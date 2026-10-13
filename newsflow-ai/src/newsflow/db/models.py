@@ -132,3 +132,58 @@ class ContentDraft(Base):
     review_status: Mapped[str] = mapped_column(String(30), default="review_required")
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class VideoProject(Base):
+    __tablename__ = "video_projects"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    draft_id: Mapped[int] = mapped_column(ForeignKey("content_drafts.id"))
+    title: Mapped[str] = mapped_column(String(100))
+    duration: Mapped[int] = mapped_column(Integer)
+    snapshot: Mapped[dict] = mapped_column(JSON)
+    sources: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class Scene(Base):
+    __tablename__ = "video_scenes"
+    __table_args__ = (UniqueConstraint("project_id", "position"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("video_projects.id", ondelete="CASCADE"))
+    position: Mapped[int] = mapped_column(Integer)
+    start_ms: Mapped[int] = mapped_column(Integer)
+    end_ms: Mapped[int] = mapped_column(Integer)
+    narration: Mapped[str] = mapped_column(Text)
+    caption: Mapped[str] = mapped_column(Text)
+    material: Mapped[str] = mapped_column(String(255), default="")
+
+
+class AudioTrack(Base):
+    __tablename__ = "audio_tracks"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("video_projects.id", ondelete="CASCADE"), unique=True)
+    provider: Mapped[str] = mapped_column(String(30))
+    voice: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(30), default="pending")
+
+
+class SubtitleTrack(Base):
+    __tablename__ = "subtitle_tracks"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("video_projects.id", ondelete="CASCADE"), unique=True)
+    font_size: Mapped[int] = mapped_column(Integer)
+    position_y: Mapped[int] = mapped_column(Integer)
+    cues: Mapped[list] = mapped_column(JSON)
+
+
+class RenderJob(Base):
+    __tablename__ = "render_jobs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("video_projects.id"))
+    status: Mapped[str] = mapped_column(String(30), default="running")
+    progress: Mapped[int] = mapped_column(Integer, default=0)
+    output_name: Mapped[str] = mapped_column(String(100), unique=True)
+    message: Mapped[str] = mapped_column(String(500), default="영상 제작 준비 중")
+    metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)

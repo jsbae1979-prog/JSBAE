@@ -63,3 +63,18 @@ for (const form of document.querySelectorAll('form[method="post"]')) {
     }
   });
 }
+const renderState = document.getElementById('render-status');
+if (renderState && renderState.dataset.status === 'running') {
+  async function pollRender() {
+    try {
+      const response = await fetch(`/api/video/jobs/${renderState.dataset.jobId}`, {cache:'no-store'});
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      renderState.textContent = `${data.progress}% · ${data.message}`;
+      document.getElementById('render-progress').value = data.progress;
+      if (data.status !== 'running') { window.location.reload(); return; }
+    } catch (_) { renderState.textContent = '영상 상태를 확인하지 못했습니다. 작업 이력을 확인하세요.'; }
+    window.setTimeout(pollRender, 2000);
+  }
+  pollRender();
+}

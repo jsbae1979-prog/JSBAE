@@ -3,3 +3,4 @@
 .ai-choice{display:block;padding:.6rem;overflow-wrap:anywhere}.ai-choice input{width:auto;margin-right:.7rem}.ai-editor{width:100%;min-height:24rem;font-family:monospace}pre{white-space:pre-wrap;overflow-wrap:anywhere}.ai-panel article{border-bottom:1px solid #30394b;padding:1rem 0}.ai-panel p,.ai-panel a{overflow-wrap:anywhere}
 
 .ai-panel textarea{display:block;width:100%;min-height:6rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;margin:6px 0 14px;font:inherit}.ai-panel fieldset{border:1px solid var(--border);border-radius:8px;margin:16px 0;padding:16px;min-width:0}.ai-panel input[type=checkbox]{display:inline;width:auto}.ai-choice small{display:inline}
+.video-preview{display:block;width:100%;max-width:360px;aspect-ratio:9/16;background:#000;border-radius:10px;margin:18px auto}progress{width:100%;accent-color:var(--accent)}

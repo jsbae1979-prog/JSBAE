@@ -1,16 +1,16 @@
-# NewsFlow AI — Windows 11 · Phase 1A
+# NewsFlow AI — Windows 11 · Phase 3
 
 공개 RSS 수집·중복 제거·내부 추천 평가를 제공하는 한국어 로컬 웹 대시보드입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
-Phase 1A는 Windows 실행·저장 경로·검증 보완 단계입니다. AI/영상 제작·SNS 게시·스케줄러·Phase 2는 구현하지 않습니다.
+현재 Phase 3는 RSS 수집, AI 뉴스 분석·대본 초안과 FFmpeg 영상 제작을 제공합니다. 실제 SNS 게시·계정 연결·주기 스케줄러는 제공하지 않습니다.
 
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. GitHub PR #1의 `feat/newsflow-phase1` 브랜치를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 3 검토 브랜치 `feat/newsflow-phase3`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase1 https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase3 https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -31,7 +31,7 @@ Windows EXE Installer는 제공하지 않습니다. `run.bat`의 실제 Windows 
 
 ```powershell
 # JSBAE 저장소 루트에서
-git switch feat/newsflow-phase1
+git switch feat/newsflow-phase3
 git pull --ff-only
 cd newsflow-ai
 .\run.bat
@@ -50,7 +50,10 @@ cd newsflow-ai
 | `logs\execution.log` | 시작·종료·설정/포트 오류 이벤트, UTC, 순환 로그 |
 | `logs\launcher.log` | BAT bootstrap의 정제된 오류 안내 |
 | `content\` | 향후 생성 콘텐츠 보관 공간만 준비; 생성 기능 없음 |
-| `videos\` | 향후 영상 출력 공간만 준비; 제작 기능 없음 |
+| `videos\` | 이전 단계의 예약 폴더; Phase 3 출력은 outputs/videos 사용 |
+| `outputs\videos\` | 완성 MP4 |
+| `assets\` | 사용자가 허가한 로컬 이미지 |
+| `render-tmp\` | 작업별 임시 이미지·WAV·장면 MP4 |
 
 RSS 설정은 SQLite에 저장하고 환경변수는 실행 전에 설정합니다. `.env.example`는 참고용이며 자동으로 읽지 않습니다. API/OAuth 키는 이 단계에 필요하지 않습니다. GUI Settings에서 요청 타임아웃을 저장하고 데이터 폴더/로그 위치를 확인할 수 있습니다.
 
@@ -158,7 +161,7 @@ Windows 실환경 승인 체크리스트: [windows_validation.md](docs/windows_v
 
 SQLAlchemy 바인딩, Jinja escaping, CSP, signed double-submit CSRF/Origin/Host 확인을 유지합니다. 사설·예약·멀티캐스트 IP, URL 인증정보를 차단하며 DNS 결과 전체 검사 및 고정 IP 연결·TLS 호스트명 검증·리디렉션 재검증을 유지합니다. 로그에 비밀값을 출력하지 않고 DB/키/.env/venv는 Git에서 제외합니다. 공개 RSS 자체에 개인정보가 포함될 수 있어 데이터 폴더를 Git에 추가하지 마세요.
 
-단일 사용자 로컬 도구이며 다중 사용자 인증·실제 조회수/검색량 측정·영상 제작·SNS 게시 기능은 없습니다. Phase 2 AI Studio는 검토용 분석과 대본 초안을 제공합니다. Windows ACL, BAT 실행, 실제 브라우저 POST, 실제 RSS 저장은 별도 실환경 검증 전 PASS로 판단하지 않습니다.
+단일 사용자 로컬 도구이며 다중 사용자 인증·실제 조회수/검색량 측정·SNS 게시 기능은 없습니다. Phase 2 AI Studio는 검토용 분석과 대본 초안을 제공합니다. Windows ACL, BAT 실행, 실제 브라우저 POST, 실제 RSS 저장은 별도 실환경 검증 전 PASS로 판단하지 않습니다.
 
 ## PR 브랜치 Windows 자동 검증
 
@@ -189,7 +192,8 @@ Windows PowerShell에서 값을 화면에 표시하지 않고 현재 세션에�
 ```powershell
 $newsflowKey = Read-Host 'OpenAI API 키' -AsSecureString
 $env:NEWSFLOW_AI_API_KEY = [System.Net.NetworkCredential]::new('', $newsflowKey).Password
-.un.bat
+.
+un.bat
 Remove-Item Env:NEWSFLOW_AI_API_KEY
 ```
 
@@ -199,4 +203,39 @@ DB revision 0002는 기존 0001에 분석 이력과 초안 테이블만 추가�
 
 Phase 2 전용 `.github/workflows/newsflow-phase2-windows.yml`은 `feat/newsflow-phase2` 코드 변경에만 실행됩니다. 기존 Phase 1 PR/워크플로는 보존합니다. Windows BAT/기존 기능에 더해 Chromium에서 AI 분석·대본 생성·수정 POST, 모바일 화면과 재실행 후 초안 보존을 검증합니다. CI는 합성 RSS와 Offline만 사용하며 실제 API 키를 등록하지 않습니다.
 
-[Phase 2 완료 보고서](docs/reports/phase2_report.md). 실제 RSS, 실제 AI API, 사용자 Windows 11 PC 운영 검증은 별도이며 Phase 3는 승인 후 시작합니다.
+[Phase 2 완료 보고서](docs/reports/phase2_report.md). 실제 RSS, 실제 AI API, 사용자 Windows 11 PC 운영 검증은 별도이며 Phase 3 영상 기능은 아래에 설명합니다. Phase 4는 추가 승인 후 시작합니다.
+
+## Phase 3 · Video Studio (Windows 11)
+
+AI Studio의 저장된 초안에서 **이 대본으로 영상 구성**을 선택하거나 Video Studio에서 대본을 선택합니다. 30/45/60초, 음성, 자막 크기(36/48/64px)와 위치를 정하고 장면을 확인한 뒤 검토 체크박스와 **영상 제작 실행**으로 시작합니다. 길이를 바꾸면 장면 비율에 따라 타이밍을 재배정합니다. 음성이 배정 시간보다 길면 실패하며 음성 내용을 잘라내지 않습니다.
+
+FFmpeg/ffprobe를 Windows에 설치해야 합니다. 공식 FFmpeg 다운로드 안내에서 Windows 빌드를 선택하거나 Windows 패키지 관리자를 이용하세요. 예: `winget install --id Gyan.FFmpeg -e`. 설치 도구의 TLS/체크섬 검사를 우회하지 마세요. 설치 후 새 터미널에서 `ffmpeg -version`과 `ffprobe -version`을 확인합니다. libx264와 AAC 인코더가 있는 빌드가 필요합니다. PATH에 없다면 현재 PowerShell 세션에서 절대 경로를 지정할 수 있습니다:
+
+```powershell
+$env:NEWSFLOW_FFMPEG = 'C:\Tools\ffmpeg\bin\ffmpeg.exe'
+$env:NEWSFLOW_FFPROBE = 'C:\Tools\ffmpeg\bin\ffprobe.exe'
+.\run.bat
+```
+
+버전·실행 파일 확인은 제작 실행 시 수행합니다. FFmpeg가 없어도 기존 RSS/AI Studio는 사용할 수 있습니다. 실행은 인수 배열과 `shell=False`만 사용하며 사용자 텍스트를 명령이나 FFmpeg 필터로 넣지 않습니다. 한국어 텍스트는 Pillow로 카드에 그려 자막을 영상에 포함합니다. 제목·대표 출처(화면 공간상 최대 3개 후보/2줄)와 미확인 표시를 넣고, 전체 원문 출처는 프로젝트와 GUI에 보존합니다. 장면은 컷으로 전환하며 카메라 애니메이션/클립 영상 합성은 이번 범위에 없습니다.
+
+Windows 기본 한국어 글꼴은 `C:\Windows\Fonts\malgun.ttf`입니다. 없다면 사용이 허용된 한국어 글꼴을 설치하고 `NEWSFLOW_FONT_PATH`로 TTF/TTC/OTF 절대 경로를 지정하세요. 글꼴을 찾지 못하면 오류로 기록하고 완료로 표시하지 않습니다. Windows CI는 Google Fonts의 Noto Sans KR(SIL Open Font License)을 고정 URL·SHA256 검증으로 별도 준비합니다. 폰트 자동 다운로드는 운영 앱에 없습니다. CI 폰트 출처/라이선스: https://github.com/google/fonts/tree/b38c5c93af322c45f633e17ac440ec1e6c94d489/ofl/notosanskr
+
+기본 **Offline · 무음**은 PCM 무음 오디오를 만들고 MP4에 AAC 스트림으로 포함합니다. 실제 발화가 아닙니다. Windows 옵션은 설치된 SAPI/System.Speech 음성을 조회하고 로컬 WAV로 합성합니다. Windows OneCore 음성 전부가 SAPI에서 보이는 것은 아니며 한국어 발음 품질은 실제 PC에서 확인해야 합니다. PowerShell 실행 정책을 앱이 완화하지 않습니다. 오류가 나면 설치된 음성/조직 정책/권한을 확인하고 Offline 모드로 기존 화면을 사용할 수 있습니다. 외부·유료 TTS 호출 구현은 없습니다.
+
+사용이 허용된 로컬 PNG/JPEG를 `%LOCALAPPDATA%\NewsFlowAI\assets`에 직접 복사하면 장면별 목록에서 선택할 수 있습니다. 20MB 및 1600만 픽셀 이하이며 symlink/경로 이동/다른 파일 형식은 거부합니다. 이미지 크기에 맞춰 중앙 자르기를 적용합니다. 소재 이용 권한 체크가 필요합니다. 뉴스 이미지/영상은 다운로드하지 않습니다. 소재 없이 텍스트·배경·도형으로 제작할 수 있습니다.
+
+완성 파일은 `%LOCALAPPDATA%\NewsFlowAI\outputs\videos\video-<고유번호>.mp4`에 저장합니다. 한 번에 한 렌더를 실행하고 임시 파일은 `render-tmp`에 분리합니다. 기존 파일은 덮어쓰지 않습니다. 제작 중 디스크 여유를 확보하세요(최소 약 500MB, 긴 작업/대형 소재는 추가 여유 필요). 작업 이력에서 진행률과 실패 단계/종료 코드를 확인할 수 있습니다. 성공한 실제 MP4만 GUI에서 미리보기·열기·다운로드가 가능합니다. Fake 결과는 시뮬레이션으로 구분하여 미리보기를 막습니다.
+
+프로그램 종료는 진행 중 FFmpeg를 중단하고 미완료 작업을 interrupted로 기록합니다. Windows TTS 호출 중이면 음성 목록 조회(최대 15초)·합성(최대 60초)의 제한시간 내 정리를 기다릴 수 있습니다. 강제 종료 후 재실행해도 미완료 작업을 성공으로 바꾸거나 자동 재실행하지 않습니다. 다음 기동 시 앱 소유 임시 작업 폴더를 정리합니다. 성공 표시 이전에 강제 종료되면 출력 폴더에 불완전/고아 고유 파일이 남을 수 있으며 GUI는 이를 완성 영상으로 제공하지 않습니다. 확인 후 수동 정리할 수 있습니다.
+
+업데이트 전 서버를 종료하고 데이터 폴더를 백업합니다. DB 0003은 기존 기사/대본을 유지하며 영상 프로젝트·장면·트랙·작업 테이블만 추가합니다. 0003 DB를 이전 버전 코드로 운영하지 마세요. 기존 이전 도구는 0001/0002/0003을 지원합니다. 사용자 데이터/영상/소재/임시 파일은 Git에서 제외합니다.
+
+Phase 3 검증:
+
+```powershell
+python -m pytest -q -rs
+python tools/ci_video_validation.py --output validation-output
+```
+
+별도 `newsflow-phase3-windows.yml`은 `feat/newsflow-phase3`에만 실행하며 실제 FFmpeg 짧은 샘플 및 ffprobe, Windows TTS(설치된 음성 있을 때), 전체 회귀, 실제 BAT와 Windows Google Chrome(Chromium 기반)에서 30초 영상 제작/미리보기/다운로드를 검증합니다. Cloud는 설치 Chromium을 사용합니다. 샘플 생성·코덱 검증은 30/45/60초 콘텐츠의 음성·내용·영상 품질 검수를 대신하지 않습니다. 실제 RSS/AI API, 사용자 Windows 11 PC, 한국어 TTS 발음과 전체 길이 최종 품질은 별도 검증 사항입니다. [Phase 3 보고서](docs/reports/phase3_report.md). Phase 4/SNS 계정 연결·게시·main 병합은 수행하지 않습니다.

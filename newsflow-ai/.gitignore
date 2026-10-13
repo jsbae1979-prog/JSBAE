@@ -23,3 +23,8 @@ session.key
 /videos/
 
 /validation-output/
+
+# Phase 3 private output/material/intermediate data
+/outputs/
+/assets/
+/render-tmp/
