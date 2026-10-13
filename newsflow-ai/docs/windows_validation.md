@@ -27,7 +27,7 @@ Windows 11 버전, Python 3.12 버전/아키텍처, Chrome/Edge 버전, JSBAE �
 - News Explorer 검색 및 시작/종료 날짜·카테고리·출처·정렬·페이지 이동.
 - News Detail 출처 provenance, RSS 요약, 원문 링크, 점수의 미평가와 평가 근거.
 - Settings 출처 등록, 비활성화/권한 확인 후 활성화, 타임아웃 저장, 실행/수집 로그.
-- 실제 일반 Chrome/Edge 브라우저에서 폼 POST. 개발자 도구 Network의 Origin은 요청 주소와 일치해야 합니다. Cloud에서 관찰한 Origin:null을 허용하도록 변경하지 않습니다.
+- 실제 일반 Chrome/Edge 브라우저에서 폼 POST. JavaScript를 활성화하세요. 폼은 표준 fetch 제출을 사용하며 개발자 도구 Network의 Origin은 요청 주소와 일치해야 합니다. no-referrer로 인한 native 폼의 null Origin을 서버에서 허용하지 않습니다.
 - 수동 수집 진행 표시·중복 실행 방지·완료 결과·부분 실패/전체 실패 시 기존 기사 보존.
 - 작은 창/모바일 emulation에서 가로 넘침, 표시 오류 없음.
 - 원격 Origin, 위조/누락 CSRF, 사설 RSS URL이 차단되는지 확인.

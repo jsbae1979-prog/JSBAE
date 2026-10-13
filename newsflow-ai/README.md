@@ -159,3 +159,18 @@ Windows 실환경 승인 체크리스트: [windows_validation.md](docs/windows_v
 SQLAlchemy 바인딩, Jinja escaping, CSP, signed double-submit CSRF/Origin/Host 확인을 유지합니다. 사설·예약·멀티캐스트 IP, URL 인증정보를 차단하며 DNS 결과 전체 검사 및 고정 IP 연결·TLS 호스트명 검증·리디렉션 재검증을 유지합니다. 로그에 비밀값을 출력하지 않고 DB/키/.env/venv는 Git에서 제외합니다. 공개 RSS 자체에 개인정보가 포함될 수 있어 데이터 폴더를 Git에 추가하지 마세요.
 
 단일 사용자 로컬 도구이며 다중 사용자 인증·실제 조회수/검색량·AI/영상/게시 기능은 없습니다. Windows ACL, BAT 실행, 실제 브라우저 POST, 실제 RSS 저장은 별도 실환경 검증 전 PASS로 판단하지 않습니다.
+
+## PR 브랜치 Windows 자동 검증
+
+`.github/workflows/newsflow-windows.yml`은 `feat/newsflow-phase1`의 실행 코드/테스트/CI 도구 변경에만 반응합니다. main에서는 실행하지 않으며 보고서만 변경할 때 다시 실행하지 않습니다. Windows Runner에서 Python 3.12 및 전체 pytest, 실제 run.bat, 기본 데이터 경로, 포트 충돌/중복 실행, 합성 데이터 저장·재시작·조회와 Chromium GUI POST를 검사합니다. 실제 RSS나 실제 API 키는 사용하지 않습니다.
+
+합성 RSS는 기존 앱 팩토리에 Fake Adapter를 주입한 별도 검증 서버에서 사용합니다. 운영 run.bat에 보안 우회·Fake 모드·테스트 HTTP endpoint를 추가하지 않습니다. CI의 Windows 종료는 `taskkill /T /F`를 이용한 프로세스 트리 종료이며 수동 Ctrl+C 검증을 대신하지 않습니다.
+
+Cloud 재현 (CI 브라우저 의존성은 별도):
+
+```bash
+.venv/bin/python -m pip install -r tools/requirements-ci.txt
+.venv/bin/python tools/ci_validation.py --mode cloud --output validation-output --browser-executable /usr/bin/chromium
+```
+
+Windows 재현은 개발·브라우저 의존성과 Playwright Chromium을 설치한 격리된 테스트 PC에서 `python tools/ci_validation.py --mode windows --output validation-output`으로 수행합니다. `%LOCALAPPDATA%\NewsFlowAI`에 기존 DB가 있으면 기존 사용자 데이터 보호를 위해 거부합니다. 일반 PC에서는 README의 수동 Windows 체크리스트를 먼저 사용하세요. 결과: [Cloud/Windows 추가 검증 보고서](docs/reports/phase1a_cloud_windows_validation.md).

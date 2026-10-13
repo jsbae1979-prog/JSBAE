@@ -4,6 +4,9 @@
 
 검증 환경은 Python 3.12.14의 Linux Codex Cloud입니다. Linux는 개발·테스트 머신일 뿐 운영 배포 대상이 아닙니다. 네트워크 권한·허용 도메인·프록시 설정은 이번 단계에서 변경하지 않았습니다.
 
+
+**후속 자동 검증 정정:** Origin:null은 Cloud만의 제약이 아니라 no-referrer와 native HTML 폼 POST의 상호작용이었습니다. 보안 정책을 유지한 fetch 제출로 수정했고, 이후 Cloud/Windows Actions의 BAT·GUI POST가 통과했습니다. 당시 결과는 아래에 보존하며 최신 증거는 [Cloud/Windows 추가 보고서](phase1a_cloud_windows_validation.md)를 참고하세요.
+
 ## 1. Windows 전용 변경 사항 — PASS (구현·자동 검증)
 
 - 최종 운영 대상을 Windows 11로 문서화하고 README를 Windows 설치/재실행/종료/업데이트 중심으로 재작성했습니다.
