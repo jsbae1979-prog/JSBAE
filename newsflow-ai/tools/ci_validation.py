@@ -30,6 +30,7 @@ def child_env() -> dict[str, str]:
         "NEWSFLOW_PORT",
         "NEWSFLOW_HOST",
         "NEWSFLOW_SECRET_KEY",
+        "NEWSFLOW_AI_API_KEY",
         "GH_TOKEN",
         "GITHUB_TOKEN",
     ):
@@ -335,8 +336,42 @@ def browser(
                 assert page.locator(".article-row").count() == 1
                 page.locator(".article-row").click()
                 page.get_by_role("heading", name="내부 추천 평가 근거").wait_for()
+                page.goto(BASE + "/ai")
+                page.locator('input[name=article_ids][value="1"]').check()
+                with (
+                    page.expect_navigation(wait_until="domcontentloaded"),
+                    page.expect_response(
+                        lambda r: r.request.method == "POST" and r.url.endswith("/ai/analyze")
+                    ) as response,
+                ):
+                    page.get_by_role("button", name="선택 기사 분석", exact=True).click()
+                assert response.value.status == 303
+                assert response.value.request.all_headers().get("origin") == BASE
+                page.locator("select[name=duration]").select_option("45")
+                with (
+                    page.expect_navigation(wait_until="domcontentloaded"),
+                    page.expect_response(
+                        lambda r: r.request.method == "POST" and r.url.endswith("/ai/generate")
+                    ) as response,
+                ):
+                    page.get_by_role("button", name="대본 생성 및 초안 저장", exact=True).click()
+                assert response.value.status == 303
+                page.locator('form[action="/ai/drafts/1"] input[name=title]').fill("합성 검토용 수정 대본")
+                with (
+                    page.expect_navigation(wait_until="domcontentloaded"),
+                    page.expect_response(
+                        lambda r: r.request.method == "POST" and r.url.endswith("/ai/drafts/1")
+                    ) as response,
+                ):
+                    page.get_by_role("button", name="수정 초안 저장", exact=True).click()
+                assert response.value.status == 303
+                page.get_by_role("heading", name="합성 검토용 수정 대본", exact=True).wait_for()
+                page.screenshot(path=str(output / "ai-studio.png"), full_page=True)
+                result["AI_Studio_analysis_script_edit_POST"] = (
+                    "PASS (offline; unverified; sources preserved)"
+                )
                 page.set_viewport_size({"width": 390, "height": 844})
-                for path in ("/", "/news", "/news/1", "/settings"):
+                for path in ("/", "/news", "/news/1", "/settings", "/ai?draft_id=1"):
                     page.goto(BASE + path)
                     overflow = page.evaluate("document.documentElement.scrollWidth > innerWidth")
                     progress["mobile_last_path"] = path
@@ -356,6 +391,8 @@ def browser(
     try:
         assert counts(root) == before
         assert "한국 우주 기술 발사 현장 공개" in HTTP().get("/news").decode()
+        assert "합성 검토용 수정 대본" in HTTP().get("/ai?draft_id=1").decode()
+        result["AI_draft_restart_persistence"] = "PASS"
         result["fixture_server_restart_persistence"] = "PASS"
     finally:
         stop(process)

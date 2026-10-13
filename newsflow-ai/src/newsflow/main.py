@@ -16,8 +16,9 @@ from sqlalchemy import select
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .config import Settings
-from .db.models import AppSetting, NewsSource
+from .db.models import AppSetting, IntelligenceRun, NewsSource, utcnow
 from .db.session import make_engine, migrate, session_factory
+from .gui.intelligence_routes import router as intelligence_router
 from .gui.routes import router
 from .news.collector import Collector
 from .news.rss_adapter import PublicRSSAdapter, RSSAdapter
@@ -30,6 +31,12 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     migrate(engine)
     sessions = session_factory(engine)
     with sessions.begin() as session:
+        for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.status == "running")):
+            run.status, run.message, run.finished_at = (
+                "interrupted",
+                "이전 실행이 중단되었습니다. 명시적으로 다시 실행하세요.",
+                utcnow(),
+            )
         if not session.get(AppSetting, "request_timeout"):
             session.add(AppSetting(key="request_timeout", value=str(settings.request_timeout)))
         if not session.scalar(select(NewsSource).limit(1)):
@@ -110,6 +117,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
         return response
 
     app.include_router(router)
+    app.include_router(intelligence_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
     return app
 

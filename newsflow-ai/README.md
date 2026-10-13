@@ -158,7 +158,7 @@ Windows 실환경 승인 체크리스트: [windows_validation.md](docs/windows_v
 
 SQLAlchemy 바인딩, Jinja escaping, CSP, signed double-submit CSRF/Origin/Host 확인을 유지합니다. 사설·예약·멀티캐스트 IP, URL 인증정보를 차단하며 DNS 결과 전체 검사 및 고정 IP 연결·TLS 호스트명 검증·리디렉션 재검증을 유지합니다. 로그에 비밀값을 출력하지 않고 DB/키/.env/venv는 Git에서 제외합니다. 공개 RSS 자체에 개인정보가 포함될 수 있어 데이터 폴더를 Git에 추가하지 마세요.
 
-단일 사용자 로컬 도구이며 다중 사용자 인증·실제 조회수/검색량·AI/영상/게시 기능은 없습니다. Windows ACL, BAT 실행, 실제 브라우저 POST, 실제 RSS 저장은 별도 실환경 검증 전 PASS로 판단하지 않습니다.
+단일 사용자 로컬 도구이며 다중 사용자 인증·실제 조회수/검색량 측정·영상 제작·SNS 게시 기능은 없습니다. Phase 2 AI Studio는 검토용 분석과 대본 초안을 제공합니다. Windows ACL, BAT 실행, 실제 브라우저 POST, 실제 RSS 저장은 별도 실환경 검증 전 PASS로 판단하지 않습니다.
 
 ## PR 브랜치 Windows 자동 검증
 
@@ -174,3 +174,29 @@ Cloud 재현 (CI 브라우저 의존성은 별도):
 ```
 
 Windows 재현은 개발·브라우저 의존성과 Playwright Chromium을 설치한 격리된 테스트 PC에서 `python tools/ci_validation.py --mode windows --output validation-output`으로 수행합니다. `%LOCALAPPDATA%\NewsFlowAI`에 기존 DB가 있으면 기존 사용자 데이터 보호를 위해 거부합니다. 일반 PC에서는 README의 수동 Windows 체크리스트를 먼저 사용하세요. 결과: [Cloud/Windows 추가 검증 보고서](docs/reports/phase1a_cloud_windows_validation.md).
+
+
+## Phase 2 · AI Studio
+
+왼쪽 AI Studio에서 뉴스 1~10개 선택 → 분석 → 30/45/60초 선택 → 대본 생성 → 제목·후킹·요약·장면별 내레이션/자막/소재 수정 → 초안 저장 순서로 사용합니다. 출처 링크와 분석 시점 RSS 근거는 고정 보존되고, 수정 충돌 시 새로고침을 요구합니다. 모든 초안은 **게시 전 사람의 검토·승인 필요** 상태이며 게시 버튼이나 SNS 연동은 없습니다.
+
+기본 Offline 모드는 인터넷·API 키 없이 RSS 내부 점수와 제목 유사도 후보 그룹을 설명하고, 사람이 작성할 편집용 기본 대본을 만듭니다. 실제 AI 작성 결과가 아닙니다. 신뢰도는 미평가, 사실 확인은 미확인이며, 복수 출처는 독립 검증을 의미하지 않습니다. 장면 길이는 계획값으로 실제 음성 길이를 측정한 결과가 아닙니다.
+
+OpenAI는 분석과 대본 생성 각각의 Provider에서 선택할 수 있습니다. 매 실행마다 외부 전송·비용 체크박스 동의가 필요합니다. 선택 기사 제목·RSS 요약(최대 800자/기사)·원문 출처·점수 근거가 고정 HTTPS API에 전송됩니다. 모델·호출 옵션은 대본 생성 폼에서 지정할 수 있습니다. 지원하지 않는 모델/옵션 조합은 오류로 기록되며 자동 재시도하지 않습니다. API 미설정은 Offline 사용을 막지 않습니다.
+
+Windows PowerShell에서 값을 화면에 표시하지 않고 현재 세션에만 키를 설정한 뒤 실행할 수 있습니다:
+
+```powershell
+$newsflowKey = Read-Host 'OpenAI API 키' -AsSecureString
+$env:NEWSFLOW_AI_API_KEY = [System.Net.NetworkCredential]::new('', $newsflowKey).Password
+.un.bat
+Remove-Item Env:NEWSFLOW_AI_API_KEY
+```
+
+키를 저장소·.env.example·로그·HTML에 넣지 마세요. .env는 자동 로드되지 않습니다. API 키는 현재 실행 프로세스가 읽는 환경변수만 사용합니다. 외부 응답은 길이/JSON 스키마/출처 ID/비밀값/일부 선정적 문구/긴 요약 복제 여부를 검사하지만, 사실 검증이나 저작권 판정을 자동 보장하지 않습니다. 사람이 원문과 소재 이용 권한을 검토해야 합니다. 실제 AI API 연결은 NOT VERIFIED입니다.
+
+DB revision 0002는 기존 0001에 분석 이력과 초안 테이블만 추가합니다. 기존 기사·출처·점수·세션 키는 유지됩니다. 업데이트 전 서버를 종료하고 데이터 폴더를 백업하세요. 0002로 업데이트한 DB는 Phase 1 코드로 되돌려 운영하지 마세요. 기존 데이터 이전 도구는 0001/0002를 지원합니다.
+
+Phase 2 전용 `.github/workflows/newsflow-phase2-windows.yml`은 `feat/newsflow-phase2` 코드 변경에만 실행됩니다. 기존 Phase 1 PR/워크플로는 보존합니다. Windows BAT/기존 기능에 더해 Chromium에서 AI 분석·대본 생성·수정 POST, 모바일 화면과 재실행 후 초안 보존을 검증합니다. CI는 합성 RSS와 Offline만 사용하며 실제 API 키를 등록하지 않습니다.
+
+[Phase 2 완료 보고서](docs/reports/phase2_report.md). 실제 RSS, 실제 AI API, 사용자 Windows 11 PC 운영 검증은 별도이며 Phase 3는 승인 후 시작합니다.
