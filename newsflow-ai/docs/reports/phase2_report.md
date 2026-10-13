@@ -15,7 +15,7 @@ Phase 1/1A 승인 기준 bd9df6d에서 별도 `feat/newsflow-phase2` 브랜치�
 | 실제 AI API | NOT VERIFIED | 실제 키 사용·유료 API 호출 없음 |
 | 실제 RSS | NOT VERIFIED | 기존 미검증 상태 유지; live opt-in 테스트 1개 skip |
 | Windows 11 사용자 PC 운영 | NOT VERIFIED | 수동 PC 설치·네트워크·권한·보안 제품·Ctrl+C 미검증 |
-| Phase 2 Windows Actions | NOT VERIFIED | 업로드 후 실행 결과를 아래에 갱신 |
+| Phase 2 Windows Actions | PASS | windows-latest/Python 3.12: 107 passed / 1 skipped / 0 failed / 0 errors; 실제 BAT·Chromium·초안 재기동 유지 |
 | 실제 Cloud Chromium | PASS | 실제 서버에서 등록·수집·AI 분석·45초 대본·필드 편집 POST, 모바일·재실행 후 초안 유지 |
 
 ## 구현 및 아키텍처
@@ -62,6 +62,17 @@ Phase 3 진입 전 사용자 Phase 2 승인, 실제 Windows 11 운영 점검, �
 
 ## Git / PR 및 최종 증거
 
-기준 bd9df6d. 별도 feat/newsflow-phase2. 새 Draft PR은 feat/newsflow-phase1을 base로 하는 의존 PR로 생성하여 Phase 2 변경만 검토할 수 있게 합니다. 기존 PR #1은 수정·병합하지 않습니다. main 변경 없음. 커밋/PR/Windows 결과는 실행 후 갱신합니다.
+기준 bd9df6d. 별도 feat/newsflow-phase2. 새 Draft PR은 feat/newsflow-phase1을 base로 하는 의존 PR로 생성하여 Phase 2 변경만 검토할 수 있게 합니다. 기존 PR #1은 수정·병합하지 않습니다. main 변경 없음. 기능 커밋 `d657ad7e33ce552a0a8e97814679aaea4658bb10`. [Draft PR #2](https://github.com/jsbae1979-prog/JSBAE/pull/2)는 OPEN/DRAFT이며 base는 feat/newsflow-phase1, head는 feat/newsflow-phase2입니다. 기존 PR #1은 OPEN/unmerged, head bd9df6d이며 main은 aa2f056d78ceed24874d0b4c50c6033f7168bf4d로 그대로입니다. 검증 증거·보고서 갱신은 별도 docs 커밋으로 업로드합니다. 해당 커밋은 `git log -1 -- docs/reports/phase2_report.md`에서 확인할 수 있습니다.
 
 Cloud 실제 실행 명령: `.venv/bin/python tools/ci_validation.py --mode cloud --browser-executable /usr/bin/chromium --output /tmp/phase2-final-cloud`. 서버 기동/종료, HTTP POST, SQLite 저장·재실행·조회, 중복/포트 충돌, Chromium 실제 same-origin POST, AI Studio 분석·대본·필드별 수정·초안 재기동 보존, 390px 모바일 overflow 없음 PASS. 이는 Linux Cloud의 실제 실행이며 Windows BAT 실행 또는 실제 AI/RSS 통신 검증이 아닙니다. [Cloud 결과](phase2_evidence/cloud_result.json), [pytest](phase2_evidence/cloud_pytest.txt), [AI Studio 화면](phase2_evidence/ai_studio.png), [모바일 화면](phase2_evidence/mobile.png).
+
+
+### Windows Actions 실제 실행 결과
+
+[실행 38427343350](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38427343350), job 115400072856, 검증 코드 d657ad7, 전체 job/단계 success. Python 3.12 설치·개발 의존성·Chromium 설치·전체 pytest·실제 BAT/GUI 검증·artifact 업로드 모두 PASS입니다. [Windows 구조화된 실행 결과](phase2_evidence/windows_result.json), [Windows pytest 집계](phase2_evidence/windows_pytest.json)는 GitHub check annotation에서 조회한 실제 데이터입니다.
+
+Windows 전체 108 tests / 107 passed / 1 skipped / 0 failures / 0 errors. 경고 수는 JUnit 집계에 포함되지 않아 NOT VERIFIED로 유지합니다. `python tools/ci_validation.py --mode windows --output validation-output`은 실제 cmd.exe/run.bat를 실행했고 기본 LOCALAPPDATA 경로, 기동·종료·재기동, SQLite 합성 기사 3개 저장/조회, 중복 실행·8765 포트 충돌, Chromium 등록·활성 토글·수집·AI 분석·45초 대본·필드 편집 POST(303), 모바일 overflow 없음, 재실행 후 수정 초안 조회가 PASS입니다. 실제 브라우저가 만든 Origin은 http://127.0.0.1:8765였으며 보안을 완화하지 않았습니다.
+
+Windows Runner 종료는 taskkill 프로세스 트리 방식이며 사용자 Windows 11 PC의 Ctrl+C 검증이 아닙니다. Windows-hosted Runner 결과를 사용자 PC 운영 PASS로 해석하지 않습니다. 합성 RSS와 Offline 대본은 실제 RSS 또는 AI API 검증이 아닙니다. Actions API와 check annotation으로 성공/집계를 확인했으며 raw 로그 및 artifact 파일 다운로드는 별도 확인하지 않았습니다. Node 20 기반 action의 Node 24 전환 안내는 기능 실패와 구분합니다. 권한·비용·네트워크 설정 변경은 수행하지 않았습니다.
+
+**최종 개발 검증: PASS (명시된 NOT VERIFIED 항목 제외). Phase 2 사용자 승인 대기.** Cloud/Windows 자동 회귀·실제 프로세스·브라우저 검증은 통과했지만 실제 API 품질과 사용자 PC 운영 검증을 대신하지 않습니다. 개발을 종료하며 승인 없이 Phase 3 또는 main 병합을 진행하지 않습니다.
