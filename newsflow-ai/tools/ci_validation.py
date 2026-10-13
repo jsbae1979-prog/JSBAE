@@ -267,6 +267,10 @@ def browser(
                 options["executable_path"] = executable
             if mode == "cloud":
                 options["args"] = ["--no-sandbox"]
+            elif not executable:
+                # Windows MP4 preview needs a Chromium build with licensed H.264/AAC support.
+                options["channel"] = "chrome"
+            progress["browser_channel"] = options.get("channel", "chromium")
             instance = playwright.chromium.launch(**options)
             try:
                 page = instance.new_page(viewport={"width": 1440, "height": 1000})
@@ -395,10 +399,19 @@ def browser(
                 page.goto(BASE + "/video?job_id=1")
                 page.locator("video").wait_for()
                 media_deadline = time.monotonic() + 30
-                while page.locator("video").evaluate("v => v.readyState") < 1:
+                while True:
+                    media = page.locator("video").evaluate(
+                        "v => ({ready:v.readyState,error:v.error ? v.error.code : null,width:v.videoWidth,height:v.videoHeight,support:v.canPlayType('video/mp4; codecs=\"avc1.640028,mp4a.40.2\"')})"
+                    )
+                    progress["video_metadata_state"] = media
+                    assert not media["error"], "browser video metadata decoder error"
+                    if media["ready"] >= 1:
+                        break
                     assert time.monotonic() < media_deadline, "video metadata deadline"
                     page.wait_for_timeout(100)
-                assert page.locator("video").evaluate("v => [v.videoWidth,v.videoHeight]") == [1080, 1920]
+                dimensions = page.locator("video").evaluate("v => [v.videoWidth,v.videoHeight]")
+                progress["video_dimensions"] = dimensions
+                assert dimensions == [1080, 1920], "browser video dimensions"
                 page.locator("video").evaluate("v => { v.currentTime = 1; v.pause(); }")
                 media_deadline = time.monotonic() + 30
                 while True:
