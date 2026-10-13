@@ -251,10 +251,13 @@ def production(mode: str, root: Path, env: dict[str, str], trace: list[str]) -> 
     }
 
 
-def browser(mode: str, root: Path, env: dict[str, str], output: Path, executable: str | None) -> dict:
+def browser(
+    mode: str, root: Path, env: dict[str, str], output: Path, executable: str | None, progress: dict
+) -> dict:
     from playwright.sync_api import sync_playwright
 
     process = start([sys.executable, str(ROOT / "tools/ci_fixture_server.py"), "--data-dir", str(root)], env)
+    progress["server_ready"] = True
     result: dict = {}
     try:
         with sync_playwright() as playwright:
@@ -269,6 +272,9 @@ def browser(mode: str, root: Path, env: dict[str, str], output: Path, executable
                 errors = []
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.goto(BASE + "/settings")
+                progress["context_origin"] = page.evaluate(
+                    "({location:location.origin, window:window.origin})"
+                )
                 observed = []
                 page.on(
                     "request",
@@ -282,6 +288,9 @@ def browser(mode: str, root: Path, env: dict[str, str], output: Path, executable
                 ) as response:
                     page.locator(".source-form button").click()
                 status = response.value.status
+                progress.update(
+                    registration_status=status, registration_origin=observed[-1] if observed else None
+                )
                 if status == 403 and mode == "cloud" and observed[-1] == "null":
                     result["GUI_browser_POST"] = "NOT VERIFIED: Cloud POST Origin:null rejected (403)"
                     result["null_origin_security"] = "PASS"
@@ -294,39 +303,48 @@ def browser(mode: str, root: Path, env: dict[str, str], output: Path, executable
                     assert client.done()["added"] == 3
                 else:
                     assert status == 303, "GUI registration POST failed"
+                    progress["registration"] = "PASS"
                     page.goto(BASE + "/settings")
                     toggle = page.locator('form[action="/settings/sources/2/toggle"]')
                     with page.expect_response(lambda r: r.request.method == "POST") as response:
                         toggle.locator("button").click()
+                    progress["disable_status"] = response.value.status
                     assert response.value.status == 303
                     page.goto(BASE + "/settings")
                     toggle = page.locator('form[action="/settings/sources/2/toggle"]')
                     toggle.locator("input[name=permission]").check()
                     with page.expect_response(lambda r: r.request.method == "POST") as response:
                         toggle.locator("button").click()
+                    progress["enable_status"] = response.value.status
                     assert response.value.status == 303
                     page.goto(BASE)
                     with page.expect_response(
                         lambda r: r.request.method == "POST" and r.url.endswith("/collection")
                     ) as response:
                         page.locator("#collect-button").click()
+                    progress["collection_status"] = response.value.status
                     assert response.value.status == 303
                     assert HTTP().done()["added"] == 3
                     result["GUI_browser_POST"] = "PASS (registration, disable/enable, collection)"
                 assert counts(root)["news_articles"] == 3
+                progress["sqlite_count"] = 3
                 page.goto(BASE)
                 page.screenshot(path=str(output / "dashboard.png"), full_page=True)
                 page.goto(BASE + "/news")
                 page.locator("input[name=q]").fill("우주")
                 page.get_by_role("button", name="필터 적용").click()
                 page.wait_for_url("**/news?**")
+                progress["search_count"] = page.locator(".article-row").count()
                 assert page.locator(".article-row").count() == 1
                 page.locator(".article-row").click()
                 page.get_by_role("heading", name="내부 추천 평가 근거").wait_for()
                 page.set_viewport_size({"width": 390, "height": 844})
                 for path in ("/", "/news", "/news/1", "/settings"):
                     page.goto(BASE + path)
-                    assert not page.evaluate("document.documentElement.scrollWidth > innerWidth")
+                    overflow = page.evaluate("document.documentElement.scrollWidth > innerWidth")
+                    progress["mobile_last_path"] = path
+                    progress["mobile_overflow"] = overflow
+                    assert not overflow
                 page.screenshot(path=str(output / "mobile.png"), full_page=True)
                 assert not errors, "browser page error"
                 result.update(
@@ -377,8 +395,14 @@ def main() -> None:
                 result["LOCALAPPDATA_default"] = "NOT VERIFIED (Linux)"
             result["production_trace"] = []
             result["production"] = production(args.mode, data, env, result["production_trace"])
+            result["browser_progress"] = {}
             result["browser"] = browser(
-                args.mode, Path(directory) / "합성 브라우저 데이터", env, args.output, args.browser_executable
+                args.mode,
+                Path(directory) / "합성 브라우저 데이터",
+                env,
+                args.output,
+                args.browser_executable,
+                result["browser_progress"],
             )
         result["outcome"] = "PASS with explicit unverified items" if args.mode == "cloud" else "PASS"
     except Exception as exc:
