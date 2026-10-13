@@ -227,7 +227,7 @@ Windows 기본 한국어 글꼴은 `C:\Windows\Fonts\malgun.ttf`입니다. 없�
 
 완성 파일은 `%LOCALAPPDATA%\NewsFlowAI\outputs\videos\video-<고유번호>.mp4`에 저장합니다. 한 번에 한 렌더를 실행하고 임시 파일은 `render-tmp`에 분리합니다. 기존 파일은 덮어쓰지 않습니다. 제작 중 디스크 여유를 확보하세요(최소 약 500MB, 긴 작업/대형 소재는 추가 여유 필요). 작업 이력에서 진행률과 실패 단계/종료 코드를 확인할 수 있습니다. 성공한 실제 MP4만 GUI에서 미리보기·열기·다운로드가 가능합니다. Fake 결과는 시뮬레이션으로 구분하여 미리보기를 막습니다.
 
-프로그램 종료는 진행 중 FFmpeg를 중단하고 미완료 작업을 interrupted로 기록합니다. Windows TTS 호출 중이면 최대 60초 제한시간 내 정리를 기다릴 수 있습니다. 강제 종료 후 재실행해도 미완료 작업을 성공으로 바꾸거나 자동 재실행하지 않습니다. 다음 기동 시 앱 소유 임시 작업 폴더를 정리합니다. 성공 표시 이전에 강제 종료되면 출력 폴더에 불완전/고아 고유 파일이 남을 수 있으며 GUI는 이를 완성 영상으로 제공하지 않습니다. 확인 후 수동 정리할 수 있습니다.
+프로그램 종료는 진행 중 FFmpeg를 중단하고 미완료 작업을 interrupted로 기록합니다. Windows TTS 호출 중이면 음성 목록 조회(최대 15초)·합성(최대 60초)의 제한시간 내 정리를 기다릴 수 있습니다. 강제 종료 후 재실행해도 미완료 작업을 성공으로 바꾸거나 자동 재실행하지 않습니다. 다음 기동 시 앱 소유 임시 작업 폴더를 정리합니다. 성공 표시 이전에 강제 종료되면 출력 폴더에 불완전/고아 고유 파일이 남을 수 있으며 GUI는 이를 완성 영상으로 제공하지 않습니다. 확인 후 수동 정리할 수 있습니다.
 
 업데이트 전 서버를 종료하고 데이터 폴더를 백업합니다. DB 0003은 기존 기사/대본을 유지하며 영상 프로젝트·장면·트랙·작업 테이블만 추가합니다. 0003 DB를 이전 버전 코드로 운영하지 마세요. 기존 이전 도구는 0001/0002/0003을 지원합니다. 사용자 데이터/영상/소재/임시 파일은 Git에서 제외합니다.
 
@@ -238,4 +238,4 @@ python -m pytest -q -rs
 python tools/ci_video_validation.py --output validation-output
 ```
 
-별도 `newsflow-phase3-windows.yml`은 `feat/newsflow-phase3`에만 실행하며 실제 FFmpeg 짧은 샘플 및 ffprobe, Windows TTS(설치된 음성 있을 때), 전체 회귀, 실제 BAT와 Chromium에서 30초 영상 제작/미리보기/다운로드를 검증합니다. 샘플 생성·코덱 검증은 30/45/60초 콘텐츠의 음성·내용·영상 품질 검수를 대신하지 않습니다. 실제 RSS/AI API, 사용자 Windows 11 PC, 한국어 TTS 발음과 전체 길이 최종 품질은 별도 검증 사항입니다. [Phase 3 보고서](docs/reports/phase3_report.md). Phase 4/SNS 계정 연결·게시·main 병합은 수행하지 않습니다.
+별도 `newsflow-phase3-windows.yml`은 `feat/newsflow-phase3`에만 실행하며 실제 FFmpeg 짧은 샘플 및 ffprobe, Windows TTS(설치된 음성 있을 때), 전체 회귀, 실제 BAT와 Windows Google Chrome(Chromium 기반)에서 30초 영상 제작/미리보기/다운로드를 검증합니다. Cloud는 설치 Chromium을 사용합니다. 샘플 생성·코덱 검증은 30/45/60초 콘텐츠의 음성·내용·영상 품질 검수를 대신하지 않습니다. 실제 RSS/AI API, 사용자 Windows 11 PC, 한국어 TTS 발음과 전체 길이 최종 품질은 별도 검증 사항입니다. [Phase 3 보고서](docs/reports/phase3_report.md). Phase 4/SNS 계정 연결·게시·main 병합은 수행하지 않습니다.

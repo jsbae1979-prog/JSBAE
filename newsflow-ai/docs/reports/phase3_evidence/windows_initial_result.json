@@ -1,0 +1,46 @@
+{
+  "platform": "win32",
+  "mode": "windows",
+  "real_RSS": "NOT VERIFIED (offline synthetic tests)",
+  "LOCALAPPDATA_default": "PASS",
+  "production_trace": [
+    "first_start_requested",
+    "first_server_ready",
+    "production_HTTP_POST_completed",
+    "duplicate_rejected",
+    "first_server_stopped",
+    "seed_stored_three_articles",
+    "restarted_server_ready",
+    "restarted_server_stopped",
+    "port_collision_rejected"
+  ],
+  "production": {
+    "server_lifecycle": "PASS",
+    "http_POST": "PASS",
+    "sqlite_store_restart_query": "PASS",
+    "article_count": 3,
+    "duplicate_and_port_collision": "PASS",
+    "run_bat": "PASS",
+    "stop_method": "taskkill process tree",
+    "Windows_manual_CtrlC": "NOT VERIFIED"
+  },
+  "browser_progress": {
+    "server_ready": true,
+    "context_origin": {
+      "location": "http://127.0.0.1:8765",
+      "window": "http://127.0.0.1:8765"
+    },
+    "registration_status": 303,
+    "registration_origin": "http://127.0.0.1:8765",
+    "registration": "PASS",
+    "disable_status": 303,
+    "enable_status": 303,
+    "collection_status": 303,
+    "sqlite_count": 3,
+    "search_count": 1,
+    "video_status": "success",
+    "video_progress": 100
+  },
+  "outcome": "FAIL",
+  "error_type": "AssertionError"
+}

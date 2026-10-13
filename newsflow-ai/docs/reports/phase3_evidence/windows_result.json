@@ -1,0 +1,75 @@
+{
+  "platform": "win32",
+  "mode": "windows",
+  "real_RSS": "NOT VERIFIED (offline synthetic tests)",
+  "LOCALAPPDATA_default": "PASS",
+  "production_trace": [
+    "first_start_requested",
+    "first_server_ready",
+    "production_HTTP_POST_completed",
+    "duplicate_rejected",
+    "first_server_stopped",
+    "seed_stored_three_articles",
+    "restarted_server_ready",
+    "restarted_server_stopped",
+    "port_collision_rejected"
+  ],
+  "production": {
+    "server_lifecycle": "PASS",
+    "http_POST": "PASS",
+    "sqlite_store_restart_query": "PASS",
+    "article_count": 3,
+    "duplicate_and_port_collision": "PASS",
+    "run_bat": "PASS",
+    "stop_method": "taskkill process tree",
+    "Windows_manual_CtrlC": "NOT VERIFIED"
+  },
+  "browser_progress": {
+    "server_ready": true,
+    "browser_channel": "chrome",
+    "context_origin": {
+      "location": "http://127.0.0.1:8765",
+      "window": "http://127.0.0.1:8765"
+    },
+    "registration_status": 303,
+    "registration_origin": "http://127.0.0.1:8765",
+    "registration": "PASS",
+    "disable_status": 303,
+    "enable_status": 303,
+    "collection_status": 303,
+    "sqlite_count": 3,
+    "search_count": 1,
+    "video_status": "success",
+    "video_progress": 100,
+    "video_metadata_state": {
+      "ready": 4,
+      "error": null,
+      "width": 1080,
+      "height": 1920,
+      "support": "probably"
+    },
+    "video_dimensions": [
+      1080,
+      1920
+    ],
+    "video_media_state": {
+      "ready": 4,
+      "error": null
+    },
+    "video_frame_decode": "PASS",
+    "mobile_last_path": "/video?job_id=1",
+    "mobile_overflow": false
+  },
+  "browser": {
+    "GUI_browser_POST": "PASS (registration, disable/enable, collection)",
+    "AI_Studio_analysis_script_edit_POST": "PASS (offline; unverified; sources preserved)",
+    "Video_Studio_POST_preview_download": "PASS (real 30s MP4; offline silent audio; human quality not verified)",
+    "GUI_render_search_detail_mobile": "PASS",
+    "GUI_synthetic_RSS_store": "PASS",
+    "article_count": 3,
+    "Video_job_file_restart_persistence": "PASS",
+    "AI_draft_restart_persistence": "PASS",
+    "fixture_server_restart_persistence": "PASS"
+  },
+  "outcome": "PASS"
+}

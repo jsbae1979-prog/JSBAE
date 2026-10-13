@@ -12,8 +12,9 @@ Phase 2 승인 커밋 f9f9f0fc6bdad3478a2f53871ecbbab4d813c97b에서 `feat/newsf
 | 실제 FFmpeg 3초 MP4 | PASS | H.264/yuv420p/1080×1920/AAC/2ch, ffprobe duration 3.021029초, 62,335 bytes |
 | 한국어 샘플 프레임 | PASS | 실제 MP4에서 추출하여 한국어 제목/자막/출처/여백 확인; 전체 영상 품질 판정 아님 |
 | Cloud Chromium/30초 MP4 | PASS | 실제 제작 POST·프레임 디코딩·미리보기·다운로드·재기동 파일 유지·모바일 |
-| Windows Actions | NOT VERIFIED | 브랜치 업로드 후 실제 실행 결과 갱신 예정 |
+| Windows Actions | PASS | 최종 실행 38479483734 success; 147 passed / 1 skipped / 0 failures / 0 errors |
 | 실제 사용자 Windows 11 PC | NOT VERIFIED | 설치·권한·조직 정책·수동 종료·장기 운영 미검증 |
+| Windows SAPI 음성 생성 | PASS | 설치 음성으로 비무음 WAV 및 5초 AAC MP4 샘플 생성, 청취 품질 판정 아님 |
 | Windows TTS 음성 품질 | NOT VERIFIED | 실제 청취 및 한국어 발음 품질은 별도 검수 |
 | 30/45/60초 최종 콘텐츠 품질 | NOT VERIFIED | 샘플/코덱/시간 검증은 사람의 전체 음성·내용·영상 검수를 대신하지 않음 |
 | 실제 RSS 및 AI API | NOT VERIFIED | 기존 미검증 유지; 외부/유료 TTS API 구현 및 호출 없음 |
@@ -72,7 +73,7 @@ NOT VERIFIED: 실제 RSS/AI API, 사용자 Windows 11 PC의 FFmpeg 설치/ACL/�
 
 ## Git/Draft PR/Phase 4
 
-기준 f9f9f0f, feat/newsflow-phase3. 새 Draft PR은 feat/newsflow-phase2를 base로 하여 영상 기능만 검토합니다. PR 번호는 GitHub 실제 부여 번호를 보고합니다. 코드 커밋·PR·Windows 결과는 실행 후 갱신합니다. 기존 PR #1/#2, main, 다른 프로젝트는 변경하지 않습니다.
+기준 f9f9f0f, feat/newsflow-phase3. 새 Draft PR은 feat/newsflow-phase2를 base로 하여 영상 기능만 검토합니다. PR 번호는 GitHub 실제 부여 번호를 보고합니다. 기능 커밋 `577a9e3bbdf6090b126ab28d380451e9b3d3c643`, Windows Chrome/미디어 진단 보완 `f49cca70cbeed81f9bcda5ae11c5a06ed70dbbc4`. [Draft PR #3](https://github.com/jsbae1979-prog/JSBAE/pull/3)는 OPEN/DRAFT, base feat/newsflow-phase2, head feat/newsflow-phase3입니다. 기존 PR #1/#2는 수정·병합하지 않습니다. 최종 증거·문서 갱신은 별도 docs 커밋이며 `git log -1 -- docs/reports/phase3_report.md`로 해당 커밋을 확인할 수 있습니다. 기존 PR #1/#2, main, 다른 프로젝트는 변경하지 않습니다.
 
 **Phase 4 진입: 사용자 승인 전 불가.** Phase 3의 개발 검증 후 실제 Windows PC/한국어 음성/전체 30·45·60초 품질·사실/소재 권한을 검수하고 사용자의 Phase 3 승인 및 별도 Phase 4 게시 정책을 확정해야 합니다. 보고서와 Draft PR 제출 후 개발을 중단하며 main 병합·SNS 계정 연결·게시를 수행하지 않습니다.
 
@@ -80,3 +81,18 @@ NOT VERIFIED: 실제 RSS/AI API, 사용자 Windows 11 PC의 FFmpeg 설치/ACL/�
 ### Cloud 실제 서버/브라우저 실행
 
 `.venv/bin/python tools/ci_validation.py --mode cloud --browser-executable /usr/bin/chromium --output /tmp/newsflow-phase3-verified-cloud` 최종 PASS. 기존 RSS/AI Studio POST, 실제 30초 FFmpeg 제작 POST 303/정상 Origin, progress 100/status success, Chromium readyState 4·media error null/1080×1920·1초 위치 프레임 디코딩, MP4 다운로드, 390px 모바일 overflow 없음, 서버 재기동 후 job success 및 파일 조회를 검증했습니다. `.video` 미리보기는 검증된 실제 MP4이며 Fake가 아닙니다. 음성은 명확한 Offline 무음이고 최종 콘텐츠 품질·실제 한국어 음성 청취·사용자 Windows PC 검증을 의미하지 않습니다. [실제 실행 결과](phase3_evidence/cloud_result.json), [Video Studio 화면](phase3_evidence/video_studio.png), [모바일](phase3_evidence/mobile.png).
+
+
+### Windows Actions 최종 실제 실행
+
+[실행 38479483734](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38479483734), 검증 SHA f49cca7, job 115578274999, workflow/job conclusion success입니다. [Windows pytest](phase3_evidence/windows_pytest.json): 148 tests / 147 passed / 1 skipped / 0 failures / 0 errors. Windows 경고 수는 JUnit 집계에 포함되지 않아 NOT VERIFIED입니다.
+
+[Windows 실제 MP4/TTS 결과](phase3_evidence/windows_video_result.json): FFmpeg 7.1.1-essentials_build-www.gyan.dev, 실제 3초 샘플 H.264/1080×1920/AAC/2ch/3.021029초/56,520 bytes PASS. 설치된 SAPI 음성으로 1.51초 비무음 PCM 발화를 생성하여 5.021029초 H.264/AAC MP4(46,855 bytes)로 렌더했습니다. SAPI 샘플은 영어 “News flow.”이며 한국어 발음/사람 청취 품질은 NOT VERIFIED입니다.
+
+[Windows 실제 BAT/GUI 결과](phase3_evidence/windows_result.json): run.bat 실제 실행, 기본 LOCALAPPDATA, 서버 기동/종료/재기동, 합성 기사 저장/조회, 중복/포트 충돌, 기존 GUI/AI Studio, Video Studio 제작 POST/완성 30초 MP4/미리보기/다운로드/재기동 파일 유지/모바일 overflow 없음 PASS. Windows는 설치된 Google Chrome(Chromium 기반)을 사용했습니다. 실제 Origin http://127.0.0.1:8765, video dimensions 1080×1920, H.264/AAC canPlayType probably, readyState 4, media error null, 프레임 디코딩 PASS. Windows 종료는 taskkill 프로세스 트리이며 사용자 PC의 Ctrl+C 검증이 아닙니다.
+
+최초 [실행 38478536088](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38478536088)는 렌더·SAPI·147개 회귀·BAT·영상 작업 success까지 통과했으나 번들 Chromium의 미리보기 단계에서 AssertionError로 전체 FAIL이었습니다. [최초 GUI 실패 결과](phase3_evidence/windows_initial_result.json)를 보존했습니다. 당시 원문 로그는 Cloud에서 조회하지 못했고 미디어 상태의 세부 진단이 부족하여 최초 실패의 정확한 내부 디코더 원인을 확정하지 않습니다. H.264/AAC를 지원하는 설치 Chrome 채널을 명시적으로 선택하고 dimensions/readyState/error/support 진단을 추가한 뒤 동일 해상도·프레임·POST·품질 구분 검사를 유지하여 최종 실행이 PASS했습니다. 검사 제거/skip/continue-on-error/보안 정책 완화는 없습니다.
+
+CI의 준비 단계는 임시 Windows Runner에 FFmpeg 및 검증된 Noto Sans KR 글꼴, 설치 Chrome을 준비합니다. 사용자 PC/Cloud 네트워크·권한·비용 설정을 변경하지 않았습니다. raw Actions 로그와 artifact 파일 다운로드는 NOT VERIFIED이며 결과는 실제 GitHub check annotation 및 workflow/job conclusion으로 확인했습니다. Node 20 action의 Node 24 전환 안내는 기능 실패와 구분합니다. Cloud 기능/브라우저 증거는 577a9e3의 동일 운영 코드, Windows 최종 증거는 CI 채널·진단만 보완한 f49cca7입니다.
+
+**최종 개발 검증: PASS (명시된 미검증 항목 제외). Phase 3 사용자 승인 대기.** Phase 4 진입과 실제 게시 승인을 의미하지 않습니다. 보고서·검증 증거·Draft PR 제출 후 개발을 중단합니다.
