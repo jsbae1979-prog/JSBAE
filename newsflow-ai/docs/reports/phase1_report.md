@@ -203,3 +203,10 @@ Chromium + Playwright가 실제 실행 중인 로컬 서버에 접속했습니�
 - Cloud 환경 게시 및 새 task에서의 복원까지 검증한 것은 아닙니다.
 
 Phase 2는 시작하지 않았습니다. 이번 후속 작업 범위는 기존 Phase 1의 저장소 이전·검증·업로드입니다.
+
+### JSBAE 이전 및 GitHub 업로드 결과
+
+- 이전 구현 커밋: `cd4cb5c` (Phase 1 코드와 보고서·루트 안내 추가).
+- GitHub `origin/feat/newsflow-phase1` 업로드 성공.
+- 검토용 Draft PR: https://github.com/jsbae1979-prog/JSBAE/pull/1
+- main 병합은 수행하지 않았습니다. Phase 2는 시작하지 않았습니다.
