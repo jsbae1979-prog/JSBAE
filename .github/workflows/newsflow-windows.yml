@@ -51,7 +51,10 @@ jobs:
       - name: All offline regression tests
         run: |
           python -m pytest -q -rs --junitxml=validation-output/pytest.xml
+          $testExit = $LASTEXITCODE
+          python tools/ci_pytest_summary.py validation-output/pytest.xml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($testExit -ne 0) { exit $testExit }
       - name: Actual BAT, default path, lifecycle, SQLite and GUI POST
         run: |
           python tools/ci_validation.py --mode windows --output validation-output

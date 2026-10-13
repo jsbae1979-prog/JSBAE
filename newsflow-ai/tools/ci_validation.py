@@ -20,6 +20,7 @@ from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_ope
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "http://127.0.0.1:8765"
+STARTUP_ERROR: dict = {}
 
 
 def child_env() -> dict[str, str]:
@@ -74,14 +75,32 @@ def start(command: list[str], env: dict[str, str], deadline_seconds: int = 30) -
         cwd=ROOT,
         env=env,
         stdin=subprocess.DEVNULL,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         creationflags=flags,
     )
     try:
         deadline = time.monotonic() + deadline_seconds
         while time.monotonic() < deadline:
             if process.poll() is not None:
+                output = process.communicate(timeout=3)[0].decode("utf-8", errors="replace")
+                stage = "unknown"
+                for phrase, label in (
+                    ("가상환경 생성 실패", "venv_creation"),
+                    ("가상환경 Python 3.12 확인 실패", "venv_python"),
+                    ("의존성 설치 실패", "dependency_install"),
+                    ("의존성 검사 실패", "dependency_check"),
+                    ("기존 data/newsflow.db", "legacy_data"),
+                    ("포트가 사용 중", "port_conflict"),
+                    ("지정 포트", "port_conflict"),
+                    ("Python 3.12 is required", "python_discovery"),
+                    ("Cannot open the project folder", "project_path"),
+                    ("실행 설정 또는 데이터", "runtime_configuration"),
+                ):
+                    if phrase in output:
+                        stage = label
+                        break
+                STARTUP_ERROR.update(stage=stage, exit_code=process.returncode)
                 raise AssertionError("server exited before readiness")
             try:
                 assert json.loads(HTTP().get("/health")) == {"status": "ok", "phase": 1}
@@ -144,13 +163,15 @@ def seed(root: Path) -> None:
         app.state.coordinator.future.result(timeout=10)
 
 
-def production(mode: str, root: Path, env: dict[str, str]) -> dict:
+def production(mode: str, root: Path, env: dict[str, str], trace: list[str]) -> dict:
     command = (
         ["cmd.exe", "/d", "/c", str(ROOT / "run.bat")]
         if mode == "windows"
         else [sys.executable, "-m", "newsflow.main"]
     )
+    trace.append("first_start_requested")
     process = start(command, env, 180 if mode == "windows" else 30)
+    trace.append("first_server_ready")
     try:
         client = HTTP()
         for path in ("/", "/news", "/settings"):
@@ -163,6 +184,7 @@ def production(mode: str, root: Path, env: dict[str, str]) -> dict:
         client.post("/settings/collection", {"timeout": 7})
         client.post("/collection", {})
         assert client.done()["status"] == "empty"
+        trace.append("production_HTTP_POST_completed")
         duplicate = subprocess.run(
             command,
             cwd=ROOT,
@@ -174,6 +196,7 @@ def production(mode: str, root: Path, env: dict[str, str]) -> dict:
             check=False,
         )
         assert duplicate.returncode != 0
+        trace.append("duplicate_rejected")
         assert json.loads(client.get("/health"))["status"] == "ok"
         if mode == "windows":
             assert (ROOT / ".venv/Scripts/python.exe").is_file()
@@ -181,11 +204,14 @@ def production(mode: str, root: Path, env: dict[str, str]) -> dict:
         assert (root / "newsflow.db").is_file()
     finally:
         stop(process)
+    trace.append("first_server_stopped")
     seed(root)
     before = counts(root)
     assert before["news_articles"] == before["article_mentions"] == before["article_scores"] == 3
     key = (root / "session.key").read_bytes()
+    trace.append("seed_stored_three_articles")
     process = start(command, env, 60)
+    trace.append("restarted_server_ready")
     try:
         assert counts(root) == before
         assert (root / "session.key").read_bytes() == key
@@ -193,6 +219,7 @@ def production(mode: str, root: Path, env: dict[str, str]) -> dict:
         HTTP().post("/settings/sources/2/toggle", {})
     finally:
         stop(process)
+    trace.append("restarted_server_stopped")
     with socket.socket() as occupied:
         if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
             occupied.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
@@ -211,6 +238,7 @@ def production(mode: str, root: Path, env: dict[str, str]) -> dict:
             check=False,
         )
         assert collision.returncode != 0
+        trace.append("port_collision_rejected")
     return {
         "server_lifecycle": "PASS",
         "http_POST": "PASS",
@@ -347,7 +375,8 @@ def main() -> None:
                 data = Path(directory) / "개발 사용자 공간"
                 env["NEWSFLOW_DATA_DIR"] = str(data)
                 result["LOCALAPPDATA_default"] = "NOT VERIFIED (Linux)"
-            result["production"] = production(args.mode, data, env)
+            result["production_trace"] = []
+            result["production"] = production(args.mode, data, env, result["production_trace"])
             result["browser"] = browser(
                 args.mode, Path(directory) / "합성 브라우저 데이터", env, args.output, args.browser_executable
             )
@@ -355,12 +384,18 @@ def main() -> None:
     except Exception as exc:
         result["outcome"] = "FAIL"
         result["error_type"] = type(exc).__name__
+        if STARTUP_ERROR:
+            result["startup_error"] = STARTUP_ERROR
         raise
     finally:
         (args.output / "result.json").write_text(
             json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))
+        # Metadata is readable through GitHub's check API even if artifact/log hosts are blocked.
+        notice = json.dumps(result, ensure_ascii=False, separators=(",", ":"))
+        notice = notice.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+        print(f"::notice title=NewsFlow validation::{notice}")
 
 
 if __name__ == "__main__":
