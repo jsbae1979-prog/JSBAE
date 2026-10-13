@@ -73,6 +73,10 @@ jobs:
         run: |
           python tools/ci_video_validation.py --output validation-output
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Read-only public official policy documentation
+        run: |
+          python tools/ci_official_research.py --output validation-output/official-web-research.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: All offline regression tests
         run: |
           python -m pytest -q -rs --junitxml=validation-output/pytest.xml
