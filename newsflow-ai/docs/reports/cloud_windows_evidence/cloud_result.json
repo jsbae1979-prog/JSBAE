@@ -1,0 +1,25 @@
+{
+  "platform": "linux",
+  "mode": "cloud",
+  "real_RSS": "NOT VERIFIED (offline synthetic tests)",
+  "LOCALAPPDATA_default": "NOT VERIFIED (Linux)",
+  "production": {
+    "server_lifecycle": "PASS",
+    "http_POST": "PASS",
+    "sqlite_store_restart_query": "PASS",
+    "article_count": 3,
+    "duplicate_and_port_collision": "PASS",
+    "run_bat": "NOT VERIFIED",
+    "stop_method": "SIGTERM",
+    "Windows_manual_CtrlC": "NOT VERIFIED"
+  },
+  "browser": {
+    "GUI_browser_POST": "NOT VERIFIED: Cloud POST Origin:null rejected (403)",
+    "null_origin_security": "PASS",
+    "GUI_render_search_detail_mobile": "PASS",
+    "GUI_synthetic_RSS_store": "PASS",
+    "article_count": 3,
+    "fixture_server_restart_persistence": "PASS"
+  },
+  "outcome": "PASS with explicit unverified items"
+}

@@ -21,3 +21,5 @@ session.key
 /logs/
 /content/
 /videos/
+
+/validation-output/

@@ -18,6 +18,9 @@ def reserve_socket(host: str, port: int) -> socket.socket:
     try:
         if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
             listener.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        else:
+            # Cloud development: allow restart after TIME_WAIT; no SO_REUSEPORT/shared listener.
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         listener.bind((host, port))
         listener.listen(128)
         return listener

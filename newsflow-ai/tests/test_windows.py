@@ -13,10 +13,10 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from newsflow.config import Settings
-from newsflow.db.models import AppSetting, NewsSource
+from newsflow.db.models import AppSetting, ArticleMention, ArticleScore, NewsArticle, NewsSource
 from newsflow.main import create_app
 from newsflow.migrate_data import migrate_data
 from newsflow.paths import default_data_dir, prepare_data_dir
@@ -148,9 +148,12 @@ def test_migrate_existing_database_settings_and_key(tmp_path, rss):
     from newsflow.news.rss_adapter import FakeRSSAdapter
 
     app = create_app(Settings(data_dir=original), FakeRSSAdapter({"https://example.com/rss": rss}))
-    with TestClient(app, base_url="http://127.0.0.1"), app.state.sessions.begin() as session:
-        session.add(NewsSource(name="이전 테스트", url="https://example.com/rss"))
-        session.get(AppSetting, "request_timeout").value = "6"
+    with TestClient(app, base_url="http://127.0.0.1"):
+        with app.state.sessions.begin() as session:
+            session.add(NewsSource(name="이전 테스트", url="https://example.com/rss"))
+            session.get(AppSetting, "request_timeout").value = "6"
+        app.state.coordinator.start()
+        app.state.coordinator.future.result(timeout=10)
     original_key = (original / "session.key").read_bytes()
     migrate_data(original, target)
     assert (original / "newsflow.db").is_file()
@@ -159,6 +162,8 @@ def test_migrate_existing_database_settings_and_key(tmp_path, rss):
     with TestClient(app, base_url="http://127.0.0.1"), app.state.sessions() as session:
         assert session.get(AppSetting, "request_timeout").value == "6"
         assert session.scalar(select(NewsSource).where(NewsSource.name == "이전 테스트"))
+        for model in (NewsArticle, ArticleMention, ArticleScore):
+            assert session.scalar(select(func.count()).select_from(model)) == 3
     with pytest.raises(ValueError, match="덮어쓰지"):
         migrate_data(original, target)
     assert (target / "session.key").read_bytes() == original_key

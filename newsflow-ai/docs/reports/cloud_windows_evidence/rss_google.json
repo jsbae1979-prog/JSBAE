@@ -1,0 +1,6 @@
+{
+  "dns": "FAIL",
+  "proxy": "HTTP 200 (diagnostic only)",
+  "rss_store": "NOT VERIFIED",
+  "failure_stage": "timeout"
+}
