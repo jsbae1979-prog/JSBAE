@@ -9,6 +9,7 @@ import ssl
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import StrEnum
 from queue import Empty, Queue
 from threading import Thread
 from typing import Protocol
@@ -19,12 +20,29 @@ MAX_BYTES = 2 * 1024 * 1024
 USER_AGENT = "NewsFlowAI/0.1 (+RSS-only local reader)"
 
 
+class ErrorKind(StrEnum):
+    DNS = "dns"
+    PROXY = "proxy"
+    HTTPS = "https"
+    TIMEOUT = "timeout"
+    HTTP = "http"
+    ROBOTS = "robots"
+    PARSE = "parse"
+    POLICY = "policy"
+    NETWORK = "network"
+
+
 class FeedError(Exception):
-    """Safe user-facing message, never includes raw URL credentials."""
+    """Classified external failure, without raw URL/credential diagnostics."""
+
+    def __init__(self, message: str, kind: ErrorKind = ErrorKind.NETWORK):
+        super().__init__(message)
+        self.kind = kind
 
 
 class URLPolicyError(FeedError):
-    pass
+    def __init__(self, message: str):
+        super().__init__(message, ErrorKind.POLICY)
 
 
 def validate_url(url: str) -> str:
@@ -81,9 +99,9 @@ def public_addresses(host: str, port: int, timeout: float = 10) -> list[str]:
     try:
         result = answers.get(timeout=timeout)
     except Empty as exc:
-        raise FeedError("RSS 요청 시간이 초과되었습니다.") from exc
+        raise FeedError("RSS 요청 시간이 초과되었습니다.", ErrorKind.TIMEOUT) from exc
     if isinstance(result, OSError):
-        raise FeedError("RSS 호스트 DNS 조회에 실패했습니다.") from result
+        raise FeedError("RSS 호스트 DNS 조회에 실패했습니다.", ErrorKind.DNS) from result
     if not result or any(
         not ipaddress.ip_address(ip).is_global
         or ipaddress.ip_address(ip).is_multicast
@@ -151,7 +169,9 @@ class PublicTransport:
                 raise FeedError("RSS 응답이 최대 2 MiB를 초과했습니다.")
             return Response(response.status, b"".join(chunks), response.getheader("Location"))
         except TimeoutError as exc:
-            raise FeedError("RSS 요청 시간이 초과되었습니다.") from exc
+            raise FeedError("RSS 요청 시간이 초과되었습니다.", ErrorKind.TIMEOUT) from exc
+        except ssl.SSLError as exc:
+            raise FeedError("RSS TLS 인증서 또는 HTTPS 연결 검증에 실패했습니다.", ErrorKind.HTTPS) from exc
         except (OSError, http.client.HTTPException) as exc:
             raise FeedError("RSS 연결 또는 TLS 검증에 실패했습니다.") from exc
         finally:
@@ -193,23 +213,27 @@ class PublicRSSAdapter:
                 elif response.status == 200:
                     rules = response.body.decode("utf-8", errors="replace").splitlines()
                 else:
-                    raise FeedError("robots.txt 확인 실패로 수집을 중단했습니다.")
+                    raise FeedError("robots.txt 확인 실패로 수집을 중단했습니다.", ErrorKind.ROBOTS)
                 robot = RobotFileParser()
                 robot.parse(rules)
                 checked[origin] = robot
             if not checked[origin].can_fetch(USER_AGENT, target):
-                raise FeedError("robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.")
+                raise FeedError("robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.", ErrorKind.ROBOTS)
             # Local manual collector makes one feed request per source. For crawl-delay,
             # conservatively reject unsupported timing rather than ignoring it.
             delay = checked[origin].crawl_delay(USER_AGENT)
             if checked[origin].request_rate(USER_AGENT):
-                raise FeedError("robots.txt 요청 간격 정책을 지원하지 않아 수집을 중단했습니다.")
+                raise FeedError(
+                    "robots.txt 요청 간격 정책을 지원하지 않아 수집을 중단했습니다.", ErrorKind.ROBOTS
+                )
             if delay:
-                raise FeedError("crawl-delay가 지정된 출처는 Phase 1에서 수집하지 않습니다.")
+                raise FeedError(
+                    "crawl-delay가 지정된 출처는 Phase 1에서 수집하지 않습니다.", ErrorKind.ROBOTS
+                )
 
         response = self._get(url, timeout, approve)
         if response.status != 200:
-            raise FeedError(f"RSS 서버가 HTTP {response.status}을 반환했습니다.")
+            raise FeedError(f"RSS 서버가 HTTP {response.status}을 반환했습니다.", ErrorKind.HTTP)
         return response.body
 
 

@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import os
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+
+from .paths import default_data_dir
 
 
 @dataclass(frozen=True)
 class Settings:
-    data_dir: Path = Path("data")
+    data_dir: Path = field(default_factory=default_data_dir)
     host: str = "127.0.0.1"
     port: int = 8765
     request_timeout: int = 10
@@ -29,7 +31,7 @@ class Settings:
     @classmethod
     def from_env(cls) -> Settings:
         return cls(
-            data_dir=Path(os.getenv("NEWSFLOW_DATA_DIR", "data")).resolve(),
+            data_dir=default_data_dir(),
             host=os.getenv("NEWSFLOW_HOST", "127.0.0.1"),
             port=int(os.getenv("NEWSFLOW_PORT", "8765")),
             request_timeout=int(os.getenv("NEWSFLOW_REQUEST_TIMEOUT", "10")),

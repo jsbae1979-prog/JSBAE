@@ -10,7 +10,7 @@ from html.parser import HTMLParser
 import feedparser
 from defusedxml import ElementTree
 
-from .rss_adapter import MAX_BYTES, FeedError, RSSAdapter, validate_url
+from .rss_adapter import MAX_BYTES, ErrorKind, FeedError, RSSAdapter, validate_url
 
 
 class PlainText(HTMLParser):
@@ -43,12 +43,12 @@ def parse_feed(payload: bytes, source_name: str) -> list[CollectedArticle]:
     try:
         root = ElementTree.fromstring(payload)
     except Exception as exc:
-        raise FeedError("RSS XML 형식이 잘못되었거나 안전하지 않습니다.") from exc
+        raise FeedError("RSS XML 형식이 잘못되었거나 안전하지 않습니다.", ErrorKind.PARSE) from exc
     if root.tag.split("}")[-1] not in {"rss", "feed", "RDF"}:
-        raise FeedError("RSS 또는 Atom 문서가 아닙니다.")
+        raise FeedError("RSS 또는 Atom 문서가 아닙니다.", ErrorKind.PARSE)
     parsed = feedparser.parse(payload)
     if parsed.bozo:
-        raise FeedError("RSS 문서를 정상적으로 파싱하지 못했습니다.")
+        raise FeedError("RSS 문서를 정상적으로 파싱하지 못했습니다.", ErrorKind.PARSE)
     result: list[CollectedArticle] = []
     if len(parsed.entries) > 1000:
         raise FeedError("RSS 항목이 최대 1000개를 초과했습니다.")

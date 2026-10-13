@@ -1,0 +1,8 @@
+PASS: 4 screens, GET search/detail, desktop/mobile, JS errors=0
+Origin diagnostic: {
+  locationOrigin: 'http://127.0.0.1:8766',
+  windowOrigin: 'http://127.0.0.1:8766',
+  secureContext: true
+}
+POST diagnostic: {"origin":"null"}
+POST response: 외부 사이트에서 요청할 수 없습니다.

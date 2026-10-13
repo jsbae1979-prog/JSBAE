@@ -187,6 +187,7 @@ def settings(request: Request) -> HTMLResponse:
             logs=logs,
             timeout=int(timeout.value) if timeout else request.app.state.config.request_timeout,
             config=request.app.state.config,
+            execution_log=request.app.state.config.data_dir / "logs" / "execution.log",
         )
 
 

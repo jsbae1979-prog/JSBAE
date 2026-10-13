@@ -15,3 +15,9 @@ build/
 dist/
 
 !requirements-dev.lock
+
+# User data must remain private even with an explicit project-root override.
+session.key
+/logs/
+/content/
+/videos/

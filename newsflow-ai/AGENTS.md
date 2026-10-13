@@ -1,7 +1,7 @@
 # NewsFlow AI development rules
 
-- Phase 1 only. Do not begin Phase 2 without explicit user approval.
-- Python 3.12; support Windows 11 and Ubuntu 24.04.
+- Phase 1/1A only. Do not begin Phase 2 without explicit user approval.
+- Python 3.12; production target is Windows 11 only. Codex Cloud is for development/tests; no Linux deployment, Docker, or WSL features.
 - Keep GUI, services, persistence, and external adapters separate.
 - Never commit API keys, OAuth tokens, personal data, local databases, or session secrets.
 - No article body scraping, login/paywall bypass, or actual SNS publishing.

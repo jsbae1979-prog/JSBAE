@@ -116,9 +116,49 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
 
 def run() -> None:
     import uvicorn
+    from filelock import FileLock, Timeout
 
-    settings = Settings.from_env()
-    uvicorn.run(create_app(settings), host=settings.host, port=settings.port, log_level="warning")
+    from .paths import prepare_data_dir
+    from .runtime import PortInUseError, reserve_socket, runtime_logger
+
+    logger = None
+    try:
+        settings = Settings.from_env()
+        prepare_data_dir(settings.data_dir)
+        logger = runtime_logger(settings.data_dir)
+        with (
+            FileLock(str(settings.data_dir / f"server-{settings.port}.lock")).acquire(timeout=0),
+            FileLock(str(settings.data_dir / "migration.lock")).acquire(timeout=0),
+            reserve_socket(settings.host, settings.port) as listener,
+        ):
+            app = create_app(settings)
+            logger.info("server_start port=%d", settings.port)
+            print(f"GUI 주소: http://{settings.host}:{settings.port} · 종료: Ctrl+C", flush=True)
+            try:
+                uvicorn.Server(
+                    uvicorn.Config(
+                        app, host=settings.host, port=settings.port, log_level="warning", access_log=False
+                    )
+                ).run(sockets=[listener])
+            finally:
+                app.state.coordinator.close()
+                app.state.engine.dispose()
+                logger.info("server_stop")
+    except (PortInUseError, Timeout):
+        if logger:
+            logger.error("server_port_or_instance_conflict")
+        print("이미 실행 중이거나 지정 포트를 사용할 수 없습니다. 기존 실행을 종료하세요.", flush=True)
+        raise SystemExit(1) from None
+    except (ValueError, OSError):
+        if logger:
+            logger.error("server_configuration_or_path_error")
+        print("실행 설정 또는 데이터 폴더 권한을 확인하세요. 비밀값은 출력하지 않습니다.", flush=True)
+        raise SystemExit(1) from None
+    except Exception:  # noqa: BLE001 -- startup errors must not expose secrets in a traceback
+        if logger:
+            logger.error("server_startup_or_runtime_error")
+        print("서버 실행 오류입니다. 실행 로그와 README를 확인하세요.", flush=True)
+        raise SystemExit(1) from None
 
 
 if __name__ == "__main__":

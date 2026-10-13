@@ -6,14 +6,15 @@ from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
-from sqlalchemy import Engine, create_engine, event
+from sqlalchemy import URL, Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 
 def make_engine(path: Path) -> Engine:
     path.parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(
-        f"sqlite:///{path.as_posix()}", connect_args={"check_same_thread": False, "timeout": 15}
+        URL.create("sqlite", database=str(path.resolve())),
+        connect_args={"check_same_thread": False, "timeout": 15},
     )
 
     @event.listens_for(engine, "connect")
@@ -28,7 +29,9 @@ def make_engine(path: Path) -> Engine:
 
 def migrate(engine: Engine) -> None:
     config = Config()
-    config.set_main_option("script_location", str(Path(__file__).resolve().parent / "migrations"))
+    config.set_main_option(
+        "script_location", str(Path(__file__).resolve().parent / "migrations").replace("%", "%%")
+    )
     with engine.begin() as connection:
         config.attributes["connection"] = connection
         command.upgrade(config, "head")
