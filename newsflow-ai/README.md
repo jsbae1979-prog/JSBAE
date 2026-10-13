@@ -203,7 +203,7 @@ DB revision 0002는 기존 0001에 분석 이력과 초안 테이블만 추가�
 
 Phase 2 전용 `.github/workflows/newsflow-phase2-windows.yml`은 `feat/newsflow-phase2` 코드 변경에만 실행됩니다. 기존 Phase 1 PR/워크플로는 보존합니다. Windows BAT/기존 기능에 더해 Chromium에서 AI 분석·대본 생성·수정 POST, 모바일 화면과 재실행 후 초안 보존을 검증합니다. CI는 합성 RSS와 Offline만 사용하며 실제 API 키를 등록하지 않습니다.
 
-[Phase 2 완료 보고서](docs/reports/phase2_report.md). 실제 RSS, 실제 AI API, 사용자 Windows 11 PC 운영 검증은 별도이며 Phase 3 영상 기능은 아래에 설명합니다. Phase 4는 추가 승인 후 시작합니다.
+[Phase 2 완료 보고서](docs/reports/phase2_report.md). 실제 RSS, 실제 AI API, 사용자 Windows 11 PC 운영 검증은 별도이며 Phase 3 영상 기능은 아래에 설명합니다. Phase 4B 실계정 연동은 추가 승인 후 시작합니다.
 
 ## Phase 3 · Video Studio (Windows 11)
 
@@ -238,7 +238,7 @@ python -m pytest -q -rs
 python tools/ci_video_validation.py --output validation-output
 ```
 
-별도 `newsflow-phase3-windows.yml`은 `feat/newsflow-phase3`에만 실행하며 실제 FFmpeg 짧은 샘플 및 ffprobe, Windows TTS(설치된 음성 있을 때), 전체 회귀, 실제 BAT와 Windows Google Chrome(Chromium 기반)에서 30초 영상 제작/미리보기/다운로드를 검증합니다. Cloud는 설치 Chromium을 사용합니다. 샘플 생성·코덱 검증은 30/45/60초 콘텐츠의 음성·내용·영상 품질 검수를 대신하지 않습니다. 실제 RSS/AI API, 사용자 Windows 11 PC, 한국어 TTS 발음과 전체 길이 최종 품질은 별도 검증 사항입니다. [Phase 3 보고서](docs/reports/phase3_report.md). Phase 4/SNS 계정 연결·게시·main 병합은 수행하지 않습니다.
+별도 `newsflow-phase3-windows.yml`은 `feat/newsflow-phase3`에만 실행하며 실제 FFmpeg 짧은 샘플 및 ffprobe, Windows TTS(설치된 음성 있을 때), 전체 회귀, 실제 BAT와 Windows Google Chrome(Chromium 기반)에서 30초 영상 제작/미리보기/다운로드를 검증합니다. Cloud는 설치 Chromium을 사용합니다. 샘플 생성·코덱 검증은 30/45/60초 콘텐츠의 음성·내용·영상 품질 검수를 대신하지 않습니다. 실제 RSS/AI API, 사용자 Windows 11 PC, 한국어 TTS 발음과 전체 길이 최종 품질은 별도 검증 사항입니다. [Phase 3 보고서](docs/reports/phase3_report.md). 실제 SNS 계정 연결·게시·main 병합은 수행하지 않습니다.
 
 ## Phase 4A · Publishing Studio 준비 기능
 
@@ -248,7 +248,7 @@ Video Studio의 검증된 완성 MP4에서 **게시 준비**를 선택합니다.
 
 YouTube 업로드 설계는 공식 `videos.insert` 기반이며 Shorts 전용 임의 API를 만들지 않았습니다. Shorts 자동 분류는 업로드와 별도 플랫폼 결정입니다. Instagram은 공식 SDK의 media/media_publish 구조를 준비했으나 로그인 경로별 URL 또는 resumable 제공 방식은 재검토 전 미구현입니다. 로컬 MP4를 공개 URL에 노출하거나 서버에 전송하지 않습니다. [공식 자료 조사와 확인 날짜](docs/publishing_platforms.md)를 참고하세요. 일부 공식 웹 문서는 Cloud 프록시 403으로 최신 자격/제한을 확인하지 못했고, 공식 Google discovery/Meta SDK의 검증 범위와 구분해 기록했습니다.
 
-앱 준비 프로파일은 1080×1920 H.264/AAC MP4, 30/45/60초, 최대 2GiB 파일, 제목 100자, 설명·태그 포함 Instagram 2200자/YouTube 5000자, 태그 최대 30개입니다. 이 텍스트/태그 기준을 최신 공식 플랫폼 한도로 주장하지 않습니다. Phase 4B 전에 공식 정책을 재확인해야 합니다. AI 표시 선택은 실제적인 합성/변조 여부에 대한 사람의 검토를 요구하며 YouTube containsSyntheticMedia와 Meta is_ai_generated는 매핑 후보입니다. 모든 AI 대본에 자동으로 의무 표시가 확정됐다는 뜻이 아닙니다.
+앱 준비 프로파일은 1080×1920 H.264/AAC MP4, 30/45/60초, 최대 2GiB 파일, 제목 100자, 설명·태그 포함 Instagram 2200자/YouTube 5000자, 태그 최대 30개입니다. 추가로 공식 YouTube videos 본문에서 확인한 설명 UTF-8 5,000바이트(출력 해시태그 포함)·꺾쇠 제외, API 태그 합계 500자(쉼표 포함)를 검사합니다. Instagram의 문자/태그 예산은 앱 기준이며 최신 공식 제한 확인은 미완료입니다. Phase 4B 전에 대상 계정의 정책 적용을 확인해야 합니다. AI 표시 선택은 실제적인 합성/변조 여부에 대한 사람의 검토를 요구하며 YouTube containsSyntheticMedia와 Meta is_ai_generated는 매핑 후보입니다. 모든 AI 대본에 자동으로 의무 표시가 확정됐다는 뜻이 아닙니다.
 
 Publisher Protocol·Instagram/YouTube 차단 어댑터·Fake Publisher, PublishJobRepository를 제공합니다. Fake는 테스트/개발 API에서만 명시적 승인으로 실행하며 simulated/failed/expired/unknown을 저장합니다. 동일 플랫폼/대상 계정/영상 SHA256 식별자는 제목 수정이나 재시작 후에도 재호출하지 않습니다. 결과 불명은 실제 성공이 아니며 자동 재시도하지 않습니다. GUI에는 Fake 게시 실행 버튼도 없습니다.
 

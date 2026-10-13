@@ -88,3 +88,5 @@ Publishing Studio routes → PublishingService (로컬 파일·독립 ffprobe·S
 Fake 시뮬레이션은 최신 로컬 검증 및 명시적 승인만으로 테스트하고 실제 어댑터를 허용하지 않습니다. 플랫폼/대상 계정/media hash UNIQUE identity와 conditional revision UPDATE로 먼저 writer reservation/job/attempt를 저장한 뒤 adapter를 한 번 호출합니다. 수정 후에도 같은 영상의 같은 대상은 재실행하지 않습니다. 실패/만료/결과 불명·예외/불완전 실행은 unknown 등으로 관리하고 성공으로 추정하지 않으며 자동 재시도하지 않습니다. repository의 명시적 recovery가 불완전 Fake를 unknown으로 표시할 수 있지만 GUI에 시뮬레이션 실행/복구 경로는 없습니다. 요청 revision/검증 ID/메타데이터 snapshot을 evidence에 보존해 향후 수정과 구분합니다.
 
 토큰값 DB 컬럼이나 HTML 입력이 없습니다. credential_ref는 향후 비밀 저장소의 opaque 식별자용이며 지금은 NULL입니다. TokenBundle은 SecretStr/ValidationError 입력 마스킹이고 FakeCredentialVault는 휘발성/만료·취소 검증만 지원합니다. 실제 Windows 암호화/OS vault와 OAuth code exchange는 Phase 4B 승인 후 구현해야 하며 UnavailableCredentialVault로 차단합니다. 공식 웹 접근 불가 항목과 공식 GitHub 스키마/SDK에서 확인한 사실, 앱 준비 정책을 구분합니다. API 연구 URL은 evidence에 저장만 하며 renderer/publisher가 자동 fetch하지 않습니다.
+
+YouTube 준비 payload의 description은 해시태그를 포함한 UTF-8 5,000바이트와 꺾쇠 제외를 검사하고 API tags는 쉼표 포함 500자를 검사합니다. 공식 Windows 문서 조회와 실제 계정 정책 적용을 구분하며 공식 요건의 확인이 실제 SNS 실행을 활성화하지 않습니다.

@@ -8,7 +8,16 @@ SNS 인증·게시 요청은 **0건**이다. 조사에 사용한 요청은 공�
 
 Google/Meta 공식 웹 문서 12개에 HTTPS로 접근했지만 Codex Cloud의 기존 프록시가
 CONNECT 요청을 **403 Forbidden**으로 거절했다. 프록시, DNS, TLS, 허용 목록을 변경하지 않았다.
-따라서 웹 문서의 최신 본문과 계정별 제한은 **NOT VERIFIED**다. 접속 실패를 문서상 금지나 API 오류로 해석하지 않는다.
+Cloud에서의 직접 본문 조회는 **NOT VERIFIED**다. 접속 실패를 문서상 금지나 API 오류로 해석하지 않는다.
+
+기존 Windows Actions 네트워크에서는 Google 공식 웹 문서 7개와 Meta AI 정책 블로그에서 HTTPS 200 응답과
+본문 발췌를 확보했다. 최종 근거는
+[Windows 조사 실행](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38485460702)의
+check annotation이다. gzip/base64 chunk 7개를 재조립하고 SHA256을 검증했으며 페이지당 최대
+6,000자의 본문 발췌를 추가 축소 없이 보존했다. 전체 근거는
+[windows_official_docs.json](reports/phase4a_evidence/windows_official_docs.json)이다.
+Instagram 개발 문서 4개는 허용된 문서 URL 정책을 벗어나는 리다이렉트가 차단되어 **NOT VERIFIED**다.
+문서의 자동 요약과 정책 본문이 충돌한 항목은 충돌을 보존하며, 실제 계정 적용을 검증했다고 표시하지 않는다.
 
 대신 Google/YouTube/Meta가 관리하는 공식 GitHub 파일을 기존 GitHub 접근 경로로 읽어
 아래 API 구조를 확인했다. 이는 API 스키마 검증이며, 인증 성공·실제 업로드·콘텐츠 승인 검증이 아니다.
@@ -21,10 +30,13 @@ CONNECT 요청을 **403 Forbidden**으로 거절했다. 프록시, DNS, TLS, 허
 | YouTube 최소 업로드 권한 후보 | PASS | discovery와 YouTube 공식 예제가 `https://www.googleapis.com/auth/youtube.upload`를 사용 |
 | YouTube AI 표시 필드 | PASS | 공식 `VideoStatus.containsSyntheticMedia` boolean |
 | YouTube Shorts 전용 업로드 API | PASS | 읽은 공식 v3 discovery에서 Shorts 전용 업로드 메서드가 없고 동영상 업로드는 `videos.insert` |
-| Shorts 최신 자동 분류 조건·정책 | NOT VERIFIED | 공식 지원 문서 본문 접근 실패; discovery에 분류 조건 없음 |
+| YouTube 제목·설명·태그 규격 | PASS | Windows에서 읽은 Videos 정책 본문: 제목 100자, 설명 5,000 UTF-8 bytes, 태그 500자 및 계산 규칙 |
+| Shorts 분류 조건·정책 본문 | PASS | Windows에서 읽은 공식 지원 문서의 업로드 날짜·세로/정방형·3분 조건과 음악 채널 예외 |
+| YouTube 계정별 공개 범위·quota | NOT VERIFIED | quota 기본값 본문은 확인했지만 자동 요약과 충돌; 실제 대상 프로젝트·계정 미연결 |
 | Instagram 게시 컨테이너·게시 API 구조 | PASS | Meta 공식 SDK의 POST `/media`, POST `/media_publish` 및 `creation_id` |
 | Instagram 소재·AI 표시 매개변수 | PASS | `/media`에 `video_url`, `upload_type`, `is_ai_generated`가 정의됨 |
 | Instagram 게시 한도 조회 구조 | PASS | GET `/content_publishing_limit`, `config`와 `quota_usage` 응답 필드 |
+| Meta AI 표시 정책 블로그 본문 | PASS | Windows HTTPS 200; AI info 표시 신호·자진 공개·생성과 편집의 표시 구분 설명 확인 |
 | Instagram 최신 계정 자격·OAuth 권한·게시 제한 | NOT VERIFIED | 공식 웹 문서 본문 접근 실패; SDK는 자격·권한·수치의 근거가 아님 |
 | Instagram Login 경로의 AI 표시 적용 범위 | NOT VERIFIED | Business SDK 필드 존재와 별개로 해당 로그인 경로의 최신 지원 범위 확인 필요 |
 | 실제 토큰·계정·SNS 게시 | NOT VERIFIED | 이번 단계의 금지 범위이며 실행하지 않음 |
@@ -48,17 +60,55 @@ CONNECT 요청을 **403 Forbidden**으로 거절했다. 프록시, DNS, TLS, 허
 - `VideoStatus.uploadStatus`는 `uploaded`와 `processed`를 구분하고 `failed`/`rejected`도 제공한다.
   추후 업로드 요청 수락과 최종 처리 성공을 다른 상태로 관리해야 한다.
 
-### 재확인해야 하는 공식 웹 문서
+### Windows에서 확인한 공식 웹 문서
 
-| 공식 URL | 확인할 내용 | 2026-10-13 접근 |
+| 공식 URL | 확인한 내용 및 남은 확인 | 2026-10-13 접근 |
 | --- | --- | --- |
-| https://developers.google.com/youtube/v3/docs/videos/insert | 필수 입력, 업로드 quota, 미검증 API 프로젝트의 공개 범위 제한, 오류 | 프록시 CONNECT 403 |
-| https://developers.google.com/youtube/v3/docs/videos | 제목·설명·태그 한도, AI 표시 및 개인정보 필드 의미 | 프록시 CONNECT 403 |
-| https://developers.google.com/youtube/v3/guides/auth/installed-apps | Windows 데스크톱 공식 OAuth, redirect/PKCE/offline 권한 | 프록시 CONNECT 403 |
-| https://developers.google.com/youtube/v3/determine_quota_cost | 업로드 요청 비용·일일 할당량 | 프록시 CONNECT 403 |
-| https://support.google.com/youtube/answer/15424877?hl=en | 세로·정방형, 업로드 날짜, 길이에 따른 Shorts 분류와 Content ID 제한 | 프록시 CONNECT 403 |
-| https://support.google.com/youtube/answer/1722171?hl=en | MP4/H.264/AAC 등의 권장 인코딩 | 프록시 CONNECT 403 |
-| https://support.google.com/youtube/answer/14328491?hl=en | 사실적으로 변경·합성한 콘텐츠 공개 의무와 예외 | 프록시 CONNECT 403 |
+| https://developers.google.com/youtube/v3/docs/videos/insert | 공식 upload scope, quota 본문, 공개 범위 본문; 실제 계정 적용은 미검증 | Cloud CONNECT 403 / Windows HTTPS 200 |
+| https://developers.google.com/youtube/v3/docs/videos | 제목·설명·태그 한도, AI 표시 필드 | Cloud CONNECT 403 / Windows HTTPS 200 |
+| https://developers.google.com/youtube/v3/guides/auth/installed-apps | 공식 installed-app flow의 시스템 브라우저와 local redirect; 실제 인증 미실행 | Cloud CONNECT 403 / Windows HTTPS 200 |
+| https://developers.google.com/youtube/v3/determine_quota_cost | 업로드 요청 비용·기본 할당량 본문; 자동 요약과 수치 충돌 | Cloud CONNECT 403 / Windows HTTPS 200 |
+| https://support.google.com/youtube/answer/15424877?hl=en | 분류 날짜·길이·비율·음악 채널 및 저작권 조건 | Cloud CONNECT 403 / Windows HTTPS 200 |
+| https://support.google.com/youtube/answer/1722171?hl=en | MP4/H.264/AAC 등의 권장 인코딩 | Cloud CONNECT 403 / Windows HTTPS 200 |
+| https://support.google.com/youtube/answer/14328491?hl=en | 사실적으로 변경·합성한 콘텐츠 공개 의무와 예외 | Cloud CONNECT 403 / Windows HTTPS 200 |
+
+### 직접 읽은 본문의 조건
+
+- **텍스트:** Videos 본문은 제목 최대 100자, 설명 최대 5,000 bytes를 명시하며 둘 다 `<`와 `>`를 금지한다.
+  태그는 최대 500자다. 목록 구분 쉼표를 포함하며, 공백이 있는 태그는 따옴표 두 글자도 계산한다.
+  원문 예시는 `Foo-Baz`가 7자, `Foo Baz`가 9자라고 설명한다. 설명은 한글도 UTF-8 bytes로 검사해야 한다.
+- **Shorts:** 일반 채널은 `2024-10-15` 이후 업로드한 정방형 또는 세로형 영상 중 최대 3분을
+  Shorts로 분류한다는 본문을 확인했다. 공식 아티스트 채널 또는 음악 Content Owner와 연결된 채널은
+  동일 조건 중 1분 초과 영상에 대해 `2025-12-08` 이전 업로드를 long-form으로 유지하고,
+  그 날짜 이후 업로드를 Shorts로 분류한다는 별도 조건이 있다. 일반 조건을 모든 채널에 그대로 적용하지 않는다.
+- **저작권:** 1분을 초과하는 Short에 수동 claim을 포함한 active copyright claim이 있으면 전 세계에서
+  차단되어 재생·추천·수익화가 불가능하다는 본문을 확인했다. 길이만 맞춘다고 저작권이나 수익화를 통과하지 않는다.
+- **권장 인코딩:** MP4, H.264, AAC-LC(또는 Opus/Eclipsa Audio)를 권장한다.
+  24/25/30/48/50/60 fps 등이 가능하다고 안내한다.
+  세로형·정방형은 플레이어가 비율에 맞춰 조정한다. 이는 권장 인코딩이며 최종 게시 승인 보증이 아니다.
+- **AI 표시:** 도움말은 AI로 의미 있게 변경하거나 생성한 사실적인 콘텐츠의 공개를 요구한다.
+  비현실적인 콘텐츠나 오해를 유발하지 않는 사소한 편집에는 예외가 있고, 자막 생성도 공개가 필요 없는
+  예시로 나온다. 사람은 영상·오디오의 실제 변경 내용을 검토해야 하며 대본 생성 여부만으로 판단하지 않는다.
+- **OAuth:** installed-app 본문은 시스템 브라우저를 열고 local redirect URI를 사용하라고 설명하며,
+  사용자의 비밀번호를 앱에 제공하지 않고 scope를 통해 채널 업로드 권한을 얻는 흐름을 안내한다.
+  PKCE·토큰 저장·만료·취소의 실제 동작은 Phase 4B의 별도 구현·검증 대상이다.
+
+### quota·공개 범위의 문서 충돌
+
+`videos.insert` 본문의 인용은 다음과 같다.
+
+> “Quota impact: 100 calls per day. A call to this method has a quota cost of 1 unit in the Video Uploads quota bucket.”
+
+quota 계산 본문도 `search.list`와 `videos.insert` 각각 기본 하루 100회, 각각 1 quota/call,
+다른 endpoint의 합계 하루 10,000 units, Pacific Time 자정 초기화를 안내한다.
+그러나 동일 페이지 끝의 자동 요약에는 과거 `videos insert` 1,600 비용이 남아 있다.
+따라서 자동 요약을 최신 정책 본문으로 사용하지 않는다. 이 기본값을 실제 프로젝트 한도로 확정하지도 않는다.
+
+공개 범위 역시 `videos.insert` 본문은 “Videos uploaded from unverified API projects are not restricted to
+private viewing mode.”라고 쓰지만 Videos 페이지 첫 요약은 미검증 프로젝트의 private/audit 제한을 주장한다.
+두 문장을 같은 정책이라고 합치지 않는다. 실제 계정 설정·OAuth 앱 검증·프로젝트 감사 필요 여부·공개 업로드
+자격은 **NOT VERIFIED**이며 Phase 4B에서 현재 본문과 대상 프로젝트 상태를 다시 확인해야 한다.
+앱의 준비 descriptor는 보수적으로 `private`를 선택하고 Phase 4A에서는 전송하지 않는다.
 
 30/45/60초 1080×1920 MP4가 내부 영상 프로파일을 통과해도 **YouTube Shorts 분류를 보장하지 않는다**.
 `#Shorts`나 별도의 가상 업로드 API를 Shorts 분류 보증으로 사용하지 않는다.
@@ -97,9 +147,29 @@ Instagram Login과 Facebook Login의 권한명·계정 요구사항을 섞어서
 | 공통 publishing 문서 | https://developers.facebook.com/docs/instagram-platform/content-publishing | Reels `media_type`, 컨테이너 상태·유효기간, 분량·크기·프레임레이트·오디오·캡션·해시태그 한도, 현재 게시 제한 |
 | Meta AI 표시 정책 | https://about.fb.com/news/2024/04/metas-approach-to-labeling-ai-generated-content-and-manipulated-media/ | 사람이 신고해야 하는 생성·변경 미디어와 표시 방식, 최신 후속 정책 |
 
-위 다섯 URL 모두 `2026-10-13` 프록시 CONNECT 403으로 본문을 확인하지 못했다.
+위 다섯 URL 모두 Cloud에서는 `2026-10-13` 프록시 CONNECT 403으로 본문을 확인하지 못했다.
+Windows에서는 Instagram Login, 해당 publishing, Facebook Login publishing, 공통 publishing의
+개발 문서 4개가 모두 `redirect_not_allowed`로 차단되어 본문을 확보하지 못했다.
+OAuth 호스트로 이동하거나 로그인하지 않았고, 리다이렉트 허용 정책과 TLS 검증을 완화하지 않았다.
 기존 권한명 후보나 과거 게시 제한 수치를 곧바로 실행 설정으로 확정하지 않는다.
 Business SDK의 `is_ai_generated`를 Instagram Login 경로에서 실제로 적용할 수 있는지도 별도 검증한다.
+
+### Windows에서 읽은 Meta AI 정책 블로그
+
+[공식 Meta 정책 블로그](https://about.fb.com/news/2024/04/metas-approach-to-labeling-ai-generated-content-and-manipulated-media/)는
+Windows에서 HTTPS 200으로 읽었다. 페이지 날짜 행에는 `April 5, 2024`와 `October 23, 2025`가 함께
+표시되어 있다. 게시 경로와 최초 표시 날짜는 `2024-04-05`이고, 이 글의 후속 수정 내용을 포함한
+발췌를 확인했다. 이를 모든 `2026` Instagram API 요건의 최신 확인으로 확대하지 않는다.
+
+- 본문은 산업 표준 AI 신호를 감지하거나 이용자가 AI 생성 콘텐츠임을 자진 공개하면 영상·오디오·이미지에
+  `AI info` 라벨을 붙이는 방식을 설명한다. `2024-07-01` 수정 문구는 라벨 이름 변경을 명시한다.
+- 후속 수정 본문은 AI로 수정·편집만 된 콘텐츠의 `AI info`를 게시물 메뉴로 이동하고,
+  AI가 생성한 것으로 감지한 콘텐츠는 라벨을 계속 표시하며 산업 신호 또는 자진 공개 여부를 설명한다고 한다.
+  이 후속 단락의 시행 날짜나 API 로그인 경로별 자동 적용을 발췌만으로 추가 확정하지 않는다.
+- AI 라벨은 사실 확인이나 커뮤니티 정책 준수의 보증이 아니다. 본문은 정책 위반 콘텐츠는 AI 생성 여부와
+  관계없이 제거할 수 있고, 중요 사안에 대한 오해 위험이 높은 변경 미디어에 더 눈에 띄는 라벨을 붙일 수 있다고 설명한다.
+- 이번에 확인한 것은 공식 정책 설명이다. 계정별 공개 설정, 최신 후속 정책, `is_ai_generated`가 해당
+  Instagram Login 경로에서 적용되는 방식은 **NOT VERIFIED**로 남는다. 사람의 AI 표시 검토를 대체하지 않는다.
 
 ## Phase 4A 앱 준비 프로파일과 플랫폼 보증의 구분
 
@@ -112,10 +182,11 @@ Business SDK의 `is_ai_generated`를 Instagram Login 경로에서 실제로 적�
 Fake 성공은 **모의 실행 성공**으로만 기록하며 실제 SNS `SUCCESS`나 원격 게시 ID를 만들지 않는다.
 타임아웃으로 결과를 알 수 없으면 `UNKNOWN`으로 보존하고 자동 재시도하지 않는다.
 
-텍스트 예산도 **앱의 준비 프로파일**이다. 현재 Instagram용으로 제목·설명·해시태그를 합친
-캡션에 2,200자, 해시태그에 최대 30개를 적용한다. YouTube용 준비 텍스트 예산은 5,000자다.
-이 수치를 최신 공식 플랫폼 제한이라고 표시하지 않는다. 플랫폼이 사용하는 byte 수,
-태그별 계산 방식·현재 해시태그 정책은 공식 본문을 읽은 후 별도로 확인해야 한다.
+Instagram용 제목·설명·해시태그를 합친 캡션 2,200자와 최대 해시태그 30개는 **앱의 준비 프로파일**이며
+최신 Instagram 공식 제한이라고 표시하지 않는다. 현재 공식 캡션·해시태그 정책을 재확인해야 한다.
+YouTube는 확인한 공식 제목 100자·설명 5,000 UTF-8 bytes·태그 500자 규칙을 적용한다.
+추가로 앱의 제목 포함 준비 텍스트 5,000자·해시태그 30개 예산도 유지한다. 앱의 해시태그에는 공백을 허용하지
+않으므로 태그별 따옴표 비용은 생기지 않지만 목록 쉼표 비용은 계산한다.
 내부 검사를 통과해도 계정/API/정책 상태가 미검증이면 게시 가능 상태가 되지 않는다.
 
 ## OAuth 및 토큰 보호 설계
@@ -124,11 +195,11 @@ Fake 성공은 **모의 실행 성공**으로만 기록하며 실제 SNS `SUCCES
 
 - 공식 Instagram/YouTube Adapter에는 HTTP 게시 transport와 실행 가능한 OAuth callback이 없다.
   `connect()`/`publish()`는 사용자 승인 인수의 값과 관계없이 실제 연결·게시를 거부한다.
-- `Phase4AUnavailableCredentialVault`는 실제 access/refresh token의 저장·조회를 거부하는
+- `UnavailableCredentialVault`는 실제 access/refresh token의 저장·조회를 거부하는
   자격증명 저장소 경계다. GUI, 일반 DB, Git 파일, 실행 인수로 실제 토큰을 전달하지 않는다.
 - Fake credential vault는 테스트용 합성 토큰을 메모리에만 보관한다. 토큰 객체의 `repr`은
-  값을 숨기며 파일/DB/HTML로 직렬화하지 않는다. 이것은 Windows 비밀 저장소 검증이 아니다.
-- `PlatformAccount`에는 플랫폼, 익명 또는 로컬 계정 식별자, scope·상태·만료 시각과 같은
+  값을 숨기며 토큰 원문을 파일/DB/HTML로 직렬화하지 않는다. 이것은 Windows 비밀 저장소 검증이 아니다.
+- `PlatformAccount`에는 플랫폼, 로컬 이름/유형·scope·상태·연결 시각과 같은
   공개 가능한 메타데이터만 저장한다. 토큰을 저장할 경우의 향후 DB 값은 비밀 원문 대신
   전용 저장소의 불투명 참조만 사용해야 한다.
 - 만료·취소·인증 오류 상태에서는 검증을 차단한다. 현재 만료/취소 처리는 합성 데이터 테스트이며

@@ -202,5 +202,7 @@
     "Instagram current account qualifications/login-specific minimum OAuth scopes/media and posting limits",
     "Instagram Login applicability of is_ai_generated/upload_type",
     "Actual OAuth/token/API acceptance or actual publishing"
-  ]
+  ],
+  "verification_scope": "Initial Codex Cloud web access and official vendor GitHub artifacts; later Windows public-doc verification is separate.",
+  "followup_windows_evidence": "windows_official_docs.json"
 }
