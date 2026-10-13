@@ -3,5 +3,5 @@
 {% macro csrf_field() %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endmacro %}
 {% macro badge(status) %}<span class="badge {{ status }}">{{ {'success':'성공','partial':'부분 실패','failed':'실패','running':'수집 중','empty':'활성 출처 없음','interrupted':'중단','idle':'대기'}.get(status,status) }}</span>{% endmacro %}
 {% macro when(value) %}{{ value.strftime('%Y-%m-%d %H:%M UTC') if value else '미확인' }}{% endmacro %}
-<main><header class="topbar"><span>뉴스 인사이트 워크스페이스</span><span class="pill">PHASE 1</span></header>{% block content %}{% endblock %}</main>
+<main><noscript><p>폼 제출과 수집 상태 확인에는 JavaScript가 필요합니다. 브라우저 설정에서 활성화해 주세요.</p></noscript><header class="topbar"><span>뉴스 인사이트 워크스페이스</span><span class="pill">PHASE 1</span></header>{% block content %}{% endblock %}</main>
 </body></html>

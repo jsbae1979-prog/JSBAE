@@ -127,3 +127,11 @@ def test_diagnostic_rejects_secret_url_without_output():
     )
     assert result.returncode == 1
     assert sentinel not in result.stdout + result.stderr
+
+
+def test_form_fix_preserves_referrer_and_csp_policy(client):
+    for path in ("/", "/news", "/settings"):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert response.headers["Referrer-Policy"] == "no-referrer"
+        assert "form-action 'self'" in response.headers["Content-Security-Policy"]

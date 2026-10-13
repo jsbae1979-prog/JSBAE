@@ -275,11 +275,6 @@ def browser(
                 progress["context_origin"] = page.evaluate(
                     "({location:location.origin, window:window.origin})"
                 )
-                observed = []
-                page.on(
-                    "request",
-                    lambda req: observed.append(req.headers.get("origin")) if req.method == "POST" else None,
-                )
                 page.locator(".source-form input[name=name]").fill("CI synthetic")
                 page.locator(".source-form input[name=url]").fill("https://example.com/rss")
                 page.locator(".source-form input[name=permission]").check()
@@ -289,43 +284,45 @@ def browser(
                     page.locator(".source-form button").click()
                 status = response.value.status
                 progress.update(
-                    registration_status=status, registration_origin=observed[-1] if observed else None
+                    registration_status=status,
+                    registration_origin=response.value.request.all_headers().get("origin"),
                 )
-                if status == 403 and mode == "cloud" and observed[-1] == "null":
-                    result["GUI_browser_POST"] = "NOT VERIFIED: Cloud POST Origin:null rejected (403)"
-                    result["null_origin_security"] = "PASS"
-                    client = HTTP()
-                    client.post(
-                        "/settings/sources",
-                        {"name": "CI synthetic", "url": "https://example.com/rss", "permission": "true"},
-                    )
-                    client.post("/collection", {})
-                    assert client.done()["added"] == 3
-                else:
-                    assert status == 303, "GUI registration POST failed"
-                    progress["registration"] = "PASS"
-                    page.goto(BASE + "/settings")
-                    toggle = page.locator('form[action="/settings/sources/2/toggle"]')
-                    with page.expect_response(lambda r: r.request.method == "POST") as response:
-                        toggle.locator("button").click()
-                    progress["disable_status"] = response.value.status
-                    assert response.value.status == 303
-                    page.goto(BASE + "/settings")
-                    toggle = page.locator('form[action="/settings/sources/2/toggle"]')
-                    toggle.locator("input[name=permission]").check()
-                    with page.expect_response(lambda r: r.request.method == "POST") as response:
-                        toggle.locator("button").click()
-                    progress["enable_status"] = response.value.status
-                    assert response.value.status == 303
-                    page.goto(BASE)
-                    with page.expect_response(
+                assert status == 303, "GUI registration POST failed"
+                assert progress["registration_origin"] == BASE, "Browser must generate the real Origin"
+                progress["registration"] = "PASS"
+                page.locator(".source-row").filter(has_text="CI synthetic").wait_for()
+                page.wait_for_load_state("load")
+                toggle = page.locator('form[action="/settings/sources/2/toggle"]')
+                with page.expect_response(lambda r: r.request.method == "POST") as response:
+                    toggle.locator("button").click()
+                progress["disable_status"] = response.value.status
+                assert response.value.status == 303
+                page.locator('form[action="/settings/sources/2/toggle"] input[name=permission]').wait_for()
+                page.wait_for_load_state("load")
+                toggle = page.locator('form[action="/settings/sources/2/toggle"]')
+                toggle.locator("input[name=permission]").check()
+                with page.expect_response(lambda r: r.request.method == "POST") as response:
+                    toggle.locator("button").click()
+                progress["enable_status"] = response.value.status
+                assert response.value.status == 303
+                page.locator('form[action="/settings/sources/2/toggle"]').get_by_role(
+                    "button", name="비활성화", exact=True
+                ).wait_for()
+                page.wait_for_load_state("load")
+                page.goto(BASE)
+                with (
+                    page.expect_navigation(wait_until="domcontentloaded"),
+                    page.expect_response(
                         lambda r: r.request.method == "POST" and r.url.endswith("/collection")
-                    ) as response:
-                        page.locator("#collect-button").click()
-                    progress["collection_status"] = response.value.status
-                    assert response.value.status == 303
-                    assert HTTP().done()["added"] == 3
-                    result["GUI_browser_POST"] = "PASS (registration, disable/enable, collection)"
+                    ) as response,
+                ):
+                    page.locator("#collect-button").click()
+                progress["collection_status"] = response.value.status
+                assert response.value.status == 303
+                assert HTTP().done()["added"] == 3
+                page.get_by_text("한국 우주 기술 발사 현장 공개", exact=True).first.wait_for()
+                page.wait_for_load_state("load")
+                result["GUI_browser_POST"] = "PASS (registration, disable/enable, collection)"
                 assert counts(root)["news_articles"] == 3
                 progress["sqlite_count"] = 3
                 page.goto(BASE)

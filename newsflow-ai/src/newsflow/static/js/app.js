@@ -21,5 +21,45 @@ if (state) {
   }
   poll();
 }
-const collectionForm = button && button.closest('form');
-if (collectionForm) collectionForm.addEventListener('submit', () => { button.disabled = true; button.textContent = '수집 요청 중…'; });
+// no-referrer preserves external privacy but makes native navigation POST Origin:null.
+// Fetch in cors mode sends the browser's real Origin; server CSRF/Origin checks stay intact.
+for (const form of document.querySelectorAll('form[method="post"]')) {
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const target = new URL(form.action, window.location.href);
+    if (target.origin !== window.location.origin) return;
+    const submit = form.querySelector('button[type="submit"], button:not([type])');
+    const label = submit ? submit.textContent : '';
+    if (submit) { submit.disabled = true; submit.textContent = '처리 중…'; }
+    let alert = form.querySelector('[data-submit-error]');
+    if (!alert) {
+      alert = document.createElement('p');
+      alert.dataset.submitError = 'true';
+      alert.setAttribute('role', 'alert');
+      form.append(alert);
+    }
+    alert.textContent = '';
+    try {
+      const response = await fetch(target.href, {
+        method: 'POST', mode: 'cors', credentials: 'same-origin',
+        body: new URLSearchParams(new FormData(form))
+      });
+      if (!response.ok) {
+        const messages = {
+          403: '보안 검증에 실패했습니다. 새로고침 후 다시 시도하세요.',
+          409: '이미 실행 중이거나 중복된 요청입니다. 현재 상태를 확인하세요.',
+          422: '입력값과 필수 확인 항목을 확인하세요.'
+        };
+        alert.textContent = messages[response.status] || '요청을 처리하지 못했습니다. 실행 로그를 확인하세요.';
+        return;
+      }
+      const next = new URL(response.url);
+      if (next.origin !== window.location.origin) throw new Error('Unexpected redirect');
+      window.location.assign(next.href);
+    } catch (_) {
+      alert.textContent = '서버에 연결하지 못했습니다. 실행 상태를 확인하세요.';
+    } finally {
+      if (submit) { submit.disabled = false; submit.textContent = label; }
+    }
+  });
+}
