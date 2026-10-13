@@ -78,3 +78,13 @@ FFmpeg/ffprobe 버전과 반환 코드를 확인하고 ffprobe로 MP4/H.264/yuv4
 UI는 GET JSON으로 상태를 조회하고 완료 시 성공한 로컬 MP4만 FileResponse로 preview/download(Range 지원)합니다. 경로는 사용자 입력이 아닌 DB의 고유 basename만 사용합니다. 실패 원인은 안전한 단계/오류 종류/정수 종료 코드만 저장하며 stdout/stderr와 API 키는 로그에 넣지 않습니다. Fake는 simulated 상태와 playable=false로 실제 MP4와 구분합니다. 종료 시 cancel 신호/프로세스 kill/worker join으로 중단하며, 강제 종료 후 OS lock이 해제되면 running을 interrupted로 바꾸고 자동 재실행하지 않습니다. 원본 파일은 보존하고 앱 소유 임시 작업 폴더만 정리합니다.
 
 자료 폴더는 기존 사용자 root 안의 outputs/videos, render-tmp, assets입니다. 0001/0002의 기존 데이터/저장 위치는 유지합니다. 로그는 DB 작업 이력과 기존 로컬 실행 로그를 이용하며 raw FFmpeg stderr를 저장하지 않는 것이 민감정보 제거 정책입니다. 로컬 단일 사용자 도구로, 악성 동일 사용자 프로세스의 데이터 폴더 변조까지 방어하는 서비스 인증 구조는 아닙니다.
+
+## Phase 4A · SNS Publishing Foundation
+
+Publishing Studio routes → PublishingService (로컬 파일·독립 ffprobe·SHA256·사용자 검토·revision CAS) → additive 0004/PublishDraft·PlatformAccount·PublishValidation·PublishJob·PublishAttempt·PublishEvidence입니다. 실제 Publisher/OAuth 연결·콜백·게시 경로는 존재하지 않습니다. Instagram/YouTube adapter의 prepare는 메모리의 명세 후보만 작성하고 publish/connect는 승인 여부와 무관하게 거부합니다. 실제 외부 HTTP transport를 만들지 않았습니다.
+
+파일은 성공한 RenderJob의 고유 output basename으로만 접근하고 symlink/이동/빈 파일/2GiB 초과를 거부합니다. ffprobe는 file,pipe protocol whitelist와 mov demuxer, 제한시간·정제된 자식 환경으로 실행해 악성 playlist의 외부 요청을 차단합니다. 초안 시점 해시와 독립 스트림 검사를 비교하고 검증 전/후 변경을 감지합니다. 검증 저장은 draft revision 조건부 UPDATE로 stale 결과를 거부합니다. 모든 실제 준비 상태는 blocked이며 계정/API/공식 정책 확인 전 ready/success로 승격할 수 없습니다.
+
+Fake 시뮬레이션은 최신 로컬 검증 및 명시적 승인만으로 테스트하고 실제 어댑터를 허용하지 않습니다. 플랫폼/대상 계정/media hash UNIQUE identity와 conditional revision UPDATE로 먼저 writer reservation/job/attempt를 저장한 뒤 adapter를 한 번 호출합니다. 수정 후에도 같은 영상의 같은 대상은 재실행하지 않습니다. 실패/만료/결과 불명·예외/불완전 실행은 unknown 등으로 관리하고 성공으로 추정하지 않으며 자동 재시도하지 않습니다. repository의 명시적 recovery가 불완전 Fake를 unknown으로 표시할 수 있지만 GUI에 시뮬레이션 실행/복구 경로는 없습니다. 요청 revision/검증 ID/메타데이터 snapshot을 evidence에 보존해 향후 수정과 구분합니다.
+
+토큰값 DB 컬럼이나 HTML 입력이 없습니다. credential_ref는 향후 비밀 저장소의 opaque 식별자용이며 지금은 NULL입니다. TokenBundle은 SecretStr/ValidationError 입력 마스킹이고 FakeCredentialVault는 휘발성/만료·취소 검증만 지원합니다. 실제 Windows 암호화/OS vault와 OAuth code exchange는 Phase 4B 승인 후 구현해야 하며 UnavailableCredentialVault로 차단합니다. 공식 웹 접근 불가 항목과 공식 GitHub 스키마/SDK에서 확인한 사실, 앱 준비 정책을 구분합니다. API 연구 URL은 evidence에 저장만 하며 renderer/publisher가 자동 fetch하지 않습니다.

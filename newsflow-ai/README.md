@@ -1,16 +1,16 @@
-# NewsFlow AI — Windows 11 · Phase 3
+# NewsFlow AI — Windows 11 · Phase 4A
 
 공개 RSS 수집·중복 제거·내부 추천 평가를 제공하는 한국어 로컬 웹 대시보드입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
-현재 Phase 3는 RSS 수집, AI 뉴스 분석·대본 초안과 FFmpeg 영상 제작을 제공합니다. 실제 SNS 게시·계정 연결·주기 스케줄러는 제공하지 않습니다.
+현재 Phase 4A는 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작과 SNS 게시 준비를 제공합니다. 실제 SNS 게시·계정 연결·주기 스케줄러는 제공하지 않습니다.
 
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 3 검토 브랜치 `feat/newsflow-phase3`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 4A 검토 브랜치 `feat/newsflow-phase4a`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase3 https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase4a https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -31,7 +31,7 @@ Windows EXE Installer는 제공하지 않습니다. `run.bat`의 실제 Windows 
 
 ```powershell
 # JSBAE 저장소 루트에서
-git switch feat/newsflow-phase3
+git switch feat/newsflow-phase4a
 git pull --ff-only
 cd newsflow-ai
 .\run.bat
@@ -239,3 +239,21 @@ python tools/ci_video_validation.py --output validation-output
 ```
 
 별도 `newsflow-phase3-windows.yml`은 `feat/newsflow-phase3`에만 실행하며 실제 FFmpeg 짧은 샘플 및 ffprobe, Windows TTS(설치된 음성 있을 때), 전체 회귀, 실제 BAT와 Windows Google Chrome(Chromium 기반)에서 30초 영상 제작/미리보기/다운로드를 검증합니다. Cloud는 설치 Chromium을 사용합니다. 샘플 생성·코덱 검증은 30/45/60초 콘텐츠의 음성·내용·영상 품질 검수를 대신하지 않습니다. 실제 RSS/AI API, 사용자 Windows 11 PC, 한국어 TTS 발음과 전체 길이 최종 품질은 별도 검증 사항입니다. [Phase 3 보고서](docs/reports/phase3_report.md). Phase 4/SNS 계정 연결·게시·main 병합은 수행하지 않습니다.
+
+## Phase 4A · Publishing Studio 준비 기능
+
+Video Studio의 검증된 완성 MP4에서 **게시 준비**를 선택합니다. Instagram/YouTube, 제목·설명·태그와 대상 계정 메타데이터를 선택하고 출처·저작권·내용 검토 및 AI 표시 판단을 저장할 수 있습니다. 초안 수정은 revision 충돌을 감지하고 재검증을 요구합니다. 검증은 파일 존재·SHA256·독립 ffprobe·코덱·해상도·길이와 로컬 입력/사용자 검토 여부를 기록합니다.
+
+**이번 단계에는 실제 SNS 게시·OAuth 계정 연결·토큰 입력 버튼/경로가 없습니다.** 계정 저장은 로컬 이름·유형만 보관하며 실제 계정 ID나 인증 토큰이 아닙니다. 모든 초안은 실계정/API/최신 정책 미확인으로 차단됩니다. 사용자 승인 대기는 향후 별도 단계의 최종 검토를 뜻하며, 로컬 항목 PASS가 실제 게시 승인을 의미하지 않습니다. 환경변수나 승인 인수로 실제 Publisher 차단을 해제할 수 없습니다.
+
+YouTube 업로드 설계는 공식 `videos.insert` 기반이며 Shorts 전용 임의 API를 만들지 않았습니다. Shorts 자동 분류는 업로드와 별도 플랫폼 결정입니다. Instagram은 공식 SDK의 media/media_publish 구조를 준비했으나 로그인 경로별 URL 또는 resumable 제공 방식은 재검토 전 미구현입니다. 로컬 MP4를 공개 URL에 노출하거나 서버에 전송하지 않습니다. [공식 자료 조사와 확인 날짜](docs/publishing_platforms.md)를 참고하세요. 일부 공식 웹 문서는 Cloud 프록시 403으로 최신 자격/제한을 확인하지 못했고, 공식 Google discovery/Meta SDK의 검증 범위와 구분해 기록했습니다.
+
+앱 준비 프로파일은 1080×1920 H.264/AAC MP4, 30/45/60초, 최대 2GiB 파일, 제목 100자, 설명·태그 포함 Instagram 2200자/YouTube 5000자, 태그 최대 30개입니다. 이 텍스트/태그 기준을 최신 공식 플랫폼 한도로 주장하지 않습니다. Phase 4B 전에 공식 정책을 재확인해야 합니다. AI 표시 선택은 실제적인 합성/변조 여부에 대한 사람의 검토를 요구하며 YouTube containsSyntheticMedia와 Meta is_ai_generated는 매핑 후보입니다. 모든 AI 대본에 자동으로 의무 표시가 확정됐다는 뜻이 아닙니다.
+
+Publisher Protocol·Instagram/YouTube 차단 어댑터·Fake Publisher, PublishJobRepository를 제공합니다. Fake는 테스트/개발 API에서만 명시적 승인으로 실행하며 simulated/failed/expired/unknown을 저장합니다. 동일 플랫폼/대상 계정/영상 SHA256 식별자는 제목 수정이나 재시작 후에도 재호출하지 않습니다. 결과 불명은 실제 성공이 아니며 자동 재시도하지 않습니다. GUI에는 Fake 게시 실행 버튼도 없습니다.
+
+DB 0004는 PublishDraft/PlatformAccount/PublishValidation/PublishJob/PublishAttempt/PublishEvidence 테이블을 추가합니다. 원문 출처/미디어 해시/검증 revision과 Fake 실행 메타데이터를 보존하고 기존 0001~0003은 수정하지 않습니다. 기존 DB는 기동 시 업그레이드되므로 업데이트 전 백업하고, 0004 DB를 이전 코드로 운영하지 마세요. 원본 렌더 시점의 해시가 없는 기존 파일은 초안 생성 시점부터 해시 기준을 세웁니다. 파일 해시/ffprobe가 사실·저작권 검증을 보장하지 않습니다.
+
+인증 설계는 최소 OAuth scope·state·PKCE·정확한 콜백·만료/취소 상태·별도 Windows Credential Manager/DPAPI 보관을 다룹니다. 실제 OAuth/비밀 저장소는 **NOT VERIFIED/미구현**이며 UnavailableCredentialVault가 차단합니다. Fake vault는 테스트용 메모리/SecretStr 마스킹만 제공하고 디스크/Git/HTML에 토큰을 넣지 않습니다. [Phase 4A 보고서](docs/reports/phase4a_report.md).
+
+Phase 4A 브랜치 `feat/newsflow-phase4a`와 별도 Windows workflow에서 기존 회귀·BAT·영상 제작에 더해 Publishing 초안 생성·수정·반복 검증·모바일·재시작 보존, 게시 job/attempt 0개와 외부 브라우저 요청 0건을 검사합니다. 실계정 연결·실제 업로드·Phase 4B·main 병합은 사용자 승인 전 금지입니다.

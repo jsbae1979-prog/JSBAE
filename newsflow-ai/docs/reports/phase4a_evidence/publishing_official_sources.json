@@ -1,0 +1,206 @@
+{
+  "checked_at_utc": "2026-10-13",
+  "scope": "Read-only official document and official vendor repository research. No SNS authentication or publishing requests.",
+  "sns_login_requests": 0,
+  "sns_publish_requests": 0,
+  "network_configuration_changes": 0,
+  "official_web_pages": [
+    {
+      "key": "yt_upload",
+      "url": "https://developers.google.com/youtube/v3/docs/videos/insert",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "yt_resource",
+      "url": "https://developers.google.com/youtube/v3/docs/videos",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "yt_oauth",
+      "url": "https://developers.google.com/youtube/v3/guides/auth/installed-apps",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "yt_shorts",
+      "url": "https://support.google.com/youtube/answer/15424877?hl=en",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "yt_encoding",
+      "url": "https://support.google.com/youtube/answer/1722171?hl=en",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "yt_ai",
+      "url": "https://support.google.com/youtube/answer/14328491?hl=en",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "yt_quota",
+      "url": "https://developers.google.com/youtube/v3/determine_quota_cost",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "ig_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "ig_publish",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "ig_fb",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login/content-publishing",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "ig_reels",
+      "url": "https://developers.facebook.com/docs/instagram-platform/content-publishing",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    },
+    {
+      "key": "meta_ai",
+      "url": "https://about.fb.com/news/2024/04/metas-approach-to-labeling-ai-generated-content-and-manipulated-media/",
+      "status": null,
+      "error_type": "URLError",
+      "verification": "NOT VERIFIED: official web page body unavailable",
+      "failure": "Existing Cloud proxy CONNECT 403 Forbidden (no network settings changed)"
+    }
+  ],
+  "official_repository_sources": [
+    {
+      "official_repository": "https://github.com/googleapis/google-api-python-client",
+      "url": "https://github.com/googleapis/google-api-python-client/blob/main/googleapiclient/discovery_cache/documents/youtube.v3.json",
+      "path": "googleapiclient/discovery_cache/documents/youtube.v3.json",
+      "git_blob_sha1": "19f8ac1304cb095521f751c5c13ca0fad070af4d",
+      "content_sha256": "b4260c53a3f7dc63e0161552be461de756073249e00861dfac94528702ab58d4",
+      "verification": "PASS: public official source content read through GitHub API",
+      "verified_fields": {
+        "revision": "20261001",
+        "method": "youtube.videos.insert",
+        "httpMethod": "POST",
+        "path": "youtube/v3/videos",
+        "supportsMediaUpload": true,
+        "mediaMaxBytes": 274877906944,
+        "uploadScope": "https://www.googleapis.com/auth/youtube.upload",
+        "syntheticMediaField": "VideoStatus.containsSyntheticMedia boolean",
+        "shorts_specific_upload_method_in_read_discovery": false
+      },
+      "latest_related_file_commit": {
+        "sha": "19fd51d1d18446206091a21eec763057d032c2b3",
+        "date": "2026-10-06T07:50:18Z"
+      }
+    },
+    {
+      "official_repository": "https://github.com/youtube/api-samples",
+      "url": "https://github.com/youtube/api-samples/blob/master/python/upload_video.py",
+      "path": "python/upload_video.py",
+      "git_blob_sha1": "0b52bc36d9411728b1b83e1553b0c8b7588822b8",
+      "content_sha256": "67adfd43449f86327f0653c8a061789414deaa429b989bbeb0da0393b2220b64",
+      "verification": "PASS: public official source content read through GitHub API",
+      "verified_fields": {
+        "scope": "https://www.googleapis.com/auth/youtube.upload",
+        "method": "youtube.videos().insert",
+        "mediaUpload": "MediaFileUpload(..., resumable=True)",
+        "warning": "Legacy example; not a current OAuth UI implementation reference"
+      },
+      "latest_related_file_commit": {
+        "date": "2017-10-27T19:09:38Z",
+        "sha": "d45d4fe55abb3b23b8e94bd07edf0ce317c24b7c",
+        "url": "https://github.com/youtube/api-samples/commit/d45d4fe55abb3b23b8e94bd07edf0ce317c24b7c"
+      }
+    },
+    {
+      "official_repository": "https://github.com/facebook/facebook-python-business-sdk",
+      "url": "https://github.com/facebook/facebook-python-business-sdk/blob/main/facebook_business/adobjects/iguser.py",
+      "path": "facebook_business/adobjects/iguser.py",
+      "git_blob_sha1": "7013f3abbec8213f470d5416bf7c45ec739642fd",
+      "content_sha256": "591390f8d11e39da80e65e843e9d660d20f9aa962eda0b107c6035ee100ee666",
+      "verification": "PASS: public official source content read through GitHub API",
+      "verified_fields": {
+        "create_media": {
+          "method": "POST",
+          "endpoint": "/media",
+          "parameters": [
+            "caption",
+            "media_type",
+            "video_url",
+            "upload_type",
+            "is_ai_generated"
+          ]
+        },
+        "create_media_publish": {
+          "method": "POST",
+          "endpoint": "/media_publish",
+          "parameter": "creation_id"
+        },
+        "content_publishing_limit": {
+          "method": "GET",
+          "endpoint": "/content_publishing_limit"
+        },
+        "warning": "SDK field existence does not verify account eligibility, scopes, numerical limits or Instagram Login applicability"
+      },
+      "latest_related_file_commit": {
+        "sha": "788f363d15b1269ab5efb7cd00fb5e3b133cd99b",
+        "date": "2026-08-25T06:16:51Z"
+      }
+    },
+    {
+      "official_repository": "https://github.com/facebook/facebook-python-business-sdk",
+      "url": "https://github.com/facebook/facebook-python-business-sdk/blob/main/facebook_business/adobjects/contentpublishinglimitresponse.py",
+      "path": "facebook_business/adobjects/contentpublishinglimitresponse.py",
+      "git_blob_sha1": "bdcabfe0ab4eefdf9f53a7752f029fac85e99642",
+      "content_sha256": "122b917b768a7b20ca5da923464293af8b6da06613818c14488bc1d0d58251ea",
+      "verification": "PASS: public official source content read through GitHub API",
+      "verified_fields": {
+        "fields": [
+          "config",
+          "quota_usage"
+        ],
+        "numerical_limit": "NOT VERIFIED; no value supplied by this model"
+      }
+    }
+  ],
+  "not_verified": [
+    "Shorts current classification/duration policy",
+    "YouTube current title/description/tag/quota limits and API project public-upload audit",
+    "Instagram current account qualifications/login-specific minimum OAuth scopes/media and posting limits",
+    "Instagram Login applicability of is_ai_generated/upload_type",
+    "Actual OAuth/token/API acceptance or actual publishing"
+  ]
+}

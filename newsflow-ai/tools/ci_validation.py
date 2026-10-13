@@ -15,7 +15,7 @@ from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.error import URLError
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_opener
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -145,6 +145,14 @@ def counts(root: Path) -> dict:
         }
 
 
+def publishing_counts(root: Path) -> dict[str, int]:
+    with closing(sqlite3.connect(root / "newsflow.db")) as connection:
+        return {
+            name: connection.execute(f"SELECT count(*) FROM {name}").fetchone()[0]
+            for name in ("publish_drafts", "publish_validations", "publish_jobs", "publish_attempts")
+        }
+
+
 def seed(root: Path) -> None:
     from fastapi.testclient import TestClient
 
@@ -255,6 +263,7 @@ def production(mode: str, root: Path, env: dict[str, str], trace: list[str]) -> 
 def browser(
     mode: str, root: Path, env: dict[str, str], output: Path, executable: str | None, progress: dict
 ) -> dict:
+    from playwright.sync_api import Request as BrowserRequest
     from playwright.sync_api import sync_playwright
 
     process = start([sys.executable, str(ROOT / "tools/ci_fixture_server.py"), "--data-dir", str(root)], env)
@@ -275,6 +284,16 @@ def browser(
             try:
                 page = instance.new_page(viewport={"width": 1440, "height": 1000})
                 errors = []
+                external_request_origins: set[str] = set()
+
+                def inspect_request(request: BrowserRequest) -> None:
+                    # The synthetic workflow uses only the local GUI. Never disclose URL queries.
+                    url = urlsplit(request.url)
+                    origin = f"{url.scheme}://{url.netloc}"
+                    if url.scheme in {"http", "https"} and origin != BASE:
+                        external_request_origins.add(origin)
+
+                page.on("request", inspect_request)
                 page.on("pageerror", lambda error: errors.append(str(error)))
                 page.goto(BASE + "/settings")
                 progress["context_origin"] = page.evaluate(
@@ -432,8 +451,95 @@ def browser(
                 result["Video_Studio_POST_preview_download"] = (
                     "PASS (real 30s MP4; offline silent audio; human quality not verified)"
                 )
+                page.goto(BASE + "/publishing?render_job_id=1")
+                create = page.locator("#publish-create")
+                create.locator("select[name=platform]").select_option("youtube")
+                create.locator("input[name=title]").fill("합성 게시 준비 초안")
+                create.locator("textarea[name=description]").fill(
+                    "합성 자료로 생성한 게시 준비 검증용 영상입니다. 실제 게시하지 않습니다."
+                )
+                create.locator("input[name=hashtags]").fill("#뉴스 #합성")
+                for field in ("content_reviewed", "copyright_confirmed", "sources_confirmed"):
+                    create.locator(f"input[name={field}]").check()
+                create.locator("select[name=ai_disclosure]").select_option("disclose")
+                with (
+                    page.expect_navigation(wait_until="domcontentloaded"),
+                    page.expect_response(
+                        lambda r: r.request.method == "POST" and r.url.endswith("/publishing/drafts")
+                    ) as response,
+                ):
+                    create.locator("button[type=submit]").click()
+                assert response.value.status == 303, "publishing draft create POST failed"
+                assert response.value.request.all_headers().get("origin") == BASE
+                progress["publishing_create_status"] = response.value.status
+                page.wait_for_url("**/publishing?draft_id=1")
+                edit = page.locator("#publish-edit")
+                edit.locator("input[name=title]").fill("합성 게시 준비 수정 초안")
+                with (
+                    page.expect_navigation(wait_until="domcontentloaded"),
+                    page.expect_response(
+                        lambda r: r.request.method == "POST" and r.url.endswith("/publishing/drafts/1")
+                    ) as response,
+                ):
+                    edit.locator("button[type=submit]").click()
+                assert response.value.status == 303, "publishing draft edit POST failed"
+                assert response.value.request.all_headers().get("origin") == BASE
+                progress["publishing_edit_status"] = response.value.status
+                page.locator("#publish-edit input[name=title]").wait_for()
+                assert page.locator("#publish-edit input[name=title]").input_value() == (
+                    "합성 게시 준비 수정 초안"
+                )
+                with (
+                    page.expect_navigation(wait_until="domcontentloaded"),
+                    page.expect_response(
+                        lambda r: r.request.method == "POST"
+                        and r.url.endswith("/publishing/drafts/1/validate")
+                    ) as response,
+                ):
+                    page.locator("#publish-validate button[type=submit]").click()
+                assert response.value.status == 303, "publishing validation POST failed"
+                assert response.value.request.all_headers().get("origin") == BASE
+                progress["publishing_validate_status"] = response.value.status
+                readiness = page.locator("#publish-readiness")
+                readiness.wait_for()
+                assert readiness.get_attribute("data-state") == "blocked", (
+                    "unconnected account must block publishing readiness"
+                )
+                with (
+                    page.expect_navigation(wait_until="domcontentloaded"),
+                    page.expect_response(
+                        lambda r: r.request.method == "POST"
+                        and r.url.endswith("/publishing/drafts/1/validate")
+                    ) as response,
+                ):
+                    page.locator("#publish-validate button[type=submit]").click()
+                assert response.value.status == 303, "repeated publishing validation POST failed"
+                assert response.value.request.all_headers().get("origin") == BASE
+                page.locator('#publish-readiness[data-state="blocked"]').wait_for()
+                stored = publishing_counts(root)
+                assert stored["publish_drafts"] == 1
+                assert stored["publish_validations"] == 2
+                assert stored["publish_jobs"] == stored["publish_attempts"] == 0, (
+                    "draft validation must not create publishing jobs or attempts"
+                )
+                result["publishing_SQLite_counts"] = stored
+                safety = json.loads(HTTP().get("/api/publishing/safety"))
+                assert safety == {
+                    "real_publish_calls": 0,
+                    "real_oauth_calls": 0,
+                    "mode": "foundation",
+                    "external_execution_enabled": False,
+                }, "foundation must keep real SNS and OAuth execution disabled"
+                result["Publishing_Studio_create_edit_validate_POST"] = (
+                    "PASS (unconnected account blocked; approval pending; no real publishing)"
+                )
+                result["publishing_safety"] = safety
+                page.screenshot(path=str(output / "publishing-studio.png"), full_page=True)
                 page.set_viewport_size({"width": 390, "height": 844})
-                for path in ("/", "/news", "/news/1", "/settings", "/ai?draft_id=1", "/video?job_id=1"):
+                for path in (
+                    "/", "/news", "/news/1", "/settings", "/ai?draft_id=1", "/video?job_id=1",
+                    "/publishing?draft_id=1",
+                ):
                     page.goto(BASE + path)
                     overflow = page.evaluate("document.documentElement.scrollWidth > innerWidth")
                     progress["mobile_last_path"] = path
@@ -441,6 +547,8 @@ def browser(
                     assert not overflow
                 page.screenshot(path=str(output / "mobile.png"), full_page=True)
                 assert not errors, "browser page error"
+                assert not external_request_origins, "synthetic GUI must never contact external origins"
+                result["browser_external_request_origins"] = []
                 result.update(
                     GUI_render_search_detail_mobile="PASS", GUI_synthetic_RSS_store="PASS", article_count=3
                 )
@@ -456,6 +564,12 @@ def browser(
         assert "합성 검토용 수정 대본" in HTTP().get("/ai?draft_id=1").decode()
         assert json.loads(HTTP().get("/api/video/jobs/1"))["status"] == "success"
         assert len(HTTP().get("/video/jobs/1/file")) > 1000
+        publishing = HTTP().get("/publishing?draft_id=1").decode()
+        assert "합성 게시 준비 수정 초안" in publishing
+        assert 'data-state="blocked"' in publishing
+        assert publishing_counts(root) == result["publishing_SQLite_counts"]
+        assert json.loads(HTTP().get("/api/publishing/safety")) == result["publishing_safety"]
+        result["Publishing_draft_validation_restart_persistence"] = "PASS"
         result["Video_job_file_restart_persistence"] = "PASS"
         result["AI_draft_restart_persistence"] = "PASS"
         result["fixture_server_restart_persistence"] = "PASS"
