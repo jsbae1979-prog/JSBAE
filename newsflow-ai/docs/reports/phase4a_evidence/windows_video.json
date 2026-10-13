@@ -1,0 +1,49 @@
+{
+  "real_RSS": "NOT VERIFIED",
+  "real_AI_API": "NOT VERIFIED",
+  "full_30_45_60_quality": "NOT VERIFIED (short synthetic samples; no human quality review)",
+  "Windows11_user_PC": "NOT VERIFIED",
+  "sample_MP4": "PASS",
+  "sample_file": "sample-3s-fdef85ba6ad641b7a705376ef7dbe3d0.mp4",
+  "sample_metadata": {
+    "adapter": "ffmpeg",
+    "playable": true,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "width": 1080,
+    "height": 1920,
+    "duration": 3.021029,
+    "expected_duration": 3,
+    "audio_channels": 2,
+    "bytes": 56520,
+    "ffmpeg_version": "7.1.1-essentials_build-www.gyan.dev"
+  },
+  "Korean_subtitle_raster": "PASS (pinned/installed Korean font)",
+  "scene_transition": "PASS (cuts)",
+  "Offline_TTS": "PASS (silent PCM -> AAC; not spoken voice)",
+  "progress": [
+    5,
+    35,
+    60,
+    85,
+    95
+  ],
+  "Windows_TTS": "PASS (installed SAPI voice -> WAV -> MP4 audio)",
+  "Windows_TTS_speech_seconds": 1.51,
+  "Windows_TTS_sample_metadata": {
+    "adapter": "ffmpeg",
+    "playable": true,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "width": 1080,
+    "height": 1920,
+    "duration": 5.021029,
+    "expected_duration": 5,
+    "audio_channels": 2,
+    "bytes": 46855,
+    "ffmpeg_version": "7.1.1-essentials_build-www.gyan.dev"
+  },
+  "Windows_TTS_sample_file": "sample-voice-5s-14205be8d8624454ad60a1235c947ea0.mp4",
+  "Windows_TTS_quality": "NOT VERIFIED (no human listening; Korean pronunciation not verified)",
+  "outcome": "PASS with explicit unverified items"
+}

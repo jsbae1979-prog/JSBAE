@@ -1,0 +1,228 @@
+{
+  "run_id": 38485460702,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38485460702",
+  "head_sha": "7d5b7052f9afe82dbc83dead1df5ebd3eeb9b87b",
+  "branch": "feat/newsflow-phase4a",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-10-13T23:38:23Z",
+  "updated_at": "2026-10-13T23:42:42Z",
+  "evidence_source": "GitHub check-run structured annotations; official-doc gzip chunks reconstructed and SHA256 verified",
+  "official_docs_export": {
+    "run": "COMPLETED; page verification is reported separately",
+    "encoding": "gzip-base64-utf8",
+    "payload_sha256": "67e3c84a8ae23d53ebbf6d5530757439741448c5dd9b44a9510ade29cf4e39ed",
+    "sha256_applies_to": "decompressed UTF-8 JSON bytes",
+    "chunks": 7,
+    "annotation_excerpt_cap_characters_per_page": 6000,
+    "trimmed_page_keys": [],
+    "pages": [
+      {
+        "key": "yt_upload",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "yt_resource",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "yt_oauth",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "yt_shorts",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "yt_encoding",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "yt_ai",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "yt_quota",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "ig_login",
+        "status_code": null,
+        "transport": "NOT VERIFIED",
+        "content": "NOT VERIFIED",
+        "failure_kind": "redirect_not_allowed"
+      },
+      {
+        "key": "ig_publish",
+        "status_code": null,
+        "transport": "NOT VERIFIED",
+        "content": "NOT VERIFIED",
+        "failure_kind": "redirect_not_allowed"
+      },
+      {
+        "key": "ig_fb",
+        "status_code": null,
+        "transport": "NOT VERIFIED",
+        "content": "NOT VERIFIED",
+        "failure_kind": "redirect_not_allowed"
+      },
+      {
+        "key": "ig_reels",
+        "status_code": null,
+        "transport": "NOT VERIFIED",
+        "content": "NOT VERIFIED",
+        "failure_kind": "redirect_not_allowed"
+      },
+      {
+        "key": "meta_ai",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "id": 115597899844,
+      "name": "windows-validation",
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-13T23:38:27Z",
+          "completed_at": "2026-10-13T23:38:29Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-13T23:38:29Z",
+          "completed_at": "2026-10-13T23:38:47Z"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-13T23:38:47Z",
+          "completed_at": "2026-10-13T23:38:47Z"
+        },
+        {
+          "name": "Install development and browser dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-13T23:38:47Z",
+          "completed_at": "2026-10-13T23:39:36Z"
+        },
+        {
+          "name": "Prepare Chromium-based Google Chrome for MP4 preview",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-13T23:39:36Z",
+          "completed_at": "2026-10-13T23:39:36Z"
+        },
+        {
+          "name": "Prepare real FFmpeg and pinned Korean font",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-13T23:39:36Z",
+          "completed_at": "2026-10-13T23:40:03Z"
+        },
+        {
+          "name": "Actual short MP4 ffprobe and local TTS",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-13T23:40:03Z",
+          "completed_at": "2026-10-13T23:40:15Z"
+        },
+        {
+          "name": "Read-only public official policy documentation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-13T23:40:15Z",
+          "completed_at": "2026-10-13T23:40:22Z"
+        },
+        {
+          "name": "All offline regression tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-13T23:40:22Z",
+          "completed_at": "2026-10-13T23:41:25Z"
+        },
+        {
+          "name": "Actual BAT, persistence and Publishing Studio GUI POST",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-13T23:41:25Z",
+          "completed_at": "2026-10-13T23:42:35Z"
+        },
+        {
+          "name": "Upload synthetic validation results",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-13T23:42:36Z",
+          "completed_at": "2026-10-13T23:42:37Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-10-13T23:42:37Z",
+          "completed_at": "2026-10-13T23:42:38Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-10-13T23:42:38Z",
+          "completed_at": "2026-10-13T23:42:40Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-10-13T23:42:40Z",
+          "completed_at": "2026-10-13T23:42:40Z"
+        }
+      ]
+    }
+  ]
+}

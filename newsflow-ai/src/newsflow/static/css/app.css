@@ -4,3 +4,4 @@
 
 .ai-panel textarea{display:block;width:100%;min-height:6rem;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px;margin:6px 0 14px;font:inherit}.ai-panel fieldset{border:1px solid var(--border);border-radius:8px;margin:16px 0;padding:16px;min-width:0}.ai-panel input[type=checkbox]{display:inline;width:auto}.ai-choice small{display:inline}
 .video-preview{display:block;width:100%;max-width:360px;aspect-ratio:9/16;background:#000;border-radius:10px;margin:18px auto}progress{width:100%;accent-color:var(--accent)}
+.publish-check{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}.publish-check>div{min-width:0}.publish-check p{margin:4px 0;overflow-wrap:anywhere}.publish-check strong{overflow-wrap:anywhere}.publish-check .badge{flex-shrink:0}.publish-check:last-child{border-bottom:0}

@@ -19,6 +19,7 @@ from .config import Settings
 from .db.models import AppSetting, IntelligenceRun, NewsSource, utcnow
 from .db.session import make_engine, migrate, session_factory
 from .gui.intelligence_routes import router as intelligence_router
+from .gui.publishing_routes import router as publishing_router
 from .gui.routes import router
 from .gui.video_routes import router as video_router
 from .news.collector import Collector
@@ -125,6 +126,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     app.include_router(router)
     app.include_router(intelligence_router)
     app.include_router(video_router)
+    app.include_router(publishing_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
     return app
 

@@ -1,6 +1,6 @@
 # NewsFlow AI development rules
 
-- Phase 3 is authorized. Do not begin Phase 4, merge main, or publish SNS without explicit user approval.
+- Phase 4A publishing preparation is authorized. Do not connect real SNS accounts, publish, begin Phase 4B, or merge main without explicit user approval.
 - Python 3.12; production target is Windows 11 only. Codex Cloud is for development/tests; no Linux deployment, Docker, or WSL features.
 - Keep GUI, services, persistence, and external adapters separate.
 - Never commit API keys, OAuth tokens, personal data, local databases, or session secrets.

@@ -187,3 +187,79 @@ class RenderJob(Base):
     metadata_json: Mapped[dict] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class PlatformAccount(Base):
+    __tablename__ = "platform_accounts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    platform: Mapped[str] = mapped_column(String(20))
+    label: Mapped[str] = mapped_column(String(100))
+    account_type: Mapped[str] = mapped_column(String(40))
+    status: Mapped[str] = mapped_column(String(30), default="not_connected")
+    scopes: Mapped[list] = mapped_column(JSON, default=list)
+    credential_ref: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    api_ready: Mapped[bool] = mapped_column(Boolean, default=False)
+    connected_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class PublishDraft(Base):
+    __tablename__ = "publish_drafts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    render_job_id: Mapped[int] = mapped_column(ForeignKey("render_jobs.id"))
+    platform: Mapped[str] = mapped_column(String(20))
+    title: Mapped[str] = mapped_column(String(100))
+    description: Mapped[str] = mapped_column(Text)
+    hashtags: Mapped[list] = mapped_column(JSON)
+    account_id: Mapped[int | None] = mapped_column(ForeignKey("platform_accounts.id"), nullable=True)
+    sources: Mapped[dict] = mapped_column(JSON)
+    media_sha256: Mapped[str] = mapped_column(String(64))
+    content_reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    copyright_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    sources_confirmed: Mapped[bool] = mapped_column(Boolean, default=False)
+    ai_disclosure: Mapped[str] = mapped_column(String(30), default="unreviewed")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    state: Mapped[str] = mapped_column(String(30), default="unvalidated")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class PublishValidation(Base):
+    __tablename__ = "publish_validations"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    draft_id: Mapped[int] = mapped_column(ForeignKey("publish_drafts.id"))
+    draft_revision: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(30))
+    results: Mapped[list] = mapped_column(JSON)
+    media_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class PublishJob(Base):
+    __tablename__ = "publish_jobs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    draft_id: Mapped[int] = mapped_column(ForeignKey("publish_drafts.id"))
+    platform: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(30))
+    message: Mapped[str] = mapped_column(String(500))
+    idempotency_key: Mapped[str] = mapped_column(String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class PublishAttempt(Base):
+    __tablename__ = "publish_attempts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("publish_jobs.id"))
+    status: Mapped[str] = mapped_column(String(30))
+    message: Mapped[str] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class PublishEvidence(Base):
+    __tablename__ = "publish_evidence"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    draft_id: Mapped[int] = mapped_column(ForeignKey("publish_drafts.id"))
+    kind: Mapped[str] = mapped_column(String(30))
+    payload: Mapped[dict] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
