@@ -344,6 +344,81 @@ def test_platform_media_profile_rejection(publishing, app, media):
     assert next(item for item in result.results if item["key"] == "video_profile")["status"] == "fail"
 
 
+def test_youtube_korean_description_must_fit_byte_budget(publishing, app):
+    service, *_ = publishing
+    description = "한" * 2000
+    assert len(description) < 5000 and len(description.encode("utf-8")) > 5000
+    identifier = create_draft(publishing, description=description, hashtags="")
+    result = validation(app, service.validate(identifier))
+    assert next(item for item in result.results if item["key"] == "description")["status"] == "fail"
+    assert result.status == "blocked"
+
+
+@pytest.mark.parametrize("extra_byte", [0, 1])
+def test_youtube_prepared_description_utf8_boundary(publishing, app, extra_byte):
+    service, *_ = publishing
+    description = "가" * 1600 + "a" * (200 + extra_byte)
+    identifier = create_draft(publishing, description=description, hashtags="")
+    with app.state.sessions() as session:
+        draft = session.get(PublishDraft, identifier)
+        prepared = YouTubeAdapter().prepare(
+            {"title": draft.title, "description": draft.description, "hashtags": draft.hashtags}
+        )["snippet"]["description"]
+    assert len(prepared.encode("utf-8")) == 5000 + extra_byte
+    assert len(prepared) < 5000
+    result = validation(app, service.validate(identifier))
+    expected = "pass" if extra_byte == 0 else "fail"
+    assert next(item for item in result.results if item["key"] == "description")["status"] == expected
+    assert result.status == "blocked"
+
+
+@pytest.mark.parametrize("extra_byte", [0, 1])
+def test_youtube_description_byte_budget_includes_emitted_hashtags(publishing, app, extra_byte):
+    service, *_ = publishing
+    description = "가" * 1600 + "a" * (195 + extra_byte)
+    identifier = create_draft(publishing, description=description, hashtags="#tag")
+    with app.state.sessions() as session:
+        draft = session.get(PublishDraft, identifier)
+        prepared = YouTubeAdapter().prepare(
+            {"title": draft.title, "description": draft.description, "hashtags": draft.hashtags}
+        )["snippet"]["description"]
+    assert prepared.endswith("\n#tag")
+    assert len(description.encode("utf-8")) < 5000
+    assert len(prepared.encode("utf-8")) == 5000 + extra_byte
+    result = validation(app, service.validate(identifier))
+    expected = "pass" if extra_byte == 0 else "fail"
+    assert next(item for item in result.results if item["key"] == "description")["status"] == expected
+    assert result.status == "blocked"
+
+
+@pytest.mark.parametrize("field", ["title", "description"])
+def test_youtube_api_text_disallows_angle_brackets(publishing, app, field):
+    service, *_ = publishing
+    identifier = create_draft(publishing, **{field: "합성 <검토용> 텍스트"})
+    result = validation(app, service.validate(identifier))
+    assert next(item for item in result.results if item["key"] == field)["status"] == "fail"
+    assert result.status == "blocked"
+
+
+@pytest.mark.parametrize("extra_character", [0, 1])
+def test_youtube_api_tag_budget_counts_separating_commas(publishing, app, extra_character):
+    service, *_ = publishing
+    tags = [f"t{i}" + "a" * 58 for i in range(8)] + ["t8" + "b" * (10 + extra_character)]
+    assert len(set(tags)) == len(tags) and all(len(tag) <= 60 for tag in tags)
+    identifier = create_draft(publishing, hashtags=" ".join("#" + tag for tag in tags))
+    with app.state.sessions() as session:
+        draft = session.get(PublishDraft, identifier)
+        prepared = YouTubeAdapter().prepare(
+            {"title": draft.title, "description": draft.description, "hashtags": draft.hashtags}
+        )["snippet"]
+    assert sum(len(tag) for tag in prepared["tags"]) < 500
+    assert len(",".join(prepared["tags"])) == 500 + extra_character
+    result = validation(app, service.validate(identifier))
+    expected = "pass" if extra_character == 0 else "fail"
+    assert next(item for item in result.results if item["key"] == "hashtags")["status"] == expected
+    assert result.status == "blocked"
+
+
 def test_missing_media_does_not_trust_stored_render_metadata(publishing, app):
     service, _render_id, output, inspector = publishing
     identifier = create_draft(publishing)

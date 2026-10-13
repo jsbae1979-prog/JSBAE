@@ -308,15 +308,45 @@ class PublishingService:
                 draft.title + "\n" + draft.description + "\n" + " ".join("#" + tag for tag in draft.hashtags)
             )
             limit = 2200 if draft.platform == "instagram" else 5000
+            description_valid = len(caption) <= limit
+            description_reason = f"제목/설명/태그 합친 앱 준비 예산 {limit}자; Instagram 최신 제한 재확인 필요"
+            tags_valid = len(draft.hashtags) <= 30
+            tags_reason = "중복 정규화·문법 검사, 앱 준비 예산 30개; Instagram 공식 제한 확인 필요"
+            if draft.platform == "youtube":
+                # Match the description/tags that YouTubeAdapter.prepare would supply.
+                # videos resource: 5,000 UTF-8 bytes, no angle brackets; tags 500 chars
+                # including commas. Hashtags have no spaces under the local input policy.
+                youtube_description = "\n".join(
+                    part
+                    for part in (
+                        draft.description,
+                        " ".join("#" + tag for tag in draft.hashtags),
+                    )
+                    if part
+                )
+                description_valid = (
+                    description_valid
+                    and len(youtube_description.encode("utf-8")) <= 5000
+                    and not any(c in youtube_description for c in "<>")
+                )
+                description_reason = (
+                    "YouTube 준비 설명(해시태그 포함) UTF-8 5,000바이트·꺾쇠 제외; "
+                    "앱의 제목 포함 5,000자 예산도 적용"
+                )
+                tag_characters = sum(len(tag) for tag in draft.hashtags) + max(
+                    0, len(draft.hashtags) - 1
+                )
+                tags_valid = tags_valid and tag_characters <= 500
+                tags_reason = "YouTube API 태그 합계 500자(쉼표 포함); 앱 해시태그 문법·30개 예산도 적용"
             check(
                 "description",
-                "pass" if len(caption) <= limit else "fail",
-                f"제목/설명/태그 합친 앱 준비 예산 {limit}자; 최신 플랫폼 규정은 재확인 필요",
+                "pass" if description_valid else "fail",
+                description_reason,
             )
             check(
                 "hashtags",
-                "pass" if len(draft.hashtags) <= 30 else "fail",
-                "중복 정규화·문법 검사, 앱 준비 예산 30개; 공식 제한 확인 필요",
+                "pass" if tags_valid else "fail",
+                tags_reason,
             )
             links = [
                 s.get("url", "") for a in draft.sources.get("articles", []) for s in a.get("sources", [])
@@ -369,7 +399,7 @@ class PublishingService:
             check(
                 "official_policy",
                 "unverified",
-                "최신 계정 자격·게시 제한·Shorts 분류/Instagram 전달 규정 공식 웹 문서 미확인; 공식 SDK/스키마 근거만 확보",
+                "대상 계정의 자격·권한·한도 및 정책 적용 미확인; Instagram 로그인별 전달 규정도 재확인 필요",
             )
             key = identity(draft)
             check(

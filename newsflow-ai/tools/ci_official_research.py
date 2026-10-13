@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import gzip
+import hashlib
 import json
 import socket
 import ssl
@@ -296,26 +299,79 @@ def research_page(item: dict) -> dict:
 
 
 def notice(result: dict) -> None:
-    budget = 1000
-    while True:
+    """Export at most nine notices below the runner's 4096-byte/ten-notice step limits."""
+    for budget in (6000, 5000, 4000, 3000, 2000, 1000, 0):
         payload = {**result, "pages": []}
+        trimmed: list[str] = []
         for page in result["pages"]:
             shortened = dict(page)
-            shortened["excerpts"] = [" ".join(page["excerpts"])[:budget]] if page["excerpts"] else []
+            remaining = budget
+            excerpts: list[str] = []
+            for excerpt in page["excerpts"]:
+                if remaining <= 0:
+                    break
+                excerpts.append(excerpt[:remaining])
+                remaining -= len(excerpts[-1])
+            shortened["excerpts"] = excerpts
+            if sum(map(len, excerpts)) < sum(map(len, page["excerpts"])):
+                trimmed.append(page["key"])
             payload["pages"].append(shortened)
-        encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-        encoded = encoded.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-        if len(encoded.encode("utf-8")) < 45000 or budget <= 100:
+        payload["notice_export"] = {
+            "full_artifact_excerpt_cap_characters_per_page": MAX_EXCERPTS,
+            "annotation_excerpt_cap_characters_per_page": budget,
+            "trimmed_page_keys": trimmed,
+            "encoding": "gzip-base64-utf8",
+            "compression_mtime": 0,
+            "artifact_preserves_full_bounded_excerpts": True,
+        }
+        raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        encoded = base64.b64encode(gzip.compress(raw, mtime=0)).decode("ascii")
+        if len(encoded) <= 20000:
             break
-        budget //= 2
-    print("::notice title=NewsFlow official docs::" + encoded)
-    for page in result["pages"]:
-        encoded_page = json.dumps(page, ensure_ascii=False, separators=(",", ":"))
-        encoded_page = encoded_page.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
-        if len(encoded_page.encode("utf-8")) >= 45000:
-            raise PolicyError("page_annotation_size_limit")
-        safe_key = "".join(char for char in page["key"] if char.isalnum() or char in "_-")[:80] or "unknown"
-        print("::notice title=NewsFlow official docs: " + safe_key + "::" + encoded_page)
+    else:
+        raise PolicyError("compressed_annotation_size_limit")
+    digest = hashlib.sha256(raw).hexdigest()
+    chunks = [encoded[index : index + 2500] for index in range(0, len(encoded), 2500)]
+    summary = {
+        "run": result.get("run", "COMPLETED; inspect individual page states"),
+        "encoding": "gzip-base64-utf8",
+        "payload_sha256": digest,
+        "sha256_applies_to": "decompressed UTF-8 JSON bytes",
+        "chunks": len(chunks),
+        "annotation_excerpt_cap_characters_per_page": budget,
+        "trimmed_page_keys": trimmed,
+        "pages": [
+            {
+                "key": page["key"],
+                "status_code": page.get("status_code"),
+                "transport": page["transport"].split(";")[0],
+                "content": page["content"].split(";")[0],
+                "failure_kind": page.get("failure_kind"),
+            }
+            for page in result["pages"]
+        ],
+    }
+    emit_notice("NewsFlow official docs", summary, 3500)
+    for index, chunk in enumerate(chunks, start=1):
+        emit_notice(
+            "NewsFlow official docs chunk",
+            {
+                "index": index,
+                "total": len(chunks),
+                "encoding": "gzip-base64-utf8",
+                "payload_sha256": digest,
+                "data": chunk,
+            },
+            3000,
+        )
+
+
+def emit_notice(title: str, payload: dict, max_bytes: int) -> None:
+    encoded = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    encoded = encoded.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+    if len(encoded.encode("utf-8")) > max_bytes:
+        raise PolicyError("annotation_size_limit")
+    print("::notice title=" + title + "::" + encoded)
 
 
 def main() -> None:
