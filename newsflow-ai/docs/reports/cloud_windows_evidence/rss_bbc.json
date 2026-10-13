@@ -1,0 +1,6 @@
+{
+  "dns": "FAIL",
+  "proxy": "FAIL: CONNECT/HTTPS blocked",
+  "rss_store": "NOT VERIFIED",
+  "failure_stage": "timeout"
+}

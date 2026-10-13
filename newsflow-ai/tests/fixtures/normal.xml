@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>공개 테스트 뉴스</title><link>https://example.com</link><description>Fixture</description>
+<item><title>한국 우주 기술 발사 현장 공개</title><link>https://example.com/news/1</link><description>서울에서 우주 기술 발사 현장을 공개했습니다.</description><pubDate>Tue, 13 Oct 2026 08:00:00 GMT</pubDate><source url="https://example.com/rss">테스트언론 A</source></item>
+<item><title>국회 경제 정책과 금리 논의</title><link>https://example.com/news/2</link><description>국내 경제 정책 토론</description><pubDate>Tue, 13 Oct 2026 16:30:00 +0900</pubDate></item>
+<item><title>시각이 없는 문화 소식</title><link>https://example.com/news/3</link><description>영화 음악 소식</description></item>
+</channel></rss>

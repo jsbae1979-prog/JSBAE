@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Atom 뉴스</title><id>urn:newsflow:test</id><updated>2026-10-13T08:00:00Z</updated><entry><title>새로운 과학 발견</title><id>urn:newsflow:1</id><link href="https://example.com/atom/1"/><published>2026-10-13T16:00:00+09:00</published><updated>2026-10-13T17:00:00+09:00</updated><summary>과학 실험</summary></entry><entry><title>발행일 없는 뉴스</title><id>urn:newsflow:2</id><link href="https://example.com/atom/2"/><updated>2026-10-13T08:00:00Z</updated></entry></feed>
