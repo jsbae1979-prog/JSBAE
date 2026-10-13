@@ -20,9 +20,11 @@ from .db.models import AppSetting, IntelligenceRun, NewsSource, utcnow
 from .db.session import make_engine, migrate, session_factory
 from .gui.intelligence_routes import router as intelligence_router
 from .gui.routes import router
+from .gui.video_routes import router as video_router
 from .news.collector import Collector
 from .news.rss_adapter import PublicRSSAdapter, RSSAdapter
 from .news.service import CollectionCoordinator, NewsService
+from .video.service import VideoCoordinator
 
 
 def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = None) -> FastAPI:
@@ -51,17 +53,21 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
         NewsService(sessions, Collector(adapter or PublicRSSAdapter())), settings.data_dir
     )
     coordinator.recover_interrupted()
+    video = VideoCoordinator(sessions, settings.data_dir)
+    video.recover()
     secret = settings.local_secret().encode()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         yield
         coordinator.close()
+        video.close()
         engine.dispose()
 
     app = FastAPI(title="NewsFlow AI", docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.config, app.state.sessions, app.state.coordinator = settings, sessions, coordinator
     app.state.engine = engine
+    app.state.video = video
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 
     def valid(token: str) -> bool:
@@ -118,6 +124,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
 
     app.include_router(router)
     app.include_router(intelligence_router)
+    app.include_router(video_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
     return app
 

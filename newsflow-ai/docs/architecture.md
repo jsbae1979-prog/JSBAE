@@ -64,3 +64,17 @@ AI Studio 라우트 → IntelligenceService → Provider Protocol(Offline/Fake/O
 분석은 현재 선택한 최대 10개 기사에 대해 제목 유사도 0.65 후보 그룹을 제공하고 기존 ArticleScore와 ArticleMention을 보존합니다. 그룹은 Phase 1 중복 제거와 별개이며 날짜·수치가 다른 기사도 후보일 수 있으므로 동일 사건으로 확정하지 않습니다. 비교는 출처별 제목/요약과 AI의 근거 설명을 함께 표시하고, 신뢰도 미평가·사실 미확인을 서버가 고정합니다.
 
 외부 호출은 동기 FastAPI 작업 스레드에서 유한 요청으로 실행합니다. 폼은 실행 중 버튼을 비활성화하고 완료 또는 오류를 표시합니다. 별도 작업 큐/주기 실행/자동 재시도는 없습니다. 기사 본문은 가져오지 않고 입력 근거와 출력 크기를 제한합니다. API 키는 환경변수로만 읽으며 DB/템플릿/오류 메시지에 넣지 않습니다. Schema 유효성은 사실 검증을 의미하지 않고, 장면 길이 합계는 계획된 길이입니다. 자동 출처 탐색·외부 팩트체크·TTS/영상/SNS 게시·승인 워크플로는 미구현입니다. 사람 검토 상태에서 자동 승인/게시로 전환하는 경로가 없습니다.
+
+## Phase 3 · Video Production
+
+Video Studio routes → VideoCoordinator(OS file lock + process guard + one background worker) → RenderEngine protocol → FFmpegAdapter/FakeRenderAdapter → TTSProvider(Offline/Fake/Windows SAPI) 구조입니다. 사용자의 보호된 POST와 대본/출처·소재 권한 확인으로만 실행합니다. 유료/외부 TTS, SNS/OAuth, 자동 게시 경로는 없습니다.
+
+Migration 0003은 VideoProject(초안 revision/snapshot/출처/길이), Scene(순서/밀리초 타이밍/내레이션/자막/허용 로컬 소재 파일명), AudioTrack(Provider/voice/status), SubtitleTrack(글자 크기/안전 위치/타임 cue), RenderJob(status/progress/고유 output_name/검증 metadata/UTC 시각)를 추가합니다. 모델·마이그레이션은 기존 데이터 구조를 변경하지 않습니다. 렌더 중 대본을 수정해도 고정 snapshot을 사용합니다.
+
+Pillow는 제목·한국어 자막·출처를 1080×1920 카드로 그립니다. 로컬 이미지는 허용 폴더·PNG/JPEG signature·파일/픽셀 크기를 검증하고 임시 PNG로 복사합니다. FFmpeg 필터에 사용자 문자열을 삽입하지 않습니다. 각 장면의 오디오는 Windows WAV 또는 명확한 Offline 무음입니다. 짧으면 apad, 배정 시간보다 길면 실패 처리합니다. 장면별 H.264/yuv420p/AAC MP4를 생성하고 안전한 생성 파일명만 포함하는 concat manifest 및 file/pipe protocol 제한으로 합칩니다. 기본 컷 전환입니다.
+
+FFmpeg/ffprobe 버전과 반환 코드를 확인하고 ffprobe로 MP4/H.264/yuv420p/1080×1920/길이 오차 0.25초 이하/AAC를 검사한 뒤 결과를 독점 생성(xb)으로 저장합니다. 사용자 영상은 덮어쓰지 않습니다. 모든 외부 프로세스는 shell=False, 인수 배열, 제한시간과 비밀변수를 제외한 자식 환경을 사용합니다. 임의 text를 PowerShell code로 넣지 않고 고정 packaged script가 UTF-8 JSON을 데이터로 읽어 SAPI를 호출합니다. 실행 정책·TLS 검증을 완화하지 않습니다.
+
+UI는 GET JSON으로 상태를 조회하고 완료 시 성공한 로컬 MP4만 FileResponse로 preview/download(Range 지원)합니다. 경로는 사용자 입력이 아닌 DB의 고유 basename만 사용합니다. 실패 원인은 안전한 단계/오류 종류/정수 종료 코드만 저장하며 stdout/stderr와 API 키는 로그에 넣지 않습니다. Fake는 simulated 상태와 playable=false로 실제 MP4와 구분합니다. 종료 시 cancel 신호/프로세스 kill/worker join으로 중단하며, 강제 종료 후 OS lock이 해제되면 running을 interrupted로 바꾸고 자동 재실행하지 않습니다. 원본 파일은 보존하고 앱 소유 임시 작업 폴더만 정리합니다.
+
+자료 폴더는 기존 사용자 root 안의 outputs/videos, render-tmp, assets입니다. 0001/0002의 기존 데이터/저장 위치는 유지합니다. 로그는 DB 작업 이력과 기존 로컬 실행 로그를 이용하며 raw FFmpeg stderr를 저장하지 않는 것이 민감정보 제거 정책입니다. 로컬 단일 사용자 도구로, 악성 동일 사용자 프로세스의 데이터 폴더 변조까지 방어하는 서비스 인증 구조는 아닙니다.

@@ -233,7 +233,7 @@ def test_upgrade_phase1_preserves_data(app):
     migrate(engine)
     with engine.connect() as connection:
         assert connection.scalar(text("SELECT value FROM app_settings WHERE key='request_timeout'")) == "7"
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0002"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0003"
     engine.dispose()
 
 

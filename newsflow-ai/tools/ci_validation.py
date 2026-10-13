@@ -370,8 +370,57 @@ def browser(
                 result["AI_Studio_analysis_script_edit_POST"] = (
                     "PASS (offline; unverified; sources preserved)"
                 )
+                page.goto(BASE + "/video?draft_id=1")
+                page.locator("select[name=duration]").select_option("30")
+                page.locator("input[name=reviewed]").check()
+                with (
+                    page.expect_navigation(wait_until="domcontentloaded"),
+                    page.expect_response(
+                        lambda r: r.request.method == "POST" and r.url.endswith("/video/render")
+                    ) as response,
+                ):
+                    page.get_by_role("button", name="영상 제작 실행", exact=True).click()
+                assert response.value.status == 303
+                assert response.value.request.all_headers().get("origin") == BASE
+                deadline = time.monotonic() + 300
+                while True:
+                    state = json.loads(HTTP().get("/api/video/jobs/1"))
+                    progress["video_status"] = state["status"]
+                    progress["video_progress"] = state["progress"]
+                    if state["status"] != "running":
+                        assert state["status"] == "success", "actual video render failed"
+                        break
+                    assert time.monotonic() < deadline, "video render deadline"
+                    time.sleep(0.5)
+                page.goto(BASE + "/video?job_id=1")
+                page.locator("video").wait_for()
+                media_deadline = time.monotonic() + 30
+                while page.locator("video").evaluate("v => v.readyState") < 1:
+                    assert time.monotonic() < media_deadline, "video metadata deadline"
+                    page.wait_for_timeout(100)
+                assert page.locator("video").evaluate("v => [v.videoWidth,v.videoHeight]") == [1080, 1920]
+                page.locator("video").evaluate("v => { v.currentTime = 1; v.pause(); }")
+                media_deadline = time.monotonic() + 30
+                while True:
+                    media = page.locator("video").evaluate(
+                        "v => ({ready:v.readyState,error:v.error ? v.error.code : null})"
+                    )
+                    progress["video_media_state"] = media
+                    assert not media["error"], "browser video decoder error"
+                    if media["ready"] >= 2:
+                        break
+                    assert time.monotonic() < media_deadline, "video frame decode deadline"
+                    page.wait_for_timeout(100)
+                progress["video_frame_decode"] = "PASS"
+                video_bytes = HTTP().get("/video/jobs/1/file?download=true")
+                assert len(video_bytes) > 1000
+                (output / "browser-30s.mp4").write_bytes(video_bytes)
+                page.screenshot(path=str(output / "video-studio.png"), full_page=True)
+                result["Video_Studio_POST_preview_download"] = (
+                    "PASS (real 30s MP4; offline silent audio; human quality not verified)"
+                )
                 page.set_viewport_size({"width": 390, "height": 844})
-                for path in ("/", "/news", "/news/1", "/settings", "/ai?draft_id=1"):
+                for path in ("/", "/news", "/news/1", "/settings", "/ai?draft_id=1", "/video?job_id=1"):
                     page.goto(BASE + path)
                     overflow = page.evaluate("document.documentElement.scrollWidth > innerWidth")
                     progress["mobile_last_path"] = path
@@ -392,6 +441,9 @@ def browser(
         assert counts(root) == before
         assert "한국 우주 기술 발사 현장 공개" in HTTP().get("/news").decode()
         assert "합성 검토용 수정 대본" in HTTP().get("/ai?draft_id=1").decode()
+        assert json.loads(HTTP().get("/api/video/jobs/1"))["status"] == "success"
+        assert len(HTTP().get("/video/jobs/1/file")) > 1000
+        result["Video_job_file_restart_persistence"] = "PASS"
         result["AI_draft_restart_persistence"] = "PASS"
         result["fixture_server_restart_persistence"] = "PASS"
     finally:

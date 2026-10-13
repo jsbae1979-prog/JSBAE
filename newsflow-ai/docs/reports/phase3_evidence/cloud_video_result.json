@@ -1,0 +1,33 @@
+{
+  "real_RSS": "NOT VERIFIED",
+  "real_AI_API": "NOT VERIFIED",
+  "full_30_45_60_quality": "NOT VERIFIED (short synthetic samples; no human quality review)",
+  "Windows11_user_PC": "NOT VERIFIED",
+  "sample_MP4": "PASS",
+  "sample_file": "sample-3s-e59a513e5f294c878057142db8e55968.mp4",
+  "sample_metadata": {
+    "adapter": "ffmpeg",
+    "playable": true,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "width": 1080,
+    "height": 1920,
+    "duration": 3.021029,
+    "expected_duration": 3,
+    "audio_channels": 2,
+    "bytes": 62335,
+    "ffmpeg_version": "7.1.5-0"
+  },
+  "Korean_subtitle_raster": "PASS (pinned/installed Korean font)",
+  "scene_transition": "PASS (cuts)",
+  "Offline_TTS": "PASS (silent PCM -> AAC; not spoken voice)",
+  "progress": [
+    5,
+    35,
+    60,
+    85,
+    95
+  ],
+  "Windows_TTS": "NOT VERIFIED (Cloud Linux; adapter tested with mocks only)",
+  "outcome": "PASS with explicit unverified items"
+}

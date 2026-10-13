@@ -45,7 +45,7 @@ def migrate_data(source: Path, target: Path) -> None:
                 original.backup(backup)
                 if backup.execute("PRAGMA integrity_check").fetchone() != ("ok",):
                     raise ValueError("원본 DB 무결성을 확인하지 못했습니다.")
-                if backup.execute("SELECT version_num FROM alembic_version").fetchone() not in {("0001",), ("0002",)}:
+                if backup.execute("SELECT version_num FROM alembic_version").fetchone() not in {("0001",), ("0002",), ("0003",)}:
                     raise ValueError("지원하지 않는 DB 버전입니다.")
             key = source / "session.key"
             if key.exists():
