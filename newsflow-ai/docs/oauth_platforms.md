@@ -2,11 +2,19 @@
 
 확인 기준일: **2026-10-14, Asia/Seoul (UTC+09:00)**.
 실제 조회 시각은 근거 JSON에 UTC와 서울 시각으로 함께 저장한다.
-초기 조회 시각은 `2026-10-14T03:14:52.291865+00:00` / `2026-10-14T12:14:52.291865+09:00`이다.
+초기 근거 작성 시각은 `2026-10-14T03:14:52.291865+00:00` / `2026-10-14T12:14:52.291865+09:00`이다.
 
 조사 근거는 [oauth_official_sources.json](reports/phase4b1_evidence/oauth_official_sources.json)이다.
 공개 공식 문서와 공식 공급자 GitHub 파일만 읽었다. 인증 호스트를 열거나 OAuth 로그인·code 교환·refresh·revoke·게시를
 실행하지 않았다. 프록시·DNS·TLS·네트워크 권한도 변경하지 않았다.
+
+Windows의 추가 공개 문서 근거는
+[windows_official_docs.json](reports/phase4b1_evidence/windows_official_docs.json)이다.
+[첫 Windows 문서 조회 실행](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38506864855)에서
+gzip/base64 chunk를 SHA256 검증 후 복원했으며 페이지당 최대 6,000자 발췌의 추가 축소는 없었다.
+조회 완료 시각은 `2026-10-14T03:34:45.886560+00:00` / `2026-10-14T12:34:45.886560+09:00`이다.
+**이것은 문서 읽기 결과이며 해당 실행의 전체 pytest/CI 성공 판정이 아니다.**
+전체 회귀 결과는 완료 보고서에서 별도로 확인한다.
 
 ## 판정 범위
 
@@ -15,7 +23,8 @@
 | Google 공식 authorization/token/revoke URL | PASS | 공식 Google Auth Library의 기본값을 문자열로 확인; endpoint 접속 없음 |
 | Google PKCE S256 지원·계산 방식 | PASS | 공식 라이브러리의 S256 및 SHA256/base64url 구현 확인 |
 | YouTube 업로드 권한 후보 | PASS | 공식 YouTube discovery의 `videos.insert`에 `youtube.upload` 포함 |
-| Google/Instagram/Microsoft 웹 문서 Cloud 재시도 | NOT VERIFIED | 공개 문서 9개 모두 기존 프록시 CONNECT 거절; Windows의 별도 공개 문서 재조회 가능 |
+| Google/Instagram/Microsoft 웹 문서 Cloud 재시도 | NOT VERIFIED | 공개 문서 9개 모두 기존 프록시 CONNECT 거절 |
+| Google/Microsoft 웹 문서 Windows 재시도 | PASS | Google 3개·DPAPI 2개 HTTPS 200 및 bounded 본문 발췌 확보; 실제 provider 호출과 구분 |
 | Instagram 로그인 경로별 최신 자격·scope·검수·native PKCE | NOT VERIFIED | 최신 공식 본문 미확보; 추정한 실행 설정 없음 |
 | Windows DPAPI 사용자 범위·flags·메모리 정리 | PASS | Microsoft 공식 API 문서 원문 및 공식 WinSDK 헤더 확인 |
 | 실제 계정 identity·scope grant·인증 성공·만료·취소 | NOT VERIFIED | 실제 계정·provider 호출 없음 |
@@ -57,8 +66,31 @@ NewsFlow의 public-client 준비 기준은 **S256만 사용**하는 것이다. �
 | https://developers.google.com/youtube/v3/docs/videos/insert | 최소 업로드 scope, 계정/앱 자격 및 현재 업로드 관련 정책 |
 
 Cloud에서는 세 URL 모두 `proxy_connect_denied`로 본문을 읽지 못했다.
-공식 저장소 근거와 이전 단계의 공식 문서 확인을 최신 실계정 연결 검증으로 확대하지 않는다.
-Windows에서 공개 문서를 다시 읽더라도 실제 계정 로그인이나 endpoint 호출을 포함하지 않는다.
+Windows에서는 세 URL 모두 HTTPS 200으로 본문을 읽었다. 공개 문서 조회에는 실제 계정 로그인이나
+endpoint 호출이 포함되지 않는다. 공식 저장소와 웹 문서 확인을 최신 실계정 연결 검증으로 확대하지 않는다.
+
+### Windows에서 확인한 본문과 확인하지 못한 세부 조건
+
+- Installed-app 본문은 앱이 **시스템 브라우저를 열고 local redirect URI를 제공**해야 한다고 설명한다.
+  사용자의 username/password를 앱에 전달하지 않고 OAuth 권한으로 채널 업로드에 동의하는 흐름도 확인했다.
+  인용: “installed apps must open the system browser and supply a local redirect URI”.
+- OAuth client를 만들고 해당 앱에 권장되는 client type을 고르라는 본문을 확인했다.
+  하지만 보존한 6,000자 발췌만으로 Windows의 실제 desktop client 설정이나 특정 loopback callback URI의
+  등록 자격을 확인하지는 못했다. iOS 또는 UWP의 별도 redirect 설명을 일반 데스크톱 앱에 복사하지 않는다.
+- Scope는 필요한 자원만 요청하고 이용자가 허용 범위를 선택할 수 있게 한다고 설명한다.
+  YouTube 문서의 scope 표에서 `youtube.upload`를 확인했다. 현재 계정 identity를 알아내기 위한 추가 scope는
+  확인하지 않았으며 실제 grant가 존재한다는 뜻도 아니다.
+- Google native-app 정책 본문은 특정 사용자 데이터에 접근하는 scope를 사용하는 public app에
+  verification process가 필요하다고 설명한다. 이것을 모든 앱에 같은 검증·감사가 필요하다는 주장으로 확대하지 않는다.
+  실제 OAuth consent screen·프로젝트 검증·예외 적용은 **NOT VERIFIED**다.
+- 본문은 사용자를 대신해 인증이 필요한 Google API 요청을 하기 전에 동의를 받아야 한다고 명시한다.
+  인용: “Your application must have that consent before it can execute a Google API request that requires user authorization.”
+- Native-app 본문에서 Google의 PKCE 지원은 확인했다. 발췌는 code verifier 설명 도중에 끝나므로
+  **S256 계산 세부 근거는 위 공식 라이브러리 소스**를 사용한다. 웹 문서의 이후 절차까지 읽었다고 표시하지 않는다.
+
+본문과 별개의 자동 요약을 현재 정책의 단독 근거로 사용하지 않는다. 예를 들어 이전 단계의 업로드
+quota·미검증 프로젝트 공개 범위에는 본문/자동 요약 충돌이 있었으므로, 이번 문서 조회를 계정별 업로드
+허용이나 실제 OAuth 성공의 근거로 사용하지 않는다.
 
 ### Phase 4B-1의 실행 경계
 
@@ -90,8 +122,10 @@ Instagram Login과 Facebook Login을 다른 경로로 취급한다. 아래 공�
 | https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing | 현재 필요한 최소 scope, app review·권한 레벨·게시 자격 |
 | https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login | Facebook Login의 계정/Page 자격과 해당 로그인 경로의 권한 |
 
-Cloud에서는 네 URL 모두 기존 프록시에서 차단되었다. 이전 단계에서 Instagram 개발 문서의
-허용 범위를 벗어난 리다이렉트가 발생한 사실도 계정 자격이나 PKCE 지원의 근거가 아니다.
+Cloud에서는 네 URL 모두 기존 프록시에서 차단되었다. Windows에서도 네 URL 모두
+`redirect_not_allowed`로 본문을 확보하지 못했다. 허용 범위를 벗어난 목적지를 따라가거나
+OAuth 호스트·로그인에 접근하지 않았고 문서 URL 정책과 TLS 검증을 완화하지 않았다.
+리다이렉트 발생 사실은 계정 자격이나 PKCE 지원의 근거가 아니다.
 Instagram 실제 Adapter는 **모든 실제 메서드가 차단**되며 endpoint와 scope는 미설정이다.
 기존 권한명이나 다른 플랫폼의 PKCE 지원을 Instagram에 그대로 복사하지 않는다.
 
@@ -103,6 +137,8 @@ Instagram 실제 Adapter는 **모든 실제 메서드가 차단**되며 endpoint
 - https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptunprotectdata
 
 Cloud의 웹 조회는 차단되었지만 Microsoft가 관리하는 문서 원문을 GitHub에서 읽었다.
+Windows에서는 두 공식 웹 문서도 HTTPS 200으로 읽어 아래 사용자 범위·flags·native 메모리 정리와
+변조 검증 주의사항을 본문에서 다시 확인했다.
 
 | 공식 원문 | 확인한 blob / 최근 관련 변경 |
 | --- | --- |
@@ -137,3 +173,5 @@ Cloud의 웹 조회는 차단되었지만 Microsoft가 관리하는 문서 원�
 URL의 credential/token query, 로그인, cookies, code·token 교환을 포함하지 않는다.
 
 실제 OAuth provider 연결, 사용자 승인 없는 API 호출 및 실제 SNS 게시는 이번 검증의 범위가 아니다.
+
+최종 재조회: [Windows run38508328854](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38508328854), [최종 본문 근거](reports/phase4b1_evidence/windows_official_docs_final.json). Google3/MS2 본문200·Instagram4개off-hostredirect차단 상태를 다시 확인했습니다. 최초전체CI 실패와 최종검증SUCCESS는 완료보고서에서 구분합니다.

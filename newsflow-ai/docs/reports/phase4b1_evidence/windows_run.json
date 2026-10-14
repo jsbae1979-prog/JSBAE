@@ -1,0 +1,214 @@
+{
+  "run_id": 38508328854,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38508328854",
+  "branch": "feat/newsflow-phase4b1",
+  "head_sha": "1cf3d1c3c6aff1123987b911e75998c49b86d55d",
+  "status": "completed",
+  "conclusion": "success",
+  "created_at": "2026-10-14T03:50:35Z",
+  "updated_at": "2026-10-14T03:54:17Z",
+  "evidence_source": "Safe GitHub check annotations; public-doc gzip/base64 chunks SHA256 verified",
+  "official_doc_export": {
+    "run": "COMPLETED; page verification is reported separately",
+    "encoding": "gzip-base64-utf8",
+    "payload_sha256": "96fd10537fae1cd1bc11847bd1a9fb26d46e023827fec035247ef942c56f3379",
+    "sha256_applies_to": "decompressed UTF-8 JSON bytes",
+    "chunks": 4,
+    "annotation_excerpt_cap_characters_per_page": 6000,
+    "trimmed_page_keys": [],
+    "pages": [
+      {
+        "key": "yt_oauth",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "yt_upload",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "google_native",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "ig_login",
+        "status_code": null,
+        "transport": "NOT VERIFIED",
+        "content": "NOT VERIFIED",
+        "failure_kind": "redirect_not_allowed"
+      },
+      {
+        "key": "ig_business_login",
+        "status_code": null,
+        "transport": "NOT VERIFIED",
+        "content": "NOT VERIFIED",
+        "failure_kind": "redirect_not_allowed"
+      },
+      {
+        "key": "ig_publish",
+        "status_code": null,
+        "transport": "NOT VERIFIED",
+        "content": "NOT VERIFIED",
+        "failure_kind": "redirect_not_allowed"
+      },
+      {
+        "key": "ig_fb_login",
+        "status_code": null,
+        "transport": "NOT VERIFIED",
+        "content": "NOT VERIFIED",
+        "failure_kind": "redirect_not_allowed"
+      },
+      {
+        "key": "dpapi_protect",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      },
+      {
+        "key": "dpapi_unprotect",
+        "status_code": 200,
+        "transport": "PASS",
+        "content": "PASS",
+        "failure_kind": null
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "id": 115670842208,
+      "status": "completed",
+      "conclusion": "success",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-10-14T03:50:38Z",
+          "completed_at": "2026-10-14T03:50:39Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-10-14T03:50:39Z",
+          "completed_at": "2026-10-14T03:50:46Z"
+        },
+        {
+          "name": "Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-10-14T03:50:46Z",
+          "completed_at": "2026-10-14T03:50:46Z"
+        },
+        {
+          "name": "Install development and browser dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-10-14T03:50:46Z",
+          "completed_at": "2026-10-14T03:51:30Z"
+        },
+        {
+          "name": "Prepare Chromium-based Google Chrome for MP4 preview",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-10-14T03:51:30Z",
+          "completed_at": "2026-10-14T03:51:31Z"
+        },
+        {
+          "name": "Prepare real FFmpeg and pinned Korean font",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-10-14T03:51:31Z",
+          "completed_at": "2026-10-14T03:51:52Z"
+        },
+        {
+          "name": "Actual short MP4 ffprobe and local TTS",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-10-14T03:51:52Z",
+          "completed_at": "2026-10-14T03:52:00Z"
+        },
+        {
+          "name": "Read-only public official policy documentation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-10-14T03:52:00Z",
+          "completed_at": "2026-10-14T03:52:04Z"
+        },
+        {
+          "name": "Actual Windows DPAPI synthetic credential vault",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-10-14T03:52:04Z",
+          "completed_at": "2026-10-14T03:52:06Z"
+        },
+        {
+          "name": "All offline regression tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-10-14T03:52:06Z",
+          "completed_at": "2026-10-14T03:52:58Z"
+        },
+        {
+          "name": "Actual BAT, persistence and blocked OAuth GUI POST",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-10-14T03:52:58Z",
+          "completed_at": "2026-10-14T03:54:11Z"
+        },
+        {
+          "name": "Upload synthetic validation results",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 12,
+          "started_at": "2026-10-14T03:54:11Z",
+          "completed_at": "2026-10-14T03:54:13Z"
+        },
+        {
+          "name": "Post Run actions/setup-python@v5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23,
+          "started_at": "2026-10-14T03:54:13Z",
+          "completed_at": "2026-10-14T03:54:13Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 24,
+          "started_at": "2026-10-14T03:54:13Z",
+          "completed_at": "2026-10-14T03:54:15Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 25,
+          "started_at": "2026-10-14T03:54:15Z",
+          "completed_at": "2026-10-14T03:54:15Z"
+        }
+      ]
+    }
+  ]
+}

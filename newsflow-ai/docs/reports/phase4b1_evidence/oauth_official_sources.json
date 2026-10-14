@@ -236,5 +236,7 @@
     "page_deadline_seconds": 10.0,
     "workers": 4,
     "elapsed_seconds": 0.08
-  }
+  },
+  "verification_scope": "Initial official vendor source and Cloud lookup; separate Windows evidence records public document bodies.",
+  "windows_followup": "windows_official_docs_final.json"
 }

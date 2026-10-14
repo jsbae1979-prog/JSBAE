@@ -11,5 +11,5 @@
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 =========================== short test summary info ============================
 SKIPPED [1] tests/test_live_rss.py:11: opt-in live RSS: set NEWSFLOW_LIVE_TEST=1
-SKIPPED [1] tests/test_oauth_vault.py:302: Real current-user DPAPI requires Windows; Cloud NOT VERIFIED
-356 passed, 2 skipped, 1 warning in 29.98s
+SKIPPED [1] tests/test_oauth_vault.py:308: Real current-user DPAPI requires Windows; Cloud NOT VERIFIED
+356 passed, 2 skipped, 1 warning in 31.44s

@@ -2,7 +2,7 @@
 
 공개 RSS 수집·중복 제거·내부 추천 평가를 제공하는 한국어 로컬 웹 대시보드입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
-현재 Phase 4A는 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작과 SNS 게시 준비를 제공합니다. 실제 SNS 게시·계정 연결·주기 스케줄러는 제공하지 않습니다.
+현재 Phase 4B-1은 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작, SNS 게시 준비와 차단된 OAuth 기반을 제공합니다. 실제 SNS 게시·계정 연결·주기 스케줄러는 제공하지 않습니다.
 
 ## Windows 설치와 최초 실행
 
@@ -10,7 +10,7 @@
 2. Phase 4B-1 검토 브랜치 `feat/newsflow-phase4b1`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase4a https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase4b1 https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -256,7 +256,7 @@ DB 0004는 PublishDraft/PlatformAccount/PublishValidation/PublishJob/PublishAtte
 
 인증 설계는 최소 OAuth scope·state·PKCE·정확한 콜백·만료/취소 상태·별도 Windows Credential Manager/DPAPI 보관을 다룹니다. 실제 OAuth/비밀 저장소는 **NOT VERIFIED/미구현**이며 UnavailableCredentialVault가 차단합니다. Fake vault는 테스트용 메모리/SecretStr 마스킹만 제공하고 디스크/Git/HTML에 토큰을 넣지 않습니다. [Phase 4A 보고서](docs/reports/phase4a_report.md).
 
-Phase 4A 브랜치 `feat/newsflow-phase4a`와 별도 Windows workflow에서 기존 회귀·BAT·영상 제작에 더해 Publishing 초안 생성·수정·반복 검증·모바일·재시작 보존, 게시 job/attempt 0개와 외부 브라우저 요청 0건을 검사합니다. 실계정 연결·실제 업로드·Phase 4B·main 병합은 사용자 승인 전 금지입니다.
+Phase 4A 브랜치 `feat/newsflow-phase4a`와 별도 Windows workflow에서 기존 회귀·BAT·영상 제작에 더해 Publishing 초안 생성·수정·반복 검증·모바일·재시작 보존, 게시 job/attempt 0개와 외부 브라우저 요청 0건을 검사합니다. 실계정 연결·실제 업로드·Phase 4B-2·main 병합은 사용자 승인 전 금지입니다.
 
 ## Phase 4B-1 · OFFLINE/BLOCKED 계정 연결 준비
 

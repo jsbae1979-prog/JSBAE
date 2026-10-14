@@ -11,8 +11,8 @@
 | OAuth/session/계정 준비/Fake 수명주기 | PASS | 아래 구현 및 경계 테스트 |
 | Cloud 전체 회귀 | PASS | 356 passed /2 skipped /1 warning /0 failed; 기존218개유지 |
 | Cloud 실제 서버·Chromium POST/보존 | PASS | 준비/해제303, 위조시작423, 비활성버튼, 재시작 유지 |
-| Windows 현재 사용자 DPAPI 실제 실행 | NOT VERIFIED | Windows Actions 실행 전 |
-| Windows 전체 회귀·BAT·Chrome POST | NOT VERIFIED | Windows Actions 실행 전 |
+| Windows 현재 사용자 DPAPI 실제 실행 | PASS | 합성 토큰 암호화·새 프로세스 복호화·격리·교체/삭제·변조/만료 차단 |
+| Windows 전체 회귀·BAT·Chrome POST | PASS | 357 passed/1 skipped/0 failed/0 errors 및실제BAT/브라우저/보존 |
 | Google/Microsoft 공식 소스 조사 | PASS | endpoint/S256/YouTube scope/DPAPI API·flag 문자열/본문 읽기 |
 | 최신 Instagram 로그인별 요건 | NOT VERIFIED | 실제 endpoint·scope 설정 없음 |
 | 실제 OAuth 인증·게시 호출 | PASS | 금지 경계 검사: 모두0; 실제 인증 성공 판정이 아님 |
@@ -45,11 +45,11 @@ WindowsCredentialVault는 명시적으로 전달받은 절대 데이터 경로(�
 
 [OAuth/DPAPI 공식 URL·근거·확인 날짜](../oauth_platforms.md), [초기 공식 소스/Cloud 접근 근거](phase4b1_evidence/oauth_official_sources.json). Google 공식 Auth Library에서 authorization/token/revoke URL 및 S256을 확인하고 실제 해당 endpoint는 호출하지 않았습니다. YouTube 공식 discovery의 youtube.upload는 최소 업로드 권한 후보이며 실제 대상 identity·grant/앱 검증은 미확인입니다. Microsoft 공식 API 문서/WinSDK에서 current-user, UI_FORBIDDEN, LOCAL_MACHINE 제외, LocalFree 및 메모리 정리 범위를 확인했습니다.
 
-Cloud 공개 문서9개는 기존 프록시 CONNECT 거절로 NOT VERIFIED입니다. 기존 Windows Runner의 문서 조회는 credentials/cookies/login/계정/게시 없이 공개 HTTPS만 재시도하며 TLS/호스트·경로 제한을 완화하지 않습니다. Windows 본문 결과는 실행 후 갱신합니다. Instagram 최신 자격·scope·app review·native PKCE·redirect 지원을 확정할 수 없으면 실제 Adapter는 계속 차단 상태입니다.
+Cloud 공개 문서9개는 기존 프록시 CONNECT 거절로 NOT VERIFIED입니다. 기존 Windows Runner의 문서 조회는 credentials/cookies/login/계정/게시 없이 공개 HTTPS만 재시도하며 TLS/호스트·경로 제한을 완화하지 않습니다. Windows에서 Google문서3개/Microsoft DPAPI2개의 본문 발췌를 확보했고4개Instagram문서는허용범위밖redirect를거부하여NOT VERIFIED입니다. [Windows문서발췌](phase4b1_evidence/windows_official_docs.json)는압축chunk를SHA256확인후복원한것이며자동요약/최대6,000자발췌범위와실계정적용을구분합니다. 현재public-client의세부loopback등록/desktop-client자격은추가확인이필요합니다. Instagram 최신 자격·scope·app review·native PKCE·redirect 지원을 확정할 수 없으면 실제 Adapter는 계속 차단 상태입니다.
 
 ## 테스트 및 실제 호출0건 근거
 
-`python -m pytest -q -rs`: **356 passed /2 skipped /1 warning /0 failed**. [pytest 원문](phase4b1_evidence/cloud_pytest.txt). Windows 최종 결과는 별도로 갱신합니다. 기존218개를 유지하며 새 테스트는 state/PKCE·callback mismatch/replay/expiry/concurrency, Fake 성공/실패/취소·scope, 계정 격리·회전·해제·실패 복구, vault 보호·미노출, GUI POST/CSRF/CSP, 0004→0005 보존을 검사합니다. 기존 live RSS skip은 opt-in이며 네이티브 DPAPI skip은 Linux Cloud에만 적용됩니다. Windows에서는 네이티브 vault 테스트 실패를 skip으로 바꾸지 않습니다. 기존 Starlette/httpx warning을 숨기지 않습니다.
+`python -m pytest -q -rs`: **356 passed /2 skipped /1 warning /0 failed**. [pytest 원문](phase4b1_evidence/cloud_pytest.txt). Windows 최종 결과는357 passed/1 skipped/0 failures/0 errors입니다. NativeDPAPI case가실행되어Cloud보다PASS1개더많습니다. 기존218개를 유지하며 새 테스트는 state/PKCE·callback mismatch/replay/expiry/concurrency, Fake 성공/실패/취소·scope, 계정 격리·회전·해제·실패 복구, vault 보호·미노출, GUI POST/CSRF/CSP, 0004→0005 보존을 검사합니다. 기존 live RSS skip은 opt-in이며 네이티브 DPAPI skip은 Linux Cloud에만 적용됩니다. Windows에서는 네이티브 vault 테스트 실패를 skip으로 바꾸지 않습니다. 기존 Starlette/httpx warning을 숨기지 않습니다.
 
 Cloud 실제 실행 명령: `python tools/ci_validation.py --mode cloud --browser-executable /usr/bin/chromium --output /tmp/newsflow-phase4b1-cloud`. PASS: Uvicorn health/POST/포트중복/DB재시작, 실제 Chromium의 준비·해제303/진짜Origin·위조start423·disabledbutton·mobile overflow 없음, SQLite disconnect_prepared/offline/revision3/credential 없음/api_ready=false/scopes[] 유지. 기존30초 MP4 디코드·미리보기·다운로드 회귀도PASS이며 품질검수는 아닙니다. [결과](phase4b1_evidence/cloud_result.json), [화면](phase4b1_evidence/oauth_studio.png), [모바일](phase4b1_evidence/mobile.png). 초기 Cloud 화면 캡처 후 공통 phase표시 문구만 갱신했으며 최종 Windows에서 현재 화면을 검사합니다.
 
@@ -72,4 +72,28 @@ Phase4B-2 전 사용자 별도승인, 플랫폼/계정·앱등록/검수·최소
 
 ## Git/Draft PR 및 중단
 
-브랜치 feat/newsflow-phase4b1, basefeat/newsflow-phase4a/e3b9c71. 실제GitHubDraftPR번호·커밋은 생성후갱신합니다. 기존PR#1~#4와main은 수정·병합하지 않습니다. 변경 범위는 newsflow-ai와 신규branch전용workflow하나이며 다른프로젝트/기존migration/기존workflow변경은없습니다. 완료후개발을중단하고Phase4B-2/실계정/게시/main병합을진행하지않습니다.
+브랜치 `feat/newsflow-phase4b1`, base `feat/newsflow-phase4a`/e3b9c71. [Draft PR #5](https://github.com/jsbae1979-prog/JSBAE/pull/5)는 OPEN/DRAFT입니다. 구현 커밋 `f33af2c5c7e55c29b06f86afdbe5441552984df6`, 안전한 오류 진단 커밋 `650ad1844e4f8d38ca730632435a5da2afc7e067`입니다. Windows 테스트 ID 보완 커밋 `1cf3d1c3c6aff1123987b911e75998c49b86d55d`입니다. 최종 Windows검증은이HEAD에실행했고이후변경은보고서·근거·README문서뿐입니다. 최종문서commit은PR Commits에서확인할수있습니다. 기존PR#1~#4와main은 수정·병합하지 않습니다. 변경 범위는 newsflow-ai와 신규branch전용workflow하나이며 다른프로젝트/기존migration/기존workflow변경은없습니다. 완료후개발을중단하고Phase4B-2/실계정/게시/main병합을진행하지않습니다.
+
+## 초기 Windows 오류와 해결 경과
+
+초기 run38506864855 및 진단 run38507587926은 **FAIL**: 358 tests/355 passed/1 skipped/0 failures/2 ERROR였습니다. 실제 native DPAPI검증은 별도로PASS였지만 전체회귀나 후속브라우저를PASS로기록하지 않았습니다. [초기 pytest](phase4b1_evidence/windows_pytest_initial.json), [초기 실제 vault](phase4b1_evidence/windows_vault_initial.json). 원본 로그 다운로드가 Cloud에서 차단되어 CI helper는 오류case명·고정exception종류·코드위치만 출력하도록 추가했고 원문메시지/parameter값/토큰은 출력하지 않았습니다.
+
+두오류는 b'x'*131073 ciphertext와 b'x'*32769 plaintext test의 자동 parameter ID가 각각131,153/32,850자로 Windows PYTEST_CURRENT_TEST 환경변수32767 제한을 초과해setup이ValueError로실패한 것입니다. explicit짧은ID만지정하여nodeid를100자이하로줄였고, 대용량입력/모든assert/전체case수는 유지했습니다. 보안검사/제품코드/테스트skip변경은없습니다. 최종run38508328854에서358개중357 passed/1 skipped/0 failures/0 errors로해결을확인했습니다. 동일대용량경계검사가실제로실행된결과입니다.
+
+## 최종 Windows Actions 및 완료 판정
+
+[Windows 실행38508328854](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38508328854), 검증HEAD `1cf3d1c3c6aff1123987b911e75998c49b86d55d`: workflow/job **SUCCESS**, **357 passed /1 skipped /0 failures /0 errors**. [pytest](phase4b1_evidence/windows_pytest.json), [run/step](phase4b1_evidence/windows_run.json). Windows warning수는JUnit요약에없어NOT VERIFIED이며0으로주장하지않습니다. 유일한skip은기존opt-in liveRSS입니다.
+
+PASS: 현재사용자네이티브DPAPI(ciphertext디스크저장·새Python프로세스복호화·한글/공백경로·다중local계정격리·wrong계정조회/삭제차단·token교체/삭제·만료/변조차단·실제형식token저장거부·임시파일/본인테스트데이터정리). [실제Vault근거](phase4b1_evidence/windows_vault.json). 합성토큰만사용했고서비스토큰/실제OAuth/SNS호출0입니다. 실제다른Windows사용자계정/프로필roaming/사용자Windows11PC는NOT VERIFIED입니다.
+
+PASS: 실제run.bat/LOCALAPPDATA/health/서버기동·종료/중복·포트충돌/SQLite재시작조회, GoogleChrome기반브라우저의계정metadata·prepare/disconnect303·위조start423·disabled실제버튼·모바일·재시작보존. GUIDB는disconnect_prepared/offline/revision3/credential없음/api_readyfalse/scopes[] 및게시job/attempt0입니다. 브라우저외부origins[]이고OAuth·게시counter모두0입니다. [브라우저/실행결과](phase4b1_evidence/windows_result.json). 수동Ctrl+C는NOT VERIFIED이며CI종료는taskkill process tree입니다.
+
+PASS: 기존합성FFmpegMP4·ffprobe·한글자막/SAPI·30초브라우저프레임디코드/미리보기/다운로드회귀. [영상요약](phase4b1_evidence/windows_video.json). 음성발음·최종30/45/60초품질검수는NOT VERIFIED입니다. 실제RSS/AIAPI 미검증도유지합니다.
+
+최종공식문서5개(Google3/MS2)는HTTPS200본문확보,Instagram4개는off-hostredirect차단입니다. [최종공식문서](phase4b1_evidence/windows_official_docs_final.json)의6,000자/page발췌를gzip/base64chunk에서SHA256확인후복원했고축소는없습니다. 문서본문획득과실제OAuth자격/전체문서검증은구분합니다. Source/flags/S256및문서본문에서직접확인한조건만PASS이며실제identity/grant/등록redirect/앱검수는NOT VERIFIED입니다.
+
+Phase4B-1의OFFLINE/BLOCKED구현과개발/자동화검증은완료했습니다. ACCEPTED 판정및Phase4B-2승인은사용자에게남깁니다. 실제OAuth/계정연결/서비스토큰/SNS업로드및main병합은수행하지않았으며보고서제출후개발을중단합니다.
+
+## 다운로드
+
+[Phase4B-1 보고서 및 검증 근거 ZIP](https://github.com/jsbae1979-prog/JSBAE/raw/refs/heads/feat/newsflow-phase4b1/newsflow-ai/docs/reports/phase4b1_report.zip). GitHub로그인이필요한저장소에서는로그인한브라우저로내려받으세요. ZIP의 docs/reports/phase4b1_report.md를열면됩니다.
