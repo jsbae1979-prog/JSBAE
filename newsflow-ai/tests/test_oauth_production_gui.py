@@ -45,7 +45,7 @@ def test_production_readiness_only_exposes_safe_stage_and_provider_descriptors(c
     response = client.get("/api/oauth/production-readiness")
     assert response.status_code == 200
     assert response.json() == {**production_activation_status(), "providers": EXPECTED_PROVIDERS}
-    assert response.json()["phase"] == "4B-2A"
+    assert response.json()["phase"] == "4B-2B"
     assert all(
         response.json()[name] is False
         for name in (
@@ -64,10 +64,10 @@ def test_production_readiness_only_exposes_safe_stage_and_provider_descriptors(c
 def test_readiness_panel_distinguishes_preparation_from_real_verification(client, production_gui_account):
     response = client.get("/publishing")
     assert response.status_code == 200
-    assert "PHASE 4B-2A" in response.text and "실운영 OAuth 준비 · 활성화 차단" in response.text
+    assert "PHASE 4B-2B" in response.text and "실운영 OAuth 준비 · 활성화 차단" in response.text
     panel = re.search(r'<div[^>]*id="oauth-production-readiness"[^>]*>', response.text)
     assert panel is not None
-    assert 'data-phase="4B-2A"' in panel.group()
+    assert 'data-phase="4B-2B"' in panel.group()
     for name in (
         "production-activation",
         "browser-login-allowed",

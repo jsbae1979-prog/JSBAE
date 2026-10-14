@@ -1,0 +1,297 @@
+{
+  "checked_at_utc": "2026-10-14T05:25:49.584444+00:00",
+  "checked_at_asia_seoul": "2026-10-14T14:25:49.584444+09:00",
+  "date_basis": "2026-10-14 Asia/Seoul UTC+09:00; exact UTC retained",
+  "scope": "Phase 4B-2B callback/identity/current-user credential operational foundation; production activation remains hard blocked",
+  "actual_authorization_requests": 0,
+  "actual_code_exchanges": 0,
+  "actual_refresh_requests": 0,
+  "actual_revoke_requests": 0,
+  "actual_identity_api_requests": 0,
+  "actual_publish_requests": 0,
+  "network_configuration_changes": 0,
+  "lookup_record_count": 12,
+  "unique_public_document_url_count": 10,
+  "official_web_pages": [
+    {
+      "key": "google_native_pkce",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "excerpt_profile": "native_pkce",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.205096+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "google_native_tokens",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "excerpt_profile": "native_tokens",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.206413+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "google_native_redirect",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "excerpt_profile": "native_redirect",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.207260+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "yt_oauth",
+      "url": "https://developers.google.com/youtube/v3/guides/auth/installed-apps",
+      "excerpt_profile": "installed_setup",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.207544+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "yt_upload",
+      "url": "https://developers.google.com/youtube/v3/docs/videos/insert",
+      "excerpt_profile": "default",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.234894+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "yt_identity",
+      "url": "https://developers.google.com/youtube/v3/docs/channels/list",
+      "excerpt_profile": "youtube_identity",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.236685+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "ig_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login",
+      "excerpt_profile": "instagram_login",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.243190+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "ig_business_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "excerpt_profile": "instagram_login",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.246327+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "ig_publish",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing",
+      "excerpt_profile": "instagram_login",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.255646+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "ig_fb_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login",
+      "excerpt_profile": "instagram_login",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.261900+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "dpapi_protect",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata",
+      "excerpt_profile": "default",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.269938+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    },
+    {
+      "key": "dpapi_unprotect",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptunprotectdata",
+      "excerpt_profile": "default",
+      "verification": "NOT VERIFIED: current Cloud request denied by existing proxy; no network/TLS changes",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "status_code": null,
+      "checked_at_utc": "2026-10-14T05:26:03.277505+00:00",
+      "failure_kind": "proxy_connect_denied",
+      "cloud_evidence": "cloud_official_docs.json"
+    }
+  ],
+  "official_repository_sources": [
+    {
+      "url": "https://github.com/googleapis/google-auth-library-nodejs/blob/6ac9ab4fd49d64d8315f16d7f2757da04fbeb579/src/auth/oauth2client.ts",
+      "repository": "googleapis/google-auth-library-nodejs",
+      "path": "src/auth/oauth2client.ts",
+      "checked_at_utc": "2026-10-14T05:25:49.584444+00:00",
+      "git_blob_sha1": "138e66c462b5466c4f6c5b2aae0c3d6c886e9c3a",
+      "content_sha256": "de696d086482dcc7bcef4977aaa6cd885b8cc61f211796b6c81c9344c068b8d2",
+      "source_commit_sha": "6ac9ab4fd49d64d8315f16d7f2757da04fbeb579",
+      "source_commit_date_utc": "2025-07-18T18:39:59Z",
+      "verification": "PASS: public official repository read and listed facts manually reviewed; source never executed",
+      "reviewed_facts": {
+        "auth_endpoint": "https://accounts.google.com/o/oauth2/v2/auth",
+        "token_endpoint": "https://oauth2.googleapis.com/token",
+        "revoke_endpoint": "https://oauth2.googleapis.com/revoke",
+        "pkce": "S256 = padding-free Base64URL(SHA256(ASCII(verifier)))",
+        "source_executed": false
+      },
+      "immutable_commit_blob_match": "PASS"
+    },
+    {
+      "url": "https://github.com/googleapis/google-api-python-client/blob/19fd51d1d18446206091a21eec763057d032c2b3/googleapiclient/discovery_cache/documents/youtube.v3.json",
+      "repository": "googleapis/google-api-python-client",
+      "path": "googleapiclient/discovery_cache/documents/youtube.v3.json",
+      "checked_at_utc": "2026-10-14T05:25:49.584444+00:00",
+      "git_blob_sha1": "19f8ac1304cb095521f751c5c13ca0fad070af4d",
+      "content_sha256": "b4260c53a3f7dc63e0161552be461de756073249e00861dfac94528702ab58d4",
+      "source_commit_sha": "19fd51d1d18446206091a21eec763057d032c2b3",
+      "source_commit_date_utc": "2026-10-06T07:50:18Z",
+      "verification": "PASS: public official repository read and listed facts manually reviewed; source never executed",
+      "reviewed_facts": {
+        "revision": "20261001",
+        "method": "youtube.channels.list",
+        "endpoint": "https://youtube.googleapis.com/youtube/v3/channels",
+        "http_method": "GET",
+        "mine": "Return the ids of channels owned by the authenticated user.",
+        "part": "Required; id is the minimized selection for channel binding",
+        "allowed_scopes": [
+          "https://www.googleapis.com/auth/youtube",
+          "https://www.googleapis.com/auth/youtube.force-ssl",
+          "https://www.googleapis.com/auth/youtube.readonly",
+          "https://www.googleapis.com/auth/youtubepartner",
+          "https://www.googleapis.com/auth/youtubepartner-channel-audit"
+        ],
+        "youtube_upload_scope_supported": false,
+        "minimal_identity_scope_candidate": "https://www.googleapis.com/auth/youtube.readonly",
+        "separate_future_consent_required": true,
+        "api_called": false
+      },
+      "immutable_commit_blob_match": "PASS"
+    },
+    {
+      "url": "https://github.com/googleapis/google-cloud-python/blob/30b4f440c24db348b043382178e53727c49c96de/packages/google-auth-oauthlib/google_auth_oauthlib/flow.py",
+      "repository": "googleapis/google-cloud-python",
+      "path": "packages/google-auth-oauthlib/google_auth_oauthlib/flow.py",
+      "checked_at_utc": "2026-10-14T05:25:49.584444+00:00",
+      "git_blob_sha1": "4e006c2655071087e32a980dfd7e36ed504768da",
+      "content_sha256": "18cd56cf01a624e2c3e551ed933d2bf5f5316366308a3b66ac05027019edb828",
+      "source_commit_sha": "30b4f440c24db348b043382178e53727c49c96de",
+      "source_commit_date_utc": "2026-09-28T21:49:01Z",
+      "verification": "PASS: public official repository read and listed facts manually reviewed; source never executed",
+      "reviewed_facts": {
+        "moved_from": "googleapis/google-auth-library-python-oauthlib (archived; README points to this maintained package)",
+        "after_bind_redirect": "local_server.server_port is used in the exact redirect URI before authorization URL construction",
+        "windows_exclusive_address": "SO_EXCLUSIVEADDRUSE=1 before bind; allow_reuse_address=False",
+        "why_not_reuseaddr": "Source warns SO_REUSEADDR alone permits other Windows processes to bind same address/port",
+        "system_browser": "webbrowser.get(browser).open(auth_url) follows local listener creation",
+        "not_copied": "Example authorization URL and request logging are unsuitable for secret-redacting product code",
+        "source_executed": false
+      },
+      "immutable_commit_blob_match": "PASS"
+    },
+    {
+      "url": "https://github.com/MicrosoftDocs/sdk-api/blob/0a160262f8cff85ac596b266c86e16dfd36aaae8/sdk-api-src/content/dpapi/nf-dpapi-cryptprotectdata.md",
+      "repository": "MicrosoftDocs/sdk-api",
+      "path": "sdk-api-src/content/dpapi/nf-dpapi-cryptprotectdata.md",
+      "checked_at_utc": "2026-10-14T05:25:49.584444+00:00",
+      "git_blob_sha1": "d3ecff65ad20b3f8bee9fa0bafd17b62d4f8d465",
+      "content_sha256": "3f7c77247a816e9402660a65009e53aba531ac164664e60667eddc0b23e5dc04",
+      "verification": "PASS: public official repository read and listed facts manually reviewed; source never executed",
+      "reviewed_facts": {
+        "current_user": "Typically same logon credentials and same computer; roaming-profile exception",
+        "local_machine_not_used": "CRYPTPROTECT_LOCAL_MACHINE lets any user on the computer decrypt",
+        "ui_forbidden": "CRYPTPROTECT_UI_FORBIDDEN",
+        "process_boundary": "Current-user, not per-process isolation",
+        "source_executed": false
+      },
+      "source_commit_sha": "0a160262f8cff85ac596b266c86e16dfd36aaae8",
+      "source_commit_date_utc": "2025-11-13T20:18:00Z",
+      "immutable_commit_blob_match": "PASS"
+    },
+    {
+      "url": "https://github.com/MicrosoftDocs/sdk-api/blob/649ac0310f33d4d8852aaa524ee01918528da125/sdk-api-src/content/dpapi/nf-dpapi-cryptunprotectdata.md",
+      "repository": "MicrosoftDocs/sdk-api",
+      "path": "sdk-api-src/content/dpapi/nf-dpapi-cryptunprotectdata.md",
+      "checked_at_utc": "2026-10-14T05:25:49.584444+00:00",
+      "git_blob_sha1": "92f2e6562cebe2ad0a60329e128d6ea55d7296b2",
+      "content_sha256": "6463e857d222e14c3662fcbe5c82a1a64e3a8284d10d69fbbce8dec717c8a8ff",
+      "verification": "PASS: public official repository read and listed facts manually reviewed; source never executed",
+      "reviewed_facts": {
+        "matching_entropy_required": true,
+        "tamper": "Specific DPAPI error varies; application-level integrity checks are needed",
+        "cleanup": "LocalFree returned buffers and SecureZeroMemory sensitive buffers",
+        "source_executed": false
+      },
+      "source_commit_sha": "649ac0310f33d4d8852aaa524ee01918528da125",
+      "source_commit_date_utc": "2026-02-18T03:10:32Z",
+      "immutable_commit_blob_match": "PASS"
+    }
+  ],
+  "callback_design_decision": {
+    "gui_address": "http://127.0.0.1:8765",
+    "oauth_listener": "127.0.0.1 with OS-assigned temporary port (bind port=0)",
+    "redirect": "Capture actual port after exclusive bind; use same exact URI in authorization request, callback validator and code exchange",
+    "basis": "Google native-app previously captured current official primary text recommends HTTP listener on random available port; maintained current official Python flow constructs redirect from actual server_port with Windows exclusive bind",
+    "current_stage_windows_verification": "NOT VERIFIED; synthetic callback and exclusive binding tests pending",
+    "actual_registered_client": "NOT VERIFIED; no real client registration checked"
+  },
+  "not_verified": [
+    "Real Google/Instagram login, code exchange, token issuance/storage and identity API",
+    "Instagram login-specific scopes/redirect/PKCE/account eligibility/app review",
+    "Actual client registration, consent screen and granted permissions",
+    "Different Windows user account denial is a current-user DPAPI design property; separate-user live OS test pending",
+    "User Windows 11 PC, live RSS/AI API, Korean TTS and full video quality"
+  ],
+  "cloud_followup": {
+    "source": "cloud_official_docs.json",
+    "checked_at_utc": "2026-10-14T05:26:03.310541+00:00",
+    "document_records": 12,
+    "public_document_fetches_pass": 0,
+    "not_verified": 12,
+    "failure_kind": "proxy_connect_denied",
+    "settings_changed": false,
+    "tls_bypassed": false,
+    "authorization_or_api_calls": 0
+  }
+}

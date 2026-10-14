@@ -1,16 +1,16 @@
-# NewsFlow AI — Windows 11 · Phase 4B-2A
+# NewsFlow AI — Windows 11 · Phase 4B-2B
 
 공개 RSS 수집·중복 제거·내부 추천 평가를 제공하는 한국어 로컬 웹 대시보드입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
-현재 Phase 4B-2A는 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작, SNS 게시 준비와 활성화가 차단된 OAuth 연동 코드를 제공합니다. 실제 SNS 게시·계정 로그인·실제 토큰 교환 및 저장·주기 스케줄러는 제공하지 않습니다.
+현재 Phase 4B-2B는 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작, SNS 게시 준비와 운영 OAuth callback·채널 identity·Windows 자격정보 저장 및 복구 코드를 제공합니다. OAuth 운영 코드는 활성화가 차단됩니다. 실제 SNS 게시·계정 로그인·실제 토큰 교환 및 저장·주기 스케줄러는 제공하지 않습니다.
 
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 4B-2A 검토 브랜치 `feat/newsflow-phase4b2a`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 4B-2B 검토 브랜치 `feat/newsflow-phase4b2b`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase4b2a https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase4b2b https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -21,7 +21,7 @@ Git 없이 ZIP을 받았다면 해당 브랜치 ZIP을 풀고 `newsflow-ai` 폴�
 4. 서버 실행 후 브라우저에서 **http://127.0.0.1:8765**를 직접 여세요. 기본 주소·바인딩·포트는 127.0.0.1:8765입니다. 자동 포트 변경이나 외부 공개 바인딩은 하지 않습니다.
 5. 프로그램 종료: 실행 창에서 **Ctrl+C**. 종료가 끝날 때까지 기다린 후 창을 닫으세요. 강제 종료 시 다음 실행에서 수집 중단 상태를 복구합니다.
 
-Windows EXE Installer는 제공하지 않습니다. `run.bat`의 실제 Windows 실행과 일반 Windows 브라우저 POST는 Cloud에서 **NOT VERIFIED**이며 아래 체크리스트를 사용해 확인해야 합니다.
+Windows EXE Installer는 제공하지 않습니다. Linux Cloud는 Windows BAT를 실제로 실행하지 않습니다. Windows Actions에서 BAT와 Chrome POST를 별도 검증하며, 이번 단계 결과는 완료 보고서에서 확인하세요. 사용자의 Windows 11 PC 수동 운영은 **NOT VERIFIED**이며 아래 체크리스트로 별도 확인해야 합니다.
 
 ## 재실행·업데이트
 
@@ -31,7 +31,7 @@ Windows EXE Installer는 제공하지 않습니다. `run.bat`의 실제 Windows 
 
 ```powershell
 # JSBAE 저장소 루트에서
-git switch feat/newsflow-phase4b1
+git switch feat/newsflow-phase4b2b
 git pull --ff-only
 cd newsflow-ai
 .\run.bat
@@ -274,8 +274,25 @@ YouTube 최소 업로드 scope 후보는 `youtube.upload`입니다. 채널 ident
 
 Publishing Studio의 **실운영 OAuth 준비**에서 YouTube Desktop 클라이언트 설정·PKCE·로컬 응답 처리 코드 준비와 실계정 미검증 상태를 구분합니다. 이 화면은 상태 확인용이며 로그인 URL, OAuth 클라이언트 값, 인증 코드나 토큰을 입력하거나 표시하지 않습니다. 계정의 연결 준비·해제 준비 버튼은 계속 로컬 기록만 저장하고, 실제 연결 버튼은 비활성입니다.
 
-`GET /api/oauth/production-readiness`는 Phase 4B-2A 활성화 제한과 플랫폼별 준비 상태만 반환합니다. 환경변수·GUI 승인·요청 파라미터로 브라우저 로그인, 실제 토큰 교환, 실운영 자격정보 저장 또는 SNS 게시를 켤 수 없습니다. 기존 `/api/oauth/safety`와 시작 요청의 차단 동작은 유지합니다. FastAPI에는 OAuth authorize/callback 경로를 추가하지 않습니다.
+`GET /api/oauth/production-readiness`는 현재 단계의 활성화 제한과 플랫폼별 준비 상태만 반환합니다. 환경변수·GUI 승인·요청 파라미터로 브라우저 로그인, 실제 토큰 교환, 실운영 자격정보 저장 또는 SNS 게시를 켤 수 없습니다. 기존 `/api/oauth/safety`와 시작 요청의 차단 동작은 유지합니다. FastAPI에는 OAuth authorize/callback 경로를 추가하지 않습니다.
 
-Instagram 연결은 공식 로그인 방식별 현재 권한·계정 자격 확인이 끝나기 전까지 차단합니다. 실계정·채널 identity, 실제 OAuth 응답 및 외부 토큰은 **NOT VERIFIED**입니다. 실운영 저장소는 기존 합성 토큰용 저장소와 분리된 비활성 구성으로 두며, 사용자 승인 전 실제 서비스 자격정보를 저장하지 않습니다. Phase 4B-2B 실계정 운영은 별도 승인 후 진행합니다.
+Instagram 연결은 공식 로그인 방식별 현재 권한·계정 자격 확인이 끝나기 전까지 차단합니다. 실계정·채널 identity, 실제 OAuth 응답 및 외부 토큰은 **NOT VERIFIED**입니다. 실운영 저장소는 기존 합성 토큰용 저장소와 분리된 비활성 구성으로 두며, 사용자 승인 전 실제 서비스 자격정보를 저장하지 않습니다. 실계정 운영 활성화는 후속 단계 승인과 명시적인 production activation 코드 변경이 필요합니다.
 
 Google Desktop JSON은 라이브러리의 `DesktopClientConfig.from_json()`으로 로컬 검증할 수 있습니다. 검증은 로그인이나 네트워크 요청을 시작하지 않으며 실제 앱 등록 상태를 증명하지 않습니다. 클라이언트 파일은 소스코드와 분리된 사용자 데이터 공간에 보관해야 합니다. `client_secret*.json`과 `oauth-client*.json`은 Git에서 제외합니다. [OAuth 구현 범위 및 선행 조건](docs/oauth_production.md) · [Phase 4B-2A 완료 보고서](docs/reports/phase4b2a_report.md).
+
+## Phase 4B-2B · 운영 OAuth 기반과 복구
+
+Publishing Studio의 **운영 OAuth 기반**과 `GET /api/oauth/operations-readiness`에서 loopback callback, YouTube 채널 identity 및 Windows 운영 저장소 코드의 준비 상태를 확인합니다. 이 화면은 listener를 시작하거나 브라우저 로그인·계정 조회·토큰 교환을 실행하지 않습니다. 연결 준비·해제 준비는 로컬 기록이며, 실제 연결 버튼과 직접 시작 요청은 계속 차단됩니다. `/api/oauth/production-readiness`의 기존 차단 필드도 유지합니다.
+
+Callback 코드는 GUI와 분리된 `127.0.0.1` 임시 listener를 먼저 bind하여 OS가 배정한 빈 포트를 고정하고, 정확한 URI와 state/PKCE, 만료·일회성 소비를 검증합니다. 명시적으로 선택한 callback 포트가 점유되면 오류를 반환합니다. 기본 FastAPI에는 authorize/callback/token 교환 경로를 노출하지 않습니다. 테스트만 합성 listener를 실행하며 실제 Google 인증과 연결하지 않습니다. 기존 GUI 주소 `http://127.0.0.1:8765`와 자동 포트 변경 금지 정책을 유지합니다. [포트 결정과 공식 근거](docs/oauth_operations.md).
+
+YouTube 채널 identity 검증은 업로드 권한과 구분하여 합성 응답으로 검사합니다. 계정 불일치, 채널 변경·권한 축소, 조회 실패·timeout·결과 불명은 연결 준비를 차단합니다. 실제 채널 identity와 서비스 권한은 **NOT VERIFIED**입니다. Instagram 로그인 경로·scope·redirect·PKCE·계정 자격 및 앱 검수 조건을 공식 문서로 확인하지 못하면 차단 상태를 유지합니다.
+
+별도 운영 저장소는 현재 Windows 사용자 DPAPI, 계정 격리, 쓰기·검증·DB pointer 전환, revision CAS와 crash/restart 복구를 제공합니다. 실제 서비스 토큰 저장·조회는 production boundary에서 차단하며, 기존 합성 전용 `WindowsCredentialVault`의 제한을 풀지 않습니다. native 검증은 `nf-synthetic-` 합성 토큰만 사용합니다. 동일 Windows 사용자에 속한 다른 프로세스가 같은 사용자 DPAPI를 사용할 수 있다는 운영체제 경계도 고려해야 합니다. 다른 Windows 사용자 격리의 실제 검증 여부는 보고서에서 별도로 확인하세요.
+
+```powershell
+python -m pytest -q -rs
+python tools/ci_production_vault_validation.py --output validation-output/production-credential-vault.json
+```
+
+별도 `newsflow-phase4b2b-windows.yml`은 이번 feature 브랜치에만 실행하며 전체 회귀, 실제 BAT·Google Chrome 로컬 POST·재시작, loopback HTTP callback, 합성 identity·토큰 회전 복구, 기존 및 운영 DPAPI 검증을 수행합니다. 실제 OAuth 로그인·서비스 토큰 교환·저장 및 SNS 호출을 실행하지 않습니다. 사용자 Windows 11 PC 운영, 기존 실제 RSS/AI API, 한국어 TTS와 완성 영상 품질은 여전히 별도 검증 사항입니다. 실제 인증과 게시 승인은 각각 별도 승인이 필요합니다. [Phase 4B-2B 보고서](docs/reports/phase4b2b_report.md).

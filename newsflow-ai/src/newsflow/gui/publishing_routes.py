@@ -107,6 +107,7 @@ def studio(
             accounts=list(session.scalars(select(PlatformAccount).order_by(PlatformAccount.id.desc()))),
             oauth_cards=account_connection_service(request).cards(),
             production_readiness=oauth_production_readiness(),
+            operations_readiness=oauth_operations_readiness(),
             drafts=list(session.scalars(select(PublishDraft).order_by(PublishDraft.id.desc()).limit(30))),
             validations=validations,
             validation=validations[0] if validations else None,
@@ -269,4 +270,37 @@ def oauth_production_readiness() -> dict:
                 "login": "blocked",
             },
         },
+    }
+
+
+@router.get("/api/oauth/operations-readiness")
+def oauth_operations_readiness() -> dict:
+    """Describe inactive operational code without starting a listener or opening a vault."""
+    return {
+        "phase": "4B-2B",
+        "mode": "OFFLINE/BLOCKED",
+        "production_activation": False,
+        "callback": {
+            "code_status": "implemented_inactive",
+            "binding": "127.0.0.1",
+            "registered_uri_match": "exact",
+            "real_provider_connected": False,
+            "listener_started_by_gui": False,
+        },
+        "youtube_identity": {
+            "code_status": "implemented_inactive",
+            "real_account": "NOT VERIFIED",
+            "connection_on_error": "blocked",
+        },
+        "production_vault": {
+            "code_status": "implemented_inactive",
+            "boundary": "Windows current-user DPAPI",
+            "validation_data": "synthetic_only",
+            "real_credentials_allowed": False,
+        },
+        "instagram": {"login": "blocked", "official_requirements": "NOT VERIFIED"},
+        "real_login_allowed": False,
+        "real_token_exchange_allowed": False,
+        "real_identity_lookup_allowed": False,
+        "real_publishing_allowed": False,
     }

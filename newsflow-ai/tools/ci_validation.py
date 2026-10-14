@@ -382,7 +382,7 @@ def oauth_browser(page: Page, root: Path, result: dict, progress: dict) -> None:
     result["oauth_SQLite_state"] = stored
     readiness_panel = page.locator("#oauth-production-readiness")
     readiness_panel.wait_for()
-    assert readiness_panel.get_attribute("data-phase") == "4B-2A"
+    assert readiness_panel.get_attribute("data-phase") == "4B-2B"
     for attribute in (
         "data-production-activation", "data-browser-login-allowed", "data-token-exchange-allowed",
         "data-production-storage-allowed",
@@ -392,7 +392,7 @@ def oauth_browser(page: Page, root: Path, result: dict, progress: dict) -> None:
         )
     readiness = json.loads(HTTP().get("/api/oauth/production-readiness"))
     assert readiness == {
-        "phase": "4B-2A", "production_activation": False, "environment_can_activate": False,
+        "phase": "4B-2B", "production_activation": False, "environment_can_activate": False,
         "gui_can_activate": False, "browser_login_allowed": False, "token_exchange_allowed": False,
         "production_storage_allowed": False, "publishing_allowed": False,
         "providers": {
@@ -407,6 +407,36 @@ def oauth_browser(page: Page, root: Path, result: dict, progress: dict) -> None:
         },
     }, "protocol preparation must never imply production readiness or verified real-account identity"
     result["oauth_production_readiness"] = readiness
+    operational_panel = page.locator("#oauth-operations-readiness")
+    operational_panel.wait_for()
+    assert operational_panel.get_attribute("data-phase") == "4B-2B"
+    for attribute in (
+        "data-production-activation", "data-listener-started", "data-real-identity-lookup-allowed",
+        "data-real-credentials-allowed",
+    ):
+        assert operational_panel.get_attribute(attribute) == "false"
+    operations = json.loads(HTTP().get("/api/oauth/operations-readiness"))
+    assert operations == {
+        "phase": "4B-2B", "mode": "OFFLINE/BLOCKED", "production_activation": False,
+        "callback": {
+            "code_status": "implemented_inactive", "binding": "127.0.0.1",
+            "registered_uri_match": "exact", "real_provider_connected": False,
+            "listener_started_by_gui": False,
+        },
+        "youtube_identity": {
+            "code_status": "implemented_inactive", "real_account": "NOT VERIFIED",
+            "connection_on_error": "blocked",
+        },
+        "production_vault": {
+            "code_status": "implemented_inactive", "boundary": "Windows current-user DPAPI",
+            "validation_data": "synthetic_only", "real_credentials_allowed": False,
+        },
+        "instagram": {"login": "blocked", "official_requirements": "NOT VERIFIED"},
+        "real_login_allowed": False, "real_token_exchange_allowed": False,
+        "real_identity_lookup_allowed": False, "real_publishing_allowed": False,
+    }, "operational OAuth code must remain inactive and must not imply verified real accounts"
+    result["oauth_operations_readiness"] = operations
+    result["OAuth_operations_readiness_browser"] = "PASS (inactive code; real operations blocked)"
 
 
 def browser(
@@ -723,6 +753,7 @@ def browser(
         assert json.loads(HTTP().get("/api/publishing/safety")) == result["publishing_safety"]
         assert json.loads(HTTP().get("/api/oauth/safety")) == result["oauth_safety"]
         assert json.loads(HTTP().get("/api/oauth/production-readiness")) == result["oauth_production_readiness"]
+        assert json.loads(HTTP().get("/api/oauth/operations-readiness")) == result["oauth_operations_readiness"]
         assert oauth_database_state(root, result["oauth_account_id"]) == result["oauth_SQLite_state"]
         assert 'data-connection-status="disconnect_prepared"' in publishing
         assert 'data-can-connect="false"' in publishing
@@ -788,7 +819,17 @@ def main() -> None:
         )
         print(json.dumps(result, ensure_ascii=False, indent=2))
         # Metadata is readable through GitHub's check API even if artifact/log hosts are blocked.
-        notice = json.dumps(result, ensure_ascii=False, separators=(",", ":"))
+        # GitHub check notices truncate at 4096 UTF-8 bytes. Keep the additive
+        # descriptor in a separate bounded notice rather than losing evidence.
+        notice_result = dict(result)
+        if "browser" in result:
+            notice_result["browser"] = dict(result["browser"])
+            operations = notice_result["browser"].pop("oauth_operations_readiness", None)
+            if operations is not None:
+                operations_notice = json.dumps(operations, ensure_ascii=False, separators=(",", ":"))
+                operations_notice = operations_notice.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+                print(f"::notice title=NewsFlow OAuth operations::{operations_notice}")
+        notice = json.dumps(notice_result, ensure_ascii=False, separators=(",", ":"))
         notice = notice.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
         print(f"::notice title=NewsFlow validation::{notice}")
 
