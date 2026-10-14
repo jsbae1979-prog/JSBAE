@@ -293,3 +293,34 @@ class OAuthCredentialRotation(Base):
     status: Mapped[str] = mapped_column(String(30))
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class OAuthIdentityBinding(Base):
+    """Permanent account/client/channel binding digest; no tokens or OAuth callback data."""
+
+    __tablename__ = "oauth_identity_bindings"
+    account_id: Mapped[int] = mapped_column(ForeignKey("platform_accounts.id"), primary_key=True)
+    account_key: Mapped[str] = mapped_column(String(40), unique=True)
+    identity_digest: Mapped[str] = mapped_column(String(64))
+    channel_binding_digest: Mapped[str] = mapped_column(String(64), unique=True)
+    grant_fingerprint: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    mode: Mapped[str] = mapped_column(String(24), default="synthetic")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class OAuthLifecycleOperation(Base):
+    """A durable operation owns a ciphertext reference before the file is written."""
+
+    __tablename__ = "oauth_lifecycle_operations"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("platform_accounts.id"), index=True)
+    account_key: Mapped[str] = mapped_column(String(40))
+    identity_digest: Mapped[str] = mapped_column(String(64))
+    operation: Mapped[str] = mapped_column(String(20))
+    expected_revision: Mapped[int] = mapped_column(Integer)
+    old_reference: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    new_reference: Mapped[str | None] = mapped_column(String(32), nullable=True, unique=True)
+    status: Mapped[str] = mapped_column(String(32))
+    claim_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

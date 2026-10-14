@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "tests": 830,
+  "passed": 824,
+  "skipped": 6,
+  "failures": 0,
+  "errors": 0,
+  "warnings": 1,
+  "command": "python -m pytest -q -rs --junitxml=docs/reports/phase4b2b_evidence/cloud_pytest.xml",
+  "platform": "Codex Cloud Linux / Python 3.12.14",
+  "synthetic_only": true,
+  "new_cases_by_module": {
+    "test_oauth_callback": 87,
+    "test_oauth_identity": 68,
+    "test_oauth_lifecycle": 59,
+    "test_oauth_operations_flow": 32,
+    "test_oauth_operations_gui": 23,
+    "test_production_dpapi": 46
+  },
+  "preserved_baseline_cases": 515,
+  "tested_code_sha": "f94d9d7467f927135c9923699834e2d90be46539",
+  "elapsed_seconds": 119.48
+}

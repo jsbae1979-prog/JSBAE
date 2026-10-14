@@ -1,0 +1,31 @@
+{
+  "phase": "4B-2B",
+  "mode": "OFFLINE/BLOCKED",
+  "production_activation": false,
+  "callback": {
+    "code_status": "implemented_inactive",
+    "binding": "127.0.0.1",
+    "registered_uri_match": "exact",
+    "real_provider_connected": false,
+    "listener_started_by_gui": false
+  },
+  "youtube_identity": {
+    "code_status": "implemented_inactive",
+    "real_account": "NOT VERIFIED",
+    "connection_on_error": "blocked"
+  },
+  "production_vault": {
+    "code_status": "implemented_inactive",
+    "boundary": "Windows current-user DPAPI",
+    "validation_data": "synthetic_only",
+    "real_credentials_allowed": false
+  },
+  "instagram": {
+    "login": "blocked",
+    "official_requirements": "NOT VERIFIED"
+  },
+  "real_login_allowed": false,
+  "real_token_exchange_allowed": false,
+  "real_identity_lookup_allowed": false,
+  "real_publishing_allowed": false
+}

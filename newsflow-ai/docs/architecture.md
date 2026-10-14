@@ -120,3 +120,17 @@ Google 데스크톱 프로토콜은 공식 엔드포인트, S256, state, 일회�
 `youtube.upload`는 `channels.list?mine=true`의 허용 scope가 아닙니다. 따라서 토큰 수신은 계정 신원 확인을 의미하지 않습니다. 계정 바인딩에는 별도 검증된 identity가 필요하며 실제 identity 조회, 추가 최소 권한 승인 및 앱 검증은 다음 단계의 선행 조건입니다. Instagram의 최신 공식 로그인 방식별 요건은 확인 가능한 근거가 없으면 BLOCKED로 유지하고 Google 프로토콜을 복사하지 않습니다.
 
 별도 credential boundary와 additive migration 0006의 회전 이력은 비밀 원문과 DB reference를 분리합니다. 기존 0001~0005와 synthetic-only Windows DPAPI 계약은 그대로 유지합니다. 합성 커널에서 계정별 작업 예약, revision CAS, 교체 후 이전 reference 정리와 중단된 작업의 fail-closed 복구를 검증합니다. SQLite commit과 암호화 파일 저장은 하나의 원자적 트랜잭션이 아니므로 중간 실패 및 orphan ciphertext 가능성을 명시하고 운영 활성화 전 검토합니다. 실제 서비스 credential 저장은 이 단계에서 차단합니다.
+
+## Phase 4B-2B 운영 OAuth 기반 (실제 서비스 차단)
+
+`oauth/callback.py`의 listener는 GUI 8765와 분리된 `127.0.0.1` 임시 포트를 먼저 확보한다. 정확한 redirect/Host/Origin, state, S256, 만료 및 일회성 소비를 검증한 결과는 process-local HMAC receipt로 보호한다. Windows에서는 주소 재사용 대신 `SO_EXCLUSIVEADDRUSE`를 사용한다. 운영 listener 진입점은 immutable production activation에서 차단하고 합성 경로만 실제 로컬 HTTP를 처리한다.
+
+`oauth/identity.py`는 YouTube `channels.list(part=id, mine=true)` 계약과 별도 `youtube.readonly` 권한을 검증한다. 채널 ID, client, 로컬 계정, scopes와 전체 grant fingerprint를 묶는다. 조회 실패·timeout·권한 축소와 회전 시작은 기존 receipt를 무효화한다. synthetic receipt는 실제 Google 사용자 identity 또는 게시 승인이 아니다.
+
+`oauth/production_dpapi.py`는 기존 NF 전용 vault와 별개인 current-user DPAPI 암호화 커널이다. 실제 운영 facade는 저장·조회 전에 차단된다. 합성 facade에서 같은 커널의 계정/identity/reference/operation binding, immutable 파일 쓰기, 검증, provenance 기반 삭제를 테스트한다. Windows 밖에서 production DPAPI를 Fake로 자동 대체하지 않는다.
+
+Additive migration `0007`의 identity binding과 lifecycle journal은 비밀값 대신 opaque pointer, digests, revision과 상태를 보존한다. `oauth/lifecycle.py`는 새 reference를 파일 쓰기 전에 기록하고 write → read-verify → DB pointer CAS → 이전 파일 정리를 수행한다. 재시작은 미완료 작업을 unknown으로 격리하며 provider 재호출이나 자동 성공 전환을 하지 않는다. 활성 pointer·operation provenance·파일 hash를 재검사한 뒤에만 orphan을 정리한다.
+
+만료·재시작 후의 `HistoricalCredential`은 durable grant hash와 복호화 결과를 검증하는 5분짜리 `REVALIDATION_ONLY` 후보이다. Identity receipt 또는 연결 준비 상태로 사용하지 않는다. 정확한 revision을 예약한 명시적 refresh와 새로운 채널 Identity 검증을 모두 통과해야 새 pointer를 커밋한다. unknown/error/revoked 상태는 재시도 경로로 사용할 수 없다.
+
+`oauth/fake_flow.py`는 합성 HTTP authorization redirect → callback → code exchange → channel identity → encrypted lifecycle 및 명시적 refresh/revoke를 연결한다. 외부 주소로 redirect하지 않으며 실제 production pipeline factory도 생성하지 않는다. Publishing Studio는 준비 상태만 조회한다. 실제 OAuth, 서비스 credential, Identity API 및 Publisher는 계속 BLOCKED이다.

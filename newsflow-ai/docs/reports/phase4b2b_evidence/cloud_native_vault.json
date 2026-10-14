@@ -1,0 +1,10 @@
+{
+  "platform": "linux",
+  "credential_kind": "synthetic only",
+  "real_service_tokens": 0,
+  "real_oauth_calls": 0,
+  "real_publish_calls": 0,
+  "Windows11_user_PC": "NOT VERIFIED",
+  "result": "NOT VERIFIED",
+  "current_user_DPAPI": "NOT VERIFIED (requires Windows)"
+}

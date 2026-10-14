@@ -1,0 +1,144 @@
+{
+  "platform": "win32",
+  "mode": "windows",
+  "real_RSS": "NOT VERIFIED (offline synthetic tests)",
+  "LOCALAPPDATA_default": "PASS",
+  "production_trace": [
+    "first_start_requested",
+    "first_server_ready",
+    "production_HTTP_POST_completed",
+    "duplicate_rejected",
+    "first_server_stopped",
+    "seed_stored_three_articles",
+    "restarted_server_ready",
+    "restarted_server_stopped",
+    "port_collision_rejected"
+  ],
+  "production": {
+    "server_lifecycle": "PASS",
+    "http_POST": "PASS",
+    "sqlite_store_restart_query": "PASS",
+    "article_count": 3,
+    "duplicate_and_port_collision": "PASS",
+    "run_bat": "PASS",
+    "stop_method": "taskkill process tree",
+    "Windows_manual_CtrlC": "NOT VERIFIED"
+  },
+  "browser_progress": {
+    "server_ready": true,
+    "browser_channel": "chrome",
+    "context_origin": {
+      "location": "http://127.0.0.1:8765",
+      "window": "http://127.0.0.1:8765"
+    },
+    "registration_status": 303,
+    "registration_origin": "http://127.0.0.1:8765",
+    "registration": "PASS",
+    "disable_status": 303,
+    "enable_status": 303,
+    "collection_status": 303,
+    "sqlite_count": 3,
+    "search_count": 1,
+    "video_status": "success",
+    "video_progress": 100,
+    "video_metadata_state": {
+      "ready": 4,
+      "error": null,
+      "width": 1080,
+      "height": 1920,
+      "support": "probably"
+    },
+    "video_dimensions": [
+      1080,
+      1920
+    ],
+    "video_media_state": {
+      "ready": 4,
+      "error": null
+    },
+    "video_frame_decode": "PASS",
+    "publishing_create_status": 303,
+    "publishing_edit_status": 303,
+    "publishing_validate_status": 303,
+    "oauth_forged_start_status": 423,
+    "mobile_last_path": "/publishing?draft_id=1",
+    "mobile_overflow": false
+  },
+  "browser": {
+    "GUI_browser_POST": "PASS (registration, disable/enable, collection)",
+    "AI_Studio_analysis_script_edit_POST": "PASS (offline; unverified; sources preserved)",
+    "Video_Studio_POST_preview_download": "PASS (real 30s MP4; offline silent audio; human quality not verified)",
+    "publishing_SQLite_counts": {
+      "publish_drafts": 1,
+      "publish_validations": 2,
+      "publish_jobs": 0,
+      "publish_attempts": 0
+    },
+    "Publishing_Studio_create_edit_validate_POST": "PASS (unconnected account blocked; approval pending; no real publishing)",
+    "publishing_safety": {
+      "real_publish_calls": 0,
+      "real_oauth_calls": 0,
+      "mode": "foundation",
+      "external_execution_enabled": false
+    },
+    "OAuth_Studio_metadata_prepare_disconnect_blocked_start_POST": "PASS (local records only)",
+    "oauth_safety": {
+      "real_authorization_requests": 0,
+      "real_token_exchange_calls": 0,
+      "real_refresh_calls": 0,
+      "real_revoke_calls": 0,
+      "mode": "OFFLINE/BLOCKED",
+      "feature_enabled": false,
+      "user_approval": false,
+      "phase_allows_real": false
+    },
+    "oauth_account_id": 1,
+    "oauth_SQLite_state": {
+      "status": "disconnect_prepared",
+      "mode": "offline",
+      "revision": 3,
+      "expires_at": null,
+      "error_code": null,
+      "account_status": "not_connected",
+      "credential_present": false,
+      "api_ready": false,
+      "scopes": []
+    },
+    "oauth_production_readiness": {
+      "phase": "4B-2B",
+      "production_activation": false,
+      "environment_can_activate": false,
+      "gui_can_activate": false,
+      "browser_login_allowed": false,
+      "token_exchange_allowed": false,
+      "production_storage_allowed": false,
+      "publishing_allowed": false,
+      "providers": {
+        "youtube": {
+          "client_type": "desktop",
+          "oauth_code_status": "implemented_inactive",
+          "account_identity": "NOT VERIFIED",
+          "production_vault": "inactive",
+          "login": "blocked"
+        },
+        "instagram": {
+          "oauth_code_status": "blocked",
+          "official_requirements": "NOT VERIFIED",
+          "production_vault": "inactive",
+          "login": "blocked"
+        }
+      }
+    },
+    "OAuth_operations_readiness_browser": "PASS (inactive code; real operations blocked)",
+    "browser_external_request_origins": [],
+    "GUI_render_search_detail_mobile": "PASS",
+    "GUI_synthetic_RSS_store": "PASS",
+    "article_count": 3,
+    "OAuth_preparation_restart_persistence": "PASS",
+    "Publishing_draft_validation_restart_persistence": "PASS",
+    "Video_job_file_restart_persistence": "PASS",
+    "AI_draft_restart_persistence": "PASS",
+    "fixture_server_restart_persistence": "PASS"
+  },
+  "outcome": "PASS"
+}
