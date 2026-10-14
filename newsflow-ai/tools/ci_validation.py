@@ -14,9 +14,13 @@ import time
 from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from urllib.error import URLError
+from typing import TYPE_CHECKING
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode, urlsplit
 from urllib.request import HTTPCookieProcessor, ProxyHandler, Request, build_opener
+
+if TYPE_CHECKING:
+    from playwright.sync_api import Page
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE = "http://127.0.0.1:8765"
@@ -58,6 +62,25 @@ class HTTP:
         )
         with self.opener.open(request, timeout=5) as response:
             assert response.status == 200
+
+    def blocked_post(
+        self, path: str, expected_status: int, fields: dict[str, str] | None = None
+    ) -> None:
+        self.get("/settings")
+        token = next(cookie.value for cookie in self.cookies if cookie.name == "newsflow_csrf")
+        request = Request(
+            BASE + path,
+            data=urlencode({**(fields or {}), "csrf_token": token}).encode(),
+            headers={"Origin": BASE},
+        )
+        try:
+            with self.opener.open(request, timeout=5) as response:
+                assert response.status == expected_status, "forged execution request must be blocked"
+        except HTTPError as error:
+            try:
+                assert error.code == expected_status, "forged execution request must be blocked"
+            finally:
+                error.close()
 
     def done(self) -> dict:
         deadline = time.monotonic() + 15
@@ -150,6 +173,23 @@ def publishing_counts(root: Path) -> dict[str, int]:
         return {
             name: connection.execute(f"SELECT count(*) FROM {name}").fetchone()[0]
             for name in ("publish_drafts", "publish_validations", "publish_jobs", "publish_attempts")
+        }
+
+
+def oauth_database_state(root: Path, account_id: int) -> dict:
+    with closing(sqlite3.connect(root / "newsflow.db")) as connection:
+        row = connection.execute(
+            "SELECT c.status, c.mode, c.revision, c.expires_at, c.error_code, a.status, "
+            "a.credential_ref IS NOT NULL, a.api_ready, a.scopes "
+            "FROM oauth_connections c JOIN platform_accounts a ON a.id = c.account_id "
+            "WHERE c.account_id = ?",
+            (account_id,),
+        ).fetchone()
+        assert row is not None, "local OAuth preparation record must be stored"
+        return {
+            "status": row[0], "mode": row[1], "revision": row[2], "expires_at": row[3],
+            "error_code": row[4], "account_status": row[5], "credential_present": bool(row[6]),
+            "api_ready": bool(row[7]), "scopes": json.loads(row[8]),
         }
 
 
@@ -258,6 +298,88 @@ def production(mode: str, root: Path, env: dict[str, str], trace: list[str]) -> 
         "stop_method": "taskkill process tree" if mode == "windows" else "SIGTERM",
         "Windows_manual_CtrlC": "NOT VERIFIED",
     }
+
+
+def oauth_browser(page: Page, root: Path, result: dict, progress: dict) -> None:
+    """Real local GUI requests only; no login page or token exchange is opened."""
+    metadata = page.locator('form[action="/publishing/accounts"]')
+    metadata.locator("select[name=platform]").select_option("youtube")
+    metadata.locator("input[name=label]").fill("CI 합성 YouTube 계정")
+    metadata.locator("select[name=account_type]").select_option("youtube_channel")
+    with (
+        page.expect_navigation(wait_until="domcontentloaded"),
+        page.expect_response(
+            lambda response: response.request.method == "POST"
+            and response.url.endswith("/publishing/accounts")
+        ) as response,
+    ):
+        metadata.locator("button[type=submit]").click()
+    assert response.value.status == 303, "local account metadata POST failed"
+    assert response.value.request.all_headers().get("origin") == BASE
+    with closing(sqlite3.connect(root / "newsflow.db")) as connection:
+        rows = connection.execute(
+            "SELECT id FROM platform_accounts WHERE label = ? AND platform = ?",
+            ("CI 합성 YouTube 계정", "youtube"),
+        ).fetchall()
+        assert len(rows) == 1, "synthetic account metadata must be stored once"
+        account_id = rows[0][0]
+    card = page.locator(f"#oauth-account-{account_id}")
+    card.wait_for()
+    assert card.get_attribute("data-connection-status") == "unprepared"
+    assert card.get_attribute("data-mode") == "OFFLINE/BLOCKED"
+    assert card.get_attribute("data-can-connect") == "false"
+    assert card.locator(".oauth-start-disabled").is_disabled()
+    assert page.locator('form[action$="/oauth/start"]').count() == 0
+    for action, state in (("prepare", "prepared"), ("disconnect-prepare", "disconnect_prepared")):
+        path = f"/publishing/accounts/{account_id}/oauth/{action}"
+        with (
+            page.expect_navigation(wait_until="domcontentloaded"),
+            page.expect_response(
+                lambda response, expected_path=path: response.request.method == "POST"
+                and response.url.endswith(expected_path)
+            ) as response,
+        ):
+            page.locator(f'form[action="{path}"] button[type=submit]').click()
+        assert response.value.status == 303, "local OAuth preparation POST failed"
+        assert response.value.request.all_headers().get("origin") == BASE
+        card = page.locator(f"#oauth-account-{account_id}")
+        card.wait_for()
+        assert card.get_attribute("data-connection-status") == state
+        assert card.get_attribute("data-mode") == "OFFLINE/BLOCKED"
+        assert card.get_attribute("data-can-connect") == "false"
+        assert card.locator(".oauth-start-disabled").is_disabled()
+    HTTP().blocked_post(
+        f"/publishing/accounts/{account_id}/oauth/start?allow_real=true&user_approval=true",
+        423,
+        {"mode": "real", "feature_enabled": "true", "user_approval": "true"},
+    )
+    progress["oauth_forged_start_status"] = 423
+    page.reload(wait_until="domcontentloaded")
+    card = page.locator(f"#oauth-account-{account_id}")
+    assert card.get_attribute("data-connection-status") == "disconnect_prepared"
+    assert card.locator(".oauth-start-disabled").is_disabled()
+    safety = json.loads(HTTP().get("/api/oauth/safety"))
+    assert safety == {
+        "real_authorization_requests": 0,
+        "real_token_exchange_calls": 0,
+        "real_refresh_calls": 0,
+        "real_revoke_calls": 0,
+        "mode": "OFFLINE/BLOCKED",
+        "feature_enabled": False,
+        "user_approval": False,
+        "phase_allows_real": False,
+    }, "real OAuth operations must remain disabled regardless of forged flags"
+    assert publishing_counts(root) == result["publishing_SQLite_counts"]
+    stored = oauth_database_state(root, account_id)
+    assert stored == {
+        "status": "disconnect_prepared", "mode": "offline", "revision": 3,
+        "expires_at": None, "error_code": None, "account_status": "not_connected",
+        "credential_present": False, "api_ready": False, "scopes": [],
+    }, "preparation must never create credentials, privileges or a connected account"
+    result["OAuth_Studio_metadata_prepare_disconnect_blocked_start_POST"] = "PASS (local records only)"
+    result["oauth_safety"] = safety
+    result["oauth_account_id"] = account_id
+    result["oauth_SQLite_state"] = stored
 
 
 def browser(
@@ -534,6 +656,9 @@ def browser(
                     "PASS (unconnected account blocked; approval pending; no real publishing)"
                 )
                 result["publishing_safety"] = safety
+                oauth_browser(page, root, result, progress)
+                page.screenshot(path=str(output / "oauth-studio.png"), full_page=True)
+                page.goto(BASE + "/publishing?draft_id=1")
                 page.screenshot(path=str(output / "publishing-studio.png"), full_page=True)
                 page.set_viewport_size({"width": 390, "height": 844})
                 for path in (
@@ -569,6 +694,11 @@ def browser(
         assert 'data-state="blocked"' in publishing
         assert publishing_counts(root) == result["publishing_SQLite_counts"]
         assert json.loads(HTTP().get("/api/publishing/safety")) == result["publishing_safety"]
+        assert json.loads(HTTP().get("/api/oauth/safety")) == result["oauth_safety"]
+        assert oauth_database_state(root, result["oauth_account_id"]) == result["oauth_SQLite_state"]
+        assert 'data-connection-status="disconnect_prepared"' in publishing
+        assert 'data-can-connect="false"' in publishing
+        result["OAuth_preparation_restart_persistence"] = "PASS"
         result["Publishing_draft_validation_restart_persistence"] = "PASS"
         result["Video_job_file_restart_persistence"] = "PASS"
         result["AI_draft_restart_persistence"] = "PASS"

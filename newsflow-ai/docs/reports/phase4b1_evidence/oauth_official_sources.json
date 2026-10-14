@@ -1,0 +1,240 @@
+{
+  "checked_at_utc": "2026-10-14T03:14:52.291865+00:00",
+  "checked_at_asia_seoul": "2026-10-14T12:14:52.291865+09:00",
+  "date_basis": "Asia/Seoul (UTC+09:00), 2026-10-14; exact UTC timestamps retained",
+  "scope": "Phase4B-1 public official OAuth and Windows DPAPI documentation only. Never fetch authorization, token, revoke or account/API endpoints.",
+  "sns_login_requests": 0,
+  "token_exchange_requests": 0,
+  "refresh_requests": 0,
+  "revoke_requests": 0,
+  "sns_publish_requests": 0,
+  "network_configuration_changes": 0,
+  "official_web_pages": [
+    {
+      "key": "yt_oauth",
+      "url": "https://developers.google.com/youtube/v3/guides/auth/installed-apps",
+      "verification": "NOT VERIFIED: Cloud public documentation body unavailable",
+      "checked_at_utc": "2026-10-14T03:15:09.999885+00:00",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "policy_verification": "NOT VERIFIED; captured excerpts require human review",
+      "status_code": null,
+      "title": "",
+      "excerpts": [],
+      "failure_kind": "proxy_connect_denied"
+    },
+    {
+      "key": "yt_upload",
+      "url": "https://developers.google.com/youtube/v3/docs/videos/insert",
+      "verification": "NOT VERIFIED: Cloud public documentation body unavailable",
+      "checked_at_utc": "2026-10-14T03:15:10.000713+00:00",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "policy_verification": "NOT VERIFIED; captured excerpts require human review",
+      "status_code": null,
+      "title": "",
+      "excerpts": [],
+      "failure_kind": "proxy_connect_denied"
+    },
+    {
+      "key": "google_native",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "verification": "NOT VERIFIED: Cloud public documentation body unavailable",
+      "checked_at_utc": "2026-10-14T03:15:10.001076+00:00",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "policy_verification": "NOT VERIFIED; captured excerpts require human review",
+      "status_code": null,
+      "title": "",
+      "excerpts": [],
+      "failure_kind": "proxy_connect_denied"
+    },
+    {
+      "key": "ig_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login",
+      "verification": "NOT VERIFIED: Cloud public documentation body unavailable",
+      "checked_at_utc": "2026-10-14T03:15:10.001617+00:00",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "policy_verification": "NOT VERIFIED; captured excerpts require human review",
+      "status_code": null,
+      "title": "",
+      "excerpts": [],
+      "failure_kind": "proxy_connect_denied"
+    },
+    {
+      "key": "ig_business_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "verification": "NOT VERIFIED: Cloud public documentation body unavailable",
+      "checked_at_utc": "2026-10-14T03:15:10.040848+00:00",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "policy_verification": "NOT VERIFIED; captured excerpts require human review",
+      "status_code": null,
+      "title": "",
+      "excerpts": [],
+      "failure_kind": "proxy_connect_denied"
+    },
+    {
+      "key": "ig_publish",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing",
+      "verification": "NOT VERIFIED: Cloud public documentation body unavailable",
+      "checked_at_utc": "2026-10-14T03:15:10.045666+00:00",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "policy_verification": "NOT VERIFIED; captured excerpts require human review",
+      "status_code": null,
+      "title": "",
+      "excerpts": [],
+      "failure_kind": "proxy_connect_denied"
+    },
+    {
+      "key": "ig_fb_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login",
+      "verification": "NOT VERIFIED: Cloud public documentation body unavailable",
+      "checked_at_utc": "2026-10-14T03:15:10.047521+00:00",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "policy_verification": "NOT VERIFIED; captured excerpts require human review",
+      "status_code": null,
+      "title": "",
+      "excerpts": [],
+      "failure_kind": "proxy_connect_denied"
+    },
+    {
+      "key": "dpapi_protect",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata",
+      "verification": "NOT VERIFIED: Cloud public documentation body unavailable",
+      "checked_at_utc": "2026-10-14T03:15:10.052047+00:00",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "policy_verification": "NOT VERIFIED; captured excerpts require human review",
+      "status_code": null,
+      "title": "",
+      "excerpts": [],
+      "failure_kind": "proxy_connect_denied"
+    },
+    {
+      "key": "dpapi_unprotect",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptunprotectdata",
+      "verification": "NOT VERIFIED: Cloud public documentation body unavailable",
+      "checked_at_utc": "2026-10-14T03:15:10.062112+00:00",
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "policy_verification": "NOT VERIFIED; captured excerpts require human review",
+      "status_code": null,
+      "title": "",
+      "excerpts": [],
+      "failure_kind": "proxy_connect_denied"
+    }
+  ],
+  "official_repository_sources": [
+    {
+      "url": "https://github.com/googleapis/google-auth-library-nodejs/blob/main/src/auth/oauth2client.ts",
+      "path": "src/auth/oauth2client.ts",
+      "git_blob_sha1": "138e66c462b5466c4f6c5b2aae0c3d6c886e9c3a",
+      "content_sha256": "de696d086482dcc7bcef4977aaa6cd885b8cc61f211796b6c81c9344c068b8d2",
+      "verification": "PASS: read public official maintained repository content",
+      "verified": {
+        "authorization_endpoint_text": "https://accounts.google.com/o/oauth2/v2/auth",
+        "token_endpoint_text": "https://oauth2.googleapis.com/token",
+        "revoke_endpoint_text": "https://oauth2.googleapis.com/revoke",
+        "pkce_method": "S256",
+        "pkce_algorithm": "base64url without padding of SHA256(code_verifier)",
+        "endpoint_requests": 0
+      },
+      "latest_related_commit": {
+        "date": "2025-07-18T18:39:59Z",
+        "sha": "6ac9ab4fd49d64d8315f16d7f2757da04fbeb579",
+        "url": "https://github.com/googleapis/google-auth-library-nodejs/commit/6ac9ab4fd49d64d8315f16d7f2757da04fbeb579"
+      }
+    },
+    {
+      "url": "https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/dpapi/nf-dpapi-cryptprotectdata.md",
+      "path": "sdk-api-src/content/dpapi/nf-dpapi-cryptprotectdata.md",
+      "git_blob_sha1": "d3ecff65ad20b3f8bee9fa0bafd17b62d4f8d465",
+      "content_sha256": "3f7c77247a816e9402660a65009e53aba531ac164664e60667eddc0b23e5dc04",
+      "verification": "PASS: read public official maintained repository content",
+      "verified": {
+        "user_scope": "Typically same logon credentials and same computer; roaming profile exception exists",
+        "local_machine": "Using CRYPTPROTECT_LOCAL_MACHINE permits other users of the machine to decrypt; omit for current-user vault",
+        "ui_forbidden": "CRYPTPROTECT_UI_FORBIDDEN fails when UI would be required",
+        "native_allocated_output": "LocalFree(DataOut.pbData)"
+      },
+      "latest_related_commit": {
+        "date": "2025-11-13T20:18:00Z",
+        "sha": "0a160262f8cff85ac596b266c86e16dfd36aaae8",
+        "url": "https://github.com/MicrosoftDocs/sdk-api/commit/0a160262f8cff85ac596b266c86e16dfd36aaae8"
+      }
+    },
+    {
+      "url": "https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/dpapi/nf-dpapi-cryptunprotectdata.md",
+      "path": "sdk-api-src/content/dpapi/nf-dpapi-cryptunprotectdata.md",
+      "git_blob_sha1": "92f2e6562cebe2ad0a60329e128d6ea55d7296b2",
+      "content_sha256": "6463e857d222e14c3662fcbe5c82a1a64e3a8284d10d69fbbce8dec717c8a8ff",
+      "verification": "PASS: read public official maintained repository content",
+      "verified": {
+        "native_allocated_output": [
+          "LocalFree(DataOut.pbData)",
+          "LocalFree(ppszDataDescr) if non-null"
+        ],
+        "plaintext_cleanup": "SecureZeroMemory recommended for native sensitive memory; Python immutable-string erasure is not guaranteed",
+        "tamper_caution": "Do not depend on a specific tamper error code; document recommends application integrity checks"
+      },
+      "latest_related_commit": {
+        "date": "2026-02-18T03:10:32Z",
+        "sha": "649ac0310f33d4d8852aaa524ee01918528da125",
+        "url": "https://github.com/MicrosoftDocs/sdk-api/commit/649ac0310f33d4d8852aaa524ee01918528da125"
+      }
+    },
+    {
+      "url": "https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/um/dpapi.h",
+      "path": "generation/WinSDK/RecompiledIdlHeaders/um/dpapi.h",
+      "git_blob_sha1": "b5144c4ac8d9455d03a3b67bc6d3580fb72c19b4",
+      "content_sha256": "d3ec78b268bdb7d50681ebaaa65de0f40c3dd0c99cf09ed3858241e21c12a555",
+      "verification": "PASS: read public official maintained repository content",
+      "verified": {
+        "CRYPTPROTECT_UI_FORBIDDEN": "0x1",
+        "CRYPTPROTECT_LOCAL_MACHINE": "0x4"
+      }
+    },
+    {
+      "url": "https://github.com/googleapis/google-api-python-client/blob/main/googleapiclient/discovery_cache/documents/youtube.v3.json",
+      "path": "googleapiclient/discovery_cache/documents/youtube.v3.json",
+      "git_blob_sha1": "19f8ac1304cb095521f751c5c13ca0fad070af4d",
+      "content_sha256": "b4260c53a3f7dc63e0161552be461de756073249e00861dfac94528702ab58d4",
+      "verification": "PASS: current public Google official discovery file read",
+      "verified": {
+        "revision": "20261001",
+        "upload_method": "youtube.videos.insert",
+        "minimum_candidate_scope": "https://www.googleapis.com/auth/youtube.upload",
+        "allowed_scopes": [
+          "https://www.googleapis.com/auth/youtube",
+          "https://www.googleapis.com/auth/youtube.force-ssl",
+          "https://www.googleapis.com/auth/youtube.upload",
+          "https://www.googleapis.com/auth/youtubepartner"
+        ],
+        "note": "Upload scope presence does not prove current account/channel identity authorization or live grant."
+      }
+    }
+  ],
+  "not_verified": [
+    "Live user/provider OAuth",
+    "Instagram current account types/scopes/app review/native PKCE/redirect eligibility",
+    "Current target YouTube channel identity and full account consent/revoke status",
+    "Windows 11 user PC DPAPI operation; native public documentation reading is separate"
+  ],
+  "cloud_document_retry": {
+    "checked_at_utc": "2026-10-14T03:15:10.083401+00:00",
+    "run": "COMPLETED; page verification is reported separately",
+    "scope": "Public official documentation GET requests only; no credentials, cookies or login",
+    "sns_login_calls": 0,
+    "sns_publish_calls": 0,
+    "network_settings_changed": false,
+    "tls_validation": "Default verified HTTPS context; no bypass",
+    "maximum_page_bytes": 2097152,
+    "page_deadline_seconds": 10.0,
+    "workers": 4,
+    "elapsed_seconds": 0.08
+  }
+}

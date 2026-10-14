@@ -15,6 +15,9 @@ from newsflow.db.models import (
     RenderJob,
     VideoProject,
 )
+from newsflow.oauth.contracts import OAuthBlocked, OAuthError
+from newsflow.oauth.providers import oauth_safety_status
+from newsflow.oauth.service import AccountConnectionService
 from newsflow.publishing.service import ConflictError, PublishingError, PublishingService
 
 from .routes import go, page
@@ -24,6 +27,20 @@ router = APIRouter()
 
 def service(request: Request) -> PublishingService:
     return PublishingService(request.app.state.sessions, request.app.state.video.outputs)
+
+
+def account_connection_service(request: Request) -> AccountConnectionService:
+    return AccountConnectionService(request.app.state.sessions)
+
+
+def oauth_account_identifier(value: str) -> int:
+    try:
+        identifier = int(value)
+    except ValueError:
+        raise HTTPException(422, "계정 메타데이터 선택을 확인하세요.") from None
+    if not 1 <= identifier <= 2**63 - 1:
+        raise HTTPException(422, "계정 메타데이터 선택을 확인하세요.")
+    return identifier
 
 
 def account_identifier(value: str) -> int | None:
@@ -88,6 +105,7 @@ def studio(
             project=project,
             videos=videos,
             accounts=list(session.scalars(select(PlatformAccount).order_by(PlatformAccount.id.desc()))),
+            oauth_cards=account_connection_service(request).cards(),
             drafts=list(session.scalars(select(PublishDraft).order_by(PublishDraft.id.desc()).limit(30))),
             validations=validations,
             validation=validations[0] if validations else None,
@@ -192,3 +210,37 @@ def publishing_safety() -> dict:
     from newsflow.publishing.adapters import safety_status
 
     return safety_status()
+
+
+@router.post("/publishing/accounts/{account_id}/oauth/prepare")
+def oauth_prepare(request: Request, account_id: str) -> RedirectResponse:
+    try:
+        account_connection_service(request).prepare(oauth_account_identifier(account_id))
+    except OAuthError as exc:
+        raise HTTPException(422, str(exc)) from None
+    return go("/publishing")
+
+
+@router.post("/publishing/accounts/{account_id}/oauth/disconnect-prepare")
+def oauth_disconnect_prepare(request: Request, account_id: str) -> RedirectResponse:
+    try:
+        account_connection_service(request).disconnect_prepare(oauth_account_identifier(account_id))
+    except OAuthError as exc:
+        raise HTTPException(422, str(exc)) from None
+    return go("/publishing")
+
+
+@router.post("/publishing/accounts/{account_id}/oauth/start")
+def oauth_start(request: Request, account_id: str) -> None:
+    """Defense in depth: body/query flags cannot enable actual authorization."""
+    try:
+        identifier = oauth_account_identifier(account_id)
+        account_connection_service(request).blocked_start(identifier)
+    except (OAuthBlocked, OAuthError, HTTPException):
+        pass
+    raise HTTPException(423, "Phase 4B-1에서는 실제 OAuth 계정 연결이 차단됩니다.")
+
+
+@router.get("/api/oauth/safety")
+def oauth_safety() -> dict:
+    return oauth_safety_status()

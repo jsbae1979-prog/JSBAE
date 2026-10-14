@@ -263,3 +263,16 @@ class PublishEvidence(Base):
     kind: Mapped[str] = mapped_column(String(30))
     payload: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class OAuthConnection(Base):
+    """Only offline preparation/fake lifecycle metadata. No codes/state/verifiers/tokens."""
+
+    __tablename__ = "oauth_connections"
+    account_id: Mapped[int] = mapped_column(ForeignKey("platform_accounts.id"), primary_key=True)
+    status: Mapped[str] = mapped_column(String(30), default="unprepared")
+    mode: Mapped[str] = mapped_column(String(20), default="offline")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
