@@ -7,6 +7,7 @@ import base64
 import gzip
 import hashlib
 import json
+import re
 import socket
 import ssl
 import time
@@ -285,7 +286,7 @@ class DocText(HTMLParser):
 
 def doc_headers() -> dict[str, str]:
     return {
-        "User-Agent": "NewsFlowAI-Phase4A-OfficialDocumentationResearch/1.0",
+        "User-Agent": "NewsFlowAI-Phase4B2A-OfficialDocumentationResearch/1.0",
         "Accept": "text/html",
         "Accept-Encoding": "identity",
     }
@@ -309,6 +310,19 @@ def safe_failure(exc: BaseException) -> str:
     return "network_or_document_error"
 
 
+def redact_document_examples(value: str) -> str:
+    """Remove public credential examples while retaining field names and procedures."""
+    fields = r"access_token|refresh_token|client_secret|id_token|code_verifier|code|state"
+    value = re.sub(
+        rf"([\"'](?:{fields})[\"']\s*:\s*[\"'])([^\"']*)([\"'])",
+        r"\1[PUBLIC_DOC_EXAMPLE_REDACTED]\3", value,
+    )
+    return re.sub(
+        rf"(?<![A-Za-z0-9_])((?:{fields})=)[^\s&\"'<>]+",
+        r"\1[PUBLIC_DOC_EXAMPLE_REDACTED]", value,
+    )
+
+
 def select_excerpts(lines: list[str], profile: str) -> list[str]:
     """Prioritize explicit procedure sections instead of stopping in introductory OAuth text."""
     if profile == "default":
@@ -317,7 +331,7 @@ def select_excerpts(lines: list[str], profile: str) -> list[str]:
         if profile not in PRIORITY_GROUPS:
             raise PolicyError("unknown_document_excerpt_profile")
         groups = PRIORITY_GROUPS[profile]
-    visible = [line for line in lines if line]
+    visible = [redact_document_examples(line) for line in lines if line]
     used: set[int] = set()
     excerpts: list[str] = []
     for group_budget, markers in groups:
@@ -358,6 +372,7 @@ def research_page(item: dict) -> dict:
         "status_code": None,
         "title": "",
         "excerpts": [],
+        "public_credential_examples_redacted": True,
     }
     deadline = time.monotonic() + PAGE_TIMEOUT
     try:

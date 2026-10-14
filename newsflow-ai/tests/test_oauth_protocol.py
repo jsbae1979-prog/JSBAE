@@ -237,14 +237,16 @@ def test_required_code_exchange_response_fields_are_validated(protocol, server, 
     assert len(server.requests) == 1
 
 
-def test_access_only_grant_is_explicit_and_cannot_be_refreshed(protocol, server):
+def test_installed_app_initial_response_requires_refresh_token(protocol, server):
     payload = synthetic_response()
     del payload["refresh_token"]
     server.queue(FakeResponse(payload=payload))
-    bundle = complete(protocol)
-    assert bundle.refresh_token is None
+    launch = protocol.begin("youtube:1")
+    with pytest.raises(ProtocolError) as error:
+        complete(protocol, launch)
+    assert error.value.code == "response_invalid" and error.value.outcome_unknown
     with pytest.raises(OAuthError):
-        protocol.refresh("youtube:1", bundle)
+        complete(protocol, launch)
     assert len(server.requests) == 1
 
 

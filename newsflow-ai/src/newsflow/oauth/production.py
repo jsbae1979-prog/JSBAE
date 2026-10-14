@@ -484,6 +484,10 @@ class GoogleOAuthProtocol:
         if granted_scopes != _SCOPES:
             raise ProtocolError("scope_mismatch", outcome_unknown=True)
         refresh = data.get("refresh_token")
+        if previous is None and refresh is None:
+            # Google's installed-app documentation guarantees an initial refresh
+            # token. Missing credentials must not become an accepted desktop grant.
+            raise ProtocolError("response_invalid", outcome_unknown=True)
         if refresh is None and previous is not None:
             refresh = previous.refresh_token.get_secret_value() if previous.refresh_token else None
         if refresh is not None and not _safe_string(refresh, maximum=4096):
