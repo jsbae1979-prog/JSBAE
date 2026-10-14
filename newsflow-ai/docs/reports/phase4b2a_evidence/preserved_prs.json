@@ -1,0 +1,41 @@
+{
+  "verification": "PASS",
+  "main_sha": "aa2f056d78ceed24874d0b4c50c6033f7168bf4d",
+  "previous_prs": [
+    {
+      "base": "feat/newsflow-phase4a",
+      "draft": true,
+      "head": "4bce0c70af7f17af4904120866c4b46eae8c4ca2",
+      "number": 5,
+      "state": "open"
+    },
+    {
+      "base": "feat/newsflow-phase3",
+      "draft": true,
+      "head": "e3b9c71927218864afec00434460d7d9cb8b8046",
+      "number": 4,
+      "state": "open"
+    },
+    {
+      "base": "feat/newsflow-phase2",
+      "draft": true,
+      "head": "641167e08583e628602ca27fd07a31b9609a9aac",
+      "number": 3,
+      "state": "open"
+    },
+    {
+      "base": "feat/newsflow-phase1",
+      "draft": true,
+      "head": "f9f9f0fc6bdad3478a2f53871ecbbab4d813c97b",
+      "number": 2,
+      "state": "open"
+    },
+    {
+      "base": "main",
+      "draft": true,
+      "head": "bd9df6d240c137542121343ff137a5e94042b676",
+      "number": 1,
+      "state": "open"
+    }
+  ]
+}

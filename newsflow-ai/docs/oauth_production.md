@@ -17,7 +17,7 @@ callback은 state, 계정, 정확한 URI, 만료 및 일회성 처리를 검증�
 
 초기 scope는 `youtube.upload`만 사용합니다. 토큰 수신을 계정 신원 검증으로 간주하지 않습니다. protocol 테스트의 identity는 `nf-synthetic-identity-*`로 명확히 구분하며 실제 계정 연결이나 게시 권한을 부여하지 않습니다. 실제 identity adapter는 미구현·차단 상태입니다.
 
-토큰 응답의 Bearer 형식, access token, 유효기간, scope, 선택적 refresh token과 refresh token 유효기간을 검증합니다. 갱신 응답에 refresh token이 생략되면 원래 값을 유지하며, 값이 교체되면 새 grant로 취급합니다. access·refresh token·만료·scope를 묶어 원래 발급 grant와 비교하여 계정 간 토큰 혼합을 차단합니다. 코드 교환은 일회성, 갱신·회수는 명시 실행만 허용하고 자동 재시도하지 않습니다. 타임아웃이나 불완전 응답은 결과 불명으로 처리합니다. 실운영 token metadata의 재시작 영속 복구는 활성화 전 추가 검증 대상입니다.
+토큰 응답의 Bearer 형식, access token, 유효기간, scope 및 refresh token 유효기간을 검증합니다. 설치형 앱의 초기 응답은 공식 문서에 따라 refresh token을 필수로 검증합니다. 갱신 응답에 refresh token이 생략되면 원래 값을 유지하며, 값이 교체되면 새 grant로 취급합니다. access·refresh token·만료·scope를 묶어 원래 발급 grant와 비교하여 계정 간 토큰 혼합을 차단합니다. 코드 교환은 일회성, 갱신·회수는 명시 실행만 허용하고 자동 재시도하지 않습니다. 타임아웃이나 불완전 응답은 결과 불명으로 처리합니다. 실운영 token metadata의 재시작 영속 복구는 활성화 전 추가 검증 대상입니다.
 
 ## Instagram
 
@@ -28,7 +28,7 @@ callback은 state, 계정, 정확한 URI, 만료 및 일회성 처리를 검증�
 - [Instagram Login Content Publishing](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing)
 - [Instagram API with Facebook Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login)
 
-계정 유형, Facebook Page 연결 조건, 로그인 방식별 최소 scope, redirect 등록, token 수명·갱신·회수, identity 조회, 앱 검수 및 게시 권한은 확인 근거를 확보하기 전까지 NOT VERIFIED입니다. 공식 문서의 URL이 존재하는 것과 해당 정책을 확인한 것은 구분합니다. Windows CI의 공개 문서 조회 결과와 검토 내용은 완료 보고서에 기록합니다.
+계정 유형, Facebook Page 연결 조건, 로그인 방식별 최소 scope, redirect 등록, token 수명·갱신·회수, identity 조회, 앱 검수 및 게시 권한은 확인 근거를 확보하기 전까지 NOT VERIFIED입니다. 공식 문서의 URL이 존재하는 것과 해당 정책을 확인한 것은 구분합니다. Windows CI에서도 Meta 문서 4건은 허용된 공개 문서 경로 밖으로 redirect되어 NOT VERIFIED였습니다. 인증 페이지를 따라가지 않았습니다. Google·Microsoft 문서의 8개 조회 기록은 HTTPS 200으로 확인했고 특정 본문 근거를 검토했습니다. 자세한 결과는 완료 보고서에 기록합니다.
 
 ## Credential boundary
 
@@ -48,3 +48,5 @@ SQLite와 filesystem은 하나의 분산 트랜잭션이 아닙니다. 암호화
 실제 계정 연결에는 사용자 후속 승인, reviewed production activation 코드 변경, 공식 앱 유형·동의 화면·최소 scope·검수 확인, 계정 identity 검증, callback dispatch, 별도 current-user production vault 및 실패 복구 검증이 모두 필요합니다. OAuth 승인은 SNS 게시 승인과 분리합니다. Publisher의 업로드 차단은 계속 유지합니다.
 
 공개 문서 조회의 raw 근거와 HTTP/프록시/redirect 오류는 [Phase 4B-2A evidence](reports/phase4b2a_evidence/oauth_official_sources.json) 및 완료 보고서에 보존합니다. 성공한 페이지 조회도 정책 내용의 수동 검토와 실제 앱 정책 적용을 자동으로 PASS로 만들지 않습니다.
+
+운영 호환성 제한: Google 문서는 알 수 없는 token response 필드를 무시하도록 권장하지만 현재 검증은 필드 allowlist 밖의 응답을 fail-closed 처리합니다. optional DPoP는 구현하지 않았습니다. 실제 callback 매개변수, client 등록과 새 응답 필드의 호환성은 후속 운영 승인 전 검증이 필요합니다. 공개 문서의 credential 예시 값은 export 전에 정제하며 필드명·S256 알고리즘·공식 URL은 유지합니다.

@@ -17,73 +17,183 @@
       "key": "google_native_pkce",
       "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
       "excerpt_profile": "native_pkce",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "PASS: public document read and listed specific facts manually reviewed; no real grant verified",
+      "checked_at_utc": "2026-10-14T04:58:47.729657+00:00",
+      "status_code": 200,
+      "transport": "PASS; HTTPS 200 with default certificate validation",
+      "content": "PASS; document cues and bounded visible excerpts captured",
+      "failure_kind": null,
+      "public_credential_examples_redacted": true,
+      "reviewed_facts": [
+        "Per-request verifier, 43-128 unreserved characters",
+        "S256 = padding-free Base64URL(SHA256(ASCII(verifier)))",
+        "state correlates the response and mitigates CSRF"
+      ]
     },
     {
       "key": "google_native_tokens",
       "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
       "excerpt_profile": "native_tokens",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "PASS: public document read and listed specific facts manually reviewed; no real grant verified",
+      "checked_at_utc": "2026-10-14T04:58:47.729657+00:00",
+      "status_code": 200,
+      "transport": "PASS; HTTPS 200 with default certificate validation",
+      "content": "PASS; document cues and bounded visible excerpts captured",
+      "failure_kind": null,
+      "public_credential_examples_redacted": true,
+      "reviewed_facts": [
+        "Authorization code POST: https://oauth2.googleapis.com/token",
+        "Installed-app initial response returns refresh_token",
+        "expires_in, token_type, scope and optional refresh_token_expires_in described",
+        "Refresh grant and https://oauth2.googleapis.com/revoke documented",
+        "DPoP optional; Bearer implementation remains inactive",
+        "Guide recommends ignoring unrecognized response fields; current implementation instead fails closed"
+      ]
     },
     {
       "key": "google_native_redirect",
       "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
       "excerpt_profile": "native_redirect",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "PASS: public document read and listed specific facts manually reviewed; no real grant verified",
+      "checked_at_utc": "2026-10-14T04:58:47.729657+00:00",
+      "status_code": 200,
+      "transport": "PASS; HTTPS 200 with default certificate validation",
+      "content": "PASS; document cues and bounded visible excerpts captured",
+      "failure_kind": null,
+      "public_credential_examples_redacted": true,
+      "reviewed_facts": [
+        "Windows desktop loopback redirect supported; mobile loopback deprecated",
+        "Numeric 127.0.0.1 supported; localhost firewall caveat",
+        "App registration and consent/verification prerequisites; actual client not verified"
+      ]
     },
     {
       "key": "yt_oauth",
       "url": "https://developers.google.com/youtube/v3/guides/auth/installed-apps",
       "excerpt_profile": "installed_setup",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "PASS: public document read and listed specific facts manually reviewed; no real grant verified",
+      "checked_at_utc": "2026-10-14T04:58:47.731673+00:00",
+      "status_code": 200,
+      "transport": "PASS; HTTPS 200 with default certificate validation",
+      "content": "PASS; document cues and bounded visible excerpts captured",
+      "failure_kind": null,
+      "public_credential_examples_redacted": true,
+      "reviewed_facts": [
+        "Installed apps open system browser and use local redirect",
+        "Minimize requested scopes; sensitive public-user-data scopes require verification"
+      ]
     },
     {
       "key": "yt_upload",
       "url": "https://developers.google.com/youtube/v3/docs/videos/insert",
       "excerpt_profile": "default",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "PASS: public document read and listed specific facts manually reviewed; no real grant verified",
+      "checked_at_utc": "2026-10-14T04:58:49.865898+00:00",
+      "status_code": 200,
+      "transport": "PASS; HTTPS 200 with default certificate validation",
+      "content": "PASS; document cues and bounded visible excerpts captured",
+      "failure_kind": null,
+      "public_credential_examples_redacted": true,
+      "reviewed_facts": [
+        "Official videos.insert upload API, never invoked"
+      ]
     },
     {
       "key": "yt_identity",
       "url": "https://developers.google.com/youtube/v3/docs/channels/list",
       "excerpt_profile": "youtube_identity",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "PASS: public document read and listed specific facts manually reviewed; no real grant verified",
+      "checked_at_utc": "2026-10-14T04:58:50.053811+00:00",
+      "status_code": 200,
+      "transport": "PASS; HTTPS 200 with default certificate validation",
+      "content": "PASS; document cues and bounded visible excerpts captured",
+      "failure_kind": null,
+      "public_credential_examples_redacted": true,
+      "reviewed_facts": [
+        "mine=true returns channels owned by authenticated user",
+        "Official discovery allowed scopes exclude youtube.upload; readonly addition needs separate consent"
+      ]
     },
     {
       "key": "ig_login",
       "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login",
       "excerpt_profile": "instagram_login",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "NOT VERIFIED: documentation redirected outside allowed public-document paths; no login followed",
+      "checked_at_utc": "2026-10-14T04:58:50.228430+00:00",
+      "status_code": null,
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "failure_kind": "redirect_not_allowed",
+      "public_credential_examples_redacted": true
     },
     {
       "key": "ig_business_login",
       "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login",
       "excerpt_profile": "instagram_login",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "NOT VERIFIED: documentation redirected outside allowed public-document paths; no login followed",
+      "checked_at_utc": "2026-10-14T04:58:50.315640+00:00",
+      "status_code": null,
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "failure_kind": "redirect_not_allowed",
+      "public_credential_examples_redacted": true
     },
     {
       "key": "ig_publish",
       "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing",
       "excerpt_profile": "instagram_login",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "NOT VERIFIED: documentation redirected outside allowed public-document paths; no login followed",
+      "checked_at_utc": "2026-10-14T04:58:50.571558+00:00",
+      "status_code": null,
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "failure_kind": "redirect_not_allowed",
+      "public_credential_examples_redacted": true
     },
     {
       "key": "ig_fb_login",
       "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login",
       "excerpt_profile": "instagram_login",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "NOT VERIFIED: documentation redirected outside allowed public-document paths; no login followed",
+      "checked_at_utc": "2026-10-14T04:58:50.730152+00:00",
+      "status_code": null,
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "failure_kind": "redirect_not_allowed",
+      "public_credential_examples_redacted": true
     },
     {
       "key": "dpapi_protect",
       "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata",
       "excerpt_profile": "default",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "PASS: public document read and listed specific facts manually reviewed; no real grant verified",
+      "checked_at_utc": "2026-10-14T04:58:50.835203+00:00",
+      "status_code": 200,
+      "transport": "PASS; HTTPS 200 with default certificate validation",
+      "content": "PASS; document cues and bounded visible excerpts captured",
+      "failure_kind": null,
+      "public_credential_examples_redacted": true,
+      "reviewed_facts": [
+        "Current-user default protection; LOCAL_MACHINE allows other local users and is not used",
+        "Same-computer usual boundary has roaming-profile exception"
+      ]
     },
     {
       "key": "dpapi_unprotect",
       "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptunprotectdata",
       "excerpt_profile": "default",
-      "verification": "NOT VERIFIED: pending current Cloud/Windows public-document read"
+      "verification": "PASS: public document read and listed specific facts manually reviewed; no real grant verified",
+      "checked_at_utc": "2026-10-14T04:58:50.835203+00:00",
+      "status_code": 200,
+      "transport": "PASS; HTTPS 200 with default certificate validation",
+      "content": "PASS; document cues and bounded visible excerpts captured",
+      "failure_kind": null,
+      "public_credential_examples_redacted": true,
+      "reviewed_facts": [
+        "Matching entropy and current-user boundary",
+        "LocalFree and sensitive native-buffer cleanup",
+        "Additional application integrity checks; do not rely on one tamper error code"
+      ]
     }
   ],
   "official_repository_sources": [
@@ -144,9 +254,20 @@
     }
   ],
   "not_verified": [
-    "Current primary-document detailed desktop installed JSON/loopback/PKCE/token response/revoke procedure until focused Windows read completes",
-    "Instagram login-specific account/scopes/native PKCE/exchange/refresh/revoke/identity",
-    "Actual Google OAuth grant and channel identity",
-    "User Windows 11 PC production execution"
-  ]
+    "Actual Google/Instagram registration, consent, scope/account eligibility, login and grant",
+    "Production identity adapter/callback dispatch/current-user credential backend",
+    "Instagram login-specific scopes/redirect/exchange/refresh/revoke/app review",
+    "Live SNS, Windows 11 user PC, RSS/AI API, Korean TTS and human full video quality"
+  ],
+  "windows_followup": {
+    "run_id": 38514050334,
+    "code_sha": "337242a598275bb20eb97d793bbf6d8e10934b67",
+    "source": "windows_official_docs.json",
+    "record_count": 12,
+    "https_document_records_pass": 8,
+    "meta_records_not_verified": 4,
+    "tls_policy_changed": false,
+    "network_settings_changed": false,
+    "live_oauth_calls": 0
+  }
 }
