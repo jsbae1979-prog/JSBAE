@@ -1,16 +1,16 @@
-# NewsFlow AI — Windows 11 · Phase 4B-1
+# NewsFlow AI — Windows 11 · Phase 4B-2A
 
 공개 RSS 수집·중복 제거·내부 추천 평가를 제공하는 한국어 로컬 웹 대시보드입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
-현재 Phase 4B-1은 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작, SNS 게시 준비와 차단된 OAuth 기반을 제공합니다. 실제 SNS 게시·계정 연결·주기 스케줄러는 제공하지 않습니다.
+현재 Phase 4B-2A는 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작, SNS 게시 준비와 활성화가 차단된 OAuth 연동 코드를 제공합니다. 실제 SNS 게시·계정 로그인·실제 토큰 교환 및 저장·주기 스케줄러는 제공하지 않습니다.
 
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 4B-1 검토 브랜치 `feat/newsflow-phase4b1`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 4B-2A 검토 브랜치 `feat/newsflow-phase4b2a`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase4b1 https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase4b2a https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -269,3 +269,13 @@ YouTube 최소 업로드 scope 후보는 `youtube.upload`입니다. 채널 ident
 `WindowsCredentialVault`는 전달받은 절대 데이터 경로(예정 경로 `%LOCALAPPDATA%\NewsFlowAI\credentials`)에서 **현재 Windows 사용자 DPAPI**로 암호화합니다. 이번 단계에는 `nf-synthetic-` 형식의 합성 토큰만 허용하며 실제 서비스 토큰은 저장/조회하지 않습니다. GUI는 이 저장소를 자동 생성하거나 사용하지 않습니다. 일반 SQLite에는 비밀 원문이 아닌 opaque reference와 상태·만료 시각만 저장합니다. Python 메모리의 모든 문자열 복사본을 완전히 지운다고 주장하지 않습니다. 실제 계정 인증·저장소 활성화·SNS 업로드는 별도 승인이 필요한 후속 작업입니다.
 
 전체 회귀: `python -m pytest -q -rs`. Windows에서 합성 DPAPI 검증: `python tools/ci_vault_validation.py --output validation-output/credential-vault.json`. 외부 서비스 토큰이나 API 키가 필요하지 않습니다. Windows에서 실패는 FAIL/비정상 종료로 기록하며 Cloud에서는 네이티브 DPAPI를 NOT VERIFIED로 표시합니다. [Phase 4B-1 보고서](docs/reports/phase4b1_report.md).
+
+## Phase 4B-2A · OAuth 연동 코드와 실운영 활성화 차단
+
+Publishing Studio의 **실운영 OAuth 준비**에서 YouTube Desktop 클라이언트 설정·PKCE·로컬 응답 처리 코드 준비와 실계정 미검증 상태를 구분합니다. 이 화면은 상태 확인용이며 로그인 URL, OAuth 클라이언트 값, 인증 코드나 토큰을 입력하거나 표시하지 않습니다. 계정의 연결 준비·해제 준비 버튼은 계속 로컬 기록만 저장하고, 실제 연결 버튼은 비활성입니다.
+
+`GET /api/oauth/production-readiness`는 Phase 4B-2A 활성화 제한과 플랫폼별 준비 상태만 반환합니다. 환경변수·GUI 승인·요청 파라미터로 브라우저 로그인, 실제 토큰 교환, 실운영 자격정보 저장 또는 SNS 게시를 켤 수 없습니다. 기존 `/api/oauth/safety`와 시작 요청의 차단 동작은 유지합니다. FastAPI에는 OAuth authorize/callback 경로를 추가하지 않습니다.
+
+Instagram 연결은 공식 로그인 방식별 현재 권한·계정 자격 확인이 끝나기 전까지 차단합니다. 실계정·채널 identity, 실제 OAuth 응답 및 외부 토큰은 **NOT VERIFIED**입니다. 실운영 저장소는 기존 합성 토큰용 저장소와 분리된 비활성 구성으로 두며, 사용자 승인 전 실제 서비스 자격정보를 저장하지 않습니다. Phase 4B-2B 실계정 운영은 별도 승인 후 진행합니다.
+
+Google Desktop JSON은 라이브러리의 `DesktopClientConfig.from_json()`으로 로컬 검증할 수 있습니다. 검증은 로그인이나 네트워크 요청을 시작하지 않으며 실제 앱 등록 상태를 증명하지 않습니다. 클라이언트 파일은 소스코드와 분리된 사용자 데이터 공간에 보관해야 합니다. `client_secret*.json`과 `oauth-client*.json`은 Git에서 제외합니다. [OAuth 구현 범위 및 선행 조건](docs/oauth_production.md) · [Phase 4B-2A 완료 보고서](docs/reports/phase4b2a_report.md).

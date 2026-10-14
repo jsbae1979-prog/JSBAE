@@ -7,6 +7,8 @@ from newsflow.config import Settings
 from newsflow.main import create_app
 from newsflow.news.rss_adapter import FakeRSSAdapter
 
+pytest_plugins = ("oauth_protocol_fixtures",)
+
 
 @pytest.fixture
 def rss() -> bytes:

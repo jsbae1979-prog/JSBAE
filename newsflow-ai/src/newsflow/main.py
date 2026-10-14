@@ -25,6 +25,7 @@ from .gui.video_routes import router as video_router
 from .news.collector import Collector
 from .news.rss_adapter import PublicRSSAdapter, RSSAdapter
 from .news.service import CollectionCoordinator, NewsService
+from .oauth.production_vault import recover_credential_rotations
 from .video.service import VideoCoordinator
 
 
@@ -33,6 +34,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     engine = make_engine(settings.data_dir / "newsflow.db")
     migrate(engine)
     sessions = session_factory(engine)
+    recover_credential_rotations(sessions)
     with sessions.begin() as session:
         for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.status == "running")):
             run.status, run.message, run.finished_at = (

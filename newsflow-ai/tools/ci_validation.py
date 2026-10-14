@@ -380,6 +380,33 @@ def oauth_browser(page: Page, root: Path, result: dict, progress: dict) -> None:
     result["oauth_safety"] = safety
     result["oauth_account_id"] = account_id
     result["oauth_SQLite_state"] = stored
+    readiness_panel = page.locator("#oauth-production-readiness")
+    readiness_panel.wait_for()
+    assert readiness_panel.get_attribute("data-phase") == "4B-2A"
+    for attribute in (
+        "data-production-activation", "data-browser-login-allowed", "data-token-exchange-allowed",
+        "data-production-storage-allowed",
+    ):
+        assert readiness_panel.get_attribute(attribute) == "false", (
+            "GUI must never claim production OAuth activation or credential access is allowed"
+        )
+    readiness = json.loads(HTTP().get("/api/oauth/production-readiness"))
+    assert readiness == {
+        "phase": "4B-2A", "production_activation": False, "environment_can_activate": False,
+        "gui_can_activate": False, "browser_login_allowed": False, "token_exchange_allowed": False,
+        "production_storage_allowed": False, "publishing_allowed": False,
+        "providers": {
+            "youtube": {
+                "client_type": "desktop", "oauth_code_status": "implemented_inactive",
+                "account_identity": "NOT VERIFIED", "production_vault": "inactive", "login": "blocked",
+            },
+            "instagram": {
+                "oauth_code_status": "blocked", "official_requirements": "NOT VERIFIED",
+                "production_vault": "inactive", "login": "blocked",
+            },
+        },
+    }, "protocol preparation must never imply production readiness or verified real-account identity"
+    result["oauth_production_readiness"] = readiness
 
 
 def browser(
@@ -695,6 +722,7 @@ def browser(
         assert publishing_counts(root) == result["publishing_SQLite_counts"]
         assert json.loads(HTTP().get("/api/publishing/safety")) == result["publishing_safety"]
         assert json.loads(HTTP().get("/api/oauth/safety")) == result["oauth_safety"]
+        assert json.loads(HTTP().get("/api/oauth/production-readiness")) == result["oauth_production_readiness"]
         assert oauth_database_state(root, result["oauth_account_id"]) == result["oauth_SQLite_state"]
         assert 'data-connection-status="disconnect_prepared"' in publishing
         assert 'data-can-connect="false"' in publishing

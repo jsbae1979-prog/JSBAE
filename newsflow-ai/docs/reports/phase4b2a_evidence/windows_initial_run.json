@@ -1,0 +1,10 @@
+{
+  "conclusion": "failure",
+  "head_sha": "7b980eec457aaa4f2db2d2f7752a6a8952434e39",
+  "html_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38512765212",
+  "id": 38512765212,
+  "status": "completed",
+  "application_test_result": "NOT VERIFIED; installation step failed before tests",
+  "diagnosis": "Invalid project version 0.4.1b2a reproduced locally; corrected to PEP 440 0.4.2a1. GitHub raw install log unavailable via Cloud redirect.",
+  "local_install": "PASS: python -m pip install --no-deps -e ."
+}

@@ -1,0 +1,29 @@
+{
+  "checked_at_utc": "2026-10-14T05:10:44.165707+00:00",
+  "command": "python -m pytest -q -rs --junitxml=/tmp/newsflow-phase4b2a-cloud-pytest.xml",
+  "tests": 515,
+  "passed": 512,
+  "skipped": 3,
+  "failed": 0,
+  "errors": 0,
+  "warnings": 1,
+  "outcome": "PASS",
+  "initial_run": {
+    "failed": 1,
+    "errors": 19,
+    "passed": 486,
+    "skipped": 3,
+    "cause": "Cross-module fixture registration and migration_data version allowlist",
+    "resolution": "Shared fixture plugin and additive 0006 allowlist; tests were not removed or skipped"
+  },
+  "code_sha": "337242a598275bb20eb97d793bbf6d8e10934b67",
+  "installed_version": "0.4.2a1",
+  "editable_install": "PASS: python -m pip install --no-deps -e .",
+  "final_pytest_duration_seconds": 59.5,
+  "failures": 0,
+  "documentation_test_failure": {
+    "failed": 1,
+    "reason": "Focused procedural match was clipped by a large preceding context line",
+    "resolution": "Prioritize bounded matched text before context; test retained and passed"
+  }
+}

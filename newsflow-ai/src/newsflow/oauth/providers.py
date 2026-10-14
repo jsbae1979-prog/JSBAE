@@ -1,4 +1,4 @@
-"""Official provider descriptions; real authorization/token transport deliberately absent."""
+"""Provider contracts and dormant integration; all real entry points stay blocked."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import hashlib
 import re
 from datetime import UTC, datetime, timedelta
 from threading import Lock
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 from uuid import uuid4
 
 from pydantic import SecretStr
@@ -15,6 +15,9 @@ from newsflow.publishing.auth import TokenBundle
 
 from .contracts import YOUTUBE_UPLOAD_SCOPE, OAuthBlocked, OAuthError, OAuthPolicy
 from .session import OAuthRequest, OAuthSession, OAuthSessionStore
+
+if TYPE_CHECKING:
+    from .production import DesktopClientConfig, GoogleOAuthProtocol
 
 
 class OAuthProvider(Protocol):
@@ -35,6 +38,12 @@ class YouTubeOAuthAdapter:
     def __init__(self, *, feature_enabled: bool = False, user_approved: bool = False) -> None:
         self.policy = OAuthPolicy(feature_enabled, user_approved)
 
+    def configured_protocol(self, config: DesktopClientConfig) -> GoogleOAuthProtocol:
+        """Build an inert official transport without initiating browser/network I/O."""
+        from .production import GoogleHTTPSOAuthTransport, GoogleOAuthProtocol
+
+        return GoogleOAuthProtocol(config, GoogleHTTPSOAuthTransport())
+
     def begin(self, *args: object, **kwargs: object) -> OAuthRequest:
         raise OAuthBlocked()
 
@@ -54,6 +63,10 @@ class InstagramOAuthAdapter(YouTubeOAuthAdapter):
     authorization_endpoint = None
     token_endpoint = None
     revoke_endpoint = None
+
+    def configured_protocol(self, config: DesktopClientConfig) -> GoogleOAuthProtocol:
+        # Instagram cannot inherit the Google implementation or its permissions.
+        raise OAuthBlocked()
 
 
 class FakeOAuthProvider:

@@ -1,0 +1,102 @@
+name: NewsFlow Phase 4B-2A Windows validation
+
+on:
+  push:
+    branches: [feat/newsflow-phase4b2a]
+    paths:
+      - '.github/workflows/newsflow-phase4b2a-windows.yml'
+      - 'newsflow-ai/src/**'
+      - 'newsflow-ai/tests/**'
+      - 'newsflow-ai/tools/**'
+      - 'newsflow-ai/run.bat'
+      - 'newsflow-ai/pyproject.toml'
+      - 'newsflow-ai/requirements-dev.lock'
+      - 'newsflow-ai/.gitattributes'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: newsflow-phase4b2a-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-validation:
+    if: github.ref == 'refs/heads/feat/newsflow-phase4b2a'
+    runs-on: windows-latest
+    timeout-minutes: 25
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      NEWSFLOW_LIVE_TEST: '0'
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install development and browser dependencies
+        run: |
+          python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m playwright install chromium
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare Chromium-based Google Chrome for MP4 preview
+        run: |
+          $chromePaths = @("$env:ProgramFiles\Google\Chrome\Application\chrome.exe", "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe")
+          if (-not ($chromePaths | Where-Object { Test-Path -LiteralPath $_ })) {
+            python -m playwright install chrome
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Prepare real FFmpeg and pinned Korean font
+        run: |
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ";C:\ProgramData\chocolatey\bin;C:\tools\ffmpeg\bin"
+          }
+          (Get-Command ffmpeg -ErrorAction Stop).Source | Out-Null
+          (Get-Command ffprobe -ErrorAction Stop).Source | Out-Null
+          @((Split-Path (Get-Command ffmpeg).Source), (Split-Path (Get-Command ffprobe).Source)) | Select-Object -Unique | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $fontPath = Join-Path $env:RUNNER_TEMP 'newsflow-noto-kr.ttf'
+          python tools/ci_prepare_font.py $fontPath
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "NEWSFLOW_FONT_PATH=$fontPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Actual short MP4 ffprobe and local TTS
+        run: |
+          python tools/ci_video_validation.py --output validation-output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Read-only public official policy documentation
+        run: |
+          python tools/ci_official_research.py --sources docs/reports/phase4b2a_evidence/oauth_official_sources.json --output validation-output/oauth-official-web-research.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual Windows DPAPI synthetic credential vault
+        run: |
+          python tools/ci_vault_validation.py --output validation-output/credential-vault.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: All offline regression and loopback Fake HTTP OAuth tests
+        run: |
+          python -m pytest -q -rs --junitxml=validation-output/pytest.xml
+          $testExit = $LASTEXITCODE
+          python tools/ci_pytest_summary.py validation-output/pytest.xml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($testExit -ne 0) { exit $testExit }
+      - name: Actual BAT, persistence and production-blocked OAuth GUI
+        run: |
+          python tools/ci_validation.py --mode windows --output validation-output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload synthetic validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newsflow-phase4b2a-windows-validation
+          path: newsflow-ai/validation-output/
+          if-no-files-found: warn
+          retention-days: 7

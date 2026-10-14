@@ -1,0 +1,28 @@
+{
+  "tested_code_sha": "337242a598275bb20eb97d793bbf6d8e10934b67",
+  "draft_pr": "https://github.com/jsbae1979-prog/JSBAE/pull/6",
+  "cloud_test_result": "512 passed / 3 skipped / 1 warning / 0 failed / 0 errors",
+  "windows_test_result": "514 passed / 1 skipped / 0 failed / 0 errors",
+  "windows_warnings": "NOT VERIFIED: JUnit summary does not capture pytest warnings",
+  "windows_actions_run": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38514050334",
+  "previous_runs": [
+    {
+      "id": 38512765212,
+      "status": "FAIL: install step; no tests ran",
+      "sha": "7b980eec457aaa4f2db2d2f7752a6a8952434e39"
+    },
+    {
+      "id": 38513064214,
+      "status": "PASS on earlier code: 511 passed/1 skipped/0 failed",
+      "sha": "9818241638eae8e5decb231eb5e626e2094ebcb2"
+    },
+    {
+      "id": 38513912215,
+      "status": "CANCELLED: superseded by final code under branch concurrency policy",
+      "sha": "b4c8cd0592e81575ca864841dbf7009656575945"
+    }
+  ],
+  "actual_oauth_service_credentials_sns_calls": 0,
+  "evidence_limit": "Structural guards and scoped synthetic/browser tests; not an independent machine-wide network monitor",
+  "source_document_payload_sha256": "bca2169fda9a809d6467a67112797c3ba9479e83da71cdb0c93708896108fef3"
+}
