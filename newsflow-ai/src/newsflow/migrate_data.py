@@ -51,6 +51,7 @@ def migrate_data(source: Path, target: Path) -> None:
                     ("0003",),
                     ("0004",),
                     ("0005",),
+                    ("0006",),
                 }:
                     raise ValueError("지원하지 않는 DB 버전입니다.")
             key = source / "session.key"

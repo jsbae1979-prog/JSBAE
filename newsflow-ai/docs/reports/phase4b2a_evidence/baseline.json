@@ -1,0 +1,11 @@
+{
+  "base_branch": "feat/newsflow-phase4b1",
+  "base_sha": "4bce0c70af7f17af4904120866c4b46eae8c4ca2",
+  "immutable_migrations": {
+    "src/newsflow/db/migrations/versions/0001_initial.py": "94eeed2fb8e0cc76d2bd620158a060f4a0746417dc6c2aee82b423d06000b9e3",
+    "src/newsflow/db/migrations/versions/0002_intelligence.py": "5e86919e19b57979f0ead7f5f731063ffd4c92baa22c3473218b2d9b46831e78",
+    "src/newsflow/db/migrations/versions/0003_video.py": "3e39d0e016e8a19a77b61207665be590ed8fae4a1a75adbad0304e3f0963b225",
+    "src/newsflow/db/migrations/versions/0004_publishing.py": "9a41b317fb21d91861fc0f4efb5bb470bb0cecc8427cc94b00dab9efacbd0d34",
+    "src/newsflow/db/migrations/versions/0005_oauth.py": "057176eb54e9ebb7ec8c3e5562b98111d09982c9f8a5d8e3d78074856991f435"
+  }
+}

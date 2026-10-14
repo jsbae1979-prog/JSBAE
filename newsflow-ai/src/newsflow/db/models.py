@@ -276,3 +276,20 @@ class OAuthConnection(Base):
     expires_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(32), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class OAuthCredentialRotation(Base):
+    """Secret-free credential journal; opaque references do not contain token values."""
+
+    __tablename__ = "oauth_credential_rotations"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("platform_accounts.id"), index=True)
+    account_key: Mapped[str] = mapped_column(String(40))
+    identity_digest: Mapped[str] = mapped_column(String(64))
+    operation: Mapped[str] = mapped_column(String(20))
+    expected_revision: Mapped[int] = mapped_column(Integer)
+    old_reference: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    new_reference: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    status: Mapped[str] = mapped_column(String(30))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

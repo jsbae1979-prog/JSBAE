@@ -106,6 +106,7 @@ def studio(
             videos=videos,
             accounts=list(session.scalars(select(PlatformAccount).order_by(PlatformAccount.id.desc()))),
             oauth_cards=account_connection_service(request).cards(),
+            production_readiness=oauth_production_readiness(),
             drafts=list(session.scalars(select(PublishDraft).order_by(PublishDraft.id.desc()).limit(30))),
             validations=validations,
             validation=validations[0] if validations else None,
@@ -244,3 +245,28 @@ def oauth_start(request: Request, account_id: str) -> None:
 @router.get("/api/oauth/safety")
 def oauth_safety() -> dict:
     return oauth_safety_status()
+
+
+@router.get("/api/oauth/production-readiness")
+def oauth_production_readiness() -> dict:
+    """Expose only phase gates and fixed provider descriptors, never client configuration."""
+    from newsflow.oauth.activation import production_activation_status
+
+    return {
+        **production_activation_status(),
+        "providers": {
+            "youtube": {
+                "client_type": "desktop",
+                "oauth_code_status": "implemented_inactive",
+                "account_identity": "NOT VERIFIED",
+                "production_vault": "inactive",
+                "login": "blocked",
+            },
+            "instagram": {
+                "oauth_code_status": "blocked",
+                "official_requirements": "NOT VERIFIED",
+                "production_vault": "inactive",
+                "login": "blocked",
+            },
+        },
+    }

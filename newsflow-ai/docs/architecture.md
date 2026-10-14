@@ -110,3 +110,13 @@ flowchart LR
 ```
 
 회전은 새 암호화 reference를 먼저 저장하고 계정 revision CAS로 pointer를 교체한 뒤 기존 reference를 삭제합니다. 실패한 CAS의 새 reference는 정리하며 stale 오류로 최신 연결 상태를 덮어쓰지 않습니다. 만료·인증 오류·취소는 fail-closed이고 재시도/refresh는 Fake 명시 실행만 가능합니다. Fake 연결도 PlatformAccount는 not_connected/api_ready=false라 실제 게시 승격이 불가능합니다.
+
+## Phase 4B-2A · dormant production OAuth protocol
+
+Publishing Studio는 안전한 준비 상태만 표시합니다. `oauth.activation.require_production_activation()`은 항상 차단 예외를 발생시키며 환경변수·설정·GUI 승인 입력을 받지 않습니다. 운영 프로토콜, 공식 HTTPS transport, 시스템 브라우저와 production credential boundary가 이 경계를 각각 확인합니다. 이를 활성화하려면 후속 단계 승인과 검토 가능한 코드 변경이 모두 필요합니다. 테스트 모드는 이 경계를 활성화하지 않고 별도의 loopback Fake 서버 및 식별 가능한 합성 코드·토큰만 사용합니다.
+
+Google 데스크톱 프로토콜은 공식 엔드포인트, S256, state, 일회성 callback, 정확한 loopback URI, URL-encoded 코드 교환과 응답 검증, 명시적인 refresh/revoke를 분리합니다. 실제 callback HTTP 경로 또는 자동 브라우저 실행은 등록하지 않습니다. 타임아웃·통신 중단의 결과를 성공이나 안전한 재시도로 추정하지 않습니다. 요청 및 비밀값은 DB·로그·HTML에 저장하지 않습니다.
+
+`youtube.upload`는 `channels.list?mine=true`의 허용 scope가 아닙니다. 따라서 토큰 수신은 계정 신원 확인을 의미하지 않습니다. 계정 바인딩에는 별도 검증된 identity가 필요하며 실제 identity 조회, 추가 최소 권한 승인 및 앱 검증은 다음 단계의 선행 조건입니다. Instagram의 최신 공식 로그인 방식별 요건은 확인 가능한 근거가 없으면 BLOCKED로 유지하고 Google 프로토콜을 복사하지 않습니다.
+
+별도 credential boundary와 additive migration 0006의 회전 이력은 비밀 원문과 DB reference를 분리합니다. 기존 0001~0005와 synthetic-only Windows DPAPI 계약은 그대로 유지합니다. 합성 커널에서 계정별 작업 예약, revision CAS, 교체 후 이전 reference 정리와 중단된 작업의 fail-closed 복구를 검증합니다. SQLite commit과 암호화 파일 저장은 하나의 원자적 트랜잭션이 아니므로 중간 실패 및 orphan ciphertext 가능성을 명시하고 운영 활성화 전 검토합니다. 실제 서비스 credential 저장은 이 단계에서 차단합니다.

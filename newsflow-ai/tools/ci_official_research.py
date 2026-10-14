@@ -115,6 +115,50 @@ EXPECTED = {
     "ig_fb_login": ("instagram", "facebook", "login"),
     "dpapi_protect": ("cryptprotectdata", "cryptprotect_local_machine", "user"),
     "dpapi_unprotect": ("cryptunprotectdata", "cryptprotect_ui_forbidden", "user"),
+    "google_native_pkce": ("oauth", "pkce", "redirect"),
+    "google_native_tokens": ("oauth", "pkce", "redirect"),
+    "google_native_redirect": ("oauth", "pkce", "redirect"),
+    "yt_identity": ("channels.list", "mine", "authorization"),
+}
+PRIORITY_GROUPS = {
+    "native_pkce": (
+        (2400, ("s256", "code_challenge_method", "base64url", "sha256", "code_verifier", "43", "128")),
+        (
+            1800,
+            ("accounts.google.com/o/oauth2/v2/auth", "response_type=code", "code_challenge", "access_type"),
+        ),
+        (1000, ("state", "cross-site", "unique code verifier")),
+        (800, ("access_denied", "invalid_scope", "disallowed_useragent", "redirect_uri_mismatch")),
+    ),
+    "native_tokens": (
+        (1800, ("oauth2.googleapis.com/token", "authorization_code", "code_verifier", "post /token")),
+        (1200, ("expires_in", "token_type", "access_token", "scope")),
+        (1700, ("refreshing an access token", "grant_type=refresh_token", "refresh_token")),
+        (1300, ("oauth2.googleapis.com/revoke", "revoking a token", "invalid_grant", "invalid_client")),
+    ),
+    "native_redirect": (
+        (2600, ("loopback", "127.0.0.1", "[::1]", "localhost", "listening")),
+        (1400, ("desktop app", "installed", "client_secret.json", "redirect_uris", "client_id")),
+        (1200, ("redirect_uri_mismatch", "exactly match", "state", "user consent")),
+        (800, ("verification", "unverified app", "access_denied", "invalid_scope")),
+    ),
+    "installed_setup": (
+        (1800, ("desktop app", "installed", "client type", "credentials", "redirect_uris")),
+        (1700, ("youtube.upload", "youtube.readonly", "scopes enable", "user consent")),
+        (1500, ("verification", "unverified app", "system browser", "local redirect")),
+        (1000, ("pkce", "s256", "invalid_client", "redirect_uri_mismatch")),
+    ),
+    "youtube_identity": (
+        (2100, ("mine", "authenticated user", "channel id", "snippet")),
+        (2200, ("youtube.readonly", "youtube.upload", "youtube.force-ssl", "authorization", "scope")),
+        (1700, ("forbidden", "accountdelegationforbidden", "unauthorized", "quota", "401")),
+    ),
+    "instagram_login": (
+        (1600, ("professional", "business", "creator", "facebook page")),
+        (1800, ("instagram_business", "instagram_content_publish", "scope", "app review")),
+        (1600, ("pkce", "native", "redirect_uri", "authorization code", "access_token")),
+        (1000, ("expires", "refresh", "revoke", "identity")),
+    ),
 }
 
 
@@ -189,6 +233,20 @@ class DocRedirect(urllib.request.HTTPRedirectHandler):
 class DocText(HTMLParser):
     """Keep visible document text and omit scripts, navigation and forms."""
 
+    SKIP_TAGS = frozenset(
+        {
+            "script",
+            "style",
+            "nav",
+            "footer",
+            "form",
+            "noscript",
+            "devsite-key-takeaways",
+            "devsite-feedback",
+            "devsite-rating",
+        }
+    )
+
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.skip, self.main, self.in_title = 0, 0, False
@@ -197,7 +255,7 @@ class DocText(HTMLParser):
         self.title: list[str] = []
 
     def handle_starttag(self, tag: str, attrs) -> None:
-        if tag in {"script", "style", "nav", "footer", "form", "noscript"}:
+        if tag in self.SKIP_TAGS:
             self.skip += 1
         if tag in {"main", "article"}:
             self.main += 1
@@ -207,7 +265,7 @@ class DocText(HTMLParser):
             self.handle_data("\n")
 
     def handle_endtag(self, tag: str) -> None:
-        if tag in {"script", "style", "nav", "footer", "form", "noscript"}:
+        if tag in self.SKIP_TAGS:
             self.skip = max(0, self.skip - 1)
         if tag in {"main", "article"}:
             self.main = max(0, self.main - 1)
@@ -249,6 +307,45 @@ def safe_failure(exc: BaseException) -> str:
     if "Tunnel connection failed" in str(reason):
         return "proxy_connect_denied"
     return "network_or_document_error"
+
+
+def select_excerpts(lines: list[str], profile: str) -> list[str]:
+    """Prioritize explicit procedure sections instead of stopping in introductory OAuth text."""
+    if profile == "default":
+        groups = ((MAX_EXCERPTS, KEYWORDS),)
+    else:
+        if profile not in PRIORITY_GROUPS:
+            raise PolicyError("unknown_document_excerpt_profile")
+        groups = PRIORITY_GROUPS[profile]
+    visible = [line for line in lines if line]
+    used: set[int] = set()
+    excerpts: list[str] = []
+    for group_budget, markers in groups:
+        scored = []
+        for index, line in enumerate(visible):
+            lower = line.casefold()
+            score = sum(
+                3 if "http" in marker or "_" in marker else 1 for marker in markers if marker in lower
+            )
+            if score:
+                scored.append((index, score))
+        # Default preserves source order; focused profiles rank specific procedural matches first.
+        if profile != "default":
+            scored.sort(key=lambda value: (-value[1], value[0]))
+        remaining = group_budget
+        for index, _score in scored:
+            if index in used or remaining <= 0:
+                continue
+            start, end = max(0, index - 1), min(len(visible), index + 3)
+            excerpt = " ".join(visible[start:end])[: min(1100, remaining)]
+            excerpt = excerpt[: MAX_EXCERPTS - sum(map(len, excerpts))]
+            if excerpt and excerpt not in excerpts:
+                excerpts.append(excerpt)
+                remaining -= len(excerpt)
+                used.update(range(start, end))
+            if sum(map(len, excerpts)) >= MAX_EXCERPTS:
+                return excerpts
+    return excerpts
 
 
 def research_page(item: dict) -> dict:
@@ -315,18 +412,13 @@ def research_page(item: dict) -> dict:
         ):
             result["failure_kind"] = "document_content_not_available_or_unconfirmed"
             return result
-        excerpts: list[str] = []
-        for index, line in enumerate(lines):
-            if line and any(word in line.casefold() for word in KEYWORDS):
-                excerpt = " ".join(lines[max(0, index - 1) : index + 3])[:900]
-                excerpt = excerpt[: MAX_EXCERPTS - sum(map(len, excerpts))]
-                if excerpt and excerpt not in excerpts:
-                    excerpts.append(excerpt)
-                if sum(map(len, excerpts)) >= MAX_EXCERPTS:
-                    break
-        result["excerpts"] = excerpts
+        profile = item.get("excerpt_profile", "default")
+        result["excerpts"] = select_excerpts(lines, profile)
+        result["excerpt_priority_profile"] = profile
         result["content"] = "PASS; document cues and bounded visible excerpts captured"
-        result["excerpt_method"] = "Visible text with whitespace normalized; no factual interpretation"
+        result["excerpt_method"] = (
+            "Bounded visible text, normalized whitespace, profile-ranked sections; human review required"
+        )
         return result
     except (PolicyError, OSError, ValueError, LookupError) as exc:
         result["failure_kind"] = safe_failure(exc)

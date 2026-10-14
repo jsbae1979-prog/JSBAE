@@ -1,4 +1,4 @@
-"""Safe errors and immutable Phase 4B-1 execution boundaries."""
+"""Safe errors and immutable OAuth execution boundaries."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ FIXED_REDIRECT = "http://127.0.0.1:8765/oauth/callback"
 YOUTUBE_UPLOAD_SCOPE = "https://www.googleapis.com/auth/youtube.upload"
 _ACCOUNT = re.compile(r"(?:youtube|instagram):[1-9][0-9]{0,18}\Z")
 _MESSAGES = {
-    "blocked": "Phase 4B-1에서는 실제 계정 로그인·토큰 교환·회수 요청이 차단됩니다.",
+    "blocked": "별도 production activation 승인 전에는 실제 계정 로그인·토큰 교환·회수 요청이 차단됩니다.",
     "invalid_input": "인증 준비 입력을 확인하세요.",
     "callback_invalid": "인증 응답을 안전하게 검증하지 못했습니다.",
     "reused": "인증 요청이 없거나 이미 처리되었습니다. 새 요청을 준비하세요.",
