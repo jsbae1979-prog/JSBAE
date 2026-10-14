@@ -351,7 +351,17 @@ def select_excerpts(lines: list[str], profile: str) -> list[str]:
             if index in used or remaining <= 0:
                 continue
             start, end = max(0, index - 1), min(len(visible), index + 3)
-            excerpt = " ".join(visible[start:end])[: min(1100, remaining)]
+            if profile == "default":
+                excerpt = " ".join(visible[start:end])[: min(1100, remaining)]
+            else:
+                # Put the procedural match before neighboring text: an oversized
+                # introduction must not consume the cap and erase the actual proof.
+                line = visible[index]
+                positions = [line.casefold().find(marker) for marker in markers if marker in line.casefold()]
+                offset = max(0, min(positions) - 160)
+                core = line[offset:offset + 750]
+                context = " ".join(visible[i][:150] for i in range(start, end) if i != index)
+                excerpt = (core + " " + context)[:min(1100, remaining)]
             excerpt = excerpt[: MAX_EXCERPTS - sum(map(len, excerpts))]
             if excerpt and excerpt not in excerpts:
                 excerpts.append(excerpt)
