@@ -155,7 +155,10 @@ def test_mocked_windows_account_entropy_rejects_cross_account(mocked_windows):
     assert store.load("youtube:1", reference)
 
 
-@pytest.mark.parametrize("content", [b"", b"corrupt", b"x" * 131073])
+@pytest.mark.parametrize(
+    "content", [b"", b"corrupt", b"x" * 131073],
+    ids=["empty", "corrupt", "oversized-ciphertext"],
+)
 def test_mocked_windows_corrupt_or_oversized_ciphertext(mocked_windows, content):
     store, _ = mocked_windows
     reference = store.store("youtube:1", bundle())
@@ -164,7 +167,10 @@ def test_mocked_windows_corrupt_or_oversized_ciphertext(mocked_windows, content)
         store.load("youtube:1", reference)
 
 
-@pytest.mark.parametrize("content", [b"{}", b"[]", b"not json", b"x" * 32769])
+@pytest.mark.parametrize(
+    "content", [b"{}", b"[]", b"not json", b"x" * 32769],
+    ids=["empty-object", "non-object", "invalid-json", "oversized-plaintext"],
+)
 def test_mocked_windows_malformed_plaintext_fails_closed(mocked_windows, monkeypatch, content):
     store, mock = mocked_windows
     reference = store.store("youtube:1", bundle())
