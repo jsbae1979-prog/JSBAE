@@ -1,0 +1,95 @@
+{
+  "run": "COMPLETED; page verification is reported separately",
+  "encoding": "gzip-base64-utf8",
+  "payload_sha256": "e4eb1da7bf7001fc7799404c500846d4f80de2b23625780548974ef878dc6395",
+  "sha256_applies_to": "decompressed UTF-8 JSON bytes",
+  "chunks": 6,
+  "annotation_excerpt_cap_characters_per_page": 6000,
+  "trimmed_page_keys": [],
+  "pages": [
+    {
+      "key": "google_native_pkce",
+      "status_code": 200,
+      "transport": "PASS",
+      "content": "PASS",
+      "failure_kind": null
+    },
+    {
+      "key": "google_native_tokens",
+      "status_code": 200,
+      "transport": "PASS",
+      "content": "PASS",
+      "failure_kind": null
+    },
+    {
+      "key": "google_native_redirect",
+      "status_code": 200,
+      "transport": "PASS",
+      "content": "PASS",
+      "failure_kind": null
+    },
+    {
+      "key": "yt_oauth",
+      "status_code": 200,
+      "transport": "PASS",
+      "content": "PASS",
+      "failure_kind": null
+    },
+    {
+      "key": "yt_upload",
+      "status_code": 200,
+      "transport": "PASS",
+      "content": "PASS",
+      "failure_kind": null
+    },
+    {
+      "key": "yt_identity",
+      "status_code": 200,
+      "transport": "PASS",
+      "content": "PASS",
+      "failure_kind": null
+    },
+    {
+      "key": "ig_login",
+      "status_code": null,
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "failure_kind": "redirect_not_allowed"
+    },
+    {
+      "key": "ig_business_login",
+      "status_code": null,
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "failure_kind": "redirect_not_allowed"
+    },
+    {
+      "key": "ig_publish",
+      "status_code": null,
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "failure_kind": "redirect_not_allowed"
+    },
+    {
+      "key": "ig_fb_login",
+      "status_code": null,
+      "transport": "NOT VERIFIED",
+      "content": "NOT VERIFIED",
+      "failure_kind": "redirect_not_allowed"
+    },
+    {
+      "key": "dpapi_protect",
+      "status_code": 200,
+      "transport": "PASS",
+      "content": "PASS",
+      "failure_kind": null
+    },
+    {
+      "key": "dpapi_unprotect",
+      "status_code": 200,
+      "transport": "PASS",
+      "content": "PASS",
+      "failure_kind": null
+    }
+  ]
+}

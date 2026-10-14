@@ -1,0 +1,239 @@
+{
+  "run_id": 38545651234,
+  "check_run_id": 115790917251,
+  "head_sha": "f94d9d7467f927135c9923699834e2d90be46539",
+  "conclusion": "success",
+  "annotations": [
+    {
+      "annotation_level": "warning",
+      "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-python@v5, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/",
+      "title": ""
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"platform\":\"win32\",\"mode\":\"windows\",\"real_RSS\":\"NOT VERIFIED (offline synthetic tests)\",\"LOCALAPPDATA_default\":\"PASS\",\"production_trace\":[\"first_start_requested\",\"first_server_ready\",\"production_HTTP_POST_completed\",\"duplicate_rejected\",\"first_server_stopped\",\"seed_stored_three_articles\",\"restarted_server_ready\",\"restarted_server_stopped\",\"port_collision_rejected\"],\"production\":{\"server_lifecycle\":\"PASS\",\"http_POST\":\"PASS\",\"sqlite_store_restart_query\":\"PASS\",\"article_count\":3,\"duplicate_and_port_collision\":\"PASS\",\"run_bat\":\"PASS\",\"stop_method\":\"taskkill process tree\",\"Windows_manual_CtrlC\":\"NOT VERIFIED\"},\"browser_progress\":{\"server_ready\":true,\"browser_channel\":\"chrome\",\"context_origin\":{\"location\":\"http://127.0.0.1:8765\",\"window\":\"http://127.0.0.1:8765\"},\"registration_status\":303,\"registration_origin\":\"http://127.0.0.1:8765\",\"registration\":\"PASS\",\"disable_status\":303,\"enable_status\":303,\"collection_status\":303,\"sqlite_count\":3,\"search_count\":1,\"video_status\":\"success\",\"video_progress\":100,\"video_metadata_state\":{\"ready\":4,\"error\":null,\"width\":1080,\"height\":1920,\"support\":\"probably\"},\"video_dimensions\":[1080,1920],\"video_media_state\":{\"ready\":4,\"error\":null},\"video_frame_decode\":\"PASS\",\"publishing_create_status\":303,\"publishing_edit_status\":303,\"publishing_validate_status\":303,\"oauth_forged_start_status\":423,\"mobile_last_path\":\"/publishing?draft_id=1\",\"mobile_overflow\":false},\"browser\":{\"GUI_browser_POST\":\"PASS (registration, disable/enable, collection)\",\"AI_Studio_analysis_script_edit_POST\":\"PASS (offline; unverified; sources preserved)\",\"Video_Studio_POST_preview_download\":\"PASS (real 30s MP4; offline silent audio; human quality not verified)\",\"publishing_SQLite_counts\":{\"publish_drafts\":1,\"publish_validations\":2,\"publish_jobs\":0,\"publish_attempts\":0},\"Publishing_Studio_create_edit_validate_POST\":\"PASS (unconnected account blocked; approval pending; no real publishing)\",\"publishing_safety\":{\"real_publish_calls\":0,\"real_oauth_calls\":0,\"mode\":\"foundation\",\"external_execution_enabled\":false},\"OAuth_Studio_metadata_prepare_disconnect_blocked_start_POST\":\"PASS (local records only)\",\"oauth_safety\":{\"real_authorization_requests\":0,\"real_token_exchange_calls\":0,\"real_refresh_calls\":0,\"real_revoke_calls\":0,\"mode\":\"OFFLINE/BLOCKED\",\"feature_enabled\":false,\"user_approval\":false,\"phase_allows_real\":false},\"oauth_account_id\":1,\"oauth_SQLite_state\":{\"status\":\"disconnect_prepared\",\"mode\":\"offline\",\"revision\":3,\"expires_at\":null,\"error_code\":null,\"account_status\":\"not_connected\",\"credential_present\":false,\"api_ready\":false,\"scopes\":[]},\"oauth_production_readiness\":{\"phase\":\"4B-2B\",\"production_activation\":false,\"environment_can_activate\":false,\"gui_can_activate\":false,\"browser_login_allowed\":false,\"token_exchange_allowed\":false,\"production_storage_allowed\":false,\"publishing_allowed\":false,\"providers\":{\"youtube\":{\"client_type\":\"desktop\",\"oauth_code_status\":\"implemented_inactive\",\"account_identity\":\"NOT VERIFIED\",\"production_vault\":\"inactive\",\"login\":\"blocked\"},\"instagram\":{\"oauth_code_status\":\"blocked\",\"official_requirements\":\"NOT VERIFIED\",\"production_vault\":\"inactive\",\"login\":\"blocked\"}}},\"OAuth_operations_readiness_browser\":\"PASS (inactive code; real operations blocked)\",\"browser_external_request_origins\":[],\"GUI_render_search_detail_mobile\":\"PASS\",\"GUI_synthetic_RSS_store\":\"PASS\",\"article_count\":3,\"OAuth_preparation_restart_persistence\":\"PASS\",\"Publishing_draft_validation_restart_persistence\":\"PASS\",\"Video_job_file_restart_persistence\":\"PASS\",\"AI_draft_restart_persistence\":\"PASS\",\"fixture_server_restart_persistence\":\"PASS\"},\"outcome\":\"PASS\"}",
+      "title": "NewsFlow validation"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"phase\":\"4B-2B\",\"mode\":\"OFFLINE/BLOCKED\",\"production_activation\":false,\"callback\":{\"code_status\":\"implemented_inactive\",\"binding\":\"127.0.0.1\",\"registered_uri_match\":\"exact\",\"real_provider_connected\":false,\"listener_started_by_gui\":false},\"youtube_identity\":{\"code_status\":\"implemented_inactive\",\"real_account\":\"NOT VERIFIED\",\"connection_on_error\":\"blocked\"},\"production_vault\":{\"code_status\":\"implemented_inactive\",\"boundary\":\"Windows current-user DPAPI\",\"validation_data\":\"synthetic_only\",\"real_credentials_allowed\":false},\"instagram\":{\"login\":\"blocked\",\"official_requirements\":\"NOT VERIFIED\"},\"real_login_allowed\":false,\"real_token_exchange_allowed\":false,\"real_identity_lookup_allowed\":false,\"real_publishing_allowed\":false}",
+      "title": "NewsFlow OAuth operations"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"tests\":830,\"passed\":829,\"skipped\":1,\"failures\":0,\"errors\":0}",
+      "title": "NewsFlow pytest"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"platform\":\"win32\",\"credential_kind\":\"synthetic only\",\"real_service_tokens\":0,\"real_oauth_calls\":0,\"real_publish_calls\":0,\"Windows11_user_PC\":\"NOT VERIFIED\",\"current_user_DPAPI\":\"PASS\",\"separate_production_cipher_kernel\":\"PASS\",\"disk_ciphertext\":\"PASS\",\"same_user_new_process\":\"PASS\",\"Korean_space_path\":\"PASS\",\"account_identity_binding\":\"PASS\",\"real_service_storage_blocked\":\"PASS\",\"rotation_provenance_and_delete\":\"PASS\",\"tampered_ciphertext_quarantined\":\"PASS\",\"temporary_cleanup\":\"PASS\",\"different_Windows_user_DPAPI\":\"PASS\",\"different_user_own_roundtrip\":\"PASS\",\"alternate_principal_cleanup\":\"PASS\",\"owned_test_data_cleanup\":\"PASS\",\"result\":\"PASS\"}",
+      "title": "NewsFlow production credential vault"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"platform\":\"win32\",\"credential_kind\":\"synthetic only\",\"real_service_tokens\":0,\"real_oauth_calls\":0,\"real_publish_calls\":0,\"Windows11_user_PC\":\"NOT VERIFIED\",\"current_user_DPAPI\":\"PASS\",\"disk_ciphertext\":\"PASS\",\"new_python_process_read\":\"PASS\",\"Korean_space_path\":\"PASS\",\"multiple_account_isolation\":\"PASS\",\"rotation_and_delete\":\"PASS\",\"expiry_and_expired_delete\":\"PASS\",\"tamper_rejection\":\"PASS\",\"real_token_storage_blocked\":\"PASS\",\"atomic_temporary_cleanup\":\"PASS\",\"owned_test_data_cleanup\":\"PASS\",\"result\":\"PASS\"}",
+      "title": "NewsFlow credential vault"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"index\":6,\"total\":6,\"encoding\":\"gzip-base64-utf8\",\"payload_sha256\":\"e4eb1da7bf7001fc7799404c500846d4f80de2b23625780548974ef878dc6395\",\"data\":\"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\"}",
+      "title": "NewsFlow official docs chunk"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"index\":5,\"total\":6,\"encoding\":\"gzip-base64-utf8\",\"payload_sha256\":\"e4eb1da7bf7001fc7799404c500846d4f80de2b23625780548974ef878dc6395\",\"data\":\"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\"}",
+      "title": "NewsFlow official docs chunk"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"index\":4,\"total\":6,\"encoding\":\"gzip-base64-utf8\",\"payload_sha256\":\"e4eb1da7bf7001fc7799404c500846d4f80de2b23625780548974ef878dc6395\",\"data\":\"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\"}",
+      "title": "NewsFlow official docs chunk"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"index\":3,\"total\":6,\"encoding\":\"gzip-base64-utf8\",\"payload_sha256\":\"e4eb1da7bf7001fc7799404c500846d4f80de2b23625780548974ef878dc6395\",\"data\":\"C9gK+fRGk2Dm2oJbZq+EZKGl9opdUdJslbKrGKqRa0jdYdidJsUtfYbs6z0yxyuJWtXzUp+VIKBUAQcezCXBxk9/etIGZQ1LFZdKQemCsac4XcCGYIsy35Cksqo9ZxNJdU8L5oXXjsnWmgDCKeszj6ezUrCqakMGJAFJ9JnFyKBwpUi9CFlnlCECI9FUsXHO/OhGRuWlYJEO7I5cJ847cSSY/HIgj7KTYNlNXYWGEh7wUB581PxnacsJYluyV2GbrAmHS7L9QTPAhudY/zimbJMdwdNHdRmGhSimHrgYL4pEdSLV+bvqnByfDVSnI1bpRWuPQ4Yd1Jxdb5ytdx2QKx2skOnA6+JUoei6UHfZ419Y376nfz58DXR/hkC3Cy7/LkLdbn93DnY/fvz0+ddg9ycFu5MMpMAsMxTiyRPAp3WxkqpWg71ZEniUk50uCisabmAvJDmNQSARoJerrDGkuiiXB7UFICDLKVMZJgakUya1LyXbzZLMmwBorvFITaCOMiy6w/VgbhC+a1e/KkphVpNgFAis6LHUeh+F6SJM4NscWDI0gP6NfVTESAkRlt82laccgt+W8pZ4G2MumJFimTABnmMChsWthLyQHknF8g9vu92HP9KXMNt/LbAij8NsSVgiuDzrPtFXqOkaAMYxnjIsqByCQwLLw3MgD/wJlaVVOUJ4BYqQstv4DLgOoOmAnhYlf1HFUEGSIKToy3QxH+nCqQUZGV1r1E6Vvy+Vu24LTSt3wcYsJ8JAEspGsSzotqnwM6XG9/snp/29Hpi9wRqMucjUS/eXul+ZUnNJ0lLi+5ZKvLuV9TWtkwLCu13LujD1HKUDGU4IWDGempbSEGqtZkCQDt3Hb9TtYdy17mQTuDfm4fj4rK0OwVZ711Y/xEBq1xiIJlm0WQswA6/PEdMweZfs77sQSQ3pBIVeGhVZDM7i3gwARBUabAGBFKwVAeAGyUKWSoBluvy0cd2KwawUgThdxBJAjQWEqAmRziWMzY9yNZFX7O6JkQCtNCnMXufP2CQjgOb89LDJZhNnizmIapBcTZkjthMXFQbnnpUzpyxsBUWVB/DGDlz1GFhCkV9N45IEJMpt8YMNVtDwtao+LvJxy6mC1Gi3XmtwKnE1sEGONrA5BeqKtGZeSZpaTqe5QifwhmIDmYkLBuP6M+/JPpbw4PEQZ7RjFkGNwOm9FOGLdg+7e+gJhyDBwL4KasD1wq8VPNnh8Z3VvSRbRMRwWaLrtUr+cPUyJrfzKdBIqn6YoQQVvwvhQDyL0U/ZYxuLR8lbqfJtTKNcahdxLTnuQSoY+ZMbC9QRHYBlbPoV/yONxOVVNDFhw5cJnjy6isf6BeCymroGpO8Jcx+DEYahBUKBpRdYIjhc/mArMg5X3oX/H58MT06Pj18PMXx2r+DduhAgOpYfM796Na49K8FSyoppyHEfUrTgECRiKqszdMmJHQCwUw7DizmqKECNsJeMnJ7oQmMAgo85YZGXNVSxbowoFqVNc2SdaKQhhW0zSMu5ABeZ9QI8bTa0bD0//WxmyKMYT6LdoaUEq8lIUFUR69rZuxMk5bMF+KJgB50UmqQEliAaiRbguw1LJejVdudCaLANsG+oGFbjwnFkXLEN4HikxODGXGxD3tm6lESboP0ICLio6iRDtZ56midOr7IErEEbz10TnOA8/B+5tvF/XBXgulMq6OWMNNceAwopfpcwN83i3NWS4+RiwdpcpgsQIZk2nox5pSfoWlA9OJn0MQYwkJmXaKxeS+JL1CqQL3njmyoVZOpZPyasVMNyqrwJMTyRcCDk+IWPMXzBUx13OCHRUM8hBTdijpmldNe/yE+T8i7PSKllLyUL7oW6qeYfIMGEm1UVF2sJsU7BiHUgzXmMiWwm5zaGXcYzTtqII84MRAh29ew1o4IK4e9zKKtm6w1mC65aKCifusoD/5OqZ7O0OgTggvZrTHAukkADRBdVyRfqP7K25OwggoIyerWWJaJQXBQb8wiL1PX7OJCjqXIMdeU4i8/ZxMZepQFxudhpBtQYyCVOfQMsENXNG6bVmsWIhqqv1Yv6FnqeoQ4HoL5G0x91fBUYAVB4eyCl/MsGIjFByi8112JdTAqOyKNkMRhkpLHInpF3YNv1tjAMg+90kqs9eBMse+TRrEIKuQ4NaBEVTIm7hT2HIh7hD3oEthwu1UXUlIixyi+iQcHcuwb9TxrCnjX+GrT+DEFrL0z8G4Wtb8qh3eXXQPU9A9VHHO5biVUD7wwWWE6FDgRa6XcLX3sGEqprs87pQQeFjks704TYf2VW67rwLhscHHgrljZQ9SZR7jjbDVh7c3sOS5J6FGVfNVdramXJH+r5y7fhnEJPMaBTiDnp2QAudOuVbokB0K6cIjJR647RXbygxNisfFVRV+k7xWmBssgI7iVIysV0JlrKmixUwsQVw/YwI1kTvnIbV3lrPurGlFaT0Qi2Si+CKVrGwNlIFRet9kULcHc8AWzypxKIdNSJQBBf\"}",
+      "title": "NewsFlow official docs chunk"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"index\":2,\"total\":6,\"encoding\":\"gzip-base64-utf8\",\"payload_sha256\":\"e4eb1da7bf7001fc7799404c500846d4f80de2b23625780548974ef878dc6395\",\"data\":\"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\"}",
+      "title": "NewsFlow official docs chunk"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"index\":1,\"total\":6,\"encoding\":\"gzip-base64-utf8\",\"payload_sha256\":\"e4eb1da7bf7001fc7799404c500846d4f80de2b23625780548974ef878dc6395\",\"data\":\"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\"}",
+      "title": "NewsFlow official docs chunk"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"run\":\"COMPLETED; page verification is reported separately\",\"encoding\":\"gzip-base64-utf8\",\"payload_sha256\":\"e4eb1da7bf7001fc7799404c500846d4f80de2b23625780548974ef878dc6395\",\"sha256_applies_to\":\"decompressed UTF-8 JSON bytes\",\"chunks\":6,\"annotation_excerpt_cap_characters_per_page\":6000,\"trimmed_page_keys\":[],\"pages\":[{\"key\":\"google_native_pkce\",\"status_code\":200,\"transport\":\"PASS\",\"content\":\"PASS\",\"failure_kind\":null},{\"key\":\"google_native_tokens\",\"status_code\":200,\"transport\":\"PASS\",\"content\":\"PASS\",\"failure_kind\":null},{\"key\":\"google_native_redirect\",\"status_code\":200,\"transport\":\"PASS\",\"content\":\"PASS\",\"failure_kind\":null},{\"key\":\"yt_oauth\",\"status_code\":200,\"transport\":\"PASS\",\"content\":\"PASS\",\"failure_kind\":null},{\"key\":\"yt_upload\",\"status_code\":200,\"transport\":\"PASS\",\"content\":\"PASS\",\"failure_kind\":null},{\"key\":\"yt_identity\",\"status_code\":200,\"transport\":\"PASS\",\"content\":\"PASS\",\"failure_kind\":null},{\"key\":\"ig_login\",\"status_code\":null,\"transport\":\"NOT VERIFIED\",\"content\":\"NOT VERIFIED\",\"failure_kind\":\"redirect_not_allowed\"},{\"key\":\"ig_business_login\",\"status_code\":null,\"transport\":\"NOT VERIFIED\",\"content\":\"NOT VERIFIED\",\"failure_kind\":\"redirect_not_allowed\"},{\"key\":\"ig_publish\",\"status_code\":null,\"transport\":\"NOT VERIFIED\",\"content\":\"NOT VERIFIED\",\"failure_kind\":\"redirect_not_allowed\"},{\"key\":\"ig_fb_login\",\"status_code\":null,\"transport\":\"NOT VERIFIED\",\"content\":\"NOT VERIFIED\",\"failure_kind\":\"redirect_not_allowed\"},{\"key\":\"dpapi_protect\",\"status_code\":200,\"transport\":\"PASS\",\"content\":\"PASS\",\"failure_kind\":null},{\"key\":\"dpapi_unprotect\",\"status_code\":200,\"transport\":\"PASS\",\"content\":\"PASS\",\"failure_kind\":null}]}",
+      "title": "NewsFlow official docs"
+    },
+    {
+      "annotation_level": "notice",
+      "message": "{\"real_RSS\":\"NOT VERIFIED\",\"real_AI_API\":\"NOT VERIFIED\",\"full_30_45_60_quality\":\"NOT VERIFIED (short synthetic samples; no human quality review)\",\"Windows11_user_PC\":\"NOT VERIFIED\",\"sample_MP4\":\"PASS\",\"sample_file\":\"sample-3s-43f6cfb2847e4481a22aa7032abf6bbf.mp4\",\"sample_metadata\":{\"adapter\":\"ffmpeg\",\"playable\":true,\"video_codec\":\"h264\",\"audio_codec\":\"aac\",\"width\":1080,\"height\":1920,\"duration\":3.021029,\"expected_duration\":3,\"audio_channels\":2,\"bytes\":56520,\"ffmpeg_version\":\"7.1.1-essentials_build-www.gyan.dev\"},\"Korean_subtitle_raster\":\"PASS (pinned/installed Korean font)\",\"scene_transition\":\"PASS (cuts)\",\"Offline_TTS\":\"PASS (silent PCM -> AAC; not spoken voice)\",\"progress\":[5,35,60,85,95],\"Windows_TTS\":\"PASS (installed SAPI voice -> WAV -> MP4 audio)\",\"Windows_TTS_speech_seconds\":1.51,\"Windows_TTS_sample_metadata\":{\"adapter\":\"ffmpeg\",\"playable\":true,\"video_codec\":\"h264\",\"audio_codec\":\"aac\",\"width\":1080,\"height\":1920,\"duration\":5.021029,\"expected_duration\":5,\"audio_channels\":2,\"bytes\":46855,\"ffmpeg_version\":\"7.1.1-essentials_build-www.gyan.dev\"},\"Windows_TTS_sample_file\":\"sample-voice-5s-4475a1c2e02b4d5b9359746fc1a916b6.mp4\",\"Windows_TTS_quality\":\"NOT VERIFIED (no human listening; Korean pronunciation not verified)\",\"outcome\":\"PASS with explicit unverified items\"}",
+      "title": "NewsFlow video validation"
+    }
+  ],
+  "jobs": {
+    "total_count": 1,
+    "jobs": [
+      {
+        "id": 115790917251,
+        "run_id": 38545651234,
+        "workflow_name": "NewsFlow Phase 4B-2B Windows validation",
+        "head_branch": "feat/newsflow-phase4b2b",
+        "run_url": "https://api.github.com/repos/jsbae1979-prog/JSBAE/actions/runs/38545651234",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU7EZ0c8AAAAa9a0ugw",
+        "head_sha": "f94d9d7467f927135c9923699834e2d90be46539",
+        "url": "https://api.github.com/repos/jsbae1979-prog/JSBAE/actions/jobs/115790917251",
+        "html_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38545651234/job/115790917251",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-14T09:53:27Z",
+        "started_at": "2026-10-14T09:53:29Z",
+        "completed_at": "2026-10-14T09:58:29Z",
+        "name": "windows-validation",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-10-14T09:53:30Z",
+            "completed_at": "2026-10-14T09:53:30Z"
+          },
+          {
+            "name": "Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-10-14T09:53:30Z",
+            "completed_at": "2026-10-14T09:53:38Z"
+          },
+          {
+            "name": "Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-10-14T09:53:38Z",
+            "completed_at": "2026-10-14T09:53:38Z"
+          },
+          {
+            "name": "Install development and browser dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 4,
+            "started_at": "2026-10-14T09:53:38Z",
+            "completed_at": "2026-10-14T09:54:21Z"
+          },
+          {
+            "name": "Prepare Chromium-based Google Chrome for MP4 preview",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-10-14T09:54:21Z",
+            "completed_at": "2026-10-14T09:54:22Z"
+          },
+          {
+            "name": "Prepare real FFmpeg and pinned Korean font",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-10-14T09:54:22Z",
+            "completed_at": "2026-10-14T09:54:44Z"
+          },
+          {
+            "name": "Actual short MP4 ffprobe and local TTS",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 7,
+            "started_at": "2026-10-14T09:54:44Z",
+            "completed_at": "2026-10-14T09:54:53Z"
+          },
+          {
+            "name": "Read-only public official policy documentation",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-10-14T09:54:53Z",
+            "completed_at": "2026-10-14T09:54:56Z"
+          },
+          {
+            "name": "Actual Windows DPAPI synthetic credential vault",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-10-14T09:54:56Z",
+            "completed_at": "2026-10-14T09:54:59Z"
+          },
+          {
+            "name": "Actual Windows production-vault synthetic encryption and recovery",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 10,
+            "started_at": "2026-10-14T09:54:59Z",
+            "completed_at": "2026-10-14T09:55:21Z"
+          },
+          {
+            "name": "All offline regression, callback HTTP, identity and recovery tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 11,
+            "started_at": "2026-10-14T09:55:21Z",
+            "completed_at": "2026-10-14T09:57:13Z"
+          },
+          {
+            "name": "Actual BAT, persistence and operational OAuth GUI with production blocked",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-10-14T09:57:13Z",
+            "completed_at": "2026-10-14T09:58:24Z"
+          },
+          {
+            "name": "Upload synthetic validation results",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 13,
+            "started_at": "2026-10-14T09:58:24Z",
+            "completed_at": "2026-10-14T09:58:25Z"
+          },
+          {
+            "name": "Post Run actions/setup-python@v5",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 25,
+            "started_at": "2026-10-14T09:58:25Z",
+            "completed_at": "2026-10-14T09:58:25Z"
+          },
+          {
+            "name": "Post Run actions/checkout@v4",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 26,
+            "started_at": "2026-10-14T09:58:25Z",
+            "completed_at": "2026-10-14T09:58:27Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 27,
+            "started_at": "2026-10-14T09:58:27Z",
+            "completed_at": "2026-10-14T09:58:27Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/jsbae1979-prog/JSBAE/check-runs/115790917251",
+        "labels": [
+          "windows-latest"
+        ],
+        "runner_id": 1000000018,
+        "runner_name": "GitHub Actions 1000000018",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ]
+  }
+}

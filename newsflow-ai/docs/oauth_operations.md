@@ -4,7 +4,9 @@
 
 ## 공식 근거와 현재 확인 범위
 
-공개 공식 문서만 GET으로 조회했습니다. Cloud의 문서 12개 조회 기록은 기존 프록시에서 차단되어 **NOT VERIFIED**입니다. 네트워크 권한, 프록시와 TLS 설정은 변경하지 않았습니다. 같은 날 Phase 4B-2A의 Windows가 확보한 Google/Microsoft 공식 본문과 이번 단계에서 다시 읽은 공식 유지관리 저장소를 구분하여 사용합니다. 이번 단계 Windows의 공개 문서 재조회와 검증 결과는 완료 보고서에 기록합니다.
+공개 공식 문서만 GET으로 조회했습니다. Cloud의 문서 12개 조회 기록은 기존 프록시에서 차단되어 **NOT VERIFIED**입니다. 네트워크 권한, 프록시와 TLS 설정은 변경하지 않았습니다. 이번 단계 Windows Actions run **38544669027**에서 2026-10-14 **18:47:04 Asia/Seoul / 09:47:04 UTC**에 확보한 공식 문서 결과를 다시 검토했습니다. Google/Microsoft 8개 조회 기록은 기본 TLS 검증을 유지한 HTTPS 200이며, Meta 4개는 허용된 공개 문서 경로 밖으로 redirect되어 **NOT VERIFIED**입니다. 문서 조회 단계의 성공은 해당 run의 전체 pytest 성공을 의미하지 않습니다.
+
+[Windows 문서 원본](reports/phase4b2b_evidence/windows_official_docs.json)과 [본문 검토 기록](reports/phase4b2b_evidence/windows_official_review.json)은 본문에서 확인한 사실, 공식 저장소로 보완한 사실과 미검증 항목을 구분합니다. 페이지의 자동 요약과 잘린 인접 표 행만으로 권한·검수 조건을 확정하지 않았습니다. 공개 문서 읽기는 실제 OAuth Client 등록, 사용자 동의, token 또는 계정 조회 검증이 아닙니다.
 
 | 근거 | 확인한 내용 | 실제 검증의 한계 |
 | --- | --- | --- |
@@ -21,6 +23,8 @@ GUI는 기존 **`http://127.0.0.1:8765`**를 유지합니다. 운영 callback �
 
 이는 Google 데스크톱 문서의 “HTTP listener on a random available port” 지침과 현재 공식 Python flow의 bind 순서에 근거합니다. `localhost`는 DNS/IPv6 및 일부 방화벽 차이를 만들 수 있어 숫자 IPv4 loopback을 사용합니다. Instagram의 callback 지원 여부를 이 결정으로 추정하지 않습니다. 기존 8765 callback metadata 계약은 회귀 호환성을 유지하며 새로운 listener의 동적 URI 검증과 구분합니다.
 
+이번 Windows 조회 본문에서도 “listener on a random available port. Substitute port with the actual port number your app listens on”, `http://127.0.0.1:port`, Windows desktop 지원을 확인했습니다. 공식 문서는 loopback redirect의 모바일 OAuth client 유형 지원이 폐기되었다고 구분합니다. 실제 앱이 Desktop client로 등록되었는지와 요청 URI가 그 client에 허용되는지는 별도 승인 후 확인해야 합니다.
+
 Windows에서는 주소 재사용을 금지하고 `SO_EXCLUSIVEADDRUSE`로 포트를 독점하여 다른 프로세스의 같은 주소/포트 bind를 차단합니다. 이미 점유된 명시적 포트에서는 오류를 반환하며 다른 포트로 조용히 이동하지 않습니다. 실제 Google OAuth에 listener를 연결하지 않으며 운영 listener 시작도 production activation 경계에서 차단합니다. 합성 listener의 실제 로컬 HTTP 테스트만 허용합니다.
 
 검증은 세션에 묶인 URI, 정확한 Host, loopback peer, 허용된 요청 방식과 경로, Origin 정책, 고유 state, S256 verifier/challenge, 만료 및 callback 일회성 소비를 확인합니다. 취소, timeout, replay, 중복 매개변수와 위조 요청은 연결 성공으로 바꾸지 않습니다. Origin 없는 일반 브라우저 navigation과 임의 Origin 입력을 구분하며 실제 Google 브라우저 응답의 호환성은 후속 실계정 승인 전 검증해야 합니다. 임의 외부 redirect를 제공하지 않습니다.
@@ -30,6 +34,8 @@ code/state/verifier를 로그, DB, HTML 또는 callback 응답으로 반사하�
 ## YouTube channel identity와 scope
 
 `youtube.upload`는 업로드 권한이며 공식 `channels.list`의 허용 scope에 없습니다. identity 조회에 사용할 최소 후보는 **`https://www.googleapis.com/auth/youtube.readonly`**입니다. 이 scope는 업로드 scope와 별도로 검토하고 후속 사용자 동의를 받아야 합니다. 코드에서 허용 scope를 정의한 것은 실제 동의나 grant를 얻었다는 의미가 아닙니다.
+
+이번 Windows `channels.list` 본문은 채널 ID와 `mine`의 authorized request 조건을 확인합니다. 해당 bounded excerpt에는 허용 scope 목록 전체가 없으므로 upload 제외와 readonly 후보의 직접 근거는 앞서 고정 SHA로 확인한 **공식 discovery**입니다. 설치형 YouTube 본문에서는 최소 scope 선택과 시스템 브라우저/local redirect 요구를 확인했습니다. 특정 실계정의 scope 승인·앱 검수 결과를 이를 통해 추정하지 않습니다.
 
 identity 요청 설계는 공식 `channels.list(part=id, mine=true)`를 사용합니다. email, Google `sub`, 사용자 프로필 또는 채널 제목을 수집하는 가상의 endpoint/scope를 추가하지 않습니다. 채널 ID는 로컬 계정 ID와 token grant에 함께 바인딩하며 채널 변경, 이미 다른 로컬 계정에 묶인 채널, scope 축소 및 계정 교차 연결을 차단합니다. 채널이 없거나 하나로 확정할 수 없으면 자동 선택하지 않습니다. 권한 오류, timeout, 잘못된 응답 및 결과 불명 상태는 준비 완료로 표시하지 않습니다.
 
@@ -56,7 +62,7 @@ DPAPI가 변조된 입력을 특정 오류 코드로만 거부한다고 가정�
 - [Instagram Login Content Publishing](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing)
 - [Facebook Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login)
 
-Cloud에서는 프록시가 공개 문서 연결을 차단했습니다. 기존 Windows 조회에서는 허용된 공개 문서 경로 밖으로 redirect되어 인증 페이지를 따라가지 않았습니다. 이번 단계 Windows 결과 역시 별도로 보고합니다. 로그인별 scope, redirect, PKCE 지원, 계정 자격, 앱 등록·검수, identity, token 교환·갱신·회수는 확정되지 않으면 NOT VERIFIED로 유지합니다. endpoint와 권한을 추정하거나 YouTube의 데스크톱 loopback/PKCE 구현을 복사하지 않습니다. Instagram adapter는 계속 BLOCKED입니다.
+Cloud에서는 프록시가 공개 문서 연결을 차단했습니다. 이번 Windows 조회에서도 위 4개 URL은 모두 `redirect_not_allowed`였습니다. 이는 문서 fetch 정책이 허용된 공개 문서 경로 밖의 redirect를 거부한 결과이며, 최종 목적지의 정책 내용이나 로그인 방식을 확인했다는 뜻은 아닙니다. redirect와 로그인을 따라가지 않았습니다. 로그인별 scope, redirect, PKCE 지원, 계정 자격, 앱 등록·검수, identity, token 교환·갱신·회수는 모두 NOT VERIFIED로 유지합니다. endpoint와 권한을 추정하거나 YouTube의 데스크톱 loopback/PKCE 구현을 복사하지 않습니다. Instagram adapter는 계속 BLOCKED입니다.
 
 ## Phase 4B-2C 진입 조건
 

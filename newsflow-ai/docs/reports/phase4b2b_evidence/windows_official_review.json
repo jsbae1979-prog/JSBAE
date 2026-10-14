@@ -1,0 +1,184 @@
+{
+  "reviewed_at_utc": "2026-10-14T09:54:27.700544+00:00",
+  "reviewed_at_asia_seoul": "2026-10-14T18:54:27.700544+09:00",
+  "source_run_id": 38544669027,
+  "source_document": "windows_official_docs.json",
+  "source_documents_checked_at_utc": "2026-10-14T09:47:04.609505+00:00",
+  "public_document_get_step": "PASS; independent of the same workflow run pytest outcome",
+  "records": 12,
+  "https_200_records": 8,
+  "not_verified_meta_records": 4,
+  "annotation_excerpt_cap_characters_per_page": 6000,
+  "annotation_trimmed_page_keys": [],
+  "review_method": "Manual review of bounded visible procedure text; automatic summaries/adjacent-table ordering are not permission proof. Scope/endpoint gaps supplemented only by separately pinned official repositories.",
+  "actual_authorization_calls": 0,
+  "actual_token_calls": 0,
+  "actual_identity_calls": 0,
+  "actual_upload_or_publish_calls": 0,
+  "network_or_tls_changes": 0,
+  "claims": [
+    {
+      "source_key": "google_native_pkce",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "checked_at_utc": "2026-10-14T09:47:02.451688+00:00",
+      "status": "PASS",
+      "claim": "Unique high-entropy verifier 43-128 unreserved characters; S256 padding-free Base64URL(SHA256(ASCII(verifier))).",
+      "bounded_visible_quote": "A code_verifier is a high-entropy cryptographic random string using the unreserved ... minimum length of 43 characters and a maximum length of 128 characters. The code challenge is the Base64URL (with no padding) encoded SHA256 hash of the code ... S256 (recommended).",
+      "limit": "Document read only; no authorization request or proof accepted by a live provider."
+    },
+    {
+      "source_key": "google_native_pkce",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "checked_at_utc": "2026-10-14T09:47:02.451688+00:00",
+      "status": "PASS",
+      "claim": "state correlates the response and mitigates CSRF.",
+      "bounded_visible_quote": "Specifies any string value that your application uses to maintain state between your ... authorization request and the authorization server's response ... mitigating cross-site request ... forgery.",
+      "limit": "Actual Google browser callback interoperability remains NOT VERIFIED."
+    },
+    {
+      "source_key": "google_native_redirect",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "checked_at_utc": "2026-10-14T09:47:02.451688+00:00",
+      "status": "PASS",
+      "claim": "Desktop loopback supports numeric 127.0.0.1 and listener on random available port before substituting its actual port.",
+      "bounded_visible_quote": "http://127.0.0.1:port or http://[::1]:port ... listener on a random available port. Substitute port with the actual port number your app listens on. ... Loopback IP address (macOS, Linux, Windows desktop)",
+      "limit": "Actual Desktop Client registration and permitted request redirect URI are NOT VERIFIED."
+    },
+    {
+      "source_key": "google_native_redirect",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "checked_at_utc": "2026-10-14T09:47:02.451688+00:00",
+      "status": "PASS",
+      "claim": "localhost can produce firewall issues; mobile OAuth client loopback support is deprecated.",
+      "bounded_visible_quote": "localhost in place of the loopback IP, but this configuration may cause issues ... client firewalls. ... DEPRECATED for Android, Chrome app and iOS OAuth client types.",
+      "limit": "This supports the design choice of numeric IPv4; it is not a firewall/Windows 11 user-PC validation."
+    },
+    {
+      "source_key": "google_native_tokens",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "checked_at_utc": "2026-10-14T09:47:02.451688+00:00",
+      "status": "PASS",
+      "claim": "Authorization-code exchange, refresh, revoke and response metadata are documented.",
+      "bounded_visible_quote": "https://oauth2.googleapis.com/token ... grant_type=authorization_code ... grant_type=refresh_token ... https://oauth2.googleapis.com/revoke ... expires_in ... token_type ... refresh_token_expires_in",
+      "limit": "No endpoint called. Token lifetime and granted scope of a real user are NOT VERIFIED."
+    },
+    {
+      "source_key": "google_native_tokens",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "checked_at_utc": "2026-10-14T09:47:02.451688+00:00",
+      "status": "PASS",
+      "claim": "Installed-app guide describes refresh tokens and recommends ignoring unrecognized response fields.",
+      "bounded_visible_quote": "Note that refresh tokens are always returned for installed applications. ... Note: Your application should ignore any unrecognized fields included in",
+      "limit": "Current implementation is fail-closed with a stricter allowlist; compatibility with optional/future response fields is NOT VERIFIED. DPoP is not implemented or activated."
+    },
+    {
+      "source_key": "yt_oauth",
+      "url": "https://developers.google.com/youtube/v3/guides/auth/installed-apps",
+      "checked_at_utc": "2026-10-14T09:47:02.451688+00:00",
+      "status": "PASS",
+      "claim": "Installed-app flow uses system browser/local redirect and recommends requesting only needed scopes.",
+      "bounded_visible_quote": "installed apps must open the system browser and supply a local redirect URI ... Scopes enable your application to only request access to the resources that it needs",
+      "limit": "No browser/login, actual consent screen or account eligibility verified. Automatic page summaries and ambiguously joined scope-table labels were not used to determine detailed permission semantics."
+    },
+    {
+      "source_key": "yt_identity",
+      "url": "https://developers.google.com/youtube/v3/docs/channels/list",
+      "checked_at_utc": "2026-10-14T09:47:03.416118+00:00",
+      "status": "PASS",
+      "claim": "channels.list relates channel ID to channel resources and requires authorization for mine requests.",
+      "bounded_visible_quote": "In a channel resource, the id property specifies the channel's YouTube channel ID. ... mine ... This parameter can only be used in a properly authorized request.",
+      "limit": "The bounded snippet is truncated before the full mine definition and does not include the complete allowed scope table. Exact owned-user wording and scopes are supplemented by pinned official discovery, not inferred from HTTP 200.",
+      "supplemental_official_source": "https://github.com/googleapis/google-api-python-client/blob/19fd51d1d18446206091a21eec763057d032c2b3/googleapiclient/discovery_cache/documents/youtube.v3.json"
+    },
+    {
+      "source_key": "yt_identity",
+      "url": "https://developers.google.com/youtube/v3/docs/channels/list",
+      "checked_at_utc": "2026-10-14T09:47:03.416118+00:00",
+      "status": "NOT VERIFIED",
+      "claim": "Complete method-specific OAuth scope list from primary-page bounded excerpts.",
+      "bounded_visible_quote": "",
+      "limit": "No full scope list is captured in these excerpts. Official discovery independently confirms youtube.upload is absent and youtube.readonly is allowed; real scope consent remains NOT VERIFIED."
+    },
+    {
+      "source_key": "yt_upload",
+      "url": "https://developers.google.com/youtube/v3/docs/videos/insert",
+      "checked_at_utc": "2026-10-14T09:47:03.267733+00:00",
+      "status": "PASS",
+      "claim": "Upload-only permission is distinct from other YouTube access.",
+      "bounded_visible_quote": "This OAuth 2.0 access scope allows an application to upload files to the ... authenticated user's YouTube channel, but doesn't allow other types of access.",
+      "limit": "No upload is executed. Quota, private/public defaults and audit conditions unrelated to this phase are not changed based on this excerpt."
+    },
+    {
+      "source_key": "dpapi_protect",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata",
+      "checked_at_utc": "2026-10-14T09:47:04.120218+00:00",
+      "status": "PASS",
+      "claim": "DPAPI current-user boundary usually uses same logon/computer with roaming-profile exception; LOCAL_MACHINE permits other local users.",
+      "bounded_visible_quote": "Typically, only a user with the same logon credential ... same computer ... user with a roaming profile can decrypt ... another computer on the network. ... Any user on the computer ... CRYPTPROTECT_LOCAL_MACHINE",
+      "limit": "Documentation alone does not establish different-user execution. See separate native production-vault execution evidence for synthetic same-user subprocess and independent alternate-user own-roundtrip/foreign-ciphertext tests."
+    },
+    {
+      "source_key": "dpapi_protect",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata",
+      "checked_at_utc": "2026-10-14T09:47:04.120218+00:00",
+      "status": "PASS",
+      "claim": "CRYPTPROTECT_UI_FORBIDDEN and LocalFree buffer release documented.",
+      "bounded_visible_quote": "CRYPTPROTECT_UI_FORBIDDEN ... free its pbData member by calling the LocalFree function.",
+      "limit": "Documentation read is distinct from native execution or actual service token protection."
+    },
+    {
+      "source_key": "dpapi_unprotect",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptunprotectdata",
+      "checked_at_utc": "2026-10-14T09:47:04.292351+00:00",
+      "status": "PASS",
+      "claim": "Matching entropy, native buffer cleanup and extra integrity checks required.",
+      "bounded_visible_quote": "if an optional entropy DATA_BLOB structure was used ... that same ... must be used ... specific error code ... may vary ... in some cases may succeed with corrupted output ... additional integrity checks ... SecureZeroMemory",
+      "limit": "No single native error code guarantees tamper rejection. Python immutable-string erasure and protection from same-user malicious processes are not guaranteed."
+    },
+    {
+      "source_key": "ig_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login",
+      "checked_at_utc": "2026-10-14T09:47:03.514402+00:00",
+      "status": "NOT VERIFIED",
+      "claim": "Login-specific scopes, redirect, PKCE, account eligibility, app review, identity and token lifecycle.",
+      "bounded_visible_quote": "",
+      "limit": "Public-document request rejected redirect outside allowlisted documentation paths. Destination/login/policy was not followed or verified; provider stays BLOCKED."
+    },
+    {
+      "source_key": "ig_business_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "checked_at_utc": "2026-10-14T09:47:03.925011+00:00",
+      "status": "NOT VERIFIED",
+      "claim": "Login-specific scopes, redirect, PKCE, account eligibility, app review, identity and token lifecycle.",
+      "bounded_visible_quote": "",
+      "limit": "Public-document request rejected redirect outside allowlisted documentation paths. Destination/login/policy was not followed or verified; provider stays BLOCKED."
+    },
+    {
+      "source_key": "ig_publish",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing",
+      "checked_at_utc": "2026-10-14T09:47:04.012359+00:00",
+      "status": "NOT VERIFIED",
+      "claim": "Login-specific scopes, redirect, PKCE, account eligibility, app review, identity and token lifecycle.",
+      "bounded_visible_quote": "",
+      "limit": "Public-document request rejected redirect outside allowlisted documentation paths. Destination/login/policy was not followed or verified; provider stays BLOCKED."
+    },
+    {
+      "source_key": "ig_fb_login",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login",
+      "checked_at_utc": "2026-10-14T09:47:04.118210+00:00",
+      "status": "NOT VERIFIED",
+      "claim": "Login-specific scopes, redirect, PKCE, account eligibility, app review, identity and token lifecycle.",
+      "bounded_visible_quote": "",
+      "limit": "Public-document request rejected redirect outside allowlisted documentation paths. Destination/login/policy was not followed or verified; provider stays BLOCKED."
+    }
+  ],
+  "source_file_sha256": "143d14641e18a0c057f2b82d60d5ee1ef37e185d7a123f27a58fc4f94a378ddf",
+  "sha256_applies_to": "Exact bytes of tracked windows_official_docs.json; distinct from compressed annotation payload checksum.",
+  "final_run_corroboration": {
+    "run_id": 38545651234,
+    "source": "windows_final_official_docs.json",
+    "source_file_sha256": "e4eb1da7bf7001fc7799404c500846d4f80de2b23625780548974ef878dc6395",
+    "all_12_records_equal_ignoring_timestamps": true,
+    "original_review_claims_still_apply": true
+  }
+}
