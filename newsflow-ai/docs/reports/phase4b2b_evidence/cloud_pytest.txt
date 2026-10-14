@@ -24,4 +24,4 @@ SKIPPED [1] tests/test_oauth_lifecycle.py:636: Actual current-user DPAPI require
 SKIPPED [1] tests/test_oauth_vault.py:308: Real current-user DPAPI requires Windows; Cloud NOT VERIFIED
 SKIPPED [1] tests/test_production_dpapi.py:330: Native production-kernel DPAPI needs Windows; Cloud NOT VERIFIED
 SKIPPED [1] tests/test_production_vault.py:463: Native current-user DPAPI requires Windows
-824 passed, 6 skipped, 1 warning in 86.34s (0:01:26)
+824 passed, 6 skipped, 1 warning in 119.48s (0:01:59)

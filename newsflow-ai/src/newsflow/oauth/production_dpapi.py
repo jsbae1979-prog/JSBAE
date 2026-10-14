@@ -184,7 +184,10 @@ def _directory(root: Path, *, create: bool) -> Path:
 @contextmanager
 def _cipher_stream(path: Path, *, deleting: bool = False, native: bool = False) -> Iterator[BinaryIO]:
     """Exclusive native Windows handle prevents replacement during validated deletion."""
-    if native:
+    # File-handle semantics follow the OS, independently of the chosen cipher.
+    # Windows cannot unlink a CRT-open file. Even explicit fake-crypto tests
+    # must validate and delete through the same exclusive Windows handle.
+    if native or sys.platform == "win32":
         import msvcrt  # Windows-only import; explicit fake Cloud tests never use it.
 
         kernel = ctypes.WinDLL("kernel32", use_last_error=True)  # type: ignore[attr-defined]
