@@ -1,16 +1,16 @@
-# NewsFlow AI — Windows 11 · Phase 4A
+# NewsFlow AI — Windows 11 · Phase 4B-1
 
 공개 RSS 수집·중복 제거·내부 추천 평가를 제공하는 한국어 로컬 웹 대시보드입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
-현재 Phase 4A는 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작과 SNS 게시 준비를 제공합니다. 실제 SNS 게시·계정 연결·주기 스케줄러는 제공하지 않습니다.
+현재 Phase 4B-1은 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작, SNS 게시 준비와 차단된 OAuth 기반을 제공합니다. 실제 SNS 게시·계정 연결·주기 스케줄러는 제공하지 않습니다.
 
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 4A 검토 브랜치 `feat/newsflow-phase4a`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 4B-1 검토 브랜치 `feat/newsflow-phase4b1`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase4a https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase4b1 https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -31,7 +31,7 @@ Windows EXE Installer는 제공하지 않습니다. `run.bat`의 실제 Windows 
 
 ```powershell
 # JSBAE 저장소 루트에서
-git switch feat/newsflow-phase4a
+git switch feat/newsflow-phase4b1
 git pull --ff-only
 cd newsflow-ai
 .\run.bat
@@ -256,4 +256,16 @@ DB 0004는 PublishDraft/PlatformAccount/PublishValidation/PublishJob/PublishAtte
 
 인증 설계는 최소 OAuth scope·state·PKCE·정확한 콜백·만료/취소 상태·별도 Windows Credential Manager/DPAPI 보관을 다룹니다. 실제 OAuth/비밀 저장소는 **NOT VERIFIED/미구현**이며 UnavailableCredentialVault가 차단합니다. Fake vault는 테스트용 메모리/SecretStr 마스킹만 제공하고 디스크/Git/HTML에 토큰을 넣지 않습니다. [Phase 4A 보고서](docs/reports/phase4a_report.md).
 
-Phase 4A 브랜치 `feat/newsflow-phase4a`와 별도 Windows workflow에서 기존 회귀·BAT·영상 제작에 더해 Publishing 초안 생성·수정·반복 검증·모바일·재시작 보존, 게시 job/attempt 0개와 외부 브라우저 요청 0건을 검사합니다. 실계정 연결·실제 업로드·Phase 4B·main 병합은 사용자 승인 전 금지입니다.
+Phase 4A 브랜치 `feat/newsflow-phase4a`와 별도 Windows workflow에서 기존 회귀·BAT·영상 제작에 더해 Publishing 초안 생성·수정·반복 검증·모바일·재시작 보존, 게시 job/attempt 0개와 외부 브라우저 요청 0건을 검사합니다. 실계정 연결·실제 업로드·Phase 4B-2·main 병합은 사용자 승인 전 금지입니다.
+
+## Phase 4B-1 · OFFLINE/BLOCKED 계정 연결 준비
+
+Publishing Studio에서 로컬 계정 표시명을 저장한 뒤 **연결 준비 기록** 또는 **해제 준비 기록**을 실행할 수 있습니다. 이는 로컬 상태만 저장하며 로그인·권한 부여·토큰 교환·서비스 동의 회수는 실행하지 않습니다. 실제 연결 버튼은 비활성이고 `/start` 요청도 423으로 차단됩니다. 토큰/인증 code/PKCE verifier/저장소 reference를 입력하거나 조회하는 GUI 기능은 없습니다.
+
+YouTube 최소 업로드 scope 후보는 `youtube.upload`입니다. 채널 identity에 필요한 추가 scope와 실제 앱 검증은 미확인입니다. Instagram 로그인 경로별 최신 scope·자격·PKCE 지원을 확정하지 못하면 endpoint/scopes는 미설정으로 유지합니다. [공식 OAuth·DPAPI 조사](docs/oauth_platforms.md)를 참고하세요.
+
+개발용 Fake 흐름은 계정에 결합된 난수 state, PKCE S256, 정확한 `http://127.0.0.1:8765/oauth/callback` 메타데이터, 5분 이하 만료·일회성 callback을 검사합니다. 이 callback 주소는 검증용 예약 URI이며 실제 HTTP callback 라우트는 제공하지 않습니다. 재시작하면 메모리 인증 요청은 무효입니다. 실제 provider의 begin/exchange/refresh/revoke는 기능 플래그·승인 인수가 true여도 이번 단계에서 차단됩니다.
+
+`WindowsCredentialVault`는 전달받은 절대 데이터 경로(예정 경로 `%LOCALAPPDATA%\NewsFlowAI\credentials`)에서 **현재 Windows 사용자 DPAPI**로 암호화합니다. 이번 단계에는 `nf-synthetic-` 형식의 합성 토큰만 허용하며 실제 서비스 토큰은 저장/조회하지 않습니다. GUI는 이 저장소를 자동 생성하거나 사용하지 않습니다. 일반 SQLite에는 비밀 원문이 아닌 opaque reference와 상태·만료 시각만 저장합니다. Python 메모리의 모든 문자열 복사본을 완전히 지운다고 주장하지 않습니다. 실제 계정 인증·저장소 활성화·SNS 업로드는 별도 승인이 필요한 후속 작업입니다.
+
+전체 회귀: `python -m pytest -q -rs`. Windows에서 합성 DPAPI 검증: `python tools/ci_vault_validation.py --output validation-output/credential-vault.json`. 외부 서비스 토큰이나 API 키가 필요하지 않습니다. Windows에서 실패는 FAIL/비정상 종료로 기록하며 Cloud에서는 네이티브 DPAPI를 NOT VERIFIED로 표시합니다. [Phase 4B-1 보고서](docs/reports/phase4b1_report.md).

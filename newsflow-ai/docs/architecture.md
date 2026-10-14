@@ -90,3 +90,23 @@ Fake 시뮬레이션은 최신 로컬 검증 및 명시적 승인만으로 테�
 토큰값 DB 컬럼이나 HTML 입력이 없습니다. credential_ref는 향후 비밀 저장소의 opaque 식별자용이며 지금은 NULL입니다. TokenBundle은 SecretStr/ValidationError 입력 마스킹이고 FakeCredentialVault는 휘발성/만료·취소 검증만 지원합니다. 실제 Windows 암호화/OS vault와 OAuth code exchange는 Phase 4B 승인 후 구현해야 하며 UnavailableCredentialVault로 차단합니다. 공식 웹 접근 불가 항목과 공식 GitHub 스키마/SDK에서 확인한 사실, 앱 준비 정책을 구분합니다. API 연구 URL은 evidence에 저장만 하며 renderer/publisher가 자동 fetch하지 않습니다.
 
 YouTube 준비 payload의 description은 해시태그를 포함한 UTF-8 5,000바이트와 꺾쇠 제외를 검사하고 API tags는 쉼표 포함 500자를 검사합니다. 공식 Windows 문서 조회와 실제 계정 정책 적용을 구분하며 공식 요건의 확인이 실제 SNS 실행을 활성화하지 않습니다.
+
+## Phase 4B-1 · OAuth foundation
+
+OAuthConnection은 additive migration0005의 계정별 준비·Fake상태/만료/revision/error code만 저장합니다. 기존0001~0004는 변경하지 않습니다. state hash·PKCE verifier·code는 메모리 요청에만 두고 비밀 원문은 DB/AuditLog/GUI에 저장하지 않습니다. Callback은 첫 처리 시 원자적으로 소비하며 잘못된 응답도 다시 사용할 수 없습니다. 바인딩 불일치/재사용은 고정된 감사 이벤트만 남겨 다른 계정 상태를 변경하지 않습니다. 실제 callback HTTP 라우트는 없습니다.
+
+```mermaid
+flowchart LR
+  GUI[Publishing Studio] --> Prepare[로컬 준비 서비스]
+  Prepare --> DB[계정 상태 SQLite]
+  Test[명시적 합성 테스트] --> Session[State / S256 세션]
+  Session --> Callback[일회성 응답 검증]
+  Callback --> Fake[Fake OAuth Provider]
+  Fake --> Lifecycle[TokenLifecycleManager]
+  Lifecycle --> DB
+  Lifecycle --> Vault[Fake 또는 합성 전용 Windows DPAPI]
+  Real[YouTube / Instagram 실제 OAuth] --> Block[차단]
+  Publisher[실제 Publisher] --> Block
+```
+
+회전은 새 암호화 reference를 먼저 저장하고 계정 revision CAS로 pointer를 교체한 뒤 기존 reference를 삭제합니다. 실패한 CAS의 새 reference는 정리하며 stale 오류로 최신 연결 상태를 덮어쓰지 않습니다. 만료·인증 오류·취소는 fail-closed이고 재시도/refresh는 Fake 명시 실행만 가능합니다. Fake 연결도 PlatformAccount는 not_connected/api_ready=false라 실제 게시 승격이 불가능합니다.

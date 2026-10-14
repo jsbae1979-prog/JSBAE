@@ -1,6 +1,6 @@
 # NewsFlow AI development rules
 
-- Phase 4A publishing preparation is authorized. Do not connect real SNS accounts, publish, begin Phase 4B, or merge main without explicit user approval.
+- Phase 4B-1 OFFLINE/BLOCKED OAuth foundation is authorized. Do not log in to real SNS accounts, exchange real codes/tokens, store real service credentials, upload/publish, begin Phase 4B-2, or merge main without explicit user approval. Windows vault validation uses recognizable synthetic tokens only.
 - Python 3.12; production target is Windows 11 only. Codex Cloud is for development/tests; no Linux deployment, Docker, or WSL features.
 - Keep GUI, services, persistence, and external adapters separate.
 - Never commit API keys, OAuth tokens, personal data, local databases, or session secrets.

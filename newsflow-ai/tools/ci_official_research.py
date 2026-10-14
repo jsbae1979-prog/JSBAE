@@ -18,7 +18,18 @@ from datetime import UTC, datetime
 from html.parser import HTMLParser
 from pathlib import Path
 
-HOSTS = {"developers.google.com", "support.google.com", "developers.facebook.com", "about.fb.com"}
+HOSTS = {
+    "developers.google.com",
+    "support.google.com",
+    "developers.facebook.com",
+    "about.fb.com",
+    "learn.microsoft.com",
+}
+NATIVE_OAUTH_DOCUMENT = "/identity/protocols/oauth2/native-app"
+DPAPI_DOCUMENTS = {
+    "/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata",
+    "/windows/win32/api/dpapi/nf-dpapi-cryptunprotectdata",
+}
 MAX_BODY = 2 * 1024 * 1024
 PAGE_TIMEOUT = 10.0
 MAX_EXCERPTS = 6000
@@ -69,6 +80,22 @@ KEYWORDS = (
     "ai info",
     "label",
     "manipulated",
+    "authorization code",
+    "code_challenge",
+    "code_verifier",
+    "s256",
+    "loopback",
+    "localhost",
+    "refresh_token",
+    "revoke",
+    "cryptprotectdata",
+    "cryptunprotectdata",
+    "cryptprotect_local_machine",
+    "cryptprotect_ui_forbidden",
+    "logon",
+    "same computer",
+    "localfree",
+    "securezeromemory",
 )
 EXPECTED = {
     "yt_upload": ("videos.insert", "upload", "quota"),
@@ -83,6 +110,11 @@ EXPECTED = {
     "ig_fb": ("content publishing", "reels", "video_url"),
     "ig_reels": ("content publishing", "reels", "video_url"),
     "meta_ai": ("ai-generated", "label", "manipulated"),
+    "google_native": ("oauth", "pkce", "redirect"),
+    "ig_business_login": ("instagram", "login", "authorization"),
+    "ig_fb_login": ("instagram", "facebook", "login"),
+    "dpapi_protect": ("cryptprotectdata", "cryptprotect_local_machine", "user"),
+    "dpapi_unprotect": ("cryptunprotectdata", "cryptprotect_ui_forbidden", "user"),
 }
 
 
@@ -112,8 +144,14 @@ def allowed_url(value: str) -> str:
             "support.google.com": "/youtube/answer/",
             "developers.facebook.com": "/docs/",
             "about.fb.com": "/news/",
-        }[parsed.hostname]
-        if not parsed.path.startswith(prefix):
+        }.get(parsed.hostname)
+        path = parsed.path.rstrip("/")
+        dpapi_path = path.removeprefix("/en-us")
+        if not (
+            (prefix is not None and parsed.path.startswith(prefix))
+            or (parsed.hostname == "developers.google.com" and path == NATIVE_OAUTH_DOCUMENT)
+            or (parsed.hostname == "learn.microsoft.com" and dpapi_path in DPAPI_DOCUMENTS)
+        ):
             raise PolicyError("documentation_path_policy")
         query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
         if any(key != "hl" or val not in {"en", "en-US", "ko"} for key, val in query):
