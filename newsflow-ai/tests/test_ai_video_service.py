@@ -49,6 +49,7 @@ from newsflow.video.ai.keys import VIDEO_ENV_NAME, VideoAIKeyStore
 from newsflow.video.ai.policy import DEFAULT_PROMPT, STYLE_GUARD
 from newsflow.video.ai.service import (
     CLIP_GONE_MESSAGE,
+    CLIP_LOST_FINAL_MESSAGE,
     CLIP_LOST_MESSAGE,
     CLIP_UNREADABLE,
     CLIP_UNREADABLE_KEPT,
@@ -94,6 +95,7 @@ SERVICE_MESSAGES = {
     REFETCH_KEPT_FINAL,
     REFETCH_KEPT_MESSAGE + " " + ERROR_MESSAGES["video_ai_disk_full"],
     CLIP_GONE_MESSAGE,
+    CLIP_LOST_FINAL_MESSAGE,
     "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
 }
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
@@ -2291,6 +2293,18 @@ def test_three_failed_refetches_of_an_unreadable_clip_end_with_the_discard_choic
         studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
     assert refusal(excinfo) == ("장면 1" + CLIP_UNREADABLE_KEPT, 409)
     assert studio.service.estimate(plan_id)["scenes"] == []  # still held: never bought again silently
+    # If the file is then lost, nothing points at controls the page no longer shows.
+    monkeypatch.undo()
+    studio.service.clip_path(scene.id).unlink()
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    message = str(excinfo.value)
+    lost = scenes(studio, plan_id)[0]
+    assert (lost.status, lost.message) == ("failed", CLIP_LOST_FINAL_MESSAGE)
+    assert not studio.service.can_refetch(lost) and not studio.service.holds_paid_result(lost)
+    for text in (message, lost.message):
+        assert "'결과 다시 받기'로" not in text and "받아 둔 유료 AI 영상 버리기" not in text
+    assert "결과를 3번 받지 못해" in studio.service.estimate(plan_id)["notices"][0]
 
 
 @needs_ffmpeg

@@ -107,6 +107,12 @@ CLIP_GONE_MESSAGE = "받아 둔 생성 영상 파일이 없거나 바뀌었고 �
 CLIP_LOST_REFUSAL = (
     f"의 받아 둔 생성 영상 파일이 없거나 바뀌었습니다. '결과 다시 받기'로 다시 받거나, '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요.")
 CLIP_GONE_REFUSAL = "의 받아 둔 생성 영상 파일이 없거나 바뀌었고 공급사에도 결과가 더 없습니다. 카드로 바꾸거나 다시 생성하세요(추가 비용)."
+CLIP_LOST_FINAL_MESSAGE = (
+    f"받아 둔 생성 영상 파일이 없거나 바뀌었고 '결과 다시 받기'를 {MAX_REFETCHES}번 모두 써서 더 받을 수 없습니다. "
+    "카드로 바꾸거나 다시 생성하세요(추가 비용).")
+CLIP_LOST_FINAL_REFUSAL = (
+    f"의 받아 둔 생성 영상 파일이 없거나 바뀌었고 '결과 다시 받기'를 {MAX_REFETCHES}번 모두 써서 더 받을 수 없습니다. "
+    "카드로 바꾸거나 다시 생성하세요(추가 비용).")
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
 PAUSED_MESSAGE = "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다."
 # Closed scenes that still hold a request id: re-checking status and downloading costs no new request.
@@ -678,8 +684,8 @@ class AIVideoCoordinator:
                 # The clip composed must be the clip the user reviewed.
                 if spec["clip"] and (not spec["sha256"] or self._digest(spec["clip"]) != spec["sha256"]):
                     raise AIVideoError(
-                        f"장면 {scene.position + 1}의 생성 영상 파일이 검토 후 바뀌었거나 없습니다. 다시 승인하면 '결과 다시 받기' "
-                        "상태로 바뀝니다.", 409)
+                        f"장면 {scene.position + 1}의 생성 영상 파일이 검토 후 바뀌었거나 없습니다. 다시 승인하면 다음 할 일을 "
+                        "알려 드립니다.", 409)
                 if spec["clip"] and (scene.clip_meta or {}).get("unreadable"):
                     # Readable again; result_gone stays: it records the provider's answer, not the file.
                     scene.clip_meta = {k: v for k, v in scene.clip_meta.items() if k != "unreadable"}
@@ -734,7 +740,7 @@ class AIVideoCoordinator:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
             self._compose_open(session, plan)
-            stuck, gone = [], []
+            stuck, gone, final = [], [], []
             for scene in self._scenes(session, plan_id):
                 if scene.status != "ready":
                     continue
@@ -751,6 +757,9 @@ class AIVideoCoordinator:
                     if (scene.clip_meta or {}).get("result_gone"):
                         scene.message = CLIP_GONE_MESSAGE  # nothing left at the provider either
                         gone.append(scene.position)
+                    elif not self._refetchable(scene):
+                        scene.message = CLIP_LOST_FINAL_MESSAGE  # every refetch already used
+                        final.append(scene.position)
             if broken:
                 plan.revision += 1
                 self._refresh(session, plan)
@@ -762,7 +771,8 @@ class AIVideoCoordinator:
                 ([p for p in unreadable if p not in stuck], CLIP_UNREADABLE), (stuck, CLIP_UNREADABLE_KEPT)) if group]
             raise AIVideoError(" ".join(parts), 409)
         parts = [scenes_of(group) + text for group, text in (
-            ([p for p in broken if p not in gone], CLIP_LOST_REFUSAL), (gone, CLIP_GONE_REFUSAL)) if group]
+            ([p for p in broken if p not in gone and p not in final], CLIP_LOST_REFUSAL),
+            (gone, CLIP_GONE_REFUSAL), (final, CLIP_LOST_FINAL_REFUSAL)) if group]
         raise AIVideoError(" ".join(parts), 409)
 
     def _clip_state(self, name: str | None, sha256: str | None) -> str:
