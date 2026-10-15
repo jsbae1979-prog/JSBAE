@@ -1,0 +1,79 @@
+{
+  "outcome": "PASS with explicit unverified items",
+  "mode": "windows",
+  "human_quality": "NOT VERIFIED",
+  "Windows11_user_PC": "NOT VERIFIED",
+  "setup_bat": "PASS (twice; dependency and DB initialization)",
+  "wizard": "PASS (7 steps, real missing-font failure, restart, retry, persisted settings)",
+  "videos": [
+    {
+      "duration": 30,
+      "file": "setup-30s.mp4",
+      "sha256": "a35f6eb1ae10ef85e422182b462ebb86a9f017992dbb636244604437f96dcb90",
+      "h264_aac_1080x1920": "PASS",
+      "browser_playback": "PASS",
+      "stream_timing": "PASS",
+      "subtitle_style_and_cues": "PASS",
+      "audio": "silent review; speech sync NOT VERIFIED"
+    },
+    {
+      "duration": 45,
+      "file": "setup-45s.mp4",
+      "sha256": "d68e43584106ec0bf054280014696c17797dad825d7ae663cdc7730a1693d43a",
+      "h264_aac_1080x1920": "PASS",
+      "browser_playback": "PASS",
+      "stream_timing": "PASS",
+      "subtitle_style_and_cues": "PASS",
+      "audio": "silent review; speech sync NOT VERIFIED"
+    },
+    {
+      "duration": 60,
+      "file": "setup-60s.mp4",
+      "sha256": "cc13b72a4bde642ad6da5fec02709fec03c3101fb415beb7a8f32ef08ef9abe4",
+      "h264_aac_1080x1920": "PASS",
+      "browser_playback": "PASS",
+      "stream_timing": "PASS",
+      "subtitle_style_and_cues": "PASS",
+      "audio": "silent review; speech sync NOT VERIFIED"
+    }
+  ],
+  "restart_preservation": "PASS (wizard, existing news, three MP4s and local queue)",
+  "database": {
+    "counts": {
+      "autopilot_jobs": 3,
+      "autopilot_attempts": 18,
+      "autopilot_events": 42,
+      "autopilot_artifacts": 21,
+      "news_articles": 8,
+      "content_drafts": 3,
+      "video_projects": 3,
+      "render_jobs": 3,
+      "publish_drafts": 3,
+      "publish_validations": 3,
+      "publish_jobs": 0,
+      "publish_attempts": 0
+    },
+    "AI_providers": [
+      "offline"
+    ],
+    "human_approval_preserved": true,
+    "review_only_video": true,
+    "real_connected_accounts": 0,
+    "enabled_RSS_sources": 0
+  },
+  "oauth_safety": {
+    "real_authorization_requests": 0,
+    "real_token_exchange_calls": 0,
+    "real_refresh_calls": 0,
+    "real_revoke_calls": 0,
+    "mode": "OFFLINE/BLOCKED",
+    "feature_enabled": false,
+    "user_approval": false,
+    "phase_allows_real": false
+  },
+  "browser_external_requests": 0,
+  "browser_errors": 0,
+  "layout": "PASS (320px and CSS zoom 200%); native browser zoom NOT VERIFIED",
+  "korean_voice_count": 0,
+  "korean_speech": "NOT VERIFIED (runner has no installed Korean SAPI voice)"
+}
