@@ -1,4 +1,4 @@
-# NewsFlow AI — Windows 11 · Phase 5C.1
+# NewsFlow AI — Windows 11 · Phase 5D
 
 뉴스 선택부터 대본·검토용 영상 제작·게시 대기함 보관까지 연결하는 한국어 로컬 웹 프로그램입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
@@ -6,9 +6,13 @@ Phase 5A의 **간편 제작**은 체험 뉴스 → 기본 대본 → 9:16 검토
 
 Phase 5C의 **실제 콘텐츠 제작**은 등록한 공개 RSS에서 실제 뉴스를 모아 기본 대본 또는 승인된 외부 AI 대본을 만들고, Windows 한국어 음성과 자막으로 영상을 만든 뒤 대본과 완성 영상을 사람이 확인해야 게시 대기함에 보관합니다. 체험 제작은 그대로 유지됩니다.
 
-Phase 5C.1의 **운영 준비도**는 기능을 바꾸지 않고 확인 수단을 더합니다: 공개 피드 검토 도구, 예상 토큰·예상 비용 표시, 승인된 단일 실제 AI 호출 절차, 한국어 음성 감지·읽기 형태·사람 청취 기록, 일반 사용자 안내서와 Windows 검증 체크리스트, Phase 5D 설계 초안. 새 migration은 없습니다(schema head `0009` 유지).
+Phase 5C.1의 **운영 준비도**는 기능을 바꾸지 않고 확인 수단을 더합니다: 공개 피드 검토 도구, 예상 토큰·예상 비용 표시, 승인된 단일 실제 AI 호출 절차, 한국어 음성 감지·읽기 형태·사람 청취 기록, 일반 사용자 안내서와 Windows 검증 체크리스트, Phase 5D 설계 초안. Phase 5C.1에는 새 migration이 없었습니다.
+
+Phase 5D의 **AI 고품질 제작(선택)**은 기존 스토리보드·장면 나누기·타이밍·자막·FFmpeg 제작을 그대로 쓰면서, 사용자가 고른 장면만 외부 AI 영상 공급사(Higgsfield)로 만들어 같은 FFmpeg 경로로 합성합니다. 기본값은 '사용 안 함'이며 **기본 모드는 외부 영상 API 없이 지금처럼 동작**합니다. 유료 생성은 날짜가 있는 승인·작업별/월 한도·확인한 모델·API 키·장면별 예상 비용 확인이 모두 있어야 하고, AI 장면에는 끌 수 없는 "AI 생성 장면 · 실제 현장 영상 아님" 표시가 들어갑니다. schema head는 `0010`입니다. 실제 Higgsfield 호출·가격·품질은 사용자 승인 전까지 NOT VERIFIED입니다.
 
 [간편 제작 사용법과 복구 정책](docs/autopilot.md) · [실제 콘텐츠 제작 안내](docs/realcontent.md) · [Phase 5C 검증 보고서](docs/reports/phase5c_realcontent_report.md)
+
+**Phase 5D 문서:** [AI 고품질 제작 안내](docs/user_guide_ai_video.md) · [구현 설계](docs/design/phase5d_ai_video_implementation.md) · [Higgsfield API 검증 결과](docs/reports/phase5d_higgsfield_api_verification.md) · [기존 기능 분석](docs/reports/phase5d_existing_analysis.md)
 
 **Phase 5C.1 문서:** [일반 사용자 실행·설정 안내서](docs/user_guide_realcontent.md) · [Windows 11 사용자 검증 체크리스트](docs/windows_user_verification_checklist.md) · [한국어 음성 청취 확인표](docs/korean_tts_listening_checklist.md) · [Phase 5D Higgsfield 영상 Provider 설계 초안](docs/design/phase5d_higgsfield_video_provider.md) · [Phase 5C.1 운영 준비도 보고서](docs/reports/phase5c1_operational_readiness_report.md)
 
@@ -75,20 +79,34 @@ Windows EXE Installer는 제공하지 않습니다. Linux Cloud는 Windows BAT�
 
 한국어 음성으로 제작하면 장면 시간을 실제 음성 길이에 맞춰 조정하고 자막 구간을 같은 시간표로 저장합니다. 전체 음성이 영상보다 길면 초과 시간을 알리고 멈춥니다. 자동 검증은 비무음 WAV 생성과 MP4 규격만 확인하며 **발음·시청 품질은 사람이 들어야 합니다(NOT VERIFIED)**. 실제 외부 AI API 호출과 실제 공개 RSS 수집은 사용자의 키·네트워크 환경에서만 검증할 수 있으며 CI에서는 NOT VERIFIED로 기록합니다. 상세는 [docs/realcontent.md](docs/realcontent.md)를 참고하세요.
 
-DB migration `0009`는 추가 전용입니다(`content_drafts.review_notes`, `autopilot_jobs.content_mode/ai_mode/voice`, `news_source_checks`, `ai_usage`). 실제 SNS 게시·계정 연결·예약 실행·무인 운영은 계속 제공하지 않습니다.
+DB migration `0009`는 추가 전용입니다(`content_drafts.review_notes`, `autopilot_jobs.content_mode/ai_mode/voice`, `news_source_checks`, `ai_usage`). Phase 5D의 `0010`도 추가 전용입니다(`video_ai_models`, `ai_video_plans`, `ai_video_scenes`, `video_ai_usage`, `video_projects.ai_plan_id`, `video_scenes.clip_name/ai_generated`). 실제 SNS 게시·계정 연결·예약 실행·무인 운영은 계속 제공하지 않습니다.
 
 ## Phase 5C.1 · 운영 준비도
 
-Phase 5C.1은 기능 범위를 넓히지 않고 실제 운영 전에 **확인할 수 있는 수단**을 더합니다. 새 migration은 없으며(schema head `0009` 유지) 새 상태는 `AppSetting` 키(`ai_price_input_per_1m`, `ai_price_output_per_1m`, `ai_price_currency`, `voice_listening_last`)와 데이터 폴더의 JSON 파일뿐입니다.
+Phase 5C.1은 기능 범위를 넓히지 않고 실제 운영 전에 **확인할 수 있는 수단**을 더합니다. Phase 5C.1에는 새 migration이 없었으며(당시 schema head `0009`) 새 상태는 `AppSetting` 키(`ai_price_input_per_1m`, `ai_price_output_per_1m`, `ai_price_currency`, `voice_listening_last`)와 데이터 폴더의 JSON 파일뿐입니다.
 
 1. **공개 피드 검토** — `tools\feed_candidates.json`(후보 22개, 17개 활성; 공식 여부·약관은 사람이 확인하기 전까지 `unknown`)을 `.\.venv\Scripts\python.exe tools\ci_feed_review.py --mode windows --output <폴더>`로 앱과 같은 어댑터 경로에서 검토하고 `feed-review.json`을 남깁니다. 판정은 PASS / BLOCKED(robots·policy, 결함 아님) / NOT VERIFIED / FAIL(앱 내부 결함만)입니다. 수집 오류는 `/sources`에 `최근 수집 오류: [kind] …`로 표시됩니다.
 2. **예상 토큰·예상 비용** — `/ai-settings`에 `실제 콘텐츠 1건(30초 기준) = 외부 AI 호출 2회 · 예상 최대 약 N 토큰 …`이 표시되고, 사용자가 입력한 단가(`입력 토큰 100만 개당 단가`·`출력 토큰 100만 개당 단가`·`통화`)로 예상 비용을 보여 줍니다. 대본 출력 상한은 30초 1400 · 45초 1800 · 60초 2200 토큰이며 예산 검사는 `이번 달 사용량 + 예상 입력 + 출력 상한`입니다. 예상 비용은 사용자가 입력한 단가로 계산한 참고값이며 이 앱은 요금을 보증하거나 결제하지 않습니다.
 3. **승인된 단일 실제 호출** — 사용자 PC에서만 `NEWSFLOW_AI_LIVE_TEST=1` + `tools\ai_live_check.py --article-id <번호> --max-tokens 1400 --output ai-live` → `동의` 입력 → 유료 호출 정확히 1회 → `ai-live\ai-live-check.json`(키·본문·대본 없음). 토큰 0 연결 확인은 `--connection-check --model gpt-4o-mini`. CI에서 유료 완성 호출은 실행하지 않습니다.
 4. **한국어 음성** — `/voices`가 `설치됨 / 없음 / 확인 불가 / 설치됨 · SAPI 미노출` 상태와 PowerShell 실행 정책 안내를 표시하고(앱은 레지스트리·정책을 바꾸지 않음), 미리 듣기에 **원문**과 **읽기 형태**(날짜·시각·퍼센트·통화·영문 약어의 읽기 변환, 음성에만 적용)를 함께 보여 주며, **청취 결과 기록** 양식으로 사람의 판정(PASS/FAIL/NOT VERIFIED)을 `voice-listening\listening-<id>.json`에 저장합니다. 자동화는 어떤 경우에도 PASS를 기록하지 않습니다. 새 오류 코드 `voice_failed`를 추가했습니다.
 5. **문서** — [일반 사용자 실행·설정 안내서](docs/user_guide_realcontent.md)와 [Windows 11 사용자 검증 체크리스트](docs/windows_user_verification_checklist.md)(기본 판정 NOT VERIFIED), [한국어 음성 청취 확인표](docs/korean_tts_listening_checklist.md). 문서 링크는 `tools\ci_docs_link_check.py`로 오프라인 검사합니다.
-6. **Phase 5D 설계** — [Higgsfield 영상 Provider 설계 초안](docs/design/phase5d_higgsfield_video_provider.md)은 설계만이며 Phase 5C.1에서 Higgsfield API/MCP 호출은 0건입니다. vendor 사실은 전부 NOT VERIFIED입니다.
+6. **Phase 5D 설계** — [Higgsfield 영상 Provider 설계 초안](docs/design/phase5d_higgsfield_video_provider.md)은 Phase 5C.1 당시의 설계 기록입니다(그때 Higgsfield API/MCP 호출 0건). 실제 구현은 아래 Phase 5D 절과 [구현 설계](docs/design/phase5d_ai_video_implementation.md)를 따릅니다.
 
 Windows Actions 워크플로는 `.github/workflows/newsflow-phase5c1-windows.yml`(artifact `newsflow-phase5c1-windows-validation`)이며 공개 피드 검토, 한국어 음성 프로브, 문서 링크 검사를 추가로 수행합니다. 토큰 0의 OpenAI 연결 확인은 수동 dispatch와 저장소 secret이 있을 때만 실행하고 그 외에는 SKIPPED로 기록합니다. 실제 공개 피드 수집 성공, 실제 OpenAI 응답, 한국어 발음, 사용자 PC 운영은 사용자가 체크리스트로 확인하기 전까지 **NOT VERIFIED**입니다. 결과: [Phase 5C.1 운영 준비도 보고서](docs/reports/phase5c1_operational_readiness_report.md).
+
+## Phase 5D · AI 고품질 제작 (선택)
+
+| 모드 | 화면 | 외부 호출·비용 |
+| --- | --- | --- |
+| 기본 모드 · 로컬 FFmpeg | `Video Studio`(`/video`), 자동 제작 | 없음 |
+| AI 고품질 모드 | `Video Studio` → `AI 고품질 제작 (선택) →`(`/video/ai`) | 고른 장면만, 승인·한도 안에서 유료 |
+
+1. **설정** — `/video-ai-settings`: 공급사(기본 '사용 안 함'), 작업별·월 한도(USD/KRW, OpenAI 토큰 한도와 별도), 날짜가 있는 유료 생성 승인, 공식 문서로 확인한 모델(경로·초당 단가·허용 길이), API 키(별도 DPAPI 파일 `video-ai-key.dpapi` 또는 `NEWSFLOW_VIDEO_AI_KEY`).
+2. **스토리보드** — 저장한 대본의 장면·시간·자막을 그대로 쓰고 장면마다 카드 / 로컬 이미지 / AI 생성을 고릅니다. 실제 현장·기록 영상·실존 인물처럼 보이게 하는 프롬프트는 거부되고, 모든 프롬프트에 비실사 스타일 문장이 붙습니다.
+3. **유료 생성 확인** — 장면별 예상 비용·합계·한도를 확인하고 체크해야 요청합니다. 요청은 장면 시도마다 한 번만 보내며, 결과를 모르는 요청은 다시 보내지 않고 '결과 불명'으로 둡니다. 재시작해도 보낸 요청을 다시 보내지 않습니다.
+4. **관계 검토와 최종 합성 승인** — AI 장면마다 원본 뉴스와의 관계를 검토한 뒤 최종 합성을 따로 승인하면 기존 FFmpeg 경로로 MP4를 만듭니다. AI 장면에는 끌 수 없는 "AI 생성 장면 · 실제 현장 영상 아님" 표시가 들어가고, 게시 준비에서는 AI 생성 표시(`disclose`)가 필요합니다.
+
+자동 테스트와 CI는 외부 호출이 없는 테스트 전용 Fake 공급자만 씁니다. Windows Actions 워크플로는 `.github/workflows/newsflow-phase5d-windows.yml`(artifact `newsflow-phase5d-windows-validation`)이며 5C.1 검증 전체에 `tools/ci_ai_video_validation.py`(실제 서버·브라우저·재시작·최종 MP4)를 더합니다. 사용법은 [AI 고품질 제작 안내](docs/user_guide_ai_video.md)를 참고하세요.
 
 ## 재실행·업데이트
 
@@ -148,7 +166,7 @@ $env:NEWSFLOW_DATA_DIR="D:\내 자료\NewsFlowAI" # 생략하면 LOCALAPPDATA
 ```
 
 3. 이전 명령은 SQLite backup API로 WAL을 포함한 일관된 DB snapshot을 만들고 무결성·스키마 버전을 확인합니다. DB 안의 설정과 session.key를 복사하며 원본을 삭제하지 않습니다. 대상에 기존 DB나 키가 있으면 덮어쓰지 않습니다. 파일/서버/수집 잠금도 확인합니다.
-4. run.bat를 다시 실행해 기사·출처·설정 보존을 확인한 뒤 원본을 계속 백업으로 보관하세요. 현재 이전 도구는 revision 0001~0009를 지원합니다(Phase 5C.1은 0010을 추가하지 않습니다). 임의 추가 파일·향후 콘텐츠·영상은 별도 백업해야 합니다.
+4. run.bat를 다시 실행해 기사·출처·설정 보존을 확인한 뒤 원본을 계속 백업으로 보관하세요. 현재 이전 도구는 revision 0001~0010을 지원합니다. 임의 추가 파일·향후 콘텐츠·영상, Phase 5D의 `ai-clips` 폴더와 `video-ai-key.dpapi`는 복사하지 않으므로 별도로 옮겨야 합니다.
 5. 이미 새 DB를 만들었다면 자동 병합하지 않습니다. 두 데이터 폴더를 백업한 뒤 보존할 DB를 선택하세요. 기존 경로를 계속 쓰려면 `NEWSFLOW_DATA_DIR`를 명시할 수 있습니다.
 
 ## 고급 모드에서 RSS 직접 수집
