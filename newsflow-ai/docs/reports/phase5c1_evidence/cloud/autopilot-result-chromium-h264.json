@@ -1,0 +1,16 @@
+{
+  "mode": "cloud",
+  "platform": "linux",
+  "scenario": "synthetic RSS / offline AI / silent preview / local draft",
+  "outcome": "FAIL",
+  "LOCALAPPDATA_path": "NOT VERIFIED (Cloud Linux)",
+  "actual_run_bat": "NOT VERIFIED (Cloud Linux)",
+  "browser": "Chromium",
+  "easy_job_id": "4d10821ea135471981feafa15517cd4c",
+  "progress_observed": {
+    "stage": "render",
+    "progress": 50
+  },
+  "duplicate_start": "PASS (409)",
+  "error_type": "TimeoutError"
+}
