@@ -48,12 +48,15 @@ from newsflow.video.ai.fake import FakeVideoProvider
 from newsflow.video.ai.keys import VIDEO_ENV_NAME, VideoAIKeyStore
 from newsflow.video.ai.policy import DEFAULT_PROMPT, STYLE_GUARD
 from newsflow.video.ai.service import (
+    CLIP_GONE_MESSAGE,
     CLIP_LOST_MESSAGE,
     CLIP_UNREADABLE,
+    CLIP_UNREADABLE_KEPT,
     COMPOSE_STARTED,
     DRAFT_CHANGED,
     MAX_REFETCHES,
     MAX_REQUEUES,
+    REFETCH_KEPT_FINAL,
     REFETCH_KEPT_MESSAGE,
     TIMEOUT_OPEN_MESSAGE,
     AIVideoCoordinator,
@@ -88,6 +91,9 @@ SERVICE_MESSAGES = {
     TIMEOUT_OPEN_MESSAGE,
     CLIP_LOST_MESSAGE,
     REFETCH_KEPT_MESSAGE,
+    REFETCH_KEPT_FINAL,
+    REFETCH_KEPT_MESSAGE + " " + ERROR_MESSAGES["video_ai_disk_full"],
+    CLIP_GONE_MESSAGE,
     "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
 }
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
@@ -2118,8 +2124,13 @@ def test_an_unreadable_clip_whose_result_is_gone_is_kept_and_composes_once_reada
     monkeypatch.setattr(studio.provider, "status", missing)
     studio.service.tick()
     kept = scenes(studio, plan_id)[0]
-    assert (kept.status, kept.clip_name, kept.message) == ("ready", scene.clip_name, REFETCH_KEPT_MESSAGE)
+    assert (kept.status, kept.clip_name, kept.message) == ("ready", scene.clip_name, REFETCH_KEPT_FINAL)
     assert kept.clip_meta["result_gone"] and not studio.service.can_refetch(kept)
+    # Still locked: the refusal must not point at a '결과 다시 받기' button the page no longer shows.
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert refusal(excinfo) == ("장면 1" + CLIP_UNREADABLE_KEPT, 409)
+    assert "결과 다시 받기" not in CLIP_UNREADABLE_KEPT and "받아 둔 유료 AI 영상 버리기" in CLIP_UNREADABLE_KEPT
     assert [row.status for row in usage(studio)] == ["completed"]
     monkeypatch.setattr(Path, "open", real_open)  # the user closed the other program
     with pytest.raises(AIVideoError) as excinfo:
@@ -2128,7 +2139,8 @@ def test_an_unreadable_clip_whose_result_is_gone_is_kept_and_composes_once_reada
     studio.service.review(plan_id, revision(studio, plan_id), {0}, True)
     assert studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
     final = scenes(studio, plan_id)[0]
-    assert final.clip_name == scene.clip_name and not {"unreadable", "result_gone"} & set(final.clip_meta)
+    # Readable again, but the provider's answer is remembered: no refetch is ever offered again.
+    assert final.clip_name == scene.clip_name and "unreadable" not in final.clip_meta and final.clip_meta["result_gone"]
     assert len(calls(studio.provider, "submit")) == 1
 
 
@@ -2231,3 +2243,87 @@ def test_a_key_is_never_sent_with_two_different_request_bodies(studio, monkeypat
         bodies.setdefault(key, set()).add((seconds, resolution))
     assert all(len(found) == 1 for found in bodies.values()), sent
     assert sent[-1][0] not in {first, sent[0][0]}  # neither the unknown 5 s key nor the 10 s key
+
+
+def lock_clip(monkeypatch, clip: Path) -> None:
+    real_open = Path.open
+
+    def locked(self, *args, **kwargs):
+        if self == clip:
+            raise PermissionError(13, "denied")
+        return real_open(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", locked)
+
+
+@needs_ffmpeg
+def test_a_refetch_stopped_by_a_full_disk_says_so_and_keeps_its_allowance(studio, monkeypatch):
+    plan_id, scene = ready_and_reviewed(studio)
+    lock_clip(monkeypatch, studio.service.clip_path(scene.id))
+    with pytest.raises(AIVideoError):
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    usage_tuple = shutil.disk_usage(studio.data_dir)
+    monkeypatch.setattr("newsflow.video.ai.service.shutil.disk_usage", lambda path: usage_tuple._replace(free=0))
+    for _ in range(MAX_REFETCHES + 1):
+        studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+        studio.service.tick()
+        kept = scenes(studio, plan_id)[0]
+        assert kept.status == "ready" and kept.clip_name == scene.clip_name
+        assert kept.message == REFETCH_KEPT_MESSAGE + " " + ERROR_MESSAGES["video_ai_disk_full"]
+        assert int(kept.clip_meta.get("refetches", 0)) == 0 and studio.service.can_refetch(kept)
+
+
+@needs_ffmpeg
+def test_three_failed_refetches_of_an_unreadable_clip_end_with_the_discard_choice(studio, monkeypatch):
+    plan_id, scene = ready_and_reviewed(studio)
+    lock_clip(monkeypatch, studio.service.clip_path(scene.id))
+    with pytest.raises(AIVideoError):
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    studio.provider.jobs[scene.request_id].bad_clip = True
+    for attempt in range(1, MAX_REFETCHES + 1):
+        studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+        studio.service.tick()
+        kept = scenes(studio, plan_id)[0]
+        assert kept.status == "ready" and kept.clip_meta["refetches"] == attempt
+    assert kept.message == REFETCH_KEPT_FINAL and not studio.service.can_refetch(kept)
+    studio.service.review(plan_id, revision(studio, plan_id), {0}, True)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert refusal(excinfo) == ("장면 1" + CLIP_UNREADABLE_KEPT, 409)
+    assert studio.service.estimate(plan_id)["scenes"] == []  # still held: never bought again silently
+
+
+@needs_ffmpeg
+def test_a_kept_clip_lost_after_the_result_is_gone_is_not_offered_a_refetch(studio, monkeypatch):
+    from newsflow.video.ai.contracts import ProviderRequestMissing
+
+    plan_id, scene = ready_and_reviewed(studio)
+    clip = studio.service.clip_path(scene.id)
+    lock_clip(monkeypatch, clip)
+    with pytest.raises(AIVideoError):
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+
+    def missing(request_id):
+        raise ProviderRequestMissing(status_code=404)
+
+    monkeypatch.setattr(studio.provider, "status", missing)
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].clip_meta["result_gone"]
+    monkeypatch.undo()
+    clip.unlink()  # e.g. quarantined by antivirus
+    studio.service.review(plan_id, revision(studio, plan_id), {0}, True)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert "공급사에도 결과가 더 없습니다" in str(excinfo.value) and "결과 다시 받기" not in str(excinfo.value)
+    gone = scenes(studio, plan_id)[0]
+    assert (gone.status, gone.message) == ("failed", CLIP_GONE_MESSAGE)
+    assert not studio.service.can_refetch(gone) and not studio.service.holds_paid_result(gone)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    assert excinfo.value.status == 409
+    estimate = studio.service.estimate(plan_id)
+    assert [line["position"] for line in estimate["scenes"]] == [0]
+    assert estimate["notices"] == [
+        "장면 1은 받아 둔 영상을 잃었고 공급사에도 결과가 더 없어 새 유료 생성에 포함됩니다(추가 비용)."]
+    assert [row.status for row in usage(studio)] == ["completed"]  # the delivered clip's row is untouched

@@ -98,6 +98,15 @@ COMPOSE_STARTED = "이미 최종 합성을 시작했습니다."
 REFETCH_KEPT_MESSAGE = (
     "새 파일을 받지 못해 원래 생성 영상을 그대로 둡니다. 파일을 읽을 수 있게 한 뒤(다른 프로그램 닫기·권한 확인) "
     "관계 검토를 다시 하고 승인하세요.")
+# No further '결과 다시 받기' can help (the provider no longer has the result, or all refetches are used).
+REFETCH_KEPT_FINAL = REFETCH_KEPT_MESSAGE + f" 더 이상 다시 받을 수 없으니, 계속 읽을 수 없으면 '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요."
+CLIP_UNREADABLE_KEPT = (
+    "의 생성 영상 파일을 지금 읽을 수 없습니다. 다른 프로그램을 닫거나 파일 권한을 확인한 뒤 다시 승인하세요. "
+    f"계속 읽을 수 없으면 그 장면의 '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요(새로 생성하면 비용이 다시 듭니다).")
+CLIP_GONE_MESSAGE = "받아 둔 생성 영상 파일이 없거나 바뀌었고 공급사에도 결과가 더 없습니다. 카드로 바꾸거나 다시 생성하세요(추가 비용)."
+CLIP_LOST_REFUSAL = (
+    f"의 받아 둔 생성 영상 파일이 없거나 바뀌었습니다. '결과 다시 받기'로 다시 받거나, '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요.")
+CLIP_GONE_REFUSAL = "의 받아 둔 생성 영상 파일이 없거나 바뀌었고 공급사에도 결과가 더 없습니다. 카드로 바꾸거나 다시 생성하세요(추가 비용)."
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
 PAUSED_MESSAGE = "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다."
 # Closed scenes that still hold a request id: re-checking status and downloading costs no new request.
@@ -356,8 +365,9 @@ class AIVideoCoordinator:
 
     @staticmethod
     def _refetchable(scene: AIVideoScene) -> bool:
+        meta = scene.clip_meta or {}
         return (scene.status == "failed" and scene.error_code in REFETCHABLE and bool(scene.request_id)
-                and int((scene.clip_meta or {}).get("refetches", 0)) < MAX_REFETCHES)
+                and int(meta.get("refetches", 0)) < MAX_REFETCHES and not meta.get("result_gone"))
 
     @staticmethod
     def _unreadable_clip(scene: AIVideoScene) -> bool:
@@ -409,7 +419,12 @@ class AIVideoCoordinator:
             ] if refetchable else []
             # _pending already leaves out failed scenes that can still be fetched again.
             exhausted = [s for s in pending if s.status == "failed" and s.request_id and s.error_code in REFETCHABLE
-                         and int((s.clip_meta or {}).get("refetches", 0)) >= MAX_REFETCHES]
+                         and int((s.clip_meta or {}).get("refetches", 0)) >= MAX_REFETCHES
+                         and not (s.clip_meta or {}).get("result_gone")]
+            gone = [s for s in pending if s.status == "failed" and (s.clip_meta or {}).get("result_gone")]
+            if gone:
+                notices.append("장면 " + ", ".join(str(s.position + 1) for s in gone)
+                               + "은 받아 둔 영상을 잃었고 공급사에도 결과가 더 없어 새 유료 생성에 포함됩니다(추가 비용).")
             if exhausted:
                 notices.append(
                     "장면 " + ", ".join(str(s.position + 1) for s in exhausted)
@@ -581,7 +596,8 @@ class AIVideoCoordinator:
             scene = next((s for s in self._scenes(session, plan_id) if s.position == position), None)
             unreadable = scene is not None and self._unreadable_clip(scene)
             if scene is None or not unreadable and (
-                    scene.status != "failed" or scene.error_code not in REFETCHABLE or not scene.request_id):
+                    scene.status != "failed" or scene.error_code not in REFETCHABLE or not scene.request_id
+                    or (scene.clip_meta or {}).get("result_gone")):
                 raise AIVideoError("완료 후 내려받기·검증에 실패한 장면만 결과를 다시 받을 수 있습니다.", 409)
             meta = {k: v for k, v in (scene.clip_meta or {}).items() if k not in ("unreadable", "restore")}
             if unreadable and state == "ok":
@@ -664,9 +680,9 @@ class AIVideoCoordinator:
                     raise AIVideoError(
                         f"장면 {scene.position + 1}의 생성 영상 파일이 검토 후 바뀌었거나 없습니다. 다시 승인하면 '결과 다시 받기' "
                         "상태로 바뀝니다.", 409)
-                if spec["clip"] and {"unreadable", "result_gone"} & set(scene.clip_meta or {}):
-                    scene.clip_meta = {k: v for k, v in scene.clip_meta.items()
-                                       if k not in ("unreadable", "result_gone")}  # readable again
+                if spec["clip"] and (scene.clip_meta or {}).get("unreadable"):
+                    # Readable again; result_gone stays: it records the provider's answer, not the file.
+                    scene.clip_meta = {k: v for k, v in scene.clip_meta.items() if k != "unreadable"}
             plan.approved_at = utcnow()
             plan.revision += 1
             plan.status = "composing"
@@ -718,6 +734,7 @@ class AIVideoCoordinator:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
             self._compose_open(session, plan)
+            stuck, gone = [], []
             for scene in self._scenes(session, plan_id):
                 if scene.status != "ready":
                     continue
@@ -725,19 +742,28 @@ class AIVideoCoordinator:
                     # Busy or locked (e.g. another program has it open): never mistake that for a lost
                     # clip, but let the user fetch it again if it stays unreadable.
                     scene.clip_meta = {**(scene.clip_meta or {}), "unreadable": True}
+                    if not self.can_refetch(scene):
+                        stuck.append(scene.position)  # no '결과 다시 받기' left to offer
                 elif scene.position in broken:
                     scene.status, scene.error_code, scene.message = "failed", ClipDownloadError.code, CLIP_LOST_MESSAGE
                     scene.clip_name, scene.reviewed, scene.updated_at = None, False, utcnow()
                     plan.reviewed_at = None
+                    if (scene.clip_meta or {}).get("result_gone"):
+                        scene.message = CLIP_GONE_MESSAGE  # nothing left at the provider either
+                        gone.append(scene.position)
             if broken:
                 plan.revision += 1
                 self._refresh(session, plan)
+        def scenes_of(positions: list[int]) -> str:
+            return "장면 " + ", ".join(str(p + 1) for p in positions)
+
         if unreadable:
-            raise AIVideoError("장면 " + ", ".join(str(p + 1) for p in unreadable) + CLIP_UNREADABLE, 409)
-        raise AIVideoError(
-            "장면 " + ", ".join(str(p + 1) for p in broken)
-            + f"의 받아 둔 생성 영상 파일이 없거나 바뀌었습니다. '결과 다시 받기'로 다시 받거나, '{DISCARD_LABEL}'에 체크한 뒤 "
-            "카드로 바꾸세요.", 409)
+            parts = [scenes_of(group) + text for group, text in (
+                ([p for p in unreadable if p not in stuck], CLIP_UNREADABLE), (stuck, CLIP_UNREADABLE_KEPT)) if group]
+            raise AIVideoError(" ".join(parts), 409)
+        parts = [scenes_of(group) + text for group, text in (
+            ([p for p in broken if p not in gone], CLIP_LOST_REFUSAL), (gone, CLIP_GONE_REFUSAL)) if group]
+        raise AIVideoError(" ".join(parts), 409)
 
     def _clip_state(self, name: str | None, sha256: str | None) -> str:
         """'ok', 'lost' (missing file or different bytes) or 'unreadable' (exists but cannot be read now)."""
@@ -848,7 +874,13 @@ class AIVideoCoordinator:
         if code not in REFETCHABLE:
             kept["result_gone"] = True  # nothing more to fetch: no further '결과 다시 받기' offer
         scene.status, scene.error_code, scene.clip_meta = "ready", None, kept
-        scene.message, scene.reviewed = REFETCH_KEPT_MESSAGE, False
+        if kept.get("result_gone") or refetches >= MAX_REFETCHES:
+            scene.message = REFETCH_KEPT_FINAL
+        elif code == "video_ai_disk_full":
+            scene.message = REFETCH_KEPT_MESSAGE + " " + ERROR_MESSAGES["video_ai_disk_full"]
+        else:
+            scene.message = REFETCH_KEPT_MESSAGE
+        scene.reviewed = False
         scene.finished_at = scene.updated_at = utcnow()
         return True
 
