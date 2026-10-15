@@ -31,6 +31,7 @@ from newsflow.db.models import (
     PublishValidation,
     RenderJob,
     Scene,
+    VideoProject,
 )
 from newsflow.db.session import make_engine, migrate, session_factory
 from newsflow.intelligence.provider import OfflineProvider, Options
@@ -804,22 +805,17 @@ def test_additive_0004_migration_preserves_phase3_data(tmp_path):
             draft_id=script_id, title="기존 영상", duration=30,
             snapshot=script.content, sources=script.sources, created_at=datetime.now(UTC),
         )).inserted_primary_key[0]
-        session.add(
-            Scene(
-                project_id=project_id,
-                position=0,
-                start_ms=0,
-                end_ms=30000,
-                narration="기존 내레이션",
-                caption="기존 자막",
-                material="",
-            )
-        )
+        # Pre-0010 video_scenes has no clip_name/ai_generated columns; insert through the real table.
+        legacy_scenes = Table("video_scenes", MetaData(), autoload_with=session.connection())
+        session.execute(legacy_scenes.insert().values(
+            project_id=project_id, position=0, start_ms=0, end_ms=30000,
+            narration="기존 내레이션", caption="기존 자막", material="",
+        ))
         session.add(RenderJob(project_id=project_id, output_name="legacy.mp4", status="interrupted"))
     migrate(engine)
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0009"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0011"
     with sessions() as session:
         assert session.get(AppSetting, "collection_timeout").value == "7"
         assert session.get(NewsArticle, 1).title == "기존 기사"
@@ -836,3 +832,24 @@ def test_additive_0004_migration_preserves_phase3_data(tmp_path):
         "publish_evidence",
     }.issubset(inspect(engine).get_table_names())
     engine.dispose()
+
+
+@pytest.mark.parametrize("marker", ["metadata", "scene"])
+def test_video_with_ai_generated_scenes_must_be_disclosed(publishing, app, marker):
+    """Phase 5D: 'not_required' passes only for videos without any AI-generated scene."""
+    service, render_id, *_ = publishing
+    plain = create_draft(publishing, ai_disclosure="not_required")
+    result = validation(app, service.validate(plain))
+    assert next(item for item in result.results if item["key"] == "ai_disclosure")["status"] == "pass"
+    with app.state.sessions.begin() as session:
+        job = session.get(RenderJob, render_id)
+        if marker == "metadata":
+            job.metadata_json = {**job.metadata_json, "ai_generated_scenes": [0]}
+        else:
+            project = session.get(VideoProject, job.project_id)
+            project.ai_plan_id = 1
+            session.scalar(select(Scene).where(Scene.project_id == project.id, Scene.position == 0)).ai_generated = True
+    for disclosure, expected in (("not_required", "fail"), ("disclose", "pass")):
+        identifier = create_draft(publishing, ai_disclosure=disclosure, title=f"AI 장면 포함 {disclosure}")
+        item = next(i for i in validation(app, service.validate(identifier)).results if i["key"] == "ai_disclosure")
+        assert item["status"] == expected and "AI 생성 장면 포함 영상" in item["reason"]

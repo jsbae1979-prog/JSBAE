@@ -36,7 +36,7 @@ Phase 5C.1(운영 준비도)은 제작 흐름·정책·보안 경계를 바꾸�
 | 문서 | 사용자 안내서, 검증 체크리스트, 청취 확인표, Phase 5D 설계, 문서 링크 검사 `tools/ci_docs_link_check.py` | `docs/` |
 | 워크플로 | `.github/workflows/newsflow-phase5c1-windows.yml` (artifact `newsflow-phase5c1-windows-validation`) | 공개 피드 검토·음성 프로브·문서 링크 검사 추가, 토큰 0 연결 확인은 수동 dispatch + secret 시에만 |
 
-Higgsfield API/MCP 호출은 0건입니다(Phase 5D는 설계 문서만).
+Phase 5C.1 당시 Higgsfield API/MCP 호출은 0건이었습니다(설계 문서만). Phase 5D의 선택 기능 AI 고품질 제작은 [AI 고품질 제작 안내](user_guide_ai_video.md)를 참고하세요. 실제 콘텐츠 제작과 자동 제작의 영상은 계속 기본 카드로 만듭니다.
 
 ## 뉴스 출처 (사이드바 '뉴스' · 설정 화면의 '뉴스 출처 등록·연결 테스트 →')
 
@@ -98,7 +98,7 @@ robots.txt 해석 기준 — Python 3.12 `urllib.robotparser`의 첫 일치(firs
 
 ## 데이터베이스
 
-Migration `0009`(additive): `content_drafts.review_notes`, `autopilot_jobs.content_mode/ai_mode/voice`, `news_source_checks`, `ai_usage`. 기존 0001~0008과 데이터는 변경하지 않습니다. `migrate_data`는 0009 DB를 지원합니다. Phase 5C.1은 migration을 추가하지 않으며(head `0009` 유지) `AppSetting` 키 `ai_price_input_per_1m`·`ai_price_output_per_1m`·`ai_price_currency`·`voice_listening_last`만 새로 씁니다.
+Migration `0009`(additive): `content_drafts.review_notes`, `autopilot_jobs.content_mode/ai_mode/voice`, `news_source_checks`, `ai_usage`. 기존 0001~0008과 데이터는 변경하지 않습니다. `migrate_data`는 0009 DB를 지원합니다. Phase 5C.1은 migration을 추가하지 않았으며(당시 head `0009`; Phase 5D가 additive `0010` 추가, `migrate_data`는 0010 지원) `AppSetting` 키 `ai_price_input_per_1m`·`ai_price_output_per_1m`·`ai_price_currency`·`voice_listening_last`만 새로 씁니다.
 
 ## 보안·경계 유지
 

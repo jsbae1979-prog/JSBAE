@@ -4,6 +4,8 @@
 
 > **설계 초안 · 구현 없음 · Phase 5D 승인 후 착수 · Phase 5C.1에서는 Higgsfield API/MCP 호출 0건 (catalog/balance 조회도 보류)**
 
+> **Phase 5D 구현 후 안내(2026-10-15 KST):** 이 문서는 Phase 5C.1 당시의 설계 초안으로 기록용으로 보존합니다. 실제 구현은 [Phase 5D 구현 설계](phase5d_ai_video_implementation.md)를 따르며, 자동 제작 연동·표 이름·표시 문구·다운로드 규칙 등 이 초안과 달라진 점은 그 문서 13절에 정리했습니다.
+
 이 문서는 코드베이스(`src/newsflow/video/engine.py`, `video/service.py`, `autopilot/backend.py`,
 `autopilot/service.py`, `intelligence/settings.py`, `intelligence/credentials.py`, `db/models.py`,
 `news/rss_adapter.py`, `publishing/service.py`)와 일반 지식만으로 작성했다. Cloud 컨테이너는 외부 네트워크가

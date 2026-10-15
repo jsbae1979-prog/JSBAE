@@ -435,7 +435,7 @@ Remove-Item Env:NEWSFLOW_AI_API_KEY; Remove-Item Env:NEWSFLOW_AI_LIVE_TEST
 - robots.txt·SSRF·TLS·리디렉션 정책을 **완화하지 않습니다.** BLOCKED는 결함이 아닙니다.
 - PowerShell 실행 정책·레지스트리·PATH를 **바꾸지 않고**, 프로그램·글꼴·FFmpeg를 자동 설치하지 않습니다.
 - 다른 언어 음성으로 **대체하지 않습니다.** 선택한 음성이 없으면 멈춥니다.
-- Higgsfield 등 외부 영상 생성 API를 **호출하지 않습니다**(Phase 5D는 설계 문서만).
+- 실제 콘텐츠 제작·자동 제작에서는 Higgsfield 등 외부 영상 생성 API를 **호출하지 않습니다.** Phase 5D의 선택 기능인 AI 고품질 제작은 사용자가 승인·한도·모델·키를 저장하고 장면을 직접 고른 경우에만 쓰입니다([AI 고품질 제작 안내](user_guide_ai_video.md)).
 
 ---
 
@@ -444,6 +444,6 @@ Remove-Item Env:NEWSFLOW_AI_API_KEY; Remove-Item Env:NEWSFLOW_AI_LIVE_TEST
 - [실제 콘텐츠 제작 설명 (기술·정책)](realcontent.md)
 - [Windows 11 사용자 검증 체크리스트 (Phase 5C.1)](windows_user_verification_checklist.md)
 - [한국어 음성 청취 확인표](korean_tts_listening_checklist.md)
-- [Phase 5D Higgsfield 영상 Provider 설계 초안](design/phase5d_higgsfield_video_provider.md)
+- [Phase 5D Higgsfield 영상 Provider 설계 초안](design/phase5d_higgsfield_video_provider.md) · [Phase 5D AI 고품질 제작 안내](user_guide_ai_video.md)
 - [Phase 5C.1 운영 준비도 보고서](reports/phase5c1_operational_readiness_report.md)
 - [간편 제작 사용법과 복구 정책](autopilot.md) · [README](../README.md) · [START_HERE.html](../START_HERE.html)

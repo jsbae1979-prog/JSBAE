@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Literal
 
@@ -27,6 +27,29 @@ from newsflow.news.service import CollectionBusy
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+KST = timezone(timedelta(hours=9), "KST")
+
+
+def kst(value: datetime | None) -> str:
+    """Stored times stay UTC; screens show Korea Standard Time (KST, UTC+9) by default."""
+    if value is None:
+        return "미확인"
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return value.astimezone(KST).strftime("%Y-%m-%d %H:%M KST")
+
+
+def kst_day(value: str | None) -> str:
+    """An ISO timestamp stored as text (e.g. a dated approval), shown as its KST calendar day."""
+    try:
+        parsed = datetime.fromisoformat(value or "")
+    except ValueError:
+        return ""
+    return kst(parsed)[:10]
+
+
+templates.env.filters["kst"] = kst
+templates.env.filters["kst_day"] = kst_day
 
 
 def page(request: Request, name: str, **context: object) -> HTMLResponse:
@@ -91,7 +114,7 @@ def news(
             raise ValueError
         start = date.fromisoformat(start) if start else None
         end = date.fromisoformat(end) if end else None
-        if end == date.max:
+        if end == date.max or start == date.min:
             raise ValueError
     except ValueError as exc:
         raise HTTPException(422, "출처 번호 또는 날짜 형식이 잘못되었습니다.") from exc
@@ -115,11 +138,11 @@ def news(
         )
     if start:
         statement = statement.where(
-            NewsArticle.published_at >= datetime.combine(start, datetime.min.time(), UTC)
+            NewsArticle.published_at >= datetime.combine(start, datetime.min.time(), KST).astimezone(UTC)
         )
     if end:
         statement = statement.where(
-            NewsArticle.published_at < datetime.combine(end + timedelta(days=1), datetime.min.time(), UTC)
+            NewsArticle.published_at < datetime.combine(end + timedelta(days=1), datetime.min.time(), KST).astimezone(UTC)
         )
     with request.app.state.sessions() as session:
         count = session.scalar(select(func.count()).select_from(statement.subquery()))

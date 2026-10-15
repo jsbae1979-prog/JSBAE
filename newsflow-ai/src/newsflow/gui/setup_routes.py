@@ -8,7 +8,7 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
-from newsflow.db.models import AppSetting, RenderJob, VideoProject
+from newsflow.db.models import AppSetting, RenderJob, Scene, VideoProject
 from newsflow.easy_setup import (
     POLICY_GUIDE,
     STEPS,
@@ -114,7 +114,11 @@ def test_production(request: Request) -> RedirectResponse:
 def library(request: Request) -> HTMLResponse:
     with request.app.state.sessions() as session:
         entries = []
-        for job, project in session.execute(select(RenderJob, VideoProject).join(VideoProject)
-                                           .order_by(RenderJob.id.desc()).limit(100)):
-            entries.append({'job': job, 'project': project, 'playable': _media_path(request, job) is not None})
+        rows = list(session.execute(select(RenderJob, VideoProject).join(VideoProject)
+                                    .order_by(RenderJob.id.desc()).limit(100)))
+        with_ai = set(session.scalars(select(Scene.project_id).where(
+            Scene.project_id.in_([project.id for _job, project in rows]), Scene.ai_generated.is_(True))))
+        for job, project in rows:
+            entries.append({'job': job, 'project': project, 'playable': _media_path(request, job) is not None,
+                            'ai_scenes': project.id in with_ai})
         return page(request, 'video_library.html', active='videos', entries=entries)

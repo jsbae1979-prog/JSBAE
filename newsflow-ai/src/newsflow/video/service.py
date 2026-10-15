@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -20,9 +21,18 @@ from sqlalchemy.orm import Session, sessionmaker
 from newsflow.db.models import AudioTrack, ContentDraft, RenderJob, Scene, SubtitleTrack, VideoProject, utcnow
 from newsflow.intelligence.schema import Script
 
+from .ai.clips import ClipStore, probe_clip
+from .ai.contracts import ClipInvalidError
 from .engine import FFmpegAdapter, RenderEngine, RenderError, RenderPlan, ScenePlan, load_image
 from .tts import OfflineTTS, SpeechSettings, TTSError, TTSProvider, WindowsTTS
 
+
+def file_sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 class VideoError(Exception):
     pass
@@ -46,6 +56,8 @@ class VideoCoordinator:
         self.assets = self.root / "assets"
         for directory in (self.outputs, self.temporary, self.assets):
             directory.mkdir(parents=True, exist_ok=True)
+        # Phase 5D: validated provider clips; read only when an approved AI plan is composed.
+        self.clip_store = ClipStore(self.root)
         self.engine, self.tts = engine or FFmpegAdapter(), tts
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="newsflow-render")
         self.cancel = Event()
@@ -140,6 +152,51 @@ class VideoCoordinator:
             speech=speech, fit_audio=voice != "offline-silence",
         )
 
+    def start_ai(
+        self, plan_id: int, draft_id: int, duration: int, specs: list[dict], clip_store: ClipStore | None = None,
+    ) -> int:
+        """Compose an approved AI video plan through the same renderer as every other video.
+
+        ``specs`` has one entry per scene: a local ``material`` or a validated ``clip`` name (or
+        neither, for the card). Voice and subtitle preferences are the user's saved defaults; a
+        real Windows voice renders with audio-fit timing exactly like the local review copy.
+        """
+        if duration not in (30, 45, 60):
+            raise VideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
+        from newsflow.easy_setup import SetupError, preview_preferences, speech_preferences
+
+        store = clip_store or self.clip_store
+        if store.root != self.clip_store.root:
+            # _run reads clips from this program's own store; never accept one store and render another.
+            raise VideoError("AI 생성 영상은 이 프로그램의 데이터 폴더에 받아 둔 파일만 합성할 수 있습니다.")
+        clips = [spec.get("clip") or None for spec in specs]
+        hashes = [spec.get("sha256") or None for spec in specs]
+        clip_bytes = 0
+        for name in clips:
+            if not name:
+                continue
+            try:
+                path = store.path(name)
+            except ClipInvalidError:
+                path = None
+            if path is None or not path.is_file():
+                raise VideoError("검증된 AI 생성 영상 파일을 찾지 못했습니다. 장면을 다시 생성하거나 카드로 바꾸세요.")
+            clip_bytes += path.stat().st_size
+        try:
+            voice, size, position = preview_preferences(self.sessions)
+        except SetupError:
+            raise VideoError("기본 음성·자막 설정을 다시 저장하세요.") from None
+        try:
+            speech = speech_preferences(self.sessions)
+        except TTSError:
+            raise VideoError("음성 속도·쉼 설정을 다시 저장하세요.") from None
+        images = [spec.get("material") or "" for spec in specs]
+        return self._start(
+            draft_id, duration, voice, size, position, images, any(images), False,
+            speech=speech, fit_audio=voice != "offline-silence", clips=clips, ai_plan_id=plan_id,
+            clip_hashes=hashes, clip_bytes=clip_bytes,
+        )
+
     def voice_available(self, voice: str) -> bool:
         """True when the configured local provider lists the voice; never substitutes another."""
         if voice == "offline-silence":
@@ -164,6 +221,10 @@ class VideoCoordinator:
         *,
         speech: SpeechSettings | None = None,
         fit_audio: bool = False,
+        clips: list[str | None] | None = None,
+        ai_plan_id: int | None = None,
+        clip_hashes: list[str | None] | None = None,
+        clip_bytes: int = 0,
     ) -> int:
         speech = speech or SpeechSettings()
         if self.cancel.is_set():
@@ -186,7 +247,12 @@ class VideoCoordinator:
             raise VideoError("영상 잠금 파일의 접근 권한을 확인하세요.") from None
         job_id = None
         try:
-            if shutil.disk_usage(self.root).free < (256 + duration * 4) * 1024 * 1024:
+            # Each AI clip is copied once into the job folder and once more encoded as a scene.
+            need = (256 + duration * 4) * 1024 * 1024 + 2 * clip_bytes
+            if shutil.disk_usage(self.root).free < need:
+                if clip_bytes:
+                    raise VideoError(
+                        f"영상 제작을 위한 디스크 공간이 부족합니다. AI 생성 장면을 포함해 최소 약 {-(-need // (1024 * 1024))}MB를 확보하세요.")
                 raise VideoError("영상 제작을 위한 디스크 공간이 부족합니다. 최소 약 500MB를 확보하세요.")
             with self.sessions.begin() as session:
                 draft = session.get(ContentDraft, draft_id)
@@ -200,7 +266,10 @@ class VideoCoordinator:
                 times = self.timings(draft.content, duration)
                 if images and len(images) != len(times):
                     raise VideoError("장면별 소재 개수를 확인하세요.")
+                if clips is not None and len(clips) != len(times):
+                    raise VideoError("장면별 AI 생성 영상 개수를 확인하세요.")
                 images = images or [""] * len(times)
+                clips = clips or [None] * len(times)
                 for name in images:
                     if name:
                         self.asset(name)
@@ -233,14 +302,21 @@ class VideoCoordinator:
                     snapshot={
                         **draft.content, "draft_revision": draft.revision,
                         "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio},
+                        # Provenance: which reviewed AI clip (by content hash) each scene must use.
+                        **({"ai_clips": [
+                            {"position": index, "name": name, "sha256": digest}
+                            for index, (name, digest) in enumerate(zip(clips, clip_hashes or [None] * len(clips)))
+                            if name
+                        ]} if any(clips) else {}),
                     },
                     sources=draft.sources,
                     preview_only=preview_only,
+                    ai_plan_id=ai_plan_id,
                 )
                 session.add(project)
                 session.flush()
-                for index, ((start, end), scene, name) in enumerate(
-                    zip(times, draft.content["scenes"], images)
+                for index, ((start, end), scene, name, clip) in enumerate(
+                    zip(times, draft.content["scenes"], images, clips)
                 ):
                     session.add(
                         Scene(
@@ -251,6 +327,8 @@ class VideoCoordinator:
                             narration=scene["narration"],
                             caption=scene["caption"],
                             material=name,
+                            clip_name=clip,
+                            ai_generated=bool(clip),
                         )
                     )
                 session.add(
@@ -346,6 +424,8 @@ class VideoCoordinator:
                 except (TTSError, TypeError, ValueError):
                     speech = SpeechSettings()
                 fit_audio = bool(saved.get("fit_audio")) and voice != "offline-silence"
+                ai_clips = list(project.snapshot.get("ai_clips") or [])
+                expected = {int(item["position"]): item.get("sha256") for item in ai_clips}
             with TemporaryDirectory(prefix=f"job-{identifier}-", dir=self.temporary) as directory:
                 work = Path(directory)
                 plans = []
@@ -355,9 +435,22 @@ class VideoCoordinator:
                         image = work / f"asset-{index}.png"
                         with load_image(self.asset(scene.material)) as asset:
                             asset.save(image, format="PNG")
+                    clip, clip_format = None, "mov"
+                    if scene.clip_name:
+                        # Copy, then re-validate the copy the renderer will actually read: it must be
+                        # the reviewed file (same hash) and still a valid clip.
+                        clip = work / f"clip-{index}.bin"
+                        try:
+                            shutil.copyfile(self.clip_store.path(scene.clip_name), clip)
+                            if expected.get(index) and file_sha256(clip) != expected[index]:
+                                raise ClipInvalidError()
+                            clip_format = probe_clip(clip)["format"]
+                        except (ClipInvalidError, OSError):
+                            raise RenderError("AI 생성 장면 파일 검증에 실패했습니다.", kind="clip") from None
                     plans.append(
                         ScenePlan(
-                            (scene.end_ms - scene.start_ms) / 1000, scene.narration, scene.caption, image
+                            (scene.end_ms - scene.start_ms) / 1000, scene.narration, scene.caption, image,
+                            clip=clip, ai_generated=bool(scene.ai_generated and clip), clip_format=clip_format,
                         )
                     )
                 plan = RenderPlan(title, plans, source_links, voice, font_size, position_y, speech, fit_audio)
@@ -383,6 +476,8 @@ class VideoCoordinator:
             with self.sessions.begin() as session:
                 job = session.get(RenderJob, identifier)
                 job.status = "success" if metadata.get("playable") else "simulated"
+                if ai_clips:
+                    metadata = {**metadata, "ai_clips": ai_clips, "ai_plan_id": project.ai_plan_id}
                 job.progress, job.metadata_json, job.finished_at = 100, metadata, utcnow()
                 self._apply_timings(session, job.project_id, metadata)
                 job.message = (
@@ -405,6 +500,7 @@ class VideoCoordinator:
                 "subtitle": "자막 길이·안전 영역",
                 "dependency": "FFmpeg/ffprobe 설치·버전",
                 "validation": "완성 MP4 코덱·해상도·길이·오디오",
+                "clip": "AI 생성 장면 파일(형식·검토한 파일과 같은지)",
                 "audio": "음성 길이",
             }
             kind = (

@@ -1,0 +1,12 @@
+{
+  "artifact_download": "BLOCKED",
+  "reason": "The Cloud egress proxy refused the Azure blob host (productionresultssa2.blob.core.windows.net, CONNECT 403 connect_rejected) that serves both the job-log download URL and the Actions artifact ZIP; checked 2026-10-16 06:40 KST for run 13. The GitHub connector (runs, jobs, job-log content, PR) worked, so check annotations were copied from the job log instead.",
+  "final_run": {
+    "run": 38814293774,
+    "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38814293774",
+    "head_sha": "698508e4e85d7f16caebabdeaecf50cb8469e490",
+    "conclusion": "success",
+    "artifact_name": "newsflow-phase5d-windows-validation"
+  },
+  "fallback": "windows/windows-actions-evidence.json holds the final run's check annotations (pytest counts, every validation tool's summary)"
+}
