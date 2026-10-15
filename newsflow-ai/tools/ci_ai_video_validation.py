@@ -289,6 +289,17 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             assert hashlib.sha256(clip_bytes).hexdigest() == meta["sha256"] and meta["format"] == "mov"
             result["async_generation"] = f"PASS (waiting → queued → completed → downloaded and probed; clip preview {preview})"
 
+            # 5b. A paid clip is never thrown away by an ordinary save: changing its prompt needs 'discard'.
+            board = page.locator("#storyboard-form")
+            assert board.locator('input[name="discard_0"]').count() == 1
+            assert board.locator('input[name="discard_1"]').count() == 0
+            board.locator("#prompt-0").fill(PROMPT + " 다른 색")
+            refused(page, board, f"/video/ai/plans/{plan_id}/scenes", 409, "받아 둔 영상 버리기")
+            kept = db_rows(data, "SELECT status, clip_name FROM ai_video_scenes WHERE plan_id=? AND position=0", (plan_id,))[0]
+            assert kept == ("ready", scene[1]), kept
+            page.goto(f"{BASE}/video/ai/plans/{plan_id}")
+            result["paid_clip_protection"] = "PASS (prompt change on a ready scene refused with 409 until 'discard' is checked; clip kept)"
+
             # 6. In-flight scene across a restart: never resubmitted.
             page.goto(f"{BASE}/video/ai?draft_id={draft_id}")
             new = page.locator("#video-ai-new")

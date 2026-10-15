@@ -15,7 +15,7 @@ from newsflow.db.models import AIVideoPlan, AIVideoScene, ContentDraft, VideoAIU
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.video.ai.costs import CURRENCIES
 from newsflow.video.ai.policy import DEFAULT_PROMPT, SCENE_LABEL, STYLE_GUARD, VIDEO_NOTICE
-from newsflow.video.ai.service import REFETCHABLE, AIVideoError
+from newsflow.video.ai.service import AIVideoError
 from newsflow.video.ai.settings import (
     CANDIDATE_PATHS,
     DISCLAIMER,
@@ -103,7 +103,8 @@ def plan_page(request: Request, plan_id: int, saved: str = "") -> HTMLResponse:
         source_labels=SOURCE_LABELS, status_labels=STATUS_LABELS, plan_labels=PLAN_LABELS, style_guard=STYLE_GUARD,
         scene_label=SCENE_LABEL, notice=VIDEO_NOTICE, default_prompt=DEFAULT_PROMPT, saved=saved[:20],
         active_statuses=sorted({"waiting", "submitting", "queued", "in_progress", "downloading"}),
-        refetchable=sorted(REFETCHABLE),
+        paid_positions=[s.position for s in context["scenes"] if service.holds_paid_result(s)],
+        refetch_positions=[s.position for s in context["scenes"] if service._refetchable(s)],
     )
 
 
@@ -132,6 +133,7 @@ async def save_scenes(request: Request, plan_id: int, revision: int = Form(ge=1)
             "position": index, "source": str(form.get(f"source_{index}", ""))[:12],
             "material": str(form.get(f"material_{index}", ""))[:255], "prompt": str(form.get(f"prompt_{index}", ""))[:2000],
             "model_path": str(form.get(f"model_{index}", ""))[:160],
+            "discard": form.get(f"discard_{index}") == "true",
         })
     try:
         # Local images are decoded while validating; keep that off the event loop.
@@ -169,6 +171,15 @@ def resolve(request: Request, plan_id: int, position: int, revision: int = Form(
     except AIVideoError as exc:
         raise _fail(exc) from None
     return go(f"/video/ai/plans/{plan_id}?saved=resolved")
+
+
+@router.post("/video/ai/plans/{plan_id}/rebase")
+def rebase(request: Request, plan_id: int, revision: int = Form(ge=1)) -> RedirectResponse:
+    try:
+        _service(request).rebase(plan_id, revision)
+    except AIVideoError as exc:
+        raise _fail(exc) from None
+    return go(f"/video/ai/plans/{plan_id}?saved=rebased")
 
 
 @router.post("/video/ai/plans/{plan_id}/scenes/{position}/refetch")

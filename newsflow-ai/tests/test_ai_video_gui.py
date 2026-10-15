@@ -237,3 +237,50 @@ def test_plan_page_shows_current_prices_and_flags_an_unusable_model(studio):
         session.scalar(select(VideoAIModel)).confirmed_at = None
     page = client.get(f"/video/ai/plans/{plan_id}").text
     assert "모델을 다시 고르세요(공식 문서 확인·단가가 필요합니다)" in page and "현재 단가 기준" not in page
+    # The scene's model stays selected (and so is posted back unchanged) even though it left the usable list.
+    assert '<option value="vendor/model/text-to-video" selected>vendor/model/text-to-video (현재 사용 불가)</option>' in page
+
+
+@needs_ffmpeg
+def test_paid_clip_needs_discard_and_a_new_script_can_be_taken_in(studio):
+    app, client, _provider, draft_id = studio
+    configure(client)
+    plan_id = plan_id_for(client, draft_id)
+    form = {"source_0": "generated", "prompt_0": "도시 경제를 상징하는 추상 그래픽", "model_0": "vendor/model/text-to-video",
+            "source_1": "card", "source_2": "card"}
+    assert post(client, f"/video/ai/plans/{plan_id}/scenes", {"revision": revision(app, plan_id), **form}).status_code == 303
+    assert post(client, f"/video/ai/plans/{plan_id}/confirm", {
+        "revision": revision(app, plan_id), "shown_total": "1", "confirmed": "true"}).status_code == 303
+    app.state.video_ai.tick()
+    app.state.video_ai.tick()
+    page = client.get(f"/video/ai/plans/{plan_id}").text
+    assert 'name="discard_0"' in page and 'name="discard_1"' not in page and 'id="rebase-form"' not in page
+    with app.state.sessions.begin() as session:
+        from newsflow.db.models import ContentDraft, VideoAIModel
+
+        session.scalar(select(VideoAIModel)).confirmed_at = None
+    # Posting the page back as shown keeps the paid clip although its model is no longer usable.
+    assert post(client, f"/video/ai/plans/{plan_id}/scenes", {"revision": revision(app, plan_id), **form}).status_code == 303
+    changed = {**form, "prompt_0": "다른 추상 그래픽"}
+    refused = post(client, f"/video/ai/plans/{plan_id}/scenes", {"revision": revision(app, plan_id), **changed})
+    assert refused.status_code == 409 and "받아 둔 영상 버리기" in refused.json()["detail"]
+    with app.state.sessions() as session:
+        scene = session.scalar(select(AIVideoScene).where(AIVideoScene.plan_id == plan_id, AIVideoScene.position == 0))
+    assert scene.status == "ready" and scene.clip_name
+
+    with app.state.sessions.begin() as session:
+        draft = session.get(ContentDraft, draft_id)
+        items = [dict(item) for item in draft.content["scenes"]]
+        items[1]["caption"] = "바뀐 둘째 자막"
+        draft.content = {**draft.content, "scenes": items}
+        draft.revision += 1
+    page = client.get(f"/video/ai/plans/{plan_id}").text
+    assert 'id="rebase-form"' in page and "바뀐 대본 반영" in page
+    rebased = post(client, f"/video/ai/plans/{plan_id}/rebase", {"revision": revision(app, plan_id)})
+    assert rebased.status_code == 303 and rebased.headers["location"].endswith("saved=rebased")
+    page = client.get(rebased.headers["location"]).text
+    assert "바뀐 대본의 내레이션·자막을 반영했습니다." in page and "바뀐 둘째 자막" in page and 'id="rebase-form"' not in page
+    assert post(client, f"/video/ai/plans/{plan_id}/rebase", {"revision": revision(app, plan_id)}).status_code == 409
+    with app.state.sessions() as session:
+        kept = session.get(AIVideoScene, scene.id)
+    assert (kept.status, kept.clip_name) == ("ready", scene.clip_name)

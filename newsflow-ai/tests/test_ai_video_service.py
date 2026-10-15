@@ -49,12 +49,14 @@ from newsflow.video.ai.keys import VIDEO_ENV_NAME, VideoAIKeyStore
 from newsflow.video.ai.policy import DEFAULT_PROMPT, STYLE_GUARD
 from newsflow.video.ai.service import (
     CLIP_LOST_MESSAGE,
+    DRAFT_CHANGED,
+    MAX_REFETCHES,
     MAX_REQUEUES,
     TIMEOUT_OPEN_MESSAGE,
     AIVideoCoordinator,
     AIVideoError,
 )
-from newsflow.video.ai.settings import save_model, write_settings
+from newsflow.video.ai.settings import CURRENCY_CHANGED, list_models, month_start, save_model, write_settings
 from newsflow.video.engine import FakeRenderAdapter
 from newsflow.video.tts import FakeTTS
 
@@ -103,9 +105,10 @@ PLAN_CONFIRMED = re.compile(r"유료 생성 \d+개 장면 확인됨 · 예상 [0
 NOT_RETRYABLE = "생성할 AI 장면이 없습니다. 장면 소재를 'AI 생성'으로 바꾸세요."
 STALE_TOTAL = "표시된 예상 비용이 바뀌었습니다. 새로고침해 다시 확인하세요."
 STALE_REVISION = "다른 화면에서 계획이 바뀌었습니다. 새로고침 후 다시 저장하세요."
-DRAFT_CHANGED = "계획을 만든 뒤 대본이 바뀌었습니다. 새 계획을 만드세요."
 TRIAL = "체험(합성) 뉴스 대본은 외부 AI 영상 공급사로 보내지 않습니다."
 SECRET_PROMPT = "프롬프트에 비밀정보가 포함되어 보낼 수 없습니다."
+DISCARD_NEEDED = ("장면 {}의 받아 둔 유료 AI 영상(또는 다시 받을 수 있는 결과)이 버려집니다. "
+                  "'받아 둔 영상 버리기'에 체크한 뒤 저장하세요.")
 BLOCKED = ("실제 뉴스 현장·기록 영상이나 실존 인물처럼 보이게 하는 표현은 사용할 수 없습니다. "
            "추상적인 배경·상징 화면으로 바꿔 쓰세요.")
 
@@ -1120,8 +1123,18 @@ def test_update_scenes_on_ready_scene_with_new_prompt_resets_clip_and_review(stu
     kept = scenes(studio, plan_id)[0]
     assert kept.status == "ready" and kept.clip_name == scene.clip_name and kept.reviewed
     assert plan_row(studio, plan_id).reviewed_at is None
+    # A different prompt would throw the paid clip away: only an explicit 'discard' allows that.
+    before = revision(studio, plan_id)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.update_scenes(plan_id, before, [
+            {"position": 0, "source": "generated", "prompt": PROMPT + " 다른 색", "model_path": MODEL}])
+    assert refusal(excinfo) == (DISCARD_NEEDED.format(1), 409)
+    assert scenes(studio, plan_id)[0].clip_name == scene.clip_name and revision(studio, plan_id) == before
+    for change in ({"source": "card"}, {"source": "generated", "prompt": PROMPT, "model_path": OTHER_MODEL}):
+        with pytest.raises(AIVideoError):
+            studio.service.update_scenes(plan_id, before, [{"position": 0, "prompt": PROMPT, **change}])
     studio.service.update_scenes(plan_id, revision(studio, plan_id), [
-        {"position": 0, "source": "generated", "prompt": PROMPT + " 다른 색", "model_path": MODEL}])
+        {"position": 0, "source": "generated", "prompt": PROMPT + " 다른 색", "model_path": MODEL, "discard": True}])
     reset = scenes(studio, plan_id)[0]
     assert (reset.status, reset.clip_name, reset.clip_meta, reset.reviewed, reset.error_code) == (
         "planned", None, None, False, None)
@@ -1329,11 +1342,13 @@ def test_a_completed_clip_that_failed_validation_is_fetched_again_without_a_new_
     studio.provider.jobs[scene.request_id].bad_clip = False  # the provider's file is fine the second time
     studio.service.refetch(plan_id, revision(studio, plan_id), 0)
     refetched = scenes(studio, plan_id)[0]
-    assert refetched.status == "in_progress" and refetched.clip_meta == {"refetches": 1}
+    assert refetched.status == "in_progress" and refetched.clip_meta == {"refetch_pending": True}
     assert refetched.message == "완료된 결과를 다시 확인해 내려받습니다(추가 생성 요청 없음)."
     studio.service.tick()
     scene = scenes(studio, plan_id)[0]
-    assert scene.status == "ready" and scene.request_id == refetched.request_id and scene.clip_meta["refetches"] == 1
+    # A delivered clip starts a fresh count: only failed fetches use up the three refetches.
+    assert scene.status == "ready" and scene.request_id == refetched.request_id
+    assert "refetches" not in scene.clip_meta and "refetch_pending" not in scene.clip_meta
     assert len(calls(studio.provider, "submit")) == 1 and len(calls(studio.provider, "fetch")) == 2
     assert [(row.attempt, row.status) for row in usage(studio)] == [(1, "completed")]
 
@@ -1763,3 +1778,174 @@ def test_a_reservation_from_last_month_is_not_sent_this_month(studio):
     scene = scenes(studio, plan_id)[0]
     assert (scene.status, scene.message) == ("canceled", "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.")
     assert studio.provider.calls == []
+
+
+# ---------------------------------------------------------------- paid results, script edits, currency
+
+
+def ready_and_reviewed(studio: Studio) -> tuple[int, AIVideoScene]:
+    ready_studio(studio)
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert scene.status == "ready", scene.message
+    studio.service.review(plan_id, revision(studio, plan_id), {0}, True)
+    return plan_id, scene
+
+
+@needs_ffmpeg
+def test_a_ready_clip_stays_usable_when_its_model_is_no_longer_confirmed(studio):
+    plan_id, scene = ready_and_reviewed(studio)
+    model = next(m for m in list_models(studio.sessions) if m.path == MODEL)
+    add_model(studio, confirmed=False, model_id=model.id)
+    # The form posts the stored prompt back (browsers may change whitespace): nothing changed, nothing lost.
+    studio.service.update_scenes(plan_id, revision(studio, plan_id), [
+        {"position": 0, "source": "generated", "prompt": f"  {PROMPT}\r\n", "model_path": MODEL}])
+    kept = scenes(studio, plan_id)[0]
+    assert (kept.status, kept.clip_name, kept.prompt, kept.model_path) == ("ready", scene.clip_name, PROMPT, MODEL)
+    studio.service.review(plan_id, revision(studio, plan_id), {0}, True)
+    job_id = studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert job_id and len(calls(studio.provider, "submit")) == 1
+
+
+@needs_ffmpeg
+def test_an_unreadable_clip_refuses_composition_without_releasing_the_paid_result(studio, monkeypatch):
+    plan_id, scene = ready_and_reviewed(studio)
+    clip = studio.service.clip_path(scene.id)
+    real_open = Path.open
+
+    def locked(self, *args, **kwargs):
+        if self == clip:
+            raise PermissionError(13, "in use")
+        return real_open(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", locked)
+    before = revision(studio, plan_id)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, before, True)
+    assert refusal(excinfo) == (
+        "장면 1의 생성 영상 파일을 지금 읽을 수 없습니다. 다른 프로그램에서 열려 있는지 확인한 뒤 다시 시도하세요.", 409)
+    kept = scenes(studio, plan_id)[0]
+    assert (kept.status, kept.clip_name, kept.reviewed) == ("ready", scene.clip_name, True)
+    assert revision(studio, plan_id) == before and clip.is_file()
+    with studio.sessions() as session:
+        assert session.scalar(select(RenderJob)) is None
+    monkeypatch.setattr(Path, "open", real_open)
+    assert studio.service.approve_compose(plan_id, before, True)
+
+
+def edit_draft(studio: Studio, change) -> None:
+    with studio.sessions.begin() as session:
+        draft = session.get(ContentDraft, studio.draft_id)
+        content = {**draft.content, "scenes": [dict(s) for s in draft.content["scenes"]]}
+        change(content["scenes"])
+        draft.content = content
+        draft.revision += 1
+
+
+@needs_ffmpeg
+def test_rebase_takes_a_new_script_and_keeps_paid_clips_when_the_timing_is_unchanged(studio):
+    plan_id, scene = ready_and_reviewed(studio)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.rebase(plan_id, revision(studio, plan_id))
+    assert refusal(excinfo) == ("이미 최신 대본을 쓰고 있습니다.", 409)
+
+    def retitle(items):
+        items[0]["caption"], items[0]["narration"] = "바뀐 자막", "바뀐 내레이션입니다."
+
+    edit_draft(studio, retitle)
+    assert DRAFT_CHANGED in studio.service.estimate(plan_id)["problems"]
+    studio.service.rebase(plan_id, revision(studio, plan_id))
+    rebased = scenes(studio, plan_id)[0]
+    assert (rebased.caption, rebased.narration) == ("바뀐 자막", "바뀐 내레이션입니다.")
+    assert (rebased.status, rebased.clip_name, rebased.reviewed) == ("ready", scene.clip_name, False)
+    plan = plan_row(studio, plan_id)
+    with studio.sessions() as session:
+        assert plan.draft_revision == session.get(ContentDraft, studio.draft_id).revision
+    assert plan.reviewed_at is None and DRAFT_CHANGED not in studio.service.estimate(plan_id)["problems"]
+    studio.service.review(plan_id, revision(studio, plan_id), {0}, True)
+    assert studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert len(calls(studio.provider, "submit")) == 1
+
+
+def test_rebase_refuses_a_script_whose_scene_timing_changed(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio)
+    before = scenes(studio, plan_id)
+
+    def longer(items):
+        items[0]["seconds"] += 3
+
+    edit_draft(studio, longer)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.rebase(plan_id, revision(studio, plan_id))
+    assert refusal(excinfo) == (
+        "대본의 장면 수나 장면 시간이 바뀌어 이 계획에 반영할 수 없습니다. 새 계획을 만드세요.", 409)
+    assert [(s.caption, s.start_ms, s.end_ms) for s in scenes(studio, plan_id)] == [
+        (s.caption, s.start_ms, s.end_ms) for s in before]
+    assert DRAFT_CHANGED in studio.service.estimate(plan_id)["problems"]
+
+
+@pytest.mark.parametrize(("stored", "reused"), [("", True), ("720p", True), ("1080p", False)])
+def test_resend_after_unknown_reuses_the_key_only_for_the_identical_request(studio, stored, reused):
+    # Rows written before migration 0011 have resolution '': that build always sent the model's resolution.
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, plan_id)
+
+    def crash(request):
+        studio.provider.calls.append(("submit", request.model_path, request.idempotency_key))
+        raise Crash
+
+    studio.provider.submit = crash
+    with pytest.raises(Crash):
+        studio.service.tick()
+    del studio.provider.submit
+    studio.service.recover()
+    with studio.sessions.begin() as session:
+        session.scalar(select(VideoAIUsage)).resolution = stored
+    studio.service.resolve_unknown(plan_id, revision(studio, plan_id), 0)
+    confirm(studio, plan_id)
+    studio.service.tick()
+    first, second = submit_keys(studio.provider)
+    assert (second == first) is reused
+
+
+def test_a_refetch_that_hits_a_full_disk_does_not_use_up_a_refetch(studio, monkeypatch):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT})
+    confirm(studio, plan_id)
+    usage_tuple = shutil.disk_usage(studio.data_dir)
+    monkeypatch.setattr(
+        "newsflow.video.ai.service.shutil.disk_usage", lambda path: usage_tuple._replace(free=10 * 1024 * 1024))
+    studio.service.tick()
+    for _ in range(MAX_REFETCHES + 1):
+        studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+        studio.service.tick()
+        scene = scenes(studio, plan_id)[0]
+        assert scene.error_code == "video_ai_disk_full" and int((scene.clip_meta or {}).get("refetches", 0)) == 0
+    assert len(calls(studio.provider, "submit")) == 1
+
+
+def test_a_plan_with_spend_in_another_currency_cannot_generate_more(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:fail]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].status == "failed" and [r.currency for r in usage(studio)] == ["USD"]
+    with studio.sessions.begin() as session:  # last month's USD spend; this month has none
+        session.scalar(select(VideoAIUsage)).created_at = month_start() - timedelta(days=1)
+    write_settings(
+        studio.sessions, provider="higgsfield", host="api.higgsfield.ai", approved=True, monthly_limit="20000",
+        job_limit="5000", currency="KRW", max_active=2, timeout_minutes=30, poll_seconds=10,
+    )
+    model = next(m for m in list_models(studio.sessions) if m.path == MODEL)
+    add_model(studio, price="100", model_id=model.id)  # re-confirmed in the new currency
+    estimate = studio.service.estimate(plan_id)
+    assert CURRENCY_CHANGED in estimate["problems"] and not estimate["can_submit"]
+    with pytest.raises(AIVideoError) as excinfo:
+        confirm_as_shown(studio, plan_id)
+    assert refusal(excinfo) == (CURRENCY_CHANGED, 422)
+    assert len(calls(studio.provider, "submit")) == 1

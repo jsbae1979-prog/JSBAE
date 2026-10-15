@@ -57,6 +57,7 @@ from newsflow.video.ai.policy import (
 )
 from newsflow.video.ai.settings import (
     COUNTED,
+    CURRENCY_CHANGED,
     HOSTS,
     MODEL_LIMIT,
     PROVIDERS,
@@ -68,6 +69,7 @@ from newsflow.video.ai.settings import (
     find_model,
     list_models,
     month_start,
+    plan_currency_mismatch,
     plan_spent,
     read_settings,
     readiness,
@@ -203,7 +205,10 @@ def make_plan(sessions) -> int:
         return plan.id
 
 
-def add_usage(sessions, plan_id: int, cost: str, status: str = "reserved", created_at: datetime | None = None):
+def add_usage(
+    sessions, plan_id: int, cost: str, status: str = "reserved", created_at: datetime | None = None,
+    currency: str = "USD",
+):
     created = created_at or datetime.now(UTC)
     with sessions.begin() as session:
         position = len(list(session.scalars(select(AIVideoScene.id).where(AIVideoScene.plan_id == plan_id))))
@@ -215,7 +220,7 @@ def add_usage(sessions, plan_id: int, cost: str, status: str = "reserved", creat
         session.flush()
         session.add(VideoAIUsage(
             plan_id=plan_id, scene_id=scene.id, attempt=1, provider="higgsfield", model_path=PATH, seconds=5,
-            estimated_cost=cost, currency="USD", status=status, created_at=created, updated_at=created,
+            estimated_cost=cost, currency=currency, status=status, created_at=created, updated_at=created,
         ))
 
 
@@ -676,8 +681,8 @@ def test_check_budget_requires_both_limits(sessions, job, monthly):
 
 def test_check_budget_job_limit_message_with_numbers(sessions):
     plan = make_plan(sessions)
-    add_usage(sessions, plan, "8.5")
-    add_usage(sessions, plan, "100", status="not_sent")
+    add_usage(sessions, plan, "8.5", currency="KRW")
+    add_usage(sessions, plan, "100", status="not_sent", currency="KRW")
     with sessions() as session:
         check_budget(session, limits(), plan, Decimal("1.5"))  # exactly at the job limit is allowed
         with pytest.raises(VideoSettingsError) as excinfo:
@@ -686,6 +691,22 @@ def test_check_budget_job_limit_message_with_numbers(sessions):
         "작업별 한도를 넘습니다: 이 작업 사용 8.5 + 이번 요청 예상 2 > 한도 10 KRW. "
         "장면 수를 줄이거나 한도를 확인하세요."
     )
+
+
+def test_check_budget_refuses_a_plan_whose_spend_is_in_another_currency(sessions):
+    # Last month's USD spend on this plan cannot be added to a KRW job limit: the sums would mix units.
+    plan = make_plan(sessions)
+    add_usage(sessions, plan, "1", created_at=last_month(), currency="USD")
+    with sessions() as session:
+        assert plan_currency_mismatch(session, plan, "KRW")
+        assert not plan_currency_mismatch(session, plan, "USD")
+        with pytest.raises(VideoSettingsError) as excinfo:
+            check_budget(session, limits(), plan, Decimal(1))
+    assert message(excinfo) == CURRENCY_CHANGED
+    other = make_plan(sessions)
+    add_usage(sessions, other, "1", created_at=last_month(), currency="USD", status="not_sent")
+    with sessions() as session:
+        check_budget(session, limits(), other, Decimal(1))  # never-sent rows are not counted spend
 
 
 def test_check_budget_monthly_message_with_numbers(sessions):

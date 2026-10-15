@@ -48,6 +48,11 @@ def _normal(text: str) -> str:
     return re.sub(r"\s+", " ", unicodedata.normalize("NFKC", text)).strip()
 
 
+def same_prompt(entered: str, stored: str) -> bool:
+    """True when a submitted form prompt is the stored (already cleaned) prompt up to whitespace."""
+    return entered == stored or _normal(entered or "") == stored
+
+
 def check_prompt(prompt: str) -> str:
     """Return the cleaned user prompt or raise with a fixed message naming the rule."""
     text = _normal(prompt or "")

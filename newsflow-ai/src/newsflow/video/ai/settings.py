@@ -298,10 +298,22 @@ def plan_spent(session: Session, plan_id: int) -> Decimal:
         VideoAIUsage.plan_id == plan_id, VideoAIUsage.status.in_(COUNTED))))
 
 
+CURRENCY_CHANGED = "통화가 바뀌어 이 계획에는 더 생성할 수 없습니다(이전 사용액과 단위가 다름). 새 계획을 만드세요."
+
+
+def plan_currency_mismatch(session: Session, plan_id: int, currency: str) -> bool:
+    """True when this plan already counted spend in another currency (sums would mix units)."""
+    return session.scalar(select(VideoAIUsage.id).where(
+        VideoAIUsage.plan_id == plan_id, VideoAIUsage.status.in_(COUNTED), VideoAIUsage.currency != currency,
+    ).limit(1)) is not None
+
+
 def check_budget(session: Session, settings: VideoAISettings, plan_id: int, batch: Decimal) -> None:
     """Raise before any request when this plan or this month would pass the user's limits."""
     if settings.job_limit <= 0 or settings.monthly_limit <= 0:
         raise VideoSettingsError("작업별 한도와 월 한도가 설정되지 않아 AI 영상을 생성하지 않습니다.")
+    if plan_currency_mismatch(session, plan_id, settings.currency):
+        raise VideoSettingsError(CURRENCY_CHANGED)
     spent = plan_spent(session, plan_id)
     if spent + batch > settings.job_limit:
         raise VideoSettingsError(
