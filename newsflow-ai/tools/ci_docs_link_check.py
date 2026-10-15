@@ -54,7 +54,7 @@ def links(path: Path) -> list[str]:
 def check(files: list[Path], root: Path = ROOT) -> dict:
     result: dict = {"files": [], "broken": [], "external": [], "checked": 0}
     for path in files:
-        entry = {"file": str(path.relative_to(root)), "links": 0}
+        entry = {"file": path.relative_to(root).as_posix(), "links": 0}
         for target in links(path):
             entry["links"] += 1
             result["checked"] += 1
