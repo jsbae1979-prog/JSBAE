@@ -164,7 +164,12 @@ def fixture_flow(mode: str, data: Path, env: dict, output: Path, executable: str
             page.goto(BASE + "/voices")
             page.screenshot(path=str(output / "voices.png"), full_page=True)
             state = page.locator("#voice-status").inner_text()
-            result["korean_voice_page"] = "PASS (installed voices listed)" if "설치됨" in state else "PASS (install guidance shown; no Korean SAPI voice)"
+            if "SAPI 미노출" in state:
+                result["korean_voice_page"] = "PASS (OneCore-only Korean voice reported; SAPI guidance shown; not selectable)"
+            elif "설치됨" in state:
+                result["korean_voice_page"] = "PASS (installed voices listed)"
+            else:
+                result["korean_voice_page"] = "PASS (install guidance shown; no Korean SAPI voice)"
 
             # 4. Real-content easy job pauses on script and final video; 30/45/60.
             videos = []

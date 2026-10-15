@@ -85,3 +85,12 @@ def test_sources_page_shows_last_collection_error_with_kind(client, app, fake):
     page = client.get("/sources")
     assert page.status_code == 200
     assert "최근 수집 오류: [http] RSS 서버가 HTTP 503을 반환했습니다." in page.text
+
+
+def test_unknown_feed_error_text_is_never_logged_but_kind_is(app, client, fake):
+    from newsflow.news.service import GENERIC_FEED_MESSAGE, safe_feed_message
+
+    assert safe_feed_message(FeedError("RSS secret-token=DO-NOT-LOG", ErrorKind.HTTP)) == f"[http] {GENERIC_FEED_MESSAGE}"
+    assert safe_feed_message(FeedError("RSS 서버가 HTTP 503을 반환했습니다.", ErrorKind.HTTP)) == "[http] RSS 서버가 HTTP 503을 반환했습니다."
+    assert safe_feed_message(FeedError("RSS 서버가 HTTP 999999을 반환했습니다.", ErrorKind.HTTP)) == f"[http] {GENERIC_FEED_MESSAGE}"
+    assert safe_feed_message(RuntimeError("SECRET")) == GENERIC_FEED_MESSAGE
