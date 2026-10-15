@@ -172,6 +172,11 @@ ANALYSIS_INSTRUCTION = (
 )
 
 
+def user_message(payload: dict) -> str:
+    """The exact user-message string sent to the provider; estimates count the same bytes."""
+    return json.dumps(payload, ensure_ascii=False)
+
+
 class OpenAIProvider:
     """Fixed HTTPS destination; default TLS verification; never follow redirects.
 
@@ -266,7 +271,7 @@ class OpenAIProvider:
                 "response_format": {"type": "json_object"},
                 "messages": [
                     {"role": "system", "content": instruction},
-                    {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+                    {"role": "user", "content": user_message(payload)},
                 ],
             }
         ).encode()

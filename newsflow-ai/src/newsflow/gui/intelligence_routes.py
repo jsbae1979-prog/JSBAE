@@ -11,8 +11,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
 from newsflow.db.models import ContentDraft, IntelligenceRun, NewsArticle
-from newsflow.intelligence.provider import Options
+from newsflow.intelligence.estimate import estimate_call, estimate_cost
+from newsflow.intelligence.provider import SCRIPT_INSTRUCTION, Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
+from newsflow.intelligence.settings import PRICE_DISCLAIMER, read_prices, read_settings
 
 from .routes import go, page
 
@@ -33,6 +35,12 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
         draft = session.get(ContentDraft, draft_id) if draft_id else None
         if (analysis_id and (not analysis or analysis.kind != "analysis")) or (draft_id and not draft):
             raise HTTPException(404, "분석 또는 초안이 없습니다.")
+        settings = read_settings(request.app.state.sessions)
+        estimate = None
+        if analysis is not None and analysis.status == "success":
+            # Same strings the provider would send for a 30초 script with the form's default cap.
+            estimate = estimate_call(SCRIPT_INSTRUCTION, {"duration": 30, "evidence": analysis.evidence}, 1800)
+            estimate["cost"] = estimate_cost(estimate, read_prices(request.app.state.sessions))
         return page(
             request,
             "ai.html",
@@ -46,6 +54,8 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
             key_available=bool(os.environ.get("NEWSFLOW_AI_API_KEY")) or bool(
                 getattr(request.app.state, "ai_keys", None) and request.app.state.ai_keys.status()["configured"]
             ),
+            default_model=settings.model, default_timeout=settings.timeout, estimate=estimate,
+            disclaimer=PRICE_DISCLAIMER,
         )
 
 

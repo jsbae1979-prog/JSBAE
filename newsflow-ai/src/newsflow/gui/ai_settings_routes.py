@@ -16,10 +16,13 @@ from newsflow.db.models import AIUsage, AppSetting, utcnow
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.intelligence.provider import OpenAIProvider, ProviderError
 from newsflow.intelligence.settings import (
+    CURRENCIES,
+    PRICE_DISCLAIMER,
     PROVIDERS,
     SettingsError,
     external_ready,
     read_settings,
+    write_prices,
     write_settings,
 )
 
@@ -44,6 +47,7 @@ def ai_settings(request: Request, saved: str = "") -> HTMLResponse:
     return page(
         request, "ai_settings.html", active="simple-settings", settings=settings, status=status,
         providers=PROVIDERS, last_check=last_check, usage=usage, saved=saved[:20],
+        estimate=status["estimate"], prices=status["prices"], currencies=CURRENCIES, disclaimer=PRICE_DISCLAIMER,
     )
 
 
@@ -57,6 +61,19 @@ def save_ai_settings(
     except SettingsError as exc:
         raise HTTPException(422, str(exc)) from None
     return go("/ai-settings?saved=settings")
+
+
+@router.post("/ai-settings/prices")
+def save_prices(
+    request: Request, input_per_1m: str = Form("", max_length=20), output_per_1m: str = Form("", max_length=20),
+    currency: str = Form("USD", max_length=3),
+) -> RedirectResponse:
+    """User-entered unit prices for the estimate only; they never allow or block a call."""
+    try:
+        write_prices(request.app.state.sessions, input_per_1m, output_per_1m, currency)
+    except SettingsError as exc:
+        raise HTTPException(422, str(exc)) from None
+    return go("/ai-settings?saved=prices")
 
 
 @router.post("/ai-settings/key")

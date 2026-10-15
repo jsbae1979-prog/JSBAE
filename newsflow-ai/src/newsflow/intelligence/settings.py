@@ -16,12 +16,22 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from newsflow.db.models import AIUsage, AppSetting, utcnow
 
+from .estimate import estimate_cost, estimate_job, parse_price, representative_evidence
 from .provider import Options
 
 PROVIDERS = {"offline": "기본 대본 (외부 호출 없음)", "openai": "OpenAI API (유료 · 승인 필요)"}
 DEFAULT_MODEL = "gpt-4o-mini"
 DEFAULT_LIMIT = 200_000
 MAX_LIMIT = 50_000_000
+# Output-token reservation per script length (sized from the Script schema maxima) and for
+# the analysis call; both stay inside Options' 200..3000 bound.
+SCRIPT_MAX_TOKENS = {30: 1400, 45: 1800, 60: 2200}
+ANALYSIS_MAX_TOKENS = 900
+CURRENCIES = ("USD", "KRW")
+PRICE_DISCLAIMER = (
+    "단가는 사용자가 입력한 값이며 공식 요금표를 확인하세요. "
+    "예상 비용은 참고용 추정치이고 실제 청구는 제공자 대시보드에서 확인합니다."
+)
 
 
 class SettingsError(Exception):
@@ -132,13 +142,75 @@ def record_usage(
         ))
 
 
-def check_budget(sessions: sessionmaker[Session], settings: AISettings, options: Options) -> None:
-    """Reject before any external request when the month could exceed the user's limit."""
+def max_tokens_for(duration: int) -> int:
+    """Per-duration output reservation for a script call; unknown lengths use the 45초 value."""
+    return SCRIPT_MAX_TOKENS.get(int(duration), SCRIPT_MAX_TOKENS[45])
+
+
+def check_budget(
+    sessions: sessionmaker[Session], settings: AISettings, options: Options, prompt_estimate: int = 0,
+) -> None:
+    """Reject before any external request when the month could exceed the user's limit.
+
+    The reservation is the output cap plus the estimated prompt tokens of this call, so
+    a month cannot end above the limit by the size of one prompt.
+    """
     if settings.monthly_token_limit <= 0:
         raise SettingsError("월 토큰 한도가 설정되지 않아 외부 AI를 호출하지 않습니다.")
     used = usage_this_month(sessions)["tokens"]
-    if used + options.max_tokens > settings.monthly_token_limit:
-        raise SettingsError("이번 달 토큰 한도에 도달해 외부 AI를 호출하지 않습니다. 설정에서 한도를 확인하세요.")
+    needed = max(0, int(prompt_estimate)) + options.max_tokens
+    if used + needed > settings.monthly_token_limit:
+        raise SettingsError(
+            "이번 달 토큰 한도에 도달해 외부 AI를 호출하지 않습니다. "
+            f"사용 {used} + 이번 호출 예상 {needed} > 한도 {settings.monthly_token_limit}. 설정에서 한도를 확인하세요."
+        )
+
+
+def read_prices(sessions: sessionmaker[Session]) -> dict:
+    """User-entered unit prices per one million tokens; None until the user saves them."""
+    with sessions() as session:
+        raw_input = _value(session, "ai_price_input_per_1m")
+        raw_output = _value(session, "ai_price_output_per_1m")
+        currency = _value(session, "ai_price_currency")
+
+    def safe(raw: str | None):
+        try:
+            return parse_price(raw)
+        except ValueError:
+            return None
+
+    return {
+        "input_per_1m": safe(raw_input), "output_per_1m": safe(raw_output),
+        "currency": currency if currency in CURRENCIES else "USD",
+    }
+
+
+def write_prices(sessions: sessionmaker[Session], input_per_1m: str, output_per_1m: str, currency: str) -> dict:
+    """Store the prices the user typed; blank clears a price. Prices never gate a call."""
+    try:
+        price_in, price_out = parse_price(input_per_1m), parse_price(output_per_1m)
+    except ValueError as exc:
+        raise SettingsError(str(exc)) from None
+    if currency not in CURRENCIES:
+        raise SettingsError("통화는 USD 또는 KRW 중에서 선택하세요.")
+    with sessions.begin() as session:
+        session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+        _set(session, "ai_price_input_per_1m", format(price_in, "f") if price_in is not None else "")
+        _set(session, "ai_price_output_per_1m", format(price_out, "f") if price_out is not None else "")
+        _set(session, "ai_price_currency", currency)
+    return read_prices(sessions)
+
+
+def job_estimate(sessions: sessionmaker[Session], duration: int = 30, evidence: dict | None = None) -> dict:
+    """Estimated tokens (and cost when prices exist) for one real-content job of `duration` seconds."""
+    estimate = estimate_job(
+        evidence or representative_evidence(), duration, max_tokens_for(duration), ANALYSIS_MAX_TOKENS,
+    )
+    prices = read_prices(sessions)
+    estimate["cost"] = estimate_cost(estimate, prices)
+    estimate["representative"] = evidence is None
+    estimate["disclaimer"] = PRICE_DISCLAIMER
+    return estimate
 
 
 def external_ready(sessions: sessionmaker[Session], key_store) -> dict:
@@ -157,8 +229,16 @@ def external_ready(sessions: sessionmaker[Session], key_store) -> dict:
         reasons.append("이번 달 토큰 한도를 모두 사용했습니다.")
     if not key["configured"]:
         reasons.append("API 키가 없습니다.")
+    prices = read_prices(sessions)
     return {
         "ready": not reasons, "reasons": reasons, "provider": settings.provider, "model": settings.model,
         "approved": settings.approved, "approved_at": settings.approved_at, "limit": settings.monthly_token_limit,
         "usage": usage, "key": key, "timeout": settings.timeout,
+        "remaining_tokens": max(0, settings.monthly_token_limit - usage["tokens"]),
+        "estimate": job_estimate(sessions, 30),
+        "prices": {
+            "input_per_1m": format(prices["input_per_1m"], "f") if prices["input_per_1m"] is not None else "",
+            "output_per_1m": format(prices["output_per_1m"], "f") if prices["output_per_1m"] is not None else "",
+            "currency": prices["currency"], "configured": prices["input_per_1m"] is not None and prices["output_per_1m"] is not None,
+        },
     }

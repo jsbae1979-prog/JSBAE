@@ -29,6 +29,7 @@ from newsflow.db.models import (
 )
 from newsflow.intelligence.korean import MIN_SUMMARY_CHARS, speech_plan
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
+from newsflow.intelligence.settings import ANALYSIS_MAX_TOKENS, max_tokens_for, read_settings
 from newsflow.news.collector import Collector
 from newsflow.news.rss_adapter import FakeRSSAdapter
 from newsflow.news.service import CollectionCoordinator, NewsService
@@ -350,6 +351,13 @@ class PipelineBackend:
                     raise BackendError("이전 분석 작업의 완료를 확인하지 못했습니다.", outcome_unknown=True)
         speech = self._speech()
         self.intelligence.speech = {"rate": speech.rate, "pause_ms": speech.pause_ms}
+        # External calls honour the saved model/timeout and reserve output tokens per script length;
+        # offline keeps the service defaults (no request is made).
+        analysis_options = script_options = None
+        if ai_mode != "offline":
+            settings = read_settings(self.sessions)
+            analysis_options = settings.options(max_tokens=ANALYSIS_MAX_TOKENS)
+            script_options = settings.options(max_tokens=max_tokens_for(ctx["duration"]))
         # consent=True only ever reaches the service for a gated real-content job (see _ai_mode).
         try:
             if analysis_id is None:
@@ -357,6 +365,7 @@ class PipelineBackend:
                     [ctx["article_id"]],
                     mode=ai_mode,
                     consent=ai_mode != "offline",
+                    options=analysis_options,
                     on_run=lambda value: save("analysis_run_id", value),
                 )
             self._cancel(cancel)
@@ -369,6 +378,7 @@ class PipelineBackend:
                 ctx["duration"],
                 mode=ai_mode,
                 consent=ai_mode != "offline",
+                options=script_options,
                 on_run=lambda value: save("script_run_id", value),
             )
         except IntelligenceError as exc:
@@ -432,8 +442,14 @@ class PipelineBackend:
                         "모의 영상은 재생할 수 없어 게시 대기함에 넣지 않습니다.", retryable=False
                     )
                 if job.status != "running":
-                    if "음성 생성" in (job.message or "") or "음성 길이" in (job.message or ""):
-                        raise BackendError("음성 길이 또는 음성 생성 문제로 영상을 만들지 못했습니다.", code="speech_too_long")
+                    # The video service prefixes its fixed failure text with the failure kind;
+                    # the generic suffix mentions several causes, so only the prefix is classified.
+                    if (job.message or "").startswith("음성 길이 실패"):
+                        raise BackendError("음성이 장면 또는 영상 길이보다 길어 영상을 만들지 못했습니다.", code="speech_too_long")
+                    if (job.message or "").startswith("음성 생성 실패"):
+                        raise BackendError(
+                            "음성을 만들지 못했습니다. 선택한 한국어 음성과 PowerShell 실행 상태를 확인하세요.", code="voice_failed",
+                        )
                     raise BackendError(
                         "영상 제작이 중단되었습니다. 제작 도구와 저장 공간을 확인하고 다시 시도하세요."
                     )
