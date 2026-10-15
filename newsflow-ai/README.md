@@ -1,10 +1,12 @@
-# NewsFlow AI — Windows 11 · Phase 5B
+# NewsFlow AI — Windows 11 · Phase 5C
 
 뉴스 선택부터 대본·검토용 영상 제작·게시 대기함 보관까지 연결하는 한국어 로컬 웹 프로그램입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
 Phase 5A의 **간편 제작**은 체험 뉴스 → 기본 대본 → 9:16 검토영상 → 로컬 게시 대기함을 한 번의 시작으로 연결합니다. **단계별 제작**에서는 뉴스·대본·영상을 확인하며 진행합니다. 기본 대본은 외부 AI가 작성한 결과가 아니며, 기본 영상은 무음입니다. 실제 SNS 게시·계정 로그인·실제 토큰 교환 및 저장·주기 스케줄러는 제공하지 않습니다. 기존 OAuth 운영 코드는 계속 차단됩니다.
 
-[간편 제작 사용법과 복구 정책](docs/autopilot.md) · [Phase 5A 검증 보고서](docs/reports/phase5a_autopilot_easyui_report.md)
+Phase 5C의 **실제 콘텐츠 제작**은 등록한 공개 RSS에서 실제 뉴스를 모아 기본 대본 또는 승인된 외부 AI 대본을 만들고, Windows 한국어 음성과 자막으로 영상을 만든 뒤 대본과 완성 영상을 사람이 확인해야 게시 대기함에 보관합니다. 체험 제작은 그대로 유지됩니다.
+
+[간편 제작 사용법과 복구 정책](docs/autopilot.md) · [실제 콘텐츠 제작 안내](docs/realcontent.md) · [Phase 5C 검증 보고서](docs/reports/phase5c_realcontent_report.md)
 
 ## 처음 사용하는 분을 위한 빠른 시작
 
@@ -30,10 +32,10 @@ Windows x64의 Python 3.12 + PyInstaller `onedir` 묶음으로 FastAPI/Jinja/sta
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 5B 검토 브랜치 `feat/newsflow-phase5b`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 5C 검토 브랜치 `feat/newsflow-phase5c`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase5b https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase5c https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -55,9 +57,21 @@ Windows EXE Installer는 제공하지 않습니다. Linux Cloud는 Windows BAT�
 3. 진행 화면에서 현재 단계와 진행률을 확인합니다. 완료 후 영상을 재생하거나 **MP4 저장**을 누르고 **게시 대기함에서 확인**으로 이동합니다.
 4. 대기함은 내 PC의 검토용 초안입니다. 대기함 보관이 내용·출처·저작권 검토나 플랫폼 게시 승인을 대신하지 않습니다.
 
-뉴스부터 직접 고르려면 사이드바 **자동 제작 → 단계별 제작**을 선택하세요. 뉴스 선택, 대본 검토·수정, 영상 확인에서 각각 멈춘 뒤 다음 단계로 진행합니다. **간단한 설정**에서 다음 제작의 길이(30/45/60초), 목적지(YouTube/Instagram), 뉴스 종류를 저장할 수 있습니다. 등록 출처를 선택하면 시작할 때 해당 공개 RSS에 접속합니다. Autopilot의 대본 생성은 계속 Offline이며 외부 AI API를 자동 사용하지 않습니다.
+뉴스부터 직접 고르려면 사이드바 **자동 제작 → 단계별 제작**을 선택하세요. 뉴스 선택, 대본 검토·수정, 영상 확인에서 각각 멈춘 뒤 다음 단계로 진행합니다. **간단한 설정**에서 다음 제작의 길이(30/45/60초), 목적지(YouTube/Instagram), 뉴스 종류를 저장할 수 있습니다. 등록 출처를 선택하면 시작할 때 해당 공개 RSS에 접속하는 **실제 콘텐츠 제작**이 됩니다. 대본은 기본 대본이 기본값이며, 외부 AI 대본은 **설정 → AI 연결**에서 승인·월 한도·API 키를 저장한 경우에만 실제 콘텐츠에서 선택할 수 있습니다. 체험 제작은 외부 AI를 호출하지 않습니다.
 
 기존 뉴스 검색·AI Studio·Video Studio·Publishing·상세 Settings는 사이드바 **고급 모드**에서 열 수 있습니다. 직접 검토한 대본의 음성·자막·소재를 상세 조정하려면 Video Studio를 사용하세요. 간편 제작은 무음 검토영상만 만들며 뉴스 이미지나 영상을 자동 다운로드하지 않습니다.
+
+
+## Phase 5C · 실제 콘텐츠 제작 (실제 RSS · AI 대본 · 한국어 음성)
+
+1. **설정 → 뉴스**(`/sources`)에서 공개 RSS를 등록하고 **연결 테스트**로 기사 수·발행시각·요약 상태를 확인한 뒤 **사용하기**로 활성화합니다. **지금 뉴스 모으기**로 실제 기사를 수집합니다. 요약이 짧은 기사는 "요약 부족"으로 표시되며 대본은 원문에 없는 내용을 추측해 채우지 않습니다.
+2. **설정 → AI 연결**(`/ai-settings`)에서 제공자·모델·월 토큰 한도·유료 호출 승인을 저장하고 API 키를 Windows 계정 보호 저장소(DPAPI)에 저장합니다. **연결 확인**은 토큰을 쓰지 않는 모델 조회입니다. 요청별 토큰 사용량은 같은 화면에 기록되며 실제 청구액은 제공자 대시보드에서 확인합니다.
+3. **설정 → 음성과 자막**(`/voices`)에서 설치된 한국어 SAPI 음성·발화 속도·문장 쉼을 고르고 **미리 듣기**로 확인합니다. 한국어 음성이 없으면 설치 안내가 표시되고 무음 검토영상으로 제작합니다. 다른 언어 음성으로 대체하지 않습니다.
+4. **자동 제작 → 실제 콘텐츠 제작**을 선택하면 실제 RSS 수집 → 기사 선택 → 대본 → **대본 확인(원문 비교·확인 사항)** → 한국어 음성·자막 영상 → **최종 영상 확인** → 로컬 게시 대기함 순서로 진행합니다. 간편 제작도 실제 콘텐츠에서는 대본과 완성 영상에서 멈춥니다.
+
+한국어 음성으로 제작하면 장면 시간을 실제 음성 길이에 맞춰 조정하고 자막 구간을 같은 시간표로 저장합니다. 전체 음성이 영상보다 길면 초과 시간을 알리고 멈춥니다. 자동 검증은 비무음 WAV 생성과 MP4 규격만 확인하며 **발음·시청 품질은 사람이 들어야 합니다(NOT VERIFIED)**. 실제 외부 AI API 호출과 실제 공개 RSS 수집은 사용자의 키·네트워크 환경에서만 검증할 수 있으며 CI에서는 NOT VERIFIED로 기록합니다. 상세는 [docs/realcontent.md](docs/realcontent.md)를 참고하세요.
+
+DB migration `0009`는 추가 전용입니다(`content_drafts.review_notes`, `autopilot_jobs.content_mode/ai_mode/voice`, `news_source_checks`, `ai_usage`). 실제 SNS 게시·계정 연결·예약 실행·무인 운영은 계속 제공하지 않습니다.
 
 ## 재실행·업데이트
 
