@@ -720,7 +720,8 @@ class AIVideoCoordinator:
         except (FileNotFoundError, IsADirectoryError, NotADirectoryError):
             return "lost"  # nothing that could be our clip is at that name
         except OSError:
-            return "unreadable"
+            # Windows raises PermissionError, not IsADirectoryError, when opening a directory.
+            return "lost" if path.is_dir() else "unreadable"
         return "ok" if digest.hexdigest() == sha256 else "lost"
 
     def _digest(self, name: str) -> str | None:
