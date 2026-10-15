@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -502,3 +503,24 @@ def test_live_rss_diagnosis_notice_stays_within_the_annotation_limit(monkeypatch
     assert module.fit_notice({"huge": "x" * 5000}, budget=100) == {"trimmed": True, "keys": ["huge"]}
     assert module.compact_robots({"status": 200, "sha256": "a" * 64, "decision": "allow", "extra": 1}) == {
         "status": 200, "decision": "allow", "sha256": "a" * 16}
+    assert len(json.dumps(module.bounded_text("한" * 3000), ensure_ascii=False).encode()) <= 2500
+    assert module.bounded_text("User-agent: *\nAllow: /\n") == "User-agent: *\nAllow: /\n"
+
+
+def test_interpreter_probe_reports_versions_hashes_and_the_saved_robots_decision(monkeypatch, tmp_path):
+    monkeypatch.syspath_prepend(str(ROOT / "tools"))
+    spec = importlib.util.spec_from_file_location("ci_realcontent_validation", ROOT / "tools" / "ci_realcontent_validation.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    robots = tmp_path / "example.com.txt"
+    robots.write_text("User-agent: *\nDisallow: /private\n", encoding="utf-8")
+    env = dict(os.environ)
+    # localhost is refused by the public-address policy before any socket opens.
+    allowed = module.interpreter_probe(sys.executable, "https://localhost/rss", robots, env)
+    assert allowed["python"].startswith("3.12") and len(allowed["robotparser_sha"]) == 16 and len(allowed["adapter_sha"]) == 16
+    assert allowed["saved_robots_can_fetch"] is True and allowed["check"]["status"] == "fail"
+    assert allowed["thread_check"] == allowed["check"]
+    denied = module.interpreter_probe(sys.executable, "https://localhost/private/rss", robots, env)
+    assert denied["saved_robots_can_fetch"] is False
+    assert module.interpreter_probe(str(tmp_path / "missing-python"), "https://localhost/rss", None, env) == {
+        "probe_error_type": "FileNotFoundError"}
