@@ -446,3 +446,59 @@ def test_slow_collection_is_not_verified_and_drained(tool):
     assert status == "NOT VERIFIED"
     assert tool.classify(attempted=True, check_status="pass", kind=None, feed_error=False,
                          first_status="failed", second_status=None) == "FAIL"
+
+
+# --------------------------------------------------------------------------- live RSS diagnosis
+
+def test_traced_check_records_every_request_without_bodies(tool, rss):
+    moved = "https://example.com/feed.xml"
+    transport = Transport({
+        ROBOTS: Response(200, b"User-agent: *\nAllow: /\n"),
+        FEED: Response(301, b"", "/feed.xml"),
+        moved: Response(200, rss),
+    })
+    traced = tool.traced_check(FEED, "추적", 5, transport)
+    assert traced["check"]["status"] == "pass" and traced["check"]["article_count"] > 0
+    assert [(r["host"], r["path"], r["status"]) for r in traced["requests"]] == [
+        ("example.com", "/robots.txt", 200), ("example.com", "/rss", 301), ("example.com", "/feed.xml", 200)]
+    assert traced["requests"][1]["location"] == "example.com/feed.xml"
+    assert traced["requests"][2]["bytes"] == len(rss) and len(traced["requests"][2]["sha256"]) == 16
+    dumped = json.dumps(traced, ensure_ascii=False)
+    assert "<item>" not in dumped and "한국 우주 기술" not in dumped  # metadata only, never feed bytes or titles
+
+
+def test_traced_check_shows_which_origin_denied(tool):
+    other = "https://cdn.example.net/rss"
+    transport = Transport({
+        ROBOTS: Response(200, b"User-agent: *\nAllow: /\n"),
+        FEED: Response(302, b"", other),
+        "https://cdn.example.net/robots.txt": Response(200, b"User-agent: *\nDisallow: /\n"),
+    })
+    traced = tool.traced_check(FEED, "추적", 5, transport)
+    assert traced["check"]["status"] == "fail" and traced["check"]["kind"] == "robots"
+    assert [(r["host"], r["path"]) for r in traced["requests"]] == [
+        ("example.com", "/robots.txt"), ("example.com", "/rss"), ("cdn.example.net", "/robots.txt")]
+    failing = tool.traced_check(FEED, "추적", 5, Transport({ROBOTS: FeedError("x", ErrorKind.TIMEOUT)}))
+    assert failing["check"]["kind"] == "timeout" and failing["requests"] == [
+        {"host": "example.com", "path": "/robots.txt", "query": False, "error_kind": "timeout"}]
+
+
+def test_live_rss_diagnosis_notice_stays_within_the_annotation_limit(monkeypatch):
+    monkeypatch.syspath_prepend(str(ROOT / "tools"))
+    spec = importlib.util.spec_from_file_location("ci_realcontent_validation", ROOT / "tools" / "ci_realcontent_validation.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    request = {"host": "www.example.com", "path": "/" + "p" * 119, "query": True, "status": 200, "bytes": 1, "sha256": "0" * 16}
+    trace = {"check": {"status": "fail", "kind": "robots", "message": "m" * 300, "article_count": 0}, "error_type": None,
+             "requests": [dict(request) for _ in range(12)]}
+    compact = module.compact_trace(trace)
+    assert len(compact["requests"]) == 8 and len(compact["message"]) == 80
+    diagnosis = {"order": "x", "before": compact, "after": module.compact_trace(trace), "robots": {"decision": "deny"},
+                 "server_retest": {"status": "fail"}}
+    fitted = module.fit_notice(diagnosis, budget=1500)
+    assert len(json.dumps(fitted, ensure_ascii=False, separators=(",", ":")).encode()) <= 1500
+    assert fitted["robots"] == {"decision": "deny"} and fitted["after"]["requests_trimmed"] is True
+    assert len(diagnosis["after"]["requests"]) == 8  # the JSON evidence keeps the full trace
+    assert module.fit_notice({"huge": "x" * 5000}, budget=100) == {"trimmed": True, "keys": ["huge"]}
+    assert module.compact_robots({"status": 200, "sha256": "a" * 64, "decision": "allow", "extra": 1}) == {
+        "status": 200, "decision": "allow", "sha256": "a" * 16}

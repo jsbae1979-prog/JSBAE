@@ -562,6 +562,42 @@ def _public_check(check: dict) -> dict:
     return public
 
 
+class RecordingTransport:
+    """Wraps the validated transport and records each request without keeping any body.
+
+    Every robots.txt and feed request (including redirect hops) is listed with host, path,
+    status, size, a short body hash and the redirect target, so two runs of the same check can
+    be compared. The wrapped transport, and therefore the policy, is unchanged.
+    """
+
+    def __init__(self, inner: Transport | None = None) -> None:
+        self.inner = inner or PublicTransport()
+        self.requests: list[dict] = []
+
+    def get(self, url: str, timeout: float):
+        parts = urlsplit(url)
+        entry: dict = {"host": parts.hostname, "path": (parts.path or "/")[:120], "query": bool(parts.query)}
+        try:
+            response = self.inner.get(url, timeout)
+        except FeedError as exc:
+            entry["error_kind"] = str(exc.kind)
+            self.requests.append(entry)
+            raise
+        entry.update(status=response.status, bytes=len(response.body), sha256=hashlib.sha256(response.body).hexdigest()[:16])
+        if response.location:
+            target = urlsplit(urljoin(url, response.location))
+            entry["location"] = f"{target.hostname}{(target.path or '/')[:120]}"
+        self.requests.append(entry)
+        return response
+
+
+def traced_check(url: str, name: str, timeout: int, transport: Transport | None = None) -> dict:
+    """One connection check through the production collector with a request trace (no bodies)."""
+    recorder = RecordingTransport(transport)
+    check = connection_check(Collector(PublicRSSAdapter(recorder)), url, name, timeout)
+    return {"check": _public_check(check), "error_type": check["error_type"], "requests": recorder.requests}
+
+
 def _diagnose(feed: dict, check: dict, adapter, transport: Transport | None, timeout: int, output: Path) -> None:
     if not check["feed_error"]:
         return
