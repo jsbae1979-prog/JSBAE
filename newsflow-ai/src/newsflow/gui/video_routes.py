@@ -11,7 +11,7 @@ from sqlalchemy import select
 from newsflow.db.models import AudioTrack, ContentDraft, RenderJob, Scene, SubtitleTrack, VideoProject
 from newsflow.video.engine import RenderError
 from newsflow.video.service import RenderBusy, VideoError
-from newsflow.video.tts import TTSError, WindowsTTS
+from newsflow.video.tts import POLICY_MESSAGE, TTSError, TTSPolicyError, WindowsTTS
 
 from .routes import go, page
 
@@ -44,8 +44,18 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
         )
         voices, voice_note = [], ""
         if sys.platform == "win32":
+            # Every SAPI voice is listed with its culture; non-Korean ones carry a warning and are
+            # never pre-selected. The submitted value stays the voice name the renderer validates.
             try:
-                voices = WindowsTTS().voices()
+                details = WindowsTTS().voice_details()
+                korean = [v for v in details if v["culture"].lower().startswith("ko-")]
+                others = [v for v in details if v not in korean]
+                voices = [{"name": v["name"], "label": f"{v['name']} · {v['culture']}"} for v in korean] + [
+                    {"name": v["name"], "label": f"{v['name']} · {v['culture']} (한국어 아님 · 한국어 대본 읽기 품질 미보장)"}
+                    for v in others
+                ]
+            except TTSPolicyError:
+                voice_note = POLICY_MESSAGE
             except TTSError:
                 voice_note = "Windows 음성 목록을 확인하지 못했습니다. 설치된 음성과 실행 권한을 확인하세요."
         return page(

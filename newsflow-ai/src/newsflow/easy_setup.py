@@ -1,12 +1,16 @@
 """Local readiness diagnostics and transactional first-run preferences; never calls an API."""
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import shutil
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
+from uuid import uuid4
 
 from PIL import ImageFont
 from sqlalchemy import text
@@ -15,7 +19,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from .db.models import AppSetting
 from .video.engine import FFmpegAdapter, RenderError, font_path
-from .video.tts import SpeechSettings, TTSError, WindowsTTS
+from .video.tts import SpeechSettings, TTSError, TTSPolicyError, WindowsTTS
 
 STEPS = ['시작 안내', '뉴스 수집 방식', 'AI 기능', '영상 제작', '음성과 자막', '저장 위치', '완료와 테스트']
 DEFAULTS = {'source': 'sample', 'ai': 'offline', 'duration': '30', 'platform': 'youtube',
@@ -23,6 +27,26 @@ DEFAULTS = {'source': 'sample', 'ai': 'offline', 'duration': '30', 'platform': '
             'rate': '0', 'pause_ms': '250'}
 RATE_CHOICES = {'-3': '느리게', '-2': '조금 느리게', '-1': '약간 느리게', '0': '보통', '1': '약간 빠르게', '2': '조금 빠르게', '3': '빠르게'}
 PAUSE_CHOICES = {'0': '쉼 없음', '150': '짧게', '250': '보통', '400': '여유 있게', '600': '길게'}
+# One install sentence for every screen and the readiness check (voices page, wizard step 5, diagnostics).
+VOICE_INSTALL_GUIDE = ('Windows 설정 → 시간 및 언어 → 언어 및 지역 → 한국어 → 언어 옵션에서 음성(텍스트 음성 변환)을 '
+                       '설치한 뒤 NewsFlow를 종료하고 run.bat를 다시 실행하세요.')
+POLICY_GUIDE = ('PowerShell 스크립트 실행 정책 때문에 Windows 음성 기능을 사용할 수 없습니다. PowerShell에서 '
+                'Get-ExecutionPolicy -List로 현재 정책을 확인하세요. 사용자의 결정으로 '
+                'Set-ExecutionPolicy -Scope CurrentUser RemoteSigned를 적용할 수 있지만 이 앱은 정책을 바꾸지 않습니다. '
+                '바꾸지 않으려면 무음 검토영상으로 제작하세요.')
+# Human listening record (docs/korean_tts_listening_checklist.md). Only a person fills it in; nothing
+# in the app or CI derives a verdict, and "pass" is rejected while any item is marked inaccurate.
+LISTENING_ITEMS = {'clarity': '명료도·음량·잡음·끝 잘림', 'numbers': '숫자 (연도·큰 수·소수·단위)',
+                   'dates': '날짜·시간', 'english': '영문 (글자 읽기·발음형·영단어)', 'pauses': '문장 사이 쉼',
+                   'speed': '속도', 'length': '길이 (실제 vs 화면 예상 ±30%)', 'subtitle_sync': '자막 동기 (±0.5초)'}
+LISTENING_VALUES = {'ok': '정확', 'bad': '부정확', 'unknown': '불명'}
+LISTENING_VERDICTS = {'pass': 'PASS', 'fail': 'FAIL', 'not_verified': 'NOT VERIFIED'}
+LISTENING_KEY = 'voice_listening_last'
+MAX_LISTENING_FILES = 50
+PREVIEW_NAME = re.compile(r'preview-[0-9a-f]{32}\.wav')
+LISTENING_NAME = re.compile(r'listening-[0-9a-f]{32}\.json')
+_CONTROL = re.compile(r'[\x00-\x1f\x7f]')
+_CONTROL_IN_NOTES = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
 
 
 class SetupError(Exception):
@@ -84,13 +108,22 @@ def diagnostics(data_dir: Path, sessions: sessionmaker[Session]) -> dict[str, An
         voices = voice_catalog()
         korean = [v for v in voices if v['culture'].lower().startswith('ko-')]
         voice_state = 'available' if korean else 'not_installed'
+    except TTSPolicyError:
+        voices, korean, voice_state = [], [], 'blocked_policy'
     except TTSError:
         voices, korean, voice_state = [], [], 'unavailable'
     add('korean_voice', '한국어 Windows 음성 (선택)', bool(korean),
-        '설정 → 시간 및 언어 → 언어 및 지역 → 한국어 언어 옵션에서 음성 기능을 설치하세요. 이 앱이 사용하는 SAPI 음성이 보여야 선택할 수 있습니다. 무음으로도 제작할 수 있어요.', False)
+        POLICY_GUIDE if voice_state == 'blocked_policy'
+        else VOICE_INSTALL_GUIDE + ' 이 앱이 사용하는 SAPI 음성이 보여야 선택할 수 있습니다. 무음으로도 제작할 수 있어요.',
+        False)
+    try:
+        listening = listening_summary(sessions)
+    except SQLAlchemyError:
+        listening = None
+    quality = ('사람의 청취·시청 평가는 아직 하지 않았습니다.' if listening is None
+               else f"사람 청취 결과: {listening['label']} ({listening['date']}, {listening['listener']})")
     return {'ready': all(c['status'] == 'pass' for c in checks if c['required']), 'checks': checks,
-            'voices': voices, 'korean_voice': voice_state, 'external_calls': 0,
-            'quality': '사람의 청취·시청 평가는 아직 하지 않았습니다.'}
+            'voices': voices, 'korean_voice': voice_state, 'external_calls': 0, 'quality': quality}
 
 
 def initial_state(session: Session) -> dict[str, Any]:
@@ -204,6 +237,79 @@ def save_voice_preferences(sessions: sessionmaker[Session], voice: str, rate: st
                 row.value = value
             else:
                 session.add(AppSetting(key='video_default_' + key, value=value))
+
+
+def listening_summary(sessions: sessionmaker[Session]) -> dict[str, str] | None:
+    """Latest human listening record summary from AppSetting, or None when nobody has listened yet."""
+    with sessions() as session:
+        row = session.get(AppSetting, LISTENING_KEY)
+        value = row.value if row else ''
+    parts = value.split(' · ', 3)
+    if len(parts) < 3 or parts[0] not in LISTENING_VERDICTS:
+        return None
+    return {'verdict': parts[0], 'label': LISTENING_VERDICTS[parts[0]], 'date': parts[1],
+            'listener': parts[2], 'voice': parts[3] if len(parts) > 3 else ''}
+
+
+def record_listening(data_dir: Path, sessions: sessionmaker[Session], values: dict[str, str]) -> dict[str, Any]:
+    """Store what a human listener decided; the app validates the form but never derives the verdict.
+
+    The record is a JSON file under ``voice-listening/`` (at most MAX_LISTENING_FILES kept) plus a
+    short AppSetting summary. No migration: nothing else in the database changes.
+    """
+    listener = str(values.get('listener', '')).strip()
+    if not 1 <= len(listener) <= 40 or _CONTROL.search(listener):
+        raise SetupError('청취자 이름을 1~40자로 입력하세요.')
+    voice = str(values.get('voice', '')).strip()
+    if len(voice) > 200 or _CONTROL.search(voice):
+        raise SetupError('음성 이름을 확인하세요.')
+    rate, pause_ms = str(values.get('rate', '')), str(values.get('pause_ms', ''))
+    if rate not in RATE_CHOICES or pause_ms not in PAUSE_CHOICES:
+        raise SetupError('제공된 발화 속도와 문장 쉼을 선택하세요.')
+    preview = str(values.get('preview', '')).strip()
+    if preview and not PREVIEW_NAME.fullmatch(preview):
+        raise SetupError('미리 듣기 파일 이름을 확인하세요.')
+    items: dict[str, str] = {}
+    for key in LISTENING_ITEMS:
+        value = str(values.get(key, ''))
+        if value not in LISTENING_VALUES:
+            raise SetupError('모든 청취 항목을 정확·부정확·불명 중에서 선택하세요.')
+        items[key] = value
+    verdict = str(values.get('verdict', ''))
+    if verdict not in LISTENING_VERDICTS:
+        raise SetupError('종합 판정을 PASS·FAIL·NOT VERIFIED 중에서 선택하세요.')
+    if verdict == 'pass' and any(value == 'bad' for value in items.values()):
+        raise SetupError('부정확으로 표시한 항목이 있으면 PASS로 기록할 수 없습니다. FAIL 또는 NOT VERIFIED를 선택하세요.')
+    notes = str(values.get('notes', '')).strip()
+    if len(notes) > 500 or _CONTROL_IN_NOTES.search(notes):
+        raise SetupError('메모는 500자 이하로 입력하세요.')
+    preview_sha256 = ''
+    if preview:
+        source = data_dir / 'voice-preview' / preview
+        if source.is_file() and not source.is_symlink():
+            preview_sha256 = hashlib.sha256(source.read_bytes()).hexdigest()
+    created_at = datetime.now(UTC).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+    record: dict[str, Any] = {
+        'schema': 'voice-listening/1', 'created_at': created_at, 'listener': listener, 'voice': voice,
+        'rate': int(rate), 'pause_ms': int(pause_ms), 'preview': preview, 'preview_sha256': preview_sha256,
+        'items': items, 'verdict': verdict, 'notes': notes, 'recorded_by': 'human',
+    }
+    directory = data_dir / 'voice-listening'
+    directory.mkdir(parents=True, exist_ok=True)
+    name = f'listening-{uuid4().hex}.json'
+    (directory / name).write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding='utf-8')
+    kept = sorted((p for p in directory.iterdir() if LISTENING_NAME.fullmatch(p.name) and p.is_file()
+                   and not p.is_symlink()), key=lambda p: (p.stat().st_mtime, p.name))
+    for old in kept[:max(0, len(kept) - MAX_LISTENING_FILES)]:
+        old.unlink(missing_ok=True)
+    summary = f"{verdict} · {created_at[:10]} · {listener} · {voice}"[:200]
+    with sessions.begin() as session:
+        row = session.get(AppSetting, LISTENING_KEY)
+        if row:
+            row.value = summary
+        else:
+            session.add(AppSetting(key=LISTENING_KEY, value=summary))
+    return {**record, 'file': name, 'summary': summary}
 
 
 def main() -> int:

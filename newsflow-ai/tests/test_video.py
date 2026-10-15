@@ -1,4 +1,5 @@
 import json
+import re
 from itertools import pairwise
 from pathlib import Path
 from threading import Event
@@ -448,3 +449,77 @@ def test_cleanup_completes_before_success(video, app):
         coordinator.start(draft_id, 30, reviewed=True)
         wait(video)
     assert observed == ["running"]
+
+
+# --- Phase 5C.1 package C: FFmpeg audio-fit branch and Video Studio voice labels ---
+
+from newsflow.video.engine import AUDIO_TAIL_SECONDS
+from newsflow.video.tts import TTSPolicyError
+
+
+class KoreanFitTTS(FakeTTS):
+    def voices(self):
+        return ["Fake Korean"]
+
+    def synthesize(self, text, target, voice, seconds, speech=None):
+        assert voice == "Fake Korean"
+        FakeTTS.synthesize(self, text, target, "offline-silence", seconds, speech)
+
+
+def fit_patches(tmp_path):
+    from PIL import ImageFont
+
+    return (
+        patch.object(FFmpegAdapter, "check", return_value=(tmp_path / "ffmpeg", tmp_path / "ffprobe", "7.0")),
+        patch.object(FFmpegAdapter, "execute"),
+        patch.object(FFmpegAdapter, "inspect", return_value={"adapter": "ffmpeg", "playable": True, "duration": 30.0}),
+        patch("newsflow.video.engine.font_path", return_value=tmp_path / "font.ttf"),
+        patch("newsflow.video.engine.ImageFont.truetype", return_value=ImageFont.load_default(size=20)),
+    )
+
+
+def test_ffmpeg_audio_fit_measures_narration_first_and_keeps_total(tmp_path):
+    scenes = [ScenePlan(10, "첫 장면 내레이션입니다.", "자막 1"), ScenePlan(10, "둘째 장면입니다.", "자막 2"),
+              ScenePlan(10, "셋째 장면입니다.", "자막 3")]
+    plan = RenderPlan("제목", scenes, [], voice="Fake Korean", fit_audio=True)
+    tts = KoreanFitTTS(seconds_per_call=2.0)
+    check, execute, inspect, font, truetype = fit_patches(tmp_path)
+    with check, execute as run, inspect, font, truetype:
+        final, metadata = FFmpegAdapter().render(plan, tmp_path, tts, lambda value: None, Event())
+    assert final == tmp_path / "result.mp4" and run.call_count == 4  # three clips and the concat
+    assert metadata["audio_fit"] is True and metadata["audio"] == "voice"
+    timings = metadata["scene_timings"]
+    assert len(timings) == 3 and abs(sum(t["seconds"] for t in timings) - 30) < 0.01
+    assert all(t["seconds"] >= t["audio_seconds"] + AUDIO_TAIL_SECONDS - 0.001 for t in timings)
+    assert all(abs(t["audio_seconds"] - 2.0) < 0.01 for t in timings)
+    assert tts.calls == [s.narration for s in scenes]  # synthesized once per scene, raw narration text
+
+
+def test_ffmpeg_audio_fit_overflow_stops_before_rendering(tmp_path):
+    scenes = [ScenePlan(10, "첫 장면.", "자막 1"), ScenePlan(10, "둘째 장면.", "자막 2"), ScenePlan(10, "셋째.", "자막 3")]
+    plan = RenderPlan("제목", scenes, [], voice="Fake Korean", fit_audio=True)
+    check, execute, inspect, font, truetype = fit_patches(tmp_path)
+    with check, execute as run, inspect, font, truetype, pytest.raises(RenderError, match="초과"):
+        FFmpegAdapter().render(plan, tmp_path, KoreanFitTTS(seconds_per_call=12.0), lambda value: None, Event())
+    assert run.call_count == 0 and not list(tmp_path.glob("*.png"))
+
+
+def test_video_studio_labels_voices_with_culture_and_never_preselects_non_korean(video, client, monkeypatch):
+    _coordinator, draft_id = video
+    monkeypatch.setattr("newsflow.gui.video_routes.sys", SimpleNamespace(platform="win32"))
+    monkeypatch.setattr(WindowsTTS, "voice_details", lambda self: [
+        {"name": "Zira", "culture": "en-US"}, {"name": "Heami", "culture": "ko-KR"},
+    ])
+    text = client.get(f"/video?draft_id={draft_id}").text
+    assert '<option value="offline-silence" selected>Offline · 무음' in text
+    assert '<option value="Heami">Windows · Heami · ko-KR</option>' in text
+    assert '<option value="Zira">Windows · Zira · en-US (한국어 아님 · 한국어 대본 읽기 품질 미보장)</option>' in text
+    assert text.index('value="Heami"') < text.index('value="Zira"')
+    assert not re.search(r'<option value="(Heami|Zira)"[^>]*selected', text)  # only the silent option is selected
+
+    def blocked(self):
+        raise TTSPolicyError("정책")
+
+    monkeypatch.setattr(WindowsTTS, "voice_details", blocked)
+    text = client.get(f"/video?draft_id={draft_id}").text
+    assert "실행 정책" in text and "Windows · " not in text
