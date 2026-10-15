@@ -42,6 +42,7 @@ LISTENING_ITEMS = {'clarity': '명료도·음량·잡음·끝 잘림', 'numbers'
 LISTENING_VALUES = {'ok': '정확', 'bad': '부정확', 'unknown': '불명'}
 LISTENING_VERDICTS = {'pass': 'PASS', 'fail': 'FAIL', 'not_verified': 'NOT VERIFIED'}
 LISTENING_KEY = 'voice_listening_last'
+SUMMARY_SEPARATOR = ' · '
 MAX_LISTENING_FILES = 50
 PREVIEW_NAME = re.compile(r'preview-[0-9a-f]{32}\.wav')
 LISTENING_NAME = re.compile(r'listening-[0-9a-f]{32}\.json')
@@ -244,7 +245,7 @@ def listening_summary(sessions: sessionmaker[Session]) -> dict[str, str] | None:
     with sessions() as session:
         row = session.get(AppSetting, LISTENING_KEY)
         value = row.value if row else ''
-    parts = value.split(' · ', 3)
+    parts = value.split(SUMMARY_SEPARATOR, 3)
     if len(parts) < 3 or parts[0] not in LISTENING_VERDICTS:
         return None
     return {'verdict': parts[0], 'label': LISTENING_VERDICTS[parts[0]], 'date': parts[1],
@@ -258,10 +259,10 @@ def record_listening(data_dir: Path, sessions: sessionmaker[Session], values: di
     short AppSetting summary. No migration: nothing else in the database changes.
     """
     listener = str(values.get('listener', '')).strip()
-    if not 1 <= len(listener) <= 40 or _CONTROL.search(listener):
-        raise SetupError('청취자 이름을 1~40자로 입력하세요.')
+    if not 1 <= len(listener) <= 40 or _CONTROL.search(listener) or SUMMARY_SEPARATOR.strip() in listener:
+        raise SetupError('청취자 이름을 1~40자로 입력하세요. 가운뎃점(·)은 쓸 수 없습니다.')
     voice = str(values.get('voice', '')).strip()
-    if len(voice) > 200 or _CONTROL.search(voice):
+    if len(voice) > 200 or _CONTROL.search(voice) or SUMMARY_SEPARATOR.strip() in voice:
         raise SetupError('음성 이름을 확인하세요.')
     rate, pause_ms = str(values.get('rate', '')), str(values.get('pause_ms', ''))
     if rate not in RATE_CHOICES or pause_ms not in PAUSE_CHOICES:
@@ -278,8 +279,9 @@ def record_listening(data_dir: Path, sessions: sessionmaker[Session], values: di
     verdict = str(values.get('verdict', ''))
     if verdict not in LISTENING_VERDICTS:
         raise SetupError('종합 판정을 PASS·FAIL·NOT VERIFIED 중에서 선택하세요.')
-    if verdict == 'pass' and any(value == 'bad' for value in items.values()):
-        raise SetupError('부정확으로 표시한 항목이 있으면 PASS로 기록할 수 없습니다. FAIL 또는 NOT VERIFIED를 선택하세요.')
+    if verdict == 'pass' and any(value != 'ok' for value in items.values()):
+        # docs/korean_tts_listening_checklist.md: PASS means every item was heard and judged 정확.
+        raise SetupError('PASS는 모든 항목이 정확일 때만 기록할 수 있습니다. 부정확·불명 항목이 있으면 FAIL 또는 NOT VERIFIED를 선택하세요.')
     notes = str(values.get('notes', '')).strip()
     if len(notes) > 500 or _CONTROL_IN_NOTES.search(notes):
         raise SetupError('메모는 500자 이하로 입력하세요.')
@@ -302,7 +304,7 @@ def record_listening(data_dir: Path, sessions: sessionmaker[Session], values: di
                    and not p.is_symlink()), key=lambda p: (p.stat().st_mtime, p.name))
     for old in kept[:max(0, len(kept) - MAX_LISTENING_FILES)]:
         old.unlink(missing_ok=True)
-    summary = f"{verdict} · {created_at[:10]} · {listener} · {voice}"[:200]
+    summary = SUMMARY_SEPARATOR.join((verdict, created_at[:10], listener, voice))[:200]
     with sessions.begin() as session:
         row = session.get(AppSetting, LISTENING_KEY)
         if row:

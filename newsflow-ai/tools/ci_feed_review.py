@@ -206,6 +206,8 @@ def classify(
         return "PASS"
     if first_status == "success" and second_status is None and not count_mismatch:
         return "NOT VERIFIED"  # second collection not run (wall-clock budget)
+    if "client_timeout" in (first_status, second_status):
+        return "NOT VERIFIED"  # the feed was slower than the review's wait; not an app defect
     return "FAIL"
 
 
@@ -290,10 +292,25 @@ def record_check(sessions, source_id: int, check: dict) -> None:
 
 
 def run_collection(coordinator: CollectionCoordinator, sessions, source_id: int, timeout: int) -> dict:
-    """One coordinator run for a single source, awaited, with the run row and its audit line."""
+    """One coordinator run for a single source, awaited, with the run row and its audit line.
+
+    A run that outlives the client wait is reported as ``client_timeout`` (NOT VERIFIED, never
+    FAIL). The worker is then drained for a further bounded time so the next feed does not hit
+    CollectionBusy; ``drained`` says whether that worked.
+    """
     run_id = coordinator.start([source_id])
-    assert coordinator.future is not None
-    coordinator.future.result(timeout=timeout * 10 + 30)
+    future = coordinator.future
+    assert future is not None
+    try:
+        future.result(timeout=timeout * 10 + 30)
+    except TimeoutError:
+        try:
+            future.result(timeout=timeout * 30 + 60)
+            drained = True
+        except TimeoutError:
+            drained = False
+        return {"run_id": run_id, "status": "client_timeout", "drained": drained, "added": None,
+                "duplicates": None, "audit_event": None, "audit_message": None}
     with sessions() as session:
         run = session.get(CollectionRun, run_id)
         log = session.scalar(
@@ -401,6 +418,10 @@ def explain_robots(
         "decision": "deny",
         "decision_reason": None,
         "saved": None,
+        # The adapter checks robots.txt for the origin of every redirect hop of the feed; this
+        # diagnostic explains the configured feed origin only, so a denial on a redirect target
+        # can show decision "allow" here.
+        "scope": "configured feed origin only; feed redirect targets are not explained",
     }
     target = info["robots_url"]
     response = None
@@ -699,11 +720,12 @@ def _review_feeds(feeds, output: Path, max_seconds: float, timeout: int, adapter
                 session.add(AppSetting(key="request_timeout", value=str(timeout)))
             source_ids = register_sources(sessions, feeds)
             # Pass 1: connection test, then one collection, one host at a time.
+            stalled = False  # a collection worker that could not be drained blocks every later start
             for feed in feeds:
                 source_id = source_ids.get(feed["id"])
                 if source_id is None:
                     continue
-                if time.monotonic() - started > max_seconds * PASS1_SHARE:
+                if stalled or time.monotonic() - started > max_seconds * PASS1_SHARE:
                     feed["reason"] = "budget"
                     continue
                 feed["attempted"], feed["reason"] = True, None
@@ -715,6 +737,7 @@ def _review_feeds(feeds, output: Path, max_seconds: float, timeout: int, adapter
                     if check["status"] == "pass":
                         first = run_collection(coordinator, sessions, source_id, timeout)
                         feed["collection"] = {"first": first, "second": None}
+                        stalled = first["status"] == "client_timeout" and not first["drained"]
                     else:
                         _diagnose(feed, check, adapter, transport, timeout, output)
                 except Exception as exc:  # noqa: BLE001 - one feed never stops the review
@@ -728,7 +751,10 @@ def _review_feeds(feeds, output: Path, max_seconds: float, timeout: int, adapter
                     continue
                 source_id = source_ids[feed["id"]]
                 try:
-                    if collection["first"]["status"] == "success" and time.monotonic() - started <= max_seconds:
+                    if (
+                        collection["first"]["status"] == "success" and not stalled
+                        and time.monotonic() - started <= max_seconds
+                    ):
                         collection["second"] = run_collection(coordinator, sessions, source_id, timeout)
                     collection.update(collection_evidence(sessions, source_id))
                     feed["samples"] = samples(sessions, source_id)

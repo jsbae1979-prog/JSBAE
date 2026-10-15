@@ -1,4 +1,5 @@
 """First-run setup, failure recovery, data preservation and production boundaries."""
+import os
 from pathlib import Path
 
 import pytest
@@ -260,13 +261,16 @@ def test_listening_record_service_rules_retention_and_summary(app):
     assert listening_summary(sessions) == {'verdict': 'pass', 'label': 'PASS', 'date': date,
                                            'listener': '홍길동', 'voice': 'Local Korean'}
     assert diagnostics(data_dir, sessions)['quality'] == f'사람 청취 결과: PASS ({date}, 홍길동)'
-    for bad in [{'numbers': 'bad'}, {'listener': ''}, {'listener': 'a\tb'}, {'clarity': 'x'}, {'verdict': 'ok'},
+    for bad in [{'numbers': 'bad'}, {'numbers': 'unknown'}, {'listener': '김 · 철수'}, {'listener': ''}, {'listener': 'a\tb'}, {'clarity': 'x'}, {'verdict': 'ok'},
                 {'preview': 'preview-zz.wav'}, {'notes': 'n' * 501}, {'rate': '5'}, {'pause_ms': '999'}]:
         with pytest.raises(SetupError):
             record_listening(data_dir, sessions, {**values, **bad})
     assert listening_summary(sessions)['verdict'] == 'pass'  # rejected forms change nothing
     record_listening(data_dir, sessions, {**values, 'numbers': 'bad', 'verdict': 'fail', 'notes': '줄\n바꿈 허용'})
     assert listening_summary(sessions)['verdict'] == 'fail'
+    # Pruning is by modification time; make the first record unambiguously oldest so the test does not
+    # depend on filesystem timestamp granularity (NTFS ticks can give several files the same mtime).
+    os.utime(data_dir / 'voice-listening' / record['file'], (1_000_000, 1_000_000))
     for _ in range(55):
         record_listening(data_dir, sessions, {**values, 'verdict': 'not_verified'})
     kept = list((data_dir / 'voice-listening').glob('listening-*.json'))

@@ -88,8 +88,10 @@ def test_candidates_file_is_consistent(tool):
     assert default["role"] == "app_default" and default["confidence"] == "high"
     main_source = (ROOT / "src/newsflow/main.py").read_text(encoding="utf-8")
     assert default["url"] in main_source  # the app's seeded default source, deduplicated by URL
-    assert by_id["bbc-news"]["expectation"] == "BLOCKED_robots"
-    assert by_id["hn-front"]["expectation"] == "BLOCKED_crawl_delay" and by_id["hn-front"]["role"] == "control"
+    # Expectations record what the Phase 5C.1 Windows run observed (robots.txt first-match rules).
+    assert default["expectation"] == "BLOCKED_robots" and by_id["google-news-kr-business"]["expectation"] == "BLOCKED_robots"
+    assert by_id["bbc-news"]["expectation"] == "unknown"  # PASS and robots-blocked in the same run: unstable
+    assert by_id["hn-front"]["expectation"] == "BLOCKED_robots" and by_id["hn-front"]["role"] == "control"
     assert by_id["dw-en-rdf"]["format_expected"] == "rdf"
 
 
@@ -409,3 +411,38 @@ def test_cli_exit_zero_without_network(tool, tmp_path):
     assert tool.main(["--mode", "windows", "--output", str(tmp_path / "w"), "--candidates", str(tmp_path / "missing.json")]) == 0
     broken = json.loads((tmp_path / "w" / "feed-review.json").read_text(encoding="utf-8"))
     assert broken["error_type"] == "FileNotFoundError" and broken["summary"]["feeds"] == 0
+
+
+class _SlowFuture:
+    def __init__(self, waits_before_done: int):
+        self.waits = waits_before_done
+
+    def result(self, timeout=None):
+        if self.waits > 0:
+            self.waits -= 1
+            raise TimeoutError
+
+
+class _SlowCoordinator:
+    def __init__(self, waits_before_done: int):
+        self.future = None
+        self.waits = waits_before_done
+
+    def start(self, source_ids):
+        self.future = _SlowFuture(self.waits)
+        return 7
+
+
+def test_slow_collection_is_not_verified_and_drained(tool):
+    drained = tool.run_collection(_SlowCoordinator(1), None, 1, 10)
+    assert drained["status"] == "client_timeout" and drained["drained"] is True
+    stuck = tool.run_collection(_SlowCoordinator(2), None, 1, 10)
+    assert stuck["status"] == "client_timeout" and stuck["drained"] is False
+    status = tool.classify(attempted=True, check_status="pass", kind=None, feed_error=False,
+                           first_status="client_timeout", second_status=None)
+    assert status == "NOT VERIFIED"
+    status = tool.classify(attempted=True, check_status="pass", kind=None, feed_error=False,
+                           first_status="success", second_status="client_timeout")
+    assert status == "NOT VERIFIED"
+    assert tool.classify(attempted=True, check_status="pass", kind=None, feed_error=False,
+                         first_status="failed", second_status=None) == "FAIL"

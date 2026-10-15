@@ -138,3 +138,26 @@ def test_main_blocks_when_the_app_holds_its_locks(tool, app, tmp_path, monkeypat
     finally:
         lock.release()
     assert result["outcome"] == "BLOCKED" and result["reason"] == "app_running"
+
+
+def test_refusal_before_sending_records_zero_external_calls(tool, app, collected, tmp_path):
+    from newsflow.intelligence.provider import ProviderKeyMissing
+
+    store, _forbidden = collected
+    write_settings(app.state.sessions, "openai", "gpt-4o-mini", True, 100_000, 20)
+    store.save(KEY)
+    result = run(tool, app, store, tmp_path, provider=ScriptProvider(ProviderKeyMissing("AI API 키가 설정되지 않았습니다.")))
+    assert result["outcome"] == "FAIL" and result["code"] == "ai_key_missing" and result["external_ai_calls"] == 0
+
+
+def test_evidence_scrub_uses_the_stored_key_as_well_as_the_environment(tool, tmp_path, monkeypatch):
+    from newsflow.intelligence import credentials
+
+    monkeypatch.setattr(credentials, "_native_cipher", lambda: FakeCipher())
+    data = tmp_path / "data"
+    AIKeyStore(data, FakeCipher()).save(KEY)
+    keys = tool.resolved_keys(data, environ={"NEWSFLOW_AI_API_KEY": "env-key-value-1234567890abcdef"})
+    assert keys == [KEY, "env-key-value-1234567890abcdef"]
+    with pytest.raises(RuntimeError):
+        tool.write_evidence({"note": f"x{KEY}x"}, tmp_path / "out", keys)
+    assert tool.write_evidence({"note": "clean"}, tmp_path / "out", keys).is_file()

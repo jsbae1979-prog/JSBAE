@@ -20,6 +20,8 @@ Rules, in the order they run:
  4. Percent: "3.5%p" → "3.5퍼센트포인트", "3.5%" → "3.5퍼센트".
  5. Currency prefixes move after the number: "$100" → "100달러", "US$100" → "100달러",
     "€5.5" → "5.5유로", "£20" → "20파운드", "₩1,250,000" → "125만 원" (together with rule 7).
+    A Korean scale word keeps its place: "$100만" → "100만 달러", "₩5만" → "5만 원", and
+    "$5억 달러" → "5억 달러" (the written currency is not repeated).
  6. Units right after a number (optional space, not followed by a letter or digit):
     "12km" → "12킬로미터", "3 m" → "3미터", "5cm" → "5센티미터", "2mm" → "2밀리미터",
     "60kg" → "60킬로그램", "500g" → "500그램", "3t" → "3톤", "2L" → "2리터", "350mL" → "350밀리리터",
@@ -28,12 +30,15 @@ Rules, in the order they run:
  7. Large numbers read in 만/억/조 groups, digits kept inside each group:
     "1,250,000" → "125만", "12,000" → "1만 2000", "10,000" → "1만", "123,456,789" → "1억 2345만 6789",
     "9,500" → "9500", "1,234.5" → "1234.5". Four-digit years, runs of 15 or more digits and digits
-    glued to letters, "-", ".", "/" or ":" (phone numbers, versions, model codes) are left alone.
+    glued to letters, "-", ".", "/" or ":" (phone numbers, versions, model codes) are left alone, and so
+    are digit runs with a leading zero, which are identifiers rather than quantities ("005930" stock
+    code, "01012345678" phone number, "06236" postcode).
  8. Ranges between numbers: "3~5" → "3에서 5", "3%∼5%" → "3퍼센트에서 5퍼센트"; never a hyphen.
  9. Upper-case acronyms of two to five letters are spelled with Korean letter names
     ("AI가" → "에이아이가", "KBS" → "케이비에스") unless pronounced as a word ("KOSPI" → "코스피",
-    "NASA" → "나사"); fixed tokens "5G" → "파이브지", "4K" → "포케이", "3D" → "쓰리디",
-    "COVID-19" → "코비드 19". Mixed case ("iPhone", "Google"), six or more letters ("ABCDEFG") and
+    "NASA" → "나사", "KIA" → "기아", "KAIST" → "카이스트", "POSCO" → "포스코", "MERS" → "메르스",
+    "AIDS" → "에이즈", "SARS" → "사스"); fixed tokens "5G" → "파이브지", "4K" → "포케이", "3D" → "쓰리디",
+    "COVID-19" → "코비드 19", "K-POP" → "케이팝". Mixed case ("iPhone", "Google"), six or more letters ("ABCDEFG") and
     single-letter codes ("X100", "A5") stay; ordinary English words stay for SAPI to read.
 10. Whitespace collapses to single spaces.
 """
@@ -53,8 +58,10 @@ LETTERS = {
 PRONOUNCED = {
     "NASA": "나사", "FIFA": "피파", "NATO": "나토", "UNESCO": "유네스코", "OPEC": "오펙", "ASEAN": "아세안",
     "APEC": "에이펙", "KOSPI": "코스피", "KOSDAQ": "코스닥", "COVID": "코비드", "UEFA": "유에파",
+    # Latin-letter names that Korean news reads as words, not letter by letter.
+    "KIA": "기아", "KAIST": "카이스트", "POSCO": "포스코", "MERS": "메르스", "AIDS": "에이즈", "SARS": "사스",
 }
-FIXED_TOKENS = {"5G": "파이브지", "4K": "포케이", "3D": "쓰리디", "COVID-19": "코비드 19"}
+FIXED_TOKENS = {"5G": "파이브지", "4K": "포케이", "3D": "쓰리디", "COVID-19": "코비드 19", "K-POP": "케이팝"}
 CURRENCIES = {"$": "달러", "€": "유로", "£": "파운드", "₩": "원"}
 UNITS = {
     "km/h": "킬로미터", "kWh": "킬로와트시", "GHz": "기가헤르츠", "MHz": "메가헤르츠", "MW": "메가와트",
@@ -77,7 +84,9 @@ _DATE = re.compile(r"(?<![\d.A-Za-z])(\d{4})([-./])(\d{1,2})\2(\d{1,2})(?!\d)")
 _TIME = re.compile(r"(?<![\d:])([01]?\d|2[0-3]):([0-5]\d)(?![\d:])")
 _PERCENT_POINT = re.compile(_NUMBER + r"\s?%p(?![A-Za-z])")
 _PERCENT = re.compile(_NUMBER + r"\s?%")
-_CURRENCY = re.compile(r"(?:US)?([$€£₩])\s?(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?")
+_CURRENCY = re.compile(
+    r"(?:US)?([$€£₩])\s?(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?([만억조])?(?=(\s*(?:달러|유로|파운드|원))?)"
+)
 _UNIT = re.compile(
     _NUMBER + r"\s?(" + "|".join(re.escape(unit) for unit in UNITS) + r")(?![A-Za-z0-9])"
 )
@@ -153,12 +162,25 @@ def read_number(digits: str) -> str:
     return " ".join(parts)
 
 
+def _currency(match: re.Match) -> str:
+    """'$100' → '100달러'; with a Korean scale word '$100만' → '100만 달러' (never '100달러만')."""
+    symbol, number, fraction, scale, written = match.groups()
+    amount = f"{number}{fraction or ''}"
+    if not scale:
+        return f"{amount}{CURRENCIES[symbol]}"
+    # '$5억 달러': the currency is already written after the scale word, so do not repeat it.
+    return f"{amount}{scale}" if written else f"{amount}{scale} {CURRENCIES[symbol]}"
+
+
 def _large(match: re.Match) -> str:
     groups = match.groups()
     digits = groups[0].replace(",", "")
     fraction = groups[1] if len(groups) == 3 else ""
     following = groups[-1]
     if len(digits) >= 15:
+        return match.group(0)
+    if len(digits) > 1 and digits.startswith("0"):
+        # A leading zero marks an identifier (stock code 005930, phone 010…, postcode 06236), never a quantity.
         return match.group(0)
     if fraction:
         return digits + fraction
@@ -183,7 +205,7 @@ def normalize_for_speech(text: str) -> str:
     spoken = _TIME.sub(_time, spoken)
     spoken = _PERCENT_POINT.sub(lambda m: f"{m.group(1)}{m.group(2) or ''}퍼센트포인트", spoken)
     spoken = _PERCENT.sub(lambda m: f"{m.group(1)}{m.group(2) or ''}퍼센트", spoken)
-    spoken = _CURRENCY.sub(lambda m: f"{m.group(2)}{m.group(3) or ''}{CURRENCIES[m.group(1)]}", spoken)
+    spoken = _CURRENCY.sub(_currency, spoken)
     spoken = _UNIT.sub(_unit, spoken)
     spoken = _GROUPED.sub(_large, spoken)
     spoken = _PLAIN.sub(_large, spoken)

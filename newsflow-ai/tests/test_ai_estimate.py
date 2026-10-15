@@ -255,3 +255,49 @@ def test_start_and_job_pages_show_estimate_then_actual_usage(client, app, monkey
         runs = session.scalars(select(IntelligenceRun).where(IntelligenceRun.provider == "openai")).all()
         assert {run.options["max_tokens"] for run in runs} == {ANALYSIS_MAX_TOKENS, SCRIPT_MAX_TOKENS[30]}
         assert all(run.options["model"] == "gpt-4o-mini" and run.options["timeout"] == 20 for run in runs)
+
+
+def test_rendered_price_form_carries_its_own_csrf_token_and_saves(client, app, monkeypatch):
+    """Submit exactly the fields the rendered form contains, as a browser would."""
+    import re
+
+    app.state.ai_keys = AIKeyStore(app.state.config.data_dir, FakeCipher())
+    monkeypatch.delenv("NEWSFLOW_AI_API_KEY", raising=False)
+    page = client.get("/ai-settings").text
+    form = re.search(r'<form method="post" action="/ai-settings/prices".*?</form>', page, re.DOTALL).group(0)
+    fields = dict(re.findall(r'<input[^>]*name="([^"]+)"[^>]*value="([^"]*)"', form))
+    assert fields.get("csrf_token"), "the prices form must render csrf_field()"
+    fields.update({"input_per_1m": "0.15", "output_per_1m": "0.60", "currency": "USD"})
+    saved = client.post("/ai-settings/prices", data=fields)
+    assert saved.status_code == 200 and "단가를 저장했습니다" in saved.text
+    # Every POST form on the page renders its own token.
+    assert page.count('name="csrf_token"') == page.count('method="post"')
+
+
+def test_retried_failed_script_tokens_stay_in_the_job_total(client, app, monkeypatch):
+    from newsflow.video.engine import FakeRenderAdapter
+    from newsflow.video.tts import FakeTTS
+
+    monkeypatch.setenv("NEWSFLOW_AI_API_KEY", KEY)
+    _collect_fixture(app)
+    write_settings(app.state.sessions, "openai", "gpt-4o-mini", True, 100_000, 20)
+    usage = {"prompt_tokens": 50, "completion_tokens": 20, "total_tokens": 70}
+    good = {
+        "title": "실제 뉴스 요약", "hook": "오늘의 보도입니다.", "summary": "보도된 내용의 요약입니다.", "closing": "원문을 확인하세요.",
+        "scenes": [{"seconds": 10, "narration": f"{n} 장면 내용입니다.", "caption": "자막", "material": "카드"} for n in ("첫", "둘째", "셋째")],
+    }
+    backend = app.state.autopilot_backend
+    backend.intelligence.provider = _ScriptProvider({"title": "형식이 틀린 응답"}, usage=usage)
+    app.state.video.tts, app.state.video.engine = FakeTTS(), FakeRenderAdapter()
+    response = client.post("/autopilot/start", data={"csrf_token": csrf(client), "source": "feeds", "mode": "easy", "ai": "openai", "duration": "30"}, follow_redirects=False)
+    app.state.autopilot.future.result(timeout=20)
+    job_id = response.headers["location"].rsplit("/", 1)[1]
+    failed = app.state.autopilot.snapshot(job_id)
+    assert failed["status"] == "failed" and failed["error_code"] == "ai_bad_response" and failed["retryable"]
+    backend.intelligence.provider = _ScriptProvider(good, usage=usage)
+    app.state.autopilot.retry(job_id, failed["revision"])
+    app.state.autopilot.future.result(timeout=20)
+    assert app.state.autopilot.snapshot(job_id)["current_stage"] == "script"
+    page = client.get(f"/autopilot/jobs/{job_id}").text
+    # analysis 70 + failed script 70 + successful script 70; the failed attempt is not dropped after the retry.
+    assert "실제 사용 210 토큰 (호출 3회 · 실패 1회 포함" in page

@@ -15,7 +15,14 @@ import sys
 from pathlib import Path
 
 from newsflow.intelligence.korean import speech_seconds
-from newsflow.video.tts import SpeechSettings, TTSError, WindowsTTS, wav_duration, wav_has_signal
+from newsflow.video.tts import (
+    PREVIEW_TEXT,
+    SpeechSettings,
+    TTSError,
+    WindowsTTS,
+    wav_duration,
+    wav_has_signal,
+)
 
 SAMPLE_TEXT = "2026년 10월 15일, AI 기술로 3개 기사를 45초 영상으로 만들었습니다. 매출은 1,250,000달러였습니다."
 RATES = (-3, 0, 3)
@@ -90,7 +97,7 @@ def probe(output: Path, tts: WindowsTTS | None = None, platform: str = sys.platf
                 row["previews"].append({
                     "rate": rate, "pause_ms": pause, "seconds": round(wav_duration(target), 2),
                     "signal": wav_has_signal(target),
-                    "estimated_seconds": speech_seconds(spoken(getattr(tts, "preview_text", "") or ""), rate, pause) or None,
+                    "estimated_seconds": speech_seconds(spoken(getattr(tts, "preview_text", PREVIEW_TEXT)), rate, pause) or None,
                 })
             except TTSError as exc:
                 row["errors"].append({"rate": rate, "pause_ms": pause, "error": str(exc)[:200]})

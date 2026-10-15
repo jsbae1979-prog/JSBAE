@@ -42,6 +42,7 @@ from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import external_ready, read_prices, read_settings, usage_this_month
 
 ENV_FLAG = "NEWSFLOW_AI_LIVE_TEST"
+PRE_SEND_CODES = frozenset({"ai_key_missing", "ai_budget", "ai_consent"})
 OUTPUT_NAME = "ai-live-check.json"
 CONFIRM_WORD = "동의"
 
@@ -150,6 +151,9 @@ def run(
         try:
             draft_id = live.generate(analysis_id, duration, mode="openai", consent=True, options=options)
         except IntelligenceError as exc:
+            # These codes are raised by the gate or the key store before any request is opened.
+            if exc.code in PRE_SEND_CODES:
+                result["external_ai_calls"] = 0
             result.update({"outcome": "FAIL", "code": exc.code, "message": str(exc), "retryable": exc.retryable,
                            "retried": bool(getattr(provider, "last_retried", False))})
             return result
@@ -208,9 +212,30 @@ def connection_check(*, model: str, environ: dict | None = None, provider=None) 
     return result
 
 
-def write_evidence(result: dict, output: Path, key: str = "") -> Path:
+def resolved_keys(data_dir: Path | None, environ: dict | None = None) -> list[str]:
+    """Every key the tool could have used (stored DPAPI key and environment), for the evidence scrub."""
+    environ = os.environ if environ is None else environ
+    keys = []
+    try:
+        if data_dir is None:
+            from newsflow.config import Settings
+
+            data_dir = Settings.from_env().data_dir
+        stored = AIKeyStore(data_dir).key()
+        if stored:
+            keys.append(stored)
+    except (CredentialError, OSError, ValueError):
+        pass
+    env_key = (environ.get("NEWSFLOW_AI_API_KEY") or "").strip()
+    if env_key:
+        keys.append(env_key)
+    return keys
+
+
+def write_evidence(result: dict, output: Path, key: str | list[str] = "") -> Path:
     encoded = json.dumps(result, ensure_ascii=False, indent=2, default=str)
-    if key and key in encoded:  # defensive: evidence must never carry key material
+    keys = [key] if isinstance(key, str) else list(key)
+    if any(k and k in encoded for k in keys):  # defensive: evidence must never carry key material
         raise RuntimeError("evidence would contain key material")
     output.mkdir(parents=True, exist_ok=True)
     target = output / OUTPUT_NAME
@@ -245,12 +270,7 @@ def main() -> int:
         write_evidence(result, args.output)
         print("도구 오류로 중단했습니다. 증거 파일을 확인하세요.")
         return 1
-    key = ""
-    try:
-        key = AIKeyStore(args.data_dir).key() if args.data_dir else os.environ.get("NEWSFLOW_AI_API_KEY", "")
-    except CredentialError:
-        key = ""
-    target = write_evidence(result, args.output, key)
+    target = write_evidence(result, args.output, resolved_keys(args.data_dir))
     print(f"결과 {result['outcome']} · 외부 호출 {result['external_ai_calls']}회 · 증거 {target}")
     if result["outcome"] != "PASS":
         print(result.get("message") or result.get("reason", ""))

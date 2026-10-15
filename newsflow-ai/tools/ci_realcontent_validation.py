@@ -251,13 +251,21 @@ def live_rss(mode: str, url: str, env: dict, output: Path, result: dict) -> None
                 http.post(f"/sources/{match.group(1)}/test", {}, timeout=75)
             except Exception as exc:  # noqa: BLE001 - the server-side row is still the evidence
                 client_timeout = type(exc).__name__
-            with closing(sqlite3.connect((data if mode != "windows" else data / "NewsFlowAI") / "newsflow.db")) as db:
-                row = db.execute("SELECT status, kind, message, article_count FROM news_source_checks").fetchone()
+            database = (data if mode != "windows" else data / "NewsFlowAI") / "newsflow.db"
+            # After a client timeout the server may still be inside the connection test; wait for its row.
+            waited, row = 0.0, None
+            while True:
+                with closing(sqlite3.connect(database)) as db:
+                    row = db.execute("SELECT status, kind, message, article_count FROM news_source_checks").fetchone()
+                if row or client_timeout is None or waited >= 90:
+                    break
+                time.sleep(2)
+                waited += 2
             result["live_public_rss"] = {
                 "url": url, "status": "PASS" if row and row[0] == "pass" else "NOT VERIFIED",
                 "kind": row[1] if row else None, "message": row[2] if row else "no check row", "articles": row[3] if row else 0,
                 "note": "network-dependent; articles were not stored by the connection test",
-                "client_timeout": client_timeout,
+                "client_timeout": client_timeout, "row_wait_seconds": waited,
             }
         except Exception as exc:  # noqa: BLE001 - network is outside this validation's control
             result["live_public_rss"] = {"url": url, "status": "NOT VERIFIED", "error_type": type(exc).__name__}

@@ -158,6 +158,7 @@ def listening_form(client, **overrides):
     {"listener": ""}, {"listener": "   "}, {"listener": "a\x00b"}, {"listener": "가" * 41},
     {"clarity": "maybe"}, {"numbers": None}, {"subtitle_sync": ""},
     {"verdict": "pass", "numbers": "bad"}, {"verdict": "pass", "english": "bad", "notes": "그래도 통과?"},
+    {"verdict": "pass", "dates": "unknown"}, {"listener": "김 · 철수"}, {"voice": "가 · 나"},
     {"verdict": "excellent"}, {"verdict": None}, {"rate": "9"}, {"pause_ms": "1"},
     {"preview": "../newsflow.db"}, {"preview": "preview-notahex.wav"}, {"notes": "x" * 501}, {"voice": "v" * 201},
 ])

@@ -116,7 +116,7 @@ jobs:
       - name: Actual real-content flow, RSS tests, reviews, Korean voice probe and live RSS attempt
         timeout-minutes: 25
         run: |
-          python tools/ci_realcontent_validation.py --mode windows --output validation-output/realcontent --live-rss https://feeds.bbci.co.uk/news/rss.xml
+          python tools/ci_realcontent_validation.py --mode windows --output validation-output/realcontent --live-rss 'https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Public RSS feed review through the registered adapter (never fails the run)
         timeout-minutes: 12

@@ -26,7 +26,9 @@ MAX_LIMIT = 50_000_000
 # Output-token reservation per script length (sized from the Script schema maxima) and for
 # the analysis call; both stay inside Options' 200..3000 bound.
 SCRIPT_MAX_TOKENS = {30: 1400, 45: 1800, 60: 2200}
-ANALYSIS_MAX_TOKENS = 900
+# The analysis answer for one article may reach ~1600 Korean characters (overview 600 + reason 500 +
+# uncertainties 500), so its reservation covers that maximum instead of truncating a valid answer.
+ANALYSIS_MAX_TOKENS = 1600
 CURRENCIES = ("USD", "KRW")
 PRICE_DISCLAIMER = (
     "단가는 사용자가 입력한 값이며 공식 요금표를 확인하세요. "

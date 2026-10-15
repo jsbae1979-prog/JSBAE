@@ -10,10 +10,10 @@
       "country": "KR",
       "format_expected": "rss2",
       "official_rss_page": "unknown",
-      "terms_note": "앱 기본 출처와 같은 주소입니다(URL 기준 중복 제거). Google 뉴스 이용약관 확인 필요. 집계 피드이므로 링크 도메인은 news.google.com 입니다.",
+      "terms_note": "앱 기본 출처와 같은 주소입니다(URL 기준 중복 제거). Google 뉴스 이용약관 확인 필요. 집계 피드이므로 링크 도메인은 news.google.com 입니다. Phase 5C.1 Windows 실행 38718358049(2026-10-15) 관찰: robots.txt `*` 그룹 첫 일치 규칙 `Disallow: /` → 현행 robots 정책에서 BLOCKED. 앱 기본 출처(비활성)는 이 정책에서 수집할 수 없습니다.",
       "confidence": "high",
       "enabled": true,
-      "expectation": "PASS",
+      "expectation": "BLOCKED_robots",
       "role": "app_default"
     },
     {
@@ -24,10 +24,10 @@
       "country": "KR",
       "format_expected": "rss2",
       "official_rss_page": "unknown",
-      "terms_note": "Google 뉴스 이용약관 확인 필요. 주요 뉴스 피드와 기사 중복이 있을 수 있습니다(제목 병합 관찰용).",
+      "terms_note": "Google 뉴스 이용약관 확인 필요. 주요 뉴스 피드와 기사 중복이 있을 수 있습니다(제목 병합 관찰용). Phase 5C.1 Windows 실행 38718358049(2026-10-15) 관찰: robots.txt `Disallow: /` → BLOCKED.",
       "confidence": "high",
       "enabled": true,
-      "expectation": "PASS",
+      "expectation": "BLOCKED_robots",
       "role": ""
     },
     {
@@ -206,10 +206,10 @@
       "country": "GB",
       "format_expected": "rss2",
       "official_rss_page": "unknown",
-      "terms_note": "Phase 5C Windows 검증에서 robots.txt 정책으로 kind=robots 기록. 앱의 보수적 정책이 막은 것이며 결함이 아닙니다.",
+      "terms_note": "Phase 5C Windows 실서버 연결 테스트에서 robots 차단이 기록되었고, Phase 5C.1 Windows 실행 38718358049(2026-10-15) 관찰: 피드 검토는 PASS(31건)였지만 같은 실행의 run.bat 연결 테스트는 robots 차단 → robots 응답이 요청마다 달라 결과가 안정적이지 않습니다.",
       "confidence": "high",
       "enabled": true,
-      "expectation": "BLOCKED_robots",
+      "expectation": "unknown",
       "role": ""
     },
     {
@@ -290,10 +290,10 @@
       "country": "US",
       "format_expected": "rss2",
       "official_rss_page": "unknown",
-      "terms_note": "대조군: robots.txt에 Crawl-delay가 있어 앱 정책상 수집하지 않아야 합니다(BLOCKED_crawl_delay). 뉴스 출처로 쓰지 않습니다.",
+      "terms_note": "대조군: 뉴스 출처로 쓰지 않습니다. Phase 5C.1 Windows 실행 38718358049(2026-10-15) 관찰: robots.txt 첫 일치 규칙 `Disallow: /r`(Python 3.12 접두사 일치로 /rss도 해당), crawl-delay 30 → BLOCKED(robots).",
       "confidence": "high",
       "enabled": true,
-      "expectation": "BLOCKED_crawl_delay",
+      "expectation": "BLOCKED_robots",
       "role": "control"
     },
     {
@@ -304,10 +304,10 @@
       "country": "US",
       "format_expected": "rss2",
       "official_rss_page": "unknown",
-      "terms_note": "대조군: WordPress 표준 RSS 2.0 피드로 파서 기준선을 확인합니다. 뉴스 출처로 쓰지 않습니다.",
+      "terms_note": "대조군: WordPress 표준 RSS 2.0 피드로 파서 기준선을 확인합니다. 뉴스 출처로 쓰지 않습니다. Phase 5C.1 Windows 실행 38718358049(2026-10-15) 관찰: 응답이 2 MiB 상한을 넘어 NOT VERIFIED(정책 유지).",
       "confidence": "high",
       "enabled": true,
-      "expectation": "PASS",
+      "expectation": "unknown",
       "role": "control"
     }
   ]

@@ -75,6 +75,12 @@ def test_voice_probe_measures_only_korean_voices_and_never_claims_quality(tmp_pa
     row = result["measurements"][0]
     assert {(p["rate"], p["pause_ms"]) for p in row["previews"]} == {(-3, 250), (0, 250), (3, 250), (0, 0), (0, 600)}
     assert all(p["signal"] for p in row["previews"]) and row["sample"]["signal"]
+    del FakeKoreanTTS.preview_text  # the real WindowsTTS has no such attribute: the probe uses PREVIEW_TEXT
+    try:
+        again = probe.probe(tmp_path / "again", tts=FakeKoreanTTS(), platform="win32")
+    finally:
+        FakeKoreanTTS.preview_text = "안녕하세요. 미리 듣기입니다."
+    assert all(p["estimated_seconds"] and p["estimated_seconds"] > 5 for p in again["measurements"][0]["previews"])
     assert result["registry"]["hive_counts"] == {"onecore": 1, "sapi": 1} and result["registry"]["korean_names"] == ["Microsoft Heami"]
     assert result["korean_tts"].startswith("PASS (non-silent Korean WAV") and "NOT VERIFIED" in result["korean_tts"]
     assert result["korean_pronunciation"] == "NOT VERIFIED (requires human listening)"

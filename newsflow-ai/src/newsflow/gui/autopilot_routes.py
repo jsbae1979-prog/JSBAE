@@ -20,6 +20,7 @@ from newsflow.autopilot.samples import SAMPLE_URL
 from newsflow.db.models import (
     AIUsage,
     AppSetting,
+    AutopilotArtifact,
     ContentDraft,
     NewsArticle,
     NewsSource,
@@ -106,10 +107,19 @@ def _ai_usage(request: Request, snapshot: dict[str, Any], article: NewsArticle |
         return None, None
     sessions = request.app.state.sessions
     estimate = actual = None
-    run_ids = [snapshot[key] for key in ("analysis_run_id", "script_run_id") if snapshot.get(key)]
-    if run_ids:
-        with sessions() as session:
-            rows = session.scalars(select(AIUsage).where(AIUsage.run_id.in_(run_ids)).order_by(AIUsage.id)).all()
+    with sessions() as session:
+        # Every analysis/script run the job ever used, including failed attempts that were retried.
+        run_ids = {
+            int(reference) for reference in session.scalars(select(AutopilotArtifact.reference).where(
+                AutopilotArtifact.job_id == snapshot["id"],
+                AutopilotArtifact.kind.in_(("analysis_run_id", "script_run_id")),
+            ))
+        }
+        run_ids |= {snapshot[key] for key in ("analysis_run_id", "script_run_id") if snapshot.get(key)}
+        rows = (
+            session.scalars(select(AIUsage).where(AIUsage.run_id.in_(run_ids)).order_by(AIUsage.id)).all()
+            if run_ids else []
+        )
         if rows:
             actual = {
                 "calls": len(rows), "failed": sum(1 for row in rows if row.status != "success"),
