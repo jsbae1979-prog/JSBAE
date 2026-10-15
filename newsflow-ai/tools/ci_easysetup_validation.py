@@ -4,21 +4,23 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sqlite3
 import subprocess
 import sys
 import wave
+from contextlib import closing
 from itertools import pairwise
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlsplit
 
-from ci_autopilot_validation import database_evidence, notice, open_job, submit, wait_job
+from ci_autopilot_validation import database_evidence, notice, submit, wait_job
 from ci_validation import BASE, HTTP, ROOT, child_env, start, stop
 
 
 def state(root: Path) -> dict:
-    with sqlite3.connect(root / 'newsflow.db') as db:
+    with closing(sqlite3.connect(root / 'newsflow.db')) as db:
         row = db.execute("SELECT value FROM app_settings WHERE key='easy_setup'").fetchone()
         return json.loads(row[0]) if row else {}
 
@@ -121,9 +123,12 @@ def run(mode: str, output: Path, executable: str | None, result: dict) -> None:
                         form.locator(f'input[name="duration"][value="{duration}"]').check()
                         form.locator('select[name="source"]').select_option('sample')
                         submit(page, form, '/autopilot/start')
+                    page.wait_for_url(re.compile(re.escape(BASE) + r'/autopilot/jobs/[0-9a-f]{32}$'))
                     job_id = page.url.rsplit('/', 1)[1]
                     job = wait_job(job_id, 'completed', timeout=900)
-                    open_job(page, job_id)
+                    # Let the application's existing progress refresh settle; issuing another
+                    # goto here races the completed-state navigation on faster Windows hosts.
+                    page.locator('[data-job-status="completed"]').wait_for(timeout=60000)
                     video = page.locator('video')
                     video.wait_for()
                     video.evaluate('async v=>{v.muted=true; await v.play()}')
@@ -142,7 +147,7 @@ def run(mode: str, output: Path, executable: str | None, result: dict) -> None:
                     assert abs(float(meta['format']['duration']) - duration) < .2
                     assert abs(float(v['start_time']) - float(a['start_time'])) < .1
                     assert abs(float(v['duration']) - float(a['duration'])) < .15
-                    with sqlite3.connect(root / 'newsflow.db') as db:
+                    with closing(sqlite3.connect(root / 'newsflow.db')) as db:
                         row = db.execute('SELECT font_size,position_y,cues FROM subtitle_tracks WHERE project_id=?', (job['video_project_id'],)).fetchone()
                         assert row[:2] == (56, 1280)
                         cues = json.loads(row[2])
@@ -185,7 +190,6 @@ def run(mode: str, output: Path, executable: str | None, result: dict) -> None:
                         result['korean_speech'] = 'NOT VERIFIED (runner has no installed Korean SAPI voice)'
                 else:
                     result['korean_speech'] = 'NOT VERIFIED (Cloud Linux)'
-                result['outcome'] = 'PASS with explicit unverified items'
             finally:
                 browser.close()
                 stop(process)
@@ -201,6 +205,10 @@ def main() -> None:
     result = {'outcome': 'FAIL', 'mode': args.mode, 'human_quality': 'NOT VERIFIED', 'Windows11_user_PC': 'NOT VERIFIED'}
     try:
         run(args.mode, args.output, args.browser_executable, result)
+        result['outcome'] = 'PASS with explicit unverified items'
+    except Exception as exc:
+        result['error_type'] = type(exc).__name__
+        raise
     finally:
         (args.output / 'easysetup-result.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
         for key, value in result.items():
