@@ -22,11 +22,16 @@ from newsflow.db.models import (
     ContentDraft,
     NewsArticle,
     NewsSource,
+    NewsSourceCheck,
     PublishDraft,
     RenderJob,
     VideoProject,
 )
+from newsflow.easy_setup import preview_preferences, speech_preferences
+from newsflow.intelligence.korean import speech_plan
+from newsflow.intelligence.settings import external_ready
 from newsflow.publishing.service import PublishingError, PublishingService, hash_file
+from newsflow.video.tts import TTSError
 
 from .routes import go, page
 
@@ -38,9 +43,10 @@ STATUSES = {
 }
 CHOICES = {
     "mode": {"easy", "guided"}, "source": {"sample", "feeds"},
-    "duration": {"30", "45", "60"}, "platform": set(PLATFORMS),
+    "duration": {"30", "45", "60"}, "platform": set(PLATFORMS), "ai": {"offline", "openai"},
 }
-DEFAULTS = {"mode": "easy", "source": "sample", "duration": "30", "platform": "youtube"}
+DEFAULTS = {"mode": "easy", "source": "sample", "duration": "30", "platform": "youtube", "ai": "offline"}
+AI_LABELS = {"offline": "기본 대본 (외부 호출 없음)", "openai": "외부 AI 대본 (OpenAI · 유료)"}
 DESCRIPTIONS = {
     "collect": "뉴스를 모으고 같은 기사는 정리해요.",
     "select": "새 영상으로 만들 이야기를 골라요.",
@@ -64,10 +70,32 @@ def _defaults(request: Request) -> dict[str, Any]:
 def _page(request: Request, template: str, **context: Any) -> HTMLResponse:
     response = page(
         request, template, platform_labels=PLATFORMS, status_labels=STATUSES,
-        stage_labels=STAGE_LABELS, **context,
+        stage_labels=STAGE_LABELS, ai_labels=AI_LABELS, **context,
     )
     response.headers["Cache-Control"] = "no-store"
     return response
+
+
+def readiness(request: Request) -> dict[str, Any]:
+    """Status chips for the Easy UI: RSS, AI and Korean voice readiness without external calls."""
+    sessions = request.app.state.sessions
+    with sessions() as session:
+        enabled = list(session.scalars(select(NewsSource).where(NewsSource.enabled, NewsSource.url != SAMPLE_URL)))
+        checks = {c.source_id: c for c in session.scalars(select(NewsSourceCheck))}
+    passed = sum(1 for source in enabled if checks.get(source.id) and checks[source.id].status == "pass")
+    ai = external_ready(sessions, request.app.state.ai_keys)
+    voice, _size, _position = preview_preferences(sessions)
+    try:
+        speech = speech_preferences(sessions)
+        speech_values = {"rate": speech.rate, "pause_ms": speech.pause_ms}
+    except TTSError:
+        speech_values = {"rate": 0, "pause_ms": 250}
+    installed = voice == "offline-silence" or request.app.state.video.voice_available(voice)
+    return {
+        "rss": {"enabled": len(enabled), "tested": passed, "ready": bool(enabled)},
+        "ai": ai,
+        "voice": {"name": voice, "silent": voice == "offline-silence", "installed": installed, **speech_values},
+    }
 
 
 def _error(exc: AutopilotError) -> HTTPException:
@@ -120,7 +148,7 @@ def home(request: Request) -> HTMLResponse:
                         "link": f"/autopilot/jobs/{task}" if task else f"/video?job_id={video.id}",
                     })
         return _page(
-            request, "easy_home.html", active="home", defaults=_defaults(request),
+            request, "easy_home.html", active="home", defaults=_defaults(request), ready=readiness(request),
             active_jobs=[item for item in jobs if item["status"] in {"queued", "running", "waiting_review"}],
             completed=completed, video_count=video_count,
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
@@ -134,22 +162,38 @@ def start_page(request: Request) -> HTMLResponse:
         enabled = session.scalar(select(func.count()).select_from(NewsSource).where(
             NewsSource.enabled, NewsSource.url != SAMPLE_URL,
         ))
-    return _page(request, "autopilot_start.html", active="autopilot", defaults=_defaults(request), enabled_sources=enabled)
+    return _page(
+        request, "autopilot_start.html", active="autopilot", defaults=_defaults(request),
+        enabled_sources=enabled, ready=readiness(request),
+    )
 
 
 @router.post("/autopilot/start")
 def start(
     request: Request, mode: str | None = Form(None, max_length=10),
     source: str | None = Form(None, max_length=10), duration: int | None = Form(None),
-    platform: str | None = Form(None, max_length=20),
+    platform: str | None = Form(None, max_length=20), ai: str | None = Form(None, max_length=10),
+    voice: str | None = Form(None, max_length=200),
 ) -> RedirectResponse:
     defaults = _defaults(request)
+    chosen_source = source if source is not None else defaults["source"]
+    ai_mode = ai if ai is not None else defaults["ai"]
+    if chosen_source == "sample":
+        ai_mode = "offline"  # the trial path never calls an external provider
+    if voice is not None and voice not in {"", "default", "offline-silence"}:
+        chosen_voice: str | None = voice
+    elif voice == "offline-silence":
+        chosen_voice = "offline-silence"
+    else:
+        chosen_voice = None  # saved default from the voice settings page
     try:
         job_id = request.app.state.autopilot.start(
             mode=mode if mode is not None else defaults["mode"],
-            source=source if source is not None else defaults["source"],
+            source=chosen_source,
             duration=duration if duration is not None else defaults["duration"],
             platform=platform if platform is not None else defaults["platform"],
+            content_mode="real" if chosen_source == "feeds" else "trial",
+            ai_mode=ai_mode, voice=chosen_voice,
         )
     except AutopilotError as exc:
         raise _error(exc) from None
@@ -171,10 +215,21 @@ def job(request: Request, job_id: str) -> HTMLResponse:
     with request.app.state.sessions() as session:
         draft = session.get(ContentDraft, snapshot["content_draft_id"]) if snapshot.get("content_draft_id") else None
         video = session.get(RenderJob, snapshot["render_job_id"]) if snapshot.get("render_job_id") else None
+        article = session.get(NewsArticle, snapshot["article_id"]) if snapshot.get("article_id") else None
         output = _media_path(request, video)
+        plan = None
+        if draft:
+            try:
+                speech = speech_preferences(request.app.state.sessions)
+                plan = speech_plan(draft.content, draft.duration, speech.rate, speech.pause_ms)
+            except TTSError:
+                plan = speech_plan(draft.content, draft.duration)
         return _page(
             request, "autopilot_job.html", active="autopilot", job=snapshot, stages=stages,
-            draft=draft, video=video, playable=output is not None, output_path=str(output) if output else None,
+            draft=draft, video=video, article=article, plan=plan,
+            notes=list(draft.review_notes or []) if draft else [],
+            playable=output is not None, output_path=str(output) if output else None,
+            audio=(video.metadata_json or {}).get("audio") if video else None,
         )
 
 
@@ -230,17 +285,22 @@ def queue(request: Request) -> HTMLResponse:
 
 @router.get("/simple-settings", response_class=HTMLResponse)
 def simple_settings(request: Request, saved: bool = False) -> HTMLResponse:
-    return _page(request, "simple_settings.html", active="simple-settings", defaults=_defaults(request), saved=saved)
+    return _page(
+        request, "simple_settings.html", active="simple-settings", defaults=_defaults(request), saved=saved,
+        ready=readiness(request),
+    )
 
 
 @router.post("/simple-settings")
 def save_settings(
     request: Request, duration: int = Form(), platform: str = Form(max_length=20),
-    source: str = Form(max_length=10), mode: str = Form("easy", max_length=10),
+    source: str = Form(max_length=10), mode: str = Form("easy", max_length=10), ai: str = Form("offline", max_length=10),
 ) -> RedirectResponse:
-    values = {"duration": str(duration), "platform": platform, "source": source, "mode": mode}
+    values = {"duration": str(duration), "platform": platform, "source": source, "mode": mode, "ai": ai}
     if any(value not in CHOICES[name] for name, value in values.items()):
         raise HTTPException(422, "제작 방식, 영상 길이, 목적지와 뉴스 종류를 다시 선택해 주세요.")
+    if ai == "openai" and source != "feeds":
+        raise HTTPException(422, "외부 AI 대본은 등록한 뉴스 출처(실제 콘텐츠)에서만 사용할 수 있습니다.")
     with request.app.state.sessions.begin() as session:
         for name, value in values.items():
             row = session.get(AppSetting, "autopilot_" + name)

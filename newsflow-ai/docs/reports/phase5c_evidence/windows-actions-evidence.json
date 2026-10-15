@@ -1,0 +1,714 @@
+{
+  "run": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38702027035",
+  "job": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38702027035/job/116312289794",
+  "head_sha": "4468b8240f8ccc258f0f8c65e7ae28b438299e3b",
+  "conclusion": "success",
+  "runner": "windows-latest, Google Chrome channel, FFmpeg 7.1.1, pinned Noto Sans KR",
+  "note": "check annotations copied from the job log; keys/tokens never present; sanitized by the tools",
+  "annotations": [
+    {
+      "title": "",
+      "payload": {
+        "real_RSS": "NOT VERIFIED",
+        "real_AI_API": "NOT VERIFIED",
+        "full_30_45_60_quality": "NOT VERIFIED (short synthetic samples; no human quality review)",
+        "Windows11_user_PC": "NOT VERIFIED",
+        "sample_MP4": "PASS",
+        "sample_file": "sample-3s-ab7f35f87f504b2ea68ec2a82da16325.mp4",
+        "sample_metadata": {
+          "adapter": "ffmpeg",
+          "playable": true,
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "width": 1080,
+          "height": 1920,
+          "duration": 3.021029,
+          "expected_duration": 3,
+          "audio_channels": 2,
+          "bytes": 61020,
+          "ffmpeg_version": "7.1.1-essentials_build-www.gyan.dev",
+          "audio": "silent",
+          "audio_fit": false
+        },
+        "Korean_subtitle_raster": "PASS (pinned/installed Korean font)",
+        "scene_transition": "PASS (cuts)",
+        "Offline_TTS": "PASS (silent PCM -> AAC; not spoken voice)",
+        "progress": [
+          5,
+          35,
+          60,
+          85,
+          95
+        ],
+        "Windows_TTS": "PASS (installed SAPI voice -> WAV -> MP4 audio)",
+        "Windows_TTS_speech_seconds": 1.51,
+        "Windows_TTS_sample_metadata": {
+          "adapter": "ffmpeg",
+          "playable": true,
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "width": 1080,
+          "height": 1920,
+          "duration": 5.021029,
+          "expected_duration": 5,
+          "audio_channels": 2,
+          "bytes": 48663,
+          "ffmpeg_version": "7.1.1-essentials_build-www.gyan.dev",
+          "audio": "voice",
+          "audio_fit": false
+        },
+        "Windows_TTS_sample_file": "sample-voice-5s-1150b19f9a0e4bc5a74275d9b6a1bbba.mp4",
+        "Windows_TTS_quality": "NOT VERIFIED (no human listening; Korean pronunciation not verified)",
+        "outcome": "PASS with explicit unverified items"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "platform": "win32",
+        "credential_kind": "synthetic only",
+        "real_service_tokens": 0,
+        "real_oauth_calls": 0,
+        "real_publish_calls": 0,
+        "Windows11_user_PC": "NOT VERIFIED",
+        "current_user_DPAPI": "PASS",
+        "disk_ciphertext": "PASS",
+        "new_python_process_read": "PASS",
+        "Korean_space_path": "PASS",
+        "multiple_account_isolation": "PASS",
+        "rotation_and_delete": "PASS",
+        "expiry_and_expired_delete": "PASS",
+        "tamper_rejection": "PASS",
+        "real_token_storage_blocked": "PASS",
+        "atomic_temporary_cleanup": "PASS",
+        "owned_test_data_cleanup": "PASS",
+        "result": "PASS"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "platform": "win32",
+        "credential_kind": "synthetic only",
+        "real_service_tokens": 0,
+        "real_oauth_calls": 0,
+        "real_publish_calls": 0,
+        "Windows11_user_PC": "NOT VERIFIED",
+        "current_user_DPAPI": "PASS",
+        "separate_production_cipher_kernel": "PASS",
+        "disk_ciphertext": "PASS",
+        "same_user_new_process": "PASS",
+        "Korean_space_path": "PASS",
+        "account_identity_binding": "PASS",
+        "real_service_storage_blocked": "PASS",
+        "rotation_provenance_and_delete": "PASS",
+        "tampered_ciphertext_quarantined": "PASS",
+        "temporary_cleanup": "PASS",
+        "different_Windows_user_DPAPI": "PASS",
+        "different_user_own_roundtrip": "PASS",
+        "alternate_principal_cleanup": "PASS",
+        "owned_test_data_cleanup": "PASS",
+        "result": "PASS"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "tests": 1001,
+        "passed": 1000,
+        "skipped": 1,
+        "failures": 0,
+        "errors": 0
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "phase": "4B-2B",
+        "mode": "OFFLINE/BLOCKED",
+        "production_activation": false,
+        "callback": {
+          "code_status": "implemented_inactive",
+          "binding": "127.0.0.1",
+          "registered_uri_match": "exact",
+          "real_provider_connected": false,
+          "listener_started_by_gui": false
+        },
+        "youtube_identity": {
+          "code_status": "implemented_inactive",
+          "real_account": "NOT VERIFIED",
+          "connection_on_error": "blocked"
+        },
+        "production_vault": {
+          "code_status": "implemented_inactive",
+          "boundary": "Windows current-user DPAPI",
+          "validation_data": "synthetic_only",
+          "real_credentials_allowed": false
+        },
+        "instagram": {
+          "login": "blocked",
+          "official_requirements": "NOT VERIFIED"
+        },
+        "real_login_allowed": false,
+        "real_token_exchange_allowed": false,
+        "real_identity_lookup_allowed": false,
+        "real_publishing_allowed": false
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "platform": "win32",
+        "mode": "windows",
+        "real_RSS": "NOT VERIFIED (offline synthetic tests)",
+        "LOCALAPPDATA_default": "PASS",
+        "production_trace": [
+          "first_start_requested",
+          "first_server_ready",
+          "production_HTTP_POST_completed",
+          "duplicate_rejected",
+          "first_server_stopped",
+          "seed_stored_three_articles",
+          "restarted_server_ready",
+          "restarted_server_stopped",
+          "port_collision_rejected"
+        ],
+        "production": {
+          "server_lifecycle": "PASS",
+          "http_POST": "PASS",
+          "sqlite_store_restart_query": "PASS",
+          "article_count": 3,
+          "duplicate_and_port_collision": "PASS",
+          "run_bat": "PASS",
+          "stop_method": "taskkill process tree",
+          "Windows_manual_CtrlC": "NOT VERIFIED"
+        },
+        "browser_progress": {
+          "server_ready": true,
+          "browser_channel": "chrome",
+          "context_origin": {
+            "location": "http://127.0.0.1:8765",
+            "window": "http://127.0.0.1:8765"
+          },
+          "registration_status": 303,
+          "registration_origin": "http://127.0.0.1:8765",
+          "registration": "PASS",
+          "disable_status": 303,
+          "enable_status": 303,
+          "collection_status": 303,
+          "sqlite_count": 3,
+          "search_count": 1,
+          "video_status": "success",
+          "video_progress": 100,
+          "video_metadata_state": {
+            "ready": 4,
+            "error": null,
+            "width": 1080,
+            "height": 1920,
+            "support": "probably"
+          },
+          "video_dimensions": [
+            1080,
+            1920
+          ],
+          "video_media_state": {
+            "ready": 4,
+            "error": null
+          },
+          "video_frame_decode": "PASS",
+          "publishing_create_status": 303,
+          "publishing_edit_status": 303,
+          "publishing_validate_status": 303,
+          "oauth_forged_start_status": 423,
+          "mobile_last_path": "/publishing?draft_id=1",
+          "mobile_overflow": false
+        },
+        "browser": {
+          "GUI_browser_POST": "PASS (registration, disable/enable, collection)",
+          "AI_Studio_analysis_script_edit_POST": "PASS (offline; unverified; sources preserved)",
+          "Video_Studio_POST_preview_download": "PASS (real 30s MP4; offline silent audio; human quality not verified)",
+          "publishing_SQLite_counts": {
+            "publish_drafts": 1,
+            "publish_validations": 2,
+            "publish_jobs": 0,
+            "publish_attempts": 0
+          },
+          "Publishing_Studio_create_edit_validate_POST": "PASS (unconnected account blocked; approval pending; no real publishing)",
+          "publishing_safety": {
+            "real_publish_calls": 0,
+            "real_oauth_calls": 0,
+            "mode": "foundation",
+            "external_execution_enabled": false
+          },
+          "OAuth_Studio_metadata_prepare_disconnect_blocked_start_POST": "PASS (local records only)",
+          "oauth_safety": {
+            "real_authorization_requests": 0,
+            "real_token_exchange_calls": 0,
+            "real_refresh_calls": 0,
+            "real_revoke_calls": 0,
+            "mode": "OFFLINE/BLOCKED",
+            "feature_enabled": false,
+            "user_approval": false,
+            "phase_allows_real": false
+          },
+          "oauth_account_id": 1,
+          "oauth_SQLite_state": {
+            "status": "disconnect_prepared",
+            "mode": "offline",
+            "revision": 3,
+            "expires_at": null,
+            "error_code": null,
+            "account_status": "not_connected",
+            "credential_present": false,
+            "api_ready": false,
+            "scopes": []
+          },
+          "oauth_production_readiness": {
+            "phase": "4B-2B",
+            "production_activation": false,
+            "environment_can_activate": false,
+            "gui_can_activate": false,
+            "browser_login_allowed": false,
+            "token_exchange_allowed": false,
+            "production_storage_allowed": false,
+            "publishing_allowed": false,
+            "providers": {
+              "youtube": {
+                "client_type": "desktop",
+                "oauth_code_status": "implemented_inactive",
+                "account_identity": "NOT VERIFIED",
+                "production_vault": "inactive",
+                "login": "blocked"
+              },
+              "instagram": {
+                "oauth_code_status": "blocked",
+                "official_requirements": "NOT VERIFIED",
+                "production_vault": "inactive",
+                "login": "blocked"
+              }
+            }
+          },
+          "OAuth_operations_readiness_browser": "PASS (inactive code; real operations blocked)",
+          "browser_external_request_origins": [],
+          "GUI_render_search_detail_mobile": "PASS",
+          "GUI_synthetic_RSS_store": "PASS",
+          "article_count": 3,
+          "OAuth_preparation_restart_persistence": "PASS",
+          "Publishing_draft_validation_restart_persistence": "PASS",
+          "Video_job_file_restart_persistence": "PASS",
+          "AI_draft_restart_persistence": "PASS",
+          "fixture_server_restart_persistence": "PASS"
+        },
+        "outcome": "PASS"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "mode": "windows",
+        "platform": "win32",
+        "scenario": "synthetic RSS / offline AI / silent preview / local draft",
+        "outcome": "PASS",
+        "LOCALAPPDATA_path": "PASS (isolated Windows current-user directory)",
+        "actual_run_bat": "PASS",
+        "browser": "Google Chrome",
+        "easy_job_id": "437481440ab546c78defa272fdb961ce",
+        "progress_observed": {
+          "stage": "render",
+          "progress": 50
+        },
+        "duplicate_start": "PASS (409)",
+        "one_click_easy_to_local_queue": "PASS",
+        "process_restart_persistence": "PASS (pause, edited script, MP4, queue)",
+        "guided_news_script_edit_video_review_queue": "PASS",
+        "guided_cancel": "PASS",
+        "actionable_no_source_error": "PASS",
+        "simple_defaults_and_advanced_access": "PASS",
+        "browser_external_request_origins": [],
+        "browser_javascript_errors": 0,
+        "screenshots": [
+          "advanced-settings.png",
+          "completed-video.png",
+          "dashboard.png",
+          "desktop-200percent.png",
+          "error-guidance.png",
+          "guided-script-review.png",
+          "guided-video-review.png",
+          "mobile-320.png",
+          "progress.png",
+          "queue.png",
+          "simple-settings.png",
+          "start.png"
+        ]
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "file": "easy-30s.mp4",
+        "sha256": "2d9cbc736fb5c8e80360c742d98e493b382034edd884c20ab309f3fc8e98b1d4",
+        "bytes": 252526,
+        "metadata": {
+          "format": "mov,mp4,m4a,3gp,3g2,mj2",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "width": 1080,
+          "height": 1920,
+          "duration": 30.021029,
+          "fps": 30.0,
+          "audio_channels": 2,
+          "playable": true
+        },
+        "browser_frame_decode": "PASS",
+        "browser_playback": "PASS (playback time advanced)",
+        "audio": "offline silence",
+        "human_voice_and_editorial_quality": "NOT VERIFIED"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "file": "guided-30s.mp4",
+        "sha256": "c1c207e82454688dc98c65647b7774093dfa9a84d6ba57616a2c58c7be3601e5",
+        "bytes": 248394,
+        "metadata": {
+          "format": "mov,mp4,m4a,3gp,3g2,mj2",
+          "video_codec": "h264",
+          "audio_codec": "aac",
+          "width": 1080,
+          "height": 1920,
+          "duration": 30.021029,
+          "fps": 30.0,
+          "audio_channels": 2,
+          "playable": true
+        },
+        "browser_frame_decode": "PASS",
+        "browser_playback": "PASS (playback time advanced)",
+        "audio": "offline silence",
+        "human_voice_and_editorial_quality": "NOT VERIFIED"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "counts": {
+          "autopilot_jobs": 4,
+          "autopilot_attempts": 15,
+          "autopilot_events": 44,
+          "autopilot_artifacts": 15,
+          "news_articles": 8,
+          "content_drafts": 2,
+          "video_projects": 2,
+          "render_jobs": 2,
+          "publish_drafts": 2,
+          "publish_validations": 2,
+          "publish_jobs": 0,
+          "publish_attempts": 0
+        },
+        "AI_providers": [
+          "offline"
+        ],
+        "human_approval_preserved": true,
+        "review_only_video": true,
+        "real_connected_accounts": 0,
+        "enabled_RSS_sources": 0
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "status": "PASS",
+        "checks": [
+          "mobile-320/home",
+          "mobile-320/start",
+          "mobile-320/result",
+          "mobile-320/queue",
+          "mobile-320/settings",
+          "desktop-200percent/home",
+          "desktop-200percent/start",
+          "desktop-200percent/result",
+          "desktop-200percent/queue",
+          "desktop-200percent/settings"
+        ],
+        "zoom_method": "CSS zoom 200%",
+        "user_usability_study": "NOT VERIFIED"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "real_authorization_requests": 0,
+        "real_token_exchange_calls": 0,
+        "real_refresh_calls": 0,
+        "real_revoke_calls": 0,
+        "mode": "OFFLINE/BLOCKED",
+        "feature_enabled": false,
+        "user_approval": false,
+        "phase_allows_real": false
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": "PASS with explicit unverified items"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": "windows"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": "NOT VERIFIED"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": "NOT VERIFIED"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": "PASS (twice; dependency and DB initialization)"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": "PASS (7 steps, real missing-font failure, restart, retry, persisted settings)"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": [
+          {
+            "duration": 30,
+            "file": "setup-30s.mp4",
+            "sha256": "29ef0dd2aeb1c18571d8dac3bb36e8d819cd95bc9d29deb7072b309700457d48",
+            "h264_aac_1080x1920": "PASS",
+            "browser_playback": "PASS",
+            "stream_timing": "PASS",
+            "subtitle_style_and_cues": "PASS",
+            "audio": "silent review; speech sync NOT VERIFIED"
+          },
+          {
+            "duration": 45,
+            "file": "setup-45s.mp4",
+            "sha256": "4e42ee6fc6fabb3ff67ea839563ca5114530270d9aa74ab14391787ccdb64757",
+            "h264_aac_1080x1920": "PASS",
+            "browser_playback": "PASS",
+            "stream_timing": "PASS",
+            "subtitle_style_and_cues": "PASS",
+            "audio": "silent review; speech sync NOT VERIFIED"
+          },
+          {
+            "duration": 60,
+            "file": "setup-60s.mp4",
+            "sha256": "6fe590b3b8e64f9e9412a919030842cd07491a2e2d8906a61d4a55ef111855ae",
+            "h264_aac_1080x1920": "PASS",
+            "browser_playback": "PASS",
+            "stream_timing": "PASS",
+            "subtitle_style_and_cues": "PASS",
+            "audio": "silent review; speech sync NOT VERIFIED"
+          }
+        ]
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": "PASS (wizard, existing news, three MP4s and local queue)"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "counts": {
+          "autopilot_jobs": 3,
+          "autopilot_attempts": 18,
+          "autopilot_events": 42,
+          "autopilot_artifacts": 21,
+          "news_articles": 8,
+          "content_drafts": 3,
+          "video_projects": 3,
+          "render_jobs": 3,
+          "publish_drafts": 3,
+          "publish_validations": 3,
+          "publish_jobs": 0,
+          "publish_attempts": 0
+        },
+        "AI_providers": [
+          "offline"
+        ],
+        "human_approval_preserved": true,
+        "review_only_video": true,
+        "real_connected_accounts": 0,
+        "enabled_RSS_sources": 0
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "real_authorization_requests": 0,
+        "real_token_exchange_calls": 0,
+        "real_refresh_calls": 0,
+        "real_revoke_calls": 0,
+        "mode": "OFFLINE/BLOCKED",
+        "feature_enabled": false,
+        "user_approval": false,
+        "phase_allows_real": false
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": 0
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": 0
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": "PASS (320px and CSS zoom 200%); native browser zoom NOT VERIFIED"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": 0
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": "NOT VERIFIED (runner has no installed Korean SAPI voice)"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "mode": "windows",
+        "platform": "win32",
+        "outcome": "PASS with explicit NOT VERIFIED items",
+        "scenario": "registered RSS (fixture bytes) / offline AI / default voice / mandatory reviews / local queue",
+        "external_ai_calls": 0,
+        "sns_calls": 0,
+        "Windows11_user_PC": "NOT VERIFIED",
+        "rss_register_test_collect": "PASS (fixture bytes through the registered adapter path)",
+        "ai_approval_requires_limit": "PASS (422 without monthly limit)",
+        "external_ai": "NOT VERIFIED (no API key in CI; gate closed, 0 calls)",
+        "korean_voice_page": "PASS (install guidance shown; no Korean SAPI voice)",
+        "script_edit_with_closing": "PASS (revision 2)",
+        "real_content_easy_flow": "PASS (script review → final review → local queue, 30/45/60)",
+        "restart_persistence": "PASS",
+        "browser_external_request_origins": [],
+        "browser_javascript_errors": 0,
+        "screenshots": [
+          "ai-settings.png",
+          "queue.png",
+          "real-final-review.png",
+          "real-script-review.png",
+          "sources-collected.png",
+          "sources-tested.png",
+          "voices.png"
+        ],
+        "korean_voice_count": 0,
+        "korean_tts": "NOT VERIFIED (runner has no installed Korean SAPI voice)"
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "value": [
+          {
+            "file": "real-30s.mp4",
+            "sha256": "443d93b31dfbfe40330a288c1b0eba754a0bb7bcf58a3d5214a276f3fc1fa407",
+            "bytes": 229638,
+            "duration": 30.021029,
+            "audio": "silent",
+            "browser_playback": "PASS (playback time advanced)",
+            "human_watch_quality": "NOT VERIFIED",
+            "korean_pronunciation": "n/a (silent review video)"
+          },
+          {
+            "file": "real-45s.mp4",
+            "sha256": "10cbbd49c098414854ea7b942e5f36c9745ed7f5412360375020dffae6a13132",
+            "bytes": 284856,
+            "duration": 45.021029,
+            "audio": "silent",
+            "browser_playback": "PASS (playback time advanced)",
+            "human_watch_quality": "NOT VERIFIED",
+            "korean_pronunciation": "n/a (silent review video)"
+          },
+          {
+            "file": "real-60s.mp4",
+            "sha256": "208c0ce036cb576749fbf96f9445a1db67099eea0ea4c72a3a8594f88fb2c8dd",
+            "bytes": 394521,
+            "duration": 60.021029,
+            "audio": "silent",
+            "browser_playback": "PASS (playback time advanced)",
+            "human_watch_quality": "NOT VERIFIED",
+            "korean_pronunciation": "n/a (silent review video)"
+          }
+        ]
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "autopilot_jobs": [
+          {
+            "content_mode": "real",
+            "ai_mode": "offline",
+            "status": "completed"
+          },
+          {
+            "content_mode": "real",
+            "ai_mode": "offline",
+            "status": "completed"
+          },
+          {
+            "content_mode": "real",
+            "ai_mode": "offline",
+            "status": "completed"
+          }
+        ],
+        "external_ai_calls_recorded": 0,
+        "intelligence_providers": [
+          "offline"
+        ],
+        "source_checks": [
+          {
+            "status": "pass",
+            "articles": 3
+          }
+        ],
+        "drafts_with_review_notes": 3,
+        "human_approval_preserved": true,
+        "publish_jobs": 0
+      }
+    },
+    {
+      "title": "",
+      "payload": {
+        "url": "https://feeds.bbci.co.uk/news/rss.xml",
+        "status": "NOT VERIFIED",
+        "kind": "robots",
+        "message": "robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.",
+        "articles": 0,
+        "note": "network-dependent; articles were not stored by the connection test"
+      }
+    }
+  ]
+}

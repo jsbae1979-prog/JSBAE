@@ -132,7 +132,7 @@ def run(mode: str, output: Path, executable: str | None, result: dict) -> None:
                         form = page.locator('form[action="/autopilot/start"]')
                         form.locator('input[name="mode"][value="easy"]').check()
                         form.locator(f'input[name="duration"][value="{duration}"]').check()
-                        form.locator('select[name="source"]').select_option('sample')
+                        form.locator('input[name="source"][value="sample"]').check()
                         submit(page, form, '/autopilot/start')
                     page.wait_for_url(re.compile(re.escape(BASE) + r'/autopilot/jobs/[0-9a-f]{32}$'))
                     job_id = page.url.rsplit('/', 1)[1]

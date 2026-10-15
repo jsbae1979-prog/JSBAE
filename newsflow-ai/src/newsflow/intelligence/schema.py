@@ -17,6 +17,8 @@ class Script(BaseModel):
     hook: str = Field(min_length=1, max_length=200)
     summary: str = Field(min_length=1, max_length=500)
     scenes: list[Scene] = Field(min_length=1, max_length=8)
+    # Phase 5C: closing sentence; optional so Phase 2–5B drafts remain valid.
+    closing: str = Field("", max_length=200)
 
 
 CAUTION = "사실 확인 미완료 · RSS 제목/요약 기반 · 게시 전 사람의 원문 확인과 승인 필수. 원문 전체 복제 금지. 이미지/영상 이용 허락을 확인하세요."

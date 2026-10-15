@@ -16,6 +16,7 @@ from newsflow.intelligence.provider import (
     ProviderError,
 )
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
+from newsflow.intelligence.settings import write_settings
 
 
 @pytest.fixture
@@ -42,6 +43,8 @@ def intelligence(app):
                 publisher="합성 출처 B",
             )
         )
+    # Phase 5C: external mode additionally requires the stored approval and a monthly limit.
+    write_settings(app.state.sessions, "openai", "gpt-4o-mini", True, 1_000_000, 20)
     return IntelligenceService(app.state.sessions)
 
 
@@ -233,7 +236,7 @@ def test_upgrade_phase1_preserves_data(app):
     migrate(engine)
     with engine.connect() as connection:
         assert connection.scalar(text("SELECT value FROM app_settings WHERE key='request_timeout'")) == "7"
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0008"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0009"
     engine.dispose()
 
 

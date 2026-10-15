@@ -20,6 +20,7 @@ from sqlalchemy import MetaData, Table, func, inspect, select, text
 from newsflow.db.models import (
     AppSetting,
     ContentDraft,
+    IntelligenceRun,
     NewsArticle,
     NewsSource,
     PlatformAccount,
@@ -32,6 +33,7 @@ from newsflow.db.models import (
     Scene,
 )
 from newsflow.db.session import make_engine, migrate, session_factory
+from newsflow.intelligence.provider import OfflineProvider, Options
 from newsflow.intelligence.service import IntelligenceService
 from newsflow.publishing.adapters import (
     ExternalPublishingDisabled,
@@ -786,10 +788,17 @@ def test_additive_0004_migration_preserves_phase3_data(tmp_path):
         session.add(article)
         session.add(AppSetting(key="collection_timeout", value="7"))
     intelligence = IntelligenceService(sessions)
-    script_id = intelligence.generate(intelligence.analyze([1]), 30)
+    analysis_id = intelligence.analyze([1])
     with sessions.begin() as session:
-        script = session.get(ContentDraft, script_id)
-        # Use the real pre-0008 columns when creating the migration fixture.
+        # Use the real pre-0008/0009 columns when creating the migration fixture.
+        analysis = session.get(IntelligenceRun, analysis_id)
+        legacy_drafts = Table("content_drafts", MetaData(), autoload_with=session.connection())
+        script_id = session.execute(legacy_drafts.insert().values(
+            run_id=analysis_id, duration=30, revision=1, review_status="review_required",
+            content=OfflineProvider().complete(analysis.evidence, 30, Options()), sources=analysis.evidence,
+            created_at=datetime.now(UTC), updated_at=datetime.now(UTC),
+        )).inserted_primary_key[0]
+        script = session.execute(legacy_drafts.select().where(legacy_drafts.c.id == script_id)).one()
         legacy_projects = Table("video_projects", MetaData(), autoload_with=session.connection())
         project_id = session.execute(legacy_projects.insert().values(
             draft_id=script_id, title="기존 영상", duration=30,
@@ -810,7 +819,7 @@ def test_additive_0004_migration_preserves_phase3_data(tmp_path):
     migrate(engine)
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0008"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0009"
     with sessions() as session:
         assert session.get(AppSetting, "collection_timeout").value == "7"
         assert session.get(NewsArticle, 1).title == "기존 기사"
