@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from threading import Event
 from typing import Protocol
@@ -34,6 +34,10 @@ class ScenePlan:
     narration: str
     caption: str
     image: Path | None = None
+    # Phase 5D: a validated provider clip shown behind the text layer, always labelled as AI-generated.
+    clip: Path | None = None
+    ai_generated: bool = False
+    clip_format: str = "mov"
 
 
 @dataclass(frozen=True)
@@ -191,6 +195,59 @@ def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Pat
     image.save(target, format="PNG")
 
 
+AI_SCENE_LABEL = "AI 생성 장면 · 실제 현장 영상 아님"
+CLIP_DEMUXERS = frozenset({"mov", "matroska"})
+# Constant filter graph: scale/crop the clip to the vertical frame, then draw the RGBA text layer.
+# setsar=0 and setparams=...unknown leave the aspect-ratio and colour tags unset, exactly like the
+# PNG card scenes, so every scene file has a byte-identical H.264 header for the '-c copy' concat.
+CLIP_FILTER = (
+    "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=30,setsar=0,"
+    "setparams=range=unknown:color_primaries=unknown:color_trc=unknown:colorspace=unknown[bg];"
+    "[bg][1:v]overlay=0:0:format=auto,format=yuv420p[v]"
+)
+
+
+def overlay(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Path) -> None:
+    """Transparent text layer for a generated clip: same texts as ``card`` plus the AI label.
+
+    The label cannot be turned off; it sits in its own opaque band so the clip never hides it.
+    """
+    image = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    title_font = ImageFont.truetype(str(font), 56)
+    body_font = ImageFont.truetype(str(font), plan.font_size)
+    small_font = ImageFont.truetype(str(font), 28)
+    label_font = ImageFont.truetype(str(font), 40)
+    draw.rectangle((0, 0, 1080, 600), fill=(16, 23, 38, 214))
+    draw.rounded_rectangle((90, 105, 990, 115), fill="#8b83ff", radius=5)
+    draw.text((90, 145), "NEWSFLOW · 미확인 보도 · 사람 검토 필요", font=small_font, fill="#b7adff")
+    for i, line in enumerate(text_lines(draw, plan.title, title_font, 900)[:4]):
+        draw.text((90, 210 + i * 74), line, font=title_font, fill="#f0f4ff")
+    draw.rounded_rectangle((90, 500, 990, 580), radius=20, fill=(255, 196, 0, 255))
+    width = draw.textlength(AI_SCENE_LABEL, font=label_font)
+    draw.text((540 - width / 2, 516), AI_SCENE_LABEL, font=label_font, fill="#111111")
+    lines = text_lines(draw, scene.caption, body_font, 900)
+    if len(lines) > 4 or plan.subtitle_y + len(lines) * (plan.font_size + 16) > 1790:
+        raise RenderError(
+            "자막이 안전 영역을 초과했습니다. 자막을 줄이거나 크기를 낮추세요.", kind="subtitle"
+        )
+    draw.rectangle((0, plan.subtitle_y - 40, 1080, 1920), fill=(16, 23, 38, 214))
+    for i, line in enumerate(lines):
+        draw.text((90, plan.subtitle_y + i * (plan.font_size + 16)), line, font=body_font, fill="#ffffff", stroke_width=1)
+    audio_label = "무음 검토영상 · 음성 없음" if plan.silent else "한국어 음성 · 발음 품질 미검증"
+    draw.text((990 - draw.textlength(audio_label, font=small_font), 1762), audio_label, font=small_font, fill="#8d9ab3")
+    names = []
+    for source in plan.sources[:100]:
+        label = source.get("publisher", "") + " · " + urlsplit(source.get("url", "")).netloc
+        if label not in names:
+            names.append(label[:200])
+            if len(names) == 3:
+                break
+    for i, line in enumerate(text_lines(draw, "출처: " + " / ".join(names), small_font, 900)[:2]):
+        draw.text((90, 1810 + i * 38), line, font=small_font, fill="#9ba9c1")
+    image.save(target, format="PNG")
+
+
 class FakeRenderAdapter:
     def __init__(self, error: Exception | None = None) -> None:
         self.error, self.calls = error, []
@@ -300,6 +357,29 @@ class FFmpegAdapter:
         ]
 
     @staticmethod
+    def clip_command(binary: Path, scene: ScenePlan, overlay_png: Path, audio: Path, target: Path) -> list[str]:
+        """Generated clip (looped, scaled and cropped to 1080x1920) under the labelled text layer.
+
+        Only local files can be read (``-protocol_whitelist file``) and the demuxer is fixed from
+        the ffprobe result, so a crafted clip cannot open network or playlist inputs. The clip's
+        own audio is dropped; the scene narration WAV is the only sound.
+        """
+        if scene.clip is None or scene.clip_format not in CLIP_DEMUXERS:
+            raise RenderError("생성 장면 파일 형식을 확인하세요.", kind="clip")
+        return [
+            str(binary), "-hide_banner", "-loglevel", "error", "-nostdin", "-n",
+            "-protocol_whitelist", "file", "-f", scene.clip_format, "-stream_loop", "-1", "-i", str(scene.clip),
+            "-loop", "1", "-framerate", "30", "-i", str(overlay_png),
+            "-i", str(audio),
+            "-filter_complex", CLIP_FILTER,
+            "-map", "[v]", "-map", "2:a",
+            "-t", f"{scene.seconds:.3f}",
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p", "-r", "30",
+            "-c:a", "aac", "-b:a", "128k", "-af", "apad", "-ar", "48000", "-ac", "2",
+            "-threads", "2", "-movflags", "+faststart", str(target),
+        ]
+
+    @staticmethod
     def execute(args: list[str], work: Path, cancel: Event, timeout: float = 600) -> None:
         try:
             with subprocess.Popen(
@@ -390,7 +470,7 @@ class FFmpegAdapter:
                 measured.append(wav_duration(audio))
             fitted = fit_timings(measured, [s.seconds for s in scenes], plan.duration)
             scenes = [
-                ScenePlan(seconds, scene.narration, scene.caption, scene.image)
+                replace(scene, seconds=seconds)
                 for seconds, scene in zip(fitted, scenes)
             ]
             timings = [
@@ -402,12 +482,19 @@ class FFmpegAdapter:
             image, audio, target = (
                 work / f"scene-{index:03d}{suffix}" for suffix in (".png", ".wav", ".mp4")
             )
-            card(plan, scene, index, image, font)
+            if scene.clip is not None:
+                overlay(plan, scene, index, image, font)
+            else:
+                card(plan, scene, index, image, font)
             if not timings:
                 tts.synthesize(scene.narration, audio, plan.voice, scene.seconds, plan.speech)
             if wav_duration(audio) > scene.seconds + 0.05:
                 raise RenderError("음성이 장면 길이를 초과했습니다. 대본을 수정하세요.", kind="audio")
-            self.execute(self.command(binary, scene, image, audio, target), work, cancel)
+            if scene.clip is not None:
+                command = self.clip_command(binary, scene, image, audio, target)
+            else:
+                command = self.command(binary, scene, image, audio, target)
+            self.execute(command, work, cancel)
             progress(10 + int((index + 1) / len(scenes) * 75))
         manifest = work / "concat.txt"
         manifest.write_text(
@@ -448,4 +535,9 @@ class FFmpegAdapter:
         metadata["audio_fit"] = bool(timings)
         if timings:
             metadata["scene_timings"] = timings
+        # Every clip scene carries the label (overlay), so every clip scene is listed as AI-generated.
+        ai_scenes = [index for index, scene in enumerate(scenes) if scene.clip is not None or scene.ai_generated]
+        if ai_scenes:
+            metadata["ai_generated_scenes"] = ai_scenes
+            metadata["ai_label"] = AI_SCENE_LABEL
         return final, metadata

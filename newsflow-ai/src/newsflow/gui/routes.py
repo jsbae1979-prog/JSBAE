@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Literal
 
@@ -27,6 +27,19 @@ from newsflow.news.service import CollectionBusy
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+KST = timezone(timedelta(hours=9), "KST")
+
+
+def kst(value: datetime | None) -> str:
+    """Stored times stay UTC; screens show Korea Standard Time (KST, UTC+9) by default."""
+    if value is None:
+        return "미확인"
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=UTC)
+    return value.astimezone(KST).strftime("%Y-%m-%d %H:%M KST")
+
+
+templates.env.filters["kst"] = kst
 
 
 def page(request: Request, name: str, **context: object) -> HTMLResponse:

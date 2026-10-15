@@ -29,6 +29,7 @@ from .gui.publishing_routes import router as publishing_router
 from .gui.routes import router
 from .gui.setup_routes import router as setup_router
 from .gui.sources_routes import router as sources_router
+from .gui.video_ai_routes import router as video_ai_router
 from .gui.video_routes import router as video_router
 from .gui.voice_routes import router as voice_router
 from .intelligence.credentials import AIKeyStore
@@ -39,6 +40,9 @@ from .news.rss_adapter import PublicRSSAdapter, RSSAdapter
 from .news.service import CollectionCoordinator, NewsService
 from .oauth.lifecycle import expire_production_credentials, recover_production_lifecycle
 from .oauth.production_vault import recover_credential_rotations
+from .video.ai.contracts import VideoProvider
+from .video.ai.keys import VideoAIKeyStore
+from .video.ai.service import AIVideoCoordinator
 from .video.service import VideoCoordinator
 
 
@@ -56,7 +60,9 @@ def _recover_intelligence_runs(sessions: sessionmaker[Session], data_dir: Path) 
         return
 
 
-def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None, adapter: RSSAdapter | None = None, video_provider: VideoProvider | None = None,
+) -> FastAPI:
     settings = settings or Settings.from_env()
     engine = make_engine(settings.data_dir / "newsflow.db")
     migrate(engine)
@@ -90,6 +96,9 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     )
     autopilot = AutopilotCoordinator(sessions, settings.data_dir, autopilot_backend)
     autopilot.recover()
+    # Phase 5D: optional AI video provider. Off by default; only tests/CI inject the Fake provider.
+    video_ai = AIVideoCoordinator(sessions, settings.data_dir, video, VideoAIKeyStore(settings.data_dir), video_provider)
+    video_ai.start()
     secret = settings.local_secret().encode()
 
     @asynccontextmanager
@@ -97,6 +106,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
         try:
             yield
         finally:
+            video_ai.close()
             autopilot.close()
             autopilot_backend.close()
             coordinator.close()
@@ -107,6 +117,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     app.state.config, app.state.sessions, app.state.coordinator = settings, sessions, coordinator
     app.state.engine = engine
     app.state.video = video
+    app.state.video_ai = video_ai
     app.state.autopilot = autopilot
     app.state.autopilot_backend = autopilot_backend
     app.state.ai_keys = ai_keys
@@ -172,6 +183,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     app.include_router(router)
     app.include_router(intelligence_router)
     app.include_router(video_router)
+    app.include_router(video_ai_router)
     app.include_router(publishing_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
     return app

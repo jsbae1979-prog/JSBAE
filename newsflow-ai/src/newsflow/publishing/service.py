@@ -20,6 +20,7 @@ from newsflow.db.models import (
     PublishJob,
     PublishValidation,
     RenderJob,
+    Scene,
     VideoProject,
     utcnow,
 )
@@ -379,10 +380,20 @@ class PublishingService:
                 check(
                     key, "pass" if value else "fail", reason + "; 체크 여부는 외부 검증 완료를 의미하지 않음"
                 )
+            # A video composed with AI-generated scenes (Phase 5D) must be disclosed; 'not_required'
+            # is accepted only for videos without any generated scene.
+            project = session.get(VideoProject, job.project_id) if job else None
+            ai_scenes = bool(
+                (job and (job.metadata_json or {}).get("ai_generated_scenes"))
+                or (project and project.ai_plan_id is not None and session.scalar(
+                    select(Scene.id).where(Scene.project_id == project.id, Scene.ai_generated.is_(True)).limit(1)))
+            )
+            allowed = {"disclose"} if ai_scenes else {"not_required", "disclose"}
             check(
                 "ai_disclosure",
-                "pass" if draft.ai_disclosure in {"not_required", "disclose"} else "fail",
-                "사용자 AI 표시 필요성 검토; YouTube containsSyntheticMedia/Meta is_ai_generated 매핑 후보, 적용 정책 재확인 필요",
+                "pass" if draft.ai_disclosure in allowed else "fail",
+                ("AI 생성 장면 포함 영상: 'AI 생성 표시(disclose)'만 통과; " if ai_scenes else "")
+                + "사용자 AI 표시 필요성 검토; YouTube containsSyntheticMedia/Meta is_ai_generated 매핑 후보, 적용 정책 재확인 필요",
             )
             account = session.get(PlatformAccount, draft.account_id) if draft.account_id else None
             check(

@@ -146,6 +146,8 @@ class VideoProject(Base):
     snapshot: Mapped[dict] = mapped_column(JSON)
     sources: Mapped[dict] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    # Phase 5D: the AI video plan this project was composed from (None for local FFmpeg renders).
+    ai_plan_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class Scene(Base):
@@ -159,6 +161,9 @@ class Scene(Base):
     narration: Mapped[str] = mapped_column(Text)
     caption: Mapped[str] = mapped_column(Text)
     material: Mapped[str] = mapped_column(String(255), default="")
+    # Phase 5D: a validated provider clip from the AI clip store, always labelled as AI-generated.
+    clip_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    ai_generated: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
 
 
 class AudioTrack(Base):
@@ -431,3 +436,94 @@ class AIUsage(Base):
     total_tokens: Mapped[int] = mapped_column(Integer, default=0)
     elapsed_ms: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class VideoAIModel(Base):
+    """User-confirmed model catalog entry; the path and unit price come from the official docs."""
+
+    __tablename__ = "video_ai_models"
+    __table_args__ = (UniqueConstraint("provider", "path"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    provider: Mapped[str] = mapped_column(String(20))
+    path: Mapped[str] = mapped_column(String(160))
+    label: Mapped[str] = mapped_column(String(80))
+    price_per_second: Mapped[str] = mapped_column(String(20))
+    durations: Mapped[str] = mapped_column(String(60))
+    resolution: Mapped[str] = mapped_column(String(10))
+    confirmed_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class AIVideoPlan(Base):
+    """Storyboard extension for the optional AI video mode; FFmpeg still composes the final MP4."""
+
+    __tablename__ = "ai_video_plans"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    draft_id: Mapped[int] = mapped_column(ForeignKey("content_drafts.id"))
+    draft_revision: Mapped[int] = mapped_column(Integer)
+    duration: Mapped[int] = mapped_column(Integer)
+    provider: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(20), default="draft")
+    revision: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    currency: Mapped[str] = mapped_column(String(3), default="USD")
+    confirmed_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    approved_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    render_job_id: Mapped[int | None] = mapped_column(ForeignKey("render_jobs.id"), nullable=True)
+    message: Mapped[str] = mapped_column(String(500), default="")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class AIVideoScene(Base):
+    """One storyboard scene: card, local image or a generated clip, with its provider state."""
+
+    __tablename__ = "ai_video_scenes"
+    __table_args__ = (UniqueConstraint("plan_id", "position"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    plan_id: Mapped[int] = mapped_column(ForeignKey("ai_video_plans.id", ondelete="CASCADE"))
+    position: Mapped[int] = mapped_column(Integer)
+    start_ms: Mapped[int] = mapped_column(Integer)
+    end_ms: Mapped[int] = mapped_column(Integer)
+    narration: Mapped[str] = mapped_column(Text)
+    caption: Mapped[str] = mapped_column(Text)
+    source: Mapped[str] = mapped_column(String(12), default="card")
+    material: Mapped[str] = mapped_column(String(255), default="", server_default="")
+    prompt: Mapped[str] = mapped_column(Text, default="", server_default="")
+    model_path: Mapped[str] = mapped_column(String(160), default="", server_default="")
+    clip_seconds: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    estimated_cost: Mapped[str] = mapped_column(String(20), default="", server_default="")
+    status: Mapped[str] = mapped_column(String(20), default="planned")
+    attempt: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    request_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    # Idempotency-Key for the submit; reused only to resend a submission whose outcome is unknown.
+    submit_key: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    error_code: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    message: Mapped[str] = mapped_column(String(300), default="", server_default="")
+    clip_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    clip_meta: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    reviewed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    submitted_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class VideoAIUsage(Base):
+    """Reserved generation cost per scene attempt; separate from the OpenAI token usage table."""
+
+    __tablename__ = "video_ai_usage"
+    __table_args__ = (UniqueConstraint("scene_id", "attempt"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    plan_id: Mapped[int] = mapped_column(ForeignKey("ai_video_plans.id"))
+    scene_id: Mapped[int] = mapped_column(ForeignKey("ai_video_scenes.id"))
+    attempt: Mapped[int] = mapped_column(Integer)
+    provider: Mapped[str] = mapped_column(String(20))
+    model_path: Mapped[str] = mapped_column(String(160))
+    seconds: Mapped[int] = mapped_column(Integer)
+    estimated_cost: Mapped[str] = mapped_column(String(20))
+    currency: Mapped[str] = mapped_column(String(3))
+    status: Mapped[str] = mapped_column(String(20))
+    request_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

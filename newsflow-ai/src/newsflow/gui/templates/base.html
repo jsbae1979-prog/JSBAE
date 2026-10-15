@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}NewsFlow AI{% endblock %}</title><link rel="stylesheet" href="/static/css/app.css"><link rel="stylesheet" href="/static/css/easy.css"><script src="/static/js/app.js" defer></script><script src="/static/js/autopilot.js" defer></script></head>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}NewsFlow AI{% endblock %}</title><link rel="stylesheet" href="/static/css/app.css"><link rel="stylesheet" href="/static/css/easy.css"><script src="/static/js/app.js" defer></script><script src="/static/js/autopilot.js" defer></script><script src="/static/js/video_ai.js" defer></script></head>
 <body><a class="skip-link" href="#main-content">본문으로 이동</a>
 <aside class="sidebar"><a class="brand" href="/" aria-label="NewsFlow AI 홈">◈ <span>NewsFlow <b>AI</b></span></a><div class="nav-label">나의 콘텐츠 작업실</div>
 <nav aria-label="주 메뉴"><a href="/" class="{{ 'active' if active == 'home' }}" {% if active == 'home' %}aria-current="page"{% endif %}><span aria-hidden="true">⌂</span> 홈</a><a href="/autopilot/start" class="{{ 'active' if active == 'autopilot' }}" {% if active == 'autopilot' %}aria-current="page"{% endif %}><span aria-hidden="true">✦</span> 자동 제작</a><a href="/sources" class="{{ 'active' if active == 'sources' }}" {% if active == 'sources' %}aria-current="page"{% endif %}><span aria-hidden="true">☷</span> 뉴스</a><a href="/videos" class="{{ 'active' if active == 'videos' }}">▷ 제작 영상</a><a href="/queue" class="{{ 'active' if active == 'queue' }}" {% if active == 'queue' %}aria-current="page"{% endif %}><span aria-hidden="true">▤</span> 게시 대기함</a><a href="/simple-settings" class="{{ 'active' if active == 'simple-settings' }}" {% if active == 'simple-settings' %}aria-current="page"{% endif %}><span aria-hidden="true">⚙</span> 설정</a></nav>
@@ -7,6 +7,6 @@
 <div class="sidebar-foot"><span class="dot"></span> 내 PC에서 만드는 콘텐츠<br><small>게시 전 직접 확인해 주세요.</small></div></aside>
 {% macro csrf_field() %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endmacro %}
 {% macro badge(status) %}<span class="badge {{ status }}">{{ {'success':'성공','partial':'부분 실패','failed':'실패','running':'수집 중','empty':'활성 출처 없음','interrupted':'중단','idle':'대기'}.get(status,status) }}</span>{% endmacro %}
-{% macro when(value) %}{{ value.strftime('%Y-%m-%d %H:%M UTC') if value else '미확인' }}{% endmacro %}
-<main id="main-content" tabindex="-1"><noscript><p>작업을 시작하려면 브라우저 설정에서 JavaScript를 켜 주세요.</p></noscript><header class="topbar"><span>작은 시작으로, 하나의 영상까지</span><span class="pill">PHASE 5C.1</span></header>{% block content %}{% endblock %}</main>
+{% macro when(value) %}{{ value|kst }}{% endmacro %}
+<main id="main-content" tabindex="-1"><noscript><p>작업을 시작하려면 브라우저 설정에서 JavaScript를 켜 주세요.</p></noscript><header class="topbar"><span>작은 시작으로, 하나의 영상까지</span><span class="pill">PHASE 5D</span></header>{% block content %}{% endblock %}</main>
 </body></html>

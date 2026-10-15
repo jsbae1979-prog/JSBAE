@@ -29,8 +29,8 @@ class Cipher(Protocol):
     def unprotect(self, payload: bytearray, entropy: bytearray) -> bytearray: ...
 
 
-def _entropy() -> bytearray:
-    return bytearray(hashlib.sha256(b"NewsFlowAI:Phase5C:ai-api-key").digest())
+def _entropy(label: bytes = b"NewsFlowAI:Phase5C:ai-api-key") -> bytearray:
+    return bytearray(hashlib.sha256(label).digest())
 
 
 def _native_cipher() -> Cipher:
@@ -60,8 +60,15 @@ def _native_cipher() -> Cipher:
 
 
 class AIKeyStore:
+    # Subclasses (Phase 5D video provider key) change only these constants.
+    FILE = _FILE
+    ENV = ENV_NAME
+    PATTERN = _KEY
+    ENTROPY = b"NewsFlowAI:Phase5C:ai-api-key"
+    FORMAT_MESSAGE = "API 키 형식을 확인하세요. 공백 없이 20자 이상이어야 합니다."
+
     def __init__(self, data_dir: Path, cipher: Cipher | None = None) -> None:
-        self.path = data_dir / _FILE
+        self.path = data_dir / self.FILE
         self._cipher = cipher
 
     def _get_cipher(self) -> Cipher:
@@ -69,16 +76,16 @@ class AIKeyStore:
             self._cipher = _native_cipher()
         return self._cipher
 
-    @staticmethod
-    def validate(key: str) -> str:
+    @classmethod
+    def validate(cls, key: str) -> str:
         key = key.strip()
-        if not _KEY.fullmatch(key):
-            raise CredentialError("API 키 형식을 확인하세요. 공백 없이 20자 이상이어야 합니다.")
+        if not cls.PATTERN.fullmatch(key):
+            raise CredentialError(cls.FORMAT_MESSAGE)
         return key
 
     def status(self) -> dict:
         stored = self.path.is_file() and not self.path.is_symlink()
-        environment = bool(os.environ.get(ENV_NAME, "").strip())
+        environment = bool(os.environ.get(self.ENV, "").strip())
         source = "stored" if stored else "environment" if environment else None
         return {
             "configured": source is not None, "source": source, "stored": stored, "environment": environment,
@@ -91,7 +98,7 @@ class AIKeyStore:
             payload = bytearray(self.path.read_bytes())
             if not 0 < len(payload) <= 8192:
                 raise CredentialError("저장된 키 파일이 손상되었습니다. 키를 다시 저장하세요.")
-            plain = self._get_cipher().unprotect(payload, _entropy())
+            plain = self._get_cipher().unprotect(payload, _entropy(self.ENTROPY))
             try:
                 return self.validate(bytes(plain).decode("utf-8"))
             except UnicodeDecodeError:
@@ -99,19 +106,19 @@ class AIKeyStore:
             finally:
                 for index in range(len(plain)):
                     plain[index] = 0
-        return os.environ.get(ENV_NAME, "").strip()
+        return os.environ.get(self.ENV, "").strip()
 
     def save(self, key: str) -> None:
         key = self.validate(key)
         cipher = self._get_cipher()
         plain = bytearray(key.encode("utf-8"))
         try:
-            protected = cipher.protect(plain, _entropy())
+            protected = cipher.protect(plain, _entropy(self.ENTROPY))
         finally:
             for index in range(len(plain)):
                 plain[index] = 0
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_name(_FILE + ".tmp")
+        temporary = self.path.with_name(self.FILE + ".tmp")
         try:
             with temporary.open("xb") as handle:
                 handle.write(bytes(protected))
