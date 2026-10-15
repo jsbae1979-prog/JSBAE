@@ -60,11 +60,21 @@ def diagnostics(data_dir: Path, sessions: sessionmaker[Session]) -> dict[str, An
             p = Path(directory) / '한글 파일.txt'
             p.write_text('저장 확인', encoding='utf-8')
             writable = p.read_text(encoding='utf-8') == '저장 확인'
+    except (OSError, ValueError):
+        writable = False
+    try:
         with sessions() as session:
-            db_ok = session.execute(text('SELECT 1')).scalar_one() == 1
+            # Exercise database writes without changing a setting or committing a probe row.
+            # A readable but read-only DB must not be reported as ready.
+            session.execute(text("UPDATE app_settings SET value=value WHERE key='request_timeout'"))
+            session.rollback()
+            db_ok = True
+    except SQLAlchemyError:
+        db_ok = False
+    try:
         disk_ok = shutil.disk_usage(data_dir).free >= 600 * 1024 * 1024
-    except (OSError, ValueError, SQLAlchemyError):
-        writable = db_ok = disk_ok = False
+    except OSError:
+        disk_ok = False
     add('storage', '저장 폴더와 데이터베이스', writable and db_ok, '저장 폴더 쓰기 권한과 디스크 상태를 확인하세요. 기존 데이터는 삭제하지 마세요.')
     add('space', '영상 제작 여유 공간', disk_ok, '저장 드라이브에 최소 600MB의 여유 공간을 확보하세요.')
     try:

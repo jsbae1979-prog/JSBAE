@@ -189,3 +189,24 @@ def test_first_wizard_inherits_existing_installation_defaults(app):
     assert values['duration'] == '60' and values['source'] == 'feeds'
     save_step(app.state.sessions, 1, 0, {})
     assert read_state(app.state.sessions)['values'] == values
+
+
+def test_readonly_database_not_reported_ready(app, monkeypatch):
+    from contextlib import contextmanager
+
+    monkeypatch.setattr('newsflow.easy_setup.voice_catalog', list)
+    @contextmanager
+    def readonly():
+        with app.state.sessions() as session:
+            session.connection().exec_driver_sql('PRAGMA query_only=ON')
+            try:
+                yield session
+            finally:
+                session.rollback()
+                session.connection().exec_driver_sql('PRAGMA query_only=OFF')
+    result = diagnostics(app.state.config.data_dir, readonly)
+    assert next(c for c in result['checks'] if c['key'] == 'storage')['status'] == 'needs_attention'
+    assert not result['ready'] and 'OperationalError' not in str(result)
+    with app.state.sessions() as session:
+        assert session.get(AppSetting, 'request_timeout').value == '10'
+    assert next(c for c in diagnostics(app.state.config.data_dir, app.state.sessions)['checks'] if c['key']=='storage')['status'] == 'pass'
