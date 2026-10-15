@@ -604,7 +604,7 @@ class AIVideoCoordinator:
         if provider is None:
             raise AIVideoError(
                 "AI 영상 공급사가 '사용 안 함'이라 결과를 다시 받을 수 없습니다. AI 영상 설정에서 공급사를 다시 켠 뒤 "
-                "'결과 다시 받기'를 누르세요(추가 생성 요청 없음).", 409)
+                "다시 시도하세요.", 409)
         with self.sessions() as session:
             scene = next((s for s in self._scenes(session, plan_id) if s.position == position), None)
             state = self._clip_state(scene.clip_name, (scene.clip_meta or {}).get("sha256")) \

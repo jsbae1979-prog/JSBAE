@@ -2509,4 +2509,4 @@ def test_a_refetch_while_the_provider_is_off_says_to_switch_it_on(studio):
     studio.service.injected = None
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.refetch(plan_id, revision(studio, plan_id), 0)
-    assert excinfo.value.status == 409 and "공급사를 다시 켠 뒤 '결과 다시 받기'를 누르세요" in str(excinfo.value)
+    assert excinfo.value.status == 409 and "공급사를 다시 켠 뒤 다시 시도하세요" in str(excinfo.value)
