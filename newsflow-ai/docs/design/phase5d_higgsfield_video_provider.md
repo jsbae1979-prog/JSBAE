@@ -66,7 +66,7 @@
 | 화면 | 변경 |
 |---|---|
 | 준비 상태 칩 (`autopilot_routes.readiness`) | `AI 영상: 사용 가능` / `AI 영상: 불가 (사유)` 칩 추가. 사유는 `video_ready()["reasons"]` 문자열(한국어). |
-| `/autopilot/start` (`autopilot_start.html`) | fieldset **`4. 영상 제작 방식`** 라디오 `ffmpeg`(기본) / `ai`. 준비 안 됨·체험 선택 시 `ai` 라디오를 `disabled`로 두고 사유를 라벨 아래에 표시. `ai` 선택 시 모델 `<select>`(허용 목록만), 예상 비용 패널, `video_cost_ack` 체크박스가 나타남. 기존 게시 대상 fieldset은 5번으로 밀림. |
+| `/autopilot/start` (`autopilot_start.html`) | fieldset **`4. 영상 제작 방식`** 라디오 `ffmpeg`(기본) / `ai`. 준비 안 됨·체험 선택 시 `ai` 라디오를 `disabled`로 두고 사유를 라벨 아래에 표시. `ai` 선택 시 모델 `<select>`(허용 목록만), 예상 비용 패널, `video_cost_ack` 체크박스가 나타남. `3. 영상 길이` fieldset 뒤에 추가하며, 번호 없는 기존 `영상의 목적지`·`대본 만들기`·`음성` 선택은 그대로 둠. |
 | `/simple-settings` | 기본 영상 제작 방식 저장(`autopilot_video_mode`). |
 | **새 페이지 `/video-provider-settings`** (`video_provider_settings.html`, `ai_settings.html` 복제) | 제공자/모델/월 초 한도/작업 초 한도/사용자 입력 단가/제한시간/승인 체크, 키 저장·삭제(값 비표시), 연결 확인(0비용 확인 방법은 15절에서 재확인), 이번 달 사용 초·최근 작업 목록. |
 | `/autopilot/jobs/<id>` (`autopilot_job.html`) | 장면별 `clip_source` 칩, AI 장면 수·대체 카드 수, 최종 체크리스트 2개 항목 추가(9절). |

@@ -81,7 +81,7 @@ DB migration `0009`는 추가 전용입니다(`content_drafts.review_notes`, `au
 
 Phase 5C.1은 기능 범위를 넓히지 않고 실제 운영 전에 **확인할 수 있는 수단**을 더합니다. 새 migration은 없으며(schema head `0009` 유지) 새 상태는 `AppSetting` 키(`ai_price_input_per_1m`, `ai_price_output_per_1m`, `ai_price_currency`, `voice_listening_last`)와 데이터 폴더의 JSON 파일뿐입니다.
 
-1. **공개 피드 검토** — `tools\feed_candidates.json`(후보 22개, 17개 활성; 공식 여부·약관은 사람이 확인하기 전까지 `unknown`)을 `python tools\ci_feed_review.py --mode windows --output <폴더>`로 앱과 같은 어댑터 경로에서 검토하고 `feed-review.json`을 남깁니다. 판정은 PASS / BLOCKED(robots·policy, 결함 아님) / NOT VERIFIED / FAIL(앱 내부 결함만)입니다. 수집 오류는 `/sources`에 `최근 수집 오류: [kind] …`로 표시됩니다.
+1. **공개 피드 검토** — `tools\feed_candidates.json`(후보 22개, 17개 활성; 공식 여부·약관은 사람이 확인하기 전까지 `unknown`)을 `.\.venv\Scripts\python.exe tools\ci_feed_review.py --mode windows --output <폴더>`로 앱과 같은 어댑터 경로에서 검토하고 `feed-review.json`을 남깁니다. 판정은 PASS / BLOCKED(robots·policy, 결함 아님) / NOT VERIFIED / FAIL(앱 내부 결함만)입니다. 수집 오류는 `/sources`에 `최근 수집 오류: [kind] …`로 표시됩니다.
 2. **예상 토큰·예상 비용** — `/ai-settings`에 `실제 콘텐츠 1건(30초 기준) = 외부 AI 호출 2회 · 예상 최대 약 N 토큰 …`이 표시되고, 사용자가 입력한 단가(`입력 토큰 100만 개당 단가`·`출력 토큰 100만 개당 단가`·`통화`)로 예상 비용을 보여 줍니다. 대본 출력 상한은 30초 1400 · 45초 1800 · 60초 2200 토큰이며 예산 검사는 `이번 달 사용량 + 예상 입력 + 출력 상한`입니다. 예상 비용은 사용자가 입력한 단가로 계산한 참고값이며 이 앱은 요금을 보증하거나 결제하지 않습니다.
 3. **승인된 단일 실제 호출** — 사용자 PC에서만 `NEWSFLOW_AI_LIVE_TEST=1` + `tools\ai_live_check.py --article-id <번호> --max-tokens 1400 --output ai-live` → `동의` 입력 → 유료 호출 정확히 1회 → `ai-live\ai-live-check.json`(키·본문·대본 없음). 토큰 0 연결 확인은 `--connection-check --model gpt-4o-mini`. CI에서 유료 완성 호출은 실행하지 않습니다.
 4. **한국어 음성** — `/voices`가 `설치됨 / 없음 / 확인 불가 / 설치됨 · SAPI 미노출` 상태와 PowerShell 실행 정책 안내를 표시하고(앱은 레지스트리·정책을 바꾸지 않음), 미리 듣기에 **원문**과 **읽기 형태**(날짜·시각·퍼센트·통화·영문 약어의 읽기 변환, 음성에만 적용)를 함께 보여 주며, **청취 결과 기록** 양식으로 사람의 판정(PASS/FAIL/NOT VERIFIED)을 `voice-listening\listening-<id>.json`에 저장합니다. 자동화는 어떤 경우에도 PASS를 기록하지 않습니다. 새 오류 코드 `voice_failed`를 추가했습니다.
@@ -202,7 +202,7 @@ $env:NEWSFLOW_DATA_DIR="D:\내 자료\NewsFlowAI" # 생략하면 LOCALAPPDATA
 .\.venv\Scripts\python.exe -m newsflow.diagnostics --url "https://feeds.bbci.co.uk/news/rss.xml"
 ```
 
-위 BBC 주소는 Phase 5C Windows CI에서 robots.txt 정책으로 **BLOCKED(robots)** 되었습니다(결함이 아니며 정책을 완화하지 않습니다). 여러 후보를 한 번에 검토하려면 `tools\feed_candidates.json`과 `python tools\ci_feed_review.py --mode windows --output <폴더>`를 사용하세요. 진단이 `rss_store: PASS`, `article_count > 0`, `collection_status: success`인 경우에만 실제 기사 저장을 검증한 것입니다. 운영 GUI에서도 활성 RSS의 수집을 재검증하세요. 피드의 이용 조건은 운영자가 확인해야 합니다.
+위 Google News 주소는 Phase 5C.1 Windows CI에서 robots.txt(`Disallow: /`)로 **BLOCKED(robots)**, BBC 주소는 같은 날 PASS와 robots 차단이 함께 기록되어 **불안정**합니다(결함이 아니며 정책을 완화하지 않습니다). 여러 후보를 한 번에 검토하려면 `tools\feed_candidates.json`과 `.\.venv\Scripts\python.exe tools\ci_feed_review.py --mode windows --output <폴더>`를 사용하세요. 진단이 `rss_store: PASS`, `article_count > 0`, `collection_status: success`인 경우에만 실제 기사 저장을 검증한 것입니다. 운영 GUI에서도 활성 RSS의 수집을 재검증하세요. 피드의 이용 조건은 운영자가 확인해야 합니다.
 
 Cloud 재시도 결과: Google DNS 실패/기존 프록시 robots HEAD 200; BBC DNS 실패/프록시 연결 차단. 실제 RSS 저장은 두 출처 모두 **NOT VERIFIED**입니다. 직접 IP 고정 전송은 공개 DNS가 필요한데 이 Cloud에서 제한됩니다. 프록시만으로 검사를 생략해 수집하지 않습니다. 네트워크 설정 변경 없이 진단했으며 필요 변경은 별도 승인 사항입니다.
 

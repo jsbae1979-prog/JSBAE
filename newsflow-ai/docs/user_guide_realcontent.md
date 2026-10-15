@@ -118,7 +118,7 @@ GUI 주소: http://127.0.0.1:8765 · 종료: Ctrl+C
 
 ### 4.1 처음 보이는 출처
 
-첫 실행 시 출처가 하나도 없으면 앱이 **`Google News · 한국`**(`https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko`)을 **사용 안 함** 상태로 하나 넣어 둡니다. 이용 약관을 직접 확인하기 전에는 켜지 마세요. Google News 항목의 원문 링크는 **중계 링크**일 수 있으며 앱은 링크를 바꾸지 않습니다.
+첫 실행 시 출처가 하나도 없으면 앱이 **`Google News · 한국`**(`https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko`)을 **사용 안 함** 상태로 하나 넣어 둡니다. 이용 약관을 직접 확인하기 전에는 켜지 마세요. Phase 5C.1 Windows 실행(38718358049)에서 이 주소의 robots.txt는 `*` 그룹의 첫 일치 규칙이 `Disallow: /`라서 현행 robots 정책으로는 **BLOCKED(robots)**입니다. 켜도 수집되지 않으며 정책을 완화하지 않습니다. 같은 실행에서 수집이 확인된 출처(PASS)는 [공개 피드 검토](realcontent.md#공개-피드-검토-toolsci_feed_reviewpy) 결과를 참고하세요. Google News 항목의 원문 링크는 **중계 링크**일 수 있으며 앱은 링크를 바꾸지 않습니다.
 
 ### 4.2 등록 규칙
 
@@ -158,13 +158,13 @@ GUI 주소: http://127.0.0.1:8765 · 종료: Ctrl+C
 
 ### 4.5 공개 피드 검토 도구와 후보 파일
 
-`tools\feed_candidates.json`에는 후보 공개 피드 22개(17개 활성)가 들어 있습니다. 각 후보의 `official_rss_page`와 이용 약관은 사람이 확인하기 전까지 `unknown`이며, 검토 결과 파일의 `terms_confirmed_by_human`은 `false`입니다. 앱을 종료한 뒤 프로젝트 폴더에서 다음을 실행하면 앱과 똑같은 경로로 각 후보를 검토하고 `feed-review.json`을 남깁니다(기사 본문·요약 미포함, 피드당 제목 최대 3개·80자).
+`tools\feed_candidates.json`에는 후보 공개 피드 22개(17개 활성)가 들어 있습니다. 대부분의 후보는 `official_rss_page`가 `unknown`이고, URL이 적힌 4개(한겨레·NYT·Guardian·NPR)도 사람이 열어 확인하기 전까지 NOT VERIFIED입니다. 이용 약관은 모두 미확인이며 검토 결과 파일의 `terms_confirmed_by_human`은 `false`입니다. 앱을 종료한 뒤 프로젝트 폴더에서 다음을 실행하면 앱과 똑같은 경로로 각 후보를 검토하고 `feed-review.json`을 남깁니다(기사 본문·요약 미포함, 피드당 제목 최대 3개·80자).
 
 ```powershell
 .\.venv\Scripts\python.exe tools\ci_feed_review.py --mode windows --output feed-review
 ```
 
-판정은 PASS(연결 테스트 통과 후 수집 2회 연속 성공) / BLOCKED(robots·policy, 결함 아님) / NOT VERIFIED(dns·timeout·https·http·parse·빈 피드 등 이 환경에서 확인 못 함) / FAIL(앱 내부 결함만)입니다. BBC 뉴스는 robots.txt 때문에 BLOCKED, Hacker News 대조군은 Crawl-delay 때문에 BLOCKED가 **예상된 정상 결과**입니다. 상세는 [공개 피드 검토](realcontent.md#공개-피드-검토-toolsci_feed_reviewpy)를 보세요.
+판정은 PASS(연결 테스트 통과 후 수집 2회 연속 성공) / BLOCKED(robots·policy, 결함 아님) / NOT VERIFIED(dns·timeout·https·http·parse·빈 피드 등 이 환경에서 확인 못 함) / FAIL(앱 내부 결함만)입니다. Phase 5C.1 Windows 실행(38718358049)에서는 17개 시도 중 PASS 13 · BLOCKED 3(Google News 2개 `Disallow: /`, Hacker News 대조군 `Disallow: /r`·crawl-delay 30) · NOT VERIFIED 1(GitHub 블로그, 2 MiB 초과) · FAIL 0이었습니다. BLOCKED는 앱의 보수적 정책이 막은 정상 결과입니다. BBC 뉴스는 같은 날 PASS와 robots 차단이 함께 기록되어 결과가 안정적이지 않습니다. 상세는 [공개 피드 검토](realcontent.md#공개-피드-검토-toolsci_feed_reviewpy)를 보세요.
 
 ---
 
@@ -189,7 +189,7 @@ GUI 주소: http://127.0.0.1:8765 · 종료: Ctrl+C
 
 > 실제 콘텐츠 1건(30초 기준) = 외부 AI 호출 2회 · 예상 최대 약 N 토큰 (입력 약 P + 출력 최대 O) · 이번 달 남은 R 토큰 · 예상 비용 C 또는 단가 미입력. 45·60초 대본은 출력 상한이 더 큽니다(1400·1800·2200 토큰). 실제 사용량은 호출 후 아래에 기록됩니다.
 
-- 호출 2회 = 분석 1회(출력 상한 900 토큰) + 대본 1회. 대본 출력 상한은 **30초 1400 · 45초 1800 · 60초 2200 토큰**입니다.
+- 호출 2회 = 분석 1회(출력 상한 1600 토큰) + 대본 1회. 대본 출력 상한은 **30초 1400 · 45초 1800 · 60초 2200 토큰**입니다.
 - 호출 전 예산 검사는 **`이번 달 사용량 + 이번 호출 예상 입력 + 출력 상한`**이 월 한도를 넘지 않을 때만 통과합니다(`ai_budget`).
 - `단가 (선택 · 예상 비용 표시용)` 폼: `입력 토큰 100만 개당 단가`, `출력 토큰 100만 개당 단가`, `통화`(USD/KRW), 버튼 `단가 저장`. 폼 설명 원문: **"단가는 사용자가 입력한 값이며 공식 요금표를 확인하세요. 예상 비용은 참고용 추정치이고 실제 청구는 제공자 대시보드에서 확인합니다."** 비워 두면 `단가 미입력`으로 표시됩니다. 단가는 호출을 허용하거나 막지 않습니다.
 - 상태 문장: **"예상 비용은 사용자가 입력한 단가로 계산한 참고값이며 이 앱은 요금을 보증하거나 결제하지 않습니다."**
@@ -213,7 +213,9 @@ Remove-Item Env:NEWSFLOW_AI_LIVE_TEST
 
 ```powershell
 $env:NEWSFLOW_AI_LIVE_TEST = "1"
-$env:NEWSFLOW_AI_API_KEY = "<키>"   # 세션 전용. 화면에 남지 않게 README의 Read-Host 방식을 권장
+# 키를 명령줄에 직접 적지 마세요. PowerShell 기록 파일(ConsoleHost_history.txt)에 남습니다.
+$newsflowKey = Read-Host 'OpenAI API 키' -AsSecureString
+$env:NEWSFLOW_AI_API_KEY = [System.Net.NetworkCredential]::new('', $newsflowKey).Password
 .\.venv\Scripts\python.exe tools\ai_live_check.py --connection-check --model gpt-4o-mini --output ai-live
 Remove-Item Env:NEWSFLOW_AI_API_KEY; Remove-Item Env:NEWSFLOW_AI_LIVE_TEST
 ```
@@ -246,7 +248,7 @@ Remove-Item Env:NEWSFLOW_AI_API_KEY; Remove-Item Env:NEWSFLOW_AI_LIVE_TEST
 
 > Windows 설정 → 시간 및 언어 → 언어 및 지역 → 한국어 → 언어 옵션에서 음성(텍스트 음성 변환)을 설치한 뒤 NewsFlow를 종료하고 run.bat를 다시 실행하세요.
 
-앱은 Windows **SAPI(System.Speech)에 보이는 `ko-*` 문화권 음성만** 목록에 올리고, 다른 언어 음성으로 대체하지 않으며, 외부 유료 음성을 쓰지 않습니다. 음성이 없어도 **무음 검토영상**으로 모든 흐름을 진행할 수 있습니다. 특정 음성 이름(예: "Microsoft Heami Desktop")이 보이는지, Windows 11 24H2에서 음성 팩이 SAPI에 노출되는지는 **NOT VERIFIED**입니다.
+설정 → 음성과 자막(`/voices`)과 처음 설정하기 5단계는 Windows **SAPI(System.Speech)에 보이는 `ko-*` 문화권 음성만** 목록에 올립니다. 고급 모드 Video Studio는 설치된 모든 SAPI 음성을 보여 주되 한국어가 아닌 음성에는 `(한국어 아님 · 한국어 대본 읽기 품질 미보장)`을 붙이고 기본 선택하지 않습니다. 어떤 경우에도 다른 언어 음성으로 몰래 대체하지 않으며 외부 유료 음성을 쓰지 않습니다. 음성이 없어도 **무음 검토영상**으로 모든 흐름을 진행할 수 있습니다. 특정 음성 이름(예: "Microsoft Heami Desktop")이 보이는지, Windows 11 24H2에서 음성 팩이 SAPI에 노출되는지는 **NOT VERIFIED**입니다.
 
 ### 6.2 상태 표시 (설정 → `한국어 음성·속도·미리 듣기 →`, `/voices`)
 
@@ -278,7 +280,7 @@ Remove-Item Env:NEWSFLOW_AI_API_KEY; Remove-Item Env:NEWSFLOW_AI_LIVE_TEST
 
 ### 6.5 청취 결과 기록
 
-같은 화면의 `청취 결과 기록` 폼은 **사람이 들은 결과만** 저장합니다. 항목: `청취자`(1~40자), `들은 음성`, `속도`, `쉼`, `항목별 판정`(명료도·음량·잡음·끝 잘림 / 숫자 / 날짜·시간 / 영문 / 문장 사이 쉼 / 속도 / 길이 / 자막 동기 — 각각 정확·부정확·불명), `종합 판정`(PASS / FAIL / NOT VERIFIED, 기본 NOT VERIFIED), `메모`(500자). 미리 듣기 직후 저장하면 그 WAV의 SHA256이 함께 기록됩니다. **부정확 항목이 하나라도 있으면 PASS로 저장할 수 없습니다**(`부정확으로 표시한 항목이 있으면 PASS로 기록할 수 없습니다. FAIL 또는 NOT VERIFIED를 선택하세요.`). 저장 결과는 `voice-listening\listening-<id>.json`(최근 50건 보관)과 설정 `voice_listening_last`에 남고, 화면에는 `사람 청취 결과: PASS (날짜, 청취자)`처럼 표시됩니다. 앱과 자동 테스트는 어떤 경우에도 PASS를 기록하지 않습니다. 항목별 기준은 [한국어 음성 청취 확인표](korean_tts_listening_checklist.md)를 따릅니다.
+같은 화면의 `청취 결과 기록` 폼은 **사람이 들은 결과만** 저장합니다. 항목: `청취자`(1~40자), `들은 음성`, `속도`, `쉼`, `항목별 판정`(명료도·음량·잡음·끝 잘림 / 숫자 / 날짜·시간 / 영문 / 문장 사이 쉼 / 속도 / 길이 / 자막 동기 — 각각 정확·부정확·불명), `종합 판정`(PASS / FAIL / NOT VERIFIED, 기본 NOT VERIFIED), `메모`(500자). 미리 듣기 직후 저장하면 그 WAV의 SHA256이 함께 기록됩니다. **PASS는 모든 항목이 정확일 때만 저장됩니다**(`PASS는 모든 항목이 정확일 때만 기록할 수 있습니다. 부정확·불명 항목이 있으면 FAIL 또는 NOT VERIFIED를 선택하세요.`). 청취자·음성 이름에는 가운뎃점(·)을 쓸 수 없습니다. 저장 결과는 `voice-listening\listening-<id>.json`(최근 50건 보관)과 설정 `voice_listening_last`에 남고, 화면에는 `사람 청취 결과: PASS (날짜, 청취자)`처럼 표시됩니다. 앱과 자동 테스트는 어떤 경우에도 PASS를 기록하지 않습니다. 항목별 기준은 [한국어 음성 청취 확인표](korean_tts_listening_checklist.md)를 따릅니다.
 
 ### 6.6 음성 관련 오류 코드
 
