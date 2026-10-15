@@ -430,10 +430,15 @@ class LoopbackCallbackListener:
             if self._launch is None:
                 raise CallbackError("invalid_input")
         remaining = max(0.0, self._deadline - monotonic())
+        # A wait bounded by the launch deadline is an expiry even when the OS timer wakes a
+        # few milliseconds early (Windows timer resolution); only a shorter caller timeout is
+        # reported as callback_timeout.
+        bounded_by_deadline = remaining <= timeout
         if not self._event.wait(min(timeout, remaining)):
             with self._lock:
                 if not self._consumed:
-                    self._finish_locked(error="expired" if monotonic() >= self._deadline else "callback_timeout")
+                    expired = bounded_by_deadline or monotonic() >= self._deadline
+                    self._finish_locked(error="expired" if expired else "callback_timeout")
         with self._lock:
             if self._error is not None:
                 raise self._error
