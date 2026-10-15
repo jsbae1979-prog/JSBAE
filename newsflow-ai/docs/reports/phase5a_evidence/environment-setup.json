@@ -1,0 +1,12 @@
+{
+  "install_script": "saved",
+  "start_skill": "saved",
+  "network_changed": false,
+  "credentials_changed": false,
+  "requires_publish": true,
+  "new_environment_restoration": "NOT VERIFIED",
+  "dependency_check": "PASS",
+  "ruff": "PASS",
+  "media_browser_prerequisites": "PASS",
+  "note": "Draft persistence is not publication or fresh-task restoration. Initial no-build-isolation install failed because setuptools was unavailable; standard isolated editable install succeeded."
+}
