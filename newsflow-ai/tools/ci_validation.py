@@ -35,6 +35,8 @@ def child_env() -> dict[str, str]:
         "NEWSFLOW_HOST",
         "NEWSFLOW_SECRET_KEY",
         "NEWSFLOW_AI_API_KEY",
+        "NEWSFLOW_AI_LIVE_TEST",
+        "NEWSFLOW_AI_LIVE_MAX_TOKENS",
         "GH_TOKEN",
         "GITHUB_TOKEN",
     ):
@@ -49,18 +51,18 @@ class HTTP:
         self.cookies = http.cookiejar.CookieJar()
         self.opener = build_opener(ProxyHandler({}), HTTPCookieProcessor(self.cookies))
 
-    def get(self, path: str) -> bytes:
-        with self.opener.open(BASE + path, timeout=3) as response:
+    def get(self, path: str, timeout: float = 3) -> bytes:
+        with self.opener.open(BASE + path, timeout=timeout) as response:
             assert response.status == 200
             return response.read()
 
-    def post(self, path: str, fields: dict) -> None:
+    def post(self, path: str, fields: dict, timeout: float = 5) -> None:
         self.get("/settings")
         token = next(cookie.value for cookie in self.cookies if cookie.name == "newsflow_csrf")
         request = Request(
             BASE + path, data=urlencode({**fields, "csrf_token": token}).encode(), headers={"Origin": BASE}
         )
-        with self.opener.open(request, timeout=5) as response:
+        with self.opener.open(request, timeout=timeout) as response:
             assert response.status == 200
 
     def blocked_post(
@@ -82,8 +84,8 @@ class HTTP:
             finally:
                 error.close()
 
-    def done(self) -> dict:
-        deadline = time.monotonic() + 15
+    def done(self, deadline_seconds: float = 15) -> dict:
+        deadline = time.monotonic() + deadline_seconds
         while time.monotonic() < deadline:
             result = json.loads(self.get("/api/collection"))
             if result["status"] != "running":

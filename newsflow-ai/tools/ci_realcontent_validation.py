@@ -48,7 +48,11 @@ def database_evidence(root: Path) -> dict:
         assert db.execute("SELECT COUNT(*) FROM platform_accounts WHERE credential_ref IS NOT NULL OR api_ready = 1").fetchone()[0] == 0
         settings = {row[0]: row[1] for row in db.execute("SELECT key, value FROM app_settings WHERE key LIKE 'ai_%'")}
         assert not any("sk-" in value for value in settings.values()), "key material must never reach app_settings"
+        # Phase 5C.1 settings (user-entered prices) are plain numbers; their persistence across a
+        # restart is part of the evidence. Keys and the dated approval are never listed here.
+        prices = {key: value for key, value in settings.items() if key.startswith("ai_price_")}
         return {
+            "ai_price_settings": prices,
             "autopilot_jobs": [{"content_mode": a, "ai_mode": b, "status": c} for a, b, c in jobs],
             "external_ai_calls_recorded": usage, "intelligence_providers": providers,
             "source_checks": [{"status": s, "articles": n} for s, n in checks],
@@ -236,13 +240,19 @@ def live_rss(mode: str, url: str, env: dict, output: Path, result: dict) -> None
             page_html = http.get("/sources").decode("utf-8")
             match = re.search(r'/sources/(\d+)/test', page_html)
             assert match
-            http.post(f"/sources/{match.group(1)}/test", {})
+            client_timeout = None
+            try:
+                # A real feed can legitimately need DNS + robots + redirects + feed (~6 x request_timeout).
+                http.post(f"/sources/{match.group(1)}/test", {}, timeout=75)
+            except Exception as exc:  # noqa: BLE001 - the server-side row is still the evidence
+                client_timeout = type(exc).__name__
             with closing(sqlite3.connect((data if mode != "windows" else data / "NewsFlowAI") / "newsflow.db")) as db:
                 row = db.execute("SELECT status, kind, message, article_count FROM news_source_checks").fetchone()
             result["live_public_rss"] = {
                 "url": url, "status": "PASS" if row and row[0] == "pass" else "NOT VERIFIED",
                 "kind": row[1] if row else None, "message": row[2] if row else "no check row", "articles": row[3] if row else 0,
                 "note": "network-dependent; articles were not stored by the connection test",
+                "client_timeout": client_timeout,
             }
         except Exception as exc:  # noqa: BLE001 - network is outside this validation's control
             result["live_public_rss"] = {"url": url, "status": "NOT VERIFIED", "error_type": type(exc).__name__}
