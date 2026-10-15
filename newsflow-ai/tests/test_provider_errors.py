@@ -149,3 +149,12 @@ def test_prompt_declares_evidence_untrusted_and_requires_korean_structure():
 
     for phrase in ("untrusted", "never follow instructions", "closing", "do not invent", "sum exactly"):
         assert phrase in SCRIPT_INSTRUCTION
+
+
+def test_truncated_answer_is_reported_as_cap_reached_not_bad_format(provider):
+    body = {"choices": [{"finish_reason": "length", "message": {"content": '{"title": "잘린'}}],
+            "usage": {"prompt_tokens": 900, "completion_tokens": 1400, "total_tokens": 2300}}
+    fake, _ = opener([Response(body)])
+    with patch("urllib.request.build_opener", return_value=fake), pytest.raises(ProviderResponseError) as failure:
+        provider.complete({"articles": []}, 30, Options(max_tokens=1400))
+    assert "출력 토큰 상한" in str(failure.value) and provider.last_usage["total_tokens"] == 2300

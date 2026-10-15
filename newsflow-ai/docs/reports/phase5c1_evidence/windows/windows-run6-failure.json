@@ -1,0 +1,14 @@
+{
+  "run": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38734161182",
+  "job": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38734161182/job/116419178170",
+  "head_sha": "e0fe5e66180bc917cf85c366c6d796a17f8d8a37",
+  "conclusion": "failure",
+  "passed_steps": ["install", "Chrome", "FFmpeg and font", "short MP4 and local TTS", "DPAPI vault", "production vault", "pytest", "BAT, persistence and OAuth GUI"],
+  "failed_step": "Actual Easy UI, guided editing, local MP4 queue and BAT restart (tools/ci_autopilot_validation.py)",
+  "skipped_after_failure": ["setup BAT 30/45/60", "real-content flow and live RSS", "feed review", "voice probe", "docs link check", "AI connection check record"],
+  "annotation": {"mode": "windows", "outcome": "FAIL", "progress_observed": {"stage": "render", "progress": 50}, "duplicate_start": "PASS (409)", "error_type": "Error"},
+  "error": "Page.goto: Navigation to \"http://127.0.0.1:8765/autopilot/jobs/9414c30db9254c698ca9fe398431c74a\" is interrupted by another navigation to the same URL (open_job, third attempt, tools/ci_autopilot_validation.py:59 called from line 207)",
+  "root_cause": "the running job page polls every 1.5 s and reloads itself when status or stage changes; while that document lives its reload can interrupt Playwright navigations, including every retry",
+  "fix": "bcf7322: open_job navigates to about:blank first, discarding the polling document, then opens the job page",
+  "product_code_changed": false
+}

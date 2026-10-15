@@ -24,6 +24,7 @@ from tempfile import TemporaryDirectory
 from urllib.parse import urlsplit
 
 from ci_autopilot_validation import notice, open_job, submit, wait_job
+from ci_feed_review import explain_robots, traced_check
 from ci_validation import BASE, HTTP, ROOT, STARTUP_ERROR, child_env, start, stop
 
 FIXTURE_URL = "https://example.com/rss"
@@ -48,7 +49,11 @@ def database_evidence(root: Path) -> dict:
         assert db.execute("SELECT COUNT(*) FROM platform_accounts WHERE credential_ref IS NOT NULL OR api_ready = 1").fetchone()[0] == 0
         settings = {row[0]: row[1] for row in db.execute("SELECT key, value FROM app_settings WHERE key LIKE 'ai_%'")}
         assert not any("sk-" in value for value in settings.values()), "key material must never reach app_settings"
+        # Phase 5C.1 settings (user-entered prices) are plain numbers; their persistence across a
+        # restart is part of the evidence. Keys and the dated approval are never listed here.
+        prices = {key: value for key, value in settings.items() if key.startswith("ai_price_")}
         return {
+            "ai_price_settings": prices,
             "autopilot_jobs": [{"content_mode": a, "ai_mode": b, "status": c} for a, b, c in jobs],
             "external_ai_calls_recorded": usage, "intelligence_providers": providers,
             "source_checks": [{"status": s, "articles": n} for s, n in checks],
@@ -160,7 +165,12 @@ def fixture_flow(mode: str, data: Path, env: dict, output: Path, executable: str
             page.goto(BASE + "/voices")
             page.screenshot(path=str(output / "voices.png"), full_page=True)
             state = page.locator("#voice-status").inner_text()
-            result["korean_voice_page"] = "PASS (installed voices listed)" if "설치됨" in state else "PASS (install guidance shown; no Korean SAPI voice)"
+            if "SAPI 미노출" in state:
+                result["korean_voice_page"] = "PASS (OneCore-only Korean voice reported; SAPI guidance shown; not selectable)"
+            elif "설치됨" in state:
+                result["korean_voice_page"] = "PASS (installed voices listed)"
+            else:
+                result["korean_voice_page"] = "PASS (install guidance shown; no Korean SAPI voice)"
 
             # 4. Real-content easy job pauses on script and final video; 30/45/60.
             videos = []
@@ -219,8 +229,81 @@ def fixture_flow(mode: str, data: Path, env: dict, output: Path, executable: str
             stop(process)
 
 
+LIVE_TIMEOUT = 10  # the app's default request_timeout
+NOTICE_BUDGET = 3800
+
+
+LIVE_SOURCE_NAME = "공개 RSS 연결 테스트"
+
+
+def registered_source(database: Path, name: str = LIVE_SOURCE_NAME) -> int:
+    """Id of the source this tool registered; the app also seeds a disabled Google News source."""
+    with closing(sqlite3.connect(database)) as db:
+        row = db.execute("SELECT id FROM news_sources WHERE name = ? ORDER BY id DESC", (name,)).fetchone()
+    assert row, "the live RSS source was not registered"
+    return row[0]
+
+
+def read_check(database: Path, source_id: int):
+    with closing(sqlite3.connect(database)) as db:
+        return db.execute(
+            "SELECT status, kind, message, article_count FROM news_source_checks WHERE source_id = ?", (source_id,)
+        ).fetchone()
+
+
+def compact_trace(trace: dict) -> dict:
+    """Counts and request metadata only; titles, summaries and bodies never enter the evidence."""
+    if "check" not in trace:
+        return trace
+    check = trace["check"]
+    return {"status": check["status"], "kind": check["kind"], "message": check["message"][:80],
+            "articles": check["article_count"], "error_type": trace.get("error_type"), "requests": trace["requests"][:8]}
+
+
+def compact_robots(info: dict) -> dict:
+    keys = ("status", "bytes", "redirects", "applicable_group", "first_matching_rule", "can_fetch",
+            "crawl_delay", "decision", "decision_reason", "saved", "diagnostic_error_type")
+    compact = {key: info[key] for key in keys if key in info}
+    if info.get("sha256"):
+        compact["sha256"] = info["sha256"][:16]
+    return compact
+
+
+def fit_notice(value: dict, budget: int = NOTICE_BUDGET) -> dict:
+    """Trim request traces until the annotation fits; the JSON file keeps the full diagnosis."""
+    value = json.loads(json.dumps(value, ensure_ascii=False))
+
+    def size() -> int:
+        return len(json.dumps(value, ensure_ascii=False, separators=(",", ":")).encode())
+
+    for key in ("after", "before"):
+        trace = value.get(key)
+        while size() > budget and isinstance(trace, dict) and trace.get("requests"):
+            trace["requests"].pop()
+            trace["requests_trimmed"] = True
+    if size() > budget:
+        value = {"trimmed": True, "keys": sorted(value)}
+    return value
+
+
+def diagnose_traced(url: str) -> dict:
+    try:
+        return compact_trace(traced_check(url, "live RSS diagnosis", LIVE_TIMEOUT))
+    except Exception as exc:  # noqa: BLE001 - diagnostics never fail the run
+        return {"diagnostic_error_type": type(exc).__name__}
+
+
 def live_rss(mode: str, url: str, env: dict, output: Path, result: dict) -> None:
-    """Best-effort public feed connection test through the real server; never fails the run."""
+    """Best-effort public feed connection test through the real server; never fails the run.
+
+    The same check also runs in this process through the same collector and adapter with a
+    request trace (host, path, status, size, short body hash; no bodies), before the server
+    test and, when the server test does not pass, again afterwards together with the robots
+    decision for the feed origin and one server retest. Comparing them shows whether a
+    difference comes from the server path or from what the site returned at that moment.
+    """
+    diagnosis: dict = {"order": "before (in-process) -> server test -> on failure: after (in-process), robots, server retest"}
+    result["live_rss_diagnosis"] = diagnosis
     with TemporaryDirectory(prefix="newsflow-live-") as directory:
         data = Path(directory) / "live"
         env = dict(env)
@@ -231,19 +314,49 @@ def live_rss(mode: str, url: str, env: dict, output: Path, result: dict) -> None
             env["LOCALAPPDATA"] = str(data)
         process = start(command, env, 240 if mode == "windows" else 30)
         try:
+            diagnosis["before"] = diagnose_traced(url)
+            time.sleep(1)
             http = HTTP()
-            http.post("/sources", {"name": "공개 RSS 연결 테스트", "url": url, "permission": "true"})
-            page_html = http.get("/sources").decode("utf-8")
-            match = re.search(r'/sources/(\d+)/test', page_html)
-            assert match
-            http.post(f"/sources/{match.group(1)}/test", {})
-            with closing(sqlite3.connect((data if mode != "windows" else data / "NewsFlowAI") / "newsflow.db")) as db:
-                row = db.execute("SELECT status, kind, message, article_count FROM news_source_checks").fetchone()
+            http.post("/sources", {"name": LIVE_SOURCE_NAME, "url": url, "permission": "true"})
+            database = (data if mode != "windows" else data / "NewsFlowAI") / "newsflow.db"
+            # Test the source registered here, never the first test form on the page: the app seeds
+            # a disabled Google News source first, whose robots.txt denies every path.
+            source_id = registered_source(database)
+            assert f"/sources/{source_id}/test" in http.get("/sources").decode("utf-8")
+            client_timeout = None
+            try:
+                # A real feed can legitimately need DNS + robots + redirects + feed (~6 x request_timeout).
+                http.post(f"/sources/{source_id}/test", {}, timeout=75)
+            except Exception as exc:  # noqa: BLE001 - the server-side row is still the evidence
+                client_timeout = type(exc).__name__
+            # After a client timeout the server may still be inside the connection test; wait for its row.
+            waited, row = 0.0, None
+            while True:
+                row = read_check(database, source_id)
+                if row or client_timeout is None or waited >= 90:
+                    break
+                time.sleep(2)
+                waited += 2
             result["live_public_rss"] = {
                 "url": url, "status": "PASS" if row and row[0] == "pass" else "NOT VERIFIED",
                 "kind": row[1] if row else None, "message": row[2] if row else "no check row", "articles": row[3] if row else 0,
                 "note": "network-dependent; articles were not stored by the connection test",
+                "client_timeout": client_timeout, "row_wait_seconds": waited, "source_id": source_id,
             }
+            if not (row and row[0] == "pass"):
+                time.sleep(1)
+                diagnosis["after"] = diagnose_traced(url)
+                try:
+                    diagnosis["robots"] = compact_robots(explain_robots(url, LIVE_TIMEOUT, save_dir=output / "live-robots"))
+                except Exception as exc:  # noqa: BLE001 - diagnostics never fail the run
+                    diagnosis["robots"] = {"diagnostic_error_type": type(exc).__name__}
+                time.sleep(1)
+                try:
+                    http.post(f"/sources/{source_id}/test", {}, timeout=75)
+                    again = read_check(database, source_id)
+                    diagnosis["server_retest"] = {"status": again[0], "kind": again[1], "message": again[2][:80], "articles": again[3]}
+                except Exception as exc:  # noqa: BLE001 - diagnostics never fail the run
+                    diagnosis["server_retest"] = {"diagnostic_error_type": type(exc).__name__}
         except Exception as exc:  # noqa: BLE001 - network is outside this validation's control
             result["live_public_rss"] = {"url": url, "status": "NOT VERIFIED", "error_type": type(exc).__name__}
         finally:
@@ -301,11 +414,13 @@ def main() -> None:
         raise
     finally:
         (args.output / "realcontent-result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-        core = {k: v for k, v in result.items() if k not in {"real_videos", "database", "live_public_rss"}}
+        core = {k: v for k, v in result.items() if k not in {"real_videos", "database", "live_public_rss", "live_rss_diagnosis"}}
         notice("RealContent", core)
         for key in ("real_videos", "database", "live_public_rss"):
             if key in result:
                 notice(f"RealContent {key}", result[key] if isinstance(result[key], dict) else {"value": result[key]})
+        if "live_rss_diagnosis" in result:
+            notice("RealContent live_rss_diagnosis", fit_notice(result["live_rss_diagnosis"]))
         time.sleep(0)
 
 

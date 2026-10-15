@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
@@ -30,6 +31,45 @@ from .rss_adapter import FeedError
 
 class CollectionBusy(Exception):
     pass
+
+
+# Every fixed message the adapter and parser can raise. A FeedError carrying any other text
+# (for example a transport wrapper echoing response data) is logged generically, so raw
+# URLs, tokens or server text never reach the audit log; the kind is always safe to show.
+KNOWN_FEED_MESSAGES = frozenset({
+    "RSS URL 형식이 올바르지 않습니다.",
+    "공개 HTTP(S) RSS와 기본 포트만 허용합니다. 사설 주소·인증정보는 금지됩니다.",
+    "RSS 요청 시간이 초과되었습니다.",
+    "RSS 호스트 DNS 조회에 실패했습니다.",
+    "사설·예약 IP로 연결되는 RSS 주소는 허용하지 않습니다.",
+    "압축 응답은 Phase 1 RSS 정책에서 지원하지 않습니다.",
+    "RSS 응답이 최대 2 MiB를 초과했습니다.",
+    "RSS TLS 인증서 또는 HTTPS 연결 검증에 실패했습니다.",
+    "RSS 연결 또는 TLS 검증에 실패했습니다.",
+    "RSS 리디렉션 주소가 없습니다.",
+    "RSS 리디렉션 횟수가 제한을 초과했습니다.",
+    "robots.txt 확인 실패로 수집을 중단했습니다.",
+    "robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.",
+    "robots.txt 요청 간격 정책을 지원하지 않아 수집을 중단했습니다.",
+    "crawl-delay가 지정된 출처는 Phase 1에서 수집하지 않습니다.",
+    "RSS XML 형식이 잘못되었거나 안전하지 않습니다.",
+    "RSS 또는 Atom 문서가 아닙니다.",
+    "RSS 문서를 정상적으로 파싱하지 못했습니다.",
+    "RSS 항목이 최대 1000개를 초과했습니다.",
+    "RSS 항목에 제목 또는 원문 링크가 없습니다.",
+})
+_HTTP_STATUS_MESSAGE = re.compile(r"RSS 서버가 HTTP [1-5]\d{2}을 반환했습니다\.")
+GENERIC_FEED_MESSAGE = "RSS 수집 또는 저장에 실패했습니다."
+
+
+def safe_feed_message(exc: Exception) -> str:
+    """Audit-log text for a collection failure: '[kind] fixed message' or the generic text."""
+    if not isinstance(exc, FeedError):
+        return GENERIC_FEED_MESSAGE
+    text = str(exc)
+    if text in KNOWN_FEED_MESSAGES or _HTTP_STATUS_MESSAGE.fullmatch(text):
+        return f"[{exc.kind}] {text}"
+    return f"[{exc.kind}] {GENERIC_FEED_MESSAGE}"
 
 
 class NewsService:
@@ -107,26 +147,8 @@ class NewsService:
                 succeeded += 1
             except Exception as exc:  # noqa: BLE001 -- isolate one source, redact and record failure
                 failed += 1
-                # Raw adapter exceptions/URLs must never enter logs.
-                known = {
-                    "RSS 요청 시간이 초과되었습니다.",
-                    "RSS 호스트 DNS 조회에 실패했습니다.",
-                    "RSS 연결 또는 TLS 검증에 실패했습니다.",
-                    "RSS TLS 인증서 또는 HTTPS 연결 검증에 실패했습니다.",
-                    "RSS XML 형식이 잘못되었거나 안전하지 않습니다.",
-                    "RSS 또는 Atom 문서가 아닙니다.",
-                    "RSS 문서를 정상적으로 파싱하지 못했습니다.",
-                    "robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.",
-                    "robots.txt 확인 실패로 수집을 중단했습니다.",
-                    "사설·예약 IP로 연결되는 RSS 주소는 허용하지 않습니다.",
-                    "RSS 응답이 최대 2 MiB를 초과했습니다.",
-                    "crawl-delay가 지정된 출처는 Phase 1에서 수집하지 않습니다.",
-                }
-                message = (
-                    str(exc)
-                    if isinstance(exc, FeedError) and str(exc) in known
-                    else "RSS 수집 또는 저장에 실패했습니다."
-                )
+                # Raw adapter exceptions/URLs must never enter logs (see safe_feed_message).
+                message = safe_feed_message(exc)
                 with self.sessions.begin() as session:
                     session.add(
                         AuditLog(

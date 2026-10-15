@@ -1,0 +1,15 @@
+{
+  "artifact_download": "BLOCKED",
+  "reason": "Cloud egress proxy refused the Azure blob host for the Actions artifact ZIP (CONNECT 403) for run 2 and again for the final run 7 (retried 2026-10-15 21:53 KST); the GitHub API via the session's GitHub connector worked for runs, jobs, logs and the PR",
+  "artifact": {
+    "name": "newsflow-phase5c1-windows-validation",
+    "id": 11974018726,
+    "run": 38736365785,
+    "head_sha": "bcf7322955afdc29ee263eb3e5f89cf9a2184202",
+    "bytes": 7464634,
+    "sha256": "6ab6a2cc73909bb95aac6a5344f255f28997ec35df1e355bab6db5ccb327137c",
+    "expires_at": "2026-10-22T12:52:10Z",
+    "expires_at_kst": "2026-10-22 21:52 KST"
+  },
+  "fallback": "check annotations copied from the job log into windows/windows-actions-evidence.json (final run 7); earlier runs in windows-actions-evidence-run2/run3/run4.json and windows-run6-failure.json"
+}

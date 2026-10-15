@@ -18,8 +18,12 @@ from newsflow.db.models import (
     utcnow,
 )
 
+from .credentials import CredentialError
+from .estimate import estimate_call
 from .korean import assess_script
 from .provider import (
+    ANALYSIS_INSTRUCTION,
+    SCRIPT_INSTRUCTION,
     OfflineProvider,
     OpenAIProvider,
     Options,
@@ -83,24 +87,16 @@ class IntelligenceService:
             return "AI 요청 시간이 초과되었습니다.", "ai_timeout", True
         if isinstance(exc, ProviderError):
             return _PROVIDER_MESSAGES.get(exc.code, fallback), exc.code, exc.retryable
+        if isinstance(exc, CredentialError):
+            # The key store's messages are fixed Korean strings without key material.
+            return str(exc), "ai_key_missing", False
         if isinstance(exc, IntelligenceError):
             return str(exc), exc.code, exc.retryable
         return fallback, "ai_failed", True
 
-    def analyze(
-        self,
-        ids: list[int],
-        mode: str = "offline",
-        consent: bool = False,
-        options: Options | None = None,
-        on_run: Callable[[int], None] | None = None,
-    ) -> int:
-        if mode not in MODES or (mode != "offline" and not consent):
-            raise IntelligenceError("외부 AI 분석에는 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
-        options = options or Options()
-        if not ids or len(ids) > 10 or len(set(ids)) != len(ids):
-            raise IntelligenceError("기사 1~10개를 선택하세요.", "invalid_selection", False)
-        with self.sessions.begin() as session:
+    def evidence_for(self, ids: list[int]) -> dict:
+        """Read-only evidence payload for `ids`, identical to what analyze() stores and sends."""
+        with self.sessions() as session:
             articles = [session.get(NewsArticle, i) for i in ids]
             if any(a is None for a in articles):
                 raise IntelligenceError("선택한 기사가 없습니다.", "invalid_selection", False)
@@ -140,12 +136,28 @@ class IntelligenceService:
                         break
                 else:
                     groups.append([a.id])
-            payload = {
-                "articles": evidence,
-                "groups": groups,
-                "comparison": "제목 유사도 0.65 기준 후보 그룹입니다. 서로 다른 보도 내용과 독립 출처 여부는 사람이 확인해야 합니다.",
-                "caution": CAUTION,
-            }
+        return {
+            "articles": evidence,
+            "groups": groups,
+            "comparison": "제목 유사도 0.65 기준 후보 그룹입니다. 서로 다른 보도 내용과 독립 출처 여부는 사람이 확인해야 합니다.",
+            "caution": CAUTION,
+        }
+
+    def analyze(
+        self,
+        ids: list[int],
+        mode: str = "offline",
+        consent: bool = False,
+        options: Options | None = None,
+        on_run: Callable[[int], None] | None = None,
+    ) -> int:
+        if mode not in MODES or (mode != "offline" and not consent):
+            raise IntelligenceError("외부 AI 분석에는 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
+        options = options or Options()
+        if not ids or len(ids) > 10 or len(set(ids)) != len(ids):
+            raise IntelligenceError("기사 1~10개를 선택하세요.", "invalid_selection", False)
+        payload = self.evidence_for(ids)
+        with self.sessions.begin() as session:
             run = IntelligenceRun(
                 kind="analysis",
                 status="running",
@@ -162,7 +174,7 @@ class IntelligenceService:
         try:
             if on_run:
                 on_run(run_id)
-            self._budget(mode, options)
+            self._budget(mode, options, ANALYSIS_INSTRUCTION, {"evidence": payload})
             try:
                 result = Analysis.model_validate(provider.analyze(payload, options)).model_dump()
             except IntelligenceError:
@@ -191,17 +203,27 @@ class IntelligenceService:
             self._usage(provider, run_id, mode, options, "analysis", "failed")
             raise IntelligenceError(message, code, retryable) from None
 
-    def _budget(self, mode: str, options: Options) -> None:
-        """Every external call needs the stored, dated approval and an unexhausted monthly limit."""
+    def _budget(self, mode: str, options: Options, instruction: str = "", payload: dict | None = None) -> None:
+        """Every external call needs the openai provider, the stored dated approval and budget headroom.
+
+        The reservation includes the estimated prompt tokens of this exact call when the
+        instruction and payload are known, so the check is conservative.
+        """
         if mode == "offline":
             return
         from .settings import SettingsError, check_budget, read_settings
 
         settings = read_settings(self.sessions)
+        if settings.provider != "openai":
+            raise IntelligenceError(
+                "AI 제공자가 기본 대본(외부 호출 없음)으로 저장되어 있어 외부 AI를 호출하지 않습니다. AI 연결 설정에서 제공자를 바꾸세요.",
+                "ai_consent", False,
+            )
         if not settings.approved:
             raise IntelligenceError("외부 AI 사용 승인이 AI 연결 설정에 저장되지 않았습니다.", "ai_consent", False)
+        prompt_estimate = estimate_call(instruction, payload, options.max_tokens)["prompt_tokens"] if payload is not None else 0
         try:
-            check_budget(self.sessions, settings, options)
+            check_budget(self.sessions, settings, options, prompt_estimate)
         except SettingsError as exc:
             raise IntelligenceError(str(exc), "ai_budget", False) from None
 
@@ -240,7 +262,7 @@ class IntelligenceService:
         try:
             if on_run:
                 on_run(run_id)
-            self._budget(mode, options)
+            self._budget(mode, options, SCRIPT_INSTRUCTION, {"duration": duration, "evidence": evidence})
             output = provider.complete(evidence, duration, options)
             script = self.validate(output, duration)
             self._check_stored_secret(script)

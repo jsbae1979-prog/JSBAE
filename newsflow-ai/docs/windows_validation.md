@@ -1,3 +1,5 @@
+> **역사적 문서 (Phase 1 · `feat/newsflow-phase1` 기준).** 현재 Phase 5C.1 사용자 검증은 [windows_user_verification_checklist.md](windows_user_verification_checklist.md)를 사용하세요. 아래 내용은 수정하지 않고 보존합니다.
+
 # Windows 11 실환경 검증 체크리스트
 
 현재 모든 아래 항목은 사용자 Windows 머신에서 실행 전 **NOT VERIFIED**입니다. Cloud의 Linux subprocess/경로 테스트나 BAT 정적 검사로 대체하지 않습니다. 각 작업의 PASS/FAIL과 오류 코드·기사 수를 기록하고 키/토큰·사용자 이름/전체 로그는 공유하지 마세요.

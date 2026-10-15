@@ -1,0 +1,14 @@
+{
+  "tool": "ci_korean_voice_probe",
+  "platform": "linux",
+  "korean_pronunciation": "NOT VERIFIED (requires human listening)",
+  "korean_voice_count": 0,
+  "state": "unavailable",
+  "voices": [],
+  "registry": null,
+  "measurements": [],
+  "sample_text": "2026년 10월 15일, AI 기술로 3개 기사를 45초 영상으로 만들었습니다. 매출은 1,250,000달러였습니다.",
+  "sample_spoken": "2026년 10월 15일, 에이아이 기술로 3개 기사를 45초 영상으로 만들었습니다. 매출은 125만 달러였습니다.",
+  "sample_wav": null,
+  "korean_tts": "NOT VERIFIED (not a Windows host; no SAPI)"
+}

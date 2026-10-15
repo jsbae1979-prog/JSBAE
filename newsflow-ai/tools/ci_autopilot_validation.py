@@ -56,11 +56,14 @@ def open_job(page, job_id: str) -> None:
 
     for attempt in range(3):
         try:
+            # A job page that is still running polls every 1.5 s and reloads itself when the
+            # status or stage changes; while that document lives, its reload can interrupt any
+            # navigation (Windows run 38734161182 hit it on all three retries). Leaving it for
+            # about:blank first discards the document and its timer.
+            page.goto("about:blank")
             page.goto(f"{BASE}/autopilot/jobs/{job_id}")
             break
         except PlaywrightError as error:
-            # The job page reloads itself when the stage changes; a goto that races that
-            # reload is reported as interrupted. The page ends up at the same URL either way.
             if "interrupted by another navigation" not in str(error) or attempt == 2:
                 raise
             page.wait_for_load_state("domcontentloaded")

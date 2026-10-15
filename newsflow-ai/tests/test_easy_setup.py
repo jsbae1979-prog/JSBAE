@@ -1,4 +1,5 @@
 """First-run setup, failure recovery, data preservation and production boundaries."""
+import os
 from pathlib import Path
 
 import pytest
@@ -211,3 +212,97 @@ def test_readonly_database_not_reported_ready(app, monkeypatch):
     with app.state.sessions() as session:
         assert session.get(AppSetting, 'request_timeout').value == '10'
     assert next(c for c in diagnostics(app.state.config.data_dir, app.state.sessions)['checks'] if c['key']=='storage')['status'] == 'pass'
+
+
+# --- Phase 5C.1 package C: canonical voice guidance, policy state, listening record service ---
+
+from types import SimpleNamespace
+
+from newsflow.easy_setup import (
+    LISTENING_ITEMS,
+    LISTENING_NAME,
+    VOICE_INSTALL_GUIDE,
+    listening_summary,
+    record_listening,
+)
+from newsflow.video.tts import TTSPolicyError
+
+CANONICAL = ('Windows 설정 → 시간 및 언어 → 언어 및 지역 → 한국어 → 언어 옵션에서 음성(텍스트 음성 변환)을 설치한 뒤 '
+             'NewsFlow를 종료하고 run.bat를 다시 실행하세요.')
+
+
+def test_diagnostics_voice_guidance_and_policy_state(app, monkeypatch):
+    assert VOICE_INSTALL_GUIDE == CANONICAL
+    monkeypatch.setattr('newsflow.easy_setup.voice_catalog', list)
+    result = diagnostics(app.state.config.data_dir, app.state.sessions)
+    check = next(c for c in result['checks'] if c['key'] == 'korean_voice')
+    assert check['status'] == 'needs_attention' and not check['required'] and CANONICAL in check['guidance']
+    assert result['korean_voice'] == 'not_installed'
+    assert result['quality'] == '사람의 청취·시청 평가는 아직 하지 않았습니다.'
+
+    def blocked():
+        raise TTSPolicyError('SECRET stderr text')
+
+    monkeypatch.setattr('newsflow.easy_setup.voice_catalog', blocked)
+    result = diagnostics(app.state.config.data_dir, app.state.sessions)
+    check = next(c for c in result['checks'] if c['key'] == 'korean_voice')
+    assert result['korean_voice'] == 'blocked_policy' and 'SECRET' not in str(result)
+    assert 'Get-ExecutionPolicy -List' in check['guidance'] and '정책을 바꾸지 않' in check['guidance']
+
+
+def test_listening_record_service_rules_retention_and_summary(app):
+    data_dir, sessions = app.state.config.data_dir, app.state.sessions
+    values = {'listener': ' 홍길동 ', 'voice': 'Local Korean', 'rate': '0', 'pause_ms': '250', 'verdict': 'pass',
+              **{key: 'ok' for key in LISTENING_ITEMS}}
+    record = record_listening(data_dir, sessions, values)
+    assert record['verdict'] == 'pass' and record['listener'] == '홍길동' and record['preview_sha256'] == ''
+    assert LISTENING_NAME.fullmatch(record['file']) and (data_dir / 'voice-listening' / record['file']).is_file()
+    date = record['created_at'][:10]
+    assert listening_summary(sessions) == {'verdict': 'pass', 'label': 'PASS', 'date': date,
+                                           'listener': '홍길동', 'voice': 'Local Korean'}
+    assert diagnostics(data_dir, sessions)['quality'] == f'사람 청취 결과: PASS ({date}, 홍길동)'
+    for bad in [{'numbers': 'bad'}, {'numbers': 'unknown'}, {'listener': '김 · 철수'}, {'listener': ''}, {'listener': 'a\tb'}, {'clarity': 'x'}, {'verdict': 'ok'},
+                {'preview': 'preview-zz.wav'}, {'notes': 'n' * 501}, {'rate': '5'}, {'pause_ms': '999'}]:
+        with pytest.raises(SetupError):
+            record_listening(data_dir, sessions, {**values, **bad})
+    assert listening_summary(sessions)['verdict'] == 'pass'  # rejected forms change nothing
+    record_listening(data_dir, sessions, {**values, 'numbers': 'bad', 'verdict': 'fail', 'notes': '줄\n바꿈 허용'})
+    assert listening_summary(sessions)['verdict'] == 'fail'
+    # Pruning is by modification time; make the first record unambiguously oldest so the test does not
+    # depend on filesystem timestamp granularity (NTFS ticks can give several files the same mtime).
+    os.utime(data_dir / 'voice-listening' / record['file'], (1_000_000, 1_000_000))
+    for _ in range(55):
+        record_listening(data_dir, sessions, {**values, 'verdict': 'not_verified'})
+    kept = list((data_dir / 'voice-listening').glob('listening-*.json'))
+    assert len(kept) == 50 and record['file'] not in {p.name for p in kept}
+    assert listening_summary(sessions)['label'] == 'NOT VERIFIED'
+    record_listening(data_dir, sessions, {**values, 'voice': 'v' * 200, 'verdict': 'not_verified'})
+    with sessions() as session:
+        assert len(session.get(AppSetting, 'voice_listening_last').value) <= 200
+    summary = listening_summary(sessions)
+    assert summary['listener'] == '홍길동' and summary['voice'].startswith('vvv')
+
+
+def test_setup_wizard_links_sources_and_uses_canonical_voice_guidance(client, app, monkeypatch):
+    assert advance(client, app, 1).status_code == 303
+    assert '<a href="/sources">뉴스 메뉴에서 뉴스 출처 관리 →</a>' in client.get('/setup?step=2').text
+    for step, v in [(2, {'source': 'sample'}), (3, {'ai': 'offline'}), (4, {'duration': '30', 'platform': 'youtube'})]:
+        assert advance(client, app, step, **v).status_code == 303
+    monkeypatch.setattr('newsflow.gui.setup_routes.voice_catalog', list)
+    text = client.get('/setup?step=5').text
+    assert '<select id="setup-voice" name="voice"><option value="offline-silence">무음 검토영상</option></select>' in text
+    assert 'id="setup-voice-guide"' in text and CANONICAL in text and 'SAPI 엔진' in text
+
+    def blocked():
+        raise TTSPolicyError('정책')
+
+    monkeypatch.setattr('newsflow.gui.setup_routes.voice_catalog', blocked)
+    text = client.get('/setup?step=5').text
+    assert 'Get-ExecutionPolicy -List' in text and '이 앱은 정책을 바꾸지 않습니다' in text
+    monkeypatch.setattr('newsflow.gui.setup_routes.voice_catalog', list)
+    monkeypatch.setattr('newsflow.gui.setup_routes.sys', SimpleNamespace(platform='win32'))
+    monkeypatch.setattr(WindowsTTS, 'korean_voice_report', lambda self, sapi=None: {
+        'state': 'onecore_only', 'sapi': [], 'onecore_only': ['Microsoft Heami'], 'registry_read': 'ok'})
+    text = client.get('/setup?step=5').text
+    assert '한국어 음성 1개(Microsoft Heami)' in text and 'SAPI에는 보이지 않아요' in text and CANONICAL in text
+    assert 'value="Microsoft Heami"' not in text and '레지스트리를 수정하지 않습니다' in text

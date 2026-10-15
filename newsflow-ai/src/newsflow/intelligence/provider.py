@@ -172,6 +172,11 @@ ANALYSIS_INSTRUCTION = (
 )
 
 
+def user_message(payload: dict) -> str:
+    """The exact user-message string sent to the provider; estimates count the same bytes."""
+    return json.dumps(payload, ensure_ascii=False)
+
+
 class OpenAIProvider:
     """Fixed HTTPS destination; default TLS verification; never follow redirects.
 
@@ -266,7 +271,7 @@ class OpenAIProvider:
                 "response_format": {"type": "json_object"},
                 "messages": [
                     {"role": "system", "content": instruction},
-                    {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+                    {"role": "user", "content": user_message(payload)},
                 ],
             }
         ).encode()
@@ -290,6 +295,8 @@ class OpenAIProvider:
                     k: usage.get(k) for k in ("prompt_tokens", "completion_tokens", "total_tokens")
                     if isinstance(usage.get(k), int)
                 }
+            if document["choices"][0].get("finish_reason") == "length":
+                raise ProviderResponseError("출력 토큰 상한에 도달해 AI 응답이 잘렸습니다. 출력 상한을 늘리거나 대본을 줄이세요.")
             content = document["choices"][0]["message"]["content"]
             if not isinstance(content, str):
                 raise TypeError

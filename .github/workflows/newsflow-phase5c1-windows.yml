@@ -1,0 +1,158 @@
+name: NewsFlow Phase 5C.1 Windows validation
+
+on:
+  push:
+    branches: [feat/newsflow-phase5c1]
+    paths:
+      - '.github/workflows/newsflow-phase5c1-windows.yml'
+      - 'newsflow-ai/src/**'
+      - 'newsflow-ai/tests/**'
+      - 'newsflow-ai/tools/**'
+      - 'newsflow-ai/run.bat'
+      - 'newsflow-ai/setup.bat'
+      - 'newsflow-ai/pyproject.toml'
+      - 'newsflow-ai/requirements-dev.lock'
+      - 'newsflow-ai/.gitattributes'
+  workflow_dispatch:
+    inputs:
+      ai_live_check:
+        description: '저장소 secret NEWSFLOW_AI_API_KEY가 있을 때 토큰 0의 OpenAI 연결 확인 1회를 허용 (대본 생성 없음)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: newsflow-phase5c1-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-validation:
+    if: github.ref == 'refs/heads/feat/newsflow-phase5c1'
+    runs-on: windows-latest
+    timeout-minutes: 65
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      # Only a true/false string reaches the job; the secret itself is mapped to one step below.
+      NEWSFLOW_AI_KEY_PRESENT: ${{ secrets.NEWSFLOW_AI_API_KEY != '' }}
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install development and browser dependencies
+        timeout-minutes: 15
+        run: |
+          python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m playwright install chromium
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare Chromium-based Google Chrome for MP4 preview
+        timeout-minutes: 5
+        run: |
+          $chromePaths = @("$env:ProgramFiles\Google\Chrome\Application\chrome.exe", "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe")
+          if (-not ($chromePaths | Where-Object { Test-Path -LiteralPath $_ })) {
+            python -m playwright install chrome
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Prepare real FFmpeg and pinned Korean font
+        timeout-minutes: 10
+        run: |
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ";C:\ProgramData\chocolatey\bin;C:\tools\ffmpeg\bin"
+          }
+          (Get-Command ffmpeg -ErrorAction Stop).Source | Out-Null
+          (Get-Command ffprobe -ErrorAction Stop).Source | Out-Null
+          @((Split-Path (Get-Command ffmpeg).Source), (Split-Path (Get-Command ffprobe).Source)) | Select-Object -Unique | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $fontPath = Join-Path $env:RUNNER_TEMP 'newsflow-noto-kr.ttf'
+          python tools/ci_prepare_font.py $fontPath
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "NEWSFLOW_FONT_PATH=$fontPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Actual short MP4 ffprobe and local TTS
+        run: |
+          python tools/ci_video_validation.py --output validation-output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual Windows DPAPI synthetic credential vault
+        run: |
+          python tools/ci_vault_validation.py --output validation-output/credential-vault.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual Windows production-vault synthetic encryption and recovery
+        run: |
+          python tools/ci_production_vault_validation.py --output validation-output/production-credential-vault.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: All offline regression, callback HTTP, identity and recovery tests
+        run: |
+          python -m pytest -q -rs --junitxml=validation-output/pytest.xml
+          $testExit = $LASTEXITCODE
+          python tools/ci_pytest_summary.py validation-output/pytest.xml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($testExit -ne 0) { exit $testExit }
+      - name: Actual BAT, persistence and operational OAuth GUI with production blocked
+        run: |
+          python tools/ci_validation.py --mode windows --output validation-output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual Easy UI, guided editing, local MP4 queue and BAT restart
+        run: |
+          python tools/ci_autopilot_validation.py --mode windows --output validation-output/autopilot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual setup BAT, wizard recovery and 30 45 60 second videos
+        run: |
+          python tools/ci_easysetup_validation.py --mode windows --output validation-output/easysetup
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual real-content flow, RSS tests, reviews, Korean voice probe and live RSS attempt
+        timeout-minutes: 25
+        run: |
+          python tools/ci_realcontent_validation.py --mode windows --output validation-output/realcontent --live-rss 'https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Public RSS feed review through the registered adapter (never fails the run)
+        timeout-minutes: 12
+        run: |
+          python tools/ci_feed_review.py --mode windows --output validation-output/feed-review --candidates tools/feed_candidates.json --max-seconds 540
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Korean SAPI voice probe with registry detection (never fails the run)
+        timeout-minutes: 10
+        run: |
+          python tools/ci_korean_voice_probe.py --output validation-output/voice
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: User guide and documentation link check (offline)
+        timeout-minutes: 3
+        run: |
+          python tools/ci_docs_link_check.py --output validation-output/docs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Optional zero-token OpenAI connection check (manual dispatch with repository secret only)
+        if: github.event_name == 'workflow_dispatch' && inputs.ai_live_check && env.NEWSFLOW_AI_KEY_PRESENT == 'true'
+        timeout-minutes: 5
+        continue-on-error: true
+        env:
+          NEWSFLOW_AI_LIVE_TEST: '1'
+          NEWSFLOW_AI_API_KEY: ${{ secrets.NEWSFLOW_AI_API_KEY }}
+        run: |
+          python tools/ai_live_check.py --connection-check --model gpt-4o-mini --output validation-output/ai-live
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Record the AI connection check as SKIPPED when not dispatched with a secret
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.ai_live_check && env.NEWSFLOW_AI_KEY_PRESENT == 'true') }}
+        run: |
+          New-Item -ItemType Directory -Force -Path validation-output/ai-live | Out-Null
+          '{"tool":"ai_live_check","outcome":"SKIPPED","reason":"not dispatched with ai_live_check=true and a repository secret; paid completion only on the user PC","external_ai_calls":0}' | Out-File -FilePath validation-output/ai-live/ai-live-check.json -Encoding utf8
+      - name: Upload synthetic validation results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: newsflow-phase5c1-windows-validation
+          path: newsflow-ai/validation-output/
+          if-no-files-found: warn
+          retention-days: 7

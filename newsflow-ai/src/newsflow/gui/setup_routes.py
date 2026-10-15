@@ -2,14 +2,24 @@
 from __future__ import annotations
 
 import json
+import sys
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
 from newsflow.db.models import AppSetting, RenderJob, VideoProject
-from newsflow.easy_setup import STEPS, SetupError, diagnostics, read_state, save_step, voice_catalog
-from newsflow.video.tts import TTSError
+from newsflow.easy_setup import (
+    POLICY_GUIDE,
+    STEPS,
+    VOICE_INSTALL_GUIDE,
+    SetupError,
+    diagnostics,
+    read_state,
+    save_step,
+    voice_catalog,
+)
+from newsflow.video.tts import TTSError, TTSPolicyError, WindowsTTS
 
 from .autopilot_routes import _error, _media_path
 from .routes import go, page
@@ -19,17 +29,23 @@ router = APIRouter()
 
 def render(request: Request, step: int, error: str = '', status: int = 200) -> HTMLResponse:
     state = read_state(request.app.state.sessions)
-    voices = []
+    voices, voice_report = [], None
     if step == 5:
+        # Selectable voices come from the SAPI catalog only; the registry report just explains an empty list.
         try:
             voices = [v for v in voice_catalog() if v['culture'].lower().startswith('ko-')]
+            if not voices and sys.platform == 'win32':
+                voice_report = WindowsTTS().korean_voice_report(sapi=[])
+        except TTSPolicyError:
+            voice_report = {'state': 'blocked_policy', 'sapi': [], 'onecore_only': [], 'registry_read': 'unavailable'}
         except TTSError:
             pass
     with request.app.state.sessions() as session:
         row = session.get(AppSetting, 'setup_last_check')
         check = json.loads(row.value) if row else None
     response = page(request, 'setup.html', active='simple-settings', steps=STEPS, step=step,
-                    state=state, voices=voices, check=check, error=error,
+                    state=state, voices=voices, voice_report=voice_report, check=check, error=error,
+                    install_guide=VOICE_INSTALL_GUIDE, policy_guide=POLICY_GUIDE,
                     data_path=str(request.app.state.config.data_dir),
                     output_path=str(request.app.state.video.outputs))
     response.status_code = status

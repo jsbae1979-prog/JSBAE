@@ -12,10 +12,24 @@ from pathlib import Path
 from typing import Protocol
 
 from newsflow.intelligence.korean import split_sentences
+from newsflow.video.speech_text import MAX_SPOKEN_CHARS, normalize_for_speech
 
-PREVIEW_TEXT = "안녕하세요. 뉴스플로 음성 미리 듣기입니다. 선택한 음성과 속도로 이렇게 읽어 드립니다."
+# Fixed listening sample; its spoken form (tests/test_speech_text.py) exercises dates, times,
+# percentages, currency and acronym reading so a listener can judge every normalization rule.
+PREVIEW_TEXT = (
+    "안녕하세요. 뉴스플로 음성 미리 듣기입니다. 2026-10-15 14:30 기준 KOSPI는 3.5% 올랐고, "
+    "AI 기업 매출은 $1,250,000입니다."
+)
 RATE_RANGE = (-5, 5)
 PAUSE_RANGE = (0, 1000)
+PREVIEW_MAX_SECONDS = 30
+REGISTRY_HIVES = ("sapi", "sapi_wow", "sapi_user", "onecore")
+_REGISTRY_KEYS = {"hive", "token", "name", "language", "gender"}
+_POLICY_MARKERS = ("UnauthorizedAccess", "running scripts is disabled", "스크립트를 실행할 수 없으므로")
+POLICY_MESSAGE = (
+    "PowerShell 스크립트 실행 정책 때문에 Windows 음성 기능을 사용할 수 없습니다. "
+    "안내서의 실행 정책 확인 절차를 따르거나 무음으로 제작하세요."
+)
 
 
 def local_process_env() -> dict[str, str]:
@@ -28,6 +42,29 @@ def local_process_env() -> dict[str, str]:
 
 class TTSError(Exception):
     pass
+
+
+class TTSPolicyError(TTSError):
+    """PowerShell refused to run the fixed script (execution policy). The app never changes the policy."""
+
+
+def is_korean_lcid(language: str) -> bool:
+    """True when any ';'-separated hex LCID token (``412``, ``0412``, ``0x412``) is Korean (0x412)."""
+    if not isinstance(language, str):
+        return False
+    for token in language.split(";"):
+        token = token.strip().lower().removeprefix("0x")
+        if 0 < len(token) <= 8 and all(c in "0123456789abcdef" for c in token) and int(token, 16) == 0x412:
+            return True
+    return False
+
+
+def _policy_blocked(stderr: object) -> bool:
+    """Classify a failed PowerShell run from at most 4 KiB of stderr; the text itself is never kept."""
+    raw = stderr if isinstance(stderr, bytes) else str(stderr or "").encode("utf-8", "replace")
+    raw = raw[:4096]
+    texts = [raw.decode("utf-8", "replace"), raw.decode("cp949", "replace")]
+    return any(marker in text for marker in _POLICY_MARKERS for text in texts)
 
 
 @dataclass(frozen=True)
@@ -130,7 +167,11 @@ class WindowsTTS:
                 timeout=timeout,
                 check=False,
             )
-            if result.returncode != 0 or len(result.stdout) > 32768:
+            if result.returncode != 0:
+                if _policy_blocked(getattr(result, "stderr", b"")):
+                    raise TTSPolicyError(POLICY_MESSAGE)
+                raise TTSError("Windows 음성 실행에 실패했습니다. 설치된 음성과 권한을 확인하세요.")
+            if len(result.stdout) > 32768:
                 raise TTSError("Windows 음성 실행에 실패했습니다. 설치된 음성과 권한을 확인하세요.")
             return result.stdout
         except (OSError, subprocess.TimeoutExpired):
@@ -160,6 +201,49 @@ class WindowsTTS:
     def korean_voices(self) -> list[dict[str, str]]:
         return [v for v in self.voice_details() if v["culture"].lower().startswith("ko-")]
 
+    def registry_voices(self) -> list[dict[str, str]]:
+        """Read-only SAPI/OneCore token listing; explains why nothing is listed, never a voice to select."""
+        try:
+            entries = json.loads(self._command(["-RegistryVoices"], 15).decode("utf-8-sig"))
+            if not isinstance(entries, list) or len(entries) > 200 or any(
+                not isinstance(v, dict) or set(v) != _REGISTRY_KEYS
+                or any(not isinstance(x, str) or len(x) > 200 for x in v.values())
+                or v["hive"] not in REGISTRY_HIVES
+                for v in entries
+            ):
+                raise ValueError
+            return entries
+        except (ValueError, UnicodeError):
+            raise TTSError("Windows 음성 레지스트리 정보를 읽지 못했습니다.") from None
+
+    def korean_voice_report(self, sapi: list[dict[str, str]] | None = None) -> dict:
+        """Korean voice detection: state comes from SAPI alone; the registry only adds OneCore-only names.
+
+        ``sapi`` may carry an already fetched Korean SAPI list so the catalog is not read twice.
+        """
+        empty: dict = {"sapi": [], "onecore_only": [], "registry_read": "unavailable"}
+        if sapi is None:
+            try:
+                sapi = self.korean_voices()
+            except TTSPolicyError:
+                return {"state": "blocked_policy", **empty}
+            except TTSError:
+                return {"state": "unavailable", **empty}
+        registry_read = "ok"
+        try:
+            registry = self.registry_voices()
+        except TTSError:
+            registry, registry_read = [], "unavailable"
+        names = {v["name"] for v in sapi}
+        onecore_only: list[str] = []
+        for item in registry:
+            name = item["name"] or item["token"]
+            korean_onecore = item["hive"] == "onecore" and is_korean_lcid(item["language"])
+            if korean_onecore and name not in names and name not in onecore_only:
+                onecore_only.append(name)
+        state = "available" if sapi else ("onecore_only" if onecore_only else "not_installed")
+        return {"state": state, "sapi": list(sapi), "onecore_only": onecore_only, "registry_read": registry_read}
+
     @staticmethod
     def spec(text: str, voice: str, target: Path, speech: SpeechSettings) -> dict:
         """Fixed data document for the packaged script: sentences, never code or shell text."""
@@ -171,8 +255,12 @@ class WindowsTTS:
     def _speak(self, text: str, target: Path, voice: str, speech: SpeechSettings) -> None:
         if voice not in self.voices() or not 0 < len(text) <= 400:
             raise TTSError("선택한 Windows 음성을 확인하세요.")
+        # The only place the reading form is applied: captions, estimates and the script stay raw.
+        spoken = normalize_for_speech(text)
+        if len(spoken) > MAX_SPOKEN_CHARS:
+            raise TTSError("읽기 형태로 바꾼 문장이 너무 깁니다. 대본을 줄이세요.")
         spec = target.with_suffix(".json")
-        spec.write_text(json.dumps(self.spec(text, voice, target, speech), ensure_ascii=False), encoding="utf-8")
+        spec.write_text(json.dumps(self.spec(spoken, voice, target, speech), ensure_ascii=False), encoding="utf-8")
         self._command(["-Spec", str(spec)], 60)
         if not wav_has_signal(target):
             raise TTSError("음성이 생성되지 않았습니다. 선택한 음성이 한국어 문장을 읽는지 확인하세요.")
@@ -188,6 +276,6 @@ class WindowsTTS:
         """Short fixed Korean sample for listening tests; returns the produced duration."""
         self._speak(PREVIEW_TEXT, target, voice, speech or SpeechSettings())
         duration = wav_duration(target)
-        if duration > 20:
+        if duration > PREVIEW_MAX_SECONDS:
             raise TTSError("미리 듣기 음성이 너무 깁니다. 속도 설정을 확인하세요.")
         return duration

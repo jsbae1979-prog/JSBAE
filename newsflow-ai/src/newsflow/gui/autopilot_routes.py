@@ -18,7 +18,9 @@ from newsflow.autopilot.contracts import (
 )
 from newsflow.autopilot.samples import SAMPLE_URL
 from newsflow.db.models import (
+    AIUsage,
     AppSetting,
+    AutopilotArtifact,
     ContentDraft,
     NewsArticle,
     NewsSource,
@@ -29,7 +31,8 @@ from newsflow.db.models import (
 )
 from newsflow.easy_setup import preview_preferences, speech_preferences
 from newsflow.intelligence.korean import speech_plan
-from newsflow.intelligence.settings import external_ready
+from newsflow.intelligence.service import IntelligenceError, IntelligenceService
+from newsflow.intelligence.settings import external_ready, job_estimate
 from newsflow.publishing.service import PublishingError, PublishingService, hash_file
 from newsflow.video.tts import TTSError
 
@@ -96,6 +99,40 @@ def readiness(request: Request) -> dict[str, Any]:
         "ai": ai,
         "voice": {"name": voice, "silent": voice == "offline-silence", "installed": installed, **speech_values},
     }
+
+
+def _ai_usage(request: Request, snapshot: dict[str, Any], article: NewsArticle | None) -> tuple[dict | None, dict | None]:
+    """Estimate before the paid script call and the recorded usage after it; route-level only."""
+    if snapshot.get("content_mode") != "real" or snapshot.get("ai_mode") != "openai":
+        return None, None
+    sessions = request.app.state.sessions
+    estimate = actual = None
+    with sessions() as session:
+        # Every analysis/script run the job ever used, including failed attempts that were retried.
+        run_ids = {
+            int(reference) for reference in session.scalars(select(AutopilotArtifact.reference).where(
+                AutopilotArtifact.job_id == snapshot["id"],
+                AutopilotArtifact.kind.in_(("analysis_run_id", "script_run_id")),
+            ))
+        }
+        run_ids |= {snapshot[key] for key in ("analysis_run_id", "script_run_id") if snapshot.get(key)}
+        rows = (
+            session.scalars(select(AIUsage).where(AIUsage.run_id.in_(run_ids)).order_by(AIUsage.id)).all()
+            if run_ids else []
+        )
+        if rows:
+            actual = {
+                "calls": len(rows), "failed": sum(1 for row in rows if row.status != "success"),
+                "prompt": sum(row.prompt_tokens for row in rows), "completion": sum(row.completion_tokens for row in rows),
+                "total": sum(row.total_tokens for row in rows), "model": rows[-1].model,
+            }
+    if article is not None and "script" not in snapshot.get("stage_results", {}):
+        try:
+            evidence = IntelligenceService(sessions).evidence_for([article.id])
+            estimate = job_estimate(sessions, int(snapshot["duration"]), evidence)
+        except (IntelligenceError, ValueError, TypeError):
+            estimate = None
+    return estimate, actual
 
 
 def _error(exc: AutopilotError) -> HTTPException:
@@ -217,6 +254,7 @@ def job(request: Request, job_id: str) -> HTMLResponse:
         video = session.get(RenderJob, snapshot["render_job_id"]) if snapshot.get("render_job_id") else None
         article = session.get(NewsArticle, snapshot["article_id"]) if snapshot.get("article_id") else None
         output = _media_path(request, video)
+        ai_estimate, ai_actual = _ai_usage(request, snapshot, article)
         plan = None
         if draft:
             try:
@@ -230,6 +268,7 @@ def job(request: Request, job_id: str) -> HTMLResponse:
             notes=list(draft.review_notes or []) if draft else [],
             playable=output is not None, output_path=str(output) if output else None,
             audio=(video.metadata_json or {}).get("audio") if video else None,
+            ai_estimate=ai_estimate, ai_actual=ai_actual,
         )
 
 

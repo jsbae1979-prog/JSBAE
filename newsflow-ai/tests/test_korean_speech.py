@@ -99,3 +99,65 @@ def test_wav_signal_detection(tmp_path):
             audio.writeframes(frames)
     assert not wav_has_signal(silent) and wav_has_signal(voiced)
     assert not wav_has_signal(tmp_path / "missing.wav")
+
+
+# --- Phase 5C.1 package C: the spoken form is applied once, inside WindowsTTS._speak ---
+
+from newsflow.video.speech_text import MAX_SPOKEN_CHARS, normalize_for_speech
+from newsflow.video.tts import PREVIEW_MAX_SECONDS
+
+RAW = "AI가 2026-10-15 14:30에 3.5% 올랐다."
+SPOKEN = "에이아이가 2026년 10월 15일 14시 30분에 3.5퍼센트 올랐다."
+
+
+def voiced_wav(path: Path, seconds: float = 1.0) -> None:
+    with wave.open(str(path), "wb") as audio:
+        audio.setnchannels(1)
+        audio.setsampwidth(2)
+        audio.setframerate(16000)
+        audio.writeframes(b"\x10\x10" * round(16000 * seconds))
+
+
+def test_spec_carries_the_spoken_form_when_called_from_speak(tmp_path, monkeypatch):
+    provider = WindowsTTS()
+    monkeypatch.setattr(provider, "voices", lambda: ["Korean Voice"])
+    captured = []
+
+    def fake_command(args, timeout):
+        assert args[0] == "-Spec" and timeout == 60
+        spec = json.loads(Path(args[1]).read_text(encoding="utf-8"))
+        captured.append(spec)
+        voiced_wav(Path(spec["target"]))
+        return b""
+
+    monkeypatch.setattr(provider, "_command", fake_command)
+    provider._speak(RAW, tmp_path / "a.wav", "Korean Voice", SpeechSettings(1, 150))
+    assert captured[0]["text"] == SPOKEN and captured[0]["sentences"] == [SPOKEN]
+    assert captured[0]["rate"] == 1 and captured[0]["pause_ms"] == 150 and captured[0]["voice"] == "Korean Voice"
+    assert WindowsTTS.spec(normalize_for_speech(RAW), "v", tmp_path / "b.wav", SpeechSettings())["sentences"] == [SPOKEN]
+    # The estimate used for review notes stays on the raw script (intelligence/korean.py untouched).
+    assert speech_seconds(RAW) != speech_seconds(SPOKEN)
+
+
+def test_speak_rejects_spoken_form_longer_than_limit_before_running_powershell(tmp_path, monkeypatch):
+    provider = WindowsTTS()
+    monkeypatch.setattr(provider, "voices", lambda: ["Korean Voice"])
+    calls = []
+    monkeypatch.setattr(provider, "_command", lambda args, timeout: calls.append(args) or b"")
+    raw = ("WWWWW " * 66).strip()
+    assert len(raw) <= 400 and len(normalize_for_speech(raw)) > MAX_SPOKEN_CHARS
+    with pytest.raises(TTSError, match="너무 깁니다"):
+        provider._speak(raw, tmp_path / "long.wav", "Korean Voice", SpeechSettings())
+    assert not calls
+    with pytest.raises(TTSError):
+        provider._speak("가" * 401, tmp_path / "raw.wav", "Korean Voice", SpeechSettings())
+
+
+def test_preview_cap_is_thirty_seconds(tmp_path, monkeypatch):
+    provider = WindowsTTS()
+    assert PREVIEW_MAX_SECONDS == 30
+    monkeypatch.setattr(provider, "_speak", lambda text, target, voice, speech: voiced_wav(target, 25))
+    assert abs(provider.preview(tmp_path / "ok.wav", "Korean Voice") - 25) < 0.01
+    monkeypatch.setattr(provider, "_speak", lambda text, target, voice, speech: voiced_wav(target, 31))
+    with pytest.raises(TTSError, match="너무 깁니다"):
+        provider.preview(tmp_path / "long.wav", "Korean Voice")

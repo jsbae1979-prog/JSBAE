@@ -1,6 +1,43 @@
-param([string]$Spec, [switch]$ListVoices, [switch]$VoiceDetails)
+param([string]$Spec, [switch]$ListVoices, [switch]$VoiceDetails, [switch]$RegistryVoices)
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+if ($RegistryVoices) {
+    # Read-only listing of SAPI5 and OneCore voice tokens. No synthesizer, no admin rights,
+    # no registry writes: Get-ItemProperty only. Used to explain why a voice is not listed.
+    try {
+        $hives = @(
+            @{hive='sapi'; path='HKLM:\SOFTWARE\Microsoft\Speech\Voices\Tokens'},
+            @{hive='sapi_wow'; path='HKLM:\SOFTWARE\WOW6432Node\Microsoft\Speech\Voices\Tokens'},
+            @{hive='sapi_user'; path='HKCU:\SOFTWARE\Microsoft\Speech\Voices\Tokens'},
+            @{hive='onecore'; path='HKLM:\SOFTWARE\Microsoft\Speech_OneCore\Voices\Tokens'}
+        )
+        $items = [System.Collections.ArrayList]::new()
+        foreach ($entry in $hives) {
+            if ($items.Count -ge 200) { break }
+            if (-not (Test-Path -LiteralPath $entry.path)) { continue }
+            $tokens = @(Get-ChildItem -LiteralPath $entry.path -ErrorAction SilentlyContinue)
+            foreach ($token in $tokens) {
+                if ($items.Count -ge 200) { break }
+                $name = ''
+                $language = ''
+                $gender = ''
+                $values = Get-ItemProperty -LiteralPath $token.PSPath -ErrorAction SilentlyContinue
+                if ($null -ne $values -and $null -ne $values.'(default)') { $name = [string]$values.'(default)' }
+                $attributesPath = $token.PSPath + '\Attributes'
+                if (Test-Path -LiteralPath $attributesPath) {
+                    $attributes = Get-ItemProperty -LiteralPath $attributesPath -ErrorAction SilentlyContinue
+                    if ($null -ne $attributes) {
+                        if ($null -ne $attributes.Language) { $language = [string]$attributes.Language }
+                        if ($null -ne $attributes.Gender) { $gender = [string]$attributes.Gender }
+                    }
+                }
+                [void]$items.Add(@{hive=$entry.hive; token=[string]$token.PSChildName; name=$name; language=$language; gender=$gender})
+            }
+        }
+        ConvertTo-Json -InputObject @($items.ToArray()) -Compress
+        exit 0
+    } catch { [Console]::Error.WriteLine('Windows TTS registry read failed.'); exit 1 }
+}
 try {
     Add-Type -AssemblyName System.Speech
     $speaker = [System.Speech.Synthesis.SpeechSynthesizer]::new()
