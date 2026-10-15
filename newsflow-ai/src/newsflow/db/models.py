@@ -522,6 +522,8 @@ class VideoAIUsage(Base):
     model_path: Mapped[str] = mapped_column(String(160))
     seconds: Mapped[int] = mapped_column(Integer)
     resolution: Mapped[str] = mapped_column(String(10), default="", server_default="")
+    # The dated approval (AppSetting video_ai_approved_at) this reservation was confirmed under.
+    approval: Mapped[str] = mapped_column(String(40), default="", server_default="")
     estimated_cost: Mapped[str] = mapped_column(String(20))
     currency: Mapped[str] = mapped_column(String(3))
     status: Mapped[str] = mapped_column(String(20))

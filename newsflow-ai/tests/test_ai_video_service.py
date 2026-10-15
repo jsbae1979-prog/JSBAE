@@ -47,7 +47,7 @@ from newsflow.video.ai.contracts import (
 from newsflow.video.ai.fake import FakeVideoProvider
 from newsflow.video.ai.keys import VIDEO_ENV_NAME, VideoAIKeyStore
 from newsflow.video.ai.policy import DEFAULT_PROMPT, STYLE_GUARD
-from newsflow.video.ai.service import MAX_REQUEUES, AIVideoCoordinator, AIVideoError
+from newsflow.video.ai.service import MAX_REQUEUES, TIMEOUT_OPEN_MESSAGE, AIVideoCoordinator, AIVideoError
 from newsflow.video.ai.settings import save_model, write_settings
 from newsflow.video.engine import FakeRenderAdapter
 from newsflow.video.tts import FakeTTS
@@ -74,6 +74,7 @@ SERVICE_MESSAGES = {
     "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다.",
     "확인 뒤에 유료 생성 승인이 다시 저장되어 이전 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
     "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
+    TIMEOUT_OPEN_MESSAGE,
 }
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
 SETTINGS_CHANGED = "설정이 바뀌어 AI 영상 생성 조건을 만족하지 않아 제출하지 않았습니다. "
@@ -851,8 +852,7 @@ def test_timeout_after_timeout_minutes_cancels_at_provider_and_fails(studio):
     studio.service.tick()
     scene = scenes(studio, plan_id)[0]
     # Generation had started, so the cancel is refused: the scene closes as failed but stays refetchable.
-    assert (scene.status, scene.error_code, scene.message) == (
-        "failed", "video_ai_timeout", ERROR_MESSAGES["video_ai_timeout"])
+    assert (scene.status, scene.error_code, scene.message) == ("failed", "video_ai_timeout", TIMEOUT_OPEN_MESSAGE)
     assert calls(studio.provider, "cancel") == [request_id]
     assert [row.status for row in usage(studio)] == ["failed"]
     assert plan_row(studio, plan_id).status == "review" and not studio.service.has_work()
@@ -1637,7 +1637,9 @@ def test_a_refetchable_paid_result_is_not_rebought_by_the_next_batch(studio):
     studio.service.tick()
     assert scenes(studio, plan_id)[0].error_code == "video_ai_clip_invalid"
     estimate = studio.service.estimate(plan_id)
-    assert estimate["scenes"] == [] and NOT_RETRYABLE in estimate["problems"]
+    assert estimate["scenes"] == [] and estimate["problems"] == [
+        "장면 1은 '결과 다시 받기'로 추가 비용 없이 받을 수 있어 새 유료 생성에 넣지 않습니다. 다시 생성하려면 프롬프트를 바꾸세요.",
+        "새로 생성할 AI 장면이 없습니다."]
     with pytest.raises(AIVideoError):
         confirm_as_shown(studio, plan_id)
     assert len(calls(studio.provider, "submit")) == 1
@@ -1667,3 +1669,56 @@ def test_close_stores_request_ids_still_held_in_memory(studio):
     studio.service.close()
     stored = scenes(studio, plan_id)[0]
     assert (stored.status, stored.request_id) == ("queued", "req-closing-0001") and not studio.service.unsaved
+
+
+
+# --------------------------------------------------------------------------- review round 4: per-reservation approval
+
+
+def test_a_later_batch_on_the_same_plan_does_not_launder_an_older_confirmation(studio):
+    ready_studio(studio, max_active=1)
+    busy = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, busy)
+    studio.service.tick()  # the only slot is taken by the slow plan
+    plan_id = generated_plan(studio, {0: PROMPT})
+    confirm(studio, plan_id)  # scene 0 reserved under the first approval, waiting for a slot
+    configure(studio, approved=False, max_active=1)
+    configure(studio, approved=True, max_active=1)  # a new approval date
+    studio.service.update_scenes(plan_id, revision(studio, plan_id), [
+        {"position": 1, "source": "generated", "prompt": PROMPT + " 둘째", "model_path": MODEL}])
+    confirm(studio, plan_id)  # a later batch on the same plan, under the new approval
+    edit_scene(studio, busy, 0, status="canceled")  # free the slot
+    studio.service.tick()
+    studio.service.tick()
+    rows = {s.position: s for s in scenes(studio, plan_id)}
+    assert rows[0].status == "canceled" and rows[0].request_id is None  # old confirmation never sent
+    assert rows[1].request_id is not None  # the confirmation made under the new approval is sent
+
+
+def test_an_approval_stamped_in_the_future_does_not_cancel_a_normal_confirmation(studio):
+    """No wall-clock comparison: a clock that was ahead when approving does not block sending."""
+    ready_studio(studio)
+    with studio.sessions.begin() as session:
+        from newsflow.db.models import AppSetting
+
+        session.get(AppSetting, "video_ai_approved_at").value = (utcnow() + timedelta(hours=2)).isoformat()
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].request_id is not None
+
+
+def test_the_paused_message_is_replaced_once_status_checks_answer_again(studio, monkeypatch):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].status == "in_progress"
+    real = studio.service.provider
+    monkeypatch.setattr(studio.service, "provider", lambda: None)
+    studio.service.tick()
+    monkeypatch.setattr(studio.service, "provider", real)
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert (scene.status, scene.message) == ("in_progress", "공급사에서 생성 중")

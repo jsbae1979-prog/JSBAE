@@ -8,7 +8,7 @@ Phase 5C의 **실제 콘텐츠 제작**은 등록한 공개 RSS에서 실제 뉴
 
 Phase 5C.1의 **운영 준비도**는 기능을 바꾸지 않고 확인 수단을 더합니다: 공개 피드 검토 도구, 예상 토큰·예상 비용 표시, 승인된 단일 실제 AI 호출 절차, 한국어 음성 감지·읽기 형태·사람 청취 기록, 일반 사용자 안내서와 Windows 검증 체크리스트, Phase 5D 설계 초안. Phase 5C.1에는 새 migration이 없었습니다.
 
-Phase 5D의 **AI 고품질 제작(선택)**은 기존 스토리보드·장면 나누기·타이밍·자막·FFmpeg 제작을 그대로 쓰면서, 사용자가 고른 장면만 외부 AI 영상 공급사(Higgsfield)로 만들어 같은 FFmpeg 경로로 합성합니다. 기본값은 '사용 안 함'이며 **기본 모드는 외부 영상 API 없이 지금처럼 동작**합니다. 유료 생성은 날짜가 있는 승인·작업별/월 한도·확인한 모델·API 키·장면별 예상 비용 확인이 모두 있어야 하고, AI 장면에는 끌 수 없는 "AI 생성 장면 · 실제 현장 영상 아님" 표시가 들어갑니다. schema head는 `0010`입니다. 실제 Higgsfield 호출·가격·품질은 사용자 승인 전까지 NOT VERIFIED입니다.
+Phase 5D의 **AI 고품질 제작(선택)**은 기존 스토리보드·장면 나누기·타이밍·자막·FFmpeg 제작을 그대로 쓰면서, 사용자가 고른 장면만 외부 AI 영상 공급사(Higgsfield)로 만들어 같은 FFmpeg 경로로 합성합니다. 기본값은 '사용 안 함'이며 **기본 모드는 외부 영상 API 없이 지금처럼 동작**합니다. 유료 생성은 날짜가 있는 승인·작업별/월 한도·확인한 모델·API 키·장면별 예상 비용 확인이 모두 있어야 하고, AI 장면에는 끌 수 없는 "AI 생성 장면 · 실제 현장 영상 아님" 표시가 들어갑니다. schema head는 `0011`입니다(`0010`·`0011` 모두 추가 전용). 실제 Higgsfield 호출·가격·품질은 사용자 승인 전까지 NOT VERIFIED입니다.
 
 [간편 제작 사용법과 복구 정책](docs/autopilot.md) · [실제 콘텐츠 제작 안내](docs/realcontent.md) · [Phase 5C 검증 보고서](docs/reports/phase5c_realcontent_report.md)
 
@@ -79,7 +79,7 @@ Windows EXE Installer는 제공하지 않습니다. Linux Cloud는 Windows BAT�
 
 한국어 음성으로 제작하면 장면 시간을 실제 음성 길이에 맞춰 조정하고 자막 구간을 같은 시간표로 저장합니다. 전체 음성이 영상보다 길면 초과 시간을 알리고 멈춥니다. 자동 검증은 비무음 WAV 생성과 MP4 규격만 확인하며 **발음·시청 품질은 사람이 들어야 합니다(NOT VERIFIED)**. 실제 외부 AI API 호출과 실제 공개 RSS 수집은 사용자의 키·네트워크 환경에서만 검증할 수 있으며 CI에서는 NOT VERIFIED로 기록합니다. 상세는 [docs/realcontent.md](docs/realcontent.md)를 참고하세요.
 
-DB migration `0009`는 추가 전용입니다(`content_drafts.review_notes`, `autopilot_jobs.content_mode/ai_mode/voice`, `news_source_checks`, `ai_usage`). Phase 5D의 `0010`도 추가 전용입니다(`video_ai_models`, `ai_video_plans`, `ai_video_scenes`, `video_ai_usage`, `video_projects.ai_plan_id`, `video_scenes.clip_name/ai_generated`). 실제 SNS 게시·계정 연결·예약 실행·무인 운영은 계속 제공하지 않습니다.
+DB migration `0009`는 추가 전용입니다(`content_drafts.review_notes`, `autopilot_jobs.content_mode/ai_mode/voice`, `news_source_checks`, `ai_usage`). Phase 5D의 `0010`·`0011`도 추가 전용입니다(`video_ai_models`, `ai_video_plans`, `ai_video_scenes`, `video_ai_usage`(+`resolution`·`approval`), `video_projects.ai_plan_id`, `video_scenes.clip_name/ai_generated`). 실제 SNS 게시·계정 연결·예약 실행·무인 운영은 계속 제공하지 않습니다.
 
 ## Phase 5C.1 · 운영 준비도
 
@@ -166,7 +166,7 @@ $env:NEWSFLOW_DATA_DIR="D:\내 자료\NewsFlowAI" # 생략하면 LOCALAPPDATA
 ```
 
 3. 이전 명령은 SQLite backup API로 WAL을 포함한 일관된 DB snapshot을 만들고 무결성·스키마 버전을 확인합니다. DB 안의 설정과 session.key를 복사하며 원본을 삭제하지 않습니다. 대상에 기존 DB나 키가 있으면 덮어쓰지 않습니다. 파일/서버/수집 잠금도 확인합니다.
-4. run.bat를 다시 실행해 기사·출처·설정 보존을 확인한 뒤 원본을 계속 백업으로 보관하세요. 현재 이전 도구는 revision 0001~0010을 지원합니다. 임의 추가 파일·향후 콘텐츠·영상, Phase 5D의 `ai-clips` 폴더와 `video-ai-key.dpapi`는 복사하지 않으므로 별도로 옮겨야 합니다.
+4. run.bat를 다시 실행해 기사·출처·설정 보존을 확인한 뒤 원본을 계속 백업으로 보관하세요. 현재 이전 도구는 revision 0001~0011을 지원합니다. 임의 추가 파일·향후 콘텐츠·영상, Phase 5D의 `ai-clips` 폴더와 `video-ai-key.dpapi`는 복사하지 않으므로 별도로 옮겨야 합니다.
 5. 이미 새 DB를 만들었다면 자동 병합하지 않습니다. 두 데이터 폴더를 백업한 뒤 보존할 DB를 선택하세요. 기존 경로를 계속 쓰려면 `NEWSFLOW_DATA_DIR`를 명시할 수 있습니다.
 
 ## 고급 모드에서 RSS 직접 수집

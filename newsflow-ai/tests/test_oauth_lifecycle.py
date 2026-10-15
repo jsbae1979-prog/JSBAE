@@ -630,7 +630,7 @@ def test_additive_migration_0007_preserves_prior_journal_and_account(environment
         assert session.scalar(select(OAuthIdentityBinding)) is None
         assert session.scalar(select(OAuthLifecycleOperation)) is None
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0010"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0011"
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Actual current-user DPAPI requires Windows")

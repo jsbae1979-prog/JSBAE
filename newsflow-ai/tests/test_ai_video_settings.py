@@ -1264,9 +1264,9 @@ def counts(engine) -> dict[str, int]:
         }
 
 
-def test_migration_head_is_0010_and_adds_tables_and_columns(engine):
-    assert ScriptDirectory.from_config(alembic_config()).get_current_head() == "0010"
-    assert version(engine) == "0010"
+def test_migration_head_is_0011_and_adds_tables_and_columns(engine):
+    assert ScriptDirectory.from_config(alembic_config()).get_current_head() == "0011"
+    assert version(engine) == "0011"
     tables, columns = schema(engine)
     assert NEW_TABLES <= tables
     assert NEW_COLUMNS <= columns
@@ -1301,11 +1301,11 @@ def test_downgrade_to_0009_and_upgrade_again(engine):
     assert not any(t.startswith("_alembic_tmp") for t in tables)
 
     run_alembic(engine, "upgrade", "head")
-    assert version(engine) == "0010"
+    assert version(engine) == "0011"
     tables, columns = schema(engine)
     assert NEW_TABLES <= tables and NEW_COLUMNS <= columns
     db_session.migrate(engine)  # repeat is a no-op
-    assert version(engine) == "0010"
+    assert version(engine) == "0011"
 
 
 def test_settings_work_after_downgrade_and_upgrade(engine):
@@ -1352,3 +1352,14 @@ def test_changing_the_currency_clears_every_model_confirmation(sessions):
                resolution="720p", confirmed=True, model_id=model.id)
     save_settings(sessions, currency="KRW")  # same currency: confirmations stay
     assert next(m for m in list_models(sessions) if m.id == model.id).usable
+
+
+def test_a_database_stamped_with_the_published_0010_gets_the_0011_reservation_columns(engine):
+    """0010 shipped on the branch before these columns existed; 0011 must add them, not an edited 0010."""
+    run_alembic(engine, "downgrade", "0010")
+    _tables, columns = schema(engine)
+    assert ("video_ai_usage", "resolution") not in columns and ("video_ai_usage", "approval") not in columns
+    db_session.migrate(engine)
+    assert version(engine) == "0011"
+    _tables, columns = schema(engine)
+    assert {("video_ai_usage", "resolution"), ("video_ai_usage", "approval")} <= columns

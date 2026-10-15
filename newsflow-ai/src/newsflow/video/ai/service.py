@@ -18,7 +18,7 @@ from __future__ import annotations
 import hashlib
 import shutil
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 from threading import Event, Lock, Thread
@@ -80,6 +80,11 @@ SUBMITTED = frozenset({"submitting", "queued", "in_progress"})
 RETRYABLE_END = frozenset({"planned", "failed", "nsfw", "canceled"})
 MAX_REQUEUES = 3
 MAX_REFETCHES = 3
+TIMEOUT_OPEN_MESSAGE = (
+    "생성이 제한시간 안에 끝나지 않았지만 공급사에서 아직 만들고 있을 수 있습니다. '결과 다시 받기'로 확인하거나(추가 요청 없음) "
+    "프롬프트를 바꾸거나 카드로 바꾸세요."
+)
+STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
 PAUSED_MESSAGE = "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다."
 # Closed scenes that still hold a request id: re-checking status and downloading costs no new request.
 REFETCHABLE = frozenset({"video_ai_download_failed", "video_ai_clip_invalid", "video_ai_disk_full", "video_ai_timeout"})
@@ -323,8 +328,14 @@ class AIVideoCoordinator:
                 problems.append("계획을 만든 뒤 대본이 바뀌었습니다. 새 계획을 만드세요.")
             elif not draft_is_real(session, draft):
                 problems.append("체험(합성) 뉴스 대본은 외부 AI 영상 공급사로 보내지 않습니다.")
+            refetchable = [s for s in scenes if s.source == "generated" and self._refetchable(s)]
+            if refetchable:
+                problems.append(
+                    "장면 " + ", ".join(str(s.position + 1) for s in refetchable)
+                    + "은 '결과 다시 받기'로 추가 비용 없이 받을 수 있어 새 유료 생성에 넣지 않습니다. 다시 생성하려면 프롬프트를 바꾸세요.")
             if not pending:
-                problems.append("생성할 AI 장면이 없습니다. 장면 소재를 'AI 생성'으로 바꾸세요.")
+                problems.append("생성할 AI 장면이 없습니다. 장면 소재를 'AI 생성'으로 바꾸세요." if not refetchable
+                                else "새로 생성할 AI 장면이 없습니다.")
             if any(s.status == "unknown" for s in scenes):
                 problems.append("결과 불명 장면을 먼저 실패로 확정하세요.")
             for scene in pending:
@@ -398,7 +409,8 @@ class AIVideoCoordinator:
                 session.add(VideoAIUsage(
                     plan_id=plan_id, scene_id=scene.id, attempt=scene.attempt, provider=provider,
                     model_path=scene.model_path, seconds=scene.clip_seconds, estimated_cost=scene.estimated_cost,
-                    resolution=resolution, currency=settings.currency, status="reserved", created_at=now, updated_at=now,
+                    resolution=resolution, approval=settings.approved_at or "", currency=settings.currency,
+                    status="reserved", created_at=now, updated_at=now,
                 ))
             plan.confirmed_at, plan.currency = now, settings.currency
             plan.revision += 1
@@ -663,9 +675,9 @@ class AIVideoCoordinator:
                 problem = None
                 if provider is None or not ready["ready"]:
                     problem = "설정이 바뀌어 AI 영상 생성 조건을 만족하지 않아 제출하지 않았습니다. " + " ".join(ready["reasons"])
-                elif not self._confirmed_under_current_approval(settings, plan):
-                    # Approval withdrawn and granted again after this confirmation: the old
-                    # confirmation does not carry over to the new approval.
+                elif reserved is None or not settings.approved_at or reserved.approval != settings.approved_at:
+                    # This reservation was confirmed under another approval (withdrawn and granted
+                    # again since): a confirmation never carries over to a new approval.
                     problem = "확인 뒤에 유료 생성 승인이 다시 저장되어 이전 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
                 elif plan_spent(session, plan.id) > settings.job_limit:
                     problem = "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
@@ -702,18 +714,6 @@ class AIVideoCoordinator:
                 )
                 attempt = scene.attempt
             self._submit_one(provider, scene_id, attempt, request)
-
-    @staticmethod
-    def _confirmed_under_current_approval(settings, plan: AIVideoPlan) -> bool:
-        if not settings.approved_at or plan.confirmed_at is None:
-            return False
-        try:
-            approved = datetime.fromisoformat(settings.approved_at)
-        except ValueError:
-            return False
-        approved = approved.astimezone(UTC).replace(tzinfo=None) if approved.tzinfo else approved
-        confirmed = plan.confirmed_at.astimezone(UTC).replace(tzinfo=None) if plan.confirmed_at.tzinfo else plan.confirmed_at
-        return approved <= confirmed
 
     def _flush_submitted(self) -> bool:
         """Store request ids whose first write failed (never resubmit; the provider already has them)."""
@@ -817,7 +817,7 @@ class AIVideoCoordinator:
                 with self.sessions.begin() as session:
                     scene = session.get(AIVideoScene, scene_id)
                     if scene is not None and scene.attempt == attempt:
-                        scene.message = ("상태 확인 실패 · 다음 확인에서 다시 시도합니다. " + ERROR_MESSAGES.get(code, ""))[:300]
+                        scene.message = (STATUS_RETRY + ERROR_MESSAGES.get(code, ""))[:300]
                         scene.updated_at = utcnow()
                 continue
             if status.state in (QUEUED, IN_PROGRESS) and timed_out:
@@ -827,7 +827,8 @@ class AIVideoCoordinator:
             if status.state in (QUEUED, IN_PROGRESS):
                 with self.sessions.begin() as session:
                     scene = session.get(AIVideoScene, scene_id)
-                    if scene is not None and scene.attempt == attempt and scene.status != status.state:
+                    stale = scene is not None and (scene.message == PAUSED_MESSAGE or scene.message.startswith(STATUS_RETRY))
+                    if scene is not None and scene.attempt == attempt and (scene.status != status.state or stale):
                         scene.status, scene.updated_at = status.state, utcnow()
                         scene.message = "공급사 대기열" if status.state == QUEUED else "공급사에서 생성 중"
                         self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
@@ -861,6 +862,7 @@ class AIVideoCoordinator:
                     self._usage(session, scene, "canceled")
                 else:
                     self._fail(session, scene, "video_ai_timeout", "failed")  # may still finish: refetchable
+                    scene.message = TIMEOUT_OPEN_MESSAGE
                 self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
 
     def _download(self, provider: VideoProvider, scene_id: int, attempt: int, status) -> None:
