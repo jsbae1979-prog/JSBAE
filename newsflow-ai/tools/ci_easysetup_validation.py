@@ -15,8 +15,19 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlsplit
 
-from ci_autopilot_validation import database_evidence, notice, submit, wait_job
+from ci_autopilot_validation import database_evidence, notice, wait_job
 from ci_validation import BASE, HTTP, ROOT, child_env, start, stop
+
+
+def submit(page, form, path: str) -> None:
+    # Fetch returns its 303 before the same-URL wizard navigation finishes.
+    # Observe the actual browser navigation, not a fixed sleep or the old DOM.
+    with page.expect_navigation(wait_until='load') as navigation:
+        with page.expect_response(lambda r: r.url == BASE + path and r.request.method == 'POST') as sent:
+            form.locator('button[type="submit"]').click()
+        assert sent.value.status == 303
+        assert sent.value.request.all_headers().get('origin') == BASE
+    assert navigation.value.status == 200
 
 
 def state(root: Path) -> dict:
@@ -26,7 +37,7 @@ def state(root: Path) -> dict:
 
 
 def run(mode: str, output: Path, executable: str | None, result: dict) -> None:
-    from playwright.sync_api import sync_playwright
+    from playwright.sync_api import expect, sync_playwright
 
     from newsflow.video.tts import WindowsTTS, wav_duration
 
@@ -74,7 +85,7 @@ def run(mode: str, output: Path, executable: str | None, result: dict) -> None:
                 page.screenshot(path=str(output / 'setup-error.png'), full_page=True)
                 for step in range(1, 7):
                     form = page.locator('form[action="/setup/step"]')
-                    assert form.locator('input[name="step"]').input_value() == str(step)
+                    expect(form.locator('input[name="step"]')).to_have_value(str(step))
                     if step == 4:
                         form.locator('[name="duration"]').select_option('45')
                     if step == 5:
