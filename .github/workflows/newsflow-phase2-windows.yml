@@ -34,10 +34,10 @@ jobs:
         shell: pwsh
         working-directory: newsflow-ai
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - name: Install development and browser dependencies
@@ -61,7 +61,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Upload synthetic validation results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: newsflow-phase2-windows-validation
           path: newsflow-ai/validation-output/

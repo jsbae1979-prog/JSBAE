@@ -1,0 +1,493 @@
+"""Durable, explicitly requested local automation. Never publishes or grants approval."""
+
+from __future__ import annotations
+
+import json
+import re
+from collections.abc import Iterator
+from concurrent.futures import Future, ThreadPoolExecutor
+from contextlib import contextmanager
+from pathlib import Path
+from threading import Event, Lock
+from typing import Any
+from uuid import uuid4
+
+from filelock import FileLock, Timeout
+from sqlalchemy import func, select, update
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, sessionmaker
+
+from newsflow.db.models import (
+    AutopilotArticleClaim,
+    AutopilotArtifact,
+    AutopilotAttempt,
+    AutopilotEvent,
+    AutopilotJob,
+    NewsArticle,
+    RenderJob,
+    utcnow,
+)
+
+from .contracts import (
+    ARTIFACT_KEYS,
+    STAGE_LABELS,
+    STAGES,
+    AutopilotBackend,
+    AutopilotBusy,
+    AutopilotConflict,
+    AutopilotError,
+    AutopilotNotFound,
+    BackendError,
+)
+
+_ERROR_MESSAGES = {
+    "stage_failed": "이 단계를 마치지 못했습니다. 설정과 이전 결과를 확인하세요.",
+    "collect_failed": "뉴스를 가져오지 못했습니다. 뉴스 출처와 연결 상태를 확인하세요.",
+    "no_sources": "사용 중인 뉴스 출처가 없어 제작을 시작하지 못했습니다.",
+    "select_failed": "뉴스를 고르지 못했습니다. 다른 뉴스를 모으거나 기존 작업을 확인하세요.",
+    "script_failed": "대본을 만들지 못했습니다. 이전 대본 결과를 확인하고 다시 시도하세요.",
+    "render_failed": "영상을 만들지 못했습니다. 고급 설정에서 제작 도구와 저장 공간을 확인하세요.",
+    "validate_failed": "영상 규격이나 파일을 확인하지 못했습니다. 결과 영상을 확인하세요.",
+    "queue_failed": "게시 대기함에 보관하지 못했습니다. 영상과 기존 초안을 확인하세요.",
+    "outcome_unknown": "작업 결과를 확인할 수 없어 중단했습니다. 이전 결과를 먼저 확인하세요.",
+    "interrupted": "프로그램이 종료되어 작업이 중단되었습니다. 이전 결과를 확인한 뒤 다시 시도하세요.",
+    "duplicate_article": "이 뉴스로 이미 제작한 작업이 있습니다. 기존 작업에서 영상을 확인하세요.",
+    "no_articles": "제작할 뉴스가 없습니다. 다른 뉴스를 모으거나 예제 뉴스를 선택하세요.",
+    "cancelled": "요청에 따라 중단했습니다. 이미 만든 결과는 보관합니다.",
+}
+
+
+class _Cancellation(Event):
+    """A different local process can persist cancellation without owning the worker lock."""
+
+    def __init__(self, sessions: sessionmaker[Session], job_id: str, stop: Event) -> None:
+        super().__init__()
+        self.sessions, self.job_id, self.stop = sessions, job_id, stop
+
+    def is_set(self) -> bool:
+        if super().is_set() or self.stop.is_set():
+            return True
+        with self.sessions() as session:
+            value = session.scalar(select(AutopilotJob.cancel_requested).where(AutopilotJob.id == self.job_id))
+        return value is not False
+
+    def wait(self, timeout: float | None = None) -> bool:
+        from time import monotonic
+
+        deadline = monotonic() + timeout if timeout is not None else None
+        while not self.is_set():
+            if deadline is not None and monotonic() >= deadline:
+                return False
+            self.stop.wait(0.05 if deadline is None else min(0.05, max(0, deadline - monotonic())))
+        return True
+
+
+class AutopilotCoordinator:
+    def __init__(
+        self, sessions: sessionmaker[Session], data_dir: Path, backend: AutopilotBackend,
+    ) -> None:
+        self.sessions, self.backend = sessions, backend
+        self.root = data_dir.resolve()
+        self.root.mkdir(parents=True, exist_ok=True)
+        self.lock = FileLock(str(self.root / "autopilot.lock"), thread_local=False)
+        self.guard = Lock()
+        self.stop = Event()
+        self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="newsflow-autopilot")
+        self.future: Future[None] | None = None
+
+    @contextmanager
+    def _transaction(self) -> Iterator[Session]:
+        """Serialize read-modify-write transitions with cancellation from other processes.
+
+        SQLite is the application database. Acquiring its writer reservation before
+        reading prevents a worker from overwriting a concurrent cancel/CAS revision.
+        No external work occurs while this short transaction is held.
+        """
+        with self.sessions.begin() as session:
+            session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+            yield session
+
+    @staticmethod
+    def _id(job_id: str) -> str:
+        if not isinstance(job_id, str) or not re.fullmatch(r"[a-f0-9]{32}", job_id):
+            raise AutopilotNotFound("작업을 찾을 수 없습니다.")
+        return job_id
+
+    @staticmethod
+    def _revision(revision: int) -> int:
+        if type(revision) is not int or revision < 1:
+            raise AutopilotConflict("작업 상태가 바뀌었습니다. 화면을 새로 고침하세요.")
+        return revision
+
+    @staticmethod
+    def _event(session: Session, job: AutopilotJob, status: str, message: str) -> None:
+        session.add(AutopilotEvent(job_id=job.id, stage=job.current_stage, status=status, message=message))
+
+    def _acquire(self) -> None:
+        if self.stop.is_set():
+            raise AutopilotBusy("프로그램 종료 중에는 시작할 수 없습니다.")
+        if self.future is not None and not self.future.done():
+            raise AutopilotBusy("진행 중인 작업을 먼저 확인하세요.")
+        try:
+            self.lock.acquire(timeout=0)
+        except Timeout:
+            raise AutopilotBusy("다른 창에서 제작 중입니다. 진행 중인 작업을 확인하세요.") from None
+
+    def start(
+        self, mode: str = "easy", source: str = "sample", duration: int = 30, platform: str = "youtube",
+    ) -> str:
+        if mode not in {"easy", "guided"} or source not in {"sample", "feeds"}:
+            raise AutopilotError("제작 방식과 뉴스 종류를 다시 선택하세요.")
+        if type(duration) is not int or duration not in {30, 45, 60} or platform not in {"youtube", "instagram"}:
+            raise AutopilotError("영상 길이와 게시 대상을 다시 선택하세요.")
+        with self.guard:
+            self._acquire()
+            job_id = uuid4().hex
+            try:
+                with self._transaction() as session:
+                    job = AutopilotJob(
+                        id=job_id, active_slot=1, mode=mode, source=source, duration=duration,
+                        platform=platform, status="queued", current_stage="collect", stage_results={},
+                    )
+                    session.add(job)
+                    session.flush()
+                    self._event(session, job, "queued", "자동 제작을 준비합니다.")
+                self.future = self.executor.submit(self._run, job_id)
+            except IntegrityError:
+                self.lock.release()
+                raise AutopilotBusy("진행 중이거나 확인을 기다리는 작업이 있습니다.") from None
+            except BaseException:
+                self.lock.release()
+                raise
+        return job_id
+
+    def _context(self, session: Session, job: AutopilotJob) -> dict[str, Any]:
+        context: dict[str, Any] = {}
+        for stage in STAGES:
+            context.update(job.stage_results.get(stage, {}))
+        context.update({
+            "job_id": job.id, "mode": job.mode, "source": job.source, "duration": job.duration,
+            "platform": job.platform, "stage_results": dict(job.stage_results), "article_id": job.article_id,
+        })
+        for item in session.scalars(
+            select(AutopilotArtifact).where(AutopilotArtifact.job_id == job.id).order_by(AutopilotArtifact.id)
+        ):
+            if item.kind != "article_id":
+                context[item.kind] = int(item.reference)
+        return context
+
+    def snapshot(self, job_id: str) -> dict[str, Any]:
+        with self.sessions() as session:
+            job = session.get(AutopilotJob, self._id(job_id))
+            if job is None:
+                raise AutopilotNotFound("작업을 찾을 수 없습니다.")
+            context = self._context(session, job)
+            artifacts = {key: context[key] for key in ARTIFACT_KEYS if context.get(key) is not None}
+            candidates = job.stage_results.get("select", {}).get("candidate_article_ids", [])
+            articles = session.scalars(select(NewsArticle).where(NewsArticle.id.in_(candidates))).all()
+            attempts = session.scalars(
+                select(AutopilotAttempt).where(AutopilotAttempt.job_id == job.id).order_by(AutopilotAttempt.id)
+            ).all()
+            events = session.scalars(
+                select(AutopilotEvent).where(AutopilotEvent.job_id == job.id).order_by(AutopilotEvent.id.desc()).limit(50)
+            ).all()
+            render = session.get(RenderJob, artifacts["render_job_id"]) if artifacts.get("render_job_id") else None
+            return {
+                "id": job.id, "revision": job.revision, "mode": job.mode, "source": job.source,
+                "duration": job.duration, "platform": job.platform, "status": job.status,
+                "current_stage": job.current_stage, "stage_label": STAGE_LABELS[job.current_stage],
+                "progress": job.progress, "message": job.message, "error_code": job.error_code,
+                "retryable": job.retryable, "cancel_requested": job.cancel_requested,
+                "solution": (
+                    "뉴스 출처 설정에서 출처를 등록하고 활성화한 뒤 다시 시도하세요. 체험 뉴스로 새 작업을 시작할 수도 있습니다."
+                    if job.error_code == "no_sources" else
+                    _ERROR_MESSAGES.get(job.error_code or "", "결과를 확인한 뒤 다음 단계로 진행하세요.")
+                ),
+                "article_id": job.article_id, "artifacts": artifacts, **artifacts,
+                "stage_results": dict(job.stage_results),
+                "candidates": [{"id": a.id, "title": a.title, "publisher": a.publisher, "category": a.category} for a in articles],
+                "attempts": [{"stage": a.stage, "number": a.number, "status": a.status, "error_code": a.error_code} for a in attempts],
+                "events": [{"stage": e.stage, "status": e.status, "message": e.message, "created_at": e.created_at.isoformat()} for e in reversed(events)],
+                "output_name": render.output_name if render else None,
+                "preview_playable": bool(render and render.status == "success" and render.metadata_json.get("playable") is True),
+                "created_at": job.created_at.isoformat(), "updated_at": job.updated_at.isoformat(),
+                "finished_at": job.finished_at.isoformat() if job.finished_at else None,
+            }
+
+    def list_jobs(self, limit: int = 20) -> list[dict[str, Any]]:
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise AutopilotError("목록 크기를 확인하세요.")
+        with self.sessions() as session:
+            ids = session.scalars(select(AutopilotJob.id).order_by(AutopilotJob.created_at.desc()).limit(limit)).all()
+        return [self.snapshot(job_id) for job_id in ids]
+
+    def _save_artifact(self, job_id: str, kind: str, reference: int | str) -> None:
+        if kind not in ARTIFACT_KEYS or isinstance(reference, bool) or not re.fullmatch(r"[1-9][0-9]{0,17}", str(reference)):
+            raise BackendError(code="stage_failed", retryable=False, outcome_unknown=True)
+        with self._transaction() as session:
+            existing = session.scalar(select(AutopilotArtifact.id).where(
+                AutopilotArtifact.job_id == job_id, AutopilotArtifact.kind == kind,
+                AutopilotArtifact.reference == str(reference),
+            ))
+            if existing is None:
+                session.add(AutopilotArtifact(job_id=job_id, kind=kind, reference=str(reference)))
+
+    def _progress(self, job_id: str, stage: str, value: int, _message: str) -> None:
+        if type(value) is not int or not 0 <= value <= 100:
+            return
+        overall = min(99, round((STAGES.index(stage) * 100 + value) / len(STAGES)))
+        with self._transaction() as session:
+            session.execute(update(AutopilotJob).where(
+                AutopilotJob.id == job_id, AutopilotJob.status == "running", AutopilotJob.current_stage == stage,
+            ).values(progress=overall, message=STAGE_LABELS[stage] + " 진행 중", updated_at=utcnow()))
+
+    @staticmethod
+    def _validated_result(value: dict[str, Any], stage: str) -> dict[str, Any]:
+        if not isinstance(value, dict):
+            raise BackendError(retryable=False, outcome_unknown=True)
+        encoded = json.dumps(value, ensure_ascii=False, allow_nan=False)
+        if len(encoded.encode("utf-8")) > 32768:
+            raise BackendError(retryable=False, outcome_unknown=True)
+        def inspect(item: Any) -> None:
+            if isinstance(item, dict):
+                for key, child in item.items():
+                    if not isinstance(key, str) or re.search(r"token|secret|password|authorization|api_key|verifier", key, re.IGNORECASE):
+                        raise BackendError(retryable=False, outcome_unknown=True)
+                    inspect(child)
+            elif isinstance(item, list):
+                for child in item:
+                    inspect(child)
+        inspect(value)
+        required_ids = {
+            "collect": ("collection_run_id",), "select": ("article_id",),
+            "script": ("content_draft_id",), "render": ("render_job_id", "video_project_id"),
+            "validate": (), "queue": ("publish_draft_id",),
+        }
+        if any(type(value.get(key)) is not int or value[key] < 1 for key in required_ids[stage]):
+            raise BackendError(retryable=False, outcome_unknown=True)
+        if stage == "collect" and value.get("collection_status") != "success":
+            raise BackendError(retryable=False, outcome_unknown=True)
+        if stage == "render" and value.get("preview_only") is not True:
+            raise BackendError(retryable=False, outcome_unknown=True)
+        if stage == "validate" and not (
+            re.fullmatch(r"[a-f0-9]{64}", str(value.get("media_sha256", "")))
+            and value.get("preview_only") is True and value.get("human_review_required") is True
+        ):
+            raise BackendError(retryable=False, outcome_unknown=True)
+        if stage == "queue" and not (
+            value.get("queue_state") == "review_required" and value.get("external_publishing_enabled") is False
+        ):
+            raise BackendError(retryable=False, outcome_unknown=True)
+        return json.loads(encoded)
+
+    @staticmethod
+    def _claim(session: Session, job: AutopilotJob, article_id: int) -> None:
+        if type(article_id) is not int or session.get(NewsArticle, article_id) is None:
+            raise BackendError(code="no_articles", retryable=True)
+        claim = session.get(AutopilotArticleClaim, article_id)
+        if claim is not None and claim.job_id != job.id:
+            raise BackendError(code="duplicate_article", retryable=False)
+        old = session.scalar(select(AutopilotArticleClaim).where(AutopilotArticleClaim.job_id == job.id))
+        if old and old.article_id != article_id:
+            session.delete(old)
+            session.flush()
+        if claim is None:
+            session.add(AutopilotArticleClaim(article_id=article_id, job_id=job.id))
+        job.article_id = article_id
+
+    def _run(self, job_id: str) -> None:
+        cancellation = _Cancellation(self.sessions, job_id, self.stop)
+        attempt_id: int | None = None
+        try:
+            while True:
+                if cancellation.is_set():
+                    self._finish_failure(job_id, attempt_id, "interrupted" if self.stop.is_set() else "cancelled", True)
+                    return
+                with self._transaction() as session:
+                    job = session.get(AutopilotJob, job_id)
+                    if job is None or job.status not in {"queued", "running"}:
+                        return
+                    stage = job.current_stage
+                    context = self._context(session, job)
+                    if stage == "script":
+                        self._claim(session, job, job.article_id)
+                    number = (session.scalar(select(func.max(AutopilotAttempt.number)).where(
+                        AutopilotAttempt.job_id == job_id, AutopilotAttempt.stage == stage,
+                    )) or 0) + 1
+                    attempt = AutopilotAttempt(job_id=job_id, stage=stage, number=number, status="running")
+                    session.add(attempt)
+                    job.status, job.message, job.updated_at = "running", STAGE_LABELS[stage] + " 진행 중", utcnow()
+                    job.revision += 1
+                    self._event(session, job, "running", job.message)
+                    session.flush()
+                    attempt_id = attempt.id
+                result = self._validated_result(self.backend.execute(
+                    stage, context, cancellation,
+                    lambda value, message, stage=stage: self._progress(job_id, stage, value, message),
+                    lambda kind, reference: self._save_artifact(job_id, kind, reference),
+                ), stage)
+                # Persist useful results even when cancellation arrived after the side effect.
+                with self._transaction() as session:
+                    job = session.get(AutopilotJob, job_id)
+                    attempt = session.get(AutopilotAttempt, attempt_id)
+                    if stage == "select":
+                        candidates = result.get("candidate_article_ids", [])
+                        chosen = result.get("article_id")
+                        if not isinstance(candidates, list) or not candidates or len(candidates) > 100 or any(type(item) is not int or item < 1 for item in candidates) or len(candidates) != len(set(candidates)) or chosen not in candidates:
+                            raise BackendError(code="no_articles", retryable=False)
+                        self._claim(session, job, chosen)
+                    job.stage_results = {**job.stage_results, stage: result}
+                    attempt.status, attempt.finished_at = "completed", utcnow()
+                    job.progress = round((STAGES.index(stage) + 1) * 100 / len(STAGES))
+                    job.updated_at, job.revision = utcnow(), job.revision + 1
+                    self._event(session, job, "stage_completed", STAGE_LABELS[stage] + " 완료")
+                    if cancellation.is_set():
+                        # No further stage starts; artifacts and successful attempt remain visible.
+                        job.status = "interrupted" if self.stop.is_set() else "cancelled"
+                        job.active_slot, job.finished_at = None, utcnow()
+                        job.error_code, job.retryable = job.status, True
+                        job.message = _ERROR_MESSAGES[job.status]
+                        if stage != "queue" and not (job.mode == "guided" and stage in {"select", "script", "validate"}):
+                            job.current_stage = STAGES[STAGES.index(stage) + 1]
+                        self._event(session, job, job.status, job.message)
+                        return
+                    if stage == "queue":
+                        job.status, job.active_slot, job.finished_at = "completed", None, utcnow()
+                        job.message, job.error_code, job.retryable = "영상과 게시 초안을 보관했습니다. 게시 전 직접 검토하세요.", None, False
+                        self._event(session, job, "completed", job.message)
+                        return
+                    if job.mode == "guided" and stage in {"select", "script", "validate"}:
+                        job.status, job.message = "waiting_review", "결과를 확인하고 다음 단계로 진행하세요."
+                        self._event(session, job, "waiting_review", job.message)
+                        return
+                    job.current_stage = STAGES[STAGES.index(stage) + 1]
+                    attempt_id = None
+        except BackendError as error:
+            code = error.code if error.code in _ERROR_MESSAGES else "stage_failed"
+            if code == "cancelled" and self.stop.is_set():
+                code = "interrupted"
+            if code == "stage_failed" and "stage" in locals():
+                code = f"{stage}_failed"
+            self._finish_failure(job_id, attempt_id, "outcome_unknown" if error.outcome_unknown else code, error.retryable)
+        except Exception:  # noqa: BLE001 - never expose provider errors; quarantine unknown effects
+            # Provider tracebacks/raw errors may contain secrets; only an internal stable category is persisted.
+            self._finish_failure(job_id, attempt_id, "outcome_unknown", False)
+        finally:
+            self.lock.release()
+
+    def _finish_failure(self, job_id: str, attempt_id: int | None, code: str, retryable: bool) -> None:
+        with self._transaction() as session:
+            job = session.get(AutopilotJob, job_id)
+            if job is None:
+                return
+            attempt = session.get(AutopilotAttempt, attempt_id) if attempt_id else None
+            if attempt and attempt.status == "running":
+                attempt.status = "unknown" if code in {"outcome_unknown", "interrupted"} else "cancelled" if code == "cancelled" else "failed"
+                attempt.error_code, attempt.finished_at = code, utcnow()
+            job.status = code if code in {"cancelled", "interrupted"} else "failed"
+            job.active_slot, job.error_code, job.retryable = None, code, retryable
+            job.message, job.updated_at, job.finished_at = _ERROR_MESSAGES[code], utcnow(), utcnow()
+            job.revision += 1
+            self._event(session, job, job.status, job.message)
+
+    def cancel(self, job_id: str, revision: int) -> dict[str, Any]:
+        self._id(job_id)
+        self._revision(revision)
+        with self._transaction() as session:
+            job = session.get(AutopilotJob, job_id)
+            if job is None:
+                raise AutopilotNotFound("작업을 찾을 수 없습니다.")
+            if job.revision != revision or job.status not in {"queued", "running", "waiting_review"}:
+                raise AutopilotConflict("작업 상태가 바뀌었습니다. 화면을 새로 고침하세요.")
+            changed = session.execute(update(AutopilotJob).where(
+                AutopilotJob.id == job_id, AutopilotJob.revision == revision,
+            ).values(cancel_requested=True, revision=revision + 1, updated_at=utcnow()))
+            if changed.rowcount != 1:
+                raise AutopilotConflict("작업 상태가 바뀌었습니다.")
+            session.refresh(job)
+            if job.status == "waiting_review":
+                job.status, job.active_slot, job.error_code = "cancelled", None, "cancelled"
+                job.message, job.retryable, job.finished_at = _ERROR_MESSAGES["cancelled"], True, utcnow()
+            self._event(session, job, "cancel_requested", "중단 요청을 받았습니다.")
+        return self.snapshot(job_id)
+
+    def resume(self, job_id: str, revision: int, article_id: int | None = None) -> dict[str, Any]:
+        return self._continue(job_id, revision, retry=False, article_id=article_id)
+
+    def retry(self, job_id: str, revision: int) -> dict[str, Any]:
+        return self._continue(job_id, revision, retry=True)
+
+    def _continue(self, job_id: str, revision: int, *, retry: bool, article_id: int | None = None) -> dict[str, Any]:
+        self._id(job_id)
+        self._revision(revision)
+        with self.guard:
+            self._acquire()
+            try:
+                with self._transaction() as session:
+                    job = session.get(AutopilotJob, job_id)
+                    if job is None:
+                        raise AutopilotNotFound("작업을 찾을 수 없습니다.")
+                    allowed = {"failed", "cancelled", "interrupted"} if retry else {"waiting_review"}
+                    if job.revision != revision or job.status not in allowed:
+                        raise AutopilotConflict("작업 상태가 바뀌었습니다. 화면을 새로 고침하세요.")
+                    context = self._context(session, job)
+                    restore_review = retry and job.mode == "guided" and job.current_stage in {"select", "script", "validate"} and job.current_stage in job.stage_results
+                    if retry:
+                        if not job.retryable or (not restore_review and not self.backend.can_retry(job.current_stage, context)):
+                            raise AutopilotConflict("이 작업은 안전하게 다시 시작할 수 없습니다. 이전 결과를 확인하세요.")
+                    elif article_id is not None:
+                        if job.current_stage != "select" or type(article_id) is not int or article_id not in job.stage_results.get("select", {}).get("candidate_article_ids", []):
+                            raise AutopilotError("이 작업에서 모은 뉴스 중 하나를 선택하세요.")
+                        self._claim(session, job, article_id)
+                        job.stage_results = {**job.stage_results, "select": {**job.stage_results["select"], "article_id": article_id}}
+                    changed = session.execute(update(AutopilotJob).where(
+                        AutopilotJob.id == job_id, AutopilotJob.revision == revision,
+                    ).values(
+                        status="waiting_review" if restore_review else "queued", active_slot=1, revision=revision + 1, cancel_requested=False,
+                        retryable=False, error_code=None, finished_at=None, updated_at=utcnow(),
+                        current_stage=job.current_stage if retry else STAGES[STAGES.index(job.current_stage) + 1],
+                        message="결과를 확인하고 다음 단계로 진행하세요." if restore_review else "작업을 이어서 진행합니다.",
+                    ))
+                    if changed.rowcount != 1:
+                        raise AutopilotConflict("작업 상태가 바뀌었습니다.")
+                    session.refresh(job)
+                    self._event(session, job, job.status, job.message)
+                if restore_review:
+                    self.lock.release()
+                else:
+                    self.future = self.executor.submit(self._run, job_id)
+            except IntegrityError:
+                self.lock.release()
+                raise AutopilotBusy("다른 작업이 진행 중입니다.") from None
+            except BaseException:
+                self.lock.release()
+                raise
+        return self.snapshot(job_id)
+
+    def recover(self) -> int:
+        """Never overwrite another process's active work; never turn uncertainty into success."""
+        with self.guard:
+            if self.future is not None and not self.future.done():
+                return 0
+            try:
+                self.lock.acquire(timeout=0)
+            except Timeout:
+                return 0
+            try:
+                with self._transaction() as session:
+                    jobs = session.scalars(select(AutopilotJob).where(AutopilotJob.status.in_(["queued", "running"]))).all()
+                    for job in jobs:
+                        job.status, job.active_slot, job.error_code = "interrupted", None, "interrupted"
+                        job.message, job.retryable = _ERROR_MESSAGES["interrupted"], True
+                        job.updated_at, job.finished_at, job.revision = utcnow(), utcnow(), job.revision + 1
+                        self._event(session, job, "interrupted", job.message)
+                        session.execute(update(AutopilotAttempt).where(
+                            AutopilotAttempt.job_id == job.id, AutopilotAttempt.status == "running",
+                        ).values(status="unknown", error_code="interrupted", finished_at=utcnow()))
+                    return len(jobs)
+            finally:
+                self.lock.release()
+
+    def close(self) -> None:
+        self.stop.set()
+        self.executor.shutdown(wait=True, cancel_futures=False)

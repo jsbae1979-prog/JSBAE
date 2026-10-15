@@ -39,7 +39,7 @@ def go(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=303)
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request) -> HTMLResponse:
     with request.app.state.sessions() as session:
         total = session.scalar(select(func.count()).select_from(NewsArticle))
@@ -256,7 +256,7 @@ def collect(request: Request) -> RedirectResponse:
         request.app.state.coordinator.start()
     except CollectionBusy as exc:
         raise HTTPException(409, "이미 뉴스 수집이 실행 중입니다.") from exc
-    return go("/")
+    return go("/dashboard")
 
 
 @router.get("/api/collection")

@@ -1,0 +1,9 @@
+{
+  "git_push": "PASS",
+  "branch": "feat/newsflow-phase5a",
+  "github_web_actions": "PASS",
+  "github_api": "BLOCKED: proxy CONNECT 403",
+  "draft_pr_creation": "NOT VERIFIED: gh pr create returned GraphQL Forbidden; no PR created",
+  "policy_changed": false,
+  "credentials_requested_or_extracted": false
+}

@@ -12,12 +12,17 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from filelock import FileLock, Timeout
 from sqlalchemy import select
+from sqlalchemy.orm import Session, sessionmaker
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from .autopilot.backend import PipelineBackend
+from .autopilot.service import AutopilotCoordinator
 from .config import Settings
 from .db.models import AppSetting, IntelligenceRun, NewsSource, utcnow
 from .db.session import make_engine, migrate, session_factory
+from .gui.autopilot_routes import router as autopilot_router
 from .gui.intelligence_routes import router as intelligence_router
 from .gui.publishing_routes import router as publishing_router
 from .gui.routes import router
@@ -30,6 +35,20 @@ from .oauth.production_vault import recover_credential_rotations
 from .video.service import VideoCoordinator
 
 
+def _recover_intelligence_runs(sessions: sessionmaker[Session], data_dir: Path) -> None:
+    """Do not interrupt intelligence owned by another active Autopilot worker."""
+    try:
+        with FileLock(str(data_dir / "autopilot.lock")).acquire(timeout=0), sessions.begin() as session:
+            for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.status == "running")):
+                run.status, run.message, run.finished_at = (
+                    "interrupted",
+                    "이전 실행이 중단되었습니다. 명시적으로 다시 실행하세요.",
+                    utcnow(),
+                )
+    except Timeout:
+        return
+
+
 def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
     engine = make_engine(settings.data_dir / "newsflow.db")
@@ -38,13 +57,8 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     recover_credential_rotations(sessions)
     recover_production_lifecycle(sessions)
     expire_production_credentials(sessions)
+    _recover_intelligence_runs(sessions, settings.data_dir)
     with sessions.begin() as session:
-        for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.status == "running")):
-            run.status, run.message, run.finished_at = (
-                "interrupted",
-                "이전 실행이 중단되었습니다. 명시적으로 다시 실행하세요.",
-                utcnow(),
-            )
         if not session.get(AppSetting, "request_timeout"):
             session.add(AppSetting(key="request_timeout", value=str(settings.request_timeout)))
         if not session.scalar(select(NewsSource).limit(1)):
@@ -61,19 +75,28 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     coordinator.recover_interrupted()
     video = VideoCoordinator(sessions, settings.data_dir)
     video.recover()
+    autopilot_backend = PipelineBackend(sessions, settings.data_dir, coordinator, video)
+    autopilot = AutopilotCoordinator(sessions, settings.data_dir, autopilot_backend)
+    autopilot.recover()
     secret = settings.local_secret().encode()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        yield
-        coordinator.close()
-        video.close()
-        engine.dispose()
+        try:
+            yield
+        finally:
+            autopilot.close()
+            autopilot_backend.close()
+            coordinator.close()
+            video.close()
+            engine.dispose()
 
     app = FastAPI(title="NewsFlow AI", docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.config, app.state.sessions, app.state.coordinator = settings, sessions, coordinator
     app.state.engine = engine
     app.state.video = video
+    app.state.autopilot = autopilot
+    app.state.autopilot_backend = autopilot_backend
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 
     def valid(token: str) -> bool:
@@ -128,6 +151,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
         response.headers["Cache-Control"] = "no-store"
         return response
 
+    app.include_router(autopilot_router)
     app.include_router(router)
     app.include_router(intelligence_router)
     app.include_router(video_router)
@@ -138,7 +162,6 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
 
 def run() -> None:
     import uvicorn
-    from filelock import FileLock, Timeout
 
     from .paths import prepare_data_dir
     from .runtime import PortInUseError, reserve_socket, runtime_logger
@@ -163,7 +186,10 @@ def run() -> None:
                     )
                 ).run(sockets=[listener])
             finally:
+                app.state.autopilot.close()
+                app.state.autopilot_backend.close()
                 app.state.coordinator.close()
+                app.state.video.close()
                 app.state.engine.dispose()
                 logger.info("server_stop")
     except (PortInUseError, Timeout):

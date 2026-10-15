@@ -512,7 +512,7 @@ def browser(
                     "button", name="비활성화", exact=True
                 ).wait_for()
                 page.wait_for_load_state("load")
-                page.goto(BASE)
+                page.goto(BASE + "/dashboard")
                 with (
                     page.expect_navigation(wait_until="domcontentloaded"),
                     page.expect_response(
@@ -528,7 +528,7 @@ def browser(
                 result["GUI_browser_POST"] = "PASS (registration, disable/enable, collection)"
                 assert counts(root)["news_articles"] == 3
                 progress["sqlite_count"] = 3
-                page.goto(BASE)
+                page.goto(BASE + "/dashboard")
                 page.screenshot(path=str(output / "dashboard.png"), full_page=True)
                 page.goto(BASE + "/news")
                 page.locator("input[name=q]").fill("우주")

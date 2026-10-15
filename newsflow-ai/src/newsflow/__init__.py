@@ -1,1 +1,1 @@
-"""NewsFlow AI Phase 1."""
+"""NewsFlow AI: local news, intelligence, video and review workflows."""

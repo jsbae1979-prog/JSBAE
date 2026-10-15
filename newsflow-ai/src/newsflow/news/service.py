@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from threading import Lock
@@ -36,12 +37,11 @@ class NewsService:
         self.sessions = sessions
         self.collector = collector
 
-    def collect(self, run_id: int) -> None:
+    def collect(self, run_id: int, source_ids: list[int] | None = None) -> None:
         with self.sessions() as session:
-            sources = [
-                (s.id, s.name, s.url)
-                for s in session.scalars(select(NewsSource).where(NewsSource.enabled).order_by(NewsSource.id))
-            ]
+            query = select(NewsSource).order_by(NewsSource.id)
+            query = query.where(NewsSource.enabled if source_ids is None else NewsSource.id.in_(source_ids))
+            sources = [(s.id, s.name, s.url) for s in session.scalars(query)]
             timeout = session.get(AppSetting, "request_timeout")
             timeout_value = int(timeout.value) if timeout else 10
         added = duplicates = succeeded = failed = 0
@@ -207,7 +207,7 @@ class CollectionCoordinator:
         except Timeout:
             pass  # Another process still owns a live collection.
 
-    def start(self) -> int:
+    def start(self, source_ids: list[int] | None = None, on_run: Callable[[int], None] | None = None) -> int:
         with self.guard:
             if self.future and not self.future.done():
                 raise CollectionBusy
@@ -218,6 +218,7 @@ class CollectionCoordinator:
                 lock.acquire(timeout=0)
             except Timeout as exc:
                 raise CollectionBusy from exc
+            run_id = None
             try:
                 with self.service.sessions.begin() as session:
                     for previous in session.scalars(
@@ -237,15 +238,34 @@ class CollectionCoordinator:
                     session.add(run)
                     session.flush()
                     run_id = run.id
-                self.future = self.executor.submit(self._execute, run_id, lock)
+                if on_run:
+                    on_run(run_id)
+                self.future = self.executor.submit(self._execute, run_id, lock, source_ids)
                 return run_id
             except Exception:
-                lock.release()
+                try:
+                    if run_id is not None:
+                        with self.service.sessions.begin() as session:
+                            run = session.get(CollectionRun, run_id)
+                            run.status, run.finished_at = "failed", utcnow()
+                            session.add(
+                                AuditLog(
+                                    run_id=run_id,
+                                    level="error",
+                                    event="collection_start_error",
+                                    message="수집 준비 기록에 실패했습니다. 외부 요청은 시작하지 않았습니다.",
+                                )
+                            )
+                finally:
+                    lock.release()
                 raise
 
-    def _execute(self, run_id: int, lock: FileLock) -> None:
+    def _execute(self, run_id: int, lock: FileLock, source_ids: list[int] | None = None) -> None:
         try:
-            self.service.collect(run_id)
+            if source_ids is None:
+                self.service.collect(run_id)
+            else:
+                self.service.collect(run_id, source_ids)
         except Exception:  # noqa: BLE001 -- background task must persist failure state
             with self.service.sessions.begin() as session:
                 run = session.get(CollectionRun, run_id)
