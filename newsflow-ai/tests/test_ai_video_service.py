@@ -49,6 +49,8 @@ from newsflow.video.ai.keys import VIDEO_ENV_NAME, VideoAIKeyStore
 from newsflow.video.ai.policy import DEFAULT_PROMPT, STYLE_GUARD
 from newsflow.video.ai.service import (
     CLIP_LOST_MESSAGE,
+    CLIP_UNREADABLE,
+    COMPOSE_STARTED,
     DRAFT_CHANGED,
     MAX_REFETCHES,
     MAX_REQUEUES,
@@ -108,7 +110,7 @@ STALE_REVISION = "다른 화면에서 계획이 바뀌었습니다. 새로고침
 TRIAL = "체험(합성) 뉴스 대본은 외부 AI 영상 공급사로 보내지 않습니다."
 SECRET_PROMPT = "프롬프트에 비밀정보가 포함되어 보낼 수 없습니다."
 DISCARD_NEEDED = ("장면 {}의 받아 둔 유료 AI 영상(또는 다시 받을 수 있는 결과)이 버려집니다. "
-                  "'받아 둔 영상 버리기'에 체크한 뒤 저장하세요.")
+                  "그 장면의 '받아 둔 유료 AI 영상 버리기'에 체크한 뒤 저장하세요.")
 BLOCKED = ("실제 뉴스 현장·기록 영상이나 실존 인물처럼 보이게 하는 표현은 사용할 수 없습니다. "
            "추상적인 배경·상징 화면으로 바꿔 쓰세요.")
 
@@ -386,7 +388,7 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
     assert estimate == {
         "scenes": [{"position": 2, "seconds": 5, "model": MODEL, "cost": "0.5", "usable": True}], "total": "0.5", "currency": "USD",
         "plan_spent": "0", "job_limit": "5", "monthly_limit": "20", "month_spent": "0", "remaining": "20",
-        "problems": [], "notices": [], "can_submit": True,
+        "problems": [], "notices": [], "can_submit": True, "other_currency_spend": False,
     }
     assert estimate["scenes"][0]["usable"] is True
     assert service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True) == 1
@@ -1654,6 +1656,10 @@ def test_a_timeout_the_provider_cancelled_is_closed_and_not_offered_for_refetch(
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.refetch(plan_id, revision(studio, plan_id), 0)
     assert excinfo.value.status == 409
+    # It goes into the next batch as a plain new generation: no claim of failed downloads.
+    estimate = studio.service.estimate(plan_id)
+    assert estimate["can_submit"] and [line["position"] for line in estimate["scenes"]] == [0]
+    assert estimate["notices"] == []
 
 
 @needs_ffmpeg
@@ -1666,8 +1672,9 @@ def test_a_refetchable_paid_result_is_not_rebought_by_the_next_batch(studio):
     assert scenes(studio, plan_id)[0].error_code == "video_ai_clip_invalid"
     estimate = studio.service.estimate(plan_id)
     assert estimate["scenes"] == [] and estimate["problems"] == ["새로 생성할 AI 장면이 없습니다."]
-    assert estimate["notices"] == [
-        "장면 1은 '결과 다시 받기'로 추가 비용 없이 받을 수 있어 새 유료 생성에 넣지 않습니다. 다시 생성하려면 프롬프트를 바꾸세요."]
+    assert estimate["notices"] == [(
+        "장면 1은 '결과 다시 받기'로 추가 비용 없이 받을 수 있어 새 유료 생성에 넣지 않습니다. "
+        "다시 생성하려면 그 장면의 '받아 둔 유료 AI 영상 버리기'에 체크하고 프롬프트나 모델을 바꾸세요.")]
     with pytest.raises(AIVideoError):
         confirm_as_shown(studio, plan_id)
     assert len(calls(studio.provider, "submit")) == 1
@@ -1824,15 +1831,17 @@ def test_an_unreadable_clip_refuses_composition_without_releasing_the_paid_resul
     before = revision(studio, plan_id)
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.approve_compose(plan_id, before, True)
-    assert refusal(excinfo) == (
-        "장면 1의 생성 영상 파일을 지금 읽을 수 없습니다. 다른 프로그램에서 열려 있는지 확인한 뒤 다시 시도하세요.", 409)
+    assert refusal(excinfo) == ("장면 1" + CLIP_UNREADABLE, 409)
+    assert "다른 프로그램에서 열려 있는지" in CLIP_UNREADABLE and "'결과 다시 받기'" in CLIP_UNREADABLE
     kept = scenes(studio, plan_id)[0]
     assert (kept.status, kept.clip_name, kept.reviewed) == ("ready", scene.clip_name, True)
+    assert studio.service.can_refetch(kept)  # a way out if it stays unreadable
     assert revision(studio, plan_id) == before and clip.is_file()
     with studio.sessions() as session:
         assert session.scalar(select(RenderJob)) is None
     monkeypatch.setattr(Path, "open", real_open)
     assert studio.service.approve_compose(plan_id, before, True)
+    assert "unreadable" not in scenes(studio, plan_id)[0].clip_meta  # readable again
 
 
 def edit_draft(studio: Studio, change) -> None:
@@ -1887,7 +1896,7 @@ def test_rebase_refuses_a_script_whose_scene_timing_changed(studio):
     assert DRAFT_CHANGED in studio.service.estimate(plan_id)["problems"]
 
 
-@pytest.mark.parametrize(("stored", "reused"), [("", True), ("720p", True), ("1080p", False)])
+@pytest.mark.parametrize(("stored", "reused"), [("", True), ("720p", True), ("1080p", False), ("changed", False)])
 def test_resend_after_unknown_reuses_the_key_only_for_the_identical_request(studio, stored, reused):
     # Rows written before migration 0011 have resolution '': that build always sent the model's resolution.
     ready_studio(studio)
@@ -1904,12 +1913,69 @@ def test_resend_after_unknown_reuses_the_key_only_for_the_identical_request(stud
     del studio.provider.submit
     studio.service.recover()
     with studio.sessions.begin() as session:
-        session.scalar(select(VideoAIUsage)).resolution = stored
+        session.scalar(select(VideoAIUsage)).resolution = "" if stored == "changed" else stored
+    if stored == "changed":
+        # A legacy row cannot tell which resolution was sent once the model was saved again at another one.
+        model = next(m for m in list_models(studio.sessions) if m.path == MODEL)
+        save_model(studio.sessions, path=MODEL, label="시험 모델", price_per_second="0.1", durations="5",
+                   resolution="1080p", confirmed=True, model_id=model.id)
     studio.service.resolve_unknown(plan_id, revision(studio, plan_id), 0)
     confirm(studio, plan_id)
     studio.service.tick()
     first, second = submit_keys(studio.provider)
     assert (second == first) is reused
+
+
+def unknown_then_resolved(studio: Studio) -> tuple[int, str]:
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, plan_id)
+
+    def crash(request):
+        studio.provider.calls.append(("submit", request.model_path, request.idempotency_key))
+        raise Crash
+
+    studio.provider.submit = crash
+    with pytest.raises(Crash):
+        studio.service.tick()
+    del studio.provider.submit
+    studio.service.recover()
+    studio.service.resolve_unknown(plan_id, revision(studio, plan_id), 0)
+    return plan_id, submit_keys(studio.provider)[0]
+
+
+@pytest.mark.parametrize("stop", ["user_cancel", "script_rebase"])
+def test_an_identical_resend_keeps_its_key_after_a_cancel_before_sending(studio, stop):
+    plan_id, first = unknown_then_resolved(studio)
+    confirm(studio, plan_id)
+    assert scenes(studio, plan_id)[0].status == "waiting"
+    if stop == "user_cancel":
+        studio.service.cancel_scene(plan_id, revision(studio, plan_id), 0)
+    else:
+        def caption(items):
+            items[0]["caption"] = "고친 자막"
+
+        edit_draft(studio, caption)
+        studio.service.tick()  # the send gate cancels the waiting resend (script changed): not sent
+        assert scenes(studio, plan_id)[0].error_code == "video_ai_canceled"
+        studio.service.rebase(plan_id, revision(studio, plan_id))
+    assert [row.status for row in usage(studio)] == ["unknown", "not_sent"]
+    confirm(studio, plan_id)
+    studio.service.tick()
+    assert submit_keys(studio.provider) == [first, first]  # the possibly billed request is never doubled
+
+
+def test_a_resend_that_was_answered_gets_a_new_key_next_time(studio):
+    plan_id, first = unknown_then_resolved(studio)
+    edit_scene(studio, plan_id, 0, prompt=PROMPT + " [fake:fail]")  # same request for the provider
+    confirm(studio, plan_id)
+    studio.service.tick()
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].status == "failed"
+    confirm(studio, plan_id)
+    studio.service.tick()
+    keys = submit_keys(studio.provider)
+    assert keys[:2] == [first, first] and keys[2] != first
 
 
 def test_a_refetch_that_hits_a_full_disk_does_not_use_up_a_refetch(studio, monkeypatch):
@@ -1945,7 +2011,78 @@ def test_a_plan_with_spend_in_another_currency_cannot_generate_more(studio):
     add_model(studio, price="100", model_id=model.id)  # re-confirmed in the new currency
     estimate = studio.service.estimate(plan_id)
     assert CURRENCY_CHANGED in estimate["problems"] and not estimate["can_submit"]
+    assert estimate["plan_spent"] == "0" and estimate["currency"] == "KRW"  # the USD spend is never shown as KRW
+    assert estimate["other_currency_spend"] is True
     with pytest.raises(AIVideoError) as excinfo:
         confirm_as_shown(studio, plan_id)
     assert refusal(excinfo) == (CURRENCY_CHANGED, 422)
     assert len(calls(studio.provider, "submit")) == 1
+
+
+@needs_ffmpeg
+def test_an_unreadable_clip_is_fetched_again_and_a_failed_refetch_loses_nothing(studio, monkeypatch):
+    plan_id, scene = ready_and_reviewed(studio)
+    old = studio.service.clip_path(scene.id)
+    real_open = Path.open
+
+    def locked(self, *args, **kwargs):
+        if self == old:
+            raise PermissionError(13, "denied")
+        return real_open(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", locked)
+    with pytest.raises(AIVideoError):
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    # First refetch fails validation: the scene is closed but still points at the old file.
+    studio.provider.jobs[scene.request_id].bad_clip = True
+    studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    assert scenes(studio, plan_id)[0].status == "in_progress" and plan_row(studio, plan_id).reviewed_at is None
+    studio.service.tick()
+    failed = scenes(studio, plan_id)[0]
+    assert (failed.status, failed.error_code, failed.clip_name) == ("failed", "video_ai_clip_invalid", scene.clip_name)
+    studio.service.recover()
+    assert old.is_file()  # still referenced: a failed refetch never deletes the paid file
+    studio.provider.jobs[scene.request_id].bad_clip = False
+    studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    studio.service.tick()
+    fresh = scenes(studio, plan_id)[0]
+    assert fresh.status == "ready" and fresh.clip_name != scene.clip_name and not fresh.reviewed
+    assert len(calls(studio.provider, "submit")) == 1
+    monkeypatch.setattr(Path, "open", real_open)
+    studio.service.recover()
+    assert not old.exists() and studio.service.clip_path(fresh.id).is_file()
+
+
+@needs_ffmpeg
+def test_a_directory_at_the_clip_path_counts_as_a_lost_clip(studio):
+    plan_id, scene = ready_and_reviewed(studio)
+    clip = studio.service.clip_path(scene.id)
+    clip.unlink()
+    clip.mkdir()
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert excinfo.value.status == 409 and "없거나 바뀌었습니다" in str(excinfo.value)
+    released = scenes(studio, plan_id)[0]
+    assert (released.status, released.error_code, released.message) == (
+        "failed", "video_ai_download_failed", CLIP_LOST_MESSAGE)
+    assert studio.service.can_refetch(released)
+
+
+@needs_ffmpeg
+def test_a_stale_page_or_a_finished_plan_never_releases_clips(studio):
+    plan_id, scene = ready_and_reviewed(studio)
+    stale = revision(studio, plan_id)
+    studio.service.approve_compose(plan_id, stale, True)
+    studio.app.state.video.future.result(timeout=30)
+    studio.service.sync()
+    assert plan_row(studio, plan_id).status == "composed"
+    studio.service.clip_path(scene.id).unlink()  # e.g. a data folder moved without ai-clips
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, stale, True)
+    assert refusal(excinfo) == (STALE_REVISION, 409)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert refusal(excinfo) == (COMPOSE_STARTED, 409)
+    kept = scenes(studio, plan_id)[0]
+    assert (kept.status, kept.clip_name, kept.reviewed) == ("ready", scene.clip_name, True)
+    assert plan_row(studio, plan_id).status == "composed"

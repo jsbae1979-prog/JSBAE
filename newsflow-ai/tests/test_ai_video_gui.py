@@ -263,7 +263,7 @@ def test_paid_clip_needs_discard_and_a_new_script_can_be_taken_in(studio):
     assert post(client, f"/video/ai/plans/{plan_id}/scenes", {"revision": revision(app, plan_id), **form}).status_code == 303
     changed = {**form, "prompt_0": "다른 추상 그래픽"}
     refused = post(client, f"/video/ai/plans/{plan_id}/scenes", {"revision": revision(app, plan_id), **changed})
-    assert refused.status_code == 409 and "받아 둔 영상 버리기" in refused.json()["detail"]
+    assert refused.status_code == 409 and "'받아 둔 유료 AI 영상 버리기'에 체크" in refused.json()["detail"]
     with app.state.sessions() as session:
         scene = session.scalar(select(AIVideoScene).where(AIVideoScene.plan_id == plan_id, AIVideoScene.position == 0))
     assert scene.status == "ready" and scene.clip_name
@@ -284,3 +284,42 @@ def test_paid_clip_needs_discard_and_a_new_script_can_be_taken_in(studio):
     with app.state.sessions() as session:
         kept = session.get(AIVideoScene, scene.id)
     assert (kept.status, kept.clip_name) == ("ready", scene.clip_name)
+
+
+@needs_ffmpeg
+def test_an_unreadable_clip_offers_a_free_refetch_on_the_plan_page(studio, monkeypatch):
+    from pathlib import Path
+
+    app, client, provider, draft_id = studio
+    configure(client)
+    plan_id = plan_id_for(client, draft_id)
+    form = {"source_0": "generated", "prompt_0": "도시 경제를 상징하는 추상 그래픽", "model_0": "vendor/model/text-to-video",
+            "source_1": "card", "source_2": "card"}
+    assert post(client, f"/video/ai/plans/{plan_id}/scenes", {"revision": revision(app, plan_id), **form}).status_code == 303
+    assert post(client, f"/video/ai/plans/{plan_id}/confirm", {
+        "revision": revision(app, plan_id), "shown_total": "1", "confirmed": "true"}).status_code == 303
+    app.state.video_ai.tick()
+    app.state.video_ai.tick()
+    assert post(client, f"/video/ai/plans/{plan_id}/review", {
+        "revision": revision(app, plan_id), "reviewed_0": "true", "statement": "true"}).status_code == 303
+    refetch_action = f'action="/video/ai/plans/{plan_id}/scenes/0/refetch"'
+    assert refetch_action not in client.get(f"/video/ai/plans/{plan_id}").text
+    with app.state.sessions() as session:
+        scene = session.scalar(select(AIVideoScene).where(AIVideoScene.plan_id == plan_id, AIVideoScene.position == 0))
+    clip = app.state.video_ai.clip_path(scene.id)
+    real_open = Path.open
+
+    def locked(self, *args, **kwargs):
+        if self == clip:
+            raise PermissionError(13, "denied")
+        return real_open(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", locked)
+    refused = post(client, f"/video/ai/plans/{plan_id}/approve", {"revision": revision(app, plan_id), "approved": "true"})
+    assert refused.status_code == 409 and "결과 다시 받기" in refused.json()["detail"]
+    assert refetch_action in client.get(f"/video/ai/plans/{plan_id}").text
+    assert post(client, f"/video/ai/plans/{plan_id}/scenes/0/refetch", {"revision": revision(app, plan_id)}).status_code == 303
+    app.state.video_ai.tick()
+    status = client.get(f"/api/video/ai/plans/{plan_id}").json()
+    assert status["scenes"][0]["status"] == "ready"
+    assert [call[0] for call in provider.calls].count("submit") == 1

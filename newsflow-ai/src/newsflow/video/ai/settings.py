@@ -293,9 +293,11 @@ def usage_this_month(sessions: sessionmaker[Session]) -> dict:
         return {"spent": _sum(rows), "requests": len(rows), "since": month_start().date().isoformat()}
 
 
-def plan_spent(session: Session, plan_id: int) -> Decimal:
-    return _sum(session.scalars(select(VideoAIUsage).where(
-        VideoAIUsage.plan_id == plan_id, VideoAIUsage.status.in_(COUNTED))))
+def plan_spent(session: Session, plan_id: int, currency: str | None = None) -> Decimal:
+    query = select(VideoAIUsage).where(VideoAIUsage.plan_id == plan_id, VideoAIUsage.status.in_(COUNTED))
+    if currency is not None:
+        query = query.where(VideoAIUsage.currency == currency)
+    return _sum(session.scalars(query))
 
 
 CURRENCY_CHANGED = "통화가 바뀌어 이 계획에는 더 생성할 수 없습니다(이전 사용액과 단위가 다름). 새 계획을 만드세요."

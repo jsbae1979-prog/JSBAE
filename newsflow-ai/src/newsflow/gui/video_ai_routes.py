@@ -15,7 +15,7 @@ from newsflow.db.models import AIVideoPlan, AIVideoScene, ContentDraft, VideoAIU
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.video.ai.costs import CURRENCIES
 from newsflow.video.ai.policy import DEFAULT_PROMPT, SCENE_LABEL, STYLE_GUARD, VIDEO_NOTICE
-from newsflow.video.ai.service import AIVideoError
+from newsflow.video.ai.service import DISCARD_LABEL, AIVideoError
 from newsflow.video.ai.settings import (
     CANDIDATE_PATHS,
     DISCLAIMER,
@@ -103,8 +103,8 @@ def plan_page(request: Request, plan_id: int, saved: str = "") -> HTMLResponse:
         source_labels=SOURCE_LABELS, status_labels=STATUS_LABELS, plan_labels=PLAN_LABELS, style_guard=STYLE_GUARD,
         scene_label=SCENE_LABEL, notice=VIDEO_NOTICE, default_prompt=DEFAULT_PROMPT, saved=saved[:20],
         active_statuses=sorted({"waiting", "submitting", "queued", "in_progress", "downloading"}),
-        paid_positions=[s.position for s in context["scenes"] if service.holds_paid_result(s)],
-        refetch_positions=[s.position for s in context["scenes"] if service._refetchable(s)],
+        paid_positions=[s.position for s in context["scenes"] if service.holds_paid_result(s)], discard_label=DISCARD_LABEL,
+        refetch_positions=[s.position for s in context["scenes"] if service.can_refetch(s)],
     )
 
 

@@ -294,7 +294,7 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             assert board.locator('input[name="discard_0"]').count() == 1
             assert board.locator('input[name="discard_1"]').count() == 0
             board.locator("#prompt-0").fill(PROMPT + " 다른 색")
-            refused(page, board, f"/video/ai/plans/{plan_id}/scenes", 409, "받아 둔 영상 버리기")
+            refused(page, board, f"/video/ai/plans/{plan_id}/scenes", 409, "받아 둔 유료 AI 영상 버리기")
             kept = db_rows(data, "SELECT status, clip_name FROM ai_video_scenes WHERE plan_id=? AND position=0", (plan_id,))[0]
             assert kept == ("ready", scene[1]), kept
             page.goto(f"{BASE}/video/ai/plans/{plan_id}")
