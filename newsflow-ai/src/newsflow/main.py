@@ -22,12 +22,18 @@ from .autopilot.service import AutopilotCoordinator
 from .config import Settings
 from .db.models import AppSetting, IntelligenceRun, NewsSource, utcnow
 from .db.session import make_engine, migrate, session_factory
+from .gui.ai_settings_routes import router as ai_settings_router
 from .gui.autopilot_routes import router as autopilot_router
 from .gui.intelligence_routes import router as intelligence_router
 from .gui.publishing_routes import router as publishing_router
 from .gui.routes import router
 from .gui.setup_routes import router as setup_router
+from .gui.sources_routes import router as sources_router
 from .gui.video_routes import router as video_router
+from .gui.voice_routes import router as voice_router
+from .intelligence.credentials import AIKeyStore
+from .intelligence.service import IntelligenceService
+from .intelligence.settings import external_ready
 from .news.collector import Collector
 from .news.rss_adapter import PublicRSSAdapter, RSSAdapter
 from .news.service import CollectionCoordinator, NewsService
@@ -76,7 +82,12 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     coordinator.recover_interrupted()
     video = VideoCoordinator(sessions, settings.data_dir)
     video.recover()
-    autopilot_backend = PipelineBackend(sessions, settings.data_dir, coordinator, video)
+    ai_keys = AIKeyStore(settings.data_dir)
+    autopilot_backend = PipelineBackend(
+        sessions, settings.data_dir, coordinator, video,
+        intelligence=IntelligenceService(sessions, None, ai_keys),
+        ai_gate=lambda: external_ready(sessions, ai_keys),
+    )
     autopilot = AutopilotCoordinator(sessions, settings.data_dir, autopilot_backend)
     autopilot.recover()
     secret = settings.local_secret().encode()
@@ -98,6 +109,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
     app.state.video = video
     app.state.autopilot = autopilot
     app.state.autopilot_backend = autopilot_backend
+    app.state.ai_keys = ai_keys
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 
     def valid(token: str) -> bool:
@@ -154,6 +166,9 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
 
     app.include_router(setup_router)
     app.include_router(autopilot_router)
+    app.include_router(sources_router)
+    app.include_router(ai_settings_router)
+    app.include_router(voice_router)
     app.include_router(router)
     app.include_router(intelligence_router)
     app.include_router(video_router)

@@ -10,7 +10,7 @@ import shutil
 import subprocess
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from threading import Event
 from typing import Protocol
@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps, UnidentifiedImageError
 
-from .tts import TTSProvider, local_process_env, wav_duration
+from .tts import SpeechSettings, TTSProvider, local_process_env, wav_duration
 
 
 class RenderError(Exception):
@@ -44,10 +44,17 @@ class RenderPlan:
     voice: str = "offline-silence"
     font_size: int = 48
     subtitle_y: int = 1420
+    # Phase 5C: narration speed/pauses and audio-fit timing for real Korean voices.
+    speech: SpeechSettings = field(default_factory=SpeechSettings)
+    fit_audio: bool = False
 
     @property
     def duration(self) -> float:
         return sum(scene.seconds for scene in self.scenes)
+
+    @property
+    def silent(self) -> bool:
+        return self.voice == "offline-silence"
 
     def validate(self) -> None:
         if not 1 <= len(self.scenes) <= 8 or not 0 < self.duration <= 60:
@@ -58,6 +65,32 @@ class RenderPlan:
             not 0.1 <= s.seconds <= 60 or len(s.narration) > 400 or len(s.caption) > 150 for s in self.scenes
         ):
             raise RenderError("장면 시간 또는 텍스트 길이를 확인하세요.")
+
+
+AUDIO_TAIL_SECONDS = 0.35
+
+
+def fit_timings(audio_seconds: list[float], planned: list[float], total: float) -> list[float]:
+    """Give every scene at least its narration plus a short tail, then share the slack.
+
+    Scene order and the exact total are preserved. When narration cannot fit, the
+    error names how much is over so the user can shorten the script or lengthen the video.
+    """
+    if len(audio_seconds) != len(planned) or not planned:
+        raise RenderError("장면 수와 음성 수가 일치하지 않습니다.", kind="audio")
+    minimum = [round(a + AUDIO_TAIL_SECONDS, 3) for a in audio_seconds]
+    over = sum(minimum) - total
+    if over > 0.001:
+        raise RenderError(
+            f"음성 총 길이가 영상 길이를 {over:.1f}초 초과합니다. 대본을 줄이거나 영상 길이를 늘리세요.", kind="audio"
+        )
+    slack = total - sum(minimum)
+    weights = [max(p, 0.1) for p in planned]
+    result = [round(m + slack * w / sum(weights), 3) for m, w in zip(minimum, weights)]
+    result[-1] = round(total - sum(result[:-1]), 3)
+    if any(value < 0.1 for value in result):
+        raise RenderError("장면 시간이 너무 짧습니다.", kind="audio")
+    return result
 
 
 class RenderEngine(Protocol):
@@ -121,6 +154,8 @@ def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Pat
     small_font = ImageFont.truetype(str(font), 28)
     draw.rounded_rectangle((90, 105, 990, 115), fill="#8b83ff", radius=5)
     draw.text((90, 145), "NEWSFLOW · 미확인 보도 · 사람 검토 필요", font=small_font, fill="#b7adff")
+    audio_label = "무음 검토영상 · 음성 없음" if plan.silent else "한국어 음성 · 발음 품질 미검증"
+    draw.text((990 - draw.textlength(audio_label, font=small_font), 1762), audio_label, font=small_font, fill="#8d9ab3")
     for i, line in enumerate(text_lines(draw, plan.title, title_font, 900)[:5]):
         draw.text((90, 230 + i * 78), line, font=title_font, fill="#f0f4ff")
     if scene.image:
@@ -170,7 +205,7 @@ class FakeRenderAdapter:
             raise RenderError("사용자 종료로 영상 제작이 중단되었습니다.")
         plan.validate()
         for index, scene in enumerate(plan.scenes):
-            tts.synthesize(scene.narration, work / f"audio-{index}.wav", plan.voice, scene.seconds)
+            tts.synthesize(scene.narration, work / f"audio-{index}.wav", plan.voice, scene.seconds, plan.speech)
         path = work / "result.mp4"
         path.write_bytes(b"FAKE_RENDER_NOT_PLAYABLE")
         progress(95)
@@ -342,21 +377,41 @@ class FFmpegAdapter:
         binary, probe, version = self.check()
         font = font_path()
         progress(5)
-        for index, scene in enumerate(plan.scenes):
+        scenes = list(plan.scenes)
+        timings: list[dict] = []
+        if plan.fit_audio and not plan.silent:
+            # Synthesize everything first so scene timing can follow the real narration.
+            measured = []
+            for index, scene in enumerate(scenes):
+                if cancel.is_set():
+                    raise RenderError("영상 제작이 중단되었습니다.")
+                audio = work / f"scene-{index:03d}.wav"
+                tts.synthesize(scene.narration, audio, plan.voice, plan.duration, plan.speech)
+                measured.append(wav_duration(audio))
+            fitted = fit_timings(measured, [s.seconds for s in scenes], plan.duration)
+            scenes = [
+                ScenePlan(seconds, scene.narration, scene.caption, scene.image)
+                for seconds, scene in zip(fitted, scenes)
+            ]
+            timings = [
+                {"seconds": seconds, "audio_seconds": round(audio, 3)} for seconds, audio in zip(fitted, measured)
+            ]
+        for index, scene in enumerate(scenes):
             if cancel.is_set():
                 raise RenderError("영상 제작이 중단되었습니다.")
             image, audio, target = (
                 work / f"scene-{index:03d}{suffix}" for suffix in (".png", ".wav", ".mp4")
             )
             card(plan, scene, index, image, font)
-            tts.synthesize(scene.narration, audio, plan.voice, scene.seconds)
+            if not timings:
+                tts.synthesize(scene.narration, audio, plan.voice, scene.seconds, plan.speech)
             if wav_duration(audio) > scene.seconds + 0.05:
                 raise RenderError("음성이 장면 길이를 초과했습니다. 대본을 수정하세요.", kind="audio")
             self.execute(self.command(binary, scene, image, audio, target), work, cancel)
-            progress(10 + int((index + 1) / len(plan.scenes) * 75))
+            progress(10 + int((index + 1) / len(scenes) * 75))
         manifest = work / "concat.txt"
         manifest.write_text(
-            "".join(f"file 'scene-{i:03d}.mp4'\n" for i in range(len(plan.scenes))), encoding="utf-8"
+            "".join(f"file 'scene-{i:03d}.mp4'\n" for i in range(len(scenes))), encoding="utf-8"
         )
         final = work / "result.mp4"
         self.execute(
@@ -389,4 +444,8 @@ class FFmpegAdapter:
         progress(95)
         metadata = self.inspect(probe, final, plan.duration)
         metadata["ffmpeg_version"] = version
+        metadata["audio"] = "silent" if plan.silent else "voice"
+        metadata["audio_fit"] = bool(timings)
+        if timings:
+            metadata["scene_timings"] = timings
         return final, metadata

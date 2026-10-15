@@ -27,27 +27,33 @@ from newsflow.db.models import (
     RenderJob,
     VideoProject,
 )
-from newsflow.intelligence.provider import OfflineProvider
-from newsflow.intelligence.service import IntelligenceService
+from newsflow.intelligence.korean import MIN_SUMMARY_CHARS, speech_plan
+from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.news.collector import Collector
 from newsflow.news.rss_adapter import FakeRSSAdapter
 from newsflow.news.service import CollectionCoordinator, NewsService
 from newsflow.publishing.media import FFprobeMediaInspector
 from newsflow.publishing.service import PublishingService, hash_file
-from newsflow.video.service import VideoCoordinator
+from newsflow.video.service import VideoCoordinator, VideoError
+from newsflow.video.tts import SpeechSettings, TTSError
 
 from .contracts import BackendError
 from .samples import SAMPLE_NAME, SAMPLE_URL, sample_feed
 
 Progress = Callable[[int, str], None]
 SaveArtifact = Callable[[str, int | str], None]
+_AI_CODES = {
+    "ai_not_ready", "ai_key_missing", "ai_auth_failed", "ai_rate_limited", "ai_timeout", "ai_unavailable",
+    "ai_bad_response", "ai_budget", "ai_consent",
+}
 
 
 class PipelineBackend:
     """One explicit local workflow, with synthetic RSS and offline AI as defaults.
 
-    Injected services are for deterministic tests. Runtime never discovers an AI
-    provider, account, credential or publisher from environment settings.
+    Injected services are for deterministic tests. External AI runs only for a real-content
+    job whose stored settings (provider, dated approval, monthly limit, key) pass the gate
+    at execution time; trial jobs never leave the machine.
     """
 
     def __init__(
@@ -59,13 +65,16 @@ class PipelineBackend:
         *,
         intelligence: IntelligenceService | None = None,
         publishing: PublishingService | None = None,
+        ai_gate: Callable[[], dict] | None = None,
     ) -> None:
         self.sessions, self.collection, self.video = sessions, collection, video
         self.sample_collection = CollectionCoordinator(
             NewsService(sessions, Collector(FakeRSSAdapter({SAMPLE_URL: sample_feed()}))), data_dir
         )
-        self.intelligence = intelligence or IntelligenceService(sessions, OfflineProvider())
+        self.intelligence = intelligence or IntelligenceService(sessions)
         self.publishing = publishing or PublishingService(sessions, video.outputs)
+        # Without a gate, external AI is never ready: the safe default for tests and tools.
+        self.ai_gate = ai_gate or (lambda: {"ready": False, "reasons": ["AI 설정이 연결되지 않았습니다."]})
         # Always independently inspect the physical MP4. FakeRenderAdapter cannot
         # promote its nonplayable marker merely through injected publish metadata.
         self.inspector = FFprobeMediaInspector()
@@ -253,10 +262,51 @@ class PipelineBackend:
         chosen = ctx.get("article_id") or candidates[0]
         if chosen not in candidates:
             raise BackendError("선택한 뉴스가 이번 수집 결과와 다릅니다.", retryable=False)
+        with self.sessions() as session:
+            article = session.get(NewsArticle, chosen)
+            sufficient = bool(article and len(article.summary.strip()) >= MIN_SUMMARY_CHARS)
+            dated = bool(article and article.published_at is not None)
         progress(100, "제작할 뉴스 후보를 골랐어요.")
-        return {"article_id": chosen, "candidate_article_ids": candidates}
+        return {
+            "article_id": chosen, "candidate_article_ids": candidates,
+            "content_sufficient": sufficient, "publication_dated": dated,
+            "synthetic_news": ctx.get("source") == "sample",
+        }
+
+    def _speech(self) -> SpeechSettings:
+        from newsflow.easy_setup import speech_preferences
+
+        try:
+            return speech_preferences(self.sessions)
+        except TTSError:
+            return SpeechSettings()
+
+    def _ai_mode(self, ctx: dict) -> str:
+        mode = ctx.get("ai_mode") or "offline"
+        if ctx.get("content_mode", "trial") != "real" and mode != "offline":
+            raise BackendError("체험 제작에서는 외부 AI를 사용하지 않습니다.", retryable=False, code="ai_consent")
+        if mode == "openai":
+            gate = self.ai_gate()
+            if not gate.get("ready"):
+                raise BackendError("외부 AI 준비 상태를 확인하세요.", code="ai_not_ready")
+        return mode
+
+    @staticmethod
+    def _ai_failure(exc: IntelligenceError) -> BackendError:
+        code = exc.code if exc.code in _AI_CODES else "script_failed"
+        return BackendError(str(exc), code=code, retryable=exc.retryable)
+
+    def _draft_summary(self, draft: ContentDraft, ai_mode: str) -> dict:
+        speech = self._speech()
+        plan = speech_plan(draft.content, draft.duration, speech.rate, speech.pause_ms)
+        return {
+            "content_draft_id": draft.id, "script_revision": draft.revision, "ai_mode": ai_mode,
+            "review_notes": len(draft.review_notes or []),
+            "speech_estimate_seconds": plan["estimated_total_seconds"], "speech_fits": plan["fits"],
+        }
 
     def _script(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        ai_mode = self._ai_mode(ctx)
         if ctx.get("content_draft_id"):
             with self.sessions() as session:
                 draft = session.get(ContentDraft, ctx["content_draft_id"])
@@ -265,7 +315,7 @@ class PipelineBackend:
                     and draft.duration == ctx["duration"]
                     and {article["id"] for article in draft.sources["articles"]} == {ctx["article_id"]}
                 ):
-                    return {"content_draft_id": draft.id, "script_revision": draft.revision}
+                    return self._draft_summary(draft, ai_mode)
             raise BackendError("저장된 대본과 선택 뉴스가 일치하지 않습니다.", retryable=False)
         analysis_id = ctx.get("analysis_run_id")
         script_id = ctx.get("script_run_id")
@@ -278,7 +328,7 @@ class PipelineBackend:
                     } != {ctx["article_id"]}:
                         raise BackendError("대본과 선택 뉴스가 일치하지 않습니다.", retryable=False)
                     save("content_draft_id", completed.id)
-                    return {"content_draft_id": completed.id, "script_revision": completed.revision}
+                    return self._draft_summary(completed, ai_mode)
                 run = session.get(IntelligenceRun, script_id)
                 if run is None:
                     raise BackendError("저장된 대본 작업 이력을 찾지 못했습니다.", retryable=False)
@@ -292,31 +342,42 @@ class PipelineBackend:
                     analysis_id = None
                 elif (
                     run.kind != "analysis"
-                    or run.provider != "offline"
+                    or run.provider != ai_mode
                     or {a["id"] for a in run.evidence["articles"]} != {ctx["article_id"]}
                 ):
                     raise BackendError("분석 이력과 선택 뉴스가 일치하지 않습니다.", retryable=False)
                 elif run.status != "success":
                     raise BackendError("이전 분석 작업의 완료를 확인하지 못했습니다.", outcome_unknown=True)
-        if analysis_id is None:
-            analysis_id = self.intelligence.analyze(
-                [ctx["article_id"]],
-                mode="offline",
-                consent=False,
-                on_run=lambda value: save("analysis_run_id", value),
+        speech = self._speech()
+        self.intelligence.speech = {"rate": speech.rate, "pause_ms": speech.pause_ms}
+        # consent=True only ever reaches the service for a gated real-content job (see _ai_mode).
+        try:
+            if analysis_id is None:
+                analysis_id = self.intelligence.analyze(
+                    [ctx["article_id"]],
+                    mode=ai_mode,
+                    consent=ai_mode != "offline",
+                    on_run=lambda value: save("analysis_run_id", value),
+                )
+            self._cancel(cancel)
+            progress(
+                50,
+                "외부 AI로 뉴스 대본을 만들고 있어요." if ai_mode != "offline" else "선택한 뉴스로 검토용 대본을 만들고 있어요.",
             )
-        self._cancel(cancel)
-        progress(50, "선택한 뉴스로 검토용 대본을 만들고 있어요.")
-        draft_id = self.intelligence.generate(
-            analysis_id,
-            ctx["duration"],
-            mode="offline",
-            consent=False,
-            on_run=lambda value: save("script_run_id", value),
-        )
+            draft_id = self.intelligence.generate(
+                analysis_id,
+                ctx["duration"],
+                mode=ai_mode,
+                consent=ai_mode != "offline",
+                on_run=lambda value: save("script_run_id", value),
+            )
+        except IntelligenceError as exc:
+            raise self._ai_failure(exc) from None
         save("content_draft_id", draft_id)
         self._cancel(cancel)
-        return {"content_draft_id": draft_id, "script_revision": 1, "ai_mode": "offline"}
+        with self.sessions() as session:
+            draft = session.get(ContentDraft, draft_id)
+            return self._draft_summary(draft, ai_mode)
 
     def _render(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         identifier = ctx.get("render_job_id")
@@ -338,9 +399,16 @@ class PipelineBackend:
                     identifier = None
         if identifier is None:
             self._cancel(cancel)
-            identifier = self.video.start_preview(
-                ctx["content_draft_id"], ctx["duration"], lambda value: save("render_job_id", value)
-            )
+            voice = self._voice(ctx)
+            try:
+                identifier = self.video.start_preview(
+                    ctx["content_draft_id"], ctx["duration"], lambda value: save("render_job_id", value),
+                    voice=voice, speech=self._speech(),
+                )
+            except VideoError as exc:
+                if "음성 목록" in str(exc):
+                    raise BackendError(str(exc), code="voice_unavailable") from None
+                raise
         deadline = time.monotonic() + 1200
         while True:
             if cancel.is_set():
@@ -350,17 +418,22 @@ class PipelineBackend:
                 job = session.get(RenderJob, identifier)
                 if job.status == "success":
                     save("video_project_id", job.project_id)
+                    metadata = job.metadata_json or {}
                     return {
                         "render_job_id": identifier,
                         "video_project_id": job.project_id,
                         "output_name": job.output_name,
                         "preview_only": True,
+                        "audio": metadata.get("audio", "silent"),
+                        "audio_fit": bool(metadata.get("audio_fit")),
                     }
                 if job.status == "simulated":
                     raise BackendError(
                         "모의 영상은 재생할 수 없어 게시 대기함에 넣지 않습니다.", retryable=False
                     )
                 if job.status != "running":
+                    if "음성 생성" in (job.message or "") or "음성 길이" in (job.message or ""):
+                        raise BackendError("음성 길이 또는 음성 생성 문제로 영상을 만들지 못했습니다.", code="speech_too_long")
                     raise BackendError(
                         "영상 제작이 중단되었습니다. 제작 도구와 저장 공간을 확인하고 다시 시도하세요."
                     )
@@ -371,6 +444,15 @@ class PipelineBackend:
                     "영상 제작 완료를 확인하지 못했습니다. 제작 이력을 확인하세요.", outcome_unknown=True
                 )
             cancel.wait(0.1)
+
+    def _voice(self, ctx: dict) -> str:
+        """Job voice or the saved default; a missing installed voice fails instead of substituting."""
+        from newsflow.easy_setup import preview_preferences
+
+        voice = ctx.get("voice") or preview_preferences(self.sessions)[0]
+        if not self.video.voice_available(voice):
+            raise BackendError("선택한 음성을 찾지 못했습니다.", code="voice_unavailable")
+        return voice
 
     def _validate(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         with self.sessions() as session:
@@ -407,6 +489,9 @@ class PipelineBackend:
         ):
             raise BackendError("영상 규격 또는 파일 무결성을 확인하지 못했습니다.", retryable=False)
         self._cancel(cancel)
+        with self.sessions() as session:
+            render = session.get(RenderJob, ctx["render_job_id"])
+            audio = (render.metadata_json or {}).get("audio", "silent") if render else "silent"
         progress(100, "영상 파일 확인을 마쳤어요. 내용 검토가 필요해요.")
         return {
             "media_sha256": before,
@@ -414,6 +499,8 @@ class PipelineBackend:
             "output_name": path.name,
             "preview_only": True,
             "human_review_required": True,
+            "audio": audio,
+            "watch_quality": "NOT VERIFIED",
         }
 
     def _queue(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
@@ -430,6 +517,10 @@ class PipelineBackend:
             )
             if ctx["source"] == "sample":
                 description = "체험용 합성 뉴스 · 실제 보도 아님\n" + description
+            elif ctx.get("ai_mode") == "openai":
+                description = "외부 AI 초안 · 사실 확인 미완료\n" + description
+            if ctx.get("audio") == "silent":
+                description += "\n무음 검토영상 · 음성 없음"
         identifier = self.publishing.create(
             ctx["render_job_id"],
             ctx["platform"],

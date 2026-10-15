@@ -7,8 +7,15 @@ import os
 import subprocess
 import sys
 import wave
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
+
+from newsflow.intelligence.korean import split_sentences
+
+PREVIEW_TEXT = "안녕하세요. 뉴스플로 음성 미리 듣기입니다. 선택한 음성과 속도로 이렇게 읽어 드립니다."
+RATE_RANGE = (-5, 5)
+PAUSE_RANGE = (0, 1000)
 
 
 def local_process_env() -> dict[str, str]:
@@ -23,9 +30,25 @@ class TTSError(Exception):
     pass
 
 
+@dataclass(frozen=True)
+class SpeechSettings:
+    """SAPI rate step and pause between sentences; validated so the script never sees raw input."""
+
+    rate: int = 0
+    pause_ms: int = 250
+
+    def __post_init__(self) -> None:
+        if type(self.rate) is not int or not RATE_RANGE[0] <= self.rate <= RATE_RANGE[1]:
+            raise TTSError("발화 속도는 -5~5 범위에서 선택하세요.")
+        if type(self.pause_ms) is not int or not PAUSE_RANGE[0] <= self.pause_ms <= PAUSE_RANGE[1]:
+            raise TTSError("문장 사이 쉼은 0~1000밀리초 범위에서 선택하세요.")
+
+
 class TTSProvider(Protocol):
     def voices(self) -> list[str]: ...
-    def synthesize(self, text: str, target: Path, voice: str, seconds: float) -> None: ...
+    def synthesize(
+        self, text: str, target: Path, voice: str, seconds: float, speech: SpeechSettings | None = None,
+    ) -> None: ...
 
 
 def wav_duration(path: Path) -> float:
@@ -39,11 +62,30 @@ def wav_duration(path: Path) -> float:
         raise TTSError("음성 WAV 형식 검증에 실패했습니다.") from None
 
 
+def wav_has_signal(path: Path, threshold: int = 64) -> bool:
+    """True when any sample exceeds a small amplitude; a silent placeholder returns False."""
+    try:
+        with wave.open(str(path), "rb") as audio:
+            width = audio.getsampwidth()
+            frames = audio.readframes(min(audio.getnframes(), 16000 * 60))
+    except (OSError, EOFError, wave.Error):
+        return False
+    if width != 2:
+        return False
+    for offset in range(0, len(frames) - 1, 2):
+        sample = int.from_bytes(frames[offset:offset + 2], "little", signed=True)
+        if abs(sample) > threshold:
+            return True
+    return False
+
+
 class OfflineTTS:
     def voices(self) -> list[str]:
         return ["offline-silence"]
 
-    def synthesize(self, text: str, target: Path, voice: str, seconds: float) -> None:
+    def synthesize(
+        self, text: str, target: Path, voice: str, seconds: float, speech: SpeechSettings | None = None,
+    ) -> None:
         if voice != "offline-silence" or not 0 < seconds <= 60:
             raise TTSError("Offline 음성 설정이 잘못되었습니다.")
         with wave.open(str(target), "wb") as audio:
@@ -54,14 +96,18 @@ class OfflineTTS:
 
 
 class FakeTTS(OfflineTTS):
-    def __init__(self, error: Exception | None = None) -> None:
-        self.error, self.calls = error, []
+    def __init__(self, error: Exception | None = None, seconds_per_call: float | None = None) -> None:
+        self.error, self.calls, self.seconds_per_call = error, [], seconds_per_call
+        self.settings: list[SpeechSettings | None] = []
 
-    def synthesize(self, text: str, target: Path, voice: str, seconds: float) -> None:
+    def synthesize(
+        self, text: str, target: Path, voice: str, seconds: float, speech: SpeechSettings | None = None,
+    ) -> None:
         self.calls.append(text)
+        self.settings.append(speech)
         if self.error:
             raise self.error
-        super().synthesize(text, target, voice, seconds)
+        super().synthesize(text, target, voice, self.seconds_per_call or seconds)
 
 
 class WindowsTTS:
@@ -111,14 +157,37 @@ class WindowsTTS:
         except (ValueError, UnicodeError):
             raise TTSError("Windows 음성 언어 정보를 읽지 못했습니다.") from None
 
-    def synthesize(self, text: str, target: Path, voice: str, seconds: float) -> None:
-        if voice not in self.voices() or len(text) > 400:
+    def korean_voices(self) -> list[dict[str, str]]:
+        return [v for v in self.voice_details() if v["culture"].lower().startswith("ko-")]
+
+    @staticmethod
+    def spec(text: str, voice: str, target: Path, speech: SpeechSettings) -> dict:
+        """Fixed data document for the packaged script: sentences, never code or shell text."""
+        return {
+            "text": text, "sentences": split_sentences(text) or [text], "voice": voice, "target": str(target),
+            "rate": speech.rate, "pause_ms": speech.pause_ms,
+        }
+
+    def _speak(self, text: str, target: Path, voice: str, speech: SpeechSettings) -> None:
+        if voice not in self.voices() or not 0 < len(text) <= 400:
             raise TTSError("선택한 Windows 음성을 확인하세요.")
         spec = target.with_suffix(".json")
-        spec.write_text(
-            json.dumps({"text": text, "voice": voice, "target": str(target)}, ensure_ascii=False),
-            encoding="utf-8",
-        )
+        spec.write_text(json.dumps(self.spec(text, voice, target, speech), ensure_ascii=False), encoding="utf-8")
         self._command(["-Spec", str(spec)], 60)
+        if not wav_has_signal(target):
+            raise TTSError("음성이 생성되지 않았습니다. 선택한 음성이 한국어 문장을 읽는지 확인하세요.")
+
+    def synthesize(
+        self, text: str, target: Path, voice: str, seconds: float, speech: SpeechSettings | None = None,
+    ) -> None:
+        self._speak(text, target, voice, speech or SpeechSettings())
         if wav_duration(target) > seconds + 0.05:
             raise TTSError("음성이 장면 길이를 초과했습니다. 대본을 줄이거나 영상 길이를 늘리세요.")
+
+    def preview(self, target: Path, voice: str, speech: SpeechSettings | None = None) -> float:
+        """Short fixed Korean sample for listening tests; returns the produced duration."""
+        self._speak(PREVIEW_TEXT, target, voice, speech or SpeechSettings())
+        duration = wav_duration(target)
+        if duration > 20:
+            raise TTSError("미리 듣기 음성이 너무 깁니다. 속도 설정을 확인하세요.")
+        return duration

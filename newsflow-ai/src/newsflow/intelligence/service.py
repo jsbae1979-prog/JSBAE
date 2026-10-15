@@ -18,17 +18,74 @@ from newsflow.db.models import (
     utcnow,
 )
 
-from .provider import OfflineProvider, OpenAIProvider, Options, Provider
+from .korean import assess_script
+from .provider import (
+    OfflineProvider,
+    OpenAIProvider,
+    Options,
+    Provider,
+    ProviderError,
+    ProviderTimeoutError,
+)
 from .schema import CAUTION, Analysis, Script
+
+MODES = ("offline", "openai")
+_PROVIDER_MESSAGES = {
+    "ai_auth_failed": "AI 인증에 실패했습니다. API 키와 권한을 확인하세요.",
+    "ai_rate_limited": "AI 요청 한도(Rate Limit)를 초과했습니다. 잠시 후 다시 시도하세요.",
+    "ai_timeout": "AI 요청 시간이 초과되었습니다.",
+    "ai_unavailable": "AI 서비스에 연결하지 못했습니다. 네트워크를 확인하고 다시 시도하세요.",
+    "ai_bad_response": "AI 응답 형식이 올바르지 않습니다. 모델 설정을 확인하세요.",
+    "ai_key_missing": "AI API 키가 설정되지 않았습니다.",
+}
 
 
 class IntelligenceError(Exception):
-    pass
+    """User-safe message plus a stable code for callers that map failures to guidance."""
+
+    def __init__(self, message: str, code: str = "ai_failed", retryable: bool = True) -> None:
+        super().__init__(message)
+        self.code = code
+        self.retryable = retryable
 
 
 class IntelligenceService:
-    def __init__(self, sessions, provider: Provider | None = None):
-        self.sessions, self.provider = sessions, provider
+    def __init__(self, sessions, provider: Provider | None = None, key_store=None, speech: dict | None = None):
+        self.sessions, self.provider, self.key_store = sessions, provider, key_store
+        # Speech settings only affect review estimates; they never alter the saved script.
+        self.speech = {"rate": 0, "pause_ms": 250, **(speech or {})}
+
+    def _key(self) -> str:
+        if self.key_store is not None:
+            return self.key_store.key()
+        return os.environ.get("NEWSFLOW_AI_API_KEY", "")
+
+    def _provider(self, mode: str) -> Provider:
+        if self.provider is not None:
+            return self.provider
+        return OfflineProvider() if mode == "offline" else OpenAIProvider(self._key)
+
+    def _usage(self, provider: Provider, run_id: int, mode: str, options: Options, kind: str, status: str) -> None:
+        usage = getattr(provider, "last_usage", None)
+        if mode == "offline" or (usage is None and status == "success"):
+            return
+        from .settings import record_usage
+
+        record_usage(
+            self.sessions, run_id=run_id, provider=mode, model=options.model, kind=kind, status=status,
+            usage=usage, elapsed_ms=int(getattr(provider, "last_elapsed_ms", 0) or 0),
+        )
+
+    @staticmethod
+    def _failure(exc: Exception, fallback: str) -> tuple[str, str, bool]:
+        """Fixed messages per failure class; provider exception text is never persisted."""
+        if isinstance(exc, (TimeoutError, ProviderTimeoutError)):
+            return "AI 요청 시간이 초과되었습니다.", "ai_timeout", True
+        if isinstance(exc, ProviderError):
+            return _PROVIDER_MESSAGES.get(exc.code, fallback), exc.code, exc.retryable
+        if isinstance(exc, IntelligenceError):
+            return str(exc), exc.code, exc.retryable
+        return fallback, "ai_failed", True
 
     def analyze(
         self,
@@ -38,15 +95,15 @@ class IntelligenceService:
         options: Options | None = None,
         on_run: Callable[[int], None] | None = None,
     ) -> int:
-        if mode not in ("offline", "openai") or (mode == "openai" and not consent):
-            raise IntelligenceError("외부 AI 분석에는 전송과 비용 발생에 대한 명시적 동의가 필요합니다.")
+        if mode not in MODES or (mode != "offline" and not consent):
+            raise IntelligenceError("외부 AI 분석에는 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
         options = options or Options()
         if not ids or len(ids) > 10 or len(set(ids)) != len(ids):
-            raise IntelligenceError("기사 1~10개를 선택하세요.")
+            raise IntelligenceError("기사 1~10개를 선택하세요.", "invalid_selection", False)
         with self.sessions.begin() as session:
             articles = [session.get(NewsArticle, i) for i in ids]
             if any(a is None for a in articles):
-                raise IntelligenceError("선택한 기사가 없습니다.")
+                raise IntelligenceError("선택한 기사가 없습니다.", "invalid_selection", False)
             evidence, groups = [], []
             for a in articles:
                 mentions = list(
@@ -101,26 +158,52 @@ class IntelligenceService:
             session.add(run)
             session.flush()
             run_id = run.id
+        provider = self._provider(mode)
         try:
             if on_run:
                 on_run(run_id)
-            provider = self.provider or (OfflineProvider() if mode == "offline" else OpenAIProvider())
-            result = Analysis.model_validate(provider.analyze(payload, options)).model_dump()
+            self._budget(mode, options)
+            try:
+                result = Analysis.model_validate(provider.analyze(payload, options)).model_dump()
+            except IntelligenceError:
+                raise
+            except ProviderError:
+                raise
+            except Exception as exc:
+                if isinstance(exc, TimeoutError):
+                    raise
+                raise IntelligenceError("AI 분석 응답 형식이 올바르지 않습니다.", "ai_bad_response", True) from None
             referenced = {i for comparison in result["comparisons"] for i in comparison["article_ids"]}
             if referenced != set(ids):
-                raise IntelligenceError("분석 출처가 선택 기사와 일치하지 않습니다.")
+                raise IntelligenceError("분석 출처가 선택 기사와 일치하지 않습니다.", "ai_bad_response", True)
             self.check_secret(result)
             self.check_copy(result, payload)
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.result, run.finished_at = "success", result, utcnow()
+            self._usage(provider, run_id, mode, options, "analysis", "success")
             return run_id
-        except Exception:  # noqa: BLE001 - sanitize provider failure
-            message = "AI 분석에 실패했습니다. API 설정 또는 응답 형식을 확인하세요."
+        except Exception as exc:  # noqa: BLE001 - sanitize provider failure
+            message, code, retryable = self._failure(exc, "AI 분석에 실패했습니다. API 설정 또는 응답 형식을 확인하세요.")
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.message, run.finished_at = "failed", message, utcnow()
-            raise IntelligenceError(message) from None
+            self._usage(provider, run_id, mode, options, "analysis", "failed")
+            raise IntelligenceError(message, code, retryable) from None
+
+    def _budget(self, mode: str, options: Options) -> None:
+        """Every external call needs the stored, dated approval and an unexhausted monthly limit."""
+        if mode == "offline":
+            return
+        from .settings import SettingsError, check_budget, read_settings
+
+        settings = read_settings(self.sessions)
+        if not settings.approved:
+            raise IntelligenceError("외부 AI 사용 승인이 AI 연결 설정에 저장되지 않았습니다.", "ai_consent", False)
+        try:
+            check_budget(self.sessions, settings, options)
+        except SettingsError as exc:
+            raise IntelligenceError(str(exc), "ai_budget", False) from None
 
     def generate(
         self,
@@ -131,15 +214,15 @@ class IntelligenceService:
         options: Options | None = None,
         on_run: Callable[[int], None] | None = None,
     ) -> int:
-        if duration not in (30, 45, 60) or mode not in ("offline", "openai"):
-            raise IntelligenceError("영상 길이 또는 Provider가 잘못되었습니다.")
-        if mode == "openai" and not consent:
-            raise IntelligenceError("외부 API 전송과 비용 발생에 대한 명시적 동의가 필요합니다.")
+        if duration not in (30, 45, 60) or mode not in MODES:
+            raise IntelligenceError("영상 길이 또는 Provider가 잘못되었습니다.", "invalid_selection", False)
+        if mode != "offline" and not consent:
+            raise IntelligenceError("외부 API 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
         options = options or Options()
         with self.sessions.begin() as session:
             analysis = session.get(IntelligenceRun, analysis_id)
             if not analysis or analysis.kind != "analysis" or analysis.status != "success":
-                raise IntelligenceError("먼저 기사 분석을 실행하세요.")
+                raise IntelligenceError("먼저 기사 분석을 실행하세요.", "invalid_selection", False)
             evidence = analysis.evidence
             run = IntelligenceRun(
                 kind="script",
@@ -153,20 +236,23 @@ class IntelligenceService:
             session.add(run)
             session.flush()
             run_id = run.id
+        provider = self._provider(mode)
         try:
             if on_run:
                 on_run(run_id)
-            provider = self.provider or (OfflineProvider() if mode == "offline" else OpenAIProvider())
+            self._budget(mode, options)
             output = provider.complete(evidence, duration, options)
             script = self.validate(output, duration)
+            self._check_stored_secret(script)
             self.check_copy(script, evidence)
+            notes = assess_script(script, evidence, duration, **self.speech)
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.result, run.finished_at, run.message = (
                     "success",
                     script,
                     utcnow(),
-                    "검토용 대본 생성 완료",
+                    "검토용 대본 생성 완료" + (f" · 확인 사항 {len(notes)}건" if notes else ""),
                 )
                 draft = ContentDraft(
                     run_id=run_id,
@@ -175,40 +261,47 @@ class IntelligenceService:
                     sources=evidence,
                     revision=1,
                     review_status="review_required",
+                    review_notes=notes,
                 )
                 session.add(draft)
                 session.flush()
-                return draft.id
+                draft_id = draft.id
+            self._usage(provider, run_id, mode, options, "script", "success")
+            return draft_id
         except Exception as exc:  # noqa: BLE001 - persist safe failure at adapter boundary
             # Never store provider exception text, response body or credential-bearing data.
-            message = (
-                "AI 요청 시간이 초과되었습니다."
-                if isinstance(exc, TimeoutError)
-                else "대본 생성에 실패했습니다. API 설정 또는 응답 형식을 확인하세요."
-            )
+            message, code, retryable = self._failure(exc, "대본 생성에 실패했습니다. API 설정 또는 응답 형식을 확인하세요.")
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.message, run.finished_at = "failed", message, utcnow()
-            raise IntelligenceError(message) from None
+            self._usage(provider, run_id, mode, options, "script", "failed")
+            raise IntelligenceError(message, code, retryable) from None
 
     @staticmethod
     def validate(output: dict, duration: int) -> dict:
-        script = Script.model_validate(output)
+        try:
+            script = Script.model_validate(output)
+        except Exception:  # noqa: BLE001 - pydantic detail may echo provider output
+            raise IntelligenceError("대본 형식이 올바르지 않습니다. 필드 길이와 장면 구성을 확인하세요.", "ai_bad_response", True) from None
         if sum(s.seconds for s in script.scenes) != duration:
-            raise IntelligenceError("장면 길이 합계가 영상 길이와 다릅니다.")
+            raise IntelligenceError("장면 길이 합계가 영상 길이와 다릅니다.", "ai_bad_response", True)
         serialized = script.model_dump_json()
         IntelligenceService.check_secret(script.model_dump())
         if any(word in serialized for word in ("충격!", "100% 확실", "검증 완료", "무조건 사실")):
-            raise IntelligenceError("확정적 또는 선정적 표현을 검토하세요.")
+            raise IntelligenceError("확정적 또는 선정적 표현을 검토하세요.", "ai_bad_response", True)
+        if "http://" in serialized or "https://" in serialized:
+            raise IntelligenceError("대본 본문에는 URL을 넣을 수 없습니다. 출처는 별도로 표시됩니다.", "ai_bad_response", True)
         return script.model_dump()
 
     def edit(self, draft_id: int, revision: int, output: dict) -> None:
         with self.sessions.begin() as session:
             draft = session.get(ContentDraft, draft_id)
             if not draft:
-                raise IntelligenceError("초안이 없습니다.")
+                raise IntelligenceError("초안이 없습니다.", "invalid_selection", False)
             content = self.validate(output, draft.duration)
+            self._check_stored_secret(content)
             self.check_copy(content, draft.sources)
+            notes = assess_script(content, draft.sources, draft.duration, **self.speech)
             result = session.execute(
                 update(ContentDraft)
                 .where(ContentDraft.id == draft_id, ContentDraft.revision == revision)
@@ -216,11 +309,12 @@ class IntelligenceService:
                     content=content,
                     revision=revision + 1,
                     review_status="review_required",
+                    review_notes=notes,
                     updated_at=utcnow(),
                 )
             )
             if result.rowcount != 1:
-                raise IntelligenceError("다른 편집 내용이 저장되었습니다. 새로고침 후 다시 시도하세요.")
+                raise IntelligenceError("다른 편집 내용이 저장되었습니다. 새로고침 후 다시 시도하세요.", "conflict", False)
 
     @staticmethod
     def check_copy(content: dict, evidence: dict) -> None:
@@ -229,11 +323,22 @@ class IntelligenceService:
             summary = article["summary"]
             if len(summary) >= 100 and any(summary[i : i + 100] in text for i in range(len(summary) - 99)):
                 raise IntelligenceError(
-                    "긴 원문/요약의 그대로 복제는 허용하지 않습니다. 요약을 다시 작성하세요."
+                    "긴 원문/요약의 그대로 복제는 허용하지 않습니다. 요약을 다시 작성하세요.", "ai_bad_response", True
                 )
 
     @staticmethod
     def check_secret(value: dict) -> None:
         key = os.environ.get("NEWSFLOW_AI_API_KEY", "")
         if key and key in json.dumps(value, ensure_ascii=False):
-            raise IntelligenceError("보안 정책에 의해 차단되었습니다.")
+            raise IntelligenceError("보안 정책에 의해 차단되었습니다.", "ai_bad_response", False)
+
+    def _check_stored_secret(self, value: dict) -> None:
+        """The GUI-stored key must be as unreachable in drafts as the environment key."""
+        if self.key_store is None:
+            return
+        try:
+            key = self.key_store.key()
+        except Exception:  # noqa: BLE001 - an unreadable store cannot leak into a draft
+            return
+        if key and key in json.dumps(value, ensure_ascii=False):
+            raise IntelligenceError("보안 정책에 의해 차단되었습니다.", "ai_bad_response", False)

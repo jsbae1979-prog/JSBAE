@@ -18,7 +18,7 @@ from sqlalchemy import MetaData, Table, func, select, text
 
 from newsflow.db.models import (
     AuditLog,
-    ContentDraft,
+    IntelligenceRun,
     NewsArticle,
     NewsSource,
     OAuthConnection,
@@ -31,6 +31,7 @@ from newsflow.db.models import (
     RenderJob,
 )
 from newsflow.db.session import make_engine, migrate, session_factory
+from newsflow.intelligence.provider import OfflineProvider, Options
 from newsflow.intelligence.service import IntelligenceService
 from newsflow.oauth.contracts import (
     FIXED_REDIRECT,
@@ -679,10 +680,17 @@ def test_additive_0005_migration_preserves_phase4a_forensic_records(tmp_path):
             PlatformAccount(platform="youtube", label="기존 준비 계정", account_type="youtube_channel")
         )
     ai = IntelligenceService(sessions)
-    content_id = ai.generate(ai.analyze([1]), 30)
+    analysis_id = ai.analyze([1])
     with sessions.begin() as session:
-        content = session.get(ContentDraft, content_id)
-        # Seed the actual historical schema, without columns introduced in 0008.
+        # Seed the actual historical schema, without columns introduced in 0008/0009.
+        analysis = session.get(IntelligenceRun, analysis_id)
+        legacy_content = Table("content_drafts", MetaData(), autoload_with=session.connection())
+        content_id = session.execute(legacy_content.insert().values(
+            run_id=analysis_id, duration=30, revision=1, review_status="review_required",
+            content=OfflineProvider().complete(analysis.evidence, 30, Options()), sources=analysis.evidence,
+            created_at=datetime.now(UTC), updated_at=datetime.now(UTC),
+        )).inserted_primary_key[0]
+        content = session.execute(legacy_content.select().where(legacy_content.c.id == content_id)).one()
         legacy_projects = Table("video_projects", MetaData(), autoload_with=session.connection())
         project_id = session.execute(legacy_projects.insert().values(
             draft_id=content_id, title="기존 합성 영상", duration=30,
@@ -731,7 +739,7 @@ def test_additive_0005_migration_preserves_phase4a_forensic_records(tmp_path):
     migrate(engine)
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0008"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0009"
     with sessions() as session:
         assert session.get(PlatformAccount, 1).label == "기존 준비 계정"
         assert (

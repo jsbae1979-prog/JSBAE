@@ -9,3 +9,23 @@
 
 /* First-run setup: natural wrapping for Windows scaling and long Korean paths. */
 .setup-steps{display:flex;flex-wrap:wrap;gap:.6rem;margin:1.5rem 0}.setup-steps a,.setup-steps span{padding:.5rem;border-radius:.5rem;border:1px solid #39415b}.setup-steps [aria-current]{background:#36305b;color:#fff}.setup-steps span{opacity:.6}.setup-check{margin-top:1.5rem}.readiness-list{padding:0;list-style:none}.readiness-list li{padding:1rem 0;border-bottom:1px solid #39415b}.readiness-list .easy-badge{margin-left:.5rem}.storage-paths dd{margin:0 0 1rem;overflow-wrap:anywhere}.setup-check details{margin-top:1rem}.narrow-page select{max-width:100%}
+
+/* Phase 5C: readiness chips, review notes, source cards */
+.status-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0}
+.status-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .75rem;border-radius:999px;background:#eef0f7;color:#3b4160;font-size:.85rem;text-decoration:none;border:1px solid #dde1ee}
+.status-chip.ready{background:#e6f6ee;color:#1d6b43;border-color:#bfe6d0}
+.status-chip.pending{background:#fff4e5;color:#8a5a00;border-color:#f5dcb0}
+.review-notes{list-style:none;margin:.5rem 0 1rem;padding:0;display:grid;gap:.4rem}
+.review-notes li{padding:.55rem .8rem;border-radius:.6rem;background:#fff4e5;color:#6b4600;border-left:4px solid #f0b352;font-size:.92rem}
+.review-notes li.info{background:#eef3fb;color:#2b4a7a;border-left-color:#7ea3e0}
+.final-checklist{margin:.5rem 0 1rem 1.1rem;padding:0;color:#3b4160;font-size:.95rem}
+.final-checklist li{margin:.25rem 0}
+.source-card .url{word-break:break-all;color:#5a6079;font-size:.85rem;margin:.25rem 0}
+.check-message{padding:.45rem .7rem;border-radius:.5rem;font-size:.9rem;margin:.4rem 0}
+.check-message.pass{background:#e6f6ee;color:#1d6b43}
+.check-message.fail{background:#fdecec;color:#8a1f1f}
+.usage-row{font-size:.88rem;margin:.3rem 0}
+.source-compare{margin-top:.75rem}
+.source-compare p{margin:.3rem 0}
+small .warn,b.warn{color:#a04b00}
+@media (prefers-color-scheme:dark){.status-chip{background:#2a2f45;color:#d7dcef;border-color:#3b4160}.status-chip.ready{background:#1f3b2d;color:#9ad9b5;border-color:#2e5a43}.status-chip.pending{background:#43351b;color:#f0c97a;border-color:#6b5324}.review-notes li{background:#43351b;color:#f0d9a8}.review-notes li.info{background:#1f2c45;color:#b7c9ee}.check-message.pass{background:#1f3b2d;color:#9ad9b5}.check-message.fail{background:#4a2020;color:#f1b0b0}}

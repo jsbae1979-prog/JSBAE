@@ -21,7 +21,7 @@ from newsflow.db.models import AudioTrack, ContentDraft, RenderJob, Scene, Subti
 from newsflow.intelligence.schema import Script
 
 from .engine import FFmpegAdapter, RenderEngine, RenderError, RenderPlan, ScenePlan, load_image
-from .tts import OfflineTTS, TTSError, TTSProvider, WindowsTTS
+from .tts import OfflineTTS, SpeechSettings, TTSError, TTSProvider, WindowsTTS
 
 
 class VideoError(Exception):
@@ -110,14 +110,45 @@ class VideoCoordinator:
             raise VideoError("영상 길이를 선택하고 렌더링 전 대본·출처 검토를 확인하세요.")
         return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False)
 
-    def start_preview(self, draft_id: int, duration: int, on_job: Callable[[int], None] | None = None) -> int:
-        """Create a clearly marked local review copy without granting human approval."""
+    def start_preview(
+        self,
+        draft_id: int,
+        duration: int,
+        on_job: Callable[[int], None] | None = None,
+        *,
+        voice: str | None = None,
+        speech: SpeechSettings | None = None,
+    ) -> int:
+        """Create a clearly marked local review copy without granting human approval.
+
+        A real Windows voice renders with audio-fit timing so subtitles follow the
+        narration; the silent offline voice keeps the script's planned scene seconds.
+        """
         if duration not in (30, 45, 60):
             raise VideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
-        from newsflow.easy_setup import preview_preferences
+        from newsflow.easy_setup import preview_preferences, speech_preferences
 
-        voice, size, position = preview_preferences(self.sessions)
-        return self._start(draft_id, duration, voice, size, position, None, False, True, on_job)
+        default_voice, size, position = preview_preferences(self.sessions)
+        voice = voice or default_voice
+        if speech is None:
+            try:
+                speech = speech_preferences(self.sessions)
+            except TTSError:
+                raise VideoError("음성 속도·쉼 설정을 다시 저장하세요.") from None
+        return self._start(
+            draft_id, duration, voice, size, position, None, False, True, on_job,
+            speech=speech, fit_audio=voice != "offline-silence",
+        )
+
+    def voice_available(self, voice: str) -> bool:
+        """True when the configured local provider lists the voice; never substitutes another."""
+        if voice == "offline-silence":
+            return True
+        try:
+            provider = self.tts or WindowsTTS()
+            return voice in provider.voices()
+        except TTSError:
+            return False
 
     def _start(
         self,
@@ -130,7 +161,11 @@ class VideoCoordinator:
         asset_permission: bool,
         preview_only: bool,
         on_job: Callable[[int], None] | None = None,
+        *,
+        speech: SpeechSettings | None = None,
+        fit_audio: bool = False,
     ) -> int:
+        speech = speech or SpeechSettings()
         if self.cancel.is_set():
             raise VideoError("프로그램 종료 중에는 새 영상을 제작할 수 없습니다.")
         images = images or []
@@ -187,13 +222,18 @@ class VideoCoordinator:
                     voice,
                     font_size,
                     subtitle_y,
+                    speech,
+                    fit_audio,
                 )
                 plan.validate()
                 project = VideoProject(
                     draft_id=draft.id,
                     title=draft.content["title"],
                     duration=duration,
-                    snapshot={**draft.content, "draft_revision": draft.revision},
+                    snapshot={
+                        **draft.content, "draft_revision": draft.revision,
+                        "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio},
+                    },
                     sources=draft.sources,
                     preview_only=preview_only,
                 )
@@ -300,6 +340,12 @@ class VideoCoordinator:
                     subtitles.font_size,
                     subtitles.position_y,
                 )
+                saved = project.snapshot.get("speech") or {}
+                try:
+                    speech = SpeechSettings(int(saved.get("rate", 0)), int(saved.get("pause_ms", 250)))
+                except (TTSError, TypeError, ValueError):
+                    speech = SpeechSettings()
+                fit_audio = bool(saved.get("fit_audio")) and voice != "offline-silence"
             with TemporaryDirectory(prefix=f"job-{identifier}-", dir=self.temporary) as directory:
                 work = Path(directory)
                 plans = []
@@ -314,7 +360,7 @@ class VideoCoordinator:
                             (scene.end_ms - scene.start_ms) / 1000, scene.narration, scene.caption, image
                         )
                     )
-                plan = RenderPlan(title, plans, source_links, voice, font_size, position_y)
+                plan = RenderPlan(title, plans, source_links, voice, font_size, position_y, speech, fit_audio)
                 result, metadata = self.engine.render(
                     plan, work, tts, lambda value: self._progress(identifier, value), cancel
                 )
@@ -338,6 +384,7 @@ class VideoCoordinator:
                 job = session.get(RenderJob, identifier)
                 job.status = "success" if metadata.get("playable") else "simulated"
                 job.progress, job.metadata_json, job.finished_at = 100, metadata, utcnow()
+                self._apply_timings(session, job.project_id, metadata)
                 job.message = (
                     "MP4 제작 완료 · 사람의 내용/품질 검토 필요"
                     if job.status == "success"
@@ -392,6 +439,28 @@ class VideoCoordinator:
                     self.active_job_id, self.job_cancel = None, None
             self.lock.release()
             self.guard.release()
+
+    @staticmethod
+    def _apply_timings(session: Session, project_id: int, metadata: dict) -> None:
+        """Persist audio-fit scene boundaries so subtitles and the stored plan match the MP4."""
+        timings = metadata.get("scene_timings")
+        if not isinstance(timings, list) or not timings:
+            return
+        scenes = list(
+            session.scalars(select(Scene).where(Scene.project_id == project_id).order_by(Scene.position))
+        )
+        subtitles = session.scalar(select(SubtitleTrack).where(SubtitleTrack.project_id == project_id))
+        if len(scenes) != len(timings) or subtitles is None:
+            return
+        start = 0
+        cues = []
+        for index, (scene, timing) in enumerate(zip(scenes, timings)):
+            seconds = float(timing.get("seconds", 0))
+            end = scenes[-1].end_ms if index == len(scenes) - 1 else start + round(seconds * 1000)
+            scene.start_ms, scene.end_ms = start, end
+            cues.append({"start_ms": start, "end_ms": end, "text": scene.caption})
+            start = end
+        subtitles.cues = cues
 
     def request_cancel(self, job_id: int) -> bool:
         """Cancel only the matching running job; a later render gets a fresh Event."""

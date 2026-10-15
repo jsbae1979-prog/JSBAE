@@ -15,11 +15,14 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from .db.models import AppSetting
 from .video.engine import FFmpegAdapter, RenderError, font_path
-from .video.tts import TTSError, WindowsTTS
+from .video.tts import SpeechSettings, TTSError, WindowsTTS
 
 STEPS = ['시작 안내', '뉴스 수집 방식', 'AI 기능', '영상 제작', '음성과 자막', '저장 위치', '완료와 테스트']
 DEFAULTS = {'source': 'sample', 'ai': 'offline', 'duration': '30', 'platform': 'youtube',
-            'voice': 'offline-silence', 'font_size': '48', 'subtitle_y': '1420'}
+            'voice': 'offline-silence', 'font_size': '48', 'subtitle_y': '1420',
+            'rate': '0', 'pause_ms': '250'}
+RATE_CHOICES = {'-3': '느리게', '-2': '조금 느리게', '-1': '약간 느리게', '0': '보통', '1': '약간 빠르게', '2': '조금 빠르게', '3': '빠르게'}
+PAUSE_CHOICES = {'0': '쉼 없음', '150': '짧게', '250': '보통', '400': '여유 있게', '600': '길게'}
 
 
 class SetupError(Exception):
@@ -95,7 +98,7 @@ def initial_state(session: Session) -> dict[str, Any]:
     values = dict(DEFAULTS)
     allowed = {'source': {'sample', 'feeds'}, 'duration': {'30', '45', '60'},
                'platform': {'youtube', 'instagram'}, 'font_size': {'40', '48', '56'},
-               'subtitle_y': {'1280', '1420'}}
+               'subtitle_y': {'1280', '1420'}, 'rate': set(RATE_CHOICES), 'pause_ms': set(PAUSE_CHOICES)}
     for key, choices in allowed.items():
         prefix = 'autopilot_' if key in {'source', 'duration', 'platform'} else 'video_default_'
         row = session.get(AppSetting, prefix + key)
@@ -123,6 +126,10 @@ def save_step(sessions: sessionmaker[Session], step: int, revision: int, values:
     if step == 5:
         if values.get('font_size') not in {'40', '48', '56'} or values.get('subtitle_y') not in {'1280', '1420'}:
             raise SetupError('제공된 자막 크기와 위치를 선택하세요.')
+        values.setdefault('rate', DEFAULTS['rate'])
+        values.setdefault('pause_ms', DEFAULTS['pause_ms'])
+        if values['rate'] not in RATE_CHOICES or values['pause_ms'] not in PAUSE_CHOICES:
+            raise SetupError('제공된 발화 속도와 문장 쉼을 선택하세요.')
         if values.get('voice') != 'offline-silence':
             try:
                 valid = values.get('voice') in [v['name'] for v in voice_catalog() if v['culture'].lower().startswith('ko-')]
@@ -133,7 +140,7 @@ def save_step(sessions: sessionmaker[Session], step: int, revision: int, values:
     if step == 6 and values.get('storage_confirmed') != 'yes':
         raise SetupError('저장 위치를 확인해 주세요.')
     fields = {1: set(), 2: {'source'}, 3: {'ai'}, 4: {'duration', 'platform'},
-              5: {'voice', 'font_size', 'subtitle_y'}, 6: set(), 7: set()}
+              5: {'voice', 'font_size', 'subtitle_y', 'rate', 'pause_ms'}, 6: set(), 7: set()}
     if step not in fields or set(values) - fields[step] - {'storage_confirmed'}:
         raise SetupError('설정 항목을 확인하세요.')
     with sessions.begin() as session:
@@ -168,6 +175,35 @@ def preview_preferences(sessions: sessionmaker[Session]) -> tuple[str, int, int]
         if size not in {'40', '48', '56'} or position not in {'1280', '1420'} or len(voice) > 200:
             raise SetupError('음성과 자막 설정을 다시 저장하세요.')
         return voice, int(size), int(position)
+
+
+def speech_preferences(sessions: sessionmaker[Session]) -> SpeechSettings:
+    """Saved narration rate/pause; unknown or missing values fall back to the defaults."""
+    with sessions() as session:
+        def value(key: str) -> str:
+            row = session.get(AppSetting, 'video_default_' + key)
+            return row.value if row and row.value in (RATE_CHOICES if key == 'rate' else PAUSE_CHOICES) else DEFAULTS[key]
+        return SpeechSettings(int(value('rate')), int(value('pause_ms')))
+
+
+def save_voice_preferences(sessions: sessionmaker[Session], voice: str, rate: str, pause_ms: str) -> None:
+    """Explicit voice page save; the voice must be the silent option or an installed Korean SAPI voice."""
+    if rate not in RATE_CHOICES or pause_ms not in PAUSE_CHOICES:
+        raise SetupError('제공된 발화 속도와 문장 쉼을 선택하세요.')
+    if voice != 'offline-silence':
+        try:
+            valid = voice in [v['name'] for v in voice_catalog() if v['culture'].lower().startswith('ko-')]
+        except TTSError:
+            valid = False
+        if not valid:
+            raise SetupError('사용 가능한 한국어 음성을 선택하거나 무음을 선택하세요.')
+    with sessions.begin() as session:
+        for key, value in (('voice', voice), ('rate', rate), ('pause_ms', pause_ms)):
+            row = session.get(AppSetting, 'video_default_' + key)
+            if row:
+                row.value = value
+            else:
+                session.add(AppSetting(key='video_default_' + key, value=value))
 
 
 def main() -> int:

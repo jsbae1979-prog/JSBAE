@@ -158,9 +158,10 @@ def test_preview_reads_saved_settings_and_keeps_review_boundary(app, monkeypatch
         for k, v in [('voice', 'offline-silence'), ('font_size', '56'), ('subtitle_y', '1280')]:
             session.add(AppSetting(key='video_default_' + k, value=v))
     calls = []
-    monkeypatch.setattr(app.state.video, '_start', lambda *args: calls.append(args) or 1)
+    monkeypatch.setattr(app.state.video, '_start', lambda *args, **kwargs: calls.append((args, kwargs)) or 1)
     assert app.state.video.start_preview(2, 45) == 1
-    assert calls[0] == (2, 45, 'offline-silence', 56, 1280, None, False, True, None)
+    assert calls[0][0] == (2, 45, 'offline-silence', 56, 1280, None, False, True, None)
+    assert calls[0][1]['fit_audio'] is False and calls[0][1]['speech'].rate == 0
 
 
 def test_korean_subtitles_wrap_and_overflow_is_rejected(tmp_path):

@@ -11,6 +11,8 @@ STAGE_LABELS = {
     "collect": "뉴스 모으기", "select": "뉴스 고르기", "script": "대본 만들기",
     "render": "영상 만들기", "validate": "영상 확인하기", "queue": "게시 대기함에 보관",
 }
+CONTENT_MODES = ("trial", "real")
+AI_MODES = ("offline", "openai")
 ARTIFACT_KEYS = frozenset({
     "collection_run_id", "intelligence_run_id", "analysis_run_id", "script_run_id", "article_id", "content_draft_id",
     "video_project_id", "render_job_id", "publish_draft_id",

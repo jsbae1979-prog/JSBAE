@@ -130,6 +130,8 @@ class ContentDraft(Base):
     sources: Mapped[dict] = mapped_column(JSON)
     revision: Mapped[int] = mapped_column(Integer, default=1)
     review_status: Mapped[str] = mapped_column(String(30), default="review_required")
+    # Phase 5C: server-computed review findings (numbers/dates not in evidence, speech length).
+    review_notes: Mapped[list | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
@@ -338,6 +340,10 @@ class AutopilotJob(Base):
     source: Mapped[str] = mapped_column(String(16))
     duration: Mapped[int] = mapped_column(Integer)
     platform: Mapped[str] = mapped_column(String(16))
+    # Phase 5C: trial (synthetic news, offline script) or real (registered RSS, optional external AI).
+    content_mode: Mapped[str] = mapped_column(String(16), default="trial", server_default="trial")
+    ai_mode: Mapped[str] = mapped_column(String(16), default="offline", server_default="offline")
+    voice: Mapped[str | None] = mapped_column(String(200), nullable=True)
     status: Mapped[str] = mapped_column(String(24))
     current_stage: Mapped[str] = mapped_column(String(16))
     progress: Mapped[int] = mapped_column(Integer, default=0)
@@ -391,4 +397,37 @@ class AutopilotArticleClaim(Base):
     __tablename__ = "autopilot_article_claims"
     article_id: Mapped[int] = mapped_column(ForeignKey("news_articles.id"), primary_key=True)
     job_id: Mapped[str] = mapped_column(ForeignKey("autopilot_jobs.id"), unique=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class NewsSourceCheck(Base):
+    """Latest explicit connection test per RSS source; never stores feed bytes or raw errors."""
+
+    __tablename__ = "news_source_checks"
+    source_id: Mapped[int] = mapped_column(
+        ForeignKey("news_sources.id", ondelete="CASCADE"), primary_key=True
+    )
+    status: Mapped[str] = mapped_column(String(20))
+    kind: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    message: Mapped[str] = mapped_column(String(300))
+    article_count: Mapped[int] = mapped_column(Integer, default=0)
+    dated_count: Mapped[int] = mapped_column(Integer, default=0)
+    summarized_count: Mapped[int] = mapped_column(Integer, default=0)
+    checked_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class AIUsage(Base):
+    """Per-request token accounting from provider responses; no prompt, response or key text."""
+
+    __tablename__ = "ai_usage"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[int | None] = mapped_column(ForeignKey("intelligence_runs.id"), nullable=True)
+    provider: Mapped[str] = mapped_column(String(20))
+    model: Mapped[str] = mapped_column(String(80))
+    kind: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(20))
+    prompt_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    completion_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    total_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    elapsed_ms: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

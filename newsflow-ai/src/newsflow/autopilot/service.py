@@ -29,7 +29,9 @@ from newsflow.db.models import (
 )
 
 from .contracts import (
+    AI_MODES,
     ARTIFACT_KEYS,
+    CONTENT_MODES,
     STAGE_LABELS,
     STAGES,
     AutopilotBackend,
@@ -54,6 +56,32 @@ _ERROR_MESSAGES = {
     "duplicate_article": "이 뉴스로 이미 제작한 작업이 있습니다. 기존 작업에서 영상을 확인하세요.",
     "no_articles": "제작할 뉴스가 없습니다. 다른 뉴스를 모으거나 예제 뉴스를 선택하세요.",
     "cancelled": "요청에 따라 중단했습니다. 이미 만든 결과는 보관합니다.",
+    # Phase 5C real-content stages
+    "ai_not_ready": "외부 AI를 사용할 준비가 되지 않아 대본을 만들지 않았습니다. AI 설정을 확인하세요.",
+    "ai_key_missing": "AI API 키가 없어 대본을 만들지 않았습니다. AI 설정에서 키를 저장하세요.",
+    "ai_auth_failed": "AI 인증에 실패했습니다. API 키와 권한을 확인한 뒤 다시 시도하세요.",
+    "ai_rate_limited": "AI 요청 한도(Rate Limit)에 걸렸습니다. 잠시 후 다시 시도하세요.",
+    "ai_timeout": "AI 응답을 제한시간 안에 받지 못했습니다. 네트워크를 확인하고 다시 시도하세요.",
+    "ai_unavailable": "AI 서비스에 연결하지 못했습니다. 네트워크를 확인하고 다시 시도하세요.",
+    "ai_bad_response": "AI 응답 형식이 올바르지 않아 대본을 저장하지 않았습니다. 다시 시도하거나 기본 대본을 사용하세요.",
+    "ai_budget": "이번 달 AI 토큰 한도에 도달해 외부 AI를 호출하지 않았습니다. AI 설정에서 한도를 확인하세요.",
+    "ai_consent": "외부 AI 사용 승인이 없어 호출하지 않았습니다. AI 설정에서 승인하세요.",
+    "voice_unavailable": "선택한 한국어 음성을 이 PC에서 찾지 못했습니다. 음성 설정을 확인하거나 무음으로 제작하세요.",
+    "speech_too_long": "음성이 영상 길이보다 깁니다. 대본을 줄이거나 영상 길이를 늘리세요.",
+}
+_SOLUTIONS = {
+    "no_sources": "뉴스 출처 설정에서 출처를 등록하고 활성화한 뒤 다시 시도하세요. 체험 뉴스로 새 작업을 시작할 수도 있습니다.",
+    "ai_not_ready": "설정 → AI 연결에서 제공자·승인·월 한도·API 키를 확인하거나, AI 없이 기본 대본으로 다시 시작하세요.",
+    "ai_key_missing": "설정 → AI 연결에서 API 키를 저장한 뒤 다시 시도하세요.",
+    "ai_auth_failed": "설정 → AI 연결에서 연결 상태 확인을 실행해 키가 유효한지 확인하세요.",
+    "ai_rate_limited": "몇 분 뒤 다시 시도하거나 기본 대본으로 제작하세요.",
+    "ai_timeout": "네트워크 상태를 확인하고 AI 설정의 제한시간을 늘린 뒤 다시 시도하세요.",
+    "ai_unavailable": "인터넷 연결을 확인한 뒤 다시 시도하세요. 기본 대본으로도 제작할 수 있습니다.",
+    "ai_bad_response": "AI 설정에서 모델 이름을 확인하거나 기본 대본으로 다시 시도하세요.",
+    "ai_budget": "설정 → AI 연결에서 월 토큰 한도를 조정하거나 다음 달까지 기본 대본을 사용하세요.",
+    "ai_consent": "설정 → AI 연결에서 유료 호출 승인을 저장하세요.",
+    "voice_unavailable": "설정 → 음성과 자막에서 설치된 한국어 음성을 다시 선택하거나 무음 검토영상으로 제작하세요.",
+    "speech_too_long": "대본 수정에서 문장을 줄이거나, 더 긴 영상 길이로 새 작업을 시작하세요.",
 }
 
 
@@ -133,13 +161,29 @@ class AutopilotCoordinator:
         except Timeout:
             raise AutopilotBusy("다른 창에서 제작 중입니다. 진행 중인 작업을 확인하세요.") from None
 
+    @staticmethod
+    def _pauses(job: AutopilotJob) -> set[str]:
+        """Review pauses: guided always; real content always pauses on the script and final video."""
+        pauses = {"select", "script", "validate"} if job.mode == "guided" else set()
+        if job.content_mode == "real":
+            pauses |= {"script", "validate"}
+        return pauses
+
     def start(
         self, mode: str = "easy", source: str = "sample", duration: int = 30, platform: str = "youtube",
+        content_mode: str | None = None, ai_mode: str = "offline", voice: str | None = None,
     ) -> str:
         if mode not in {"easy", "guided"} or source not in {"sample", "feeds"}:
             raise AutopilotError("제작 방식과 뉴스 종류를 다시 선택하세요.")
         if type(duration) is not int or duration not in {30, 45, 60} or platform not in {"youtube", "instagram"}:
             raise AutopilotError("영상 길이와 게시 대상을 다시 선택하세요.")
+        content_mode = content_mode or ("real" if source == "feeds" else "trial")
+        if content_mode not in CONTENT_MODES or (content_mode == "real") != (source == "feeds"):
+            raise AutopilotError("체험 제작은 체험 뉴스, 실제 콘텐츠 제작은 등록한 뉴스 출처를 사용합니다.")
+        if ai_mode not in AI_MODES or (content_mode == "trial" and ai_mode != "offline"):
+            raise AutopilotError("체험 제작에서는 외부 AI를 사용하지 않습니다. AI 방식을 다시 선택하세요.")
+        if voice is not None and (not isinstance(voice, str) or not 0 < len(voice) <= 200 or "\x00" in voice):
+            raise AutopilotError("음성을 다시 선택하세요.")
         with self.guard:
             self._acquire()
             job_id = uuid4().hex
@@ -148,6 +192,7 @@ class AutopilotCoordinator:
                     job = AutopilotJob(
                         id=job_id, active_slot=1, mode=mode, source=source, duration=duration,
                         platform=platform, status="queued", current_stage="collect", stage_results={},
+                        content_mode=content_mode, ai_mode=ai_mode, voice=voice,
                     )
                     session.add(job)
                     session.flush()
@@ -168,6 +213,7 @@ class AutopilotCoordinator:
         context.update({
             "job_id": job.id, "mode": job.mode, "source": job.source, "duration": job.duration,
             "platform": job.platform, "stage_results": dict(job.stage_results), "article_id": job.article_id,
+            "content_mode": job.content_mode, "ai_mode": job.ai_mode, "voice": job.voice,
         })
         for item in session.scalars(
             select(AutopilotArtifact).where(AutopilotArtifact.job_id == job.id).order_by(AutopilotArtifact.id)
@@ -195,13 +241,14 @@ class AutopilotCoordinator:
             return {
                 "id": job.id, "revision": job.revision, "mode": job.mode, "source": job.source,
                 "duration": job.duration, "platform": job.platform, "status": job.status,
+                "content_mode": job.content_mode, "ai_mode": job.ai_mode, "voice": job.voice,
+                "review_pauses": sorted(self._pauses(job), key=STAGES.index),
                 "current_stage": job.current_stage, "stage_label": STAGE_LABELS[job.current_stage],
                 "progress": job.progress, "message": job.message, "error_code": job.error_code,
                 "retryable": job.retryable, "cancel_requested": job.cancel_requested,
-                "solution": (
-                    "뉴스 출처 설정에서 출처를 등록하고 활성화한 뒤 다시 시도하세요. 체험 뉴스로 새 작업을 시작할 수도 있습니다."
-                    if job.error_code == "no_sources" else
-                    _ERROR_MESSAGES.get(job.error_code or "", "결과를 확인한 뒤 다음 단계로 진행하세요.")
+                "solution": _SOLUTIONS.get(
+                    job.error_code or "",
+                    _ERROR_MESSAGES.get(job.error_code or "", "결과를 확인한 뒤 다음 단계로 진행하세요."),
                 ),
                 "article_id": job.article_id, "artifacts": artifacts, **artifacts,
                 "stage_results": dict(job.stage_results),
@@ -266,6 +313,8 @@ class AutopilotCoordinator:
         if any(type(value.get(key)) is not int or value[key] < 1 for key in required_ids[stage]):
             raise BackendError(retryable=False, outcome_unknown=True)
         if stage == "collect" and value.get("collection_status") != "success":
+            raise BackendError(retryable=False, outcome_unknown=True)
+        if stage == "script" and value.get("ai_mode", "offline") not in AI_MODES:
             raise BackendError(retryable=False, outcome_unknown=True)
         if stage == "render" and value.get("preview_only") is not True:
             raise BackendError(retryable=False, outcome_unknown=True)
@@ -347,7 +396,7 @@ class AutopilotCoordinator:
                         job.active_slot, job.finished_at = None, utcnow()
                         job.error_code, job.retryable = job.status, True
                         job.message = _ERROR_MESSAGES[job.status]
-                        if stage != "queue" and not (job.mode == "guided" and stage in {"select", "script", "validate"}):
+                        if stage != "queue" and stage not in self._pauses(job):
                             job.current_stage = STAGES[STAGES.index(stage) + 1]
                         self._event(session, job, job.status, job.message)
                         return
@@ -356,7 +405,7 @@ class AutopilotCoordinator:
                         job.message, job.error_code, job.retryable = "영상과 게시 초안을 보관했습니다. 게시 전 직접 검토하세요.", None, False
                         self._event(session, job, "completed", job.message)
                         return
-                    if job.mode == "guided" and stage in {"select", "script", "validate"}:
+                    if stage in self._pauses(job):
                         job.status, job.message = "waiting_review", "결과를 확인하고 다음 단계로 진행하세요."
                         self._event(session, job, "waiting_review", job.message)
                         return
@@ -431,7 +480,7 @@ class AutopilotCoordinator:
                     if job.revision != revision or job.status not in allowed:
                         raise AutopilotConflict("작업 상태가 바뀌었습니다. 화면을 새로 고침하세요.")
                     context = self._context(session, job)
-                    restore_review = retry and job.mode == "guided" and job.current_stage in {"select", "script", "validate"} and job.current_stage in job.stage_results
+                    restore_review = retry and job.current_stage in self._pauses(job) and job.current_stage in job.stage_results
                     if retry:
                         if not job.retryable or (not restore_review and not self.backend.can_retry(job.current_stage, context)):
                             raise AutopilotConflict("이 작업은 안전하게 다시 시작할 수 없습니다. 이전 결과를 확인하세요.")

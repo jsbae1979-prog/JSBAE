@@ -20,7 +20,10 @@ router = APIRouter()
 
 
 def service(request: Request) -> IntelligenceService:
-    return IntelligenceService(request.app.state.sessions, getattr(request.app.state, "ai_provider", None))
+    return IntelligenceService(
+        request.app.state.sessions, getattr(request.app.state, "ai_provider", None),
+        getattr(request.app.state, "ai_keys", None),
+    )
 
 
 @router.get("/ai", response_class=HTMLResponse)
@@ -40,7 +43,9 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
             articles=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(100))),
             runs=list(session.scalars(select(IntelligenceRun).order_by(IntelligenceRun.id.desc()).limit(30))),
             drafts=list(session.scalars(select(ContentDraft).order_by(ContentDraft.id.desc()).limit(30))),
-            key_available=bool(os.environ.get("NEWSFLOW_AI_API_KEY")),
+            key_available=bool(os.environ.get("NEWSFLOW_AI_API_KEY")) or bool(
+                getattr(request.app.state, "ai_keys", None) and request.app.state.ai_keys.status()["configured"]
+            ),
         )
 
 
@@ -109,9 +114,12 @@ async def edit(
                     for sec, n, c, m in zip(seconds, narrations, captions, materials)
                 ],
             }
+            closing = form.get("closing")
+            if isinstance(closing, str):
+                payload["closing"] = closing
         service(request).edit(draft_id, revision, payload)
     except (ValueError, TypeError):
         raise HTTPException(422, "대본 필드 길이와 장면 시간을 확인하세요.") from None
     except IntelligenceError as exc:
-        raise HTTPException(409, str(exc)) from None
+        raise HTTPException(409 if exc.code == "conflict" else 422, str(exc)) from None
     return go(f"/ai?draft_id={draft_id}")
