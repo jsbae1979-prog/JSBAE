@@ -755,7 +755,8 @@ class AIVideoCoordinator:
         except (FileNotFoundError, IsADirectoryError, NotADirectoryError):
             return "lost"  # nothing that could be our clip is at that name
         except OSError:
-            # Windows raises PermissionError when opening a directory; is_dir() returns False on errors.
+            # Windows raises PermissionError, not IsADirectoryError, when opening a directory;
+            # is_dir() returns False on errors, so a locked regular file stays 'unreadable'.
             return "lost" if path.is_dir() else "unreadable"
         return "ok" if digest.hexdigest() == sha256 else "lost"
 
