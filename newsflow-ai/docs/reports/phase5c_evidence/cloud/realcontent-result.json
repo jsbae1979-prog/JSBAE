@@ -1,0 +1,93 @@
+{
+  "mode": "cloud",
+  "platform": "linux",
+  "outcome": "PASS with explicit NOT VERIFIED items",
+  "scenario": "registered RSS (fixture bytes) / offline AI / default voice / mandatory reviews / local queue",
+  "external_ai_calls": 0,
+  "sns_calls": 0,
+  "Windows11_user_PC": "NOT VERIFIED",
+  "rss_register_test_collect": "PASS (fixture bytes through the registered adapter path)",
+  "ai_approval_requires_limit": "PASS (422 without monthly limit)",
+  "external_ai": "NOT VERIFIED (no API key in CI; gate closed, 0 calls)",
+  "korean_voice_page": "PASS (install guidance shown; no Korean SAPI voice)",
+  "script_edit_with_closing": "PASS (revision 2)",
+  "real_videos": [
+    {
+      "file": "real-30s.mp4",
+      "sha256": "c67714a9ce93f1c0171b9254d2087d2a2684fbe95c33254efd82cb94abe985a2",
+      "bytes": 233144,
+      "duration": 30.021029,
+      "audio": "silent",
+      "browser_playback": "NOT VERIFIED (this Chromium has no H.264 decoder; Windows Chrome run verifies playback)",
+      "human_watch_quality": "NOT VERIFIED",
+      "korean_pronunciation": "n/a (silent review video)"
+    },
+    {
+      "file": "real-45s.mp4",
+      "sha256": "49dda78ba9c9dfe3916e92734d78e594088ad34b383c40d990043edde7e394d1",
+      "bytes": 282384,
+      "duration": 45.021029,
+      "audio": "silent",
+      "browser_playback": "NOT VERIFIED (this Chromium has no H.264 decoder; Windows Chrome run verifies playback)",
+      "human_watch_quality": "NOT VERIFIED",
+      "korean_pronunciation": "n/a (silent review video)"
+    },
+    {
+      "file": "real-60s.mp4",
+      "sha256": "60ea0b05bb1e7abe550a997b6b84434d2eb31e10b9ddd0c864eb231df54e5c8a",
+      "bytes": 395458,
+      "duration": 60.021029,
+      "audio": "silent",
+      "browser_playback": "NOT VERIFIED (this Chromium has no H.264 decoder; Windows Chrome run verifies playback)",
+      "human_watch_quality": "NOT VERIFIED",
+      "korean_pronunciation": "n/a (silent review video)"
+    }
+  ],
+  "real_content_easy_flow": "PASS (script review → final review → local queue, 30/45/60)",
+  "restart_persistence": "PASS",
+  "database": {
+    "autopilot_jobs": [
+      {
+        "content_mode": "real",
+        "ai_mode": "offline",
+        "status": "completed"
+      },
+      {
+        "content_mode": "real",
+        "ai_mode": "offline",
+        "status": "completed"
+      },
+      {
+        "content_mode": "real",
+        "ai_mode": "offline",
+        "status": "completed"
+      }
+    ],
+    "external_ai_calls_recorded": 0,
+    "intelligence_providers": [
+      "offline"
+    ],
+    "source_checks": [
+      {
+        "status": "pass",
+        "articles": 3
+      }
+    ],
+    "drafts_with_review_notes": 3,
+    "human_approval_preserved": true,
+    "publish_jobs": 0
+  },
+  "browser_external_request_origins": [],
+  "browser_javascript_errors": 0,
+  "screenshots": [
+    "ai-settings.png",
+    "queue.png",
+    "real-final-review.png",
+    "real-script-review.png",
+    "sources-collected.png",
+    "sources-tested.png",
+    "voices.png"
+  ],
+  "korean_tts": "NOT VERIFIED (Cloud Linux has no Windows SAPI)",
+  "live_public_rss": "NOT VERIFIED (no --live-rss URL given)"
+}
