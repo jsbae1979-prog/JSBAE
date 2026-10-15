@@ -80,7 +80,7 @@ def test_gui_running_and_completion_state(client, app, fake):
     assert entered.wait(5)
     try:
         assert client.get("/api/collection").json()["status"] == "running"
-        assert "disabled" in client.get("/").text
+        assert "disabled" in client.get("/dashboard").text
     finally:
         release.set()
     app.state.coordinator.future.result(timeout=5)

@@ -136,6 +136,7 @@ class ContentDraft(Base):
 
 class VideoProject(Base):
     __tablename__ = "video_projects"
+    preview_only: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
     id: Mapped[int] = mapped_column(primary_key=True)
     draft_id: Mapped[int] = mapped_column(ForeignKey("content_drafts.id"))
     title: Mapped[str] = mapped_column(String(100))
@@ -205,6 +206,7 @@ class PlatformAccount(Base):
 
 class PublishDraft(Base):
     __tablename__ = "publish_drafts"
+    autopilot_task_id: Mapped[str | None] = mapped_column(String(32), nullable=True, unique=True)
     id: Mapped[int] = mapped_column(primary_key=True)
     render_job_id: Mapped[int] = mapped_column(ForeignKey("render_jobs.id"))
     platform: Mapped[str] = mapped_column(String(20))
@@ -324,3 +326,69 @@ class OAuthLifecycleOperation(Base):
     claim_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class AutopilotJob(Base):
+    """One nullable unique slot serializes active work, including guided review pauses."""
+
+    __tablename__ = "autopilot_jobs"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    active_slot: Mapped[int | None] = mapped_column(Integer, unique=True, nullable=True)
+    mode: Mapped[str] = mapped_column(String(16))
+    source: Mapped[str] = mapped_column(String(16))
+    duration: Mapped[int] = mapped_column(Integer)
+    platform: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(24))
+    current_stage: Mapped[str] = mapped_column(String(16))
+    progress: Mapped[int] = mapped_column(Integer, default=0)
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    cancel_requested: Mapped[bool] = mapped_column(Boolean, default=False)
+    article_id: Mapped[int | None] = mapped_column(ForeignKey("news_articles.id"), nullable=True)
+    stage_results: Mapped[dict] = mapped_column(JSON, default=dict)
+    message: Mapped[str] = mapped_column(String(300), default="작업 준비 중")
+    error_code: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    retryable: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class AutopilotAttempt(Base):
+    __tablename__ = "autopilot_attempts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[str] = mapped_column(ForeignKey("autopilot_jobs.id"), index=True)
+    stage: Mapped[str] = mapped_column(String(16))
+    number: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(24))
+    error_code: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
+class AutopilotArtifact(Base):
+    __tablename__ = "autopilot_artifacts"
+    __table_args__ = (UniqueConstraint("job_id", "kind", "reference"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[str] = mapped_column(ForeignKey("autopilot_jobs.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(30))
+    reference: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class AutopilotEvent(Base):
+    __tablename__ = "autopilot_events"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[str] = mapped_column(ForeignKey("autopilot_jobs.id"), index=True)
+    stage: Mapped[str] = mapped_column(String(16))
+    status: Mapped[str] = mapped_column(String(24))
+    message: Mapped[str] = mapped_column(String(300))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class AutopilotArticleClaim(Base):
+    """A selected news item cannot silently produce another automatic video."""
+
+    __tablename__ = "autopilot_article_claims"
+    article_id: Mapped[int] = mapped_column(ForeignKey("news_articles.id"), primary_key=True)
+    job_id: Mapped[str] = mapped_column(ForeignKey("autopilot_jobs.id"), unique=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

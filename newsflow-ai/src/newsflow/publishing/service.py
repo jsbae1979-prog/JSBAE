@@ -176,9 +176,20 @@ class PublishingService:
         copyright_confirmed: bool = False,
         sources_confirmed: bool = False,
         ai_disclosure: str = "unreviewed",
+        autopilot_task_id: str | None = None,
     ) -> int:
         fields = self.input(platform, title, description, hashtags, ai_disclosure)
+        if autopilot_task_id is not None and not re.fullmatch(r"[0-9a-f]{32}", autopilot_task_id):
+            raise PublishingError("자동 제작 작업 식별자가 잘못되었습니다.")
         with self.sessions.begin() as session:
+            if autopilot_task_id is not None:
+                previous = session.scalar(
+                    select(PublishDraft).where(PublishDraft.autopilot_task_id == autopilot_task_id)
+                )
+                if previous:
+                    if previous.render_job_id != render_job_id or previous.platform != platform:
+                        raise ConflictError("작업에 연결된 게시 초안과 영상이 다릅니다.")
+                    return previous.id
             job = session.get(RenderJob, render_job_id)
             if not job:
                 raise PublishingError("완성 영상이 없습니다.")
@@ -201,6 +212,7 @@ class PublishingService:
                 sources_confirmed=sources_confirmed,
                 state="unvalidated",
                 revision=1,
+                autopilot_task_id=autopilot_task_id,
             )
             session.add(draft)
             session.flush()
@@ -309,7 +321,9 @@ class PublishingService:
             )
             limit = 2200 if draft.platform == "instagram" else 5000
             description_valid = len(caption) <= limit
-            description_reason = f"제목/설명/태그 합친 앱 준비 예산 {limit}자; Instagram 최신 제한 재확인 필요"
+            description_reason = (
+                f"제목/설명/태그 합친 앱 준비 예산 {limit}자; Instagram 최신 제한 재확인 필요"
+            )
             tags_valid = len(draft.hashtags) <= 30
             tags_reason = "중복 정규화·문법 검사, 앱 준비 예산 30개; Instagram 공식 제한 확인 필요"
             if draft.platform == "youtube":
@@ -333,9 +347,7 @@ class PublishingService:
                     "YouTube 준비 설명(해시태그 포함) UTF-8 5,000바이트·꺾쇠 제외; "
                     "앱의 제목 포함 5,000자 예산도 적용"
                 )
-                tag_characters = sum(len(tag) for tag in draft.hashtags) + max(
-                    0, len(draft.hashtags) - 1
-                )
+                tag_characters = sum(len(tag) for tag in draft.hashtags) + max(0, len(draft.hashtags) - 1)
                 tags_valid = tags_valid and tag_characters <= 500
                 tags_reason = "YouTube API 태그 합계 500자(쉼표 포함); 앱 해시태그 문법·30개 예산도 적용"
             check(

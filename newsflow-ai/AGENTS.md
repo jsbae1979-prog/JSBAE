@@ -1,6 +1,6 @@
 # NewsFlow AI development rules
 
-- Phase 4B-2B callback, identity, production-vault and recovery code is authorized, with actual service execution hard blocked. Do not log in to real SNS accounts, exchange real codes/tokens, store or load real service credentials, upload/publish, begin Phase 4B-2C, or merge main. Environment variables and GUI approval flags cannot enable production OAuth. Preserve the Phase 4B-1 synthetic-only vault; all vault validation uses recognizable synthetic tokens only.
+- Phase 5A Autopilot and Easy UI are authorized. Reuse the collection, intelligence, video and publishing services, preserve approval boundaries, and keep actual OAuth and SNS execution hard blocked. Do not log in to real SNS accounts, exchange real codes/tokens, store or load real service credentials, upload/publish, begin Phase 4B-2C or Phase 5B scheduling, or merge main. Environment variables and GUI approval flags cannot enable production OAuth. Preserve the existing synthetic-only vault and migrations 0001–0007; add new migrations for this phase.
 - Python 3.12; production target is Windows 11 only. Codex Cloud is for development/tests; no Linux deployment, Docker, or WSL features.
 - Keep GUI, services, persistence, and external adapters separate.
 - Never commit API keys, OAuth tokens, personal data, local databases, or session secrets.

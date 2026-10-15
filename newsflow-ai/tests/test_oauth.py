@@ -14,7 +14,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from pydantic import SecretStr
-from sqlalchemy import func, select, text
+from sqlalchemy import MetaData, Table, func, select, text
 
 from newsflow.db.models import (
     AuditLog,
@@ -29,7 +29,6 @@ from newsflow.db.models import (
     PublishJob,
     PublishValidation,
     RenderJob,
-    VideoProject,
 )
 from newsflow.db.session import make_engine, migrate, session_factory
 from newsflow.intelligence.service import IntelligenceService
@@ -683,38 +682,35 @@ def test_additive_0005_migration_preserves_phase4a_forensic_records(tmp_path):
     content_id = ai.generate(ai.analyze([1]), 30)
     with sessions.begin() as session:
         content = session.get(ContentDraft, content_id)
-        project = VideoProject(
-            draft_id=content_id,
-            title="기존 합성 영상",
-            duration=30,
-            snapshot=content.content,
-            sources=content.sources,
-        )
-        session.add(project)
-        session.flush()
-        render = RenderJob(project_id=project.id, status="success", output_name="video-" + "1" * 32 + ".mp4")
+        # Seed the actual historical schema, without columns introduced in 0008.
+        legacy_projects = Table("video_projects", MetaData(), autoload_with=session.connection())
+        project_id = session.execute(legacy_projects.insert().values(
+            draft_id=content_id, title="기존 합성 영상", duration=30,
+            snapshot=content.content, sources=content.sources, created_at=datetime.now(UTC),
+        )).inserted_primary_key[0]
+        render = RenderJob(project_id=project_id, status="success", output_name="video-" + "1" * 32 + ".mp4")
         session.add(render)
         session.flush()
-        draft = PublishDraft(
+        legacy_drafts = Table("publish_drafts", MetaData(), autoload_with=session.connection())
+        draft_id = session.execute(legacy_drafts.insert().values(
             render_job_id=render.id,
             platform="youtube",
             title="기존 게시 초안",
             description="기존 설명",
             hashtags=["합성"],
             account_id=1,
-            sources=project.sources,
+            sources=content.sources,
             media_sha256="a" * 64,
             state="blocked",
             content_reviewed=True,
             sources_confirmed=True,
             copyright_confirmed=True,
-            ai_disclosure="disclose",
-        )
-        session.add(draft)
-        session.flush()
+            ai_disclosure="disclose", revision=1,
+            created_at=datetime.now(UTC), updated_at=datetime.now(UTC),
+        )).inserted_primary_key[0]
         session.add(
             PublishValidation(
-                draft_id=draft.id,
+                draft_id=draft_id,
                 draft_revision=1,
                 status="blocked",
                 results=[{"key": "api_readiness", "status": "fail", "reason": "기존 미연결"}],
@@ -722,7 +718,7 @@ def test_additive_0005_migration_preserves_phase4a_forensic_records(tmp_path):
             )
         )
         job = PublishJob(
-            draft_id=draft.id,
+            draft_id=draft_id,
             platform="youtube",
             status="unknown",
             message="기존 결과 불명",
@@ -731,11 +727,11 @@ def test_additive_0005_migration_preserves_phase4a_forensic_records(tmp_path):
         session.add(job)
         session.flush()
         session.add(PublishAttempt(job_id=job.id, status="unknown", message="기존 시도"))
-        session.add(PublishEvidence(draft_id=draft.id, kind="simulation", payload={"real_api_calls": 0}))
+        session.add(PublishEvidence(draft_id=draft_id, kind="simulation", payload={"real_api_calls": 0}))
     migrate(engine)
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0007"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0008"
     with sessions() as session:
         assert session.get(PlatformAccount, 1).label == "기존 준비 계정"
         assert (

@@ -10,7 +10,7 @@ from newsflow.news.service import CollectionBusy
 
 
 @pytest.mark.parametrize(
-    "path,title", [("/", "뉴스 흐름을 한눈에"), ("/news", "뉴스 탐색"), ("/settings", "워크스페이스 설정")]
+    "path,title", [("/dashboard", "뉴스 흐름을 한눈에"), ("/news", "뉴스 탐색"), ("/settings", "워크스페이스 설정")]
 )
 def test_render(client, path, title):
     response = client.get(path)

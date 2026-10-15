@@ -10,7 +10,7 @@ from newsflow.db.session import migrate
 
 def test_version_and_repeat_migration(app):
     with app.state.engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0007"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0008"
     migrate(app.state.engine)
     with app.state.sessions() as session:
         assert session.scalar(select(func.count()).select_from(NewsSource)) == 1

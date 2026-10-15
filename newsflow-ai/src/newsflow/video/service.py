@@ -6,6 +6,7 @@ import json
 import os
 import re
 import shutil
+from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -51,6 +52,9 @@ class VideoCoordinator:
         self.lock = FileLock(str(self.root / "render.lock"), thread_local=False)
         self.guard = Lock()
         self.future: Future | None = None
+        self.control = Lock()
+        self.active_job_id: int | None = None
+        self.job_cancel: Event | None = None
 
     def assets_list(self) -> list[str]:
         return sorted(
@@ -104,6 +108,26 @@ class VideoCoordinator:
     ) -> int:
         if duration not in (30, 45, 60) or not reviewed:
             raise VideoError("영상 길이를 선택하고 렌더링 전 대본·출처 검토를 확인하세요.")
+        return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False)
+
+    def start_preview(self, draft_id: int, duration: int, on_job: Callable[[int], None] | None = None) -> int:
+        """Create a clearly marked local review copy without granting human approval."""
+        if duration not in (30, 45, 60):
+            raise VideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
+        return self._start(draft_id, duration, "offline-silence", 48, 1420, None, False, True, on_job)
+
+    def _start(
+        self,
+        draft_id: int,
+        duration: int,
+        voice: str,
+        font_size: int,
+        subtitle_y: int,
+        images: list[str] | None,
+        asset_permission: bool,
+        preview_only: bool,
+        on_job: Callable[[int], None] | None = None,
+    ) -> int:
         if self.cancel.is_set():
             raise VideoError("프로그램 종료 중에는 새 영상을 제작할 수 없습니다.")
         images = images or []
@@ -122,6 +146,7 @@ class VideoCoordinator:
         except OSError:
             self.guard.release()
             raise VideoError("영상 잠금 파일의 접근 권한을 확인하세요.") from None
+        job_id = None
         try:
             if shutil.disk_usage(self.root).free < (256 + duration * 4) * 1024 * 1024:
                 raise VideoError("영상 제작을 위한 디스크 공간이 부족합니다. 최소 약 500MB를 확보하세요.")
@@ -167,6 +192,7 @@ class VideoCoordinator:
                     duration=duration,
                     snapshot={**draft.content, "draft_revision": draft.revision},
                     sources=draft.sources,
+                    preview_only=preview_only,
                 )
                 session.add(project)
                 session.flush()
@@ -206,11 +232,34 @@ class VideoCoordinator:
                 session.add(job)
                 session.flush()
                 job_id = job.id
-            self.future = self.executor.submit(self._run, job_id, tts)
+            if on_job:
+                on_job(job_id)
+            job_cancel = Event()
+            with self.control:
+                self.active_job_id, self.job_cancel = job_id, job_cancel
+                if self.cancel.is_set():
+                    job_cancel.set()
+            self.future = self.executor.submit(self._run, job_id, tts, job_cancel)
             return job_id
         except Exception:
-            self.lock.release()
-            self.guard.release()
+            try:
+                if job_id is not None:
+                    with self.sessions.begin() as session:
+                        job = session.get(RenderJob, job_id)
+                        job.status, job.message, job.finished_at = (
+                            "failed",
+                            "영상 제작 준비 기록에 실패했습니다. 다시 시도하세요.",
+                            utcnow(),
+                        )
+                        session.scalar(
+                            select(AudioTrack).where(AudioTrack.project_id == job.project_id)
+                        ).status = "failed"
+            finally:
+                with self.control:
+                    if self.active_job_id == job_id:
+                        self.active_job_id, self.job_cancel = None, None
+                self.lock.release()
+                self.guard.release()
             raise
 
     def _progress(self, identifier: int, value: int) -> None:
@@ -223,7 +272,7 @@ class VideoCoordinator:
                 else ("영상 인코딩 중" if value < 95 else "완성 MP4 검증 중")
             )
 
-    def _run(self, identifier: int, tts: TTSProvider) -> None:
+    def _run(self, identifier: int, tts: TTSProvider, cancel: Event) -> None:
         published: Path | None = None
         try:
             with self.sessions() as session:
@@ -243,7 +292,7 @@ class VideoCoordinator:
                 ]
                 output = self.output_path(job.output_name)
                 title, voice, font_size, position_y = (
-                    project.title,
+                    ("검토용 초안 · " if project.preview_only else "") + project.title,
                     audio.voice,
                     subtitles.font_size,
                     subtitles.position_y,
@@ -264,9 +313,9 @@ class VideoCoordinator:
                     )
                 plan = RenderPlan(title, plans, source_links, voice, font_size, position_y)
                 result, metadata = self.engine.render(
-                    plan, work, tts, lambda value: self._progress(identifier, value), self.cancel
+                    plan, work, tts, lambda value: self._progress(identifier, value), cancel
                 )
-                if self.cancel.is_set():
+                if cancel.is_set():
                     raise RenderError("영상 제작이 종료되었습니다.")
                 if (
                     not result.resolve().is_relative_to(work.resolve())
@@ -280,7 +329,7 @@ class VideoCoordinator:
                     shutil.copyfileobj(source, target)
                     target.flush()
                     os.fsync(target.fileno())
-            if self.cancel.is_set():
+            if cancel.is_set():
                 raise RenderError("영상 제작이 종료되었습니다.")
             with self.sessions.begin() as session:
                 job = session.get(RenderJob, identifier)
@@ -319,11 +368,11 @@ class VideoCoordinator:
                 kind = "디스크 공간 부족"
             with self.sessions.begin() as session:
                 job = session.get(RenderJob, identifier)
-                job.status = "interrupted" if self.cancel.is_set() else "failed"
+                job.status = "interrupted" if cancel.is_set() else "failed"
                 job.message = (
                     f"{kind} 실패. 설치·음성 길이·자막 안전 영역·코덱·디스크 공간을 확인하세요."
                     if job.status == "failed"
-                    else "프로그램 종료로 영상 제작이 중단되었습니다."
+                    else "사용자 취소 또는 프로그램 종료로 영상 제작이 중단되었습니다."
                 )
                 if cleanup_pending:
                     job.message += " · 생성 파일 정리 실패; 출력 폴더를 수동 확인하세요."
@@ -335,8 +384,19 @@ class VideoCoordinator:
                     select(AudioTrack).where(AudioTrack.project_id == job.project_id)
                 ).status = job.status
         finally:
+            with self.control:
+                if self.active_job_id == identifier:
+                    self.active_job_id, self.job_cancel = None, None
             self.lock.release()
             self.guard.release()
+
+    def request_cancel(self, job_id: int) -> bool:
+        """Cancel only the matching running job; a later render gets a fresh Event."""
+        with self.control:
+            if self.active_job_id != job_id or self.job_cancel is None:
+                return False
+            self.job_cancel.set()
+            return True
 
     def output_path(self, name: str) -> Path:
         if not re.fullmatch(r"video-[0-9a-f]{32}\.mp4", name):
@@ -373,4 +433,7 @@ class VideoCoordinator:
 
     def close(self) -> None:
         self.cancel.set()
+        with self.control:
+            if self.job_cancel is not None:
+                self.job_cancel.set()
         self.executor.shutdown(wait=True, cancel_futures=False)

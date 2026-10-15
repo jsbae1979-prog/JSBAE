@@ -15,7 +15,7 @@ from alembic import command
 from alembic.config import Config
 from conftest import csrf
 from pydantic import ValidationError
-from sqlalchemy import func, inspect, select, text
+from sqlalchemy import MetaData, Table, func, inspect, select, text
 
 from newsflow.db.models import (
     AppSetting,
@@ -30,7 +30,6 @@ from newsflow.db.models import (
     PublishValidation,
     RenderJob,
     Scene,
-    VideoProject,
 )
 from newsflow.db.session import make_engine, migrate, session_factory
 from newsflow.intelligence.service import IntelligenceService
@@ -790,18 +789,15 @@ def test_additive_0004_migration_preserves_phase3_data(tmp_path):
     script_id = intelligence.generate(intelligence.analyze([1]), 30)
     with sessions.begin() as session:
         script = session.get(ContentDraft, script_id)
-        project = VideoProject(
-            draft_id=script_id,
-            title="기존 영상",
-            duration=30,
-            snapshot=script.content,
-            sources=script.sources,
-        )
-        session.add(project)
-        session.flush()
+        # Use the real pre-0008 columns when creating the migration fixture.
+        legacy_projects = Table("video_projects", MetaData(), autoload_with=session.connection())
+        project_id = session.execute(legacy_projects.insert().values(
+            draft_id=script_id, title="기존 영상", duration=30,
+            snapshot=script.content, sources=script.sources, created_at=datetime.now(UTC),
+        )).inserted_primary_key[0]
         session.add(
             Scene(
-                project_id=project.id,
+                project_id=project_id,
                 position=0,
                 start_ms=0,
                 end_ms=30000,
@@ -810,11 +806,11 @@ def test_additive_0004_migration_preserves_phase3_data(tmp_path):
                 material="",
             )
         )
-        session.add(RenderJob(project_id=project.id, output_name="legacy.mp4", status="interrupted"))
+        session.add(RenderJob(project_id=project_id, output_name="legacy.mp4", status="interrupted"))
     migrate(engine)
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0007"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0008"
     with sessions() as session:
         assert session.get(AppSetting, "collection_timeout").value == "7"
         assert session.get(NewsArticle, 1).title == "기존 기사"

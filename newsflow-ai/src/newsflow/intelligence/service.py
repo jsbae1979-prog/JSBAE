@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Callable
 from difflib import SequenceMatcher
 
 from sqlalchemy import select, update
@@ -30,7 +31,12 @@ class IntelligenceService:
         self.sessions, self.provider = sessions, provider
 
     def analyze(
-        self, ids: list[int], mode: str = "offline", consent: bool = False, options: Options | None = None
+        self,
+        ids: list[int],
+        mode: str = "offline",
+        consent: bool = False,
+        options: Options | None = None,
+        on_run: Callable[[int], None] | None = None,
     ) -> int:
         if mode not in ("offline", "openai") or (mode == "openai" and not consent):
             raise IntelligenceError("외부 AI 분석에는 전송과 비용 발생에 대한 명시적 동의가 필요합니다.")
@@ -96,6 +102,8 @@ class IntelligenceService:
             session.flush()
             run_id = run.id
         try:
+            if on_run:
+                on_run(run_id)
             provider = self.provider or (OfflineProvider() if mode == "offline" else OpenAIProvider())
             result = Analysis.model_validate(provider.analyze(payload, options)).model_dump()
             referenced = {i for comparison in result["comparisons"] for i in comparison["article_ids"]}
@@ -121,6 +129,7 @@ class IntelligenceService:
         mode: str = "offline",
         consent: bool = False,
         options: Options | None = None,
+        on_run: Callable[[int], None] | None = None,
     ) -> int:
         if duration not in (30, 45, 60) or mode not in ("offline", "openai"):
             raise IntelligenceError("영상 길이 또는 Provider가 잘못되었습니다.")
@@ -145,6 +154,8 @@ class IntelligenceService:
             session.flush()
             run_id = run.id
         try:
+            if on_run:
+                on_run(run_id)
             provider = self.provider or (OfflineProvider() if mode == "offline" else OpenAIProvider())
             output = provider.complete(evidence, duration, options)
             script = self.validate(output, duration)

@@ -39,7 +39,7 @@ def go(path: str) -> RedirectResponse:
     return RedirectResponse(path, status_code=303)
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(request: Request) -> HTMLResponse:
     with request.app.state.sessions() as session:
         total = session.scalar(select(func.count()).select_from(NewsArticle))

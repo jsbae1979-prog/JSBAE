@@ -1,16 +1,18 @@
-# NewsFlow AI — Windows 11 · Phase 4B-2B
+# NewsFlow AI — Windows 11 · Phase 5A
 
-공개 RSS 수집·중복 제거·내부 추천 평가를 제공하는 한국어 로컬 웹 대시보드입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
+뉴스 선택부터 대본·검토용 영상 제작·게시 대기함 보관까지 연결하는 한국어 로컬 웹 프로그램입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
-현재 Phase 4B-2B는 RSS 수집, AI 뉴스 분석·대본 초안, FFmpeg 영상 제작, SNS 게시 준비와 운영 OAuth callback·채널 identity·Windows 자격정보 저장 및 복구 코드를 제공합니다. OAuth 운영 코드는 활성화가 차단됩니다. 실제 SNS 게시·계정 로그인·실제 토큰 교환 및 저장·주기 스케줄러는 제공하지 않습니다.
+Phase 5A의 **간편 제작**은 체험 뉴스 → 기본 대본 → 9:16 검토영상 → 로컬 게시 대기함을 한 번의 시작으로 연결합니다. **단계별 제작**에서는 뉴스·대본·영상을 확인하며 진행합니다. 기본 대본은 외부 AI가 작성한 결과가 아니며, 기본 영상은 무음입니다. 실제 SNS 게시·계정 로그인·실제 토큰 교환 및 저장·주기 스케줄러는 제공하지 않습니다. 기존 OAuth 운영 코드는 계속 차단됩니다.
+
+[간편 제작 사용법과 복구 정책](docs/autopilot.md) · [Phase 5A 검증 보고서](docs/reports/phase5a_autopilot_easyui_report.md)
 
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 4B-2B 검토 브랜치 `feat/newsflow-phase4b2b`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 5A 검토 브랜치 `feat/newsflow-phase5a`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase4b2b https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase5a https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -23,6 +25,19 @@ Git 없이 ZIP을 받았다면 해당 브랜치 ZIP을 풀고 `newsflow-ai` 폴�
 
 Windows EXE Installer는 제공하지 않습니다. Linux Cloud는 Windows BAT를 실제로 실행하지 않습니다. Windows Actions에서 BAT와 Chrome POST를 별도 검증하며, 이번 단계 결과는 완료 보고서에서 확인하세요. 사용자의 Windows 11 PC 수동 운영은 **NOT VERIFIED**이며 아래 체크리스트로 별도 확인해야 합니다.
 
+## 처음 영상 만들기
+
+먼저 아래 [Video Studio 설치 안내](#phase-3--video-studio-windows-11)에 따라 **FFmpeg/ffprobe**를 설치하세요. `run.bat`는 Python 패키지를 설치하며 FFmpeg를 자동 설치하지 않습니다. 한국어 글꼴은 Windows의 맑은 고딕을 기본 사용합니다. 제작 도구가 없으면 오류 안내를 표시하고 완료나 게시 대기로 처리하지 않습니다.
+
+1. `run.bat` 실행 후 **http://127.0.0.1:8765**를 엽니다.
+2. 홈에서 **자동 제작 시작**을 누릅니다. 첫 기본값은 **체험 뉴스 · 30초 · YouTube용 · 기본 대본 · 무음 검토영상**입니다. 체험 뉴스는 인터넷에서 수집한 실제 보도가 아닌 내장 합성 자료입니다.
+3. 진행 화면에서 현재 단계와 진행률을 확인합니다. 완료 후 영상을 재생하거나 **MP4 저장**을 누르고 **게시 대기함에서 확인**으로 이동합니다.
+4. 대기함은 내 PC의 검토용 초안입니다. 대기함 보관이 내용·출처·저작권 검토나 플랫폼 게시 승인을 대신하지 않습니다.
+
+뉴스부터 직접 고르려면 사이드바 **자동 제작 → 단계별 제작**을 선택하세요. 뉴스 선택, 대본 검토·수정, 영상 확인에서 각각 멈춘 뒤 다음 단계로 진행합니다. **간단한 설정**에서 다음 제작의 길이(30/45/60초), 목적지(YouTube/Instagram), 뉴스 종류를 저장할 수 있습니다. 등록 출처를 선택하면 시작할 때 해당 공개 RSS에 접속합니다. Autopilot의 대본 생성은 계속 Offline이며 외부 AI API를 자동 사용하지 않습니다.
+
+기존 뉴스 검색·AI Studio·Video Studio·Publishing·상세 Settings는 사이드바 **고급 모드**에서 열 수 있습니다. 직접 검토한 대본의 음성·자막·소재를 상세 조정하려면 Video Studio를 사용하세요. 간편 제작은 무음 검토영상만 만들며 뉴스 이미지나 영상을 자동 다운로드하지 않습니다.
+
 ## 재실행·업데이트
 
 재실행은 같은 `run.bat`를 더블클릭하세요. 설치된 의존성 manifest가 같으면 설치를 반복하지 않으며 의존성 상태를 검사합니다. manifest가 바뀌면 설치 성공 후 갱신합니다. 동일 폴더의 BAT 중복 실행은 잠금으로 막고, 서버는 지정 포트의 소켓을 독점합니다. 다른 프로그램이 포트를 쓰면 오류를 표시하고 포트를 바꾸지 않습니다.
@@ -31,7 +46,7 @@ Windows EXE Installer는 제공하지 않습니다. Linux Cloud는 Windows BAT�
 
 ```powershell
 # JSBAE 저장소 루트에서
-git switch feat/newsflow-phase4b2b
+git switch feat/newsflow-phase5a
 git pull --ff-only
 cd newsflow-ai
 .\run.bat
@@ -45,13 +60,13 @@ cd newsflow-ai
 
 | 위치 | 용도 |
 |---|---|
-| `newsflow.db` 및 SQLite WAL/SHM | 기사·출처·수집 설정·점수·수집 이력·오류 로그 |
+| `newsflow.db` 및 SQLite WAL/SHM | 기사·대본·영상/게시 초안·간편 설정·자동 제작 상태·단계별 이력 및 산출물 참조 |
 | `session.key` | 로컬 CSRF 서명 키, 내용 공유 금지 |
 | `logs\execution.log` | 시작·종료·설정/포트 오류 이벤트, UTC, 순환 로그 |
 | `logs\launcher.log` | BAT bootstrap의 정제된 오류 안내 |
 | `content\` | 향후 생성 콘텐츠 보관 공간만 준비; 생성 기능 없음 |
 | `videos\` | 이전 단계의 예약 폴더; Phase 3 출력은 outputs/videos 사용 |
-| `outputs\videos\` | 완성 MP4 |
+| `outputs\videos\` | 완성 MP4 및 Autopilot 검토용 MP4; 서로 다른 고유 파일명 사용 |
 | `assets\` | 사용자가 허가한 로컬 이미지 |
 | `render-tmp\` | 작업별 임시 이미지·WAV·장면 MP4 |
 
@@ -81,13 +96,13 @@ $env:NEWSFLOW_DATA_DIR="D:\내 자료\NewsFlowAI" # 생략하면 LOCALAPPDATA
 ```
 
 3. 이전 명령은 SQLite backup API로 WAL을 포함한 일관된 DB snapshot을 만들고 무결성·스키마 버전을 확인합니다. DB 안의 설정과 session.key를 복사하며 원본을 삭제하지 않습니다. 대상에 기존 DB나 키가 있으면 덮어쓰지 않습니다. 파일/서버/수집 잠금도 확인합니다.
-4. run.bat를 다시 실행해 기사·출처·설정 보존을 확인한 뒤 원본을 계속 백업으로 보관하세요. 이전 도구는 현재 revision 0001만 지원합니다. 임의 추가 파일·향후 콘텐츠·영상은 별도 백업해야 합니다.
+4. run.bat를 다시 실행해 기사·출처·설정 보존을 확인한 뒤 원본을 계속 백업으로 보관하세요. 현재 이전 도구는 revision 0001~0008을 지원합니다. 임의 추가 파일·향후 콘텐츠·영상은 별도 백업해야 합니다.
 5. 이미 새 DB를 만들었다면 자동 병합하지 않습니다. 두 데이터 폴더를 백업한 뒤 보존할 DB를 선택하세요. 기존 경로를 계속 쓰려면 `NEWSFLOW_DATA_DIR`를 명시할 수 있습니다.
 
-## 사용 흐름
+## 고급 모드에서 RSS 직접 수집
 
-1. Settings에서 공개 RSS의 약관·저작권을 확인하고 출처를 등록/활성화하세요. Google News 한국 RSS는 기본 비활성 상태입니다.
-2. Dashboard의 지금 수집하기를 실행하세요. 진행 상태, 전체 성공·부분 실패·전체 실패·빈 출처를 구분합니다. 실패해도 기존 기사는 유지됩니다.
+1. 고급 모드의 Settings에서 공개 RSS의 약관·저작권을 확인하고 출처를 등록/활성화하세요. Google News 한국 RSS는 기본 비활성 상태입니다.
+2. 고급 모드의 Dashboard(`/dashboard`)에서 지금 수집하기를 실행하세요. 진행 상태, 전체 성공·부분 실패·전체 실패·빈 출처를 구분합니다. 실패해도 기존 기사는 유지됩니다.
 3. News Explorer에서 검색, UTC 발행일·카테고리·출처 필터, 점수/발행시각 정렬을 사용하세요.
 4. News Detail에서 RSS 요약·원문 링크·provenance·평가 근거와 미평가 상태를 확인하세요.
 
@@ -118,6 +133,10 @@ $env:NEWSFLOW_DATA_DIR="D:\내 자료\NewsFlowAI" # 생략하면 LOCALAPPDATA
 | 저장 경로 오류 | LOCALAPPDATA 및 사용자 폴더 권한 확인. 로그 폴더도 기록 불가능하면 콘솔 안내 확인 |
 | GUI 접속 실패 | 실행 창 오류, 127.0.0.1:8765, 명시적 포트 설정, 로컬 방화벽 확인. 브라우저 주소 직접 입력 |
 | RSS 실패 | Settings의 수집 오류 로그와 아래 diagnostics 결과 확인. DNS/TLS/robots/파싱을 구분 |
+| 자동 제작이 영상 단계에서 멈춤 | FFmpeg/ffprobe 설치, 한국어 글꼴, 저장 공간을 확인하고 작업 화면에서 다시 시도. 누락된 도구를 모의 영상으로 대신하지 않음 |
+| 진행 중/확인 대기 작업이 있음 | 해당 작업을 이어서 진행하거나 취소한 후 새 작업 시작. 확인을 기다리는 단계별 작업도 중복 실행을 막음 |
+| 같은 뉴스로 새 작업을 만들 수 없음 | 기존 작업에서 결과를 확인하거나 같은 작업을 안전하게 재시도. 다른 뉴스로 제작하려면 남은 후보를 선택 |
+| 종료 후 작업이 중단 상태 | 저장된 대본·영상·대기함을 확인한 뒤 가능한 작업만 명시적으로 재시도. 자동 재개·성공 처리는 하지 않음 |
 | CSRF 403 | 주소를 직접 열고 새로고침. iframe/외부 페이지에서 제출하지 말 것. Origin:null은 허용하지 않음 |
 
 로그 파일은 탐색기로 `%LOCALAPPDATA%\NewsFlowAI\logs`에서 확인하세요. 오류 상세가 정제되어 원문 예외·환경변수·인증정보는 기록하지 않습니다. 공유 전 로그에 사용자 정보가 없는지 확인하세요. 수집 오류는 GUI Settings 및 DB AuditLog에 기록합니다. 실행 로그는 UTC 시각을 사용합니다.
@@ -179,6 +198,8 @@ Cloud 재현 (CI 브라우저 의존성은 별도):
 Windows 재현은 개발·브라우저 의존성과 Playwright Chromium을 설치한 격리된 테스트 PC에서 `python tools/ci_validation.py --mode windows --output validation-output`으로 수행합니다. `%LOCALAPPDATA%\NewsFlowAI`에 기존 DB가 있으면 기존 사용자 데이터 보호를 위해 거부합니다. 일반 PC에서는 README의 수동 Windows 체크리스트를 먼저 사용하세요. 결과: [Cloud/Windows 추가 검증 보고서](docs/reports/phase1a_cloud_windows_validation.md).
 
 
+아래 단계별 설명은 기존 고급 기능의 도입 이력입니다. 현재 기본 화면과 자동 제작 정책은 위 Phase 5A 안내 및 [Autopilot 문서](docs/autopilot.md)를 따릅니다.
+
 ## Phase 2 · AI Studio
 
 왼쪽 AI Studio에서 뉴스 1~10개 선택 → 분석 → 30/45/60초 선택 → 대본 생성 → 제목·후킹·요약·장면별 내레이션/자막/소재 수정 → 초안 저장 순서로 사용합니다. 출처 링크와 분석 시점 RSS 근거는 고정 보존되고, 수정 충돌 시 새로고침을 요구합니다. 모든 초안은 **게시 전 사람의 검토·승인 필요** 상태이며 게시 버튼이나 SNS 연동은 없습니다.
@@ -192,8 +213,7 @@ Windows PowerShell에서 값을 화면에 표시하지 않고 현재 세션에�
 ```powershell
 $newsflowKey = Read-Host 'OpenAI API 키' -AsSecureString
 $env:NEWSFLOW_AI_API_KEY = [System.Net.NetworkCredential]::new('', $newsflowKey).Password
-.
-un.bat
+.\run.bat
 Remove-Item Env:NEWSFLOW_AI_API_KEY
 ```
 
