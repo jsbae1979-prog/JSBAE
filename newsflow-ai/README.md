@@ -202,7 +202,7 @@ $env:NEWSFLOW_DATA_DIR="D:\내 자료\NewsFlowAI" # 생략하면 LOCALAPPDATA
 .\.venv\Scripts\python.exe -m newsflow.diagnostics --url "https://feeds.bbci.co.uk/news/rss.xml"
 ```
 
-위 Google News 주소는 Phase 5C.1 Windows CI에서 robots.txt(`Disallow: /`)로 **BLOCKED(robots)**, BBC 주소는 같은 날 PASS와 robots 차단이 함께 기록되어 **불안정**합니다(결함이 아니며 정책을 완화하지 않습니다). 여러 후보를 한 번에 검토하려면 `tools\feed_candidates.json`과 `.\.venv\Scripts\python.exe tools\ci_feed_review.py --mode windows --output <폴더>`를 사용하세요. 진단이 `rss_store: PASS`, `article_count > 0`, `collection_status: success`인 경우에만 실제 기사 저장을 검증한 것입니다. 운영 GUI에서도 활성 RSS의 수집을 재검증하세요. 피드의 이용 조건은 운영자가 확인해야 합니다.
+위 Google News 주소는 Phase 5C.1 Windows CI에서 robots.txt(`Disallow: /`)로 **BLOCKED(robots)**입니다(결함이 아니며 정책을 완화하지 않습니다). BBC 주소는 Windows 피드 검토에서 매번 PASS였습니다. 이전에 기록된 BBC robots 차단은 CI 실서버 연결 테스트가 앱이 미리 넣어 둔 Google News 출처를 시험한 도구 결함이었고 수정했습니다. 여러 후보를 한 번에 검토하려면 `tools\feed_candidates.json`과 `.\.venv\Scripts\python.exe tools\ci_feed_review.py --mode windows --output <폴더>`를 사용하세요. 진단이 `rss_store: PASS`, `article_count > 0`, `collection_status: success`인 경우에만 실제 기사 저장을 검증한 것입니다. 운영 GUI에서도 활성 RSS의 수집을 재검증하세요. 피드의 이용 조건은 운영자가 확인해야 합니다.
 
 Cloud 재시도 결과: Google DNS 실패/기존 프록시 robots HEAD 200; BBC DNS 실패/프록시 연결 차단. 실제 RSS 저장은 두 출처 모두 **NOT VERIFIED**입니다. 직접 IP 고정 전송은 공개 DNS가 필요한데 이 Cloud에서 제한됩니다. 프록시만으로 검사를 생략해 수집하지 않습니다. 네트워크 설정 변경 없이 진단했으며 필요 변경은 별도 승인 사항입니다.
 

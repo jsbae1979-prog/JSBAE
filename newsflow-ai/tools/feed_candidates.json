@@ -206,10 +206,10 @@
       "country": "GB",
       "format_expected": "rss2",
       "official_rss_page": "unknown",
-      "terms_note": "Phase 5C Windows 실서버 연결 테스트에서 robots 차단이 기록되었고, Phase 5C.1 Windows 실행 38718358049(2026-10-15) 관찰: 피드 검토는 PASS(31건)였지만 같은 실행의 run.bat 연결 테스트는 robots 차단 → robots 응답이 요청마다 달라 결과가 안정적이지 않습니다.",
+      "terms_note": "BBC 이용약관(개인·비상업 이용) 확인 필요. Phase 5C.1 Windows 피드 검토 3회 모두 PASS(31건). 이전에 기록된 robots 차단은 CI 실서버 연결 테스트가 앱이 미리 등록한 Google News 출처를 시험한 도구 결함이었습니다(수정됨).",
       "confidence": "high",
       "enabled": true,
-      "expectation": "unknown",
+      "expectation": "PASS",
       "role": ""
     },
     {
@@ -262,7 +262,7 @@
       "country": "INT",
       "format_expected": "rss2",
       "official_rss_page": "unknown",
-      "terms_note": "UN 뉴스 이용 조건 확인 필요.",
+      "terms_note": "UN 뉴스 이용 조건 확인 필요. Phase 5C.1 Windows 실행에서 PASS 1회, 압축 응답(identity 요청에도 Content-Encoding 사용)으로 NOT VERIFIED 2회 관찰 → 정책상 수집하지 않음.",
       "confidence": "medium",
       "enabled": true,
       "expectation": "unknown",

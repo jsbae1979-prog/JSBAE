@@ -233,9 +233,22 @@ LIVE_TIMEOUT = 10  # the app's default request_timeout
 NOTICE_BUDGET = 3800
 
 
-def read_check(database: Path):
+LIVE_SOURCE_NAME = "공개 RSS 연결 테스트"
+
+
+def registered_source(database: Path, name: str = LIVE_SOURCE_NAME) -> int:
+    """Id of the source this tool registered; the app also seeds a disabled Google News source."""
     with closing(sqlite3.connect(database)) as db:
-        return db.execute("SELECT status, kind, message, article_count FROM news_source_checks").fetchone()
+        row = db.execute("SELECT id FROM news_sources WHERE name = ? ORDER BY id DESC", (name,)).fetchone()
+    assert row, "the live RSS source was not registered"
+    return row[0]
+
+
+def read_check(database: Path, source_id: int):
+    with closing(sqlite3.connect(database)) as db:
+        return db.execute(
+            "SELECT status, kind, message, article_count FROM news_source_checks WHERE source_id = ?", (source_id,)
+        ).fetchone()
 
 
 def compact_trace(trace: dict) -> dict:
@@ -273,69 +286,6 @@ def fit_notice(value: dict, budget: int = NOTICE_BUDGET) -> dict:
     return value
 
 
-INTERPRETER_PROBE = r"""
-import hashlib, inspect, json, sys
-out = {"python": sys.version.split()[0], "venv": sys.prefix != sys.base_prefix}
-try:
-    import ssl
-    out["openssl"] = ssl.OPENSSL_VERSION
-except Exception as exc:
-    out["ssl_error"] = type(exc).__name__
-try:
-    import urllib.robotparser as robotparser
-    from newsflow.news import rss_adapter
-    out["robotparser_sha"] = hashlib.sha256(inspect.getsource(robotparser).encode()).hexdigest()[:16]
-    out["adapter_sha"] = hashlib.sha256(inspect.getsource(rss_adapter).encode()).hexdigest()[:16]
-    if sys.argv[2]:
-        parser = robotparser.RobotFileParser()
-        parser.parse(open(sys.argv[2], encoding="utf-8", errors="replace").read().splitlines())
-        out["saved_robots_can_fetch"] = parser.can_fetch(rss_adapter.USER_AGENT, sys.argv[1])
-except Exception as exc:
-    out["source_error"] = type(exc).__name__
-try:
-    sys.path.insert(0, "tools")
-    from ci_feed_review import traced_check
-    traced = traced_check(sys.argv[1], "interpreter probe", 10)
-    out["check"] = {"status": traced["check"]["status"], "kind": traced["check"]["kind"]}
-    keys = ("host", "path", "status", "bytes", "sha256", "location", "error_kind")
-    out["requests"] = [{k: r[k] for k in keys if r.get(k) is not None} for r in traced["requests"][:4]]
-    # A sync FastAPI route runs in a worker thread; repeat the check the same way.
-    from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        threaded = pool.submit(traced_check, sys.argv[1], "interpreter probe (thread)", 10).result(timeout=80)
-    out["thread_check"] = {"status": threaded["check"]["status"], "kind": threaded["check"]["kind"]}
-except Exception as exc:
-    out["traced_error"] = type(exc).__name__
-print(json.dumps(out))
-"""
-
-
-def interpreter_probe(python: Path | str, url: str, robots_file: Path | None, env: dict) -> dict:
-    """Same check under another interpreter (e.g. the run.bat virtual environment); stdout JSON only."""
-    try:
-        completed = subprocess.run(
-            [str(python), "-c", INTERPRETER_PROBE, url, str(robots_file or "")], cwd=ROOT, env=env,
-            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=90, check=False,
-        )
-        lines = completed.stdout.strip().splitlines()
-        if lines and lines[-1].startswith("{"):
-            return json.loads(lines[-1])
-        return {"exit_code": completed.returncode, "output": "none"}
-    except Exception as exc:  # noqa: BLE001 - diagnostics never fail the run
-        return {"probe_error_type": type(exc).__name__}
-
-
-def venv_python(mode: str) -> Path:
-    return ROOT / ".venv" / ("Scripts/python.exe" if mode == "windows" else "bin/python")
-
-
-def bounded_text(text: str, budget: int = 2500) -> str:
-    """Shorten text until its JSON encoding fits the byte budget of one annotation field."""
-    while text and len(json.dumps(text, ensure_ascii=False).encode()) > budget:
-        text = text[: int(len(text) * 0.8)]
-    return text
-
-
 def diagnose_traced(url: str) -> dict:
     try:
         return compact_trace(traced_check(url, "live RSS diagnosis", LIVE_TIMEOUT))
@@ -367,21 +317,22 @@ def live_rss(mode: str, url: str, env: dict, output: Path, result: dict) -> None
             diagnosis["before"] = diagnose_traced(url)
             time.sleep(1)
             http = HTTP()
-            http.post("/sources", {"name": "공개 RSS 연결 테스트", "url": url, "permission": "true"})
-            page_html = http.get("/sources").decode("utf-8")
-            match = re.search(r'/sources/(\d+)/test', page_html)
-            assert match
+            http.post("/sources", {"name": LIVE_SOURCE_NAME, "url": url, "permission": "true"})
+            database = (data if mode != "windows" else data / "NewsFlowAI") / "newsflow.db"
+            # Test the source registered here, never the first test form on the page: the app seeds
+            # a disabled Google News source first, whose robots.txt denies every path.
+            source_id = registered_source(database)
+            assert f"/sources/{source_id}/test" in http.get("/sources").decode("utf-8")
             client_timeout = None
             try:
                 # A real feed can legitimately need DNS + robots + redirects + feed (~6 x request_timeout).
-                http.post(f"/sources/{match.group(1)}/test", {}, timeout=75)
+                http.post(f"/sources/{source_id}/test", {}, timeout=75)
             except Exception as exc:  # noqa: BLE001 - the server-side row is still the evidence
                 client_timeout = type(exc).__name__
-            database = (data if mode != "windows" else data / "NewsFlowAI") / "newsflow.db"
             # After a client timeout the server may still be inside the connection test; wait for its row.
             waited, row = 0.0, None
             while True:
-                row = read_check(database)
+                row = read_check(database, source_id)
                 if row or client_timeout is None or waited >= 90:
                     break
                 time.sleep(2)
@@ -390,7 +341,7 @@ def live_rss(mode: str, url: str, env: dict, output: Path, result: dict) -> None
                 "url": url, "status": "PASS" if row and row[0] == "pass" else "NOT VERIFIED",
                 "kind": row[1] if row else None, "message": row[2] if row else "no check row", "articles": row[3] if row else 0,
                 "note": "network-dependent; articles were not stored by the connection test",
-                "client_timeout": client_timeout, "row_wait_seconds": waited,
+                "client_timeout": client_timeout, "row_wait_seconds": waited, "source_id": source_id,
             }
             if not (row and row[0] == "pass"):
                 time.sleep(1)
@@ -401,23 +352,11 @@ def live_rss(mode: str, url: str, env: dict, output: Path, result: dict) -> None
                     diagnosis["robots"] = {"diagnostic_error_type": type(exc).__name__}
                 time.sleep(1)
                 try:
-                    http.post(f"/sources/{match.group(1)}/test", {}, timeout=75)
-                    again = read_check(database)
+                    http.post(f"/sources/{source_id}/test", {}, timeout=75)
+                    again = read_check(database, source_id)
                     diagnosis["server_retest"] = {"status": again[0], "kind": again[1], "message": again[2][:80], "articles": again[3]}
                 except Exception as exc:  # noqa: BLE001 - diagnostics never fail the run
                     diagnosis["server_retest"] = {"diagnostic_error_type": type(exc).__name__}
-                # The server runs in run.bat's own virtual environment: repeat the check under that
-                # interpreter and this one, and decide the saved robots.txt offline under both.
-                host = re.sub(r"[^A-Za-z0-9.-]", "_", urlsplit(url).hostname or "unknown")
-                robots_file = output / "live-robots" / f"{host}.txt"
-                robots_file = robots_file if robots_file.is_file() else None
-                if robots_file:
-                    result["live_rss_robots_text"] = robots_file.read_text(encoding="utf-8", errors="replace")[:1500]
-                probes = {"ci_python": interpreter_probe(sys.executable, url, robots_file, env)}
-                if venv_python(mode).is_file():
-                    time.sleep(1)
-                    probes["run_bat_venv"] = interpreter_probe(venv_python(mode), url, robots_file, env)
-                result["live_rss_interpreters"] = probes
         except Exception as exc:  # noqa: BLE001 - network is outside this validation's control
             result["live_public_rss"] = {"url": url, "status": "NOT VERIFIED", "error_type": type(exc).__name__}
         finally:
@@ -475,17 +414,13 @@ def main() -> None:
         raise
     finally:
         (args.output / "realcontent-result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-        core = {k: v for k, v in result.items() if k not in {"real_videos", "database", "live_public_rss", "live_rss_diagnosis", "live_rss_interpreters", "live_rss_robots_text"}}
+        core = {k: v for k, v in result.items() if k not in {"real_videos", "database", "live_public_rss", "live_rss_diagnosis"}}
         notice("RealContent", core)
         for key in ("real_videos", "database", "live_public_rss"):
             if key in result:
                 notice(f"RealContent {key}", result[key] if isinstance(result[key], dict) else {"value": result[key]})
         if "live_rss_diagnosis" in result:
             notice("RealContent live_rss_diagnosis", fit_notice(result["live_rss_diagnosis"]))
-        if "live_rss_interpreters" in result:
-            notice("RealContent live_rss_interpreters", fit_notice(result["live_rss_interpreters"]))
-        if "live_rss_robots_text" in result:
-            notice("RealContent live_rss_robots_text", {"robots_txt": bounded_text(result["live_rss_robots_text"])})
         time.sleep(0)
 
 

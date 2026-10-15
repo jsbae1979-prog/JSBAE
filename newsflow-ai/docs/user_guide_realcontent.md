@@ -164,7 +164,7 @@ GUI 주소: http://127.0.0.1:8765 · 종료: Ctrl+C
 .\.venv\Scripts\python.exe tools\ci_feed_review.py --mode windows --output feed-review
 ```
 
-판정은 PASS(연결 테스트 통과 후 수집 2회 연속 성공) / BLOCKED(robots·policy, 결함 아님) / NOT VERIFIED(dns·timeout·https·http·parse·빈 피드 등 이 환경에서 확인 못 함) / FAIL(앱 내부 결함만)입니다. Phase 5C.1 Windows 실행(38718358049)에서는 17개 시도 중 PASS 13 · BLOCKED 3(Google News 2개 `Disallow: /`, Hacker News 대조군 `Disallow: /r`·crawl-delay 30) · NOT VERIFIED 1(GitHub 블로그, 2 MiB 초과) · FAIL 0이었습니다. BLOCKED는 앱의 보수적 정책이 막은 정상 결과입니다. BBC 뉴스는 같은 날 PASS와 robots 차단이 함께 기록되어 결과가 안정적이지 않습니다. 상세는 [공개 피드 검토](realcontent.md#공개-피드-검토-toolsci_feed_reviewpy)를 보세요.
+판정은 PASS(연결 테스트 통과 후 수집 2회 연속 성공) / BLOCKED(robots·policy, 결함 아님) / NOT VERIFIED(dns·timeout·https·http·parse·빈 피드 등 이 환경에서 확인 못 함) / FAIL(앱 내부 결함만)입니다. Phase 5C.1 Windows 실행에서는 활성 후보 17개 중 PASS 12~13 · BLOCKED 3(Google News 2개 `Disallow: /`, Hacker News 대조군 `Disallow: /r`·crawl-delay 30) · NOT VERIFIED 1~2(GitHub 블로그 2 MiB 초과, UN 뉴스 압축 응답) · FAIL 0이었습니다. BLOCKED는 앱의 보수적 정책이 막은 정상 결과입니다. 조선일보·BBC 뉴스 등은 매 실행 PASS였습니다. 상세는 [공개 피드 검토](realcontent.md#공개-피드-검토-toolsci_feed_reviewpy)를 보세요.
 
 ---
 

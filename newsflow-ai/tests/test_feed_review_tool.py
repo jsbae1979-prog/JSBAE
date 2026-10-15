@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -91,7 +90,8 @@ def test_candidates_file_is_consistent(tool):
     assert default["url"] in main_source  # the app's seeded default source, deduplicated by URL
     # Expectations record what the Phase 5C.1 Windows run observed (robots.txt first-match rules).
     assert default["expectation"] == "BLOCKED_robots" and by_id["google-news-kr-business"]["expectation"] == "BLOCKED_robots"
-    assert by_id["bbc-news"]["expectation"] == "unknown"  # PASS and robots-blocked in the same run: unstable
+    # PASS in every feed review; the earlier "robots" result came from the CI live test reading the seeded source.
+    assert by_id["bbc-news"]["expectation"] == "PASS"
     assert by_id["hn-front"]["expectation"] == "BLOCKED_robots" and by_id["hn-front"]["role"] == "control"
     assert by_id["dw-en-rdf"]["format_expected"] == "rdf"
 
@@ -503,24 +503,32 @@ def test_live_rss_diagnosis_notice_stays_within_the_annotation_limit(monkeypatch
     assert module.fit_notice({"huge": "x" * 5000}, budget=100) == {"trimmed": True, "keys": ["huge"]}
     assert module.compact_robots({"status": 200, "sha256": "a" * 64, "decision": "allow", "extra": 1}) == {
         "status": 200, "decision": "allow", "sha256": "a" * 16}
-    assert len(json.dumps(module.bounded_text("한" * 3000), ensure_ascii=False).encode()) <= 2500
-    assert module.bounded_text("User-agent: *\nAllow: /\n") == "User-agent: *\nAllow: /\n"
 
 
-def test_interpreter_probe_reports_versions_hashes_and_the_saved_robots_decision(monkeypatch, tmp_path):
+def test_live_rss_tests_the_source_it_registered_not_the_seeded_one(monkeypatch, tmp_path):
+    """Regression: the app seeds a disabled Google News source first (robots.txt denies all paths).
+
+    Windows runs 2-4 read the first test form and the first check row, so the live result was the
+    seeded source's robots denial, not the feed under test.
+    """
+    import sqlite3
+    from contextlib import closing
+
     monkeypatch.syspath_prepend(str(ROOT / "tools"))
     spec = importlib.util.spec_from_file_location("ci_realcontent_validation", ROOT / "tools" / "ci_realcontent_validation.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    robots = tmp_path / "example.com.txt"
-    robots.write_text("User-agent: *\nDisallow: /private\n", encoding="utf-8")
-    env = dict(os.environ)
-    # localhost is refused by the public-address policy before any socket opens.
-    allowed = module.interpreter_probe(sys.executable, "https://localhost/rss", robots, env)
-    assert allowed["python"].startswith("3.12") and len(allowed["robotparser_sha"]) == 16 and len(allowed["adapter_sha"]) == 16
-    assert allowed["saved_robots_can_fetch"] is True and allowed["check"]["status"] == "fail"
-    assert allowed["thread_check"] == allowed["check"]
-    denied = module.interpreter_probe(sys.executable, "https://localhost/private/rss", robots, env)
-    assert denied["saved_robots_can_fetch"] is False
-    assert module.interpreter_probe(str(tmp_path / "missing-python"), "https://localhost/rss", None, env) == {
-        "probe_error_type": "FileNotFoundError"}
+    database = tmp_path / "newsflow.db"
+    with closing(sqlite3.connect(database)) as db:
+        db.execute("CREATE TABLE news_sources (id INTEGER PRIMARY KEY, name TEXT, url TEXT)")
+        db.execute("CREATE TABLE news_source_checks (source_id INTEGER PRIMARY KEY, status TEXT, kind TEXT, message TEXT, article_count INTEGER)")
+        db.execute("INSERT INTO news_sources VALUES (1, 'Google News · 한국', 'https://news.google.com/rss')")
+        db.execute("INSERT INTO news_sources VALUES (2, ?, 'https://www.example.com/rss')", (module.LIVE_SOURCE_NAME,))
+        db.execute("INSERT INTO news_source_checks VALUES (1, 'fail', 'robots', 'robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.', 0)")
+        db.execute("INSERT INTO news_source_checks VALUES (2, 'pass', NULL, '기사 3개', 3)")
+        db.commit()
+    source_id = module.registered_source(database)
+    assert source_id == 2 and module.read_check(database, source_id) == ("pass", None, "기사 3개", 3)
+    assert module.read_check(database, 3) is None
+    with pytest.raises(AssertionError):
+        module.registered_source(database, "없는 출처")

@@ -55,7 +55,7 @@
 | 2.7 | `지금 뉴스 모으기` 1회 | 칩 `최근 수집 성공 · 신규 N`(N>0), 카드 `모은 기사 N개` |
 | 2.8 | `지금 뉴스 모으기` 2회째 | `신규 0`, 모은 기사 수 변화 없음(중복 N은 DB 감사 기록) |
 | 2.9 | 기사 상세(`/news/<번호>`) | 발행시각·출처·원문 링크가 피드와 일치, `내용 충분성` 표시 |
-| 2.10 | robots.txt로 막히는 피드(예: `https://feeds.bbci.co.uk/news/rss.xml`) 연결 테스트 | `(유형: robots)` 실패 → **BLOCKED**로 기록. 정책을 바꾸지 않음 |
+| 2.10 | robots.txt로 막히는 피드(예: 처음부터 들어 있는 `Google News · 한국`, `https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko`) 연결 테스트 | `(유형: robots)` 실패 → **BLOCKED**로 기록. 정책을 바꾸지 않음 |
 | 2.11 | `이름·주소 수정`에서 주소 변경 | `사용 안 함`으로 전환, 연결 테스트 결과 삭제 |
 | 2.12 | (선택) 앱 종료 후 `tools\ci_feed_review.py --mode windows --output feed-review` | `feed-review.json` 생성, 후보별 PASS/BLOCKED/NOT VERIFIED/FAIL, FAIL 0 |
 
