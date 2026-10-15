@@ -72,7 +72,7 @@ def begin(page, mode: str = "easy", source: str = "sample") -> str:
     form = page.locator('form[action="/autopilot/start"]')
     form.locator(f'input[name="mode"][value="{mode}"]').check()
     form.locator('input[name="duration"][value="30"]').check()
-    form.locator('select[name="source"]').select_option(source)
+    form.locator(f'input[name="source"][value="{source}"]').check()
     submit(page, form, "/autopilot/start")
     page.wait_for_url(re.compile(re.escape(BASE) + r"/autopilot/jobs/[0-9a-f]{32}$"))
     return page.url.rsplit("/", 1)[1]
