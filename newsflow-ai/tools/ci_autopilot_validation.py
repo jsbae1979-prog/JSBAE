@@ -52,7 +52,18 @@ def wait_job(job_id: str, status: str, stage: str | None = None, timeout: int = 
 
 
 def open_job(page, job_id: str) -> None:
-    page.goto(f"{BASE}/autopilot/jobs/{job_id}")
+    from playwright.sync_api import Error as PlaywrightError
+
+    for attempt in range(3):
+        try:
+            page.goto(f"{BASE}/autopilot/jobs/{job_id}")
+            break
+        except PlaywrightError as error:
+            # The job page reloads itself when the stage changes; a goto that races that
+            # reload is reported as interrupted. The page ends up at the same URL either way.
+            if "interrupted by another navigation" not in str(error) or attempt == 2:
+                raise
+            page.wait_for_load_state("domcontentloaded")
     page.locator(f'[data-autopilot-job="{job_id}"]').wait_for()
 
 
