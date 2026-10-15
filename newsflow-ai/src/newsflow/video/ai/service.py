@@ -18,7 +18,7 @@ from __future__ import annotations
 import hashlib
 import shutil
 import uuid
-from datetime import timedelta
+from datetime import UTC, timedelta
 from decimal import Decimal
 from pathlib import Path
 from threading import Event, Lock, Thread
@@ -69,6 +69,7 @@ from .settings import (
     VideoSettingsError,
     check_budget,
     list_models,
+    month_start,
     plan_spent,
     read_settings,
     readiness,
@@ -84,6 +85,7 @@ TIMEOUT_OPEN_MESSAGE = (
     "생성이 제한시간 안에 끝나지 않았지만 공급사에서 아직 만들고 있을 수 있습니다. '결과 다시 받기'로 확인하거나(추가 요청 없음) "
     "프롬프트를 바꾸거나 카드로 바꾸세요."
 )
+CLIP_LOST_MESSAGE = "받아 둔 생성 영상 파일이 없거나 바뀌었습니다. '결과 다시 받기'로 다시 받거나 카드로 바꾸세요."
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
 PAUSED_MESSAGE = "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다."
 # Closed scenes that still hold a request id: re-checking status and downloading costs no new request.
@@ -93,6 +95,10 @@ DISK_MARGIN = 512 * 1024 * 1024
 COMPOSE_OPEN = frozenset({"failed", "interrupted"})
 TERMINAL_SCENE = {FAILED: "failed", NSFW: "nsfw", CANCELED: "canceled"}
 TERMINAL_CODE = {FAILED: "video_ai_provider_failed", NSFW: "video_ai_nsfw", CANCELED: "video_ai_canceled"}
+
+
+def _as_utc(value):
+    return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
 
 
 class AIVideoError(Exception):
@@ -329,10 +335,10 @@ class AIVideoCoordinator:
             elif not draft_is_real(session, draft):
                 problems.append("체험(합성) 뉴스 대본은 외부 AI 영상 공급사로 보내지 않습니다.")
             refetchable = [s for s in scenes if s.source == "generated" and self._refetchable(s)]
-            if refetchable:
-                problems.append(
-                    "장면 " + ", ".join(str(s.position + 1) for s in refetchable)
-                    + "은 '결과 다시 받기'로 추가 비용 없이 받을 수 있어 새 유료 생성에 넣지 않습니다. 다시 생성하려면 프롬프트를 바꾸세요.")
+            notices = [
+                "장면 " + ", ".join(str(s.position + 1) for s in refetchable)
+                + "은 '결과 다시 받기'로 추가 비용 없이 받을 수 있어 새 유료 생성에 넣지 않습니다. 다시 생성하려면 프롬프트를 바꾸세요."
+            ] if refetchable else []
             if not pending:
                 problems.append("생성할 AI 장면이 없습니다. 장면 소재를 'AI 생성'으로 바꾸세요." if not refetchable
                                 else "새로 생성할 AI 장면이 없습니다.")
@@ -351,7 +357,7 @@ class AIVideoCoordinator:
             "total": money(total), "currency": settings.currency, "plan_spent": money(spent),
             "job_limit": money(settings.job_limit), "monthly_limit": money(settings.monthly_limit),
             "month_spent": money(ready["usage"]["spent"]), "remaining": money(ready["remaining"]),
-            "problems": problems, "can_submit": not problems,
+            "problems": problems, "notices": notices, "can_submit": not problems,
         }
 
     def confirm_generation(self, plan_id: int, revision: int, shown_total: str, confirmed: bool) -> int:
@@ -500,6 +506,7 @@ class AIVideoCoordinator:
         """Start the existing FFmpeg renderer with the plan's cards, local images and validated clips."""
         if not approved:
             raise AIVideoError("최종 합성을 승인한다는 항목에 체크하세요.")
+        self._release_broken_clips(plan_id)
         with self.sessions.begin() as session:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
@@ -551,6 +558,30 @@ class AIVideoCoordinator:
             plan.render_job_id = job_id
             self._refresh(session, plan)
         return job_id
+
+    def _release_broken_clips(self, plan_id: int) -> None:
+        """A reviewed clip that is missing or changed on disk becomes refetchable (no new paid request)."""
+        with self.sessions() as session:
+            broken = [
+                s.position for s in self._scenes(session, plan_id)
+                if s.source == "generated" and s.status == "ready" and s.request_id
+                and (not s.clip_name or self._digest(s.clip_name) != (s.clip_meta or {}).get("sha256"))
+            ]
+        if not broken:
+            return
+        with self.sessions.begin() as session:
+            self._locked(session)
+            plan = session.get(AIVideoPlan, plan_id)
+            for scene in self._scenes(session, plan_id):
+                if scene.position in broken and scene.status == "ready":
+                    scene.status, scene.error_code, scene.message = "failed", ClipDownloadError.code, CLIP_LOST_MESSAGE
+                    scene.clip_name, scene.reviewed, scene.updated_at = None, False, utcnow()
+            plan.revision += 1
+            plan.reviewed_at = None
+            self._refresh(session, plan)
+        raise AIVideoError(
+            "장면 " + ", ".join(str(p + 1) for p in broken)
+            + "의 받아 둔 생성 영상 파일이 없거나 바뀌었습니다. '결과 다시 받기'로 다시 받거나 카드로 바꾼 뒤 검토하세요.", 409)
 
     def _digest(self, name: str) -> str | None:
         try:
@@ -679,6 +710,9 @@ class AIVideoCoordinator:
                     # This reservation was confirmed under another approval (withdrawn and granted
                     # again since): a confirmation never carries over to a new approval.
                     problem = "확인 뒤에 유료 생성 승인이 다시 저장되어 이전 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
+                elif reserved.created_at is not None and _as_utc(reserved.created_at) < month_start():
+                    # Confirmed under last month's limit: this month's limit never counted it.
+                    problem = "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
                 elif plan_spent(session, plan.id) > settings.job_limit:
                     problem = "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
                 elif draft is None or draft.revision != plan.draft_revision or not draft_is_real(session, draft):

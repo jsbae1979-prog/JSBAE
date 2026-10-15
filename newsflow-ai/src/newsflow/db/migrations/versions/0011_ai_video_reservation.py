@@ -14,8 +14,13 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("video_ai_usage", sa.Column("resolution", sa.String(10), nullable=False, server_default=""))
-    op.add_column("video_ai_usage", sa.Column("approval", sa.String(40), nullable=False, server_default=""))
+    # A development build of the branch (65a470c) created ``resolution`` inside 0010; folders it
+    # migrated are stamped 0010 with that column already present, so add only what is missing.
+    existing = {column["name"] for column in sa.inspect(op.get_bind()).get_columns("video_ai_usage")}
+    if "resolution" not in existing:
+        op.add_column("video_ai_usage", sa.Column("resolution", sa.String(10), nullable=False, server_default=""))
+    if "approval" not in existing:
+        op.add_column("video_ai_usage", sa.Column("approval", sa.String(40), nullable=False, server_default=""))
 
 
 def downgrade() -> None:

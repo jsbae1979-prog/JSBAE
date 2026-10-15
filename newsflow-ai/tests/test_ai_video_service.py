@@ -47,7 +47,13 @@ from newsflow.video.ai.contracts import (
 from newsflow.video.ai.fake import FakeVideoProvider
 from newsflow.video.ai.keys import VIDEO_ENV_NAME, VideoAIKeyStore
 from newsflow.video.ai.policy import DEFAULT_PROMPT, STYLE_GUARD
-from newsflow.video.ai.service import MAX_REQUEUES, TIMEOUT_OPEN_MESSAGE, AIVideoCoordinator, AIVideoError
+from newsflow.video.ai.service import (
+    CLIP_LOST_MESSAGE,
+    MAX_REQUEUES,
+    TIMEOUT_OPEN_MESSAGE,
+    AIVideoCoordinator,
+    AIVideoError,
+)
 from newsflow.video.ai.settings import save_model, write_settings
 from newsflow.video.engine import FakeRenderAdapter
 from newsflow.video.tts import FakeTTS
@@ -75,6 +81,8 @@ SERVICE_MESSAGES = {
     "확인 뒤에 유료 생성 승인이 다시 저장되어 이전 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
     "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
     TIMEOUT_OPEN_MESSAGE,
+    CLIP_LOST_MESSAGE,
+    "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
 }
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
 SETTINGS_CHANGED = "설정이 바뀌어 AI 영상 생성 조건을 만족하지 않아 제출하지 않았습니다. "
@@ -375,7 +383,7 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
     assert estimate == {
         "scenes": [{"position": 2, "seconds": 5, "model": MODEL, "cost": "0.5", "usable": True}], "total": "0.5", "currency": "USD",
         "plan_spent": "0", "job_limit": "5", "monthly_limit": "20", "month_spent": "0", "remaining": "20",
-        "problems": [], "can_submit": True,
+        "problems": [], "notices": [], "can_submit": True,
     }
     assert estimate["scenes"][0]["usable"] is True
     assert service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True) == 1
@@ -1269,14 +1277,19 @@ def test_failed_composition_can_be_retried_with_the_same_paid_clips(studio):
 
 
 @needs_ffmpeg
-def test_a_clip_changed_after_review_is_refused_at_approval(studio):
+def test_a_clip_changed_after_review_is_refused_at_approval_and_becomes_refetchable(studio):
     plan_id, scene = ready_reviewed_plan(studio)
     path = studio.service.clips.path(scene.clip_name)
     path.write_bytes(path.read_bytes() + b"\x00")
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
-    assert excinfo.value.status == 409 and "검토 후 바뀌었거나" in str(excinfo.value)
+    assert excinfo.value.status == 409 and "'결과 다시 받기'" in str(excinfo.value)
     assert plan_row(studio, plan_id).render_job_id is None
+    lost = scenes(studio, plan_id)[0]
+    assert (lost.status, lost.error_code, lost.message) == ("failed", "video_ai_download_failed", CLIP_LOST_MESSAGE)
+    studio.service.refetch(plan_id, revision(studio, plan_id), 0)  # the paid result, no new request
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].status == "ready" and len(calls(studio.provider, "submit")) == 1
 
 
 @needs_ffmpeg
@@ -1637,9 +1650,9 @@ def test_a_refetchable_paid_result_is_not_rebought_by_the_next_batch(studio):
     studio.service.tick()
     assert scenes(studio, plan_id)[0].error_code == "video_ai_clip_invalid"
     estimate = studio.service.estimate(plan_id)
-    assert estimate["scenes"] == [] and estimate["problems"] == [
-        "장면 1은 '결과 다시 받기'로 추가 비용 없이 받을 수 있어 새 유료 생성에 넣지 않습니다. 다시 생성하려면 프롬프트를 바꾸세요.",
-        "새로 생성할 AI 장면이 없습니다."]
+    assert estimate["scenes"] == [] and estimate["problems"] == ["새로 생성할 AI 장면이 없습니다."]
+    assert estimate["notices"] == [
+        "장면 1은 '결과 다시 받기'로 추가 비용 없이 받을 수 있어 새 유료 생성에 넣지 않습니다. 다시 생성하려면 프롬프트를 바꾸세요."]
     with pytest.raises(AIVideoError):
         confirm_as_shown(studio, plan_id)
     assert len(calls(studio.provider, "submit")) == 1
@@ -1722,3 +1735,31 @@ def test_the_paused_message_is_replaced_once_status_checks_answer_again(studio, 
     studio.service.tick()
     scene = scenes(studio, plan_id)[0]
     assert (scene.status, scene.message) == ("in_progress", "공급사에서 생성 중")
+
+
+
+# --------------------------------------------------------------------------- review round 5
+
+
+def test_one_refetchable_scene_does_not_block_confirming_the_others(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:bad-clip]", 1: PROMPT + " [fake:fail]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    studio.service.tick()
+    estimate = studio.service.estimate(plan_id)
+    assert [line["position"] for line in estimate["scenes"]] == [1] and estimate["can_submit"]
+    assert estimate["notices"] and not estimate["problems"]
+
+
+def test_a_reservation_from_last_month_is_not_sent_this_month(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    with studio.sessions.begin() as session:
+        row = session.scalar(select(VideoAIUsage))
+        row.created_at = row.created_at - timedelta(days=40)
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert (scene.status, scene.message) == ("canceled", "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.")
+    assert studio.provider.calls == []

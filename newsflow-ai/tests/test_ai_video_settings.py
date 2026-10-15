@@ -1363,3 +1363,16 @@ def test_a_database_stamped_with_the_published_0010_gets_the_0011_reservation_co
     assert version(engine) == "0011"
     _tables, columns = schema(engine)
     assert {("video_ai_usage", "resolution"), ("video_ai_usage", "approval")} <= columns
+
+
+
+def test_0011_upgrades_a_0010_that_already_has_the_resolution_column(engine):
+    """A development build (65a470c) created video_ai_usage.resolution inside 0010."""
+    run_alembic(engine, "downgrade", "0010")
+    with engine.begin() as connection:
+        connection.exec_driver_sql(
+            "ALTER TABLE video_ai_usage ADD COLUMN resolution VARCHAR(10) DEFAULT '' NOT NULL")
+    db_session.migrate(engine)
+    assert version(engine) == "0011"
+    _tables, columns = schema(engine)
+    assert {("video_ai_usage", "resolution"), ("video_ai_usage", "approval")} <= columns
