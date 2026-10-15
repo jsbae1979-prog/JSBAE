@@ -248,7 +248,11 @@ class VideoCoordinator:
         job_id = None
         try:
             # Each AI clip is copied once into the job folder and once more encoded as a scene.
-            if shutil.disk_usage(self.root).free < (256 + duration * 4) * 1024 * 1024 + 2 * clip_bytes:
+            need = (256 + duration * 4) * 1024 * 1024 + 2 * clip_bytes
+            if shutil.disk_usage(self.root).free < need:
+                if clip_bytes:
+                    raise VideoError(
+                        f"영상 제작을 위한 디스크 공간이 부족합니다. AI 생성 장면을 포함해 최소 약 {-(-need // (1024 * 1024))}MB를 확보하세요.")
                 raise VideoError("영상 제작을 위한 디스크 공간이 부족합니다. 최소 약 500MB를 확보하세요.")
             with self.sessions.begin() as session:
                 draft = session.get(ContentDraft, draft_id)

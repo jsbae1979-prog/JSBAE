@@ -214,6 +214,7 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             form.locator("#video-ai-monthly-limit").fill("20")
             form.locator("#video-ai-poll").fill("5")
             submit(page, form, "/video-ai-settings")
+            page.wait_for_url(re.compile(r".*saved=settings$"))
             model = page.locator("#video-ai-model-new")
             model.locator("#new-model-path").fill(MODEL)
             model.locator("#new-model-label").fill("CI 시험 모델")
@@ -221,6 +222,7 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             model.locator("#new-model-durations").fill("5,10")
             model.locator('input[name="confirmed"]').check()
             submit(page, model, "/video-ai-settings/models")
+            page.wait_for_url(re.compile(r".*saved=model$"))
             assert "AI 영상 사용 가능" in page.locator("#video-ai-status").inner_text()
             page.screenshot(path=str(output / "ai-settings.png"), full_page=True)
             result["settings_gate"] = "PASS (approval refused without limits; approval, limits and confirmed model saved)"
@@ -239,6 +241,7 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             refused(page, board, f"/video/ai/plans/{plan_id}/scenes", 422, "실제 뉴스 현장")
             board.locator("#prompt-0").fill(PROMPT)
             submit(page, board, f"/video/ai/plans/{plan_id}/scenes")
+            page.wait_for_url(re.compile(r".*saved=scenes$"))
             page.screenshot(path=str(output / "ai-plan-storyboard.png"), full_page=True)
             assert "예상 합계" in page.locator("#cost-summary").inner_text()
             result["storyboard_and_prompt_policy"] = "PASS (scene source/prompt/model saved; footage-like prompt refused before any call)"
@@ -252,12 +255,14 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             form = page.locator("#video-ai-settings-form")
             form.locator("#video-ai-job-limit").fill("5")
             submit(page, form, "/video-ai-settings")
+            page.wait_for_url(re.compile(r".*saved=settings$"))
             page.goto(f"{BASE}/video/ai/plans/{plan_id}")
             revision_before = plan_state(plan_id)["revision"]
             page.screenshot(path=str(output / "ai-plan-cost.png"), full_page=True)
             cost = page.locator("#cost-form")
             cost.locator('input[name="confirmed"]').check()
             submit(page, cost, f"/video/ai/plans/{plan_id}/confirm")
+            page.goto("about:blank")  # the plan page polls and reloads itself while scenes are active
             resend = post_status(
                 f"/video/ai/plans/{plan_id}/confirm",
                 {"revision": str(revision_before), "shown_total": "1", "confirmed": "true"},
@@ -291,9 +296,11 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             board.locator("#model-0").select_option(MODEL)
             board.locator("#prompt-0").fill(PROMPT + " [fake:slow]")
             submit(page, board, f"/video/ai/plans/{slow_id}/scenes")
+            page.wait_for_url(re.compile(r".*saved=scenes$"))
             cost = page.locator("#cost-form")
             cost.locator('input[name="confirmed"]').check()
             submit(page, cost, f"/video/ai/plans/{slow_id}/confirm")
+            page.goto("about:blank")
             wait_scene(slow_id, 0, {"queued", "in_progress"})
             before = db_rows(data, "SELECT id, attempt, status, request_id FROM video_ai_usage ORDER BY id")
             usage_before = len(before)
@@ -321,6 +328,7 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             review.locator('input[name="reviewed_0"]').check()
             review.locator('input[name="statement"]').check()
             submit(page, review, f"/video/ai/plans/{plan_id}/review")
+            page.wait_for_url(re.compile(r".*saved=reviewed$"))
             page.screenshot(path=str(output / "ai-plan-reviewed.png"), full_page=True)
             compose = page.locator("#compose-form")
             compose.locator('input[name="approved"]').check()

@@ -24,7 +24,8 @@ from pathlib import Path
 from threading import Event, Lock, Thread
 
 from filelock import FileLock, Timeout
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from newsflow.autopilot.samples import SAMPLE_URL
@@ -79,7 +80,8 @@ SUBMITTED = frozenset({"submitting", "queued", "in_progress"})
 RETRYABLE_END = frozenset({"planned", "failed", "nsfw", "canceled"})
 MAX_REQUEUES = 3
 MAX_REFETCHES = 3
-REFETCHABLE = frozenset({"video_ai_download_failed", "video_ai_clip_invalid", "video_ai_disk_full"})
+# Closed scenes that still hold a request id: re-checking status and downloading costs no new request.
+REFETCHABLE = frozenset({"video_ai_download_failed", "video_ai_clip_invalid", "video_ai_disk_full", "video_ai_timeout"})
 # Free space kept on top of one clip before a download starts.
 DISK_MARGIN = 512 * 1024 * 1024
 COMPOSE_OPEN = frozenset({"failed", "interrupted"})
@@ -136,6 +138,7 @@ class AIVideoCoordinator:
         self.lock = FileLock(str(self.root / "ai-video.lock"), thread_local=False)
         self.thread: Thread | None = None
         self.thread_guard = Lock()
+        self.unsaved: list[tuple] = []
 
     # ------------------------------------------------------------------ provider and gate
 
@@ -152,9 +155,9 @@ class AIVideoCoordinator:
             return self.injected.name
         return read_settings(self.sessions).provider
 
-    def readiness(self) -> dict:
+    def readiness(self, *, submitting: bool = False) -> dict:
         override = self.injected.name if self.injected is not None else None
-        result = readiness(self.sessions, self.keys, provider_override=override)
+        result = readiness(self.sessions, self.keys, provider_override=override, submitting=submitting)
         result["provider_label"] = self.injected.label if self.injected is not None else (
             "Higgsfield" if result["provider"] == "higgsfield" else "사용 안 함")
         result["test_provider"] = self.injected is not None
@@ -226,8 +229,15 @@ class AIVideoCoordinator:
                 material = (edit.get("material") or "").strip() if source == "local" else ""
                 prompt = edit.get("prompt", scene.prompt)
                 model_path = (edit.get("model_path") or "").strip() if source == "generated" else ""
-                if scene.status in ACTIVE and (source, prompt, model_path) != (scene.source, scene.prompt, scene.model_path):
-                    raise AIVideoError(f"장면 {scene.position + 1}은 생성 중이라 바꿀 수 없습니다. 끝난 뒤 다시 시도하세요.", 409)
+                if scene.status in ACTIVE or scene.status == "unknown":
+                    # A confirmed or possibly billed request keeps exactly what was reserved: no
+                    # re-pricing, and no new prompt/model under the same Idempotency-Key.
+                    if (source, prompt, model_path) != (scene.source, scene.prompt, scene.model_path):
+                        if scene.status == "unknown":
+                            raise AIVideoError(
+                                f"장면 {scene.position + 1}은 결과 불명 상태입니다. 먼저 실패로 확정한 뒤 바꾸세요.", 409)
+                        raise AIVideoError(f"장면 {scene.position + 1}은 생성 중이라 바꿀 수 없습니다. 끝난 뒤 다시 시도하세요.", 409)
+                    continue
                 if source == "local":
                     try:
                         self.video.asset(material)
@@ -274,17 +284,30 @@ class AIVideoCoordinator:
 
     # ------------------------------------------------------------------ estimate and confirmation
 
+    @staticmethod
+    def _quote(scene: AIVideoScene, models: dict[str, ModelEntry]) -> tuple[int, str] | None:
+        """Clip seconds and cost at the model's CURRENT confirmed price and lengths (None: not usable)."""
+        model = models.get(scene.model_path)
+        if model is None or not model.usable:
+            return None
+        seconds = clip_seconds((scene.end_ms - scene.start_ms) / 1000, model.durations)
+        return seconds, money(scene_cost(seconds, model.price_per_second))
+
     def _pending(self, scenes: list[AIVideoScene]) -> list[AIVideoScene]:
         return [s for s in scenes if s.source == "generated" and s.status in RETRYABLE_END]
 
     def estimate(self, plan_id: int) -> dict:
         ready = self.readiness()
         settings = ready["settings"]
+        models = {m.path: m for m in list_models(self.sessions)}
         with self.sessions() as session:
             plan = self._plan(session, plan_id)
             scenes = self._scenes(session, plan_id)
             pending = self._pending(scenes)
-            total = sum((Decimal(s.estimated_cost or "0") for s in pending), Decimal(0))
+            quotes = {s.id: self._quote(s, models) for s in pending}
+            lines = [{"position": s.position, "seconds": (quotes[s.id] or (s.clip_seconds, ""))[0], "model": s.model_path,
+                      "cost": (quotes[s.id] or (0, s.estimated_cost))[1]} for s in pending]
+            total = sum((Decimal(q[1]) for q in quotes.values() if q), Decimal(0))
             spent = plan_spent(session, plan_id)
             draft = session.get(ContentDraft, plan.draft_id)
             problems = list(ready["reasons"])
@@ -296,9 +319,11 @@ class AIVideoCoordinator:
                 problems.append("생성할 AI 장면이 없습니다. 장면 소재를 'AI 생성'으로 바꾸세요.")
             if any(s.status == "unknown" for s in scenes):
                 problems.append("결과 불명 장면을 먼저 실패로 확정하세요.")
+            for scene in pending:
+                if quotes[scene.id] is None:
+                    problems.append(f"장면 {scene.position + 1}의 모델이 바뀌었거나 사용할 수 없습니다. 모델을 다시 고르세요.")
         return {
-            "scenes": [{"position": s.position, "seconds": s.clip_seconds, "model": s.model_path, "cost": s.estimated_cost}
-                       for s in pending],
+            "scenes": lines,
             "total": money(total), "currency": settings.currency, "plan_spent": money(spent),
             "job_limit": money(settings.job_limit), "monthly_limit": money(settings.monthly_limit),
             "month_spent": money(ready["usage"]["spent"]), "remaining": money(ready["remaining"]),
@@ -314,15 +339,21 @@ class AIVideoCoordinator:
             raise AIVideoError(" ".join(current["problems"]))
         if shown_total != current["total"]:
             raise AIVideoError("표시된 예상 비용이 바뀌었습니다. 새로고침해 다시 확인하세요.", 409)
-        settings = read_settings(self.sessions)
         provider = self.provider_name()
         secrets = self._secrets()
         with self.sessions.begin() as session:
             self._locked(session)
+            settings = read_settings(self.sessions)  # read under the write lock
             plan = self._plan(session, plan_id, revision)
-            if plan.render_job_id is not None:
-                raise AIVideoError("최종 합성을 시작한 계획입니다.", 409)
+            self._reopen_compose(session, plan)
             pending = self._pending(self._scenes(session, plan_id))
+            models = {m.path: m for m in list_models(self.sessions)}  # read under the write lock
+            for scene in pending:
+                quote = self._quote(scene, models)
+                if quote is None:
+                    raise AIVideoError(f"장면 {scene.position + 1}의 모델이 바뀌었거나 사용할 수 없습니다. 모델을 다시 고르세요.", 409)
+                # The reservation, the limit check and the request all use today's confirmed price.
+                scene.clip_seconds, scene.estimated_cost = quote
             batch = sum((Decimal(s.estimated_cost or "0") for s in pending), Decimal(0))
             if not pending or money(batch) != shown_total:
                 raise AIVideoError("표시된 예상 비용이 바뀌었습니다. 새로고침해 다시 확인하세요.", 409)
@@ -583,31 +614,45 @@ class AIVideoCoordinator:
             self.lock.release()
 
     def _submit_waiting(self) -> None:
-        settings = read_settings(self.sessions)
-        ready = self.readiness()
-        provider = self.provider()
-        models = {m.path: m for m in list_models(self.sessions)}
+        if not self._flush_submitted():
+            return  # the database still refuses writes: send nothing new until the ids are stored
         with self.sessions() as session:
             waiting = [s.id for s in session.scalars(
                 select(AIVideoScene).where(AIVideoScene.status == "waiting").order_by(AIVideoScene.updated_at, AIVideoScene.id))]
-            busy = len(list(session.scalars(select(AIVideoScene.id).where(AIVideoScene.status.in_(SUBMITTED)))))
         for scene_id in waiting:
-            if busy >= settings.max_active or self.stop.is_set():
+            if self.stop.is_set():
                 return
             with self.sessions.begin() as session:
                 self._locked(session)
+                # Every send is gated on the settings committed when this scene is claimed: the
+                # settings and model writers also take BEGIN IMMEDIATE, so nothing changes until the
+                # compare-and-set below commits.
+                settings = read_settings(self.sessions)
+                busy = session.scalar(select(func.count(AIVideoScene.id)).where(AIVideoScene.status.in_(SUBMITTED)))
+                if busy >= settings.max_active:
+                    return
+                ready = self.readiness(submitting=True)
+                provider = self.provider()
+                models = {m.path: m for m in list_models(self.sessions)}
                 scene = session.get(AIVideoScene, scene_id)
                 if scene is None or scene.status != "waiting":
                     continue
                 plan = session.get(AIVideoPlan, scene.plan_id)
                 draft = session.get(ContentDraft, plan.draft_id) if plan else None
                 model = models.get(scene.model_path)
+                reserved = session.scalar(select(VideoAIUsage).where(
+                    VideoAIUsage.scene_id == scene.id, VideoAIUsage.attempt == scene.attempt))
                 problem = None
                 if provider is None or not ready["ready"]:
                     problem = "설정이 바뀌어 AI 영상 생성 조건을 만족하지 않아 제출하지 않았습니다. " + " ".join(ready["reasons"])
                 elif draft is None or draft.revision != plan.draft_revision or not draft_is_real(session, draft):
                     problem = "대본이 바뀌었거나 체험 뉴스여서 제출하지 않았습니다."
-                elif model is None or not model.usable:
+                elif (
+                    model is None or not model.usable or reserved is None
+                    or (reserved.model_path, reserved.seconds, reserved.estimated_cost)
+                    != (scene.model_path, *(self._quote(scene, models) or (None, None)))
+                ):
+                    # The request must be exactly what was confirmed and limit-checked.
                     problem = "모델 설정이 바뀌어 제출하지 않았습니다. 장면을 다시 확인하세요."
                 prompt = None
                 if not problem:
@@ -626,12 +671,34 @@ class AIVideoCoordinator:
                 # 'unknown' instead of resending (a resent submission could be billed twice).
                 scene.status, scene.message, scene.updated_at = "submitting", "공급사에 제출 중", utcnow()
                 request = ClipRequest(
-                    scene.model_path, prompt, scene.clip_seconds, model.resolution,
+                    reserved.model_path, prompt, reserved.seconds, model.resolution,
                     idempotency_key=scene.submit_key,
                 )
                 attempt = scene.attempt
-            busy += 1
             self._submit_one(provider, scene_id, attempt, request)
+
+    def _flush_submitted(self) -> bool:
+        """Store request ids whose first write failed (never resubmit; the provider already has them)."""
+        while self.unsaved:
+            scene_id, attempt, submission = self.unsaved[0]
+            try:
+                self._record_submission(scene_id, attempt, submission)
+            except SQLAlchemyError:
+                return False
+            self.unsaved.pop(0)
+        return True
+
+    def _record_submission(self, scene_id: int, attempt: int, submission) -> None:
+        with self.sessions.begin() as session:
+            scene = session.get(AIVideoScene, scene_id)
+            if scene is None or scene.attempt != attempt or scene.status not in ("submitting", "unknown"):
+                return
+            state = submission.state if submission.state in (QUEUED, IN_PROGRESS) else QUEUED
+            scene.status, scene.request_id, scene.error_code = state, submission.request_id, None
+            scene.submitted_at = scene.updated_at = utcnow()
+            scene.message = "공급사 대기열에 등록됨"
+            self._usage(session, scene, "submitted", submission.request_id)
+            self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
 
     def _submit_one(self, provider: VideoProvider, scene_id: int, attempt: int, request: ClipRequest) -> None:
         try:
@@ -662,16 +729,17 @@ class AIVideoCoordinator:
                 self._fail(session, scene, ProviderAmbiguousSubmit.code, "unknown")
                 self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
             return
-        with self.sessions.begin() as session:
-            scene = session.get(AIVideoScene, scene_id)
-            if scene is None or scene.attempt != attempt:
+        # The request id is the only handle on a billed request: retry the write briefly, then keep it
+        # in memory for the next pass instead of losing it (the scene stays 'submitting', never resent).
+        for delay in (0.0, 0.5, 1.0, 2.0):
+            if delay:
+                self.stop.wait(delay)
+            try:
+                self._record_submission(scene_id, attempt, submission)
                 return
-            state = submission.state if submission.state in (QUEUED, IN_PROGRESS) else QUEUED
-            scene.status, scene.request_id = state, submission.request_id
-            scene.submitted_at = scene.updated_at = utcnow()
-            scene.message = "공급사 대기열에 등록됨"
-            self._usage(session, scene, "submitted", submission.request_id)
-            self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
+            except SQLAlchemyError:
+                continue
+        self.unsaved.append((scene_id, attempt, submission))
 
     def _poll_active(self) -> None:
         settings = read_settings(self.sessions)
@@ -699,7 +767,8 @@ class AIVideoCoordinator:
                             self._fail(session, scene, code, "failed")
                             self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
                     continue
-                if timed_out:
+                if submitted is not None and utcnow() - submitted > 2 * timedelta(minutes=settings.timeout_minutes):
+                    # Still no answer long after the deadline: close it, but keep it refetchable.
                     self._timeout(provider, scene_id, request_id, attempt)
                     continue
                 with self.sessions.begin() as session:

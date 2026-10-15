@@ -1395,3 +1395,142 @@ def test_a_half_of_a_key_pair_in_a_prompt_is_refused(studio, monkeypatch):
         studio.service.update_scenes(plan_id, 1, [
             {"position": 0, "source": "generated", "prompt": f"{PROMPT} {secret.upper()}", "model_path": MODEL}])
     assert all(secret not in s.prompt for s in scenes(studio, plan_id))
+
+
+# --------------------------------------------------------------------------- review round 2: prices, locks, gates
+
+
+def test_estimate_and_confirm_use_the_current_confirmed_price_not_the_saved_one(studio):
+    ready_studio(studio, job="1", monthly="20")
+    plan_id = generated_plan(studio)  # saved at 0.1/s x 5 s = 0.5
+    assert studio.service.estimate(plan_id)["total"] == "0.5"
+    model = next(m for m in studio.service.models() if m.path == MODEL)
+    add_model(studio, price="4", model_id=model.id)  # re-confirmed at 4/s: 20 for the same scene
+    estimate = studio.service.estimate(plan_id)
+    assert estimate["total"] == "20" and estimate["scenes"][0]["cost"] == "20"
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True)
+    assert refusal(excinfo) == (STALE_TOTAL, 409)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.confirm_generation(plan_id, revision(studio, plan_id), "20", True)
+    assert excinfo.value.status == 422 and "작업별 한도" in str(excinfo.value)
+    assert usage(studio) == [] and studio.provider.calls == []
+    add_model(studio, confirmed=False, model_id=model.id)
+    problems = studio.service.estimate(plan_id)["problems"]
+    assert "장면 1의 모델이 바뀌었거나 사용할 수 없습니다. 모델을 다시 고르세요." in problems
+
+
+def test_a_price_change_after_confirmation_cancels_the_waiting_scene_unsent(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    model = next(m for m in studio.service.models() if m.path == MODEL)
+    add_model(studio, price="0.2", model_id=model.id)
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert (scene.status, scene.message) == ("canceled", "모델 설정이 바뀌어 제출하지 않았습니다. 장면을 다시 확인하세요.")
+    assert [row.status for row in usage(studio)] == ["not_sent"] and studio.provider.calls == []
+
+
+def test_resaving_the_storyboard_never_changes_a_confirmed_scene(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    model = next(m for m in studio.service.models() if m.path == MODEL)
+    save_model(studio.sessions, path=MODEL, label="시험 모델", price_per_second="0.1", durations="5,10",
+               resolution="720p", confirmed=True, model_id=model.id)
+    studio.service.update_scenes(plan_id, revision(studio, plan_id), [
+        {"position": 0, "source": "generated", "prompt": PROMPT, "model_path": MODEL}, {"position": 1, "source": "card"}])
+    scene = scenes(studio, plan_id)[0]
+    assert (scene.status, scene.clip_seconds, scene.estimated_cost) == ("waiting", 5, "0.5")
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.update_scenes(plan_id, revision(studio, plan_id), [
+            {"position": 0, "source": "generated", "prompt": PROMPT + " 변경", "model_path": MODEL}])
+    assert excinfo.value.status == 409
+    # The model's lengths changed after confirmation (today it would be a 10 s / 1.0 clip), so the
+    # 5 s / 0.5 reservation no longer matches: nothing is sent and the user confirms again.
+    studio.service.tick()
+    assert studio.provider.calls == [] and [(row.seconds, row.status) for row in usage(studio)] == [(5, "not_sent")]
+    assert scenes(studio, plan_id)[0].message == "모델 설정이 바뀌어 제출하지 않았습니다. 장면을 다시 확인하세요."
+
+
+def test_an_unknown_scene_is_locked_until_the_user_closes_it(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:ambiguous]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].status == "unknown"
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.update_scenes(plan_id, revision(studio, plan_id), [
+            {"position": 0, "source": "generated", "prompt": PROMPT + " 다른 장면", "model_path": MODEL}])
+    assert refusal(excinfo) == ("장면 1은 결과 불명 상태입니다. 먼저 실패로 확정한 뒤 바꾸세요.", 409)
+    studio.service.resolve_unknown(plan_id, revision(studio, plan_id), 0)
+    key = scenes(studio, plan_id)[0].submit_key
+    studio.service.update_scenes(plan_id, revision(studio, plan_id), [
+        {"position": 0, "source": "generated", "prompt": PROMPT + " 다른 장면", "model_path": MODEL}])
+    assert scenes(studio, plan_id)[0].submit_key is None and key  # a changed request never reuses the old key
+
+
+def test_a_batch_that_fills_the_month_exactly_is_still_sent(studio):
+    ready_studio(studio, job="0.5", monthly="0.5")
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].status in {"queued", "ready", "in_progress", "downloading"}
+    assert len(calls(studio.provider, "submit")) == 1
+    assert "이번 달 AI 영상 한도를 모두 사용했습니다." in studio.service.readiness()["reasons"]  # no further confirmations
+
+
+def test_a_status_failure_after_the_deadline_keeps_polling_then_closes_refetchably(studio, monkeypatch):
+    ready_studio(studio, timeout=5)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    real_status = studio.provider.status
+
+    def down(request_id):
+        raise ProviderUnavailable()
+
+    monkeypatch.setattr(studio.provider, "status", down)
+    monkeypatch.setattr(studio.provider, "cancel", lambda request_id: False)  # generation already started
+    edit_scene(studio, plan_id, 0, submitted_at=utcnow() - timedelta(minutes=6))
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert scene.status in {"queued", "in_progress"} and scene.message.startswith(STATUS_RETRY)
+    edit_scene(studio, plan_id, 0, submitted_at=utcnow() - timedelta(minutes=11))
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert (scene.status, scene.error_code) == ("failed", "video_ai_timeout") and scene.request_id
+    monkeypatch.setattr(studio.provider, "status", real_status)
+    studio.provider.jobs[scene.request_id].slow = False
+    studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].status == "ready" and len(calls(studio.provider, "submit")) == 1
+
+
+def test_a_failed_write_after_submit_keeps_the_request_id_and_never_resends(studio, monkeypatch):
+    from sqlalchemy.exc import OperationalError
+
+    ready_studio(studio)
+    studio.provider.steps = 3
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    real = studio.service._record_submission
+    failures = {"left": 5}
+
+    def flaky(*args):
+        if failures["left"]:
+            failures["left"] -= 1
+            raise OperationalError("UPDATE", {}, Exception("database is locked"))
+        return real(*args)
+
+    monkeypatch.setattr(studio.service, "_record_submission", flaky)
+    monkeypatch.setattr(studio.service.stop, "wait", lambda delay=None: False)
+    studio.service.tick()  # submit succeeds, the four writes fail: the id is kept in memory
+    assert scenes(studio, plan_id)[0].status == "submitting" and len(studio.service.unsaved) == 1
+    studio.service.tick()  # the database still refuses: nothing new is sent, the id is still kept
+    assert len(studio.service.unsaved) == 1 and len(calls(studio.provider, "submit")) == 1
+    studio.service.tick()  # stored now
+    scene = scenes(studio, plan_id)[0]
+    assert scene.request_id and scene.status in {"queued", "in_progress"} and not studio.service.unsaved
+    assert len(calls(studio.provider, "submit")) == 1 and [row.status for row in usage(studio)] == ["submitted"]

@@ -1339,3 +1339,16 @@ def test_downgrade_0010_with_a_rendered_video_succeeds_and_keeps_rows(engine):
 def test_check_prompt_rejects_addresses_and_hidden_format_characters(prompt):
     with pytest.raises(PromptPolicyError):
         check_prompt(prompt)
+
+
+def test_changing_the_currency_clears_every_model_confirmation(sessions):
+    save_settings(sessions, currency="USD")
+    model = save_model(sessions, path="vendor/model/text-to-video", label="모델", price_per_second="0.1",
+                       durations="5", resolution="720p", confirmed=True)
+    assert next(m for m in list_models(sessions) if m.id == model.id).usable
+    save_settings(sessions, currency="KRW")
+    assert not next(m for m in list_models(sessions) if m.id == model.id).usable
+    save_model(sessions, path="vendor/model/text-to-video", label="모델", price_per_second="140", durations="5",
+               resolution="720p", confirmed=True, model_id=model.id)
+    save_settings(sessions, currency="KRW")  # same currency: confirmations stay
+    assert next(m for m in list_models(sessions) if m.id == model.id).usable

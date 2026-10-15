@@ -17,6 +17,7 @@ from .contracts import ClipInvalidError
 NAME = re.compile(r"clip-[0-9a-f]{32}\.(mp4|mov|webm)")
 FORMATS = {"mov,mp4,m4a,3gp,3g2,mj2": "mov", "matroska,webm": "matroska"}
 VIDEO_CODECS = frozenset({"h264", "hevc", "vp8", "vp9", "av1", "mpeg4"})
+FORMAT_WHITELIST = "mov,mp4,m4a,3gp,3g2,mj2,matroska,webm"
 
 
 class ClipStore:
@@ -47,7 +48,10 @@ def probe_clip(path: Path, ffprobe: Path | None = None, *, min_seconds: float = 
         if path.is_symlink() or size <= 0:
             raise ValueError
         result = subprocess.run(
-            [str(binary), "-v", "error", "-protocol_whitelist", "file", "-show_streams", "-show_format",
+            # Only container demuxers are allowed to open the untrusted file: no concat/playlist
+            # demuxer can be auto-detected and made to open other (local or UNC) paths.
+            [str(binary), "-v", "error", "-protocol_whitelist", "file", "-format_whitelist", FORMAT_WHITELIST,
+             "-show_streams", "-show_format",
              "-of", "json", str(path)],
             shell=False, env=local_process_env(), capture_output=True, timeout=30, check=False,
         )

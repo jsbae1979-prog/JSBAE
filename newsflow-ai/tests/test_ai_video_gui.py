@@ -20,7 +20,7 @@ from newsflow.db.models import (
     VideoAIUsage,
     VideoProject,
 )
-from newsflow.gui.routes import kst
+from newsflow.gui.routes import kst, kst_day
 from newsflow.intelligence.credentials import FakeCipher
 from newsflow.intelligence.service import IntelligenceService
 from newsflow.main import create_app
@@ -201,3 +201,16 @@ def test_screen_times_are_kst():
     assert kst(datetime(2026, 10, 15, 12, 39, tzinfo=UTC)) == "2026-10-15 21:39 KST"
     assert kst(datetime(2026, 10, 15, 15, 0)) == "2026-10-16 00:00 KST"
     assert kst(None) == "미확인"
+
+
+def test_approval_day_and_news_date_filter_use_kst(client, app):
+    assert kst_day("2026-10-15T20:30:00+00:00") == "2026-10-16" and kst_day("") == "" and kst_day("garbage") == ""
+    with app.state.sessions.begin() as session:
+        session.add(NewsArticle(
+            title="KST 자정 넘긴 합성 뉴스", summary="합성 요약", url="https://example.com/news/kst",
+            canonical_url="https://example.com/news/kst", source_id=1, publisher="합성 언론",
+            published_at=datetime(2026, 10, 13, 16, 0, tzinfo=UTC),  # 2026-10-14 01:00 KST
+        ))
+    assert "KST 자정 넘긴 합성 뉴스" in client.get("/news?start=2026-10-14&end=2026-10-14").text
+    assert "KST 자정 넘긴 합성 뉴스" not in client.get("/news?start=2026-10-13&end=2026-10-13").text
+    assert "발행일 시작 · KST" in client.get("/news").text

@@ -39,7 +39,17 @@ def kst(value: datetime | None) -> str:
     return value.astimezone(KST).strftime("%Y-%m-%d %H:%M KST")
 
 
+def kst_day(value: str | None) -> str:
+    """An ISO timestamp stored as text (e.g. a dated approval), shown as its KST calendar day."""
+    try:
+        parsed = datetime.fromisoformat(value or "")
+    except ValueError:
+        return ""
+    return kst(parsed)[:10]
+
+
 templates.env.filters["kst"] = kst
+templates.env.filters["kst_day"] = kst_day
 
 
 def page(request: Request, name: str, **context: object) -> HTMLResponse:
@@ -128,11 +138,11 @@ def news(
         )
     if start:
         statement = statement.where(
-            NewsArticle.published_at >= datetime.combine(start, datetime.min.time(), UTC)
+            NewsArticle.published_at >= datetime.combine(start, datetime.min.time(), KST).astimezone(UTC)
         )
     if end:
         statement = statement.where(
-            NewsArticle.published_at < datetime.combine(end + timedelta(days=1), datetime.min.time(), UTC)
+            NewsArticle.published_at < datetime.combine(end + timedelta(days=1), datetime.min.time(), KST).astimezone(UTC)
         )
     with request.app.state.sessions() as session:
         count = session.scalar(select(func.count()).select_from(statement.subquery()))

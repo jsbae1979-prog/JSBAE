@@ -139,6 +139,11 @@ def write_settings(
         previous_currency = _value(session, "video_ai_currency") or "USD"
         if currency != previous_currency and _month_rows(session):
             raise VideoSettingsError("이번 달 사용 기록이 있어 통화를 바꿀 수 없습니다. 다음 달에 바꾸세요.")
+        if currency != previous_currency:
+            # Per-second prices carry no currency of their own: each must be re-entered and
+            # re-confirmed in the new one before any model can be used again.
+            for model in session.scalars(select(VideoAIModel)):
+                model.confirmed_at = None
         previous = _value(session, "video_ai_approved_at")
         values = {
             "provider": provider, "host": host, "monthly_limit": money(monthly), "job_limit": money(job),
@@ -311,8 +316,15 @@ def check_budget(session: Session, settings: VideoAISettings, plan_id: int, batc
         )
 
 
-def readiness(sessions: sessionmaker[Session], key_store, *, provider_override: str | None = None) -> dict:
-    """Why paid AI video generation can or cannot run now; safe to show in the GUI."""
+def readiness(
+    sessions: sessionmaker[Session], key_store, *, provider_override: str | None = None, submitting: bool = False,
+) -> dict:
+    """Why paid AI video generation can or cannot run now; safe to show in the GUI.
+
+    ``submitting``: the worker's send-time check. The scenes it sends are already reserved inside
+    this month's usage (confirmed as ``month + batch <= limit``), so only usage beyond the limit
+    (a limit lowered after confirmation) stops them.
+    """
     settings = read_settings(sessions)
     key = key_store.status() if key_store is not None else {"configured": False}
     usage = usage_this_month(sessions)
@@ -325,7 +337,7 @@ def readiness(sessions: sessionmaker[Session], key_store, *, provider_override: 
         reasons.append("AI 영상 유료 생성 승인이 저장되지 않았습니다.")
     if settings.job_limit <= 0 or settings.monthly_limit <= 0:
         reasons.append("작업별 한도와 월 한도가 없습니다.")
-    elif usage["spent"] >= settings.monthly_limit:
+    elif usage["spent"] > settings.monthly_limit if submitting else usage["spent"] >= settings.monthly_limit:
         reasons.append("이번 달 AI 영상 한도를 모두 사용했습니다.")
     if provider_override is None and not key["configured"]:
         reasons.append("AI 영상 API 키가 없습니다.")

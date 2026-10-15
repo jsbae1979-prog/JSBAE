@@ -16,6 +16,7 @@ import subprocess
 from dataclasses import replace
 from pathlib import Path
 from threading import Event
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -43,7 +44,6 @@ from newsflow.video.engine import (
 from newsflow.video.service import VideoError
 from newsflow.video.tts import FakeTTS
 
-FONT = Path("/tmp/claude-0/-home-user-JSBAE/d7f4ae56-35d4-5b9e-8a1f-7ac22ebd95b9/scratchpad/font/NotoSansKR.ttf")
 needs_ffmpeg = pytest.mark.skipif(
     shutil.which("ffmpeg") is None or shutil.which("ffprobe") is None, reason="ffmpeg/ffprobe not installed"
 )
@@ -65,9 +65,7 @@ ENCODER_TAIL = [
 @pytest.fixture
 def korean_font(monkeypatch) -> Path:
     if not os.environ.get("NEWSFLOW_FONT_PATH"):
-        if not FONT.is_file():
-            pytest.skip("Korean font not configured (NEWSFLOW_FONT_PATH)")
-        monkeypatch.setenv("NEWSFLOW_FONT_PATH", str(FONT))
+        pytest.skip("Korean font not configured (NEWSFLOW_FONT_PATH)")
     return font_path()
 
 
@@ -459,6 +457,30 @@ def test_landscape_clip_shorter_than_scene_is_cropped_looped_and_its_audio_dropp
     )
     level = re.search(r"max_volume: (-?[0-9.]+|-inf) dB", detect.stderr)
     assert level and (level.group(1) == "-inf" or float(level.group(1)) <= -60)
+
+
+@needs_ffmpeg
+def test_probe_refuses_a_concat_script_disguised_as_a_clip_before_it_opens_anything(tmp_path):
+    """Only container demuxers may open downloaded bytes (-format_whitelist)."""
+    store = ClipStore(tmp_path / "data")
+    victim = store.new_path()
+    fake_clip(victim, 1)
+    disguised = store.new_path()
+    disguised.write_text(f"ffconcat version 1.0\nfile {victim.name}\n", encoding="utf-8")
+    with pytest.raises(ClipInvalidError):
+        probe_clip(disguised)
+    assert probe_clip(victim)["format"] == "mov"
+
+
+def test_disk_message_for_an_ai_compose_names_the_real_requirement(studio, app):
+    coordinator, draft_id = studio
+    name = coordinator.clip_store.new_path().name
+    coordinator.clip_store.path(name).write_bytes(b"x" * 300_000)
+    with patch("newsflow.video.service.shutil.disk_usage", return_value=SimpleNamespace(free=0)), \
+            pytest.raises(VideoError) as caught:
+        coordinator.start_ai(1, draft_id, 30, [{"clip": name}, {}, {}])
+    assert "AI 생성 장면을 포함해 최소 약" in str(caught.value) and "MB를 확보하세요" in str(caught.value)
+    assert_nothing_created(app, coordinator)
 
 
 @needs_ffmpeg
