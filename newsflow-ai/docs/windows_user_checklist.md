@@ -1,5 +1,7 @@
 # Windows 11 사용자 PC 확인표
 
+> **Phase 5C/5C.1 항목은 [windows_user_verification_checklist.md](windows_user_verification_checklist.md)를 사용**하세요(판정 기본값 NOT VERIFIED, 30/45/60초 MP4 표, 증거 제출 안내 포함). 이 확인표는 Phase 5B까지의 기본 설치·실행 항목이며 그대로 유효합니다.
+
 아래 항목은 실제 사용자 PC에서 수행해야 합니다. Cloud/Actions 성공만으로 완료 표시하지 않습니다.
 
 1. `START_HERE.html`을 열고 Python 3.12 및 FFmpeg/ffprobe를 준비합니다. 관리자 권한, WSL, Docker는 사용하지 않습니다.
@@ -11,6 +13,12 @@
 7. 실행 창에서 Ctrl+C로 종료한 뒤 재실행합니다. 설정, 뉴스, 대본, 영상, 게시 대기함이 남아 있는지 확인합니다. 진행 중 강제 종료 복구는 별도 복사본의 데이터로 시험합니다.
 8. 사용 중인 데이터 폴더는 `%LOCALAPPDATA%\NewsFlowAI`, 영상은 `outputs\videos`, 로그는 `logs` 아래입니다. 변경 전 종료·백업하고 원본을 삭제하지 않습니다.
 
-기록: Windows 버전 / 설치 경로 / Python 버전 / 영상 도구 버전 / 한국어 음성 이름 / 화면 배율 / 실행 일시 / PASS·FAIL·NOT VERIFIED / 관찰한 문제.
+9. (Phase 5C) 사이드바 **뉴스**에서 약관을 확인한 공개 RSS를 등록 → `연결 테스트`(`기사 N개 · 발행시각 있음 N개 · 요약 충분 N개`) → `사용하기` → `지금 뉴스 모으기` 2회(두 번째는 신규 0). `(유형: robots)` 실패는 BLOCKED로 기록합니다.
+10. (Phase 5C) **자동 제작 → 실제 콘텐츠 제작**으로 30초 1편을 만들어 대본 확인(`원문과 비교하기`)과 최종 영상 확인에서 멈추는지, 게시 대기함에 `검토 대기`로 들어가는지 확인합니다. 외부 AI는 승인하지 않는 한 호출 0건(`/ai-settings` 사용량 비어 있음).
+11. (Phase 5C.1) `/voices`의 상태 칩(`설치됨` / `없음` / `확인 불가` / `설치됨 · SAPI 미노출`), 미리 듣기의 원문·읽기 형태, `청취 결과 기록` 저장을 확인합니다. 발음 판정은 사람이 적으며 자동화는 PASS를 쓰지 않습니다.
+12. (Phase 5C.1) `/ai-settings`의 예상 토큰 문장(`실제 콘텐츠 1건(30초 기준) = 외부 AI 호출 2회 …`)과 단가 입력 시 예상 비용 표시를 확인합니다. 유료 호출은 승인한 경우 `tools\ai_live_check.py`로 정확히 1회만.
+13. (Phase 5C.1) 앱 종료 후 `python tools\ci_feed_review.py --mode windows --output feed-review`로 `feed-review.json`을 만들고 FAIL이 0인지 봅니다. BLOCKED(robots·policy)는 정상입니다.
+
+기록: Windows 버전 / 설치 경로 / Python 버전 / 영상 도구 버전 / 한국어 음성 이름 / 화면 배율 / 실행 일시 / PASS·FAIL·SKIPPED·NOT VERIFIED·BLOCKED / 관찰한 문제.
 
 실제 RSS·외부 AI는 별도의 명시적 실행·승인 정책을 따릅니다. 이 확인표는 실계정 OAuth·서비스 토큰·SNS 업로드·게시를 승인하지 않습니다.

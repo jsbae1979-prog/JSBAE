@@ -1,4 +1,4 @@
-# NewsFlow AI — Windows 11 · Phase 5C
+# NewsFlow AI — Windows 11 · Phase 5C.1
 
 뉴스 선택부터 대본·검토용 영상 제작·게시 대기함 보관까지 연결하는 한국어 로컬 웹 프로그램입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
@@ -6,7 +6,11 @@ Phase 5A의 **간편 제작**은 체험 뉴스 → 기본 대본 → 9:16 검토
 
 Phase 5C의 **실제 콘텐츠 제작**은 등록한 공개 RSS에서 실제 뉴스를 모아 기본 대본 또는 승인된 외부 AI 대본을 만들고, Windows 한국어 음성과 자막으로 영상을 만든 뒤 대본과 완성 영상을 사람이 확인해야 게시 대기함에 보관합니다. 체험 제작은 그대로 유지됩니다.
 
+Phase 5C.1의 **운영 준비도**는 기능을 바꾸지 않고 확인 수단을 더합니다: 공개 피드 검토 도구, 예상 토큰·예상 비용 표시, 승인된 단일 실제 AI 호출 절차, 한국어 음성 감지·읽기 형태·사람 청취 기록, 일반 사용자 안내서와 Windows 검증 체크리스트, Phase 5D 설계 초안. 새 migration은 없습니다(schema head `0009` 유지).
+
 [간편 제작 사용법과 복구 정책](docs/autopilot.md) · [실제 콘텐츠 제작 안내](docs/realcontent.md) · [Phase 5C 검증 보고서](docs/reports/phase5c_realcontent_report.md)
+
+**Phase 5C.1 문서:** [일반 사용자 실행·설정 안내서](docs/user_guide_realcontent.md) · [Windows 11 사용자 검증 체크리스트](docs/windows_user_verification_checklist.md) · [한국어 음성 청취 확인표](docs/korean_tts_listening_checklist.md) · [Phase 5D Higgsfield 영상 Provider 설계 초안](docs/design/phase5d_higgsfield_video_provider.md) · [Phase 5C.1 운영 준비도 보고서](docs/reports/phase5c1_operational_readiness_report.md)
 
 ## 처음 사용하는 분을 위한 빠른 시작
 
@@ -17,7 +21,7 @@ Phase 5C의 **실제 콘텐츠 제작**은 등록한 공개 RSS에서 실제 뉴
 
 마법사는 자동 설치나 PATH 변경을 하지 않습니다. FFmpeg가 없는 경우에도 GUI를 열어 문제를 확인할 수 있습니다. 준비 점검은 실행 파일과 글꼴·저장 공간을 확인하며 실제 인코딩 성공을 대신하지 않습니다. 30초 체험 제작으로 마지막 확인을 하세요.
 
-한국어 음성은 Windows **SAPI**에서 `ko-KR` 등 한국어 문화권으로 제공되는 설치 음성만 선택할 수 있습니다. Windows에 보이는 OneCore 음성이 모두 SAPI에 제공되는 것은 아닙니다. 미설치 시 무음으로 시작할 수 있고, 누락된 음성으로 자동 대체하지 않습니다. 대본이 장면 시간보다 길면 안전하게 실패하며 대본을 줄이거나 길이를 늘려야 합니다. 마법사 설정은 **새 검토영상 렌더 시작 시** 읽어 AudioTrack/SubtitleTrack에 보존되므로 이미 제작한 영상을 변경하지 않습니다.
+한국어 음성은 Windows **SAPI**에서 `ko-KR` 등 한국어 문화권으로 제공되는 설치 음성만 선택할 수 있습니다. 설치 방법: Windows 설정 → 시간 및 언어 → 언어 및 지역 → 한국어 → 언어 옵션에서 음성(텍스트 음성 변환)을 설치한 뒤 NewsFlow를 종료하고 run.bat를 다시 실행하세요. Windows에 보이는 OneCore 음성이 모두 SAPI에 제공되는 것은 아니며, 그 경우 `/voices`에 `설치됨 · SAPI 미노출`로 표시됩니다(앱은 레지스트리를 수정하지 않습니다). 미설치 시 무음으로 시작할 수 있고, 누락된 음성으로 자동 대체하지 않습니다. 대본이 장면 시간보다 길면 안전하게 실패하며 대본을 줄이거나 길이를 늘려야 합니다. 마법사 설정은 **새 검토영상 렌더 시작 시** 읽어 AudioTrack/SubtitleTrack에 보존되므로 이미 제작한 영상을 변경하지 않습니다.
 
 마법사는 마지막 점검을 통과하기 전 기존 기본값을 덮어쓰지 않습니다. 중간 입력은 재실행 후 이어서 진행하며, 오래된 창의 중복 저장은 거부합니다. 설정과 점검 이력은 기존 SQLite `AppSetting`에 저장하므로 새 migration은 필요하지 않습니다.
 
@@ -32,10 +36,10 @@ Windows x64의 Python 3.12 + PyInstaller `onedir` 묶음으로 FastAPI/Jinja/sta
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 5C 검토 브랜치 `feat/newsflow-phase5c`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 5C.1 검토 브랜치 `feat/newsflow-phase5c1`을 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase5c https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase5c1 https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -46,7 +50,7 @@ Git 없이 ZIP을 받았다면 해당 브랜치 ZIP을 풀고 `newsflow-ai` 폴�
 4. 서버 실행 후 브라우저에서 **http://127.0.0.1:8765**를 직접 여세요. 기본 주소·바인딩·포트는 127.0.0.1:8765입니다. 자동 포트 변경이나 외부 공개 바인딩은 하지 않습니다.
 5. 프로그램 종료: 실행 창에서 **Ctrl+C**. 종료가 끝날 때까지 기다린 후 창을 닫으세요. 강제 종료 시 다음 실행에서 수집 중단 상태를 복구합니다.
 
-Windows EXE Installer는 제공하지 않습니다. Linux Cloud는 Windows BAT를 실제로 실행하지 않습니다. Windows Actions에서 BAT와 Chrome POST를 별도 검증하며, 이번 단계 결과는 완료 보고서에서 확인하세요. 사용자의 Windows 11 PC 수동 운영은 **NOT VERIFIED**이며 아래 체크리스트로 별도 확인해야 합니다.
+Windows EXE Installer는 제공하지 않습니다. Linux Cloud는 Windows BAT를 실제로 실행하지 않습니다. Windows Actions에서 BAT와 Chrome POST를 별도 검증하며, 이번 단계 결과는 완료 보고서에서 확인하세요. 사용자의 Windows 11 PC 수동 운영은 **NOT VERIFIED**이며 [Windows 11 사용자 검증 체크리스트](docs/windows_user_verification_checklist.md)로 별도 확인해야 합니다.
 
 ## 처음 영상 만들기
 
@@ -57,21 +61,34 @@ Windows EXE Installer는 제공하지 않습니다. Linux Cloud는 Windows BAT�
 3. 진행 화면에서 현재 단계와 진행률을 확인합니다. 완료 후 영상을 재생하거나 **MP4 저장**을 누르고 **게시 대기함에서 확인**으로 이동합니다.
 4. 대기함은 내 PC의 검토용 초안입니다. 대기함 보관이 내용·출처·저작권 검토나 플랫폼 게시 승인을 대신하지 않습니다.
 
-뉴스부터 직접 고르려면 사이드바 **자동 제작 → 단계별 제작**을 선택하세요. 뉴스 선택, 대본 검토·수정, 영상 확인에서 각각 멈춘 뒤 다음 단계로 진행합니다. **간단한 설정**에서 다음 제작의 길이(30/45/60초), 목적지(YouTube/Instagram), 뉴스 종류를 저장할 수 있습니다. 등록 출처를 선택하면 시작할 때 해당 공개 RSS에 접속하는 **실제 콘텐츠 제작**이 됩니다. 대본은 기본 대본이 기본값이며, 외부 AI 대본은 **설정 → AI 연결**에서 승인·월 한도·API 키를 저장한 경우에만 실제 콘텐츠에서 선택할 수 있습니다. 체험 제작은 외부 AI를 호출하지 않습니다.
+뉴스부터 직접 고르려면 사이드바 **자동 제작 → 단계별 제작**을 선택하세요. 뉴스 선택, 대본 검토·수정, 영상 확인에서 각각 멈춘 뒤 다음 단계로 진행합니다. **간단한 설정**에서 다음 제작의 길이(30/45/60초), 목적지(YouTube/Instagram), 뉴스 종류를 저장할 수 있습니다. 등록 출처를 선택하면 시작할 때 해당 공개 RSS에 접속하는 **실제 콘텐츠 제작**이 됩니다. 대본은 기본 대본이 기본값이며, 외부 AI 대본은 **설정 → AI 연결**(설정 화면의 `AI 연결·API 키·사용량 →`)에서 제공자·승인·월 한도·API 키를 저장한 경우에만 실제 콘텐츠에서 선택할 수 있습니다. 체험 제작은 외부 AI를 호출하지 않습니다.
 
-기존 뉴스 검색·AI Studio·Video Studio·Publishing·상세 Settings는 사이드바 **고급 모드**에서 열 수 있습니다. 직접 검토한 대본의 음성·자막·소재를 상세 조정하려면 Video Studio를 사용하세요. 간편 제작은 무음 검토영상만 만들며 뉴스 이미지나 영상을 자동 다운로드하지 않습니다.
+기존 뉴스 검색·AI Studio·Video Studio·Publishing·상세 Settings는 사이드바 **고급 모드**에서 열 수 있습니다. 직접 검토한 대본의 음성·자막·소재를 상세 조정하려면 Video Studio를 사용하세요. 간편 제작은 설정한 기본 음성(한국어 SAPI 음성 또는 무음 검토영상)으로 만들며 뉴스 이미지나 영상을 자동 다운로드하지 않습니다.
 
 
 ## Phase 5C · 실제 콘텐츠 제작 (실제 RSS · AI 대본 · 한국어 음성)
 
-1. **설정 → 뉴스**(`/sources`)에서 공개 RSS를 등록하고 **연결 테스트**로 기사 수·발행시각·요약 상태를 확인한 뒤 **사용하기**로 활성화합니다. **지금 뉴스 모으기**로 실제 기사를 수집합니다. 요약이 짧은 기사는 "요약 부족"으로 표시되며 대본은 원문에 없는 내용을 추측해 채우지 않습니다.
-2. **설정 → AI 연결**(`/ai-settings`)에서 제공자·모델·월 토큰 한도·유료 호출 승인을 저장하고 API 키를 Windows 계정 보호 저장소(DPAPI)에 저장합니다. **연결 확인**은 토큰을 쓰지 않는 모델 조회입니다. 요청별 토큰 사용량은 같은 화면에 기록되며 실제 청구액은 제공자 대시보드에서 확인합니다.
-3. **설정 → 음성과 자막**(`/voices`)에서 설치된 한국어 SAPI 음성·발화 속도·문장 쉼을 고르고 **미리 듣기**로 확인합니다. 한국어 음성이 없으면 설치 안내가 표시되고 무음 검토영상으로 제작합니다. 다른 언어 음성으로 대체하지 않습니다.
+1. 사이드바 **뉴스**(`/sources`, 설정 화면의 `뉴스 출처 등록·연결 테스트 →`)에서 공개 RSS를 등록하고 **연결 테스트**로 기사 수·발행시각·요약 상태를 확인한 뒤 **사용하기**로 활성화합니다. **지금 뉴스 모으기**로 실제 기사를 수집합니다. 요약이 짧은 기사는 "요약 부족"으로 표시되며 대본은 원문에 없는 내용을 추측해 채우지 않습니다.
+2. **설정 → AI 연결**(`/ai-settings`, 설정 화면의 `AI 연결·API 키·사용량 →`)에서 제공자·모델·월 토큰 한도·유료 호출 승인을 저장하고 API 키를 Windows 계정 보호 저장소(DPAPI)에 저장합니다. **연결 확인**은 토큰을 쓰지 않는 모델 조회입니다. 요청별 토큰 사용량은 같은 화면에 기록되며 실제 청구액은 제공자 대시보드에서 확인합니다.
+3. **설정 → 음성과 자막**(`/voices`, 설정 화면의 `한국어 음성·속도·미리 듣기 →`)에서 설치된 한국어 SAPI 음성·발화 속도·문장 쉼을 고르고 **미리 듣기**로 확인합니다. 한국어 음성이 없으면 설치 안내가 표시되고 무음 검토영상으로 제작합니다. 다른 언어 음성으로 대체하지 않습니다.
 4. **자동 제작 → 실제 콘텐츠 제작**을 선택하면 실제 RSS 수집 → 기사 선택 → 대본 → **대본 확인(원문 비교·확인 사항)** → 한국어 음성·자막 영상 → **최종 영상 확인** → 로컬 게시 대기함 순서로 진행합니다. 간편 제작도 실제 콘텐츠에서는 대본과 완성 영상에서 멈춥니다.
 
 한국어 음성으로 제작하면 장면 시간을 실제 음성 길이에 맞춰 조정하고 자막 구간을 같은 시간표로 저장합니다. 전체 음성이 영상보다 길면 초과 시간을 알리고 멈춥니다. 자동 검증은 비무음 WAV 생성과 MP4 규격만 확인하며 **발음·시청 품질은 사람이 들어야 합니다(NOT VERIFIED)**. 실제 외부 AI API 호출과 실제 공개 RSS 수집은 사용자의 키·네트워크 환경에서만 검증할 수 있으며 CI에서는 NOT VERIFIED로 기록합니다. 상세는 [docs/realcontent.md](docs/realcontent.md)를 참고하세요.
 
 DB migration `0009`는 추가 전용입니다(`content_drafts.review_notes`, `autopilot_jobs.content_mode/ai_mode/voice`, `news_source_checks`, `ai_usage`). 실제 SNS 게시·계정 연결·예약 실행·무인 운영은 계속 제공하지 않습니다.
+
+## Phase 5C.1 · 운영 준비도
+
+Phase 5C.1은 기능 범위를 넓히지 않고 실제 운영 전에 **확인할 수 있는 수단**을 더합니다. 새 migration은 없으며(schema head `0009` 유지) 새 상태는 `AppSetting` 키(`ai_price_input_per_1m`, `ai_price_output_per_1m`, `ai_price_currency`, `voice_listening_last`)와 데이터 폴더의 JSON 파일뿐입니다.
+
+1. **공개 피드 검토** — `tools\feed_candidates.json`(후보 22개, 17개 활성; 공식 여부·약관은 사람이 확인하기 전까지 `unknown`)을 `python tools\ci_feed_review.py --mode windows --output <폴더>`로 앱과 같은 어댑터 경로에서 검토하고 `feed-review.json`을 남깁니다. 판정은 PASS / BLOCKED(robots·policy, 결함 아님) / NOT VERIFIED / FAIL(앱 내부 결함만)입니다. 수집 오류는 `/sources`에 `최근 수집 오류: [kind] …`로 표시됩니다.
+2. **예상 토큰·예상 비용** — `/ai-settings`에 `실제 콘텐츠 1건(30초 기준) = 외부 AI 호출 2회 · 예상 최대 약 N 토큰 …`이 표시되고, 사용자가 입력한 단가(`입력 토큰 100만 개당 단가`·`출력 토큰 100만 개당 단가`·`통화`)로 예상 비용을 보여 줍니다. 대본 출력 상한은 30초 1400 · 45초 1800 · 60초 2200 토큰이며 예산 검사는 `이번 달 사용량 + 예상 입력 + 출력 상한`입니다. 예상 비용은 사용자가 입력한 단가로 계산한 참고값이며 이 앱은 요금을 보증하거나 결제하지 않습니다.
+3. **승인된 단일 실제 호출** — 사용자 PC에서만 `NEWSFLOW_AI_LIVE_TEST=1` + `tools\ai_live_check.py --article-id <번호> --max-tokens 1400 --output ai-live` → `동의` 입력 → 유료 호출 정확히 1회 → `ai-live\ai-live-check.json`(키·본문·대본 없음). 토큰 0 연결 확인은 `--connection-check --model gpt-4o-mini`. CI에서 유료 완성 호출은 실행하지 않습니다.
+4. **한국어 음성** — `/voices`가 `설치됨 / 없음 / 확인 불가 / 설치됨 · SAPI 미노출` 상태와 PowerShell 실행 정책 안내를 표시하고(앱은 레지스트리·정책을 바꾸지 않음), 미리 듣기에 **원문**과 **읽기 형태**(날짜·시각·퍼센트·통화·영문 약어의 읽기 변환, 음성에만 적용)를 함께 보여 주며, **청취 결과 기록** 양식으로 사람의 판정(PASS/FAIL/NOT VERIFIED)을 `voice-listening\listening-<id>.json`에 저장합니다. 자동화는 어떤 경우에도 PASS를 기록하지 않습니다. 새 오류 코드 `voice_failed`를 추가했습니다.
+5. **문서** — [일반 사용자 실행·설정 안내서](docs/user_guide_realcontent.md)와 [Windows 11 사용자 검증 체크리스트](docs/windows_user_verification_checklist.md)(기본 판정 NOT VERIFIED), [한국어 음성 청취 확인표](docs/korean_tts_listening_checklist.md). 문서 링크는 `tools\ci_docs_link_check.py`로 오프라인 검사합니다.
+6. **Phase 5D 설계** — [Higgsfield 영상 Provider 설계 초안](docs/design/phase5d_higgsfield_video_provider.md)은 설계만이며 Phase 5C.1에서 Higgsfield API/MCP 호출은 0건입니다. vendor 사실은 전부 NOT VERIFIED입니다.
+
+Windows Actions 워크플로는 `.github/workflows/newsflow-phase5c1-windows.yml`(artifact `newsflow-phase5c1-windows-validation`)이며 공개 피드 검토, 한국어 음성 프로브, 문서 링크 검사를 추가로 수행합니다. 토큰 0의 OpenAI 연결 확인은 수동 dispatch와 저장소 secret이 있을 때만 실행하고 그 외에는 SKIPPED로 기록합니다. 실제 공개 피드 수집 성공, 실제 OpenAI 응답, 한국어 발음, 사용자 PC 운영은 사용자가 체크리스트로 확인하기 전까지 **NOT VERIFIED**입니다. 결과: [Phase 5C.1 운영 준비도 보고서](docs/reports/phase5c1_operational_readiness_report.md).
 
 ## 재실행·업데이트
 
@@ -81,7 +98,7 @@ DB migration `0009`는 추가 전용입니다(`content_drafts.review_notes`, `au
 
 ```powershell
 # JSBAE 저장소 루트에서
-git switch feat/newsflow-phase5a
+git switch feat/newsflow-phase5c1
 git pull --ff-only
 cd newsflow-ai
 .\run.bat
@@ -105,7 +122,7 @@ cd newsflow-ai
 | `assets\` | 사용자가 허가한 로컬 이미지 |
 | `render-tmp\` | 작업별 임시 이미지·WAV·장면 MP4 |
 
-RSS 설정은 SQLite에 저장하고 환경변수는 실행 전에 설정합니다. `.env.example`는 참고용이며 자동으로 읽지 않습니다. API/OAuth 키는 이 단계에 필요하지 않습니다. GUI Settings에서 요청 타임아웃을 저장하고 데이터 폴더/로그 위치를 확인할 수 있습니다.
+RSS 설정은 SQLite에 저장하고 환경변수는 실행 전에 설정합니다. `.env.example`는 참고용이며 자동으로 읽지 않습니다. OAuth 키는 필요 없음; 외부 AI 키는 선택 사항이며 설정 → AI 연결에서 DPAPI 저장(`ai-key.dpapi`)하거나 환경변수 `NEWSFLOW_AI_API_KEY`로 제공합니다. GUI Settings에서 요청 타임아웃을 저장하고 데이터 폴더/로그 위치를 확인할 수 있습니다.
 
 기본 포트 외 사용은 **명시적으로** 설정할 때만 허용합니다. 외부 바인딩은 거부합니다.
 
@@ -131,7 +148,7 @@ $env:NEWSFLOW_DATA_DIR="D:\내 자료\NewsFlowAI" # 생략하면 LOCALAPPDATA
 ```
 
 3. 이전 명령은 SQLite backup API로 WAL을 포함한 일관된 DB snapshot을 만들고 무결성·스키마 버전을 확인합니다. DB 안의 설정과 session.key를 복사하며 원본을 삭제하지 않습니다. 대상에 기존 DB나 키가 있으면 덮어쓰지 않습니다. 파일/서버/수집 잠금도 확인합니다.
-4. run.bat를 다시 실행해 기사·출처·설정 보존을 확인한 뒤 원본을 계속 백업으로 보관하세요. 현재 이전 도구는 revision 0001~0008을 지원합니다. 임의 추가 파일·향후 콘텐츠·영상은 별도 백업해야 합니다.
+4. run.bat를 다시 실행해 기사·출처·설정 보존을 확인한 뒤 원본을 계속 백업으로 보관하세요. 현재 이전 도구는 revision 0001~0009를 지원합니다(Phase 5C.1은 0010을 추가하지 않습니다). 임의 추가 파일·향후 콘텐츠·영상은 별도 백업해야 합니다.
 5. 이미 새 DB를 만들었다면 자동 병합하지 않습니다. 두 데이터 폴더를 백업한 뒤 보존할 DB를 선택하세요. 기존 경로를 계속 쓰려면 `NEWSFLOW_DATA_DIR`를 명시할 수 있습니다.
 
 ## 고급 모드에서 RSS 직접 수집
@@ -185,7 +202,7 @@ $env:NEWSFLOW_DATA_DIR="D:\내 자료\NewsFlowAI" # 생략하면 LOCALAPPDATA
 .\.venv\Scripts\python.exe -m newsflow.diagnostics --url "https://feeds.bbci.co.uk/news/rss.xml"
 ```
 
-진단이 `rss_store: PASS`, `article_count > 0`, `collection_status: success`인 경우에만 실제 기사 저장을 검증한 것입니다. 운영 GUI에서도 활성 RSS의 수집을 재검증하세요. 피드의 이용 조건은 운영자가 확인해야 합니다.
+위 BBC 주소는 Phase 5C Windows CI에서 robots.txt 정책으로 **BLOCKED(robots)** 되었습니다(결함이 아니며 정책을 완화하지 않습니다). 여러 후보를 한 번에 검토하려면 `tools\feed_candidates.json`과 `python tools\ci_feed_review.py --mode windows --output <폴더>`를 사용하세요. 진단이 `rss_store: PASS`, `article_count > 0`, `collection_status: success`인 경우에만 실제 기사 저장을 검증한 것입니다. 운영 GUI에서도 활성 RSS의 수집을 재검증하세요. 피드의 이용 조건은 운영자가 확인해야 합니다.
 
 Cloud 재시도 결과: Google DNS 실패/기존 프록시 robots HEAD 200; BBC DNS 실패/프록시 연결 차단. 실제 RSS 저장은 두 출처 모두 **NOT VERIFIED**입니다. 직접 IP 고정 전송은 공개 DNS가 필요한데 이 Cloud에서 제한됩니다. 프록시만으로 검사를 생략해 수집하지 않습니다. 네트워크 설정 변경 없이 진단했으며 필요 변경은 별도 승인 사항입니다.
 
@@ -209,7 +226,7 @@ Remove-Item Env:NEWSFLOW_LIVE_TEST
 
 기본 suite는 Fixture/Fake Adapter를 사용해 외부 RSS에 의존하지 않으며 테스트 DB는 임시 폴더입니다. Linux Codex에서 개발 검증 시 `python -m venv .venv`, `.venv/bin/python -m pip install -r requirements-dev.lock`, `.venv/bin/python -m pip install --no-deps -e .`, `.venv/bin/python -m pytest -q -rs`를 사용합니다. 이는 운영 Linux 지원을 뜻하지 않습니다.
 
-Windows 실환경 승인 체크리스트: [windows_validation.md](docs/windows_validation.md). Phase 1A 결과: [phase1a_validation_report.md](docs/reports/phase1a_validation_report.md). 역사적 Phase 1 결과: [phase1_report.md](docs/reports/phase1_report.md).
+Windows 11 사용자 검증 체크리스트(Phase 5C.1): [windows_user_verification_checklist.md](docs/windows_user_verification_checklist.md). 역사적 Phase 1 체크리스트: [windows_validation.md](docs/windows_validation.md). Phase 1A 결과: [phase1a_validation_report.md](docs/reports/phase1a_validation_report.md). 역사적 Phase 1 결과: [phase1_report.md](docs/reports/phase1_report.md).
 
 ## 보안·범위
 
@@ -230,7 +247,7 @@ Cloud 재현 (CI 브라우저 의존성은 별도):
 .venv/bin/python tools/ci_validation.py --mode cloud --output validation-output --browser-executable /usr/bin/chromium
 ```
 
-Windows 재현은 개발·브라우저 의존성과 Playwright Chromium을 설치한 격리된 테스트 PC에서 `python tools/ci_validation.py --mode windows --output validation-output`으로 수행합니다. `%LOCALAPPDATA%\NewsFlowAI`에 기존 DB가 있으면 기존 사용자 데이터 보호를 위해 거부합니다. 일반 PC에서는 README의 수동 Windows 체크리스트를 먼저 사용하세요. 결과: [Cloud/Windows 추가 검증 보고서](docs/reports/phase1a_cloud_windows_validation.md).
+Windows 재현은 개발·브라우저 의존성과 Playwright Chromium을 설치한 격리된 테스트 PC에서 `python tools/ci_validation.py --mode windows --output validation-output`으로 수행합니다. `%LOCALAPPDATA%\NewsFlowAI`에 기존 DB가 있으면 기존 사용자 데이터 보호를 위해 거부합니다. 일반 PC에서는 [Windows 11 사용자 검증 체크리스트](docs/windows_user_verification_checklist.md)를 먼저 사용하세요. 결과: [Cloud/Windows 추가 검증 보고서](docs/reports/phase1a_cloud_windows_validation.md).
 
 
 아래 단계별 설명은 기존 고급 기능의 도입 이력입니다. 현재 기본 화면과 자동 제작 정책은 위 Phase 5A 안내 및 [Autopilot 문서](docs/autopilot.md)를 따릅니다.
