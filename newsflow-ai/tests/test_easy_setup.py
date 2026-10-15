@@ -179,3 +179,13 @@ def test_korean_subtitles_wrap_and_overflow_is_rejected(tmp_path):
     long = ScenePlan(30, '합성 대본', '한' * 150)
     with pytest.raises(RenderError):
         card(plan, long, 0, tmp_path / 'overflow.png', font_path())
+
+
+def test_first_wizard_inherits_existing_installation_defaults(app):
+    with app.state.sessions.begin() as session:
+        session.add(AppSetting(key='autopilot_duration', value='60'))
+        session.add(AppSetting(key='autopilot_source', value='feeds'))
+    values = read_state(app.state.sessions)['values']
+    assert values['duration'] == '60' and values['source'] == 'feeds'
+    save_step(app.state.sessions, 1, 0, {})
+    assert read_state(app.state.sessions)['values'] == values

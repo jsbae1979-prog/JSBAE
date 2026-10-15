@@ -80,10 +80,27 @@ def diagnostics(data_dir: Path, sessions: sessionmaker[Session]) -> dict[str, An
             'quality': '사람의 청취·시청 평가는 아직 하지 않았습니다.'}
 
 
+def initial_state(session: Session) -> dict[str, Any]:
+    # Existing installations keep their defaults when opening the wizard for the first time.
+    values = dict(DEFAULTS)
+    allowed = {'source': {'sample', 'feeds'}, 'duration': {'30', '45', '60'},
+               'platform': {'youtube', 'instagram'}, 'font_size': {'40', '48', '56'},
+               'subtitle_y': {'1280', '1420'}}
+    for key, choices in allowed.items():
+        prefix = 'autopilot_' if key in {'source', 'duration', 'platform'} else 'video_default_'
+        row = session.get(AppSetting, prefix + key)
+        if row and row.value in choices:
+            values[key] = row.value
+    row = session.get(AppSetting, 'video_default_voice')
+    if row and 0 < len(row.value) <= 200:
+        values['voice'] = row.value
+    return {'revision': 0, 'step': 1, 'completed': False, 'values': values}
+
+
 def read_state(sessions: sessionmaker[Session]) -> dict[str, Any]:
     with sessions() as session:
         row = session.get(AppSetting, 'easy_setup')
-        return json.loads(row.value) if row else {'revision': 0, 'step': 1, 'completed': False, 'values': dict(DEFAULTS)}
+        return json.loads(row.value) if row else initial_state(session)
 
 
 def save_step(sessions: sessionmaker[Session], step: int, revision: int, values: dict[str, str]) -> None:
@@ -112,7 +129,7 @@ def save_step(sessions: sessionmaker[Session], step: int, revision: int, values:
     with sessions.begin() as session:
         session.connection().exec_driver_sql('BEGIN IMMEDIATE')
         row = session.get(AppSetting, 'easy_setup')
-        state = json.loads(row.value) if row else {'revision': 0, 'step': 1, 'completed': False, 'values': dict(DEFAULTS)}
+        state = json.loads(row.value) if row else initial_state(session)
         if state['revision'] != revision or step > state['step']:
             raise SetupError('다른 창에서 설정이 바뀌었거나 이전 단계가 남았습니다. 새로고침해 주세요.')
         state['values'].update({key: values[key] for key in fields[step]})
