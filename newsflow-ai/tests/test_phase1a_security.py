@@ -76,7 +76,8 @@ def test_gui_running_and_completion_state(client, app, fake):
 
     fake.fetch = fetch
     token = csrf(client)
-    client.post("/collection", data={"csrf_token": token})
+    response = client.post("/collection", data={"csrf_token": token}, follow_redirects=False)
+    assert response.status_code == 303 and response.headers["location"] == "/dashboard"
     assert entered.wait(5)
     try:
         assert client.get("/api/collection").json()["status"] == "running"

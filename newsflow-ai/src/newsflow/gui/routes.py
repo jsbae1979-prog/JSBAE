@@ -256,7 +256,7 @@ def collect(request: Request) -> RedirectResponse:
         request.app.state.coordinator.start()
     except CollectionBusy as exc:
         raise HTTPException(409, "이미 뉴스 수집이 실행 중입니다.") from exc
-    return go("/")
+    return go("/dashboard")
 
 
 @router.get("/api/collection")
