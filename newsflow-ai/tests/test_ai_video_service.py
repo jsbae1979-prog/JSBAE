@@ -48,6 +48,7 @@ from newsflow.video.ai.fake import FakeVideoProvider
 from newsflow.video.ai.keys import VIDEO_ENV_NAME, VideoAIKeyStore
 from newsflow.video.ai.policy import DEFAULT_PROMPT, STYLE_GUARD
 from newsflow.video.ai.service import (
+    CANCEL_UNCONFIRMED,
     CLIP_GONE_MESSAGE,
     CLIP_LOST_FINAL_MESSAGE,
     CLIP_LOST_MESSAGE,
@@ -59,9 +60,12 @@ from newsflow.video.ai.service import (
     DRAFT_CHANGED_CLOSED,
     MAX_REFETCHES,
     MAX_REQUEUES,
+    PAUSED_REFUSAL,
+    READY_MESSAGE,
     REFETCH_KEPT_FINAL,
     REFETCH_KEPT_MESSAGE,
     REFRESH_FIRST,
+    STATUS_UNREADABLE,
     TIMEOUT_OPEN_MESSAGE,
     AIVideoCoordinator,
     AIVideoError,
@@ -283,7 +287,7 @@ def assert_fixed_messages(studio: Studio) -> None:
             if message in SERVICE_MESSAGES or message in fixed_errors:
                 pass
             elif message.startswith(STATUS_RETRY):
-                assert message[len(STATUS_RETRY):] in fixed_errors | {""}, message
+                assert message[len(STATUS_RETRY):] in fixed_errors | {"", STATUS_UNREADABLE}, message
             elif message.startswith(SETTINGS_CHANGED):
                 rest = message[len(SETTINGS_CHANGED):]
                 for reason in READINESS_REASONS:
@@ -2429,3 +2433,61 @@ def test_a_composed_plan_whose_script_changed_points_to_a_new_plan(studio):
     assert COMPOSE_CLOSED in estimate["problems"] and "새로 생성할 AI 장면이 없습니다." not in estimate["problems"]
     page = TestClient(studio.app, base_url="http://127.0.0.1").get(f"/video/ai/plans/{plan_id}").text
     assert 'id="rebase-closed"' in page and 'id="rebase-form"' not in page
+
+
+def test_a_paused_provider_is_named_at_approval_and_cancel(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].status in {"queued", "in_progress"}
+    configure(studio, provider="off", approved=False)
+    studio.service.injected = None  # follow the saved setting: no provider
+    studio.service.tick()
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert refusal(excinfo) == ("장면 1" + PAUSED_REFUSAL, 422)
+    edit_scene(studio, plan_id, 0, status="queued")
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.cancel_scene(plan_id, revision(studio, plan_id), 0)
+    assert "공급사를 다시 켠 뒤 취소하세요" in str(excinfo.value)
+
+
+def test_an_unreadable_status_answer_never_asks_to_switch_a_locked_scene(studio, monkeypatch):
+    from newsflow.video.ai.contracts import ProviderResponseError
+
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+
+    def unreadable(_request_id):
+        raise ProviderResponseError()
+
+    monkeypatch.setattr(studio.provider, "status", unreadable)
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert scene.status in {"queued", "in_progress"} and scene.message == STATUS_RETRY + STATUS_UNREADABLE
+    edit_scene(studio, plan_id, 0, status="queued")
+    monkeypatch.setattr(studio.provider, "cancel", unreadable)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.cancel_scene(plan_id, revision(studio, plan_id), 0)
+    assert refusal(excinfo) == (CANCEL_UNCONFIRMED, 502)
+
+
+@needs_ffmpeg
+def test_readable_again_drops_the_disk_and_refetch_guidance(studio, monkeypatch):
+    plan_id, scene = ready_and_reviewed(studio)
+    lock_clip(monkeypatch, studio.service.clip_path(scene.id))
+    with pytest.raises(AIVideoError):
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    usage_tuple = shutil.disk_usage(studio.data_dir)
+    monkeypatch.setattr("newsflow.video.ai.service.shutil.disk_usage", lambda path: usage_tuple._replace(free=0))
+    studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    studio.service.tick()
+    assert "'결과 다시 받기'를 누르세요" in scenes(studio, plan_id)[0].message
+    monkeypatch.undo()  # space freed and the player closed
+    with pytest.raises(AIVideoError):
+        studio.service.refetch(plan_id, revision(studio, plan_id), 0)  # readable again: nothing fetched
+    kept = scenes(studio, plan_id)[0]
+    assert kept.message == READY_MESSAGE and not studio.service.can_refetch(kept)

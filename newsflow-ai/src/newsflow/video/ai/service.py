@@ -108,6 +108,12 @@ CLIP_LOST_REFUSAL = (
     f"의 받아 둔 생성 영상 파일이 없거나 바뀌었습니다. '결과 다시 받기'로 다시 받거나, '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요.")
 CLIP_GONE_REFUSAL = "의 받아 둔 생성 영상 파일이 없거나 바뀌었고 공급사에도 결과가 더 없습니다. 카드로 바꾸거나 다시 생성하세요(추가 비용)."
 REFRESH_FIRST = "이 승인으로 계획이 바뀌었으니 화면을 새로 고친 뒤 다시 승인하세요."
+READY_MESSAGE = "생성 영상 준비됨 · 원본 뉴스와의 관계를 검토하세요."
+STATUS_UNREADABLE = "공급사 응답을 확인하지 못했습니다."
+CANCEL_UNCONFIRMED = "공급사 응답을 확인하지 못해 취소하지 못했습니다. 장면은 그대로 진행 중이니 잠시 후 다시 취소하거나 장면 상태가 바뀔 때까지 기다리세요."
+PAUSED_REFUSAL = (
+    "은 AI 영상 공급사가 '사용 안 함'이라 상태 확인이 멈춰 있습니다. AI 영상 설정에서 공급사를 다시 켜면 이어서 확인합니다. "
+    "그 뒤 끝날 때까지 기다리거나, 공급사 대기열이면 '생성 취소' 뒤 카드로 바꾸세요.")
 CLIP_LOST_FINAL_MESSAGE = (
     f"받아 둔 생성 영상 파일이 없거나 바뀌었고 '결과 다시 받기'를 {MAX_REFETCHES}번 모두 써서 더 받을 수 없습니다. "
     "카드로 바꾸거나 다시 생성하세요(추가 비용).")
@@ -616,6 +622,7 @@ class AIVideoCoordinator:
             meta = {k: v for k, v in (scene.clip_meta or {}).items() if k not in ("unreadable", "restore")}
             if unreadable and state == "ok":
                 scene.clip_meta = meta  # readable again: nothing to fetch, the reviewed clip stays as it is
+                scene.message = READY_MESSAGE  # the refetch/disk guidance no longer applies
                 readable_again = True
                 needs_review = not scene.reviewed or plan.reviewed_at is None
             else:
@@ -662,6 +669,7 @@ class AIVideoCoordinator:
         if not approved:
             raise AIVideoError("최종 합성을 승인한다는 항목에 체크하세요.")
         self._release_broken_clips(plan_id, revision)
+        paused = self.provider() is None  # status checks stop while the provider is off (no network here)
         with self.sessions.begin() as session:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
@@ -680,6 +688,8 @@ class AIVideoCoordinator:
                         raise AIVideoError(
                             f"장면 {n}의 AI 생성 영상을 아직 받지 못했습니다. 그 장면의 '결과 다시 받기'(추가 생성 요청 없음)로 "
                             f"받거나, '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요.")
+                    if scene.status in ACTIVE and paused and scene.status != "waiting":
+                        raise AIVideoError(f"장면 {n}" + PAUSED_REFUSAL)
                     if scene.status in ACTIVE:
                         raise AIVideoError(
                             f"장면 {n}의 AI 생성 영상을 아직 만들고 있습니다. 끝날 때까지 기다리세요(제출 대기·공급사 대기열이면 "
@@ -709,6 +719,7 @@ class AIVideoCoordinator:
                 if spec["clip"] and (scene.clip_meta or {}).get("unreadable"):
                     # Readable again; result_gone stays: it records the provider's answer, not the file.
                     scene.clip_meta = {k: v for k, v in scene.clip_meta.items() if k != "unreadable"}
+                    scene.message = READY_MESSAGE
             plan.approved_at = utcnow()
             plan.revision += 1
             plan.status = "composing"
@@ -867,10 +878,12 @@ class AIVideoCoordinator:
                 return "canceled"
             request_id = scene.request_id
         if provider is None or request_id is None:
-            raise AIVideoError("AI 영상 공급사가 설정되지 않아 취소 요청을 보낼 수 없습니다.", 409)
+            raise AIVideoError("AI 영상 공급사가 '사용 안 함'이라 취소 요청을 보낼 수 없습니다. AI 영상 설정에서 공급사를 다시 켠 뒤 취소하세요.", 409)
         try:
             accepted = provider.cancel(request_id)
         except VideoProviderError as exc:
+            if exc.code in ("video_ai_bad_response", "video_ai_request_missing", "video_ai_failed"):
+                raise AIVideoError(CANCEL_UNCONFIRMED, 502) from None
             raise AIVideoError(ERROR_MESSAGES.get(exc.code, exc.message), 502) from None
         if not accepted:
             raise AIVideoError("공급사에서 이미 처리를 시작해 취소할 수 없습니다. 완료를 기다리세요.", 409)
@@ -1122,7 +1135,9 @@ class AIVideoCoordinator:
                 with self.sessions.begin() as session:
                     scene = session.get(AIVideoScene, scene_id)
                     if scene is not None and scene.attempt == attempt:
-                        scene.message = (STATUS_RETRY + ERROR_MESSAGES.get(code, ""))[:300]
+                        reason = STATUS_UNREADABLE if code in ("video_ai_bad_response", "video_ai_failed") \
+                            else ERROR_MESSAGES.get(code, "")
+                        scene.message = (STATUS_RETRY + reason)[:300]
                         scene.updated_at = utcnow()
                 continue
             if status.state in (QUEUED, IN_PROGRESS) and timed_out:
@@ -1220,7 +1235,7 @@ class AIVideoCoordinator:
             scene.status, scene.clip_name = "ready", target.name
             # The paid result is in hand: the refetch allowance starts again for any later loss.
             scene.clip_meta = {**meta, "sha256": fetched.sha256, "download_host": fetched.host}
-            scene.message = "생성 영상 준비됨 · 원본 뉴스와의 관계를 검토하세요."
+            scene.message = READY_MESSAGE
             scene.reviewed, scene.finished_at, scene.updated_at = False, utcnow(), utcnow()
             self._usage(session, scene, "completed")
             self._refresh(session, session.get(AIVideoPlan, scene.plan_id))

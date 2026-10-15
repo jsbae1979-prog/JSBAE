@@ -99,7 +99,8 @@ def plan_page(request: Request, plan_id: int, saved: str = "") -> HTMLResponse:
     service = context.pop("service")
     return page(
         request, "video_ai_plan.html", active="video", **context, estimate=service.estimate(plan_id),
-        ready=service.readiness(), models=[m for m in service.models() if m.usable], assets=request.app.state.video.assets_list(),
+        ready=service.readiness(), provider_off=service.provider() is None,
+        models=[m for m in service.models() if m.usable], assets=request.app.state.video.assets_list(),
         source_labels=SOURCE_LABELS, status_labels=STATUS_LABELS, plan_labels=PLAN_LABELS, style_guard=STYLE_GUARD,
         scene_label=SCENE_LABEL, notice=VIDEO_NOTICE, default_prompt=DEFAULT_PROMPT, saved=saved[:20],
         active_statuses=sorted({"waiting", "submitting", "queued", "in_progress", "downloading"}),
