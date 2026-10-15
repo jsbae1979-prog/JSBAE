@@ -602,7 +602,9 @@ class AIVideoCoordinator:
         """
         provider = self.provider()
         if provider is None:
-            raise AIVideoError("AI 영상 공급사가 설정되지 않아 결과를 다시 받을 수 없습니다.", 409)
+            raise AIVideoError(
+                "AI 영상 공급사가 '사용 안 함'이라 결과를 다시 받을 수 없습니다. AI 영상 설정에서 공급사를 다시 켠 뒤 "
+                "'결과 다시 받기'를 누르세요(추가 생성 요청 없음).", 409)
         with self.sessions() as session:
             scene = next((s for s in self._scenes(session, plan_id) if s.position == position), None)
             state = self._clip_state(scene.clip_name, (scene.clip_meta or {}).get("sha256")) \
@@ -690,10 +692,12 @@ class AIVideoCoordinator:
                             f"받거나, '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요.")
                     if scene.status in ACTIVE and paused and scene.status != "waiting":
                         raise AIVideoError(f"장면 {n}" + PAUSED_REFUSAL)
-                    if scene.status in ACTIVE:
+                    if scene.status in ("waiting", "queued"):
                         raise AIVideoError(
-                            f"장면 {n}의 AI 생성 영상을 아직 만들고 있습니다. 끝날 때까지 기다리세요(제출 대기·공급사 대기열이면 "
-                            "'생성 취소' 뒤 카드로 바꿀 수 있습니다).")
+                            f"장면 {n}의 AI 생성 영상을 아직 만들고 있습니다. 끝날 때까지 기다리거나 '생성 취소' 뒤 카드로 "
+                            "바꾸세요.")
+                    if scene.status in ACTIVE:
+                        raise AIVideoError(f"장면 {n}의 AI 생성 영상을 공급사에서 만들고 있습니다. 끝날 때까지 기다리세요(취소할 수 없음).")
                     if scene.status == "unknown":
                         raise AIVideoError(
                             f"장면 {n}은 결과 불명 상태입니다. 공급사 대시보드를 확인해 '결과 불명을 실패로 확정'한 뒤 "

@@ -2397,7 +2397,12 @@ def test_approval_refusal_for_an_active_or_unknown_scene_names_a_step_that_works
     confirm(studio, plan_id)
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
-    assert "끝날 때까지 기다리세요" in str(excinfo.value) and "'생성 취소'" in str(excinfo.value)
+    assert "끝날 때까지 기다리거나" in str(excinfo.value) and "'생성 취소'" in str(excinfo.value)  # waiting: cancel works
+    studio.service.tick()  # now with the provider (queued or generating)
+    if scenes(studio, plan_id)[0].status not in ("waiting", "queued"):
+        with pytest.raises(AIVideoError) as excinfo:
+            studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+        assert "취소할 수 없음" in str(excinfo.value) and "'생성 취소'" not in str(excinfo.value)
     plan_id = unknown_scene_plan(studio)
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
@@ -2491,3 +2496,17 @@ def test_readable_again_drops_the_disk_and_refetch_guidance(studio, monkeypatch)
         studio.service.refetch(plan_id, revision(studio, plan_id), 0)  # readable again: nothing fetched
     kept = scenes(studio, plan_id)[0]
     assert kept.message == READY_MESSAGE and not studio.service.can_refetch(kept)
+
+
+def test_a_refetch_while_the_provider_is_off_says_to_switch_it_on(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:bad-clip]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    studio.service.tick()
+    assert studio.service.can_refetch(scenes(studio, plan_id)[0])
+    configure(studio, provider="off", approved=False)
+    studio.service.injected = None
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    assert excinfo.value.status == 409 and "공급사를 다시 켠 뒤 '결과 다시 받기'를 누르세요" in str(excinfo.value)
