@@ -95,6 +95,9 @@ CLIP_UNREADABLE = (
     "의 생성 영상 파일을 지금 읽을 수 없습니다. 다른 프로그램에서 열려 있는지 확인한 뒤 다시 시도하세요. "
     "계속 읽을 수 없으면 그 장면의 '결과 다시 받기'(추가 생성 요청 없음)로 새로 받으세요.")
 COMPOSE_STARTED = "이미 최종 합성을 시작했습니다."
+REFETCH_KEPT_MESSAGE = (
+    "새 파일을 받지 못해 원래 생성 영상을 그대로 둡니다. 파일을 읽을 수 있게 한 뒤(다른 프로그램 닫기·권한 확인) "
+    "관계 검토를 다시 하고 승인하세요.")
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
 PAUSED_MESSAGE = "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다."
 # Closed scenes that still hold a request id: re-checking status and downloading costs no new request.
@@ -358,8 +361,10 @@ class AIVideoCoordinator:
 
     @staticmethod
     def _unreadable_clip(scene: AIVideoScene) -> bool:
+        meta = scene.clip_meta or {}
         return (scene.source == "generated" and scene.status == "ready" and bool(scene.request_id)
-                and bool((scene.clip_meta or {}).get("unreadable")))
+                and bool(meta.get("unreadable")) and not meta.get("result_gone")
+                and int(meta.get("refetches", 0)) < MAX_REFETCHES)
 
     @classmethod
     def can_refetch(cls, scene: AIVideoScene) -> bool:
@@ -454,6 +459,9 @@ class AIVideoCoordinator:
             previous = {s.id: session.scalar(
                 select(VideoAIUsage).where(VideoAIUsage.scene_id == s.id, VideoAIUsage.status != "not_sent")
                 .order_by(VideoAIUsage.attempt.desc()).limit(1)) for s in pending}
+            # The attempt the current submit_key was made for (sent or not: a 429 answer counts as sent).
+            holders = {s.id: session.scalar(select(VideoAIUsage).where(
+                VideoAIUsage.scene_id == s.id, VideoAIUsage.attempt == s.attempt)) for s in pending}
             for scene in pending:
                 quote = self._quote(scene, models)
                 if quote is None:
@@ -475,15 +483,16 @@ class AIVideoCoordinator:
                 # A resend after an unknown outcome keeps its key only for the identical request, so a
                 # provider that honours Idempotency-Key answers with the first request instead of
                 # billing a second one; any difference (model, seconds, resolution) gets a new key.
-                last = previous[scene.id]
+                last, holder = previous[scene.id], holders[scene.id]
                 resolution = models[scene.model_path].resolution
-                same = (
-                    last is not None and last.status == "unknown" and bool(scene.submit_key)
-                    and (last.model_path, last.seconds) == (scene.model_path, scene.clip_seconds)
-                    and self._same_resolution(session, last, resolution)
-                )
+                same = bool(scene.submit_key) and all(
+                    row is not None and (row.model_path, row.seconds) == (scene.model_path, scene.clip_seconds)
+                    and self._same_resolution(session, row, resolution) for row in (last, holder)
+                ) and last.status == "unknown"
                 if not same:
-                    # A changed prompt clears submit_key (update_scenes), so a kept key always names this request.
+                    # A key only ever names one request body: it is carried on only when both the unknown
+                    # attempt and the attempt the key was made for match this request exactly (a changed
+                    # prompt clears submit_key in update_scenes). Otherwise the resend gets a new key.
                     scene.submit_key = uuid.uuid4().hex
                 scene.attempt += 1
                 scene.status, scene.request_id, scene.error_code = "waiting", None, None
@@ -551,10 +560,19 @@ class AIVideoCoordinator:
                     self._refresh(session, plan)
 
     def refetch(self, plan_id: int, revision: int, position: int) -> None:
-        """Download a completed clip again (no new paid request): the status is re-checked for a fresh URL."""
+        """Download a completed clip again (no new paid request): the status is re-checked for a fresh URL.
+
+        Also for a ready clip that was unreadable at approval: it is looked at again first, and while it is
+        still unreadable the reviewed file stays referenced and is restored if no new file arrives.
+        """
         provider = self.provider()
         if provider is None:
             raise AIVideoError("AI 영상 공급사가 설정되지 않아 결과를 다시 받을 수 없습니다.", 409)
+        with self.sessions() as session:
+            scene = next((s for s in self._scenes(session, plan_id) if s.position == position), None)
+            state = self._clip_state(scene.clip_name, (scene.clip_meta or {}).get("sha256")) \
+                if scene is not None and self._unreadable_clip(scene) else None
+        readable_again = False
         with self.sessions.begin() as session:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
@@ -565,22 +583,32 @@ class AIVideoCoordinator:
             if scene is None or not unreadable and (
                     scene.status != "failed" or scene.error_code not in REFETCHABLE or not scene.request_id):
                 raise AIVideoError("완료 후 내려받기·검증에 실패한 장면만 결과를 다시 받을 수 있습니다.", 409)
-            meta = dict(scene.clip_meta or {})
-            if unreadable:
-                # The old file stays referenced until a new one is in hand (a failed refetch loses nothing).
-                meta.pop("unreadable", None)
-                scene.reviewed, plan.reviewed_at = False, None
-            if int(meta.get("refetches", 0)) >= MAX_REFETCHES:
-                raise AIVideoError(f"결과 다시 받기는 {MAX_REFETCHES}번까지입니다. 카드로 바꾸거나 다시 생성하세요.", 409)
-            # Counted only when the provider answers 'completed' and a download is attempted.
-            meta["refetch_pending"] = True
-            scene.clip_meta = meta
-            scene.status, scene.error_code = "in_progress", None
-            scene.message = "완료된 결과를 다시 확인해 내려받습니다(추가 생성 요청 없음)."
-            scene.submitted_at = scene.updated_at = utcnow()
-            scene.finished_at = None
-            plan.revision += 1
-            self._refresh(session, plan)
+            meta = {k: v for k, v in (scene.clip_meta or {}).items() if k not in ("unreadable", "restore")}
+            if unreadable and state == "ok":
+                scene.clip_meta = meta  # readable again: nothing to fetch, the reviewed clip stays as it is
+                readable_again = True
+            else:
+                if int(meta.get("refetches", 0)) >= MAX_REFETCHES:
+                    raise AIVideoError(f"결과 다시 받기는 {MAX_REFETCHES}번까지입니다. 카드로 바꾸거나 다시 생성하세요.", 409)
+                if unreadable:
+                    if state == "lost":
+                        scene.clip_name = None  # gone or changed after all: the usual refetch
+                    else:
+                        meta["restore"] = {"clip_name": scene.clip_name,
+                                           "clip_meta": {k: v for k, v in meta.items() if k != "refetch_pending"}}
+                    scene.reviewed, plan.reviewed_at = False, None
+                # Counted only when the provider answers 'completed' and a download is attempted.
+                meta["refetch_pending"] = True
+                scene.clip_meta = meta
+                scene.status, scene.error_code = "in_progress", None
+                scene.message = "완료된 결과를 다시 확인해 내려받습니다(추가 생성 요청 없음)."
+                scene.submitted_at = scene.updated_at = utcnow()
+                scene.finished_at = None
+                plan.revision += 1
+                self._refresh(session, plan)
+        if readable_again:
+            raise AIVideoError(
+                f"장면 {position + 1}의 생성 영상 파일을 다시 읽을 수 있어 새로 받지 않았습니다. 최종 합성 승인을 다시 누르세요.", 409)
         self.wake()
 
     def review(self, plan_id: int, revision: int, positions: set[int], statement: bool) -> None:
@@ -613,8 +641,14 @@ class AIVideoCoordinator:
             scenes = self._scenes(session, plan_id)
             for scene in scenes:
                 if scene.source == "generated" and (scene.status != "ready" or not scene.reviewed or not scene.clip_name):
-                    raise AIVideoError(
-                        f"장면 {scene.position + 1}의 AI 생성 영상이 준비·검토되지 않았습니다. 기다리거나 카드로 바꾸세요.")
+                    n = scene.position + 1
+                    if scene.status == "ready" and scene.clip_name:
+                        raise AIVideoError(f"장면 {n}의 AI 생성 영상을 관계 검토에서 확인(체크)한 뒤 다시 승인하세요.")
+                    if self.can_refetch(scene):
+                        raise AIVideoError(
+                            f"장면 {n}의 AI 생성 영상을 아직 받지 못했습니다. 그 장면의 '결과 다시 받기'(추가 생성 요청 없음)로 "
+                            f"받거나, '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요.")
+                    raise AIVideoError(f"장면 {n}의 AI 생성 영상이 준비·검토되지 않았습니다. 기다리거나 카드로 바꾸세요.")
             if any(s.source == "generated" for s in scenes) and plan.reviewed_at is None:
                 raise AIVideoError("원본 뉴스와 AI 생성 장면의 관계 검토를 먼저 저장하세요.")
             specs = [
@@ -630,8 +664,9 @@ class AIVideoCoordinator:
                     raise AIVideoError(
                         f"장면 {scene.position + 1}의 생성 영상 파일이 검토 후 바뀌었거나 없습니다. 다시 승인하면 '결과 다시 받기' "
                         "상태로 바뀝니다.", 409)
-                if spec["clip"] and (scene.clip_meta or {}).get("unreadable"):
-                    scene.clip_meta = {k: v for k, v in scene.clip_meta.items() if k != "unreadable"}  # readable again
+                if spec["clip"] and {"unreadable", "result_gone"} & set(scene.clip_meta or {}):
+                    scene.clip_meta = {k: v for k, v in scene.clip_meta.items()
+                                       if k not in ("unreadable", "result_gone")}  # readable again
             plan.approved_at = utcnow()
             plan.revision += 1
             plan.status = "composing"
@@ -720,7 +755,8 @@ class AIVideoCoordinator:
         except (FileNotFoundError, IsADirectoryError, NotADirectoryError):
             return "lost"  # nothing that could be our clip is at that name
         except OSError:
-            return "unreadable"
+            # Windows raises PermissionError when opening a directory; is_dir() returns False on errors.
+            return "lost" if path.is_dir() else "unreadable"
         return "ok" if digest.hexdigest() == sha256 else "lost"
 
     def _digest(self, name: str) -> str | None:
@@ -796,6 +832,29 @@ class AIVideoCoordinator:
             row.status, row.updated_at = status, utcnow()
             if request_id:
                 row.request_id = request_id
+
+    @staticmethod
+    def _restore(scene: AIVideoScene, code: str) -> bool:
+        """A refetch of an unreadable ready clip ended without a new file: the reviewed clip comes back."""
+        meta = scene.clip_meta or {}
+        restore = meta.get("restore")
+        if not isinstance(restore, dict) or not restore.get("clip_name") or scene.clip_name != restore["clip_name"]:
+            return False
+        refetches = int(meta.get("refetches", 0))
+        if meta.get("refetch_pending") and code != "video_ai_disk_full":
+            refetches += 1  # this close path did not count the attempt yet
+        kept = {**(restore.get("clip_meta") or {}), "unreadable": True, "refetches": refetches}
+        if code not in REFETCHABLE:
+            kept["result_gone"] = True  # nothing more to fetch: no further '결과 다시 받기' offer
+        scene.status, scene.error_code, scene.clip_meta = "ready", None, kept
+        scene.message, scene.reviewed = REFETCH_KEPT_MESSAGE, False
+        scene.finished_at = scene.updated_at = utcnow()
+        return True
+
+    def _close(self, session: Session, scene: AIVideoScene, code: str, usage: str | None) -> None:
+        """End a request without a new clip (the usage row of a restored, delivered clip stays completed)."""
+        if not self._restore(scene, code):
+            self._fail(session, scene, code, usage)
 
     def _fail(self, session: Session, scene: AIVideoScene, code: str, usage: str | None) -> None:
         scene.status = "unknown" if code == "video_ai_unknown_submit" else "failed"
@@ -983,7 +1042,7 @@ class AIVideoCoordinator:
                     with self.sessions.begin() as session:
                         scene = session.get(AIVideoScene, scene_id)
                         if scene is not None and scene.attempt == attempt and scene.status in ("queued", "in_progress", "downloading"):
-                            self._fail(session, scene, code, "failed")
+                            self._close(session, scene, code, "failed")
                             self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
                     continue
                 if submitted is not None and utcnow() - submitted > 2 * timedelta(minutes=settings.timeout_minutes):
@@ -1012,7 +1071,9 @@ class AIVideoCoordinator:
             if status.state in TERMINAL_SCENE:
                 with self.sessions.begin() as session:
                     scene = session.get(AIVideoScene, scene_id)
-                    if scene is not None and scene.attempt == attempt:
+                    if scene is not None and scene.attempt == attempt and self._restore(scene, TERMINAL_CODE[status.state]):
+                        self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
+                    elif scene is not None and scene.attempt == attempt:
                         scene.status, scene.error_code = TERMINAL_SCENE[status.state], TERMINAL_CODE[status.state]
                         scene.message = ERROR_MESSAGES[TERMINAL_CODE[status.state]][:300]
                         scene.finished_at = scene.updated_at = utcnow()
@@ -1030,7 +1091,9 @@ class AIVideoCoordinator:
         with self.sessions.begin() as session:
             scene = session.get(AIVideoScene, scene_id)
             if scene is not None and scene.attempt == attempt and scene.status in ("queued", "in_progress", "downloading"):
-                if canceled:
+                if self._restore(scene, "video_ai_timeout"):
+                    pass
+                elif canceled:
                     # Cancelled at the provider: nothing will arrive, so it is not offered for refetch.
                     scene.status, scene.error_code = "canceled", "video_ai_timeout"
                     scene.message = ERROR_MESSAGES["video_ai_timeout"][:300]
@@ -1076,7 +1139,7 @@ class AIVideoCoordinator:
                         if meta.pop("refetch_pending", False) and code != "video_ai_disk_full":
                             meta["refetches"] = int(meta.get("refetches", 0)) + 1  # a real download attempt
                         scene.clip_meta = meta
-                        self._fail(session, scene, code, "completed")
+                        self._close(session, scene, code, "completed")
                         self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
             return
         with self.sessions.begin() as session:

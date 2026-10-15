@@ -54,6 +54,7 @@ from newsflow.video.ai.service import (
     DRAFT_CHANGED,
     MAX_REFETCHES,
     MAX_REQUEUES,
+    REFETCH_KEPT_MESSAGE,
     TIMEOUT_OPEN_MESSAGE,
     AIVideoCoordinator,
     AIVideoError,
@@ -86,6 +87,7 @@ SERVICE_MESSAGES = {
     "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
     TIMEOUT_OPEN_MESSAGE,
     CLIP_LOST_MESSAGE,
+    REFETCH_KEPT_MESSAGE,
     "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
 }
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
@@ -430,7 +432,7 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
     # Composition needs every generated scene reviewed AND the relation statement.
     with pytest.raises(AIVideoError) as excinfo:
         service.approve_compose(plan_id, revision(studio, plan_id), True)
-    assert refusal(excinfo) == ("장면 3의 AI 생성 영상이 준비·검토되지 않았습니다. 기다리거나 카드로 바꾸세요.", 422)
+    assert refusal(excinfo) == ("장면 3의 AI 생성 영상을 관계 검토에서 확인(체크)한 뒤 다시 승인하세요.", 422)
     service.review(plan_id, revision(studio, plan_id), set(), True)
     assert plan_row(studio, plan_id).reviewed_at is None and not scenes(studio, plan_id)[2].reviewed
     service.review(plan_id, revision(studio, plan_id), {2}, False)
@@ -2033,13 +2035,17 @@ def test_an_unreadable_clip_is_fetched_again_and_a_failed_refetch_loses_nothing(
     monkeypatch.setattr(Path, "open", locked)
     with pytest.raises(AIVideoError):
         studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
-    # First refetch fails validation: the scene is closed but still points at the old file.
+    # First refetch fails validation: the reviewed clip comes back as it was (ready, still flagged).
     studio.provider.jobs[scene.request_id].bad_clip = True
     studio.service.refetch(plan_id, revision(studio, plan_id), 0)
     assert scenes(studio, plan_id)[0].status == "in_progress" and plan_row(studio, plan_id).reviewed_at is None
     studio.service.tick()
-    failed = scenes(studio, plan_id)[0]
-    assert (failed.status, failed.error_code, failed.clip_name) == ("failed", "video_ai_clip_invalid", scene.clip_name)
+    kept = scenes(studio, plan_id)[0]
+    assert (kept.status, kept.error_code, kept.clip_name, kept.message) == (
+        "ready", None, scene.clip_name, REFETCH_KEPT_MESSAGE)
+    assert kept.clip_meta["unreadable"] and kept.clip_meta["refetches"] == 1 and kept.clip_meta["sha256"] == scene.clip_meta["sha256"]
+    assert studio.service.can_refetch(kept) and studio.service.holds_paid_result(kept)
+    assert studio.service.estimate(plan_id)["scenes"] == []  # never bought again
     studio.service.recover()
     assert old.is_file()  # still referenced: a failed refetch never deletes the paid file
     studio.provider.jobs[scene.request_id].bad_clip = False
@@ -2086,3 +2092,142 @@ def test_a_stale_page_or_a_finished_plan_never_releases_clips(studio):
     kept = scenes(studio, plan_id)[0]
     assert (kept.status, kept.clip_name, kept.reviewed) == ("ready", scene.clip_name, True)
     assert plan_row(studio, plan_id).status == "composed"
+
+
+@needs_ffmpeg
+def test_an_unreadable_clip_whose_result_is_gone_is_kept_and_composes_once_readable(studio, monkeypatch):
+    from newsflow.video.ai.contracts import ProviderRequestMissing
+
+    plan_id, scene = ready_and_reviewed(studio)
+    old = studio.service.clip_path(scene.id)
+    real_open = Path.open
+
+    def locked(self, *args, **kwargs):
+        if self == old:
+            raise PermissionError(13, "denied")
+        return real_open(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", locked)
+    with pytest.raises(AIVideoError):
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+
+    def missing(request_id):
+        raise ProviderRequestMissing(status_code=404)
+
+    monkeypatch.setattr(studio.provider, "status", missing)
+    studio.service.tick()
+    kept = scenes(studio, plan_id)[0]
+    assert (kept.status, kept.clip_name, kept.message) == ("ready", scene.clip_name, REFETCH_KEPT_MESSAGE)
+    assert kept.clip_meta["result_gone"] and not studio.service.can_refetch(kept)
+    assert [row.status for row in usage(studio)] == ["completed"]
+    monkeypatch.setattr(Path, "open", real_open)  # the user closed the other program
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert refusal(excinfo) == ("장면 1의 AI 생성 영상을 관계 검토에서 확인(체크)한 뒤 다시 승인하세요.", 422)
+    studio.service.review(plan_id, revision(studio, plan_id), {0}, True)
+    assert studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    final = scenes(studio, plan_id)[0]
+    assert final.clip_name == scene.clip_name and not {"unreadable", "result_gone"} & set(final.clip_meta)
+    assert len(calls(studio.provider, "submit")) == 1
+
+
+@needs_ffmpeg
+def test_a_refetch_of_a_clip_that_is_readable_again_fetches_nothing(studio, monkeypatch):
+    plan_id, scene = ready_and_reviewed(studio)
+    old = studio.service.clip_path(scene.id)
+    real_open = Path.open
+
+    def locked(self, *args, **kwargs):
+        if self == old:
+            raise PermissionError(13, "denied")
+        return real_open(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", locked)
+    with pytest.raises(AIVideoError):
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    monkeypatch.setattr(Path, "open", real_open)
+    before = len(studio.provider.calls)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    assert refusal(excinfo) == (
+        "장면 1의 생성 영상 파일을 다시 읽을 수 있어 새로 받지 않았습니다. 최종 합성 승인을 다시 누르세요.", 409)
+    kept = scenes(studio, plan_id)[0]
+    assert (kept.status, kept.clip_name, kept.reviewed) == ("ready", scene.clip_name, True)
+    assert "unreadable" not in kept.clip_meta and len(studio.provider.calls) == before
+    assert studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+
+
+@needs_ffmpeg
+def test_a_directory_at_the_clip_path_is_lost_where_opening_it_is_a_permission_error(studio, monkeypatch):
+    # Windows answers PermissionError (not IsADirectoryError) when a directory is opened as a file.
+    plan_id, scene = ready_and_reviewed(studio)
+    clip = studio.service.clip_path(scene.id)
+    clip.unlink()
+    clip.mkdir()
+    real_open = Path.open
+
+    def windows_open(self, *args, **kwargs):
+        if self.is_dir():
+            raise PermissionError(13, "Permission denied")
+        return real_open(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", windows_open)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert "없거나 바뀌었습니다" in str(excinfo.value)
+    assert scenes(studio, plan_id)[0].message == CLIP_LOST_MESSAGE
+
+
+@needs_ffmpeg
+def test_approval_names_refetch_for_a_paid_result_not_yet_received(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:bad-clip]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    studio.service.tick()
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert refusal(excinfo) == ((
+        "장면 1의 AI 생성 영상을 아직 받지 못했습니다. 그 장면의 '결과 다시 받기'(추가 생성 요청 없음)로 받거나, "
+        "'받아 둔 유료 AI 영상 버리기'에 체크한 뒤 카드로 바꾸세요."), 422)
+
+
+def test_a_key_is_never_sent_with_two_different_request_bodies(studio, monkeypatch):
+    from newsflow.video.ai.contracts import ProviderRateLimited
+
+    plan_id, first = unknown_then_resolved(studio)  # attempt 1: 5 s, key K1, outcome unknown
+    model = next(m for m in list_models(studio.sessions) if m.path == MODEL)
+    sent = []
+    real_submit = studio.provider.submit
+
+    def record(request):
+        sent.append((request.idempotency_key, request.seconds, request.resolution))
+        return real_submit(request)
+
+    monkeypatch.setattr(studio.provider, "submit", record)
+
+    def lengths(value: str) -> None:
+        save_model(studio.sessions, path=MODEL, label="시험 모델", price_per_second="0.1", durations=value,
+                   resolution="720p", confirmed=True, model_id=model.id)
+
+    lengths("10")
+    confirm(studio, plan_id)  # attempt 2: 10 s, a new key
+
+    def rate_limited(request):
+        sent.append((request.idempotency_key, request.seconds, request.resolution))
+        raise ProviderRateLimited()
+
+    monkeypatch.setattr(studio.provider, "submit", rate_limited)
+    studio.service.tick()  # the 10 s body went out under its key and came back 429: requeued
+    monkeypatch.setattr(studio.provider, "submit", record)
+    lengths("5")
+    studio.service.tick()  # the send gate drops the 10 s reservation (model changed): not sent again
+    assert [row.status for row in usage(studio)] == ["unknown", "not_sent"]
+    confirm(studio, plan_id)  # attempt 3: 5 s again
+    studio.service.tick()
+    bodies = {}
+    for key, seconds, resolution in sent:
+        bodies.setdefault(key, set()).add((seconds, resolution))
+    assert all(len(found) == 1 for found in bodies.values()), sent
+    assert sent[-1][0] not in {first, sent[0][0]}  # neither the unknown 5 s key nor the 10 s key
