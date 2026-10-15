@@ -521,6 +521,7 @@ class VideoAIUsage(Base):
     provider: Mapped[str] = mapped_column(String(20))
     model_path: Mapped[str] = mapped_column(String(160))
     seconds: Mapped[int] = mapped_column(Integer)
+    resolution: Mapped[str] = mapped_column(String(10), default="", server_default="")
     estimated_cost: Mapped[str] = mapped_column(String(20))
     currency: Mapped[str] = mapped_column(String(3))
     status: Mapped[str] = mapped_column(String(20))

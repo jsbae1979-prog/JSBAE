@@ -214,3 +214,26 @@ def test_approval_day_and_news_date_filter_use_kst(client, app):
     assert "KST 자정 넘긴 합성 뉴스" in client.get("/news?start=2026-10-14&end=2026-10-14").text
     assert "KST 자정 넘긴 합성 뉴스" not in client.get("/news?start=2026-10-13&end=2026-10-13").text
     assert "발행일 시작 · KST" in client.get("/news").text
+
+
+def test_news_filter_rejects_the_first_calendar_day_instead_of_failing(client):
+    assert client.get("/news?start=0001-01-01").status_code == 422
+    assert client.get("/news?start=0001-01-02").status_code == 200
+
+
+def test_plan_page_shows_current_prices_and_flags_an_unusable_model(studio):
+    app, client, _provider, draft_id = studio
+    configure(client)
+    plan_id = plan_id_for(client, draft_id)
+    assert post(client, f"/video/ai/plans/{plan_id}/scenes", {
+        "revision": revision(app, plan_id), "source_0": "generated", "prompt_0": "도시 경제를 상징하는 추상 그래픽",
+        "model_0": "vendor/model/text-to-video", "source_1": "card", "source_2": "card",
+    }).status_code == 303
+    page = client.get(f"/video/ai/plans/{plan_id}").text
+    assert "현재 단가 기준 생성 길이 10초 · 예상 1 USD" in page
+    with app.state.sessions.begin() as session:
+        from newsflow.db.models import VideoAIModel
+
+        session.scalar(select(VideoAIModel)).confirmed_at = None
+    page = client.get(f"/video/ai/plans/{plan_id}").text
+    assert "모델을 다시 고르세요(공식 문서 확인·단가가 필요합니다)" in page and "현재 단가 기준" not in page

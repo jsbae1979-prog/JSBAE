@@ -247,9 +247,14 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             result["storyboard_and_prompt_policy"] = "PASS (scene source/prompt/model saved; footage-like prompt refused before any call)"
 
             # 4. Paid confirmation: refused over the per-job limit, accepted after raising it.
-            cost = page.locator("#cost-form")
-            cost.locator('input[name="confirmed"]').check()
-            refused(page, cost, f"/video/ai/plans/{plan_id}/confirm", 422, "작업별 한도")
+            # Over the per-job limit: the cost screen names the limit and the paid button stays disabled;
+            # a forged POST with the shown total is refused by the server too.
+            assert "작업별 한도" in page.locator("#cost-problems").inner_text()
+            assert page.locator('#cost-form button[type="submit"]').is_disabled()
+            shown = page.locator('#cost-form input[name="shown_total"]').get_attribute("value")
+            over = post_status(f"/video/ai/plans/{plan_id}/confirm", {
+                "revision": str(plan_state(plan_id)["revision"]), "shown_total": shown, "confirmed": "true"})
+            assert over == 422, over
             assert db_rows(data, "SELECT COUNT(*) FROM video_ai_usage")[0][0] == 0
             page.goto(BASE + "/video-ai-settings")
             form = page.locator("#video-ai-settings-form")
@@ -271,7 +276,7 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
             rows = db_rows(data, "SELECT status, attempt FROM video_ai_usage WHERE plan_id=?", (plan_id,))
             assert len(rows) == 1 and rows[0][1] == 1, rows
             result["budget_and_duplicate"] = (
-                f"PASS (per-job limit refusal with 0 usage rows; confirm accepted once; resend refused {resend}; 1 reservation)")
+                f"PASS (over the per-job limit: problem shown, button disabled, server 422, 0 usage rows; confirm accepted once; resend refused {resend}; 1 reservation)")
 
             # 5. Async generation with the Fake provider, then the clip preview.
             wait_scene(plan_id, 0, {"ready"})

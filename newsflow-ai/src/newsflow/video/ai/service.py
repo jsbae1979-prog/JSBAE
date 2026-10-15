@@ -18,7 +18,7 @@ from __future__ import annotations
 import hashlib
 import shutil
 import uuid
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from threading import Event, Lock, Thread
@@ -80,6 +80,7 @@ SUBMITTED = frozenset({"submitting", "queued", "in_progress"})
 RETRYABLE_END = frozenset({"planned", "failed", "nsfw", "canceled"})
 MAX_REQUEUES = 3
 MAX_REFETCHES = 3
+PAUSED_MESSAGE = "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다."
 # Closed scenes that still hold a request id: re-checking status and downloading costs no new request.
 REFETCHABLE = frozenset({"video_ai_download_failed", "video_ai_clip_invalid", "video_ai_disk_full", "video_ai_timeout"})
 # Free space kept on top of one clip before a download starts.
@@ -293,8 +294,15 @@ class AIVideoCoordinator:
         seconds = clip_seconds((scene.end_ms - scene.start_ms) / 1000, model.durations)
         return seconds, money(scene_cost(seconds, model.price_per_second))
 
+    @staticmethod
+    def _refetchable(scene: AIVideoScene) -> bool:
+        return (scene.status == "failed" and scene.error_code in REFETCHABLE and bool(scene.request_id)
+                and int((scene.clip_meta or {}).get("refetches", 0)) < MAX_REFETCHES)
+
     def _pending(self, scenes: list[AIVideoScene]) -> list[AIVideoScene]:
-        return [s for s in scenes if s.source == "generated" and s.status in RETRYABLE_END]
+        # A completed (paid) result that can still be fetched again is never re-bought by a new
+        # batch: the user uses '결과 다시 받기' or changes the prompt to generate something else.
+        return [s for s in scenes if s.source == "generated" and s.status in RETRYABLE_END and not self._refetchable(s)]
 
     def estimate(self, plan_id: int) -> dict:
         ready = self.readiness()
@@ -306,7 +314,7 @@ class AIVideoCoordinator:
             pending = self._pending(scenes)
             quotes = {s.id: self._quote(s, models) for s in pending}
             lines = [{"position": s.position, "seconds": (quotes[s.id] or (s.clip_seconds, ""))[0], "model": s.model_path,
-                      "cost": (quotes[s.id] or (0, s.estimated_cost))[1]} for s in pending]
+                      "cost": (quotes[s.id] or (0, ""))[1], "usable": quotes[s.id] is not None} for s in pending]
             total = sum((Decimal(q[1]) for q in quotes.values() if q), Decimal(0))
             spent = plan_spent(session, plan_id)
             draft = session.get(ContentDraft, plan.draft_id)
@@ -322,6 +330,11 @@ class AIVideoCoordinator:
             for scene in pending:
                 if quotes[scene.id] is None:
                     problems.append(f"장면 {scene.position + 1}의 모델이 바뀌었거나 사용할 수 없습니다. 모델을 다시 고르세요.")
+            if pending and not problems:
+                try:
+                    check_budget(session, settings, plan_id, total)
+                except VideoSettingsError as exc:
+                    problems.append(str(exc))
         return {
             "scenes": lines,
             "total": money(total), "currency": settings.currency, "plan_spent": money(spent),
@@ -348,6 +361,8 @@ class AIVideoCoordinator:
             self._reopen_compose(session, plan)
             pending = self._pending(self._scenes(session, plan_id))
             models = {m.path: m for m in list_models(self.sessions)}  # read under the write lock
+            previous = {s.id: session.scalar(select(VideoAIUsage).where(
+                VideoAIUsage.scene_id == s.id, VideoAIUsage.attempt == s.attempt)) for s in pending}
             for scene in pending:
                 quote = self._quote(scene, models)
                 if quote is None:
@@ -366,9 +381,14 @@ class AIVideoCoordinator:
                 raise AIVideoError(str(exc)) from None
             now = utcnow()
             for scene in pending:
-                # A resend after an unknown outcome keeps its key, so a provider that honours
-                # Idempotency-Key answers with the first request instead of billing a second one.
-                if scene.error_code != ProviderAmbiguousSubmit.code or not scene.submit_key:
+                # A resend after an unknown outcome keeps its key only for the identical request, so a
+                # provider that honours Idempotency-Key answers with the first request instead of
+                # billing a second one; any difference (model, seconds, resolution) gets a new key.
+                last = previous[scene.id]
+                resolution = models[scene.model_path].resolution
+                same = last is not None and (last.model_path, last.seconds, last.resolution) == (
+                    scene.model_path, scene.clip_seconds, resolution)
+                if scene.error_code != ProviderAmbiguousSubmit.code or not scene.submit_key or not same:
                     scene.submit_key = uuid.uuid4().hex
                 scene.attempt += 1
                 scene.status, scene.request_id, scene.error_code = "waiting", None, None
@@ -378,7 +398,7 @@ class AIVideoCoordinator:
                 session.add(VideoAIUsage(
                     plan_id=plan_id, scene_id=scene.id, attempt=scene.attempt, provider=provider,
                     model_path=scene.model_path, seconds=scene.clip_seconds, estimated_cost=scene.estimated_cost,
-                    currency=settings.currency, status="reserved", created_at=now, updated_at=now,
+                    resolution=resolution, currency=settings.currency, status="reserved", created_at=now, updated_at=now,
                 ))
             plan.confirmed_at, plan.currency = now, settings.currency
             plan.revision += 1
@@ -629,8 +649,6 @@ class AIVideoCoordinator:
                 # compare-and-set below commits.
                 settings = read_settings(self.sessions)
                 busy = session.scalar(select(func.count(AIVideoScene.id)).where(AIVideoScene.status.in_(SUBMITTED)))
-                if busy >= settings.max_active:
-                    return
                 ready = self.readiness(submitting=True)
                 provider = self.provider()
                 models = {m.path: m for m in list_models(self.sessions)}
@@ -645,12 +663,18 @@ class AIVideoCoordinator:
                 problem = None
                 if provider is None or not ready["ready"]:
                     problem = "설정이 바뀌어 AI 영상 생성 조건을 만족하지 않아 제출하지 않았습니다. " + " ".join(ready["reasons"])
+                elif not self._confirmed_under_current_approval(settings, plan):
+                    # Approval withdrawn and granted again after this confirmation: the old
+                    # confirmation does not carry over to the new approval.
+                    problem = "확인 뒤에 유료 생성 승인이 다시 저장되어 이전 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
+                elif plan_spent(session, plan.id) > settings.job_limit:
+                    problem = "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
                 elif draft is None or draft.revision != plan.draft_revision or not draft_is_real(session, draft):
                     problem = "대본이 바뀌었거나 체험 뉴스여서 제출하지 않았습니다."
                 elif (
                     model is None or not model.usable or reserved is None
-                    or (reserved.model_path, reserved.seconds, reserved.estimated_cost)
-                    != (scene.model_path, *(self._quote(scene, models) or (None, None)))
+                    or (reserved.model_path, reserved.seconds, reserved.estimated_cost, reserved.resolution)
+                    != (scene.model_path, *(self._quote(scene, models) or (None, None)), model.resolution)
                 ):
                     # The request must be exactly what was confirmed and limit-checked.
                     problem = "모델 설정이 바뀌어 제출하지 않았습니다. 장면을 다시 확인하세요."
@@ -667,15 +691,29 @@ class AIVideoCoordinator:
                     self._usage(session, scene, "not_sent")
                     self._refresh(session, plan)
                     continue
+                if busy >= settings.max_active:
+                    continue  # gated above every pass; sent when a slot frees up
                 # Compare-and-set: from here on a crash leaves 'submitting', which recovery turns into
                 # 'unknown' instead of resending (a resent submission could be billed twice).
                 scene.status, scene.message, scene.updated_at = "submitting", "공급사에 제출 중", utcnow()
                 request = ClipRequest(
-                    reserved.model_path, prompt, reserved.seconds, model.resolution,
+                    reserved.model_path, prompt, reserved.seconds, reserved.resolution,
                     idempotency_key=scene.submit_key,
                 )
                 attempt = scene.attempt
             self._submit_one(provider, scene_id, attempt, request)
+
+    @staticmethod
+    def _confirmed_under_current_approval(settings, plan: AIVideoPlan) -> bool:
+        if not settings.approved_at or plan.confirmed_at is None:
+            return False
+        try:
+            approved = datetime.fromisoformat(settings.approved_at)
+        except ValueError:
+            return False
+        approved = approved.astimezone(UTC).replace(tzinfo=None) if approved.tzinfo else approved
+        confirmed = plan.confirmed_at.astimezone(UTC).replace(tzinfo=None) if plan.confirmed_at.tzinfo else plan.confirmed_at
+        return approved <= confirmed
 
     def _flush_submitted(self) -> bool:
         """Store request ids whose first write failed (never resubmit; the provider already has them)."""
@@ -751,7 +789,12 @@ class AIVideoCoordinator:
             if self.stop.is_set():
                 return
             if provider is None or request_id is None:
-                continue  # status checks resume when a provider is configured again
+                # Status checks resume when the provider is switched on again; say so on the scene.
+                with self.sessions.begin() as session:
+                    scene = session.get(AIVideoScene, scene_id)
+                    if scene is not None and scene.message != PAUSED_MESSAGE:
+                        scene.message, scene.updated_at = PAUSED_MESSAGE, utcnow()
+                continue
             with self.sessions() as session:
                 scene = session.get(AIVideoScene, scene_id)
                 submitted = scene.submitted_at
@@ -804,13 +847,20 @@ class AIVideoCoordinator:
 
     def _timeout(self, provider: VideoProvider, scene_id: int, request_id: str, attempt: int) -> None:
         try:
-            provider.cancel(request_id)
-        except Exception:  # noqa: BLE001, S110 - best effort; the scene is closed as timed out either way
-            pass
+            canceled = provider.cancel(request_id) is True
+        except Exception:  # noqa: BLE001 - best effort; an unanswered cancel may still finish
+            canceled = False
         with self.sessions.begin() as session:
             scene = session.get(AIVideoScene, scene_id)
             if scene is not None and scene.attempt == attempt and scene.status in ("queued", "in_progress", "downloading"):
-                self._fail(session, scene, "video_ai_timeout", "failed")
+                if canceled:
+                    # Cancelled at the provider: nothing will arrive, so it is not offered for refetch.
+                    scene.status, scene.error_code = "canceled", "video_ai_timeout"
+                    scene.message = ERROR_MESSAGES["video_ai_timeout"][:300]
+                    scene.finished_at = scene.updated_at = utcnow()
+                    self._usage(session, scene, "canceled")
+                else:
+                    self._fail(session, scene, "video_ai_timeout", "failed")  # may still finish: refetchable
                 self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
 
     def _download(self, provider: VideoProvider, scene_id: int, attempt: int, status) -> None:
@@ -922,6 +972,10 @@ class AIVideoCoordinator:
         thread = self.thread
         if thread is not None:
             thread.join(timeout=30)
+        try:
+            self._flush_submitted()  # last chance to store request ids held in memory
+        except Exception:  # noqa: BLE001, S110 - recovery then marks such scenes unknown (never resent)
+            pass
 
     # ------------------------------------------------------------------ views
 

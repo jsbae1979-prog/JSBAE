@@ -71,6 +71,9 @@ SERVICE_MESSAGES = {
     "모델 설정이 바뀌어 제출하지 않았습니다. 장면을 다시 확인하세요.",
     "프롬프트가 현재 정책을 통과하지 못해 제출하지 않았습니다. 프롬프트를 고친 뒤 다시 확인하세요.",
     "완료된 결과를 다시 확인해 내려받습니다(추가 생성 요청 없음).",
+    "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다.",
+    "확인 뒤에 유료 생성 승인이 다시 저장되어 이전 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
+    "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
 }
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
 SETTINGS_CHANGED = "설정이 바뀌어 AI 영상 생성 조건을 만족하지 않아 제출하지 않았습니다. "
@@ -222,6 +225,12 @@ def confirm(studio: Studio, plan_id: int) -> int:
     return studio.service.confirm_generation(plan_id, revision(studio, plan_id), estimate["total"], True)
 
 
+def confirm_as_shown(studio: Studio, plan_id: int) -> int:
+    """Confirm the total the cost screen shows, even when that screen lists problems."""
+    shown = studio.service.estimate(plan_id)["total"]
+    return studio.service.confirm_generation(plan_id, revision(studio, plan_id), shown, True)
+
+
 def calls(provider: FakeVideoProvider, kind: str) -> list[str]:
     """Second element of each recorded call of ``kind`` (model path for submit, request id otherwise)."""
     return [call[1] for call in provider.calls if call[0] == kind]
@@ -363,10 +372,11 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
 
     estimate = service.estimate(plan_id)
     assert estimate == {
-        "scenes": [{"position": 2, "seconds": 5, "model": MODEL, "cost": "0.5"}], "total": "0.5", "currency": "USD",
+        "scenes": [{"position": 2, "seconds": 5, "model": MODEL, "cost": "0.5", "usable": True}], "total": "0.5", "currency": "USD",
         "plan_spent": "0", "job_limit": "5", "monthly_limit": "20", "month_spent": "0", "remaining": "20",
         "problems": [], "can_submit": True,
     }
+    assert estimate["scenes"][0]["usable"] is True
     assert service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True) == 1
     plan = plan_row(studio, plan_id)
     assert plan.status == "generating" and plan.confirmed_at is not None
@@ -559,10 +569,11 @@ def test_duplicate_confirm_while_waiting_creates_no_second_usage_row(studio):
 def test_per_job_limit_refusal_counts_earlier_attempts(studio):
     ready_studio(studio, job="1", monthly="20")
     plan_id = generated_plan(studio, {0: PROMPT + " [fake:fail]", 1: PROMPT + " [fake:fail]", 2: PROMPT})
+    over = "작업별 한도를 넘습니다: 이 작업 사용 0 + 이번 요청 예상 1.5 > 한도 1 USD. 장면 수를 줄이거나 한도를 확인하세요."
+    assert studio.service.estimate(plan_id)["problems"] == [over]  # the cost screen says so before any click
     with pytest.raises(AIVideoError) as excinfo:
-        confirm(studio, plan_id)
-    assert refusal(excinfo) == (
-        "작업별 한도를 넘습니다: 이 작업 사용 0 + 이번 요청 예상 1.5 > 한도 1 USD. 장면 수를 줄이거나 한도를 확인하세요.", 422)
+        confirm_as_shown(studio, plan_id)
+    assert refusal(excinfo) == (over, 422)
     assert usage(studio) == [] and {s.status for s in scenes(studio, plan_id)} == {"planned"}
     studio.service.update_scenes(plan_id, revision(studio, plan_id), [{"position": 2, "source": "card"}])
     assert confirm(studio, plan_id) == 2
@@ -570,7 +581,7 @@ def test_per_job_limit_refusal_counts_earlier_attempts(studio):
     assert [s.status for s in scenes(studio, plan_id)[:2]] == ["failed", "failed"]
     # Retrying the failed scenes would pass the per-job limit: the earlier attempts still count.
     with pytest.raises(AIVideoError) as excinfo:
-        confirm(studio, plan_id)
+        confirm_as_shown(studio, plan_id)
     assert refusal(excinfo) == (
         "작업별 한도를 넘습니다: 이 작업 사용 1 + 이번 요청 예상 1 > 한도 1 USD. 장면 수를 줄이거나 한도를 확인하세요.", 422)
     assert len(usage(studio)) == 2 and len(calls(studio.provider, "submit")) == 2
@@ -591,10 +602,12 @@ def test_monthly_limit_refusal_counts_other_plans(studio):
         ))
     plan_id = generated_plan(studio)
     estimate = studio.service.estimate(plan_id)
-    assert estimate["month_spent"] == "4.8" and estimate["remaining"] == "0.2" and estimate["can_submit"]
+    over = "이번 달 AI 영상 한도를 넘습니다: 사용 4.8 + 이번 요청 예상 0.5 > 한도 5 USD."
+    assert estimate["month_spent"] == "4.8" and estimate["remaining"] == "0.2"
+    assert not estimate["can_submit"] and estimate["problems"] == [over]
     with pytest.raises(AIVideoError) as excinfo:
-        confirm(studio, plan_id)
-    assert refusal(excinfo) == ("이번 달 AI 영상 한도를 넘습니다: 사용 4.8 + 이번 요청 예상 0.5 > 한도 5 USD.", 422)
+        confirm_as_shown(studio, plan_id)
+    assert refusal(excinfo) == (over, 422)
     assert usage(studio, plan_id) == [] and studio.provider.calls == []
 
 
@@ -837,6 +850,7 @@ def test_timeout_after_timeout_minutes_cancels_at_provider_and_fails(studio):
     edit_scene(studio, plan_id, 0, submitted_at=utcnow() - timedelta(minutes=6))
     studio.service.tick()
     scene = scenes(studio, plan_id)[0]
+    # Generation had started, so the cancel is refused: the scene closes as failed but stays refetchable.
     assert (scene.status, scene.error_code, scene.message) == (
         "failed", "video_ai_timeout", ERROR_MESSAGES["video_ai_timeout"])
     assert calls(studio.provider, "cancel") == [request_id]
@@ -1408,12 +1422,14 @@ def test_estimate_and_confirm_use_the_current_confirmed_price_not_the_saved_one(
     add_model(studio, price="4", model_id=model.id)  # re-confirmed at 4/s: 20 for the same scene
     estimate = studio.service.estimate(plan_id)
     assert estimate["total"] == "20" and estimate["scenes"][0]["cost"] == "20"
-    with pytest.raises(AIVideoError) as excinfo:
-        studio.service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True)
-    assert refusal(excinfo) == (STALE_TOTAL, 409)
+    assert not estimate["can_submit"] and "작업별 한도" in estimate["problems"][0]
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.confirm_generation(plan_id, revision(studio, plan_id), "20", True)
     assert excinfo.value.status == 422 and "작업별 한도" in str(excinfo.value)
+    configure(studio, job="50", monthly="100")
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True)
+    assert refusal(excinfo) == (STALE_TOTAL, 409)
     assert usage(studio) == [] and studio.provider.calls == []
     add_model(studio, confirmed=False, model_id=model.id)
     problems = studio.service.estimate(plan_id)["problems"]
@@ -1534,3 +1550,120 @@ def test_a_failed_write_after_submit_keeps_the_request_id_and_never_resends(stud
     scene = scenes(studio, plan_id)[0]
     assert scene.request_id and scene.status in {"queued", "in_progress"} and not studio.service.unsaved
     assert len(calls(studio.provider, "submit")) == 1 and [row.status for row in usage(studio)] == ["submitted"]
+
+
+# --------------------------------------------------------------------------- review round 3: gates every pass
+
+
+def test_a_withdrawn_approval_cancels_waiting_scenes_even_while_slots_are_full(studio):
+    ready_studio(studio, max_active=1)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]", 1: PROMPT + " 두번째"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    assert [s.status for s in scenes(studio, plan_id)[:2]] == ["queued", "waiting"]
+    configure(studio, approved=False, max_active=1)
+    studio.service.tick()  # the only slot is busy, but the waiting scene is still gated
+    configure(studio, approved=True, max_active=1)  # approved again: a new date, after the confirmation
+    studio.service.tick()
+    second = scenes(studio, plan_id)[1]
+    assert second.status == "canceled" and second.request_id is None
+    assert len(calls(studio.provider, "submit")) == 1
+    assert [row.status for row in usage(studio)][1] == "not_sent"
+
+
+def test_reapproval_after_confirmation_does_not_carry_the_old_confirmation(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    configure(studio, approved=False)
+    configure(studio, approved=True)
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert (scene.status, scene.message) == (
+        "canceled", "확인 뒤에 유료 생성 승인이 다시 저장되어 이전 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.")
+    assert studio.provider.calls == []
+
+
+def test_a_per_job_limit_lowered_after_confirmation_stops_the_send(studio):
+    ready_studio(studio, job="5", monthly="20")
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    configure(studio, job="0.1", monthly="20")
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert (scene.status, scene.message) == ("canceled", "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요.")
+    assert studio.provider.calls == [] and [row.status for row in usage(studio)] == ["not_sent"]
+
+
+def test_a_resend_after_unknown_gets_a_new_key_when_the_request_changed(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:ambiguous]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    first_key = scenes(studio, plan_id)[0].submit_key
+    studio.service.resolve_unknown(plan_id, revision(studio, plan_id), 0)
+    model = next(m for m in studio.service.models() if m.path == MODEL)
+    save_model(studio.sessions, path=MODEL, label="시험 모델", price_per_second="0.1", durations="10",
+               resolution="720p", confirmed=True, model_id=model.id)  # same prompt, now a 10 s clip
+    confirm(studio, plan_id)
+    assert scenes(studio, plan_id)[0].submit_key != first_key
+    rows = usage(studio)
+    assert [(row.seconds, row.resolution) for row in rows] == [(5, "720p"), (10, "720p")]
+
+
+def test_a_timeout_the_provider_cancelled_is_closed_and_not_offered_for_refetch(studio):
+    ready_studio(studio, timeout=5)
+    studio.provider.steps = 3
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, plan_id)
+    studio.service.tick()  # submitted; the first status poll answers queued
+    edit_scene(studio, plan_id, 0, submitted_at=utcnow() - timedelta(minutes=6), status="queued")
+    studio.provider.jobs[scenes(studio, plan_id)[0].request_id].polls = 0
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert (scene.status, scene.error_code) == ("canceled", "video_ai_timeout")
+    assert [row.status for row in usage(studio)] == ["canceled"]
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    assert excinfo.value.status == 409
+
+
+@needs_ffmpeg
+def test_a_refetchable_paid_result_is_not_rebought_by_the_next_batch(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:bad-clip]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].error_code == "video_ai_clip_invalid"
+    estimate = studio.service.estimate(plan_id)
+    assert estimate["scenes"] == [] and NOT_RETRYABLE in estimate["problems"]
+    with pytest.raises(AIVideoError):
+        confirm_as_shown(studio, plan_id)
+    assert len(calls(studio.provider, "submit")) == 1
+
+
+def test_in_flight_scenes_say_why_checks_paused_when_the_provider_is_off(studio, monkeypatch):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    monkeypatch.setattr(studio.service, "provider", lambda: None)
+    studio.service.tick()
+    scene = scenes(studio, plan_id)[0]
+    assert scene.status in {"queued", "in_progress"}
+    assert scene.message == "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다."
+
+
+def test_close_stores_request_ids_still_held_in_memory(studio):
+    from newsflow.video.ai.contracts import Submission
+
+    ready_studio(studio)
+    plan_id = generated_plan(studio)
+    confirm(studio, plan_id)
+    scene = scenes(studio, plan_id)[0]
+    edit_scene(studio, plan_id, 0, status="submitting")
+    studio.service.unsaved.append((scene.id, scene.attempt, Submission("req-closing-0001", "queued")))
+    studio.service.close()
+    stored = scenes(studio, plan_id)[0]
+    assert (stored.status, stored.request_id) == ("queued", "req-closing-0001") and not studio.service.unsaved

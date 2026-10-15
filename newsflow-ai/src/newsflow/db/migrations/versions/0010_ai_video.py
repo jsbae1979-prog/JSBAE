@@ -80,6 +80,7 @@ def upgrade() -> None:
         sa.Column("provider", sa.String(20), nullable=False),
         sa.Column("model_path", sa.String(160), nullable=False),
         sa.Column("seconds", sa.Integer, nullable=False),
+        sa.Column("resolution", sa.String(10), nullable=False, server_default=""),
         sa.Column("estimated_cost", sa.String(20), nullable=False),
         sa.Column("currency", sa.String(3), nullable=False),
         sa.Column("status", sa.String(20), nullable=False),

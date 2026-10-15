@@ -114,7 +114,7 @@ def news(
             raise ValueError
         start = date.fromisoformat(start) if start else None
         end = date.fromisoformat(end) if end else None
-        if end == date.max:
+        if end == date.max or start == date.min:
             raise ValueError
     except ValueError as exc:
         raise HTTPException(422, "출처 번호 또는 날짜 형식이 잘못되었습니다.") from exc
