@@ -107,26 +107,12 @@ class NewsService:
                 succeeded += 1
             except Exception as exc:  # noqa: BLE001 -- isolate one source, redact and record failure
                 failed += 1
-                # Raw adapter exceptions/URLs must never enter logs.
-                known = {
-                    "RSS 요청 시간이 초과되었습니다.",
-                    "RSS 호스트 DNS 조회에 실패했습니다.",
-                    "RSS 연결 또는 TLS 검증에 실패했습니다.",
-                    "RSS TLS 인증서 또는 HTTPS 연결 검증에 실패했습니다.",
-                    "RSS XML 형식이 잘못되었거나 안전하지 않습니다.",
-                    "RSS 또는 Atom 문서가 아닙니다.",
-                    "RSS 문서를 정상적으로 파싱하지 못했습니다.",
-                    "robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.",
-                    "robots.txt 확인 실패로 수집을 중단했습니다.",
-                    "사설·예약 IP로 연결되는 RSS 주소는 허용하지 않습니다.",
-                    "RSS 응답이 최대 2 MiB를 초과했습니다.",
-                    "crawl-delay가 지정된 출처는 Phase 1에서 수집하지 않습니다.",
-                }
-                message = (
-                    str(exc)
-                    if isinstance(exc, FeedError) and str(exc) in known
-                    else "RSS 수집 또는 저장에 실패했습니다."
-                )
+                # Raw adapter exceptions/URLs must never enter logs. Every FeedError carries a
+                # fixed Korean message, so its kind and text are safe; anything else is generic.
+                if isinstance(exc, FeedError):
+                    message = f"[{exc.kind}] {str(exc)[:450]}"
+                else:
+                    message = "RSS 수집 또는 저장에 실패했습니다."
                 with self.sessions.begin() as session:
                     session.add(
                         AuditLog(
