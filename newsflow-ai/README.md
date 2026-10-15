@@ -1,4 +1,4 @@
-# NewsFlow AI — Windows 11 · Phase 5A
+# NewsFlow AI — Windows 11 · Phase 5B
 
 뉴스 선택부터 대본·검토용 영상 제작·게시 대기함 보관까지 연결하는 한국어 로컬 웹 프로그램입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
@@ -6,13 +6,34 @@ Phase 5A의 **간편 제작**은 체험 뉴스 → 기본 대본 → 9:16 검토
 
 [간편 제작 사용법과 복구 정책](docs/autopilot.md) · [Phase 5A 검증 보고서](docs/reports/phase5a_autopilot_easyui_report.md)
 
+## 처음 사용하는 분을 위한 빠른 시작
+
+1. 프로젝트의 **[START_HERE.html](START_HERE.html)**을 브라우저로 여세요. Python 3.12와 FFmpeg/ffprobe 준비 방법을 한국어로 안내합니다.
+2. **setup.bat**를 더블클릭하세요. 가상환경·패키지를 준비하고 기존 DB를 보존하면서 필요한 디렉터리와 스키마를 초기화합니다. 필수 도구 누락 시 종료 코드 1과 해결 방법을 표시합니다. 기존 run.bat는 그대로 사용할 수 있습니다.
+3. **run.bat**를 실행하고 `http://127.0.0.1:8765`에서 **처음 설정하기**를 엽니다.
+4. 뉴스 → AI → 영상 → 음성·자막 → 저장 위치를 확인하고 설정을 완료하세요. **체험 영상 만들기**는 설정된 실제 RSS 대신 합성 뉴스로 30초 영상을 만듭니다. 실제 외부 AI·OAuth·SNS 호출은 하지 않습니다.
+
+마법사는 자동 설치나 PATH 변경을 하지 않습니다. FFmpeg가 없는 경우에도 GUI를 열어 문제를 확인할 수 있습니다. 준비 점검은 실행 파일과 글꼴·저장 공간을 확인하며 실제 인코딩 성공을 대신하지 않습니다. 30초 체험 제작으로 마지막 확인을 하세요.
+
+한국어 음성은 Windows **SAPI**에서 `ko-KR` 등 한국어 문화권으로 제공되는 설치 음성만 선택할 수 있습니다. Windows에 보이는 OneCore 음성이 모두 SAPI에 제공되는 것은 아닙니다. 미설치 시 무음으로 시작할 수 있고, 누락된 음성으로 자동 대체하지 않습니다. 대본이 장면 시간보다 길면 안전하게 실패하며 대본을 줄이거나 길이를 늘려야 합니다. 마법사 설정은 **새 검토영상 렌더 시작 시** 읽어 AudioTrack/SubtitleTrack에 보존되므로 이미 제작한 영상을 변경하지 않습니다.
+
+마법사는 마지막 점검을 통과하기 전 기존 기본값을 덮어쓰지 않습니다. 중간 입력은 재실행 후 이어서 진행하며, 오래된 창의 중복 저장은 거부합니다. 설정과 점검 이력은 기존 SQLite `AppSetting`에 저장하므로 새 migration은 필요하지 않습니다.
+
+**종료:** run.bat 실행 창에서 Ctrl+C. 브라우저 탭만 닫아도 서버는 종료되지 않습니다. 포트가 사용 중이면 기존 실행 창을 먼저 확인하세요. 8765 이외의 포트로 자동 변경하지 않습니다.
+
+**백업·업데이트:** 실행을 종료하고 `%LOCALAPPDATA%\NewsFlowAI` 폴더를 별도 위치에 복사한 뒤 소스코드를 업데이트하세요. `.venv` 의존성은 다음 실행에서 확인합니다. DB·영상·설정·자격 증명은 삭제하지 않습니다. 저장 위치 변경이 필요한 경우 아래의 기존 안전 이전 절차를 사용하세요.
+
+### Python 별도 설치 없는 배포 설계
+
+Windows x64의 Python 3.12 + PyInstaller `onedir` 묶음으로 FastAPI/Jinja/static/Alembic/PowerShell 리소스를 포함하고, 데이터는 계속 LOCALAPPDATA에 둘 수 있습니다. 개발 구현은 가능하지만 **이번 단계에서는 EXE/설치본을 빌드하거나 배포하지 않았습니다**. 서명된 실행 파일, Windows Defender/SmartScreen, 깨끗한 Windows 11에서 DLL·SAPI·DPAPI 확인, 안전한 업데이트/롤백, FFmpeg 빌드별 LGPL/GPL 재배포 조건·라이선스 동봉 검토가 선행되어야 합니다. 원격 EXE를 자동 다운로드·실행하거나 TLS/체크섬 검증을 우회하는 설치기는 제공하지 않습니다.
+
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 5A 검토 브랜치 `feat/newsflow-phase5a`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 5B 검토 브랜치 `feat/newsflow-phase5b`를 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase5a https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase5b https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```

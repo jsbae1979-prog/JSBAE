@@ -26,6 +26,7 @@ from .gui.autopilot_routes import router as autopilot_router
 from .gui.intelligence_routes import router as intelligence_router
 from .gui.publishing_routes import router as publishing_router
 from .gui.routes import router
+from .gui.setup_routes import router as setup_router
 from .gui.video_routes import router as video_router
 from .news.collector import Collector
 from .news.rss_adapter import PublicRSSAdapter, RSSAdapter
@@ -151,6 +152,7 @@ def create_app(settings: Settings | None = None, adapter: RSSAdapter | None = No
         response.headers["Cache-Control"] = "no-store"
         return response
 
+    app.include_router(setup_router)
     app.include_router(autopilot_router)
     app.include_router(router)
     app.include_router(intelligence_router)

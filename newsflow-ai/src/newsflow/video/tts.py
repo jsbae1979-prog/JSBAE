@@ -99,6 +99,18 @@ class WindowsTTS:
         except (ValueError, UnicodeError):
             raise TTSError("Windows 음성 목록을 읽지 못했습니다.") from None
 
+    def voice_details(self) -> list[dict[str, str]]:
+        try:
+            entries = json.loads(self._command(["-VoiceDetails"], 15).decode("utf-8-sig"))
+            if not isinstance(entries, list) or len(entries) > 100 or any(
+                not isinstance(v, dict) or set(v) != {"name", "culture"}
+                or any(not isinstance(x, str) or len(x) > 200 for x in v.values()) for v in entries
+            ):
+                raise ValueError
+            return entries
+        except (ValueError, UnicodeError):
+            raise TTSError("Windows 음성 언어 정보를 읽지 못했습니다.") from None
+
     def synthesize(self, text: str, target: Path, voice: str, seconds: float) -> None:
         if voice not in self.voices() or len(text) > 400:
             raise TTSError("선택한 Windows 음성을 확인하세요.")

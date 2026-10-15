@@ -45,6 +45,12 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
         body: new URLSearchParams(new FormData(form))
       });
       if (!response.ok) {
+        if (response.status === 422 && form.hasAttribute('data-setup-form')) {
+          const documentCopy = new DOMParser().parseFromString(await response.text(), 'text/html');
+          const explanation = documentCopy.getElementById('setup-error');
+          alert.textContent = explanation ? explanation.textContent : '선택한 설정과 이전 단계를 확인해 주세요.';
+          return;
+        }
         const messages = {
           403: '보안 검증에 실패했습니다. 새로고침 후 다시 시도하세요.',
           409: '이미 실행 중이거나 중복된 요청입니다. 현재 상태를 확인하세요.',

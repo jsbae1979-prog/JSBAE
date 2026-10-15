@@ -1,11 +1,14 @@
-param([string]$Spec, [switch]$ListVoices)
+param([string]$Spec, [switch]$ListVoices, [switch]$VoiceDetails)
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 try {
     Add-Type -AssemblyName System.Speech
     $speaker = [System.Speech.Synthesis.SpeechSynthesizer]::new()
     try {
-        if ($ListVoices) {
+        if ($VoiceDetails) {
+            $details = @($speaker.GetInstalledVoices() | Where-Object { $_.Enabled } | ForEach-Object { @{name=$_.VoiceInfo.Name; culture=$_.VoiceInfo.Culture.Name} })
+            ConvertTo-Json -InputObject $details -Compress
+        } elseif ($ListVoices) {
             $names = @($speaker.GetInstalledVoices() | Where-Object { $_.Enabled } | ForEach-Object { $_.VoiceInfo.Name })
             ConvertTo-Json -InputObject $names -Compress
         } else {
