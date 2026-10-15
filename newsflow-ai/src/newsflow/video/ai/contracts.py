@@ -133,7 +133,7 @@ class ProviderAmbiguousSubmit(VideoProviderError):
     code = "video_ai_unknown_submit"
     message = (
         "생성 요청을 보냈지만 결과를 확인하지 못했습니다. 중복 과금을 막기 위해 자동으로 다시 보내지 않습니다. "
-        "공급사 대시보드에서 확인한 뒤 장면을 다시 생성하거나 카드로 바꾸세요."
+        "공급사 대시보드에서 확인한 뒤 '결과 불명을 실패로 확정'을 누르면 장면을 다시 생성하거나 카드로 바꿀 수 있습니다."
     )
 
 

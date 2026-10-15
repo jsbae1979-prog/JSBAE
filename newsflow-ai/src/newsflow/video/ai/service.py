@@ -107,6 +107,7 @@ CLIP_GONE_MESSAGE = "받아 둔 생성 영상 파일이 없거나 바뀌었고 �
 CLIP_LOST_REFUSAL = (
     f"의 받아 둔 생성 영상 파일이 없거나 바뀌었습니다. '결과 다시 받기'로 다시 받거나, '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요.")
 CLIP_GONE_REFUSAL = "의 받아 둔 생성 영상 파일이 없거나 바뀌었고 공급사에도 결과가 더 없습니다. 카드로 바꾸거나 다시 생성하세요(추가 비용)."
+REFRESH_FIRST = "이 승인으로 계획이 바뀌었으니 화면을 새로 고친 뒤 다시 승인하세요."
 CLIP_LOST_FINAL_MESSAGE = (
     f"받아 둔 생성 영상 파일이 없거나 바뀌었고 '결과 다시 받기'를 {MAX_REFETCHES}번 모두 써서 더 받을 수 없습니다. "
     "카드로 바꾸거나 다시 생성하세요(추가 비용).")
@@ -129,6 +130,8 @@ def _as_utc(value):
 
 
 DRAFT_CHANGED = "계획을 만든 뒤 대본이 바뀌었습니다. '바뀐 대본 반영'을 누르거나(장면 구성이 같을 때) 새 계획을 만드세요."
+DRAFT_CHANGED_CLOSED = "계획을 만든 뒤 대본이 바뀌었습니다. 최종 합성을 시작한 계획에는 반영할 수 없으니 새 계획을 만드세요."
+COMPOSE_CLOSED = "최종 합성을 시작한 계획입니다. 바꾸거나 더 생성하려면 새 계획을 만드세요."
 
 
 class AIVideoError(Exception):
@@ -413,8 +416,9 @@ class AIVideoCoordinator:
             other_currency = plan_currency_mismatch(session, plan_id, settings.currency)
             draft = session.get(ContentDraft, plan.draft_id)
             problems = list(ready["reasons"])
+            closed = self._compose_closed(session, plan)
             if draft is None or draft.revision != plan.draft_revision:
-                problems.append(DRAFT_CHANGED)
+                problems.append(DRAFT_CHANGED_CLOSED if closed else DRAFT_CHANGED)
             elif not draft_is_real(session, draft):
                 problems.append("체험(합성) 뉴스 대본은 외부 AI 영상 공급사로 보내지 않습니다.")
             refetchable = [s for s in scenes if s.source == "generated" and self._refetchable(s)]
@@ -436,8 +440,12 @@ class AIVideoCoordinator:
                     "장면 " + ", ".join(str(s.position + 1) for s in exhausted)
                     + f"은 결과를 {MAX_REFETCHES}번 받지 못해 새 유료 생성에 포함됩니다(추가 비용).")
             if not pending:
-                problems.append("생성할 AI 장면이 없습니다. 장면 소재를 'AI 생성'으로 바꾸세요." if not refetchable
-                                else "새로 생성할 AI 장면이 없습니다.")
+                if closed:
+                    problems.append(COMPOSE_CLOSED)
+                elif any(s.source == "generated" for s in scenes):
+                    problems.append("새로 생성할 AI 장면이 없습니다.")  # generating, done, unknown or refetchable
+                else:
+                    problems.append("생성할 AI 장면이 없습니다. 장면 소재를 'AI 생성'으로 바꾸세요.")
             if any(s.status == "unknown" for s in scenes):
                 problems.append("결과 불명 장면을 먼저 실패로 확정하세요.")
             for scene in pending:
@@ -454,7 +462,7 @@ class AIVideoCoordinator:
             "job_limit": money(settings.job_limit), "monthly_limit": money(settings.monthly_limit),
             "month_spent": money(ready["usage"]["spent"]), "remaining": money(ready["remaining"]),
             "problems": problems, "notices": notices, "can_submit": not problems,
-            "other_currency_spend": other_currency,
+            "other_currency_spend": other_currency, "compose_closed": closed,
         }
 
     def confirm_generation(self, plan_id: int, revision: int, shown_total: str, confirmed: bool) -> int:
@@ -593,7 +601,7 @@ class AIVideoCoordinator:
             scene = next((s for s in self._scenes(session, plan_id) if s.position == position), None)
             state = self._clip_state(scene.clip_name, (scene.clip_meta or {}).get("sha256")) \
                 if scene is not None and self._unreadable_clip(scene) else None
-        readable_again = False
+        readable_again = needs_review = False
         with self.sessions.begin() as session:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
@@ -609,6 +617,7 @@ class AIVideoCoordinator:
             if unreadable and state == "ok":
                 scene.clip_meta = meta  # readable again: nothing to fetch, the reviewed clip stays as it is
                 readable_again = True
+                needs_review = not scene.reviewed or plan.reviewed_at is None
             else:
                 if int(meta.get("refetches", 0)) >= MAX_REFETCHES:
                     raise AIVideoError(f"결과 다시 받기는 {MAX_REFETCHES}번까지입니다. 카드로 바꾸거나 다시 생성하세요.", 409)
@@ -629,8 +638,9 @@ class AIVideoCoordinator:
                 plan.revision += 1
                 self._refresh(session, plan)
         if readable_again:
-            raise AIVideoError(
-                f"장면 {position + 1}의 생성 영상 파일을 다시 읽을 수 있어 새로 받지 않았습니다. 최종 합성 승인을 다시 누르세요.", 409)
+            step = ("관계 검토에서 이 장면을 확인(체크)해 저장한 뒤 최종 합성 승인을 누르세요." if needs_review
+                    else "최종 합성 승인을 다시 누르세요.")
+            raise AIVideoError(f"장면 {position + 1}의 생성 영상 파일을 다시 읽을 수 있어 새로 받지 않았습니다. {step}", 409)
         self.wake()
 
     def review(self, plan_id: int, revision: int, positions: set[int], statement: bool) -> None:
@@ -670,7 +680,17 @@ class AIVideoCoordinator:
                         raise AIVideoError(
                             f"장면 {n}의 AI 생성 영상을 아직 받지 못했습니다. 그 장면의 '결과 다시 받기'(추가 생성 요청 없음)로 "
                             f"받거나, '{DISCARD_LABEL}'에 체크한 뒤 카드로 바꾸세요.")
-                    raise AIVideoError(f"장면 {n}의 AI 생성 영상이 준비·검토되지 않았습니다. 기다리거나 카드로 바꾸세요.")
+                    if scene.status in ACTIVE:
+                        raise AIVideoError(
+                            f"장면 {n}의 AI 생성 영상을 아직 만들고 있습니다. 끝날 때까지 기다리세요(제출 대기·공급사 대기열이면 "
+                            "'생성 취소' 뒤 카드로 바꿀 수 있습니다).")
+                    if scene.status == "unknown":
+                        raise AIVideoError(
+                            f"장면 {n}은 결과 불명 상태입니다. 공급사 대시보드를 확인해 '결과 불명을 실패로 확정'한 뒤 "
+                            "카드로 바꾸거나 다시 생성하세요.")
+                    raise AIVideoError(
+                        f"장면 {n}의 AI 생성 영상이 없습니다. 카드로 바꾸거나, 예상 비용을 확인한 뒤 '유료 생성 요청'으로 "
+                        "다시 생성하세요(추가 비용).")
             if any(s.source == "generated" for s in scenes) and plan.reviewed_at is None:
                 raise AIVideoError("원본 뉴스와 AI 생성 장면의 관계 검토를 먼저 저장하세요.")
             specs = [
@@ -710,6 +730,14 @@ class AIVideoCoordinator:
             plan.render_job_id = job_id
             self._refresh(session, plan)
         return job_id
+
+    @staticmethod
+    def _compose_closed(session: Session, plan: AIVideoPlan) -> bool:
+        """True while a composition runs or after it finished: the plan can no longer change."""
+        if plan.render_job_id is None:
+            return False
+        job = session.get(RenderJob, plan.render_job_id)
+        return job is not None and job.status not in COMPOSE_OPEN
 
     @staticmethod
     def _compose_open(session: Session, plan: AIVideoPlan) -> None:
@@ -766,13 +794,12 @@ class AIVideoCoordinator:
         def scenes_of(positions: list[int]) -> str:
             return "장면 " + ", ".join(str(p + 1) for p in positions)
 
-        if unreadable:
-            parts = [scenes_of(group) + text for group, text in (
-                ([p for p in unreadable if p not in stuck], CLIP_UNREADABLE), (stuck, CLIP_UNREADABLE_KEPT)) if group]
-            raise AIVideoError(" ".join(parts), 409)
         parts = [scenes_of(group) + text for group, text in (
+            ([p for p in unreadable if p not in stuck], CLIP_UNREADABLE), (stuck, CLIP_UNREADABLE_KEPT),
             ([p for p in broken if p not in gone and p not in final], CLIP_LOST_REFUSAL),
             (gone, CLIP_GONE_REFUSAL), (final, CLIP_LOST_FINAL_REFUSAL)) if group]
+        if unreadable and broken:
+            parts.append(REFRESH_FIRST)  # this approval changed the plan: a retry starts from a fresh page
         raise AIVideoError(" ".join(parts), 409)
 
     def _clip_state(self, name: str | None, sha256: str | None) -> str:

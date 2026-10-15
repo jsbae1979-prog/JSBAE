@@ -53,12 +53,15 @@ from newsflow.video.ai.service import (
     CLIP_LOST_MESSAGE,
     CLIP_UNREADABLE,
     CLIP_UNREADABLE_KEPT,
+    COMPOSE_CLOSED,
     COMPOSE_STARTED,
     DRAFT_CHANGED,
+    DRAFT_CHANGED_CLOSED,
     MAX_REFETCHES,
     MAX_REQUEUES,
     REFETCH_KEPT_FINAL,
     REFETCH_KEPT_MESSAGE,
+    REFRESH_FIRST,
     TIMEOUT_OPEN_MESSAGE,
     AIVideoCoordinator,
     AIVideoError,
@@ -398,7 +401,7 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
     assert estimate == {
         "scenes": [{"position": 2, "seconds": 5, "model": MODEL, "cost": "0.5", "usable": True}], "total": "0.5", "currency": "USD",
         "plan_spent": "0", "job_limit": "5", "monthly_limit": "20", "month_spent": "0", "remaining": "20",
-        "problems": [], "notices": [], "can_submit": True, "other_currency_spend": False,
+        "problems": [], "notices": [], "can_submit": True, "other_currency_spend": False, "compose_closed": False,
     }
     assert estimate["scenes"][0]["usable"] is True
     assert service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True) == 1
@@ -516,7 +519,8 @@ def test_failed_generated_scene_can_fall_back_to_card_and_compose(studio):
     assert scenes(studio, plan_id)[0].status == "failed"
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
-    assert refusal(excinfo) == ("장면 1의 AI 생성 영상이 준비·검토되지 않았습니다. 기다리거나 카드로 바꾸세요.", 422)
+    assert refusal(excinfo) == ((
+        "장면 1의 AI 생성 영상이 없습니다. 카드로 바꾸거나, 예상 비용을 확인한 뒤 '유료 생성 요청'으로 다시 생성하세요(추가 비용)."), 422)
     studio.service.update_scenes(plan_id, revision(studio, plan_id), [{"position": 0, "source": "card"}])
     assert plan_row(studio, plan_id).status == "draft"
     job_id = studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
@@ -580,7 +584,8 @@ def test_duplicate_confirm_while_waiting_creates_no_second_usage_row(studio):
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True)
     message, status = refusal(excinfo)
-    assert status == 422 and NOT_RETRYABLE in message
+    # The AI scene is already waiting: no advice to switch a scene to AI.
+    assert status == 422 and "새로 생성할 AI 장면이 없습니다." in message and NOT_RETRYABLE not in message
     with pytest.raises(AIVideoError):
         studio.service.confirm_generation(plan_id, revision(studio, plan_id), "0", True)
     rows = usage(studio)
@@ -2341,3 +2346,86 @@ def test_a_kept_clip_lost_after_the_result_is_gone_is_not_offered_a_refetch(stud
     assert estimate["notices"] == [
         "장면 1은 받아 둔 영상을 잃었고 공급사에도 결과가 더 없어 새 유료 생성에 포함됩니다(추가 비용)."]
     assert [row.status for row in usage(studio)] == ["completed"]  # the delivered clip's row is untouched
+
+
+@needs_ffmpeg
+def test_one_refusal_names_both_an_unreadable_and_a_lost_clip(studio, monkeypatch):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT, 1: PROMPT + " 둘째"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    studio.service.tick()
+    studio.service.review(plan_id, revision(studio, plan_id), {0, 1}, True)
+    first, second = scenes(studio, plan_id)[:2]
+    lock_clip(monkeypatch, studio.service.clip_path(first.id))
+    studio.service.clip_path(second.id).unlink()
+    before = revision(studio, plan_id)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, before, True)
+    message = str(excinfo.value)
+    assert message.startswith("장면 1" + CLIP_UNREADABLE) and "장면 2의 받아 둔 생성 영상 파일이 없거나 바뀌었습니다." in message
+    assert message.endswith(REFRESH_FIRST) and revision(studio, plan_id) == before + 1
+    assert scenes(studio, plan_id)[1].status == "failed" and scenes(studio, plan_id)[0].status == "ready"
+
+
+@needs_ffmpeg
+def test_readable_again_after_a_restore_asks_for_the_review_first(studio, monkeypatch):
+    plan_id, scene = ready_and_reviewed(studio)
+    lock_clip(monkeypatch, studio.service.clip_path(scene.id))
+    with pytest.raises(AIVideoError):
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    studio.provider.jobs[scene.request_id].bad_clip = True
+    studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    studio.service.tick()  # restored, review reset
+    monkeypatch.undo()
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.refetch(plan_id, revision(studio, plan_id), 0)
+    assert refusal(excinfo) == ((
+        "장면 1의 생성 영상 파일을 다시 읽을 수 있어 새로 받지 않았습니다. "
+        "관계 검토에서 이 장면을 확인(체크)해 저장한 뒤 최종 합성 승인을 누르세요."), 409)
+    studio.service.review(plan_id, revision(studio, plan_id), {0}, True)
+    assert studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+
+
+def test_approval_refusal_for_an_active_or_unknown_scene_names_a_step_that_works(studio):
+    ready_studio(studio)
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:slow]"})
+    confirm(studio, plan_id)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert "끝날 때까지 기다리세요" in str(excinfo.value) and "'생성 취소'" in str(excinfo.value)
+    plan_id = unknown_scene_plan(studio)
+    with pytest.raises(AIVideoError) as excinfo:
+        studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    assert "'결과 불명을 실패로 확정'" in str(excinfo.value)
+    estimate = studio.service.estimate(plan_id)
+    assert "새로 생성할 AI 장면이 없습니다." in estimate["problems"] and NOT_RETRYABLE not in estimate["problems"]
+    assert "'결과 불명을 실패로 확정'을 누르면" in scenes(studio, plan_id)[0].message
+
+
+def unknown_scene_plan(studio: Studio) -> int:
+    """A plan whose only AI scene ended 'unknown' (not yet resolved)."""
+    plan_id = generated_plan(studio, {0: PROMPT + " [fake:ambiguous]"})
+    confirm(studio, plan_id)
+    studio.service.tick()
+    assert scenes(studio, plan_id)[0].status == "unknown"
+    return plan_id
+
+
+@needs_ffmpeg
+def test_a_composed_plan_whose_script_changed_points_to_a_new_plan(studio):
+    plan_id, _scene = ready_and_reviewed(studio)
+    studio.service.approve_compose(plan_id, revision(studio, plan_id), True)
+    studio.app.state.video.future.result(timeout=30)
+    studio.service.sync()
+
+    def caption(items):
+        items[0]["caption"] = "고친 자막"
+
+    edit_draft(studio, caption)
+    estimate = studio.service.estimate(plan_id)
+    assert estimate["compose_closed"] and DRAFT_CHANGED_CLOSED in estimate["problems"]
+    assert DRAFT_CHANGED not in estimate["problems"]
+    assert COMPOSE_CLOSED in estimate["problems"] and "새로 생성할 AI 장면이 없습니다." not in estimate["problems"]
+    page = TestClient(studio.app, base_url="http://127.0.0.1").get(f"/video/ai/plans/{plan_id}").text
+    assert 'id="rebase-closed"' in page and 'id="rebase-form"' not in page
