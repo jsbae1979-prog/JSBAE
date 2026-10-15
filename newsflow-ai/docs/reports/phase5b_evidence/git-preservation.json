@@ -1,0 +1,19 @@
+{
+  "base": "d0ec31445ee32893378e6194d7bd16cda1b545d4",
+  "branch": "feat/newsflow-phase5b",
+  "tested_code": "ccd08967bba4d4fd4491c26fe4ae1959ae8f6a39",
+  "protected_refs": {
+    "refs/heads/main": "aa2f056d78ceed24874d0b4c50c6033f7168bf4d",
+    "refs/pull/1/head": "bd9df6d240c137542121343ff137a5e94042b676",
+    "refs/pull/2/head": "f9f9f0fc6bdad3478a2f53871ecbbab4d813c97b",
+    "refs/pull/3/head": "641167e08583e628602ca27fd07a31b9609a9aac",
+    "refs/pull/4/head": "e3b9c71927218864afec00434460d7d9cb8b8046",
+    "refs/pull/5/head": "4bce0c70af7f17af4904120866c4b46eae8c4ca2",
+    "refs/pull/6/head": "4d7a024c37528d1265ad595d9402bf790eb18536",
+    "refs/pull/7/head": "72b274314f220a1f03ff5b52b5c65123ea34acd0",
+    "refs/pull/8/head": "d0ec31445ee32893378e6194d7bd16cda1b545d4"
+  },
+  "existing_PRs_modified": false,
+  "main_merged": false,
+  "run_bat_DB_migrations_and_OAuth_sources_changed": false
+}

@@ -1,0 +1,127 @@
+{
+  "mode": "windows",
+  "platform": "win32",
+  "scenario": "synthetic RSS / offline AI / silent preview / local draft",
+  "outcome": "PASS",
+  "LOCALAPPDATA_path": "PASS (isolated Windows current-user directory)",
+  "actual_run_bat": "PASS",
+  "browser": "Google Chrome",
+  "easy_job_id": "cd296c680e894459b6590fd755b23318",
+  "progress_observed": {
+    "stage": "render",
+    "progress": 50
+  },
+  "duplicate_start": "PASS (409)",
+  "easy_video": {
+    "file": "easy-30s.mp4",
+    "sha256": "5557edb74b6e642c83b93b6944c9276d1e8445452eaf31878c148251d9d59bdc",
+    "bytes": 242788,
+    "metadata": {
+      "format": "mov,mp4,m4a,3gp,3g2,mj2",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "width": 1080,
+      "height": 1920,
+      "duration": 30.021029,
+      "fps": 30.0,
+      "audio_channels": 2,
+      "playable": true
+    },
+    "browser_frame_decode": "PASS",
+    "browser_playback": "PASS (playback time advanced)",
+    "audio": "offline silence",
+    "human_voice_and_editorial_quality": "NOT VERIFIED"
+  },
+  "one_click_easy_to_local_queue": "PASS",
+  "process_restart_persistence": "PASS (pause, edited script, MP4, queue)",
+  "guided_video": {
+    "file": "guided-30s.mp4",
+    "sha256": "f6d7bad2739a9df5d99dbf9d7c821a0dd9aa531920e78d2fe4b28727020746dc",
+    "bytes": 238651,
+    "metadata": {
+      "format": "mov,mp4,m4a,3gp,3g2,mj2",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "width": 1080,
+      "height": 1920,
+      "duration": 30.021029,
+      "fps": 30.0,
+      "audio_channels": 2,
+      "playable": true
+    },
+    "browser_frame_decode": "PASS",
+    "browser_playback": "PASS (playback time advanced)",
+    "audio": "offline silence",
+    "human_voice_and_editorial_quality": "NOT VERIFIED"
+  },
+  "guided_news_script_edit_video_review_queue": "PASS",
+  "guided_cancel": "PASS",
+  "actionable_no_source_error": "PASS",
+  "simple_defaults_and_advanced_access": "PASS",
+  "layout": {
+    "status": "PASS",
+    "checks": [
+      "mobile-320/home",
+      "mobile-320/start",
+      "mobile-320/result",
+      "mobile-320/queue",
+      "mobile-320/settings",
+      "desktop-200percent/home",
+      "desktop-200percent/start",
+      "desktop-200percent/result",
+      "desktop-200percent/queue",
+      "desktop-200percent/settings"
+    ],
+    "zoom_method": "CSS zoom 200%",
+    "user_usability_study": "NOT VERIFIED"
+  },
+  "database": {
+    "counts": {
+      "autopilot_jobs": 4,
+      "autopilot_attempts": 15,
+      "autopilot_events": 44,
+      "autopilot_artifacts": 15,
+      "news_articles": 8,
+      "content_drafts": 2,
+      "video_projects": 2,
+      "render_jobs": 2,
+      "publish_drafts": 2,
+      "publish_validations": 2,
+      "publish_jobs": 0,
+      "publish_attempts": 0
+    },
+    "AI_providers": [
+      "offline"
+    ],
+    "human_approval_preserved": true,
+    "review_only_video": true,
+    "real_connected_accounts": 0,
+    "enabled_RSS_sources": 0
+  },
+  "oauth_safety": {
+    "real_authorization_requests": 0,
+    "real_token_exchange_calls": 0,
+    "real_refresh_calls": 0,
+    "real_revoke_calls": 0,
+    "mode": "OFFLINE/BLOCKED",
+    "feature_enabled": false,
+    "user_approval": false,
+    "phase_allows_real": false
+  },
+  "browser_external_request_origins": [],
+  "browser_javascript_errors": 0,
+  "screenshots": [
+    "advanced-settings.png",
+    "completed-video.png",
+    "dashboard.png",
+    "desktop-200percent.png",
+    "error-guidance.png",
+    "guided-script-review.png",
+    "guided-video-review.png",
+    "mobile-320.png",
+    "progress.png",
+    "queue.png",
+    "simple-settings.png",
+    "start.png"
+  ]
+}

@@ -94,6 +94,10 @@ def launch_lock(path: Path) -> Iterator[None]:
 
 
 def main() -> int:
+    setup_only = sys.argv[1:] == ["--setup-only"]
+    if sys.argv[1:] and not setup_only:
+        print("지원하지 않는 실행 옵션입니다.")
+        return 1
     if sys.platform != "win32" or sys.version_info[:2] != (3, 12):
         print("Windows 11과 Python 3.12에서 run.bat를 실행하세요.")
         return 1
@@ -111,6 +115,11 @@ def main() -> int:
                 raise LaunchError(
                     "기존 data/newsflow.db가 있습니다. README의 migrate_data 명령으로 안전하게 이전한 후 다시 실행하세요."
                 )
+            if setup_only:
+                return subprocess.run(
+                    [str(python), "-m", "newsflow.easy_setup"], cwd=ROOT, check=False,
+                ).returncode
+            print("처음 실행하면 홈의 '처음 설정하기'에서 영상 도구와 한국어 음성을 점검하세요.")
             # Fail before launching another server; the runtime additionally holds its bound socket.
             port = int(os.getenv("NEWSFLOW_PORT", "8765"))
             if not 1024 <= port <= 65535:

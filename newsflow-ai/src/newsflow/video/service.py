@@ -114,7 +114,10 @@ class VideoCoordinator:
         """Create a clearly marked local review copy without granting human approval."""
         if duration not in (30, 45, 60):
             raise VideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
-        return self._start(draft_id, duration, "offline-silence", 48, 1420, None, False, True, on_job)
+        from newsflow.easy_setup import preview_preferences
+
+        voice, size, position = preview_preferences(self.sessions)
+        return self._start(draft_id, duration, voice, size, position, None, False, True, on_job)
 
     def _start(
         self,

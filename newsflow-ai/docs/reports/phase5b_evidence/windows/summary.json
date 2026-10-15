@@ -1,0 +1,18 @@
+{
+  "tested_code": "ccd08967bba4d4fd4491c26fe4ae1959ae8f6a39",
+  "run_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38693103037",
+  "outcome": "PASS",
+  "tests": 948,
+  "passed": 947,
+  "skipped": 1,
+  "failures": 0,
+  "warnings": 1,
+  "warning": "Existing StarletteDeprecationWarning (httpx TestClient)",
+  "Node20_deprecation_warning": "not found in complete job log",
+  "setup_bat": "PASS (2 executions)",
+  "run_bat_and_Chrome": "PASS",
+  "native_DPAPI_and_production_vault": "PASS (synthetic only)",
+  "Korean_SAPI_voice_count": 0,
+  "Korean_speech": "NOT VERIFIED",
+  "user_Windows11_PC": "NOT VERIFIED"
+}
