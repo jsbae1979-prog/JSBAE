@@ -141,3 +141,39 @@ def test_runtime_only_tools_do_not_import_dev_dependencies(name):
     source = (TOOLS / f"{name}.py").read_text(encoding="utf-8")
     for forbidden in ("playwright", "httpx", "fastapi.testclient", "ci_autopilot_validation", "ci_validation"):
         assert forbidden not in source, f"{name} must stay runnable with runtime dependencies only ({forbidden})"
+
+
+def test_open_job_leaves_a_polling_job_page_before_navigating(monkeypatch):
+    """Regression for Windows run 38734161182: the running job page's own reload interrupted goto."""
+    from playwright.sync_api import Error as PlaywrightError
+
+    monkeypatch.syspath_prepend(str(TOOLS))
+    autopilot = load("ci_autopilot_validation")
+
+    class Locator:
+        def wait_for(self):
+            return None
+
+    class Page:
+        def __init__(self, interruptions: int) -> None:
+            self.interruptions, self.visited = interruptions, []
+
+        def goto(self, url):
+            self.visited.append(url)
+            if url != "about:blank" and self.interruptions:
+                self.interruptions -= 1
+                raise PlaywrightError(f'Page.goto: Navigation to "{url}" is interrupted by another navigation to "{url}"')
+
+        def wait_for_load_state(self, state):
+            assert state == "domcontentloaded"
+
+        def locator(self, selector):
+            assert selector == '[data-autopilot-job="abc"]'
+            return Locator()
+
+    page = Page(interruptions=1)
+    autopilot.open_job(page, "abc")
+    target = f"{autopilot.BASE}/autopilot/jobs/abc"
+    assert page.visited == ["about:blank", target, "about:blank", target]
+    with pytest.raises(PlaywrightError):
+        autopilot.open_job(Page(interruptions=3), "abc")
