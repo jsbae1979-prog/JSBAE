@@ -98,6 +98,16 @@ jobs:
         run: |
           python -m pytest -q -rs tests/test_operational_startup.py --junitxml=validation-output/startup-pytest.xml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual scheduler Chrome flow, local MP4, restart and missed occurrence
+        timeout-minutes: 12
+        run: |
+          python tools/ci_scheduler_validation.py --mode windows --output validation-output/scheduler
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Operations consent and human checklist Chrome flow with Fake OS registration
+        timeout-minutes: 5
+        run: |
+          python tools/ci_operations_validation.py --mode windows --output validation-output/operations
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: All offline regression, callback HTTP, identity and recovery tests
         run: |
           python -m pytest -q -rs --junitxml=validation-output/pytest.xml
@@ -126,16 +136,6 @@ jobs:
         timeout-minutes: 15
         run: |
           python tools/ci_ai_video_validation.py --mode windows --output validation-output/ai-video
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Actual scheduler Chrome flow, local MP4, restart and missed occurrence
-        timeout-minutes: 12
-        run: |
-          python tools/ci_scheduler_validation.py --mode windows --output validation-output/scheduler
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Operations consent and human checklist Chrome flow with Fake OS registration
-        timeout-minutes: 5
-        run: |
-          python tools/ci_operations_validation.py --mode windows --output validation-output/operations
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Public RSS feed review through the registered adapter (never fails the run)
         timeout-minutes: 12

@@ -23,7 +23,7 @@ for (const form of document.querySelectorAll('form[data-easy-form]')) {
         body: new URLSearchParams(new FormData(form))
       });
       if (!response.ok) {
-        if (form.closest('.schedule-page')) {
+        if (form.closest('.schedule-page, .operations-page')) {
           const error = await response.json().catch(() => null);
           if (typeof error?.detail === 'string' && error.detail.length <= 300) {
             if (alert) alert.textContent = error.detail;

@@ -42,6 +42,15 @@ def validate(mode: str, root: Path, output: Path, executable: str | None, result
             assert page.get_by_role('heading',name='내 PC 운영 점검').is_visible()
             page.screenshot(path=str(output/'01-operations.png'),full_page=True)
             form = page.locator('form[action="/operations/startup"]')
+            form.locator('[name=revision]').evaluate("element => element.value = '0'.repeat(64)")
+            form.locator('[name=consent]').check()
+            with page.expect_response(lambda r: r.request.method == 'POST' and urlsplit(r.url).path == '/operations/startup') as failure:
+                form.locator('button[type=submit]').click()
+            assert failure.value.status == 409
+            page.wait_for_function("document.querySelector('[data-submit-error]').textContent.includes('새로고침')")
+            page.screenshot(path=str(output/'06-action-error.png'),full_page=True)
+            page.goto(BASE+'/operations')
+            form = page.locator('form[action="/operations/startup"]')
             assert not form.locator('[name=consent]').is_checked()
             form.locator('[name=consent]').check()
             submit(page,form,'/operations/startup')
@@ -80,7 +89,7 @@ def validate(mode: str, root: Path, output: Path, executable: str | None, result
             assert '사용자 직접 입력' in page.inner_text('main')
             assert 'NOT VERIFIED' in page.inner_text('main')
             assert not errors and not external
-            result.update(browser='PASS',fake_register_remove='PASS',review_download_restart='PASS',
+            result.update(browser='PASS',visible_rejected_post='PASS',fake_register_remove='PASS',review_download_restart='PASS',
                 mobile_zoom='PASS',page_errors=errors,external_browser_requests=len(external),
                 actual_os_registration=0,paid_ai_calls=0,oauth_sns_calls=0,
                 user_pc='NOT VERIFIED',human_korean_audio='NOT VERIFIED')
