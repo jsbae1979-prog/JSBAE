@@ -255,7 +255,8 @@ def test_actual_server_lifecycle_and_port_collision(tmp_path):
             # Verify app cleanup, not just the venv redirector's exit.
             process.send_signal(signal.CTRL_BREAK_EVENT)
         else:
-            process.terminate()
+            # Ctrl+C semantics also exercise cleanup on the Cloud test runner.
+            process.send_signal(signal.SIGINT)
         process.wait(timeout=15)
         log = tmp_path / "운영 데이터/logs/execution.log"
         deadline = time.monotonic() + 15
