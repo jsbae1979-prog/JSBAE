@@ -109,3 +109,5 @@ Cloud의 7 skip: opt-in 실제 AI/RSS 2개 + Windows 전용 5개. 기존 `Starle
 - [전체 pytest 원문](evidence/phase5e/cloud/pytest.txt) · [JUnit](evidence/phase5e/cloud/pytest.xml) · [기존 Autopilot 브라우저 회귀](evidence/phase5e/cloud/autopilot/autopilot-result.json)
 
 Cloud 재접속 지침은 Phase 5E용 **환경 설정 초안**으로 저장했습니다. 네트워크·비밀정보·저장소 구성은 바꾸지 않았으며 자동 Publish하지 않았습니다. 사용자가 환경 설정에서 검토·저장 후 Publish해야 적용되며, 새 Cloud 인스턴스 복원 검증은 NOT VERIFIED입니다.
+
+다운로드 검토용 `phase5e_review.html`은 Cloud 관리형 브라우저의 `file://` 접근 제한으로 직접 파일 열기 검증이 **NOT VERIFIED**입니다. 앱의 HTTP GUI 검증과 별개입니다. ZIP의 원본 PNG/MP4 및 Markdown 보고서도 함께 제공합니다. Windows에서 받은 텍스트 증거는 내용 변경 없이 CRLF→LF로 정규화했으며 원본/저장 SHA256을 `evidence/phase5e/windows/line-ending-normalization.json`에 보존했습니다.
