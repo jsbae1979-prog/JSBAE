@@ -41,6 +41,11 @@ for (const form of document.querySelectorAll('form[data-easy-form]')) {
       }
       const next = new URL(response.url);
       if (next.origin !== window.location.origin) throw new Error('Unexpected redirect');
+      // Fetch may omit a redirect fragment. Keep a workspace mutation at its saved review panel.
+      if (next.pathname === '/' && next.searchParams.has('task') &&
+          form.querySelector('input[name="workspace"][value="true"]')) {
+        next.hash = 'workspace-detail';
+      }
       window.location.assign(next.href);
     } catch (_) {
       if (alert) alert.textContent = '서버 연결이 끊겨 결과를 확인하지 못했습니다. 다시 누르기 전에 나의 제작 작업에서 진행 상황을 확인해 주세요.';

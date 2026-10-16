@@ -6,13 +6,13 @@ from newsflow.db.models import AppSetting, NewsArticle, NewsSource
 from newsflow.intelligence.settings import read_studio_settings, write_studio_settings
 
 
-def test_home_four_destinations_and_two_production_choices(client):
+def test_workspace_two_destinations_and_two_production_choices(client):
     response = client.get("/")
     assert response.status_code == 200
     html = response.text
     primary = re.search(r'<nav aria-label="주 메뉴"[^>]*>(.*?)</nav>', html, re.DOTALL).group(1)
-    assert re.findall(r'href="([^"]+)"', primary) == ["/", "/autopilot/jobs", "/videos", "/simple-settings"]
-    for label in ("홈", "작업 현황", "내 영상", "설정"):
+    assert re.findall(r'href="([^"]+)"', primary) == ["/", "/simple-settings"]
+    for label in ("작업실", "설정"):
         assert label in primary
     assert 'class="advanced-nav"' not in html
     settings = client.get("/simple-settings").text
@@ -61,6 +61,6 @@ def test_home_preserves_defaults_and_shows_review_snapshot_safely(client, app, m
     assert "선택한 AI의 자동 실행은 지원하지 않습니다" in html
     assert "대본과 원문 확인 후 제작" in html
     assert '<progress value="50" max="100"' in html
-    assert 'href="/autopilot/jobs/fixture-review"' in html
+    assert 'href="/?task=fixture-review#workspace-detail"' in html
     assert '<script>alert(' not in html
     assert "최근 뉴스</h2>" not in html  # only production and results on home

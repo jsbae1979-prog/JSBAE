@@ -36,7 +36,7 @@ def start_guided(client, app):
 
 
 @pytest.mark.parametrize("path,title", [
-    ("/", "오늘은 어떤 뉴스를 만들까요?"),
+    ("/", "뉴스에서 영상까지, 한곳에서."),
     ("/autopilot/start", "뉴스 영상 만들기"),
     ("/autopilot/jobs", "작업 현황"),
     ("/queue", "게시 대기함"),

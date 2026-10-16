@@ -27,6 +27,7 @@ from newsflow.db.models import (
     NewsSourceCheck,
     PublishDraft,
     RenderJob,
+    Scene,
     VideoProject,
 )
 from newsflow.easy_setup import preview_preferences, speech_preferences
@@ -211,36 +212,83 @@ def _media_path(request: Request, video: RenderJob | None):
         return None
 
 
+def _workspace_video(
+    request: Request, video: RenderJob, project: VideoProject, task: dict | None = None, *, ai_scenes: bool = False,
+) -> dict | None:
+    """The existing media boundary decides playability; a completed file never grants review."""
+    output = _media_path(request, video)
+    if output is None:
+        return None
+    stored = bool(task and task["status"] == "completed")
+    return {
+        "id": video.id, "title": project.title, "duration": project.duration,
+        "project_id": project.id, "draft_id": project.draft_id, "task_id": task["id"] if task else None,
+        "review_status": "stored" if stored else "review_required",
+        "review_label": "보관 완료 · 게시 전 내용·출처·권리 검토 필요" if stored else "직접 시청·내용 확인 필요",
+        "playable": True, "link": f"/?video={video.id}#workspace-detail",
+        "media_url": f"/video/jobs/{video.id}/file", "download_url": f"/video/jobs/{video.id}/file?download=true",
+        "edit_url": f"/video?job_id={video.id}&draft_id={project.draft_id}",
+        "review_url": f'/?task={task["id"]}#workspace-detail' if task else f"/video?job_id={video.id}&draft_id={project.draft_id}",
+        "audio": (video.metadata_json or {}).get("audio"), "output_path": str(output),
+        "ai_scenes": ai_scenes, "preview_only": project.preview_only,
+    }
+
+
 @router.get("/", response_class=HTMLResponse)
-def home(request: Request) -> HTMLResponse:
+def home(request: Request, task: str | None = None, video: int | None = None, show: str = "") -> HTMLResponse:
+    if show not in {"", "tasks", "videos"} or task is not None and video is not None or video is not None and video < 1:
+        raise HTTPException(422, "작업 또는 영상 하나를 선택해 주세요.")
     jobs = request.app.state.autopilot.list_jobs(100)
     ready = readiness(request)
     from .production_status import production_context
 
     overview = production_context(request)
     tasks = task_rows(request, jobs)
+    selected_task_context = job_detail_context(request, task) if task is not None else None
+    selected_video = None
     with request.app.state.sessions() as session:
         completed = []
+        selected_video_id = video
         videos = session.execute(
             select(RenderJob, VideoProject).join(VideoProject)
             .where(RenderJob.status == "success").order_by(RenderJob.id.desc()).limit(100)
         ).all()
-        job_links = {item.get("render_job_id"): item["id"] for item in jobs}
-        video_count = 0
-        for video, project in videos:
-            if _media_path(request, video) is not None:
-                video_count += 1
-                if len(completed) < 5:
-                    task = job_links.get(video.id)
-                    completed.append({
-                        "title": project.title, "duration": project.duration,
-                        "link": f"/autopilot/jobs/{task}" if task else f"/video?job_id={video.id}",
-                    })
+        with_ai = set(session.scalars(select(Scene.project_id).where(
+            Scene.project_id.in_([project.id for _render, project in videos]), Scene.ai_generated.is_(True))))
+        job_links = {item.get("render_job_id"): item for item in jobs if item.get("render_job_id")}
+        for render, project in videos:
+            result = _workspace_video(request, render, project, job_links.get(render.id), ai_scenes=project.id in with_ai)
+            if result:
+                completed.append(result)
+                if render.id == selected_video_id:
+                    selected_video = result
+        if selected_video_id is not None and selected_video is None:
+            render = session.get(RenderJob, selected_video_id)
+            project = session.get(VideoProject, render.project_id) if render else None
+            if project:
+                ai_scenes = session.scalar(select(Scene.id).where(
+                    Scene.project_id == project.id, Scene.ai_generated.is_(True)).limit(1)) is not None
+                selected_video = _workspace_video(request, render, project, job_links.get(render.id), ai_scenes=ai_scenes)
+            if selected_video is None:
+                raise HTTPException(404, "검증된 완성 영상을 찾지 못했습니다.")
+        playable_ids = {item["id"] for item in completed}
+        # Missing or invalid media needs the existing render recovery view, not a player that must 404.
+        tasks = [{**item, "workspace_href": item["href"]}
+                 if item["kind"] == "manual" and item.get("render_job_id") not in playable_ids
+                 else item for item in tasks]
+        active_jobs = [item for item in tasks if not item["completed"] and not (
+            item["kind"] == "manual" and item.get("render_job_id") in playable_ids)]
+        # A pending Autopilot review remains actionable; don't repeat the same video below it.
+        active_render_ids = {item.get("render_job_id") for item in active_jobs}
+        recent_videos = completed if show == "videos" else [item for item in completed if item["id"] not in active_render_ids]
+        visible_tasks = tasks[:100] if show == "tasks" else active_jobs[:5]
+        visible_videos = recent_videos[:100 if show == "videos" else 5]
         return _page(
             request, "easy_home.html", active="home", defaults=_defaults(request), ready=ready,
             production=production_summary(request, ready),
-            active_jobs=[item for item in tasks if not item["completed"]],
-            completed=completed, video_count=video_count,
+            active_jobs=visible_tasks, workspace_tasks=visible_tasks, task_count=len(tasks), active_task_count=len(active_jobs),
+            completed=visible_videos, workspace_videos=visible_videos, video_count=len(completed),
+            selected_task_context=selected_task_context, selected_video=selected_video, workspace=True, show=show,
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
             recent_news=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(5))),
             **overview,
@@ -269,6 +317,7 @@ def start_page(request: Request, guide: str = "", flow: str | None = None, advan
 @router.post("/autopilot/quick-start")
 def quick_start(
     request: Request, source: str = Form(max_length=10), duration: int = Form(),
+    workspace: bool = Form(False),
 ) -> RedirectResponse:
     """Two-choice entry point, with the same coordinator and all existing review gates."""
     if source not in CHOICES["source"] or duration not in {30, 45, 60}:
@@ -313,7 +362,7 @@ def quick_start(
         )
     except AutopilotError as exc:
         raise _error(exc) from None
-    return go(f"/autopilot/jobs/{identifier}")
+    return go(f"/?task={identifier}#workspace-detail" if workspace else f"/autopilot/jobs/{identifier}")
 
 
 @router.post("/autopilot/start")
@@ -353,8 +402,8 @@ def jobs(request: Request) -> HTMLResponse:
     return _page(request, "autopilot_jobs.html", active="autopilot", jobs=task_rows(request))
 
 
-@router.get("/autopilot/jobs/{job_id}", response_class=HTMLResponse)
-def job(request: Request, job_id: str) -> HTMLResponse:
+def job_detail_context(request: Request, job_id: str) -> dict[str, Any]:
+    """Read-only detail shared by the workspace and the existing per-job URL."""
     snapshot = _snapshot(request, job_id)
     task_summary = next(row for row in task_rows(request, [snapshot]) if row["id"] == "auto:" + job_id)
     stages = [
@@ -374,15 +423,19 @@ def job(request: Request, job_id: str) -> HTMLResponse:
                 plan = speech_plan(draft.content, draft.duration, speech.rate, speech.pause_ms)
             except TTSError:
                 plan = speech_plan(draft.content, draft.duration)
-        return _page(
-            request, "autopilot_job.html", active="autopilot", job=snapshot, stages=stages,
-            task_summary=task_summary,
-            draft=draft, video=video, article=article, plan=plan,
-            notes=list(draft.review_notes or []) if draft else [],
-            playable=output is not None, output_path=str(output) if output else None,
-            audio=(video.metadata_json or {}).get("audio") if video else None,
-            ai_estimate=ai_estimate, ai_actual=ai_actual,
-        )
+        return {
+            "job": snapshot, "stages": stages, "task_summary": task_summary,
+            "draft": draft, "video": video, "article": article, "plan": plan,
+            "notes": list(draft.review_notes or []) if draft else [],
+            "playable": output is not None, "output_path": str(output) if output else None,
+            "audio": (video.metadata_json or {}).get("audio") if video else None,
+            "ai_estimate": ai_estimate, "ai_actual": ai_actual,
+        }
+
+
+@router.get("/autopilot/jobs/{job_id}", response_class=HTMLResponse)
+def job(request: Request, job_id: str) -> HTMLResponse:
+    return _page(request, "autopilot_job.html", active="autopilot", **job_detail_context(request, job_id))
 
 
 @router.get("/api/autopilot/jobs/{job_id}")
@@ -391,32 +444,33 @@ def job_status(request: Request, job_id: str) -> JSONResponse:
 
 
 @router.post("/autopilot/jobs/{job_id}/cancel")
-def cancel(request: Request, job_id: str, revision: int = Form(ge=1)) -> RedirectResponse:
+def cancel(request: Request, job_id: str, revision: int = Form(ge=1), workspace: bool = Form(False)) -> RedirectResponse:
     try:
         request.app.state.autopilot.cancel(job_id, revision)
     except AutopilotError as exc:
         raise _error(exc) from None
-    return go(f"/autopilot/jobs/{job_id}")
+    return go(f"/?task={job_id}#workspace-detail" if workspace else f"/autopilot/jobs/{job_id}")
 
 
 @router.post("/autopilot/jobs/{job_id}/resume")
 def resume(
     request: Request, job_id: str, revision: int = Form(ge=1), article_id: int | None = Form(None, ge=1),
+    workspace: bool = Form(False),
 ) -> RedirectResponse:
     try:
         request.app.state.autopilot.resume(job_id, revision, article_id=article_id)
     except AutopilotError as exc:
         raise _error(exc) from None
-    return go(f"/autopilot/jobs/{job_id}")
+    return go(f"/?task={job_id}#workspace-detail" if workspace else f"/autopilot/jobs/{job_id}")
 
 
 @router.post("/autopilot/jobs/{job_id}/retry")
-def retry(request: Request, job_id: str, revision: int = Form(ge=1)) -> RedirectResponse:
+def retry(request: Request, job_id: str, revision: int = Form(ge=1), workspace: bool = Form(False)) -> RedirectResponse:
     try:
         request.app.state.autopilot.retry(job_id, revision)
     except AutopilotError as exc:
         raise _error(exc) from None
-    return go(f"/autopilot/jobs/{job_id}")
+    return go(f"/?task={job_id}#workspace-detail" if workspace else f"/autopilot/jobs/{job_id}")
 
 
 @router.get("/queue", response_class=HTMLResponse)
