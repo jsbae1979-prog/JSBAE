@@ -5,8 +5,10 @@ from __future__ import annotations
 import math
 import time
 from collections.abc import Callable
+from contextlib import contextmanager
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
-from threading import Event
+from threading import Event, Thread
 from typing import Any
 
 from sqlalchemy import select
@@ -27,7 +29,9 @@ from newsflow.db.models import (
     RenderJob,
     VideoProject,
 )
+from newsflow.intelligence.capabilities import NEWS_CATEGORIES, require_acquisition
 from newsflow.intelligence.korean import MIN_SUMMARY_CHARS, speech_plan
+from newsflow.intelligence.provider import Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import ANALYSIS_MAX_TOKENS, max_tokens_for, read_settings
 from newsflow.news.collector import Collector
@@ -123,6 +127,14 @@ class PipelineBackend:
             raise BackendError(messages[stage]) from None
 
     def can_retry(self, stage: str, context: dict[str, Any]) -> bool:
+        if stage in {"select", "script"} and context.get("ai_mode", "offline") != "offline":
+            with self.sessions() as session:
+                for key in ("analysis_run_id", "script_run_id"):
+                    identifier = context.get(key)
+                    if identifier:
+                        run = session.get(IntelligenceRun, identifier)
+                        if run is None or run.status != "success":
+                            return False  # Failed/unknown external requests are never replayed.
         if stage in {"collect", "select", "validate", "queue"}:
             if stage == "collect" and context.get("collection_run_id"):
                 with self.sessions() as session:
@@ -169,6 +181,11 @@ class PipelineBackend:
         return identifiers
 
     def _collect(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        if ctx.get("acquisition_policy") is not None:
+            try:
+                require_acquisition(ctx.get("ai_mode", "offline"), ctx["acquisition_policy"])
+            except ValueError:
+                raise BackendError(code="news_search_blocked", retryable=False) from None
         source_ids = list(ctx.get("source_ids") or [])
         coordinator = self.sample_collection if ctx["source"] == "sample" else self.collection
         identifier = ctx.get("collection_run_id")
@@ -223,6 +240,9 @@ class PipelineBackend:
                         "added": run.added,
                         "duplicates": run.duplicates,
                         "synthetic_news": ctx["source"] == "sample",
+                        "news_method": "synthetic_rss" if ctx["source"] == "sample" else "rss",
+                        "researched_at": run.finished_at.isoformat() if run.finished_at else None,
+                        "web_search_performed": False,
                     }
             if time.monotonic() >= deadline:
                 raise BackendError(
@@ -238,12 +258,26 @@ class PipelineBackend:
 
     def _select(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         source_ids = ctx.get("source_ids", [])
+        conditions = []
+        if ctx.get("unified") and ctx["source"] != "sample":
+            requested = datetime.fromisoformat(ctx["requested_at"])
+            if requested.tzinfo is None:
+                raise BackendError(code="select_failed", retryable=False)
+            since = (requested.astimezone(timezone(timedelta(hours=9))).replace(hour=0, minute=0, second=0, microsecond=0)
+                     if ctx["period"] == "today" else requested - timedelta(days=7 if ctx["period"] == "7d" else 1))
+            since = since.astimezone(UTC)
+            # Unknown/future dates remain in the DB, but never become confirmed current news.
+            conditions += [NewsArticle.published_at >= since, NewsArticle.published_at <= requested]
+            category = NEWS_CATEGORIES[ctx["category"]]
+            if ctx["category"] != "all":
+                conditions.append(NewsArticle.category == category)
         with self.sessions() as session:
             candidates = list(
                 session.scalars(
                     select(NewsArticle.id)
                     .outerjoin(ArticleScore, ArticleScore.article_id == NewsArticle.id)
                     .where(
+                        *conditions,
                         ~NewsArticle.id.in_(
                             select(AutopilotArticleClaim.article_id).where(
                                 AutopilotArticleClaim.job_id != ctx["job_id"]
@@ -254,12 +288,46 @@ class PipelineBackend:
                         ),
                     )
                     .order_by(ArticleScore.total.desc(), NewsArticle.collected_at.desc(), NewsArticle.id)
-                    .limit(100)
+                    .limit(10 if ctx.get("unified") else 100)
                 )
             )
         self._cancel(cancel)
         if not candidates:
-            raise BackendError("제작할 뉴스가 없습니다. 다른 출처로 다시 시도하세요.")
+            raise BackendError("제작할 뉴스가 없습니다. 다른 출처로 다시 시도하세요.",
+                               code="no_eligible_articles" if ctx.get("unified") else "no_articles")
+        analysis_id = ctx.get("analysis_run_id")
+        selection_method = "rss_heuristic"
+        selection_reason = "RSS 내부 추천 후보 순서 · 실제 조회수·화제성 측정 아님"
+        if ctx.get("unified"):
+            ai_mode = self._ai_mode(ctx)
+            if analysis_id:
+                with self.sessions() as session:
+                    previous = session.get(IntelligenceRun, analysis_id)
+                    if previous is None or previous.status != "success":
+                        raise BackendError(code="ai_request_stopped", retryable=False,
+                                           outcome_unknown=bool(previous and previous.status in {"running", "interrupted"}))
+                    # Resume uses the original evidence set; RSS can change after an interrupted worker.
+                    candidates = [a["id"] for a in previous.evidence["articles"]]
+                    if previous.kind != "analysis" or previous.provider != ai_mode:
+                        raise BackendError(code="select_failed", retryable=False)
+            else:
+                try:
+                    with self._ai_service(ai_mode, cancel) as service:
+                        analysis_id = service.analyze(
+                            candidates, mode=ai_mode, consent=ai_mode != "offline",
+                            options=self._options(ctx, ANALYSIS_MAX_TOKENS),
+                            on_run=self._remember(ctx, "analysis_run_id", save),
+                        )
+                except IntelligenceError as exc:
+                    raise self._ai_failure(exc, external=ai_mode != "offline") from None
+                self._cancel(cancel)
+            with self.sessions() as session:
+                analysis = session.get(IntelligenceRun, analysis_id)
+                recommended = analysis.result.get("recommended_article_id")
+                if type(recommended) is int and recommended in candidates:
+                    candidates = [recommended, *(item for item in candidates if item != recommended)]
+                    selection_method = "ai_recommendation"
+                    selection_reason = analysis.result.get("selection_reason") or "AI 제안 · 사실 확인 및 원문 검토 필요"
         chosen = ctx.get("article_id") or candidates[0]
         if chosen not in candidates:
             raise BackendError("선택한 뉴스가 이번 수집 결과와 다릅니다.", retryable=False)
@@ -272,6 +340,9 @@ class PipelineBackend:
             "article_id": chosen, "candidate_article_ids": candidates,
             "content_sufficient": sufficient, "publication_dated": dated,
             "synthetic_news": ctx.get("source") == "sample",
+            "selection_method": selection_method, "selection_reason": selection_reason,
+            **({"analysis_run_id": analysis_id, "analysis_provider": ctx.get("ai_mode", "offline"),
+                "ai_model": ctx.get("ai_model"), "analyzed_article_ids": candidates} if analysis_id else {}),
         }
 
     def _speech(self) -> SpeechSettings:
@@ -288,6 +359,9 @@ class PipelineBackend:
             raise BackendError(code="ai_consent", retryable=False)
         if ctx.get("content_mode", "trial") != "real" and mode != "offline":
             raise BackendError("체험 제작에서는 외부 AI를 사용하지 않습니다.", retryable=False, code="ai_consent")
+        if ((mode in {"claude_code", "codex"} or ctx.get("unified") and mode != "offline")
+                and not (ctx.get("external_consent") is True and ctx.get("consented_at"))):
+            raise BackendError(code="ai_consent", retryable=False)
         if mode == "openai":
             gate = self.ai_gate()
             if not gate.get("ready"):
@@ -295,9 +369,76 @@ class PipelineBackend:
         return mode
 
     @staticmethod
-    def _ai_failure(exc: IntelligenceError) -> BackendError:
-        code = exc.code if exc.code in _AI_CODES else "script_failed"
-        return BackendError(str(exc), code=code, retryable=exc.retryable)
+    def _ai_failure(exc: IntelligenceError, *, external: bool = False) -> BackendError:
+        aliases = {"codex_auth": "ai_auth_failed", "codex_billing": "ai_consent",
+                   "codex_usage": "ai_budget", "ai_billing_approval": "ai_consent",
+                   "codex_cancelled": "cancelled", "ai_cancelled": "cancelled"}
+        mapped = aliases.get(exc.code, exc.code)
+        code = mapped if mapped in _AI_CODES | {"cancelled"} else "ai_request_stopped" if external else "script_failed"
+        return BackendError(str(exc), code=code, retryable=False if external else exc.retryable,
+                            outcome_unknown=external and mapped in {"ai_timeout", "ai_unavailable", "codex_rpc"})
+
+    def _options(self, ctx: dict, maximum: int) -> Options | None:
+        mode = ctx.get("ai_mode", "offline")
+        if mode == "offline":
+            return None
+        settings = read_settings(self.sessions)
+        return Options(model=ctx.get("ai_model") or settings.model, max_tokens=maximum,
+                       timeout=60 if mode in {"claude_code", "codex"} else settings.timeout)
+
+    def _remember(self, ctx: dict, kind: str, save: SaveArtifact):
+        def remember(identifier: int) -> None:
+            # Journal before a possible side effect. A crash after this point blocks replay.
+            save(kind, identifier)
+            if ctx.get("unified"):
+                with self.sessions.begin() as session:
+                    run = session.get(IntelligenceRun, identifier)
+                    run.options = {**run.options, "autopilot_job_id": ctx["job_id"],
+                                   "production_context": {
+                                       "source": ctx["source"], "initial_duration": ctx["duration"],
+                                       "initial_provider": ctx["ai_mode"], "initial_model": ctx["ai_model"],
+                                       "initial_voice": ctx.get("voice") or "silent", "initial_video": "off",
+                                   }, "external_consent": ctx.get("external_consent", False),
+                                   "consented_at": ctx.get("consented_at"),
+                                   "news_method": "synthetic_rss" if ctx["source"] == "sample" else "rss"}
+        return remember
+
+    @contextmanager
+    def _ai_service(self, mode: str, cancel: Event):
+        """Use operation-owned CLI adapters; cancellation must never stop another Studio job."""
+        service = self.intelligence
+        provider = service.provider
+        if provider is None and mode != "offline":
+            if mode == "claude_code":
+                from newsflow.intelligence.claude_code import ClaudeCodeProvider
+
+                provider = ClaudeCodeProvider()
+            elif mode == "codex":
+                from newsflow.intelligence.codex import CodexProvider
+
+                provider = CodexProvider()
+            else:
+                from newsflow.intelligence.provider import OpenAIProvider
+
+                provider = OpenAIProvider(service._key, allow_retry=False)
+            service = IntelligenceService(self.sessions, provider, key_store=service.key_store, speech=service.speech)
+        done = Event()
+
+        def monitor():
+            while not done.wait(.05):
+                if cancel.is_set() and provider.cancel():
+                    return
+
+        worker = Thread(target=monitor, daemon=True) if provider is not None and callable(getattr(provider, "cancel", None)) else None
+        if worker:
+            worker.start()
+        try:
+            self._cancel(cancel)
+            yield service
+        finally:
+            done.set()
+            if worker:
+                worker.join(timeout=1)
 
     def _draft_summary(self, draft: ContentDraft, ai_mode: str) -> dict:
         speech = self._speech()
@@ -309,7 +450,7 @@ class PipelineBackend:
         }
 
     def _script(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
-        ai_mode = self._ai_mode(ctx)
+        ai_mode = ctx.get("ai_mode", "offline")
         if ctx.get("content_draft_id"):
             with self.sessions() as session:
                 draft = session.get(ContentDraft, ctx["content_draft_id"])
@@ -336,60 +477,67 @@ class PipelineBackend:
                 if run is None:
                     raise BackendError("저장된 대본 작업 이력을 찾지 못했습니다.", retryable=False)
                 if run.status == "running":
-                    raise BackendError("이전 대본 작업의 완료를 확인하지 못했습니다.", outcome_unknown=True)
+                    raise BackendError("이전 대본 작업의 완료를 확인하지 못했습니다.", retryable=False, outcome_unknown=True)
+                if ai_mode != "offline":
+                    raise BackendError(code="ai_request_stopped", retryable=False)
             if analysis_id:
                 run = session.get(IntelligenceRun, analysis_id)
                 if run is None:
                     raise BackendError("저장된 분석 이력을 찾지 못했습니다.", retryable=False)
                 if run.status in {"failed", "interrupted"}:
+                    if ai_mode != "offline":
+                        raise BackendError(code="ai_request_stopped", retryable=False,
+                                           outcome_unknown=run.status == "interrupted")
                     analysis_id = None
                 elif (
                     run.kind != "analysis"
                     or run.provider != ai_mode
-                    or {a["id"] for a in run.evidence["articles"]} != {ctx["article_id"]}
+                    or (ctx["article_id"] not in {a["id"] for a in run.evidence["articles"]}
+                        if ctx.get("unified") else {a["id"] for a in run.evidence["articles"]} != {ctx["article_id"]})
                 ):
                     raise BackendError("분석 이력과 선택 뉴스가 일치하지 않습니다.", retryable=False)
                 elif run.status != "success":
-                    raise BackendError("이전 분석 작업의 완료를 확인하지 못했습니다.", outcome_unknown=True)
+                    raise BackendError("이전 분석 작업의 완료를 확인하지 못했습니다.", retryable=False, outcome_unknown=True)
+        ai_mode = self._ai_mode(ctx)
         speech = self._speech()
         self.intelligence.speech = {"rate": speech.rate, "pause_ms": speech.pause_ms}
         # External calls honour the saved model/timeout and reserve output tokens per script length;
         # offline keeps the service defaults (no request is made).
-        analysis_options = script_options = None
-        if ai_mode != "offline":
-            settings = read_settings(self.sessions)
-            analysis_options = settings.options(max_tokens=ANALYSIS_MAX_TOKENS)
-            script_options = settings.options(max_tokens=max_tokens_for(ctx["duration"]))
+        analysis_options = self._options(ctx, ANALYSIS_MAX_TOKENS)
+        script_options = self._options(ctx, max_tokens_for(ctx["duration"]))
         # consent=True only ever reaches the service for a gated real-content job (see _ai_mode).
         try:
-            if analysis_id is None:
-                analysis_id = self.intelligence.analyze(
-                    [ctx["article_id"]],
+            with self._ai_service(ai_mode, cancel) as service:
+                if analysis_id is None:
+                    analysis_id = service.analyze(
+                        [ctx["article_id"]],
+                        mode=ai_mode,
+                        consent=ai_mode != "offline",
+                        options=analysis_options,
+                        on_run=self._remember(ctx, "analysis_run_id", save),
+                    )
+                self._cancel(cancel)
+                progress(
+                    50,
+                    "선택한 AI로 뉴스 대본을 만들고 있어요." if ai_mode != "offline" else "선택한 뉴스로 검토용 대본을 만들고 있어요.",
+                )
+                draft_id = service.generate(
+                    analysis_id,
+                    ctx["duration"],
                     mode=ai_mode,
                     consent=ai_mode != "offline",
-                    options=analysis_options,
-                    on_run=lambda value: save("analysis_run_id", value),
+                    options=script_options,
+                    on_run=self._remember(ctx, "script_run_id", save),
+                    **({"article_ids": [ctx["article_id"]]} if ctx.get("unified") else {}),
                 )
-            self._cancel(cancel)
-            progress(
-                50,
-                "외부 AI로 뉴스 대본을 만들고 있어요." if ai_mode != "offline" else "선택한 뉴스로 검토용 대본을 만들고 있어요.",
-            )
-            draft_id = self.intelligence.generate(
-                analysis_id,
-                ctx["duration"],
-                mode=ai_mode,
-                consent=ai_mode != "offline",
-                options=script_options,
-                on_run=lambda value: save("script_run_id", value),
-            )
         except IntelligenceError as exc:
-            raise self._ai_failure(exc) from None
+            raise self._ai_failure(exc, external=ai_mode != "offline") from None
         save("content_draft_id", draft_id)
         self._cancel(cancel)
         with self.sessions() as session:
             draft = session.get(ContentDraft, draft_id)
-            return self._draft_summary(draft, ai_mode)
+            return {**self._draft_summary(draft, ai_mode), "analysis_run_id": analysis_id,
+                    "script_provider": ai_mode, "ai_model": ctx.get("ai_model")}
 
     def _render(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         identifier = ctx.get("render_job_id")
@@ -535,7 +683,7 @@ class PipelineBackend:
             )
             if ctx["source"] == "sample":
                 description = "체험용 합성 뉴스 · 실제 보도 아님\n" + description
-            elif ctx.get("ai_mode") == "openai":
+            elif ctx.get("ai_mode", "offline") != "offline":
                 description = "외부 AI 초안 · 사실 확인 미완료\n" + description
             if ctx.get("audio") == "silent":
                 description += "\n무음 검토영상 · 음성 없음"

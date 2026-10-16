@@ -85,6 +85,13 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "voice": voice_label(audios.get(render.project_id) if render else None, item.get("voice")),
                 "next_action": action, "href": f'/autopilot/jobs/{item["id"]}', "duration": item["duration"],
                 "progress": item["progress"], "updated_at": item["updated_at"], "completed": status == "completed",
+                "news_method": ("체험 뉴스 · 로컬" if item["source"] == "sample" else
+                                "RSS · 웹 검색 아님" if item.get("acquisition_policy", "rss") == "rss" else
+                                "AI 웹 뉴스 조사 · 차단"),
+                "analysis_engine": run_label(analysis, item["ai_mode"]),
+                "script_engine": run_label(script, item["ai_mode"]),
+                "model": item.get("ai_model") or (script or analysis).options.get("model", "")
+                if script or analysis or item.get("ai_model") else "",
             })
         for draft in drafts.values():
             if draft.id in used_drafts:
