@@ -70,11 +70,16 @@ def claude_login(request: Request, consent: bool = Form(False)) -> dict:
 
 @router.post("/ai/preferences")
 def studio_preferences(request: Request, provider: str = Form(max_length=20),
-                       model: str = Form(max_length=80)) -> RedirectResponse:
+                       model: str = Form(max_length=80),
+                       return_to: str = Form("studio", max_length=20)) -> RedirectResponse:
+    if return_to not in ("studio", "settings"):
+        raise HTTPException(422, "설정 저장 화면을 다시 열어 주세요.")
     try:
         write_studio_settings(request.app.state.sessions, provider, model)
     except SettingsError as exc:
         raise HTTPException(422, str(exc)) from None
+    if return_to == "settings":
+        return go("/simple-settings?saved=true#connections")
     anchor = "codex-connection" if provider == "codex" else "claude-connection"
     return go(f"/ai?saved=true#{anchor}")
 
@@ -93,12 +98,26 @@ def service(request: Request) -> IntelligenceService:
     )
 
 
+def connection_context(request: Request) -> dict:
+    """Saved defaults and cached diagnostics only; viewing settings never starts a CLI."""
+    from newsflow.intelligence.claude_code import connection_state
+
+    return {
+        "studio_defaults": read_studio_settings(request.app.state.sessions),
+        "claude_status": getattr(request.app.state, "claude_status", connection_state("unchecked")),
+        "codex_status": getattr(request.app.state, "codex_status", {
+            "state": "unchecked", "installed": False, "authenticated": False, "ready": False,
+            "version": None, "checked_at": None, "web_search_verified": False,
+            "message": "아직 연결을 확인하지 않았습니다. 설치·로그인 확인을 눌러 주세요.",
+        }),
+    }
+
+
 @router.get("/ai", response_class=HTMLResponse)
 def studio(request: Request, analysis_id: int | None = None, draft_id: int | None = None,
            saved: bool = False) -> HTMLResponse:
-    from newsflow.intelligence.claude_code import connection_state
-
-    studio_defaults = read_studio_settings(request.app.state.sessions)
+    connections = connection_context(request)
+    studio_defaults = connections["studio_defaults"]
     with request.app.state.sessions() as session:
         analysis = session.get(IntelligenceRun, analysis_id) if analysis_id else None
         draft = session.get(ContentDraft, draft_id) if draft_id else None
@@ -124,13 +143,7 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
                 getattr(request.app.state, "ai_keys", None) and request.app.state.ai_keys.status()["configured"]
             ),
             default_model=studio_defaults["model"], default_timeout=settings.timeout, estimate=estimate,
-            studio_defaults=studio_defaults, saved=saved,
-            claude_status=getattr(request.app.state, "claude_status", connection_state("unchecked")),
-            codex_status=getattr(request.app.state, "codex_status", {
-                "state": "unchecked", "installed": False, "authenticated": False, "ready": False,
-                "version": None, "checked_at": None, "web_search_verified": False,
-                "message": "아직 연결을 확인하지 않았습니다. 설치·로그인 확인을 눌러 주세요.",
-            }),
+            saved=saved, **connections,
             disclaimer=PRICE_DISCLAIMER,
         )
 

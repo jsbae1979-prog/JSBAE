@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
 from newsflow.db.models import AudioTrack, ContentDraft, RenderJob, Scene, SubtitleTrack, VideoProject
+from newsflow.easy_setup import initial_state
 from newsflow.video.engine import RenderError
 from newsflow.video.service import RenderBusy, VideoError
 from newsflow.video.tts import POLICY_MESSAGE, TTSError, TTSPolicyError, WindowsTTS
@@ -112,6 +113,12 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
         voices.extend({"name": voice, "label": f"Supertonic 3 · {voice.split(':')[1]} · 한국어 · 무료 로컬",
                        "engine": "local"} for voice in SupertonicTTS().voices())
         voices.append({"name": "elevenlabs", "label": "ElevenLabs · 외부 API · 설정·동의 필요", "engine": "external"})
+        # Reuse the wizard/voice settings instead of silently resetting saved narration to silence.
+        preferences = initial_state(session)["values"]
+        selected_voice = preferences["voice"]
+        voice_available = selected_voice == "offline-silence" or any(
+            item["name"] == selected_voice for item in voices
+        )
         return page(
             request,
             "video.html",
@@ -124,6 +131,9 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
             audio=audio,
             voices=voices,
             voice_note=voice_note,
+            preferences=preferences,
+            selected_voice=selected_voice,
+            voice_available=voice_available,
             assets=video.assets_list(),
             outputs=video.outputs,
             assets_path=video.assets,

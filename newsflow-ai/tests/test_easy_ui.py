@@ -36,10 +36,10 @@ def start_guided(client, app):
 
 @pytest.mark.parametrize("path,title", [
     ("/", "오늘의 이야기를"),
-    ("/autopilot/start", "어떻게 만들어 볼까요?"),
-    ("/autopilot/jobs", "나의 제작 작업"),
+    ("/autopilot/start", "뉴스 영상 만들기"),
+    ("/autopilot/jobs", "작업 현황"),
     ("/queue", "게시 대기함"),
-    ("/simple-settings", "간단한 설정"),
+    ("/simple-settings", "AI·API 연결"),
     ("/dashboard", "뉴스 흐름을 한눈에"),
 ])
 def test_easy_and_advanced_pages_keep_security_headers(client, path, title):
@@ -142,9 +142,12 @@ def test_invalid_simple_settings_are_atomic(client, app, field, value):
 def test_saved_simple_defaults_are_applied_by_home_button_and_remain_local(client, app):
     data = {"duration": "45", "platform": "instagram", "source": "sample", "mode": "guided"}
     response = client.post("/simple-settings", data={**data, "csrf_token": csrf(client)})
-    assert response.status_code == 200 and "기본 설정을 저장했습니다" in response.text
+    assert response.status_code == 200 and "설정을 저장했습니다" in response.text
     home = client.get("/").text
-    assert "단계별 제작 · 45초 · Instagram Reels" in home
+    assert 'value="45" selected' in home and 'value="sample" selected' in home
+    # Detailed defaults remain in the advanced setup, while the home shows two choices.
+    advanced = client.get("/autopilot/start").text
+    assert 'value="guided" selected' in advanced and 'value="instagram" selected' in advanced
     started = client.post("/autopilot/start", data={"csrf_token": csrf(client)}, follow_redirects=False)
     app.state.autopilot.future.result(timeout=15)
     job_id = started.headers["location"].rsplit("/", 1)[1]
@@ -162,7 +165,9 @@ def test_corrupt_saved_settings_fall_back_to_offline_defaults(client, app):
         )])
     response = client.get("/")
     assert response.status_code == 200
-    assert "간편 제작 · 30초 · YouTube Shorts · 체험 뉴스" in response.text
+    assert 'value="30" selected' in response.text and 'value="sample" selected' in response.text
+    advanced = client.get("/autopilot/start").text
+    assert 'value="easy" selected' in advanced and 'value="youtube" selected' in advanced
 
 
 def test_user_news_titles_are_escaped_and_source_count_excludes_sample(client, app):

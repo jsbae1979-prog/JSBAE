@@ -1,10 +1,43 @@
-{% extends 'base.html' %}{% block title %}자동 제작 시작 · NewsFlow AI{% endblock %}{% block content %}
-<div class="easy-page narrow-page"><div class="page-head"><div><p class="eyebrow">새 영상 만들기</p><h1>어떻게 만들어 볼까요?</h1><p>처음이라면 체험 뉴스로, 익숙해지면 등록한 뉴스 출처로 실제 콘텐츠를 만들어요.</p></div></div>
-<p><a href="/schedules">시간을 정해 자동 제작 예약하기 →</a></p><div class="status-chips" aria-label="준비 상태"><span class="status-chip {{ 'ready' if ready.rss.ready else 'pending' }}">RSS 출처 {{ ready.rss.enabled }}개 사용 중 · 연결 확인 {{ ready.rss.tested }}개</span><span class="status-chip {{ 'ready' if ready.ai.ready else '' }}">외부 AI {{ '사용 가능' if ready.ai.ready else '미사용 · 기본 대본' }}</span><span class="status-chip {{ 'ready' if (not ready.voice.silent and ready.voice.installed) else '' }}">음성 {{ '무음 검토영상' if ready.voice.silent else (ready.voice.name if ready.voice.installed else ready.voice.name + ' · 찾지 못함') }}</span></div>
-<form action="/autopilot/start" method="post" class="easy-panel creation-form" data-easy-form>{{ csrf_field() }}<fieldset><legend>1. 뉴스 종류</legend><div class="choice-grid"><label class="choice-card"><input type="radio" name="source" value="sample" {% if defaults.source == 'sample' %}checked{% endif %}><span class="choice-icon" aria-hidden="true">✎</span><strong>체험 제작</strong><span>연습용 체험 뉴스와 기본 대본으로 흐름을 익혀요. 외부 호출이 없어요.</span><small class="recommend">처음이라면 추천</small></label><label class="choice-card"><input type="radio" name="source" value="feeds" {% if defaults.source == 'feeds' %}checked{% endif %}><span class="choice-icon" aria-hidden="true">☷</span><strong>실제 콘텐츠 제작</strong><span>등록한 RSS에서 실제 뉴스를 모아 대본·음성·영상을 만들고, 대본과 완성 영상을 직접 확인해요.</span><small>등록 출처 {{ enabled_sources }}개 사용 중 · <a href="/sources">뉴스 출처 관리</a></small></label></div></fieldset>
-<fieldset><legend>2. 제작 방식</legend><div class="choice-grid"><label class="choice-card"><input type="radio" name="mode" value="easy" {% if defaults.mode == 'easy' %}checked{% endif %}><span class="choice-icon" aria-hidden="true">✦</span><strong>간편 제작</strong><span>뉴스 선정부터 영상까지 이어서 만들어요. 실제 콘텐츠는 대본과 완성 영상에서 잠시 멈춰 확인을 받아요.</span></label><label class="choice-card"><input type="radio" name="mode" value="guided" {% if defaults.mode == 'guided' %}checked{% endif %}><span class="choice-icon" aria-hidden="true">☰</span><strong>단계별 제작</strong><span>뉴스 선택, 대본, 영상을 하나씩 확인하고 다음으로 넘어가요.</span></label></div></fieldset>
-<fieldset><legend>3. 영상 길이</legend><div class="duration-choices">{% for seconds in [30,45,60] %}<label><input type="radio" name="duration" value="{{ seconds }}" {% if defaults.duration == seconds %}checked{% endif %}><span>{{ seconds }}초</span></label>{% endfor %}</div></fieldset>
-<div class="form-two-columns"><label for="platform">영상의 목적지<select id="platform" name="platform">{% for value, label in platform_labels.items() %}<option value="{{ value }}" {% if defaults.platform == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><small>해당 플랫폼용 로컬 초안으로 보관해요. 실제 게시는 하지 않아요.</small></label><label for="ai">대본 만들기<select id="ai" name="ai"><option value="offline" {% if defaults.ai == 'offline' %}selected{% endif %}>{{ ai_labels.offline }}</option><option value="openai" {% if defaults.ai == 'openai' %}selected{% endif %} {% if not ready.ai.ready %}disabled{% endif %}>{{ ai_labels.openai }}{% if not ready.ai.ready %} · 준비 안 됨{% endif %}</option></select><small>{% if ready.ai.ready %}외부 AI는 실제 콘텐츠 제작에서만 호출하고 토큰 사용량을 기록해요. <span id="start-ai-estimate">1건(30초 기준) 호출 {{ ready.ai.estimate.calls }}회 · 예상 최대 약 {{ ready.ai.estimate.total_max }} 토큰 · 이번 달 남은 {{ ready.ai.remaining_tokens }} 토큰 · 예상 비용 {% if ready.ai.estimate.cost %}{{ ready.ai.estimate.cost.amount }} {{ ready.ai.estimate.cost.currency }}{% else %}단가 미입력{% endif %}</span> (참고용 추정치 · <a href="/ai-settings">AI 연결 설정</a>){% else %}{{ ready.ai.reasons|join(' ') }} <a href="/ai-settings">AI 연결 설정</a>{% endif %}</small></label></div>
-<label for="voice">음성<select id="voice" name="voice"><option value="default">기본 설정 사용 · {{ '무음 검토영상' if ready.voice.silent else ready.voice.name }}</option><option value="offline-silence">이번만 무음 검토영상</option></select><small>한국어 음성 선택과 미리 듣기는 <a href="/voices">음성 설정</a>에서 해요. 선택한 음성이 없으면 제작을 멈추고 알려 드립니다.</small></label>
-<div class="soft-notice"><strong>검토가 먼저예요</strong><p>체험 뉴스는 실제 사건이 아닌 연습용 뉴스입니다. 실제 뉴스 대본은 원문에 없는 내용을 채우지 않으며, 만들어진 대본과 영상은 사람이 내용·출처·권리를 확인한 뒤에만 게시 대기함에서 다음 단계로 갈 수 있어요.</p></div><div class="form-actions"><button class="primary" type="submit">선택한 방식으로 제작 시작 <span aria-hidden="true">→</span></button><a href="/">홈으로</a><a href="/autopilot/jobs">나의 제작 작업</a></div><p class="form-feedback" role="alert" data-submit-error></p></form>
-<section class="how-it-works" aria-label="제작 과정"><h2>이렇게 만들어져요</h2><ol><li><span>01</span> 뉴스 모으고 고르기</li><li><span>02</span> 대본 만들고 확인하기</li><li><span>03</span> 음성·자막 영상 만들기</li><li><span>04</span> 영상 확인하고 대기함에 보관</li></ol><p>제작 중 취소할 수 있으며, 작업 기록과 만들어진 결과는 보관됩니다.</p></section></div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}자동 제작 시작 · NewsFlow AI{% endblock %}
+{% block content %}
+<div class="easy-page narrow-page">
+  <div class="page-head"><div><p class="eyebrow">뉴스 선택 → 자동 제작 → 결과 확인</p><h1>뉴스 영상 만들기</h1><p>뉴스와 길이를 고르면 작업 현황에서 확인하며 이어서 만들어요.</p></div><a href="/">홈으로</a></div>
+  {% if guide %}
+  <section class="easy-panel review-panel" role="status" aria-labelledby="guide-title">
+    <h2 id="guide-title">시작 전에 확인해 주세요</h2>
+    {% if guide == 'provider' %}
+    <p>{{ production.notice }}</p><p>저장한 AI를 유지했습니다. 뉴스 분석·대본 화면에서 뉴스를 선택하고 외부 전송에 동의한 뒤 시작하세요.</p><a class="button primary" href="/ai">저장한 AI로 대본 만들기</a>
+    {% elif guide == 'voice' %}
+    <p>선택한 음성을 자동 제작에서 바로 사용할 수 없습니다. 다른 음성이나 무음으로 바꾸지 않았어요.</p>
+    {% if ready.voice.name == 'elevenlabs' %}<p>ElevenLabs는 영상 제작마다 외부 전송·크레딧 사용 동의가 필요합니다. 대본을 준비한 뒤 영상 편집에서 승인해 주세요.</p><a class="button primary" href="/video">대본 선택 후 영상 제작</a>{% else %}<p>음성 설정에서 설치·모델 준비 상태를 확인해 주세요.</p><a class="button primary" href="/simple-settings#quality">음성 준비 확인</a>{% endif %}
+    {% elif guide == 'approval' %}
+    <p>등록 뉴스의 AI 연결·비용 승인이 준비되지 않아 제작을 시작하지 않았습니다.</p><p>{{ ready.ai.reasons|join(' ') }}</p><a class="button primary" href="/simple-settings#connections">AI 연결과 승인 확인</a>
+    {% else %}<p>사용 중인 뉴스 출처가 없습니다. 출처를 등록하거나 아래에서 체험 뉴스를 선택해 주세요.</p><a class="button primary" href="/sources">뉴스 출처 등록</a>{% endif %}
+  </section>
+  {% endif %}
+  <form action="{{ production.action_url }}" method="post" class="easy-panel creation-form" data-easy-form>
+    {{ csrf_field() }}
+    <div class="form-two-columns">
+      <label for="quick-source">사용할 뉴스<select id="quick-source" name="source"><option value="sample" {% if defaults.source == 'sample' %}selected{% endif %}>체험 뉴스</option><option value="feeds" {% if defaults.source == 'feeds' %}selected{% endif %}>등록된 뉴스</option></select></label>
+      <label for="quick-duration">영상 길이<select id="quick-duration" name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {% if defaults.duration == seconds %}selected{% endif %}>{{ seconds }}초</option>{% endfor %}</select></label>
+    </div>
+    <p>{{ production.voice_label }} · 등록 출처 {{ enabled_sources }}개</p>
+    <p class="hint">{{ production.notice }}</p>
+    <p class="hint">체험 뉴스는 연습용 자료와 기본 대본을 사용하며 외부 AI를 호출하지 않습니다. 뉴스·대본·완성 영상 확인은 작업 화면에서 이어집니다.</p>
+    <button class="primary" type="submit">뉴스 영상 자동 제작 시작 <span aria-hidden="true">→</span></button><p class="form-feedback" role="alert" data-submit-error></p>
+  </form>
+  <details class="easy-panel advanced-settings"><summary>고급 제작 설정</summary>
+    <p>자동 제작 엔진의 기존 옵션입니다. Claude Code·Codex는 <a href="/ai">뉴스 분석·대본 화면</a>을 이용하세요. 선택한 AI나 음성을 자동으로 대체하지 않습니다.</p>
+    <form action="/autopilot/start" method="post" class="creation-form" data-easy-form>{{ csrf_field() }}
+      <div class="form-two-columns"><label>뉴스 종류<select name="source"><option value="sample" {% if defaults.source == 'sample' %}selected{% endif %}>체험 뉴스</option><option value="feeds" {% if defaults.source == 'feeds' %}selected{% endif %}>등록된 뉴스</option></select></label><label>영상 길이<select name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {% if defaults.duration == seconds %}selected{% endif %}>{{ seconds }}초</option>{% endfor %}</select></label></div>
+      <div class="form-two-columns"><label>제작 방식<select name="mode"><option value="easy" {% if defaults.mode == 'easy' %}selected{% endif %}>간편 제작</option><option value="guided" {% if defaults.mode == 'guided' %}selected{% endif %}>뉴스부터 단계별 검토</option></select></label><label>영상의 목적지<select name="platform">{% for value, label in platform_labels.items() %}<option value="{{ value }}" {% if defaults.platform == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label></div>
+      <label>자동 제작용 대본<select name="ai">{% for key, label in ai_labels.items() %}<option value="{{ key }}" {% if defaults.ai == key %}selected{% endif %} {% if key == 'openai' and not ready.ai.ready %}disabled{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      {% if ready.ai.ready %}<p class="hint" id="start-ai-estimate">외부 AI는 등록 뉴스에서만 호출합니다. 30초 기준 호출 {{ ready.ai.estimate.calls }}회 · 예상 최대 약 {{ ready.ai.estimate.total_max }} 토큰 · 이번 달 남은 {{ ready.ai.remaining_tokens }} 토큰. 참고용 추정치이며 실제 사용량은 호출 후 기록됩니다.</p>{% else %}<p class="hint">{{ ready.ai.reasons|join(' ') }}</p>{% endif %}
+      <label>이번 제작 음성<select name="voice"><option value="default">저장한 음성 · {{ ready.voice.name }}</option><option value="offline-silence">이번만 무음 검토영상</option></select></label>
+      <p class="hint">실제 뉴스는 대본·완성 영상의 검토를 건너뛰지 않습니다. 실제 SNS 게시 없이 내 PC에 보관합니다.</p>
+      <button type="submit">고급 설정으로 제작 시작</button><p class="form-feedback" role="alert" data-submit-error></p>
+    </form>
+  </details>
+</div>
+{% endblock %}

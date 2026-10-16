@@ -40,9 +40,7 @@
         message.textContent = result.message;
         message.dataset.state = result.state;
         document.getElementById('codex-version').textContent = result.version ? 'CLI ' + result.version : 'CLI 버전 미확인';
-        web.textContent = result.web_search_verified
-          ? '웹 검색: 실제 검색 이벤트 확인 이력 있음 · 아래 RSS 분석과 별도 경로입니다.'
-          : '웹 검색: 미확인 · 연결 성공은 검색 성공이 아닙니다. 이 화면에서는 RSS 자료 분석만 실행합니다.';
+        web.textContent = '웹 검색: BLOCKED · 개발 중단. RSS 자료 분석·대본 생성만 지원합니다.';
         showTime(result.checked_at);
       } catch (_) {
         message.textContent = '서버 응답 확인 실패·시간 초과. 자동 재시도하지 않습니다. 실행 상태를 확인하세요.';
