@@ -40,7 +40,7 @@ AI 웹 검색은 전부 **BLOCKED**다. RSS로 자동 전환하거나 대체 Pro
 - 테스트 작업 `2a23b7736ad2434f913b024660280c8f`, 분석 #1/대본 #2/렌더 #1. 정상 재시작 후 ID·단계·영상 해시 동일, 새 Fake 호출 **0회**. 최종 사람 검토는 대기 상태를 유지했다.
 - 원래 `run.bat`으로 8765 앱을 기존 데이터 경로 그대로 재실행했다. 실제 사용자 작업실·설정 확인: 기존 저장 Codex/Heami/체험 30초 및 작업·영상 유지.
 - 원본 DB `integrity_check=ok`, 전체 테이블 건수·설정 해시·기존 MP4 2개 해시 작업 전후 동일. 사용자 데이터 백업은 로컬 검증 폴더에만 보존했다.
-- 최종 Windows Python 3.12/3.14 CI: 실행 후 아래 GitHub 기록에 결과를 기입한다. 로컬 Python 3.12 재설치/실행은 수행하지 않았다.
+- 최종 Windows CI **1회 SUCCESS**: Python **3.12.10 / 3.14.8 각각 402 PASS**, Ruff·고정 의존성 설치·`pip check` PASS. 두 환경 모두 기존 Starlette/httpx 사용 중단 예정 경고 1건이며 실패는 없다. 로컬 Python 3.12 재설치/실행은 수행하지 않았다.
 
 로컬 샘플과 화면 캡처는 Git에서 제외한다:
 
@@ -60,7 +60,10 @@ AI 웹 검색은 전부 **BLOCKED**다. RSS로 자동 전환하거나 대체 Pro
 
 ## GitHub 기록 및 남은 검증
 
-- 코드 SHA / 최종 SHA / Draft PR / Windows Actions: 업로드·CI 완료 후 기록.
+- 검증 코드 SHA: `1054518f029b913f34e9870ad01f2d3bb8a411d3`.
+- 신규 [Draft PR #27](https://github.com/jsbae1979-prog/JSBAE/pull/27), base `feat/newsflow-single-workspace`.
+- [Windows Actions #38916368746](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38916368746): SUCCESS. 재실행 없음.
+- 이 결과를 기록한 후속 커밋은 보고서만 변경한다. 최종 브랜치 HEAD는 PR #27 및 완료 응답에 명시하며, 검증 코드는 위 SHA와 동일하다.
 - 실제 Claude/Codex 구독 추론, 실제 OpenAI API, 실제 RSS 원문 내용의 품질 및 사람의 음성·영상 품질 평가: **NOT VERIFIED**.
 - ElevenLabs/Higgsfield는 기존 별도 승인 경로를 유지하며 이번 자동 제작의 무승인 실행 대상이 아니다. AI 웹 검색, Claude API 추가 구현 없음.
 - 인증정보·DB·키·모델 가중치·WAV·MP4·사용자 데이터는 커밋하지 않는다. 기존 PR/main 변경·병합, 실제 유료 API·SNS 호출 없음. 통합 완료 후 판정을 기다린다.
