@@ -24,7 +24,7 @@
 ## 검증
 
 - 로컬 Windows 11 / Python 3.14.7: 변경 범위 핵심 테스트 205개 통과 후 화면 기대값 2개를 수정해 해당 2개 통과. 누락 영상 복구 테스트 1개 추가 통과. 중복 제거 안내 변경은 해당 테스트 1개만 다시 확인했다. 전체 회귀는 실행하지 않았다.
-- Ruff 및 `pip check` 통과. Windows Python 3.12·3.14 최종 Actions 결과는 아래 이력에 기록한다.
+- Ruff 및 `pip check` 통과. Windows Actions 1회 실행: Python 3.12·3.14 각각 **208 passed**, Ruff·의존성 검사 성공. 기존 Starlette/httpx 사용 관련 경고 1개는 실패가 아니다.
 - 실제 Chrome: 체험 뉴스 선택 → Offline 대본 → 같은 화면에서 대본·합성 출처 확인 → Supertonic F1 + FFmpeg → 최종 검토 대기 → 같은 화면 재생·MP4 저장 확인.
 - MP4: H.264/AAC, 1080×1920, **30.021680초**. Chrome에서 끝까지 재생(`ended=true`, 오류 없음). 목록에는 MP4 플레이어가 없고 선택한 플레이어는 재생 전 `readyState=0`을 확인했다.
 - 다운로드한 MP4와 원본 SHA256 동일: `7ac55940c9e3524dbf4f8d7ac83b78840fde8724074ebc277101bf030fcd9b15`.
@@ -51,4 +51,8 @@ GitHub에는 사용자 자료·DB·영상·스크린샷·모델을 올리지 않
 
 ## GitHub 이력
 
-- 코드 SHA / Draft PR / Windows Actions: 업로드 및 1회 검증 후 기록 예정.
+- 검증 코드 SHA: `e7ed12c6f2a6b5604d590cc0e3632e367186f86c` (후속 커밋은 이 보고서 결과 기록만 변경).
+- Draft PR: [#26](https://github.com/jsbae1979-prog/JSBAE/pull/26), 기준 브랜치는 `feat/newsflow-ux-workflow-unification`.
+- Windows Actions: [38912555848 — SUCCESS](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38912555848).
+- 변경 파일 17개: GUI 라우트·공유 작업 모델·템플릿·CSS/JS 9개, 썸네일 모듈 1개, 테스트 5개, workflow 1개, 보고서 1개.
+- 최종 브랜치 HEAD는 PR의 최신 문서 기록 커밋이며 완료 응답에도 전체 SHA를 제공한다.
