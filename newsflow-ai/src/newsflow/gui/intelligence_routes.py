@@ -104,6 +104,7 @@ def service(request: Request) -> IntelligenceService:
     return IntelligenceService(
         request.app.state.sessions, getattr(request.app.state, "ai_provider", None),
         getattr(request.app.state, "ai_keys", None),
+        api_key_stores=getattr(request.app.state, "api_keys", None),
     )
 
 

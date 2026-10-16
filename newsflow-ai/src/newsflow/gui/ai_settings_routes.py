@@ -13,6 +13,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
 from newsflow.db.models import AIUsage, AppSetting, utcnow
+from newsflow.intelligence.api_settings import invalidate_api_verification
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.intelligence.provider import OpenAIProvider, ProviderError
 from newsflow.intelligence.settings import (
@@ -77,9 +78,10 @@ def save_prices(
 
 
 @router.post("/ai-settings/key")
-def save_key(request: Request, api_key: str = Form(max_length=256)) -> RedirectResponse:
+def save_key(request: Request, api_key: str = Form("")) -> RedirectResponse:
     try:
         _store(request).save(api_key)
+        invalidate_api_verification(request.app.state.sessions, "openai")
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
     return go("/ai-settings?saved=key")
@@ -89,6 +91,7 @@ def save_key(request: Request, api_key: str = Form(max_length=256)) -> RedirectR
 def clear_key(request: Request) -> RedirectResponse:
     try:
         _store(request).clear()
+        invalidate_api_verification(request.app.state.sessions, "openai")
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
     return go("/ai-settings?saved=cleared")

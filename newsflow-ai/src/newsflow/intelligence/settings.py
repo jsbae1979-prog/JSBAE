@@ -24,7 +24,8 @@ DEFAULT_MODEL = "gpt-4o-mini"
 DEFAULT_LIMIT = 200_000
 MAX_LIMIT = 50_000_000
 STUDIO_PROVIDERS = {"offline": "Offline · 외부 호출 없음", "openai": "OpenAI · API 승인 필요",
-                    "claude_code": "Claude Code · 본인 계정 사용량", "codex": "Codex · RSS 자료 분석"}
+                    "claude_code": "Claude Code · 본인 계정 사용량", "codex": "Codex · RSS 자료 분석",
+                    "claude_api": "Claude API · 별도 API 키·과금"}
 # Output-token reservation per script length (sized from the Script schema maxima) and for
 # the analysis call; both stay inside Options' 200..3000 bound.
 SCRIPT_MAX_TOKENS = {30: 1400, 45: 1800, 60: 2200}
@@ -78,16 +79,19 @@ def studio_model(provider: str, model: str) -> str:
     if provider == "codex":
         return model
     is_claude = model in ("sonnet", "opus", "haiku") or model.startswith("claude-")
-    if (provider == "claude_code") != is_claude:
+    if (provider in {"claude_code", "claude_api"}) != is_claude:
         raise SettingsError("제공자에 맞는 모델을 입력하세요. Claude는 sonnet·opus·haiku 또는 claude- 모델입니다.")
+    if provider == "claude_api" and not model.startswith("claude-"):
+        raise SettingsError("Claude API의 공식 claude- 모델 ID를 입력하세요. CLI 별칭은 사용하지 않습니다.")
     return model
 
 
 def read_studio_settings(sessions: sessionmaker[Session]) -> dict:
     """UI defaults only: never changes Autopilot settings or external-call approvals."""
     models = {"offline": "offline", "openai": read_settings(sessions).model,
-              "claude_code": "sonnet", "codex": "default"}
-    fallbacks = {"offline": "offline", "openai": DEFAULT_MODEL, "claude_code": "sonnet", "codex": "default"}
+              "claude_code": "sonnet", "codex": "default", "claude_api": "claude-sonnet-4-6"}
+    fallbacks = {"offline": "offline", "openai": DEFAULT_MODEL, "claude_code": "sonnet", "codex": "default",
+                 "claude_api": "claude-sonnet-4-6"}
     with sessions() as session:
         provider = _value(session, "studio_provider")
         for key, fallback in models.items():
@@ -128,9 +132,8 @@ def read_settings(sessions: sessionmaker[Session]) -> AISettings:
     )
 
 
-def write_settings(
-    sessions: sessionmaker[Session], provider: str, model: str, approved: bool, monthly_token_limit: int, timeout: int,
-) -> AISettings:
+def validate_settings(provider: str, model: str, approved: bool, monthly_token_limit: int, timeout: int) -> None:
+    """Validate legacy API gates without saving or invoking a provider."""
     if provider not in PROVIDERS:
         raise SettingsError("AI 제공자를 다시 선택하세요.")
     if not isinstance(model, str) or not re.fullmatch(r"[a-zA-Z0-9._-]{1,80}", model):
@@ -141,6 +144,12 @@ def write_settings(
         raise SettingsError("요청 제한시간은 1~60초여야 합니다.")
     if provider == "openai" and approved and monthly_token_limit <= 0:
         raise SettingsError("외부 AI를 승인하려면 0보다 큰 월 토큰 한도를 함께 설정하세요.")
+
+
+def write_settings(
+    sessions: sessionmaker[Session], provider: str, model: str, approved: bool, monthly_token_limit: int, timeout: int,
+) -> AISettings:
+    validate_settings(provider, model, approved, monthly_token_limit, timeout)
     with sessions.begin() as session:
         session.connection().exec_driver_sql("BEGIN IMMEDIATE")
         previous = _value(session, "ai_approved_at")

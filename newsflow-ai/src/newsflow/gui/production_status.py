@@ -19,16 +19,18 @@ from newsflow.db.models import (
 )
 from newsflow.easy_setup import initial_state, voice_choice_catalog
 from newsflow.intelligence.capabilities import provider_capabilities
-from newsflow.intelligence.settings import external_ready, read_studio_settings
+from newsflow.intelligence.settings import external_ready, read_settings, read_studio_settings
 from newsflow.video.ai.settings import readiness as video_readiness
 from newsflow.video.elevenlabs_tts import ElevenLabsKeys
 from newsflow.video.elevenlabs_tts import settings as elevenlabs_settings
 from newsflow.video.engine import FFmpegAdapter, RenderError
 from newsflow.video.voice_engines import provider_name
 
+from .api_settings_routes import connection_status
 from .production_context import ACQUISITION_LABELS, CATEGORY_LABELS, PERIOD_LABELS, acquisition_preferences
 
 PROVIDER_LABELS = {"offline": "Offline", "claude_code": "Claude Code", "codex": "Codex", "openai": "OpenAI API",
+                   "claude_api": "Claude API · API Key",
                    "supertonic": "Supertonic 3", "windows": "Windows SAPI", "elevenlabs": "ElevenLabs",
                    "higgsfield": "Higgsfield", "ffmpeg": "FFmpeg", "rss": "RSS"}
 STATUS_LABELS = {"ready": "사용 준비 완료", "configured": "설정 확인됨", "setup": "설정 필요",
@@ -137,7 +139,17 @@ def production_context(request) -> dict:
         authentication="모델 조회 성공 기록 있음" if ai_check.get("ok") is True else "실제 API 인증 확인 필요",
         checked_at=ai_check.get("checked_at"), cost=f"유료 API · 로컬 잔여 한도 {ai_gate['remaining_tokens']} 토큰",
         evidence="키 파일 존재·설정 통과는 현재 API 인증 성공이 아닙니다.", action="#selected-ai")
-    for name in ("offline", "claude_code", "codex", "openai"):
+    api_connections = {name: connection_status(request, name) for name in ("openai", "claude_api")}
+    for name in ("openai", "claude_api"):
+        api = api_connections[name]
+        inference = connection_status(request, name, "analysis")
+        statuses[name] = _status(name, "configured" if api["key"]["configured"] else "setup",
+            "API 키 등록됨" if api["key"]["configured"] else "API Key 미등록",
+            " ".join(inference["reasons"]) if not inference["ready"] else "분석·대본 실행 조건 확인됨",
+            authentication="실제 인증 확인 기록 있음" if api["authentication_verified"] else "실제 연결 미확인",
+            cost="별도 API 과금 · 요청별·월 예산 적용 · 로컬 추정은 공급사 청구액과 다름",
+            evidence="설정 완료와 실제 검색·분석·대본 성공은 별개입니다.", action="#selected-ai")
+    for name in ("offline", "claude_code", "codex", "openai", "claude_api"):
         statuses[name]["capabilities"] = provider_capabilities(name)
 
     for name in ("windows", "supertonic"):
@@ -179,7 +191,7 @@ def production_context(request) -> dict:
         action="#selected-video")
 
     for name, status in statuses.items():
-        if name in {"offline", "claude_code", "codex", "openai"}:
+        if name in {"offline", "claude_code", "codex", "openai", "claude_api"}:
             match = next((row for row in successful if row.provider == name), None)
             status["last_success_at"] = match.finished_at if match else None
         elif name in {"windows", "supertonic", "elevenlabs", "ffmpeg"}:
@@ -218,6 +230,16 @@ def production_context(request) -> dict:
                          status_code="unavailable", status_label="웹 뉴스 조사 BLOCKED",
                          availability="실제 검색·출처 확인 경로가 승인·검증되지 않아 실행하지 않습니다. RSS 자동 전환 없음.",
                          last_success_at=None, evidence="AI 연결 성공과 실제 웹 검색 성공은 별개입니다.")
+        if actual_ai in api_connections:
+            api = api_connections[actual_ai]
+            stages[0].update(provider=actual_ai,
+                provider_label=PROVIDER_LABELS[actual_ai] + (" + RSS 보완" if acquisition["acquisition_policy"] == "hybrid" else ""),
+                configuration="공식 API 검색 구현됨 · " + statuses[actual_ai]["configuration"],
+                authentication=statuses[actual_ai]["authentication"], cost_notice=statuses[actual_ai]["cost_notice"],
+                status_code="configured" if api["ready"] else "unavailable",
+                status_label="실행 조건 확인됨" if api["ready"] else "웹 뉴스 조사 BLOCKED",
+                availability=" ".join(api["reasons"]) if not api["ready"] else "검색 → 같은 API 분석·대본 → 사용자 검토",
+                evidence="도구 검색 증거와 AI 요약을 구분합니다. 원문 전체 사실 검증을 뜻하지 않습니다.")
     if values["voice"] == "offline-silence":
         stages[3].update(provider_label="Offline 무음", configuration="무음 검토영상 선택됨",
                          availability="실제 음성 없이 자막 검토영상 제작", last_success_at=None,
@@ -228,6 +250,7 @@ def production_context(request) -> dict:
     unchecked = {"state": "unchecked", "ready": False, "version": None, "checked_at": None,
                  "message": "아직 연결을 확인하지 않았습니다. 아래 확인 버튼을 눌러 주세요."}
     return {"production_config": config, "pipeline_stages": stages, "provider_statuses": statuses,
+            "api_connections": api_connections, "legacy_api_settings": read_settings(sessions),
             "acquisition_labels": ACQUISITION_LABELS, "category_labels": CATEGORY_LABELS, "period_labels": PERIOD_LABELS,
             "voice_choices": catalog, "studio_defaults": studio,
             "claude_status": getattr(request.app.state, "claude_status", unchecked),

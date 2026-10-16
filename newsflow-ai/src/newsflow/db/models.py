@@ -438,6 +438,26 @@ class AIUsage(Base):
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 
+class APIRequestReservation(Base):
+    """Durable API cost upper bounds. No prompts, credentials or raw responses."""
+
+    __tablename__ = "api_request_reservations"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    request_id: Mapped[str] = mapped_column(String(128), unique=True)
+    provider: Mapped[str] = mapped_column(String(20), index=True)
+    kind: Mapped[str] = mapped_column(String(20))
+    model: Mapped[str] = mapped_column(String(80))
+    status: Mapped[str] = mapped_column(String(20), default="reserved")
+    reserved_usd: Mapped[str] = mapped_column(String(32))
+    estimated_usd: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    bounds: Mapped[dict] = mapped_column(JSON)
+    prices: Mapped[dict] = mapped_column(JSON)
+    usage: Mapped[dict] = mapped_column(JSON, default=dict)
+    test_only: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+
+
 class VideoAIModel(Base):
     """User-confirmed model catalog entry; the path and unit price come from the official docs."""
 

@@ -24,7 +24,7 @@ function refreshPolicyReadiness() {
 }
 function refreshPolicyWarning() {
   if (policyWarning && acquisitionChoice && newsChoice) {
-    policyWarning.hidden = newsChoice.value === "sample" || acquisitionChoice.value === "rss";
+    policyWarning.hidden = newsChoice.value === "sample" || acquisitionChoice.value === "rss" || policyStates[acquisitionChoice.value]?.supported === true;
   }
 }
 if (acquisitionChoice && acquisitionLabel) {

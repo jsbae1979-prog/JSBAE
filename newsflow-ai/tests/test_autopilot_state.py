@@ -381,7 +381,7 @@ def test_migration_0008_is_additive_and_retains_legacy_data(tmp_path):
             connection.execute(text("INSERT INTO news_sources(name,url,enabled,created_at) VALUES ('legacy','https://example.test/legacy',0,'2026-01-01 00:00:00')"))
         migrate(engine)
         with engine.connect() as connection:
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0012"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0013"
             assert connection.scalar(text("SELECT name FROM news_sources")) == "legacy"
         schema = inspect(engine)
         assert "autopilot_jobs" in schema.get_table_names()

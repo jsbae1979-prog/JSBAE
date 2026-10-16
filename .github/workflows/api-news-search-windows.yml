@@ -1,0 +1,61 @@
+name: NewsFlow API News Search Windows
+
+on:
+  push:
+    branches: [feat/newsflow-api-news-search]
+    paths-ignore: ['newsflow-ai/docs/**']
+
+permissions:
+  contents: read
+
+jobs:
+  api-news-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_CLAUDE_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      ANTHROPIC_AUTH_TOKEN: ''
+      CLAUDE_CODE_OAUTH_TOKEN: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install -r requirements-dev.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Changed API and workspace areas
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/autopilot src/newsflow/gui src/newsflow/intelligence src/newsflow/news/service.py src/newsflow/db/models.py src/newsflow/db/migrations/versions/0013_api_requests.py src/newsflow/main.py src/newsflow/migrate_data.py tests/test_api_search_contract.py tests/test_api_providers.py tests/test_api_settings.py tests/test_api_news_pipeline.py tests/test_api_news_gui.py tests/test_ai_news_contract.py tests/test_ai_news_automation_backend.py tests/test_unified_ai_workspace.py tests/test_intelligence.py tests/test_collection_errors.py tests/test_database.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Fake API pipeline and existing data contracts
+        run: |
+          .venv/Scripts/python -m pytest -q -rs tests/test_api_search_contract.py tests/test_api_providers.py tests/test_api_settings.py tests/test_api_news_pipeline.py tests/test_api_news_gui.py tests/test_ai_news_contract.py tests/test_ai_news_automation_backend.py tests/test_unified_ai_workspace.py tests/test_intelligence.py tests/test_collection_errors.py tests/test_database.py tests/test_production_dpapi.py::test_real_windows_production_dpapi_restart_tampering_account_binding
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # Injected API/RSS fixtures and synthetic temp data only. No actual CLI,
+      # authentication, paid API, live search, OAuth/SNS or artifact uploads.

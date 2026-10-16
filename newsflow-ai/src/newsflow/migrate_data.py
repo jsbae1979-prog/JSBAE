@@ -60,9 +60,10 @@ def migrate_data(source: Path, target: Path) -> None:
                     ("0010",),
                     ("0011",),
                     ("0012",),
+                    ("0013",),
                 }:
                     raise ValueError("지원하지 않는 DB 버전입니다.")
-                if backup.execute("SELECT version_num FROM alembic_version").fetchone() == ("0012",):
+                if backup.execute("SELECT version_num FROM alembic_version").fetchone() in {("0012",), ("0013",)}:
                     # A copied DB must not create a second active schedule in another data folder.
                     backup.execute("UPDATE production_schedules SET status='paused', revision=revision+1 WHERE status='active'")
                     backup.commit()

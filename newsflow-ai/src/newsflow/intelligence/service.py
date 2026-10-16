@@ -6,6 +6,7 @@ import json
 import os
 from collections.abc import Callable
 from difflib import SequenceMatcher
+from threading import Event, Thread
 
 from sqlalchemy import select, update
 
@@ -15,6 +16,7 @@ from newsflow.db.models import (
     ContentDraft,
     IntelligenceRun,
     NewsArticle,
+    NewsSource,
     utcnow,
 )
 
@@ -33,7 +35,7 @@ from .provider import (
 )
 from .schema import CAUTION, Analysis, Script
 
-MODES = ("offline", "openai", "claude_code", "codex")
+MODES = ("offline", "openai", "claude_code", "codex", "claude_api")
 _PROVIDER_MESSAGES = {
     "codex_auth": "Codex의 공식 ChatGPT 로그인이 필요합니다. 연결 상태를 확인하세요.",
     "codex_billing": "Codex가 ChatGPT 구독 인증이 아닙니다. API 과금으로 전환하지 않습니다.",
@@ -52,7 +54,7 @@ _PROVIDER_MESSAGES = {
     "ai_unavailable": "AI 서비스에 연결하지 못했습니다. 네트워크를 확인하고 다시 시도하세요.",
     "ai_bad_response": "AI 응답 형식이 올바르지 않습니다. 모델 설정을 확인하세요.",
     "ai_key_missing": "AI API 키가 설정되지 않았습니다.",
-    "ai_cancelled": "Claude Code 요청을 취소했습니다. 계정 사용량이 발생했을 수 있습니다.",
+    "ai_cancelled": "AI 요청을 취소했습니다. 요청이 전송되었다면 계정 사용량이 발생했을 수 있습니다.",
 }
 
 
@@ -66,8 +68,15 @@ class IntelligenceError(Exception):
 
 
 class IntelligenceService:
-    def __init__(self, sessions, provider: Provider | None = None, key_store=None, speech: dict | None = None):
+    def __init__(self, sessions, provider: Provider | None = None, key_store=None, speech: dict | None = None,
+                 *, api_key_stores: dict | None = None, api_providers: dict | None = None, api_budget=None):
         self.sessions, self.provider, self.key_store = sessions, provider, key_store
+        self.api_key_stores = dict(api_key_stores or {})
+        if key_store is not None:
+            self.api_key_stores.setdefault("openai", key_store)
+        self.api_providers = dict(api_providers or {})
+        self.api_budget = api_budget
+        self.api_managed = api_key_stores is not None or api_budget is not None
         # Speech settings only affect review estimates; they never alter the saved script.
         self.speech = {"rate": 0, "pause_ms": 250, **(speech or {})}
 
@@ -77,8 +86,14 @@ class IntelligenceService:
         return os.environ.get("NEWSFLOW_AI_API_KEY", "")
 
     def _provider(self, mode: str) -> Provider:
+        if mode in self.api_providers:
+            return self.api_providers[mode]
         if self.provider is not None:
             return self.provider
+        if mode == "claude_api":
+            from .api_providers import AnthropicProvider
+
+            return AnthropicProvider(lambda: self._api_key(mode))
         if mode == "codex":
             from .codex import CODEX_PROVIDER
 
@@ -87,7 +102,43 @@ class IntelligenceService:
             from .claude_code import CLAUDE_PROVIDER
 
             return CLAUDE_PROVIDER
-        return OfflineProvider() if mode == "offline" else OpenAIProvider(self._key)
+        return OfflineProvider() if mode == "offline" else OpenAIProvider(self._key, allow_retry=not self.api_managed)
+
+    def _api_key(self, mode: str) -> str:
+        store = self.api_key_stores.get(mode)
+        return store.key() if store is not None else ""
+
+    def api_readiness(self, mode: str, capability: str = "search") -> dict:
+        """Read-only gates; setting a key never establishes real authentication."""
+        from .api_settings import APIBudgetService
+
+        budget = self.api_budget or APIBudgetService(self.sessions)
+        return budget.readiness(mode, self.api_key_stores.get(mode), capability=capability)
+
+    def _reserve_api(self, mode: str, run_id: int, kind: str, options: Options, payload: dict):
+        if mode not in {"openai", "claude_api"} or (mode == "openai" and not self.api_managed and kind != "search"):
+            return None
+        from .api_settings import APIBudgetService, APISettingsError
+
+        budget = self.api_budget or APIBudgetService(self.sessions)
+        # Every UTF-8 byte can be a token. Additional room covers the schema/system
+        # instructions. The budget service separately bounds tool-returned search context.
+        maximum = len(json.dumps(payload, ensure_ascii=False).encode("utf-8")) * 4 + 4096
+        try:
+            reservation = budget.reserve(
+                provider=mode, request_id=f"intelligence:{run_id}", kind=kind, model=options.model,
+                max_input_tokens=maximum, max_output_tokens=options.max_tokens,
+                max_search_calls=1 if kind == "search" else 0, key_store=self.api_key_stores.get(mode),
+            )
+        except APISettingsError as exc:
+            raise IntelligenceError(str(exc), "ai_budget", False) from None
+        return budget, reservation
+
+    @staticmethod
+    def _finish_api(reservation, provider, status: str) -> None:
+        if reservation:
+            budget, record = reservation
+            budget.finish(record.id, status=status, usage=getattr(provider, "last_usage", None))
 
     def _usage(self, provider: Provider, run_id: int, mode: str, options: Options, kind: str, status: str) -> None:
         usage = getattr(provider, "last_usage", None)
@@ -115,12 +166,113 @@ class IntelligenceService:
             return str(exc), exc.code, exc.retryable
         return fallback, "ai_failed", True
 
+    def search_news(self, mode: str, request, *, consent: bool = False, options: Options | None = None,
+                    on_run: Callable[[int], None] | None = None, cancel: Event | None = None) -> int:
+        """One approved search, with request ID journaled before dispatch and no replay.
+
+        Search sources are imported only after an actual tool-result match. Generated
+        dates stay claims; unverified dates cannot enter the current-news selection.
+        """
+        from newsflow.news.collector import CollectedArticle
+        from newsflow.news.service import NewsService
+
+        from .api_providers import AnthropicProvider, OpenAISearchProvider
+        from .api_search import SEARCH_INSTRUCTION, SearchRequest, validate_search_result
+
+        if mode not in {"openai", "claude_api"} or consent is not True:
+            raise IntelligenceError("API 웹 검색에는 별도 사용·비용 승인이 필요합니다.", "ai_consent", False)
+        if not isinstance(request, SearchRequest):
+            raise IntelligenceError("뉴스 검색 요청 형식을 확인하세요.", "invalid_selection", False)
+        options = options or Options(max_tokens=3000)
+        payload = request.model_dump(mode="json")
+        with self.sessions.begin() as session:
+            run = IntelligenceRun(kind="search", provider=mode, status="running", options=vars(options),
+                                  evidence=payload, result={}, message="API 검색 요청 준비 · 원문 사실 확인 미완료")
+            session.add(run)
+            session.flush()
+            run_id = run.id
+        provider = self.api_providers.get(mode)
+        if provider is None:
+            factory = OpenAISearchProvider if mode == "openai" else AnthropicProvider
+            provider = factory(lambda: self._api_key(mode))
+        reservation = None
+        done = Event()
+
+        def monitor():
+            while not done.wait(.05):
+                if cancel.is_set():
+                    provider.cancel()
+                    return
+
+        worker = Thread(target=monitor, daemon=True) if cancel is not None and callable(getattr(provider, "cancel", None)) else None
+        try:
+            if on_run:
+                on_run(run_id)
+            reservation = self._reserve_api(mode, run_id, "search", options,
+                                            {"instruction": SEARCH_INSTRUCTION, "request": payload})
+            if cancel is not None and cancel.is_set():
+                raise IntelligenceError("API 뉴스 검색을 취소했습니다.", "ai_cancelled", False)
+            if worker:
+                worker.start()
+            result = validate_search_result(provider.search(request, options))
+            if result.provider != mode or result.model != options.model or len(result.articles) > request.count:
+                raise IntelligenceError("검색 제공자·모델·결과 건수가 요청과 다릅니다.", "ai_bad_response", False)
+            if result.tool_evidence.provenance == "test_fixture" and mode not in self.api_providers:
+                raise IntelligenceError("테스트 검색 근거를 실제 검색으로 저장할 수 없습니다.", "ai_bad_response", False)
+            data = result.model_dump(mode="json")
+            self._check_stored_secret(data)
+            source_url = "https://api.openai.com/v1/responses" if mode == "openai" else "https://api.anthropic.com/v1/messages"
+            with self.sessions.begin() as session:
+                source = session.scalar(select(NewsSource).where(NewsSource.url == source_url))
+                if source is None:
+                    source = NewsSource(name=f"{mode} 웹 검색 · 원문 검토 필요", url=source_url, enabled=False)
+                    session.add(source)
+                    session.flush()
+                stored = NewsService.store_articles(session, source.id, [CollectedArticle(
+                    article.title, article.url, article.publisher[:200], article.summary, article.published_at,
+                ) for article in result.articles])
+                run = session.get(IntelligenceRun, run_id)
+                run.status, run.finished_at = "success", utcnow()
+                run.message = "검색 도구 출처 확인 · 발행일·언론사·원문 사실은 별도 검토 필요"
+                run.result = {**data, **stored, "source_ids": [source.id],
+                              "web_search_performed": result.tool_evidence.provenance == "provider_response",
+                              "simulated": result.tool_evidence.provenance == "test_fixture",
+                              "full_body_verified": False, "facts_verified": False}
+            self._usage(provider, run_id, mode, options, "search", "success")
+            self._finish_api(reservation, provider, "success")
+            return run_id
+        except Exception as exc:  # noqa: BLE001 - fixed messages only, never persist vendor text
+            message, code, _ = self._failure(exc, "API 뉴스 검색에 실패했습니다. 자동 재요청하지 않습니다.")
+            with self.sessions.begin() as session:
+                run = session.get(IntelligenceRun, run_id)
+                run.status, run.message, run.finished_at = "failed", message, utcnow()
+            self._usage(provider, run_id, mode, options, "search", "failed")
+            self._finish_api(reservation, provider, "unknown" if code in {"ai_timeout", "ai_unavailable", "ai_cancelled"} else "failed")
+            raise IntelligenceError(message, code, False) from None
+        finally:
+            done.set()
+            if worker and worker.ident is not None:
+                worker.join(timeout=1)
+
     def evidence_for(self, ids: list[int]) -> dict:
         """Read-only evidence payload for `ids`, identical to what analyze() stores and sends."""
         with self.sessions() as session:
             articles = [session.get(NewsArticle, i) for i in ids]
             if any(a is None for a in articles):
                 raise IntelligenceError("선택한 기사가 없습니다.", "invalid_selection", False)
+            search_by_article = {}
+            for search in session.scalars(select(IntelligenceRun).where(
+                IntelligenceRun.kind == "search", IntelligenceRun.status == "success",
+            ).order_by(IntelligenceRun.id)):
+                for identifier in search.result.get("article_ids", []):
+                    if identifier in ids:
+                        search_by_article[identifier] = {
+                            "search_run_id": search.id, "provider": search.provider,
+                            "model": search.options.get("model"), "searched_at": search.result.get("searched_at"),
+                            "tool_evidence": search.result.get("tool_evidence"),
+                            "full_body_verified": False, "facts_verified": False,
+                            "summary_kind": "AI 검색 요약 · 원문 본문 미확인",
+                        }
             evidence, groups = [], []
             for a in articles:
                 mentions = list(
@@ -147,7 +299,9 @@ class IntelligenceService:
                         }
                         if score
                         else None,
-                        "popularity": "RSS 내부 휴리스틱 · 실제 조회수/검색량 미측정",
+                        "popularity": ("AI 검색 후보 · 실제 조회수/검색량 미측정" if a.id in search_by_article
+                                       else "RSS 내부 휴리스틱 · 실제 조회수/검색량 미측정"),
+                        **({"search_provenance": search_by_article[a.id]} if a.id in search_by_article else {}),
                     }
                 )
                 for group in groups:
@@ -186,16 +340,19 @@ class IntelligenceService:
                 options=vars(options),
                 evidence=payload,
                 result={},
-                message="RSS 근거 분석 완료; 사실 확인 미완료",
+                message="제공된 출처 근거 분석; 사실 확인 미완료",
             )
             session.add(run)
             session.flush()
             run_id = run.id
         provider = self._provider(mode)
+        reservation = None
         try:
             if on_run:
                 on_run(run_id)
             self._budget(mode, options, ANALYSIS_INSTRUCTION, {"evidence": payload})
+            reservation = self._reserve_api(mode, run_id, "analysis", options,
+                                            {"instruction": ANALYSIS_INSTRUCTION, "evidence": payload})
             try:
                 result = Analysis.model_validate(provider.analyze(payload, options)).model_dump()
             except IntelligenceError:
@@ -212,12 +369,13 @@ class IntelligenceService:
             recommended = result.get("recommended_article_id")
             if recommended is not None and (recommended not in ids or not result["selection_reason"].strip()):
                 raise IntelligenceError("추천 기사와 근거가 선택 자료와 일치하지 않습니다.", "ai_bad_response", False)
-            self.check_secret(result)
+            self._check_stored_secret(result)
             self.check_copy(result, payload)
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.result, run.finished_at = "success", result, utcnow()
             self._usage(provider, run_id, mode, options, "analysis", "success")
+            self._finish_api(reservation, provider, "success")
             return run_id
         except Exception as exc:  # noqa: BLE001 - sanitize provider failure
             message, code, retryable = self._failure(exc, "AI 분석에 실패했습니다. API 설정 또는 응답 형식을 확인하세요.")
@@ -225,6 +383,7 @@ class IntelligenceService:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.message, run.finished_at = "failed", message, utcnow()
             self._usage(provider, run_id, mode, options, "analysis", "failed")
+            self._finish_api(reservation, provider, "unknown" if code in {"ai_timeout", "ai_unavailable", "ai_cancelled"} else "failed")
             raise IntelligenceError(message, code, retryable) from None
 
     def _budget(self, mode: str, options: Options, instruction: str = "", payload: dict | None = None) -> None:
@@ -233,7 +392,7 @@ class IntelligenceService:
         The reservation includes the estimated prompt tokens of this exact call when the
         instruction and payload are known, so the check is conservative.
         """
-        if mode in ("offline", "claude_code", "codex"):
+        if mode in ("offline", "claude_code", "codex", "claude_api"):
             return
         from .settings import SettingsError, check_budget, read_settings
 
@@ -295,10 +454,13 @@ class IntelligenceService:
             session.flush()
             run_id = run.id
         provider = self._provider(mode)
+        reservation = None
         try:
             if on_run:
                 on_run(run_id)
             self._budget(mode, options, SCRIPT_INSTRUCTION, {"duration": duration, "evidence": evidence})
+            reservation = self._reserve_api(mode, run_id, "script", options,
+                                            {"instruction": SCRIPT_INSTRUCTION, "duration": duration, "evidence": evidence})
             output = provider.complete(evidence, duration, options)
             script = self.validate(output, duration)
             self._check_stored_secret(script)
@@ -325,6 +487,7 @@ class IntelligenceService:
                 session.flush()
                 draft_id = draft.id
             self._usage(provider, run_id, mode, options, "script", "success")
+            self._finish_api(reservation, provider, "success")
             return draft_id
         except Exception as exc:  # noqa: BLE001 - persist safe failure at adapter boundary
             # Never store provider exception text, response body or credential-bearing data.
@@ -333,6 +496,7 @@ class IntelligenceService:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.message, run.finished_at = "failed", message, utcnow()
             self._usage(provider, run_id, mode, options, "script", "failed")
+            self._finish_api(reservation, provider, "unknown" if code in {"ai_timeout", "ai_unavailable", "ai_cancelled"} else "failed")
             raise IntelligenceError(message, code, retryable) from None
 
     @staticmethod
@@ -392,11 +556,14 @@ class IntelligenceService:
 
     def _check_stored_secret(self, value: dict) -> None:
         """The GUI-stored key must be as unreachable in drafts as the environment key."""
-        if self.key_store is None:
-            return
-        try:
-            key = self.key_store.key()
-        except Exception:  # noqa: BLE001 - an unreadable store cannot leak into a draft
-            return
-        if key and key in json.dumps(value, ensure_ascii=False):
-            raise IntelligenceError("보안 정책에 의해 차단되었습니다.", "ai_bad_response", False)
+        self.check_secret(value)
+        stores = [self.key_store, *self.api_key_stores.values()]
+        for store in stores:
+            if store is None:
+                continue
+            try:
+                key = store.key()
+            except Exception:  # noqa: BLE001, S112 - do not expose credential-store failures
+                continue
+            if key and key in json.dumps(value, ensure_ascii=False):
+                raise IntelligenceError("보안 정책에 의해 차단되었습니다.", "ai_bad_response", False)

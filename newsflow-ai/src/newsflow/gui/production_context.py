@@ -16,8 +16,8 @@ from newsflow.intelligence.capabilities import (
 from newsflow.intelligence.settings import SettingsError, studio_model
 
 CONTEXT_KEY = "production_context"
-ACQUISITION_LABELS = {"ai_web": "AI 웹 뉴스 조사 · 현재 차단", "rss": "RSS 뉴스 수집 · 직접 선택",
-                      "hybrid": "AI 웹 조사 + RSS 보완 · 현재 차단"}
+ACQUISITION_LABELS = {"ai_web": "AI 웹 뉴스 조사 · 승인·검증 필요", "rss": "RSS 뉴스 수집 · 직접 선택",
+                      "hybrid": "AI 웹 조사 + RSS 보완 · 승인·검증 필요"}
 CATEGORY_LABELS = {"all": "전체", "politics": "정치", "economy": "경제", "society": "사회",
                    "it": "IT·과학", "world": "국제"}
 PERIOD_LABELS = {"today": "오늘", "24h": "최근 24시간", "7d": "최근 7일"}
