@@ -33,3 +33,5 @@ typing_extensions==4.16.0
 uvicorn==0.54.0
 
 Pillow==12.3.0
+
+pywin32==312; sys_platform == "win32"

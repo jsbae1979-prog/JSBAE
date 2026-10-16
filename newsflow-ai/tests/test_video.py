@@ -1,5 +1,6 @@
 import json
 import re
+import sys
 from itertools import pairwise
 from pathlib import Path
 from threading import Event
@@ -375,7 +376,8 @@ def test_windows_tts_command_safe_and_platform_guard(tmp_path, monkeypatch):
     ):
         assert provider.voices() == ["Installed synthetic voice"]
     assert call.call_args.kwargs["shell"] is False
-    assert "-File" in call.call_args.args[0] and "-Command" not in call.call_args.args[0]
+    assert call.call_args.args[0] == [sys.executable, "-m", "newsflow.video.windows_sapi", "-ListVoices"]
+    assert not any("powershell" in part.lower() for part in call.call_args.args[0])
     with patch("newsflow.video.tts.sys.platform", "linux"), pytest.raises(TTSError):
         provider.voices()
 
