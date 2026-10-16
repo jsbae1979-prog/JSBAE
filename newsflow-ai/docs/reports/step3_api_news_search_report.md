@@ -1,6 +1,6 @@
 # STEP 3 — API 뉴스 검색·분석·대본 자동화
 
-상태: 구현·로컬 Fake 통합·Chrome 검증 완료, Windows CI 결과 대기. 실제 OpenAI/Anthropic 호출은 0건이며 실제 연결·검색은 **NOT VERIFIED / BLOCKED**이다. Claude Code·Codex CLI를 실행하거나 인증 상태를 다시 조사하지 않았다.
+상태: 구현·Fake 통합·Chrome·Windows CI 검증 완료. 판정 대기. 실제 OpenAI/Anthropic 호출은 0건이며 실제 연결·검색은 **NOT VERIFIED / BLOCKED**이다. Claude Code·Codex CLI를 실행하거나 인증 상태를 다시 조사하지 않았다.
 
 ## 구현 범위
 
@@ -50,12 +50,12 @@
 |---|---|
 | API 어댑터·검색 계약 핵심 테스트 | 로컬 Python 3.14: 39 PASS, 해당 파일 Ruff PASS |
 | API 설정·비용 보호 | 22 PASS |
-| Fake API 검색·분석·대본 파이프라인 | 18 PASS |
+| Fake API 검색·분석·대본·작업실 파이프라인 | 20 PASS |
 | 기존 분석·자동 제작 계약 | 94 PASS |
-| 설정·작업실 GUI 계약 | 18 PASS (11 + 7); 추가 연결 계약 2건 최종 확인 예정 |
+| 설정·작업실 GUI 계약 | 18 PASS (11 + 7); 추가 작업실 2건은 위 파이프라인에 포함 |
 | migration·데이터 계약 | 15 PASS |
 | 실제 Windows Chrome 작업실 동선 | PASS: 별도 DB·Fake API 3단계 → 대본 검토 → Supertonic F1 → 30.02초 MP4 → 인라인 재생·다운로드 |
-| Windows Python 3.12 / 3.14 CI | 변경 범위 workflow 준비, 최종 결과·URL 기록 예정 |
+| Windows Python 3.12 / 3.14 CI | 각 198 PASS · Ruff·pip check PASS · 동일 workflow 1회 SUCCESS ([Actions](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38924226205)) |
 | 기존 사용자 DB·영상 보존 대조 | PASS: SQLite integrity=ok, 모든 테이블 행 수·설정 해시·기존 MP4 3개 SHA-256 동일 |
 | 실제 OpenAI/Anthropic 요청 | 0건, NOT VERIFIED |
 | 실제 Claude Code/Codex CLI·인증 시험 | 0건, 사용자 지시에 따라 중단 유지 |
@@ -67,9 +67,9 @@
 
 - 브랜치: `feat/newsflow-api-news-search`
 - 기준 SHA: `34c22e9a89afcde12ea89ef859e1157a6a8dc813`
-- 최종 SHA: 최종 기록 예정
-- Draft PR: 최종 기록 예정 (base: `feat/newsflow-unified-ai-workspace`)
-- Windows Actions: 최종 기록 예정
+- 검증 코드 SHA: `3c2e02848d9179f514010802df32599824db45ee` (이후 보고서만 갱신; 최종 HEAD는 완료 메시지에 기재)
+- Draft PR: [#28](https://github.com/jsbae1979-prog/JSBAE/pull/28) (base: `feat/newsflow-unified-ai-workspace`)
+- Windows Actions: [38924226205](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38924226205)
 
 남은 미검증: 실제 API 키·계정 권한·웹 검색 성공, 공급사 청구액, 원문 발행일/사실 검증, 실제 AI 결과의 한국어 대본·청취 품질. 새 Provider를 설정하는 것만으로 이를 PASS로 표시하지 않는다.
 
@@ -82,3 +82,7 @@
 - 샘플(로컬 전용): `validation-output/step3-api-news-search/ui-test-data/outputs/videos/video-b9823ec5901d44e0b37b11bd424d7aa1.mp4`. 다운로드 사본은 사용자 Downloads의 같은 이름. 실제 보도가 아닌 합성 테스트 자료이다.
 - 화면 증거(로컬 전용): `validation-output/step3-api-news-search/chrome-result.png`, `chrome-api-settings.png`. 모델·음성·영상·DB·인증 파일은 Git에 포함하지 않는다.
 - 신규 migration 0013만 추가한다. 사용자 원본 DB에는 앱 업데이트·migration을 실행하지 않았다. 기존 0001–0012와 의존성 고정 파일, CLI 구현 파일은 그대로다.
+
+실제 이용 전 남은 절차: 별도 승인된 실제 API 인증·모델/검색 권한 검증과 공급사 결제 확인이 필요하다. 새 검색 기사에 독립적으로 확인된 발행일이 없으면 최신 뉴스 자동 분석을 차단한다. 이 경우 원문 날짜 검증 또는 명시적으로 선택한 RSS 메타데이터 보완이 필요하며, 현재 Fake 성공으로 이를 대체하지 않는다.
+
+패키징: 변경 45개 텍스트 파일만 신규 브랜치에 반영했다. 기존 PR #1–#27 및 main은 변경하지 않았다. 검증용 8780 서버는 종료했으며 사용자 8765 앱은 재시작하지 않았다. 전체 회귀 반복 및 후속 단계 개발은 하지 않았다.
