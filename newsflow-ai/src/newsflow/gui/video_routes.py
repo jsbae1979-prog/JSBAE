@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from sqlalchemy import select
 
 from newsflow.db.models import (
@@ -217,3 +217,23 @@ def media(request: Request, job_id: int, download: bool = False) -> FileResponse
             filename=target.name,
             content_disposition_type="attachment" if download else "inline",
         )
+
+
+@router.get("/video/jobs/{job_id}/thumbnail")
+def video_thumbnail(request: Request, job_id: int) -> Response:
+    from newsflow.publishing.service import PublishingError, PublishingService
+    from newsflow.video.thumbnails import thumbnail
+
+    coordinator = request.app.state.video
+    with request.app.state.sessions() as session:
+        job = session.get(RenderJob, job_id)
+        if job is None:
+            raise HTTPException(404, "영상이 없습니다.")
+        try:
+            target = PublishingService(request.app.state.sessions, coordinator.outputs).media_path(job)
+            preview = thumbnail(target, getattr(coordinator.engine, "ffmpeg", None))
+        except (PublishingError, OSError):
+            raise HTTPException(404, "검증된 영상이 없습니다.") from None
+        except RenderError:
+            raise HTTPException(503, "미리보기를 준비하지 못했습니다. 영상 재생은 별도로 확인할 수 있습니다.") from None
+    return Response(preview, media_type="image/png", headers={"Cache-Control": "private, no-store"})

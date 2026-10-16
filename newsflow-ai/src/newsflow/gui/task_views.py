@@ -85,6 +85,9 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "voice": voice_label(audios.get(render.project_id) if render else None, item.get("voice")),
                 "next_action": action, "href": f'/autopilot/jobs/{item["id"]}', "duration": item["duration"],
                 "progress": item["progress"], "updated_at": item["updated_at"], "completed": status == "completed",
+                "task_id": item["id"], "render_job_id": render.id if render else None,
+                "draft_id": draft.id if draft else None, "project_id": render.project_id if render else None,
+                "workspace_href": f'/?task={item["id"]}#workspace-detail',
             })
         for draft in drafts.values():
             if draft.id in used_drafts:
@@ -119,6 +122,9 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "next_action": action, "href": href, "duration": draft.duration,
                 "progress": render.progress if render else None,
                 "updated_at": (render.created_at if render else draft.updated_at).isoformat(), "completed": False,
+                "task_id": None, "render_job_id": render.id if render else None, "draft_id": draft.id,
+                "project_id": render.project_id if render else None,
+                "workspace_href": f"/?video={render.id}#workspace-detail" if render and render.status == "success" else href,
             })
         for run in sorted(runs.values(), key=lambda r: r.id, reverse=True):
             context = context_for_run(run)
@@ -140,6 +146,8 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "href": f"/ai?analysis_id={analysis_id}&failed_run_id={run.id}",
                 "duration": run.options.get("duration", context["initial_duration"]),
                 "progress": None, "updated_at": run.created_at.isoformat(), "completed": False,
+                "task_id": None, "render_job_id": None, "draft_id": None, "project_id": None,
+                "workspace_href": f"/ai?analysis_id={analysis_id}&failed_run_id={run.id}",
             })
         for run in runs.values():
             context = context_for_run(run)
@@ -158,5 +166,7 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "next_action": "분석 확인 후 대본 만들기" if successful else "분석 진행·오류 확인",
                 "href": f"/ai?analysis_id={run.id}", "duration": context["initial_duration"], "progress": None,
                 "updated_at": run.created_at.isoformat(), "completed": False,
+                "task_id": None, "render_job_id": None, "draft_id": None, "project_id": None,
+                "workspace_href": f"/ai?analysis_id={run.id}",
             })
         return sorted(rows, key=lambda r: r["updated_at"], reverse=True)[:100]

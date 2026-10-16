@@ -1,16 +1,9 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}NewsFlow AI{% endblock %}</title><link rel="stylesheet" href="/static/css/app.css"><link rel="stylesheet" href="/static/css/easy.css"><script src="/static/js/app.js" defer></script><script src="/static/js/autopilot.js" defer></script><script src="/static/js/scheduler.js" defer></script><script src="/static/js/video_ai.js" defer></script></head>
-<body><a class="skip-link" href="#main-content">본문으로 이동</a>
-<aside class="sidebar"><a class="brand" href="/" aria-label="NewsFlow AI 홈">◈ <span>NewsFlow <b>AI</b></span></a><div class="nav-label">나의 콘텐츠 작업실</div>
-<nav aria-label="주 메뉴" class="primary-nav">
-{% set nav_key = 'autopilot' if active == 'autopilot' else 'videos' if active in ['videos', 'queue'] else 'simple-settings' if active in ['simple-settings', 'settings', 'sources', 'operations', 'schedules', 'ai-settings', 'voices', 'video-ai-settings'] else active %}
-{% for href,key,icon,label in [('/', 'home', '⌂', '홈'), ('/autopilot/jobs', 'autopilot', '◷', '작업 현황'), ('/videos', 'videos', '▣', '내 영상'), ('/simple-settings', 'simple-settings', '⚙', '설정')] %}
-<a href="{{ href }}" class="{{ 'active' if nav_key == key }}" {% if nav_key == key %}aria-current="page"{% endif %}><span aria-hidden="true">{{ icon }}</span> {{ label }}</a>
-{% endfor %}</nav>
-
-<div class="sidebar-foot"><span class="dot"></span> 내 PC에서 만드는 콘텐츠<br><small>게시 전 직접 확인해 주세요.</small></div></aside>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}NewsFlow AI{% endblock %}</title><link rel="stylesheet" href="/static/css/app.css"><link rel="stylesheet" href="/static/css/easy.css"><link rel="stylesheet" href="/static/css/workspace.css"><script src="/static/js/app.js" defer></script><script src="/static/js/autopilot.js" defer></script><script src="/static/js/scheduler.js" defer></script><script src="/static/js/video_ai.js" defer></script></head>
+<body class="workspace-shell"><a class="skip-link" href="#main-content">본문으로 이동</a>
+<header class="workspace-topbar"><a class="brand" href="/" aria-label="NewsFlow AI 작업실"><span aria-hidden="true">◈</span><span>NewsFlow <b>AI</b></span></a><nav aria-label="주 메뉴" class="workspace-nav"><a href="/" class="{{ 'active' if active == 'home' }}" {% if active == 'home' %}aria-current="page"{% endif %}><span aria-hidden="true">▣</span> 작업실</a><a href="/simple-settings" class="{{ 'active' if active == 'simple-settings' }}" {% if active == 'simple-settings' %}aria-current="page"{% endif %}><span aria-hidden="true">⚙</span> 설정</a></nav></header>
 {% macro csrf_field() %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endmacro %}
 {% macro badge(status) %}<span class="badge {{ status }}">{{ {'success':'성공','partial':'부분 실패','failed':'실패','running':'수집 중','empty':'활성 출처 없음','interrupted':'중단','idle':'대기'}.get(status,status) }}</span>{% endmacro %}
 {% macro when(value) %}{{ value|kst }}{% endmacro %}
-<main id="main-content" tabindex="-1"><noscript><p>작업을 시작하려면 브라우저 설정에서 JavaScript를 켜 주세요.</p></noscript><header class="topbar"><span>뉴스 선택 <span aria-hidden="true">→</span> 자동 제작 <span aria-hidden="true">→</span> 결과 확인</span><span class="topbar-local">내 PC의 뉴스 작업실</span></header>{% block content %}{% endblock %}</main>
+<main id="main-content" tabindex="-1"><noscript><p>작업을 시작하려면 브라우저 설정에서 JavaScript를 켜 주세요.</p></noscript>{% block content %}{% endblock %}</main>
 </body></html>

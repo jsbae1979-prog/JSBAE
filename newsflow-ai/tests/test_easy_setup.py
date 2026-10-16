@@ -34,13 +34,13 @@ def through_storage(client, app):
 
 def test_wizard_is_optional_and_all_core_menus_remain(client):
     for path in ['/setup', '/videos', '/', '/news', '/simple-settings', '/dashboard', '/video', '/publishing',
-                 '/queue', '/autopilot/start']:
+                 '/queue', '/autopilot/start', '/autopilot/jobs']:
         result = client.get(path)
         assert result.status_code == 200
         assert "script-src 'self'" in result.headers['content-security-policy']
     home = client.get('/').text
     assert '제작 시작' in home
-    for path in ['/', '/autopilot/jobs', '/videos', '/simple-settings']:
+    for path in ['/', '/simple-settings']:
         assert f'href="{path}"' in home
     assert '고급 관리' in client.get('/simple-settings').text
 
