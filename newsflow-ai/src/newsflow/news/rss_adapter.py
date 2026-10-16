@@ -14,7 +14,8 @@ from queue import Empty, Queue
 from threading import Thread
 from typing import Protocol
 from urllib.parse import urljoin, urlsplit, urlunsplit
-from urllib.robotparser import RobotFileParser
+
+from .vendor.robotparser312 import RobotFileParser
 
 MAX_BYTES = 2 * 1024 * 1024
 USER_AGENT = "NewsFlowAI/0.1 (+RSS-only local reader)"

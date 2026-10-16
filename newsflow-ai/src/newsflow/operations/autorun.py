@@ -11,6 +11,7 @@ from uuid import uuid4
 
 from filelock import FileLock, Timeout
 
+from ..python_policy import PYTHON_GUIDANCE, supported
 from .startup import StartupError, local_service
 
 
@@ -31,8 +32,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-dir',type=Path,required=True)
     args = parser.parse_args()
-    if sys.platform != 'win32' or sys.version_info[:2] != (3,12):
-        print('Windows 11 / Python 3.12 전용입니다. run.bat를 사용하세요.')
+    if sys.platform != 'win32' or not supported():
+        print('Windows 11에서 run.bat를 사용하세요. ' + PYTHON_GUIDANCE)
         return 1
     try:
         root = args.data_dir.resolve(strict=True)

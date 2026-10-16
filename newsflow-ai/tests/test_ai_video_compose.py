@@ -309,7 +309,7 @@ def test_overlay_draws_opaque_label_band_and_leaves_the_clip_visible(tmp_path, k
         assert band.getchannel("A").getextrema() == (255, 255)
         yellow = sum(count for count, colour in band.getcolors(band.width * band.height) if colour == (*LABEL_YELLOW, 255))
         assert yellow / (band.width * band.height) > 0.8  # the rest is the dark label text
-        for strip in ((110, 500, 240, 580), (850, 500, 970, 580)):  # beside the centred text
+        for strip in ((110, 500, 130, 580), (950, 500, 970, 580)):  # margins clear of Noto/Malgun text
             assert image.crop(strip).getcolors() == [((strip[2] - strip[0]) * 80, (*LABEL_YELLOW, 255))]
         assert image.crop((0, 700, 1080, 1300)).getchannel("A").getextrema() == (0, 0)
         assert image.getpixel((5, 5)) == (16, 23, 38, 214)  # translucent title band above the label

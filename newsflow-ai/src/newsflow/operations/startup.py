@@ -15,6 +15,8 @@ from xml.etree import ElementTree as ET
 from defusedxml.ElementTree import fromstring
 from filelock import FileLock, Timeout
 
+from ..python_policy import installation_fingerprint
+
 
 class StartupError(Exception):
     pass
@@ -128,11 +130,9 @@ class StartupPlan:
     def prepared(self) -> bool:
         # run.bat remains the only dependency installer; unattended startup never installs packages.
         try:
-            digest = hashlib.sha256(str((3,12)).encode())
-            for name in ('pyproject.toml','requirements-dev.lock'):
-                digest.update((self.root/name).read_bytes())
+            expected = installation_fingerprint(self.root)
             return (self.python.is_file() and not self.python.is_symlink()
-                    and (self.root/'.venv/.newsflow-installed').read_text(encoding='ascii') == digest.hexdigest())
+                    and (self.root/'.venv/.newsflow-installed').read_text(encoding='ascii') == expected)
         except (OSError, ValueError):
             return False
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
 import socket
 import subprocess
@@ -14,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from newsflow.paths import default_data_dir, prepare_data_dir
+from newsflow.python_policy import PYTHON_GUIDANCE, installation_fingerprint, supported
 
 
 class LaunchError(Exception):
@@ -31,10 +31,7 @@ def checked(command: list[str], stage: str, cwd: Path = ROOT) -> None:
 
 
 def fingerprint(root: Path) -> str:
-    digest = hashlib.sha256(str(sys.version_info[:2]).encode())
-    for name in ("pyproject.toml", "requirements-dev.lock"):
-        digest.update((root / name).read_bytes())
-    return digest.hexdigest()
+    return installation_fingerprint(root)
 
 
 def ensure_environment(root: Path = ROOT) -> Path:
@@ -42,8 +39,9 @@ def ensure_environment(root: Path = ROOT) -> Path:
     if not python.is_file():
         checked([sys.executable, "-m", "venv", str(root / ".venv")], "가상환경 생성", root)
     checked(
-        [str(python), "-c", "import sys; sys.exit(0 if sys.version_info[:2]==(3,12) else 1)"],
-        "가상환경 Python 3.12 확인",
+        [str(python), "-c", ("import sys; sys.exit(0 if sys.version_info[:2] == "
+         f"{tuple(sys.version_info[:2])!r} else 1)")],
+        "가상환경 Python 버전 확인 (현재 실행 버전과 일치해야 합니다)",
         root,
     )
     marker = root / ".venv" / ".newsflow-installed"
@@ -98,8 +96,8 @@ def main() -> int:
     if sys.argv[1:] and not setup_only:
         print("지원하지 않는 실행 옵션입니다.")
         return 1
-    if sys.platform != "win32" or sys.version_info[:2] != (3, 12):
-        print("Windows 11과 Python 3.12에서 run.bat를 실행하세요.")
+    if sys.platform != "win32" or not supported():
+        print("Windows 11에서 run.bat를 실행하세요. " + PYTHON_GUIDANCE)
         return 1
     try:
         data_dir = default_data_dir()

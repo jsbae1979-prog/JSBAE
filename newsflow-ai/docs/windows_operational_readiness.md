@@ -1,6 +1,6 @@
 # Windows 11 운영 점검 (Phase 5F)
 
-기본 실행은 기존 `setup.bat` / `run.bat`입니다. Python 3.12, 영상 도구, 글꼴, 데이터 이전 절차는 [README](https://github.com/jsbae1979-prog/JSBAE/blob/feat/newsflow-phase5f/newsflow-ai/README.md)를 따릅니다. 데이터는 `%LOCALAPPDATA%\NewsFlowAI`에 유지됩니다. 이 단계에서는 유료 AI, OAuth 로그인, SNS 업로드·게시를 시험하지 않습니다.
+기본 실행은 기존 `setup.bat` / `run.bat`입니다. Python 3.12 또는 3.14, 영상 도구, 글꼴, 데이터 이전 절차는 [README](https://github.com/jsbae1979-prog/JSBAE/blob/feat/newsflow-phase5f/newsflow-ai/README.md)를 따릅니다. 데이터는 `%LOCALAPPDATA%\NewsFlowAI`에 유지됩니다. 이 단계에서는 유료 AI, OAuth 로그인, SNS 업로드·게시를 시험하지 않습니다.
 
 ## 로그인 시 자동 시작 — 선택 사항
 

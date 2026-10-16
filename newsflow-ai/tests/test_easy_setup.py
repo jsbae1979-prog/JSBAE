@@ -148,7 +148,7 @@ def test_voice_metadata_supported(monkeypatch):
 def test_setup_script_preserves_launcher_and_safe_arguments():
     root = Path(__file__).parents[1]
     script = (root / 'setup.bat').read_text()
-    assert '--setup-only' in script and 'py -3.12' in script
+    assert '--setup-only' in script and 'py -3.12' in script and 'py -3.14' in script
     assert 'START_HERE.html' in script
     assert 'powershell -Command' not in script
     assert '--setup-only' not in (root / 'run.bat').read_text()

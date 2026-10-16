@@ -18,6 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from .db.models import AppSetting
+from .python_policy import PYTHON_GUIDANCE, supported
 from .video.engine import FFmpegAdapter, RenderError, font_path
 from .video.tts import SpeechSettings, TTSError, TTSPolicyError, WindowsTTS
 
@@ -68,7 +69,7 @@ def diagnostics(data_dir: Path, sessions: sessionmaker[Session]) -> dict[str, An
         checks.append({'key': key, 'label': label, 'status': 'pass' if ok else 'needs_attention',
                        'guidance': '준비되었습니다.' if ok else guidance, 'required': required})
 
-    add('python', 'Python 실행 환경', sys.version_info[:2] == (3, 12), 'Python 3.12를 설치한 뒤 run.bat를 다시 실행하세요.')
+    add('python', 'Python 실행 환경', supported(), PYTHON_GUIDANCE)
     try:
         FFmpegAdapter().check()
         media = True
