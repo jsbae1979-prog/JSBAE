@@ -1,0 +1,19 @@
+{
+  "tested_code_sha": "cc295ac57b86c848d702e71ff40f108ea35a3af7",
+  "pytest": {
+    "passed": 2289,
+    "skipped": 7,
+    "failed": 0,
+    "warnings": 1,
+    "duration_seconds": 161.45
+  },
+  "scheduler_browser": "PASS",
+  "existing_autopilot_browser": "PASS",
+  "actual_run_bat": "NOT VERIFIED (Linux)",
+  "real_paid_ai_calls": 0,
+  "real_oauth_calls": 0,
+  "real_sns_calls": 0,
+  "os_task_registration": 0,
+  "human_quality": "NOT VERIFIED",
+  "font_sha256": "194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252"
+}
