@@ -1,0 +1,378 @@
+{
+  "files": [
+    {
+      "file": "README.md",
+      "links": 46
+    },
+    {
+      "file": "START_HERE.html",
+      "links": 3
+    },
+    {
+      "file": "docs/architecture.md",
+      "links": 4
+    },
+    {
+      "file": "docs/autopilot.md",
+      "links": 5
+    },
+    {
+      "file": "docs/korean_tts_listening_checklist.md",
+      "links": 0
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "links": 13
+    },
+    {
+      "file": "docs/oauth_platforms.md",
+      "links": 9
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "links": 11
+    },
+    {
+      "file": "docs/publishing_platforms.md",
+      "links": 8
+    },
+    {
+      "file": "docs/realcontent.md",
+      "links": 8
+    },
+    {
+      "file": "docs/scheduling.md",
+      "links": 3
+    },
+    {
+      "file": "docs/user_guide_ai_video.md",
+      "links": 1
+    },
+    {
+      "file": "docs/user_guide_realcontent.md",
+      "links": 24
+    },
+    {
+      "file": "docs/windows_higgsfield_preflight_checklist.md",
+      "links": 1
+    },
+    {
+      "file": "docs/windows_operational_readiness.md",
+      "links": 7
+    },
+    {
+      "file": "docs/windows_user_checklist.md",
+      "links": 1
+    },
+    {
+      "file": "docs/windows_user_verification_checklist.md",
+      "links": 4
+    },
+    {
+      "file": "docs/windows_validation.md",
+      "links": 1
+    },
+    {
+      "file": "docs/design/phase5d_ai_video_implementation.md",
+      "links": 3
+    },
+    {
+      "file": "docs/design/phase5d_higgsfield_video_provider.md",
+      "links": 3
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "links": 52
+    }
+  ],
+  "broken": [],
+  "external": [
+    {
+      "file": "README.md",
+      "url": "https://www.python.org/downloads/windows/",
+      "https": true
+    },
+    {
+      "file": "START_HERE.html",
+      "url": "https://www.python.org/downloads/windows/",
+      "https": true
+    },
+    {
+      "file": "START_HERE.html",
+      "url": "https://ffmpeg.org/download.html#build-windows",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://github.com/googleapis/google-cloud-python/blob/30b4f440c24db348b043382178e53727c49c96de/packages/google-auth-oauthlib/google_auth_oauthlib/flow.py",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://developers.google.com/youtube/v3/docs/channels/list",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://github.com/googleapis/google-api-python-client/blob/19fd51d1d18446206091a21eec763057d032c2b3/googleapiclient/discovery_cache/documents/youtube.v3.json",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptunprotectdata",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_operations.md",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_platforms.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38506864855",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_platforms.md",
+      "url": "https://github.com/googleapis/google-auth-library-nodejs/blob/6ac9ab4fd49d64d8315f16d7f2757da04fbeb579/src/auth/oauth2client.ts",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_platforms.md",
+      "url": "https://github.com/MicrosoftDocs/sdk-api/blob/0a160262f8cff85ac596b266c86e16dfd36aaae8/sdk-api-src/content/dpapi/nf-dpapi-cryptprotectdata.md",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_platforms.md",
+      "url": "https://github.com/MicrosoftDocs/sdk-api/blob/649ac0310f33d4d8852aaa524ee01918528da125/sdk-api-src/content/dpapi/nf-dpapi-cryptunprotectdata.md",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_platforms.md",
+      "url": "https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/um/dpapi.h",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_platforms.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38508328854",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://developers.google.com/identity/protocols/oauth2/native-app",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://developers.google.com/youtube/v3/guides/auth/installed-apps",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://developers.google.com/youtube/v3/docs/videos/insert",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://developers.google.com/youtube/v3/docs/channels/list",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/business-login",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/content-publishing",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptprotectdata",
+      "https": true
+    },
+    {
+      "file": "docs/oauth_production.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/api/dpapi/nf-dpapi-cryptunprotectdata",
+      "https": true
+    },
+    {
+      "file": "docs/publishing_platforms.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38485460702",
+      "https": true
+    },
+    {
+      "file": "docs/publishing_platforms.md",
+      "url": "https://github.com/googleapis/google-api-python-client/blob/19fd51d1d18446206091a21eec763057d032c2b3/googleapiclient/discovery_cache/documents/youtube.v3.json",
+      "https": true
+    },
+    {
+      "file": "docs/publishing_platforms.md",
+      "url": "https://github.com/youtube/api-samples/blob/master/python/upload_video.py",
+      "https": true
+    },
+    {
+      "file": "docs/publishing_platforms.md",
+      "url": "https://github.com/facebook/facebook-python-business-sdk/blob/788f363d15b1269ab5efb7cd00fb5e3b133cd99b/facebook_business/adobjects/iguser.py",
+      "https": true
+    },
+    {
+      "file": "docs/publishing_platforms.md",
+      "url": "https://github.com/facebook/facebook-python-business-sdk/blob/main/facebook_business/adobjects/contentpublishinglimitresponse.py",
+      "https": true
+    },
+    {
+      "file": "docs/publishing_platforms.md",
+      "url": "https://about.fb.com/news/2024/04/metas-approach-to-labeling-ai-generated-content-and-manipulated-media/",
+      "https": true
+    },
+    {
+      "file": "docs/scheduling.md",
+      "url": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/schtasks-create",
+      "https": true
+    },
+    {
+      "file": "docs/scheduling.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks",
+      "https": true
+    },
+    {
+      "file": "docs/scheduling.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/tasksettings-startwhenavailable",
+      "https": true
+    },
+    {
+      "file": "docs/user_guide_realcontent.md",
+      "url": "https://www.python.org/downloads/windows/",
+      "https": true
+    },
+    {
+      "file": "docs/user_guide_realcontent.md",
+      "url": "https://ffmpeg.org/download.html#build-windows",
+      "https": true
+    },
+    {
+      "file": "docs/windows_operational_readiness.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks",
+      "https": true
+    },
+    {
+      "file": "docs/windows_operational_readiness.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/taskfolder-registertask",
+      "https": true
+    },
+    {
+      "file": "docs/windows_operational_readiness.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/logon-trigger-example--scripting-",
+      "https": true
+    },
+    {
+      "file": "docs/windows_operational_readiness.md",
+      "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-waketorun-settingstype-element",
+      "https": true
+    },
+    {
+      "file": "docs/windows_operational_readiness.md",
+      "url": "https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis.speechsynthesizer.getinstalledvoices",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/pull/11",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38736365785",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38736365785",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38717489264",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38718358049",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38727688507",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38730720236",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38733446214",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38734161182",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38736365785",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/pull/11",
+      "https": true
+    },
+    {
+      "file": "docs/reports/phase5c1_operational_readiness_report.md",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38736365785",
+      "https": true
+    }
+  ],
+  "checked": 207,
+  "status": "PASS"
+}

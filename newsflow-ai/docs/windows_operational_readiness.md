@@ -1,6 +1,6 @@
 # Windows 11 운영 점검 (Phase 5F)
 
-기본 실행은 기존 `setup.bat` / `run.bat`입니다. Python 3.12, 영상 도구, 글꼴, 데이터 이전 절차는 [README](../README.md)를 따릅니다. 데이터는 `%LOCALAPPDATA%\NewsFlowAI`에 유지됩니다. 이 단계에서는 유료 AI, OAuth 로그인, SNS 업로드·게시를 시험하지 않습니다.
+기본 실행은 기존 `setup.bat` / `run.bat`입니다. Python 3.12, 영상 도구, 글꼴, 데이터 이전 절차는 [README](https://github.com/jsbae1979-prog/JSBAE/blob/feat/newsflow-phase5f/newsflow-ai/README.md)를 따릅니다. 데이터는 `%LOCALAPPDATA%\NewsFlowAI`에 유지됩니다. 이 단계에서는 유료 AI, OAuth 로그인, SNS 업로드·게시를 시험하지 않습니다.
 
 ## 로그인 시 자동 시작 — 선택 사항
 
@@ -32,7 +32,7 @@
 
 Windows 설정 → 시간 및 언어 → 언어 및 지역 → 한국어 → 언어 옵션에서 음성 설치 상태를 확인하세요. OneCore에만 있는 음성은 이 앱의 SAPI에 보이지 않을 수 있습니다. 앱은 음성을 설치하거나 레지스트리를 수정하지 않습니다. 비공식 레지스트리 복사 대신 무음 검토영상 또는 Windows 지원 경로를 이용하세요.
 
-[한국어 청취 확인표](korean_tts_listening_checklist.md)에 따라 직접 듣고 기록합니다. 발음·속도·금액·날짜와 영상 자막 동기를 사람이 평가하기 전에는 **NOT VERIFIED**입니다. CI에서 WAV/MP4가 생성된 사실만으로 청취 품질을 PASS로 바꾸지 않습니다.
+[한국어 청취 확인표](https://github.com/jsbae1979-prog/JSBAE/blob/feat/newsflow-phase5f/newsflow-ai/docs/korean_tts_listening_checklist.md)에 따라 직접 듣고 기록합니다. 발음·속도·금액·날짜와 영상 자막 동기를 사람이 평가하기 전에는 **NOT VERIFIED**입니다. CI에서 WAV/MP4가 생성된 사실만으로 청취 품질을 PASS로 바꾸지 않습니다.
 
 ## 사용자 PC 증거 수집
 

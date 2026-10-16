@@ -1,0 +1,86 @@
+[
+  {
+    "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks",
+    "http": 200,
+    "bytes": 60325,
+    "checked_utc": "2026-10-16T03:25:11.216700+00:00",
+    "excerpts": [
+      "In these methods and properties, you also define the logon type.",
+      "The logon type is defined by one of the constants in the TASK_LOGON_TYPE enumeration.",
+      "Tasks registered with the TASK_LOGON_PASSWORD or TASK_LOGON_S4U flag will only launch if the specified user has the Logon as Batch privilege enabled.",
+      "This is important to consider when registering tasks with an interactive logon type.",
+      "When you register a task with the logon type equal to TASK_LOGON_INTERACTIVE_TOKEN and the task does not have credentials specified in the Principal property of the task definition, specified in the parameters to RegisterTaskDefinition , or specified in the XML that is passed to RegisterTask , then the task will be registered with the credentials of the user that called the Connect method.",
+      "Tasks can specify that they will run with elevated privileges or low privileges by setting a privilege level from the TASK_RUNLEVEL_TYPE enumeration for the RunLevel property of IPrincipal ( Principal.RunLevel for scripting).",
+      "The value of the RunLevel property determines the privilege level at which a task's actions will be run.",
+      "If a task's actions must have elevated privileges to run, then you must set the RunLevel property to TASK_RUNLEVEL_HIGHEST .",
+      "If a task is registered using the Administrators group for the security context of the task, then you must also set the RunLevel property to TASK_RUNLEVEL_HIGHEST if you want to run the task.",
+      "If a task is registered using the Builtin\\Administrator account or the Local System or Local Service accounts, then the RunLevel property will be ignored."
+    ]
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/taskfolder-registertask",
+    "http": 200,
+    "bytes": 57359,
+    "checked_utc": "2026-10-16T03:25:11.506832+00:00",
+    "excerpts": [
+      "Syntax TaskFolder.RegisterTask( _ ByVal path, _ ByVal xmlText, _ ByVal flags, _ ByVal userId, _ ByVal password, _ ByVal logonType, _ [ ByVal sddl ], _ ByRef pTask _ ) Parameters path [in] The name of the task.",
+      "Time Trigger Example (XML) Event Trigger Example (XML) Daily Trigger Example (XML) Registration Trigger Example (XML) Weekly Trigger Example (XML) Logon Trigger Example (XML) Boot Trigger Example (XML) flags [in] A TASK_CREATION constant.",
+      "This constant cannot be combined with the TASK_CREATE , TASK_UPDATE , or TASK_CREATE_OR_UPDATE values.",
+      "TASK_CREATE 0x2 The Task Scheduler registers the task as a new task.",
+      "TASK_CREATE_OR_UPDATE 0x6 The Task Scheduler either registers the task as a new task or as an updated version if the task already exists.",
+      "Equivalent to TASK_CREATE | TASK_UPDATE.",
+      "When the TASK_LOGON_SERVICE_ACCOUNT logon type is used, the password must be an empty VARIANT value such as VT_NULL or VT_EMPTY .",
+      "logonType [in] Defines what logon technique is used to run the registered task.",
+      "Value Meaning TASK_LOGON_NONE 0 The logon method is not specified.",
+      "TASK_LOGON_PASSWORD 1 Use a password for logging on the user."
+    ]
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/logon-trigger-example--scripting-",
+    "http": 200,
+    "bytes": 53268,
+    "checked_utc": "2026-10-16T03:25:11.966657+00:00",
+    "excerpts": [
+      "Logon Trigger Example (Scripting) Feedback Summarize this article for me In this article This scripting example shows how to create a task that is scheduled to execute Notepad when a user logs on.",
+      "The task contains a logon trigger that specifies a start boundary for the task to start and a user identifier that specifies the user.",
+      "Create a logon trigger using the TaskDefinition.Triggers property.",
+      "Use the TriggerCollection.Create method (specifying the type of trigger that you want to create) to create a logon trigger.",
+      "'--------------------------------------------------------- ' A constant that specifies a logon trigger.",
+      "const TriggerTypeLogon = 9 ' A constant that specifies an executable action.",
+      "Dim settings Set settings = taskDefinition.Settings settings.StartWhenAvailable = True '******************************************************** ' Create a logon trigger.",
+      "Dim triggers Set triggers = taskDefinition.Triggers Dim trigger Set trigger = triggers.Create(TriggerTypeLogon) ' Trigger variables that define when the trigger is active.",
+      "Dim startTime, endTime startTime = \"2006-05-02T10:49:02\" endTime = \"2006-05-02T10:52:02\" WScript.Echo \"startTime :\" & startTime WScript.Echo \"endTime :\" & endTime trigger.StartBoundary = startTime trigger.EndBoundary = endTime trigger.ExecutionTimeLimit = \"PT5M\" ' Five minutes trigger.Id = \"LogonTriggerId\" trigger.UserId = \"DOMAIN\\UserName\" ' Must be a valid user account '*********************************************************** ' Create the action for the task to execute.",
+      "const createOrUpdateTask = 6 call rootFolder.RegisterTaskDefinition( _ \"Test Logon Trigger\", taskDefinition, createOrUpdateTask, _ \"Builtin\\Administrators\", , 4) WScript.Echo \"Task submitted.\" Related topics Using the Task Scheduler Feedback Was this page helpful?"
+    ]
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/taskschedulerschema-waketorun-settingstype-element",
+    "http": 200,
+    "bytes": 48975,
+    "checked_utc": "2026-10-16T03:25:12.182740+00:00",
+    "excerpts": [
+      "WakeToRun (settingsType) Element Feedback Summarize this article for me In this article Specifies that Task Scheduler will wake the computer when it is time to run the task.",
+      "<xs:element name=\"WakeToRun\" type=\"boolean\" /> The WakeToRun element is defined by the settingsType complex type.",
+      "For C++ development, see WakeToRun Property of ITaskSettings .",
+      "For script development, see TaskSettings.WakeToRun ."
+    ]
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis.speechsynthesizer.getinstalledvoices",
+    "http": 200,
+    "bytes": 70111,
+    "checked_utc": "2026-10-16T03:25:13.365884+00:00",
+    "excerpts": [
+      "Get Installed Voices Method Definition Namespace: System.Speech.Synthesis Assembly: System.Speech.dll Package: System.Speech v11.0.0-rc.1.26425.128 Important Some information relates to prerelease product that may be substantially modified before it’s released.",
+      "Returns the collection of speech synthesis (text-to-speech) voices that are currently installed on the system.",
+      "Overloads Name Description GetInstalledVoices() Returns all of the installed speech synthesis (text-to-speech) voices.",
+      "GetInstalledVoices(CultureInfo) Returns all of the installed speech synthesis (text-to-speech) voices that support a specific locale.",
+      "Remarks When an application calls GetInstalledVoices , the method verifies that each of the voices (engines for text-to-speech) it finds in the registry meets certain minimum criteria.",
+      "For any voice that fails verification, GetInstalledVoices sets its Enabled property to False .",
+      "GetInstalledVoices() Source: SpeechSynthesizer.cs Source: SpeechSynthesizer.cs Source: SpeechSynthesizer.cs Source: SpeechSynthesizer.cs Returns all of the installed speech synthesis (text-to-speech) voices.",
+      "public: System::Collections::ObjectModel::ReadOnlyCollection<System::Speech::Synthesis::InstalledVoice ^> ^ GetInstalledVoices(); public System.Collections.ObjectModel.ReadOnlyCollection<System.Speech.Synthesis.InstalledVoice> GetInstalledVoices(); member this.GetInstalledVoices : unit -> System.Collections.ObjectModel.ReadOnlyCollection<System.Speech.Synthesis.InstalledVoice> Public Function GetInstalledVoices () As ReadOnlyCollection(Of InstalledVoice) Returns ReadOnlyCollection < InstalledVoice > Returns a read-only collection of the voices currently installed on the system.",
+      "Examples The following example is part of a console application that initializes a SpeechSynthesizer object and outputs to the console a list of the installed voices (engines for speech synthesis) and demonstrates the information that is available for each voice.",
+      "using (SpeechSynthesizer synth = new SpeechSynthesizer()) { // Output information about all of the installed voices."
+    ]
+  }
+]

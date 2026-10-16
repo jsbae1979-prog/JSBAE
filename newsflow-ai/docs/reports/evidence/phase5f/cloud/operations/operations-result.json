@@ -1,0 +1,19 @@
+{
+  "mode": "cloud",
+  "outcome": "PASS",
+  "os_adapter": "Fake; never registers an OS task",
+  "browser": "PASS",
+  "visible_rejected_post": "PASS",
+  "fake_register_remove": "PASS",
+  "review_download_restart": "PASS",
+  "mobile_zoom": "PASS",
+  "page_errors": [],
+  "external_browser_requests": 0,
+  "actual_os_registration": 0,
+  "paid_ai_calls": 0,
+  "oauth_sns_calls": 0,
+  "user_pc": "NOT VERIFIED",
+  "human_korean_audio": "NOT VERIFIED",
+  "automatic_runtime_loopback_fixed_port_duplicate": "PASS",
+  "automatic_runtime_restart": "PASS"
+}
