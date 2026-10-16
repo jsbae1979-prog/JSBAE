@@ -1,0 +1,87 @@
+name: NewsFlow Phase 5F.3 video quality validation
+
+on:
+  push:
+    branches: [feat/newsflow-phase5f3]
+    paths: ['newsflow-ai/src/**', 'newsflow-ai/tests/**', 'newsflow-ai/tools/**', '.github/workflows/newsflow-phase5f3-windows.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  windows-native-sapi:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Isolate runner packages
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          (Join-Path $PWD '.venv/Scripts') | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Install pinned dependencies
+        run: |
+          python -m pip install -r requirements-dev.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Native worker and caller contracts only
+        run: |
+          python -m ruff check src tests/test_video_quality.py tests/test_video.py tools/ci_quality_validation.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pytest -q -rs tests/test_video_quality.py tests/test_windows_sapi.py tests/test_video.py tests/test_korean_speech.py tests/test_speech_text.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Require an actual native SAPI voice
+        run: |
+          python -c "from newsflow.video.tts import WindowsTTS; voices = WindowsTTS().voices(); assert voices, 'No native SAPI voice available'; print(voices)"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare FFmpeg and Korean font
+        run: |
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ';C:\ProgramData\chocolatey\bin;C:\tools\ffmpeg\bin'
+          }
+          @((Split-Path (Get-Command ffmpeg -ErrorAction Stop).Source), (Split-Path (Get-Command ffprobe -ErrorAction Stop).Source)) | Select-Object -Unique | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $fontPath = Join-Path $env:RUNNER_TEMP 'newsflow-noto-kr.ttf'
+          python tools/ci_prepare_font.py $fontPath
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "NEWSFLOW_FONT_PATH=$fontPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Actual native voice and silent FFmpeg MP4
+        run: |
+          python tools/ci_video_validation.py --output validation-output/native-sapi
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Measured sentence captions and 30 second native SAPI MP4
+        run: |
+          python -m pytest -q -rs tests/test_ai_video_compose.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/ci_quality_validation.py --output validation-output/quality
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual DPAPI with synthetic credentials only
+        run: |
+          python tools/ci_vault_validation.py --output validation-output/credential-vault.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/ci_production_vault_validation.py --output validation-output/production-credential-vault.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # No artifact upload: local WAV/MP4, credentials and user data stay out of GitHub.

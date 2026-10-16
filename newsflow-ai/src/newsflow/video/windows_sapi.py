@@ -8,6 +8,7 @@ import wave
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from .speech_audio import prepare_pcm
 from .speech_text import MAX_SPOKEN_CHARS
 
 
@@ -55,7 +56,7 @@ def registry_voices() -> list[dict[str, str]]:
     return result
 
 
-def speak(speaker, dispatch, spec: dict) -> None:
+def speak(speaker, dispatch, spec: dict) -> list[dict]:
     voice, target = spec['voice'], Path(spec['target'])
     rate, pause = spec.get('rate', 0), spec.get('pause_ms', 0)
     sentences = spec['sentences']
@@ -73,6 +74,7 @@ def speak(speaker, dispatch, spec: dict) -> None:
         raise ValueError('voice unavailable')
     speaker.Voice, speaker.Rate = selected, rate
     pcm = bytearray()
+    cues = []
     with TemporaryDirectory(prefix='sapi-', dir=target.parent) as directory:
         for index, sentence in enumerate(sentences):
             part = Path(directory) / f'{index}.wav'
@@ -87,7 +89,10 @@ def speak(speaker, dispatch, spec: dict) -> None:
             with wave.open(str(part), 'rb') as audio:
                 if (audio.getnchannels(), audio.getsampwidth(), audio.getframerate()) != (1, 2, 16000):
                     raise ValueError('unexpected PCM format')
-                pcm.extend(audio.readframes(16000 * 61))
+                part_pcm = prepare_pcm(audio.readframes(16000 * 61))
+                start = len(pcm) / 32000
+                pcm.extend(part_pcm)
+                cues.append({'start': start, 'end': len(pcm) / 32000})
             if index < len(sentences) - 1:
                 pcm.extend(b'\0\0' * (16000 * pause // 1000))
             if len(pcm) > 16000 * 2 * 60:
@@ -97,6 +102,7 @@ def speak(speaker, dispatch, spec: dict) -> None:
         audio.setsampwidth(2)
         audio.setframerate(16000)
         audio.writeframes(pcm)
+    return cues
 
 
 def main() -> int:
@@ -126,8 +132,7 @@ def main() -> int:
                         raw = source.read(32769)
                     if len(raw) > 32768:
                         raise ValueError('speech specification too large')
-                    speak(speaker, Dispatch, json.loads(raw))
-                    result = None
+                    result = speak(speaker, Dispatch, json.loads(raw))
                 else:
                     raise ValueError('unsupported operation')
             except Exception:  # noqa: BLE001 -- release exception-held COM objects before uninitializing

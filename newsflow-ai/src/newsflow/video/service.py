@@ -117,10 +117,16 @@ class VideoCoordinator:
         images: list[str] | None = None,
         reviewed: bool = False,
         asset_permission: bool = False,
+        *,
+        speech: SpeechSettings | None = None,
+        theme: str = 'news',
+        subtitle_style: str = 'panel',
     ) -> int:
         if duration not in (30, 45, 60) or not reviewed:
             raise VideoError("영상 길이를 선택하고 렌더링 전 대본·출처 검토를 확인하세요.")
-        return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False)
+        return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False,
+                           speech=speech, fit_audio=voice != 'offline-silence',
+                           theme=theme, subtitle_style=subtitle_style)
 
     def start_preview(
         self,
@@ -225,6 +231,8 @@ class VideoCoordinator:
         ai_plan_id: int | None = None,
         clip_hashes: list[str | None] | None = None,
         clip_bytes: int = 0,
+        theme: str = 'news',
+        subtitle_style: str = 'panel',
     ) -> int:
         speech = speech or SpeechSettings()
         if self.cancel.is_set():
@@ -293,6 +301,8 @@ class VideoCoordinator:
                     subtitle_y,
                     speech,
                     fit_audio,
+                    theme,
+                    subtitle_style,
                 )
                 plan.validate()
                 project = VideoProject(
@@ -302,6 +312,7 @@ class VideoCoordinator:
                     snapshot={
                         **draft.content, "draft_revision": draft.revision,
                         "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio},
+                        'quality': {'theme': theme, 'subtitle_style': subtitle_style},
                         # Provenance: which reviewed AI clip (by content hash) each scene must use.
                         **({"ai_clips": [
                             {"position": index, "name": name, "sha256": digest}
@@ -453,7 +464,9 @@ class VideoCoordinator:
                             clip=clip, ai_generated=bool(scene.ai_generated and clip), clip_format=clip_format,
                         )
                     )
-                plan = RenderPlan(title, plans, source_links, voice, font_size, position_y, speech, fit_audio)
+                quality = project.snapshot.get('quality') or {}
+                plan = RenderPlan(title, plans, source_links, voice, font_size, position_y, speech, fit_audio,
+                                  quality.get('theme', 'news'), quality.get('subtitle_style', 'panel'))
                 result, metadata = self.engine.render(
                     plan, work, tts, lambda value: self._progress(identifier, value), cancel
                 )
@@ -556,7 +569,7 @@ class VideoCoordinator:
             scene.start_ms, scene.end_ms = start, end
             cues.append({"start_ms": start, "end_ms": end, "text": scene.caption})
             start = end
-        subtitles.cues = cues
+        subtitles.cues = metadata.get('subtitle_cues') or cues
 
     def request_cancel(self, job_id: int) -> bool:
         """Cancel only the matching running job; a later render gets a fresh Event."""

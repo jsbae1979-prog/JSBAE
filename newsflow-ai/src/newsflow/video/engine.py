@@ -51,6 +51,8 @@ class RenderPlan:
     # Phase 5C: narration speed/pauses and audio-fit timing for real Korean voices.
     speech: SpeechSettings = field(default_factory=SpeechSettings)
     fit_audio: bool = False
+    theme: str = 'news'
+    subtitle_style: str = 'panel'
 
     @property
     def duration(self) -> float:
@@ -61,6 +63,8 @@ class RenderPlan:
         return self.voice == "offline-silence"
 
     def validate(self) -> None:
+        if self.theme not in {'news', 'economy', 'culture'} or self.subtitle_style not in {'panel', 'outline'}:
+            raise RenderError('화면 테마·자막 스타일을 확인하세요.')
         if not 1 <= len(self.scenes) <= 8 or not 0 < self.duration <= 60:
             raise RenderError("장면 수 또는 길이가 잘못되었습니다.")
         if not 36 <= self.font_size <= 64 or not 1100 <= self.subtitle_y <= 1500:
@@ -140,49 +144,72 @@ def load_image(path: Path) -> Image.Image:
 
 def text_lines(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFont, width: int) -> list[str]:
     lines, current = [], ""
-    for char in text.replace("\r", "").replace("\n", " "):
-        if current and draw.textlength(current + char, font=font) > width:
+    for word in text.split():
+        candidate = f'{current} {word}'.strip()
+        if current and draw.textlength(candidate, font=font) > width:
             lines.append(current)
-            current = ""
-        current += char
+            current = ''
+        for char in ((' ' if current else '') + word):
+            if current and draw.textlength(current + char, font=font) > width:
+                lines.append(current)
+                current = ''
+            current += char
     if current:
         lines.append(current)
     return lines
 
 
-def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Path) -> None:
-    image = Image.new("RGB", (1080, 1920), "#101726")
+def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Path,
+         spoken_caption: str | None = None) -> None:
+    palettes = {'news': ('#101c30', '#71c7ff'), 'economy': ('#102a25', '#7cdec1'),
+                'culture': ('#281d36', '#e5b5ff')}
+    background, accent = palettes[plan.theme]
+    image = Image.new("RGB", (1080, 1920), background)
     draw = ImageDraw.Draw(image)
     title_font = ImageFont.truetype(str(font), 56)
     body_font = ImageFont.truetype(str(font), plan.font_size)
     small_font = ImageFont.truetype(str(font), 28)
-    draw.rounded_rectangle((90, 105, 990, 115), fill="#8b83ff", radius=5)
+    draw.rounded_rectangle((90, 105, 990, 115), fill=accent, radius=5)
     draw.text((90, 145), "NEWSFLOW · 미확인 보도 · 사람 검토 필요", font=small_font, fill="#b7adff")
     audio_label = "무음 검토영상 · 음성 없음" if plan.silent else "한국어 음성 · 발음 품질 미검증"
-    draw.text((990 - draw.textlength(audio_label, font=small_font), 1762), audio_label, font=small_font, fill="#8d9ab3")
-    for i, line in enumerate(text_lines(draw, plan.title, title_font, 900)[:5]):
+    draw.text((90, 1740), audio_label, font=small_font, fill="#8d9ab3")
+    display_title = plan.title.removeprefix('검토용 초안 · ').removeprefix('뉴스 검토: ')
+    for i, line in enumerate(text_lines(draw, display_title, title_font, 900)[:5]):
         draw.text((90, 230 + i * 78), line, font=title_font, fill="#f0f4ff")
     if scene.image:
         asset = ImageOps.fit(load_image(scene.image), (900, 650))
         image.paste(asset, (90, 650))
     else:
         draw.rounded_rectangle((90, 650, 990, 1000), radius=35, fill="#272d46")
-        draw.ellipse((750, 710, 920, 880), fill="#524980")
-        draw.text((140, 735), f"장면 {index + 1:02d}", font=title_font, fill="#e7ecf5")
-        draw.text((140, 835), "텍스트 기반 뉴스 브리핑", font=small_font, fill="#aaa5ff")
-    lines = text_lines(draw, scene.caption, body_font, 900)
-    if len(lines) > 4 or plan.subtitle_y + len(lines) * (plan.font_size + 16) > 1790:
+        draw.rounded_rectangle((120, 690, 165 + min(index, 7) * 85, 702), fill=accent, radius=6)
+        draw.text((140, 735), f"{index + 1:02d} / {len(plan.scenes):02d}  핵심 내용", font=small_font, fill=accent)
+        for row, line in enumerate(text_lines(draw, scene.caption, title_font, 800)[:3]):
+            draw.text((140, 800 + row * 74), line, font=title_font, fill='#f0f4ff')
+    caption = scene.caption if spoken_caption is None else spoken_caption
+    lines = text_lines(draw, caption, body_font, 840)
+    if len(lines) > 3 or plan.subtitle_y + len(lines) * (plan.font_size + 16) > 1700:
         raise RenderError(
             "자막이 안전 영역을 초과했습니다. 자막을 줄이거나 크기를 낮추세요.", kind="subtitle"
         )
+    if lines and plan.subtitle_style == 'panel':
+        draw.rounded_rectangle((90, plan.subtitle_y - 24, 990,
+                                plan.subtitle_y + len(lines) * (plan.font_size + 16) + 16),
+                               radius=22, fill='#050a12')
     for i, line in enumerate(lines):
         draw.text(
-            (90, plan.subtitle_y + i * (plan.font_size + 16)),
+            (120, plan.subtitle_y + i * (plan.font_size + 16)),
             line,
             font=body_font,
             fill="#ffffff",
-            stroke_width=1,
+            stroke_width=2 if plan.subtitle_style == 'panel' else 3,
+            stroke_fill='#000000',
         )
+    # Emphasize existing numeric tokens only: never invent facts or alter subtitle text.
+    for row, line in enumerate(lines):
+        for match in re.finditer(r'\d[\d.,:%년월일억만조원달러]*', line):
+            x = 120 + draw.textlength(line[:match.start()], font=body_font)
+            draw.text((x, plan.subtitle_y + row * (plan.font_size + 16)), match.group(),
+                      font=body_font, fill=accent, stroke_width=2, stroke_fill='#000000')
     names = []
     for source in plan.sources[:100]:
         label = source.get("publisher", "") + " · " + urlsplit(source.get("url", "")).netloc
@@ -191,7 +218,7 @@ def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Pat
             if len(names) == 3:
                 break
     for i, line in enumerate(text_lines(draw, "출처: " + " / ".join(names), small_font, 900)[:2]):
-        draw.text((90, 1810 + i * 38), line, font=small_font, fill="#9ba9c1")
+        draw.text((90, 1790 + i * 38), line, font=small_font, fill="#9ba9c1")
     image.save(target, format="PNG")
 
 
@@ -267,6 +294,34 @@ class FakeRenderAdapter:
         path.write_bytes(b"FAKE_RENDER_NOT_PLAYABLE")
         progress(95)
         return path, {"adapter": "fake", "playable": False, "duration": plan.duration}
+
+
+def caption_frames(plan: RenderPlan, scene: ScenePlan, index: int, work: Path,
+                   font: Path, cues: list[dict]) -> Path:
+    """PNG concat timeline from measured sentence WAVs. No proportional text timing."""
+    spans, cursor = [], 0.0
+    for cue in cues:
+        start, end = float(cue['start']), float(cue['end'])
+        if not cursor <= start < end <= scene.seconds or len(cue['text']) > 400:
+            raise RenderError('문장별 자막 시점이 장면 범위를 벗어났습니다.', kind='subtitle')
+        if start > cursor:
+            spans.append((start - cursor, ''))
+        spans.append((end - start, cue['text']))
+        cursor = end
+    if cursor < scene.seconds:
+        spans.append((scene.seconds - cursor, ''))
+    entries = []
+    for number, (seconds, text) in enumerate(spans):
+        path = work / f'caption-{index:03d}-{number:03d}.png'
+        if scene.clip is None:
+            card(plan, scene, index, path, font, text)
+        else:
+            overlay(plan, replace(scene, caption=text), index, path, font)
+        entries.append(f"file '{path.name}'\nduration {seconds:.6f}\n")
+    entries.append(f"file '{path.name}'\n")
+    manifest = work / f'captions-{index:03d}.txt'
+    manifest.write_text(''.join(entries), encoding='utf-8')
+    return manifest
 
 
 class FFmpegAdapter:
@@ -476,6 +531,8 @@ class FFmpegAdapter:
             timings = [
                 {"seconds": seconds, "audio_seconds": round(audio, 3)} for seconds, audio in zip(fitted, measured)
             ]
+        subtitle_cues = []
+        scene_offset = 0.0
         for index, scene in enumerate(scenes):
             if cancel.is_set():
                 raise RenderError("영상 제작이 중단되었습니다.")
@@ -494,7 +551,26 @@ class FFmpegAdapter:
                 command = self.clip_command(binary, scene, image, audio, target)
             else:
                 command = self.command(binary, scene, image, audio, target)
+            cue_path = audio.with_suffix('.cues.json')
+            if not plan.silent and cue_path.is_file():
+                if cue_path.stat().st_size > 32768:
+                    raise RenderError('문장별 자막 파일이 너무 큽니다.', kind='subtitle')
+                cues = json.loads(cue_path.read_text(encoding='utf-8'))
+                if not isinstance(cues, list) or not 1 <= len(cues) <= 100:
+                    raise RenderError('문장별 자막을 확인하세요.', kind='subtitle')
+                caption_manifest = caption_frames(plan, scene, index, work, font, cues)
+                # Replace only the fixed still-image input. The guarded clip input is unchanged.
+                position = command.index('-loop')
+                command[position:position + 6] = ['-f', 'concat', '-safe', '1', '-i', str(caption_manifest)]
+                if scene.clip is None:
+                    # A short visual fade at scene entry; narration/timestamps are never cross-faded.
+                    command[-1:-1] = ['-vf', 'fps=30,fade=t=in:st=0:d=0.12']
+                for cue in cues:
+                    subtitle_cues.append({'start_ms': round((scene_offset + cue['start']) * 1000),
+                                          'end_ms': round((scene_offset + cue['end']) * 1000),
+                                          'text': cue['text'], 'scene': index})
             self.execute(command, work, cancel)
+            scene_offset += scene.seconds
             progress(10 + int((index + 1) / len(scenes) * 75))
         manifest = work / "concat.txt"
         manifest.write_text(
@@ -533,6 +609,9 @@ class FFmpegAdapter:
         metadata["ffmpeg_version"] = version
         metadata["audio"] = "silent" if plan.silent else "voice"
         metadata["audio_fit"] = bool(timings)
+        if subtitle_cues:
+            metadata['subtitle_cues'] = subtitle_cues
+            metadata['subtitle_timing'] = 'measured-reading-unit-wav; not word alignment'
         if timings:
             metadata["scene_timings"] = timings
         # Every clip scene carries the label (overlay), so every clip scene is listed as AI-generated.

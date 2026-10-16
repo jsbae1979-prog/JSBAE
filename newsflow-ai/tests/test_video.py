@@ -506,6 +506,42 @@ def test_ffmpeg_audio_fit_overflow_stops_before_rendering(tmp_path):
     assert run.call_count == 0 and not list(tmp_path.glob("*.png"))
 
 
+def test_quality_settings_persist_without_new_schema(video, app):
+    from newsflow.video.tts import SpeechSettings
+
+    coordinator, draft_id = video
+    job_id = coordinator.start(draft_id, 30, reviewed=True, theme='culture',
+                               subtitle_style='outline', speech=SpeechSettings(-1, 400))
+    wait(video)
+    with app.state.sessions() as session:
+        job = session.get(RenderJob, job_id)
+        project = session.get(VideoProject, job.project_id)
+        assert project.snapshot['quality'] == {'theme': 'culture', 'subtitle_style': 'outline'}
+        assert project.snapshot['speech']['rate'] == -1
+        assert project.snapshot['speech']['pause_ms'] == 400
+
+
+def test_measured_caption_render_keeps_audio_input_and_stored_cues(tmp_path):
+    class TimedTTS(KoreanFitTTS):
+        def synthesize(self, text, target, voice, seconds, speech=None):
+            super().synthesize(text, target, voice, seconds, speech)
+            target.with_suffix('.cues.json').write_text(json.dumps([
+                {'start': 0.0, 'end': 0.7, 'text': '첫 문장.'},
+                {'start': 1.0, 'end': 2.0, 'text': '둘째 문장.'},
+            ]), encoding='utf-8')
+
+    plan = RenderPlan('제목', [ScenePlan(30, '첫 문장. 둘째 문장.', '장면 요약')], [],
+                      voice='Fake Korean', fit_audio=True)
+    check, execute, inspect, font, truetype = fit_patches(tmp_path)
+    with check, execute as run, inspect, font, truetype:
+        _, metadata = FFmpegAdapter().render(plan, tmp_path, TimedTTS(seconds_per_call=2), lambda _: None, Event())
+    command = run.call_args_list[0].args[0]
+    inputs = [command[i + 1] for i, value in enumerate(command) if value == '-i']
+    assert inputs == [str(tmp_path / 'captions-000.txt'), str(tmp_path / 'scene-000.wav')]
+    assert 'fps=30,fade=t=in:st=0:d=0.12' in command
+    assert metadata['subtitle_cues'][1] == {'start_ms': 1000, 'end_ms': 2000, 'text': '둘째 문장.', 'scene': 0}
+
+
 def test_video_studio_labels_voices_with_culture_and_never_preselects_non_korean(video, client, monkeypatch):
     _coordinator, draft_id = video
     monkeypatch.setattr("newsflow.gui.video_routes.sys", SimpleNamespace(platform="win32"))
