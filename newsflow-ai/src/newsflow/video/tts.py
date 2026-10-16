@@ -149,18 +149,17 @@ class FakeTTS(OfflineTTS):
 
 class WindowsTTS:
     def __init__(self) -> None:
+        # Retained legacy reference; runtime calls the native COM worker, never this script.
         self.script = Path(__file__).with_name("windows_tts.ps1")
 
     def _command(self, args: list[str], timeout: int) -> bytes:
         if sys.platform != "win32":
             raise TTSError("Windows 로컬 음성은 Windows 환경에서만 사용할 수 있습니다.")
-        executable = (
-            Path(os.environ.get("SystemRoot", "C:/Windows"))
-            / "System32/WindowsPowerShell/v1.0/powershell.exe"
-        )
+        # Fixed native worker; never evaluate the legacy script or relax its policy.
+        command = [sys.executable, "-m", "newsflow.video.windows_sapi", *args]
         try:
             result = subprocess.run(
-                [str(executable), "-NoProfile", "-NonInteractive", "-File", str(self.script), *args],
+                command,
                 shell=False,
                 env=local_process_env(),
                 capture_output=True,
