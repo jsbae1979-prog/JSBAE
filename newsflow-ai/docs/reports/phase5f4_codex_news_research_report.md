@@ -51,4 +51,6 @@
 - Windows Actions 최초 실행에서 Python 3.12 러너의 사전 설치 pipx/filelock 충돌로 pip check 실패. 기존 Windows workflow의 전용 venv 격리를 적용하여 해당 CI 영역만 재검증한다. 고정 의존성 변경 없음. 결과는 최종 기록에서 갱신.
 - 전체 회귀·GUI·MP4·DB 쓰기 테스트는 실행하지 않음. 실서비스 인증 실패/한도/타임아웃/취소는 구현·검증되지 않았으며 Fake 취소 테스트로 대체했다고 주장하지 않는다.
 - 사용자 데이터/기존 MP4/설정 파일 변경, 실제 유료 API, OAuth/SNS 게시, 관리자 권한 상승, 실행 정책 변경, main 병합 없음.
-- Git SHA·Draft PR·Actions URL은 최종 기록에서 갱신한다.
+- Windows 재검증: Python 3.12/3.14 각각 핵심 19 tests, Ruff, pip check **SUCCESS**. [Actions 38881022468](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38881022468). 최초 실패 후 원인 수정 1회, 성공 후 반복 없음.
+- 검증 코드 SHA: `10a7c7a89d08fa197a5051b758d613af5e22f04d`. 이후 보고서만 갱신하며 최종 HEAD는 완료 메시지에 기재한다.
+- 브랜치 `feat/newsflow-phase5f4` · [Draft PR #19](https://github.com/jsbae1979-prog/JSBAE/pull/19), base `feat/newsflow-phase5f2`. 기존 PR/main 변경 없음.
