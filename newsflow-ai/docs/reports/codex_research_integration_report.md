@@ -14,6 +14,7 @@
 공식 근거: [App Server](https://developers.openai.com/codex/app-server), [인증](https://developers.openai.com/codex/auth), [웹 검색](https://developers.openai.com/codex/web-search), [설정](https://developers.openai.com/codex/config-reference).
 
 - 사용자가 설치한 공식 CLI의 `app-server --listen stdio://`와 공식 RPC를 사용한다. `account/read`의 ChatGPT 인증 및 `account/rateLimits/read`의 사용 가능 상태를 확인한다. 인증 파일·쿠키·세션 토큰을 읽거나 복사하지 않는다.
+- 해당 버전 스키마의 `ordinaryUsageAllowed`는 계정에 검증된 일반 포함 사용량 권한이다. 구매 크레딧·리셋 크레딧과 별개이며, null/false는 차단한다. 사용 퍼센트나 크레딧 잔액으로 허용 여부를 추정하지 않는다.
 - 검증 CLI는 **0.163.0-alpha.10.2**다. 실험적 App Server의 도구 의미가 달라질 수 있어 다른 버전은 격리 재검증 전 차단한다. CLI 자체의 기존 공식 인증 위치는 유지하고 API 키·토큰 환경변수는 자식 환경에서 제외한다. API 키 방식·사용량 확인 실패는 차단하며 다른 유료 Provider로 전환하지 않는다.
 - 임시 작업 폴더, ephemeral thread, read-only, approval never, RSS 경로 web search disabled. shell·MCP·hooks·plugins·skills·agents·browser·computer-use·code-mode 등을 비활성화하고 유효 설정과 thread 응답을 검증한다. 알 수 없는 도구 이벤트·승인 요청은 거절하고 중단한다. 뉴스에 포함된 지시문은 자료로만 전달한다.
 - 본인 구독 사용량·호출 제한이 적용된다. 별도 API 키 호출은 0건이며 무료·무제한을 보장하지 않는다. 로컬 토큰 기록은 계정 잔여량·청구량이 아니다. App Server에는 이 화면의 OpenAI 출력 토큰 상한이 적용되지 않음을 안내한다.
@@ -36,6 +37,7 @@
 - 기존 `run.bat`과 LocalCache 데이터 경로로 실제 실행, 기본값 `Codex / default` 저장, 정상 종료·재시작 후 복원을 확인했다. 내장 브라우저에서 공식 연결 준비 완료(20:53 KST), 분석 #5·초안 #3·기존 Video Studio로 전달된 3개 장면을 확인했다. 저장·재시작·상태 조회 후 Codex AIUsage는 기존 2건으로 증가하지 않았다. 별도 Chrome 검증은 수행하지 않았다.
 - SQLite `quick_check=ok`. 기존 기사 8·초안 2·영상 프로젝트 2·렌더 작업 2·AI 실행 4건의 원래 행이 백업과 동일하며 기존 MP4 2개 SHA-256도 동일하다. 새 RSS 기사 1·초안 1·AI 실행 2건만 추가했다. 앱 설정 변경은 AI Studio Provider/Codex 모델뿐이며 Claude 모델 및 다른 설정은 보존했다.
 - 재시작 중 열려 있던 브라우저 탭이 연결 거부 오류 화면에 남아 새 탭으로 결과를 확인했다. 서버는 127.0.0.1에만 바인딩되며 시스템 정책·LAN 설정 변경 없음.
+- [Windows Actions #38896937942](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38896937942): **SUCCESS**, Python 3.12·3.14 각각 **132 passed**, Ruff·pip check 통과. 변경 영역과 기존 Claude 핵심 테스트만 1회 실행했다. 실제 CLI 추론·유료 API 호출 없는 Fake CI이며 전체 회귀와 구분한다.
 
 ## 변경 파일과 게시 기록
 
@@ -43,7 +45,8 @@
 - 화면: `gui/intelligence_routes.py`, `gui/templates/{ai,claude_connection,codex_connection}.html`, `static/js/{app,codex_connection}.js`.
 - 테스트: `tests/test_codex_{adapter,research,search_evidence,studio}.py`, 전용 Windows workflow 및 본 보고서.
 - 브랜치: `feat/newsflow-codex-research-integration`. PR base: `feat/newsflow-claude-onboarding`. 기존 PR #1–#21과 main 변경 없음.
-- 최종 검증 코드 SHA·Draft PR·Actions 결과: 게시 후 기록.
+- 검증 코드 SHA: `a72f2b76029c6bc3696fcb7f23889afe03a89d31`. 이후 본 보고서만 갱신하며 최종 제출 SHA는 PR head와 완료 응답에 기록한다.
+- 신규 [Draft PR #22](https://github.com/jsbae1979-prog/JSBAE/pull/22), 변경 파일 16개. 문서만 갱신하는 push는 경로 필터로 CI를 반복하지 않는다.
 
 ## 미검증
 
