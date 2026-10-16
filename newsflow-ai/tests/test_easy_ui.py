@@ -27,7 +27,7 @@ from newsflow.video.engine import FakeRenderAdapter
 
 def start_guided(client, app):
     response = client.post(
-        "/autopilot/start", data={"csrf_token": csrf(client), "mode": "guided"}, follow_redirects=False,
+        "/autopilot/start", data={"csrf_token": csrf(client), "mode": "guided", "source": "sample"}, follow_redirects=False,
     )
     assert response.status_code == 303
     job_id = response.headers["location"].rsplit("/", 1)[1]
@@ -53,7 +53,7 @@ def test_easy_and_advanced_pages_keep_security_headers(client, path, title):
     assert '<script src="/static/js/autopilot.js" defer>' in response.text
 
 
-def test_easy_default_one_click_stops_with_actionable_real_render_failure(client, app, monkeypatch):
+def test_easy_trial_stops_with_actionable_real_render_failure(client, app, monkeypatch):
     execute = app.state.autopilot.backend.execute
 
     def fail_render(stage, *args, **kwargs):
@@ -62,7 +62,7 @@ def test_easy_default_one_click_stops_with_actionable_real_render_failure(client
         return execute(stage, *args, **kwargs)
 
     monkeypatch.setattr(app.state.autopilot.backend, "execute", fail_render)
-    response = client.post("/autopilot/start", data={"csrf_token": csrf(client)}, follow_redirects=False)
+    response = client.post("/autopilot/start", data={"csrf_token": csrf(client), "source": "sample"}, follow_redirects=False)
     app.state.autopilot.future.result(timeout=15)
     job_id = response.headers["location"].rsplit("/", 1)[1]
     data = client.get(f"/api/autopilot/jobs/{job_id}").json()
@@ -109,7 +109,7 @@ def test_guided_selection_changes_news_then_script_and_cancel_preserves_artifact
 
 def test_stale_revision_and_duplicate_start_have_no_new_task_or_script(client, app):
     job_id, selected = start_guided(client, app)
-    duplicate = client.post("/autopilot/start", data={"csrf_token": csrf(client)})
+    duplicate = client.post("/autopilot/start", data={"csrf_token": csrf(client), "source": "sample"})
     assert duplicate.status_code == 409
     stale = client.post(f"/autopilot/jobs/{job_id}/resume", data={
         "csrf_token": csrf(client), "revision": selected["revision"] + 100,
@@ -167,7 +167,9 @@ def test_corrupt_saved_settings_fall_back_to_offline_defaults(client, app):
         )])
     response = client.get("/")
     assert response.status_code == 200
-    assert 'value="30" selected' in response.text and 'value="sample" selected' in response.text
+    assert 'value="30" selected' in response.text and 'value="feeds" selected' in response.text
+    assert "AI 웹 뉴스 조사 BLOCKED" in response.text
+    assert response.context["defaults"]["ai"] == "offline"
     advanced = client.get("/autopilot/start?advanced=true").text
     assert 'value="easy" selected' in advanced and 'value="youtube" selected' in advanced
 

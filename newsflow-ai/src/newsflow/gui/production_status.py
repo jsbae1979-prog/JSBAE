@@ -18,12 +18,15 @@ from newsflow.db.models import (
     VideoAIUsage,
 )
 from newsflow.easy_setup import initial_state, voice_choice_catalog
+from newsflow.intelligence.capabilities import provider_capabilities
 from newsflow.intelligence.settings import external_ready, read_studio_settings
 from newsflow.video.ai.settings import readiness as video_readiness
 from newsflow.video.elevenlabs_tts import ElevenLabsKeys
 from newsflow.video.elevenlabs_tts import settings as elevenlabs_settings
 from newsflow.video.engine import FFmpegAdapter, RenderError
 from newsflow.video.voice_engines import provider_name
+
+from .production_context import ACQUISITION_LABELS, CATEGORY_LABELS, PERIOD_LABELS, acquisition_preferences
 
 PROVIDER_LABELS = {"offline": "Offline", "claude_code": "Claude Code", "codex": "Codex", "openai": "OpenAI API",
                    "supertonic": "Supertonic 3", "windows": "Windows SAPI", "elevenlabs": "ElevenLabs",
@@ -71,19 +74,24 @@ def _cli_status(provider, cached):
         authentication = "인증 확인 실패"
     return _status(provider, code,
                    "CLI 설치 확인됨" if cached.get("installed") else "CLI 설치 확인 필요",
-                   message + " · 기사 분석·대본 경로만 지원하며 자동 제작의 직접 실행은 미지원",
+                   message + " · RSS 분석·대본 통합 제작 지원 · 실행별 외부 전송·계정 사용량 동의 필요",
                    authentication=authentication,
                    checked_at=cached.get("checked_at"), cost="본인 구독 사용량·한도 적용 · 무료·무제한 아님",
-                   evidence="설치·인증 검사와 실제 생성 성공은 별개입니다.", action="#selected-ai")
+                   evidence="설치·인증 검사와 실제 생성 성공은 별개입니다."
+                   + (" Claude Code 일반 배포 약관 적합성 NOT VERIFIED." if provider == "claude_code" else ""),
+                   action="#selected-ai")
 
 
 def production_context(request) -> dict:
     """Existing configuration is canonical; observations never rewrite or prove current credentials."""
     sessions = request.app.state.sessions
     studio = read_studio_settings(sessions)
+    acquisition = acquisition_preferences(sessions)
     checks = getattr(request.app.state, "production_checks", {})
     with sessions() as session:
         values = initial_state(session)["values"]
+        if session.get(AppSetting, "autopilot_source") is None:
+            values["source"] = "feeds"  # new-user display only; never rewrite a saved sample selection
         sources = list(session.scalars(select(NewsSource).where(NewsSource.enabled, NewsSource.url != SAMPLE_URL)))
         rss_checks = list(session.scalars(select(NewsSourceCheck).where(
             NewsSourceCheck.source_id.in_([item.id for item in sources]))))
@@ -129,6 +137,8 @@ def production_context(request) -> dict:
         authentication="모델 조회 성공 기록 있음" if ai_check.get("ok") is True else "실제 API 인증 확인 필요",
         checked_at=ai_check.get("checked_at"), cost=f"유료 API · 로컬 잔여 한도 {ai_gate['remaining_tokens']} 토큰",
         evidence="키 파일 존재·설정 통과는 현재 API 인증 성공이 아닙니다.", action="#selected-ai")
+    for name in ("offline", "claude_code", "codex", "openai"):
+        statuses[name]["capabilities"] = provider_capabilities(name)
 
     for name in ("windows", "supertonic"):
         available = any(item["engine"] == name and item["available"] for item in catalog)
@@ -181,7 +191,7 @@ def production_context(request) -> dict:
         if status["last_success_at"]:
             status["evidence"] += " · 이전 성공 이력은 현재 요청 성공이나 사람 품질 평가를 보장하지 않습니다."
 
-    config = {**values, "duration": int(values["duration"]), "provider": studio["provider"],
+    config = {**values, **acquisition, "duration": int(values["duration"]), "provider": studio["provider"],
               "provider_label": PROVIDER_LABELS[studio["provider"]], "model": studio["model"], "models": studio["models"],
               "voice_label": selected["label"], "voice_available": selected["available"],
               "voice_engine": provider_name(values["voice"]), "video_provider": video_gate["provider"],
@@ -203,6 +213,11 @@ def production_context(request) -> dict:
         stages[0].update(provider_label="체험 뉴스 · 로컬", status_code="ready", status_label="사용 준비 완료",
                          configuration="내장 합성 뉴스", availability="외부 뉴스 수집 없이 연습 자료 사용",
                          checked_at=None, last_success_at=None, evidence="실제 보도로 게시하면 안 되는 체험 자료")
+    elif acquisition["acquisition_policy"] != "rss":
+        stages[0].update(provider_label=ACQUISITION_LABELS[acquisition["acquisition_policy"]],
+                         status_code="unavailable", status_label="웹 뉴스 조사 BLOCKED",
+                         availability="실제 검색·출처 확인 경로가 승인·검증되지 않아 실행하지 않습니다. RSS 자동 전환 없음.",
+                         last_success_at=None, evidence="AI 연결 성공과 실제 웹 검색 성공은 별개입니다.")
     if values["voice"] == "offline-silence":
         stages[3].update(provider_label="Offline 무음", configuration="무음 검토영상 선택됨",
                          availability="실제 음성 없이 자막 검토영상 제작", last_success_at=None,
@@ -213,6 +228,7 @@ def production_context(request) -> dict:
     unchecked = {"state": "unchecked", "ready": False, "version": None, "checked_at": None,
                  "message": "아직 연결을 확인하지 않았습니다. 아래 확인 버튼을 눌러 주세요."}
     return {"production_config": config, "pipeline_stages": stages, "provider_statuses": statuses,
+            "acquisition_labels": ACQUISITION_LABELS, "category_labels": CATEGORY_LABELS, "period_labels": PERIOD_LABELS,
             "voice_choices": catalog, "studio_defaults": studio,
             "claude_status": getattr(request.app.state, "claude_status", unchecked),
             "codex_status": getattr(request.app.state, "codex_status", unchecked)}

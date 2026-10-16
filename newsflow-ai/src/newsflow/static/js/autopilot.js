@@ -42,7 +42,7 @@ for (const form of document.querySelectorAll('form[data-easy-form]')) {
       const next = new URL(response.url);
       if (next.origin !== window.location.origin) throw new Error('Unexpected redirect');
       // Fetch may omit a redirect fragment. Keep a workspace mutation at its saved review panel.
-      if (next.pathname === '/' && next.searchParams.has('task') &&
+      if (next.pathname === '/' && (next.searchParams.has('task') || next.searchParams.has('guide')) &&
           form.querySelector('input[name="workspace"][value="true"]')) {
         next.hash = 'workspace-detail';
       }

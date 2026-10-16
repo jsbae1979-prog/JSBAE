@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from uuid import uuid4
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -22,6 +23,7 @@ from newsflow.db.models import (
     AppSetting,
     AutopilotArtifact,
     ContentDraft,
+    IntelligenceRun,
     NewsArticle,
     NewsSource,
     NewsSourceCheck,
@@ -31,19 +33,29 @@ from newsflow.db.models import (
     VideoProject,
 )
 from newsflow.easy_setup import preview_preferences, speech_preferences
+from newsflow.intelligence.capabilities import DEFAULT_ACQUISITION_POLICY
 from newsflow.intelligence.korean import speech_plan
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import (
     STUDIO_PROVIDERS,
     external_ready,
     job_estimate,
-    read_settings,
+    max_tokens_for,
     read_studio_settings,
 )
 from newsflow.publishing.service import PublishingError, PublishingService, hash_file
 from newsflow.video.tts import TTSError
 
-from .production_context import context_query, parse_context, validate_context
+from .production_context import (
+    ACQUISITION_LABELS,
+    CATEGORY_LABELS,
+    PERIOD_LABELS,
+    acquisition_preferences,
+    context_json,
+    context_query,
+    parse_context,
+    validate_context,
+)
 from .routes import go, page
 from .task_views import task_rows
 
@@ -57,8 +69,10 @@ CHOICES = {
     "mode": {"easy", "guided"}, "source": {"sample", "feeds"},
     "duration": {"30", "45", "60"}, "platform": set(PLATFORMS), "ai": {"offline", "openai"},
 }
-DEFAULTS = {"mode": "easy", "source": "sample", "duration": "30", "platform": "youtube", "ai": "offline"}
-AI_LABELS = {"offline": "기본 대본 (외부 호출 없음)", "openai": "외부 AI 대본 (OpenAI · 유료)"}
+DEFAULTS = {"mode": "easy", "source": "feeds", "duration": "30", "platform": "youtube", "ai": "offline"}
+AI_LABELS = {"offline": "기본 대본 (외부 호출 없음)", "openai": "외부 AI 대본 (OpenAI · 유료)",
+             "claude_code": "Claude Code · 본인 구독", "codex": "Codex · 본인 구독"}
+GUIDES = {"provider", "voice", "approval", "sources", "model", "video", "consent", "search"}
 DESCRIPTIONS = {
     "collect": "뉴스를 모으고 같은 기사는 정리해요.",
     "select": "새 영상으로 만들 이야기를 골라요.",
@@ -115,26 +129,44 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
     saved = read_studio_settings(request.app.state.sessions)
     provider = saved["provider"]
     voice = ready["voice"]
-    supported = provider in {"offline", "openai"}
+    rss_supported = provider in STUDIO_PROVIDERS
     with request.app.state.sessions() as session:
         video_setting = session.get(AppSetting, "video_ai_provider")
         manual_video = bool(video_setting and video_setting.value == "higgsfield")
-    model_mismatch = provider == "openai" and saved["model"] != read_settings(request.app.state.sessions).model
+    acquisition = acquisition_preferences(request.app.state.sessions)
     if manual_video:
-        supported = False
-        notice = "Higgsfield는 장면별 비용·내용 승인이 필요합니다. 대본을 준비한 뒤 별도 장면 계획으로 이어갑니다."
-    elif model_mismatch:
-        supported = False
-        notice = "선택 모델과 기존 자동 제작 모델이 달라 선택한 모델의 대본 검토 흐름으로 이어갑니다."
-    elif not supported:
-        notice = (
-            "선택한 AI는 뉴스 분석·대본 화면에서 사용할 수 있어요. "
-            "등록된 뉴스는 대본을 검토한 뒤 영상 제작으로 이어집니다."
-        )
+        rss_supported = False
+        rss_notice = "Higgsfield는 장면별 비용·내용 승인이 필요합니다. 대본을 준비한 뒤 별도 장면 계획으로 이어갑니다."
+    elif voice["name"] == "elevenlabs" or not voice["installed"]:
+        rss_supported = False
+        rss_notice = "선택한 음성의 설치·제작별 승인이 필요합니다. 다른 음성으로 자동 전환하지 않습니다."
+    elif not ready["rss"]["ready"]:
+        rss_supported = False
+        rss_notice = "사용 중인 RSS 출처가 없습니다. 설정에서 출처를 등록한 뒤 RSS 제작을 시작하세요."
     elif provider == "openai" and not ready["ai"]["ready"]:
-        notice = "등록 뉴스 자동 제작에 필요한 AI 연결·비용 승인을 설정에서 확인해 주세요."
+        rss_supported = False
+        rss_notice = "등록 뉴스 자동 제작에 필요한 AI 연결·비용 승인을 설정에서 확인해 주세요."
     else:
-        notice = "등록 뉴스는 대본과 완성 영상을 확인한 뒤 보관합니다. 체험 뉴스는 기본 대본으로 연습해요."
+        rss_notice = ("RSS 확보 → 같은 AI의 분석·대본 작성 → 대본 검토 → 영상 제작으로 이어집니다. "
+                      "외부 AI는 전송·계정 사용량 동의 후 실행하며, 체험 뉴스는 Offline으로 연습해요.")
+    cached = getattr(request.app.state, "claude_status" if provider == "claude_code" else "codex_status", {})
+    auth_checked = provider == "offline" or (provider in {"claude_code", "codex"}
+                                             and cached.get("state") == "ready" and cached.get("ready") is True)
+    policy_states = {
+        "rss": {"supported": rss_supported,
+                "auth_checked": auth_checked,
+                "title": "RSS 분석·대본 경로 지원" if rss_supported else "RSS 제작 조건 확인 필요",
+                "detail": "실행 전 인증·승인을 확인합니다. 경로 지원은 현재 로그인·사용 가능 상태를 보장하지 않습니다."
+                if rss_supported else rss_notice,
+                "notice": rss_notice},
+    }
+    for policy in ("ai_web", "hybrid"):
+        policy_states[policy] = {
+            "supported": False, "title": "AI 웹 뉴스 조사 BLOCKED",
+            "detail": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+            "notice": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+        }
+    current_policy = policy_states[acquisition["acquisition_policy"]]
     if voice["name"] == "elevenlabs":
         voice_label = "외부 한국어 음성 · 제작별 동의 필요"
     elif voice["silent"]:
@@ -143,7 +175,8 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
         voice_label = "한국어 음성" if voice["installed"] else "선택한 음성 준비 필요"
     return {
         "provider": provider, "provider_label": STUDIO_PROVIDERS[provider],
-        "automatic_supported": supported, "notice": notice,
+        "automatic_supported": current_policy["supported"], "notice": current_policy["notice"],
+        "policy_states": policy_states, "current_policy": current_policy,
         "voice_label": voice_label, "voice_ready": voice["installed"],
         "action_url": "/autopilot/quick-start", "guide_url": "/ai", "rss_ready": ready["rss"]["ready"],
     }
@@ -151,7 +184,7 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
 
 def _ai_usage(request: Request, snapshot: dict[str, Any], article: NewsArticle | None) -> tuple[dict | None, dict | None]:
     """Estimate before the paid script call and the recorded usage after it; route-level only."""
-    if snapshot.get("content_mode") != "real" or snapshot.get("ai_mode") != "openai":
+    if snapshot.get("content_mode") != "real" or snapshot.get("ai_mode") == "offline":
         return None, None
     sessions = request.app.state.sessions
     estimate = actual = None
@@ -173,8 +206,13 @@ def _ai_usage(request: Request, snapshot: dict[str, Any], article: NewsArticle |
                 "calls": len(rows), "failed": sum(1 for row in rows if row.status != "success"),
                 "prompt": sum(row.prompt_tokens for row in rows), "completion": sum(row.completion_tokens for row in rows),
                 "total": sum(row.total_tokens for row in rows), "model": rows[-1].model,
+                "provider": snapshot["ai_mode"],
+                "notice": "응답에서 받은 로컬 사용량 기록 · 공급사 계정 잔여량·실제 청구량과 다를 수 있습니다.",
+                "stages": [{"kind": kind, "calls": sum(row.kind == kind for row in rows),
+                            "total": sum(row.total_tokens for row in rows if row.kind == kind)}
+                           for kind in ("analysis", "script")],
             }
-    if article is not None and "script" not in snapshot.get("stage_results", {}):
+    if article is not None and snapshot.get("ai_mode") == "openai" and "script" not in snapshot.get("stage_results", {}):
         try:
             evidence = IntelligenceService(sessions).evidence_for([article.id])
             estimate = job_estimate(sessions, int(snapshot["duration"]), evidence)
@@ -235,8 +273,12 @@ def _workspace_video(
 
 
 @router.get("/", response_class=HTMLResponse)
-def home(request: Request, task: str | None = None, video: int | None = None, show: str = "") -> HTMLResponse:
-    if show not in {"", "tasks", "videos"} or task is not None and video is not None or video is not None and video < 1:
+def home(
+    request: Request, task: str | None = None, video: int | None = None, show: str = "",
+    guide: str = "", flow: str | None = None,
+) -> HTMLResponse:
+    if (show not in {"", "tasks", "videos"} or sum((task is not None, video is not None, bool(guide))) > 1
+            or video is not None and video < 1 or guide and guide not in GUIDES):
         raise HTTPException(422, "작업 또는 영상 하나를 선택해 주세요.")
     jobs = request.app.state.autopilot.list_jobs(100)
     ready = readiness(request)
@@ -245,6 +287,11 @@ def home(request: Request, task: str | None = None, video: int | None = None, sh
     overview = production_context(request)
     tasks = task_rows(request, jobs)
     selected_task_context = job_detail_context(request, task) if task is not None else None
+    workspace_guide_context = None
+    if guide:
+        workspace_guide_context = _guide_context(request, guide, flow)
+        if workspace_guide_context["production_flow"] is None:
+            raise HTTPException(422, "작업실에서 제작할 뉴스와 길이를 다시 선택해 주세요.")
     selected_video = None
     with request.app.state.sessions() as session:
         completed = []
@@ -289,14 +336,14 @@ def home(request: Request, task: str | None = None, video: int | None = None, sh
             active_jobs=visible_tasks, workspace_tasks=visible_tasks, task_count=len(tasks), active_task_count=len(active_jobs),
             completed=visible_videos, workspace_videos=visible_videos, video_count=len(completed),
             selected_task_context=selected_task_context, selected_video=selected_video, workspace=True, show=show,
+            workspace_guide_context=workspace_guide_context,
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
             recent_news=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(5))),
             **overview,
         )
 
 
-@router.get("/autopilot/start", response_class=HTMLResponse)
-def start_page(request: Request, guide: str = "", flow: str | None = None, advanced: bool = False) -> HTMLResponse:
+def _guide_context(request: Request, guide: str, flow: str | None) -> dict[str, Any]:
     try:
         production_flow = parse_context(flow)
     except ValueError as exc:
@@ -306,17 +353,27 @@ def start_page(request: Request, guide: str = "", flow: str | None = None, advan
             NewsSource.enabled, NewsSource.url != SAMPLE_URL,
         ))
     ready = readiness(request)
-    return _page(
-        request, "autopilot_start.html", active="autopilot", defaults=_defaults(request),
-        enabled_sources=enabled, ready=ready, production=production_summary(request, ready),
-        guide=guide if guide in {"provider", "voice", "approval", "sources", "model", "video"} else "",
-        production_flow=production_flow, manual_url="/ai?" + context_query(production_flow), advanced=advanced,
-    )
+    return {
+        "defaults": _defaults(request), "enabled_sources": enabled, "ready": ready,
+        "production": production_summary(request, ready), "guide": guide if guide in GUIDES else "",
+        "production_flow": production_flow, "manual_url": "/ai?" + context_query(production_flow),
+        "production_json": context_json(production_flow),
+        "script_output_limit": max_tokens_for(production_flow["initial_duration"] if production_flow else 30),
+        "acquisition_labels": ACQUISITION_LABELS, "category_labels": CATEGORY_LABELS, "period_labels": PERIOD_LABELS,
+    }
+
+
+@router.get("/autopilot/start", response_class=HTMLResponse)
+def start_page(request: Request, guide: str = "", flow: str | None = None, advanced: bool = False) -> HTMLResponse:
+    return _page(request, "autopilot_start.html", active="autopilot", advanced=advanced,
+                 **_guide_context(request, guide, flow))
 
 
 @router.post("/autopilot/quick-start")
 def quick_start(
     request: Request, source: str = Form(max_length=10), duration: int = Form(),
+    acquisition_policy: str | None = Form(None, max_length=10),
+    category: str | None = Form(None, max_length=20), period: str | None = Form(None, max_length=10),
     workspace: bool = Form(False),
 ) -> RedirectResponse:
     """Two-choice entry point, with the same coordinator and all existing review gates."""
@@ -324,45 +381,85 @@ def quick_start(
         raise HTTPException(422, "뉴스 종류와 30·45·60초 중 영상 길이를 선택해 주세요.")
     ready = readiness(request)
     saved = read_studio_settings(request.app.state.sessions)
+    acquisition = acquisition_preferences(request.app.state.sessions)
+    for key, value in (("acquisition_policy", acquisition_policy), ("category", category), ("period", period)):
+        if value is not None:
+            acquisition[key] = value
     with request.app.state.sessions() as session:
         video_setting = session.get(AppSetting, "video_ai_provider")
         video_mode = video_setting.value if video_setting and video_setting.value == "higgsfield" else "off"
-    flow = validate_context({
+    try:
+        flow = validate_context({
         "source": source, "initial_duration": duration,
         "initial_provider": saved["provider"] if source == "feeds" else "offline",
         "initial_model": saved["model"] if source == "feeds" else "offline",
         "initial_voice": ready["voice"]["name"], "initial_video": video_mode,
-    })
+        "initial_platform": _defaults(request)["platform"], **acquisition,
+        **({"request_id": uuid4().hex} if source == "feeds" else {}),
+        })
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
+    return _start_production(request, flow, external_consent=False, workspace=workspace)
+
+
+def _start_production(request: Request, flow: dict, *, external_consent: bool, workspace: bool = False) -> RedirectResponse:
+    """An explicit confirmation freezes choices; it does not grant any stored API approval."""
+    source, provider = flow["source"], flow["initial_provider"]
+    ready = readiness(request)
 
     def guide_to(reason: str):
+        if workspace:
+            return go(f"/?guide={reason}&{context_query(flow)}#workspace-detail")
         return go(f"/autopilot/start?guide={reason}&{context_query(flow)}")
 
-    if video_mode == "higgsfield":
+    if flow.get("initial_video") == "higgsfield":
         return guide_to("video")
     if source == "feeds":
-        if saved["provider"] not in {"offline", "openai"}:
-            return guide_to("provider")
+        if flow.get("acquisition_policy", DEFAULT_ACQUISITION_POLICY) != "rss":
+            return guide_to("search")
         if not ready["rss"]["ready"]:
             return guide_to("sources")
-        if saved["provider"] == "openai" and not ready["ai"]["ready"]:
+        if provider == "openai" and not ready["ai"]["ready"]:
             return guide_to("approval")
-        if saved["provider"] == "openai" and saved["model"] != read_settings(request.app.state.sessions).model:
-            return guide_to("model")
     # An external voice needs the existing Video Studio per-render consent flow.
     # A missing selected voice never becomes silent or switches providers.
-    if ready["voice"]["name"] == "elevenlabs" or not ready["voice"]["installed"]:
+    voice = flow["initial_voice"]
+    if voice == "elevenlabs" or (voice != "offline-silence" and not request.app.state.video.voice_available(voice)):
         return guide_to("voice")
-    defaults = _defaults(request)
+    if source == "feeds" and provider != "offline" and not external_consent:
+        return guide_to("consent")
+    options = {}
+    if source == "feeds":
+        options = {"ai_model": flow["initial_model"], "acquisition_policy": flow["acquisition_policy"],
+                   "category": flow.get("category", "all"), "period": flow.get("period", "7d"),
+                   "external_consent": external_consent}
+        if flow.get("request_id"):
+            options["request_id"] = flow["request_id"]
     try:
         identifier = request.app.state.autopilot.start(
-            mode="guided", source=source, duration=duration, platform=defaults["platform"],
+            mode="guided", source=source, duration=flow["initial_duration"],
+            platform=flow.get("initial_platform", _defaults(request)["platform"]),
             content_mode="real" if source == "feeds" else "trial",
-            ai_mode=saved["provider"] if source == "feeds" else "offline",
-            voice=ready["voice"]["name"],
+            ai_mode=provider if source == "feeds" else "offline", voice=voice, **options,
         )
     except AutopilotError as exc:
         raise _error(exc) from None
     return go(f"/?task={identifier}#workspace-detail" if workspace else f"/autopilot/jobs/{identifier}")
+
+
+@router.post("/autopilot/confirm-start")
+def confirm_start(
+    request: Request, flow: str = Form(max_length=2000), consent: bool = Form(False), workspace: bool = Form(False),
+) -> RedirectResponse:
+    if not consent:
+        raise HTTPException(422, "이번 분석·대본 요청의 외부 자료 전송과 계정 사용량에 동의해 주세요.")
+    try:
+        production = parse_context(flow)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
+    if not production or production["source"] != "feeds" or not production.get("request_id"):
+        raise HTTPException(422, "홈에서 제작할 등록 뉴스를 다시 선택해 주세요.")
+    return _start_production(request, production, external_consent=True, workspace=workspace)
 
 
 @router.post("/autopilot/start")
@@ -410,10 +507,13 @@ def job_detail_context(request: Request, job_id: str) -> dict[str, Any]:
         {"key": key, "label": STAGE_LABELS[key], "description": DESCRIPTIONS[key], "done": key in snapshot["stage_results"]}
         for key in STAGES
     ]
+    if snapshot.get("unified"):
+        stages[1].update(label="기사 분석·뉴스 선정", description="수집한 RSS 자료를 비교하고 대본을 만들 뉴스를 고릅니다.")
     with request.app.state.sessions() as session:
         draft = session.get(ContentDraft, snapshot["content_draft_id"]) if snapshot.get("content_draft_id") else None
         video = session.get(RenderJob, snapshot["render_job_id"]) if snapshot.get("render_job_id") else None
         article = session.get(NewsArticle, snapshot["article_id"]) if snapshot.get("article_id") else None
+        analysis = session.get(IntelligenceRun, snapshot["analysis_run_id"]) if snapshot.get("analysis_run_id") else None
         output = _media_path(request, video)
         ai_estimate, ai_actual = _ai_usage(request, snapshot, article)
         plan = None
@@ -430,6 +530,7 @@ def job_detail_context(request: Request, job_id: str) -> dict[str, Any]:
             "playable": output is not None, "output_path": str(output) if output else None,
             "audio": (video.metadata_json or {}).get("audio") if video else None,
             "ai_estimate": ai_estimate, "ai_actual": ai_actual,
+            "analysis": analysis, "analysis_sources": (analysis.evidence or {}).get("articles", []) if analysis else [],
         }
 
 

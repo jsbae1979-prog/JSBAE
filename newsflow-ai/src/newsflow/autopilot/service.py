@@ -23,11 +23,13 @@ from newsflow.db.models import (
     AutopilotAttempt,
     AutopilotEvent,
     AutopilotJob,
+    IntelligenceRun,
     NewsArticle,
     RenderJob,
     ScheduledRun,
     utcnow,
 )
+from newsflow.intelligence.capabilities import NEWS_CATEGORIES, NEWS_PERIODS, require_acquisition
 
 from .contracts import (
     AI_MODES,
@@ -67,6 +69,9 @@ _ERROR_MESSAGES = {
     "ai_bad_response": "AI 응답 형식이 올바르지 않아 대본을 저장하지 않았습니다. 다시 시도하거나 기본 대본을 사용하세요.",
     "ai_budget": "이번 달 AI 토큰 한도에 도달해 외부 AI를 호출하지 않았습니다. AI 설정에서 한도를 확인하세요.",
     "ai_consent": "외부 AI 사용 승인이 없어 호출하지 않았습니다. AI 설정에서 승인하세요.",
+    "ai_request_stopped": "이전 AI 요청이 실패했거나 결과가 불명확합니다. 자동 재전송하지 않습니다. 작업 이력을 확인하세요.",
+    "news_search_blocked": "이 AI의 웹 뉴스 검색은 검증되지 않았습니다. 설정에서 RSS 수집 정책을 직접 선택하세요.",
+    "no_eligible_articles": "선택한 분야·기간에 발행일과 출처가 확인되는 RSS 기사가 없습니다. 수집 정책을 확인하세요.",
     "voice_unavailable": "선택한 한국어 음성을 이 PC에서 찾지 못했습니다. 음성 설정을 확인하거나 무음으로 제작하세요.",
     "speech_too_long": "음성이 영상 길이보다 깁니다. 대본을 줄이거나 영상 길이를 늘리세요.",
     "voice_failed": "음성을 만들지 못했습니다. 선택한 한국어 음성과 PowerShell 실행 상태를 확인하세요.",
@@ -170,12 +175,16 @@ class AutopilotCoordinator:
         pauses = {"select", "script", "validate"} if job.mode == "guided" else set()
         if job.content_mode == "real":
             pauses |= {"script", "validate"}
+        if job.stage_results.get("request", {}).get("unified"):
+            pauses.discard("select")
         return pauses
 
     def start(
         self, mode: str = "easy", source: str = "sample", duration: int = 30, platform: str = "youtube",
         content_mode: str | None = None, ai_mode: str = "offline", voice: str | None = None,
-        *, request_id: str | None = None,
+        *, request_id: str | None = None, ai_model: str | None = None,
+        acquisition_policy: str | None = None, category: str = "all", period: str | None = None,
+        external_consent: bool = False,
     ) -> str:
         if mode not in {"easy", "guided"} or source not in {"sample", "feeds"}:
             raise AutopilotError("제작 방식과 뉴스 종류를 다시 선택하세요.")
@@ -188,6 +197,30 @@ class AutopilotCoordinator:
             raise AutopilotError("체험 제작에서는 외부 AI를 사용하지 않습니다. AI 방식을 다시 선택하세요.")
         if voice is not None and (not isinstance(voice, str) or not 0 < len(voice) <= 200 or "\x00" in voice):
             raise AutopilotError("음성을 다시 선택하세요.")
+        request = {}
+        if acquisition_policy is not None or ai_mode in {"claude_code", "codex"}:
+            from newsflow.intelligence.settings import SettingsError, studio_model
+
+            try:
+                require_acquisition(ai_mode, acquisition_policy)
+            except ValueError:
+                raise AutopilotError(_ERROR_MESSAGES["news_search_blocked"]) from None
+            if category not in NEWS_CATEGORIES or period not in NEWS_PERIODS:
+                raise AutopilotError("뉴스 분야와 조사 기간을 다시 선택하세요.")
+            if ai_mode != "offline" and external_consent is not True:
+                raise AutopilotError("이 작업의 기사 분석·대본 생성 두 요청에 대한 자료 전송과 계정 사용량 동의가 필요합니다.")
+            try:
+                model = studio_model(ai_mode, ai_model)
+            except (SettingsError, TypeError):
+                raise AutopilotError("제작할 AI와 모델 설정을 확인하세요.") from None
+            request = {
+                "unified": True, "ai_model": model, "acquisition_policy": acquisition_policy,
+                "category": category, "period": period, "external_consent": external_consent is True,
+                "consented_at": utcnow().isoformat() if external_consent is True else None,
+                "requested_at": utcnow().isoformat(),
+                "analysis_provider": ai_mode, "script_provider": ai_mode,
+                "news_method": "synthetic_rss" if source == "sample" else "rss",
+            }
         if request_id is not None:
             self._id(request_id)
         with self.guard:
@@ -201,6 +234,10 @@ class AutopilotCoordinator:
                             existing.content_mode, existing.ai_mode, existing.voice) != (
                             mode, source, duration, platform, content_mode, ai_mode, voice):
                             raise AutopilotConflict("같은 작업 번호로 다른 제작을 시작할 수 없습니다.")
+                        old = existing.stage_results.get("request", {})
+                        if any(old.get(key) != value for key, value in request.items()
+                               if key not in {"consented_at", "requested_at"}) or bool(old) != bool(request):
+                            raise AutopilotConflict("같은 작업 번호의 AI와 뉴스 수집 정책을 변경할 수 없습니다.")
                         return existing.id
             self._acquire()
             job_id = request_id or uuid4().hex
@@ -208,7 +245,8 @@ class AutopilotCoordinator:
                 with self._transaction() as session:
                     job = AutopilotJob(
                         id=job_id, active_slot=1, mode=mode, source=source, duration=duration,
-                        platform=platform, status="queued", current_stage="collect", stage_results={},
+                        platform=platform, status="queued", current_stage="collect",
+                        stage_results={"request": request} if request else {},
                         content_mode=content_mode, ai_mode=ai_mode, voice=voice,
                     )
                     session.add(job)
@@ -227,7 +265,7 @@ class AutopilotCoordinator:
         scheduled = session.scalar(select(ScheduledRun.id).where(ScheduledRun.job_id == job.id)) is not None
         if scheduled and job.ai_mode != "offline":
             raise BackendError(code="ai_consent", retryable=False, outcome_unknown=True)
-        context: dict[str, Any] = {}
+        context: dict[str, Any] = dict(job.stage_results.get("request", {}))
         for stage in STAGES:
             context.update(job.stage_results.get(stage, {}))
         context.update({
@@ -262,8 +300,11 @@ class AutopilotCoordinator:
                 "id": job.id, "revision": job.revision, "mode": job.mode, "source": job.source,
                 "duration": job.duration, "platform": job.platform, "status": job.status,
                 "content_mode": job.content_mode, "ai_mode": job.ai_mode, "voice": job.voice,
+                **job.stage_results.get("request", {}),
                 "review_pauses": sorted(self._pauses(job), key=STAGES.index),
-                "current_stage": job.current_stage, "stage_label": STAGE_LABELS[job.current_stage],
+                "current_stage": job.current_stage,
+                "stage_label": "기사 분석·뉴스 선정" if job.current_stage == "select" and context.get("unified")
+                else STAGE_LABELS[job.current_stage],
                 "progress": job.progress, "message": job.message, "error_code": job.error_code,
                 "retryable": job.retryable, "cancel_requested": job.cancel_requested,
                 "solution": _SOLUTIONS.get(
@@ -548,6 +589,17 @@ class AutopilotCoordinator:
                     for job in jobs:
                         job.status, job.active_slot, job.error_code = "interrupted", None, "interrupted"
                         job.message, job.retryable = _ERROR_MESSAGES["interrupted"], True
+                        if job.ai_mode != "offline" and job.current_stage in {"select", "script"}:
+                            context = self._context(session, job)
+                            for key in ("analysis_run_id", "script_run_id"):
+                                identifier = context.get(key)
+                                run = session.get(IntelligenceRun, identifier) if identifier else None
+                                if identifier and (run is None or run.status != "success"):
+                                    job.error_code = ("ai_request_stopped" if run and run.status == "failed"
+                                                      else "outcome_unknown")
+                                    job.status, job.retryable = "failed", False
+                                    job.message = _ERROR_MESSAGES[job.error_code]
+                                    break
                         job.updated_at, job.finished_at, job.revision = utcnow(), utcnow(), job.revision + 1
                         self._event(session, job, "interrupted", job.message)
                         session.execute(update(AutopilotAttempt).where(
