@@ -142,3 +142,15 @@ Phase 5A는 `AutopilotCoordinator`(SQLite 단일 활성 슬롯·OS 파일 잠금
 ## Phase 5D (AI 고품질 제작, 선택)
 
 Phase 5D는 FFmpeg 카드 제작을 기본으로 유지한 채 영상 스튜디오에 선택 모드 `/video/ai`를 더했다. `video/ai/` 패키지의 공급사 독립 `VideoProvider` Protocol(`HiggsfieldProvider`, 테스트 전용 `FakeVideoProvider`)이 사용자가 'AI 생성'으로 고른 장면만 제출·폴링·안전 다운로드(`download.py`, `rss_adapter`의 URL 검사·DNS 고정 연결 재사용)·ffprobe 검증(`clips.py`)하고, `AIVideoCoordinator`(`service.py`)가 계획·장면 상태 기계, 장면 시도별 비용 예약(`video_ai_usage`), 파일 잠금 작업자, 재시작 복구(제출 중 → 결과 불명, 재전송 없음), 관계 검토와 최종 합성 승인을 맡는다. 최종 합성은 `VideoCoordinator.start_ai` → 기존 `_start/_run` 경로이며 엔진에는 `overlay()`(카드와 같은 문구 레이어 + 끌 수 없는 "AI 생성 장면 · 실제 현장 영상 아님" 표시)와 상수 필터의 `clip_command()`만 더했다. 비용·승인·키는 외부 AI 대본 게이트와 같은 형태지만 설정 키(`video_ai_*`)·사용 기록 표·DPAPI 파일(`video-ai-key.dpapi`)을 분리했다. Additive migration `0010`이 `video_ai_models`·`ai_video_plans`·`ai_video_scenes`·`video_ai_usage`와 `video_projects.ai_plan_id`·`video_scenes.clip_name/ai_generated`를 추가한다. 자동 제작은 카드 영상만 만든다. 상세: [docs/design/phase5d_ai_video_implementation.md](design/phase5d_ai_video_implementation.md) (5C.1 초안: [phase5d_higgsfield_video_provider.md](design/phase5d_higgsfield_video_provider.md)). 공급사 사실: [phase5d_higgsfield_api_verification.md](reports/phase5d_higgsfield_api_verification.md).
+
+## Phase 5E (로컬 예약 제작)
+
+`Scheduler`는 FastAPI lifespan에서 5초 간격으로 실행하며, `production_schedules`와 `scheduled_runs`를 additive migration `0012`에 저장한다. 기존 `0001`–`0011`은 변경하지 않는다. KST 고정 오프셋의 미래 wall-clock 예약을 UTC aware timestamp로 계산한다. 일광절약시간이 없는 KST만 지원하고 시스템 시간대는 사용하지 않는다.
+
+예약 수정·dispatch·직접 retry/cancel은 프로세스 내 잠금과 `scheduler.lock`으로 직렬화한다. 짧은 SQLite `BEGIN IMMEDIATE`에서 occurrence와 다음 미래 예약을 함께 commit한다. `(schedule_id, scheduled_for)` unique + UUID5 occurrence/job ID + 기존 Autopilot의 active slot/file lock으로 중복을 차단한다. 외부 작업 중 DB writer lock은 잡지 않는다. 예약 commit과 Autopilot commit 사이의 crash gap은 같은 job ID로 복구하며, job이 없는 dispatching은 interrupted로 남기고 자동 재생성하지 않는다.
+
+실행은 기존 `AutopilotCoordinator.start(request_id=..., ai_mode='offline')`를 재사용한다. `PipelineBackend`, 수집/중복 제거, intelligence, video/TTS/FFmpeg, 결과 검증과 PublishingService를 다시 만들지 않는다. 예약 연결이 있는 context는 유료 AI mode를 거부하고, 실제 뉴스의 script/validate 사람 검토를 그대로 유지한다. 시작 당시의 제작 옵션은 occurrence에 복사한다. 기존 기사 claim·산출물·안전 retry/recover 규칙도 유지한다. scheduler는 AI video provider, OAuth, 실제 Publisher를 호출하는 코드를 갖지 않는다.
+
+GET `/schedules`는 읽기 전용, POST는 기존 CSRF/Origin middleware 아래에서 CAS revision을 검증한다. 활성화는 별도 동의 입력이 있어야 한다. 브라우저는 5초 간격으로 읽기 전용 상태를 갱신하고, 폼 입력·동의 중에는 교체하지 않는다. 실행/성공 판정은 서버와 기존 작업 상태만 따른다. 예약 off/pause는 현재 작업을 취소하지 않으며 occurrence cancel은 별도다. DB 복사 도구는 복사본의 활성 예약을 일시 중지한다.
+
+정책과 Windows 작업 스케줄러 조사: [예약 사용 안내](scheduling.md).

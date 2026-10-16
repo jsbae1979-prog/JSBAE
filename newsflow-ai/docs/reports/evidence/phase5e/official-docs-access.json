@@ -1,0 +1,20 @@
+[
+  {
+    "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/security-contexts-for-running-tasks",
+    "status": 200,
+    "checked_kst": "2026-10-16",
+    "sha256": "ee9b76d9668ffbca598a0cd5de0287c8ffe9aadbe2ea4f40a3e1c48bf08c6ffa"
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/windows/win32/taskschd/tasksettings-startwhenavailable",
+    "status": 200,
+    "checked_kst": "2026-10-16",
+    "sha256": "385ba53dbfb9ce2034998988bf0c767f3c88831398dac8da26e85cd246406e9f"
+  },
+  {
+    "url": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/schtasks-create",
+    "status": 200,
+    "checked_kst": "2026-10-16",
+    "sha256": "72a06717bf2a33540262607565a355114be17aa65cd63470d12225e4ff07bfbe"
+  }
+]

@@ -35,3 +35,12 @@ small .warn,b.warn{color:#a04b00}
 .ai-clip-preview{display:block;width:100%;max-width:270px;aspect-ratio:9/16;background:#000;border-radius:10px;margin:8px 0}
 .inline-action{display:inline-block;margin:0 8px 8px 0;vertical-align:top}
 .scene-source{font-weight:600}
+
+/* Local scheduling shares the Easy UI's spacing, contrast and responsive navigation. */
+.schedule-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start;margin-top:24px}
+.schedule-columns>.easy-panel{padding:24px}.schedule-card{padding:24px;margin-bottom:18px;overflow-wrap:anywhere}
+.schedule-time{font-size:30px;font-weight:700;margin:14px 0}.schedule-time small{font-size:14px;font-weight:400}
+.weekday-choices{display:flex;flex-wrap:wrap;gap:12px}.weekday-choices label,.schedule-consent{display:flex!important;align-items:flex-start;gap:8px}
+.weekday-choices input,.schedule-consent input{width:auto!important;flex-shrink:0}.schedule-card details{margin-top:16px}
+.schedule-card form{margin-top:12px}.schedule-card progress{width:100%}.schedule-page input,.schedule-page select{min-width:0;max-width:100%}
+@media(max-width:1100px){.schedule-columns{grid-template-columns:minmax(0,1fr)}}
