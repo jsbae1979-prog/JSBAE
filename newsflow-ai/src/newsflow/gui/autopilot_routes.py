@@ -46,6 +46,7 @@ from newsflow.intelligence.settings import (
 from newsflow.publishing.service import PublishingError, PublishingService, hash_file
 from newsflow.video.tts import TTSError
 
+from .api_settings_routes import connection_status
 from .production_context import (
     ACQUISITION_LABELS,
     CATEGORY_LABELS,
@@ -71,6 +72,7 @@ CHOICES = {
 }
 DEFAULTS = {"mode": "easy", "source": "feeds", "duration": "30", "platform": "youtube", "ai": "offline"}
 AI_LABELS = {"offline": "기본 대본 (외부 호출 없음)", "openai": "외부 AI 대본 (OpenAI · 유료)",
+             "claude_api": "Claude API · 별도 API 과금",
              "claude_code": "Claude Code · 본인 구독", "codex": "Codex · 본인 구독"}
 GUIDES = {"provider", "voice", "approval", "sources", "model", "video", "consent", "search"}
 DESCRIPTIONS = {
@@ -120,6 +122,9 @@ def readiness(request: Request) -> dict[str, Any]:
     return {
         "rss": {"enabled": len(enabled), "tested": passed, "ready": bool(enabled)},
         "ai": ai,
+        "apis": {provider: {"analysis": connection_status(request, provider, "analysis"),
+                            "search": connection_status(request, provider, "search")}
+                 for provider in ("openai", "claude_api")},
         "voice": {"name": voice, "silent": voice == "offline-silence", "installed": installed, **speech_values},
     }
 
@@ -143,7 +148,7 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
     elif not ready["rss"]["ready"]:
         rss_supported = False
         rss_notice = "사용 중인 RSS 출처가 없습니다. 설정에서 출처를 등록한 뒤 RSS 제작을 시작하세요."
-    elif provider == "openai" and not ready["ai"]["ready"]:
+    elif provider in ready["apis"] and not ready["apis"][provider]["analysis"]["ready"]:
         rss_supported = False
         rss_notice = "등록 뉴스 자동 제작에 필요한 AI 연결·비용 승인을 설정에서 확인해 주세요."
     else:
@@ -152,6 +157,8 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
     cached = getattr(request.app.state, "claude_status" if provider == "claude_code" else "codex_status", {})
     auth_checked = provider == "offline" or (provider in {"claude_code", "codex"}
                                              and cached.get("state") == "ready" and cached.get("ready") is True)
+    if provider in ready["apis"]:
+        auth_checked = ready["apis"][provider]["analysis"]["authentication_verified"]
     policy_states = {
         "rss": {"supported": rss_supported,
                 "auth_checked": auth_checked,
@@ -166,6 +173,16 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
             "detail": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
             "notice": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
         }
+        if provider in ready["apis"]:
+            gate = ready["apis"][provider]["search"]
+            usable = (gate["ready"] and voice["installed"] and voice["name"] != "elevenlabs"
+                      and not manual_video and (policy != "hybrid" or ready["rss"]["ready"]))
+            detail = " ".join(gate["reasons"]) if not gate["ready"] else (
+                "검색 → 같은 API 분석·대본 → 사용자 검토. 원문 사실 검증은 별도입니다."
+                if usable else "선택한 음성·영상 또는 RSS 보완 출처를 확인하세요.")
+            policy_states[policy].update(supported=usable, auth_checked=gate["authentication_verified"],
+                title="API 뉴스 검색 실행 조건 확인됨" if usable else "AI 웹 뉴스 조사 BLOCKED",
+                detail=detail, notice=detail + " RSS·다른 Provider로 자동 전환하지 않습니다.")
     current_policy = policy_states[acquisition["acquisition_policy"]]
     if voice["name"] == "elevenlabs":
         voice_label = "외부 한국어 음성 · 제작별 동의 필요"
@@ -193,10 +210,10 @@ def _ai_usage(request: Request, snapshot: dict[str, Any], article: NewsArticle |
         run_ids = {
             int(reference) for reference in session.scalars(select(AutopilotArtifact.reference).where(
                 AutopilotArtifact.job_id == snapshot["id"],
-                AutopilotArtifact.kind.in_(("analysis_run_id", "script_run_id")),
+                AutopilotArtifact.kind.in_(("search_run_id", "analysis_run_id", "script_run_id")),
             ))
         }
-        run_ids |= {snapshot[key] for key in ("analysis_run_id", "script_run_id") if snapshot.get(key)}
+        run_ids |= {snapshot[key] for key in ("search_run_id", "analysis_run_id", "script_run_id") if snapshot.get(key)}
         rows = (
             session.scalars(select(AIUsage).where(AIUsage.run_id.in_(run_ids)).order_by(AIUsage.id)).all()
             if run_ids else []
@@ -210,7 +227,7 @@ def _ai_usage(request: Request, snapshot: dict[str, Any], article: NewsArticle |
                 "notice": "응답에서 받은 로컬 사용량 기록 · 공급사 계정 잔여량·실제 청구량과 다를 수 있습니다.",
                 "stages": [{"kind": kind, "calls": sum(row.kind == kind for row in rows),
                             "total": sum(row.total_tokens for row in rows if row.kind == kind)}
-                           for kind in ("analysis", "script")],
+                           for kind in ("search", "analysis", "script")],
             }
     if article is not None and snapshot.get("ai_mode") == "openai" and "script" not in snapshot.get("stage_results", {}):
         try:
@@ -353,11 +370,17 @@ def _guide_context(request: Request, guide: str, flow: str | None) -> dict[str, 
             NewsSource.enabled, NewsSource.url != SAMPLE_URL,
         ))
     ready = readiness(request)
+    api_gate = None
+    if production_flow and production_flow["initial_provider"] in ready["apis"]:
+        capability = "analysis" if production_flow.get("acquisition_policy") == "rss" else "search"
+        api_gate = ready["apis"][production_flow["initial_provider"]][capability]
+        ready = {**ready, "ai": {**ready["ai"], "reasons": api_gate["reasons"]}}
     return {
         "defaults": _defaults(request), "enabled_sources": enabled, "ready": ready,
         "production": production_summary(request, ready), "guide": guide if guide in GUIDES else "",
         "production_flow": production_flow, "manual_url": "/ai?" + context_query(production_flow),
         "production_json": context_json(production_flow),
+        "api_gate": api_gate,
         "script_output_limit": max_tokens_for(production_flow["initial_duration"] if production_flow else 30),
         "acquisition_labels": ACQUISITION_LABELS, "category_labels": CATEGORY_LABELS, "period_labels": PERIOD_LABELS,
     }
@@ -415,11 +438,12 @@ def _start_production(request: Request, flow: dict, *, external_consent: bool, w
     if flow.get("initial_video") == "higgsfield":
         return guide_to("video")
     if source == "feeds":
-        if flow.get("acquisition_policy", DEFAULT_ACQUISITION_POLICY) != "rss":
+        policy = flow.get("acquisition_policy", DEFAULT_ACQUISITION_POLICY)
+        if policy != "rss" and (provider not in ready["apis"] or not ready["apis"][provider]["search"]["ready"]):
             return guide_to("search")
-        if not ready["rss"]["ready"]:
+        if policy in {"rss", "hybrid"} and not ready["rss"]["ready"]:
             return guide_to("sources")
-        if provider == "openai" and not ready["ai"]["ready"]:
+        if provider in ready["apis"] and not ready["apis"][provider]["analysis"]["ready"]:
             return guide_to("approval")
     # An external voice needs the existing Video Studio per-render consent flow.
     # A missing selected voice never becomes silent or switches providers.
@@ -508,12 +532,13 @@ def job_detail_context(request: Request, job_id: str) -> dict[str, Any]:
         for key in STAGES
     ]
     if snapshot.get("unified"):
-        stages[1].update(label="기사 분석·뉴스 선정", description="수집한 RSS 자료를 비교하고 대본을 만들 뉴스를 고릅니다.")
+        stages[1].update(label="기사 분석·뉴스 선정", description="확보한 기사 자료를 비교하고 대본을 만들 뉴스를 고릅니다.")
     with request.app.state.sessions() as session:
         draft = session.get(ContentDraft, snapshot["content_draft_id"]) if snapshot.get("content_draft_id") else None
         video = session.get(RenderJob, snapshot["render_job_id"]) if snapshot.get("render_job_id") else None
         article = session.get(NewsArticle, snapshot["article_id"]) if snapshot.get("article_id") else None
         analysis = session.get(IntelligenceRun, snapshot["analysis_run_id"]) if snapshot.get("analysis_run_id") else None
+        search = session.get(IntelligenceRun, snapshot["search_run_id"]) if snapshot.get("search_run_id") else None
         output = _media_path(request, video)
         ai_estimate, ai_actual = _ai_usage(request, snapshot, article)
         plan = None
@@ -531,6 +556,7 @@ def job_detail_context(request: Request, job_id: str) -> dict[str, Any]:
             "audio": (video.metadata_json or {}).get("audio") if video else None,
             "ai_estimate": ai_estimate, "ai_actual": ai_actual,
             "analysis": analysis, "analysis_sources": (analysis.evidence or {}).get("articles", []) if analysis else [],
+            "search": search,
         }
 
 

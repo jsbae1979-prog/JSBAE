@@ -23,7 +23,7 @@ from newsflow.db.models import (
     utcnow,
 )
 
-from .collector import Collector
+from .collector import CollectedArticle, Collector
 from .dedup import canonical_url, similar_title
 from .ranking import classify, rank
 from .rss_adapter import FeedError
@@ -77,6 +77,52 @@ class NewsService:
         self.sessions = sessions
         self.collector = collector
 
+    @staticmethod
+    def store_articles(session: Session, source_id: int, articles: list[CollectedArticle],
+                       *, rss_metadata: bool = False) -> dict:
+        """Shared RSS/search dedup boundary. Inputs must already pass their source policy.
+
+        Search imports and their durable request result use one transaction. Existing
+        articles, dates and summaries are never overwritten by an AI response.
+        """
+        existing = list(session.scalars(select(NewsArticle)))
+        identifiers, added, duplicates = [], 0, 0
+        for item in articles:
+            canonical = canonical_url(item.url)
+            article = next((a for a in existing if a.canonical_url == canonical), None)
+            if article is None:
+                article = next((a for a in existing if similar_title(
+                    a.title, item.title, a.published_at, item.published_at,
+                )), None)
+            if article is None:
+                article = NewsArticle(
+                    title=item.title, url=item.url, canonical_url=canonical, source_id=source_id,
+                    publisher=item.publisher, summary=item.summary, published_at=item.published_at,
+                    category=classify(item.title + " " + item.summary),
+                )
+                session.add(article)
+                session.flush()
+                existing.append(article)
+                added += 1
+            else:
+                duplicates += 1
+                # An explicitly collected RSS item may complete unknown metadata on a
+                # new API-search row. Existing RSS records and known dates are untouched.
+                origin = session.get(NewsSource, article.source_id)
+                if (rss_metadata and article.published_at is None and item.published_at is not None
+                        and origin and origin.url in {
+                            "https://api.openai.com/v1/responses", "https://api.anthropic.com/v1/messages",
+                        } and article.canonical_url == canonical):
+                    article.published_at, article.publisher = item.published_at, item.publisher
+            if not session.scalar(select(ArticleMention).where(
+                ArticleMention.article_id == article.id, ArticleMention.url == item.url,
+            )):
+                session.add(ArticleMention(
+                    article_id=article.id, source_id=source_id, publisher=item.publisher, url=item.url,
+                ))
+            identifiers.append(article.id)
+        return {"article_ids": list(dict.fromkeys(identifiers)), "added": added, "duplicates": duplicates}
+
     def collect(self, run_id: int, source_ids: list[int] | None = None) -> None:
         with self.sessions() as session:
             query = select(NewsSource).order_by(NewsSource.id)
@@ -90,49 +136,8 @@ class NewsService:
                 articles = self.collector.collect(url, name, timeout_value)
                 source_added = source_duplicates = 0
                 with self.sessions.begin() as session:
-                    existing = list(session.scalars(select(NewsArticle)))
-                    for item in articles:
-                        canonical = canonical_url(item.url)
-                        article = next((a for a in existing if a.canonical_url == canonical), None)
-                        if article is None:
-                            article = next(
-                                (
-                                    a
-                                    for a in existing
-                                    if similar_title(a.title, item.title, a.published_at, item.published_at)
-                                ),
-                                None,
-                            )
-                        if article is None:
-                            article = NewsArticle(
-                                title=item.title,
-                                url=item.url,
-                                canonical_url=canonical,
-                                source_id=source_id,
-                                publisher=item.publisher,
-                                summary=item.summary,
-                                published_at=item.published_at,
-                                category=classify(item.title + " " + item.summary),
-                            )
-                            session.add(article)
-                            session.flush()
-                            existing.append(article)
-                            source_added += 1
-                        else:
-                            source_duplicates += 1
-                        if not session.scalar(
-                            select(ArticleMention).where(
-                                ArticleMention.article_id == article.id, ArticleMention.url == item.url
-                            )
-                        ):
-                            session.add(
-                                ArticleMention(
-                                    article_id=article.id,
-                                    source_id=source_id,
-                                    publisher=item.publisher,
-                                    url=item.url,
-                                )
-                            )
+                    stored = self.store_articles(session, source_id, articles, rss_metadata=True)
+                    source_added, source_duplicates = stored["added"], stored["duplicates"]
                     session.add(
                         AuditLog(
                             run_id=run_id,

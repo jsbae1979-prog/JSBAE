@@ -11,7 +11,7 @@ from pathlib import Path
 from threading import Event, Thread
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from newsflow.db.models import (
@@ -127,9 +127,9 @@ class PipelineBackend:
             raise BackendError(messages[stage]) from None
 
     def can_retry(self, stage: str, context: dict[str, Any]) -> bool:
-        if stage in {"select", "script"} and context.get("ai_mode", "offline") != "offline":
+        if stage in {"collect", "select", "script"} and context.get("ai_mode", "offline") != "offline":
             with self.sessions() as session:
-                for key in ("analysis_run_id", "script_run_id"):
+                for key in ("search_run_id", "analysis_run_id", "script_run_id"):
                     identifier = context.get(key)
                     if identifier:
                         run = session.get(IntelligenceRun, identifier)
@@ -183,9 +183,60 @@ class PipelineBackend:
     def _collect(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         if ctx.get("acquisition_policy") is not None:
             try:
-                require_acquisition(ctx.get("ai_mode", "offline"), ctx["acquisition_policy"])
+                require_acquisition(ctx.get("ai_mode", "offline"), ctx["acquisition_policy"],
+                                    api_ready=(self.acquisition_ready(ctx.get("ai_mode", "offline"))
+                                               if ctx["acquisition_policy"] != "rss" else False))
             except ValueError:
                 raise BackendError(code="news_search_blocked", retryable=False) from None
+        if ctx.get("acquisition_policy") in {"ai_web", "hybrid"}:
+            search = self._search_collect(ctx, cancel, progress, save)
+            if ctx["acquisition_policy"] == "ai_web":
+                return search
+            # Explicit hybrid policy only. Search failures never fall through to RSS.
+            rss = self._rss_collect(ctx, cancel, progress, save)
+            return {**rss, **search, "news_method": "ai_web+rss", "rss_collection_run_id": rss["collection_run_id"],
+                    "collection_run_id": rss["collection_run_id"],
+                    "source_ids": list(dict.fromkeys([*search["source_ids"], *rss["source_ids"]])),
+                    "rss_source_ids": rss["source_ids"],
+                    "added": rss["added"] + search["added"], "duplicates": rss["duplicates"] + search["duplicates"]}
+        return self._rss_collect(ctx, cancel, progress, save)
+
+    def acquisition_ready(self, mode: str) -> bool:
+        if mode not in {"openai", "claude_api"}:
+            return False
+        return self.intelligence.api_readiness(mode, "search").get("ready") is True
+
+    def _search_collect(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        from newsflow.intelligence.api_search import SearchRequest
+
+        mode = self._ai_mode(ctx)
+        identifier = ctx.get("search_run_id")
+        if identifier is None:
+            try:
+                identifier = self.intelligence.search_news(
+                    mode, SearchRequest(category=ctx["category"], period=ctx["period"], count=5),
+                    consent=ctx.get("external_consent") is True, options=self._options(ctx, 3000),
+                    on_run=self._remember(ctx, "search_run_id", save), cancel=cancel,
+                )
+            except IntelligenceError as exc:
+                raise self._ai_failure(exc, external=True) from None
+        self._cancel(cancel)
+        with self.sessions() as session:
+            run = session.get(IntelligenceRun, identifier)
+            if run is None or run.kind != "search" or run.provider != mode or run.status != "success":
+                raise BackendError(code="ai_request_stopped", retryable=False,
+                                   outcome_unknown=bool(run and run.status in {"running", "interrupted"}))
+            result = run.result
+            progress(100, "검색 도구 출처를 확보했어요. 발행일·원문 사실은 별도 확인이 필요해요.")
+            return {"search_run_id": identifier, "source_ids": result["source_ids"],
+                    "collection_status": "success",
+                    "search_article_ids": result["article_ids"], "search_provider": mode,
+                    "added": result["added"], "duplicates": result["duplicates"], "synthetic_news": False,
+                    "news_method": "ai_web", "researched_at": result["searched_at"],
+                    "web_search_performed": result["web_search_performed"],
+                    "simulated_search": result["simulated"], "facts_verified": False}
+
+    def _rss_collect(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         source_ids = list(ctx.get("source_ids") or [])
         coordinator = self.sample_collection if ctx["source"] == "sample" else self.collection
         identifier = ctx.get("collection_run_id")
@@ -259,6 +310,13 @@ class PipelineBackend:
     def _select(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         source_ids = ctx.get("source_ids", [])
         conditions = []
+        if ctx.get("search_run_id"):
+            scope = NewsArticle.id.in_(ctx.get("search_article_ids", []))
+            if ctx.get("acquisition_policy") == "hybrid":
+                scope = or_(scope, NewsArticle.id.in_(select(ArticleMention.article_id).where(
+                    ArticleMention.source_id.in_(ctx.get("rss_source_ids", [])),
+                )))
+            conditions.append(scope)
         if ctx.get("unified") and ctx["source"] != "sample":
             requested = datetime.fromisoformat(ctx["requested_at"])
             if requested.tzinfo is None:
@@ -366,6 +424,9 @@ class PipelineBackend:
             gate = self.ai_gate()
             if not gate.get("ready"):
                 raise BackendError("외부 AI 준비 상태를 확인하세요.", code="ai_not_ready")
+        if ((mode == "claude_api" or mode == "openai" and self.intelligence.api_managed)
+                and not self.intelligence.api_readiness(mode, "analysis").get("ready")):
+            raise BackendError("API 사용 승인·계정·비용 한도 확인이 필요합니다.", code="ai_not_ready", retryable=False)
         return mode
 
     @staticmethod
@@ -383,6 +444,11 @@ class PipelineBackend:
         if mode == "offline":
             return None
         settings = read_settings(self.sessions)
+        if mode == "claude_api":
+            from newsflow.intelligence.api_settings import read_api_settings
+
+            api = read_api_settings(self.sessions, mode)
+            return Options(model=ctx.get("ai_model") or api.model, max_tokens=maximum, timeout=60)
         return Options(model=ctx.get("ai_model") or settings.model, max_tokens=maximum,
                        timeout=60 if mode in {"claude_code", "codex"} else settings.timeout)
 
@@ -400,14 +466,16 @@ class PipelineBackend:
                                        "initial_voice": ctx.get("voice") or "silent", "initial_video": "off",
                                    }, "external_consent": ctx.get("external_consent", False),
                                    "consented_at": ctx.get("consented_at"),
-                                   "news_method": "synthetic_rss" if ctx["source"] == "sample" else "rss"}
+                                   "news_method": ("synthetic_rss" if ctx["source"] == "sample" else
+                                                   "ai_web+rss" if ctx.get("acquisition_policy") == "hybrid" else
+                                                   "ai_web" if ctx.get("acquisition_policy") == "ai_web" else "rss")}
         return remember
 
     @contextmanager
     def _ai_service(self, mode: str, cancel: Event):
         """Use operation-owned CLI adapters; cancellation must never stop another Studio job."""
         service = self.intelligence
-        provider = service.provider
+        provider = service.api_providers.get(mode) or service.provider
         if provider is None and mode != "offline":
             if mode == "claude_code":
                 from newsflow.intelligence.claude_code import ClaudeCodeProvider
@@ -417,11 +485,17 @@ class PipelineBackend:
                 from newsflow.intelligence.codex import CodexProvider
 
                 provider = CodexProvider()
+            elif mode == "claude_api":
+                provider = service._provider(mode)
             else:
                 from newsflow.intelligence.provider import OpenAIProvider
 
                 provider = OpenAIProvider(service._key, allow_retry=False)
-            service = IntelligenceService(self.sessions, provider, key_store=service.key_store, speech=service.speech)
+            service = IntelligenceService(
+                self.sessions, provider, key_store=service.key_store, speech=service.speech,
+                api_key_stores=service.api_key_stores if service.api_managed else None,
+                api_providers=service.api_providers, api_budget=service.api_budget,
+            )
         done = Event()
 
         def monitor():

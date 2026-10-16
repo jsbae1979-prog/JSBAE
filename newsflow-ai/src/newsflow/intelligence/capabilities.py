@@ -15,13 +15,13 @@ NEWS_CATEGORIES = {"all": "전체", "politics": "정치", "economy": "경제", "
                    "it": "IT·과학", "world": "국제"}
 NEWS_PERIODS = {"today": "오늘", "24h": "최근 24시간", "7d": "최근 7일"}
 _LABELS = {"offline": "Offline", "claude_code": "Claude Code", "codex": "Codex",
-           "openai": "OpenAI API", "claude_api": "Claude API · 미도입"}
+           "openai": "OpenAI API", "claude_api": "Claude API · 별도 API 키·과금"}
 _SEARCH_REASONS = {
     "offline": "웹 검색 미지원 · 등록 RSS만 사용합니다.",
     "claude_code": "웹 검색 미검증 · 기존 최소 권한 분석·대본 어댑터는 웹 도구를 허용하지 않습니다.",
     "codex": "웹 검색 BLOCKED · RSS 분석·대본만 지원하며 검색을 재시도하지 않습니다.",
     "openai": "Responses 웹 검색은 별도 API 기능입니다. 검색 승인·한도·계정/모델 검증 전 차단합니다.",
-    "claude_api": "Claude Code와 별도 API 키·과금입니다. 미도입이며 검색 승인·계정 검증 전 차단합니다.",
+    "claude_api": "Claude Code와 별도 API 키·과금입니다. 검색 승인·비용 한도·계정/모델 검증 전 차단합니다.",
 }
 
 
@@ -29,18 +29,18 @@ def provider_capabilities(provider: str) -> dict:
     """Return a fresh contract; ``available=None`` requires runtime authentication/gates."""
     if provider not in _LABELS:
         raise ValueError("지원하는 AI를 선택하세요.")
-    implemented = provider != "claude_api"
+    api = provider in {"openai", "claude_api"}
     local = provider == "offline"
     return {
         "provider": provider, "label": _LABELS[provider],
         "features": {
-            NEWS_SEARCH: {"implemented": False, "available": False,
+            NEWS_SEARCH: {"implemented": api, "available": False,
                           "verification": "NOT VERIFIED" if provider == "claude_code" else "BLOCKED",
                           "reason": _SEARCH_REASONS[provider]},
-            NEWS_ANALYSIS: {"implemented": implemented, "available": True if local else None,
+            NEWS_ANALYSIS: {"implemented": True, "available": True if local else None,
                             "verification": "LOCAL" if local else "실제 요청 성공과 별도",
                             "reason": "RSS 제목·요약 비교 · 원문 전체 확인 및 사실 검증을 의미하지 않습니다."},
-            SCRIPT_GENERATION: {"implemented": implemented, "available": True if local else None,
+            SCRIPT_GENERATION: {"implemented": True, "available": True if local else None,
                                 "verification": "LOCAL" if local else "실제 요청 성공과 별도",
                                 "reason": "30·45·60초 검토용 대본 · 대본/출처/권리 검토 필요"},
         },
@@ -51,10 +51,10 @@ def provider_capabilities(provider: str) -> dict:
     }
 
 
-def require_acquisition(provider: str, policy: str) -> None:
+def require_acquisition(provider: str, policy: str, *, api_ready: bool = False) -> None:
     """Fail closed; never substitute RSS for unapproved/unverified web search."""
     contract = provider_capabilities(provider)
     if policy not in ACQUISITION_POLICIES:
         raise ValueError("뉴스 확보 방식을 직접 선택해 저장하세요.")
-    if policy != "rss" or not contract["features"][NEWS_ANALYSIS]["implemented"]:
+    if policy != "rss" and not (provider in {"openai", "claude_api"} and api_ready is True):
         raise ValueError(contract["features"][NEWS_SEARCH]["reason"])

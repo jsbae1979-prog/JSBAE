@@ -25,13 +25,13 @@ from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 def test_capabilities_do_not_claim_live_search_or_authentication(provider):
     contract = provider_capabilities(provider)
     assert contract["features"][NEWS_SEARCH]["available"] is False
-    assert contract["features"][NEWS_ANALYSIS]["implemented"] is (provider != "claude_api")
+    assert contract["features"][NEWS_ANALYSIS]["implemented"] is True
+    assert contract["features"][NEWS_SEARCH]["implemented"] is (provider in {"openai", "claude_api"})
     assert contract["features"][SCRIPT_GENERATION]["available"] is (True if provider == "offline" else None)
     for policy in ("ai_web", "hybrid", "unknown"):
         with pytest.raises(ValueError):
             require_acquisition(provider, policy)
-    if provider != "claude_api":
-        require_acquisition(provider, "rss")
+    require_acquisition(provider, "rss")
 
 
 @pytest.fixture

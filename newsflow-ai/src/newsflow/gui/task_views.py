@@ -8,7 +8,8 @@ from newsflow.db.models import AudioTrack, ContentDraft, IntelligenceRun, NewsAr
 
 from .production_context import context_for_run
 
-PROVIDERS = {"offline": "Offline", "openai": "OpenAI API", "claude_code": "Claude Code", "codex": "Codex"}
+PROVIDERS = {"offline": "Offline", "openai": "OpenAI API", "claude_code": "Claude Code", "codex": "Codex",
+             "claude_api": "Claude API"}
 VOICES = {"offline": "무음", "windows": "Windows SAPI", "supertonic": "Supertonic 3", "elevenlabs": "ElevenLabs"}
 
 
@@ -35,7 +36,8 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
             drafts[draft.id] = draft
         runs = {r.id: r for r in session.scalars(select(IntelligenceRun).order_by(IntelligenceRun.id.desc()).limit(200))}
         referenced = {draft.run_id for draft in drafts.values()}
-        referenced.update(item[key] for item in snapshots for key in ("analysis_run_id", "script_run_id") if item.get(key))
+        referenced.update(item[key] for item in snapshots for key in ("search_run_id", "analysis_run_id", "script_run_id")
+                          if item.get(key))
         for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.id.in_(referenced))):
             runs[run.id] = run
         articles = {a.id: a for a in session.scalars(select(NewsArticle).where(NewsArticle.id.in_(
@@ -56,10 +58,11 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
             draft = drafts.get(item.get("content_draft_id"))
             article = articles.get(item.get("article_id"))
             analysis = runs.get(item.get("analysis_run_id"))
+            search = runs.get(item.get("search_run_id"))
             script = runs.get(item.get("script_run_id") or (draft.run_id if draft else None))
             render = render_by_id.get(item.get("render_job_id"))
             used_drafts.add(draft.id if draft else None)
-            used_runs.update(r.id for r in (analysis, script) if r)
+            used_runs.update(r.id for r in (search, analysis, script) if r)
             used_renders.add(render.id if render else None)
             status = item["status"]
             stage = item["current_stage"]
@@ -90,7 +93,10 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "workspace_href": f'/?task={item["id"]}#workspace-detail',
                 "news_method": ("체험 뉴스 · 로컬" if item["source"] == "sample" else
                                 "RSS · 웹 검색 아님" if item.get("acquisition_policy", "rss") == "rss" else
-                                "AI 웹 뉴스 조사 · 차단"),
+                                ("AI 웹 검색 + RSS 보완" if item.get("acquisition_policy") == "hybrid" else "AI 웹 검색")
+                                + (" · Fake 검증" if search and search.result and search.result.get("simulated") else
+                                   " · 도구 결과 확인" if search and search.status == "success" else " · 완료 미확인")),
+                "search_engine": run_label(search, item["ai_mode"]),
                 "analysis_engine": run_label(analysis, item["ai_mode"]),
                 "script_engine": run_label(script, item["ai_mode"]),
                 "model": item.get("ai_model") or (script or analysis).options.get("model", "")

@@ -70,8 +70,8 @@ _ERROR_MESSAGES = {
     "ai_budget": "이번 달 AI 토큰 한도에 도달해 외부 AI를 호출하지 않았습니다. AI 설정에서 한도를 확인하세요.",
     "ai_consent": "외부 AI 사용 승인이 없어 호출하지 않았습니다. AI 설정에서 승인하세요.",
     "ai_request_stopped": "이전 AI 요청이 실패했거나 결과가 불명확합니다. 자동 재전송하지 않습니다. 작업 이력을 확인하세요.",
-    "news_search_blocked": "이 AI의 웹 뉴스 검색은 검증되지 않았습니다. 설정에서 RSS 수집 정책을 직접 선택하세요.",
-    "no_eligible_articles": "선택한 분야·기간에 발행일과 출처가 확인되는 RSS 기사가 없습니다. 수집 정책을 확인하세요.",
+    "news_search_blocked": "웹 뉴스 검색의 사용 승인·계정·비용 조건이 확인되지 않았습니다. 다른 방식으로 자동 전환하지 않습니다.",
+    "no_eligible_articles": "선택한 분야·기간에 발행일과 출처가 확인되는 기사가 없습니다. 검색 요약의 날짜를 사실로 확정하지 않습니다.",
     "voice_unavailable": "선택한 한국어 음성을 이 PC에서 찾지 못했습니다. 음성 설정을 확인하거나 무음으로 제작하세요.",
     "speech_too_long": "음성이 영상 길이보다 깁니다. 대본을 줄이거나 영상 길이를 늘리세요.",
     "voice_failed": "음성을 만들지 못했습니다. 선택한 한국어 음성과 PowerShell 실행 상태를 확인하세요.",
@@ -198,17 +198,19 @@ class AutopilotCoordinator:
         if voice is not None and (not isinstance(voice, str) or not 0 < len(voice) <= 200 or "\x00" in voice):
             raise AutopilotError("음성을 다시 선택하세요.")
         request = {}
-        if acquisition_policy is not None or ai_mode in {"claude_code", "codex"}:
+        if acquisition_policy is not None or ai_mode in {"claude_code", "codex", "claude_api"}:
             from newsflow.intelligence.settings import SettingsError, studio_model
 
             try:
-                require_acquisition(ai_mode, acquisition_policy)
+                ready = getattr(self.backend, "acquisition_ready", lambda _: False)
+                require_acquisition(ai_mode, acquisition_policy,
+                                    api_ready=ready(ai_mode) if acquisition_policy != "rss" else False)
             except ValueError:
                 raise AutopilotError(_ERROR_MESSAGES["news_search_blocked"]) from None
             if category not in NEWS_CATEGORIES or period not in NEWS_PERIODS:
                 raise AutopilotError("뉴스 분야와 조사 기간을 다시 선택하세요.")
             if ai_mode != "offline" and external_consent is not True:
-                raise AutopilotError("이 작업의 기사 분석·대본 생성 두 요청에 대한 자료 전송과 계정 사용량 동의가 필요합니다.")
+                raise AutopilotError("이 작업의 검색·분석·대본 생성에 필요한 자료 전송과 사용량·비용 동의가 필요합니다.")
             try:
                 model = studio_model(ai_mode, ai_model)
             except (SettingsError, TypeError):
@@ -219,7 +221,9 @@ class AutopilotCoordinator:
                 "consented_at": utcnow().isoformat() if external_consent is True else None,
                 "requested_at": utcnow().isoformat(),
                 "analysis_provider": ai_mode, "script_provider": ai_mode,
-                "news_method": "synthetic_rss" if source == "sample" else "rss",
+                "news_method": ("synthetic_rss" if source == "sample" else "ai_web+rss" if acquisition_policy == "hybrid"
+                                else "ai_web" if acquisition_policy == "ai_web" else "rss"),
+                **({"search_provider": ai_mode} if acquisition_policy != "rss" else {}),
             }
         if request_id is not None:
             self._id(request_id)
@@ -367,7 +371,9 @@ class AutopilotCoordinator:
                     inspect(child)
         inspect(value)
         required_ids = {
-            "collect": ("collection_run_id",), "select": ("article_id",),
+            "collect": (("search_run_id",) if value.get("news_method") == "ai_web" else
+                        ("collection_run_id", "search_run_id") if value.get("news_method") == "ai_web+rss" else
+                        ("collection_run_id",)), "select": ("article_id",),
             "script": ("content_draft_id",), "render": ("render_job_id", "video_project_id"),
             "validate": (), "queue": ("publish_draft_id",),
         }
@@ -589,9 +595,9 @@ class AutopilotCoordinator:
                     for job in jobs:
                         job.status, job.active_slot, job.error_code = "interrupted", None, "interrupted"
                         job.message, job.retryable = _ERROR_MESSAGES["interrupted"], True
-                        if job.ai_mode != "offline" and job.current_stage in {"select", "script"}:
+                        if job.ai_mode != "offline" and job.current_stage in {"collect", "select", "script"}:
                             context = self._context(session, job)
-                            for key in ("analysis_run_id", "script_run_id"):
+                            for key in ("search_run_id", "analysis_run_id", "script_run_id"):
                                 identifier = context.get(key)
                                 run = session.get(IntelligenceRun, identifier) if identifier else None
                                 if identifier and (run is None or run.status != "success"):

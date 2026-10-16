@@ -140,6 +140,14 @@ class AIKeyStore:
             raise CredentialError("키 파일을 삭제하지 못했습니다. 데이터 폴더 권한을 확인하세요.") from None
 
 
+class AnthropicKeyStore(AIKeyStore):
+    """Anthropic API credentials are separate from OpenAI and Claude Code login."""
+
+    FILE = "anthropic-api-key.dpapi"
+    ENV = "NEWSFLOW_ANTHROPIC_API_KEY"
+    ENTROPY = b"NewsFlowAI:Step3:anthropic-api-key"
+
+
 class FakeCipher:
     """Deterministic reversible transform for tests; not a real cipher."""
 
