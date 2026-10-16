@@ -1,6 +1,6 @@
 # Claude 연결 초기 설정 및 배포 준비
 
-보고 기준: 2026-10-16 KST. 대상 Windows 11 / Python 3.12·3.14.
+보고 시각: 2026-10-16 20:30 KST. 대상 Windows 11 / Python 3.12·3.14.
 
 ## 구현·사용 순서
 
@@ -28,9 +28,9 @@
 - Fake: 미설치·구버전·미로그인·정상·다른 인증·오류·시간 초과, 동의·중복 창·취소·종료 후 재확인, 설정 재시작 보존·Provider 전환, CSRF/Origin·비밀정보 비노출·추론 미실행을 확인했다.
 - 첫 테스트에서 테스트 대역의 바인딩 오류를 수정했다. 샌드박스의 asyncio 로컬 소켓 대기 때문에 일반 사용자 실행으로 전환했으며 앱 보안 정책은 변경하지 않았다.
 - 실제 기존 `run.bat` 재시작, 내장 브라우저의 AI Studio 화면과 버튼 동작을 확인했다. 공식 CLI **2.1.301**, 상태 **로컬 실행 준비 완료**(20:23 KST). 실제 공식 로그인 창 재실행은 기존 로그인 보존을 위해 하지 않았다. 로그인 창 동작 자체는 Fake 검증이다.
-- 실제 화면에서 **Claude Code / sonnet** 기본값을 저장하고 다시 열었을 때 복원됨을 확인했다. 실행 동의는 미체크. 기존 초안 #2와 Video Studio 링크가 표시된다. Chrome 별도 검증·새 추론·음성 생성·사람 청취는 수행하지 않았다.
+- 실제 화면에서 **Claude Code / sonnet** 기본값을 저장하고 다시 열었을 때와 실제 run.bat 정상 종료·재실행 후 복원됨을 확인했다. 실행 동의는 미체크. 기존 초안 #2와 Video Studio 링크가 표시된다. Chrome 별도 검증·새 추론·음성 생성·사람 청취는 수행하지 않았다.
 - 기존 LocalCache 데이터 경로를 유지했다. 읽기 전용 SQLite 백업은 무시된 `validation-output`에만 저장했다. 기사 8·초안 2·영상 프로젝트 2·렌더 작업 2·AI 실행 4건 유지, 기존 MP4 2개 SHA-256 동일, SQLite quick_check `ok`. AI Studio 외 설정은 백업과 동일하다.
-- Python 3.12·3.14 변경 영역 Windows CI를 한 번 실행하도록 전용 workflow를 추가했다. 결과와 최종 Git 식별자는 아래 게시 기록에 기재한다. 전체 회귀는 실행하지 않는다.
+- Python 3.12·3.14 변경 영역 Windows CI를 한 번 실행했고 두 작업 모두 SUCCESS다. 전체 회귀는 실행하지 않았다.
 
 ## 변경 파일·게시 기록
 
@@ -40,4 +40,6 @@
 - Base: `feat/newsflow-phase5f3-voices` / `b570a29a37138080b787170e23a967be009c2596`.
 - 작업 브랜치: `feat/newsflow-claude-onboarding`. 기존 PR #18·#20, 연구 브랜치, main 변경 없음.
 - 인증·세션 파일, 사용자 DB, WAV/MP4, 모델 가중치·로컬 검증 캡처는 커밋하지 않는다.
-- PR·코드 SHA·Actions 결과: 게시 후 기록 예정.
+- 검증 코드 SHA: `b5f3b6adb57d49896e1f5b9c3062ba5d0f1575c1`. 이후 보고서만 갱신한다. 최종 제출 SHA는 PR head와 완료 응답에 기록한다.
+- 신규 [Draft PR #21](https://github.com/jsbae1979-prog/JSBAE/pull/21), base `feat/newsflow-phase5f3-voices`. 변경 파일 총 15개.
+- [Windows Actions #38893841532](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38893841532): SUCCESS (Python 3.12 / 3.14). 보고서만 갱신하는 push는 경로 필터로 CI를 반복하지 않는다.
