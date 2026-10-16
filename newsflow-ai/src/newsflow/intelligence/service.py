@@ -33,8 +33,18 @@ from .provider import (
 )
 from .schema import CAUTION, Analysis, Script
 
-MODES = ("offline", "openai", "claude_code")
+MODES = ("offline", "openai", "claude_code", "codex")
 _PROVIDER_MESSAGES = {
+    "codex_auth": "Codex의 공식 ChatGPT 로그인이 필요합니다. 연결 상태를 확인하세요.",
+    "codex_billing": "Codex가 ChatGPT 구독 인증이 아닙니다. API 과금으로 전환하지 않습니다.",
+    "codex_usage": "Codex 구독 사용 가능 여부가 확인되지 않아 실행을 차단했습니다.",
+    "codex_isolation": "Codex 최소 권한 격리를 확인하지 못해 실행을 차단했습니다.",
+    "codex_version": "이 Codex 버전의 도구 격리는 미검증입니다. 실행을 차단했습니다.",
+    "codex_busy": "Codex 요청이 이미 진행 중입니다. 완료 또는 취소 후 확인하세요.",
+    "codex_cancelled": "Codex 요청을 취소했습니다. 이미 발생한 구독 사용량은 되돌아가지 않습니다.",
+    "codex_model": "선택 모델을 Codex 목록에서 확인하지 못했습니다. default를 선택하세요.",
+    "codex_rpc": "Codex 공식 연결 요청이 실패했습니다. 자동 재시도하지 않습니다.",
+    "codex_turn_failed": "Codex가 요청을 완료하지 못했습니다. 사용량·인증·모델을 확인하세요.",
     "ai_billing_approval": "Claude 인증은 확인됐으나 해당 과금 방식은 NewsFlow AI에서 사용 승인되지 않았습니다.",
     "ai_auth_failed": "AI 인증에 실패했습니다. API 키와 권한을 확인하세요.",
     "ai_rate_limited": "AI 요청 한도(Rate Limit)를 초과했습니다. 잠시 후 다시 시도하세요.",
@@ -69,6 +79,10 @@ class IntelligenceService:
     def _provider(self, mode: str) -> Provider:
         if self.provider is not None:
             return self.provider
+        if mode == "codex":
+            from .codex import CODEX_PROVIDER
+
+            return CODEX_PROVIDER
         if mode == "claude_code":
             from .claude_code import CLAUDE_PROVIDER
 
@@ -216,7 +230,7 @@ class IntelligenceService:
         The reservation includes the estimated prompt tokens of this exact call when the
         instruction and payload are known, so the check is conservative.
         """
-        if mode in ("offline", "claude_code"):
+        if mode in ("offline", "claude_code", "codex"):
             return
         from .settings import SettingsError, check_budget, read_settings
 

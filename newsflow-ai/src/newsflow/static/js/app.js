@@ -23,7 +23,7 @@ if (state) {
 }
 // no-referrer preserves external privacy but makes native navigation POST Origin:null.
 // Fetch in cors mode sends the browser's real Origin; server CSRF/Origin checks stay intact.
-for (const form of document.querySelectorAll('form[method="post"]:not([data-easy-form]):not([data-ai-form]):not([data-claude-action])')) {
+for (const form of document.querySelectorAll('form[method="post"]:not([data-easy-form]):not([data-ai-form]):not([data-claude-action]):not([data-codex-action])')) {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const target = new URL(event.submitter?.getAttribute('formaction') || form.action, window.location.href);

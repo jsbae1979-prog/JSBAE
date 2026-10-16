@@ -24,7 +24,7 @@ DEFAULT_MODEL = "gpt-4o-mini"
 DEFAULT_LIMIT = 200_000
 MAX_LIMIT = 50_000_000
 STUDIO_PROVIDERS = {"offline": "Offline · 외부 호출 없음", "openai": "OpenAI · API 승인 필요",
-                    "claude_code": "Claude Code · 본인 계정 사용량"}
+                    "claude_code": "Claude Code · 본인 계정 사용량", "codex": "Codex · RSS 자료 분석"}
 # Output-token reservation per script length (sized from the Script schema maxima) and for
 # the analysis call; both stay inside Options' 200..3000 bound.
 SCRIPT_MAX_TOKENS = {30: 1400, 45: 1800, 60: 2200}
@@ -75,6 +75,8 @@ def studio_model(provider: str, model: str) -> str:
         return "offline"
     if not isinstance(model, str) or not re.fullmatch(r"[a-zA-Z0-9._-]{1,80}", model):
         raise SettingsError("모델 이름은 영문·숫자·점·하이픈 80자 이내여야 합니다.")
+    if provider == "codex":
+        return model
     is_claude = model in ("sonnet", "opus", "haiku") or model.startswith("claude-")
     if (provider == "claude_code") != is_claude:
         raise SettingsError("제공자에 맞는 모델을 입력하세요. Claude는 sonnet·opus·haiku 또는 claude- 모델입니다.")
@@ -83,14 +85,16 @@ def studio_model(provider: str, model: str) -> str:
 
 def read_studio_settings(sessions: sessionmaker[Session]) -> dict:
     """UI defaults only: never changes Autopilot settings or external-call approvals."""
-    models = {"offline": "offline", "openai": read_settings(sessions).model, "claude_code": "sonnet"}
+    models = {"offline": "offline", "openai": read_settings(sessions).model,
+              "claude_code": "sonnet", "codex": "default"}
+    fallbacks = {"offline": "offline", "openai": DEFAULT_MODEL, "claude_code": "sonnet", "codex": "default"}
     with sessions() as session:
         provider = _value(session, "studio_provider")
         for key, fallback in models.items():
             try:
                 models[key] = studio_model(key, _value(session, "studio_model_" + key) or fallback)
             except SettingsError:
-                models[key] = "sonnet" if key == "claude_code" else DEFAULT_MODEL if key == "openai" else "offline"
+                models[key] = fallbacks[key]
     provider = provider if provider in STUDIO_PROVIDERS else "offline"
     return {"provider": provider, "model": models[provider], "models": models}
 

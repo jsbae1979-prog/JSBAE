@@ -28,6 +28,24 @@ from .routes import go, page
 router = APIRouter()
 
 
+@router.post("/ai/codex/status")
+def codex_status(request: Request) -> dict:
+    from newsflow.intelligence.codex import CODEX_PROVIDER
+    from newsflow.intelligence.settings import usage_this_month
+
+    status = CODEX_PROVIDER.status()
+    request.app.state.codex_status = status
+    return {**status, "local_usage": usage_this_month(request.app.state.sessions, "codex"),
+            "usage_notice": "로컬 기록이며 ChatGPT 계정 잔여량·실제 청구량이 아닙니다."}
+
+
+@router.post("/ai/codex/cancel")
+def codex_cancel(request: Request) -> dict:
+    from newsflow.intelligence.codex import CODEX_PROVIDER
+
+    return {"cancel_requested": CODEX_PROVIDER.cancel()}
+
+
 @router.post("/ai/claude/status")
 def claude_status(request: Request) -> dict:
     from newsflow.intelligence.claude_code import CLAUDE_LOGIN
@@ -57,7 +75,8 @@ def studio_preferences(request: Request, provider: str = Form(max_length=20),
         write_studio_settings(request.app.state.sessions, provider, model)
     except SettingsError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/ai?saved=true#claude-connection")
+    anchor = "codex-connection" if provider == "codex" else "claude-connection"
+    return go(f"/ai?saved=true#{anchor}")
 
 
 @router.post("/ai/claude/cancel")
@@ -107,6 +126,11 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
             default_model=studio_defaults["model"], default_timeout=settings.timeout, estimate=estimate,
             studio_defaults=studio_defaults, saved=saved,
             claude_status=getattr(request.app.state, "claude_status", connection_state("unchecked")),
+            codex_status=getattr(request.app.state, "codex_status", {
+                "state": "unchecked", "installed": False, "authenticated": False, "ready": False,
+                "version": None, "checked_at": None, "web_search_verified": False,
+                "message": "아직 연결을 확인하지 않았습니다. 설치·로그인 확인을 눌러 주세요.",
+            }),
             disclaimer=PRICE_DISCLAIMER,
         )
 
