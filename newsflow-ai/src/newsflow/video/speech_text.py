@@ -62,6 +62,9 @@ PRONOUNCED = {
     "KIA": "기아", "KAIST": "카이스트", "POSCO": "포스코", "MERS": "메르스", "AIDS": "에이즈", "SARS": "사스",
 }
 FIXED_TOKENS = {"5G": "파이브지", "4K": "포케이", "3D": "쓰리디", "COVID-19": "코비드 19", "K-POP": "케이팝"}
+# Small, reviewable local pronunciation dictionary; affects audio only, no remote provider.
+TECH_TERMS = {'ChatGPT': '챗지피티', 'OpenAI': '오픈에이아이', 'Windows': '윈도우',
+              'SQLite': '에스큐엘라이트', 'FFmpeg': '에프에프엠펙', 'YouTube': '유튜브'}
 CURRENCIES = {"$": "달러", "€": "유로", "£": "파운드", "₩": "원"}
 UNITS = {
     "km/h": "킬로미터", "kWh": "킬로와트시", "GHz": "기가헤르츠", "MHz": "메가헤르츠", "MW": "메가와트",
@@ -211,6 +214,8 @@ def normalize_for_speech(text: str) -> str:
     spoken = _PLAIN.sub(_large, spoken)
     spoken = _RANGE.sub(r"\1에서 ", spoken)
     spoken = _FIXED.sub(lambda m: FIXED_TOKENS[m.group(1)], spoken)
+    for token, reading in TECH_TERMS.items():
+        spoken = re.sub(r'(?<![A-Za-z0-9])' + re.escape(token) + r'(?![A-Za-z0-9])', reading, spoken)
     spoken = _ACRONYM.sub(_acronym, spoken)
     return " ".join(spoken.split())
 

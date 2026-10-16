@@ -1,0 +1,22 @@
+{% extends 'base.html' %}{% block title %}고품질 한국어 음성 API · NewsFlow AI{% endblock %}
+{% block content %}
+<section class="page-head"><div><h1>한국어 음성 제공자</h1><p>Windows SAPI는 무료·로컬입니다. Azure·Google은 계정 확인과 요청별 승인이 필요합니다.</p></div><a href="/voices">Heami·속도·로컬 미리 듣기 →</a></section>
+{% if message %}<p role="status" class="soft-notice">{{ message }}</p>{% endif %}
+<div class="card"><h2>사용 전 확인</h2><p><b>현재 실제 공급사 계정 사용량 검증은 연결되지 않았습니다. API 키만 등록해도 실제 합성·미리 듣기는 차단됩니다.</b> 로컬 사용량은 공급사 청구량·무료 잔여량과 다릅니다. 공급사 조회 실패·미검증·무료 한도 초과 가능성은 차단하며, 실패 시 재요청이나 Heami 자동 대체는 하지 않습니다. Heami는 직접 선택해 사용할 수 있습니다.</p>
+<p>공식 정책 확인: 2026-10-16. Azure F0 Neural 월 50만 문자 안내는 상업적 사용 권리 보장이 아닙니다. Microsoft 현재 약관은 Neural 출력의 상업적 사용을 유료 tier 고객에 한정합니다. Google Standard·WaveNet 월 400만, Neural2·Chirp3 HD 월 100만 문자 안내가 있으며 계정·모델 조건에 따라 적용됩니다. Google은 무료량 초과 시 자동 과금됩니다. 신규 가입 크레딧은 월 반복 무료량과 별개입니다.</p>
+<p><a href="https://azure.microsoft.com/en-us/pricing/details/speech/" target="_blank" rel="noopener">Azure 가격</a> · <a href="https://www.microsoft.com/licensing/terms/productoffering/MicrosoftAzure/MCA" target="_blank" rel="noopener">Microsoft 이용 조건</a> · <a href="https://cloud.google.com/text-to-speech/pricing" target="_blank" rel="noopener">Google 모델별 가격</a></p></div>
+<form method="post" action="/tts-settings" class="card">{{ csrf_field() }}
+<label>제공자<select name="provider">{% for key,label in providers.items() %}<option value="{{ key }}" {{ 'selected' if config.provider==key }}>{{ label }}</option>{% endfor %}</select></label>
+<label>한국어 음성 모델<select name="voice">{% for p,voices in models.items() %}<optgroup label="{{ providers[p] }}">{% for voice in voices %}<option value="{{ voice }}" {{ 'selected' if config.voice==voice }}>{{ voice }}</option>{% endfor %}</optgroup>{% endfor %}</select></label>
+<label>Azure 지역<select name="region">{% for region in regions %}<option {{ 'selected' if config.region==region }}>{{ region }}</option>{% endfor %}</select></label>
+<label>로컬 월 문자 상한<input type="number" name="monthly_char_limit" min="0" max="10000000" value="{{ config.monthly_char_limit }}"></label>
+<label>확인한 100만 문자당 USD 단가<input name="price_per_million" value="{{ config.price_per_million }}"></label>
+<label>작업별 USD 상한<input name="job_usd_limit" value="{{ config.job_usd_limit }}"></label><label>월 USD 상한<input name="monthly_usd_limit" value="{{ config.monthly_usd_limit }}"></label>
+<label class="check"><input type="checkbox" name="approved" value="true" {{ 'checked' if config.approved_at }}>대본의 외부 전송·과금 가능성을 이해하며 설정을 승인합니다. 실제 호출은 별도 요청 승인과 공급사 계정 검증이 필요합니다.</label>
+<p>승인 시각: {{ config.approved_at or '미승인' }} · 가격은 입력값에 따른 상한 추정이며 실제 청구 확인이 아닙니다.</p><button>설정 저장</button></form>
+<div class="card"><h2>API 키 보호 저장</h2>{% for p,label in [('azure','Azure Speech'),('google','Google Cloud TTS')] %}<form method="post" action="/tts-settings/key">{{ csrf_field() }}<input type="hidden" name="provider" value="{{ p }}"><label>{{ label }} API 키<input type="password" name="api_key" autocomplete="new-password" required maxlength="256"></label><p>{{ '키 구성됨' if keys[p].configured else '키 없음' }} · Windows 계정 DPAPI 별도 파일 · SQLite·로그 평문 저장 없음</p><button>보호 저장</button></form>{% endfor %}
+<form method="post" action="/tts-settings/check">{{ csrf_field() }}<button>연결 준비 검사 · 네트워크 호출 없음</button></form></div>
+<div class="card"><h2>음성 미리 듣기</h2><p>고정 샘플 예상 문자: {{ characters }}자 · 입력 단가 기준 USD {{ sample_estimate }}(읽기 형태 기준). Azure SSML 등을 포함한 보수적 예약은 더 클 수 있습니다. 실제 계정 미검증 시 요청하지 않습니다. Chirp3 HD는 이 연동에서 속도 조절 없이 사용합니다.</p>
+<form method="post" action="/tts-settings/preview">{{ csrf_field() }}<label>속도<select name="rate"><option value="-1">약간 느리게</option><option value="0" selected>보통</option><option value="1">약간 빠르게</option></select></label><label>쉼<select name="pause_ms"><option value="250">250ms</option><option value="400">400ms</option></select></label><label class="check"><input type="checkbox" name="confirmed" value="true" required>이번 샘플의 외부 전송·비용 가능성을 승인합니다.</label><button>음성 샘플 만들기</button></form></div>
+<div class="card"><h2>로컬 요청·예약 기록</h2><p>이번 달 모든 TTS 제공자 예약 합계(UTF-8 바이트 상한): {{ local_characters }}자 · 예약 상한 USD {{ local_reserved_usd }}. 공급사 현재 사용량·무료 잔여량: NOT VERIFIED.</p><p>성공·결과 불명 요청은 모두 한도에 포함합니다. 자동 환급·재시도하지 않습니다. 이 기록은 공급사 사용량·청구서가 아닙니다.</p><ul>{% for row in usage %}<li>{{ row.at }} · {{ row.provider }} · {{ row.voice }} · 전송 {{ row.submitted_characters }}문자 · 예약 {{ row.chars }}단위 · 예약 상한 USD {{ row.cost_upper_usd }} · {{ row.status }}</li>{% else %}<li>기록 없음 · 공급사 실제 사용량 NOT VERIFIED</li>{% endfor %}</ul></div>
+{% endblock %}

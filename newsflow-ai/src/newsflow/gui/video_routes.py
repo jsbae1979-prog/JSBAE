@@ -9,9 +9,10 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
 from newsflow.db.models import AudioTrack, ContentDraft, RenderJob, Scene, SubtitleTrack, VideoProject
+from newsflow.video.cloud_tts import MODELS
 from newsflow.video.engine import RenderError
 from newsflow.video.service import RenderBusy, VideoError
-from newsflow.video.tts import POLICY_MESSAGE, TTSError, TTSPolicyError, WindowsTTS
+from newsflow.video.tts import POLICY_MESSAGE, SpeechSettings, TTSError, TTSPolicyError, WindowsTTS
 
 from .routes import go, page
 
@@ -69,6 +70,7 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
             subtitles=subtitles,
             audio=audio,
             voices=voices,
+            cloud_models=MODELS,
             voice_note=voice_note,
             assets=video.assets_list(),
             outputs=video.outputs,
@@ -88,6 +90,11 @@ async def render(
     subtitle_y: int = Form(1420),
     reviewed: bool = Form(False),
     asset_permission: bool = Form(False),
+    rate: int = Form(0),
+    pause_ms: int = Form(250),
+    theme: str = Form('news', max_length=20),
+    subtitle_style: str = Form('panel', max_length=20),
+    cloud_confirmed: bool = Form(False),
 ) -> RedirectResponse:
     form = await request.form()
     try:
@@ -100,6 +107,8 @@ async def render(
             [str(name) for name in form.getlist("images")],
             reviewed,
             asset_permission,
+            speech=SpeechSettings(rate, pause_ms), theme=theme, subtitle_style=subtitle_style,
+            cloud_confirmed=cloud_confirmed,
         )
     except RenderBusy:
         raise HTTPException(409, "이미 영상 제작이 실행 중입니다.") from None

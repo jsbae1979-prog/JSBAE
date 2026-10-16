@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Protocol
 
 from newsflow.intelligence.korean import split_sentences
+from newsflow.video.speech_audio import reading_units
 from newsflow.video.speech_text import MAX_SPOKEN_CHARS, normalize_for_speech
 
 # Fixed listening sample; its spoken form (tests/test_speech_text.py) exercises dates, times,
@@ -255,12 +256,30 @@ class WindowsTTS:
         if voice not in self.voices() or not 0 < len(text) <= 400:
             raise TTSError("선택한 Windows 음성을 확인하세요.")
         # The only place the reading form is applied: captions, estimates and the script stay raw.
+        units = reading_units(text)
         spoken = normalize_for_speech(text)
         if len(spoken) > MAX_SPOKEN_CHARS:
             raise TTSError("읽기 형태로 바꾼 문장이 너무 깁니다. 대본을 줄이세요.")
         spec = target.with_suffix(".json")
-        spec.write_text(json.dumps(self.spec(spoken, voice, target, speech), ensure_ascii=False), encoding="utf-8")
-        self._command(["-Spec", str(spec)], 60)
+        document = self.spec(spoken, voice, target, speech)
+        document['sentences'] = [normalize_for_speech(unit) for unit in units]
+        spec.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+        raw = self._command(["-Spec", str(spec)], 60)
+        if raw:
+            try:
+                cues = json.loads(raw)
+                if len(cues) != len(units):
+                    raise ValueError
+                last = 0.0
+                for cue, unit in zip(cues, units):
+                    start, end = float(cue['start']), float(cue['end'])
+                    if not last <= start < end <= 60:
+                        raise ValueError
+                    cue['text'] = unit
+                    last = end
+                target.with_suffix('.cues.json').write_text(json.dumps(cues, ensure_ascii=False), encoding='utf-8')
+            except (TypeError, ValueError, KeyError):
+                raise TTSError('문장별 음성 시점을 읽지 못했습니다.') from None
         if not wav_has_signal(target):
             raise TTSError("음성이 생성되지 않았습니다. 선택한 음성이 한국어 문장을 읽는지 확인하세요.")
 
