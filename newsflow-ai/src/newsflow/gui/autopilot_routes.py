@@ -617,7 +617,7 @@ def queue(request: Request) -> HTMLResponse:
 
 
 @router.get("/simple-settings", response_class=HTMLResponse)
-def simple_settings(request: Request, saved: bool = False) -> HTMLResponse:
+def simple_settings(request: Request, saved: str = "") -> HTMLResponse:
     from .production_routes import settings_page
 
     return settings_page(request, saved=saved)

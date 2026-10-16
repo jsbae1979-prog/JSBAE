@@ -1,0 +1,61 @@
+name: NewsFlow Settings Simplification Windows
+
+on:
+  push:
+    branches: [feat/newsflow-settings-simplification]
+    paths-ignore: ['newsflow-ai/docs/**']
+
+permissions:
+  contents: read
+
+jobs:
+  settings-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_CLAUDE_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      ANTHROPIC_AUTH_TOKEN: ''
+      CLAUDE_CODE_OAUTH_TOKEN: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install -r requirements-dev.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Settings lint
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/gui tests/test_settings_simplification.py tests/test_settings_api_panel.py tests/test_api_news_gui.py tests/test_ux_workflow_settings.py tests/test_ux_settings.py tests/test_api_settings.py tests/test_ai_settings.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Isolated settings and approval contracts
+        run: |
+          .venv/Scripts/python -m pytest -q -rs tests/test_settings_simplification.py tests/test_settings_api_panel.py tests/test_api_news_gui.py tests/test_ux_workflow_settings.py tests/test_ux_settings.py tests/test_api_settings.py tests/test_ai_settings.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # Temp databases, synthetic keys and injected adapters only. No live API,
+      # CLI authentication/inference, video generation, OS task registration or uploads.
