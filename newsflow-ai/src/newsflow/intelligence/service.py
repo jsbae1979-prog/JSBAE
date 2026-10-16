@@ -33,7 +33,7 @@ from .provider import (
 )
 from .schema import CAUTION, Analysis, Script
 
-MODES = ("offline", "openai")
+MODES = ("offline", "openai", "claude_code")
 _PROVIDER_MESSAGES = {
     "ai_auth_failed": "AI 인증에 실패했습니다. API 키와 권한을 확인하세요.",
     "ai_rate_limited": "AI 요청 한도(Rate Limit)를 초과했습니다. 잠시 후 다시 시도하세요.",
@@ -41,6 +41,7 @@ _PROVIDER_MESSAGES = {
     "ai_unavailable": "AI 서비스에 연결하지 못했습니다. 네트워크를 확인하고 다시 시도하세요.",
     "ai_bad_response": "AI 응답 형식이 올바르지 않습니다. 모델 설정을 확인하세요.",
     "ai_key_missing": "AI API 키가 설정되지 않았습니다.",
+    "ai_cancelled": "Claude Code 요청을 취소했습니다. 계정 사용량이 발생했을 수 있습니다.",
 }
 
 
@@ -67,6 +68,10 @@ class IntelligenceService:
     def _provider(self, mode: str) -> Provider:
         if self.provider is not None:
             return self.provider
+        if mode == "claude_code":
+            from .claude_code import CLAUDE_PROVIDER
+
+            return CLAUDE_PROVIDER
         return OfflineProvider() if mode == "offline" else OpenAIProvider(self._key)
 
     def _usage(self, provider: Provider, run_id: int, mode: str, options: Options, kind: str, status: str) -> None:
@@ -76,7 +81,8 @@ class IntelligenceService:
         from .settings import record_usage
 
         record_usage(
-            self.sessions, run_id=run_id, provider=mode, model=options.model, kind=kind, status=status,
+            self.sessions, run_id=run_id, provider=mode,
+            model=getattr(provider, "last_model", options.model), kind=kind, status=status,
             usage=usage, elapsed_ms=int(getattr(provider, "last_elapsed_ms", 0) or 0),
         )
 
@@ -209,7 +215,7 @@ class IntelligenceService:
         The reservation includes the estimated prompt tokens of this exact call when the
         instruction and payload are known, so the check is conservative.
         """
-        if mode == "offline":
+        if mode in ("offline", "claude_code"):
             return
         from .settings import SettingsError, check_budget, read_settings
 

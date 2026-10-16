@@ -21,6 +21,22 @@ from .routes import go, page
 router = APIRouter()
 
 
+@router.post("/ai/claude/status")
+def claude_status(request: Request) -> dict:
+    from newsflow.intelligence.claude_code import CLAUDE_PROVIDER
+    from newsflow.intelligence.settings import usage_this_month
+
+    return {**CLAUDE_PROVIDER.status(), "local_usage": usage_this_month(request.app.state.sessions, "claude_code"),
+            "usage_notice": "로컬 기록이며 Claude 계정 잔여량·실제 청구량이 아닙니다."}
+
+
+@router.post("/ai/claude/cancel")
+def claude_cancel(request: Request) -> dict:
+    from newsflow.intelligence.claude_code import CLAUDE_PROVIDER
+
+    return {"cancel_requested": CLAUDE_PROVIDER.cancel()}
+
+
 def service(request: Request) -> IntelligenceService:
     return IntelligenceService(
         request.app.state.sessions, getattr(request.app.state, "ai_provider", None),

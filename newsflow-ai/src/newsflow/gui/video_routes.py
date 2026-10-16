@@ -18,6 +18,55 @@ from .routes import go, page
 router = APIRouter()
 
 
+@router.get("/video/tts", response_class=HTMLResponse)
+def tts_settings(request: Request):
+    from newsflow.video.elevenlabs_tts import MODELS, ElevenLabsKeys, settings
+    from newsflow.video.supertonic_tts import SupertonicTTS
+
+    video = request.app.state.video
+    return page(request, "tts_settings.html", active="video", config=settings(video.sessions), models=MODELS,
+                key=ElevenLabsKeys(video.root).status(), supertonic_ready=bool(SupertonicTTS().voices()))
+
+
+@router.post("/video/tts")
+def save_tts(request: Request, enabled: bool = Form(False), voice_id: str = Form("", max_length=100),
+             model: str = Form("eleven_multilingual_v2"), job_limit: int = Form(1000),
+             monthly_limit: int = Form(10000), commercial: bool = Form(True)):
+    from newsflow.video.elevenlabs_tts import save_settings
+
+    try:
+        save_settings(request.app.state.sessions, enabled=enabled, voice_id=voice_id, model=model,
+                      job_limit=job_limit, monthly_limit=monthly_limit, commercial=commercial)
+    except TTSError as exc:
+        raise HTTPException(422, str(exc)) from None
+    return go("/video/tts")
+
+
+@router.post("/video/tts/key")
+def save_tts_key(request: Request, api_key: str = Form(min_length=20, max_length=256)):
+    from newsflow.intelligence.credentials import CredentialError
+    from newsflow.video.elevenlabs_tts import ElevenLabsKeys
+
+    try:
+        ElevenLabsKeys(request.app.state.video.root).save(api_key)
+    except CredentialError as exc:
+        raise HTTPException(422, str(exc)) from None
+    return go("/video/tts")
+
+
+@router.post("/video/tts/check")
+def check_tts(request: Request, consent: bool = Form(False)):
+    from newsflow.video.elevenlabs_tts import ElevenLabsTTS, settings
+
+    if not consent:
+        raise HTTPException(422, "API 키로 계정 한도를 조회하는 데 동의하세요. 음성 생성은 하지 않습니다.")
+    video = request.app.state.video
+    try:
+        return ElevenLabsTTS(video.root, settings(video.sessions)).subscription()
+    except TTSError as exc:
+        raise HTTPException(422, str(exc)) from None
+
+
 @router.get("/video", response_class=HTMLResponse)
 def studio(request: Request, draft_id: int | None = None, job_id: int | None = None) -> HTMLResponse:
     video = request.app.state.video
@@ -58,6 +107,11 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
                 voice_note = POLICY_MESSAGE
             except TTSError:
                 voice_note = "Windows 음성 목록을 확인하지 못했습니다. 설치된 음성과 실행 권한을 확인하세요."
+        from newsflow.video.supertonic_tts import SupertonicTTS
+
+        voices.extend({"name": voice, "label": f"Supertonic 3 · {voice.split(':')[1]} · 한국어 · 무료 로컬",
+                       "engine": "local"} for voice in SupertonicTTS().voices())
+        voices.append({"name": "elevenlabs", "label": "ElevenLabs · 외부 API · 설정·동의 필요", "engine": "external"})
         return page(
             request,
             "video.html",
@@ -88,6 +142,7 @@ async def render(
     subtitle_y: int = Form(1420),
     reviewed: bool = Form(False),
     asset_permission: bool = Form(False),
+    external_tts_consent: bool = Form(False),
 ) -> RedirectResponse:
     form = await request.form()
     try:
@@ -100,6 +155,7 @@ async def render(
             [str(name) for name in form.getlist("images")],
             reviewed,
             asset_permission,
+            external_tts_consent=external_tts_consent,
         )
     except RenderBusy:
         raise HTTPException(409, "이미 영상 제작이 실행 중입니다.") from None

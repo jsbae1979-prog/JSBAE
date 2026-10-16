@@ -24,7 +24,8 @@ from newsflow.intelligence.schema import Script
 from .ai.clips import ClipStore, probe_clip
 from .ai.contracts import ClipInvalidError
 from .engine import FFmpegAdapter, RenderEngine, RenderError, RenderPlan, ScenePlan, load_image
-from .tts import OfflineTTS, SpeechSettings, TTSError, TTSProvider, WindowsTTS
+from .tts import SpeechSettings, TTSError, TTSProvider
+from .voice_engines import provider_for, provider_name
 
 
 def file_sha256(path: Path) -> str:
@@ -117,10 +118,12 @@ class VideoCoordinator:
         images: list[str] | None = None,
         reviewed: bool = False,
         asset_permission: bool = False,
+        external_tts_consent: bool = False,
     ) -> int:
         if duration not in (30, 45, 60) or not reviewed:
             raise VideoError("영상 길이를 선택하고 렌더링 전 대본·출처 검토를 확인하세요.")
-        return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False)
+        return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False,
+                           fit_audio=voice != "offline-silence", external_tts_consent=external_tts_consent)
 
     def start_preview(
         self,
@@ -202,7 +205,7 @@ class VideoCoordinator:
         if voice == "offline-silence":
             return True
         try:
-            provider = self.tts or WindowsTTS()
+            provider = self.tts or provider_for(voice, self.sessions, self.root)
             return voice in provider.voices()
         except TTSError:
             return False
@@ -225,6 +228,7 @@ class VideoCoordinator:
         ai_plan_id: int | None = None,
         clip_hashes: list[str | None] | None = None,
         clip_bytes: int = 0,
+        external_tts_consent: bool = False,
     ) -> int:
         speech = speech or SpeechSettings()
         if self.cancel.is_set():
@@ -275,10 +279,8 @@ class VideoCoordinator:
                         self.asset(name)
                 if self.tts:
                     tts = self.tts
-                elif voice == "offline-silence":
-                    tts = OfflineTTS()
                 else:
-                    tts = WindowsTTS()
+                    tts = provider_for(voice, self.sessions, self.root, external_consent=external_tts_consent)
                 if voice not in tts.voices():
                     raise VideoError("설치된 음성 목록에서 음성을 선택하세요.")
                 plan = RenderPlan(
@@ -334,7 +336,7 @@ class VideoCoordinator:
                 session.add(
                     AudioTrack(
                         project_id=project.id,
-                        provider="offline" if voice == "offline-silence" else "windows",
+                        provider=provider_name(voice),
                         voice=voice,
                     )
                 )
@@ -554,7 +556,16 @@ class VideoCoordinator:
             seconds = float(timing.get("seconds", 0))
             end = scenes[-1].end_ms if index == len(scenes) - 1 else start + round(seconds * 1000)
             scene.start_ms, scene.end_ms = start, end
-            cues.append({"start_ms": start, "end_ms": end, "text": scene.caption})
+            if "narration" in timing:
+                scene.narration = timing["narration"]
+                scene.caption = timing["caption"]
+            sentence_cues = timing.get("sentence_cues", [])
+            if sentence_cues:
+                cues.extend({"start_ms": start + cue["start_ms"], "end_ms": start + cue["end_ms"],
+                             "text": cue["text"]} for cue in sentence_cues)
+            else:
+                cues.append({"start_ms": start, "end_ms": min(end, start + round(
+                    timing.get("audio_seconds", seconds) * 1000)), "text": scene.caption})
             start = end
         subtitles.cues = cues
 

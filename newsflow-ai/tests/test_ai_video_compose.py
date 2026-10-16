@@ -287,10 +287,13 @@ def test_audio_fit_branch_keeps_the_clip_with_fitted_seconds(tmp_path):
     assert metadata["audio_fit"] is True and metadata["audio"] == "voice" and len(timings) == 2
     assert tts.calls == [s.narration for s in scenes]  # synthesized once per scene
     first = run.call_args_list[0].args[0]
-    assert first == FFmpegAdapter.clip_command(
+    expected = FFmpegAdapter.clip_command(
         tmp_path / "ffmpeg", replace(scenes[0], seconds=timings[0]["seconds"]),
         work / "scene-000.png", work / "scene-000.wav", work / "scene-000.mp4",
     )
+    filter_index = expected.index("-filter_complex") + 1
+    expected[filter_index] = expected[filter_index].replace("[v]", "[base];[base]ass=scene-000.ass[v]")
+    assert first == expected
     assert first[first.index("-f") + 1] == "matroska" and first[first.index("-t") + 1] == f"{timings[0]['seconds']:.3f}"
     assert "-filter_complex" not in run.call_args_list[1].args[0]
     assert metadata["ai_generated_scenes"] == [0] and metadata["ai_label"] == AI_SCENE_LABEL
