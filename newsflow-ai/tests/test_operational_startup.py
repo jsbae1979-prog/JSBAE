@@ -238,3 +238,11 @@ def test_automatic_entry_records_exit_without_secret_traceback(tmp_path,monkeypa
     assert module.main() == expected_code
     assert json.loads((tmp_path/'startup-status.json').read_text())['status'] == expected_status
     assert 'secret-token' not in capsys.readouterr().out
+
+
+
+def test_builtin_administrator_cannot_bypass_least_privilege_with_filtered_token(tmp_path,monkeypatch):
+    import newsflow.operations.startup as module
+    monkeypatch.setattr(module,'native',Mock(return_value={'sid':'S-1-5-21-100-200-300-500','elevated':False}))
+    with pytest.raises(StartupError,match='Administrator'):
+        module.local_service(tmp_path)

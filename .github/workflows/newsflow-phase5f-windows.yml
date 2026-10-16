@@ -94,6 +94,10 @@ jobs:
         run: |
           python -m ruff check src tests tools
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Windows startup safety and native XML validation without OS registration
+        run: |
+          python -m pytest -q -rs tests/test_operational_startup.py --junitxml=validation-output/startup-pytest.xml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: All offline regression, callback HTTP, identity and recovery tests
         run: |
           python -m pytest -q -rs --junitxml=validation-output/pytest.xml

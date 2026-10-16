@@ -84,6 +84,8 @@ class StartupPlan:
     def __post_init__(self) -> None:
         if not re.fullmatch(r'S-1-(?:5-21|12-1)-(?:[0-9]+-){3}[0-9]+', self.sid):
             raise StartupError('현재 Windows 사용자 계정을 확인하세요.')
+        if self.sid.startswith('S-1-5-21-') and self.sid.endswith('-500'):
+            raise StartupError('기본 제공 Administrator 대신 일반 Windows 사용자로 실행하세요.')
         for path in (self.root, self.data_dir):
             if not path.is_absolute() or any(c in str(path) for c in '\r\n\x00"'):
                 raise StartupError('설치 및 저장 폴더 경로를 확인하세요.')
