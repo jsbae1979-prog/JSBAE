@@ -45,6 +45,9 @@ def main() -> int:
             from newsflow.main import run
             try:
                 run(automatic_data_dir=root)
+            except KeyboardInterrupt:
+                record(root,'stopped')
+                return 0
             except (SystemExit, Exception):  # noqa: BLE001 -- fixed status only; no secrets in tracebacks
                 record(root,'failed')
                 print('자동 시작을 마치지 못했습니다. run.bat와 운영 점검에서 포트·설치 상태를 확인하세요.')

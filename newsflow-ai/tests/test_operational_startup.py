@@ -4,6 +4,7 @@ import hashlib
 import json
 import subprocess
 import sys
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -219,3 +220,21 @@ def test_elevated_or_unknown_identity_cannot_operate(monkeypatch,tmp_path,elevat
 def test_current_user_azure_ad_sid_is_supported(tmp_path):
     plan = StartupPlan(tmp_path,tmp_path,'S-1-12-1-100-200-300-400')
     assert owned(plan,plan.xml())
+
+
+@pytest.mark.parametrize(('outcome','expected_code','expected_status'),[
+    (KeyboardInterrupt,0,'stopped'),(RuntimeError,1,'failed'),(SystemExit,1,'failed')])
+def test_automatic_entry_records_exit_without_secret_traceback(tmp_path,monkeypatch,capsys,outcome,expected_code,expected_status):
+    import newsflow.main as main_module
+    import newsflow.operations.autorun as module
+    plan = Mock(python=Path(sys.executable))
+    plan.prepared.return_value = True
+    service = Mock(plan=plan)
+    service.view.return_value = {'status':'enabled'}
+    monkeypatch.setattr(module.sys,'platform','win32')
+    monkeypatch.setattr(module.sys,'argv',['autorun','--data-dir',str(tmp_path)])
+    monkeypatch.setattr(module,'local_service',lambda root:service)
+    monkeypatch.setattr(main_module,'run',Mock(side_effect=outcome('secret-token')))
+    assert module.main() == expected_code
+    assert json.loads((tmp_path/'startup-status.json').read_text())['status'] == expected_status
+    assert 'secret-token' not in capsys.readouterr().out
