@@ -14,7 +14,7 @@
 <p>로그인을 마치거나 취소한 뒤 ‘연결 다시 확인’을 누르세요. 창이 열리지 않으면 일반 사용자 터미널에서 <code>claude auth login</code>을 실행하세요. 앱은 로그인 URL·인증 코드·토큰을 수집하지 않습니다.</p>
 </details>
 <p class="hint">로컬 실행 준비 완료는 설치·버전·인증 검사 결과입니다. 실제 추론 성공이나 남은 구독 사용량, 무료·무제한 이용을 보장하지 않습니다. 연결 확인은 추론을 실행하지 않습니다.</p>
-<p>현재 기본값: <strong>{{ {'offline':'Offline', 'openai':'OpenAI', 'claude_code':'Claude Code'}[studio_defaults.provider] }}</strong> · {{ studio_defaults.model }}. 아래의 기존 Provider 선택에서 바꾸고 ‘AI Studio 기본값 저장’을 누르세요. 설정은 이 화면의 분석·대본에만 적용됩니다.</p>
+<p>현재 기본값: <strong>{{ {'offline':'Offline', 'openai':'OpenAI', 'claude_code':'Claude Code', 'codex':'Codex'}[studio_defaults.provider] }}</strong> · {{ studio_defaults.model }}. 아래의 기존 Provider 선택에서 바꾸고 ‘AI Studio 기본값 저장’을 누르세요. 설정은 이 화면의 분석·대본에만 적용됩니다.</p>
 {% if saved %}<p class="soft-notice success-notice" role="status">AI Studio 기본값을 저장했습니다. 추론은 실행하지 않았습니다. 실제 실행마다 별도 동의가 필요합니다.</p>{% endif %}
 {% if studio_defaults.provider == 'claude_code' and not claude_status.ready %}<p class="review-notes">Claude 기본값은 저장되어 있습니다. 연결 상태를 확인한 뒤 실행하세요. 준비되지 않으면 실행 단계에서 이유를 안내하고 차단합니다.</p>{% endif %}
 {% if studio_defaults.provider == 'claude_code' %}<form method="post" action="/ai/preferences" data-ai-studio>{{ csrf_field() }}<input type="hidden" name="provider" value="offline"><input type="hidden" name="model" value="offline"><button type="submit">앱에서 Claude 기본 사용 해제</button><p class="hint">AI Studio 기본값만 Offline으로 바꿉니다. 공식 CLI에서 로그아웃하거나 인증정보를 삭제하지 않습니다.</p></form>{% endif %}
