@@ -33,7 +33,7 @@ GUI 검증은 127.0.0.1:8782의 별도 테스트 DB를 사용했다. Chrome에�
 | 검증 | 결과 |
 |---|---|
 | 변경 영역 핵심 테스트 | 로컬 Python 3.14: 85개 계약 PASS. 최초 84 PASS와 기존 문구 콜론 차이 1건 실패 후 해당 1건만 수정·재검증 PASS. 테스트 파일 Ruff PASS |
-| Windows Python 3.12 / 3.14 CI | 실행 후 기록 |
+| Windows Python 3.12 / 3.14 CI | 각 85 PASS · Ruff·pip check PASS. 동일 실행 1회, 재실행 없음 |
 | Chrome 전후 화면·선택한 연결만 표시 | PASS: 현재 AI·음성·영상 구성을 확인하고 OpenAI/Claude 선택 시 해당 연결 패널만 표시 |
 | 키 입력 위치·비용 승인·BLOCKED 사유 | PASS: 두 API의 직접 키 입력 위치·월 예산·미검증 표시 확인. 별도 검색 동의·계정 잔여 예산 확인은 임의 체크되지 않음. 실제 키 등록은 미실행 |
 | 음성 저장·변경 상태·작업실 복귀 | PASS: 미저장 표시·변경 취소 후 모델 선택 유지, Supertonic F1→F2 저장 안내 후 작업실에서 F2 확인 |
@@ -52,11 +52,22 @@ Chrome 화면 증거는 로컬 전용 `validation-output/settings-simplification
 - `after-mobile.png` / `after-mobile-budget.png`: 좁은 화면 기본 배치와 비용 대화상자. 요청 viewport는 390px이며 브라우저 배율이 반영된 측정 CSS 너비는 355px였다.
 
 - 브랜치: `feat/newsflow-settings-simplification`
-- 변경 파일: 최종 diff 및 아래 완료 기록 참조
-- 검증 코드 SHA: 최종 기록 예정
-- 신규 Draft PR: 생성 후 기록 (base: `feat/newsflow-api-news-search`)
-- Windows Actions: 실행 후 기록
+- 변경 파일: 총 14개 (아래 목록)
+- 검증 코드 SHA: `4169eb809653ff4f4ec9b17203ef77828dd511b7` (후속 커밋은 이 보고서 결과 기록만 변경)
+- 신규 Draft PR: [#29](https://github.com/jsbae1979-prog/JSBAE/pull/29), base: `feat/newsflow-api-news-search`
+- Windows Actions: [38928630262 — SUCCESS](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38928630262)
 - 남은 문제: 실제 계정의 인증·검색·청구 결과는 이번 UI 작업으로 검증되지 않음.
 
 현재 검증 서버의 실제 API·CLI 호출 시도는 0건이다. 사용자 앱(8765)은 재시작하지 않았다. 검증 중 발견한 Provider 변경 취소 후 모델 혼합 표시를 UI 코드에서 수정하고 해당 동선을 Chrome에서 재검증했다.
 
+
+## 변경 파일
+
+- `src/newsflow/gui/production_routes.py`, `autopilot_routes.py`, `api_settings_routes.py`: 읽기 전용 상태 요약과 저장 결과 안내.
+- `src/newsflow/gui/templates/simple_settings.html`, `api_connection.html`, `base.html`: 세 영역 화면·키·예산·진단 대화상자.
+- `src/newsflow/static/css/settings.css`, `static/js/production_settings.js`, `static/js/app.js`: 반응형 배치·미저장 표시·취소·키보드·인라인 오류.
+- `tests/test_settings_simplification.py`, `test_settings_api_panel.py`, `test_ux_workflow_settings.py`: 설정·승인·보존 계약 및 변경 문구.
+- `.github/workflows/settings-simplification-windows.yml`: 변경 범위 Windows 3.12/3.14 CI.
+- `docs/reports/settings_ux_simplification_report.md`: 완료 기록.
+
+기존 PR #1~#28과 main은 변경·병합하지 않았다. 최종 구현은 4169eb8이며, 보고서 기록 커밋을 포함한 최종 HEAD는 PR과 완료 응답에 명시한다. 새 화면은 격리 검증용 127.0.0.1:8782에서 확인했고, 사용 중인 8765 앱에는 다음 정상 재시작 때 적용된다. 검증 도중 추가 입력이 발견된 8781 테스트 화면과 데이터는 초기화하지 않고 보존했다.
