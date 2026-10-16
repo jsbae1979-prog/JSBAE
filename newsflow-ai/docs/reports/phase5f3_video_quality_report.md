@@ -30,7 +30,7 @@ Inspected the user-evaluated `video-4594b5e463da4c859f7e58e6d820eb79.mp4` in the
 - A first-frame fade issue discovered in decoded screenshots was fixed by placing `fps=30` before fade; only the affected render was repeated. CI checks non-black frames and changed sentence captions.
 - Installed Google Chrome (headless decoding test): actual `currentTime > 2`, duration 30.027018, 1080x1920, playing with no media error. Also opened a visible Chrome preview for the user. This is technical playback evidence, not human listening.
 - Existing SQLite read-only `quick_check`: `ok`; original MP4 files retained. No dependency, migration, DPAPI, CSRF, SSRF, TLS or external-call policy change. Actual paid AI/OAuth/SNS/Task Scheduler calls: zero.
-- Final Windows Actions and validated implementation SHA: pending below; final results will be recorded after the single run.
+- Final TTS-scope Windows Actions [38877997628](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38877997628): Python 3.12/3.14 SUCCESS; validated implementation `bc29b0fad8a93b2b6602f841e1c3d67eca6954fc`. Each passed 292 focused tests plus 57 composition tests, actual native/silent MP4, measured captions, Fake API MP4 and synthetic DPAPI. Runners had no Korean voice; local Heami evidence remains separate. See the TTS API report for the earlier background-color test failure and its correction.
 
 ## Local review material (not committed)
 
