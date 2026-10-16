@@ -18,6 +18,8 @@ from urllib.parse import urlsplit
 
 from PIL import Image, ImageDraw, ImageFont, ImageOps, UnidentifiedImageError
 
+from newsflow.intelligence.korean import split_sentences
+
 from .tts import SpeechSettings, TTSProvider, local_process_env, wav_duration
 
 
@@ -82,19 +84,131 @@ def fit_timings(audio_seconds: list[float], planned: list[float], total: float) 
     """
     if len(audio_seconds) != len(planned) or not planned:
         raise RenderError("장면 수와 음성 수가 일치하지 않습니다.", kind="audio")
-    minimum = [round(a + AUDIO_TAIL_SECONDS, 3) for a in audio_seconds]
+    if not math.isfinite(total) or total <= 0 or any(
+        not math.isfinite(value) or value <= 0 for value in audio_seconds + planned
+    ):
+        raise RenderError("음성 길이가 유효하지 않습니다.", kind="audio")
+    # Quantize scene boundaries to the renderer's 30 fps grid, so concatenated frames
+    # and persisted subtitle starts cannot accumulate fractional-frame drift.
+    minimum_frames = [math.ceil((a + AUDIO_TAIL_SECONDS) * 30) for a in audio_seconds]
+    minimum = [frames / 30 for frames in minimum_frames]
     over = sum(minimum) - total
     if over > 0.001:
         raise RenderError(
             f"음성 총 길이가 영상 길이를 {over:.1f}초 초과합니다. 대본을 줄이거나 영상 길이를 늘리세요.", kind="audio"
         )
-    slack = total - sum(minimum)
+    slack_frames = round(total * 30) - sum(minimum_frames)
     weights = [max(p, 0.1) for p in planned]
-    result = [round(m + slack * w / sum(weights), 3) for m, w in zip(minimum, weights)]
+    extra_frames = [int(slack_frames * w / sum(weights)) for w in weights]
+    extra_frames[-1] += slack_frames - sum(extra_frames)
+    result = [round((m + e) / 30, 3) for m, e in zip(minimum_frames, extra_frames)]
     result[-1] = round(total - sum(result[:-1]), 3)
     if any(value < 0.1 for value in result):
         raise RenderError("장면 시간이 너무 짧습니다.", kind="audio")
     return result
+
+
+def prepare_audio(plan: RenderPlan, work: Path, tts: TTSProvider, cancel: Event) -> tuple[list[ScenePlan], list[dict]]:
+    """Bounded local regeneration: drop complete trailing sentences only, never speed up/cut WAV."""
+    scenes = list(plan.scenes)
+    measured, cue_lists = [], []
+
+    def synthesize(index: int) -> None:
+        if cancel.is_set():
+            raise RenderError("음성 생성이 취소되었습니다.")
+        scene, audio = scenes[index], work / f"scene-{index:03d}.wav"
+        timed = getattr(tts, "synthesize_timed", None)
+        if callable(timed):
+            cues = timed(scene.narration, audio, plan.voice, 120, plan.speech, cancel=cancel)
+        else:
+            tts.synthesize(scene.narration, audio, plan.voice, 120, plan.speech)
+            cues = []
+        duration = wav_duration(audio)
+        if not math.isfinite(duration) or not 0 < duration <= 120:
+            raise RenderError("음성 길이가 유효하지 않습니다.", kind="audio")
+        if not cues:
+            # No word/sentence alignment is claimed for adapters without timestamps.
+            cues = [{"start_ms": 0, "end_ms": round(duration * 1000), "text": scene.caption or scene.narration}]
+        previous = 0
+        for cue in cues:
+            if (not isinstance(cue.get("text"), str) or not 0 < len(cue["text"]) <= 400
+                    or not previous <= cue["start_ms"] < cue["end_ms"] <= round(duration * 1000) + 1):
+                raise RenderError("엔진 문장 타임스탬프가 잘못되었습니다.", kind="audio")
+            previous = cue["end_ms"]
+        if index == len(measured):
+            measured.append(duration)
+            cue_lists.append(cues)
+        else:
+            measured[index], cue_lists[index] = duration, cues
+
+    for index in range(len(scenes)):
+        synthesize(index)
+    for attempt in range(9):
+        try:
+            fitted = fit_timings(measured, [s.seconds for s in scenes], plan.duration)
+            break
+        except RenderError:
+            candidates = [index for index, scene in enumerate(scenes) if len(split_sentences(scene.narration)) > 1]
+            if attempt == 8 or not candidates:
+                raise RenderError(
+                    "음성이 목표 길이를 초과합니다. 완전한 문장 단위 축약으로 맞출 수 없어 중단했습니다. "
+                    "대본을 검토·축약한 뒤 다시 제작하세요. 음성은 자르지 않았습니다.", kind="audio"
+                ) from None
+            index = max(candidates, key=lambda i: measured[i])
+            shortened = " ".join(split_sentences(scenes[index].narration)[:-1])
+            # Do not leave a caption claiming material removed from narration.
+            caption = split_sentences(shortened)[0]
+            if len(caption) > 150:
+                raise RenderError("축약 대본 자막을 검토하세요.", kind="subtitle") from None
+            scenes[index] = replace(scenes[index], narration=shortened, caption=caption)
+            synthesize(index)
+    metadata, start = [], 0
+    for index, seconds in enumerate(fitted):
+        metadata.append({"seconds": seconds, "audio_seconds": round(measured[index], 3),
+                         "start_ms": start, "audio_end_ms": start + round(measured[index] * 1000),
+                         "narration": scenes[index].narration, "caption": scenes[index].caption,
+                         "shortened": scenes[index].narration != plan.scenes[index].narration,
+                         "timing_source": "measured_sentences" if callable(getattr(tts, "synthesize_timed", None))
+                         else "scene_audio_only",
+                         "sentence_cues": cue_lists[index]})
+        start += round(seconds * 1000)
+    return [replace(scene, seconds=seconds) for scene, seconds in zip(scenes, fitted)], metadata
+
+
+def write_ass(path: Path, cues: list[dict], plan: RenderPlan, font: Path) -> None:
+    def timestamp(milliseconds: int) -> str:
+        centiseconds = round(milliseconds / 10)
+        return f"{centiseconds // 360000}:{centiseconds // 6000 % 60:02}:{centiseconds // 100 % 60:02}.{centiseconds % 100:02}"
+
+    lines = ["[Script Info]", "PlayResX: 1080", "PlayResY: 1920", "WrapStyle: 0", "[V4+ Styles]",
+             "Format: Name,Fontname,Fontsize,PrimaryColour,BackColour,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV",
+             f"Style: Default,Malgun Gothic,{plan.font_size},&H00FFFFFF,&H80000000,3,3,0,2,90,90,{1920 - plan.subtitle_y - 150}",
+             "[Events]", "Format: Layer,Start,End,Style,Text"]
+    draw = ImageDraw.Draw(Image.new("RGB", (1080, 1920)))
+    selected = ImageFont.truetype(str(font), plan.font_size)
+    for cue in cues:
+        wrapped, line = [], ""
+        for word in cue["text"].split():
+            candidate = f"{line} {word}".strip()
+            if line and draw.textlength(candidate, font=selected) > 900:
+                wrapped.append(line)
+                line = ""
+            pieces = text_lines(draw, word, selected, 900)
+            if len(pieces) > 1:
+                if line:
+                    wrapped.append(line)
+                wrapped.extend(pieces[:-1])
+                line = pieces[-1]
+            else:
+                line = f"{line} {word}".strip()
+        if line:
+            wrapped.append(line)
+        if len(wrapped) > 4:
+            raise RenderError("문장 자막이 안전 영역을 초과합니다. 대본을 줄이세요.", kind="subtitle")
+        # Never allow untrusted ASS override tags or newline injection.
+        text = r"\N".join(line.replace("\\", "＼").replace("{", "｛").replace("}", "｝") for line in wrapped)
+        lines.append(f"Dialogue: 0,{timestamp(cue['start_ms'])},{timestamp(cue['end_ms'])},Default,{text}")
+    path.write_text("\n".join(lines), encoding="utf-8-sig")
 
 
 class RenderEngine(Protocol):
@@ -460,32 +574,21 @@ class FFmpegAdapter:
         scenes = list(plan.scenes)
         timings: list[dict] = []
         if plan.fit_audio and not plan.silent:
-            # Synthesize everything first so scene timing can follow the real narration.
-            measured = []
-            for index, scene in enumerate(scenes):
-                if cancel.is_set():
-                    raise RenderError("영상 제작이 중단되었습니다.")
-                audio = work / f"scene-{index:03d}.wav"
-                tts.synthesize(scene.narration, audio, plan.voice, plan.duration, plan.speech)
-                measured.append(wav_duration(audio))
-            fitted = fit_timings(measured, [s.seconds for s in scenes], plan.duration)
-            scenes = [
-                replace(scene, seconds=seconds)
-                for seconds, scene in zip(fitted, scenes)
-            ]
-            timings = [
-                {"seconds": seconds, "audio_seconds": round(audio, 3)} for seconds, audio in zip(fitted, measured)
-            ]
+            scenes, timings = prepare_audio(plan, work, tts, cancel)
+        if getattr(tts, "attribution_required", False):
+            plan = replace(plan, title=plan.title + " · elevenlabs.io")
         for index, scene in enumerate(scenes):
             if cancel.is_set():
                 raise RenderError("영상 제작이 중단되었습니다.")
             image, audio, target = (
                 work / f"scene-{index:03d}{suffix}" for suffix in (".png", ".wav", ".mp4")
             )
+            cues = timings[index].get("sentence_cues", []) if timings else []
+            visual_scene = replace(scene, caption="") if cues else scene
             if scene.clip is not None:
-                overlay(plan, scene, index, image, font)
+                overlay(plan, visual_scene, index, image, font)
             else:
-                card(plan, scene, index, image, font)
+                card(plan, visual_scene, index, image, font)
             if not timings:
                 tts.synthesize(scene.narration, audio, plan.voice, scene.seconds, plan.speech)
             if wav_duration(audio) > scene.seconds + 0.05:
@@ -494,6 +597,14 @@ class FFmpegAdapter:
                 command = self.clip_command(binary, scene, image, audio, target)
             else:
                 command = self.command(binary, scene, image, audio, target)
+            if cues:
+                ass = work / f"scene-{index:03d}.ass"
+                write_ass(ass, cues, plan, font)
+                if scene.clip is not None:
+                    filter_index = command.index("-filter_complex") + 1
+                    command[filter_index] = command[filter_index].replace("[v]", f"[base];[base]ass={ass.name}[v]")
+                else:
+                    command[-1:-1] = ["-vf", f"ass={ass.name}"]
             self.execute(command, work, cancel)
             progress(10 + int((index + 1) / len(scenes) * 75))
         manifest = work / "concat.txt"
@@ -533,8 +644,14 @@ class FFmpegAdapter:
         metadata["ffmpeg_version"] = version
         metadata["audio"] = "silent" if plan.silent else "voice"
         metadata["audio_fit"] = bool(timings)
+        if plan.voice == "elevenlabs":
+            metadata["tts_provider"] = "elevenlabs"
+            metadata["attribution_required"] = bool(getattr(tts, "attribution_required", False))
+            metadata["non_commercial_only"] = metadata["attribution_required"]
         if timings:
             metadata["scene_timings"] = timings
+            metadata["script_shortened"] = any(t["shortened"] for t in timings)
+            metadata["human_review_required"] = True
         # Every clip scene carries the label (overlay), so every clip scene is listed as AI-generated.
         ai_scenes = [index for index, scene in enumerate(scenes) if scene.clip is not None or scene.ai_generated]
         if ai_scenes:

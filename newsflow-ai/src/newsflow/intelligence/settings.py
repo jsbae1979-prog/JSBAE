@@ -117,11 +117,11 @@ def month_start(now: datetime | None = None) -> datetime:
     return datetime(now.year, now.month, 1, tzinfo=UTC)
 
 
-def usage_this_month(sessions: sessionmaker[Session]) -> dict:
+def usage_this_month(sessions: sessionmaker[Session], provider: str = "openai") -> dict:
     with sessions() as session:
         total, calls = session.execute(
             select(func.coalesce(func.sum(AIUsage.total_tokens), 0), func.count(AIUsage.id)).where(
-                AIUsage.provider != "offline", AIUsage.created_at >= month_start()
+                AIUsage.provider == provider, AIUsage.created_at >= month_start()
             )
         ).one()
     return {"tokens": int(total), "calls": int(calls), "since": month_start().date().isoformat()}

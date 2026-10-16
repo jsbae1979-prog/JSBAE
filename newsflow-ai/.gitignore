@@ -15,6 +15,7 @@ build/
 dist/
 
 !requirements-dev.lock
+!requirements-supertonic.lock
 
 # User data must remain private even with an explicit project-root override.
 session.key
@@ -30,3 +31,21 @@ session.key
 /render-tmp/
 client_secret*.json
 oauth-client*.json
+/local-models/
+
+# Local credentials, generated media and optional model weights never belong in new commits.
+.claude/
+.claude.json
+.credentials.json
+auth.json
+*.dpapi
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.wav
+*.mp4
+*.onnx
+*.safetensors
+*.pem
+*.key

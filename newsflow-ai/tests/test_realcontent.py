@@ -206,7 +206,7 @@ def test_real_voice_uses_audio_fit_and_persists_scene_timing(real, app):
         scenes = session.scalars(select(Scene).where(Scene.project_id == ctx["video_project_id"]).order_by(Scene.position)).all()
         assert [(s.start_ms, s.end_ms) for s in scenes] == [(0, 12000), (12000, 20000), (20000, 30000)]
         cues = session.scalar(select(SubtitleTrack).where(SubtitleTrack.project_id == ctx["video_project_id"])).cues
-        assert cues[0]["end_ms"] == 12000 and cues[-1]["end_ms"] == 30000
+        assert cues[0]["end_ms"] == 11000 and cues[-1]["end_ms"] == 29000
         job = session.get(RenderJob, ctx["render_job_id"])
         assert job.status == "success"
 

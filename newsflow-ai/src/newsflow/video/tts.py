@@ -9,6 +9,7 @@ import sys
 import wave
 from dataclasses import dataclass
 from pathlib import Path
+from threading import Event
 from typing import Protocol
 
 from newsflow.intelligence.korean import split_sentences
@@ -270,6 +271,42 @@ class WindowsTTS:
         self._speak(text, target, voice, speech or SpeechSettings())
         if wav_duration(target) > seconds + 0.05:
             raise TTSError("음성이 장면 길이를 초과했습니다. 대본을 줄이거나 영상 길이를 늘리세요.")
+
+    def synthesize_timed(
+        self, text: str, target: Path, voice: str, seconds: float,
+        speech: SpeechSettings | None = None, *, cancel: Event | None = None,
+    ) -> list[dict]:
+        """Measure individually synthesized sentences; no guessed word alignment or audio trimming."""
+        speech = speech or SpeechSettings()
+        parts = split_sentences(text)
+        if not parts or len(text) > 400:
+            raise TTSError("문장별 음성 대본 길이를 확인하세요.")
+        cues, offset, parameters = [], 0, None
+        with wave.open(str(target), "wb") as joined:
+            for index, sentence in enumerate(parts):
+                if cancel is not None and cancel.is_set():
+                    raise TTSError("문장별 음성 생성 취소")
+                piece = target.with_name(f"{target.stem}-sentence-{index:03d}.wav")
+                self._speak(sentence, piece, voice, SpeechSettings(speech.rate, 0))
+                with wave.open(str(piece), "rb") as source:
+                    current = (source.getnchannels(), source.getsampwidth(), source.getframerate())
+                    if parameters is None:
+                        parameters = current
+                        joined.setnchannels(current[0])
+                        joined.setsampwidth(current[1])
+                        joined.setframerate(current[2])
+                    if current != parameters or source.getnframes() > current[2] * 120:
+                        raise TTSError("문장별 WAV 형식 또는 길이 불일치")
+                    count = source.getnframes()
+                    joined.writeframes(source.readframes(count))
+                    cues.append({"start_ms": round(offset * 1000 / current[2]),
+                                 "end_ms": round((offset + count) * 1000 / current[2]), "text": sentence})
+                    offset += count
+                    if index + 1 < len(parts):
+                        pause = round(current[2] * speech.pause_ms / 1000)
+                        joined.writeframes(b"\0" * pause * current[0] * current[1])
+                        offset += pause
+        return cues
 
     def preview(self, target: Path, voice: str, speech: SpeechSettings | None = None) -> float:
         """Short fixed Korean sample for listening tests; returns the produced duration."""
