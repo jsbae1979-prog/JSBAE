@@ -15,6 +15,7 @@ from newsflow.db.models import AIVideoPlan, AIVideoScene, ContentDraft, VideoAIU
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.video.ai.costs import CURRENCIES
 from newsflow.video.ai.policy import DEFAULT_PROMPT, SCENE_LABEL, STYLE_GUARD, VIDEO_NOTICE
+from newsflow.video.ai.preflight import inspect_setup
 from newsflow.video.ai.service import DISCARD_LABEL, AIVideoError
 from newsflow.video.ai.settings import (
     CANDIDATE_PATHS,
@@ -239,6 +240,18 @@ def settings_page(request: Request, saved: str = "") -> HTMLResponse:
         models=list_models(sessions), candidates=CANDIDATE_PATHS, disclaimer=DISCLAIMER, usage=usage,
         key=service.keys.status(), saved=saved[:20], style_guard=STYLE_GUARD,
     )
+
+
+@router.post("/video-ai-settings/preflight")
+def start_preflight() -> RedirectResponse:
+    # Match the existing fetch/redirect forms; the destination is strictly read-only.
+    return go("/video-ai-settings/preflight")
+
+
+@router.get("/video-ai-settings/preflight", response_class=HTMLResponse)
+def preflight(request: Request) -> HTMLResponse:
+    report = inspect_setup(request.app.state.sessions, _service(request).keys)
+    return page(request, "video_ai_preflight.html", active="simple-settings", report=report)
 
 
 @router.post("/video-ai-settings")

@@ -9,3 +9,5 @@
 - Preserve unknown publication dates and unassessed score components.
 - Run `python -m pytest -q -rs`; distinguish tests from real network/browser/OS validation.
 - Every cloud task is already isolated. Use this checkout; do not create a worktree unless requested.
+
+- Phase 5D.1: preserve the accepted 5D implementation; no automatic submit POST replay, including 408/429. Preserve reservations for unknown outcomes and quarantine legacy requeues. Public official documentation GET is permitted; never execute paid Higgsfield/OpenAI APIs, real OAuth or SNS in development/CI. Dated schema checks and local-only preflight do not prove real vendor compatibility, billing or user approval. Keep migrations 0001–0011 unchanged.

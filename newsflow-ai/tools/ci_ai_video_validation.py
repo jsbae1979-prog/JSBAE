@@ -206,6 +206,21 @@ def flow(mode: str, data: Path, env: dict, output: Path, executable: str | None,
 
             # 2. Settings: refusal without limits, then approval, limits and a confirmed model.
             page.goto(BASE + "/video-ai-settings")
+            # Phase 5D.1: a CSRF-protected POST opens a read-only local check.
+            with (
+                page.expect_navigation(wait_until="load"),
+                page.expect_response(lambda r: r.url == BASE + "/video-ai-settings/preflight"
+                                     and r.request.method == "POST") as preflight_post,
+            ):
+                page.locator('form[action="/video-ai-settings/preflight"] button').click()
+            assert preflight_post.value.status == 303
+            assert preflight_post.value.request.all_headers().get("origin") == BASE
+            assert page.locator("#video-ai-preflight").is_visible()
+            assert "외부 API 호출 0건" in page.content() and "NOT VERIFIED" in page.content()
+            assert db_rows(data, "SELECT COUNT(*) FROM video_ai_usage")[0][0] == 0
+            page.screenshot(path=str(output / "ai-preflight.png"), full_page=True)
+            result["local_preflight"] = "PASS (Chrome POST, Origin/CSRF, no provider call or cost reservation)"
+            page.goto(BASE + "/video-ai-settings")
             form = page.locator("#video-ai-settings-form")
             form.locator("#video-ai-provider").select_option("higgsfield")
             form.locator('input[name="approved"]').check()

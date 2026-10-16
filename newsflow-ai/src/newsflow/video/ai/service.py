@@ -82,7 +82,6 @@ SOURCES = ("card", "local", "generated")
 ACTIVE = frozenset({"waiting", "submitting", "queued", "in_progress", "downloading"})
 SUBMITTED = frozenset({"submitting", "queued", "in_progress"})
 RETRYABLE_END = frozenset({"planned", "failed", "nsfw", "canceled"})
-MAX_REQUEUES = 3
 MAX_REFETCHES = 3
 DISCARD_LABEL = "받아 둔 유료 AI 영상 버리기"
 TIMEOUT_OPEN_MESSAGE = (
@@ -984,6 +983,12 @@ class AIVideoCoordinator:
                 scene = session.get(AIVideoScene, scene_id)
                 if scene is None or scene.status != "waiting":
                     continue
+                # Upgrade safety: Phase 5D persisted these after a POST had already been sent.
+                # Never classify a replay reservation as not_sent when a gate later changes.
+                if (scene.clip_meta or {}).get("requeues"):
+                    self._fail(session, scene, ProviderAmbiguousSubmit.code, "unknown")
+                    self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
+                    continue
                 plan = session.get(AIVideoPlan, scene.plan_id)
                 draft = session.get(ContentDraft, plan.draft_id) if plan else None
                 model = models.get(scene.model_path)
@@ -1063,19 +1068,10 @@ class AIVideoCoordinator:
     def _submit_one(self, provider: VideoProvider, scene_id: int, attempt: int, request: ClipRequest) -> None:
         try:
             submission = provider.submit(request)
-        except ProviderRateLimited:
-            with self.sessions.begin() as session:
-                scene = session.get(AIVideoScene, scene_id)
-                requeues = int((scene.clip_meta or {}).get("requeues", 0)) + 1
-                if requeues > MAX_REQUEUES:
-                    self._fail(session, scene, ProviderRateLimited.code, "failed")
-                else:
-                    scene.status, scene.clip_meta = "waiting", {"requeues": requeues}
-                    scene.message = ERROR_MESSAGES[ProviderRateLimited.code][:300]
-                    scene.updated_at = utcnow()
-                self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
-            return
         except VideoProviderError as exc:
+            # Neither HTTP 408/429 nor a provider retry hint proves non-acceptance.
+            if isinstance(exc, ProviderRateLimited) and exc.sent:
+                exc = ProviderAmbiguousSubmit(status_code=exc.status_code)
             code = exc.code
             usage = "not_sent" if not exc.sent else ("unknown" if isinstance(exc, ProviderAmbiguousSubmit) else "failed")
             with self.sessions.begin() as session:
@@ -1252,7 +1248,9 @@ class AIVideoCoordinator:
             return
         try:
             with self.sessions.begin() as session:
-                for scene in session.scalars(select(AIVideoScene).where(AIVideoScene.status == "submitting")):
+                for scene in session.scalars(select(AIVideoScene).where(AIVideoScene.status.in_(("submitting", "waiting")))):
+                    if scene.status == "waiting" and not (scene.clip_meta or {}).get("requeues"):
+                        continue
                     self._fail(session, scene, ProviderAmbiguousSubmit.code, "unknown")
                     self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
                 for scene in session.scalars(select(AIVideoScene).where(AIVideoScene.status == "downloading")):
