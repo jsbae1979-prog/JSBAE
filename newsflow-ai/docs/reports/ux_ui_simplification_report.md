@@ -40,10 +40,18 @@
 
 ## 보존 및 남은 사항
 
-사용자 SQLite는 작업 전 읽기 전용 연결로 백업했다. 백업·DB·영상·세션·키는 Git에 포함하지 않았다. 사용자 뉴스 9개·대본 3개·영상 2개와 기존 최종 검토 대기 작업을 유지했다. 실제 사용자 설정 변경은 하지 않았다.
+사용자 SQLite는 작업 전 읽기 전용 연결로 백업했다. 백업·DB·영상·세션·키는 Git에 포함하지 않았다. 작업 전후 `integrity_check=ok`, 전체 테이블 건수·설정 SHA-256·기존 MP4 두 개의 SHA-256이 모두 동일했다. 사용자 뉴스 9개·대본 3개·영상 2개와 기존 최종 검토 대기 작업을 유지했다. 실제 사용자 설정 변경은 하지 않았다.
 
 Claude·Codex의 등록 뉴스 대본 제작은 기존 AI Studio에서 진행하며, 홈에서 선택한 45·60초는 대본 화면에서 다시 선택해야 한다. Supertonic·ElevenLabs는 기존 제작별 선택 구조를 유지한다. 실제 유료 호출·음성 청취·SNS 게시·모든 고급 기능의 전체 회귀는 이번 검증 대상이 아니다.
 
 변경 파일: GUI 라우트 3개, 템플릿 11개, CSS 1개, 연결 JS 2개, 테스트 6개, 전용 Windows workflow, 본 보고서와 화면 캡처. 엔진·DB 모델·migration·고정 의존성은 변경하지 않았다.
 
-최종 코드 SHA·Draft PR·Windows Actions 결과는 업로드 후 아래에 기록한다.
+## GitHub 결과
+
+- 검증된 최종 코드 SHA: `239685122f30fca2ba55ff5e32221b1116abe812` (이후 커밋은 결과 보고서만 갱신).
+- [Draft PR #23](https://github.com/jsbae1979-prog/JSBAE/pull/23), 기준 브랜치 `feat/newsflow-codex-research-integration`.
+- [Windows Actions 38900771047](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38900771047): **SUCCESS**. Python 3.12 **81 passed** / Python 3.14 **81 passed**; 양쪽 Ruff·pip check 통과. 전용 핵심 workflow 1회 실행, 전체 회귀 반복 없음.
+- 총 변경 파일 29개. 기존 PR #1~#22·main 변경 없음. 사용자 데이터·인증 정보·MP4·모델 가중치 업로드 없음.
+- 최종 GUI는 기존 데이터 경로로 `run.bat` 실행 상태이며 Chrome 홈을 열어 두었다. 별도 검증 서버는 정상 종료했다.
+
+샘플 MP4는 로컬 전용 `newsflow-ai/validation-output/ux-simplification/ui-test-data/outputs/videos/video-b86913add6ce40a28bfc7507db1840f7.mp4`에 보존했다. 사용자 청취·시청 평가는 이 기술 검증으로 대체하지 않는다. 추가 개발을 중단하고 판정을 기다린다.
