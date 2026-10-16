@@ -8,5 +8,5 @@
 {% macro csrf_field() %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endmacro %}
 {% macro badge(status) %}<span class="badge {{ status }}">{{ {'success':'성공','partial':'부분 실패','failed':'실패','running':'수집 중','empty':'활성 출처 없음','interrupted':'중단','idle':'대기'}.get(status,status) }}</span>{% endmacro %}
 {% macro when(value) %}{{ value|kst }}{% endmacro %}
-<main id="main-content" tabindex="-1"><noscript><p>작업을 시작하려면 브라우저 설정에서 JavaScript를 켜 주세요.</p></noscript><header class="topbar"><span>작은 시작으로, 하나의 영상까지</span><span class="pill">PHASE 5E</span></header>{% block content %}{% endblock %}</main>
+<main id="main-content" tabindex="-1"><noscript><p>작업을 시작하려면 브라우저 설정에서 JavaScript를 켜 주세요.</p></noscript><header class="topbar"><span>작은 시작으로, 하나의 영상까지</span><span class="pill">PHASE 5F</span></header>{% block content %}{% endblock %}</main>
 </body></html>

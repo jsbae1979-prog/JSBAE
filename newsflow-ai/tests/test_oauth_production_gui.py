@@ -64,7 +64,7 @@ def test_production_readiness_only_exposes_safe_stage_and_provider_descriptors(c
 def test_readiness_panel_distinguishes_preparation_from_real_verification(client, production_gui_account):
     response = client.get("/publishing")
     assert response.status_code == 200
-    assert "PHASE 5E" in response.text and "실운영 OAuth 준비 · 활성화 차단" in response.text
+    assert "PHASE 5F" in response.text and "실운영 OAuth 준비 · 활성화 차단" in response.text
     panel = re.search(r'<div[^>]*id="oauth-production-readiness"[^>]*>', response.text)
     assert panel is not None
     assert 'data-phase="4B-2B"' in panel.group()

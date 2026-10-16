@@ -25,6 +25,7 @@ from .db.session import make_engine, migrate, session_factory
 from .gui.ai_settings_routes import router as ai_settings_router
 from .gui.autopilot_routes import router as autopilot_router
 from .gui.intelligence_routes import router as intelligence_router
+from .gui.operations_routes import router as operations_router
 from .gui.publishing_routes import router as publishing_router
 from .gui.routes import router
 from .gui.scheduler_routes import router as scheduler_router
@@ -64,6 +65,7 @@ def _recover_intelligence_runs(sessions: sessionmaker[Session], data_dir: Path) 
 
 def create_app(
     settings: Settings | None = None, adapter: RSSAdapter | None = None, video_provider: VideoProvider | None = None,
+    *, automatic_start: bool = False,
 ) -> FastAPI:
     settings = settings or Settings.from_env()
     engine = make_engine(settings.data_dir / "newsflow.db")
@@ -101,7 +103,10 @@ def create_app(
     scheduler = Scheduler(sessions, settings.data_dir, autopilot)
     # Phase 5D: optional AI video provider. Off by default; only tests/CI inject the Fake provider.
     video_ai = AIVideoCoordinator(sessions, settings.data_dir, video, VideoAIKeyStore(settings.data_dir), video_provider)
-    video_ai.start()
+    if automatic_start:
+        video_ai.recover()  # Local recovery only: never resume paid submissions/polling at Windows logon.
+    else:
+        video_ai.start()
     secret = settings.local_secret().encode()
 
     @asynccontextmanager
@@ -181,6 +186,7 @@ def create_app(
         response.headers["Cache-Control"] = "no-store"
         return response
 
+    app.include_router(operations_router)
     app.include_router(scheduler_router)
     app.include_router(setup_router)
     app.include_router(autopilot_router)
@@ -196,7 +202,7 @@ def create_app(
     return app
 
 
-def run() -> None:
+def run(*, automatic_data_dir: Path | None = None) -> None:
     import uvicorn
 
     from .paths import prepare_data_dir
@@ -204,7 +210,7 @@ def run() -> None:
 
     logger = None
     try:
-        settings = Settings.from_env()
+        settings = Settings(data_dir=automatic_data_dir, host="127.0.0.1", port=8765) if automatic_data_dir else Settings.from_env()
         prepare_data_dir(settings.data_dir)
         logger = runtime_logger(settings.data_dir)
         with (
@@ -212,8 +218,11 @@ def run() -> None:
             FileLock(str(settings.data_dir / "migration.lock")).acquire(timeout=0),
             reserve_socket(settings.host, settings.port) as listener,
         ):
-            app = create_app(settings)
+            app = create_app(settings, automatic_start=automatic_data_dir is not None)
             logger.info("server_start port=%d", settings.port)
+            if automatic_data_dir:
+                from .operations.autorun import record
+                record(automatic_data_dir, "running")
             print(f"GUI 주소: http://{settings.host}:{settings.port} · 종료: Ctrl+C", flush=True)
             try:
                 uvicorn.Server(

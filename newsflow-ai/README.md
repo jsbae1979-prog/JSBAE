@@ -390,3 +390,7 @@ python tools/ci_production_vault_validation.py --output validation-output/produc
 ```
 
 별도 `newsflow-phase4b2b-windows.yml`은 이번 feature 브랜치에만 실행하며 전체 회귀, 실제 BAT·Google Chrome 로컬 POST·재시작, loopback HTTP callback, 합성 identity·토큰 회전 복구, 기존 및 운영 DPAPI 검증을 수행합니다. 실제 OAuth 로그인·서비스 토큰 교환·저장 및 SNS 호출을 실행하지 않습니다. 사용자 Windows 11 PC 운영, 기존 실제 RSS/AI API, 한국어 TTS와 완성 영상 품질은 여전히 별도 검증 사항입니다. 실제 인증과 게시 승인은 각각 별도 승인이 필요합니다. [Phase 4B-2B 보고서](docs/reports/phase4b2b_report.md).
+
+### Windows 로그인 시 시작과 사용자 PC 점검 (Phase 5F)
+
+설정 → **내 PC 운영 점검**에서 동의 후 자동 시작 등록·해제와 사용자 확인 결과 저장·JSON 다운로드를 할 수 있습니다. 기본값은 비활성입니다. 기존 `run.bat` 설치를 재사용하며 관리자 권한·암호·절전 해제·자동 패키지 설치를 요구하지 않습니다. 유료 AI와 SNS를 실행하지 않습니다. [Windows 운영 점검 안내](docs/windows_operational_readiness.md)를 확인하세요. CI와 사용자 PC·한국어 청취 품질 판정은 별개입니다.

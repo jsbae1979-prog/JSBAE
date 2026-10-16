@@ -1,0 +1,162 @@
+name: NewsFlow Phase 5F Windows validation
+
+on:
+  push:
+    branches: [feat/newsflow-phase5f]
+    paths:
+      - '.github/workflows/newsflow-phase5f-windows.yml'
+      - 'newsflow-ai/src/**'
+      - 'newsflow-ai/tests/**'
+      - 'newsflow-ai/tools/**'
+      - 'newsflow-ai/run.bat'
+      - 'newsflow-ai/setup.bat'
+      - 'newsflow-ai/pyproject.toml'
+      - 'newsflow-ai/requirements-dev.lock'
+      - 'newsflow-ai/.gitattributes'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: newsflow-phase5f-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-validation:
+    if: github.ref == 'refs/heads/feat/newsflow-phase5f'
+    runs-on: windows-latest
+    timeout-minutes: 80
+    env:
+      PYTHONUTF8: '1'
+      PYTHONIOENCODING: utf-8
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      # Phase 5F: no Higgsfield key or call exists in CI; the AI video step injects the offline Fake provider.
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      # Phase 5F never maps a real service key or enables any live AI step.
+      NEWSFLOW_AI_API_KEY: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install development and browser dependencies
+        timeout-minutes: 15
+        run: |
+          python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m playwright install chromium
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare Chromium-based Google Chrome for MP4 preview
+        timeout-minutes: 5
+        run: |
+          $chromePaths = @("$env:ProgramFiles\Google\Chrome\Application\chrome.exe", "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe")
+          if (-not ($chromePaths | Where-Object { Test-Path -LiteralPath $_ })) {
+            python -m playwright install chrome
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+      - name: Prepare real FFmpeg and pinned Korean font
+        timeout-minutes: 10
+        run: |
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ";C:\ProgramData\chocolatey\bin;C:\tools\ffmpeg\bin"
+          }
+          (Get-Command ffmpeg -ErrorAction Stop).Source | Out-Null
+          (Get-Command ffprobe -ErrorAction Stop).Source | Out-Null
+          @((Split-Path (Get-Command ffmpeg).Source), (Split-Path (Get-Command ffprobe).Source)) | Select-Object -Unique | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $fontPath = Join-Path $env:RUNNER_TEMP 'newsflow-noto-kr.ttf'
+          python tools/ci_prepare_font.py $fontPath
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "NEWSFLOW_FONT_PATH=$fontPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Actual short MP4 ffprobe and local TTS
+        run: |
+          python tools/ci_video_validation.py --output validation-output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual Windows DPAPI synthetic credential vault
+        run: |
+          python tools/ci_vault_validation.py --output validation-output/credential-vault.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual Windows production-vault synthetic encryption and recovery
+        run: |
+          python tools/ci_production_vault_validation.py --output validation-output/production-credential-vault.json
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Ruff entire project
+        run: |
+          python -m ruff check src tests tools
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: All offline regression, callback HTTP, identity and recovery tests
+        run: |
+          python -m pytest -q -rs --junitxml=validation-output/pytest.xml
+          $testExit = $LASTEXITCODE
+          python tools/ci_pytest_summary.py validation-output/pytest.xml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($testExit -ne 0) { exit $testExit }
+      - name: Actual BAT, persistence and operational OAuth GUI with production blocked
+        run: |
+          python tools/ci_validation.py --mode windows --output validation-output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual Easy UI, guided editing, local MP4 queue and BAT restart
+        run: |
+          python tools/ci_autopilot_validation.py --mode windows --output validation-output/autopilot
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual setup BAT, wizard recovery and 30 45 60 second videos
+        run: |
+          python tools/ci_easysetup_validation.py --mode windows --output validation-output/easysetup
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual real-content flow, RSS tests, reviews, Korean voice probe and live RSS attempt
+        timeout-minutes: 25
+        run: |
+          python tools/ci_realcontent_validation.py --mode windows --output validation-output/realcontent --live-rss 'https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual AI high-quality mode with the offline Fake provider, restart recovery and labelled MP4
+        timeout-minutes: 15
+        run: |
+          python tools/ci_ai_video_validation.py --mode windows --output validation-output/ai-video
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Actual scheduler Chrome flow, local MP4, restart and missed occurrence
+        timeout-minutes: 12
+        run: |
+          python tools/ci_scheduler_validation.py --mode windows --output validation-output/scheduler
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Operations consent and human checklist Chrome flow with Fake OS registration
+        timeout-minutes: 5
+        run: |
+          python tools/ci_operations_validation.py --mode windows --output validation-output/operations
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Public RSS feed review through the registered adapter (never fails the run)
+        timeout-minutes: 12
+        run: |
+          python tools/ci_feed_review.py --mode windows --output validation-output/feed-review --candidates tools/feed_candidates.json --max-seconds 540
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Korean SAPI voice probe with registry detection (never fails the run)
+        timeout-minutes: 10
+        run: |
+          python tools/ci_korean_voice_probe.py --output validation-output/voice
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: User guide and documentation link check (offline)
+        timeout-minutes: 3
+        run: |
+          python tools/ci_docs_link_check.py --output validation-output/docs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Record paid APIs as not executed
+        run: |
+          New-Item -ItemType Directory -Force -Path validation-output/ai-live | Out-Null
+          '{"mode":"offline-only","higgsfield_api_calls":0,"openai_api_calls":0,"cost":0,"actual_service":"NOT VERIFIED"}' | Out-File -FilePath validation-output/ai-live/phase5f-boundary.json -Encoding utf8
+      - name: Upload synthetic validation results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: newsflow-phase5f-windows-validation
+          path: newsflow-ai/validation-output/
+          if-no-files-found: warn
+          retention-days: 7
