@@ -1,0 +1,7 @@
+{% extends 'base.html' %}{% block title %}AI 영상 사전 점검 · NewsFlow AI{% endblock %}{% block content %}
+<div class="easy-page narrow-page" id="video-ai-preflight"><h1>AI 영상 사전 점검</h1><p>확인 시각: {{ report.checked_at_kst }} · 외부 API 호출 0건 · 비용 예약 0건</p>
+<div class="soft-notice" role="status">{{ '로컬 설정 점검 완료' if report.local_ready else '확인이 필요한 항목이 있습니다' }}. 이 결과는 실제 서비스 연결이나 유료 생성 승인이 아닙니다.</div>
+{% for check in report.checks %}<section class="easy-panel"><h2>{{ check.name }}</h2><span class="status-chip">{{ check.status }}</span><p>{{ check.detail }}</p></section>{% endfor %}
+<section class="easy-panel"><h2>비용과 중복 요청</h2><p>제출 요청은 자동으로 다시 보내지 않습니다. 결과 불명도 예상 한도에 포함하며, 기존 요청 번호가 있으면 조회·다운로드로 복구합니다. 실제 청구·환불 금액: NOT VERIFIED.</p><p>예약 {{ report.usage_counts.reserved }}건 · 접수 {{ report.usage_counts.submitted }}건 · 완료 {{ report.usage_counts.completed }}건 · 결과 불명 {{ report.usage_counts.unknown }}건</p><p>실제 API 인증·생성 품질·사용자 PC 운영은 별도 검증이 필요합니다. 모델별 가격과 기본 음성 생성 등 추가 옵션을 공급사에서 확인하세요.</p></section>
+<a class="button" href="/video-ai-settings">설정으로 돌아가기</a></div>
+{% endblock %}

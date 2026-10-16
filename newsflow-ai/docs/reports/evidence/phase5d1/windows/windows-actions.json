@@ -1,0 +1,201 @@
+{
+  "run_id": 38832096264,
+  "head_sha": "986355879681bdcc159163f413b2afed6c79b602",
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38832096264",
+  "conclusion": "success",
+  "started_at_kst": "2026-10-16 09:53:53 KST",
+  "finished_at_kst": "2026-10-16 10:08:28 KST",
+  "runner": "windows-latest / Windows Server 2025",
+  "python": "3.12.10",
+  "tests": 2230,
+  "passed": 2227,
+  "skipped": 3,
+  "failures": 0,
+  "errors": 0,
+  "warnings": 1,
+  "pytest_summary_log": "2026-10-16T01:01:28.8344780Z 2227 passed, 3 skipped, 1 warning in 329.83s (0:05:29)",
+  "skip_reasons": [
+    {
+      "class": "tests.test_ai_video_settings",
+      "name": "test_video_key_store_fails_closed_without_dpapi",
+      "reason": "Windows has a real DPAPI cipher"
+    },
+    {
+      "class": "tests.test_live_ai",
+      "name": "test_single_approved_openai_script_generation",
+      "reason": "opt-in paid AI live test: set NEWSFLOW_AI_LIVE_TEST=1, NEWSFLOW_AI_API_KEY and NEWSFLOW_AI_LIVE_MAX_TOKENS"
+    },
+    {
+      "class": "tests.test_live_rss",
+      "name": "test_google_news_live",
+      "reason": "opt-in live RSS: set NEWSFLOW_LIVE_TEST=1"
+    }
+  ],
+  "warning": "StarletteDeprecationWarning: httpx TestClient backend deprecated",
+  "node20_deprecation_warning": false,
+  "check_annotations": 36,
+  "warning_or_failure_annotations": [],
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:53:57Z",
+      "completed_at": "2026-10-16T00:53:57Z"
+    },
+    {
+      "name": "Run actions/checkout@v5",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:53:57Z",
+      "completed_at": "2026-10-16T00:54:05Z"
+    },
+    {
+      "name": "Run actions/setup-python@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:54:05Z",
+      "completed_at": "2026-10-16T00:54:05Z"
+    },
+    {
+      "name": "Install development and browser dependencies",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:54:05Z",
+      "completed_at": "2026-10-16T00:54:55Z"
+    },
+    {
+      "name": "Prepare Chromium-based Google Chrome for MP4 preview",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:54:55Z",
+      "completed_at": "2026-10-16T00:54:55Z"
+    },
+    {
+      "name": "Prepare real FFmpeg and pinned Korean font",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:54:55Z",
+      "completed_at": "2026-10-16T00:55:17Z"
+    },
+    {
+      "name": "Actual short MP4 ffprobe and local TTS",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:55:17Z",
+      "completed_at": "2026-10-16T00:55:24Z"
+    },
+    {
+      "name": "Actual Windows DPAPI synthetic credential vault",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:55:24Z",
+      "completed_at": "2026-10-16T00:55:26Z"
+    },
+    {
+      "name": "Actual Windows production-vault synthetic encryption and recovery",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:55:26Z",
+      "completed_at": "2026-10-16T00:55:53Z"
+    },
+    {
+      "name": "All offline regression, callback HTTP, identity and recovery tests",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T00:55:53Z",
+      "completed_at": "2026-10-16T01:01:32Z"
+    },
+    {
+      "name": "Actual BAT, persistence and operational OAuth GUI with production blocked",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:01:32Z",
+      "completed_at": "2026-10-16T01:02:44Z"
+    },
+    {
+      "name": "Actual Easy UI, guided editing, local MP4 queue and BAT restart",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:02:44Z",
+      "completed_at": "2026-10-16T01:03:36Z"
+    },
+    {
+      "name": "Actual setup BAT, wizard recovery and 30 45 60 second videos",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:03:36Z",
+      "completed_at": "2026-10-16T01:04:45Z"
+    },
+    {
+      "name": "Actual real-content flow, RSS tests, reviews, Korean voice probe and live RSS attempt",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:04:45Z",
+      "completed_at": "2026-10-16T01:06:02Z"
+    },
+    {
+      "name": "Actual AI high-quality mode with the offline Fake provider, restart recovery and labelled MP4",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:06:02Z",
+      "completed_at": "2026-10-16T01:06:56Z"
+    },
+    {
+      "name": "Public RSS feed review through the registered adapter (never fails the run)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:06:56Z",
+      "completed_at": "2026-10-16T01:08:20Z"
+    },
+    {
+      "name": "Korean SAPI voice probe with registry detection (never fails the run)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:08:20Z",
+      "completed_at": "2026-10-16T01:08:22Z"
+    },
+    {
+      "name": "User guide and documentation link check (offline)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:08:22Z",
+      "completed_at": "2026-10-16T01:08:22Z"
+    },
+    {
+      "name": "Record paid APIs as not executed",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:08:22Z",
+      "completed_at": "2026-10-16T01:08:22Z"
+    },
+    {
+      "name": "Upload synthetic validation results",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:08:22Z",
+      "completed_at": "2026-10-16T01:08:24Z"
+    },
+    {
+      "name": "Post Run actions/setup-python@v6",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:08:24Z",
+      "completed_at": "2026-10-16T01:08:24Z"
+    },
+    {
+      "name": "Post Run actions/checkout@v5",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:08:24Z",
+      "completed_at": "2026-10-16T01:08:26Z"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-10-16T01:08:26Z",
+      "completed_at": "2026-10-16T01:08:26Z"
+    }
+  ]
+}

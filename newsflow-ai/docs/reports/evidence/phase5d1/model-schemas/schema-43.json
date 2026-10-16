@@ -1,0 +1,60 @@
+{
+  "type": "object",
+  "title": "Wan 2.6 Playground",
+  "required": [
+    "prompt"
+  ],
+  "properties": {
+    "seed": {
+      "type": "integer",
+      "maximum": 2147483646,
+      "minimum": 1
+    },
+    "prompt": {
+      "type": "string",
+      "title": "Prompt",
+      "description": "Write your prompt here"
+    },
+    "duration": {
+      "type": "integer",
+      "title": "Duration",
+      "default": 5,
+      "maximum": 15,
+      "minimum": 2
+    },
+    "audio_url": {
+      "type": "string",
+      "title": "Audio URL",
+      "format": "uri"
+    },
+    "resolution": {
+      "enum": [
+        "720p",
+        "1080p"
+      ],
+      "type": "string",
+      "default": "720p"
+    },
+    "aspect_ratio": {
+      "enum": [
+        "16:9",
+        "9:16",
+        "1:1",
+        "4:3",
+        "3:4"
+      ],
+      "type": "string",
+      "title": "Aspect Ratio",
+      "default": "16:9"
+    },
+    "prompt_extend": {
+      "type": "boolean",
+      "default": false
+    },
+    "negative_prompt": {
+      "type": "string",
+      "title": "Negative prompt",
+      "default": ""
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "title": "Wan 2.6 Playground",
+  "required": [
+    "prompt"
+  ],
+  "properties": {
+    "seed": {
+      "type": "integer",
+      "maximum": 10000000,
+      "minimum": -1
+    },
+    "prompt": {
+      "type": "string",
+      "title": "Prompt",
+      "description": "Write your prompt here"
+    },
+    "duration": {
+      "enum": [
+        5,
+        10,
+        15
+      ],
+      "type": "integer",
+      "title": "Duration",
+      "default": 5
+    },
+    "audio_url": {
+      "type": "string",
+      "title": "Audio URL",
+      "format": "uri"
+    },
+    "resolution": {
+      "enum": [
+        "720p",
+        "1080p"
+      ],
+      "type": "string",
+      "default": "720p"
+    },
+    "multi_shots": {
+      "type": "boolean",
+      "default": false
+    },
+    "prompt_extend": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

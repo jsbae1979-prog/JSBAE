@@ -12,6 +12,8 @@ Phase 5D의 **AI 고품질 제작(선택)**은 기존 스토리보드·장면 �
 
 [간편 제작 사용법과 복구 정책](docs/autopilot.md) · [실제 콘텐츠 제작 안내](docs/realcontent.md) · [Phase 5C 검증 보고서](docs/reports/phase5c_realcontent_report.md)
 
+**Phase 5D.1 문서:** [인계 검증](docs/reports/codex_handover_report.md) · [공식 API 재검증](docs/reports/phase5d1_higgsfield_verification.md) · [Windows 최초 실행 점검](docs/windows_higgsfield_preflight_checklist.md). 설정의 **비용 없이 사전 점검**은 키 형식·모델·한도·비용 기록·영상 도구만 검사하며 외부 API를 호출하지 않습니다. 현재 검증 워크플로: `.github/workflows/newsflow-phase5d1-windows.yml` (유료 API 실행 없음).
+
 **Phase 5D 문서:** [AI 고품질 제작 안내](docs/user_guide_ai_video.md) · [구현 설계](docs/design/phase5d_ai_video_implementation.md) · [Higgsfield API 검증 결과](docs/reports/phase5d_higgsfield_api_verification.md) · [기존 기능 분석](docs/reports/phase5d_existing_analysis.md)
 
 **Phase 5C.1 문서:** [일반 사용자 실행·설정 안내서](docs/user_guide_realcontent.md) · [Windows 11 사용자 검증 체크리스트](docs/windows_user_verification_checklist.md) · [한국어 음성 청취 확인표](docs/korean_tts_listening_checklist.md) · [Phase 5D Higgsfield 영상 Provider 설계 초안](docs/design/phase5d_higgsfield_video_provider.md) · [Phase 5C.1 운영 준비도 보고서](docs/reports/phase5c1_operational_readiness_report.md)
@@ -40,10 +42,10 @@ Windows x64의 Python 3.12 + PyInstaller `onedir` 묶음으로 FastAPI/Jinja/sta
 ## Windows 설치와 최초 실행
 
 1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 5C.1 검토 브랜치 `feat/newsflow-phase5c1`을 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+2. Phase 5D.1 검토 브랜치 `feat/newsflow-phase5d1`을 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase5c1 https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase5d1 https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
@@ -103,7 +105,7 @@ Windows Actions 워크플로는 `.github/workflows/newsflow-phase5c1-windows.yml
 
 1. **설정** — `/video-ai-settings`: 공급사(기본 '사용 안 함'), 작업별·월 한도(USD/KRW, OpenAI 토큰 한도와 별도), 날짜가 있는 유료 생성 승인, 공식 문서로 확인한 모델(경로·초당 단가·허용 길이), API 키(별도 DPAPI 파일 `video-ai-key.dpapi` 또는 `NEWSFLOW_VIDEO_AI_KEY`).
 2. **스토리보드** — 저장한 대본의 장면·시간·자막을 그대로 쓰고 장면마다 카드 / 로컬 이미지 / AI 생성을 고릅니다. 실제 현장·기록 영상·실존 인물처럼 보이게 하는 프롬프트는 거부되고, 모든 프롬프트에 비실사 스타일 문장이 붙습니다.
-3. **유료 생성 확인** — 장면별 예상 비용·합계·한도를 확인하고 체크해야 요청합니다. 예상 비용과 한도는 확인 순간의 모델 단가로 다시 계산합니다. 공급사가 429·408(요청 과다·요청 시간 초과)로 받지 않은 요청만 같은 시도 안에서 같은 Idempotency-Key로 최대 3번 다시 보내고, 그 밖에 보낸 요청과 결과를 모르는 요청은 다시 보내지 않고 '결과 불명'으로 둡니다. 재시작해도 보낸 요청을 다시 보내지 않습니다.
+3. **유료 생성 확인** — 장면별 예상 비용·합계·한도를 확인하고 체크해야 요청합니다. 예상 비용과 한도는 확인 순간의 모델 단가로 다시 계산합니다. 408·429도 접수되지 않았다는 증거로 간주하지 않습니다. 제출 POST는 자동 재전송하지 않으며 결과를 확인할 수 없으면 '결과 불명'으로 둡니다. 재시작해도 보낸 요청을 다시 보내지 않습니다.
 4. **관계 검토와 최종 합성 승인** — AI 장면마다 원본 뉴스와의 관계를 검토한 뒤 최종 합성을 따로 승인하면 기존 FFmpeg 경로로 MP4를 만듭니다. AI 장면에는 끌 수 없는 "AI 생성 장면 · 실제 현장 영상 아님" 표시가 들어가고, 게시 준비에서는 AI 생성 표시(`disclose`)가 필요합니다.
 
 자동 테스트와 CI는 외부 호출이 없는 테스트 전용 Fake 공급자만 씁니다. Windows Actions 워크플로는 `.github/workflows/newsflow-phase5d-windows.yml`(artifact `newsflow-phase5d-windows-validation`)이며 5C.1 검증 전체에 `tools/ci_ai_video_validation.py`(실제 서버·브라우저·재시작·최종 MP4)를 더합니다. 사용법은 [AI 고품질 제작 안내](docs/user_guide_ai_video.md)를 참고하세요.
@@ -116,7 +118,7 @@ Windows Actions 워크플로는 `.github/workflows/newsflow-phase5c1-windows.yml
 
 ```powershell
 # JSBAE 저장소 루트에서
-git switch feat/newsflow-phase5c1
+git switch feat/newsflow-phase5d1
 git pull --ff-only
 cd newsflow-ai
 .\run.bat

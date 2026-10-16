@@ -11,10 +11,11 @@ cancel = ``POST {base}/requests/{id}/cancel`` (queued requests only; 202, then "
 The templates' generic text-to-video body is ``prompt``, ``aspect_ratio``, ``resolution`` and
 ``duration`` (seconds, a number), which is what this client sends.
 
-NOT VERIFIED (the docs sites could not be opened from this environment): prices, rate limits,
-output retention, whether failed/nsfw requests are refunded, idempotency keys and per-model
-duration limits. Unlike the SDK this client never retries a submit, so one approval is at most
-one billed request.
+Official docs were rechecked on 2026-10-16 (see phase5d1_higgsfield_verification.md).
+Their account-specific prices, permissions, refunds and idempotency behaviour have not been
+exercised. The four-field body is checked against dated model contracts before submission.
+A submit is never automatically retried, including HTTP 408/429. This limits client requests;
+it does not claim verified supplier billing behaviour.
 """
 
 from __future__ import annotations
@@ -56,6 +57,7 @@ from .contracts import (
 )
 from .download import SafeDownloader
 from .keys import VideoAIKeyStore
+from .model_contracts import check_model_contract
 from .settings import HOSTS, VideoSettingsError, validate_path
 
 USER_AGENT = "NewsFlowAI/0.6 (+local news briefing; Higgsfield REST)"
@@ -152,7 +154,7 @@ class HiggsfieldProvider:
         if status in (400, 422):
             return ProviderInputError(status_code=status)
         if status in (408, 429):
-            return ProviderRateLimited(status_code=status)
+            return ProviderAmbiguousSubmit(status_code=status) if submit else ProviderRateLimited(status_code=status)
         if status >= 500 and submit:
             # The request reached a server that failed; it may still have been queued and billed.
             return ProviderAmbiguousSubmit(status_code=status)
@@ -165,6 +167,8 @@ class HiggsfieldProvider:
             path = "/" + validate_path(request.model_path)
         except VideoSettingsError:
             raise ProviderInputError(sent=False) from None
+        if check_model_contract(request.model_path, (request.seconds,), request.resolution)[0] == "FAIL":
+            raise ProviderInputError(sent=False)
         payload = {
             "prompt": request.prompt, "duration": int(request.seconds),
             "aspect_ratio": request.aspect_ratio, "resolution": request.resolution,

@@ -61,7 +61,7 @@ from newsflow.video.ai.settings import HOSTS
 KEY_ID = "nfvidkey01"
 KEY_SECRET = "nfvidsecret-0123456789"
 KEY = f"{KEY_ID}:{KEY_SECRET}"  # synthetic, matches VideoAIKeyStore.PATTERN
-MODEL = "kling-video/v2.6/pro/text-to-video"
+MODEL = "kling-video/v3.0-turbo/text-to-video"
 PROMPT = "서울 도심의 출근길을 표현한 추상적 일러스트 [STYLE GUARD]"
 REQUEST_ID = "3f2c1a9e-7d4b-4b6b-9c1d-0123456789ab"
 CLIP_URL = "https://cdn.example.com/clips/a.mp4?Expires=1700000000&Signature=abc&Key-Pair-Id=K1"
@@ -396,7 +396,7 @@ def test_submit_accepted_with_unreadable_body_is_ambiguous(data):
 
 SUBMIT_ERRORS = [
     (401, ProviderAuthError), (402, ProviderCreditError), (403, ProviderCreditError), (404, ProviderModelError),
-    (400, ProviderInputError), (422, ProviderInputError), (408, ProviderRateLimited), (429, ProviderRateLimited),
+    (400, ProviderInputError), (422, ProviderInputError), (408, ProviderAmbiguousSubmit), (429, ProviderAmbiguousSubmit),
     (500, ProviderAmbiguousSubmit), (502, ProviderAmbiguousSubmit), (503, ProviderAmbiguousSubmit),
     (504, ProviderAmbiguousSubmit), (409, ProviderResponseError), (302, ProviderResponseError),
 ]
@@ -453,9 +453,9 @@ def test_submit_failure_after_sending_is_ambiguous_and_not_retried(failure):
 
 def test_submit_rate_limit_is_not_retried_internally():
     provider, requester = make((429, {}), accepted())
-    with pytest.raises(ProviderRateLimited) as caught:
+    with pytest.raises(ProviderAmbiguousSubmit) as caught:
         provider.submit(clip_request())
-    assert caught.value.retryable is True
+    assert caught.value.retryable is False
     assert len(requester.calls) == 1
 
 

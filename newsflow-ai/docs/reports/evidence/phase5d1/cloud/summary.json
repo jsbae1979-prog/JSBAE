@@ -1,0 +1,41 @@
+{
+  "code_sha": "986355879681bdcc159163f413b2afed6c79b602",
+  "baseline_cases": 2207,
+  "current_cases": 2230,
+  "added_cases": 23,
+  "renamed_updated_cases": [
+    [
+      "tests.test_ai_video_provider",
+      "test_submit_http_errors_map_to_fixed_messages_and_are_never_retried[408-ProviderRateLimited]"
+    ],
+    [
+      "tests.test_ai_video_provider",
+      "test_submit_http_errors_map_to_fixed_messages_and_are_never_retried[429-ProviderRateLimited]"
+    ],
+    [
+      "tests.test_ai_video_service",
+      "test_idempotency_key_kept_across_requeues_and_renewed_after_a_definite_failure"
+    ],
+    [
+      "tests.test_ai_video_service",
+      "test_rate_limited_submit_is_requeued_then_failed_after_max_requeues"
+    ],
+    [
+      "tests.test_easy_ui",
+      "test_missing_or_malformed_task_is_not_found[/autopilot/jobs/18e219f6a7aa40dfa6a6db419e6961ae]"
+    ]
+  ],
+  "passed": 2223,
+  "skipped": 7,
+  "failures": 0,
+  "warnings": 1,
+  "warning": "Existing Starlette httpx deprecation",
+  "python": "3.12.14",
+  "dependency_lock_matches": true,
+  "font_sha256": "194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252",
+  "live_paid_api_calls": 0,
+  "case_identity_note": "Two service test names and two provider exception parameter IDs changed with the no-retry policy; the Easy UI UUID parameter changes between runs. No test was removed.",
+  "gui_mode": "Chromium + injected FakeVideoProvider + real FFmpeg",
+  "gui_browser_playback": "PASS",
+  "user_pc_quality": "NOT VERIFIED"
+}

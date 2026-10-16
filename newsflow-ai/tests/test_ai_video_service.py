@@ -59,7 +59,6 @@ from newsflow.video.ai.service import (
     DRAFT_CHANGED,
     DRAFT_CHANGED_CLOSED,
     MAX_REFETCHES,
-    MAX_REQUEUES,
     PAUSED_REFUSAL,
     READY_MESSAGE,
     REFETCH_KEPT_FINAL,
@@ -70,7 +69,14 @@ from newsflow.video.ai.service import (
     AIVideoCoordinator,
     AIVideoError,
 )
-from newsflow.video.ai.settings import CURRENCY_CHANGED, list_models, month_start, save_model, write_settings
+from newsflow.video.ai.settings import (
+    CURRENCY_CHANGED,
+    LEDGER_INVALID,
+    list_models,
+    month_start,
+    save_model,
+    write_settings,
+)
 from newsflow.video.engine import FakeRenderAdapter
 from newsflow.video.tts import FakeTTS
 
@@ -108,6 +114,7 @@ SERVICE_MESSAGES = {
 STATUS_RETRY = "상태 확인 실패 · 다음 확인에서 다시 시도합니다. "
 SETTINGS_CHANGED = "설정이 바뀌어 AI 영상 생성 조건을 만족하지 않아 제출하지 않았습니다. "
 READINESS_REASONS = (
+    LEDGER_INVALID,
     "AI 영상 공급사가 '사용 안 함'입니다. 기본 FFmpeg 제작만 사용합니다.",
     "AI 영상 유료 생성 승인이 저장되지 않았습니다.",
     "작업별 한도와 월 한도가 없습니다.",
@@ -817,43 +824,38 @@ def test_fake_failure_markers_map_to_scene_and_usage_states(studio, marker, scen
         assert calls(studio.provider, "fetch") == []
 
 
-def test_rate_limited_submit_is_requeued_then_failed_after_max_requeues(studio):
+def test_rate_limited_submit_is_unknown_and_never_requeued(studio):
     ready_studio(studio)
     plan_id = generated_plan(studio, {0: PROMPT + " [fake:rate]"})
     confirm(studio, plan_id)
-    for attempt in range(1, MAX_REQUEUES + 1):
+    for _ in range(5):
         studio.service.tick()
-        scene = scenes(studio, plan_id)[0]
-        assert scene.status == "waiting" and scene.clip_meta == {"requeues": attempt}
-        assert scene.message == ERROR_MESSAGES["video_ai_rate_limited"] and scene.error_code is None
-        assert [row.status for row in usage(studio)] == ["reserved"]
-        assert plan_row(studio, plan_id).status == "generating"
-    studio.service.tick()
     scene = scenes(studio, plan_id)[0]
-    assert (scene.status, scene.error_code) == ("failed", "video_ai_rate_limited")
-    assert [row.status for row in usage(studio)] == ["failed"]
-    assert len(calls(studio.provider, "submit")) == MAX_REQUEUES + 1
-    studio.service.tick()
-    assert len(calls(studio.provider, "submit")) == MAX_REQUEUES + 1
+    assert (scene.status, scene.error_code) == ("unknown", "video_ai_unknown_submit")
+    assert [row.status for row in usage(studio)] == ["unknown"]
+    assert len(calls(studio.provider, "submit")) == 1
+    assert studio.service.readiness()["usage"]["spent"] == Decimal("0.5")
+    assert plan_row(studio, plan_id).status == "review"
+    with pytest.raises(AIVideoError):
+        studio.service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True)
 
 
-def test_idempotency_key_kept_across_requeues_and_renewed_after_a_definite_failure(studio):
+def test_idempotency_key_kept_after_unknown_and_renewed_after_a_definite_failure(studio):
     ready_studio(studio)
     plan_id = generated_plan(studio, {0: PROMPT + " [fake:rate]", 1: PROMPT + " [fake:fail]"})
     confirm(studio, plan_id)
-    studio.service.tick()  # scene 1 (rate) is requeued, scene 2 (fail) is submitted and fails
-    studio.service.tick()  # scene 1 is resent within the same attempt
+    studio.service.tick()
+    studio.service.tick()
     keys = submit_keys(studio.provider)
-    assert len(keys) == 3 and keys[0] == keys[2] != keys[1]
+    assert len(keys) == 2 and keys[0] != keys[1]
     assert all(re.fullmatch(r"[0-9a-f]{32}", key) for key in keys)
-    assert scenes(studio, plan_id)[1].status == "failed" and scenes(studio, plan_id)[1].submit_key == keys[1]
-    edit_scene(studio, plan_id, 0, prompt=PROMPT)  # stop the rate limit marker for the retry below
-    studio.service.cancel_scene(plan_id, revision(studio, plan_id), 0)
-    confirm(studio, plan_id)
+    assert scenes(studio, plan_id)[1].status == "failed"
+    studio.service.resolve_unknown(plan_id, revision(studio, plan_id), 0)
+    confirm(studio, plan_id)  # a new explicit approval, never an automatic resend
     renewed = {s.position: s.submit_key for s in scenes(studio, plan_id)}
-    assert renewed[0] not in keys and renewed[1] not in keys  # only an unknown outcome keeps its key
-    assert re.fullmatch(r"[0-9a-f]{32}", renewed[1])
-    assert [(row.attempt, row.status) for row in usage(studio)] == [(1, "not_sent"), (1, "failed"), (2, "reserved"), (2, "reserved")]
+    assert renewed[0] == keys[0] and renewed[1] not in keys
+    assert [(row.attempt, row.status) for row in usage(studio)] == [
+        (1, "unknown"), (1, "failed"), (2, "reserved"), (2, "reserved")]
 
 
 def test_slow_generation_stays_in_progress(studio):
@@ -2242,11 +2244,12 @@ def test_a_key_is_never_sent_with_two_different_request_bodies(studio, monkeypat
         raise ProviderRateLimited()
 
     monkeypatch.setattr(studio.provider, "submit", rate_limited)
-    studio.service.tick()  # the 10 s body went out under its key and came back 429: requeued
+    studio.service.tick()  # the 10 s body went out: 429 is now unknown, never requeued
     monkeypatch.setattr(studio.provider, "submit", record)
     lengths("5")
-    studio.service.tick()  # the send gate drops the 10 s reservation (model changed): not sent again
-    assert [row.status for row in usage(studio)] == ["unknown", "not_sent"]
+    studio.service.tick()  # no automatic submission, even after changing the model
+    assert [row.status for row in usage(studio)] == ["unknown", "unknown"]
+    studio.service.resolve_unknown(plan_id, revision(studio, plan_id), 0)
     confirm(studio, plan_id)  # attempt 3: 5 s again
     studio.service.tick()
     bodies = {}

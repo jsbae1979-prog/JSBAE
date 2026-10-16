@@ -1,0 +1,133 @@
+{
+  "mode": "windows",
+  "platform": "win32",
+  "outcome": "PASS with explicit NOT VERIFIED items",
+  "scenario": "registered RSS (fixture bytes) / offline AI / default voice / mandatory reviews / local queue",
+  "external_ai_calls": 0,
+  "sns_calls": 0,
+  "Windows11_user_PC": "NOT VERIFIED",
+  "rss_register_test_collect": "PASS (fixture bytes through the registered adapter path)",
+  "ai_approval_requires_limit": "PASS (422 without monthly limit)",
+  "external_ai": "NOT VERIFIED (no API key in CI; gate closed, 0 calls)",
+  "korean_voice_page": "PASS (install guidance shown; no Korean SAPI voice)",
+  "script_edit_with_closing": "PASS (revision 2)",
+  "real_videos": [
+    {
+      "file": "real-30s.mp4",
+      "sha256": "443d93b31dfbfe40330a288c1b0eba754a0bb7bcf58a3d5214a276f3fc1fa407",
+      "bytes": 229638,
+      "duration": 30.021029,
+      "audio": "silent",
+      "browser_playback": "PASS (playback time advanced)",
+      "human_watch_quality": "NOT VERIFIED",
+      "korean_pronunciation": "n/a (silent review video)"
+    },
+    {
+      "file": "real-45s.mp4",
+      "sha256": "10cbbd49c098414854ea7b942e5f36c9745ed7f5412360375020dffae6a13132",
+      "bytes": 284856,
+      "duration": 45.021029,
+      "audio": "silent",
+      "browser_playback": "PASS (playback time advanced)",
+      "human_watch_quality": "NOT VERIFIED",
+      "korean_pronunciation": "n/a (silent review video)"
+    },
+    {
+      "file": "real-60s.mp4",
+      "sha256": "208c0ce036cb576749fbf96f9445a1db67099eea0ea4c72a3a8594f88fb2c8dd",
+      "bytes": 394521,
+      "duration": 60.021029,
+      "audio": "silent",
+      "browser_playback": "PASS (playback time advanced)",
+      "human_watch_quality": "NOT VERIFIED",
+      "korean_pronunciation": "n/a (silent review video)"
+    }
+  ],
+  "real_content_easy_flow": "PASS (script review → final review → local queue, 30/45/60)",
+  "restart_persistence": "PASS",
+  "database": {
+    "ai_price_settings": {},
+    "autopilot_jobs": [
+      {
+        "content_mode": "real",
+        "ai_mode": "offline",
+        "status": "completed"
+      },
+      {
+        "content_mode": "real",
+        "ai_mode": "offline",
+        "status": "completed"
+      },
+      {
+        "content_mode": "real",
+        "ai_mode": "offline",
+        "status": "completed"
+      }
+    ],
+    "external_ai_calls_recorded": 0,
+    "intelligence_providers": [
+      "offline"
+    ],
+    "source_checks": [
+      {
+        "status": "pass",
+        "articles": 3
+      }
+    ],
+    "drafts_with_review_notes": 3,
+    "human_approval_preserved": true,
+    "publish_jobs": 0
+  },
+  "browser_external_request_origins": [],
+  "browser_javascript_errors": 0,
+  "screenshots": [
+    "ai-settings.png",
+    "queue.png",
+    "real-final-review.png",
+    "real-script-review.png",
+    "sources-collected.png",
+    "sources-tested.png",
+    "voices.png"
+  ],
+  "korean_voice_count": 0,
+  "korean_tts": "NOT VERIFIED (runner has no installed Korean SAPI voice)",
+  "live_rss_diagnosis": {
+    "order": "before (in-process) -> server test -> on failure: after (in-process), robots, server retest",
+    "before": {
+      "status": "pass",
+      "kind": null,
+      "message": "기사 100개 · 발행시각 있음 100개 · 요약 충분 54개",
+      "articles": 100,
+      "error_type": null,
+      "requests": [
+        {
+          "host": "www.chosun.com",
+          "path": "/robots.txt",
+          "query": false,
+          "status": 200,
+          "bytes": 479,
+          "sha256": "62f170517be85367"
+        },
+        {
+          "host": "www.chosun.com",
+          "path": "/arc/outboundfeeds/rss/",
+          "query": true,
+          "status": 200,
+          "bytes": 164515,
+          "sha256": "1ac37b102f469423"
+        }
+      ]
+    }
+  },
+  "live_public_rss": {
+    "url": "https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml",
+    "status": "PASS",
+    "kind": null,
+    "message": "기사 100개 · 발행시각 있음 100개 · 요약 충분 54개",
+    "articles": 100,
+    "note": "network-dependent; articles were not stored by the connection test",
+    "client_timeout": null,
+    "row_wait_seconds": 0.0,
+    "source_id": 2
+  }
+}

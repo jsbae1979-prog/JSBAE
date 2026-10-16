@@ -1,0 +1,260 @@
+{
+  "purpose": "Public official documentation GET only; no API endpoint invoked",
+  "records": [
+    {
+      "url": "https://docs.higgsfield.ai/",
+      "checked_at_kst": "2026-10-16T07:54:31.047284+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs",
+      "bytes": 349987,
+      "sha256": "bdaa667818ff96b0157b08955a0e73d32aa2b4d132749935ac98148b494bd1bd"
+    },
+    {
+      "url": "https://higgsfield.ai/terms-of-use",
+      "checked_at_kst": "2026-10-16T07:54:31.048059+09:00",
+      "status": 404,
+      "error": "HTTPError",
+      "reason": "HTTP Error 404: Not Found"
+    },
+    {
+      "url": "https://higgsfield.ai/pricing",
+      "checked_at_kst": "2026-10-16T07:54:31.048684+09:00",
+      "status": 200,
+      "final_url": "https://higgsfield.ai/pricing",
+      "bytes": 84476,
+      "sha256": "3a3f0a035bafac23d5512b76c2c19f718f5ba1fc9c7b0cef3417e9534b536732"
+    },
+    {
+      "url": "https://open.higgsfield.ai/",
+      "checked_at_kst": "2026-10-16T07:54:31.049427+09:00",
+      "status": 200,
+      "final_url": "https://open.higgsfield.ai/explore",
+      "bytes": 618148,
+      "sha256": "5f6fc61861e03e73a749c8b463fcb7b131da3c8db231b4c38db1d2ac7066c5d6"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/higgsfield-ai/app-templates/main/README.md",
+      "checked_at_kst": "2026-10-16T07:54:31.334358+09:00",
+      "status": 200,
+      "final_url": "https://raw.githubusercontent.com/higgsfield-ai/app-templates/main/README.md",
+      "bytes": 5096,
+      "sha256": "0327289378eef12ae2b0c715fc1a0b10bb0d4eea0ad61bc290781a99d19e972b"
+    },
+    {
+      "url": "https://pypi.org/pypi/higgsfield-client/json",
+      "checked_at_kst": "2026-10-16T07:54:31.687464+09:00",
+      "status": 200,
+      "final_url": "https://pypi.org/pypi/higgsfield-client/json",
+      "bytes": 17855,
+      "sha256": "e423980b8fca608a3920a3aa2ad38bc09670bb36a9ea3be68cc9d8e7dece5a20"
+    },
+    {
+      "url": "https://registry.npmjs.org/@higgsfield/client/latest",
+      "checked_at_kst": "2026-10-16T07:54:31.868366+09:00",
+      "status": 200,
+      "final_url": "https://registry.npmjs.org/@higgsfield/client/latest",
+      "bytes": 2762,
+      "sha256": "b016378561a5a3511eb896e175c1bd9531e247bb1816314f132aebc5bf4403fa"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/authentication.md",
+      "checked_at_kst": "2026-10-16T07:55:18.390919+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/authentication.md",
+      "bytes": 2317,
+      "sha256": "7c00d38b91b41a8199bdb9486ff7652105446f74e521062aa2e006cf4f73e967"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/concepts/idempotency.md",
+      "checked_at_kst": "2026-10-16T07:55:18.392630+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/concepts/idempotency.md",
+      "bytes": 3699,
+      "sha256": "487dadfd0d8ce01d6b29e7615d0bc04db22fa9d7861c31c69f96077b2d5d6857"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/concepts/errors.md",
+      "checked_at_kst": "2026-10-16T07:55:18.393442+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/concepts/errors.md",
+      "bytes": 2569,
+      "sha256": "1e5087e50eee54640934c7a7923d601ecab507472af6642bcdf6cb66b3d1cf20"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/concepts/rate-limits.md",
+      "checked_at_kst": "2026-10-16T07:55:18.394207+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/concepts/rate-limits.md",
+      "bytes": 2036,
+      "sha256": "b9b45c75253d0c0036956268c0c73f1bdcf2ec0bf0695c2df7584714317b52da"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+      "checked_at_kst": "2026-10-16T07:55:18.789742+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/concepts/billing-and-retention.md",
+      "bytes": 2199,
+      "sha256": "40bd4322a732e252f6cc5920f2a026e9a6e648bf302190c4e3bc9ef4b82703dc"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models.md",
+      "checked_at_kst": "2026-10-16T07:55:18.939496+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models.md",
+      "bytes": 2580,
+      "sha256": "7531a373b3a23a600601c0fa9cd00ef2527e0e6e6688d47c3c2e34cc006cc2cd"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/api-reference/requests/cancel-a-queued-request.md",
+      "checked_at_kst": "2026-10-16T07:55:18.945598+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/api-reference/requests/cancel-a-queued-request.md",
+      "bytes": 2567,
+      "sha256": "4282cad6640c0cf5ca0ac2bcc21d49a0aff91d2e455761af9181b17fd78e1293"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/api-reference/requests/get-request-status.md",
+      "checked_at_kst": "2026-10-16T07:55:19.025256+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/api-reference/requests/get-request-status.md",
+      "bytes": 3530,
+      "sha256": "cafcff8b89b022800f2c8d91a33f7a9e652c78a95897b50ab980976c44175da0"
+    },
+    {
+      "url": "https://higgsfield.ai/terms-of-use-agreement",
+      "checked_at_kst": "2026-10-16T07:55:19.188082+09:00",
+      "status": 200,
+      "final_url": "https://higgsfield.ai/terms-of-use-agreement",
+      "bytes": 284078,
+      "sha256": "f398d4906b058bb6f4519347759447870fb7c0103468b48e2363653c58327000"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/kling-3.md",
+      "checked_at_kst": "2026-10-16T07:55:55.447558+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/kling-3.md",
+      "bytes": 2062,
+      "sha256": "9167262cc21536d690228505efacda1e8b407eed3f35af97bd9f4048e21da051"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/kling-2-6.md",
+      "checked_at_kst": "2026-10-16T07:55:55.448315+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/kling-2-6.md",
+      "bytes": 1342,
+      "sha256": "d111cb276d46ba40646420f5147a1f49f40af4c3cfa6982c4bd1659871d5e97e"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/wan-2-6.md",
+      "checked_at_kst": "2026-10-16T07:55:55.450366+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/wan-2-6.md",
+      "bytes": 1327,
+      "sha256": "0b19bba493fab1cfbc109a23eeaf4c9e492a0dde421a261df26b724a1a17ca82"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/wan-2-7.md",
+      "checked_at_kst": "2026-10-16T07:55:55.452154+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/wan-2-7.md",
+      "bytes": 1269,
+      "sha256": "8f2d67bc46acbcc0235af5b0db1ed77fff6b58ac7f6854b44346196cad4f45bd"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/wan-3.md",
+      "checked_at_kst": "2026-10-16T07:55:55.836008+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/wan-3.md",
+      "bytes": 1334,
+      "sha256": "0071a38c0e0096503d5bddb6e4a59741dfd43a295fe2bbe86627500f1b4503b9"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/wan-3-prime.md",
+      "checked_at_kst": "2026-10-16T07:55:55.853182+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/wan-3-prime.md",
+      "bytes": 1426,
+      "sha256": "1e964313b5c22211b1ff09c0361047f15e769d68b361bcca495f08ad7d050293"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/pixverse-v6.md",
+      "checked_at_kst": "2026-10-16T07:55:55.869741+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/pixverse-v6.md",
+      "bytes": 1130,
+      "sha256": "4f274e74a04253cc900cb333e5e31c24bb96d49040bbf4c2ef67fd20d47ebb0d"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/ltx-2-5.md",
+      "checked_at_kst": "2026-10-16T07:55:55.870906+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/ltx-2-5.md",
+      "bytes": 1528,
+      "sha256": "e9fca5dd1a37983adbec331fd2495be7b96d06029fbeb10c96416fdc689fde92"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/kling-3/turbo-text-to-video.md",
+      "checked_at_kst": "2026-10-16T07:56:13.582524+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/kling-3/turbo-text-to-video.md",
+      "bytes": 5646,
+      "sha256": "ea833f2704103277e1688cf6c60136d95bba23169a138e612afada6e940ccd73"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/kling-2-6/pro-text-to-video.md",
+      "checked_at_kst": "2026-10-16T07:56:13.583347+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/kling-2-6/pro-text-to-video.md",
+      "bytes": 5708,
+      "sha256": "83643dd1569298774119bc6452f589088f80deb9d5ec7cbfed63e0fdcacd4775"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/wan-2-6/text-to-video.md",
+      "checked_at_kst": "2026-10-16T07:56:13.583924+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/wan-2-6/text-to-video.md",
+      "bytes": 5780,
+      "sha256": "34475c0c58632f7f6a67008392937a70da10646a8dcf3f30475a176727ca6789"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/wan-2-7/text-to-video.md",
+      "checked_at_kst": "2026-10-16T07:56:13.586524+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/wan-2-7/text-to-video.md",
+      "bytes": 6162,
+      "sha256": "b6b27584f5300a00eb8a4b56db0d258cc26be1a3f5c6b3cc639355a2135e4196"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/wan-3/text-to-video.md",
+      "checked_at_kst": "2026-10-16T07:56:13.984614+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/wan-3/text-to-video.md",
+      "bytes": 6266,
+      "sha256": "9bdde30cb5d30f093acbb24e658f4a99c67f1325b33e53b608b7c8c64a3b4d2d"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/wan-3-prime/text-to-video.md",
+      "checked_at_kst": "2026-10-16T07:56:13.997299+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/wan-3-prime/text-to-video.md",
+      "bytes": 6384,
+      "sha256": "5addd4d817a0e303550b6900a599bfbfeec848b7e1418f77ac8c5f48ebf64ef5"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/pixverse-v6/text-to-video.md",
+      "checked_at_kst": "2026-10-16T07:56:14.030588+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/pixverse-v6/text-to-video.md",
+      "bytes": 6414,
+      "sha256": "dadf0e51d0543b9b7c0f3be7c6628adbe40598dfabbc34ea3daca3912afcde62"
+    },
+    {
+      "url": "https://docs.higgsfield.ai/docs/models/ltx-2-5/text-to-video-fast.md",
+      "checked_at_kst": "2026-10-16T07:56:14.057118+09:00",
+      "status": 200,
+      "final_url": "https://docs.higgsfield.ai/docs/models/ltx-2-5/text-to-video-fast.md",
+      "bytes": 6914,
+      "sha256": "e39d22542b30a30e29a2f71d2fb35ef6be6208f9507d4a0374594bab5e5fb176"
+    }
+  ]
+}

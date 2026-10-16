@@ -1,0 +1,1 @@
+Selected evidence from the successful browser run. ai-video-validation.json is the unmodified tool output. Its screenshots list includes failure.png left by the earlier POST-to-GET navigation failure; that old screenshot is not a result of the passing run and is not included. The issue and fix are recorded in the completion report. Synthetic content only.

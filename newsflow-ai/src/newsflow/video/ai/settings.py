@@ -25,17 +25,13 @@ HOSTS = ("api.higgsfield.ai",)
 RESOLUTIONS = ("480p", "720p", "1080p")
 MODEL_LIMIT = 10
 PATH_PATTERN = re.compile(r"[a-z0-9][a-z0-9._-]{0,40}(/[a-z0-9][a-z0-9._-]{0,40}){1,6}")
-# Text-to-video paths from the official app templates (higgsfield-ai/app-templates commit 1e15e22,
-# generation/catalog/models) whose template body is exactly prompt/aspect_ratio/resolution/duration
-# and which allow 9:16. Kling 3.0 Std/Pro and Seedance take other fields; MiniMax is left out because
-# the official CLI model table lists no aspect ratio and other resolutions for it.
+# Dated official schema candidates (2026-10-16); actual access/prices remain unverified.
+# Exclude Kling 2.6 and Wan 2.6: their schemas differ from our four-field request body.
 CANDIDATE_PATHS = (
     "kling-video/v3.0-turbo/text-to-video",
-    "kling-video/v2.6/pro/text-to-video",
     "alibaba/wan-3.0/text-to-video",
     "alibaba/wan-3.0-prime/text-to-video",
     "wan/v2.7/text-to-video",
-    "wan/v2.6/text-to-video",
     "pixverse/v6/text-to-video",
     "lightricks/ltx-2.5/text-to-video/fast",
 )
@@ -310,8 +306,25 @@ def plan_currency_mismatch(session: Session, plan_id: int, currency: str) -> boo
     ).limit(1)) is not None
 
 
+LEDGER_INVALID = "AI 영상 비용 기록을 검증하지 못했습니다. 원본 DB를 보존하고 기록을 확인하기 전에는 새 요청을 보내지 않습니다."
+
+
+def ledger_valid(session: Session) -> bool:
+    """Do not silently omit malformed ledger entries when deciding whether more can be spent."""
+    for row in session.scalars(select(VideoAIUsage)):
+        if row.status not in (*COUNTED, "not_sent") or row.currency not in CURRENCIES:
+            return False
+        try:
+            parse_money(row.estimated_cost, blank=False)
+        except CostError:
+            return False
+    return True
+
+
 def check_budget(session: Session, settings: VideoAISettings, plan_id: int, batch: Decimal) -> None:
     """Raise before any request when this plan or this month would pass the user's limits."""
+    if not ledger_valid(session):
+        raise VideoSettingsError(LEDGER_INVALID)
     if settings.job_limit <= 0 or settings.monthly_limit <= 0:
         raise VideoSettingsError("작업별 한도와 월 한도가 설정되지 않아 AI 영상을 생성하지 않습니다.")
     if plan_currency_mismatch(session, plan_id, settings.currency):
@@ -344,6 +357,9 @@ def readiness(
     usage = usage_this_month(sessions)
     models = list_models(sessions)
     reasons = []
+    with sessions() as session:
+        if not ledger_valid(session):
+            reasons.append(LEDGER_INVALID)
     provider = provider_override or settings.provider
     if provider == "off":
         reasons.append("AI 영상 공급사가 '사용 안 함'입니다. 기본 FFmpeg 제작만 사용합니다.")

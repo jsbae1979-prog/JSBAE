@@ -1,0 +1,6 @@
+2026-10-16T01:01:28.8339363Z   C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+2026-10-16T01:01:28.8342549Z SKIPPED [1] tests\test_ai_video_settings.py:1157: Windows has a real DPAPI cipher
+2026-10-16T01:01:28.8343253Z SKIPPED [1] tests\test_live_ai.py:25: opt-in paid AI live test: set NEWSFLOW_AI_LIVE_TEST=1, NEWSFLOW_AI_API_KEY and NEWSFLOW_AI_LIVE_MAX_TOKENS
+2026-10-16T01:01:28.8344301Z SKIPPED [1] tests\test_live_rss.py:11: opt-in live RSS: set NEWSFLOW_LIVE_TEST=1
+2026-10-16T01:01:28.8344780Z 2227 passed, 3 skipped, 1 warning in 329.83s (0:05:29)
+2026-10-16T01:01:54.3032469Z C:\hostedtoolcache\windows\Python\3.12.10\x64\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
