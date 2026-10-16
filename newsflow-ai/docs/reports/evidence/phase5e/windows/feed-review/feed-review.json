@@ -1,0 +1,1426 @@
+{
+  "tool": "ci_feed_review",
+  "mode": "windows",
+  "platform": "Windows-2025Server-10.0.26100-SP0",
+  "python": "3.12.10",
+  "feedparser": "6.0.14",
+  "started_at": "2026-10-16T03:02:58+00:00",
+  "adapter": "PublicRSSAdapter (robots/SSRF/TLS/redirect/2MiB policy unchanged)",
+  "user_agent": "NewsFlowAI/0.1 (+RSS-only local reader)",
+  "request_timeout": 10,
+  "network": {
+    "dns_preflight": "OK",
+    "https_proxy_present": false,
+    "proxy_used_by_transport": false
+  },
+  "terms_confirmed_by_human": false,
+  "article_bodies_fetched": false,
+  "summary": {
+    "feeds": 22,
+    "attempted": 17,
+    "PASS": 13,
+    "BLOCKED": 4,
+    "NOT VERIFIED": 5,
+    "FAIL": 0,
+    "by_kind": {
+      "robots": 4
+    },
+    "by_reason": {
+      "not_enabled": 5
+    },
+    "expectation_unmet": [],
+    "elapsed_seconds": 81.8
+  },
+  "feeds": [
+    {
+      "id": "google-news-kr-top",
+      "name": "Google 뉴스 · 한국 주요 뉴스",
+      "url": "https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko",
+      "host": "news.google.com",
+      "language": "ko",
+      "confidence": "high",
+      "expectation": "BLOCKED_robots",
+      "role": "app_default",
+      "enabled": true,
+      "status": "BLOCKED",
+      "reason": "robots",
+      "attempted": true,
+      "check": {
+        "status": "fail",
+        "kind": "robots",
+        "message": "robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.",
+        "article_count": 0,
+        "dated_count": 0,
+        "summarized_count": 0,
+        "elapsed_ms": 234,
+        "feed_error": true
+      },
+      "robots": {
+        "origin": "https://news.google.com",
+        "robots_url": "https://news.google.com/robots.txt",
+        "redirects": 0,
+        "status": 200,
+        "bytes": 515,
+        "sha256": "b7233dfe338c30329a8936be1011b16181f7f4ed47d6175954be90abcf842c07",
+        "user_agent_token": "newsflowai",
+        "applicable_group": [
+          "*"
+        ],
+        "first_matching_rule": "Disallow: /",
+        "crawl_delay": null,
+        "request_rate": null,
+        "can_fetch": false,
+        "decision": "deny",
+        "decision_reason": "disallowed",
+        "saved": "robots/news.google.com.txt",
+        "scope": "configured feed origin only; feed redirect targets are not explained"
+      },
+      "parse_diagnostic": null,
+      "collection": null,
+      "samples": [],
+      "expectation_met": true,
+      "error_type": null
+    },
+    {
+      "id": "google-news-kr-business",
+      "name": "Google 뉴스 · 한국 경제",
+      "url": "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=ko&gl=KR&ceid=KR:ko",
+      "host": "news.google.com",
+      "language": "ko",
+      "confidence": "high",
+      "expectation": "BLOCKED_robots",
+      "role": "",
+      "enabled": true,
+      "status": "BLOCKED",
+      "reason": "robots",
+      "attempted": true,
+      "check": {
+        "status": "fail",
+        "kind": "robots",
+        "message": "robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.",
+        "article_count": 0,
+        "dated_count": 0,
+        "summarized_count": 0,
+        "elapsed_ms": 217,
+        "feed_error": true
+      },
+      "robots": {
+        "origin": "https://news.google.com",
+        "robots_url": "https://news.google.com/robots.txt",
+        "redirects": 0,
+        "status": 200,
+        "bytes": 515,
+        "sha256": "b7233dfe338c30329a8936be1011b16181f7f4ed47d6175954be90abcf842c07",
+        "user_agent_token": "newsflowai",
+        "applicable_group": [
+          "*"
+        ],
+        "first_matching_rule": "Disallow: /",
+        "crawl_delay": null,
+        "request_rate": null,
+        "can_fetch": false,
+        "decision": "deny",
+        "decision_reason": "disallowed",
+        "saved": "robots/news.google.com.txt",
+        "scope": "configured feed origin only; feed redirect targets are not explained"
+      },
+      "parse_diagnostic": null,
+      "collection": null,
+      "samples": [],
+      "expectation_met": true,
+      "error_type": null
+    },
+    {
+      "id": "korea-kr-policy",
+      "name": "대한민국 정책브리핑 · 정책뉴스",
+      "url": "https://www.korea.kr/rss/policy.xml",
+      "host": "www.korea.kr",
+      "language": "ko",
+      "confidence": "low",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": false,
+      "status": "NOT VERIFIED",
+      "reason": "not_enabled",
+      "attempted": false,
+      "check": null,
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": null,
+      "samples": [],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "yna-news",
+      "name": "연합뉴스 · 전체 기사",
+      "url": "https://www.yna.co.kr/rss/news.xml",
+      "host": "www.yna.co.kr",
+      "language": "ko",
+      "confidence": "low",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": false,
+      "status": "NOT VERIFIED",
+      "reason": "not_enabled",
+      "attempted": false,
+      "check": null,
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": null,
+      "samples": [],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "hani-all",
+      "name": "한겨레 · 전체 기사",
+      "url": "https://www.hani.co.kr/rss/",
+      "host": "www.hani.co.kr",
+      "language": "ko",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 30개 · 발행시각 있음 0개 · 요약 충분 0개",
+        "article_count": 30,
+        "dated_count": 0,
+        "summarized_count": 0,
+        "elapsed_ms": 2281,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 1,
+          "status": "success",
+          "added": 30,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 30, 중복 0"
+        },
+        "second": {
+          "run_id": 14,
+          "status": "success",
+          "added": 0,
+          "duplicates": 30,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 30"
+        },
+        "articles_stored": 30,
+        "mentions": 30,
+        "title_merges": 0,
+        "dated_ratio": "0/30",
+        "earliest_published": null,
+        "latest_published": null,
+        "publishers": [
+          "한겨레 · 전체 기사"
+        ],
+        "link_domains": {
+          "www.hani.co.kr": 30
+        },
+        "categories": {
+          "미분류": 20,
+          "정치": 7,
+          "경제": 2,
+          "IT·과학": 1
+        }
+      },
+      "samples": [
+        {
+          "title": "출판계 “AI 기업, 책에 정당한 대가 지급하라” 공동성명",
+          "publisher": "한겨레 · 전체 기사",
+          "published_at": null,
+          "link_domain": "www.hani.co.kr"
+        },
+        {
+          "title": "국민연금 저소득층 보험료 지원 문턱 낮춘다…월 소득 80만원→100만원",
+          "publisher": "한겨레 · 전체 기사",
+          "published_at": null,
+          "link_domain": "www.hani.co.kr"
+        },
+        {
+          "title": "대구시, 2차 공공기관 유치 총력…주택 취득세 감면·자녀 전입학 확대 정착 지원",
+          "publisher": "한겨레 · 전체 기사",
+          "published_at": null,
+          "link_domain": "www.hani.co.kr"
+        }
+      ],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "khan-total",
+      "name": "경향신문 · 전체 기사",
+      "url": "https://www.khan.co.kr/rss/rssdata/total_news.xml",
+      "host": "www.khan.co.kr",
+      "language": "ko",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 50개 · 발행시각 있음 0개 · 요약 충분 49개",
+        "article_count": 50,
+        "dated_count": 0,
+        "summarized_count": 49,
+        "elapsed_ms": 1281,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 2,
+          "status": "success",
+          "added": 50,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 50, 중복 0"
+        },
+        "second": {
+          "run_id": 15,
+          "status": "success",
+          "added": 0,
+          "duplicates": 50,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 50"
+        },
+        "articles_stored": 50,
+        "mentions": 50,
+        "title_merges": 0,
+        "dated_ratio": "0/50",
+        "earliest_published": null,
+        "latest_published": null,
+        "publishers": [
+          "경향신문 · 전체 기사"
+        ],
+        "link_domains": {
+          "www.khan.co.kr": 50
+        },
+        "categories": {
+          "정치": 17,
+          "미분류": 16,
+          "사회": 6,
+          "경제": 4,
+          "IT·과학": 3,
+          "문화": 2,
+          "국제": 2
+        }
+      },
+      "samples": [
+        {
+          "title": "고의로 부딪힌 뒤 “휴대전화 수리비 내놔” 돈 뜯어낸 20대 구속···38명에게서 2200만원 갈취",
+          "publisher": "경향신문 · 전체 기사",
+          "published_at": null,
+          "link_domain": "www.khan.co.kr"
+        },
+        {
+          "title": "‘소방이 재정 빨대’ 발언에 분노···부산서 “경기도지사 관사에 불 지른다”고 협박한 60대 검거",
+          "publisher": "경향신문 · 전체 기사",
+          "published_at": null,
+          "link_domain": "www.khan.co.kr"
+        },
+        {
+          "title": "[단독]인천 흉기 난동범에게 ‘흉기소지 금지’ 조건 안붙인 법원···과거 수차례 흉기 범행 전력",
+          "publisher": "경향신문 · 전체 기사",
+          "published_at": null,
+          "link_domain": "www.khan.co.kr"
+        }
+      ],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "mk-headline",
+      "name": "매일경제 · 헤드라인",
+      "url": "https://www.mk.co.kr/rss/30000001/",
+      "host": "www.mk.co.kr",
+      "language": "ko",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 50개 · 발행시각 있음 0개 · 요약 충분 50개",
+        "article_count": 50,
+        "dated_count": 0,
+        "summarized_count": 50,
+        "elapsed_ms": 1437,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 3,
+          "status": "success",
+          "added": 50,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 50, 중복 0"
+        },
+        "second": {
+          "run_id": 16,
+          "status": "success",
+          "added": 0,
+          "duplicates": 50,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 50"
+        },
+        "articles_stored": 50,
+        "mentions": 50,
+        "title_merges": 0,
+        "dated_ratio": "0/50",
+        "earliest_published": null,
+        "latest_published": null,
+        "publishers": [
+          "매일경제 · 헤드라인"
+        ],
+        "link_domains": {
+          "www.mk.co.kr": 50
+        },
+        "categories": {
+          "미분류": 29,
+          "경제": 6,
+          "IT·과학": 6,
+          "사회": 3,
+          "문화": 3,
+          "정치": 2,
+          "국제": 1
+        }
+      },
+      "samples": [
+        {
+          "title": "민희진 웃고 하이브 불복…255억 풋옵션 소송, 12월 2심 시작",
+          "publisher": "매일경제 · 헤드라인",
+          "published_at": null,
+          "link_domain": "www.mk.co.kr"
+        },
+        {
+          "title": "‘스케일업 팁스’ 선정 주빅, 바이오의약품 마이크로니들 개발 속도",
+          "publisher": "매일경제 · 헤드라인",
+          "published_at": null,
+          "link_domain": "www.mk.co.kr"
+        },
+        {
+          "title": "고객부터 생산 자금까지 한 번에…와디즈, 소상공인 지원",
+          "publisher": "매일경제 · 헤드라인",
+          "published_at": null,
+          "link_domain": "www.mk.co.kr"
+        }
+      ],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "hankyung-all",
+      "name": "한국경제 · 전체 뉴스",
+      "url": "https://www.hankyung.com/feed/all-news",
+      "host": "www.hankyung.com",
+      "language": "ko",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 50개 · 발행시각 있음 50개 · 요약 충분 0개",
+        "article_count": 50,
+        "dated_count": 50,
+        "summarized_count": 0,
+        "elapsed_ms": 734,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 4,
+          "status": "success",
+          "added": 50,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 50, 중복 0"
+        },
+        "second": {
+          "run_id": 17,
+          "status": "success",
+          "added": 0,
+          "duplicates": 50,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 50"
+        },
+        "articles_stored": 50,
+        "mentions": 50,
+        "title_merges": 0,
+        "dated_ratio": "50/50",
+        "earliest_published": "2026-10-16T00:01:01+00:00",
+        "latest_published": "2026-10-16T02:03:14+00:00",
+        "publishers": [
+          "한국경제 · 전체 뉴스"
+        ],
+        "link_domains": {
+          "www.hankyung.com": 50
+        },
+        "categories": {
+          "미분류": 32,
+          "IT·과학": 6,
+          "정치": 4,
+          "국제": 4,
+          "경제": 2,
+          "문화": 1,
+          "사회": 1
+        }
+      },
+      "samples": [
+        {
+          "title": "\"한 달 만에 8억 하락\"…강남 집값 나홀로 꺾였다",
+          "publisher": "한국경제 · 전체 뉴스",
+          "published_at": "2026-10-16T02:03:14+00:00",
+          "link_domain": "www.hankyung.com"
+        },
+        {
+          "title": "'도라' 정주리 감독, 프랑스 문화예술훈장 슈발리에 수훈",
+          "publisher": "한국경제 · 전체 뉴스",
+          "published_at": "2026-10-16T02:03:12+00:00",
+          "link_domain": "www.hankyung.com"
+        },
+        {
+          "title": "2억 원짜리 국내차 상륙… GV90이 마이바흐에 도전장을 내다 [조두현의 테이스티드라이브]",
+          "publisher": "한국경제 · 전체 뉴스",
+          "published_at": "2026-10-16T02:02:15+00:00",
+          "link_domain": "www.hankyung.com"
+        }
+      ],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "chosun-all",
+      "name": "조선일보 · 전체 기사",
+      "url": "https://www.chosun.com/arc/outboundfeeds/rss/?outputType=xml",
+      "host": "www.chosun.com",
+      "language": "ko",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 100개 · 발행시각 있음 100개 · 요약 충분 51개",
+        "article_count": 100,
+        "dated_count": 100,
+        "summarized_count": 51,
+        "elapsed_ms": 1125,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 5,
+          "status": "success",
+          "added": 100,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 100, 중복 0"
+        },
+        "second": {
+          "run_id": 18,
+          "status": "success",
+          "added": 5,
+          "duplicates": 95,
+          "audit_event": "source_success",
+          "audit_message": "신규 5, 중복 95"
+        },
+        "articles_stored": 105,
+        "mentions": 105,
+        "title_merges": 0,
+        "dated_ratio": "105/105",
+        "earliest_published": "2026-10-15T15:37:00+00:00",
+        "latest_published": "2026-10-16T03:00:00+00:00",
+        "publishers": [
+          "조선일보 · 전체 기사"
+        ],
+        "link_domains": {
+          "www.chosun.com": 105
+        },
+        "categories": {
+          "미분류": 76,
+          "IT·과학": 10,
+          "스포츠": 6,
+          "정치": 5,
+          "문화": 5,
+          "경제": 2,
+          "사회": 1
+        }
+      },
+      "samples": [
+        {
+          "title": "부천 부품도장공장 화재... 소방관 5명이 쓰러졌다",
+          "publisher": "조선일보 · 전체 기사",
+          "published_at": "2026-10-16T01:37:17+00:00",
+          "link_domain": "www.chosun.com"
+        },
+        {
+          "title": "富川の部品塗装工場火災、消防士5人倒れる",
+          "publisher": "조선일보 · 전체 기사",
+          "published_at": "2026-10-16T01:37:17+00:00",
+          "link_domain": "www.chosun.com"
+        },
+        {
+          "title": "무료 체험 끝났는데 결제…‘다크패턴’ 상담 늘었다",
+          "publisher": "조선일보 · 전체 기사",
+          "published_at": "2026-10-16T02:28:29+00:00",
+          "link_domain": "www.chosun.com"
+        }
+      ],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "donga-total",
+      "name": "동아일보 · 전체 기사",
+      "url": "https://rss.donga.com/total.xml",
+      "host": "rss.donga.com",
+      "language": "ko",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": false,
+      "status": "NOT VERIFIED",
+      "reason": "not_enabled",
+      "attempted": false,
+      "check": null,
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": null,
+      "samples": [],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "jtbc-newsflash",
+      "name": "JTBC · 속보",
+      "url": "https://fs.jtbc.co.kr/RSS/newsflash.xml",
+      "host": "fs.jtbc.co.kr",
+      "language": "ko",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": false,
+      "status": "NOT VERIFIED",
+      "reason": "not_enabled",
+      "attempted": false,
+      "check": null,
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": null,
+      "samples": [],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "etnews-all",
+      "name": "전자신문 · 전체 기사",
+      "url": "https://rss.etnews.com/Section901.xml",
+      "host": "rss.etnews.com",
+      "language": "ko",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": false,
+      "status": "NOT VERIFIED",
+      "reason": "not_enabled",
+      "attempted": false,
+      "check": null,
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": null,
+      "samples": [],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "bbc-korean",
+      "name": "BBC 코리아",
+      "url": "https://feeds.bbci.co.uk/korean/rss.xml",
+      "host": "feeds.bbci.co.uk",
+      "language": "ko",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 21개 · 발행시각 있음 21개 · 요약 충분 21개",
+        "article_count": 21,
+        "dated_count": 21,
+        "summarized_count": 21,
+        "elapsed_ms": 1265,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 6,
+          "status": "success",
+          "added": 21,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 21, 중복 0"
+        },
+        "second": {
+          "run_id": 19,
+          "status": "success",
+          "added": 0,
+          "duplicates": 21,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 21"
+        },
+        "articles_stored": 21,
+        "mentions": 21,
+        "title_merges": 0,
+        "dated_ratio": "21/21",
+        "earliest_published": "2026-08-27T04:49:34+00:00",
+        "latest_published": "2026-10-16T03:00:05+00:00",
+        "publishers": [
+          "BBC 코리아"
+        ],
+        "link_domains": {
+          "www.bbc.com": 21
+        },
+        "categories": {
+          "미분류": 8,
+          "정치": 6,
+          "국제": 4,
+          "IT·과학": 2,
+          "사회": 1
+        }
+      },
+      "samples": [
+        {
+          "title": "데이터센터 건설 둘러싼 논란, 미 중간선거에 영향 미칠까?",
+          "publisher": "BBC 코리아",
+          "published_at": "2026-10-16T03:00:05+00:00",
+          "link_domain": "www.bbc.com"
+        },
+        {
+          "title": "신압록강대교: 북한-중국, 12년 만에 새 다리 개통",
+          "publisher": "BBC 코리아",
+          "published_at": "2026-10-15T08:04:50+00:00",
+          "link_domain": "www.bbc.com"
+        },
+        {
+          "title": "우크라이나 전장에서 스타링크 인터넷이 그토록 중요한 이유는?",
+          "publisher": "BBC 코리아",
+          "published_at": "2026-10-15T02:46:03+00:00",
+          "link_domain": "www.bbc.com"
+        }
+      ],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "nyt-home",
+      "name": "뉴욕타임스 · 홈페이지",
+      "url": "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+      "host": "rss.nytimes.com",
+      "language": "en",
+      "confidence": "high",
+      "expectation": "PASS",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 19개 · 발행시각 있음 19개 · 요약 충분 19개",
+        "article_count": 19,
+        "dated_count": 19,
+        "summarized_count": 19,
+        "elapsed_ms": 593,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 7,
+          "status": "success",
+          "added": 19,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 19, 중복 0"
+        },
+        "second": {
+          "run_id": 20,
+          "status": "success",
+          "added": 0,
+          "duplicates": 19,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 19"
+        },
+        "articles_stored": 19,
+        "mentions": 19,
+        "title_merges": 0,
+        "dated_ratio": "19/19",
+        "earliest_published": "2026-10-15T09:00:41+00:00",
+        "latest_published": "2026-10-16T02:53:03+00:00",
+        "publishers": [
+          "뉴욕타임스 · 홈페이지"
+        ],
+        "link_domains": {
+          "www.nytimes.com": 19
+        },
+        "categories": {
+          "IT·과학": 15,
+          "미분류": 4
+        }
+      },
+      "samples": [
+        {
+          "title": "School Shooting in Oregon Adds Silver Rail Elementary to Grim List",
+          "publisher": "뉴욕타임스 · 홈페이지",
+          "published_at": "2026-10-16T01:55:49+00:00",
+          "link_domain": "www.nytimes.com"
+        },
+        {
+          "title": "Paxton Partied in Dubai With Fugitives Charged With Fraud, Lawsuit Says",
+          "publisher": "뉴욕타임스 · 홈페이지",
+          "published_at": "2026-10-15T23:41:02+00:00",
+          "link_domain": "www.nytimes.com"
+        },
+        {
+          "title": "Trump’s Attacks on Voting Raise Fears He Will Try to Challenge Midterm Results",
+          "publisher": "뉴욕타임스 · 홈페이지",
+          "published_at": "2026-10-15T21:37:34+00:00",
+          "link_domain": "www.nytimes.com"
+        }
+      ],
+      "expectation_met": true,
+      "error_type": null
+    },
+    {
+      "id": "bbc-news",
+      "name": "BBC 뉴스 · 주요 뉴스",
+      "url": "https://feeds.bbci.co.uk/news/rss.xml",
+      "host": "feeds.bbci.co.uk",
+      "language": "en",
+      "confidence": "high",
+      "expectation": "PASS",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 34개 · 발행시각 있음 34개 · 요약 충분 34개",
+        "article_count": 34,
+        "dated_count": 34,
+        "summarized_count": 34,
+        "elapsed_ms": 656,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 8,
+          "status": "success",
+          "added": 34,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 34, 중복 0"
+        },
+        "second": {
+          "run_id": 21,
+          "status": "success",
+          "added": 0,
+          "duplicates": 34,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 34"
+        },
+        "articles_stored": 34,
+        "mentions": 34,
+        "title_merges": 0,
+        "dated_ratio": "34/34",
+        "earliest_published": "2025-04-30T14:04:28+00:00",
+        "latest_published": "2026-10-16T03:01:38+00:00",
+        "publishers": [
+          "BBC 뉴스 · 주요 뉴스"
+        ],
+        "link_domains": {
+          "www.bbc.co.uk": 34
+        },
+        "categories": {
+          "미분류": 19,
+          "IT·과학": 15
+        }
+      },
+      "samples": [
+        {
+          "title": "Three children and teacher killed by 16-year-old at Oregon primary school",
+          "publisher": "BBC 뉴스 · 주요 뉴스",
+          "published_at": "2026-10-16T03:01:38+00:00",
+          "link_domain": "www.bbc.co.uk"
+        },
+        {
+          "title": "Bus hits train stopped on French side of Channel Tunnel, with 19 injured",
+          "publisher": "BBC 뉴스 · 주요 뉴스",
+          "published_at": "2026-10-15T22:37:21+00:00",
+          "link_domain": "www.bbc.co.uk"
+        },
+        {
+          "title": "Same-day test helps doctors detect hidden infections in critically ill children",
+          "publisher": "BBC 뉴스 · 주요 뉴스",
+          "published_at": "2026-10-16T00:34:45+00:00",
+          "link_domain": "www.bbc.co.uk"
+        }
+      ],
+      "expectation_met": true,
+      "error_type": null
+    },
+    {
+      "id": "guardian-world",
+      "name": "가디언 · 세계",
+      "url": "https://www.theguardian.com/world/rss",
+      "host": "www.theguardian.com",
+      "language": "en",
+      "confidence": "high",
+      "expectation": "PASS",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 45개 · 발행시각 있음 45개 · 요약 충분 45개",
+        "article_count": 45,
+        "dated_count": 45,
+        "summarized_count": 45,
+        "elapsed_ms": 500,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 9,
+          "status": "success",
+          "added": 45,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 45, 중복 0"
+        },
+        "second": {
+          "run_id": 22,
+          "status": "success",
+          "added": 0,
+          "duplicates": 45,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 45"
+        },
+        "articles_stored": 45,
+        "mentions": 45,
+        "title_merges": 0,
+        "dated_ratio": "45/45",
+        "earliest_published": "2026-10-09T16:30:09+00:00",
+        "latest_published": "2026-10-16T01:59:51+00:00",
+        "publishers": [
+          "가디언 · 세계"
+        ],
+        "link_domains": {
+          "www.theguardian.com": 45
+        },
+        "categories": {
+          "IT·과학": 43,
+          "미분류": 2
+        }
+      },
+      "samples": [
+        {
+          "title": "LGBTQ+ people go into hiding in Senegal as hundreds are arrested",
+          "publisher": "가디언 · 세계",
+          "published_at": "2026-10-15T08:00:25+00:00",
+          "link_domain": "www.theguardian.com"
+        },
+        {
+          "title": "Zimbabwean author Simbarashe Kundizeza denies using AI to write prize-winning st",
+          "publisher": "가디언 · 세계",
+          "published_at": "2026-10-14T19:01:29+00:00",
+          "link_domain": "www.theguardian.com"
+        },
+        {
+          "title": "Guinea-Bissau denies it has approved controversial vaccine trial in newborns",
+          "publisher": "가디언 · 세계",
+          "published_at": "2026-10-14T13:16:30+00:00",
+          "link_domain": "www.theguardian.com"
+        }
+      ],
+      "expectation_met": true,
+      "error_type": null
+    },
+    {
+      "id": "npr-news",
+      "name": "NPR · 뉴스",
+      "url": "https://feeds.npr.org/1001/rss.xml",
+      "host": "feeds.npr.org",
+      "language": "en",
+      "confidence": "high",
+      "expectation": "PASS",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 10개 · 발행시각 있음 10개 · 요약 충분 10개",
+        "article_count": 10,
+        "dated_count": 10,
+        "summarized_count": 10,
+        "elapsed_ms": 1000,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 10,
+          "status": "success",
+          "added": 10,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 10, 중복 0"
+        },
+        "second": {
+          "run_id": 23,
+          "status": "success",
+          "added": 0,
+          "duplicates": 10,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 10"
+        },
+        "articles_stored": 10,
+        "mentions": 10,
+        "title_merges": 0,
+        "dated_ratio": "10/10",
+        "earliest_published": "2026-10-15T09:00:00+00:00",
+        "latest_published": "2026-10-15T20:50:53+00:00",
+        "publishers": [
+          "NPR · 뉴스"
+        ],
+        "link_domains": {
+          "www.npr.org": 10
+        },
+        "categories": {
+          "미분류": 6,
+          "IT·과학": 4
+        }
+      },
+      "samples": [
+        {
+          "title": "Hit a midlife wall? This test identifies your strengths and what matters to you",
+          "publisher": "NPR · 뉴스",
+          "published_at": "2026-10-15T20:50:53+00:00",
+          "link_domain": "www.npr.org"
+        },
+        {
+          "title": "Suspicious mailings to election officials, congressional offices under investiga",
+          "publisher": "NPR · 뉴스",
+          "published_at": "2026-10-15T19:54:15+00:00",
+          "link_domain": "www.npr.org"
+        },
+        {
+          "title": "U.S. historic preservation law faces the most serious threat in its 60-year hist",
+          "publisher": "NPR · 뉴스",
+          "published_at": "2026-10-15T18:38:05+00:00",
+          "link_domain": "www.npr.org"
+        }
+      ],
+      "expectation_met": true,
+      "error_type": null
+    },
+    {
+      "id": "nasa-news",
+      "name": "NASA · 보도자료",
+      "url": "https://www.nasa.gov/news-release/feed/",
+      "host": "www.nasa.gov",
+      "language": "en",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": true,
+      "status": "BLOCKED",
+      "reason": "robots",
+      "attempted": true,
+      "check": {
+        "status": "fail",
+        "kind": "robots",
+        "message": "robots.txt 확인 실패로 수집을 중단했습니다.",
+        "article_count": 0,
+        "dated_count": 0,
+        "summarized_count": 0,
+        "elapsed_ms": 312,
+        "feed_error": true
+      },
+      "robots": {
+        "origin": "https://www.nasa.gov",
+        "robots_url": "https://www.nasa.gov/robots.txt",
+        "redirects": 0,
+        "status": 429,
+        "bytes": 162,
+        "sha256": "413d294fad14524bf94e764b33ff0f327682549408545171fcf9240189c154ae",
+        "user_agent_token": "newsflowai",
+        "applicable_group": null,
+        "first_matching_rule": null,
+        "crawl_delay": null,
+        "request_rate": null,
+        "can_fetch": null,
+        "decision": "deny",
+        "decision_reason": "robots_unavailable",
+        "saved": null,
+        "scope": "configured feed origin only; feed redirect targets are not explained"
+      },
+      "parse_diagnostic": null,
+      "collection": null,
+      "samples": [],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "un-news",
+      "name": "UN 뉴스 · 전체",
+      "url": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
+      "host": "news.un.org",
+      "language": "en",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 30개 · 발행시각 있음 30개 · 요약 충분 30개",
+        "article_count": 30,
+        "dated_count": 30,
+        "summarized_count": 30,
+        "elapsed_ms": 734,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 11,
+          "status": "success",
+          "added": 30,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 30, 중복 0"
+        },
+        "second": {
+          "run_id": 24,
+          "status": "success",
+          "added": 0,
+          "duplicates": 30,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 30"
+        },
+        "articles_stored": 30,
+        "mentions": 30,
+        "title_merges": 0,
+        "dated_ratio": "30/30",
+        "earliest_published": "2026-10-12T12:00:00+00:00",
+        "latest_published": "2026-10-15T12:00:00+00:00",
+        "publishers": [
+          "UN News - Global perspective Human stories"
+        ],
+        "link_domains": {
+          "news.un.org": 30
+        },
+        "categories": {
+          "IT·과학": 19,
+          "미분류": 11
+        }
+      },
+      "samples": [
+        {
+          "title": "Could your brain data be used against you? UN calls for limits on neurotechnolog",
+          "publisher": "UN News - Global perspective Human stories",
+          "published_at": "2026-10-15T12:00:00+00:00",
+          "link_domain": "news.un.org"
+        },
+        {
+          "title": "The world is waging a ‘war on nature’ as progress on biodiversity targets lags",
+          "publisher": "UN News - Global perspective Human stories",
+          "published_at": "2026-10-15T12:00:00+00:00",
+          "link_domain": "news.un.org"
+        },
+        {
+          "title": "AI, green energy and economic transitions risk leaving vulnerable communities be",
+          "publisher": "UN News - Global perspective Human stories",
+          "published_at": "2026-10-15T12:00:00+00:00",
+          "link_domain": "news.un.org"
+        }
+      ],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "dw-en-rdf",
+      "name": "DW 영어 · 전체 (RDF)",
+      "url": "https://rss.dw.com/rdf/rss-en-all",
+      "host": "rss.dw.com",
+      "language": "en",
+      "confidence": "medium",
+      "expectation": "unknown",
+      "role": "",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 135개 · 발행시각 있음 0개 · 요약 충분 135개",
+        "article_count": 135,
+        "dated_count": 0,
+        "summarized_count": 135,
+        "elapsed_ms": 750,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 12,
+          "status": "success",
+          "added": 135,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 135, 중복 0"
+        },
+        "second": {
+          "run_id": 25,
+          "status": "success",
+          "added": 0,
+          "duplicates": 135,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 135"
+        },
+        "articles_stored": 135,
+        "mentions": 135,
+        "title_merges": 0,
+        "dated_ratio": "0/135",
+        "earliest_published": null,
+        "latest_published": null,
+        "publishers": [
+          "DW 영어 · 전체 (RDF)"
+        ],
+        "link_domains": {
+          "www.dw.com": 135
+        },
+        "categories": {
+          "IT·과학": 72,
+          "미분류": 63
+        }
+      },
+      "samples": [
+        {
+          "title": "Oregon school shooting: 3 children, teacher killed; 16-year-old gunman dies afte",
+          "publisher": "DW 영어 · 전체 (RDF)",
+          "published_at": null,
+          "link_domain": "www.dw.com"
+        },
+        {
+          "title": "Bus, train collide, injuring 19 at Channel Tunnel terminal",
+          "publisher": "DW 영어 · 전체 (RDF)",
+          "published_at": null,
+          "link_domain": "www.dw.com"
+        },
+        {
+          "title": "Venezuela's Nicolas Maduro pleads not guilty to torture charges",
+          "publisher": "DW 영어 · 전체 (RDF)",
+          "published_at": null,
+          "link_domain": "www.dw.com"
+        }
+      ],
+      "expectation_met": null,
+      "error_type": null
+    },
+    {
+      "id": "hn-front",
+      "name": "Hacker News · 첫 화면 (대조군)",
+      "url": "https://news.ycombinator.com/rss",
+      "host": "news.ycombinator.com",
+      "language": "en",
+      "confidence": "high",
+      "expectation": "BLOCKED_robots",
+      "role": "control",
+      "enabled": true,
+      "status": "BLOCKED",
+      "reason": "robots",
+      "attempted": true,
+      "check": {
+        "status": "fail",
+        "kind": "robots",
+        "message": "robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.",
+        "article_count": 0,
+        "dated_count": 0,
+        "summarized_count": 0,
+        "elapsed_ms": 375,
+        "feed_error": true
+      },
+      "robots": {
+        "origin": "https://news.ycombinator.com",
+        "robots_url": "https://news.ycombinator.com/robots.txt",
+        "redirects": 0,
+        "status": 200,
+        "bytes": 243,
+        "sha256": "2391981cd9331481b06bac19761a772a9cff2e168ebc8359dcae7a53af0ec257",
+        "user_agent_token": "newsflowai",
+        "applicable_group": [
+          "*"
+        ],
+        "first_matching_rule": "Disallow: /r",
+        "crawl_delay": 30,
+        "request_rate": null,
+        "can_fetch": false,
+        "decision": "deny",
+        "decision_reason": "disallowed",
+        "saved": "robots/news.ycombinator.com.txt",
+        "scope": "configured feed origin only; feed redirect targets are not explained"
+      },
+      "parse_diagnostic": null,
+      "collection": null,
+      "samples": [],
+      "expectation_met": true,
+      "error_type": null
+    },
+    {
+      "id": "github-blog",
+      "name": "GitHub 블로그 (대조군)",
+      "url": "https://github.blog/feed/",
+      "host": "github.blog",
+      "language": "en",
+      "confidence": "high",
+      "expectation": "unknown",
+      "role": "control",
+      "enabled": true,
+      "status": "PASS",
+      "reason": null,
+      "attempted": true,
+      "check": {
+        "status": "pass",
+        "kind": null,
+        "message": "기사 10개 · 발행시각 있음 10개 · 요약 충분 10개",
+        "article_count": 10,
+        "dated_count": 10,
+        "summarized_count": 10,
+        "elapsed_ms": 952,
+        "feed_error": false
+      },
+      "robots": null,
+      "parse_diagnostic": null,
+      "collection": {
+        "first": {
+          "run_id": 13,
+          "status": "success",
+          "added": 10,
+          "duplicates": 0,
+          "audit_event": "source_success",
+          "audit_message": "신규 10, 중복 0"
+        },
+        "second": {
+          "run_id": 26,
+          "status": "success",
+          "added": 0,
+          "duplicates": 10,
+          "audit_event": "source_success",
+          "audit_message": "신규 0, 중복 10"
+        },
+        "articles_stored": 10,
+        "mentions": 10,
+        "title_merges": 0,
+        "dated_ratio": "10/10",
+        "earliest_published": "2026-10-06T20:57:56+00:00",
+        "latest_published": "2026-10-15T19:39:27+00:00",
+        "publishers": [
+          "GitHub 블로그 (대조군)"
+        ],
+        "link_domains": {
+          "github.blog": 10
+        },
+        "categories": {
+          "미분류": 6,
+          "IT·과학": 4
+        }
+      },
+      "samples": [
+        {
+          "title": "The next developer interface is ambient intelligence",
+          "publisher": "GitHub 블로그 (대조군)",
+          "published_at": "2026-10-15T19:39:27+00:00",
+          "link_domain": "github.blog"
+        },
+        {
+          "title": "Staying Evergreen: How we automated secure access and repo hygiene in a shared o",
+          "publisher": "GitHub 블로그 (대조군)",
+          "published_at": "2026-10-15T18:00:00+00:00",
+          "link_domain": "github.blog"
+        },
+        {
+          "title": "GitHub availability report: September 2026",
+          "publisher": "GitHub 블로그 (대조군)",
+          "published_at": "2026-10-14T20:01:35+00:00",
+          "link_domain": "github.blog"
+        }
+      ],
+      "expectation_met": null,
+      "error_type": null
+    }
+  ]
+}

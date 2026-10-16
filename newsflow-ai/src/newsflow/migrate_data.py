@@ -29,6 +29,8 @@ def migrate_data(source: Path, target: Path) -> None:
                 stack.enter_context(FileLock(str(lock)).acquire(timeout=0))
             stack.enter_context(FileLock(str(root / "collection.lock")).acquire(timeout=0))
             stack.enter_context(FileLock(str(root / "migration.lock")).acquire(timeout=0))
+            stack.enter_context(FileLock(str(root / "scheduler.lock")).acquire(timeout=0))
+            stack.enter_context(FileLock(str(root / "autopilot.lock")).acquire(timeout=0))
         if any(
             (target / name).exists()
             for name in ("newsflow.db", "newsflow.db-wal", "newsflow.db-shm", "session.key")
@@ -57,8 +59,13 @@ def migrate_data(source: Path, target: Path) -> None:
                     ("0009",),
                     ("0010",),
                     ("0011",),
+                    ("0012",),
                 }:
                     raise ValueError("지원하지 않는 DB 버전입니다.")
+                if backup.execute("SELECT version_num FROM alembic_version").fetchone() == ("0012",):
+                    # A copied DB must not create a second active schedule in another data folder.
+                    backup.execute("UPDATE production_schedules SET status='paused', revision=revision+1 WHERE status='active'")
+                    backup.commit()
             key = source / "session.key"
             if key.exists():
                 if key.is_symlink() or len(key.read_text(encoding="ascii").strip()) < 32:
@@ -93,7 +100,7 @@ def main() -> None:
     except Exception:  # noqa: BLE001 -- do not print raw SQLite/path/secret exceptions
         print("이전 실패: 서버 종료, 원본 DB, 대상 기존 데이터, 폴더 권한과 DB 버전을 확인하세요.")
         raise SystemExit(1) from None
-    print("DB·설정·세션 키 이전 완료. 원본은 보존되었습니다. 기타 사용자 파일은 별도로 백업하세요.")
+    print("DB·설정·세션 키 이전 완료. 원본은 보존되었습니다. 복사본의 예약은 일시 중지됩니다. 기타 사용자 파일은 별도로 백업하세요.")
 
 
 if __name__ == "__main__":

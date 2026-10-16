@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import time
+from datetime import datetime
 from pathlib import Path
 
 import uvicorn
@@ -28,6 +29,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--fake-video-provider", action="store_true")
+    parser.add_argument("--scheduler-clock-file", type=Path)  # synthetic clock, test tool only
     args = parser.parse_args()
     fixture = Path(__file__).resolve().parents[1] / "tests/fixtures/normal.xml"
     video_provider = None
@@ -39,6 +41,14 @@ def main() -> None:
         Settings(data_dir=args.data_dir), SlowFake({"https://example.com/rss": fixture.read_bytes()}),
         video_provider=video_provider,
     )
+    if args.scheduler_clock_file:
+        def synthetic_clock():
+            value = datetime.fromisoformat(args.scheduler_clock_file.read_text(encoding="utf-8"))
+            if value.tzinfo is None:
+                raise ValueError("Synthetic clock must be aware")
+            return value
+        app.state.scheduler.clock = synthetic_clock
+        app.state.scheduler.interval = 0.2
     uvicorn.run(app, host="127.0.0.1", port=8765, log_level="warning", access_log=False)
 
 

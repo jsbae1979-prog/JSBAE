@@ -1,0 +1,49 @@
+{
+  "change": "CRLF to LF only; JSON values unchanged",
+  "files": {
+    "video-result.json": {
+      "artifact_sha256": "88c88dc7e6e688a59838daf811b0a175ca4c93483505fb6943e4095dd816151c",
+      "stored_lf_sha256": "5e4828ac5b4e8ee9085c0a4ff132345e1376d41ab1ad0a70c7dce86482aa546a"
+    },
+    "result.json": {
+      "artifact_sha256": "b6fc9a58e7e6b20a6a8ce1dcaaef11b57b77e7fcaaadae02b4908fdcb0d279e3",
+      "stored_lf_sha256": "01c0066e2cd21d8c57aca7cae1813d07f5abf349503c09d77cb4845c614565be"
+    },
+    "credential-vault.json": {
+      "artifact_sha256": "02104d1832d2b88c2ba328ae3ccbd96eaffd5581ea4c755a0f194842e71218f0",
+      "stored_lf_sha256": "1f2836fe6d202382ef44007917a534f015e4f8f66075f5ddb4d5f41896ce4bb2"
+    },
+    "production-credential-vault.json": {
+      "artifact_sha256": "b85e26099a9c4cfb220cf74cee54296e9e17d9c46adb7e1d82119ba8721c0170",
+      "stored_lf_sha256": "4bceaa9eb2cb60a062b074d2af3c4b4dc434294c1564f9f9d58aced656363d65"
+    },
+    "voice/voice-probe.json": {
+      "artifact_sha256": "49bc447102641e8aa39e0d4f33eeaad147c0edf3d2b9474d6a105f5c12ee9e0a",
+      "stored_lf_sha256": "78ccd3239d6f6bcb7e77509bf87868bf28092c92fbb665b0a3ee6155811ac6ca"
+    },
+    "easysetup/easysetup-result.json": {
+      "artifact_sha256": "e9860df0fcd2be2c876bd42981e0adff94012950fd3ce0c436f196906998ed15",
+      "stored_lf_sha256": "85a2f8167c1973057f969a1f9b9fa5a65e15a26c9a114c18967f575c33eabfaf"
+    },
+    "feed-review/feed-review.json": {
+      "artifact_sha256": "da54cbbf2f13b93010f12e317844142e28fc827410c9af6e6941ffc283137e96",
+      "stored_lf_sha256": "ca7dda9d65ab6b3d777bbb4c091f6a73ed8d2de3fbd8584a515903db5c39acdb"
+    },
+    "ai-video/ai-video-validation.json": {
+      "artifact_sha256": "c4d0b61fcca2ce707e845c4b466ab167f1c41f5bf1e597a6501a6139f214e5da",
+      "stored_lf_sha256": "b274662f106dac76a0aa7124929b6e071ac7d6b08b0b0193fe8fcfe0bde29c89"
+    },
+    "autopilot/autopilot-result.json": {
+      "artifact_sha256": "26d2a455eca42073db0ea7e3f2fb7f2a9db93b2ca7629787224ac8ca6eb491d4",
+      "stored_lf_sha256": "61576cd5d413d71b2af778525273dd21aefef7d5c89148667bba9715332258f9"
+    },
+    "realcontent/realcontent-result.json": {
+      "artifact_sha256": "c6516170ed5f0053293517ebe334d6d65c734133ba1e047e3ecf871f085e1736",
+      "stored_lf_sha256": "ab601fab9957422bb2183973295ee24c0310876ef76150443d70796af492f0f4"
+    },
+    "scheduler/scheduler-result.json": {
+      "artifact_sha256": "6448d56bea5769dbfebd7cfd98b4374f2e14f7675f7871e927e4384761b2f378",
+      "stored_lf_sha256": "ae93f47641aa01dd0488d66666384923aa9e18413d3d6a1f99e1fe84d322c4af"
+    }
+  }
+}

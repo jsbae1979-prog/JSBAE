@@ -815,7 +815,7 @@ def test_additive_0004_migration_preserves_phase3_data(tmp_path):
     migrate(engine)
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0011"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0012"
     with sessions() as session:
         assert session.get(AppSetting, "collection_timeout").value == "7"
         assert session.get(NewsArticle, 1).title == "기존 기사"

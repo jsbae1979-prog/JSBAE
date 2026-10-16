@@ -1,0 +1,19 @@
+{
+  "tested_code_sha": "cc295ac57b86c848d702e71ff40f108ea35a3af7",
+  "conclusion": "SUCCESS",
+  "run_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38842249544",
+  "pytest": {
+    "passed": 2293,
+    "skipped": 3,
+    "warnings": 1,
+    "failed": 0,
+    "seconds": 350.27
+  },
+  "os": "Windows Server 2025",
+  "user_windows_11": "NOT VERIFIED",
+  "real_paid_api_calls": 0,
+  "real_oauth_calls": 0,
+  "real_sns_calls": 0,
+  "real_cost": 0,
+  "os_task_registrations": 0
+}

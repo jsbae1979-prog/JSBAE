@@ -1,12 +1,15 @@
 'use strict';
 // Same-origin fetch preserves Origin under the existing no-referrer policy.
 // Each mutation is submitted once. An uncertain response is never auto-retried.
+function wireEasyForms() {
 for (const form of document.querySelectorAll('form[data-easy-form]')) {
+  if (form.dataset.easyWired) continue;
+  form.dataset.easyWired = 'true';
   let pending = false;
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (pending) return;
-    const target = new URL(form.action, window.location.href);
+    const target = new URL(form.getAttribute('action'), window.location.href);
     if (target.origin !== window.location.origin) return;
     const submit = form.querySelector('button[type="submit"]');
     const alert = form.querySelector('[data-submit-error]');
@@ -20,6 +23,13 @@ for (const form of document.querySelectorAll('form[data-easy-form]')) {
         body: new URLSearchParams(new FormData(form))
       });
       if (!response.ok) {
+        if (form.closest('.schedule-page')) {
+          const error = await response.json().catch(() => null);
+          if (typeof error?.detail === 'string' && error.detail.length <= 300) {
+            if (alert) alert.textContent = error.detail;
+            return;
+          }
+        }
         const messages = {
           403: '보안 확인을 위해 화면을 새로고침한 뒤 다시 시도해 주세요.',
           404: '이 작업을 찾을 수 없습니다. 나의 제작 작업에서 다시 확인해 주세요.',
@@ -40,6 +50,10 @@ for (const form of document.querySelectorAll('form[data-easy-form]')) {
     }
   });
 }
+
+}
+wireEasyForms();
+document.addEventListener('newsflow:updated', wireEasyForms);
 
 const taskPage = document.querySelector('[data-autopilot-job]');
 if (taskPage && ['queued', 'running'].includes(taskPage.dataset.jobStatus)) {

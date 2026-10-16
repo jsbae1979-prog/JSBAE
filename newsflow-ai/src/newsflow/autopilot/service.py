@@ -25,6 +25,7 @@ from newsflow.db.models import (
     AutopilotJob,
     NewsArticle,
     RenderJob,
+    ScheduledRun,
     utcnow,
 )
 
@@ -174,6 +175,7 @@ class AutopilotCoordinator:
     def start(
         self, mode: str = "easy", source: str = "sample", duration: int = 30, platform: str = "youtube",
         content_mode: str | None = None, ai_mode: str = "offline", voice: str | None = None,
+        *, request_id: str | None = None,
     ) -> str:
         if mode not in {"easy", "guided"} or source not in {"sample", "feeds"}:
             raise AutopilotError("제작 방식과 뉴스 종류를 다시 선택하세요.")
@@ -186,9 +188,22 @@ class AutopilotCoordinator:
             raise AutopilotError("체험 제작에서는 외부 AI를 사용하지 않습니다. AI 방식을 다시 선택하세요.")
         if voice is not None and (not isinstance(voice, str) or not 0 < len(voice) <= 200 or "\x00" in voice):
             raise AutopilotError("음성을 다시 선택하세요.")
+        if request_id is not None:
+            self._id(request_id)
         with self.guard:
+            # Durable caller identity closes the scheduler/start crash gap. Existing jobs are
+            # returned without starting or retrying them; parameters must describe the same work.
+            if request_id:
+                with self.sessions() as session:
+                    existing = session.get(AutopilotJob, request_id)
+                    if existing:
+                        if (existing.mode, existing.source, existing.duration, existing.platform,
+                            existing.content_mode, existing.ai_mode, existing.voice) != (
+                            mode, source, duration, platform, content_mode, ai_mode, voice):
+                            raise AutopilotConflict("같은 작업 번호로 다른 제작을 시작할 수 없습니다.")
+                        return existing.id
             self._acquire()
-            job_id = uuid4().hex
+            job_id = request_id or uuid4().hex
             try:
                 with self._transaction() as session:
                     job = AutopilotJob(
@@ -209,11 +224,14 @@ class AutopilotCoordinator:
         return job_id
 
     def _context(self, session: Session, job: AutopilotJob) -> dict[str, Any]:
+        scheduled = session.scalar(select(ScheduledRun.id).where(ScheduledRun.job_id == job.id)) is not None
+        if scheduled and job.ai_mode != "offline":
+            raise BackendError(code="ai_consent", retryable=False, outcome_unknown=True)
         context: dict[str, Any] = {}
         for stage in STAGES:
             context.update(job.stage_results.get(stage, {}))
         context.update({
-            "job_id": job.id, "mode": job.mode, "source": job.source, "duration": job.duration,
+            "job_id": job.id, "mode": job.mode, "source": job.source, "duration": job.duration, "scheduled": scheduled,
             "platform": job.platform, "stage_results": dict(job.stage_results), "article_id": job.article_id,
             "content_mode": job.content_mode, "ai_mode": job.ai_mode, "voice": job.voice,
         })

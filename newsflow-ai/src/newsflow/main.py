@@ -27,6 +27,7 @@ from .gui.autopilot_routes import router as autopilot_router
 from .gui.intelligence_routes import router as intelligence_router
 from .gui.publishing_routes import router as publishing_router
 from .gui.routes import router
+from .gui.scheduler_routes import router as scheduler_router
 from .gui.setup_routes import router as setup_router
 from .gui.sources_routes import router as sources_router
 from .gui.video_ai_routes import router as video_ai_router
@@ -40,6 +41,7 @@ from .news.rss_adapter import PublicRSSAdapter, RSSAdapter
 from .news.service import CollectionCoordinator, NewsService
 from .oauth.lifecycle import expire_production_credentials, recover_production_lifecycle
 from .oauth.production_vault import recover_credential_rotations
+from .scheduler.service import Scheduler
 from .video.ai.contracts import VideoProvider
 from .video.ai.keys import VideoAIKeyStore
 from .video.ai.service import AIVideoCoordinator
@@ -96,6 +98,7 @@ def create_app(
     )
     autopilot = AutopilotCoordinator(sessions, settings.data_dir, autopilot_backend)
     autopilot.recover()
+    scheduler = Scheduler(sessions, settings.data_dir, autopilot)
     # Phase 5D: optional AI video provider. Off by default; only tests/CI inject the Fake provider.
     video_ai = AIVideoCoordinator(sessions, settings.data_dir, video, VideoAIKeyStore(settings.data_dir), video_provider)
     video_ai.start()
@@ -103,9 +106,11 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        scheduler.start()
         try:
             yield
         finally:
+            scheduler.close()
             video_ai.close()
             autopilot.close()
             autopilot_backend.close()
@@ -118,6 +123,7 @@ def create_app(
     app.state.engine = engine
     app.state.video = video
     app.state.video_ai = video_ai
+    app.state.scheduler = scheduler
     app.state.autopilot = autopilot
     app.state.autopilot_backend = autopilot_backend
     app.state.ai_keys = ai_keys
@@ -175,6 +181,7 @@ def create_app(
         response.headers["Cache-Control"] = "no-store"
         return response
 
+    app.include_router(scheduler_router)
     app.include_router(setup_router)
     app.include_router(autopilot_router)
     app.include_router(sources_router)
@@ -215,6 +222,7 @@ def run() -> None:
                     )
                 ).run(sockets=[listener])
             finally:
+                app.state.scheduler.close()
                 app.state.autopilot.close()
                 app.state.autopilot_backend.close()
                 app.state.coordinator.close()

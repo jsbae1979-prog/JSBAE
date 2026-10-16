@@ -530,3 +530,35 @@ class VideoAIUsage(Base):
     request_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class ProductionSchedule(Base):
+    __tablename__ = "production_schedules"
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    name: Mapped[str] = mapped_column(String(80))
+    kind: Mapped[str] = mapped_column(String(12))
+    local_time: Mapped[str] = mapped_column(String(5))
+    weekdays: Mapped[list] = mapped_column(JSON)
+    once_date: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    options: Mapped[dict] = mapped_column(JSON)
+    fingerprint: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
+    status: Mapped[str] = mapped_column(String(16), default="paused")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    next_run_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class ScheduledRun(Base):
+    __tablename__ = "scheduled_runs"
+    __table_args__ = (UniqueConstraint("schedule_id", "scheduled_for"),)
+    id: Mapped[str] = mapped_column(String(32), primary_key=True)
+    schedule_id: Mapped[str] = mapped_column(ForeignKey("production_schedules.id"), index=True)
+    scheduled_for: Mapped[datetime] = mapped_column(UTCDateTime())
+    job_id: Mapped[str] = mapped_column(String(32), unique=True)
+    options: Mapped[dict] = mapped_column(JSON)
+    status: Mapped[str] = mapped_column(String(24))
+    message: Mapped[str] = mapped_column(String(300))
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

@@ -284,6 +284,8 @@ class PipelineBackend:
 
     def _ai_mode(self, ctx: dict) -> str:
         mode = ctx.get("ai_mode") or "offline"
+        if ctx.get("scheduled") and mode != "offline":
+            raise BackendError(code="ai_consent", retryable=False)
         if ctx.get("content_mode", "trial") != "real" and mode != "offline":
             raise BackendError("체험 제작에서는 외부 AI를 사용하지 않습니다.", retryable=False, code="ai_consent")
         if mode == "openai":
