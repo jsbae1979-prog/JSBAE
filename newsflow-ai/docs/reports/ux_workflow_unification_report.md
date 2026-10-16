@@ -68,11 +68,11 @@ A: 동일 기능, B: 비슷하지만 실행·승인이 다름, C: 유지할 고�
 
 ## 보존·테스트
 
-- 사용자 SQLite 읽기 전용 백업 후 run.bat 정상 종료·재시작. 전체 테이블 행 수, 설정 해시, 기존 MP4 2개 해시가 전후 동일. SQLite integrity_check `ok`.
+- 사용자 SQLite 읽기 전용 백업 후 run.bat 정상 종료·재시작. 최초 보존 비교에서는 전체 테이블 행 수·설정·MP4 해시가 동일했다. 최종 비교에서도 설정 해시·기존 MP4 2개 해시가 동일하고 SQLite integrity_check는 `ok`다. 그 사이 RSS 점검/활성화 감사 기록 5개와 출처 점검 기록 2개가 추가되어 최종 DB 전체가 동일하다고 판정하지 않았다. 기존 뉴스·대본·영상·AI 이력 수는 유지됐으며 이 기록을 되돌리지 않았다.
 - 기존 Codex 기본 선택과 Heami 기본 음성 보존. 임시 검증 데이터만 Claude/F1/45초로 설정했다.
 - CSRF/Origin/CSP, 외부 전송 동의, 비용 승인·한도, DPAPI, 중복 요청 보호를 유지했다. 실제 AI/음성 유료 API·OAuth·SNS 호출 없음.
 - 변경 범위 핵심 테스트를 실행하고 실패한 이전 UI 기대값/Windows 호스트 의존 fixture만 수정 후 재확인했다. 전체 pytest는 실행하지 않았다.
-- 최종 Windows Python 3.12/3.14 Actions 결과와 코드 SHA는 아래에 기록한다.
+- 최종 Windows Actions 1회: Python 3.12.10 / 3.14.8 각각 **178 passed**, Ruff 및 `pip check` 통과. 실제 PC는 Python 3.14.7이다. 기존 Starlette/httpx deprecation warning 각 1개가 있으며 의존성을 불필요하게 변경하지 않았다.
 
 ## 변경 파일
 
@@ -87,4 +87,8 @@ A: 동일 기능, B: 비슷하지만 실행·승인이 다름, C: 유지할 고�
 
 ## GitHub
 
-최종 검증 결과 기록 대기. 기존 PR #1–23 및 main은 변경하지 않는다.
+- 검증 코드 SHA: `dea45f50ee45085c409f370f78956c57ea99d5b0`.
+- [Draft PR #24](https://github.com/jsbae1979-prog/JSBAE/pull/24), 기준 브랜치 `feat/newsflow-ux-simplification`.
+- [Windows Actions #38905929882](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38905929882): Python 3.12 / 3.14 SUCCESS.
+- 38개 파일 변경. 이후 커밋은 이 검증 결과를 기록하는 보고서만 수정하며 코드 검증을 반복하지 않는다. 최종 HEAD는 완료 응답에 기재한다.
+- 기존 PR #1–23 및 main은 변경·병합하지 않았다. 최종 앱은 기존 데이터 경로로 `127.0.0.1:8765`에 실행 중이며 분리된 검증 서버는 정상 종료했다.
