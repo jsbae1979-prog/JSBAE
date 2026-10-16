@@ -40,7 +40,10 @@
 - Windows Chrome 분리 서버: AI 웹 기본 BLOCKED → 자동 RSS 미실행 → RSS 직접 선택 → 두 요청 동의 → Fake 분석·대본 자동 생성 → 대본 검토 → 실제 Supertonic F1/FFmpeg 45초 영상 → 최종 검토 대기.
 - Fake 서버는 실제 Claude/Codex/OpenAI 추론 메서드를 명시적으로 차단했다. 진단에서 Fake 연결·격리 데이터·실제 추론 차단을 확인했다. 화면의 Claude 경로 검증은 실제 계정 추론 성공을 의미하지 않는다.
 - 샘플: `validation-output/phase5f5/ui-test-data/outputs/videos/video-5f5372108fe245b0b79d01970f79bd49.mp4`.
-- 실제 재생·최종 Windows CI·데이터 보존 결과는 완료 시 추가한다.
+- 실제 MP4는 1080×1920 H.264/AAC, 45.021680초다. Chrome 재생 시간이 0초에서 끝까지 진행했고 미디어 오류가 없었다. 최종 검토 대기는 승인하지 않고 유지했다.
+- 테스트 서버 정상 재시작 후 같은 작업·분석/대본 ID·영상·최종 검토 대기가 유지됐고 새 Fake 요청은 0건이었다. 원래 분석 1회/대본 1회 사용량 기록만 남는다.
+- 사용자 DB는 읽기 전용 백업 후 전후 비교했다. 전체 테이블 행 수·설정 해시·기존 MP4 2개 해시 동일, SQLite 무결성 `ok`. 별도 검증 데이터·캡처·모델·음성·영상은 Git에 포함하지 않는다.
+- Chrome 캡처: 로컬 `validation-output/phase5f5/`의 `home-ai-web-blocked.png`, `home-explicit-rss.png`, `rss-two-request-consent.png`, `fake-ai-script-review.png`, `supertonic-final-review.png`.
 
 ## 변경 파일과 남은 범위
 
@@ -50,4 +53,7 @@ Autopilot `backend/contracts/service`, Intelligence `capabilities/provider/schem
 
 ## GitHub
 
-최종 SHA·신규 Draft PR·Windows Actions 결과 기록 대기.
+- 검증 코드 SHA: `bfd3f66e18be9b38c99975049740fc69b0c36181` (26개 변경 파일).
+- [Draft PR #25](https://github.com/jsbae1979-prog/JSBAE/pull/25), 기준 `feat/newsflow-ux-workflow-unification`.
+- [Windows Actions #38909704366](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38909704366): Python 3.12.10 / 3.14.8 각각 **248 passed**, Ruff·pip check PASS. 기존 Starlette/httpx 비권장 경고 각 1개. 전체 회귀를 반복하지 않았다.
+- 검증 후 보고서만 갱신하며 최종 HEAD는 완료 응답에 기록한다. 기존 PR #1–24/main은 변경·병합하지 않았다.
