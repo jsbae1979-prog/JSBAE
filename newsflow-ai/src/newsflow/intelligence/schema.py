@@ -35,3 +35,6 @@ class Analysis(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     overview: str = Field(min_length=1, max_length=600)
     comparisons: list[Comparison] = Field(min_length=1, max_length=10)
+    # Optional for previously stored analyses and offline/Fake adapters.
+    recommended_article_id: int | None = Field(default=None, ge=1)
+    selection_reason: str = Field(default="", max_length=500)

@@ -1,0 +1,53 @@
+name: NewsFlow AI news automation Windows
+
+on:
+  push:
+    branches: [feat/newsflow-ai-news-automation]
+    paths-ignore: ['newsflow-ai/docs/**']
+
+permissions:
+  contents: read
+
+jobs:
+  automation-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install -r requirements-dev.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Changed automation and consent contracts - Fake only
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/autopilot src/newsflow/gui src/newsflow/intelligence tests/test_ai_news_contract.py tests/test_ai_news_automation_backend.py tests/test_ai_news_automation_gui.py tests/test_ux_workflow.py tests/test_ux_workflow_context.py tests/test_ux_workflow_settings.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pytest -q -rs tests/test_ai_news_contract.py tests/test_ai_news_automation_backend.py tests/test_ai_news_automation_gui.py tests/test_intelligence.py tests/test_autopilot_backend.py tests/test_autopilot_boundaries.py tests/test_autopilot_state.py tests/test_ux_workflow.py tests/test_ux_workflow_context.py tests/test_ux_workflow_settings.py tests/test_codex_studio.py tests/test_claude_onboarding.py tests/test_codex_search_evidence.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

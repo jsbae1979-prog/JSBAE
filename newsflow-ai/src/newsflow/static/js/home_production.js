@@ -3,6 +3,36 @@
 const newsChoice = document.getElementById("quick-source");
 const actualAi = document.querySelector("[data-home-ai]");
 const trialNotice = document.querySelector("[data-trial-notice]");
+const acquisitionChoice = document.querySelector('[name="acquisition_policy"]');
+const acquisitionLabel = document.querySelector("[data-home-acquisition]");
+const policyWarning = document.querySelector("[data-home-policy-warning]");
+const policyStatesNode = document.querySelector("[data-home-policy-states]");
+const policyStates = policyStatesNode ? JSON.parse(policyStatesNode.dataset.homePolicyStates) : {};
+function refreshPolicyReadiness() {
+  const state = acquisitionChoice && policyStates[acquisitionChoice.value];
+  if (!state) return;
+  for (const key of ["title", "detail", "notice"]) {
+    const node = document.querySelector(`[data-home-policy-${key}]`);
+    if (node) node.textContent = state[key];
+  }
+  const dot = document.querySelector("[data-home-policy-dot]");
+  if (dot) {
+    dot.classList.toggle("ready", state.supported);
+    dot.classList.toggle("pending", !state.supported);
+  }
+}
+function refreshPolicyWarning() {
+  if (policyWarning && acquisitionChoice && newsChoice) {
+    policyWarning.hidden = newsChoice.value === "sample" || acquisitionChoice.value === "rss";
+  }
+}
+if (acquisitionChoice && acquisitionLabel) {
+  acquisitionChoice.addEventListener("change", () => {
+    acquisitionLabel.textContent = acquisitionChoice.options[acquisitionChoice.selectedIndex].text;
+    refreshPolicyWarning();
+    refreshPolicyReadiness();
+  });
+}
 if (newsChoice && actualAi && trialNotice) {
   newsChoice.addEventListener("change", () => {
     const trial = newsChoice.value === "sample";
@@ -11,5 +41,7 @@ if (newsChoice && actualAi && trialNotice) {
     document.querySelectorAll("[data-source-mode]").forEach(node => {
       node.hidden = node.dataset.sourceMode !== newsChoice.value;
     });
+    refreshPolicyWarning();
+    refreshPolicyReadiness();
   });
 }

@@ -209,6 +209,9 @@ class IntelligenceService:
             referenced = {i for comparison in result["comparisons"] for i in comparison["article_ids"]}
             if referenced != set(ids):
                 raise IntelligenceError("분석 출처가 선택 기사와 일치하지 않습니다.", "ai_bad_response", True)
+            recommended = result.get("recommended_article_id")
+            if recommended is not None and (recommended not in ids or not result["selection_reason"].strip()):
+                raise IntelligenceError("추천 기사와 근거가 선택 자료와 일치하지 않습니다.", "ai_bad_response", False)
             self.check_secret(result)
             self.check_copy(result, payload)
             with self.sessions.begin() as session:
@@ -256,6 +259,7 @@ class IntelligenceService:
         consent: bool = False,
         options: Options | None = None,
         on_run: Callable[[int], None] | None = None,
+        article_ids: list[int] | None = None,
     ) -> int:
         if duration not in (30, 45, 60) or mode not in MODES:
             raise IntelligenceError("영상 길이 또는 Provider가 잘못되었습니다.", "invalid_selection", False)
@@ -267,12 +271,23 @@ class IntelligenceService:
             if not analysis or analysis.kind != "analysis" or analysis.status != "success":
                 raise IntelligenceError("먼저 기사 분석을 실행하세요.", "invalid_selection", False)
             evidence = analysis.evidence
+            if article_ids is not None:
+                known = {a["id"] for a in evidence["articles"]}
+                if (not isinstance(article_ids, list) or not article_ids or len(article_ids) > 10
+                        or any(type(i) is not int for i in article_ids)
+                        or len(article_ids) != len(set(article_ids)) or not set(article_ids) <= known):
+                    raise IntelligenceError("대본 뉴스가 저장된 분석 자료와 다릅니다.", "invalid_selection", False)
+                selected = set(article_ids)
+                evidence = {**evidence, "articles": [a for a in evidence["articles"] if a["id"] in selected],
+                            "groups": [[i for i in group if i in selected] for group in evidence["groups"]
+                                       if any(i in selected for i in group)]}
             run = IntelligenceRun(
                 kind="script",
                 provider=mode,
                 status="running",
                 evidence=evidence,
-                options={**vars(options), "duration": duration},
+                options={**vars(options), "duration": duration, "analysis_run_id": analysis_id,
+                         **({"selected_article_ids": article_ids} if article_ids is not None else {})},
                 result={},
                 message="대본 생성 중",
             )

@@ -6,7 +6,17 @@
 {% if production_flow %}<div class="soft-notice"><strong>처음 선택한 길이 {{ production_flow.initial_duration }}초</strong><p>AI 예정: {{ production_flow.initial_provider }} · {{ production_flow.initial_model }} / 음성 선택: {{ production_flow.initial_voice }}</p><p>다음 화면에서도 이 설정을 이어서 사용합니다. 실행 전 검토와 동의는 그대로 필요합니다.</p></div>{% endif %}
 {% if guide %}
 <section class="easy-panel review-panel" role="status" aria-labelledby="guide-title"><h2 id="guide-title">이 제작은 확인하며 이어갑니다</h2>
-{% if guide in ['provider', 'model'] %}
+{% if guide == 'consent' and production_flow %}
+<h3>이번 뉴스 분석·대본 생성 동의</h3><p><strong>뉴스 확보: {{ acquisition_labels.get(production_flow.acquisition_policy, 'RSS 뉴스 수집') }} · {{ category_labels.get(production_flow.category, '전체') }} · {{ period_labels.get(production_flow.period, '최근 7일') }}</strong></p>
+<p>RSS에서 수집한 기사 최대 10건의 제목·요약(기사당 최대 800자)·출처 URL·발행 시각을 {{ ai_labels[production_flow.initial_provider] }}에 전달합니다. 전체 기사 본문을 수집하거나 웹 검색을 실행하는 방식이 아닙니다.</p>
+<p>예상 요청: 기사 비교·분석 1회 + {{ production_flow.initial_duration }}초 대본 생성 1회. 입력 사용량은 수집 자료 길이에 따라 달라지며, 출력 상한은 분석 1,600 + 대본 {{ script_output_limit }} 토큰입니다. 출력 상한은 실제 사용량이나 청구액이 아닙니다.</p>
+{% if production_flow.initial_provider == 'openai' %}<p>OpenAI API 과금 대상입니다. 저장된 유료 승인·요청별 출력 제한·월 토큰 한도를 각 요청 전에 확인합니다. 공급사 실제 청구량은 계정 대시보드에서 확인하세요.</p>{% else %}<p>본인 Claude 또는 ChatGPT 구독 사용량과 제한이 적용됩니다. 무료·무제한이 아니며 계정 잔여량을 정확히 확인할 수 없습니다. API 키 과금 방식으로 전환하지 않습니다.</p>{% endif %}
+{% if production_flow.initial_provider == 'claude_code' %}<p class="hint">Claude Code 일반 배포 약관 적합성은 NOT VERIFIED입니다.</p>{% endif %}
+<p>동의하면 같은 AI가 분석과 대본 작성을 이어서 수행하고, 대본 검토에서 멈춥니다. 실패·시간 초과·결과 불명 요청은 자동 재전송하지 않습니다.</p>
+<form action="/autopilot/confirm-start" method="post" data-easy-form>{{ csrf_field() }}<input type="hidden" name="flow" value="{{ production_json }}"><label><input type="checkbox" name="consent" value="true" required> 이번 2단계 요청의 자료 전송과 계정 사용량에 동의합니다.</label><button class="primary" type="submit">동의하고 자동 분석·대본 시작</button><p class="form-feedback" role="alert" data-submit-error></p></form>
+{% elif guide == 'search' %}
+<p><strong>AI 웹 뉴스 조사 BLOCKED</strong></p><p>선택한 AI의 실제 검색·기사 URL 확인 경로가 아직 승인·검증되지 않았습니다. 연결 성공을 뉴스 검색 성공으로 표시하지 않습니다.</p><p>RSS로 자동 전환하지 않았습니다. RSS 분석을 원하면 홈 또는 설정에서 ‘RSS 뉴스 수집’을 직접 선택해 주세요.</p><a class="button primary" href="/">홈에서 뉴스 확보 방식 선택</a>
+{% elif guide in ['provider', 'model'] %}
 <p>{% if guide == 'model' %}선택한 OpenAI 모델과 기존 자동 제작의 모델이 다릅니다. 다른 모델로 바꾸지 않고 선택한 모델의 대본 검토 흐름으로 연결합니다.{% else %}Claude Code·Codex는 기사 분석과 대본 생성에 사용합니다. 기존 자동 제작 엔진이 직접 실행하지 않으므로 대본을 검토한 뒤 영상으로 이어갑니다.{% endif %}</p>
 <p>저장한 AI를 유지했습니다. 기사 자료와 계정 사용량에 대한 실행별 동의를 확인해 주세요.</p><a class="button primary" href="{{ manual_url }}">뉴스 확인·대본 만들기로 이어가기</a>
 {% elif guide == 'video' %}
@@ -22,11 +32,11 @@
 {% elif not advanced %}<section class="easy-panel"><h2>제작 시작은 홈에서</h2><p>뉴스와 길이를 고르는 화면을 하나로 모았습니다.</p><a class="button primary" href="/">홈에서 제작 시작</a></section>{% endif %}
 {% if advanced %}
   <details class="easy-panel advanced-settings" open><summary>고급 제작 설정</summary>
-    <p>자동 제작 엔진의 기존 옵션입니다. Claude Code·Codex는 <a href="/ai">뉴스 분석·대본 화면</a>을 이용하세요. 선택한 AI나 음성을 자동으로 대체하지 않습니다.</p>
+    <p>자동 제작 엔진의 기존 옵션입니다. Claude Code·Codex 통합 제작은 <a href="/">홈</a>에서 시작합니다. 개별 편집은 <a href="/ai">AI Studio</a>를 이용하세요. 선택한 AI나 음성을 자동으로 대체하지 않습니다.</p>
     <form action="/autopilot/start" method="post" class="creation-form" data-easy-form>{{ csrf_field() }}
       <div class="form-two-columns"><label>뉴스 종류<select name="source"><option value="sample" {% if defaults.source == 'sample' %}selected{% endif %}>체험 뉴스</option><option value="feeds" {% if defaults.source == 'feeds' %}selected{% endif %}>등록된 뉴스</option></select></label><label>영상 길이<select name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {% if defaults.duration == seconds %}selected{% endif %}>{{ seconds }}초</option>{% endfor %}</select></label></div>
       <div class="form-two-columns"><label>제작 방식<select name="mode"><option value="easy" {% if defaults.mode == 'easy' %}selected{% endif %}>간편 제작</option><option value="guided" {% if defaults.mode == 'guided' %}selected{% endif %}>뉴스부터 단계별 검토</option></select></label><label>영상의 목적지<select name="platform">{% for value, label in platform_labels.items() %}<option value="{{ value }}" {% if defaults.platform == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label></div>
-      <label>자동 제작용 대본<select name="ai">{% for key, label in ai_labels.items() %}<option value="{{ key }}" {% if defaults.ai == key %}selected{% endif %} {% if key == 'openai' and not ready.ai.ready %}disabled{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+      <label>자동 제작용 대본<select name="ai">{% for key, label in ai_labels.items() %}{% if key in ['offline', 'openai'] %}<option value="{{ key }}" {% if defaults.ai == key %}selected{% endif %} {% if key == 'openai' and not ready.ai.ready %}disabled{% endif %}>{{ label }}</option>{% endif %}{% endfor %}</select></label>
       {% if ready.ai.ready %}<p class="hint" id="start-ai-estimate">외부 AI는 등록 뉴스에서만 호출합니다. 30초 기준 호출 {{ ready.ai.estimate.calls }}회 · 예상 최대 약 {{ ready.ai.estimate.total_max }} 토큰 · 이번 달 남은 {{ ready.ai.remaining_tokens }} 토큰. 참고용 추정치이며 실제 사용량은 호출 후 기록됩니다.</p>{% else %}<p class="hint">{{ ready.ai.reasons|join(' ') }}</p>{% endif %}
       <label>이번 제작 음성<select name="voice"><option value="default">저장한 음성 · {{ ready.voice.name }}</option><option value="offline-silence">이번만 무음 검토영상</option></select></label>
       <p class="hint">실제 뉴스는 대본·완성 영상의 검토를 건너뛰지 않습니다. 실제 SNS 게시 없이 내 PC에 보관합니다.</p>
