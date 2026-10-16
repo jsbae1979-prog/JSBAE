@@ -1,0 +1,1 @@
+"""CPython 3.12.10 robots policy snapshot; see LICENSE-CPYTHON.txt."""

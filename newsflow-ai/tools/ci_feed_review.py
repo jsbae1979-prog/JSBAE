@@ -34,7 +34,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import quote, unquote, urljoin, urlparse, urlsplit, urlunparse
-from urllib.robotparser import RobotFileParser
 
 import feedparser
 from defusedxml import ElementTree
@@ -63,6 +62,7 @@ from newsflow.news.rss_adapter import (
     validate_url,
 )
 from newsflow.news.service import CollectionCoordinator, NewsService
+from newsflow.news.vendor.robotparser312 import RobotFileParser
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CANDIDATES = ROOT / "tools" / "feed_candidates.json"
