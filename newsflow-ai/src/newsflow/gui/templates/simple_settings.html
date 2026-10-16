@@ -1,6 +1,6 @@
 {% extends 'base.html' %}{% block title %}간단한 설정 · NewsFlow AI{% endblock %}{% block content %}<div class="easy-page narrow-page"><div class="page-head"><div><p class="eyebrow">나에게 맞는 시작</p><h1>간단한 설정</h1><p>홈의 자동 제작 시작에 사용할 기본값을 정해요.</p></div></div>{% if saved %}<div class="soft-notice success-notice" role="status">기본 설정을 저장했습니다. 다음 제작부터 적용됩니다.</div>{% endif %}<div class="soft-notice"><a href="/setup">처음 설정하기 · 준비 상태 점검 →</a><p>음성·자막·저장 위치와 설치 준비를 순서대로 확인하세요.</p></div><div class="soft-notice"><a href="/operations">내 PC 운영 점검 · 자동 시작과 사용 결과 →</a></div><section class="connection-hub easy-panel" id="connections" aria-labelledby="connections-title"><h2 id="connections-title">API · 계정 · 음성 연결</h2><p>사용하려는 서비스만 설정하세요. 이 버튼은 설정 화면만 엽니다.</p><div class="connection-grid">
 <a href="/ai-settings"><span aria-hidden="true">✦</span><strong>OpenAI</strong><small>API 키 · 사용 승인 · 비용 한도</small></a>
-<a href="/ai"><span aria-hidden="true">✎</span><strong>Claude Code</strong><small>CLI 설치·로그인 확인 · 대본 선택</small></a>
+<a href="/ai#claude-connection"><span aria-hidden="true">✎</span><strong>Claude Code</strong><small>CLI 설치·로그인 확인 · 대본 선택</small></a>
 <a href="/video/tts"><span aria-hidden="true">♫</span><strong>Supertonic · ElevenLabs</strong><small>로컬 음성 안내 · ElevenLabs API 키</small></a>
 <a href="/voices"><span aria-hidden="true">♬</span><strong>Windows · Heami</strong><small>기본 음성 · 속도 · 미리 듣기</small></a>
 <a href="/video-ai-settings"><span aria-hidden="true">▷</span><strong>Higgsfield 영상 API</strong><small>선택 기능 · 별도 비용 승인 필요</small></a>

@@ -23,12 +23,12 @@ if (state) {
 }
 // no-referrer preserves external privacy but makes native navigation POST Origin:null.
 // Fetch in cors mode sends the browser's real Origin; server CSRF/Origin checks stay intact.
-for (const form of document.querySelectorAll('form[method="post"]:not([data-easy-form]):not([data-ai-form])')) {
+for (const form of document.querySelectorAll('form[method="post"]:not([data-easy-form]):not([data-ai-form]):not([data-claude-action])')) {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const target = new URL(form.action, window.location.href);
+    const target = new URL(event.submitter?.getAttribute('formaction') || form.action, window.location.href);
     if (target.origin !== window.location.origin) return;
-    const submit = form.querySelector('button[type="submit"], button:not([type])');
+    const submit = event.submitter || form.querySelector('button[type="submit"], button:not([type])');
     const label = submit ? submit.textContent : '';
     if (submit) { submit.disabled = true; submit.textContent = '처리 중…'; }
     let alert = form.querySelector('[data-submit-error]');
@@ -45,6 +45,12 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
         body: new URLSearchParams(new FormData(form))
       });
       if (!response.ok) {
+        if (response.status === 422 && form.hasAttribute('data-ai-studio')) {
+          const failure = await response.json();
+          alert.textContent = typeof failure.detail === 'string' && failure.detail.length <= 300
+            ? failure.detail : '제공자·모델과 실행 동의 항목을 확인해 주세요.';
+          return;
+        }
         if (response.status === 422 && form.hasAttribute('data-setup-form')) {
           const documentCopy = new DOMParser().parseFromString(await response.text(), 'text/html');
           const explanation = documentCopy.getElementById('setup-error');

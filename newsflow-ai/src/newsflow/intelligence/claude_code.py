@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 from threading import Event, Lock
 
@@ -24,6 +25,34 @@ from .provider import (
     ProviderUnavailableError,
 )
 from .schema import Analysis, Script
+
+CONNECTION_MESSAGES = {
+    "unchecked": "연결 상태를 확인해 주세요. 페이지를 여는 것만으로 CLI를 실행하지 않습니다.",
+    "checking": "연결 확인 중입니다. 잠시 후 다시 확인해 주세요.",
+    "not_installed": "설치 필요 · 공식 설치 안내에서 Windows 설치 방법을 확인하세요.",
+    "version_check": "CLI 버전 확인 필요 · 2.1.259 이상이 필요합니다. 자동 업데이트하지 않습니다.",
+    "login_required": "공식 로그인 필요 · 아래 버튼으로 CLI의 공식 로그인 창을 여세요.",
+    "ready": "로컬 실행 준비 완료 · 설치·버전·구독 인증 확인 결과입니다.",
+    "approval_required": "인증 확인됨 · NewsFlow AI에서 해당 과금 방식 사용 승인 필요. 자동 전환하지 않습니다.",
+    "auth_error": "인증 오류 · 공식 CLI에서 계정 상태를 확인한 뒤 다시 확인하세요.",
+    "timeout": "연결 확인 시간이 초과되었습니다. 자동 재시도하지 않습니다.",
+    "check_failed": "상태 확인 실패 · 실행 파일과 공식 CLI 상태를 확인하세요.",
+    "login_running": "공식 로그인 창이 열려 있습니다. 그 창에서 직접 완료하거나 취소한 뒤 연결을 다시 확인하세요.",
+    "login_started": "공식 로그인 창을 열었습니다. 로그인 후 연결 다시 확인을 눌러 주세요.",
+    "login_failed": "로그인 창 실행 실패 · 일반 사용자 터미널에서 claude auth login을 실행하세요.",
+    "login_cancelled": "공식 로그인이 취소되었거나 완료되지 않았습니다. 필요할 때 다시 진행하세요.",
+    "manual_login": "이 환경에서는 일반 사용자 터미널에서 claude auth login을 직접 실행하세요.",
+}
+
+
+def connection_state(state, *, installed=False, authenticated=False, version=None):
+    return {"state": state, "installed": installed, "authenticated": authenticated,
+            "ready": state == "ready", "version": version, "message": CONNECTION_MESSAGES[state],
+            "checked_at": datetime.now(UTC).isoformat() if state != "unchecked" else None}
+
+
+class ProviderBillingApprovalError(ProviderError):
+    code = "ai_billing_approval"
 
 
 class ProviderCancelled(ProviderError):
@@ -55,8 +84,9 @@ def cli_path() -> Path | None:
 
 def cli_env() -> dict[str, str]:
     return {key: value for key, value in os.environ.items()
-            if not key.upper().startswith(("ANTHROPIC_", "CLAUDE_", "CLAUDECODE"))
-            and not key.upper().endswith(("_KEY", "_TOKEN", "_PASSWORD", "_SECRET"))}
+            if key.upper() == "CLAUDE_CONFIG_DIR" or (
+                not key.upper().startswith(("ANTHROPIC_", "CLAUDE_", "CLAUDECODE"))
+                and not key.upper().endswith(("_KEY", "_TOKEN", "_PASSWORD", "_SECRET")))}
 
 
 class ClaudeCodeProvider:
@@ -76,27 +106,41 @@ class ClaudeCodeProvider:
 
     @staticmethod
     def status() -> dict:
+        # Observe the CLI's own authentication context, without changing its methods.
+        # Execution retains the app's separate subscription-only cost guard.
         path = cli_path()
         if path is None:
-            return {"installed": False, "ready": False, "message": "Claude Code CLI 미설치 또는 경로 미확인"}
+            return connection_state("not_installed")
+        version_text = None
         try:
             version = subprocess.run([str(path), "--version"], capture_output=True, timeout=10,
-                                     env=cli_env(), shell=False, check=False)
+                                     env=os.environ.copy(), shell=False, check=False)
             match = re.search(rb"(\d+)\.(\d+)\.(\d+)", version.stdout[:4096])
-            if version.returncode or not match or tuple(map(int, match.groups())) < (2, 1, 259):
-                raise ValueError
+            if version.returncode or len(version.stdout) > 4096 or not match:
+                return connection_state("version_check", installed=True)
+            version_text = match.group().decode()
+            if tuple(map(int, match.groups())) < (2, 1, 259):
+                return connection_state("version_check", installed=True, version=version_text)
             auth = subprocess.run([str(path), "auth", "status"], capture_output=True, timeout=10,
-                                  env=cli_env(), shell=False, check=False)
+                                  env=os.environ.copy(), shell=False, check=False)
             if len(auth.stdout) > 16384:
                 raise ValueError
             value = json.loads(auth.stdout)
-            if not isinstance(value, dict):
-                raise TypeError
-            ready = auth.returncode == 0 and value.get("loggedIn") is True and value.get("authMethod") == "claude.ai"
-            return {"installed": True, "ready": ready, "version": match.group().decode(),
-                    "message": "Claude 구독 인증 확인" if ready else "공식 CLI에서 Claude 구독 로그인이 필요합니다"}
-        except (OSError, subprocess.TimeoutExpired, ValueError, TypeError):
-            return {"installed": True, "ready": False, "message": "CLI 버전·인증 확인 실패 (2.1.259 이상 필요)"}
+            if not isinstance(value, dict) or type(value.get("loggedIn")) is not bool:
+                raise ValueError
+            method = value.get("authMethod")
+            if auth.returncode == 0 and value["loggedIn"]:
+                if not isinstance(method, str) or method == "none":
+                    raise ValueError
+                return connection_state("ready" if method == "claude.ai" else "approval_required",
+                                        installed=True, authenticated=True, version=version_text)
+            if auth.returncode == 1 and not value["loggedIn"]:
+                return connection_state("login_required", installed=True, version=version_text)
+            return connection_state("auth_error", installed=True, version=version_text)
+        except subprocess.TimeoutExpired:
+            return connection_state("timeout", installed=True, version=version_text)
+        except (OSError, ValueError, TypeError):
+            return connection_state("check_failed", installed=True, version=version_text)
 
     @staticmethod
     def command(path: Path, schema: dict, instruction: str, model: str) -> list[str]:
@@ -119,6 +163,8 @@ class ClaudeCodeProvider:
         try:
             status = self.status()
             if not status["ready"]:
+                if status.get("state") == "approval_required":
+                    raise ProviderBillingApprovalError("인증 확인됨 · 해당 과금 방식 사용 승인 필요")
                 raise ProviderAuthError("Claude Code 설치·구독 인증을 확인하세요.")
             if cancel.is_set():
                 raise ProviderCancelled("Claude 요청 취소")
@@ -197,4 +243,55 @@ class ClaudeCodeProvider:
         return self._request({"duration": duration, "evidence": evidence}, Script, SCRIPT_INSTRUCTION, options)
 
 
+class ClaudeLogin:
+    """One explicitly requested official login window; never captures its streams."""
+
+    def __init__(self):
+        self.lock = Lock()
+        self.process = None
+
+    def check(self):
+        if not self.lock.acquire(blocking=False):
+            return connection_state("checking")
+        try:
+            if self.process is not None and self.process.poll() is None:
+                return connection_state("login_running", installed=True)
+            exit_code = self.process.poll() if self.process is not None else None
+            self.process = None
+            result = ClaudeCodeProvider.status()
+            if exit_code not in (None, 0) and result["state"] == "login_required":
+                return connection_state("login_cancelled", installed=True, version=result["version"])
+            return result
+        finally:
+            self.lock.release()
+
+    def start(self, *, consent=False):
+        if not consent:
+            raise ValueError("공식 로그인 창 열기에 동의해 주세요.")
+        if not self.lock.acquire(blocking=False):
+            return connection_state("checking")
+        try:
+            if self.process is not None and self.process.poll() is None:
+                return connection_state("login_running", installed=True)
+            result = ClaudeCodeProvider.status()
+            # No re-login when ready or another valid authentication method is present.
+            if result["state"] != "login_required":
+                return result
+            if os.name != "nt":
+                return connection_state("manual_login", installed=True)
+            path = cli_path()
+            if path is None:
+                return connection_state("not_installed")
+            self.process = subprocess.Popen(
+                [str(path), "auth", "login"], cwd=str(Path.home()), env=os.environ.copy(),
+                shell=False, creationflags=subprocess.CREATE_NEW_CONSOLE,
+            )
+            return connection_state("login_started", installed=True)
+        except OSError:
+            return connection_state("login_failed", installed=True)
+        finally:
+            self.lock.release()
+
+
 CLAUDE_PROVIDER = ClaudeCodeProvider()
+CLAUDE_LOGIN = ClaudeLogin()

@@ -35,6 +35,7 @@ from .schema import CAUTION, Analysis, Script
 
 MODES = ("offline", "openai", "claude_code")
 _PROVIDER_MESSAGES = {
+    "ai_billing_approval": "Claude 인증은 확인됐으나 해당 과금 방식은 NewsFlow AI에서 사용 승인되지 않았습니다.",
     "ai_auth_failed": "AI 인증에 실패했습니다. API 키와 권한을 확인하세요.",
     "ai_rate_limited": "AI 요청 한도(Rate Limit)를 초과했습니다. 잠시 후 다시 시도하세요.",
     "ai_timeout": "AI 요청 시간이 초과되었습니다.",

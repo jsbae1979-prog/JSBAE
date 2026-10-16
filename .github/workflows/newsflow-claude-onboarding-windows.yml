@@ -1,0 +1,52 @@
+name: NewsFlow Claude onboarding Windows
+
+on:
+  push:
+    branches: [feat/newsflow-claude-onboarding]
+    paths-ignore: ['newsflow-ai/docs/**']
+
+permissions:
+  contents: read
+
+jobs:
+  connection-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Isolated pinned dependencies
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install -r requirements-dev.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Changed contracts only - fake CLI and isolated data
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/intelligence/claude_code.py src/newsflow/intelligence/settings.py src/newsflow/intelligence/service.py src/newsflow/gui/intelligence_routes.py tests/test_claude_onboarding.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pytest -q -rs tests/test_claude_onboarding.py tests/test_claude_audio_fit.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # No CLI installation/login, live inference, user data or artifact uploads.
