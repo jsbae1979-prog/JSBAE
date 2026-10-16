@@ -42,9 +42,9 @@ def test_saved_account_provider_guides_to_studio_without_job_or_replacement(clie
         "csrf_token": csrf(client), "source": "feeds", "duration": 30,
     }, follow_redirects=False)
     assert response.status_code == 303
-    assert response.headers["location"] == "/autopilot/start?guide=provider"
+    assert response.headers["location"].startswith("/autopilot/start?guide=provider&flow=")
     page = client.get(response.headers["location"]).text
-    assert "저장한 AI를 유지했습니다" in page and 'href="/ai"' in page
+    assert "저장한 AI를 유지했습니다" in page and 'href="/ai?flow=' in page
     assert job_count(app) == 0
     with app.state.sessions() as session:
         assert session.get(AppSetting, "studio_provider").value == provider
@@ -88,7 +88,7 @@ def test_unavailable_or_external_voice_never_silently_falls_back(client, app, mo
     response = client.post("/autopilot/quick-start", data={
         "csrf_token": csrf(client), "source": "sample", "duration": 30,
     }, follow_redirects=False)
-    assert response.status_code == 303 and response.headers["location"] == "/autopilot/start?guide=voice"
+    assert response.status_code == 303 and response.headers["location"].startswith("/autopilot/start?guide=voice&flow=")
     page = client.get(response.headers["location"]).text
     assert "다른 음성이나 무음으로 바꾸지 않았어요" in page
     assert job_count(app) == 0
@@ -117,7 +117,7 @@ def test_openai_without_existing_approval_stops_before_collection(client, app):
     response = client.post("/autopilot/quick-start", data={
         "csrf_token": csrf(client), "source": "feeds", "duration": 60,
     }, follow_redirects=False)
-    assert response.status_code == 303 and response.headers["location"] == "/autopilot/start?guide=approval"
+    assert response.status_code == 303 and response.headers["location"].startswith("/autopilot/start?guide=approval&flow=")
     assert job_count(app) == 0
 
 
@@ -157,8 +157,10 @@ def test_invalid_quick_choices_do_not_create_job(client, app, source, duration):
 
 def test_task_views_keep_advanced_routes_and_real_progress_copy(client):
     start = client.get("/autopilot/start").text
-    assert 'action="/autopilot/quick-start"' in start
-    assert 'action="/autopilot/start"' in start and "고급 제작 설정" in start
+    assert 'action="/autopilot/quick-start"' not in start
+    assert 'action="/autopilot/start"' not in start and "제작 시작은 홈에서" in start
+    advanced = client.get("/autopilot/start?advanced=true").text
+    assert 'action="/autopilot/start"' in advanced and "고급 제작 설정" in advanced
     tasks = client.get("/autopilot/jobs").text
     assert "작업 현황" in tasks
-    assert all(f'href="{path}"' in tasks for path in ("/video", "/schedules", "/queue"))
+    assert "설정의 고급 관리" in tasks

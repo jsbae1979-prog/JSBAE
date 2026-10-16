@@ -61,6 +61,52 @@ def voice_catalog() -> list[dict[str, str]]:
     return WindowsTTS().voice_details()
 
 
+def voice_choice_catalog(sapi: list[dict] | None = None) -> list[dict]:
+    """Selection metadata only; presence is not a synthesis or integrity check."""
+    from .video.supertonic_tts import VOICES, SupertonicTTS
+
+    if sapi is None:
+        try:
+            sapi = voice_catalog()
+        except TTSError:
+            sapi = []
+    local = set(SupertonicTTS().voices())
+    return [
+        {"name": "offline-silence", "label": "음성 없음 · 검토용", "engine": "offline", "available": True},
+        *({"name": name, "label": f"Supertonic 3 · {name.split(':')[1]} · 한국어",
+           "engine": "supertonic", "available": name in local} for name in VOICES),
+        *({"name": item["name"], "label": f"Windows SAPI · {item['name']} · 한국어",
+           "engine": "windows", "available": True} for item in sapi if item["culture"].lower().startswith("ko-")),
+        {"name": "elevenlabs", "label": "ElevenLabs · 외부 음성 · 제작별 동의 필요",
+         "engine": "elevenlabs", "available": False},
+    ]
+
+
+def validate_voice_preferences(voice: str, rate: str, pause_ms: str) -> None:
+    """Validate a selection without storing settings or granting paid-call consent."""
+    if rate not in RATE_CHOICES or pause_ms not in PAUSE_CHOICES:
+        raise SetupError('제공된 발화 속도와 문장 쉼을 선택하세요.')
+    if voice in {'offline-silence', 'elevenlabs'}:
+        return
+    if voice.startswith('supertonic:'):
+        from .video.supertonic_assets import model_dir, verify_models
+        from .video.supertonic_tts import SupertonicTTS
+
+        try:
+            if voice not in SupertonicTTS().voices():
+                raise TTSError('Supertonic 설치 확인 필요')
+            verify_models(model_dir())
+        except (TTSError, OSError):
+            raise SetupError('Supertonic 음성의 패키지·고정 모델 무결성을 확인하세요. 기존 선택은 변경하지 않았습니다.') from None
+        return
+    try:
+        valid = voice in [v['name'] for v in voice_catalog() if v['culture'].lower().startswith('ko-')]
+    except TTSError:
+        valid = False
+    if not valid:
+        raise SetupError('사용 가능한 한국어 음성을 선택하세요. 기존 선택은 변경하지 않았습니다.')
+
+
 def diagnostics(data_dir: Path, sessions: sessionmaker[Session]) -> dict[str, Any]:
     """Only fixed local tools; raw exceptions, paths from tools, and secrets never enter results."""
     checks: list[dict[str, str | bool]] = []
@@ -165,13 +211,7 @@ def save_step(sessions: sessionmaker[Session], step: int, revision: int, values:
         values.setdefault('pause_ms', DEFAULTS['pause_ms'])
         if values['rate'] not in RATE_CHOICES or values['pause_ms'] not in PAUSE_CHOICES:
             raise SetupError('제공된 발화 속도와 문장 쉼을 선택하세요.')
-        if values.get('voice') != 'offline-silence':
-            try:
-                valid = values.get('voice') in [v['name'] for v in voice_catalog() if v['culture'].lower().startswith('ko-')]
-            except TTSError:
-                valid = False
-            if not valid:
-                raise SetupError('사용 가능한 한국어 음성을 선택하거나 무음을 선택하세요.')
+        validate_voice_preferences(values.get('voice', ''), values['rate'], values['pause_ms'])
     if step == 6 and values.get('storage_confirmed') != 'yes':
         raise SetupError('저장 위치를 확인해 주세요.')
     fields = {1: set(), 2: {'source'}, 3: {'ai'}, 4: {'duration', 'platform'},
@@ -222,16 +262,8 @@ def speech_preferences(sessions: sessionmaker[Session]) -> SpeechSettings:
 
 
 def save_voice_preferences(sessions: sessionmaker[Session], voice: str, rate: str, pause_ms: str) -> None:
-    """Explicit voice page save; the voice must be the silent option or an installed Korean SAPI voice."""
-    if rate not in RATE_CHOICES or pause_ms not in PAUSE_CHOICES:
-        raise SetupError('제공된 발화 속도와 문장 쉼을 선택하세요.')
-    if voice != 'offline-silence':
-        try:
-            valid = voice in [v['name'] for v in voice_catalog() if v['culture'].lower().startswith('ko-')]
-        except TTSError:
-            valid = False
-        if not valid:
-            raise SetupError('사용 가능한 한국어 음성을 선택하거나 무음을 선택하세요.')
+    """Explicit save to the existing default keys; selecting external speech is not consent."""
+    validate_voice_preferences(voice, rate, pause_ms)
     with sessions.begin() as session:
         for key, value in (('voice', voice), ('rate', rate), ('pause_ms', pause_ms)):
             row = session.get(AppSetting, 'video_default_' + key)

@@ -33,14 +33,16 @@ def through_storage(client, app):
 
 
 def test_wizard_is_optional_and_all_core_menus_remain(client):
-    for path in ['/setup', '/videos', '/', '/news', '/simple-settings', '/dashboard', '/video', '/publishing']:
+    for path in ['/setup', '/videos', '/', '/news', '/simple-settings', '/dashboard', '/video', '/publishing',
+                 '/queue', '/autopilot/start']:
         result = client.get(path)
         assert result.status_code == 200
         assert "script-src 'self'" in result.headers['content-security-policy']
     home = client.get('/').text
-    assert '처음 오셨나요' in home and '자동 제작 시작' in home
-    for path in ['/news', '/videos', '/queue', '/simple-settings', '/autopilot/start']:
+    assert '제작 시작' in home
+    for path in ['/', '/autopilot/jobs', '/videos', '/simple-settings']:
         assert f'href="{path}"' in home
+    assert '고급 관리' in client.get('/simple-settings').text
 
 
 def test_wizard_atomic_commit_and_existing_news_preserved(client, app, ready):
@@ -289,8 +291,11 @@ def test_setup_wizard_links_sources_and_uses_canonical_voice_guidance(client, ap
     for step, v in [(2, {'source': 'sample'}), (3, {'ai': 'offline'}), (4, {'duration': '30', 'platform': 'youtube'})]:
         assert advance(client, app, step, **v).status_code == 303
     monkeypatch.setattr('newsflow.gui.setup_routes.voice_catalog', list)
+    # The empty-catalog branch must not depend on voices installed on the host PC.
+    monkeypatch.setattr(WindowsTTS, 'korean_voice_report', lambda self, sapi=None: {
+        'state': 'not_installed', 'sapi': [], 'onecore_only': [], 'registry_read': 'ok'})
     text = client.get('/setup?step=5').text
-    assert '<select id="setup-voice" name="voice"><option value="offline-silence">무음 검토영상</option></select>' in text
+    assert '<select id="setup-voice" name="voice"><option value="offline-silence" selected>무음 검토영상</option></select>' in text
     assert 'id="setup-voice-guide"' in text and CANONICAL in text and 'SAPI 엔진' in text
 
     def blocked():

@@ -8,12 +8,21 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
-from newsflow.db.models import AudioTrack, ContentDraft, RenderJob, Scene, SubtitleTrack, VideoProject
+from newsflow.db.models import (
+    AudioTrack,
+    ContentDraft,
+    IntelligenceRun,
+    RenderJob,
+    Scene,
+    SubtitleTrack,
+    VideoProject,
+)
 from newsflow.easy_setup import initial_state
 from newsflow.video.engine import RenderError
 from newsflow.video.service import RenderBusy, VideoError
 from newsflow.video.tts import POLICY_MESSAGE, TTSError, TTSPolicyError, WindowsTTS
 
+from .production_context import context_for_draft
 from .routes import go, page
 
 router = APIRouter()
@@ -115,7 +124,10 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
         voices.append({"name": "elevenlabs", "label": "ElevenLabs · 외부 API · 설정·동의 필요", "engine": "external"})
         # Reuse the wizard/voice settings instead of silently resetting saved narration to silence.
         preferences = initial_state(session)["values"]
-        selected_voice = preferences["voice"]
+        context_draft = draft or (session.get(ContentDraft, project.draft_id) if project else None)
+        production_context = context_for_draft(session, context_draft)
+        draft_run = session.get(IntelligenceRun, context_draft.run_id) if context_draft else None
+        selected_voice = production_context["initial_voice"] if production_context else preferences["voice"]
         voice_available = selected_voice == "offline-silence" or any(
             item["name"] == selected_voice for item in voices
         )
@@ -132,6 +144,8 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
             voices=voices,
             voice_note=voice_note,
             preferences=preferences,
+            production_context=production_context,
+            draft_provider=draft_run.provider if draft_run else None,
             selected_voice=selected_voice,
             voice_available=voice_available,
             assets=video.assets_list(),

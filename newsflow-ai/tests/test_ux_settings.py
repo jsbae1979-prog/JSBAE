@@ -25,7 +25,8 @@ def test_settings_view_preserves_selection_and_never_checks_cli(client, app, mon
     assert read_studio_settings(app.state.sessions) == before
     for anchor in ("production", "connections", "quality", "schedules", "advanced"):
         assert f'id="{anchor}"' in page.text
-    assert page.text.count('action="/ai/preferences"') == 1
+    assert page.text.count('action="/production/preferences"') == 1
+    assert 'action="/ai/preferences"' not in page.text
     assert 'value="codex" selected' in page.text
     assert "Claude Code · 권장" in page.text and "웹 검색: BLOCKED" in page.text
     assert 'action="/ai/claude/status"' in page.text

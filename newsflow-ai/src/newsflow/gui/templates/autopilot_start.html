@@ -1,33 +1,27 @@
 {% extends 'base.html' %}
-{% block title %}자동 제작 시작 · NewsFlow AI{% endblock %}
+{% block title %}제작 흐름 안내 · NewsFlow AI{% endblock %}
 {% block content %}
 <div class="easy-page narrow-page">
-  <div class="page-head"><div><p class="eyebrow">뉴스 선택 → 자동 제작 → 결과 확인</p><h1>뉴스 영상 만들기</h1><p>뉴스와 길이를 고르면 작업 현황에서 확인하며 이어서 만들어요.</p></div><a href="/">홈으로</a></div>
-  {% if guide %}
-  <section class="easy-panel review-panel" role="status" aria-labelledby="guide-title">
-    <h2 id="guide-title">시작 전에 확인해 주세요</h2>
-    {% if guide == 'provider' %}
-    <p>{{ production.notice }}</p><p>저장한 AI를 유지했습니다. 뉴스 분석·대본 화면에서 뉴스를 선택하고 외부 전송에 동의한 뒤 시작하세요.</p><a class="button primary" href="/ai">저장한 AI로 대본 만들기</a>
-    {% elif guide == 'voice' %}
-    <p>선택한 음성을 자동 제작에서 바로 사용할 수 없습니다. 다른 음성이나 무음으로 바꾸지 않았어요.</p>
-    {% if ready.voice.name == 'elevenlabs' %}<p>ElevenLabs는 영상 제작마다 외부 전송·크레딧 사용 동의가 필요합니다. 대본을 준비한 뒤 영상 편집에서 승인해 주세요.</p><a class="button primary" href="/video">대본 선택 후 영상 제작</a>{% else %}<p>음성 설정에서 설치·모델 준비 상태를 확인해 주세요.</p><a class="button primary" href="/simple-settings#quality">음성 준비 확인</a>{% endif %}
-    {% elif guide == 'approval' %}
-    <p>등록 뉴스의 AI 연결·비용 승인이 준비되지 않아 제작을 시작하지 않았습니다.</p><p>{{ ready.ai.reasons|join(' ') }}</p><a class="button primary" href="/simple-settings#connections">AI 연결과 승인 확인</a>
-    {% else %}<p>사용 중인 뉴스 출처가 없습니다. 출처를 등록하거나 아래에서 체험 뉴스를 선택해 주세요.</p><a class="button primary" href="/sources">뉴스 출처 등록</a>{% endif %}
-  </section>
-  {% endif %}
-  <form action="{{ production.action_url }}" method="post" class="easy-panel creation-form" data-easy-form>
-    {{ csrf_field() }}
-    <div class="form-two-columns">
-      <label for="quick-source">사용할 뉴스<select id="quick-source" name="source"><option value="sample" {% if defaults.source == 'sample' %}selected{% endif %}>체험 뉴스</option><option value="feeds" {% if defaults.source == 'feeds' %}selected{% endif %}>등록된 뉴스</option></select></label>
-      <label for="quick-duration">영상 길이<select id="quick-duration" name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {% if defaults.duration == seconds %}selected{% endif %}>{{ seconds }}초</option>{% endfor %}</select></label>
-    </div>
-    <p>{{ production.voice_label }} · 등록 출처 {{ enabled_sources }}개</p>
-    <p class="hint">{{ production.notice }}</p>
-    <p class="hint">체험 뉴스는 연습용 자료와 기본 대본을 사용하며 외부 AI를 호출하지 않습니다. 뉴스·대본·완성 영상 확인은 작업 화면에서 이어집니다.</p>
-    <button class="primary" type="submit">뉴스 영상 자동 제작 시작 <span aria-hidden="true">→</span></button><p class="form-feedback" role="alert" data-submit-error></p>
-  </form>
-  <details class="easy-panel advanced-settings"><summary>고급 제작 설정</summary>
+<div class="page-head"><div><p class="eyebrow">선택한 구성으로 이어가기</p><h1>뉴스 영상 만들기</h1><p>지원하는 제작 경로를 확인한 뒤 이어집니다. 여기서는 AI·음성·영상을 실행하지 않았습니다.</p></div><a href="/">홈으로</a></div>
+{% if production_flow %}<div class="soft-notice"><strong>처음 선택한 길이 {{ production_flow.initial_duration }}초</strong><p>AI 예정: {{ production_flow.initial_provider }} · {{ production_flow.initial_model }} / 음성 선택: {{ production_flow.initial_voice }}</p><p>다음 화면에서도 이 설정을 이어서 사용합니다. 실행 전 검토와 동의는 그대로 필요합니다.</p></div>{% endif %}
+{% if guide %}
+<section class="easy-panel review-panel" role="status" aria-labelledby="guide-title"><h2 id="guide-title">이 제작은 확인하며 이어갑니다</h2>
+{% if guide in ['provider', 'model'] %}
+<p>{% if guide == 'model' %}선택한 OpenAI 모델과 기존 자동 제작의 모델이 다릅니다. 다른 모델로 바꾸지 않고 선택한 모델의 대본 검토 흐름으로 연결합니다.{% else %}Claude Code·Codex는 기사 분석과 대본 생성에 사용합니다. 기존 자동 제작 엔진이 직접 실행하지 않으므로 대본을 검토한 뒤 영상으로 이어갑니다.{% endif %}</p>
+<p>저장한 AI를 유지했습니다. 기사 자료와 계정 사용량에 대한 실행별 동의를 확인해 주세요.</p><a class="button primary" href="{{ manual_url }}">뉴스 확인·대본 만들기로 이어가기</a>
+{% elif guide == 'video' %}
+<p>Higgsfield를 선택했습니다. 자동 제작은 유료 장면을 직접 생성하지 않으며 기본 카드 영상으로 몰래 바꾸지 않습니다.</p><p>먼저 대본을 준비한 뒤 장면별 계획·비용·최종 합성 승인을 확인합니다.</p>
+{% if production_flow and production_flow.source == 'feeds' %}<a class="button primary" href="{{ manual_url }}">대본 검토 흐름으로 이어가기</a>{% else %}<p>체험 뉴스는 외부 호출 없이 연습하는 경로입니다. 설정에서 기본 FFmpeg 장면을 직접 선택해 주세요.</p><a class="button primary" href="/simple-settings#selected-video">영상 방식 확인</a>{% endif %}
+{% elif guide == 'voice' %}
+<p>선택한 음성을 자동 제작에서 바로 사용할 수 없습니다. 다른 음성이나 무음으로 바꾸지 않았어요.</p>
+{% if production_flow and production_flow.initial_voice == 'elevenlabs' and production_flow.source == 'feeds' %}<p>ElevenLabs는 영상 제작마다 외부 전송·크레딧 사용 동의가 필요합니다. 대본을 먼저 준비하고 영상 단계에서 승인합니다.</p><a class="button primary" href="{{ manual_url }}">대본 준비부터 이어가기</a>{% else %}<p>설정에서 선택한 음성의 설치·모델 준비 상태를 확인해 주세요. 체험 뉴스는 외부 음성을 사용하지 않습니다.</p><a class="button primary" href="/simple-settings#selected-voice">음성 준비 확인</a>{% endif %}
+{% elif guide == 'approval' %}
+<p>등록 뉴스의 AI 연결·비용 승인이 준비되지 않아 제작을 시작하지 않았습니다.</p><p>{{ ready.ai.reasons|join(' ') }}</p><a class="button primary" href="/simple-settings#selected-ai">AI 연결과 승인 확인</a>
+{% else %}<p>사용 중인 뉴스 출처가 없습니다. 설정에서 출처를 등록하거나 홈에서 체험 뉴스를 선택해 주세요.</p><a class="button primary" href="/simple-settings#connections">뉴스 수집 준비 확인</a>{% endif %}
+</section>
+{% elif not advanced %}<section class="easy-panel"><h2>제작 시작은 홈에서</h2><p>뉴스와 길이를 고르는 화면을 하나로 모았습니다.</p><a class="button primary" href="/">홈에서 제작 시작</a></section>{% endif %}
+{% if advanced %}
+  <details class="easy-panel advanced-settings" open><summary>고급 제작 설정</summary>
     <p>자동 제작 엔진의 기존 옵션입니다. Claude Code·Codex는 <a href="/ai">뉴스 분석·대본 화면</a>을 이용하세요. 선택한 AI나 음성을 자동으로 대체하지 않습니다.</p>
     <form action="/autopilot/start" method="post" class="creation-form" data-easy-form>{{ csrf_field() }}
       <div class="form-two-columns"><label>뉴스 종류<select name="source"><option value="sample" {% if defaults.source == 'sample' %}selected{% endif %}>체험 뉴스</option><option value="feeds" {% if defaults.source == 'feeds' %}selected{% endif %}>등록된 뉴스</option></select></label><label>영상 길이<select name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {% if defaults.duration == seconds %}selected{% endif %}>{{ seconds }}초</option>{% endfor %}</select></label></div>
@@ -39,5 +33,7 @@
       <button type="submit">고급 설정으로 제작 시작</button><p class="form-feedback" role="alert" data-submit-error></p>
     </form>
   </details>
+
+{% endif %}
 </div>
 {% endblock %}

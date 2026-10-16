@@ -36,12 +36,15 @@ from newsflow.intelligence.settings import (
     STUDIO_PROVIDERS,
     external_ready,
     job_estimate,
+    read_settings,
     read_studio_settings,
 )
 from newsflow.publishing.service import PublishingError, PublishingService, hash_file
 from newsflow.video.tts import TTSError
 
+from .production_context import context_query, parse_context, validate_context
 from .routes import go, page
+from .task_views import task_rows
 
 router = APIRouter()
 PLATFORMS = {"youtube": "YouTube Shorts", "instagram": "Instagram Reels"}
@@ -108,10 +111,21 @@ def readiness(request: Request) -> dict[str, Any]:
 
 def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any]:
     """Presentation only; saved Studio choices are never rewritten or silently replaced."""
-    provider = read_studio_settings(request.app.state.sessions)["provider"]
+    saved = read_studio_settings(request.app.state.sessions)
+    provider = saved["provider"]
     voice = ready["voice"]
     supported = provider in {"offline", "openai"}
-    if not supported:
+    with request.app.state.sessions() as session:
+        video_setting = session.get(AppSetting, "video_ai_provider")
+        manual_video = bool(video_setting and video_setting.value == "higgsfield")
+    model_mismatch = provider == "openai" and saved["model"] != read_settings(request.app.state.sessions).model
+    if manual_video:
+        supported = False
+        notice = "Higgsfield는 장면별 비용·내용 승인이 필요합니다. 대본을 준비한 뒤 별도 장면 계획으로 이어갑니다."
+    elif model_mismatch:
+        supported = False
+        notice = "선택 모델과 기존 자동 제작 모델이 달라 선택한 모델의 대본 검토 흐름으로 이어갑니다."
+    elif not supported:
         notice = (
             "선택한 AI는 뉴스 분석·대본 화면에서 사용할 수 있어요. "
             "등록된 뉴스는 대본을 검토한 뒤 영상 제작으로 이어집니다."
@@ -201,6 +215,10 @@ def _media_path(request: Request, video: RenderJob | None):
 def home(request: Request) -> HTMLResponse:
     jobs = request.app.state.autopilot.list_jobs(100)
     ready = readiness(request)
+    from .production_status import production_context
+
+    overview = production_context(request)
+    tasks = task_rows(request, jobs)
     with request.app.state.sessions() as session:
         completed = []
         videos = session.execute(
@@ -221,15 +239,20 @@ def home(request: Request) -> HTMLResponse:
         return _page(
             request, "easy_home.html", active="home", defaults=_defaults(request), ready=ready,
             production=production_summary(request, ready),
-            active_jobs=[item for item in jobs if item["status"] in {"queued", "running", "waiting_review"}],
+            active_jobs=[item for item in tasks if not item["completed"]],
             completed=completed, video_count=video_count,
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
             recent_news=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(5))),
+            **overview,
         )
 
 
 @router.get("/autopilot/start", response_class=HTMLResponse)
-def start_page(request: Request, guide: str = "") -> HTMLResponse:
+def start_page(request: Request, guide: str = "", flow: str | None = None, advanced: bool = False) -> HTMLResponse:
+    try:
+        production_flow = parse_context(flow)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
     with request.app.state.sessions() as session:
         enabled = session.scalar(select(func.count()).select_from(NewsSource).where(
             NewsSource.enabled, NewsSource.url != SAMPLE_URL,
@@ -238,7 +261,8 @@ def start_page(request: Request, guide: str = "") -> HTMLResponse:
     return _page(
         request, "autopilot_start.html", active="autopilot", defaults=_defaults(request),
         enabled_sources=enabled, ready=ready, production=production_summary(request, ready),
-        guide=guide if guide in {"provider", "voice", "approval", "sources"} else "",
+        guide=guide if guide in {"provider", "voice", "approval", "sources", "model", "video"} else "",
+        production_flow=production_flow, manual_url="/ai?" + context_query(production_flow), advanced=advanced,
     )
 
 
@@ -251,17 +275,34 @@ def quick_start(
         raise HTTPException(422, "뉴스 종류와 30·45·60초 중 영상 길이를 선택해 주세요.")
     ready = readiness(request)
     saved = read_studio_settings(request.app.state.sessions)
+    with request.app.state.sessions() as session:
+        video_setting = session.get(AppSetting, "video_ai_provider")
+        video_mode = video_setting.value if video_setting and video_setting.value == "higgsfield" else "off"
+    flow = validate_context({
+        "source": source, "initial_duration": duration,
+        "initial_provider": saved["provider"] if source == "feeds" else "offline",
+        "initial_model": saved["model"] if source == "feeds" else "offline",
+        "initial_voice": ready["voice"]["name"], "initial_video": video_mode,
+    })
+
+    def guide_to(reason: str):
+        return go(f"/autopilot/start?guide={reason}&{context_query(flow)}")
+
+    if video_mode == "higgsfield":
+        return guide_to("video")
     if source == "feeds":
         if saved["provider"] not in {"offline", "openai"}:
-            return go("/autopilot/start?guide=provider")
+            return guide_to("provider")
         if not ready["rss"]["ready"]:
-            return go("/autopilot/start?guide=sources")
+            return guide_to("sources")
         if saved["provider"] == "openai" and not ready["ai"]["ready"]:
-            return go("/autopilot/start?guide=approval")
+            return guide_to("approval")
+        if saved["provider"] == "openai" and saved["model"] != read_settings(request.app.state.sessions).model:
+            return guide_to("model")
     # An external voice needs the existing Video Studio per-render consent flow.
     # A missing selected voice never becomes silent or switches providers.
     if ready["voice"]["name"] == "elevenlabs" or not ready["voice"]["installed"]:
-        return go("/autopilot/start?guide=voice")
+        return guide_to("voice")
     defaults = _defaults(request)
     try:
         identifier = request.app.state.autopilot.start(
@@ -309,12 +350,13 @@ def start(
 
 @router.get("/autopilot/jobs", response_class=HTMLResponse)
 def jobs(request: Request) -> HTMLResponse:
-    return _page(request, "autopilot_jobs.html", active="autopilot", jobs=request.app.state.autopilot.list_jobs(100))
+    return _page(request, "autopilot_jobs.html", active="autopilot", jobs=task_rows(request))
 
 
 @router.get("/autopilot/jobs/{job_id}", response_class=HTMLResponse)
 def job(request: Request, job_id: str) -> HTMLResponse:
     snapshot = _snapshot(request, job_id)
+    task_summary = next(row for row in task_rows(request, [snapshot]) if row["id"] == "auto:" + job_id)
     stages = [
         {"key": key, "label": STAGE_LABELS[key], "description": DESCRIPTIONS[key], "done": key in snapshot["stage_results"]}
         for key in STAGES
@@ -334,6 +376,7 @@ def job(request: Request, job_id: str) -> HTMLResponse:
                 plan = speech_plan(draft.content, draft.duration)
         return _page(
             request, "autopilot_job.html", active="autopilot", job=snapshot, stages=stages,
+            task_summary=task_summary,
             draft=draft, video=video, article=article, plan=plan,
             notes=list(draft.review_notes or []) if draft else [],
             playable=output is not None, output_path=str(output) if output else None,
@@ -394,12 +437,9 @@ def queue(request: Request) -> HTMLResponse:
 
 @router.get("/simple-settings", response_class=HTMLResponse)
 def simple_settings(request: Request, saved: bool = False) -> HTMLResponse:
-    from .intelligence_routes import connection_context
+    from .production_routes import settings_page
 
-    return _page(
-        request, "simple_settings.html", active="simple-settings", defaults=_defaults(request), saved=saved,
-        ready=readiness(request), **connection_context(request),
-    )
+    return settings_page(request, saved=saved)
 
 
 @router.post("/simple-settings")

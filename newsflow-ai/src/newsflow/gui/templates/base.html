@@ -7,12 +7,10 @@
 {% for href,key,icon,label in [('/', 'home', '⌂', '홈'), ('/autopilot/jobs', 'autopilot', '◷', '작업 현황'), ('/videos', 'videos', '▣', '내 영상'), ('/simple-settings', 'simple-settings', '⚙', '설정')] %}
 <a href="{{ href }}" class="{{ 'active' if nav_key == key }}" {% if nav_key == key %}aria-current="page"{% endif %}><span aria-hidden="true">{{ icon }}</span> {{ label }}</a>
 {% endfor %}</nav>
-<details class="advanced-nav" {% if active in ['dashboard', 'news', 'ai', 'video', 'publishing'] %}open{% endif %}><summary>고급 모드 <span>세부 편집과 운영 도구</span></summary><nav aria-label="고급 메뉴">
-<a href="/news" class="{{ 'active' if active == 'news' }}">▤ 뉴스 상세 탐색</a><a href="/ai" class="{{ 'active' if active == 'ai' }}">✎ AI Studio</a><a href="/video" class="{{ 'active' if active == 'video' }}">▷ Video Studio</a><a href="/autopilot/start">✦ Autopilot 상세 제작</a><a href="/queue" class="{{ 'active' if active == 'queue' }}">▥ 게시 대기함</a><a href="/schedules">◷ 예약 관리</a><a href="/sources">☷ 뉴스 출처 관리</a><a href="/dashboard" class="{{ 'active' if active == 'dashboard' }}">▦ 현황판</a><a href="/publishing" class="{{ 'active' if active == 'publishing' }}">↗ 게시 준비</a><a href="/operations">◎ 운영 점검</a><a href="/settings" class="{{ 'active' if active == 'settings' }}">⚙ 실행 설정</a>
-</nav></details>
+
 <div class="sidebar-foot"><span class="dot"></span> 내 PC에서 만드는 콘텐츠<br><small>게시 전 직접 확인해 주세요.</small></div></aside>
 {% macro csrf_field() %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endmacro %}
 {% macro badge(status) %}<span class="badge {{ status }}">{{ {'success':'성공','partial':'부분 실패','failed':'실패','running':'수집 중','empty':'활성 출처 없음','interrupted':'중단','idle':'대기'}.get(status,status) }}</span>{% endmacro %}
 {% macro when(value) %}{{ value|kst }}{% endmacro %}
-<main id="main-content" tabindex="-1"><noscript><p>작업을 시작하려면 브라우저 설정에서 JavaScript를 켜 주세요.</p></noscript><header class="topbar"><span>뉴스 선택 <span aria-hidden="true">→</span> 자동 제작 <span aria-hidden="true">→</span> 결과 확인</span><a class="pill" href="/simple-settings#connections">AI·계정 연결</a></header>{% block content %}{% endblock %}</main>
+<main id="main-content" tabindex="-1"><noscript><p>작업을 시작하려면 브라우저 설정에서 JavaScript를 켜 주세요.</p></noscript><header class="topbar"><span>뉴스 선택 <span aria-hidden="true">→</span> 자동 제작 <span aria-hidden="true">→</span> 결과 확인</span><span class="topbar-local">내 PC의 뉴스 작업실</span></header>{% block content %}{% endblock %}</main>
 </body></html>
