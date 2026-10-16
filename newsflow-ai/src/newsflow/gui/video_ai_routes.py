@@ -12,6 +12,7 @@ from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
 from newsflow.db.models import AIVideoPlan, AIVideoScene, ContentDraft, VideoAIUsage
+from newsflow.easy_setup import SetupError, preview_preferences
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.video.ai.costs import CURRENCIES
 from newsflow.video.ai.policy import DEFAULT_PROMPT, SCENE_LABEL, STYLE_GUARD, VIDEO_NOTICE
@@ -31,6 +32,7 @@ from newsflow.video.ai.settings import (
     write_settings,
 )
 
+from .production_context import context_for_draft
 from .routes import go, page
 
 router = APIRouter()
@@ -65,6 +67,7 @@ def plans(request: Request, draft_id: int | None = None) -> HTMLResponse:
         drafts = list(session.scalars(select(ContentDraft).order_by(ContentDraft.id.desc()).limit(100)))
     return page(
         request, "video_ai.html", active="video", plans=rows, drafts=drafts, draft_id=draft_id,
+        selected_duration=next((draft.duration for draft in drafts if draft.id == draft_id), 30),
         ready=service.readiness(), plan_labels=PLAN_LABELS, notice=VIDEO_NOTICE,
     )
 
@@ -88,10 +91,16 @@ def _plan_context(request: Request, plan_id: int) -> dict:
         scenes = list(session.scalars(
             select(AIVideoScene).where(AIVideoScene.plan_id == plan_id).order_by(AIVideoScene.position)))
         draft = session.get(ContentDraft, plan.draft_id)
+        production_context = context_for_draft(session, draft)
         usage = list(session.scalars(
             select(VideoAIUsage).where(VideoAIUsage.plan_id == plan_id).order_by(VideoAIUsage.id)))
         session.expunge_all()
-    return {"plan": plan, "scenes": scenes, "draft": draft, "usage": usage, "service": service}
+    try:
+        compose_voice = preview_preferences(request.app.state.sessions)[0]
+    except SetupError:
+        compose_voice = None
+    return {"plan": plan, "scenes": scenes, "draft": draft, "usage": usage, "service": service,
+            "production_context": production_context, "compose_voice": compose_voice}
 
 
 @router.get("/video/ai/plans/{plan_id}", response_class=HTMLResponse)

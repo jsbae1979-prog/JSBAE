@@ -1,0 +1,54 @@
+name: NewsFlow Workflow UX Windows
+
+on:
+  push:
+    branches: [feat/newsflow-ux-workflow-unification]
+    paths-ignore: ['newsflow-ai/docs/**']
+
+permissions:
+  contents: read
+
+jobs:
+  ux-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install -r requirements-dev.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: UX and preserved consent contracts - isolated data only
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/gui src/newsflow/easy_setup.py src/newsflow/main.py tests/test_ux_navigation.py tests/test_ux_settings.py tests/test_ux_video.py tests/test_ux_workflow.py tests/test_ux_workflow_settings.py tests/test_ux_workflow_video.py tests/test_ux_workflow_context.py tests/test_easy_setup.py tests/test_easy_ui.py tests/test_claude_onboarding.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pytest -q -rs tests/test_ux_navigation.py tests/test_ux_settings.py tests/test_ux_video.py tests/test_ux_workflow.py tests/test_ux_workflow_settings.py tests/test_ux_workflow_video.py tests/test_ux_workflow_context.py tests/test_easy_ui.py tests/test_easy_setup.py tests/test_voices_gui.py tests/test_codex_studio.py tests/test_claude_onboarding.py tests/test_video.py::test_video_gui_post_status_csrf_and_no_key tests/test_video.py::test_video_studio_labels_voices_with_culture_and_never_preselects_non_korean
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # No real CLI inference, paid API, OAuth/SNS or user-data upload.

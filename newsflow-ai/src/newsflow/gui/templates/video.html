@@ -12,7 +12,11 @@
 {% if draft %}
 <div class="card ai-panel">
   <h2>{{ draft.content.title }}</h2>
-  <form method="post" action="/video/render">
+  <p>대본을 만든 AI: {{ draft_provider or '기록 없음' }} · {{ draft.duration }}초 대본</p>
+  {% if production_context %}<p id="video-initial-config">홈에서 선택: {{ production_context.initial_duration }}초 · {{ production_context.initial_provider }} · {{ production_context.initial_voice }}. 아래 값이 이번 제작에 적용되며 직접 수정할 수 있습니다.</p>{% else %}<p class="hint">이 대본에는 최초 제작 구성 기록이 없습니다. 대본 길이와 저장된 음성을 기본으로 표시합니다.</p>{% endif %}
+  {% if production_context and production_context.get('initial_video') == 'higgsfield' %}
+  <div class="soft-notice" id="video-selected-higgsfield"><p>최초 선택한 영상 방식은 Higgsfield입니다. 기본 카드 영상으로 자동 전환하지 않습니다. 장면·비용을 확인하고 별도 승인한 뒤 기존 영상 계획에서 진행하세요.</p><a class="button primary" href="/video/ai?draft_id={{ draft.id }}">{{ draft.duration }}초 Higgsfield 장면 계획 열기</a><p>이동만으로 유료 장면 생성이나 합성을 시작하지 않습니다.</p></div>
+  {% else %}<form method="post" action="/video/render">
     {{ csrf_field() }}<input type="hidden" name="draft_id" value="{{ draft.id }}">
     <div class="video-basic-fields">
       <label>영상 길이<select name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {{ 'selected' if draft.duration==seconds }}>{{ seconds }}초</option>{% endfor %}</select></label>
@@ -24,7 +28,7 @@
     </div>
     {% if not voice_available %}<p class="soft-notice" role="alert">저장한 음성을 사용할 수 없습니다. 음성 설정을 확인하거나 사용할 음성을 직접 선택해 주세요. 무음이나 다른 유료 음성으로 자동 전환하지 않습니다.</p>{% endif %}
     {% if voice_note %}<p class="soft-notice">{{ voice_note }}</p>{% endif %}
-    <p>음성이 있는 영상은 한국어 음성을 선택하세요. 선택한 음성이 없으면 제작을 멈춥니다. <a href="/simple-settings#quality">음성 설정</a></p>
+    <p>선택한 음성으로 제작하며 사용할 수 없으면 멈춥니다. <a href="/simple-settings#selected-voice">기본 제작 구성 변경</a></p>
     <details class="video-advanced" id="video-script-review">
       <summary>대본·출처 확인</summary>
       {% for s in draft.content.scenes %}<p><strong>장면 {{ loop.index }}</strong> · {{ s.narration }}</p>{% endfor %}
@@ -47,18 +51,21 @@
     </details>
     <details class="video-advanced"{% if selected_voice=='elevenlabs' %} open{% endif %}>
       <summary>외부 음성 사용 시 확인 · ElevenLabs</summary>
-      <p>로컬 한국어 음성은 외부 전송 동의가 필요하지 않습니다. ElevenLabs의 요금·무료 플랜 이용 범위는 <a href="/video/tts">음성 엔진 설정</a>에서 확인하세요.</p>
+      <p>로컬 한국어 음성은 외부 전송 동의가 필요하지 않습니다. ElevenLabs의 요금·무료 플랜 이용 범위는 <a href="/simple-settings#selected-voice">음성 연결 설정</a>에서 확인하세요.</p>
       <label class="check"><input type="checkbox" name="external_tts_consent" value="true">ElevenLabs 선택 시 이번 제작의 대본을 외부로 전송하고 설정 한도 안에서 계정 크레딧을 사용하는 데 동의합니다. 결과 불명 요청은 자동 재시도하지 않습니다.</label>
     </details>
     <label class="check"><input type="checkbox" name="reviewed" value="true" required>렌더링용 대본·출처를 검토했습니다. 게시 전 사실 확인·저작권·최종 영상 품질을 다시 확인하겠습니다.</label>
     <p>제작 후 이 화면에서 미리 볼 수 있습니다. 자동으로 게시하지 않습니다.</p>
     <button type="submit" class="primary">영상 제작 실행</button>
-  </form>
+  </form>{% endif %}
 </div>
 {% endif %}
 {% if job %}
 <div class="card" id="video-result">
   <h2>{{ project.title }}</h2>
+  <p id="video-actual-config">{{ '실제 제작 구성' if job.status=='success' else '영상 작업 구성' }}: {{ project.duration }}초 · {{ audio.provider }} · {{ audio.voice }} · {{ '테스트 합성' if job.status=='simulated' else 'FFmpeg 합성' }}</p>
+  <p>대본을 만든 AI: {{ draft_provider or '기록 없음' }}</p>
+  {% if production_context %}<p class="hint">최초 선택: {{ production_context.initial_duration }}초 · {{ production_context.initial_voice }}</p>{% endif %}
   <p id="render-status" data-job-id="{{ job.id }}" data-status="{{ job.status }}">{{ badge(job.status) }} · {{ job.progress }}% · {{ job.message }}</p>
   <progress id="render-progress" max="100" value="{{ job.progress }}"></progress>
   {% if job.metadata_json.script_shortened %}<p class="soft-notice">목표 길이에 맞춰 일부 완전한 문장을 생략했습니다. 원본과 완성본 내레이션을 다시 검토하세요.</p>{% endif %}
@@ -72,7 +79,7 @@
     <p>Fake Adapter 검증용 결과입니다. 실제 MP4가 아니며 미리보기·다운로드를 제공하지 않습니다.</p>
   {% elif job.status in ['failed','interrupted'] %}
     <p class="soft-notice">영상 제작을 완료하지 못했습니다. 위의 오류 안내와 음성·영상 설정을 확인한 뒤 다시 제작해 주세요.</p>
-    <p><a class="button" href="/video?draft_id={{ project.draft_id }}">대본·제작 설정 확인</a> <a class="quiet-link" href="/simple-settings#quality">음성·영상 설정</a></p>
+    <p><a class="button" href="/video?draft_id={{ project.draft_id }}">대본·제작 설정 확인</a> <a class="quiet-link" href="/simple-settings#selected-voice">음성·영상 연결 설정</a></p>
   {% endif %}
   <details class="video-advanced" id="video-output-details">
     <summary>제작 정보 · 출처 · 게시 준비</summary>
@@ -84,5 +91,5 @@
   </details>
 </div>
 {% endif %}
-<details class="card video-advanced"><summary>작업 이력 · 실패 원인</summary>{% for j in jobs %}<p><a href="/video?job_id={{ j.id }}">작업 #{{ j.id }}</a> · {{ badge(j.status) }} · {{ j.progress }}% · {{ j.message }} · {{ when(j.created_at) }}</p>{% else %}<p>영상 작업 없음</p>{% endfor %}</details>
+<p class="hint">이전 제작 결과와 오류는 <a href="/videos">내 영상</a>에서 확인하세요.</p>
 {% endblock %}

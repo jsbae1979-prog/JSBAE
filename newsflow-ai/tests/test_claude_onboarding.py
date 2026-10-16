@@ -14,6 +14,7 @@ from newsflow.intelligence import claude_code as cli
 from newsflow.intelligence.provider import Options
 from newsflow.intelligence.settings import read_settings, read_studio_settings, write_studio_settings
 from newsflow.main import create_app
+from newsflow.video.tts import WindowsTTS
 
 
 @pytest.mark.parametrize("logged,method,code,expected", [
@@ -124,6 +125,9 @@ def test_preserve_config_context_without_api_credentials(monkeypatch):
 
 
 def test_preferences_reload_restart_and_separate_approval(tmp_path, fake, monkeypatch):
+    # Unified readiness also lists local SAPI voices. Keep that unrelated worker synthetic;
+    # the global process prohibition below must still catch every accidental Claude launch.
+    monkeypatch.setattr(WindowsTTS, "voice_details", lambda self: [])
     monkeypatch.setattr(cli.subprocess, "Popen", lambda *a, **k: pytest.fail("CLI launched by settings"))
     monkeypatch.setattr(cli.ClaudeCodeProvider, "status", lambda *args: pytest.fail("automatic status query"))
     config = Settings(data_dir=tmp_path / "persistent")
@@ -161,6 +165,7 @@ def test_setup_csrf_and_origin(client, path):
 def test_explicit_status_login_and_disable(client, app, monkeypatch):
     checks = []
     starts = []
+    monkeypatch.setattr(WindowsTTS, "voice_details", lambda self: [])
     monkeypatch.setattr(cli.CLAUDE_LOGIN, "check", lambda: checks.append(1) or cli.connection_state("ready"))
     monkeypatch.setattr(cli.CLAUDE_LOGIN, "start", lambda **k: starts.append(k) or cli.connection_state("ready"))
     monkeypatch.setattr(cli.subprocess, "Popen", lambda *a, **k: pytest.fail("unexpected CLI"))

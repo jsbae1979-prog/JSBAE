@@ -24,6 +24,7 @@ from newsflow.easy_setup import (
     save_voice_preferences,
     speech_preferences,
     voice_catalog,
+    voice_choice_catalog,
 )
 from newsflow.intelligence.korean import speech_seconds
 from newsflow.video.speech_text import normalize_for_speech
@@ -73,15 +74,17 @@ def voices(request: Request, preview: str = "", saved: bool = False, listened: b
     sessions = request.app.state.sessions
     catalog, korean, state, report = _voices()
     voice, _size, _position = preview_preferences(sessions)
+    choices = voice_choice_catalog(catalog)
     speech = speech_preferences(sessions)
     playable = bool(preview) and _PREVIEW.fullmatch(preview) is not None and (_preview_dir(request) / preview).is_file()
     sample_spoken = normalize_for_speech(PREVIEW_TEXT)
     return page(
         request, "voices.html", active="simple-settings", catalog=catalog, korean=korean, state=state, report=report,
         voice=voice, speech=speech, rates=RATE_CHOICES, pauses=PAUSE_CHOICES, preview=preview if playable else "",
+        voice_choices=choices, saved_voice_listed=any(item['name'] == voice for item in choices),
         saved=saved, listened=listened, windows=_windows(), sample_text=PREVIEW_TEXT, sample_spoken=sample_spoken,
         sample_estimate=speech_seconds(sample_spoken, speech.rate, speech.pause_ms),
-        voice_installed=voice == "offline-silence" or any(v["name"] == voice for v in korean),
+        voice_installed=any(item['name'] == voice and item['available'] for item in choices),
         install_guide=VOICE_INSTALL_GUIDE, policy_guide=POLICY_GUIDE, listening=listening_summary(sessions),
         listening_items=LISTENING_ITEMS, listening_values=LISTENING_VALUES, listening_verdicts=LISTENING_VERDICTS,
     )

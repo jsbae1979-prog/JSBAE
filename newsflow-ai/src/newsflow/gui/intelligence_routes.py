@@ -11,6 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
 from newsflow.db.models import ContentDraft, IntelligenceRun, NewsArticle
+from newsflow.easy_setup import preview_preferences
 from newsflow.intelligence.estimate import estimate_call, estimate_cost
 from newsflow.intelligence.provider import SCRIPT_INSTRUCTION, Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
@@ -23,6 +24,14 @@ from newsflow.intelligence.settings import (
     write_studio_settings,
 )
 
+from .production_context import (
+    context_for_draft,
+    context_for_run,
+    context_json,
+    parse_context,
+    remember_context,
+    validate_context,
+)
 from .routes import go, page
 
 router = APIRouter()
@@ -115,7 +124,7 @@ def connection_context(request: Request) -> dict:
 
 @router.get("/ai", response_class=HTMLResponse)
 def studio(request: Request, analysis_id: int | None = None, draft_id: int | None = None,
-           saved: bool = False) -> HTMLResponse:
+           saved: bool = False, flow: str | None = None, failed_run_id: int | None = None) -> HTMLResponse:
     connections = connection_context(request)
     studio_defaults = connections["studio_defaults"]
     with request.app.state.sessions() as session:
@@ -123,11 +132,37 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
         draft = session.get(ContentDraft, draft_id) if draft_id else None
         if (analysis_id and (not analysis or analysis.kind != "analysis")) or (draft_id and not draft):
             raise HTTPException(404, "분석 또는 초안이 없습니다.")
+        try:
+            incoming = parse_context(flow)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+        production = context_for_draft(session, draft) or context_for_run(analysis) or incoming
+        if production is None and analysis is None and draft is None:
+            from .autopilot_routes import _defaults
+
+            production = validate_context({
+                "source": "feeds", "initial_duration": _defaults(request)["duration"],
+                "initial_provider": studio_defaults["provider"], "initial_model": studio_defaults["model"],
+                "initial_voice": preview_preferences(request.app.state.sessions)[0],
+            })
+        actual_run = session.get(IntelligenceRun, draft.run_id) if draft else analysis
+        failed_run = session.get(IntelligenceRun, failed_run_id) if failed_run_id else None
+        if failed_run_id and (not failed_run or failed_run.kind != "script" or failed_run.status == "success"
+                              or (context_for_run(failed_run) or {}).get("analysis_id") != analysis_id):
+            raise HTTPException(404, "해당 분석의 대본 실행 기록을 찾지 못했습니다.")
+        selected_provider = actual_run.provider if actual_run else (
+            production["initial_provider"] if production else studio_defaults["provider"]
+        )
+        selected_model = actual_run.options.get("model") if actual_run else (
+            production["initial_model"] if production else studio_defaults["model"]
+        )
+        execution_defaults = {**studio_defaults, "provider": selected_provider, "model": selected_model,
+                              "models": {**studio_defaults["models"], selected_provider: selected_model}}
+        selected_duration = draft.duration if draft else production["initial_duration"] if production else 30
         settings = read_settings(request.app.state.sessions)
         estimate = None
         if analysis is not None and analysis.status == "success":
-            # Same strings the provider would send for a 30초 script with the form's default cap.
-            estimate = estimate_call(SCRIPT_INSTRUCTION, {"duration": 30, "evidence": analysis.evidence}, 1800)
+            estimate = estimate_call(SCRIPT_INSTRUCTION, {"duration": selected_duration, "evidence": analysis.evidence}, 1800)
             estimate["cost"] = estimate_cost(estimate, read_prices(request.app.state.sessions))
         return page(
             request,
@@ -142,7 +177,10 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
             key_available=bool(os.environ.get("NEWSFLOW_AI_API_KEY")) or bool(
                 getattr(request.app.state, "ai_keys", None) and request.app.state.ai_keys.status()["configured"]
             ),
-            default_model=studio_defaults["model"], default_timeout=settings.timeout, estimate=estimate,
+            default_model=selected_model, default_timeout=settings.timeout, estimate=estimate,
+            execution_defaults=execution_defaults, production=production, production_json=context_json(production),
+            selected_duration=selected_duration, actual_run=actual_run,
+            failed_run=failed_run,
             saved=saved, **connections,
             disclaimer=PRICE_DISCLAIMER,
         )
@@ -158,10 +196,13 @@ def analyze(
     temperature: float = Form(0.2),
     timeout: int = Form(20),
     max_tokens: int = Form(1800),
+    flow: str | None = Form(None, max_length=2000),
 ) -> RedirectResponse:
     try:
+        production = parse_context(flow)
         identifier = service(request).analyze(
-            article_ids, provider, consent, Options(model, temperature, timeout, max_tokens)
+            article_ids, provider, consent, Options(model, temperature, timeout, max_tokens),
+            on_run=remember_context(request.app.state.sessions, production),
         )
     except (IntelligenceError, ValueError) as exc:
         raise HTTPException(422, str(exc)) from None
@@ -179,10 +220,19 @@ def generate(
     temperature: float = Form(0.2),
     timeout: int = Form(20),
     max_tokens: int = Form(1800),
+    flow: str | None = Form(None, max_length=2000),
 ) -> RedirectResponse:
     try:
+        incoming = parse_context(flow)
+        with request.app.state.sessions() as session:
+            production = context_for_run(session.get(IntelligenceRun, analysis_id)) or incoming
+        if production:
+            production = {**production, "analysis_id": analysis_id}
         options = Options(model, temperature, timeout, max_tokens)
-        identifier = service(request).generate(analysis_id, duration, provider, consent, options)
+        identifier = service(request).generate(
+            analysis_id, duration, provider, consent, options,
+            on_run=remember_context(request.app.state.sessions, production),
+        )
     except (IntelligenceError, ValueError) as exc:
         raise HTTPException(422, str(exc)) from None
     return go(f"/ai?analysis_id={analysis_id}&draft_id={identifier}")

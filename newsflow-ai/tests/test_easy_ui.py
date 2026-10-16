@@ -14,6 +14,7 @@ from newsflow.db.models import (
     AppSetting,
     AutopilotJob,
     ContentDraft,
+    IntelligenceRun,
     NewsArticle,
     NewsSource,
     PublishDraft,
@@ -35,17 +36,18 @@ def start_guided(client, app):
 
 
 @pytest.mark.parametrize("path,title", [
-    ("/", "오늘의 이야기를"),
+    ("/", "오늘은 어떤 뉴스를 만들까요?"),
     ("/autopilot/start", "뉴스 영상 만들기"),
     ("/autopilot/jobs", "작업 현황"),
     ("/queue", "게시 대기함"),
-    ("/simple-settings", "AI·API 연결"),
+    ("/simple-settings", "제작 단계별 연결 상태"),
     ("/dashboard", "뉴스 흐름을 한눈에"),
 ])
 def test_easy_and_advanced_pages_keep_security_headers(client, path, title):
     response = client.get(path)
     assert response.status_code == 200 and title in response.text
-    assert "고급 모드" in response.text
+    assert 'href="/simple-settings"' in response.text
+    assert 'aria-label="주 메뉴"' in response.text
     assert "script-src 'self'" in response.headers["content-security-policy"]
     assert 'href="#main-content"' in response.text
     assert '<script src="/static/js/autopilot.js" defer>' in response.text
@@ -142,11 +144,11 @@ def test_invalid_simple_settings_are_atomic(client, app, field, value):
 def test_saved_simple_defaults_are_applied_by_home_button_and_remain_local(client, app):
     data = {"duration": "45", "platform": "instagram", "source": "sample", "mode": "guided"}
     response = client.post("/simple-settings", data={**data, "csrf_token": csrf(client)})
-    assert response.status_code == 200 and "설정을 저장했습니다" in response.text
+    assert response.status_code == 200 and "제작 구성을 저장했습니다" in response.text
     home = client.get("/").text
     assert 'value="45" selected' in home and 'value="sample" selected' in home
     # Detailed defaults remain in the advanced setup, while the home shows two choices.
-    advanced = client.get("/autopilot/start").text
+    advanced = client.get("/autopilot/start?advanced=true").text
     assert 'value="guided" selected' in advanced and 'value="instagram" selected' in advanced
     started = client.post("/autopilot/start", data={"csrf_token": csrf(client)}, follow_redirects=False)
     app.state.autopilot.future.result(timeout=15)
@@ -166,7 +168,7 @@ def test_corrupt_saved_settings_fall_back_to_offline_defaults(client, app):
     response = client.get("/")
     assert response.status_code == 200
     assert 'value="30" selected' in response.text and 'value="sample" selected' in response.text
-    advanced = client.get("/autopilot/start").text
+    advanced = client.get("/autopilot/start?advanced=true").text
     assert 'value="easy" selected' in advanced and 'value="youtube" selected' in advanced
 
 
@@ -175,14 +177,27 @@ def test_user_news_titles_are_escaped_and_source_count_excludes_sample(client, a
         sample = NewsSource(name="Synthetic", url=SAMPLE_URL, enabled=True)
         session.add(sample)
         session.flush()
-        session.add(NewsArticle(
+        article = NewsArticle(
             title='<script>alert("title")</script>', url="https://example.com/escaped", canonical_url="https://example.com/escaped",
             publisher="<b>출처</b>", source_id=sample.id,
-        ))
-    response = client.get("/")
+        )
+        session.add(article)
+        session.flush()
+        article_id = article.id
+        # Stored text is untrusted on task cards as well as the legacy article page.
+        run = IntelligenceRun(kind="script", status="success", provider="offline", options={"model": "offline"},
+                              evidence={"articles": []}, result={}, message="UI escaping fixture")
+        session.add(run)
+        session.flush()
+        session.add(ContentDraft(run_id=run.id, duration=30, content={"title": article.title, "scenes": []},
+                                 sources={"articles": []}))
+    response = client.get(f"/news/{article_id}")
     assert "&lt;script&gt;" in response.text and "&lt;b&gt;출처&lt;/b&gt;" in response.text
     assert '<script>alert("title")</script>' not in response.text
-    assert "등록 출처 0개" in client.get("/autopilot/start").text
+    for path in ("/", "/autopilot/jobs"):
+        task_page = client.get(path).text
+        assert "&lt;script&gt;" in task_page and '<script>alert("title")</script>' not in task_page
+    assert client.get("/autopilot/start").context["enabled_sources"] == 0
 
 
 def test_fake_render_cannot_appear_as_completed_video(client, app):

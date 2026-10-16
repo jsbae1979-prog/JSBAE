@@ -1,8 +1,11 @@
 {% extends 'base.html' %}{% block title %}작업 현황 · NewsFlow AI{% endblock %}{% block content %}
 <div class="easy-page">
-  <div class="page-head"><div><p class="eyebrow">진행과 검토를 한곳에서</p><h1>작업 현황</h1><p>확인이 필요한 작업을 열면 멈춘 이유와 다음 할 일을 볼 수 있어요.</p></div><a class="button primary" href="/">새 영상 만들기</a></div>
-  <nav class="status-chips" aria-label="관련 작업"><a class="status-chip" href="/video">직접 제작한 영상 작업</a><a class="status-chip" href="/schedules">예약 관리</a><a class="status-chip" href="/queue">게시 전 검토</a></nav>
-  <div class="job-grid">{% for job in jobs %}
-    <a class="work-card" href="/autopilot/jobs/{{ job.id }}"><div class="work-card-top"><span class="easy-badge {{ job.status }}">{{ status_labels.get(job.status, '상태 확인 필요') }}</span><span>{{ job.duration }}초</span></div><h2>{{ stage_labels.get(job.current_stage, '제작 준비') }}</h2><p>{{ job.message }}</p><progress max="100" value="{{ job.progress }}" aria-label="실제 처리 단계 기준 진행률 {{ job.progress }}퍼센트"></progress><div class="work-card-bottom"><span>{{ '등록 뉴스' if job.content_mode == 'real' else '체험 뉴스' }}</span><span>{{ '확인하고 이어가기' if job.status == 'waiting_review' else '결과 보기' if job.status == 'completed' else '작업 확인' }} →</span></div></a>
-  {% else %}<div class="gentle-empty"><div><h2>아직 시작한 작업이 없어요.</h2><p>홈에서 뉴스와 길이를 고르면 첫 제작을 시작할 수 있어요.</p><a href="/">뉴스 영상 만들기 →</a></div></div>{% endfor %}</div>
+<div class="page-head"><div><p class="eyebrow">제작·검토를 한곳에서</p><h1>작업 현황</h1><p>자동 제작과 대본 검토 흐름을 함께 보여줍니다. 선택 예정과 실제 실행 기록을 구분해요.</p></div><a href="/">홈으로</a></div>
+<div class="job-grid">{% for task in jobs %}<a class="work-card" href="{{ task.href }}">
+<div class="work-card-top"><span class="easy-badge {{ task.status }}">{{ task.status_label }}</span><span>{{ task.duration }}초</span></div>
+<h2>{{ task.title }}</h2><p>현재 단계 · {{ task.stage }}</p><p class="hint">AI 실행 · {{ task.provider }}</p><p class="hint">음성 · {{ task.voice }}</p>
+{% if task.progress is not none %}<progress max="100" value="{{ task.progress }}" aria-label="실제 처리 상태 {{ task.progress }}퍼센트"></progress>{% endif %}
+<div class="work-card-bottom"><strong>{{ task.next_action }} →</strong></div></a>
+{% else %}<div class="gentle-empty"><div><h2>아직 시작한 작업이 없어요.</h2><p>홈에서 뉴스를 고르면 첫 제작을 시작할 수 있어요.</p></div></div>{% endfor %}</div>
+<p class="hint">이전 상세 실행 이력과 예약·게시 관리는 설정의 고급 관리에서 확인할 수 있습니다.</p>
 </div>{% endblock %}
