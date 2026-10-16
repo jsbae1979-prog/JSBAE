@@ -22,9 +22,40 @@ from .routes import go, page
 router = APIRouter()
 
 
-def settings_page(request: Request, saved: bool = False):
+def _settings_overview(context: dict) -> list[dict]:
+    """Compact presentation of existing observations; never checks a provider."""
+    config, stages = context["production_config"], context["pipeline_stages"]
+    rows = []
+    for key, label, index, anchor in (("search", "뉴스 검색", 0, "selected-ai"),
+                                     ("analysis", "분석·대본", 1, "selected-ai"),
+                                     ("voice", "음성", 3, "selected-voice"),
+                                     ("video", "영상", 4, "selected-video")):
+        stage = stages[index]
+        state = stage["status_label"]
+        blocked = stage["status_code"] in {"unavailable", "setup", "install", "login", "limited", "check"}
+        if key == "search" and stage["status_code"] == "unavailable":
+            state = "BLOCKED · 실제 검색 확인 필요"
+        elif key == "analysis" and stage["provider"] in context["api_connections"]:
+            api = context["api_connections"][stage["provider"]]
+            state = ("API Key 등록 필요" if not api["key"]["configured"] else
+                     "실제 API 연결 미검증" if not api["authentication_verified"] else
+                     "실행 조건 확인됨" if stage["availability"] == "분석·대본 실행 조건 확인됨" else "승인·한도 확인 필요")
+            blocked = not api["authentication_verified"] or stage["availability"] != "분석·대본 실행 조건 확인됨"
+        elif key == "voice" and config["voice"] != "offline-silence":
+            state = ("최근 설치 검사 실패" if stage["status_code"] == "unavailable" else
+                     "설치 감지 · 생성 시 확인" if config["voice_available"] else "설치·연결 필요")
+        rows.append({"key": key, "label": label, "engine": stage["provider_label"], "state": state,
+                     "action": "#" + anchor, "blocked": blocked})
+    return rows
+
+
+def settings_page(request: Request, saved: str = ""):
+    context = production_context(request)
+    notices = {"true": "제작 구성을 저장했습니다.", "api": "API 승인·예산을 저장했습니다.",
+               "key": "API Key를 저장했습니다. 실제 연결은 미검증입니다.", "key_removed": "저장된 API Key를 삭제했습니다."}
     response = page(request, "simple_settings.html", active="simple-settings", saved=saved,
-                    rates=RATE_CHOICES, pauses=PAUSE_CHOICES, **production_context(request))
+                    saved_notice=notices.get(saved, ""), settings_overview=_settings_overview(context),
+                    rates=RATE_CHOICES, pauses=PAUSE_CHOICES, **context)
     response.headers["Cache-Control"] = "no-store"
     return response
 

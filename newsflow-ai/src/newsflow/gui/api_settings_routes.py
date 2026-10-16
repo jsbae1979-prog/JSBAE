@@ -56,7 +56,7 @@ def save_configuration(
             write_settings(request.app.state.sessions, "openai", model.strip(), approved, monthly_token_limit, timeout)
     except (APIPolicyError, SettingsError) as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/simple-settings?saved=true#selected-ai")
+    return go("/simple-settings?saved=api#selected-ai")
 
 
 @router.post("/api-settings/{provider}/key")
@@ -68,7 +68,7 @@ def save_key(request: Request, provider: str, api_key: str = Form("")):
         invalidate_api_verification(request.app.state.sessions, provider)
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/simple-settings?saved=true#selected-ai")
+    return go("/simple-settings?saved=key#selected-ai")
 
 
 @router.post("/api-settings/{provider}/key/clear")
@@ -79,4 +79,4 @@ def clear_key(request: Request, provider: str):
         invalidate_api_verification(request.app.state.sessions, provider)
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/simple-settings?saved=true#selected-ai")
+    return go("/simple-settings?saved=key_removed#selected-ai")

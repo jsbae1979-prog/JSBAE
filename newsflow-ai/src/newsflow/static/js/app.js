@@ -31,11 +31,13 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
     const submit = event.submitter || form.querySelector('button[type="submit"], button:not([type])');
     const label = submit ? submit.textContent : '';
     if (submit) { submit.disabled = true; submit.textContent = '처리 중…'; }
-    let alert = form.querySelector('[data-submit-error]');
+    let alert = form.id === 'production-preferences'
+      ? document.getElementById('settings-save-error') : form.querySelector('[data-submit-error]');
     if (!alert) {
       alert = document.createElement('p');
       alert.dataset.submitError = 'true';
       alert.setAttribute('role', 'alert');
+      alert.tabIndex = -1;
       form.append(alert);
     }
     alert.textContent = '';
@@ -45,7 +47,7 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
         body: new URLSearchParams(new FormData(form))
       });
       if (!response.ok) {
-        if (response.status === 422 && form.hasAttribute('data-ai-studio')) {
+        if (response.status === 422 && (form.hasAttribute('data-ai-studio') || form.hasAttribute('data-settings-form'))) {
           const failure = await response.json();
           alert.textContent = typeof failure.detail === 'string' && failure.detail.length <= 300
             ? failure.detail : '제공자·모델과 실행 동의 항목을 확인해 주세요.';
@@ -67,10 +69,12 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
       }
       const next = new URL(response.url);
       if (next.origin !== window.location.origin) throw new Error('Unexpected redirect');
+      document.dispatchEvent(new CustomEvent('settings:form-saved', {detail: {form}}));
       window.location.assign(next.href);
     } catch (_) {
       alert.textContent = '서버에 연결하지 못했습니다. 실행 상태를 확인하세요.';
     } finally {
+      if (alert.textContent && form.closest('.settings-workspace')) alert.focus();
       if (submit) { submit.disabled = false; submit.textContent = label; }
     }
   });

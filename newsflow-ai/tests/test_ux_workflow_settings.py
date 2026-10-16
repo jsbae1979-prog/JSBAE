@@ -82,7 +82,7 @@ def test_status_page_does_not_authenticate_generate_or_verify_models(client, app
     assert context["provider_statuses"]["claude_code"]["checked_at"] is None
     assert context["provider_statuses"]["supertonic"]["status_code"] == "check"
     assert 'data-ai-provider="openai" hidden' in response.text
-    assert "웹 검색 BLOCKED" in response.text and "확인 기록 없음" in response.text
+    assert "웹 검색: BLOCKED" in response.text and "확인 기록 없음" in response.text
     assert response.headers["cache-control"] == "no-store"
 
 
