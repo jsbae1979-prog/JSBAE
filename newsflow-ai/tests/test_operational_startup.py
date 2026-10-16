@@ -201,9 +201,15 @@ def test_review_never_passes_by_default_and_rejects_no_consent(client,app):
 
 @pytest.mark.skipif(sys.platform != 'win32',reason='Actual Windows Task Scheduler XML engine, read-only; no OS registration')
 def test_native_windows_schema_roundtrip_without_registration(startup):
-    sid = native({'operation':'identity'})['sid']
-    plan = StartupPlan(startup.plan.root,startup.plan.data_dir,sid)
-    response = native({'operation':'validate','sid':sid,'name':plan.name,'xml':plan.xml()})
+    from newsflow.operations.startup import local_service
+    identity = native({'operation':'identity'})
+    if identity['elevated'] or identity['sid'].endswith('-500'):
+        with pytest.raises(StartupError):
+            local_service(startup.plan.data_dir)
+    # Schema-only COM object, never registered: synthetic principal, genuine caller identity.
+    # The hosted runner is RID 500; production account restrictions must remain intact.
+    plan = startup.plan
+    response = native({'operation':'validate','sid':identity['sid'],'name':plan.name,'xml':plan.xml()})
     assert owned(plan,response['xml'])
 
 
