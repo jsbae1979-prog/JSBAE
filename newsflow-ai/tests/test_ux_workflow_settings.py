@@ -52,7 +52,7 @@ def test_cli_adapter_states_keep_blocked_reason_and_auth_distinction(provider, s
                                                      "authenticated": True, "ready": False, "message": "PRIVATE"})
     assert result["status_code"] == expected
     assert "PRIVATE" not in str(result)  # use adapter's fixed message, never a raw cached error
-    assert "자동 제작의 직접 실행은 미지원" in result["availability"]
+    assert "RSS 분석·대본 통합 제작 지원" in result["availability"]
     if state == "approval_required":
         assert "구독 로그인 확인됨" not in result["authentication"]
         assert "과금 자동 전환 차단" in result["authentication"]
@@ -68,6 +68,8 @@ def test_status_page_does_not_authenticate_generate_or_verify_models(client, app
     monkeypatch.setattr(FFmpegAdapter, "check", forbidden)
     monkeypatch.setattr(production_routes, "validate_voice_preferences", forbidden)
     write_studio_settings(app.state.sessions, "claude_code", "opus")
+    with app.state.sessions.begin() as session:
+        session.add(AppSetting(key="autopilot_source", value="sample"))
     before = all_settings(app)
     response = client.get("/simple-settings")
     assert response.status_code == 200

@@ -36,15 +36,16 @@ def enabled_source(app):
 
 
 @pytest.mark.parametrize("provider,model", [("claude_code", "sonnet"), ("codex", "default")])
-def test_saved_account_provider_guides_to_studio_without_job_or_replacement(client, app, provider, model):
-    save(app, studio_provider=provider, **{"studio_model_" + provider: model})
+def test_saved_account_provider_requires_consent_without_job_or_replacement(client, app, provider, model):
+    enabled_source(app)
+    save(app, studio_provider=provider, video_default_voice="offline-silence", **{"studio_model_" + provider: model})
     response = client.post("/autopilot/quick-start", data={
-        "csrf_token": csrf(client), "source": "feeds", "duration": 30,
+        "csrf_token": csrf(client), "source": "feeds", "acquisition_policy": "rss", "duration": 30,
     }, follow_redirects=False)
     assert response.status_code == 303
-    assert response.headers["location"].startswith("/autopilot/start?guide=provider&flow=")
+    assert response.headers["location"].startswith("/autopilot/start?guide=consent&flow=")
     page = client.get(response.headers["location"]).text
-    assert "저장한 AI를 유지했습니다" in page and 'href="/ai?flow=' in page
+    assert "이번 뉴스 분석·대본 생성 동의" in page and 'action="/autopilot/confirm-start"' in page
     assert job_count(app) == 0
     with app.state.sessions() as session:
         assert session.get(AppSetting, "studio_provider").value == provider
@@ -115,13 +116,13 @@ def test_openai_without_existing_approval_stops_before_collection(client, app):
     enabled_source(app)
     save(app, studio_provider="openai")
     response = client.post("/autopilot/quick-start", data={
-        "csrf_token": csrf(client), "source": "feeds", "duration": 60,
+        "csrf_token": csrf(client), "source": "feeds", "acquisition_policy": "rss", "duration": 60,
     }, follow_redirects=False)
     assert response.status_code == 303 and response.headers["location"].startswith("/autopilot/start?guide=approval&flow=")
     assert job_count(app) == 0
 
 
-def test_approved_provider_still_enters_existing_guided_review_engine(client, app, monkeypatch):
+def test_stored_paid_approval_still_requires_per_job_transfer_consent(client, app, monkeypatch):
     from newsflow.gui import autopilot_routes
 
     enabled_source(app)
@@ -130,12 +131,11 @@ def test_approved_provider_still_enters_existing_guided_review_engine(client, ap
     start = Mock(return_value="test-job")
     monkeypatch.setattr(app.state.autopilot, "start", start)
     response = client.post("/autopilot/quick-start", data={
-        "csrf_token": csrf(client), "source": "feeds", "duration": 60,
+        "csrf_token": csrf(client), "source": "feeds", "acquisition_policy": "rss", "duration": 60,
     }, follow_redirects=False)
     assert response.status_code == 303
-    assert start.call_args.kwargs["mode"] == "guided"
-    assert start.call_args.kwargs["ai_mode"] == "openai"
-    assert start.call_args.kwargs["content_mode"] == "real"
+    assert "guide=consent" in response.headers["location"]
+    assert start.call_count == 0
 
 
 @pytest.mark.parametrize("origin,token", [("https://foreign.example", True), ("http://127.0.0.1", False)])

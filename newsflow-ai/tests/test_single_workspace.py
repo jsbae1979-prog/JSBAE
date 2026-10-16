@@ -231,6 +231,8 @@ def test_pending_final_review_is_not_duplicated_in_completed_cards(client, app):
     assert response.context["active_jobs"][0]["status_label"] == "최종 확인 필요"
     assert response.context["completed"] == []
     assert f'/?task={identifier}#workspace-detail' in response.text
+    assert "검토 중인 영상은 위 작업에서 확인해 주세요" in response.text
+    assert 'href="/?show=videos#workspace-videos"' in response.text
 
 
 @pytest.mark.parametrize("origin,include_token", [("https://foreign.example", True), ("null", True),
@@ -266,7 +268,11 @@ def test_workspace_reads_never_change_provider_preferences_or_start_inference(cl
     assert response.context["ready"]["voice"]["installed"] is False
     assert "Claude Code" in home and "선택한 음성 설치·연결 확인 필요" in home
     assert 'value="60" selected' in home and 'value="feeds" selected' in home
-    assert "선택한 AI의 자동 실행은 지원하지 않습니다" in home
+    assert "AI 웹 뉴스 조사 BLOCKED" in home
+    rss_state = response.context["production"]["policy_states"]["rss"]
+    assert rss_state["supported"] is False
+    assert "선택한 음성의 설치·제작별 승인이 필요합니다" in rss_state["notice"]
+    assert "다른 음성으로 자동 전환하지 않습니다" in rss_state["notice"]
 
 
 @pytest.mark.parametrize("path", ["/autopilot/jobs", "/videos", "/ai", "/video", "/simple-settings"])

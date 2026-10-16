@@ -15,6 +15,7 @@ from newsflow.intelligence.settings import SettingsError, studio_model
 from newsflow.video.engine import FFmpegAdapter, RenderError
 from newsflow.video.tts import TTSError
 
+from .production_context import ACQUISITION_LABELS, CATEGORY_LABELS, PERIOD_LABELS, acquisition_preferences
 from .production_status import production_context
 from .routes import go, page
 
@@ -32,11 +33,19 @@ def settings_page(request: Request, saved: bool = False):
 def preferences(request: Request, provider: str = Form(max_length=20), model: str = Form(max_length=80),
                 source: str = Form(max_length=10), duration: int = Form(), platform: str = Form(max_length=20),
                 voice: str = Form(max_length=200), rate: str = Form(max_length=3), pause_ms: str = Form(max_length=4),
-                video_provider: str = Form(max_length=20)):
+                video_provider: str = Form(max_length=20), acquisition_policy: str | None = Form(None, max_length=10),
+                category: str | None = Form(None, max_length=20), period: str | None = Form(None, max_length=10)):
     if (source not in {"sample", "feeds"} or duration not in {30, 45, 60}
             or platform not in {"youtube", "instagram"} or video_provider not in {"off", "higgsfield"}):
         raise HTTPException(422, "뉴스·길이·목적지·영상 방식을 다시 선택해 주세요.")
     sessions = request.app.state.sessions
+    previous_acquisition = acquisition_preferences(sessions)
+    acquisition = {"acquisition_policy": acquisition_policy, "category": category, "period": period}
+    for key, choices in (("acquisition_policy", ACQUISITION_LABELS), ("category", CATEGORY_LABELS),
+                         ("period", PERIOD_LABELS)):
+        acquisition[key] = acquisition[key] if acquisition[key] is not None else previous_acquisition[key]
+        if acquisition[key] not in choices:
+            raise HTTPException(422, "뉴스 확보 방식·분야·기간을 다시 선택해 주세요.")
     try:
         model = studio_model(provider, model)
         with sessions() as session:
@@ -52,6 +61,7 @@ def preferences(request: Request, provider: str = Form(max_length=20), model: st
               "autopilot_source": source, "autopilot_duration": str(duration), "autopilot_platform": platform,
               "video_default_voice": voice, "video_default_rate": rate, "video_default_pause_ms": pause_ms,
               "video_ai_provider": video_provider}
+    values.update({"autopilot_" + key: value for key, value in acquisition.items()})
     with sessions.begin() as session:
         for key, value in values.items():
             row = session.get(AppSetting, key)

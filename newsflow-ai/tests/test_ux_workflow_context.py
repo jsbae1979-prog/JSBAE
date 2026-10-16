@@ -41,7 +41,7 @@ def article(app):
 
 @pytest.mark.parametrize("provider,model,duration", [("claude_code", "sonnet", 45), ("codex", "default", 45),
                                                    ("claude_code", "sonnet", 60)])
-def test_home_choices_survive_manual_analysis_script_and_video(client, app, monkeypatch, provider, model, duration):
+def test_advanced_manual_analysis_script_and_video_preserve_home_context(client, app, monkeypatch, provider, model, duration):
     write_studio_settings(app.state.sessions, provider, model)
     set_values(app, video_default_voice="supertonic:F1")
     fake = FakeProvider()
@@ -51,7 +51,7 @@ def test_home_choices_survive_manual_analysis_script_and_video(client, app, monk
     news_id = article(app)
     token = csrf(client)
     started = client.post("/autopilot/quick-start", data={
-        "csrf_token": token, "source": "feeds", "duration": duration,
+        "csrf_token": token, "source": "feeds", "acquisition_policy": "rss", "duration": duration,
     }, follow_redirects=False)
     assert started.status_code == 303 and fake.calls == 0
     flow = parse_qs(urlsplit(started.headers["location"]).query)["flow"][0]
@@ -59,7 +59,7 @@ def test_home_choices_survive_manual_analysis_script_and_video(client, app, monk
     assert context["initial_duration"] == duration
     assert context["initial_provider"] == provider and context["initial_voice"] == "supertonic:F1"
     guide = client.get(started.headers["location"]).text
-    assert f"처음 선택한 길이 {duration}초" in guide and "/ai?flow=" in guide
+    assert f"처음 선택한 길이 {duration}초" in guide and 'action="/autopilot/confirm-start"' in guide
     prepared = client.get("/ai", params={"flow": flow}).text
     assert f"최초 선택 · {duration}초" in prepared and "아직 AI를 실행하지 않았습니다" in prepared
     denied = client.post("/ai/analyze", data={
@@ -135,17 +135,18 @@ def test_invalid_context_does_not_run_ai(client, app, update):
     assert response.status_code == 422 and fake.calls == 0
 
 
-def test_different_openai_model_guides_without_starting_engine(client, app, monkeypatch):
+def test_different_openai_model_requires_consent_without_replacement(client, app, monkeypatch):
     from newsflow.gui import autopilot_routes
 
     article(app)
     write_studio_settings(app.state.sessions, "openai", "gpt-4o")
+    set_values(app, video_default_voice="offline-silence")
     monkeypatch.setattr(autopilot_routes, "external_ready", lambda *_: {"ready": True})
     monkeypatch.setattr(app.state.autopilot, "start", lambda **kw: pytest.fail("wrong model auto-start"))
     response = client.post("/autopilot/quick-start", data={
-        "csrf_token": csrf(client), "source": "feeds", "duration": 45,
+        "csrf_token": csrf(client), "source": "feeds", "acquisition_policy": "rss", "duration": 45,
     }, follow_redirects=False)
-    assert response.status_code == 303 and "guide=model" in response.headers["location"]
+    assert response.status_code == 303 and "guide=consent" in response.headers["location"]
     context = parse_context(parse_qs(urlsplit(response.headers["location"]).query)["flow"][0])
     assert context["initial_model"] == "gpt-4o"
 
