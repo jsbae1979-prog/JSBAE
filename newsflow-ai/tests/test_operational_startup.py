@@ -34,7 +34,7 @@ def startup(tmp_path):
     data.mkdir(); root.mkdir()
     plan = StartupPlan(root,data,SID)
     plan.python.parent.mkdir(parents=True); plan.python.write_bytes(b'synthetic')
-    digest = hashlib.sha256(str((3,12)).encode())
+    digest = hashlib.sha256(str(tuple(sys.version_info[:2])).encode())
     for name in ('pyproject.toml','requirements-dev.lock'):
         (root/name).write_bytes(b'fixture'); digest.update(b'fixture')
     (root/'.venv/.newsflow-installed').write_text(digest.hexdigest(),encoding='ascii')

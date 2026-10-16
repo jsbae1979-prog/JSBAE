@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import re
 import secrets
+import signal
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -224,6 +225,11 @@ def run(*, automatic_data_dir: Path | None = None) -> None:
                 from .operations.autorun import record
                 record(automatic_data_dir, "running")
             print(f"GUI 주소: http://{settings.host}:{settings.port} · 종료: Ctrl+C", flush=True)
+            # Uvicorn re-raises captured signals after shutdown. Windows' default
+            # SIGBREAK terminates before our finally block; treat it like Ctrl+C.
+            previous_break = None
+            if hasattr(signal, "SIGBREAK"):
+                previous_break = signal.signal(signal.SIGBREAK, signal.default_int_handler)
             try:
                 uvicorn.Server(
                     uvicorn.Config(
@@ -231,6 +237,8 @@ def run(*, automatic_data_dir: Path | None = None) -> None:
                     )
                 ).run(sockets=[listener])
             finally:
+                if previous_break is not None:
+                    signal.signal(signal.SIGBREAK, previous_break)
                 app.state.scheduler.close()
                 app.state.autopilot.close()
                 app.state.autopilot_backend.close()

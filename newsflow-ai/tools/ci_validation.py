@@ -35,6 +35,7 @@ def child_env() -> dict[str, str]:
         "NEWSFLOW_HOST",
         "NEWSFLOW_SECRET_KEY",
         "NEWSFLOW_AI_API_KEY",
+        "NEWSFLOW_VIDEO_AI_KEY",
         "NEWSFLOW_AI_LIVE_TEST",
         "NEWSFLOW_AI_LIVE_MAX_TOKENS",
         "GH_TOKEN",
@@ -113,13 +114,13 @@ def start(command: list[str], env: dict[str, str], deadline_seconds: int = 30) -
                 stage = "unknown"
                 for phrase, label in (
                     ("가상환경 생성 실패", "venv_creation"),
-                    ("가상환경 Python 3.12 확인 실패", "venv_python"),
+                    ("가상환경 Python 버전 확인", "venv_python"),
                     ("의존성 설치 실패", "dependency_install"),
                     ("의존성 검사 실패", "dependency_check"),
                     ("기존 data/newsflow.db", "legacy_data"),
                     ("포트가 사용 중", "port_conflict"),
                     ("지정 포트", "port_conflict"),
-                    ("Python 3.12 is required", "python_discovery"),
+                    ("Python 3.12 or 3.14 is required", "python_discovery"),
                     ("Cannot open the project folder", "project_path"),
                     ("실행 설정 또는 데이터", "runtime_configuration"),
                 ):

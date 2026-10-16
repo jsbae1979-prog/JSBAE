@@ -1,6 +1,6 @@
 # NewsFlow AI — Windows 11 · Phase 5E
 
-뉴스 선택부터 대본·검토용 영상 제작·게시 대기함 보관까지 연결하는 한국어 로컬 웹 프로그램입니다. **운영 대상은 Windows 11 전용**, Python 3.12입니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
+뉴스 선택부터 대본·검토용 영상 제작·게시 대기함 보관까지 연결하는 한국어 로컬 웹 프로그램입니다. **운영 대상은 Windows 11 전용**, Python 3.12 또는 3.14입니다. Python 3.13은 지원하지 않습니다. 기존 `.venv`를 우선 사용하고, 없으면 3.14 → 3.12 순서로 선택합니다. 지원하지 않는 기존 가상환경은 삭제·교체하지 않고 오류로 중단합니다. FastAPI + HTML/CSS/JavaScript GUI를 유지합니다. Codex Cloud는 개발·자동 테스트용이며 Linux/Ubuntu 배포, Docker, WSL 운영 기능은 제공하지 않습니다.
 
 Phase 5A의 **간편 제작**은 체험 뉴스 → 기본 대본 → 9:16 검토영상 → 로컬 게시 대기함을 한 번의 시작으로 연결합니다. **단계별 제작**에서는 뉴스·대본·영상을 확인하며 진행합니다. 기본 대본은 외부 AI가 작성한 결과가 아니며, 기본 영상은 무음입니다. 실제 SNS 게시·계정 로그인·실제 토큰 교환 및 저장은 제공하지 않습니다. 기존 OAuth 운영 코드는 계속 차단됩니다.
 
@@ -22,7 +22,7 @@ Phase 5D의 **AI 고품질 제작(선택)**은 기존 스토리보드·장면 �
 
 ## 처음 사용하는 분을 위한 빠른 시작
 
-1. 프로젝트의 **[START_HERE.html](START_HERE.html)**을 브라우저로 여세요. Python 3.12와 FFmpeg/ffprobe 준비 방법을 한국어로 안내합니다.
+1. 프로젝트의 **[START_HERE.html](START_HERE.html)**을 브라우저로 여세요. Python 3.12 또는 3.14와 FFmpeg/ffprobe 준비 방법을 한국어로 안내합니다.
 2. **setup.bat**를 더블클릭하세요. 가상환경·패키지를 준비하고 기존 DB를 보존하면서 필요한 디렉터리와 스키마를 초기화합니다. 필수 도구 누락 시 종료 코드 1과 해결 방법을 표시합니다. 기존 run.bat는 그대로 사용할 수 있습니다.
 3. **run.bat**를 실행하고 `http://127.0.0.1:8765`에서 **처음 설정하기**를 엽니다.
 4. 뉴스 → AI → 영상 → 음성·자막 → 저장 위치를 확인하고 설정을 완료하세요. **체험 영상 만들기**는 설정된 실제 RSS 대신 합성 뉴스로 30초 영상을 만듭니다. 실제 외부 AI·OAuth·SNS 호출은 하지 않습니다.
@@ -39,22 +39,22 @@ Phase 5D의 **AI 고품질 제작(선택)**은 기존 스토리보드·장면 �
 
 ### Python 별도 설치 없는 배포 설계
 
-Windows x64의 Python 3.12 + PyInstaller `onedir` 묶음으로 FastAPI/Jinja/static/Alembic/PowerShell 리소스를 포함하고, 데이터는 계속 LOCALAPPDATA에 둘 수 있습니다. 개발 구현은 가능하지만 **이번 단계에서는 EXE/설치본을 빌드하거나 배포하지 않았습니다**. 서명된 실행 파일, Windows Defender/SmartScreen, 깨끗한 Windows 11에서 DLL·SAPI·DPAPI 확인, 안전한 업데이트/롤백, FFmpeg 빌드별 LGPL/GPL 재배포 조건·라이선스 동봉 검토가 선행되어야 합니다. 원격 EXE를 자동 다운로드·실행하거나 TLS/체크섬 검증을 우회하는 설치기는 제공하지 않습니다.
+Windows x64의 Python 3.12 또는 3.14 + PyInstaller `onedir` 묶음으로 FastAPI/Jinja/static/Alembic/PowerShell 리소스를 포함하고, 데이터는 계속 LOCALAPPDATA에 둘 수 있습니다. 개발 구현은 가능하지만 **이번 단계에서는 EXE/설치본을 빌드하거나 배포하지 않았습니다**. 서명된 실행 파일, Windows Defender/SmartScreen, 깨끗한 Windows 11에서 DLL·SAPI·DPAPI 확인, 안전한 업데이트/롤백, FFmpeg 빌드별 LGPL/GPL 재배포 조건·라이선스 동봉 검토가 선행되어야 합니다. 원격 EXE를 자동 다운로드·실행하거나 TLS/체크섬 검증을 우회하는 설치기는 제공하지 않습니다.
 
 ## Windows 설치와 최초 실행
 
-1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12의 Windows 설치본**을 설치하세요. Python launcher와 `Add python.exe to PATH`를 선택하세요. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
-2. Phase 5D.1 검토 브랜치 `feat/newsflow-phase5d1`을 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
+1. [Python 공식 사이트](https://www.python.org/downloads/windows/)에서 **Python 3.12 또는 3.14의 Windows 설치본**을 설치하세요. 기존 Python 런처를 유지할 수 있으며 PATH 추가는 필수가 아닙니다. 3.11·3.13은 이 프로젝트의 지원 버전이 아닙니다.
+2. Phase 5D.1 검토 브랜치 `feat/newsflow-phase5f1`을 받으세요. 아직 main에 병합되지 않았습니다. Git for Windows를 사용한다면:
 
 ```powershell
-git clone -b feat/newsflow-phase5d1 https://github.com/jsbae1979-prog/JSBAE.git
+git clone -b feat/newsflow-phase5f1 https://github.com/jsbae1979-prog/JSBAE.git
 cd JSBAE\newsflow-ai
 .\run.bat
 ```
 
 Git 없이 ZIP을 받았다면 해당 브랜치 ZIP을 풀고 `newsflow-ai` 폴더의 **run.bat를 더블클릭**하세요. 사용자에게 쓰기 권한이 있는 폴더를 사용하세요. 관리자 권한 실행은 필요하지 않습니다.
 
-3. 첫 실행은 Python 3.12를 확인하고 프로젝트 `.venv`를 만든 뒤 필요한 런타임 패키지를 설치합니다. 설치 실패 시 서버를 실행하지 않으며 오류를 표시합니다. 처음에는 패키지 다운로드 인터넷 연결이 필요합니다. 로그에 pip 원문 출력이나 자격정보를 저장하지 않습니다.
+3. 첫 실행은 Python 3.12 또는 3.14를 확인하고 프로젝트 `.venv`를 만든 뒤 필요한 런타임 패키지를 설치합니다. 설치 실패 시 서버를 실행하지 않으며 오류를 표시합니다. 처음에는 패키지 다운로드 인터넷 연결이 필요합니다. 로그에 pip 원문 출력이나 자격정보를 저장하지 않습니다.
 4. 서버 실행 후 브라우저에서 **http://127.0.0.1:8765**를 직접 여세요. 기본 주소·바인딩·포트는 127.0.0.1:8765입니다. 자동 포트 변경이나 외부 공개 바인딩은 하지 않습니다.
 5. 프로그램 종료: 실행 창에서 **Ctrl+C**. 종료가 끝날 때까지 기다린 후 창을 닫으세요. 강제 종료 시 다음 실행에서 수집 중단 상태를 복구합니다.
 
@@ -120,7 +120,7 @@ Windows Actions 워크플로는 `.github/workflows/newsflow-phase5c1-windows.yml
 
 ```powershell
 # JSBAE 저장소 루트에서
-git switch feat/newsflow-phase5d1
+git switch feat/newsflow-phase5f1
 git pull --ff-only
 cd newsflow-ai
 .\run.bat
@@ -200,7 +200,7 @@ $env:NEWSFLOW_DATA_DIR="D:\내 자료\NewsFlowAI" # 생략하면 LOCALAPPDATA
 
 | 문제 | 확인할 내용 |
 |---|---|
-| Python 3.12 오류 | `py -3.12 --version`; Python launcher/PATH와 3.12 설치 확인 |
+| Python 3.12 또는 3.14 오류 | `py -3.12 --version`; Python launcher/PATH와 3.12 설치 확인 |
 | 패키지 설치 실패 | 인터넷·회사 프록시·패키지 저장소·설치 폴더 권한 확인; 성공 전 서버 실행 없음 |
 | 가상환경 버전 오류 | 서버 종료 후 `.venv`를 보관용 이름으로 바꾸고 run.bat 재실행 |
 | 중복 실행/포트 사용 중 | 기존 실행 창 종료; `netstat -ano | findstr :8765`로 확인. 모르는 프로세스를 임의 종료하지 말 것 |
@@ -258,7 +258,7 @@ SQLAlchemy 바인딩, Jinja escaping, CSP, signed double-submit CSRF/Origin/Host
 
 ## PR 브랜치 Windows 자동 검증
 
-`.github/workflows/newsflow-windows.yml`은 `feat/newsflow-phase1`의 실행 코드/테스트/CI 도구 변경에만 반응합니다. main에서는 실행하지 않으며 보고서만 변경할 때 다시 실행하지 않습니다. Windows Runner에서 Python 3.12 및 전체 pytest, 실제 run.bat, 기본 데이터 경로, 포트 충돌/중복 실행, 합성 데이터 저장·재시작·조회와 Chromium GUI POST를 검사합니다. 실제 RSS나 실제 API 키는 사용하지 않습니다.
+`.github/workflows/newsflow-windows.yml`은 `feat/newsflow-phase1`의 실행 코드/테스트/CI 도구 변경에만 반응합니다. main에서는 실행하지 않으며 보고서만 변경할 때 다시 실행하지 않습니다. Windows Runner에서 Python 3.12 또는 3.14 및 전체 pytest, 실제 run.bat, 기본 데이터 경로, 포트 충돌/중복 실행, 합성 데이터 저장·재시작·조회와 Chromium GUI POST를 검사합니다. 실제 RSS나 실제 API 키는 사용하지 않습니다.
 
 합성 RSS는 기존 앱 팩토리에 Fake Adapter를 주입한 별도 검증 서버에서 사용합니다. 운영 run.bat에 보안 우회·Fake 모드·테스트 HTTP endpoint를 추가하지 않습니다. CI의 Windows 종료는 `taskkill /T /F`를 이용한 프로세스 트리 종료이며 수동 Ctrl+C 검증을 대신하지 않습니다.
 

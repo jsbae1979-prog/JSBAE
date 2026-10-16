@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import signal
 import socket
 import subprocess
 import sys
@@ -64,7 +65,9 @@ def test_bat_static_version_quotes_no_secrets():
     script = raw.decode("ascii")
     assert b"\r\n" in raw
     assert 'cd /d "%~dp0"' in script
-    assert "py -3.12" in script and "sys.version_info[:2] == (3,12)" in script
+    assert "py -3.12" in script and "py -3.14" in script
+    assert "((3,12),(3,14))" in script
+    assert script.index("goto existing_venv") < script.index("py -3.14")
     assert '"tools\\windows_launcher.py"' in script
     assert "if errorlevel 1" in script
     assert "exit /b %NF_EXIT%" in script
@@ -187,7 +190,8 @@ def test_actual_server_lifecycle_and_port_collision(tmp_path):
     from urllib.request import urlopen
 
     process = subprocess.Popen(
-        [sys.executable, "-m", "newsflow.main"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        [sys.executable, "-m", "newsflow.main"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0,
     )
     try:
         for _ in range(80):
@@ -247,8 +251,17 @@ def test_actual_server_lifecycle_and_port_collision(tmp_path):
         assert duplicate.returncode != 0
         assert "지정 포트" in duplicate.stdout or "이미 실행" in duplicate.stdout
     finally:
-        process.terminate()
+        if sys.platform == "win32":
+            # Verify app cleanup, not just the venv redirector's exit.
+            process.send_signal(signal.CTRL_BREAK_EVENT)
+        else:
+            process.terminate()
         process.wait(timeout=15)
+        log = tmp_path / "운영 데이터/logs/execution.log"
+        deadline = time.monotonic() + 15
+        while 'server_stop' not in log.read_text(encoding='utf-8'):
+            assert time.monotonic() < deadline, 'server cleanup deadline'
+            time.sleep(0.1)
     with socket.socket() as check:
         assert check.connect_ex(("127.0.0.1", port)) != 0
     assert (tmp_path / "운영 데이터/logs/execution.log").exists()

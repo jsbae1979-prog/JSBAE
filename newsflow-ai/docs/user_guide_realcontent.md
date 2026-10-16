@@ -11,7 +11,7 @@
 | 준비물 | 내용 |
 |---|---|
 | Windows 11 | 일반 사용자 계정이면 됩니다. **관리자 권한, WSL, Docker는 필요 없습니다.** |
-| Python 3.12 | [python.org Windows 다운로드](https://www.python.org/downloads/windows/)의 **Windows installer (64-bit)**. 설치 화면에서 **Add python.exe to PATH**를 반드시 선택합니다. 3.11·3.13은 지원 버전이 아니며 run.bat가 거부합니다. |
+| Python 3.12 또는 3.14 | [python.org Windows 다운로드](https://www.python.org/downloads/windows/)의 **Windows installer (64-bit)**. 설치 화면에서 **Add python.exe to PATH**를 반드시 선택합니다. 3.11·3.13은 지원 버전이 아니며 run.bat가 거부합니다. |
 | FFmpeg · ffprobe | [FFmpeg 공식 다운로드 안내](https://ffmpeg.org/download.html#build-windows)에서 Windows 빌드를 받아 압축을 풉니다. `bin` 폴더 안에 `ffmpeg.exe`와 `ffprobe.exe`가 **모두** 있어야 합니다(libx264·AAC 포함 빌드). |
 | 프로젝트 ZIP | 브랜치 ZIP을 **먼저 압축 해제**한 뒤 `newsflow-ai` 폴더를 사용합니다. ZIP 안에서 BAT를 직접 실행하지 마세요. 사용자가 쓰기 권한을 가진 폴더(한글·공백 경로 가능)에 두세요. |
 | 인터넷 | 첫 실행의 Python 패키지 설치에만 필요합니다. 이후 체험 제작은 인터넷 없이 됩니다. |
@@ -31,7 +31,7 @@ Path를 바꾸고 싶지 않다면 PowerShell 세션에서 `$env:NEWSFLOW_FFMPEG
 
 | 상황 | 콘솔 메시지 (영문 원문) | 뜻과 할 일 |
 |---|---|---|
-| Python 3.12 없음 | `Python 3.12 is required. Open START_HERE.html for the illustrated setup steps.` | START_HERE.html이 자동으로 열립니다. Python 3.12를 설치하고 다시 실행합니다. |
+| Python 3.12 또는 3.14 없음 | `Python 3.12 또는 3.14 is required. Open START_HERE.html for the illustrated setup steps.` | START_HERE.html이 자동으로 열립니다. Python 3.12 또는 3.14를 설치하고 다시 실행합니다. |
 | 폴더를 열 수 없음 | `Cannot open the project folder. Check its path and permissions.` | ZIP을 완전히 풀었는지, 폴더에 쓰기 권한이 있는지 확인합니다. |
 | 점검 실패 또는 오류 | `NewsFlow AI did not start or stopped with an error. See README troubleshooting.` | 바로 위에 출력된 한국어 안내(항목별 `확인 필요`)를 해결하고 다시 실행합니다. 종료 코드 1. |
 | 필수 항목 통과 | `Required preparation checks passed. Open run.bat to start.` | 종료 코드 0. 이제 run.bat를 실행합니다. |
@@ -101,7 +101,7 @@ GUI 주소: http://127.0.0.1:8765 · 종료: Ctrl+C
 
 | 항목 | 준비됨 조건 | 확인 필요 시 안내 |
 |---|---|---|
-| Python 실행 환경 | Python 3.12 | `Python 3.12를 설치한 뒤 run.bat를 다시 실행하세요.` |
+| Python 실행 환경 | Python 3.12 또는 3.14 | `Python 3.12 또는 3.14를 설치한 뒤 run.bat를 다시 실행하세요.` |
 | 영상 제작 도구 (FFmpeg · ffprobe) | 두 실행 파일 호출 성공 | `시작 안내의 FFmpeg 설치 방법을 따라 두 실행 파일을 PATH에 추가한 뒤 프로그램을 다시 실행하세요.` |
 | 한국어 글꼴 | 한글이 실제로 그려지는 글꼴 | `Windows 언어 설정에서 한국어 글꼴을 설치하거나 고급 안내에 따라 글꼴 경로를 지정하세요.` |
 | 저장 폴더와 데이터베이스 | 한글 파일 쓰기·DB 쓰기 가능 | `저장 폴더 쓰기 권한과 디스크 상태를 확인하세요. 기존 데이터는 삭제하지 마세요.` |

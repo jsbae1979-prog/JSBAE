@@ -15,7 +15,7 @@
 |---|---|
 | Windows 11 버전·빌드 (`winver`) | |
 | 디스플레이 배율 | |
-| Python (`py -3.12 --version`) | |
+| Python (`py -3.12 --version` 또는 `py -3.14 --version`, 3.13 제외) | |
 | FFmpeg / ffprobe (`ffmpeg -version` 첫 줄) | |
 | 브라우저와 버전 (Chrome/Edge) | |
 | 브랜치 / SHA (`git rev-parse HEAD`, ZIP이면 파일명) | `feat/newsflow-phase5c1` / |

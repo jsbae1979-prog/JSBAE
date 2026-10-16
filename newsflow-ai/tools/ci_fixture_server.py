@@ -8,6 +8,7 @@ and it can never be selected in the settings of a normal ``run.bat`` start.
 from __future__ import annotations
 
 import argparse
+import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -50,7 +51,7 @@ def main() -> None:
         plan = StartupPlan(root, args.data_dir, 'S-1-5-21-100-200-300-1001')
         plan.python.parent.mkdir(parents=True, exist_ok=True)
         plan.python.write_bytes(b'synthetic, never executed')
-        digest = hashlib.sha256(str((3, 12)).encode())
+        digest = hashlib.sha256(str(tuple(sys.version_info[:2])).encode())
         for name in ('pyproject.toml', 'requirements-dev.lock'):
             (root/name).write_bytes(b'fixture'); digest.update(b'fixture')
         (root/'.venv/.newsflow-installed').write_text(digest.hexdigest(), encoding='ascii')
