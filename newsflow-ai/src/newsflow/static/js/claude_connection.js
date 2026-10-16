@@ -58,6 +58,8 @@ for (const form of document.querySelectorAll('form[data-studio-models]')) {
     models[previous] = model.value;
     model.value = models[provider.value];
     previous = provider.value;
+    const label = form.querySelector('[data-studio-provider-label]');
+    if (label) label.textContent = provider.selectedOptions[0].textContent;
     // Selection never starts a request or stores an execution consent.
   });
 }

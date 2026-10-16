@@ -50,9 +50,13 @@ def test_codex_defaults_restart_without_cli_or_approval_changes(tmp_path, fake, 
             assert 'value="codex" selected' in page.text and 'value="default"' in page.text
             assert "RSS 자료 분석" in page.text and "웹 검색을 실행하지 않습니다" in page.text
             assert "무료·무제한이 아닙니다" in page.text
-            assert 'action="/ai/codex/status"' in page.text
-            assert 'action="/ai/claude/login"' in page.text
-            assert 'action="/ai/codex/login"' not in page.text
+            assert 'href="/simple-settings#connections"' in page.text
+            settings = client.get("/simple-settings")
+            assert settings.status_code == 200
+            assert 'action="/ai/codex/status"' in settings.text
+            assert 'action="/ai/claude/login"' in settings.text
+            assert 'action="/ai/codex/login"' not in settings.text
+            assert 'value="codex" selected' in settings.text and 'value="default"' in settings.text
             assert "content-security-policy" in page.headers
 
 
@@ -95,7 +99,7 @@ def test_codex_explicit_status_cache_cancel_without_inference(client, app, monke
     assert status.json()["web_search_verified"] is False
     assert status.json()["local_usage"]["calls"] == 0
     assert app.state.codex_status == result
-    assert "연결 준비 완료" in client.get("/ai").text
+    assert "연결 준비 완료" in client.get("/simple-settings").text
     assert calls == ["status"]
     assert client.post("/ai/codex/cancel", data={"csrf_token": token}).json() == {"cancel_requested": False}
     assert calls == ["status", "cancel"]
@@ -174,7 +178,8 @@ def test_codex_rss_analysis_script_and_video_flow(client, app, fake, monkeypatch
             assert session.get(IntelligenceRun, draft.run_id).provider == "codex"
         assert f'href="/video?draft_id={draft_id}"' in response.text
         video = client.get(f"/video?draft_id={draft_id}")
-        assert video.status_code == 200 and f'원본 대본 {duration}초' in video.text
+        assert video.status_code == 200 and f'value="{duration}" selected' in video.text
+        assert f'name="draft_id" value="{draft_id}"' in video.text
         assert 'value="offline-silence" selected' in video.text
 
     assert fake_codex.calls == 4 and claude_code.CLAUDE_PROVIDER is original_claude

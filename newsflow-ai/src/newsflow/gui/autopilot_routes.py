@@ -32,7 +32,12 @@ from newsflow.db.models import (
 from newsflow.easy_setup import preview_preferences, speech_preferences
 from newsflow.intelligence.korean import speech_plan
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
-from newsflow.intelligence.settings import external_ready, job_estimate
+from newsflow.intelligence.settings import (
+    STUDIO_PROVIDERS,
+    external_ready,
+    job_estimate,
+    read_studio_settings,
+)
 from newsflow.publishing.service import PublishingError, PublishingService, hash_file
 from newsflow.video.tts import TTSError
 
@@ -98,6 +103,34 @@ def readiness(request: Request) -> dict[str, Any]:
         "rss": {"enabled": len(enabled), "tested": passed, "ready": bool(enabled)},
         "ai": ai,
         "voice": {"name": voice, "silent": voice == "offline-silence", "installed": installed, **speech_values},
+    }
+
+
+def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any]:
+    """Presentation only; saved Studio choices are never rewritten or silently replaced."""
+    provider = read_studio_settings(request.app.state.sessions)["provider"]
+    voice = ready["voice"]
+    supported = provider in {"offline", "openai"}
+    if not supported:
+        notice = (
+            "선택한 AI는 뉴스 분석·대본 화면에서 사용할 수 있어요. "
+            "등록된 뉴스는 대본을 검토한 뒤 영상 제작으로 이어집니다."
+        )
+    elif provider == "openai" and not ready["ai"]["ready"]:
+        notice = "등록 뉴스 자동 제작에 필요한 AI 연결·비용 승인을 설정에서 확인해 주세요."
+    else:
+        notice = "등록 뉴스는 대본과 완성 영상을 확인한 뒤 보관합니다. 체험 뉴스는 기본 대본으로 연습해요."
+    if voice["name"] == "elevenlabs":
+        voice_label = "외부 한국어 음성 · 제작별 동의 필요"
+    elif voice["silent"]:
+        voice_label = "무음 검토영상 · 음성 없음"
+    else:
+        voice_label = "한국어 음성" if voice["installed"] else "선택한 음성 준비 필요"
+    return {
+        "provider": provider, "provider_label": STUDIO_PROVIDERS[provider],
+        "automatic_supported": supported, "notice": notice,
+        "voice_label": voice_label, "voice_ready": voice["installed"],
+        "action_url": "/autopilot/quick-start", "guide_url": "/ai", "rss_ready": ready["rss"]["ready"],
     }
 
 
@@ -167,6 +200,7 @@ def _media_path(request: Request, video: RenderJob | None):
 @router.get("/", response_class=HTMLResponse)
 def home(request: Request) -> HTMLResponse:
     jobs = request.app.state.autopilot.list_jobs(100)
+    ready = readiness(request)
     with request.app.state.sessions() as session:
         completed = []
         videos = session.execute(
@@ -185,7 +219,8 @@ def home(request: Request) -> HTMLResponse:
                         "link": f"/autopilot/jobs/{task}" if task else f"/video?job_id={video.id}",
                     })
         return _page(
-            request, "easy_home.html", active="home", defaults=_defaults(request), ready=readiness(request),
+            request, "easy_home.html", active="home", defaults=_defaults(request), ready=ready,
+            production=production_summary(request, ready),
             active_jobs=[item for item in jobs if item["status"] in {"queued", "running", "waiting_review"}],
             completed=completed, video_count=video_count,
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
@@ -194,15 +229,50 @@ def home(request: Request) -> HTMLResponse:
 
 
 @router.get("/autopilot/start", response_class=HTMLResponse)
-def start_page(request: Request) -> HTMLResponse:
+def start_page(request: Request, guide: str = "") -> HTMLResponse:
     with request.app.state.sessions() as session:
         enabled = session.scalar(select(func.count()).select_from(NewsSource).where(
             NewsSource.enabled, NewsSource.url != SAMPLE_URL,
         ))
+    ready = readiness(request)
     return _page(
         request, "autopilot_start.html", active="autopilot", defaults=_defaults(request),
-        enabled_sources=enabled, ready=readiness(request),
+        enabled_sources=enabled, ready=ready, production=production_summary(request, ready),
+        guide=guide if guide in {"provider", "voice", "approval", "sources"} else "",
     )
+
+
+@router.post("/autopilot/quick-start")
+def quick_start(
+    request: Request, source: str = Form(max_length=10), duration: int = Form(),
+) -> RedirectResponse:
+    """Two-choice entry point, with the same coordinator and all existing review gates."""
+    if source not in CHOICES["source"] or duration not in {30, 45, 60}:
+        raise HTTPException(422, "뉴스 종류와 30·45·60초 중 영상 길이를 선택해 주세요.")
+    ready = readiness(request)
+    saved = read_studio_settings(request.app.state.sessions)
+    if source == "feeds":
+        if saved["provider"] not in {"offline", "openai"}:
+            return go("/autopilot/start?guide=provider")
+        if not ready["rss"]["ready"]:
+            return go("/autopilot/start?guide=sources")
+        if saved["provider"] == "openai" and not ready["ai"]["ready"]:
+            return go("/autopilot/start?guide=approval")
+    # An external voice needs the existing Video Studio per-render consent flow.
+    # A missing selected voice never becomes silent or switches providers.
+    if ready["voice"]["name"] == "elevenlabs" or not ready["voice"]["installed"]:
+        return go("/autopilot/start?guide=voice")
+    defaults = _defaults(request)
+    try:
+        identifier = request.app.state.autopilot.start(
+            mode="guided", source=source, duration=duration, platform=defaults["platform"],
+            content_mode="real" if source == "feeds" else "trial",
+            ai_mode=saved["provider"] if source == "feeds" else "offline",
+            voice=ready["voice"]["name"],
+        )
+    except AutopilotError as exc:
+        raise _error(exc) from None
+    return go(f"/autopilot/jobs/{identifier}")
 
 
 @router.post("/autopilot/start")
@@ -324,9 +394,11 @@ def queue(request: Request) -> HTMLResponse:
 
 @router.get("/simple-settings", response_class=HTMLResponse)
 def simple_settings(request: Request, saved: bool = False) -> HTMLResponse:
+    from .intelligence_routes import connection_context
+
     return _page(
         request, "simple_settings.html", active="simple-settings", defaults=_defaults(request), saved=saved,
-        ready=readiness(request),
+        ready=readiness(request), **connection_context(request),
     )
 
 

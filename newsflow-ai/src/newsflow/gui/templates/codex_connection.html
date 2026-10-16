@@ -3,17 +3,14 @@
 <p id="codex-state" role="status" aria-live="polite" data-state="{{ codex_status.state }}">{{ codex_status.message }}</p>
 <p><span id="codex-version">{{ 'CLI ' + codex_status.version if codex_status.version else 'CLI 버전 미확인' }}</span> · <time id="codex-check-time" datetime="{{ codex_status.checked_at or '' }}">이번 앱 실행에서 확인한 기록이 없습니다.</time></p>
 <form method="post" action="/ai/codex/status" data-codex-action="status">{{ csrf_field() }}<button type="submit">Codex 설치·로그인 확인</button></form>
-<p>아래 Provider에서 <strong>Codex · RSS 자료 분석</strong>을 선택하세요. 기사 비교 → 분석 → 30·45·60초 대본 → Video Studio 순서로 진행합니다. 기본값 저장은 추론을 시작하지 않습니다.</p>
+<p>위의 기본 AI에서 <strong>Codex · RSS 자료 분석</strong>을 선택하세요. 기사 비교 → 분석 → 30·45·60초 대본 → Video Studio 순서로 진행합니다. 기본값 저장은 추론을 시작하지 않습니다.</p>
 <p>선택한 기사 제목·RSS 요약·출처·점수 자료가 OpenAI로 전달됩니다. 본인의 ChatGPT 구독 사용량·호출 제한이 적용되며 무료·무제한이 아닙니다. 실행마다 동의가 필요하고, 로컬 사용 기록은 구독 잔여량·청구량이 아닙니다.</p>
-<p id="codex-web-state" class="hint">웹 검색: {{ '실제 검색 이벤트 확인 이력 있음 · 아래 RSS 분석과 별도 경로입니다.' if codex_status.web_search_verified else '미확인 · 설치·로그인 성공은 웹 검색 성공이 아닙니다. 이 화면에서는 RSS 자료 분석만 실행합니다.' }}</p>
-<p class="hint">2026-10-16 개발 검증: 웹 검색 이벤트 0건으로 웹 조사 경로는 비활성 상태입니다. RSS 기사 분석·대본 생성은 별도로 검증했습니다.</p>
-{% if studio_defaults.provider == 'codex' %}<p>현재 AI Studio 기본값: <strong>Codex · {{ studio_defaults.model }}</strong>. 다른 Provider를 선택·저장해도 Codex 계정에서 로그아웃하거나 인증정보를 삭제하지 않습니다.</p>{% endif %}
-{% if saved and studio_defaults.provider == 'codex' %}<p role="status">Codex 기본값을 저장했습니다. 추론은 실행하지 않았습니다.</p>{% endif %}
+<p id="codex-web-state" class="hint">웹 검색: BLOCKED · 개발 중단. RSS 자료 분석·대본 생성만 지원하며, 연결 성공을 검색 성공으로 표시하지 않습니다.</p>
 <details class="easy-advanced"><summary>설치·로그인 및 모델 안내</summary>
 <p><a href="https://developers.openai.com/codex/cli" target="_blank" rel="noopener noreferrer">공식 Codex CLI 설치 안내 ↗</a> · <a href="https://developers.openai.com/codex/auth" target="_blank" rel="noopener noreferrer">공식 인증 안내 ↗</a></p>
 <p>일반 사용자 터미널에서 공식 <code>codex login</code>으로 직접 로그인한 뒤 위 확인 버튼을 누르세요. 앱은 자동 설치·로그인이나 인증 파일·토큰 추출을 하지 않습니다. API 키 인증은 별도 과금 승인으로 간주하지 않으며 실행을 차단합니다.</p>
 <p>모델 <code>default</code>는 설치된 Codex App Server의 현재 기본 모델을 사용합니다. 다른 모델은 본인 계정에서 사용할 수 있는 모델 ID를 입력하세요. 설정 저장만으로 모델의 사용 가능 여부를 확인하지는 않습니다.</p>
-<p>아래 Temperature·출력 토큰 한도·금액 예상은 OpenAI API용입니다. Codex에는 같은 토큰 상한이 적용되지 않으며, 계정 사용 가능 상태와 요청 시간 제한을 확인합니다.</p>
+<p>AI Studio 고급 설정의 Temperature·출력 토큰 한도·금액 예상은 OpenAI API용입니다. Codex에는 같은 토큰 상한이 적용되지 않으며, 계정 사용 가능 상태와 요청 시간 제한을 확인합니다.</p>
 <p>연결 상태와 실제 응답은 구분합니다. 최소 권한 격리가 적용되지 않거나 인증·사용량 확인에 실패하면 실행하지 않습니다. 실패 요청을 자동 재시도하거나 다른 유료 Provider로 전환하지 않습니다.</p>
 <p>NewsFlow의 요청 자동 재전송과 Codex의 내부 통신 재시도는 다릅니다. 무제한 연결 재시도는 끄지만, 공식 CLI의 제한된 내부 재시도 횟수는 이 버전에서 변경할 수 없습니다. 중단·오류 때도 구독 사용량이 발생할 수 있습니다.</p>
 </details>
