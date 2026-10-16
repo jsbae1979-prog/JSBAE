@@ -36,3 +36,11 @@ Python 3.12.14, 기존 .venv의 `pip check` PASS. FFmpeg/ffprobe 및 시스템 C
 ## 계속 미검증인 항목
 
 실제 Higgsfield 인증·모델 동작·결제·계정별 가격/동시 제한·환불·품질, 실제 OpenAI, 사용자 Windows 11 운영, 한국어 음성의 사람 청취·완성 영상 품질은 NOT VERIFIED. 기존 Windows RSS 성공은 해당 피드·시점의 증거이며 모든 RSS의 보편적 성공으로 확대하지 않는다. 실제 OAuth/SNS는 차단 유지. 이번 인수 검사에 유료 API·OAuth·SNS 호출은 0건, 비용 0이다. 공식 공개 문서 GET은 생성 API 호출과 구분한다.
+
+## Claude 최종 종료 보고 추가 대조
+
+사용자가 전달한 Claude 종료 보고: 예약 점검 활성 0건, 마지막 작업 트리 Clean. 이는 **인계된 보고**이며 Codex가 다른 Claude 세션의 예약 작업을 직접 조회한 결과는 아니다.
+
+2026-10-16 KST 추가 확인에서도 원격 `feat/newsflow-phase5d`는 지정 SHA `3951a231e8a5a03a113498d8223a25cc8a6d3b38`로 유지되었다. 동시 세션 푸시 가능성을 고려하여 종료 전에도 재확인한다. 기존 분석 §4~§4.12와 설계 §7.1의 유료 클립 보존·재조회·다시 받기·키/요청 내용 결합·대본 반영 정책을 재대조했다. 변경은 자동 제출 재전송·비용 기록 검증·로컬 사전 점검에 한정하며 기존 회귀를 유지한다. migration 0010·0011 및 다른 DB 파일 변경 없음, 새 migration도 필요하지 않다.
+
+문서만 바뀐 최종 커밋과 실제 Windows 검증 코드 SHA를 구분하여 완료 보고서에 기록한다. 신규 코드 커밋 `986355879681bdcc159163f413b2afed6c79b602`에서 [Windows Actions](https://github.com/jsbae1979-prog/JSBAE/actions/runs/38832096264)가 실제 실행되어 SUCCESS로 종료되었음을 확인했다(2227 passed / 3 skipped / 1 warning / 0 failed). 문서 커밋에 자동 실행이 없으면 이전 코드 테스트를 새 실행으로 표현하지 않는다.

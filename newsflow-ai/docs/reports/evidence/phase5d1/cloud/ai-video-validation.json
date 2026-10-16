@@ -1,0 +1,64 @@
+{
+  "tool": "ci_ai_video_validation",
+  "mode": "cloud",
+  "provider": "FakeVideoProvider (offline, injected)",
+  "higgsfield_api_calls": 0,
+  "higgsfield_vendor_behaviour": "NOT VERIFIED",
+  "generated_video_quality": "NOT VERIFIED",
+  "default_off_and_basic_mode": "PASS (AI mode unavailable until approved; Video Studio unchanged; 6 menus)",
+  "local_preflight": "PASS (Chrome POST, Origin/CSRF, no provider call or cost reservation)",
+  "settings_gate": "PASS (approval refused without limits; approval, limits and confirmed model saved)",
+  "storyboard_and_prompt_policy": "PASS (scene source/prompt/model saved; footage-like prompt refused before any call)",
+  "budget_and_duplicate": "PASS (over the per-job limit: problem shown, button disabled, server 422, 0 usage rows; confirm accepted once; resend refused 422; 1 reservation)",
+  "async_generation": "PASS (waiting → queued → completed → downloaded and probed; clip preview PASS (playback time advanced))",
+  "paid_clip_protection": "PASS (prompt change on a ready scene refused with 409 until 'discard' is checked; clip kept)",
+  "restart_recovery": "PASS (after a restart the in-flight scene keeps its request id and is only polled; no new submission; ready clip and usage rows persist)",
+  "final_mp4": {
+    "status": "PASS",
+    "sha256": "d7124709b10a17ed090ef4af05ca294c7b4543f055ffb4ba9b8f8e2275872e44",
+    "bytes": 1959319,
+    "duration": 30.021029,
+    "browser_playback": "PASS (playback time advanced)",
+    "ai_label_in_ai_scene": true,
+    "ai_label_in_card_scene": false,
+    "ai_generated_scenes": [
+      0
+    ],
+    "reviewed_clip_hash_recorded": true,
+    "human_watch_quality": "NOT VERIFIED"
+  },
+  "security": "PASS (forged origin POST 403; CSP self-only; no key in app_settings; separate video_ai_usage; no browser request outside 127.0.0.1)",
+  "database": {
+    "video_ai_usage": [
+      {
+        "provider": "fake",
+        "status": "completed",
+        "estimated_cost": "1",
+        "currency": "USD"
+      },
+      {
+        "provider": "fake",
+        "status": "submitted",
+        "estimated_cost": "1",
+        "currency": "USD"
+      }
+    ],
+    "openai_ai_usage_rows": 0,
+    "clip_files": 1
+  },
+  "screenshots": [
+    "ai-final-frame-ai-scene.png",
+    "ai-final-frame-card-scene.png",
+    "ai-home-default-off.png",
+    "ai-job-page.png",
+    "ai-library.png",
+    "ai-plan-cost.png",
+    "ai-plan-ready.png",
+    "ai-plan-reviewed.png",
+    "ai-plan-storyboard.png",
+    "ai-preflight.png",
+    "ai-settings.png",
+    "failure.png"
+  ],
+  "outcome": "PASS"
+}

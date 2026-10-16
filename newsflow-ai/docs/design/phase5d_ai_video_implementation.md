@@ -31,7 +31,7 @@ AI 영상 설정의 기본값은 공급사 '사용 안 함'(`off`)이며, 이 �
 | `video_ai_credits` | 402·403 잔액·권한 | True | 실패 |
 | `video_ai_bad_input` | 400·422 또는 보내기 전 경로 오류 | 경우별 | 실패 또는 보내지 않음 |
 | `video_ai_bad_model` | 제출 404 | True | 실패 |
-| `video_ai_ambiguous_submit` | 제출 408·429 → 결과 불명, 자동 재전송 없음 (5D.1) | False | 예약 유지 |
+| `video_ai_unknown_submit` | 제출 408·429 → 결과 불명, 자동 재전송 없음 (5D.1) | False | 예약 유지 |
 | `video_ai_unavailable` | 연결 전 실패 | False | 보내지 않음 |
 | `video_ai_unknown_submit` | 보낸 뒤 결과 불명(끊김·5xx·읽을 수 없는 2xx) | True | 결과 불명(계산) |
 | `video_ai_request_missing` | 상태·취소 404 | True | 실패 |

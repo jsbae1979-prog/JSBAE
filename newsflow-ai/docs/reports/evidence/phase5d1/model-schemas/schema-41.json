@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "title": "Kling 2.6 Playground",
+  "required": [
+    "prompt"
+  ],
+  "properties": {
+    "sound": {
+      "enum": [
+        "on",
+        "off"
+      ],
+      "type": "string",
+      "title": "Generate sound",
+      "default": "on"
+    },
+    "prompt": {
+      "type": "string",
+      "title": "Prompt",
+      "description": "Write your prompt here"
+    },
+    "duration": {
+      "enum": [
+        5,
+        10
+      ],
+      "type": "integer",
+      "title": "Duration",
+      "default": 5
+    },
+    "cfg_scale": {
+      "type": "number",
+      "title": "CFG Scale",
+      "default": 0.5,
+      "maximum": 1,
+      "minimum": 0,
+      "multipleOf": 0.01
+    },
+    "aspect_ratio": {
+      "enum": [
+        "16:9",
+        "9:16",
+        "1:1"
+      ],
+      "type": "string",
+      "title": "Aspect ratio",
+      "default": "16:9"
+    }
+  }
+}
