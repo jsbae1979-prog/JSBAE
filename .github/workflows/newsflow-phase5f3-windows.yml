@@ -48,9 +48,9 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Native worker and caller contracts only
         run: |
-          python -m ruff check src tests/test_video_quality.py tests/test_video.py tools/ci_quality_validation.py
+          python -m ruff check src tests/test_video_quality.py tests/test_cloud_tts.py tests/test_video.py tools/ci_quality_validation.py tools/ci_cloud_tts_validation.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -m pytest -q -rs tests/test_video_quality.py tests/test_windows_sapi.py tests/test_video.py tests/test_korean_speech.py tests/test_speech_text.py
+          python -m pytest -q -rs tests/test_cloud_tts.py tests/test_video_quality.py tests/test_windows_sapi.py tests/test_video.py tests/test_korean_speech.py tests/test_speech_text.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Require an actual native SAPI voice
         run: |
@@ -77,6 +77,8 @@ jobs:
           python -m pytest -q -rs tests/test_ai_video_compose.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tools/ci_quality_validation.py --output validation-output/quality
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python tools/ci_cloud_tts_validation.py --output validation-output/fake-cloud
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Actual DPAPI with synthetic credentials only
         run: |

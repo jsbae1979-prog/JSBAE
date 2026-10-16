@@ -121,12 +121,13 @@ class VideoCoordinator:
         speech: SpeechSettings | None = None,
         theme: str = 'news',
         subtitle_style: str = 'panel',
+        cloud_confirmed: bool = False,
     ) -> int:
         if duration not in (30, 45, 60) or not reviewed:
             raise VideoError("영상 길이를 선택하고 렌더링 전 대본·출처 검토를 확인하세요.")
         return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False,
                            speech=speech, fit_audio=voice != 'offline-silence',
-                           theme=theme, subtitle_style=subtitle_style)
+                           theme=theme, subtitle_style=subtitle_style, cloud_confirmed=cloud_confirmed)
 
     def start_preview(
         self,
@@ -233,6 +234,7 @@ class VideoCoordinator:
         clip_bytes: int = 0,
         theme: str = 'news',
         subtitle_style: str = 'panel',
+        cloud_confirmed: bool = False,
     ) -> int:
         speech = speech or SpeechSettings()
         if self.cancel.is_set():
@@ -281,7 +283,22 @@ class VideoCoordinator:
                 for name in images:
                     if name:
                         self.asset(name)
-                if self.tts:
+                cloud_settings = None
+                if voice.startswith(('azure:', 'google:')):
+                    from .cloud_tts import CloudTTS, load_settings
+
+                    provider, voice = voice.split(':', 1)
+                    cloud_settings = load_settings(self.sessions)
+                    if cloud_settings['provider'] != provider or voice != cloud_settings['voice'] or not cloud_confirmed:
+                        raise VideoError('외부 음성 설정과 이번 제작의 비용·전송 승인을 확인하세요.')
+                    # No trial/autopilot transmission and no silent cloud fallback.
+                    if (preview_only or draft.sources.get('mode') == 'trial' or draft.content.get('trial')
+                            or any(a.get('title', '').startswith('[합성]')
+                                   or any(s.get('url', '').startswith('https://example.com') for s in a.get('sources', []))
+                                   for a in draft.sources.get('articles', []))):
+                        raise VideoError('체험·자동 제작에서는 외부 음성을 호출하지 않습니다.')
+                    tts = CloudTTS(self.sessions, cloud_settings, lambda: '', scope='preflight')
+                elif self.tts:
                     tts = self.tts
                 elif voice == "offline-silence":
                     tts = OfflineTTS()
@@ -313,6 +330,7 @@ class VideoCoordinator:
                         **draft.content, "draft_revision": draft.revision,
                         "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio},
                         'quality': {'theme': theme, 'subtitle_style': subtitle_style},
+                        **({'cloud_tts': {**cloud_settings, 'request_confirmed': True}} if cloud_settings else {}),
                         # Provenance: which reviewed AI clip (by content hash) each scene must use.
                         **({"ai_clips": [
                             {"position": index, "name": name, "sha256": digest}
@@ -345,7 +363,8 @@ class VideoCoordinator:
                 session.add(
                     AudioTrack(
                         project_id=project.id,
-                        provider="offline" if voice == "offline-silence" else "windows",
+                        provider=cloud_settings['provider'] if cloud_settings else (
+                            "offline" if voice == "offline-silence" else "windows"),
                         voice=voice,
                     )
                 )
@@ -435,6 +454,14 @@ class VideoCoordinator:
                 except (TTSError, TypeError, ValueError):
                     speech = SpeechSettings()
                 fit_audio = bool(saved.get("fit_audio")) and voice != "offline-silence"
+                if project.snapshot.get('cloud_tts'):
+                    from .cloud_tts import AzureTTSKeyStore, CloudTTS, GoogleTTSKeyStore, load_settings
+
+                    cloud = project.snapshot['cloud_tts']
+                    store = AzureTTSKeyStore if cloud['provider'] == 'azure' else GoogleTTSKeyStore
+                    tts = CloudTTS(self.sessions, cloud, store(self.root).key,
+                                   scope=f'render-job:{identifier}', confirmed=cloud.get('request_confirmed', False),
+                                   current_settings=lambda: load_settings(self.sessions))
                 ai_clips = list(project.snapshot.get("ai_clips") or [])
                 expected = {int(item["position"]): item.get("sha256") for item in ai_clips}
             with TemporaryDirectory(prefix=f"job-{identifier}-", dir=self.temporary) as directory:

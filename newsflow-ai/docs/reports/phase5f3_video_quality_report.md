@@ -1,5 +1,7 @@
 # Phase 5F.3 — Korean shorts quality
 
+The user subsequently prioritized Azure/Google API integration in this same phase. See `phase5f3_tts_api_report.md` for the final scope, live-usage verification limitation and latest results. The minimum layout work below is retained; no larger redesign was added.
+
 ## Original analysis
 
 Base: `e2904c6335954c7fb71becf02dc4c94c059bcd43` (Phase 5F.2).

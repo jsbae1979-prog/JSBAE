@@ -345,7 +345,7 @@ def test_card_is_deterministic_has_no_ai_label_and_ignores_clip_fields(tmp_path,
         assert image.mode == "RGB" and image.size == (1080, 1920)
         colours = image.getcolors(1080 * 1920)
         assert not [count for count, colour in colours if colour == LABEL_YELLOW]
-        assert image.crop((90, 500, 990, 580)).getcolors() == [(900 * 80, (16, 23, 38))]
+        assert image.crop((90, 500, 990, 580)).getcolors() == [(900 * 80, (16, 28, 48))]
     overlay(plan, scene, 0, tmp_path / "o.png", korean_font)
     assert (tmp_path / "o.png").read_bytes() != first
 

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}{% block title %}음성과 자막 · NewsFlow AI{% endblock %}{% block content %}
+<p><a href="/tts-settings">Azure·Google 고품질 한국어 음성 · API 키·비용 보호 →</a></p>
 <div class="easy-page narrow-page"><div class="page-head"><div><p class="eyebrow">영상에 넣을 목소리</p><h1>한국어 음성 설정</h1><p>이 PC에 설치된 Windows 한국어 음성을 고르고 미리 들어 보세요. 외부 유료 음성은 사용하지 않아요.</p></div><a class="quiet-link" href="/simple-settings">설정으로 →</a></div>
 {% if saved %}<div class="soft-notice success-notice" role="status">음성 설정을 저장했습니다. 다음 제작부터 적용됩니다.</div>{% endif %}
 {% if listened %}<div class="soft-notice success-notice" role="status">청취 결과를 기록했습니다. 판정은 사람이 적은 그대로 저장되며 앱이 바꾸지 않습니다.</div>{% endif %}

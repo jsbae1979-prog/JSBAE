@@ -32,6 +32,7 @@ from .gui.routes import router
 from .gui.scheduler_routes import router as scheduler_router
 from .gui.setup_routes import router as setup_router
 from .gui.sources_routes import router as sources_router
+from .gui.tts_settings_routes import router as tts_settings_router
 from .gui.video_ai_routes import router as video_ai_router
 from .gui.video_routes import router as video_router
 from .gui.voice_routes import router as voice_router
@@ -194,6 +195,7 @@ def create_app(
     app.include_router(sources_router)
     app.include_router(ai_settings_router)
     app.include_router(voice_router)
+    app.include_router(tts_settings_router)
     app.include_router(router)
     app.include_router(intelligence_router)
     app.include_router(video_router)
