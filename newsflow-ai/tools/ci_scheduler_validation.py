@@ -13,7 +13,7 @@ import time
 from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from ci_autopilot_validation import database_evidence, media_evidence, notice, open_job, submit, wait_job
 from ci_validation import BASE, HTTP, ROOT, child_env, start, stop
@@ -87,6 +87,22 @@ def validate(mode: str, root: Path, clock: Path, output: Path, executable: str |
             page = browser.new_page(viewport={'width':1440,'height':1050},locale='ko-KR')
             page.set_default_timeout(30000)
             page.on('pageerror',lambda error:errors.append(type(error).__name__))
+            result['schedule_posts'] = []
+            def remember(response):
+                if response.request.method != 'POST' or urlsplit(response.url).path != '/schedules':
+                    return
+                values = parse_qs(response.request.post_data or '')
+                entry = {'status':response.status,'origin':response.request.all_headers().get('origin'),
+                         'fields':{k:values.get(k) for k in ('kind','local_time','once_date')}}
+                if response.status >= 400:
+                    try:
+                        detail = response.json().get('detail')
+                        entry['error'] = ([{'loc':v.get('loc'),'type':v.get('type')} for v in detail]
+                                          if isinstance(detail,list) else 'request rejected')
+                    except ValueError:
+                        entry['error'] = 'non-JSON rejection'
+                result['schedule_posts'].append(entry)
+            page.on('response',remember)
             def guard(route):
                 if urlsplit(route.request.url).netloc != '127.0.0.1:8765':
                     external.add(urlsplit(route.request.url).netloc)

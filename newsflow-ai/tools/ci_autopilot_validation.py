@@ -26,7 +26,10 @@ def notice(name: str, value: dict) -> None:
 def submit(page, form, path: str) -> None:
     with page.expect_response(lambda r: r.request.method == "POST" and urlsplit(r.url).path == path) as response:
         form.locator('button[type="submit"]').click()
-    assert response.value.status == 303, f"POST failed: {path}"
+    assert response.value.status == 303, (
+        f"POST failed: {path}; status={response.value.status}; "
+        f"origin={response.value.request.all_headers().get('origin')}"
+    )
     assert response.value.request.all_headers().get("origin") == BASE
     # Fetch-driven HTML forms navigate only after the redirected response loads.
     page.wait_for_timeout(250)

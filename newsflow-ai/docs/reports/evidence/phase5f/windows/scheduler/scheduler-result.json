@@ -1,0 +1,113 @@
+{
+  "mode": "windows",
+  "outcome": "PASS",
+  "clock": "synthetic clock injected by test-only fixture; production timer unchanged",
+  "schedule_posts": [
+    {
+      "status": 303,
+      "origin": "http://127.0.0.1:8765",
+      "fields": {
+        "kind": [
+          "once"
+        ],
+        "local_time": [
+          "09:00"
+        ],
+        "once_date": [
+          "2031-01-02"
+        ]
+      }
+    },
+    {
+      "status": 303,
+      "origin": "http://127.0.0.1:8765",
+      "fields": {
+        "kind": [
+          "once"
+        ],
+        "local_time": [
+          "09:01"
+        ],
+        "once_date": [
+          "2031-01-02"
+        ]
+      }
+    }
+  ],
+  "mp4": {
+    "file": "scheduled-preview.mp4",
+    "sha256": "2d9cbc736fb5c8e80360c742d98e493b382034edd884c20ab309f3fc8e98b1d4",
+    "bytes": 252526,
+    "metadata": {
+      "format": "mov,mp4,m4a,3gp,3g2,mj2",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "width": 1080,
+      "height": 1920,
+      "duration": 30.021029,
+      "fps": 30.0,
+      "audio_channels": 2,
+      "playable": true
+    },
+    "browser_frame_decode": "PASS",
+    "browser_playback": "PASS (playback time advanced)",
+    "audio": "offline silence",
+    "human_voice_and_editorial_quality": "NOT VERIFIED"
+  },
+  "database": {
+    "counts": {
+      "autopilot_jobs": 1,
+      "autopilot_attempts": 6,
+      "autopilot_events": 14,
+      "autopilot_artifacts": 7,
+      "news_articles": 8,
+      "content_drafts": 1,
+      "video_projects": 1,
+      "render_jobs": 1,
+      "publish_drafts": 1,
+      "publish_validations": 1,
+      "publish_jobs": 0,
+      "publish_attempts": 0
+    },
+    "AI_providers": [
+      "offline"
+    ],
+    "human_approval_preserved": true,
+    "review_only_video": true,
+    "real_connected_accounts": 0,
+    "enabled_RSS_sources": 0
+  },
+  "restart_mp4": {
+    "file": "restart-preview.mp4",
+    "sha256": "2d9cbc736fb5c8e80360c742d98e493b382034edd884c20ab309f3fc8e98b1d4",
+    "bytes": 252526,
+    "metadata": {
+      "format": "mov,mp4,m4a,3gp,3g2,mj2",
+      "video_codec": "h264",
+      "audio_codec": "aac",
+      "width": 1080,
+      "height": 1920,
+      "duration": 30.021029,
+      "fps": 30.0,
+      "audio_channels": 2,
+      "playable": true
+    },
+    "browser_frame_decode": "PASS",
+    "browser_playback": "PASS (playback time advanced)",
+    "audio": "offline silence",
+    "human_voice_and_editorial_quality": "NOT VERIFIED"
+  },
+  "browser": "PASS",
+  "csrf_origin_post": "PASS",
+  "restart_preservation": "PASS",
+  "missed_no_catchup": "PASS",
+  "layouts": "PASS (desktop, mobile, CSS zoom 200%)",
+  "browser_external_requests": [],
+  "paid_usage_rows": 0,
+  "oauth_connections": 0,
+  "publish_attempts": 0,
+  "actual_paid_API_calls": 0,
+  "actual_SNS_calls": 0,
+  "user_PC_quality": "NOT VERIFIED",
+  "OS_task_registration": 0
+}

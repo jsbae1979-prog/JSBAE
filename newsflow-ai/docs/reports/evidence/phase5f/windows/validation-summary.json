@@ -1,0 +1,14 @@
+{
+  "tested_sha": "7a5d5066f613b493b5e43d28df1244341aadeaf8",
+  "actions_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38848843327",
+  "pytest": {
+    "tests": 2338,
+    "skipped": 3,
+    "failures": 0,
+    "errors": 0,
+    "passed": 2335
+  },
+  "user_windows11": "NOT VERIFIED",
+  "actual_os_registrations": 0,
+  "paid_ai_oauth_sns_calls": 0
+}

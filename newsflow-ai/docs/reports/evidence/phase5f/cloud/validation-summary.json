@@ -1,0 +1,17 @@
+{
+  "tested_sha": "7a5d5066f613b493b5e43d28df1244341aadeaf8",
+  "pytest": {
+    "passed": 2330,
+    "skipped": 8,
+    "failed": 0,
+    "warnings": 1
+  },
+  "ruff": "PASS",
+  "browser_operations": "PASS",
+  "browser_scheduler_mp4_restart": "PASS",
+  "actual_os_registrations": 0,
+  "paid_ai_oauth_sns_calls": 0,
+  "user_windows11": "NOT VERIFIED",
+  "browser_sha": "7a5d5066f613b493b5e43d28df1244341aadeaf8",
+  "browser_runtime_equal_to_tested_sha": true
+}

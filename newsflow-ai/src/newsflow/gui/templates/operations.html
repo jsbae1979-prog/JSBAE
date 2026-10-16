@@ -1,0 +1,23 @@
+{% extends 'base.html' %}{% block title %}내 PC 운영 점검 · NewsFlow AI{% endblock %}
+{% block content %}<div class="easy-page narrow-page operations-page">
+<div class="page-head"><div><p class="eyebrow">안심하고 다시 시작하기</p><h1>내 PC 운영 점검</h1><p>설치·예약·목소리를 확인하고 직접 사용한 결과를 남겨요.</p></div></div>
+{% if saved %}<div class="soft-notice success-notice" role="status">변경 결과를 저장했습니다.</div>{% endif %}
+<section class="easy-panel"><h2>Windows 로그인할 때 시작</h2><p>기본값은 사용 안 함입니다. 지금 로그인한 사용자에게만 적용되며 관리자 권한이나 비밀번호를 요구하지 않아요.</p>
+<p><strong>현재 상태: {% if startup.status == 'enabled' %}등록됨{% elif startup.status == 'disabled' %}사용 안 함{% elif startup.status == 'conflict' %}다른 설치 또는 변경된 작업 · 확인 필요{% else %}확인 필요{% endif %}</strong></p>
+{% if startup.message %}<p role="status">{{ startup.message }}</p>{% endif %}
+<p>로그인 후 앱만 실행합니다. 꺼진 PC를 켜거나 절전 상태를 깨우지 않아요. 유료 AI 제작·계정 연결·SNS 게시는 시작하지 않습니다.</p>
+<p>사용 중인 포트가 있으면 새 창의 실행을 중단합니다. 다른 포트로 바꾸지 않으며 내 PC 안에서만 접속할 수 있어요.</p>
+{% if startup.status in ['disabled','enabled'] %}<form method="post" action="/operations/startup" data-easy-form>{{ csrf_field() }}
+<input type="hidden" name="revision" value="{{ startup.revision }}"><input type="hidden" name="command" value="{{ 'remove' if startup.status == 'enabled' else 'register' }}">
+<label class="operations-consent"><input type="checkbox" name="consent" value="true" required> {{ '자동 시작 작업만 해제합니다. 실행 중인 앱과 데이터는 유지됩니다.' if startup.status == 'enabled' else '다음 Windows 로그인부터 앱을 시작하는 작업 등록에 동의합니다.' }}</label>
+<button type="submit" {% if startup.status == 'disabled' and not startup.prepared %}disabled{% endif %}>{{ '자동 시작 해제' if startup.status == 'enabled' else '동의하고 자동 시작 등록' }}</button>
+{% if not startup.prepared %}<p>먼저 run.bat로 설치를 마쳐 주세요. 업데이트 뒤에도 run.bat를 한 번 실행하세요.</p>{% endif %}<p class="form-feedback" data-submit-error role="alert"></p></form>{% endif %}
+<p>최근 자동 시작: {{ runtime }}</p><p>종료하려면 실행 창에서 Ctrl+C를 누르세요. 브라우저 탭만 닫으면 앱은 계속 실행됩니다.</p></section>
+<section class="easy-panel"><h2>재부팅·절전 후 예약</h2><p>앱이 실행 중일 때만 예약 시간이 적용됩니다. 다시 시작하거나 절전에서 돌아왔을 때 90초가 지난 예약은 건너뛰고 다음 시간을 기다려요. 밀린 영상을 한꺼번에 만들지 않습니다.</p><p>제작 중 중단된 작업은 성공으로 바꾸지 않습니다. 작업 화면에서 결과를 확인하고 다시 시도하세요. 이미 만든 영상과 사용자가 검토할 내용은 유지됩니다.</p><a href="/schedules">예약과 다음 실행 시각 확인 →</a> · <a href="/autopilot">제작 진행·실패 원인 확인 →</a></section>
+<section class="easy-panel"><h2>한국어 목소리와 영상</h2><p>Windows에 한국어 음성이 있어도 앱이 사용하는 SAPI 목록에 보이지 않을 수 있어요. OneCore 전용 음성과 구분해서 안내합니다. 앱은 음성을 설치하거나 레지스트리를 바꾸지 않습니다.</p><p>숫자·날짜·영문 약어·금액을 직접 듣고, 영상의 자막과 맞는지 확인하세요. 자동 검사 성공은 발음 품질을 보장하지 않습니다.</p><p>청취 기록: {{ listening.label if listening else 'NOT VERIFIED · 아직 직접 평가하지 않았습니다.' }}</p><a href="/voices">음성 확인·샘플 듣기·청취 기록 →</a> · <a href="/videos">30·45·60초 영상 확인 →</a> · <a href="/setup">설치 준비 다시 점검 →</a></section>
+<section class="easy-panel"><h2>내 PC에서 직접 확인한 결과</h2><p>기본값은 NOT VERIFIED입니다. 직접 확인하지 않은 항목은 그대로 두세요. 이 기록은 사용자 자가 보고이며 CI 테스트 결과와 별개입니다. 유료 API·계정 연결·게시 시험은 하지 마세요.</p>
+<form method="post" action="/operations/review" data-easy-form>{{ csrf_field() }}<input type="hidden" name="revision" value="{{ review.revision }}">
+{% for key,label in items.items() %}<label>{{ label }}<select name="{{ key }}">{% for value in verdicts %}<option value="{{ value }}" {% if review['items'][key] == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>{% endfor %}
+<label class="operations-consent"><input type="checkbox" name="consent" value="true" required> 직접 확인한 결과만 기록했습니다. 자동 테스트 결과를 대신 적지 않았습니다.</label><button type="submit">확인 결과 저장</button><p class="form-feedback" data-submit-error role="alert"></p></form>
+<p>기록 출처: {{ "사용자 직접 입력" if review.source == "human_self_report" else "아직 없음" }} · {% if review.at %}{{ reviewed_at }}{% else %}아직 기록하지 않았습니다.{% endif %}</p>
+<a href="/operations/evidence.json" download>내 점검 결과 내려받기 (JSON)</a><p>키·토큰·사용자 이름·전체 폴더 경로는 포함하지 않습니다. 한국어 음성 청취 기록은 음성 화면에서 별도로 관리해요.</p></section></div>{% endblock %}

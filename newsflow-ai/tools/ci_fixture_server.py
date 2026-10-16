@@ -30,6 +30,7 @@ def main() -> None:
     parser.add_argument("--data-dir", type=Path, required=True)
     parser.add_argument("--fake-video-provider", action="store_true")
     parser.add_argument("--scheduler-clock-file", type=Path)  # synthetic clock, test tool only
+    parser.add_argument("--fake-startup", action="store_true")  # In-memory OS adapter, test tool only
     args = parser.parse_args()
     fixture = Path(__file__).resolve().parents[1] / "tests/fixtures/normal.xml"
     video_provider = None
@@ -41,6 +42,19 @@ def main() -> None:
         Settings(data_dir=args.data_dir), SlowFake({"https://example.com/rss": fixture.read_bytes()}),
         video_provider=video_provider,
     )
+    if args.fake_startup:
+        import hashlib
+
+        from newsflow.operations.startup import FakeTaskScheduler, StartupPlan, StartupService
+        root = args.data_dir / 'synthetic-install'
+        plan = StartupPlan(root, args.data_dir, 'S-1-5-21-100-200-300-1001')
+        plan.python.parent.mkdir(parents=True, exist_ok=True)
+        plan.python.write_bytes(b'synthetic, never executed')
+        digest = hashlib.sha256(str((3, 12)).encode())
+        for name in ('pyproject.toml', 'requirements-dev.lock'):
+            (root/name).write_bytes(b'fixture'); digest.update(b'fixture')
+        (root/'.venv/.newsflow-installed').write_text(digest.hexdigest(), encoding='ascii')
+        app.state.startup_service = StartupService(plan, FakeTaskScheduler())
     if args.scheduler_clock_file:
         def synthetic_clock():
             value = datetime.fromisoformat(args.scheduler_clock_file.read_text(encoding="utf-8"))

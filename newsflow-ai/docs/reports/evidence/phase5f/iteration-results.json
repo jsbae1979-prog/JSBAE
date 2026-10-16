@@ -1,0 +1,27 @@
+{
+  "failed_run": {
+    "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38847047733",
+    "sha": "7fbe20c734b8dc9220d06f35db671dea2aec30ab",
+    "native_subset": "41 passed, 1 failed",
+    "cause": "Hosted runner uses RID 500; production plan correctly rejected this account. Test now validates a synthetic principal in a transient native COM definition and separately asserts real admin rejection. Production restrictions unchanged."
+  },
+  "superseded_cancelled_runs": [
+    38845797203,
+    38845950930,
+    38846096945
+  ],
+  "second_failed_run": {
+    "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/38847346183",
+    "sha": "51d71691946c640d91692897c396f7df239f175b",
+    "full_pytest": {
+      "passed": 2335,
+      "skipped": 3,
+      "failed": 0
+    },
+    "native_startup_subset": {
+      "passed": 42,
+      "failed": 0
+    },
+    "failure": "Subsequent scheduler Chrome POST /schedules rejected; initial diagnostic did not record status or fields. Investigating with allowlisted synthetic request metadata; no CSRF relaxation."
+  }
+}
