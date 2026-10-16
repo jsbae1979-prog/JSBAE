@@ -204,3 +204,18 @@ def test_native_windows_schema_roundtrip_without_registration(startup):
     plan = StartupPlan(startup.plan.root,startup.plan.data_dir,sid)
     response = native({'operation':'validate','sid':sid,'name':plan.name,'xml':plan.xml()})
     assert owned(plan,response['xml'])
+
+
+@pytest.mark.parametrize('elevated',[True,None,'false'])
+def test_elevated_or_unknown_identity_cannot_operate(monkeypatch,tmp_path,elevated):
+    import newsflow.operations.startup as module
+    adapter = Mock(return_value={'sid':SID,'elevated':elevated})
+    monkeypatch.setattr(module,'native',adapter)
+    with pytest.raises(StartupError):
+        module.local_service(tmp_path)
+    adapter.assert_called_once_with({'operation':'identity'})
+
+
+def test_current_user_azure_ad_sid_is_supported(tmp_path):
+    plan = StartupPlan(tmp_path,tmp_path,'S-1-12-1-100-200-300-400')
+    assert owned(plan,plan.xml())

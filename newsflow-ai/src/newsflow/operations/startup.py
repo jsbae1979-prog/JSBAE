@@ -27,8 +27,11 @@ $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding
 try {
   $p = [Console]::In.ReadToEnd() | ConvertFrom-Json
-  $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
-  if ($p.operation -eq 'identity') { @{sid=$sid} | ConvertTo-Json -Compress; exit 0 }
+  $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+  $sid = $identity.User.Value
+  $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+  $elevated = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+  if ($p.operation -eq 'identity') { @{sid=$sid;elevated=$elevated} | ConvertTo-Json -Compress; exit 0 }
   if ($sid -ne $p.sid) { throw 'identity' }
   $s = New-Object -ComObject 'Schedule.Service'; $s.Connect(); $f = $s.GetFolder('\')
   if ($p.operation -eq 'validate') {
@@ -42,6 +45,7 @@ try {
       else { throw }
     }
   } elseif ($p.operation -eq 'create') {
+    if ($elevated) { throw 'elevated registration is forbidden' }
     # TASK_CREATE=2, TASK_LOGON_INTERACTIVE_TOKEN=3. Never update/overwrite an existing task.
     $null = $f.RegisterTask($p.name, $p.xml, 2, $sid, $null, 3, $null)
     @{ok=$true} | ConvertTo-Json -Compress
@@ -78,7 +82,7 @@ class StartupPlan:
     sid: str
 
     def __post_init__(self) -> None:
-        if not re.fullmatch(r'S-1-5-21-(?:[0-9]+-){2}[0-9]+-[0-9]+', self.sid):
+        if not re.fullmatch(r'S-1-(?:5-21|12-1)-(?:[0-9]+-){3}[0-9]+', self.sid):
             raise StartupError('현재 Windows 사용자 계정을 확인하세요.')
         for path in (self.root, self.data_dir):
             if not path.is_absolute() or any(c in str(path) for c in '\r\n\x00"'):
@@ -246,5 +250,8 @@ class StartupService:
 
 
 def local_service(data_dir: Path) -> StartupService:
-    sid = native({'operation':'identity'}).get('sid','')
+    identity = native({'operation':'identity'})
+    if identity.get('elevated') is not False:
+        raise StartupError('관리자 권한 없이 run.bat를 실행한 뒤 자동 시작을 설정하세요.')
+    sid = identity.get('sid','')
     return StartupService(StartupPlan(Path(__file__).resolve().parents[3], data_dir.resolve(), sid), WindowsTaskScheduler())
