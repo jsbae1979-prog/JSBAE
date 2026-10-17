@@ -26,6 +26,7 @@ from .db.session import make_engine, migrate, session_factory
 from .gui.ai_settings_routes import router as ai_settings_router
 from .gui.api_settings_routes import router as api_settings_router
 from .gui.autopilot_routes import router as autopilot_router
+from .gui.instagram_routes import router as instagram_router
 from .gui.intelligence_routes import router as intelligence_router
 from .gui.operations_routes import router as operations_router
 from .gui.production_routes import router as production_router
@@ -44,9 +45,11 @@ from .intelligence.settings import external_ready
 from .news.collector import Collector
 from .news.rss_adapter import PublicRSSAdapter, RSSAdapter
 from .news.service import CollectionCoordinator, NewsService
+from .oauth.instagram import InstagramConnectionService
 from .oauth.lifecycle import expire_production_credentials, recover_production_lifecycle
 from .oauth.production_vault import recover_credential_rotations
 from .oauth.youtube import YouTubeConnectionService
+from .publishing.instagram_live import InstagramPublishingService
 from .publishing.live import LivePublishingService
 from .scheduler.service import Scheduler
 from .video.ai.contracts import VideoProvider
@@ -102,6 +105,10 @@ def create_app(
     youtube.recover()
     live_publishing = LivePublishingService(sessions, video.outputs, youtube)
     live_publishing.recover()
+    instagram = InstagramConnectionService(sessions, settings.data_dir)
+    instagram.recover()
+    instagram_publishing = InstagramPublishingService(sessions, video.outputs, instagram)
+    instagram_publishing.recover()
     ai_keys = AIKeyStore(settings.data_dir)
     api_keys = {"openai": ai_keys, "claude_api": AnthropicKeyStore(settings.data_dir)}
     autopilot_backend = PipelineBackend(
@@ -127,6 +134,7 @@ def create_app(
             yield
         finally:
             youtube.close()
+            instagram.close()
             scheduler.close()
             video_ai.close()
             autopilot.close()
@@ -141,6 +149,8 @@ def create_app(
     app.state.video = video
     app.state.youtube = youtube
     app.state.live_publishing = live_publishing
+    app.state.instagram = instagram
+    app.state.instagram_publishing = instagram_publishing
     app.state.video_ai = video_ai
     app.state.scheduler = scheduler
     app.state.autopilot = autopilot
@@ -216,6 +226,7 @@ def create_app(
     app.include_router(video_ai_router)
     app.include_router(publishing_router)
     app.include_router(youtube_router)
+    app.include_router(instagram_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
     return app
 

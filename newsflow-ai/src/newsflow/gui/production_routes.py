@@ -15,6 +15,7 @@ from newsflow.intelligence.settings import SettingsError, studio_model
 from newsflow.video.engine import FFmpegAdapter, RenderError
 from newsflow.video.tts import TTSError
 
+from .instagram_routes import connection_context as instagram_context
 from .production_context import ACQUISITION_LABELS, CATEGORY_LABELS, PERIOD_LABELS, acquisition_preferences
 from .production_status import production_context
 from .routes import go, page
@@ -60,7 +61,8 @@ def settings_page(request: Request, saved: str = ""):
                "key": "API Key를 저장했습니다. 실제 연결은 미검증입니다.", "key_removed": "저장된 API Key를 삭제했습니다."}
     response = page(request, "simple_settings.html", active="simple-settings", saved=saved,
                     saved_notice=notices.get(saved, ""), settings_overview=_settings_overview(context),
-                    rates=RATE_CHOICES, pauses=PAUSE_CHOICES, youtube=connection_context(request), **context)
+                    rates=RATE_CHOICES, pauses=PAUSE_CHOICES, youtube=connection_context(request),
+                    instagram=instagram_context(request), **context)
     response.headers["Cache-Control"] = "no-store"
     return response
 

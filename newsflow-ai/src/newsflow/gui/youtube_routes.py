@@ -17,7 +17,7 @@ def connection_context(request: Request) -> dict:
                                             "pending": False, "accounts": []}
 
 
-def publishing_context(request: Request, render_job_id: int | None) -> dict | None:
+def publishing_context(request: Request, render_job_id: int | None, *, platform: str = "youtube") -> dict | None:
     if render_job_id is None:
         return None
     with request.app.state.sessions() as session:
@@ -26,7 +26,7 @@ def publishing_context(request: Request, render_job_id: int | None) -> dict | No
         if not project:
             return None
         draft = session.scalar(select(PublishDraft).where(
-            PublishDraft.render_job_id == render_job_id, PublishDraft.platform == "youtube",
+            PublishDraft.render_job_id == render_job_id, PublishDraft.platform == platform,
         ).order_by(PublishDraft.id.desc()).limit(1))
         validation = session.scalar(select(PublishValidation).where(
             PublishValidation.draft_id == draft.id,
@@ -34,11 +34,12 @@ def publishing_context(request: Request, render_job_id: int | None) -> dict | No
         local_checks = [item for item in validation.results if item["key"] not in REAL_BLOCKERS] if validation else []
         reviewed = bool(draft and validation and validation.draft_revision == draft.revision
                         and local_checks and all(item["status"] == "pass" for item in local_checks))
-        live = getattr(request.app.state, "live_publishing", None)
+        live = getattr(request.app.state, "instagram_publishing" if platform == "instagram" else "live_publishing", None)
+        connections = getattr(request.app.state, platform, None)
         results = live.results() if live else []
         return {"render_job_id": render_job_id, "title": project.title, "draft": draft,
                 "sources": project.sources, "checks": local_checks, "reviewed": reviewed,
-                "accounts": connection_context(request)["accounts"],
+                "accounts": connections.status()["accounts"] if connections else [],
                 "results": [item for item in results if item.get("render_job_id") == render_job_id]}
 
 

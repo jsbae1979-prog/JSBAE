@@ -1,9 +1,8 @@
 name: NewsFlow YouTube Publishing Windows
 
 on:
-  push:
-    branches: [codex/newsflow-core-production]
-    paths-ignore: ['newsflow-ai/docs/**']
+  # A is accepted. Keep its full suite available without repeating it on every B commit.
+  workflow_dispatch:
 
 permissions:
   contents: read

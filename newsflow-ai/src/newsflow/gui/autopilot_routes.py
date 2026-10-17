@@ -297,10 +297,11 @@ def _workspace_video(
 @router.get("/", response_class=HTMLResponse)
 def home(
     request: Request, task: str | None = None, video: int | None = None, show: str = "",
-    guide: str = "", flow: str | None = None,
+    guide: str = "", flow: str | None = None, publish_platform: str = "youtube",
 ) -> HTMLResponse:
     if (show not in {"", "tasks", "videos"} or sum((task is not None, video is not None, bool(guide))) > 1
-            or video is not None and video < 1 or guide and guide not in GUIDES):
+            or video is not None and video < 1 or guide and guide not in GUIDES
+            or publish_platform not in PLATFORMS):
         raise HTTPException(422, "작업 또는 영상 하나를 선택해 주세요.")
     jobs = request.app.state.autopilot.list_jobs(100)
     ready = readiness(request)
@@ -359,7 +360,10 @@ def home(
             completed=visible_videos, workspace_videos=visible_videos, video_count=len(completed),
             selected_task_context=selected_task_context, selected_video=selected_video, workspace=True, show=show,
             workspace_guide_context=workspace_guide_context,
-            youtube_publish=publishing_context(request, video),
+            publish_platform=publish_platform,
+            youtube_publish=publishing_context(request, video) if publish_platform == "youtube" else None,
+            instagram_publish=publishing_context(request, video, platform="instagram")
+            if publish_platform == "instagram" else None,
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
             recent_news=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(5))),
             **overview,

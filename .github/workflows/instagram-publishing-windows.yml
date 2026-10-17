@@ -1,0 +1,69 @@
+name: NewsFlow Instagram Publishing Windows
+
+on:
+  push:
+    branches: [codex/newsflow-core-production]
+    paths-ignore: ['newsflow-ai/docs/**']
+
+permissions:
+  contents: read
+
+jobs:
+  instagram-publishing:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_CLAUDE_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      ANTHROPIC_AUTH_TOKEN: ''
+      CLAUDE_CODE_OAUTH_TOKEN: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Isolated test data
+        run: |
+          "NEWSFLOW_DATA_DIR=$env:RUNNER_TEMP/newsflow-instagram-${{ matrix.python }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies and pip check
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Ruff - Instagram change scope
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/main.py src/newsflow/gui/instagram_routes.py src/newsflow/gui/youtube_routes.py src/newsflow/gui/production_routes.py src/newsflow/gui/autopilot_routes.py src/newsflow/oauth/instagram.py src/newsflow/publishing/instagram.py src/newsflow/publishing/instagram_live.py tests/test_instagram_connection.py tests/test_instagram_upload.py tests/test_instagram_live.py tests/test_instagram_gui.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Fake connection, MP4 transfer, public approval and duplicate protection
+        run: |
+          .venv/Scripts/python -m pytest -q -rs tests/test_instagram_connection.py tests/test_instagram_upload.py tests/test_instagram_live.py tests/test_instagram_gui.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: YouTube shared workspace impact only
+        run: |
+          .venv/Scripts/python -m pytest -q -rs tests/test_youtube_gui.py::test_settings_show_channel_without_login_upload_or_setting_changes tests/test_youtube_gui.py::test_review_ready_channel_and_sources_are_kept_in_same_workspace tests/test_youtube_gui.py::test_private_upload_is_explicit_and_refresh_does_not_repeat_it
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # Injected Fake transports + isolated DB/media only. No real Meta login,
+      # live uploads/publication, operating app restart, AI calls or CLI checks.
