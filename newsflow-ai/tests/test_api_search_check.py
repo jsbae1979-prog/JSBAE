@@ -12,7 +12,6 @@ from newsflow.intelligence.api_connection import check_api_connection
 from newsflow.intelligence.api_search_check import check_api_search, read_search_check
 from newsflow.intelligence.api_settings import (
     FIRST_SEARCH_OUTPUT_TOKENS,
-    SEARCH_CONTEXT_BOUNDS,
     APIBudgetService,
     APISettingsError,
     api_readiness,
@@ -149,8 +148,9 @@ def test_first_search_validates_evidence_without_import_or_other_setting_changes
     assert summary["tool_ids"] and summary["reservation_id"]
     ledger = rows(sessions)
     assert len(ledger) == 1 and ledger[0].status == "success"
-    assert ledger[0].test_only is False and Decimal(ledger[0].reserved_usd) > 0
-    assert ledger[0].bounds["prompt_tokens"] == SEARCH_CONTEXT_BOUNDS[MODELS[provider]]
+    assert ledger[0].test_only is False and Decimal(ledger[0].reserved_usd) == 0
+    assert ledger[0].bounds == {"accounting": "reported_usage", "search_calls": 1}
+    assert Decimal(ledger[0].estimated_usd) > 0
     assert ledger[0].usage["search_calls"] == 1
     after = settings_values(sessions)
     proof_updates = {f"api_{provider}_search_verified_at", f"api_{provider}_request_succeeded_at"}
@@ -198,13 +198,13 @@ def test_unknown_outcome_survives_reauthentication_and_blocks_new_attempt(state)
     result = send_search(state, timeout)
     assert result.code == "unknown" and KEY not in repr(result)
     ledger = rows(state["sessions"])
-    assert ledger[0].status == "unknown" and Decimal(ledger[0].reserved_usd) > 0
+    assert ledger[0].status == "unknown" and Decimal(ledger[0].reserved_usd) == 0
     authenticate(state)
     assert send_search(state, timeout).code == "blocked"
     assert len(calls) == 1 and len(rows(state["sessions"])) == 1
 
 
-@pytest.mark.parametrize("problem", ["empty", "invalid_json", "missing_usage", "over_bound", "secret_echo"])
+@pytest.mark.parametrize("problem", ["empty", "invalid_json", "missing_usage", "malformed_usage", "secret_echo"])
 def test_bad_search_or_usage_never_creates_proof_or_releases_reservation(state, problem):
     document = response(state["provider"])
     if problem == "empty":
@@ -214,8 +214,8 @@ def test_bad_search_or_usage_never_creates_proof_or_releases_reservation(state, 
             document["content"][1]["content"] = []
     elif problem == "missing_usage":
         document.pop("usage")
-    elif problem == "over_bound":
-        document["usage"]["output_tokens"] = FIRST_SEARCH_OUTPUT_TOKENS + 1
+    elif problem == "malformed_usage":
+        document["usage"]["output_tokens"] = "unknown"
     elif problem == "secret_echo":
         document["secret"] = KEY
     calls = []
@@ -228,8 +228,8 @@ def test_bad_search_or_usage_never_creates_proof_or_releases_reservation(state, 
     assert not result.ok and len(calls) == 1
     assert not read_api_settings(state["sessions"], state["provider"]).search_verified_at
     ledger = rows(state["sessions"])
-    assert len(ledger) == 1 and Decimal(ledger[0].reserved_usd) > 0
-    if problem in {"missing_usage", "over_bound"}:
+    assert len(ledger) == 1 and Decimal(ledger[0].reserved_usd) == 0
+    if problem in {"missing_usage", "malformed_usage"}:
         assert ledger[0].status == "unknown" and result.code == "unknown"
     assert send_search(state, send).code == "blocked" and len(calls) == 1
     assert KEY not in json.dumps(settings_values(state["sessions"]))
@@ -254,4 +254,22 @@ def test_late_search_cannot_verify_changed_model_key_or_authentication(state, ch
     assert send_search(state, send).code == "stale"
     assert not read_api_settings(sessions, provider).search_verified_at
     assert read_search_check(sessions, provider) == {}
-    assert len(rows(sessions)) == 1 and Decimal(rows(sessions)[0].reserved_usd) > 0
+    assert len(rows(sessions)) == 1 and Decimal(rows(sessions)[0].reserved_usd) == 0
+
+
+def test_reported_output_above_requested_tokens_does_not_invalidate_valid_result(state):
+    document = response(state["provider"])
+    document["usage"]["output_tokens"] = FIRST_SEARCH_OUTPUT_TOKENS + 1
+    calls = []
+
+    def send(*args):
+        calls.append(True)
+        return json.dumps(document).encode()
+
+    assert send_search(state, send).ok and len(calls) == 1
+    ledger = rows(state["sessions"])
+    assert len(ledger) == 1 and ledger[0].status == "success"
+    assert ledger[0].usage["completion_tokens"] == FIRST_SEARCH_OUTPUT_TOKENS + 1
+    assert Decimal(ledger[0].reserved_usd) == 0 and Decimal(ledger[0].estimated_usd) > 0
+    assert read_api_settings(state["sessions"], state["provider"]).search_verified_at
+    assert send_search(state, send).code == "blocked" and len(calls) == 1

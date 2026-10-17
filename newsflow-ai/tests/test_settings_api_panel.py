@@ -73,11 +73,13 @@ def test_key_registration_is_direct_and_costs_use_one_accessible_dialog(provider
 
 @pytest.mark.parametrize("provider", ["openai", "claude_api"])
 def test_mandatory_approvals_and_budget_are_visible_in_dialog_and_not_prechecked(provider):
-    _, panel = render_panel(provider)
+    html, panel = render_panel(provider)
     for name in ("approved", "search_enabled", "search_approved", "billing_confirmed",
-                 "request_limit_usd", "monthly_limit_usd", "account_remaining_usd"):
+                 "monthly_limit_usd", "account_remaining_usd"):
         field, parents = panel.field(name)
         assert parents == ("dialog", "form") and "checked" not in field
+    assert not any(field.get("name") == "request_limit_usd" for field, _ in panel.inputs)
+    assert "최종 비용 상한을 보장하지 않습니다" in html
     assert "details" in panel.field("input_price_per_1m")[1]
     assert "details" in panel.field("search_price_per_1k")[1]
 

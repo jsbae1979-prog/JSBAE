@@ -137,7 +137,7 @@ def test_official_search_usage_field_is_recorded(sessions, store):
 @pytest.mark.parametrize("value", ["NaN", "Infinity", "-1", "1000001", "0.000000001"])
 def test_invalid_money_fails_closed(sessions, value):
     with pytest.raises(APISettingsError):
-        configured(sessions, request_limit_usd=value)
+        configured(sessions, monthly_limit_usd=value)
 
 
 def test_fake_uses_all_budget_gates_but_never_records_actual_authentication(sessions, store):
@@ -149,8 +149,9 @@ def test_fake_uses_all_budget_gates_but_never_records_actual_authentication(sess
     assert not api_readiness(sessions, "claude_api", store)["authentication_verified"]
     state = budget.readiness("claude_api", store)
     assert state["usage"]["test_calls"] == 1
-    assert Decimal(state["usage"]["held_usd"]) == Decimal("0.018")
-    assert Decimal(state["usage"]["estimated_usd"]) < Decimal(state["usage"]["held_usd"])
+    assert Decimal(state["usage"]["held_usd"]) == 0
+    assert Decimal(state["usage"]["estimated_usd"]) == Decimal("0.000990")
+    assert state["usage"]["vendor_billing"] == "NOT VERIFIED"
 
 
 def test_duplicate_id_blocked_after_success_restart_and_failed_result(sessions, store):
@@ -161,7 +162,7 @@ def test_duplicate_id_blocked_after_success_restart_and_failed_result(sessions, 
     with pytest.raises(APISettingsError, match="이미 기록된 요청"):
         reserve(FakeAPIBudgetService(sessions), store)
     with sessions() as session:
-        assert session.get(APIRequestReservation, result.id).reserved_usd == "0.018000"
+        assert Decimal(session.get(APIRequestReservation, result.id).reserved_usd) == 0
 
 
 @pytest.mark.parametrize("status", ["unknown", "cancelled"])
@@ -174,7 +175,7 @@ def test_uncertain_outcome_retains_reservation_and_blocks_next_request(sessions,
         reserve(FakeAPIBudgetService(sessions), store, "analysis:2")
 
 
-def test_malformed_or_over_bound_usage_blocks_and_never_releases_cost(sessions, store):
+def test_reported_usage_exceeding_requested_tokens_is_recorded_without_guessing_cost(sessions, store):
     configured(sessions)
     budget = FakeAPIBudgetService(sessions)
     result = reserve(budget, store)
@@ -182,35 +183,120 @@ def test_malformed_or_over_bound_usage_blocks_and_never_releases_cost(sessions, 
                                                      "api_key": KEY})
     with sessions() as session:
         row = session.get(APIRequestReservation, result.id)
-        assert row.status == "unknown"
-        assert Decimal(row.reserved_usd) > result.reserved_usd
+        assert row.status == "success"
+        assert Decimal(row.reserved_usd) == result.reserved_usd == 0
+        assert Decimal(row.estimated_usd) == Decimal("0.018018")
         assert KEY not in str(row.usage)
 
 
-def test_search_reserves_full_model_context_and_official_price_floor(sessions, store):
+def test_search_does_not_price_full_model_context_but_retains_reported_usage_prices(sessions, store):
     configured(sessions, input_price_per_1m="0.001", output_price_per_1m="0.001", search_price_per_1k="0.001")
     budget = FakeAPIBudgetService(sessions)
     result = reserve(budget, store, kind="search", max_search_calls=1)
-    assert result.reserved_usd == Decimal("3.025000")
+    assert result.reserved_usd == 0
     with sessions() as session:
         row = session.get(APIRequestReservation, result.id)
-        assert row.bounds["prompt_tokens"] == 1_000_000
+        assert row.bounds == {"accounting": "reported_usage", "search_calls": 1}
         assert row.prices == {"input": "3", "output": "15", "search": "10"}
 
 
-def test_request_monthly_and_account_limits(sessions, store):
+def test_monthly_and_account_limits_use_reported_usage_not_ignored_request_limit(sessions, store):
     budget = FakeAPIBudgetService(sessions)
-    configured(sessions, request_limit_usd="0.01")
-    with pytest.raises(APISettingsError, match="USD 한도"):
-        reserve(budget, store)
-    configured(sessions, monthly_limit_usd="0.02")
+    configured(sessions, request_limit_usd="0.000001", monthly_limit_usd="0.01", account_remaining_usd="0.01")
     result = reserve(budget, store)
-    budget.finish(result.id, status="success", usage={"prompt_tokens": 1, "completion_tokens": 1})
-    with pytest.raises(APISettingsError, match="USD 한도"):
+    budget.finish(result.id, status="success", usage={"prompt_tokens": 1000, "completion_tokens": 1000})
+    with pytest.raises(APISettingsError, match="월별"):
         reserve(budget, store, "analysis:2")
-    configured(sessions, account_remaining_usd="0.01")
+    # Updating a monthly limit must not renew the vendor-balance confirmation.
+    with sessions.begin() as session:
+        _set(session, "api_claude_api_monthly_limit_usd", "30")
     with pytest.raises(APISettingsError, match="잔여 예산"):
         reserve(budget, store, "analysis:2")
+
+
+@pytest.mark.parametrize("usage", [None, {}, {"prompt_tokens": 1},
+                                   {"prompt_tokens": "1", "completion_tokens": 2},
+                                   {"prompt_tokens": True, "completion_tokens": 2}])
+def test_missing_or_malformed_reported_usage_blocks_new_requests(sessions, store, usage):
+    configured(sessions)
+    budget = FakeAPIBudgetService(sessions)
+    result = reserve(budget, store)
+    budget.finish(result.id, status="success", usage=usage)
+    with sessions() as session:
+        row = session.get(APIRequestReservation, result.id)
+        assert row.status == "unknown" and row.estimated_usd is None
+        assert Decimal(row.reserved_usd) == 0
+    with pytest.raises(APISettingsError, match="결과 불명"):
+        reserve(budget, store, "analysis:2")
+
+
+def test_reported_search_count_above_one_still_blocks(sessions, store):
+    configured(sessions)
+    budget = FakeAPIBudgetService(sessions)
+    result = reserve(budget, store, kind="search", max_search_calls=1)
+    budget.finish(result.id, status="success",
+                  usage={"prompt_tokens": 100, "completion_tokens": 50, "search_calls": 2})
+    with sessions() as session:
+        row = session.get(APIRequestReservation, result.id)
+        assert row.status == "unknown" and row.usage["search_calls"] == 2
+    with pytest.raises(APISettingsError, match="결과 불명"):
+        reserve(budget, store, "analysis:2")
+
+
+def test_old_large_reservation_is_preserved_without_counting_it_as_a_bill(sessions, store):
+    configured(sessions, request_limit_usd="0.000001", monthly_limit_usd="1", account_remaining_usd="1")
+    with sessions.begin() as session:
+        old = APIRequestReservation(id="old", request_id="old:search", provider="claude_api", kind="search",
+                                    model="claude-sonnet-4-6", status="failed", reserved_usd="999.00",
+                                    estimated_usd="0.01", bounds={"prompt_tokens": 1000000,
+                                    "completion_tokens": 3000, "search_calls": 1},
+                                    prices={"input": "3", "output": "15", "search": "10"},
+                                    usage={"prompt_tokens": 0, "completion_tokens": 0, "search_calls": 1},
+                                    test_only=True, created_at=utcnow(), finished_at=utcnow())
+        session.add(old)
+    with sessions() as session:
+        row = session.get(APIRequestReservation, "old")
+        snapshot = {column.name: getattr(row, column.name) for column in row.__table__.columns}
+    budget = FakeAPIBudgetService(sessions)
+    assert budget.readiness("claude_api", store)["ready"]
+    result = reserve(budget, store, kind="search", max_input_tokens=1000000,
+                     max_output_tokens=9000, max_search_calls=1)
+    assert result.reserved_usd == 0
+    with sessions() as session:
+        row = session.get(APIRequestReservation, "old")
+        assert {column.name: getattr(row, column.name) for column in row.__table__.columns} == snapshot
+
+
+def test_optional_request_limit_omission_preserves_existing_setting(sessions):
+    old = configured(sessions, request_limit_usd="3.10")
+    saved = save_api_settings(
+        sessions, "claude_api", model=old.model, approved=old.approved,
+        search_enabled=old.search_enabled, search_approved=old.search_approved,
+        monthly_limit_usd=str(old.monthly_limit_usd), input_price_per_1m=str(old.input_price_per_1m),
+        output_price_per_1m=str(old.output_price_per_1m), search_price_per_1k=str(old.search_price_per_1k),
+        billing_confirmed=False, account_remaining_usd=str(old.account_remaining_usd),
+    )
+    assert saved.request_limit_usd == Decimal("3.10")
+    assert saved.monthly_limit_usd == old.monthly_limit_usd
+    assert saved.approved_at == old.approved_at and saved.search_approved_at == old.search_approved_at
+
+
+def test_legacy_reserved_request_keeps_its_original_finish_semantics(sessions, store):
+    configured(sessions)
+    with sessions.begin() as session:
+        session.add(APIRequestReservation(
+            id="legacy", request_id="legacy:search", provider="claude_api", kind="search",
+            model="claude-sonnet-4-6", status="reserved", reserved_usd="3.055",
+            bounds={"prompt_tokens": 1000000, "completion_tokens": 3000, "search_calls": 1},
+            prices={"input": "3", "output": "15", "search": "10"}, usage={}, test_only=True,
+            created_at=utcnow(),
+        ))
+    APIBudgetService(sessions).finish("legacy", status="failed",
+                                    usage={"prompt_tokens": 11651, "completion_tokens": 3060, "search_calls": 1})
+    with sessions() as session:
+        row = session.get(APIRequestReservation, "legacy")
+        assert row.status == "unknown" and row.reserved_usd == "3.055"
+        assert row.estimated_usd == "0.090853"
 
 
 def test_stale_account_evidence_and_unknown_model_block(sessions, store):

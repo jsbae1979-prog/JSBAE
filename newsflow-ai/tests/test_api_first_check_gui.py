@@ -85,7 +85,11 @@ def test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth(c
         if suffix == "check-search":
             button = next(node for node in doc.find("button", type="submit") if form in node.ancestors)
             assert "disabled" in button.attrs
-    assert "검색 요청 1회" in response.text and "3,000토큰" in response.text
+    assert "검색 요청 1회" in response.text and "9,000토큰" in response.text
+    assert not doc.find("input", name="max_cost_usd")
+    assert not doc.find("input", name="request_limit_usd")
+    assert "응답의 사용량을 받아 비용을 집계" in response.text
+    assert "최종 비용이나 월 예산 이내 완료를 보장하지 않습니다" in response.text
     assert calls == [] and settings(app) == before and encrypted == store.path.read_bytes()
     assert KEY not in response.text
 
@@ -101,7 +105,7 @@ def test_explicit_auth_then_search_prg_and_refresh_never_repeat(client, app, pre
     auth = read_api_settings(app.state.sessions, provider)
     assert auth.authentication_verified_at and not auth.search_verified_at
     form = {"csrf_token": token, "consent": "true", "model": model,
-            "authentication_at": auth.authentication_verified_at, "max_cost_usd": "10"}
+            "authentication_at": auth.authentication_verified_at}
     response = client.post(f"/api-settings/{provider}/check-search", data=form, follow_redirects=False)
     assert response.status_code == 303
     assert response.headers["location"] == "/simple-settings?saved=search-check#selected-ai"

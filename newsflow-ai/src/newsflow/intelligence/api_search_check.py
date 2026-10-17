@@ -79,7 +79,7 @@ def read_search_check(sessions: sessionmaker[Session], provider: str) -> dict:
 
 def check_api_search(
     sessions: sessionmaker[Session], key_store, *, provider: str, model: str,
-    authentication_at: str, max_cost_usd: str, consent: bool, transport=None,
+    authentication_at: str, max_cost_usd: str | None = None, consent: bool, transport=None,
 ) -> SearchCheckResult:
     if consent is not True:
         return _result("consent_required")

@@ -13,7 +13,12 @@ from newsflow.db.session import make_engine, migrate, session_factory
 from newsflow.intelligence.api_providers import AnthropicProvider
 from newsflow.intelligence.api_search import SearchRequest, SearchResponseError
 from newsflow.intelligence.api_search_check import read_search_check
-from newsflow.intelligence.api_settings import APIBudgetService, read_api_settings, save_api_settings
+from newsflow.intelligence.api_settings import (
+    APIBudgetService,
+    APISettingsError,
+    read_api_settings,
+    save_api_settings,
+)
 from newsflow.intelligence.credentials import AnthropicKeyStore, FakeCipher
 from newsflow.intelligence.provider import Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
@@ -99,7 +104,7 @@ def snapshot(row):
     ("incomplete_response", "max_tokens"), ("incomplete_response", "pause_turn"),
     ("result_json", "end_turn"), ("source_binding", "end_turn"),
 ])
-def test_production_failure_persists_cause_while_over_bound_usage_stays_unknown(
+def test_production_failure_persists_cause_and_reported_usage_without_guessed_token_bounds(
     state, monkeypatch, reason, stop_reason,
 ):
     document = (response("claude_api") if reason == "incomplete_response" else broken_response(reason))
@@ -143,26 +148,25 @@ def test_production_failure_persists_cause_while_over_bound_usage_stays_unknown(
     assert len(ledger) == 2
     assert snapshot(next(row for row in ledger if row.id == previous.id)) == old_reservation
     current = next(row for row in ledger if row.id != previous.id)
-    assert current.status == "unknown" and current.test_only is False
-    assert Decimal(current.reserved_usd) == Decimal("3.055")
+    assert current.status == "failed" and current.test_only is False
+    assert Decimal(current.reserved_usd) == 0
     assert Decimal(current.estimated_usd) == Decimal("0.090853")
-    assert current.bounds == {"prompt_tokens": 1000000, "completion_tokens": 3000, "search_calls": 1}
+    assert current.bounds == {"accounting": "reported_usage", "search_calls": 1}
     assert current.usage == {"prompt_tokens": 11651, "completion_tokens": 3060, "search_calls": 1}
-    # A subsequent invocation is blocked before HTTP, including after service reconstruction.
-    replacement = IntelligenceService(
-        state["sessions"], api_key_stores=service.api_key_stores,
-        api_providers=service.api_providers, api_budget=APIBudgetService(state["sessions"]),
-    )
-    with pytest.raises(IntelligenceError) as blocked:
-        search(replacement)
-    assert blocked.value.code == "ai_budget" and len(calls) == 1
+    # The same failed request can never be replayed after reconstructing the ledger.
+    with pytest.raises(APISettingsError, match="이미 기록된 요청"):
+        APIBudgetService(state["sessions"]).reserve(
+            provider="claude_api", request_id=current.request_id, kind="search", model=MODEL,
+            max_input_tokens=1000, max_output_tokens=3000, max_search_calls=1, key_store=state["store"],
+        )
+    assert len(calls) == 1
     assert len(rows(state["sessions"])) == 2
     assert settings_values(state["sessions"]) == before and state["store"].path.read_bytes() == encrypted
     stored = json.dumps({"settings": before, "result": run.result, "message": run.message})
     assert all(marker not in stored for marker in (KEY, RAW_MARKER, "DO_NOT_PERSIST_THIS"))
 
 
-def test_first_search_unknown_cost_keeps_parser_diagnostic_without_creating_proof(state):
+def test_first_search_parser_failure_with_complete_usage_is_not_unknown_only_for_token_size(state):
     document = broken_response("result_json")
     document["usage"] = OBSERVED_USAGE
     calls = []
@@ -172,16 +176,40 @@ def test_first_search_unknown_cost_keeps_parser_diagnostic_without_creating_proo
         return json.dumps(document).encode()
 
     result = send_search(state, transport)
-    assert result.code == "unknown" and not result.ok
+    assert result.code == "ai_bad_response" and not result.ok
     summary = read_search_check(state["sessions"], "claude_api")
     assert summary["failure_reason"] == "result_json" and summary["stop_reason"] == "end_turn"
     assert summary["message"] == result.message
     assert "sources" not in summary and "tool_ids" not in summary
     assert not read_api_settings(state["sessions"], "claude_api").search_verified_at
     reservation = rows(state["sessions"])[0]
-    assert reservation.status == "unknown" and Decimal(reservation.reserved_usd) == Decimal("3.055")
+    assert reservation.status == "failed" and Decimal(reservation.reserved_usd) == 0
+    assert Decimal(reservation.estimated_usd) == Decimal("0.090853")
     assert send_search(state, transport).code == "blocked" and len(calls) == 1
     assert all(marker not in json.dumps(settings_values(state["sessions"])) for marker in (KEY, RAW_MARKER))
+
+
+def test_missing_usage_keeps_parser_diagnostic_unknown_and_blocks_new_production_request(state, monkeypatch):
+    document = broken_response("result_json")
+    document.pop("usage")
+    service, _, calls = production_service(state, document, monkeypatch)
+    ids = []
+    with pytest.raises(IntelligenceError):
+        search(service, ids.append)
+    ledger = rows(state["sessions"])
+    assert len(calls) == len(ledger) == 1 and ledger[0].status == "unknown"
+    assert ledger[0].estimated_usd is None and Decimal(ledger[0].reserved_usd) == 0
+    with state["sessions"]() as session:
+        run = session.get(IntelligenceRun, ids[0])
+        assert run.result == {"search_failure": {"failure_reason": "result_json", "stop_reason": "end_turn"}}
+    replacement = IntelligenceService(
+        state["sessions"], api_key_stores=service.api_key_stores,
+        api_providers=service.api_providers, api_budget=APIBudgetService(state["sessions"]),
+    )
+    with pytest.raises(IntelligenceError) as blocked:
+        search(replacement)
+    assert blocked.value.code == "ai_budget" and len(calls) == 1
+    assert len(rows(state["sessions"])) == 1
 
 
 @pytest.mark.parametrize("stop_reason,expected", [

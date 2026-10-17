@@ -12,7 +12,6 @@ from newsflow.db.session import make_engine, migrate, session_factory
 from newsflow.intelligence.api_settings import (
     DEFAULT_MODELS,
     FIRST_SEARCH_OUTPUT_TOKENS,
-    SEARCH_CONTEXT_BOUNDS,
     APIBudgetService,
     APISettingsError,
     FakeAPIBudgetService,
@@ -72,22 +71,22 @@ def settings_values(sessions):
         return {row.key: row.value for row in session.scalars(select(AppSetting))}
 
 
-@pytest.mark.parametrize("provider,expected", [("openai", "0.433831"), ("claude_api", "3.055000")])
-def test_only_first_search_proof_is_exempt_and_quote_equals_atomic_reservation(sessions, provider, expected):
+@pytest.mark.parametrize("provider", ["openai", "claude_api"])
+def test_first_search_exempts_only_search_proof_and_tracks_request_without_guessed_amount(sessions, provider):
     stamp = configured(sessions, provider)
     before = settings_values(sessions)
     normal = api_readiness(sessions, provider, StatusOnlyStore())
     assert not normal["ready"] and "실제 웹 검색 미검증 · BLOCKED" in normal["reasons"]
     quote = first_search_readiness(sessions, provider, StatusOnlyStore())
-    assert quote["ready"] and quote["reserved_usd"] == expected
+    assert quote["ready"] and quote["reserved_usd"] is None
+    assert quote["max_output_tokens"] == FIRST_SEARCH_OUTPUT_TOKENS == 9000
     assert quote["authentication_at"] == stamp and quote["model"] == DEFAULT_MODELS[provider]
     assert settings_values(sessions) == before  # GET quote is read-only.
     result = reserve(sessions, stamp, provider)
-    assert result.request_id == quote["request_id"] and result.reserved_usd == Decimal(expected)
+    assert result.request_id == quote["request_id"] and result.reserved_usd == 0
     with sessions() as session:
         row = session.get(APIRequestReservation, result.id)
-        assert row.bounds == {"prompt_tokens": SEARCH_CONTEXT_BOUNDS[DEFAULT_MODELS[provider]],
-                              "completion_tokens": FIRST_SEARCH_OUTPUT_TOKENS, "search_calls": 1}
+        assert row.bounds == {"accounting": "reported_usage", "search_calls": 1}
         assert not row.test_only and row.status == "reserved"
     assert settings_values(sessions) == before
     assert not api_readiness(sessions, provider, StatusOnlyStore())["ready"]
@@ -119,9 +118,6 @@ def test_fake_budget_cannot_bypass_authentication_for_first_search(sessions):
     ({"output_price_per_1m": "0"}, "단가"),
     ({"search_price_per_1k": "0"}, "단가"),
     ({"billing_confirmed": False}, "24시간"),
-    ({"request_limit_usd": "3"}, "USD 한도"),
-    ({"monthly_limit_usd": "3"}, "USD 한도"),
-    ({"account_remaining_usd": "3"}, "잔여 예산"),
 ])
 def test_all_existing_gates_apply_to_quote_and_reservation(sessions, changes, reason):
     stamp = configured(sessions, **changes)
@@ -160,25 +156,24 @@ def test_submitted_authentication_and_model_must_match_under_lock(sessions):
         reserve(sessions, stamp, key_store=None)
 
 
-def test_price_increase_after_quote_cannot_exceed_the_displayed_consent_cap(sessions):
+def test_current_prices_are_recorded_for_reported_usage_without_speculative_consent_cap(sessions):
     stamp = configured(sessions)
     quote = first_search_readiness(sessions, "claude_api", StatusOnlyStore())
-    assert quote["reserved_usd"] == "3.055000"
+    assert quote["reserved_usd"] is None
     with sessions.begin() as session:
         _set(session, "api_claude_api_input_price_per_1m", "4")
-    with pytest.raises(APISettingsError, match="화면에서 승인한 금액보다"):
-        reserve(sessions, stamp, max_cost_usd=quote["reserved_usd"])
+    result = reserve(sessions, stamp, max_cost_usd="0.001")
     with sessions() as session:
-        assert session.scalar(select(APIRequestReservation.id)) is None
+        row = session.get(APIRequestReservation, result.id)
+        assert row.prices["input"] == "4" and Decimal(row.reserved_usd) == 0
 
 
 @pytest.mark.parametrize("cap", ["", "0", "NaN", "Infinity", "-1"])
-def test_invalid_displayed_consent_cap_blocks_without_reservation(sessions, cap):
+def test_legacy_displayed_cap_is_ignored_and_no_money_is_prereserved(sessions, cap):
     stamp = configured(sessions)
-    with pytest.raises(APISettingsError):
-        reserve(sessions, stamp, max_cost_usd=cap)
+    result = reserve(sessions, stamp, max_cost_usd=cap)
     with sessions() as session:
-        assert session.scalar(select(APIRequestReservation.id)) is None
+        assert Decimal(session.get(APIRequestReservation, result.id).reserved_usd) == 0
 
 
 @pytest.mark.parametrize("status", ["success", "failed", "unknown", "cancelled"])
@@ -193,7 +188,7 @@ def test_repeat_and_restart_never_reuse_same_authentication_attempt(sessions, st
     assert not quote["ready"] and quote["reservation_id"] == reservation.id
     assert quote["attempt_status"] == ("unknown" if status == "cancelled" else status)
     with sessions() as session:
-        assert session.get(APIRequestReservation, reservation.id).reserved_usd == "3.055000"
+        assert Decimal(session.get(APIRequestReservation, reservation.id).reserved_usd) == 0
 
 
 @pytest.mark.parametrize("status", ["reserved", "unknown"])
@@ -209,12 +204,13 @@ def test_other_pending_or_unknown_request_blocks_first_search(sessions, status):
         reserve(sessions, stamp)
 
 
-@pytest.mark.parametrize("limit,reason", [("monthly_limit_usd", "USD 한도"),
+@pytest.mark.parametrize("limit,reason", [("monthly_limit_usd", "월별"),
                                          ("account_remaining_usd", "잔여 예산")])
-def test_prior_completed_reservations_still_consume_month_and_account_limits(sessions, limit, reason):
-    stamp = configured(sessions, **{limit: "6"})
+def test_reported_usage_consumes_month_and_account_limits(sessions, limit, reason):
+    stamp = configured(sessions, **{limit: "0.01"})
     result = reserve(sessions, stamp)
-    APIBudgetService(sessions).finish(result.id, status="failed")
+    APIBudgetService(sessions).finish(result.id, status="failed",
+                                    usage={"prompt_tokens": 100, "completion_tokens": 50, "search_calls": 1})
     new_stamp = utcnow().isoformat()
     with sessions.begin() as session:
         _set(session, "api_claude_api_authentication_verified_at", new_stamp)

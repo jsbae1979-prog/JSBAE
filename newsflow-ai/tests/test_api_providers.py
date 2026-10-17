@@ -22,6 +22,12 @@ URL = "https://www.bbc.com/korean/articles/source-contract"
 KEY = "unit-test-not-a-credential"
 
 
+def test_explicit_search_output_limit_9000_is_supported_but_still_bounded():
+    assert Options(model="claude-sonnet-4-6", max_tokens=9000).max_tokens == 9000
+    with pytest.raises(ValueError):
+        Options(model="claude-sonnet-4-6", max_tokens=9001)
+
+
 def article_payload():
     return {"articles": [{
         "title": "테스트 제목", "url": URL, "publisher": "BBC", "published_at": None,

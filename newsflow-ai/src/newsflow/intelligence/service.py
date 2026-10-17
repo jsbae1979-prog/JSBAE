@@ -130,13 +130,10 @@ class IntelligenceService:
         from .api_settings import APIBudgetService, APISettingsError
 
         budget = self.api_budget or APIBudgetService(self.sessions)
-        # Every UTF-8 byte can be a token. Additional room covers the schema/system
-        # instructions. The budget service separately bounds tool-returned search context.
-        maximum = len(json.dumps(payload, ensure_ascii=False).encode("utf-8")) * 4 + 4096
         try:
             reservation = budget.reserve(
                 provider=mode, request_id=f"intelligence:{run_id}", kind=kind, model=options.model,
-                max_input_tokens=maximum, max_output_tokens=options.max_tokens,
+                max_output_tokens=options.max_tokens,
                 max_search_calls=1 if kind == "search" else 0, key_store=self.api_key_stores.get(mode),
             )
         except APISettingsError as exc:
