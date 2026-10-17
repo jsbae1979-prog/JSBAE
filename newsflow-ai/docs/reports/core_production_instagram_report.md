@@ -33,7 +33,7 @@
 ## 검증·보존
 
 - 새 연결·전송·상태·공개 승인·결과 불명·중복·GUI의 Fake 테스트와 변경된 부분만 로컬 Python 3.14에서 확인했다. GUI fixture의 필수 message 누락을 보완한 뒤 해당 1건과 기존 YouTube 공유 화면 3건 PASS.
-- 최종 Windows Python 3.12/3.14 CI: 아래 결과 기록에서 확정한다. 변경 범위 124건과 YouTube 공유 화면 영향 3건만 실행하며 전체 회귀는 반복하지 않는다.
+- 최종 Windows Python 3.12/3.14 CI 각각 **124 PASS + YouTube 공유 화면 3 PASS = 127 PASS**. 변경 범위 CI 한 차례 성공. 전체 회귀와 A 189건은 반복하지 않았다.
 - Ruff·로컬 pip check PASS. 새로운 패키지나 의존성 변경 없음.
 - 별도 8795 서버와 합성 계정·DB·가짜 미디어로 화면 검토 저장, 플랫폼 선택, 미체크 전송 승인 표시 확인. Chrome 제어 연결이 없어 앱 내 브라우저 사용. 이 증거는 실제 MP4 재생·Meta 게시 증거가 아니다.
 - 화면 증거는 로컬 `validation-output/instagram-ui-20261017/review.png`. 테스트 자료와 화면은 Git에 포함하지 않는다.
@@ -49,4 +49,8 @@
 
 ## 최종 결과
 
-Windows CI 결과와 최종 커밋은 실행 완료 후 이 절에 기록한다. PR #34는 Draft로 유지하고 기존 PR #1~#33 및 main은 변경·병합하지 않는다. B 결과 제출 후 C단계는 시작하지 않는다.
+- 검증 코드 SHA: `d5c164a5e0394f45402be0ae333124bb81e95381`.
+- [Windows Actions #39005151529](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39005151529): SUCCESS, 첫 실행. Python 3.12.10/3.14.8 각각 127 PASS, Ruff·pip check PASS.
+- 테스트 라이브러리의 기존 Starlette/httpx 사용 중단 예정 경고 1종은 남기고 의존성 변경은 하지 않았다. 실패·skip 없음.
+- 이후 커밋은 이 보고서 결과 기록뿐이며 CI를 다시 실행하지 않는다. 최종 HEAD는 [기존 Draft PR #34](https://github.com/jsbae1979-prog/JSBAE/pull/34)에 기록한다.
+- 기존 PR #1~#33 및 main은 변경·병합하지 않았다. 실제 계정 연결·게시가 BLOCKED/NOT VERIFIED인 상태를 유지하고 C단계는 시작하지 않는다.
