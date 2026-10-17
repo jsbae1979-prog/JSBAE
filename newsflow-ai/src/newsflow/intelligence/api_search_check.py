@@ -17,7 +17,7 @@ from newsflow.db.models import APIRequestReservation, utcnow
 
 from .api_connection import _key
 from .api_providers import AnthropicProvider, OpenAISearchProvider
-from .api_search import SearchRequest, validate_search_result
+from .api_search import SearchRequest, SearchResponseError, validate_search_result
 from .api_settings import (
     FIRST_SEARCH_OUTPUT_TOKENS,
     APIBudgetService,
@@ -26,7 +26,7 @@ from .api_settings import (
     _recent,
 )
 from .credentials import CredentialError
-from .provider import Options, ProviderError, ProviderResponseError
+from .provider import Options, ProviderError
 from .settings import _set, _value
 
 MESSAGES = {
@@ -48,8 +48,11 @@ class SearchCheckResult:
     message: str
 
 
-def _result(code: str) -> SearchCheckResult:
-    return SearchCheckResult(code == "success", code, MESSAGES[code])
+def _result(code: str, failure: SearchResponseError | None = None) -> SearchCheckResult:
+    message = MESSAGES[code]
+    if code == "ai_bad_response" and failure is not None:
+        message += " " + str(failure)
+    return SearchCheckResult(code == "success", code, message)
 
 
 def _same_auth(session: Session, provider: str, model: str, authentication_at: str) -> bool:
@@ -105,6 +108,7 @@ def check_api_search(
     if transport is not None:
         adapter._open = transport  # Tests replace HTTP only; production validation is unchanged.
     code, status, evidence = "unknown", "unknown", {}
+    failure = None
     prefix = f"api_{provider}_"
     try:
         with sessions.begin() as session:
@@ -121,7 +125,7 @@ def check_api_search(
             ))
             if (result.provider != provider or result.model != model or len(result.articles) != 1
                     or result.tool_evidence.provenance != "provider_response"):
-                raise ProviderResponseError("Invalid verification evidence")
+                raise SearchResponseError("result_contract")
             if (adapter.last_usage or {}).get("web_search_requests") != 1:
                 # Tool evidence alone cannot stand in for an incomplete usage report.
                 code, status = "unknown", "unknown"
@@ -131,6 +135,11 @@ def check_api_search(
                             "tool_ids": result.tool_evidence.completed_tool_ids,
                             "sources": [{"title": article.title, "url": article.url} for article in result.articles],
                             "source_review": "NOT VERIFIED"}
+    except SearchResponseError as exc:
+        # Revalidate the finite diagnostic vocabulary; never persist str(exc)
+        # from an arbitrary provider error or attach the original response.
+        failure = SearchResponseError(exc.failure_reason, tool_error_code=exc.tool_error_code)
+        code, status = "ai_bad_response", "failed"
     except ProviderError as exc:
         code = exc.code if exc.code in MESSAGES else "unknown"
         status = "unknown" if code == "unknown" else "failed"
@@ -157,8 +166,13 @@ def check_api_search(
         else:
             evidence = {}
             _set(session, prefix + "search_verified_at", "")
-        summary = {"code": code, "message": MESSAGES[code], "checked_at": checked_at,
+        outcome = _result(code, failure)
+        summary = {"code": code, "message": outcome.message, "checked_at": checked_at,
                    "model": model, "authentication_at": authentication_at,
                    "reservation_id": reservation.id, **evidence}
+        if code == "ai_bad_response" and failure is not None:
+            summary["failure_reason"] = failure.failure_reason
+            if failure.tool_error_code is not None:
+                summary["tool_error_code"] = failure.tool_error_code
         _set(session, prefix + "search_check_summary", json.dumps(summary, ensure_ascii=False))
-    return _result(code)
+    return outcome

@@ -18,6 +18,7 @@ from newsflow.intelligence.api_search import (
     SEARCH_INSTRUCTION,
     SearchArticle,
     SearchRequest,
+    SearchResponseError,
     SearchResult,
     SourceEvidence,
     ToolEvidence,
@@ -305,49 +306,69 @@ class AnthropicProvider(_APITransport):
         return _safe_json(self._text(document, search=False))
 
     def search(self, request: SearchRequest, options: Options) -> SearchResult:
-        document = self._message(
-            SEARCH_INSTRUCTION, {**request.model_dump(), "searched_at": datetime.now(UTC).isoformat()},
-            options, search=True,
-        )
-        text = self._text(document, search=True)
+        # Retain a fixed failure stage, never the response or exception payload.
+        # The accepted formats, source checks and single-call policy stay intact.
+        stage = "response_envelope"
         try:
+            document = self._message(
+                SEARCH_INSTRUCTION, {**request.model_dump(), "searched_at": datetime.now(UTC).isoformat()},
+                options, search=True,
+            )
+            if document.get("stop_reason") != "end_turn":
+                raise SearchResponseError("incomplete_response")
+            stage = "response_text"
+            text = self._text(document, search=True)
             ids, completed, sources = set(), [], []
+            stage = "tool_pairing"
             for block in document["content"]:
                 if block.get("type") == "server_tool_use":
                     if block.get("name") != "web_search":
-                        raise ValueError
+                        raise SearchResponseError("tool_policy")
                     if block.get("caller", {"type": "direct"}) != {"type": "direct"}:
-                        raise ValueError
+                        raise SearchResponseError("tool_policy")
                     ids.add(block["id"])
                 elif block.get("type") == "web_search_tool_result":
                     identifier = block.get("tool_use_id")
-                    if identifier not in ids or not isinstance(block.get("content"), list):
-                        # Anthropic may return a tool error inside HTTP 200.
+                    if identifier not in ids:
+                        raise ValueError
+                    content = block.get("content")
+                    # Official tool errors can arrive inside an HTTP 200 response.
+                    if isinstance(content, dict) and content.get("type") == "web_search_tool_result_error":
+                        raise SearchResponseError("search_tool_error", tool_error_code=content.get("error_code"))
+                    if not isinstance(content, list):
                         raise ValueError
                     completed.append(identifier)
-                    for source in block["content"]:
+                    stage = "source_evidence"
+                    for source in content:
                         if source.get("type") != "web_search_result":
                             raise ValueError
                         parsed = _source(source)
                         if parsed:
                             sources.append(parsed)
+                    stage = "tool_pairing"
             if set(completed) != ids or len(ids) != 1:
                 raise ValueError
+            stage = "usage_mismatch"
             observed_usage = (self.last_usage or {}).get("web_search_requests")
             if observed_usage is not None and observed_usage != len(completed):
                 raise ValueError
+            stage = "source_evidence"
             evidence = ToolEvidence(
                 tool_name="web_search_20250305", completed_tool_ids=completed, sources=sources,
             )
             self.last_search_evidence = evidence.model_dump(mode="json")
+            stage = "result_json"
+            payload = _safe_json(text)
             return bind_search_result(
-                _safe_json(text), provider=self.provider, model=options.model,
+                payload, provider=self.provider, model=options.model,
                 request=request, tool_evidence=evidence, usage=self.last_usage or {},
             )
-        except ProviderError:
+        except SearchResponseError:
             raise
+        except ProviderResponseError:
+            raise SearchResponseError(stage) from None
         except (ValueError, TypeError, KeyError, AttributeError):
-            raise ProviderResponseError("Claude 웹 검색 결과가 비어 있거나 도구 실행에 실패했습니다.") from None
+            raise SearchResponseError(stage) from None
 
 
 class FakeAPIProvider:
