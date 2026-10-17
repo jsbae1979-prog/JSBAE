@@ -77,6 +77,7 @@ _ERROR_MESSAGES = {
     "news_usage_script": "미검증 자료의 대본에 확인되지 않은 사실이 포함될 수 있어 제작을 중단했습니다.",
     "voice_unavailable": "선택한 한국어 음성을 이 PC에서 찾지 못했습니다. 음성 설정을 확인하거나 무음으로 제작하세요.",
     "speech_too_long": "음성이 영상 길이보다 깁니다. 대본을 줄이거나 영상 길이를 늘리세요.",
+    "audio_review": "실제 음성 분량과 목표 길이가 맞지 않아 제작을 멈췄습니다. 추가 API 요청은 하지 않았습니다.",
     "voice_failed": "음성을 만들지 못했습니다. 선택한 한국어 음성과 PowerShell 실행 상태를 확인하세요.",
 }
 _SOLUTIONS = {
@@ -94,6 +95,7 @@ _SOLUTIONS = {
     "news_usage_script": "주제 설명형 대본과 참고 출처를 확인해 주세요. 개별 사건·수치·발언을 임의로 추가할 수 없습니다.",
     "voice_unavailable": "설정 → 음성과 자막에서 설치된 한국어 음성을 다시 선택하거나 무음 검토영상으로 제작하세요.",
     "speech_too_long": "대본 수정에서 문장을 줄이거나, 더 긴 영상 길이로 새 작업을 시작하세요.",
+    "audio_review": "대본 수정에서 장면별 분량과 시간을 검토한 뒤 영상 제작 화면에서 다시 제작하세요. API 재생성은 별도 승인 없이는 실행하지 않습니다.",
     "voice_failed": "설정 → 음성과 자막에서 미리 듣기로 음성이 소리를 내는지 확인하고, 안 되면 무음 검토영상으로 제작하세요. 안내서의 실행 정책 항목도 확인하세요.",
 }
 
@@ -236,6 +238,19 @@ class AutopilotCoordinator:
             }
         # A per-job policy does not opt legacy/sample paths into the unified AI pipeline.
         request["news_usage"] = news_usage
+        if content_mode == "real" and ai_mode in {"openai", "claude_api"}:
+            # Server-owned creation marker: old local jobs must never gain paid analysis
+            # or script requests merely because an app version changed after restart.
+            if external_consent is not True:
+                raise AutopilotError("선택한 API의 검색·분석·대본 생성에 대한 자료 전송과 비용 동의가 필요합니다.")
+            from newsflow.intelligence.settings import SettingsError, studio_model
+
+            try:
+                model = studio_model(ai_mode, ai_model)
+            except (SettingsError, TypeError):
+                raise AutopilotError("제작할 AI와 모델 설정을 확인하세요.") from None
+            request.update(script_method="api_grounded_v1", ai_model=model,
+                           external_consent=True, consented_at=request.get("consented_at") or utcnow().isoformat())
         if request_id is not None:
             self._id(request_id)
         with self.guard:

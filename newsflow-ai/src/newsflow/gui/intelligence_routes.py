@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
 from newsflow.db.models import AutopilotArtifact, AutopilotJob, ContentDraft, IntelligenceRun, NewsArticle
-from newsflow.easy_setup import preview_preferences
+from newsflow.easy_setup import preview_preferences, speech_preferences
 from newsflow.intelligence.estimate import estimate_call, estimate_cost
 from newsflow.intelligence.news_usage import safe_topic_script
 from newsflow.intelligence.provider import SCRIPT_INSTRUCTION, Options
@@ -41,7 +41,8 @@ router = APIRouter()
 
 def _topic_editor_options(draft: ContentDraft | None) -> list[dict]:
     """Only known text variants for this saved source and scene role enter controls."""
-    if not draft or not draft.sources.get("news_usage"):
+    if (not draft or not draft.sources.get("news_usage")
+            or draft.sources.get("script_method") == "api_grounded_v1"):
         return []
     try:
         variants = [safe_topic_script(draft.sources, duration) for duration in (30, 45, 60)]
@@ -139,9 +140,11 @@ def claude_cancel(request: Request) -> dict:
 
 
 def service(request: Request) -> IntelligenceService:
+    speech = speech_preferences(request.app.state.sessions)
     return IntelligenceService(
         request.app.state.sessions, getattr(request.app.state, "ai_provider", None),
         getattr(request.app.state, "ai_keys", None),
+        speech={"rate": speech.rate, "pause_ms": speech.pause_ms},
         api_key_stores=getattr(request.app.state, "api_keys", None),
     )
 
@@ -209,7 +212,9 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
             active="ai",
             analysis=analysis,
             draft=draft,
-            topic_editor=bool(draft and draft.sources.get("news_usage")),
+            topic_editor=bool(draft and draft.sources.get("news_usage")
+                              and draft.sources.get("script_method") != "api_grounded_v1"),
+            api_editor=bool(draft and draft.sources.get("script_method") == "api_grounded_v1"),
             topic_options=_topic_editor_options(draft),
             workspace_return=_draft_workspace_link(session, draft),
             draft_json=json.dumps(draft.content, ensure_ascii=False, indent=2) if draft else "",
@@ -245,6 +250,7 @@ def analyze(
         identifier = service(request).analyze(
             article_ids, provider, consent, Options(model, temperature, timeout, max_tokens),
             on_run=remember_context(request.app.state.sessions, production),
+            news_usage=production.get("news_usage") if production and provider in {"openai", "claude_api"} else None,
         )
     except (IntelligenceError, ValueError) as exc:
         raise HTTPException(422, str(exc)) from None
@@ -274,6 +280,7 @@ def generate(
         identifier = service(request).generate(
             analysis_id, duration, provider, consent, options,
             on_run=remember_context(request.app.state.sessions, production),
+            news_usage=production.get("news_usage") if production and provider in {"openai", "claude_api"} else None,
         )
     except (IntelligenceError, ValueError) as exc:
         raise HTTPException(422, str(exc)) from None

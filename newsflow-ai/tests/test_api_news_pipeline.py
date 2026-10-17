@@ -94,9 +94,9 @@ def test_search_analysis_script_same_api_and_length_pause_once(api_pipeline, dur
     identifier = start(api_pipeline, duration=duration, request_id=identity)
     job = settled(api_pipeline, identifier)
     assert (job["status"], job["current_stage"]) == ("waiting_review", "script")
-    assert provider.calls == ["search"] and rss.calls == []
+    assert provider.calls == ["search", "analysis", "script"] and rss.calls == []
     assert job["ai_mode"] == job["search_provider"] == mode
-    assert job["analysis_provider"] == job["script_provider"] == "local_topic_template"
+    assert job["analysis_provider"] == job["script_provider"] == mode
     assert job["news_method"] == "ai_web" and job["duration"] == duration
     assert job["review_pauses"] == ["script", "validate"]
     assert job["stage_results"]["collect"]["web_search_performed"] is False
@@ -105,8 +105,8 @@ def test_search_analysis_script_same_api_and_length_pause_once(api_pipeline, dur
         rows = list(session.scalars(select(IntelligenceRun).order_by(IntelligenceRun.id)))
         assert [(row.kind, row.provider, row.status) for row in rows] == [
             ("search", mode, "success"),
-            ("analysis", "local_topic_template", "success"),
-            ("script", "local_topic_template", "success"),
+            ("analysis", mode, "success"),
+            ("script", mode, "success"),
         ]
         assert all(row.options["autopilot_job_id"] == identity for row in rows)
         draft = session.get(ContentDraft, job["content_draft_id"])
@@ -114,7 +114,7 @@ def test_search_analysis_script_same_api_and_length_pause_once(api_pipeline, dur
         assert sum(scene["seconds"] for scene in draft.content["scenes"]) == duration
         assert draft.sources["articles"][0]["search_provenance"]["facts_verified"] is False
         reservations = list(session.scalars(select(APIRequestReservation)))
-        assert len(reservations) == 1 and all(row.test_only and row.status == "success" for row in reservations)
+        assert len(reservations) == 3 and all(row.test_only and row.status == "success" for row in reservations)
     # Reopening, restarting and repeated start preserve IDs and never rerun inference.
     assert start(api_pipeline, duration=duration, request_id=identity) == identity
     assert coordinator.recover() == 0
@@ -130,7 +130,7 @@ def test_search_analysis_script_same_api_and_length_pause_once(api_pipeline, dur
     coordinator.future.result(timeout=15)
     assert captured["duration"] == duration and captured["voice"] == "supertonic:F1"
     assert captured["analysis_run_id"] == job["analysis_run_id"]
-    assert provider.calls == ["search"]
+    assert provider.calls == ["search", "analysis", "script"]
 
 
 def test_hybrid_runs_explicit_rss_after_search_and_deduplicates(api_pipeline):
@@ -139,7 +139,7 @@ def test_hybrid_runs_explicit_rss_after_search_and_deduplicates(api_pipeline):
     job = settled(api_pipeline, identifier)
     assert job["status"] == "waiting_review"
     assert job["news_method"] == "ai_web+rss" and rss.calls == ["https://example.com/step3-rss"]
-    assert provider.calls == ["search"]
+    assert provider.calls == ["search", "analysis", "script"]
     with sessions() as session:
         assert session.scalar(select(func.count()).select_from(NewsArticle)) == 1
 
@@ -190,8 +190,8 @@ def test_unknown_source_date_allows_topic_only_and_rss_is_explicit(api_pipeline,
     assert job["status"] == "waiting_review" and job["current_stage"] == "script"
     assert job["news_usage"] == "STANDARD"
     assert job["news_usage_result"]["verification_status"] == "NOT VERIFIED"
-    assert job["analysis_provider"] == job["script_provider"] == "local_topic_template"
-    assert provider.calls == ["search"]
+    assert job["analysis_provider"] == job["script_provider"] == mode
+    assert provider.calls == ["search", "analysis", "script"]
     assert rss.calls == (["https://example.com/step3-rss"] if acquisition_policy == "hybrid" else [])
     with sessions() as session:
         article = session.scalar(select(NewsArticle))
@@ -208,7 +208,7 @@ def test_successful_search_artifact_reused_after_restart_without_new_search(api_
         context = coordinator._context(session, session.get(AutopilotJob, identifier))
     restored = backend.execute("collect", context, Event(), lambda *_: None, lambda *_: None)
     assert restored["search_run_id"] == job["search_run_id"]
-    assert provider.calls == ["search"] and rss.calls == []
+    assert provider.calls == ["search", "analysis", "script"] and rss.calls == []
 
 
 def test_cancel_search_keeps_reservation_unknown_and_never_starts_analysis(api_pipeline, monkeypatch):
@@ -253,4 +253,4 @@ def test_workspace_script_review_shows_search_evidence_and_separate_usage(api_pi
     assert 'href="https://www.bbc.com/korean/articles/newsflow-contract-fixture"' in response.text
     assert "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다." not in response.text  # fixture has a registered RSS
     assert "RSS 선택 시 사용합니다." in response.text
-    assert provider.calls == ["search"] and rss.calls == []
+    assert provider.calls == ["search", "analysis", "script"] and rss.calls == []

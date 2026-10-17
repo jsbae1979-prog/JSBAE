@@ -153,8 +153,10 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
         rss_supported = False
         rss_notice = "등록 뉴스 자동 제작에 필요한 AI 연결·비용 승인을 설정에서 확인해 주세요."
     else:
-        rss_notice = ("RSS 자료 확인 → 뉴스 활용 수준 적용 → 대본 검토 → 영상 제작으로 이어집니다. "
-                      "미검증 자료는 추가 AI 호출 없이 주제 설명으로 제한하며, 검증 우선은 근거 부족 시 중단해요.")
+        rss_notice = ("RSS 자료 → 선택한 API 분석·대본 → 대본 검토 → 영상 제작. "
+                      "분석과 대본은 별도 사용량·비용이 발생하며 자동 대체하지 않습니다."
+                      if provider in {"openai", "claude_api"} else
+                      "RSS 자료 확인 → 대본 검토 → 영상 제작. 실제 처리 엔진은 작업 이력에서 확인하세요.")
     cached = getattr(request.app.state, "claude_status" if provider == "claude_code" else "codex_status", {})
     auth_checked = provider == "offline" or (provider in {"claude_code", "codex"}
                                              and cached.get("state") == "ready" and cached.get("ready") is True)
@@ -176,11 +178,12 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
         }
         if provider in ready["apis"]:
             gate = ready["apis"][provider]["search"]
-            usable = (gate["ready"] and voice["installed"] and voice["name"] != "elevenlabs"
+            usable = (gate["ready"] and ready["apis"][provider]["analysis"]["ready"]
+                      and voice["installed"] and voice["name"] != "elevenlabs"
                       and not manual_video and (policy != "hybrid" or ready["rss"]["ready"]))
             detail = " ".join(gate["reasons"]) if not gate["ready"] else (
-                "웹 검색 → 뉴스 활용 수준 적용 → 사용자 검토. 미검증 대본은 추가 AI 호출 없이 주제 설명으로 제한합니다."
-                if usable else "선택한 음성·영상 또는 RSS 보완 출처를 확인하세요.")
+                "검색 최대 1회 → 선택한 API 분석 1회 → 대본 1회 → 사용자 검토. 단계별 비용 승인이 필요합니다."
+                if usable else "선택한 API의 분석·대본 승인, 음성·영상 또는 RSS 보완 출처를 확인하세요.")
             policy_states[policy].update(supported=usable, auth_checked=gate["authentication_verified"],
                 title="API 뉴스 검색 실행 조건 확인됨" if usable else "AI 웹 뉴스 조사 BLOCKED",
                 detail=detail, notice=detail + " RSS·다른 Provider로 자동 전환하지 않습니다.")
