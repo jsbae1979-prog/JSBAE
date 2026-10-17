@@ -17,7 +17,8 @@
 - 로컬 Python 3.14에서 작성 중 범위 테스트 및 Ruff/pip check PASS. GUI 15개는 처음 13 PASS/2 FAIL(테스트의 잘못된 기존 URL·버튼 문구), 그 두 항목 수정 후 2 PASS입니다. 제품 실패를 숨기거나 테스트를 skip하지 않았습니다.
 - 격리 서버 `127.0.0.1:8796`의 합성 계정·DB·파일로 앱 내 브라우저에서 두 플랫폼 선택 → 검토 저장 → 하나의 게시 버튼 → YouTube 완료/Instagram 처리 대기 → Instagram만 후속 실행 대상으로 표시됨을 확인했습니다. 외부 통신을 차단한 Fake 어댑터이며 실제 로그인·업로드 증거가 아닙니다. 임시 서버와 탭은 종료했습니다.
 - 로컬 화면 증거: `validation-output/unified-publishing-ui-20261017/partial-result.png` (Git 미포함). 이 단계에서 영상 품질·실제 재생을 다시 검증하지 않았습니다.
-- Windows Python 3.12/3.14 CI: 최종 결과는 아래에 기록합니다.
+- Windows Python 3.12/3.14 각각 **112 PASS**, Ruff·pip check PASS. [C Actions](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39006221846) 첫 실행 성공이며 반복 실행하지 않았습니다. 기존 Starlette/httpx 경고 1건 외 실패·skip 없음.
+- 검증 코드 SHA: `e541e78da6778dbf1049d2586da8110e8e54405b`. 이후 커밋은 이 검증 결과 문서만 갱신하므로 추가 CI를 실행하지 않습니다.
 
 ## 보존과 미검증
 
