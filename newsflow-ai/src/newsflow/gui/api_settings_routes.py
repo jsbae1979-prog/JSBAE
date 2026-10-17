@@ -2,9 +2,11 @@
 
 from fastapi import APIRouter, Form, HTTPException, Request
 
-from newsflow.intelligence.api_connection import check_claude_connection
+from newsflow.intelligence.api_connection import check_api_connection, check_claude_connection
+from newsflow.intelligence.api_search_check import check_api_search, read_search_check
 from newsflow.intelligence.api_settings import (
     APIPolicyError,
+    first_search_readiness,
     invalidate_api_verification,
     save_api_settings,
 )
@@ -18,20 +20,45 @@ router = APIRouter()
 
 @router.post("/api-settings/{provider}/check")
 def check_connection(request: Request, provider: str, consent: bool = Form(False)):
-    if provider != "claude_api":
-        raise HTTPException(422, "이 화면의 연결 확인은 Claude API만 지원합니다.")
-    result = check_claude_connection(
-        request.app.state.sessions, _store(request, provider), consent=consent,
-        transport=getattr(request.app.state, "claude_connection_transport", None),
-    )
+    store = _store(request, provider)
+    if provider == "claude_api":
+        result = check_claude_connection(
+            request.app.state.sessions, store, consent=consent,
+            transport=getattr(request.app.state, "claude_connection_transport", None),
+        )
+    else:
+        result = check_api_connection(
+            request.app.state.sessions, store, provider=provider, consent=consent,
+            transport=getattr(request.app.state, "openai_connection_transport", None),
+        )
     if not result.ok:
         raise HTTPException(422, result.message)
     return go("/simple-settings?saved=connection#selected-ai")
 
 
+@router.post("/api-settings/{provider}/check-search")
+def check_search(
+    request: Request, provider: str, consent: bool = Form(False),
+    model: str = Form("", max_length=80), authentication_at: str = Form("", max_length=80),
+    max_cost_usd: str = Form("", max_length=20),
+):
+    result = check_api_search(
+        request.app.state.sessions, _store(request, provider), provider=provider,
+        consent=consent, model=model, authentication_at=authentication_at, max_cost_usd=max_cost_usd,
+        transport=getattr(request.app.state, "api_search_check_transports", {}).get(provider),
+    )
+    if not result.ok:
+        raise HTTPException(422, result.message)
+    return go("/simple-settings?saved=search-check#selected-ai")
+
+
 def connection_status(request: Request, provider: str, capability: str = "search") -> dict:
     """Use the same local gates as the worker, without credential reads or HTTP calls."""
-    return request.app.state.autopilot_backend.intelligence.api_readiness(provider, capability)
+    status = request.app.state.autopilot_backend.intelligence.api_readiness(provider, capability)
+    if capability == "search":
+        status["first_search"] = first_search_readiness(request.app.state.sessions, provider, _store(request, provider))
+        status["search_check"] = read_search_check(request.app.state.sessions, provider)
+    return status
 
 
 def _store(request: Request, provider: str):

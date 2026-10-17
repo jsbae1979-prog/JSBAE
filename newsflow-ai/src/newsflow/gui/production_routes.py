@@ -52,7 +52,8 @@ def _settings_overview(context: dict) -> list[dict]:
 def settings_page(request: Request, saved: str = ""):
     context = production_context(request)
     notices = {"true": "제작 구성을 저장했습니다.", "api": "API 승인·예산을 저장했습니다.",
-               "connection": "Claude API 인증·모델 접근을 확인했습니다. 생성·웹 검색은 별도 검증이 필요합니다.",
+               "connection": "API 인증·모델 접근을 확인했습니다. 생성·웹 검색은 별도 검증이 필요합니다.",
+               "search-check": "검색 검증을 마쳤습니다. 기사 발행일·사실·대본은 별도 검토가 필요합니다.",
                "key": "API Key를 저장했습니다. 실제 연결은 미검증입니다.", "key_removed": "저장된 API Key를 삭제했습니다."}
     response = page(request, "simple_settings.html", active="simple-settings", saved=saved,
                     saved_notice=notices.get(saved, ""), settings_overview=_settings_overview(context),
