@@ -21,6 +21,7 @@ ACQUISITION_LABELS = {"ai_web": "AI 웹 뉴스 조사 · 승인·검증 필요",
 CATEGORY_LABELS = {"all": "전체", "politics": "정치", "economy": "경제", "society": "사회",
                    "it": "IT·과학", "world": "국제"}
 PERIOD_LABELS = {"today": "오늘", "24h": "최근 24시간", "7d": "최근 7일"}
+NEWS_USAGE_LABELS = {"QUICK": "빠른 제작", "STANDARD": "균형 제작", "VERIFIED": "검증 우선"}
 assert set(ACQUISITION_LABELS) == set(ACQUISITION_POLICIES)
 assert set(CATEGORY_LABELS) == set(NEWS_CATEGORIES)
 assert set(PERIOD_LABELS) == set(NEWS_PERIODS)
@@ -55,6 +56,10 @@ def validate_context(value: dict) -> dict:
         raise ValueError("선택한 AI와 모델 설정을 확인해 주세요.") from None
     result = {"source": value["source"], "initial_duration": duration,
               "initial_provider": provider, "initial_model": model, "initial_voice": voice}
+    news_usage = value.get("news_usage", "STANDARD")
+    if not isinstance(news_usage, str) or news_usage not in NEWS_USAGE_LABELS:
+        raise ValueError("뉴스 활용 수준을 다시 선택해 주세요.")
+    result["news_usage"] = news_usage
     if "initial_video" in value:
         if value["initial_video"] not in {"off", "higgsfield"}:
             raise ValueError("영상 장면 설정을 다시 확인해 주세요.")

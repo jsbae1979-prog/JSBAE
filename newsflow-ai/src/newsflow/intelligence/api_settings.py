@@ -8,6 +8,7 @@ Neither settings saves nor readiness reads perform any network operation.
 
 from __future__ import annotations
 
+import hashlib
 import re
 import uuid
 from dataclasses import dataclass
@@ -25,6 +26,7 @@ from .settings import SettingsError, _set, _value, month_start
 PROVIDERS = {"openai": "OpenAI API", "claude_api": "Claude API"}
 DEFAULT_MODELS = {"openai": "gpt-4.1-mini", "claude_api": "claude-sonnet-4-6"}
 VERIFICATION_TTL = timedelta(hours=24)
+FIRST_SEARCH_OUTPUT_TOKENS = 3000
 # Conservative context ceilings, not an estimate based on generated text length.
 # Search content is billable input too. Unknown models fail closed for search.
 SEARCH_CONTEXT_BOUNDS = {"gpt-4.1-mini": 1_047_576, "claude-sonnet-4-6": 1_000_000,
@@ -152,7 +154,7 @@ def read_api_settings(sessions: sessionmaker[Session], provider: str) -> APISett
 
 def _invalidate(session: Session, provider: str) -> None:
     for key in ("authentication_verified_at", "search_verified_at", "request_succeeded_at", "verified_model",
-                "billing_confirmed_at", "account_remaining_usd"):
+                "billing_confirmed_at", "account_remaining_usd", "search_check_summary"):
         _set(session, f"api_{provider}_{key}", "")
     from .api_connection import invalidate_connection_check
 
@@ -221,7 +223,8 @@ def _usage(rows: list[APIRequestReservation], now: datetime) -> dict:
     }
 
 
-def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *, fake: bool = False) -> list[str]:
+def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *, fake: bool = False,
+             first_search: bool = False) -> list[str]:
     reasons = []
     if not key.get("configured"):
         reasons.append("API Key 미등록")
@@ -249,7 +252,9 @@ def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *
     if not fake:
         if settings.verified_model != settings.model or not _recent(settings.authentication_verified_at, now):
             reasons.append("실제 API 연결 미확인 · 별도 승인 후 검증 필요")
-        if capability == "search" and (settings.verified_model != settings.model or not settings.search_verified_at):
+        if capability == "search" and not first_search and (
+            settings.verified_model != settings.model or not settings.search_verified_at
+        ):
             reasons.append("실제 웹 검색 미검증 · BLOCKED")
     return reasons
 
@@ -284,6 +289,70 @@ def api_readiness(sessions: sessionmaker[Session], provider: str, key_store, cap
     return _readiness(sessions, provider, key_store, capability)
 
 
+def _first_search_id(provider: str, model: str, authentication_at: str) -> str:
+    stamp = hashlib.sha256(f"{model}\n{authentication_at}".encode()).hexdigest()
+    return f"first-search:{provider}:{stamp}"
+
+
+def _quote(settings: APISettings, max_input_tokens: int, max_output_tokens: int, max_search_calls: int) -> tuple:
+    bounds = {"prompt_tokens": max_input_tokens, "completion_tokens": max_output_tokens,
+              "search_calls": max_search_calls}
+    floor_input, floor_output = PRICE_FLOORS[settings.model]
+    prices = {"input": str(max(settings.input_price_per_1m, Decimal(floor_input))),
+              "output": str(max(settings.output_price_per_1m, Decimal(floor_output))),
+              "search": str(max(settings.search_price_per_1k or Decimal(0), Decimal(10)))}
+    return bounds, prices, APIBudgetService._cost(bounds, prices)
+
+
+def _limit_reasons(settings: APISettings, rows: list[APIRequestReservation], now: datetime,
+                   cost: Decimal) -> list[str]:
+    reasons = []
+    if any(row.status in ("reserved", "unknown") for row in rows):
+        reasons.append("진행 중이거나 결과 불명인 API 요청이 있어 새 호출을 차단합니다.")
+    monthly = sum((Decimal(row.reserved_usd) for row in rows if row.created_at >= month_start(now)), Decimal(0))
+    # Count every outcome since account confirmation. Reservations are not refunds
+    # or a live provider balance, even after failures or cancellation.
+    confirmed_at = _time(settings.billing_confirmed_at)
+    after_check = sum((Decimal(row.reserved_usd) for row in rows
+                       if confirmed_at is not None and row.created_at >= confirmed_at), Decimal(0))
+    if cost > settings.request_limit_usd or monthly + cost > settings.monthly_limit_usd:
+        reasons.append("보수적 토큰·검색 상한이 요청별 또는 월별 USD 한도를 넘습니다.")
+    if settings.account_remaining_usd is not None and after_check + cost > settings.account_remaining_usd:
+        reasons.append("사용자가 확인한 공급사 잔여 예산보다 요청 상한이 큽니다.")
+    return reasons
+
+
+def first_search_readiness(sessions: sessionmaker[Session], provider: str, key_store) -> dict:
+    """Local quote for one explicit check; never decrypt keys or make a request."""
+    now = utcnow()
+    with sessions() as session:
+        settings = _read(session, provider)
+        rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
+        connection_busy = bool(_value(session, f"api_{provider}_connection_check_id"))
+    key = key_store.status() if key_store is not None else {"configured": False}
+    reasons = _reasons(settings, key, "search", now, first_search=True)
+    if connection_busy:
+        reasons.append("API 연결 확인 중입니다. 완료 후 검색 검증을 실행하세요.")
+    stamp = settings.authentication_verified_at or ""
+    request_id = _first_search_id(provider, settings.model, stamp)
+    attempt = next((row for row in rows if row.request_id == request_id), None)
+    if attempt is not None:
+        reasons.append("이미 기록된 최초 검색 검증입니다. 실패·결과 불명 요청도 재전송하지 않습니다.")
+    cost = None
+    if (settings.model in PRICE_FLOORS and settings.model in SEARCH_CONTEXT_BOUNDS
+        and settings.input_price_per_1m is not None and settings.input_price_per_1m > 0
+        and settings.output_price_per_1m is not None and settings.output_price_per_1m > 0
+        and settings.search_price_per_1k is not None and settings.search_price_per_1k > 0):
+        _, _, cost = _quote(settings, SEARCH_CONTEXT_BOUNDS[settings.model], FIRST_SEARCH_OUTPUT_TOKENS, 1)
+        reasons.extend(_limit_reasons(settings, rows, now, cost))
+    elif any(row.status in ("reserved", "unknown") for row in rows):
+        reasons.append("진행 중이거나 결과 불명인 API 요청이 있어 새 호출을 차단합니다.")
+    return {"ready": not reasons, "reasons": reasons, "provider": provider, "model": settings.model,
+            "reserved_usd": str(cost) if cost is not None else None, "request_id": request_id,
+            "authentication_at": stamp, "attempt_status": attempt.status if attempt else "",
+            "reservation_id": attempt.id if attempt else "", "disclaimer": DISCLAIMER}
+
+
 @dataclass(frozen=True)
 class Reservation:
     id: str
@@ -304,6 +373,33 @@ class APIBudgetService:
 
     def reserve(self, *, provider: str, request_id: str, kind: str, model: str, max_input_tokens: int,
                 max_output_tokens: int, key_store, max_search_calls: int = 0) -> Reservation:
+        return self._reserve(provider=provider, request_id=request_id, kind=kind, model=model,
+                             max_input_tokens=max_input_tokens, max_output_tokens=max_output_tokens,
+                             key_store=key_store, max_search_calls=max_search_calls)
+
+    def reserve_first_search(self, *, provider: str, model: str, authentication_at: str,
+                             key_store, consent: bool, max_cost_usd: str) -> Reservation:
+        """One bounded, explicitly approved bootstrap request per authentication."""
+        _provider(provider)
+        if consent is not True:
+            raise APISettingsError("최초 웹 검색 검증에는 별도 실행 동의가 필요합니다.")
+        if self.test_only:
+            raise APISettingsError("실제 최초 검색 검증에는 Fake 예산의 인증 우회를 사용할 수 없습니다.")
+        if model not in API_MODELS[provider] or model not in SEARCH_CONTEXT_BOUNDS:
+            raise APISettingsError("이 모델의 검색 비용 상한은 미검증입니다.")
+        if not isinstance(authentication_at, str) or not authentication_at:
+            raise APISettingsError("인증 상태가 변경되었습니다. 화면을 새로 확인하세요.")
+        approved_cost = _amount(max_cost_usd)
+        if approved_cost <= 0:
+            raise APISettingsError("화면에 표시된 검색 검증 예약액을 다시 확인하세요.")
+        return self._reserve(provider=provider, request_id=_first_search_id(provider, model, authentication_at),
+                             kind="search", model=model, max_input_tokens=SEARCH_CONTEXT_BOUNDS[model],
+                             max_output_tokens=FIRST_SEARCH_OUTPUT_TOKENS, key_store=key_store, max_search_calls=1,
+                             first_search_authentication=authentication_at, approved_cost=approved_cost)
+
+    def _reserve(self, *, provider: str, request_id: str, kind: str, model: str, max_input_tokens: int,
+                 max_output_tokens: int, key_store, max_search_calls: int = 0,
+                 first_search_authentication: str | None = None, approved_cost: Decimal | None = None) -> Reservation:
         _provider(provider)
         if kind not in ("search", "analysis", "script") or not re.fullmatch(r"[A-Za-z0-9:._-]{1,128}", request_id):
             raise APISettingsError("API 요청 식별자와 작업 유형을 확인하세요.")
@@ -321,31 +417,25 @@ class APIBudgetService:
             settings = _read(session, provider)
             if settings.model != model:
                 raise APISettingsError("저장된 API 모델과 실행 모델이 달라 다시 확인해야 합니다.")
+            if (first_search_authentication is not None
+                and settings.authentication_verified_at != first_search_authentication):
+                raise APISettingsError("인증 상태가 변경되었습니다. 화면을 새로 확인하세요.")
+            if first_search_authentication is not None and _value(session, f"api_{provider}_connection_check_id"):
+                raise APISettingsError("API 연결 확인 중입니다. 완료 후 검색 검증을 실행하세요.")
             key = key_store.status() if key_store is not None else {"configured": False}
-            reasons = _reasons(settings, key, kind, now, fake=self.test_only)
+            reasons = _reasons(settings, key, kind, now, fake=self.test_only,
+                               first_search=first_search_authentication is not None)
             if reasons:
                 raise APISettingsError(" / ".join(reasons))
             if kind == "search":
                 max_input_tokens = max(max_input_tokens, SEARCH_CONTEXT_BOUNDS[model])
-            bounds = {"prompt_tokens": max_input_tokens, "completion_tokens": max_output_tokens,
-                      "search_calls": max_search_calls}
-            floor_input, floor_output = PRICE_FLOORS[model]
-            prices = {"input": str(max(settings.input_price_per_1m, Decimal(floor_input))),
-                      "output": str(max(settings.output_price_per_1m, Decimal(floor_output))),
-                      "search": str(max(settings.search_price_per_1k or Decimal(0), Decimal(10)))}
-            cost = self._cost(bounds, prices)
+            bounds, prices, cost = _quote(settings, max_input_tokens, max_output_tokens, max_search_calls)
+            if approved_cost is not None and cost > approved_cost:
+                raise APISettingsError("예약액이 화면에서 승인한 금액보다 커졌습니다. 최신 금액을 확인하고 다시 동의하세요.")
             rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
-            if any(row.status in ("reserved", "unknown") for row in rows):
-                raise APISettingsError("진행 중이거나 결과 불명인 API 요청이 있어 새 호출을 차단합니다.")
-            monthly = sum((Decimal(row.reserved_usd) for row in rows if row.created_at >= month_start(now)), Decimal(0))
-            # Deliberately include all reservations since the account confirmation. Never
-            # subtract another app's usage or pretend this local ledger is account balance.
-            confirmed_at = _time(settings.billing_confirmed_at)
-            after_check = sum((Decimal(row.reserved_usd) for row in rows if row.created_at >= confirmed_at), Decimal(0))
-            if cost > settings.request_limit_usd or monthly + cost > settings.monthly_limit_usd:
-                raise APISettingsError("보수적 토큰·검색 상한이 요청별 또는 월별 USD 한도를 넘습니다.")
-            if after_check + cost > settings.account_remaining_usd:
-                raise APISettingsError("사용자가 확인한 공급사 잔여 예산보다 요청 상한이 큽니다.")
+            reasons = _limit_reasons(settings, rows, now, cost)
+            if reasons:
+                raise APISettingsError(" / ".join(reasons))
             row = APIRequestReservation(id=uuid.uuid4().hex, request_id=request_id, provider=provider, kind=kind,
                                         model=model, status="reserved", reserved_usd=str(cost), bounds=bounds,
                                         prices=prices, usage={}, test_only=self.test_only, created_at=now)

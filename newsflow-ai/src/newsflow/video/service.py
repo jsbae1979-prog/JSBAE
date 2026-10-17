@@ -262,6 +262,12 @@ class VideoCoordinator:
                 draft = session.get(ContentDraft, draft_id)
                 if not draft:
                     raise VideoError("저장된 대본을 찾지 못했습니다.")
+                from newsflow.intelligence.service import IntelligenceError, IntelligenceService
+
+                try:
+                    IntelligenceService.check_news_usage(draft.content, draft.sources)
+                except IntelligenceError:
+                    raise VideoError("미확인 사실이 포함될 수 있는 대본입니다. 뉴스 활용 수준을 확인하세요.") from None
                 key = os.environ.get("NEWSFLOW_AI_API_KEY", "")
                 if key and key in json.dumps(
                     {"content": draft.content, "sources": draft.sources}, ensure_ascii=False

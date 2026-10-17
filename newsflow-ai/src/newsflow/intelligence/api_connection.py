@@ -1,4 +1,4 @@
-"""Explicit, non-inference Claude API connection checks.
+"""Explicit, non-inference OpenAI and Claude API connection checks.
 
 Only the official model metadata GET is sent. A successful response proves key
 authentication and access to that model, not billing, inference or web search.
@@ -21,13 +21,14 @@ from sqlalchemy.orm import Session, sessionmaker
 from newsflow.db.models import utcnow
 
 from .api_providers import API_MODELS
-from .api_settings import _read, _time
+from .api_settings import _provider, _read, _time
 from .credentials import CredentialError
 from .provider import OpenAIProvider, ProviderResponseError
 from .settings import _set, _value
 
 PROVIDER = "claude_api"
 ENDPOINT = "https://api.anthropic.com/v1/models/"
+ENDPOINTS = {PROVIDER: ENDPOINT, "openai": "https://api.openai.com/v1/models/"}
 TIMEOUT_SECONDS = 15
 MAX_RESPONSE_BYTES = 64 * 1024
 BUSY_TTL = timedelta(seconds=60)
@@ -61,8 +62,11 @@ class ConnectionCheckResult:
     checked_at: str | None = None
 
 
-def _result(code: str, checked_at: str | None = None) -> ConnectionCheckResult:
-    return ConnectionCheckResult(code == "success", code, CHECK_MESSAGES[code], checked_at)
+def _result(code: str, checked_at: str | None = None, provider: str = PROVIDER) -> ConnectionCheckResult:
+    message = CHECK_MESSAGES[code]
+    if provider == "openai":
+        message = message.replace("Claude", "OpenAI")
+    return ConnectionCheckResult(code == "success", code, message, checked_at)
 
 
 def invalidate_connection_check(session: Session, provider: str) -> None:
@@ -73,22 +77,24 @@ def invalidate_connection_check(session: Session, provider: str) -> None:
 
 
 def read_connection_check(sessions: sessionmaker[Session], provider: str = PROVIDER) -> ConnectionCheckResult:
+    _provider(provider)
     with sessions() as session:
         code = _value(session, f"api_{provider}_connection_check_code")
         checked_at = _value(session, f"api_{provider}_connection_checked_at")
-    return _result(code if code in CHECK_MESSAGES else "not_checked", checked_at if _time(checked_at) else None)
+    return _result(code if code in CHECK_MESSAGES else "not_checked",
+                   checked_at if _time(checked_at) else None, provider)
 
 
-def _clear_proof(session: Session) -> None:
+def _clear_proof(session: Session, provider: str = PROVIDER) -> None:
     for name in _PROOF_KEYS:
-        _set(session, f"api_{PROVIDER}_{name}", "")
+        _set(session, f"api_{provider}_{name}", "")
 
 
-def _record(session: Session, code: str, checked_at: str) -> ConnectionCheckResult:
-    _set(session, f"api_{PROVIDER}_connection_check_id", "")
-    _set(session, f"api_{PROVIDER}_connection_check_code", code)
-    _set(session, f"api_{PROVIDER}_connection_checked_at", checked_at)
-    return _result(code, checked_at)
+def _record(session: Session, code: str, checked_at: str, provider: str = PROVIDER) -> ConnectionCheckResult:
+    _set(session, f"api_{provider}_connection_check_id", "")
+    _set(session, f"api_{provider}_connection_check_code", code)
+    _set(session, f"api_{provider}_connection_checked_at", checked_at)
+    return _result(code, checked_at, provider)
 
 
 def _key(key_store) -> str:
@@ -101,11 +107,13 @@ def _key(key_store) -> str:
     return key
 
 
-def _check_model(model: str, key: str, transport) -> str:
-    request = urllib.request.Request(
-        ENDPOINT + model, method="GET",
-        headers={"x-api-key": key, "anthropic-version": "2023-06-01", "Accept": "application/json"},
-    )
+def _check_model(model: str, key: str, transport, provider: str = PROVIDER) -> str:
+    headers = {"Accept": "application/json"}
+    if provider == "openai":
+        headers["Authorization"] = "Bearer " + key
+    else:
+        headers.update({"x-api-key": key, "anthropic-version": "2023-06-01"})
+    request = urllib.request.Request(ENDPOINTS[provider] + model, method="GET", headers=headers)
     try:
         # Reuse the existing verified-TLS, no-redirect transport directly: _send's
         # retry logic is deliberately never entered. Tests inject only this seam.
@@ -114,7 +122,8 @@ def _check_model(model: str, key: str, transport) -> str:
         if not isinstance(raw, bytes) or len(raw) > MAX_RESPONSE_BYTES:
             return "invalid_response"
         document = json.loads(raw)
-        if not isinstance(document, dict) or document.get("type") != "model" or document.get("id") != model:
+        kind = "object" if provider == "openai" else "type"
+        if not isinstance(document, dict) or document.get(kind) != "model" or document.get("id") != model:
             return "invalid_response"
         return "success"
     except urllib.error.HTTPError as error:
@@ -135,8 +144,8 @@ def _check_model(model: str, key: str, transport) -> str:
         return "unavailable"
 
 
-def check_claude_connection(
-    sessions: sessionmaker[Session], key_store, *, consent: bool, transport=None,
+def check_api_connection(
+    sessions: sessionmaker[Session], key_store, *, provider: str, consent: bool, transport=None,
 ) -> ConnectionCheckResult:
     """Perform one user-requested metadata check without spending inference budget.
 
@@ -145,53 +154,61 @@ def check_claude_connection(
     A key/model change or new check invalidates a late result. Budget, approvals,
     provider choice and key files are never changed here.
     """
+    _provider(provider)
     if consent is not True:
-        return _result("consent_required")
+        return _result("consent_required", provider=provider)
     now = utcnow()
-    prefix = f"api_{PROVIDER}_"
+    prefix = f"api_{provider}_"
     generation = uuid.uuid4().hex
     with sessions.begin() as session:
         session.connection().exec_driver_sql("BEGIN IMMEDIATE")
         started = _time(_value(session, prefix + "connection_check_started_at"))
         if (_value(session, prefix + "connection_check_id") and started is not None
                 and timedelta(0) <= now - started < BUSY_TTL):
-            return _result("busy")
-        settings = _read(session, PROVIDER)
+            return _result("busy", provider=provider)
+        settings = _read(session, provider)
         try:
             key = _key(key_store)
         except (CredentialError, OSError):
-            _clear_proof(session)
-            return _record(session, "key_error", now.isoformat())
+            _clear_proof(session, provider)
+            return _record(session, "key_error", now.isoformat(), provider)
         if not key:
-            _clear_proof(session)
-            return _record(session, "key_missing", now.isoformat())
+            _clear_proof(session, provider)
+            return _record(session, "key_missing", now.isoformat(), provider)
         model = settings.model
-        if not re.fullmatch(r"[A-Za-z0-9._-]{1,80}", model) or model not in API_MODELS[PROVIDER]:
-            _clear_proof(session)
-            return _record(session, "unsupported_model", now.isoformat())
+        if not re.fullmatch(r"[A-Za-z0-9._-]{1,80}", model) or model not in API_MODELS[provider]:
+            _clear_proof(session, provider)
+            return _record(session, "unsupported_model", now.isoformat(), provider)
         _set(session, prefix + "connection_check_id", generation)
         _set(session, prefix + "connection_check_started_at", now.isoformat())
         _set(session, prefix + "connection_check_code", "checking")
 
-    code = _check_model(model, key, transport)
+    code = _check_model(model, key, transport, provider)
     with sessions.begin() as session:
         session.connection().exec_driver_sql("BEGIN IMMEDIATE")
         if _value(session, prefix + "connection_check_id") != generation:
-            return _result("stale")  # Never replace newer settings or verification.
-        current = _read(session, PROVIDER)
+            return _result("stale", provider=provider)  # Never replace newer settings or verification.
+        current = _read(session, provider)
         try:
             same_key = hmac.compare_digest(_key(key_store), key)
         except (CredentialError, OSError):
             same_key = False
         checked_at = utcnow().isoformat()
         if current.model != model or not same_key:
-            _clear_proof(session)
-            return _record(session, "stale", checked_at)
+            _clear_proof(session, provider)
+            return _record(session, "stale", checked_at, provider)
         if code == "success":
             if current.verified_model != model:
-                _clear_proof(session)
+                _clear_proof(session, provider)
             _set(session, prefix + "authentication_verified_at", checked_at)
             _set(session, prefix + "verified_model", model)
         else:
-            _clear_proof(session)
-        return _record(session, code, checked_at)
+            _clear_proof(session, provider)
+        return _record(session, code, checked_at, provider)
+
+
+def check_claude_connection(
+    sessions: sessionmaker[Session], key_store, *, consent: bool, transport=None,
+) -> ConnectionCheckResult:
+    """Compatibility entry point for the existing Claude connection screen."""
+    return check_api_connection(sessions, key_store, provider=PROVIDER, consent=consent, transport=transport)

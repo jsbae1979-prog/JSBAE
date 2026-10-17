@@ -17,6 +17,45 @@ from newsflow.intelligence.provider import ProviderResponseError
 from newsflow.news.dedup import canonical_url
 from newsflow.news.rss_adapter import URLPolicyError, validate_url
 
+SEARCH_FAILURE_MESSAGES = {
+    "response_envelope": "공급사 응답 JSON 또는 응답 보호 검사에 실패했습니다.",
+    "incomplete_response": "응답이 정상 종료되지 않았습니다. 자동 연속 호출하지 않습니다.",
+    "response_text": "최종 응답의 텍스트 블록 형식이 올바르지 않습니다.",
+    "tool_policy": "허용되지 않은 검색 도구 또는 호출 방식입니다.",
+    "tool_pairing": "검색 도구 호출과 결과 식별자가 일치하지 않습니다.",
+    "search_tool_error": "HTTP 성공 응답 안에서 검색 도구 오류가 반환됐습니다.",
+    "source_evidence": "검색 도구가 반환한 유효한 출처 근거가 없습니다.",
+    "usage_mismatch": "검색 도구 실행과 사용량 기록이 일치하지 않습니다.",
+    "result_json": "최종 뉴스 결과를 JSON 객체로 해석하지 못했습니다.",
+    "article_schema": "뉴스 결과의 필수 필드·자료형·길이 조건을 충족하지 못했습니다.",
+    "article_count": "뉴스 결과 건수가 요청한 범위를 벗어났습니다.",
+    "source_binding": "뉴스 결과의 URL·제목 근거가 실제 검색 출처와 일치하지 않습니다.",
+    "result_contract": "최종 검색 결과 계약 검증에 실패했습니다.",
+}
+TOOL_ERROR_CODES = {
+    "too_many_requests", "invalid_tool_input", "max_uses_exceeded",
+    "query_too_long", "request_too_large", "unavailable",
+}
+
+
+class SearchResponseError(ProviderResponseError):
+    """Keep the public error code; persist only fixed, secret-safe diagnostics.
+
+    Never attach vendor text, JSON decode errors or Pydantic input values.
+    """
+
+    def __init__(self, failure_reason: str, *, tool_error_code=None):
+        self.failure_reason = (failure_reason if isinstance(failure_reason, str)
+                               and failure_reason in SEARCH_FAILURE_MESSAGES else "result_contract")
+        self.tool_error_code = None
+        if self.failure_reason == "search_tool_error":
+            self.tool_error_code = (tool_error_code if isinstance(tool_error_code, str)
+                                    and tool_error_code in TOOL_ERROR_CODES else "other")
+        message = SEARCH_FAILURE_MESSAGES[self.failure_reason]
+        if self.tool_error_code:
+            message += f" ({self.tool_error_code})"
+        super().__init__(message)
+
 
 def safe_source_url(value: str) -> str:
     try:
@@ -170,7 +209,7 @@ def validate_search_result(result: SearchResult | dict) -> SearchResult:
         payload = result.model_dump(mode="json") if isinstance(result, SearchResult) else result
         return SearchResult.model_validate_json(json.dumps(payload, ensure_ascii=False))
     except (ValueError, TypeError):
-        raise ProviderResponseError("검색 도구 근거 또는 기사 JSON 검증에 실패했습니다.") from None
+        raise SearchResponseError("result_contract") from None
 
 
 def bind_search_result(
@@ -180,8 +219,11 @@ def bind_search_result(
     """Bind generated claims to observed sources, preserving unknown source metadata."""
     try:
         generated = GeneratedSearch.model_validate_json(json.dumps(payload, ensure_ascii=False))
-        if len(generated.articles) > request.count:
-            raise ValueError
+    except (ValueError, TypeError):
+        raise SearchResponseError("article_schema") from None
+    if len(generated.articles) > request.count:
+        raise SearchResponseError("article_count")
+    try:
         observed = {canonical_url(source.url): source for source in tool_evidence.sources}
         articles = []
         for item in generated.articles:
@@ -201,7 +243,7 @@ def bind_search_result(
             tool_evidence=tool_evidence, usage=usage,
         )
     except (ValueError, TypeError):
-        raise ProviderResponseError("실제 검색 출처와 뉴스 결과가 일치하지 않거나 형식이 잘못되었습니다.") from None
+        raise SearchResponseError("source_binding") from None
 
 
 SEARCH_INSTRUCTION = (
@@ -217,3 +259,15 @@ SEARCH_INSTRUCTION = (
     "Do not use any tools other than the provided web search. Keep titles under 200, summaries under "
     "800, list items under 800 characters. If no trustworthy sources were returned, articles must be empty."
 )
+
+# Claude web search always supplies citations; output_config.format is not
+# compatible with citations. Give the existing contract as a prompt instead of
+# introducing an incompatible API option or a second formatting request.
+CLAUDE_SEARCH_INSTRUCTION = SEARCH_INSTRUCTION + (
+    " After the search, the final text must be one complete JSON object with only the key articles. "
+    "Start with { and end with }. Do not wrap it in Markdown or add an introduction, conclusion, "
+    "footnotes or another JSON object. Escape quotes and newlines inside JSON strings. "
+    "Use literal source URLs in url and related_urls, never citation placeholders. "
+    "Provider citation metadata may accompany text blocks; keep the JSON text valid. "
+    "Follow this JSON Schema; if sources are insufficient, return {\"articles\":[]} rather than inventing news: "
+) + json.dumps(GeneratedSearch.model_json_schema(), ensure_ascii=False, separators=(",", ":"))

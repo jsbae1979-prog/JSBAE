@@ -11,7 +11,7 @@ from pathlib import Path
 from threading import Event, Thread
 from typing import Any
 
-from sqlalchemy import or_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from newsflow.db.models import (
@@ -31,6 +31,7 @@ from newsflow.db.models import (
 )
 from newsflow.intelligence.capabilities import NEWS_CATEGORIES, require_acquisition
 from newsflow.intelligence.korean import MIN_SUMMARY_CHARS, speech_plan
+from newsflow.intelligence.news_usage import assess_news_usage
 from newsflow.intelligence.provider import Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import ANALYSIS_MAX_TOKENS, max_tokens_for, read_settings
@@ -325,7 +326,12 @@ class PipelineBackend:
                      if ctx["period"] == "today" else requested - timedelta(days=7 if ctx["period"] == "7d" else 1))
             since = since.astimezone(UTC)
             # Unknown/future dates remain in the DB, but never become confirmed current news.
-            conditions += [NewsArticle.published_at >= since, NewsArticle.published_at <= requested]
+            dated = and_(NewsArticle.published_at >= since, NewsArticle.published_at <= requested)
+            if ctx.get("news_usage") and ctx.get("search_run_id"):
+                # Unknown search dates may supply topics, never confirmed current events.
+                dated = or_(dated, and_(NewsArticle.id.in_(ctx.get("search_article_ids", [])),
+                                       NewsArticle.published_at.is_(None)))
+            conditions.append(dated)
             category = NEWS_CATEGORIES[ctx["category"]]
             if ctx["category"] != "all":
                 conditions.append(NewsArticle.category == category)
@@ -346,13 +352,15 @@ class PipelineBackend:
                         ),
                     )
                     .order_by(ArticleScore.total.desc(), NewsArticle.collected_at.desc(), NewsArticle.id)
-                    .limit(10 if ctx.get("unified") else 100)
+                    .limit(10 if ctx.get("unified") or ctx.get("news_usage") else 100)
                 )
             )
         self._cancel(cancel)
         if not candidates:
             raise BackendError("제작할 뉴스가 없습니다. 다른 출처로 다시 시도하세요.",
                                code="no_eligible_articles" if ctx.get("unified") else "no_articles")
+        if ctx.get("news_usage") and (ctx["source"] != "sample" or ctx["news_usage"] == "VERIFIED"):
+            return self._select_topic(ctx, candidates, cancel, progress, save)
         analysis_id = ctx.get("analysis_run_id")
         selection_method = "rss_heuristic"
         selection_reason = "RSS 내부 추천 후보 순서 · 실제 조회수·화제성 측정 아님"
@@ -402,6 +410,52 @@ class PipelineBackend:
             **({"analysis_run_id": analysis_id, "analysis_provider": ctx.get("ai_mode", "offline"),
                 "ai_model": ctx.get("ai_model"), "analyzed_article_ids": candidates} if analysis_id else {}),
         }
+
+    def _select_topic(self, ctx: dict, candidates: list[int], cancel: Event,
+                      progress: Progress, save: SaveArtifact) -> dict:
+        """Unverified sources select a topic; no second inference or factual promotion."""
+        analysis_id = ctx.get("analysis_run_id")
+        if analysis_id:
+            with self.sessions() as session:
+                run = session.get(IntelligenceRun, analysis_id)
+                if (not run or run.status != "success" or run.kind != "analysis"
+                        or run.provider != "local_topic_template"
+                        or run.evidence.get("news_usage") != ctx["news_usage"]):
+                    raise BackendError(code="ai_request_stopped", retryable=False)
+                evidence = run.evidence
+                candidates = [a["id"] for a in evidence["articles"]]
+        else:
+            evidence = self.intelligence.evidence_for(candidates)
+        assessment = assess_news_usage(evidence, ctx["news_usage"])
+        if assessment["approach"] == "blocked":
+            raise BackendError(assessment["message"], code="news_evidence_required", retryable=False)
+        candidates = assessment["preferred_article_ids"]
+        chosen = ctx.get("article_id") or candidates[0]
+        if chosen not in candidates:
+            raise BackendError(code="select_failed", retryable=False)
+        self._cancel(cancel)
+        if analysis_id is None:
+            try:
+                analysis_id = self.intelligence.create_topic_analysis(
+                    candidates, ctx["news_usage"], category=ctx.get("category"),
+                    selected_provider=ctx.get("ai_mode", "offline"),
+                    on_run=self._remember(ctx, "analysis_run_id", save),
+                )
+            except IntelligenceError:
+                raise BackendError(code="news_usage_script", retryable=False) from None
+        with self.sessions() as session:
+            article = session.get(NewsArticle, chosen)
+            sufficient = bool(article and len(article.summary.strip()) >= MIN_SUMMARY_CHARS)
+            dated = bool(article and article.published_at)
+        selected = {**evidence, "articles": [a for a in evidence["articles"] if a["id"] == chosen]}
+        assessment = assess_news_usage(selected, ctx["news_usage"])
+        progress(100, "주제 참고 자료를 골랐어요. 개별 사건의 원문 사실은 미검증입니다.")
+        return {"article_id": chosen, "candidate_article_ids": candidates,
+                "content_sufficient": sufficient, "publication_dated": dated,
+                "synthetic_news": ctx["source"] == "sample", "selection_method": "topic_reference",
+                "selection_reason": assessment["message"], "analysis_run_id": analysis_id,
+                "analysis_provider": "local_topic_template", "analyzed_article_ids": candidates,
+                "news_usage_result": assessment, "script_method": "local_topic_template"}
 
     def _speech(self) -> SpeechSettings:
         from newsflow.easy_setup import speech_preferences
@@ -464,6 +518,7 @@ class PipelineBackend:
                                        "source": ctx["source"], "initial_duration": ctx["duration"],
                                        "initial_provider": ctx["ai_mode"], "initial_model": ctx["ai_model"],
                                        "initial_voice": ctx.get("voice") or "silent", "initial_video": "off",
+                                       "news_usage": ctx.get("news_usage"),
                                    }, "external_consent": ctx.get("external_consent", False),
                                    "consented_at": ctx.get("consented_at"),
                                    "news_method": ("synthetic_rss" if ctx["source"] == "sample" else
@@ -524,6 +579,8 @@ class PipelineBackend:
         }
 
     def _script(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        if ctx.get("script_method") == "local_topic_template":
+            return self._topic_script(ctx, cancel, progress, save)
         ai_mode = ctx.get("ai_mode", "offline")
         if ctx.get("content_draft_id"):
             with self.sessions() as session:
@@ -613,7 +670,50 @@ class PipelineBackend:
             return {**self._draft_summary(draft, ai_mode), "analysis_run_id": analysis_id,
                     "script_provider": ai_mode, "ai_model": ctx.get("ai_model")}
 
+    def _topic_script(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        draft_id = ctx.get("content_draft_id")
+        with self.sessions() as session:
+            if not draft_id and ctx.get("script_run_id"):
+                draft_id = session.scalar(select(ContentDraft.id).where(ContentDraft.run_id == ctx["script_run_id"]))
+                if not draft_id:
+                    raise BackendError(code="ai_request_stopped", retryable=False)
+        self._cancel(cancel)
+        if draft_id is None:
+            try:
+                draft_id = self.intelligence.generate_topic(
+                    ctx["analysis_run_id"], ctx["duration"], ctx["news_usage"],
+                    article_ids=[ctx["article_id"]], on_run=self._remember(ctx, "script_run_id", save),
+                )
+            except IntelligenceError:
+                raise BackendError(code="news_usage_script", retryable=False) from None
+        with self.sessions() as session:
+            draft = session.get(ContentDraft, draft_id)
+            if (not draft or draft.duration != ctx["duration"]
+                    or {a["id"] for a in draft.sources["articles"]} != {ctx["article_id"]}
+                    or draft.sources.get("news_usage") != ctx["news_usage"]):
+                raise BackendError(code="news_usage_script", retryable=False)
+            self._check_topic_draft(draft)
+            result = {**self._draft_summary(draft, ctx.get("ai_mode", "offline")),
+                      "analysis_run_id": ctx["analysis_run_id"], "script_run_id": draft.run_id,
+                      "script_provider": "local_topic_template", "script_method": "local_topic_template",
+                      "news_usage_result": draft.sources["news_usage_result"]}
+        save("content_draft_id", draft_id)
+        progress(100, "주제 설명 대본을 준비했어요. 추가 AI 호출 없이 만들었으며 검토가 필요해요.")
+        return result
+
+    @staticmethod
+    def _check_topic_draft(draft: ContentDraft) -> None:
+        try:
+            IntelligenceService.check_news_usage(draft.content, draft.sources)
+        except IntelligenceError:
+            raise BackendError(code="news_usage_script", retryable=False) from None
+
     def _render(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        with self.sessions() as session:
+            draft = session.get(ContentDraft, ctx["content_draft_id"])
+            if not draft:
+                raise BackendError(code="news_usage_script", retryable=False)
+            self._check_topic_draft(draft)
         identifier = ctx.get("render_job_id")
         if identifier:
             with self.sessions() as session:

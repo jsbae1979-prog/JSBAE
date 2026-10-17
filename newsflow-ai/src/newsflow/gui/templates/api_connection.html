@@ -29,14 +29,34 @@
   <form method="post" action="/api-settings/{{ key }}/key/clear" data-settings-form data-settings-watch>{{ csrf_field() }}<button type="submit" class="subtle-button">저장된 키 삭제</button></form>
   {% endif %}
   {% if api.key.environment %}<p class="hint">환경변수 키도 있습니다. 저장된 키를 삭제해도 환경변수는 유지됩니다.</p>{% endif %}
-  {% if key == 'claude_api' %}
-  <form method="post" action="/api-settings/claude_api/check" data-settings-form data-settings-watch>
+  <form method="post" action="/api-settings/{{ key }}/check" data-settings-form data-settings-watch>
     {{ csrf_field() }}
     <p class="hint">저장된 모델 <strong>{{ api.settings.model }}</strong>의 접근 권한만 확인합니다. 모델을 바꿨다면 제작 구성을 먼저 저장하세요. 생성·웹 검색은 실행하지 않습니다.</p>
-    <label class="check"><input type="checkbox" name="consent" value="true" required> 저장된 API Key를 Claude에 보내 인증·모델 접근을 확인하는 데 동의합니다.</label>
-    <button type="submit">Claude API 연결 확인</button>
+    <label class="check"><input type="checkbox" name="consent" value="true" required> 저장된 API Key를 {{ api_label }}에 보내 인증·모델 접근을 확인하는 데 동의합니다.</label>
+    <button type="submit">{{ api_label }} 연결 확인</button>
     <p class="hint">연결 확인에는 사용 승인·예산 입력이 필요하지 않습니다.</p>
   </form>
+
+  {% if api.first_search is defined %}
+  {% set probe = api.first_search %}
+  <section aria-labelledby="{{ key }}-search-check-title">
+    <h3 id="{{ key }}-search-check-title">최초 웹 검색 검증</h3>
+    <p class="hint">최근 24시간 IT 뉴스 1건 · 검색 요청 1회 · 검색 도구 최대 1회 · 출력 최대 3,000토큰. 분석·대본·영상은 시작하지 않습니다.</p>
+    <p>사전 예약액 <strong>{{ probe.reserved_usd or '계산 불가' }} USD</strong> · 요청 한도 {{ api.settings.request_limit_usd }} USD</p>
+    <p class="hint">예약액은 실제 청구액이 아닙니다. 기존 사용 승인·검색 동의·월 한도·계정 잔여 예산이 모두 필요합니다.</p>
+    {% if api.search_check %}<p role="status">{{ api.search_check.message }}</p>{% endif %}
+    {% if not probe.ready %}<p class="settings-warning" role="status">{{ probe.reasons|join(' / ') }}</p>{% endif %}
+    <form method="post" action="/api-settings/{{ key }}/check-search" data-settings-form data-settings-watch>
+      {{ csrf_field() }}
+      <input type="hidden" name="model" value="{{ probe.model }}">
+      <input type="hidden" name="authentication_at" value="{{ probe.authentication_at or '' }}">
+      <input type="hidden" name="max_cost_usd" value="{{ probe.reserved_usd or '' }}">
+      <label class="check"><input type="checkbox" name="consent" value="true" required> 뉴스 검색 조건을 {{ api_label }}에 전송하고, 표시된 예약액과 저장된 한도 안에서 검색·토큰 비용이 발생하는 1회 검증에 동의합니다.</label>
+      <button type="submit" {% if not probe.ready %}disabled{% endif %}>유료 웹 검색 1회 검증</button>
+    </form>
+    <p class="hint">같은 인증 기록의 검증은 다시 전송하지 않습니다. 시간 초과·결과 불명 시 예약을 유지하고 새 호출을 차단합니다. 검색 성공도 기사 발행일·사실 확인 완료를 의미하지 않습니다.</p>
+    {% if api.search_check.sources %}<ul>{% for source in api.search_check.sources %}<li><a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.title }}</a></li>{% endfor %}</ul>{% endif %}
+  </section>
   {% endif %}
 
   <div class="api-budget-summary">

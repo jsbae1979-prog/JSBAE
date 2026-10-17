@@ -50,6 +50,7 @@ from .api_settings_routes import connection_status
 from .production_context import (
     ACQUISITION_LABELS,
     CATEGORY_LABELS,
+    NEWS_USAGE_LABELS,
     PERIOD_LABELS,
     acquisition_preferences,
     context_json,
@@ -98,7 +99,7 @@ def _defaults(request: Request) -> dict[str, Any]:
 def _page(request: Request, template: str, **context: Any) -> HTMLResponse:
     response = page(
         request, template, platform_labels=PLATFORMS, status_labels=STATUSES,
-        stage_labels=STAGE_LABELS, ai_labels=AI_LABELS, **context,
+        stage_labels=STAGE_LABELS, ai_labels=AI_LABELS, news_usage_labels=NEWS_USAGE_LABELS, **context,
     )
     response.headers["Cache-Control"] = "no-store"
     return response
@@ -152,8 +153,8 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
         rss_supported = False
         rss_notice = "등록 뉴스 자동 제작에 필요한 AI 연결·비용 승인을 설정에서 확인해 주세요."
     else:
-        rss_notice = ("RSS 확보 → 같은 AI의 분석·대본 작성 → 대본 검토 → 영상 제작으로 이어집니다. "
-                      "외부 AI는 전송·계정 사용량 동의 후 실행하며, 체험 뉴스는 Offline으로 연습해요.")
+        rss_notice = ("RSS 자료 확인 → 뉴스 활용 수준 적용 → 대본 검토 → 영상 제작으로 이어집니다. "
+                      "미검증 자료는 추가 AI 호출 없이 주제 설명으로 제한하며, 검증 우선은 근거 부족 시 중단해요.")
     cached = getattr(request.app.state, "claude_status" if provider == "claude_code" else "codex_status", {})
     auth_checked = provider == "offline" or (provider in {"claude_code", "codex"}
                                              and cached.get("state") == "ready" and cached.get("ready") is True)
@@ -178,7 +179,7 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
             usable = (gate["ready"] and voice["installed"] and voice["name"] != "elevenlabs"
                       and not manual_video and (policy != "hybrid" or ready["rss"]["ready"]))
             detail = " ".join(gate["reasons"]) if not gate["ready"] else (
-                "검색 → 같은 API 분석·대본 → 사용자 검토. 원문 사실 검증은 별도입니다."
+                "웹 검색 → 뉴스 활용 수준 적용 → 사용자 검토. 미검증 대본은 추가 AI 호출 없이 주제 설명으로 제한합니다."
                 if usable else "선택한 음성·영상 또는 RSS 보완 출처를 확인하세요.")
             policy_states[policy].update(supported=usable, auth_checked=gate["authentication_verified"],
                 title="API 뉴스 검색 실행 조건 확인됨" if usable else "AI 웹 뉴스 조사 BLOCKED",
@@ -397,9 +398,10 @@ def quick_start(
     request: Request, source: str = Form(max_length=10), duration: int = Form(),
     acquisition_policy: str | None = Form(None, max_length=10),
     category: str | None = Form(None, max_length=20), period: str | None = Form(None, max_length=10),
+    news_usage: str = Form("STANDARD", max_length=12),
     workspace: bool = Form(False),
 ) -> RedirectResponse:
-    """Two-choice entry point, with the same coordinator and all existing review gates."""
+    """Workspace entry point, with the same coordinator and all existing review gates."""
     if source not in CHOICES["source"] or duration not in {30, 45, 60}:
         raise HTTPException(422, "뉴스 종류와 30·45·60초 중 영상 길이를 선택해 주세요.")
     ready = readiness(request)
@@ -417,6 +419,7 @@ def quick_start(
         "initial_provider": saved["provider"] if source == "feeds" else "offline",
         "initial_model": saved["model"] if source == "feeds" else "offline",
         "initial_voice": ready["voice"]["name"], "initial_video": video_mode,
+        "news_usage": news_usage,
         "initial_platform": _defaults(request)["platform"], **acquisition,
         **({"request_id": uuid4().hex} if source == "feeds" else {}),
         })
@@ -464,7 +467,8 @@ def _start_production(request: Request, flow: dict, *, external_consent: bool, w
             mode="guided", source=source, duration=flow["initial_duration"],
             platform=flow.get("initial_platform", _defaults(request)["platform"]),
             content_mode="real" if source == "feeds" else "trial",
-            ai_mode=provider if source == "feeds" else "offline", voice=voice, **options,
+            ai_mode=provider if source == "feeds" else "offline", voice=voice,
+            news_usage=flow.get("news_usage", "STANDARD"), **options,
         )
     except AutopilotError as exc:
         raise _error(exc) from None

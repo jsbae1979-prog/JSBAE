@@ -6,10 +6,10 @@ from sqlalchemy import select
 
 from newsflow.db.models import AudioTrack, ContentDraft, IntelligenceRun, NewsArticle, RenderJob, VideoProject
 
-from .production_context import context_for_run
+from .production_context import NEWS_USAGE_LABELS, context_for_run
 
 PROVIDERS = {"offline": "Offline", "openai": "OpenAI API", "claude_code": "Claude Code", "codex": "Codex",
-             "claude_api": "Claude API"}
+             "claude_api": "Claude API", "local_topic_template": "주제 설명 템플릿"}
 VOICES = {"offline": "무음", "windows": "Windows SAPI", "supertonic": "Supertonic 3", "elevenlabs": "ElevenLabs"}
 
 
@@ -81,6 +81,12 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
             provider = run_label(script or analysis, item["ai_mode"])
             if analysis and script and analysis.provider != script.provider:
                 provider = f"분석 {run_label(analysis)} / 대본 {run_label(script)}"
+            usage_result = item.get("news_usage_result") if isinstance(item.get("news_usage_result"), dict) else None
+            topic_template = (item.get("script_method") == "local_topic_template"
+                              or item.get("actual_method") == "local_topic_template"
+                              or usage_result and usage_result.get("actual_method") == "local_topic_template")
+            if topic_template:
+                provider = "주제 설명 템플릿 · 추가 AI 호출 없음"
             rows.append({
                 "id": "auto:" + item["id"], "kind": "auto", "title": draft.content.get("title", "") if draft else
                 article.title if article else "제작할 뉴스를 준비하고 있어요", "status": status,
@@ -97,8 +103,14 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                                 + (" · Fake 검증" if search and search.result and search.result.get("simulated") else
                                    " · 도구 결과 확인" if search and search.status == "success" else " · 완료 미확인")),
                 "search_engine": run_label(search, item["ai_mode"]),
-                "analysis_engine": run_label(analysis, item["ai_mode"]),
-                "script_engine": run_label(script, item["ai_mode"]),
+                "news_usage": item.get("news_usage", "STANDARD"),
+                "news_usage_label": NEWS_USAGE_LABELS.get(item.get("news_usage", "STANDARD"), "확인 필요"),
+                "news_usage_result": usage_result,
+                "analysis_engine": "주제 설명 템플릿 · 추가 AI 호출 없음"
+                if item.get("analysis_provider") == "local_topic_template"
+                or analysis and analysis.provider == "local_topic_template" else run_label(analysis, item["ai_mode"]),
+                "script_engine": "주제 설명 템플릿 · 추가 AI 호출 없음" if topic_template
+                else run_label(script, item["ai_mode"]),
                 "model": item.get("ai_model") or (script or analysis).options.get("model", "")
                 if script or analysis or item.get("ai_model") else "",
             })
