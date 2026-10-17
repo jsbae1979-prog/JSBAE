@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from typing import Annotated
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
-from newsflow.db.models import ContentDraft, IntelligenceRun, NewsArticle
+from newsflow.db.models import AutopilotArtifact, AutopilotJob, ContentDraft, IntelligenceRun, NewsArticle
 from newsflow.easy_setup import preview_preferences
 from newsflow.intelligence.estimate import estimate_call, estimate_cost
+from newsflow.intelligence.news_usage import safe_topic_script
 from newsflow.intelligence.provider import SCRIPT_INSTRUCTION, Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import (
@@ -35,6 +37,42 @@ from .production_context import (
 from .routes import go, page
 
 router = APIRouter()
+
+
+def _topic_editor_options(draft: ContentDraft | None) -> list[dict]:
+    """Only known text variants for this saved source and scene role enter controls."""
+    if not draft or not draft.sources.get("news_usage"):
+        return []
+    try:
+        variants = [safe_topic_script(draft.sources, duration) for duration in (30, 45, 60)]
+        topic = variants[0]["title"].split(" · ")[0]
+    except (ValueError, TypeError, KeyError):
+        return [{} for _ in draft.content.get("scenes", [])]
+    result = []
+    for scene in draft.content.get("scenes", []):
+        roles = {index for variant in variants for index, allowed in enumerate(variant["scenes"])
+                 if scene["narration"] == allowed["narration"] and scene["material"] == allowed["material"]}
+        if len(roles) != 1:
+            result.append({})  # Older preserved drafts remain readable without guessed alternatives.
+            continue
+        role = roles.pop()
+        narrations = sorted({variant["scenes"][role]["narration"] for variant in variants}, key=lambda value: (len(value), value))
+        caption = variants[0]["scenes"][role]["caption"]
+        protected = "개별 기사 미확인" in caption
+        result.append({"short": narrations[0], "full": narrations[-1], "topic": topic,
+                       "protected": protected, "captions": [caption] if protected else [caption, topic]})
+    return result
+
+
+def _draft_workspace_link(session, draft: ContentDraft | None) -> str:
+    """Derive a local return link from the durable relationship, never a supplied URL."""
+    if draft is None:
+        return "/"
+    identifier = session.scalar(select(AutopilotJob.id).join(
+        AutopilotArtifact, AutopilotArtifact.job_id == AutopilotJob.id,
+    ).where(AutopilotArtifact.kind == "content_draft_id", AutopilotArtifact.reference == str(draft.id))
+        .order_by(AutopilotJob.created_at.desc()).limit(1))
+    return f"/?task={identifier}#workspace-detail" if identifier and re.fullmatch(r"[a-f0-9]{32}", identifier) else "/"
 
 
 @router.post("/ai/codex/status")
@@ -171,6 +209,9 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
             active="ai",
             analysis=analysis,
             draft=draft,
+            topic_editor=bool(draft and draft.sources.get("news_usage")),
+            topic_options=_topic_editor_options(draft),
+            workspace_return=_draft_workspace_link(session, draft),
             draft_json=json.dumps(draft.content, ensure_ascii=False, indent=2) if draft else "",
             articles=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(100))),
             runs=list(session.scalars(select(IntelligenceRun).order_by(IntelligenceRun.id.desc()).limit(30))),

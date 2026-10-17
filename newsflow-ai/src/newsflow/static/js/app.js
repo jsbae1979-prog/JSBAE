@@ -1,4 +1,30 @@
 'use strict';
+document.querySelectorAll('[data-scene-up]').forEach(control => {
+  control.addEventListener('click', () => {
+    const scene = control.closest('fieldset');
+    const previous = scene.previousElementSibling;
+    if (previous?.matches('[data-topic-scene]')) previous.before(scene);
+    scene.parentElement.querySelectorAll('[data-topic-scene] legend').forEach((legend, index) => {
+      legend.textContent = `장면 ${index + 1}`;
+    });
+  });
+});
+document.querySelectorAll('[data-short-caption]').forEach(control => {
+  control.addEventListener('click', () => {
+    const caption = control.closest('fieldset').querySelector('[name="caption"]');
+    // Keep the on-screen uncertainty notice; the server independently checks it.
+    if (!caption.value.includes('개별 기사 미확인')) caption.value = control.dataset.shortCaption;
+  });
+});
+document.querySelectorAll('[data-topic-narration-short]').forEach(control => {
+  control.addEventListener('click', () => {
+    const narration = control.closest('fieldset').querySelector('[name="narration"]');
+    narration.value = narration.value === control.dataset.topicNarrationShort
+      ? control.dataset.topicNarrationFull : control.dataset.topicNarrationShort;
+    control.textContent = narration.value === control.dataset.topicNarrationShort
+      ? '이 장면을 자세히' : '이 장면을 짧게';
+  });
+});
 const state = document.getElementById('collection-status');
 const button = document.getElementById('collect-button');
 const labels = {idle:'대기',running:'수집 중',success:'성공',partial:'부분 실패',failed:'실패',empty:'활성 출처 없음',interrupted:'중단'};
@@ -47,7 +73,8 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
         body: new URLSearchParams(new FormData(form))
       });
       if (!response.ok) {
-        if (response.status === 422 && (form.hasAttribute('data-ai-studio') || form.hasAttribute('data-settings-form'))) {
+        if (response.status === 422 && (form.hasAttribute('data-ai-studio') || form.hasAttribute('data-settings-form')
+            || form.hasAttribute('data-topic-editor-form'))) {
           const failure = await response.json();
           alert.textContent = typeof failure.detail === 'string' && failure.detail.length <= 300
             ? failure.detail : '제공자·모델과 실행 동의 항목을 확인해 주세요.';

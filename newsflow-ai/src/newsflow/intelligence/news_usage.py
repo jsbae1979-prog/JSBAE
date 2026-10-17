@@ -128,7 +128,7 @@ def assess_news_usage(evidence: dict, mode: str = "STANDARD") -> dict:
     }
 
 
-def safe_topic_script(evidence: dict, duration: int) -> dict:
+def _category_script(evidence: dict, duration: int) -> dict:
     """Use only allowlisted category text; never turn a model/title claim into narration.
 
     The source URL/title/unknown date remain in the caller's evidence, not copied
@@ -190,6 +190,122 @@ def safe_topic_script(evidence: dict, duration: int) -> dict:
     }
 
 
+# Source text selects concepts only. No source sentence, name, number, date or
+# purported quote is copied into narration. Matching is not fact verification.
+_TOPICS = (
+    ("반도체", ("반도체", "semiconductor", "semiconductors", "칩셋", "chipset", "chipsets",
+             "microchip", "microchips", "computer chip", "computer chips", "ai chip", "ai chips"),
+     "반도체는 전자 기기의 연산과 저장에 쓰이는 부품입니다.",
+     "성능과 전력 소비, 공급 조건을 함께 비교해야 합니다.",
+     "기기에 필요한 성능과 가격을 기준으로 살펴보세요."),
+    ("생성형 AI", ("생성형", "생성형ai", "chatgpt", "챗gpt", "llm", "llms", "generative ai",
+                "generative artificial intelligence"),
+     "생성형 인공지능은 입력을 바탕으로 글이나 이미지 같은 결과를 만듭니다.",
+     "결과의 정확성과 개인정보 처리, 저작권이 주요 판단 기준입니다.",
+     "중요한 답변은 별도 자료로 확인하고 민감한 정보 입력에 주의하세요."),
+    ("인공지능", ("인공지능", "artificial intelligence", "ai"),
+     "인공지능은 데이터를 바탕으로 분류와 예측 등 여러 작업을 수행하는 기술입니다.",
+     "용도와 학습 자료, 오류의 영향을 함께 살펴야 합니다.",
+     "어떤 작업을 지원하는지 확인하고 중요한 판단은 결과의 근거도 살펴보세요."),
+    ("스마트폰", ("스마트폰", "smartphone", "smartphones", "아이폰", "iphone", "iphones", "갤럭시"),
+     "스마트폰은 통신과 촬영, 앱 사용을 한 기기에서 지원합니다.",
+     "새 기능의 필요성과 배터리, 지원 기간을 함께 비교해야 합니다.",
+     "자주 쓰는 기능과 수리 비용을 기준으로 선택을 검토하세요."),
+    ("개인정보 보호", ("개인정보", "privacy", "데이터 유출", "해킹", "hacking"),
+     "개인정보 보호는 정보의 수집과 이용, 보관 범위를 다루는 문제입니다.",
+     "서비스 편의성과 정보 제공 범위, 이용자의 통제권을 함께 살펴야 합니다.",
+     "앱 권한과 보관 기간, 삭제 방법을 확인하세요."),
+    ("로봇", ("로봇", "robot", "robots", "휴머노이드"),
+     "로봇은 센서와 제어 장치를 이용해 물리적인 작업을 수행합니다.",
+     "시연 조건과 실제 작업 환경, 안전 관리가 중요한 비교 기준입니다.",
+     "가능한 작업의 범위와 유지 비용을 확인하세요."),
+    ("전기차 배터리", ("전기차", "electric vehicle", "electric vehicles", "ev battery", "ev batteries"),
+     "전기차 배터리는 이동에 필요한 전기 에너지를 저장합니다.",
+     "주행 조건과 충전 편의, 안전 및 수명을 함께 살펴야 합니다.",
+     "자신의 이동 거리와 충전 환경을 기준으로 비교하세요."),
+    ("배터리", ("배터리", "battery", "batteries"),
+     "배터리는 전기 에너지를 저장하고 필요한 기기에 공급합니다.",
+     "용도와 사용 조건에 따라 필요한 용량과 성능이 달라질 수 있습니다.",
+     "사용 기기에 맞는 규격과 안전 안내, 교체 및 폐기 방법을 확인하세요."),
+    ("금리", ("금리", "interest rate"),
+     "금리는 돈을 빌리거나 맡길 때 적용되는 비율입니다.",
+     "대출 부담과 예금 수익은 계약 조건에 따라 다를 수 있습니다.",
+     "고정 금리와 변동 금리, 계약 기간을 함께 확인하세요."),
+    ("물가", ("물가", "inflation"),
+     "물가는 여러 상품과 서비스의 가격 수준을 나타냅니다.",
+     "전체 지표와 개인의 소비 품목에 따른 체감은 다를 수 있습니다.",
+     "비교 기간과 품목, 소득의 변화를 함께 살펴보세요."),
+    ("기후", ("기후", "climate", "탄소"),
+     "기후 문제는 장기간의 환경 변화와 사회의 대응을 함께 다룹니다.",
+     "관측 자료와 예측, 정책 목표를 구분해 살펴야 합니다.",
+     "자료의 관측 기간과 지역, 불확실성 표시를 확인하세요."),
+)
+
+
+def _topic(article: dict) -> tuple | None:
+    # Priority: headline, then search summary. Raw tool payloads cannot override
+    # the selected article and are never serialized into a script.
+    provenance = article.get("search_provenance", {})
+    sources = article.get("sources", [])
+    urls = {source.get("url") for source in sources if isinstance(source, dict)}
+    urls.add(article.get("url"))
+    candidates = provenance.get("topic_candidates", []) if isinstance(provenance, dict) else []
+    titles = [candidate.get("title") for candidate in candidates
+              if isinstance(candidate, dict) and candidate.get("url") in urls]
+    for value in (article.get("title"), *titles, article.get("summary")):
+        if not isinstance(value, str):
+            continue
+        text = value[:800].casefold()
+        for topic in _TOPICS:
+            if any(re.search(r"(?<![a-z])" + re.escape(word) + r"(?![a-z])", text)
+                   for word in topic[1]):
+                return topic
+    return None
+
+
+def safe_topic_script(evidence: dict, duration: int) -> dict:
+    """Select local concept prose from search evidence, never assert its claims."""
+    legacy = _category_script(evidence, duration)
+    mode = validate_news_usage(evidence.get("news_usage"))
+    if mode == "VERIFIED":
+        raise ValueError(assess_news_usage(evidence, mode)["message"])
+    selected = _topic(_articles(evidence)[0])
+    if selected:
+        topic, _, background, issue, takeaway = selected
+    else:
+        topic = legacy["title"].split(" 뉴스")[0]
+        background = legacy["scenes"][1]["narration"]
+        issue = legacy["scenes"][2]["narration"]
+        takeaway = "제목과 검색 요약은 주제 참고 자료입니다. 개별 사실은 원문에서 확인하세요."
+    quick = mode == "QUICK"
+    title = f"{topic} · {'빠르게 알아보기' if quick else '배경과 핵심 쟁점'}"
+    introduction = f"{topic}, 무엇을 알아두면 좋을까요? 주제 소개이며 개별 사건은 미검증입니다."
+    captions = [f"{topic} · 주제 참고 · 개별 기사 미확인", f"{topic} · 기본 개념", f"{topic} · 알아둘 점"]
+    narrations = [introduction, background, takeaway]
+    if not quick:
+        narrations = [introduction + " 검색 자료의 주장과 일반적인 설명을 구분해 살펴봅니다.",
+                      background, issue, takeaway]
+        captions = [captions[0], f"{topic} · 배경", f"{topic} · 핵심 쟁점", captions[2]]
+    # QUICK retains short prose even in a longer canvas; STANDARD adds useful
+    # context without inventing events to fill the requested running time.
+    if not quick and duration >= 45:
+        narrations[2] += " 비교 기준이 다르면 평가도 달라질 수 있습니다."
+    if not quick and duration == 60:
+        narrations[3] += " 검색 요약만으로 결론을 내리지 말고 근거의 범위도 살펴보세요."
+    seconds, remainder = divmod(duration, len(narrations))
+    return {
+        "title": title,
+        "hook": f"{topic}의 {'기본 개념과 확인할 점' if quick else '배경, 쟁점과 판단 기준'}을 살펴봅니다.",
+        "summary": "검색 자료에서 고른 주제의 일반 설명입니다. 확인된 개별 사실 없음 · 사건·발언·수치·발행일 미검증.",
+        "scenes": [
+            {"seconds": seconds + (index < remainder), "narration": narration, "caption": caption,
+             "material": f"직접 제작한 {topic} 주제 설명 텍스트 카드"}
+            for index, (narration, caption) in enumerate(zip(narrations, captions, strict=True))
+        ],
+        "closing": legacy["closing"],
+    }
+
+
 def validate_news_usage_script(output: dict, evidence: dict, assessment: dict) -> None:
     """Reject unsupported claims without claiming a heuristic can verify prose.
 
@@ -208,5 +324,27 @@ def validate_news_usage_script(output: dict, evidence: dict, assessment: dict) -
         expected = safe_topic_script(evidence, duration)
     except (ValueError, TypeError):
         raise ValueError("미확인 자료의 주제 설명 대본 형식을 확인하세요.") from None
-    if script != expected:
+    # Older accepted drafts stay renderable without rewriting stored content.
+    if script == _category_script(evidence, duration):
+        return
+    # Reviewers may reorder/retime scenes and choose shorter captions or known
+    # narration variants for each role. Arbitrary prose cannot bypass gates.
+    candidates = [safe_topic_script(evidence, value) for value in (30, 45, 60)]
+    top_fields = ("title", "hook", "summary", "closing")
+    valid = all(script[field] == expected[field] for field in top_fields)
+    valid = valid and len(script["scenes"]) == len(expected["scenes"])
+    valid = valid and any("개별 기사 미확인" in scene["caption"] for scene in script["scenes"])
+    matched_roles = []
+    for scene in script["scenes"]:
+        roles = {
+            index for candidate in candidates for index, allowed in enumerate(candidate["scenes"])
+            if scene["narration"] == allowed["narration"] and scene["material"] == allowed["material"]
+            and scene["caption"] in {allowed["caption"], expected["title"].split(" · ")[0]}
+        }
+        # Keep each scene's purpose exactly once even when variants are mixed.
+        # A duplicate background cannot replace the uncertainty or takeaway.
+        valid = valid and len(roles) == 1
+        matched_roles.extend(roles)
+    valid = valid and sorted(matched_roles) == list(range(len(expected["scenes"])))
+    if not valid:
         raise ValueError("미확인 사실이 포함될 수 있어 대본을 차단했습니다. 주제 설명형을 사용하세요.")

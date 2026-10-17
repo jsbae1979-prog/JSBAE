@@ -134,7 +134,7 @@ def test_cnbc_category_url_selects_technology_topic_without_verification(categor
     payload = evidence()
     payload["articles"][0]["category"] = category
     output = safe_topic_script(payload, 30)
-    assert output["title"].startswith("기술 뉴스")
+    assert output["title"].startswith("기술 ·")
     assert "개인정보" in str(output)
     assert assess_news_usage(payload)["verification_status"] == "NOT VERIFIED"
     assert payload["articles"][0]["published_at"] is None

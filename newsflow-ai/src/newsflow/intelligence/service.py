@@ -278,6 +278,10 @@ class IntelligenceService:
                             "tool_evidence": search.result.get("tool_evidence"),
                             "full_body_verified": False, "facts_verified": False,
                             "summary_kind": "AI 검색 요약 · 원문 본문 미확인",
+                            "topic_candidates": [
+                                {"url": candidate.get("url"), "title": candidate.get("claimed_title")}
+                                for candidate in search.result.get("articles", []) if isinstance(candidate, dict)
+                            ],
                         }
             evidence, groups = [], []
             for a in articles:
@@ -362,8 +366,8 @@ class IntelligenceService:
                 "uncertainties": "원문 본문·개별 사건·발행일 미검증",
             } for group in evidence["groups"]],
             "recommended_article_id": assessment["preferred_article_ids"][0],
-            "selection_reason": "개별 기사 후보를 우선하되 확인되지 않은 사실을 대본에 옮기지 않습니다."
-            if mode == "STANDARD" else "선택 자료의 분야를 주제 설명에 활용합니다.",
+            "selection_reason": "제목과 검색 요약의 주제어로 배경·쟁점·판단 기준을 구성합니다. 개별 사실은 미검증입니다."
+            if mode == "STANDARD" else "제목과 검색 요약의 주제어로 짧은 소개와 확인할 점을 구성합니다.",
         }).model_dump()
         with self.sessions.begin() as session:
             run = IntelligenceRun(
