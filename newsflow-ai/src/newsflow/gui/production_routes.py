@@ -18,6 +18,7 @@ from newsflow.video.tts import TTSError
 from .production_context import ACQUISITION_LABELS, CATEGORY_LABELS, PERIOD_LABELS, acquisition_preferences
 from .production_status import production_context
 from .routes import go, page
+from .youtube_routes import connection_context
 
 router = APIRouter()
 
@@ -52,12 +53,14 @@ def _settings_overview(context: dict) -> list[dict]:
 def settings_page(request: Request, saved: str = ""):
     context = production_context(request)
     notices = {"true": "제작 구성을 저장했습니다.", "api": "API 승인·예산을 저장했습니다.",
+               "youtube-client": "Google 앱 설정을 안전하게 저장했습니다. 다음으로 계정을 연결하세요.",
+               "youtube-login": "Google 로그인 창을 열었습니다. 승인 후 이 화면을 새로고침하세요.",
                "connection": "API 인증·모델 접근을 확인했습니다. 생성·웹 검색은 별도 검증이 필요합니다.",
                "search-check": "검색 검증을 마쳤습니다. 기사 발행일·사실·대본은 별도 검토가 필요합니다.",
                "key": "API Key를 저장했습니다. 실제 연결은 미검증입니다.", "key_removed": "저장된 API Key를 삭제했습니다."}
     response = page(request, "simple_settings.html", active="simple-settings", saved=saved,
                     saved_notice=notices.get(saved, ""), settings_overview=_settings_overview(context),
-                    rates=RATE_CHOICES, pauses=PAUSE_CHOICES, **context)
+                    rates=RATE_CHOICES, pauses=PAUSE_CHOICES, youtube=connection_context(request), **context)
     response.headers["Cache-Control"] = "no-store"
     return response
 

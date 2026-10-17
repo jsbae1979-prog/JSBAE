@@ -51,6 +51,7 @@ if (state) {
 // Fetch in cors mode sends the browser's real Origin; server CSRF/Origin checks stay intact.
 for (const form of document.querySelectorAll('form[method="post"]:not([data-easy-form]):not([data-ai-form]):not([data-claude-action]):not([data-codex-action])')) {
   form.addEventListener('submit', async (event) => {
+    if (event.defaultPrevented) return;
     event.preventDefault();
     const target = new URL(event.submitter?.getAttribute('formaction') || form.action, window.location.href);
     if (target.origin !== window.location.origin) return;
@@ -74,7 +75,7 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
       });
       if (!response.ok) {
         if (response.status === 422 && (form.hasAttribute('data-ai-studio') || form.hasAttribute('data-settings-form')
-            || form.hasAttribute('data-topic-editor-form'))) {
+            || form.hasAttribute('data-topic-editor-form') || form.hasAttribute('data-youtube-form'))) {
           const failure = await response.json();
           alert.textContent = typeof failure.detail === 'string' && failure.detail.length <= 300
             ? failure.detail : '제공자·모델과 실행 동의 항목을 확인해 주세요.';
@@ -96,6 +97,9 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
       }
       const next = new URL(response.url);
       if (next.origin !== window.location.origin) throw new Error('Unexpected redirect');
+      if (form.hasAttribute('data-youtube-form')) {
+        next.hash = next.pathname === '/simple-settings' ? 'youtube' : 'youtube-publish';
+      }
       document.dispatchEvent(new CustomEvent('settings:form-saved', {detail: {form}}));
       window.location.assign(next.href);
     } catch (_) {

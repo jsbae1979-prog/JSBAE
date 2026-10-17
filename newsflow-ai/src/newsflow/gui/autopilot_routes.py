@@ -60,6 +60,7 @@ from .production_context import (
 )
 from .routes import go, page
 from .task_views import task_rows
+from .youtube_routes import publishing_context
 
 router = APIRouter()
 PLATFORMS = {"youtube": "YouTube Shorts", "instagram": "Instagram Reels"}
@@ -358,6 +359,7 @@ def home(
             completed=visible_videos, workspace_videos=visible_videos, video_count=len(completed),
             selected_task_context=selected_task_context, selected_video=selected_video, workspace=True, show=show,
             workspace_guide_context=workspace_guide_context,
+            youtube_publish=publishing_context(request, video),
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
             recent_news=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(5))),
             **overview,

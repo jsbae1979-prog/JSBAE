@@ -1,0 +1,65 @@
+name: NewsFlow YouTube Publishing Windows
+
+on:
+  push:
+    branches: [codex/newsflow-core-production]
+    paths-ignore: ['newsflow-ai/docs/**']
+
+permissions:
+  contents: read
+
+jobs:
+  youtube-publishing:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_CLAUDE_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      ANTHROPIC_AUTH_TOKEN: ''
+      CLAUDE_CODE_OAUTH_TOKEN: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Isolated test data directory
+        run: |
+          "NEWSFLOW_DATA_DIR=$env:RUNNER_TEMP/newsflow-youtube-${{ matrix.python }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies and pip check
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Ruff - YouTube integration only
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/main.py src/newsflow/gui/youtube_routes.py src/newsflow/gui/production_routes.py src/newsflow/gui/autopilot_routes.py src/newsflow/oauth/activation.py src/newsflow/oauth/callback.py src/newsflow/oauth/youtube.py src/newsflow/publishing/youtube.py src/newsflow/publishing/live.py tests/test_youtube_connection.py tests/test_youtube_upload.py tests/test_live_publishing.py tests/test_youtube_gui.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Fake OAuth, upload, review and duplicate protection
+        run: |
+          .venv/Scripts/python -m pytest -q -rs tests/test_youtube_connection.py tests/test_youtube_upload.py tests/test_live_publishing.py tests/test_youtube_gui.py tests/test_oauth_callback.py tests/test_oauth_activation.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # Isolated SQLite/media and injected transports only. No external OAuth,
+      # live provider calls, CLI authentication, operating data or SNS uploads.

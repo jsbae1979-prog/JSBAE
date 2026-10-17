@@ -1,0 +1,24 @@
+{% set publish = youtube_publish %}{% set draft = publish.draft %}
+<section class="easy-panel" id="youtube-publish" aria-labelledby="youtube-publish-title"><div class="section-head"><div><p class="eyebrow">04 · 검토 후 게시</p><h2 id="youtube-publish-title">YouTube에 게시하기</h2></div><a href="/simple-settings#youtube">계정 연결</a></div>
+{% for result in publish.results %}<div class="soft-notice" role="status"><strong>{{ '업로드 접수 완료' if result.status == 'uploaded' else result.status }}</strong><p>{{ result.message }}</p>{% if result.video_url %}<a href="{{ result.video_url }}" target="_blank" rel="noopener noreferrer">YouTube에서 영상 확인 ↗</a><p>영상 ID: {{ result.video_id }}</p>{% endif %}<small>자동 재시도하지 않습니다. 결과 불명인 경우 YouTube Studio에서 먼저 확인하세요.</small></div>{% endfor %}
+{% set ready_accounts = publish.accounts|selectattr('ready')|list %}
+{% if not ready_accounts %}<p>게시할 채널을 먼저 연결하세요. <a href="/simple-settings#youtube">YouTube 연결 설정 →</a></p>
+{% else %}
+<form data-youtube-form method="post" action="/youtube/draft">{{ csrf_field() }}<input type="hidden" name="render_job_id" value="{{ publish.render_job_id }}">{% if draft %}<input type="hidden" name="draft_id" value="{{ draft.id }}"><input type="hidden" name="revision" value="{{ draft.revision }}">{% endif %}
+<label>게시할 채널<select name="account_id" required>{% for account in ready_accounts %}<option value="{{ account.id }}" {% if draft and draft.account_id == account.id %}selected{% endif %}>{{ account.label }} · {{ account.channel_id }}</option>{% endfor %}</select></label>
+<label>제목<input name="title" value="{{ draft.title if draft else publish.title }}" maxlength="100" required></label>
+<label>설명<textarea name="description" rows="4" maxlength="5000">{{ draft.description if draft else '' }}</textarea></label><label>해시태그<input name="hashtags" value="{{ draft.hashtags|join(' ') if draft else '#Shorts' }}" maxlength="500"></label>
+<details class="easy-advanced"><summary>영상의 출처 보기</summary>{% for article in publish.sources.get('articles', []) %}<p>{{ article.get('title', '뉴스 자료') }}</p>{% for source in article.get('sources', []) %}<p>{{ source.get('name', '') }} · {{ source.get('url', '') }}</p>{% endfor %}{% else %}<p>출처 자료가 없습니다. 게시 전 상세 편집에서 자료를 확인하세요.</p>{% endfor %}</details>
+<label class="check"><input type="checkbox" name="content_reviewed" value="true" required {% if draft and draft.content_reviewed %}checked{% endif %}> 이 영상의 내용·음성·자막을 직접 확인했습니다.</label>
+<label class="check"><input type="checkbox" name="sources_confirmed" value="true" required {% if draft and draft.sources_confirmed %}checked{% endif %}> 출처와 사실 관계를 확인했습니다.</label>
+<label class="check"><input type="checkbox" name="copyright_confirmed" value="true" required {% if draft and draft.copyright_confirmed %}checked{% endif %}> 영상·음성·자료의 게시 권리를 확인했습니다.</label>
+<label>AI 생성·변형 콘텐츠 표시<select name="ai_disclosure" required><option value="unreviewed">직접 선택해 주세요</option><option value="disclose" {% if draft and draft.ai_disclosure == 'disclose' %}selected{% endif %}>표시합니다</option><option value="not_required" {% if draft and draft.ai_disclosure == 'not_required' %}selected{% endif %}>표시 대상이 아님을 확인했습니다</option></select></label><button>검토 저장·파일 확인</button>
+</form>
+{% if publish.checks %}<ul>{% for check in publish.checks if check.status != 'pass' %}<li class="settings-warning">{{ check.reason|default(check.key) }}</li>{% endfor %}</ul>{% endif %}
+{% if draft and publish.reviewed %}<form data-youtube-form method="post" action="/youtube/publish/{{ draft.id }}">{{ csrf_field() }}<input type="hidden" name="revision" value="{{ draft.revision }}">
+<label>공개 상태<select name="privacy"><option value="private" selected>비공개 · 기본값</option><option value="unlisted">일부 공개</option><option value="public">공개</option></select></label>
+<label>아동용 영상인가요?<select name="made_for_kids" required><option value="">직접 선택해 주세요</option><option value="no">아니요</option><option value="yes">예</option></select></label>
+<label class="check"><input type="checkbox" name="consent" value="true" required> 선택한 채널에 이 MP4와 제목·설명을 전송하고 업로드하는 데 동의합니다.</label>
+<label class="check"><input type="checkbox" name="public_consent" value="true"> 일부 공개 또는 공개를 선택한 경우, 다른 사람이 볼 수 있는 게시에 동의합니다.</label>
+<p class="hint">Google API 할당량이 사용됩니다. 네트워크 오류로 결과가 불명확하면 다시 보내지 않습니다. Shorts 분류와 최종 처리는 YouTube에서 결정합니다.</p><button class="primary">YouTube 게시하기</button></form>{% endif %}
+{% endif %}</section>

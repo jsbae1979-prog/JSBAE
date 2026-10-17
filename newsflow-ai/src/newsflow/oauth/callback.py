@@ -1,8 +1,8 @@
-"""Dedicated, ephemeral IPv4-loopback callbacks with a blocked production entry.
+"""Dedicated, ephemeral IPv4-loopback callbacks with scoped production access.
 
 The GUI remains on port 8765. The separate synthetic validation listener handles
-only recognizable fixture codes. It does not launch browsers, exchange codes, or
-assert a live Google grant. A future activation review must connect those steps.
+only recognizable fixture codes. The explicit YouTube service separately consumes
+sealed production results; the listener never exchanges tokens or launches browsers.
 """
 
 from __future__ import annotations
@@ -113,20 +113,27 @@ class CallbackResult:
     mode: str = "SYNTHETIC_CALLBACK"
     _seal: bytes = field(default=b"", repr=False)
 
-    def assert_valid(self, account_key: str) -> None:
-        """Authenticate the consumed callback binding before synthetic exchange.
+    def assert_valid(self, account_key: str, *, production: bool = False) -> None:
+        """Authenticate a consumed callback binding for its specific execution mode.
 
         Dataclass immutability alone would not stop a forged/modified result. This
         process-local seal covers every input to the later token POST. It cannot
         protect against code injection or inspection of this process's memory.
         """
         try:
+            if production:
+                require_production_activation()
+            expected_mode = "YOUTUBE_CALLBACK" if production else "SYNTHETIC_CALLBACK"
             if (
-                type(self) is not CallbackResult or self.mode != "SYNTHETIC_CALLBACK"
+                type(self) is not CallbackResult or self.mode != expected_mode
                 or not isinstance(self._seal, bytes) or len(self._seal) != 32
                 or not hmac.compare_digest(self._seal, _result_seal(self))
                 or pkce_s256(self.verifier.get_secret_value()) != self.code_challenge
-                or not re.fullmatch(r"nf-synthetic-code-[A-Za-z0-9_-]{1,200}", self.code.get_secret_value())
+                or (not production and not re.fullmatch(
+                    r"nf-synthetic-code-[A-Za-z0-9_-]{1,200}", self.code.get_secret_value()))
+                or (production and (not 1 <= len(self.code.get_secret_value()) <= 2048
+                                    or any(ord(char) < 33 or ord(char) == 127
+                                           for char in self.code.get_secret_value())))
             ):
                 raise CallbackError("callback_invalid")
             if self.account_key != account_key:
@@ -242,7 +249,7 @@ class _Handler(BaseHTTPRequestHandler):
 
 
 class LoopbackCallbackListener:
-    """Dormant production listener. The activation gate executes before any bind."""
+    """The explicit YouTube activation context is required before any production bind."""
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
@@ -308,7 +315,7 @@ class LoopbackCallbackListener:
             request = DynamicOAuthRequest(
                 uuid4().hex, account_key, scopes, uri, SecretStr(state), pkce_s256(verifier),
                 checked_time() + timedelta(seconds=lifetime),
-                mode="SYNTHETIC_CALLBACK" if synthetic else "PRODUCTION_BLOCKED",
+                mode="SYNTHETIC_CALLBACK" if synthetic else "YOUTUBE_CALLBACK",
             )
             self._server, self._launch = server, CallbackLaunch(request, uri)
             self._verifier, self._state_digest = SecretStr(verifier), hashlib.sha256(state.encode()).digest()
@@ -418,7 +425,8 @@ class LoopbackCallbackListener:
                 object.__setattr__(result, "_seal", _result_seal(result))
                 self._finish_locked(result=result)
                 self._accepted += 1
-                handler._reply(200, _ACCEPTED)
+                handler._reply(200, _ACCEPTED if self._synthetic else
+                               b"Authorization received. Close this tab and return to NewsFlow AI.")
             except CallbackError as error:
                 self._finish_locked(error=error.code)
                 self._rejected += 1

@@ -37,6 +37,7 @@ from .gui.sources_routes import router as sources_router
 from .gui.video_ai_routes import router as video_ai_router
 from .gui.video_routes import router as video_router
 from .gui.voice_routes import router as voice_router
+from .gui.youtube_routes import router as youtube_router
 from .intelligence.credentials import AIKeyStore, AnthropicKeyStore
 from .intelligence.service import IntelligenceService
 from .intelligence.settings import external_ready
@@ -45,6 +46,8 @@ from .news.rss_adapter import PublicRSSAdapter, RSSAdapter
 from .news.service import CollectionCoordinator, NewsService
 from .oauth.lifecycle import expire_production_credentials, recover_production_lifecycle
 from .oauth.production_vault import recover_credential_rotations
+from .oauth.youtube import YouTubeConnectionService
+from .publishing.live import LivePublishingService
 from .scheduler.service import Scheduler
 from .video.ai.contracts import VideoProvider
 from .video.ai.keys import VideoAIKeyStore
@@ -95,6 +98,10 @@ def create_app(
     coordinator.recover_interrupted()
     video = VideoCoordinator(sessions, settings.data_dir)
     video.recover()
+    youtube = YouTubeConnectionService(sessions, settings.data_dir)
+    youtube.recover()
+    live_publishing = LivePublishingService(sessions, video.outputs, youtube)
+    live_publishing.recover()
     ai_keys = AIKeyStore(settings.data_dir)
     api_keys = {"openai": ai_keys, "claude_api": AnthropicKeyStore(settings.data_dir)}
     autopilot_backend = PipelineBackend(
@@ -119,6 +126,7 @@ def create_app(
         try:
             yield
         finally:
+            youtube.close()
             scheduler.close()
             video_ai.close()
             autopilot.close()
@@ -131,6 +139,8 @@ def create_app(
     app.state.config, app.state.sessions, app.state.coordinator = settings, sessions, coordinator
     app.state.engine = engine
     app.state.video = video
+    app.state.youtube = youtube
+    app.state.live_publishing = live_publishing
     app.state.video_ai = video_ai
     app.state.scheduler = scheduler
     app.state.autopilot = autopilot
@@ -205,6 +215,7 @@ def create_app(
     app.include_router(video_router)
     app.include_router(video_ai_router)
     app.include_router(publishing_router)
+    app.include_router(youtube_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
     return app
 
