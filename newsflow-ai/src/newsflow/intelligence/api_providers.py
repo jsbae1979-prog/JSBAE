@@ -42,7 +42,8 @@ from newsflow.news.dedup import canonical_url
 
 MAX_REQUEST_BYTES = 64000
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
-API_MODELS = {"openai": ("gpt-4.1-mini",), "claude_api": ("claude-sonnet-4-6",)}
+API_MODELS = {"openai": ("gpt-4.1-mini",),
+              "claude_api": ("claude-sonnet-4-6", "claude-haiku-4-5-20251001", "claude-opus-4-6")}
 
 
 class APICancelled(ProviderError):

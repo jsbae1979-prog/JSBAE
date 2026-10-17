@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Form, HTTPException, Request
 
+from newsflow.intelligence.api_connection import check_claude_connection
 from newsflow.intelligence.api_settings import (
     APIPolicyError,
     invalidate_api_verification,
@@ -13,6 +14,19 @@ from newsflow.intelligence.settings import SettingsError, read_settings, validat
 from .routes import go
 
 router = APIRouter()
+
+
+@router.post("/api-settings/{provider}/check")
+def check_connection(request: Request, provider: str, consent: bool = Form(False)):
+    if provider != "claude_api":
+        raise HTTPException(422, "이 화면의 연결 확인은 Claude API만 지원합니다.")
+    result = check_claude_connection(
+        request.app.state.sessions, _store(request, provider), consent=consent,
+        transport=getattr(request.app.state, "claude_connection_transport", None),
+    )
+    if not result.ok:
+        raise HTTPException(422, result.message)
+    return go("/simple-settings?saved=connection#selected-ai")
 
 
 def connection_status(request: Request, provider: str, capability: str = "search") -> dict:

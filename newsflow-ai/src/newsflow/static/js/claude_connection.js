@@ -51,15 +51,58 @@ for (const form of document.querySelectorAll('form[data-claude-action]')) {
 }
 for (const form of document.querySelectorAll('form[data-studio-models]')) {
   const models = JSON.parse(form.dataset.studioModels);
+  const choices = JSON.parse(form.dataset.studioModelChoices || '{}');
   const provider = form.elements.namedItem('provider');
   const model = form.elements.namedItem('model');
+  // form.elements includes controls outside the form associated by form="...".
+  const picker = [...form.elements].find(element => element.hasAttribute('data-model-choice'));
+  const custom = model.closest('[data-custom-model]');
+  const customModes = {};
+  const refreshPicker = () => {
+    if (!picker) return; // Existing AI Studio forms keep their direct input.
+    const available = choices[provider.value] || [];
+    const known = available.some(choice => choice.value === model.value);
+    const direct = customModes[provider.value] ?? !known;
+    picker.replaceChildren(...available.map(choice => new Option(choice.label, choice.value)),
+      new Option('다른 모델 직접 입력 · 검증 필요', '__custom__'));
+    picker.value = direct ? '__custom__' : model.value;
+    if (custom) custom.hidden = !direct;
+    picker.hidden = false;
+  };
   let previous = provider.value;
   provider.addEventListener('change', () => {
     models[previous] = model.value;
-    model.value = models[provider.value];
+    model.value = models[provider.value] || '';
     previous = provider.value;
+    refreshPicker();
     const label = form.querySelector('[data-studio-provider-label]');
     if (label) label.textContent = provider.selectedOptions[0].textContent;
     // Selection never starts a request or stores an execution consent.
   });
+  picker?.addEventListener('change', () => {
+    const direct = picker.value === '__custom__';
+    customModes[provider.value] = direct;
+    if (custom) custom.hidden = !direct;
+    if (direct) {
+      model.focus(); // Keep the user's saved value until they explicitly edit it.
+      return;
+    }
+    model.value = picker.value;
+    models[provider.value] = model.value;
+    // The canonical field remains the only model submitted and watched for edits.
+    model.dispatchEvent(new Event('input', {bubbles: true}));
+    model.dispatchEvent(new Event('change', {bubbles: true}));
+  });
+  const restored = () => {
+    previous = provider.value;
+    models[previous] = model.value;
+    delete customModes[previous];
+    refreshPicker();
+  };
+  form.addEventListener('reset', () => window.setTimeout(restored, 0));
+  if (form.id === 'production-preferences') {
+    // production_settings restores saved fields after its provider change event.
+    document.querySelector('[data-settings-reset]')?.addEventListener('click', () => window.setTimeout(restored, 0));
+  }
+  refreshPicker();
 }

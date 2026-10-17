@@ -52,6 +52,7 @@ def _settings_overview(context: dict) -> list[dict]:
 def settings_page(request: Request, saved: str = ""):
     context = production_context(request)
     notices = {"true": "제작 구성을 저장했습니다.", "api": "API 승인·예산을 저장했습니다.",
+               "connection": "Claude API 인증·모델 접근을 확인했습니다. 생성·웹 검색은 별도 검증이 필요합니다.",
                "key": "API Key를 저장했습니다. 실제 연결은 미검증입니다.", "key_removed": "저장된 API Key를 삭제했습니다."}
     response = page(request, "simple_settings.html", active="simple-settings", saved=saved,
                     saved_notice=notices.get(saved, ""), settings_overview=_settings_overview(context),
@@ -94,6 +95,12 @@ def preferences(request: Request, provider: str = Form(max_length=20), model: st
               "video_ai_provider": video_provider}
     values.update({"autopilot_" + key: value for key, value in acquisition.items()})
     with sessions.begin() as session:
+        session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+        if provider in {"openai", "claude_api"}:
+            from newsflow.intelligence.api_settings import _invalidate, _read
+
+            if _read(session, provider).model != model:
+                _invalidate(session, provider)
         for key, value in values.items():
             row = session.get(AppSetting, key)
             if row:

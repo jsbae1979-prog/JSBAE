@@ -27,10 +27,16 @@ DEFAULT_MODELS = {"openai": "gpt-4.1-mini", "claude_api": "claude-sonnet-4-6"}
 VERIFICATION_TTL = timedelta(hours=24)
 # Conservative context ceilings, not an estimate based on generated text length.
 # Search content is billable input too. Unknown models fail closed for search.
-SEARCH_CONTEXT_BOUNDS = {"gpt-4.1-mini": 1_047_576, "claude-sonnet-4-6": 1_000_000}
+SEARCH_CONTEXT_BOUNDS = {"gpt-4.1-mini": 1_047_576, "claude-sonnet-4-6": 1_000_000,
+                         "claude-haiku-4-5-20251001": 200_000, "claude-opus-4-6": 1_000_000}
 # Official 2026-10-16 public list-price floors. User-entered higher account rates
 # win; a mistaken lower rate can never reduce the reservation below this floor.
-PRICE_FLOORS = {"gpt-4.1-mini": ("0.40", "1.60"), "claude-sonnet-4-6": ("3", "15")}
+PRICE_FLOORS = {"gpt-4.1-mini": ("0.40", "1.60"), "claude-sonnet-4-6": ("3", "15"),
+                "claude-haiku-4-5-20251001": ("1", "5"), "claude-opus-4-6": ("5", "25")}
+# Claude first-party standard rates checked 2026-10-17:
+# https://platform.claude.com/docs/en/about-claude/pricing
+# Missing rates use the pinned model's public tariff; explicit saved values,
+# including zero/invalid values, are never silently repaired or overwritten.
 DISCLAIMER = (
     "로컬 예약·사용량 추정은 공급사 실제 청구액이 아닙니다. 단가와 계정 잔여 예산은 사용자가 확인한 값이며 "
     "다른 앱의 사용·요금 변경은 실시간 반영되지 않습니다. 공급사 대시보드의 결제·한도를 함께 확인하세요."
@@ -118,14 +124,21 @@ def _read(session: Session, provider: str) -> APISettings:
     model = _value(session, "studio_model_" + provider)
     if not model and provider == "openai":
         model = _value(session, "ai_model")
+    model = model or DEFAULT_MODELS[provider]
+
+    def price(name, index):
+        if raw(name) is None and provider == "claude_api" and model in PRICE_FLOORS:
+            return Decimal(PRICE_FLOORS[model][index]) if index < 2 else Decimal(10)
+        return money(name)
+
     return APISettings(
-        provider=provider, model=model or DEFAULT_MODELS[provider],
+        provider=provider, model=model,
         approved_at=(_value(session, "ai_approved_at") or None) if provider == "openai" else raw("approved_at"),
         search_enabled=raw("search_enabled") == "1", search_approved_at=raw("search_approved_at"),
         request_limit_usd=money("request_limit_usd", Decimal(0)),
         monthly_limit_usd=money("monthly_limit_usd", Decimal(0)),
-        input_price_per_1m=money("input_price_per_1m"), output_price_per_1m=money("output_price_per_1m"),
-        search_price_per_1k=money("search_price_per_1k"), billing_confirmed_at=raw("billing_confirmed_at"),
+        input_price_per_1m=price("input_price_per_1m", 0), output_price_per_1m=price("output_price_per_1m", 1),
+        search_price_per_1k=price("search_price_per_1k", 2), billing_confirmed_at=raw("billing_confirmed_at"),
         account_remaining_usd=money("account_remaining_usd"),
         authentication_verified_at=raw("authentication_verified_at"), search_verified_at=raw("search_verified_at"),
         request_succeeded_at=raw("request_succeeded_at"), verified_model=raw("verified_model"),
@@ -141,6 +154,9 @@ def _invalidate(session: Session, provider: str) -> None:
     for key in ("authentication_verified_at", "search_verified_at", "request_succeeded_at", "verified_model",
                 "billing_confirmed_at", "account_remaining_usd"):
         _set(session, f"api_{provider}_{key}", "")
+    from .api_connection import invalidate_connection_check
+
+    invalidate_connection_check(session, provider)
 
 
 def invalidate_api_verification(sessions: sessionmaker[Session], provider: str) -> None:
@@ -239,6 +255,10 @@ def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *
 
 
 def _readiness(sessions, provider, key_store, capability="search", *, fake=False) -> dict:
+    from dataclasses import asdict
+
+    from .api_connection import read_connection_check
+
     now = utcnow()
     with sessions() as session:
         settings = _read(session, provider)
@@ -255,6 +275,7 @@ def _readiness(sessions, provider, key_store, capability="search", *, fake=False
             "provider": provider, "model": settings.model, "capability": capability, "key": key,
             "configured": bool(key.get("configured")), "authentication_verified": auth,
             "request_succeeded": bool(auth and settings.request_succeeded_at), "settings": settings,
+            "connection_check": asdict(read_connection_check(sessions, provider)),
             "usage": usage, "disclaimer": DISCLAIMER, "account_evidence": "USER CONFIRMED" if
             _recent(settings.billing_confirmed_at, now) else "NOT VERIFIED"}
 
