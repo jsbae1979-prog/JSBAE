@@ -1,10 +1,9 @@
 """Facebook Login for Business connection contract for Instagram publishing.
 
-The installed Windows app has no registered HTTPS authorization relay and cannot
-protect a shared Meta app secret. The default connection path therefore stays
-blocked. An application-owned authorization backend may be injected in tests;
-HTTP forms, environment variables and pasted tokens cannot enable that backend.
-Graph account checks and the existing Windows DPAPI kernel are reused below.
+The Windows app stores only the configured HTTPS relay origin and Meta App ID.
+The relay owns its App Secret and exchanges authorization codes server-side.
+Without that deployment the connection remains blocked. Graph account checks
+and the existing Windows DPAPI kernel are reused below.
 """
 
 from __future__ import annotations
@@ -19,7 +18,7 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from threading import RLock
+from threading import RLock, Thread
 from typing import Any, Protocol
 from urllib.error import HTTPError
 from urllib.parse import urlencode
@@ -63,6 +62,9 @@ _MESSAGES = {
     "outcome_unknown": "계정 연결 결과를 확인하지 못했습니다. 자동 재시도하지 않습니다.",
     "response_invalid": "Meta 계정 확인 응답을 안전하게 검증하지 못했습니다.",
     "connection_failed": "Instagram 계정 연결에 실패했습니다. 앱과 계정 권한을 확인해 주세요.",
+    "relay_config_invalid": "인증 중계의 공개 HTTPS 주소와 Meta App ID를 확인해 주세요.",
+    "cancelled": "Instagram 계정 연결을 취소했습니다.",
+    "rate_limited": "로그인 연결 요청 한도에 도달했습니다. 자동으로 다시 요청하지 않습니다.",
 }
 
 
@@ -78,7 +80,7 @@ class MetaAuthorization:
 
     The backend must verify state, exact registered HTTPS redirect, one-use code,
     app identity and data-access expiry on its secret-holding server. It must let
-    the user select the Page. No production backend is distributed in this app.
+    the user select the Page. The desktop receives no shared App Secret.
     """
 
     app_id: str
@@ -197,14 +199,51 @@ def _object_id(value: Any) -> str:
 
 class InstagramConnectionService:
     def __init__(self, sessions, data_dir: Path, *, authorization_backend: TrustedFacebookAuthorization | None = None,
-                 identity_transport=None, vault=None) -> None:
+                 identity_transport=None, vault=None, relay_factory=None) -> None:
         self.sessions = sessions
         self.authorization = authorization_backend
+        self._relay_factory = relay_factory
         self.identity = identity_transport if identity_transport is not None else FacebookGraphIdentity()
         self.vault = vault if vault is not None else _InstagramVault(Path(data_dir) / "instagram-oauth")
         self._lock = RLock()
+        self._active: tuple[int, str] | None = None
+        self._worker: Thread | None = None
+        if self.authorization is None:
+            self._load_relay()
+
+    def _relay_config(self):
+        from .instagram_relay import RelayConfig
+
+        with self.sessions() as session:
+            origin, app_id = _setting(session, "instagram.relay.url"), _setting(session, "instagram.relay.app_id")
+        if not origin or not app_id:
+            return None
+        try:
+            return RelayConfig.parse(origin, app_id)
+        except InstagramConnectionError:
+            return None
+
+    def _load_relay(self):
+        from .instagram_relay import InstagramRelayAuthorization
+
+        config = self._relay_config()
+        if config is not None:
+            self.authorization = (self._relay_factory or InstagramRelayAuthorization)(config)
+
+    def save_relay(self, url: str, app_id: str) -> None:
+        from .instagram_relay import InstagramRelayAuthorization, RelayConfig
+
+        config = RelayConfig.parse(url, app_id)
+        with self._lock:
+            if self._active is not None:
+                raise InstagramConnectionError("pending")
+            with self.sessions.begin() as session:
+                _setting(session, "instagram.relay.url", config.origin)
+                _setting(session, "instagram.relay.app_id", config.app_id)
+            self.authorization = (self._relay_factory or InstagramRelayAuthorization)(config)
 
     def accounts(self) -> list[dict]:
+        configured_app = getattr(getattr(self.authorization, "config", None), "app_id", None)
         with self.sessions() as session:
             rows = session.execute(select(PlatformAccount, OAuthConnection).join(
                 OAuthConnection, PlatformAccount.id == OAuthConnection.account_id,
@@ -216,22 +255,33 @@ class InstagramConnectionService:
                 "status": connection.status, "error_code": connection.error_code,
                 "ready": bool(self.authorization is not None and account.api_ready
                               and connection.status == "connected" and connection.expires_at
-                              and connection.expires_at > utcnow() + timedelta(seconds=30)),
+                              and connection.expires_at > utcnow() + timedelta(seconds=30)
+                              and (not configured_app or configured_app == _setting(session, f"instagram.app.{account.id}"))),
                 "expires_at": connection.expires_at,
-                "message": _MESSAGES.get(connection.error_code, "연결된 프로페셔널 계정"
-                                         if connection.status == "connected" else "연결 확인 필요"),
+                "message": ("Meta 앱 설정 변경 · 계정을 다시 연결해 주세요."
+                            if configured_app and configured_app != _setting(session, f"instagram.app.{account.id}")
+                            and connection.status == "connected" else
+                            "연결 유효기간 만료 · 계정을 다시 연결해 주세요."
+                            if connection.status == "connected" and connection.expires_at
+                            and connection.expires_at <= utcnow() + timedelta(seconds=30) else
+                            _MESSAGES.get(connection.error_code, "연결된 프로페셔널 계정"
+                                          if connection.status == "connected" else "연결 확인 필요")),
             } for account, connection in rows]
 
     def status(self) -> dict:
         accounts = self.accounts()
         supported = self.authorization is not None
-        return {"configured": supported, "connection_supported": supported,
+        config = self._relay_config()
+        details = self.authorization.snapshot() if hasattr(self.authorization, "snapshot") else {}
+        return {"configured": supported, "connection_supported": supported, "relay_code_available": True,
+                "relay_configured": config is not None, "relay_url": config.origin if config else "",
+                "relay_app_id": config.app_id if config else "", "pending_account_id": self._active[0] if self._active else None,
                 "storage_supported": sys.platform == "win32", "accounts": accounts,
                 "pending": any(row["status"] in {"authorizing", "exchanging"} for row in accounts),
                 "blocked_reason": None if supported else "auth_relay_required",
-                "message": "Facebook Login for Business" if supported else _MESSAGES["auth_relay_required"]}
+                "message": "Facebook Login for Business" if supported else _MESSAGES["auth_relay_required"], **details}
 
-    def _verified(self, grant: MetaAuthorization) -> tuple[InstagramCredential, str]:
+    def _verified(self, grant: MetaAuthorization, *, ensure_active=None) -> tuple[InstagramCredential, str]:
         if not isinstance(grant, MetaAuthorization):
             raise InstagramConnectionError("response_invalid")
         app_id, page_id = _object_id(grant.app_id), _object_id(grant.page_id)
@@ -242,12 +292,16 @@ class InstagramConnectionService:
         expires = min(bundle.expires_at, grant.data_access_expires_at)
         if expires <= utcnow() + timedelta(seconds=30):
             raise InstagramConnectionError("expired")
+        if ensure_active is not None:
+            ensure_active()
         permissions = self.identity.get("me/permissions", bundle.access_token).get("data")
         if not isinstance(permissions, list) or not all(isinstance(row, dict) for row in permissions):
             raise InstagramConnectionError("response_invalid")
         approved = {row.get("permission") for row in permissions if row.get("status") == "granted"}
         if not set(FACEBOOK_SCOPES).issubset(approved):
             raise InstagramConnectionError("permission_denied")
+        if ensure_active is not None:
+            ensure_active()
         pages = self.identity.get("me/accounts", bundle.access_token,
                                   "id,name,access_token,tasks,instagram_business_account").get("data")
         if not isinstance(pages, list) or not all(isinstance(row, dict) for row in pages):
@@ -266,6 +320,8 @@ class InstagramConnectionService:
                 or any(ord(char) < 33 or ord(char) == 127 for char in raw_token)):
             raise InstagramConnectionError("response_invalid")
         page_token = SecretStr(raw_token)
+        if ensure_active is not None:
+            ensure_active()
         profile = self.identity.get(instagram_id, page_token, "id,username")
         if profile.get("id") != instagram_id:
             raise InstagramConnectionError("identity_mismatch")
@@ -284,6 +340,8 @@ class InstagramConnectionService:
         if self.authorization is None:
             raise InstagramConnectionError("auth_relay_required")
         with self._lock:
+            if self._active is not None:
+                raise InstagramConnectionError("pending")
             operation_id = uuid4().hex
             with self.sessions() as session:
                 session.connection().exec_driver_sql("BEGIN IMMEDIATE")
@@ -291,6 +349,8 @@ class InstagramConnectionService:
                     OAuthConnection.mode == MODE, OAuthConnection.status.in_(("authorizing", "exchanging")),
                 )):
                     raise InstagramConnectionError("pending")
+                if hasattr(self.authorization, "prepare"):
+                    self.authorization.prepare()
                 if account_id is None:
                     account = PlatformAccount(platform="instagram", label="Instagram 연결 중",
                                               account_type="professional", status="not_connected")
@@ -313,20 +373,69 @@ class InstagramConnectionService:
                     expected_revision=connection.revision, status="instagram_pending",
                 ))
                 session.commit()
-            try:
-                with _approved_operation():
-                    grant = self.authorization.authorize(scopes=FACEBOOK_SCOPES)
-                    credential, label = self._verified(grant)
-                    self._commit(account_id, operation_id, credential, label)
+            self._active = (account_id, operation_id)
+            if getattr(self.authorization, "background", False):
+                self._worker = Thread(target=self._connect, args=(account_id, operation_id),
+                                      kwargs={"raise_errors": False}, daemon=True, name="instagram-authorization")
+                self._worker.start()
                 return account_id
-            except Exception as error:  # noqa: BLE001 - record only fixed safe error codes
-                code = getattr(error, "code", "outcome_unknown")
-                if code not in _MESSAGES:
-                    code = "outcome_unknown"
-                self._fail(account_id, operation_id, code)
+            self._connect(account_id, operation_id, raise_errors=True)
+            return account_id
+
+    def _connect(self, account_id: int, operation_id: str, *, raise_errors: bool) -> None:
+        try:
+            with _approved_operation():
+                self._assert_pending(account_id, operation_id)
+                grant = self.authorization.authorize(scopes=FACEBOOK_SCOPES)
+                self._assert_pending(account_id, operation_id)
+                credential, label = self._verified(grant, ensure_active=lambda: self._assert_pending(account_id, operation_id))
+                self._commit(account_id, operation_id, credential, label)
+        except Exception as error:  # noqa: BLE001 - record only fixed safe error codes
+            code = getattr(error, "code", "outcome_unknown")
+            if code not in _MESSAGES:
+                code = "outcome_unknown"
+            self._fail(account_id, operation_id, code)
+            if raise_errors:
                 raise InstagramConnectionError(code) from None
+        finally:
+            with self._lock:
+                if self._active == (account_id, operation_id):
+                    self._active = None
+
+    def _assert_pending(self, account_id: int, operation_id: str) -> None:
+        with self.sessions() as session:
+            connection = session.get(OAuthConnection, account_id)
+            operation = session.get(OAuthLifecycleOperation, operation_id)
+            if (not connection or connection.status != "authorizing" or not operation
+                    or operation.status != "instagram_pending"):
+                raise InstagramConnectionError("cancelled")
+
+    def select_page(self, account_id: int, page_id: str, *, consent: bool = False) -> None:
+        if consent is not True:
+            raise InstagramConnectionError("consent_required")
+        with self._lock:
+            if not self._active or self._active[0] != account_id or not hasattr(self.authorization, "select_page"):
+                raise InstagramConnectionError("not_connected")
+            self.authorization.select_page(page_id)
+
+    def cancel(self, account_id: int) -> None:
+        with self._lock:
+            if not self._active or self._active[0] != account_id:
+                raise InstagramConnectionError("not_connected")
+            with self.sessions.begin() as session:
+                connection = session.get(OAuthConnection, account_id)
+                operation = session.get(OAuthLifecycleOperation, self._active[1])
+                if connection.status != "authorizing":
+                    raise InstagramConnectionError("not_connected")
+                connection.status, connection.error_code, connection.updated_at = "cancelled", "cancelled", utcnow()
+                operation.status, operation.updated_at = "instagram_cancelled", utcnow()
+                session.get(PlatformAccount, account_id).api_ready = False
+            backend = self.authorization
+        if hasattr(backend, "cancel"):
+            backend.cancel()
 
     def _commit(self, account_id, operation_id, credential, label):
+        self._assert_pending(account_id, operation_id)
         key, reference = f"instagram:{account_id}", uuid4().hex
         identity = _digest(MODE, key, credential.app_id, credential.page_id, credential.instagram_id, FACEBOOK_SCOPES)
         channel = _digest(MODE, credential.app_id, credential.instagram_id)
@@ -340,11 +449,16 @@ class InstagramConnectionService:
             if other is not None:
                 raise InstagramConnectionError("identity_mismatch")
             operation = session.get(OAuthLifecycleOperation, operation_id)
+            connection = session.get(OAuthConnection, account_id)
+            if connection.status != "authorizing" or operation.status != "instagram_pending":
+                raise InstagramConnectionError("cancelled")
             operation.identity_digest, operation.new_reference, operation.status = identity, reference, "instagram_writing"
         self.vault.write_reserved(key, identity, reference, credential.bundle, operation_id=operation_id)
         with self.sessions.begin() as session:
             account, connection = session.get(PlatformAccount, account_id), session.get(OAuthConnection, account_id)
             operation = session.get(OAuthLifecycleOperation, operation_id)
+            if connection.status == "cancelled" or operation.status in {"instagram_unknown", "instagram_cancelled"}:
+                return
             if connection.status != "authorizing" or operation.status != "instagram_writing":
                 raise InstagramConnectionError("outcome_unknown")
             binding = session.get(OAuthIdentityBinding, account_id)
@@ -364,9 +478,11 @@ class InstagramConnectionService:
         with self.sessions.begin() as session:
             connection, account = session.get(OAuthConnection, account_id), session.get(PlatformAccount, account_id)
             operation = session.get(OAuthLifecycleOperation, operation_id)
+            if connection.status == "cancelled" or operation.status in {"instagram_unknown", "instagram_cancelled"}:
+                return
             if operation.status == "instagram_writing":
                 code = "outcome_unknown"
-            connection.status = "unknown" if code == "outcome_unknown" else "error"
+            connection.status = "unknown" if code == "outcome_unknown" else "cancelled" if code == "cancelled" else "error"
             connection.error_code, connection.updated_at = code, utcnow()
             account.api_ready = False
             operation.status, operation.updated_at = f"instagram_{connection.status}", utcnow()
@@ -385,6 +501,9 @@ class InstagramConnectionService:
                 raise InstagramConnectionError("not_connected")
             values = [_setting(session, f"instagram.{suffix}.{account_id}") for suffix in ("page", "id", "app")]
             page_id, instagram_id, app_id = map(_object_id, values)
+            configured_app = getattr(getattr(self.authorization, "config", None), "app_id", None)
+            if configured_app and app_id != configured_app:
+                raise InstagramConnectionError("identity_mismatch")
             identity = _digest(MODE, f"instagram:{account_id}", app_id, page_id, instagram_id, FACEBOOK_SCOPES)
             if binding.identity_digest != identity:
                 raise InstagramConnectionError("identity_mismatch")
@@ -418,4 +537,8 @@ class InstagramConnectionService:
         return count
 
     def close(self) -> None:
-        """No callback listener or authorization server is started by this module."""
+        """Stop local authorization work without a logout request or automatic replay."""
+        if self._active and hasattr(self.authorization, "cancel"):
+            self.authorization.cancel(remote=False)
+        if self._worker is not None:
+            self._worker.join(timeout=1)

@@ -35,6 +35,7 @@ from .gui.routes import router
 from .gui.scheduler_routes import router as scheduler_router
 from .gui.setup_routes import router as setup_router
 from .gui.sources_routes import router as sources_router
+from .gui.unified_publishing_routes import router as unified_publishing_router
 from .gui.video_ai_routes import router as video_ai_router
 from .gui.video_routes import router as video_router
 from .gui.voice_routes import router as voice_router
@@ -51,6 +52,7 @@ from .oauth.production_vault import recover_credential_rotations
 from .oauth.youtube import YouTubeConnectionService
 from .publishing.instagram_live import InstagramPublishingService
 from .publishing.live import LivePublishingService
+from .publishing.unified import UnifiedPublishingService
 from .scheduler.service import Scheduler
 from .video.ai.contracts import VideoProvider
 from .video.ai.keys import VideoAIKeyStore
@@ -109,6 +111,8 @@ def create_app(
     instagram.recover()
     instagram_publishing = InstagramPublishingService(sessions, video.outputs, instagram)
     instagram_publishing.recover()
+    unified_publishing = UnifiedPublishingService(sessions, video.outputs, live_publishing, instagram_publishing)
+    unified_publishing.recover()
     ai_keys = AIKeyStore(settings.data_dir)
     api_keys = {"openai": ai_keys, "claude_api": AnthropicKeyStore(settings.data_dir)}
     autopilot_backend = PipelineBackend(
@@ -151,6 +155,7 @@ def create_app(
     app.state.live_publishing = live_publishing
     app.state.instagram = instagram
     app.state.instagram_publishing = instagram_publishing
+    app.state.unified_publishing = unified_publishing
     app.state.video_ai = video_ai
     app.state.scheduler = scheduler
     app.state.autopilot = autopilot
@@ -227,6 +232,7 @@ def create_app(
     app.include_router(publishing_router)
     app.include_router(youtube_router)
     app.include_router(instagram_router)
+    app.include_router(unified_publishing_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
     return app
 

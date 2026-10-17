@@ -10,6 +10,39 @@ from .routes import go
 router = APIRouter()
 
 
+@router.post("/instagram/relay-config")
+def relay_config(request: Request, url: str = Form(max_length=300), app_id: str = Form(max_length=40),
+                 consent: bool = Form(False)):
+    if consent is not True:
+        raise HTTPException(422, "운영자가 제공한 공식 로그인 연결 주소와 Meta 앱을 확인해 주세요.")
+    try:
+        request.app.state.instagram.save_relay(url, app_id)
+    except Exception:  # noqa: BLE001 - configuration errors never reflect secrets or arbitrary URLs.
+        raise HTTPException(422, "HTTPS 연결 주소와 Meta 앱 ID를 확인하세요. 로그인 중에는 변경할 수 없습니다.") from None
+    return go("/simple-settings?saved=instagram-config#instagram")
+
+
+@router.post("/instagram/connect/{account_id}/cancel")
+def cancel_connection(request: Request, account_id: int):
+    try:
+        request.app.state.instagram.cancel(account_id)
+    except Exception:  # noqa: BLE001
+        raise HTTPException(422, "로그인 취소 상태를 확인하세요. 자동으로 다시 연결하지 않습니다.") from None
+    return go("/simple-settings#instagram")
+
+
+@router.post("/instagram/connect/{account_id}/page")
+def select_page(request: Request, account_id: int, page_id: str = Form(pattern=r"^[1-9][0-9]{0,29}$"),
+                consent: bool = Form(False)):
+    if consent is not True:
+        raise HTTPException(422, "게시할 Facebook Page와 연결된 Instagram 계정을 확인해 주세요.")
+    try:
+        request.app.state.instagram.select_page(account_id, page_id, consent=True)
+    except Exception:  # noqa: BLE001
+        raise HTTPException(422, "선택한 게시 계정을 연결하지 못했습니다. 로그인 만료·취소 상태를 확인하세요.") from None
+    return go("/simple-settings#instagram")
+
+
 def connection_context(request: Request) -> dict:
     service = getattr(request.app.state, "instagram", None)
     return service.status() if service else {
@@ -19,14 +52,14 @@ def connection_context(request: Request) -> dict:
 
 
 @router.post("/instagram/connect")
-def connect(request: Request, consent: bool = Form(False)):
+def connect(request: Request, consent: bool = Form(False), account_id: int | None = Form(None, ge=1)):
     if consent is not True:
         raise HTTPException(422, "Meta 로그인·게시 계정 확인에 동의해 주세요.")
     status = connection_context(request)
     if not status["connection_supported"]:
         raise HTTPException(422, "BLOCKED · 공식 HTTPS 로그인 연결이 준비되지 않았습니다. 토큰을 직접 입력하지 마세요.")
     try:
-        request.app.state.instagram.begin(consent=True)
+        request.app.state.instagram.begin(consent=True, **({"account_id": account_id} if account_id is not None else {}))
     except Exception:  # noqa: BLE001 - OAuth failures can include credentials.
         raise HTTPException(422, "Instagram 계정 연결을 완료하지 못했습니다. 자동으로 다시 요청하지 않습니다.") from None
     return go("/simple-settings?saved=instagram#instagram")

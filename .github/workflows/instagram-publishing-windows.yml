@@ -1,9 +1,7 @@
 name: NewsFlow Instagram Publishing Windows
 
 on:
-  push:
-    branches: [codex/newsflow-core-production]
-    paths-ignore: ['newsflow-ai/docs/**']
+  workflow_dispatch:
 
 permissions:
   contents: read
