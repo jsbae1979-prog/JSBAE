@@ -18,6 +18,7 @@ from newsflow.db.models import (
     VideoAIUsage,
 )
 from newsflow.easy_setup import initial_state, voice_choice_catalog
+from newsflow.intelligence.api_providers import API_MODELS
 from newsflow.intelligence.capabilities import provider_capabilities
 from newsflow.intelligence.settings import external_ready, read_settings, read_studio_settings
 from newsflow.video.ai.settings import readiness as video_readiness
@@ -164,6 +165,7 @@ def production_context(request) -> dict:
             "목록 표시는 실제 생성 성공이나 모델 전체 무결성 검증이 아닙니다.", action="#selected-voice")
     el = elevenlabs_settings(sessions)
     key = ElevenLabsKeys(request.app.state.video.root).status()
+    elevenlabs_key = key
     el_ready = key["configured"] and el["enabled"] and bool(el["voice_id"])
     statuses["elevenlabs"] = _status("elevenlabs", "check" if el_ready else "setup",
         "키·음성 ID·사용 설정 있음" if el_ready else "키·음성 ID·사용 설정 확인 필요",
@@ -252,6 +254,10 @@ def production_context(request) -> dict:
     return {"production_config": config, "pipeline_stages": stages, "provider_statuses": statuses,
             "api_connections": api_connections, "legacy_api_settings": read_settings(sessions),
             "acquisition_labels": ACQUISITION_LABELS, "category_labels": CATEGORY_LABELS, "period_labels": PERIOD_LABELS,
-            "voice_choices": catalog, "studio_defaults": studio,
+            "voice_choices": catalog, "studio_defaults": studio, "elevenlabs_key": elevenlabs_key,
+            "model_choices": {name: [{"value": model, "label": model} for model in models]
+                              for name, models in {**API_MODELS, "offline": ("offline",),
+                                                   "claude_code": ("sonnet", "opus", "haiku"),
+                                                   "codex": ("default",)}.items()},
             "claude_status": getattr(request.app.state, "claude_status", unchecked),
             "codex_status": getattr(request.app.state, "codex_status", unchecked)}

@@ -106,6 +106,12 @@ def read_studio_settings(sessions: sessionmaker[Session]) -> dict:
 def write_studio_settings(sessions: sessionmaker[Session], provider: str, model: str) -> dict:
     model = studio_model(provider, model)
     with sessions.begin() as session:
+        session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+        if provider in {"openai", "claude_api"}:
+            from .api_settings import _invalidate, _read
+
+            if _read(session, provider).model != model:
+                _invalidate(session, provider)
         _set(session, "studio_provider", provider)
         _set(session, "studio_model_" + provider, model)
     return read_studio_settings(sessions)
