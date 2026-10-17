@@ -50,7 +50,7 @@ class SearchCheckResult:
 
 def _result(code: str, failure: SearchResponseError | None = None) -> SearchCheckResult:
     message = MESSAGES[code]
-    if code == "ai_bad_response" and failure is not None:
+    if code in {"ai_bad_response", "unknown"} and failure is not None:
         message += " " + str(failure)
     return SearchCheckResult(code == "success", code, message)
 
@@ -138,7 +138,7 @@ def check_api_search(
     except SearchResponseError as exc:
         # Revalidate the finite diagnostic vocabulary; never persist str(exc)
         # from an arbitrary provider error or attach the original response.
-        failure = SearchResponseError(exc.failure_reason, tool_error_code=exc.tool_error_code)
+        failure = exc.safe_copy()
         code, status = "ai_bad_response", "failed"
     except ProviderError as exc:
         code = exc.code if exc.code in MESSAGES else "unknown"
@@ -170,9 +170,9 @@ def check_api_search(
         summary = {"code": code, "message": outcome.message, "checked_at": checked_at,
                    "model": model, "authentication_at": authentication_at,
                    "reservation_id": reservation.id, **evidence}
-        if code == "ai_bad_response" and failure is not None:
-            summary["failure_reason"] = failure.failure_reason
-            if failure.tool_error_code is not None:
-                summary["tool_error_code"] = failure.tool_error_code
+        if failure is not None:
+            # Cost outcome and response failure are independent. In particular,
+            # an over-bound usage report must not erase the safe parser diagnostic.
+            summary.update(failure.diagnostics())
         _set(session, prefix + "search_check_summary", json.dumps(summary, ensure_ascii=False))
     return outcome

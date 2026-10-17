@@ -36,6 +36,7 @@ TOOL_ERROR_CODES = {
     "too_many_requests", "invalid_tool_input", "max_uses_exceeded",
     "query_too_long", "request_too_large", "unavailable",
 }
+SEARCH_STOP_REASONS = {"end_turn", "max_tokens", "stop_sequence", "tool_use", "pause_turn", "refusal"}
 
 
 class SearchResponseError(ProviderResponseError):
@@ -44,17 +45,37 @@ class SearchResponseError(ProviderResponseError):
     Never attach vendor text, JSON decode errors or Pydantic input values.
     """
 
-    def __init__(self, failure_reason: str, *, tool_error_code=None):
+    def __init__(self, failure_reason: str, *, tool_error_code=None, stop_reason=None):
         self.failure_reason = (failure_reason if isinstance(failure_reason, str)
                                and failure_reason in SEARCH_FAILURE_MESSAGES else "result_contract")
         self.tool_error_code = None
         if self.failure_reason == "search_tool_error":
             self.tool_error_code = (tool_error_code if isinstance(tool_error_code, str)
                                     and tool_error_code in TOOL_ERROR_CODES else "other")
+        self.stop_reason = None if stop_reason is None else (
+            stop_reason if isinstance(stop_reason, str) and stop_reason in SEARCH_STOP_REASONS else "other"
+        )
         message = SEARCH_FAILURE_MESSAGES[self.failure_reason]
         if self.tool_error_code:
             message += f" ({self.tool_error_code})"
+        if self.stop_reason:
+            message += f" (종료 사유: {self.stop_reason})"
         super().__init__(message)
+
+    def safe_copy(self) -> SearchResponseError:
+        """Revalidate even exception attributes before storing or displaying them."""
+        return SearchResponseError(
+            self.failure_reason, tool_error_code=self.tool_error_code, stop_reason=self.stop_reason,
+        )
+
+    def diagnostics(self) -> dict[str, str]:
+        safe = self.safe_copy()
+        result = {"failure_reason": safe.failure_reason}
+        if safe.tool_error_code is not None:
+            result["tool_error_code"] = safe.tool_error_code
+        if safe.stop_reason is not None:
+            result["stop_reason"] = safe.stop_reason
+        return result
 
 
 def safe_source_url(value: str) -> str:
