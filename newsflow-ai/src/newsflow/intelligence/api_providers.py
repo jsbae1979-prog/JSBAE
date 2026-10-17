@@ -15,6 +15,7 @@ from datetime import UTC, datetime, timedelta
 from threading import Event
 
 from newsflow.intelligence.api_search import (
+    CLAUDE_SEARCH_INSTRUCTION,
     SEARCH_INSTRUCTION,
     SearchArticle,
     SearchRequest,
@@ -59,6 +60,21 @@ def _safe_json(text: str) -> dict:
         return result
     except (ValueError, TypeError):
         raise ProviderResponseError("AI JSON 형식을 확인하지 못했습니다. 자동 재요청하지 않습니다.") from None
+
+
+def _claude_search_json(text: str) -> dict:
+    """Accept one whole JSON document, optionally in one complete Markdown fence.
+
+    Never search prose for braces, repair JSON, or choose among several objects.
+    Envelope parsing, other providers and analysis/script parsing stay strict.
+    The unchanged article/source validators still run after this presentation step.
+    """
+    text = text.strip()
+    lines = text.splitlines()
+    if (len(lines) >= 3 and lines[0].lower() in {"```json", "```"}
+            and lines[-1] == "```"):
+        text = "\n".join(lines[1:-1])
+    return _safe_json(text)
 
 
 def _usage(document: dict, *, anthropic: bool = False) -> dict[str, int]:
@@ -311,7 +327,7 @@ class AnthropicProvider(_APITransport):
         stage = "response_envelope"
         try:
             document = self._message(
-                SEARCH_INSTRUCTION, {**request.model_dump(), "searched_at": datetime.now(UTC).isoformat()},
+                CLAUDE_SEARCH_INSTRUCTION, {**request.model_dump(), "searched_at": datetime.now(UTC).isoformat()},
                 options, search=True,
             )
             if document.get("stop_reason") != "end_turn":
@@ -358,7 +374,7 @@ class AnthropicProvider(_APITransport):
             )
             self.last_search_evidence = evidence.model_dump(mode="json")
             stage = "result_json"
-            payload = _safe_json(text)
+            payload = _claude_search_json(text)
             return bind_search_result(
                 payload, provider=self.provider, model=options.model,
                 request=request, tool_evidence=evidence, usage=self.last_usage or {},

@@ -259,3 +259,15 @@ SEARCH_INSTRUCTION = (
     "Do not use any tools other than the provided web search. Keep titles under 200, summaries under "
     "800, list items under 800 characters. If no trustworthy sources were returned, articles must be empty."
 )
+
+# Claude web search always supplies citations; output_config.format is not
+# compatible with citations. Give the existing contract as a prompt instead of
+# introducing an incompatible API option or a second formatting request.
+CLAUDE_SEARCH_INSTRUCTION = SEARCH_INSTRUCTION + (
+    " After the search, the final text must be one complete JSON object with only the key articles. "
+    "Start with { and end with }. Do not wrap it in Markdown or add an introduction, conclusion, "
+    "footnotes or another JSON object. Escape quotes and newlines inside JSON strings. "
+    "Use literal source URLs in url and related_urls, never citation placeholders. "
+    "Provider citation metadata may accompany text blocks; keep the JSON text valid. "
+    "Follow this JSON Schema; if sources are insufficient, return {\"articles\":[]} rather than inventing news: "
+) + json.dumps(GeneratedSearch.model_json_schema(), ensure_ascii=False, separators=(",", ":"))
