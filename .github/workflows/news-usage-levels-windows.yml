@@ -1,0 +1,65 @@
+name: NewsFlow News Usage Levels Windows
+
+on:
+  push:
+    branches: [codex/newsflow-news-use-levels]
+    paths-ignore: ['newsflow-ai/docs/**']
+
+permissions:
+  contents: read
+
+jobs:
+  news-usage-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_CLAUDE_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      ANTHROPIC_AUTH_TOKEN: ''
+      CLAUDE_CODE_OAUTH_TOKEN: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Isolated test data directory
+        run: |
+          "NEWSFLOW_DATA_DIR=$env:RUNNER_TEMP/newsflow-news-usage-${{ matrix.python }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies and pip check
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Ruff - changed Python files only
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/autopilot/backend.py src/newsflow/autopilot/service.py src/newsflow/gui/autopilot_routes.py src/newsflow/gui/production_context.py src/newsflow/gui/task_views.py src/newsflow/intelligence/news_usage.py src/newsflow/intelligence/service.py src/newsflow/video/service.py tests/test_news_usage_policy.py tests/test_news_usage_gui.py tests/test_news_usage_pipeline.py tests/test_api_news_pipeline.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Fake news policy, workspace, search and cost protection
+        run: |
+          .venv/Scripts/python -m pytest -q -rs tests/test_news_usage_policy.py tests/test_news_usage_gui.py tests/test_news_usage_pipeline.py tests/test_api_news_pipeline.py tests/test_api_search_contract.py tests/test_api_settings.py tests/test_api_search_check.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # Temporary databases, synthetic keys and injected Fake transports only.
+      # No live provider requests, CLI checks, live RSS, OS task registration or uploads.

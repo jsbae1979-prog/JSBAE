@@ -30,6 +30,7 @@ from newsflow.db.models import (
     utcnow,
 )
 from newsflow.intelligence.capabilities import NEWS_CATEGORIES, NEWS_PERIODS, require_acquisition
+from newsflow.intelligence.news_usage import validate_news_usage
 
 from .contracts import (
     AI_MODES,
@@ -72,6 +73,8 @@ _ERROR_MESSAGES = {
     "ai_request_stopped": "이전 AI 요청이 실패했거나 결과가 불명확합니다. 자동 재전송하지 않습니다. 작업 이력을 확인하세요.",
     "news_search_blocked": "웹 뉴스 검색의 사용 승인·계정·비용 조건이 확인되지 않았습니다. 다른 방식으로 자동 전환하지 않습니다.",
     "no_eligible_articles": "선택한 분야·기간에 발행일과 출처가 확인되는 기사가 없습니다. 검색 요약의 날짜를 사실로 확정하지 않습니다.",
+    "news_evidence_required": "개별 기사·발행일·핵심 사실의 확인 근거가 부족하여 사실 중심 제작을 중단했습니다.",
+    "news_usage_script": "미검증 자료의 대본에 확인되지 않은 사실이 포함될 수 있어 제작을 중단했습니다.",
     "voice_unavailable": "선택한 한국어 음성을 이 PC에서 찾지 못했습니다. 음성 설정을 확인하거나 무음으로 제작하세요.",
     "speech_too_long": "음성이 영상 길이보다 깁니다. 대본을 줄이거나 영상 길이를 늘리세요.",
     "voice_failed": "음성을 만들지 못했습니다. 선택한 한국어 음성과 PowerShell 실행 상태를 확인하세요.",
@@ -87,6 +90,8 @@ _SOLUTIONS = {
     "ai_bad_response": "AI 설정에서 모델 이름을 확인하거나 기본 대본으로 다시 시도하세요.",
     "ai_budget": "설정 → AI 연결에서 월 토큰 한도를 조정하거나 다음 달까지 기본 대본을 사용하세요.",
     "ai_consent": "설정 → AI 연결에서 유료 호출 승인을 저장하세요.",
+    "news_evidence_required": "원문과 발행일을 확인해 주세요. 주제 참고용 제작은 작업실에서 빠른 제작 또는 균형 제작을 직접 선택하세요. 자동 재검색하지 않습니다.",
+    "news_usage_script": "주제 설명형 대본과 참고 출처를 확인해 주세요. 개별 사건·수치·발언을 임의로 추가할 수 없습니다.",
     "voice_unavailable": "설정 → 음성과 자막에서 설치된 한국어 음성을 다시 선택하거나 무음 검토영상으로 제작하세요.",
     "speech_too_long": "대본 수정에서 문장을 줄이거나, 더 긴 영상 길이로 새 작업을 시작하세요.",
     "voice_failed": "설정 → 음성과 자막에서 미리 듣기로 음성이 소리를 내는지 확인하고, 안 되면 무음 검토영상으로 제작하세요. 안내서의 실행 정책 항목도 확인하세요.",
@@ -184,7 +189,7 @@ class AutopilotCoordinator:
         content_mode: str | None = None, ai_mode: str = "offline", voice: str | None = None,
         *, request_id: str | None = None, ai_model: str | None = None,
         acquisition_policy: str | None = None, category: str = "all", period: str | None = None,
-        external_consent: bool = False,
+        external_consent: bool = False, news_usage: str = "STANDARD",
     ) -> str:
         if mode not in {"easy", "guided"} or source not in {"sample", "feeds"}:
             raise AutopilotError("제작 방식과 뉴스 종류를 다시 선택하세요.")
@@ -197,6 +202,10 @@ class AutopilotCoordinator:
             raise AutopilotError("체험 제작에서는 외부 AI를 사용하지 않습니다. AI 방식을 다시 선택하세요.")
         if voice is not None and (not isinstance(voice, str) or not 0 < len(voice) <= 200 or "\x00" in voice):
             raise AutopilotError("음성을 다시 선택하세요.")
+        try:
+            news_usage = validate_news_usage(news_usage)
+        except ValueError:
+            raise AutopilotError("뉴스 활용 수준을 다시 선택하세요.") from None
         request = {}
         if acquisition_policy is not None or ai_mode in {"claude_code", "codex", "claude_api"}:
             from newsflow.intelligence.settings import SettingsError, studio_model
@@ -225,6 +234,8 @@ class AutopilotCoordinator:
                                 else "ai_web" if acquisition_policy == "ai_web" else "rss"),
                 **({"search_provider": ai_mode} if acquisition_policy != "rss" else {}),
             }
+        # A per-job policy does not opt legacy/sample paths into the unified AI pipeline.
+        request["news_usage"] = news_usage
         if request_id is not None:
             self._id(request_id)
         with self.guard:
@@ -239,8 +250,10 @@ class AutopilotCoordinator:
                             mode, source, duration, platform, content_mode, ai_mode, voice):
                             raise AutopilotConflict("같은 작업 번호로 다른 제작을 시작할 수 없습니다.")
                         old = existing.stage_results.get("request", {})
-                        if any(old.get(key) != value for key, value in request.items()
-                               if key not in {"consented_at", "requested_at"}) or bool(old) != bool(request):
+                        comparable = {"news_usage": "STANDARD", **old}
+                        if (any(comparable.get(key) != value for key, value in request.items()
+                                if key not in {"consented_at", "requested_at"})
+                                or bool(set(old) - {"news_usage"}) != bool(set(request) - {"news_usage"})):
                             raise AutopilotConflict("같은 작업 번호의 AI와 뉴스 수집 정책을 변경할 수 없습니다.")
                         return existing.id
             self._acquire()
@@ -272,6 +285,10 @@ class AutopilotCoordinator:
         context: dict[str, Any] = dict(job.stage_results.get("request", {}))
         for stage in STAGES:
             context.update(job.stage_results.get(stage, {}))
+        # Keep the initial user choice authoritative. Do not opt old jobs into a
+        # new execution policy merely by reading/resuming their saved state.
+        if "news_usage" in job.stage_results.get("request", {}):
+            context["news_usage"] = job.stage_results["request"]["news_usage"]
         context.update({
             "job_id": job.id, "mode": job.mode, "source": job.source, "duration": job.duration, "scheduled": scheduled,
             "platform": job.platform, "stage_results": dict(job.stage_results), "article_id": job.article_id,
@@ -300,11 +317,22 @@ class AutopilotCoordinator:
                 select(AutopilotEvent).where(AutopilotEvent.job_id == job.id).order_by(AutopilotEvent.id.desc()).limit(50)
             ).all()
             render = session.get(RenderJob, artifacts["render_job_id"]) if artifacts.get("render_job_id") else None
+            usage_result = context.get("news_usage_result")
+            if job.error_code == "news_evidence_required":
+                usage_result = {
+                    "mode": context.get("news_usage", "STANDARD"), "approach": "blocked",
+                    "source_kind": usage_result.get("source_kind", "unknown") if isinstance(usage_result, dict) else "unknown",
+                    "verification_status": "NOT VERIFIED", "message": _ERROR_MESSAGES["news_evidence_required"],
+                }
             return {
                 "id": job.id, "revision": job.revision, "mode": job.mode, "source": job.source,
                 "duration": job.duration, "platform": job.platform, "status": job.status,
                 "content_mode": job.content_mode, "ai_mode": job.ai_mode, "voice": job.voice,
                 **job.stage_results.get("request", {}),
+                "news_usage": context.get("news_usage", "STANDARD"),
+                "news_usage_result": usage_result if isinstance(usage_result, dict) else None,
+                **{key: context[key] for key in ("analysis_provider", "script_provider", "script_method", "actual_method")
+                   if key in context},
                 "review_pauses": sorted(self._pauses(job), key=STAGES.index),
                 "current_stage": job.current_stage,
                 "stage_label": "기사 분석·뉴스 선정" if job.current_stage == "select" and context.get("unified")

@@ -23,6 +23,12 @@ from newsflow.db.models import (
 from .credentials import CredentialError
 from .estimate import estimate_call
 from .korean import assess_script
+from .news_usage import (
+    assess_news_usage,
+    safe_topic_script,
+    validate_news_usage,
+    validate_news_usage_script,
+)
 from .provider import (
     ANALYSIS_INSTRUCTION,
     SCRIPT_INSTRUCTION,
@@ -318,6 +324,158 @@ class IntelligenceService:
             "caution": CAUTION,
         }
 
+    def create_topic_analysis(
+        self, article_ids: list[int], news_usage: str, *,
+        on_run: Callable[[int], None] | None = None,
+        category: str | None = None, selected_provider: str | None = None,
+    ) -> int:
+        """Record the explicit local topic path; no AI call or usage reservation."""
+        if (not isinstance(article_ids, list) or not article_ids or len(article_ids) > 10
+                or any(type(identifier) is not int or identifier < 1 for identifier in article_ids)
+                or len(article_ids) != len(set(article_ids))):
+            raise IntelligenceError("기사 1~10개를 선택하세요.", "invalid_selection", False)
+        if selected_provider is not None and selected_provider not in MODES:
+            raise IntelligenceError("선택한 AI를 확인하세요.", "invalid_selection", False)
+        if category is not None and (
+            not isinstance(category, str) or category not in {"all", "politics", "economy", "society", "it", "world"}
+        ):
+            raise IntelligenceError("뉴스 분야를 확인하세요.", "invalid_selection", False)
+        try:
+            mode = validate_news_usage(news_usage)
+        except ValueError:
+            raise IntelligenceError("뉴스 활용 수준을 확인하세요.", "invalid_selection", False) from None
+        evidence = self.evidence_for(article_ids)
+        if category is not None and category != "all":
+            evidence = {**evidence, "articles": [
+                {**article, "source_category": article.get("category"), "category": category}
+                for article in evidence["articles"]
+            ]}
+        assessment = assess_news_usage(evidence, mode)
+        if assessment["approach"] == "blocked":
+            raise IntelligenceError(assessment["message"], "news_usage_blocked", False)
+        evidence = {**evidence, "news_usage": mode, "news_usage_result": assessment}
+        result = Analysis.model_validate({
+            "overview": "주제 설명형 로컬 구성입니다. 선택 AI의 추가 분석이나 독립 사실 검증은 수행하지 않았습니다.",
+            "comparisons": [{
+                "article_ids": group,
+                "reason": "출처는 주제 참고 자료로 보존합니다. 기사 후보 여부는 URL 형태에 따른 분류입니다.",
+                "uncertainties": "원문 본문·개별 사건·발행일 미검증",
+            } for group in evidence["groups"]],
+            "recommended_article_id": assessment["preferred_article_ids"][0],
+            "selection_reason": "개별 기사 후보를 우선하되 확인되지 않은 사실을 대본에 옮기지 않습니다."
+            if mode == "STANDARD" else "선택 자료의 분야를 주제 설명에 활용합니다.",
+        }).model_dump()
+        with self.sessions.begin() as session:
+            run = IntelligenceRun(
+                kind="analysis", provider="local_topic_template", status="running",
+                options={"model": "local-topic-v1", "news_usage": mode, "selected_provider": selected_provider},
+                evidence=evidence, result={}, message="로컬 주제 구성 중 · 외부 AI 호출 없음",
+            )
+            session.add(run)
+            session.flush()
+            run_id = run.id
+        try:
+            if on_run:
+                on_run(run_id)
+            with self.sessions.begin() as session:
+                run = session.get(IntelligenceRun, run_id)
+                run.status, run.result, run.finished_at = "success", result, utcnow()
+                run.message = "로컬 주제 구성 완료 · 개별 기사 사실 미검증"
+            return run_id
+        except Exception as exc:  # noqa: BLE001 - no external error text in persisted runs
+            message, code, _ = self._failure(exc, "로컬 주제 구성을 완료하지 못했습니다.")
+            with self.sessions.begin() as session:
+                run = session.get(IntelligenceRun, run_id)
+                run.status, run.message, run.finished_at = "failed", message, utcnow()
+            raise IntelligenceError(message, code, False) from None
+
+    def generate_topic(
+        self, analysis_id: int, duration: int, news_usage: str, *,
+        on_run: Callable[[int], None] | None = None, article_ids: list[int] | None = None,
+    ) -> int:
+        """Create a review-required local template draft without switching API providers."""
+        try:
+            mode = validate_news_usage(news_usage)
+        except ValueError:
+            raise IntelligenceError("뉴스 활용 수준을 확인하세요.", "invalid_selection", False) from None
+        if type(duration) is not int or duration not in (30, 45, 60):
+            raise IntelligenceError("영상 길이를 확인하세요.", "invalid_selection", False)
+        with self.sessions() as session:
+            analysis = session.get(IntelligenceRun, analysis_id)
+            if (not analysis or analysis.kind != "analysis" or analysis.status != "success"
+                    or analysis.provider != "local_topic_template"
+                    or analysis.evidence.get("news_usage") != mode):
+                raise IntelligenceError("저장된 뉴스 활용 수준과 주제 구성을 확인하세요.", "invalid_selection", False)
+            evidence = analysis.evidence
+            selected_provider = analysis.options.get("selected_provider")
+        if article_ids is not None:
+            known = {article["id"] for article in evidence["articles"]}
+            if (not isinstance(article_ids, list) or not article_ids or len(article_ids) > 10
+                    or any(type(identifier) is not int for identifier in article_ids)
+                    or len(article_ids) != len(set(article_ids)) or not set(article_ids) <= known):
+                raise IntelligenceError("대본 뉴스가 저장된 분석 자료와 다릅니다.", "invalid_selection", False)
+            selected = set(article_ids)
+            evidence = {**evidence, "articles": [article for article in evidence["articles"] if article["id"] in selected],
+                        "groups": [[identifier for identifier in group if identifier in selected]
+                                   for group in evidence["groups"] if any(identifier in selected for identifier in group)]}
+        assessment = assess_news_usage(evidence, mode)
+        evidence = {**evidence, "news_usage_result": assessment}
+        if assessment["approach"] == "blocked":
+            raise IntelligenceError(assessment["message"], "news_usage_blocked", False)
+        script = self.validate(safe_topic_script(evidence, duration), duration)
+        self.check_news_usage(script, evidence)
+        self._check_stored_secret(script)
+        self.check_copy(script, evidence)
+        notes = assess_script(script, evidence, duration, **self.speech)
+        with self.sessions.begin() as session:
+            run = IntelligenceRun(
+                kind="script", provider="local_topic_template", status="running", evidence=evidence,
+                options={"model": "local-topic-v1", "duration": duration, "analysis_run_id": analysis_id,
+                         "news_usage": mode, "selected_provider": selected_provider,
+                         "selected_article_ids": [article["id"] for article in evidence["articles"]]},
+                result={}, message="로컬 주제 설명 대본 구성 중 · 외부 AI 호출 없음",
+            )
+            session.add(run)
+            session.flush()
+            run_id = run.id
+        try:
+            if on_run:
+                on_run(run_id)
+            with self.sessions.begin() as session:
+                run = session.get(IntelligenceRun, run_id)
+                run.status, run.result, run.finished_at = "success", script, utcnow()
+                run.message = "주제 설명형 대본 완료 · 개별 사건 미검증 · 사용자 검토 필요"
+                draft = ContentDraft(
+                    run_id=run_id, duration=duration, content=script, sources=evidence,
+                    revision=1, review_status="review_required", review_notes=notes,
+                )
+                session.add(draft)
+                session.flush()
+                draft_id = draft.id
+            return draft_id
+        except Exception as exc:  # noqa: BLE001 - local callback/DB errors stay sanitized
+            message, code, _ = self._failure(exc, "로컬 주제 설명 대본을 완료하지 못했습니다.")
+            with self.sessions.begin() as session:
+                run = session.get(IntelligenceRun, run_id)
+                run.status, run.message, run.finished_at = "failed", message, utcnow()
+            raise IntelligenceError(message, code, False) from None
+
+    @staticmethod
+    def check_news_usage(content: dict, evidence: dict) -> None:
+        """Reusable review/render gate; legacy drafts without this policy are unchanged."""
+        if "news_usage" not in evidence and "news_usage_result" not in evidence:
+            return
+        try:
+            if "news_usage" not in evidence:
+                raise ValueError
+            assessment = assess_news_usage(evidence, evidence["news_usage"])
+            validate_news_usage_script(content, evidence, assessment)
+        except ValueError:
+            raise IntelligenceError(
+                "뉴스 활용 수준의 근거 요건을 충족하지 않는 대본입니다. 미확인 사실을 추가할 수 없습니다.",
+                "news_usage_blocked", False,
+            ) from None
+
     def analyze(
         self,
         ids: list[int],
@@ -430,6 +588,11 @@ class IntelligenceService:
             if not analysis or analysis.kind != "analysis" or analysis.status != "success":
                 raise IntelligenceError("먼저 기사 분석을 실행하세요.", "invalid_selection", False)
             evidence = analysis.evidence
+            if "news_usage" in evidence or "news_usage_result" in evidence:
+                raise IntelligenceError(
+                    "뉴스 활용 수준이 지정된 대본은 작업실의 주제 설명형 제작으로 진행하세요.",
+                    "news_usage_blocked", False,
+                )
             if article_ids is not None:
                 known = {a["id"] for a in evidence["articles"]}
                 if (not isinstance(article_ids, list) or not article_ids or len(article_ids) > 10
@@ -521,6 +684,7 @@ class IntelligenceService:
             if not draft:
                 raise IntelligenceError("초안이 없습니다.", "invalid_selection", False)
             content = self.validate(output, draft.duration)
+            self.check_news_usage(content, draft.sources)
             self._check_stored_secret(content)
             self.check_copy(content, draft.sources)
             notes = assess_script(content, draft.sources, draft.duration, **self.speech)
