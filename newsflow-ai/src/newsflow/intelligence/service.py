@@ -130,13 +130,10 @@ class IntelligenceService:
         from .api_settings import APIBudgetService, APISettingsError
 
         budget = self.api_budget or APIBudgetService(self.sessions)
-        # Every UTF-8 byte can be a token. Additional room covers the schema/system
-        # instructions. The budget service separately bounds tool-returned search context.
-        maximum = len(json.dumps(payload, ensure_ascii=False).encode("utf-8")) * 4 + 4096
         try:
             reservation = budget.reserve(
                 provider=mode, request_id=f"intelligence:{run_id}", kind=kind, model=options.model,
-                max_input_tokens=maximum, max_output_tokens=options.max_tokens,
+                max_output_tokens=options.max_tokens,
                 max_search_calls=1 if kind == "search" else 0, key_store=self.api_key_stores.get(mode),
             )
         except APISettingsError as exc:
@@ -186,7 +183,7 @@ class IntelligenceService:
         from newsflow.news.service import NewsService
 
         from .api_providers import AnthropicProvider, OpenAISearchProvider
-        from .api_search import SEARCH_INSTRUCTION, SearchRequest, validate_search_result
+        from .api_search import SEARCH_INSTRUCTION, SearchRequest, SearchResponseError, validate_search_result
 
         if mode not in {"openai", "claude_api"} or consent is not True:
             raise IntelligenceError("API 웹 검색에는 별도 사용·비용 승인이 필요합니다.", "ai_consent", False)
@@ -252,9 +249,14 @@ class IntelligenceService:
             return run_id
         except Exception as exc:  # noqa: BLE001 - fixed messages only, never persist vendor text
             message, code, _ = self._failure(exc, "API 뉴스 검색에 실패했습니다. 자동 재요청하지 않습니다.")
+            failure = exc.safe_copy() if isinstance(exc, SearchResponseError) else None
+            if failure is not None:
+                message = str(failure) + " 자동 재요청하지 않습니다."
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.message, run.finished_at = "failed", message, utcnow()
+                if failure is not None:
+                    run.result = {"search_failure": failure.diagnostics()}
             self._usage(provider, run_id, mode, options, "search", "failed")
             self._finish_api(reservation, provider, "unknown" if code in {"ai_timeout", "ai_unavailable", "ai_cancelled"} else "failed")
             raise IntelligenceError(message, code, False) from None

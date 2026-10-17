@@ -71,7 +71,7 @@ def _store(request: Request, provider: str):
 def save_configuration(
     request: Request, provider: str, model: str = Form(max_length=80),
     approved: bool = Form(False), search_enabled: bool = Form(False), search_approved: bool = Form(False),
-    request_limit_usd: str = Form("", max_length=20), monthly_limit_usd: str = Form("", max_length=20),
+    request_limit_usd: str | None = Form(None, max_length=20), monthly_limit_usd: str = Form("", max_length=20),
     input_price_per_1m: str = Form("", max_length=20), output_price_per_1m: str = Form("", max_length=20),
     search_price_per_1k: str = Form("", max_length=20), billing_confirmed: bool = Form(False),
     account_remaining_usd: str = Form("", max_length=20),

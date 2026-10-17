@@ -148,7 +148,7 @@ def production_context(request) -> dict:
             "API 키 등록됨" if api["key"]["configured"] else "API Key 미등록",
             " ".join(inference["reasons"]) if not inference["ready"] else "분석·대본 실행 조건 확인됨",
             authentication="실제 인증 확인 기록 있음" if api["authentication_verified"] else "실제 연결 미확인",
-            cost="별도 API 과금 · 요청별·월 예산 적용 · 로컬 추정은 공급사 청구액과 다름",
+            cost="별도 API 과금 · 월 예산·보고 사용량 확인 · 로컬 집계는 공급사 청구액과 다름",
             evidence="설정 완료와 실제 검색·분석·대본 성공은 별개입니다.", action="#selected-ai")
     for name in ("offline", "claude_code", "codex", "openai", "claude_api"):
         statuses[name]["capabilities"] = provider_capabilities(name)

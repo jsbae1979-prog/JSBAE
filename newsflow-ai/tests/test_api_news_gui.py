@@ -3,6 +3,7 @@
 import json
 import subprocess
 import urllib.request
+from decimal import Decimal
 from html import unescape
 from urllib.parse import parse_qs, urlsplit
 
@@ -107,6 +108,29 @@ def test_claude_api_configuration_does_not_change_existing_openai_gate(client, a
     assert response.status_code == 303 and read_settings(app.state.sessions) == before
 
 
+@pytest.mark.parametrize("provider", ["openai", "claude_api"])
+def test_saving_without_removed_request_limit_preserves_saved_value_and_other_provider(client, app, provider):
+    token = csrf(client)
+    model = "gpt-4.1-mini" if provider == "openai" else "claude-sonnet-4-6"
+    other = "claude_api" if provider == "openai" else "openai"
+    other_before = read_api_settings(app.state.sessions, other)
+    fields = config(token, model=model, monthly_token_limit="250000", timeout="35")
+    path = f"/api-settings/{provider}"
+    assert client.post(path, data=fields, follow_redirects=False).status_code == 303
+    before = read_api_settings(app.state.sessions, provider)
+    fields.pop("request_limit_usd")
+    fields["monthly_limit_usd"] = "25"
+    response = client.post(path, data=fields, follow_redirects=False)
+    assert response.status_code == 303
+    after = read_api_settings(app.state.sessions, provider)
+    assert after.request_limit_usd == before.request_limit_usd == Decimal(5)
+    assert after.monthly_limit_usd == Decimal(25)
+    assert after.approved_at == before.approved_at
+    assert after.search_approved_at == before.search_approved_at
+    assert after.model == before.model and after.search_enabled == before.search_enabled
+    assert read_api_settings(app.state.sessions, other) == other_before
+
+
 def test_new_key_never_echoed_or_stored_in_sqlite_and_clear_preserves_other_provider(client, app):
     store = AnthropicKeyStore(app.state.config.data_dir, FakeCipher())
     app.state.api_keys["claude_api"] = store
@@ -168,6 +192,10 @@ def test_fake_ready_api_consent_names_three_stages_and_preserves_duration(client
     flow = json.loads(unescape(query["flow"][0]))
     assert flow["initial_duration"] == duration and flow["initial_provider"] == "claude_api"
     page = client.get(response.headers["location"])
-    assert "검색·분석·대본 3단계" in page.text and "별도의 API 과금" in page.text
+    assert "웹 검색 최대 1회(검색 도구 최대 1회) + 기사 비교·분석 1회 + 대본 1회" in page.text
+    assert "별도의 API 과금" in page.text
+    assert "응답의 보고 사용량으로 집계" in page.text
+    assert "최종 비용이나 월 예산 이내 완료를 보장하지 않습니다" in page.text
+    assert "요청별 예산" not in page.text
     assert "본인 Claude 또는 ChatGPT 구독" not in page.text
     assert app.state.autopilot.future is None

@@ -325,11 +325,13 @@ class AnthropicProvider(_APITransport):
         # Retain a fixed failure stage, never the response or exception payload.
         # The accepted formats, source checks and single-call policy stay intact.
         stage = "response_envelope"
+        stop_reason = None
         try:
             document = self._message(
                 CLAUDE_SEARCH_INSTRUCTION, {**request.model_dump(), "searched_at": datetime.now(UTC).isoformat()},
                 options, search=True,
             )
+            stop_reason = document.get("stop_reason")
             if document.get("stop_reason") != "end_turn":
                 raise SearchResponseError("incomplete_response")
             stage = "response_text"
@@ -379,12 +381,14 @@ class AnthropicProvider(_APITransport):
                 payload, provider=self.provider, model=options.model,
                 request=request, tool_evidence=evidence, usage=self.last_usage or {},
             )
-        except SearchResponseError:
-            raise
+        except SearchResponseError as exc:
+            raise SearchResponseError(
+                exc.failure_reason, tool_error_code=exc.tool_error_code, stop_reason=stop_reason,
+            ) from None
         except ProviderResponseError:
-            raise SearchResponseError(stage) from None
+            raise SearchResponseError(stage, stop_reason=stop_reason) from None
         except (ValueError, TypeError, KeyError, AttributeError):
-            raise SearchResponseError(stage) from None
+            raise SearchResponseError(stage, stop_reason=stop_reason) from None
 
 
 class FakeAPIProvider:

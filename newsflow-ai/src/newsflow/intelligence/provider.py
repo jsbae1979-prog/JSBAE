@@ -62,7 +62,7 @@ class Options:
         if (
             not 0 <= self.temperature <= 1
             or not 1 <= self.timeout <= 60
-            or not 200 <= self.max_tokens <= 3000
+            or not 200 <= self.max_tokens <= 9000
         ):
             raise ValueError("AI 호출 옵션 범위를 확인하세요.")
 

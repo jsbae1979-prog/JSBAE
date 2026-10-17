@@ -1,0 +1,55 @@
+{% set publish = unified_publish %}{% set cohort = publish.cohort %}{% set meta = cohort.metadata if cohort else {} %}
+{% set selected_target = 'both' if cohort and cohort.accounts|length == 2 else (cohort.accounts|first if cohort else 'youtube') %}
+<section class="easy-panel ai-panel" id="publish-workspace" aria-labelledby="publish-workspace-title">
+  <div class="section-head"><div><p class="eyebrow">검토 후 게시</p><h2 id="publish-workspace-title">완성 영상을 게시하세요</h2></div><a href="/simple-settings#youtube">계정 설정</a></div>
+  <p><strong>{{ publish.title }}</strong> · 위 플레이어에서 확인한 같은 MP4를 사용합니다. 게시하지 않고 MP4만 저장해도 됩니다.</p>
+  {% if cohort %}{% for result in cohort.targets %}<div class="soft-notice" role="status">
+    <strong>{{ 'YouTube' if result.platform == 'youtube' else 'Instagram' }} · {{ result.account_label }}</strong><p>{{ result.message }}</p>
+    {% if result.url %}<a href="{{ result.url }}" target="_blank" rel="noopener noreferrer">게시된 영상 확인 ↗</a>{% endif %}
+  </div>{% endfor %}{% endif %}
+  {% if not cohort or not cohort.locked %}
+  <form data-unified-publish-form method="post" action="/publishing/unified/review">{{ csrf_field() }}
+    <input type="hidden" name="render_job_id" value="{{ publish.render_id }}">
+    <label>게시할 곳<select name="target" data-publish-target>
+      <option value="youtube" {% if selected_target == 'youtube' %}selected{% endif %}>YouTube</option>
+      <option value="instagram" {% if selected_target == 'instagram' %}selected{% endif %}>Instagram</option>
+      <option value="both" {% if selected_target == 'both' %}selected{% endif %}>YouTube + Instagram</option>
+    </select></label>
+    {% for platform, label, accounts in [('youtube', 'YouTube', publish.youtube_accounts), ('instagram', 'Instagram', publish.instagram_accounts)] %}
+    {% set ready_accounts = accounts|selectattr('ready')|list %}
+    <div data-publish-account="{{ platform }}">
+      {% if ready_accounts %}<label>{{ label }} 계정<select name="{{ platform }}_account" required>{% for account in ready_accounts %}<option value="{{ account.id }}" {% if cohort and cohort.accounts.get(platform) == account.id %}selected{% endif %}>{{ account.label }}</option>{% endfor %}</select></label>
+      {% else %}<p class="settings-warning">{{ label }} 계정 연결이 필요합니다. <a href="/simple-settings#{{ platform }}">연결 설정 →</a></p>{% endif %}
+    </div>{% endfor %}
+    <label>제목<input name="title" value="{{ meta.title if meta else publish.title }}" maxlength="100" required></label>
+    <label>설명<textarea name="description" rows="3" maxlength="5000">{{ meta.description if meta else '' }}</textarea></label>
+    <label>해시태그<input name="hashtags" value="{{ meta.hashtags|join(' ') if meta else '' }}" maxlength="500"></label>
+    <p class="hint">Instagram에는 제목·설명·해시태그를 합쳐 게시합니다. 플랫폼별 길이와 형식은 저장할 때 확인합니다.</p>
+    <details class="easy-advanced"><summary>영상의 출처 보기</summary>{% for article in publish.sources.get('articles', []) %}<p>{{ article.get('title', '뉴스 자료') }}</p>{% for source in article.get('sources', []) %}<p>{{ source.get('name', source.get('publisher', '')) }} · {{ source.get('url', '') }}</p>{% endfor %}{% else %}<p>게시 전 자료의 출처를 확인하세요.</p>{% endfor %}</details>
+    <label class="check"><input type="checkbox" name="content_reviewed" value="true" required {% if meta.content_reviewed %}checked{% endif %}> 이 영상의 내용·음성·자막을 직접 확인했습니다.</label>
+    <label class="check"><input type="checkbox" name="sources_confirmed" value="true" required {% if meta.sources_confirmed %}checked{% endif %}> 출처와 사실 관계를 확인했습니다.</label>
+    <label class="check"><input type="checkbox" name="copyright_confirmed" value="true" required {% if meta.copyright_confirmed %}checked{% endif %}> 영상·음성·자료의 게시 권리를 확인했습니다.</label>
+    <label>AI 생성·변형 콘텐츠 표시<select name="ai_disclosure" required><option value="unreviewed">직접 선택해 주세요</option><option value="disclose" {% if meta.ai_disclosure == 'disclose' %}selected{% endif %}>표시합니다</option><option value="not_required" {% if meta.ai_disclosure == 'not_required' %}selected{% endif %}>표시 대상이 아님을 확인했습니다</option></select></label>
+    <button>검토 저장·파일 확인</button>
+  </form>
+  {% else %}<p>전송을 시작한 게시 내용은 보존됩니다. 완료된 플랫폼은 다시 게시하지 않습니다.</p>{% endif %}
+  {% if cohort %}
+  {% if cohort.checks %}<ul>{% for check in cohort.checks %}<li class="settings-warning">{{ check.platform }} · {{ check.reason|default(check.key) }}</li>{% endfor %}</ul>{% endif %}
+  {% if cohort.can_execute %}
+  {% set pending_platforms = cohort.targets|selectattr('can_continue')|map(attribute='platform')|list %}
+  <form data-unified-publish-form method="post" action="/publishing/unified/{{ cohort.id }}/execute">{{ csrf_field() }}<input type="hidden" name="approval_token" value="{{ cohort.approval_token }}">
+    <p>이번 실행 대상: {% for result in cohort.targets if result.can_continue %}<strong>{{ 'YouTube' if result.platform == 'youtube' else 'Instagram' }} / {{ result.account_label }}</strong>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+    {% if 'youtube' in pending_platforms %}
+    <label>YouTube 공개 상태<select name="privacy"><option value="private" selected>비공개 · 기본값</option><option value="unlisted">일부 공개</option><option value="public">공개</option></select></label>
+    <label>YouTube 아동용 영상인가요?<select name="made_for_kids" required><option value="">직접 선택해 주세요</option><option value="no">아니요</option><option value="yes">예</option></select></label>
+    <label class="check"><input type="checkbox" name="youtube_public_consent" value="true"> YouTube 일부 공개 또는 공개를 선택한 경우 다른 사람이 볼 수 있는 게시를 승인합니다.</label>
+    {% endif %}
+    {% if 'instagram' in pending_platforms %}<label class="check"><input type="checkbox" name="instagram_public_consent" value="true" required> 위 Instagram 계정에 선택한 영상을 공개 Reels로 게시하는 것을 승인합니다.</label>{% endif %}
+    <label class="check"><input type="checkbox" name="consent" value="true" required> 위 대상 계정과 영상을 확인했으며 MP4·제목·설명 전송 및 게시를 승인합니다.</label>
+    <p class="hint">플랫폼 사용량이 발생합니다. Instagram 처리 중이면 다음 클릭에서 상태를 확인하고 이어서 게시합니다. 실패·결과 불명은 다시 보내지 않으며, 완료된 플랫폼은 건너뜁니다.</p>
+    <button class="primary">{{ '게시 계속' if cohort.locked else '선택한 곳에 게시' }}</button>
+  </form>
+  {% else %}<p>게시 결과와 확인이 필요한 항목을 위에서 확인하세요. 실패·결과 불명은 자동으로 다시 보내지 않습니다.</p>{% endif %}
+  {% endif %}
+</section>
+<script src="/static/js/publish_workspace.js" defer></script>

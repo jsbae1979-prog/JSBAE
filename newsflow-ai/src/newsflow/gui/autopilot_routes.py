@@ -60,6 +60,8 @@ from .production_context import (
 )
 from .routes import go, page
 from .task_views import task_rows
+from .unified_publishing_routes import workspace_context as unified_publishing_context
+from .youtube_routes import publishing_context
 
 router = APIRouter()
 PLATFORMS = {"youtube": "YouTube Shorts", "instagram": "Instagram Reels"}
@@ -284,7 +286,7 @@ def _workspace_video(
         "project_id": project.id, "draft_id": project.draft_id, "task_id": task["id"] if task else None,
         "review_status": "stored" if stored else "review_required",
         "review_label": "보관 완료 · 게시 전 내용·출처·권리 검토 필요" if stored else "직접 시청·내용 확인 필요",
-        "playable": True, "link": f"/?video={video.id}#workspace-detail",
+        "playable": True, "link": f"/?video={video.id}&publish_platform=unified#workspace-detail",
         "media_url": f"/video/jobs/{video.id}/file", "download_url": f"/video/jobs/{video.id}/file?download=true",
         "edit_url": f"/video?job_id={video.id}&draft_id={project.draft_id}",
         "review_url": f'/?task={task["id"]}#workspace-detail' if task else f"/video?job_id={video.id}&draft_id={project.draft_id}",
@@ -296,10 +298,11 @@ def _workspace_video(
 @router.get("/", response_class=HTMLResponse)
 def home(
     request: Request, task: str | None = None, video: int | None = None, show: str = "",
-    guide: str = "", flow: str | None = None,
+    guide: str = "", flow: str | None = None, publish_platform: str = "youtube",
 ) -> HTMLResponse:
     if (show not in {"", "tasks", "videos"} or sum((task is not None, video is not None, bool(guide))) > 1
-            or video is not None and video < 1 or guide and guide not in GUIDES):
+            or video is not None and video < 1 or guide and guide not in GUIDES
+            or publish_platform not in {*PLATFORMS, "unified"}):
         raise HTTPException(422, "작업 또는 영상 하나를 선택해 주세요.")
     jobs = request.app.state.autopilot.list_jobs(100)
     ready = readiness(request)
@@ -358,6 +361,11 @@ def home(
             completed=visible_videos, workspace_videos=visible_videos, video_count=len(completed),
             selected_task_context=selected_task_context, selected_video=selected_video, workspace=True, show=show,
             workspace_guide_context=workspace_guide_context,
+            publish_platform=publish_platform,
+            youtube_publish=publishing_context(request, video) if publish_platform == "youtube" else None,
+            instagram_publish=publishing_context(request, video, platform="instagram")
+            if publish_platform == "instagram" else None,
+            unified_publish=unified_publishing_context(request, video) if publish_platform == "unified" else None,
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
             recent_news=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(5))),
             **overview,
