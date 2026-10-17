@@ -11,7 +11,8 @@
 
 ## 검증과 보존
 
-- 새 OAuth·업로드·게시 이력·GUI 테스트를 Fake와 임시 DB로 검증했다. 기존 callback/activation/protocol의 관련 테스트도 통과했다. Windows 3.12/3.14 최종 CI 결과는 이 통합 Draft PR에 기록한다.
+- 새 OAuth·업로드·게시 이력·GUI 테스트 95개를 Fake와 임시 DB로 검증했다. 실제 Windows DPAPI 저장·복호화는 가짜 자격증명으로 확인했다. 기존 callback/activation/protocol 관련 174개도 통과했다.
+- [최종 Windows CI 1회](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39001611964): Python 3.12/3.14 각각 **189 PASS**, Ruff·pip check PASS. 테스트한 구현 SHA는 `0b2ce83a4b527c36f905958d2c382c9b2cdf3766`이며 이후 변경은 이 보고서의 결과 기록뿐이다. [통합 Draft PR #34](https://github.com/jsbae1979-prog/JSBAE/pull/34).
 - Ruff·pip check 통과. 실제 OAuth·Google 업로드·유료 AI·CLI 인증/추론 호출은 0건이다.
 - 별도 `127.0.0.1:8794` 서버에서 합성 계정·합성 영상 레코드로 설정 표시, 필수 검토, 같은 게시 패널 복귀, 비공개 기본값·게시 동의 화면을 확인했다. 앱 내 브라우저를 사용했으며 Chrome 연결 및 실제 MP4 재생을 이번 검증으로 대체하지 않는다.
 - 화면 캡처는 로컬 `validation-output/youtube-core-ui-20261017/settings.png`, `publish.png`에 보관하며 Git에 포함하지 않는다.
