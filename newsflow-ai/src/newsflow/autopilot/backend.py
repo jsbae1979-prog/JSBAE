@@ -182,6 +182,9 @@ class PipelineBackend:
         return identifiers
 
     def _collect(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        if ctx.get("script_method") == "api_grounded_v1" and ctx.get("news_usage") == "VERIFIED":
+            raise BackendError("독립 사실 검증은 지원하지 않아 API 요청 전에 중단했습니다.",
+                               code="news_evidence_required", retryable=False)
         if ctx.get("acquisition_policy") is not None:
             try:
                 require_acquisition(ctx.get("ai_mode", "offline"), ctx["acquisition_policy"],
@@ -359,12 +362,21 @@ class PipelineBackend:
         if not candidates:
             raise BackendError("제작할 뉴스가 없습니다. 다른 출처로 다시 시도하세요.",
                                code="no_eligible_articles" if ctx.get("unified") else "no_articles")
-        if ctx.get("news_usage") and (ctx["source"] != "sample" or ctx["news_usage"] == "VERIFIED"):
+        api_script = ctx.get("script_method") == "api_grounded_v1"
+        assessment = None
+        if api_script:
+            # New API jobs retain their selected adapter. Legacy jobs without this durable
+            # request marker keep their accepted local path and never acquire new paid stages.
+            assessment = assess_news_usage(self.intelligence.evidence_for(candidates), ctx["news_usage"])
+            if assessment["approach"] == "blocked":
+                raise BackendError(assessment["message"], code="news_evidence_required", retryable=False)
+            candidates = assessment["preferred_article_ids"]
+        elif ctx.get("news_usage") and (ctx["source"] != "sample" or ctx["news_usage"] == "VERIFIED"):
             return self._select_topic(ctx, candidates, cancel, progress, save)
         analysis_id = ctx.get("analysis_run_id")
         selection_method = "rss_heuristic"
         selection_reason = "RSS 내부 추천 후보 순서 · 실제 조회수·화제성 측정 아님"
-        if ctx.get("unified"):
+        if ctx.get("unified") or api_script:
             ai_mode = self._ai_mode(ctx)
             if analysis_id:
                 with self.sessions() as session:
@@ -376,6 +388,8 @@ class PipelineBackend:
                     candidates = [a["id"] for a in previous.evidence["articles"]]
                     if previous.kind != "analysis" or previous.provider != ai_mode:
                         raise BackendError(code="select_failed", retryable=False)
+                    if api_script and not self._api_run_matches(previous, ctx):
+                        raise BackendError(code="select_failed", retryable=False)
             else:
                 try:
                     with self._ai_service(ai_mode, cancel) as service:
@@ -383,6 +397,7 @@ class PipelineBackend:
                             candidates, mode=ai_mode, consent=ai_mode != "offline",
                             options=self._options(ctx, ANALYSIS_MAX_TOKENS),
                             on_run=self._remember(ctx, "analysis_run_id", save),
+                            **({"news_usage": ctx["news_usage"]} if api_script else {}),
                         )
                 except IntelligenceError as exc:
                     raise self._ai_failure(exc, external=ai_mode != "offline") from None
@@ -401,6 +416,8 @@ class PipelineBackend:
             article = session.get(NewsArticle, chosen)
             sufficient = bool(article and len(article.summary.strip()) >= MIN_SUMMARY_CHARS)
             dated = bool(article and article.published_at is not None)
+        if api_script:
+            assessment = assess_news_usage(self.intelligence.evidence_for([chosen]), ctx["news_usage"])
         progress(100, "제작할 뉴스 후보를 골랐어요.")
         return {
             "article_id": chosen, "candidate_article_ids": candidates,
@@ -409,7 +426,17 @@ class PipelineBackend:
             "selection_method": selection_method, "selection_reason": selection_reason,
             **({"analysis_run_id": analysis_id, "analysis_provider": ctx.get("ai_mode", "offline"),
                 "ai_model": ctx.get("ai_model"), "analyzed_article_ids": candidates} if analysis_id else {}),
+            **({"news_usage_result": assessment, "script_method": "api_grounded_v1"} if api_script else {}),
         }
+
+    @staticmethod
+    def _api_run_matches(run: IntelligenceRun, ctx: dict) -> bool:
+        return (
+            run.provider == ctx.get("ai_mode")
+            and run.options.get("model") == ctx.get("ai_model")
+            and run.evidence.get("script_method") == "api_grounded_v1"
+            and run.evidence.get("news_usage") == ctx.get("news_usage")
+        )
 
     def _select_topic(self, ctx: dict, candidates: list[int], cancel: Event,
                       progress: Progress, save: SaveArtifact) -> dict:
@@ -471,7 +498,8 @@ class PipelineBackend:
             raise BackendError(code="ai_consent", retryable=False)
         if ctx.get("content_mode", "trial") != "real" and mode != "offline":
             raise BackendError("체험 제작에서는 외부 AI를 사용하지 않습니다.", retryable=False, code="ai_consent")
-        if ((mode in {"claude_code", "codex"} or ctx.get("unified") and mode != "offline")
+        if ((mode in {"claude_code", "codex"} or ctx.get("unified") and mode != "offline"
+             or ctx.get("script_method") == "api_grounded_v1")
                 and not (ctx.get("external_consent") is True and ctx.get("consented_at"))):
             raise BackendError(code="ai_consent", retryable=False)
         if mode == "openai":
@@ -510,7 +538,7 @@ class PipelineBackend:
         def remember(identifier: int) -> None:
             # Journal before a possible side effect. A crash after this point blocks replay.
             save(kind, identifier)
-            if ctx.get("unified"):
+            if ctx.get("unified") or ctx.get("script_method") == "api_grounded_v1":
                 with self.sessions.begin() as session:
                     run = session.get(IntelligenceRun, identifier)
                     run.options = {**run.options, "autopilot_job_id": ctx["job_id"],
@@ -576,12 +604,16 @@ class PipelineBackend:
             "content_draft_id": draft.id, "script_revision": draft.revision, "ai_mode": ai_mode,
             "review_notes": len(draft.review_notes or []),
             "speech_estimate_seconds": plan["estimated_total_seconds"], "speech_fits": plan["fits"],
+            **({"script_method": "api_grounded_v1", "script_provider": ai_mode,
+                "news_usage_result": draft.sources.get("news_usage_result")}
+               if draft.sources.get("script_method") == "api_grounded_v1" else {}),
         }
 
     def _script(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         if ctx.get("script_method") == "local_topic_template":
             return self._topic_script(ctx, cancel, progress, save)
         ai_mode = ctx.get("ai_mode", "offline")
+        api_script = ctx.get("script_method") == "api_grounded_v1"
         if ctx.get("content_draft_id"):
             with self.sessions() as session:
                 draft = session.get(ContentDraft, ctx["content_draft_id"])
@@ -590,6 +622,10 @@ class PipelineBackend:
                     and draft.duration == ctx["duration"]
                     and {article["id"] for article in draft.sources["articles"]} == {ctx["article_id"]}
                 ):
+                    if api_script:
+                        run = session.get(IntelligenceRun, draft.run_id)
+                        if not run or run.status != "success" or not self._api_run_matches(run, ctx):
+                            raise BackendError(code="ai_request_stopped", retryable=False)
                     return self._draft_summary(draft, ai_mode)
             raise BackendError("저장된 대본과 선택 뉴스가 일치하지 않습니다.", retryable=False)
         analysis_id = ctx.get("analysis_run_id")
@@ -602,6 +638,9 @@ class PipelineBackend:
                         a["id"] for a in completed.sources["articles"]
                     } != {ctx["article_id"]}:
                         raise BackendError("대본과 선택 뉴스가 일치하지 않습니다.", retryable=False)
+                    run = session.get(IntelligenceRun, script_id)
+                    if api_script and (not run or run.status != "success" or not self._api_run_matches(run, ctx)):
+                        raise BackendError(code="ai_request_stopped", retryable=False)
                     save("content_draft_id", completed.id)
                     return self._draft_summary(completed, ai_mode)
                 run = session.get(IntelligenceRun, script_id)
@@ -629,6 +668,8 @@ class PipelineBackend:
                     raise BackendError("분석 이력과 선택 뉴스가 일치하지 않습니다.", retryable=False)
                 elif run.status != "success":
                     raise BackendError("이전 분석 작업의 완료를 확인하지 못했습니다.", retryable=False, outcome_unknown=True)
+                elif api_script and not self._api_run_matches(run, ctx):
+                    raise BackendError(code="ai_request_stopped", retryable=False)
         ai_mode = self._ai_mode(ctx)
         speech = self._speech()
         self.intelligence.speech = {"rate": speech.rate, "pause_ms": speech.pause_ms}
@@ -646,6 +687,7 @@ class PipelineBackend:
                         consent=ai_mode != "offline",
                         options=analysis_options,
                         on_run=self._remember(ctx, "analysis_run_id", save),
+                        **({"news_usage": ctx["news_usage"]} if api_script else {}),
                     )
                 self._cancel(cancel)
                 progress(
@@ -659,7 +701,8 @@ class PipelineBackend:
                     consent=ai_mode != "offline",
                     options=script_options,
                     on_run=self._remember(ctx, "script_run_id", save),
-                    **({"article_ids": [ctx["article_id"]]} if ctx.get("unified") else {}),
+                    **({"article_ids": [ctx["article_id"]]} if ctx.get("unified") or api_script else {}),
+                    **({"news_usage": ctx["news_usage"]} if api_script else {}),
                 )
         except IntelligenceError as exc:
             raise self._ai_failure(exc, external=ai_mode != "offline") from None
@@ -770,6 +813,9 @@ class PipelineBackend:
                     # the generic suffix mentions several causes, so only the prefix is classified.
                     if (job.message or "").startswith("음성 길이 실패"):
                         raise BackendError("음성이 장면 또는 영상 길이보다 길어 영상을 만들지 못했습니다.", code="speech_too_long")
+                    if (job.message or "").startswith("음성 분량 검토 필요"):
+                        raise BackendError("실제 음성과 목표 길이가 맞지 않습니다. 대본을 검토·편집한 뒤 다시 제작하세요.",
+                                           code="audio_review", retryable=False)
                     if (job.message or "").startswith("음성 생성 실패"):
                         raise BackendError(
                             "음성을 만들지 못했습니다. 선택한 한국어 음성과 PowerShell 실행 상태를 확인하세요.", code="voice_failed",

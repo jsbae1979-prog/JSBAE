@@ -1,4 +1,4 @@
-"""News-use levels on isolated SQLite with injected search fixtures only."""
+"""Preserved legacy local jobs on isolated SQLite; new API jobs use test_api_shorts_pipeline."""
 
 from copy import deepcopy
 from threading import Event
@@ -26,7 +26,25 @@ from newsflow.intelligence.provider import Options
 from newsflow.intelligence.service import IntelligenceError
 from newsflow.video.service import VideoError
 
-api_pipeline = test_api_news_pipeline.api_pipeline
+new_api_pipeline = test_api_news_pipeline.api_pipeline
+
+
+@pytest.fixture
+def api_pipeline(new_api_pipeline, monkeypatch):
+    """Model a saved pre-upgrade job, without the new paid-stage creation marker."""
+    coordinator, _, _, sessions, _, _ = new_api_pipeline
+    run = coordinator._run
+
+    def legacy_run(identifier):
+        with sessions.begin() as session:
+            row = session.get(AutopilotJob, identifier)
+            request = dict(row.stage_results["request"])
+            request.pop("script_method", None)
+            row.stage_results = {**row.stage_results, "request": request}
+        run(identifier)
+
+    monkeypatch.setattr(coordinator, "_run", legacy_run)
+    return new_api_pipeline
 
 LISTING = "https://www.cnbc.com/technology/"
 ARTICLE = "https://www.cnbc.com/2026/10/17/technology-explainer.html"
@@ -140,7 +158,9 @@ def test_news_usage_is_durable_and_recovery_never_repeats_search(api_pipeline):
     identity = uuid4().hex
     start(api_pipeline, request_id=identity, news_usage="QUICK")
     job = settled(api_pipeline, identity)
-    assert start(api_pipeline, request_id=identity, news_usage="QUICK") == identity
+    # Reusing an old request ID cannot upgrade its policy into new paid API stages.
+    with pytest.raises(AutopilotConflict):
+        start(api_pipeline, request_id=identity, news_usage="QUICK")
     with pytest.raises(AutopilotConflict):
         start(api_pipeline, request_id=identity, news_usage="STANDARD")
     assert coordinator.recover() == 0

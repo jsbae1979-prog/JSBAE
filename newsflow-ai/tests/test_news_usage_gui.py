@@ -56,7 +56,7 @@ def test_workspace_offers_one_news_usage_choice_with_standard_default(client, ap
     assert 'aria-describedby="news-usage-help"' in html
     assert "목록 페이지는 주제 참고용" in html
     assert "선택한 AI" in html and "이번 분석 · 대본" not in html
-    assert "미검증 자료는 추가 AI 호출 없이 주제 설명형 대본으로 제작" in html
+    assert "API 선택 시 해당 API로 분석·대본을 만듭니다" in html
     assert stored_values(app) == before
 
 
@@ -125,12 +125,13 @@ def test_external_consent_preserves_mode_and_does_not_grant_any_saved_approval(
     assert guide.status_code == 200
     assert f'<option value="{mode}" selected>' in guide.text
     assert "검색 도구 최대 1회" in guide.text and "자동 재검색은 없습니다" in guide.text
-    assert "기사 비교·분석 1회" not in guide.text and "대본 1회" not in guide.text
+    assert "기사 비교·분석 1회" in guide.text and "대본 1회" in guide.text
+    assert "분석·대본의 추가 AI 호출과 자동 재검색은 없습니다" not in guide.text
     if mode == "VERIFIED":
         assert "독립적인 원문·발행일·핵심 사실 확인 근거가 없으면 대본 제작을 중단" in guide.text
-        assert "승인된 웹 검색 1회는 실행될 수 있지만 검증 완료를 보장하지 않습니다" in guide.text
+        assert "신규 API 제작은 실행하지 않습니다" in guide.text
     else:
-        assert "미검증 자료는 추가 AI 호출 없이 주제 설명형 대본으로 제작" in guide.text
+        assert "실패 시 로컬 템플릿이나 다른 Provider로 전환하지 않습니다" in guide.text
     data = {"csrf_token": token, "flow": flow, "workspace": "true"}
     assert client.post("/autopilot/confirm-start", data=data).status_code == 422
     assert capture_start == []

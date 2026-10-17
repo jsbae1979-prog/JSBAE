@@ -2,18 +2,107 @@
 
 URL shape can prioritize a candidate; it cannot prove an article's contents or
 publication date. The application currently has no independent source verifier,
-so VERIFIED is deliberately blocked. Unverified material can still select a
-category explainer, whose words come from a local template, not model claims.
+so VERIFIED is deliberately blocked. Legacy local explainers retain their
+strict template gate. Explicit API drafts use a separate, review-required contract.
 """
 
 from __future__ import annotations
 
 import re
+from math import ceil, floor
 from urllib.parse import parse_qs, urlsplit
 
 from newsflow.intelligence.schema import Script
 
+from .korean import CHARS_PER_SECOND, SENTENCE_PAUSE_SECONDS, rate_factor
+
 NEWS_USAGE_LABELS = {"QUICK": "빠른 제작", "STANDARD": "균형 제작", "VERIFIED": "검증 우선"}
+API_SCRIPT_METHOD = "api_grounded_v1"
+
+
+def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *, speech: dict | None = None) -> dict:
+    """Server-owned instructions, never a model-selected validation exemption."""
+    assessment = assess_news_usage(evidence, mode)
+    if assessment["approach"] == "blocked":
+        raise ValueError(assessment["message"])
+    contract = {
+        "mode": assessment["mode"],
+        "structure": (
+            "핵심 주제 → 시청자가 알아둘 점 → 마무리. 배경은 꼭 필요한 만큼만 간결하게."
+            if assessment["mode"] == "QUICK" else
+            "도입 → 배경 → 핵심 쟁점 → 마무리. 각 장면에 내레이션·짧은 자막·소재 제안을 작성."
+        ),
+        "grounding": (
+            "입력 제목·요약·검색 근거의 구체적 주제로 구성하고 고정 분야 설명으로 대체하지 마세요. "
+            "목록·검색 요약은 주제 참고 자료이며 개별 사건의 사실 검증이 아닙니다. "
+            "개별 기사 내용이 부족하면 같은 주제의 설명형 대본을 생성하고 미확인 사항을 밝히세요. "
+            "자료에 없는 사건·발언·수치·발행일·인물을 만들지 마세요. 검색 시각은 기사 발행일이 아닙니다. "
+            "확인된 입력 내용과 해설·추정을 구분하고, 사실 검증 완료라고 주장하지 마세요."
+        ),
+        "verification_status": "NOT VERIFIED",
+        "human_review_required": True,
+        "selected_article_ids": [article["id"] for article in _articles(evidence) if type(article.get("id")) is int],
+        "tools": "추가 검색·외부 명령·Provider 전환 없이 제공된 자료만 사용하세요.",
+    }
+    if duration is not None:
+        if type(duration) is not int or duration not in (30, 45, 60):
+            raise ValueError("영상 길이를 확인하세요.")
+        # This is an estimate, not an audio measurement. Existing TTS checks the
+        # actual WAV and returns a review action instead of another paid request.
+        speech = {"rate": 0, "pause_ms": 250, **(speech or {})}
+        scene_count = 3 if assessment["mode"] == "QUICK" else 4
+        sentences = scene_count * 2
+        pause_seconds = (SENTENCE_PAUSE_SECONDS * sentences
+                         + speech["pause_ms"] / 1000 * (sentences - scene_count))
+        speed = CHARS_PER_SECOND * rate_factor(speech["rate"])
+        contract["duration_seconds"] = duration
+        contract["narration_spoken_units_target"] = {
+            "minimum": max(1, ceil((duration * .90 - pause_seconds) * speed)),
+            "maximum": max(1, floor((duration * .97 - pause_seconds) * speed)),
+            "unit": "공백·문장부호를 제외한 한글 음절 수. 영문·숫자 묶음은 기존 발화 추정 단위 적용.",
+        }
+        contract["speech_estimate"] = {
+            "rate": speech["rate"], "pause_ms": speech["pause_ms"],
+            "scene_count_hint": scene_count, "sentence_count_hint": sentences,
+            "target_seconds_minimum": round(duration * .90, 2),
+            "target_seconds_maximum": round(duration * .97, 2),
+            "estimated_pauses_seconds": round(pause_seconds, 2),
+            "basis": "기존 한국어 음성 길이 추정식. 실제 엔진의 WAV 측정이나 품질 검증 결과가 아님.",
+        }
+        contract["audio_fit"] = (
+            "전체 장면 내레이션은 목표 분량에 맞게 작성하고 장면별 음성 시간을 고려하세요. "
+            "긴 무음·정지 화면으로 길이를 채우거나 과도한 속도를 요구하지 마세요. "
+            "근거가 부족하면 그 한계를 설명하되 사실을 만들어 분량을 채우지 마세요."
+        )
+    return contract
+
+
+def validate_api_news_script(output: dict, evidence: dict) -> None:
+    """Bounded edit/output checks; these do not establish factual correctness."""
+    assessment = assess_news_usage(evidence, evidence.get("news_usage"))
+    if assessment["approach"] == "blocked":
+        raise ValueError(assessment["message"])
+    script = Script.model_validate(output)
+    articles = _articles(evidence)
+    if any(not article.get("sources") for article in articles):
+        raise ValueError("대본에 연결된 출처 자료가 필요합니다.")
+    # Figures and quotations absent from the input cannot be added by the model
+    # or editor. Event/name accuracy still needs human review; do not label PASS.
+    source_text = " ".join(
+        str(article.get(field) or "") for article in articles for field in ("title", "summary")
+    )
+    text = " ".join([
+        script.title, script.hook, script.summary, script.closing,
+        *(getattr(scene, field) for scene in script.scenes for field in ("narration", "caption")),
+    ])
+    def numbers(value: str) -> set[str]:
+        return {number.replace(",", "") for number in re.findall(r"\d+(?:[,.]\d+)*", value)}
+
+    if numbers(text) - numbers(source_text):
+        raise ValueError("자료에 없는 수치·날짜는 추가할 수 없습니다.")
+    for quoted in re.findall(r'[“\"]([^”\"]{4,})[”\"]', text):
+        if quoted not in source_text:
+            raise ValueError("자료에 없는 직접 발언은 추가할 수 없습니다.")
 _CATEGORIES = {
     "all": ("뉴스", "뉴스는 사건과 주장을 전합니다. 보도 내용과 의미를 풀이하는 해설은 구분해야 합니다."),
     "politics": ("정치", "정책은 문제에 대응하는 방안입니다. 제안과 확정, 시행은 서로 다른 단계입니다."),

@@ -22,10 +22,13 @@ from newsflow.db.models import (
 
 from .credentials import CredentialError
 from .estimate import estimate_call
-from .korean import assess_script
+from .korean import assess_script, speech_plan
 from .news_usage import (
+    API_SCRIPT_METHOD,
+    api_news_contract,
     assess_news_usage,
     safe_topic_script,
+    validate_api_news_script,
     validate_news_usage,
     validate_news_usage_script,
 )
@@ -473,7 +476,10 @@ class IntelligenceService:
             if "news_usage" not in evidence:
                 raise ValueError
             assessment = assess_news_usage(evidence, evidence["news_usage"])
-            validate_news_usage_script(content, evidence, assessment)
+            if evidence.get("script_method") == API_SCRIPT_METHOD:
+                validate_api_news_script(content, evidence)
+            else:
+                validate_news_usage_script(content, evidence, assessment)
         except ValueError:
             raise IntelligenceError(
                 "뉴스 활용 수준의 근거 요건을 충족하지 않는 대본입니다. 미확인 사실을 추가할 수 없습니다.",
@@ -487,13 +493,26 @@ class IntelligenceService:
         consent: bool = False,
         options: Options | None = None,
         on_run: Callable[[int], None] | None = None,
+        news_usage: str | None = None,
     ) -> int:
         if mode not in MODES or (mode != "offline" and not consent):
             raise IntelligenceError("외부 AI 분석에는 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
+        if news_usage is not None and mode in {"openai", "claude_api"} and not self.api_managed:
+            raise IntelligenceError("API 단계별 비용 보호가 연결되지 않아 실행을 차단했습니다.", "ai_budget", False)
         options = options or Options()
         if not ids or len(ids) > 10 or len(set(ids)) != len(ids):
             raise IntelligenceError("기사 1~10개를 선택하세요.", "invalid_selection", False)
         payload = self.evidence_for(ids)
+        if news_usage is not None:
+            if mode not in {"openai", "claude_api"}:
+                raise IntelligenceError("선택한 API 분석 경로를 확인하세요.", "invalid_selection", False)
+            try:
+                level = validate_news_usage(news_usage)
+                contract = api_news_contract(payload, level)
+            except ValueError:
+                raise IntelligenceError("뉴스 활용 수준의 근거 요건을 확인하세요.", "news_usage_blocked", False) from None
+            payload = {**payload, "news_usage": level, "news_usage_result": assess_news_usage(payload, level),
+                       "script_method": API_SCRIPT_METHOD, "news_usage_contract": contract}
         with self.sessions.begin() as session:
             run = IntelligenceRun(
                 kind="analysis",
@@ -581,6 +600,7 @@ class IntelligenceService:
         options: Options | None = None,
         on_run: Callable[[int], None] | None = None,
         article_ids: list[int] | None = None,
+        news_usage: str | None = None,
     ) -> int:
         if duration not in (30, 45, 60) or mode not in MODES:
             raise IntelligenceError("영상 길이 또는 Provider가 잘못되었습니다.", "invalid_selection", False)
@@ -592,9 +612,24 @@ class IntelligenceService:
             if not analysis or analysis.kind != "analysis" or analysis.status != "success":
                 raise IntelligenceError("먼저 기사 분석을 실행하세요.", "invalid_selection", False)
             evidence = analysis.evidence
-            if "news_usage" in evidence or "news_usage_result" in evidence:
+            api_news = evidence.get("script_method") == API_SCRIPT_METHOD
+            if api_news:
+                if not self.api_managed:
+                    raise IntelligenceError("API 단계별 비용 보호가 연결되지 않아 실행을 차단했습니다.", "ai_budget", False)
+                if (mode not in {"openai", "claude_api"} or mode != analysis.provider
+                        or options.model != analysis.options.get("model")):
+                    raise IntelligenceError("저장된 분석과 같은 API·모델로 대본을 생성하세요.", "invalid_selection", False)
+                try:
+                    level = validate_news_usage(news_usage if news_usage is not None else evidence.get("news_usage"))
+                    if level != evidence.get("news_usage"):
+                        raise ValueError
+                    contract = api_news_contract(evidence, level, duration, speech=self.speech)
+                except ValueError:
+                    raise IntelligenceError("저장된 분석의 뉴스 활용 수준을 확인하세요.", "news_usage_blocked", False) from None
+                evidence = {**evidence, "news_usage_contract": contract, "analysis_result": analysis.result}
+            elif "news_usage" in evidence or "news_usage_result" in evidence or news_usage is not None:
                 raise IntelligenceError(
-                    "뉴스 활용 수준이 지정된 대본은 작업실의 주제 설명형 제작으로 진행하세요.",
+                    "저장된 분석 방식과 뉴스 활용 수준을 확인하세요. 기존 로컬 대본은 기존 경로를 사용합니다.",
                     "news_usage_blocked", False,
                 )
             if article_ids is not None:
@@ -607,6 +642,11 @@ class IntelligenceService:
                 evidence = {**evidence, "articles": [a for a in evidence["articles"] if a["id"] in selected],
                             "groups": [[i for i in group if i in selected] for group in evidence["groups"]
                                        if any(i in selected for i in group)]}
+            if api_news:
+                evidence = {**evidence, "news_usage_result": assess_news_usage(evidence, evidence["news_usage"]),
+                            "news_usage_contract": api_news_contract(
+                                evidence, evidence["news_usage"], duration, speech=self.speech,
+                            )}
             run = IntelligenceRun(
                 kind="script",
                 provider=mode,
@@ -630,9 +670,10 @@ class IntelligenceService:
                                             {"instruction": SCRIPT_INSTRUCTION, "duration": duration, "evidence": evidence})
             output = provider.complete(evidence, duration, options)
             script = self.validate(output, duration)
+            self.check_news_usage(script, evidence)
             self._check_stored_secret(script)
             self.check_copy(script, evidence)
-            notes = assess_script(script, evidence, duration, **self.speech)
+            notes = self._review_notes(script, evidence, duration)
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.result, run.finished_at, run.message = (
@@ -682,6 +723,20 @@ class IntelligenceService:
             raise IntelligenceError("대본 본문에는 URL을 넣을 수 없습니다. 출처는 별도로 표시됩니다.", "ai_bad_response", True)
         return script.model_dump()
 
+    def _review_notes(self, content: dict, evidence: dict, duration: int) -> list[dict]:
+        notes = assess_script(content, evidence, duration, **self.speech)
+        if evidence.get("script_method") == API_SCRIPT_METHOD:
+            estimated = speech_plan(content, duration, **self.speech)["estimated_total_seconds"]
+            if estimated < duration * .90:
+                notes.append({
+                    "code": "total_narration_too_short", "level": "warning",
+                    "message": (
+                        f"전체 음성 예상 길이 {estimated}초가 목표 {duration}초보다 짧습니다. "
+                        "근거 범위에서 대본을 보완하세요. 실제 WAV 길이는 음성 생성 후 확인하며 API를 자동 재호출하지 않습니다."
+                    ),
+                })
+        return notes
+
     def edit(self, draft_id: int, revision: int, output: dict) -> None:
         with self.sessions.begin() as session:
             draft = session.get(ContentDraft, draft_id)
@@ -691,7 +746,7 @@ class IntelligenceService:
             self.check_news_usage(content, draft.sources)
             self._check_stored_secret(content)
             self.check_copy(content, draft.sources)
-            notes = assess_script(content, draft.sources, draft.duration, **self.speech)
+            notes = self._review_notes(content, draft.sources, draft.duration)
             result = session.execute(
                 update(ContentDraft)
                 .where(ContentDraft.id == draft_id, ContentDraft.revision == revision)

@@ -53,6 +53,8 @@ class RenderPlan:
     # Phase 5C: narration speed/pauses and audio-fit timing for real Korean voices.
     speech: SpeechSettings = field(default_factory=SpeechSettings)
     fit_audio: bool = False
+    # New API drafts must return to review instead of silently padding or rewriting speech.
+    strict_audio_fit: bool = False
 
     @property
     def duration(self) -> float:
@@ -74,6 +76,30 @@ class RenderPlan:
 
 
 AUDIO_TAIL_SECONDS = 0.35
+API_MIN_AUDIO_COVERAGE = 0.90
+API_MAX_SCENE_TAIL_SECONDS = 2.0
+
+
+def fit_api_timings(audio_seconds: list[float], total: float) -> list[float]:
+    """Fit measured WAVs, with at most 10% overall slack and a two-second scene tail.
+
+    WAV duration includes the selected engine's pauses; this is a pacing check,
+    not a claim about phoneme alignment or listening quality. Short tails are
+    shared evenly so a planned long scene cannot consume all remaining slack.
+    """
+    try:
+        if sum(audio_seconds) < total * API_MIN_AUDIO_COVERAGE:
+            raise RenderError("음성 분량 부족")
+        fitted = fit_timings(audio_seconds, [1.0] * len(audio_seconds), total)
+        if any(seconds - audio > API_MAX_SCENE_TAIL_SECONDS + 0.001
+               for seconds, audio in zip(fitted, audio_seconds)):
+            raise RenderError("장면 무음 초과")
+    except RenderError:
+        raise RenderError(
+            "음성 분량이 목표 영상 길이와 맞지 않습니다. 대본을 검토·편집한 뒤 다시 제작하세요. "
+            "음성 축약·가속·추가 API 요청은 실행하지 않았습니다.", kind="audio_review",
+        ) from None
+    return fitted
 
 
 def fit_timings(audio_seconds: list[float], planned: list[float], total: float) -> list[float]:
@@ -109,7 +135,7 @@ def fit_timings(audio_seconds: list[float], planned: list[float], total: float) 
 
 
 def prepare_audio(plan: RenderPlan, work: Path, tts: TTSProvider, cancel: Event) -> tuple[list[ScenePlan], list[dict]]:
-    """Bounded local regeneration: drop complete trailing sentences only, never speed up/cut WAV."""
+    """Measure once for API drafts; retain legacy whole-sentence fitting for older projects."""
     scenes = list(plan.scenes)
     measured, cue_lists = [], []
 
@@ -143,7 +169,9 @@ def prepare_audio(plan: RenderPlan, work: Path, tts: TTSProvider, cancel: Event)
 
     for index in range(len(scenes)):
         synthesize(index)
-    for attempt in range(9):
+    if plan.strict_audio_fit:
+        fitted = fit_api_timings(measured, plan.duration)
+    for attempt in range(0 if plan.strict_audio_fit else 9):
         try:
             fitted = fit_timings(measured, [s.seconds for s in scenes], plan.duration)
             break
@@ -573,7 +601,7 @@ class FFmpegAdapter:
         progress(5)
         scenes = list(plan.scenes)
         timings: list[dict] = []
-        if plan.fit_audio and not plan.silent:
+        if (plan.fit_audio or plan.strict_audio_fit) and not plan.silent:
             scenes, timings = prepare_audio(plan, work, tts, cancel)
         if getattr(tts, "attribution_required", False):
             plan = replace(plan, title=plan.title + " · elevenlabs.io")

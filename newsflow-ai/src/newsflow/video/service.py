@@ -19,6 +19,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from newsflow.db.models import AudioTrack, ContentDraft, RenderJob, Scene, SubtitleTrack, VideoProject, utcnow
+from newsflow.intelligence.news_usage import API_SCRIPT_METHOD
 from newsflow.intelligence.schema import Script
 
 from .ai.clips import ClipStore, probe_clip
@@ -289,6 +290,7 @@ class VideoCoordinator:
                     tts = provider_for(voice, self.sessions, self.root, external_consent=external_tts_consent)
                 if voice not in tts.voices():
                     raise VideoError("설치된 음성 목록에서 음성을 선택하세요.")
+                strict_audio_fit = draft.sources.get("script_method") == API_SCRIPT_METHOD
                 plan = RenderPlan(
                     draft.content["title"],
                     [
@@ -301,6 +303,7 @@ class VideoCoordinator:
                     subtitle_y,
                     speech,
                     fit_audio,
+                    strict_audio_fit,
                 )
                 plan.validate()
                 project = VideoProject(
@@ -309,7 +312,8 @@ class VideoCoordinator:
                     duration=duration,
                     snapshot={
                         **draft.content, "draft_revision": draft.revision,
-                        "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio},
+                        "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio,
+                                   "strict_audio_fit": strict_audio_fit},
                         # Provenance: which reviewed AI clip (by content hash) each scene must use.
                         **({"ai_clips": [
                             {"position": index, "name": name, "sha256": digest}
@@ -432,6 +436,7 @@ class VideoCoordinator:
                 except (TTSError, TypeError, ValueError):
                     speech = SpeechSettings()
                 fit_audio = bool(saved.get("fit_audio")) and voice != "offline-silence"
+                strict_audio_fit = saved.get("strict_audio_fit") is True
                 ai_clips = list(project.snapshot.get("ai_clips") or [])
                 expected = {int(item["position"]): item.get("sha256") for item in ai_clips}
             with TemporaryDirectory(prefix=f"job-{identifier}-", dir=self.temporary) as directory:
@@ -461,7 +466,8 @@ class VideoCoordinator:
                             clip=clip, ai_generated=bool(scene.ai_generated and clip), clip_format=clip_format,
                         )
                     )
-                plan = RenderPlan(title, plans, source_links, voice, font_size, position_y, speech, fit_audio)
+                plan = RenderPlan(title, plans, source_links, voice, font_size, position_y, speech, fit_audio,
+                                  strict_audio_fit)
                 result, metadata = self.engine.render(
                     plan, work, tts, lambda value: self._progress(identifier, value), cancel
                 )
@@ -528,6 +534,11 @@ class VideoCoordinator:
                     if job.status == "failed"
                     else "사용자 취소 또는 프로그램 종료로 영상 제작이 중단되었습니다."
                 )
+                if getattr(exc, "kind", None) == "audio_review" and job.status == "failed":
+                    job.message = (
+                        "음성 분량 검토 필요. 목표 길이에 맞게 대본을 수정한 뒤 다시 제작하세요. "
+                        "긴 무음 추가·음성 축약·가속·추가 API 요청은 실행하지 않았습니다."
+                    )
                 if cleanup_pending:
                     job.message += " · 생성 파일 정리 실패; 출력 폴더를 수동 확인하세요."
                 code = getattr(exc, "exit_code", None)
