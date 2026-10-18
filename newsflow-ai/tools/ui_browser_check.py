@@ -61,6 +61,9 @@ def main() -> None:
                 results["layout"].append({"page": name, "width": width, "height": height, "horizontal_overflow": False,
                                            "visible_inputs_named": True})
                 if name in {"home", "create", "videos", "preview", "settings", "publishing"}:
+                    # Capture a decoded paused frame, not Chrome's transient native loading spinner.
+                    for video in page.locator("video").all():
+                        video.evaluate("async v => { v.muted=true; await v.play(); await new Promise(r=>setTimeout(r,200)); v.pause(); }")
                     page.screenshot(path=str(args.output / f"{name}-{width}.png"), full_page=True)
         page.set_viewport_size({"width": 1366, "height": 768})
         visit("/")
