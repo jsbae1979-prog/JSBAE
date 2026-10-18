@@ -40,7 +40,9 @@ def test_topic_search_honestly_uses_existing_news_search_not_new_generation_cont
     response = client.get("/")
     assert 'action="/news" method="get" data-topic-search' in response.text
     assert 'id="home-topic" name="q"' in response.text
-    assert "보관한 기사에서 먼저" in response.text
+    assert "이미 수집해 보관한 기사만 검색합니다" in response.text
+    assert "보관 기사 검색" in response.text
+    assert "기사를 선택한 뒤 분석·대본 작성" in response.text
     assert "새 기사 URL 가져오기" in response.text
     assert '<option value="VERIFIED"' not in response.text
     create = client.get("/create").text

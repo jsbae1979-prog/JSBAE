@@ -71,12 +71,12 @@ def main() -> None:
         expect(page.locator("a.skip-link")).to_be_focused()
         page.keyboard.press("Enter")
         expect(page.locator("#main-content")).to_be_focused()
-        page.get_by_role("textbox", name="어떤 주제로 만들까요?").fill("https://example.com/article")
-        page.get_by_role("button", name="쇼츠 만들기").first.click()
+        page.get_by_role("textbox", name="보관한 기사에서 어떤 주제를 찾을까요?").fill("https://example.com/article")
+        page.get_by_role("button", name="보관 기사 검색").click()
         expect(page.locator("[data-topic-error]")).to_be_visible()
         assert urlsplit(page.url).path == "/"
-        page.get_by_role("textbox", name="어떤 주제로 만들까요?").fill("도시")
-        page.get_by_role("button", name="쇼츠 만들기").first.click()
+        page.get_by_role("textbox", name="보관한 기사에서 어떤 주제를 찾을까요?").fill("도시")
+        page.get_by_role("button", name="보관 기사 검색").click()
         page.wait_for_url("**/news?q=*")
         expect(page.locator(".article-row")).to_have_count(1)
         page.locator(".article-row").click()
@@ -98,6 +98,15 @@ def main() -> None:
         expect(page.locator("#video-result video")).to_be_visible()
         page.locator("#video-result video").evaluate("async v=>{v.muted=true;await v.play();await new Promise(r=>setTimeout(r,250));v.pause();}")
         page.screenshot(path=str(args.output / "rendered-through-ui.png"), full_page=True)
+        visit("/videos")
+        expect(page.get_by_role("link", name="대본·자막 편집").first).to_be_visible()
+        page.get_by_role("link", name="대본·자막 편집").first.click()
+        assert parse_qs(urlsplit(page.url).query)["draft_id"] == [generated_draft]
+        expect(page.locator("[data-editor-player]")).to_be_visible()
+        page.screenshot(path=str(args.output / "flow-library-to-editor.png"), full_page=True)
+        visit("/?video=4&publish_platform=unified#publish-workspace")
+        expect(page.locator("#publish-workspace")).to_be_visible()
+        page.screenshot(path=str(args.output / "flow-publish-preparation.png"), full_page=True)
         results["checks"].append("topic search → saved article → existing analysis selection; URL import honestly blocked")
         results["checks"].append("existing Offline analysis and draft generation POST, no content engine changes")
         results["checks"].append("existing /video/render POST after explicit review → real silent FFmpeg MP4 → browser playback")
@@ -136,6 +145,31 @@ def main() -> None:
         expect(page.locator('form[action="/ai/drafts/1"] [data-submit-error]')).to_be_focused()
         page.screenshot(path=str(args.output / "error-stale-edit.png"), full_page=True)
         results["checks"].append("real MP4 playback; scene edit POST persisted; output hash preserved; stale edit 409 focused without retry")
+
+        # Real application form, real save route; source restrictions stay enforced.
+        visit("/ai?draft_id=4")
+        page.get_by_role("button", name="장면 3", exact=True).click()
+        active = page.locator("[data-topic-scene]:visible")
+        original_narration = active.locator('[name="narration"]').input_value()
+        assert active.locator('[name="narration"]').get_attribute("readonly") is not None
+        active.get_by_role("button", name="이 장면을 위로", exact=True).click()
+        expect(page.get_by_role("button", name="장면 2", exact=True)).to_have_attribute("aria-pressed", "true")
+        active = page.locator("[data-topic-scene]:visible")
+        expect(active.locator('[name="narration"]')).to_have_value(original_narration)
+        active.get_by_role("button", name="자막을 주제어로 줄이기", exact=True).click()
+        caption = active.locator('[name="caption"]').input_value()
+        page.screenshot(path=str(args.output / "scene-reordered-selected.png"), full_page=True)
+        with page.expect_response(lambda r: r.request.method == "POST" and "/ai/drafts/4" in r.url) as saved:
+            page.get_by_role("button", name="수정 초안 저장").click()
+        assert saved.value.status == 303
+        page.wait_for_url("**/ai?draft_id=4")
+        page.get_by_role("button", name="장면 2", exact=True).click()
+        active = page.locator("[data-topic-scene]:visible")
+        expect(active.locator('[name="narration"]')).to_have_value(original_narration)
+        expect(active.locator('[name="caption"]')).to_have_value(caption)
+        assert active.locator('[name="narration"]').get_attribute("readonly") is not None
+        assert page.locator('input[name="revision"]').input_value() == "2"
+        results["checks"].append("real app protected scene 3 → 2: selected tab follows, readonly narration preserved, caption choice saved and reloaded")
 
         visit("/create")
         page.locator("#quick-source").select_option("sample")

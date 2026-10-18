@@ -34,6 +34,7 @@ from newsflow.db.models import (
     VideoProject,
 )
 from newsflow.gui.routes import templates
+from newsflow.intelligence.news_usage import assess_news_usage, safe_topic_script
 from newsflow.intelligence.provider import FakeProvider, Options
 from newsflow.main import create_app
 from newsflow.news.rss_adapter import FakeRSSAdapter
@@ -129,6 +130,21 @@ def seed(app, root: Path) -> None:
             for position, scene in enumerate(script["scenes"]):
                 session.add(Scene(project_id=project.id, position=position, start_ms=position * 10000,
                                   end_ms=(position + 1) * 10000, narration=scene["narration"], caption=scene["caption"]))
+        # Legacy protected editor fixture; never a new content production option.
+        evidence = {"news_usage": "STANDARD", "articles": [{
+            "id": 1, "title": "합성 반도체 자료", "summary": "장면 순서 검증용 합성 자료", "category": "it",
+            "url": "https://example.com/demo-0", "publisher": "데모 자료", "published_at": None,
+            "sources": [{"publisher": "데모 자료", "url": "https://example.com/demo-0"}],
+        }]}
+        evidence["news_usage_result"] = assess_news_usage(evidence)
+        script = safe_topic_script(evidence, 60)
+        run = IntelligenceRun(kind="script", provider="local_topic_template", status="success",
+                              options={"model": "local_topic_template"}, evidence=evidence, result=script,
+                              message="장면 재정렬 검증 전용 합성 기록")
+        session.add(run)
+        session.flush()
+        session.add(ContentDraft(run_id=run.id, duration=60, content=script, sources=evidence,
+                                 review_status="review_required"))
         session.add(AutopilotJob(id="e" * 32, mode="guided", source="sample", duration=30, platform="youtube",
                                 status="failed", current_stage="render", progress=70, message="데모 오류 · 음성 준비를 확인해 주세요.",
                                 error_code="voice_unavailable"))
