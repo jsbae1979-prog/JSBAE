@@ -1,0 +1,15 @@
+{
+  "base_sha": "590ffd447eebf76b9429c22a3354dbfa239dec16",
+  "unchanged": {
+    "src/newsflow/db": true,
+    "src/newsflow/intelligence": true,
+    "src/newsflow/video": true,
+    "src/newsflow/oauth": true,
+    "src/newsflow/publishing": true,
+    "src/newsflow/autopilot": true,
+    "run.bat": true
+  },
+  "production_data": "not opened by preview; new TEMP directories only",
+  "actual_external_paid_ai_oauth_sns": 0,
+  "mp4_in_git_artifacts": false
+}
