@@ -37,7 +37,14 @@ document.querySelectorAll('form[action^="/ai/drafts/"]').forEach(form => {
   function changed() { hasEdits = true; if (dirty) dirty.hidden = false; }
   form.addEventListener('input', changed);
   form.addEventListener('change', changed);
-  form.querySelectorAll('[data-scene-up],[data-short-caption],[data-topic-narration-short]').forEach(button => button.addEventListener('click', changed));
+  form.querySelectorAll('[data-scene-up],[data-short-caption],[data-topic-narration-short]').forEach(button => button.addEventListener('click', () => {
+    changed();
+  }));
+  // Bubble after the existing button handler has actually moved its fieldset.
+  form.addEventListener('click', event => {
+    const move = event.target.closest('[data-scene-up]');
+    if (move) selectScene(scenes().indexOf(move.closest('fieldset')));
+  });
   // Invalid fields in another scene must be reachable for native keyboard validation.
   form.addEventListener('invalid', event => {
     const scene = event.target.closest('[data-topic-scene]');
