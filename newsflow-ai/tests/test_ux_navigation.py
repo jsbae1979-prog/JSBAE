@@ -11,24 +11,24 @@ def test_workspace_two_destinations_and_two_production_choices(client):
     assert response.status_code == 200
     html = response.text
     primary = re.search(r'<nav aria-label="주 메뉴"[^>]*>(.*?)</nav>', html, re.DOTALL).group(1)
-    assert re.findall(r'href="([^"]+)"', primary) == ["/", "/simple-settings"]
-    for label in ("작업실", "설정"):
+    assert re.findall(r'href="([^"]+)"', primary) == ["/", "/create", "/videos", "/queue", "/simple-settings"]
+    for label in ("홈", "쇼츠 만들기", "내 영상", "게시", "설정"):
         assert label in primary
     assert 'class="advanced-nav"' not in html
     settings = client.get("/simple-settings").text
-    advanced = re.search(r'<section[^>]*id="advanced"[^>]*>(.*?)</section>', settings, re.DOTALL).group(1)
+    advanced = re.search(r'<dialog[^>]*id="settings-advanced-tools"[^>]*>(.*?)</dialog>', settings, re.DOTALL).group(1)
     for destination in ("/news", "/ai", "/video", "/sources", "/queue", "/publishing"):
         assert f'href="{destination}"' in advanced
     assert 'href="/operations"' in settings  # scheduling group owns this entry
     assert 'href="/ai"' not in html and 'href="/video"' not in html
     form = re.search(r'<form action="/autopilot/quick-start".*?</form>', html, re.DOTALL).group(0)
-    advanced_choices = re.search(r'<details class="easy-advanced"[^>]*>.*?</details>', form, re.DOTALL).group(0)
-    assert ' open' not in advanced_choices.split('>', 1)[0]
-    assert re.findall(r'<select[^>]+name="([^"]+)"', form.replace(advanced_choices, '')) == ["source", "duration"]
-    assert re.findall(r'<select[^>]+name="([^"]+)"', advanced_choices) == ["acquisition_policy", "category", "period"]
+    assert '<details class="easy-advanced home-quick-settings"><summary>' in html
+    assert re.findall(r'<select[^>]+name="([^"]+)"', form) == [
+        "source", "duration", "news_usage", "acquisition_policy", "category", "period"]
+    assert '<option value="VERIFIED"' not in form
     assert 'name="csrf_token"' in form and 'method="post"' in form
     assert 'name="provider"' not in form and 'name="voice"' not in form
-    assert "뉴스 영상 제작 시작" in form
+    assert "쇼츠 만들기" in form
     assert "완성한 영상이 여기에 모입니다" in html
     assert '<progress ' not in html  # no invented progress when no job exists
     assert "script-src 'self'" in response.headers["content-security-policy"]
@@ -65,7 +65,8 @@ def test_home_preserves_defaults_and_shows_review_snapshot_safely(client, app, m
     assert "AI 웹 뉴스 조사 BLOCKED" in html
     assert response.context["production"]["policy_states"]["rss"]["supported"] is True
     assert "대본과 원문 확인 후 제작" in html
-    assert '<progress value="50" max="100"' in html
+    assert '<progress ' not in html  # stage labels, not an estimated percentage
+    assert "대본 작성" in html
     assert 'href="/?task=fixture-review#workspace-detail"' in html
     assert '<script>alert(' not in html
     assert "최근 뉴스</h2>" not in html  # only production and results on home

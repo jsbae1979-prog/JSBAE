@@ -93,13 +93,13 @@ def start_workspace(client, app):
     return identifier, app.state.autopilot.snapshot(identifier)
 
 
-def test_workspace_has_two_destinations_one_start_and_no_eager_player(client):
+def test_workspace_has_creator_destinations_one_start_and_no_eager_player(client):
     response = client.get("/")
     assert response.status_code == 200
     html = response.text
     navigation = re.search(r'<nav[^>]*aria-label="주 메뉴"[^>]*>(.*?)</nav>', html, re.DOTALL).group(1)
-    assert re.findall(r'href="([^"]+)"', navigation) == ["/", "/simple-settings"]
-    assert "작업실" in navigation and "설정" in navigation
+    assert re.findall(r'href="([^"]+)"', navigation) == ["/", "/create", "/videos", "/queue", "/simple-settings"]
+    assert all(label in navigation for label in ("홈", "쇼츠 만들기", "내 영상", "게시", "설정"))
     assert not re.search(r'<aside[^>]*class="[^"]*\bsidebar\b', html)
     assert html.count('action="/autopilot/quick-start"') == 1
     for marker in ("data-workspace-create", "data-workspace-tasks", "data-workspace-videos"):

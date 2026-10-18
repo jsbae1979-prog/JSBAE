@@ -125,6 +125,7 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
     } finally {
       if (alert.textContent && form.closest('.settings-workspace')) alert.focus();
       if (submit) { submit.disabled = false; submit.textContent = label; }
+      if (alert?.textContent) { alert.tabIndex = -1; alert.focus(); }
     }
   });
 }

@@ -295,6 +295,7 @@ def _workspace_video(
     }
 
 
+@router.get("/create", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 def home(
     request: Request, task: str | None = None, video: int | None = None, show: str = "",

@@ -11,7 +11,15 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
-from newsflow.db.models import AutopilotArtifact, AutopilotJob, ContentDraft, IntelligenceRun, NewsArticle
+from newsflow.db.models import (
+    AutopilotArtifact,
+    AutopilotJob,
+    ContentDraft,
+    IntelligenceRun,
+    NewsArticle,
+    RenderJob,
+    VideoProject,
+)
 from newsflow.easy_setup import preview_preferences, speech_preferences
 from newsflow.intelligence.estimate import estimate_call, estimate_cost
 from newsflow.intelligence.news_usage import safe_topic_script
@@ -206,9 +214,19 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
         if analysis is not None and analysis.status == "success":
             estimate = estimate_call(SCRIPT_INSTRUCTION, {"duration": selected_duration, "evidence": analysis.evidence}, 1800)
             estimate["cost"] = estimate_cost(estimate, read_prices(request.app.state.sessions))
+        preview = None
+        if draft:
+            from .autopilot_routes import _workspace_video
+
+            latest = session.execute(select(RenderJob, VideoProject).join(VideoProject).where(
+                VideoProject.draft_id == draft.id, RenderJob.status == "success",
+            ).order_by(RenderJob.id.desc()).limit(1)).first()
+            if latest:
+                preview = _workspace_video(request, *latest)
         return page(
             request,
             "ai.html",
+            preview=preview,
             active="ai",
             analysis=analysis,
             draft=draft,
