@@ -175,10 +175,13 @@ def main() -> None:
         safe = ("/ai/drafts/", "/autopilot/quick-start", "/autopilot/jobs/", "/simple-settings", "/production/preferences")
         if request.method == "POST":
             allowed = request.url.path.startswith(safe)
-            if request.url.path in {"/ai/analyze", "/ai/generate", "/autopilot/quick-start"}:
+            if request.url.path in {"/ai/analyze", "/ai/generate", "/autopilot/quick-start", "/video/render"}:
                 fields = parse_qs((await request.body()).decode("utf-8"), max_num_fields=1000)
-                allowed = (fields.get("source") == ["sample"] if request.url.path == "/autopilot/quick-start"
-                           else fields.get("provider") == ["offline"])
+                if request.url.path == "/video/render":
+                    allowed = fields.get("voice") == ["offline-silence"] and not any(fields.get("images", []))
+                else:
+                    allowed = (fields.get("source") == ["sample"] if request.url.path == "/autopilot/quick-start"
+                               else fields.get("provider") == ["offline"])
             if not allowed:
                 return JSONResponse({"detail": "데모에서는 인증·외부 연결·게시를 실행하지 않습니다."}, status_code=403)
         token = scenario.set(request.query_params.get("demo", ""))

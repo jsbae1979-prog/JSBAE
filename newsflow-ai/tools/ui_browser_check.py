@@ -5,7 +5,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -87,8 +87,20 @@ def main() -> None:
         page.get_by_role("button", name="대본 생성 및 초안 저장", exact=True).click()
         page.wait_for_url(lambda url: "/ai?" in url and "draft_id=" in url)
         expect(page.locator('form[action^="/ai/drafts/"]')).to_be_visible()
+        generated_draft = parse_qs(urlsplit(page.url).query)["draft_id"][0]
+        visit("/video?draft_id=" + generated_draft)
+        render = page.locator('form[action="/video/render"]')
+        render.locator('[name="voice"]').select_option("offline-silence")
+        render.locator('[name="reviewed"]').check()
+        render.get_by_role("button", name="영상 제작 실행", exact=True).click()
+        page.wait_for_url(lambda url: "/video?" in url and "job_id=" in url)
+        expect(page.locator("#render-status")).to_have_attribute("data-status", "success", timeout=180000)
+        expect(page.locator("#video-result video")).to_be_visible()
+        page.locator("#video-result video").evaluate("async v=>{v.muted=true;await v.play();await new Promise(r=>setTimeout(r,250));v.pause();}")
+        page.screenshot(path=str(args.output / "rendered-through-ui.png"), full_page=True)
         results["checks"].append("topic search → saved article → existing analysis selection; URL import honestly blocked")
         results["checks"].append("existing Offline analysis and draft generation POST, no content engine changes")
+        results["checks"].append("existing /video/render POST after explicit review → real silent FFmpeg MP4 → browser playback")
 
         visit("/ai?draft_id=1")
         player = page.locator("[data-editor-player]")
