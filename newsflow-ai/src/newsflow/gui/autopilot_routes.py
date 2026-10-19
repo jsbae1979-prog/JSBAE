@@ -122,6 +122,11 @@ def readiness(request: Request) -> dict[str, Any]:
     except TTSError:
         speech_values = {"rate": 0, "pause_ms": 250}
     installed = voice == "offline-silence" or request.app.state.video.voice_available(voice)
+    if voice == "elevenlabs":
+        from newsflow.video.elevenlabs_tts import ElevenLabsKeys, settings
+
+        cfg = settings(sessions)
+        installed = bool(cfg["enabled"] and cfg["voice_id"] and ElevenLabsKeys(request.app.state.video.root).status()["configured"])
     return {
         "rss": {"enabled": len(enabled), "tested": passed, "ready": bool(enabled)},
         "ai": ai,
@@ -145,7 +150,7 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
     if manual_video:
         rss_supported = False
         rss_notice = "Higgsfield는 장면별 비용·내용 승인이 필요합니다. 대본을 준비한 뒤 별도 장면 계획으로 이어갑니다."
-    elif voice["name"] == "elevenlabs" or not voice["installed"]:
+    elif not voice["installed"]:
         rss_supported = False
         rss_notice = "선택한 음성의 설치·제작별 승인이 필요합니다. 다른 음성으로 자동 전환하지 않습니다."
     elif not ready["rss"]["ready"]:
@@ -155,10 +160,10 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
         rss_supported = False
         rss_notice = "등록 뉴스 자동 제작에 필요한 AI 연결·비용 승인을 설정에서 확인해 주세요."
     else:
-        rss_notice = ("RSS 자료 → 선택한 API 분석·대본 → 대본 검토 → 영상 제작. "
+        rss_notice = ("RSS 자료 → 선택한 API 분석·대본 → 선택한 대본 검토 정책 → 영상 제작. "
                       "분석과 대본은 별도 사용량·비용이 발생하며 자동 대체하지 않습니다."
                       if provider in {"openai", "claude_api"} else
-                      "RSS 자료 확인 → 대본 검토 → 영상 제작. 실제 처리 엔진은 작업 이력에서 확인하세요.")
+                      "RSS 자료 확인 → 선택한 대본 검토 정책 → 영상 제작. 실제 처리 엔진은 작업 이력에서 확인하세요.")
     cached = getattr(request.app.state, "claude_status" if provider == "claude_code" else "codex_status", {})
     auth_checked = provider == "offline" or (provider in {"claude_code", "codex"}
                                              and cached.get("state") == "ready" and cached.get("ready") is True)
@@ -181,17 +186,17 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
         if provider in ready["apis"]:
             gate = ready["apis"][provider]["search"]
             usable = (gate["ready"] and ready["apis"][provider]["analysis"]["ready"]
-                      and voice["installed"] and voice["name"] != "elevenlabs"
+                      and voice["installed"]
                       and not manual_video and (policy != "hybrid" or ready["rss"]["ready"]))
             detail = " ".join(gate["reasons"]) if not gate["ready"] else (
-                "검색 최대 1회 → 선택한 API 분석 1회 → 대본 1회 → 사용자 검토. 단계별 비용 승인이 필요합니다."
+                "검색 최대 1회 → 선택한 API 분석 1회 → 대본 1회 → 선택한 검토 정책. 단계별 비용 승인이 필요합니다."
                 if usable else "선택한 API의 분석·대본 승인, 음성·영상 또는 RSS 보완 출처를 확인하세요.")
             policy_states[policy].update(supported=usable, auth_checked=gate["authentication_verified"],
                 title="API 뉴스 검색 실행 조건 확인됨" if usable else "AI 웹 뉴스 조사 BLOCKED",
                 detail=detail, notice=detail + " RSS·다른 Provider로 자동 전환하지 않습니다.")
     current_policy = policy_states[acquisition["acquisition_policy"]]
     if voice["name"] == "elevenlabs":
-        voice_label = "외부 한국어 음성 · 제작별 동의 필요"
+        voice_label = "ElevenLabs · 설정 확인 · 실행별 동의·계정 확인 필요"
     elif voice["silent"]:
         voice_label = "무음 검토영상 · 음성 없음"
     else:
@@ -412,6 +417,8 @@ def quick_start(
     category: str | None = Form(None, max_length=20), period: str | None = Form(None, max_length=10),
     news_usage: str = Form("STANDARD", max_length=12),
     workspace: bool = Form(False),
+    production_options_version: int | None = Form(None), script_review: bool = Form(False),
+    voice_method: str | None = Form(None, max_length=20), video_method: str | None = Form(None, max_length=20),
 ) -> RedirectResponse:
     """Workspace entry point, with the same coordinator and all existing review gates."""
     if source not in CHOICES["source"] or duration not in {30, 45, 60}:
@@ -425,12 +432,21 @@ def quick_start(
     with request.app.state.sessions() as session:
         video_setting = session.get(AppSetting, "video_ai_provider")
         video_mode = video_setting.value if video_setting and video_setting.value == "higgsfield" else "off"
+    voice = ready["voice"]["name"]
+    if production_options_version is not None:
+        if production_options_version != 1 or voice_method not in {"local", "elevenlabs"} or video_method not in {"off", "higgsfield"}:
+            raise HTTPException(422, "음성·영상 제작 방식을 다시 선택하세요.")
+        if voice_method == "local" and voice == "elevenlabs":
+            raise HTTPException(422, "설정에서 사용할 Windows 또는 Supertonic 로컬 음성을 선택해 주세요. 자동으로 다른 음성을 고르지 않습니다.")
+        voice = "elevenlabs" if voice_method == "elevenlabs" else voice
+        video_mode = video_method
     try:
         flow = validate_context({
         "source": source, "initial_duration": duration,
         "initial_provider": saved["provider"] if source == "feeds" else "offline",
         "initial_model": saved["model"] if source == "feeds" else "offline",
-        "initial_voice": ready["voice"]["name"], "initial_video": video_mode,
+        "initial_voice": voice, "initial_video": video_mode,
+        **({"production_options_version": 1, "script_review": script_review} if production_options_version else {}),
         "news_usage": news_usage,
         "initial_platform": _defaults(request)["platform"], **acquisition,
         **({"request_id": uuid4().hex} if source == "feeds" else {}),
@@ -440,7 +456,8 @@ def quick_start(
     return _start_production(request, flow, external_consent=False, workspace=workspace)
 
 
-def _start_production(request: Request, flow: dict, *, external_consent: bool, workspace: bool = False) -> RedirectResponse:
+def _start_production(request: Request, flow: dict, *, external_consent: bool, workspace: bool = False,
+                      external_tts_consent: bool = False) -> RedirectResponse:
     """An explicit confirmation freezes choices; it does not grant any stored API approval."""
     source, provider = flow["source"], flow["initial_provider"]
     ready = readiness(request)
@@ -450,7 +467,8 @@ def _start_production(request: Request, flow: dict, *, external_consent: bool, w
             return go(f"/?guide={reason}&{context_query(flow)}#workspace-detail")
         return go(f"/autopilot/start?guide={reason}&{context_query(flow)}")
 
-    if flow.get("initial_video") == "higgsfield":
+    modern = flow.get("production_options_version") == 1
+    if flow.get("initial_video") == "higgsfield" and not modern:
         return guide_to("video")
     if source == "feeds":
         policy = flow.get("acquisition_policy", DEFAULT_ACQUISITION_POLICY)
@@ -460,18 +478,32 @@ def _start_production(request: Request, flow: dict, *, external_consent: bool, w
             return guide_to("sources")
         if provider in ready["apis"] and not ready["apis"][provider]["analysis"]["ready"]:
             return guide_to("approval")
-    # An external voice needs the existing Video Studio per-render consent flow.
-    # A missing selected voice never becomes silent or switches providers.
+    # Legacy voices keep the manual gate. Versioned jobs require separate voice
+    # consent before the existing provider can render; missing voices never substitute.
     voice = flow["initial_voice"]
-    if voice == "elevenlabs" or (voice != "offline-silence" and not request.app.state.video.voice_available(voice)):
+    if voice == "elevenlabs" and modern and source == "feeds":
+        from newsflow.video.elevenlabs_tts import ElevenLabsKeys, settings
+
+        el = settings(request.app.state.sessions)
+        if not el["enabled"] or not el["voice_id"] or not ElevenLabsKeys(request.app.state.video.root).status()["configured"]:
+            return guide_to("voice")
+        if not external_tts_consent:
+            return guide_to("consent")
+    elif voice == "elevenlabs" or (voice != "offline-silence" and not request.app.state.video.voice_available(voice)):
         return guide_to("voice")
     if source == "feeds" and provider != "offline" and not external_consent:
         return guide_to("consent")
     options = {}
+    if modern:
+        choices = {"version": 1, "script_review": flow["script_review"], "video_provider": flow["initial_video"],
+                   "external_tts_consent": external_tts_consent}
+        if voice == "elevenlabs":
+            choices["elevenlabs"] = el
+        options["production_options"] = choices
     if source == "feeds":
-        options = {"ai_model": flow["initial_model"], "acquisition_policy": flow["acquisition_policy"],
+        options.update({"ai_model": flow["initial_model"], "acquisition_policy": flow["acquisition_policy"],
                    "category": flow.get("category", "all"), "period": flow.get("period", "7d"),
-                   "external_consent": external_consent}
+                   "external_consent": external_consent})
         if flow.get("request_id"):
             options["request_id"] = flow["request_id"]
     try:
@@ -490,6 +522,7 @@ def _start_production(request: Request, flow: dict, *, external_consent: bool, w
 @router.post("/autopilot/confirm-start")
 def confirm_start(
     request: Request, flow: str = Form(max_length=2000), consent: bool = Form(False), workspace: bool = Form(False),
+    external_tts_consent: bool = Form(False),
 ) -> RedirectResponse:
     if not consent:
         raise HTTPException(422, "이번 분석·대본 요청의 외부 자료 전송과 계정 사용량에 동의해 주세요.")
@@ -499,7 +532,10 @@ def confirm_start(
         raise HTTPException(422, str(exc)) from None
     if not production or production["source"] != "feeds" or not production.get("request_id"):
         raise HTTPException(422, "홈에서 제작할 등록 뉴스를 다시 선택해 주세요.")
-    return _start_production(request, production, external_consent=True, workspace=workspace)
+    if production.get("production_options_version") == 1 and production["initial_voice"] == "elevenlabs" and not external_tts_consent:
+        raise HTTPException(422, "이번 ElevenLabs 음성 제작의 외부 전송·사용량 동의는 별도로 필요합니다.")
+    return _start_production(request, production, external_consent=True, workspace=workspace,
+                             external_tts_consent=external_tts_consent)
 
 
 @router.post("/autopilot/start")

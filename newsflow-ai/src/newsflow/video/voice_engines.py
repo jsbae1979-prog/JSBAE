@@ -3,7 +3,7 @@
 from .tts import OfflineTTS, TTSError, WindowsTTS
 
 
-def provider_for(voice, sessions, root, *, external_consent=False):
+def provider_for(voice, sessions, root, *, external_consent=False, elevenlabs_config=None):
     if voice == "offline-silence":
         return OfflineTTS()
     if voice.startswith("supertonic:"):
@@ -15,7 +15,10 @@ def provider_for(voice, sessions, root, *, external_consent=False):
 
         if not external_consent:
             raise TTSError("ElevenLabs는 이번 제작의 외부 전송·크레딧 사용 동의가 필요합니다.")
-        return ElevenLabsTTS(root, settings(sessions), consent=True)
+        current = settings(sessions)
+        if not current["enabled"]:
+            raise TTSError("ElevenLabs 사용 설정이 해제되었습니다.")
+        return ElevenLabsTTS(root, elevenlabs_config or current, consent=True)
     return WindowsTTS()
 
 

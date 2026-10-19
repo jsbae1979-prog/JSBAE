@@ -134,6 +134,8 @@ class VideoCoordinator:
         *,
         voice: str | None = None,
         speech: SpeechSettings | None = None,
+        external_tts_consent: bool = False,
+        elevenlabs_config: dict | None = None,
     ) -> int:
         """Create a clearly marked local review copy without granting human approval.
 
@@ -154,6 +156,7 @@ class VideoCoordinator:
         return self._start(
             draft_id, duration, voice, size, position, None, False, True, on_job,
             speech=speech, fit_audio=voice != "offline-silence",
+            external_tts_consent=external_tts_consent, elevenlabs_config=elevenlabs_config,
         )
 
     def start_ai(
@@ -230,6 +233,7 @@ class VideoCoordinator:
         clip_hashes: list[str | None] | None = None,
         clip_bytes: int = 0,
         external_tts_consent: bool = False,
+        elevenlabs_config: dict | None = None,
     ) -> int:
         speech = speech or SpeechSettings()
         if self.cancel.is_set():
@@ -287,7 +291,8 @@ class VideoCoordinator:
                 if self.tts:
                     tts = self.tts
                 else:
-                    tts = provider_for(voice, self.sessions, self.root, external_consent=external_tts_consent)
+                    tts = provider_for(voice, self.sessions, self.root, external_consent=external_tts_consent,
+                                       elevenlabs_config=elevenlabs_config)
                 if voice not in tts.voices():
                     raise VideoError("설치된 음성 목록에서 음성을 선택하세요.")
                 strict_audio_fit = draft.sources.get("script_method") == API_SCRIPT_METHOD

@@ -79,6 +79,9 @@ _ERROR_MESSAGES = {
     "speech_too_long": "음성이 영상 길이보다 깁니다. 대본을 줄이거나 영상 길이를 늘리세요.",
     "audio_review": "실제 음성 분량과 목표 길이가 맞지 않아 제작을 멈췄습니다. 추가 API 요청은 하지 않았습니다.",
     "voice_failed": "음성을 만들지 못했습니다. 선택한 한국어 음성과 PowerShell 실행 상태를 확인하세요.",
+    "voice_api_failed": "ElevenLabs 음성 제작을 완료하지 못했습니다. 다른 음성으로 전환하거나 자동 재요청하지 않습니다.",
+    "script_auto_review": "자동 대본 점검에서 확인이 필요한 내용이 발견되어 멈췄습니다. 대본과 출처를 직접 검토·수정하세요.",
+    "ai_video_review": "Higgsfield 장면별 생성·내용 검토·최종 합성 승인이 필요합니다. 기본 영상으로 대체하지 않았습니다.",
 }
 _SOLUTIONS = {
     "no_sources": "뉴스 출처 설정에서 출처를 등록하고 활성화한 뒤 다시 시도하세요. 체험 뉴스로 새 작업을 시작할 수도 있습니다.",
@@ -178,12 +181,19 @@ class AutopilotCoordinator:
 
     @staticmethod
     def _pauses(job: AutopilotJob) -> set[str]:
-        """Review pauses: guided always; real content always pauses on the script and final video."""
+        """Legacy review gates plus an explicit new-job script choice; final review stays mandatory."""
         pauses = {"select", "script", "validate"} if job.mode == "guided" else set()
         if job.content_mode == "real":
             pauses |= {"script", "validate"}
         if job.stage_results.get("request", {}).get("unified"):
             pauses.discard("select")
+        choices = job.stage_results.get("request", {}).get("production_options", {})
+        if choices.get("version") == 1:
+            if choices.get("video_provider") == "higgsfield":
+                pauses.add("script")  # Existing per-scene approvals remain mandatory.
+            elif choices.get("script_review") is False:
+                pauses.discard("script")
+            pauses.add("validate")  # Skipping script review never approves the finished video.
         return pauses
 
     def start(
@@ -192,6 +202,7 @@ class AutopilotCoordinator:
         *, request_id: str | None = None, ai_model: str | None = None,
         acquisition_policy: str | None = None, category: str = "all", period: str | None = None,
         external_consent: bool = False, news_usage: str = "STANDARD",
+        production_options: dict | None = None,
     ) -> str:
         if mode not in {"easy", "guided"} or source not in {"sample", "feeds"}:
             raise AutopilotError("제작 방식과 뉴스 종류를 다시 선택하세요.")
@@ -238,6 +249,12 @@ class AutopilotCoordinator:
             }
         # A per-job policy does not opt legacy/sample paths into the unified AI pipeline.
         request["news_usage"] = news_usage
+        if production_options is not None:
+            from .production_options import freeze_options
+
+            if voice == "elevenlabs" and content_mode != "real":
+                raise AutopilotError("체험 뉴스는 ElevenLabs로 보내지 않습니다. 실제 뉴스와 별도 음성 동의를 확인하세요.")
+            request["production_options"] = freeze_options(production_options, voice)
         if content_mode == "real" and ai_mode in {"openai", "claude_api"}:
             # Server-owned creation marker: old local jobs must never gain paid analysis
             # or script requests merely because an app version changed after restart.
@@ -304,6 +321,8 @@ class AutopilotCoordinator:
         # new execution policy merely by reading/resuming their saved state.
         if "news_usage" in job.stage_results.get("request", {}):
             context["news_usage"] = job.stage_results["request"]["news_usage"]
+        if "production_options" in job.stage_results.get("request", {}):
+            context["production_options"] = job.stage_results["request"]["production_options"]
         context.update({
             "job_id": job.id, "mode": job.mode, "source": job.source, "duration": job.duration, "scheduled": scheduled,
             "platform": job.platform, "stage_results": dict(job.stage_results), "article_id": job.article_id,

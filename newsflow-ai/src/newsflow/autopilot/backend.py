@@ -43,7 +43,7 @@ from newsflow.publishing.service import PublishingService, hash_file
 from newsflow.video.service import VideoCoordinator, VideoError
 from newsflow.video.tts import SpeechSettings, TTSError
 
-from .contracts import BackendError
+from .contracts import AutopilotError, BackendError
 from .samples import SAMPLE_NAME, SAMPLE_URL, sample_feed
 
 Progress = Callable[[int, str], None]
@@ -125,9 +125,11 @@ class PipelineBackend:
                 "validate": "영상 파일을 확인하지 못했습니다. 결과 영상을 다시 제작하세요.",
                 "queue": "게시 대기함에 보관하지 못했습니다. 영상을 확인한 뒤 다시 시도하세요.",
             }
-            raise BackendError(messages[stage]) from None
+            raise BackendError(messages[stage], retryable=not (stage == "render" and context.get("voice") == "elevenlabs")) from None
 
     def can_retry(self, stage: str, context: dict[str, Any]) -> bool:
+        if stage == "render" and context.get("voice") == "elevenlabs":
+            return False  # A failed/unknown paid voice is not automatically resubmitted.
         if stage in {"collect", "select", "script"} and context.get("ai_mode", "offline") != "offline":
             with self.sessions() as session:
                 for key in ("search_run_id", "analysis_run_id", "script_run_id"):
@@ -545,7 +547,12 @@ class PipelineBackend:
                                    "production_context": {
                                        "source": ctx["source"], "initial_duration": ctx["duration"],
                                        "initial_provider": ctx["ai_mode"], "initial_model": ctx["ai_model"],
-                                       "initial_voice": ctx.get("voice") or "silent", "initial_video": "off",
+                                       "initial_voice": ctx.get("voice") or "silent",
+                                       "initial_video": ctx.get("production_options", {}).get("video_provider", "off"),
+                                       **({"production_options_version": 1,
+                                           "script_review": ctx["production_options"]["script_review"],
+                                           **{key: ctx[key] for key in ("acquisition_policy", "category", "period") if key in ctx}}
+                                          if ctx.get("production_options", {}).get("version") == 1 else {}),
                                        "news_usage": ctx.get("news_usage"),
                                    }, "external_consent": ctx.get("external_consent", False),
                                    "consented_at": ctx.get("consented_at"),
@@ -752,11 +759,28 @@ class PipelineBackend:
             raise BackendError(code="news_usage_script", retryable=False) from None
 
     def _render(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        choices = ctx.get("production_options", {})
+        if choices.get("video_provider") == "higgsfield":
+            raise BackendError("Higgsfield는 AI 장면 화면에서 장면별 생성·내용 검토·합성 승인을 진행하세요. 기본 영상으로 대체하지 않았습니다.",
+                               code="ai_video_review", retryable=False)
         with self.sessions() as session:
             draft = session.get(ContentDraft, ctx["content_draft_id"])
             if not draft:
                 raise BackendError(code="news_usage_script", retryable=False)
             self._check_topic_draft(draft)
+            if choices.get("version") == 1 and choices.get("script_review") is False:
+                try:
+                    IntelligenceService.validate(draft.content, draft.duration)
+                    self.intelligence.check_copy(draft.content, draft.sources)
+                    self.intelligence._check_stored_secret(draft.content)
+                    notes = self.intelligence._review_notes(draft.content, draft.sources, draft.duration)
+                    if (any(note.get("level") != "info" for note in notes)
+                            or not draft.sources.get("articles")
+                            or any(not article.get("sources") for article in draft.sources["articles"])):
+                        raise ValueError
+                except (IntelligenceError, ValueError, TypeError, KeyError):
+                    raise BackendError("자동 점검에서 확인이 필요한 대본입니다. 대본을 검토·수정하세요. 사실 검증 완료나 게시 승인은 기록하지 않았습니다.",
+                                       code="script_auto_review", retryable=False) from None
         identifier = ctx.get("render_job_id")
         if identifier:
             with self.sessions() as session:
@@ -781,6 +805,8 @@ class PipelineBackend:
                 identifier = self.video.start_preview(
                     ctx["content_draft_id"], ctx["duration"], lambda value: save("render_job_id", value),
                     voice=voice, speech=self._speech(),
+                    **({"external_tts_consent": choices.get("external_tts_consent") is True,
+                        "elevenlabs_config": choices.get("elevenlabs")} if voice == "elevenlabs" else {}),
                 )
             except VideoError as exc:
                 if "음성 목록" in str(exc):
@@ -809,6 +835,9 @@ class PipelineBackend:
                         "모의 영상은 재생할 수 없어 게시 대기함에 넣지 않습니다.", retryable=False
                     )
                 if job.status != "running":
+                    if ctx.get("voice") == "elevenlabs":
+                        raise BackendError("ElevenLabs 음성·영상 제작을 완료하지 못했습니다. 다른 음성으로 전환하거나 자동 재요청하지 않습니다.",
+                                           code="voice_api_failed", retryable=False)
                     # The video service prefixes its fixed failure text with the failure kind;
                     # the generic suffix mentions several causes, so only the prefix is classified.
                     if (job.message or "").startswith("음성 길이 실패"):
@@ -836,6 +865,17 @@ class PipelineBackend:
         from newsflow.easy_setup import preview_preferences
 
         voice = ctx.get("voice") or preview_preferences(self.sessions)[0]
+        if voice == "elevenlabs":
+            from .production_options import freeze_options
+
+            choices = ctx.get("production_options", {})
+            try:
+                freeze_options(choices, voice)
+            except AutopilotError:
+                raise BackendError("이번 ElevenLabs 제작 동의를 확인하세요.", code="ai_consent", retryable=False) from None
+            if ctx.get("source") != "feeds" or ctx.get("scheduled"):
+                raise BackendError(code="ai_consent", retryable=False)
+            return voice
         if not self.video.voice_available(voice):
             raise BackendError("선택한 음성을 찾지 못했습니다.", code="voice_unavailable")
         return voice

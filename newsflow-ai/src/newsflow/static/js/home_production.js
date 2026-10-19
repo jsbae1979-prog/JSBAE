@@ -46,3 +46,14 @@ if (newsChoice && actualAi && trialNotice) {
     refreshPolicyReadiness();
   });
 }
+
+// These labels are selections, not evidence that a provider has run.
+for (const [id, target] of [["quick-voice-method", "[data-selected-voice]"], ["quick-video-method", "[data-selected-video]"]]) {
+  const select = document.getElementById(id);
+  const label = document.querySelector(target);
+  if (select && label) {
+    const update = () => { label.textContent = select.selectedOptions[0].textContent; };
+    select.addEventListener("change", update);
+    update();
+  }
+}

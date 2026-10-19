@@ -60,6 +60,11 @@ def validate_context(value: dict) -> dict:
     if not isinstance(news_usage, str) or news_usage not in NEWS_USAGE_LABELS:
         raise ValueError("뉴스 활용 수준을 다시 선택해 주세요.")
     result["news_usage"] = news_usage
+    if "production_options_version" in value:
+        if (type(value["production_options_version"]) is not int or value["production_options_version"] != 1
+                or type(value.get("script_review")) is not bool or value.get("initial_video") not in {"off", "higgsfield"}):
+            raise ValueError("대본 검토 선택을 다시 확인하세요.")
+        result.update(production_options_version=1, script_review=value["script_review"])
     if "initial_video" in value:
         if value["initial_video"] not in {"off", "higgsfield"}:
             raise ValueError("영상 장면 설정을 다시 확인해 주세요.")
