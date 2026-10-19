@@ -1,0 +1,92 @@
+name: NewsFlow PR35 Cloud Connection Windows
+
+on:
+  push:
+    branches: [codex/newsflow-ux-video-app]
+    paths: ['newsflow-ai/src/**', 'newsflow-ai/tests/**', 'newsflow-ai/tools/**', 'newsflow-ai/run.bat', 'newsflow-ai/requirements-dev.lock', '.github/workflows/newsflow-cloud-connect-windows.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  connected-workspace:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_CLAUDE_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      NEWSFLOW_META_APP_SECRET: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      ANTHROPIC_AUTH_TOKEN: ''
+      CLAUDE_CODE_OAUTH_TOKEN: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies and pip check
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare existing video and Chrome prerequisites
+        run: |
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ';C:\ProgramData\chocolatey\bin;C:\tools\ffmpeg\bin'
+          }
+          @((Split-Path (Get-Command ffmpeg -ErrorAction Stop).Source), (Split-Path (Get-Command ffprobe -ErrorAction Stop).Source)) | Select-Object -Unique | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $fontPath = 'C:\Windows\Fonts\malgun.ttf'
+          if (-not (Test-Path -LiteralPath $fontPath)) { throw 'Korean font missing' }
+          "NEWSFLOW_FONT_PATH=$fontPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEWSFLOW_VALIDATION_OUTPUT=$env:RUNNER_TEMP/newsflow-connect-evidence" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEWSFLOW_DATA_DIR=$env:RUNNER_TEMP/newsflow-connect-default" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $chrome = @("$env:ProgramFiles\Google\Chrome\Application\chrome.exe", "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe")
+          if (-not ($chrome | Where-Object { Test-Path -LiteralPath $_ })) { throw 'Windows Chrome missing' }
+      - name: Ruff
+        run: |
+          .venv/Scripts/python -m ruff check src tests tools
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Current API, publishing, UI and Windows contracts - no full suite replay
+        run: |
+          .venv/Scripts/python -m pytest -q -rs tests/test_api_shorts_intelligence.py tests/test_api_shorts_pipeline.py tests/test_api_shorts_audio.py tests/test_api_shorts_gui.py tests/test_api_news_pipeline.py tests/test_api_news_gui.py tests/test_unified_publishing.py tests/test_unified_publishing_gui.py tests/test_creator_ui.py tests/test_single_workspace.py tests/test_creator_scene_browser.py tests/test_model_picker_browser.py tests/test_windows.py tests/test_production_dpapi.py::test_real_windows_production_dpapi_restart_tampering_account_binding tests/test_cloud_workspace_flow.py --junitxml=validation-output/connect-tests.xml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Existing BAT start, duplicate block, stop and data restart
+        run: |
+          .venv/Scripts/python tools/ci_windows_launch_smoke.py --root "$env:RUNNER_TEMP/newsflow-bat-new" --output "$env:RUNNER_TEMP/newsflow-connect-evidence/bat-result.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload synthetic summaries and key screens only
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: pr35-connected-workspace-${{ matrix.python }}
+          path: |
+            ${{ runner.temp }}/newsflow-connect-evidence/**/*.json
+            ${{ runner.temp }}/newsflow-connect-evidence/**/*.png
+          if-no-files-found: warn
+          retention-days: 14
+      # No real service keys, OAuth, media transfer or operation on user data.
+      # Native DPAPI uses synthetic values; no MP4/WAV/SQLite/key artifacts are uploaded.
