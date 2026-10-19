@@ -72,6 +72,24 @@ def cancel(request: Request, account_id: int):
     return go("/simple-settings#youtube")
 
 
+@router.post("/youtube/connect/{account_id}/link")
+def authorization_link(request: Request, account_id: int):
+    try:
+        url, remaining = request.app.state.youtube.authorization_link(account_id)
+    except Exception:  # noqa: BLE001 - never reflect state or callback data
+        raise HTTPException(409, "인증 링크가 만료되었거나 연결 처리가 시작되었습니다. 연결 상태를 새로고침하세요.") from None
+    return {"url": url.get_secret_value(), "expires_in": remaining}
+
+
+@router.post("/youtube/connect/{account_id}/reopen")
+def reopen_authorization(request: Request, account_id: int):
+    try:
+        request.app.state.youtube.reopen_authorization(account_id)
+    except Exception:  # noqa: BLE001
+        raise HTTPException(409, "인증 창을 열지 못했습니다. 연결 상태를 확인하거나 유효한 링크를 복사해 사용하세요.") from None
+    return {"message": "진행 중인 Google 인증 창을 다시 열었습니다."}
+
+
 @router.post("/youtube/draft")
 def save_review(
     request: Request, render_job_id: int = Form(ge=1), title: str = Form(max_length=100),
