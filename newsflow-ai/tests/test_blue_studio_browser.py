@@ -82,6 +82,12 @@ def test_home_creation_choices_archive_and_keyboard(studio_ui, browser, size):
         expect(page.get_by_role("button", name="쇼츠 만들기", exact=True)).to_be_visible()
         assert page.locator('details:has(form[action="/autopilot/quick-start"])').count() == 0
         expect(page.locator(".studio-phone-empty")).to_be_visible()
+        expect(page.locator(".reference-metric strong")).to_have_text(["0", "0", "0", "0"])
+        expect(page.locator(".reference-news-empty")).to_be_visible()
+        expect(page.locator(".reference-search")).to_have_attribute("href", "/news")
+        page.get_by_role("link", name="지금 영상 만들기", exact=False).click()
+        expect(page.locator("#production-title")).to_be_in_viewport()
+        page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
         assert page.locator("video, progress, iframe").count() == 0
         expect(page.locator("#archive-search")).not_to_have_attribute("open", "")
         assert page.locator('[name="topic"],option[value="VERIFIED"]').count() == 0
@@ -159,8 +165,12 @@ def test_portrait_library_edit_playback_and_publish_keep_original_boundaries(stu
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 capture(page, f'{name}-populated-{width}.png')
                 if name == 'home':
+                    expect(page.locator('.reference-news-item')).to_have_count(3)
+                    expect(page.locator('.reference-metric strong')).to_have_text(['2', '3', '0', '5'])
+                    href = page.locator('.reference-news-item').first.get_attribute('href')
+                    assert href.startswith('/news/')
                     expect(page.locator('.studio-phone-video')).to_be_visible()
-                    page.wait_for_function('document.querySelector(".studio-phone-video img").naturalWidth > 0')
+                    page.wait_for_function('()=>document.querySelector(".studio-phone-video img").naturalWidth > 0')
                     capture(page, f'home-populated-{width}.png')
                     assert page.locator('video').count() == 0
                 if name == 'videos':
@@ -173,7 +183,7 @@ def test_portrait_library_edit_playback_and_publish_keep_original_boundaries(stu
                     assert page.locator('.studio-new-production').count() == 1
                     expect(page.locator('.studio-new-production')).not_to_have_attribute('open', '')
                     player.evaluate('async v=>{v.muted=true;await v.play()}')
-                    page.wait_for_function('document.querySelector("[data-workspace-player]").currentTime > 0')
+                    page.wait_for_function('()=>document.querySelector("[data-workspace-player]").currentTime > 0')
                     player.evaluate('v=>v.pause()')
                     page.locator('#workspace-detail').evaluate('e=>e.scrollIntoView({block:"start",behavior:"instant"})')
                     expect(player).to_be_in_viewport()
