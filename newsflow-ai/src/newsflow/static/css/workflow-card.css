@@ -36,7 +36,7 @@
 .mockup-dashboard .workflow-script p{font-size:13px;color:#d1e0f4;line-height:1.5;margin:3px 0 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .mockup-dashboard .workflow-script .button{flex-shrink:0;gap:13px;min-height:40px;padding:8px 15px;border-radius:8px;background:linear-gradient(110deg,#287cff,#1754f6);border-color:#428eff;box-shadow:0 0 18px #0761ff55;font-size:14px;font-weight:700;white-space:nowrap}
 .workflow-option summary:hover,.workflow-current:hover{border-color:#4b93d5}.workflow-card a:focus-visible,.workflow-card summary:focus-visible{outline:2px solid #67e0ff;outline-offset:3px}
-@container(max-width:430px){.workflow-options{grid-template-columns:repeat(2,minmax(0,1fr))}.mockup-dashboard .workflow-option summary{min-height:44px}.workflow-wave{width:29%}.workflow-script{gap:8px}.mockup-dashboard .workflow-script .button{font-size:13px;padding:8px 10px;min-height:44px;gap:8px}.workflow-popover a{min-height:44px}}
+@container(max-width:350px){.workflow-options{grid-template-columns:repeat(2,minmax(0,1fr))}.mockup-dashboard .workflow-option summary{min-height:44px}.workflow-wave{width:29%}.workflow-script{gap:8px}.mockup-dashboard .workflow-script .button{font-size:13px;padding:8px 10px;min-height:44px;gap:8px}.workflow-popover a{min-height:44px}}
 @media(prefers-reduced-motion:reduce){.workflow-card *{transition:none!important;animation:none!important}}
 
 .dash-workflow>.dashboard-create-drawer{margin:8px 0 0;padding:0 12px;border-top:0}
