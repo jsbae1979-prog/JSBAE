@@ -142,8 +142,8 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         response = page.goto(origin + "/")
         assert "script-src 'self'" in response.headers["content-security-policy"]
         expect(page.locator(".demo-banner")).to_be_visible()
-        page.get_by_role("link", name="새 뉴스로 쇼츠 만들기 →", exact=True).click()
-        assert urlsplit(page.url).path == "/create"
+        # The home now exposes the same guarded creation form directly.
+        assert urlsplit(page.url).path == "/"
         page.wait_for_load_state("load")
         expect(page.locator('form[action="/autopilot/quick-start"]')).to_have_attribute("data-easy-wired","true")
         with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/autopilot/quick-start")) as prepared:

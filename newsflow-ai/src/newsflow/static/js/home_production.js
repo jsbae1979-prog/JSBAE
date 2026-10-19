@@ -57,3 +57,17 @@ for (const [id, target] of [["quick-voice-method", "[data-selected-voice]"], ["q
     update();
   }
 }
+
+// A selection only reveals the existing approval requirements; it grants no consent.
+for (const [id, target, external] of [
+  ["quick-voice-method", "[data-external-voice-note]", "elevenlabs"],
+  ["quick-video-method", "[data-external-video-note]", "higgsfield"]
+]) {
+  const select = document.getElementById(id);
+  const note = document.querySelector(target);
+  if (select && note) {
+    const update = () => { note.hidden = select.value !== external; };
+    select.addEventListener("change", update);
+    update();
+  }
+}
