@@ -582,3 +582,47 @@ class ScheduledRun(Base):
     revision: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class PublishSchedule(Base):
+    """Local calendar; approval snapshots never contain service credentials."""
+    __tablename__ = "publish_schedules"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cohort_id: Mapped[int] = mapped_column(ForeignKey("publish_evidence.id"), unique=True)
+    due_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    status: Mapped[str] = mapped_column(String(30), default="paused")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    approval: Mapped[dict] = mapped_column(JSON, default=dict)
+    message: Mapped[str] = mapped_column(String(500), default="예약 대기")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class SocialMetric(Base):
+    """One provider field per publication/window; missing fields are not zero."""
+    __tablename__ = "social_metrics"
+    __table_args__ = (UniqueConstraint("job_id", "metric", "period_start", "period_end", "synthetic"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("publish_jobs.id"))
+    account_id: Mapped[int] = mapped_column(ForeignKey("platform_accounts.id"))
+    platform: Mapped[str] = mapped_column(String(20))
+    remote_id: Mapped[str] = mapped_column(String(160))
+    metric: Mapped[str] = mapped_column(String(80))
+    value: Mapped[str] = mapped_column(String(60))
+    unit: Mapped[str] = mapped_column(String(30))
+    period_start: Mapped[str] = mapped_column(String(10))
+    period_end: Mapped[str] = mapped_column(String(10))
+    period_basis: Mapped[str] = mapped_column(String(40))
+    published_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    synthetic: Mapped[bool] = mapped_column(Boolean)
+    fetched_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class SocialMetricRun(Base):
+    __tablename__ = "social_metric_runs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("publish_jobs.id"))
+    status: Mapped[str] = mapped_column(String(30))
+    message: Mapped[str] = mapped_column(String(500))
+    synthetic: Mapped[bool] = mapped_column(Boolean)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

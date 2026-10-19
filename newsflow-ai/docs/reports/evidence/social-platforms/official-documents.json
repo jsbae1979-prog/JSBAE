@@ -1,0 +1,151 @@
+{
+  "checked_on_kst": "2026-10-19",
+  "http_results": [
+    {
+      "name": "tiktok-direct",
+      "url": "https://developers.tiktok.com/doc/content-posting-api-reference-direct-post",
+      "status": 200,
+      "bytes": 268580,
+      "final_url": "https://developers.tiktok.com/docs/en/content-posting-api-reference-direct-post"
+    },
+    {
+      "name": "tiktok-guidelines",
+      "url": "https://developers.tiktok.com/doc/content-sharing-guidelines",
+      "status": 200,
+      "bytes": 235071,
+      "final_url": "https://developers.tiktok.com/docs/en/content-sharing-guidelines"
+    },
+    {
+      "name": "tiktok-query",
+      "url": "https://developers.tiktok.com/doc/tiktok-api-v2-video-query",
+      "status": 200,
+      "bytes": 225856,
+      "final_url": "https://developers.tiktok.com/docs/en/tiktok-api-v2-video-query"
+    },
+    {
+      "name": "tiktok-oauth",
+      "url": "https://developers.tiktok.com/doc/login-kit-web",
+      "status": 200,
+      "bytes": 239736,
+      "final_url": "https://developers.tiktok.com/docs/en/login-kit-web"
+    },
+    {
+      "name": "facebook-reels",
+      "url": "https://developers.facebook.com/docs/video-api/guides/reels-publishing/",
+      "status": 200,
+      "bytes": 25435,
+      "final_url": "https://developers.facebook.com/documentation/video-api/guides/reels-publishing"
+    },
+    {
+      "name": "facebook-insights",
+      "url": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights/",
+      "status": 200,
+      "bytes": 197838,
+      "final_url": "https://developers.facebook.com/docs/graph-api/reference/video/video_insights/"
+    },
+    {
+      "name": "youtube-analytics",
+      "url": "https://developers.google.com/youtube/analytics/reference/reports/query",
+      "status": 200,
+      "bytes": 128594,
+      "final_url": "https://developers.google.com/youtube/analytics/reference/reports/query"
+    },
+    {
+      "name": "youtube-metrics",
+      "url": "https://developers.google.com/youtube/analytics/metrics",
+      "status": 200,
+      "bytes": 103719,
+      "final_url": "https://developers.google.com/youtube/analytics/metrics"
+    },
+    {
+      "name": "instagram-insights",
+      "url": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login/insights/",
+      "status": 200,
+      "bytes": 10102,
+      "final_url": "https://developers.facebook.com/documentation/instagram-platform/insights"
+    }
+  ],
+  "additional_results": [
+    {
+      "name": "tiktok-status",
+      "url": "https://developers.tiktok.com/docs/en/content-posting-api-reference-get-video-status",
+      "status": 200,
+      "bytes": 249804
+    },
+    {
+      "name": "tiktok-creator",
+      "url": "https://developers.tiktok.com/docs/en/content-posting-api-reference-query-creator-info",
+      "status": 200,
+      "bytes": 234899
+    },
+    {
+      "name": "instagram-media-insights",
+      "url": "https://developers.facebook.com/documentation/instagram-platform/reference/instagram-media/insights",
+      "status": 200,
+      "bytes": 972172
+    }
+  ],
+  "extracted_document_hashes": [
+    {
+      "document": "facebook-insights",
+      "sha256": "6c138dc83313ad6599ab0a1b52f531635fdad81b0301ff03c26b9b557026bff6",
+      "bytes": 19766
+    },
+    {
+      "document": "facebook-reels",
+      "sha256": "333d6b9ed5b406c33aa2de6aa3a0416ab9fc4dc7287b5df67b2c38e12588c2bc",
+      "bytes": 23059
+    },
+    {
+      "document": "instagram-insights",
+      "sha256": "ebc353159557a8abd9034f670f5d6fd8def996de0d4916084d9a55b35cd6e3cf",
+      "bytes": 8906
+    },
+    {
+      "document": "instagram-media-insights",
+      "sha256": "46f3d6bad48d72149b915c634ed338fb12c6eac24cf03e448f3f6f35270b2b91",
+      "bytes": 19047
+    },
+    {
+      "document": "tiktok-creator",
+      "sha256": "616a85c2ea8c5e143e1b964e3a296ad018a115f76b964ce5ba2250dfa3858c2f",
+      "bytes": 5378
+    },
+    {
+      "document": "tiktok-direct",
+      "sha256": "f3176bf51a80afcd8d05c582741fa1ccf0b45118be24ec8491117f67cea01cd6",
+      "bytes": 9753
+    },
+    {
+      "document": "tiktok-guidelines",
+      "sha256": "037261443d7e2a14469cf35332c91239c75c9cbc944be028c2b7043d3908ea04",
+      "bytes": 10014
+    },
+    {
+      "document": "tiktok-oauth",
+      "sha256": "3141a9ea30bd4c983ca9dd887371673d577e7149cde8adfe9431cf513d7efb8b",
+      "bytes": 8680
+    },
+    {
+      "document": "tiktok-query",
+      "sha256": "d41507e08a68ea1cb70bb75fee0ba5e053266480dae88e3a43b49c2bbfa7568c",
+      "bytes": 3201
+    },
+    {
+      "document": "tiktok-status",
+      "sha256": "11f209926786b2852f5145c6b0af6683cd544d1d208be53efad0204368fe39ec",
+      "bytes": 8751
+    },
+    {
+      "document": "youtube-analytics",
+      "sha256": "4caa25f7883f62e3d0073458146569470a9309a98ec902069ea0ac076302e483",
+      "bytes": 38912
+    },
+    {
+      "document": "youtube-metrics",
+      "sha256": "74928e598ffb6d681d3b5f7b20aeea7695900922e1416be3ddd57fd13af55ded",
+      "bytes": 33185
+    }
+  ],
+  "note": "Public official documentation GET only. No account/token/upload/analytics API requests."
+}

@@ -32,5 +32,6 @@ def visual_seed(app,root):
    render.metadata_json={**render.metadata_json,'sha256':hashlib.sha256(target.read_bytes()).hexdigest()}
    render.finished_at=now-timedelta(days=2-index)
 
-demo.seed=visual_seed
-demo.main()
+if __name__ == "__main__":
+ demo.seed=visual_seed
+ demo.main()

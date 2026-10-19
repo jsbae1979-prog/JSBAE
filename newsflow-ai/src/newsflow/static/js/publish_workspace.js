@@ -2,7 +2,7 @@
 const selection = document.querySelector('[data-publish-target]');
 if (selection) {
   function updateTargets() {
-    const targets = selection.value === 'both' ? ['youtube', 'instagram'] : [selection.value];
+    const targets = selection.value === 'all' ? ['youtube', 'instagram', 'tiktok', 'facebook'] : selection.value === 'both' ? ['youtube', 'instagram'] : [selection.value];
     let connected = true;
     document.querySelectorAll('[data-publish-account]').forEach(section => {
       const active = targets.includes(section.dataset.publishAccount);

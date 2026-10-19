@@ -18,6 +18,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from newsflow.gui.social_routes import router as social_router
+from newsflow.publishing.analytics import AnalyticsService
+from newsflow.publishing.calendar import PublishingCalendar
+from newsflow.publishing.extensions import ExtendedPublishingService
+
 from .autopilot.backend import PipelineBackend
 from .autopilot.service import AutopilotCoordinator
 from .config import Settings
@@ -111,8 +116,14 @@ def create_app(
     instagram.recover()
     instagram_publishing = InstagramPublishingService(sessions, video.outputs, instagram)
     instagram_publishing.recover()
-    unified_publishing = UnifiedPublishingService(sessions, video.outputs, live_publishing, instagram_publishing)
+    social_extensions = {name: ExtendedPublishingService(sessions, video.outputs, name) for name in ("tiktok", "facebook")}
+    for extension in social_extensions.values():
+        extension.recover()
+    unified_publishing = UnifiedPublishingService(sessions, video.outputs, live_publishing, instagram_publishing, extensions=social_extensions)
     unified_publishing.recover()
+    publishing_calendar = PublishingCalendar(sessions, unified_publishing)
+    publishing_calendar.recover()
+    social_analytics = AnalyticsService(sessions)
     ai_keys = AIKeyStore(settings.data_dir)
     api_keys = {"openai": ai_keys, "claude_api": AnthropicKeyStore(settings.data_dir)}
     autopilot_backend = PipelineBackend(
@@ -136,11 +147,13 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         scheduler.start()
+        publishing_calendar.start()
         try:
             yield
         finally:
             youtube.close()
             instagram.close()
+            publishing_calendar.close()
             scheduler.close()
             video_ai.close()
             autopilot.close()
@@ -158,6 +171,9 @@ def create_app(
     app.state.instagram = instagram
     app.state.instagram_publishing = instagram_publishing
     app.state.unified_publishing = unified_publishing
+    app.state.social_extensions = social_extensions
+    app.state.publishing_calendar = publishing_calendar
+    app.state.social_analytics = social_analytics
     app.state.video_ai = video_ai
     app.state.scheduler = scheduler
     app.state.autopilot = autopilot
@@ -235,6 +251,7 @@ def create_app(
     app.include_router(youtube_router)
     app.include_router(instagram_router)
     app.include_router(unified_publishing_router)
+    app.include_router(social_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
     return app
 

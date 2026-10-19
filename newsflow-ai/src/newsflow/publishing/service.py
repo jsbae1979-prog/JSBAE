@@ -36,9 +36,11 @@ class ConflictError(PublishingError):
     pass
 
 
-PLATFORMS = {"instagram", "youtube"}
+PLATFORMS = {"instagram", "youtube", "tiktok", "facebook"}
 REAL_BLOCKERS = {"account", "permissions", "api_readiness", "instagram_delivery", "official_policy"}
 OFFICIAL_URLS = {
+    "tiktok": "https://developers.tiktok.com/doc/content-sharing-guidelines",
+    "facebook": "https://developers.facebook.com/documentation/video-api/guides/reels-publishing",
     "youtube": "https://developers.google.com/youtube/v3/docs/videos/insert",
     "instagram": "https://developers.facebook.com/docs/instagram-platform/content-publishing/",
 }
@@ -142,6 +144,8 @@ class PublishingService:
         types = {
             "instagram": {"professional_business", "professional_creator", "personal", "unknown"},
             "youtube": {"youtube_channel", "unknown"},
+            "tiktok": {"tiktok_creator", "unknown"},
+            "facebook": {"facebook_page", "unknown"},
         }
         if (
             platform not in types
@@ -320,8 +324,10 @@ class PublishingService:
             caption = (
                 draft.title + "\n" + draft.description + "\n" + " ".join("#" + tag for tag in draft.hashtags)
             )
-            limit = 2200 if draft.platform == "instagram" else 5000
+            limit = 2200 if draft.platform in {"instagram", "tiktok"} else 5000
             description_valid = len(caption) <= limit
+            if draft.platform == "tiktok":
+                description_valid = len(caption.encode("utf-16-le")) // 2 <= 2200
             description_reason = (
                 f"제목/설명/태그 합친 앱 준비 예산 {limit}자; Instagram 최신 제한 재확인 필요"
             )

@@ -1,0 +1,124 @@
+{
+  "environment": "Cloud Linux / Python 3.12.14 / Chromium 151.0.7922.173",
+  "viewports": [
+    "1920x1080",
+    "1366x768",
+    "390x844"
+  ],
+  "scenario": "Isolated synthetic data and silent MP4; no real service connections.",
+  "settings_state": {
+    "settings-1920.png": "뉴스·대본 AI 탭",
+    "settings-1366.png": "세션에 보존된 게시 계정 탭",
+    "settings-390.png": "세션에 보존된 게시 계정 탭",
+    "accounts-1920.png": "게시 계정 탭",
+    "accounts-1366.png": "게시 계정 탭",
+    "accounts-390.png": "게시 계정 탭"
+  },
+  "files": [
+    {
+      "name": "accounts-1366.png",
+      "sha256": "595f2143cd1c29eaafa7bbe130f03802937f4a0c652d0382a2f97c5777dd9d84",
+      "bytes": 294009
+    },
+    {
+      "name": "accounts-1920.png",
+      "sha256": "a13f722b804235ad78037ced611fb5ea1c885db7ccea2e35c2eeeeb14b8b31b5",
+      "bytes": 374829
+    },
+    {
+      "name": "accounts-390.png",
+      "sha256": "4345f10f9b79f7359330697fb7d15738f05ee17e82ba6d1690fd59341bde2f71",
+      "bytes": 119059
+    },
+    {
+      "name": "analytics-1366.png",
+      "sha256": "378c894acc838030469c3784dff9cfda2f7bc6e72147034a71b76ac4a6ef79f3",
+      "bytes": 459213
+    },
+    {
+      "name": "analytics-1920.png",
+      "sha256": "9e3556ffcfcee85b2bc65a90eef68540d6a69e302eb812c88be858972516ceff",
+      "bytes": 776730
+    },
+    {
+      "name": "analytics-390.png",
+      "sha256": "0803cc9e3bf8c17befa498abc19d2357cdfa4f86c34f0b2dbf5f6f543740f353",
+      "bytes": 123280
+    },
+    {
+      "name": "news-1366.png",
+      "sha256": "3ea6b2815635c50cc387aedf3f9b2b83d718d909e359682be9dba8b717f1e2d8",
+      "bytes": 442056
+    },
+    {
+      "name": "news-1920.png",
+      "sha256": "950ed0d5cc27e0304c39567319eb87f99b9c3ee93a2e69e45a12b50937116d44",
+      "bytes": 680086
+    },
+    {
+      "name": "news-390.png",
+      "sha256": "8b508a9e36b2f0933afe4e15489477fa04c2bebe076f3791f7faf4e28c8e1f8e",
+      "bytes": 102980
+    },
+    {
+      "name": "publish-1366.png",
+      "sha256": "0c399d45d01624ba25d83728b372940523a0bb0bb42fc1352b543df653e33232",
+      "bytes": 426362
+    },
+    {
+      "name": "publish-1920.png",
+      "sha256": "2f672213d85a45779e7e186fd2b845a899465f898cb3538778c3851b37647331",
+      "bytes": 610153
+    },
+    {
+      "name": "publish-390.png",
+      "sha256": "5d1237279675622ec4195ae6b70631beeb6711a437da4d4831c9d40149d16450",
+      "bytes": 140462
+    },
+    {
+      "name": "script-1366.png",
+      "sha256": "ba039791b244a683171aedb60b79183aaaf91787503c9be093982ad7d7267924",
+      "bytes": 449486
+    },
+    {
+      "name": "script-1920.png",
+      "sha256": "d55b9ef3c9984a69776a7534733db1023b0f41ef576b4319541a731ec5d10cf6",
+      "bytes": 556179
+    },
+    {
+      "name": "script-390.png",
+      "sha256": "1482a071758fc81b6d5cba2e0de1e47f9796236f056582550f2839b7178eb652",
+      "bytes": 116035
+    },
+    {
+      "name": "settings-1366.png",
+      "sha256": "595f2143cd1c29eaafa7bbe130f03802937f4a0c652d0382a2f97c5777dd9d84",
+      "bytes": 294009
+    },
+    {
+      "name": "settings-1920.png",
+      "sha256": "f6b5753f01e8e5c63748f91603b3675d2ab4dd41045710a37a78dbe29cfb282c",
+      "bytes": 403054
+    },
+    {
+      "name": "settings-390.png",
+      "sha256": "01fbaa5dc075212e11b3716a08f855116a9d13e0c0aebe7a5ea61e2f9fa1cb56",
+      "bytes": 120605
+    },
+    {
+      "name": "video-1366.png",
+      "sha256": "6881648ad11bb5224aaec9c42fdbf863eed0b1900a32ee6bd0d3ab1d9a2b18a5",
+      "bytes": 491207
+    },
+    {
+      "name": "video-1920.png",
+      "sha256": "d361ab338a12305af2ee77e8a8fc33e05748882d49da75369c0dfd3b148753a5",
+      "bytes": 756036
+    },
+    {
+      "name": "video-390.png",
+      "sha256": "9f217459f571419e51ca9dfb105d81e186bc22ab784e708bfccef0c31e901f3e",
+      "bytes": 121465
+    }
+  ]
+}

@@ -1,0 +1,511 @@
+{
+  "environment": "Cloud Linux Chromium, not Windows display scaling",
+  "pages": [
+    {
+      "page": "news",
+      "viewport": "1920x1080",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "script",
+      "viewport": "1920x1080",
+      "http": 200,
+      "synthetic": true,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        }
+      ],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "video",
+      "viewport": "1920x1080",
+      "http": 200,
+      "synthetic": true,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        }
+      ],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "publish",
+      "viewport": "1920x1080",
+      "http": 200,
+      "synthetic": true,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        }
+      ],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "analytics",
+      "viewport": "1920x1080",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "settings",
+      "viewport": "1920x1080",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "accounts",
+      "viewport": "1920x1080",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "news",
+      "viewport": "1366x768",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "script",
+      "viewport": "1366x768",
+      "http": 200,
+      "synthetic": true,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        }
+      ],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "video",
+      "viewport": "1366x768",
+      "http": 200,
+      "synthetic": true,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        }
+      ],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "publish",
+      "viewport": "1366x768",
+      "http": 200,
+      "synthetic": true,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        }
+      ],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "analytics",
+      "viewport": "1366x768",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "settings",
+      "viewport": "1366x768",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "accounts",
+      "viewport": "1366x768",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "news",
+      "viewport": "390x844",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "script",
+      "viewport": "390x844",
+      "http": 200,
+      "synthetic": true,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        }
+      ],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "video",
+      "viewport": "390x844",
+      "http": 200,
+      "synthetic": true,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        }
+      ],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "publish",
+      "viewport": "390x844",
+      "http": 200,
+      "synthetic": true,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920,
+          "duration": 30
+        }
+      ],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "analytics",
+      "viewport": "390x844",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "settings",
+      "viewport": "390x844",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    },
+    {
+      "page": "accounts",
+      "viewport": "390x844",
+      "http": 200,
+      "synthetic": true,
+      "playback": [],
+      "overflow": false,
+      "outside": []
+    }
+  ],
+  "external_requests": [],
+  "javascript_errors": []
+}

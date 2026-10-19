@@ -682,7 +682,14 @@ def retry(request: Request, job_id: str, revision: int = Form(ge=1), workspace: 
 
 
 @router.get("/queue", response_class=HTMLResponse)
-def queue(request: Request) -> HTMLResponse:
+def queue(request: Request, month: str | None = None) -> HTMLResponse:
+    from newsflow.publishing.calendar import month_view
+    from newsflow.publishing.service import PublishingError
+    try:
+        calendar = request.app.state.publishing_calendar.rows()
+        calendar_month = month_view(calendar, month)
+    except (ValueError, PublishingError):
+        raise HTTPException(422, "달력 월을 확인하세요.") from None
     with request.app.state.sessions() as session:
         entries = []
         for draft, video in session.execute(
@@ -694,7 +701,7 @@ def queue(request: Request) -> HTMLResponse:
             except OSError:
                 valid = False
             entries.append({"draft": draft, "video": video, "playable": valid})
-        return _page(request, "queue.html", active="queue", entries=entries)
+        return _page(request, "queue.html", active="queue", entries=entries, calendar=calendar, calendar_month=calendar_month)
 
 
 @router.get("/simple-settings", response_class=HTMLResponse)
