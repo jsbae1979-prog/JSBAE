@@ -12,6 +12,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 from ci_validation import HTTP, ROOT, child_env, start, stop
@@ -58,9 +59,16 @@ def main() -> None:
                                    stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=45)
         assert duplicate.returncode != 0
         assert any(marker in duplicate.stdout.decode('utf-8',errors='replace') for marker in ('이미 run.bat','포트'))
+        log_path = data / 'logs/execution.log'
+        prior_stops = log_path.read_text(encoding='utf-8').count('server_stop')
         process.send_signal(signal.CTRL_BREAK_EVENT)
         process.wait(timeout=45)
-        assert 'server_stop' in (data/'logs/execution.log').read_text(encoding='utf-8')
+        # cmd.exe can exit before its Python child's finally block has flushed.
+        # Match the existing CI compatibility tool: observe actual cleanup, not parent exit.
+        deadline = time.monotonic() + 30
+        while log_path.read_text(encoding='utf-8').count('server_stop') <= prior_stops:
+            assert time.monotonic() < deadline, 'server_stop not recorded after CTRL_BREAK'
+            time.sleep(.1)
         process = start(command, env, 180)
         for route in routes:
             HTTP().get(route)
