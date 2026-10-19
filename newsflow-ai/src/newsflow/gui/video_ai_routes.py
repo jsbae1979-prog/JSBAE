@@ -21,9 +21,7 @@ from newsflow.video.ai.preflight import inspect_setup
 from newsflow.video.ai.service import DISCARD_LABEL, AIVideoError
 from newsflow.video.ai.settings import (
     CANDIDATE_PATHS,
-    DISCLAIMER,
     HOSTS,
-    PROVIDERS,
     RESOLUTIONS,
     VideoSettingsError,
     delete_model,
@@ -267,13 +265,11 @@ def clip(request: Request, scene_id: int) -> FileResponse:
 def settings_page(request: Request, saved: str = "") -> HTMLResponse:
     service = _service(request)
     sessions = request.app.state.sessions
-    with sessions() as session:
-        usage = list(session.scalars(select(VideoAIUsage).order_by(VideoAIUsage.id.desc()).limit(20)))
     return page(
         request, "video_ai_settings.html", active="simple-settings", settings=read_settings(sessions),
-        ready=service.readiness(), providers=PROVIDERS, hosts=HOSTS, currencies=CURRENCIES, resolutions=RESOLUTIONS,
-        models=list_models(sessions), candidates=CANDIDATE_PATHS, disclaimer=DISCLAIMER, usage=usage,
-        key=service.keys.status(), saved=saved[:20], style_guard=STYLE_GUARD,
+        ready=service.readiness(), currencies=CURRENCIES, resolutions=RESOLUTIONS,
+        models=list_models(sessions), candidates=CANDIDATE_PATHS,
+        key=service.keys.status(), saved=saved[:20],
     )
 
 

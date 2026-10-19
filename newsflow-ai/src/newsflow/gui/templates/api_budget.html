@@ -1,0 +1,44 @@
+  <dialog id="api-costs-{{ key }}" class="settings-dialog" aria-labelledby="api-costs-title-{{ key }}">
+    <div class="settings-dialog-head"><h2 id="api-costs-title-{{ key }}">{{ api_label }} 사용 승인·예산</h2><button type="button" data-settings-close aria-label="{{ api_label }} 사용 승인·예산 닫기">닫기</button></div>
+    <p>월 API 예산과 사용 승인을 관리합니다. {{ 'ChatGPT' if key == 'openai' else 'Claude Code' }} 구독과 별도 과금이며 검색·분석·대본은 각각 요청으로 계산합니다.</p>
+    <form method="post" action="/api-settings/{{ key }}" data-settings-form data-settings-watch>
+      {{ csrf_field() }}
+      <input type="hidden" name="model" value="{{ api.settings.model }}">
+      <p class="hint">저장된 모델: <strong>{{ api.settings.model }}</strong></p>
+      <label class="check"><input type="checkbox" name="approved" value="true" {% if api.settings.approved %}checked{% endif %}> 기사 분석·대본 생성의 API 비용 사용에 동의합니다.</label>
+      <label class="check"><input type="checkbox" name="search_enabled" value="true" {% if api.settings.search_enabled %}checked{% endif %}> 공식 뉴스 웹 검색 기능을 사용합니다.</label>
+      <label class="check"><input type="checkbox" name="search_approved" value="true" {% if api.settings.search_approved %}checked{% endif %}> 웹 검색 도구 및 검색 자료의 토큰 비용을 별도로 승인합니다.</label>
+      <div class="production-config-grid">
+        <label>월 API 예산 (USD)<input name="monthly_limit_usd" inputmode="decimal" maxlength="20" value="{{ api.settings.monthly_limit_usd }}" required></label>
+      </div>
+      {% if key == 'openai' and legacy_api_settings.monthly_token_limit <= 0 %}
+      <label>월 분석·대본 토큰 한도<input type="number" name="monthly_token_limit" min="0" max="50000000" value="{{ legacy_api_settings.monthly_token_limit }}" required></label>
+      <p class="hint">OpenAI 사용 승인에는 0보다 큰 토큰 한도가 필요합니다.</p>
+      {% endif %}
+      <p class="hint">실제 API 연결·검색 검증은 별도 승인이 필요합니다. 설정 저장만으로 호출하지 않습니다.</p>
+      <p class="soft-notice">보존된 예약 {{ api.usage.held_usd }} USD · 결과 불명 {{ api.usage.unknown }}건{% if api.usage.pending %} · 진행 중 {{ api.usage.pending }}건{% endif %}. 실패·시간 초과·결과 불명 요청은 자동 재전송하지 않으며 기존 예약과 기록을 유지합니다.</p>
+      <label>직접 확인한 계정 잔여 예산 (USD)<input name="account_remaining_usd" inputmode="decimal" maxlength="20" value="" placeholder="이번에 확인한 금액"></label>
+      <label class="check"><input type="checkbox" name="billing_confirmed" value="true"> 공급사 계정의 결제·모델·검색 권한과 잔여 예산을 직접 확인했습니다.</label>
+      <p class="hint">직접 확인은 24시간 유효하며 실제 인증 성공을 뜻하지 않습니다. 로컬 사용량·예약액은 공급사 청구액과 다릅니다.</p>
+      {% if api.settings.input_price_per_1m is none or api.settings.output_price_per_1m is none or api.settings.search_price_per_1k is none %}
+      <p class="soft-notice">단가 입력이 필요합니다. 아래 고급 설정에서 공식 요금을 확인해 입력하세요.</p>
+      {% endif %}
+      <details class="easy-advanced" id="{{ key }}-price-settings" {% if api.settings.input_price_per_1m is none or api.settings.output_price_per_1m is none or api.settings.search_price_per_1k is none %}open{% endif %}>
+        <summary>단가·사용 기록 자세히 보기</summary>
+        {% if key == 'claude_api' %}<p class="hint">지원 모델의 빈 단가에는 확인된 공식 기본값을 표시합니다. 기존에 저장한 단가는 유지합니다. <a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener noreferrer">공식 요금표 ↗</a></p>{% endif %}
+        <div class="production-config-grid">
+          <label>입력 100만 토큰 단가 (USD)<input name="input_price_per_1m" inputmode="decimal" maxlength="20" value="{{ api.settings.input_price_per_1m if api.settings.input_price_per_1m is not none else '' }}"></label>
+          <label>출력 100만 토큰 단가 (USD)<input name="output_price_per_1m" inputmode="decimal" maxlength="20" value="{{ api.settings.output_price_per_1m if api.settings.output_price_per_1m is not none else '' }}"></label>
+          <label>검색 1,000회 단가 (USD)<input name="search_price_per_1k" inputmode="decimal" maxlength="20" value="{{ api.settings.search_price_per_1k if api.settings.search_price_per_1k is not none else '' }}"></label>
+          {% if key == 'openai' %}
+          {% if legacy_api_settings.monthly_token_limit > 0 %}<label>월 분석·대본 토큰 한도<input type="number" name="monthly_token_limit" min="0" max="50000000" value="{{ legacy_api_settings.monthly_token_limit }}" required></label>{% endif %}
+          <label>분석·대본 제한시간 (초)<input type="number" name="timeout" min="1" max="60" value="{{ legacy_api_settings.timeout }}" required></label>
+          {% endif %}
+        </div>
+        <p class="hint">해당 모델·계정의 공식 단가를 입력하세요. 응답의 보고 사용량과 단가로 집계하며, 공급사 실제 청구액은 대시보드에서 확인하세요. 새 요청 전 월 예산을 확인하지만 응답 후 집계이므로 최종 비용 상한을 보장하지 않습니다.</p>
+        <p>이번 달 {{ api.usage.calls }}건 · 보고 사용량 기반 비용 집계 {{ api.usage.estimated_usd }} USD</p>
+        <p class="hint">{{ '실제 요청 성공 기록 있음' if api.request_succeeded else '실제 요청 성공 미검증' }}</p>
+      </details>
+      <button type="submit" class="primary">API 사용 승인·예산 저장</button>
+    </form>
+  </dialog>

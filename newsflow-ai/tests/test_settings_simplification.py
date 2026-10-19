@@ -109,16 +109,17 @@ def synthetic_stores(app):
     return stores
 
 
-def test_three_sections_four_saved_statuses_and_seven_on_demand_diagnostics(client, app):
+def test_five_sections_single_editor_and_on_demand_diagnostics(client, app):
     write_studio_settings(app.state.sessions, "claude_api", "claude-sonnet-4-6")
     save_values(app, video_default_voice="supertonic:F1", autopilot_source="feeds")
     before = values(app)
     response = client.get("/simple-settings")
     dom = Document(response.text)
-    for section in ("connections", "quality", "schedules"):
+    for section in ("connections", "quality", "video-settings", "costs", "accounts"):
         assert dom.find("section", id=section)
-    assert {node.attrs["data-summary-stage"] for node in dom.nodes if "data-summary-stage" in node.attrs} == {
-        "search", "analysis", "voice", "video"}
+    assert not any("data-summary-stage" in node.attrs for node in dom.nodes)
+    assert len(dom.find("form", id="production-preferences")) == 1
+    assert not dom.find("a", href="/ai-settings")
     stages = [node for node in dom.nodes if "data-stage" in node.attrs]
     assert len(stages) == 7
     assert all(any(parent.tag == "dialog" and parent.attrs.get("id") == "settings-diagnostics"
@@ -154,7 +155,8 @@ def test_key_entry_is_direct_and_cost_approvals_are_not_prechecked_or_hidden_in_
     stores[provider].clear()
     dom = Document(client.get("/simple-settings").text)
     key_form = dom.find("form", action=f"/api-settings/{provider}/key")[0]
-    assert not any(parent.tag in {"details", "dialog"} for parent in key_form.ancestors)
+    entry = next(parent for parent in key_form.ancestors if parent.tag == "details")
+    assert "open" in entry.attrs  # Missing key is immediately actionable; configured keys collapse.
     key_input = next(node for node in dom.find("input", name="api_key") if key_form in node.ancestors)
     assert key_input.attrs["type"] == "password" and "value" not in key_input.attrs
     assert any(parent.tag == "label" for parent in key_input.ancestors)
@@ -234,5 +236,21 @@ def test_advanced_links_and_legacy_anchors_remain_available(client):
                    "selected-voice", "selected-video", "pipeline-status"):
         assert dom.find(id=anchor)
     links = {node.attrs.get("href") for node in dom.find("a")}
-    assert {"/", "/sources", "/ai", "/video", "/schedules", "/operations", "/settings",
-            "/ai-settings", "/video-ai-settings", "/video/tts"} <= links
+    assert {"/", "/sources", "/voices", "/schedules", "/operations", "/settings",
+            "/video-ai-settings", "/video/tts"} <= links
+
+
+def test_legacy_editor_redirects_and_configured_keys_collapse_without_calls(client, app):
+    stores = synthetic_stores(app)
+    before = values(app)
+    redirect = client.get("/ai-settings", follow_redirects=False)
+    assert redirect.status_code == 303 and redirect.headers["location"] == "/simple-settings?saved=#selected-ai"
+    dom = Document(client.get("/simple-settings").text)
+    for provider, store in stores.items():
+        panel = dom.find("details", id=provider + "-key-settings")[0]
+        assert "open" not in panel.attrs
+        assert store.key() not in "".join(node for node in dom.find("body")[0].text)
+        assert len(dom.find("form", action=f"/api-settings/{provider}")) == 1
+        assert len([n for n in dom.nodes if n.attrs.get("data-settings-open") == "api-costs-" + provider]) == 1
+    assert not dom.find("a", href="/dashboard") and not dom.find("a", href="/ai-settings")
+    assert values(app) == before

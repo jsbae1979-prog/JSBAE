@@ -24,36 +24,11 @@ from .youtube_routes import connection_context
 router = APIRouter()
 
 
-def _settings_overview(context: dict) -> list[dict]:
-    """Compact presentation of existing observations; never checks a provider."""
-    config, stages = context["production_config"], context["pipeline_stages"]
-    rows = []
-    for key, label, index, anchor in (("search", "뉴스 검색", 0, "selected-ai"),
-                                     ("analysis", "분석·대본", 1, "selected-ai"),
-                                     ("voice", "음성", 3, "selected-voice"),
-                                     ("video", "영상", 4, "selected-video")):
-        stage = stages[index]
-        state = stage["status_label"]
-        blocked = stage["status_code"] in {"unavailable", "setup", "install", "login", "limited", "check"}
-        if key == "search" and stage["status_code"] == "unavailable":
-            state = "BLOCKED · 실제 검색 확인 필요"
-        elif key == "analysis" and stage["provider"] in context["api_connections"]:
-            api = context["api_connections"][stage["provider"]]
-            state = ("API Key 등록 필요" if not api["key"]["configured"] else
-                     "실제 API 연결 미검증" if not api["authentication_verified"] else
-                     "실행 조건 확인됨" if stage["availability"] == "분석·대본 실행 조건 확인됨" else "승인·한도 확인 필요")
-            blocked = not api["authentication_verified"] or stage["availability"] != "분석·대본 실행 조건 확인됨"
-        elif key == "voice" and config["voice"] != "offline-silence":
-            state = ("최근 설치 검사 실패" if stage["status_code"] == "unavailable" else
-                     "설치 감지 · 생성 시 확인" if config["voice_available"] else "설치·연결 필요")
-        rows.append({"key": key, "label": label, "engine": stage["provider_label"], "state": state,
-                     "action": "#" + anchor, "blocked": blocked})
-    return rows
-
-
 def settings_page(request: Request, saved: str = ""):
     context = production_context(request)
-    notices = {"true": "제작 구성을 저장했습니다.", "api": "API 승인·예산을 저장했습니다.",
+    notices = {"legacy": "기존 AI 설정을 저장했습니다. 현재 제작 구성을 확인하세요.",
+               "legacy-check": "기존 연결 점검 기록을 저장했습니다. 현재 API 연결은 아래에서 확인하세요.",
+               "legacy-prices": "기존 단가 기록을 저장했습니다.", "true": "제작 구성을 저장했습니다.", "api": "API 승인·예산을 저장했습니다.",
                "youtube-client": "Google 앱 설정을 안전하게 저장했습니다. 다음으로 계정을 연결하세요.",
                "youtube-login": "Google 로그인 창을 열었습니다. 승인 후 이 화면을 새로고침하세요.",
                "instagram-config": "로그인 연결 주소를 저장했습니다. 다음으로 Instagram 계정을 연결하세요.",
@@ -62,7 +37,7 @@ def settings_page(request: Request, saved: str = ""):
                "search-check": "검색 검증을 마쳤습니다. 기사 발행일·사실·대본은 별도 검토가 필요합니다.",
                "key": "API Key를 저장했습니다. 실제 연결은 미검증입니다.", "key_removed": "저장된 API Key를 삭제했습니다."}
     response = page(request, "simple_settings.html", active="simple-settings", saved=saved,
-                    saved_notice=notices.get(saved, ""), settings_overview=_settings_overview(context),
+                    saved_notice=notices.get(saved, ""),
                     rates=RATE_CHOICES, pauses=PAUSE_CHOICES, youtube=connection_context(request),
                     instagram=instagram_context(request), **context)
     response.headers["Cache-Control"] = "no-store"

@@ -54,6 +54,10 @@ def render_panel(provider="openai", *, settings=None, token_limit=0, **changes):
         key=provider, api_connections={provider: api}, csrf_field=lambda: "CSRF-FIELD",
         legacy_api_settings=SimpleNamespace(monthly_token_limit=token_limit, timeout=30),
     )
+    html += templates.env.get_template("api_budget.html").render(
+        key=provider, api=api, api_label="OpenAI API" if provider == "openai" else "Claude API",
+        csrf_field=lambda: "CSRF-FIELD",
+        legacy_api_settings=SimpleNamespace(monthly_token_limit=token_limit, timeout=30))
     return html, Panel(html)
 
 
@@ -61,13 +65,15 @@ def render_panel(provider="openai", *, settings=None, token_limit=0, **changes):
 def test_key_registration_is_direct_and_costs_use_one_accessible_dialog(provider):
     html, panel = render_panel(provider)
     field, parents = panel.field("api_key")
-    assert parents == ("form",) and field["type"] == "password" and "value" not in field
+    assert parents == ("details", "form") and field["type"] == "password" and "value" not in field
     assert field["id"] in html and field["aria-describedby"] in html
     assert len(panel.dialogs) == 1 and panel.dialogs[0][0]["aria-labelledby"] in html
-    assert f'data-settings-open="api-costs-{provider}"' in html and "data-settings-close" in html
+    assert panel.dialogs[0][0]["id"] == f"api-costs-{provider}" and "data-settings-close" in html
     assert all("form" not in parents for _, parents in panel.forms)
     assert all("data-settings-form" in attrs and "data-settings-watch" in attrs for attrs, _ in panel.forms)
-    assert len(panel.details) == 1 and "details" not in panel.details[0][1]
+    assert len(panel.details) == 3
+    key_details = next(attrs for attrs, _ in panel.details if attrs.get("id") == provider + "-key-settings")
+    assert "open" in key_details
     assert "실제 연결 미확인" in html and "실제 웹 검색 미검증 · BLOCKED" in html
 
 
@@ -114,11 +120,11 @@ def test_unknown_reservation_is_prominent_outside_dialog():
 
 def test_missing_rates_are_explained_and_saved_zero_is_not_dropped():
     html, panel = render_panel()
-    assert "단가 입력이 필요합니다" in html and "open" in panel.details[0][0]
+    assert "단가 입력이 필요합니다" in html and "open" in next(attrs for attrs, _ in panel.details if attrs.get("id") == "openai-price-settings")
     config = APISettings("openai", "gpt-4.1-mini", input_price_per_1m=Decimal(0),
                          output_price_per_1m=Decimal(2), search_price_per_1k=Decimal(10))
     html, panel = render_panel(settings=config)
-    assert "단가 입력이 필요합니다" not in html and "open" not in panel.details[0][0]
+    assert "단가 입력이 필요합니다" not in html and "open" not in next(attrs for attrs, _ in panel.details if attrs.get("id") == "openai-price-settings")
     assert panel.field("input_price_per_1m")[0]["value"] == "0"
 
 

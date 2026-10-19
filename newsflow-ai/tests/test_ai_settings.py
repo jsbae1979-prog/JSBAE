@@ -124,18 +124,22 @@ def test_service_records_usage_and_maps_auth_failure(app, store):
 
 def test_gui_saves_settings_and_key_without_echo(client, app, monkeypatch):
     app.state.ai_keys = AIKeyStore(app.state.config.data_dir, FakeCipher())
+    app.state.api_keys["openai"] = app.state.ai_keys
+    app.state.autopilot_backend.intelligence.api_key_stores["openai"] = app.state.ai_keys
     monkeypatch.delenv("NEWSFLOW_AI_API_KEY", raising=False)
     page = client.get("/ai-settings")
-    assert page.status_code == 200 and "외부 AI 사용 불가" in page.text and 'type="password"' in page.text
+    assert page.status_code == 200 and page.url.path == "/simple-settings"
+    assert "뉴스·대본 AI" in page.text and 'type="password"' in page.text
     token = csrf(client)
     assert client.post("/ai-settings", data={"csrf_token": token, "provider": "openai", "model": "gpt-4o-mini",
                                              "approved": "true", "monthly_token_limit": "0", "timeout": "20"}).status_code == 422
     saved = client.post("/ai-settings", data={"csrf_token": token, "provider": "openai", "model": "gpt-4o-mini",
                                               "approved": "true", "monthly_token_limit": "100000", "timeout": "30"})
-    assert saved.status_code == 200 and "AI 설정을 저장했습니다" in saved.text
+    assert saved.status_code == 200 and "기존 AI 설정을 저장했습니다" in saved.text
     stored = client.post("/ai-settings/key", data={"csrf_token": token, "api_key": KEY})
-    assert stored.status_code == 200 and KEY not in stored.text and "계정 보호 저장소" in stored.text
-    assert "외부 AI 사용 가능" in client.get("/ai-settings").text
+    assert stored.status_code == 200 and KEY not in stored.text and "API Key를 저장했습니다" in stored.text
+    assert external_ready(app.state.sessions, app.state.ai_keys)["ready"] is True
+    assert "외부 AI 사용 가능" not in client.get("/ai-settings").text
     with app.state.sessions() as session:
         assert KEY not in json.dumps([(s.key, s.value) for s in session.scalars(select(AppSetting))], ensure_ascii=False)
     assert client.post("/ai-settings/key", data={"csrf_token": token, "api_key": "short"}).status_code == 422
@@ -146,6 +150,8 @@ def test_gui_saves_settings_and_key_without_echo(client, app, monkeypatch):
 
 def test_gui_connection_check_uses_zero_token_lookup_and_stores_safe_result(client, app):
     app.state.ai_keys = AIKeyStore(app.state.config.data_dir, FakeCipher())
+    app.state.api_keys["openai"] = app.state.ai_keys
+    app.state.autopilot_backend.intelligence.api_key_stores["openai"] = app.state.ai_keys
     app.state.ai_keys.save(KEY)
     token = csrf(client)
     client.post("/ai-settings", data={"csrf_token": token, "provider": "openai", "model": "gpt-4o-mini",
@@ -158,7 +164,10 @@ def test_gui_connection_check_uses_zero_token_lookup_and_stores_safe_result(clie
 
     app.state.ai_provider = Checker()
     checked = client.post("/ai-settings/check", data={"csrf_token": token})
-    assert checked.status_code == 200 and "연결 성공" in checked.text and "토큰 사용 0" in checked.text
+    assert checked.status_code == 200 and checked.url.path == "/simple-settings"
+    with app.state.sessions() as session:
+        result = json.loads(session.get(AppSetting, "ai_last_check").value)
+        assert result["ok"] and "토큰 사용 0" in result["message"]
 
     class Broken:
         def check_connection(self, options):
@@ -166,7 +175,10 @@ def test_gui_connection_check_uses_zero_token_lookup_and_stores_safe_result(clie
 
     app.state.ai_provider = Broken()
     failed = client.post("/ai-settings/check", data={"csrf_token": token})
-    assert failed.status_code == 200 and "AI 인증에 실패" in failed.text
+    assert failed.status_code == 200
+    with app.state.sessions() as session:
+        result = json.loads(session.get(AppSetting, "ai_last_check").value)
+        assert not result["ok"] and "AI 인증에 실패" in result["message"]
     with app.state.sessions() as session:
         assert "SECRET" not in session.get(AppSetting, "ai_last_check").value
     del app.state.ai_provider

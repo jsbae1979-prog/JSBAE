@@ -1,22 +1,22 @@
 {% extends 'base.html' %}
 {% block extra_head %}<link rel="stylesheet" href="/static/css/settings.css">{% endblock %}
 {% block content %}
-<section class="card settings-workspace"><h1>음성 엔진 설정</h1><p><a href="/video">Video Studio로 돌아가기</a></p>
-<h2>무료 로컬 음성</h2><p>Windows SAPI·Heami와 Supertonic 3는 음성 생성 API 비용이 없습니다. Supertonic 상태: {{ '설치됨' if supertonic_ready else '선택적 의존성·모델 설치 필요' }}. 음성 F1~F5, M1~M5는 Video Studio에서 선택합니다.</p>
+<section class="card settings-workspace"><h1>음성 엔진 설정</h1><p><a href="/simple-settings#selected-voice">기본 음성 설정으로 돌아가기</a></p>
+<p>기본 음성은 <a href="/simple-settings#selected-voice">제작 설정</a>에서 선택합니다.</p><details class="settings-advanced"><summary>로컬 음성 이용 조건</summary><h2>무료 로컬 음성</h2><p>Windows SAPI·Heami와 Supertonic 3는 음성 생성 API 비용이 없습니다. Supertonic 상태: {{ '설치됨' if supertonic_ready else '선택적 의존성·모델 설치 필요' }}. 음성 F1~F5, M1~M5는 Video Studio에서 선택합니다.</p>
 <p>Supertonic 코드는 MIT, 모델은 사용 제한이 있는 OpenRAIL-M입니다. 공식 지원은 종료되었습니다. <a href="https://github.com/supertone-oss-archive/supertonic" target="_blank" rel="noopener noreferrer">공식 보관소·라이선스</a>. 음성 복제 기능은 사용하지 않습니다.</p>
 <p>Supertonic의 상업적 이용은 모델 라이선스의 사용 제한 준수를 전제로 가능합니다. 공개 영상에는 AI로 생성한 음성임을 명확히 표시하세요. 모델을 재배포하면 라이선스·고지와 사용 제한도 전달해야 합니다.</p>
-<h2>ElevenLabs — 선택적 외부 API</h2><p>한국어를 지원합니다. 무료 플랜은 비상업용이며 공개할 때 제목에 elevenlabs.io 또는 11.ai 표시가 필요합니다. 상업용 뉴스 영상은 해당 라이선스가 있는 플랜·음성을 확인하세요. <a href="https://elevenlabs.io/pricing" target="_blank" rel="noopener noreferrer">최신 요금표</a>. 무료 제공량을 계정의 실제 잔여량으로 간주하지 않습니다.</p>
+</details><h2>ElevenLabs — 선택적 외부 API</h2><p>한국어를 지원합니다. 무료 플랜은 비상업용이며 공개할 때 제목에 elevenlabs.io 또는 11.ai 표시가 필요합니다. 상업용 뉴스 영상은 해당 라이선스가 있는 플랜·음성을 확인하세요. <a href="https://elevenlabs.io/pricing" target="_blank" rel="noopener noreferrer">최신 요금표</a>. 무료 제공량을 계정의 실제 잔여량으로 간주하지 않습니다.</p>
 <p><a href="https://elevenlabs.io/" target="_blank" rel="noopener noreferrer">ElevenLabs 공식 사이트 · 계정·API Key 관리 ↗</a></p>
-<div class="status-chips" aria-label="ElevenLabs API Key 상태"><span class="status-chip status-chip--{{ 'success' if key.configured else 'error' }}">{{ '✓ API Key 등록됨' if key.configured else '✕ API Key 미등록' }}</span><span class="status-chip status-chip--warning">● 키 등록과 실제 연결 확인은 별개</span></div>
-<p class="hint">Windows 계정 DPAPI로 별도 암호화합니다. 키를 저장해도 계정 조회나 음성 생성을 시작하지 않습니다.</p>
-<form method="post" action="/video/tts/key" autocomplete="off">{{ csrf_field() }}<label>ElevenLabs API 키<input type="password" name="api_key" minlength="20" maxlength="256" required autocomplete="new-password"></label><button>키 보호 저장</button></form>
-<form method="post" action="/video/tts">{{ csrf_field() }}
+<div class="status-chips" aria-label="ElevenLabs API Key 상태"><span class="status-chip status-chip--{{ 'success' if key.configured else 'error' }}">{{ '✓ API Key 등록됨' if key.configured else '✕ API Key 미등록' }}</span></div>
+<p class="hint">키 등록과 실제 연결 확인은 별개입니다. 키 저장은 음성 생성을 실행하지 않습니다.</p>
+<details class="settings-advanced" {% if not key.configured %}open{% endif %}><summary>API Key {{ '변경' if key.configured else '등록' }}</summary><form method="post" action="/video/tts/key" autocomplete="off">{{ csrf_field() }}<label>ElevenLabs API 키<input type="password" name="api_key" minlength="20" maxlength="256" required autocomplete="new-password"></label><button>키 보호 저장</button></form>
+</details><form method="post" action="/video/tts">{{ csrf_field() }}
 <label><input type="checkbox" name="enabled" value="true" {{ 'checked' if config.enabled }}>ElevenLabs 사용 설정 (음성 생성 시 별도 동의 필요)</label>
 <label>계정에서 선택한 음성 ID<input name="voice_id" value="{{ config.voice_id }}" maxlength="100"></label>
 <label>모델<select name="model">{% for model in models %}<option value="{{ model }}" {{ 'selected' if config.model==model }}>{{ model }}</option>{% endfor %}</select></label>
 <label>이번 제작 크레딧 상한<input type="number" name="job_limit" value="{{ config.job_limit }}" min="1" max="10000"></label>
 <label>월 로컬 크레딧 상한<input type="number" name="monthly_limit" value="{{ config.monthly_limit }}" min="1" max="1000000"></label>
 <label>사용 목적<select name="commercial"><option value="true" {{ 'selected' if config.commercial }}>상업적 이용 — 유효한 상업 라이선스 필요</option><option value="false" {{ 'selected' if not config.commercial }}>개인 비상업 검토용 — 무료 플랜 출처 표시 필요</option></select></label>
-<p>한도 조회 실패·잔여량 부족·초과 과금 활성화 시 생성이 차단됩니다. 문자당 2크레딧을 보수적으로 예약하며 실제 청구량과 같다고 표시하지 않습니다. 타임아웃·결과 불명은 자동 재요청하지 않습니다.</p><button>설정 저장 (외부 호출 없음)</button></form>
+<p>한도 조회 실패·잔여량 부족·초과 과금 활성화 시 생성이 차단됩니다. 타임아웃·결과 불명은 자동 재요청하지 않습니다.</p><button>설정 저장 (외부 호출 없음)</button></form>
 <form method="post" action="/video/tts/check">{{ csrf_field() }}<label><input type="checkbox" name="consent" value="true" required>등록된 API 키로 계정 플랜·한도만 조회하는 데 동의합니다.</label><button>계정 한도 확인 (음성 생성 없음)</button></form>
 </section>{% endblock %}

@@ -253,6 +253,7 @@ def production_context(request) -> dict:
                  "message": "아직 연결을 확인하지 않았습니다. 아래 확인 버튼을 눌러 주세요."}
     return {"production_config": config, "pipeline_stages": stages, "provider_statuses": statuses,
             "api_connections": api_connections, "legacy_api_settings": read_settings(sessions),
+            "elevenlabs_config": el, "video_ai_budget": video_gate,
             "acquisition_labels": ACQUISITION_LABELS, "category_labels": CATEGORY_LABELS, "period_labels": PERIOD_LABELS,
             "voice_choices": catalog, "studio_defaults": studio, "elevenlabs_key": elevenlabs_key,
             "model_choices": {name: [{"value": model, "label": model} for model in models]
