@@ -36,3 +36,17 @@ document.querySelectorAll('[data-chart-day]').forEach(button => {
   button.addEventListener('click', show);
   button.addEventListener('mouseenter', show);
 });
+
+// Read-only task details: never write frozen production settings or grant consent.
+const workflowOptions = [...document.querySelectorAll('.workflow-option')];
+workflowOptions.forEach(option => option.addEventListener('toggle', () => {
+  if (option.open) workflowOptions.forEach(other => { if (other !== option) other.open = false; });
+}));
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') workflowOptions.forEach(option => {
+    if (option.open) { option.open = false; option.querySelector('summary').focus(); }
+  });
+});
+document.addEventListener('click', event => {
+  if (!event.target.closest('.workflow-options')) workflowOptions.forEach(option => { option.open = false; });
+});
