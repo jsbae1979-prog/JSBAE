@@ -1,0 +1,22 @@
+{
+  "base": "75077729adcbe67fcf9954462485405747db621d",
+  "tested_sha": "f8326f78e7ed15e9719c3cd174cbbea255dce846",
+  "unchanged": {
+    "src/newsflow/db": true,
+    "src/newsflow/intelligence": true,
+    "src/newsflow/news": true,
+    "src/newsflow/video": true,
+    "src/newsflow/publishing": true,
+    "src/newsflow/oauth": true,
+    "src/newsflow/autopilot": true,
+    "run.bat": true,
+    "pyproject.toml": true,
+    "requirements-dev.lock": true
+  },
+  "ui_changes": [
+    "existing /create link wording",
+    "same-task successful POST refresh",
+    "saved-form notification before same-document reload"
+  ],
+  "operational_data": "not opened; no operating process restart; new test TEMP only"
+}
