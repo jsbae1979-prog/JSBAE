@@ -120,5 +120,7 @@
       "sha256": "9f217459f571419e51ca9dfb105d81e186bc22ab784e708bfccef0c31e901f3e",
       "bytes": 121465
     }
-  ]
+  ],
+  "tested_code_sha": "74f1c70a06be09dcd82bd355d6711255115f317b",
+  "report_time_kst": "2026-10-19T17:22:30+09:00"
 }
