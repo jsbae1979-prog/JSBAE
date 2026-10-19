@@ -1,0 +1,24 @@
+{
+  "sha": "0b19b2fd6e2fa3c5223083bcd631007d3e1450f7",
+  "environment": "Cloud Linux Chromium; not Windows",
+  "viewports": [
+    "1920x1080",
+    "1366x768",
+    "390x844"
+  ],
+  "synthetic": true,
+  "screenshots": [
+    "analytics-1366.png",
+    "analytics-1920.png",
+    "analytics-390.png",
+    "script-1366.png",
+    "script-1920.png",
+    "script-390.png",
+    "video-1366.png",
+    "video-1920.png",
+    "video-390.png"
+  ],
+  "scroll": "Some captures scrolled to tested controls; raw viewport pixels",
+  "video": "2s silent synthetic H264/AAC 1080x1920, no real voice or anchor",
+  "remote_changes": false
+}

@@ -1,0 +1,26 @@
+{
+  "code_sha": "0b19b2fd6e2fa3c5223083bcd631007d3e1450f7",
+  "pytest": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "291",
+    "time": "131.170",
+    "timestamp": "2026-10-19T09:10:02.433664+00:00",
+    "hostname": "83de6bfc3517"
+  },
+  "warnings": [
+    "Existing Starlette TestClient httpx deprecation"
+  ],
+  "ruff": "PASS",
+  "pip_check": "PASS",
+  "diff_check": "PASS",
+  "paid_api_calls": 0,
+  "real_oauth_sns_calls": 0,
+  "windows": "NOT VERIFIED",
+  "python_314": "NOT VERIFIED",
+  "whole_suite": "NOT RUN; previously recorded 57 FAIL preserved",
+  "browser": "Cloud Chromium 151; three viewports, Fake OpenAI/Claude flows; outside requests rejected and none observed",
+  "sample_mp4": "2s silent H264/AAC 1080x1920, decoded fade frames and Chromium playback PASS"
+}
