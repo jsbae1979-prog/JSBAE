@@ -1,0 +1,12 @@
+{
+  "sha": "be0707a97edcd4a919fd7c1303a3964f3972eaef",
+  "environment": "Cloud Linux / Python 3.12.14 / Chromium 151",
+  "data": "isolated synthetic UI preview; silent MP4; external services blocked",
+  "viewports": [
+    "1920x1080",
+    "1366x768",
+    "390x844"
+  ],
+  "reference_image": "Generated concept, 1672x941, synthetic concept data; not an application screenshot",
+  "windows_verified": false
+}
