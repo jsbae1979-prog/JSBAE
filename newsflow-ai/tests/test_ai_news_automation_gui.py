@@ -69,11 +69,14 @@ def test_home_policy_change_has_matching_readiness_and_notice_without_execution(
     assert states["rss"]["supported"] is True
     assert states["rss"]["title"] == "RSS 분석·대본 경로 지원"
     assert "현재 로그인·사용 가능 상태를 보장하지 않습니다" in states["rss"]["detail"]
-    assert "RSS 확보 → 같은 AI" in states["rss"]["notice"]
+    assert "RSS 자료 확인" in states["rss"]["notice"]  # Unsaved provider defaults to Offline.
     assert states["ai_web"]["supported"] is False
     assert states["hybrid"]["title"] == "AI 웹 뉴스 조사 BLOCKED"
     assert 'data-home-policy-title>AI 웹 뉴스 조사 BLOCKED' in home
-    assert 'data-home-policy-notice' in home and 'data-home-policy-detail' in home
+    assert 'data-home-policy-detail' in home
+    # Dashboard folds details; the full creation screen retains the execution notice.
+    create = client.get('/create').text
+    assert 'data-home-policy-notice' in create and 'data-home-policy-detail' in create
     script = client.get("/static/js/home_production.js").text
     assert 'acquisitionChoice.addEventListener("change"' in script
     assert 'for (const key of ["title", "detail", "notice"])' in script
@@ -120,7 +123,7 @@ def test_one_home_request_preserves_choices_and_requires_explicit_consent(
         "mode": "guided", "source": "feeds", "duration": duration, "platform": "instagram",
         "content_mode": "real", "ai_mode": provider, "ai_model": model, "voice": "supertonic:F1",
         "acquisition_policy": "rss", "category": "it", "period": "24h", "external_consent": True,
-        "request_id": parse_context(flow)["request_id"],
+        "request_id": parse_context(flow)["request_id"], "news_usage": "STANDARD",
     }
     assert settings(app)["studio_provider"] == "offline"  # job creation never rewrites defaults
 

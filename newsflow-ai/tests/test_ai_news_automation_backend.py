@@ -208,7 +208,11 @@ def test_offline_keeps_local_flow_and_explicit_policy(automation):
     job = settled(coordinator, identifier)
     assert job["status"] == "waiting_review" and job["current_stage"] == "script"
     assert job["external_consent"] is False
-    assert len(ai.calls) == 2
+    assert ai.calls == []  # Offline uses the accepted local topic path, never a CLI/API.
+    assert job["script_method"] == "local_topic_template"
+    with sessions() as session:
+        draft = session.get(ContentDraft, job["content_draft_id"])
+        assert draft.review_status == "review_required"
     with sessions() as session:
         assert session.scalar(select(AIUsage)) is None
 
@@ -300,4 +304,55 @@ def test_restart_distinguishes_success_failure_and_unknown_without_replay(automa
     assert coordinator.recover() == 1
     recovered = coordinator.snapshot(identifier)
     assert recovered["error_code"] == expected and recovered["retryable"] is retryable
+    assert len(ai.calls) == 2
+
+
+@pytest.mark.parametrize("provider", ["claude_code", "codex"])
+def test_legacy_local_job_does_not_acquire_cli_calls(automation, monkeypatch, provider):
+    coordinator, backend, ai, sessions = automation
+    run = coordinator._run
+
+    def legacy_run(identifier):
+        with sessions.begin() as session:
+            row = session.get(AutopilotJob, identifier)
+            request = dict(row.stage_results["request"])
+            request.pop("script_method")
+            row.stage_results = {**row.stage_results, "request": request}
+        run(identifier)
+
+    monkeypatch.setattr(coordinator, "_run", legacy_run)
+    identifier = start(coordinator, provider)
+    job = settled(coordinator, identifier)
+    assert job["status"] == "waiting_review" and job["script_method"] == "local_topic_template"
+    assert ai.calls == [] and coordinator.recover() == 0
+    with sessions() as session:
+        context = coordinator._context(session, session.get(AutopilotJob, identifier))
+    restored = backend.execute("script", context, Event(), lambda *_: None, lambda *_: None)
+    assert restored["content_draft_id"] == job["content_draft_id"] and ai.calls == []
+
+
+@pytest.mark.parametrize("provider", ["claude_code", "codex"])
+def test_cli_verified_is_blocked_before_collection_or_inference(automation, provider):
+    coordinator, _, ai, sessions = automation
+    job = settled(coordinator, start(coordinator, provider, news_usage="VERIFIED"))
+    assert job["status"] == "failed" and job["error_code"] == "news_evidence_required"
+    assert job["retryable"] is False and ai.calls == []
+    with sessions() as session:
+        assert session.scalar(select(NewsArticle)) is None
+        assert session.scalar(select(IntelligenceRun)) is None
+
+
+@pytest.mark.parametrize("field,value", [("ai_model", "different-model"), ("job_id", "different-job"),
+                                         ("consented_at", "different-consent")])
+@pytest.mark.parametrize("stage", ["select", "script"])
+def test_cli_resume_rejects_mismatched_saved_binding(automation, stage, field, value):
+    coordinator, backend, ai, sessions = automation
+    identifier = start(coordinator)
+    job = settled(coordinator, identifier)
+    assert job["status"] == "waiting_review"
+    with sessions() as session:
+        context = coordinator._context(session, session.get(AutopilotJob, identifier))
+    context[field] = value
+    with pytest.raises(BackendError):
+        backend.execute(stage, context, Event(), lambda *_: None, lambda *_: None)
     assert len(ai.calls) == 2

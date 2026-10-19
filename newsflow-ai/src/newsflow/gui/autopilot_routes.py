@@ -164,6 +164,8 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
         rss_notice = ("RSS 자료 → 선택한 API 분석·대본 → 선택한 대본 검토 정책 → 영상 제작. "
                       "분석과 대본은 별도 사용량·비용이 발생하며 자동 대체하지 않습니다."
                       if provider in {"openai", "claude_api"} else
+                      "RSS 확보 → 같은 AI 분석·대본 → 선택한 대본 검토 정책 → 영상 제작. 실행별 동의가 필요합니다."
+                      if provider in {"claude_code", "codex"} else
                       "RSS 자료 확인 → 선택한 대본 검토 정책 → 영상 제작. 실제 처리 엔진은 작업 이력에서 확인하세요.")
     cached = getattr(request.app.state, "claude_status" if provider == "claude_code" else "codex_status", {})
     auth_checked = provider == "offline" or (provider in {"claude_code", "codex"}

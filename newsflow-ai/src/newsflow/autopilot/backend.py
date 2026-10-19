@@ -191,8 +191,8 @@ class PipelineBackend:
         return identifiers
 
     def _collect(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
-        if ctx.get("script_method") == "api_grounded_v1" and ctx.get("news_usage") == "VERIFIED":
-            raise BackendError("독립 사실 검증은 지원하지 않아 API 요청 전에 중단했습니다.",
+        if ctx.get("script_method") in {"api_grounded_v1", "cli_grounded_v1"} and ctx.get("news_usage") == "VERIFIED":
+            raise BackendError("독립 사실 검증은 지원하지 않아 AI 요청 전에 중단했습니다.",
                                code="news_evidence_required", retryable=False)
         if ctx.get("acquisition_policy") is not None:
             try:
@@ -372,7 +372,14 @@ class PipelineBackend:
             raise BackendError("제작할 뉴스가 없습니다. 다른 출처로 다시 시도하세요.",
                                code="no_eligible_articles" if ctx.get("unified") else "no_articles")
         api_script = ctx.get("script_method") == "api_grounded_v1"
+        cli_script = ctx.get("script_method") == "cli_grounded_v1"
         assessment = None
+        if cli_script:
+            if ctx.get("ai_mode") not in {"claude_code", "codex"} or not ctx.get("unified"):
+                raise BackendError(code="ai_request_stopped", retryable=False)
+            assessment = assess_news_usage(self.intelligence.evidence_for(candidates), ctx["news_usage"])
+            if assessment["approach"] == "blocked":
+                raise BackendError(assessment["message"], code="news_evidence_required", retryable=False)
         if api_script:
             # New API jobs retain their selected adapter. Legacy jobs without this durable
             # request marker keep their accepted local path and never acquire new paid stages.
@@ -380,7 +387,7 @@ class PipelineBackend:
             if assessment["approach"] == "blocked":
                 raise BackendError(assessment["message"], code="news_evidence_required", retryable=False)
             candidates = assessment["preferred_article_ids"]
-        elif ctx.get("news_usage") and (ctx["source"] != "sample" or ctx["news_usage"] == "VERIFIED"):
+        elif not cli_script and ctx.get("news_usage") and (ctx["source"] != "sample" or ctx["news_usage"] == "VERIFIED"):
             return self._select_topic(ctx, candidates, cancel, progress, save)
         analysis_id = ctx.get("analysis_run_id")
         selection_method = "rss_heuristic"
@@ -397,7 +404,8 @@ class PipelineBackend:
                     candidates = [a["id"] for a in previous.evidence["articles"]]
                     if previous.kind != "analysis" or previous.provider != ai_mode:
                         raise BackendError(code="select_failed", retryable=False)
-                    if api_script and not self._api_run_matches(previous, ctx):
+                    if ((api_script and not self._api_run_matches(previous, ctx))
+                            or (cli_script and not self._cli_run_matches(previous, ctx))):
                         raise BackendError(code="select_failed", retryable=False)
             else:
                 try:
@@ -445,6 +453,17 @@ class PipelineBackend:
             and run.options.get("model") == ctx.get("ai_model")
             and run.evidence.get("script_method") == "api_grounded_v1"
             and run.evidence.get("news_usage") == ctx.get("news_usage")
+        )
+
+    @staticmethod
+    def _cli_run_matches(run: IntelligenceRun, ctx: dict) -> bool:
+        """Only reuse the exact consented job/model; old local records cannot become CLI runs."""
+        return (
+            run.provider == ctx.get("ai_mode")
+            and run.options.get("model") == ctx.get("ai_model")
+            and run.options.get("autopilot_job_id") == ctx.get("job_id")
+            and run.options.get("external_consent") is True
+            and run.options.get("consented_at") == ctx.get("consented_at")
         )
 
     def _select_topic(self, ctx: dict, candidates: list[int], cancel: Event,
@@ -633,6 +652,7 @@ class PipelineBackend:
             return self._topic_script(ctx, cancel, progress, save)
         ai_mode = ctx.get("ai_mode", "offline")
         api_script = ctx.get("script_method") == "api_grounded_v1"
+        cli_script = ctx.get("script_method") == "cli_grounded_v1"
         if ctx.get("content_draft_id"):
             with self.sessions() as session:
                 draft = session.get(ContentDraft, ctx["content_draft_id"])
@@ -644,6 +664,10 @@ class PipelineBackend:
                     if api_script:
                         run = session.get(IntelligenceRun, draft.run_id)
                         if not run or run.status != "success" or not self._api_run_matches(run, ctx):
+                            raise BackendError(code="ai_request_stopped", retryable=False)
+                    if cli_script:
+                        run = session.get(IntelligenceRun, draft.run_id)
+                        if not run or run.status != "success" or not self._cli_run_matches(run, ctx):
                             raise BackendError(code="ai_request_stopped", retryable=False)
                     return self._draft_summary(draft, ai_mode, ctx)
             raise BackendError("저장된 대본과 선택 뉴스가 일치하지 않습니다.", retryable=False)
@@ -659,6 +683,8 @@ class PipelineBackend:
                         raise BackendError("대본과 선택 뉴스가 일치하지 않습니다.", retryable=False)
                     run = session.get(IntelligenceRun, script_id)
                     if api_script and (not run or run.status != "success" or not self._api_run_matches(run, ctx)):
+                        raise BackendError(code="ai_request_stopped", retryable=False)
+                    if cli_script and (not run or run.status != "success" or not self._cli_run_matches(run, ctx)):
                         raise BackendError(code="ai_request_stopped", retryable=False)
                     save("content_draft_id", completed.id)
                     return self._draft_summary(completed, ai_mode, ctx)
@@ -687,7 +713,8 @@ class PipelineBackend:
                     raise BackendError("분석 이력과 선택 뉴스가 일치하지 않습니다.", retryable=False)
                 elif run.status != "success":
                     raise BackendError("이전 분석 작업의 완료를 확인하지 못했습니다.", retryable=False, outcome_unknown=True)
-                elif api_script and not self._api_run_matches(run, ctx):
+                elif ((api_script and not self._api_run_matches(run, ctx))
+                      or (cli_script and not self._cli_run_matches(run, ctx))):
                     raise BackendError(code="ai_request_stopped", retryable=False)
         ai_mode = self._ai_mode(ctx)
         speech = self._speech(ctx)

@@ -273,6 +273,10 @@ class AutopilotCoordinator:
                 raise AutopilotError("제작할 AI와 모델 설정을 확인하세요.") from None
             request.update(script_method="api_grounded_v1", ai_model=model,
                            external_consent=True, consented_at=request.get("consented_at") or utcnow().isoformat())
+        if content_mode == "real" and ai_mode in {"claude_code", "codex"}:
+            # Only newly consented jobs opt into the selected CLI. Persisted local-topic
+            # jobs must not acquire external calls after an application update/restart.
+            request["script_method"] = "cli_grounded_v1"
         if request_id is not None:
             self._id(request_id)
         with self.guard:

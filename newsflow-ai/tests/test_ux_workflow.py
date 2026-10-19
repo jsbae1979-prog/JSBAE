@@ -108,7 +108,7 @@ def test_available_local_voice_is_forwarded_without_new_provider_settings(client
     assert response.status_code == 303
     assert start.call_args.kwargs == {
         "mode": "guided", "source": "sample", "duration": 45, "platform": "youtube",
-        "content_mode": "trial", "ai_mode": "offline", "voice": "supertonic:F1",
+        "content_mode": "trial", "ai_mode": "offline", "voice": "supertonic:F1", "news_usage": "STANDARD",
     }
 
 
@@ -123,11 +123,12 @@ def test_openai_without_existing_approval_stops_before_collection(client, app):
 
 
 def test_stored_paid_approval_still_requires_per_job_transfer_consent(client, app, monkeypatch):
-    from newsflow.gui import autopilot_routes
 
     enabled_source(app)
     save(app, studio_provider="openai", video_default_voice="offline-silence")
-    monkeypatch.setattr(autopilot_routes, "external_ready", lambda *_: {"ready": True})
+    readiness = app.state.autopilot_backend.intelligence.api_readiness
+    monkeypatch.setattr(app.state.autopilot_backend.intelligence, "api_readiness",
+                        lambda *args, **kwargs: {**readiness(*args, **kwargs), "ready": True})
     start = Mock(return_value="test-job")
     monkeypatch.setattr(app.state.autopilot, "start", start)
     response = client.post("/autopilot/quick-start", data={

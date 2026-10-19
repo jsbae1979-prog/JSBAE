@@ -84,13 +84,18 @@ def test_pages_render_default_off_and_keep_six_main_menus(studio):
     assert home.status_code == 200 and "기본 모드 · 로컬 FFmpeg" in home.text and "AI 고품질 모드" in home.text
     assert "AI 영상 유료 생성 승인이 저장되지 않았습니다." in home.text and "테스트 전용 Fake 공급자" in home.text
     nav = home.text.split('aria-label="주 메뉴"', 1)[1].split("</nav>", 1)[0]
-    assert nav.count("<a ") == 6
+    assert nav.count("<a ") == 7
+    for href in ("/", "/news", "/ai", "/videos", "/queue", "/analytics", "/simple-settings"):
+        assert f'href="{href}"' in nav
     settings = client.get("/video-ai-settings")
-    assert settings.status_code == 200 and "사용 안 함 (기본 FFmpeg 제작만)" in settings.text and STYLE_GUARD in settings.text
-    assert "NOT VERIFIED" in settings.text and "Authorization: Key" in settings.text and "video.url" in settings.text
+    assert settings.status_code == 200 and 'name="provider" value="off"' in settings.text
+    assert 'href="/simple-settings#selected-video"' in settings.text
+    assert "모델 등록·가격 확인 (고급 관리)" in settings.text
+    assert "공급사에서 확인한 값만 입력하세요" in settings.text
+    assert "Authorization: Key" not in settings.text and "video.url" not in settings.text
     assert "kling-video/v3.0-turbo/text-to-video" in settings.text and "KEY_ID" not in settings.text
     studio_page = client.get(f"/video?draft_id={draft_id}")
-    assert f'href="/video/ai?draft_id={draft_id}"' in studio_page.text and "외부 영상 API 없음" in studio_page.text
+    assert f'href="/video/ai?draft_id={draft_id}"' in studio_page.text and 'action="/video/render"' in studio_page.text
     assert 'href="/video-ai-settings"' in client.get("/simple-settings").text
 
 
@@ -114,13 +119,16 @@ def test_post_requires_csrf_and_refusals_carry_the_fixed_detail(studio):
 def test_key_form_stores_through_dpapi_store_and_never_renders_the_key(studio, monkeypatch):
     app, client, _provider, _draft = studio
     app.state.video_ai.keys._cipher = FakeCipher()
-    monkeypatch.setattr("newsflow.intelligence.credentials.sys.platform", "win32")
+    from types import SimpleNamespace
+
+    # Isolate the key-store platform branch; never change stdlib sys.platform on Linux.
+    monkeypatch.setattr("newsflow.intelligence.credentials.sys", SimpleNamespace(platform="win32"))
     secret = "hf-test-key-ABCDEFGH12345678"
     refused = post(client, "/video-ai-settings/key", {"api_key": "has space key value"})
     assert refused.status_code == 422 and "open.higgsfield.ai" in refused.json()["detail"]
     assert post(client, "/video-ai-settings/key", {"api_key": secret}).status_code == 303
     page = client.get("/video-ai-settings").text
-    assert secret not in page and "저장됨 (계정 보호 저장소)" in page
+    assert secret not in page and "저장됨 (비밀값 비표시)" in page
     assert (app.state.config.data_dir / "video-ai-key.dpapi").is_file()
     assert not (app.state.config.data_dir / "ai-key.dpapi").exists()
     assert post(client, "/video-ai-settings/key/clear").status_code == 303

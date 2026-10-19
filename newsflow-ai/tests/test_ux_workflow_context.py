@@ -136,12 +136,13 @@ def test_invalid_context_does_not_run_ai(client, app, update):
 
 
 def test_different_openai_model_requires_consent_without_replacement(client, app, monkeypatch):
-    from newsflow.gui import autopilot_routes
 
     article(app)
     write_studio_settings(app.state.sessions, "openai", "gpt-4o")
     set_values(app, video_default_voice="offline-silence")
-    monkeypatch.setattr(autopilot_routes, "external_ready", lambda *_: {"ready": True})
+    readiness = app.state.autopilot_backend.intelligence.api_readiness
+    monkeypatch.setattr(app.state.autopilot_backend.intelligence, "api_readiness",
+                        lambda *args, **kwargs: {**readiness(*args, **kwargs), "ready": True})
     monkeypatch.setattr(app.state.autopilot, "start", lambda **kw: pytest.fail("wrong model auto-start"))
     response = client.post("/autopilot/quick-start", data={
         "csrf_token": csrf(client), "source": "feeds", "acquisition_policy": "rss", "duration": 45,

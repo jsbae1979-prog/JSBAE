@@ -39,10 +39,11 @@ def test_wizard_is_optional_and_all_core_menus_remain(client):
         assert result.status_code == 200
         assert "script-src 'self'" in result.headers['content-security-policy']
     home = client.get('/').text
-    assert '제작 시작' in home
+    assert 'action="/autopilot/quick-start"' in home and '내 영상' in home
     for path in ['/', '/simple-settings']:
         assert f'href="{path}"' in home
-    assert '고급 관리' in client.get('/simple-settings').text
+    settings = client.get('/simple-settings').text
+    assert 'id="advanced"' in settings and '운영 관리' in settings
 
 
 def test_wizard_atomic_commit_and_existing_news_preserved(client, app, ready):
