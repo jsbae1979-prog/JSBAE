@@ -14,17 +14,21 @@
 'wallet':'M3 6h17v15H3V6zm0 0V4h14v2M20 11h-6v5h6M16 13.5h.01',
 'accounts':'M10 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0M2 21v-3a5 5 0 0 1 10 0v3M15 4a3 3 0 0 1 0 6M16 14a5 5 0 0 1 6 5v2',
 'arrow':'M5 12h14m-6-6 6 6-6 6',
-'folder':'M3 6h7l2 3h9v11H3V6z'
+'folder':'M3 6h7l2 3h9v11H3V6z',
+'chart':'M4 3v18h18M9 17v-5M14 17V7M19 17V3',
+'news':'M4 3h14v18H4zM18 7h3v14h-3M8 7h6M8 11h6M8 15h6',
+'edit':'m4 16 12-12 4 4-12 12H4v-4zM14 6l4 4'
 } -%}
 <svg class="ui-icon" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="{{ paths[name] }}"/></svg>
 {%- endmacro %}
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% block title %}NewsFlow AI{% endblock %}</title><link rel="stylesheet" href="/static/css/app.css"><link rel="stylesheet" href="/static/css/easy.css"><link rel="stylesheet" href="/static/css/workspace.css"><link rel="stylesheet" href="/static/css/creator.css"><link rel="stylesheet" href="/static/css/premium.css"><script src="/static/js/creator.js" defer></script><script src="/static/js/app.js" defer></script><script src="/static/js/autopilot.js" defer></script><script src="/static/js/scheduler.js" defer></script><script src="/static/js/video_ai.js" defer></script>{% block extra_head %}{% endblock %}</head>
-<body class="workspace-shell premium-shell"><a class="skip-link" href="#main-content">본문으로 이동</a>
+<body class="workspace-shell premium-shell {{ 'dashboard-shell' if dashboard|default(none) else '' }}"><a class="skip-link" href="#main-content">본문으로 이동</a>
 <header class="workspace-topbar creator-sidebar"><a class="brand" href="/" aria-label="NewsFlow AI 작업실"><span aria-hidden="true"><svg viewBox="0 0 32 32" width="32" height="32"><path fill="#3487ff" d="M3 27V5l6-3 14 17V5l6-3v25l-6 3L9 13v11z"/><path fill="#70b9ff" d="m9 2 20 15v10L9 13z"/></svg></span><span>NewsFlow<b>AI</b></span></a><p class="nav-caption">From News to Video, Automatically.</p><nav aria-label="주 메뉴" class="workspace-nav">
 {% set current_path = request.url.path %}
-{% for href,label,icon,selected in [('/', '홈', 'home', current_path == '/' and not selected_video|default(none)),('/create','쇼츠 만들기','sparkles',current_path == '/create' or current_path.startswith('/autopilot')),('/videos','내 영상','video',current_path in ['/videos','/video','/ai'] or selected_video|default(none)),('/queue','게시','send',current_path.startswith('/publishing') or current_path == '/queue'),('/simple-settings','설정','settings',active == 'simple-settings')] %}
-<a href="{{ href }}" class="{{ 'active' if selected }}" {% if selected %}aria-current="page"{% endif %}><span aria-hidden="true">{{ ui_icon(icon) }}</span>{{ label }}</a>{% endfor %}</nav>
+{% for href,label,icon,selected in [('/', '대시보드', 'home', current_path == '/' and not selected_video|default(none)),('/news','뉴스 수집','news',current_path.startswith('/news')),('/ai','AI 대본','edit',current_path == '/ai'),('/videos','영상 제작','video',current_path in ['/videos','/video','/create'] or current_path.startswith('/autopilot') or selected_video|default(none)),('/queue','게시 허브','send',current_path.startswith('/publishing') or current_path == '/queue'),('/#production-activity','제작 활동','chart',false),('/simple-settings','설정 · 자동화','settings',active == 'simple-settings')] %}
+<a href="{{ href }}" class="{{ 'active' if selected }} {{ 'desktop-nav-item' if icon in ['news','chart'] }}" {% if selected %}aria-current="page"{% endif %}><span aria-hidden="true">{{ ui_icon(icon) }}</span>{{ label }}</a>{% endfor %}</nav><a class="sidebar-create" href="/create">{{ ui_icon("sparkles",18) }} 쇼츠 만들기</a>
+{% if dashboard|default(none) %}<section class="dashboard-system" aria-label="제작 설정 요약"><h2>워크플로 상태</h2><a href="/news">{{ ui_icon('news', 18) }} 뉴스 자료 <span>{{ 'RSS 등록됨' if production.rss_ready else '설정 확인' }}</span></a><a href="/simple-settings#connections">{{ ui_icon('sparkles', 18) }} 뉴스·대본 <span>{{ production_config.provider_label }}</span></a><a href="/simple-settings#quality">{{ ui_icon('voice', 18) }} 음성 <span>{{ '설정 보관됨' if production.voice_ready else '준비 필요' }}</span></a><a href="/queue">{{ ui_icon('send', 18) }} 게시 준비 <span>별도 검토</span></a></section>{% endif %}
 <div class="sidebar-bottom"><span class="local-indicator"></span> 내 PC에 보관<p>게시 전, 직접 확인해 주세요.</p><a href="/simple-settings#advanced">고급 도구 ↗</a></div></header>
 {% macro csrf_field() %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endmacro %}
 {% macro badge(status) %}<span class="badge {{ status }}">{{ {'success':'성공','partial':'부분 실패','failed':'실패','running':'수집 중','empty':'활성 출처 없음','interrupted':'중단','idle':'대기'}.get(status,status) }}</span>{% endmacro %}

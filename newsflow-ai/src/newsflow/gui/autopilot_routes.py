@@ -47,6 +47,7 @@ from newsflow.publishing.service import PublishingError, PublishingService, hash
 from newsflow.video.tts import SpeechSettings, TTSError
 
 from .api_settings_routes import connection_status
+from .dashboard_view import dashboard_context
 from .production_context import (
     ACQUISITION_LABELS,
     CATEGORY_LABELS,
@@ -360,8 +361,11 @@ def home(
         recent_videos = completed if show == "videos" else [item for item in completed if item["id"] not in active_render_ids]
         visible_tasks = tasks[:100] if show == "tasks" else active_jobs[:5]
         visible_videos = recent_videos[:100 if show == "videos" else 5]
+        is_dashboard = request.url.path == "/" and not (task or video or guide or show)
+        dashboard = dashboard_context(session, visible_tasks) if is_dashboard else None
         return _page(
-            request, "easy_home.html", active="home", defaults=_defaults(request), ready=ready,
+            request, "creator_dashboard.html" if is_dashboard else "easy_home.html", active="home",
+            dashboard=dashboard, defaults=_defaults(request), ready=ready,
             production=production_summary(request, ready),
             active_jobs=visible_tasks, workspace_tasks=visible_tasks, task_count=len(tasks), active_task_count=len(active_jobs),
             completed=visible_videos, workspace_videos=visible_videos, video_count=len(completed),

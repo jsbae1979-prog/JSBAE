@@ -34,38 +34,7 @@
   {% for label in ['자료 준비','대본 작성','음성·영상 제작','미리보기'] %}<li><span>{{ '%02d'|format(loop.index) }}</span>{{ label }}</li>{% endfor %}
 </ol>
 {% if reference_home and active_jobs %}<div class="premium-activity">{% include 'workspace_tasks_panel.html' %}</div><details class="dashboard-create-drawer" data-home-create-drawer><summary><span>{{ ui_icon('sparkles', 20) }} 새 쇼츠 제작 설정</span><span>설정 열기 +</span></summary>{% endif %}
-  <div class="studio-form-heading"><div><p class="eyebrow">CREATE YOUR NEXT STORY</p><h2 id="production-title" tabindex="-1">{{ "새 쇼츠 만들기" if reference_home else "어떤 뉴스로 만들까요?" }}</h2></div><span class="studio-format">9:16 SHORTS</span></div>
-  <form action="{{ production.action_url }}" method="post" data-easy-form class="quick-production-form">
-    {{ csrf_field() }}<input type="hidden" name="workspace" value="true"><input type="hidden" name="production_options_version" value="2">
-    <div class="quick-production-fields">
-      <label for="quick-source">뉴스 자료<select id="quick-source" name="source"><option value="feeds" {% if entry_source == 'feeds' %}selected{% endif %}>새 뉴스 수집·검색</option><option value="sample" {% if entry_source == 'sample' %}selected{% endif %}>체험 뉴스 · 연습용</option></select></label>
-      <label for="quick-duration">영상 길이<select id="quick-duration" name="duration">{% for duration in [30,45,60] %}<option value="{{ duration }}" {% if entry_duration == duration %}selected{% endif %}>{{ duration }}초</option>{% endfor %}</select></label>
-    </div>
-    <div class="quick-production-fields" data-source-mode="feeds" {% if entry_source == 'sample' %}hidden{% endif %}>
-      <label for="quick-category">뉴스 분야<select id="quick-category" name="category">{% for value,label in category_labels.items() %}<option value="{{ value }}" {% if entry_category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-      <label for="quick-period">뉴스 범위<select id="quick-period" name="period">{% for value,label in period_labels.items() %}<option value="{{ value }}" {% if entry_period == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-    </div>
-    <div class="studio-provider-line"><span>뉴스·대본 AI <strong data-home-ai data-selected-ai="{{ production_config.provider_label }}">{{ 'Offline · 체험용' if entry_source == 'sample' else production_config.provider_label }}</strong></span><a href="/simple-settings#connections">변경·연결 확인 ↗</a></div>
-    <div class="quick-production-fields engine-fields">
-      <label for="quick-voice-method">이번 음성<select id="quick-voice-method" name="voice_method"><option value="local" {% if (entry_flow.initial_voice if entry_flow else ready.voice.name) != 'elevenlabs' %}selected{% endif %}>로컬 · {{ production_config.voice_label if ready.voice.name != 'elevenlabs' else 'Windows / Supertonic 설정 필요' }}</option><option value="elevenlabs" {% if (entry_flow.initial_voice if entry_flow else ready.voice.name) == 'elevenlabs' %}selected{% endif %}>ElevenLabs · AI 음성</option></select></label>
-      <label for="quick-video-method">영상 제작<select id="quick-video-method" name="video_method"><option value="off" {% if (entry_flow.get('initial_video', 'off') if entry_flow else production_config.video_provider) != 'higgsfield' %}selected{% endif %}>기본 영상 · FFmpeg</option><option value="higgsfield" {% if (entry_flow.get('initial_video', 'off') if entry_flow else production_config.video_provider) == 'higgsfield' %}selected{% endif %}>AI 영상 · Higgsfield + FFmpeg</option></select></label>
-    </div>
-    <p class="hint studio-api-note" data-external-voice-note {% if (entry_flow.initial_voice if entry_flow else ready.voice.name) != 'elevenlabs' %}hidden{% endif %}>ElevenLabs 음성은 제작별 외부 전송·유료 사용 동의 후 생성해요.</p>
-    <p class="hint studio-api-note" data-external-video-note {% if (entry_flow.get('initial_video', 'off') if entry_flow else production_config.video_provider) != 'higgsfield' %}hidden{% endif %}>모든 장면을 Higgsfield로 생성해요. 생성·내용 검토·합성 승인이 별도로 필요해요.</p>
-    <label class="check studio-review"><input type="checkbox" name="script_review" value="true" {% if not entry_flow or entry_flow.get('script_review', true) %}checked{% endif %}> 영상 제작 전에 대본 확인하기</label>
-    <p class="hint studio-review-note">생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.</p>
-    <p class="soft-notice studio-connection-notice" data-home-policy-warning data-source-mode="feeds" {% if entry_source == 'sample' or entry_policy == 'rss' or entry_policy_state.supported %}hidden{% endif %}>뉴스 검색 준비가 필요해요. <a href="/simple-settings#connections">AI 연결·사용 승인 확인 →</a></p>
-    <button class="primary production-start-button" type="submit"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m13 3-9 11h7l-1 7 10-12h-7z"/></svg> 쇼츠 만들기 <span aria-hidden="true">→</span></button>
-    <p class="form-feedback" role="alert" data-submit-error></p>
-    <details class="easy-advanced studio-production-options"><summary>뉴스 확보 방식·대본 옵션 <span data-home-acquisition>{{ acquisition_labels[entry_policy] }}</span></summary>
-      <div data-source-mode="feeds" {% if entry_source == 'sample' %}hidden{% endif %}><label for="quick-acquisition">뉴스 확보 방식<select id="quick-acquisition" name="acquisition_policy">{% for value,label in acquisition_labels.items() %}<option value="{{ value }}" {% if entry_policy == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><p class="hint">선택한 방식으로 새 뉴스를 확보합니다. 검색 실패 시 재검색이나 다른 서비스로 자동 전환하지 않아요. 발행일을 확인하지 못한 기사는 최신으로 확정하지 않습니다.</p></div>
-      <label for="quick-news-usage">뉴스 활용 수준<select id="quick-news-usage" name="news_usage" aria-describedby="news-usage-help">{% for value,label in news_usage_labels.items() if value != 'VERIFIED' %}<option value="{{ value }}" {% if entry_news_usage == value %}selected{% endif %}>{{ label }}{% if value == 'QUICK' %} · 주제 중심{% elif value == 'STANDARD' %} · 사실과 해설 구분{% else %} · 근거 부족 시 중단{% endif %}</option>{% endfor %}</select></label><p class="hint" id="news-usage-help">목록 페이지는 주제 참고용입니다. QUICK은 간결하게, STANDARD는 배경·쟁점까지 구성해요. 검증 우선은 미지원입니다.</p>
-      <p class="hint">AI 영상은 모든 시각 장면을 Higgsfield로 생성한 뒤 FFmpeg로 합성해요. 장면별 생성·내용 검토·합성 승인이 필요하며 기본 영상으로 자동 대체하지 않습니다. <a href="/simple-settings#quality">음성·영상 설정 ↗</a></p>
-      <div class="chosen-production" aria-label="현재 제작 구성"><div><small>음성 선택</small><strong data-selected-voice>{{ production_config.voice_label }}</strong></div><div><small>영상 선택</small><strong data-selected-video>{{ 'Higgsfield 장면 + FFmpeg' if production_config.video_provider == 'higgsfield' else 'FFmpeg · 로컬 제작' }}</strong></div></div>
-    </details>
-
-  </form>
-  <p class="production-explainer" data-trial-notice {% if entry_source != 'sample' %}hidden{% endif %}>체험 뉴스는 Offline 대본을 사용합니다. 등록 뉴스의 {{ production_config.provider_label }} 선택은 유지됩니다.</p>
+{% include 'production_form.html' %}
 {% if reference_home and active_jobs %}</details>{% endif %}{% if reference_home and not active_jobs %}<div class="premium-activity">{% include 'workspace_tasks_panel.html' %}</div>{% endif %}
 </div>
 <aside class="production-readiness studio-preview" aria-label="미리보기와 제작 준비">

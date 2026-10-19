@@ -169,3 +169,5 @@ body.premium-shell {
 .dashboard-video-strip a{padding:0;margin:0;border:0;background:transparent}
 @media(min-width:761px){.premium-shell .creator-sidebar .workspace-nav .ui-icon{width:24px;height:24px}}
 @media(max-width:1000px){.premium-shell .reference-home .reference-earth{height:100%;width:135%;top:0}}
+.sidebar-create{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;margin-top:16px;border:1px solid #315878;border-radius:8px;color:#c2dcf5;font-size:13px;min-height:44px}
+@media(max-width:760px){.workspace-nav .desktop-nav-item,.sidebar-create{display:none}}
