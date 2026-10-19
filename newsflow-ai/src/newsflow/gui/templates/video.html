@@ -11,40 +11,36 @@
 </div>
 {% if draft %}
 <div class="workstation-video-project">
-  <details class="workstation-video-context"><summary>{{ draft.content.title }} · 제작 구성</summary>
-  <p>대본을 만든 AI: {{ draft_provider or '기록 없음' }} · {{ draft.duration }}초 대본</p>
-  {% if production_context %}<p id="video-initial-config">홈에서 선택: {{ production_context.initial_duration }}초 · {{ production_context.initial_provider }} · {{ production_context.initial_voice }}. 아래 값이 이번 제작에 적용되며 직접 수정할 수 있습니다.</p>{% else %}<p class="hint">이 대본에는 최초 제작 구성 기록이 없습니다. 대본 길이와 저장된 음성을 기본으로 표시합니다.</p>{% endif %}
-  </details>
   {% if production_context and production_context.get('initial_video') == 'higgsfield' %}
   <div class="soft-notice" id="video-selected-higgsfield"><p>최초 선택한 영상 방식은 Higgsfield입니다. 기본 카드 영상으로 자동 전환하지 않습니다. 장면·비용을 확인하고 별도 승인한 뒤 기존 영상 계획에서 진행하세요.</p><a class="button primary" href="/video/ai?draft_id={{ draft.id }}">{{ draft.duration }}초 Higgsfield 장면 계획 열기</a><p>이동만으로 유료 장면 생성이나 합성을 시작하지 않습니다.</p></div>
   {% else %}<form method="post" action="/video/render" class="workstation-video-grid">
     {{ csrf_field() }}<input type="hidden" name="draft_id" value="{{ draft.id }}">
-    <aside class="suite-panel workstation-media-panel"><div class="suite-section-bar"><h2>장면 · 소재</h2>{{ ui_icon('folder',18) }}</div><p class="hint">장면을 선택해 자막과 소재를 확인하세요.</p><div class="workstation-scene-list" aria-label="영상 장면 선택">{% for scene in draft.content.scenes %}<button type="button" data-video-scene-select="{{ loop.index0 }}" aria-pressed="{{ 'true' if loop.first else 'false' }}"><span>{{ '%02d'|format(loop.index) }}</span><span>{{ scene.caption }}</span><small>{{ scene.seconds }}초</small></button>{% endfor %}</div>    <details class="video-advanced" id="video-advanced-editing" open>
-      <summary>고급 편집 · 자막과 장면</summary>
-      <p>실제 음성 길이로 장면·자막을 맞춥니다. 목표 길이를 넘으면 완전한 문장 단위로 축약·재생성하고, 안전하게 맞출 수 없으면 중단합니다. 원본 대본은 보존하며 완성본을 다시 검토하세요.</p>
+    <aside class="suite-panel workstation-media-panel"><div class="suite-section-bar"><h2>음성 · 미디어</h2>{{ ui_icon('folder',18) }}</div>    <div class="video-basic-fields">
+      <label>영상 길이<select name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {{ 'selected' if draft.duration==seconds }}>{{ seconds }}초</option>{% endfor %}</select></label>
+      <label>음성<select name="voice">
+        <option value="offline-silence"{% if selected_voice=='offline-silence' %} selected{% endif %}>Offline · 무음 오디오 (실제 발화 없음)</option>
+    {% if not voice_available %}<option value="{{ selected_voice }}" selected>저장된 음성 · {{ selected_voice }} (현재 사용 불가)</option>{% endif %}
+        {% for v in voices %}<option value="{{ v.name }}"{% if selected_voice==v.name %} selected{% endif %}>{{ 'Windows · ' if not v.engine else '' }}{{ v.label }}</option>{% endfor %}
+      </select></label>
+    </div>
+    <details class="video-advanced" id="video-advanced-editing" open>
+      <summary>자막 · 장면 소재</summary>
+      <details class="video-policy-note"><summary>음성·자막 타이밍 안내</summary><p>실제 음성 길이로 장면·자막을 맞춥니다. 목표 길이를 넘으면 완전한 문장 단위로 축약·재생성하고, 안전하게 맞출 수 없으면 중단합니다. 원본 대본은 보존하며 완성본을 다시 검토하세요.</p></details>
       <label>자막 크기<select name="font_size">{% for size in [36,40,48,56,64] %}<option value="{{ size }}"{% if preferences.font_size|int==size %} selected{% endif %}>{{ size }}px</option>{% endfor %}</select></label>
       <label>자막 위치<select name="subtitle_y">{% for position,label in [(1100,'중앙 아래'),(1280,'중앙 아래 안전 영역'),(1420,'하단 안전 영역'),(1500,'하단 (짧은 자막)')] %}<option value="{{ position }}"{% if preferences.subtitle_y|int==position %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
-      <p>한국어 글꼴과 제목·출처 표시를 사용합니다. 긴 자막이 안전 영역을 넘으면 오류로 표시합니다. 장면은 컷으로 전환합니다.</p>
+      <p class="hint">한국어 글꼴과 제목·출처 표시를 사용합니다. 긴 자막이 안전 영역을 넘으면 오류로 표시합니다. 장면은 컷으로 전환합니다.</p>
       {% for s in draft.content.scenes %}
       <fieldset data-video-scene="{{ loop.index0 }}"><legend>장면 {{ loop.index }} · 원본 {{ s.seconds }}초</legend><p>내레이션: {{ s.narration }}</p><p>자막: {{ s.caption }}</p><p>소재 제안: {{ s.material }}</p><label>로컬 이미지<select name="images"><option value="">텍스트·배경·도형 기본 카드</option>{% for name in assets %}<option value="{{ name }}">{{ name }}</option>{% endfor %}</select></label></fieldset>
       {% endfor %}
-      <p>사용이 허용된 PNG/JPEG(20MB·1600만 픽셀 이하)를 {{ assets_path }}에 복사하면 목록에서 선택할 수 있습니다. 뉴스 이미지·영상을 자동 다운로드하지 않습니다.</p>
+      <details class="video-policy-note"><summary>이미지 추가·사용 범위</summary><p>사용이 허용된 PNG/JPEG(20MB·1600만 픽셀 이하)를 {{ assets_path }}에 복사하면 목록에서 선택할 수 있습니다. 뉴스 이미지·영상을 자동 다운로드하지 않습니다.</p>
       <label class="check"><input type="checkbox" name="asset_permission" value="true">선택한 로컬 소재의 이용 권한을 확인했습니다.</label>
       <p>Video Studio · 1080×1920 · 9:16 · H.264 MP4 · 로컬 FFmpeg 제작</p>
-      <a class="quiet-link" href="/video/ai?draft_id={{ draft.id }}" id="video-ai-link">AI 고품질 제작 (선택) →</a>
+      <a class="quiet-link" href="/video/ai?draft_id={{ draft.id }}" id="video-ai-link">AI 고품질 제작 (선택) →</a></details>
     </details>
 </aside>
 <section class="workstation-preview-column"><div class="suite-panel"><div class="suite-section-bar"><h2>영상 미리보기</h2><span>9:16 · 1080p</span></div><div class="workstation-monitor">{% if preview_job %}<video controls preload="metadata" poster="/video/jobs/{{ preview_job.id }}/thumbnail" src="/video/jobs/{{ preview_job.id }}/file" aria-label="이 대본으로 만든 이전 영상"></video>{% else %}<div class="workstation-monitor-empty">{{ ui_icon('video',42) }}<h3>{{ draft.content.title }}</h3><p>제작이 끝나면 완성 영상이 표시됩니다.</p><span>{{ draft.duration }}초 · 세로형 쇼츠</span></div>{% endif %}</div><p class="hint">{{ '이전에 제작된 영상입니다. 편집한 대본·설정을 반영하려면 다시 제작하세요.' if preview_job else '장면 이미지를 선택하지 않으면 기본 배경과 자막으로 제작합니다.' }}</p>{% if preview_job %}<a href="/video/jobs/{{ preview_job.id }}/file?download=true">MP4 저장 ↓</a>{% endif %}</div>
 <section class="suite-panel workstation-timeline"><div class="suite-section-bar"><h2>장면 타임라인</h2><span>대본 기준 · {{ draft.duration }}초</span></div><div class="workstation-time-ruler"><span>0:00</span><span>0:{{ '%02d'|format(draft.duration//2) }}</span><span>{{ '1:00' if draft.duration==60 else '0:' ~ draft.duration }}</span></div>{% for kind,label in [('visual','영상'),('caption','자막'),('audio','음성 대본')] %}<div class="workstation-track track-{{ kind }}"><span>{{ label }}</span><div>{% for scene in draft.content.scenes %}<button type="button" data-video-scene-select="{{ loop.index0 }}" data-scene-weight="{{ scene.seconds }}" aria-label="{{ label }} 장면 {{ loop.index }} · {{ scene.seconds }}초" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ loop.index if kind=='visual' else scene.caption if kind=='caption' else scene.narration }}</button>{% endfor %}</div></div>{% endfor %}<p class="hint">클릭해 장면 선택 · 실제 음성 길이에 따라 최종 타이밍이 조정됩니다.</p><a href="/ai?draft_id={{ draft.id }}">대본·자막·장면 길이 편집 →</a></section></section>
-<section class="suite-panel workstation-render-controls"><h2>음성 · 내보내기</h2>
-    <div class="video-basic-fields">
-      <label>영상 길이<select name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {{ 'selected' if draft.duration==seconds }}>{{ seconds }}초</option>{% endfor %}</select></label>
-      <label>음성<select name="voice">
-        <option value="offline-silence"{% if selected_voice=='offline-silence' %} selected{% endif %}>Offline · 무음 오디오 (실제 발화 없음)</option>
-        {% if not voice_available %}<option value="{{ selected_voice }}" selected>저장된 음성 · {{ selected_voice }} (현재 사용 불가)</option>{% endif %}
-        {% for v in voices %}<option value="{{ v.name }}"{% if selected_voice==v.name %} selected{% endif %}>{{ 'Windows · ' if not v.engine else '' }}{{ v.label }}</option>{% endfor %}
-      </select></label>
-    </div>
+<section class="suite-panel workstation-render-controls"><h2>장면 구성</h2><div class="workstation-scene-list" aria-label="영상 장면 선택">{% for scene in draft.content.scenes %}<button type="button" data-video-scene-select="{{ loop.index0 }}" aria-pressed="{{ 'true' if loop.first else 'false' }}"><span>{{ '%02d'|format(loop.index) }}</span><span>{{ scene.caption }}</span><small>{{ scene.seconds }}초</small></button>{% endfor %}</div><h3>내보내기</h3>
     {% if not voice_available %}<p class="soft-notice" role="alert">저장한 음성을 사용할 수 없습니다. 음성 설정을 확인하거나 사용할 음성을 직접 선택해 주세요. 무음이나 다른 유료 음성으로 자동 전환하지 않습니다.</p>{% endif %}
     {% if voice_note %}<p class="soft-notice">{{ voice_note }}</p>{% endif %}
     <p>선택한 음성으로 제작하며 사용할 수 없으면 멈춥니다. <a href="/simple-settings#selected-voice">기본 제작 구성 변경</a></p>
@@ -63,6 +59,11 @@
     <p>제작 후 이 화면에서 미리 볼 수 있습니다. 자동으로 게시하지 않습니다.</p>
     <button type="submit" class="primary">영상 제작 실행</button>
   </section></form>{% endif %}
+  <details class="workstation-video-context"><summary>{{ draft.content.title }} · 제작 구성</summary>
+  <p>대본을 만든 AI: {{ draft_provider or '기록 없음' }} · {{ draft.duration }}초 대본</p>
+  {% if production_context %}<p id="video-initial-config">홈에서 선택: {{ production_context.initial_duration }}초 · {{ production_context.initial_provider }} · {{ production_context.initial_voice }}. 아래 값이 이번 제작에 적용되며 직접 수정할 수 있습니다.</p>{% else %}<p class="hint">이 대본에는 최초 제작 구성 기록이 없습니다. 대본 길이와 저장된 음성을 기본으로 표시합니다.</p>{% endif %}
+  </details>
+
 </div>
 {% endif %}
 {% if job %}

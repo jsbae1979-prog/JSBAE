@@ -42,7 +42,7 @@ def main():
                 ("video", "/video?draft_id=1"),
                 ("publish", "/queue"),
                 ("analytics", "/analytics"),
-                ("settings", "/simple-settings"),
+                ("settings", "/simple-settings#connections"),
                 ("accounts", "/simple-settings#accounts"),
             ]:
                 response = page.goto(args.origin + path)
@@ -51,8 +51,9 @@ def main():
                 page.wait_for_load_state("networkidle")
                 assert page.locator(".demo-banner").count() > 0, "Not a demo; do not capture production data."
                 playback = page.locator("video").evaluate_all(
-                    """async videos => {const results=[]; for(const video of videos){ video.muted=true;try{await video.play();video.pause(); results.push({ready:video.readyState,width:video.videoWidth,height:video.videoHeight,duration:video.duration});}catch(e){results.push({error:String(e)});}} return results;}"""
+                    """async videos => {const results=[]; for(const video of videos){ video.muted=true;try{await video.play(); await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('No decoded frame after seek')),5000);video.addEventListener('seeked',()=>{clearTimeout(timer);resolve();},{once:true});video.currentTime=Math.min(1,video.duration/2);});video.pause(); await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))); results.push({ready:video.readyState,frameTime:video.currentTime,width:video.videoWidth,height:video.videoHeight,duration:video.duration});}catch(e){results.push({error:String(e)});}} return results;}"""
                 )
+                page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
                 metrics = page.evaluate("""()=>({overflow:document.documentElement.scrollWidth>innerWidth,
                     outside:[...document.querySelectorAll('input,select,button,a.button')].filter(e=>e.getClientRects().length && e.getBoundingClientRect().right>innerWidth+1).map(e=>e.textContent.trim().slice(0,50))})""")
                 page.screenshot(path=str(args.out / f"{name}-{width}.png"))
@@ -62,6 +63,7 @@ def main():
                         "viewport": f"{width}x{height}",
                         "http": response.status,
                         "synthetic": True,
+                        "scroll_y": page.evaluate("window.scrollY"),
                         "playback": playback,
                         **metrics,
                     }

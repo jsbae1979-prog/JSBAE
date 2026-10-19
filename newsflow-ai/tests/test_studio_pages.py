@@ -65,6 +65,7 @@ def test_suite_browser_navigation_filters_and_record_preservation(studio_ui, bro
             expect(page.get_by_role('navigation',name='설정 항목')).to_have_count(1)
             expect(page.locator('form[action="/production/preferences"]')).to_have_count(1)
             page.goto(origin+'/news')
+            page.locator('.news-filter-options > summary').click()
             page.locator('[name="category"]').select_option('경제')
             page.get_by_role('button',name='필터 적용',exact=True).click()
             page.wait_for_url('**/news?**')

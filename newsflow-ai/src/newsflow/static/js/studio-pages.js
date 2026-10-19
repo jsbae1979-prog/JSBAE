@@ -124,3 +124,36 @@ document.querySelector('.workstation-video-grid')?.addEventListener('invalid', e
   window.addEventListener('popstate', restore);
   restore();
 })();
+
+// Script outline and copy use the editor's current in-memory values, never a provider.
+const outlineButtons = [...document.querySelectorAll('[data-outline-scene]')];
+function syncScriptOutline() {
+  const selected = document.querySelector('.scene-tabs [aria-pressed="true"]');
+  const scenes = [...document.querySelectorAll('.workstation-editor-panel [data-topic-scene]')];
+  outlineButtons.forEach((button, index) => {
+    button.setAttribute('aria-pressed', String(button.dataset.outlineScene === selected?.dataset.editScene));
+    const scene = scenes[index];
+    if (scene) {
+      button.querySelector('span:nth-child(2)').textContent = scene.querySelector('[name=caption]').value;
+      button.querySelector('small').textContent = `${scene.querySelector('[name=seconds]').value}초`;
+    }
+  });
+}
+outlineButtons.forEach(button => button.addEventListener('click', () => {
+  document.querySelector(`.scene-tabs [data-edit-scene="${button.dataset.outlineScene}"]`)?.click();
+  syncScriptOutline();
+}));
+document.querySelectorAll('.scene-tabs [data-edit-scene]').forEach(button => button.addEventListener('click', () => queueMicrotask(syncScriptOutline)));
+const outlineForm = document.querySelector('.workstation-editor-panel form');
+['input', 'change', 'click', 'invalid'].forEach(kind => outlineForm?.addEventListener(kind, () => queueMicrotask(syncScriptOutline), kind === 'invalid'));
+document.querySelector('[data-copy-script]')?.addEventListener('click', async () => {
+  const form = document.querySelector('.workstation-editor-panel form');
+  const feedback = document.querySelector('[data-copy-feedback]');
+  const text = [...form.querySelectorAll('[name="narration"]')].map(field => field.value).join('\n\n');
+  try {
+    await navigator.clipboard.writeText(text);
+    feedback.textContent = '현재 편집 중인 내레이션을 복사했습니다.';
+  } catch (_) {
+    feedback.textContent = '복사를 허용하지 않은 브라우저입니다. 내레이션을 선택해 복사해 주세요.';
+  }
+});
