@@ -43,7 +43,7 @@ from newsflow.publishing.service import PublishingService, hash_file
 from newsflow.video.service import VideoCoordinator, VideoError
 from newsflow.video.tts import SpeechSettings, TTSError
 
-from .contracts import AutopilotError, BackendError
+from .contracts import AutopilotError, BackendError, BackendWaiting
 from .samples import SAMPLE_NAME, SAMPLE_URL, sample_feed
 
 Progress = Callable[[int, str], None]
@@ -81,6 +81,7 @@ class PipelineBackend:
         self.publishing = publishing or PublishingService(sessions, video.outputs)
         # Without a gate, external AI is never ready: the safe default for tests and tools.
         self.ai_gate = ai_gate or (lambda: {"ready": False, "reasons": ["AI 설정이 연결되지 않았습니다."]})
+        self.ai_video = None
         # Always independently inspect the physical MP4. FakeRenderAdapter cannot
         # promote its nonplayable marker merely through injected publish metadata.
         self.inspector = FFprobeMediaInspector()
@@ -113,7 +114,10 @@ class PipelineBackend:
         if stage not in handlers:
             raise BackendError("지원하지 않는 제작 단계입니다.", retryable=False)
         try:
-            return handlers[stage](context, cancel, progress, save_artifact)
+            result = handlers[stage](context, cancel, progress, save_artifact)
+            if stage == "script" and context.get("production_options", {}).get("version") == 2:
+                self._check_render_draft({**context, **result})
+            return result
         except BackendError:
             raise
         except Exception:  # noqa: BLE001 - do not persist raw adapter or filesystem errors
@@ -128,6 +132,9 @@ class PipelineBackend:
             raise BackendError(messages[stage], retryable=not (stage == "render" and context.get("voice") == "elevenlabs")) from None
 
     def can_retry(self, stage: str, context: dict[str, Any]) -> bool:
+        if (stage == "render" and context.get("production_options", {}).get("version") == 2
+                and context["production_options"].get("video_provider") == "higgsfield" and context.get("ai_plan_id")):
+            return True  # Reopen only the existing plan. This branch never submits or composes.
         if stage == "render" and context.get("voice") == "elevenlabs":
             return False  # A failed/unknown paid voice is not automatically resubmitted.
         if stage in {"collect", "select", "script"} and context.get("ai_mode", "offline") != "offline":
@@ -486,9 +493,11 @@ class PipelineBackend:
                 "analysis_provider": "local_topic_template", "analyzed_article_ids": candidates,
                 "news_usage_result": assessment, "script_method": "local_topic_template"}
 
-    def _speech(self) -> SpeechSettings:
+    def _speech(self, ctx: dict | None = None) -> SpeechSettings:
         from newsflow.easy_setup import speech_preferences
 
+        if ctx and ctx.get("production_options", {}).get("version") == 2:
+            return SpeechSettings(**ctx["production_options"]["speech"])
         try:
             return speech_preferences(self.sessions)
         except TTSError:
@@ -549,10 +558,10 @@ class PipelineBackend:
                                        "initial_provider": ctx["ai_mode"], "initial_model": ctx["ai_model"],
                                        "initial_voice": ctx.get("voice") or "silent",
                                        "initial_video": ctx.get("production_options", {}).get("video_provider", "off"),
-                                       **({"production_options_version": 1,
+                                       **({"production_options_version": ctx["production_options"]["version"],
                                            "script_review": ctx["production_options"]["script_review"],
                                            **{key: ctx[key] for key in ("acquisition_policy", "category", "period") if key in ctx}}
-                                          if ctx.get("production_options", {}).get("version") == 1 else {}),
+                                          if ctx.get("production_options", {}).get("version") in {1, 2} else {}),
                                        "news_usage": ctx.get("news_usage"),
                                    }, "external_consent": ctx.get("external_consent", False),
                                    "consented_at": ctx.get("consented_at"),
@@ -604,11 +613,14 @@ class PipelineBackend:
             if worker:
                 worker.join(timeout=1)
 
-    def _draft_summary(self, draft: ContentDraft, ai_mode: str) -> dict:
-        speech = self._speech()
+    def _draft_summary(self, draft: ContentDraft, ai_mode: str, ctx: dict | None = None) -> dict:
+        from newsflow.video.production_policy import digest
+
+        speech = self._speech(ctx)
         plan = speech_plan(draft.content, draft.duration, speech.rate, speech.pause_ms)
         return {
             "content_draft_id": draft.id, "script_revision": draft.revision, "ai_mode": ai_mode,
+            **({"script_sha256": digest(draft.content)} if ctx and ctx.get("production_options", {}).get("version") == 2 else {}),
             "review_notes": len(draft.review_notes or []),
             "speech_estimate_seconds": plan["estimated_total_seconds"], "speech_fits": plan["fits"],
             **({"script_method": "api_grounded_v1", "script_provider": ai_mode,
@@ -633,7 +645,7 @@ class PipelineBackend:
                         run = session.get(IntelligenceRun, draft.run_id)
                         if not run or run.status != "success" or not self._api_run_matches(run, ctx):
                             raise BackendError(code="ai_request_stopped", retryable=False)
-                    return self._draft_summary(draft, ai_mode)
+                    return self._draft_summary(draft, ai_mode, ctx)
             raise BackendError("저장된 대본과 선택 뉴스가 일치하지 않습니다.", retryable=False)
         analysis_id = ctx.get("analysis_run_id")
         script_id = ctx.get("script_run_id")
@@ -649,7 +661,7 @@ class PipelineBackend:
                     if api_script and (not run or run.status != "success" or not self._api_run_matches(run, ctx)):
                         raise BackendError(code="ai_request_stopped", retryable=False)
                     save("content_draft_id", completed.id)
-                    return self._draft_summary(completed, ai_mode)
+                    return self._draft_summary(completed, ai_mode, ctx)
                 run = session.get(IntelligenceRun, script_id)
                 if run is None:
                     raise BackendError("저장된 대본 작업 이력을 찾지 못했습니다.", retryable=False)
@@ -678,7 +690,7 @@ class PipelineBackend:
                 elif api_script and not self._api_run_matches(run, ctx):
                     raise BackendError(code="ai_request_stopped", retryable=False)
         ai_mode = self._ai_mode(ctx)
-        speech = self._speech()
+        speech = self._speech(ctx)
         self.intelligence.speech = {"rate": speech.rate, "pause_ms": speech.pause_ms}
         # External calls honour the saved model/timeout and reserve output tokens per script length;
         # offline keeps the service defaults (no request is made).
@@ -717,7 +729,7 @@ class PipelineBackend:
         self._cancel(cancel)
         with self.sessions() as session:
             draft = session.get(ContentDraft, draft_id)
-            return {**self._draft_summary(draft, ai_mode), "analysis_run_id": analysis_id,
+            return {**self._draft_summary(draft, ai_mode, ctx), "analysis_run_id": analysis_id,
                     "script_provider": ai_mode, "ai_model": ctx.get("ai_model")}
 
     def _topic_script(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
@@ -743,7 +755,7 @@ class PipelineBackend:
                     or draft.sources.get("news_usage") != ctx["news_usage"]):
                 raise BackendError(code="news_usage_script", retryable=False)
             self._check_topic_draft(draft)
-            result = {**self._draft_summary(draft, ctx.get("ai_mode", "offline")),
+            result = {**self._draft_summary(draft, ctx.get("ai_mode", "offline"), ctx),
                       "analysis_run_id": ctx["analysis_run_id"], "script_run_id": draft.run_id,
                       "script_provider": "local_topic_template", "script_method": "local_topic_template",
                       "news_usage_result": draft.sources["news_usage_result"]}
@@ -758,16 +770,23 @@ class PipelineBackend:
         except IntelligenceError:
             raise BackendError(code="news_usage_script", retryable=False) from None
 
-    def _render(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+    def _check_render_draft(self, ctx: dict) -> None:
         choices = ctx.get("production_options", {})
-        if choices.get("video_provider") == "higgsfield":
-            raise BackendError("Higgsfield는 AI 장면 화면에서 장면별 생성·내용 검토·합성 승인을 진행하세요. 기본 영상으로 대체하지 않았습니다.",
-                               code="ai_video_review", retryable=False)
+        if choices.get("version") == 2:
+            speech = self._speech(ctx)
+            self.intelligence.speech = {"rate": speech.rate, "pause_ms": speech.pause_ms}
         with self.sessions() as session:
             draft = session.get(ContentDraft, ctx["content_draft_id"])
             if not draft:
                 raise BackendError(code="news_usage_script", retryable=False)
             self._check_topic_draft(draft)
+            if choices.get("version") == 2:
+                from newsflow.video.production_policy import check_draft
+                try:
+                    check_draft(self.sessions, draft, choices, self.video.root)
+                except IntelligenceError:
+                    raise BackendError(code="script_auto_review", retryable=False) from None
+                return
             if choices.get("version") == 1 and choices.get("script_review") is False:
                 try:
                     IntelligenceService.validate(draft.content, draft.duration)
@@ -781,6 +800,64 @@ class PipelineBackend:
                 except (IntelligenceError, ValueError, TypeError, KeyError):
                     raise BackendError("자동 점검에서 확인이 필요한 대본입니다. 대본을 검토·수정하세요. 사실 검증 완료나 게시 승인은 기록하지 않았습니다.",
                                        code="script_auto_review", retryable=False) from None
+
+    def sync_video(self) -> None:
+        if self.ai_video is not None:
+            self.ai_video.sync()
+
+    def cancel_ai(self, job_id: str) -> None:
+        from newsflow.db.models import AIVideoPlan, AIVideoScene, AutopilotArtifact
+
+        if self.ai_video is None:
+            return
+        with self.sessions() as session:
+            link = session.scalar(select(AutopilotArtifact).where(AutopilotArtifact.job_id == job_id,
+                                                                 AutopilotArtifact.kind == "ai_plan_id"))
+            plan_id = int(link.reference) if link else None
+            positions = list(session.scalars(select(AIVideoScene.position).where(
+                AIVideoScene.plan_id == plan_id, AIVideoScene.status == "waiting"))) if plan_id else []
+        for position in positions:
+            with self.sessions() as session:
+                revision = session.get(AIVideoPlan, plan_id).revision
+            self.ai_video.cancel_scene(plan_id, revision, position)  # Waiting only: local not_sent, no vendor call.
+
+    def _ai_render(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        from newsflow.db.models import AIVideoPlan
+
+        if self.ai_video is None or ctx.get("source") != "feeds" or ctx.get("scheduled"):
+            raise BackendError(code="ai_video_review", retryable=False)
+        identifier = ctx.get("ai_plan_id")
+        if identifier is None:
+            identifier = self.ai_video.create_plan(ctx["content_draft_id"], ctx["duration"], production_job_id=ctx["job_id"])
+            save("ai_plan_id", identifier)
+        with self.sessions() as session:
+            plan = session.get(AIVideoPlan, identifier)
+            if not plan or plan.draft_id != ctx["content_draft_id"] or plan.duration != ctx["duration"]:
+                raise BackendError(code="ai_video_review", retryable=False)
+            render = session.get(RenderJob, plan.render_job_id) if plan.render_job_id else None
+            if not render or render.status == "running":
+                raise BackendWaiting(code="ai_scene_approval", retryable=False)
+            if render.status != "success" or not plan.approved_at or not plan.reviewed_at:
+                raise BackendError("AI 영상 합성에 실패했습니다. 생성 장면과 사용량을 보존했습니다.", retryable=False)
+            self.ai_video.check_full_plan(session, plan, require_ready=True)
+            project = session.get(VideoProject, render.project_id)
+            if not project or project.ai_plan_id != plan.id or project.snapshot.get("draft_revision") != plan.draft_revision:
+                raise BackendError(code="ai_video_review", retryable=False)
+            result = {"render_job_id": render.id, "video_project_id": project.id, "output_name": render.output_name,
+                      "preview_only": True, "audio": (render.metadata_json or {}).get("audio", "silent"),
+                      "audio_fit": bool((render.metadata_json or {}).get("audio_fit"))}
+        self._cancel(cancel)
+        save("render_job_id", result["render_job_id"])
+        save("video_project_id", result["video_project_id"])
+        return result
+
+    def _render(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
+        choices = ctx.get("production_options", {})
+        if choices.get("video_provider") == "higgsfield" and choices.get("version") != 2:
+            raise BackendError(code="ai_video_review", retryable=False)
+        self._check_render_draft(ctx)
+        if choices.get("version") == 2 and choices.get("video_provider") == "higgsfield":
+            return self._ai_render(ctx, cancel, progress, save)
         identifier = ctx.get("render_job_id")
         if identifier:
             with self.sessions() as session:
@@ -804,7 +881,8 @@ class PipelineBackend:
             try:
                 identifier = self.video.start_preview(
                     ctx["content_draft_id"], ctx["duration"], lambda value: save("render_job_id", value),
-                    voice=voice, speech=self._speech(),
+                    voice=voice, speech=self._speech(ctx),
+                    **({"style": {key: choices[key] for key in ("font_size", "subtitle_y")}} if choices.get("version") == 2 else {}),
                     **({"external_tts_consent": choices.get("external_tts_consent") is True,
                         "elevenlabs_config": choices.get("elevenlabs")} if voice == "elevenlabs" else {}),
                 )
@@ -865,6 +943,15 @@ class PipelineBackend:
         from newsflow.easy_setup import preview_preferences
 
         voice = ctx.get("voice") or preview_preferences(self.sessions)[0]
+        if voice == "elevenlabs" and ctx.get("production_options", {}).get("version") == 2:
+            from newsflow.db.models import AutopilotJob
+            from newsflow.video.production_policy import voice_allowed
+
+            with self.sessions() as session:
+                job = session.get(AutopilotJob, ctx["job_id"])
+                draft = session.get(ContentDraft, ctx["content_draft_id"])
+                if not job or not draft or not voice_allowed(job, draft, ctx["production_options"]):
+                    raise BackendError(code="voice_consent_required", retryable=False)
         if voice == "elevenlabs":
             from .production_options import freeze_options
 

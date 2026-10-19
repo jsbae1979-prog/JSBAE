@@ -44,7 +44,7 @@ from newsflow.intelligence.settings import (
     read_studio_settings,
 )
 from newsflow.publishing.service import PublishingError, PublishingService, hash_file
-from newsflow.video.tts import TTSError
+from newsflow.video.tts import SpeechSettings, TTSError
 
 from .api_settings_routes import connection_status
 from .production_context import (
@@ -434,7 +434,7 @@ def quick_start(
         video_mode = video_setting.value if video_setting and video_setting.value == "higgsfield" else "off"
     voice = ready["voice"]["name"]
     if production_options_version is not None:
-        if production_options_version != 1 or voice_method not in {"local", "elevenlabs"} or video_method not in {"off", "higgsfield"}:
+        if production_options_version not in {1, 2} or voice_method not in {"local", "elevenlabs"} or video_method not in {"off", "higgsfield"}:
             raise HTTPException(422, "음성·영상 제작 방식을 다시 선택하세요.")
         if voice_method == "local" and voice == "elevenlabs":
             raise HTTPException(422, "설정에서 사용할 Windows 또는 Supertonic 로컬 음성을 선택해 주세요. 자동으로 다른 음성을 고르지 않습니다.")
@@ -446,7 +446,7 @@ def quick_start(
         "initial_provider": saved["provider"] if source == "feeds" else "offline",
         "initial_model": saved["model"] if source == "feeds" else "offline",
         "initial_voice": voice, "initial_video": video_mode,
-        **({"production_options_version": 1, "script_review": script_review} if production_options_version else {}),
+        **({"production_options_version": production_options_version, "script_review": script_review} if production_options_version else {}),
         "news_usage": news_usage,
         "initial_platform": _defaults(request)["platform"], **acquisition,
         **({"request_id": uuid4().hex} if source == "feeds" else {}),
@@ -467,7 +467,7 @@ def _start_production(request: Request, flow: dict, *, external_consent: bool, w
             return go(f"/?guide={reason}&{context_query(flow)}#workspace-detail")
         return go(f"/autopilot/start?guide={reason}&{context_query(flow)}")
 
-    modern = flow.get("production_options_version") == 1
+    modern = flow.get("production_options_version") in {1, 2}
     if flow.get("initial_video") == "higgsfield" and not modern:
         return guide_to("video")
     if source == "feeds":
@@ -495,9 +495,20 @@ def _start_production(request: Request, flow: dict, *, external_consent: bool, w
         return guide_to("consent")
     options = {}
     if modern:
-        choices = {"version": 1, "script_review": flow["script_review"], "video_provider": flow["initial_video"],
+        choices = {"version": flow["production_options_version"], "script_review": flow["script_review"], "video_provider": flow["initial_video"],
                    "external_tts_consent": external_tts_consent}
+        if flow["production_options_version"] == 2:
+            speech = speech_preferences(request.app.state.sessions)
+            _, size, position = preview_preferences(request.app.state.sessions)
+            choices.update(speech={"rate": speech.rate, "pause_ms": speech.pause_ms}, font_size=size, subtitle_y=position)
         if voice == "elevenlabs":
+            if flow["production_options_version"] == 2:
+                from hashlib import sha256
+
+                key = ElevenLabsKeys(request.app.state.video.root).key()
+                if not key:
+                    return guide_to("voice")
+                el = {**el, "credential_fingerprint": sha256(key.encode()).hexdigest()}
             choices["elevenlabs"] = el
         options["production_options"] = choices
     if source == "feeds":
@@ -532,10 +543,19 @@ def confirm_start(
         raise HTTPException(422, str(exc)) from None
     if not production or production["source"] != "feeds" or not production.get("request_id"):
         raise HTTPException(422, "홈에서 제작할 등록 뉴스를 다시 선택해 주세요.")
-    if production.get("production_options_version") == 1 and production["initial_voice"] == "elevenlabs" and not external_tts_consent:
+    if production.get("production_options_version") in {1, 2} and production["initial_voice"] == "elevenlabs" and not external_tts_consent:
         raise HTTPException(422, "이번 ElevenLabs 음성 제작의 외부 전송·사용량 동의는 별도로 필요합니다.")
     return _start_production(request, production, external_consent=True, workspace=workspace,
                              external_tts_consent=external_tts_consent)
+
+
+@router.post("/autopilot/jobs/{job_id}/voice-consent")
+def renew_voice_consent(request: Request, job_id: str, revision: int = Form(ge=1), consent: bool = Form(False)):
+    try:
+        request.app.state.autopilot.approve_voice(job_id, revision, consent)
+    except AutopilotError as exc:
+        raise _error(exc) from None
+    return go(f"/?task={job_id}#workspace-detail")
 
 
 @router.post("/autopilot/start")
@@ -596,7 +616,9 @@ def job_detail_context(request: Request, job_id: str) -> dict[str, Any]:
         plan = None
         if draft:
             try:
-                speech = speech_preferences(request.app.state.sessions)
+                speech = (SpeechSettings(**snapshot["production_options"]["speech"])
+                          if snapshot.get("production_options", {}).get("version") == 2
+                          else speech_preferences(request.app.state.sessions))
                 plan = speech_plan(draft.content, draft.duration, speech.rate, speech.pause_ms)
             except TTSError:
                 plan = speech_plan(draft.content, draft.duration)

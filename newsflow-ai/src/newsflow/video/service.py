@@ -145,6 +145,7 @@ class VideoCoordinator:
         speech: SpeechSettings | None = None,
         external_tts_consent: bool = False,
         elevenlabs_config: dict | None = None,
+        style: dict | None = None,
     ) -> int:
         """Create a clearly marked local review copy without granting human approval.
 
@@ -156,6 +157,8 @@ class VideoCoordinator:
         from newsflow.easy_setup import preview_preferences, speech_preferences
 
         default_voice, size, position = preview_preferences(self.sessions)
+        if style:
+            size, position = style["font_size"], style["subtitle_y"]
         voice = voice or default_voice
         if speech is None:
             try:
@@ -179,7 +182,33 @@ class VideoCoordinator:
         """
         if duration not in (30, 45, 60):
             raise VideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
+        from newsflow.db.models import AIVideoPlan, AIVideoScene, AutopilotJob
         from newsflow.easy_setup import SetupError, preview_preferences, speech_preferences
+        from newsflow.video.production_policy import check_draft, plan_policy, voice_allowed
+
+        with self.sessions() as session:
+            policy = plan_policy(session, plan_id)
+            if policy:
+                plan = session.get(AIVideoPlan, plan_id)
+                draft = session.get(ContentDraft, draft_id)
+                owner = session.get(AutopilotJob, policy["job_id"])
+                scenes = list(session.scalars(select(AIVideoScene).where(AIVideoScene.plan_id == plan_id).order_by(AIVideoScene.position)))
+                if (not plan or not draft or not owner or plan.draft_id != draft_id or plan.duration != duration
+                        or plan.draft_revision != draft.revision or not plan.approved_at or not plan.reviewed_at
+                        or owner.cancel_requested or owner.status in {"cancelled", "interrupted"}
+                        or len(specs) != len(scenes) or len(scenes) != len(draft.content["scenes"])
+                        or any(s.source != "generated" or s.status != "ready" or not s.reviewed
+                               or not spec.get("clip") or spec.get("clip") != s.clip_name or spec.get("material")
+                               or spec.get("sha256") != (s.clip_meta or {}).get("sha256") for s, spec in zip(scenes, specs))):
+                    raise VideoError("모든 AI 장면의 승인·대본·클립 연결을 확인할 수 없어 합성을 차단했습니다.")
+                options = policy["options"]
+                from newsflow.intelligence.service import IntelligenceError
+                try:
+                    check_draft(self.sessions, draft, options, self.root)
+                except IntelligenceError:
+                    raise VideoError("수정한 대본의 자동 검사를 통과하기 전에는 음성·합성을 실행하지 않습니다.") from None
+                if not voice_allowed(owner, draft, options):
+                    raise VideoError("수정한 대본에 대한 ElevenLabs 외부 전송·음성 사용 동의가 다시 필요합니다.")
 
         store = clip_store or self.clip_store
         if store.root != self.clip_store.root:
@@ -209,7 +238,7 @@ class VideoCoordinator:
             run = session.get(IntelligenceRun, draft.run_id) if draft else None
             choice = run.options.get("production_context", {}) if run and isinstance(run.options, dict) else {}
             choice = choice if isinstance(choice, dict) else {}
-            if choice.get("production_options_version") == 1 and choice.get("initial_video") == "higgsfield":
+            if not policy and choice.get("production_options_version") == 1 and choice.get("initial_video") == "higgsfield":
                 voice = choice.get("initial_voice")
                 if not isinstance(voice, str) or not voice or voice == "elevenlabs":
                     raise VideoError("이 작업의 ElevenLabs + Higgsfield 동시 합성은 지원하지 않습니다. 다른 음성으로 대체하지 않았습니다. 제작 화면에서 지원하는 조합을 직접 선택하세요.")
@@ -217,11 +246,16 @@ class VideoCoordinator:
             speech = speech_preferences(self.sessions)
         except TTSError:
             raise VideoError("음성 속도·쉼 설정을 다시 저장하세요.") from None
+        if policy:
+            voice, size, position = options["voice"], options["font_size"], options["subtitle_y"]
+            speech = SpeechSettings(**options["speech"])
         images = [spec.get("material") or "" for spec in specs]
         return self._start(
-            draft_id, duration, voice, size, position, images, any(images), False,
+            draft_id, duration, voice, size, position, images, any(images), bool(policy),
             speech=speech, fit_audio=voice != "offline-silence", clips=clips, ai_plan_id=plan_id,
             clip_hashes=hashes, clip_bytes=clip_bytes,
+            **({"external_tts_consent": options.get("external_tts_consent") is True,
+                "elevenlabs_config": options.get("elevenlabs")} if policy else {}),
         )
 
     def voice_available(self, voice: str) -> bool:

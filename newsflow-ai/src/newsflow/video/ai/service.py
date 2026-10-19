@@ -33,7 +33,10 @@ from newsflow.db.models import (
     AIVideoPlan,
     AIVideoScene,
     ArticleMention,
+    AutopilotArtifact,
+    AutopilotJob,
     ContentDraft,
+    IntelligenceRun,
     NewsArticle,
     NewsSource,
     RenderJob,
@@ -41,7 +44,9 @@ from newsflow.db.models import (
     VideoAIUsage,
     utcnow,
 )
+from newsflow.video.production_policy import check_draft, full_job, plan_policy, write_policy
 from newsflow.video.service import VideoCoordinator, VideoError
+from newsflow.video.tts import TTSError
 
 from .clips import ClipStore, probe_clip
 from .contracts import (
@@ -215,10 +220,11 @@ class AIVideoCoordinator:
 
     # ------------------------------------------------------------------ plan editing
 
-    def create_plan(self, draft_id: int, duration: int) -> int:
+    def create_plan(self, draft_id: int, duration: int, *, production_job_id: str | None = None) -> int:
         if duration not in (30, 45, 60):
             raise AIVideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
         with self.sessions.begin() as session:
+            self._locked(session)
             draft = session.get(ContentDraft, draft_id)
             if draft is None:
                 raise AIVideoError("저장된 대본을 찾지 못했습니다.", 404)
@@ -226,6 +232,24 @@ class AIVideoCoordinator:
                 times = self.video.timings(draft.content, duration)
             except (VideoError, ValueError):
                 raise AIVideoError("대본 장면을 영상 시간으로 나누지 못했습니다. 대본을 확인하세요.") from None
+            owner = full_job(session, draft_id)
+            if owner:
+                if (production_job_id is not None and production_job_id != owner.id
+                        or owner.duration != duration
+                        or owner.current_stage != "render" or owner.status not in {"running", "waiting_review"}
+                        or owner.cancel_requested):
+                    raise AIVideoError("원래 작업의 대본 확인·자동 검사와 현재 단계를 먼저 확인하세요.", 409)
+                old = session.scalar(select(AutopilotArtifact).where(AutopilotArtifact.job_id == owner.id,
+                                                                    AutopilotArtifact.kind == "ai_plan_id"))
+                if old:
+                    return int(old.reference)  # Restart/navigation never creates another plan or paid request.
+            elif production_job_id:
+                raise AIVideoError("영상 제작 작업과 대본의 연결을 확인할 수 없습니다.", 409)
+            else:
+                run = session.get(IntelligenceRun, draft.run_id)
+                context = (run.options or {}).get("production_context", {}) if run and isinstance(run.options, dict) else {}
+                if isinstance(context, dict) and context.get("production_options_version") == 2 and context.get("initial_video") == "higgsfield":
+                    raise AIVideoError("모든 장면 AI 영상은 서버에 저장된 제작 작업에서 시작하세요.", 409)
             plan = AIVideoPlan(
                 draft_id=draft.id, draft_revision=draft.revision, duration=duration, provider=self.provider_name(),
                 status="draft", currency=read_settings(self.sessions).currency,
@@ -236,9 +260,56 @@ class AIVideoCoordinator:
             for index, ((start, end), scene) in enumerate(zip(times, draft.content["scenes"])):
                 session.add(AIVideoScene(
                     plan_id=plan.id, position=index, start_ms=start, end_ms=end, narration=scene["narration"],
-                    caption=scene["caption"], source="card", prompt=DEFAULT_PROMPT, status="planned",
+                    caption=scene["caption"], source="generated" if owner else "card", prompt=DEFAULT_PROMPT, status="planned",
                 ))
+            if owner:
+                from copy import deepcopy
+
+                policy = {"mode": "all_higgsfield", "job_id": owner.id,
+                          "options": deepcopy(owner.stage_results["request"]["production_options"]),
+                          "source": {key: owner.stage_results["request"].get(key) for key in
+                                     ("ai_model", "analysis_provider", "script_provider", "news_method", "acquisition_policy")},
+                          "created_at": utcnow().isoformat(), "generation_approvals": []}
+                write_policy(session, owner, plan.id, policy)
+                session.add(AutopilotArtifact(job_id=owner.id, kind="ai_plan_id", reference=str(plan.id)))
+                plan.message = "모든 시각 장면을 AI 생성 클립으로 제작합니다. 모델·프롬프트 확인과 별도 유료 생성 승인이 필요합니다."
             return plan.id
+
+    def check_full_plan(self, session: Session, plan: AIVideoPlan, *, require_ready: bool = False) -> dict | None:
+        try:
+            policy = plan_policy(session, plan.id)
+        except ValueError as exc:
+            raise AIVideoError(str(exc), 409) from None
+        if not policy:
+            return None  # Never apply a new all-generated requirement to legacy mixed plans.
+        job = session.get(AutopilotJob, policy["job_id"])
+        draft = session.get(ContentDraft, plan.draft_id)
+        scenes = self._scenes(session, plan.id)
+        if not job or job.cancel_requested or job.status in {"cancelled", "interrupted"}:
+            raise AIVideoError("원래 제작 작업이 취소·중단되어 새 생성이나 합성을 시작하지 않습니다.", 409)
+        if plan.duration != job.duration or policy["options"] != job.stage_results.get("request", {}).get("production_options"):
+            raise AIVideoError("영상 길이·음성·제작 설정이 원래 작업의 승인 범위와 다릅니다.", 409)
+        if not draft or draft.revision != plan.draft_revision:
+            raise AIVideoError(DRAFT_CHANGED, 409)
+        from newsflow.intelligence.service import IntelligenceError
+
+        try:
+            check_draft(self.sessions, draft, policy["options"], self.root)
+        except IntelligenceError:
+            raise AIVideoError("대본 자동 검사에서 확인할 내용이 있습니다. 검토·수정 전에는 생성·합성하지 않습니다.", 409) from None
+        times = self.video.timings(draft.content, plan.duration)
+        if len(scenes) != len(times) or not scenes:
+            raise AIVideoError("AI 영상은 도입·본문·마무리의 모든 장면이 필요합니다.", 409)
+        for index, (scene, timing, text) in enumerate(zip(scenes, times, draft.content["scenes"], strict=True)):
+            if (scene.position != index or scene.source != "generated" or scene.material
+                    or (scene.start_ms, scene.end_ms) != tuple(timing)
+                    or (scene.narration, scene.caption) != (text["narration"], text["caption"])):
+                raise AIVideoError("모든 장면 AI 모드는 카드·정지 이미지·누락·다른 대본 장면으로 대신할 수 없습니다.", 409)
+            if require_ready and (scene.status != "ready" or not scene.reviewed or not scene.clip_name
+                                  or not (scene.clip_meta or {}).get("sha256")
+                                  or self._digest(scene.clip_name) != scene.clip_meta["sha256"]):
+                raise AIVideoError("AI 생성 장면의 수신·무결성·관계 검토를 모두 완료하세요.", 409)
+        return policy
 
     def _plan(self, session: Session, plan_id: int, revision: int | None = None) -> AIVideoPlan:
         plan = session.get(AIVideoPlan, plan_id)
@@ -268,12 +339,15 @@ class AIVideoCoordinator:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
             self._reopen_compose(session, plan)
+            full = self.check_full_plan(session, plan)
             scenes = {s.position: s for s in self._scenes(session, plan_id)}
             for edit in edits:
                 scene = scenes.get(edit.get("position"))
                 if scene is None:
                     raise AIVideoError("장면 번호를 확인하세요.")
                 source = edit.get("source", scene.source)
+                if full and source != "generated":
+                    raise AIVideoError("모든 장면 AI 모드에서는 카드나 로컬 이미지로 대체할 수 없습니다.")
                 if source not in SOURCES:
                     raise AIVideoError("장면 소재는 카드·로컬 이미지·AI 생성 중에서 고르세요.")
                 material = (edit.get("material") or "").strip() if source == "local" else ""
@@ -486,6 +560,7 @@ class AIVideoCoordinator:
             settings = read_settings(self.sessions)  # read under the write lock
             plan = self._plan(session, plan_id, revision)
             self._reopen_compose(session, plan)
+            policy = self.check_full_plan(session, plan)
             pending = self._pending(self._scenes(session, plan_id))
             models = {m.path: m for m in list_models(self.sessions)}  # read under the write lock
             # The newest attempt that left this app: a resend cancelled before sending (not_sent) is skipped,
@@ -513,6 +588,13 @@ class AIVideoCoordinator:
             except VideoSettingsError as exc:
                 raise AIVideoError(str(exc)) from None
             now = utcnow()
+            if policy:
+                policy["generation_approvals"].append({"approved_at": now.isoformat(), "revision": revision,
+                    "shown_total": shown_total, "currency": settings.currency,
+                    "scenes": [{"position": scene.position, "prompt": scene.prompt, "model": scene.model_path,
+                                "seconds": scene.clip_seconds, "resolution": models[scene.model_path].resolution}
+                               for scene in pending]})
+                write_policy(session, session.get(AutopilotJob, policy["job_id"]), plan.id, policy)
             for scene in pending:
                 # A resend after an unknown outcome keeps its key only for the identical request, so a
                 # provider that honours Idempotency-Key answers with the first request instead of
@@ -592,6 +674,12 @@ class AIVideoCoordinator:
                 job = session.get(RenderJob, plan.render_job_id)
                 if job is None or job.status != "running":
                     self._refresh(session, plan)
+        callback = getattr(self, "on_complete", None)
+        if callback:
+            with self.sessions() as session:
+                completed = list(session.scalars(select(AIVideoPlan.id).where(AIVideoPlan.status == "composed")))
+            for plan_id in completed:
+                callback(plan_id)
 
     def refetch(self, plan_id: int, revision: int, position: int) -> None:
         """Download a completed clip again (no new paid request): the status is re-checked for a fresh URL.
@@ -675,6 +763,9 @@ class AIVideoCoordinator:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
             self._compose_open(session, plan)
+            policy = self.check_full_plan(session, plan, require_ready=True)
+            if policy and (paused or not read_settings(self.sessions).approved):
+                raise AIVideoError("AI 영상 공급사 사용이 중지되어 합성을 시작하지 않습니다.", 409)
             plan.render_job_id = None  # retry after a failed or interrupted composition
             draft = session.get(ContentDraft, plan.draft_id)
             if draft is None or draft.revision != plan.draft_revision:
@@ -736,7 +827,7 @@ class AIVideoCoordinator:
                 plan.approved_at = None
                 self._refresh(session, plan)
                 plan.message = "최종 합성을 시작하지 못했습니다. 제작 중인 영상이 끝난 뒤 다시 시도하세요."
-            if isinstance(exc, VideoError):
+            if isinstance(exc, (VideoError, TTSError)):
                 raise AIVideoError(str(exc), 409 if "실행 중" in str(exc) else 422) from None
             raise
         with self.sessions.begin() as session:
@@ -995,7 +1086,13 @@ class AIVideoCoordinator:
                 reserved = session.scalar(select(VideoAIUsage).where(
                     VideoAIUsage.scene_id == scene.id, VideoAIUsage.attempt == scene.attempt))
                 problem = None
-                if provider is None or not ready["ready"]:
+                try:
+                    self.check_full_plan(session, plan)
+                except (AIVideoError, ValueError):
+                    problem = "원래 작업의 취소·대본·모든 장면 정책이 바뀌어 새 생성 요청을 보내지 않았습니다."
+                if problem:
+                    pass
+                elif provider is None or not ready["ready"]:
                     problem = "설정이 바뀌어 AI 영상 생성 조건을 만족하지 않아 제출하지 않았습니다. " + " ".join(ready["reasons"])
                 elif reserved is None or not settings.approved_at or reserved.approval != settings.approved_at:
                     # This reservation was confirmed under another approval (withdrawn and granted

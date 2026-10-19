@@ -78,6 +78,19 @@ def local_server(app):
 
 def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, browser, monkeypatch, tmp_path):
     coordinator, backend, provider, sessions, mode, rss = api_pipeline
+    # New jobs reject short scripts before either review mode. This healthy-flow
+    # fixture supplies valid narration; the short-response rejection is tested separately.
+    from newsflow.intelligence.korean import speech_plan
+    complete = provider.complete
+    def healthy_fake_script(evidence, seconds, options):
+        result = complete(evidence, seconds, options)
+        while speech_plan(result, seconds)["estimated_total_seconds"] < seconds * .90:
+            plan = speech_plan(result, seconds)
+            index = min(range(len(plan["scenes"])), key=lambda i: plan["scenes"][i]["estimated_seconds"])
+            result["scenes"][index]["narration"] += " 살펴봅니다."
+        assert speech_plan(result, seconds)["fits"]
+        return result
+    monkeypatch.setattr(provider, "complete", healthy_fake_script)
     # The original factories/engines stay intact; only test dependencies are injected.
     monkeypatch.setattr(app.state, "autopilot", coordinator)
     monkeypatch.setattr(app.state, "autopilot_backend", backend)

@@ -125,6 +125,8 @@ def create_app(
     scheduler = Scheduler(sessions, settings.data_dir, autopilot)
     # Phase 5D: optional AI video provider. Off by default; only tests/CI inject the Fake provider.
     video_ai = AIVideoCoordinator(sessions, settings.data_dir, video, VideoAIKeyStore(settings.data_dir), video_provider)
+    autopilot_backend.ai_video = video_ai
+    video_ai.on_complete = autopilot.attach_completed_ai
     if automatic_start:
         video_ai.recover()  # Local recovery only: never resume paid submissions/polling at Windows logon.
     else:

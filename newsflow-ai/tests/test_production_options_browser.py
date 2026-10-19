@@ -67,7 +67,8 @@ def test_skip_review_elevenlabs_fake_to_real_mp4_final_review(app, api_pipeline,
 
     # Existing adapter runs fully, including consent, account permissions, timed WAV and ledger.
     fake_tts = ElevenLabsTTS(backend.video.root, cfg, consent=True, transport=transport, keys=Keys())
-    monkeypatch.setattr("newsflow.video.elevenlabs_tts.ElevenLabsTTS", lambda root, config, consent: fake_tts)
+    monkeypatch.setattr("newsflow.video.elevenlabs_tts.ElevenLabsTTS", lambda root, config, consent, **_kw: fake_tts)
+    monkeypatch.setattr("newsflow.video.elevenlabs_tts.ElevenLabsKeys.key", lambda _: Keys().key())
     monkeypatch.setattr("newsflow.video.elevenlabs_tts.ElevenLabsKeys.status", lambda _: {"configured": True})
     monkeypatch.setattr(production_status, "voice_choice_catalog", lambda: [{
         "name": "elevenlabs", "label": "ElevenLabs · 합성 API 응답", "engine": "elevenlabs", "available": False}])
@@ -113,7 +114,7 @@ def test_skip_review_elevenlabs_fake_to_real_mp4_final_review(app, api_pipeline,
         job = coordinator.snapshot(identifier)
         assert (job["status"], job["current_stage"]) == ("waiting_review", "validate"), job
         assert job["production_options"]["script_review"] is False and job["review_pauses"] == ["validate"]
-        assert job["production_options"]["elevenlabs"] == cfg
+        assert {k:v for k,v in job["production_options"]["elevenlabs"].items() if k != "credential_fingerprint"} == cfg
         assert api.calls == ["search", "analysis", "script"] and rss.calls == []
         assert len(sent) == 3 and [method for method, _ in calls] == ["GET", "POST"] * 3
         expect(page.locator('[data-autopilot-job]')).to_have_attribute("data-job-stage", "validate", timeout=15000)

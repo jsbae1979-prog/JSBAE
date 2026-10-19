@@ -11,7 +11,8 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
-from newsflow.db.models import AIVideoPlan, AIVideoScene, ContentDraft, VideoAIUsage
+from newsflow.autopilot.contracts import AutopilotError
+from newsflow.db.models import AIVideoPlan, AIVideoScene, AutopilotJob, ContentDraft, VideoAIUsage
 from newsflow.easy_setup import SetupError, preview_preferences
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.video.ai.costs import CURRENCIES
@@ -31,6 +32,7 @@ from newsflow.video.ai.settings import (
     save_model,
     write_settings,
 )
+from newsflow.video.production_policy import plan_policy, voice_allowed
 
 from .production_context import context_for_draft
 from .routes import go, page
@@ -97,6 +99,10 @@ def _plan_context(request: Request, plan_id: int) -> dict:
             select(AIVideoScene).where(AIVideoScene.plan_id == plan_id).order_by(AIVideoScene.position)))
         draft = session.get(ContentDraft, plan.draft_id)
         production_context = context_for_draft(session, draft)
+        policy = plan_policy(session, plan_id)
+        owner = session.get(AutopilotJob, policy["job_id"]) if policy else None
+        voice_ready = voice_allowed(owner, draft, policy["options"]) if policy else False
+        owner_revision = owner.revision if owner else None
         usage = list(session.scalars(
             select(VideoAIUsage).where(VideoAIUsage.plan_id == plan_id).order_by(VideoAIUsage.id)))
         session.expunge_all()
@@ -105,7 +111,22 @@ def _plan_context(request: Request, plan_id: int) -> dict:
     except SetupError:
         compose_voice = None
     return {"plan": plan, "scenes": scenes, "draft": draft, "usage": usage, "service": service,
-            "production_context": production_context, "compose_voice": compose_voice}
+            "production_context": production_context, "compose_voice": policy["options"]["voice"] if policy else compose_voice,
+            "full_mode": bool(policy), "production_job_id": policy["job_id"] if policy else None,
+            "voice_ready": voice_ready, "owner_revision": owner_revision}
+
+
+@router.post("/video/ai/plans/{plan_id}/voice-consent")
+def voice_consent(request: Request, plan_id: int, revision: int = Form(ge=1), consent: bool = Form(False)):
+    with request.app.state.sessions() as session:
+        policy = plan_policy(session, plan_id)
+    if not policy:
+        raise HTTPException(422, "원래 제작 작업의 음성 동의를 확인하세요.")
+    try:
+        request.app.state.autopilot.approve_voice(policy["job_id"], revision, consent)
+    except AutopilotError as exc:
+        raise HTTPException(409, str(exc)) from None
+    return go(f"/video/ai/plans/{plan_id}")
 
 
 @router.get("/video/ai/plans/{plan_id}", response_class=HTMLResponse)
