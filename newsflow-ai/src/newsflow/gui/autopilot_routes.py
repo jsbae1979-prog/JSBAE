@@ -366,7 +366,9 @@ def home(
         return _page(
             request, "creator_dashboard.html" if is_dashboard else "activity.html"
             if show == "tasks" and not (task or video or guide) else "easy_home.html", active="home",
-            dashboard=dashboard, defaults=_defaults(request), ready=ready,
+            dashboard=dashboard,
+            activity_chart=dashboard_context(session, visible_tasks) if show == "tasks" else None,
+            defaults=_defaults(request), ready=ready,
             production=production_summary(request, ready),
             active_jobs=visible_tasks, workspace_tasks=visible_tasks, task_count=len(tasks), active_task_count=len(active_jobs),
             completed=visible_videos, workspace_videos=visible_videos, video_count=len(completed),

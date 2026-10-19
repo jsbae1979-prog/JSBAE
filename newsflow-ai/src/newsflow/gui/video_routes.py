@@ -131,11 +131,23 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
         voice_available = selected_voice == "offline-silence" or any(
             item["name"] == selected_voice for item in voices
         )
+        preview_job = None
+        if draft:
+            candidate = session.scalar(select(RenderJob).join(VideoProject).where(
+                VideoProject.draft_id == draft.id, RenderJob.status == "success",
+            ).order_by(RenderJob.id.desc()).limit(1))
+            if candidate and candidate.metadata_json.get("playable"):
+                try:
+                    if video.output_path(candidate.output_name).is_file():
+                        preview_job = candidate
+                except VideoError:
+                    pass
         return page(
             request,
             "video.html",
             active="video",
             draft=draft,
+            preview_job=preview_job,
             job=job,
             project=project,
             scenes=scenes,

@@ -108,3 +108,71 @@ def test_publish_queue_retains_unapproved_draft_and_original_targets(client, app
         draft=session.get(PublishDraft,draft_id)
         assert not draft.content_reviewed and draft.state=='unvalidated'
         assert len(list(session.scalars(select(PublishDraft))))==1
+
+
+def test_workstation_scene_selection_filters_and_chart_are_read_only(studio_ui, browser):
+    app = studio_ui
+    draft_id = seed_suite(app)
+    with app.state.sessions.begin() as session:
+        draft = session.get(ContentDraft, draft_id)
+        draft.content = {**draft.content, 'scenes': [
+            {'seconds': 20, 'narration': '합성 첫 문장입니다.', 'caption': '첫 장면', 'material': '배경'},
+            {'seconds': 25, 'narration': '합성 두 번째 문장입니다.', 'caption': '두 번째 장면', 'material': '도형'},
+        ]}
+        before_content = draft.content.copy()
+    before = stored_values(app)
+    with local_server(app) as origin:
+        context, page, external, errors = guarded_page(browser, origin, (1366,768))
+        posts = []
+        page.on('request', lambda request: posts.append(request.url) if request.method == 'POST' else None)
+        for width, height in [(1366,768),(1920,1080),(390,844)]:
+            page.set_viewport_size({'width': width, 'height': height})
+            page.goto(origin + '/news')
+            page.get_by_role('button', name='경제', exact=True).click()
+            page.wait_for_url('**/news?**')
+            expect(page.locator('.suite-news-article')).to_have_count(1)
+            expect(page.locator('[name=category]')).to_have_value('경제')
+            page.goto(origin + f'/video?draft_id={draft_id}')
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            expect(page.locator('[data-video-scene]:visible')).to_have_count(1)
+            page.get_by_role('button', name='자막 장면 2 · 25초', exact=True).focus()
+            page.keyboard.press('Enter')
+            expect(page.locator('[data-video-scene="1"]')).to_be_visible()
+            expect(page.locator('[data-video-scene="0"]')).to_be_hidden()
+            expect(page.locator('[data-video-scene-select="1"]')).to_have_count(4)
+            assert all(value == 'true' for value in page.locator('[data-video-scene-select="1"]').evaluate_all(
+                "elements => elements.map(element => element.getAttribute('aria-pressed'))"))
+            # All scene image selectors remain successful controls of the unchanged protected form.
+            assert page.locator('form[action="/video/render"]').evaluate(
+                "form => new FormData(form).getAll('images').length") == 2
+            expect(page.locator('[name=reviewed]')).not_to_be_checked()
+            expect(page.locator('[name=external_tts_consent]')).not_to_be_checked()
+            page.goto(origin + '/?show=tasks')
+            page.locator('[data-activity-day]').first.click()
+            expect(page.locator('[data-activity-day-result]')).to_contain_text('생성 완료 0건')
+            page.goto(origin + f'/ai?draft_id={draft_id}')
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.get_by_role('button', name='장면 2', exact=True).click()
+            expect(page.locator('[data-topic-scene]:visible textarea[name=narration]')).to_have_value('합성 두 번째 문장입니다.')
+            expect(page.locator('[data-workspace-return]')).to_have_count(1)
+        assert not posts and not external and not errors
+        context.close()
+    assert stored_values(app) == before
+    with app.state.sessions() as session:
+        draft = session.get(ContentDraft, draft_id)
+        assert draft.content == before_content and draft.review_status == 'review_required'
+
+
+@pytest.mark.parametrize('status,playable,exists,shown', [
+    ('success',True,True,True), ('failed',True,True,False),
+    ('success',False,True,False), ('success',True,False,False),
+])
+def test_video_studio_previous_preview_requires_existing_completed_output(client, app, status, playable, exists, shown):
+    item = video_fixture(app, '이전 합성 영상', status=status, playable=playable, exists=exists)
+    response = client.get(f'/video?draft_id={item["draft_id"]}')
+    assert response.status_code == 200
+    assert ('aria-label="이 대본으로 만든 이전 영상"' in response.text) is shown
+    if shown:
+        assert '이전에 제작된 영상입니다' in response.text
+        assert f'/video/jobs/{item["id"]}/file?download=true' in response.text
+    # This is the stored-output UI contract, not a claim that fixture bytes are a valid MP4.
