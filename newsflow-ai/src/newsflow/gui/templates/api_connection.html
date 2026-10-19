@@ -11,7 +11,7 @@
   </div>
   {% if key == 'claude_api' %}<p class="settings-inline-note"><a href="https://platform.claude.com/dashboard" target="_blank" rel="noopener noreferrer">Claude API 사이트 · 키·결제 관리 ↗</a></p>{% endif %}
   {% if failed_check %}<p class="settings-warning" role="status">{{ connection.message }}</p>{% endif %}
-  {% if not api.ready and api.reasons %}<p class="settings-warning">뉴스 웹 검색 — {{ api.reasons[0] }}</p>{% endif %}
+  {% if not api.ready and api.reasons and api.key.configured %}<p class="settings-warning">뉴스 웹 검색 — {{ api.reasons[0] }}</p>{% endif %}
   {% if api.usage.unknown or api.usage.pending %}
   <p class="soft-notice" role="alert">결과 불명 {{ api.usage.unknown }}건 · 진행 중 {{ api.usage.pending }}건. 새 API 호출이 차단되어 있습니다. 예약 예산은 유지됩니다.</p>
   {% endif %}
