@@ -171,3 +171,58 @@
 @media(max-width:900px){.workspace-shell .reference-home .production-hero{grid-template-columns:minmax(0,1fr)}.reference-news-list{grid-template-columns:repeat(2,minmax(0,1fr))}.reference-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.reference-home .studio-phone{max-width:210px}.reference-home .workspace-video-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){.workspace-shell .creator-sidebar{position:static;width:auto;height:auto;padding:16px 18px 8px}.workspace-shell #main-content{margin:0;padding:18px 16px 36px}.sidebar-story{display:none}.reference-toolbar{margin-bottom:12px;gap:8px}.reference-workspace-link{display:none}.reference-search{font-size:11px;padding:9px 10px;min-height:44px}.reference-hero{min-height:212px}.reference-earth{width:150%;right:-45%;opacity:.7}.reference-hero-copy{padding:22px 20px;background:linear-gradient(90deg,#070f21f5,#070f2170 70%)}.workspace-shell .reference-hero h1{font-size:34px}.reference-hero-actions{gap:8px}.workspace-shell .reference-hero-actions .button{min-height:44px;padding:8px 12px;font-size:11px}.reference-metrics{gap:8px}.reference-metric{padding:12px;gap:10px}.reference-metric strong{font-size:22px}.reference-metric>div>span{font-size:10px}.reference-news-list{grid-template-columns:1fr;gap:0}.workspace-shell .reference-home .studio-preview{padding:20px!important}.reference-home .studio-flow li{display:flex;font-size:9px;white-space:normal;text-align:center}.reference-home .studio-flow span{margin:0}.reference-home .studio-production-options summary{display:flex}.reference-home .workspace-video-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.reference-home .quick-production-form select{min-height:44px}}
 @media(prefers-reduced-motion:reduce){.reference-home{scroll-behavior:auto}}
+
+/* Readability and icon consistency: no network fonts or icon runtime. */
+.workspace-shell{--ui-caption:12px;--ui-label:13px;--ui-body:14px;--ui-heading:18px}
+body.workspace-shell{font-family:"Malgun Gothic","맑은 고딕","Noto Sans CJK KR","Noto Sans KR",system-ui,sans-serif;line-height:1.7;word-break:normal}
+.ui-icon{display:inline-block;vertical-align:middle;flex-shrink:0;pointer-events:none}
+.workspace-shell .creator-sidebar{overflow-y:auto;scrollbar-width:thin}
+.creator-sidebar .workspace-nav a{min-height:48px;margin:0;gap:12px;font-size:14px;font-weight:500}
+.creator-sidebar .workspace-nav a>span{display:grid;place-items:center;width:22px}
+.creator-sidebar .nav-caption{font-size:12px;margin:7px 0 28px 0;color:#a8bad4}
+.sidebar-bottom,.sidebar-bottom p,.sidebar-bottom a{font-size:12px}.sidebar-story{flex-shrink:0;margin-top:auto}
+.workspace-shell .eyebrow{font-size:12px;letter-spacing:1px}.workspace-shell .demo-banner{font-size:12px;line-height:1.6}
+.workspace-shell :is(button,.button){font-weight:600;border-radius:8px;min-height:44px}
+.workspace-shell :is(button,.button):disabled{opacity:1;cursor:not-allowed}
+.workspace-shell :is(input,select,textarea){font-size:14px;line-height:1.6}
+.workspace-shell :is(h1,h2,h3){word-break:keep-all;overflow-wrap:anywhere}
+.workspace-shell :is(.reference-metric strong,.workspace-count,.workspace-video-duration){font-variant-numeric:tabular-nums}
+.workspace-shell .reference-search{font-size:13px;min-height:44px}.reference-workspace-link{font-size:13px}
+.workspace-shell .reference-hero-copy>p:first-child,.workspace-shell .reference-tagline{font-size:13px}
+.workspace-shell .reference-hero-actions .button{min-height:44px;font-size:13px;padding:10px 16px}
+.reference-metric>div>span{font-size:12px;line-height:1.6}.reference-metric strong{font-weight:700;font-size:26px;letter-spacing:0}
+.reference-metric-icon{width:44px;height:44px}.reference-metric-arrow{font-size:16px}
+.workspace-shell .reference-panel-head h2,.workspace-shell .studio-preview-heading h3{font-size:16px;font-weight:700}
+.reference-panel-head a{font-size:12px;padding:6px 0}.workspace-shell .reference-news-scope{font-size:12px;line-height:1.65}
+.reference-news-copy>small,.reference-news-copy>span{font-size:12px;line-height:1.6}.reference-news-copy strong{font-size:14px;line-height:1.65;font-weight:600}
+.reference-news-art{flex-basis:58px;height:66px}.reference-news-art svg{width:38px;height:38px}.reference-news-art small{font-size:10px}
+.reference-news-footer,.reference-news-empty a{font-size:13px;min-height:36px;padding:12px 0 0}.reference-news-copy>small{white-space:normal;overflow-wrap:anywhere}
+.reference-home .studio-flow li{font-size:12px;white-space:normal;text-align:center;line-height:1.5;word-break:keep-all}
+.reference-home .studio-flow span{width:28px;height:28px;font-size:12px}.reference-home .studio-flow li:not(:last-child)::after{top:14px}
+.workspace-shell .studio-form-heading h2,.workspace-shell .reference-home .studio-form-heading h2{font-size:18px;line-height:1.5;font-weight:700}
+.workspace-shell .studio-format,.studio-preview-heading>span{font-size:12px;letter-spacing:0;padding:3px 7px}
+.workspace-shell .blue-studio .quick-production-form label{font-size:13px;line-height:1.65}
+.workspace-shell .blue-studio .quick-production-form select{font-size:14px;min-height:44px;padding:9px 10px;border-radius:8px;margin:6px 0 14px}
+.studio-provider-line,.reference-home .studio-provider-line{font-size:13px;padding-bottom:14px}.studio-provider-line a,.reference-home .studio-provider-line a{font-size:12px;padding:2px 0}
+.workspace-shell .studio-review,.workspace-shell .reference-home .studio-review{font-size:13px!important}
+.workspace-shell .studio-review-note,.workspace-shell .reference-home .studio-review-note,.workspace-shell .studio-api-note,.workspace-shell .studio-connection-notice{font-size:12px;line-height:1.75}
+.workspace-shell .reference-home .production-start-button{font-size:15px!important;min-height:46px}
+.studio-production-options summary,.reference-home .studio-production-options summary,.studio-readiness summary,.reference-home .studio-readiness summary{font-size:13px;min-height:44px;line-height:1.6}
+.studio-production-options summary span,.studio-phone-duration,.studio-preview-link,.studio-preview-title,.workspace-shell .studio-preview-caption{font-size:12px;line-height:1.7}
+.workspace-shell .studio-readiness :is(small,.production-capability-note){font-size:12px}
+.workspace-shell .archive-search>summary{font-size:14px}.workspace-shell .archive-search>summary>span{font-size:12px}
+.workspace-shell .settings-icon{background:#173454;border:1px solid #325c8a;color:#9cccff;border-radius:10px;width:40px;height:40px}
+.workspace-shell .settings-card-heading h2{font-size:19px}.workspace-shell .settings-card-heading p{font-size:14px}.workspace-shell .settings-section-number{color:#a5b7d1;font-size:12px}
+.workspace-shell .settings-jump{gap:8px}.workspace-shell .settings-jump a{min-height:44px;font-size:13px;display:inline-flex;align-items:center;padding:8px 14px}
+.workspace-shell .settings-workspace :is(button,.button){min-height:44px}.workspace-shell .settings-workspace :is(.status-chip,.settings-pill,.settings-savebar small){font-size:12px}
+.workspace-shell .settings-workspace .subtle-button{color:#bedbff;border-color:#526f96}.workspace-shell .settings-advanced>summary{color:#c1d4ef;font-size:13px;min-height:44px;line-height:1.6}
+.workspace-shell .settings-dialog{line-height:1.75}.workspace-shell .scene-tabs button{min-height:44px}
+.workspace-shell .workspace-video-actions a{min-height:36px;display:inline-flex;align-items:center;font-size:13px}
+.workspace-shell .studio-phone-play,.workspace-shell .workspace-video-play{color:#fff;background:#071327bf}
+.workspace-shell .studio-phone-mark .ui-icon{width:32px;height:32px}
+@media(max-width:1500px){.reference-home .engine-fields{grid-template-columns:minmax(0,1fr)}.reference-home .studio-format{display:none}}
+@media(max-width:760px){.creator-sidebar .workspace-nav a{font-size:12px;min-height:60px;gap:4px}.workspace-shell .reference-hero-actions .button{font-size:13px;min-height:44px;padding:10px 12px}.reference-metric{gap:10px}.reference-metric>div>span{font-size:12px}.reference-metric-icon{width:36px;height:36px}.reference-metric-icon .ui-icon{width:22px;height:22px}.reference-metric strong{font-size:24px}.workspace-shell .studio-provider-line{gap:8px}.blue-studio .engine-fields{grid-template-columns:minmax(0,1fr)}.workspace-shell .studio-format{display:none}.workspace-shell .studio-production-options summary{align-items:start;flex-wrap:wrap}.workspace-shell .studio-production-options summary span{display:block;width:100%}.reference-home .studio-flow li{font-size:12px}.workspace-shell .reference-search{font-size:12px}.workspace-shell .settings-save-actions{width:100%}.workspace-shell .settings-save-actions>button[type=submit]{flex:1}.workspace-shell .scene-tabs{gap:8px}.workspace-shell .workspace-video-actions a{min-height:44px}}
+@media(max-height:780px) and (min-width:761px){.sidebar-story{min-height:125px}.sidebar-bottom{margin-top:14px}.creator-sidebar .nav-caption{margin-bottom:22px}}
+
+.workspace-shell .settings-card-heading p{word-break:keep-all;overflow-wrap:anywhere;line-height:1.7}
+.workspace-shell .studio-flow span,.workspace-shell .settings-header .eyebrow{font-size:12px}
