@@ -134,7 +134,7 @@
 .creator-sidebar .brand{font-size:20px;gap:8px}.creator-sidebar .nav-caption{font-size:10px;margin:4px 0 30px 39px}
 .workspace-shell #main-content{margin-left:204px;padding:18px 24px 44px}
 .workspace-shell .easy-page{max-width:1560px}
-.sidebar-story{margin-top:auto;min-height:160px;border:1px solid #243754;border-radius:10px;background:#07152a url('/static/images/newsflow-earth.svg') 65% 0/auto 180px no-repeat;display:flex;align-items:end;padding:16px}
+.sidebar-story{margin-top:auto;min-height:160px;border:1px solid #243754;border-radius:10px;background:linear-gradient(0deg,#061023ef,#06102300 80%),#07152a url('/static/images/newsflow-earth-generated.png') 72% center/auto 180px no-repeat;display:flex;align-items:end;padding:16px}
 .sidebar-story p{font-size:13px;color:#f3f7ff;margin:0;text-shadow:0 2px 8px #000}
 .sidebar-story strong{font-size:19px}.sidebar-bottom{margin-top:18px;padding:14px 7px 0;font-size:11px}.sidebar-bottom p,.sidebar-bottom a{font-size:11px}
 .reference-toolbar{display:flex;align-items:center;justify-content:space-between;gap:22px;margin:0 0 16px;min-height:40px}
@@ -143,13 +143,13 @@
 .reference-workspace-link{display:flex;align-items:center;gap:9px;font-size:12px;white-space:nowrap}
 .reference-workspace-link>span{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:#4358ed;color:white;font-weight:700}
 .reference-hero{position:relative;isolation:isolate;overflow:hidden;border:1px solid #2b4273;border-radius:10px;min-height:208px;background:#07112a;margin-bottom:14px}
-.reference-earth{position:absolute;right:0;top:0;width:88%;height:100%;object-fit:cover;object-position:50% 40%;z-index:-1}
-.reference-hero-copy{padding:23px 30px;background:linear-gradient(90deg,#070f21 0%,#070f21ed 25%,#070f2100 64%)}
+.reference-earth{position:absolute;right:0;top:0;width:100%;height:100%;object-fit:cover;object-position:center top;z-index:-1}
+.reference-hero-copy{padding:23px 30px;background:linear-gradient(90deg,#070f21ed 0%,#070f21c9 24%,#070f2100 60%)}
 .workspace-shell .reference-hero-copy>p:first-child{font-size:12px;line-height:1.7;margin:0 0 4px;color:#d0d8ea}
 .workspace-shell .reference-hero h1{font-size:40px;line-height:1.1;letter-spacing:-1.2px;margin:0;font-weight:800;color:#fff}
 .reference-hero h1 span{color:#439aff}.workspace-shell .reference-tagline{font-size:12px;color:#60aaff;margin:6px 0 16px}
 .reference-hero-actions{display:flex;gap:10px}.workspace-shell .reference-hero-actions .button{min-height:36px;padding:8px 14px;font-size:12px;border-radius:6px;background:#0c1727d9}
-.workspace-shell .reference-hero-caption{position:absolute;right:26px;top:40px;font-size:13px;color:#c8d8ff;line-height:2;letter-spacing:1px;text-align:right;text-shadow:0 2px 4px #03091c}
+.workspace-shell .reference-hero-caption{position:absolute;right:20px;top:24px;font-size:12px;color:#e1eaff;line-height:2;letter-spacing:1px;text-align:right;text-shadow:0 2px 4px #03091c;background:#061227d9;padding:8px 12px;border-radius:8px}
 .reference-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 16px}
 .reference-metric{display:flex;align-items:center;gap:14px;min-width:0;border:1px solid #21334c;background:linear-gradient(120deg,#112034,#0d1827);border-radius:9px;padding:14px}
 .reference-metric-icon{display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;font-size:25px;color:#92aaff;border:1px solid #374a96;background:#27346e;border-radius:10px;box-shadow:inset 0 0 20px #283cff22}
