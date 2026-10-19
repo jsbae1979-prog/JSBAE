@@ -18,14 +18,14 @@
 .workflow-current-text small{display:block;font-size:12px;color:#86b5e5;line-height:1.45;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .workflow-wave{width:31%;max-width:170px;height:36px;flex-shrink:0;filter:drop-shadow(0 0 4px #006aff88)}
 .workflow-wave path{stroke:url(#workflow-wave-color);stroke-width:1.5;stroke-linecap:round;fill:none}
-.workflow-options{display:grid;grid-template-columns:1fr 1.15fr 1.05fr 1.25fr;gap:6px;margin:7px 0;position:relative;z-index:3}
+.workflow-options{display:grid;grid-template-columns:1fr 1.25fr 1.1fr 1.07fr;gap:6px;margin:7px 0;position:relative;z-index:3}
 .mockup-dashboard details.workflow-option{padding:0;margin:0;border:0;background:none;min-width:0}
-.mockup-dashboard .workflow-option summary{display:flex;align-items:center;gap:5px;min-height:34px;padding:5px 7px;color:#d0e3ff;border:1px solid #2c4d71;border-radius:7px;background:linear-gradient(#16304f,#0b2038);font-size:12px;line-height:1.4;cursor:pointer;list-style:none;box-sizing:border-box}
+.mockup-dashboard .workflow-option summary{display:flex;align-items:center;gap:4px;min-height:34px;padding:5px 5px;color:#d0e3ff;border:1px solid #2c4d71;border-radius:7px;background:linear-gradient(#16304f,#0b2038);font-size:12px;line-height:1.4;cursor:pointer;list-style:none;box-sizing:border-box}
 .workflow-option summary::-webkit-details-marker{display:none}.workflow-option summary::after{display:none!important}
 .workflow-option summary>span:not(.workflow-switch):not(.workflow-chevron):not(.workflow-provider){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.workflow-option summary .ui-icon{flex-shrink:0}.workflow-provider{display:flex;color:#80c8ff}.workflow-provider.claude_api{color:#f9a783}
-.workflow-chevron{margin-left:auto;color:#9cb1cf;font-size:15px}
-.mockup-dashboard .workflow-review summary{border-color:transparent;background:none;padding-left:2px;padding-right:0;font-size:12px;color:#a8c9ea}
+.workflow-option summary .ui-icon{flex-shrink:0;width:14px;height:14px;min-width:14px}.workflow-provider{display:flex;color:#80c8ff}.workflow-provider.claude_api{color:#f9a783}
+.workflow-chevron{margin-left:auto;color:#9cb1cf;font-size:12px;line-height:1;width:7px;flex:none}
+.mockup-dashboard .workflow-review summary{border-color:transparent;background:none;padding-left:0;padding-right:0;gap:3px;font-size:12px;color:#a8c9ea}
 .workflow-switch{position:relative;display:block;width:28px;height:16px;flex:none;border:1px solid #527499;border-radius:20px;background:#1d3048}
 .workflow-switch:before{content:'';position:absolute;left:2px;top:2px;width:10px;height:10px;border-radius:50%;background:#aec2d9}
 .workflow-switch.is-on{background:#087cf9;border-color:#3ba5ff;box-shadow:0 0 8px #057aff60}.workflow-switch.is-on:before{left:14px;background:white;box-shadow:0 0 5px #b4ecff}
@@ -36,7 +36,7 @@
 .mockup-dashboard .workflow-script p{font-size:13px;color:#d1e0f4;line-height:1.5;margin:3px 0 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .mockup-dashboard .workflow-script .button{flex-shrink:0;gap:13px;min-height:40px;padding:8px 15px;border-radius:8px;background:linear-gradient(110deg,#287cff,#1754f6);border-color:#428eff;box-shadow:0 0 18px #0761ff55;font-size:14px;font-weight:700;white-space:nowrap}
 .workflow-option summary:hover,.workflow-current:hover{border-color:#4b93d5}.workflow-card a:focus-visible,.workflow-card summary:focus-visible{outline:2px solid #67e0ff;outline-offset:3px}
-@container(max-width:350px){.workflow-options{grid-template-columns:repeat(2,minmax(0,1fr))}.mockup-dashboard .workflow-option summary{min-height:44px}.workflow-wave{width:29%}.workflow-script{gap:8px}.mockup-dashboard .workflow-script .button{font-size:13px;padding:8px 10px;min-height:44px;gap:8px}.workflow-popover a{min-height:44px}}
+@container(max-width:380px){.workflow-options{grid-template-columns:repeat(2,minmax(0,1fr))}.mockup-dashboard .workflow-option summary{min-height:44px}.workflow-wave{width:29%}.workflow-script{gap:8px}.mockup-dashboard .workflow-script .button{font-size:13px;padding:8px 10px;min-height:44px;gap:8px}.workflow-popover a{min-height:44px}}
 @media(prefers-reduced-motion:reduce){.workflow-card *{transition:none!important;animation:none!important}}
 
 .dash-workflow>.dashboard-create-drawer{margin:8px 0 0;padding:0 12px;border-top:0}

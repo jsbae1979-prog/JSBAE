@@ -88,6 +88,9 @@ def test_reference_card_browser_popovers_keyboard_and_no_mutation(studio_ui, bro
             expect(card.locator('.workflow-switch.is-on')).to_have_count(1)
             expect(card.get_by_role('link', name='작업실 열기')).to_have_attribute('href', f'/ai?draft_id={draft_id}')
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            labels = card.locator('.workflow-option summary>span:not([class])').evaluate_all(
+                'nodes=>nodes.map(n=>({text:n.textContent,scroll:n.scrollWidth,width:n.clientWidth}))')
+            assert all(label['scroll'] <= label['width'] for label in labels), (width, labels)
             if output:
                 root = Path(output); root.mkdir(parents=True, exist_ok=True)
                 card.screenshot(path=str(root / f'workflow-{width}.png'))
