@@ -30,10 +30,11 @@
 
 <section class="production-hero workspace-create" data-workspace-create aria-labelledby="production-title" data-home-policy-states='{{ production.policy_states|tojson }}'>
 {% if reference_home %}<aside class="reference-news" aria-labelledby="reference-news-title"><div class="reference-panel-head"><h2 id="reference-news-title">최근 보관 뉴스</h2><a href="/news">전체 보기 ↗</a></div><p class="reference-news-scope">수집한 자료 · 발행일은 기사에서 확인하세요.</p><div class="reference-news-list">{% for article in recent_news %}<a class="reference-news-item" href="/news/{{ article.id }}"><span class="reference-news-art" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M12 49V19h27l13 13v17z M39 19v13h13 M20 39h24 M20 44h17 M20 27h10" stroke="currentColor" stroke-width="2"/></svg></span><span class="reference-news-copy"><small>{{ article.publisher }}</small><strong>{{ article.title }}</strong><span>{{ category_labels.get(article.category, article.category) }}</span></span></a>{% else %}<div class="reference-news-empty"><span aria-hidden="true">{{ ui_icon("file", 32) }}</span><h3>첫 뉴스가 기다리고 있어요.</h3><p>제작을 시작하면 선택한 방식으로 새 뉴스를 확보해요.</p><a href="#quick-source">뉴스 자료 선택 →</a></div>{% endfor %}</div><a class="reference-news-footer" href="/news">보관 기사 검색 →</a></aside>{% endif %}
-<div class="production-start"><ol class="creator-flow studio-flow" aria-label="제작 순서">
+<div class="production-start">{% if reference_home %}<div class="dashboard-workflow-heading"><h2>AI 제작 워크플로</h2><span>내 작업실</span></div>{% endif %}<ol class="creator-flow studio-flow" aria-label="제작 순서">
   {% for label in ['자료 준비','대본 작성','음성·영상 제작','미리보기'] %}<li><span>{{ '%02d'|format(loop.index) }}</span>{{ label }}</li>{% endfor %}
 </ol>
-  <div class="studio-form-heading"><div><p class="eyebrow">CREATE YOUR NEXT STORY</p><h2 id="production-title">{{ "영상 제작 워크플로" if reference_home else "어떤 뉴스로 만들까요?" }}</h2></div><span class="studio-format">9:16 SHORTS</span></div>
+{% if reference_home and active_jobs %}<div class="premium-activity">{% include 'workspace_tasks_panel.html' %}</div><details class="dashboard-create-drawer" data-home-create-drawer><summary><span>{{ ui_icon('sparkles', 20) }} 새 쇼츠 제작 설정</span><span>설정 열기 +</span></summary>{% endif %}
+  <div class="studio-form-heading"><div><p class="eyebrow">CREATE YOUR NEXT STORY</p><h2 id="production-title" tabindex="-1">{{ "새 쇼츠 만들기" if reference_home else "어떤 뉴스로 만들까요?" }}</h2></div><span class="studio-format">9:16 SHORTS</span></div>
   <form action="{{ production.action_url }}" method="post" data-easy-form class="quick-production-form">
     {{ csrf_field() }}<input type="hidden" name="workspace" value="true"><input type="hidden" name="production_options_version" value="2">
     <div class="quick-production-fields">
@@ -65,14 +66,15 @@
 
   </form>
   <p class="production-explainer" data-trial-notice {% if entry_source != 'sample' %}hidden{% endif %}>체험 뉴스는 Offline 대본을 사용합니다. 등록 뉴스의 {{ production_config.provider_label }} 선택은 유지됩니다.</p>
-{% if reference_home %}<div class="premium-activity">{% include 'workspace_tasks_panel.html' %}</div>{% endif %}
+{% if reference_home and active_jobs %}</details>{% endif %}{% if reference_home and not active_jobs %}<div class="premium-activity">{% include 'workspace_tasks_panel.html' %}</div>{% endif %}
 </div>
 <aside class="production-readiness studio-preview" aria-label="미리보기와 제작 준비">
   <div class="studio-preview-heading"><h3>나의 쇼츠</h3><span>9:16</span></div>
   {% if completed %}{% set latest = completed[0] %}
-    <a class="studio-phone studio-phone-video" href="{{ latest.link }}" aria-label="{{ latest.title }} 미리보기"><img src="/video/jobs/{{ latest.id }}/thumbnail" alt="{{ latest.title }} 영상 첫 화면" width="180" height="320" loading="lazy"><span class="studio-phone-play" aria-hidden="true">{{ ui_icon("play", 24) }}</span><span class="studio-phone-duration">{{ latest.duration }}초</span></a>
+    {% if reference_home %}<div class="dashboard-preview-stage"><img class="dashboard-preview-ambient" src="/video/jobs/{{ latest.id }}/thumbnail" alt="" aria-hidden="true" loading="lazy">{% endif %}
+    <a class="studio-phone studio-phone-video" href="{{ latest.link }}" aria-label="{{ latest.title }} 미리보기"><img src="/video/jobs/{{ latest.id }}/thumbnail" alt="{{ latest.title }} 영상 첫 화면" width="180" height="320" loading="lazy"><span class="studio-phone-play" aria-hidden="true">{{ ui_icon("play", 24) }}</span><span class="studio-phone-duration">{{ latest.duration }}초</span></a>{% if reference_home %}</div>{% endif %}
     <p class="studio-preview-title">{{ latest.title }}</p><a class="studio-preview-link" href="{{ latest.link }}">최근 영상 미리보기 →</a>
-    {% if reference_home %}<div class="premium-preview-actions"><a class="button" href="/ai?draft_id={{ latest.draft_id }}">{{ ui_icon("file", 18) }} 대본·자막 수정</a><a class="button primary" href="{{ latest.link }}">{{ ui_icon("play", 18) }} 영상 검토</a><a class="premium-publish-link" href="/?video={{ latest.id }}&amp;publish_platform=unified#publish-workspace">게시 준비 {{ ui_icon("send", 18) }}</a><p>게시 전 내용·출처·권리를 확인해 주세요.</p></div>{% endif %}
+    {% if reference_home %}<nav class="dashboard-video-strip" aria-label="최근 영상 선택">{% for item in completed[:3] %}<a href="{{ item.link }}" aria-label="{{ item.title }} 영상 열기"><img src="/video/jobs/{{ item.id }}/thumbnail" alt="" loading="lazy" width="90" height="160"><span>{{ '%02d'|format(loop.index) }} · {{ item.title }}</span><small>{{ item.duration }}초 · 검토 열기</small></a>{% endfor %}</nav><div class="premium-preview-actions"><a class="button" href="/ai?draft_id={{ latest.draft_id }}">{{ ui_icon("file", 18) }} 대본·자막 수정</a><a class="button primary" href="{{ latest.link }}">{{ ui_icon("play", 18) }} 영상 검토</a><a class="premium-publish-link" href="/?video={{ latest.id }}&amp;publish_platform=unified#publish-workspace">게시 준비 {{ ui_icon("send", 18) }}</a><p>게시 전 내용·출처·권리를 확인해 주세요.</p></div>{% endif %}
   {% else %}
     <div class="studio-phone studio-phone-empty"><span class="studio-phone-mark" aria-hidden="true"><svg viewBox="0 0 48 48" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="5" width="32" height="38" rx="7"/><path d="m20 17 12 7-12 7z"/></svg></span><strong>새로운 이야기가<br>영상이 되는 곳</strong><p>완성된 쇼츠를<br>여기서 확인하세요.</p><span class="studio-phone-tag">NEWSFLOW AI</span></div>
     <p class="studio-preview-caption">아직 완성된 영상이 없어요.</p>

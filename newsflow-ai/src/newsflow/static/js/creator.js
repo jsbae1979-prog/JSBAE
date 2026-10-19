@@ -13,6 +13,18 @@ document.querySelectorAll('[data-topic-search]').forEach(form => {
     }
   });
 });
+// The dashboard prioritizes existing tasks; opening new settings never submits a job.
+const homeCreateDrawer = document.querySelector('[data-home-create-drawer]');
+if (homeCreateDrawer) {
+  document.querySelectorAll('a[href="#production-title"],a[href="#quick-source"]').forEach(link => {
+    link.addEventListener('click', () => {
+      homeCreateDrawer.open = true;
+      requestAnimationFrame(() => document.getElementById(link.hash.slice(1))?.focus({preventScroll: true}));
+    });
+  });
+  if (['#production-title', '#quick-source'].includes(location.hash)) homeCreateDrawer.open = true;
+  homeCreateDrawer.addEventListener('invalid', () => { homeCreateDrawer.open = true; }, true);
+}
 const articleMatch = /^#article-(\d+)$/.exec(location.hash);
 if (articleMatch) {
   const article = document.getElementById(`article-${articleMatch[1]}`);
