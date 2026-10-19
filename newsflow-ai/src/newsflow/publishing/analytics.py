@@ -330,6 +330,13 @@ class AnalyticsService:
             }
             for i, (d, v) in enumerate(points)
         ]
+        # Classify each video once from its preserved publication evidence, never current news.
+        with self.sessions() as session:
+            sources = dict(session.execute(
+                select(PublishJob.id, PublishDraft.sources).join(PublishDraft, PublishJob.draft_id == PublishDraft.id)
+                .where(PublishJob.id.in_({row.job_id for row in rows}))
+            ).all()) if rows else {}
+        categories = category_performance(rows, sources, platform)
         recommendation = recommend(rows, account_id=account_id)
         return {
             "platform": platform,
@@ -337,6 +344,7 @@ class AnalyticsService:
             "totals": totals,
             "rows": rows[:100],
             "chart": chart,
+            "categories": categories,
             "points": " ".join(f"{p['x']},{p['y']}" for p in chart),
             "synthetic": synthetic,
             "recommendation": recommendation,
@@ -396,3 +404,31 @@ def recommend(rows: list, *, account_id: int | None, now=None) -> dict:
         "samples": count,
         "reason": "동일 계정의 첫 7일 조회수 중앙값 비교 · KST · 인과관계·성과 보장 아님",
     }
+
+
+def category_performance(rows: list, sources: dict[int, dict], platform: str) -> list[dict]:
+    """One bucket per published video, no multiplication for multi-source stories.
+
+    Input rows are the same platform/account/cohort and deduplicated snapshots used by dashboard.
+    A category is not a growth/quality prediction; zero and missing remain distinct.
+    """
+    metric = {"youtube": "views", "instagram": "views", "tiktok": "view_count",
+              "facebook": "total_video_views"}[platform]
+    aliases = {"it": "IT·과학", "IT": "IT·과학", "IT/과학": "IT·과학", "IT·과학": "IT·과학", "AI": "IT·과학",
+               "economy": "경제", "politics": "정치", "society": "사회", "world": "국제",
+               "경제": "경제", "정치": "정치", "사회": "사회", "국제": "국제",
+               "스포츠": "스포츠", "문화": "문화", "연예": "연예"}
+    totals, videos = defaultdict(Decimal), defaultdict(set)
+    for row in rows:
+        if row.metric != metric:
+            continue
+        evidence = sources.get(row.job_id, {})
+        articles = evidence.get("articles", []) if isinstance(evidence, dict) else []
+        categories = {aliases.get(a.get("category"), "미분류") for a in articles if isinstance(a, dict)}
+        category = next(iter(categories)) if len(categories) == 1 else "복합 주제" if categories else "미분류"
+        totals[category] += Decimal(row.value)
+        videos[category].add(row.job_id)
+    total = sum(totals.values(), Decimal(0))
+    return [{"name": name, "views": value, "videos": len(videos[name]),
+             "percent": float(value / total * 100) if total else 0}
+            for name, value in sorted(totals.items(), key=lambda item: (-item[1], item[0]))]

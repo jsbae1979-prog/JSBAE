@@ -40,6 +40,7 @@ class ScenePlan:
     clip: Path | None = None
     ai_generated: bool = False
     clip_format: str = "mov"
+    effect: str = "cut"
 
 
 @dataclass(frozen=True)
@@ -73,6 +74,8 @@ class RenderPlan:
             not 0.1 <= s.seconds <= 60 or len(s.narration) > 400 or len(s.caption) > 150 for s in self.scenes
         ):
             raise RenderError("장면 시간 또는 텍스트 길이를 확인하세요.")
+        if any(s.effect not in {"cut", "fade"} for s in self.scenes):
+            raise RenderError("지원하는 장면 효과를 선택하세요.")
 
 
 AUDIO_TAIL_SECONDS = 0.35
@@ -522,6 +525,26 @@ class FFmpegAdapter:
         ]
 
     @staticmethod
+    def apply_effect(command: list[str], scene: ScenePlan) -> list[str]:
+        """Apply only our enum-based filters after captions; preserve narration/timing."""
+        if scene.effect not in {"cut", "fade"}:
+            raise RenderError("지원하는 장면 효과를 선택하세요.")
+        command = list(command)
+        if scene.effect == "cut":
+            return command
+        duration = min(0.25, scene.seconds / 4)
+        effect = f"fade=t=in:st=0:d={duration:.3f},fade=t=out:st={scene.seconds-duration:.3f}:d={duration:.3f}"
+        if "-filter_complex" in command:
+            index = command.index("-filter_complex") + 1
+            command[index] = command[index].replace("[v]", f"[effectbase];[effectbase]{effect}[v]")
+        elif "-vf" in command:
+            index = command.index("-vf") + 1
+            command[index] += "," + effect
+        else:
+            command[-1:-1] = ["-vf", effect]
+        return command
+
+    @staticmethod
     def execute(args: list[str], work: Path, cancel: Event, timeout: float = 600) -> None:
         try:
             with subprocess.Popen(
@@ -633,6 +656,7 @@ class FFmpegAdapter:
                     command[filter_index] = command[filter_index].replace("[v]", f"[base];[base]ass={ass.name}[v]")
                 else:
                     command[-1:-1] = ["-vf", f"ass={ass.name}"]
+            command = self.apply_effect(command, scene)
             self.execute(command, work, cancel)
             progress(10 + int((index + 1) / len(scenes) * 75))
         manifest = work / "concat.txt"

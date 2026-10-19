@@ -32,6 +32,7 @@ from .news_usage import (
     validate_news_usage,
     validate_news_usage_script,
 )
+from .presentation import presentation
 from .provider import (
     ANALYSIS_INSTRUCTION,
     SCRIPT_INSTRUCTION,
@@ -603,7 +604,13 @@ class IntelligenceService:
         on_run: Callable[[int], None] | None = None,
         article_ids: list[int] | None = None,
         news_usage: str | None = None,
+        script_style: str = "news",
+        script_tone: str = "neutral",
+        script_audience: str = "general",
     ) -> int:
+        chosen_presentation = presentation(script_style, script_tone, script_audience)
+        if mode == "offline" and (script_style, script_tone, script_audience) != ("news", "neutral", "general"):
+            raise IntelligenceError("스타일 적용은 연결된 AI로 대본을 생성할 때 사용할 수 있습니다.", "invalid_selection", False)
         if duration not in (30, 45, 60) or mode not in MODES:
             raise IntelligenceError("영상 길이 또는 Provider가 잘못되었습니다.", "invalid_selection", False)
         if mode != "offline" and not consent:
@@ -649,12 +656,14 @@ class IntelligenceService:
                             "news_usage_contract": api_news_contract(
                                 evidence, evidence["news_usage"], duration, speech=self.speech,
                             )}
+            evidence = {**evidence, "presentation": chosen_presentation}
             run = IntelligenceRun(
                 kind="script",
                 provider=mode,
                 status="running",
                 evidence=evidence,
                 options={**vars(options), "duration": duration, "analysis_run_id": analysis_id,
+                         "presentation": chosen_presentation,
                          **({"selected_article_ids": article_ids} if article_ids is not None else {})},
                 result={},
                 message="대본 생성 중",

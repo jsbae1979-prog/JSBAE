@@ -192,6 +192,7 @@ async def render(
             reviewed,
             asset_permission,
             external_tts_consent=external_tts_consent,
+            effects=[str(value) for value in form.getlist("effects")] or None,
         )
     except RenderBusy:
         raise HTTPException(409, "이미 영상 제작이 실행 중입니다.") from None

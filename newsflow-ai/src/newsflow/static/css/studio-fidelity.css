@@ -190,3 +190,21 @@
 .suite-shell .workstation-track button{min-height:28px;padding:5px 8px}
 .suite-shell .workstation-timeline .hint{margin:7px 0 4px}
 }
+
+/* Functional controls keep the reference's compact inspector and readable timeline. */
+.suite-shell .script-style-panel {margin:16px 0;padding:12px;border:1px solid #243957;border-radius:10px;background:#0c192a;}
+.suite-shell .script-style-panel summary {cursor:pointer;font-weight:650;color:#dbeafe;}
+.suite-shell .script-style-controls {display:grid;gap:10px;margin:12px 0;}
+.suite-shell .script-style-controls label {display:grid;gap:6px;min-width:0;}
+.suite-shell .script-style-controls select {width:100%;min-width:0;}
+.suite-shell .track-effect button {background:#283754;color:#d6e5ff;}
+.suite-shell .category-performance-row {margin:14px 0;}
+.suite-shell .category-performance-row>div {display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.suite-shell .category-performance-row span,.suite-shell .category-performance-row small {color:#a9bad1;font-size:12px;}
+.suite-shell .category-performance progress {display:block;width:100%;height:8px;margin:8px 0;accent-color:#368bff;}
+@media(min-width:1200px){.suite-shell .workstation-analytics-grid {grid-template-columns:1.5fr 1fr 1fr;}}
+
+.suite-shell .category-performance progress {appearance:none;border:0;border-radius:6px;background:#172c46;overflow:hidden;}
+.suite-shell .category-performance progress::-webkit-progress-bar {background:#172c46;border-radius:6px;}
+.suite-shell .category-performance progress::-webkit-progress-value {background:linear-gradient(90deg,#2563eb,#06b6d4);border-radius:6px;}
+.suite-shell .category-performance progress::-moz-progress-bar {background:#368bff;border-radius:6px;}

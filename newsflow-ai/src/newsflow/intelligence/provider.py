@@ -147,6 +147,8 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 SCRIPT_INSTRUCTION = (
+    "서버가 제공한 evidence.presentation의 스타일·톤·시청자 수준을 반영하되 사실·출처·검토 규칙을 우선한다. "
+    "스타일은 표현 방식만 바꾸며 새 사실·인용·자극적 단정을 만들거나 미확인 표시를 제거하지 않는다. "
     "You write Korean short-form news narration scripts for a vertical video. Return JSON only with keys: "
     "title, hook, summary, scenes (list of objects: seconds integer, narration, caption, material), closing. "
     "Structure: hook = 도입 문장 (one sentence that states the topic), scenes = 주요 뉴스 내용 in order "

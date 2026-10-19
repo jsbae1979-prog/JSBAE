@@ -129,11 +129,12 @@ class VideoCoordinator:
         reviewed: bool = False,
         asset_permission: bool = False,
         external_tts_consent: bool = False,
+        effects: list[str] | None = None,
     ) -> int:
         if duration not in (30, 45, 60) or not reviewed:
             raise VideoError("영상 길이를 선택하고 렌더링 전 대본·출처 검토를 확인하세요.")
         return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False,
-                           fit_audio=voice != "offline-silence", external_tts_consent=external_tts_consent)
+                           fit_audio=voice != "offline-silence", external_tts_consent=external_tts_consent, effects=effects)
 
     def start_preview(
         self,
@@ -288,6 +289,7 @@ class VideoCoordinator:
         clip_bytes: int = 0,
         external_tts_consent: bool = False,
         elevenlabs_config: dict | None = None,
+        effects: list[str] | None = None,
     ) -> int:
         speech = speech or SpeechSettings()
         if self.cancel.is_set():
@@ -349,12 +351,17 @@ class VideoCoordinator:
                                        elevenlabs_config=elevenlabs_config)
                 if voice not in tts.voices():
                     raise VideoError("설치된 음성 목록에서 음성을 선택하세요.")
+                if effects is None:
+                    effects = ["cut"] * len(draft.content["scenes"])
+                if (not isinstance(effects, list) or len(effects) != len(draft.content["scenes"])
+                        or any(effect not in {"cut", "fade"} for effect in effects)):
+                    raise VideoError("각 장면의 효과를 확인하세요.")
                 strict_audio_fit = draft.sources.get("script_method") == API_SCRIPT_METHOD
                 plan = RenderPlan(
                     draft.content["title"],
                     [
-                        ScenePlan((end - start) / 1000, s["narration"], s["caption"])
-                        for (start, end), s in zip(times, draft.content["scenes"])
+                        ScenePlan((end - start) / 1000, s["narration"], s["caption"], effect=effect)
+                        for (start, end), s, effect in zip(times, draft.content["scenes"], effects)
                     ],
                     [],
                     voice,
@@ -370,7 +377,7 @@ class VideoCoordinator:
                     title=draft.content["title"],
                     duration=duration,
                     snapshot={
-                        **draft.content, "draft_revision": draft.revision,
+                        **draft.content, "draft_revision": draft.revision, "effects": list(effects),
                         "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio,
                                    "strict_audio_fit": strict_audio_fit},
                         # Provenance: which reviewed AI clip (by content hash) each scene must use.
@@ -496,6 +503,10 @@ class VideoCoordinator:
                     speech = SpeechSettings()
                 fit_audio = bool(saved.get("fit_audio")) and voice != "offline-silence"
                 strict_audio_fit = saved.get("strict_audio_fit") is True
+                effects = project.snapshot.get("effects", ["cut"] * len(scenes))
+                if (not isinstance(effects, list) or len(effects) != len(scenes)
+                        or any(effect not in {"cut", "fade"} for effect in effects)):
+                    raise RenderError("저장된 장면 효과가 올바르지 않습니다.")
                 ai_clips = list(project.snapshot.get("ai_clips") or [])
                 expected = {int(item["position"]): item.get("sha256") for item in ai_clips}
             with TemporaryDirectory(prefix=f"job-{identifier}-", dir=self.temporary) as directory:
@@ -523,6 +534,7 @@ class VideoCoordinator:
                         ScenePlan(
                             (scene.end_ms - scene.start_ms) / 1000, scene.narration, scene.caption, image,
                             clip=clip, ai_generated=bool(scene.ai_generated and clip), clip_format=clip_format,
+                            effect=effects[index],
                         )
                     )
                 plan = RenderPlan(title, plans, source_links, voice, font_size, position_y, speech, fit_audio,

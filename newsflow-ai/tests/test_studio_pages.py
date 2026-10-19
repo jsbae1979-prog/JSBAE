@@ -140,7 +140,8 @@ def test_workstation_scene_selection_filters_and_chart_are_read_only(studio_ui, 
             page.keyboard.press('Enter')
             expect(page.locator('[data-video-scene="1"]')).to_be_visible()
             expect(page.locator('[data-video-scene="0"]')).to_be_hidden()
-            expect(page.locator('[data-video-scene-select="1"]')).to_have_count(4)
+            expect(page.locator('[data-video-scene-select="1"]')).to_have_count(5)
+            expect(page.locator('.track-effect [data-video-scene-select="1"]')).to_have_count(1)
             assert all(value == 'true' for value in page.locator('[data-video-scene-select="1"]').evaluate_all(
                 "elements => elements.map(element => element.getAttribute('aria-pressed'))"))
             # All scene image selectors remain successful controls of the unchanged protected form.

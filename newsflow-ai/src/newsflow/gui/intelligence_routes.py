@@ -23,6 +23,7 @@ from newsflow.db.models import (
 from newsflow.easy_setup import preview_preferences, speech_preferences
 from newsflow.intelligence.estimate import estimate_call, estimate_cost
 from newsflow.intelligence.news_usage import safe_topic_script
+from newsflow.intelligence.presentation import AUDIENCES, STYLES, TONES
 from newsflow.intelligence.provider import SCRIPT_INSTRUCTION, Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import (
@@ -227,6 +228,7 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
             request,
             "ai.html",
             preview=preview,
+            script_styles=STYLES, script_tones=TONES, script_audiences=AUDIENCES,
             active="ai",
             analysis=analysis,
             draft=draft,
@@ -279,6 +281,7 @@ def analyze(
 def generate(
     request: Request,
     analysis_id: int = Form(ge=1),
+    source_draft_id: int | None = Form(None, ge=1),
     duration: int = Form(),
     provider: str = Form("offline", max_length=20),
     consent: bool = Form(False),
@@ -287,10 +290,21 @@ def generate(
     timeout: int = Form(20),
     max_tokens: int = Form(1800),
     flow: str | None = Form(None, max_length=2000),
+    script_style: str = Form("news", max_length=20),
+    script_tone: str = Form("neutral", max_length=20),
+    script_audience: str = Form("general", max_length=20),
 ) -> RedirectResponse:
     try:
         incoming = parse_context(flow)
+        selected_ids = None
         with request.app.state.sessions() as session:
+            if source_draft_id is not None:
+                original = session.get(ContentDraft, source_draft_id)
+                original_run = session.get(IntelligenceRun, original.run_id) if original else None
+                if (not original_run or original_run.options.get("analysis_run_id") != analysis_id
+                        or original_run.provider != provider or original_run.options.get("model") != model):
+                    raise ValueError("원본 대본과 같은 분석·AI·모델을 사용하세요.")
+                selected_ids = original_run.options.get("selected_article_ids")
             production = context_for_run(session.get(IntelligenceRun, analysis_id)) or incoming
         if production:
             production = {**production, "analysis_id": analysis_id}
@@ -298,6 +312,8 @@ def generate(
         identifier = service(request).generate(
             analysis_id, duration, provider, consent, options,
             on_run=remember_context(request.app.state.sessions, production),
+            script_style=script_style, script_tone=script_tone, script_audience=script_audience,
+            article_ids=selected_ids,
             news_usage=production.get("news_usage") if production and provider in {"openai", "claude_api"} else None,
         )
     except (IntelligenceError, ValueError) as exc:

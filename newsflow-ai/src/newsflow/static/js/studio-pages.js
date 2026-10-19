@@ -157,3 +157,11 @@ document.querySelector('[data-copy-script]')?.addEventListener('click', async ()
     feedback.textContent = '복사를 허용하지 않은 브라우저입니다. 내레이션을 선택해 복사해 주세요.';
   }
 });
+
+// Effect changes configure the next explicit render only; previous MP4s stay intact.
+document.querySelectorAll('[data-scene-effect]').forEach(select => {
+  select.addEventListener('change', () => {
+    const button = document.querySelector(`.track-effect [data-video-scene-select="${select.dataset.sceneEffect}"]`);
+    if (button) button.textContent = select.options[select.selectedIndex].textContent;
+  });
+});
