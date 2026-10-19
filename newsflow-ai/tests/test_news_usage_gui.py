@@ -57,7 +57,8 @@ def test_workspace_offers_one_news_usage_choice_with_standard_default(client, ap
     assert 'aria-describedby="news-usage-help"' in html
     assert "목록 페이지는 주제 참고용" in html
     assert "선택한 AI" in html and "이번 분석 · 대본" not in html
-    assert "API 선택 시 해당 API로 분석·대본을 만듭니다" in html
+    assert 'data-home-ai data-selected-ai="' in html
+    assert 'href="/simple-settings#connections"' in html
     assert stored_values(app) == before
 
 

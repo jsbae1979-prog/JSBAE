@@ -85,11 +85,14 @@ def test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth(c
         if suffix == "check-search":
             button = next(node for node in doc.find("button", type="submit") if form in node.ancestors)
             assert "disabled" in button.attrs
-    assert "검색 요청 1회" in response.text and "9,000토큰" in response.text
+    assert "유료 웹 검색 1회 검증" in response.text
+    assert "분석·대본·영상은 만들지 않습니다" in response.text
+    assert "같은 인증 기록의 검증은 다시 전송하지 않습니다" in response.text
     assert not doc.find("input", name="max_cost_usd")
     assert not doc.find("input", name="request_limit_usd")
-    assert "응답의 사용량을 받아 비용을 집계" in response.text
-    assert "최종 비용이나 월 예산 이내 완료를 보장하지 않습니다" in response.text
+    assert "응답 후 확인되는 검색·토큰 비용" in response.text
+    assert "이번 요청 비용은 사전에 확정되지 않습니다" in response.text
+    assert "비용 상한을 보장하지 않습니다" in response.text
     assert calls == [] and settings(app) == before and encrypted == store.path.read_bytes()
     assert KEY not in response.text
 

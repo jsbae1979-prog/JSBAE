@@ -36,7 +36,7 @@ def start_guided(client, app):
 
 
 @pytest.mark.parametrize("path,title", [
-    ("/", "오늘은 어떤 이야기를"),
+    ("/", "오늘의 뉴스를,"),
     ("/autopilot/start", "뉴스 영상 만들기"),
     ("/autopilot/jobs", "작업 현황"),
     ("/queue", "게시 대기함"),
@@ -212,7 +212,10 @@ def test_fake_render_cannot_appear_as_completed_video(client, app):
     app.state.video.future.result(timeout=15)
     with app.state.sessions() as session:
         assert session.get(RenderJob, render_id).status == "simulated"
-    assert "완성한 영상이 여기에 모입니다" in client.get("/").text
+    home = client.get("/").text
+    assert "첫 쇼츠가 기다리고 있어요" in home
+    assert 'id="dashboard-player"' not in home
+    assert f'/video/jobs/{render_id}/file' not in home
     assert client.get(f"/video/jobs/{render_id}/file").status_code == 404
 
 
