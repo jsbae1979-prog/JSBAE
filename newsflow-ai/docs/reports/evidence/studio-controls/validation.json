@@ -22,5 +22,6 @@
   "python_314": "NOT VERIFIED",
   "whole_suite": "NOT RUN; previously recorded 57 FAIL preserved",
   "browser": "Cloud Chromium 151; three viewports, Fake OpenAI/Claude flows; outside requests rejected and none observed",
-  "sample_mp4": "2s silent H264/AAC 1080x1920, decoded fade frames and Chromium playback PASS"
+  "sample_mp4": "2s silent H264/AAC 1080x1920, decoded fade frames and Chromium playback PASS",
+  "gallery": "PASS: 18 before/current images + report/XML/JSON HTTP 200 + MP4 playback; external requests 0"
 }

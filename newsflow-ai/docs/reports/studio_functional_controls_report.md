@@ -65,7 +65,7 @@ NEWSFLOW_CONTROL_EVIDENCE=/tmp/newsflow-controls-committed \
 
 [화면 갤러리](evidence/studio-controls/review.html) · [pytest XML](evidence/studio-controls/pytest.xml) · [검증 메타데이터](evidence/studio-controls/validation.json) · [2초 합성 MP4](evidence/studio-controls/synthetic-fade-2s.mp4)
 
-세 화면 × 세 크기 총 9개 실제 브라우저 캡처. 대본/모바일 일부는 조작부가 보이도록 스크롤한 뷰포트이며 전체 페이지 축소 이미지가 아닙니다. 이전 화면은 별도 합성 자료이므로 데이터 수치의 변화로 기능 효과를 비교하지 않습니다. PNG 원본을 보존했습니다.
+세 화면 × 세 크기 총 9개 실제 브라우저 캡처. 대본/모바일 일부는 조작부가 보이도록 스크롤한 뷰포트이며 전체 페이지 축소 이미지가 아닙니다. 이전 화면은 별도 합성 자료이므로 데이터 수치의 변화로 기능 효과를 비교하지 않습니다. PNG 원본을 보존했습니다. 별도 임시 loopback 서버에서 갤러리의 전후 이미지 18장·보고서/XML/JSON 링크·MP4 재생이 실제로 열리는 것을 확인하고 서버를 종료했습니다.
 
 ## 남은 차이·미검증
 

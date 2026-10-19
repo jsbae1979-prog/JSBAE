@@ -20,5 +20,20 @@
   ],
   "scroll": "Some captures scrolled to tested controls; raw viewport pixels",
   "video": "2s silent synthetic H264/AAC 1080x1920, no real voice or anchor",
-  "remote_changes": false
+  "remote_changes": false,
+  "files": {
+    "pytest.xml": "cfd3887231143b3a2e6d6c48d2a9b6e8ad5767963fbfdee08a229bc8749a1e8c",
+    "analytics-1920.png": "bbacd9f29e4b7f4e136564c37ee5262fb704e1f2a171fba4ab2f3b198274babf",
+    "script-1920.png": "3edc4b6259f0f05019985ee0e3597bbe73d5e5b5ffa96fdf09b1e62fcd832dce",
+    "synthetic-fade-2s.mp4": "e8e3ec75ad03c5b6636f8acdb3ef6aa130d9af0d1604d1c4a8b26a3a0544b7a5",
+    "script-390.png": "2191825fdf1ca4db1b95b047e9beeedca7d71d49baefaaf2079853ab942b2225",
+    "analytics-1366.png": "951c0826a0b004dd24e95f14c9c6302cb749d494b533dc4a1be25c03a070c952",
+    "review.html": "833066fe0c0f50f413839702e68cc5c80666bba3898dcaf1dd1e472de202d73b",
+    "analytics-390.png": "50fee737e2ececb795f5c0e1727b15fc452e8fd32fe2be066cc75732497e2b81",
+    "video-1366.png": "79ad95e80392c71af7e9c59f8f1214d66a6ea7f86f0ea89cbfdec8681176fcf8",
+    "video-1920.png": "9eff28b8ece8cbf0fa24437ff9de171ed715a29d6dbde5449bcfb37337483798",
+    "script-1366.png": "981c33751f9fe625dc5a8beabb6e9f037987fc5f3e48190d1418a7574594e829",
+    "validation.json": "df9a7c8609ec9c5b1fe78f3067d920a936c78f231d16ce27c59f589d77114d95",
+    "video-390.png": "3b5988a1a97b07bd393a2467153705d123471b4189515682e8c17a7feb303ceb"
+  }
 }
