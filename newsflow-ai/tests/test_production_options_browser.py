@@ -118,6 +118,9 @@ def test_skip_review_elevenlabs_fake_to_real_mp4_final_review(app, api_pipeline,
         assert api.calls == ["search", "analysis", "script"] and rss.calls == []
         assert len(sent) == 3 and [method for method, _ in calls] == ["GET", "POST"] * 3
         expect(page.locator('[data-autopilot-job]')).to_have_attribute("data-job-stage", "validate", timeout=15000)
+        expect(page.locator('.creator-flow [aria-current="step"]')).to_contain_text('미리보기·최종 검토')
+        expect(page.locator('[data-production-history] .progress-panel')).to_be_hidden()
+        assert page.locator('[data-ai-production-history]').count() == 0
         player = page.locator('[data-workspace-detail] video').first
         player.evaluate("async v=>{v.muted=true;await v.play()}")
         page.wait_for_function("document.querySelector('[data-workspace-detail] video').currentTime > 0")

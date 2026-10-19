@@ -38,6 +38,16 @@ def test_settings_edit_save_reenter_and_creation_without_external_actions(app, b
         for path, name in (("/simple-settings", "settings-after.png"), ("/video-ai-settings", "higgsfield-after.png")):
             assert page.goto(origin + path).status == 200
             page.screenshot(path=str(output / name), full_page=True)
+        assert page.locator('#video-ai-reasons a').get_attribute('href') == '#video-ai-key'
+        sections = ['#video-ai-key', '#video-ai-models', '#video-ai-settings-form']
+        positions = [page.locator(selector).bounding_box()['y'] for selector in sections]
+        assert positions == sorted(positions)
+        for width, height in ((1366, 768), (1920, 1080), (390, 844)):
+            page.set_viewport_size({'width': width, 'height': height})
+            page.evaluate("scrollTo({top:0,behavior:'instant'})")
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.screenshot(path=str(output / f'higgsfield-{width}.png'))
+        page.set_viewport_size({'width':1366,'height':768})
         # Use synthetic key storage; its binding is identical to app initialization.
         stores = synthetic_stores(app)
         configured(app, "openai")
@@ -58,7 +68,18 @@ def test_settings_edit_save_reenter_and_creation_without_external_actions(app, b
         for width, height in ((1366, 768), (1920, 1080), (390, 844)):
             page.set_viewport_size({"width": width, "height": height})
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-        page.set_viewport_size({"width": 1366, "height": 768})
+            save = page.get_by_role('button', name='제작 구성 저장', exact=True)
+            page.locator('[role="tab"][aria-selected="true"]').focus()
+            save.focus()
+            expect(save).to_be_focused()
+            expect(save).to_be_in_viewport(ratio=1)
+            box = save.bounding_box()
+            assert box and 0 <= box['x'] and box['x']+box['width'] <= width
+            assert 0 <= box['y'] and box['y']+box['height'] <= height
+            assert save.evaluate('e=>{const r=e.getBoundingClientRect();return e.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2))}')
+            page.screenshot(path=str(output / f'settings-save-{width}.png'))
+            page.evaluate("scrollTo({top:0,behavior:'instant'})")
+            page.screenshot(path=str(output / f'settings-top-{width}.png'))
         before = read_api_settings(app.state.sessions, 'openai')
         key_bytes = {key: store.path.read_bytes() for key, store in stores.items()}
         page.get_by_text('제작 기본값', exact=True).click()
@@ -67,6 +88,7 @@ def test_settings_edit_save_reenter_and_creation_without_external_actions(app, b
         expect(page.get_by_role('status').filter(has_text='제작 구성을 저장했습니다')).to_be_visible()
         page.reload()
         expect(page.locator('[name="duration"]')).to_have_value('45')
+        page.set_viewport_size({'width':1366,'height':768})
         assert read_api_settings(app.state.sessions, 'openai') == before
         assert {key: store.path.read_bytes() for key, store in stores.items()} == key_bytes
         page.get_by_role("tab", name="비용 관리", exact=True).click()
@@ -86,6 +108,24 @@ def test_settings_edit_save_reenter_and_creation_without_external_actions(app, b
         expect(page.locator('[name="script_review"]')).to_be_checked()
         expect(page.locator('#quick-voice-method')).to_have_value('local')
         expect(page.locator('#quick-video-method')).to_have_value('off')
+        page.locator('.studio-production-options > summary').click()
+        expect(page.locator('[data-external-video-note]')).to_be_hidden()
+        assert '모든 시각 장면을 Higgsfield' not in page.locator('body').inner_text()
+        assert page.locator('.chosen-production, [data-selected-voice], [data-selected-video]').count() == 0
+        for choice in ('higgsfield', 'off', 'higgsfield', 'off'):
+            page.locator('#quick-video-method').select_option(choice)
+            note = page.locator('[data-external-video-note]')
+            if choice == 'off':
+                expect(note).to_be_hidden()
+            else:
+                expect(note).to_be_visible()
+        page.locator('.studio-production-options > summary').click()
+        for width, height in ((1366, 768), (1920, 1080), (390, 844)):
+            page.set_viewport_size({'width':width,'height':height})
+            page.locator('form.quick-production-form').evaluate('e=>e.scrollIntoView({block:"start",behavior:"instant"})')
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.screenshot(path=str(output / f'production-{width}.png'))
+        page.set_viewport_size({'width':1366,'height':768})
         # Hidden operational parameters preserve prior saved runtime behavior.
         write_settings(app.state.sessions, provider='higgsfield', host='api.higgsfield.ai', approved=False,
                        monthly_limit='100', job_limit='5', currency='USD', max_active=3, timeout_minutes=42, poll_seconds=17)

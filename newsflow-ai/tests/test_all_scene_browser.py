@@ -11,6 +11,7 @@ from test_cloud_workspace_flow import local_server
 from test_model_picker_browser import browser as browser_fixture
 from test_single_workspace import save_values
 
+from newsflow.db.models import PublishDraft
 from newsflow.gui import production_status
 from newsflow.gui.routes import templates
 from newsflow.intelligence.settings import write_studio_settings
@@ -100,12 +101,43 @@ def test_workspace_all_ai_voice_approval_to_original_task_preview(production, br
         job = coordinator.snapshot(identifier)
         assert (job["status"], job["current_stage"]) == ("waiting_review", "validate"), job
         page.goto(origin + f'/?task={identifier}#workspace-detail')
+        detail = page.locator('#workspace-detail')
+        expect(detail.locator('.creator-flow [aria-current="step"]')).to_contain_text('미리보기·최종 검토')
+        assert '장면별 승인 대기' not in detail.inner_text()
+        expect(detail.get_by_role('link', name='AI 장면 계획·승인 열기 →', exact=True)).to_have_count(0)
+        history = detail.locator('[data-ai-production-history]')
+        expect(history).not_to_have_attribute('open', '')
+        expect(detail.locator('[data-production-history] .progress-panel')).to_be_hidden()
+        history.locator('summary').focus()
+        page.keyboard.press('Enter')
+        expect(history.get_by_role('link', name='장면·승인 기록 보기 →')).to_be_visible()
+        page.keyboard.press('Enter')
+        expect(history.get_by_role('link')).to_be_hidden()
         video = page.locator('[data-workspace-player]').first
         expect(video).to_be_visible()
         video.evaluate("async v=>{v.muted=true;await v.play()}")
         page.wait_for_function("document.querySelector('[data-workspace-player]').currentTime > 0")
         video.evaluate("v=>v.pause()")
         page.locator('#workspace-detail').screenshot(path=str(output / f'ai-final-review-{p["mode"]}.png'))
+        for width, height in ((1366, 768), (1920, 1080), (390, 844)):
+            page.set_viewport_size({'width': width, 'height': height})
+            detail.evaluate('e=>e.scrollIntoView({block:"start",behavior:"instant"})')
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.screenshot(path=str(output / f'final-review-{p["mode"]}-{width}.png'))
+        counts = (len(p['fake'].calls), len(p['voice_calls']))
+        with page.expect_navigation(wait_until='domcontentloaded'):
+            detail.get_by_role('button', name='게시 대기함에 보관하기').click()
+        coordinator.future.result(timeout=60)
+        job = coordinator.snapshot(identifier)
+        assert job['status'] == 'completed'
+        with p['sessions']() as session:
+            queued = session.get(PublishDraft, job['publish_draft_id'])
+            assert not queued.content_reviewed and queued.account_id is None
+        page.goto(origin + f'/?task={identifier}#workspace-detail')
+        expect(detail.locator('.creator-flow [aria-current="step"]')).to_contain_text('미리보기·최종 검토')
+        assert '장면별 승인 대기' not in detail.inner_text()
+        expect(detail.locator('[data-production-history] .progress-panel')).to_be_hidden()
+        assert counts == (len(p['fake'].calls), len(p['voice_calls']))
         assert not errors and not external
         assert len([c for c in p["voice_calls"] if c[0] == "POST"]) == 3
         assert len([c for c in p["fake"].calls if c[0] == "submit"]) == 3

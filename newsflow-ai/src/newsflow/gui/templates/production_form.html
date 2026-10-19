@@ -24,8 +24,6 @@
     <details class="easy-advanced studio-production-options"><summary>뉴스 확보 방식·대본 옵션 <span data-home-acquisition>{{ acquisition_labels[entry_policy] }}</span></summary>
       <div data-source-mode="feeds" {% if entry_source == 'sample' %}hidden{% endif %}><label for="quick-acquisition">뉴스 확보 방식<select id="quick-acquisition" name="acquisition_policy">{% for value,label in acquisition_labels.items() %}<option value="{{ value }}" {% if entry_policy == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><p class="hint">선택한 방식으로 새 뉴스를 확보합니다. 검색 실패 시 재검색이나 다른 서비스로 자동 전환하지 않아요. 발행일을 확인하지 못한 기사는 최신으로 확정하지 않습니다.</p></div>
       <label for="quick-news-usage">뉴스 활용 수준<select id="quick-news-usage" name="news_usage" aria-describedby="news-usage-help">{% for value,label in news_usage_labels.items() if value != 'VERIFIED' %}<option value="{{ value }}" {% if entry_news_usage == value %}selected{% endif %}>{{ label }}{% if value == 'QUICK' %} · 주제 중심{% elif value == 'STANDARD' %} · 사실과 해설 구분{% else %} · 근거 부족 시 중단{% endif %}</option>{% endfor %}</select></label><p class="hint" id="news-usage-help">목록 페이지는 주제 참고용입니다. QUICK은 간결하게, STANDARD는 배경·쟁점까지 구성해요. 검증 우선은 미지원입니다.</p>
-      <p class="hint">AI 영상은 모든 시각 장면을 Higgsfield로 생성한 뒤 FFmpeg로 합성해요. 장면별 생성·내용 검토·합성 승인이 필요하며 기본 영상으로 자동 대체하지 않습니다. <a href="/simple-settings#quality">음성·영상 설정 ↗</a></p>
-      <div class="chosen-production" aria-label="현재 제작 구성"><div><small>음성 선택</small><strong data-selected-voice>{{ production_config.voice_label }}</strong></div><div><small>영상 선택</small><strong data-selected-video>{{ 'Higgsfield 장면 + FFmpeg' if production_config.video_provider == 'higgsfield' else 'FFmpeg · 로컬 제작' }}</strong></div></div>
     </details>
 
   </form>
