@@ -1,6 +1,7 @@
 {% extends 'base.html' %}{% block title %}자동 제작 예약 · NewsFlow AI{% endblock %}{% block content %}
 <div class="easy-page schedule-page">
-<div class="page-head"><div><p class="eyebrow">내 시간에 맞춰 만드는 영상</p><h1>자동 제작 예약</h1><p>원하는 시간을 정해 두면, 앱이 켜져 있을 때 제작을 시작해요.</p></div><a href="/autopilot/start">지금 직접 만들기 →</a></div>
+{% call studio_header('clock','AUTOMATION','자동 제작 예약','원하는 시간을 정해 두면, 앱이 켜져 있을 때 제작을 시작해요.') %}<a class="button" href="/simple-settings">설정으로 돌아가기</a>{% endcall %}
+
 <div class="status-chips"><span class="status-chip ready">한국 시간 · KST</span><span class="status-chip">유료 AI 사용 안 함</span><span class="status-chip">직접 검토 후 게시 준비</span></div>
 {% if saved %}<p class="soft-notice" role="status">예약을 저장했어요. 새 예약은 아래에서 안내를 확인하고 켜 주세요.</p>{% endif %}
 {% if scheduler_error %}<p class="soft-notice" role="alert">{{ scheduler_error }}</p>{% endif %}

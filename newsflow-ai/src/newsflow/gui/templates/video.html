@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}영상 만들기 · NewsFlow AI{% endblock %}
 {% block content %}
-<section class="page-head"><div><h1>영상 만들기</h1><p>저장한 대본에 음성을 더하고, 완성 영상을 확인하세요.</p></div><a class="quiet-link" href="/videos">내 영상 보기 →</a></section>
+{% call studio_header('video','VIDEO STUDIO','영상 구성','저장한 대본에 음성과 자막을 더하고, 검토 후 제작하세요.') %}<a class="button" href="/videos">내 영상 보기 →</a>{% endcall %}
 <div class="card">
   <h2>사용할 대본</h2>
   <form method="get" action="/video">
