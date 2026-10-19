@@ -211,6 +211,10 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
             draft = s.get(PublishDraft, job["publish_draft_id"])
             assert not draft.content_reviewed and not draft.copyright_confirmed and not draft.sources_confirmed
             assert draft.account_id is None
+        # The server future can finish before the form's redirect/reload. Observe the
+        # completed page before navigating; never race or retry the mutation.
+        expect(page.locator("[data-autopilot-job]")).to_have_attribute(
+            "data-job-status", "completed", timeout=15000)
         page.goto(origin+f"/?video={render_id}&publish_platform=unified#publish-workspace")
         review = page.locator('form[action="/publishing/unified/review"]')
         target = "both" if mode == "openai" else "youtube"
