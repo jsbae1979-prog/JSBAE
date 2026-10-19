@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "python": "3.14.8",
+  "actual_run_bat": true,
+  "actual_paid_api_oauth_sns": 0,
+  "user_windows_pc": "NOT VERIFIED",
+  "routes": [
+    "/",
+    "/create",
+    "/news",
+    "/videos",
+    "/queue",
+    "/simple-settings",
+    "/health"
+  ],
+  "loopback_port": 8765,
+  "default_localappdata": true,
+  "unicode_spaces_path": true,
+  "duplicate_run": "blocked",
+  "shutdown": "CTRL_BREAK with server_stop",
+  "restart": "same SQLite marker and integrity_check; no app migration edits",
+  "paid_services": "not configured; no OAuth/upload calls"
+}
