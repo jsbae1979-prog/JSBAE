@@ -1,0 +1,497 @@
+{
+  "results": [
+    {
+      "page": "home",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "지금 영상 만들기 →",
+          "height": 44
+        },
+        {
+          "label": "내 영상 보기",
+          "height": 44
+        },
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 46
+        },
+        {
+          "label": "보관 기사 검색 ↗",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "create",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "settings",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "작업실로 돌아가기 ↗",
+          "height": 44
+        },
+        {
+          "label": "FFmpeg 확인",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "앱 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "Google로 YouTube 연결",
+          "height": 44
+        },
+        {
+          "label": "연결 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "진단·현재 저장 경로",
+          "height": 44
+        },
+        {
+          "label": "제작 구성 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "library",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "새 쇼츠 만들기",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "editor",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "선택 기사 분석",
+          "height": 44
+        },
+        {
+          "label": "게시 준비 →",
+          "height": 44
+        },
+        {
+          "label": "이 대본으로 영상 구성",
+          "height": 44
+        },
+        {
+          "label": "장면 1",
+          "height": 44
+        },
+        {
+          "label": "장면 2",
+          "height": 44
+        },
+        {
+          "label": "장면 3",
+          "height": 44
+        },
+        {
+          "label": "수정 초안 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "publish",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        },
+        {
+          "label": "MP4 저장 ↓",
+          "height": 44
+        },
+        {
+          "label": "대본·자막 편집 →",
+          "height": 44
+        },
+        {
+          "label": "검토 저장·파일 확인",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "home",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "지금 영상 만들기 →",
+          "height": 44
+        },
+        {
+          "label": "내 영상 보기",
+          "height": 44
+        },
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 46
+        },
+        {
+          "label": "보관 기사 검색 ↗",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "create",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "settings",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "작업실로 돌아가기 ↗",
+          "height": 44
+        },
+        {
+          "label": "FFmpeg 확인",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "앱 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "Google로 YouTube 연결",
+          "height": 44
+        },
+        {
+          "label": "연결 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "진단·현재 저장 경로",
+          "height": 44
+        },
+        {
+          "label": "제작 구성 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "library",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "새 쇼츠 만들기",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "editor",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "선택 기사 분석",
+          "height": 44
+        },
+        {
+          "label": "게시 준비 →",
+          "height": 44
+        },
+        {
+          "label": "이 대본으로 영상 구성",
+          "height": 44
+        },
+        {
+          "label": "장면 1",
+          "height": 44
+        },
+        {
+          "label": "장면 2",
+          "height": 44
+        },
+        {
+          "label": "장면 3",
+          "height": 44
+        },
+        {
+          "label": "수정 초안 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "publish",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        },
+        {
+          "label": "MP4 저장 ↓",
+          "height": 44
+        },
+        {
+          "label": "대본·자막 편집 →",
+          "height": 44
+        },
+        {
+          "label": "검토 저장·파일 확인",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "home",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "지금 영상 만들기 →",
+          "height": 44
+        },
+        {
+          "label": "내 영상 보기",
+          "height": 44
+        },
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 46
+        },
+        {
+          "label": "보관 기사 검색 ↗",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "create",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "settings",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "작업실로 돌아가기 ↗",
+          "height": 44
+        },
+        {
+          "label": "FFmpeg 확인",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "앱 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "Google로 YouTube 연결",
+          "height": 44
+        },
+        {
+          "label": "연결 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "진단·현재 저장 경로",
+          "height": 44
+        },
+        {
+          "label": "제작 구성 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "library",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "새 쇼츠 만들기",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "editor",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "선택 기사 분석",
+          "height": 44
+        },
+        {
+          "label": "게시 준비 →",
+          "height": 44
+        },
+        {
+          "label": "이 대본으로 영상 구성",
+          "height": 44
+        },
+        {
+          "label": "장면 1",
+          "height": 44
+        },
+        {
+          "label": "장면 2",
+          "height": 44
+        },
+        {
+          "label": "장면 3",
+          "height": 44
+        },
+        {
+          "label": "수정 초안 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "publish",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        },
+        {
+          "label": "MP4 저장 ↓",
+          "height": 44
+        },
+        {
+          "label": "대본·자막 편집 →",
+          "height": 44
+        },
+        {
+          "label": "검토 저장·파일 확인",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans CJK KR\", \"Noto Sans KR\", system-ui, sans-serif"
+    }
+  ],
+  "external_browser_requests": 0
+}
