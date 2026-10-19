@@ -84,17 +84,17 @@ def test_home_creation_choices_archive_and_keyboard(studio_ui, browser, size):
         expect(page.locator(".studio-phone-empty")).to_be_visible()
         expect(page.locator(".reference-metric strong")).to_have_text(["0", "0", "0", "0"])
         expect(page.locator(".reference-news-empty")).to_be_visible()
-        expect(page.locator(".reference-search")).to_have_attribute("href", "/news")
+        expect(page.locator(".reference-search")).to_have_attribute("action", "/news")
         page.get_by_role("link", name="지금 영상 만들기", exact=False).click()
         expect(page.locator("#production-title")).to_be_in_viewport()
         page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
         assert page.locator("video, progress, iframe").count() == 0
-        expect(page.locator("#archive-search")).not_to_have_attribute("open", "")
+        expect(page.locator("#archive-search")).to_be_visible()
         assert page.locator('[name="topic"],option[value="VERIFIED"]').count() == 0
         assert page.locator(".studio-flow [aria-current]").count() == 0
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         primary = page.get_by_role("button", name="쇼츠 만들기", exact=True)
-        assert primary.evaluate("e=>getComputedStyle(e).backgroundColor") == "rgb(36, 99, 235)"
+        assert primary.evaluate("e=>getComputedStyle(e).backgroundColor") == "rgb(37, 99, 235)"
         capture(page, f"home-empty-{size[0]}.png")
         # Native keyboard entry, not element presence alone.
         page.goto(origin + "/")
@@ -125,7 +125,6 @@ def test_home_creation_choices_archive_and_keyboard(studio_ui, browser, size):
         assert {k: values[k] for k in ('category', 'duration', 'period', 'voice_method', 'video_method')} == {
             'category': 'it', 'duration': '45', 'period': '24h', 'voice_method': 'local', 'video_method': 'off'}
         assert 'script_review' not in values
-        page.locator('#archive-search > summary').click()
         page.locator('#home-topic').fill('https://example.com/new-article')
         page.get_by_role('button', name='보관 기사 검색', exact=False).click()
         expect(page.locator('[data-topic-error]')).to_be_visible()
@@ -165,12 +164,20 @@ def test_portrait_library_edit_playback_and_publish_keep_original_boundaries(stu
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 capture(page, f'{name}-populated-{width}.png')
                 if name == 'home':
+                    expect(page.locator('#workspace-tasks')).to_have_count(1)
+                    expect(page.locator('#home-topic')).to_have_count(1)
+                    preview_href = page.locator('.studio-phone-video').get_attribute('href')
+                    expect(page.locator('.premium-preview-actions a').nth(1)).to_have_attribute('href', preview_href)
+                    assert page.locator('.premium-preview-actions a').nth(0).get_attribute('href').startswith('/ai?draft_id=')
+                    assert 'publish_platform=unified#publish-workspace' in page.locator('.premium-publish-link').get_attribute('href')
                     expect(page.locator('.reference-news-item')).to_have_count(3)
                     expect(page.locator('.reference-metric strong')).to_have_text(['2', '3', '0', '5'])
                     href = page.locator('.reference-news-item').first.get_attribute('href')
                     assert href.startswith('/news/')
                     expect(page.locator('.studio-phone-video')).to_be_visible()
+                    page.locator(".studio-phone-video").scroll_into_view_if_needed()
                     page.wait_for_function('()=>document.querySelector(".studio-phone-video img").naturalWidth > 0')
+                    page.evaluate("()=>window.scrollTo({top:0,behavior:'instant'})")
                     capture(page, f'home-populated-{width}.png')
                     assert page.locator('video').count() == 0
                 if name == 'videos':
