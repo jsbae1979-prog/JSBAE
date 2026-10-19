@@ -193,14 +193,17 @@ def test_gui_prices_form_and_estimate_text(client, app, monkeypatch):
     app.state.ai_keys = AIKeyStore(app.state.config.data_dir, FakeCipher())
     monkeypatch.delenv("NEWSFLOW_AI_API_KEY", raising=False)
     page = client.get("/ai-settings")
-    assert page.status_code == 200 and 'id="ai-estimate"' in page.text and "단가 미입력" in page.text
-    assert "단가는 사용자가 입력한 값이며 공식 요금표를 확인하세요" in page.text
-    assert "요금을 보증하거나 결제하지 않습니다" in page.text
+    assert page.status_code == 200 and page.url.path == "/simple-settings"
+    assert 'id="ai-estimate"' not in page.text and 'action="/ai-settings/prices"' not in page.text
+    assert 'action="/api-settings/openai"' in page.text
+    assert "실제 청구액은 공급사에서 확인하세요" in page.text
     token = csrf(client)
     assert client.post("/ai-settings/prices", data={"csrf_token": token, "input_per_1m": "x", "output_per_1m": "1", "currency": "USD"}).status_code == 422
     assert client.post("/ai-settings/prices", data={"csrf_token": token, "input_per_1m": "0.15", "output_per_1m": "0.60", "currency": "XYZ"}).status_code == 422
     saved = client.post("/ai-settings/prices", data={"csrf_token": token, "input_per_1m": "0.15", "output_per_1m": "0.60", "currency": "USD"})
-    assert saved.status_code == 200 and "단가를 저장했습니다" in saved.text and "예상 비용 0." in saved.text and " USD" in saved.text
+    assert saved.status_code == 200 and "기존 단가 기록을 저장했습니다" in saved.text
+    assert read_prices(app.state.sessions)["input_per_1m"] == Decimal("0.15")
+    assert read_prices(app.state.sessions)["output_per_1m"] == Decimal("0.60")
     assert client.post("/ai-settings/prices", data={"input_per_1m": "1"}).status_code == 403
     _collect_fixture(app)
     write_settings(app.state.sessions, "openai", "gpt-4.1-mini", False, 0, 25)
@@ -264,12 +267,15 @@ def test_rendered_price_form_carries_its_own_csrf_token_and_saves(client, app, m
     app.state.ai_keys = AIKeyStore(app.state.config.data_dir, FakeCipher())
     monkeypatch.delenv("NEWSFLOW_AI_API_KEY", raising=False)
     page = client.get("/ai-settings").text
-    form = re.search(r'<form method="post" action="/ai-settings/prices".*?</form>', page, re.DOTALL).group(0)
-    fields = dict(re.findall(r'<input[^>]*name="([^"]+)"[^>]*value="([^"]*)"', form))
-    assert fields.get("csrf_token"), "the prices form must render csrf_field()"
+    assert 'action="/ai-settings/prices"' not in page
+    form = re.search(r'<form method="post" action="/api-settings/openai".*?</form>', page, re.DOTALL).group(0)
+    token = re.search(r'name="csrf_token"[^>]*value="([^"]+)"', form).group(1)
+    fields = {"csrf_token": token}
+    assert token, "the canonical API cost form must render csrf_field()"
     fields.update({"input_per_1m": "0.15", "output_per_1m": "0.60", "currency": "USD"})
     saved = client.post("/ai-settings/prices", data=fields)
-    assert saved.status_code == 200 and "단가를 저장했습니다" in saved.text
+    assert saved.status_code == 200 and "기존 단가 기록을 저장했습니다" in saved.text
+    assert read_prices(app.state.sessions)["input_per_1m"] == Decimal("0.15")
     # Every POST form on the page renders its own token.
     assert page.count('name="csrf_token"') == page.count('method="post"')
 
