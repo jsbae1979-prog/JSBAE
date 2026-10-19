@@ -69,6 +69,7 @@ def test_settings_edit_save_reenter_and_creation_without_external_actions(app, b
         expect(page.locator('[name="duration"]')).to_have_value('45')
         assert read_api_settings(app.state.sessions, 'openai') == before
         assert {key: store.path.read_bytes() for key, store in stores.items()} == key_bytes
+        page.get_by_role("tab", name="비용 관리", exact=True).click()
         costs = page.locator('[data-settings-open="api-costs-openai"]')
         costs.click()
         dialog = page.locator('#api-costs-openai')
@@ -100,5 +101,73 @@ def test_settings_edit_save_reenter_and_creation_without_external_actions(app, b
         assert read_settings(app.state.sessions) == runtime
         assert values(app)['autopilot_duration'] == '45'
         expect(page.locator('#video-ai-model-management [name="confirmed"]').last).not_to_be_checked()
+        assert not external and not errors
+        context.close()
+
+
+def test_settings_tabs_preserve_pending_values_deep_links_and_validation(app, browser, tmp_path):
+    from test_blue_studio_browser import guarded_page
+
+    output = Path(os.environ.get("NEWSFLOW_SETTINGS_EVIDENCE", str(tmp_path)))
+    output.mkdir(parents=True, exist_ok=True)
+    with local_server(app) as origin:
+        context, page, external, errors = guarded_page(browser, origin, (1366,768))
+        posts = []
+        page.on('request', lambda request: posts.append(request.url) if request.method == 'POST' else None)
+        sections = [('뉴스·대본 AI','connections'),('기본 음성','quality'),('AI 영상','video-settings'),
+                    ('비용 관리','costs'),('게시 계정','accounts'),('운영 관리','advanced')]
+        for width, height in [(1366,768),(1920,1080),(390,844)]:
+            page.set_viewport_size({'width':width,'height':height})
+            page.goto(origin+'/simple-settings#connections')
+            for label, identifier in sections:
+                tab = page.get_by_role('tab', name=label, exact=True)
+                tab.click()
+                expect(page.locator('[role=tabpanel]:visible')).to_have_count(1)
+                expect(page.locator('#'+identifier)).to_be_visible()
+                expect(tab).to_have_attribute('aria-selected','true')
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                page.screenshot(path=str(output/f'tab-{identifier}-{width}.png'))
+        assert not posts
+        page.set_viewport_size({'width':1366,'height':768})
+        page.get_by_role('tab',name='뉴스·대본 AI',exact=True).click()
+        page.get_by_text('제작 기본값',exact=True).click()
+        page.locator('[name=duration]').select_option('45')
+        page.get_by_role('tab',name='AI 영상',exact=True).click()
+        expect(page.locator('#production-unsaved')).to_be_visible()
+        assert page.locator('#production-preferences').evaluate("f=>new FormData(f).get('duration')")=='45'
+        page.get_by_role('button',name='제작 구성 저장',exact=True).click()
+        expect(page.get_by_role('status').filter(has_text='제작 구성을 저장했습니다')).to_be_visible()
+        expect(page.locator('#video-settings')).to_be_visible()
+        page.reload()
+        expect(page.locator('#video-settings')).to_be_visible()
+        expect(page.locator('[name=duration]')).to_have_value('45')
+        assert values(app)['autopilot_duration']=='45'
+        # Browser back/forward and keyboard navigation select only one panel.
+        page.get_by_role('tab',name='기본 음성',exact=True).click()
+        page.get_by_role('tab',name='게시 계정',exact=True).click()
+        page.go_back();expect(page.locator('#quality')).to_be_visible()
+        page.go_forward();expect(page.locator('#accounts')).to_be_visible()
+        page.get_by_role('tab',name='게시 계정',exact=True).focus()
+        page.keyboard.press('Home')
+        expect(page.get_by_role('tab',name='뉴스·대본 AI',exact=True)).to_be_focused()
+        page.keyboard.press('ArrowRight')
+        expect(page.locator('#quality')).to_be_visible()
+        # Validation on an off-screen required model opens its owning tab.
+        page.locator('[data-model-choice]').evaluate("el=>el.setCustomValidity('모델을 확인하세요')")
+        page.get_by_role('button',name='제작 구성 저장',exact=True).click()
+        expect(page.locator('#connections')).to_be_visible()
+        page.locator('[data-model-choice]').evaluate("el=>el.setCustomValidity('')")
+        before_links = len(posts)
+        for anchor, panel in [('selected-voice','quality'),('selected-video','video-settings'),
+                              ('youtube','accounts'),('instagram','accounts'),('production','connections')]:
+            page.goto(origin+'/simple-settings#'+anchor)
+            expect(page.locator('#'+panel)).to_be_visible()
+            expect(page.locator('[role=tabpanel]:visible')).to_have_count(1)
+        page.goto(origin+'/simple-settings#api-costs-openai')
+        expect(page.locator('#costs')).to_be_visible()
+        expect(page.locator('#api-costs-openai')).to_be_visible()
+        expect(page.locator('#api-costs-openai [name=billing_confirmed]')).not_to_be_checked()
+        page.keyboard.press('Escape')
+        assert len(posts)==before_links
         assert not external and not errors
         context.close()

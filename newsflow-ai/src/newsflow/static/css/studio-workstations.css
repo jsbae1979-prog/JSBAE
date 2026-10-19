@@ -149,3 +149,11 @@
 @media(min-width:1700px){.suite-shell .workstation-monitor{height:340px}}
 .suite-shell .suite-settings-index a:first-child:not(.selected){background:transparent;color:#afc8e3}
 .suite-shell .suite-settings-index a.selected{background:#1448a5;color:white}
+
+/* One settings panel at a time; no hidden form values are disabled or discarded. */
+.suite-settings-tabs{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.suite-shell .suite-settings-content.settings-tabs-ready{display:block}
+.suite-shell .settings-tabs-ready>[role=tabpanel]{width:100%;margin-bottom:16px}
+.suite-shell .settings-tabs-ready>#advanced{padding:18px;border:1px solid #203e53;border-radius:8px;background:#0f1d2b}
+.suite-shell .settings-tabs-ready>.settings-savebar{margin-top:18px}
+.suite-shell .settings-tabs-ready>[role=tabpanel]:focus-visible{outline:2px solid #61dbff;outline-offset:3px}

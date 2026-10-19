@@ -55,17 +55,72 @@ document.querySelector('.workstation-video-grid')?.addEventListener('invalid', e
   }
 }, true);
 
-const settingsIndex = document.querySelector('.suite-settings-index');
-function markSettingsSection() {
-  if (!settingsIndex) return;
-  const target = document.getElementById(location.hash.slice(1));
-  const id = target?.closest('.settings-card, #advanced')?.id || 'connections';
-  settingsIndex.querySelectorAll('a[href^="#"]').forEach(link => {
-    const active = link.hash === `#${id}`;
-    link.classList.toggle('selected', active);
-    if (active) link.setAttribute('aria-current', 'location');
-    else link.removeAttribute('aria-current');
+// Settings are real tabs. Hidden controls keep their form ownership and pending values.
+(() => {
+  const index = document.querySelector('.suite-settings-tabs');
+  if (!index) return;
+  const tabs = [...index.querySelectorAll('a[href^="#"]')];
+  const panels = tabs.map(tab => document.getElementById(tab.hash.slice(1)));
+  const storageKey = 'newsflow-settings-tab';
+  const content = document.querySelector('.suite-settings-content');
+  index.setAttribute('role', 'tablist');
+  content.classList.add('settings-tabs-ready');
+  tabs.forEach((tab, i) => {
+    tab.id = `settings-tab-${panels[i].id}`;
+    tab.setAttribute('role', 'tab');
+    tab.setAttribute('aria-controls', panels[i].id);
+    panels[i].setAttribute('role', 'tabpanel');
+    panels[i].setAttribute('aria-labelledby', tab.id);
+    panels[i].tabIndex = 0;
   });
-}
-markSettingsSection();
-window.addEventListener('hashchange', markSettingsSection);
+  function panelFor(target) {
+    return panels.find(panel => target && panel.contains(target)) ||
+      (target?.closest('#settings-diagnostics') ? document.getElementById('advanced') : null);
+  }
+  function activate(panel, focus = false) {
+    if (!panels.includes(panel)) panel = panels[0];
+    panels.forEach((item, i) => {
+      const selected = item === panel;
+      item.hidden = !selected;
+      tabs[i].classList.toggle('selected', selected);
+      tabs[i].setAttribute('aria-selected', String(selected));
+      tabs[i].tabIndex = selected ? 0 : -1;
+      if (selected && focus) tabs[i].focus();
+    });
+    if (panel.tagName === 'DETAILS') panel.open = true;
+    try { sessionStorage.setItem(storageKey, panel.id); } catch (_) { /* View preference is optional. */ }
+  }
+  function restore() {
+    const target = document.getElementById(location.hash.slice(1));
+    let remembered = null;
+    try { remembered = document.getElementById(sessionStorage.getItem(storageKey)); } catch (_) { /* No storage required. */ }
+    activate(panelFor(target) || remembered);
+  }
+  function choose(tab, focus = false) {
+    if (location.hash !== tab.hash) history.pushState(null, '', tab.hash);
+    activate(document.getElementById(tab.hash.slice(1)), focus);
+  }
+  tabs.forEach(tab => tab.addEventListener('click', event => {
+    event.preventDefault(); choose(tab);
+  }));
+  index.addEventListener('keydown', event => {
+    const position = tabs.indexOf(event.target);
+    if (position < 0) return;
+    let next;
+    if (event.key === 'ArrowRight') next = (position + 1) % tabs.length;
+    else if (event.key === 'ArrowLeft') next = (position + tabs.length - 1) % tabs.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = tabs.length - 1;
+    else if (event.key === ' ') next = position;
+    else return;
+    event.preventDefault(); choose(tabs[next], true);
+  });
+  // A required field on another tab must be exposed before native validation focuses it.
+  document.addEventListener('invalid', event => {
+    const panel = panelFor(event.target);
+    if (panel) activate(panel);
+  }, true);
+  window.addEventListener('hashchange', restore);
+  window.addEventListener('popstate', restore);
+  restore();
+})();
