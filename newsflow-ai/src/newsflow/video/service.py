@@ -18,7 +18,16 @@ from filelock import FileLock, Timeout
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
-from newsflow.db.models import AudioTrack, ContentDraft, RenderJob, Scene, SubtitleTrack, VideoProject, utcnow
+from newsflow.db.models import (
+    AudioTrack,
+    ContentDraft,
+    IntelligenceRun,
+    RenderJob,
+    Scene,
+    SubtitleTrack,
+    VideoProject,
+    utcnow,
+)
 from newsflow.intelligence.news_usage import API_SCRIPT_METHOD
 from newsflow.intelligence.schema import Script
 
@@ -193,6 +202,17 @@ class VideoCoordinator:
             voice, size, position = preview_preferences(self.sessions)
         except SetupError:
             raise VideoError("기본 음성·자막 설정을 다시 저장하세요.") from None
+        # Preserve new-job AI-scene voice choices across changes to global defaults.
+        # Legacy/manual drafts keep their existing contract; no GUI dependency here.
+        with self.sessions() as session:
+            draft = session.get(ContentDraft, draft_id)
+            run = session.get(IntelligenceRun, draft.run_id) if draft else None
+            choice = run.options.get("production_context", {}) if run and isinstance(run.options, dict) else {}
+            choice = choice if isinstance(choice, dict) else {}
+            if choice.get("production_options_version") == 1 and choice.get("initial_video") == "higgsfield":
+                voice = choice.get("initial_voice")
+                if not isinstance(voice, str) or not voice or voice == "elevenlabs":
+                    raise VideoError("이 작업의 ElevenLabs + Higgsfield 동시 합성은 지원하지 않습니다. 다른 음성으로 대체하지 않았습니다. 제작 화면에서 지원하는 조합을 직접 선택하세요.")
         try:
             speech = speech_preferences(self.sessions)
         except TTSError:

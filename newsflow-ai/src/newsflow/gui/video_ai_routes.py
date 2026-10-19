@@ -74,6 +74,11 @@ def plans(request: Request, draft_id: int | None = None) -> HTMLResponse:
 
 @router.post("/video/ai/plans")
 def create_plan(request: Request, draft_id: int = Form(ge=1), duration: int = Form()) -> RedirectResponse:
+    with request.app.state.sessions() as session:
+        choice = context_for_draft(session, session.get(ContentDraft, draft_id)) or {}
+    if (choice.get("production_options_version") == 1 and choice.get("initial_video") == "higgsfield"
+            and choice.get("initial_voice") == "elevenlabs"):
+        raise HTTPException(422, "ElevenLabs + Higgsfield 동시 합성은 지원하지 않습니다. 생성 요청 전에 제작 방식을 다시 선택하세요. 다른 음성으로 대체하지 않습니다.")
     try:
         plan_id = _service(request).create_plan(draft_id, duration)
     except AIVideoError as exc:

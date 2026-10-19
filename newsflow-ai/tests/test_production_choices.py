@@ -19,6 +19,7 @@ from newsflow.autopilot.service import AutopilotCoordinator
 from newsflow.db.models import AutopilotJob, ContentDraft, PublishDraft
 from newsflow.gui.production_context import parse_context, validate_context
 from newsflow.video.elevenlabs_tts import ElevenLabsKeys, save_settings
+from newsflow.video.service import VideoError
 from newsflow.video.voice_engines import provider_for
 
 api_pipeline = test_api_news_pipeline.api_pipeline
@@ -113,6 +114,27 @@ def test_higgsfield_workspace_offers_scene_approvals_instead_of_basic_render(api
     assert f'/video/ai?draft_id={job["content_draft_id"]}' in page.text
     assert 'action="/autopilot/jobs/' + job["id"] + '/resume"' not in page.text
     assert "장면별 승인 대기" in page.text and "기본 영상으로 대체하지 않습니다" in page.text
+
+
+@pytest.mark.parametrize("voice", ["supertonic:F1", "elevenlabs"])
+def test_ai_scene_composition_keeps_frozen_voice_or_blocks_unsupported_combination(api_pipeline, app, client, monkeypatch, voice):
+    _, backend, _, _, _, _ = api_pipeline
+    extra = {"external_tts_consent": True, "elevenlabs": config()} if voice == "elevenlabs" else {}
+    job = settled(api_pipeline, start(api_pipeline, voice=voice, production_options=choices(False, "higgsfield", **extra)))
+    save_values(app, video_default_voice="supertonic:F2")
+    captured = []
+    monkeypatch.setattr(backend.video, "_start", lambda *a, **k: captured.append((a, k)) or 123)
+    if voice == "elevenlabs":
+        with pytest.raises(VideoError, match="동시 합성은 지원하지 않습니다"):
+            backend.video.start_ai(123, job["content_draft_id"], 30, [{}, {}, {}])
+        assert captured == []
+        monkeypatch.setattr(app.state.video_ai, "create_plan", lambda *_a: pytest.fail("Unsupported plan must not generate"))
+        response = client.post("/video/ai/plans", data={"csrf_token": csrf(client),
+            "draft_id": job["content_draft_id"], "duration": 30})
+        assert response.status_code == 422 and "다른 음성으로 대체하지 않습니다" in response.text
+    else:
+        assert backend.video.start_ai(123, job["content_draft_id"], 30, [{}, {}, {}]) == 123
+        assert captured[0][0][2] == "supertonic:F1"
 
 
 def test_options_persist_across_coordinator_restart_and_default_changes(api_pipeline, app):
