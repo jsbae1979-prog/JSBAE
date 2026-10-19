@@ -1,0 +1,19 @@
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_ai_video_compose.py:305: Korean font not configured (NEWSFLOW_FONT_PATH)
+SKIPPED [3] tests/test_ai_video_compose.py:322: Korean font not configured (NEWSFLOW_FONT_PATH)
+SKIPPED [1] tests/test_ai_video_compose.py:338: Korean font not configured (NEWSFLOW_FONT_PATH)
+SKIPPED [2] tests/test_ai_video_compose.py:359: Korean font not configured (NEWSFLOW_FONT_PATH)
+SKIPPED [1] tests/test_ai_video_compose.py:404: Korean font not configured (NEWSFLOW_FONT_PATH)
+SKIPPED [1] tests/test_ai_video_compose.py:427: Korean font not configured (NEWSFLOW_FONT_PATH)
+SKIPPED [1] tests/test_ai_video_compose.py:489: Korean font not configured (NEWSFLOW_FONT_PATH)
+SKIPPED [1] tests/test_claude_audio_fit.py:140: Local Korean font unavailable
+SKIPPED [1] tests/test_live_ai.py:25: opt-in paid AI live test: set NEWSFLOW_AI_LIVE_TEST=1, NEWSFLOW_AI_API_KEY and NEWSFLOW_AI_LIVE_MAX_TOKENS
+SKIPPED [1] tests/test_live_rss.py:11: opt-in live RSS: set NEWSFLOW_LIVE_TEST=1
+SKIPPED [1] tests/test_oauth_callback.py:408: Native Windows SO_EXCLUSIVEADDRUSE requires Windows runner
+SKIPPED [1] tests/test_oauth_lifecycle.py:636: Actual current-user DPAPI requires Windows
+SKIPPED [1] tests/test_oauth_vault.py:308: Real current-user DPAPI requires Windows; Cloud NOT VERIFIED
+SKIPPED [1] tests/test_operational_startup.py:202: Actual Windows Task Scheduler XML engine, read-only; no OS registration
+SKIPPED [1] tests/test_production_dpapi.py:330: Native production-kernel DPAPI needs Windows; Cloud NOT VERIFIED
+SKIPPED [1] tests/test_production_vault.py:463: Native current-user DPAPI requires Windows
+SKIPPED [1] tests/test_youtube_connection.py:351: Windows current-user DPAPI requires Windows
+61 failed, 3483 passed, 20 skipped, 1 warning in 424.01s (0:07:04)

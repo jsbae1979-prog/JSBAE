@@ -1,0 +1,6 @@
+{
+  "source_sha256": "53259479831dad53494523d8f3d2a42b50d88c4f3628e08bc91b1c4922d01e65",
+  "copied_sha256": "53259479831dad53494523d8f3d2a42b50d88c4f3628e08bc91b1c4922d01e65",
+  "same": true,
+  "note": "pytest completed with exit 1; post-run Path.replace crossed filesystems (EXDEV). JUnit safely copied, checksum verified, only generated source removed. No test rerun or result alteration."
+}

@@ -1,0 +1,30 @@
+{
+  "tested_code_sha": "dbd4ba446c3f13705ac207a37cddbdd5339e6baa",
+  "baseline_sha": "590ffd447eebf76b9429c22a3354dbfa239dec16",
+  "full_regression_status": "FAIL",
+  "baseline": {
+    "passed": 3483,
+    "failed": 61,
+    "error": 0,
+    "skipped": 20
+  },
+  "final": {
+    "passed": 3503,
+    "failed": 57,
+    "error": 0,
+    "skipped": 20
+  },
+  "ui": {
+    "passed": 109,
+    "failed": 0,
+    "error": 0,
+    "skipped": 0
+  },
+  "ui_status": "PASS",
+  "new_failed_ids": [],
+  "new_errors": [],
+  "ruff": "All checks passed!",
+  "actual_paid_oauth_upload_publish": 0,
+  "windows": "NOT VERIFIED",
+  "human_audio_subtitle_sync_content_quality": "NOT VERIFIED"
+}
