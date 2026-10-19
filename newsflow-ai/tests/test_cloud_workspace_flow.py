@@ -131,7 +131,12 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         expect(page.locator(".demo-banner")).to_be_visible()
         page.get_by_role("link", name="새 뉴스로 쇼츠 만들기 →", exact=True).click()
         assert urlsplit(page.url).path == "/create"
-        page.get_by_role("button", name="쇼츠 만들기", exact=True).click()
+        page.wait_for_load_state("load")
+        expect(page.locator('form[action="/autopilot/quick-start"]')).to_have_attribute("data-easy-wired","true")
+        with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/autopilot/quick-start")) as prepared:
+            page.get_by_role("button", name="쇼츠 만들기", exact=True).click()
+        assert prepared.value.status == 303, prepared.value.text()
+        assert "guide=consent" in prepared.value.headers.get("location", "")
         page.wait_for_url(lambda u: "guide=consent" in u)
         assert provider.calls == []
         form = page.locator('form[action="/autopilot/confirm-start"]')
@@ -139,6 +144,7 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         flow = form.locator('[name="flow"]').input_value()
         rejected = context.request.post(origin + "/autopilot/confirm-start", form={"csrf_token":token,"flow":flow,"workspace":"true"})
         assert rejected.status == 422 and provider.calls == []
+        expect(form).to_have_attribute("data-easy-wired","true")
         form.locator('[name="consent"]').check()
         form.get_by_role("button", name="동의하고 제작 준비").click()
         page.wait_for_url(lambda u: "task=" in u)
@@ -147,17 +153,19 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         job = coordinator.snapshot(identifier)
         assert (job["status"],job["current_stage"]) == ("waiting_review","script"), job
         assert provider.calls == ["search","analysis","script"] and rss.calls == []
-        page.reload()
+        expect(page.locator("[data-autopilot-job]")).to_have_attribute("data-job-stage","script",timeout=15000)
+        expect(page.locator("[data-autopilot-job]")).to_have_attribute("data-job-status","waiting_review",timeout=15000)
         expect(page.locator("#job-script")).to_be_visible()
-        page.screenshot(path=str(output / "api-script-review.png"), full_page=True)
+        page.locator("#workspace-detail").screenshot(path=str(output / "api-script-review.png"))
         # Use the real editor POST and return to the same work item, with no new inference.
         page.goto(origin + f'/ai?draft_id={job["content_draft_id"]}')
         expect(page.locator('textarea[name="narration"]').first).not_to_have_attribute("readonly", "")
-        with page.expect_response(lambda r:r.request.method=="POST" and "/ai/drafts/" in r.url) as saved:
+        with page.expect_navigation(wait_until="load"), page.expect_response(lambda r:r.request.method=="POST" and "/ai/drafts/" in r.url) as saved:
             page.get_by_role("button",name="수정 초안 저장").click()
         assert saved.value.status == 303
         page.wait_for_url(lambda u:"draft_id=" in u)
         page.get_by_role("link", name="작업실에서 대본 검토 계속하기 →", exact=True).click()
+        expect(page.locator('form[action$="/resume"]')).to_have_attribute("data-easy-wired","true")
         with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/resume")) as resumed:
             page.get_by_role("button", name="이 대본으로 영상 만들기", exact=False).click()
         assert resumed.value.status == 303
@@ -165,7 +173,8 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         job = coordinator.snapshot(identifier)
         assert (job["status"],job["current_stage"]) == ("waiting_review","validate"), job
         assert len(tts.calls) == 3
-        page.reload()
+        expect(page.locator("[data-autopilot-job]")).to_have_attribute("data-job-stage","validate",timeout=15000)
+        expect(page.locator("[data-autopilot-job]")).to_have_attribute("data-job-status","waiting_review",timeout=15000)
         video = page.locator('[data-workspace-detail] video').first
         expect(video).to_be_visible()
         video.evaluate("async v=>{v.muted=true;await v.play()}")
@@ -219,7 +228,9 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         states = [row["status"] for row in unified.for_video(render_id)["targets"]]
         assert states == (["complete","waiting"] if target=="both" else ["complete"])
         if target=="both":
-            page.screenshot(path=str(output/'synthetic-partial-result.png'),full_page=True)
+            expect(page.locator('[data-outcome="success"]')).to_have_count(1)
+            expect(page.locator('[data-outcome="waiting"]')).to_have_count(1)
+            page.locator('#publish-workspace').screenshot(path=str(output/'synthetic-partial-result.png'))
             # Recreate the existing coordinator from durable SQLite evidence.
             unified = UnifiedPublishingService(sessions, backend.video.outputs, youtube, instagram, inspector)
             monkeypatch.setattr(app.state,"unified_publishing",unified)

@@ -98,6 +98,8 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
       }
       const next = new URL(response.url);
       if (next.origin !== window.location.origin) throw new Error('Unexpected redirect');
+      // Clear saved-state guards before any same-page reload branch returns.
+      document.dispatchEvent(new CustomEvent('settings:form-saved', {detail: {form}}));
       if (form.hasAttribute('data-youtube-form')) {
         next.hash = next.pathname === '/simple-settings' ? 'youtube' : 'youtube-publish';
       }
@@ -118,7 +120,6 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
           return;
         }
       }
-      document.dispatchEvent(new CustomEvent('settings:form-saved', {detail: {form}}));
       window.location.assign(next.href);
     } catch (_) {
       alert.textContent = '서버에 연결하지 못했습니다. 실행 상태를 확인하세요.';

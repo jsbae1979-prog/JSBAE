@@ -72,11 +72,12 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Current API, publishing, UI and Windows contracts - no full suite replay
         run: |
-          .venv/Scripts/python -m pytest -q -rs tests/test_api_shorts_intelligence.py tests/test_api_shorts_pipeline.py tests/test_api_shorts_audio.py tests/test_api_shorts_gui.py tests/test_api_news_pipeline.py tests/test_api_news_gui.py tests/test_unified_publishing.py tests/test_unified_publishing_gui.py tests/test_creator_ui.py tests/test_single_workspace.py tests/test_creator_scene_browser.py tests/test_model_picker_browser.py tests/test_windows.py tests/test_production_dpapi.py::test_real_windows_production_dpapi_restart_tampering_account_binding tests/test_cloud_workspace_flow.py --junitxml=validation-output/connect-tests.xml
+          .venv/Scripts/python -m pytest -q -rs tests/test_api_shorts_intelligence.py tests/test_api_shorts_pipeline.py tests/test_api_shorts_audio.py tests/test_api_shorts_gui.py tests/test_api_news_pipeline.py tests/test_api_news_gui.py tests/test_unified_publishing.py tests/test_unified_publishing_gui.py tests/test_creator_ui.py tests/test_single_workspace.py tests/test_creator_scene_browser.py tests/test_model_picker_browser.py tests/test_windows.py tests/test_production_dpapi.py::test_real_windows_production_dpapi_restart_tampering_account_binding tests/test_cloud_workspace_flow.py tests/test_publish_save_browser.py --junitxml=validation-output/connect-tests.xml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Existing BAT start, duplicate block, stop and data restart
         run: |
-          .venv/Scripts/python tools/ci_windows_launch_smoke.py --root "$env:RUNNER_TEMP/newsflow-bat-new" --output "$env:RUNNER_TEMP/newsflow-connect-evidence/bat-result.json"
+          $smokeRoot = .venv/Scripts/python -c "import tempfile; from pathlib import Path; print(Path(tempfile.gettempdir()) / 'newsflow-bat-new')"
+          .venv/Scripts/python tools/ci_windows_launch_smoke.py --root "$smokeRoot" --output "$env:RUNNER_TEMP/newsflow-connect-evidence/bat-result.json"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Upload synthetic summaries and key screens only
         if: always()
