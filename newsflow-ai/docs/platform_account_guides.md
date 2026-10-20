@@ -18,7 +18,7 @@
 직접 업로드에는 개발자 앱/API 키가 필요하지 않습니다. 직접 게시한 결과를 NewsFlow AI 이력으로 자동 동기화한다고 안내하지 않습니다.
 YouTube 연결/게시와 Instagram 인증 중계/게시 코드는 존재하지만 실제 계정 운영은 미검증입니다.
 Instagram은 별도 HTTPS 인증 서버와 Meta 앱 설정이 필요합니다. [운영자 배포 문서](INSTAGRAM_AUTH_RELAY.md)를 참고하세요.
-TikTok 실계정 연결·게시 기능은 비활성이며 준비 목록은 실행 가능한 연결 기능을 뜻하지 않습니다.
+TikTok Desktop Login Kit의 앱 등록·인증·갱신·해제 코드는 구현되어 있으나 실계정 인증·게시 활성화는 차단 상태입니다. [TikTok 연동 문서](TIKTOK_CONNECTION.md)에 구현 범위와 심사·운영 선행 조건을 정리했습니다.
 
 가이드 본문은 `src/newsflow/gui/templates/guides/`의 플랫폼별 HTML을 단일 원본으로 관리합니다.
 배포 파일에 해당 하위 템플릿을 포함합니다. 이전 보고서는 과거 단계의 근거로 보존하며 현재 동작 안내와 구분합니다.

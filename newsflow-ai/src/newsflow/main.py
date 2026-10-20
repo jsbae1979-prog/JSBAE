@@ -40,6 +40,7 @@ from .gui.routes import router
 from .gui.scheduler_routes import router as scheduler_router
 from .gui.setup_routes import router as setup_router
 from .gui.sources_routes import router as sources_router
+from .gui.tiktok_routes import router as tiktok_router
 from .gui.unified_publishing_routes import router as unified_publishing_router
 from .gui.video_ai_routes import router as video_ai_router
 from .gui.video_routes import router as video_router
@@ -54,6 +55,7 @@ from .news.service import CollectionCoordinator, NewsService
 from .oauth.instagram import InstagramConnectionService
 from .oauth.lifecycle import expire_production_credentials, recover_production_lifecycle
 from .oauth.production_vault import recover_credential_rotations
+from .oauth.tiktok import TikTokConnectionService
 from .oauth.youtube import YouTubeConnectionService
 from .publishing.instagram_live import InstagramPublishingService
 from .publishing.live import LivePublishingService
@@ -112,6 +114,8 @@ def create_app(
     youtube.recover()
     live_publishing = LivePublishingService(sessions, video.outputs, youtube)
     live_publishing.recover()
+    tiktok = TikTokConnectionService(sessions, settings.data_dir)
+    tiktok.recover()
     instagram = InstagramConnectionService(sessions, settings.data_dir)
     instagram.recover()
     instagram_publishing = InstagramPublishingService(sessions, video.outputs, instagram)
@@ -152,6 +156,7 @@ def create_app(
             yield
         finally:
             youtube.close()
+            tiktok.close()
             instagram.close()
             publishing_calendar.close()
             scheduler.close()
@@ -167,6 +172,7 @@ def create_app(
     app.state.engine = engine
     app.state.video = video
     app.state.youtube = youtube
+    app.state.tiktok = tiktok
     app.state.live_publishing = live_publishing
     app.state.instagram = instagram
     app.state.instagram_publishing = instagram_publishing
@@ -249,6 +255,7 @@ def create_app(
     app.include_router(video_ai_router)
     app.include_router(publishing_router)
     app.include_router(youtube_router)
+    app.include_router(tiktok_router)
     app.include_router(instagram_router)
     app.include_router(unified_publishing_router)
     app.include_router(social_router)

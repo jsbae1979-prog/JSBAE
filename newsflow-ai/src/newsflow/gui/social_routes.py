@@ -88,6 +88,7 @@ def platforms(request: Request):
         active="settings",
         labels=LABELS,
         requirements=REQUIREMENTS,
+        tiktok=request.app.state.tiktok.status(),
         states={p: s.status() for p, s in request.app.state.social_extensions.items()},
     )
 
