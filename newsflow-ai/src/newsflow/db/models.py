@@ -217,6 +217,7 @@ class PublishDraft(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     render_job_id: Mapped[int] = mapped_column(ForeignKey("render_jobs.id"))
     platform: Mapped[str] = mapped_column(String(20))
+    youtube_category_id: Mapped[str] = mapped_column(String(3), default="25", server_default="25")
     title: Mapped[str] = mapped_column(String(100))
     description: Mapped[str] = mapped_column(Text)
     hashtags: Mapped[list] = mapped_column(JSON)

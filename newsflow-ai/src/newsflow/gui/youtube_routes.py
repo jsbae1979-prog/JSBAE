@@ -4,6 +4,7 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from sqlalchemy import select
 
 from newsflow.db.models import PublishDraft, PublishValidation, RenderJob, VideoProject
+from newsflow.publishing.categories import YOUTUBE_CATEGORIES
 from newsflow.publishing.service import REAL_BLOCKERS, PublishingError, PublishingService
 
 from .routes import go
@@ -37,7 +38,7 @@ def publishing_context(request: Request, render_job_id: int | None, *, platform:
         live = getattr(request.app.state, "instagram_publishing" if platform == "instagram" else "live_publishing", None)
         connections = getattr(request.app.state, platform, None)
         results = live.results() if live else []
-        return {"render_job_id": render_job_id, "title": project.title, "draft": draft,
+        return {"youtube_categories": YOUTUBE_CATEGORIES, "render_job_id": render_job_id, "title": project.title, "draft": draft,
                 "sources": project.sources, "checks": local_checks, "reviewed": reviewed,
                 "accounts": connections.status()["accounts"] if connections else [],
                 "results": [item for item in results if item.get("render_job_id") == render_job_id]}
@@ -97,6 +98,7 @@ def save_review(
     account_id: int = Form(ge=1), draft_id: int | None = Form(None, ge=1), revision: int = Form(1, ge=1),
     content_reviewed: bool = Form(False), copyright_confirmed: bool = Form(False),
     sources_confirmed: bool = Form(False), ai_disclosure: str = Form("unreviewed", max_length=30),
+    youtube_category_id: str = Form("", max_length=3),
 ):
     accounts = connection_context(request)["accounts"]
     if not any(item["id"] == account_id and item["ready"] for item in accounts):
@@ -108,7 +110,7 @@ def save_review(
     fields = {"platform": "youtube", "title": title, "description": description, "hashtags": hashtags,
               "account_id": account_id, "content_reviewed": content_reviewed,
               "copyright_confirmed": copyright_confirmed, "sources_confirmed": sources_confirmed,
-              "ai_disclosure": ai_disclosure}
+              "ai_disclosure": ai_disclosure, "youtube_category_id": youtube_category_id}
     try:
         if draft_id is None:
             draft_id = service.create(render_job_id=render_job_id, **fields)

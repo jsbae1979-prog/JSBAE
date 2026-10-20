@@ -62,6 +62,7 @@ class YouTubeAdapter:
             "upload": "resumable",
             "endpoint": "https://www.googleapis.com/upload/youtube/v3/videos",
             "snippet": {
+                "categoryId": payload.get("youtube_category_id", "25"),
                 "title": payload.get("title", ""),
                 "description": "\n".join(
                     part

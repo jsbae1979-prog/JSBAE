@@ -81,6 +81,7 @@ class LivePublishingService:
                 raise PublishingError("검토한 MP4가 변경되었습니다. 다시 확인하세요.")
             payload = {
                 "title": current.title, "description": current.description, "hashtags": current.hashtags,
+                "youtube_category_id": current.youtube_category_id,
                 "ai_disclosure": current.ai_disclosure, "privacy": privacy, "made_for_kids": made_for_kids,
                 "upload_approved": True, "public_approved": public_consent is True,
             }

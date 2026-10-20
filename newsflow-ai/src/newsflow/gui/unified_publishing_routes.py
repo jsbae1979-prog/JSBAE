@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Form, HTTPException, Request
 
 from newsflow.db.models import RenderJob, VideoProject
+from newsflow.publishing.categories import YOUTUBE_CATEGORIES
 from newsflow.publishing.service import PublishingError
 
 from .routes import go
@@ -22,7 +23,7 @@ def workspace_context(request: Request, render_id: int | None):
         cohort = request.app.state.unified_publishing.for_video(render_id)
         tiktok = next((t for t in cohort["targets"] if t["platform"] == "tiktok"), None) if cohort else None
         prepared = request.app.state.social_extensions["tiktok"].prepared_options(tiktok["draft_id"]) if tiktok else None
-        return {"tiktok_options": prepared, "render_id": render_id, "title": project.title, "sources": project.sources,
+        return {"youtube_categories": YOUTUBE_CATEGORIES, "tiktok_options": prepared, "render_id": render_id, "title": project.title, "sources": project.sources,
                 "cohort": request.app.state.unified_publishing.for_video(render_id),
                 "youtube_accounts": request.app.state.youtube.status()["accounts"],
                 "instagram_accounts": request.app.state.instagram.status()["accounts"],
@@ -38,6 +39,7 @@ def review(
     tiktok_account: int | None = Form(None, ge=1), facebook_account: int | None = Form(None, ge=1), content_reviewed: bool = Form(False),
     copyright_confirmed: bool = Form(False), sources_confirmed: bool = Form(False),
     ai_disclosure: str = Form("unreviewed", max_length=30),
+    youtube_category_id: str = Form("", max_length=3),
 ):
     if target not in TARGETS:
         raise HTTPException(422, "게시할 플랫폼을 선택하세요.")
@@ -55,6 +57,7 @@ def review(
             render_job_id, accounts, title=title, description=description, hashtags=hashtags,
             content_reviewed=content_reviewed, copyright_confirmed=copyright_confirmed,
             sources_confirmed=sources_confirmed, ai_disclosure=ai_disclosure,
+            youtube_category_id=youtube_category_id,
         )
     except PublishingError as error:
         raise HTTPException(422, str(error)) from None

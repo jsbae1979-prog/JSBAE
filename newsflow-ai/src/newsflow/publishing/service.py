@@ -25,6 +25,7 @@ from newsflow.db.models import (
     utcnow,
 )
 
+from .categories import valid_category
 from .media import FFprobeMediaInspector, MediaInspector
 
 
@@ -182,8 +183,13 @@ class PublishingService:
         sources_confirmed: bool = False,
         ai_disclosure: str = "unreviewed",
         autopilot_task_id: str | None = None,
+        youtube_category_id: str = "25",
     ) -> int:
         fields = self.input(platform, title, description, hashtags, ai_disclosure)
+        if platform == "youtube":
+            if not valid_category(youtube_category_id):
+                raise PublishingError("YouTube 영상 카테고리를 선택하세요.")
+            fields["youtube_category_id"] = youtube_category_id
         if autopilot_task_id is not None and not re.fullmatch(r"[0-9a-f]{32}", autopilot_task_id):
             raise PublishingError("자동 제작 작업 식별자가 잘못되었습니다.")
         with self.sessions.begin() as session:
@@ -248,8 +254,13 @@ class PublishingService:
         copyright_confirmed: bool = False,
         sources_confirmed: bool = False,
         ai_disclosure: str = "unreviewed",
+        youtube_category_id: str | None = None,
     ) -> None:
         fields = self.input(platform, title, description, hashtags, ai_disclosure)
+        if platform == "youtube" and youtube_category_id is not None:
+            if not valid_category(youtube_category_id):
+                raise PublishingError("YouTube 영상 카테고리를 선택하세요.")
+            fields["youtube_category_id"] = youtube_category_id
         with self.sessions.begin() as session:
             if not session.get(PublishDraft, draft_id):
                 raise PublishingError("게시 초안이 없습니다.")
@@ -321,6 +332,9 @@ class PublishingService:
                 else "fail",
                 "앱 제목 프로파일 1~100자; 꺾쇠/줄바꿈 제외",
             )
+            if draft.platform == "youtube":
+                check("youtube_category", "pass" if valid_category(draft.youtube_category_id) else "fail",
+                      "YouTube 영상 카테고리를 선택하세요. 지역별 최종 지원은 YouTube에서 확인합니다.")
             caption = (
                 draft.title + "\n" + draft.description + "\n" + " ".join("#" + tag for tag in draft.hashtags)
             )

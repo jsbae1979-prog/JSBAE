@@ -1285,9 +1285,9 @@ def counts(engine) -> dict[str, int]:
         }
 
 
-def test_migration_head_is_0014_and_retains_ai_tables_and_columns(engine):
-    assert ScriptDirectory.from_config(alembic_config()).get_current_head() == "0014"
-    assert version(engine) == "0014"
+def test_migration_head_is_0015_and_retains_ai_tables_and_columns(engine):
+    assert ScriptDirectory.from_config(alembic_config()).get_current_head() == "0015"
+    assert version(engine) == "0015"
     tables, columns = schema(engine)
     assert NEW_TABLES <= tables
     assert NEW_COLUMNS <= columns
@@ -1322,11 +1322,11 @@ def test_downgrade_to_0009_and_upgrade_again(engine):
     assert not any(t.startswith("_alembic_tmp") for t in tables)
 
     run_alembic(engine, "upgrade", "head")
-    assert version(engine) == "0014"
+    assert version(engine) == "0015"
     tables, columns = schema(engine)
     assert NEW_TABLES <= tables and NEW_COLUMNS <= columns
     db_session.migrate(engine)  # repeat is a no-op
-    assert version(engine) == "0014"
+    assert version(engine) == "0015"
 
 
 def test_settings_work_after_downgrade_and_upgrade(engine):
@@ -1381,7 +1381,7 @@ def test_a_database_stamped_with_the_published_0010_gets_the_0011_reservation_co
     _tables, columns = schema(engine)
     assert ("video_ai_usage", "resolution") not in columns and ("video_ai_usage", "approval") not in columns
     db_session.migrate(engine)
-    assert version(engine) == "0014"
+    assert version(engine) == "0015"
     _tables, columns = schema(engine)
     assert {("video_ai_usage", "resolution"), ("video_ai_usage", "approval")} <= columns
 
@@ -1394,6 +1394,6 @@ def test_0011_upgrades_a_0010_that_already_has_the_resolution_column(engine):
         connection.exec_driver_sql(
             "ALTER TABLE video_ai_usage ADD COLUMN resolution VARCHAR(10) DEFAULT '' NOT NULL")
     db_session.migrate(engine)
-    assert version(engine) == "0014"
+    assert version(engine) == "0015"
     _tables, columns = schema(engine)
     assert {("video_ai_usage", "resolution"), ("video_ai_usage", "approval")} <= columns

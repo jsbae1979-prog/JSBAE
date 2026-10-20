@@ -447,7 +447,7 @@ def test_additive_migration_0011_preserves_legacy_settings_and_sources(tmp_path)
         migrate(engine)
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT value FROM app_settings WHERE key='legacy'")) == 'preserved'
-            assert connection.scalar(text('SELECT version_num FROM alembic_version')) == '0014'
+            assert connection.scalar(text('SELECT version_num FROM alembic_version')) == '0015'
         assert {'production_schedules','scheduled_runs'} <= set(inspect(engine).get_table_names())
         migrate(engine)
     finally:

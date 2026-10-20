@@ -22,6 +22,7 @@
       {% if ready_accounts %}<label>{{ label }} 계정<select name="{{ platform }}_account" required>{% for account in ready_accounts %}<option value="{{ account.id }}" {% if cohort and cohort.accounts.get(platform) == account.id %}selected{% endif %}>{{ account.label }}</option>{% endfor %}</select></label>
       {% else %}<p class="settings-warning">{{ label }} 계정 연결이 필요합니다. <a href="{{ '/publishing/platforms#' if platform in ['tiktok','facebook'] else '/simple-settings#' }}{{ platform }}">연결 설정 →</a></p>{% endif %}
     </div>{% endfor %}
+    <div data-publish-account="youtube"><label>YouTube 영상 카테고리<select aria-label="YouTube 영상 카테고리" name="youtube_category_id" required><option value="">영상에 맞는 분야를 선택하세요</option>{% for value,label in publish.youtube_categories.items() %}<option value="{{ value }}" {% if meta and meta.get('youtube_category_id', '25') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><p class="hint">YouTube 분류입니다. Instagram·TikTok에는 이 값을 보내지 않습니다.</p></div>
     <label>제목<input name="title" value="{{ meta.title if meta else publish.title }}" maxlength="100" required></label>
     <label>설명<textarea name="description" rows="3" maxlength="5000">{{ meta.description if meta else '' }}</textarea></label>
     <label>해시태그<input name="hashtags" value="{{ meta.hashtags|join(' ') if meta else '' }}" maxlength="500"></label>

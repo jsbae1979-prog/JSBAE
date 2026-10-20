@@ -26,6 +26,7 @@ from newsflow.db.models import (
 from newsflow.oauth.instagram import InstagramConnectionError
 from newsflow.oauth.youtube import YouTubeConnectionError
 
+from .categories import valid_category
 from .platforms import PlatformBlocked
 from .service import REAL_BLOCKERS, ConflictError, PublishingError, PublishingService, hash_file
 
@@ -55,7 +56,10 @@ class UnifiedPublishingService:
 
     @staticmethod
     def _snapshot(draft: PublishDraft) -> dict:
-        return {"id": draft.id, "revision": draft.revision, "platform": draft.platform,
+        # Legacy snapshots omitted the previously fixed category25. Preserve their approval hashes.
+        category = {"youtube_category_id": draft.youtube_category_id} if (
+            draft.platform == "youtube" and draft.youtube_category_id != "25") else {}
+        return {**category, "id": draft.id, "revision": draft.revision, "platform": draft.platform,
                 "account_id": draft.account_id, "media_sha256": draft.media_sha256,
                 "render_job_id": draft.render_job_id, "sources": draft.sources,
                 **{name: getattr(draft, name) for name in _FIELDS}}
@@ -94,7 +98,7 @@ class UnifiedPublishingService:
     def save_review(
         self, render_job_id: int, accounts: dict[str, int], *, title: str, description: str = "", hashtags: str = "",
         content_reviewed: bool = False, copyright_confirmed: bool = False, sources_confirmed: bool = False,
-        ai_disclosure: str = "unreviewed",
+        ai_disclosure: str = "unreviewed", youtube_category_id: str | None = None,
     ) -> int:
         """Save local reviews only. Repeated saves retain previous outcomes, including failures."""
         if (not isinstance(accounts, dict) or not accounts or not set(accounts) <= set(_PLATFORMS)
@@ -103,6 +107,10 @@ class UnifiedPublishingService:
         fields = {"title": title, "description": description, "hashtags": hashtags,
                   "content_reviewed": content_reviewed is True, "copyright_confirmed": copyright_confirmed is True,
                   "sources_confirmed": sources_confirmed is True, "ai_disclosure": ai_disclosure}
+        if "youtube" in accounts and youtube_category_id is not None:
+            if not valid_category(youtube_category_id):
+                raise PublishingError("YouTube 영상 카테고리를 선택하세요.")
+            fields["youtube_category_id"] = youtube_category_id
         normalized = self.local.input(next(iter(accounts)), title, description, hashtags, ai_disclosure)
         metadata = {**fields, **{key: normalized[key] for key in ("title", "description", "hashtags")}}
         with self._save_lock:
@@ -144,7 +152,8 @@ class UnifiedPublishingService:
                 if reused is not None:
                     targets[platform] = reused
                     continue
-                draft_id = self.local.create(render_job_id, platform, account_id=accounts[platform], **fields)
+                draft_fields = {k: v for k, v in fields.items() if k != "youtube_category_id" or platform == "youtube"}
+                draft_id = self.local.create(render_job_id, platform, account_id=accounts[platform], **draft_fields)
                 self.local.validate(draft_id)
                 with self.sessions() as session:
                     snapshot = self._snapshot(session.get(PublishDraft, draft_id))

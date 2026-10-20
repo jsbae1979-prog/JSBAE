@@ -293,7 +293,7 @@ def test_recommendations_require_comparable_complete_windows_and_one_account():
 
 def test_additive_schema_and_existing_tables_remain(app):
     with app.state.engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0014"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0015"
         names = {r[0] for r in connection.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))}
     assert {
         "news_articles",
@@ -324,7 +324,7 @@ def test_copied_database_cannot_duplicate_scheduled_publication(calendar_env, tm
         # This service fixture uses Base.metadata.create_all rather than Alembic.
         # Tag only the synthetic backup with its actual current schema revision.
         copy.execute("CREATE TABLE alembic_version(version_num VARCHAR(32) NOT NULL)")
-        copy.execute("INSERT INTO alembic_version VALUES ('0014')")
+        copy.execute("INSERT INTO alembic_version VALUES ('0015')")
     target = tmp_path / "destination"
     migrate_data(source_copy, target)
     engine = make_engine(target / "newsflow.db")

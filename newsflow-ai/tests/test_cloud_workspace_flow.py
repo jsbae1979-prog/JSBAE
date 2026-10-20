@@ -219,6 +219,7 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         review = page.locator('form[action="/publishing/unified/review"]')
         target = "both" if mode == "openai" else "youtube"
         review.locator('[name="target"]').select_option(target)
+        review.locator('[name="youtube_category_id"]').select_option("28")
         for field in ("content_reviewed","copyright_confirmed","sources_confirmed"):
             review.locator(f'[name="{field}"]').check()
         review.locator('[name="ai_disclosure"]').select_option("disclose")
