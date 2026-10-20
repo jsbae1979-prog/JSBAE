@@ -9,7 +9,8 @@
 <label>YouTube 영상 카테고리<select aria-label="YouTube 영상 카테고리" name="youtube_category_id" required><option value="">영상에 맞는 분야를 선택하세요</option>{% for value,label in publish.youtube_categories.items() %}<option value="{{ value }}" {% if draft and draft.youtube_category_id == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
 {% if not draft %}<p class="hint" data-metadata-notice>{{ publish.suggested.notice }}</p>{% endif %}
 <label>제목<input name="title" value="{{ draft.title if draft else publish.suggested.title }}" maxlength="100" required></label>
-<label>설명<textarea name="description" rows="4" maxlength="5000">{{ draft.description if draft else publish.suggested.description }}</textarea></label><label>해시태그<input name="hashtags" value="{{ draft.hashtags|join(' ') if draft else publish.suggested.hashtags }}" maxlength="500"></label>
+<label>설명<textarea name="description" rows="4" maxlength="5000">{{ draft.description if draft else publish.suggested.description }}</textarea></label>{% include 'publish_source_choice.html' %}
+<label>해시태그<input name="hashtags" value="{{ draft.hashtags|join(' ') if draft else publish.suggested.hashtags }}" maxlength="500"></label>
 <details class="easy-advanced"><summary>영상의 출처 보기</summary>{% for article in publish.sources.get('articles', []) %}<p>{{ article.get('title', '뉴스 자료') }}</p>{% for source in article.get('sources', []) %}<p>{{ source.get('name', '') }} · {{ source.get('url', '') }}</p>{% endfor %}{% else %}<p>출처 자료가 없습니다. 게시 전 상세 편집에서 자료를 확인하세요.</p>{% endfor %}</details>
 <label class="check"><input type="checkbox" name="content_reviewed" value="true" required {% if draft and draft.content_reviewed %}checked{% endif %}> 이 영상의 내용·음성·자막을 직접 확인했습니다.</label>
 <label class="check"><input type="checkbox" name="sources_confirmed" value="true" required {% if draft and draft.sources_confirmed %}checked{% endif %}> 출처와 사실 관계를 확인했습니다.</label>

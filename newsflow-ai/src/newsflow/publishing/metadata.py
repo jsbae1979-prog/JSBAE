@@ -18,7 +18,7 @@ def suggest_metadata(title: str, snapshot: dict, sources: dict) -> dict:
     URLs are included whole or omitted with a visible notice. Full provenance remains
     in the video record. Existing saved posting drafts always take precedence in the UI.
     """
-    empty = {"title": "", "description": "", "hashtags": "", "notice": "대본과 출처를 확인한 뒤 게시 문구를 작성하세요."}
+    empty = {"title": "", "description": "", "hashtags": "", "source_block": "", "notice": "대본과 출처를 확인한 뒤 게시 문구를 작성하세요."}
     summary = snapshot.get("summary", "") if isinstance(snapshot, dict) else ""
     if not isinstance(title, str) or not isinstance(summary, str):
         return empty
@@ -42,7 +42,7 @@ def suggest_metadata(title: str, snapshot: dict, sources: dict) -> dict:
     description = "대본 기반 초안 · 게시 전 사실·출처 확인 필요"
     if summary.strip():
         description += "\n\n" + summary.strip()
-    urls, omitted = [], 0
+    urls, included, omitted = [], [], 0
     articles = sources.get("articles", []) if isinstance(sources, dict) else []
     for article in articles if isinstance(articles, list) else []:
         if not isinstance(article, dict):
@@ -61,12 +61,14 @@ def suggest_metadata(title: str, snapshot: dict, sources: dict) -> dict:
                 omitted += 1
                 continue
             urls.append(url)
-            addition = ("\n\n출처:\n" if "\n\n출처:\n" not in description else "\n") + url
+            addition = ("\n\n출처:\n" if not included else "\n") + url
             if _units(description + addition) > budget:
                 omitted += 1
                 continue
             description += addition
+            included.append(url)
     notice = "영상에 사용한 대본으로 제목·설명·해시태그를 채웠습니다. 수정 후 검토해 주세요."
     if omitted:
         notice += f" 출처 링크 {omitted}개는 형식·길이 때문에 넣지 못했습니다. ‘영상의 출처 보기’에서 확인하세요."
-    return {"title": title, "description": description, "hashtags": hashtags, "notice": notice}
+    return {"title": title, "description": description, "hashtags": hashtags, "notice": notice,
+            "source_block": "출처:\n" + "\n".join(included) if included else ""}

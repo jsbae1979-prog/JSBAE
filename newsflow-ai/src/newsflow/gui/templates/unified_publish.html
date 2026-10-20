@@ -26,7 +26,8 @@
     {% if not cohort %}<p class="hint" data-metadata-notice>{{ publish.suggested.notice }}</p>{% endif %}
     <label>제목<input name="title" value="{{ meta.title if meta else publish.suggested.title }}" maxlength="100" required></label>
     <label>설명<textarea name="description" rows="3" maxlength="5000">{{ meta.description if meta else publish.suggested.description }}</textarea></label>
-    <label>해시태그<input name="hashtags" value="{{ meta.hashtags|join(' ') if meta else publish.suggested.hashtags }}" maxlength="500"></label>
+    {% include 'publish_source_choice.html' %}
+<label>해시태그<input name="hashtags" value="{{ meta.hashtags|join(' ') if meta else publish.suggested.hashtags }}" maxlength="500"></label>
     <p class="hint">YouTube에는 제목·설명·태그로, Instagram·TikTok에는 제목·설명·해시태그를 합친 캡션으로 반영합니다. 플랫폼별 길이와 형식은 저장할 때 확인합니다.</p>
     <details class="easy-advanced"><summary>영상의 출처 보기</summary>{% for article in publish.sources.get('articles', []) %}<p>{{ article.get('title', '뉴스 자료') }}</p>{% for source in article.get('sources', []) %}<p>{{ source.get('name', source.get('publisher', '')) }} · {{ source.get('url', '') }}</p>{% endfor %}{% else %}<p>게시 전 자료의 출처를 확인하세요.</p>{% endfor %}</details>
     <label class="check"><input type="checkbox" name="content_reviewed" value="true" required {% if meta.content_reviewed %}checked{% endif %}> 이 영상의 내용·음성·자막을 직접 확인했습니다.</label>
