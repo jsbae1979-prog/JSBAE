@@ -15,6 +15,20 @@ from .routes import go, page
 
 router = APIRouter()
 
+_GUIDES = {"youtube": "YouTube", "instagram": "Instagram", "tiktok": "TikTok"}
+
+
+@router.get("/guides/platforms")
+def platform_guide_index(request: Request):
+    return page(request, "platform_guide.html", active="simple-settings", guides=_GUIDES, platform=None)
+
+
+@router.get("/guides/platforms/{platform}")
+def platform_guide(request: Request, platform: str):
+    if platform not in _GUIDES:
+        raise HTTPException(404, "지원하는 플랫폼 가이드를 선택하세요.")
+    return page(request, "platform_guide.html", active="simple-settings", guides=_GUIDES, platform=platform)
+
 
 @router.get("/analytics")
 def analytics(request: Request, platform: str = "youtube", account: str = ""):

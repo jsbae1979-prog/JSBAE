@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}{{ guides[platform] if platform else '플랫폼별' }} 시작 가이드 · NewsFlow AI{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/platform_guides.css"><script src="/static/js/platform_guides.js" defer></script>{% endblock %}
+{% block content %}
+<div class="platform-guide">
+{% call studio_header('accounts','GETTING STARTED',(guides[platform] ~ ' 시작 가이드') if platform else '플랫폼별 시작 가이드','계정 만들기부터 직접 업로드와 앱 연결까지, 필요한 경로를 선택하세요.') %}<a class="button" href="/simple-settings#accounts" target="_blank" rel="noopener noreferrer">계정 설정 열기 · 새 탭</a>{% endcall %}
+<nav class="guide-platforms" aria-label="플랫폼 가이드"><a href="/guides/platforms" {% if not platform %}aria-current="page"{% endif %}>전체 안내</a>{% for key,label in guides.items() %}<a href="/guides/platforms/{{ key }}" {% if platform == key %}aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}</nav>
+<p class="guide-note">작성 기준: 2026-10-20 KST · 메뉴·심사 조건은 플랫폼에서 바뀔 수 있습니다. 이 가이드를 여는 것만으로 로그인·API 호출·게시가 실행되지 않습니다. 실제 계정 연결·게시 성공은 별도 확인이 필요합니다.</p>
+{% if platform %}
+<nav class="guide-contents" aria-label="가이드 목차"><a href="#account">계정 만들기</a><a href="#manual">직접 업로드</a><a href="#connect">앱 연동</a><a href="#publish">게시 확인</a><a href="#troubleshoot">문제 해결</a></nav>
+<p class="guide-note">긴 운영자 설정은 필요한 경우에만 펼쳐 보세요. 인쇄·PDF 저장은 브라우저의 Ctrl+P를 사용하세요.</p>
+<article class="guide-body" aria-label="{{ guides[platform] }} 사용 안내">{% include 'guides/' ~ platform ~ '.html' %}</article>
+{% else %}
+<section class="guide-body"><h2>먼저 사용 방법을 선택하세요</h2><div class="guide-choices"><section><h3>영상만 만들어 직접 올리기</h3><p>NewsFlow AI에서 MP4 저장 → 플랫폼 웹·앱 로그인 → 직접 업로드.</p><p>개발자 앱·API 키·OAuth JSON·인증 서버가 필요하지 않습니다. 직접 게시한 결과는 앱 게시 이력에 자동 반영되지 않습니다.</p></section><section><h3>NewsFlow AI 안에서 계정 연결·게시</h3><p>YouTube는 Google 앱 설정과 사용자 승인이, Instagram은 Meta 앱과 HTTPS 인증 중계가 추가로 필요합니다.</p><p>TikTok 실계정 연결·게시 기능은 현재 비활성입니다. 준비 화면을 게시 가능 상태로 오해하지 마세요.</p></section></div>
+<h2>어느 플랫폼부터 시작할까요?</h2><ul class="guide-directory">{% for key,label in guides.items() %}<li><a href="/guides/platforms/{{ key }}">{{ label }} 가이드 읽기 →</a><p>{% if key == 'youtube' %}Google 계정·채널 만들기, 직접 업로드, Desktop OAuth와 첫 비공개 업로드.{% elif key == 'instagram' %}계정 만들기, 직접 업로드, 프로 계정·Page·Meta 앱·인증 중계 준비.{% else %}계정 만들기와 직접 업로드, API 연동의 현재 제한과 선행 조건.{% endif %}</p></li>{% endfor %}</ul>
+<h2>모든 플랫폼에서 확인할 것</h2><p>MP4를 끝까지 시청하고 사실·출처·음악·이미지·목소리의 사용 권리를 검토하세요. 필요한 AI 표시와 공개 범위를 확인한 뒤 게시하세요. 계정 연결 승인과 영상 게시 승인은 별개입니다.</p></section>
+{% endif %}
+</div>
+{% endblock %}

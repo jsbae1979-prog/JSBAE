@@ -1,0 +1,41 @@
+<section id="account"><h2>1. Google 계정과 YouTube 채널 만들기</h2><ol>
+<li>Google 계정이 없다면 <a href="https://accounts.google.com/signup" target="_blank" rel="noopener noreferrer">Google 계정 만들기</a>에서 가입합니다. 비밀번호·복구 수단·2단계 인증은 Google에서 관리합니다.</li>
+<li><a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">YouTube</a>에 로그인하고 프로필 메뉴의 채널 만들기 또는 채널 관리 화면에서 이름과 핸들을 정합니다. 이미 채널이 있다면 새로 만들 필요가 없습니다.</li>
+<li><a href="https://studio.youtube.com/" target="_blank" rel="noopener noreferrer">YouTube Studio</a>에서 게시할 채널 이름을 확인합니다. 로그인한 Google 계정과 실제 게시 채널을 구분하세요.</li>
+</ol><p><strong>완료 확인:</strong> YouTube Studio에서 자신의 채널과 콘텐츠 메뉴가 보입니다.</p></section>
+<section id="manual"><h2>2. 직접 업로드하기 · 앱 연결 없이</h2><p>준비물은 YouTube 채널과 완성 MP4입니다. Google Cloud 프로젝트·OAuth JSON·API 키는 필요하지 않습니다.</p><ol>
+<li>NewsFlow AI의 완성 영상 화면에서 MP4를 내려받고 영상·음성·자막·출처·사용 권리를 검토합니다.</li>
+<li>YouTube Studio에서 <strong>만들기 → 동영상 업로드</strong>를 선택하고 MP4를 고릅니다.</li>
+<li>제목·설명, 아동용 여부, 해당하는 합성·변형 콘텐츠 표시를 직접 확인합니다. 저작권 검사가 끝났다고 모든 권리가 보장되는 것은 아닙니다.</li>
+<li>처음에는 비공개로 저장하고 실제 재생을 확인한 뒤 원하는 공개 상태를 선택합니다. Shorts 분류는 YouTube의 규격·정책에 따릅니다. #Shorts 입력만으로 분류가 보장되지 않습니다.</li>
+</ol><p><strong>완료 확인:</strong> Studio의 콘텐츠 목록에서 처리 상태·공개 범위와 영상을 확인합니다. 웹에서 직접 게시한 결과는 NewsFlow AI의 게시 이력으로 자동 등록되지 않습니다.</p></section>
+<section id="connect"><h2>3. NewsFlow AI에서 연결하기 · 선택 사항</h2><p>현재 앱에는 연결·게시 코드가 있습니다. 실제 Google 로그인과 사용자 PC 동작은 별도 검증이 필요합니다. 계정 연결은 영상 업로드 승인이 아닙니다.</p>
+<details><summary>먼저 준비할 Google 앱 설정</summary><ol>
+<li><a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>에서 본인이 관리할 프로젝트를 선택하거나 만듭니다.</li>
+<li>API 라이브러리에서 <strong>YouTube Data API v3</strong>를 사용 설정합니다.</li>
+<li>Google Auth Platform 또는 OAuth 동의 화면에서 앱 이름·연락처·대상을 설정합니다. 외부 앱을 테스트 상태로 사용할 경우 실제 로그인할 계정을 테스트 사용자에 추가합니다.</li>
+<li>요청 권한을 확인합니다. 현재 앱은 채널 확인을 위한 <code>youtube.readonly</code>와 업로드를 위한 <code>youtube.upload</code>를 사용합니다. Google의 앱 검증·정책 요구 여부는 프로젝트의 현재 화면에서 확인합니다.</li>
+<li>OAuth 클라이언트를 <strong>데스크톱 앱</strong> 유형으로 만들고 JSON을 내려받습니다. 웹 앱용 JSON이나 단순 API 키로 대체하지 않습니다. JSON은 채팅·Git·공유 폴더에 올리지 마세요.</li>
+</ol></details><ol>
+<li>NewsFlow AI의 <strong>설정 → 게시 계정 → YouTube → Google 앱 설정</strong>에서 데스크톱 앱 JSON을 등록합니다.</li>
+<li>권한 요청에 동의하고 <strong>Google로 YouTube 연결</strong>을 누릅니다. Google 공식 인증 화면에서 게시할 채널의 계정으로 로그인하고 요청 권한을 검토·승인합니다.</li>
+<li>창이 안 열리면 <strong>인증 링크 복사</strong> 또는 <strong>인증 화면 다시 열기</strong>를 사용합니다. 링크는 앱을 실행한 동일 PC에서만 사용하며 연결 시작 후 최대 5분입니다. 공유하지 마세요.</li>
+<li>앱에서 연결 상태를 새로고침하고 확인된 채널이 맞는지 확인합니다. 잘못된 채널이면 게시하지 말고 계정을 다시 확인합니다.</li>
+</ol><p><strong>완료 확인:</strong> 앱에 확인된 채널이 표시됩니다. API 키·JSON 저장만으로 연결이 완료된 것은 아닙니다. 테스트 앱의 인증은 만료·회수 등으로 재연결이 필요할 수 있습니다.</p></section>
+<section id="publish"><h2>4. 앱에서 첫 게시 확인하기</h2><ol>
+<li>완성 MP4를 재생하고 게시 화면에서 YouTube와 확인된 채널을 선택합니다.</li>
+<li>제목·설명·출처·저작권·내용·AI 표시 판단을 검토해 저장합니다.</li>
+<li>처음에는 <strong>비공개</strong>와 올바른 아동용 여부를 선택하고 이번 영상의 업로드를 명시적으로 승인합니다. 공개·일부 공개는 별도 동의가 필요합니다.</li>
+<li>앱의 플랫폼별 결과와 Studio를 함께 확인합니다. 결과 불명일 때 반복 업로드하지 말고 Studio에서 실제 등록 여부를 먼저 확인합니다.</li>
+</ol></section>
+<section id="troubleshoot"><h2>5. 막혔을 때</h2><dl>
+<dt>앱 설정 저장이 실패해요</dt><dd>지원되는 Windows 환경인지, JSON이 데스크톱 앱 유형인지 확인하세요. 비밀값이 포함된 JSON을 오류 제보에 붙이지 마세요.</dd>
+<dt>Google에서 접근을 거부해요</dt><dd>테스트 사용자 등록, 조직 계정 제한, 동의 화면·요청 권한과 앱 검증 상태를 확인하세요. 보안 경고를 무시하는 방식으로 진행하지 마세요.</dd>
+<dt>로그인 후 돌아오지 않거나 링크가 만료됐어요</dt><dd>같은 PC에서 앱이 실행 중인지 확인하고 대기 중인 연결을 취소한 뒤 새로 연결하세요. 브라우저·보안 프로그램의 차단 여부를 확인하되 보안 기능을 끄지는 마세요.</dd>
+<dt>다른 PC로 옮겼어요</dt><dd>기존 DPAPI 토큰 파일을 복사하지 말고 새 PC에서 앱 설정과 로그인을 진행하세요. 인증 링크 복사와 토큰 파일 복사는 다른 기능입니다.</dd>
+</dl></section>
+<section id="sources"><h2>공식 도움말</h2><ul>
+<li><a href="https://support.google.com/youtube/answer/1646861?hl=ko" target="_blank" rel="noopener noreferrer">YouTube 채널 만들기</a></li>
+<li><a href="https://support.google.com/youtube/answer/57407?hl=ko" target="_blank" rel="noopener noreferrer">동영상 업로드</a></li>
+<li><a href="https://developers.google.com/identity/protocols/oauth2/native-app" target="_blank" rel="noopener noreferrer">Google 데스크톱 앱 OAuth</a></li>
+</ul></section>
