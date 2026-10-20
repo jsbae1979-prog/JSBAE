@@ -91,7 +91,8 @@ def test_callback_result_delivered_once_and_http_replay_rejected(listener):
     callback, launch = listener
     assert request(launch)[0] == 200
     callback.wait(1)
-    assert request(launch)[0] == 409
+    status, body, _ = request(launch)
+    assert status == 409 and b"Reason: callback_reused" in body
     with pytest.raises(CallbackError) as error:
         callback.wait(1)
     assert error.value.code == "reused"
@@ -126,6 +127,7 @@ def test_invalid_host_rejected_without_burning_valid_state(listener, host):
     callback, launch = listener
     status, body, _ = request(launch, headers={"Host": host})
     assert status == 400 and launch.request.state.get_secret_value().encode() not in body
+    assert b"Reason: callback_host" in body
     assert request(launch)[0] == 200
     callback.wait(1).assert_valid("youtube:1")
 
@@ -133,7 +135,8 @@ def test_invalid_host_rejected_without_burning_valid_state(listener, host):
 @pytest.mark.parametrize("origin", ["null", "https://attacker.invalid", "http://127.0.0.1:8765"])
 def test_external_or_unconfigured_origin_cannot_consume_callback(listener, origin):
     callback, launch = listener
-    assert request(launch, headers={"Origin": origin})[0] == 400
+    status, body, _ = request(launch, headers={"Origin": origin})
+    assert status == 400 and b"Reason: callback_origin" in body
     assert request(launch)[0] == 200
     callback.wait(1).assert_valid("youtube:1")
 
@@ -170,14 +173,14 @@ def test_duplicate_host_and_origin_headers_rejected_without_consuming(listener):
 
 
 @pytest.mark.parametrize(
-    "case,code",
-    [("duplicate-code", "callback_invalid"),
-     ("unknown-field", "callback_invalid"), ("both-code-error", "callback_invalid"),
-     ("empty-code", "callback_invalid"), ("foreign-code", "callback_invalid"),
-     ("control-code", "callback_invalid"), ("error-description-with-code", "callback_invalid"),
-     ("other-account-field", "callback_invalid")],
+    "case,reason",
+    [("duplicate-code", "duplicate_field"),
+     ("unknown-field", "unknown_field"), ("both-code-error", "result_fields"),
+     ("empty-code", "empty_field"), ("foreign-code", "code_format"),
+     ("control-code", "field_format"), ("error-description-with-code", "result_fields"),
+     ("other-account-field", "unknown_field"), ("empty-optional", "empty_field")],
 )
-def test_invalid_callback_consumed_fail_closed_without_any_network_exchange(listener, case, code):
+def test_invalid_callback_consumed_fail_closed_without_any_network_exchange(listener, case, reason, capfd):
     callback, launch = listener
     values = params(launch)
     if case == "duplicate-code":
@@ -194,13 +197,21 @@ def test_invalid_callback_consumed_fail_closed_without_any_network_exchange(list
         values[1] = ("code", "nf-synthetic-code-\x00")
     elif case == "error-description-with-code":
         values.append(("error_description", "nf-synthetic-error-sensitive"))
+    elif case == "empty-optional":
+        values.append(("prompt", ""))
     else:
         values.append(("account_key", "youtube:2"))
     status, body, _ = request(launch, values=values)
     assert status == 400 and b"nf-synthetic" not in body
     with pytest.raises(CallbackError) as error:
         callback.wait(1)
-    assert error.value.code == code
+    assert error.value.code == "callback_invalid"
+    assert error.value.reason == error.value.last_rejection == reason
+    assert f"Reason: callback_{reason}".encode() in body
+    rendered = body.decode() + repr(vars(error.value)) + str(error.value)
+    for secret in (launch.request.state.get_secret_value(), "nf-synthetic", "attacker.invalid", "youtube:2"):
+        assert secret not in rendered
+    assert capfd.readouterr() == ("", "")
     assert request(launch)[0] == 409
     assert callback.evidence()["real_oauth_requests"] == 0
 
@@ -215,7 +226,8 @@ def test_unauthenticated_callback_rejected_without_burning_legitimate_pending_lo
         values.pop(0)
     else:
         values.append(values[0])
-    assert request(launch, values=values)[0] == 400
+    status, body, _ = request(launch, values=values)
+    assert status == 400 and b"Reason: callback_state" in body
     assert callback.evidence()["synthetic_callbacks_accepted"] == 0
     assert request(launch)[0] == 200
     callback.wait(1).assert_valid("youtube:1")
@@ -230,6 +242,7 @@ def test_provider_cancellation_and_error_emit_no_secret_error_description(listen
     with pytest.raises(CallbackError) as error:
         callback.wait(1)
     assert error.value.code == code
+    assert error.value.reason == ("provider_denied" if error_name == "access_denied" else "provider_error")
     assert "secret" not in str(error.value) and capfd.readouterr() == ("", "")
 
 
@@ -281,20 +294,76 @@ def test_callback_wait_timeout_consumes_and_late_response_cannot_become_success(
     assert callback.evidence()["synthetic_callbacks_accepted"] == 0
 
 
+def test_timeout_preserves_observed_rejection_without_claiming_it_is_the_cause(listener):
+    callback, launch = listener
+    assert request(launch, headers={"Origin": "https://DO_NOT_EXPOSE.invalid"})[0] == 400
+    with pytest.raises(CallbackError) as error:
+        callback.wait(0.01)
+    assert error.value.code == "callback_timeout"
+    assert error.value.reason is None
+    assert error.value.last_rejection == "origin"
+    assert error.value.safe_observation()["tcp_connections"] == 1
+    assert error.value.safe_observation()["http_requests"] == 1
+    assert error.value.safe_observation()["rejected_requests"] == 1
+    assert error.value.safe_observation()["accepted_callbacks"] == 0
+    assert error.value.safe_observation()["read_failures"] == 0
+    assert error.value.safe_observation()["deadline_reached"] is False
+    assert "DO_NOT_EXPOSE" not in repr(vars(error.value)) + str(error.value)
+
+
+def test_callback_error_diagnostic_rejects_arbitrary_text():
+    error = CallbackError("callback_invalid", reason="DO_NOT_EXPOSE_state_token")
+    assert error.reason is None
+    assert "DO_NOT_EXPOSE" not in str(error) + repr(vars(error))
+
+
 def test_callback_expiration_without_http_request_is_not_success():
     with SyntheticLoopbackCallback() as callback:
         launch = callback.start("youtube:1", ttl_seconds=0.02)
         with pytest.raises(CallbackError) as error:
             callback.wait(1)
         assert error.value.code == "expired"
+        assert error.value.safe_observation()["tcp_connections"] == 0
+        assert error.value.safe_observation()["http_requests"] == 0
+        assert error.value.safe_observation()["listener_running"] is True
         assert request(launch)[0] == 409
+
+
+def test_partial_http_read_failure_is_distinct_from_no_connection(listener, capfd):
+    callback, launch = listener
+    port = urlsplit(launch.redirect_uri).port
+    with socket.create_connection(("127.0.0.1", port), timeout=3) as connection:
+        connection.sendall(b"GET /oauth/callback?code=DO_NOT_EXPOSE_partial HTTP/1.1\r\nHost:")
+        # The real local handler's one-second read deadline closes the socket.
+        assert connection.recv(1) == b""
+    with pytest.raises(CallbackError) as error:
+        callback.wait(0.01)
+    observation = error.value.safe_observation()
+    assert observation["tcp_connections"] == 1
+    assert observation["http_requests"] == 1
+    assert observation["read_failures"] == 1
+    assert observation["accepted_callbacks"] == observation["rejected_requests"] == 0
+    assert error.value.last_rejection is None
+    assert "DO_NOT_EXPOSE" not in repr(vars(error.value)) + str(error.value)
+    assert capfd.readouterr() == ("", "")
+
+
+def test_failure_snapshot_is_not_changed_by_late_callback(listener):
+    callback, launch = listener
+    with pytest.raises(CallbackError) as error:
+        callback.wait(0.01)
+    original = error.value.safe_observation()
+    assert request(launch)[0] == 409
+    assert error.value.safe_observation() == original
+    assert callback.evidence()["synthetic_callbacks_accepted"] == 0
 
 
 def test_expired_callback_received_over_http_is_rejected():
     with SyntheticLoopbackCallback() as callback:
         launch = callback.start("youtube:1", ttl_seconds=0.01)
         threading.Event().wait(0.02)
-        assert request(launch)[0] == 410
+        status, body, _ = request(launch)
+        assert status == 410 and b"Reason: callback_expired" in body
         with pytest.raises(CallbackError) as error:
             callback.wait(1)
         assert error.value.code == "expired"
@@ -315,6 +384,7 @@ def test_mismatching_pkce_verifier_never_yields_result(listener):
     with pytest.raises(CallbackError) as error:
         callback.wait(1)
     assert error.value.code == "callback_invalid"
+    assert error.value.reason == "pkce"
 
 
 @pytest.mark.parametrize("case", ["account", "scope", "uri", "code", "verifier", "challenge", "expiry", "session", "mode", "seal"])

@@ -22,6 +22,7 @@ from sqlalchemy import select, update
 
 from newsflow.db.models import (
     AppSetting,
+    AuditLog,
     OAuthConnection,
     OAuthIdentityBinding,
     OAuthLifecycleOperation,
@@ -32,7 +33,7 @@ from newsflow.intelligence.credentials import AIKeyStore, CredentialError
 from newsflow.publishing.auth import TokenBundle
 
 from .activation import youtube_operation
-from .callback import LoopbackCallbackListener
+from .callback import CALLBACK_REJECTION_MESSAGES, CallbackError, LoopbackCallbackListener
 from .identity import (
     IDENTITY_LINK_SCOPES,
     YouTubeHTTPSIdentityTransport,
@@ -67,6 +68,10 @@ _MESSAGES = {
     "ambiguous_identity": "게시할 YouTube 채널 한 개를 확인하지 못했습니다.",
     "outcome_unknown": "인증 처리 결과를 확인하지 못했습니다. 자동으로 다시 요청하지 않습니다.",
     "connection_failed": "YouTube 연결에 실패했습니다. 계정과 Google 앱 설정을 확인해 주세요.",
+    "callback_invalid": "Google 인증 응답을 안전하게 검증하지 못했습니다.",
+    "callback_timeout": "Google 인증 응답 대기 시간이 만료되었습니다.",
+    "port_conflict": "로컬 인증 응답 포트를 사용할 수 없습니다.",
+    **{f"callback_{reason}": message for reason, message in CALLBACK_REJECTION_MESSAGES.items()},
 }
 
 
@@ -394,6 +399,20 @@ class YouTubeConnectionService:
 
     def _fail(self, account_id: int, operation_id: str, revision: int, error: Exception) -> None:
         code = getattr(error, "code", "connection_failed")
+        callback_reason = None
+        observed_rejection = None
+        if isinstance(error, CallbackError):
+            # Only allowlisted classifications reach storage/UI; never the exception text.
+            if code == "expired":
+                # A local callback deadline is not evidence that Google rejected a token.
+                code = "callback_expired"
+            if isinstance(error.reason, str) and error.reason in CALLBACK_REJECTION_MESSAGES:
+                callback_reason = error.reason
+                if code in {"callback_invalid", "state_mismatch", "provider_error"}:
+                    code = f"callback_{callback_reason}"
+            if (isinstance(error.last_rejection, str)
+                    and error.last_rejection in CALLBACK_REJECTION_MESSAGES):
+                observed_rejection = error.last_rejection
         if getattr(error, "outcome_unknown", False) or isinstance(error, (TimeoutError, OSError)):
             code = "outcome_unknown"
         if code not in _MESSAGES:
@@ -408,6 +427,15 @@ class YouTubeConnectionService:
                 code = "outcome_unknown"
             if connection.status in {"cancelled", "unknown"}:
                 return
+            if isinstance(error, CallbackError):
+                session.add(AuditLog(level="warning", event="youtube_callback_rejected", message=json.dumps({
+                    "account_id": account_id, "stage": "callback", "outcome": code,
+                    "operation_id": operation_id, "revision": revision,
+                    "reason": callback_reason,
+                    # A pre-state rejection is an observation, not proof of why login expired.
+                    "last_rejected_request": observed_rejection if callback_reason is None else None,
+                    "observation": error.safe_observation(),
+                }, separators=(",", ":"))))
             status = "unknown" if code == "outcome_unknown" else "cancelled" if code == "cancelled" else "error"
             connection.status, connection.error_code, connection.updated_at = status, code, utcnow()
             account.api_ready, account.status = False, "not_connected"
