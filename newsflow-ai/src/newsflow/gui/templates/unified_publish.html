@@ -23,10 +23,11 @@
       {% else %}<p class="settings-warning">{{ label }} 계정 연결이 필요합니다. <a href="{{ '/publishing/platforms#' if platform in ['tiktok','facebook'] else '/simple-settings#' }}{{ platform }}">연결 설정 →</a></p>{% endif %}
     </div>{% endfor %}
     <div data-publish-account="youtube"><label>YouTube 영상 카테고리<select aria-label="YouTube 영상 카테고리" name="youtube_category_id" required><option value="">영상에 맞는 분야를 선택하세요</option>{% for value,label in publish.youtube_categories.items() %}<option value="{{ value }}" {% if meta and meta.get('youtube_category_id', '25') == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label><p class="hint">YouTube 분류입니다. Instagram·TikTok에는 이 값을 보내지 않습니다.</p></div>
-    <label>제목<input name="title" value="{{ meta.title if meta else publish.title }}" maxlength="100" required></label>
-    <label>설명<textarea name="description" rows="3" maxlength="5000">{{ meta.description if meta else '' }}</textarea></label>
-    <label>해시태그<input name="hashtags" value="{{ meta.hashtags|join(' ') if meta else '' }}" maxlength="500"></label>
-    <p class="hint">Instagram에는 제목·설명·해시태그를 합쳐 게시합니다. 플랫폼별 길이와 형식은 저장할 때 확인합니다.</p>
+    {% if not cohort %}<p class="hint" data-metadata-notice>{{ publish.suggested.notice }}</p>{% endif %}
+    <label>제목<input name="title" value="{{ meta.title if meta else publish.suggested.title }}" maxlength="100" required></label>
+    <label>설명<textarea name="description" rows="3" maxlength="5000">{{ meta.description if meta else publish.suggested.description }}</textarea></label>
+    <label>해시태그<input name="hashtags" value="{{ meta.hashtags|join(' ') if meta else publish.suggested.hashtags }}" maxlength="500"></label>
+    <p class="hint">YouTube에는 제목·설명·태그로, Instagram·TikTok에는 제목·설명·해시태그를 합친 캡션으로 반영합니다. 플랫폼별 길이와 형식은 저장할 때 확인합니다.</p>
     <details class="easy-advanced"><summary>영상의 출처 보기</summary>{% for article in publish.sources.get('articles', []) %}<p>{{ article.get('title', '뉴스 자료') }}</p>{% for source in article.get('sources', []) %}<p>{{ source.get('name', source.get('publisher', '')) }} · {{ source.get('url', '') }}</p>{% endfor %}{% else %}<p>게시 전 자료의 출처를 확인하세요.</p>{% endfor %}</details>
     <label class="check"><input type="checkbox" name="content_reviewed" value="true" required {% if meta.content_reviewed %}checked{% endif %}> 이 영상의 내용·음성·자막을 직접 확인했습니다.</label>
     <label class="check"><input type="checkbox" name="sources_confirmed" value="true" required {% if meta.sources_confirmed %}checked{% endif %}> 출처와 사실 관계를 확인했습니다.</label>

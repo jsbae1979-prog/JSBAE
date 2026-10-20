@@ -5,6 +5,7 @@ from sqlalchemy import select
 
 from newsflow.db.models import PublishDraft, PublishValidation, RenderJob, VideoProject
 from newsflow.publishing.categories import YOUTUBE_CATEGORIES
+from newsflow.publishing.metadata import suggest_metadata
 from newsflow.publishing.service import REAL_BLOCKERS, PublishingError, PublishingService
 
 from .routes import go
@@ -38,7 +39,8 @@ def publishing_context(request: Request, render_job_id: int | None, *, platform:
         live = getattr(request.app.state, "instagram_publishing" if platform == "instagram" else "live_publishing", None)
         connections = getattr(request.app.state, platform, None)
         results = live.results() if live else []
-        return {"youtube_categories": YOUTUBE_CATEGORIES, "render_job_id": render_job_id, "title": project.title, "draft": draft,
+        return {"suggested": suggest_metadata(project.title, project.snapshot, project.sources),
+                "youtube_categories": YOUTUBE_CATEGORIES, "render_job_id": render_job_id, "title": project.title, "draft": draft,
                 "sources": project.sources, "checks": local_checks, "reviewed": reviewed,
                 "accounts": connections.status()["accounts"] if connections else [],
                 "results": [item for item in results if item.get("render_job_id") == render_job_id]}
