@@ -39,6 +39,7 @@ from newsflow.news.collector import Collector
 from newsflow.news.rss_adapter import FakeRSSAdapter
 from newsflow.news.service import CollectionCoordinator, NewsService
 from newsflow.publishing.media import FFprobeMediaInspector
+from newsflow.publishing.metadata import suggest_metadata
 from newsflow.publishing.service import PublishingService, hash_file
 from newsflow.video.service import VideoCoordinator, VideoError
 from newsflow.video.tts import SpeechSettings, TTSError
@@ -1050,11 +1051,12 @@ class PipelineBackend:
         if not ctx.get("media_sha256") or checked["media_sha256"] != ctx["media_sha256"]:
             raise BackendError("검사 후 영상 파일이 바뀌었습니다. 다시 확인하세요.", retryable=False)
         with self.sessions() as session:
-            draft = session.get(ContentDraft, ctx["content_draft_id"])
-            title = draft.content["title"]
-            description = (
-                "검토용 초안입니다. 출처·내용·저작권을 사람이 확인해야 합니다.\n" + draft.content["summary"]
-            )
+            render = session.get(RenderJob, ctx["render_job_id"])
+            project = session.get(VideoProject, render.project_id)
+            metadata = suggest_metadata(project.title, project.snapshot, project.sources)
+            if not metadata["title"]:
+                raise BackendError("게시 문구를 자동 작성하지 못했습니다. 영상 대본과 출처를 확인하세요.", retryable=False)
+            description = metadata["description"]
             if ctx["source"] == "sample":
                 description = "체험용 합성 뉴스 · 실제 보도 아님\n" + description
             elif ctx.get("ai_mode", "offline") != "offline":
@@ -1064,9 +1066,9 @@ class PipelineBackend:
         identifier = self.publishing.create(
             ctx["render_job_id"],
             ctx["platform"],
-            title,
+            metadata["title"],
             description,
-            "뉴스 검토용",
+            metadata["hashtags"],
             content_reviewed=False,
             copyright_confirmed=False,
             sources_confirmed=False,
