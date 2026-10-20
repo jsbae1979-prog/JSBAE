@@ -656,6 +656,13 @@ class IntelligenceService:
                             "news_usage_contract": api_news_contract(
                                 evidence, evidence["news_usage"], duration, speech=self.speech,
                             )}
+            if len(evidence.get("articles", [])) > 1:
+                evidence = {**evidence, "synthesis": {
+                    "article_ids": [a["id"] for a in evidence["articles"]],
+                    "facts_verified": False,
+                    "instruction": "같은 주제의 제공 자료를 한 편으로 종합하되 서로 다른 수치·날짜·주장을 합치거나 다수결로 확정하지 마세요. "
+                                   "출처별 차이와 미확인 사항을 구분하고 같은 보도의 재전재를 독립 확인으로 취급하지 마세요.",
+                }}
             evidence = {**evidence, "presentation": chosen_presentation}
             run = IntelligenceRun(
                 kind="script",

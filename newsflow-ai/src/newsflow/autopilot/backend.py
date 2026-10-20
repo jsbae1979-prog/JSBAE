@@ -11,7 +11,7 @@ from pathlib import Path
 from threading import Event, Thread
 from typing import Any
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import Integer, and_, cast, or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from newsflow.db.models import (
@@ -19,6 +19,7 @@ from newsflow.db.models import (
     ArticleScore,
     AuditLog,
     AutopilotArticleClaim,
+    AutopilotArtifact,
     CollectionRun,
     ContentDraft,
     IntelligenceRun,
@@ -46,6 +47,7 @@ from newsflow.video.tts import SpeechSettings, TTSError
 
 from .contracts import AutopilotError, BackendError, BackendWaiting
 from .samples import SAMPLE_NAME, SAMPLE_URL, sample_feed
+from .synthesis import CLAIM_KIND, POLICY, choose_articles
 
 Progress = Callable[[int, str], None]
 SaveArtifact = Callable[[str, int | str], None]
@@ -360,6 +362,8 @@ class PipelineBackend:
                                 AutopilotArticleClaim.job_id != ctx["job_id"]
                             )
                         ),
+                        ~NewsArticle.id.in_(select(cast(AutopilotArtifact.reference, Integer)).where(
+                            AutopilotArtifact.kind == CLAIM_KIND, AutopilotArtifact.job_id != ctx["job_id"])),
                         NewsArticle.id.in_(
                             select(ArticleMention.article_id).where(ArticleMention.source_id.in_(source_ids))
                         ),
@@ -434,14 +438,22 @@ class PipelineBackend:
             article = session.get(NewsArticle, chosen)
             sufficient = bool(article and len(article.summary.strip()) >= MIN_SUMMARY_CHARS)
             dated = bool(article and article.published_at is not None)
+        script_ids = [chosen]
+        if ctx.get("article_grouping") == POLICY:
+            with self.sessions() as session:
+                analysis = session.get(IntelligenceRun, analysis_id) if analysis_id else None
+                if not analysis or analysis.status != "success":
+                    raise BackendError(code="select_failed", retryable=False)
+                script_ids = choose_articles(analysis.evidence, chosen)
         if api_script:
-            assessment = assess_news_usage(self.intelligence.evidence_for([chosen]), ctx["news_usage"])
+            assessment = assess_news_usage(self.intelligence.evidence_for(script_ids), ctx["news_usage"])
         progress(100, "제작할 뉴스 후보를 골랐어요.")
         return {
             "article_id": chosen, "candidate_article_ids": candidates,
             "content_sufficient": sufficient, "publication_dated": dated,
             "synthetic_news": ctx.get("source") == "sample",
             "selection_method": selection_method, "selection_reason": selection_reason,
+            **({"script_article_ids": script_ids} if ctx.get("article_grouping") == POLICY else {}),
             **({"analysis_run_id": analysis_id, "analysis_provider": ctx.get("ai_mode", "offline"),
                 "ai_model": ctx.get("ai_model"), "analyzed_article_ids": candidates} if analysis_id else {}),
             **({"news_usage_result": assessment, "script_method": "api_grounded_v1"} if api_script else {}),
@@ -583,6 +595,8 @@ class PipelineBackend:
                                            **{key: ctx[key] for key in ("acquisition_policy", "category", "period") if key in ctx}}
                                           if ctx.get("production_options", {}).get("version") in {1, 2} else {}),
                                        "news_usage": ctx.get("news_usage"),
+                                       **({"article_grouping": POLICY, "script_article_ids": ctx.get("script_article_ids", [])}
+                                          if ctx.get("article_grouping") == POLICY else {}),
                                    }, "external_consent": ctx.get("external_consent", False),
                                    "consented_at": ctx.get("consented_at"),
                                    "news_method": ("synthetic_rss" if ctx["source"] == "sample" else
@@ -648,19 +662,39 @@ class PipelineBackend:
                if draft.sources.get("script_method") == "api_grounded_v1" else {}),
         }
 
+    def _script_ids(self, ctx: dict) -> list[int]:
+        if "article_grouping" not in ctx:
+            return [ctx["article_id"]]
+        if ctx["article_grouping"] != POLICY:
+            raise BackendError(code="select_failed", retryable=False)
+        with self.sessions() as session:
+            analysis = session.get(IntelligenceRun, ctx.get("analysis_run_id"))
+            ids = ctx.get("script_article_ids")
+            try:
+                expected = choose_articles(analysis.evidence, ctx["article_id"]) if analysis else None
+            except (ValueError, KeyError, TypeError):
+                raise BackendError("종합 기사 근거를 확인할 수 없습니다.", retryable=False) from None
+            if (not analysis or analysis.status != "success" or analysis.provider != ctx.get("ai_mode")
+                    or analysis.options.get("autopilot_job_id") != ctx["job_id"]
+                    or not isinstance(ids, list) or any(type(i) is not int for i in ids)
+                    or ids != expected):
+                raise BackendError("저장된 종합 기사 묶음이 분석 근거와 다릅니다.", retryable=False)
+            return list(ids)
+
     def _script(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         if ctx.get("script_method") == "local_topic_template":
             return self._topic_script(ctx, cancel, progress, save)
         ai_mode = ctx.get("ai_mode", "offline")
         api_script = ctx.get("script_method") == "api_grounded_v1"
         cli_script = ctx.get("script_method") == "cli_grounded_v1"
+        script_ids = self._script_ids(ctx)
         if ctx.get("content_draft_id"):
             with self.sessions() as session:
                 draft = session.get(ContentDraft, ctx["content_draft_id"])
                 if (
                     draft
                     and draft.duration == ctx["duration"]
-                    and {article["id"] for article in draft.sources["articles"]} == {ctx["article_id"]}
+                    and {article["id"] for article in draft.sources["articles"]} == set(script_ids)
                 ):
                     if api_script:
                         run = session.get(IntelligenceRun, draft.run_id)
@@ -680,7 +714,7 @@ class PipelineBackend:
                 if completed:
                     if completed.duration != ctx["duration"] or {
                         a["id"] for a in completed.sources["articles"]
-                    } != {ctx["article_id"]}:
+                    } != set(script_ids):
                         raise BackendError("대본과 선택 뉴스가 일치하지 않습니다.", retryable=False)
                     run = session.get(IntelligenceRun, script_id)
                     if api_script and (not run or run.status != "success" or not self._api_run_matches(run, ctx)):
@@ -748,7 +782,7 @@ class PipelineBackend:
                     consent=ai_mode != "offline",
                     options=script_options,
                     on_run=self._remember(ctx, "script_run_id", save),
-                    **({"article_ids": [ctx["article_id"]]} if ctx.get("unified") or api_script else {}),
+                    **({"article_ids": script_ids} if ctx.get("unified") or api_script else {}),
                     **({"news_usage": ctx["news_usage"]} if api_script else {}),
                 )
         except IntelligenceError as exc:
