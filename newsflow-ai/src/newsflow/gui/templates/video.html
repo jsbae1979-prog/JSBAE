@@ -22,7 +22,7 @@
     {{ csrf_field() }}<input type="hidden" name="draft_id" value="{{ draft.id }}">
 
 <aside class="video-modern-inspector">    <section class="suite-panel workstation-media-panel"><div class="suite-section-bar"><h2>이번 영상 설정</h2>{{ ui_icon('settings',18) }}</div><p class="video-settings-scope">아래 선택은 이번 영상에만 적용됩니다.</p>    <div class="video-basic-fields">
-      <label>영상 길이<select name="duration">{% for seconds in shortform_durations|default([30,45,60]) %}<option value="{{ seconds }}" {{ 'selected' if draft.duration==seconds }}>{{ seconds }}초</option>{% endfor %}</select></label>
+      <label>영상 길이<select name="duration">{% for seconds in shortform_durations|default([30,45,60]) if not draft.sources.shortform or not draft.sources.shortform.enabled or seconds <= 35 %}<option value="{{ seconds }}" {{ 'selected' if draft.duration==seconds }}>{{ seconds }}초</option>{% endfor %}</select></label>
       {% set voice_name = namespace(label=selected_voice) %}{% for voice in voices if voice.name == selected_voice %}{% set voice_name.label=voice.label %}{% endfor %}<details class="video-voice-choice"><summary>{{ ui_icon('voice',17) }} 음성 · {{ voice_name.label }} · 변경</summary><label>음성<select name="voice">
         <option value="offline-silence"{% if selected_voice=='offline-silence' %} selected{% endif %}>Offline · 무음 오디오 (실제 발화 없음)</option>
     {% if not voice_available %}<option value="{{ selected_voice }}" selected>저장된 음성 · {{ selected_voice }} (현재 사용 불가)</option>{% endif %}

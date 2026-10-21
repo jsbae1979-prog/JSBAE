@@ -237,3 +237,29 @@ def test_caption_hook_uses_narration_when_adapter_has_no_alignment(tmp_path):
     assert timings[0]["sentence_cues"][0]["text"] == script()["hook"]
     assert .34 <= scenes[-1].seconds-timings[-1]["audio_seconds"] <= .39
     assert 15 <= sum(s.seconds for s in scenes) < 30
+
+
+def test_frozen_short_draft_keeps_supported_lengths_after_defaults_disabled(client, app, monkeypatch):
+    import re
+
+    from newsflow.db.models import IntelligenceRun
+
+    class NoWindowsVoice:
+        def voices(self): return []
+        def voice_details(self): return []
+    monkeypatch.setattr("newsflow.gui.video_routes.WindowsTTS", NoWindowsVoice)
+    with app.state.sessions.begin() as session:
+        run = IntelligenceRun(kind="script", provider="offline", status="success", evidence={}, options={}, result={}, message="합성")
+        session.add(run)
+        session.flush()
+        draft = ContentDraft(run_id=run.id, duration=20, content=script(20), sources={"shortform": asdict(Shortform(enabled=True))})
+        session.add(draft)
+        session.flush()
+        identifier = draft.id
+    save(app.state.sessions, Shortform(enabled=False))
+    response = client.get(f"/video?draft_id={identifier}")
+    assert response.status_code == 200
+    options = re.search(r'<select name="duration">(.*?)</select>', response.text, re.DOTALL)[1]
+    assert 'value="20" selected' in options
+    assert 'value="15"' in options and 'value="35"' in options
+    assert 'value="45"' not in options and 'value="60"' not in options
