@@ -1,5 +1,5 @@
 {% extends 'base.html' %}{% block title %}뉴스 출처 · NewsFlow AI{% endblock %}{% block content %}
-<div class="easy-page"><div class="page-head"><div><p class="eyebrow">실제 뉴스 준비</p><h1>뉴스 출처와 모은 뉴스</h1><p>공개 RSS를 등록하고 연결을 확인한 뒤, 실제 뉴스를 모아 영상을 만들어요.</p></div><a class="quiet-link" href="/news">뉴스 탐색(고급) →</a></div>
+<div class="easy-page"><div class="page-head"><div><p class="eyebrow">실제 뉴스 준비</p><h1>뉴스 출처와 모은 뉴스</h1><p>RSS 출처를 등록하고 연결·수집 상태를 확인하세요.</p></div><a class="quiet-link" href="/news">뉴스 탐색(고급) →</a></div>
 <div class="status-chips" aria-label="뉴스 출처 상태"><span class="status-chip {{ 'ready' if enabled_count else 'pending' }}">사용 중인 출처 {{ enabled_count }}개</span><span class="status-chip">체험 뉴스는 별도 · 실제 보도 아님</span>{% if run %}<span class="status-chip {{ 'ready' if run.status == 'success' else 'pending' }}" id="collection-status" data-status="{{ run.status }}">최근 수집 {{ badge(run.status) }} · 신규 {{ run.added }}</span>{% else %}<span class="status-chip pending" id="collection-status" data-status="idle">아직 수집한 적이 없어요</span>{% endif %}</div>
 <div class="easy-two-columns"><section class="easy-section"><div class="section-head"><div><p class="eyebrow">1. 출처</p><h2>등록한 RSS 출처</h2></div></div>
 {% for row in sources %}<article class="easy-panel source-card" id="source-{{ row.source.id }}"><div class="work-card-top"><h3>{{ row.source.name }}</h3><span class="easy-badge {{ 'completed' if row.source.enabled else 'queued' }}">{{ '사용 중' if row.source.enabled else '사용 안 함' }}</span></div><p class="url">{{ row.source.url }}</p>
@@ -11,7 +11,7 @@
 <form method="post" action="/sources/preset" class="easy-panel creation-form" data-easy-form>{{ csrf_field() }}
 <h3>RSS 제공 사이트 빠른 등록</h3>
 <label>뉴스 제공 사이트<select name="preset" required><option value="">출처를 선택하세요</option>{% for feed in feed_presets %}<option value="{{ feed.id }}" {% if feed.url in registered_urls %}disabled{% endif %}>{{ feed.name }}{% if feed.url in registered_urls %} · 등록됨{% endif %}</option>{% endfor %}</select></label>
-<p class="hint">주소를 직접 입력하지 않고 등록할 수 있어요. 등록 후 연결 테스트와 사용하기를 눌러 주세요. 주소 목록만으로 현재 연결을 보장하지는 않습니다.</p>
+<p class="hint">출처 등록 → 연결 테스트 → 사용하기 순서로 진행하세요. 등록만으로 연결되지는 않습니다.</p>
 <label class="check"><input type="checkbox" name="permission" value="true" required> 선택한 RSS의 이용 약관·저작권을 확인했습니다.</label>
 <button class="primary" type="submit">선택한 출처 등록</button><p class="form-feedback" role="alert" data-submit-error></p>
 <p class="hint">RSS 제공은 영상 재사용 허가를 뜻하지 않습니다. 원문·이미지의 이용 조건은 별도로 확인하세요.</p>

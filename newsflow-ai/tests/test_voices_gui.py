@@ -196,6 +196,6 @@ def test_listening_record_persists_file_setting_and_summary(client, app, korean)
     quality = diagnostics(app.state.config.data_dir, app.state.sessions)["quality"]
     assert quality == f"사람 청취 결과: FAIL ({record['created_at'][:10]}, 홍길동)"
     # a later PASS record (all items accurate) replaces the summary; the app never derives it
-    passed = client.post("/voices/listening", data=listening_form(client))
+    passed = client.post("/voices/listening", data=listening_form(client, preview=name))
     assert passed.status_code == 200 and "사람 청취 결과: PASS (" in passed.text
     assert len(list((app.state.config.data_dir / "voice-listening").glob("listening-*.json"))) == 2

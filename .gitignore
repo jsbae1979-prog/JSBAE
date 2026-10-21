@@ -1,0 +1,4 @@
+# Local operational backups, user attachments and generated media stay on this PC.
+/backups/
+/.codex-remote-attachments/
+/newsflow-ai/output/

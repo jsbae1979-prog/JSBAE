@@ -12,6 +12,7 @@ import urllib.request
 import wave
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import ClassVar
 from uuid import uuid4
 
 from filelock import FileLock
@@ -24,6 +25,42 @@ from .tts import SpeechSettings, TTSError, wav_duration
 
 MODELS = ("eleven_multilingual_v2", "eleven_flash_v2_5", "eleven_v3")
 BASE = "https://api.elevenlabs.io/v1"
+
+
+class SubscriptionError(TTSError):
+    """Fixed local policy messages; never expose supplier response text."""
+
+    MESSAGES: ClassVar[dict[str, str]] = {
+        "invalid_usage": "ElevenLabs 사용량 응답을 확인할 수 없습니다. 음성 생성은 실행하지 않았습니다.",
+        "overage_unknown": "ElevenLabs 초과 과금 설정을 확인할 수 없습니다. 계정의 사용량 기반 과금 설정을 확인하세요.",
+        "overage_enabled": "ElevenLabs 초과 과금이 허용되어 있습니다. 계정에서 초과 과금을 끈 뒤 확인하세요.",
+        "unknown_plan": "ElevenLabs 플랜 이용 조건을 확인할 수 없습니다.",
+        "inactive": "ElevenLabs 계정 상태가 음성 생성 허용 상태가 아닙니다. 계정 상태를 확인하세요.",
+        "free_commercial": "ElevenLabs 무료 플랜은 상업적 이용이 불가합니다. 비상업용 검토 또는 허용된 유료 플랜이 필요합니다.",
+        "insufficient_credits": "ElevenLabs 잔여 크레딧이 이번 요청에 필요한 한도보다 부족합니다.",
+    }
+
+    def __init__(self, code):
+        self.code = code if isinstance(code, str) and code in self.MESSAGES else "invalid_usage"
+        super().__init__(self.user_message)
+
+    @property
+    def user_message(self):
+        return self.MESSAGES.get(self.code, self.MESSAGES["invalid_usage"])
+
+
+class PaymentRequiredError(TTSError):
+    """An HTTP 402 is a definite provider rejection, not a lost response."""
+
+    def __init__(self):
+        super().__init__("ElevenLabs가 이 음성의 API 생성에 유료 플랜을 요구했습니다 (HTTP 402). 자동 재시도하지 않습니다.")
+
+
+def rejected_payment(item):
+    # Preserve the original reservation and its credit count; only an explicit
+    # provider rejection annotation lets a DIFFERENT request proceed.
+    return (item.get("state") == "reserved"
+            and item.get("provider_rejection") == {"http_status": 402, "code": "payment_required"})
 
 
 class ElevenLabsKeys(AIKeyStore):
@@ -121,6 +158,9 @@ class ElevenLabsTTS:
                 raise TypeError
             return result
         except urllib.error.HTTPError as error:
+            if error.code == 402:
+                error.close()
+                raise PaymentRequiredError() from None
             message = {401: "API 키 인증 실패", 403: "권한·플랜 확인 필요", 429: "사용량·요청 한도 초과"}.get(
                 error.code, "요청 실패 · 자동 재시도 없음")
             raise TTSError("ElevenLabs " + message) from None
@@ -131,18 +171,25 @@ class ElevenLabsTTS:
         info = self.transport("GET", "/user/subscription")
         if (not isinstance(info, dict) or type(info.get("character_count")) is not int
                 or type(info.get("character_limit")) is not int
-                or not 0 <= info["character_count"] <= info["character_limit"]
-                or type(info.get("max_credit_limit_extension")) is not int
-                or info.get("max_credit_limit_extension") != 0
-                or info.get("status") != "active"):
-            raise TTSError("계정 한도 확인 실패 또는 추가 과금 가능: 공급사에서 초과 과금을 끈 뒤 확인하세요.")
+                or not 0 <= info["character_count"] <= info["character_limit"]):
+            raise SubscriptionError("invalid_usage")
+        extension = info.get("max_credit_limit_extension")
+        if extension == "unlimited" or (type(extension) is int and extension > 0):
+            raise SubscriptionError("overage_enabled")
+        if type(extension) is not int or extension != 0:
+            raise SubscriptionError("overage_unknown")
         tier = info.get("tier")
         if tier not in ("free", "starter", "creator", "pro", "scale", "business", "enterprise"):
-            raise TTSError("ElevenLabs 플랜 이용 조건 미확인")
+            raise SubscriptionError("unknown_plan")
+        # Official subscription responses use "free" for a usable free account.
+        # Do not accept it for a paid tier, or accept free_disabled/trialing/unknown.
+        status = info.get("status")
+        if status != "active" and not (tier == "free" and status == "free"):
+            raise SubscriptionError("inactive")
         if self.config["commercial"] and tier == "free":
-            raise TTSError("ElevenLabs 무료 플랜은 상업적 이용이 불가합니다. 로컬 음성 또는 허용된 유료 플랜을 선택하세요.")
+            raise SubscriptionError("free_commercial")
         if info["character_limit"] - info["character_count"] < credits:
-            raise TTSError("ElevenLabs 잔여 크레딧 부족 가능성으로 차단했습니다.")
+            raise SubscriptionError("insufficient_credits")
         self.attribution_required = tier == "free"
         return {"tier": tier, "remaining": info["character_limit"] - info["character_count"],
                 "overage_disabled": True, "attribution_required": self.attribution_required}
@@ -179,7 +226,7 @@ class ElevenLabsTTS:
                     shutil.copyfile(cache, target)
                     return previous["cues"]
                 raise TTSError("동일 외부 음성 요청의 결과 불명·캐시 손상: 중복 청구 방지를 위해 재요청을 차단했습니다.")
-            if any(item["state"] != "completed" for item in ledger.values()):
+            if any(item["state"] != "completed" and not rejected_payment(item) for item in ledger.values()):
                 raise TTSError("이전 외부 음성 요청 결과 불명: 공급사 사용량 확인 전 추가 요청 차단")
             month = datetime.now(UTC).strftime("%Y-%m")
             reserved = sum(item["credits"] for item in ledger.values() if item["month"] == month)
@@ -212,6 +259,10 @@ class ElevenLabsTTS:
                     raise TTSError("응답 후 취소 · 사용량과 캐시는 보존했습니다.")
                 shutil.copyfile(cache, target)
                 return cues
+            except PaymentRequiredError:
+                ledger[digest]["provider_rejection"] = {"http_status": 402, "code": "payment_required"}
+                persist()
+                raise
             except TTSError:
                 raise
             except Exception:  # noqa: BLE001 - uncertain POST outcome stays reserved; never replay

@@ -1,0 +1,90 @@
+<section class="card news-curation" id="curation" aria-labelledby="curation-title">
+  <div class="suite-section-bar"><h2 id="curation-title">{{ ui_icon('news',20) }} Google News + Trends</h2><a href="/simple-settings#serpapi">수집 설정 ↗</a></div>
+  <div class="collection-status-grid" aria-label="수집 준비 상태">
+    <span><i class="collection-dot {{ 'ok' if curation.serpapi.key.configured else 'bad' }}"></i>{{ ui_icon('accounts',16) }} {{ '키 등록됨' if curation.serpapi.key.configured else '키 필요' }}</span>
+    <span><i class="collection-dot {{ 'ok' if curation.collection and curation.collection.succeeded and not curation.collection.failed else 'bad' if curation.collection and curation.collection.failed else '' }}"></i>{{ ui_icon('news',16) }} 뉴스 {{ curation.articles|length }}개{% if curation.collection and curation.collection.failed %} · 일부 실패{% endif %}</span>
+    <span><i class="collection-dot {{ 'ok' if curation.fresh else '' }}"></i>{{ ui_icon('chart',16) }} Trends {{ '준비됨' if curation.fresh else '수신 필요' }}</span>
+  </div>
+  <div class="curation-preparation">
+    <form method="post" action="/news/curation/serpapi" data-curation-form>
+      <input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="request_token" value="{{ curation.serpapi.request_token }}">
+      <input type="hidden" name="collection_policy" value="{{ curation.serpapi.collection_plan.policy }}">
+      <input type="hidden" name="maximum_requests" value="{{ curation.serpapi.collection_plan.maximum_requests }}">
+      <strong>{{ ui_icon('chart',18) }} 급상승 주제 → 글로벌·한국 뉴스</strong>
+      <p>Google News 최대 5회 조회 · Trends 공개 RSS 함께 확인</p>
+      <label class="check"><input type="checkbox" name="consent" value="true" required> SerpApi 최대 5회 조회의 계정 사용량·요금과 Trends RSS 수신에 동의합니다.</label>
+      <button class="primary" type="submit" {% if not curation.serpapi.can_request %}disabled{% endif %}>{{ ui_icon('news',18) }} Google News + Trends 수집</button>
+      <small>성공 시 이전 목록 정리 · 영상에 사용한 뉴스 별도 보관 · 실패·빈 결과는 기존 목록 유지</small>
+    </form>
+    <div role="status">
+      {% if curation.observed_at %}<p>{{ ui_icon('clock',16) }} {{ curation.observed_at|kst }}</p>{% endif %}
+      {% if curation.collection %}<p>신규 {{ curation.collection.added }} · 중복 {{ curation.collection.duplicates }} · 실패 {{ curation.collection.failed }}</p>{% else %}<p>아직 수집한 자료가 없습니다.</p>{% endif %}
+      {% if curation.candidate_mix %}<p>글로벌 {{ curation.candidate_mix.global_edition_unique }} · 한국 {{ curation.candidate_mix.korea_edition_unique }} · 공통 {{ curation.candidate_mix.both_editions }}</p>{% endif %}
+      {% if curation.error %}<p class="error">{{ curation.error }}</p>{% endif %}
+    </div>
+  </div>
+  <details><summary>{{ ui_icon('file',16) }} 수집 범위·상태 안내</summary>
+    <p>Trends 급상승 키워드를 먼저 확인하고 지역별 Google News 판을 SerpApi로 조회합니다. 글로벌 80%·한국 20%는 조회 배분 목표이며 실제 기사 비율은 응답·중복에 따라 달라집니다. 전 세계 전수 수집이나 실제 인기 순위가 아닙니다.</p>
+    <p>{{ curation.serpapi.collection_plan.edition_labels }}. Trends는 유효한 저장 자료가 있으면 재사용합니다. 수집 버튼은 AI 분석·대본을 실행하지 않습니다. 자동 재시도·다른 Provider 전환 없음.</p>
+    <p>키 등록은 인증 성공을 뜻하지 않습니다. 초록색 뉴스는 수집 응답 저장, Trends는 최근 자료 보유만 뜻하며 사실 검증 완료가 아닙니다. {{ curation.message }}</p>
+    <p>이전 기사는 목록에서만 정리합니다. 영상 출처·대본·요청·실패 기록은 보존합니다. <a href="/news?view=used">영상에 사용한 뉴스 보기</a></p>
+    <p>Data source: <a href="https://trends.google.com/" target="_blank" rel="noopener noreferrer">Google Trends</a>. 검색 관심도는 실제 YouTube 조회수가 아닙니다. 트렌드 시각과 기사 발행시각은 다릅니다.</p>
+  </details>
+  <details><summary>보유 RSS 파일 가져오기</summary>
+    <p>적법하게 보유한 Google News RSS 파일에서 앞의 기사 최대 5개·요약 각 250자를 사용합니다. 원문을 새로 가져오거나 수집 차단을 우회하지 않습니다. Trends는 24시간 이내 저장 자료를 재사용합니다.</p>
+    <form method="post" action="/news/curation/import" data-curation-form>
+      <input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="rss_xml" data-rss-payload>
+      <label>보유 RSS 파일<input type="file" accept=".xml,.rss" data-rss-file required></label><p data-rss-status role="status"></p>
+      <label class="check"><input type="checkbox" name="permission" value="true" required> 제공 자료의 이용 권한과 원문 출처를 확인했습니다.</label>
+      <button type="submit" class="button">파일 기사 가져오기 · 외부 요청 없음</button>
+    </form>
+  </details>
+  {% if curation.ready %}
+  {% if curation.whole_collection_evaluation|default(false) %}
+  <form method="post" action="/news/curation/analyze" data-curation-form>
+    <input type="hidden" name="csrf_token" value="{{ csrf }}">
+    <input type="hidden" name="collection_context_id" value="{{ curation.run_id }}">
+    <h3>전체 뉴스 화제성 평가 <small>최근 수집 회차 전체 {{ curation.articles|length }}개 비교 · 상위 {{ curation.selection_limit|default(10) }}개 주제 선정</small></h3>
+
+    <details><summary>전체 평가 대상 {{ curation.articles|length }}개 보기</summary>
+    <div class="curation-candidates">
+    {% for article in curation.articles %}<div><span>{{ article.title }}<small>{{ article.publisher }} · {{ article.published_at|kst }}</small></span><a href="/news/{{ article.id }}">자료 보기</a></div>{% endfor %}
+    </div></details>
+    <p>현재 AI: <strong>{{ curation.ai.provider }} · {{ curation.ai.model }}</strong> <a href="/simple-settings#connections">변경</a></p>
+    {% if curation.api_selected %}<label class="check"><input type="checkbox" name="consent" value="true" required> 최근 수집 회차 전체 {{ curation.articles|length }}개의 제목·요약·출처·Trends 자료를 해당 API에 전송해 화제성 분석 1회를 실행합니다. 본인 계정 사용량과 비용이 발생합니다.</label><button class="primary" type="submit">{{ ui_icon('sparkles',16) }} 전체 뉴스 화제성 평가 1회</button>
+    {% else %}<p class="error">OpenAI API 또는 Claude API를 설정해 주세요. Offline 고정 대본으로 대체하지 않습니다.</p>{% endif %}
+    {% if curation.snapshot.collection_policy|default('') == 'global_trends_v1' %}<small>검색 관심 증가 가능성·이번 응답 등장 빈도·SNS 확산 가능성·한국 시청자 관심도·영향력·흥미도 각 20점 → 합계 120점을 100점으로 환산 · 관측 근거와 AI 추정 구분 · 미확인은 미평가</small>{% else %}<small>최신성·대중성·영향력·확산 가능성·흥미도 각 20점 · 미확인 항목은 미평가</small>{% endif %}
+    <small>전송 한도 초과 시 일부 제외·자동 분할 호출 없이 중단 · 재검색·자동 재시도 없음</small>
+  </form>
+  {% else %}<p role="status">전체 뉴스 평가 기능을 적용하려면 앱 재시작이 필요합니다. 실제 평가 요청은 실행하지 않습니다.</p>{% endif %}
+  {% endif %}
+  {% if curation_run %}
+  <section id="curation-results" aria-labelledby="curation-results-title">
+    <div class="suite-section-bar"><h3 id="curation-results-title">선정 뉴스 · 검토 후 대본 만들기</h3><a href="/news/curation/{{ curation_run.id }}/ranking.json" target="_blank" rel="noopener">순위 JSON</a></div>
+    {% if image_selection_available|default(false) and curation_run.status == 'success' and curation_run.result.ranking|length >= 3 %}<p><a class="button primary" href="/image-posts/selection?analysis_id={{ curation_run.id }}">{{ ui_icon('file',18) }} 피드 3개 만들기</a> <small>기존 대본·요약 재사용 · 추가 AI 호출 없음</small></p>{% endif %}
+    <p>{{ curation_run.provider }} · {{ curation_run.options.model }} · {{ curation_run.created_at|kst }} 저장 결과 · {{ curation_run.status }} · 독립 사실 검증 미완료</p>
+    {% if curation_run.evidence.curation_contract.profile == 'global_news_trends_v2' %}<p>한국 시청자 기준 · 6항목 각 20점 합계를 100점으로 환산 · 국가·분야 가중치 없음 · 실제 SNS 확산·기사 노출수 미측정</p>{% endif %}
+    {% if curation_run.status == 'success' %}<p>평가 입력 {{ curation_run.evidence.articles|length }}개 · 선정 {{ curation_run.result.ranking|length }}개 주제 · 저장된 입력 범위의 결과입니다.</p>{% endif %}
+    {% if curation_run.status == 'success' %}{% if curation_run.evidence.curation_contract.get('top_k') == 3 %}<p class="curation-plan">{{ ui_icon('check',16) }} 추천 1건 · 다른 후보 {{ curation_run.result.ranking|length - 1 }}건 · 예약 1회당 영상 1개</p>{% endif %}<div class="curation-ranked">
+    {% for item in curation_run.result.ranking %}
+      <article class="curation-item {{ 'is-recommended' if loop.first else 'is-alternative' }}"><h3><span class="category">{{ '추천 1건' if loop.first else '다른 후보 ' ~ (item.rank - 1) }}</span> {{ item.title }}</h3>
+        <strong>{{ item.score }}/100 · {{ 'AI 편집 평가' if item.assessed_max == 100 else '부분 평가: ' ~ item.assessed_max ~ '점 범위만 평가' }}</strong>
+        <p>{{ item.reason }}</p><p>{{ item.summary }}</p>
+        <details><summary>평가 근거 보기</summary><div class="curation-scores">{% for key,label in curation_components.items() %}<span>{{ label }} <b>{{ item.components[key] if item.components[key] is not none else '미평가' }}</b>/20</span>{% endfor %}</div>
+        {% for signal in item.search_interest %}<p class="suite-image-note">Google Trends: {% if signal.matches %}{% for match in signal.matches %}{{ match.term }}{% if match.traffic %} (검색량 구간 {{ match.traffic }}){% endif %} · {% endfor %}{% else %}{{ '유효한 일치 검색어 없음 · 관심 없음으로 단정하지 않음' if signal.status == 'not_matched' else '미확인·갱신 필요' }}{% endif %}</p>{% endfor %}
+        </details><div class="curation-sources">{% for source in item.sources %}<a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">{{ source.publisher }} ↗</a>{% endfor %}</div>
+        <form method="post" action="/news/curation/generate" data-curation-form>
+          <input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="analysis_id" value="{{ curation_run.id }}"><input type="hidden" name="rank" value="{{ item.rank }}">
+          <label>영상 길이<select name="duration"><option value="30">30초</option><option value="45">45초</option><option value="60">60초</option></select></label>
+          <label class="check"><input type="checkbox" name="consent" value="true" required> 이 주제로 같은 API·모델의 대본 생성 1회를 승인합니다. 뉴스 자료 전송·과금이 발생하며 음성·영상·게시를 자동 실행하지 않습니다.</label>
+          <button class="button primary" type="submit">{{ ui_icon('edit',16) }} HOOK → CONTENT → ENDING 대본</button>
+          <small>한국어 내레이션 150~300자 · 실제 길이는 음성 생성 후 확인 · 부족하면 검토·편집 · 자동 재생성 없음</small>
+        </form>
+      </article>
+    {% endfor %}</div>{% else %}<p class="error">{{ curation_run.message }} 자동 재요청하지 않습니다.</p>{% endif %}
+  </section>
+  {% endif %}
+  <p class="suite-image-note">출처·수치·날짜는 검토가 필요합니다. 동의와 기존 API 사용 제한을 통과해야 실행됩니다. 일반 RSS·저장 기사·기존 제작 경로는 아래에 그대로 유지됩니다.</p>
+</section>
+<link rel="stylesheet" href="/static/css/curation.css">
+<script src="/static/js/curation.js" defer></script>

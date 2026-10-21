@@ -26,10 +26,22 @@ def workspace_context(request: Request, render_id: int | None):
         prepared = request.app.state.social_extensions["tiktok"].prepared_options(tiktok["draft_id"]) if tiktok else None
         return {"suggested": suggest_metadata(project.title, project.snapshot, project.sources),
                 "youtube_categories": YOUTUBE_CATEGORIES, "tiktok_options": prepared, "render_id": render_id, "title": project.title, "sources": project.sources,
-                "cohort": request.app.state.unified_publishing.for_video(render_id),
+                "cohort": cohort, "local_draft": request.app.state.unified_publishing.local_draft(render_id),
                 "youtube_accounts": request.app.state.youtube.status()["accounts"],
                 "instagram_accounts": request.app.state.instagram.status()["accounts"],
                 **{name + "_accounts": service.status()["accounts"] for name, service in request.app.state.social_extensions.items()}}
+
+
+@router.post("/publishing/unified/local-draft")
+def local_draft(request: Request, render_job_id: int = Form(ge=1), target: str = Form(max_length=15),
+                title: str = Form("", max_length=100), description: str = Form("", max_length=5000),
+                hashtags: str = Form("", max_length=2000), youtube_category_id: str = Form("", max_length=3)):
+    try:
+        request.app.state.unified_publishing.save_local_draft(render_job_id, target=target, title=title,
+            description=description, hashtags=hashtags, youtube_category_id=youtube_category_id)
+    except PublishingError as error:
+        raise HTTPException(422, str(error)) from None
+    return go(f"/?video={render_job_id}&publish_platform=unified&local_saved=true#publish-workspace")
 
 
 @router.post("/publishing/unified/review")

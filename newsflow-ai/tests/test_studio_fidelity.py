@@ -36,6 +36,7 @@ def test_composition_inspector_copy_and_render_controls_preserve_contract(studio
             response = page.goto(origin + f'/ai?draft_id={draft_id}')
             assert response.status == 200, (width, response.status, page.locator('body').inner_text()[:500])
             assert page.locator('[data-outline-scene]').count() > 0, (width, page.url, page.locator('body').inner_text()[-600:])
+            page.locator('.script-scene-outline summary').click()
             last = page.locator('[data-outline-scene]').last
             last.focus()
             page.keyboard.press('Enter')
@@ -61,7 +62,7 @@ def test_composition_inspector_copy_and_render_controls_preserve_contract(studio
             assert page.locator('option').evaluate_all("es=>es.every(e=>e.closest('select,datalist'))")
             expect(page.locator('.workstation-media-panel select[name=voice]')).to_be_visible()
             expect(page.locator('.workstation-render-controls [name=reviewed]')).not_to_be_checked()
-            page.locator('.workstation-scene-list button').last.click()
+            page.locator('.track-caption [data-video-scene-select]').last.click()
             expect(page.locator('[data-video-scene]:visible')).to_have_count(1)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         assert not posts and not external and not errors

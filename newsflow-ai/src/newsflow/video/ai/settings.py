@@ -7,6 +7,7 @@ and its own usage table. A generation runs only when every check here passes at 
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -200,10 +201,8 @@ def validate_path(path: str) -> str:
     return path
 
 
-def save_model(
-    sessions: sessionmaker[Session], *, path: str, label: str, price_per_second: str, durations: str,
-    resolution: str, confirmed: bool, provider: str = "higgsfield", model_id: int | None = None,
-) -> ModelEntry:
+def validate_model_fields(path: str, label: str, durations: str, resolution: str):
+    """Validate locally before a price lookup can send any request."""
     path = validate_path(path)
     label = (label or "").strip()
     if not 1 <= len(label) <= 80 or any(ord(c) < 32 for c in label):
@@ -211,14 +210,57 @@ def save_model(
     if resolution not in RESOLUTIONS:
         raise VideoSettingsError("해상도는 480p·720p·1080p 중에서 선택하세요.")
     try:
-        price = parse_money(price_per_second, maximum=MAX_PRICE_PER_SECOND)
         allowed = parse_durations(durations)
+    except CostError as exc:
+        raise VideoSettingsError(str(exc)) from None
+    return path, label, allowed
+
+
+def model_version(row: VideoAIModel) -> tuple:
+    return tuple(getattr(row, name) for name in (
+        "path", "label", "price_per_second", "durations", "resolution", "confirmed_at", "updated_at"))
+
+
+def model_quotes(sessions: sessionmaker[Session]) -> dict:
+    """Dated, condition-bound numeric evidence; no credentials or supplier prose."""
+    result = {}
+    with sessions() as session:
+        currency = _value(session, "video_ai_currency") or "USD"
+        for model in session.scalars(select(VideoAIModel)):
+            raw = _value(session, f"video_ai_model_quote_{model.id}")
+            try:
+                value = json.loads(raw or "null")
+            except (ValueError, TypeError):
+                continue
+            if isinstance(value, dict) and (
+                value.get("path"), value.get("resolution"), value.get("durations"),
+                value.get("unit_price"), value.get("currency"),
+            ) == (model.path, model.resolution, model.durations, model.price_per_second, currency):
+                try:
+                    value["checked_time"] = datetime.fromisoformat(value["checked_at"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+                result[model.id] = value
+    return result
+
+
+def save_model(
+    sessions: sessionmaker[Session], *, path: str, label: str, price_per_second: str, durations: str,
+    resolution: str, confirmed: bool, provider: str = "higgsfield", model_id: int | None = None,
+    official_quote: dict | None = None, expected_version: tuple | None = None,
+    expected_currency: str | None = None,
+) -> ModelEntry:
+    path, label, allowed = validate_model_fields(path, label, durations, resolution)
+    try:
+        price = parse_money(price_per_second, maximum=MAX_PRICE_PER_SECOND)
     except CostError as exc:
         raise VideoSettingsError(str(exc)) from None
     if confirmed and (price is None or price <= 0):
         raise VideoSettingsError("공식 문서 확인을 표시하려면 0보다 큰 초당 단가를 함께 입력하세요.")
     with sessions.begin() as session:
         session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+        if expected_currency is not None and (_value(session, "video_ai_currency") or "USD") != expected_currency:
+            raise VideoSettingsError("견적 조회 중 통화가 바뀌었습니다. 기존 가격을 유지했습니다. 새로고침해 확인하세요.")
         clash = session.scalar(select(VideoAIModel.id).where(
             VideoAIModel.provider == provider, VideoAIModel.path == path, VideoAIModel.id != (model_id or -1)))
         if clash is not None:
@@ -233,6 +275,8 @@ def save_model(
             row = session.get(VideoAIModel, model_id)
             if row is None or row.provider != provider:
                 raise VideoSettingsError("모델을 찾지 못했습니다.")
+            if expected_version is not None and model_version(row) != expected_version:
+                raise VideoSettingsError("견적 조회 중 모델이 바뀌었습니다. 기존 값을 덮어쓰지 않았습니다. 새로고침해 확인하세요.")
         changed = (row.path, row.price_per_second, row.durations, row.resolution) != (
             path, money(price) if price is not None else "", ",".join(map(str, allowed)), resolution)
         row.path, row.label, row.resolution = path, label, resolution
@@ -245,6 +289,12 @@ def save_model(
             row.confirmed_at = utcnow()
         row.updated_at = utcnow()
         session.flush()
+        if official_quote is not None:
+            if (official_quote.get("path"), official_quote.get("resolution"),
+                official_quote.get("durations"), official_quote.get("unit_price"),
+                official_quote.get("currency")) != (path, resolution, row.durations, row.price_per_second, "USD"):
+                raise VideoSettingsError("견적 조건이 모델 설정과 일치하지 않습니다. 기존 가격을 유지했습니다.")
+            _set(session, f"video_ai_model_quote_{row.id}", json.dumps(official_quote, ensure_ascii=False))
         return _entry(row)
 
 

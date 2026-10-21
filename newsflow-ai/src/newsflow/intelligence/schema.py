@@ -1,6 +1,8 @@
 """Strict script shape; factual verification and sources are server controlled."""
 
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field, model_serializer
 
 
 class Scene(BaseModel):
@@ -9,6 +11,14 @@ class Scene(BaseModel):
     narration: str = Field(min_length=1, max_length=400)
     caption: str = Field(min_length=1, max_length=150)
     material: str = Field(min_length=1, max_length=200)
+    review_notes: list[Annotated[str, Field(min_length=1, max_length=300)]] = Field(default_factory=list, max_length=5)
+
+    @model_serializer(mode="wrap")
+    def broadcast_compatible(self, handler):
+        value = handler(self)
+        if not value.get("review_notes"):
+            value.pop("review_notes", None)
+        return value
 
 
 class Script(BaseModel):

@@ -24,18 +24,98 @@ from newsflow.video.tts import POLICY_MESSAGE, TTSError, TTSPolicyError, Windows
 
 from .production_context import context_for_draft
 from .routes import go, page
+from .video_presentation import video_presentation
 
 router = APIRouter()
 
 
 @router.get("/video/tts", response_class=HTMLResponse)
-def tts_settings(request: Request):
+def tts_settings(request: Request, sample: str = "", saved_voice: bool = False):
+    return _tts_page(request, sample=sample, message="음성 선택을 저장했습니다." if saved_voice else "")
+
+
+def _voice_catalog(request):
+    from newsflow.video.elevenlabs_tts import ElevenLabsKeys
+    from newsflow.video.elevenlabs_voices import ElevenLabsVoices
+
+    root = request.app.state.video.root
+    return ElevenLabsVoices(root, ElevenLabsKeys(root))
+
+
+def _tts_page(request, *, sample="", message="", error=False):
     from newsflow.video.elevenlabs_tts import MODELS, ElevenLabsKeys, settings
     from newsflow.video.supertonic_tts import SupertonicTTS
 
     video = request.app.state.video
-    return page(request, "tts_settings.html", active="video", config=settings(video.sessions), models=MODELS,
-                key=ElevenLabsKeys(video.root).status(), supertonic_ready=bool(SupertonicTTS().voices()))
+    catalog = _voice_catalog(request)
+    preview = None
+    if sample:
+        try:
+            if catalog.sample_path(sample).is_file():
+                preview = catalog.voice(sample)
+        except TTSError:
+            pass
+    response = page(request, "tts_settings.html", active="video", config=settings(video.sessions),
+                    models=MODELS, key=ElevenLabsKeys(video.root).status(),
+                    supertonic_ready=bool(SupertonicTTS().voices()), voice_catalog=catalog.cached(),
+                    voice_message=message, voice_error=error, sample_voice=preview)
+    if error:
+        response.status_code = 422
+    return response
+
+
+@router.post("/video/tts/voices/load")
+def load_elevenlabs_voices(request: Request, consent: bool = Form(False), more: bool = Form(False)):
+    if not consent:
+        return _tts_page(request, error=True, message="등록된 키로 음성 목록을 조회하는 데 동의하세요.")
+    catalog = _voice_catalog(request)
+    try:
+        catalog.load(more=more)
+    except TTSError as exc:
+        catalog.record_failure(exc)
+        return _tts_page(request, error=True, message=str(exc))
+    return go("/video/tts#elevenlabs-voices")
+
+
+@router.post("/video/tts/voices/select")
+def select_elevenlabs_voice(request: Request, voice_id: str = Form("", max_length=100)):
+    from newsflow.video.elevenlabs_voices import select_voice
+
+    try:
+        select_voice(request.app.state.sessions, voice_id, _voice_catalog(request))
+    except TTSError as exc:
+        return _tts_page(request, error=True, message=str(exc))
+    return go("/video/tts?saved_voice=true#elevenlabs-voices")
+
+
+@router.post("/video/tts/voices/preview")
+def preview_elevenlabs_voice(request: Request, voice_id: str = Form("", max_length=100),
+                            sample_consent: bool = Form(False)):
+    if not sample_consent:
+        return _tts_page(request, error=True, message="공개 샘플 다운로드에 동의하세요. 음성 생성은 하지 않습니다.")
+    try:
+        _voice_catalog(request).prepare_sample(voice_id)
+    except TTSError as exc:
+        return _tts_page(request, error=True, message=str(exc))
+    return go(f"/video/tts?sample={voice_id}#elevenlabs-voices")
+
+
+@router.get("/video/tts/voices/{voice_id}/sample")
+def elevenlabs_sample(request: Request, voice_id: str):
+    # Media GET is local-cache-only. External downloads require the protected POST above.
+    if (request.cookies.get("newsflow_csrf") != request.state.csrf
+            or request.headers.get("sec-fetch-site") == "cross-site"
+            or request.headers.get("origin", str(request.base_url).rstrip("/"))
+            != str(request.base_url).rstrip("/")):
+        raise HTTPException(403, "같은 앱 화면에서 샘플을 재생하세요.")
+    try:
+        path = _voice_catalog(request).sample_path(voice_id)
+    except TTSError:
+        raise HTTPException(404, "준비된 샘플이 없습니다.") from None
+    if not path.is_file():
+        raise HTTPException(404, "미리듣기 버튼으로 샘플을 먼저 준비하세요.")
+    return FileResponse(path, media_type="audio/mpeg", headers={"Cache-Control": "private, no-store",
+                                                               "X-Content-Type-Options": "nosniff"})
 
 
 @router.post("/video/tts")
@@ -149,6 +229,7 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
             draft=draft,
             preview_job=preview_job,
             job=job,
+            job_presentation=video_presentation(job, playable=bool(job.metadata_json.get("playable"))) if job else None,
             project=project,
             scenes=scenes,
             subtitles=subtitles,
@@ -214,7 +295,11 @@ def status(request: Request, job_id: int) -> dict:
 
 @router.get("/video/jobs/{job_id}/file")
 def media(request: Request, job_id: int, download: bool = False) -> FileResponse:
+    from newsflow.db.models import WorkspaceRemoval
+
     with request.app.state.sessions() as session:
+        if session.get(WorkspaceRemoval, f"video:{job_id}"):
+            raise HTTPException(404, "휴지 보관한 영상입니다.")
         job = session.get(RenderJob, job_id)
         if not job or job.status != "success" or not job.metadata_json.get("playable"):
             raise HTTPException(404, "검증된 완성 영상이 없습니다.")

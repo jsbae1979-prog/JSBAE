@@ -79,6 +79,11 @@ class PublishingService:
         )
 
     def media_path(self, job: RenderJob) -> Path:
+        from newsflow.db.models import WorkspaceRemoval
+
+        with self.sessions() as session:
+            if session.get(WorkspaceRemoval, f"video:{job.id}"):
+                raise PublishingError("휴지 보관한 영상입니다. 복원 후 다시 확인하세요.")
         if (
             job.status != "success"
             or not job.metadata_json.get("playable")

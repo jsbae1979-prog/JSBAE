@@ -162,11 +162,13 @@ def test_key_entry_is_direct_and_cost_approvals_are_not_prechecked_or_hidden_in_
     assert any(parent.tag == "label" for parent in key_input.ancestors)
     cost_form = dom.find("form", action=f"/api-settings/{provider}")[0]
     assert any(parent.tag == "dialog" for parent in cost_form.ancestors)
-    for name in ("approved", "search_enabled", "search_approved", "billing_confirmed"):
+    for name in ("approved", "search_enabled", "search_approved"):
         control = next(node for node in dom.find("input", name=name) if cost_form in node.ancestors)
         assert "checked" not in control.attrs
         assert not any(parent.tag == "details" for parent in control.ancestors)
     assert dom.find("input", name="monthly_limit_usd")
+    assert not dom.find("input", name="billing_confirmed")
+    assert not dom.find("input", name="account_remaining_usd")
 
 
 def test_voice_change_preserves_other_providers_keys_approvals_and_unknown_reservation(client, app, monkeypatch):

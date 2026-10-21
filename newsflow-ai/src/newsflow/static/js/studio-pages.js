@@ -32,6 +32,11 @@ document.querySelectorAll('[data-activity-day]').forEach(button => button.addEve
 // View selection only: no rendering, paid requests, autosave or timeline edits.
 const videoSceneButtons = document.querySelectorAll('[data-video-scene-select]');
 function selectVideoScene(index) {
+  const selected = document.querySelector(`.track-caption [data-video-scene-select="${index}"]`);
+  const caption = document.querySelector('[data-composition-caption]');
+  if (caption && selected) caption.textContent = selected.textContent;
+  document.querySelector('[data-video-selected-scene]')?.replaceChildren(`장면 ${Number(index) + 1}`);
+  document.querySelector('[data-video-scene-status]')?.replaceChildren(`장면 ${Number(index) + 1} 선택됨`);
   document.querySelectorAll('[data-video-scene]').forEach(scene => {
     scene.hidden = scene.dataset.videoScene !== index;
   });
@@ -165,3 +170,17 @@ document.querySelectorAll('[data-scene-effect]').forEach(select => {
     if (button) button.textContent = select.options[select.selectedIndex].textContent;
   });
 });
+
+// Layout preview only: no render, autosave, synthesis or vendor request.
+function updateCompositionLayout() {
+  const frame = document.querySelector('.composition-preview');
+  const caption = document.querySelector('[data-composition-caption]');
+  if (!frame || !caption) return;
+  const size = Number(document.querySelector('[name="font_size"]')?.value || 48);
+  const y = Number(document.querySelector('[name="subtitle_y"]')?.value || 1280);
+  caption.style.top = `${y / 1920 * 100}%`;
+  caption.style.fontSize = `${Math.max(11, size / 1080 * frame.clientWidth)}px`;
+}
+document.querySelectorAll('[name="font_size"],[name="subtitle_y"]').forEach(el => el.addEventListener('change', updateCompositionLayout));
+window.addEventListener('resize', updateCompositionLayout);
+updateCompositionLayout();

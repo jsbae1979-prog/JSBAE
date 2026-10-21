@@ -1,4 +1,8 @@
 /* Compact workflow card, matching the supplied reference. No simulated progress. */
+.workflow-formats{display:block;margin:0 0 12px;padding:0 0 12px;border-bottom:1px solid #24405c;container-type:inline-size}
+.workflow-format-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;min-width:0}
+.mockup-dashboard .workflow-format-links .button{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:44px;margin:0;padding:7px 6px;border-radius:7px;font-size:12px;line-height:1.4;text-align:center}
+.workflow-format-links .ui-icon{flex:none;width:16px;height:16px}.workflow-format-links .button span{min-width:0;overflow-wrap:anywhere}
 .mockup-dashboard .dash-workflow{padding:0;border:0;background:none;box-shadow:none;container-type:inline-size}
 .workflow-card{background:radial-gradient(ellipse at 76% 12%,#10305166,transparent 65%),linear-gradient(120deg,#0a1a2c,#071423);border:1px solid #244f78;border-radius:10px;padding:16px}
 .mockup-dashboard .workflow-card h2{font-size:20px;line-height:1.35;color:#eaf2ff;margin:0 0 13px;font-weight:750;letter-spacing:-.4px}

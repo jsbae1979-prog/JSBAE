@@ -1,33 +1,36 @@
 "use strict";
-// Presentation only: no POST, provider calls, approvals or automatic playback.
-const dashboardPlayer = document.querySelector('[data-dashboard-player]');
-document.querySelectorAll('[data-dash-video]').forEach(link => {
-  link.addEventListener('click', event => {
-    const id = link.dataset.videoId;
-    const draft = link.dataset.draftId;
-    if (!dashboardPlayer || !/^[1-9]\d*$/.test(id) || !/^[1-9]\d*$/.test(draft)) return;
+// Filter stored news in this panel without navigating away or resetting production inputs.
+const dashboardNewsList = document.querySelector('[data-dash-news-list]');
+const dashboardNewsStatus = document.querySelector('[data-dash-news-status]');
+let dashboardNewsRequest = null;
+document.querySelectorAll('[data-dash-news-category]').forEach(link => {
+  link.addEventListener('click', async event => {
+    if (!dashboardNewsList || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    dashboardPlayer.pause();
-    dashboardPlayer.removeAttribute('src');
-    dashboardPlayer.querySelector('source').src = `/video/jobs/${id}/file`;
-    dashboardPlayer.poster = `/video/jobs/${id}/thumbnail`;
-    dashboardPlayer.setAttribute('aria-label', `${link.dataset.title} 미리보기`);
-    dashboardPlayer.load();
-    document.querySelector('.dash-player-ambient').src = dashboardPlayer.poster;
-    document.querySelector('[data-dash-ai-warning]').hidden = link.dataset.aiScenes !== 'true';
-    document.querySelector('[data-dash-preview-warning]').hidden = link.dataset.previewOnly !== 'true';
-    document.querySelector('[data-dash-video-title]').textContent = link.dataset.title;
-    document.querySelector('[data-dash-duration]').textContent = link.dataset.duration;
-    const targets = {
-      'edit': `/ai?draft_id=${draft}`, 'download': `/video/jobs/${id}/file?download=true`,
-      'review': `/?video=${id}&publish_platform=unified#workspace-detail`,
-      'publish': `/?video=${id}&publish_platform=unified#publish-workspace`,
-      'youtube': `/?video=${id}#youtube-publish`,
-      'instagram': `/?video=${id}&publish_platform=instagram#instagram-publish`
-    };
-    for (const [name, href] of Object.entries(targets)) document.querySelector(`[data-dash-${name}]`).href = href;
-    document.querySelectorAll('[data-dash-video]').forEach(item => item.removeAttribute('aria-current'));
-    link.setAttribute('aria-current', 'true');
+    if (dashboardNewsRequest) dashboardNewsRequest.abort();
+    const request = new AbortController();
+    dashboardNewsRequest = request;
+    dashboardNewsList.setAttribute('aria-busy', 'true');
+    dashboardNewsStatus.textContent = '보관 뉴스 불러오는 중';
+    try {
+      const response = await fetch(`/dashboard/news?category=${encodeURIComponent(link.dataset.dashNewsCategory)}`, {
+        credentials: 'same-origin', signal: request.signal, headers: {'Accept': 'text/html'}
+      });
+      if (!response.ok || !response.headers.get('Content-Type')?.includes('text/html')) throw new Error();
+      const html = await response.text();
+      if (dashboardNewsRequest !== request) return;
+      dashboardNewsList.innerHTML = html;
+      document.querySelectorAll('[data-dash-news-category]').forEach(item => {
+        item.classList.toggle('selected', item === link);
+        if (item === link) item.setAttribute('aria-current', 'true');
+        else item.removeAttribute('aria-current');
+      });
+      dashboardNewsStatus.textContent = `${link.textContent} · 보관 뉴스 · 새 수집·AI 호출 없음`;
+    } catch (error) {
+      if (error.name !== 'AbortError') dashboardNewsStatus.textContent = '목록을 불러오지 못했습니다. 기존 목록은 유지됩니다.';
+    } finally {
+      if (dashboardNewsRequest === request) dashboardNewsList.removeAttribute('aria-busy');
+    }
   });
 });
 document.querySelectorAll('[data-chart-day]').forEach(button => {

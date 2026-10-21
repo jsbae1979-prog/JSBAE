@@ -16,10 +16,7 @@
       <p class="hint">OpenAI 사용 승인에는 0보다 큰 토큰 한도가 필요합니다.</p>
       {% endif %}
       <p class="hint">실제 API 연결·검색 검증은 별도 승인이 필요합니다. 설정 저장만으로 호출하지 않습니다.</p>
-      <p class="soft-notice">보존된 예약 {{ api.usage.held_usd }} USD · 결과 불명 {{ api.usage.unknown }}건{% if api.usage.pending %} · 진행 중 {{ api.usage.pending }}건{% endif %}. 실패·시간 초과·결과 불명 요청은 자동 재전송하지 않으며 기존 예약과 기록을 유지합니다.</p>
-      <label>직접 확인한 계정 잔여 예산 (USD)<input name="account_remaining_usd" inputmode="decimal" maxlength="20" value="" placeholder="이번에 확인한 금액"></label>
-      <label class="check"><input type="checkbox" name="billing_confirmed" value="true"> 공급사 계정의 결제·모델·검색 권한과 잔여 예산을 직접 확인했습니다.</label>
-      <p class="hint">직접 확인은 24시간 유효하며 실제 인증 성공을 뜻하지 않습니다. 로컬 사용량·예약액은 공급사 청구액과 다릅니다.</p>
+      <p class="soft-notice">결과 불명 {{ api.usage.unknown }}건{% if api.usage.pending %} · 진행 중 {{ api.usage.pending }}건{% endif %}. 실패·시간 초과·결과 불명 요청은 자동 재전송하지 않으며 기존 기록을 유지합니다.</p>
       {% if api.settings.input_price_per_1m is none or api.settings.output_price_per_1m is none or api.settings.search_price_per_1k is none %}
       <p class="soft-notice">단가 입력이 필요합니다. 아래 고급 설정에서 공식 요금을 확인해 입력하세요.</p>
       {% endif %}

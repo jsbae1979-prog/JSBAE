@@ -13,7 +13,22 @@
   {% if failed_check %}<p class="settings-warning" role="status">{{ connection.message }}</p>{% endif %}
   {% if not api.ready and api.reasons and api.key.configured %}<p class="settings-warning">뉴스 웹 검색 — {{ api.reasons[0] }}</p>{% endif %}
   {% if api.usage.unknown or api.usage.pending %}
-  <p class="soft-notice" role="alert">결과 불명 {{ api.usage.unknown }}건 · 진행 중 {{ api.usage.pending }}건. 새 API 호출이 차단되어 있습니다. 예약 예산은 유지됩니다.</p>
+  <p class="soft-notice" role="alert">결과 불명 {{ api.usage.unknown }}건 · 진행 중 {{ api.usage.pending }}건.
+  {% if api.acknowledged_unknown_analyses|default(0) %}기존 분석 {{ api.acknowledged_unknown_analyses }}건의 인지 확인을 보존했습니다. 새 기사 분석만 차단 예외 대상이며 다른 실행 조건은 유지됩니다. 검색·대본의 결과 불명 차단은 유지됩니다.
+  {% else %}새 API 호출이 차단되어 있습니다.{% endif %} 기존 기록은 유지됩니다.</p>
+  {% for review in api.unknown_analysis_reviews|default([]) %}
+  {% if not review.acknowledged %}
+  <form method="post" action="/api-settings/{{ key }}/acknowledge-unknown-analysis" data-settings-form data-settings-watch>
+    {{ csrf_field() }}
+    <input type="hidden" name="reservation_id" value="{{ review.id }}">
+    <input type="hidden" name="fingerprint" value="{{ review.fingerprint }}">
+    <p>이전 분석 {{ review.request_id }} · {{ review.model }} — 공급사 처리·과금은 미확인입니다. 기존 기록은 변경하지 않습니다.</p>
+    <label class="check"><input type="checkbox" name="consent" value="true" required> 미확인 과금 가능성을 인지하고 새 기사 분석에만 차단 예외를 적용합니다. 원래 요청 재전송·검색·대본 실행은 허용하지 않습니다.</label>
+    <button type="submit">기록 보존·새 기사 분석 허용</button>
+    <p class="hint">이 확인은 API를 호출하지 않습니다. 실제 분석에는 별도 실행 동의와 기존 인증·예산 조건이 필요합니다.</p>
+  </form>
+  {% endif %}
+  {% endfor %}
   {% endif %}
   <details class="settings-advanced" id="{{ key }}-key-settings" {% if not api.key.configured %}open{% endif %}><summary>API Key {{ '변경' if api.key.configured else '등록' }}</summary>
   {% if api.key.storage_supported %}

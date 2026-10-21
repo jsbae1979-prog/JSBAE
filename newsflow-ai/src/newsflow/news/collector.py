@@ -35,6 +35,7 @@ class CollectedArticle:
     publisher: str
     summary: str
     published_at: datetime | None
+    thumbnail_url: str | None = None
 
 
 def parse_feed(payload: bytes, source_name: str) -> list[CollectedArticle]:
@@ -79,9 +80,10 @@ def parse_feed(payload: bytes, source_name: str) -> list[CollectedArticle]:
             except (ValueError, TypeError, OverflowError):
                 pass
         publisher = plain(entry.get("source", {}).get("title", source_name), 200) or source_name
-        result.append(
-            CollectedArticle(title, url, publisher, plain(entry.get("summary", ""), 2000), published)
-        )
+        from .thumbnails import rss_thumbnail
+
+        result.append(CollectedArticle(title, url, publisher, plain(entry.get("summary", ""), 2000), published,
+                                       rss_thumbnail(entry, url)))
     return result
 
 

@@ -8,7 +8,7 @@
 <p class="guide-note">작성 기준: 2026-10-20 KST · 메뉴·심사 조건은 플랫폼에서 바뀔 수 있습니다. 이 가이드를 여는 것만으로 로그인·API 호출·게시가 실행되지 않습니다. 실제 계정 연결·게시 성공은 별도 확인이 필요합니다.</p>
 {% if platform %}
 <nav class="guide-contents" aria-label="가이드 목차"><a href="#account">계정 만들기</a><a href="#manual">직접 업로드</a><a href="#connect">앱 연동</a><a href="#publish">게시 확인</a><a href="#troubleshoot">문제 해결</a></nav>
-<p class="guide-note">긴 운영자 설정은 필요한 경우에만 펼쳐 보세요. 인쇄·PDF 저장은 브라우저의 Ctrl+P를 사용하세요.</p>
+<p class="guide-note">세부 설정은 펼쳐 확인하세요. 인쇄·PDF 저장: Ctrl+P.</p>
 <article class="guide-body" aria-label="{{ guides[platform] }} 사용 안내">{% include 'guides/' ~ platform ~ '.html' %}</article>
 {% else %}
 <section class="guide-body"><h2>먼저 사용 방법을 선택하세요</h2><div class="guide-choices"><section><h3>영상만 만들어 직접 올리기</h3><p>NewsFlow AI에서 MP4 저장 → 플랫폼 웹·앱 로그인 → 직접 업로드.</p><p>개발자 앱·API 키·OAuth JSON·인증 서버가 필요하지 않습니다. 직접 게시한 결과는 앱 게시 이력에 자동 반영되지 않습니다.</p></section><section><h3>NewsFlow AI 안에서 계정 연결·게시</h3><p>YouTube는 Google 앱 설정과 사용자 승인이, Instagram은 Meta 앱과 HTTPS 인증 중계가 추가로 필요합니다.</p><p>TikTok 실계정 연결·게시 기능은 현재 비활성입니다. 준비 화면을 게시 가능 상태로 오해하지 마세요.</p></section></div>

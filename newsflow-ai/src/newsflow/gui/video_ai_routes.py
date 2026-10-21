@@ -26,6 +26,7 @@ from newsflow.video.ai.settings import (
     VideoSettingsError,
     delete_model,
     list_models,
+    model_quotes,
     read_settings,
     save_model,
     write_settings,
@@ -262,14 +263,15 @@ def clip(request: Request, scene_id: int) -> FileResponse:
 # --------------------------------------------------------------------------- settings
 
 @router.get("/video-ai-settings", response_class=HTMLResponse)
-def settings_page(request: Request, saved: str = "") -> HTMLResponse:
+def settings_page(request: Request, saved: str = "", return_draft: int | None = None) -> HTMLResponse:
     service = _service(request)
     sessions = request.app.state.sessions
     return page(
         request, "video_ai_settings.html", active="simple-settings", settings=read_settings(sessions),
         ready=service.readiness(), currencies=CURRENCIES, resolutions=RESOLUTIONS,
-        models=list_models(sessions), candidates=CANDIDATE_PATHS,
-        key=service.keys.status(), saved=saved[:20],
+        models=list_models(sessions), candidates=CANDIDATE_PATHS, model_quotes=model_quotes(sessions),
+        official_pricing_available=True,
+        key=service.keys.status(), saved=saved[:20], return_draft=return_draft if return_draft and return_draft > 0 else None,
     )
 
 
@@ -290,7 +292,7 @@ def save_settings(
     request: Request, provider: str = Form(max_length=20), host: str = Form(HOSTS[0], max_length=40),
     approved: bool = Form(False), monthly_limit: str = Form("", max_length=20), job_limit: str = Form("", max_length=20),
     currency: str = Form("USD", max_length=3), max_active: int = Form(2), timeout_minutes: int = Form(30),
-    poll_seconds: int = Form(10),
+    poll_seconds: int = Form(10), return_draft: int | None = Form(None, ge=1),
 ) -> RedirectResponse:
     try:
         write_settings(
@@ -300,7 +302,7 @@ def save_settings(
         )
     except VideoSettingsError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=settings")
+    return go("/video-ai-settings?saved=settings" + (f"&return_draft={return_draft}" if return_draft else ""))
 
 
 @router.post("/video-ai-settings/models")
@@ -308,39 +310,49 @@ def save_model_route(
     request: Request, path: str = Form(max_length=160), label: str = Form(max_length=80),
     price_per_second: str = Form("", max_length=20), durations: str = Form("5", max_length=60),
     resolution: str = Form("720p", max_length=10), confirmed: bool = Form(False), model_id: int | None = Form(None),
+    return_draft: int | None = Form(None, ge=1),
+    pricing_mode: str = Form("manual", max_length=20), estimate_consent: bool = Form(False),
 ) -> RedirectResponse:
     try:
-        save_model(
-            request.app.state.sessions, path=path, label=label, price_per_second=price_per_second, durations=durations,
-            resolution=resolution, confirmed=confirmed, model_id=model_id,
-        )
+        if pricing_mode == "official":
+            _service(request).model_pricing.register(
+                path=path, label=label, durations=durations, resolution=resolution,
+                consent=estimate_consent, model_id=model_id,
+            )
+        elif pricing_mode == "manual":
+            save_model(
+                request.app.state.sessions, path=path, label=label, price_per_second=price_per_second, durations=durations,
+                resolution=resolution, confirmed=confirmed, model_id=model_id,
+            )
+        else:
+            raise VideoSettingsError("가격 확인 방식을 다시 선택하세요.")
     except VideoSettingsError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=model")
+    return go("/video-ai-settings?saved=model" + (f"&return_draft={return_draft}" if return_draft else ""))
 
 
 @router.post("/video-ai-settings/models/{model_id}/delete")
-def delete_model_route(request: Request, model_id: int) -> RedirectResponse:
+def delete_model_route(request: Request, model_id: int, return_draft: int | None = Form(None, ge=1)) -> RedirectResponse:
     try:
         delete_model(request.app.state.sessions, model_id)
     except VideoSettingsError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=deleted")
+    return go("/video-ai-settings?saved=deleted" + (f"&return_draft={return_draft}" if return_draft else ""))
 
 
 @router.post("/video-ai-settings/key")
-def save_key(request: Request, api_key: str = Form(max_length=520)) -> RedirectResponse:
+def save_key(request: Request, api_key: str = Form(max_length=520), return_draft: int | None = Form(None, ge=1)) -> RedirectResponse:
     try:
         _service(request).keys.save(api_key)
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=key")
+    return go("/video-ai-settings?saved=key" + (f"&return_draft={return_draft}" if return_draft else ""))
 
 
 @router.post("/video-ai-settings/key/clear")
-def clear_key(request: Request) -> RedirectResponse:
+def clear_key(request: Request, return_draft: int | None = Form(None, ge=1)) -> RedirectResponse:
     try:
         _service(request).keys.clear()
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=cleared")
+    return go("/video-ai-settings?saved=cleared" + (f"&return_draft={return_draft}" if return_draft else ""))

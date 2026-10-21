@@ -54,6 +54,36 @@ class UnifiedPublishingService:
         self.local = PublishingService(sessions, outputs_dir, inspector)
         self._save_lock = RLock()
 
+    def save_local_draft(self, render_job_id: int, *, target: str, title: str = "",
+                         description: str = "", hashtags: str = "", youtube_category_id: str = "") -> int:
+        """Save unfinished copy only. No account checks, validation, approval or transport."""
+        if target not in {"youtube", "instagram", "both", "tiktok", "facebook", "all"}:
+            raise PublishingError("게시할 플랫폼을 선택하세요.")
+        if len(title) > 100 or len(description) > 5000 or len(hashtags) > 2000 or len(youtube_category_id) > 3:
+            raise PublishingError("게시 초안의 입력 길이를 확인하세요.")
+        with self._save_lock, self.sessions.begin() as session:
+            if not session.get(RenderJob, render_job_id):
+                raise PublishingError("영상 작업을 찾지 못했습니다.")
+            draft = PublishDraft(render_job_id=render_job_id, platform="youtube" if target in {"both", "all"} else target,
+                title=title, description=description, hashtags=hashtags.split(), account_id=None,
+                sources={}, media_sha256="", state="local_draft", youtube_category_id=youtube_category_id or "25")
+            session.add(draft)
+            session.flush()
+            evidence = PublishEvidence(draft_id=draft.id, kind="local_workspace", payload={
+                "render_job_id": render_job_id, "target": target,
+                "metadata": {"title": title, "description": description, "hashtags": hashtags.split(),
+                             "youtube_category_id": youtube_category_id}, "approval": False})
+            session.add(evidence)
+            session.flush()
+            return evidence.id
+
+    def local_draft(self, render_job_id: int) -> dict | None:
+        with self.sessions() as session:
+            row = session.scalar(select(PublishEvidence).where(PublishEvidence.kind == "local_workspace",
+                PublishEvidence.payload["render_job_id"].as_integer() == render_job_id
+            ).order_by(PublishEvidence.id.desc()).limit(1))
+            return {**deepcopy(row.payload), "id": row.id, "saved_at": row.created_at} if row else None
+
     @staticmethod
     def _snapshot(draft: PublishDraft) -> dict:
         # Legacy snapshots omitted the previously fixed category25. Preserve their approval hashes.

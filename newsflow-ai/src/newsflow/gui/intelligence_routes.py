@@ -34,6 +34,7 @@ from newsflow.intelligence.settings import (
     read_studio_settings,
     write_studio_settings,
 )
+from newsflow.news.lifecycle import visible_news
 
 from .production_context import (
     context_for_draft,
@@ -238,7 +239,9 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
             topic_options=_topic_editor_options(draft),
             workspace_return=_draft_workspace_link(session, draft),
             draft_json=json.dumps(draft.content, ensure_ascii=False, indent=2) if draft else "",
-            articles=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(100))),
+            articles=list(session.scalars(select(NewsArticle).where(
+                visible_news())
+                .order_by(NewsArticle.id.desc()).limit(100))),
             runs=list(session.scalars(select(IntelligenceRun).order_by(IntelligenceRun.id.desc()).limit(30))),
             drafts=list(session.scalars(select(ContentDraft).order_by(ContentDraft.id.desc()).limit(30))),
             key_available=bool(os.environ.get("NEWSFLOW_AI_API_KEY")) or bool(
@@ -346,6 +349,11 @@ async def edit(
                     for sec, n, c, m in zip(seconds, narrations, captions, materials)
                 ],
             }
+            note_fields = form.getlist("scene_review_notes")
+            if note_fields and len(note_fields) != len(payload["scenes"]):
+                raise ValueError
+            for scene, notes in zip(payload["scenes"], note_fields):
+                scene["review_notes"] = [line.strip() for line in str(notes).splitlines() if line.strip()]
             closing = form.get("closing")
             if isinstance(closing, str):
                 payload["closing"] = closing

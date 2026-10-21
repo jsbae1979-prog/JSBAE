@@ -62,6 +62,8 @@ def test_video_selection_attributes_preserve_disclosures_and_escape_html(client,
 
 
 def test_legacy_dashboard_and_new_creator_routes_remain_separate(client):
+    import re
+
     home = client.get('/')
     legacy = client.get('/dashboard')
     assert home.status_code == legacy.status_code == 200
@@ -69,19 +71,26 @@ def test_legacy_dashboard_and_new_creator_routes_remain_separate(client):
     assert '뉴스 흐름을 한눈에' in legacy.text
     assert 'mockup-dashboard' not in legacy.text
     assert client.get('/create').status_code == 200
+    actions = re.search(r'<nav class="workflow-formats".*?</nav>', home.text, re.DOTALL).group()
+    assert re.findall(r'href="([^"]+)"', actions) == ['#production-title', '/image-posts']
+    assert 'id="production-title"' in home.text
+    assert 'workflow-record-scope' not in home.text
+    assert 'workflow-formats-label' not in home.text
+    assert client.get('/image-posts').status_code == 200
 
 
-def test_dashboard_category_links_use_existing_news_contract(client):
+def test_dashboard_category_links_stay_on_dashboard(client):
     import re
     from urllib.parse import parse_qs, urlparse
 
     html = client.get('/').text
     category_nav = re.search(r'<nav class="dash-categories".*?</nav>', html).group()
     links = re.findall(r'href="([^"]+)"', category_nav)
-    assert len(links) == 5
+    assert len(links) == 9
     categories = []
     for link in links:
+        assert urlparse(link).path == '/'
         response = client.get(link)
         assert response.status_code == 200, link
-        categories.extend(parse_qs(urlparse(link).query).get('category', []))
-    assert categories == ['IT·과학', '경제', '국제', '사회']
+        categories.extend(parse_qs(urlparse(link).query).get('news_category', []))
+    assert categories == ['정치', '경제', '사회', 'IT·과학', '문화', '스포츠', '국제', '미분류']

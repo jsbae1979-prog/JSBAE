@@ -33,6 +33,7 @@ from newsflow.intelligence.schema import Script
 
 from .ai.clips import ClipStore, probe_clip
 from .ai.contracts import ClipInvalidError
+from .elevenlabs_tts import PaymentRequiredError, SubscriptionError
 from .engine import FFmpegAdapter, RenderEngine, RenderError, RenderPlan, ScenePlan, load_image
 from .tts import SpeechSettings, TTSError, TTSProvider
 from .voice_engines import provider_for, provider_name
@@ -601,10 +602,17 @@ class VideoCoordinator:
                 job = session.get(RenderJob, identifier)
                 job.status = "interrupted" if cancel.is_set() else "failed"
                 job.message = (
-                    f"{kind} 실패. 설치·음성 길이·자막 안전 영역·코덱·디스크 공간을 확인하세요."
+                    f"{kind} 실패. 해당 단계의 설정과 승인 조건을 확인하세요. 자동 재시도하지 않습니다."
                     if job.status == "failed"
                     else "사용자 취소 또는 프로그램 종료로 영상 제작이 중단되었습니다."
                 )
+                job.metadata_json = {**(job.metadata_json or {}), "failure_stage": (
+                    "voice" if isinstance(exc, TTSError) else "disk" if isinstance(exc, OSError) and exc.errno == 28
+                    else getattr(exc, "kind", "unknown"))}
+                if isinstance(exc, SubscriptionError) and job.status == "failed":
+                    job.message = exc.user_message + " · 자동 재시도 없음"
+                if isinstance(exc, PaymentRequiredError) and job.status == "failed":
+                    job.message = str(PaymentRequiredError())
                 if getattr(exc, "kind", None) == "audio_review" and job.status == "failed":
                     job.message = (
                         "음성 분량 검토 필요. 목표 길이에 맞게 대본을 수정한 뒤 다시 제작하세요. "

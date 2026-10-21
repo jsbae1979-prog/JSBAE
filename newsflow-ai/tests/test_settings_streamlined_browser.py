@@ -96,7 +96,8 @@ def test_settings_edit_save_reenter_and_creation_without_external_actions(app, b
         costs.click()
         dialog = page.locator('#api-costs-openai')
         expect(dialog).to_be_visible()
-        expect(dialog.locator('[name="billing_confirmed"]')).not_to_be_checked()
+        expect(dialog.locator('[name="billing_confirmed"]')).to_have_count(0)
+        expect(dialog.locator('[name="account_remaining_usd"]')).to_have_count(0)
         page.keyboard.press('Escape')
         expect(costs).to_be_focused()
         # Old bookmarks reach the canonical editor, not a second preference form.
@@ -206,7 +207,8 @@ def test_settings_tabs_preserve_pending_values_deep_links_and_validation(app, br
         page.goto(origin+'/simple-settings#api-costs-openai')
         expect(page.locator('#costs')).to_be_visible()
         expect(page.locator('#api-costs-openai')).to_be_visible()
-        expect(page.locator('#api-costs-openai [name=billing_confirmed]')).not_to_be_checked()
+        expect(page.locator('#api-costs-openai [name=billing_confirmed]')).to_have_count(0)
+        expect(page.locator('#api-costs-openai [name=account_remaining_usd]')).to_have_count(0)
         page.keyboard.press('Escape')
         assert len(posts)==before_links
         assert not external and not errors

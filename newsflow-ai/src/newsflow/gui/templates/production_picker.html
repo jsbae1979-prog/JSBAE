@@ -1,0 +1,38 @@
+{% if production_picker|default(none) %}
+<section class="production-picker {{ 'production-picker-dashboard' if dashboard_picker|default(false) }}" data-production-picker aria-label="공통 제작 설정">
+  <div class="production-picker-heading"><span>{{ '새 제작 설정' if dashboard_picker|default(false) else '기본 제작 설정' }}</span><small>클릭해서 변경 · 기존 작업의 기록은 유지</small></div>
+  {% if production_picker.saved %}<p role="status" class="production-picker-saved">설정을 저장했습니다. 제작·연결 검사는 실행하지 않았습니다.</p>{% endif %}
+  <div class="production-picker-options">
+  {% for kind,icon,title,label in [('news','sparkles','뉴스·대본 방식',production_picker.method_label),('voice','voice','한국어 음성',production_picker.voice_label),('video','video','영상 제작',production_picker.video_label)] %}
+    {% set light = production_picker.get('lights',{}).get(kind, {'color':'yellow','label':'미확인','detail':'상태 표시 적용 대기'}) %}
+    {% set settings_href = '/sources' if kind == 'news' and light.label in ['RSS 출처 없음','RSS 확인 필요'] else '/simple-settings#selected-ai' if kind == 'news' else '/video/tts' if kind == 'voice' and production_picker.voice_short == 'ElevenLabs' else '/simple-settings#selected-voice' if kind == 'voice' else '/video-ai-settings' if production_picker.video == 'higgsfield' else '/simple-settings#selected-video' %}
+    {% set settings_label = 'RSS 출처 확인' if settings_href == '/sources' else 'AI 설정 확인' if kind == 'news' else 'ElevenLabs 설정 확인' if settings_href == '/video/tts' else '음성 설정 확인' if kind == 'voice' else '영상 설정 확인' %}
+    <details class="production-picker-option" data-production-kind="{{ kind }}">
+      <summary aria-label="{{ title }} 변경: {{ label }} · {{ light.label }}" title="{{ label }} · {{ light.label }} — {{ light.detail }}"><i class="production-signal is-{{ light.color }}" data-signal="{{ light.color }}" aria-hidden="true"></i>{{ ui_icon(icon,17) }}<span><small>{{ title }} · 선택됨</small><strong>{{ production_picker.method_short if kind == 'news' else production_picker.voice_short if kind == 'voice' else label }}</strong></span><em class="production-signal-state is-{{ light.color }}">{{ light.state|default('미검증') }}</em><span aria-hidden="true">⌄</span></summary>
+      <div class="production-picker-popover">
+        <form action="/production/selection" method="post" data-settings-form>
+          {{ csrf_field() }}<input type="hidden" name="kind" value="{{ kind }}"><input type="hidden" name="return_to" value="{{ production_picker.return_to }}">
+          <div class="production-readiness {{ 'needs-attention' if light.color != 'green' }}" data-selection-status>
+            <strong class="production-readiness-heading">{{ '확인이 필요해요' if light.color != 'green' else '저장된 준비 상태' }}</strong>
+            <p class="production-picker-status"><i class="production-signal is-{{ light.color }}" aria-hidden="true"></i><strong>{{ light.state|default('미검증') }} · {{ light.label }}</strong><br><span data-readiness-reason>{{ light.detail }}</span><br><small>검사 범위: {{ light.scope|default(title) }} · 확인: {{ light.checked_at|kst }} · 실시간 검사 아님</small></p>
+            <a class="production-readiness-link" data-readiness-settings href="{{ settings_href }}">{{ settings_label }} →</a>
+          </div>
+          <label>{{ title }}<select name="value" required>
+          {% if kind == 'news' %}{% for value,text in production_picker.methods.items() %}<option value="{{ value }}" {% if value == production_picker.method %}selected{% endif %}>{{ text }}</option>{% endfor %}
+          {% elif kind == 'voice' %}{% for voice in production_picker.voices %}<option value="{{ voice.name }}" {% if voice.name == production_picker.voice %}selected{% endif %}>{{ voice.label }}{% if not voice.available %} · 준비 확인 필요{% endif %}</option>{% endfor %}
+          {% else %}<option value="off" {% if production_picker.video == 'off' %}selected{% endif %}>기본 영상 · FFmpeg</option><option value="higgsfield" {% if production_picker.video == 'higgsfield' %}selected{% endif %}>AI 영상 · Higgsfield + FFmpeg</option>{% endif %}
+          </select></label>
+          <p data-selection-pending role="status" hidden>아직 저장하지 않았습니다. 저장해도 연결 확인·외부 호출은 시작하지 않습니다.</p>
+          {% if kind == 'news' %}<p>RSS는 자료 수집 방식입니다. Claude API + RSS는 API 사용량이, Claude Code·Codex + RSS는 본인 구독 사용량이 발생합니다. Codex 웹 검색은 BLOCKED입니다.</p>{% endif %}
+          <p>선택 저장은 사용 승인이나 연결 성공을 뜻하지 않습니다. 사용할 수 없으면 자동 대체하지 않습니다.</p>
+          <div class="production-picker-actions"><button class="primary" type="submit">선택 저장</button></div>
+          <p data-submit-error role="alert"></p>
+        </form>
+      </div>
+    </details>
+  {% endfor %}
+
+  </div>
+  <p class="production-picker-note">저장한 선택을 다음 단계에서 재사용합니다. 외부 전송·유료 사용 동의와 최종 검토는 실행할 때 확인합니다.</p>
+</section>
+{% else %}<p class="hint">새 선택 화면은 앱 재시작 후 적용됩니다. <a href="/simple-settings">기존 제작 설정 확인 →</a></p>{% endif %}

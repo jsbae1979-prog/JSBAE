@@ -1,24 +1,39 @@
 {% set flow = dashboard.workflow %}
 <div class="workflow-card" data-workflow-card>
-  <h2 id="dash-workflow-title">AI 제작 워크플로</h2>
+  <div class="workflow-title-row"><h2 id="dash-workflow-title">AI 제작 워크플로</h2><label class="production-review-choice"><input type="checkbox" name="script_review" value="true" form="quick-production" {% if not entry_flow|default(none) or entry_flow.get('script_review', true) %}checked{% endif %}><span>대본 검토</span></label></div>
+  {% if image_posts_available|default(false) %}
+  <nav class="workflow-formats" aria-label="만들 콘텐츠">
+    <div class="workflow-format-links">
+      <a class="button" href="#production-title">{{ ui_icon('video',18) }}<span>쇼츠 영상</span></a><a class="button" href="/image-posts">{{ ui_icon('file',18) }}<span>이미지 게시물</span></a>
+    </div>
+  </nav>
+  {% endif %}
+  <p class="workflow-context-note">현재 작업의 진행 상태</p>
   <ol class="workflow-steps" aria-label="제작 단계">
     {% for step in flow.steps %}<li class="is-{{ step.state }}" {% if step.state in ['current','error'] %}aria-current="step"{% endif %}>
       <span class="workflow-node">{% if step.state == 'done' %}<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 3 3 7-7"/></svg>{% elif step.state == 'error' %}!{% else %}{{ loop.index }}{% endif %}</span>
       <span>{{ step.label }}</span><span class="sr-only">{{ {'done':'완료 기록 있음','current':'현재 단계','error':'확인 필요','pending':'완료 미확인'}[step.state] }}</span>
     </li>{% endfor %}
   </ol>
+  <p class="workflow-settings-scope">다음 제작에 사용할 설정</p>
+  {% with dashboard_picker=true %}{% include 'production_picker.html' %}{% endwith %}
   {% if dashboard.focus %}{% set focus = dashboard.focus %}
+  {% if focus.status in ['failed','interrupted','unknown','cancelled'] %}{% set action_label = '중단 원인 확인하기' %}
+  {% elif focus.kind == 'collection' %}{% set action_label = '추천 뉴스 확인하기' if focus.status_label == '추천 뉴스 검토' else '평가 진행 확인하기' if focus.status == 'running' else '수집 뉴스 확인하기' %}
+  {% elif focus.status == 'completed' %}{% set action_label = '완성 영상 보기' %}
+  {% elif focus.status in ['running','queued'] %}{% set action_label = '제작 진행 확인하기' if focus.status == 'running' else '제작 준비 확인하기' %}
+  {% elif focus.get('render_job_id') %}{% set action_label = '완성 영상 확인하기' %}
+  {% elif focus.get('draft_id') %}{% set action_label = '대본 검토하기' %}
+  {% elif focus.get('analysis_run_id') %}{% set action_label = '분석 결과 확인하기' %}
+  {% else %}{% set action_label = focus.get('next_action') or '작업 확인하기' %}{% endif %}
   <a class="workflow-current" href="{{ focus.workspace_href or focus.href }}">
     <span class="workflow-document">{{ ui_icon('file',18) }}</span>
-    <span class="workflow-current-text"><strong>{{ focus.title }}</strong><small>{{ focus.stage }} · <span class="dash-state {{ focus.status }}">{{ focus.status_label }}</span></small></span>
+    <span class="workflow-current-text"><strong title="{{ focus.title }}">{{ focus.title }}</strong><small>{{ focus.stage }} · <span class="dash-state {{ focus.status }}">{{ focus.status_label }}</span></small></span>
     <svg class="workflow-wave" viewBox="0 0 160 36" aria-hidden="true" focusable="false"><defs><linearGradient id="workflow-wave-color"><stop stop-color="#2563ff"/><stop offset=".6" stop-color="#00d9ff"/><stop offset="1" stop-color="#2563ff"/></linearGradient></defs><path d="M2 16v4m4-8v12m4-16v20m4-12v4m4-7v10m4-15v20m4-23v26m4-19v12m4-8v4m4-11v18m4-25v32m4-25v18m4-14v10m4-8v6m4-11v16m4-20v24m4-21v18m4-13v8m4-5v2m4-10v18m4-23v28m4-24v20m4-15v10m4-8v6m4-10v14m4-18v22m4-25v28m4-20v12m4-8v4m4-10v16m4-19v22m4-16v10m4-8v6m4-6v6m4-7v8m4-6v4m4-4v4m4-5v6m4-4v2"/></svg>
   </a>
-  <div class="workflow-options" aria-label="이번 작업에 저장된 선택">
-    <details class="workflow-option"><summary aria-label="AI 선택 기록: {{ flow.provider }}"><span class="workflow-provider {{ flow.provider_id }}">{{ ui_icon('sparkles',16) }}</span><span>{{ 'Claude' if flow.provider_id == 'claude_api' else 'OpenAI' if flow.provider_id == 'openai' else flow.provider }}</span><span class="workflow-chevron" aria-hidden="true">⌄</span></summary><div class="workflow-popover"><strong>뉴스·대본 AI</strong><p>{{ focus.provider }}</p><p>현재 작업의 기록입니다. 새 제작의 선택은 아래 제작 설정에서 확인하세요.</p><a href="{{ focus.workspace_href or focus.href }}">작업 기록 확인 →</a></div></details>
-    <details class="workflow-option"><summary aria-label="음성 선택 기록: {{ flow.voice }}">{{ ui_icon('voice',16) }}<span>{{ 'Windows' if flow.voice == 'Windows 음성' else flow.voice }}</span><span class="workflow-chevron" aria-hidden="true">⌄</span></summary><div class="workflow-popover"><strong>이번 음성</strong><p>{{ focus.voice }}</p><a href="{{ focus.workspace_href or focus.href }}">음성 제작 상태 확인 →</a></div></details>
-    <details class="workflow-option"><summary aria-label="영상 선택 기록: {{ flow.video }}">{{ ui_icon('video',16) }}<span>{{ flow.video }}</span><span class="workflow-chevron" aria-hidden="true">⌄</span></summary><div class="workflow-popover"><strong>이번 영상</strong><p>{{ flow.video_detail }}</p><a href="{{ focus.workspace_href or focus.href }}">영상 제작 상태 확인 →</a></div></details>
-    <details class="workflow-option workflow-review"><summary aria-label="저장된 대본 검토: {{ '사용' if flow.review else '생략' }}"><span class="workflow-switch {{ 'is-on' if flow.review }}" aria-hidden="true"></span><span>대본 검토</span></summary><div class="workflow-popover"><strong>대본 검토 {{ '사용' if flow.review else '생략' }}</strong><p>{{ '이전 작업의 검토 정책을 유지합니다.' if flow.review_legacy else '작업 시작 때 저장한 선택입니다.' }} 여기서 기존 작업의 승인을 변경하지 않습니다.</p><p>안전 검사·영상 최종 검토·게시 승인은 별도입니다.</p></div></details>
-  </div>
-  <div class="workflow-script"><div><small>대본 미리보기 (일부)</small><p>{{ dashboard.excerpt if dashboard.excerpt else '아직 표시할 대본이 없어요. 작업실에서 현재 상태를 확인해 주세요.' }}</p></div><a class="button primary" href="{{ focus.workspace_href or focus.href }}">작업실 열기 {{ ui_icon('arrow',18) }}</a></div>
+  <div class="workflow-script"><div><small>{{ '대본 생성 전' if focus.kind == 'collection' else '대본 미리보기 (일부)' }}</small><p>{{ '수집 뉴스의 평가와 후보 검토를 이어가세요.' if focus.kind == 'collection' else dashboard.excerpt if dashboard.excerpt else '대본 생성 전입니다. 현재 작업을 확인하세요.' }}</p></div><a class="button primary" data-workflow-next-action href="{{ focus.workspace_href or focus.href }}">{{ action_label }} {{ ui_icon('arrow',18) }}</a></div>
   {% else %}<div class="dash-empty dash-workflow-empty"><h3>새로운 이야기를 시작하세요.</h3><p>뉴스와 제작 방식을 고르면 기존 제작 흐름으로 이어집니다.</p></div>{% endif %}
+
+
+
 </div>

@@ -47,7 +47,7 @@ from newsflow.publishing.service import PublishingError, PublishingService, hash
 from newsflow.video.tts import SpeechSettings, TTSError
 
 from .api_settings_routes import connection_status
-from .dashboard_view import dashboard_context
+from .dashboard_view import CATEGORY_FILTERS, dashboard_context, news_context
 from .production_context import (
     ACQUISITION_LABELS,
     CATEGORY_LABELS,
@@ -308,7 +308,10 @@ def _workspace_video(
 def home(
     request: Request, task: str | None = None, video: int | None = None, show: str = "",
     guide: str = "", flow: str | None = None, publish_platform: str = "youtube",
+    news_category: str = "",
 ) -> HTMLResponse:
+    if news_category not in CATEGORY_FILTERS:
+        raise HTTPException(422, "뉴스 분야를 확인해 주세요.")
     if (show not in {"", "tasks", "videos"} or sum((task is not None, video is not None, bool(guide))) > 1
             or video is not None and video < 1 or guide and guide not in GUIDES
             or publish_platform not in {*PLATFORMS, "unified"}):
@@ -337,6 +340,10 @@ def home(
             Scene.project_id.in_([project.id for _render, project in videos]), Scene.ai_generated.is_(True))))
         job_links = {item.get("render_job_id"): item for item in jobs if item.get("render_job_id")}
         for render, project in videos:
+            from newsflow.db.models import WorkspaceRemoval
+
+            if session.get(WorkspaceRemoval, f"video:{render.id}"):
+                continue
             result = _workspace_video(request, render, project, job_links.get(render.id), ai_scenes=project.id in with_ai)
             if result:
                 completed.append(result)
@@ -364,7 +371,7 @@ def home(
         visible_tasks = tasks[:100] if show == "tasks" else active_jobs[:5]
         visible_videos = recent_videos[:100 if show == "videos" else 5]
         is_dashboard = request.url.path == "/" and not (task or video or guide or show)
-        dashboard = dashboard_context(session, visible_tasks) if is_dashboard else None
+        dashboard = dashboard_context(session, tasks) if is_dashboard else None
         return _page(
             request, "creator_dashboard.html" if is_dashboard else "activity.html"
             if show == "tasks" and not (task or video or guide) else "easy_home.html", active="home",
@@ -382,9 +389,18 @@ def home(
             if publish_platform == "instagram" else None,
             unified_publish=unified_publishing_context(request, video) if publish_platform == "unified" else None,
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
-            recent_news=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(5))),
+            **news_context(session, news_category),
             **overview,
         )
+
+
+@router.get("/dashboard/news", response_class=HTMLResponse)
+def dashboard_news(request: Request, category: str = ""):
+    if category not in CATEGORY_FILTERS:
+        raise HTTPException(422, "뉴스 분야를 확인해 주세요.")
+    with request.app.state.sessions() as session:
+        return _page(request, "dashboard_news_list.html", **news_context(session, category),
+                     category_labels=CATEGORY_LABELS)
 
 
 def _guide_context(request: Request, guide: str, flow: str | None) -> dict[str, Any]:
@@ -694,12 +710,16 @@ def queue(request: Request, month: str | None = None) -> HTMLResponse:
         raise HTTPException(422, "달력 월을 확인하세요.") from None
     with request.app.state.sessions() as session:
         entries = []
+        seen_videos = set()
         for draft, video in session.execute(
             select(PublishDraft, RenderJob).join(RenderJob).order_by(PublishDraft.id.desc()).limit(100)
         ):
+            if draft.state == "local_draft" and video.id in seen_videos:
+                continue
+            seen_videos.add(video.id)
             target = _media_path(request, video)
             try:
-                valid = target is not None and hash_file(target) == draft.media_sha256
+                valid = target is not None and (draft.state == "local_draft" or hash_file(target) == draft.media_sha256)
             except OSError:
                 valid = False
             entries.append({"draft": draft, "video": video, "playable": valid})

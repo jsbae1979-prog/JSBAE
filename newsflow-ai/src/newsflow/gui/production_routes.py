@@ -17,11 +17,50 @@ from newsflow.video.tts import TTSError
 
 from .instagram_routes import connection_context as instagram_context
 from .production_context import ACQUISITION_LABELS, CATEGORY_LABELS, PERIOD_LABELS, acquisition_preferences
+from .production_picker import NEWS_METHODS
 from .production_status import production_context
 from .routes import go, page
 from .youtube_routes import connection_context
 
 router = APIRouter()
+
+
+@router.post("/production/selection")
+def selection(request: Request, kind: str = Form(max_length=10), value: str = Form(max_length=200),
+              return_to: str = Form("/", max_length=2500)):
+    """Save only the clicked preference; no credentials, approvals, job snapshots or inference."""
+    from urllib.parse import urlsplit
+
+    target = urlsplit(return_to)
+    allowed = target.path in {"/", "/news", "/ai", "/video", "/create"}
+    if target.scheme or target.netloc or not allowed or any(ord(c) < 32 for c in return_to):
+        raise HTTPException(422, "돌아갈 화면을 확인해 주세요.")
+    sessions = request.app.state.sessions
+    with sessions.begin() as session:
+        session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+        if kind == "news" and value in NEWS_METHODS:
+            provider, policy = value.split("|")
+            # Provider-specific models and all validation/approval records remain untouched.
+            values = {"studio_provider": provider, "autopilot_acquisition_policy": policy}
+        elif kind == "voice":
+            current = initial_state(session)["values"]
+            if value != current["voice"]:
+                try:
+                    validate_voice_preferences(value, current["rate"], current["pause_ms"])
+                except SetupError as exc:
+                    raise HTTPException(422, str(exc)) from None
+            values = {"video_default_voice": value}
+        elif kind == "video" and value in {"off", "higgsfield"}:
+            values = {"video_ai_provider": value}
+        else:
+            raise HTTPException(422, "제작 설정을 다시 선택해 주세요.")
+        for key, selected in values.items():
+            row = session.get(AppSetting, key)
+            if row:
+                row.value = selected
+            else:
+                session.add(AppSetting(key=key, value=selected))
+    return go(return_to)
 
 
 def settings_page(request: Request, saved: str = ""):
@@ -35,8 +74,12 @@ def settings_page(request: Request, saved: str = ""):
                "instagram": "Meta 공식 로그인 창에서 승인해 주세요. 완료 후 이 화면을 새로고침하세요.",
                "connection": "API 인증·모델 접근을 확인했습니다. 생성·웹 검색은 별도 검증이 필요합니다.",
                "search-check": "검색 검증을 마쳤습니다. 기사 발행일·사실·대본은 별도 검토가 필요합니다.",
+               "analysis-ack": "기존 결과 불명 기록을 보존해 인지 확인을 저장했습니다. 실제 분석은 실행하지 않았습니다.",
                "key": "API Key를 저장했습니다. 실제 연결은 미검증입니다.", "key_removed": "저장된 API Key를 삭제했습니다."}
+    from .serpapi_routes import connection_context as serpapi_context
+
     response = page(request, "simple_settings.html", active="simple-settings", saved=saved,
+                    serpapi=serpapi_context(request),
                     saved_notice=notices.get(saved, ""),
                     rates=RATE_CHOICES, pauses=PAUSE_CHOICES, youtube=connection_context(request),
                     instagram=instagram_context(request), **context)

@@ -70,6 +70,7 @@ from .download import MAX_CLIP_BYTES
 from .higgsfield import HiggsfieldProvider
 from .keys import VideoAIKeyStore
 from .policy import DEFAULT_PROMPT, PromptPolicyError, check_prompt, provider_prompt, same_prompt
+from .pricing import ModelPricingService
 from .settings import (
     CURRENCY_CHANGED,
     ModelEntry,
@@ -186,6 +187,7 @@ class AIVideoCoordinator:
     ) -> None:
         self.sessions, self.root, self.video = sessions, data_dir.resolve(), video
         self.keys = key_store or VideoAIKeyStore(data_dir)
+        self.model_pricing = ModelPricingService(sessions, self.keys)
         self.injected = provider
         self.clips = ClipStore(self.root)
         self.poll_interval = poll_interval

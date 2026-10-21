@@ -1,0 +1,72 @@
+/* Layout density only: keep the existing palette, typography and consent controls. */
+.premium-shell .workflow-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.premium-shell .workflow-title-row h2{margin:0;min-width:0}
+.premium-shell .workflow-title-row .production-review-choice{display:flex;align-items:center;flex:none;gap:8px;min-height:44px;margin:0 0 0 auto;white-space:nowrap}
+.premium-shell .workflow-title-row .production-review-choice input[type=checkbox]{appearance:none;position:relative;display:block;width:28px;min-width:28px;max-width:28px;height:16px;min-height:16px;max-height:16px;box-sizing:border-box;flex:none;border:1px solid #527499;border-radius:20px;background:#1d3048;margin:0;padding:0;cursor:pointer}
+.premium-shell .workflow-title-row .production-review-choice input:checked{background:#087cf9;border-color:#3ba5ff;box-shadow:0 0 8px #057aff60}
+.premium-shell .workflow-title-row .production-review-choice input:focus-visible{outline:3px solid #89d5ff;outline-offset:3px}
+.premium-shell .production-picker-dashboard .production-picker-options{grid-template-columns:repeat(3,minmax(0,1fr))}
+.premium-shell .production-picker-option>summary strong{white-space:normal;word-break:keep-all;overflow-wrap:normal}
+
+/* At medium dashboard widths, give the workflow usable room instead of three tight columns. */
+@media(min-width:1001px) and (max-width:1350px){
+  .dashboard-shell .dash-columns{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}
+  .dashboard-shell .dash-news{grid-column:1;grid-row:1/3;min-height:0}
+  .dashboard-shell .dash-center{grid-column:2;grid-row:1}
+  .dashboard-shell .dash-right{grid-column:2;grid-row:2}
+}
+@media(max-width:1350px){
+  .premium-shell .production-picker-dashboard .production-picker-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .premium-shell .production-picker-dashboard .production-picker-option:first-child{grid-column:1/-1}
+}
+@media(max-width:1100px){
+  .premium-shell .video-modern .video-modern-inspector{grid-row:1}
+  .premium-shell .video-modern .workstation-preview-column{grid-row:2}
+  .premium-shell .video-modern .workstation-monitor:has(.composition-preview){padding:12px}
+  .premium-shell .video-modern .composition-preview{width:210px}
+  .premium-shell.suite-script .script-modern .script-welcome{display:none}
+}
+@media(max-width:760px){
+  .suite-shell.premium-shell .creator-sidebar{padding-block:10px}
+  .suite-shell.premium-shell .workspace-nav{margin-top:8px;gap:3px}
+  .suite-shell.premium-shell .workspace-nav a{padding-block:6px;min-height:44px}
+  .suite-shell.premium-shell .suite-topbar{margin-bottom:10px;padding-block:8px;min-height:0}
+  .suite-shell.premium-shell :is(.script-modern,.video-modern,.settings-modern) .suite-header{padding-bottom:10px;margin-bottom:12px;gap:10px}
+  .suite-shell.premium-shell :is(.script-modern,.video-modern,.settings-modern) .suite-header p{margin-block:4px}
+  .suite-shell.premium-shell .suite-header-actions{margin:0;gap:8px}
+  .premium-shell .production-picker{margin:10px 0 12px}
+  .premium-shell .production-picker-heading{flex-direction:row;align-items:center;gap:8px}
+  .premium-shell .production-picker-heading small{display:none}
+  .premium-shell .production-picker-options{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .premium-shell .production-picker-option:first-child{grid-column:1/-1}
+  .premium-shell .production-picker .production-picker-option>summary{min-height:44px;padding:6px 8px;box-sizing:border-box}
+  .premium-shell .production-picker-note{margin-top:6px!important}
+  .premium-shell .workflow-title-row{gap:8px;margin-bottom:8px}
+  .premium-shell.suite-script .script-modern .script-steps{margin-bottom:12px}
+  .premium-shell.suite-script .script-modern :is(.card,.suite-panel){padding:16px}
+  .premium-shell.suite-script .script-modern .script-section-heading{margin-bottom:12px}
+  .suite-shell.premium-shell .settings-modern .settings-context-strip{display:grid;grid-template-columns:minmax(0,1fr) auto;padding:12px;margin-bottom:12px;gap:8px 10px}
+  .suite-shell.premium-shell .settings-modern .settings-context-strip>div{display:contents}
+  .suite-shell.premium-shell .settings-modern .settings-context-strip .modern-kicker{grid-column:1/-1}
+  .suite-shell.premium-shell .settings-modern .settings-context-strip>button{grid-column:2;grid-row:2;align-self:end}
+  .suite-shell.premium-shell .settings-modern .settings-current-choices{gap:6px 12px}
+  .suite-shell.premium-shell .settings-modern .settings-current-choices>span{white-space:normal}
+  /* The strip's heading already identifies these as defaults; actual connection status stays below. */
+  .suite-shell.premium-shell .settings-modern .settings-context-strip p{display:none}
+  .suite-shell.premium-shell .settings-modern .suite-settings-index{padding-bottom:10px;margin-bottom:12px}
+  .suite-shell.premium-shell .settings-modern .suite-settings-tabs{gap:6px}
+  .suite-shell.premium-shell .settings-modern .suite-settings-tabs>a{padding:6px 10px;min-height:44px;box-sizing:border-box}
+  .suite-shell.premium-shell .settings-modern :is(.settings-card-heading,.settings-section-content){padding:12px 14px}
+  .suite-shell.premium-shell .settings-modern .settings-card-heading{gap:10px}
+  .suite-shell.premium-shell .settings-modern #selected-ai{gap:14px}
+  .suite-shell.premium-shell .settings-modern .settings-ai-choices>label{margin-top:12px}
+  .premium-shell .video-modern .video-project-heading{margin-bottom:12px}
+  .premium-shell .video-modern .video-project-heading h2{margin-bottom:8px}
+  .premium-shell .video-modern details.workstation-video-toolbar{margin-bottom:12px;padding:8px 12px}
+  .premium-shell .video-modern .workstation-video-grid{gap:12px}
+  .premium-shell .video-modern .video-modern-inspector{gap:12px;align-items:stretch}
+  .premium-shell .video-modern .video-modern-inspector>.suite-panel{width:100%;box-sizing:border-box}
+  .premium-shell .video-modern :is(.workstation-media-panel,.workstation-render-controls,.workstation-preview-column>.suite-panel){padding:14px}
+  .premium-shell .video-modern .suite-section-bar{margin-bottom:10px}
+  .premium-shell .video-modern .video-settings-scope{margin-bottom:10px}
+}
