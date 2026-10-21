@@ -446,7 +446,10 @@ def quick_start(
     voice_method: str | None = Form(None, max_length=20), video_method: str | None = Form(None, max_length=20),
 ) -> RedirectResponse:
     """Workspace entry point, with the same coordinator and all existing review gates."""
-    if source not in CHOICES["source"] or duration not in {30, 45, 60}:
+    from newsflow.shortform import allowed_duration
+    from newsflow.shortform import read as read_shortform
+
+    if source not in CHOICES["source"] or not allowed_duration(duration, read_shortform(request.app.state.sessions).enabled):
         raise HTTPException(422, "뉴스 종류와 30·45·60초 중 영상 길이를 선택해 주세요.")
     ready = readiness(request)
     saved = read_studio_settings(request.app.state.sessions)

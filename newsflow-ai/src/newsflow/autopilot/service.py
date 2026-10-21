@@ -212,7 +212,13 @@ class AutopilotCoordinator:
     ) -> str:
         if mode not in {"easy", "guided"} or source not in {"sample", "feeds"}:
             raise AutopilotError("제작 방식과 뉴스 종류를 다시 선택하세요.")
-        if type(duration) is not int or duration not in {30, 45, 60} or platform not in {"youtube", "instagram"}:
+        from dataclasses import asdict
+
+        from newsflow.shortform import allowed_duration
+        from newsflow.shortform import read as read_shortform
+
+        profile = read_shortform(self.sessions)
+        if not allowed_duration(duration, profile.enabled and source == "feeds" and ai_mode in {"openai", "claude_api"}) or platform not in {"youtube", "instagram"}:
             raise AutopilotError("영상 길이와 게시 대상을 다시 선택하세요.")
         content_mode = content_mode or ("real" if source == "feeds" else "trial")
         if content_mode not in CONTENT_MODES or (content_mode == "real") != (source == "feeds"):
@@ -255,6 +261,8 @@ class AutopilotCoordinator:
             }
         # A per-job policy does not opt legacy/sample paths into the unified AI pipeline.
         request["news_usage"] = news_usage
+        if profile.enabled and duration <= 35 and source == "feeds" and ai_mode in {"openai", "claude_api"}:
+            request["shortform"] = asdict(profile)
         if production_options is not None:
             from .production_options import freeze_options
 
@@ -334,6 +342,7 @@ class AutopilotCoordinator:
         # new execution policy merely by reading/resuming their saved state.
         if "news_usage" in job.stage_results.get("request", {}):
             context["news_usage"] = job.stage_results["request"]["news_usage"]
+        context["shortform"] = job.stage_results.get("request", {}).get("shortform", {})
         if "production_options" in job.stage_results.get("request", {}):
             context["production_options"] = job.stage_results["request"]["production_options"]
         context.pop("article_grouping", None)

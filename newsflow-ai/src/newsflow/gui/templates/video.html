@@ -14,6 +14,7 @@
   </form>
 </details>
 {% if draft %}
+{% if draft.sources.shortform and draft.sources.shortform.enabled %}<p class="soft-notice">숏폼 강조 · 한 이슈 · {{ draft.duration }}초 목표 · 저장된 음성 유지 · {{ draft.sources.shortform.speed }}배. 실제 음성 길이가 맞지 않으면 검토가 필요하며 자동 재생성하지 않습니다.</p>{% endif %}
 <div class="workstation-video-project">
   {% if production_context and production_context.get('initial_video') == 'higgsfield' %}
   <div class="soft-notice" id="video-selected-higgsfield"><p>최초 선택한 영상 방식은 Higgsfield입니다. 기본 카드 영상으로 자동 전환하지 않습니다. 장면·비용을 확인하고 별도 승인한 뒤 기존 영상 계획에서 진행하세요.</p><a class="button primary" href="/video/ai?draft_id={{ draft.id }}">{{ draft.duration }}초 Higgsfield 장면 계획 열기</a><p>이동만으로 유료 장면 생성이나 합성을 시작하지 않습니다.</p></div>
@@ -21,7 +22,7 @@
     {{ csrf_field() }}<input type="hidden" name="draft_id" value="{{ draft.id }}">
 
 <aside class="video-modern-inspector">    <section class="suite-panel workstation-media-panel"><div class="suite-section-bar"><h2>이번 영상 설정</h2>{{ ui_icon('settings',18) }}</div><p class="video-settings-scope">아래 선택은 이번 영상에만 적용됩니다.</p>    <div class="video-basic-fields">
-      <label>영상 길이<select name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {{ 'selected' if draft.duration==seconds }}>{{ seconds }}초</option>{% endfor %}</select></label>
+      <label>영상 길이<select name="duration">{% for seconds in shortform_durations|default([30,45,60]) %}<option value="{{ seconds }}" {{ 'selected' if draft.duration==seconds }}>{{ seconds }}초</option>{% endfor %}</select></label>
       {% set voice_name = namespace(label=selected_voice) %}{% for voice in voices if voice.name == selected_voice %}{% set voice_name.label=voice.label %}{% endfor %}<details class="video-voice-choice"><summary>{{ ui_icon('voice',17) }} 음성 · {{ voice_name.label }} · 변경</summary><label>음성<select name="voice">
         <option value="offline-silence"{% if selected_voice=='offline-silence' %} selected{% endif %}>Offline · 무음 오디오 (실제 발화 없음)</option>
     {% if not voice_available %}<option value="{{ selected_voice }}" selected>저장된 음성 · {{ selected_voice }} (현재 사용 불가)</option>{% endif %}

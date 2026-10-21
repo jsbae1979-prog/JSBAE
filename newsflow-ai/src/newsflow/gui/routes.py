@@ -54,6 +54,22 @@ templates.env.filters["kst_day"] = kst_day
 
 
 def page(request: Request, name: str, **context: object) -> HTMLResponse:
+    if name in {"simple_settings.html", "ai.html", "video.html", "video_ai.html", "creator_dashboard.html", "easy_home.html", "news.html"}:
+        from dataclasses import asdict
+
+        from newsflow.shortform import choices
+        from newsflow.shortform import read as shortform_settings
+
+        profile = shortform_settings(request.app.state.sessions)
+        context["shortform_settings"] = asdict(profile)
+        context["shortform_durations"] = choices(profile.enabled, profile.target_seconds)
+        if name == "video.html" and context.get("draft"):
+            from newsflow.shortform import frozen
+
+            draft_profile = frozen(context["draft"].sources)
+            context["shortform_durations"] = choices(draft_profile.enabled, context["draft"].duration)
+        if name == "ai.html" and profile.enabled and not context.get("draft") and not context.get("production_context"):
+            context["selected_duration"] = profile.target_seconds
     if name in {"creator_dashboard.html", "easy_home.html", "news.html", "ai.html", "video.html"}:
         from .production_picker import selection_context
 

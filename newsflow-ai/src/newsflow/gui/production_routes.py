@@ -25,6 +25,20 @@ from .youtube_routes import connection_context
 router = APIRouter()
 
 
+@router.post("/production/shortform")
+def shortform_preferences(request: Request, enabled: bool = Form(False), hook: bool = Form(False),
+                          captions: bool = Form(False), motion: bool = Form(False), source: bool = Form(False),
+                          tight_ending: bool = Form(False), speed: float = Form(1.1), target_seconds: int = Form(30)):
+    from newsflow.shortform import Shortform, save
+
+    try:
+        save(request.app.state.sessions, Shortform(enabled, hook, captions, motion, source, tight_ending,
+                                                  speed, target_seconds))
+    except ValueError:
+        raise HTTPException(422, "숏폼 목표 길이와 속도·옵션을 확인하세요.") from None
+    return go("/simple-settings#shortform-settings")
+
+
 @router.post("/production/selection")
 def selection(request: Request, kind: str = Form(max_length=10), value: str = Form(max_length=200),
               return_to: str = Form("/", max_length=2500)):

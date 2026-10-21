@@ -299,6 +299,8 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 SCRIPT_INSTRUCTION = (
+    "When evidence.shortform_contract is present, its hook, 3-4 sentence structure and ending rules "
+    "override the generic scene count and source-check closing below. No extra API requests or invented facts. "
     "When evidence.curation_contract is present, its script contract overrides the generic scene guidance: "
     "produce exactly 3 scenes HOOK, CONTENT, ENDING with 150..300 Korean characters including spaces in "
     "the joined narrations. hook equals the first narration, closing equals the last narration. "

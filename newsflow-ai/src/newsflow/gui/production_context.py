@@ -45,7 +45,7 @@ def validate_context(value: dict) -> dict:
         raise ValueError("제작 설정을 홈에서 다시 선택해 주세요.")
     duration = value.get("initial_duration")
     voice = value.get("initial_voice")
-    if type(duration) is not int or duration not in {30, 45, 60}:
+    if type(duration) is not int or duration not in {30, 45, 60} and not 15 <= duration <= 35:
         raise ValueError("영상 길이는 30·45·60초 중에서 선택하세요.")
     if not isinstance(voice, str) or not 0 < len(voice) <= 200 or any(ord(c) < 32 for c in voice):
         raise ValueError("선택한 음성 설정을 확인해 주세요.")

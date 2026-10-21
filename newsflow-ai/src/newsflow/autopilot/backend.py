@@ -781,6 +781,7 @@ class PipelineBackend:
                     mode=ai_mode,
                     consent=ai_mode != "offline",
                     options=script_options,
+                    shortform_profile=ctx.get("shortform", {}),
                     on_run=self._remember(ctx, "script_run_id", save),
                     **({"article_ids": script_ids} if ctx.get("unified") or api_script else {}),
                     **({"news_usage": ctx["news_usage"]} if api_script else {}),
@@ -1060,7 +1061,10 @@ class PipelineBackend:
             and metadata.get("width") == 1080
             and metadata.get("height") == 1920
             and math.isfinite(duration)
-            and abs(duration - ctx["duration"]) <= 0.25
+            and (abs(duration - ctx["duration"]) <= 0.25 or (
+                draft.sources.get("shortform", {}).get("enabled") is True
+                and draft.sources["shortform"].get("tight_ending") is True
+                and 15 <= duration <= min(35, ctx["duration"]) + 0.1))
         ):
             raise BackendError("영상 규격 또는 파일 무결성을 확인하지 못했습니다.", retryable=False)
         self._cancel(cancel)

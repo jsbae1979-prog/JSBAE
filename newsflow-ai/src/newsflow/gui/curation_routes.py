@@ -126,7 +126,10 @@ def analyze(request: Request, collection_context_id: int = Form(ge=1), consent: 
 @router.post("/news/curation/generate")
 def generate(request: Request, analysis_id: int = Form(ge=1), rank: int = Form(ge=1, le=10),
              duration: int = Form(30), consent: bool = Form(False)):
-    if not consent or duration not in {30, 45, 60}:
+    from newsflow.shortform import allowed_duration
+    from newsflow.shortform import read as read_shortform
+
+    if not consent or not allowed_duration(duration, read_shortform(request.app.state.sessions).enabled):
         raise HTTPException(422, "대본 1회 전송·과금 동의와 30·45·60초 중 길이를 선택하세요.")
     with request.app.state.sessions() as session:
         analysis = session.get(IntelligenceRun, analysis_id)

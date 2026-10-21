@@ -494,6 +494,12 @@ class IntelligenceService:
     @staticmethod
     def check_news_usage(content: dict, evidence: dict) -> None:
         """Reusable review/render gate; legacy drafts without this policy are unchanged."""
+        from newsflow.shortform import validate_script as validate_shortform
+
+        try:
+            validate_shortform(content, evidence)
+        except ValueError:
+            raise IntelligenceError("숏폼 훅·장면·분량을 검토하세요.", "shortform_review", False) from None
         if "news_usage" not in evidence and "news_usage_result" not in evidence:
             return
         try:
@@ -660,11 +666,19 @@ class IntelligenceService:
         script_style: str = "news",
         script_tone: str = "neutral",
         script_audience: str = "general",
+        shortform_profile: dict | None = None,
     ) -> int:
+        from dataclasses import asdict
+
+        from newsflow.shortform import Shortform, allowed_duration, instruction
+        from newsflow.shortform import read as read_shortform
+
+        profile = read_shortform(self.sessions) if shortform_profile is None else Shortform(**shortform_profile)
+        profile_on = profile.enabled and 15 <= duration <= 35 and mode in {"openai", "claude_api"}
         chosen_presentation = presentation(script_style, script_tone, script_audience)
         if mode == "offline" and (script_style, script_tone, script_audience) != ("news", "neutral", "general"):
             raise IntelligenceError("스타일 적용은 연결된 AI로 대본을 생성할 때 사용할 수 있습니다.", "invalid_selection", False)
-        if duration not in (30, 45, 60) or mode not in MODES:
+        if not allowed_duration(duration, profile_on) or mode not in MODES:
             raise IntelligenceError("영상 길이 또는 Provider가 잘못되었습니다.", "invalid_selection", False)
         if mode != "offline" and not consent:
             raise IntelligenceError("외부 API 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
@@ -674,6 +688,8 @@ class IntelligenceService:
             if not analysis or analysis.kind != "analysis" or analysis.status != "success":
                 raise IntelligenceError("먼저 기사 분석을 실행하세요.", "invalid_selection", False)
             evidence = analysis.evidence
+            if profile_on:
+                evidence = {**evidence, "shortform": asdict(profile)}
             if evidence.get("curation_contract"):
                 if (mode not in {"openai", "claude_api"} or mode != analysis.provider
                         or options.model != analysis.options.get("model") or not self.api_managed):
@@ -721,6 +737,10 @@ class IntelligenceService:
                             "news_usage_contract": api_news_contract(
                                 evidence, evidence["news_usage"], duration, speech=self.speech,
                             )}
+            if profile_on:
+                if len(evidence.get("groups", [])) > 1:
+                    raise IntelligenceError("숏폼 강조는 한 이슈만 선택하세요.", "invalid_selection", False)
+                evidence = {**evidence, "shortform": asdict(profile), "shortform_contract": instruction(profile)}
             if len(evidence.get("articles", [])) > 1:
                 evidence = {**evidence, "synthesis": {
                     "article_ids": [a["id"] for a in evidence["articles"]],

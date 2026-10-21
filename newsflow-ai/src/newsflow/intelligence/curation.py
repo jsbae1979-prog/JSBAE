@@ -452,11 +452,12 @@ def validate_script(content: dict, evidence: dict) -> None:
     if not evidence.get("curation_contract"):
         return
     scenes = content["scenes"]
-    if (len(scenes) != 3 or scenes[0]["narration"] != content["hook"]
+    short = evidence.get("shortform", {}).get("enabled") is True
+    if ((len(scenes) not in (3, 4) if short else len(scenes) != 3) or scenes[0]["narration"] != content["hook"]
             or scenes[-1]["narration"] != content["closing"]):
         raise ValueError("HOOK·CONTENT·ENDING 세 장면을 확인하세요.")
     text = " ".join(s["narration"] for s in scenes)
-    if not 150 <= len(text) <= 300:
+    if not (50 if short else 150) <= len(text) <= 300:
         raise ValueError("내레이션은 150~300자여야 합니다.")
     source = " ".join(a["title"] + " " + a["summary"] for a in evidence["articles"])
     numbers = lambda value: set(re.findall(r"\d+(?:[.,]\d+)*", value))

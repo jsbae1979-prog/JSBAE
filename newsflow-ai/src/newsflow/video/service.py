@@ -9,6 +9,7 @@ import re
 import shutil
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
+from dataclasses import asdict
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Event, Lock
@@ -30,6 +31,8 @@ from newsflow.db.models import (
 )
 from newsflow.intelligence.news_usage import API_SCRIPT_METHOD
 from newsflow.intelligence.schema import Script
+from newsflow.shortform import allowed_duration
+from newsflow.shortform import frozen as shortform_profile
 
 from .ai.clips import ClipStore, probe_clip
 from .ai.contracts import ClipInvalidError
@@ -132,7 +135,7 @@ class VideoCoordinator:
         external_tts_consent: bool = False,
         effects: list[str] | None = None,
     ) -> int:
-        if duration not in (30, 45, 60) or not reviewed:
+        if not allowed_duration(duration, True) or not reviewed:
             raise VideoError("영상 길이를 선택하고 렌더링 전 대본·출처 검토를 확인하세요.")
         return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False,
                            fit_audio=voice != "offline-silence", external_tts_consent=external_tts_consent, effects=effects)
@@ -154,7 +157,7 @@ class VideoCoordinator:
         A real Windows voice renders with audio-fit timing so subtitles follow the
         narration; the silent offline voice keeps the script's planned scene seconds.
         """
-        if duration not in (30, 45, 60):
+        if not allowed_duration(duration, True):
             raise VideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
         from newsflow.easy_setup import preview_preferences, speech_preferences
 
@@ -182,7 +185,7 @@ class VideoCoordinator:
         neither, for the card). Voice and subtitle preferences are the user's saved defaults; a
         real Windows voice renders with audio-fit timing exactly like the local review copy.
         """
-        if duration not in (30, 45, 60):
+        if not allowed_duration(duration, True):
             raise VideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
         from newsflow.db.models import AIVideoPlan, AIVideoScene, AutopilotJob
         from newsflow.easy_setup import SetupError, preview_preferences, speech_preferences
@@ -335,6 +338,9 @@ class VideoCoordinator:
                     {"content": draft.content, "sources": draft.sources}, ensure_ascii=False
                 ):
                     raise VideoError("비밀정보가 포함된 초안은 영상으로 제작할 수 없습니다.")
+                shortform = shortform_profile(draft.sources)
+                if not allowed_duration(duration, shortform.enabled):
+                    raise VideoError("15~35초 제작은 숏폼 강조로 생성한 대본을 선택하세요.")
                 times = self.timings(draft.content, duration)
                 if images and len(images) != len(times):
                     raise VideoError("장면별 소재 개수를 확인하세요.")
@@ -371,6 +377,7 @@ class VideoCoordinator:
                     speech,
                     fit_audio,
                     strict_audio_fit,
+                    shortform,
                 )
                 plan.validate()
                 project = VideoProject(
@@ -379,6 +386,7 @@ class VideoCoordinator:
                     duration=duration,
                     snapshot={
                         **draft.content, "draft_revision": draft.revision, "effects": list(effects),
+                        "shortform": asdict(shortform),
                         "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio,
                                    "strict_audio_fit": strict_audio_fit},
                         # Provenance: which reviewed AI clip (by content hash) each scene must use.
@@ -539,7 +547,7 @@ class VideoCoordinator:
                         )
                     )
                 plan = RenderPlan(title, plans, source_links, voice, font_size, position_y, speech, fit_audio,
-                                  strict_audio_fit)
+                                  strict_audio_fit, shortform_profile(project.snapshot))
                 result, metadata = self.engine.render(
                     plan, work, tts, lambda value: self._progress(identifier, value), cancel
                 )

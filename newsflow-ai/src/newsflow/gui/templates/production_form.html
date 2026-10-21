@@ -5,7 +5,7 @@
     {% if not production_picker|default(none) and (not entry_flow or entry_flow.get('script_review', true)) %}<input type="hidden" name="script_review" value="true">{% endif %}
     <div class="quick-production-fields">
       <label for="quick-source">뉴스 자료<select id="quick-source" name="source"><option value="feeds" {% if entry_source == 'feeds' %}selected{% endif %}>새 뉴스 수집·검색</option><option value="sample" {% if entry_source == 'sample' %}selected{% endif %}>체험 뉴스 · 연습용</option></select></label>
-      <label for="quick-duration">영상 길이<select id="quick-duration" name="duration">{% for duration in [30,45,60] %}<option value="{{ duration }}" {% if entry_duration == duration %}selected{% endif %}>{{ duration }}초</option>{% endfor %}</select></label>
+      <label for="quick-duration">영상 길이<select id="quick-duration" name="duration">{% for duration in shortform_durations|default([30,45,60]) %}<option value="{{ duration }}" {% if entry_duration == duration %}selected{% endif %}>{{ duration }}초</option>{% endfor %}</select></label>
     </div>
     <div class="quick-production-fields" data-source-mode="feeds" {% if entry_source == 'sample' %}hidden{% endif %}>
       <label for="quick-category">뉴스 분야<select id="quick-category" name="category">{% for value,label in category_labels.items() %}<option value="{{ value }}" {% if entry_category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>

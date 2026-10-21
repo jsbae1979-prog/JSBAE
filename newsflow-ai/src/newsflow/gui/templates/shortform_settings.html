@@ -1,0 +1,11 @@
+<details class="settings-advanced" id="shortform-settings"><summary>{{ ui_icon('video',18) }} 숏폼 강조 · 새 API 대본에 적용</summary>
+<form method="post" action="/production/shortform">{{ csrf_field() }}
+<label class="check"><input type="checkbox" name="enabled" value="true" {% if shortform_settings.enabled %}checked{% endif %}>숏폼 강조 사용</label>
+<p>기존 대본·영상·예약은 유지합니다. 한 이슈를 간결하게 구성하며 음성 선택·사용 동의는 그대로 유지합니다.</p>
+<label>기본 목표 길이(15~35초)<input type="number" name="target_seconds" min="15" max="35" value="{{ shortform_settings.target_seconds }}" required></label>
+<label>음성 속도 배율(1.0~1.2)<input type="number" name="speed" min="1" max="1.2" step="0.05" value="{{ shortform_settings.speed }}" required></label>
+{% for key,label in [('hook','첫 3초 훅'),('captions','중앙 큰 자막·핵심어 강조'),('motion','카드 움직임·진행 표시'),('source','상단 출처 계속 표시'),('tight_ending','마지막 발화 후 짧게 종료')] %}
+<label class="check"><input type="checkbox" name="{{ key }}" value="true" {% if shortform_settings[key] %}checked{% endif %}>{{ label }}</label>
+{% endfor %}
+<p class="hint">저장은 외부 호출이 아닙니다. 사실·소재 권리·음질과 최종 영상은 직접 검토하세요.</p><button type="submit">숏폼 옵션 저장</button>
+</form></details>

@@ -223,13 +223,17 @@ class AIVideoCoordinator:
     # ------------------------------------------------------------------ plan editing
 
     def create_plan(self, draft_id: int, duration: int, *, production_job_id: str | None = None) -> int:
-        if duration not in (30, 45, 60):
+        from newsflow.shortform import allowed_duration, frozen
+
+        if not allowed_duration(duration, True):
             raise AIVideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
         with self.sessions.begin() as session:
             self._locked(session)
             draft = session.get(ContentDraft, draft_id)
             if draft is None:
                 raise AIVideoError("저장된 대본을 찾지 못했습니다.", 404)
+            if not allowed_duration(duration, frozen(draft.sources).enabled):
+                raise AIVideoError("15~35초는 숏폼 강조 대본을 선택하세요.")
             try:
                 times = self.video.timings(draft.content, duration)
             except (VideoError, ValueError):
@@ -262,7 +266,7 @@ class AIVideoCoordinator:
             for index, ((start, end), scene) in enumerate(zip(times, draft.content["scenes"])):
                 session.add(AIVideoScene(
                     plan_id=plan.id, position=index, start_ms=start, end_ms=end, narration=scene["narration"],
-                    caption=scene["caption"], source="generated" if owner else "card", prompt=DEFAULT_PROMPT, status="planned",
+                    caption=scene["caption"], source="generated" if owner or (index == 0 and frozen(draft.sources).enabled and frozen(draft.sources).hook) else "card", prompt=DEFAULT_PROMPT, status="planned",
                 ))
             if owner:
                 from copy import deepcopy

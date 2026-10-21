@@ -48,6 +48,7 @@
 <p class="settings-inline-note">AI 영상은 장면 생성·내용 검토·합성을 각각 승인합니다. 두 방식 모두 최종 합성은 FFmpeg를 사용합니다.</p><form method="post" action="/production/check-local">{{ csrf_field() }}<input type="hidden" name="engine" value="ffmpeg"><button class="subtle-button">FFmpeg 확인</button></form>
 </div>
 </div></section>
+{% if shortform_settings is defined %}{% include 'shortform_settings.html' %}{% endif %}
 <section class="settings-card" id="costs"><div class="settings-card-heading"><span class="settings-icon" aria-hidden="true">{{ ui_icon("wallet", 22) }}</span><div><h2>비용 관리</h2><p>설정 저장은 유료 제작 실행 동의가 아닙니다. 실제 청구액은 공급사에서 확인하세요.</p></div></div><div class="settings-section-content">
 {% for key in ['openai','claude_api'] %}{% set api = api_connections[key] %}{% set api_label = 'OpenAI API' if key == 'openai' else 'Claude API' %}<div class="settings-connection-line"><strong>{{ api_label }}</strong><span>월 한도 {{ api.settings.monthly_limit_usd }} USD · 집계 {{ api.usage.estimated_usd }} USD</span><button type="button" data-settings-open="api-costs-{{ key }}">한도·사용 승인 변경</button></div>{% include 'api_budget.html' %}{% endfor %}
 <p>ElevenLabs · 월 한도 {{ elevenlabs_config.monthly_limit }} 크레딧 · 계정 사용량은 별도 확인 <a href="/video/tts">한도·이용 범위 관리 →</a></p><p>Higgsfield · 월 한도 {{ video_ai_budget.settings.monthly_limit }} {{ video_ai_budget.settings.currency }} · 기존 기록의 예상 사용 {{ video_ai_budget.usage.spent }} {{ video_ai_budget.settings.currency }} <a href="/video-ai-settings#video-ai-settings-form">생성 한도 관리 →</a></p>
