@@ -14,7 +14,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from newsflow.intelligence.schema import Script
 
-from .korean import CHARS_PER_SECOND, SENTENCE_PAUSE_SECONDS, rate_factor
+from .korean import CHARS_PER_SECOND, SENTENCE_PAUSE_SECONDS, rate_factor, split_sentences
 
 NEWS_USAGE_LABELS = {"QUICK": "빠른 제작", "STANDARD": "균형 제작", "VERIFIED": "검증 우선"}
 API_SCRIPT_METHOD = "api_grounded_v1"
@@ -65,6 +65,8 @@ def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *,
                          [['fact', 'meaning', 'meaning', 'action'], ['fact', 'meaning', 'action', 'next']]),
             grounding=contract['grounding'] + ' 자료가 부족하면 fact는 최소화하고 같은 주제의 해석·일반적인 확인 방법으로 구성하세요. '
                       '시청자 관점의 해석은 허용하지만 새 사건 사실이 아니며, 자료에 없는 통계·수치·법령·가격·날짜는 넣지 마세요. '
+                      '자료에 없는 향후 전망·원인·결과를 가능성이라는 표현으로 추가하지 마세요. '
+                      '합성·가상 자료는 사실 장면의 내레이션과 자막에도 합성·가상 예시임을 표시하고 실제 보도로 소개하지 마세요. '
                       '후속 일정은 자료에 있을 때만 사용하고, 투자·상품·구매 권유 대신 확인할 일로 표현하세요.',
         )
     if duration is not None:
@@ -100,6 +102,23 @@ def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *,
             "긴 무음·정지 화면으로 길이를 채우거나 과도한 속도를 요구하지 마세요. "
             "근거가 부족하면 그 한계를 설명하되 사실을 만들어 분량을 채우지 마세요."
         )
+        if selected == 'v2':
+            # Concrete scene budgets use the unchanged estimator, not WAV measurement.
+            seconds = [max(1, duration // 5)]
+            remaining = duration - seconds[0]
+            seconds.extend([remaining // (scene_count - 1)] * (scene_count - 1))
+            seconds[-1] += duration - sum(seconds)
+            per_scene_pauses = pause_seconds / scene_count
+            contract['scene_narration_budgets'] = [
+                {'scene': i, 'seconds': sec, 'maximum_sentences': sentences // scene_count,
+                 'maximum_spoken_units': max(1, floor((sec * .97 - per_scene_pauses) * speed))}
+                for i, sec in enumerate(seconds, 1)
+            ]
+            contract['spoken_boundaries'] = (
+                'hook은 첫 장면 내레이션의 맨 앞, closing은 마지막 장면의 맨 끝에 같은 문장으로 각각 한 번 포함하세요. '
+                '두 문장도 분량 예산에 포함합니다. 장면별 초와 발화 단위 예산을 사용하고, '
+                '초 배정을 바꾸면 같은 추정식으로 예산을 다시 계산하세요. 의미 장면끼리 설명을 반복하지 마세요.'
+            )
     return contract
 
 
@@ -165,7 +184,56 @@ def explainer_findings(content: dict, evidence: dict) -> list[dict]:
     if analysis.get('ad_risk') == 'high':
         result.append({'code': 'explainer_ad_risk', 'level': 'warning',
                        'message': '폭력·위험·광고 민감 주제입니다. 비선정적 표현과 실루엣·아이콘·텍스트 소재를 검토하세요.'})
+    result.extend(_explainer_broadcast_findings(content, evidence))
     return result
+
+
+_SYNTHETIC_MARKER = re.compile(r'합성|가상|\bsynthetic\b|\bfictional\b', re.IGNORECASE)
+_SYNTHETIC_SOURCE = re.compile(r'\[(?:합성|가상)[^\]]*\]|(?:합성|가상)\s*(?:자료|예시|사례)|'
+                               r'\b(?:synthetic|fictional)\s+(?:data|source|example|fixture|scenario)\b', re.IGNORECASE)
+# Deliberately narrow Korean outlook signals, not a semantic fact verifier.
+_OUTLOOK = re.compile(r'(?:향후|앞으로|조만간).{0,90}?(?:전망|예상|가능성|예정)|'
+                      r'(?:인하|인상|급등|폭락|증가|감소).{0,24}?(?:전망|예상|가능성)')
+_UNCONFIRMED = re.compile(r'미확인|미확정|알 수 없|확인되지 않|확인되지 않았')
+
+
+def _explainer_broadcast_findings(content: dict, evidence: dict) -> list[dict]:
+    """Flag observable speech/source mismatches without rewriting or approving facts."""
+    import logging
+
+    findings = []
+
+    def warn(code, message):
+        logging.getLogger(__name__).warning('explainer_review_warning=%s', code)
+        findings.append({'code': code, 'level': 'warning', 'message': message})
+
+    normalize = lambda value: ' '.join(str(value).split())
+    scenes = content['scenes']
+    hook, closing = normalize(content.get('hook', '')), normalize(content.get('closing', ''))
+    narration = normalize(' '.join(scene['narration'] for scene in scenes))
+    if hook and (not normalize(scenes[0]['narration']).startswith(hook) or narration.count(hook) != 1):
+        warn('explainer_spoken_hook', '도입 문장을 첫 장면 내레이션 맨 앞에 한 번 포함하도록 수정하세요.')
+    if closing and (not normalize(scenes[-1]['narration']).endswith(closing) or narration.count(closing) != 1):
+        warn('explainer_spoken_closing', '마무리 문장을 마지막 장면 내레이션 맨 끝에 한 번 포함하도록 수정하세요.')
+    source_text = ' '.join(str(article.get(key) or '') for article in evidence.get('articles', [])
+                           for key in ('title', 'summary'))
+    fact_scenes = [scene for scene in scenes if scene.get('role') == 'fact']
+    if _SYNTHETIC_SOURCE.search(source_text) and (
+        not fact_scenes or any(not _SYNTHETIC_MARKER.search(scene[field])
+                              for scene in fact_scenes for field in ('narration', 'caption'))
+    ):
+        warn('explainer_synthetic_context', '합성·가상 자료입니다. 사실 장면의 내레이션과 자막에 예시임을 표시하세요.')
+    # Include planning and display fields, but never producer-only review notes.
+    visible = [content['title'], content['hook'], content['summary'], content.get('closing', ''),
+                        *(scene[field] for scene in scenes for field in ('narration', 'caption')),
+                        *(str(value) for key, value in (content.get('analysis') or {}).items() if key != 'ad_risk')]
+    # A supplied outlook still needs human review; absence is only a warning signal.
+    if not _OUTLOOK.search(source_text) and any(
+        _OUTLOOK.search(sentence) and not _UNCONFIRMED.search(sentence)
+        for value in visible for sentence in split_sentences(value)
+    ):
+        warn('explainer_outlook_without_source', '자료에서 확인되지 않은 전망 표현이 있습니다. 근거를 확인하거나 해당 표현을 수정하세요.')
+    return findings
 
 
 def validate_explainer_analysis(output: dict, evidence: dict) -> None:

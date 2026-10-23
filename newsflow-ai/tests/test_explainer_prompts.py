@@ -77,7 +77,7 @@ def interpretive(duration=30, quick=False, next_event=''):
             'title': '기준금리와 내 계약을 구분하는 방법', 'hook': hook,
             'summary': '합성 자료에 대한 시청자 관점 해석이며 계약의 조건을 확인하는 내용입니다.',
             'scenes': [{'seconds': sec, 'role': role, 'narration': narration,
-                        'caption': caption, 'material': '직접 제작한 계약 점검 아이콘'}
+                        'caption': '합성 예시 · ' + caption, 'material': '직접 제작한 계약 점검 아이콘'}
                        for sec, role, narration, caption in zip(seconds, roles, narrations,
                            ['기준금리 결정', '시청자 관점', '계약과 결정 구분', '확인할 일'][:len(roles)])],
             'closing': closing}
@@ -153,8 +153,10 @@ def test_composition_is_advisory_but_high_risk_needs_review():
     value['scenes'][1]['seconds'] = 29
     value['closing'] = '원문을 확인해 주세요.'
     notes = explainer_findings(value, source)
-    assert {n['code'] for n in notes} == {'explainer_roles', 'explainer_balance', 'explainer_closing'}
-    assert all(n['level'] == 'info' and n['kind'] == 'composition_warning' for n in notes)
+    assert {n['code'] for n in notes} == {'explainer_roles', 'explainer_balance', 'explainer_closing',
+                                       'explainer_spoken_closing', 'explainer_synthetic_context'}
+    assert all(n['level'] == 'info' and n['kind'] == 'composition_warning'
+               for n in notes if n['code'] in {'explainer_roles', 'explainer_balance', 'explainer_closing'})
     value['analysis']['ad_risk'] = 'high'
     assert explainer_findings(value, source)[-1]['level'] == 'warning'
     assert explainer_findings(value, {'script_method': 'api_grounded_v1'}) == []

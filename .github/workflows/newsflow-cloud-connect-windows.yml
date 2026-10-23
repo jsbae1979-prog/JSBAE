@@ -1,4 +1,4 @@
-name: NewsFlow PR35 Comparison Approval Windows
+name: NewsFlow PR35 Explainer Review Safety Windows
 
 on:
   push:
@@ -71,12 +71,12 @@ jobs:
         run: |
           .venv/Scripts/python -m ruff check src tests tools
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Scoped comparison and existing history safeguards - Fake providers
+      - name: Explainer review and existing history safeguards - Fake providers
         run: |
           $env:PYTHONPATH = "$PWD/src;$PWD/tests"
           New-Item -ItemType Directory -Path validation-output -Force | Out-Null
           $testOptions = @('-p', 'claude_compat_safety', '--basetemp=validation-output/explainer-compat-ci')
-          $targets = @(Get-Content tools/comparison_approval_targets.txt | Where-Object { $_ -and -not $_.StartsWith('#') })
+          $targets = @(Get-Content tools/explainer_review_targets.txt | Where-Object { $_ -and -not $_.StartsWith('#') })
           Write-Host "Changed-range targets: $($targets -join ' ')"
           .venv/Scripts/python -m pytest -q -rs @testOptions @targets --junitxml=validation-output/final-tests.xml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -84,7 +84,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: pr35-comparison-approval-${{ matrix.python }}
+          name: pr35-explainer-review-safety-${{ matrix.python }}
           path: |
             ${{ runner.temp }}/newsflow-connect-evidence/**/*.json
             ${{ runner.temp }}/newsflow-connect-evidence/**/*.png
