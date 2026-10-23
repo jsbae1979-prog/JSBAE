@@ -25,6 +25,7 @@ STEPS = (
     ('script-b-v2', 'script', 'v2', 1),
 )
 RECHECK_STEPS = STEPS[3:]  # A/B V2 scripts only, reusing a successful saved V2 analysis.
+SINGLE_RECHECK_STEPS = RECHECK_STEPS[:1]  # A only; never inherit the unused B permission.
 RUNTIME_FIELDS = {'script_prompt_version', 'script_method', 'news_usage', 'news_usage_result',
                   'news_usage_contract', 'analysis_result', 'presentation'}
 
@@ -96,12 +97,14 @@ def _saved_analysis(session, identifier):
     return parent, reservation
 
 
-def _review(session, article_ids, sessions, analysis_id=None):
+def _review(session, article_ids, sessions, analysis_id=None, single_script=False):
     from .service import IntelligenceService
 
     if (not isinstance(article_ids, list) or len(article_ids) != 2
             or any(type(i) is not int or i < 1 for i in article_ids) or len(set(article_ids)) != 2):
         raise APISettingsError('비교할 기사 A/B 두 건을 순서대로 확인하세요.')
+    if type(single_script) is not bool or single_script and analysis_id is None:
+        raise APISettingsError('단일 대본 재검증에는 저장된 V2 분석이 필요합니다.')
     settings = _read(session, PROVIDER)
     if settings.model != MODEL or not settings.approved:
         raise APISettingsError('저장된 Claude 모델과 사용 승인을 먼저 확인하세요.')
@@ -112,30 +115,33 @@ def _review(session, article_ids, sessions, analysis_id=None):
     parent, parent_reservation = _saved_analysis(session, analysis_id) if analysis_id is not None else (None, None)
     if parent and _digest({k: v for k, v in parent.evidence.items() if k not in RUNTIME_FIELDS}) != _digest(source):
         raise APISettingsError('저장된 분석의 기사 자료가 현재 비교 자료와 다릅니다.')
-    value = {'scope': 'method_b_saved_analysis_two_scripts' if parent else 'method_b_five_requests',
+    scope = ('method_b_saved_analysis_one_script' if single_script else
+             'method_b_saved_analysis_two_scripts' if parent else 'method_b_five_requests')
+    steps = SINGLE_RECHECK_STEPS if single_script else RECHECK_STEPS if parent else STEPS
+    value = {'scope': scope,
              'provider': PROVIDER, 'model': MODEL,
              'article_ids': article_ids, 'settings': _settings(settings), 'unknowns': unknowns,
-             'plan': _plan(source, RECHECK_STEPS if parent else STEPS)}
+             'plan': _plan(source, steps)}
     if parent:
         value['saved_analysis'] = {'id': parent.id, 'fingerprint': _unknown_fingerprint(parent),
                                    'reservation_fingerprint': _unknown_fingerprint(parent_reservation)}
     return value, source
 
 
-def comparison_review(sessions, article_ids, *, analysis_id=None):
+def comparison_review(sessions, article_ids, *, analysis_id=None, single_script=False):
     """Read-only preview. No credential load, acknowledgement or execution consent."""
     with sessions() as session:
-        value, source = _review(session, article_ids, sessions, analysis_id)
+        value, source = _review(session, article_ids, sessions, analysis_id, single_script)
         return {'token': _digest(value), 'articles': source['articles'],
                 'steps': [step['step'] for step in value['plan']], 'unknown_count': len(value['unknowns'])}
 
 
-def approve_comparison(sessions, *, article_ids, review_token, consent, analysis_id=None):
+def approve_comparison(sessions, *, article_ids, review_token, consent, analysis_id=None, single_script=False):
     if consent is not True or not isinstance(review_token, str) or not re.fullmatch(r'[a-f0-9]{64}', review_token):
         raise APISettingsError('기사·모델·기존 결과 불명 기록과 검토한 비교 호출 범위에 명시적으로 동의하세요.')
     with sessions.begin() as session:
         session.connection().exec_driver_sql('BEGIN IMMEDIATE')
-        value, _ = _review(session, article_ids, sessions, analysis_id)
+        value, _ = _review(session, article_ids, sessions, analysis_id, single_script)
         if _digest(value) != review_token:
             raise APISettingsError('자료·설정·결과 불명 기록이 바뀌었습니다. 비교 범위를 다시 확인하세요.')
         for entry, previous in _entries(session, APPROVAL):
@@ -162,14 +168,16 @@ def authorize_step(session, settings, request_id, kind, rows, max_output_tokens)
     try:
         grant = json.loads(entry.message) if entry and entry.event == APPROVAL else {}
         if (_digest({k: v for k, v in grant.items() if k not in {'review_token', 'expires_at'}}) != grant['review_token']
-                or grant.get('scope') not in {'method_b_five_requests', 'method_b_saved_analysis_two_scripts'}
+                or grant.get('scope') not in {'method_b_five_requests', 'method_b_saved_analysis_two_scripts',
+                                             'method_b_saved_analysis_one_script'}
                 or grant['provider'] != settings.provider or grant['model'] != settings.model
                 or grant['settings'] != _settings(settings)
                 or datetime.fromisoformat(grant['expires_at']) <= utcnow()
                 or grant['unknowns'] != _unknowns(rows)):
             raise ValueError
-        reuse = grant['scope'] == 'method_b_saved_analysis_two_scripts'
-        definitions = RECHECK_STEPS if reuse else STEPS
+        reuse = grant['scope'] != 'method_b_five_requests'
+        definitions = (SINGLE_RECHECK_STEPS if grant['scope'] == 'method_b_saved_analysis_one_script' else
+                       RECHECK_STEPS if reuse else STEPS)
         if [p['step'] for p in grant['plan']] != [p[0] for p in definitions]:
             raise ValueError
         saved_parent, saved_reservation = (_saved_analysis(session, grant['saved_analysis']['id'])

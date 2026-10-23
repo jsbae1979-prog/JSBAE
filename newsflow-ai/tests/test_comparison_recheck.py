@@ -175,3 +175,70 @@ def test_first_script_failure_unknown_or_review_warning_stops_second(comparison,
     with pytest.raises(IntelligenceError):
         recheck(value, grant, parent)
     assert len(value['calls']) == 6
+
+
+def approve_single(value, parent):
+    review = comparison_review(value['sessions'], value['ids'], analysis_id=parent, single_script=True)
+    assert review['steps'] == ['script-a-v2']
+    return approve_comparison(value['sessions'], article_ids=value['ids'], analysis_id=parent,
+                              single_script=True, review_token=review['token'], consent=True)
+
+
+def test_single_script_grant_never_authorizes_b_analysis_or_a_replay(comparison):
+    value = comparison
+    parent = completed_comparison(value)
+    before = originals(value)
+    grant = approve_single(value, parent)
+    assert approve_single(value, parent) == grant
+    for attempt in (lambda: recheck(value, grant, parent, 1), lambda: analyze(value, grant, 'v2')):
+        with pytest.raises(IntelligenceError):
+            attempt()
+    assert len(value['calls']) == 5
+    identifier = recheck(value, grant, parent)
+    with value['sessions']() as session:
+        draft = session.get(ContentDraft, identifier)
+        assert draft.review_status == 'review_required'
+        run = session.get(IntelligenceRun, draft.run_id)
+        assert run.options['analysis_run_id'] == parent
+        assert run.evidence['news_usage_contract']['narration_limits_version'] == 'scene-characters-v1'
+    for index in (0, 1):
+        with pytest.raises(IntelligenceError):
+            recheck(value, grant, parent, index)
+    assert len(value['calls']) == 6 and originals(value) == before
+
+
+def test_single_review_token_cannot_be_expanded_to_two_calls(comparison):
+    value = comparison
+    parent = completed_comparison(value)
+    review = comparison_review(value['sessions'], value['ids'], analysis_id=parent, single_script=True)
+    with pytest.raises(APISettingsError):
+        approve_comparison(value['sessions'], article_ids=value['ids'], analysis_id=parent,
+                           review_token=review['token'], consent=True)
+    assert len(value['calls']) == 5
+
+
+@pytest.mark.parametrize('option', [None, 1, 'true'])
+def test_single_scope_requires_a_boolean_and_saved_analysis(comparison, option):
+    with pytest.raises(APISettingsError):
+        comparison_review(comparison['sessions'], comparison['ids'], single_script=option)
+    with pytest.raises(APISettingsError):
+        comparison_review(comparison['sessions'], comparison['ids'], single_script=True)
+    assert not comparison['calls']
+
+
+def test_single_failed_request_cannot_be_replayed(comparison, monkeypatch):
+    value = comparison
+    parent = completed_comparison(value)
+    grant = approve_single(value, parent)
+
+    def timeout(*args):
+        value['calls'].append('synthetic timeout')
+        raise ProviderTimeoutError()
+
+    with monkeypatch.context() as patch:
+        patch.setattr(value['adapter'], '_open', timeout)
+        with pytest.raises(IntelligenceError):
+            recheck(value, grant, parent)
+    with pytest.raises(IntelligenceError):
+        recheck(value, grant, parent)
+    assert len(value['calls']) == 6
