@@ -10,7 +10,7 @@ import urllib.error
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 OPENAI_BASE = "https://api.openai.com/v1"
 
@@ -45,6 +45,139 @@ class ProviderResponseError(ProviderError):
     code = "ai_bad_response"
 
 
+_REQUEST_FIELDS = frozenset({
+    "output_config", "schema", "enum", "$ref", "required", "additionalProperties",
+    "model", "max_tokens", "temperature", "messages", "system",
+})
+_REQUEST_ISSUE_MESSAGES = {
+    "credit_balance_low": (
+        "Claude API에서 크레딧 부족을 알렸습니다. Claude Console의 Billing을 확인하세요. "
+        "자동 재요청하지 않습니다."
+    ),
+    "schema_complexity": "Claude API에서 출력 형식이 너무 복잡하다고 알렸습니다. 자동 재요청하지 않습니다.",
+    "schema_invalid": "Claude API에서 JSON 출력 형식이 잘못되었다고 알렸습니다. 자동 재요청하지 않습니다.",
+}
+
+
+def _safe_http_diagnostics(http_status=None, error_type=None, request_issue=None, request_fields=None,
+                           diagnostic_ref=None) -> dict:
+    result = {}
+    if type(http_status) is int and 400 <= http_status <= 599:
+        result["http_status"] = http_status
+    if isinstance(error_type, str) and error_type in {
+        "invalid_request_error", "not_found_error", "request_too_large", "api_error",
+        "authentication_error", "permission_error", "rate_limit_error", "overloaded_error",
+    }:
+        result["error_type"] = error_type
+    if isinstance(request_issue, str) and request_issue in _REQUEST_ISSUE_MESSAGES:
+        result["request_issue"] = request_issue
+    if isinstance(request_fields, (list, tuple)):
+        fields = sorted({v for v in request_fields if isinstance(v, str) and v in _REQUEST_FIELDS})
+        if fields:
+            result["request_fields"] = fields
+    if isinstance(diagnostic_ref, str) and re.fullmatch(r"[a-f0-9]{32}", diagnostic_ref):
+        result["diagnostic_ref"] = diagnostic_ref
+    return result
+
+
+class ProviderHTTPResponseError(ProviderResponseError):
+    """Retain only finite diagnostics from a rejected request, never its body."""
+
+    def __init__(self, http_status, error_type=None, request_issue=None, request_fields=None, diagnostic_ref=None):
+        self.details = _safe_http_diagnostics(http_status, error_type, request_issue, request_fields, diagnostic_ref)
+        super().__init__("Claude API가 요청을 거절했습니다. 자동 재요청하지 않습니다.")
+
+    def diagnostics(self) -> dict:
+        return _safe_http_diagnostics(**{
+            name: self.details.get(name) for name in (
+                "http_status", "error_type", "request_issue", "request_fields", "diagnostic_ref")
+        })
+
+    @classmethod
+    def from_http_error(cls, error, *, recorder=None, secret=""):
+        error_type, issue, fields, reference = None, None, [], None
+        try:
+            raw = error.read(8193)
+            if len(raw) <= 8192:
+                detail = json.loads(raw).get("error", {})
+                error_type = detail.get("type")
+                message = detail.get("message")
+                if isinstance(message, str):
+                    if recorder is not None:
+                        try:
+                            reference = recorder.save(status=error.code, error_type=error_type,
+                                                      message=message, secret=secret)
+                        except Exception:  # noqa: BLE001 - encryption/storage failure must not leak detail or retry
+                            reference = None
+                    # These are field *mentions*, not proof of which parameter caused rejection.
+                    # Never retain arbitrary parameter names, values, URLs, or remote prose.
+                    fields = [name for name in _REQUEST_FIELDS if re.search(
+                        r"(?<![A-Za-z0-9_])" + re.escape(name) + r"(?![A-Za-z0-9_])",
+                        message, re.IGNORECASE)]
+                    # Official account error; HTTP 400 alone does NOT establish this cause.
+                    # Do not retrospectively assign it to old generic failure records.
+                    if message.strip().lower().startswith("your credit balance is too low"):
+                        issue = "credit_balance_low"
+                    elif ("schema is too complex for compilation" in message.lower()
+                          or ("compiled grammar" in message.lower() and "too large" in message.lower())):
+                        issue = "schema_complexity"
+                    elif "invalid json schema" in message.lower():
+                        issue = "schema_invalid"
+        except Exception:  # noqa: BLE001 - malformed/secret-bearing errors must stay private
+            error_type, issue, fields = None, None, []
+        finally:
+            error.close()
+        return cls(error.code, error_type, issue, fields, reference)
+
+
+class AnalysisResponseError(ProviderResponseError):
+    """Finite diagnostic vocabulary; never retain response text or validation input."""
+
+    MESSAGES: ClassVar[dict[str, str]] = {
+        "response_envelope": "Claude 분석 응답의 JSON 또는 보호 검사를 통과하지 못했습니다.",
+        "incomplete_response": "Claude 분석 응답이 정상 종료되지 않았습니다. 자동 재요청하지 않습니다.",
+        "response_text": "Claude 분석 응답의 텍스트 블록 형식이 올바르지 않습니다.",
+        "result_json": "Claude 분석 결과를 단일 JSON 객체로 해석하지 못했습니다.",
+        "analysis_schema": "Claude 분석 결과의 필드·자료형·길이 조건이 맞지 않습니다.",
+        "source_binding": "Claude 분석의 기사 식별자가 선택한 기사와 일치하지 않습니다.",
+        "request_rejected": "Claude API가 분석 요청을 거절했습니다. 자동 재요청하지 않습니다.",
+    }
+    STOP_REASONS = frozenset({"end_turn", "max_tokens", "stop_sequence", "tool_use", "pause_turn", "refusal"})
+
+    def __init__(self, failure_reason, *, stop_reason=None,
+                 http_status=None, error_type=None, request_issue=None, request_fields=None, diagnostic_ref=None):
+        self.failure_reason = (failure_reason if isinstance(failure_reason, str)
+                               and failure_reason in self.MESSAGES else "response_envelope")
+        self.stop_reason = None if stop_reason is None else (
+            stop_reason if isinstance(stop_reason, str) and stop_reason in self.STOP_REASONS else "other")
+        self.http_details = _safe_http_diagnostics(
+            http_status, error_type, request_issue, request_fields, diagnostic_ref)
+        message = self.MESSAGES[self.failure_reason]
+        if self.failure_reason == "request_rejected":
+            message = _REQUEST_ISSUE_MESSAGES.get(self.http_details.get("request_issue"), message)
+        super().__init__(message)
+
+    def safe_copy(self) -> AnalysisResponseError:
+        return AnalysisResponseError(self.failure_reason, stop_reason=self.stop_reason,
+                                     **self._http_diagnostics())
+
+    def _http_diagnostics(self) -> dict:
+        return _safe_http_diagnostics(**{
+            name: self.http_details.get(name) for name in (
+                "http_status", "error_type", "request_issue", "request_fields", "diagnostic_ref")
+        })
+
+    def diagnostics(self) -> dict:
+        safe = self.safe_copy()
+        result = {"failure_reason": safe.failure_reason}
+        if safe.stop_reason is not None:
+            result["stop_reason"] = safe.stop_reason
+        if safe.failure_reason == "request_rejected":
+            result.update(safe.http_details)
+        return result
+
+
+
 class ProviderKeyMissing(ProviderError):
     code = "ai_key_missing"
 
@@ -61,7 +194,7 @@ class Options:
             raise ValueError("모델 이름이 잘못되었습니다.")
         if (
             not 0 <= self.temperature <= 1
-            or not 1 <= self.timeout <= 60
+            or not 1 <= self.timeout <= 180
             or not 200 <= self.max_tokens <= 9000
         ):
             raise ValueError("AI 호출 옵션 범위를 확인하세요.")

@@ -4,11 +4,11 @@ import binascii
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Form, HTTPException, Query, Request
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, Response
 from sqlalchemy import select
 
 from newsflow.db.models import ContentDraft, NewsArticle
-from newsflow.publishing.image_artwork import MAX_IMAGE_BYTES
+from newsflow.publishing.image_artwork import MAX_IMAGE_BYTES, card_artwork
 from newsflow.publishing.image_generation import MODEL, STYLES
 from newsflow.publishing.image_posts import STATES
 from newsflow.publishing.service import PublishingError
@@ -68,7 +68,7 @@ def workspace(request: Request, article_id: int | None = Query(None, ge=1),
                     raise PublishingError("이미지와 대본 연결이 다릅니다.")
                 seed = generated.evidence["source"]["plan"]
             return page(request, "image_posts.html", active="image-posts", article=article,
-                        full_image_available=False, full_generated=full_generated,
+                        full_image_available=bool(cards and generation), full_generated=full_generated,
                         claude_cards_available=bool(cards), card_plan=card,
                         card_readiness=cards.readiness(article_id, analysis_id, rank, draft_id) if cards else {},
                         card_runs=cards.recent(article_id) if cards and article_id else [],
@@ -110,6 +110,62 @@ def create(request: Request, article_id: int = Form(ge=1), title: str = Form(max
     except PublishingError as error:
         raise HTTPException(422, str(error)) from None
     return go(f"/image-posts?post_id={identifier}#image-result")
+
+
+@router.post("/image-posts/claude-card")
+def claude_card(request: Request, article_id: int = Form(ge=1),
+                analysis_id: int | None = Form(None, ge=1), rank: int | None = Form(None, ge=1, le=3),
+                draft_id: int | None = Form(None, ge=1), model: str = Form(max_length=80),
+                consent: bool = Form(False), review_token: str = Form("", max_length=64),
+                review_consent: bool = Form(False), purpose: str = Form("full_image", max_length=20)):
+    service = request.app.state.claude_cards
+    try:
+        if purpose != "full_image":
+            raise PublishingError("Claude는 문구·이미지 지시문만 작성합니다. 실제 이미지는 OpenAI로 생성하세요.")
+        identifier = service.generate(article_id, analysis_id=analysis_id, rank=rank,
+                                      draft_id=draft_id, model=model, consent=consent,
+                                      review_token=review_token, review_consent=review_consent, purpose=purpose)
+        run = service.get(identifier)
+    except PublishingError as error:
+        raise HTTPException(422, str(error)) from None
+    query = {k: v for k, v in {"article_id": article_id, "analysis_id": analysis_id, "rank": rank,
+                              "draft_id": draft_id}.items() if v is not None}
+    if run.status == "success":
+        query["card_id"] = identifier
+    return go("/image-posts?" + urlencode(query) + "#claude-card")
+
+@router.post("/image-posts/generate-card-image")
+def generate_card_image(request: Request, article_id: int = Form(ge=1), card_id: int = Form(ge=1),
+                        analysis_id: int | None = Form(None, ge=1),
+                        rank: int | None = Form(None, ge=1, le=3),
+                        draft_id: int | None = Form(None, ge=1),
+                        consent: bool = Form(False), plan_reviewed: bool = Form(False)):
+    service = request.app.state.image_generation
+    try:
+        identifier = service.generate_card(article_id, card_id=card_id, analysis_id=analysis_id,
+            rank=rank, draft_id=draft_id, consent=consent, plan_reviewed=plan_reviewed)
+        run = service.get(identifier)
+    except PublishingError as error:
+        raise HTTPException(422, str(error)) from None
+    query = {k: v for k, v in {"article_id": article_id, "analysis_id": analysis_id,
+                              "rank": rank, "draft_id": draft_id}.items() if v is not None}
+    query["generated_id" if run.status == "success" else "card_id"] = (
+        identifier if run.status == "success" else card_id)
+    return go("/image-posts?" + urlencode(query) + "#ai-background")
+
+@router.get("/image-posts/cards/{identifier}/preview")
+def card_preview(request: Request, identifier: int):
+    try:
+        run = request.app.state.claude_cards.get(identifier)
+        if run.status != "success":
+            raise PublishingError("완료된 구성이 없습니다.")
+        if run.options.get("purpose") == "full_image":
+            raise PublishingError("지시문 단계입니다. 아직 생성된 이미지가 없습니다.")
+        plan = run.result["plan"]
+        raw = card_artwork(plan["title"], plan["body"], run.evidence["publisher"], plan)
+    except PublishingError as error:
+        raise HTTPException(404, str(error)) from None
+    return Response(raw, media_type="image/jpeg")
 
 
 @router.post("/image-posts/generate-background")

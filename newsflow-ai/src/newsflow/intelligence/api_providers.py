@@ -34,6 +34,7 @@ from newsflow.intelligence.provider import (
     OpenAIProvider,
     Options,
     ProviderError,
+    ProviderHTTPResponseError,
     ProviderKeyMissing,
     ProviderResponseError,
     ProviderTimeoutError,
@@ -52,14 +53,61 @@ class APICancelled(ProviderError):
     code = "ai_cancelled"
 
 
-def _safe_json(text: str) -> dict:
+def _safe_json(text: str, *, reject_duplicates: bool = False) -> dict:
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate JSON field")
+            result[key] = value
+        return result
+
     try:
-        result = json.loads(text)
+        result = json.loads(text, object_pairs_hook=unique if reject_duplicates else None)
         if not isinstance(result, dict):
             raise TypeError
         return result
     except (ValueError, TypeError):
         raise ProviderResponseError("AI JSON 형식을 확인하지 못했습니다. 자동 재요청하지 않습니다.") from None
+
+
+def _claude_json_object(text: str) -> dict:
+    """Accept one whole JSON document, optionally in one complete Markdown fence.
+
+    Never search prose for braces, repair JSON, or choose among several objects.
+    Envelope parsing and other providers stay strict. Local schema/source and
+    script safety validators remain mandatory after this step.
+    """
+    text = text.strip()
+    lines = text.splitlines()
+    if (len(lines) >= 3 and lines[0].lower() in {"```json", "```"}
+            and lines[-1] == "```"):
+        text = "\n".join(lines[1:-1])
+    return _safe_json(text, reject_duplicates=True)
+
+
+def _output_schema(model) -> dict:
+    """Send supported wire constraints; retain the original strict local schema.
+
+    Claude's raw JSON schema API does not support string/numeric bounds or
+    maxItems. Describe those bounds on the wire and still enforce them locally.
+    https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+    """
+    unsupported = {"minimum", "maximum", "minLength", "maxLength", "maxItems"}
+
+    def wire(value):
+        if isinstance(value, list):
+            return [wire(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        limits = {name: value[name] for name in unsupported if name in value}
+        result = {name: wire(item) for name, item in value.items() if name not in unsupported}
+        if limits:
+            result["description"] = (result.get("description", "") + " Local validation: "
+                                     + json.dumps(limits, sort_keys=True)).strip()
+        return result
+
+    return wire(model.model_json_schema())
 
 
 def _claude_search_json(text: str) -> dict:
@@ -189,6 +237,8 @@ class _APITransport:
             self.last_usage = _usage(document, anthropic=self.provider == "claude_api")
             return document
         except urllib.error.HTTPError as exc:
+            if self.provider == "claude_api" and exc.code == 400:
+                raise ProviderHTTPResponseError.from_http_error(exc) from None
             raise OpenAIProvider._classify(exc) from None
         except TimeoutError:
             raise ProviderTimeoutError("API 요청 결과가 불명확합니다. 자동 재요청하지 않습니다.") from None

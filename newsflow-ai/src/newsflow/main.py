@@ -51,6 +51,7 @@ from .oauth.instagram import InstagramConnectionService
 from .oauth.lifecycle import expire_production_credentials, recover_production_lifecycle
 from .oauth.production_vault import recover_credential_rotations
 from .oauth.youtube import YouTubeConnectionService
+from .publishing.claude_cards import ClaudeCardService
 from .publishing.image_delivery import HTTPSImageDelivery
 from .publishing.image_generation import ImageGenerationService
 from .publishing.image_posts import ImagePostService
@@ -68,7 +69,7 @@ def _recover_intelligence_runs(sessions: sessionmaker[Session], data_dir: Path) 
     """Do not interrupt intelligence owned by another active Autopilot worker."""
     try:
         with FileLock(str(data_dir / "autopilot.lock")).acquire(timeout=0), sessions.begin() as session:
-            for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.status == "running", IntelligenceRun.kind != "feed_image")):
+            for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.status == "running", IntelligenceRun.kind.notin_(("feed_image", "feed_card")))):
                 run.status, run.message, run.finished_at = (
                     "interrupted",
                     "이전 실행이 중단되었습니다. 명시적으로 다시 실행하세요.",
@@ -120,9 +121,12 @@ def create_app(
     ai_keys = AIKeyStore(settings.data_dir)
     api_keys = {"openai": ai_keys, "claude_api": AnthropicKeyStore(settings.data_dir)}
     image_generation = ImageGenerationService(sessions, settings.data_dir, ai_keys)
+    claude_cards = ClaudeCardService(sessions, settings.data_dir, api_keys["claude_api"], image_generation)
+    claude_cards.recover()
+    image_generation.cards = claude_cards
     image_generation.recover()
     image_posts = ImagePostService(sessions, settings.data_dir, instagram,
-                                   generation=image_generation,
+                                   generation=image_generation, cards=claude_cards,
                                    delivery=HTTPSImageDelivery(sessions, settings.data_dir))
     image_posts.recover()
     autopilot_backend = PipelineBackend(
@@ -172,6 +176,7 @@ def create_app(
     app.state.autopilot_backend = autopilot_backend
     app.state.ai_keys = ai_keys
     app.state.api_keys = api_keys
+    app.state.claude_cards = claude_cards
     app.state.image_generation, app.state.image_posts = image_generation, image_posts
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 

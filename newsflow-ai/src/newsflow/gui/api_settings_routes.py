@@ -6,6 +6,7 @@ from newsflow.intelligence.api_connection import check_api_connection, check_cla
 from newsflow.intelligence.api_search_check import check_api_search, read_search_check
 from newsflow.intelligence.api_settings import (
     APIPolicyError,
+    acknowledge_unknown_analysis,
     first_search_readiness,
     invalidate_api_verification,
     save_api_settings,
@@ -16,6 +17,18 @@ from newsflow.intelligence.settings import SettingsError, read_settings, validat
 from .routes import go
 
 router = APIRouter()
+
+
+@router.post("/api-settings/{provider}/acknowledge-unknown-analysis")
+def acknowledge_analysis(request: Request, provider: str, reservation_id: str = Form(""),
+                         fingerprint: str = Form(""), consent: bool = Form(False)):
+    _store(request, provider)
+    try:
+        acknowledge_unknown_analysis(request.app.state.sessions, provider, reservation_id=reservation_id,
+                                     fingerprint=fingerprint, consent=consent)
+    except APIPolicyError as exc:
+        raise HTTPException(422, str(exc)) from None
+    return go("/simple-settings?saved=analysis-ack#selected-ai")
 
 
 @router.post("/api-settings/{provider}/check")
