@@ -16,7 +16,7 @@
 | Autopilot 연결 | AI 장면 승인을 기다리는 상태로 유지. 합성 완료 전 진행 버튼 비활성·서버에서도 422. 같은 대본 수정·길이·제작 선택의 완성 MP4만 기존 최종 영상 검토·게시 초안 흐름에 재사용 |
 | Instagram 기본 피드 | 기사/저장 대본 원고, 제목·핵심 내용·출처를 프로그램에서 정확히 렌더링한 1080×1350 JPG 1장. OpenAI 이미지 호출 0회. 계정 없이 저장·미리보기·다운로드 가능 |
 | OpenAI 피드 | 뉴스 분석 Provider와 독립된 명시적 선택·동의. 기존 Image API 어댑터로 주제 배경 1장 생성 → 프로그램의 한글·숫자·출처 렌더링. `gpt-image-2.5-flare-2026-09-08`, 1024×1280, medium JPEG 계약 재사용. 원고 생성 API나 Claude 이미지 생성으로 표시하지 않음. 실패 시 기본 이미지로 자동 대체하지 않음 |
-| 단일 IMAGE 게시 | Facebook Login for Business의 계정·권한·Graph transport 재사용. HTTPS `image_url` 컨테이너 생성 → 명시적 처리 조회 → 별도 공개 게시. 게시 ID·링크·계정과 파일 SHA-256 기록. 로컬 MP4 직접 전송과 구분 |
+| 단일 IMAGE 게시 | 임시 공개 HTTPS JPG 업로드 동의와 Instagram 공개 게시 승인을 명확히 구분. Facebook Login for Business의 계정·권한·Graph transport 재사용. HTTPS `image_url` 컨테이너 생성 → 명시적 처리 조회 → 별도 공개 게시. 게시 ID·링크·계정과 파일 SHA-256 기록. 로컬 MP4 직접 전송과 구분 |
 | 임시 HTTPS 전달 | 이미지 전용 별도 서버/클라이언트 코드·DPAPI 설정. 검토한 JPG만 POST, 동일 해시 확인, HTTPS/DNS 고정/robots/SSRF 보호. 서버 미준비 시 외부 요청 전에 BLOCKED, 로컬 저장은 가능. 실제 배포·업로드 없음 |
 | 게시 보호 | Reels/YouTube 기존 코드는 재작성하지 않음. 피드와 동영상 기록 독립. 계정+파일 해시로 전송 전에 claim을 저장하고 실패·결과 불명·재시작 후 자동 중복 전송/게시 금지. 성공 ID를 링크 조회보다 먼저 저장 |
 
@@ -63,7 +63,19 @@ Carousel·다중 이미지 게시·새 영상/음성 엔진·새 계정 Provider
 
 ## Windows CI와 최종 상태
 
-Windows Python 3.12/3.14 변경 범위 CI: **진행 중**. 1차 코드 `0cd44b62381afa8dbf27efac436d7eca9ff74c1f`의 [통합 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39877722984)와, 후속 설정 표시·사전 점검 연결 보완의 최종 결과를 구분해 기록한다. 1차 3.12는 통과했고 3.14는 452 PASS / 1 FAIL(Chrome 전체 페이지 PNG 캡처 프로토콜 오류)이었다. 화면 동작·저장·외부 요청 차단 검사는 유지하고, Windows compositor의 캡처를 뷰포트 크기로 한정해 별도 변경 범위로 재검증한다. 실패 테스트를 삭제하거나 skip하지 않는다. 기존 Draft PR #35 유지, 신규 PR·main/기존 PR 병합 없음.
+| 검증 범위 · SHA | Windows Python 3.12.10 | Windows Python 3.14.8 | 근거 |
+|---|---|---|---|
+| 통합 제작·게시 · `6484fefcd05ac2c9616fc3bf849b6977ed76d714` | **454 PASS / 0 FAIL / 0 SKIP** | **454 PASS / 0 FAIL / 0 SKIP** | [통합 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39878041017) |
+| Chrome 캡처 보완 · `50ce7c33dd4f8d03229091be95307c9398910288` | **1 PASS** | **1 PASS** | [브라우저 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39878628548) |
+| 최종 피드 동의·로컬 저장·단일 게시·Chrome · `4075bf8c61cefc09edf7010dd1e8d99f9b1a21ae` | **25 PASS / 0 FAIL / 0 SKIP** | **25 PASS / 0 FAIL / 0 SKIP** | [최종 변경 범위 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39878850217) |
+
+각 작업의 Ruff·pip check PASS. warning 1건은 기존 Starlette/httpx deprecation이다. 이 수치는 서로 겹치는 변경 범위 테스트이므로 합산한 단일 전체 회귀 수치로 표시하지 않는다. 현재 본체는 통합 CI의 소스와 같고 이후 변경은 Chrome 증거 캡처·CI 인자 처리와 임시 공개 이미지 전달 동의 문구/검사뿐이다. 마지막 보고서 커밋은 문서·합성 증거만 갱신한다.
+
+중간 실패도 보존한다. [1차 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39877722984)는 3.12 453 PASS, 3.14 452 PASS / 1 FAIL(Chrome 전체 페이지 PNG 캡처 프로토콜 오류)이었다. 기능 검사를 유지하고 캡처 범위를 뷰포트로 고정했다. 이후 [브라우저 범위 실행](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39878403256)은 PowerShell이 단일 테스트 경로를 문자로 나누어 pytest가 시작하지 못했다. 배열 인자를 수정한 위 브라우저 CI와 최종 변경 범위 CI가 모두 통과했다. 실패 테스트 삭제·임의 skip·유료 생성 재시도는 없다.
+
+원본 체크아웃은 `codex/newsflow-local-d4dc20f` / `027644730c04b6b977baa9c4ede3eeb56115e61b`를 유지한다. 기존 로컬 Claude 진단 보완 3개는 원본에 그대로 남겨 두었고 운영 코드에 새 코드를 적용하지 않았다. 별도 검증 소스 폴더만 추가했다. 실제 운영 적용 전에는 해당 로컬 보완과 운영 브랜치의 차이를 보존·결합 검토해야 한다.
+
+기존 Draft PR #35 유지, 신규 PR·main/기존 PR 병합 없음. Codex Cloud 자체 실행은 미수행이며 Windows 격리 개발·GitHub Windows runner 결과를 구분한다. 기존 전체 회귀 **57 FAIL은 미해결 기록으로 유지**한다.
 
 ## 실사용에 남은 필수 조건
 

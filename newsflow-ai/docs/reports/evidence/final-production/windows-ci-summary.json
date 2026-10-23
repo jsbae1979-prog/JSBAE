@@ -1,0 +1,71 @@
+{
+  "date_kst": "2026-10-23",
+  "repository": "jsbae1979-prog/JSBAE",
+  "pr": 35,
+  "draft": true,
+  "base_sha": "3c5230942466a87e5bc191961538e9bbccddc90b",
+  "integrated_sha": "6484fefcd05ac2c9616fc3bf849b6977ed76d714",
+  "integrated_run": 39878041017,
+  "integrated_results": {
+    "3.12.10": {
+      "passed": 454,
+      "failed": 0,
+      "skipped": 0
+    },
+    "3.14.8": {
+      "passed": 454,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "browser_sha": "50ce7c33dd4f8d03229091be95307c9398910288",
+  "browser_run": 39878628548,
+  "browser_results": {
+    "3.12.10": {
+      "passed": 1
+    },
+    "3.14.8": {
+      "passed": 1
+    }
+  },
+  "latest_changed_range_sha": "4075bf8c61cefc09edf7010dd1e8d99f9b1a21ae",
+  "latest_run": 39878850217,
+  "latest_results": {
+    "3.12.10": {
+      "passed": 25,
+      "failed": 0,
+      "skipped": 0
+    },
+    "3.14.8": {
+      "passed": 25,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "ruff": "PASS",
+  "pip_check": "PASS",
+  "warning": "existing Starlette/httpx deprecation",
+  "original_full_suite_failures_preserved": 57,
+  "full_suite_repeated": false,
+  "paid_api_calls": 0,
+  "real_oauth_or_sns_calls": 0,
+  "deployed_or_uploaded_images": false,
+  "operating_app_restarted": false,
+  "operating_data_modified": false,
+  "human_voice_quality": "NOT VERIFIED",
+  "real_vendor_models_and_billing": "NOT VERIFIED",
+  "feed_live_publishing": "BLOCKED until HTTPS delivery infrastructure and actual Meta setup/approval",
+  "intermediate_failures": [
+    {
+      "run": 39877722984,
+      "python": "3.14",
+      "passed": 452,
+      "failed": 1,
+      "cause": "full-page Chrome capture protocol error"
+    },
+    {
+      "run": 39878403256,
+      "cause": "single test path incorrectly expanded by CI shell; corrected, never skipped"
+    }
+  ]
+}
