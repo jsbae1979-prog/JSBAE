@@ -25,7 +25,9 @@
 - 기존 실제 응답 #54 JSON은 읽기 전용으로만 확인했다. 새 계약을 메모리에서 대조했을 때 4장면의 글자 초과와 두 중간 장면의 문장 수 초과를 찾았다. 전후 원본 파일 SHA-256은 동일하며 실제 초안 #10·분석 #50·기존 실행 기록을 수정하지 않았다.
 - 전체 회귀는 실행하지 않았으며 기존 57 FAIL 기록을 보존한다. 테스트 삭제·skip·실계정 키 사용·보안 검사 완화는 없다.
 
-Windows 로컬 Python **3.14.7** 변경 범위 **291 PASS**, Ruff(`src tests tools`)·pip check PASS. 초기 113건/290건과 최종 작업 속도 전달 검증 76건은 중복 범위이므로 합산하지 않는다. Windows 3.12/3.14 CI 결과와 구현 SHA는 검증 후 확정한다.
+Windows 로컬 Python **3.14.7** 변경 범위 **291 PASS**, Ruff(`src tests tools`)·pip check PASS. 초기 113건/290건과 최종 작업 속도 전달 검증 76건은 중복 범위이므로 합산하지 않는다.
+
+Windows CI Python **3.12.10 / 3.14.8 각각 291 PASS**, Ruff·pip check PASS. 각각 기존 Starlette/httpx deprecation warning 1건, 실패·skip 0. [최종 코드 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39911345234)는 구현 SHA `e5486ab83cff143231aebaa8724c87b715ca0959`를 검증했다. 3.12 job `120274829746`, 3.14 job `120274829947`. [비밀정보 없는 요약](evidence/narration-characters/windows-ci.json). 후속 커밋은 보고서와 CI 요약만 확정하므로 동일 CI를 반복하지 않는다. PR #35는 Draft·미병합 유지이며 새 PR·main/다른 PR 병합은 없다.
 
 ## 남은 작업
 
