@@ -61,12 +61,29 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           .venv/Scripts/python -m pytest -q -rs --tb=short -p claude_compat_safety --basetemp=C:/nf-character-${{ matrix.python }} --junitxml=validation-output/character-windows.xml tests/test_character_shorts.py tests/test_character_media.py tests/test_image_posts.py tests/test_gui.py::test_html_escape tests/test_gui.py::test_partial_and_failures_keep_data_no_secrets tests/test_gui.py::test_cross_coordinator_and_crash_recovery
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Stage only synthetic media inside the workspace drive
+        if: always()
+        run: |
+          $characterBase = [System.IO.Path]::GetFullPath('C:/nf-character-${{ matrix.python }}')
+          $characterArtifacts = Join-Path $PWD 'validation-output/character-media'
+          New-Item -ItemType Directory -Path $characterArtifacts -Force | Out-Null
+          $characterIndex = 0
+          Get-ChildItem -LiteralPath $characterBase -Recurse -File -Filter 'final.mp4' -ErrorAction SilentlyContinue | ForEach-Object {
+            if (-not $_.FullName.StartsWith($characterBase + '\', [System.StringComparison]::OrdinalIgnoreCase)) { throw 'Unexpected artifact path' }
+            $characterIndex += 1
+            $characterCase = Join-Path $characterArtifacts "case-$characterIndex"
+            New-Item -ItemType Directory -Path $characterCase | Out-Null
+            Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $characterCase 'final.mp4') -ErrorAction Stop
+            $characterReview = Join-Path $_.DirectoryName 'review.json'
+            if (Test-Path -LiteralPath $characterReview) {
+              Copy-Item -LiteralPath $characterReview -Destination (Join-Path $characterCase 'review.json') -ErrorAction Stop
+            }
+          }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: character-synthetic-${{ matrix.python }}
           path: |
             newsflow-ai/validation-output/character-windows.xml
-            C:/nf-character-${{ matrix.python }}/test_three_synthetic*/**/final.mp4
-            C:/nf-character-${{ matrix.python }}/test_three_synthetic*/**/review.json
+            newsflow-ai/validation-output/character-media/**
           retention-days: 7

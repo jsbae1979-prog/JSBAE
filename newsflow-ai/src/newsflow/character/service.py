@@ -45,7 +45,8 @@ class CharacterService:
         if not isinstance(job_id,str) or not re.fullmatch('[a-f0-9]{32}',job_id):
             raise CharacterError()
         path = self.root/job_id
-        if path.is_symlink() or not path.resolve().is_relative_to(self.root.resolve()):
+        if (self.root.is_symlink() or self.root.is_junction() or path.is_symlink() or path.is_junction()
+                or not path.resolve().is_relative_to(self.root.resolve())):
             raise CharacterError()
         return path
 
@@ -79,6 +80,8 @@ class CharacterService:
         os.replace(temp,path)
 
     def lock(self):
+        if self.root.is_symlink() or self.root.is_junction():
+            raise CharacterError()
         self.root.mkdir(parents=True,exist_ok=True)
         return FileLock(str(self.root/'character.lock'),timeout=0)
 
@@ -142,8 +145,12 @@ class CharacterService:
                     story=Storyboard.model_validate(story)
             except Exception:  # noqa: BLE001 - persist a stopped state without secret supplier diagnostics
                 job['state']='script_failed'
+                usage=self.writer.last_usage
+                response_known=(isinstance(usage,dict) and all(
+                    type(usage.get(k)) is int for k in ['prompt_tokens','completion_tokens']))
+                job['response_received']=response_known
                 self.save(job)
-                self.budget.finish(reservation.id,status='unknown',usage=self.writer.last_usage)
+                self.budget.finish(reservation.id,status='failed' if response_known else 'unknown',usage=usage)
                 raise CharacterError('provider') from None
             self.budget.finish(reservation.id,status='success',usage=self.writer.last_usage)
             job['script']=story.model_dump()
@@ -170,6 +177,8 @@ class CharacterService:
             self.save(job)
             try:
                 cachefile=self.root/'references.json'
+                if cachefile.is_symlink() or (cachefile.is_file() and cachefile.stat().st_size>1000000):
+                    raise CharacterError()
                 cache=json.loads(cachefile.read_text(encoding='utf8')) if cachefile.is_file() else {}
                 key_id=hashlib.sha256(self.video.credential().encode()).hexdigest()
                 cache_id=fingerprint([job['reference_sha256'],key_id])

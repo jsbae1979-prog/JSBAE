@@ -150,6 +150,9 @@ def test_claude_invalid_json_stops_without_second_request(setup,monkeypatch):
     assert 'SECRET' not in str(e.value)
     with pytest.raises(CharacterError):setup.service.write(i,consent=True)
     assert setup.writer.calls==1 and setup.video.calls==0
+    with setup.sessions() as session:
+        record=session.scalar(select(APIRequestReservation))
+        assert record.status=='failed'  # A received response with usage is not a transport timeout.
 
 
 def test_explicit_consents_and_original_reservations_preserved(setup):

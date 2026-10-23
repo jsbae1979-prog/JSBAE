@@ -24,7 +24,9 @@ Higgsfield는 기존 HTTPS 인증·DNS pinning·안전 다운로드·ffprobe 검
 
 ## 검증
 
-로컬 Windows Python 3.14.7: 초기 변경 범위 **59 PASS**, Ruff PASS. 여기에 공급사 공식 6종 상태 계약 검증을 추가했다. 최종 Windows 3.12/3.14 변경 범위 CI 결과는 후속 기록한다. 테스트는 외부 HTTP와 예약/자동 실행을 차단하는 기존 guard 및 Fake 응답만 사용한다. 실제 API 키·사용자 DB를 테스트에 넣지 않는다.
+로컬 Windows Python 3.14.7: 최종 변경 범위 **65 PASS**, Ruff·pip check PASS. 수신 응답/사용량이 있는 형식 실패는 `failed`, 응답 불명은 `unknown`으로 구분하고 자동 재전송하지 않는다. 캐릭터 폴더의 symlink/junction과 변조된 업로드 캐시도 차단한다. 테스트는 외부 HTTP와 예약/자동 실행을 차단하는 기존 guard 및 Fake 응답만 사용한다. 실제 API 키·사용자 DB를 테스트에 넣지 않는다.
+
+첫 Windows CI `39930517695`의 Python 3.12/3.14 테스트 단계는 각각 **69 PASS**였으나, artifact 업로드가 C: 테스트 폴더와 D: workspace의 공통 루트를 잡지 못해 두 job이 마지막 단계에서 실패했다. 테스트 실패로 표시하거나 성공 job으로 숨기지 않는다. 합성 MP4·검토 JSON만 workspace 드라이브로 복사한 뒤 업로드하도록 수정했다. 최종 CI 결과는 후속 기록한다.
 
 확대 점검 중 `test_gui.py::test_render`의 `/settings` 제목 기대값이 현행 화면과 다른 기존 실패를 확인했다. 기준 SHA 4164077을 git archive로 분리하고 실제 import 경로를 확인한 뒤 동일 실패(2 PASS 뒤 1 FAIL)를 재현했다. 기존 실패를 삭제/skip하거나 화면을 되돌리지 않았다. 이번 변경 범위는 캐릭터 테스트, 단일 이미지 게시 테스트 및 HTML escape·수집 실패 보존·복구 검사로 한정했다. 기존 전체 회귀 57 FAIL 기록은 그대로이며 전체 회귀 PASS를 주장하지 않는다.
 
