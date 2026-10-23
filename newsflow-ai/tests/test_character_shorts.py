@@ -148,7 +148,7 @@ def test_claude_invalid_json_stops_without_second_request(setup,monkeypatch):
     monkeypatch.setattr(setup.writer,'write',invalid)
     with pytest.raises(CharacterError,match='공급사') as e:setup.service.write(i,consent=True)
     assert 'SECRET' not in str(e.value)
-    with pytest.raises(CharacterError):setup.service.write(i,consent=True)
+    with pytest.raises(CharacterError):setup.service.write(i,consent=False)
     assert setup.writer.calls==1 and setup.video.calls==0
     with setup.sessions() as session:
         record=session.scalar(select(APIRequestReservation))
@@ -338,3 +338,49 @@ def test_character_upload_preserves_other_forms_limits_and_origin(client,app,set
     assert client.post('/character',data=data,files=two).status_code==400
     assert client.post('/character',data={**data,'pad':'x'*(11*1024*1024)},files=f).status_code==413
     assert setup.service.listing()==[] and setup.writer.calls==setup.video.calls==0
+
+
+def test_known_failed_scene_requires_new_quote_and_consent_and_stops_after_two(setup):
+    i=prepared(setup)
+    s=setup.service
+    s.submit(i,consent=True,quote_hash=s.read(i)['quote_hash'])
+    setup.video.states='failed'
+    for attempt in [2,3]:
+        with pytest.raises(CharacterError):s.check(i,consent=True)
+        with pytest.raises(CharacterError):s.prepare_retry(i)
+        s.prepare_retry(i,consent=True)
+        job=s.read(i)
+        with pytest.raises(CharacterError):s.retry_scene(i,quote_hash=job['retry_hash'])
+        s.retry_scene(i,consent=True,quote_hash=job['retry_hash'])
+        current=s.read(i)['scenes'][0]
+        assert current['attempt']==attempt and len(current['history'])==attempt-1
+        assert current['history'][-1]['handle']['request_id']!=current['handle']['request_id']
+    with pytest.raises(CharacterError):s.check(i,consent=True)
+    with pytest.raises(CharacterError):s.prepare_retry(i,consent=True)
+    assert setup.video.calls==5 and s.read(i)['quote_total_usd']=='2.50'
+    assert len(s.read(i)['quote_approvals'])==3
+
+
+@pytest.mark.parametrize('state',['nsfw','canceled','unknown'])
+def test_moderation_cancellation_or_unknown_never_reenabled_by_retry(setup,state):
+    i=prepared(setup)
+    j=setup.service.read(i);j['state']='scene_review';j['scenes'][0]['state']=state
+    setup.service.save(j)
+    with pytest.raises(CharacterError):setup.service.prepare_retry(i,consent=True)
+    assert setup.video.calls==0
+
+
+def test_known_script_format_failure_can_only_get_two_separately_approved_new_intents(setup,monkeypatch):
+    i=create(setup)
+    def invalid(*args):
+        setup.writer.calls+=1
+        raise ValueError('synthetic format error')
+    monkeypatch.setattr(setup.writer,'write',invalid)
+    for _ in range(3):
+        with pytest.raises(CharacterError):setup.service.write(i,consent=True)
+    with pytest.raises(CharacterError):setup.service.write(i,consent=True)
+    with setup.sessions() as session:
+        rows=list(session.scalars(select(APIRequestReservation)))
+        assert len(rows)==3 and all(r.status=='failed' for r in rows)
+        assert len({r.request_id for r in rows})==3
+    assert setup.writer.calls==3

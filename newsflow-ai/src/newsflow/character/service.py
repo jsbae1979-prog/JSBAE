@@ -32,6 +32,13 @@ def fingerprint(value):
     return hashlib.sha256(json.dumps(value,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
 
+def day_exposure(job, day):
+    rows=job.get('quote_approvals')
+    if rows is not None:
+        return sum((amount(r['usd']) for r in rows if r['day']==day),Decimal(0))
+    return amount(job['quote_total_usd']) if job.get('approved_day')==day else Decimal(0)
+
+
 class CharacterService:
     def __init__(self, data_dir, sessions, keys, *, writer=None, video=None, budget=None, composer=None):
         self.root = Path(data_dir)/'character'
@@ -129,13 +136,17 @@ class CharacterService:
         self.consent(consent)
         with self.lock():
             job=self.read(identifier)
-            if job['state']!='needs_script':
+            attempt=job.get('script_attempts',0)+1
+            retry_known=(job['state']=='script_failed' and job.get('response_received') is True and attempt<=3)
+            if job['state']!='needs_script' and not retry_known:
                 raise CharacterError('blocked')
             options=Options(model=job['claude_model'],timeout=300,max_tokens=3000)
-            reservation=self.budget.reserve(provider='claude_api',request_id='character:'+identifier,
+            request_id='character:'+identifier+(':'+str(attempt) if attempt>1 else '')
+            reservation=self.budget.reserve(provider='claude_api',request_id=request_id,
                 kind='script',model=options.model,max_output_tokens=options.max_tokens,key_store=self.keys)
             job['state']='writing'
-            job['events'].append({'stage':'claude','at':now().isoformat(),'request_id':'character:'+identifier})
+            job['script_attempts']=attempt
+            job['events'].append({'stage':'claude','at':now().isoformat(),'request_id':request_id})
             self.save(job)
             try:
                 payload={'duration':30,'topic':job['topic'],'character':job['character'],
@@ -224,17 +235,18 @@ class CharacterService:
                 raise CharacterError('budget')
             # Official supplier quotes only, never estimated token-dollar reservations or actual bills.
             day=(now()+timedelta(hours=9)).date().isoformat()
-            used=sum((amount(j['quote_total_usd']) for j in self.listing()
-                      if j.get('approved_day')==day),start=Decimal(0))
+            used=sum((day_exposure(j,day) for j in self.listing()),start=Decimal(0))
             total=amount(job['quote_total_usd'])
             if used+total>amount(job['day_limit']) or total>amount(job['episode_limit']):
                 raise CharacterError('budget')
             # Unknown submissions continue consuming this approved quote exposure; no automatic release.
             job['approved_day']=day
+            job['quote_approvals']=[{'day':day,'usd':str(total),'scope':'initial'}]
             job['state']='generating'
             self.save(job)
             for scene in job['scenes']:
                 scene['state']='submitting'
+                scene['submitted_at']=now().isoformat()
                 self.save(job)
                 try:
                     scene['handle']=self.video.submit_scene(scene['payload'],scene['idempotency_key'])
@@ -264,6 +276,7 @@ class CharacterService:
                     status=self.video.check(scene['handle'])
                     if status.state in {'failed','nsfw','canceled'}:
                         scene['state']=status.state
+                        scene['finished_at']=now().isoformat()
                         job['state']='scene_review'
                         self.save(job)
                         raise CharacterError('blocked')
@@ -276,6 +289,7 @@ class CharacterService:
                         if info['duration']<scene['payload']['duration']-2:
                             raise CharacterError('media')
                         scene.update(state='downloaded',file=path.name,sha256=digest(path),media=info)
+                        scene['finished_at']=now().isoformat()
                         self.save(job)
                 except CharacterError:
                     raise
@@ -286,6 +300,69 @@ class CharacterService:
             if all(s['state']=='downloaded' for s in job['scenes']):
                 job['state']='clips_review'
                 self.save(job)
+
+    def prepare_retry(self, identifier, *, consent=False):
+        self.consent(consent)
+        with self.lock():
+            job=self.read(identifier)
+            pending=next((s for s in job['scenes'] if s['state']=='failed' and s['attempt']<3),None)
+            if job['state']!='scene_review' or pending is None:
+                raise CharacterError('blocked')
+            job['state']='retry_quoting'
+            self.save(job)
+            try:
+                quote=str(amount(self.video.estimate(pending['payload'])))
+                retry={'position':pending['position'],'quote_usd':quote,'at':now().isoformat(),
+                       'key_id':hashlib.sha256(self.video.credential().encode()).hexdigest(),
+                       'original':fingerprint(pending)}
+                job['retry']=retry
+                job['retry_hash']=fingerprint(retry)
+                job['state']='retry_quoted'
+                self.save(job)
+            except Exception:  # noqa: BLE001 - fixed public diagnostics, no supplier body
+                job['state']='retry_quote_failed'
+                self.save(job)
+                raise CharacterError('provider') from None
+
+    def retry_scene(self, identifier, *, consent=False, quote_hash=''):
+        self.consent(consent)
+        with self.lock():
+            job=self.read(identifier)
+            if job['state']!='retry_quoted' or quote_hash!=job['retry_hash']:
+                raise CharacterError('blocked')
+            retry=job['retry']
+            scene=next(s for s in job['scenes'] if s['position']==retry['position'])
+            if (fingerprint(retry)!=quote_hash or fingerprint(scene)!=retry['original']
+                    or scene['state']!='failed' or scene['attempt']>=3
+                    or now()-datetime.fromisoformat(retry['at'])>timedelta(minutes=15)
+                    or hashlib.sha256(self.video.credential().encode()).hexdigest()!=retry['key_id']):
+                raise CharacterError('blocked')
+            day=(now()+timedelta(hours=9)).date().isoformat()
+            exposure=sum((day_exposure(j,day) for j in self.listing()),Decimal(0))
+            extra=amount(retry['quote_usd'])
+            if (amount(job['quote_total_usd'])+extra>amount(job['episode_limit'])
+                    or exposure+extra>amount(job['day_limit'])):
+                raise CharacterError('budget')
+            history=scene.get('history',[])
+            history.append({k:v for k,v in scene.items() if k!='history'})
+            scene.update(history=history,attempt=scene['attempt']+1,idempotency_key=uuid4().hex,
+                         state='submitting',quote_usd=retry['quote_usd'],submitted_at=now().isoformat())
+            scene.pop('handle',None)
+            scene.pop('finished_at',None)
+            job['quote_total_usd']=str(amount(job['quote_total_usd'])+extra)
+            job['quote_approvals'].append({'day':day,'usd':str(extra),'scope':'scene_retry',
+                                           'position':scene['position'],'attempt':scene['attempt']})
+            job['state']='generating'
+            self.save(job)
+            try:
+                scene['handle']=self.video.submit_scene(scene['payload'],scene['idempotency_key'])
+                scene['state']='submitted'
+                self.save(job)
+            except Exception:  # noqa: BLE001 - retain the new intent and prior terminal receipt
+                scene['state']='unknown'
+                job['state']='submission_unknown'
+                self.save(job)
+                raise CharacterError('blocked') from None
 
     def render(self, identifier, *, reviewed=False):
         self.consent(reviewed)
@@ -315,7 +392,11 @@ class CharacterService:
             self.save(job)
             review={'title':job['script']['title'],'output':output,'model':job['model'],'made_for_kids':False,
                     'quote_total_usd':job['quote_total_usd'],'reported_billed_usd':None,
-                    'scenes':[{k:s[k] for k in ['position','file','sha256','state','attempt','quote_usd']} for s in job['scenes']],
+                    'scenes':[{**{k:s[k] for k in ['position','file','sha256','state','attempt','quote_usd']},
+                               'history':[{**{k:old.get(k) for k in ['attempt','state','quote_usd','submitted_at',
+                                                                    'finished_at']},
+                                           'request_id':old.get('handle',{}).get('request_id')}
+                                          for old in s.get('history',[])]} for s in job['scenes']],
                     'checklist':['캐릭터 일관성','자막·순서·30초','AI 생성 표시','아동용 아님 확인',
                                  '음악은 플랫폼에서 직접 선택','최근 웃음 구조 반복 여부'],
                     'human_review':'NOT VERIFIED','automatic_upload':False}
