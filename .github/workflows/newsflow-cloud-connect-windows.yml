@@ -75,10 +75,10 @@ jobs:
         run: |
           $changedPaths = @(git diff --name-only HEAD^ HEAD)
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $otherChanges = @($changedPaths | Where-Object { $_ -notmatch '^(newsflow-ai/tests/test_final_workspace_browser\.py$|newsflow-ai/docs/|\.github/workflows/newsflow-cloud-connect-windows\.yml$)' })
-          # Screenshot-only follow-up: rerun its full functional browser scenario, not paid-media Fake renders.
+          $otherChanges = @($changedPaths | Where-Object { $_ -notmatch '^(newsflow-ai/tests/(test_final_workspace_browser|test_image_posts)\.py$|newsflow-ai/src/newsflow/gui/templates/image_posts\.html$|newsflow-ai/docs/|\.github/workflows/newsflow-cloud-connect-windows\.yml$)' })
+          # Browser/consent-copy follow-up: retain image publication contracts and the full browser scenario.
           $targets = @(if ($changedPaths.Count -gt 0 -and $otherChanges.Count -eq 0) {
-            @('tests/test_final_workspace_browser.py')
+            @('tests/test_final_workspace_browser.py', 'tests/test_image_posts.py')
           } else {
             @('tests/test_final_production.py', 'tests/test_final_media.py', 'tests/test_final_workspace_browser.py', 'tests/test_image_posts.py', 'tests/test_image_generation.py', 'tests/test_image_delivery.py', 'tests/test_production_choices.py', 'tests/test_voice_engines.py', 'tests/test_ai_video_provider.py', 'tests/test_ai_video_service.py::test_full_flow_card_local_and_generated_scene_to_composition', 'tests/test_ai_video_service.py::test_unchecked_confirmation_is_refused', 'tests/test_ai_video_service.py::test_rate_limited_submit_is_unknown_and_never_requeued', 'tests/test_ai_video_service.py::test_recover_turns_interrupted_submission_into_unknown_and_never_resubmits', 'tests/test_unified_publishing.py::test_one_platform_failure_does_not_cancel_other_or_replay_success')
           })

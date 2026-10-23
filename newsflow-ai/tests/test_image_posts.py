@@ -341,3 +341,16 @@ def test_migration_adds_only_image_tables_and_preserves_existing_data(tmp_path, 
         assert all(connection.exec_driver_sql(f'SELECT * FROM "{t}"').all() == rows
                    for t, rows in before.items())
     engine.dispose()
+
+
+def test_temporary_public_image_upload_is_explicit_in_the_existing_consent(app, client, monkeypatch):
+    identifier = make_post(app)
+    monkeypatch.setattr(app.state.instagram, "status", lambda: {"accounts": [
+        {"id": 1, "label": "합성 계정", "ready": True}]})
+    response = client.get(f"/image-posts?post_id={identifier}")
+    assert response.status_code == 200
+    assert "인증 없이 접근 가능한 임시 URL에 업로드됨을 승인합니다" in response.text
+    assert "Instagram 공개 게시는 별도로 승인합니다" in response.text
+    assert f'action="/image-posts/{identifier}/prepare"' in response.text
+    assert 'name="consent" value="true" required' in response.text
+    assert app.state.image_posts.deliveries(identifier) == []
