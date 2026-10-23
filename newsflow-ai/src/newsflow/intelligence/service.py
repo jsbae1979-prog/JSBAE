@@ -533,6 +533,8 @@ class IntelligenceService:
         trend_snapshot: dict | None = None,
         curation_top_k: int = 10,
         script_prompt_version: str | None = None,
+        comparison_approval_id: int | None = None,
+        comparison_step: str | None = None,
     ) -> int:
         if mode not in MODES or (mode != "offline" and not consent):
             raise IntelligenceError("외부 AI 분석에는 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
@@ -540,6 +542,12 @@ class IntelligenceService:
             raise IntelligenceError("API 단계별 비용 보호가 연결되지 않아 실행을 차단했습니다.", "ai_budget", False)
         options = options or Options()
         base_options = options
+        comparison_options = {}
+        if comparison_approval_id is not None or comparison_step is not None:
+            if (mode != 'claude_api' or type(comparison_approval_id) is not int or comparison_approval_id < 1
+                    or not isinstance(comparison_step, str)):
+                raise IntelligenceError('비교 승인 식별자·Provider를 확인하세요.', 'ai_consent', False)
+            comparison_options = {'comparison_approval_id': comparison_approval_id, 'comparison_step': comparison_step}
         selected_version = prompt_version(selected=script_prompt_version) if mode in {'openai', 'claude_api'} else 'v1'
         options = prompt_options(options, 'analysis', selected_version)
         instruction_text = prompt_instruction('analysis', version=selected_version)
@@ -578,7 +586,7 @@ class IntelligenceService:
                 kind="analysis",
                 status="running",
                 provider=mode,
-                options={**vars(options), 'script_prompt_version': selected_version,
+                options={**vars(options), **comparison_options, 'script_prompt_version': selected_version,
                          'base_max_tokens': base_options.max_tokens,
                          'output_token_allowance': options.max_tokens-base_options.max_tokens},
                 evidence=payload,
@@ -689,6 +697,8 @@ class IntelligenceService:
         script_audience: str = "general",
         shortform_profile: dict | None = None,
         script_prompt_version: str | None = None,
+        comparison_approval_id: int | None = None,
+        comparison_step: str | None = None,
     ) -> int:
         from dataclasses import asdict
 
@@ -706,6 +716,12 @@ class IntelligenceService:
             raise IntelligenceError("외부 API 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
         options = options or Options()
         base_options = options
+        comparison_options = {}
+        if comparison_approval_id is not None or comparison_step is not None:
+            if (mode != 'claude_api' or type(comparison_approval_id) is not int or comparison_approval_id < 1
+                    or not isinstance(comparison_step, str)):
+                raise IntelligenceError('비교 승인 식별자·Provider를 확인하세요.', 'ai_consent', False)
+            comparison_options = {'comparison_approval_id': comparison_approval_id, 'comparison_step': comparison_step}
         selected_version = prompt_version(selected=script_prompt_version) if mode in {'openai', 'claude_api'} else 'v1'
         options = prompt_options(options, 'script', selected_version)
         instruction_text = prompt_instruction('script', version=selected_version)
@@ -787,7 +803,7 @@ class IntelligenceService:
                 provider=mode,
                 status="running",
                 evidence=evidence,
-                options={**vars(options), "duration": duration, "analysis_run_id": analysis_id,
+                options={**vars(options), **comparison_options, "duration": duration, "analysis_run_id": analysis_id,
                          'script_prompt_version': selected_version, 'base_max_tokens': base_options.max_tokens,
                          'output_token_allowance': options.max_tokens-base_options.max_tokens,
                          "presentation": chosen_presentation,

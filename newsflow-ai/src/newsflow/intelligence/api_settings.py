@@ -412,11 +412,13 @@ def _card_unknown_review(session, settings, rows, context):
 
 def _limit_reasons(settings: APISettings, rows: list[APIRequestReservation], now: datetime, *,
                    capability: str = "search", acknowledged: set[str] | None = None,
-                   script_exception: bool = False, rejected: set[str] | None = None) -> list[str]:
+                   script_exception: bool = False, rejected: set[str] | None = None,
+                   scoped_unknowns: set[str] | None = None) -> list[str]:
     reasons = []
     acknowledged = acknowledged or set()
     rejected = rejected or set()
-    if any(row.status == "reserved" or (row.status == "unknown" and row.id not in rejected and not (
+    scoped_unknowns = scoped_unknowns or set()
+    if any(row.status == "reserved" or (row.status == "unknown" and row.id not in rejected and row.id not in scoped_unknowns and not (
             (capability == "analysis" or script_exception) and row.id in acknowledged)) for row in rows):
         reasons.append("진행 중이거나 결과 불명인 API 요청이 있어 새 호출을 차단합니다.")
     monthly = sum((Decimal(row.estimated_usd or "0") for row in rows
@@ -664,15 +666,22 @@ class APIBudgetService:
                 if not review["token"] or card_review_token != review["token"]:
                     raise APISettingsError("뉴스·모델·결과 불명 기록이 변경되었습니다. 화면을 새로 확인하세요.")
                 card_ids = review["ids"]
+            from .comparison_approval import CONSUMED, authorize_step
+
+            comparison = authorize_step(session, settings, request_id, kind, rows, max_output_tokens)
             reasons = _limit_reasons(settings, rows, now, capability=kind, acknowledged=acknowledged,
                                      script_exception=script_approval is not None,
-                                     rejected=_confirmed_rejections(session, rows) | card_ids)
+                                     rejected=_confirmed_rejections(session, rows) | card_ids,
+                                     scoped_unknowns=set(comparison["unknown_ids"]) if comparison else None)
             if reasons:
                 raise APISettingsError(" / ".join(reasons))
             row = APIRequestReservation(id=uuid.uuid4().hex, request_id=request_id, provider=provider, kind=kind,
                                         model=model, status="reserved", reserved_usd="0", bounds=bounds,
                                         prices=prices, usage={}, test_only=self.test_only, created_at=now)
             session.add(row)
+            if comparison:
+                session.add(AuditLog(level='info', event=CONSUMED, message=json.dumps(
+                    comparison, separators=(',', ':'))))
             if card_ids:
                 session.add(AuditLog(level="info", event="api_feed_card_once_ack", message=json.dumps({
                     "scope": "new_feed_card_once", "request_id": request_id, "model": model,
@@ -722,6 +731,9 @@ class APIBudgetService:
             if status in ("cancelled", "unknown"):
                 row.status = "unknown"
             row.finished_at = utcnow()
+            from .comparison_approval import record_finished
+
+            record_finished(session, row)
 
 
 class FakeAPIBudgetService(APIBudgetService):
