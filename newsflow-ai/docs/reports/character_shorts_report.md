@@ -24,9 +24,9 @@ Higgsfield는 기존 HTTPS 인증·DNS pinning·안전 다운로드·ffprobe 검
 
 ## 검증
 
-로컬 Windows Python 3.14.7: 최종 변경 범위 **65 PASS**, Ruff·pip check PASS. 수신 응답/사용량이 있는 형식 실패는 `failed`, 응답 불명은 `unknown`으로 구분하고 자동 재전송하지 않는다. 캐릭터 폴더의 symlink/junction과 변조된 업로드 캐시도 차단한다. 테스트는 외부 HTTP와 예약/자동 실행을 차단하는 기존 guard 및 Fake 응답만 사용한다. 실제 API 키·사용자 DB를 테스트에 넣지 않는다.
+로컬 Windows Python 3.14.7: 최종 변경 범위 **70 PASS**, Ruff·pip check PASS. 수신 응답/사용량이 있는 형식 실패는 `failed`, 응답 불명은 `unknown`으로 구분하고 자동 재전송하지 않는다. 캐릭터 폴더의 symlink/junction과 변조된 업로드 캐시도 차단한다. 테스트는 외부 HTTP와 예약/자동 실행을 차단하는 기존 guard 및 Fake 응답만 사용한다. 실제 API 키·사용자 DB를 테스트에 넣지 않는다.
 
-첫 Windows CI `39930517695`의 Python 3.12/3.14 테스트 단계는 각각 **69 PASS**였으나, artifact 업로드가 C: 테스트 폴더와 D: workspace의 공통 루트를 잡지 못해 두 job이 마지막 단계에서 실패했다. 테스트 실패로 표시하거나 성공 job으로 숨기지 않는다. 합성 MP4·검토 JSON만 workspace 드라이브로 복사한 뒤 업로드하도록 수정했다. 수정 후 구현 SHA 7654048의 Windows CI 39930954335는 Python 3.12/3.14 각각 69 PASS 및 artifact 저장까지 성공했다. 이후 명시적 실패 재생성 범위 검증을 추가했으며 최종 결과는 후속 기록한다.
+첫 Windows CI `39930517695`의 Python 3.12/3.14 테스트 단계는 각각 **69 PASS**였으나, artifact 업로드가 C: 테스트 폴더와 D: workspace의 공통 루트를 잡지 못해 두 job이 마지막 단계에서 실패했다. 테스트 실패로 표시하거나 성공 job으로 숨기지 않는다. 합성 MP4·검토 JSON만 workspace 드라이브로 복사한 뒤 업로드하도록 수정했다. 수정 후 구현 SHA 7654048의 Windows CI 39930954335는 Python 3.12/3.14 각각 69 PASS 및 artifact 저장까지 성공했다. 최종 구현 SHA `5d60721126b9cfbe3ee1998bf0f3165521875913`의 [Windows CI 39931475676](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39931475676)는 Python 3.12.10 / 3.14.9 각각 **74 PASS**, Ruff·pip check PASS 및 합성 MP4·검토 JSON artifact 업로드까지 성공했다. 두 환경 모두 warning 1건은 Starlette TestClient의 httpx deprecation이며 실패·skip은 없다. [CI 요약](evidence/character-shorts/windows-ci.json). 마지막 보고서 저장 커밋은 런타임 코드를 바꾸지 않는다.
 
 확대 점검 중 `test_gui.py::test_render`의 `/settings` 제목 기대값이 현행 화면과 다른 기존 실패를 확인했다. 기준 SHA 4164077을 git archive로 분리하고 실제 import 경로를 확인한 뒤 동일 실패(2 PASS 뒤 1 FAIL)를 재현했다. 기존 실패를 삭제/skip하거나 화면을 되돌리지 않았다. 이번 변경 범위는 캐릭터 테스트, 단일 이미지 게시 테스트 및 HTML escape·수집 실패 보존·복구 검사로 한정했다. 기존 전체 회귀 57 FAIL 기록은 그대로이며 전체 회귀 PASS를 주장하지 않는다.
 
@@ -41,3 +41,5 @@ Windows CI의 가짜 공급사 클립으로 세 주제의 실제 로컬 MP4 합�
 5. 운영 적용·백업·재시작은 별도 승인 단계다. 기존 운영 인스턴스는 계속 4164077로 유지한다.
 
 공식 계약 확인: [Seedance 참조 영상](https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video), [업로드](https://docs.higgsfield.ai/docs/concepts/file-uploads), [견적·보관](https://docs.higgsfield.ai/docs/concepts/billing-and-retention), [idempotency](https://docs.higgsfield.ai/docs/concepts/idempotency). 문서상의 지원과 실제 계정 검증을 구분했다.
+
+운영 보존 확인: 원래 4164077의 소스 320개 파일, DB/WAL 원시 바이트, 보호 파일 28개 및 Sola WAV 해시가 같았다. 원본 SQLite 조회 0회, 키 복호화 0회, 캐릭터 운영 폴더 생성 0회이며 기존 서버 프로세스(43496)를 유지했다. 검증 중 운영 앱 적용·재시작을 하지 않았다. 참조 원본과 실계정 생성/품질·수동 게시 검수는 계속 미검증이다.
