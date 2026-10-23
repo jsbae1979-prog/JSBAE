@@ -122,7 +122,7 @@ def production_context(request) -> dict:
                     "available": False}
         catalog.append(selected)
     ai_gate = external_ready(sessions, request.app.state.ai_keys)
-    video_gate = video_readiness(sessions, request.app.state.video_ai.keys)
+    video_gate = video_readiness(sessions, request.app.state.video_ai.keys, reported=True)
     statuses = {
         "offline": _status("offline", "ready", "내장 기본 대본", "외부 전송 없이 분석·대본 생성", evidence="출처·대본의 사람 검토 필요"),
         "claude_code": _cli_status("claude_code", getattr(request.app.state, "claude_status", {})),
@@ -170,12 +170,12 @@ def production_context(request) -> dict:
     statuses["elevenlabs"] = _status("elevenlabs", "check" if el_ready else "setup",
         "키·음성 ID·사용 설정 있음" if el_ready else "키·음성 ID·사용 설정 확인 필요",
         "영상 제작마다 외부 전송 동의 필요 · 공급사 한도 확인 실패 시 호출 차단",
-        authentication="공급사 계정 상태 미확인", cost="무료 플랜 비상업용 · 공급사 한도와 로컬 한도 별도",
+        authentication="공급사 계정 상태 미확인", cost="무료 플랜 비상업용 · 확인된 공급사 사용량과 청구액 구분",
         evidence="계정 조회·음성 생성을 자동 실행하지 않습니다.", action="#selected-voice")
     statuses["higgsfield"] = _status("higgsfield", "configured" if video_gate["ready"] else "setup",
-        "모델·키·승인·예산 설정 통과" if video_gate["ready"] else " ".join(video_gate["reasons"]),
-        "장면별 계획·비용 승인 후만 생성 · 홈 자동 제작에서는 직접 실행하지 않음",
-        authentication="실제 API 동작 미검증", cost="유료 장면 생성 · 작업별·월별 비용 승인 유지",
+        "모델 규격·키·승인 준비 · 실제 계정 미검증" if video_gate["ready"] else " ".join(video_gate["reasons"]),
+        "전체 장면 계획·생성 승인·관계 검토 후 합성",
+        authentication="실제 API 동작 미검증", cost="유료 장면 생성 · 작업별 명시적 승인 · 사용량·청구액 미확인",
         action="#selected-video")
     binary_exists = True
     try:

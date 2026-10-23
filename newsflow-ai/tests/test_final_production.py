@@ -168,3 +168,24 @@ def test_full_ai_gui_defaults_and_empty_cost_confirmation(full):
         response=client.post(f'/video/ai/plans/{plan}/confirm',data={
             'csrf_token':csrf(client),'revision':rev(full,plan),'shown_total':'','confirmed':'true'},follow_redirects=False)
         assert response.status_code==303
+
+def test_current_status_and_preflight_do_not_require_guessed_money(full, monkeypatch):
+    from pathlib import Path
+
+    from newsflow.gui.production_status import production_context
+    from newsflow.video.ai.preflight import inspect_setup
+    keys = SimpleNamespace(status=lambda: {'configured': True}, key=lambda: 'syntheticid:syntheticsecret-value')
+    monkeypatch.setattr(full.service, 'keys', keys)
+    monkeypatch.setattr('newsflow.video.ai.preflight.FFmpegAdapter.check',
+                        lambda _: (Path('fake-ffmpeg'), Path('fake-probe'), 'test'))
+    report = inspect_setup(full.app.state.sessions, keys, reported=True)
+    assert report['local_ready'], report['checks']
+    assert report['actual_service'] == 'NOT VERIFIED' and report['new_reservations'] == 0
+    assert inspect_setup(full.app.state.sessions, keys)['local_ready'] is False  # preserved legacy contract
+    context = production_context(SimpleNamespace(app=full.app))
+    state = context['provider_statuses']['higgsfield']
+    assert state['status_code'] == 'configured'
+    assert '예산' not in state['configuration'] and '미검증' in state['configuration']
+    keys.status = lambda: {'configured': False}
+    assert not inspect_setup(full.app.state.sessions, keys, reported=True)['local_ready']
+    assert full.provider.calls == []

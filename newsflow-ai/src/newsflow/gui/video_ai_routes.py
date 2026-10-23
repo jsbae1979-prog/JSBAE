@@ -275,7 +275,7 @@ def start_preflight() -> RedirectResponse:
 
 @router.get("/video-ai-settings/preflight", response_class=HTMLResponse)
 def preflight(request: Request) -> HTMLResponse:
-    report = inspect_setup(request.app.state.sessions, _service(request).keys)
+    report = inspect_setup(request.app.state.sessions, _service(request).keys, reported=True)
     return page(request, "video_ai_preflight.html", active="simple-settings", report=report)
 
 

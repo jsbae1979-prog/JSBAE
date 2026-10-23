@@ -15,15 +15,15 @@ from .model_contracts import check_model_contract
 from .settings import ledger_valid, list_models, read_settings, readiness
 
 
-def inspect_setup(sessions: sessionmaker[Session], keys: VideoAIKeyStore) -> dict:
+def inspect_setup(sessions: sessionmaker[Session], keys: VideoAIKeyStore, *, reported: bool = False) -> dict:
     checks = []
 
     def add(name: str, status: str, detail: str) -> None:
         checks.append({"name": name, "status": status, "detail": detail})
 
     settings = read_settings(sessions)
-    gate = readiness(sessions, keys)
-    add("승인과 비용 한도", "PASS" if gate["ready"] else "FAIL",
+    gate = readiness(sessions, keys, reported=reported)
+    add("승인과 생성 설정" if reported else "승인과 비용 한도", "PASS" if gate["ready"] else "FAIL",
         "저장된 조건을 통과했습니다. 장면별 비용 확인은 별도로 필요합니다." if gate["ready"] else " ".join(gate["reasons"]))
     try:
         key = VideoAIKeyStore.validate(keys.key())
@@ -39,8 +39,9 @@ def inspect_setup(sessions: sessionmaker[Session], keys: VideoAIKeyStore) -> dic
         add("모델", "FAIL", "공식 문서를 확인한 모델·단가·길이·해상도를 등록하세요.")
     for index, model in enumerate(models, 1):
         status, detail = check_model_contract(model.path, model.durations, model.resolution)
-        if not model.usable:
-            status, detail = "FAIL", "모델의 문서 확인 또는 유효한 초당 단가가 없습니다."
+        from .production import model_ready
+        if not (model_ready(model) if reported else model.usable):
+            status, detail = "FAIL", ("모델의 공식 입력 규격 확인이 필요합니다." if reported else "모델의 문서 확인 또는 유효한 초당 단가가 없습니다.")
         add(f"등록 모델 {index}", status, detail)
     with sessions() as session:
         valid = ledger_valid(session)

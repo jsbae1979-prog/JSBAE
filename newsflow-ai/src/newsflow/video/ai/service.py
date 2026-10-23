@@ -218,15 +218,8 @@ class AIVideoCoordinator:
 
     def readiness(self, *, submitting: bool = False, reported: bool = False) -> dict:
         override = self.injected.name if self.injected is not None else None
-        result = readiness(self.sessions, self.keys, provider_override=override, submitting=submitting)
-        if reported:
-            obsolete = {"작업별 한도와 월 한도가 없습니다.", "이번 달 AI 영상 한도를 모두 사용했습니다.",
-                        "공식 문서 확인과 초당 단가를 입력한 모델이 없습니다."}
-            result["reasons"] = [reason for reason in result["reasons"] if reason not in obsolete]
-            if not any(model_ready(model) for model in result["models"]):
-                result["reasons"].append("공식 입력 규격을 확인한 모델이 없습니다. 계정 사용 가능 여부는 별도 확인이 필요합니다.")
-            result["ready"] = not result["reasons"]
-            result["remaining"] = None
+        result = readiness(self.sessions, self.keys, provider_override=override,
+                           submitting=submitting, reported=reported)
         result["provider_label"] = self.injected.label if self.injected is not None else (
             "Higgsfield" if result["provider"] == "higgsfield" else "사용 안 함")
         result["test_provider"] = self.injected is not None

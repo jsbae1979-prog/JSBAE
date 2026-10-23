@@ -344,7 +344,7 @@ def check_budget(session: Session, settings: VideoAISettings, plan_id: int, batc
 
 
 def readiness(
-    sessions: sessionmaker[Session], key_store, *, provider_override: str | None = None, submitting: bool = False,
+    sessions: sessionmaker[Session], key_store, *, provider_override: str | None = None, submitting: bool = False, reported: bool = False,
 ) -> dict:
     """Why paid AI video generation can or cannot run now; safe to show in the GUI.
 
@@ -365,16 +365,21 @@ def readiness(
         reasons.append("AI 영상 공급사가 '사용 안 함'입니다. 기본 FFmpeg 제작만 사용합니다.")
     if not settings.approved:
         reasons.append("AI 영상 유료 생성 승인이 저장되지 않았습니다.")
-    if settings.job_limit <= 0 or settings.monthly_limit <= 0:
-        reasons.append("작업별 한도와 월 한도가 없습니다.")
-    elif usage["spent"] > settings.monthly_limit if submitting else usage["spent"] >= settings.monthly_limit:
-        reasons.append("이번 달 AI 영상 한도를 모두 사용했습니다.")
+    if not reported:
+        if settings.job_limit <= 0 or settings.monthly_limit <= 0:
+            reasons.append("작업별 한도와 월 한도가 없습니다.")
+        elif usage["spent"] > settings.monthly_limit if submitting else usage["spent"] >= settings.monthly_limit:
+            reasons.append("이번 달 AI 영상 한도를 모두 사용했습니다.")
     if provider_override is None and not key["configured"]:
         reasons.append("AI 영상 API 키가 없습니다.")
-    if not any(m.usable for m in models):
+    if reported:
+        from .production import model_ready
+        if not any(model_ready(model) for model in models):
+            reasons.append("공식 입력 규격을 확인한 모델이 없습니다. 계정 사용 가능 여부는 별도 확인이 필요합니다.")
+    elif not any(m.usable for m in models):
         reasons.append("공식 문서 확인과 초당 단가를 입력한 모델이 없습니다.")
     return {
         "ready": not reasons, "reasons": reasons, "settings": settings, "provider": provider, "key": key,
-        "usage": usage, "remaining": max(Decimal(0), settings.monthly_limit - usage["spent"]),
+        "usage": usage, "remaining": None if reported else max(Decimal(0), settings.monthly_limit - usage["spent"]),
         "models": models,
     }
