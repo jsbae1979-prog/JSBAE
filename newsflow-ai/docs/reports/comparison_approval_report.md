@@ -33,7 +33,7 @@ Provider/model은 `claude_api / claude-sonnet-4-6`, STANDARD 30초, 기본 스�
 - 새 테스트는 실제 서비스/어댑터/`APIBudgetService`와 **합성 DB·합성 키·Fake HTTP**를 조합한다. fixture에만 합성 인증 시각을 넣었으며 실계정 인증 성공을 뜻하지 않는다. 운영 자료·키는 사용하지 않았다.
 - #47에 대응하는 합성 결과 불명 카드와 기존 분석·예약액·인지 확인·설정을 전후 모든 컬럼 값으로 비교했다. 승인/소비/완료 이력만 새로 추가되며 기존 값은 동일하다. 5개 허용, 6번째 차단, 새 출처/Provider/모델/버전/부모/길이 차단, 동시 실행 1건, 분석 및 대본 중간 실패 후 잔여 단계 중단을 확인했다.
 - 초기 실행은 pytest 임시 폴더 준비 오류로 시작되지 않았다. 임시 상위 폴더 준비 후 검증했으며 제품 코드 실패나 실호출 실패가 아니다. 실패 테스트 삭제·skip 없음.
-- Windows CI 변경 범위는 `tools/comparison_approval_targets.txt`다. 이전 295건/443건 전체를 재실행하지 않는다. 기존 전체 회귀 **57 FAIL 기록은 보존**하며 전수 PASS로 확대하지 않는다.
+- Windows CI Python **3.12.10 / 3.14.9 각각 208 PASS**, Ruff·pip check PASS. 각각 기존 Starlette/httpx deprecation warning 1건, 실패/skip 0. 변경 범위는 `tools/comparison_approval_targets.txt`다. 이전 295건/443건 전체를 재실행하지 않는다. 기존 전체 회귀 **57 FAIL 기록은 보존**하며 전수 PASS로 확대하지 않는다.
 
 ## 남은 작업
 
@@ -43,4 +43,7 @@ Provider/model은 `claude_api / claude-sonnet-4-6`, STANDARD 30초, 기본 스�
 
 ## SHA·PR·CI
 
-구현 SHA와 Windows 3.12/3.14 결과는 CI 완료 후 확정한다. 기존 [Draft PR #35](https://github.com/jsbae1979-prog/JSBAE/pull/35)는 미병합으로 유지하고 새 PR·main 병합·force push는 하지 않는다.
+- 검증된 구현 SHA: `512c61689d9d7a71ac08fe02c22bbe31cf2514b1`.
+- [변경 범위 Windows CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39894569540): 3.12 job `120221893777`, 3.14 job `120221894038`, 모두 success. [비밀정보 없는 CI 요약](evidence/comparison-approval/windows-ci.json).
+- 후속 커밋은 보고서·CI 요약만 확정한다. 기존 [Draft PR #35](https://github.com/jsbae1979-prog/JSBAE/pull/35)는 미병합 유지. 새 PR·main 병합·force push 없음.
+- 이번 승인 범위인 보완·Fake 검증을 완료했다. 실제 인증·대본·영상·게시나 운영 적용은 추가로 진행하지 않는다.
