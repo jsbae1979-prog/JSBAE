@@ -109,10 +109,13 @@ def test_supplied_outlook_or_explicit_unknown_does_not_assert_new_fact_validatio
     assert source.get('facts_verified') is None
 
 
-def test_virtual_reality_or_image_synthesis_topic_is_not_a_synthetic_news_fixture():
+@pytest.mark.parametrize('title,summary', [
+    ('가상현실과 음성 합성 기술', '가상현실 기기와 음성 합성 기술을 소개하는 주제 자료입니다.'),
+    ('합성 자료 유포 논란', '연구진이 합성 자료의 유포 문제를 설명한 주제 자료입니다.'),
+])
+def test_synthetic_media_topic_is_not_itself_a_synthetic_news_fixture(title, summary):
     source = evidence()
-    source['articles'] = [{'id': 1, 'title': '가상현실과 음성 합성 기술',
-                           'summary': '가상현실 기기와 음성 합성 기술을 소개하는 주제 자료입니다.'}]
+    source['articles'] = [{'id': 1, 'title': title, 'summary': summary}]
     value = compact_script()
     value['scenes'][0].update(narration=value['hook'] + ' 기술을 살펴봅니다.', caption='기술 소개')
     assert 'explainer_synthetic_context' not in codes(value, source)

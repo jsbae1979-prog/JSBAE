@@ -189,8 +189,12 @@ def explainer_findings(content: dict, evidence: dict) -> list[dict]:
 
 
 _SYNTHETIC_MARKER = re.compile(r'합성|가상|\bsynthetic\b|\bfictional\b', re.IGNORECASE)
-_SYNTHETIC_SOURCE = re.compile(r'\[(?:합성|가상)[^\]]*\]|(?:합성|가상)\s*(?:자료|예시|사례)|'
-                               r'\b(?:synthetic|fictional)\s+(?:data|source|example|fixture|scenario)\b', re.IGNORECASE)
+_SYNTHETIC_SOURCE = re.compile(
+    r'^\s*(?:\[(?:합성|가상|synthetic|fictional)[^\]]*\]|'
+    r'(?:합성|가상)\s*(?:자료|예시|사례)입니다|'
+    r'(?:this is |these are )?(?:synthetic|fictional)\s+(?:data|source|example|fixture|scenario)\b)',
+    re.IGNORECASE,
+)
 # Deliberately narrow Korean outlook signals, not a semantic fact verifier.
 _OUTLOOK = re.compile(r'(?:향후|앞으로|조만간).{0,90}?(?:전망|예상|가능성|예정)|'
                       r'(?:인하|인상|급등|폭락|증가|감소).{0,24}?(?:전망|예상|가능성)')
@@ -218,7 +222,11 @@ def _explainer_broadcast_findings(content: dict, evidence: dict) -> list[dict]:
     source_text = ' '.join(str(article.get(key) or '') for article in evidence.get('articles', [])
                            for key in ('title', 'summary'))
     fact_scenes = [scene for scene in scenes if scene.get('role') == 'fact']
-    if _SYNTHETIC_SOURCE.search(source_text) and (
+    # A topic about synthetic media is not itself a synthetic event. Only
+    # explicit source labels/declarations trigger the broadcast disclosure check.
+    synthetic = any(_SYNTHETIC_SOURCE.search(str(article.get(field) or ''))
+                    for article in evidence.get('articles', []) for field in ('title', 'summary'))
+    if synthetic and (
         not fact_scenes or any(not _SYNTHETIC_MARKER.search(scene[field])
                               for scene in fact_scenes for field in ('narration', 'caption'))
     ):
