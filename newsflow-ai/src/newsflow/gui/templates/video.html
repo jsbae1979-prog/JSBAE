@@ -3,7 +3,7 @@
 {% block extra_head %}<link rel="stylesheet" href="/static/css/video-modern.css">{% endblock %}
 {% block content %}
 <div class="video-modern">
-{% call studio_header('video','VIDEO STUDIO','영상 구성','저장한 대본에 음성과 자막을 더하고, 검토 후 제작하세요.') %}<a class="button" href="/videos">내 영상 보기 →</a>{% endcall %}
+{% call studio_header('video','VIDEO STUDIO','영상 구성','저장한 대본에 음성과 자막을 더하고, 검토 후 제작하세요.') %}<a class="button" href="/character">캐릭터 쇼츠</a><a class="button" href="/videos">내 영상 보기 →</a>{% endcall %}
 {% if not draft and not job %}{% include 'production_picker.html' %}{% endif %}
 
 {% if draft %}<header class="video-project-heading"><span class="video-project-kicker">영상 제작 준비</span><h2>{{ draft.content.title }}</h2><div class="video-project-meta"><span>{{ ui_icon('clock',16) }} 원본 대본 {{ draft.duration }}초</span><span>{{ ui_icon('video',16) }} 9:16 세로 영상</span><span>이번 작업 설정 · 다음 제작 기본값과 별개</span></div></header>{% endif %}

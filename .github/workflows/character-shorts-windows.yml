@@ -1,0 +1,72 @@
+name: Character Shorts Windows
+on:
+  push:
+    branches: [codex/newsflow-ux-video-app]
+    paths:
+      - newsflow-ai/src/newsflow/character/**
+      - newsflow-ai/src/newsflow/gui/character_routes.py
+      - newsflow-ai/src/newsflow/gui/templates/character*.html
+      - newsflow-ai/tests/test_character*.py
+      - .github/workflows/character-shorts-windows.yml
+permissions:
+  contents: read
+jobs:
+  character:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_LIVE_TEST: '0'
+      HF_KEY: ''
+      HF_API_KEY: ''
+      HF_API_SECRET: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Dependencies and existing FFmpeg tools
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install -r requirements-dev.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ';C:\ProgramData\chocolatey\bin;C:\tools\ffmpeg\bin'
+          }
+          @((Split-Path (Get-Command ffmpeg -ErrorAction Stop).Source), (Split-Path (Get-Command ffprobe -ErrorAction Stop).Source)) | Select-Object -Unique | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          "PYTHONPATH=$pwd/src;$pwd/tests" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Changed contracts only with external requests and schedulers blocked
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/character src/newsflow/gui/character_routes.py src/newsflow/main.py tests/test_character_shorts.py tests/test_character_media.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pytest -q -rs --tb=short -p claude_compat_safety --basetemp=C:/nf-character-${{ matrix.python }} --junitxml=validation-output/character-windows.xml tests/test_character_shorts.py tests/test_character_media.py tests/test_image_posts.py tests/test_gui.py::test_html_escape tests/test_gui.py::test_partial_and_failures_keep_data_no_secrets tests/test_gui.py::test_cross_coordinator_and_crash_recovery
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: character-synthetic-${{ matrix.python }}
+          path: |
+            newsflow-ai/validation-output/character-windows.xml
+            C:/nf-character-${{ matrix.python }}/test_three_synthetic*/**/final.mp4
+            C:/nf-character-${{ matrix.python }}/test_three_synthetic*/**/review.json
+          retention-days: 7

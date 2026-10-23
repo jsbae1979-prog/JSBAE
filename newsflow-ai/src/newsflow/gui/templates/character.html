@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}캐릭터 쇼츠 · NewsFlow AI{% endblock %}
+{% block content %}
+{% call studio_header('video','CHARACTER SHORTS','느긋해 대리','주제 하나로 만드는 30초 무대사 직장인 코미디') %}<a class="button" href="/video">뉴스 영상으로 돌아가기</a>{% endcall %}
+{% if error %}<p role="alert" class="error">{{ error }}</p>{% endif %}
+{% if not job %}
+<section class="suite-panel"><h2>새 캐릭터 쇼츠</h2>
+<form action="/character" method="post" enctype="multipart/form-data">
+<input type="hidden" name="csrf_token" value="{{ csrf }}">
+<label>주제<input name="topic" maxlength="150" placeholder="월요일 아침 9시 1분, 지각했는데 태평하게 출근" required></label>
+<label>캐릭터 PNG 원본<input type="file" name="reference" accept="image/png" required></label>
+<div class="form-grid"><label>이 작품의 공식 견적 상한 (USD)<input name="episode_limit" type="number" min="0.01" step="0.01" required></label>
+<label>캐릭터 제작 일일 상한 (USD)<input name="day_limit" type="number" min="0.01" step="0.01" required></label></div>
+<p class="hint">이 단계는 로컬 작업만 저장합니다. 대사·립싱크·자동 게시 없이 자막과 효과음으로 표현합니다.</p>
+<button class="primary">작업 저장</button></form></section>
+{% else %}
+<section class="suite-panel"><div class="suite-section-bar"><h2>{{ job.script.title if job.script else job.topic }}</h2><span>{{ job.state }} · 30초 · 9:16</span></div>
+{% if job.script %}<p>{{ job.script.plan.situation }}</p><ol>{% for scene in job.script.scenes %}<li><strong>{{ scene.seconds }}초 · {{ scene.role }}</strong> {{ scene.caption }}<details><summary>장면·효과음</summary><p>{{ scene.action }}</p><p>효과음: {{ scene.sfx or '무음' }}</p></details></li>{% endfor %}</ol>{% endif %}
+{% if job.state=='needs_script' %}<form action="/character/{{ job.id }}/write" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}">
+<label class="check"><input type="checkbox" name="consent" value="true" required>주제·캐릭터 설정·최근 주제를 {{ job.claude_model }}에 전송하여 대본 1회를 생성합니다. 유료 사용량이 발생하며 자동 재생성하지 않습니다.</label><button class="primary">Claude 대본 1회 생성</button></form>
+{% elif job.state=='script_review' %}<form action="/character/{{ job.id }}/prepare" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}">
+<label class="check"><input type="checkbox" name="reviewed" value="true" required>상황·자막·가상 캐릭터·민감한 내용 여부를 검토했습니다.</label>
+<label class="check"><input type="checkbox" name="consent" value="true" required>권한 있는 참조 이미지 1장과 장면 프롬프트를 Higgsfield에 전송하고, 장면별 공식 견적을 조회합니다. 이미 등록한 원본은 재업로드하지 않습니다. 영상 생성은 아직 하지 않습니다.</label><button class="primary">참조 이미지 등록·공식 견적 확인</button></form>
+{% elif job.state=='quoted' %}<p>모델: {{ job.model }} · 720p · 전체 {{ job.scenes|length }}장면</p>
+<p>공식 견적 합계 ${{ job.quote_total_usd }} · 편당 ${{ job.episode_limit }} / 일일 ${{ job.day_limit }} 이내 확인 · 실제 청구액과 다릅니다.</p>
+<form action="/character/{{ job.id }}/submit" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="quote_hash" value="{{ job.quote_hash }}">
+<label class="check"><input type="checkbox" name="consent" value="true" required>이 작업의 참조 이미지·전체 {{ job.scenes|length }}개 장면·선택 모델·공식 견적을 확인했고 유료 생성을 승인합니다. 실패·결과 불명은 자동 재전송하지 않습니다.</label><button class="primary">전체 장면 생성 승인</button></form>
+{% elif job.state=='generating' %}<form action="/character/{{ job.id }}/check" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><label class="check"><input type="checkbox" name="consent" value="true" required>미완료 장면의 상태를 1회씩 조회하고 완료된 영상을 내려받습니다. 새로 생성하지 않습니다.</label><button class="primary">상태 확인·완료 장면 저장</button></form>
+{% elif job.state=='clips_review' %}<p>모든 장면이 로컬에 저장됐습니다. <a href="/character/{{ job.id }}/clips">장면 영상 검토</a></p>
+<form action="/character/{{ job.id }}/render" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><label class="check"><input type="checkbox" name="reviewed" value="true" required>장면의 캐릭터·표정·내용·순서를 검토했고 로컬 합성에 동의합니다.</label><button class="primary">30초 MP4 합성</button></form>
+{% elif job.state=='completed' %}<video controls preload="none" src="/character/{{ job.id }}/file" aria-label="캐릭터 쇼츠 완성 영상"></video><a class="button" href="/character/{{ job.id }}/file?download=true">MP4 저장</a><p>사람의 최종 검수 필요 · 자동 업로드 없음 · AI 표시·아동용 여부·반복 구성 확인</p>
+{% else %}<p role="status">작업이 중단됐거나 확인이 필요합니다. 기록과 생성 결과를 보존했습니다. 자동 재시도·일반 뉴스 영상 대체는 하지 않습니다.</p>{% endif %}
+<details><summary>작업 정보</summary><p>Claude {{ job.claude_model }} · 영상 {{ job.model }} · 음성 없음 · 실제 청구액 {{ job.reported_billed_usd if job.reported_billed_usd is not none else '미확인' }}</p><p>Windows 환경의 HF_KEY 설정과 API 사용 권한이 필요합니다. 기존 뉴스·음성 기본값은 바꾸지 않습니다.</p></details>
+</section><a class="button" href="/character">다른 주제 준비</a>
+{% endif %}
+{% if jobs %}<section class="suite-panel"><h2>저장된 캐릭터 작업</h2><ul>{% for item in jobs %}<li><a href="/character?job_id={{ item.id }}">{{ item.topic }}</a> · {{ item.state }}</li>{% endfor %}</ul></section>{% endif %}
+{% endblock %}

@@ -16,6 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from filelock import FileLock, Timeout
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from newsflow.gui.social_routes import router as social_router
@@ -31,6 +32,7 @@ from .db.session import make_engine, migrate, session_factory
 from .gui.ai_settings_routes import router as ai_settings_router
 from .gui.api_settings_routes import router as api_settings_router
 from .gui.autopilot_routes import router as autopilot_router
+from .gui.character_routes import router as character_router
 from .gui.curation_routes import router as curation_router
 from .gui.image_post_routes import router as image_post_router
 from .gui.instagram_routes import router as instagram_router
@@ -188,6 +190,9 @@ def create_app(
 
     app = FastAPI(title="NewsFlow AI", docs_url=None, redoc_url=None, lifespan=lifespan)
     app.state.config, app.state.sessions, app.state.coordinator = settings, sessions, coordinator
+    from .character.service import CharacterService
+
+    app.state.character = CharacterService(settings.data_dir, sessions, api_keys['claude_api'])
     app.state.news_thumbnails = ThumbnailService(coordinator.service.collector.adapter)
     app.state.engine = engine
     app.state.video = video
@@ -228,15 +233,15 @@ def create_app(
                 return HTMLResponse("외부 사이트에서 요청할 수 없습니다.", status_code=403)
             if not valid(cookie):
                 return HTMLResponse("보안 토큰이 필요합니다.", status_code=403)
-            if (
-                request.headers.get("content-type", "").split(";", 1)[0]
-                != "application/x-www-form-urlencoded"
-            ):
+            encoding = request.headers.get("content-type", "").split(";", 1)[0]
+            character_upload = request.url.path == '/character' and encoding == 'multipart/form-data'
+            if encoding != "application/x-www-form-urlencoded" and not character_upload:
                 return HTMLResponse("지원하지 않는 요청 형식입니다.", status_code=415)
             # Cache before form parsing so downstream FastAPI receives the same body.
             # Only the local image form accepts bounded base64 raster data.
             # Origin, form encoding, signed CSRF and CSP checks remain unchanged.
-            limit = 8 * 1024 * 1024 if request.url.path == "/image-posts/create" else 65536
+            limit = (10 * 1024 * 1024 + 65536 if character_upload else
+                     8 * 1024 * 1024 if request.url.path == "/image-posts/create" else 65536)
             chunks, length = [], 0
             async for chunk in request.stream():
                 length += len(chunk)
@@ -245,8 +250,15 @@ def create_app(
                 chunks.append(chunk)
             body = b"".join(chunks)
             request._body = body
-            form = await request.form()
-            token = form.get("csrf_token", "")
+            if character_upload:
+                try:
+                    async with request.form(max_files=1, max_fields=10, max_part_size=10*1024*1024) as form:
+                        token = form.get('csrf_token', '')
+                except (StarletteHTTPException, ValueError):
+                    return HTMLResponse('PNG 파일 1개와 입력 항목을 확인하세요.', status_code=400)
+            else:
+                form = await request.form()
+                token = form.get("csrf_token", "")
             if (
                 not isinstance(token, str)
                 or not valid(cookie)
@@ -289,6 +301,7 @@ def create_app(
 
     app.include_router(cleanup_router)
     app.include_router(video_router)
+    app.include_router(character_router)
     app.include_router(video_ai_router)
     app.include_router(publishing_router)
     app.include_router(youtube_router)
