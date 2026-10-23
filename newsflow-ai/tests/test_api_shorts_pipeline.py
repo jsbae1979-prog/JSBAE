@@ -17,6 +17,12 @@ api_pipeline = test_api_news_pipeline.api_pipeline
 
 
 @pytest.fixture(autouse=True)
+def original_v1_contract(monkeypatch):
+    """This module asserts STEP 4's saved V1 contract, independent of the new V2 default."""
+    monkeypatch.setenv('NEWSFLOW_SCRIPT_PROMPT_VERSION', 'v1')
+
+
+@pytest.fixture(autouse=True)
 def no_external_calls(monkeypatch):
     monkeypatch.setattr("urllib.request.build_opener", lambda *_a, **_k: pytest.fail("No live HTTP"))
     monkeypatch.setattr("subprocess.Popen", lambda *_a, **_k: pytest.fail("No CLI or render processes"))

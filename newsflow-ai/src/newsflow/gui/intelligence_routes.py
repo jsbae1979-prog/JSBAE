@@ -149,13 +149,17 @@ def claude_cancel(request: Request) -> dict:
     return {"cancel_requested": CLAUDE_PROVIDER.cancel()}
 
 
-def service(request: Request) -> IntelligenceService:
+def service(request: Request, production=None) -> IntelligenceService:
+    from newsflow.video.narration_planning import selected_voice
+
     speech = speech_preferences(request.app.state.sessions)
+    voice = selected_voice(request.app.state.sessions, (production or {}).get('initial_voice'))
     return IntelligenceService(
         request.app.state.sessions, getattr(request.app.state, "ai_provider", None),
         getattr(request.app.state, "ai_keys", None),
         speech={"rate": speech.rate, "pause_ms": speech.pause_ms},
         api_key_stores=getattr(request.app.state, "api_keys", None),
+        narration_root=getattr(getattr(request.app.state, 'video', None), 'root', None), narration_voice=voice,
     )
 
 
@@ -312,7 +316,7 @@ def generate(
         if production:
             production = {**production, "analysis_id": analysis_id}
         options = Options(model, temperature, timeout, max_tokens)
-        identifier = service(request).generate(
+        identifier = service(request, production).generate(
             analysis_id, duration, provider, consent, options,
             on_run=remember_context(request.app.state.sessions, production),
             script_style=script_style, script_tone=script_tone, script_audience=script_audience,

@@ -29,6 +29,8 @@ def provider_for(voice, sessions, root, *, external_consent=False, elevenlabs_co
 
             store = ElevenLabsKeys(root)
             class BoundKeys:
+                path = store.path  # Encrypted-file identity for local planning; no decryption on a read.
+
                 def key(self):
                     if not settings(sessions)["enabled"]:
                         raise TTSError("ElevenLabs 사용 설정이 해제되어 추가 음성 요청을 중단했습니다.")

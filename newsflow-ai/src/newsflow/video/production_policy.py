@@ -16,9 +16,16 @@ def check_draft(sessions, draft: ContentDraft, options: dict, root) -> None:
     from newsflow.video.ai.keys import VideoAIKeyStore
     from newsflow.video.elevenlabs_tts import ElevenLabsKeys
 
-    service = IntelligenceService(sessions, speech=options["speech"], api_key_stores={
+    service = IntelligenceService(sessions, speech=options["speech"], narration_root=root, api_key_stores={
         "openai": AIKeyStore(root), "claude_api": AnthropicKeyStore(root),
         "elevenlabs": ElevenLabsKeys(root), "video_ai": VideoAIKeyStore(root)})
+    expected = (draft.sources.get('news_usage_contract') or {}).get('narration_voice')
+    if expected:
+        from .narration_planning import selected_voice
+
+        if selected_voice(sessions, options.get('voice'), options.get('elevenlabs')) != expected:
+            raise IntelligenceError('이번 음성·모델이 대본의 분량 안내와 다릅니다. 선택과 대본을 다시 검토하세요.',
+                                    'ai_bad_response', False)
     service.validate(draft.content, draft.duration)
     service.check_news_usage(draft.content, draft.sources)
     service.check_copy(draft.content, draft.sources)

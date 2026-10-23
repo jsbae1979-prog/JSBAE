@@ -60,7 +60,7 @@ def _unknowns(rows):
     return {r.id: _unknown_fingerprint(r) for r in rows if r.status == 'unknown'}
 
 
-def _plan(source, steps=STEPS):
+def _plan(source, steps=STEPS, narration=None):
     result = []
     for name, kind, version, index in steps:
         base = deepcopy(source)
@@ -68,7 +68,8 @@ def _plan(source, steps=STEPS):
             chosen = source['articles'][index]['id']
             base['articles'] = [a for a in source['articles'] if a['id'] == chosen]
             base['groups'] = [[i for i in group if i == chosen] for group in source['groups'] if chosen in group]
-        contract = api_news_contract(base, 'STANDARD', 30 if kind == 'script' else None, version=version)
+        contract = api_news_contract(base, 'STANDARD', 30 if kind == 'script' else None, version=version,
+                                     narration=narration)
         options = prompt_options(Options(model=MODEL, timeout=300), kind, version)
         result.append({'step': name, 'kind': kind, 'version': version, 'source': _digest(base),
                        'contract': _digest(contract), 'assessment': _digest(assess_news_usage(base, 'STANDARD')),
@@ -97,7 +98,8 @@ def _saved_analysis(session, identifier):
     return parent, reservation
 
 
-def _review(session, article_ids, sessions, analysis_id=None, single_script=False):
+def _review(session, article_ids, sessions, analysis_id=None, single_script=False,
+            narration_voice=None, narration_root=None, narration_keys=None):
     from .service import IntelligenceService
 
     if (not isinstance(article_ids, list) or len(article_ids) != 2
@@ -118,30 +120,41 @@ def _review(session, article_ids, sessions, analysis_id=None, single_script=Fals
     scope = ('method_b_saved_analysis_one_script' if single_script else
              'method_b_saved_analysis_two_scripts' if parent else 'method_b_five_requests')
     steps = SINGLE_RECHECK_STEPS if single_script else RECHECK_STEPS if parent else STEPS
+    if narration_voice is not None and not single_script:
+        raise APISettingsError('음성별 재검증은 새 단일 대본 승인 범위로 확인하세요.')
+    from newsflow.video.narration_planning import planning
+
+    narration = planning(narration_root, narration_voice, {'rate': 0, 'pause_ms': 250}, keys=narration_keys)
     value = {'scope': scope,
              'provider': PROVIDER, 'model': MODEL,
              'article_ids': article_ids, 'settings': _settings(settings), 'unknowns': unknowns,
-             'plan': _plan(source, steps)}
+             'plan': _plan(source, steps, narration)}
+    if narration:
+        value['narration'] = narration
     if parent:
         value['saved_analysis'] = {'id': parent.id, 'fingerprint': _unknown_fingerprint(parent),
                                    'reservation_fingerprint': _unknown_fingerprint(parent_reservation)}
     return value, source
 
 
-def comparison_review(sessions, article_ids, *, analysis_id=None, single_script=False):
+def comparison_review(sessions, article_ids, *, analysis_id=None, single_script=False,
+                      narration_voice=None, narration_root=None, narration_keys=None):
     """Read-only preview. No credential load, acknowledgement or execution consent."""
     with sessions() as session:
-        value, source = _review(session, article_ids, sessions, analysis_id, single_script)
+        value, source = _review(session, article_ids, sessions, analysis_id, single_script,
+                                narration_voice, narration_root, narration_keys)
         return {'token': _digest(value), 'articles': source['articles'],
                 'steps': [step['step'] for step in value['plan']], 'unknown_count': len(value['unknowns'])}
 
 
-def approve_comparison(sessions, *, article_ids, review_token, consent, analysis_id=None, single_script=False):
+def approve_comparison(sessions, *, article_ids, review_token, consent, analysis_id=None, single_script=False,
+                       narration_voice=None, narration_root=None, narration_keys=None):
     if consent is not True or not isinstance(review_token, str) or not re.fullmatch(r'[a-f0-9]{64}', review_token):
         raise APISettingsError('기사·모델·기존 결과 불명 기록과 검토한 비교 호출 범위에 명시적으로 동의하세요.')
     with sessions.begin() as session:
         session.connection().exec_driver_sql('BEGIN IMMEDIATE')
-        value, _ = _review(session, article_ids, sessions, analysis_id, single_script)
+        value, _ = _review(session, article_ids, sessions, analysis_id, single_script, narration_voice,
+                           narration_root, narration_keys)
         if _digest(value) != review_token:
             raise APISettingsError('자료·설정·결과 불명 기록이 바뀌었습니다. 비교 범위를 다시 확인하세요.')
         for entry, previous in _entries(session, APPROVAL):

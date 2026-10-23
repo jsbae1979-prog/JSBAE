@@ -86,7 +86,8 @@ class IntelligenceError(Exception):
 
 class IntelligenceService:
     def __init__(self, sessions, provider: Provider | None = None, key_store=None, speech: dict | None = None,
-                 *, api_key_stores: dict | None = None, api_providers: dict | None = None, api_budget=None):
+                 *, api_key_stores: dict | None = None, api_providers: dict | None = None, api_budget=None,
+                 narration_root=None, narration_voice: dict | None = None, narration_keys=None):
         self.sessions, self.provider, self.key_store = sessions, provider, key_store
         self.api_key_stores = dict(api_key_stores or {})
         if key_store is not None:
@@ -96,6 +97,8 @@ class IntelligenceService:
         self.api_managed = api_key_stores is not None or api_budget is not None
         # Speech settings only affect review estimates; they never alter the saved script.
         self.speech = {"rate": 0, "pause_ms": 250, **(speech or {})}
+        self.narration_root, self.narration_voice = narration_root, narration_voice
+        self.narration_keys = narration_keys
 
     def _key(self) -> str:
         if self.key_store is not None:
@@ -699,6 +702,7 @@ class IntelligenceService:
         script_prompt_version: str | None = None,
         comparison_approval_id: int | None = None,
         comparison_step: str | None = None,
+        narration_voice: dict | None = None,
     ) -> int:
         from dataclasses import asdict
 
@@ -723,6 +727,11 @@ class IntelligenceService:
                 raise IntelligenceError('비교 승인 식별자·Provider를 확인하세요.', 'ai_consent', False)
             comparison_options = {'comparison_approval_id': comparison_approval_id, 'comparison_step': comparison_step}
         selected_version = prompt_version(selected=script_prompt_version) if mode in {'openai', 'claude_api'} else 'v1'
+        from newsflow.video.narration_planning import planning
+
+        narration = (planning(self.narration_root, narration_voice or self.narration_voice, self.speech,
+                              keys=self.narration_keys)
+                     if selected_version == 'v2' else None)
         options = prompt_options(options, 'script', selected_version)
         instruction_text = prompt_instruction('script', version=selected_version)
         with self.sessions.begin() as session:
@@ -756,7 +765,8 @@ class IntelligenceService:
                     level = validate_news_usage(news_usage if news_usage is not None else evidence.get("news_usage"))
                     if level != evidence.get("news_usage"):
                         raise ValueError
-                    contract = api_news_contract(evidence, level, duration, speech=self.speech, version=selected_version)
+                    contract = api_news_contract(evidence, level, duration, speech=self.speech, version=selected_version,
+                                                 narration=narration)
                 except ValueError:
                     raise IntelligenceError("저장된 분석의 뉴스 활용 수준을 확인하세요.", "news_usage_blocked", False) from None
                 evidence = {**evidence, "news_usage_contract": contract, "analysis_result": analysis.result}
@@ -782,6 +792,7 @@ class IntelligenceService:
                 evidence = {**evidence, "news_usage_result": assess_news_usage(evidence, evidence["news_usage"]),
                             "news_usage_contract": api_news_contract(
                                 evidence, evidence["news_usage"], duration, speech=self.speech, version=selected_version,
+                                narration=narration,
                             )}
             if profile_on:
                 if len(evidence.get("groups", [])) > 1:
@@ -797,7 +808,7 @@ class IntelligenceService:
             evidence = {**evidence, "presentation": chosen_presentation}
             if mode in {'openai', 'claude_api'} and selected_version == 'v2' and not evidence.get('news_usage_contract'):
                 evidence = {**evidence, 'news_usage_contract': api_news_contract(
-                    evidence, 'STANDARD', duration, speech=self.speech, version=selected_version)}
+                    evidence, 'STANDARD', duration, speech=self.speech, version=selected_version, narration=narration)}
             run = IntelligenceRun(
                 kind="script",
                 provider=mode,
@@ -901,14 +912,40 @@ class IntelligenceService:
             raise IntelligenceError("대본 본문에는 URL을 넣을 수 없습니다. 출처는 별도로 표시됩니다.", "ai_bad_response", True)
         return script.model_dump()
 
+    def _timing_context(self, evidence: dict) -> tuple[float, list[dict]]:
+        contract = evidence.get('news_usage_contract') or {}
+        if not contract.get('narration_voice'):
+            return 1, []  # Never reinterpret older work with today's default voice.
+        from newsflow.video.narration_planning import load_profile
+
+        expected = contract.get('narration_voice_profile')
+        if expected is None:
+            return 1, [{'code': 'voice_planning_unmeasured', 'level': 'info',
+                        'message': '선택 음성의 완료 측정 근거가 없어 공통 추정을 사용합니다. 실제 WAV 길이는 별도로 검사합니다.'}]
+        current = (load_profile(getattr(self, 'narration_root', None), contract['narration_voice'], self.speech,
+                               sample_checksums=expected.get('sample_checksums', []),
+                               keys=getattr(self, 'narration_keys', None))
+                   if isinstance(expected, dict) else None)
+        if current != expected:
+            return 1, [{'code': 'voice_planning_evidence_changed', 'level': 'warning',
+                        'message': '이 대본의 음성·모델·속도 측정 근거가 없거나 달라졌습니다. 새 분량 안내를 검토하세요. 자동 재생성하지 않습니다.'}]
+        return current['ratio'], [{'code': 'voice_planning_estimate', 'level': 'info',
+                                  'message': '동일 음성의 완료 기록에 따른 작성 추정입니다. 새 WAV 길이·음질·사실 검증을 보장하지 않습니다.'}]
+
+    def review_speech_plan(self, content: dict, evidence: dict, duration: int) -> dict:
+        ratio, _ = self._timing_context(evidence)
+        return speech_plan(content, duration, **self.speech, timing_ratio=ratio)
+
     def _review_notes(self, content: dict, evidence: dict, duration: int) -> list[dict]:
-        notes = assess_script(content, evidence, duration, **self.speech)
+        ratio, guidance = self._timing_context(evidence)
+        notes = assess_script(content, evidence, duration, **self.speech, timing_ratio=ratio)
+        notes.extend(guidance)
         if any(a.get("search_provenance", {}).get("provider") == "serpapi" for a in evidence.get("articles", [])):
             notes = [{**note, "message": note["message"].replace("원문 RSS 요약", "공급사 제공 요약")}
                      for note in notes]
-        notes.extend(explainer_findings(content, evidence, speech=self.speech))
+        notes.extend(explainer_findings(content, evidence, speech=self.speech, timing_ratio=ratio))
         if evidence.get("script_method") in API_SCRIPT_METHODS:
-            estimated = speech_plan(content, duration, **self.speech)["estimated_total_seconds"]
+            estimated = speech_plan(content, duration, **self.speech, timing_ratio=ratio)["estimated_total_seconds"]
             if estimated < duration * .90:
                 notes.append({
                     "code": "total_narration_too_short", "level": "warning",

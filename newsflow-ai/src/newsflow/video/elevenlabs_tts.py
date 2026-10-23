@@ -7,6 +7,7 @@ import math
 import os
 import re
 import shutil
+import time
 import urllib.error
 import urllib.request
 import wave
@@ -25,6 +26,18 @@ from .tts import SpeechSettings, TTSError, wav_duration
 
 MODELS = ("eleven_multilingual_v2", "eleven_flash_v2_5", "eleven_v3")
 BASE = "https://api.elevenlabs.io/v1"
+
+
+def replace_metadata(temporary, destination):
+    """Bounded local rename only, under requests.lock. Never repeats a supplier request."""
+    for attempt in range(4):
+        try:
+            os.replace(temporary, destination)
+            return
+        except PermissionError:
+            if os.name != 'nt' or attempt == 3:
+                raise
+            time.sleep((.01, .03, .10)[attempt])
 
 
 class SubscriptionError(TTSError):
@@ -197,6 +210,49 @@ class ElevenLabsTTS:
         return {"tier": tier, "remaining": info["character_limit"] - info["character_count"],
                 "overage_disabled": True, "attribution_required": self.attribution_required}
 
+    def _cache_digest(self, text, speech):
+        secret = self.keys.key()
+        if secret and secret in text:
+            raise TTSError('비밀정보가 포함된 음성 요청은 실행할 수 없습니다.')
+        return hashlib.sha256(json.dumps([text, self.config['voice_id'], self.config['model'], speech.rate,
+                              hashlib.sha256(secret.encode()).hexdigest(),
+                              self.config['commercial']], ensure_ascii=False).encode()).hexdigest()
+
+    def remember_completed_cache(self, text, speech=None):
+        """Explicit local reuse only. Missing/unknown cache never turns into an HTTP request."""
+        from .narration_planning import measurement
+
+        speech = speech or SpeechSettings()
+        if not isinstance(text, str) or not 0 < len(text) <= 400 or not self.root.is_dir():
+            raise TTSError('완료된 기존 음성 캐시가 필요합니다. 새 요청하지 않습니다.')
+        name = self._cache_digest(text, speech)
+        with FileLock(str(self.root / 'requests.lock'), timeout=1):
+            ledger = json.loads((self.root/'ledger.json').read_text(encoding='utf-8'))
+            row, audio = ledger.get(name), self.root/(name+'.wav')
+            cues = row.get('cues') if isinstance(row, dict) else None
+            if (not isinstance(row, dict) or row.get('state') != 'completed' or not audio.is_file()
+                    or audio.is_symlink() or hashlib.sha256(audio.read_bytes()).hexdigest() != row.get('sha256')
+                    or not isinstance(cues, list) or any(not isinstance(cue, dict) or not isinstance(cue.get('text'), str) for cue in cues)
+                    or ''.join(cue['text'] for cue in cues).replace(' ', '') != text.replace(' ', '')):
+                raise TTSError('완료·텍스트·WAV 연결이 확인되지 않아 기존 기록만 보존합니다. 새 요청하지 않습니다.')
+            receipt = measurement(text, self.config, speech, self.keys, audio, row.get('reported_credits'))
+            if receipt is None:
+                raise TTSError('확인된 사용량·키 식별 근거가 없어 보정 기록을 만들지 않습니다.')
+            path = self.root/'narration-measurements.json'
+            if path.is_symlink() or path.is_file() and path.stat().st_size > 4_000_000:
+                raise TTSError('기존 보정 기록을 확인할 수 없습니다.')
+            values = json.loads(path.read_text(encoding='utf-8')) if path.is_file() else {}
+            if not isinstance(values, dict):
+                raise TTSError('기존 보정 기록을 확인할 수 없습니다.')
+            if name in values:
+                if values[name] != receipt:
+                    raise TTSError('기존 보정 기록이 달라 자동 덮어쓰지 않습니다.')
+                return
+            values[name] = receipt
+            temporary = path.with_name('narration-measurements-'+uuid4().hex+'.tmp')
+            temporary.write_text(json.dumps(values, ensure_ascii=False), encoding='utf-8')
+            replace_metadata(temporary, path)  # Separate additive receipts; original ledger/cache untouched.
+
     def synthesize_timed(self, text, target, voice, seconds, speech=None, *, cancel=None):
         config = self.config
         speech = speech or SpeechSettings()
@@ -207,9 +263,7 @@ class ElevenLabsTTS:
         if cancel is not None and cancel.is_set():
             raise TTSError("외부 음성 요청 취소")
         # Resource limits stay; speculative credit multipliers and reservations do not.
-        digest = hashlib.sha256(json.dumps([text, config["voice_id"], config["model"], speech.rate,
-                                           hashlib.sha256(self.keys.key().encode()).hexdigest(),
-                                           config["commercial"]], ensure_ascii=False).encode()).hexdigest()
+        digest = self._cache_digest(text, speech)
         self.root.mkdir(parents=True, exist_ok=True)
         ledger_path, cache = self.root / "ledger.json", self.root / f"{digest}.wav"
         with FileLock(str(self.root / "requests.lock"), timeout=1):
@@ -218,7 +272,7 @@ class ElevenLabsTTS:
             def persist():
                 temporary = ledger_path.with_name("ledger-" + uuid4().hex + ".tmp")
                 temporary.write_text(json.dumps(ledger, ensure_ascii=False), encoding="utf-8")
-                os.replace(temporary, ledger_path)
+                replace_metadata(temporary, ledger_path)
 
             previous = ledger.get(digest)
             if previous:
@@ -256,6 +310,16 @@ class ElevenLabsTTS:
                                       reported_credits=self.reported_credits,
                                       attribution_required=self.attribution_required,
                                       sha256=hashlib.sha256(cache.read_bytes()).hexdigest())
+                # Optional local writing guidance, after response/alignment/usage validation.
+                # Never backfill or rewrite an old receipt and never submit to obtain samples.
+                from .narration_planning import measurement
+
+                try:
+                    receipt = measurement(text, config, speech, self.keys, cache, self.reported_credits)
+                except (OSError, ValueError, TTSError):
+                    receipt = None
+                if receipt:
+                    ledger[digest]['narration_measurement'] = receipt
                 persist()
                 if cancel is not None and cancel.is_set():
                     raise TTSError("응답 후 취소 · 사용량과 캐시는 보존했습니다.")

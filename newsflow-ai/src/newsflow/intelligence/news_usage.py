@@ -22,7 +22,7 @@ API_SCRIPT_METHODS = frozenset({API_SCRIPT_METHOD, 'api_grounded_v2'})
 
 
 def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *, speech: dict | None = None,
-                      version: str | None = None) -> dict:
+                      version: str | None = None, narration: dict | None = None) -> dict:
     """Server-owned instructions, never a model-selected validation exemption."""
     assessment = assess_news_usage(evidence, mode)
     if assessment["approach"] == "blocked":
@@ -49,6 +49,21 @@ def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *,
     from .provider import prompt_version
 
     selected = prompt_version(evidence, selected=version)
+    ratio, calibrated = 1, False
+    if selected == 'v2' and narration:
+        from newsflow.shortform import frozen
+        from newsflow.video.narration_planning import validate_voice
+
+        from .korean import validate_timing_ratio
+
+        voice, voice_profile = validate_voice(narration['voice']), narration.get('profile')
+        post_effect = frozen(evidence)
+        if post_effect.enabled and post_effect.speed != 1:
+            voice_profile = None  # Unpaced TTS receipts do not certify a later FFmpeg speed effect.
+        ratio = voice_profile['ratio'] if voice_profile else 1
+        calibrated = bool(voice_profile)
+        validate_timing_ratio(ratio)
+        contract.update(narration_voice=voice, narration_voice_profile=voice_profile)
     if selected == 'v2':
         contract.update(
             prompt_version='v2',
@@ -86,19 +101,24 @@ def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *,
         pause_seconds = (SENTENCE_PAUSE_SECONDS * sentences
                          + speech["pause_ms"] / 1000 * (sentences - scene_count))
         speed = CHARS_PER_SECOND * rate_factor(speech["rate"]) * (profile.speed if profile.enabled else 1)
+        maximum_seconds = duration * .97
+        if calibrated:
+            # Reserve the existing per-scene tail plus a frame-grid rounding margin.
+            maximum_seconds = min(maximum_seconds, duration - scene_count * (.35 + 1 / 30))
         contract["duration_seconds"] = duration
         contract["narration_spoken_units_target"] = {
-            "minimum": max(1, ceil((duration * .90 - pause_seconds) * speed)),
-            "maximum": max(1, floor((duration * .97 - pause_seconds) * speed)),
+            "minimum": max(1, ceil((duration * .90 / ratio - pause_seconds) * speed)),
+            "maximum": max(1, floor((maximum_seconds / ratio - pause_seconds) * speed)),
             "unit": "공백·문장부호를 제외한 한글 음절 수. 영문·숫자 묶음은 기존 발화 추정 단위 적용.",
         }
         contract["speech_estimate"] = {
             "rate": speech["rate"], "pause_ms": speech["pause_ms"],
             "scene_count_hint": scene_count, "sentence_count_hint": sentences,
             "target_seconds_minimum": round(duration * .90, 2),
-            "target_seconds_maximum": round(duration * .97, 2),
+            "target_seconds_maximum": round(maximum_seconds, 2),
             "estimated_pauses_seconds": round(pause_seconds, 2),
-            "basis": "기존 한국어 음성 길이 추정식. 실제 엔진의 WAV 측정이나 품질 검증 결과가 아님.",
+            "basis": ("동일 음성·모델·속도의 저장된 완료 음성으로 보정한 작성 안내. 새 WAV 길이·품질 보장 아님."
+                      if calibrated else "기존 한국어 음성 길이 추정식. 실제 엔진의 WAV 측정이나 품질 검증 결과가 아님."),
         }
         contract["audio_fit"] = (
             "전체 장면 내레이션은 목표 분량에 맞게 작성하고 장면별 음성 시간을 고려하세요. "
@@ -114,7 +134,7 @@ def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *,
             seconds[-1] += duration - sum(seconds)
             contract['scene_narration_budgets'] = [
                 {'scene': i, **narration_budget(sec, limit, **speech,
-                                              speed=profile.speed if profile.enabled else 1)}
+                                              speed=profile.speed if profile.enabled else 1, timing_ratio=ratio)}
                 for i, (sec, limit) in enumerate(zip(seconds, sentence_limits), 1)
             ]
             contract['narration_limits_version'] = 'scene-characters-v1'
@@ -168,7 +188,7 @@ def validate_api_news_script(output: dict, evidence: dict) -> None:
             raise ValueError("자료에 없는 직접 발언은 추가할 수 없습니다.")
 
 
-def explainer_findings(content: dict, evidence: dict, *, speech: dict | None = None) -> list[dict]:
+def explainer_findings(content: dict, evidence: dict, *, speech: dict | None = None, timing_ratio: float = 1) -> list[dict]:
     """Composition warnings never approve facts or reject otherwise valid legacy output."""
     if evidence.get('script_prompt_version') != 'v2' and evidence.get('script_method') != 'api_grounded_v2':
         return []
@@ -198,11 +218,12 @@ def explainer_findings(content: dict, evidence: dict, *, speech: dict | None = N
         result.append({'code': 'explainer_ad_risk', 'level': 'warning',
                        'message': '폭력·위험·광고 민감 주제입니다. 비선정적 표현과 실루엣·아이콘·텍스트 소재를 검토하세요.'})
     result.extend(_explainer_broadcast_findings(content, evidence))
-    result.extend(_narration_length_findings(content, evidence, speech=speech))
+    result.extend(_narration_length_findings(content, evidence, speech=speech, timing_ratio=timing_ratio))
     return result
 
 
-def _narration_length_findings(content: dict, evidence: dict, *, speech: dict | None = None) -> list[dict]:
+def _narration_length_findings(content: dict, evidence: dict, *, speech: dict | None = None,
+                              timing_ratio: float = 1) -> list[dict]:
     """Only newly frozen contracts opt in; old drafts and their text stay intact."""
     contract = evidence.get('news_usage_contract') or {}
     if contract.get('narration_limits_version') != 'scene-characters-v1':
@@ -217,7 +238,8 @@ def _narration_length_findings(content: dict, evidence: dict, *, speech: dict | 
         # stored narration or the old contract's original planning suggestion.
         sentences = 1 if profile.enabled or 0 < i < len(scenes) - 1 else 2
         budget = narration_budget(scene['seconds'], sentences, rate=speech.get('rate', 0),
-                                  pause_ms=speech.get('pause_ms', 250), speed=profile.speed if profile.enabled else 1)
+                                  pause_ms=speech.get('pause_ms', 250), speed=profile.speed if profile.enabled else 1,
+                                  timing_ratio=timing_ratio)
         text = scene['narration']
         if len(text) > budget['maximum_characters']:
             findings.append({'code': 'narration_character_limit', 'level': 'warning',

@@ -31,7 +31,7 @@ from newsflow.db.models import (
     VideoProject,
 )
 from newsflow.intelligence.capabilities import NEWS_CATEGORIES, require_acquisition
-from newsflow.intelligence.korean import MIN_SUMMARY_CHARS, speech_plan
+from newsflow.intelligence.korean import MIN_SUMMARY_CHARS
 from newsflow.intelligence.news_usage import assess_news_usage
 from newsflow.intelligence.provider import Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
@@ -80,7 +80,8 @@ class PipelineBackend:
         self.sample_collection = CollectionCoordinator(
             NewsService(sessions, Collector(FakeRSSAdapter({SAMPLE_URL: sample_feed()}))), data_dir
         )
-        self.intelligence = intelligence or IntelligenceService(sessions)
+        self.intelligence = intelligence or IntelligenceService(sessions, narration_root=data_dir)
+        self.intelligence.narration_root = data_dir
         self.publishing = publishing or PublishingService(sessions, video.outputs)
         # Without a gate, external AI is never ready: the safe default for tests and tools.
         self.ai_gate = ai_gate or (lambda: {"ready": False, "reasons": ["AI 설정이 연결되지 않았습니다."]})
@@ -629,6 +630,8 @@ class PipelineBackend:
                 self.sessions, provider, key_store=service.key_store, speech=service.speech,
                 api_key_stores=service.api_key_stores if service.api_managed else None,
                 api_providers=service.api_providers, api_budget=service.api_budget,
+                narration_root=service.narration_root, narration_voice=service.narration_voice,
+                narration_keys=service.narration_keys,
             )
         done = Event()
 
@@ -652,7 +655,10 @@ class PipelineBackend:
         from newsflow.video.production_policy import digest
 
         speech = self._speech(ctx)
-        plan = speech_plan(draft.content, draft.duration, speech.rate, speech.pause_ms)
+        checker = IntelligenceService(self.sessions, speech={"rate": speech.rate, "pause_ms": speech.pause_ms},
+                                      narration_root=self.intelligence.narration_root,
+                                      narration_keys=self.intelligence.narration_keys)
+        plan = checker.review_speech_plan(draft.content, draft.sources, draft.duration)
         return {
             "content_draft_id": draft.id, "script_revision": draft.revision, "ai_mode": ai_mode,
             **({"script_sha256": digest(draft.content)} if ctx and ctx.get("production_options", {}).get("version") == 2 else {}),
@@ -776,6 +782,10 @@ class PipelineBackend:
                     50,
                     "선택한 AI로 뉴스 대본을 만들고 있어요." if ai_mode != "offline" else "선택한 뉴스로 검토용 대본을 만들고 있어요.",
                 )
+                from newsflow.video.narration_planning import selected_voice
+
+                voice_plan = selected_voice(self.sessions, ctx.get('production_options', {}).get('voice') or ctx.get('voice'),
+                                            ctx.get('production_options', {}).get('elevenlabs'))
                 draft_id = service.generate(
                     analysis_id,
                     ctx["duration"],
@@ -784,6 +794,7 @@ class PipelineBackend:
                     options=script_options,
                     shortform_profile=ctx.get("shortform", {}),
                     on_run=self._remember(ctx, "script_run_id", save),
+                    narration_voice=voice_plan,
                     **({"article_ids": script_ids} if ctx.get("unified") or api_script else {}),
                     **({"news_usage": ctx["news_usage"], "script_prompt_version": ctx["script_method"].rsplit("_", 1)[-1]} if api_script else {}),
                 )

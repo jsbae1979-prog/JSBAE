@@ -494,6 +494,12 @@ def prompt_options(options, kind, version):
 
 def user_message(payload: dict) -> str:
     """The exact user-message string sent to the provider; estimates count the same bytes."""
+    evidence = payload.get('evidence')
+    contract = evidence.get('news_usage_contract') if isinstance(evidence, dict) else None
+    if isinstance(contract, dict) and 'narration_voice' in contract:
+        # Voice IDs and local measurement provenance stay local. The writer needs only the budgets.
+        public_contract = {k: v for k, v in contract.items() if k not in {'narration_voice', 'narration_voice_profile'}}
+        payload = {**payload, 'evidence': {**evidence, 'news_usage_contract': public_contract}}
     return json.dumps(payload, ensure_ascii=False)
 
 

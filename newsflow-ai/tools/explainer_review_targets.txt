@@ -10,3 +10,10 @@ tests/test_claude_script_response.py
 tests/test_api_news_pipeline.py
 tests/test_news_usage_policy.py
 tests/test_korean_speech.py
+tests/test_voice_narration_planning.py
+tests/test_voice_engines.py
+tests/test_elevenlabs_subscription_status.py
+tests/test_api_shorts_audio.py
+tests/test_api_shorts_pipeline.py
+tests/test_api_shorts_gui.py
+tests/test_production_choices.py

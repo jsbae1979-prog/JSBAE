@@ -647,7 +647,10 @@ def job_detail_context(request: Request, job_id: str) -> dict[str, Any]:
                 speech = (SpeechSettings(**snapshot["production_options"]["speech"])
                           if snapshot.get("production_options", {}).get("version") == 2
                           else speech_preferences(request.app.state.sessions))
-                plan = speech_plan(draft.content, draft.duration, speech.rate, speech.pause_ms)
+                checker = IntelligenceService(request.app.state.sessions,
+                    speech={'rate': speech.rate, 'pause_ms': speech.pause_ms},
+                    narration_root=request.app.state.video.root)
+                plan = checker.review_speech_plan(draft.content, draft.sources, draft.duration)
             except TTSError:
                 plan = speech_plan(draft.content, draft.duration)
         from newsflow.video.ai.production import completed_render

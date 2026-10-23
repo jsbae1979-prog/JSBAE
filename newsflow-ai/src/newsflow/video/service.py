@@ -342,6 +342,14 @@ class VideoCoordinator:
                     IntelligenceService.check_news_usage(draft.content, draft.sources)
                 except IntelligenceError:
                     raise VideoError("미확인 사실이 포함될 수 있는 대본입니다. 뉴스 활용 수준을 확인하세요.") from None
+                if (draft.sources.get('news_usage_contract') or {}).get('narration_voice_profile'):
+                    from .production_policy import check_draft
+
+                    try:
+                        check_draft(self.sessions, draft, {'voice': voice, 'speech': vars(speech),
+                                                         'elevenlabs': elevenlabs_config}, self.root)
+                    except IntelligenceError as exc:
+                        raise VideoError(str(exc)) from None
                 key = os.environ.get("NEWSFLOW_AI_API_KEY", "")
                 if key and key in json.dumps(
                     {"content": draft.content, "sources": draft.sources}, ensure_ascii=False
