@@ -98,4 +98,6 @@ Carousel·다중 이미지 게시·새 영상/음성 엔진·새 계정 Provider
 - 로컬 Windows Python **3.14.7**에서 관련 Fake **202 PASS**, Chrome **1 PASS**(1366/390px), Ruff·pip check PASS. 외부 HTTP 요청·예약/AI worker 시작을 차단하는 테스트 전용 플러그인을 사용했다. 실제 API·OAuth·외부 업로드·게시는 0회다.
 - 중간 결과는 85 PASS / 2 UI FAIL(인지 확인 UI·submit 속성 보완), 확대 검사는 197 PASS / 3 기존 정책 기대값 FAIL이었다. 기준 `b9a2e67` API 정책 모듈에서도 제거된 잔여액·24시간 예산 게이트 기대값 2개가 실패했다. 나머지 1개는 로컬 정책상 제거된 입력으로 새 계정 확인 기록을 만들지 않는 동작과 달랐다. 세 검사는 실제 인증·보고 사용량 한도·원본 기록·중복 방지 검사를 유지하면서 확정된 정책에 맞게 정리했다. 삭제·skip으로 통과시키지 않았다. 기존 전체 회귀 **57 FAIL 기록은 유지**하며 전체 회귀 PASS로 확대하지 않는다.
 
-동일 변경 범위의 Windows Python 3.12/3.14 CI와 최종 SHA는 후속 결과로 기록한다. 실제 공급사 품질·계정 사용·SNS 게시 및 운영 적용은 계속 **NOT VERIFIED**다.
+동일 코드 `1aad2885071e6e61fd3ed709c7b3fd4d09c106ad`의 [Windows CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39880941214)는 Python **3.12.10 / 3.14.9 각각 203 PASS / 0 FAIL / 0 SKIP**, Ruff·pip check PASS다. 관련 Fake 202개와 Chrome 1개만 검사했고 전체 제작 회귀나 샘플 MP4 제작은 반복하지 않았다. warning은 각각 기존 Starlette/httpx deprecation 1건이다. [합성 검증 요약](evidence/final-production/claude-compatibility-windows.json)에 실행 ID·검증 SHA·보존 범위를 기록한다.
+
+후속 보고서 커밋은 문서·합성 요약만 변경하며 기존 Draft PR #35에서 이어간다. 새 PR·main/기존 PR 병합·운영 적용·운영 앱 재시작은 없다. 실제 공급사 품질·계정 사용·SNS 게시 및 운영 적용은 계속 **NOT VERIFIED**다. 이 결과를 전체 회귀 PASS나 기존 57 FAIL 해결로 표시하지 않는다.
