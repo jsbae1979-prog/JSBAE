@@ -453,8 +453,9 @@ def validate_script(content: dict, evidence: dict) -> None:
         return
     scenes = content["scenes"]
     short = evidence.get("shortform", {}).get("enabled") is True
-    if ((len(scenes) not in (3, 4) if short else len(scenes) != 3) or scenes[0]["narration"] != content["hook"]
-            or scenes[-1]["narration"] != content["closing"]):
+    if (evidence.get("script_prompt_version") != "v2"
+            and ((len(scenes) not in (3, 4) if short else len(scenes) != 3) or scenes[0]["narration"] != content["hook"]
+                 or scenes[-1]["narration"] != content["closing"])):
         raise ValueError("HOOK·CONTENT·ENDING 세 장면을 확인하세요.")
     text = " ".join(s["narration"] for s in scenes)
     if not (50 if short else 150) <= len(text) <= 300:
@@ -475,6 +476,16 @@ def ranking_json(result: dict) -> dict:
 
 
 def script_json(content: dict, score: int) -> dict:
+    # V2 carries meaningful prose in every scene, with hook/closing embedded once.
+    # Keep the legacy three-part export without dropping interpretation scenes.
+    if content.get('analysis') is not None or any(scene.get('role') for scene in content['scenes']):
+        body = ' '.join(scene['narration'] for scene in content['scenes'])
+        if body.startswith(content['hook']):
+            body = body[len(content['hook']):].lstrip()
+        if content['closing'] and body.endswith(content['closing']):
+            body = body[:-len(content['closing'])].rstrip()
+    else:
+        body = content['scenes'][1]['narration']
     return {"title": content["title"], "score": score, "summary": content["summary"],
-            "script": {"hook": content["hook"], "content": content["scenes"][1]["narration"],
+            "script": {"hook": content["hook"], "content": body,
                        "ending": content["closing"]}}

@@ -88,8 +88,10 @@ def latest(state):
         return run, row
 
 
+@pytest.mark.parametrize("version", ["v1", "v2"])
 @pytest.mark.parametrize("presentation", ["plain", "fence", "split"])
-def test_one_complete_json_object_is_accepted_with_unchanged_source_and_schema_checks(state, presentation):
+def test_one_complete_json_object_is_accepted_with_unchanged_source_and_schema_checks(state, presentation, version, monkeypatch):
+    monkeypatch.setenv("NEWSFLOW_SCRIPT_PROMPT_VERSION", version)
     text = json.dumps(state["payload"], ensure_ascii=False)
     if presentation == "fence":
         text = "```json\n" + text + "\n```"
@@ -113,7 +115,8 @@ def test_one_complete_json_object_is_accepted_with_unchanged_source_and_schema_c
     assert "maxItems" not in schema["properties"]["comparisons"]
     assert "minimum" not in schema["properties"]["recommended_article_id"]["anyOf"][0]
     assert Analysis.model_json_schema()["properties"]["overview"]["maxLength"] == 600
-    assert "no Markdown" in body["system"] and body["max_tokens"] == 1800
+    assert "no Markdown" in body["system"] and body["max_tokens"] == (2200 if version == "v2" else 1800)
+    assert ("recommended_angle" in schema["properties"]) == (version == "v2")
 
 
 @pytest.mark.parametrize("kind,reason", [
@@ -182,7 +185,8 @@ def test_incomplete_or_refused_response_is_not_continued(state, stop_reason, exp
     failure = {"failure_reason": "incomplete_response"}
     if expected is not None:
         failure["stop_reason"] = expected
-    assert run.result == {"analysis_failure": failure}
+    assert run.result == {"analysis_failure": failure, **({"output_limit": {"stop_reason": "max_tokens"}}
+                                                        if stop_reason == "max_tokens" else {})}
     assert row.status == "failed" and len(state["calls"]) == 1
     assert RAW not in json.dumps(run.result) + run.message
 

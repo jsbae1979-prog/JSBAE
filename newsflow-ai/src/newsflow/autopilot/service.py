@@ -32,7 +32,7 @@ from newsflow.db.models import (
     utcnow,
 )
 from newsflow.intelligence.capabilities import NEWS_CATEGORIES, NEWS_PERIODS, require_acquisition
-from newsflow.intelligence.news_usage import validate_news_usage
+from newsflow.intelligence.news_usage import API_SCRIPT_METHODS, validate_news_usage
 
 from .contracts import (
     AI_MODES,
@@ -278,7 +278,9 @@ class AutopilotCoordinator:
                 model = studio_model(ai_mode, ai_model)
             except (SettingsError, TypeError):
                 raise AutopilotError("제작할 AI와 모델 설정을 확인하세요.") from None
-            request.update(script_method="api_grounded_v1", ai_model=model,
+            from newsflow.intelligence.provider import prompt_version
+
+            request.update(script_method="api_grounded_" + prompt_version(), ai_model=model,
                            external_consent=True, consented_at=request.get("consented_at") or utcnow().isoformat())
         if content_mode == "real" and ai_mode in {"claude_code", "codex"}:
             # Only newly consented jobs opt into the selected CLI. Persisted local-topic
@@ -300,6 +302,10 @@ class AutopilotCoordinator:
                             mode, source, duration, platform, content_mode, ai_mode, voice):
                             raise AutopilotConflict("같은 작업 번호로 다른 제작을 시작할 수 없습니다.")
                         old = existing.stage_results.get("request", {})
+                        # The prompt rollout is a server default, not a new caller choice.
+                        # An idempotent reopen retains the stored version without dispatch.
+                        if old.get('script_method') in API_SCRIPT_METHODS and request.get('script_method') in API_SCRIPT_METHODS:
+                            request['script_method'] = old['script_method']
                         comparable = {"news_usage": "STANDARD", **old}
                         if (any(comparable.get(key) != value for key, value in request.items()
                                 if key not in {"consented_at", "requested_at"}
@@ -345,7 +351,7 @@ class AutopilotCoordinator:
             context["production_options"] = job.stage_results["request"]["production_options"]
         context.pop("article_grouping", None)
         if ("article_grouping" in job.stage_results.get("request", {})
-                and job.stage_results["request"].get("script_method") in {"api_grounded_v1", "cli_grounded_v1"}):
+                and job.stage_results["request"].get("script_method") in {"api_grounded_v1", "api_grounded_v2", "cli_grounded_v1"}):
             context["article_grouping"] = job.stage_results["request"]["article_grouping"]
         context.update({
             "job_id": job.id, "mode": job.mode, "source": job.source, "duration": job.duration, "scheduled": scheduled,
@@ -521,7 +527,7 @@ class AutopilotCoordinator:
         """
         request = job.stage_results.get("request", {})
         if (request.get("article_grouping") != POLICY
-                or request.get("script_method") not in {"api_grounded_v1", "cli_grounded_v1"}):
+                or request.get("script_method") not in {"api_grounded_v1", "api_grounded_v2", "cli_grounded_v1"}):
             return
         ids = result.get("script_article_ids")
         if (not isinstance(ids, list) or not 1 <= len(ids) <= MAX_ARTICLES

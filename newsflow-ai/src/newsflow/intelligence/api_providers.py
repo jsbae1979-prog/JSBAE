@@ -27,8 +27,6 @@ from newsflow.intelligence.api_search import (
     safe_source_url,
 )
 from newsflow.intelligence.provider import (
-    ANALYSIS_INSTRUCTION,
-    SCRIPT_INSTRUCTION,
     AnalysisResponseError,
     NoRedirect,
     OfflineProvider,
@@ -41,6 +39,9 @@ from newsflow.intelligence.provider import (
     ProviderTimeoutError,
     ProviderUnavailableError,
     ScriptResponseError,
+    prompt_instruction,
+    prompt_options,
+    prompt_version,
     user_message,
 )
 from newsflow.news.dedup import canonical_url
@@ -108,6 +109,8 @@ def _output_schema(model) -> dict:
             return value
         limits = {name: value[name] for name in unsupported if name in value}
         result = {name: wire(item) for name, item in value.items() if name not in unsupported}
+        if result.get('type') == 'object':
+            result['additionalProperties'] = False
         if limits:
             result["description"] = (result.get("description", "") + " Local validation: "
                                      + json.dumps(limits, sort_keys=True)).strip()
@@ -116,12 +119,27 @@ def _output_schema(model) -> dict:
     return wire(model.model_json_schema())
 
 
-def _analysis_output_schema() -> dict:
-    return _output_schema(Analysis)
+def _legacy_wire(schema, *, script):
+    if script:
+        schema['properties'].pop('analysis', None)
+        schema.get('$defs', {}).pop('ScriptAnalysis', None)
+        schema.get('$defs', {}).get('Scene', {}).get('properties', {}).pop('role', None)
+    else:
+        schema['properties'].pop('recommended_angle', None)
+        props = schema.get('$defs', {}).get('Comparison', {}).get('properties', {})
+        for name in ('ad_risk', 'viewer_relevance', 'viewer_angle'):
+            props.pop(name, None)
+    return schema
 
 
-def _script_output_schema() -> dict:
-    return _output_schema(Script)
+def _analysis_output_schema(version='v1') -> dict:
+    schema = _output_schema(Analysis)
+    return _legacy_wire(schema, script=False) if version == 'v1' else schema
+
+
+def _script_output_schema(version='v1') -> dict:
+    schema = _output_schema(Script)
+    return _legacy_wire(schema, script=True) if version == 'v1' else schema
 
 
 def _usage(document: dict, *, anthropic: bool = False) -> dict[str, int]:
@@ -350,13 +368,17 @@ class AnthropicProvider(_APITransport):
             }]
         if analysis or script:
             body["system"] += " Return exactly one JSON object, with no Markdown fences or surrounding prose."
-            schema = _script_output_schema() if script else _analysis_output_schema()
+            version = prompt_version(payload.get('evidence'))
+            schema = _script_output_schema(version) if script else _analysis_output_schema(version)
             if analysis and payload.get("evidence", {}).get("curation_contract"):
                 from .curation import ranking_model, wire_evidence
                 from .curation_wire import INSTRUCTION, output_schema
 
                 contract = payload["evidence"]["curation_contract"]
-                schema = output_schema(_output_schema(ranking_model(contract)), payload["evidence"])
+                ranking_schema = _output_schema(ranking_model(contract))
+                if version == "v1":
+                    ranking_schema = _legacy_wire(ranking_schema, script=False)
+                schema = output_schema(ranking_schema, payload["evidence"])
                 body["system"] += INSTRUCTION
                 body["messages"][0]["content"] = json.dumps(
                     {**payload, "evidence": wire_evidence(payload["evidence"])}, ensure_ascii=False, separators=(",", ":"))
@@ -384,7 +406,8 @@ class AnthropicProvider(_APITransport):
     def analyze(self, evidence: dict, options: Options) -> dict:
         stage, stop_reason = "response_envelope", None
         try:
-            document = self._message(ANALYSIS_INSTRUCTION, {"evidence": evidence}, options, analysis=True)
+            document = self._message(prompt_instruction('analysis', evidence), {"evidence": evidence},
+                                     prompt_options(options, 'analysis', prompt_version(evidence)), analysis=True)
             stop_reason = document.get("stop_reason")
             if stop_reason != "end_turn":
                 raise AnalysisResponseError("incomplete_response", stop_reason=stop_reason)
@@ -407,8 +430,8 @@ class AnthropicProvider(_APITransport):
     def complete(self, evidence: dict, duration: int, options: Options) -> dict:
         stage, stop_reason = "response_envelope", None
         try:
-            document = self._message(SCRIPT_INSTRUCTION, {"duration": duration, "evidence": evidence},
-                                     options, script=True)
+            document = self._message(prompt_instruction('script', evidence), {"duration": duration, "evidence": evidence},
+                                     prompt_options(options, 'script', prompt_version(evidence)), script=True)
             stop_reason = document.get("stop_reason")
             if stop_reason != "end_turn":
                 raise ScriptResponseError("incomplete_response", stop_reason=stop_reason)

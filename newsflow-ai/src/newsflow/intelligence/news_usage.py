@@ -18,9 +18,11 @@ from .korean import CHARS_PER_SECOND, SENTENCE_PAUSE_SECONDS, rate_factor
 
 NEWS_USAGE_LABELS = {"QUICK": "빠른 제작", "STANDARD": "균형 제작", "VERIFIED": "검증 우선"}
 API_SCRIPT_METHOD = "api_grounded_v1"
+API_SCRIPT_METHODS = frozenset({API_SCRIPT_METHOD, 'api_grounded_v2'})
 
 
-def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *, speech: dict | None = None) -> dict:
+def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *, speech: dict | None = None,
+                      version: str | None = None) -> dict:
     """Server-owned instructions, never a model-selected validation exemption."""
     assessment = assess_news_usage(evidence, mode)
     if assessment["approach"] == "blocked":
@@ -44,6 +46,27 @@ def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *,
         "selected_article_ids": [article["id"] for article in _articles(evidence) if type(article.get("id")) is int],
         "tools": "추가 검색·외부 명령·Provider 전환 없이 제공된 자료만 사용하세요.",
     }
+    from .provider import prompt_version
+
+    selected = prompt_version(evidence, selected=version)
+    if selected == 'v2':
+        contract.update(
+            prompt_version='v2',
+            structure=(
+                '장면 3개, role 순서: fact(무슨 일인지 최대 2문장) → meaning(시청자에게 왜 중요한지, 흔한 오해 바로잡기) '
+                '→ action(시청자가 지금 확인할 일 1가지).'
+                if assessment['mode'] == 'QUICK' else
+                '장면 4개. 자료에 후속 일정·이슈가 있으면 fact → meaning → action → next, '
+                '없으면 fact → meaning(왜 중요한지) → meaning(시청자 관점의 배경·핵심 쟁점) → action. '
+                'fact는 모두 합쳐 최대 2문장.'
+            ) + ' meaning과 action의 초 합계가 fact보다 길어야 합니다. hook은 질문 또는 흔한 오해, '
+                'closing은 공유·다음 일정 기억·후속 확인. 각 장면은 role·내레이션·짧은 자막·소재 제안을 포함합니다.',
+            role_orders=([['fact', 'meaning', 'action']] if assessment['mode'] == 'QUICK' else
+                         [['fact', 'meaning', 'meaning', 'action'], ['fact', 'meaning', 'action', 'next']]),
+            grounding=contract['grounding'] + ' 자료가 부족하면 fact는 최소화하고 같은 주제의 해석·일반적인 확인 방법으로 구성하세요. '
+                      '시청자 관점의 해석은 허용하지만 새 사건 사실이 아니며, 자료에 없는 통계·수치·법령·가격·날짜는 넣지 마세요. '
+                      '후속 일정은 자료에 있을 때만 사용하고, 투자·상품·구매 권유 대신 확인할 일로 표현하세요.',
+        )
     if duration is not None:
         from newsflow.shortform import allowed_duration, frozen
 
@@ -98,6 +121,11 @@ def validate_api_news_script(output: dict, evidence: dict) -> None:
         script.title, script.hook, script.summary, script.closing,
         *(getattr(scene, field) for scene in script.scenes for field in ("narration", "caption")),
     ])
+    # Check the original bounded-planning strings too, before optional-field truncation can hide a claim.
+    if isinstance(output.get('analysis'), dict):
+        text += ' ' + ' '.join(value for key, value in output['analysis'].items()
+                              if key in {'misconception', 'viewer_relevance', 'viewer_action', 'next_event'}
+                              and isinstance(value, str))
     def numbers(value: str) -> set[str]:
         return {number.replace(",", "") for number in re.findall(r"\d+(?:[,.]\d+)*", value)}
 
@@ -106,6 +134,60 @@ def validate_api_news_script(output: dict, evidence: dict) -> None:
     for quoted in re.findall(r'[“\"]([^”\"]{4,})[”\"]', text):
         if quoted not in source_text:
             raise ValueError("자료에 없는 직접 발언은 추가할 수 없습니다.")
+
+
+def explainer_findings(content: dict, evidence: dict) -> list[dict]:
+    """Composition warnings never approve facts or reject otherwise valid legacy output."""
+    if evidence.get('script_prompt_version') != 'v2' and evidence.get('script_method') != 'api_grounded_v2':
+        return []
+    analysis = content.get('analysis') or {}
+    roles = [scene.get('role') for scene in content['scenes']]
+    expected = (['fact', 'meaning', 'action'] if evidence.get('news_usage') == 'QUICK' else
+                ['fact', 'meaning', 'action', 'next'] if analysis.get('next_event') else
+                ['fact', 'meaning', 'meaning', 'action'])
+    result = []
+
+    def note(code, message):
+        import logging
+
+        logging.getLogger(__name__).warning('explainer_review_warning=%s', code)
+        # Informational review items keep these editorial checks soft, including when review is skipped.
+        result.append({'code': code, 'level': 'info', 'kind': 'composition_warning', 'message': message})
+
+    if roles != expected:
+        note('explainer_roles', '해석형 장면 역할·순서가 권장 구성과 다릅니다. 사실·의미·확인할 일을 검토하세요.')
+    fact = sum(scene['seconds'] for scene in content['scenes'] if scene.get('role') == 'fact')
+    interpretation = sum(scene['seconds'] for scene in content['scenes'] if scene.get('role') in {'meaning', 'action'})
+    if fact >= interpretation:
+        note('explainer_balance', '사실 소개보다 시청자 관점의 의미·확인할 일에 충분한 시간을 배정하세요.')
+    if any(word in content.get('closing', '') for word in ('원문', '출처를 확인')):
+        note('explainer_closing', '마무리는 원문 이동 안내보다 공유·후속 일정 기억 등 시청자 참여로 정리하세요.')
+    if analysis.get('ad_risk') == 'high':
+        result.append({'code': 'explainer_ad_risk', 'level': 'warning',
+                       'message': '폭력·위험·광고 민감 주제입니다. 비선정적 표현과 실루엣·아이콘·텍스트 소재를 검토하세요.'})
+    return result
+
+
+def validate_explainer_analysis(output: dict, evidence: dict) -> None:
+    """New editorial fields cannot smuggle numerical facts/quotes from another candidate."""
+    articles = {article['id']: article for article in _articles(evidence)}
+
+    def check(values, ids):
+        source = ' '.join(str(articles[i].get(k) or '') for i in ids if i in articles
+                          for k in ('title', 'summary'))
+        text = ' '.join(value for value in values if isinstance(value, str))
+        numbers = lambda value: {n.replace(',', '') for n in re.findall(r'\d+(?:[,.]\d+)*', value)}
+        if numbers(text)-numbers(source):
+            raise ValueError('해석에 자료에 없는 수치·날짜가 있습니다.')
+        if any(quote not in source for quote in re.findall(r'[“"]([^”"]{4,})[”"]', text)):
+            raise ValueError('해석에 자료에 없는 직접 발언이 있습니다.')
+
+    for comparison in output.get('comparisons', []):
+        check([comparison.get('viewer_angle')], comparison.get('article_ids', []))
+    chosen = output.get('recommended_article_id')
+    ids = next((comparison.get('article_ids', []) for comparison in output.get('comparisons', [])
+                if chosen in comparison.get('article_ids', [])), [chosen])
+    check([output.get('recommended_angle')], ids)
 _CATEGORIES = {
     "all": ("뉴스", "뉴스는 사건과 주장을 전합니다. 보도 내용과 의미를 풀이하는 해설은 구분해야 합니다."),
     "politics": ("정치", "정책은 문제에 대응하는 방안입니다. 제안과 확정, 시행은 서로 다른 단계입니다."),

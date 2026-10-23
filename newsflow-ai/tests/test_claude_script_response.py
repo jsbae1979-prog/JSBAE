@@ -63,8 +63,10 @@ def failure(value, reason, *, unknown=False):
     return run, reservation
 
 
+@pytest.mark.parametrize('version', ['v1', 'v2'])
 @pytest.mark.parametrize('formatting', ['plain', 'fence', 'split'])
-def test_one_complete_script_json_is_saved_for_review_with_original_limits(script_state, formatting):
+def test_one_complete_script_json_is_saved_for_review_with_original_limits(script_state, formatting, version, monkeypatch):
+    monkeypatch.setenv('NEWSFLOW_SCRIPT_PROMPT_VERSION', version)
     text = json.dumps(script_state['payload'], ensure_ascii=False)
     if formatting == 'fence':
         text = '```json\n' + text + '\n```'
@@ -90,7 +92,8 @@ def test_one_complete_script_json_is_saved_for_review_with_original_limits(scrip
     assert 'maxLength' not in schema['$defs']['Scene']['properties']['narration']
     assert '400' in schema['$defs']['Scene']['properties']['narration']['description']
     assert Script.model_json_schema()['$defs']['Scene']['properties']['narration']['maxLength'] == 400
-    assert body['max_tokens'] == 1800 and 'no Markdown' in body['system']
+    assert body['max_tokens'] == (2400 if version == 'v2' else 1800) and 'no Markdown' in body['system']
+    assert ('analysis' in schema['properties']) == (version == 'v2')
     assert json.loads(body['messages'][0]['content'])['duration'] == 30 and 'tools' not in body
 
 

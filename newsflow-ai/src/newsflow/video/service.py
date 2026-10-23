@@ -29,7 +29,7 @@ from newsflow.db.models import (
     VideoProject,
     utcnow,
 )
-from newsflow.intelligence.news_usage import API_SCRIPT_METHOD
+from newsflow.intelligence.news_usage import API_SCRIPT_METHODS
 from newsflow.intelligence.schema import Script
 from newsflow.shortform import allowed_duration
 from newsflow.shortform import frozen as shortform_profile
@@ -373,7 +373,7 @@ class VideoCoordinator:
                         or any(effect not in {"cut", "fade"} for effect in effects)):
                     raise VideoError("각 장면의 효과를 확인하세요.")
                 from .ai.production import read_contract
-                strict_audio_fit = (draft.sources.get("script_method") == API_SCRIPT_METHOD or voice == "elevenlabs"
+                strict_audio_fit = (draft.sources.get("script_method") in API_SCRIPT_METHODS or voice == "elevenlabs"
                                     or bool(ai_plan_id and read_contract(session, ai_plan_id)))
                 plan = RenderPlan(
                     draft.content["title"],

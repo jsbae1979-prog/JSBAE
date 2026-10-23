@@ -194,7 +194,7 @@ class PipelineBackend:
         return identifiers
 
     def _collect(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
-        if ctx.get("script_method") in {"api_grounded_v1", "cli_grounded_v1"} and ctx.get("news_usage") == "VERIFIED":
+        if ctx.get("script_method") in {"api_grounded_v1", "api_grounded_v2", "cli_grounded_v1"} and ctx.get("news_usage") == "VERIFIED":
             raise BackendError("독립 사실 검증은 지원하지 않아 AI 요청 전에 중단했습니다.",
                                code="news_evidence_required", retryable=False)
         if ctx.get("acquisition_policy") is not None:
@@ -376,7 +376,7 @@ class PipelineBackend:
         if not candidates:
             raise BackendError("제작할 뉴스가 없습니다. 다른 출처로 다시 시도하세요.",
                                code="no_eligible_articles" if ctx.get("unified") else "no_articles")
-        api_script = ctx.get("script_method") == "api_grounded_v1"
+        api_script = ctx.get("script_method") in {"api_grounded_v1", "api_grounded_v2"}
         cli_script = ctx.get("script_method") == "cli_grounded_v1"
         assessment = None
         if cli_script:
@@ -419,7 +419,7 @@ class PipelineBackend:
                             candidates, mode=ai_mode, consent=ai_mode != "offline",
                             options=self._options(ctx, ANALYSIS_MAX_TOKENS),
                             on_run=self._remember(ctx, "analysis_run_id", save),
-                            **({"news_usage": ctx["news_usage"]} if api_script else {}),
+                            **({"news_usage": ctx["news_usage"], "script_prompt_version": ctx["script_method"].rsplit("_", 1)[-1]} if api_script else {}),
                         )
                 except IntelligenceError as exc:
                     raise self._ai_failure(exc, external=ai_mode != "offline") from None
@@ -456,7 +456,7 @@ class PipelineBackend:
             **({"script_article_ids": script_ids} if ctx.get("article_grouping") == POLICY else {}),
             **({"analysis_run_id": analysis_id, "analysis_provider": ctx.get("ai_mode", "offline"),
                 "ai_model": ctx.get("ai_model"), "analyzed_article_ids": candidates} if analysis_id else {}),
-            **({"news_usage_result": assessment, "script_method": "api_grounded_v1"} if api_script else {}),
+            **({"news_usage_result": assessment, "script_method": ctx["script_method"]} if api_script else {}),
         }
 
     @staticmethod
@@ -464,7 +464,7 @@ class PipelineBackend:
         return (
             run.provider == ctx.get("ai_mode")
             and run.options.get("model") == ctx.get("ai_model")
-            and run.evidence.get("script_method") == "api_grounded_v1"
+            and run.evidence.get("script_method") == ctx.get("script_method")
             and run.evidence.get("news_usage") == ctx.get("news_usage")
         )
 
@@ -542,7 +542,7 @@ class PipelineBackend:
         if ctx.get("content_mode", "trial") != "real" and mode != "offline":
             raise BackendError("체험 제작에서는 외부 AI를 사용하지 않습니다.", retryable=False, code="ai_consent")
         if ((mode in {"claude_code", "codex"} or ctx.get("unified") and mode != "offline"
-             or ctx.get("script_method") == "api_grounded_v1")
+             or ctx.get("script_method") in {"api_grounded_v1", "api_grounded_v2"})
                 and not (ctx.get("external_consent") is True and ctx.get("consented_at"))):
             raise BackendError(code="ai_consent", retryable=False)
         if mode == "openai":
@@ -581,7 +581,7 @@ class PipelineBackend:
         def remember(identifier: int) -> None:
             # Journal before a possible side effect. A crash after this point blocks replay.
             save(kind, identifier)
-            if ctx.get("unified") or ctx.get("script_method") == "api_grounded_v1":
+            if ctx.get("unified") or ctx.get("script_method") in {"api_grounded_v1", "api_grounded_v2"}:
                 with self.sessions.begin() as session:
                     run = session.get(IntelligenceRun, identifier)
                     run.options = {**run.options, "autopilot_job_id": ctx["job_id"],
@@ -658,9 +658,9 @@ class PipelineBackend:
             **({"script_sha256": digest(draft.content)} if ctx and ctx.get("production_options", {}).get("version") == 2 else {}),
             "review_notes": len(draft.review_notes or []),
             "speech_estimate_seconds": plan["estimated_total_seconds"], "speech_fits": plan["fits"],
-            **({"script_method": "api_grounded_v1", "script_provider": ai_mode,
+            **({"script_method": draft.sources["script_method"], "script_provider": ai_mode,
                 "news_usage_result": draft.sources.get("news_usage_result")}
-               if draft.sources.get("script_method") == "api_grounded_v1" else {}),
+               if draft.sources.get("script_method") in {"api_grounded_v1", "api_grounded_v2"} else {}),
         }
 
     def _script_ids(self, ctx: dict) -> list[int]:
@@ -686,7 +686,7 @@ class PipelineBackend:
         if ctx.get("script_method") == "local_topic_template":
             return self._topic_script(ctx, cancel, progress, save)
         ai_mode = ctx.get("ai_mode", "offline")
-        api_script = ctx.get("script_method") == "api_grounded_v1"
+        api_script = ctx.get("script_method") in {"api_grounded_v1", "api_grounded_v2"}
         cli_script = ctx.get("script_method") == "cli_grounded_v1"
         script_ids = self._script_ids(ctx)
         if ctx.get("content_draft_id"):
@@ -769,7 +769,7 @@ class PipelineBackend:
                         consent=ai_mode != "offline",
                         options=analysis_options,
                         on_run=self._remember(ctx, "analysis_run_id", save),
-                        **({"news_usage": ctx["news_usage"]} if api_script else {}),
+                        **({"news_usage": ctx["news_usage"], "script_prompt_version": ctx["script_method"].rsplit("_", 1)[-1]} if api_script else {}),
                     )
                 self._cancel(cancel)
                 progress(
@@ -785,7 +785,7 @@ class PipelineBackend:
                     shortform_profile=ctx.get("shortform", {}),
                     on_run=self._remember(ctx, "script_run_id", save),
                     **({"article_ids": script_ids} if ctx.get("unified") or api_script else {}),
-                    **({"news_usage": ctx["news_usage"]} if api_script else {}),
+                    **({"news_usage": ctx["news_usage"], "script_prompt_version": ctx["script_method"].rsplit("_", 1)[-1]} if api_script else {}),
                 )
         except IntelligenceError as exc:
             raise self._ai_failure(exc, external=ai_mode != "offline") from None

@@ -1,4 +1,4 @@
-name: NewsFlow PR35 Final Production Windows
+name: NewsFlow PR35 Method B Windows
 
 on:
   push:
@@ -71,12 +71,12 @@ jobs:
         run: |
           .venv/Scripts/python -m ruff check src tests tools
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Changed production and single feed contracts only - Fake providers
+      - name: Method B changed-range and legacy compatibility - Fake providers
         run: |
           $env:PYTHONPATH = "$PWD/src;$PWD/tests"
           New-Item -ItemType Directory -Path validation-output -Force | Out-Null
-          $testOptions = @('-p', 'claude_compat_safety', '--basetemp=validation-output/operating-compat-ci')
-          $targets = @(Get-Content tools/operating_compatibility_targets.txt | Where-Object { $_ -and -not $_.StartsWith('#') })
+          $testOptions = @('-p', 'claude_compat_safety', '--basetemp=validation-output/explainer-compat-ci')
+          $targets = @(Get-Content tools/explainer_compatibility_targets.txt | Where-Object { $_ -and -not $_.StartsWith('#') })
           Write-Host "Changed-range targets: $($targets -join ' ')"
           .venv/Scripts/python -m pytest -q -rs @testOptions @targets --junitxml=validation-output/final-tests.xml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -84,12 +84,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: pr35-final-production-${{ matrix.python }}
+          name: pr35-method-b-${{ matrix.python }}
           path: |
             ${{ runner.temp }}/newsflow-connect-evidence/**/*.json
             ${{ runner.temp }}/newsflow-connect-evidence/**/*.png
             newsflow-ai/validation-output/final-tests.xml
-            newsflow-ai/validation-output/operating-compat-ci/**/screens/*.png
+            newsflow-ai/validation-output/explainer-compat-ci/**/screens/*.png
           if-no-files-found: warn
           retention-days: 14
       # No real service keys, OAuth, media transfer or operation on user data.

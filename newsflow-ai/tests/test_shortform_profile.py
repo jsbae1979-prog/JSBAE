@@ -8,9 +8,8 @@ import pytest
 from conftest import csrf
 from PIL import Image, ImageDraw, ImageFont
 from sqlalchemy import select
+from test_api_news_pipeline import api_pipeline as api_pipeline  # noqa: PLC0414
 from test_api_news_pipeline import settled, start
-
-pytest_plugins = ("test_api_news_pipeline",)
 
 from newsflow.db.models import AppSetting, ContentDraft, VideoProject
 from newsflow.intelligence.provider import ProviderTimeoutError

@@ -22,7 +22,7 @@ from newsflow.db.models import (
 )
 from newsflow.easy_setup import preview_preferences, speech_preferences
 from newsflow.intelligence.estimate import estimate_call, estimate_cost
-from newsflow.intelligence.news_usage import safe_topic_script
+from newsflow.intelligence.news_usage import API_SCRIPT_METHODS, safe_topic_script
 from newsflow.intelligence.presentation import AUDIENCES, STYLES, TONES
 from newsflow.intelligence.provider import SCRIPT_INSTRUCTION, Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
@@ -52,7 +52,7 @@ router = APIRouter()
 def _topic_editor_options(draft: ContentDraft | None) -> list[dict]:
     """Only known text variants for this saved source and scene role enter controls."""
     if (not draft or not draft.sources.get("news_usage")
-            or draft.sources.get("script_method") == "api_grounded_v1"):
+            or draft.sources.get("script_method") in API_SCRIPT_METHODS):
         return []
     try:
         variants = [safe_topic_script(draft.sources, duration) for duration in (30, 45, 60)]
@@ -234,8 +234,8 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
             analysis=analysis,
             draft=draft,
             topic_editor=bool(draft and draft.sources.get("news_usage")
-                              and draft.sources.get("script_method") != "api_grounded_v1"),
-            api_editor=bool(draft and draft.sources.get("script_method") == "api_grounded_v1"),
+                              and draft.sources.get("script_method") not in API_SCRIPT_METHODS),
+            api_editor=bool(draft and draft.sources.get("script_method") in API_SCRIPT_METHODS),
             topic_options=_topic_editor_options(draft),
             workspace_return=_draft_workspace_link(session, draft),
             draft_json=json.dumps(draft.content, ensure_ascii=False, indent=2) if draft else "",

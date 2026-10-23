@@ -1,0 +1,13 @@
+# Method B only plus touched legacy boundaries. Not a full regression or real API quality test.
+tests/test_explainer_prompts.py
+tests/test_explainer_compatibility.py
+tests/test_claude_script_response.py
+tests/test_claude_analysis_response.py
+tests/test_api_news_pipeline.py
+tests/test_multi_article_synthesis.py
+tests/test_api_script_once.py
+tests/test_curation_top_three.py
+tests/test_curation_numbers.py
+tests/test_news_usage_policy.py
+tests/test_shortform_profile.py
+tests/test_claude_compatibility.py

@@ -112,8 +112,10 @@ def test_prior_failed_script_prevents_new_approval(sessions, store):
     with pytest.raises(APISettingsError):
         approve(sessions, identifier)
 
+@pytest.mark.parametrize('version', ['v1', 'v2'])
 @pytest.mark.parametrize('fail', [False, True])
-def test_service_dispatches_only_one_script_and_preserves_analysis(sessions, store, fail):
+def test_service_dispatches_only_one_script_and_preserves_analysis(sessions, store, fail, version, monkeypatch):
+    monkeypatch.setenv('NEWSFLOW_SCRIPT_PROMPT_VERSION', version)
     from newsflow.db.models import ContentDraft
     from newsflow.intelligence.api_providers import FakeAPIProvider
     from newsflow.intelligence.provider import Options, ProviderTimeoutError
@@ -123,7 +125,8 @@ def test_service_dispatches_only_one_script_and_preserves_analysis(sessions, sto
     with sessions.begin() as session:
         analysis = session.get(IntelligenceRun, identifier)
         analysis.evidence = {'articles': [{'id': 31, 'title': '합성 지역 정책 자료', 'summary': '합성 요약',
-                                          'url': 'https://example.com/story', 'publisher': '합성 출처'}],
+                                          'url': 'https://example.com/story', 'publisher': '합성 출처',
+                                          'sources': [{'url': 'https://example.com/story', 'publisher': '합성 출처'}]}],
                              'groups': [[31]]}
     approve(sessions, identifier)
     adapter = FakeAPIProvider('claude_api', ProviderTimeoutError() if fail else None)
