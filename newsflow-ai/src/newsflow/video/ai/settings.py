@@ -126,8 +126,6 @@ def write_settings(
     ):
         if type(value) is not int or not low <= value <= high:
             raise VideoSettingsError(f"{label} 사이여야 합니다.")
-    if provider != "off" and approved and (monthly <= 0 or job <= 0):
-        raise VideoSettingsError("유료 생성을 승인하려면 0보다 큰 작업별 한도와 월 한도를 함께 설정하세요.")
     if job > monthly > 0:
         raise VideoSettingsError("작업별 한도는 월 한도보다 클 수 없습니다.")
     with sessions.begin() as session:
@@ -215,8 +213,10 @@ def save_model(
         allowed = parse_durations(durations)
     except CostError as exc:
         raise VideoSettingsError(str(exc)) from None
-    if confirmed and (price is None or price <= 0):
-        raise VideoSettingsError("공식 문서 확인을 표시하려면 0보다 큰 초당 단가를 함께 입력하세요.")
+    if confirmed:
+        from .model_contracts import check_model_contract
+        if check_model_contract(path, allowed, resolution)[0] == "FAIL":
+            raise VideoSettingsError("공식 입력 규격과 길이·해상도가 일치하지 않습니다.")
     with sessions.begin() as session:
         session.connection().exec_driver_sql("BEGIN IMMEDIATE")
         clash = session.scalar(select(VideoAIModel.id).where(

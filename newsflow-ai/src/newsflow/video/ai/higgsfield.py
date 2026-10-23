@@ -173,6 +173,9 @@ class HiggsfieldProvider:
             "prompt": request.prompt, "duration": int(request.seconds),
             "aspect_ratio": request.aspect_ratio, "resolution": request.resolution,
         }
+        if request.model_path in {"pixverse/v6/text-to-video", "alibaba/wan-3.0/text-to-video",
+                                  "alibaba/wan-3.0-prime/text-to-video"}:
+            payload["generate_audio"] = False  # Narration uses the independently selected TTS engine.
         key = request.idempotency_key
         extra = {"Idempotency-Key": key} if key and IDEMPOTENCY_KEY.fullmatch(key) else None
         try:

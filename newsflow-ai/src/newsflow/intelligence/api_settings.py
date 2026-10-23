@@ -254,8 +254,6 @@ def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *
         prices += (settings.search_price_per_1k,)
     if any(price is None or price <= 0 for price in prices):
         reasons.append("공식 요금표에서 확인한 단가 입력 필요")
-    if not _recent(settings.billing_confirmed_at, now) or not settings.account_remaining_usd:
-        reasons.append("공급사 결제·잔여 예산 사용자 확인 필요 (24시간 유효)")
     if not fake:
         if settings.verified_model != settings.model or not _recent(settings.authentication_verified_at, now):
             reasons.append("실제 API 연결 미확인 · 별도 승인 후 검증 필요")
@@ -313,13 +311,8 @@ def _limit_reasons(settings: APISettings, rows: list[APIRequestReservation], now
                    if row.created_at >= month_start(now)), Decimal(0))
     # Only response-reported usage enters these totals. Missing usage remains an
     # unknown-outcome blocker, never an invented zero-cost success or refund.
-    confirmed_at = _time(settings.billing_confirmed_at)
-    after_check = sum((Decimal(row.estimated_usd or "0") for row in rows
-                       if confirmed_at is not None and row.created_at >= confirmed_at), Decimal(0))
     if settings.monthly_limit_usd > 0 and monthly >= settings.monthly_limit_usd:
         reasons.append("보고된 사용량 기준 월별 비용 한도에 도달했습니다.")
-    if settings.account_remaining_usd is not None and after_check >= settings.account_remaining_usd:
-        reasons.append("보고된 사용량이 사용자가 확인한 공급사 잔여 예산에 도달했습니다.")
     return reasons
 
 

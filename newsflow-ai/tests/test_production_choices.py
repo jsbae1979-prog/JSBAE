@@ -98,6 +98,7 @@ def test_higgsfield_stops_for_existing_scene_approvals_even_when_script_skipped(
     assert (job["status"], job["current_stage"]) == ("waiting_review", "script")
     assert job["production_options"]["video_provider"] == "higgsfield"
     monkeypatch.setattr(backend.video, "start_preview", lambda *_a, **_k: pytest.fail("No FFmpeg fallback"))
+    assert job["review_pauses"] == ["validate"]
     coordinator.resume(job["id"], job["revision"])
     job = settled(api_pipeline, job["id"])
     assert job["status"] == "failed" and job["error_code"] == "ai_video_review" and not job["retryable"]
@@ -112,8 +113,14 @@ def test_higgsfield_workspace_offers_scene_approvals_instead_of_basic_render(api
     page = client.get(f'/?task={job["id"]}')
     assert page.status_code == 200
     assert f'/video/ai?draft_id={job["content_draft_id"]}' in page.text
-    assert 'action="/autopilot/jobs/' + job["id"] + '/resume"' not in page.text
-    assert "장면별 승인 대기" in page.text and "기본 영상으로 대체하지 않습니다" in page.text
+    assert '<button type="submit" disabled>합성 완료 영상으로 계속</button>' in page.text
+    assert "전체 Higgsfield + FFmpeg" in page.text and "기본 영상으로 대체하지 않습니다" in page.text
+    from conftest import csrf
+    refused = client.post(f'/autopilot/jobs/{job["id"]}/resume', data={
+        'csrf_token': csrf(client), 'revision': job['revision']})
+    assert refused.status_code == 422
+    assert coordinator.snapshot(job['id'])['status'] == 'waiting_review'
+    assert coordinator.snapshot(job['id'])['revision'] == job['revision']
 
 
 @pytest.mark.parametrize("voice", ["supertonic:F1", "elevenlabs"])

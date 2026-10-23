@@ -189,9 +189,7 @@ class AutopilotCoordinator:
             pauses.discard("select")
         choices = job.stage_results.get("request", {}).get("production_options", {})
         if choices.get("version") == 1:
-            if choices.get("video_provider") == "higgsfield":
-                pauses.add("script")  # Existing per-scene approvals remain mandatory.
-            elif choices.get("script_review") is False:
+            if choices.get("script_review") is False:
                 pauses.discard("script")
             pauses.add("validate")  # Skipping script review never approves the finished video.
         return pauses
@@ -534,8 +532,10 @@ class AutopilotCoordinator:
                         job.message, job.error_code, job.retryable = "영상과 게시 초안을 보관했습니다. 게시 전 직접 검토하세요.", None, False
                         self._event(session, job, "completed", job.message)
                         return
-                    if stage in self._pauses(job):
-                        job.status, job.message = "waiting_review", "결과를 확인하고 다음 단계로 진행하세요."
+                    ai_plan_gate = (stage == "script" and
+                                    job.stage_results.get("request", {}).get("production_options", {}).get("video_provider") == "higgsfield")
+                    if stage in self._pauses(job) or ai_plan_gate:
+                        job.status, job.message = "waiting_review", ("AI 장면 계획·생성·관계 검토와 합성 승인을 진행하세요." if ai_plan_gate else "결과를 확인하고 다음 단계로 진행하세요.")
                         self._event(session, job, "waiting_review", job.message)
                         return
                     job.current_stage = STAGES[STAGES.index(stage) + 1]

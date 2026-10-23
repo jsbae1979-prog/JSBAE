@@ -600,8 +600,11 @@ def job_detail_context(request: Request, job_id: str) -> dict[str, Any]:
                 plan = speech_plan(draft.content, draft.duration, speech.rate, speech.pause_ms)
             except TTSError:
                 plan = speech_plan(draft.content, draft.duration)
+        from newsflow.video.ai.production import completed_render
+        ai_render_ready = completed_render(session, snapshot.get("content_draft_id"),
+            snapshot.get("production_options", {}), snapshot["duration"]) is not None
         return {
-            "job": snapshot, "stages": stages, "task_summary": task_summary,
+            "ai_render_ready": ai_render_ready, "job": snapshot, "stages": stages, "task_summary": task_summary,
             "draft": draft, "video": video, "article": article, "plan": plan,
             "notes": list(draft.review_notes or []) if draft else [],
             "playable": output is not None, "output_path": str(output) if output else None,
@@ -637,6 +640,11 @@ def resume(
     workspace: bool = Form(False),
 ) -> RedirectResponse:
     try:
+        current = _snapshot(request, job_id)
+        if (current["current_stage"] == "script" and current["status"] == "waiting_review"
+                and current.get("production_options", {}).get("video_provider") == "higgsfield"
+                and not job_detail_context(request, job_id)["ai_render_ready"]):
+            raise HTTPException(422, "AI 장면 생성·검토·최종 합성을 먼저 완료하세요. 기존 작업은 그대로 유지합니다.")
         request.app.state.autopilot.resume(job_id, revision, article_id=article_id)
     except AutopilotError as exc:
         raise _error(exc) from None

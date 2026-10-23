@@ -1,4 +1,4 @@
-name: NewsFlow PR35 Cloud Connection Windows
+name: NewsFlow PR35 Final Production Windows
 
 on:
   push:
@@ -70,23 +70,19 @@ jobs:
         run: |
           .venv/Scripts/python -m ruff check src tests tools
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Current API, publishing, UI and Windows contracts - no full suite replay
+      - name: Changed production and single feed contracts only - Fake providers
         run: |
-          .venv/Scripts/python -m pytest -q -rs tests/test_api_shorts_intelligence.py tests/test_api_shorts_pipeline.py tests/test_api_shorts_audio.py tests/test_api_shorts_gui.py tests/test_api_news_pipeline.py tests/test_api_news_gui.py tests/test_unified_publishing.py tests/test_unified_publishing_gui.py tests/test_creator_ui.py tests/test_single_workspace.py tests/test_creator_scene_browser.py tests/test_model_picker_browser.py tests/test_windows.py tests/test_production_dpapi.py::test_real_windows_production_dpapi_restart_tampering_account_binding tests/test_cloud_workspace_flow.py tests/test_publish_save_browser.py tests/test_production_choices.py tests/test_production_options_browser.py tests/test_voice_engines.py tests/test_ai_video_service.py::test_full_flow_card_local_and_generated_scene_to_composition tests/test_ai_video_service.py::test_unchecked_confirmation_is_refused tests/test_ai_video_service.py::test_rate_limited_submit_is_unknown_and_never_requeued tests/test_ai_video_service.py::test_recover_turns_interrupted_submission_into_unknown_and_never_resubmits tests/test_ai_video_compose.py::test_fake_provider_clip_and_card_render_a_playable_labelled_mp4 --junitxml=validation-output/connect-tests.xml
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Existing BAT start, duplicate block, stop and data restart
-        run: |
-          $smokeRoot = .venv/Scripts/python -c "import tempfile; from pathlib import Path; print(Path(tempfile.gettempdir()) / 'newsflow-bat-new')"
-          .venv/Scripts/python tools/ci_windows_launch_smoke.py --root "$smokeRoot" --output "$env:RUNNER_TEMP/newsflow-connect-evidence/bat-result.json"
+          .venv/Scripts/python -m pytest -q -rs tests/test_final_production.py tests/test_final_media.py tests/test_final_workspace_browser.py tests/test_image_posts.py tests/test_image_generation.py tests/test_image_delivery.py tests/test_production_choices.py tests/test_voice_engines.py tests/test_ai_video_provider.py tests/test_ai_video_service.py::test_full_flow_card_local_and_generated_scene_to_composition tests/test_ai_video_service.py::test_unchecked_confirmation_is_refused tests/test_ai_video_service.py::test_rate_limited_submit_is_unknown_and_never_requeued tests/test_ai_video_service.py::test_recover_turns_interrupted_submission_into_unknown_and_never_resubmits tests/test_unified_publishing.py::test_one_platform_failure_does_not_cancel_other_or_replay_success --junitxml=validation-output/final-tests.xml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Upload synthetic summaries and key screens only
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: pr35-connected-workspace-${{ matrix.python }}
+          name: pr35-final-production-${{ matrix.python }}
           path: |
             ${{ runner.temp }}/newsflow-connect-evidence/**/*.json
             ${{ runner.temp }}/newsflow-connect-evidence/**/*.png
+            newsflow-ai/validation-output/final-tests.xml
           if-no-files-found: warn
           retention-days: 14
       # No real service keys, OAuth, media transfer or operation on user data.

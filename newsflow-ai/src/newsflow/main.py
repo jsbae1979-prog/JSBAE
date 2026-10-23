@@ -26,6 +26,7 @@ from .db.session import make_engine, migrate, session_factory
 from .gui.ai_settings_routes import router as ai_settings_router
 from .gui.api_settings_routes import router as api_settings_router
 from .gui.autopilot_routes import router as autopilot_router
+from .gui.image_post_routes import router as image_post_router
 from .gui.instagram_routes import router as instagram_router
 from .gui.intelligence_routes import router as intelligence_router
 from .gui.operations_routes import router as operations_router
@@ -50,6 +51,9 @@ from .oauth.instagram import InstagramConnectionService
 from .oauth.lifecycle import expire_production_credentials, recover_production_lifecycle
 from .oauth.production_vault import recover_credential_rotations
 from .oauth.youtube import YouTubeConnectionService
+from .publishing.image_delivery import HTTPSImageDelivery
+from .publishing.image_generation import ImageGenerationService
+from .publishing.image_posts import ImagePostService
 from .publishing.instagram_live import InstagramPublishingService
 from .publishing.live import LivePublishingService
 from .publishing.unified import UnifiedPublishingService
@@ -64,7 +68,7 @@ def _recover_intelligence_runs(sessions: sessionmaker[Session], data_dir: Path) 
     """Do not interrupt intelligence owned by another active Autopilot worker."""
     try:
         with FileLock(str(data_dir / "autopilot.lock")).acquire(timeout=0), sessions.begin() as session:
-            for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.status == "running")):
+            for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.status == "running", IntelligenceRun.kind != "feed_image")):
                 run.status, run.message, run.finished_at = (
                     "interrupted",
                     "이전 실행이 중단되었습니다. 명시적으로 다시 실행하세요.",
@@ -115,6 +119,12 @@ def create_app(
     unified_publishing.recover()
     ai_keys = AIKeyStore(settings.data_dir)
     api_keys = {"openai": ai_keys, "claude_api": AnthropicKeyStore(settings.data_dir)}
+    image_generation = ImageGenerationService(sessions, settings.data_dir, ai_keys)
+    image_generation.recover()
+    image_posts = ImagePostService(sessions, settings.data_dir, instagram,
+                                   generation=image_generation,
+                                   delivery=HTTPSImageDelivery(sessions, settings.data_dir))
+    image_posts.recover()
     autopilot_backend = PipelineBackend(
         sessions, settings.data_dir, coordinator, video,
         intelligence=IntelligenceService(sessions, None, ai_keys, api_key_stores=api_keys),
@@ -162,6 +172,7 @@ def create_app(
     app.state.autopilot_backend = autopilot_backend
     app.state.ai_keys = ai_keys
     app.state.api_keys = api_keys
+    app.state.image_generation, app.state.image_posts = image_generation, image_posts
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 
     def valid(token: str) -> bool:
@@ -189,7 +200,8 @@ def create_app(
                 return HTMLResponse("지원하지 않는 요청 형식입니다.", status_code=415)
             # Cache before form parsing so downstream FastAPI receives the same body.
             body = await request.body()
-            if len(body) > 65536:
+            limit = 6 * 1024 * 1024 if request.url.path == "/image-posts/create" else 65536
+            if len(body) > limit:
                 return HTMLResponse("요청이 너무 큽니다.", status_code=413)
             form = await request.form()
             token = form.get("csrf_token", "")
@@ -229,6 +241,7 @@ def create_app(
     app.include_router(intelligence_router)
     app.include_router(video_router)
     app.include_router(video_ai_router)
+    app.include_router(image_post_router)
     app.include_router(publishing_router)
     app.include_router(youtube_router)
     app.include_router(instagram_router)

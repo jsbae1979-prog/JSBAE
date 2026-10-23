@@ -550,6 +550,7 @@ class PipelineBackend:
                                        "initial_voice": ctx.get("voice") or "silent",
                                        "initial_video": ctx.get("production_options", {}).get("video_provider", "off"),
                                        **({"production_options_version": 1,
+                                           "production_options": ctx["production_options"],
                                            "script_review": ctx["production_options"]["script_review"],
                                            **{key: ctx[key] for key in ("acquisition_policy", "category", "period") if key in ctx}}
                                           if ctx.get("production_options", {}).get("version") == 1 else {}),
@@ -761,7 +762,15 @@ class PipelineBackend:
     def _render(self, ctx: dict, cancel: Event, progress: Progress, save: SaveArtifact) -> dict:
         choices = ctx.get("production_options", {})
         if choices.get("video_provider") == "higgsfield":
-            raise BackendError("Higgsfield는 AI 장면 화면에서 장면별 생성·내용 검토·합성 승인을 진행하세요. 기본 영상으로 대체하지 않았습니다.",
+            from newsflow.video.ai.production import completed_render
+            with self.sessions() as session:
+                render = completed_render(session, ctx["content_draft_id"], choices, ctx["duration"])
+                if render:
+                    return {"render_job_id": render.id, "video_project_id": render.project_id,
+                            "output_name": render.output_name, "preview_only": True,
+                            "audio": render.metadata_json.get("audio", "silent"),
+                            "audio_fit": bool(render.metadata_json.get("audio_fit"))}
+            raise BackendError("전체 AI 장면의 생성·관계 검토·합성을 먼저 완료하세요. 기본 영상으로 대체하지 않습니다.",
                                code="ai_video_review", retryable=False)
         with self.sessions() as session:
             draft = session.get(ContentDraft, ctx["content_draft_id"])

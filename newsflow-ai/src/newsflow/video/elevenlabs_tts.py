@@ -98,7 +98,7 @@ class ElevenLabsTTS:
         self.root, self.config, self.consent = root / "tts-elevenlabs", config, consent
         self.keys = keys or ElevenLabsKeys(root)
         self.transport = transport or self._http
-        self.job_credits = 0
+        self.reported_credits = None
         self.attribution_required = False
 
     def voices(self):
@@ -114,6 +114,9 @@ class ElevenLabsTTS:
         try:
             with urllib.request.build_opener(NoRedirect()).open(request, timeout=30) as response:
                 raw = response.read(10000001)
+                if method == "POST":
+                    value = response.headers.get("character-cost", "")
+                    self.reported_credits = int(value) if re.fullmatch(r"[0-9]{1,9}", value) else None
             if len(raw) > 10000000:
                 raise ValueError
             result = json.loads(raw)
@@ -141,8 +144,8 @@ class ElevenLabsTTS:
             raise TTSError("ElevenLabs 플랜 이용 조건 미확인")
         if self.config["commercial"] and tier == "free":
             raise TTSError("ElevenLabs 무료 플랜은 상업적 이용이 불가합니다. 로컬 음성 또는 허용된 유료 플랜을 선택하세요.")
-        if info["character_limit"] - info["character_count"] < credits:
-            raise TTSError("ElevenLabs 잔여 크레딧 부족 가능성으로 차단했습니다.")
+        if info["character_limit"] == info["character_count"]:
+            raise TTSError("ElevenLabs에서 확인한 잔여 크레딧이 없습니다.")
         self.attribution_required = tier == "free"
         return {"tier": tier, "remaining": info["character_limit"] - info["character_count"],
                 "overage_disabled": True, "attribution_required": self.attribution_required}
@@ -156,8 +159,7 @@ class ElevenLabsTTS:
             raise TTSError("ElevenLabs는 키·음성 설정과 이번 제작의 외부 전송·사용량 동의가 필요합니다.")
         if cancel is not None and cancel.is_set():
             raise TTSError("외부 음성 요청 취소")
-        # Conservative 2 credits/character bound for the supported model set, not a price quote.
-        credits = len(text) * 2
+        # Resource limits stay; speculative credit multipliers and reservations do not.
         digest = hashlib.sha256(json.dumps([text, config["voice_id"], config["model"], speech.rate,
                                            hashlib.sha256(self.keys.key().encode()).hexdigest(),
                                            config["commercial"]], ensure_ascii=False).encode()).hexdigest()
@@ -182,16 +184,15 @@ class ElevenLabsTTS:
             if any(item["state"] != "completed" for item in ledger.values()):
                 raise TTSError("이전 외부 음성 요청 결과 불명: 공급사 사용량 확인 전 추가 요청 차단")
             month = datetime.now(UTC).strftime("%Y-%m")
-            reserved = sum(item["credits"] for item in ledger.values() if item["month"] == month)
-            if self.job_credits + credits > config["job_limit"] or reserved + credits > config["monthly_limit"]:
-                raise TTSError("ElevenLabs 로컬 제작별·월별 크레딧 상한 초과")
-            self.subscription(credits + reserved)
-            ledger[digest] = {"state": "reserved", "credits": credits, "month": month}
+            self.subscription()
+            ledger[digest] = {"state": "reserved", "credits": 0, "month": month,
+                              "accounting": "reported_usage", "reported_credits": None,
+                              "vendor_billing": "NOT VERIFIED"}
             persist()
-            self.job_credits += credits
             try:
                 if cancel is not None and cancel.is_set():
-                    raise TTSError("전송 직전 취소 · 예약 기록 유지")
+                    raise TTSError("전송 직전 취소 · 요청 기록 유지")
+                self.reported_credits = None
                 response = self.transport("POST", f"/text-to-speech/{config['voice_id']}/with-timestamps?output_format=pcm_24000",
                                           {"text": text, "model_id": config["model"],
                                            "voice_settings": {"speed": 1 + speech.rate * .03}})
@@ -205,6 +206,7 @@ class ElevenLabsTTS:
                     output.writeframes(pcm)
                 cues = alignment_cues(text, response.get("alignment"), wav_duration(cache))
                 ledger[digest].update(state="completed", cues=cues,
+                                      reported_credits=self.reported_credits,
                                       attribution_required=self.attribution_required,
                                       sha256=hashlib.sha256(cache.read_bytes()).hexdigest())
                 persist()
@@ -215,7 +217,7 @@ class ElevenLabsTTS:
             except TTSError:
                 raise
             except Exception:  # noqa: BLE001 - uncertain POST outcome stays reserved; never replay
-                raise TTSError("ElevenLabs 생성 결과 확인 실패 · 비용 예약 유지 · 자동 재시도 없음") from None
+                raise TTSError("ElevenLabs 생성 결과 확인 실패 · 요청 기록 유지 · 사용량 미확인 · 자동 재시도 없음") from None
 
     def synthesize(self, text, target, voice, seconds, speech=None):
         self.synthesize_timed(text, target, voice, seconds, speech)

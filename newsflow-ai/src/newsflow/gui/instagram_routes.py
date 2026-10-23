@@ -147,3 +147,31 @@ def publish(
     _execute(request, "publish", job_id, account_id=account_id, media_sha256=media_sha256,
              consent=True, public_consent=True)
     return go(target)
+
+
+@router.post("/instagram/image-delivery-config")
+def image_delivery_config(request: Request, origin: str = Form(max_length=300),
+                          upload_key: str = Form("", max_length=256), consent: bool = Form(False)):
+    """Save deployment configuration locally; never deploy or check the external server."""
+    import re
+
+    from newsflow.db.models import AppSetting
+    from newsflow.publishing.image_delivery import delivery_origin
+    if not consent:
+        raise HTTPException(422, "이미지 전용 서버 주소와 운영 권한을 확인하세요.")
+    service = request.app.state.image_posts.delivery
+    try:
+        origin = delivery_origin(origin)
+        if upload_key:
+            if not re.fullmatch(r"[A-Za-z0-9_-]{32,256}", upload_key):
+                raise ValueError
+            service.keys.save(upload_key)
+        with request.app.state.sessions.begin() as session:
+            row = session.get(AppSetting, "feed_delivery_origin")
+            if row:
+                row.value = origin
+            else:
+                session.add(AppSetting(key="feed_delivery_origin", value=origin))
+    except Exception:  # noqa: BLE001 - never reflect secret/config errors
+        raise HTTPException(422, "HTTPS 도메인·전용 키 보호 저장을 확인하세요. 외부 요청은 하지 않았습니다.") from None
+    return go("/simple-settings#instagram")

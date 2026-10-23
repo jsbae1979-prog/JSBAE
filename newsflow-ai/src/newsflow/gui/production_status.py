@@ -194,7 +194,7 @@ def production_context(request) -> dict:
 
     for name, status in statuses.items():
         if name in {"offline", "claude_code", "codex", "openai", "claude_api"}:
-            match = next((row for row in successful if row.provider == name), None)
+            match = next((row for row in successful if row.provider == name and row.kind in {"search", "analysis", "script"}), None)
             status["last_success_at"] = match.finished_at if match else None
         elif name in {"windows", "supertonic", "elevenlabs", "ffmpeg"}:
             match = next((job for job, audio in renders if job.metadata_json.get("playable")

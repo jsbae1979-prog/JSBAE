@@ -209,19 +209,37 @@ class VideoCoordinator:
             run = session.get(IntelligenceRun, draft.run_id) if draft else None
             choice = run.options.get("production_context", {}) if run and isinstance(run.options, dict) else {}
             choice = choice if isinstance(choice, dict) else {}
-            if choice.get("production_options_version") == 1 and choice.get("initial_video") == "higgsfield":
+            from newsflow.autopilot.contracts import AutopilotError
+            from newsflow.autopilot.production_options import freeze_options
+
+            from .ai.production import read_contract
+
+            contract = read_contract(session, plan_id)
+            production = None
+            if contract:
+                try:
+                    production = freeze_options(contract["production"], contract["production"]["voice"])
+                    speech = SpeechSettings(**contract["speech"])
+                except (KeyError, TypeError, ValueError, AutopilotError):
+                    raise VideoError("이 작업의 고정된 음성 설정을 확인할 수 없습니다. 다른 음성으로 대체하지 않습니다.") from None
+                voice = production["voice"]
+                if contract.get("mode") == "full" and not all(clips):
+                    raise VideoError("전체 AI 영상은 모든 장면의 생성 클립이 필요합니다. 카드로 대체하지 않습니다.")
+            elif choice.get("production_options_version") == 1 and choice.get("initial_video") == "higgsfield":
                 voice = choice.get("initial_voice")
                 if not isinstance(voice, str) or not voice or voice == "elevenlabs":
                     raise VideoError("이 작업의 ElevenLabs + Higgsfield 동시 합성은 지원하지 않습니다. 다른 음성으로 대체하지 않았습니다. 제작 화면에서 지원하는 조합을 직접 선택하세요.")
         try:
-            speech = speech_preferences(self.sessions)
+            speech = speech if contract else speech_preferences(self.sessions)
         except TTSError:
             raise VideoError("음성 속도·쉼 설정을 다시 저장하세요.") from None
         images = [spec.get("material") or "" for spec in specs]
         return self._start(
-            draft_id, duration, voice, size, position, images, any(images), False,
+            draft_id, duration, voice, size, position, images, any(images), bool(contract),
             speech=speech, fit_audio=voice != "offline-silence", clips=clips, ai_plan_id=plan_id,
             clip_hashes=hashes, clip_bytes=clip_bytes,
+            external_tts_consent=bool(production and production["external_tts_consent"]),
+            elevenlabs_config=production.get("elevenlabs") if production else None,
         )
 
     def voice_available(self, voice: str) -> bool:
@@ -315,7 +333,9 @@ class VideoCoordinator:
                                        elevenlabs_config=elevenlabs_config)
                 if voice not in tts.voices():
                     raise VideoError("설치된 음성 목록에서 음성을 선택하세요.")
-                strict_audio_fit = draft.sources.get("script_method") == API_SCRIPT_METHOD
+                from .ai.production import read_contract
+                strict_audio_fit = (draft.sources.get("script_method") == API_SCRIPT_METHOD or voice == "elevenlabs"
+                                    or bool(ai_plan_id and read_contract(session, ai_plan_id)))
                 plan = RenderPlan(
                     draft.content["title"],
                     [

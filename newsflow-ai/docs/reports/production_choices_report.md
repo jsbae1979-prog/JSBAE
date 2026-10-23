@@ -76,3 +76,8 @@ Windows runner 결과와 사용자 Windows 11 PC 운영은 구분한다. 사용�
 - [Claude + ElevenLabs Fake 동선](evidence/production-choices/cloud-claude-options.json)
 - 실제 OpenAI / Claude / ElevenLabs / Higgsfield 유료 요청 **0건**, 실제 OAuth·SNS 업로드·게시 **0건**.
 - 기존 [Draft PR #35](https://github.com/jsbae1979-prog/JSBAE/pull/35)를 유지한다. 새 PR·main 병합·다른 브랜치 병합·운영 반영은 하지 않았다. 최종 결과 제출 후 추가 개발을 중단한다.
+
+
+## 후속 최종 통합 개발
+
+기존 결과는 그대로 보존한다. 전체 AI 영상·ElevenLabs 결합·단일 피드의 후속 변경과 검증 한계는 [최종 통합 보고서](final_production_report.md)를 참고한다.

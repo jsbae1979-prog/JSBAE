@@ -8,3 +8,5 @@
 .oauth-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0}.oauth-actions form{margin:0}.oauth-start-disabled{cursor:not-allowed}.oauth-error{color:#ff9fae}.oauth-account code{overflow-wrap:anywhere}@media(max-width:700px){.oauth-actions{align-items:stretch;flex-direction:column}.oauth-actions button{width:100%}}
 
 .operations-page .operations-consent{display:flex;align-items:flex-start;gap:10px;margin:16px 0;line-height:1.6}.operations-page .operations-consent input[type=checkbox]{width:auto;flex:0 0 auto;margin:5px 0 0}.operations-page section{overflow-wrap:anywhere}
+
+.single-feed-workspace img{max-width:100%;height:auto;border-radius:12px}.single-feed-workspace pre,.single-feed-workspace p{overflow-wrap:anywhere}
