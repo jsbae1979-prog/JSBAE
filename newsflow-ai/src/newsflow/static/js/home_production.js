@@ -8,6 +8,17 @@ const acquisitionLabel = document.querySelector("[data-home-acquisition]");
 const policyWarning = document.querySelector("[data-home-policy-warning]");
 const policyStatesNode = document.querySelector("[data-home-policy-states]");
 const policyStates = policyStatesNode ? JSON.parse(policyStatesNode.dataset.homePolicyStates) : {};
+// Closed options still submit their existing values; this summary never writes settings.
+const optionSummary = document.querySelector('[data-production-options-summary]');
+function refreshOptionsSummary() {
+  if (!optionSummary) return;
+  optionSummary.textContent = ['source','category','period','news_usage'].map(name => {
+    const field = document.querySelector(`#quick-production select[name="${name}"]`);
+    return field?.selectedOptions[0]?.textContent?.trim();
+  }).filter(Boolean).join(' · ');
+}
+document.querySelectorAll('#quick-production select').forEach(field => field.addEventListener('change', refreshOptionsSummary));
+refreshOptionsSummary();
 function refreshPolicyReadiness() {
   const state = acquisitionChoice && policyStates[acquisitionChoice.value];
   if (!state) return;

@@ -300,6 +300,7 @@ def _workspace_video(
         "review_url": f'/?task={task["id"]}#workspace-detail' if task else f"/video?job_id={video.id}&draft_id={project.draft_id}",
         "audio": (video.metadata_json or {}).get("audio"), "output_path": str(output),
         "ai_scenes": ai_scenes, "preview_only": project.preview_only,
+        "recorded_at": (video.finished_at or video.created_at).isoformat(),
     }
 
 
@@ -372,10 +373,16 @@ def home(
         visible_videos = recent_videos[:100 if show == "videos" else 5]
         is_dashboard = request.url.path == "/" and not (task or video or guide or show)
         dashboard = dashboard_context(session, tasks) if is_dashboard else None
+        from .navigation import CONTENT_TYPES
+        from .studio_overview import overview as studio_overview
+
+        studio = studio_overview(session, tasks, completed, request.app.state.character.listing()) if (
+            is_dashboard or show == "tasks" and not (task or video or guide)) else None
         return _page(
             request, "creator_dashboard.html" if is_dashboard else "activity.html"
             if show == "tasks" and not (task or video or guide) else "easy_home.html", active="home",
             dashboard=dashboard,
+            studio=studio, content_types=CONTENT_TYPES,
             activity_chart=dashboard_context(session, visible_tasks) if show == "tasks" else None,
             defaults=_defaults(request), ready=ready,
             production=production_summary(request, ready),

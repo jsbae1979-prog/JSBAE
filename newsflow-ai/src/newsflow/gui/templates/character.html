@@ -1,21 +1,26 @@
 {% extends 'base.html' %}
 {% block title %}캐릭터 쇼츠 · NewsFlow AI{% endblock %}
 {% block content %}
+{% set character_states = {'needs_script':'대본 준비','writing':'대본 작성 중','script_failed':'대본 확인 필요','script_review':'대본 검토','preparing':'견적 확인 중','prepare_failed':'견적 확인 필요','quoted':'생성 승인 대기','generating':'장면 생성 중','submission_unknown':'결과 확인 필요','scene_review':'장면 확인 필요','retry_quoted':'추가 생성 승인 대기','clips_review':'장면 검토','composing':'합성 중','compose_failed':'합성 확인 필요','completed':'영상 저장 완료'} %}
+{% set roles = {'setup':'도입','build':'상황 전개','contrast':'대비','punchline':'반전'} %}
+{% set step = 1 if not job or job.state in ['needs_script','writing','script_failed'] else 2 if job.state in ['script_review','preparing','prepare_failed','quoted'] else 3 if job.state != 'completed' else 4 %}
 {% call studio_header('video','CHARACTER SHORTS','느긋해 대리','주제 하나로 만드는 30초 무대사 직장인 코미디') %}<a class="button" href="/video">뉴스 영상으로 돌아가기</a>{% endcall %}
+<ol class="character-path" aria-label="캐릭터 제작 순서">{% for number,label,icon in [(1,'주제·대본','edit'),(2,'검토·견적','check'),(3,'장면·합성','video'),(4,'영상 확인','play')] %}<li {% if step == number %}aria-current="step"{% endif %}>{{ ui_icon(icon,20) }}{{ number }}. {{ label }}</li>{% endfor %}</ol>
 {% if error %}<p role="alert" class="error">{{ error }}</p>{% endif %}
 {% if not job %}
-<section class="suite-panel"><h2>새 캐릭터 쇼츠</h2>
-<form action="/character" method="post" enctype="multipart/form-data">
+<div class="character-layout"><section class="suite-panel"><h2>{{ ui_icon("edit",20) }} 어떤 이야기를 만들까요?</h2>
+<form class="character-form" action="/character" method="post" enctype="multipart/form-data">
 <input type="hidden" name="csrf_token" value="{{ csrf }}">
 <label>주제<input name="topic" maxlength="150" placeholder="월요일 아침 9시 1분, 지각했는데 태평하게 출근" required></label>
-<label>캐릭터 PNG 원본<input type="file" name="reference" accept="image/png" required></label>
+<div class="character-reference-picker"><label>{{ ui_icon("image",18) }} 캐릭터 원본 선택<input type="file" name="reference" accept="image/png" required data-character-reference aria-describedby="character-file-help"></label><p class="hint" id="character-file-help">PNG · 10MB 이내 · 선택한 이미지는 저장 전까지 내 PC에서만 미리 봅니다.</p><canvas class="character-reference-preview" data-character-preview hidden role="img" aria-label="선택한 캐릭터 원본 미리보기"></canvas><p class="hint" role="status" data-character-file-status></p></div>
 <div class="form-grid"><label>이 작품의 공식 견적 상한 (USD)<input name="episode_limit" type="number" min="0.01" step="0.01" required></label>
 <label>캐릭터 제작 일일 상한 (USD)<input name="day_limit" type="number" min="0.01" step="0.01" required></label></div>
 <p class="hint">이 단계는 로컬 작업만 저장합니다. 대사·립싱크·자동 게시 없이 자막과 효과음으로 표현합니다.</p>
-<button class="primary">작업 저장</button></form></section>
+<button class="primary">{{ ui_icon('file',18) }} 주제·원본 저장</button></form></section>
+<aside class="character-summary"><h2>{{ ui_icon('character',24) }} 느긋해 대리</h2><p>작은 사건에도 평온한 직장인. 대사 대신 표정·행동·자막으로 이야기를 전합니다.</p><dl><dt>영상</dt><dd>30초 · 세로 9:16</dd><dt>장면</dt><dd>3~5개</dd><dt>음성·음악</dt><dd>없음</dd><dt>게시</dt><dd>자동 게시 안 함</dd></dl><p class="hint">지금은 로컬 작업만 저장합니다. Claude 대본과 Higgsfield 생성은 각 단계에서 별도로 승인합니다.</p><a class="button" href="/simple-settings#connections">{{ ui_icon('key',18) }} API 연결 설정</a></aside></div>
 {% else %}
-<section class="suite-panel"><div class="suite-section-bar"><h2>{{ job.script.title if job.script else job.topic }}</h2><span>{{ job.state }} · 30초 · 9:16</span></div>
-{% if job.script %}<p>{{ job.script.plan.situation }}</p><ol>{% for scene in job.script.scenes %}<li><strong>{{ scene.seconds }}초 · {{ scene.role }}</strong> {{ scene.caption }}<details><summary>장면·효과음</summary><p>{{ scene.action }}</p><p>효과음: {{ scene.sfx or '무음' }}</p></details></li>{% endfor %}</ol>{% endif %}
+<section class="suite-panel"><div class="suite-section-bar"><h2>{{ job.script.title if job.script else job.topic }}</h2><span><span class="character-status {{ 'is-error' if job.state in ['script_failed','prepare_failed','submission_unknown','scene_review','compose_failed'] else 'is-complete' if job.state == 'completed' else 'is-review' if job.state in ['script_review','quoted','retry_quoted','clips_review'] }}">{{ character_states.get(job.state,"상태 확인 필요") }}</span> · 30초 · 9:16</span></div>
+{% if job.script %}<p>{{ job.script.plan.situation }}</p><ol class="character-scene-list">{% for scene in job.script.scenes %}<li><strong>장면 {{ loop.index }} · {{ roles.get(scene.role,scene.role) }} · {{ scene.seconds }}초</strong><p class="scene-caption">{{ scene.caption }}</p><details><summary>장면·효과음</summary><p>{{ scene.action }}</p><p>효과음: {{ scene.sfx or '무음' }}</p></details></li>{% endfor %}</ol>{% endif %}
 {% if job.state=='needs_script' or (job.state=='script_failed' and job.response_received and job.script_attempts<3) %}<form action="/character/{{ job.id }}/write" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}">
 <label class="check"><input type="checkbox" name="consent" value="true" required>주제·캐릭터 설정·최근 주제를 {{ job.claude_model }}에 전송하여 대본 1회를 생성합니다. 유료 사용량이 발생하며 자동 재생성하지 않습니다.</label><button class="primary">Claude 대본 1회 생성</button></form>
 {% elif job.state=='script_review' %}<form action="/character/{{ job.id }}/prepare" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}">
@@ -30,10 +35,10 @@
 {% elif job.state=='retry_quoted' %}<p>장면 {{ job.retry.position }} 추가 공식 견적 ${{ job.retry.quote_usd }} · 기존 기록과 완료 장면 보존 · 최초 생성 후 장면별 최대 2회 추가 승인</p><form action="/character/{{ job.id }}/retry-scene" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="quote_hash" value="{{ job.retry_hash }}"><label class="check"><input type="checkbox" name="consent" value="true" required>동일 장면·모델·참조의 새 유료 생성 1회를 승인합니다. 이전 요청을 재전송하지 않으며 견적 합계를 편당·일일 상한에 포함합니다.</label><button class="primary">실패 장면 새 생성 1회 승인</button></form>
 {% elif job.state=='clips_review' %}<p>모든 장면이 로컬에 저장됐습니다. <a href="/character/{{ job.id }}/clips">장면 영상 검토</a></p>
 <form action="/character/{{ job.id }}/render" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><label class="check"><input type="checkbox" name="reviewed" value="true" required>장면의 캐릭터·표정·내용·순서를 검토했고 로컬 합성에 동의합니다.</label><button class="primary">30초 MP4 합성</button></form>
-{% elif job.state=='completed' %}<video controls preload="none" src="/character/{{ job.id }}/file" aria-label="캐릭터 쇼츠 완성 영상"></video><a class="button" href="/character/{{ job.id }}/file?download=true">MP4 저장</a><p>사람의 최종 검수 필요 · 자동 업로드 없음 · AI 표시·아동용 여부·반복 구성 확인</p>
+{% elif job.state=='completed' %}<video class="character-scenes-video" controls preload="none" src="/character/{{ job.id }}/file" aria-label="캐릭터 쇼츠 완성 영상"></video><a class="button" href="/character/{{ job.id }}/file?download=true">MP4 저장</a><p>사람의 최종 검수 필요 · 자동 업로드 없음 · AI 표시·아동용 여부·반복 구성 확인</p>
 {% else %}<p role="status">작업이 중단됐거나 확인이 필요합니다. 기록과 생성 결과를 보존했습니다. 자동 재시도·일반 뉴스 영상 대체는 하지 않습니다.</p>{% endif %}
 <details><summary>작업 정보</summary><p>Claude {{ job.claude_model }} · 영상 {{ job.model }} · 음성 없음 · 실제 청구액 {{ job.reported_billed_usd if job.reported_billed_usd is not none else '미확인' }}</p><p>Windows 환경의 HF_KEY 설정과 API 사용 권한이 필요합니다. 기존 뉴스·음성 기본값은 바꾸지 않습니다.</p></details>
 </section><a class="button" href="/character">다른 주제 준비</a>
 {% endif %}
-{% if jobs %}<section class="suite-panel"><h2>저장된 캐릭터 작업</h2><ul>{% for item in jobs %}<li><a href="/character?job_id={{ item.id }}">{{ item.topic }}</a> · {{ item.state }}</li>{% endfor %}</ul></section>{% endif %}
+{% if jobs %}<section class="suite-panel"><h2>저장된 캐릭터 작업</h2><ul class="character-saved-list">{% for item in jobs %}<li><a href="/character?job_id={{ item.id }}">{{ ui_icon("character",18) }} {{ item.topic }}</a><span class="character-status {{ 'is-error' if item.state in ['script_failed','prepare_failed','submission_unknown','scene_review','compose_failed'] else 'is-complete' if item.state == 'completed' else 'is-review' if item.state in ['script_review','quoted','retry_quoted','clips_review'] }}">{{ character_states.get(item.state,"상태 확인 필요") }}</span></li>{% endfor %}</ul></section>{% endif %}
 {% endblock %}

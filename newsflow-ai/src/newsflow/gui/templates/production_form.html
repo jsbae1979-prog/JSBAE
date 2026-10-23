@@ -1,17 +1,18 @@
 {% if not reference_home|default(false) %}<label class="production-review-choice"><input type="checkbox" name="script_review" value="true" form="quick-production" {% if not entry_flow|default(none) or entry_flow.get('script_review', true) %}checked{% endif %}><span>영상 제작 전에 대본 확인하기</span></label>{% endif %}
 {% if not picker_on_dashboard|default(false) %}{% with dashboard_picker=true %}{% include 'production_picker.html' %}{% endwith %}{% endif %}
-  <div class="studio-form-heading"><div><p class="eyebrow">CREATE YOUR NEXT STORY</p><h2 id="production-title" tabindex="-1">{{ "새 쇼츠 만들기" if reference_home else "어떤 뉴스로 만들까요?" }}</h2></div><span class="studio-format">9:16 SHORTS</span></div>
+  <div class="studio-form-heading"><div><p class="eyebrow">CREATE YOUR NEXT STORY</p><h2 id="production-title" tabindex="-1">{{ "새 쇼츠 만들기" if reference_home else "제작 시작" }}</h2></div><span class="studio-format">9:16 SHORTS</span></div>
   <form action="{{ production.action_url }}" method="post" data-easy-form class="quick-production-form" id="quick-production">
     {{ csrf_field() }}<input type="hidden" name="workspace" value="true"><input type="hidden" name="production_options_version" value="2">
     {% if not production_picker|default(none) and (not entry_flow or entry_flow.get('script_review', true)) %}<input type="hidden" name="script_review" value="true">{% endif %}
-    <div class="quick-production-fields">
+    <div class="production-essential"><label for="quick-duration">영상 길이<select id="quick-duration" name="duration">{% for duration in shortform_durations|default([30,45,60]) %}<option value="{{ duration }}" {% if entry_duration == duration %}selected{% endif %}>{{ duration }}초</option>{% endfor %}</select></label></div>
+    <details class="studio-job-options" data-production-options><summary>자료·대본 옵션 <small data-production-options-summary>{{ '체험 뉴스' if entry_source == 'sample' else '새 뉴스' }} · {{ category_labels.get(entry_category, entry_category) }} · {{ period_labels.get(entry_period, entry_period) }} · {{ news_usage_labels.get(entry_news_usage, entry_news_usage) }}</small></summary>
       <label for="quick-source">뉴스 자료<select id="quick-source" name="source"><option value="feeds" {% if entry_source == 'feeds' %}selected{% endif %}>새 뉴스 수집·검색</option><option value="sample" {% if entry_source == 'sample' %}selected{% endif %}>체험 뉴스 · 연습용</option></select></label>
-      <label for="quick-duration">영상 길이<select id="quick-duration" name="duration">{% for duration in shortform_durations|default([30,45,60]) %}<option value="{{ duration }}" {% if entry_duration == duration %}selected{% endif %}>{{ duration }}초</option>{% endfor %}</select></label>
-    </div>
-    <div class="quick-production-fields" data-source-mode="feeds" {% if entry_source == 'sample' %}hidden{% endif %}>
+<div class="quick-production-fields" data-source-mode="feeds" {% if entry_source == 'sample' %}hidden{% endif %}>
       <label for="quick-category">뉴스 분야<select id="quick-category" name="category">{% for value,label in category_labels.items() %}<option value="{{ value }}" {% if entry_category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
       <label for="quick-period">뉴스 범위<select id="quick-period" name="period">{% for value,label in period_labels.items() %}<option value="{{ value }}" {% if entry_period == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
     </div>
+<label for="quick-news-usage">뉴스 활용 수준<select id="quick-news-usage" name="news_usage" aria-describedby="news-usage-help">{% for value,label in news_usage_labels.items() if value != 'VERIFIED' %}<option value="{{ value }}" {% if entry_news_usage == value %}selected{% endif %}>{{ label }}{% if value == 'QUICK' %} · 주제 중심{% elif value == 'STANDARD' %} · 사실과 해설 구분{% else %} · 근거 부족 시 중단{% endif %}</option>{% endfor %}</select></label><p class="hint" id="news-usage-help">QUICK은 주제 중심, STANDARD는 사실과 해설을 구분합니다. 목록 자료는 주제 참고용입니다.</p>
+    </details>
     <input type="hidden" id="quick-voice-method" name="voice_method" value="{{ 'elevenlabs' if (entry_flow.initial_voice if entry_flow else ready.voice.name) == 'elevenlabs' else 'local' }}">
     <input type="hidden" id="quick-video-method" name="video_method" value="{{ entry_flow.get('initial_video', production_config.video_provider) if entry_flow else production_config.video_provider }}">
     <input type="hidden" name="acquisition_policy" value="{{ entry_policy }}">
@@ -19,12 +20,10 @@
     <p class="hint studio-api-note" data-external-voice-note {% if (entry_flow.initial_voice if entry_flow else ready.voice.name) != 'elevenlabs' %}hidden{% endif %}>ElevenLabs 음성은 제작별 외부 전송·유료 사용 동의 후 생성해요.</p>
     <p class="hint studio-api-note" data-external-video-note {% if (entry_flow.get('initial_video', 'off') if entry_flow else production_config.video_provider) != 'higgsfield' %}hidden{% endif %}>모든 장면을 Higgsfield로 생성해요. 생성·내용 검토·합성 승인이 별도로 필요해요.</p>
     <p class="soft-notice studio-connection-notice" data-home-policy-warning data-source-mode="feeds" {% if entry_source == 'sample' or entry_policy == 'rss' or entry_policy_state.supported %}hidden{% endif %}>뉴스 검색 준비가 필요해요. <a href="/simple-settings#connections">AI 연결·사용 승인 확인 →</a></p>
-    {% if production_picker|default(none) %}<ul class="readiness-action-list" aria-label="이번 새 제작의 준비 조건">{% for key,label in [('news','뉴스·대본'),('voice','음성'),('video','영상')] %}{% set signal = production_picker.lights[key] %}{% if signal.color != 'green' %}<li><span>{{ label }} · {{ signal.state }} — {{ signal.label }}</span><a href="{{ signal.action_url }}">설정 확인 →</a></li>{% endif %}{% endfor %}</ul>{% endif %}
-    <button class="primary production-start-button" type="submit"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m13 3-9 11h7l-1 7 10-12h-7z"/></svg> 쇼츠 만들기 <span aria-hidden="true">→</span></button>
+
+    <button class="primary production-start-button" type="submit"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m13 3-9 11h7l-1 7 10-12h-7z"/></svg> 자동 제작 시작 <span aria-hidden="true">→</span></button>
     <p class="form-feedback" role="alert" data-submit-error></p>
-    <details class="easy-advanced studio-production-options"><summary>대본 구성 옵션</summary>
-      <label for="quick-news-usage">뉴스 활용 수준<select id="quick-news-usage" name="news_usage" aria-describedby="news-usage-help">{% for value,label in news_usage_labels.items() if value != 'VERIFIED' %}<option value="{{ value }}" {% if entry_news_usage == value %}selected{% endif %}>{{ label }}{% if value == 'QUICK' %} · 주제 중심{% elif value == 'STANDARD' %} · 사실과 해설 구분{% else %} · 근거 부족 시 중단{% endif %}</option>{% endfor %}</select></label><p class="hint" id="news-usage-help">목록 페이지는 주제 참고용입니다. QUICK은 간결하게, STANDARD는 배경·쟁점까지 구성해요. 검증 우선은 미지원입니다.</p>
-    </details>
+
 
   </form>
   <p class="production-explainer" data-trial-notice {% if entry_source != 'sample' %}hidden{% endif %}>체험 뉴스는 Offline 대본을 사용합니다. 등록 뉴스의 {{ production_config.provider_label }} 선택은 유지됩니다.</p>

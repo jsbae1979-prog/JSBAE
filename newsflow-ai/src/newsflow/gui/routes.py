@@ -26,6 +26,8 @@ from newsflow.news.ranking import CATEGORY_WORDS
 from newsflow.news.rss_adapter import URLPolicyError, validate_url
 from newsflow.news.service import CollectionBusy
 
+from .navigation import navigation_context
+
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 KST = timezone(timedelta(hours=9), "KST")
@@ -51,6 +53,8 @@ def kst_day(value: str | None) -> str:
 
 templates.env.filters["kst"] = kst
 templates.env.filters["kst_day"] = kst_day
+
+templates.env.globals["workspace_navigation"] = navigation_context
 
 
 def page(request: Request, name: str, **context: object) -> HTMLResponse:

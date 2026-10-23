@@ -15,7 +15,7 @@
 {% for symbol,label,value,href,tone in [('clock','진행·확인할 작업',active_task_count,'#workspace-tasks','violet'),('video','제작된 영상',video_count,'/videos','blue'),('send','게시 초안',queue_count,'/queue','green'),('file','전체 작업 기록',task_count,'/?show=tasks#workspace-tasks','indigo')] %}<a class="reference-metric {{ tone }}" href="{{ href }}"><span class="reference-metric-icon" aria-hidden="true">{{ ui_icon(symbol, 24) }}</span><div><span>{{ label }}</span><strong>{{ value }}</strong></div><span class="reference-metric-arrow" aria-hidden="true">↗</span></a>{% endfor %}
 </nav>
 {% else %}
-<header class="creator-heading studio-heading"><div><p class="eyebrow">NEWS TO SHORTS</p><h1>{{ '새로운 쇼츠를 만들어 보세요.' if creating else '나의 영상 작업실' }}</h1><p>뉴스를 고르고, 이야기를 만들고, 완성된 영상을 확인하세요.</p></div><a class="studio-library-link" href="/videos">내 영상 보기 ↗</a></header>
+<header class="creator-heading studio-heading"><div><p class="eyebrow">NEWS TO SHORTS</p><h1>{{ '뉴스 쇼츠 만들기' if creating else '나의 영상 작업실' }}</h1><p>{{ '저장한 설정으로 수집부터 제작까지 이어갑니다.' if creating else '뉴스를 고르고, 이야기를 만들고, 완성된 영상을 확인하세요.' }}</p></div><a class="studio-library-link" href="/videos">내 영상 보기 ↗</a></header>
 {% endif %}
 {% set entry_flow = workspace_guide_context.production_flow if workspace_guide_context else none %}
 {% set entry_source = entry_flow.source if entry_flow else defaults.source %}
@@ -28,16 +28,16 @@
 {% set detail_open = selected_video or selected_task_context or workspace_guide_context %}
 {% if detail_open %}<details class="easy-advanced studio-new-production"><summary>새 쇼츠 만들기</summary>{% endif %}
 
-<section class="production-hero workspace-create" data-workspace-create aria-labelledby="production-title" data-home-policy-states='{{ production.policy_states|tojson }}'>
+<section class="production-hero workspace-create {{ 'production-hero-auto' if creating }}" data-workspace-create aria-labelledby="production-title" data-home-policy-states='{{ production.policy_states|tojson }}'>
 {% if reference_home %}<aside class="reference-news" aria-labelledby="reference-news-title"><div class="reference-panel-head"><h2 id="reference-news-title">최근 보관 뉴스</h2><a href="/news">전체 보기 ↗</a></div><p class="reference-news-scope">수집한 자료 · 발행일은 기사에서 확인하세요.</p><div class="reference-news-list">{% for article in recent_news %}<a class="reference-news-item" href="/news/{{ article.id }}"><span class="reference-news-art" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M12 49V19h27l13 13v17z M39 19v13h13 M20 39h24 M20 44h17 M20 27h10" stroke="currentColor" stroke-width="2"/></svg></span><span class="reference-news-copy"><small>{{ article.publisher }}</small><strong>{{ article.title }}</strong><span>{{ category_labels.get(article.category, article.category) }}</span></span></a>{% else %}<div class="reference-news-empty"><span aria-hidden="true">{{ ui_icon("file", 32) }}</span><h3>첫 뉴스가 기다리고 있어요.</h3><p>제작을 시작하면 선택한 방식으로 새 뉴스를 확보해요.</p><a href="#quick-source">뉴스 자료 선택 →</a></div>{% endfor %}</div><a class="reference-news-footer" href="/news">보관 기사 검색 →</a></aside>{% endif %}
-<div class="production-start">{% if reference_home %}<div class="dashboard-workflow-heading"><h2>AI 제작 워크플로</h2><span>내 작업실</span></div>{% endif %}<ol class="creator-flow studio-flow" aria-label="제작 순서">
+<div class="production-start">{% if reference_home %}<div class="dashboard-workflow-heading"><h2>AI 제작 워크플로</h2><span>내 작업실</span></div>{% endif %}{% if not creating %}<ol class="creator-flow studio-flow" aria-label="제작 순서">
   {% for label in ['자료 준비','대본 작성','음성·영상 제작','미리보기'] %}<li><span>{{ '%02d'|format(loop.index) }}</span>{{ label }}</li>{% endfor %}
-</ol>
+</ol>{% endif %}
 {% if reference_home and active_jobs %}<div class="premium-activity">{% include 'workspace_tasks_panel.html' %}</div><details class="dashboard-create-drawer" data-home-create-drawer><summary><span>{{ ui_icon('sparkles', 20) }} 새 쇼츠 제작 설정</span><span>설정 열기 +</span></summary>{% endif %}
 {% include 'production_form.html' %}
 {% if reference_home and active_jobs %}</details>{% endif %}{% if reference_home and not active_jobs %}<div class="premium-activity">{% include 'workspace_tasks_panel.html' %}</div>{% endif %}
 </div>
-<aside class="production-readiness studio-preview" aria-label="미리보기와 제작 준비">
+{% if not creating %}<aside class="production-readiness studio-preview" aria-label="미리보기와 제작 준비">
   <div class="studio-preview-heading"><h3>나의 쇼츠</h3><span>9:16</span></div>
   {% if completed %}{% set latest = completed[0] %}
     {% if reference_home %}<div class="dashboard-preview-stage"><img class="dashboard-preview-ambient" src="/video/jobs/{{ latest.id }}/thumbnail" alt="" aria-hidden="true" loading="lazy">{% endif %}
@@ -53,7 +53,7 @@
 <a class="readiness-settings" href="/simple-settings">제작 구성 · 연결 상태 확인 →</a>
 <p class="production-capability-note" data-home-policy-notice data-source-mode="feeds" {% if entry_source == 'sample' %}hidden{% endif %}>{{ entry_policy_state.notice }}</p>
 </details>
-</aside>
+</aside>{% endif %}
 </section>
 {% if detail_open %}</details>{% endif %}
 
