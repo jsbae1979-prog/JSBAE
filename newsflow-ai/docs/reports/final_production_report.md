@@ -1,103 +1,70 @@
-# NewsFlow AI 최종 제작·단일 피드 통합
+# NewsFlow AI 최종 통합·운영 적용 보고
 
-기준: `3c5230942466a87e5bc191961538e9bbccddc90b`, `codex/newsflow-ux-video-app`, 기존 [Draft PR #35](https://github.com/jsbae1979-prog/JSBAE/pull/35). 기존 A·B·C 및 production_choices 보고서는 보존한다. 이번 구현은 별도 Windows 소스 복사본에서 수행했으며 Codex Cloud에서 실행했다고 표시하지 않는다. 운영 적용·재시작은 하지 않았다.
+검증·적용 소스: `7d6224f6f223e6daee4470e3f361cc19ff7d4d26`.
+브랜치: `codex/newsflow-ux-video-app`, 기존 [Draft PR #35](https://github.com/jsbae1979-prog/JSBAE/pull/35).
+Windows 격리 개발과 GitHub Windows runner에서 검증했다. Codex Cloud에서 실행했다고 표시하지 않는다.
 
-## 구현 범위
+## 결합·재사용
 
-| 항목 | 최종 동작 |
+공통 기준 `3c52309`에서 운영 `0276447`과 기존 통합 코드를 3방향 비교했다. 운영의 313개 소스를 모두 보존하고 SerpApi·Google Trends·전체 뉴스 화제성 평가·음성 목록/미리듣기·공식 견적 자동 입력·현재 화면을 유지했다. 로컬 Claude 진단 보완 3개 파일은 원본 바이트 그대로 보존했다. 이전에 인수한 OAuth 보완도 유지했다.
+
+638개 파일의 커밋 차이는 기존 운영 코드·테스트·보고서·증거를 통합 브랜치로 인수한 범위다. 운영 소스와 비교한 실제 기능 수정은 30개 경로이며, 이미 있던 로컬 진단을 제외하고 운영에 새로 반영한 소스는 29개다. 새 관리 기능을 개발한 범위로 해석하지 않는다.
+
+| 항목 | 동작·보호 |
 |---|---|
-| 재사용 | RSS/AI 웹 검색, 선택 Provider의 IntelligenceService, Autopilot, 대본 검토, TTS, FFmpeg, Higgsfield worker·클립 보관·관계 검토·합성 승인, YouTube/Reels 공식 어댑터·OAuth·게시 기록 재사용 |
-| 기본 영상 | 기존 카드·이미지·자막 + FFmpeg. Higgsfield 호출 0회. 로컬 음성 또는 별도 동의를 받은 ElevenLabs. 30/45/60초 유지 |
-| 전체 AI 영상 | 작업실의 AI 영상은 전체 장면을 같은 등록 모델·공통 스타일로 계획. 장면 수·프롬프트·모델을 보고 일괄 유료 생성 승인. 모든 장면에 검토한 클립이 있어야 합성하며 카드로 자동 대체하지 않음 |
-| 음성 결합 | 기본/전체 AI × 로컬/ElevenLabs 네 조합 연결. 새 계획에 음성·모델·외부 음성 동의·발화 설정을 고정. 기존 WAV·문장 타이밍과 클립 재사용. ElevenLabs는 캐시가 없는 내레이션별 최대 1회 생성, 계정 이용 조건 조회는 별도 GET |
-| 길이 불일치 | API 대본·ElevenLabs·신규 전체 AI 합성은 기존 엄격한 오디오 길이 검사를 사용. 분량 부족/초과 시 보존하고 검토로 돌림. 자동 축약·가속·음성 교체·추가 유료 요청 없음 |
-| 대본 검토 | 기존 기본 체크 유지. 새 전체 AI 계획은 화면에 대본을 표시하고 생성 승인에 해당 수정본 확인을 기록. 해제한 새 작업만 기존 구조·출처·수치·비밀정보·검토 메모 검사를 통과해야 진행. 사실 검증 완료나 공개 게시 승인으로 바꾸지 않음 |
-| 준비 상태 | 신규 전체 AI의 실행·작업실 상태·설정·로컬 사전 점검이 같은 모델 규격/키/동의 게이트를 사용. 단가 미확인·금액 한도 미입력만으로 미준비 표시하지 않음. 실제 계정·청구액은 별도 미검증 |
-| Autopilot 연결 | AI 장면 승인을 기다리는 상태로 유지. 합성 완료 전 진행 버튼 비활성·서버에서도 422. 같은 대본 수정·길이·제작 선택의 완성 MP4만 기존 최종 영상 검토·게시 초안 흐름에 재사용 |
-| Instagram 기본 피드 | 기사/저장 대본 원고, 제목·핵심 내용·출처를 프로그램에서 정확히 렌더링한 1080×1350 JPG 1장. OpenAI 이미지 호출 0회. 계정 없이 저장·미리보기·다운로드 가능 |
-| OpenAI 피드 | 뉴스 분석 Provider와 독립된 명시적 선택·동의. 기존 Image API 어댑터로 주제 배경 1장 생성 → 프로그램의 한글·숫자·출처 렌더링. `gpt-image-2.5-flare-2026-09-08`, 1024×1280, medium JPEG 계약 재사용. 원고 생성 API나 Claude 이미지 생성으로 표시하지 않음. 실패 시 기본 이미지로 자동 대체하지 않음 |
-| 단일 IMAGE 게시 | 임시 공개 HTTPS JPG 업로드 동의와 Instagram 공개 게시 승인을 명확히 구분. Facebook Login for Business의 계정·권한·Graph transport 재사용. HTTPS `image_url` 컨테이너 생성 → 명시적 처리 조회 → 별도 공개 게시. 게시 ID·링크·계정과 파일 SHA-256 기록. 로컬 MP4 직접 전송과 구분 |
-| 임시 HTTPS 전달 | 이미지 전용 별도 서버/클라이언트 코드·DPAPI 설정. 검토한 JPG만 POST, 동일 해시 확인, HTTPS/DNS 고정/robots/SSRF 보호. 서버 미준비 시 외부 요청 전에 BLOCKED, 로컬 저장은 가능. 실제 배포·업로드 없음 |
-| 게시 보호 | Reels/YouTube 기존 코드는 재작성하지 않음. 피드와 동영상 기록 독립. 계정+파일 해시로 전송 전에 claim을 저장하고 실패·결과 불명·재시작 후 자동 중복 전송/게시 금지. 성공 ID를 링크 조회보다 먼저 저장 |
+| 기본 영상 | 기존 TTS·이미지·자막·FFmpeg. 30/45/60초, 선택 음성 사용, Higgsfield 0회 |
+| 전체 AI 영상 | 모든 시각 장면 Higgsfield, 공통 스타일, 단일 모델, 최대 지원 길이보다 긴 장면은 수정 안내. 유료 생성 → 관계 검토 → 합성 → 최종 영상 검토 승인 유지. 카드 자동 대체 없음 |
+| 음성 | 기본/전체 AI × 로컬/ElevenLabs 연결. 작업별 음성·모델·속도·동의를 보존하고 저장 WAV·타이밍·클립 재사용. ElevenLabs 실패 시 재전송·로컬 대체 없음 |
+| 대본 검토 | 기본 체크. 해제한 새 작업만 기존 자동 구조·근거·비밀정보 검사를 통과해 진행. AI 장면 승인과 공개 게시 승인은 별도. 과거 작업의 승인 상태는 바꾸지 않음 |
+| Instagram 피드 | 기본 1080×1350 JPG 1장, OpenAI 미선택 시 이미지 API 0회. 선택 시 기존 배경 생성/전체 이미지 생성 경로와 별도 승인을 유지. Claude는 문구·지시문을 작성하며 래스터 이미지 생성 공급사로 표시하지 않음 |
+| 피드 게시 | 기존 Facebook Login for Business 계정·권한 재사용. HTTPS JPG → IMAGE 컨테이너 → 처리 조회 → 별도 공개 게시. 파일 SHA·계정·ID·링크, 실패·결과 불명·중복 방지 유지 |
+| HTTPS 이미지 전달 | OAuth와 분리한 이미지 전용 서버/클라이언트. JPG 1장/2MiB, HTTPS·TLS·SSRF·robots·해시 검증, DPAPI 전용 키, 접근 1시간 만료. 실제 서버 배포는 미수행 |
+| 기존 SNS | YouTube와 Reels 경로 및 독립 게시 기록 보존. 이미지 기능 때문에 동영상 게시 정책을 바꾸지 않음 |
 
-Carousel·다중 이미지 게시·새 영상/음성 엔진·새 계정 Provider·분석 대시보드는 추가하지 않았다. 기존 고급 장면별 혼합 계획과 과거 승인·사용 이력은 기존 계약으로 보존하며 새 전체 AI 영상의 기본값으로 사용하지 않는다. 과거 무버전 ElevenLabs+AI 계획은 자동 재개하지 않고, 명시적으로 새 전체 AI 계획과 승인을 사용한다.
+Carousel·다중 이미지 게시·새 음성/영상 엔진은 추가하지 않았다. 기존 고급 혼합 계획·기록은 보존하며 신규 전체 AI 작업과 구분한다.
 
-## 공식 입력 규격·비용
+새 전체 AI 계획과 ElevenLabs는 추측 기반 금액 예약/임의 금액 상한으로 차단하지 않는다. 기존 한도 설정·예약·실패·결과 불명 원장은 그대로 둔다. 원장의 신규 금액 `0`은 내부 제출 claim 호환 값이며 무료/확정 청구액이 아니다. 공급사에서 확인한 사용량만 별도 기록하고 실제 청구액 미확인을 명시한다. 확인된 잔여 0·권한·이용 조건·명시적 동의·중복 방지는 유지한다.
 
-이번 작업에서 공식 문서와 기존 Model Contract를 대조했다. 표는 요청 스키마이며 계정 사용 가능 판정이 아니다.
+## 변경 범위 검증
 
-| 후보 | 모델 경로 | 공식 길이·선택 규격 |
-|---|---|---|
-| 기본 후보 | `pixverse/v6/text-to-video` | 1~15초, 720p, 9:16, Text-to-Video. 선택 TTS 사용을 위해 `generate_audio=false` |
-| 대안 | `alibaba/wan-3.0/text-to-video` | 2~30초, 720p, 9:16. `generate_audio=false` |
-| 대안 | `kling-video/v3.0-turbo/text-to-video` | 3~15초, 720p, 9:16. 공식 네 입력 필드 유지 |
+[동일 SHA의 Windows CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39886504223):
 
-장면을 덮는 가장 짧은 등록 길이를 선택한다. 모델 최대 길이보다 긴 대본 장면은 자동으로 짧은 클립을 반복 생성하지 않고 계획을 차단해 대본 장면 분할 또는 적합한 모델을 안내한다. 최종 합성은 기존 FFmpeg의 클립 배경·자막·출처·AI 표시 경로를 사용한다.
+| 환경 | 결과 |
+|---|---|
+| Windows Python 3.12.10 | **443 PASS / 0 FAIL / 0 SKIP**, Ruff·pip check PASS |
+| Windows Python 3.14.8 | **443 PASS / 0 FAIL / 0 SKIP**, Ruff·pip check PASS |
 
-- 신규 전체 AI 영상·ElevenLabs에 추측 금액 예약이나 임의 요청 금액 상한을 추가하지 않는다. 기존 설정값·예약·실패 원장은 삭제하지 않는다.
-- 신규 AI 영상 원장의 금액 `0`은 **무과금/확인된 청구액이 아닌 제출 claim의 내부 호환 값**이다. 화면은 실제 사용량·청구액 미확인으로 표시한다. 과거 고급 계획의 예상 기록은 구분해 보존한다.
-- ElevenLabs는 응답 `character-cost`가 있을 때 보고된 크레딧만 저장하고 없으면 null이다. 실제 청구액과 다르다. 확인된 공급사 잔여 0, 권한·플랜 이용 조건, 명시적 동의, 결과 불명 차단은 유지한다.
-- 뉴스 API의 잔액 확인 시각/추측 잔여액 강제 조건은 해제하며 기존 요청 원장과 결과 불명·동의·보고 사용량 보호는 유지한다.
-- 공개 PixVerse 페이지는 15초 720p 클립의 표준 $0.06/초와 할인 $0.051/초를 안내한다. 이를 다른 길이·계정의 확정 견적으로 적용하거나 앱에 자동 저장하지 않았다. 계정별 실제 견적·잔액·청구액은 **NOT VERIFIED**다.
+각각 기존 Starlette/httpx deprecation warning 1건. 대상은 `tools/operating_compatibility_targets.txt`의 변경·보존 경계이며 전체 회귀 결과가 아니다. 이전 전체 회귀 **57 FAIL 기록과 이후 수정 보고서/증거를 보존**했다. 이번에 전체 회귀를 반복하지 않았으므로 현재 전수 결과로 확대하지 않는다.
 
-공식 근거: [PixVerse 스키마](https://open.higgsfield.ai/models/pixverse/v6/text-to-video/api-reference), [공개 가격 조건](https://open.higgsfield.ai/models/pixverse/v6/text-to-video/playground), [Wan 3.0 스키마](https://open.higgsfield.ai/models/alibaba/wan-3.0/text-to-video/api-reference), [Kling Turbo 스키마](https://open.higgsfield.ai/models/kling-video/v3.0-turbo/text-to-video/api-reference), [OpenAI Image API](https://developers.openai.com/api/reference/resources/images/methods/generate), [Meta 공식 Facebook Login 컬렉션](https://www.postman.com/meta/instagram/folder/u4g5a2a/instagram-api-with-facebook-login).
+Windows 로컬 3.14.7에서도 Fake 제작·수집·화제성 평가·음성·이미지 전달·콜백·브라우저 검증을 수행했다. 결합 초기에 발견한 생성자/중복 라우트·승인 분기 충돌과 테스트의 로컬 소켓 차단을 수정했다. 실패 테스트 삭제나 임의 skip은 없다.
 
-## 보존과 검증
-
-- 운영 체크아웃·앱·DB·LocalCache·기존 키·설정·MP4에 쓰거나 앱을 재시작하지 않았다. 개발 위치는 `integration-final-20261022/candidate`의 별도 소스 복사본이다.
-- 기존 로컬 피드 제작·게시 코드를 재사용하고, 로컬에서 이미 사용한 additive migration **0014~0018을 그대로** 가져와 연결했다. 기존 0001~0013은 변경하지 않았다. 합성 DB의 0013/0017 → 0018 전환에서 기존 모든 테이블 행과 SQLite integrity를 확인했다. 운영 migration 실행은 없다.
-- 실제 OpenAI·Claude·ElevenLabs·Higgsfield 유료 요청, OAuth, 외부 파일 전송, SNS 게시 **0회**. 임시 DB·Fake 토큰/응답·로컬 FFmpeg만 사용했다.
-- Windows 로컬 Python **3.14.7**: 변경 범위 초기 실행 **451 PASS / 2 FAIL**. 두 실패는 합성 전 비활성 진행 버튼을 없다고 가정한 기존 UI 기대값이었다. 기대값을 실제 차단 동작으로 바꾸고 서버 조기 진행 거절까지 검사했다. 수정된 2개와 새 합성 연결·Chrome 경로 **7 PASS**, 최종 장면/피드 계약 **64 PASS**, 현재 설정·사전 점검과 실행 게이트를 같은 신규 정책으로 맞춘 **9 PASS**. 최종 Windows CI 결과는 아래에 별도 기록한다.
-- Ruff·pip check PASS. 기존 전체 회귀 **57 FAIL 기록을 유지**하며 전체 재실행·실패 삭제·임의 skip은 하지 않았다. 본 범위 결과를 전체 회귀 PASS로 확대하지 않는다.
-
-| 로컬 FFmpeg 결과 | 실제 길이 | 형식·검사 |
+| 로컬 합성 결과 | 길이 | 검사 |
 |---|---:|---|
-| 기본 + 로컬 Fake 음성 | 30.021초 | 1080×1920, H.264/AAC, 전체 디코딩 PASS, Higgsfield 0회 |
-| 기본 + ElevenLabs Fake | 45.021초 | 동일, WAV/타이밍 캐시 재사용 PASS, Higgsfield 0회 |
-| 전체 AI Fake + 로컬 Fake 음성 | 60.021초 | 6개 시각 장면, 전부 Fake 클립·검토·합성 승인 후 MP4 |
-| 전체 AI Fake + ElevenLabs Fake | 30.021초 | 동일, 고정 음성·모델·동의 및 저장 WAV/타이밍 재사용 |
+| 기본 + 로컬 Fake | 30.021초 | 1080×1920 H.264/AAC, 전체 디코딩 PASS |
+| 기본 + ElevenLabs Fake | 45.021초 | 동일, 저장 WAV·타이밍 재사용 |
+| 전체 AI Fake + 로컬 Fake | 60.021초 | 모든 시각 장면 Fake 클립, 검토·합성 승인 |
+| 전체 AI Fake + ElevenLabs Fake | 30.021초 | 동일, 고정 음성·모델·동의 보존 |
 
-음성은 합성 PCM이므로 실제 한국어 TTS 음질이나 사람의 최종 시청·청취 품질 PASS가 아니다. Chrome 1366/390px에서 계획·피드·설정 화면과 로컬 저장 동선을 확인했다. 브라우저 외부 요청을 차단하고 예약·자동 실행 없이 임시 앱에서만 검사했다.
+실제 한국어 음질·유료 공급사 결과물·사람의 최종 시청/청취 품질은 **NOT VERIFIED**다. [합성 자료 검증 증거](evidence/operating-compatible/windows-ci.json), [AI 계획](evidence/operating-compatible/final-video-1366.png), [작은 창](evidence/operating-compatible/final-video-390.png), [피드 화면](evidence/operating-compatible/final-feed-1366.png)을 제공한다. 운영 DB·키·MP4·WAV는 Git/Actions에 올리지 않았다.
 
-[AI 계획 화면](evidence/final-production/final-video-1366.png) · [작은 창의 단일 피드](evidence/final-production/final-feed-390.png). 미디어 검사 JSON도 같은 증거 폴더에 보존한다. MP4·WAV·DB·키는 Git/Actions 아티팩트에 올리지 않는다.
+## 승인된 운영 적용·보존
 
-## Windows CI와 최종 상태
+- 영구 보호 백업: `C:/Codex/NewsFlowAI/backups/production-preapply-20261023-103129`. 데이터 37개, 기존 코드 archive/patch/미추적 소스를 보존하고 복사 해시를 확인했다.
+- 복사본의 migration·integrity·FK 확인 결과 **0018 → 0018**, 신규 migration 없음. 게시된 migration 파일은 변경하지 않았다.
+- 내용이 달라진 소스 29개만 원본을 추가 백업한 뒤 반영했다. 줄바꿈만 다른 파일은 유지했고 기존 파일 삭제는 0개다. 적용 후 소스 318개를 검증 코드와 대조했다.
+- 기존 LocalCache 데이터 경로로 정상 첫 실행 1회. 활성 예약/진행 중 제작은 없었다. 강제 종료·재시도·복구·예약 변경은 하지 않았다.
+- 운영 9개 화면과 390px 주요 3개 화면, 총 12개 뷰: HTTP 200, 가로 넘침·JavaScript 오류 0. 폼 제출 0, 외부/비읽기 요청 0. 출처 이미지 프록시와 영상 썸네일 생성은 검사 중 차단했다. 운영 화면 캡처는 보호 백업에만 저장했다.
+- 안정 복사한 DB에서 **47개 모든 테이블의 행·값 해시 동일**, integrity PASS, FK 위반 0. 운영 DB에 직접 진단 연결을 열지 않았다. 키·설정·기존 영상 등 사용자 콘텐츠 파일 28개의 해시도 동일하다. 보호 백업 전체 해시 동일.
+- 첫 보존 검사는 실행 중 Windows 잠금 파일 읽기에서 멈췄다. `migration.lock`·`server-8765.lock` 2개는 사용자 콘텐츠 검증에서 제외하고, 이미 확보한 DB 복사본으로 검사를 마쳤다. 운영 DB 재복사·복구·앱 재시작은 하지 않았다.
+- 실제 유료 API·OAuth·외부 파일 전송·SNS 게시 **0회**. [비밀정보 없는 운영 적용 요약](evidence/operating-compatible/operating-application.json).
 
-| 검증 범위 · SHA | Windows Python 3.12.10 | Windows Python 3.14.8 | 근거 |
-|---|---|---|---|
-| 통합 제작·게시 · `6484fefcd05ac2c9616fc3bf849b6977ed76d714` | **454 PASS / 0 FAIL / 0 SKIP** | **454 PASS / 0 FAIL / 0 SKIP** | [통합 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39878041017) |
-| Chrome 캡처 보완 · `50ce7c33dd4f8d03229091be95307c9398910288` | **1 PASS** | **1 PASS** | [브라우저 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39878628548) |
-| 최종 피드 동의·로컬 저장·단일 게시·Chrome · `4075bf8c61cefc09edf7010dd1e8d99f9b1a21ae` | **25 PASS / 0 FAIL / 0 SKIP** | **25 PASS / 0 FAIL / 0 SKIP** | [최종 변경 범위 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39878850217) |
+운영 체크아웃의 브랜치/HEAD는 백업·비교 기준 `codex/newsflow-local-d4dc20f` / `027644730c04b6b977baa9c4ede3eeb56115e61b`를 유지한다. checkout/reset/병합으로 이력을 바꾸지 않고 위 검증 소스를 반영했다. PR #35의 브랜치와 운영 Git HEAD를 같은 것으로 보고하지 않는다. 보고서 후속 커밋은 문서·합성 증거만 갱신한다.
 
-각 작업의 Ruff·pip check PASS. warning 1건은 기존 Starlette/httpx deprecation이다. 이 수치는 서로 겹치는 변경 범위 테스트이므로 합산한 단일 전체 회귀 수치로 표시하지 않는다. 현재 본체는 통합 CI의 소스와 같고 이후 변경은 Chrome 증거 캡처·CI 인자 처리와 임시 공개 이미지 전달 동의 문구/검사뿐이다. 마지막 보고서 커밋은 문서·합성 증거만 갱신한다.
+## 실제 사용에 남은 필수 조건
 
-중간 실패도 보존한다. [1차 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39877722984)는 3.12 453 PASS, 3.14 452 PASS / 1 FAIL(Chrome 전체 페이지 PNG 캡처 프로토콜 오류)이었다. 기능 검사를 유지하고 캡처 범위를 뷰포트로 고정했다. 이후 [브라우저 범위 실행](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39878403256)은 PowerShell이 단일 테스트 경로를 문자로 나누어 pytest가 시작하지 못했다. 배열 인자를 수정한 위 브라우저 CI와 최종 변경 범위 CI가 모두 통과했다. 실패 테스트 삭제·임의 skip·유료 생성 재시도는 없다.
+1. 기존 대본을 재사용하는 30초 제작 1건으로 실제 공급사·한국어 음질·자막·영상 품질을 확인한다. 기사/대본·모델·장면 수·요청 횟수를 제시한 별도 유료 승인이 필요하다. 실제 모델 계정 접근·잔액·확정 견적은 미조회/NOT VERIFIED다.
+2. 저장된 공식 모델 계약은 PixVerse V6/Wan 3.0/Kling 3.0 Turbo의 720p·9:16 입력을 지원한다. 기존 공식 견적 자동 입력은 Fake로 보존 검증했으며, 이번에 실제 계정 조회나 최신 견적 조회를 실행하지 않았다. 단가를 추측해 저장하지 않았다.
+3. Google/Meta 실제 로그인·권한·업로드·게시 검증은 별도 사용자 승인 후 진행한다. 현재 **NOT VERIFIED**다. 계정·영상/이미지·공개 범위·게시 횟수를 먼저 정해야 한다.
+4. Instagram은 Meta 앱/권한·Page 연결 프로 계정과 기존 HTTPS OAuth 중계가 필요하다. 단일 피드에는 [이미지 전용 HTTPS 서버](../INSTAGRAM_IMAGE_DELIVERY.md)의 도메인·TLS·전용 저장소/키·만료 정리가 별도로 필요하다. 인프라가 없는 실게시 경로는 **BLOCKED**다. 서버 배포·스토리지 개설·공개 업로드는 수행하지 않았다.
 
-원본 체크아웃은 `codex/newsflow-local-d4dc20f` / `027644730c04b6b977baa9c4ede3eeb56115e61b`를 유지한다. 기존 로컬 Claude 진단 보완 3개는 원본에 그대로 남겨 두었고 운영 코드에 새 코드를 적용하지 않았다. 별도 검증 소스 폴더만 추가했다. 실제 운영 적용 전에는 해당 로컬 보완과 운영 브랜치의 차이를 보존·결합 검토해야 한다.
-
-기존 Draft PR #35 유지, 신규 PR·main/기존 PR 병합 없음. Codex Cloud 자체 실행은 미수행이며 Windows 격리 개발·GitHub Windows runner 결과를 구분한다. 기존 전체 회귀 **57 FAIL은 미해결 기록으로 유지**한다.
-
-## 실사용에 남은 필수 조건
-
-1. 승인 후에만 운영 전체 백업·예약/미완료 작업 점검·코드 적용·첫 실행을 진행한다. 이번 단계에서는 적용하지 않았다.
-2. 선택한 AI API·ElevenLabs·Higgsfield의 실제 계정 권한·모델 사용 가능 여부와 명시적 작업별 유료 승인을 확인하고 제한된 실생성으로 음성 길이·자막·영상 품질을 검증해야 한다. 현재 **NOT VERIFIED**.
-3. Google/Meta 실제 로그인·권한·실제 업로드·게시 결과는 **NOT VERIFIED**. Meta 앱 승인·Page/프로 계정·기존 HTTPS OAuth 중계를 준비해야 한다.
-4. 단일 피드 실게시에는 [별도 HTTPS 이미지 전달 서버 배포 조건](../INSTAGRAM_IMAGE_DELIVERY.md)이 필요하다. 서버·도메인·키가 없는 상태는 **BLOCKED**이며 이번에 서버를 배포하거나 이미지를 공개 업로드하지 않았다. 주소 접근 만료·서버 별도 정리와 로컬 원본/게시 기록 보존을 구분한다.
-5. 기존 전체 회귀 57개 실패와 구버전 고급 계획 계약은 미해결 범위로 남긴다. 운영 적용 판정이나 실계정 성공으로 간주하지 않는다.
-
-결과 제출 뒤 추가 기능 개발을 멈추고 사용자 판정을 기다린다.
-
-## 후속 로컬 Claude 보완 결합
-
-사용자의 후속 진행 지시에 따라 `b9a2e6749efe5405a131767dff7a971521392c4b`를 기준으로 기존 운영 소스의 Claude 카드 경로와 미커밋 진단 보완을 격리 코드에서 결합했다. 운영 체크아웃과 데이터는 적용·재시작하지 않았다.
-
-- 기존 `claude_cards.py`, `card_diagnostics.py`, `test_card_response_diagnostics.py`는 원본 그대로 포함했다. 관련 원본 14개·로컬 패치·SHA-256과 결합 소스 ZIP을 `C:\Codex\NewsFlowAI\backups\claude-card-compat-20261023`에 보존했다. 원본 14개의 해시 일치와 운영 HEAD 불변을 확인했다. 실제 키·DB·설정·MP4는 읽거나 복사하지 않았다.
-- 기존 Claude 문구·전체 이미지 지시문 → 사용자 검토 → 별도 승인된 OpenAI 전체 이미지 생성 경로를 복구했다. 기본 피드와 OpenAI 배경 경로도 유지한다. Claude가 직접 픽셀을 생성한다고 표시하지 않는다. 과거 로컬 그림·배치 결과는 읽기·저장이 가능하며 신규 SVG/Codex 생성 경로는 연결하지 않았다.
-- JSON 구조·길이·출처·비밀정보 보호와 유한한 진단 단계만 기록한다. HTTP 응답 본문·민감값은 저장하지 않는다. 원고·이미지 생성은 별도 동의, CSRF·Origin 검사, 최종 이미지 검토를 유지한다. 전체 이미지 실패 시 로컬 카드로 대체하거나 이전 요청을 재전송하지 않는다.
-- 기존 결과 불명 인지 확인과 새 카드 한 번의 범위 제한을 재사용했다. 원래 기록·예약액은 변경하지 않는다. 모델·자료·기록이 바뀐 확인은 거절하고 기존 성공 결과는 재사용한다. 시작 시 중단된 카드 요청은 결과 불명으로 보존하며 자동 재개하지 않는다.
-- 로컬 Windows Python **3.14.7**에서 관련 Fake **202 PASS**, Chrome **1 PASS**(1366/390px), Ruff·pip check PASS. 외부 HTTP 요청·예약/AI worker 시작을 차단하는 테스트 전용 플러그인을 사용했다. 실제 API·OAuth·외부 업로드·게시는 0회다.
-- 중간 결과는 85 PASS / 2 UI FAIL(인지 확인 UI·submit 속성 보완), 확대 검사는 197 PASS / 3 기존 정책 기대값 FAIL이었다. 기준 `b9a2e67` API 정책 모듈에서도 제거된 잔여액·24시간 예산 게이트 기대값 2개가 실패했다. 나머지 1개는 로컬 정책상 제거된 입력으로 새 계정 확인 기록을 만들지 않는 동작과 달랐다. 세 검사는 실제 인증·보고 사용량 한도·원본 기록·중복 방지 검사를 유지하면서 확정된 정책에 맞게 정리했다. 삭제·skip으로 통과시키지 않았다. 기존 전체 회귀 **57 FAIL 기록은 유지**하며 전체 회귀 PASS로 확대하지 않는다.
-
-동일 코드 `1aad2885071e6e61fd3ed709c7b3fd4d09c106ad`의 [Windows CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39880941214)는 Python **3.12.10 / 3.14.9 각각 203 PASS / 0 FAIL / 0 SKIP**, Ruff·pip check PASS다. 관련 Fake 202개와 Chrome 1개만 검사했고 전체 제작 회귀나 샘플 MP4 제작은 반복하지 않았다. warning은 각각 기존 Starlette/httpx deprecation 1건이다. [합성 검증 요약](evidence/final-production/claude-compatibility-windows.json)에 실행 ID·검증 SHA·보존 범위를 기록한다.
-
-후속 보고서 커밋은 문서·합성 요약만 변경하며 기존 Draft PR #35에서 이어간다. 새 PR·main/기존 PR 병합·운영 적용·운영 앱 재시작은 없다. 실제 공급사 품질·계정 사용·SNS 게시 및 운영 적용은 계속 **NOT VERIFIED**다. 이 결과를 전체 회귀 PASS나 기존 57 FAIL 해결로 표시하지 않는다.
+기존 [Draft PR #35](https://github.com/jsbae1979-prog/JSBAE/pull/35)는 미병합으로 유지한다. 새 PR·main/기존 PR 병합·force push 없음. 이번 승인 범위는 완료했으며 추가 기능 개발을 시작하지 않는다.
