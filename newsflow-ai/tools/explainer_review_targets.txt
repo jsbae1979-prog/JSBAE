@@ -3,6 +3,7 @@ tests/test_explainer_review_safety.py
 tests/test_explainer_prompts.py
 tests/test_explainer_compatibility.py
 tests/test_comparison_approval.py
+tests/test_comparison_recheck.py
 tests/test_api_script_once.py
 tests/test_api_news_pipeline.py
 tests/test_news_usage_policy.py

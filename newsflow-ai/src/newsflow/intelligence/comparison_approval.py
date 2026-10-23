@@ -1,4 +1,4 @@
-"""Five explicit Method B requests; append-only consent, never a global unknown reset."""
+"""Scoped Method B requests; append-only consent, never a global unknown reset."""
 
 import hashlib
 import json
@@ -9,10 +9,11 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import select
 
-from newsflow.db.models import APIRequestReservation, AuditLog, IntelligenceRun, utcnow
+from newsflow.db.models import APIRequestReservation, AuditLog, ContentDraft, IntelligenceRun, utcnow
 
 from .api_settings import APISettingsError, _read, _unknown_fingerprint
-from .news_usage import api_news_contract, assess_news_usage
+from .korean import assess_script, speech_plan
+from .news_usage import api_news_contract, assess_news_usage, explainer_findings
 from .presentation import presentation
 from .provider import Options, prompt_instruction, prompt_options
 
@@ -23,6 +24,7 @@ STEPS = (
     ('script-a-v1', 'script', 'v1', 0), ('script-a-v2', 'script', 'v2', 0),
     ('script-b-v2', 'script', 'v2', 1),
 )
+RECHECK_STEPS = STEPS[3:]  # A/B V2 scripts only, reusing a successful saved V2 analysis.
 RUNTIME_FIELDS = {'script_prompt_version', 'script_method', 'news_usage', 'news_usage_result',
                   'news_usage_contract', 'analysis_result', 'presentation'}
 
@@ -57,9 +59,9 @@ def _unknowns(rows):
     return {r.id: _unknown_fingerprint(r) for r in rows if r.status == 'unknown'}
 
 
-def _plan(source):
+def _plan(source, steps=STEPS):
     result = []
-    for name, kind, version, index in STEPS:
+    for name, kind, version, index in steps:
         base = deepcopy(source)
         if index is not None:
             chosen = source['articles'][index]['id']
@@ -74,7 +76,27 @@ def _plan(source):
     return result
 
 
-def _review(session, article_ids, sessions):
+def _saved_analysis(session, identifier):
+    parent = session.get(IntelligenceRun, identifier) if type(identifier) is int and identifier > 0 else None
+    reservation = session.scalar(select(APIRequestReservation).where(
+        APIRequestReservation.request_id == f'intelligence:{identifier}')) if parent else None
+    proof = next((v for _, v in _entries(session, FINISHED)
+                  if v.get('request_id') == f'intelligence:{identifier}'
+                  and parent and v.get('approval_id') == parent.options.get('comparison_approval_id')), None)
+    if (not parent or parent.kind != 'analysis' or parent.status != 'success' or parent.provider != PROVIDER
+            or parent.options.get('model') != MODEL or parent.options.get('script_prompt_version') != 'v2'
+            or parent.options.get('comparison_step') != 'analysis-v2'
+            or not reservation or reservation.status != 'success' or reservation.provider != PROVIDER
+            or reservation.kind != 'analysis' or reservation.model != MODEL
+            or not isinstance(reservation.usage, dict)
+            or not reservation.usage.get('prompt_tokens') or not reservation.usage.get('completion_tokens')
+            or not proof or proof.get('status') != 'success'
+            or proof.get('run_fingerprint') != _unknown_fingerprint(parent)):
+        raise APISettingsError('사용량과 완료 기록이 확인된 기존 V2 비교 분석이 필요합니다.')
+    return parent, reservation
+
+
+def _review(session, article_ids, sessions, analysis_id=None):
     from .service import IntelligenceService
 
     if (not isinstance(article_ids, list) or len(article_ids) != 2
@@ -87,26 +109,33 @@ def _review(session, article_ids, sessions):
     source = IntelligenceService(sessions).evidence_for(article_ids)
     rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == PROVIDER)))
     unknowns = _unknowns(rows)
-    value = {'scope': 'method_b_five_requests', 'provider': PROVIDER, 'model': MODEL,
+    parent, parent_reservation = _saved_analysis(session, analysis_id) if analysis_id is not None else (None, None)
+    if parent and _digest({k: v for k, v in parent.evidence.items() if k not in RUNTIME_FIELDS}) != _digest(source):
+        raise APISettingsError('저장된 분석의 기사 자료가 현재 비교 자료와 다릅니다.')
+    value = {'scope': 'method_b_saved_analysis_two_scripts' if parent else 'method_b_five_requests',
+             'provider': PROVIDER, 'model': MODEL,
              'article_ids': article_ids, 'settings': _settings(settings), 'unknowns': unknowns,
-             'plan': _plan(source)}
+             'plan': _plan(source, RECHECK_STEPS if parent else STEPS)}
+    if parent:
+        value['saved_analysis'] = {'id': parent.id, 'fingerprint': _unknown_fingerprint(parent),
+                                   'reservation_fingerprint': _unknown_fingerprint(parent_reservation)}
     return value, source
 
 
-def comparison_review(sessions, article_ids):
+def comparison_review(sessions, article_ids, *, analysis_id=None):
     """Read-only preview. No credential load, acknowledgement or execution consent."""
     with sessions() as session:
-        value, source = _review(session, article_ids, sessions)
+        value, source = _review(session, article_ids, sessions, analysis_id)
         return {'token': _digest(value), 'articles': source['articles'],
                 'steps': [step['step'] for step in value['plan']], 'unknown_count': len(value['unknowns'])}
 
 
-def approve_comparison(sessions, *, article_ids, review_token, consent):
+def approve_comparison(sessions, *, article_ids, review_token, consent, analysis_id=None):
     if consent is not True or not isinstance(review_token, str) or not re.fullmatch(r'[a-f0-9]{64}', review_token):
-        raise APISettingsError('기사·모델·기존 결과 불명 기록과 비교 5회 범위에 명시적으로 동의하세요.')
+        raise APISettingsError('기사·모델·기존 결과 불명 기록과 검토한 비교 호출 범위에 명시적으로 동의하세요.')
     with sessions.begin() as session:
         session.connection().exec_driver_sql('BEGIN IMMEDIATE')
-        value, _ = _review(session, article_ids, sessions)
+        value, _ = _review(session, article_ids, sessions, analysis_id)
         if _digest(value) != review_token:
             raise APISettingsError('자료·설정·결과 불명 기록이 바뀌었습니다. 비교 범위를 다시 확인하세요.')
         for entry, previous in _entries(session, APPROVAL):
@@ -133,14 +162,23 @@ def authorize_step(session, settings, request_id, kind, rows, max_output_tokens)
     try:
         grant = json.loads(entry.message) if entry and entry.event == APPROVAL else {}
         if (_digest({k: v for k, v in grant.items() if k not in {'review_token', 'expires_at'}}) != grant['review_token']
-                or grant.get('scope') != 'method_b_five_requests'
+                or grant.get('scope') not in {'method_b_five_requests', 'method_b_saved_analysis_two_scripts'}
                 or grant['provider'] != settings.provider or grant['model'] != settings.model
                 or grant['settings'] != _settings(settings)
                 or datetime.fromisoformat(grant['expires_at']) <= utcnow()
                 or grant['unknowns'] != _unknowns(rows)):
             raise ValueError
+        reuse = grant['scope'] == 'method_b_saved_analysis_two_scripts'
+        definitions = RECHECK_STEPS if reuse else STEPS
+        if [p['step'] for p in grant['plan']] != [p[0] for p in definitions]:
+            raise ValueError
+        saved_parent, saved_reservation = (_saved_analysis(session, grant['saved_analysis']['id'])
+                                           if reuse else (None, None))
+        if reuse and (_unknown_fingerprint(saved_parent) != grant['saved_analysis']['fingerprint']
+                      or _unknown_fingerprint(saved_reservation) != grant['saved_analysis']['reservation_fingerprint']):
+            raise ValueError
         used = [v for _, v in _entries(session, CONSUMED) if v.get('approval_id') == grant_id]
-        if len(used) >= len(STEPS) or step_name != grant['plan'][len(used)]['step']:
+        if len(used) >= len(definitions) or step_name != grant['plan'][len(used)]['step']:
             raise ValueError
         previous = {}
         finished = [v for _, v in _entries(session, FINISHED) if v.get('approval_id') == grant_id]
@@ -153,6 +191,14 @@ def authorize_step(session, settings, request_id, kind, rows, max_output_tokens)
                     or not reservation or reservation.status != 'success' or not proof
                     or proof.get('run_fingerprint') != _unknown_fingerprint(old)):
                 raise ValueError
+            if reuse:
+                draft = session.scalar(select(ContentDraft).where(ContentDraft.run_id == old.id))
+                if (not draft or draft.duration != 30 or draft.revision != 1 or draft.content != old.result
+                        or draft.review_status != 'review_required'
+                        or any(note.get('level') != 'info' for note in
+                               assess_script(old.result, old.evidence, 30) + explainer_findings(old.result, old.evidence))
+                        or speech_plan(old.result, 30)['estimated_total_seconds'] < 27):
+                    raise ValueError
             previous[item['step']] = old
         expected = grant['plan'][len(used)]
         version = expected['version']
@@ -171,7 +217,7 @@ def authorize_step(session, settings, request_id, kind, rows, max_output_tokens)
                 or run.options.get('timeout') != 300 or run.options.get('script_prompt_version') != version):
             raise ValueError
         if kind == 'script':
-            parent = previous['analysis-' + version]
+            parent = saved_parent if reuse else previous['analysis-' + version]
             if (run.options.get('duration') != 30 or run.options.get('analysis_run_id') != parent.id
                     or run.evidence.get('analysis_result') != parent.result
                     or run.evidence.get('presentation') != presentation()):
