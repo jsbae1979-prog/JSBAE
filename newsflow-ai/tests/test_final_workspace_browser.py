@@ -40,7 +40,8 @@ def test_final_choices_and_feed_local_save_in_chrome(full,browser,tmp_path):
                     # Collapsed opt-in remains separate from local saving.
                     expect(page.get_by_role('button',name='이미지로 저장',exact=True)).to_be_visible()
                 assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth+2')
-                page.screenshot(path=str(output/f'final-{name}-{width}.png'),full_page=True)
+                # Bound compositor allocation on Windows runners; functional checks still cover the document.
+                page.screenshot(path=str(output/f'final-{name}-{width}.png'),full_page=False, animations='disabled')
         page.goto(origin+f'/image-posts?article_id={identifier}')
         form=page.locator('form[action="/image-posts/create"]')
         form.locator('[name="title"]').fill('새로운 독서 모임')

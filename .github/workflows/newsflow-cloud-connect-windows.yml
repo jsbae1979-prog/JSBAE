@@ -38,6 +38,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           persist-credentials: false
+          fetch-depth: 2
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
@@ -72,7 +73,17 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Changed production and single feed contracts only - Fake providers
         run: |
-          .venv/Scripts/python -m pytest -q -rs tests/test_final_production.py tests/test_final_media.py tests/test_final_workspace_browser.py tests/test_image_posts.py tests/test_image_generation.py tests/test_image_delivery.py tests/test_production_choices.py tests/test_voice_engines.py tests/test_ai_video_provider.py tests/test_ai_video_service.py::test_full_flow_card_local_and_generated_scene_to_composition tests/test_ai_video_service.py::test_unchecked_confirmation_is_refused tests/test_ai_video_service.py::test_rate_limited_submit_is_unknown_and_never_requeued tests/test_ai_video_service.py::test_recover_turns_interrupted_submission_into_unknown_and_never_resubmits tests/test_unified_publishing.py::test_one_platform_failure_does_not_cancel_other_or_replay_success --junitxml=validation-output/final-tests.xml
+          $changedPaths = @(git diff --name-only HEAD^ HEAD)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $otherChanges = @($changedPaths | Where-Object { $_ -notmatch '^(newsflow-ai/tests/test_final_workspace_browser\.py$|newsflow-ai/docs/|\.github/workflows/newsflow-cloud-connect-windows\.yml$)' })
+          # Screenshot-only follow-up: rerun its full functional browser scenario, not paid-media Fake renders.
+          $targets = if ($changedPaths.Count -gt 0 -and $otherChanges.Count -eq 0) {
+            @('tests/test_final_workspace_browser.py')
+          } else {
+            @('tests/test_final_production.py', 'tests/test_final_media.py', 'tests/test_final_workspace_browser.py', 'tests/test_image_posts.py', 'tests/test_image_generation.py', 'tests/test_image_delivery.py', 'tests/test_production_choices.py', 'tests/test_voice_engines.py', 'tests/test_ai_video_provider.py', 'tests/test_ai_video_service.py::test_full_flow_card_local_and_generated_scene_to_composition', 'tests/test_ai_video_service.py::test_unchecked_confirmation_is_refused', 'tests/test_ai_video_service.py::test_rate_limited_submit_is_unknown_and_never_requeued', 'tests/test_ai_video_service.py::test_recover_turns_interrupted_submission_into_unknown_and_never_resubmits', 'tests/test_unified_publishing.py::test_one_platform_failure_does_not_cancel_other_or_replay_success')
+          }
+          Write-Host "Changed-range targets: $($targets -join ' ')"
+          .venv/Scripts/python -m pytest -q -rs @targets --junitxml=validation-output/final-tests.xml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Upload synthetic summaries and key screens only
         if: always()

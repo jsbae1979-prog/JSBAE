@@ -63,7 +63,7 @@ Carousel·다중 이미지 게시·새 영상/음성 엔진·새 계정 Provider
 
 ## Windows CI와 최종 상태
 
-Windows Python 3.12/3.14 변경 범위 CI: **진행 중**. 1차 코드 `0cd44b62381afa8dbf27efac436d7eca9ff74c1f`의 [통합 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39877722984)와, 후속 설정 표시·사전 점검 연결 보완의 최종 결과를 구분해 기록한다. 기존 Draft PR #35 유지, 신규 PR·main/기존 PR 병합 없음.
+Windows Python 3.12/3.14 변경 범위 CI: **진행 중**. 1차 코드 `0cd44b62381afa8dbf27efac436d7eca9ff74c1f`의 [통합 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39877722984)와, 후속 설정 표시·사전 점검 연결 보완의 최종 결과를 구분해 기록한다. 1차 3.12는 통과했고 3.14는 452 PASS / 1 FAIL(Chrome 전체 페이지 PNG 캡처 프로토콜 오류)이었다. 화면 동작·저장·외부 요청 차단 검사는 유지하고, Windows compositor의 캡처를 뷰포트 크기로 한정해 별도 변경 범위로 재검증한다. 실패 테스트를 삭제하거나 skip하지 않는다. 기존 Draft PR #35 유지, 신규 PR·main/기존 PR 병합 없음.
 
 ## 실사용에 남은 필수 조건
 
