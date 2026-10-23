@@ -25,7 +25,7 @@
 - 기존 실제 V2 저장 JSON 두 개를 읽기 전용으로 검사해 A의 마무리·합성 표시·전망 문제와 B의 도입·마무리·합성 표시 문제를 탐지했다. 전후 파일 SHA-256이 같으며 수정·재생성하지 않았다. 실제 응답 원문과 사용자 DB는 Git에 포함하지 않는다.
 - 초기 로컬 GUI 테스트는 sandbox 안의 Windows asyncio socketpair 생성에서 멈춰 중단했다. 제품 테스트 실패나 공급사 오류로 표시하지 않는다. 외부 요청·예약·자동 실행 차단 플러그인을 유지하고 로컬 루프백이 가능한 실행에서 최종 218건을 검증했다. 실패 테스트 삭제·skip·보안 설정 완화는 없다.
 
-Windows Python 3.12/3.14 CI는 동일 변경 범위로 검증하고 아래에 결과를 기록한다. 운영 코드와 실제 유료 생성은 별도 승인 전 적용하지 않는다.
+Windows Python **3.12.10 / 3.14.9 각각 219 PASS**, Ruff·pip check PASS. 각각 기존 Starlette/httpx deprecation warning 1건, 실패·skip 0. [최종 코드 CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39898187474)는 구현 SHA `e7880cac515c0fc83a1c869a522fb5b3c8d8f85a`를 검증했다. 3.12 job `120233384717`, 3.14 job `120233384823`. [비밀정보 없는 요약](evidence/explainer-review-safety/windows-ci.json). 앞선 218건 CI 이후 실제 기사 오인 방지 조건을 보완해 최종 219건을 확인했으며 전체 회귀를 반복하지 않았다. 후속 커밋은 보고서와 CI 요약만 확정하므로 동일 CI를 다시 실행하지 않는다. 운영 코드와 실제 유료 생성은 별도 승인 전 적용하지 않는다.
 
 ## 남은 작업
 

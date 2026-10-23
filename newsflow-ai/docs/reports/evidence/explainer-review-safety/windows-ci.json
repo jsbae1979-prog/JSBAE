@@ -1,0 +1,21 @@
+{
+  "implementation_sha": "e7880cac515c0fc83a1c869a522fb5b3c8d8f85a",
+  "workflow_run_id": 39898187474,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39898187474",
+  "status": "completed",
+  "conclusion": "success",
+  "targets": "tools/explainer_review_targets.txt",
+  "jobs": [
+    {"id": 120233384717, "python": "3.12.10", "passed": 219, "failed": 0, "skipped": 0, "warnings": 1, "ruff": "PASS", "pip_check": "PASS"},
+    {"id": 120233384823, "python": "3.14.9", "passed": 219, "failed": 0, "skipped": 0, "warnings": 1, "ruff": "PASS", "pip_check": "PASS"}
+  ],
+  "warning": "Existing Starlette/httpx deprecation warning",
+  "local_windows_python": "3.14.7",
+  "local_passed": 219,
+  "live_ai_authentication_or_generation_calls": 0,
+  "operating_restart_or_data_changes": false,
+  "real_tts_video_oauth_upload_publish_calls": 0,
+  "actual_model_quality_after_changes": "NOT VERIFIED",
+  "full_regression_run": false,
+  "historical_full_regression_failures_preserved": 57
+}
