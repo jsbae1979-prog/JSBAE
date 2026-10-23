@@ -46,10 +46,10 @@
 <details class="sidebar-menu" open data-sidebar-menu><summary>{{ ui_icon('list',20) }} 메뉴 <span>{{ navigation.label }}</span></summary>
 <nav aria-label="주 메뉴" class="workspace-nav navigation-catalog">
 {% for group in navigation.groups %}<div class="navigation-group"><p class="navigation-group-label">{{ group.label }}</p>{% for item in group['items']|rejectattr('secondary') %}<a href="{{ item.href }}" class="{{ 'active' if item.selected }}" data-nav-id="{{ item.id }}" {% if item.selected %}aria-current="page"{% endif %}>{{ ui_icon(item.icon,20) }}<span>{{ item.label }}</span></a>{% endfor %}</div>{% endfor %}
-<details class="sidebar-tools" data-sidebar-tools {% if navigation.tools_open %}open{% endif %}><summary>{{ ui_icon('folder',18) }} 보관·통계 <span aria-hidden="true">⌄</span></summary><div>{% for item in navigation.tools %}<a href="{{ item.href }}" class="{{ 'active' if item.selected }}" data-nav-id="{{ item.id }}" {% if item.selected %}aria-current="page"{% endif %}>{{ ui_icon(item.icon,20) }}<span>{{ item.label }}</span></a>{% endfor %}</div></details>
+<details class="sidebar-tools" data-sidebar-tools {% if navigation.tools_open %}open{% endif %}><summary>{{ ui_icon('folder',18) }} 라이브러리·분석 <span aria-hidden="true">⌄</span></summary><div>{% for item in navigation.tools %}<a href="{{ item.href }}" class="{{ 'active' if item.selected }}" data-nav-id="{{ item.id }}" {% if item.selected %}aria-current="page"{% endif %}>{{ ui_icon(item.icon,20) }}<span>{{ item.label }}</span></a>{% endfor %}</div></details>
 </nav></details>
 
-<div class="sidebar-bottom"><span class="local-indicator"></span> 내 PC에 보관<p>게시 전, 직접 확인해 주세요.</p><a href="/simple-settings#advanced">고급 도구 ↗</a></div></header>
+<div class="sidebar-bottom"><span class="local-indicator"></span> 내 PC에 보관<p>게시 전, 직접 확인해 주세요.</p><a href="/simple-settings#advanced">운영 설정 ↗</a></div></header>
 {% macro csrf_field() %}<input type="hidden" name="csrf_token" value="{{ csrf }}">{% endmacro %}
 {% macro badge(status) %}<span class="badge {{ status }}">{{ {'success':'성공','partial':'부분 실패','failed':'실패','running':'수집 중','empty':'활성 출처 없음','interrupted':'중단','idle':'대기'}.get(status,status) }}</span>{% endmacro %}
 {% macro when(value) %}{{ value|kst }}{% endmacro %}

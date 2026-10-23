@@ -47,7 +47,7 @@ def image_records(app):
 
 def test_content_catalogue_and_creation_sidebar_share_destinations():
     menu = navigation_context('/', {})
-    creation = next(group for group in menu['groups'] if group['label'] == '만들기')['items']
+    creation = next(group for group in menu['groups'] if group['label'] == '콘텐츠 스튜디오')['items']
     assert [row['href'] for row in creation] == [row['href'] for row in CONTENT_TYPES]
     assert len({row['id'] for group in menu['groups'] for row in group['items']}) == 13
 

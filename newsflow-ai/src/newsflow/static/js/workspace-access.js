@@ -21,7 +21,7 @@
     const words = normalize(search.value).split(' ').filter(Boolean);
     let count = 0;
     entries.forEach(entry => {
-      const label = normalize(`${entry.textContent} ${aliases[entry.getAttribute('href')] || ''}`);
+      const label = normalize(`${entry.textContent} ${entry.dataset.accessSearchText || ''} ${aliases[entry.getAttribute('href')] || ''}`);
       entry.hidden = !words.every(word => label.includes(word));
       if (!entry.hidden) count++;
     });

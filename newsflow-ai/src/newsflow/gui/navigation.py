@@ -6,19 +6,19 @@ CONTENT_TYPES = (
      'description': '뉴스 자료로 대본·음성·세로 영상 만들기'},
     {'id': 'character', 'label': '캐릭터 쇼츠', 'icon': 'character', 'href': '/character',
      'description': '주제로 캐릭터 이야기·장면 만들기'},
-    {'id': 'image', 'label': '이미지 게시물', 'icon': 'image', 'href': '/image-posts',
+    {'id': 'image', 'label': '이미지 피드', 'icon': 'image', 'href': '/image-posts',
      'description': '뉴스를 이미지 한 장과 본문으로 만들기'},
 )
 
 NAV_GROUPS = (
-    ('작업실', (('home', '/', '대시보드', 'home'), ('tasks', '/?show=tasks', '진행 · 검토', 'clock'))),
-    ('만들기', tuple(('news-create' if item['id'] == 'news' else item['id'], item['href'],
+    ('워크스페이스', (('home', '/', '대시보드', 'home'), ('tasks', '/?show=tasks', '제작 현황', 'clock'))),
+    ('콘텐츠 스튜디오', tuple(('news-create' if item['id'] == 'news' else item['id'], item['href'],
                      item['label'], item['icon']) for item in CONTENT_TYPES)),
-    ('자료 · 보관', (('news', '/news', '뉴스 자료', 'folder'), ('script', '/ai', 'AI 대본', 'edit'),
-                    ('videos', '/videos', '뉴스 영상', 'video'), ('voices', '/voices', '음성 · 샘플', 'voice'))),
-    ('게시 · 운영', (('publish', '/queue', '게시 허브', 'send'), ('analytics', '/analytics', '성과 분석', 'chart'),
-                    ('schedules', '/schedules', '예약 제작', 'clock'),
-                    ('settings', '/simple-settings', '설정', 'settings'))),
+    ('뉴스 리서치', (('news', '/news', '뉴스 큐레이션', 'folder'), ('script', '/ai', '대본 라이브러리', 'edit'),
+                    ('videos', '/videos', '뉴스 영상 보관', 'video'), ('voices', '/voices', '보이스 라이브러리', 'voice'))),
+    ('게시·자동화', (('publish', '/queue', '게시 관리', 'send'), ('analytics', '/analytics', '성과 리포트', 'chart'),
+                    ('schedules', '/schedules', '제작 스케줄', 'clock'),
+                    ('settings', '/simple-settings', '환경 설정', 'settings'))),
 )
 
 
@@ -57,4 +57,5 @@ def navigation_context(path: str, query) -> dict:
     selected = next(item for group in groups for item in group['items'] if item['selected'])
     tools = [item for group in groups for item in group['items'] if item['secondary']]
     return {'groups': groups, 'tools': tools, 'tools_open': any(item['selected'] for item in tools),
+            'labels': {item['href']: item['label'] for group in groups for item in group['items']},
             'current': current, 'label': selected['label'], 'icon': selected['icon']}
