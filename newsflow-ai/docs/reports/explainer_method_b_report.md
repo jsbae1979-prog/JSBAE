@@ -29,7 +29,7 @@
 ## 검증
 
 - 로컬 Windows Python **3.14.7**: 변경 범위 분할 검증 **287 PASS + 8 PASS = 295건**, Ruff·pip check PASS. 초기 숏폼 4개 fixture 미연결 오류는 명시적인 Fake fixture import로 수정했고, 공급사 두 종류까지 확장된 8개 조합이 통과했다. 테스트 삭제·skip 없음.
-- Windows Actions Python 3.12/3.14: 실행 결과는 아래 후속 확정 절에 기록한다. 대상은 `tools/explainer_compatibility_targets.txt`이며 이전 전체 영상 제작 443건을 반복하지 않는다.
+- Windows Actions Python **3.12.10 / 3.14.9 각각 295 PASS**, Ruff·pip check PASS. 각각 기존 Starlette/httpx deprecation warning 1건. 대상은 `tools/explainer_compatibility_targets.txt`이며 이전 전체 영상 제작 443건을 반복하지 않는다.
 - 검증 내용: V1 직렬화 호환, V1/V2 실제 어댑터+Fake HTTP, 30/45/60초 QUICK·STANDARD 역할/시간, 기본값·롤백·작업 고정, 편집 메타데이터 보존, Fake 영상 전달·자막/내레이션 분리, 고위험 경고, 숫자·인용·비밀정보 차단, 토큰 여유분·기록 일치, 잘린 응답 미재전송.
 - 합성 자료 A(기준금리 동결)와 B(어린이집 총기 안전 사건)는 실제 보도가 아니다. Fake 분석은 A 추천·B 고위험을 반환하도록 구성했다. B 대본도 생성 거부 없이 비선정적 소재/검토 경고와 함께 저장된다. [합성 V1/V2 비교 예시](evidence/explainer-method-b/synthetic-comparison.json)는 기대 구조를 보여 주는 fixture이며 실제 모델 산출물이 아니다.
 - 과거 전체 회귀 **57 FAIL 기록을 보존**한다. 이번에 전체 회귀는 반복하지 않았다. 초기 넓은 점검에서 `test_intelligence`의 기존 UI 문구 기대값과 migration `0015` 기대값 두 실패를 발견했고, 기준 HEAD 소스 복사본에서도 동일하게 2 FAIL임을 확인했다(현재 실제 schema는 0018). 해당 테스트를 삭제하거나 skip하지 않았다. 이 보고서는 전체 회귀 PASS를 주장하지 않는다.
@@ -43,4 +43,7 @@
 
 ## 최종 SHA·CI
 
-구현 커밋과 CI 결과는 실행 완료 후 확정한다. PR #35는 Draft·미병합으로 유지하며 새 PR·main/기존 PR 병합·force push는 하지 않는다.
+- 검증된 구현 SHA: `2f5002c9cc3009bdbeda2ed84078f93087c08eda`.
+- [Windows CI](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39890613672): 3.12 job `120209209014`, 3.14 job `120209209096`, 모두 success. 실패/skip 0. [비밀정보 없는 CI 요약](evidence/explainer-method-b/windows-ci.json).
+- 최종 후속 커밋은 이 보고서와 합성 CI 요약만 확정한다. 코드 변경이 없으므로 이미 통과한 CI를 다시 실행하지 않는다.
+- PR #35는 Draft·미병합 유지. 새 PR·main/기존 PR 병합·force push 없음. 운영 코드·앱 재시작·외부 계정 검증은 별도 승인 전까지 진행하지 않는다.
