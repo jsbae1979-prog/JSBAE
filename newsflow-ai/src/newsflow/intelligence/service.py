@@ -906,7 +906,7 @@ class IntelligenceService:
         if any(a.get("search_provenance", {}).get("provider") == "serpapi" for a in evidence.get("articles", [])):
             notes = [{**note, "message": note["message"].replace("원문 RSS 요약", "공급사 제공 요약")}
                      for note in notes]
-        notes.extend(explainer_findings(content, evidence))
+        notes.extend(explainer_findings(content, evidence, speech=self.speech))
         if evidence.get("script_method") in API_SCRIPT_METHODS:
             estimated = speech_plan(content, duration, **self.speech)["estimated_total_seconds"]
             if estimated < duration * .90:

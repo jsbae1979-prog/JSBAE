@@ -141,8 +141,12 @@ def test_roles_timing_grounding_and_no_added_narration(quick, next_event, durati
         scene.pop('role')
     assert speech_plan(value, duration) == speech_plan(without, duration)
     v1 = api_news_contract(source, source['news_usage'], duration, version='v1')
-    assert contract['speech_estimate'] == v1['speech_estimate']
-    assert contract['narration_spoken_units_target'] == v1['narration_spoken_units_target']
+    # The estimator stays unchanged; the new writing plan allows only one
+    # sentence in middle scenes, instead of assuming two in every scene.
+    assert contract['speech_estimate']['sentence_count_hint'] == len(roles) + 2
+    assert v1['speech_estimate']['sentence_count_hint'] == len(roles) * 2
+    assert contract['speech_estimate']['rate'] == v1['speech_estimate']['rate']
+    assert contract['speech_estimate']['target_seconds_maximum'] == v1['speech_estimate']['target_seconds_maximum']
     assert source['articles'][0].get('published_at') is None
 
 

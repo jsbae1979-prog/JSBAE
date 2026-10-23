@@ -26,8 +26,8 @@ def compact_script():
     value['closing'] = '함께 계약을 보는 분과 공유하세요.'
     narrations = [
         value['hook'] + ' 합성 자료는 금리 동결을 다룹니다.',
-        '기준금리와 계약 금리는 다릅니다. 내 계약의 조건을 따로 살펴보는 관점이 필요합니다.',
-        '금리 소식만으로 내 이자를 단정하지 마세요. 계약마다 적용 조건을 나눠 살펴보세요.',
+        '기준금리와 계약 금리는 다르므로 내 계약의 조건을 따로 살펴보는 관점이 필요합니다.',
+        '금리 소식만으로 내 이자를 단정하지 말고 계약마다 적용 조건을 나눠 살펴보세요.',
         '은행 앱에서 금리 유형과 변경 조건을 확인하세요. ' + value['closing'],
     ]
     for scene, narration, seconds in zip(value['scenes'], narrations, [6, 8, 8, 8]):
@@ -52,7 +52,8 @@ def test_scene_unit_ceilings_fit_existing_timing_without_changing_voice(duration
     # the existing estimator. No TTS, clipping, speed override or padding occurs.
     for budget in budgets:
         units = budget['maximum_spoken_units']
-        text = '가' * (units // 2) + '. ' + '나' * (units - units // 2) + '.'
+        text = ('가' * (units // 2) + '. ' + '나' * (units - units // 2) + '.'
+                if budget['maximum_sentences'] == 2 else '가' * units + '.')
         assert speech_seconds(text, rate=rate) <= budget['seconds']
     assert contract['speech_estimate']['rate'] == rate
     assert 'scene_narration_budgets' not in api_news_contract(evidence(), mode, duration, version='v1')

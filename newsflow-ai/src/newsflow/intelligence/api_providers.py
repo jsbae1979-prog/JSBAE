@@ -137,9 +137,21 @@ def _analysis_output_schema(version='v1') -> dict:
     return _legacy_wire(schema, script=False) if version == 'v1' else schema
 
 
-def _script_output_schema(version='v1') -> dict:
+def _script_output_schema(version='v1', evidence=None) -> dict:
     schema = _output_schema(Script)
-    return _legacy_wire(schema, script=True) if version == 'v1' else schema
+    if version == 'v1':
+        return _legacy_wire(schema, script=True)
+    contract = (evidence or {}).get('news_usage_contract') or {}
+    if contract.get('narration_limits_version') == 'scene-characters-v1':
+        budgets = contract['scene_narration_budgets']
+        limits = ', '.join(f"{b['scene']}번: {b['maximum_characters']}자/{b['maximum_sentences']}문장"
+                           for b in budgets)
+        schema['$defs']['Scene']['properties']['narration']['description'] = (
+            '실제로 읽을 한국어 문장. 공백·문장부호 포함 최대 글자 수와 최대 문장 수: ' + limits
+            + '. hook/closing도 포함. 배정 초를 바꾸면 같은 시간 추정식으로 예산을 다시 계산. '
+              '발화 단위와 전체 분량 상한도 함께 지킬 것. 초과 시 자동 재생성하지 않고 검토 대상으로 저장됨.'
+        )
+    return schema
 
 
 def _usage(document: dict, *, anthropic: bool = False) -> dict[str, int]:
@@ -369,7 +381,7 @@ class AnthropicProvider(_APITransport):
         if analysis or script:
             body["system"] += " Return exactly one JSON object, with no Markdown fences or surrounding prose."
             version = prompt_version(payload.get('evidence'))
-            schema = _script_output_schema(version) if script else _analysis_output_schema(version)
+            schema = _script_output_schema(version, payload.get('evidence')) if script else _analysis_output_schema(version)
             if analysis and payload.get("evidence", {}).get("curation_contract"):
                 from .curation import ranking_model, wire_evidence
                 from .curation_wire import INSTRUCTION, output_schema

@@ -14,7 +14,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from newsflow.intelligence.schema import Script
 
-from .korean import CHARS_PER_SECOND, SENTENCE_PAUSE_SECONDS, rate_factor, split_sentences
+from .korean import CHARS_PER_SECOND, SENTENCE_PAUSE_SECONDS, narration_budget, rate_factor, split_sentences
 
 NEWS_USAGE_LABELS = {"QUICK": "빠른 제작", "STANDARD": "균형 제작", "VERIFIED": "검증 우선"}
 API_SCRIPT_METHOD = "api_grounded_v1"
@@ -79,7 +79,10 @@ def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *,
         # actual WAV and returns a review action instead of another paid request.
         speech = {"rate": 0, "pause_ms": 250, **(speech or {})}
         scene_count = 3 if assessment["mode"] == "QUICK" else 4
-        sentences = scene_count if profile.enabled else scene_count * 2
+        sentence_limits = ([1] * scene_count if profile.enabled else
+                           [2, *([1] * (scene_count - 2)), 2])
+        sentences = (sum(sentence_limits) if selected == 'v2' else
+                     scene_count if profile.enabled else scene_count * 2)
         pause_seconds = (SENTENCE_PAUSE_SECONDS * sentences
                          + speech["pause_ms"] / 1000 * (sentences - scene_count))
         speed = CHARS_PER_SECOND * rate_factor(speech["rate"]) * (profile.speed if profile.enabled else 1)
@@ -104,16 +107,26 @@ def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *,
         )
         if selected == 'v2':
             # Concrete scene budgets use the unchanged estimator, not WAV measurement.
-            seconds = [max(1, duration // 5)]
+            seconds = [min(3, max(1, duration // 5)) if profile.enabled and profile.hook
+                       else max(1, duration // 5)]
             remaining = duration - seconds[0]
             seconds.extend([remaining // (scene_count - 1)] * (scene_count - 1))
             seconds[-1] += duration - sum(seconds)
-            per_scene_pauses = pause_seconds / scene_count
             contract['scene_narration_budgets'] = [
-                {'scene': i, 'seconds': sec, 'maximum_sentences': sentences // scene_count,
-                 'maximum_spoken_units': max(1, floor((sec * .97 - per_scene_pauses) * speed))}
-                for i, sec in enumerate(seconds, 1)
+                {'scene': i, **narration_budget(sec, limit, **speech,
+                                              speed=profile.speed if profile.enabled else 1)}
+                for i, (sec, limit) in enumerate(zip(seconds, sentence_limits), 1)
             ]
+            contract['narration_limits_version'] = 'scene-characters-v1'
+            contract['narration_characters_maximum'] = sum(
+                budget['maximum_characters'] for budget in contract['scene_narration_budgets'])
+            contract['narration_length_rule'] = (
+                'maximum_characters는 내레이션의 공백·문장부호를 포함한 글자 수 상한입니다. '
+                '각 장면의 글자 수·문장 수·발화 단위·총 분량을 모두 지키세요. '
+                '중간 의미 장면은 짧은 문장 하나로 서로 다른 핵심만 말하고 해설을 반복하지 마세요. '
+                '긴 문장을 쉼표로 이어 붙이지 마세요. 도입·마무리도 같은 예산에 포함합니다. '
+                '검토 메모에 분량 준수라고 쓰는 것은 내레이션 검사 통과를 대신하지 않습니다.'
+            )
             contract['spoken_boundaries'] = (
                 'hook은 첫 장면 내레이션의 맨 앞, closing은 마지막 장면의 맨 끝에 같은 문장으로 각각 한 번 포함하세요. '
                 '두 문장도 분량 예산에 포함합니다. 장면별 초와 발화 단위 예산을 사용하고, '
@@ -155,7 +168,7 @@ def validate_api_news_script(output: dict, evidence: dict) -> None:
             raise ValueError("자료에 없는 직접 발언은 추가할 수 없습니다.")
 
 
-def explainer_findings(content: dict, evidence: dict) -> list[dict]:
+def explainer_findings(content: dict, evidence: dict, *, speech: dict | None = None) -> list[dict]:
     """Composition warnings never approve facts or reject otherwise valid legacy output."""
     if evidence.get('script_prompt_version') != 'v2' and evidence.get('script_method') != 'api_grounded_v2':
         return []
@@ -185,7 +198,42 @@ def explainer_findings(content: dict, evidence: dict) -> list[dict]:
         result.append({'code': 'explainer_ad_risk', 'level': 'warning',
                        'message': '폭력·위험·광고 민감 주제입니다. 비선정적 표현과 실루엣·아이콘·텍스트 소재를 검토하세요.'})
     result.extend(_explainer_broadcast_findings(content, evidence))
+    result.extend(_narration_length_findings(content, evidence, speech=speech))
     return result
+
+
+def _narration_length_findings(content: dict, evidence: dict, *, speech: dict | None = None) -> list[dict]:
+    """Only newly frozen contracts opt in; old drafts and their text stay intact."""
+    contract = evidence.get('news_usage_contract') or {}
+    if contract.get('narration_limits_version') != 'scene-characters-v1':
+        return []
+    from newsflow.shortform import frozen
+
+    profile = frozen(evidence)
+    speech = {**(contract.get('speech_estimate') or {}), **(speech or {})}
+    scenes, findings, seen = content['scenes'], [], set()
+    for i, scene in enumerate(scenes):
+        # Editing scene seconds recalculates the ceiling without changing voice,
+        # stored narration or the old contract's original planning suggestion.
+        sentences = 1 if profile.enabled or 0 < i < len(scenes) - 1 else 2
+        budget = narration_budget(scene['seconds'], sentences, rate=speech.get('rate', 0),
+                                  pause_ms=speech.get('pause_ms', 250), speed=profile.speed if profile.enabled else 1)
+        text = scene['narration']
+        if len(text) > budget['maximum_characters']:
+            findings.append({'code': 'narration_character_limit', 'level': 'warning',
+                             'message': f"장면 {i+1} 내레이션 {len(text)}자가 분량 안내 {budget['maximum_characters']}자를 넘습니다. 핵심 문장만 남겨 수정하세요."})
+        parts = split_sentences(text)
+        if len(parts) > sentences:
+            findings.append({'code': 'narration_sentence_limit', 'level': 'warning',
+                             'message': f'장면 {i+1}은 최대 {sentences}문장으로 정리하세요. 글자 수와 음성 길이도 함께 확인합니다.'})
+        for part in parts:
+            normalized = re.sub(r'\W+', '', part)
+            if len(normalized) >= 10 and normalized in seen:
+                findings.append({'code': 'narration_repeated_sentence', 'level': 'info', 'kind': 'composition_warning',
+                                 'message': '내레이션에 같은 문장이 반복됩니다. 장면별 핵심을 나눠 수정하세요.'})
+                break
+            seen.add(normalized)
+    return findings
 
 
 _SYNTHETIC_MARKER = re.compile(r'합성|가상|\bsynthetic\b|\bfictional\b', re.IGNORECASE)

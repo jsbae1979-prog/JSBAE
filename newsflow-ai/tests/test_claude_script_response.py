@@ -90,7 +90,8 @@ def test_one_complete_script_json_is_saved_for_review_with_original_limits(scrip
     assert body['output_config']['format']['type'] == 'json_schema'
     assert schema['additionalProperties'] is False and schema['$defs']['Scene']['additionalProperties'] is False
     assert 'maxLength' not in schema['$defs']['Scene']['properties']['narration']
-    assert '400' in schema['$defs']['Scene']['properties']['narration']['description']
+    description = schema['$defs']['Scene']['properties']['narration']['description']
+    assert ('400' in description) if version == 'v1' else ('36자/2문장' in description and '55자/1문장' in description)
     assert Script.model_json_schema()['$defs']['Scene']['properties']['narration']['maxLength'] == 400
     assert body['max_tokens'] == (2400 if version == 'v2' else 1800) and 'no Markdown' in body['system']
     assert ('analysis' in schema['properties']) == (version == 'v2')

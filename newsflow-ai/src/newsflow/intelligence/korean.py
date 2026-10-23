@@ -7,6 +7,7 @@ of produced audio and never replace the actual WAV duration check in the rendere
 from __future__ import annotations
 
 import re
+from math import floor
 
 # Typical Korean SAPI narration at rate 0: about 5 syllables (characters) per second.
 CHARS_PER_SECOND = 5.0
@@ -41,6 +42,15 @@ def speech_seconds(text: str, rate: int = 0, pause_ms: int = 250) -> float:
     seconds = units / (CHARS_PER_SECOND * rate_factor(rate))
     seconds += SENTENCE_PAUSE_SECONDS * len(sentences) + (pause_ms / 1000) * max(0, len(sentences) - 1)
     return round(seconds, 2)
+
+
+def narration_budget(seconds: int, sentences: int, *, rate: int = 0, pause_ms: int = 250,
+                     speed: float = 1.0) -> dict:
+    """A countable writing ceiling, alongside (not instead of) the speech estimate."""
+    pauses = SENTENCE_PAUSE_SECONDS * sentences + pause_ms / 1000 * max(0, sentences - 1)
+    units = max(1, floor((seconds * .97 - pauses) * CHARS_PER_SECOND * rate_factor(rate) * speed))
+    return {'seconds': seconds, 'maximum_sentences': sentences, 'maximum_spoken_units': units,
+            'maximum_characters': min(400, max(1, floor(units * 1.5)))}
 
 
 def speech_plan(content: dict, duration: int, rate: int = 0, pause_ms: int = 250) -> dict:
