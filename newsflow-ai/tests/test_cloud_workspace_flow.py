@@ -78,6 +78,19 @@ def local_server(app):
 
 def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, browser, monkeypatch, tmp_path):
     coordinator, backend, provider, sessions, mode, rss = api_pipeline
+    # New jobs reject short scripts before either review mode. This healthy-flow
+    # fixture supplies valid narration; the short-response rejection is tested separately.
+    from newsflow.intelligence.korean import speech_plan
+    complete = provider.complete
+    def healthy_fake_script(evidence, seconds, options):
+        result = complete(evidence, seconds, options)
+        while speech_plan(result, seconds)["estimated_total_seconds"] < seconds * .90:
+            plan = speech_plan(result, seconds)
+            index = min(range(len(plan["scenes"])), key=lambda i: plan["scenes"][i]["estimated_seconds"])
+            result["scenes"][index]["narration"] += " 살펴봅니다."
+        assert speech_plan(result, seconds)["fits"]
+        return result
+    monkeypatch.setattr(provider, "complete", healthy_fake_script)
     # The original factories/engines stay intact; only test dependencies are injected.
     monkeypatch.setattr(app.state, "autopilot", coordinator)
     monkeypatch.setattr(app.state, "autopilot_backend", backend)
@@ -129,8 +142,8 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         response = page.goto(origin + "/")
         assert "script-src 'self'" in response.headers["content-security-policy"]
         expect(page.locator(".demo-banner")).to_be_visible()
-        page.get_by_role("link", name="새 뉴스로 쇼츠 만들기 →", exact=True).click()
-        assert urlsplit(page.url).path == "/create"
+        # The home now exposes the same guarded creation form directly.
+        assert urlsplit(page.url).path == "/"
         page.wait_for_load_state("load")
         expect(page.locator('form[action="/autopilot/quick-start"]')).to_have_attribute("data-easy-wired","true")
         with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/autopilot/quick-start")) as prepared:
@@ -198,10 +211,15 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
             draft = s.get(PublishDraft, job["publish_draft_id"])
             assert not draft.content_reviewed and not draft.copyright_confirmed and not draft.sources_confirmed
             assert draft.account_id is None
+        # The server future can finish before the form's redirect/reload. Observe the
+        # completed page before navigating; never race or retry the mutation.
+        expect(page.locator("[data-autopilot-job]")).to_have_attribute(
+            "data-job-status", "completed", timeout=15000)
         page.goto(origin+f"/?video={render_id}&publish_platform=unified#publish-workspace")
         review = page.locator('form[action="/publishing/unified/review"]')
         target = "both" if mode == "openai" else "youtube"
         review.locator('[name="target"]').select_option(target)
+        review.locator('[name="youtube_category_id"]').select_option("28")
         for field in ("content_reviewed","copyright_confirmed","sources_confirmed"):
             review.locator(f'[name="{field}"]').check()
         review.locator('[name="ai_disclosure"]').select_option("disclose")

@@ -44,9 +44,10 @@ from newsflow.intelligence.settings import (
     read_studio_settings,
 )
 from newsflow.publishing.service import PublishingError, PublishingService, hash_file
-from newsflow.video.tts import TTSError
+from newsflow.video.tts import SpeechSettings, TTSError
 
 from .api_settings_routes import connection_status
+from .dashboard_view import CATEGORY_FILTERS, dashboard_context, news_context
 from .production_context import (
     ACQUISITION_LABELS,
     CATEGORY_LABELS,
@@ -163,6 +164,8 @@ def production_summary(request: Request, ready: dict[str, Any]) -> dict[str, Any
         rss_notice = ("RSS 자료 → 선택한 API 분석·대본 → 선택한 대본 검토 정책 → 영상 제작. "
                       "분석과 대본은 별도 사용량·비용이 발생하며 자동 대체하지 않습니다."
                       if provider in {"openai", "claude_api"} else
+                      "RSS 확보 → 같은 AI 분석·대본 → 선택한 대본 검토 정책 → 영상 제작. 실행별 동의가 필요합니다."
+                      if provider in {"claude_code", "codex"} else
                       "RSS 자료 확인 → 선택한 대본 검토 정책 → 영상 제작. 실제 처리 엔진은 작업 이력에서 확인하세요.")
     cached = getattr(request.app.state, "claude_status" if provider == "claude_code" else "codex_status", {})
     auth_checked = provider == "offline" or (provider in {"claude_code", "codex"}
@@ -305,7 +308,10 @@ def _workspace_video(
 def home(
     request: Request, task: str | None = None, video: int | None = None, show: str = "",
     guide: str = "", flow: str | None = None, publish_platform: str = "youtube",
+    news_category: str = "",
 ) -> HTMLResponse:
+    if news_category not in CATEGORY_FILTERS:
+        raise HTTPException(422, "뉴스 분야를 확인해 주세요.")
     if (show not in {"", "tasks", "videos"} or sum((task is not None, video is not None, bool(guide))) > 1
             or video is not None and video < 1 or guide and guide not in GUIDES
             or publish_platform not in {*PLATFORMS, "unified"}):
@@ -334,6 +340,10 @@ def home(
             Scene.project_id.in_([project.id for _render, project in videos]), Scene.ai_generated.is_(True))))
         job_links = {item.get("render_job_id"): item for item in jobs if item.get("render_job_id")}
         for render, project in videos:
+            from newsflow.db.models import WorkspaceRemoval
+
+            if session.get(WorkspaceRemoval, f"video:{render.id}"):
+                continue
             result = _workspace_video(request, render, project, job_links.get(render.id), ai_scenes=project.id in with_ai)
             if result:
                 completed.append(result)
@@ -360,8 +370,14 @@ def home(
         recent_videos = completed if show == "videos" else [item for item in completed if item["id"] not in active_render_ids]
         visible_tasks = tasks[:100] if show == "tasks" else active_jobs[:5]
         visible_videos = recent_videos[:100 if show == "videos" else 5]
+        is_dashboard = request.url.path == "/" and not (task or video or guide or show)
+        dashboard = dashboard_context(session, tasks) if is_dashboard else None
         return _page(
-            request, "easy_home.html", active="home", defaults=_defaults(request), ready=ready,
+            request, "creator_dashboard.html" if is_dashboard else "activity.html"
+            if show == "tasks" and not (task or video or guide) else "easy_home.html", active="home",
+            dashboard=dashboard,
+            activity_chart=dashboard_context(session, visible_tasks) if show == "tasks" else None,
+            defaults=_defaults(request), ready=ready,
             production=production_summary(request, ready),
             active_jobs=visible_tasks, workspace_tasks=visible_tasks, task_count=len(tasks), active_task_count=len(active_jobs),
             completed=visible_videos, workspace_videos=visible_videos, video_count=len(completed),
@@ -373,9 +389,18 @@ def home(
             if publish_platform == "instagram" else None,
             unified_publish=unified_publishing_context(request, video) if publish_platform == "unified" else None,
             queue_count=session.scalar(select(func.count()).select_from(PublishDraft)),
-            recent_news=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(5))),
+            **news_context(session, news_category),
             **overview,
         )
+
+
+@router.get("/dashboard/news", response_class=HTMLResponse)
+def dashboard_news(request: Request, category: str = ""):
+    if category not in CATEGORY_FILTERS:
+        raise HTTPException(422, "뉴스 분야를 확인해 주세요.")
+    with request.app.state.sessions() as session:
+        return _page(request, "dashboard_news_list.html", **news_context(session, category),
+                     category_labels=CATEGORY_LABELS)
 
 
 def _guide_context(request: Request, guide: str, flow: str | None) -> dict[str, Any]:
@@ -421,7 +446,10 @@ def quick_start(
     voice_method: str | None = Form(None, max_length=20), video_method: str | None = Form(None, max_length=20),
 ) -> RedirectResponse:
     """Workspace entry point, with the same coordinator and all existing review gates."""
-    if source not in CHOICES["source"] or duration not in {30, 45, 60}:
+    from newsflow.shortform import allowed_duration
+    from newsflow.shortform import read as read_shortform
+
+    if source not in CHOICES["source"] or not allowed_duration(duration, read_shortform(request.app.state.sessions).enabled):
         raise HTTPException(422, "뉴스 종류와 30·45·60초 중 영상 길이를 선택해 주세요.")
     ready = readiness(request)
     saved = read_studio_settings(request.app.state.sessions)
@@ -434,7 +462,7 @@ def quick_start(
         video_mode = video_setting.value if video_setting and video_setting.value == "higgsfield" else "off"
     voice = ready["voice"]["name"]
     if production_options_version is not None:
-        if production_options_version != 1 or voice_method not in {"local", "elevenlabs"} or video_method not in {"off", "higgsfield"}:
+        if production_options_version not in {1, 2} or voice_method not in {"local", "elevenlabs"} or video_method not in {"off", "higgsfield"}:
             raise HTTPException(422, "음성·영상 제작 방식을 다시 선택하세요.")
         if voice_method == "local" and voice == "elevenlabs":
             raise HTTPException(422, "설정에서 사용할 Windows 또는 Supertonic 로컬 음성을 선택해 주세요. 자동으로 다른 음성을 고르지 않습니다.")
@@ -446,7 +474,7 @@ def quick_start(
         "initial_provider": saved["provider"] if source == "feeds" else "offline",
         "initial_model": saved["model"] if source == "feeds" else "offline",
         "initial_voice": voice, "initial_video": video_mode,
-        **({"production_options_version": 1, "script_review": script_review} if production_options_version else {}),
+        **({"production_options_version": production_options_version, "script_review": script_review} if production_options_version else {}),
         "news_usage": news_usage,
         "initial_platform": _defaults(request)["platform"], **acquisition,
         **({"request_id": uuid4().hex} if source == "feeds" else {}),
@@ -467,7 +495,7 @@ def _start_production(request: Request, flow: dict, *, external_consent: bool, w
             return go(f"/?guide={reason}&{context_query(flow)}#workspace-detail")
         return go(f"/autopilot/start?guide={reason}&{context_query(flow)}")
 
-    modern = flow.get("production_options_version") == 1
+    modern = flow.get("production_options_version") in {1, 2}
     if flow.get("initial_video") == "higgsfield" and not modern:
         return guide_to("video")
     if source == "feeds":
@@ -495,9 +523,20 @@ def _start_production(request: Request, flow: dict, *, external_consent: bool, w
         return guide_to("consent")
     options = {}
     if modern:
-        choices = {"version": 1, "script_review": flow["script_review"], "video_provider": flow["initial_video"],
+        choices = {"version": flow["production_options_version"], "script_review": flow["script_review"], "video_provider": flow["initial_video"],
                    "external_tts_consent": external_tts_consent}
+        if flow["production_options_version"] == 2:
+            speech = speech_preferences(request.app.state.sessions)
+            _, size, position = preview_preferences(request.app.state.sessions)
+            choices.update(speech={"rate": speech.rate, "pause_ms": speech.pause_ms}, font_size=size, subtitle_y=position)
         if voice == "elevenlabs":
+            if flow["production_options_version"] == 2:
+                from hashlib import sha256
+
+                key = ElevenLabsKeys(request.app.state.video.root).key()
+                if not key:
+                    return guide_to("voice")
+                el = {**el, "credential_fingerprint": sha256(key.encode()).hexdigest()}
             choices["elevenlabs"] = el
         options["production_options"] = choices
     if source == "feeds":
@@ -532,10 +571,19 @@ def confirm_start(
         raise HTTPException(422, str(exc)) from None
     if not production or production["source"] != "feeds" or not production.get("request_id"):
         raise HTTPException(422, "홈에서 제작할 등록 뉴스를 다시 선택해 주세요.")
-    if production.get("production_options_version") == 1 and production["initial_voice"] == "elevenlabs" and not external_tts_consent:
+    if production.get("production_options_version") in {1, 2} and production["initial_voice"] == "elevenlabs" and not external_tts_consent:
         raise HTTPException(422, "이번 ElevenLabs 음성 제작의 외부 전송·사용량 동의는 별도로 필요합니다.")
     return _start_production(request, production, external_consent=True, workspace=workspace,
                              external_tts_consent=external_tts_consent)
+
+
+@router.post("/autopilot/jobs/{job_id}/voice-consent")
+def renew_voice_consent(request: Request, job_id: str, revision: int = Form(ge=1), consent: bool = Form(False)):
+    try:
+        request.app.state.autopilot.approve_voice(job_id, revision, consent)
+    except AutopilotError as exc:
+        raise _error(exc) from None
+    return go(f"/?task={job_id}#workspace-detail")
 
 
 @router.post("/autopilot/start")
@@ -596,7 +644,9 @@ def job_detail_context(request: Request, job_id: str) -> dict[str, Any]:
         plan = None
         if draft:
             try:
-                speech = speech_preferences(request.app.state.sessions)
+                speech = (SpeechSettings(**snapshot["production_options"]["speech"])
+                          if snapshot.get("production_options", {}).get("version") == 2
+                          else speech_preferences(request.app.state.sessions))
                 plan = speech_plan(draft.content, draft.duration, speech.rate, speech.pause_ms)
             except TTSError:
                 plan = speech_plan(draft.content, draft.duration)
@@ -642,6 +692,7 @@ def resume(
     try:
         current = _snapshot(request, job_id)
         if (current["current_stage"] == "script" and current["status"] == "waiting_review"
+                and current.get("production_options", {}).get("version") != 2
                 and current.get("production_options", {}).get("video_provider") == "higgsfield"
                 and not job_detail_context(request, job_id)["ai_render_ready"]):
             raise HTTPException(422, "AI 장면 생성·검토·최종 합성을 먼저 완료하세요. 기존 작업은 그대로 유지합니다.")
@@ -661,19 +712,30 @@ def retry(request: Request, job_id: str, revision: int = Form(ge=1), workspace: 
 
 
 @router.get("/queue", response_class=HTMLResponse)
-def queue(request: Request) -> HTMLResponse:
+def queue(request: Request, month: str | None = None) -> HTMLResponse:
+    from newsflow.publishing.calendar import month_view
+    from newsflow.publishing.service import PublishingError
+    try:
+        calendar = request.app.state.publishing_calendar.rows()
+        calendar_month = month_view(calendar, month)
+    except (ValueError, PublishingError):
+        raise HTTPException(422, "달력 월을 확인하세요.") from None
     with request.app.state.sessions() as session:
         entries = []
+        seen_videos = set()
         for draft, video in session.execute(
             select(PublishDraft, RenderJob).join(RenderJob).order_by(PublishDraft.id.desc()).limit(100)
         ):
+            if draft.state == "local_draft" and video.id in seen_videos:
+                continue
+            seen_videos.add(video.id)
             target = _media_path(request, video)
             try:
-                valid = target is not None and hash_file(target) == draft.media_sha256
+                valid = target is not None and (draft.state == "local_draft" or hash_file(target) == draft.media_sha256)
             except OSError:
                 valid = False
             entries.append({"draft": draft, "video": video, "playable": valid})
-        return _page(request, "queue.html", active="queue", entries=entries)
+        return _page(request, "queue.html", active="queue", entries=entries, calendar=calendar, calendar_month=calendar_month)
 
 
 @router.get("/simple-settings", response_class=HTMLResponse)

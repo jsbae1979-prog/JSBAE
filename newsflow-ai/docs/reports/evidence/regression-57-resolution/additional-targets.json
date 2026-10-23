@@ -1,0 +1,9 @@
+[
+  "tests/test_api_first_check_gui.py::test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[openai]",
+  "tests/test_api_first_check_gui.py::test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[claude_api]",
+  "tests/test_claude_connection_gui.py::test_connection_action_is_explicit_outside_cost_dialog_with_official_dashboard",
+  "tests/test_codex_studio.py::test_codex_rss_analysis_script_and_video_flow",
+  "tests/test_easy_ui.py::test_easy_and_advanced_pages_keep_security_headers[/-\\uc624\\ub298\\uc740 \\uc5b4\\ub5a4 \\uc774\\uc57c\\uae30\\ub97c]",
+  "tests/test_easy_ui.py::test_fake_render_cannot_appear_as_completed_video",
+  "tests/test_news_usage_gui.py::test_workspace_offers_one_news_usage_choice_with_standard_default"
+]

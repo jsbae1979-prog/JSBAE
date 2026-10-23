@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import re
 from types import SimpleNamespace
 
 import pytest
 from conftest import csrf
 from sqlalchemy import select
+from test_claude_connection_gui import Document
 
 from newsflow.db.models import AppSetting, NewsArticle, RenderJob
 from newsflow.intelligence.service import IntelligenceService
@@ -32,21 +32,20 @@ def studio_draft(app, monkeypatch):
     return service.generate(service.analyze([1]), 30)
 
 
-def advanced_editing(html):
-    return re.search(r'<details[^>]*id="video-advanced-editing"[^>]*>(.*?)</details>', html, re.DOTALL).group(1)
-
-
 def test_simple_form_keeps_advanced_fields_and_explicit_review(client, studio_draft):
     response = client.get(f"/video?draft_id={studio_draft}")
     assert response.status_code == 200
     html = response.text
-    advanced = advanced_editing(html)
-    assert not re.search(r'<details[^>]*id="video-advanced-editing"[^>]*\bopen', html)
-    for name in ("font_size", "subtitle_y", "images", "asset_permission"):
-        assert f'name="{name}"' in advanced
-    assert 'id="video-ai-link"' in advanced
+    document = Document(html)
+    advanced = document.find("details", id="video-advanced-editing")[0]
+    assert "open" in advanced.attrs
+    # Parse nested details as a tree; a regex stopped at the first inner </details>.
+    for name in ("font_size", "subtitle_y", "images", "effects", "asset_permission"):
+        assert any(advanced in node.ancestors for node in document.find(name=name))
+    assert advanced in document.find(id="video-ai-link")[0].ancestors
     for name in ("duration", "voice", "reviewed", "external_tts_consent"):
-        assert f'name="{name}"' in html and f'name="{name}"' not in advanced
+        fields = document.find(name=name)
+        assert fields and all(advanced not in node.ancestors for node in fields)
     assert 'name="reviewed" value="true" required' in html
     assert 'name="csrf_token"' in html and 'href="https://example.com/ux-video"' in html
     assert "script-src 'self'" in response.headers["content-security-policy"]

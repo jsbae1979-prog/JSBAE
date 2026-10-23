@@ -1,0 +1,100 @@
+{
+  "contrast_samples": {
+    "primary": {
+      "text": "rgb(255, 255, 255)",
+      "background": "rgb(36, 99, 235)",
+      "size": "15px",
+      "weight": "700",
+      "outline": "rgb(255, 255, 255)",
+      "contrast": 5.17
+    },
+    "input": {
+      "text": "rgb(238, 244, 255)",
+      "background": "rgb(12, 23, 40)",
+      "size": "14px",
+      "weight": "400",
+      "outline": "rgb(238, 244, 255)",
+      "contrast": 16.27
+    },
+    "secondary": {
+      "text": "rgb(228, 232, 244)",
+      "background": "rgba(12, 23, 39, 0.85)",
+      "size": "13px",
+      "weight": "600",
+      "outline": "rgb(228, 232, 244)",
+      "contrast": 14.69
+    },
+    "label": {
+      "text": "rgb(183, 198, 220)",
+      "background": "rgb(23,52,84)",
+      "size": "13px",
+      "weight": "400",
+      "outline": "rgb(183, 198, 220)",
+      "background_note": "Conservative lighter panel sample, not a full composited-pixel audit",
+      "contrast": 7.32
+    }
+  },
+  "actual_cloud_heading_fonts": {
+    "fonts": [
+      {
+        "familyName": "Noto Sans CJK KR",
+        "postScriptName": "NotoSansCJKkr-Bold",
+        "isCustomFont": false,
+        "glyphCount": 10
+      }
+    ]
+  },
+  "long_option_fit": [
+    {
+      "viewport": "1366x768",
+      "selected_options": [
+        {
+          "value": "elevenlabs",
+          "text": "ElevenLabs · AI 음성",
+          "width": 452,
+          "needed": 173.90548706054688
+        },
+        {
+          "value": "higgsfield",
+          "text": "AI 영상 · Higgsfield + FFmpeg",
+          "width": 452,
+          "needed": 231.1652069091797
+        }
+      ]
+    },
+    {
+      "viewport": "1920x1080",
+      "selected_options": [
+        {
+          "value": "elevenlabs",
+          "text": "ElevenLabs · AI 음성",
+          "width": 377,
+          "needed": 173.90548706054688
+        },
+        {
+          "value": "higgsfield",
+          "text": "AI 영상 · Higgsfield + FFmpeg",
+          "width": 251,
+          "needed": 231.1652069091797
+        }
+      ]
+    },
+    {
+      "viewport": "390x844",
+      "selected_options": [
+        {
+          "value": "elevenlabs",
+          "text": "ElevenLabs · AI 음성",
+          "width": 318,
+          "needed": 173.90548706054688
+        },
+        {
+          "value": "higgsfield",
+          "text": "AI 영상 · Higgsfield + FFmpeg",
+          "width": 318,
+          "needed": 231.1652069091797
+        }
+      ]
+    }
+  ]
+}

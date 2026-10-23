@@ -24,6 +24,7 @@ from newsflow.db.models import (
     utcnow,
 )
 from newsflow.intelligence.korean import MIN_SUMMARY_CHARS
+from newsflow.news.catalog import FEED_PRESETS
 from newsflow.news.rss_adapter import FeedError, URLPolicyError, validate_url
 from newsflow.news.service import CollectionBusy
 
@@ -93,7 +94,19 @@ def sources(request: Request, tested: int | None = None) -> HTMLResponse:
             enabled_count=sum(1 for row in rows if row["source"].enabled), tested=tested,
             timeout=int(timeout.value) if timeout else request.app.state.config.request_timeout,
             max_sources=MAX_SOURCES, min_summary=MIN_SUMMARY_CHARS,
+            feed_presets=FEED_PRESETS, registered_urls={row["source"].url for row in rows},
         )
+
+
+@router.post("/sources/preset")
+def add_preset(
+    request: Request, preset: str = Form(max_length=40), permission: bool = Form(False),
+) -> RedirectResponse:
+    selected = next((item for item in FEED_PRESETS if item.id == preset), None)
+    if selected is None:
+        raise HTTPException(422, "목록에서 RSS 출처를 선택하세요.")
+    # Reuse URL, permission, duplicate and limit checks; registration never fetches.
+    return add_source(request, name=selected.name, url=selected.url, permission=permission)
 
 
 @router.post("/sources")

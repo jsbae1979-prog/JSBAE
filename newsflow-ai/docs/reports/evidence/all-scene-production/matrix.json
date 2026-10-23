@@ -1,0 +1,422 @@
+{
+  "tested_sha": "63431bf261eebefe1ea63e90c4e8d1eed2f77369",
+  "scope": "8 choices x OpenAI/Claude API Fake; actual FFmpeg; no live vendor calls",
+  "rows": [
+    {
+      "status": "PASS",
+      "script_review": false,
+      "voice": "elevenlabs",
+      "all_ai": false,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-claude_api-False-elevenlabs-False"
+    },
+    {
+      "status": "PASS",
+      "script_review": false,
+      "voice": "elevenlabs",
+      "all_ai": true,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-claude_api-False-elevenlabs-True"
+    },
+    {
+      "status": "PASS",
+      "script_review": false,
+      "voice": "supertonic:F1",
+      "all_ai": false,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-claude_api-False-supertonic-F1-False"
+    },
+    {
+      "status": "PASS",
+      "script_review": false,
+      "voice": "supertonic:F1",
+      "all_ai": true,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-claude_api-False-supertonic-F1-True"
+    },
+    {
+      "status": "PASS",
+      "script_review": true,
+      "voice": "elevenlabs",
+      "all_ai": false,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-claude_api-True-elevenlabs-False"
+    },
+    {
+      "status": "PASS",
+      "script_review": true,
+      "voice": "elevenlabs",
+      "all_ai": true,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-claude_api-True-elevenlabs-True"
+    },
+    {
+      "status": "PASS",
+      "script_review": true,
+      "voice": "supertonic:F1",
+      "all_ai": false,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-claude_api-True-supertonic-F1-False"
+    },
+    {
+      "status": "PASS",
+      "script_review": true,
+      "voice": "supertonic:F1",
+      "all_ai": true,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-claude_api-True-supertonic-F1-True"
+    },
+    {
+      "status": "PASS",
+      "script_review": false,
+      "voice": "elevenlabs",
+      "all_ai": false,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-openai-False-elevenlabs-False"
+    },
+    {
+      "status": "PASS",
+      "script_review": false,
+      "voice": "elevenlabs",
+      "all_ai": true,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-openai-False-elevenlabs-True"
+    },
+    {
+      "status": "PASS",
+      "script_review": false,
+      "voice": "supertonic:F1",
+      "all_ai": false,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-openai-False-supertonic-F1-False"
+    },
+    {
+      "status": "PASS",
+      "script_review": false,
+      "voice": "supertonic:F1",
+      "all_ai": true,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-openai-False-supertonic-F1-True"
+    },
+    {
+      "status": "PASS",
+      "script_review": true,
+      "voice": "elevenlabs",
+      "all_ai": false,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-openai-True-elevenlabs-False"
+    },
+    {
+      "status": "PASS",
+      "script_review": true,
+      "voice": "elevenlabs",
+      "all_ai": true,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-openai-True-elevenlabs-True"
+    },
+    {
+      "status": "PASS",
+      "script_review": true,
+      "voice": "supertonic:F1",
+      "all_ai": false,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-openai-True-supertonic-F1-False"
+    },
+    {
+      "status": "PASS",
+      "script_review": true,
+      "voice": "supertonic:F1",
+      "all_ai": true,
+      "media": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "source_api_calls": [
+        "search",
+        "analysis",
+        "script"
+      ],
+      "actual_paid_calls": 0,
+      "human_audio_quality": "NOT VERIFIED",
+      "output": "temporary synthetic MP4; not committed",
+      "case": "matrix-openai-True-supertonic-F1-True"
+    }
+  ]
+}

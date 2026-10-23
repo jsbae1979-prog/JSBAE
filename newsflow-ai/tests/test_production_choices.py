@@ -221,7 +221,7 @@ def test_form_default_context_and_separate_tts_consent(client, app, monkeypatch)
     save_values(app, video_default_voice="offline-silence", autopilot_acquisition_policy="rss")
     before = stored_values(app)
     page = client.get("/create")
-    assert 'name="script_review" value="true" checked' in page.text
+    assert 'name="script_review" value="true" form="quick-production" checked' in page.text
     assert 'id="quick-voice-method"' in page.text and 'id="quick-video-method"' in page.text
     captured = []
     monkeypatch.setattr(app.state.autopilot, "start", lambda **k: captured.append(k) or "a" * 32)

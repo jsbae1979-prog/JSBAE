@@ -38,7 +38,7 @@ def test_final_choices_and_feed_local_save_in_chrome(full,browser,tmp_path):
                 if name=='feed':
                     assert page.locator('form[action="/image-posts/generate-background"]').count()==1
                     # Collapsed opt-in remains separate from local saving.
-                    expect(page.get_by_role('button',name='이미지로 저장',exact=True)).to_be_visible()
+                    expect(page.locator('form[action="/image-posts/create"] button[type="submit"]')).to_be_visible()
                 assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth+2')
                 # Bound compositor allocation on Windows runners; functional checks still cover the document.
                 page.screenshot(path=str(output/f'final-{name}-{width}.png'),full_page=False, animations='disabled')
@@ -48,9 +48,9 @@ def test_final_choices_and_feed_local_save_in_chrome(full,browser,tmp_path):
         form.locator('[name="body"]').fill('합성 뉴스의 저장된 요약을 확인합니다.')
         form.locator('[name="ai_disclosure"]').select_option('not_required')
         for name in ['reviewed','rights','sources_confirmed']: form.locator(f'[name="{name}"]').check()
-        form.get_by_role('button',name='이미지로 저장',exact=True).click()
+        form.locator('button[type="submit"]').click()
         expect(page.locator('#image-result')).to_be_visible()
-        expect(page.get_by_role('link',name='JPG 저장',exact=True)).to_be_visible()
+        expect(page.locator('#image-result a[href$="/file?download=true"]')).to_be_visible()
         assert len(app.state.image_posts.recent())==1
         assert app.state.image_generation.recent(identifier)==[]
         assert not external and not errors and not full.provider.calls

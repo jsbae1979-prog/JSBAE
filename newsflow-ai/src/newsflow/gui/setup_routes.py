@@ -119,6 +119,12 @@ def library(request: Request) -> HTMLResponse:
         with_ai = set(session.scalars(select(Scene.project_id).where(
             Scene.project_id.in_([project.id for _job, project in rows]), Scene.ai_generated.is_(True))))
         for job, project in rows:
-            entries.append({'job': job, 'project': project, 'playable': _media_path(request, job) is not None,
+            from newsflow.db.models import WorkspaceRemoval
+
+            if session.get(WorkspaceRemoval, f"video:{job.id}"):
+                continue
+            from .video_presentation import video_presentation
+
+            entries.append({'presentation': video_presentation(job, playable=_media_path(request, job) is not None), 'job': job, 'project': project, 'playable': _media_path(request, job) is not None,
                             'ai_scenes': project.id in with_ai})
         return page(request, 'video_library.html', active='videos', entries=entries)

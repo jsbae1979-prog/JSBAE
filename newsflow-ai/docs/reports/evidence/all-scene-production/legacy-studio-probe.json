@@ -1,0 +1,15 @@
+{
+  "baseline_sha": "3c5230942466a87e5bc191961538e9bbccddc90b",
+  "current_sha": "d86357542e8f141b77989109b6147b5b21251fe2",
+  "method": "Identical isolated app/Fake RSS/legacy write_settings/Studio GET probe using same venv; whole GUI test assertions differ because old editor was deliberately retired. This is a probe, not an identical-test failure comparison.",
+  "results": {
+    "baseline": {
+      "http": 200,
+      "old_legacy_model_input_expectation": false
+    },
+    "current": {
+      "http": 200,
+      "old_legacy_model_input_expectation": false
+    }
+  }
+}

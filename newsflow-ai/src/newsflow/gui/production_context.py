@@ -45,7 +45,7 @@ def validate_context(value: dict) -> dict:
         raise ValueError("제작 설정을 홈에서 다시 선택해 주세요.")
     duration = value.get("initial_duration")
     voice = value.get("initial_voice")
-    if type(duration) is not int or duration not in {30, 45, 60}:
+    if type(duration) is not int or duration not in {30, 45, 60} and not 15 <= duration <= 35:
         raise ValueError("영상 길이는 30·45·60초 중에서 선택하세요.")
     if not isinstance(voice, str) or not 0 < len(voice) <= 200 or any(ord(c) < 32 for c in voice):
         raise ValueError("선택한 음성 설정을 확인해 주세요.")
@@ -61,10 +61,10 @@ def validate_context(value: dict) -> dict:
         raise ValueError("뉴스 활용 수준을 다시 선택해 주세요.")
     result["news_usage"] = news_usage
     if "production_options_version" in value:
-        if (type(value["production_options_version"]) is not int or value["production_options_version"] != 1
+        if (type(value["production_options_version"]) is not int or value["production_options_version"] not in {1, 2}
                 or type(value.get("script_review")) is not bool or value.get("initial_video") not in {"off", "higgsfield"}):
             raise ValueError("대본 검토 선택을 다시 확인하세요.")
-        result.update(production_options_version=1, script_review=value["script_review"])
+        result.update(production_options_version=value["production_options_version"], script_review=value["script_review"])
     if "initial_video" in value:
         if value["initial_video"] not in {"off", "higgsfield"}:
             raise ValueError("영상 장면 설정을 다시 확인해 주세요.")

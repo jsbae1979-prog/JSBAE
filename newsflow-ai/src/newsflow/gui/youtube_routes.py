@@ -4,6 +4,8 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from sqlalchemy import select
 
 from newsflow.db.models import PublishDraft, PublishValidation, RenderJob, VideoProject
+from newsflow.publishing.categories import YOUTUBE_CATEGORIES
+from newsflow.publishing.metadata import suggest_metadata
 from newsflow.publishing.service import REAL_BLOCKERS, PublishingError, PublishingService
 
 from .routes import go
@@ -37,7 +39,8 @@ def publishing_context(request: Request, render_job_id: int | None, *, platform:
         live = getattr(request.app.state, "instagram_publishing" if platform == "instagram" else "live_publishing", None)
         connections = getattr(request.app.state, platform, None)
         results = live.results() if live else []
-        return {"render_job_id": render_job_id, "title": project.title, "draft": draft,
+        return {"suggested": suggest_metadata(project.title, project.snapshot, project.sources),
+                "youtube_categories": YOUTUBE_CATEGORIES, "render_job_id": render_job_id, "title": project.title, "draft": draft,
                 "sources": project.sources, "checks": local_checks, "reviewed": reviewed,
                 "accounts": connections.status()["accounts"] if connections else [],
                 "results": [item for item in results if item.get("render_job_id") == render_job_id]}
@@ -72,6 +75,24 @@ def cancel(request: Request, account_id: int):
     return go("/simple-settings#youtube")
 
 
+@router.post("/youtube/connect/{account_id}/link")
+def authorization_link(request: Request, account_id: int):
+    try:
+        url, remaining = request.app.state.youtube.authorization_link(account_id)
+    except Exception:  # noqa: BLE001 - never reflect state or callback data
+        raise HTTPException(409, "인증 링크가 만료되었거나 연결 처리가 시작되었습니다. 연결 상태를 새로고침하세요.") from None
+    return {"url": url.get_secret_value(), "expires_in": remaining}
+
+
+@router.post("/youtube/connect/{account_id}/reopen")
+def reopen_authorization(request: Request, account_id: int):
+    try:
+        request.app.state.youtube.reopen_authorization(account_id)
+    except Exception:  # noqa: BLE001
+        raise HTTPException(409, "인증 창을 열지 못했습니다. 연결 상태를 확인하거나 유효한 링크를 복사해 사용하세요.") from None
+    return {"message": "진행 중인 Google 인증 창을 다시 열었습니다."}
+
+
 @router.post("/youtube/draft")
 def save_review(
     request: Request, render_job_id: int = Form(ge=1), title: str = Form(max_length=100),
@@ -79,6 +100,7 @@ def save_review(
     account_id: int = Form(ge=1), draft_id: int | None = Form(None, ge=1), revision: int = Form(1, ge=1),
     content_reviewed: bool = Form(False), copyright_confirmed: bool = Form(False),
     sources_confirmed: bool = Form(False), ai_disclosure: str = Form("unreviewed", max_length=30),
+    youtube_category_id: str = Form("", max_length=3),
 ):
     accounts = connection_context(request)["accounts"]
     if not any(item["id"] == account_id and item["ready"] for item in accounts):
@@ -90,7 +112,7 @@ def save_review(
     fields = {"platform": "youtube", "title": title, "description": description, "hashtags": hashtags,
               "account_id": account_id, "content_reviewed": content_reviewed,
               "copyright_confirmed": copyright_confirmed, "sources_confirmed": sources_confirmed,
-              "ai_disclosure": ai_disclosure}
+              "ai_disclosure": ai_disclosure, "youtube_category_id": youtube_category_id}
     try:
         if draft_id is None:
             draft_id = service.create(render_job_id=render_job_id, **fields)

@@ -1,0 +1,76 @@
+{
+  "baseline_sha": "4b4e9c232f8b66ead8966e72556f283f39cb1fa0",
+  "tested_sha": "cc7b3190c9acd8a3bacbfbfbb0ce4bac004de1a9",
+  "rows": [
+    {
+      "baseline_test_id": "tests.test_api_first_check_gui::test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[openai]",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_api_first_check_gui::test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[openai]",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    },
+    {
+      "baseline_test_id": "tests.test_api_first_check_gui::test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[claude_api]",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_api_first_check_gui::test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[claude_api]",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    },
+    {
+      "baseline_test_id": "tests.test_claude_connection_gui::test_connection_action_is_explicit_outside_cost_dialog_with_official_dashboard",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_claude_connection_gui::test_connection_action_is_explicit_outside_cost_dialog_with_official_dashboard",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    },
+    {
+      "baseline_test_id": "tests.test_codex_studio::test_codex_rss_analysis_script_and_video_flow",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_codex_studio::test_codex_rss_analysis_script_and_video_flow",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    },
+    {
+      "baseline_test_id": "tests.test_easy_ui::test_easy_and_advanced_pages_keep_security_headers[/-\\uc624\\ub298\\uc740 \\uc5b4\\ub5a4 \\uc774\\uc57c\\uae30\\ub97c]",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_easy_ui::test_easy_and_advanced_pages_keep_security_headers[/-\\uc624\\ub298\\uc758 \\ub274\\uc2a4\\ub97c,]",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    },
+    {
+      "baseline_test_id": "tests.test_easy_ui::test_fake_render_cannot_appear_as_completed_video",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_easy_ui::test_fake_render_cannot_appear_as_completed_video",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    },
+    {
+      "baseline_test_id": "tests.test_news_usage_gui::test_workspace_offers_one_news_usage_choice_with_standard_default",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_news_usage_gui::test_workspace_offers_one_news_usage_choice_with_standard_default",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    },
+    {
+      "baseline_test_id": "tests.test_topic_editor_gui::test_topic_editor_only_offers_known_local_variants_and_workspace_return",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_topic_editor_gui::test_topic_editor_only_offers_known_local_variants_and_workspace_return",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    },
+    {
+      "baseline_test_id": "tests.test_ux_navigation::test_workspace_two_destinations_and_two_production_choices",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_ux_navigation::test_workspace_two_destinations_and_two_production_choices",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    },
+    {
+      "baseline_test_id": "tests.test_ux_video::test_simple_form_keeps_advanced_fields_and_explicit_review",
+      "baseline_result": "FAIL",
+      "final_test_id": "tests.test_ux_video::test_simple_form_keeps_advanced_fields_and_explicit_review",
+      "final_result": "PASS",
+      "reason": "현재 간소화 UI의 의미/구조 또는 presentation 메타데이터까지 검사하도록 갱신; 승인·CSRF·비밀값 비노출·원문 출처 검사는 유지."
+    }
+  ]
+}

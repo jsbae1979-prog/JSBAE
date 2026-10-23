@@ -18,11 +18,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from newsflow.db.models import (
+    AIVideoPlan,
     AutopilotArticleClaim,
     AutopilotArtifact,
     AutopilotAttempt,
     AutopilotEvent,
     AutopilotJob,
+    ContentDraft,
     IntelligenceRun,
     NewsArticle,
     RenderJob,
@@ -44,7 +46,9 @@ from .contracts import (
     AutopilotError,
     AutopilotNotFound,
     BackendError,
+    BackendWaiting,
 )
+from .synthesis import CLAIM_KIND, MAX_ARTICLES, POLICY
 
 _ERROR_MESSAGES = {
     "stage_failed": "이 단계를 마치지 못했습니다. 설정과 이전 결과를 확인하세요.",
@@ -82,6 +86,8 @@ _ERROR_MESSAGES = {
     "voice_api_failed": "ElevenLabs 음성 제작을 완료하지 못했습니다. 다른 음성으로 전환하거나 자동 재요청하지 않습니다.",
     "script_auto_review": "자동 대본 점검에서 확인이 필요한 내용이 발견되어 멈췄습니다. 대본과 출처를 직접 검토·수정하세요.",
     "ai_video_review": "Higgsfield 장면별 생성·내용 검토·최종 합성 승인이 필요합니다. 기본 영상으로 대체하지 않았습니다.",
+    "voice_consent_required": "수정한 대본에 대한 ElevenLabs 전송·음성 사용 동의를 다시 확인하세요. 새 요청은 보내지 않았습니다.",
+    "ai_scene_approval": "모든 장면의 AI 영상 계획에서 유료 생성·장면 검토·최종 합성 승인을 진행하세요.",
 }
 _SOLUTIONS = {
     "no_sources": "뉴스 출처 설정에서 출처를 등록하고 활성화한 뒤 다시 시도하세요. 체험 뉴스로 새 작업을 시작할 수도 있습니다.",
@@ -188,7 +194,7 @@ class AutopilotCoordinator:
         if job.stage_results.get("request", {}).get("unified"):
             pauses.discard("select")
         choices = job.stage_results.get("request", {}).get("production_options", {})
-        if choices.get("version") == 1:
+        if choices.get("version") in {1, 2}:
             if choices.get("script_review") is False:
                 pauses.discard("script")
             pauses.add("validate")  # Skipping script review never approves the finished video.
@@ -204,7 +210,13 @@ class AutopilotCoordinator:
     ) -> str:
         if mode not in {"easy", "guided"} or source not in {"sample", "feeds"}:
             raise AutopilotError("제작 방식과 뉴스 종류를 다시 선택하세요.")
-        if type(duration) is not int or duration not in {30, 45, 60} or platform not in {"youtube", "instagram"}:
+        from dataclasses import asdict
+
+        from newsflow.shortform import allowed_duration
+        from newsflow.shortform import read as read_shortform
+
+        profile = read_shortform(self.sessions)
+        if not allowed_duration(duration, profile.enabled and source == "feeds" and ai_mode in {"openai", "claude_api"}) or platform not in {"youtube", "instagram"}:
             raise AutopilotError("영상 길이와 게시 대상을 다시 선택하세요.")
         content_mode = content_mode or ("real" if source == "feeds" else "trial")
         if content_mode not in CONTENT_MODES or (content_mode == "real") != (source == "feeds"):
@@ -247,6 +259,8 @@ class AutopilotCoordinator:
             }
         # A per-job policy does not opt legacy/sample paths into the unified AI pipeline.
         request["news_usage"] = news_usage
+        if profile.enabled and duration <= 35 and source == "feeds" and ai_mode in {"openai", "claude_api"}:
+            request["shortform"] = asdict(profile)
         if production_options is not None:
             from .production_options import freeze_options
 
@@ -266,6 +280,12 @@ class AutopilotCoordinator:
                 raise AutopilotError("제작할 AI와 모델 설정을 확인하세요.") from None
             request.update(script_method="api_grounded_v1", ai_model=model,
                            external_consent=True, consented_at=request.get("consented_at") or utcnow().isoformat())
+        if content_mode == "real" and ai_mode in {"claude_code", "codex"}:
+            # Only newly consented jobs opt into the selected CLI. Persisted local-topic
+            # jobs must not acquire external calls after an application update/restart.
+            request["script_method"] = "cli_grounded_v1"
+        if request.get("unified") and content_mode == "real" and ai_mode != "offline":
+            request["article_grouping"] = POLICY
         if request_id is not None:
             self._id(request_id)
         with self.guard:
@@ -282,7 +302,8 @@ class AutopilotCoordinator:
                         old = existing.stage_results.get("request", {})
                         comparable = {"news_usage": "STANDARD", **old}
                         if (any(comparable.get(key) != value for key, value in request.items()
-                                if key not in {"consented_at", "requested_at"})
+                                if key not in {"consented_at", "requested_at"}
+                                and not (key == "article_grouping" and key not in old))
                                 or bool(set(old) - {"news_usage"}) != bool(set(request) - {"news_usage"})):
                             raise AutopilotConflict("같은 작업 번호의 AI와 뉴스 수집 정책을 변경할 수 없습니다.")
                         return existing.id
@@ -319,8 +340,13 @@ class AutopilotCoordinator:
         # new execution policy merely by reading/resuming their saved state.
         if "news_usage" in job.stage_results.get("request", {}):
             context["news_usage"] = job.stage_results["request"]["news_usage"]
+        context["shortform"] = job.stage_results.get("request", {}).get("shortform", {})
         if "production_options" in job.stage_results.get("request", {}):
             context["production_options"] = job.stage_results["request"]["production_options"]
+        context.pop("article_grouping", None)
+        if ("article_grouping" in job.stage_results.get("request", {})
+                and job.stage_results["request"].get("script_method") in {"api_grounded_v1", "cli_grounded_v1"}):
+            context["article_grouping"] = job.stage_results["request"]["article_grouping"]
         context.update({
             "job_id": job.id, "mode": job.mode, "source": job.source, "duration": job.duration, "scheduled": scheduled,
             "platform": job.platform, "stage_results": dict(job.stage_results), "article_id": job.article_id,
@@ -329,11 +355,14 @@ class AutopilotCoordinator:
         for item in session.scalars(
             select(AutopilotArtifact).where(AutopilotArtifact.job_id == job.id).order_by(AutopilotArtifact.id)
         ):
-            if item.kind != "article_id":
+            if item.kind in ARTIFACT_KEYS and item.kind != "article_id":
                 context[item.kind] = int(item.reference)
         return context
 
     def snapshot(self, job_id: str) -> dict[str, Any]:
+        sync = getattr(self.backend, "sync_video", None)
+        if sync:
+            sync()  # Only adopts an already approved, completed local result; never generates.
         with self.sessions() as session:
             job = session.get(AutopilotJob, self._id(job_id))
             if job is None:
@@ -349,6 +378,13 @@ class AutopilotCoordinator:
                 select(AutopilotEvent).where(AutopilotEvent.job_id == job.id).order_by(AutopilotEvent.id.desc()).limit(50)
             ).all()
             render = session.get(RenderJob, artifacts["render_job_id"]) if artifacts.get("render_job_id") else None
+            ai_plan = session.get(AIVideoPlan, artifacts["ai_plan_id"]) if artifacts.get("ai_plan_id") else None
+            ai_phase = None
+            if ai_plan and job.current_stage == "render" and job.status == "waiting_review":
+                ai_phase = {"draft": "AI 장면 모델·유료 생성 승인 대기", "generating": "승인한 AI 장면 생성·수신 중",
+                            "review": "최종 합성 승인 대기" if ai_plan.reviewed_at else "생성 장면의 뉴스 관련성 검토 대기",
+                            "composing": "선택한 음성과 AI 장면 합성 중", "compose_failed": "AI 영상 합성 실패 · 결과 보존 · 계획에서 원인 확인",
+                            "composed": "완성 영상 검사·연결 중"}.get(ai_plan.status, "AI 장면 상태·실패 원인 확인")
             usage_result = context.get("news_usage_result")
             if job.error_code == "news_evidence_required":
                 usage_result = {
@@ -369,7 +405,8 @@ class AutopilotCoordinator:
                 "current_stage": job.current_stage,
                 "stage_label": "기사 분석·뉴스 선정" if job.current_stage == "select" and context.get("unified")
                 else STAGE_LABELS[job.current_stage],
-                "progress": job.progress, "message": job.message, "error_code": job.error_code,
+                "progress": job.progress, "message": ai_phase or job.message, "error_code": job.error_code,
+                "ai_phase": ai_phase, "ai_plan_status": ai_plan.status if ai_plan else None,
                 "retryable": job.retryable, "cancel_requested": job.cancel_requested,
                 "solution": _SOLUTIONS.get(
                     job.error_code or "",
@@ -463,6 +500,10 @@ class AutopilotCoordinator:
         claim = session.get(AutopilotArticleClaim, article_id)
         if claim is not None and claim.job_id != job.id:
             raise BackendError(code="duplicate_article", retryable=False)
+        if session.scalar(select(AutopilotArtifact.id).where(
+                AutopilotArtifact.kind == CLAIM_KIND, AutopilotArtifact.reference == str(article_id),
+                AutopilotArtifact.job_id != job.id)) is not None:
+            raise BackendError(code="duplicate_article", retryable=False)
         old = session.scalar(select(AutopilotArticleClaim).where(AutopilotArticleClaim.job_id == job.id))
         if old and old.article_id != article_id:
             session.delete(old)
@@ -470,6 +511,38 @@ class AutopilotCoordinator:
         if claim is None:
             session.add(AutopilotArticleClaim(article_id=article_id, job_id=job.id))
         job.article_id = article_id
+
+    @staticmethod
+    def _claim_sources(session: Session, job: AutopilotJob, result: dict) -> None:
+        """Called only inside BEGIN IMMEDIATE with the primary claim and stage result.
+
+        Reuse the existing durable artifact journal, including its unique
+        (job, kind, reference) key. The SQLite writer lock serializes cross-job claims.
+        """
+        request = job.stage_results.get("request", {})
+        if (request.get("article_grouping") != POLICY
+                or request.get("script_method") not in {"api_grounded_v1", "cli_grounded_v1"}):
+            return
+        ids = result.get("script_article_ids")
+        if (not isinstance(ids, list) or not 1 <= len(ids) <= MAX_ARTICLES
+                or any(type(i) is not int or i < 1 for i in ids) or len(set(ids)) != len(ids)
+                or ids[0] != job.article_id or not set(ids) <= set(result.get("candidate_article_ids", []))):
+            raise BackendError(code="select_failed", retryable=False)
+        old = {int(a.reference) for a in session.scalars(select(AutopilotArtifact).where(
+            AutopilotArtifact.job_id == job.id, AutopilotArtifact.kind == CLAIM_KIND))}
+        if old and old != set(ids):
+            raise BackendError(code="select_failed", retryable=False)
+        for identifier in ids:
+            if session.get(NewsArticle, identifier) is None:
+                raise BackendError(code="select_failed", retryable=False)
+            primary = session.get(AutopilotArticleClaim, identifier)
+            other = session.scalar(select(AutopilotArtifact.id).where(
+                AutopilotArtifact.kind == CLAIM_KIND, AutopilotArtifact.reference == str(identifier),
+                AutopilotArtifact.job_id != job.id))
+            if (primary and primary.job_id != job.id) or other is not None:
+                raise BackendError(code="duplicate_article", retryable=False)
+            if identifier not in old:
+                session.add(AutopilotArtifact(job_id=job.id, kind=CLAIM_KIND, reference=str(identifier)))
 
     def _run(self, job_id: str) -> None:
         cancellation = _Cancellation(self.sessions, job_id, self.stop)
@@ -487,6 +560,7 @@ class AutopilotCoordinator:
                     context = self._context(session, job)
                     if stage == "script":
                         self._claim(session, job, job.article_id)
+                        self._claim_sources(session, job, job.stage_results.get("select", {}))
                     number = (session.scalar(select(func.max(AutopilotAttempt.number)).where(
                         AutopilotAttempt.job_id == job_id, AutopilotAttempt.stage == stage,
                     )) or 0) + 1
@@ -512,6 +586,7 @@ class AutopilotCoordinator:
                         if not isinstance(candidates, list) or not candidates or len(candidates) > 100 or any(type(item) is not int or item < 1 for item in candidates) or len(candidates) != len(set(candidates)) or chosen not in candidates:
                             raise BackendError(code="no_articles", retryable=False)
                         self._claim(session, job, chosen)
+                        self._claim_sources(session, job, result)
                     job.stage_results = {**job.stage_results, stage: result}
                     attempt.status, attempt.finished_at = "completed", utcnow()
                     job.progress = round((STAGES.index(stage) + 1) * 100 / len(STAGES))
@@ -533,6 +608,7 @@ class AutopilotCoordinator:
                         self._event(session, job, "completed", job.message)
                         return
                     ai_plan_gate = (stage == "script" and
+                                    job.stage_results.get("request", {}).get("production_options", {}).get("version") == 1 and
                                     job.stage_results.get("request", {}).get("production_options", {}).get("video_provider") == "higgsfield")
                     if stage in self._pauses(job) or ai_plan_gate:
                         job.status, job.message = "waiting_review", ("AI 장면 계획·생성·관계 검토와 합성 승인을 진행하세요." if ai_plan_gate else "결과를 확인하고 다음 단계로 진행하세요.")
@@ -540,6 +616,21 @@ class AutopilotCoordinator:
                         return
                     job.current_stage = STAGES[STAGES.index(stage) + 1]
                     attempt_id = None
+        except BackendWaiting:
+            with self._transaction() as session:
+                job = session.get(AutopilotJob, job_id)
+                if job and job.status == "running":
+                    stopped = job.cancel_requested or self.stop.is_set()
+                    job.status = ("interrupted" if self.stop.is_set() else "cancelled") if stopped else "waiting_review"
+                    job.error_code = job.status if stopped else "ai_scene_approval"
+                    job.message, job.retryable = _ERROR_MESSAGES[job.error_code], bool(stopped)
+                    if stopped:
+                        job.active_slot, job.finished_at = None, utcnow()
+                    job.revision, job.updated_at = job.revision + 1, utcnow()
+                    if attempt_id:
+                        attempt = session.get(AutopilotAttempt, attempt_id)
+                        attempt.status, attempt.finished_at = "waiting_review", utcnow()
+                    self._event(session, job, job.status, job.message)
         except BackendError as error:
             code = error.code if error.code in _ERROR_MESSAGES else "stage_failed"
             if code == "cancelled" and self.stop.is_set():
@@ -587,10 +678,49 @@ class AutopilotCoordinator:
                 job.status, job.active_slot, job.error_code = "cancelled", None, "cancelled"
                 job.message, job.retryable, job.finished_at = _ERROR_MESSAGES["cancelled"], True, utcnow()
             self._event(session, job, "cancel_requested", "중단 요청을 받았습니다.")
+        cancel_ai = getattr(self.backend, "cancel_ai", None)
+        if cancel_ai:
+            cancel_ai(job_id)
         return self.snapshot(job_id)
 
     def resume(self, job_id: str, revision: int, article_id: int | None = None) -> dict[str, Any]:
         return self._continue(job_id, revision, retry=False, article_id=article_id)
+
+    def attach_completed_ai(self, plan_id: int) -> None:
+        """Resume only the local adoption of an existing completed AI render."""
+        with self.sessions() as session:
+            job = session.scalar(select(AutopilotJob).join(AutopilotArtifact, AutopilotArtifact.job_id == AutopilotJob.id).where(
+                AutopilotArtifact.kind == "ai_plan_id", AutopilotArtifact.reference == str(plan_id),
+                AutopilotJob.status == "waiting_review", AutopilotJob.current_stage == "render"))
+            identity = (job.id, job.revision) if job and not job.cancel_requested else None
+        if identity:
+            try:
+                self.resume(*identity)
+            except AutopilotError:
+                pass  # Another poll/process owns the command; a later local sync rechecks it.
+
+    def approve_voice(self, job_id: str, revision: int, consent: bool) -> dict[str, Any]:
+        from newsflow.video.production_policy import approve_voice
+
+        if consent is not True:
+            raise AutopilotError("수정한 대본의 ElevenLabs 전송·음성 생성에 별도로 동의하세요.")
+        with self._transaction() as session:
+            job = session.get(AutopilotJob, self._id(job_id))
+            if not job or job.revision != revision or job.cancel_requested:
+                raise AutopilotConflict("작업 상태를 다시 확인하세요.")
+            if job.status != "waiting_review" and not (job.status == "failed" and job.error_code == "voice_consent_required"):
+                raise AutopilotConflict("실패·결과 불명 요청을 새 동의만으로 재실행할 수 없습니다.")
+            context = self._context(session, job)
+            choices = context.get("production_options", {})
+            draft = session.get(ContentDraft, context.get("content_draft_id"))
+            if choices.get("version") != 2 or choices.get("voice") != "elevenlabs" or not draft:
+                raise AutopilotError("이 작업의 저장된 음성·대본을 확인하세요.")
+            approve_voice(session, job, draft, choices)
+            job.revision += 1
+            if job.status == "failed":
+                job.status, job.error_code, job.active_slot = "waiting_review", None, 1
+            self._event(session, job, "voice_consent", "수정한 대본의 음성 사용 동의를 보존했습니다. 자동 요청하지 않습니다.")
+        return self.snapshot(job_id)
 
     def retry(self, job_id: str, revision: int) -> dict[str, Any]:
         return self._continue(job_id, revision, retry=True)
@@ -623,7 +753,7 @@ class AutopilotCoordinator:
                     ).values(
                         status="waiting_review" if restore_review else "queued", active_slot=1, revision=revision + 1, cancel_requested=False,
                         retryable=False, error_code=None, finished_at=None, updated_at=utcnow(),
-                        current_stage=job.current_stage if retry else STAGES[STAGES.index(job.current_stage) + 1],
+                        current_stage=job.current_stage if retry or job.current_stage == "render" else STAGES[STAGES.index(job.current_stage) + 1],
                         message="결과를 확인하고 다음 단계로 진행하세요." if restore_review else "작업을 이어서 진행합니다.",
                     ))
                     if changed.rowcount != 1:

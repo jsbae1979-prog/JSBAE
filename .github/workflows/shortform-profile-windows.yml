@@ -1,0 +1,65 @@
+name: NewsFlow Shortform Profile Windows
+
+on:
+  push:
+    branches: [codex/newsflow-local-d4dc20f]
+    paths:
+      - 'newsflow-ai/src/newsflow/**'
+      - 'newsflow-ai/tests/test_shortform_profile.py'
+      - '.github/workflows/shortform-profile-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shortform:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_CLAUDE_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Isolate all test data
+        run: |
+          "NEWSFLOW_DATA_DIR=$env:RUNNER_TEMP/newsflow-shortform-${{ matrix.python }}" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Pinned dependencies
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Changed Python lint
+        run: |
+          .venv/Scripts/python -m ruff check src/newsflow/shortform.py src/newsflow/video/shortform_visuals.py src/newsflow/video/engine.py src/newsflow/video/service.py src/newsflow/video/ai/service.py src/newsflow/intelligence/service.py src/newsflow/intelligence/news_usage.py src/newsflow/intelligence/provider.py src/newsflow/intelligence/curation.py src/newsflow/gui/production_routes.py src/newsflow/gui/production_context.py src/newsflow/gui/routes.py src/newsflow/gui/autopilot_routes.py src/newsflow/gui/curation_routes.py src/newsflow/autopilot/service.py src/newsflow/autopilot/backend.py tests/test_shortform_profile.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Shortform, existing renderer and Fake API contracts
+        run: |
+          .venv/Scripts/python -m pytest -q -rs tests/test_shortform_profile.py tests/test_video.py tests/test_api_news_pipeline.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # Synthetic DBs and injected Fake providers only. No real TTS, provider
+      # credentials, paid generation, OAuth, uploads, publishing or OS scheduling.

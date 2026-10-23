@@ -11,25 +11,25 @@ def test_workspace_two_destinations_and_two_production_choices(client):
     assert response.status_code == 200
     html = response.text
     primary = re.search(r'<nav aria-label="주 메뉴"[^>]*>(.*?)</nav>', html, re.DOTALL).group(1)
-    assert re.findall(r'href="([^"]+)"', primary) == ["/", "/create", "/videos", "/queue", "/simple-settings"]
-    for label in ("홈", "쇼츠 만들기", "내 영상", "게시", "설정"):
+    assert re.findall(r'href="([^"]+)"', primary) == [
+        "/", "/news", "/ai", "/videos", "/queue", "/analytics", "/simple-settings"]
+    for label in ("대시보드", "뉴스 수집", "AI 대본", "영상 제작", "게시 허브", "성과 분석", "설정"):
         assert label in primary
-    assert 'class="advanced-nav"' not in html
+    assert 'href="/create"' in html and 'class="advanced-nav"' not in html
     settings = client.get("/simple-settings").text
-    advanced = re.search(r'<dialog[^>]*id="settings-advanced-tools"[^>]*>(.*?)</dialog>', settings, re.DOTALL).group(1)
-    for destination in ("/news", "/ai", "/video", "/sources", "/queue", "/publishing"):
-        assert f'href="{destination}"' in advanced
-    assert 'href="/operations"' in settings  # scheduling group owns this entry
-    assert 'href="/ai"' not in html and 'href="/video"' not in html
+    assert 'id="settings-advanced-tools"' not in settings  # Removed duplicate tool menu stays removed.
+    assert 'id="advanced"' in settings
+    for destination in ("/schedules", "/operations", "/sources"):
+        assert f'href="{destination}"' in settings
     form = re.search(r'<form action="/autopilot/quick-start".*?</form>', html, re.DOTALL).group(0)
-    assert '<details class="easy-advanced home-quick-settings"><summary>' in html
+    assert 'class="easy-advanced studio-production-options"' in form
     assert re.findall(r'<select[^>]+name="([^"]+)"', form) == [
-        "source", "duration", "news_usage", "acquisition_policy", "category", "period"]
+        "source", "duration", "category", "period", "voice_method", "video_method", "acquisition_policy", "news_usage"]
     assert '<option value="VERIFIED"' not in form
     assert 'name="csrf_token"' in form and 'method="post"' in form
     assert 'name="provider"' not in form and 'name="voice"' not in form
-    assert "쇼츠 만들기" in form
-    assert "완성한 영상이 여기에 모입니다" in html
+    assert 'name="script_review" value="true" checked' in form
+    assert "쇼츠 만들기" in form and "첫 쇼츠가 기다리고 있어요" in html
     assert '<progress ' not in html  # no invented progress when no job exists
     assert "script-src 'self'" in response.headers["content-security-policy"]
 

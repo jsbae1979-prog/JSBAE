@@ -9,6 +9,7 @@ import re
 import shutil
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
+from dataclasses import asdict
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Event, Lock
@@ -30,9 +31,12 @@ from newsflow.db.models import (
 )
 from newsflow.intelligence.news_usage import API_SCRIPT_METHOD
 from newsflow.intelligence.schema import Script
+from newsflow.shortform import allowed_duration
+from newsflow.shortform import frozen as shortform_profile
 
 from .ai.clips import ClipStore, probe_clip
 from .ai.contracts import ClipInvalidError
+from .elevenlabs_tts import PaymentRequiredError, SubscriptionError
 from .engine import FFmpegAdapter, RenderEngine, RenderError, RenderPlan, ScenePlan, load_image
 from .tts import SpeechSettings, TTSError, TTSProvider
 from .voice_engines import provider_for, provider_name
@@ -129,11 +133,12 @@ class VideoCoordinator:
         reviewed: bool = False,
         asset_permission: bool = False,
         external_tts_consent: bool = False,
+        effects: list[str] | None = None,
     ) -> int:
-        if duration not in (30, 45, 60) or not reviewed:
+        if not allowed_duration(duration, True) or not reviewed:
             raise VideoError("영상 길이를 선택하고 렌더링 전 대본·출처 검토를 확인하세요.")
         return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False,
-                           fit_audio=voice != "offline-silence", external_tts_consent=external_tts_consent)
+                           fit_audio=voice != "offline-silence", external_tts_consent=external_tts_consent, effects=effects)
 
     def start_preview(
         self,
@@ -145,17 +150,20 @@ class VideoCoordinator:
         speech: SpeechSettings | None = None,
         external_tts_consent: bool = False,
         elevenlabs_config: dict | None = None,
+        style: dict | None = None,
     ) -> int:
         """Create a clearly marked local review copy without granting human approval.
 
         A real Windows voice renders with audio-fit timing so subtitles follow the
         narration; the silent offline voice keeps the script's planned scene seconds.
         """
-        if duration not in (30, 45, 60):
+        if not allowed_duration(duration, True):
             raise VideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
         from newsflow.easy_setup import preview_preferences, speech_preferences
 
         default_voice, size, position = preview_preferences(self.sessions)
+        if style:
+            size, position = style["font_size"], style["subtitle_y"]
         voice = voice or default_voice
         if speech is None:
             try:
@@ -177,9 +185,38 @@ class VideoCoordinator:
         neither, for the card). Voice and subtitle preferences are the user's saved defaults; a
         real Windows voice renders with audio-fit timing exactly like the local review copy.
         """
-        if duration not in (30, 45, 60):
+        if not allowed_duration(duration, True):
             raise VideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
+        from newsflow.db.models import AIVideoPlan, AIVideoScene, AutopilotJob
         from newsflow.easy_setup import SetupError, preview_preferences, speech_preferences
+        from newsflow.video.production_policy import check_draft, plan_policy, voice_allowed
+
+        from .ai.production import read_contract
+
+        with self.sessions() as session:
+            contract = read_contract(session, plan_id)
+            policy = plan_policy(session, plan_id)
+            if policy:
+                plan = session.get(AIVideoPlan, plan_id)
+                draft = session.get(ContentDraft, draft_id)
+                owner = session.get(AutopilotJob, policy["job_id"])
+                scenes = list(session.scalars(select(AIVideoScene).where(AIVideoScene.plan_id == plan_id).order_by(AIVideoScene.position)))
+                if (not plan or not draft or not owner or plan.draft_id != draft_id or plan.duration != duration
+                        or plan.draft_revision != draft.revision or not plan.approved_at or not plan.reviewed_at
+                        or owner.cancel_requested or owner.status in {"cancelled", "interrupted"}
+                        or len(specs) != len(scenes) or len(scenes) != len(draft.content["scenes"])
+                        or any(s.source != "generated" or s.status != "ready" or not s.reviewed
+                               or not spec.get("clip") or spec.get("clip") != s.clip_name or spec.get("material")
+                               or spec.get("sha256") != (s.clip_meta or {}).get("sha256") for s, spec in zip(scenes, specs))):
+                    raise VideoError("모든 AI 장면의 승인·대본·클립 연결을 확인할 수 없어 합성을 차단했습니다.")
+                options = policy["options"]
+                from newsflow.intelligence.service import IntelligenceError
+                try:
+                    check_draft(self.sessions, draft, options, self.root)
+                except IntelligenceError:
+                    raise VideoError("수정한 대본의 자동 검사를 통과하기 전에는 음성·합성을 실행하지 않습니다.") from None
+                if not voice_allowed(owner, draft, options):
+                    raise VideoError("수정한 대본에 대한 ElevenLabs 외부 전송·음성 사용 동의가 다시 필요합니다.")
 
         store = clip_store or self.clip_store
         if store.root != self.clip_store.root:
@@ -209,37 +246,30 @@ class VideoCoordinator:
             run = session.get(IntelligenceRun, draft.run_id) if draft else None
             choice = run.options.get("production_context", {}) if run and isinstance(run.options, dict) else {}
             choice = choice if isinstance(choice, dict) else {}
-            from newsflow.autopilot.contracts import AutopilotError
-            from newsflow.autopilot.production_options import freeze_options
-
-            from .ai.production import read_contract
-
-            contract = read_contract(session, plan_id)
-            production = None
             if contract:
-                try:
-                    production = freeze_options(contract["production"], contract["production"]["voice"])
-                    speech = SpeechSettings(**contract["speech"])
-                except (KeyError, TypeError, ValueError, AutopilotError):
-                    raise VideoError("이 작업의 고정된 음성 설정을 확인할 수 없습니다. 다른 음성으로 대체하지 않습니다.") from None
-                voice = production["voice"]
-                if contract.get("mode") == "full" and not all(clips):
-                    raise VideoError("전체 AI 영상은 모든 장면의 생성 클립이 필요합니다. 카드로 대체하지 않습니다.")
-            elif choice.get("production_options_version") == 1 and choice.get("initial_video") == "higgsfield":
+                voice = contract["production"]["voice"]
+            if not policy and not contract and choice.get("production_options_version") == 1 and choice.get("initial_video") == "higgsfield":
                 voice = choice.get("initial_voice")
                 if not isinstance(voice, str) or not voice or voice == "elevenlabs":
                     raise VideoError("이 작업의 ElevenLabs + Higgsfield 동시 합성은 지원하지 않습니다. 다른 음성으로 대체하지 않았습니다. 제작 화면에서 지원하는 조합을 직접 선택하세요.")
         try:
-            speech = speech if contract else speech_preferences(self.sessions)
+            speech = SpeechSettings(**contract["speech"]) if contract else speech_preferences(self.sessions)
         except TTSError:
             raise VideoError("음성 속도·쉼 설정을 다시 저장하세요.") from None
+        if policy:
+            voice, size, position = options["voice"], options["font_size"], options["subtitle_y"]
+            speech = SpeechSettings(**options["speech"])
+        elif contract:
+            options = contract["production"]
+            if options.get("version") == 2:
+                size, position = options["font_size"], options["subtitle_y"]
         images = [spec.get("material") or "" for spec in specs]
         return self._start(
-            draft_id, duration, voice, size, position, images, any(images), bool(contract),
+            draft_id, duration, voice, size, position, images, any(images), bool(policy or contract),
             speech=speech, fit_audio=voice != "offline-silence", clips=clips, ai_plan_id=plan_id,
             clip_hashes=hashes, clip_bytes=clip_bytes,
-            external_tts_consent=bool(production and production["external_tts_consent"]),
-            elevenlabs_config=production.get("elevenlabs") if production else None,
+            **({"external_tts_consent": options.get("external_tts_consent") is True,
+                "elevenlabs_config": options.get("elevenlabs")} if policy or contract else {}),
         )
 
     def voice_available(self, voice: str) -> bool:
@@ -272,6 +302,7 @@ class VideoCoordinator:
         clip_bytes: int = 0,
         external_tts_consent: bool = False,
         elevenlabs_config: dict | None = None,
+        effects: list[str] | None = None,
     ) -> int:
         speech = speech or SpeechSettings()
         if self.cancel.is_set():
@@ -316,6 +347,9 @@ class VideoCoordinator:
                     {"content": draft.content, "sources": draft.sources}, ensure_ascii=False
                 ):
                     raise VideoError("비밀정보가 포함된 초안은 영상으로 제작할 수 없습니다.")
+                shortform = shortform_profile(draft.sources)
+                if not allowed_duration(duration, shortform.enabled):
+                    raise VideoError("15~35초 제작은 숏폼 강조로 생성한 대본을 선택하세요.")
                 times = self.timings(draft.content, duration)
                 if images and len(images) != len(times):
                     raise VideoError("장면별 소재 개수를 확인하세요.")
@@ -333,14 +367,19 @@ class VideoCoordinator:
                                        elevenlabs_config=elevenlabs_config)
                 if voice not in tts.voices():
                     raise VideoError("설치된 음성 목록에서 음성을 선택하세요.")
+                if effects is None:
+                    effects = ["cut"] * len(draft.content["scenes"])
+                if (not isinstance(effects, list) or len(effects) != len(draft.content["scenes"])
+                        or any(effect not in {"cut", "fade"} for effect in effects)):
+                    raise VideoError("각 장면의 효과를 확인하세요.")
                 from .ai.production import read_contract
                 strict_audio_fit = (draft.sources.get("script_method") == API_SCRIPT_METHOD or voice == "elevenlabs"
                                     or bool(ai_plan_id and read_contract(session, ai_plan_id)))
                 plan = RenderPlan(
                     draft.content["title"],
                     [
-                        ScenePlan((end - start) / 1000, s["narration"], s["caption"])
-                        for (start, end), s in zip(times, draft.content["scenes"])
+                        ScenePlan((end - start) / 1000, s["narration"], s["caption"], effect=effect)
+                        for (start, end), s, effect in zip(times, draft.content["scenes"], effects)
                     ],
                     [],
                     voice,
@@ -349,6 +388,7 @@ class VideoCoordinator:
                     speech,
                     fit_audio,
                     strict_audio_fit,
+                    shortform,
                 )
                 plan.validate()
                 project = VideoProject(
@@ -356,7 +396,8 @@ class VideoCoordinator:
                     title=draft.content["title"],
                     duration=duration,
                     snapshot={
-                        **draft.content, "draft_revision": draft.revision,
+                        **draft.content, "draft_revision": draft.revision, "effects": list(effects),
+                        "shortform": asdict(shortform),
                         "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio,
                                    "strict_audio_fit": strict_audio_fit},
                         # Provenance: which reviewed AI clip (by content hash) each scene must use.
@@ -482,6 +523,10 @@ class VideoCoordinator:
                     speech = SpeechSettings()
                 fit_audio = bool(saved.get("fit_audio")) and voice != "offline-silence"
                 strict_audio_fit = saved.get("strict_audio_fit") is True
+                effects = project.snapshot.get("effects", ["cut"] * len(scenes))
+                if (not isinstance(effects, list) or len(effects) != len(scenes)
+                        or any(effect not in {"cut", "fade"} for effect in effects)):
+                    raise RenderError("저장된 장면 효과가 올바르지 않습니다.")
                 ai_clips = list(project.snapshot.get("ai_clips") or [])
                 expected = {int(item["position"]): item.get("sha256") for item in ai_clips}
             with TemporaryDirectory(prefix=f"job-{identifier}-", dir=self.temporary) as directory:
@@ -509,10 +554,11 @@ class VideoCoordinator:
                         ScenePlan(
                             (scene.end_ms - scene.start_ms) / 1000, scene.narration, scene.caption, image,
                             clip=clip, ai_generated=bool(scene.ai_generated and clip), clip_format=clip_format,
+                            effect=effects[index],
                         )
                     )
                 plan = RenderPlan(title, plans, source_links, voice, font_size, position_y, speech, fit_audio,
-                                  strict_audio_fit)
+                                  strict_audio_fit, shortform_profile(project.snapshot))
                 result, metadata = self.engine.render(
                     plan, work, tts, lambda value: self._progress(identifier, value), cancel
                 )
@@ -575,10 +621,17 @@ class VideoCoordinator:
                 job = session.get(RenderJob, identifier)
                 job.status = "interrupted" if cancel.is_set() else "failed"
                 job.message = (
-                    f"{kind} 실패. 설치·음성 길이·자막 안전 영역·코덱·디스크 공간을 확인하세요."
+                    f"{kind} 실패. 해당 단계의 설정과 승인 조건을 확인하세요. 자동 재시도하지 않습니다."
                     if job.status == "failed"
                     else "사용자 취소 또는 프로그램 종료로 영상 제작이 중단되었습니다."
                 )
+                job.metadata_json = {**(job.metadata_json or {}), "failure_stage": (
+                    "voice" if isinstance(exc, TTSError) else "disk" if isinstance(exc, OSError) and exc.errno == 28
+                    else getattr(exc, "kind", "unknown"))}
+                if isinstance(exc, SubscriptionError) and job.status == "failed":
+                    job.message = exc.user_message + " · 자동 재시도 없음"
+                if isinstance(exc, PaymentRequiredError) and job.status == "failed":
+                    job.message = str(PaymentRequiredError())
                 if getattr(exc, "kind", None) == "audio_review" and job.status == "failed":
                     job.message = (
                         "음성 분량 검토 필요. 목표 길이에 맞게 대본을 수정한 뒤 다시 제작하세요. "

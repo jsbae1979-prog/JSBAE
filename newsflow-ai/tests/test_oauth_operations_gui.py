@@ -55,7 +55,7 @@ def test_operations_readiness_marks_code_prepared_but_real_services_blocked(clie
 
 def test_operations_panel_keeps_real_connect_button_disabled(client, operations_account):
     response = client.get("/publishing")
-    assert response.status_code == 200 and "PHASE 5F" in response.text
+    assert response.status_code == 200 and "운영 OAuth 기반 · 실제 서비스 차단" in response.text
     panel = re.search(r'<div[^>]*id="oauth-operations-readiness"[^>]*>', response.text)
     assert panel is not None and 'data-phase="4B-2B"' in panel.group()
     for attribute in (

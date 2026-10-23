@@ -281,6 +281,13 @@ class SyntheticLoopbackTransport:
             connection.close()
 
 
+class BrowserLaunchError(ProtocolError):
+    """The validated authorization URL could not be opened by the OS."""
+
+    def __init__(self) -> None:
+        super().__init__("provider_error")
+
+
 class GoogleSystemBrowser:
     """Dormant system browser launcher, never called in synthetic tests."""
 
@@ -297,9 +304,9 @@ class GoogleSystemBrowser:
         try:
             opened = webbrowser.open(authorization_url.get_secret_value(), new=1, autoraise=True)
         except Exception:  # noqa: BLE001 - operating-system browser errors may contain the state URL
-            raise ProtocolError("provider_error") from None
+            raise BrowserLaunchError() from None
         if not opened:
-            raise ProtocolError("provider_error")
+            raise BrowserLaunchError()
 
 
 @dataclass(frozen=True)

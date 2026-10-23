@@ -10,13 +10,14 @@ from newsflow.news.service import CollectionBusy
 
 
 @pytest.mark.parametrize(
-    "path,title", [("/dashboard", "뉴스 흐름을 한눈에"), ("/news", "뉴스 탐색"), ("/settings", "워크스페이스 설정")]
+    "path,title", [("/dashboard", "뉴스 흐름을 한눈에"), ("/news", "뉴스 수집"), ("/settings", "워크스페이스 설정")]
 )
 def test_render(client, path, title):
     response = client.get(path)
     assert response.status_code == 200
     assert title in response.text
-    assert "개발 예정" in response.text
+    for href in ("/news", "/ai", "/videos", "/queue", "/simple-settings"):
+        assert f'href="{href}"' in response.text
     assert "Content-Security-Policy" in response.headers
 
 

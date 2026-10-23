@@ -25,6 +25,7 @@ import json
 import re
 import ssl
 from collections.abc import Callable
+from decimal import Decimal
 from pathlib import Path
 from threading import Event
 
@@ -194,6 +195,32 @@ class HiggsfieldProvider:
             raise ProviderAmbiguousSubmit(status_code=status)
         state = data.get("status")
         return Submission(request_id, state if state in PROVIDER_STATES else "queued")
+
+    def estimate_usd(self, request: ClipRequest) -> Decimal:
+        """One authenticated estimate POST, never a generation or an automatic retry."""
+        path = validate_path(request.model_path)
+        if check_model_contract(path, (request.seconds,), request.resolution)[0] != "PASS":
+            raise ProviderInputError(sent=False)
+        payload = {
+            "prompt": request.prompt, "duration": request.seconds,
+            "aspect_ratio": request.aspect_ratio, "resolution": request.resolution,
+        }
+        try:
+            status, data = self._call("POST", "/estimate/" + path, payload)
+        except (_NotSent, ConnectionError):
+            raise ProviderUnavailable() from None
+        if not 200 <= status < 300:
+            raise self._error(status, submit=False)
+        raw = data.get("usd")
+        if isinstance(raw, bool) or not isinstance(raw, (str, int, float)):
+            raise ProviderResponseError()
+        text = str(raw)
+        if not re.fullmatch(r"[0-9]{1,8}(\.[0-9]{1,8})?", text):
+            raise ProviderResponseError()
+        amount = Decimal(text)
+        if amount <= 0 or amount > Decimal(1000) * request.seconds:
+            raise ProviderResponseError()
+        return amount
 
     def _request_path(self, request_id: str, action: str) -> str:
         if not isinstance(request_id, str) or not REQUEST_ID.fullmatch(request_id):

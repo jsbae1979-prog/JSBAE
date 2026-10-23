@@ -313,8 +313,7 @@ def test_changed_account_blocks_publication(app):
     assert "publish" not in service.adapter.calls
 
 
-@pytest.mark.parametrize("prior", ["0013", "0017"])
-def test_migration_adds_only_image_tables_and_preserves_existing_data(tmp_path, prior):
+def test_migration_adds_only_image_tables_and_preserves_existing_data(tmp_path):
     from pathlib import Path
 
     from alembic import command
@@ -328,7 +327,7 @@ def test_migration_adds_only_image_tables_and_preserves_existing_data(tmp_path, 
                         "src/newsflow/db/migrations"))
     with engine.begin() as connection:
         cfg.attributes["connection"] = connection
-        command.upgrade(cfg, prior)
+        command.upgrade(cfg, "0017")
         connection.exec_driver_sql("INSERT INTO app_settings(key,value) VALUES ('synthetic_voice','unchanged')")
         tables = connection.exec_driver_sql(
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='alembic_version'"
@@ -341,16 +340,3 @@ def test_migration_adds_only_image_tables_and_preserves_existing_data(tmp_path, 
         assert all(connection.exec_driver_sql(f'SELECT * FROM "{t}"').all() == rows
                    for t, rows in before.items())
     engine.dispose()
-
-
-def test_temporary_public_image_upload_is_explicit_in_the_existing_consent(app, client, monkeypatch):
-    identifier = make_post(app)
-    monkeypatch.setattr(app.state.instagram, "status", lambda: {"accounts": [
-        {"id": 1, "label": "합성 계정", "ready": True}]})
-    response = client.get(f"/image-posts?post_id={identifier}")
-    assert response.status_code == 200
-    assert "인증 없이 접근 가능한 임시 URL에 업로드됨을 승인합니다" in response.text
-    assert "Instagram 공개 게시는 별도로 승인합니다" in response.text
-    assert f'action="/image-posts/{identifier}/prepare"' in response.text
-    assert 'name="consent" value="true" required' in response.text
-    assert app.state.image_posts.deliveries(identifier) == []

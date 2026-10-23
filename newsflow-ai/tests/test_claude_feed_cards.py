@@ -4,11 +4,11 @@ from types import SimpleNamespace
 
 import pytest
 from conftest import csrf
-from image_selection_fixture import selected
 from PIL import Image
 from sqlalchemy import select
 from test_api_settings import configured
 from test_image_posts import article
+from test_image_selection import selected
 
 from newsflow.db.models import APIRequestReservation, AppSetting, IntelligenceRun
 from newsflow.intelligence.api_settings import APIBudgetService, FakeAPIBudgetService

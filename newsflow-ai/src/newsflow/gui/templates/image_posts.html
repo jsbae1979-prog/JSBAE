@@ -1,34 +1,189 @@
 {% extends 'base.html' %}
-{% block title %}Instagram 피드 · NewsFlow AI{% endblock %}
-{% block content %}<main class="easy-page single-feed-workspace"><header class="page-head"><div><h1>Instagram 피드</h1><p>이미지 1장을 저장·검토한 뒤 게시하세요.</p></div><a href="/" class="quiet-link">작업실로 →</a></header>
-<section class="easy-panel"><form method="get" action="/image-posts"><label>보관 뉴스<select name="article_id" required>{% for a in articles %}<option value="{{ a.id }}" {% if article and a.id == article.id %}selected{% endif %}>{{ a.title }}</option>{% endfor %}</select></label><button type="submit">뉴스 선택</button></form></section>
-{% if article %}<section class="easy-panel"><h2>{{ article.title }}</h2><p>{{ article.publisher }} · {{ article.published_at|kst }}</p><a href="{{ article.url }}" rel="noreferrer" target="_blank">출처 확인 ↗</a>
-<form method="get" action="/image-posts"><input type="hidden" name="article_id" value="{{ article.id }}"><label>저장 대본 재사용<select name="draft_id"><option value="">기사 요약</option>{% for d in drafts %}<option value="{{ d.id }}" {% if selected_draft and selected_draft.id == d.id %}selected{% endif %}>{{ d.content.title }}</option>{% endfor %}</select></label><button>원고 불러오기</button></form></section>
-{% if claude_cards_available %}
-<details class="easy-panel" id="claude-card" {% if card_plan %}open{% endif %}><summary>Claude 문구·이미지 지시문 · 선택 사항</summary>
-<p>Claude가 뉴스 문구·이미지 지시문을 작성합니다. 검토 후 OpenAI가 전체 이미지 1장을 생성합니다. 각 단계는 별도 동의가 필요합니다.</p>
-<p>Claude 키와 OpenAI 이미지 API 키가 각각 필요합니다. Claude는 이미지 파일을 생성하지 않습니다.</p>
+{% block title %}이미지 게시물 · NewsFlow AI{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/image-posts.css"><script src="/static/js/image-posts.js" defer></script>{% endblock %}
+{% block content %}
+<div class="page-head"><div><a href="/">← 작업실</a><h1>{{ ui_icon('file',28) }} 이미지 뉴스 게시물</h1><p>뉴스를 이미지 한 장과 본문으로 만드세요. 저장과 공개 게시는 별도입니다.</p></div><a class="button" href="/create">영상 만들기 →</a></div>
+<section class="card">
+{% if image_selection_available|default(false) %}<p><a class="button" href="/image-posts/selection">상위 3건으로 피드 만들기 →</a></p>{% endif %}
+  <form action="/image-posts" method="get"><label for="image-article">사용할 뉴스</label><select id="image-article" name="article_id" required><option value="">뉴스 선택</option>{% for item in articles %}<option value="{{ item.id }}" {{ 'selected' if article and item.id == article.id }}>{{ item.title }}</option>{% endfor %}</select><button type="submit">이 뉴스 사용</button></form>
+</section>
+{% if article %}
+<section class="card"><h2>이미지와 문구</h2>
+<p>{{ article.publisher }} · {{ article.published_at|kst }} · <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">원문 확인 ↗</a></p>
+{% if not article.summary %}<p role="status">저장된 요약이 없습니다. 원문을 확인해 본문을 작성하거나 기존 대본을 선택하세요.</p>{% endif %}
+{% if feed_item %}<p><a href="/image-posts/selection?analysis_id={{ analysis_id }}">← 피드 3건 목록</a> · {{ feed_item.origin }}</p>{% endif %}
+{% if drafts and not feed_item %}<form action="/image-posts" method="get"><input type="hidden" name="article_id" value="{{ article.id }}"><label for="image-draft">이 뉴스의 기존 대본 재사용 · AI 추가 호출 없음</label><select id="image-draft" name="draft_id">{% for draft in drafts %}<option value="{{ draft.id }}" {{ 'selected' if selected_draft and selected_draft.id == draft.id }}>#{{ draft.id }} · {{ draft.content.get('title','대본') }}</option>{% endfor %}</select><button>문구 가져오기</button></form>{% endif %}
+{% if claude_cards_available|default(false) %}
+<div class="ai-background" id="claude-card">
+<h3>{{ ui_icon('sparkles',20) }} Claude로 뉴스 문구·이미지 지시문 작성</h3>
+{% if full_image_available|default(false) %}
+<p>① Claude가 뉴스 문구·이미지 지시문 작성 → ② 검토 후 OpenAI가 그림·한글·배치를 포함한 전체 이미지 생성 → ③ 이미지 검토·저장</p>
+<p class="hint">각 단계는 별도 유료 호출입니다. Claude 키와 OpenAI 이미지 API 키가 각각 필요합니다. 기존 카드와 설정은 그대로 보존됩니다.</p>
+{% else %}<p>Claude가 뉴스에 맞는 문구·그림 요소·색상·배치를 설계하고, 이 PC에서 안전한 그래픽 이미지로 만듭니다. OpenAI 키는 필요하지 않습니다.</p>{% endif %}
+<p><strong>Claude API · {{ card_readiness.model }}</strong> · {{ '✓ 키 등록됨' if card_readiness.configured else '○ 키 등록 필요' }}</p>
 {% if card_plan %}
 {% if card_plan.options.get('purpose') == 'full_image' %}
-<h3>Claude 문구·이미지 지시문 준비 완료 · 아직 이미지가 아닙니다</h3><h4>{{ card_plan.result.plan.title }}</h4><p>{{ card_plan.result.plan.body }}</p><p>{{ card_plan.result.plan.image_prompt }}</p>
-<form method="post" action="/image-posts/generate-card-image">{{ csrf_field() }}<input type="hidden" name="article_id" value="{{ article.id }}"><input type="hidden" name="card_id" value="{{ card_plan.id }}">{% if selected_draft %}<input type="hidden" name="draft_id" value="{{ selected_draft.id }}">{% endif %}{% if feed_item %}<input type="hidden" name="analysis_id" value="{{ analysis_id }}"><input type="hidden" name="rank" value="{{ feed_item.rank }}">{% endif %}
-<label class="check"><input type="checkbox" name="plan_reviewed" value="true" required> 문구·지시문과 출처를 검토했습니다.</label><label class="check"><input type="checkbox" name="consent" value="true" required> 자료 외부 전송 및 OpenAI 전체 이미지 유료 생성 1회에 동의합니다.</label><button>전체 이미지 1장 생성</button></form>
-{% else %}<img src="/image-posts/cards/{{ card_plan.id }}/preview" width="216" height="270" alt="기존 Claude 카드 초안"><p>기존 그림·배치 구성을 재사용합니다. 새 API 호출이 아닙니다.</p>{% endif %}
+<div class="card"><strong>Claude 문구·이미지 지시문 준비 완료 · 아직 이미지가 아닙니다</strong>
+<h4>{{ card_plan.result.plan.title }}</h4><p>{{ card_plan.result.plan.body }}</p>
+<details open><summary>이미지 지시문 검토</summary><p>{{ card_plan.result.plan.image_prompt }}</p></details>
+<p>원문·출처와 위 문구를 확인하세요. 이미지 생성 시 이 문구와 출처가 함께 전달됩니다.</p>
+</div>
 {% else %}
-<p>Claude · {{ card_readiness.model }}</p>{% if not card_readiness.ready %}<p role="status">{{ card_readiness.reasons|join(' / ') }}</p><a href="/simple-settings#selected-ai">연결·승인 설정</a>{% endif %}
-<form method="post" action="/image-posts/claude-card">{{ csrf_field() }}<input type="hidden" name="article_id" value="{{ article.id }}"><input type="hidden" name="model" value="{{ card_readiness.model }}"><input type="hidden" name="purpose" value="full_image">{% if selected_draft %}<input type="hidden" name="draft_id" value="{{ selected_draft.id }}">{% endif %}{% if feed_item %}<input type="hidden" name="analysis_id" value="{{ analysis_id }}"><input type="hidden" name="rank" value="{{ feed_item.rank }}">{% endif %}
-<label class="check"><input type="checkbox" name="consent" value="true" required> 선택한 뉴스·대본·출처의 외부 전송 및 Claude 유료 문구·지시문 작성 1회에 동의합니다.</label>
-{% if card_readiness.unknown_review.ready %}<p>기존 결과 불명 요청 {{ card_readiness.unknown_review.requests|length }}건의 기록과 과금 가능성은 유지됩니다.</p><input type="hidden" name="review_token" value="{{ card_readiness.unknown_review.token }}"><label class="check"><input type="checkbox" name="review_consent" value="true" required> 기존 미확인 요청을 인지하고 이번 새 카드 1회만 승인합니다. 이전 요청은 재전송하지 않습니다.</label>{% endif %}
-<button type="submit" {{ 'disabled' if not card_readiness.ready and not card_readiness.unknown_review.ready }}>Claude 문구·이미지 지시문 작성 1회</button></form>{% endif %}
-{% for c in card_runs %}<p>#{{ c.id }} · {{ c.message }}{% if c.status == 'success' %} <a href="/image-posts?article_id={{ article.id }}&amp;card_id={{ c.id }}{% if selected_draft %}&amp;draft_id={{ selected_draft.id }}{% endif %}{% if feed_item %}&amp;analysis_id={{ analysis_id }}&amp;rank={{ feed_item.rank }}{% endif %}#claude-card">구성 검토</a>{% endif %}</p>{% endfor %}
-</details>{% endif %}
-<details class="easy-panel" id="ai-background"><summary>OpenAI 배경 · 선택 사항</summary><p>뉴스 분석 Provider와 별개입니다. 배경 1장 생성 후 한글·수치·출처는 프로그램에서 표시합니다.</p><p>키 {{ '등록됨' if image_key.configured else '미등록' }} · 등록만으로 생성 권한이 확인되지는 않습니다. {{ image_model }}</p>
-<form method="post" action="/image-posts/generate-background">{{ csrf_field() }}<input type="hidden" name="article_id" value="{{ article.id }}">{% if selected_draft %}<input type="hidden" name="draft_id" value="{{ selected_draft.id }}">{% endif %}<label>이미지 스타일<select name="style">{% for v,label in image_styles.items() %}<option value="{{ v }}">{{ label }}</option>{% endfor %}</select></label><label class="check"><input type="checkbox" name="consent" value="true" required> 이 뉴스의 제목·요약 외부 전송 및 OpenAI 이미지 유료 생성 1회에 동의합니다.</label><button type="submit">배경 1장 생성</button></form>
-{% for g in generations %}<p>#{{ g.id }} · {{ g.message }}</p>{% if g.status == 'success' %}<a href="/image-posts?article_id={{ article.id }}&generated_id={{ g.id }}">{{ "전체 이미지 검토" if g.options.get("style") == "full_card" else "이 배경 선택" }}</a>{% endif %}{% endfor %}</details>
-{% if not card_plan or card_plan.options.get("purpose") != "full_image" or generated %}<form method="post" action="/image-posts/create" class="easy-panel creation-form">{{ csrf_field() }}<input type="hidden" name="article_id" value="{{ article.id }}">{% if selected_draft %}<input type="hidden" name="draft_id" value="{{ selected_draft.id }}">{% endif %}{% if generated %}<input type="hidden" name="generated_id" value="{{ generated.id }}"><img src="/image-posts/backgrounds/{{ generated.id }}/file" width="216" height="270" alt="생성 이미지 검토"><p>{{ "전체 구성을 그대로 저장합니다. 한글·수치·출처를 직접 검토하세요." if full_generated else "이 배경을 카드에 사용합니다." }}</p>{% endif %}
-{% if card_plan and card_plan.options.get('purpose') != 'full_image' %}<input type="hidden" name="card_id" value="{{ card_plan.id }}">{% endif %}
-<h2>{{ '검토한 전체 이미지 저장' if full_generated else 'OpenAI 배경으로 이미지 저장' if generated else '기본 이미지 · OpenAI 호출 없음' }}</h2><label>제목<input name="title" {% if full_generated %}readonly {% endif %}maxlength="100" value="{{ seed.title }}" required></label><label>핵심 내용<textarea name="body" {% if full_generated %}readonly {% endif %}rows="4" maxlength="200" required>{{ seed.body }}</textarea></label><p class="hint">{{ '생성 당시 문구를 유지합니다. 이미지의 한글·숫자·출처를 직접 확인하세요.' if full_generated else '이미지에 들어갈 핵심 내용을 짧게 정리하세요. 표시 공간을 넘으면 저장을 중단합니다.' }}</p><label>해시태그<input name="hashtags" maxlength="200"></label><label>AI 표시<select name="ai_disclosure"><option value="unreviewed">선택하세요</option><option value="not_required">AI 이미지 아님</option><option value="disclose" {% if generated or card_plan %}selected{% endif %}>AI 생성 이미지</option></select></label><label class="check"><input type="checkbox" name="reviewed" value="true" required> 내용·수치·날짜를 검토했습니다.</label><label class="check"><input type="checkbox" name="sources_confirmed" value="true" required> 출처와 확보한 자료의 범위를 확인했습니다.</label><label class="check"><input type="checkbox" name="rights" value="true" required> 이미지·문구의 이용 권한을 확인했습니다.</label><button class="primary">이미지로 저장</button><p>1080×1350 JPG · 로컬 저장이며 공개 게시가 아닙니다.</p></form>{% endif %}{% endif %}
-{% if post %}<section class="easy-panel" id="image-result"><h2>이미지 준비 완료 · #{{ post.id }}</h2><img src="/image-posts/{{ post.id }}/file" width="324" height="405" alt="{{ post.title }}"><p>{{ post.title }}</p><div class="form-actions"><a href="/image-posts/{{ post.id }}/file?download=true">JPG 저장</a><a href="/image-posts/{{ post.id }}/caption">게시 원고 저장</a></div><pre>{{ post.caption }}</pre>
-{% if accounts|selectattr('ready')|list %}<form method="post" action="/image-posts/{{ post.id }}/prepare">{{ csrf_field() }}<label>Instagram 계정<select name="account_id">{% for a in accounts if a.ready %}<option value="{{ a.id }}">{{ a.label }}</option>{% endfor %}</select></label>{% if not delivery_ready %}<p>BLOCKED · HTTPS 이미지 전달 서버가 필요합니다. <a href="/simple-settings#instagram">설정</a></p>{% endif %}<details><summary>이미지 주소 직접 지정</summary><label>검토한 JPG와 동일한 공개 HTTPS 주소<input name="image_url" maxlength="2048"></label></details><label class="check"><input type="checkbox" name="consent" value="true" required> 이 JPG의 공개 HTTPS 주소와 원고를 선택한 계정에 전송합니다. 자동 전달 시 JPG가 인증 없이 접근 가능한 임시 URL에 업로드됨을 승인합니다. Instagram 공개 게시는 별도로 승인합니다.</label><button>Instagram 게시 준비</button></form>{% else %}<p>Instagram 계정 연결이 필요합니다. <a href="/simple-settings#instagram">설정으로 →</a></p>{% endif %}
-{% for d in deliveries %}<article class="card"><h3>{{ d.detail.account_label }} · {{ states.get(d.status,d.status) }}</h3>{% if d.detail.media_id %}<p>게시 ID: {{ d.detail.media_id }}</p>{% endif %}{% if d.detail.url %}<a href="{{ d.detail.url }}" rel="noreferrer" target="_blank">게시물 확인 ↗</a>{% endif %}{% if d.status in ['processing','ready'] %}<form method="post" action="/image-posts/deliveries/{{ d.id }}/{{ 'check' if d.status == 'processing' else 'publish' }}">{{ csrf_field() }}<label class="check"><input type="checkbox" name="consent" value="true" required> {{ '처리 상태 조회에 동의합니다.' if d.status == 'processing' else d.detail.account_label ~ ' 계정에 위 이미지와 원고를 공개 게시합니다.' }}</label><button>{{ '처리 상태 확인' if d.status == 'processing' else '공개 게시 승인' }}</button></form>{% endif %}{% if d.detail.error_code %}<p>오류: {{ d.detail.error_code }} · 자동 재시도하지 않습니다.</p>{% endif %}</article>{% endfor %}</section>{% endif %}
-<section class="easy-panel"><h2>저장한 이미지</h2>{% for p in recent %}<p><a href="/image-posts?post_id={{ p.id }}">#{{ p.id }} · {{ p.title }}</a></p>{% else %}<p>저장한 이미지가 없습니다. 보관 뉴스를 선택하세요.</p>{% endfor %}</section></main>{% endblock %}
+<div class="generated-background"><img src="/image-posts/cards/{{ card_plan.id }}/preview" width="256" height="320" alt="Claude 카드 구성 초안 · 검토 전">
+<div><strong>카드 초안이 준비됐습니다.</strong><p>{{ 'Claude가 작성한 전체 SVG 그림·문구·배치' if card_plan.options.get('purpose') == 'svg_card' else 'Claude 그림·배치 설계 적용' if card_plan.result.get('plan', {}).get('design') else '기존 카드 구성 재사용 · 추가 호출 없음' }}</p><p>{{ '이미지와 문구의 일치·가독성·출처를 확인하세요. SVG의 문구는 아래 입력으로 자동 변경되지 않습니다.' if card_plan.options.get('purpose') == 'svg_card' else '아래 제목·요약을 수정할 수 있습니다. 그림의 주제 적합성과 원문·사실을 확인한 뒤 저장하세요.' }}</p></div></div>
+<p><a href="/image-posts?article_id={{ article.id }}{% if feed_item %}&amp;analysis_id={{ analysis_id }}&amp;rank={{ feed_item.rank }}{% endif %}{% if selected_draft %}&amp;draft_id={{ selected_draft.id }}{% endif %}#claude-card">전체 이미지 방식으로 새 구성 준비 · 기존 카드 보존</a></p>
+{% endif %}
+{% else %}
+{% if card_readiness.unknown_review and card_readiness.unknown_review.ready %}<p role="status">기존 결과 불명 기록에 대한 추가 확인 후 이번 카드 1회를 실행할 수 있습니다.</p>
+{% elif not card_readiness.ready %}<p role="status">{{ card_readiness.reasons|join(' / ') }}</p><a href="/simple-settings#selected-ai">Claude 연결·승인 설정 확인 →</a>{% endif %}
+<form method="post" action="/image-posts/claude-card" data-generate-card>
+{% if full_image_available|default(false) %}<input type="hidden" name="purpose" value="full_image">{% endif %}
+{{ csrf_field() }}<input type="hidden" name="article_id" value="{{ article.id }}"><input type="hidden" name="model" value="{{ card_readiness.model }}">
+{% if feed_item %}<input type="hidden" name="analysis_id" value="{{ analysis_id }}"><input type="hidden" name="rank" value="{{ feed_item.rank }}">{% endif %}
+{% if selected_draft %}<input type="hidden" name="draft_id" value="{{ selected_draft.id }}">{% endif %}
+<label class="check"><input type="checkbox" name="consent" value="true" required> 선택한 뉴스·기존 대본·출처를 Claude에 전달하고 유료 문구·이미지 지시문 작성 1회를 실행합니다.</label>
+<p class="hint">새 뉴스 검색·사진 생성은 하지 않습니다. 같은 요청은 기존 결과를 재사용하며 자동 재시도하지 않습니다. 자동 사실 검증 완료를 뜻하지 않습니다.</p>
+{% if card_readiness.unknown_review and card_readiness.unknown_review.ready %}
+<div role="note"><p>기존 요청 {{ card_readiness.unknown_review.requests|length }}건의 처리·과금 여부가 미확인입니다. 기록은 보존하고 이전 요청은 재전송하지 않습니다.</p>
+<details><summary>해당 요청 보기</summary><p>{{ card_readiness.unknown_review.requests|join(' · ') }}</p></details>
+<input type="hidden" name="review_token" value="{{ card_readiness.unknown_review.token }}">
+<label class="check"><input type="checkbox" name="review_consent" value="true" required> 기존 미확인 요청의 과금 가능성을 이해하며, 위 뉴스의 새 카드 구성 1회만 허용합니다.</label></div>
+{% endif %}
+<button type="submit" {{ 'disabled' if not card_readiness.ready and not (card_readiness.unknown_review and card_readiness.unknown_review.ready) }}>{{ 'Claude 문구·이미지 지시문 작성 1회' if full_image_available|default(false) else 'Claude 카드 구성 1회' }}</button><p data-generation-status role="status" aria-live="polite"></p>
+</form>
+{% endif %}
+{% if card_runs %}<details open><summary>Claude 카드 구성 기록</summary>{% for run in card_runs %}<p>#{{ run.id }} · {{ run.message }}{% if run.status == 'success' %}
+<a href="/image-posts?article_id={{ article.id }}{% if run.options.get('analysis_id') %}&amp;analysis_id={{ run.options.analysis_id }}&amp;rank={{ run.options.rank }}{% endif %}{% if run.options.get('draft_id') %}&amp;draft_id={{ run.options.draft_id }}{% endif %}&amp;card_id={{ run.id }}#claude-card">구성 사용</a>{% endif %}</p>{% endfor %}</details>{% endif %}
+</div>
+{% endif %}
+{% if image_generation_available|default(false) %}
+<details id="codex-image" {{ 'open' if generated and generated.provider == 'codex' }}>
+<summary>Codex로 전체 이미지 · 구독 사용량</summary>
+<div class="ai-background"><h3>{{ ui_icon('sparkles',20) }} Codex 전체 이미지</h3>
+<p>{{ 'Codex 설치 파일 확인 · 로그인·이미지 생성 권한 미검증' if codex_image_installed else 'Codex 설치 파일을 찾지 못했습니다' }}</p>
+<p>OpenAI API 키 없이 공식 Codex 로그인으로 요청합니다. 구독 사용량과 이미지 한도가 적용되며 무료·무제한이 아닙니다.</p>
+<p class="hint">Codex가 제공하는 기본 모델을 사용합니다. 응답 토큰은 기록하지만 이미지별 사용 한도·청구액을 뜻하지 않습니다.</p>
+{% if not generated and (not card_plan or card_plan.options.get('purpose') != 'full_image') %}
+<p>아래 제목·본문을 제목 60자·본문 200자 이내로 정리하고 출처를 확인하세요. 이 문구와 뉴스 자료를 전달해 그림·한글·배치를 한 장으로 만듭니다.</p>
+<form method="post" action="/image-posts/generate-codex-image" data-generate-image data-codex-image>
+{{ csrf_field() }}<input type="hidden" name="article_id" value="{{ article.id }}">
+<input type="hidden" name="title" value="{{ seed.title }}"><input type="hidden" name="body" value="{{ seed.body or '' }}">
+{% if feed_item %}<input type="hidden" name="analysis_id" value="{{ analysis_id }}"><input type="hidden" name="rank" value="{{ feed_item.rank }}">{% endif %}
+{% if selected_draft %}<input type="hidden" name="draft_id" value="{{ selected_draft.id }}">{% endif %}
+<label class="check"><input type="checkbox" name="reviewed" value="true" required> 아래 문구와 뉴스 출처를 검토했습니다.</label>
+<label class="check"><input type="checkbox" name="consent" value="true" required> Codex로 자료를 전송하고 구독 사용량을 사용하는 이미지 1장 요청을 승인합니다.</label>
+<p class="hint">최대 5분. 이미지 도구만 허용합니다. 실패·결과 불명은 자동 재요청하지 않으며 API나 로컬 그림으로 대체하지 않습니다. 실제 생성 가능 여부와 품질은 미검증입니다.</p>
+<button type="submit" {{ 'disabled' if not codex_image_installed }}>Codex 전체 이미지 1장 요청</button><p data-generation-status role="status" aria-live="polite"></p>
+</form>
+{% endif %}
+{% if generated and generated.provider == 'codex' %}<p><strong>Codex 생성 결과 · 최종 검토 필요</strong></p>
+<img src="/image-posts/backgrounds/{{ generated.id }}/file" alt="Codex 생성 초안 · 실제 현장 사진 아님" width="256" height="320">
+<p>아래에서 한글·내용·출처·AI 표시와 권리를 확인한 뒤 저장하세요.</p>{% endif %}
+</div></details>
+{% if not generated or generated.provider != 'codex' %}
+<details {{ 'open' if generated or (card_plan and card_plan.options.get('purpose') == 'full_image') }}><summary>OpenAI 이미지 생성 · 별도 키·요금{% if full_image_available|default(false) %} · 전체 이미지 또는 기존 배경{% endif %}</summary>
+<div class="ai-background" id="ai-background">
+<h3>{{ ui_icon('sparkles',20) }} {{ '전체 이미지 생성' if full_generated|default(false) or (card_plan and card_plan.options.get('purpose') == 'full_image') else 'AI 배경 이미지 · 선택' }}</h3>
+<p>{% if full_generated|default(false) or (card_plan and card_plan.options.get('purpose') == 'full_image') %}Claude의 문구·지시문으로 완성 이미지 1장을 만듭니다. 기존 카드 틀을 덮지 않습니다. 한글 오타·내용·출처·AI 표시를 직접 검토해야 합니다.{% else %}뉴스 주제에 맞는 일러스트를 만들고, 한국어 제목과 출처는 아래에서 얹습니다.{% endif %}</p>
+<p class="badge">{{ '✓ OpenAI 키 등록됨 · 등록만으로 생성 권한이 확인되지는 않습니다' if image_key.configured else '○ OpenAI 키 등록 필요' }}</p>
+<p class="hint">Claude 대본 설정은 그대로 유지됩니다. 실제 사건을 재현한 사진이 아니며 AI 표시가 붙습니다.</p>
+<details><summary>이미지 API 키 {{ '변경' if image_key.configured else '등록' }}</summary>
+<form method="post" action="/api-settings/openai/key" autocomplete="off">{{ csrf_field() }}
+<label for="image-openai-key">기존 OpenAI Key 보관함</label><input id="image-openai-key" type="password" name="api_key" minlength="20" maxlength="256" autocomplete="new-password" required>
+<p class="hint">OpenAI 뉴스 기능과 같은 키를 사용합니다. 저장만으로 API를 호출하거나 기본 AI를 변경하지 않습니다.</p><button>키 저장 · 설정으로 이동</button></form></details>
+{% if generated %}
+<div class="generated-background"><img src="/image-posts/backgrounds/{{ generated.id }}/file" alt="AI 생성 이미지 · 실제 현장 사진 아님" width="256" height="320">
+<div><strong>{{ '전체 이미지가 준비됐습니다. 문구·출처·AI 표시를 확인하세요.' if full_generated|default(false) else '이 배경을 카드에 사용합니다.' }}</strong><p>그림에 실제 사건처럼 보이는 내용이나 잘못된 문자가 없는지 확인하세요.</p>
+<a href="/image-posts?article_id={{ article.id }}{% if feed_item %}&amp;analysis_id={{ analysis_id }}&amp;rank={{ feed_item.rank }}{% endif %}{% if selected_draft %}&amp;draft_id={{ selected_draft.id }}{% endif %}#ai-background">배경 선택 해제 · 기존 이미지 보존</a></div></div>
+{% elif card_plan and card_plan.options.get('purpose') == 'full_image' %}
+<form method="post" action="/image-posts/generate-card-image" data-generate-image>
+{{ csrf_field() }}<input type="hidden" name="article_id" value="{{ article.id }}"><input type="hidden" name="card_id" value="{{ card_plan.id }}">
+{% if feed_item %}<input type="hidden" name="analysis_id" value="{{ analysis_id }}"><input type="hidden" name="rank" value="{{ feed_item.rank }}">{% endif %}
+{% if selected_draft %}<input type="hidden" name="draft_id" value="{{ selected_draft.id }}">{% endif %}
+<p>OpenAI · {{ image_model }} · 1장 · 1024×1280 · 중간 품질 · 최대 180초</p>
+<p>Claude 문구·지시문과 뉴스 출처를 OpenAI에 전송합니다. ChatGPT 구독과 별도 API 요금이며, 실제 생성 권한·가격·청구액은 계정에서 확인하세요.</p>
+<label class="check"><input type="checkbox" name="plan_reviewed" value="true" required> 위 Claude 문구·이미지 지시문·출처를 검토했습니다.</label>
+<label class="check"><input type="checkbox" name="consent" value="true" required> OpenAI로 자료 전송 및 유료 전체 이미지 1장 생성을 승인합니다.</label>
+<p class="hint">Claude를 다시 호출하지 않습니다. 성공 결과 재사용, 실패·시간 초과·결과 불명은 자동 재요청하지 않습니다.</p>
+<button type="submit" {{ 'disabled' if not image_key.configured }}>전체 이미지 1장 생성</button><p data-generation-status role="status" aria-live="polite"></p>
+</form>
+{% else %}
+<form method="post" action="/image-posts/generate-background" data-generate-image>
+{{ csrf_field() }}<input type="hidden" name="article_id" value="{{ article.id }}">
+{% if feed_item %}<input type="hidden" name="analysis_id" value="{{ analysis_id }}"><input type="hidden" name="rank" value="{{ feed_item.rank }}">{% endif %}
+{% if selected_draft %}<input type="hidden" name="draft_id" value="{{ selected_draft.id }}">{% endif %}
+<label for="background-style">그림 스타일</label><select id="background-style" name="style">{% for key,label in image_styles.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select>
+<p>OpenAI · 1장 · 유료 생성</p>
+<details><summary>전송 내용과 비용</summary><p>선택한 뉴스의 제목·저장 요약(선정 후보는 저장된 대본 또는 요약)·출처·발행시각을 OpenAI에 전달합니다. 기사 본문을 새로 수집하지 않습니다.</p>
+<p>{{ image_model }} · 1024×1280 · 중간 품질 · 180초 응답 제한. 입력·이미지 출력 토큰에 따라 과금되며 고정 금액을 보장하지 않습니다.</p>
+<p><a href="https://developers.openai.com/api/docs/models/gpt-image-2.5-flare" target="_blank" rel="noopener noreferrer">공식 모델·요금 확인 ↗</a> · ChatGPT 구독과 별도 API 결제입니다. 응답 사용량만 기록하며 공급사 청구액은 별도 확인합니다.</p></details>
+<label class="check"><input type="checkbox" name="consent" value="true" required> 위 뉴스 자료 외부 전송과 OpenAI 유료 이미지 1장 생성을 승인합니다.</label>
+<p class="hint">한 번에 1장만 요청합니다. 같은 자료·스타일은 기존 결과를 재사용하고, 실패·결과 불명 요청은 다시 보내지 않습니다. 생성 전에 문구를 편집했다면 아래 카드를 먼저 저장해 보존하세요.</p>
+<button type="submit" {{ 'disabled' if not image_key.configured }}>배경 1장 생성</button><p data-generation-status role="status" aria-live="polite"></p>
+</form>
+{% endif %}
+</div></details>
+{% endif %}
+{% if generations %}<details open><summary>이 뉴스의 이미지 생성 기록</summary>{% for run in generations %}
+<p>#{{ run.id }} · {{ 'Codex 구독' if run.provider == 'codex' else 'OpenAI API' }} · {{ run.message }}
+{% if run.status == 'success' %}<a href="/image-posts?article_id={{ article.id }}{% if run.options.get('analysis_id') %}&amp;analysis_id={{ run.options.analysis_id }}&amp;rank={{ run.options.rank }}{% endif %}{% if selected_draft and not run.options.get('analysis_id') %}&amp;draft_id={{ selected_draft.id }}{% endif %}&amp;generated_id={{ run.id }}#ai-background">{{ '전체 이미지 사용' if run.options.get('style') == 'full_card' else '배경 사용' }}</a>{% endif %}
+{% if run.result.get('error_code') %} · {{ run.result.error_code }}{% if run.result.get('http_status') %} (HTTP {{ run.result.http_status }}){% endif %}{% endif %}
+{% if run.result.get('usage') %}<small>응답 사용량: 입력 {{ run.result.usage.input_tokens }} / 출력 {{ run.result.usage.output_tokens }} 토큰 · 청구액 미확인</small>{% elif run.status != 'running' %}<small>사용량 미확인 · 0원으로 처리하지 않습니다.</small>{% endif %}</p>{% endfor %}</details>{% endif %}
+{% endif %}
+{% if not card_plan or card_plan.options.get('purpose') != 'full_image' %}
+<form method="post" action="/image-posts/create" data-image-form>
+{{ csrf_field() }}<input type="hidden" name="article_id" value="{{ article.id }}">
+{% if feed_item %}<input type="hidden" name="analysis_id" value="{{ analysis_id }}"><input type="hidden" name="rank" value="{{ feed_item.rank }}">
+<p class="hint">이 후보의 기사 출처 {{ feed_item.references|length }}개를 함께 보존합니다. 문구·출처를 확인한 뒤 저장하세요.</p>{% endif %}
+{% if selected_draft %}<input type="hidden" name="draft_id" value="{{ selected_draft.id }}"><p class="hint">가져온 대본의 모든 기사 출처가 본문에 보존됩니다.</p>{% endif %}
+{% if card_plan %}<input type="hidden" name="card_id" value="{{ card_plan.id }}"><p>Claude 카드 · 제목 60자 / 요약 200자 · AI 구성 표시 유지</p>{% endif %}
+<label for="image-title">이미지 제목</label><input id="image-title" name="title" {{ 'readonly' if full_generated|default(false) or (card_plan and card_plan.options.get('purpose') == 'svg_card') }} value="{{ seed.title }}" maxlength="{{ 60 if card_plan else 100 }}" required>
+<label for="image-body">{{ '카드 요약 · 게시물 본문' if card_plan else '게시물 본문' }}</label><textarea id="image-body" name="body" {{ 'readonly' if full_generated|default(false) or (card_plan and card_plan.options.get('purpose') == 'svg_card') }} rows="7" maxlength="{{ 200 if card_plan else 1800 }}" required>{{ seed.body or '' }}</textarea>
+<label for="image-tags">해시태그 · 선택</label><input id="image-tags" name="hashtags" maxlength="200" placeholder="#뉴스 #주제">
+{% if generated %}<input type="hidden" name="generated_id" value="{{ generated.id }}"><p>{{ '전체 이미지 사용 · 이미지 속 문구는 자동 편집되지 않습니다.' if full_generated|default(false) else '선택한 AI 배경 사용 · 표시 문구는 자동으로 유지됩니다.' }}</p>{% endif %}
+<label for="image-photo">내 사진 · 선택하지 않으면 {{ '선택한 AI 배경' if generated else '텍스트 카드' }}</label><input id="image-photo" type="file" accept="image/jpeg,image/png,image/webp" data-image-file {{ 'disabled' if generated or card_plan }}>
+<input type="hidden" name="image_base64" value="" data-image-base64>
+<p class="hint">4MB 이하 · 가운데를 기준으로 4:5 비율로 배치합니다. RSS 썸네일은 이용 권한 없이 자동 사용하지 않습니다.</p>
+<label for="image-ai">이미지 표시</label><select name="ai_disclosure" id="image-ai" required {{ 'disabled' if generated or card_plan }}><option value="">선택하세요</option><option value="not_required">직접 제작한 카드·허가받은 사진</option><option value="disclose" {{ 'selected' if generated or card_plan }}>{{ 'AI 구성 뉴스 카드 · 실제 현장 사진 아님' if card_plan else 'AI 생성 이미지 · 실제 현장 사진 아님' }}</option></select>
+<div class="image-checks">
+<label><input type="checkbox" name="reviewed" value="true" required> {{ '이미지 속 한글·수치·날짜·출처·AI 표시와 아래 문구가 일치함을 직접 확인했습니다.' if full_generated|default(false) or (card_plan and card_plan.options.get('purpose') == 'svg_card') else '제목·본문의 사실과 날짜를 확인했습니다.' }}</label>
+<label><input type="checkbox" name="sources_confirmed" value="true" required> 뉴스 출처를 확인했습니다. 출처는 본문에 함께 저장됩니다.</label>
+<label><input type="checkbox" name="rights" value="true" required> 사진·문구를 사용할 권한이 있습니다.</label></div>
+<p data-image-error role="alert"></p><button class="primary" type="submit">{{ '검토한 전체 이미지 저장' if full_generated|default(false) else '이미지 만들고 미리보기' }}</button><p class="hint">PC에만 저장합니다. 공개 게시 승인은 별도입니다.</p>
+</form>{% endif %}</section>
+{% endif %}
+{% if post %}
+<section class="card" id="image-result"><h2>{{ post.title }}</h2><div class="image-post-preview">
+<img src="/image-posts/{{ post.id }}/file" alt="{{ post.title }}" width="1080" height="1350">
+<div><p class="badge">이미지 준비 완료 · 1080×1350 JPEG</p><label for="image-caption">게시 본문 · 출처 포함</label><textarea id="image-caption" rows="14" readonly>{{ post.caption }}</textarea>
+<div class="image-actions"><button type="button" data-copy-caption>본문 복사</button><a class="button" href="/image-posts/{{ post.id }}/file?download=true">이미지 저장 ↓</a><a class="button" href="/image-posts/{{ post.id }}/caption">본문 저장 ↓</a></div><p data-copy-status role="status"></p>
+{% if post.sources.get('selection') %}<p><a class="button" href="/image-posts/selection?analysis_id={{ post.sources.selection.analysis_id }}">피드 3건 목록 · 다음 후보 만들기 →</a></p>
+<a href="/image-posts?analysis_id={{ post.sources.selection.analysis_id }}&amp;rank={{ post.sources.selection.rank }}">새 버전 만들기 · 기존 결과 보존</a>
+{% else %}<a href="/image-posts?article_id={{ post.article_id }}">새 버전 만들기 · 기존 결과 보존</a>{% endif %}
+<p class="hint">원문·이미지 이용 권한을 최종 확인하세요. 자동 사실 검증 완료를 뜻하지 않습니다.</p>
+<details><summary>YouTube 이미지 게시</summary><p>공식 API 자동 게시 미지원. 이미지와 본문을 저장한 뒤 YouTube의 ‘게시물 작성’에서 직접 등록하세요.</p></details>
+</div></div>
+<h3>Instagram에 게시</h3>
+{% if not accounts %}<p>Instagram 계정 연결이 필요합니다. 위 저장 기능은 계속 사용할 수 있습니다.</p><a href="/simple-settings#connections">설정에서 계정 연결 →</a>{% endif %}
+{% if accounts and not deliveries %}
+<p>등록된 HTTPS 이미지 저장소가 필요합니다. 로그인 중계 서버는 이미지 저장소가 아닙니다.</p>
+<details><summary>공개 이미지 주소로 게시 준비</summary>
+<form method="post" action="/image-posts/{{ post.id }}/prepare">{{ csrf_field() }}
+<label for="image-account">게시 계정</label><select id="image-account" name="account_id" required><option value="">계정 선택</option>{% for account in accounts %}<option value="{{ account.id }}" {{ 'disabled' if not account.ready }}>{{ account.label }}{{ ' · 연결 확인 필요' if not account.ready }}</option>{% endfor %}</select>
+<label for="image-public-url">위에서 저장한 JPEG의 공개 HTTPS 주소</label><input type="url" id="image-public-url" name="image_url" maxlength="2048" {% if not delivery_ready %}required{% endif %} placeholder="https://내-저장소.example/news.jpg">
+<p class="hint">{% if delivery_ready %}주소를 비우면 설정된 이미지 전용 서버에 이 JPG 1장만 전송합니다.{% else %}현재 자동 저장소 업로드는 미설정입니다.{% endif %} 주소의 파일이 검토한 이미지와 정확히 일치해야 합니다. 토큰이 포함된 주소는 입력하지 마세요.</p>
+<label><input type="checkbox" name="consent" value="true" required> 이 이미지의 HTTPS 전달과 이미지·본문을 선택한 Instagram 계정으로 전송하는 것에 동의합니다. 아직 공개 게시하지 않습니다.</label>
+<button>게시 준비</button></form></details>
+{% endif %}
+{% for delivery in deliveries %}
+<div class="card"><strong>{{ delivery.detail.get('account_label','Instagram') }}</strong><p role="status">{{ states.get(delivery.status,delivery.status) }}</p>
+{% if delivery.detail.get('error_code') %}<p>원인: {{ delivery.detail.error_code }} · 기록을 보존하며 자동 재전송하지 않습니다.</p>{% endif %}
+{% if delivery.status == 'processing' %}<form method="post" action="/image-posts/deliveries/{{ delivery.id }}/check">{{ csrf_field() }}<label><input type="checkbox" name="consent" value="true" required> Instagram 처리 상태를 조회합니다.</label><button>처리 상태 확인</button></form>{% endif %}
+{% if delivery.status == 'ready' %}<form method="post" action="/image-posts/deliveries/{{ delivery.id }}/publish">{{ csrf_field() }}<label><input type="checkbox" name="consent" value="true" required> 위 이미지와 본문을 {{ delivery.detail.get('account_label','선택한 계정') }}에 공개 게시하도록 승인합니다.</label><button class="primary">Instagram 공개 게시</button></form>{% endif %}
+{% if delivery.detail.get('media_id') %}<p>게시 ID: {{ delivery.detail.media_id }}</p>{% endif %}
+{% if delivery.status == 'published' and delivery.detail.get('url') %}<a href="{{ delivery.detail.url }}" rel="noopener noreferrer" target="_blank">게시물 확인 ↗</a>{% endif %}
+</div>{% endfor %}
+</section>
+{% endif %}
+<section class="card"><h2>저장한 이미지 게시물</h2><div class="image-post-list">{% for item in recent %}<a href="/image-posts?post_id={{ item.id }}#image-result"><img src="/image-posts/{{ item.id }}/file" loading="lazy" width="108" height="135" alt=""><span>{{ item.title }}<small>{{ item.created_at|kst }}</small></span></a>{% else %}<p>기사를 선택해 첫 이미지 게시물을 만들어 보세요.</p>{% endfor %}</div></section>
+{% endblock %}

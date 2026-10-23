@@ -1,0 +1,466 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                [100%]
+=================================== FAILURES ===================================
+____________________ test_gui_prices_form_and_estimate_text ____________________
+tests/test_ai_estimate.py:212: in test_gui_prices_form_and_estimate_text
+    assert 'value="gpt-4.1-mini"' in studio.text  # analysis form defaults to the saved model
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   assert 'value="gpt-4.1-mini"' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...tails>\n<details class="card ai-panel"><summary>실행 이력 · 오류</summary><p>실행 이력 없음</p></details>\n</main>\n</body></html>'
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...tails>\n<details class="card ai-panel"><summary>실행 이력 · 오류</summary><p>실행 이력 없음</p></details>\n</main>\n</body></html>' = <Response [200 OK]>.text
+___________ test_start_and_job_pages_show_estimate_then_actual_usage ___________
+tests/test_ai_estimate.py:236: in test_start_and_job_pages_show_estimate_then_actual_usage
+    assert 'id="start-ai-estimate"' in start and "예상 최대 약" in start and "단가 미입력" in start and "준비 안 됨" not in start
+E   assert ('id="start-ai-estimate"' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...이를 고르는 화면을 하나로 모았습니다.</p><a class="button primary" href="/">홈에서 제작 시작</a></section>\n\n</div>\n</main>\n</body></html>')
+___________ test_retried_failed_script_tokens_stay_in_the_job_total ____________
+tests/test_ai_estimate.py:299: in test_retried_failed_script_tokens_stay_in_the_job_total
+    app.state.autopilot.future.result(timeout=20)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'result'
+_ test_same_provider_pipeline_preserves_selection_context_usage_and_review[30-claude_code] _
+tests/test_ai_news_automation_backend.py:104: in test_same_provider_pipeline_preserves_selection_context_usage_and_review
+    assert job["stage_results"]["select"]["selection_method"] == "ai_recommendation"
+E   AssertionError: assert 'topic_reference' == 'ai_recommendation'
+E     
+E     - ai_recommendation
+E     + topic_reference
+_ test_same_provider_pipeline_preserves_selection_context_usage_and_review[30-codex] _
+tests/test_ai_news_automation_backend.py:104: in test_same_provider_pipeline_preserves_selection_context_usage_and_review
+    assert job["stage_results"]["select"]["selection_method"] == "ai_recommendation"
+E   AssertionError: assert 'topic_reference' == 'ai_recommendation'
+E     
+E     - ai_recommendation
+E     + topic_reference
+_ test_same_provider_pipeline_preserves_selection_context_usage_and_review[45-claude_code] _
+tests/test_ai_news_automation_backend.py:104: in test_same_provider_pipeline_preserves_selection_context_usage_and_review
+    assert job["stage_results"]["select"]["selection_method"] == "ai_recommendation"
+E   AssertionError: assert 'topic_reference' == 'ai_recommendation'
+E     
+E     - ai_recommendation
+E     + topic_reference
+_ test_same_provider_pipeline_preserves_selection_context_usage_and_review[45-codex] _
+tests/test_ai_news_automation_backend.py:104: in test_same_provider_pipeline_preserves_selection_context_usage_and_review
+    assert job["stage_results"]["select"]["selection_method"] == "ai_recommendation"
+E   AssertionError: assert 'topic_reference' == 'ai_recommendation'
+E     
+E     - ai_recommendation
+E     + topic_reference
+_ test_same_provider_pipeline_preserves_selection_context_usage_and_review[60-claude_code] _
+tests/test_ai_news_automation_backend.py:104: in test_same_provider_pipeline_preserves_selection_context_usage_and_review
+    assert job["stage_results"]["select"]["selection_method"] == "ai_recommendation"
+E   AssertionError: assert 'topic_reference' == 'ai_recommendation'
+E     
+E     - ai_recommendation
+E     + topic_reference
+_ test_same_provider_pipeline_preserves_selection_context_usage_and_review[60-codex] _
+tests/test_ai_news_automation_backend.py:104: in test_same_provider_pipeline_preserves_selection_context_usage_and_review
+    assert job["stage_results"]["select"]["selection_method"] == "ai_recommendation"
+E   AssertionError: assert 'topic_reference' == 'ai_recommendation'
+E     
+E     - ai_recommendation
+E     + topic_reference
+___ test_failed_and_unknown_external_requests_never_replay[error0-analysis] ____
+tests/test_ai_news_automation_backend.py:152: in test_failed_and_unknown_external_requests_never_replay
+    assert job["status"] == "failed" and job["retryable"] is False
+E   AssertionError: assert ('waiting_review' == 'failed'
+E     
+E     - failed
+E     + waiting_review)
+____ test_failed_and_unknown_external_requests_never_replay[error0-script] _____
+tests/test_ai_news_automation_backend.py:152: in test_failed_and_unknown_external_requests_never_replay
+    assert job["status"] == "failed" and job["retryable"] is False
+E   AssertionError: assert ('waiting_review' == 'failed'
+E     
+E     - failed
+E     + waiting_review)
+___ test_failed_and_unknown_external_requests_never_replay[error1-analysis] ____
+tests/test_ai_news_automation_backend.py:152: in test_failed_and_unknown_external_requests_never_replay
+    assert job["status"] == "failed" and job["retryable"] is False
+E   AssertionError: assert ('waiting_review' == 'failed'
+E     
+E     - failed
+E     + waiting_review)
+____ test_failed_and_unknown_external_requests_never_replay[error1-script] _____
+tests/test_ai_news_automation_backend.py:152: in test_failed_and_unknown_external_requests_never_replay
+    assert job["status"] == "failed" and job["retryable"] is False
+E   AssertionError: assert ('waiting_review' == 'failed'
+E     
+E     - failed
+E     + waiting_review)
+___ test_failed_and_unknown_external_requests_never_replay[error2-analysis] ____
+tests/test_ai_news_automation_backend.py:152: in test_failed_and_unknown_external_requests_never_replay
+    assert job["status"] == "failed" and job["retryable"] is False
+E   AssertionError: assert ('waiting_review' == 'failed'
+E     
+E     - failed
+E     + waiting_review)
+____ test_failed_and_unknown_external_requests_never_replay[error2-script] _____
+tests/test_ai_news_automation_backend.py:152: in test_failed_and_unknown_external_requests_never_replay
+    assert job["status"] == "failed" and job["retryable"] is False
+E   AssertionError: assert ('waiting_review' == 'failed'
+E     
+E     - failed
+E     + waiting_review)
+_______ test_category_and_unknown_old_future_dates_are_not_current_news ________
+tests/test_ai_news_automation_backend.py:172: in test_category_and_unknown_old_future_dates_are_not_current_news
+    assert len(ai.calls[0][1]["articles"]) == 1
+               ^^^^^^^^^^^
+E   IndexError: list index out of range
+______________ test_offline_keeps_local_flow_and_explicit_policy _______________
+tests/test_ai_news_automation_backend.py:211: in test_offline_keeps_local_flow_and_explicit_policy
+    assert len(ai.calls) == 2
+E   assert 0 == 2
+E    +  where 0 = len([])
+E    +    where [] = <test_ai_news_automation_backend.RecordingAI object at 0x7fb942783ec0>.calls
+_______________ test_idempotency_refuses_changed_policy_or_model _______________
+tests/test_ai_news_automation_backend.py:225: in test_idempotency_refuses_changed_policy_or_model
+    assert len(ai.calls) == 2
+E   assert 0 == 2
+E    +  where 0 = len([])
+E    +    where [] = <test_ai_news_automation_backend.RecordingAI object at 0x7fb942550710>.calls
+__________ test_cancel_is_delivered_to_only_operation_owned_provider ___________
+tests/test_ai_news_automation_backend.py:242: in test_cancel_is_delivered_to_only_operation_owned_provider
+    assert entered.wait(5)
+E   assert False
+E    +  where False = wait(5)
+E    +    where wait = <threading.Event at 0x7fb942781fd0: unset>.wait
+_________ test_resume_after_script_review_carries_voice_without_new_ai _________
+tests/test_ai_news_automation_backend.py:266: in test_resume_after_script_review_carries_voice_without_new_ai
+    assert len(ai.calls) == 2
+E   assert 0 == 2
+E    +  where 0 = len([])
+E    +    where [] = <test_ai_news_automation_backend.RecordingAI object at 0x7fb942b46b40>.calls
+_ test_restart_distinguishes_success_failure_and_unknown_without_replay[running-outcome_unknown-False] _
+tests/test_ai_news_automation_backend.py:303: in test_restart_distinguishes_success_failure_and_unknown_without_replay
+    assert len(ai.calls) == 2
+E   assert 0 == 2
+E    +  where 0 = len([])
+E    +    where [] = <test_ai_news_automation_backend.RecordingAI object at 0x7fb9429178c0>.calls
+_ test_restart_distinguishes_success_failure_and_unknown_without_replay[failed-ai_request_stopped-False] _
+tests/test_ai_news_automation_backend.py:303: in test_restart_distinguishes_success_failure_and_unknown_without_replay
+    assert len(ai.calls) == 2
+E   assert 0 == 2
+E    +  where 0 = len([])
+E    +    where [] = <test_ai_news_automation_backend.RecordingAI object at 0x7fb9423d1fd0>.calls
+_ test_restart_distinguishes_success_failure_and_unknown_without_replay[success-interrupted-True] _
+tests/test_ai_news_automation_backend.py:303: in test_restart_distinguishes_success_failure_and_unknown_without_replay
+    assert len(ai.calls) == 2
+E   assert 0 == 2
+E    +  where 0 = len([])
+E    +    where [] = <test_ai_news_automation_backend.RecordingAI object at 0x7fb942945ca0>.calls
+_ test_home_policy_change_has_matching_readiness_and_notice_without_execution __
+tests/test_ai_news_automation_gui.py:72: in test_home_policy_change_has_matching_readiness_and_notice_without_execution
+    assert "RSS 확보 → 같은 AI" in states["rss"]["notice"]
+E   AssertionError: assert 'RSS 확보 → 같은 AI' in 'RSS 자료 확인 → 선택한 대본 검토 정책 → 영상 제작. 실제 처리 엔진은 작업 이력에서 확인하세요.'
+_ test_one_home_request_preserves_choices_and_requires_explicit_consent[30-claude_code-sonnet] _
+tests/test_ai_news_automation_gui.py:105: in test_one_home_request_preserves_choices_and_requires_explicit_consent
+    assert "기사 비교·분석 1회" in page.text and "계정 잔여량을 정확히 확인할 수 없습니다" in page.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_one_home_request_preserves_choices_and_requires_explicit_consent[30-codex-default] _
+tests/test_ai_news_automation_gui.py:105: in test_one_home_request_preserves_choices_and_requires_explicit_consent
+    assert "기사 비교·분석 1회" in page.text and "계정 잔여량을 정확히 확인할 수 없습니다" in page.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_one_home_request_preserves_choices_and_requires_explicit_consent[45-claude_code-sonnet] _
+tests/test_ai_news_automation_gui.py:105: in test_one_home_request_preserves_choices_and_requires_explicit_consent
+    assert "기사 비교·분석 1회" in page.text and "계정 잔여량을 정확히 확인할 수 없습니다" in page.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_one_home_request_preserves_choices_and_requires_explicit_consent[45-codex-default] _
+tests/test_ai_news_automation_gui.py:105: in test_one_home_request_preserves_choices_and_requires_explicit_consent
+    assert "기사 비교·분석 1회" in page.text and "계정 잔여량을 정확히 확인할 수 없습니다" in page.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_one_home_request_preserves_choices_and_requires_explicit_consent[60-claude_code-sonnet] _
+tests/test_ai_news_automation_gui.py:105: in test_one_home_request_preserves_choices_and_requires_explicit_consent
+    assert "기사 비교·분석 1회" in page.text and "계정 잔여량을 정확히 확인할 수 없습니다" in page.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_one_home_request_preserves_choices_and_requires_explicit_consent[60-codex-default] _
+tests/test_ai_news_automation_gui.py:105: in test_one_home_request_preserves_choices_and_requires_explicit_consent
+    assert "기사 비교·분석 1회" in page.text and "계정 잔여량을 정확히 확인할 수 없습니다" in page.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+____________ test_pages_render_default_off_and_keep_six_main_menus _____________
+tests/test_ai_video_gui.py:87: in test_pages_render_default_off_and_keep_six_main_menus
+    assert nav.count("<a ") == 6
+E   assert 7 == 6
+E    +  where 7 = <built-in method count of str object at 0x178933c0>('<a ')
+E    +    where <built-in method count of str object at 0x178933c0> = ' class="workspace-nav">\n\n\n<a href="/" class=" " ><span aria-hidden="true"><svg class="ui-icon" width="20" height="...d="M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1zM9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0"/></svg></span>설정 · 자동화</a>'.count
+______ test_key_form_stores_through_dpapi_store_and_never_renders_the_key ______
+tests/test_ai_video_gui.py:119: in test_key_form_stores_through_dpapi_store_and_never_renders_the_key
+    refused = post(client, "/video-ai-settings/key", {"api_key": "has space key value"})
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_ai_video_gui.py:55: in post
+    token = csrf(client)
+            ^^^^^^^^^^^^
+tests/conftest.py:35: in csrf
+    client.get("/")
+.venv/lib/python3.12/site-packages/httpx/_client.py:1053: in get
+    return self.request(
+.venv/lib/python3.12/site-packages/starlette/testclient.py:457: in request
+    return super().request(
+.venv/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+.venv/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+.venv/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/testclient.py:354: in handle_request
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/testclient.py:351: in handle_request
+    portal.call(self.app, scope, receive, send)
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:340: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+.venv/lib/python3.12/site-packages/anyio/from_thread.py:265: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/applications.py:1216: in __call__
+    await super().__call__(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/applications.py:96: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py:151: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:203: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/newsflow/main.py:226: in security
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:179: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+.venv/lib/python3.12/site-packages/starlette/middleware/base.py:149: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+.venv/lib/python3.12/site-packages/starlette/middleware/trustedhost.py:57: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/routing.py:676: in __call__
+    await self.middleware_stack(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2786: in app
+    await route.handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:1817: in handle
+    await self.original_router.handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:2869: in handle
+    await included_router._handle_selected(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:1843: in _handle_selected
+    await original_route.handle(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:1308: in handle
+    await effective_context.app(scope, receive, send)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:165: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+.venv/lib/python3.12/site-packages/fastapi/routing.py:151: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/routing.py:727: in app
+    raw_response = await run_endpoint_function(
+.venv/lib/python3.12/site-packages/fastapi/routing.py:362: in run_endpoint_function
+    return await run_in_threadpool(
+.venv/lib/python3.12/site-packages/starlette/concurrency.py:34: in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/to_thread.py:65: in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2706: in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:1100: in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/fastapi/telemetry/_api.py:244: in _run_sync_endpoint
+    return function(**arguments)
+           ^^^^^^^^^^^^^^^^^^^^^
+src/newsflow/gui/autopilot_routes.py:318: in home
+    overview = production_context(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/newsflow/gui/production_status.py:183: in production_context
+    FFmpegAdapter.executable(name, getattr(request.app.state.video.engine, name, None))
+src/newsflow/video/engine.py:424: in executable
+    str(explicit) if explicit else os.environ.get("NEWSFLOW_" + name.upper()) or shutil.which(name)
+                                                                                 ^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:1510: in which
+    if sys.platform == "win32" and _win_path_needs_curdir(cmd, mode):
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/shutil.py:1464: in _win_path_needs_curdir
+    return (not (mode & os.X_OK)) or _winapi.NeedCurrentDirectoryForExePath(
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   AttributeError: 'NoneType' object has no attribute 'NeedCurrentDirectoryForExePath'
+______________ test_easy_synthetic_stages_are_durable_and_ordered ______________
+tests/test_autopilot_state.py:110: in test_easy_synthetic_stages_are_durable_and_ordered
+    assert list(result["stage_results"]) == list(STAGES)
+E   AssertionError: assert ['request', '...alidate', ...] == ['collect', '...ate', 'queue']
+E     
+E     At index 0 diff: 'request' != 'collect'
+E     Left contains one more item: 'queue'
+E     Use -v to get more diff
+_ test_structured_rss_request_preserves_input_and_has_no_implicit_tools[analyze] _
+tests/test_codex_adapter.py:240: in test_structured_rss_request_preserves_input_and_has_no_implicit_tools
+    assert result == answer and len(starts) == 1 and starts[0]["web"] is False
+E   AssertionError: assert ({'comparisons...n_reason': ''} == {'comparisons... 수행하지 않았습니다.'}
+E     
+E     Omitting 2 identical items, use -vv to show
+E     Left contains 2 more items:
+E     {'recommended_article_id': None, 'selection_reason': ''}
+E     Use -v to get more diff)
+______________ test_wizard_is_optional_and_all_core_menus_remain _______________
+tests/test_easy_setup.py:42: in test_wizard_is_optional_and_all_core_menus_remain
+    assert '제작 시작' in home
+E   assert '제작 시작' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...n>\n    </div>\n  </div>\n</div>\n<script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>'
+__ test_render[/dashboard-\ub274\uc2a4 \ud750\ub984\uc744 \ud55c\ub208\uc5d0] __
+tests/test_gui.py:19: in test_render
+    assert "개발 예정" in response.text
+E   assert '개발 예정' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini.../div>\n<section class="card"><h2>최신 수집 기사</h2><p class="empty">아직 수집된 기사가 없습니다.</p></section>\n</main>\n</body></html>'
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini.../div>\n<section class="card"><h2>최신 수집 기사</h2><p class="empty">아직 수집된 기사가 없습니다.</p></section>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_________________ test_render[/news-\ub274\uc2a4 \ud0d0\uc0c9] _________________
+tests/test_gui.py:18: in test_render
+    assert title in response.text
+E   assert '뉴스 탐색' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini....</p><p>점수는 내부 추천 휴리스틱이며 실제 조회수가 아닙니다. 옆의 주제 이미지는 실제 보도 사진이 아닙니다.</p></details></aside></div>\n</main>\n</body></html>'
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini....</p><p>점수는 내부 추천 휴리스틱이며 실제 조회수가 아닙니다. 옆의 주제 이미지는 실제 보도 사진이 아닙니다.</p></details></aside></div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+___ test_render[/settings-\uc6cc\ud06c\uc2a4\ud398\uc774\uc2a4 \uc124\uc815] ___
+tests/test_gui.py:19: in test_render
+    assert "개발 예정" in response.text
+E   assert '개발 예정' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...></div>\n<section class="card"><h2>최근 수집 오류 로그</h2><p class="empty">기록된 오류가 없습니다.</p></section></main>\n</body></html>'
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...></div>\n<section class="card"><h2>최근 수집 오류 로그</h2><p class="empty">기록된 오류가 없습니다.</p></section></main>\n</body></html>' = <Response [200 OK]>.text
+___________ test_operations_panel_keeps_real_connect_button_disabled ___________
+tests/test_oauth_operations_gui.py:58: in test_operations_panel_keeps_real_connect_button_disabled
+    assert response.status_code == 200 and "PHASE 5F" in response.text
+E   assert (200 == 200 and 'PHASE 5F' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...차단되어 있습니다. Fake 결과는 실제 게시 성공으로 표시하지 않습니다. 결과 불명 작업을 자동으로 재시도하지 않습니다.</p><p>게시 작업 없음</p></div>\n</main>\n</body></html>')
+E    +  where 200 = <Response [200 OK]>.status_code
+E    +  and   '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...차단되어 있습니다. Fake 결과는 실제 게시 성공으로 표시하지 않습니다. 결과 불명 작업을 자동으로 재시도하지 않습니다.</p><p>게시 작업 없음</p></div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+____ test_readiness_panel_distinguishes_preparation_from_real_verification _____
+tests/test_oauth_production_gui.py:67: in test_readiness_panel_distinguishes_preparation_from_real_verification
+    assert "PHASE 5F" in response.text and "실운영 OAuth 준비 · 활성화 차단" in response.text
+E   assert ('PHASE 5F' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...차단되어 있습니다. Fake 결과는 실제 게시 성공으로 표시하지 않습니다. 결과 불명 작업을 자동으로 재시도하지 않습니다.</p><p>게시 작업 없음</p></div>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...차단되어 있습니다. Fake 결과는 실제 게시 성공으로 표시하지 않습니다. 결과 불명 작업을 자동으로 재시도하지 않습니다.</p><p>게시 작업 없음</p></div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_external_ai_failures_map_to_actionable_codes[error0-ai_rate_limited-True] _
+tests/test_realcontent.py:148: in test_external_ai_failures_map_to_actionable_codes
+    assert failure.value.code == code and failure.value.retryable is retryable
+E   AssertionError: assert ('ai_rate_limited' == 'ai_rate_limited'
+E     
+E       ai_rate_limited and False is True)
+E    +  where False = BackendError('AI 요청 한도(Rate Limit)를 초과했습니다. 잠시 후 다시 시도하세요.').retryable
+E    +    where BackendError('AI 요청 한도(Rate Limit)를 초과했습니다. 잠시 후 다시 시도하세요.') = <ExceptionInfo BackendError('AI 요청 한도(Rate Limit)를 초과했습니다. 잠시 후 다시 시도하세요.') tblen=4>.value
+__ test_external_ai_failures_map_to_actionable_codes[error1-ai_timeout-True] ___
+tests/test_realcontent.py:148: in test_external_ai_failures_map_to_actionable_codes
+    assert failure.value.code == code and failure.value.retryable is retryable
+E   AssertionError: assert ('ai_timeout' == 'ai_timeout'
+E     
+E       ai_timeout and False is True)
+E    +  where False = BackendError('AI 요청 시간이 초과되었습니다.').retryable
+E    +    where BackendError('AI 요청 시간이 초과되었습니다.') = <ExceptionInfo BackendError('AI 요청 시간이 초과되었습니다.') tblen=4>.value
+_ test_external_ai_failures_map_to_actionable_codes[error2-ai_bad_response-True] _
+tests/test_realcontent.py:148: in test_external_ai_failures_map_to_actionable_codes
+    assert failure.value.code == code and failure.value.retryable is retryable
+E   AssertionError: assert ('ai_bad_response' == 'ai_bad_response'
+E     
+E       ai_bad_response and False is True)
+E    +  where False = BackendError('AI 분석 응답 형식이 올바르지 않습니다.').retryable
+E    +    where BackendError('AI 분석 응답 형식이 올바르지 않습니다.') = <ExceptionInfo BackendError('AI 분석 응답 형식이 올바르지 않습니다.') tblen=4>.value
+__________ test_simple_settings_rejects_external_ai_with_sample_news ___________
+tests/test_realcontent.py:274: in test_simple_settings_rejects_external_ai_with_sample_news
+    assert "외부 AI 대본" in client.get("/").text
+E   assert '외부 AI 대본' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...n>\n    </div>\n  </div>\n</div>\n<script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>'
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...n>\n    </div>\n  </div>\n</div>\n<script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+E    +    where <Response [200 OK]> = get('/')
+E    +      where get = <starlette.testclient.TestClient object at 0x7fb940641100>.get
+_____ test_gui_start_page_shows_readiness_and_disables_unready_external_ai _____
+tests/test_realcontent.py:281: in test_gui_start_page_shows_readiness_and_disables_unready_external_ai
+    assert "준비 안 됨" in page and 'value="openai"' in page and "disabled" in page
+E   assert ('준비 안 됨' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...이를 고르는 화면을 하나로 모았습니다.</p><a class="button primary" href="/">홈에서 제작 시작</a></section>\n\n</div>\n</main>\n</body></html>')
+_ test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[30-claude_code] _
+tests/test_unified_ai_workspace.py:62: in test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai
+    assert "기사 비교·분석 1회" in guide.text and "계정 잔여량을 정확히 확인할 수 없습니다" in guide.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[30-codex] _
+tests/test_unified_ai_workspace.py:62: in test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai
+    assert "기사 비교·분석 1회" in guide.text and "계정 잔여량을 정확히 확인할 수 없습니다" in guide.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[45-claude_code] _
+tests/test_unified_ai_workspace.py:62: in test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai
+    assert "기사 비교·분석 1회" in guide.text and "계정 잔여량을 정확히 확인할 수 없습니다" in guide.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[45-codex] _
+tests/test_unified_ai_workspace.py:62: in test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai
+    assert "기사 비교·분석 1회" in guide.text and "계정 잔여량을 정확히 확인할 수 없습니다" in guide.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[60-claude_code] _
+tests/test_unified_ai_workspace.py:62: in test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai
+    assert "기사 비교·분석 1회" in guide.text and "계정 잔여량을 정확히 확인할 수 없습니다" in guide.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[60-codex] _
+tests/test_unified_ai_workspace.py:62: in test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai
+    assert "기사 비교·분석 1회" in guide.text and "계정 잔여량을 정확히 확인할 수 없습니다" in guide.text
+E   assert ('기사 비교·분석 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_unknown_script_result_remains_stopped_after_refresh_reconfirm_and_recovery _
+tests/test_unified_ai_workspace.py:142: in test_unknown_script_result_remains_stopped_after_refresh_reconfirm_and_recovery
+    assert failed["status"] == "failed" and failed["retryable"] is False
+E   AssertionError: assert ('waiting_review' == 'failed'
+E     
+E     - failed
+E     + waiting_review)
+_ test_saved_account_provider_requires_consent_without_job_or_replacement[claude_code-sonnet] _
+tests/test_ux_workflow.py:48: in test_saved_account_provider_requires_consent_without_job_or_replacement
+    assert "이번 뉴스 분석·대본 생성 동의" in page and 'action="/autopilot/confirm-start"' in page
+E   assert ('이번 뉴스 분석·대본 생성 동의' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>')
+_ test_saved_account_provider_requires_consent_without_job_or_replacement[codex-default] _
+tests/test_ux_workflow.py:48: in test_saved_account_provider_requires_consent_without_job_or_replacement
+    assert "이번 뉴스 분석·대본 생성 동의" in page and 'action="/autopilot/confirm-start"' in page
+E   assert ('이번 뉴스 분석·대본 생성 동의' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... class="form-feedback" role="alert" data-submit-error></p></form>\n\n</section>\n\n\n\n</div>\n</main>\n</body></html>')
+____ test_available_local_voice_is_forwarded_without_new_provider_settings _____
+tests/test_ux_workflow.py:109: in test_available_local_voice_is_forwarded_without_new_provider_settings
+    assert start.call_args.kwargs == {
+E   AssertionError: assert {'ai_mode': '...'guided', ...} == {'ai_mode': '...'guided', ...}
+E     
+E     Omitting 7 identical items, use -vv to show
+E     Left contains 1 more item:
+E     {'news_usage': 'STANDARD'}
+E     Use -v to get more diff
+______ test_stored_paid_approval_still_requires_per_job_transfer_consent _______
+tests/test_ux_workflow.py:137: in test_stored_paid_approval_still_requires_per_job_transfer_consent
+    assert "guide=consent" in response.headers["location"]
+E   AssertionError: assert 'guide=consent' in '/autopilot/start?guide=approval&flow=%7B%22source%22%3A%22feeds%22%2C%22initial_duration%22%3A60%2C%22initial_provide...%22%3A%227d%22%2C%22initial_platform%22%3A%22youtube%22%2C%22request_id%22%3A%22eae8bb34c3fb4972a4f3f7846b058f42%22%7D'
+_______ test_different_openai_model_requires_consent_without_replacement _______
+tests/test_ux_workflow_context.py:149: in test_different_openai_model_requires_consent_without_replacement
+    assert response.status_code == 303 and "guide=consent" in response.headers["location"]
+E   AssertionError: assert (303 == 303 and 'guide=consent' in '/autopilot/start?guide=approval&flow=%7B%22source%22%3A%22feeds%22%2C%22initial_duration%22%3A45%2C%22initial_provide...%22%3A%227d%22%2C%22initial_platform%22%3A%22youtube%22%2C%22request_id%22%3A%2244e81c60a43a477da4c4efd2c5cb181b%22%7D')
+E    +  where 303 = <Response [303 See Other]>.status_code
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/JSBAE/newsflow-ai/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /tmp/newsflow-57-analysis/before.xml -----------
+57 failed, 230 deselected, 1 warning in 21.30s

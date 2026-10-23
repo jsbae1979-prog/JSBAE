@@ -249,7 +249,7 @@ def test_gui_readonly_then_csrf_protected_single_request(client, prepared):
 
 
 def test_selection_context_bound_to_candidate_and_sources(app, monkeypatch):
-    from image_selection_fixture import selected
+    from test_image_selection import selected
     run_id, _rows, _ = selected.__wrapped__(app, monkeypatch)
     service = app.state.image_generation
     service.keys = SimpleNamespace(key=lambda: KEY, status=lambda: {"configured": True})

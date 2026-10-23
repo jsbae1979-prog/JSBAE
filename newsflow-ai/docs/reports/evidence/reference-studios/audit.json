@@ -1,0 +1,390 @@
+{
+  "pages": [
+    {
+      "page": "news",
+      "viewport": "1920x1080",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "뉴스 수집"
+      ],
+      "outside": []
+    },
+    {
+      "page": "script",
+      "viewport": "1920x1080",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "AI 대본"
+      ],
+      "outside": []
+    },
+    {
+      "page": "library",
+      "viewport": "1920x1080",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "영상 제작"
+      ],
+      "outside": []
+    },
+    {
+      "page": "video",
+      "viewport": "1920x1080",
+      "http": 200,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        }
+      ],
+      "overflow": false,
+      "h1": [
+        "영상 구성"
+      ],
+      "outside": []
+    },
+    {
+      "page": "publish",
+      "viewport": "1920x1080",
+      "http": 200,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        }
+      ],
+      "overflow": false,
+      "h1": [
+        "게시 허브"
+      ],
+      "outside": []
+    },
+    {
+      "page": "activity",
+      "viewport": "1920x1080",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "제작 활동"
+      ],
+      "outside": []
+    },
+    {
+      "page": "settings",
+      "viewport": "1920x1080",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "설정 · 자동화"
+      ],
+      "outside": []
+    },
+    {
+      "page": "editor",
+      "viewport": "1920x1080",
+      "http": 200,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        }
+      ],
+      "overflow": false,
+      "h1": [
+        "AI 대본"
+      ],
+      "outside": []
+    },
+    {
+      "page": "schedule",
+      "viewport": "1920x1080",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "자동 제작 예약"
+      ],
+      "outside": []
+    },
+    {
+      "page": "news",
+      "viewport": "1366x768",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "뉴스 수집"
+      ],
+      "outside": []
+    },
+    {
+      "page": "script",
+      "viewport": "1366x768",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "AI 대본"
+      ],
+      "outside": []
+    },
+    {
+      "page": "library",
+      "viewport": "1366x768",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "영상 제작"
+      ],
+      "outside": []
+    },
+    {
+      "page": "video",
+      "viewport": "1366x768",
+      "http": 200,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        }
+      ],
+      "overflow": false,
+      "h1": [
+        "영상 구성"
+      ],
+      "outside": []
+    },
+    {
+      "page": "publish",
+      "viewport": "1366x768",
+      "http": 200,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        }
+      ],
+      "overflow": false,
+      "h1": [
+        "게시 허브"
+      ],
+      "outside": []
+    },
+    {
+      "page": "activity",
+      "viewport": "1366x768",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "제작 활동"
+      ],
+      "outside": []
+    },
+    {
+      "page": "settings",
+      "viewport": "1366x768",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "설정 · 자동화"
+      ],
+      "outside": []
+    },
+    {
+      "page": "editor",
+      "viewport": "1366x768",
+      "http": 200,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        }
+      ],
+      "overflow": false,
+      "h1": [
+        "AI 대본"
+      ],
+      "outside": []
+    },
+    {
+      "page": "schedule",
+      "viewport": "1366x768",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "자동 제작 예약"
+      ],
+      "outside": []
+    },
+    {
+      "page": "news",
+      "viewport": "390x844",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "뉴스 수집"
+      ],
+      "outside": []
+    },
+    {
+      "page": "script",
+      "viewport": "390x844",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "AI 대본"
+      ],
+      "outside": []
+    },
+    {
+      "page": "library",
+      "viewport": "390x844",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "영상 제작"
+      ],
+      "outside": []
+    },
+    {
+      "page": "video",
+      "viewport": "390x844",
+      "http": 200,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        }
+      ],
+      "overflow": false,
+      "h1": [
+        "영상 구성"
+      ],
+      "outside": []
+    },
+    {
+      "page": "publish",
+      "viewport": "390x844",
+      "http": 200,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        },
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        }
+      ],
+      "overflow": false,
+      "h1": [
+        "게시 허브"
+      ],
+      "outside": []
+    },
+    {
+      "page": "activity",
+      "viewport": "390x844",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "제작 활동"
+      ],
+      "outside": []
+    },
+    {
+      "page": "settings",
+      "viewport": "390x844",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "설정 · 자동화"
+      ],
+      "outside": []
+    },
+    {
+      "page": "editor",
+      "viewport": "390x844",
+      "http": 200,
+      "playback": [
+        {
+          "ready": 4,
+          "width": 1080,
+          "height": 1920
+        }
+      ],
+      "overflow": false,
+      "h1": [
+        "AI 대본"
+      ],
+      "outside": []
+    },
+    {
+      "page": "schedule",
+      "viewport": "390x844",
+      "http": 200,
+      "playback": [],
+      "overflow": false,
+      "h1": [
+        "자동 제작 예약"
+      ],
+      "outside": []
+    }
+  ],
+  "external": [],
+  "errors": [],
+  "tested_sha": "0fc1a12149dccd4566dc59788c5c64a2099570c0",
+  "environment": "Cloud Linux / Python 3.12.14 / Chromium 151; not Windows",
+  "fixture": "Isolated UI demo; synthetic news, silent MP4 and unapproved local publishing drafts; no external calls"
+}

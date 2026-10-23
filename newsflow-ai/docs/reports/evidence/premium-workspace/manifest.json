@@ -1,0 +1,13 @@
+{
+  "code_sha": "7b2c2949008fa6b2b04deef75c09f46498262e98",
+  "environment": "Codex Cloud Linux / Chromium 151 / Python 3.12.14",
+  "data": "isolated UI demo with synthetic articles and silent MP4; real service calls blocked",
+  "views": [
+    "1366x768",
+    "1920x1080",
+    "390x844"
+  ],
+  "before_evidence": "../ui-polish/",
+  "captured_after_final_template_and_css_changes": true,
+  "windows_verified": false
+}

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}대시보드 · NewsFlowAI{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/news-thumbnails.css"><script src="/static/js/news-thumbnails.js" defer></script><link rel="stylesheet" href="/static/css/dashboard.css"><link rel="stylesheet" href="/static/css/workflow-card.css"><script src="/static/js/dashboard.js" defer></script>{% endblock %}
+{% block content %}
+{% set reference_home = true %}
+{% set picker_on_dashboard = true %}
+{% set latest = completed[0] if completed else none %}
+<div class="mockup-dashboard">
+  <div class="dash-topbar">
+    <form action="/news" method="get" data-topic-search class="reference-search dash-search" id="archive-search" role="search" aria-label="보관 기사 검색">
+      <label class="sr-only" for="home-topic">보관 기사 검색</label>{{ ui_icon('news',20) }}<input type="search" id="home-topic" name="q" maxlength="200" placeholder="보관한 기사에서 주제 검색" aria-describedby="topic-scope" required><button type="submit" aria-label="보관 기사 검색">{{ ui_icon('arrow',18) }}</button><p data-topic-error role="alert" hidden></p>
+    </form><p id="topic-scope" class="sr-only">이미 수집해 보관한 기사만 검색합니다. 기사를 선택한 뒤 분석·대본 작성을 이어가세요. 새 기사 URL 가져오기는 지원하지 않습니다.</p>
+    <a class="dash-workspace" href="/videos"><span class="dash-avatar">N</span><span>나의 작업실<small>{{ 'DEMO · 합성 자료' if ui_demo|default(false) else '내 PC에 보관' }}</small></span>{{ ui_icon('folder',18) }}</a>
+  </div>
+  <header class="dash-heading"><div><h1>오늘의 뉴스를, <span>다음 영상으로.</span></h1><p>수집부터 대본, 영상, 게시 준비까지 하나의 작업실에서.</p></div><div class="dash-heading-action"><time>{{ dashboard.today }} · KST</time></div></header>
+  <nav class="reference-metrics dash-metrics" aria-label="내 제작 현황">
+  {% for icon,label,value,href,tone in [('news','수집한 뉴스',dashboard.news_count,'/news','blue'),('clock','진행·확인할 작업',active_task_count,'#workspace-tasks','amber'),('play','완성 영상',video_count,'/videos','cyan'),('file','게시 초안',queue_count,'/queue','purple')] %}
+    <a class="reference-metric dash-metric {{ tone }}" href="{{ href }}"><span class="dash-icon">{{ ui_icon(icon,28) }}</span><div><span>{{ label }}</span><strong>{{ value }}</strong><small>7일 {{ ['수집','작업 등록','생성 완료','초안 등록'][loop.index0] }} <b>{{ dashboard.spark_totals[loop.index0] }}</b></small></div><svg class="dash-spark" viewBox="0 0 520 60" aria-hidden="true"><polyline points="{{ dashboard.sparks[loop.index0] }}"/></svg></a>
+  {% endfor %}
+  </nav>
+  <div class="dash-columns">
+    <section class="dash-panel dash-news" aria-labelledby="dash-news-title"><div class="dash-panel-heading"><h2 id="dash-news-title">뉴스 인텔리전스</h2><a href="/news#curation">Google News + Trends ↗</a></div>
+      <nav class="dash-categories" aria-label="뉴스 분야">{% for key in dashboard_news_categories|default(['','정치','경제','사회','IT·과학','문화','스포츠','국제','미분류']) %}{% set label = key or '전체' %}<a data-dash-news-category="{{ key }}" class="{{ 'selected' if dashboard_news_category|default('')==key }}" {% if dashboard_news_category|default('')==key %}aria-current="true"{% endif %} href="/?news_category={{ key|urlencode }}#dash-news-title">{{ label }}</a>{% endfor %}</nav>
+      <p class="suite-image-note" data-dash-news-status role="status" aria-live="polite">보관 뉴스 · 새 수집·AI 호출 없음</p>
+      <div class="dash-news-list" data-dash-news-list>{% include 'dashboard_news_list.html' %}</div>
+      <footer><span>출처 이미지 / 주제 이미지</span><a href="/news">보관 기사 검색 →</a></footer>
+    </section>
+    <div class="dash-center">
+      <section class="dash-panel dash-workflow" data-workspace-create aria-labelledby="dash-workflow-title" data-home-policy-states='{{ production.policy_states|tojson }}'>{% include 'workflow_card.html' %}
+        {% if active_jobs %}<details class="dashboard-create-drawer" data-home-create-drawer><summary><span>{{ ui_icon('sparkles',18) }} 새 쇼츠 제작 설정</span><span>설정 열기 +</span></summary>{% endif %}
+        {% with entry_flow=none, entry_source=defaults.source, entry_duration=defaults.duration, entry_news_usage='STANDARD', entry_policy=production_config.acquisition_policy, entry_category=production_config.category, entry_period=production_config.period, entry_policy_state=production.policy_states[production_config.acquisition_policy] %}{% include 'production_form.html' %}<details class="dash-readiness"><summary>뉴스·음성 준비 확인</summary><p data-home-policy-title>{{ entry_policy_state.title }}</p><p data-home-policy-detail>{{ entry_policy_state.detail }}</p></details>{% endwith %}
+        {% if not production.voice_ready %}<p class="dash-media-notice">선택한 음성 설치·연결 확인 필요 · <a href="/simple-settings#quality">음성 설정 확인 →</a></p>{% endif %}{% if active_jobs %}</details>{% endif %}
+      </section>
+      <section class="dash-panel dash-activity" id="production-activity" aria-labelledby="activity-title"><div class="dash-panel-heading"><h2 id="activity-title">제작 활동</h2><span>최근 7일 · KST</span></div><div class="dash-chart-legend"><span class="video">생성 완료 기록</span><span class="news">수집 기사</span><output id="chart-readout" aria-live="polite"></output></div>
+        <svg class="dash-chart" viewBox="0 0 540 132" role="img" aria-label="최근 7일 실제 뉴스 수집·영상 생성 완료 기록"><defs><linearGradient id="dash-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2585ff" stop-opacity=".28"/><stop offset="100%" stop-color="#2585ff" stop-opacity="0"/></linearGradient></defs>{% for y in [12,62,112] %}<path class="chart-grid" d="M20 {{ y }}H500"/>{% endfor %}<polygon points="20,112 {{ dashboard.video_points }} 500,112" fill="url(#dash-chart-fill)"/><polyline class="chart-video" points="{{ dashboard.video_points }}"/><polyline class="chart-news" points="{{ dashboard.news_points }}"/>{% for day in dashboard.days %}<circle class="chart-video-dot" cx="{{ day.x }}" cy="{{ day.video_y }}" r="3"/><circle class="chart-news-dot" cx="{{ day.x }}" cy="{{ day.news_y }}" r="3"/>{% endfor %}<text x="515" y="16">{{ dashboard.maximum }}</text><text x="515" y="116">0</text></svg>
+        <div class="dash-chart-days">{% for day in dashboard.days %}<button type="button" data-chart-day data-description="{{ day.date }} · 수집 {{ day.news }}건 · 생성 완료 {{ day.videos }}건" aria-label="{{ day.date }}: 수집 {{ day.news }}건, 생성 완료 {{ day.videos }}건">{{ day.label }}</button>{% endfor %}</div>
+        <p class="dash-chart-note">{{ '아직 집계된 활동이 없어요.' if not dashboard.has_activity else '저장된 수집·완료 시각 기준' }}{% if dashboard.unknown_finished %} · 완료시각 없는 {{ dashboard.unknown_finished }}건 제외{% endif %}</p>
+      </section>
+      <section class="dash-panel dash-recent" id="workspace-tasks" data-workspace-tasks aria-labelledby="recent-title"><div class="dash-panel-heading"><h2 id="recent-title">최근 활동</h2><a href="/?show=tasks#workspace-tasks">전체 작업 {{ task_count }} ↗</a></div><p class="hint" aria-label="표시 작업 목록의 검토 상태">표시 작업 · 대본 검토 {{ dashboard.task_review_counts.script }} · 영상 검토 {{ dashboard.task_review_counts.video }} · 조치 필요 {{ dashboard.task_review_counts.failed }}</p>{% for task in active_jobs[:2] %}<div class="cleanup-row"><a class="dash-activity-row" data-workspace-task href="{{ task.workspace_href or task.href }}">{{ ui_icon('alert' if task.status in ['failed','interrupted'] else 'file',18) }}<span>{{ task.title }}<small>{{ task.status_label }} · {{ task.next_action }}</small></span>{{ ui_icon('arrow',16) }}</a>{% include 'remove_activity_button.html' %}</div>{% else %}<p class="dash-empty-inline">확인할 작업이 없어요.</p>{% endfor %}<a href="/workspace/trash">휴지 보관 →</a></section>
+
+    </div>
+    <div class="dash-right">
+      <section class="dash-panel dash-preview" aria-labelledby="preview-title"><div class="dash-panel-heading"><h2 id="preview-title">영상 미리보기</h2>{% if latest %}<a href="{{ latest.link }}" aria-label="영상 검토 열기">{{ ui_icon('arrow',16) }}</a>{% endif %}</div>
+        {% if latest %}<div class="dash-player-stage"><video id="dashboard-player" data-dashboard-player controls preload="none" poster="/video/jobs/{{ latest.id }}/thumbnail" aria-label="{{ latest.title }} 미리보기"><source src="{{ latest.media_url }}" type="video/mp4"></video></div><p class="dash-media-notice" data-dash-ai-warning {% if not latest.ai_scenes %}hidden{% endif %}>AI 생성 장면 포함 · 실제 사건을 촬영한 영상이 아닙니다.</p><p class="dash-media-notice" data-dash-preview-warning {% if not latest.preview_only %}hidden{% endif %}>검토용 초안</p><h3 class="dash-video-title" data-dash-video-title>{{ latest.title }}</h3>
+
+        <div class="dash-preview-meta"><span><b data-dash-duration>{{ latest.duration }}</b>초 · 9:16 · MP4</span></div>
+        <div class="dash-preview-actions"><a class="button" data-dash-review href="{{ latest.link }}">영상 확인</a><a class="button primary" data-dash-download href="{{ latest.download_url }}" download>{{ ui_icon('folder',16) }} MP4 저장</a></div>
+        <details class="dash-preview-more"><summary>더 보기</summary><div class="dash-preview-links"><a data-dash-edit href="/ai?draft_id={{ latest.draft_id }}">{{ ui_icon('edit',16) }} 대본·자막 수정</a>{% with removal_video_id=latest.id %}{% include 'remove_video_button.html' %}{% endwith %}</div></details>
+        {% else %}<div class="studio-phone-empty dash-empty-preview">{{ ui_icon('video',44) }}<h3>{{ "검토 중인 영상은 위 작업에서 확인해 주세요." if video_count else "첫 쇼츠가 기다리고 있어요." }}</h3><p>완성한 영상은 여기서 재생하고<br>확인할 수 있어요.</p><a href="#production-title" data-dash-create>새 쇼츠 만들기 →</a></div>{% endif %}
+      </section>
+      <section class="dash-panel dash-publish" aria-labelledby="publish-title"><div class="dash-panel-heading"><h2 id="publish-title">게시 준비</h2><a href="/queue">대기함 ↗</a></div><div class="dash-platforms"><a data-dash-youtube href="{{ '/?video=' ~ latest.id ~ '#youtube-publish' if latest else '/queue' }}"><span class="platform-mark youtube">{{ ui_icon('play',21) }}</span><span>YouTube<small>게시 준비 열기</small></span></a><a data-dash-instagram href="{{ '/?video=' ~ latest.id ~ '&publish_platform=instagram#instagram-publish' if latest else '/queue' }}"><span class="platform-mark instagram">{{ ui_icon('video',21) }}</span><span>Instagram<small>게시 준비 열기</small></span></a></div>
+      <p>계정·권한 확인과 게시 승인은 별도입니다.</p><a class="button primary dash-publish-action" data-dash-publish href="{{ '/?video=' ~ latest.id ~ '&publish_platform=unified#publish-workspace' if latest else '/queue' }}">{{ ui_icon('send',20) }} 검토 후 게시 준비</a></section>
+      <section class="dash-saved" id="workspace-videos" data-workspace-videos><a href="/videos">내 영상 {{ video_count }}개 확인 {{ ui_icon('arrow',18) }}</a>{% if video_count > completed|length %}<a href="/?show=videos#workspace-videos">영상 더 보기 ↓</a>{% endif %}</section>
+    </div>
+  </div>
+</div>
+<script src="/static/js/home_production.js" defer></script>
+{% endblock %}

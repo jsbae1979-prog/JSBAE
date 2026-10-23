@@ -1,0 +1,18 @@
+{
+  "code_sha": "03abeadfae9bc95fbc46a33c20dd0e983f7e5aad",
+  "pytest": {
+    "passed": 99,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "warnings": 1,
+    "seconds": 128.24
+  },
+  "warning": "Existing Starlette TestClient httpx deprecation",
+  "ruff": "PASS",
+  "pip_check": "PASS",
+  "browser_viewports": 21,
+  "full_regression": "NOT RUN; historical 57 FAIL preserved",
+  "windows": "NOT VERIFIED",
+  "paid_api_oauth_social_calls": 0
+}

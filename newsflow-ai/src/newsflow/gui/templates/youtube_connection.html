@@ -1,8 +1,20 @@
 <section class="settings-card" id="youtube" aria-labelledby="youtube-title">
 <div class="settings-card-heading"><span class="settings-icon" aria-hidden="true">▷</span><div><h2 id="youtube-title">YouTube 계정 연결</h2><p>완성한 영상을 확인한 뒤 선택한 채널에 업로드합니다.</p></div></div>
 <div class="settings-section-content">
+<p><a href="/guides/platforms/youtube" target="_blank" rel="noopener noreferrer">계정 만들기·연결 가이드 ↗ · 새 탭</a></p>
 {% if not youtube.storage_supported %}<p class="settings-warning">Windows 보호 저장소를 사용할 수 없습니다. 계정 연결이 차단됩니다.</p>{% endif %}
-{% for account in youtube.accounts %}<div class="settings-connection-line"><strong>{{ account.label }}</strong><span class="settings-pill">{{ '채널 확인됨' if account.ready else '연결 확인 필요' }}</span></div><p class="settings-inline-note">{{ account.channel_id or '확인된 채널 없음' }} · {{ account.message }}{% if account.refresh_needed %} · 업로드 승인 시 토큰 갱신{% endif %}</p>{% if account.status in ['authorizing', 'exchanging', 'refreshing'] %}<form data-youtube-form method="post" action="/youtube/connect/{{ account.id }}/cancel">{{ csrf_field() }}<button>연결 취소</button></form>{% endif %}{% endfor %}
+{% for account in youtube.accounts %}<div class="settings-connection-line"><strong>{{ account.label }}</strong><span class="settings-pill">{{ '채널 확인됨' if account.ready else '연결 확인 필요' }}</span></div><p class="settings-inline-note">{{ account.channel_id or '확인된 채널 없음' }} · {{ account.message }}{% if account.refresh_needed %} · 업로드 승인 시 토큰 갱신{% endif %}</p>{% if account.status in ['authorizing', 'exchanging', 'refreshing'] %}<form data-youtube-form method="post" action="/youtube/connect/{{ account.id }}/cancel">{{ csrf_field() }}<button>연결 취소</button></form>{% endif %}{% if account.status == 'authorizing' %}
+<div data-youtube-link-controls data-account-id="{{ account.id }}">
+{{ csrf_field() }}
+<div class="actions">
+<button type="button" data-youtube-link-action="reopen">인증 화면 다시 열기</button>
+<button type="button" data-youtube-link-action="link">인증 링크 복사</button>
+</div>
+<p class="settings-inline-note">창이 열리지 않으면 링크를 복사해 이 PC의 브라우저에서 여세요. 연결 시작 후 5분 동안 유효하며 다른 사람에게 공유하지 마세요.</p>
+<label hidden data-youtube-link-fallback>인증 링크 · 직접 복사<input type="text" readonly autocomplete="off" spellcheck="false" data-youtube-link-value></label>
+<p class="form-feedback" role="status" aria-live="polite" data-youtube-link-message></p>
+</div>
+{% endif %}{% endfor %}
 {% if youtube.pending %}<p role="status">Google에서 승인을 기다리는 중입니다. 승인 후 <a href="/simple-settings#youtube">연결 상태 새로고침</a></p>{% endif %}
 <details class="settings-advanced" ><summary>Google 앱 설정 · {{ '등록됨' if youtube.client_configured else '최초 1회 필요' }}</summary>
 <p>Google Cloud에서 YouTube Data API를 활성화하고 OAuth 클라이언트 유형을 <strong>데스크톱 앱</strong>으로 만든 뒤 JSON을 내려받으세요. 테스트 앱은 사용할 Google 계정을 테스트 사용자로 등록해야 합니다.</p>

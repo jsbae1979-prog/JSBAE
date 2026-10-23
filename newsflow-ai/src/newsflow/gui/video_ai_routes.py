@@ -11,7 +11,8 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
-from newsflow.db.models import AIVideoPlan, AIVideoScene, ContentDraft, VideoAIUsage
+from newsflow.autopilot.contracts import AutopilotError
+from newsflow.db.models import AIVideoPlan, AIVideoScene, AutopilotJob, ContentDraft, VideoAIUsage
 from newsflow.easy_setup import SetupError, preview_preferences
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.video.ai.costs import CURRENCIES
@@ -21,17 +22,17 @@ from newsflow.video.ai.production import DEFAULT_MODEL, model_ready, read_contra
 from newsflow.video.ai.service import DISCARD_LABEL, AIVideoError
 from newsflow.video.ai.settings import (
     CANDIDATE_PATHS,
-    DISCLAIMER,
     HOSTS,
-    PROVIDERS,
     RESOLUTIONS,
     VideoSettingsError,
     delete_model,
     list_models,
+    model_quotes,
     read_settings,
     save_model,
     write_settings,
 )
+from newsflow.video.production_policy import plan_policy, voice_allowed
 
 from .production_context import context_for_draft
 from .routes import go, page
@@ -103,6 +104,10 @@ def _plan_context(request: Request, plan_id: int) -> dict:
         draft = session.get(ContentDraft, plan.draft_id)
         production_context = context_for_draft(session, draft)
         contract = read_contract(session, plan_id)
+        policy = plan_policy(session, plan_id)
+        owner = session.get(AutopilotJob, policy["job_id"]) if policy else None
+        voice_ready = voice_allowed(owner, draft, policy["options"]) if policy else False
+        owner_revision = owner.revision if owner else None
         usage = list(session.scalars(
             select(VideoAIUsage).where(VideoAIUsage.plan_id == plan_id).order_by(VideoAIUsage.id)))
         session.expunge_all()
@@ -113,8 +118,24 @@ def _plan_context(request: Request, plan_id: int) -> dict:
     if contract:
         compose_voice = contract["production"]["voice"]
     return {"plan": plan, "scenes": scenes, "draft": draft, "usage": usage, "service": service,
-            "plan_contract": contract,
-            "production_context": production_context, "compose_voice": compose_voice}
+            "production_context": production_context, "compose_voice": policy["options"]["voice"] if policy else compose_voice,
+            "plan_contract": contract, "accounting_reported": service._reported(plan_id),
+            "full_mode": bool(policy or contract),
+            "production_job_id": policy["job_id"] if policy else None,
+            "voice_ready": voice_ready, "owner_revision": owner_revision}
+
+
+@router.post("/video/ai/plans/{plan_id}/voice-consent")
+def voice_consent(request: Request, plan_id: int, revision: int = Form(ge=1), consent: bool = Form(False)):
+    with request.app.state.sessions() as session:
+        policy = plan_policy(session, plan_id)
+    if not policy:
+        raise HTTPException(422, "원래 제작 작업의 음성 동의를 확인하세요.")
+    try:
+        request.app.state.autopilot.approve_voice(policy["job_id"], revision, consent)
+    except AutopilotError as exc:
+        raise HTTPException(409, str(exc)) from None
+    return go(f"/video/ai/plans/{plan_id}")
 
 
 @router.get("/video/ai/plans/{plan_id}", response_class=HTMLResponse)
@@ -123,8 +144,8 @@ def plan_page(request: Request, plan_id: int, saved: str = "") -> HTMLResponse:
     service = context.pop("service")
     return page(
         request, "video_ai_plan.html", active="video", **context, estimate=service.estimate(plan_id),
-        ready=service.readiness(reported=bool(context["plan_contract"])), provider_off=service.provider() is None,
-        models=[m for m in service.models() if model_ready(m)] if context["plan_contract"]
+        ready=service.readiness(reported=context["accounting_reported"]), provider_off=service.provider() is None,
+        models=[m for m in service.models() if model_ready(m)] if context["accounting_reported"]
         else [m for m in service.models() if m.usable], assets=request.app.state.video.assets_list(),
         source_labels=SOURCE_LABELS, status_labels=STATUS_LABELS, plan_labels=PLAN_LABELS, style_guard=STYLE_GUARD,
         scene_label=SCENE_LABEL, notice=VIDEO_NOTICE, default_prompt=DEFAULT_PROMPT, saved=saved[:20],
@@ -253,17 +274,15 @@ def clip(request: Request, scene_id: int) -> FileResponse:
 # --------------------------------------------------------------------------- settings
 
 @router.get("/video-ai-settings", response_class=HTMLResponse)
-def settings_page(request: Request, saved: str = "") -> HTMLResponse:
+def settings_page(request: Request, saved: str = "", return_draft: int | None = None) -> HTMLResponse:
     service = _service(request)
     sessions = request.app.state.sessions
-    with sessions() as session:
-        usage = list(session.scalars(select(VideoAIUsage).order_by(VideoAIUsage.id.desc()).limit(20)))
     return page(
         request, "video_ai_settings.html", active="simple-settings", settings=read_settings(sessions),
-        ready=service.readiness(reported=True), providers=PROVIDERS, hosts=HOSTS, currencies=CURRENCIES, resolutions=RESOLUTIONS,
-        models=list_models(sessions), model_schema_ready=[m.id for m in list_models(sessions) if model_ready(m)],
-        candidates=CANDIDATE_PATHS, disclaimer=DISCLAIMER, usage=usage,
-        key=service.keys.status(), saved=saved[:20], style_guard=STYLE_GUARD,
+        ready=service.readiness(), currencies=CURRENCIES, resolutions=RESOLUTIONS,
+        models=list_models(sessions), candidates=CANDIDATE_PATHS, model_quotes=model_quotes(sessions),
+        official_pricing_available=True,
+        key=service.keys.status(), saved=saved[:20], return_draft=return_draft if return_draft and return_draft > 0 else None,
     )
 
 
@@ -284,7 +303,7 @@ def save_settings(
     request: Request, provider: str = Form(max_length=20), host: str = Form(HOSTS[0], max_length=40),
     approved: bool = Form(False), monthly_limit: str = Form("", max_length=20), job_limit: str = Form("", max_length=20),
     currency: str = Form("USD", max_length=3), max_active: int = Form(2), timeout_minutes: int = Form(30),
-    poll_seconds: int = Form(10),
+    poll_seconds: int = Form(10), return_draft: int | None = Form(None, ge=1),
 ) -> RedirectResponse:
     try:
         write_settings(
@@ -294,7 +313,7 @@ def save_settings(
         )
     except VideoSettingsError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=settings")
+    return go("/video-ai-settings?saved=settings" + (f"&return_draft={return_draft}" if return_draft else ""))
 
 
 @router.post("/video-ai-settings/models")
@@ -302,39 +321,49 @@ def save_model_route(
     request: Request, path: str = Form(max_length=160), label: str = Form(max_length=80),
     price_per_second: str = Form("", max_length=20), durations: str = Form("5", max_length=60),
     resolution: str = Form("720p", max_length=10), confirmed: bool = Form(False), model_id: int | None = Form(None),
+    return_draft: int | None = Form(None, ge=1),
+    pricing_mode: str = Form("manual", max_length=20), estimate_consent: bool = Form(False),
 ) -> RedirectResponse:
     try:
-        save_model(
-            request.app.state.sessions, path=path, label=label, price_per_second=price_per_second, durations=durations,
-            resolution=resolution, confirmed=confirmed, model_id=model_id,
-        )
+        if pricing_mode == "official":
+            _service(request).model_pricing.register(
+                path=path, label=label, durations=durations, resolution=resolution,
+                consent=estimate_consent, model_id=model_id,
+            )
+        elif pricing_mode == "manual":
+            save_model(
+                request.app.state.sessions, path=path, label=label, price_per_second=price_per_second, durations=durations,
+                resolution=resolution, confirmed=confirmed, model_id=model_id,
+            )
+        else:
+            raise VideoSettingsError("가격 확인 방식을 다시 선택하세요.")
     except VideoSettingsError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=model")
+    return go("/video-ai-settings?saved=model" + (f"&return_draft={return_draft}" if return_draft else ""))
 
 
 @router.post("/video-ai-settings/models/{model_id}/delete")
-def delete_model_route(request: Request, model_id: int) -> RedirectResponse:
+def delete_model_route(request: Request, model_id: int, return_draft: int | None = Form(None, ge=1)) -> RedirectResponse:
     try:
         delete_model(request.app.state.sessions, model_id)
     except VideoSettingsError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=deleted")
+    return go("/video-ai-settings?saved=deleted" + (f"&return_draft={return_draft}" if return_draft else ""))
 
 
 @router.post("/video-ai-settings/key")
-def save_key(request: Request, api_key: str = Form(max_length=520)) -> RedirectResponse:
+def save_key(request: Request, api_key: str = Form(max_length=520), return_draft: int | None = Form(None, ge=1)) -> RedirectResponse:
     try:
         _service(request).keys.save(api_key)
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=key")
+    return go("/video-ai-settings?saved=key" + (f"&return_draft={return_draft}" if return_draft else ""))
 
 
 @router.post("/video-ai-settings/key/clear")
-def clear_key(request: Request) -> RedirectResponse:
+def clear_key(request: Request, return_draft: int | None = Form(None, ge=1)) -> RedirectResponse:
     try:
         _service(request).keys.clear()
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
-    return go("/video-ai-settings?saved=cleared")
+    return go("/video-ai-settings?saved=cleared" + (f"&return_draft={return_draft}" if return_draft else ""))

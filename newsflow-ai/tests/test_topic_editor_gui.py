@@ -56,7 +56,7 @@ def test_topic_editor_only_offers_known_local_variants_and_workspace_return(clie
     response = client.get(f"/ai?draft_id={draft_id}&return_to=https://foreign.example")
     assert response.status_code == 200
     html = response.text
-    assert "주제 설명 대본 편집" in html and "주제 설명 내레이션" in html
+    assert "실제 처리: 주제 설명 템플릿" in html and "원문 사실 NOT VERIFIED" in html
     assert "추가 AI 호출 없음" in html and "보도 기반 미확인 초안:" not in html
     assert f'href="/?task={job_id}#workspace-detail"' in html and "foreign.example" not in html
     assert 'action="/ai/analyze"' not in html and 'action="/ai/generate"' not in html

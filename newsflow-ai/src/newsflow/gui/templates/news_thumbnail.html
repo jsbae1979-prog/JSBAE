@@ -1,0 +1,1 @@
+{% if article.id in (news_thumbnails|default({})) %}<img data-news-thumbnail src="/news/{{ article.id }}/thumbnail" alt="{{ article.title }} · 출처 제공 대표 이미지" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="160" height="90">{% endif %}

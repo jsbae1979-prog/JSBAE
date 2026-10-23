@@ -1,0 +1,141 @@
+{
+  "code_sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+  "base_sha": "375d18c8f9cfdcc85cec8e555caf645a78396831",
+  "time_kst": "2026-10-19T21:57:25.170813+09:00",
+  "runs": [
+    {
+      "run": "scope",
+      "passed": 103,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0
+    },
+    {
+      "run": "browser-final",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    }
+  ],
+  "latest_result_per_test": {
+    "passed": 104,
+    "failed": 0,
+    "skipped": 0
+  },
+  "note": "Scope product code identical; final browser rerun fixes only test response/scroll synchronization. Not a whole regression run.",
+  "windows": "NOT VERIFIED",
+  "real_paid_api_oauth_sns_calls": 0,
+  "images": [
+    {
+      "name": "before-review.png",
+      "sha": "375d18c8f9cfdcc85cec8e555caf645a78396831",
+      "size": [
+        1094,
+        2183
+      ],
+      "sha256": "39cd38f67fd5430a0a4f28dc9ed71eaf9148e41d549670be204ddc6826b7bed7",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "before-higgsfield.png",
+      "sha": "375d18c8f9cfdcc85cec8e555caf645a78396831",
+      "size": [
+        1366,
+        1901
+      ],
+      "sha256": "f94ff488a89812c8525678960f6d11914b5e8bb3fc6e2c27c974145d7b262b58",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "after-review.png",
+      "sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+      "size": [
+        1094,
+        1973
+      ],
+      "sha256": "f267aa9099510700e7554745a66b7d6236293e58b10c02a1409f1be042ea545f",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "review-desktop.png",
+      "sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+      "size": [
+        1366,
+        768
+      ],
+      "sha256": "6f50653332fd0d0eabcbaa3f8ed353005328649872547ddb77d2432613a4e56f",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "review-mobile.png",
+      "sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+      "size": [
+        390,
+        844
+      ],
+      "sha256": "9f82c2ac88074b059ef0450f3890451d0a6027c058f5f62f350beab148044334",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "after-higgsfield.png",
+      "sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+      "size": [
+        1366,
+        1901
+      ],
+      "sha256": "972ca410e855e991a9f9744fc1dfe85a667c32fc393aa66ceb20bade0532febb",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "higgsfield-mobile.png",
+      "sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+      "size": [
+        390,
+        844
+      ],
+      "sha256": "0076f271b9bf9d66e0c6e732d415a3b1bc424b40ea96e4f812eadd4b8b4c0b8c",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "settings-desktop.png",
+      "sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+      "size": [
+        1366,
+        768
+      ],
+      "sha256": "2114fe54f5889755404b108a7c7f017e4318256e08e1985dca621c5e3e6ba37e",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "settings-mobile-save.png",
+      "sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+      "size": [
+        390,
+        844
+      ],
+      "sha256": "26e56517bf59823451a59a9048be3d267fd6633dd3dfca1a341626624d8d9fdd",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "production-desktop.png",
+      "sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+      "size": [
+        1366,
+        768
+      ],
+      "sha256": "9d58c9967d8f0c965994224cd309fcd5fc2790fc71fced0e5d1746e33e9727f5",
+      "state": "Cloud isolated synthetic data; no live providers"
+    },
+    {
+      "name": "production-mobile.png",
+      "sha": "758863cacc2a424c1c8805b5e994d88b0ce826f9",
+      "size": [
+        390,
+        844
+      ],
+      "sha256": "6f85e1db3b3f575cc269d07d98601fd26fb14822f59d012875724fbea7198fec",
+      "state": "Cloud isolated synthetic data; no live providers"
+    }
+  ]
+}

@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from typing import ClassVar, Protocol
 
 OPENAI_BASE = "https://api.openai.com/v1"
+# Whole-collection curation may opt into a longer wait; ordinary call defaults stay unchanged.
+MAX_TIMEOUT_SECONDS = 300
 
 
 class ProviderError(Exception):
@@ -177,6 +179,22 @@ class AnalysisResponseError(ProviderResponseError):
         return result
 
 
+class ScriptResponseError(AnalysisResponseError):
+    """Script diagnostics use fixed stages, without raw response or validation inputs."""
+
+    MESSAGES: ClassVar[dict[str, str]] = {
+        "response_envelope": "Claude 대본 응답의 JSON 또는 보호 검사를 통과하지 못했습니다.",
+        "incomplete_response": "Claude 대본 응답이 정상 종료되지 않았습니다. 자동 재요청하지 않습니다.",
+        "response_text": "Claude 대본 응답의 텍스트 블록 형식이 올바르지 않습니다.",
+        "result_json": "Claude 대본 결과를 단일 JSON 객체로 해석하지 못했습니다.",
+        "script_validation": "Claude 대본의 필드·장면 길이 또는 출처·보호 조건이 맞지 않습니다.",
+        "request_rejected": "Claude API가 대본 요청을 거절했습니다. 자동 재요청하지 않습니다.",
+    }
+
+    def safe_copy(self) -> ScriptResponseError:
+        return ScriptResponseError(self.failure_reason, stop_reason=self.stop_reason,
+                                   **self._http_diagnostics())
+
 
 class ProviderKeyMissing(ProviderError):
     code = "ai_key_missing"
@@ -194,8 +212,9 @@ class Options:
             raise ValueError("모델 이름이 잘못되었습니다.")
         if (
             not 0 <= self.temperature <= 1
-            or not 1 <= self.timeout <= 180
-            or not 200 <= self.max_tokens <= 9000
+            or not 1 <= self.timeout <= MAX_TIMEOUT_SECONDS
+            or type(self.max_tokens) is not int
+            or not 200 <= self.max_tokens <= (100_000 if self.model == "claude-sonnet-4-6" else 9000)
         ):
             raise ValueError("AI 호출 옵션 범위를 확인하세요.")
 
@@ -280,8 +299,17 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 SCRIPT_INSTRUCTION = (
+    "When evidence.shortform_contract is present, its hook, 3-4 sentence structure and ending rules "
+    "override the generic scene count and source-check closing below. No extra API requests or invented facts. "
+    "When evidence.curation_contract is present, its script contract overrides the generic scene guidance: "
+    "produce exactly 3 scenes HOOK, CONTENT, ENDING with 150..300 Korean characters including spaces in "
+    "the joined narrations. hook equals the first narration, closing equals the last narration. "
+    "Use only the selected issue's sources, not other issues in analysis_result. A hook must be engaging "
+    "but never invent urgency, audience attention, quotes, numbers, market effects or predictions. "
+    "서버가 제공한 evidence.presentation의 스타일·톤·시청자 수준을 반영하되 사실·출처·검토 규칙을 우선한다. "
+    "스타일은 표현 방식만 바꾸며 새 사실·인용·자극적 단정을 만들거나 미확인 표시를 제거하지 않는다. "
     "You write Korean short-form news narration scripts for a vertical video. Return JSON only with keys: "
-    "title, hook, summary, scenes (list of objects: seconds integer, narration, caption, material), closing. "
+    "title, hook, summary, scenes (list of objects: seconds integer, narration, caption, material, review_notes list of short producer-only strings), closing. "
     "Structure: hook = 도입 문장 (one sentence that states the topic), scenes = 주요 뉴스 내용 in order "
     "(2-5 scenes), summary = 핵심 요약, closing = 마무리 문장 that tells viewers to check the original source. "
     "Scene seconds must sum exactly to the requested duration. Korean narration speaks about five syllables "
@@ -290,6 +318,9 @@ SCRIPT_INSTRUCTION = (
     "If evidence.news_usage_contract is present, follow that server-generated composition and narration-length "
     "contract for QUICK or STANDARD. Use evidence.analysis_result as a reviewable analysis, not verified fact; "
     "when it discusses other articles, compose only for the currently selected articles and their sources. "
+    "When evidence.synthesis is present, synthesize the supplied articles into ONE coherent topic script, "
+    "not separate scripts. Attribute conflicting figures, dates or claims to their sources, preserve uncertainty, "
+    "and never resolve a conflict by averaging or majority vote. Repeated coverage is not independent verification. "
     "A contract's narration_spoken_units_target overrides the rough characters-per-second advice above: "
     "count Korean syllables without whitespace or punctuation and account for the supplied pause estimate. "
     "Compose a specific script for the selected title and supplied material; never replace it with fixed category prose. "
@@ -301,11 +332,28 @@ SCRIPT_INSTRUCTION = (
     "Distinguish topic commentary from reported claims and search time from publication time. "
     "If the evidence is too thin for a scene, say that details are in the original report instead of "
     "filling gaps. No sensational claims, no full article copying, no secrets, no URLs in the text. "
+    "Producer checks, missing evidence and source-verification tasks belong only in scene.review_notes, "
+    "never in narration, captions, hook or closing. Do not invent facts to fill evidence gaps. "
     "Limits: title <=100, hook <=200, summary <=500, narration <=400, caption <=150, material <=200, closing <=200."
 )
 
 ANALYSIS_INSTRUCTION = (
-    "Return Korean JSON only: overview (<=600 chars), comparisons (1..10 objects: article_ids list of "
+    "The exact fields and scoring in evidence.curation_contract override generic analysis guidance. "
+    "For global_news_trends_v2 use its SIX component keys, score=round(sum*100/120), and no recency component. "
+    "Distinguish observed regional Trends and this batch's edition appearances from AI estimates of Korean-viewer "
+    "interest/SNS sharing potential. Never invent measured search growth, exposure or social statistics. "
+    "When evidence.curation_contract is present, additionally return ranking according to that contract, "
+    "with rank, article_ids, score, components (use the exact keys in that contract, each integer 0..20 or null), "
+    "reason and summary. Group every supplied article exactly once in comparisons; "
+    "compare ALL supplied articles and return exactly min(evidence.curation_contract.top_k, number of groups) "
+    "in ranking, using 10 only for a legacy contract without top_k. "
+    "comparisons may contain up to 400 concise groups for this contract only, never truncate the input. "
+    "Each ranking entry is one whole group, never repeat an issue. Choose the longest supplied summary's "
+    "article as representative (lowest ID breaks ties). ONLY for google_news_trends_v1 use its curation_recency unchanged. "
+    "Use only supplied Google Trends observations as search-interest evidence, not YouTube views or fact proof. "
+    "Explain editorial estimates; unknown evidence stays null. No political or category preferences. "
+    "Return Korean JSON only: overview (<=600 chars), comparisons (1..10 objects normally; "
+    "up to 400 only with evidence.curation_contract: article_ids list of "
     "supplied article IDs, reason <=500 chars, uncertainties <=500 chars), recommended_article_id "
     "(one supplied article ID), selection_reason (<=500 chars). Select a news-video candidate based on "
     "the supplied facts, significance and suitability, and explain the choice without measured-popularity claims. "

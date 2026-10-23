@@ -73,47 +73,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Changed production and single feed contracts only - Fake providers
         run: |
-          $changedPaths = @(git diff --name-only HEAD^ HEAD)
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $otherChanges = @($changedPaths | Where-Object { $_ -notmatch '^(newsflow-ai/tests/(test_final_workspace_browser|test_image_posts)\.py$|newsflow-ai/src/newsflow/gui/templates/image_posts\.html$|newsflow-ai/docs/|\.github/workflows/newsflow-cloud-connect-windows\.yml$)' })
-          $compatibilityPaths = @(
-            '.github/workflows/newsflow-cloud-connect-windows.yml',
-            'newsflow-ai/src/newsflow/main.py',
-            'newsflow-ai/src/newsflow/gui/api_settings_routes.py',
-            'newsflow-ai/src/newsflow/gui/image_post_routes.py',
-            'newsflow-ai/src/newsflow/gui/production_routes.py',
-            'newsflow-ai/src/newsflow/gui/templates/api_connection.html',
-            'newsflow-ai/src/newsflow/gui/templates/image_posts.html',
-            'newsflow-ai/src/newsflow/intelligence/api_providers.py',
-            'newsflow-ai/src/newsflow/intelligence/api_settings.py',
-            'newsflow-ai/src/newsflow/intelligence/provider.py',
-            'newsflow-ai/src/newsflow/publishing/card_diagnostics.py',
-            'newsflow-ai/src/newsflow/publishing/claude_cards.py',
-            'newsflow-ai/src/newsflow/publishing/image_generation.py',
-            'newsflow-ai/tests/claude_compat_safety.py',
-            'newsflow-ai/tests/test_api_script_once.py',
-            'newsflow-ai/tests/test_api_unknown_acknowledgement.py',
-            'newsflow-ai/tests/test_api_settings.py',
-            'newsflow-ai/tests/test_card_response_diagnostics.py',
-            'newsflow-ai/tests/test_claude_compatibility.py',
-            'newsflow-ai/tests/test_claude_feed_cards.py',
-            'newsflow-ai/tests/test_feed_card_unknown_review.py',
-            'newsflow-ai/tests/test_full_image_pipeline.py'
-          )
-          $outsideCompatibility = @($changedPaths | Where-Object { $_ -notin $compatibilityPaths -and $_ -notmatch '^newsflow-ai/docs/' })
-          $testOptions = @()
-          # Browser/consent-copy follow-up: retain image publication contracts and the full browser scenario.
-          $targets = @(if ($changedPaths.Count -gt 0 -and $outsideCompatibility.Count -eq 0) {
-            # Existing local Claude paths on the accepted integration base; no media regeneration.
-            $env:PYTHONPATH = "$PWD/src;$PWD/tests"
-            New-Item -ItemType Directory -Path validation-output -Force | Out-Null
-            $testOptions = @('-p', 'claude_compat_safety', '--basetemp=validation-output/claude-compat-ci')
-            @('tests/test_claude_compatibility.py', 'tests/test_card_response_diagnostics.py', 'tests/test_claude_feed_cards.py', 'tests/test_full_image_pipeline.py', 'tests/test_feed_card_unknown_review.py', 'tests/test_api_unknown_acknowledgement.py', 'tests/test_api_script_once.py', 'tests/test_image_posts.py', 'tests/test_image_generation.py', 'tests/test_image_delivery.py', 'tests/test_api_settings.py', 'tests/test_api_providers.py', 'tests/test_final_workspace_browser.py')
-          } elseif ($changedPaths.Count -gt 0 -and $otherChanges.Count -eq 0) {
-            @('tests/test_final_workspace_browser.py', 'tests/test_image_posts.py')
-          } else {
-            @('tests/test_final_production.py', 'tests/test_final_media.py', 'tests/test_final_workspace_browser.py', 'tests/test_image_posts.py', 'tests/test_image_generation.py', 'tests/test_image_delivery.py', 'tests/test_production_choices.py', 'tests/test_voice_engines.py', 'tests/test_ai_video_provider.py', 'tests/test_ai_video_service.py::test_full_flow_card_local_and_generated_scene_to_composition', 'tests/test_ai_video_service.py::test_unchecked_confirmation_is_refused', 'tests/test_ai_video_service.py::test_rate_limited_submit_is_unknown_and_never_requeued', 'tests/test_ai_video_service.py::test_recover_turns_interrupted_submission_into_unknown_and_never_resubmits', 'tests/test_unified_publishing.py::test_one_platform_failure_does_not_cancel_other_or_replay_success')
-          })
+          $env:PYTHONPATH = "$PWD/src;$PWD/tests"
+          New-Item -ItemType Directory -Path validation-output -Force | Out-Null
+          $testOptions = @('-p', 'claude_compat_safety', '--basetemp=validation-output/operating-compat-ci')
+          $targets = @(Get-Content tools/operating_compatibility_targets.txt | Where-Object { $_ -and -not $_.StartsWith('#') })
           Write-Host "Changed-range targets: $($targets -join ' ')"
           .venv/Scripts/python -m pytest -q -rs @testOptions @targets --junitxml=validation-output/final-tests.xml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -126,7 +89,7 @@ jobs:
             ${{ runner.temp }}/newsflow-connect-evidence/**/*.json
             ${{ runner.temp }}/newsflow-connect-evidence/**/*.png
             newsflow-ai/validation-output/final-tests.xml
-            newsflow-ai/validation-output/claude-compat-ci/**/screens/*.png
+            newsflow-ai/validation-output/operating-compat-ci/**/screens/*.png
           if-no-files-found: warn
           retention-days: 14
       # No real service keys, OAuth, media transfer or operation on user data.

@@ -19,7 +19,7 @@ import re
 import stat
 import struct
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -242,10 +242,12 @@ class _ProductionDPAPIFileKernel:
 
     def __init__(
         self, root: Path, protector: CipherProtector, owner_sid: str, *, native: bool, synthetic_only: bool,
+        account_validator: Callable[[str], bool] = account_key_valid,
     ) -> None:
         self._root = _directory(Path(root), create=True)
         self._protector, self._native = protector, native
         self._synthetic_only = synthetic_only
+        self._account_validator = account_validator
         self._owner_digest = hashlib.sha256(("NewsFlowAI:WindowsUser:" + owner_sid).encode()).hexdigest()
         self._lock = FileLock(str(self._root / ".production-vault.lock"), timeout=5)
 
@@ -301,7 +303,7 @@ class _ProductionDPAPIFileKernel:
         return len(matches) == 1
 
     def _metadata(self, account_key: str, identity_digest: str, reference: str, operation_id: str) -> dict:
-        if not account_key_valid(account_key):
+        if not self._account_validator(account_key):
             raise ProductionVaultError()
         _checked_hex(identity_digest, digest=True)
         _checked_hex(reference)
@@ -449,7 +451,7 @@ class _ProductionDPAPIFileKernel:
     def read(
         self, account_key: str, identity_digest: str, reference: str, *, check_expiry: bool,
     ) -> TokenBundle:
-        if not account_key_valid(account_key):
+        if not self._account_validator(account_key):
             raise ProductionVaultError()
         _checked_hex(identity_digest, digest=True)
         try:
@@ -464,7 +466,7 @@ class _ProductionDPAPIFileKernel:
         self, account_key: str, identity_digest: str, reference: str,
         *, expected_file_digest: str | None = None, expected_operation_id: str | None = None,
     ) -> None:
-        if not account_key_valid(account_key):
+        if not self._account_validator(account_key):
             raise ProductionVaultError()
         _checked_hex(identity_digest, digest=True)
         if expected_file_digest is not None:

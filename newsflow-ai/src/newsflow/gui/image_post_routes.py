@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse, PlainTextResponse, Response
 from sqlalchemy import select
 
 from newsflow.db.models import ContentDraft, NewsArticle
+from newsflow.intelligence.codex import cli_path
 from newsflow.publishing.image_artwork import MAX_IMAGE_BYTES, card_artwork
 from newsflow.publishing.image_generation import MODEL, STYLES
 from newsflow.publishing.image_posts import STATES
@@ -68,12 +69,12 @@ def workspace(request: Request, article_id: int | None = Query(None, ge=1),
                     raise PublishingError("이미지와 대본 연결이 다릅니다.")
                 seed = generated.evidence["source"]["plan"]
             return page(request, "image_posts.html", active="image-posts", article=article,
-                        full_image_available=bool(cards and generation), full_generated=full_generated,
+                        full_image_available=True, full_generated=full_generated,
                         claude_cards_available=bool(cards), card_plan=card,
                         card_readiness=cards.readiness(article_id, analysis_id, rank, draft_id) if cards else {},
                         card_runs=cards.recent(article_id) if cards and article_id else [],
                         image_generation_available=bool(generation),
-                        delivery_ready=service.delivery.ready(),
+                        codex_image_installed=cli_path() is not None,
                         image_key=generation.keys.status() if generation else {},
                         image_model=MODEL, image_styles=STYLES, generated=generated,
                         generations=generation.recent(article_id) if generation and article_id else [],
@@ -81,9 +82,19 @@ def workspace(request: Request, article_id: int | None = Query(None, ge=1),
                         articles=articles, seed=seed, drafts=drafts, selected_draft=selected,
                         post=post, recent=service.recent(), states=STATES,
                         deliveries=service.deliveries(post.id) if post else [],
-                        accounts=request.app.state.instagram.status()["accounts"])
+                        accounts=request.app.state.instagram.status()["accounts"],
+                        delivery_ready=bool(service.delivery and service.delivery.ready()))
     except PublishingError as error:
         raise HTTPException(422, str(error)) from None
+
+
+@router.get("/image-posts/selection")
+def selected_feeds(request: Request, analysis_id: int | None = Query(None, ge=1)):
+    try:
+        group = request.app.state.image_posts.selection(analysis_id)
+    except PublishingError as error:
+        return page(request, "image_selection.html", group=None, error=str(error))
+    return page(request, "image_selection.html", group=group, error=None)
 
 
 @router.post("/image-posts/create")
@@ -134,6 +145,7 @@ def claude_card(request: Request, article_id: int = Form(ge=1),
         query["card_id"] = identifier
     return go("/image-posts?" + urlencode(query) + "#claude-card")
 
+
 @router.post("/image-posts/generate-card-image")
 def generate_card_image(request: Request, article_id: int = Form(ge=1), card_id: int = Form(ge=1),
                         analysis_id: int | None = Form(None, ge=1),
@@ -152,20 +164,6 @@ def generate_card_image(request: Request, article_id: int = Form(ge=1), card_id:
     query["generated_id" if run.status == "success" else "card_id"] = (
         identifier if run.status == "success" else card_id)
     return go("/image-posts?" + urlencode(query) + "#ai-background")
-
-@router.get("/image-posts/cards/{identifier}/preview")
-def card_preview(request: Request, identifier: int):
-    try:
-        run = request.app.state.claude_cards.get(identifier)
-        if run.status != "success":
-            raise PublishingError("완료된 구성이 없습니다.")
-        if run.options.get("purpose") == "full_image":
-            raise PublishingError("지시문 단계입니다. 아직 생성된 이미지가 없습니다.")
-        plan = run.result["plan"]
-        raw = card_artwork(plan["title"], plan["body"], run.evidence["publisher"], plan)
-    except PublishingError as error:
-        raise HTTPException(404, str(error)) from None
-    return Response(raw, media_type="image/jpeg")
 
 
 @router.post("/image-posts/generate-background")
@@ -187,6 +185,42 @@ def generate_background(request: Request, article_id: int = Form(ge=1),
     if run.status == "success":
         query["generated_id"] = identifier
     return go("/image-posts?" + urlencode(query) + "#ai-background")
+
+
+@router.post("/image-posts/generate-codex-image")
+def generate_codex_image(request: Request, article_id: int = Form(ge=1),
+                         title: str = Form(max_length=60), body: str = Form(max_length=200),
+                         analysis_id: int | None = Form(None, ge=1),
+                         rank: int | None = Form(None, ge=1, le=3),
+                         draft_id: int | None = Form(None, ge=1),
+                         consent: bool = Form(False), reviewed: bool = Form(False)):
+    service = request.app.state.image_generation
+    try:
+        identifier = service.generate_codex(article_id, title=title, body=body,
+            analysis_id=analysis_id, rank=rank, draft_id=draft_id, consent=consent, reviewed=reviewed)
+        run = service.get(identifier)
+    except PublishingError as error:
+        raise HTTPException(422, str(error)) from None
+    query = {k: v for k, v in {"article_id": article_id, "analysis_id": analysis_id,
+                              "rank": rank, "draft_id": draft_id}.items() if v is not None}
+    if run.status == "success":
+        query["generated_id"] = identifier
+    return go("/image-posts?" + urlencode(query) + "#codex-image")
+
+
+@router.get("/image-posts/cards/{identifier}/preview")
+def card_preview(request: Request, identifier: int):
+    try:
+        run = request.app.state.claude_cards.get(identifier)
+        if run.status != "success":
+            raise PublishingError("완료된 구성이 없습니다.")
+        if run.options.get("purpose") == "full_image":
+            raise PublishingError("지시문 단계입니다. 아직 생성된 이미지가 없습니다.")
+        plan = run.result["plan"]
+        raw = card_artwork(plan["title"], plan["body"], run.evidence["publisher"], plan)
+    except PublishingError as error:
+        raise HTTPException(404, str(error)) from None
+    return Response(raw, media_type="image/jpeg")
 
 
 @router.get("/image-posts/backgrounds/{identifier}/file")

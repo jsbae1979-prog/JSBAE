@@ -45,16 +45,19 @@ def api_news_contract(evidence: dict, mode: str, duration: int | None = None, *,
         "tools": "추가 검색·외부 명령·Provider 전환 없이 제공된 자료만 사용하세요.",
     }
     if duration is not None:
-        if type(duration) is not int or duration not in (30, 45, 60):
+        from newsflow.shortform import allowed_duration, frozen
+
+        profile = frozen(evidence)
+        if not allowed_duration(duration, profile.enabled):
             raise ValueError("영상 길이를 확인하세요.")
         # This is an estimate, not an audio measurement. Existing TTS checks the
         # actual WAV and returns a review action instead of another paid request.
         speech = {"rate": 0, "pause_ms": 250, **(speech or {})}
         scene_count = 3 if assessment["mode"] == "QUICK" else 4
-        sentences = scene_count * 2
+        sentences = scene_count if profile.enabled else scene_count * 2
         pause_seconds = (SENTENCE_PAUSE_SECONDS * sentences
                          + speech["pause_ms"] / 1000 * (sentences - scene_count))
-        speed = CHARS_PER_SECOND * rate_factor(speech["rate"])
+        speed = CHARS_PER_SECOND * rate_factor(speech["rate"]) * (profile.speed if profile.enabled else 1)
         contract["duration_seconds"] = duration
         contract["narration_spoken_units_target"] = {
             "minimum": max(1, ceil((duration * .90 - pause_seconds) * speed)),

@@ -95,6 +95,7 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "next_action": action, "href": f'/autopilot/jobs/{item["id"]}', "duration": item["duration"],
                 "progress": item["progress"], "updated_at": item["updated_at"], "completed": status == "completed",
                 "task_id": item["id"], "render_job_id": render.id if render else None,
+                "analysis_run_id": analysis.id if analysis else None, "script_run_id": script.id if script else None,
                 "draft_id": draft.id if draft else None, "project_id": render.project_id if render else None,
                 "workspace_href": f'/?task={item["id"]}#workspace-detail',
                 "news_method": ("체험 뉴스 · 로컬" if item["source"] == "sample" else
@@ -124,6 +125,10 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
             used_runs.add(run.id)
             if context and context.get("analysis_id"):
                 used_runs.add(context["analysis_id"])
+            linked_analysis = ((context or {}).get("analysis_id")
+                               or (run.options.get("analysis_run_id") if isinstance(run.options, dict) else None))
+            if type(linked_analysis) is int:
+                used_runs.add(linked_analysis)
             render = latest_by_draft.get(draft.id)
             if render and render.id in used_renders:
                 continue
@@ -148,6 +153,7 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "progress": render.progress if render else None,
                 "updated_at": (render.created_at if render else draft.updated_at).isoformat(), "completed": False,
                 "task_id": None, "render_job_id": render.id if render else None, "draft_id": draft.id,
+                "analysis_run_id": linked_analysis, "script_run_id": run.id,
                 "project_id": render.project_id if render else None,
                 "workspace_href": f"/?video={render.id}#workspace-detail" if render and render.status == "success" else href,
             })
@@ -172,6 +178,7 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "duration": run.options.get("duration", context["initial_duration"]),
                 "progress": None, "updated_at": run.created_at.isoformat(), "completed": False,
                 "task_id": None, "render_job_id": None, "draft_id": None, "project_id": None,
+                "analysis_run_id": analysis_id, "script_run_id": run.id,
                 "workspace_href": f"/ai?analysis_id={analysis_id}&failed_run_id={run.id}",
             })
         for run in runs.values():
@@ -192,6 +199,15 @@ def task_rows(request, snapshots: list[dict] | None = None) -> list[dict]:
                 "href": f"/ai?analysis_id={run.id}", "duration": context["initial_duration"], "progress": None,
                 "updated_at": run.created_at.isoformat(), "completed": False,
                 "task_id": None, "render_job_id": None, "draft_id": None, "project_id": None,
+                "analysis_run_id": run.id, "script_run_id": None,
                 "workspace_href": f"/ai?analysis_id={run.id}",
             })
-        return sorted(rows, key=lambda r: r["updated_at"], reverse=True)[:100]
+        from newsflow.db.models import WorkspaceRemoval
+
+        removed = set(session.scalars(select(WorkspaceRemoval.key)))
+        for row in rows:
+            row["can_remove"] = row["status"] not in {"running", "queued"} and not (
+                row["kind"] == "auto" and row["status"] == "waiting_review")
+        return sorted([row for row in rows if "activity:" + row["id"] not in removed
+                       and (not row.get("render_job_id") or f"video:{row['render_job_id']}" not in removed)],
+                      key=lambda r: r["updated_at"], reverse=True)[:100]

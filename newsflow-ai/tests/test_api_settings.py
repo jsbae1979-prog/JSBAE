@@ -110,7 +110,6 @@ def test_configured_is_not_authenticated_or_successful_and_get_never_reads_key(s
     state = api_readiness(sessions, "claude_api", store)
     assert state["configured"] and not state["ready"]
     assert not state["authentication_verified"] and not state["request_succeeded"]
-    # Removed balance inputs cannot create new supplier/account evidence.
     assert state["account_evidence"] == "NOT VERIFIED"
     assert state["usage"]["vendor_billing"] == "NOT VERIFIED"
     with pytest.raises(APISettingsError, match="실제 API 연결 미확인"):
@@ -201,21 +200,19 @@ def test_search_does_not_price_full_model_context_but_retains_reported_usage_pri
         assert row.prices == {"input": "3", "output": "15", "search": "10"}
 
 
-def test_monthly_reported_usage_gate_preserves_ignored_balance_and_request_limits(sessions, store):
+def test_monthly_limit_uses_reported_usage_without_a_balance_or_request_limit_gate(sessions, store):
     budget = FakeAPIBudgetService(sessions)
     configured(sessions, request_limit_usd="0.000001", monthly_limit_usd="0.01", account_remaining_usd="0.01")
     result = reserve(budget, store)
     budget.finish(result.id, status="success", usage={"prompt_tokens": 1000, "completion_tokens": 1000})
     with pytest.raises(APISettingsError, match="월별"):
         reserve(budget, store, "analysis:2")
-    # A reported-usage limit is distinct from removed speculative balance gates.
+    # Legacy supplier-balance fields no longer gate a new request.
     with sessions.begin() as session:
         _set(session, "api_claude_api_monthly_limit_usd", "30")
-    next_request = reserve(budget, store, "analysis:2")
-    assert next_request.reserved_usd == 0
-    with sessions() as session:
-        original = session.get(APIRequestReservation, result.id)
-        assert original.status == "success" and original.estimated_usd == "0.018000"
+        _set(session, "api_claude_api_account_remaining_usd", "0.000001")
+        _set(session, "api_claude_api_billing_confirmed_at", (utcnow() - timedelta(days=7)).isoformat())
+    assert reserve(budget, store, "analysis:2").reserved_usd == 0
 
 
 @pytest.mark.parametrize("usage", [None, {}, {"prompt_tokens": 1},
@@ -303,20 +300,14 @@ def test_legacy_reserved_request_keeps_its_original_finish_semantics(sessions, s
         assert row.estimated_usd == "0.090853"
 
 
-def test_stale_balance_evidence_is_not_authentication_and_unknown_model_blocks(sessions, store):
+def test_stale_balance_is_not_a_gate_but_unknown_model_still_blocks(sessions, store):
     configured(sessions)
     with sessions.begin() as session:
         _set(session, "api_claude_api_billing_confirmed_at", (utcnow() - timedelta(hours=25)).isoformat())
-    budget = FakeAPIBudgetService(sessions)
-    result = reserve(budget, store)
-    assert result.reserved_usd == 0
-    budget.finish(result.id, status="success", usage={"prompt_tokens": 10, "completion_tokens": 10})
-    # Ignoring balance age must never bypass real authentication proof.
-    with pytest.raises(APISettingsError, match="실제 API 연결 미확인"):
-        reserve(APIBudgetService(sessions), store, "analysis:2")
+    assert reserve(FakeAPIBudgetService(sessions), store).reserved_usd == 0
     configured(sessions, model="claude-unknown")
     with pytest.raises(APISettingsError, match="미검증"):
-        reserve(FakeAPIBudgetService(sessions), store, "analysis:3", model="claude-unknown")
+        reserve(FakeAPIBudgetService(sessions), store, "analysis:2", model="claude-unknown")
 
 
 def test_key_rotation_and_model_mismatch_invalidate_prior_proof(sessions, store):
@@ -349,3 +340,34 @@ def test_concurrent_reservations_are_atomic(sessions, store):
     assert sum(result is not None for result in results) == 1
     with sessions() as session:
         assert len(list(session.scalars(select(APIRequestReservation)))) == 1
+
+
+def test_old_balance_values_are_history_only_and_normal_saves_preserve_them(sessions, store):
+    stamp = (utcnow() - timedelta(days=7)).isoformat()
+    with sessions.begin() as session:
+        _set(session, "api_claude_api_account_remaining_usd", "0.000001")
+        _set(session, "api_claude_api_billing_confirmed_at", stamp)
+    configured(sessions, billing_confirmed=True, account_remaining_usd="999")
+    old = read_api_settings(sessions, "claude_api")
+    assert old.account_remaining_usd == Decimal("0.000001") and old.billing_confirmed_at == stamp
+    assert FakeAPIBudgetService(sessions).readiness("claude_api", store, "analysis")["ready"]
+    configured(sessions, billing_confirmed=False, account_remaining_usd="")
+    invalidate_api_verification(sessions, "claude_api")
+    saved = read_api_settings(sessions, "claude_api")
+    assert saved.account_remaining_usd == old.account_remaining_usd and saved.billing_confirmed_at == stamp
+
+
+def test_no_balance_required_but_actual_authentication_still_expires(sessions, store):
+    configured(sessions)
+    budget = APIBudgetService(sessions)
+    assert "실제 API 연결 미확인 · 별도 승인 후 검증 필요" in budget.readiness(
+        "claude_api", store, "analysis")["reasons"]
+    with sessions.begin() as session:
+        _set(session, "api_claude_api_verified_model", "claude-sonnet-4-6")
+        _set(session, "api_claude_api_authentication_verified_at", utcnow().isoformat())
+    status = budget.readiness("claude_api", store, "analysis")
+    assert status["ready"] and status["settings"].account_remaining_usd is None
+    assert status["settings"].billing_confirmed_at is None
+    with sessions.begin() as session:
+        _set(session, "api_claude_api_authentication_verified_at", (utcnow() - timedelta(hours=25)).isoformat())
+    assert not budget.readiness("claude_api", store, "analysis")["ready"]

@@ -1,0 +1,65 @@
+/tmp/newsflow-57-analysis/baseline/newsflow-ai/src/newsflow/__init__.py
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[openai] _
+/tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_api_first_check_gui.py:88: in test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth
+    assert "검색 요청 1회" in response.text and "9,000토큰" in response.text
+E   assert ('검색 요청 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...js/production_settings.js" defer></script><script src="/static/js/youtube.js" defer></script>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...js/production_settings.js" defer></script><script src="/static/js/youtube.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[claude_api] _
+/tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_api_first_check_gui.py:88: in test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth
+    assert "검색 요청 1회" in response.text and "9,000토큰" in response.text
+E   assert ('검색 요청 1회' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...js/production_settings.js" defer></script><script src="/static/js/youtube.js" defer></script>\n</main>\n</body></html>')
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...js/production_settings.js" defer></script><script src="/static/js/youtube.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+_ test_connection_action_is_explicit_outside_cost_dialog_with_official_dashboard _
+/tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_claude_connection_gui.py:100: in test_connection_action_is_explicit_outside_cost_dialog_with_official_dashboard
+    assert not any(node.tag in {"details", "dialog", "form"} for node in form.ancestors)
+E   assert not True
+E    +  where True = any(<generator object test_connection_action_is_explicit_outside_cost_dialog_with_official_dashboard.<locals>.<genexpr> at 0x7fdace2dc1e0>)
+________________ test_codex_rss_analysis_script_and_video_flow _________________
+/tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_codex_studio.py:175: in test_codex_rss_analysis_script_and_video_flow
+    assert draft.duration == duration and draft.sources == evidence
+E   AssertionError: assert (30 == 30 and {'articles': ...2], [3]], ...} == {'articles': ...1], [2], [3]]}
+E    +  where 30 = <newsflow.db.models.ContentDraft object at 0x7fdace773410>.duration
+E     
+E     Omitting 4 identical items, use -vv to show
+E     Left contains 1 more item:
+E     {'presentation': {'audience': 'general',
+E                       'instructions': '전문 뉴스. 차분하고 객관적으로. 대상: 일반 시청자. 한국어로 작성.',
+E                       'language': 'ko',
+E                       'style': 'news',
+E                       'tone': 'neutral'}}
+E     Use -v to get more diff)
+_ test_easy_and_advanced_pages_keep_security_headers[/-\uc624\ub298\uc740 \uc5b4\ub5a4 \uc774\uc57c\uae30\ub97c] _
+/tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_easy_ui.py:48: in test_easy_and_advanced_pages_keep_security_headers
+    assert response.status_code == 200 and title in response.text
+E   assert (200 == 200 and '오늘은 어떤 이야기를' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...n>\n    </div>\n  </div>\n</div>\n<script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>')
+E    +  where 200 = <Response [200 OK]>.status_code
+E    +  and   '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...n>\n    </div>\n  </div>\n</div>\n<script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+______________ test_fake_render_cannot_appear_as_completed_video _______________
+/tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_easy_ui.py:215: in test_fake_render_cannot_appear_as_completed_video
+    assert "완성한 영상이 여기에 모입니다" in client.get("/").text
+E   assert '완성한 영상이 여기에 모입니다' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...n>\n    </div>\n  </div>\n</div>\n<script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>'
+E    +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...n>\n    </div>\n  </div>\n</div>\n<script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>' = <Response [200 OK]>.text
+E    +    where <Response [200 OK]> = get('/')
+E    +      where get = <starlette.testclient.TestClient object at 0x7fdace885be0>.get
+______ test_workspace_offers_one_news_usage_choice_with_standard_default _______
+/tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_news_usage_gui.py:60: in test_workspace_offers_one_news_usage_choice_with_standard_default
+    assert "API 선택 시 해당 API로 분석·대본을 만듭니다" in html
+E   assert 'API 선택 시 해당 API로 분석·대본을 만듭니다' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...n>\n    </div>\n  </div>\n</div>\n<script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>'
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/JSBAE/newsflow-ai/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+-- generated xml file: /tmp/newsflow-57-analysis/additional-all-baseline.xml ---
+=========================== short test summary info ============================
+FAILED ../../../tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_api_first_check_gui.py::test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[openai]
+FAILED ../../../tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_api_first_check_gui.py::test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth[claude_api]
+FAILED ../../../tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_claude_connection_gui.py::test_connection_action_is_explicit_outside_cost_dialog_with_official_dashboard
+FAILED ../../../tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_codex_studio.py::test_codex_rss_analysis_script_and_video_flow
+FAILED ../../../tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_easy_ui.py::test_easy_and_advanced_pages_keep_security_headers[/-\uc624\ub298\uc740 \uc5b4\ub5a4 \uc774\uc57c\uae30\ub97c]
+FAILED ../../../tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_easy_ui.py::test_fake_render_cannot_appear_as_completed_video
+FAILED ../../../tmp/newsflow-57-analysis/baseline/newsflow-ai/tests/test_news_usage_gui.py::test_workspace_offers_one_news_usage_choice_with_standard_default
+7 failed, 1 warning in 2.78s

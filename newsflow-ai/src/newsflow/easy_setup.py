@@ -170,6 +170,8 @@ def diagnostics(data_dir: Path, sessions: sessionmaker[Session]) -> dict[str, An
         listening = None
     quality = ('사람의 청취·시청 평가는 아직 하지 않았습니다.' if listening is None
                else f"사람 청취 결과: {listening['label']} ({listening['date']}, {listening['listener']})")
+    if listening and not listening.get('sample_linked'):
+        quality += ' · 샘플 연결 확인 필요 · 기존 기록'
     return {'ready': all(c['status'] == 'pass' for c in checks if c['required']), 'checks': checks,
             'voices': voices, 'korean_voice': voice_state, 'external_calls': 0, 'quality': quality}
 
@@ -273,23 +275,44 @@ def save_voice_preferences(sessions: sessionmaker[Session], voice: str, rate: st
                 session.add(AppSetting(key='video_default_' + key, value=value))
 
 
+def preview_evidence(data_dir: Path, name: str) -> dict | None:
+    """Only a matching local sample and its creation metadata are listening evidence."""
+    if not PREVIEW_NAME.fullmatch(name):
+        return None
+    source = data_dir / 'voice-preview' / name
+    metadata = source.with_suffix('.json')
+    if source.is_symlink() or metadata.is_symlink() or not source.is_file() or not metadata.is_file():
+        return None
+    try:
+        proof = json.loads(metadata.read_text(encoding='utf-8'))
+        if (proof['provider'] != 'windows' or not proof['voice'] or str(proof['rate']) not in RATE_CHOICES
+                or str(proof['pause_ms']) not in PAUSE_CHOICES
+                or proof['sha256'] != hashlib.sha256(source.read_bytes()).hexdigest()):
+            return None
+        return proof
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
 def listening_summary(sessions: sessionmaker[Session]) -> dict[str, str] | None:
     """Latest human listening record summary from AppSetting, or None when nobody has listened yet."""
     with sessions() as session:
         row = session.get(AppSetting, LISTENING_KEY)
         value = row.value if row else ''
+        linked = session.get(AppSetting, LISTENING_KEY + '_sample')
+        linked = bool(linked and linked.value == value)
     parts = value.split(SUMMARY_SEPARATOR, 3)
     if len(parts) < 3 or parts[0] not in LISTENING_VERDICTS:
         return None
     return {'verdict': parts[0], 'label': LISTENING_VERDICTS[parts[0]], 'date': parts[1],
-            'listener': parts[2], 'voice': parts[3] if len(parts) > 3 else ''}
+            'listener': parts[2], 'voice': parts[3] if len(parts) > 3 else '', 'sample_linked': linked}
 
 
 def record_listening(data_dir: Path, sessions: sessionmaker[Session], values: dict[str, str]) -> dict[str, Any]:
     """Store what a human listener decided; the app validates the form but never derives the verdict.
 
-    The record is a JSON file under ``voice-listening/`` (at most MAX_LISTENING_FILES kept) plus a
-    short AppSetting summary. No migration: nothing else in the database changes.
+    The record is an append-only JSON file under ``voice-listening/`` plus a
+    short AppSetting summary and sample binding. Existing records and samples are retained.
     """
     listener = str(values.get('listener', '')).strip()
     if not 1 <= len(listener) <= 40 or _CONTROL.search(listener) or SUMMARY_SEPARATOR.strip() in listener:
@@ -318,14 +341,15 @@ def record_listening(data_dir: Path, sessions: sessionmaker[Session], values: di
     notes = str(values.get('notes', '')).strip()
     if len(notes) > 500 or _CONTROL_IN_NOTES.search(notes):
         raise SetupError('메모는 500자 이하로 입력하세요.')
-    preview_sha256 = ''
-    if preview:
-        source = data_dir / 'voice-preview' / preview
-        if source.is_file() and not source.is_symlink():
-            preview_sha256 = hashlib.sha256(source.read_bytes()).hexdigest()
+    proof = preview_evidence(data_dir, preview)
+    if not proof:
+        raise SetupError('연결된 음성 샘플을 먼저 열어 주세요. 기존 기록은 보존됩니다.')
+    if (voice, int(rate), int(pause_ms)) != (proof['voice'], proof['rate'], proof['pause_ms']):
+        raise SetupError('들은 샘플과 음성·속도·쉼이 다릅니다. 샘플 화면을 다시 열어 주세요.')
+    preview_sha256 = proof['sha256']
     created_at = datetime.now(UTC).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
     record: dict[str, Any] = {
-        'schema': 'voice-listening/1', 'created_at': created_at, 'listener': listener, 'voice': voice,
+        'schema': 'voice-listening/2', 'provider': proof['provider'], 'created_at': created_at, 'listener': listener, 'voice': voice,
         'rate': int(rate), 'pause_ms': int(pause_ms), 'preview': preview, 'preview_sha256': preview_sha256,
         'items': items, 'verdict': verdict, 'notes': notes, 'recorded_by': 'human',
     }
@@ -333,10 +357,6 @@ def record_listening(data_dir: Path, sessions: sessionmaker[Session], values: di
     directory.mkdir(parents=True, exist_ok=True)
     name = f'listening-{uuid4().hex}.json'
     (directory / name).write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding='utf-8')
-    kept = sorted((p for p in directory.iterdir() if LISTENING_NAME.fullmatch(p.name) and p.is_file()
-                   and not p.is_symlink()), key=lambda p: (p.stat().st_mtime, p.name))
-    for old in kept[:max(0, len(kept) - MAX_LISTENING_FILES)]:
-        old.unlink(missing_ok=True)
     summary = SUMMARY_SEPARATOR.join((verdict, created_at[:10], listener, voice))[:200]
     with sessions.begin() as session:
         row = session.get(AppSetting, LISTENING_KEY)
@@ -344,6 +364,11 @@ def record_listening(data_dir: Path, sessions: sessionmaker[Session], values: di
             row.value = summary
         else:
             session.add(AppSetting(key=LISTENING_KEY, value=summary))
+        linked = session.get(AppSetting, LISTENING_KEY + '_sample')
+        if linked:
+            linked.value = summary
+        else:
+            session.add(AppSetting(key=LISTENING_KEY + '_sample', value=summary))
     return {**record, 'file': name, 'summary': summary}
 
 
