@@ -1,0 +1,74 @@
+[
+  {
+    "status": "A",
+    "path": ".github/workflows/pc-cloud-integration-windows.yml"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/pyproject.toml"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/src/newsflow/character/service.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tests/pc_cloud_script_fixture.py"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/tests/test_all_scene_production.py"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/tests/test_all_scene_safety.py"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/tests/test_character_shorts.py"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/tests/test_cloud_workspace_flow.py"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/tests/test_dashboard_view.py"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/tests/test_google_news_trends.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tests/test_pc_cloud_entrypoint.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tests/test_pc_cloud_windows_browser.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/check_pc_cloud_package.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/pc_cloud_browser_targets.txt"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/pc_cloud_guard.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/pc_cloud_media_targets.txt"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/pc_cloud_targets.txt"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/pc_cloud_validate.py"
+  }
+]

@@ -1,0 +1,103 @@
+NewsFlow AI — PC/Cloud 통합 후보 Windows 검증 보고
+기준일: 2026-10-24
+검증 코드 SHA: cbdda2da51ba53b5e0ef09aa0364d283bd4e527d
+격리 개발 브랜치: codex/newsflow-pc-cloud-integration-20261024
+Cloud 기준: 6aef983db5a8d31b604d9fafd4329a0b4f83787d
+PC 운영 기준: 027644730c04b6b977baa9c4ede3eeb56115e61b + 기존 로컬 변경
+PR #35: Draft·미병합, 후보 브랜치를 별도 보고하며 운영/Cloud 원본 브랜치로 병합하지 않음.
+
+현재 판정: 격리 통합 개발 및 Windows Fake 검증 완료 · 운영 미적용 · 판정 대기
+최신 Windows Actions: https://github.com/jsbae1979-prog/JSBAE/actions/runs/40080805175
+
+1. 인수 결과
+Cloud 코드를 독립 Git 저장소의 기준으로 사용했다.
+Cloud와 같은 로컬 변경 54개는 중복 적용하지 않았다.
+UI·스타일 9개는 Cloud 구성을 그대로 채택했다. 대시보드 테스트는 PC의 세 제작 진입점·캐릭터 접근과 Cloud workflow 연결을 함께 검증한다.
+Cloud 신규 UI·이미지 10개와 이미 동일한 신규 모듈 참조 26곳을 유지했다.
+영상 정보·출처 팝업, 오류/복구 연결, 제목·출처·음성 귀속, 보관 기사 검색·분류와 실제 데이터 표시를 보존했다.
+Provider·모델·음성의 작업별 고정, 대본/외부 전송/생성/게시의 별도 승인, 결과 불명·중복 요청 차단을 변경하지 않았다.
+새 DB migration, OAuth/게시 Adapter 재작성, 새 기능은 추가하지 않았다.
+
+2. 이번 최소 수정
+- 배포 이미지 누락 수정: pyproject 패키지 데이터에 기존 정적 SVG/PNG·Cloud WebP/출처 JSON을 포함했다. 설치된 wheel에서 화면 6개와 정적 자산 63개 응답을 확인했다.
+- Windows 로컬 journal 저장: 일시적인 WinError 5/32/33에서 os.replace만 최대 3회 시도한다. 공급사 요청/바깥 작업을 다시 실행하지 않는다. 계속 거절되면 기존 journal과 임시 파일을 보존하고 예외로 중단한다.
+- 현재 V2 계약에 맞춘 합성 성공 대본: 도입·마무리, 합성 표시, 장면별 문장 수, 최소 분량을 충족한다. 제품의 안전 검사를 제거하거나 경고를 무시하지 않았다.
+- 기존 브라우저 성공 테스트를 현재 /create 경로, 접힌 대본 편집기와 게시 검토 버튼에 맞췄다.
+- 미등록 모델을 참조하던 결과 불명 테스트를 등록된 동일 Fake 모델로 바로잡았다.
+- 근거 없는 수치 편집은 현재 V2 오류 news_usage_blocked로 차단되는지 확인한다.
+- 격리 테스트 서버의 열린 영상 스트림 종료 지연을 확인해 테스트 서버에만 종료 대기 상한을 적용하고, 열린 스트림 회귀 검사를 추가했다. 운영 서버 종료 정책은 변경하지 않았다.
+- native dialog close 이벤트 후 상태를 기다리고 Escape·닫기 버튼의 초점/aria 상태를 모두 검사한다.
+- 합성 프로필 검증 도구, 외부 socket/DNS·운영 포트 8765 접근 차단과 범위별 Windows Actions를 추가했다.
+
+3. 로컬 Windows 결과
+Python 3.12.10 / Python 3.14.7, 별도 가상환경과 합성 데이터만 사용했다.
+두 환경 pip check 및 변경 Python 파일 Ruff PASS.
+초기 범위: 각각 582건 중 542 PASS / 40 FAIL.
+Cloud 기준의 별도 소스·합성 프로필에서도 동일 실패 ID 40개를 재현했다(기준 범위 50건 중 10 PASS / 40 FAIL).
+V2 합성 성공 자료와 현재 오류 계약을 보완한 범위 재검증:
+- 3.12: 579 PASS / 3 FAIL. 두 모델 fixture 실패와 Windows 파일 교체 거절을 확인.
+- 3.14: 580 PASS / 2 FAIL. 동일 모델 fixture 실패를 확인.
+확인한 원인을 보완한 영향 범위 80건은 두 버전 각각 80 PASS / 0 FAIL / 0 SKIP.
+- 실제 로컬 FFmpeg MP4 네 조합: 두 버전 각각 4 PASS.
+- 실제 프로그램 진입점·합성 프로필 재열기와 Chromium 계열 브라우저 브라우저 범위: 3.12 17 PASS.
+- 3.14 동일 범위: 16 PASS / 1 FAIL 후 비동기 close 이벤트 테스트 경합을 수정했고, CI에서 발견한 열린 스트림의 테스트 서버 종료 지연도 보완했다. 최종 로컬 브라우저 범위 18 PASS. 새 열린 스트림 회귀 검사도 두 버전 각각 1 PASS.
+로컬 결과는 서로 겹치는 실행이 있으므로 합산하여 단일 실행의 PASS 수로 표시하지 않는다.
+각 실행에 기존 Starlette/httpx deprecation warning 1건이 있었다.
+제품 source의 외부 API/OAuth/SNS 호출, 원본 운영 앱 사용은 0회다. 최종 합성 검사들의 network guard 위반도 0건이다.
+
+4. Windows Actions 결과
+검증 SHA cbdda2da51ba53b5e0ef09aa0364d283bd4e527d, 위 Actions 실행에서 두 Windows job 모두 success.
+- Python 3.12.10: 핵심 584 PASS + MP4 4 PASS + 브라우저/진입점 18 PASS = 606 PASS.
+- Python 3.14.9: 핵심 584 PASS + MP4 4 PASS + 브라우저/진입점 18 PASS = 606 PASS.
+각각 FAIL/ERROR/SKIP 0. 서로 다른 세 범위 실행의 합계이며 전체 회귀가 아니다.
+각 범위 실행에 기존 Starlette/httpx deprecation warning 1건. Ruff·pip check PASS.
+첫 CI 실패와 중간 후보의 열린 스트림 종료 실패는 실행 기록과 ci-history.json에 보존했다. 최종 후보에서 이를 수정·재검증했다.
+범위: tools/pc_cloud_targets.txt, pc_cloud_media_targets.txt, pc_cloud_browser_targets.txt.
+전체 회귀를 재실행하지 않았다. 기존 전체 회귀 57 FAIL 기록을 보존하며 전체 프로그램 전수 PASS로 확대하지 않는다.
+초기 후보 실패와 후속 후보 결과를 구분한다. 테스트 삭제·skip·보안 검사 완화는 없다.
+
+5. 실제로 확인한 사용자 흐름
+- 새 합성 뉴스 확보 -> 선택한 OpenAI/Claude Fake 분석 -> 대본 -> 사용자 대본 검토 -> 저장/편집 -> 음성/FFmpeg -> 영상 재생 -> 로컬 게시 초안/게시 준비.
+- 대본 검토 체크/해제, 기본/전체 Higgsfield, 로컬/ElevenLabs Fake를 기존 서비스로 검증.
+- 30/45/60초 결과를 실제 FFmpeg encode/probe/decode. 1080x1920, H.264/AAC와 길이 확인.
+- 기본 영상의 Higgsfield 호출 0, 전체 AI 장면/선택적 장면 계약, 생성·장면 검토·합성 승인, 저장 클립/WAV 재사용, 결과 불명 재제출 차단.
+- 단일 JPG 피드와 OpenAI 선택/미선택·별도 승인, HTTPS 이미지 전달/IMAGE container의 Fake 계약, 실패·중복·결과 불명 보존.
+- 동일 MP4의 YouTube/Instagram Fake 게시, 독립 결과·보류 후 계속하기와 성공 플랫폼 재전송 차단.
+- 새 합성 프로필에서 run() 진입점을 별도 프로세스로 두 번 실행하고 정상 종료. DB revision 0018·integrity_check·foreign_key_check 및 주요 데이터 수 보존.
+- 15개 주요/보조 화면을 너비 1440/980/390에서 탐색. 이미지, 넘침, JavaScript 오류, 제작 진입점과 팝업 초점 확인.
+- synthetic 기록·설정은 읽기 전용 화면 탐색 전후 동일.
+이는 실제 공급사 응답·계정·한국어 음질·AI 영상 품질·현실 기사 사실성·실게시의 검증이 아니다.
+
+6. 운영 원본 보존
+운영 앱은 기존 127.0.0.1:8765에서 유지했고 종료/재시작하지 않았다.
+운영 Git branch/HEAD/refs/index/status, 로컬 변경 64개의 SHA-256이 조사 전과 동일.
+기존 보존 범위 42,955개 파일의 크기/수정시각 변화 0건.
+운영 DB/WAL/SHM SHA-256 동일. 운영 migration·데이터 복사·키/설정/영상 변경·실제 백업은 하지 않았다. 기존 API 결과 불명 7건, 피드 결과 불명 1건, ElevenLabs reserved/HTTP 402 기록도 변경·재조회·재시도하지 않았다.
+합성 프로필·검증 DB·임시 암호문은 운영 저장소와 분리했다.
+GitHub에는 제품 소스·테스트·공개 제품 자산·합성 스크린샷·경로 없는 요약만 보낸다. DB/DPAPI/OAuth/사용자 미디어/모델/로컬 백업은 보내지 않는다.
+근거: evidence/pc-cloud-integration/preservation-proof-safe.json
+
+7. 산출물과 재현
+코드 변경: 패키징 설정과 로컬 Windows journal 저장 두 제품 파일, 결합/호환 테스트, 검증 도구, 별도 CI workflow.
+실행 가능한 최종 wheel은 PC 격리 개발 위치에 보관했다. 운영에는 설치하지 않았다.
+wheel SHA-256: 0b86bcc1103329dfcd097c8f848eeb08da637d115b347000e9f4c734fb496e69
+검증은 tools/pc_cloud_validate.py를 사용해 소스 밖의 새 output 위치와 범위별 targets를 지정한다. 공급사 키를 주입하지 않는다.
+브라우저 검증은 loopback 임의 포트와 합성 프로필에서만 실행한다. 운영 run.bat/프로필로 시험하지 않는다.
+주요 스크린샷: evidence/pc-cloud-integration/
+dashboard-1440.png, news-1440.png, script-1440.png, production-1440.png,
+publish-1440.png, analytics-1440.png, settings-1440.png, image-feed-1440.png,
+production-390.png, settings-390.png.
+manifest.json은 파일 크기·SHA-256을 제공한다.
+local-results.json은 기존/수정 후/추가 영향 검증 결과를 분리한다.
+baseline-comparison-safe.json은 동일 기준 실패 40개의 ID를 보존한다.
+flow-*.json, media-*.json, entrypoint-*.json, gui-*.json은 모두 합성 자료 결과다.
+
+8. 운영 전환 전 남은 작업
+- 기존 계획에 따른 전용 백업 권한·공간·외부 자료 범위 재확인.
+- 활성 예약·미완료/결과 불명 기록 및 모든 writer를 새로 확인하고, 별도 승인 후 일관된 운영 백업·복원 검증.
+- DPAPI 동일 사용자/프로필에서의 복원 검증. 암호문 파일 보존과 복호화 성공을 구분.
+- 열린 브라우저 스트림과 background writer 때문에 운영 종료가 지연될 가능성은 별도로 확인해야 한다. 테스트 서버의 종료 상한은 운영 서버의 종료 정책 변경이나 운영 정상 종료 검증을 뜻하지 않는다.
+- 후보 운영 적용·migration·첫 실행은 별도 승인. 현재는 운영 코드/DB를 바꾸지 않는다.
+- 실제 Provider/모델 접근·한국어 음질·영상 품질·SNS 계정/권한·HTTPS 전달 인프라와 실게시 검증은 각각 별도 승인/준비가 필요.
+- 기존 결과 불명 API/피드/ElevenLabs 기록은 해결된 것으로 표시하거나 자동 재전송하지 않는다.
+이 개발 단계의 결과를 보고한 뒤 추가 기능 개발이나 운영 전환 없이 판정을 기다린다.
