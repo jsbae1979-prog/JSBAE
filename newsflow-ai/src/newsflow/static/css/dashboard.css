@@ -63,7 +63,7 @@
 .mockup-dashboard .dash-categories a.selected{background:linear-gradient(120deg,#1978ff,#0048ec);border-color:#4b9eff;box-shadow:0 0 12px #0069ff55;color:#fff}
 .dash-news{min-height:620px;display:flex;flex-direction:column}
 .mockup-dashboard .dash-news-item{display:flex;gap:12px;align-items:center;margin:0;padding:18px 0;border-bottom:1px solid #223f57;color:#e6effd}
-.dash-news-art{display:block;width:112px;height:90px;flex-shrink:0;border:1px solid #3f6d8e;border-radius:9px;background-image:url('/static/images/news-topic-atlas.png');background-size:200% 200%;background-position:0 0}
+.dash-news-art{display:block;width:112px;height:90px;flex-shrink:0;border:1px solid #3f6d8e;border-radius:9px;background-color:#102236;background-size:200% 200%;background-position:0 0}
 .dash-news-art.topic-city{background-position:100% 0}.dash-news-art.topic-energy{background-position:0 100%}.dash-news-art.topic-world{background-position:100% 100%}
 .dash-news-item>div{min-width:0}
 .dash-news-item p{display:flex;align-items:center;gap:8px;margin:0 0 8px;min-width:0}

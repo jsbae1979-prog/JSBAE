@@ -15,7 +15,7 @@
 <details class="news-source-list" {% if source %}open{% endif %}><summary>등록 출처 {{ sources|length }}개</summary>
 {% for s in sources %}<a class="suite-source-line" href="/news?source={{ s.id }}" {% if source == s.id %}aria-current="true"{% endif %}><span class="suite-dot {{ 'enabled' if s.enabled }}"></span><strong>{{ s.name }}</strong><small>{{ '활성' if s.enabled else '비활성' }}</small></a>{% else %}<p>등록한 RSS 출처가 없습니다.</p>{% endfor %}</details>
 <a class="suite-panel-link" href="/sources">출처 추가·수집 관리 →</a></section>
-<details class="suite-context-note"><summary>자료·점수·이미지 안내</summary><p>보관 기사 검색은 새 수집과 다릅니다. 날짜 필터에서는 발행시각 미확인 기사를 제외합니다.</p><p>점수는 내부 추천 휴리스틱이며 실제 조회수가 아닙니다. 출처 제공 대표 이미지는 목록 미리보기입니다. 영상 재사용 권한은 별도 확인하며 영상 소재로 자동 사용하지 않습니다. 기본 주제 이미지는 실제 보도 사진이 아닙니다.</p></details>
+<details class="suite-context-note"><summary>자료·점수·이미지 안내</summary><p>보관 기사 검색은 새 수집과 다릅니다. 날짜 필터에서는 발행시각 미확인 기사를 제외합니다.</p><p>점수는 내부 추천 휴리스틱이며 실제 조회수가 아닙니다. 출처 제공 대표 이미지는 목록 미리보기입니다. 영상 재사용 권한은 별도 확인하며 영상 소재로 자동 사용하지 않습니다. 원본 대표 이미지가 없거나 표시할 수 없으면 뉴스 아이콘과 “이미지 없음”을 표시합니다.</p></details>
 </aside></div>
 {% if curation is defined %}{% include 'curation_panel.html' %}{% endif %}
 </div>{% endblock %}

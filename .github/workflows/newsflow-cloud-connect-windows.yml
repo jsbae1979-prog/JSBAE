@@ -6,7 +6,7 @@ on:
       scope:
         description: 'Full native verification or only the historical failure comparison'
         type: choice
-        options: [full, history, flow]
+        options: [full, history, flow, visual-assets]
         default: full
   push:
     branches: [codex/newsflow-ux-video-app]
@@ -104,7 +104,7 @@ jobs:
       # Native DPAPI uses synthetic values; no MP4/WAV/SQLite/key artifacts are uploaded.
 
   final-windows-ui:
-    if: github.event_name == 'workflow_dispatch' && inputs.scope != 'flow'
+    if: github.event_name == 'workflow_dispatch' && inputs.scope != 'flow' && inputs.scope != 'visual-assets'
     runs-on: windows-latest
     timeout-minutes: 35
     strategy:
@@ -321,5 +321,90 @@ jobs:
             ${{ runner.temp }}/newsflow-script-flow/**/*.txt
             ${{ runner.temp }}/newsflow-script-flow/**/*.png
             ${{ runner.temp }}/newsflow-script-flow/**/synthetic-review.mp4
+          retention-days: 14
+          if-no-files-found: warn
+
+  visual-assets:
+    if: github.event_name == 'workflow_dispatch' && inputs.scope == 'visual-assets'
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_CLAUDE_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      NEWSFLOW_META_APP_SECRET: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      ANTHROPIC_AUTH_TOKEN: ''
+      CLAUDE_CODE_OAUTH_TOKEN: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies and pip check
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Isolate native profile and verify Chrome
+        run: |
+          "LOCALAPPDATA=$env:RUNNER_TEMP/newsflow-visual-profile" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEWSFLOW_DATA_DIR=$env:RUNNER_TEMP/newsflow-visual-data" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEWSFLOW_VALIDATION_OUTPUT=$env:RUNNER_TEMP/newsflow-visual-assets" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "PYTHONPATH=$PWD/src;$PWD/tests;$PWD/tools" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          $chrome = @("$env:ProgramFiles\Google\Chrome\Application\chrome.exe", "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe")
+          if (-not ($chrome | Where-Object { Test-Path -LiteralPath $_ })) { throw 'Windows Chrome missing' }
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP/newsflow-visual-assets" | Out-Null
+          git rev-parse HEAD
+          python --version
+      - name: Ruff
+        run: .venv/Scripts/python -m ruff check tests/test_visual_asset_followup.py
+      - name: News images and existing AI mode safety - no live services
+        run: |
+          .venv/Scripts/python -m pytest -q -rs -p windows_final_guard tests/test_visual_asset_followup.py tests/test_news_thumbnails.py tests/test_final_production.py --junitxml="$env:RUNNER_TEMP/newsflow-visual-assets/tests.xml"
+          exit $LASTEXITCODE
+      - name: Reproduce existing migration assertion on unchanged baseline
+        if: always()
+        run: |
+          $baseline = "$env:RUNNER_TEMP/newsflow-visual-baseline"
+          New-Item -ItemType Directory -Force $baseline | Out-Null
+          git -C .. archive c5ed43ffd7140aeca0e7c2521882a06227905805 --output="$env:RUNNER_TEMP/newsflow-visual-baseline.tar" newsflow-ai/src newsflow-ai/tests newsflow-ai/pyproject.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          tar -xf "$env:RUNNER_TEMP/newsflow-visual-baseline.tar" -C $baseline
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:PYTHONPATH = "$baseline/newsflow-ai/src;$baseline/newsflow-ai/tests;$PWD/tools"
+          .venv/Scripts/python -m pytest -q -rs -p windows_final_guard "$baseline/newsflow-ai/tests/test_news_thumbnails.py::test_additive_migration_preserves_synthetic_legacy_tables" --junitxml="$env:RUNNER_TEMP/newsflow-visual-assets/baseline.xml"
+          exit $LASTEXITCODE
+      - name: Record exact environment
+        if: always()
+        run: |
+          @{ sha='${{ github.sha }}'; python='${{ matrix.python }}'; platform='Windows Chrome'; live_services='blocked by windows_final_guard'; scope='visual-assets' } | ConvertTo-Json | Out-File "$env:RUNNER_TEMP/newsflow-visual-assets/environment.json" -Encoding utf8
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: pr35-visual-assets-${{ matrix.python }}
+          path: ${{ runner.temp }}/newsflow-visual-assets/
           retention-days: 14
           if-no-files-found: warn
