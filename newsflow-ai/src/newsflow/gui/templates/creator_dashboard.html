@@ -12,7 +12,7 @@
     </form><p id="topic-scope" class="sr-only">이미 수집해 보관한 기사만 검색합니다. 기사를 선택한 뒤 분석·대본 작성을 이어가세요. 새 기사 URL 가져오기는 지원하지 않습니다.</p>
 
   </div>
-  <header class="dash-heading"><div><h1>오늘의 뉴스를, <span>다음 영상으로.</span></h1><p>수집부터 대본, 영상, 게시 준비까지 하나의 작업실에서.</p></div><div class="dash-heading-action"><time>{{ dashboard.today }} · KST</time></div></header>
+  <header class="dash-heading studio-concept-hero"><figure class="studio-hero-art"><img src="/static/images/studio-concepts/hero_news_studio-1024.webp" srcset="/static/images/studio-concepts/hero_news_studio-512.webp 512w, /static/images/studio-concepts/hero_news_studio-1024.webp 1024w" sizes="(max-width:760px) 100vw, (max-width:1600px) 45vw, 740px" width="1024" height="576" alt="" decoding="async"><figcaption>AI 생성 콘셉트 이미지 · 실제 보도 사진 아님</figcaption></figure><div class="studio-hero-copy"><h1>오늘의 뉴스를, <span>다음 영상으로.</span></h1><p>수집부터 대본, 영상, 게시 준비까지 하나의 작업실에서.</p></div><div class="dash-heading-action"><time>{{ dashboard.today }} · KST</time></div></header>
   <nav class="reference-metrics dash-metrics" aria-label="내 제작 현황">
   {% for icon,label,value,href,tone in [('news','보관 뉴스',dashboard.news_count,'/news','blue'),('clock','진행·검토',studio.counts.active,'/?show=tasks','amber'),('play','완성 영상',video_count,'/videos','cyan'),('file','게시 초안',queue_count,'/queue','purple')] %}
     <a class="reference-metric dash-metric {{ tone }}" href="{{ href }}"><span class="dash-icon">{{ ui_icon(icon,24) }}</span><div><span>{{ label }}</span><strong>{{ value }}</strong></div>{{ ui_icon('arrow',16) }}</a>

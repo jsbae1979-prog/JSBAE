@@ -154,3 +154,22 @@ body.unified-studio.premium-shell.workspace-shell #publish-workspace .warn {padd
 body.unified-studio.premium-shell.workspace-shell .studio-error {padding:12px 16px;border:1px solid #92505e;border-left-width:3px;border-radius:9px;background:#3b2330;color:#ffd0d5;line-height:1.7}
 
 body.unified-studio.premium-shell.workspace-shell .studio-recovery-actions {display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+
+/* Supplied concept photography is decorative, never article or video content. */
+body.unified-studio.premium-shell.workspace-shell .mockup-dashboard:before {content:none;background:none}
+body.unified-studio.premium-shell.workspace-shell .studio-concept-hero {position:relative;isolation:isolate;min-height:160px;padding:24px;margin-bottom:20px;border:1px solid var(--studio-line);border-radius:var(--studio-radius);overflow:hidden;background:var(--studio-panel)}
+.studio-hero-art {position:absolute;inset:0 0 0 auto;width:60%;margin:0;z-index:-1;pointer-events:none}
+.studio-hero-art img {display:block;width:100%;height:100%;object-fit:cover;object-position:65% 52%}
+.studio-hero-art::after {content:'';position:absolute;inset:0;background:linear-gradient(90deg,#101c2e 0%,#101c2ee6 15%,#101c2e22 65%)}
+.studio-hero-art figcaption {position:absolute;right:12px;bottom:10px;z-index:1;padding:3px 7px;border-radius:4px;background:#08111ff2;color:#c5d5e8;font-size:12px;line-height:1.6}
+.studio-hero-copy {width:68%;position:relative;z-index:1}
+body.unified-studio.premium-shell.workspace-shell .studio-concept-hero .dash-heading-action {align-self:flex-start;position:relative;z-index:1;padding:3px 7px;border-radius:4px;background:#08111ff2}
+.library-concept-art {width:100%;max-width:440px;margin:0;justify-self:center}
+.library-concept-art img {border-radius:9px}
+.library-concept-art figcaption {margin-top:8px;color:var(--studio-muted);font-size:12px;line-height:1.6;text-align:center}
+@media(max-width:760px) {
+ body.unified-studio.premium-shell.workspace-shell .studio-concept-hero {min-height:190px;padding:20px 16px 42px}
+ .studio-hero-art {width:100%}.studio-hero-art img {opacity:.3}.studio-hero-art::after {background:linear-gradient(90deg,#101c2ed9,#101c2e55)}
+ .studio-hero-art figcaption {left:12px;right:auto;bottom:10px;font-size:12px}
+ .studio-hero-copy {width:100%}.library-concept-art {max-width:240px}
+}
