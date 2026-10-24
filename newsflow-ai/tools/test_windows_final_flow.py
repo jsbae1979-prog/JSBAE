@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import socket
 import time
 import urllib.request
@@ -82,18 +83,13 @@ def local_server(app):
 
 def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, browser, monkeypatch, tmp_path):
     coordinator, backend, provider, sessions, mode, rss = api_pipeline
-    # New jobs reject short scripts before either review mode. This healthy-flow
-    # fixture supplies valid narration; the short-response rejection is tested separately.
-    from newsflow.intelligence.korean import speech_plan
+    # The prior fixture appended repeated sentences to reach 27 seconds, but
+    # violated the current spoken hook/closing, synthetic disclosure and sentence
+    # limits. Change only this Fake response, never the product review policy.
+    from flow_script_fixture import valid_script
     complete = provider.complete
     def healthy_fake_script(evidence, seconds, options):
-        result = complete(evidence, seconds, options)
-        while speech_plan(result, seconds)["estimated_total_seconds"] < seconds * .90:
-            plan = speech_plan(result, seconds)
-            index = min(range(len(plan["scenes"])), key=lambda i: plan["scenes"][i]["estimated_seconds"])
-            result["scenes"][index]["narration"] += " 살펴봅니다."
-        assert speech_plan(result, seconds)["fits"]
-        return result
+        return valid_script(complete(evidence, seconds, options))
     monkeypatch.setattr(provider, "complete", healthy_fake_script)
     # The original factories/engines stay intact; only test dependencies are injected.
     monkeypatch.setattr(app.state, "autopilot", coordinator)
@@ -178,12 +174,13 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         page.locator("#workspace-detail").screenshot(path=str(output / "api-script-review.png"))
         # Use the real editor POST and return to the same work item, with no new inference.
         page.goto(origin + f'/ai?draft_id={job["content_draft_id"]}')
+        page.locator("[data-script-editor]>summary").click()
         expect(page.locator('textarea[name="narration"]').first).not_to_have_attribute("readonly", "")
         with page.expect_navigation(wait_until="load"), page.expect_response(lambda r:r.request.method=="POST" and "/ai/drafts/" in r.url) as saved:
-            page.get_by_role("button",name="수정 초안 저장").click()
+            page.locator('form[action^="/ai/drafts/"] button[type="submit"]').click()
         assert saved.value.status == 303
         page.wait_for_url(lambda u:"draft_id=" in u)
-        page.get_by_role("link", name="작업실에서 대본 검토 계속하기 →", exact=True).click()
+        page.get_by_role("link", name="작업실로 돌아가기 →", exact=True).click()
         expect(page.locator('form[action$="/resume"]')).to_have_attribute("data-easy-wired","true")
         with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/resume")) as resumed:
             page.get_by_role("button", name="이 대본으로 영상 만들기", exact=False).click()
@@ -198,6 +195,7 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         expect(video).to_be_visible()
         video.evaluate("async v=>{v.muted=true;await v.play()}")
         page.wait_for_function("()=>document.querySelector('[data-workspace-detail] video').currentTime>0")
+        page.locator("#workspace-detail").screenshot(path=str(output / "generated-video-review.png"))
         video.evaluate("v=>v.pause()")
         render_id = job["render_job_id"]
         media = context.request.get(origin + f"/video/jobs/{render_id}/file?download=true")
@@ -207,6 +205,10 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
         metadata = inspector.inspect(path)
         assert (metadata["width"],metadata["height"],metadata["video_codec"],metadata["audio_codec"]) == (1080,1920,"h264","aac")
+        assert 29.9 <= metadata["duration"] <= 30.2 and metadata["playable"]
+        # Only synthetic media from this temporary test is exported for review.
+        shutil.copyfile(path, output / "synthetic-review.mp4")
+        assert hashlib.sha256((output / "synthetic-review.mp4").read_bytes()).hexdigest() == digest
         with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/resume")) as queued:
             page.get_by_role("button", name="게시 대기함에 보관하기", exact=False).click()
         assert queued.value.status == 303
@@ -229,7 +231,7 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         for field in ("content_reviewed","copyright_confirmed","sources_confirmed"):
             review.locator(f'[name="{field}"]').check()
         review.locator('[name="ai_disclosure"]').select_option("disclose")
-        review.get_by_role("button",name="검토 저장·파일 확인").click()
+        review.locator("[data-publish-save]").click()
         page.wait_for_load_state("networkidle")
         execute = page.locator('form[action$="/execute"]')
         expect(execute).to_be_visible()
@@ -288,6 +290,13 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
     result={"status":"PASS","provider":mode,"api_calls":provider.calls,"target":target,
             "youtube_fake_uploads":len(yt_adapter.calls),"instagram_fake_calls":ig_adapter.calls,
             "media":metadata,"media_sha256":digest,"tts":"synthetic timed WAV silence, not speech",
+            "steps":{"news":"PASS: Fake search once", "analysis":"PASS: selected Fake provider once",
+                     "script":"PASS: automatic validators and user review wait",
+                     "edit":"PASS: existing form POST, revision 2, no inference",
+                     "render":"PASS: synthetic TTS and actual FFmpeg",
+                     "playback":"PASS: Windows Chrome when run on Windows; advancing currentTime",
+                     "final_review":"PASS: explicit resume before local queue",
+                     "publishing":"PASS: Fake services only, approval and successful-target replay guards"},
             "human_quality":"NOT VERIFIED","actual_external_api_oauth_sns":0,
             "javascript_errors":errors,"external_browser_requests":external,
             "restart":"publisher coordinator reconstructed; same SQLite evidence, no successful-platform replay"}
