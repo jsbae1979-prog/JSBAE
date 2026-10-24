@@ -65,7 +65,11 @@ class SyntheticTTS:
 def local_server(app):
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
-        config = uvicorn.Config(app, log_level="error", access_log=False, lifespan="off")
+        # This short-lived test server must not wait forever on a browser's
+        # abandoned keep-alive connection (Windows Proactor may reset it).
+        # Keep the thread-exit assertion; do not affect the application's server.
+        config = uvicorn.Config(app, log_level="error", access_log=False, lifespan="off",
+                                timeout_graceful_shutdown=5)
         server = uvicorn.Server(config)
         thread = Thread(target=server.run, kwargs={"sockets": [sock]}, daemon=True)
         thread.start()
@@ -286,6 +290,7 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
             assert all(r.test_only for r in s.scalars(select(APIRequestReservation)))
             assert {r.provider for r in s.scalars(select(IntelligenceRun))}=={mode}
             assert s.get(ContentDraft,job['content_draft_id']).revision==2
+        page.wait_for_load_state("networkidle")
         context.close()
     result={"status":"PASS","provider":mode,"api_calls":provider.calls,"target":target,
             "youtube_fake_uploads":len(yt_adapter.calls),"instagram_fake_calls":ig_adapter.calls,
