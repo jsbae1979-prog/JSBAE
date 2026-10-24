@@ -61,7 +61,8 @@ class SyntheticTTS:
 def local_server(app):
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
-        config = uvicorn.Config(app, log_level="error", access_log=False, lifespan="off")
+        config = uvicorn.Config(app, log_level="error", access_log=False, lifespan="off",
+                                timeout_keep_alive=1, timeout_graceful_shutdown=3)
         server = uvicorn.Server(config)
         thread = Thread(target=server.run, kwargs={"sockets": [sock]}, daemon=True)
         thread.start()

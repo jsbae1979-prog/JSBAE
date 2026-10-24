@@ -111,3 +111,37 @@ def test_isolated_windows_all_routes_assets_popup_and_preserved_records(visual, 
         "mutations": writes, "javascript_errors": errors, "static_asset_failures": asset_failures,
         "synthetic_records_unchanged": True, "operating_port_used": False,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+
+def test_open_media_stream_cannot_hold_the_isolated_server_during_teardown():
+    import asyncio
+    import http.client
+    import time
+
+    from fastapi import FastAPI
+    from starlette.responses import StreamingResponse
+
+    app = FastAPI()
+    @app.get("/held-synthetic-stream")
+    def held():
+        async def body():
+            yield b"x"
+            await asyncio.sleep(60)
+            yield b"x"
+        return StreamingResponse(body(), media_type="application/octet-stream")
+
+    connection = None
+    started = time.monotonic()
+    try:
+        with local_server(app) as origin:
+            address = urlsplit(origin)
+            connection = http.client.HTTPConnection(address.hostname, address.port, timeout=10)
+            connection.request("GET", "/held-synthetic-stream")
+            response = connection.getresponse()
+            assert response.status == 200 and response.read(1) == b"x"
+            # Deliberately leave the local media stream open during server teardown.
+        assert time.monotonic() - started < 14
+    finally:
+        if connection is not None:
+            connection.close()
