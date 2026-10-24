@@ -69,7 +69,7 @@ def main() -> int:
     # The CI change must not silently alter the approved product or its existing tests.
     changed = subprocess.check_output(['git', 'diff', '--name-only', PRODUCT, 'HEAD', '--',
         'newsflow-ai/src', 'newsflow-ai/run.bat', 'newsflow-ai/pyproject.toml', 'newsflow-ai/tests'],
-        cwd=ROOT, text=True)
+        cwd=ROOT.parent, text=True)
     assert not changed, changed
     historical = json.loads((ROOT/'docs/reports/evidence/regression-57-resolution/selection.json').read_text())['matched']
     assert len(historical) == 57
@@ -78,7 +78,7 @@ def main() -> int:
         'windows': platform.platform(), 'product_and_existing_tests_unchanged': True,
         'external_services': 'blocked by test guard; no real credentials', 'groups': {}}
     archive = subprocess.check_output(['git', 'archive', BASE, 'newsflow-ai/src', 'newsflow-ai/tests',
-                                      'newsflow-ai/pyproject.toml'], cwd=ROOT)
+                                      'newsflow-ai/pyproject.toml'], cwd=ROOT.parent)
     with tempfile.TemporaryDirectory(prefix='newsflow-final-baseline-') as temp:
         with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
             tar.extractall(temp, filter='data')

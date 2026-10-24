@@ -177,7 +177,7 @@ jobs:
         id: bat
         continue-on-error: true
         timeout-minutes: 6
-        run: .venv/Scripts/python tools/ci_windows_launch_smoke.py --root "$env:RUNNER_TEMP/newsflow-final-ui-bat" --output "$env:RUNNER_TEMP/newsflow-final-ui/bat.json"
+        run: .venv/Scripts/python tools/ci_windows_launch_smoke.py --root "$env:TEMP/newsflow-final-ui-bat" --output "$env:RUNNER_TEMP/newsflow-final-ui/bat.json"
       - name: Windows Chrome final screens and supplied artwork
         if: always() && steps.comparison.outcome != 'skipped'
         id: browser
@@ -192,7 +192,7 @@ jobs:
         id: flow
         continue-on-error: true
         run: |
-          .venv/Scripts/python -m pytest -q -rs tests/test_cloud_workspace_flow.py --junitxml="$env:RUNNER_TEMP/newsflow-final-ui/flow.xml"
+          .venv/Scripts/python -m pytest -q -rs tools/test_windows_final_flow.py --junitxml="$env:RUNNER_TEMP/newsflow-final-ui/flow.xml"
           exit $LASTEXITCODE
       - name: Report actual step outcomes without treating failures as success
         if: always()
