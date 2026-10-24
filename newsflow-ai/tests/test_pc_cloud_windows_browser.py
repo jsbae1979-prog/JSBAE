@@ -97,7 +97,12 @@ def test_isolated_windows_all_routes_assets_popup_and_preserved_records(visual, 
         page.keyboard.press("Escape")
         expect(dialog).not_to_be_visible()
         expect(trigger).to_be_focused()
-        assert trigger.get_attribute("aria-expanded") == "false"
+        expect(trigger).to_have_attribute("aria-expanded", "false")
+        trigger.click()
+        dialog.get_by_role("button", name="닫기").click()
+        expect(dialog).not_to_be_visible()
+        expect(trigger).to_have_attribute("aria-expanded", "false")
+        expect(trigger).to_be_focused()
         assert not external and not writes and not errors and not asset_failures
         context.close()
     assert (records(app), stored_values(app)) == before
