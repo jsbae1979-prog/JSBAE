@@ -1,0 +1,42 @@
+{
+  "phase": "before",
+  "metrics": [
+    {
+      "viewport": "1366x768",
+      "cta": {
+        "x": 274,
+        "y": 331.484375,
+        "width": 114.328125,
+        "height": 34.796875
+      },
+      "outline": "rgb(139, 200, 255)",
+      "text": "rgb(237, 243, 255)"
+    },
+    {
+      "viewport": "1920x1080",
+      "cta": {
+        "x": 358,
+        "y": 339.484375,
+        "width": 114.328125,
+        "height": 34.796875
+      },
+      "outline": "rgb(139, 200, 255)",
+      "text": "rgb(237, 243, 255)"
+    },
+    {
+      "viewport": "390x844",
+      "cta": {
+        "x": 40,
+        "y": 487.71875,
+        "width": 114.328125,
+        "height": 44
+      },
+      "outline": "rgb(139, 200, 255)",
+      "text": "rgb(237, 243, 255)"
+    }
+  ],
+  "external_requests": [],
+  "mutations": [],
+  "page_errors": [],
+  "database_bytes_preserved": true
+}

@@ -1,0 +1,8 @@
+{
+  "phase": "before",
+  "metrics": [],
+  "external_requests": [],
+  "mutations": [],
+  "page_errors": [],
+  "database_bytes_preserved": true
+}

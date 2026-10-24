@@ -1,0 +1,25 @@
+{
+  "before_sha": "c988fa2dfe42d2a54f67207a2f608bcb15ca8237",
+  "after_code_sha": "cf1899c440d1fcff16b72faa8b95abe8f9449836",
+  "environment": "Cloud Linux / Python 3.12.14 / Chromium (not Windows)",
+  "files": {
+    "after/contrast-and-svg.json": "7d73e7b9f80563f80fb07774fae350bb626454cb9fc179faf9fa2606dd1e0ee5",
+    "after/empty-1366.png": "6844927dcdfdc3d862f622377d820335d8361b6d2df20d80fe3bdbdfad6c2e3a",
+    "after/empty-1920.png": "e2abeba5a63b2ba91ce7ce66a94bcce0642d4ed564755a037c2c153e5d395dca",
+    "after/empty-390-focus.png": "a6aca495fff3fbcf79e3a0c471a29fdefcd5009607bcb5499fd94f0e7e3605dd",
+    "after/empty-390.png": "36d1ec9ff6312ac18514354700cfc4dce0cc0485eb11e377df56430ec3aa14c7",
+    "after/empty-audit.json": "a59aa02a528f3efff19142473fd849e401c38cd8f26fab0542290c7a0492f00d",
+    "after/populated-1366.png": "05bf829f8d736f365cb14b930754e46d5c10226456805e0b4d79d1e98fe069eb",
+    "after/populated-audit.json": "435f67bf2613d942b204eaa11a98c6b55096e4e62e6825deeb398f98929bd0bb",
+    "after.log": "1442a3df3f594c85890a07a8d98d0d96c680cd159d48d3be40a53474b7078783",
+    "before/empty-1366.png": "23d2fa5944c1e69d8127cc296ce648b5cef2e22217b785601798973d9972c95e",
+    "before/empty-1920.png": "38f7d0d91e008044f4685678c1a20359185076ae81ac46710b3f3b1bce63766d",
+    "before/empty-390.png": "06b1d8b8e2f903f71daaa065f1de6e9961ff8f51116e97a15c7d5e63a2657f29",
+    "before/empty-audit.json": "b08ee977374b8b54f6396e9b748ce164f7894e81edcaaba895f297acdda72c95",
+    "before/populated-1366.png": "05bf829f8d736f365cb14b930754e46d5c10226456805e0b4d79d1e98fe069eb",
+    "before/populated-audit.json": "30eaa541985652168762a5908439f7b978a689962c74fc8141f4e61eed058a5a",
+    "before.log": "232bff35699be42e19db2b3963a4d92b4b661367b1db36f248cd96c3f36cdde8",
+    "regression.log": "325d76a8ab418a54a1707bffc9a9ce334fe0d52e1c693b8e13d711ea85ead0e7",
+    "test_storyflow_review.py": "4e790f88209aa724fc4a652d519f3bd69703df4508f5d8aea5c0fbd3f4ff807b"
+  }
+}
