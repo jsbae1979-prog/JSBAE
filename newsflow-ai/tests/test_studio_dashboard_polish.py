@@ -67,7 +67,10 @@ def test_studio_dashboard_polish_keeps_real_state_forms_and_reviews(visual,brows
             expect(page.get_by_role('link',name='이미지 게시물',exact=True)).to_have_count(1)
             expect(page.locator('[data-dash-news-category]')).to_have_count(9)
             assert page.locator('.dash-center').evaluate("e=>[...e.children].map(n=>n.className)")==[
-                'dash-panel dash-workflow','dash-panel dash-activity','dash-panel dash-recent']
+                'dash-panel dash-workflow','studio-disclosure dashboard-history','dash-panel dash-recent']
+            expect(page.locator('.dashboard-history')).not_to_have_attribute('open','')
+            page.locator('.dashboard-history>summary').click()
+            expect(page.locator('.dashboard-history .dash-activity')).to_be_visible()
             assert page.locator('.workflow-steps').evaluate("e=>!!(e.compareDocumentPosition(document.querySelector('.workflow-current')) & Node.DOCUMENT_POSITION_FOLLOWING)")
             expect(page.locator('[data-dashboard-player]')).to_have_count(1)
             expect(page.locator('[data-workflow-next-action]')).to_have_attribute('href',f'/?task={task}#workspace-detail')
@@ -75,7 +78,7 @@ def test_studio_dashboard_polish_keeps_real_state_forms_and_reviews(visual,brows
             page.evaluate("()=>window.scrollTo({top:0,behavior:'instant'})")
             page.screenshot(path=str(evidence/f'dashboard-{width}.png'),full_page=True)
             assert page.goto(origin+f'/ai?draft_id={draft}').status==200
-            expect(page.locator(f'main a[href="/video?draft_id={draft}"]')).to_have_count(1)
+            expect(page.locator(f'.script-next-step a[href="/video?draft_id={draft}"]')).to_have_count(1)
             expect(page.get_by_role('region',name='장면별 보완 필요')).to_contain_text('보완 필요 1건')
             expect(page.locator('.scene-review-notes')).to_contain_text('관련 용어와 기사 근거를 확인하세요.')
             page.locator('[data-script-source-open]').click()
@@ -89,8 +92,9 @@ def test_studio_dashboard_polish_keeps_real_state_forms_and_reviews(visual,brows
             page.evaluate("()=>window.scrollTo({top:0,behavior:'instant'})")
             page.screenshot(path=str(evidence/f'script-{width}.png'),full_page=True)
             page.get_by_role('link',name='이 대본으로 영상 구성',exact=False).click()
+            page.wait_for_load_state('networkidle')  # Wait for deferred scene controls before keyboard input.
             expect(page.locator('.workstation-scene-list')).to_have_count(0)
-            expect(page.locator(f'main a[href="/ai?draft_id={draft}"]')).to_have_count(1)
+            expect(page.locator(f'.workstation-timeline a[href="/ai?draft_id={draft}"]')).to_have_count(1)
             expect(page.locator('#video-advanced-editing')).not_to_have_attribute('open','')
             page.get_by_role('button',name='자막 장면 2 · 10초',exact=True).focus()
             page.keyboard.press('Enter')

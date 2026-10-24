@@ -1,6 +1,6 @@
 {% if not reference_home|default(false) %}<label class="production-review-choice"><input type="checkbox" name="script_review" value="true" form="quick-production" {% if not entry_flow|default(none) or entry_flow.get('script_review', true) %}checked{% endif %}><span>영상 제작 전에 대본 확인하기</span></label>{% endif %}
 {% if not picker_on_dashboard|default(false) %}{% with dashboard_picker=true %}{% include 'production_picker.html' %}{% endwith %}{% endif %}
-  <div class="studio-form-heading"><div><p class="eyebrow">CREATE YOUR NEXT STORY</p><h2 id="production-title" tabindex="-1">{{ "새 쇼츠 만들기" if reference_home else "제작 시작" }}</h2></div><span class="studio-format">9:16 SHORTS</span></div>
+  <h2 id="production-title" tabindex="-1" class="sr-only">{{ "새 쇼츠 만들기" if reference_home else "제작 시작" }}</h2>
   <form action="{{ production.action_url }}" method="post" data-easy-form class="quick-production-form" id="quick-production">
     {{ csrf_field() }}<input type="hidden" name="workspace" value="true"><input type="hidden" name="production_options_version" value="2">
     {% if not production_picker|default(none) and (not entry_flow or entry_flow.get('script_review', true)) %}<input type="hidden" name="script_review" value="true">{% endif %}

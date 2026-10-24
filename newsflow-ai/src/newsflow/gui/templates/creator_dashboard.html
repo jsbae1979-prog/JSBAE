@@ -10,7 +10,7 @@
     <form action="/news" method="get" data-topic-search class="reference-search dash-search" id="archive-search" role="search" aria-label="보관 기사 검색">
       <label class="sr-only" for="home-topic">보관 기사 검색</label>{{ ui_icon('search',20) }}<input type="search" id="home-topic" name="q" maxlength="200" placeholder="보관한 기사에서 주제 검색" aria-describedby="topic-scope" required><button type="submit" aria-label="보관 기사 검색">{{ ui_icon('arrow',18) }}</button><p data-topic-error role="alert" hidden></p>
     </form><p id="topic-scope" class="sr-only">이미 수집해 보관한 기사만 검색합니다. 기사를 선택한 뒤 분석·대본 작성을 이어가세요. 새 기사 URL 가져오기는 지원하지 않습니다.</p>
-    <a class="dash-workspace" href="/videos"><span class="dash-avatar">N</span><span>나의 작업실<small>{{ 'DEMO · 합성 자료' if ui_demo|default(false) else '내 PC에 보관' }}</small></span>{{ ui_icon('folder',18) }}</a>
+
   </div>
   <header class="dash-heading"><div><h1>오늘의 뉴스를, <span>다음 영상으로.</span></h1><p>수집부터 대본, 영상, 게시 준비까지 하나의 작업실에서.</p></div><div class="dash-heading-action"><time>{{ dashboard.today }} · KST</time></div></header>
   <nav class="reference-metrics dash-metrics" aria-label="내 제작 현황">
@@ -29,12 +29,12 @@
       <section class="dash-panel dash-workflow" data-workspace-create aria-labelledby="dash-workflow-title">
         {% with dashboard_compact=true %}{% include 'workflow_card.html' %}{% endwith %}
       </section>
-      {% include 'dashboard_activity_chart.html' %}
+      <details class="studio-disclosure dashboard-history"><summary>{{ ui_icon('chart',18) }} 제작 활동 보기</summary>{% include 'dashboard_activity_chart.html' %}</details>
       <section class="dash-panel dash-recent" id="workspace-tasks" aria-labelledby="recent-title"><div class="dash-panel-heading"><h2 id="recent-title">{{ ui_icon('clock',20) }}이어서 작업하기</h2><a href="/?show=tasks">전체 작업 {{ studio.counts.active }} ↗</a></div>{% with studio_rows=studio.active[:2] %}{% include 'studio_task_list.html' %}{% endwith %}<a class="dash-quiet-link" href="/workspace/trash">{{ ui_icon('trash',16) }} 휴지 보관</a></section>
 
     </div>
     <div class="dash-right">
-      <section class="dash-panel dash-preview" aria-labelledby="preview-title"><div class="dash-panel-heading"><h2 id="preview-title">{{ ui_icon('play',20) }}영상 미리보기</h2>{% if latest %}<a href="{{ latest.link }}" aria-label="영상 검토 열기">{{ ui_icon('arrow',16) }}</a>{% endif %}</div>
+      <section class="dash-panel dash-preview" id="workspace-videos" data-workspace-videos aria-labelledby="preview-title"><div class="dash-panel-heading"><h2 id="preview-title">{{ ui_icon('play',20) }}영상 미리보기</h2><a href="/videos">내 영상 →</a></div>
         {% if latest %}<div class="dash-player-stage"><video id="dashboard-player" data-dashboard-player data-preview-only="{{ 'true' if latest.preview_only else 'false' }}" controls preload="none" poster="/video/jobs/{{ latest.id }}/thumbnail" aria-label="{{ latest.title }} 미리보기"><source src="{{ latest.media_url }}" type="video/mp4"></video></div><p class="dash-media-notice" data-dash-ai-warning {% if not latest.ai_scenes %}hidden{% endif %}>AI 생성 장면 포함 · 실제 사건을 촬영한 영상이 아닙니다.</p><p class="dash-media-notice" data-dash-preview-warning {% if not latest.preview_only %}hidden{% endif %}>검토용 초안</p><h3 class="dash-video-title" data-dash-video-title>{{ latest.title }}</h3>
 
         <div class="dash-preview-meta"><span><b data-dash-duration>{{ latest.duration }}</b>초 · 9:16 · MP4</span></div>
@@ -44,7 +44,7 @@
       </section>
       <section class="dash-panel dash-publish" aria-labelledby="publish-title"><div class="dash-panel-heading"><h2 id="publish-title">{{ ui_icon('send',20) }}게시 준비</h2><a href="/queue">대기함 ↗</a></div><div class="dash-platforms"><a data-dash-youtube href="{{ '/?video=' ~ latest.id ~ '#youtube-publish' if latest else '/queue' }}"><span class="platform-mark youtube">{{ ui_icon('youtube',21) }}</span><span>YouTube<small>게시 준비 열기</small></span></a><a data-dash-instagram href="{{ '/?video=' ~ latest.id ~ '&publish_platform=instagram#instagram-publish' if latest else '/queue' }}"><span class="platform-mark instagram">{{ ui_icon('instagram',21) }}</span><span>Instagram<small>게시 준비 열기</small></span></a></div>
       <p>계정·권한 확인과 게시 승인은 별도입니다.</p><a class="button primary dash-publish-action" data-dash-publish href="{{ '/?video=' ~ latest.id ~ '&publish_platform=unified#publish-workspace' if latest else '/queue' }}">{{ ui_icon('send',20) }} 검토 후 게시 준비</a></section>
-      <section class="dash-saved" id="workspace-videos" data-workspace-videos><a href="/videos">내 영상 {{ video_count }}개 확인 {{ ui_icon('arrow',18) }}</a>{% if video_count > completed|length %}<a href="/?show=videos#workspace-videos">영상 더 보기 ↓</a>{% endif %}</section>
+
     </div>
   </div>
 </div>

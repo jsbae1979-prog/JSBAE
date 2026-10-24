@@ -1,0 +1,156 @@
+/* Shared presentation contract. This final layer owns tokens and common primitives;
+   feature CSS continues to own editor geometry, state, visibility and interactions. */
+body.unified-studio.premium-shell.workspace-shell {
+  --studio-bg:#08111f; --studio-panel:#101c2e; --studio-inset:#0b1626;
+  --studio-line:#2b4059; --studio-text:#eef4fc; --studio-muted:#aebed2;
+  --studio-primary:#2864df; --studio-focus:#8bc8ff; --studio-radius:12px;
+  --studio-gap:24px; --bg:var(--studio-bg); --panel:var(--studio-panel);
+  --text:var(--studio-text); --muted:var(--studio-muted); --border:var(--studio-line);
+  background:var(--studio-bg);color:var(--studio-text);font-size:14px;line-height:1.65;
+}
+body.unified-studio.premium-shell.workspace-shell #main-content {padding:24px 28px 48px}
+body.unified-studio.premium-shell.workspace-shell :is(.easy-page,.settings-workspace,.mockup-dashboard,.single-workspace) {max-width:1480px;margin-inline:auto}
+body.unified-studio.premium-shell.workspace-shell :is(h1,h2,h3) {font-weight:650;letter-spacing:-.025em;color:var(--studio-text);overflow-wrap:anywhere}
+body.unified-studio.premium-shell.workspace-shell :is(h1,.dash-heading h1) {font-size:32px;line-height:1.35}
+body.unified-studio.premium-shell.workspace-shell h2 {font-size:20px;line-height:1.5}
+body.unified-studio.premium-shell.workspace-shell h3 {font-size:16px;line-height:1.55}
+body.unified-studio.premium-shell.workspace-shell :is(.hint,small,.settings-inline-note,.production-explainer) {font-size:13px;line-height:1.65;color:var(--studio-muted)}
+body.unified-studio.premium-shell.workspace-shell :is(.suite-header,.page-head) {margin:0 0 24px;padding:0 0 20px;border-bottom:1px solid var(--studio-line);gap:16px}
+body.unified-studio.premium-shell.workspace-shell .suite-header h1 {margin-bottom:6px}
+body.unified-studio.premium-shell.workspace-shell .suite-heading-icon {width:44px;height:44px;border:1px solid #34577e;border-radius:10px;background:#152b45;box-shadow:none;color:#9cc7fc}
+body.unified-studio.premium-shell.workspace-shell :is(.easy-panel,.card,.suite-panel,.settings-card,.dash-panel,.studio-all-work,.publish-result,.queue-card) {
+  background:var(--studio-panel);border:1px solid var(--studio-line);border-radius:var(--studio-radius);
+  box-shadow:none;backdrop-filter:none;padding:20px;min-width:0;
+}
+body.unified-studio.premium-shell.workspace-shell :is(.section-head,.section-heading,.dash-panel-heading,.suite-section-bar) {gap:12px;flex-wrap:wrap}
+body.unified-studio.premium-shell.workspace-shell .dash-panel-heading h2:before {display:none}
+body.unified-studio.premium-shell.workspace-shell :is(button,.button) {
+  min-height:44px;padding:10px 16px;border-radius:9px;border:1px solid #3e5673;
+  background:#15253a;background-image:none;color:var(--studio-text);box-shadow:none;
+  font:inherit;font-size:14px;line-height:1.5;white-space:normal;gap:8px;text-shadow:none;
+}
+body.unified-studio.premium-shell.workspace-shell :is(button,.button):hover:not(:disabled) {background:#1b314c;border-color:#7799bf;transform:none;filter:none}
+body.unified-studio.premium-shell.workspace-shell :is(button,.button).primary:not(:disabled) {background:var(--studio-primary);border-color:#4a87ef;color:#fff;box-shadow:none}
+body.unified-studio.premium-shell.workspace-shell :is(button,.button).primary:hover:not(:disabled) {background:#2156c6}
+body.unified-studio.premium-shell.workspace-shell :is(button,.button):disabled {background:#172335;color:#9cabc0;border-color:#34445a;opacity:1;box-shadow:none}
+body.unified-studio.premium-shell.workspace-shell :is(.subtle-button,.cleanup-button) {background:transparent;color:var(--studio-muted)}
+body.unified-studio.premium-shell.workspace-shell :is(input:not([type=hidden]):not([type=checkbox]):not([type=radio]),select,textarea) {
+  background:var(--studio-inset);color:var(--studio-text);border:1px solid #425b78;border-radius:9px;
+  font:inherit;font-size:14px;line-height:1.6;min-width:0;max-width:100%;
+}
+body.unified-studio.premium-shell.workspace-shell :is(input:not([type=hidden]):not([type=checkbox]):not([type=radio]),select) {min-height:44px}
+body.unified-studio.premium-shell.workspace-shell :is(input,textarea)::placeholder {color:#97abc4;opacity:1}
+body.unified-studio.premium-shell.workspace-shell :is(button,a,input,select,textarea,summary):focus-visible {outline:3px solid var(--studio-focus);outline-offset:3px}
+body.unified-studio.premium-shell.workspace-shell :is(.form-actions,.result-actions,.suite-header-actions,.settings-button-row) {gap:10px;flex-wrap:wrap}
+body.unified-studio.premium-shell.workspace-shell :is(.badge,.easy-badge,.status-chip,.studio-state) {border-radius:6px;padding:4px 8px;font-size:12px;line-height:1.5;white-space:normal;text-shadow:none}
+body.unified-studio.premium-shell.workspace-shell :is(.badge.success,.easy-badge.completed,.studio-state.state-saved,.status-chip--success) {color:#b1e8cd;background:#173b32;border-color:#3b6e5d}
+body.unified-studio.premium-shell.workspace-shell :is(.badge.running,.easy-badge.running,.studio-state.state-running) {color:#bfdcff;background:#183654;border-color:#38618c}
+body.unified-studio.premium-shell.workspace-shell :is(.badge.failed,.easy-badge.failed,.studio-state.state-attention,.status-chip--error) {color:#ffd0d5;background:#442633;border-color:#92505e}
+body.unified-studio.premium-shell.workspace-shell :is(.easy-badge.waiting_review,.studio-state.state-review,.status-chip--warning,.badge.unknown) {color:#f7d5a0;background:#3a3021;border-color:#856738}
+body.unified-studio.premium-shell.workspace-shell :is(.soft-notice,.settings-inline-note,.scene-review-notes) {line-height:1.7}
+body.unified-studio.premium-shell.workspace-shell .soft-notice {background:#122a3b;border:1px solid #375d78;border-radius:9px;padding:12px 16px;color:#d5e6f6}
+body.unified-studio.premium-shell.workspace-shell :is(.form-feedback:not(:empty),.check-message.fail) {color:#ffd0d5;background:#3b2330;border:1px solid #92505e;border-radius:9px;padding:12px 16px}
+body.unified-studio.premium-shell.workspace-shell :is(.gentle-empty,.studio-empty,.compact-empty) {border-radius:var(--studio-radius);color:var(--studio-muted);line-height:1.7}
+body.unified-studio.premium-shell.workspace-shell .gentle-empty {padding:24px;border:1px dashed #405774}
+body.unified-studio.premium-shell.workspace-shell .gentle-empty .button {margin-top:12px}
+body.unified-studio.premium-shell.workspace-shell .library-empty {border-style:solid;background:var(--studio-panel)}
+/* One primary navigation; secondary content formats and tools remain accessible. */
+body.unified-studio.premium-shell.workspace-shell .creator-sidebar {background:#0c1727;border-color:var(--studio-line);padding:24px 16px}
+body.unified-studio.premium-shell.workspace-shell .navigation-catalog a {min-height:44px;margin:4px 0;padding:10px 12px;font-size:14px}
+body.unified-studio.premium-shell.workspace-shell .navigation-catalog a[aria-current=page] {background:#163454;border-color:#365f8b;box-shadow:inset 3px 0 #71b1ff}
+body.unified-studio.premium-shell.workspace-shell .navigation-group-label {margin-top:24px;font-size:12px}
+body.unified-studio.premium-shell.workspace-shell .sidebar-tools {border-top:1px solid var(--studio-line);padding-top:12px;margin-top:16px}
+body.unified-studio.premium-shell.workspace-shell .sidebar-bottom {margin-top:auto;padding-top:16px}
+body.unified-studio.premium-shell.workspace-shell .access-toolbar {max-width:1480px;margin:0 auto 24px;padding-bottom:16px}
+body.unified-studio.premium-shell.workspace-shell .access-launch {min-height:40px;font-size:13px;padding:8px 12px}
+body.unified-studio.premium-shell.workspace-shell .access-search input {border:0;background:transparent}
+/* Navigational stages do not imply completion, approval or automatic execution. */
+.studio-journey {display:flex;align-items:center;gap:20px;max-width:1480px;margin:0 auto 16px;padding:0 0 12px;border-bottom:1px solid var(--studio-line)}
+.journey-label {font-size:13px;color:#d7e5f5;flex:0 0 140px}
+.journey-label small {display:block;font-size:12px}
+.studio-journey ol {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));list-style:none;gap:6px;margin:0;padding:0;flex:1;min-width:0}
+.studio-journey a {display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:6px;color:#aebed2;border-radius:8px;border:1px solid transparent;font-size:13px;white-space:normal;text-align:center;text-decoration:none}
+.studio-journey a:hover {background:#15253a;color:#fff}
+.studio-journey a[aria-current=page] {background:#163454;border-color:#416e9d;color:#eef6ff;font-weight:600}
+.journey-index {color:#9dc7fa;font-size:12px;flex-shrink:0}
+/* Home foregrounds news production; secondary history is a disclosure, not another card. */
+body.unified-studio.premium-shell.workspace-shell .mockup-dashboard:before {opacity:.24}
+body.unified-studio.premium-shell.workspace-shell .dash-topbar {height:auto;margin-bottom:16px}
+body.unified-studio.premium-shell.workspace-shell .dash-search {width:100%;max-width:680px}
+body.unified-studio.premium-shell.workspace-shell .dash-search input {border:0;background:transparent;box-shadow:none}
+body.unified-studio.premium-shell.workspace-shell .dash-heading {padding:8px 0 24px;min-height:0}
+body.unified-studio.premium-shell.workspace-shell .dash-heading p {color:var(--studio-muted);font-size:14px}
+body.unified-studio.premium-shell.workspace-shell .dash-metrics {gap:16px;margin-bottom:24px}
+body.unified-studio.premium-shell.workspace-shell .dash-metric {padding:16px;border-radius:var(--studio-radius);min-height:94px;border:1px solid var(--studio-line);background:var(--studio-panel);box-shadow:none;transform:none}
+body.unified-studio.premium-shell.workspace-shell .dash-metric strong {font-size:28px}
+body.unified-studio.premium-shell.workspace-shell .dash-icon {width:40px;height:40px;background:#162f4c;color:#a8ceff;border:0;box-shadow:none;border-radius:10px}
+body.unified-studio.premium-shell.workspace-shell .dash-columns {gap:20px}
+body.unified-studio.premium-shell.workspace-shell .dash-center,body.unified-studio.premium-shell.workspace-shell .dash-right {gap:20px}
+body.unified-studio.premium-shell.workspace-shell .workflow-format-links .button {background:transparent;padding:10px 8px;border:1px solid var(--studio-line);box-shadow:none}
+body.unified-studio.premium-shell.workspace-shell .workflow-format-links .button:first-child {background:#163454;border-color:#4377ac}
+body.unified-studio.premium-shell.workspace-shell .workflow-format-links .button>span {background:none;box-shadow:none}
+body.unified-studio.premium-shell.workspace-shell .workflow-wave {opacity:.55}
+.studio-disclosure {border:1px solid var(--studio-line);border-radius:var(--studio-radius);background:var(--studio-panel);padding:0 16px}
+.studio-disclosure>summary {display:flex;align-items:center;gap:8px;min-height:48px;color:#bdcde1;cursor:pointer;font-size:14px}
+.studio-disclosure>summary::after {content:'＋';margin-left:auto}
+.studio-disclosure[open]>summary::after {content:'−'}
+body.unified-studio.premium-shell.workspace-shell .dashboard-history .dash-panel {border:0;padding:12px 0;margin:0}
+/* Forms and settings keep their own fields, tabs, validation and consent controls. */
+body.unified-studio.premium-shell.workspace-shell .production-start {padding:24px;border:1px solid var(--studio-line);border-radius:var(--studio-radius);background:var(--studio-panel);box-shadow:none}
+body.unified-studio.premium-shell.workspace-shell .production-review-choice {display:flex;gap:10px;align-items:center;font-size:14px;margin-bottom:16px}
+body.unified-studio.premium-shell.workspace-shell .production-essential {margin:20px 0}
+body.unified-studio.premium-shell.workspace-shell .settings-card {margin-bottom:24px}
+body.unified-studio.premium-shell.workspace-shell .settings-card-heading {padding:0 0 16px;margin-bottom:20px;border-bottom:1px solid var(--studio-line)}
+body.unified-studio.premium-shell.workspace-shell .settings-card-heading h2 {font-size:20px}
+body.unified-studio.premium-shell.workspace-shell .settings-section-content {padding:0}
+body.unified-studio.premium-shell.workspace-shell .suite-settings-tabs {gap:8px}
+body.unified-studio.premium-shell.workspace-shell .suite-settings-tabs a {min-height:44px;padding:10px 14px;border-radius:8px;background:transparent;border-color:var(--studio-line);font-size:14px}
+body.unified-studio.premium-shell.workspace-shell .suite-settings-tabs a[aria-selected=true] {background:#163454;border-color:#5483b9}
+body.unified-studio.premium-shell.workspace-shell .settings-savebar {border:1px solid #3c5c80;border-radius:10px;background:#102138;box-shadow:0 -8px 24px #08111f40;gap:12px}
+body.unified-studio.premium-shell.workspace-shell .workspace-video-card {background:var(--studio-panel);border:1px solid var(--studio-line);border-radius:var(--studio-radius);overflow:hidden}
+body.unified-studio.premium-shell.workspace-shell .workspace-video-body {padding:16px}
+body.unified-studio.premium-shell.workspace-shell .workspace-video-actions {padding:0 16px 16px;gap:12px}
+body.unified-studio.premium-shell.workspace-shell .workspace-video-actions a {min-height:40px;display:inline-flex;align-items:center}
+body.unified-studio.premium-shell.workspace-shell .queue-card {margin:0}
+body.unified-studio.premium-shell.workspace-shell .social-platforms .suite-platform-card {background:var(--studio-inset);border-color:var(--studio-line);box-shadow:none;padding:12px;border-radius:9px}
+body.unified-studio.premium-shell.workspace-shell .social-platforms .suite-platform-card h3 {font-size:15px}
+body.unified-studio.premium-shell.workspace-shell .publish-result {padding:16px}
+body.unified-studio.premium-shell.workspace-shell .publish-result[data-outcome=unknown] {border-color:#927142;background:#30291f}
+body.unified-studio.premium-shell.workspace-shell .publish-result[data-outcome=failed] {border-color:#92505e;background:#33212c}
+@media(max-width:1100px) {
+ .studio-journey {display:block}.journey-label {display:flex;gap:12px;margin-bottom:8px}
+ body.unified-studio.premium-shell.workspace-shell .dash-columns {grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ body.unified-studio.premium-shell.workspace-shell .dash-center {order:0;grid-column:1/-1}
+ body.unified-studio.premium-shell.workspace-shell .dash-news {order:1}
+ body.unified-studio.premium-shell.workspace-shell .dash-right {order:2}
+}
+@media(max-width:760px) {
+ body.unified-studio.premium-shell.workspace-shell {--studio-gap:16px}
+ body.unified-studio.premium-shell.workspace-shell #main-content {padding:16px 14px 32px}
+ body.unified-studio.premium-shell.workspace-shell .creator-sidebar {padding:12px 14px}
+ body.unified-studio.premium-shell.workspace-shell :is(h1,.dash-heading h1) {font-size:26px}
+ body.unified-studio.premium-shell.workspace-shell h2 {font-size:18px}
+ body.unified-studio.premium-shell.workspace-shell :is(.easy-panel,.card,.suite-panel,.settings-card,.dash-panel,.studio-all-work) {padding:16px}
+ body.unified-studio.premium-shell.workspace-shell .access-toolbar {margin-bottom:20px;gap:8px}
+ body.unified-studio.premium-shell.workspace-shell .access-location {font-size:13px}
+ body.unified-studio.premium-shell.workspace-shell :is(.suite-header,.page-head) {margin-bottom:20px;padding-bottom:16px}
+ .studio-journey {margin-bottom:20px;padding:0 0 16px}.studio-journey ol {grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+ .studio-journey a {font-size:12px;min-height:40px;gap:5px}
+ body.unified-studio.premium-shell.workspace-shell .dash-columns {grid-template-columns:minmax(0,1fr)}
+ body.unified-studio.premium-shell.workspace-shell .dash-metrics {gap:8px;margin-bottom:20px}
+ body.unified-studio.premium-shell.workspace-shell .dash-metric {padding:12px;min-height:86px;gap:10px}
+ body.unified-studio.premium-shell.workspace-shell .dash-icon {width:32px;height:36px}
+ body.unified-studio.premium-shell.workspace-shell .dash-metric strong {font-size:24px}
+ body.unified-studio.premium-shell.workspace-shell .production-start {padding:16px}
+ body.unified-studio.premium-shell.workspace-shell .suite-settings-tabs {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ body.unified-studio.premium-shell.workspace-shell .suite-settings-tabs a {padding:10px;font-size:13px}
+ body.unified-studio.premium-shell.workspace-shell .settings-savebar {flex-wrap:wrap}
+ body.unified-studio.premium-shell.workspace-shell .workspace-video-actions {padding:0 12px 12px}
+}
+@media(prefers-reduced-motion:reduce) {
+ body.unified-studio *,body.unified-studio *::before,body.unified-studio *::after {scroll-behavior:auto;transition:none}
+}
+body.unified-studio.premium-shell.workspace-shell #publish-workspace .warn {padding:12px 16px;border:1px solid #8b6d40;border-left-width:3px;border-radius:9px;background:#30291e;color:#f9dfb7;line-height:1.7}
+body.unified-studio.premium-shell.workspace-shell .studio-error {padding:12px 16px;border:1px solid #92505e;border-left-width:3px;border-radius:9px;background:#3b2330;color:#ffd0d5;line-height:1.7}
+
+body.unified-studio.premium-shell.workspace-shell .studio-recovery-actions {display:flex;flex-wrap:wrap;align-items:center;gap:12px}

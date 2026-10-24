@@ -89,8 +89,8 @@
   {% elif job.status=='simulated' %}
     <p>Fake Adapter 검증용 결과입니다. 실제 MP4가 아니며 미리보기·다운로드를 제공하지 않습니다.</p>
   {% elif job.status in ['failed','interrupted','unknown'] %}
-    <p class="soft-notice">{{ job_presentation.stage }} · {{ job_presentation.message }}</p>
-    <p><a class="button primary" href="{{ job_presentation.action }}">해당 단계 설정 확인</a> <a class="button" href="/video?draft_id={{ project.draft_id }}">대본·제작 설정 확인</a> <a class="quiet-link" href="/simple-settings#selected-voice">음성·영상 연결 설정</a></p>
+    <p class="soft-notice studio-error" role="alert">{{ job_presentation.stage }} · {{ job_presentation.message }}</p>
+    <p class="studio-recovery-actions"><a class="button primary" href="{{ job_presentation.action }}">해당 단계 설정 확인</a> <a class="button" href="/video?draft_id={{ project.draft_id }}">대본·제작 설정 확인</a> <a class="quiet-link" href="/simple-settings#selected-voice">음성·영상 연결 설정</a></p>
   {% endif %}
   <details class="video-advanced" id="video-output-details" data-video-review-details>
     <summary>{{ ui_icon('file',18) }} 영상 정보·출처</summary><div data-video-review-content><p><strong>{{ project.title }}</strong></p><p>{{ job.message }}</p>

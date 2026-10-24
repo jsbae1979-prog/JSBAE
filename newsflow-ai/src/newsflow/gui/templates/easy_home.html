@@ -15,7 +15,7 @@
 {% for symbol,label,value,href,tone in [('clock','진행·확인할 작업',active_task_count,'#workspace-tasks','violet'),('video','제작된 영상',video_count,'/videos','blue'),('send','게시 초안',queue_count,'/queue','green'),('file','전체 작업 기록',task_count,'/?show=tasks#workspace-tasks','indigo')] %}<a class="reference-metric {{ tone }}" href="{{ href }}"><span class="reference-metric-icon" aria-hidden="true">{{ ui_icon(symbol, 24) }}</span><div><span>{{ label }}</span><strong>{{ value }}</strong></div><span class="reference-metric-arrow" aria-hidden="true">↗</span></a>{% endfor %}
 </nav>
 {% else %}
-<header class="creator-heading studio-heading"><div><p class="eyebrow">NEWS TO SHORTS</p><h1>{{ '뉴스 쇼츠 만들기' if creating else '나의 영상 작업실' }}</h1><p>{{ '저장한 설정으로 수집부터 제작까지 이어갑니다.' if creating else '뉴스를 고르고, 이야기를 만들고, 완성된 영상을 확인하세요.' }}</p></div><a class="studio-library-link" href="/videos">내 영상 보기 ↗</a></header>
+<header class="creator-heading studio-heading"><div><h1>{{ '뉴스 쇼츠 만들기' if creating else '나의 영상 작업실' }}</h1><p>{{ '저장한 설정으로 수집부터 제작까지 이어갑니다.' if creating else '뉴스를 고르고, 이야기를 만들고, 완성된 영상을 확인하세요.' }}</p></div><a class="studio-library-link" href="/videos">내 영상 보기 ↗</a></header>
 {% endif %}
 {% set entry_flow = workspace_guide_context.production_flow if workspace_guide_context else none %}
 {% set entry_source = entry_flow.source if entry_flow else defaults.source %}

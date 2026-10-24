@@ -109,18 +109,23 @@ def test_settings_edit_save_reenter_and_creation_without_external_actions(app, b
         expect(page.locator('[name="script_review"]')).to_be_checked()
         expect(page.locator('#quick-voice-method')).to_have_value('local')
         expect(page.locator('#quick-video-method')).to_have_value('off')
-        page.locator('.studio-production-options > summary').click()
         expect(page.locator('[data-external-video-note]')).to_be_hidden()
         assert '모든 시각 장면을 Higgsfield' not in page.locator('body').inner_text()
         assert page.locator('.chosen-production, [data-selected-voice], [data-selected-video]').count() == 0
         for choice in ('higgsfield', 'off', 'higgsfield', 'off'):
-            page.locator('#quick-video-method').select_option(choice)
+            # Current picker saves through the existing settings endpoint; hidden inputs
+            # only carry the frozen choice into a new production request.
+            picker = page.locator('[data-production-kind=video]')
+            picker.locator('summary').click()
+            picker.locator('select[name=value]').select_option(choice)
+            with page.expect_navigation(wait_until='networkidle'):
+                picker.get_by_role('button', name='선택 저장', exact=True).click()
+            expect(page.locator('#quick-video-method')).to_have_value(choice)
             note = page.locator('[data-external-video-note]')
             if choice == 'off':
                 expect(note).to_be_hidden()
             else:
                 expect(note).to_be_visible()
-        page.locator('.studio-production-options > summary').click()
         for width, height in ((1366, 768), (1920, 1080), (390, 844)):
             page.set_viewport_size({'width':width,'height':height})
             page.locator('form.quick-production-form').evaluate('e=>e.scrollIntoView({block:"start",behavior:"instant"})')
