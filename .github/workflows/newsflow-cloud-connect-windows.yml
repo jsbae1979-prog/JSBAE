@@ -2,6 +2,12 @@ name: NewsFlow PR35 Explainer Review Safety Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Full native verification or only the historical failure comparison'
+        type: choice
+        options: [full, history]
+        default: full
   push:
     branches: [codex/newsflow-ux-video-app]
     paths: ['newsflow-ai/src/**', 'newsflow-ai/tests/**', 'newsflow-ai/tools/**', 'newsflow-ai/run.bat', 'newsflow-ai/requirements-dev.lock', '.github/workflows/newsflow-cloud-connect-windows.yml']
@@ -166,20 +172,24 @@ jobs:
       - name: Scoped regression and historical 57 IDs versus accepted baseline
         id: comparison
         continue-on-error: true
-        run: .venv/Scripts/python tools/ci_final_windows_ui.py --output "$env:RUNNER_TEMP/newsflow-final-ui/comparison"
+        run: |
+          $options = @('--output', "$env:RUNNER_TEMP/newsflow-final-ui/comparison")
+          if ('${{ inputs.scope }}' -eq 'history') { $options += '--historical-only' }
+          .venv/Scripts/python tools/ci_final_windows_ui.py @options
+          exit $LASTEXITCODE
       - name: Native DPAPI with disposable synthetic credentials
-        if: always() && steps.comparison.outcome != 'skipped'
+        if: always() && steps.comparison.outcome != 'skipped' && inputs.scope != 'history'
         id: vault
         continue-on-error: true
         run: .venv/Scripts/python tools/ci_vault_validation.py --output "$env:RUNNER_TEMP/newsflow-final-ui/vault.json"
       - name: Actual BAT start duplicate shutdown and restart
-        if: always() && steps.comparison.outcome != 'skipped'
+        if: always() && steps.comparison.outcome != 'skipped' && inputs.scope != 'history'
         id: bat
         continue-on-error: true
         timeout-minutes: 6
         run: .venv/Scripts/python tools/ci_windows_launch_smoke.py --root "$env:TEMP/newsflow-final-ui-bat" --output "$env:RUNNER_TEMP/newsflow-final-ui/bat.json"
       - name: Windows Chrome final screens and supplied artwork
-        if: always() && steps.comparison.outcome != 'skipped'
+        if: always() && steps.comparison.outcome != 'skipped' && inputs.scope != 'history'
         id: browser
         continue-on-error: true
         run: |
@@ -188,7 +198,7 @@ jobs:
           .venv/Scripts/python -m pytest -q -rs tools/test_windows_final_visual.py --junitxml="$env:RUNNER_TEMP/newsflow-final-ui/browser.xml"
           exit $LASTEXITCODE
       - name: Fake news and AI to actual MP4 and review and Fake publishing
-        if: always() && steps.comparison.outcome != 'skipped'
+        if: always() && steps.comparison.outcome != 'skipped' && inputs.scope != 'history'
         id: flow
         continue-on-error: true
         run: |
@@ -199,12 +209,13 @@ jobs:
         run: |
           $results = @{ comparison='${{ steps.comparison.outcome }}'; vault='${{ steps.vault.outcome }}'; bat='${{ steps.bat.outcome }}'; browser='${{ steps.browser.outcome }}'; flow='${{ steps.flow.outcome }}'; sha='${{ github.sha }}'; python='${{ matrix.python }}' }
           $results | ConvertTo-Json | Out-File "$env:RUNNER_TEMP/newsflow-final-ui/outcomes.json" -Encoding utf8
-          if (@($results.comparison,$results.vault,$results.bat,$results.browser,$results.flow) | Where-Object { $_ -ne 'success' }) { exit 1 }
+          if ('${{ inputs.scope }}' -eq 'history') { if ($results.comparison -ne 'success') { exit 1 } }
+          elseif (@($results.comparison,$results.vault,$results.bat,$results.browser,$results.flow) | Where-Object { $_ -ne 'success' }) { exit 1 }
       - name: Upload isolated evidence only never keys databases or MP4
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: pr35-final-windows-ui-${{ matrix.python }}
+          name: pr35-final-windows-ui-${{ matrix.python }}-${{ inputs.scope }}
           path: |
             ${{ runner.temp }}/newsflow-final-ui/**/*.json
             ${{ runner.temp }}/newsflow-final-ui/**/*.xml

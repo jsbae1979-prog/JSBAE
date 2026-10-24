@@ -61,6 +61,7 @@ def run(tree: Path, targets: list[str], label: str, output: Path) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--historical-only', action='store_true')
     args = parser.parse_args()
     if sys.platform != 'win32':
         parser.error('Native Windows required')
@@ -73,17 +74,26 @@ def main() -> int:
     assert not changed, changed
     historical = json.loads((ROOT/'docs/reports/evidence/regression-57-resolution/selection.json').read_text())['matched']
     assert len(historical) == 57
+    # Four historical parameter IDs changed before this UI work. Run the full
+    # corresponding functions, preserving all current parameter assertions.
+    renamed = ('tests/test_gui.py::test_render',
+               'tests/test_realcontent.py::test_external_ai_failures_map_to_actionable_codes')
+    mapping = {node: node.split('[', 1)[0] for node in historical if node.startswith(renamed)}
+    historical_targets = list(dict.fromkeys(mapping.get(node, node) for node in historical))
     summary = {'sha': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
         'product_sha': PRODUCT, 'baseline_sha': BASE, 'python': sys.version,
         'windows': platform.platform(), 'product_and_existing_tests_unchanged': True,
-        'external_services': 'blocked by test guard; no real credentials', 'groups': {}}
+        'external_services': 'blocked by test guard; no real credentials',
+        'historical_parameter_mapping': mapping, 'historical_ids': historical, 'groups': {}}
     archive = subprocess.check_output(['git', 'archive', BASE, 'newsflow-ai/src', 'newsflow-ai/tests',
                                       'newsflow-ai/pyproject.toml'], cwd=ROOT.parent)
     with tempfile.TemporaryDirectory(prefix='newsflow-final-baseline-') as temp:
         with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
             tar.extractall(temp, filter='data')
         baseline = Path(temp)/'newsflow-ai'
-        for group, targets in [('scoped', TARGETS), ('historical57', historical)]:
+        groups = [('historical57', historical_targets)] if args.historical_only else [
+            ('scoped', TARGETS), ('historical57', historical_targets)]
+        for group, targets in groups:
             old = run(baseline, targets, f'{group}-baseline', out)
             new = run(ROOT, targets, f'{group}-final', out)
             fail = lambda data: {key for key, value in data['cases'].items() if value in ('failed', 'error')}
