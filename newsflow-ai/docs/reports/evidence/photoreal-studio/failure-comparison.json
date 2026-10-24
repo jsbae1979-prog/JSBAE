@@ -1,0 +1,25 @@
+{
+  "baseline": "fbadd460d3005fca5c5aa613a78fd7c926c87be6",
+  "final_code": "d8090dee7894597114f318553556f0ca521f0924",
+  "interpreter": "3.12.14",
+  "dependencies": "same /workspace/JSBAE/newsflow-ai/.venv, no installs/updates",
+  "baseline_code_import": "/tmp/newsflow-photoreal-baseline/newsflow-ai/src/newsflow/__init__.py",
+  "test_files_byte_identical": true,
+  "baseline_failures": [
+    "test_topic_search_honestly_uses_existing_news_search_not_new_generation_contract",
+    "test_editor_never_invents_a_preview_for_invalid_output[running-True-True]",
+    "test_editor_never_invents_a_preview_for_invalid_output[success-False-True]",
+    "test_editor_never_invents_a_preview_for_invalid_output[success-True-False]"
+  ],
+  "final_failures": [
+    "test_topic_search_honestly_uses_existing_news_search_not_new_generation_contract",
+    "test_editor_never_invents_a_preview_for_invalid_output[running-True-True]",
+    "test_editor_never_invents_a_preview_for_invalid_output[success-False-True]",
+    "test_editor_never_invents_a_preview_for_invalid_output[success-True-False]"
+  ],
+  "same_failing_assertions": true,
+  "new_failures_in_compared_scope": 0,
+  "baseline_summary": "4 failed, 20 passed, 1 warning in 21.32s",
+  "final_summary": "4 failed, 20 passed, 1 warning in 19.98s",
+  "scope_note": "These 24 tests only; historical whole-suite 57 failures not reclassified."
+}

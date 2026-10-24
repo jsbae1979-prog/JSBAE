@@ -1,0 +1,22 @@
+[
+  {
+    "file": "hero_news_studio.webp",
+    "bytes": 198466,
+    "sha256": "8ed5cd79f991a344496d7569bae817ff83f67bc90078720e96ae8ad86b11e017"
+  },
+  {
+    "file": "video_editing_studio.webp",
+    "bytes": 212880,
+    "sha256": "42814dafbd28bbeb76c6d76db60a9dfb7f97b8e2b5a9a0744a9b00e87d816879"
+  },
+  {
+    "file": "media_gallery_studio.webp",
+    "bytes": 160642,
+    "sha256": "89510edfd51e29355da1b9690bbc96c049ed3cf2e0aac89d6b960b819b61103d"
+  },
+  {
+    "file": "news_analysis_studio.webp",
+    "bytes": 239524,
+    "sha256": "c6b019b3d705dc971d43aef590e3c0372b5f6e4d5bbd8cd0e57b087d6f4af09a"
+  }
+]
