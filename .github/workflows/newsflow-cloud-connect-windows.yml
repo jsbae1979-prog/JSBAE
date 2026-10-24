@@ -1,6 +1,7 @@
 name: NewsFlow PR35 Explainer Review Safety Windows
 
 on:
+  workflow_dispatch:
   push:
     branches: [codex/newsflow-ux-video-app]
     paths: ['newsflow-ai/src/**', 'newsflow-ai/tests/**', 'newsflow-ai/tools/**', 'newsflow-ai/run.bat', 'newsflow-ai/requirements-dev.lock', '.github/workflows/newsflow-cloud-connect-windows.yml']
@@ -10,6 +11,7 @@ permissions:
 
 jobs:
   connected-workspace:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: windows-latest
     timeout-minutes: 20
     strategy:
@@ -94,3 +96,119 @@ jobs:
           retention-days: 14
       # No real service keys, OAuth, media transfer or operation on user data.
       # Native DPAPI uses synthetic values; no MP4/WAV/SQLite/key artifacts are uploaded.
+
+  final-windows-ui:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_LIVE_TEST: '0'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_CLAUDE_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      NEWSFLOW_META_APP_SECRET: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      ANTHROPIC_AUTH_TOKEN: ''
+      CLAUDE_CODE_OAUTH_TOKEN: ''
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Pinned dependencies and pip check
+        run: |
+          python -m venv .venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Prepare existing video and Chrome prerequisites
+        run: |
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ';C:\ProgramData\chocolatey\bin;C:\tools\ffmpeg\bin'
+          }
+          @((Split-Path (Get-Command ffmpeg -ErrorAction Stop).Source), (Split-Path (Get-Command ffprobe -ErrorAction Stop).Source)) | Select-Object -Unique | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $fontPath = 'C:\Windows\Fonts\malgun.ttf'
+          if (-not (Test-Path -LiteralPath $fontPath)) { throw 'Korean font missing' }
+          "NEWSFLOW_FONT_PATH=$fontPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEWSFLOW_VALIDATION_OUTPUT=$env:RUNNER_TEMP/newsflow-final-ui" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "NEWSFLOW_DATA_DIR=$env:RUNNER_TEMP/newsflow-final-ui-data" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $chrome = @("$env:ProgramFiles\Google\Chrome\Application\chrome.exe", "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe")
+          if (-not ($chrome | Where-Object { Test-Path -LiteralPath $_ })) { throw 'Windows Chrome missing' }
+      - name: Isolate native profile and record exact product version
+        run: |
+          "LOCALAPPDATA=$env:RUNNER_TEMP/newsflow-final-ui-profile" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "PYTHONPATH=$PWD/src;$PWD/tests;$PWD/tools" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP/newsflow-final-ui" | Out-Null
+          git rev-parse HEAD
+          python --version
+      - name: Scoped regression and historical 57 IDs versus accepted baseline
+        id: comparison
+        continue-on-error: true
+        run: .venv/Scripts/python tools/ci_final_windows_ui.py --output "$env:RUNNER_TEMP/newsflow-final-ui/comparison"
+      - name: Native DPAPI with disposable synthetic credentials
+        if: always() && steps.comparison.outcome != 'skipped'
+        id: vault
+        continue-on-error: true
+        run: .venv/Scripts/python tools/ci_vault_validation.py --output "$env:RUNNER_TEMP/newsflow-final-ui/vault.json"
+      - name: Actual BAT start duplicate shutdown and restart
+        if: always() && steps.comparison.outcome != 'skipped'
+        id: bat
+        continue-on-error: true
+        timeout-minutes: 6
+        run: .venv/Scripts/python tools/ci_windows_launch_smoke.py --root "$env:RUNNER_TEMP/newsflow-final-ui-bat" --output "$env:RUNNER_TEMP/newsflow-final-ui/bat.json"
+      - name: Windows Chrome final screens and supplied artwork
+        if: always() && steps.comparison.outcome != 'skipped'
+        id: browser
+        continue-on-error: true
+        run: |
+          $env:UX_PHASE = 'after'
+          $env:UX_EVIDENCE = "$env:RUNNER_TEMP/newsflow-final-ui/screens"
+          .venv/Scripts/python -m pytest -q -rs tools/test_windows_final_visual.py --junitxml="$env:RUNNER_TEMP/newsflow-final-ui/browser.xml"
+          exit $LASTEXITCODE
+      - name: Fake news and AI to actual MP4 and review and Fake publishing
+        if: always() && steps.comparison.outcome != 'skipped'
+        id: flow
+        continue-on-error: true
+        run: |
+          .venv/Scripts/python -m pytest -q -rs tests/test_cloud_workspace_flow.py --junitxml="$env:RUNNER_TEMP/newsflow-final-ui/flow.xml"
+          exit $LASTEXITCODE
+      - name: Report actual step outcomes without treating failures as success
+        if: always()
+        run: |
+          $results = @{ comparison='${{ steps.comparison.outcome }}'; vault='${{ steps.vault.outcome }}'; bat='${{ steps.bat.outcome }}'; browser='${{ steps.browser.outcome }}'; flow='${{ steps.flow.outcome }}'; sha='${{ github.sha }}'; python='${{ matrix.python }}' }
+          $results | ConvertTo-Json | Out-File "$env:RUNNER_TEMP/newsflow-final-ui/outcomes.json" -Encoding utf8
+          if (@($results.comparison,$results.vault,$results.bat,$results.browser,$results.flow) | Where-Object { $_ -ne 'success' }) { exit 1 }
+      - name: Upload isolated evidence only never keys databases or MP4
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: pr35-final-windows-ui-${{ matrix.python }}
+          path: |
+            ${{ runner.temp }}/newsflow-final-ui/**/*.json
+            ${{ runner.temp }}/newsflow-final-ui/**/*.xml
+            ${{ runner.temp }}/newsflow-final-ui/**/*.txt
+            ${{ runner.temp }}/newsflow-final-ui/**/*.png
+          if-no-files-found: warn
+          retention-days: 14
