@@ -18,6 +18,7 @@ from threading import Thread
 from urllib.parse import parse_qs, urlsplit
 
 import uvicorn
+from pc_cloud_script_fixture import healthy_three_scene
 from playwright.sync_api import expect
 from sqlalchemy import select
 from test_api_news_pipeline import FixtureKey
@@ -80,16 +81,10 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
     coordinator, backend, provider, sessions, mode, rss = api_pipeline
     # New jobs reject short scripts before either review mode. This healthy-flow
     # fixture supplies valid narration; the short-response rejection is tested separately.
-    from newsflow.intelligence.korean import speech_plan
     complete = provider.complete
     def healthy_fake_script(evidence, seconds, options):
         result = complete(evidence, seconds, options)
-        while speech_plan(result, seconds)["estimated_total_seconds"] < seconds * .90:
-            plan = speech_plan(result, seconds)
-            index = min(range(len(plan["scenes"])), key=lambda i: plan["scenes"][i]["estimated_seconds"])
-            result["scenes"][index]["narration"] += " 살펴봅니다."
-        assert speech_plan(result, seconds)["fits"]
-        return result
+        return healthy_three_scene(result, seconds)
     monkeypatch.setattr(provider, "complete", healthy_fake_script)
     # The original factories/engines stay intact; only test dependencies are injected.
     monkeypatch.setattr(app.state, "autopilot", coordinator)
@@ -142,12 +137,14 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         response = page.goto(origin + "/")
         assert "script-src 'self'" in response.headers["content-security-policy"]
         expect(page.locator(".demo-banner")).to_be_visible()
-        # The home now exposes the same guarded creation form directly.
+        # Follow the current home creation link; keep the existing guarded form and consent.
         assert urlsplit(page.url).path == "/"
+        page.get_by_role("navigation", name="만들 콘텐츠").get_by_role("link", name="쇼츠 영상", exact=True).click()
+        expect(page).to_have_url(origin + "/create")
         page.wait_for_load_state("load")
         expect(page.locator('form[action="/autopilot/quick-start"]')).to_have_attribute("data-easy-wired","true")
         with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/autopilot/quick-start")) as prepared:
-            page.get_by_role("button", name="쇼츠 만들기", exact=True).click()
+            page.locator('form[action="/autopilot/quick-start"] button[type="submit"]').click()
         assert prepared.value.status == 303, prepared.value.text()
         assert "guide=consent" in prepared.value.headers.get("location", "")
         page.wait_for_url(lambda u: "guide=consent" in u)
@@ -172,11 +169,17 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         page.locator("#workspace-detail").screenshot(path=str(output / "api-script-review.png"))
         # Use the real editor POST and return to the same work item, with no new inference.
         page.goto(origin + f'/ai?draft_id={job["content_draft_id"]}')
+        editor = page.locator('[data-script-editor]')
+        if editor.count() and editor.get_attribute("open") is None:
+            editor.locator("summary").click()
         expect(page.locator('textarea[name="narration"]').first).not_to_have_attribute("readonly", "")
         with page.expect_navigation(wait_until="load"), page.expect_response(lambda r:r.request.method=="POST" and "/ai/drafts/" in r.url) as saved:
             page.get_by_role("button",name="수정 초안 저장").click()
         assert saved.value.status == 303
         page.wait_for_url(lambda u:"draft_id=" in u)
+        editor = page.locator('[data-script-editor]')
+        if editor.count() and editor.get_attribute("open") is None:
+            editor.locator("summary").click()
         page.get_by_role("link", name="작업실에서 대본 검토 계속하기 →", exact=True).click()
         expect(page.locator('form[action$="/resume"]')).to_have_attribute("data-easy-wired","true")
         with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/resume")) as resumed:

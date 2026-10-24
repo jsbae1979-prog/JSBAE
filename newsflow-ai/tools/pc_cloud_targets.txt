@@ -1,0 +1,27 @@
+# Changed integration and preserved production boundaries. Not a full regression run.
+tests/test_operating_integration.py
+tests/test_all_scene_production.py
+tests/test_final_production.py
+tests/test_image_delivery.py
+tests/test_image_posts.py
+tests/test_image_generation.py
+tests/test_full_image_pipeline.py
+tests/test_card_response_diagnostics.py
+tests/test_claude_compatibility.py
+tests/test_production_choices.py
+tests/test_serpapi_news.py
+tests/test_google_news_trends.py
+tests/test_global_news_policy.py
+tests/test_curation_top_three.py
+tests/test_curation_numbers.py
+tests/test_elevenlabs_saved_voices.py
+tests/test_elevenlabs_voices.py
+tests/test_higgsfield_model_pricing.py
+tests/test_voice_engines.py
+tests/test_oauth_callback.py
+tests/test_unified_publishing.py::test_one_platform_failure_does_not_cancel_other_or_replay_success
+tests/test_dashboard_view.py
+tests/test_all_scene_safety.py
+tests/test_unified_publishing.py
+tests/test_character_shorts.py
+tests/test_explainer_review_safety.py

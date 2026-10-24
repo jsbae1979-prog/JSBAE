@@ -318,7 +318,7 @@ def test_draft_generation_bound_to_ranked_group_model_and_review(client, app, pr
     bad["scenes"][1]["narration"] = "근거 없는 888억 투자 소식입니다."
     with pytest.raises(Exception) as error:
         svc.edit(identifier, revision, bad)
-    assert error.value.code == "ai_bad_response"
+    assert error.value.code == "news_usage_blocked"
     with app.state.sessions() as session:
         assert session.get(ContentDraft, identifier).review_status == "review_required"
 

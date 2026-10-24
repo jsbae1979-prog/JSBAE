@@ -95,3 +95,20 @@ def test_dashboard_category_links_stay_on_dashboard(client):
         assert response.status_code == 200, link
         categories.extend(parse_qs(urlparse(link).query).get('news_category', []))
     assert categories == ['정치', '경제', '사회', 'IT·과학', '문화', '스포츠', '국제', '미분류']
+
+
+def test_pc_creation_destinations_preserved_in_cloud_workflow(client):
+    """Keep the PC's three reachable creation paths without freezing its old CSS/order."""
+    import re
+
+    home = client.get('/').text
+    component = re.search(r'<nav class="workflow-formats".*?</nav>', home, re.DOTALL).group()
+    links = re.findall(r'<a class="button" href="([^"]+)"[^>]*>(.*?)</a>', component, re.DOTALL)
+    assert len(links) == 3
+    assert {href for href, _ in links} == {'/create', '/character', '/image-posts'}
+    for href, content in links:
+        label = re.sub(r'<[^>]+>', '', content).strip()
+        assert label == {'/create': '쇼츠 영상', '/character': '캐릭터 쇼츠',
+                         '/image-posts': '이미지 게시물'}[href]
+        assert client.get(href).status_code == 200
+    assert 'mockup-dashboard' not in client.get('/dashboard').text

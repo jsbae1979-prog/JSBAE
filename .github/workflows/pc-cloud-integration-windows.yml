@@ -1,0 +1,104 @@
+name: PC Cloud Integration Windows
+on:
+  push:
+    branches: [codex/newsflow-pc-cloud-integration-20261024]
+    paths: ['newsflow-ai/**', '.github/workflows/pc-cloud-integration-windows.yml']
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    env:
+      PYTHONUTF8: '1'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_LIVE_TEST: '0'
+      HF_KEY: ''
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Isolated tools and candidate package
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install -r requirements-dev.lock playwright build setuptools wheel
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m build --wheel --no-isolation
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ';C:\ProgramData\chocolatey\bin;C:\tools\ffmpeg\bin'
+          }
+          "NEWSFLOW_FFMPEG=$((Get-Command ffmpeg -ErrorAction Stop).Source)" >> $env:GITHUB_ENV
+          "NEWSFLOW_FFPROBE=$((Get-Command ffprobe -ErrorAction Stop).Source)" >> $env:GITHUB_ENV
+      - name: Lint changed test wiring
+        run: |
+          .venv/Scripts/python -m ruff check tools/pc_cloud_guard.py tools/pc_cloud_validate.py tests/test_dashboard_view.py tools/check_pc_cloud_package.py tests/test_pc_cloud_windows_browser.py tests/test_pc_cloud_entrypoint.py tests/pc_cloud_script_fixture.py tests/test_all_scene_production.py tests/test_cloud_workspace_flow.py tests/test_google_news_trends.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Changed production and preservation contracts
+        id: core
+        run: |
+          $out = Join-Path $env:RUNNER_TEMP 'nf-integration-core'
+          $wheel = (Get-ChildItem -LiteralPath dist -Filter '*.whl' | Select-Object -First 1).FullName
+          .venv/Scripts/python tools/pc_cloud_validate.py --output $out --wheel $wheel
+          exit $LASTEXITCODE
+      - name: Four real local MP4 combinations with Fake providers
+        if: always() && steps.core.outcome != 'cancelled'
+        run: |
+          .venv/Scripts/python tools/pc_cloud_validate.py --output (Join-Path $env:RUNNER_TEMP 'nf-integration-media') --targets tools/pc_cloud_media_targets.txt
+          exit $LASTEXITCODE
+      - name: Real Chrome menus and news to publish preparation
+        if: always() && steps.core.outcome != 'cancelled'
+        run: |
+          .venv/Scripts/python tools/pc_cloud_validate.py --output (Join-Path $env:RUNNER_TEMP 'nf-integration-browser') --targets tools/pc_cloud_browser_targets.txt
+          exit $LASTEXITCODE
+      - name: Stage only synthetic screenshots and safe summaries
+        if: always()
+        run: |
+          $staged = Join-Path $PWD 'validation-output/pc-cloud'
+          New-Item -ItemType Directory -Path $staged -Force | Out-Null
+          foreach ($kind in @('core','media','browser')) {
+            $source = Join-Path $env:RUNNER_TEMP "nf-integration-$kind"
+            $dest = Join-Path $staged $kind
+            New-Item -ItemType Directory -Path $dest -Force | Out-Null
+            foreach ($name in @('pytest.xml','network-guard.json')) {
+              $file = Join-Path $source $name
+              if (Test-Path -LiteralPath $file) { Copy-Item -LiteralPath $file -Destination $dest }
+            }
+            if (Test-Path -LiteralPath $source) {
+              Get-ChildItem -LiteralPath $source -Recurse -File | Where-Object {
+                -not $_.FullName.StartsWith((Join-Path $source 'pytest') + '\', [System.StringComparison]::OrdinalIgnoreCase) -and
+                ($_.Extension -eq '.png' -or $_.Name -eq 'entrypoint-result.json' -or $_.Name -eq 'gui-result.json' -or $_.Name -eq 'flow-result.json' -or $_.Name -like 'media-*.json')
+              } | ForEach-Object {
+                $relative = [System.IO.Path]::GetRelativePath($source, $_.FullName)
+                $target = Join-Path $dest $relative
+                New-Item -ItemType Directory -Path (Split-Path $target) -Force | Out-Null
+                Copy-Item -LiteralPath $_.FullName -Destination $target
+              }
+            }
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pc-cloud-integration-${{ matrix.python }}
+          path: newsflow-ai/validation-output/pc-cloud/**
+          retention-days: 14

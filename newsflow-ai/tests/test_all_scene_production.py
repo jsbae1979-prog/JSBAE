@@ -9,6 +9,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import pytest
+from pc_cloud_script_fixture import healthy_three_scene
 from sqlalchemy import select
 from test_api_news_pipeline import api_pipeline as pipeline_fixture
 from test_api_news_pipeline import start
@@ -24,7 +25,6 @@ from newsflow.db.models import (
     PublishDraft,
     VideoProject,
 )
-from newsflow.intelligence.korean import speech_plan
 from newsflow.publishing.media import FFprobeMediaInspector
 from newsflow.video.ai.fake import FakeVideoProvider
 from newsflow.video.ai.service import AIVideoError
@@ -89,12 +89,7 @@ def production(app, api_pipeline, monkeypatch):
 
     def valid_script(evidence, seconds, opts):
         result = complete(evidence, seconds, opts)
-        while speech_plan(result, seconds)["estimated_total_seconds"] < seconds * .90:
-            plan = speech_plan(result, seconds)
-            index = min(range(len(plan["scenes"])), key=lambda i: plan["scenes"][i]["estimated_seconds"])
-            result["scenes"][index]["narration"] += " 살펴봅니다."
-        assert speech_plan(result, seconds)["fits"]
-        return result
+        return healthy_three_scene(result, seconds)
 
     monkeypatch.setattr(api, "complete", valid_script)
     return {"app": app, "pipeline": api_pipeline, "coordinator": coordinator, "backend": backend,
