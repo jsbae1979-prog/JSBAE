@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="16.852" timestamp="2026-10-24T03:35:21.286581+00:00" hostname="runnervmdaln5"><testcase classname="validation_tools.test_old_flow" name="test_api_to_render_review_and_existing_publish_services[openai]" time="6.880"><failure message="AssertionError: {'acquisition_policy': 'ai_web', 'ai_mode': 'openai', 'ai_model': 'gpt-4.1-mini', 'ai_phase': None, ...}&#10;assert ('failed', 'script') == ('waiting_review', 'script')&#10;  &#10;  At index 0 diff: 'failed' != 'waiting_review'&#10;  &#10;  Full diff:&#10;    (&#10;  -     'waiting_review',&#10;  +     'failed',&#10;        'script',&#10;    )">app = &lt;fastapi.applications.FastAPI object at 0x000002508F4D23C0&gt;
+api_pipeline = (&lt;newsflow.autopilot.service.AutopilotCoordinator object at 0x000002508F37DE50&gt;, &lt;newsflow.autopilot.backend.PipelineB...flush=True, expire_on_commit=False), 'openai', &lt;newsflow.news.rss_adapter.FakeRSSAdapter object at 0x000002508F37D6D0&gt;)
+browser = &lt;Browser type=&lt;BrowserType name=chromium executable_path=D:\a\_temp\newsflow-final-ui-profile\ms-playwright\chromium-1194\chrome-win\chrome.exe&gt; version=156.0.8078.48&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002508F0AFBB0&gt;
+tmp_path = WindowsPath('C:/Users/runneradmin/AppData/Local/Temp/pytest-of-runneradmin/pytest-2/test_api_to_render_review_and_0')
+
+    def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, browser, monkeypatch, tmp_path):
+        coordinator, backend, provider, sessions, mode, rss = api_pipeline
+        # New jobs reject short scripts before either review mode. This healthy-flow
+        # fixture supplies valid narration; the short-response rejection is tested separately.
+        from newsflow.intelligence.korean import speech_plan
+        complete = provider.complete
+        def healthy_fake_script(evidence, seconds, options):
+            result = complete(evidence, seconds, options)
+            while speech_plan(result, seconds)["estimated_total_seconds"] &lt; seconds * .90:
+                plan = speech_plan(result, seconds)
+                index = min(range(len(plan["scenes"])), key=lambda i: plan["scenes"][i]["estimated_seconds"])
+                result["scenes"][index]["narration"] += " 살펴봅니다."
+            assert speech_plan(result, seconds)["fits"]
+            return result
+        monkeypatch.setattr(provider, "complete", healthy_fake_script)
+        # The original factories/engines stay intact; only test dependencies are injected.
+        monkeypatch.setattr(app.state, "autopilot", coordinator)
+        monkeypatch.setattr(app.state, "autopilot_backend", backend)
+        monkeypatch.setattr(app.state, "api_keys", {mode: FixtureKey(),
+            ("claude_api" if mode == "openai" else "openai"): FixtureKey()})
+        if mode == "openai":
+            monkeypatch.setattr(app.state, "ai_keys", FixtureKey())
+        write_studio_settings(sessions, mode, "gpt-4.1-mini" if mode == "openai" else "claude-sonnet-4-6")
+        save_values(app, video_default_voice="supertonic:F1", autopilot_source="feeds",
+                    autopilot_acquisition_policy="ai_web", autopilot_duration="30")
+        tts = SyntheticTTS()
+        monkeypatch.setattr(app.state.video, "tts", tts)
+        monkeypatch.setattr(production_status, "voice_choice_catalog", lambda: [{
+            "name": "supertonic:F1", "label": "합성 측정 음성 · 사람 음성 아님", "engine": "supertonic", "available": True}])
+        monkeypatch.setitem(templates.env.globals, "ui_demo", True)
+        def forbidden(*_args, **_kwargs):
+            raise AssertionError("No external API/OAuth/SNS/CLI authentication allowed")
+        monkeypatch.setattr(urllib.request.OpenerDirector, "open", forbidden)
+        # Ignore no assertions: a fallback to a real network adapter fails immediately.
+        yt_connections, ig_connections = YouTubeConnections(), InstagramConnections()
+        yt_adapter, ig_adapter = YouTubeAdapter(), InstagramAdapter()
+        inspector = FFprobeMediaInspector()
+        youtube = LivePublishingService(sessions, app.state.video.outputs, yt_connections, inspector, lambda: yt_adapter)
+        instagram = InstagramPublishingService(sessions, app.state.video.outputs, ig_connections, inspector, lambda: ig_adapter)
+        unified = UnifiedPublishingService(sessions, app.state.video.outputs, youtube, instagram, inspector)
+        accounts = {"youtube": unified.local.add_account("youtube", "합성 YouTube · 실계정 아님", "youtube_channel"),
+                    "instagram": unified.local.add_account("instagram", "합성 Instagram · 실계정 아님", "professional_business")}
+        monkeypatch.setattr(yt_connections, "status", lambda: {"client_configured": True, "storage_supported": True,
+            "pending": False, "accounts": [{"id": accounts["youtube"], "label": "합성 YouTube · 실계정 아님", "ready": True}]}, raising=False)
+        monkeypatch.setattr(ig_connections, "status", lambda: {"configured": True, "connection_supported": True,
+            "accounts": [{"id": accounts["instagram"], "label": "합성 Instagram · 실계정 아님", "ready": True}]}, raising=False)
+        monkeypatch.setattr(app.state, "youtube", yt_connections)
+        monkeypatch.setattr(app.state, "instagram", ig_connections)
+        monkeypatch.setattr(app.state, "unified_publishing", unified)
+        output = Path(os.environ.get("NEWSFLOW_VALIDATION_OUTPUT", str(tmp_path / "evidence"))) / mode
+        output.mkdir(parents=True, exist_ok=True)
+        errors, external = [], []
+        with local_server(app) as origin:
+            context = browser.new_context(viewport={"width": 1366, "height": 768}, locale="ko-KR")
+            def guard(route):
+                if urlsplit(route.request.url).netloc == urlsplit(origin).netloc:
+                    route.continue_()
+                else:
+                    external.append(urlsplit(route.request.url).hostname)
+                    route.abort()
+            context.route("**/*", guard)
+            page = context.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            response = page.goto(origin + "/")
+            assert "script-src 'self'" in response.headers["content-security-policy"]
+            expect(page.locator(".demo-banner")).to_be_visible()
+            # Follow the current home navigation; preserve the same guarded creation contract.
+            assert urlsplit(page.url).path == "/"
+            page.locator('.workspace-nav [data-nav-id="news-create"]').click()
+            page.wait_for_url(lambda u: urlsplit(u).path == "/create")
+            page.wait_for_load_state("networkidle")
+            expect(page.locator('form[action="/autopilot/quick-start"]')).to_have_attribute("data-easy-wired","true")
+            with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/autopilot/quick-start")) as prepared:
+                page.locator('form[action="/autopilot/quick-start"] button[type="submit"]').click()
+            assert prepared.value.status == 303, prepared.value.text()
+            assert "guide=consent" in prepared.value.headers.get("location", "")
+            page.wait_for_url(lambda u: "guide=consent" in u)
+            assert provider.calls == []
+            form = page.locator('form[action="/autopilot/confirm-start"]')
+            token = form.locator('[name="csrf_token"]').input_value()
+            flow = form.locator('[name="flow"]').input_value()
+            rejected = context.request.post(origin + "/autopilot/confirm-start", form={"csrf_token":token,"flow":flow,"workspace":"true"})
+            assert rejected.status == 422 and provider.calls == []
+            expect(form).to_have_attribute("data-easy-wired","true")
+            form.locator('[name="consent"]').check()
+            form.get_by_role("button", name="동의하고 제작 준비").click()
+            page.wait_for_url(lambda u: "task=" in u)
+            identifier = parse_qs(urlsplit(page.url).query)["task"][0]
+            coordinator.future.result(timeout=30)
+            job = coordinator.snapshot(identifier)
+&gt;           assert (job["status"],job["current_stage"]) == ("waiting_review","script"), job
+E           AssertionError: {'acquisition_policy': 'ai_web', 'ai_mode': 'openai', 'ai_model': 'gpt-4.1-mini', 'ai_phase': None, ...}
+E           assert ('failed', 'script') == ('waiting_review', 'script')
+E             
+E             At index 0 diff: 'failed' != 'waiting_review'
+E             
+E             Full diff:
+E               (
+E             -     'waiting_review',
+E             +     'failed',
+E                   'script',
+E               )
+
+validation_tools\test_old_flow.py:173: AssertionError</failure></testcase><testcase classname="validation_tools.test_old_flow" name="test_api_to_render_review_and_existing_publish_services[claude_api]" time="7.769"><failure message="AssertionError: {'acquisition_policy': 'ai_web', 'ai_mode': 'claude_api', 'ai_model': 'claude-sonnet-4-6', 'ai_phase': None, ...}&#10;assert ('failed', 'script') == ('waiting_review', 'script')&#10;  &#10;  At index 0 diff: 'failed' != 'waiting_review'&#10;  &#10;  Full diff:&#10;    (&#10;  -     'waiting_review',&#10;  +     'failed',&#10;        'script',&#10;    )">app = &lt;fastapi.applications.FastAPI object at 0x000002509016CAD0&gt;
+api_pipeline = (&lt;newsflow.autopilot.service.AutopilotCoordinator object at 0x00000250901F1CD0&gt;, &lt;newsflow.autopilot.backend.PipelineB...h=True, expire_on_commit=False), 'claude_api', &lt;newsflow.news.rss_adapter.FakeRSSAdapter object at 0x000002508FDA3570&gt;)
+browser = &lt;Browser type=&lt;BrowserType name=chromium executable_path=D:\a\_temp\newsflow-final-ui-profile\ms-playwright\chromium-1194\chrome-win\chrome.exe&gt; version=156.0.8078.48&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002508FCEEC30&gt;
+tmp_path = WindowsPath('C:/Users/runneradmin/AppData/Local/Temp/pytest-of-runneradmin/pytest-2/test_api_to_render_review_and_1')
+
+    def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, browser, monkeypatch, tmp_path):
+        coordinator, backend, provider, sessions, mode, rss = api_pipeline
+        # New jobs reject short scripts before either review mode. This healthy-flow
+        # fixture supplies valid narration; the short-response rejection is tested separately.
+        from newsflow.intelligence.korean import speech_plan
+        complete = provider.complete
+        def healthy_fake_script(evidence, seconds, options):
+            result = complete(evidence, seconds, options)
+            while speech_plan(result, seconds)["estimated_total_seconds"] &lt; seconds * .90:
+                plan = speech_plan(result, seconds)
+                index = min(range(len(plan["scenes"])), key=lambda i: plan["scenes"][i]["estimated_seconds"])
+                result["scenes"][index]["narration"] += " 살펴봅니다."
+            assert speech_plan(result, seconds)["fits"]
+            return result
+        monkeypatch.setattr(provider, "complete", healthy_fake_script)
+        # The original factories/engines stay intact; only test dependencies are injected.
+        monkeypatch.setattr(app.state, "autopilot", coordinator)
+        monkeypatch.setattr(app.state, "autopilot_backend", backend)
+        monkeypatch.setattr(app.state, "api_keys", {mode: FixtureKey(),
+            ("claude_api" if mode == "openai" else "openai"): FixtureKey()})
+        if mode == "openai":
+            monkeypatch.setattr(app.state, "ai_keys", FixtureKey())
+        write_studio_settings(sessions, mode, "gpt-4.1-mini" if mode == "openai" else "claude-sonnet-4-6")
+        save_values(app, video_default_voice="supertonic:F1", autopilot_source="feeds",
+                    autopilot_acquisition_policy="ai_web", autopilot_duration="30")
+        tts = SyntheticTTS()
+        monkeypatch.setattr(app.state.video, "tts", tts)
+        monkeypatch.setattr(production_status, "voice_choice_catalog", lambda: [{
+            "name": "supertonic:F1", "label": "합성 측정 음성 · 사람 음성 아님", "engine": "supertonic", "available": True}])
+        monkeypatch.setitem(templates.env.globals, "ui_demo", True)
+        def forbidden(*_args, **_kwargs):
+            raise AssertionError("No external API/OAuth/SNS/CLI authentication allowed")
+        monkeypatch.setattr(urllib.request.OpenerDirector, "open", forbidden)
+        # Ignore no assertions: a fallback to a real network adapter fails immediately.
+        yt_connections, ig_connections = YouTubeConnections(), InstagramConnections()
+        yt_adapter, ig_adapter = YouTubeAdapter(), InstagramAdapter()
+        inspector = FFprobeMediaInspector()
+        youtube = LivePublishingService(sessions, app.state.video.outputs, yt_connections, inspector, lambda: yt_adapter)
+        instagram = InstagramPublishingService(sessions, app.state.video.outputs, ig_connections, inspector, lambda: ig_adapter)
+        unified = UnifiedPublishingService(sessions, app.state.video.outputs, youtube, instagram, inspector)
+        accounts = {"youtube": unified.local.add_account("youtube", "합성 YouTube · 실계정 아님", "youtube_channel"),
+                    "instagram": unified.local.add_account("instagram", "합성 Instagram · 실계정 아님", "professional_business")}
+        monkeypatch.setattr(yt_connections, "status", lambda: {"client_configured": True, "storage_supported": True,
+            "pending": False, "accounts": [{"id": accounts["youtube"], "label": "합성 YouTube · 실계정 아님", "ready": True}]}, raising=False)
+        monkeypatch.setattr(ig_connections, "status", lambda: {"configured": True, "connection_supported": True,
+            "accounts": [{"id": accounts["instagram"], "label": "합성 Instagram · 실계정 아님", "ready": True}]}, raising=False)
+        monkeypatch.setattr(app.state, "youtube", yt_connections)
+        monkeypatch.setattr(app.state, "instagram", ig_connections)
+        monkeypatch.setattr(app.state, "unified_publishing", unified)
+        output = Path(os.environ.get("NEWSFLOW_VALIDATION_OUTPUT", str(tmp_path / "evidence"))) / mode
+        output.mkdir(parents=True, exist_ok=True)
+        errors, external = [], []
+        with local_server(app) as origin:
+            context = browser.new_context(viewport={"width": 1366, "height": 768}, locale="ko-KR")
+            def guard(route):
+                if urlsplit(route.request.url).netloc == urlsplit(origin).netloc:
+                    route.continue_()
+                else:
+                    external.append(urlsplit(route.request.url).hostname)
+                    route.abort()
+            context.route("**/*", guard)
+            page = context.new_page()
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            response = page.goto(origin + "/")
+            assert "script-src 'self'" in response.headers["content-security-policy"]
+            expect(page.locator(".demo-banner")).to_be_visible()
+            # Follow the current home navigation; preserve the same guarded creation contract.
+            assert urlsplit(page.url).path == "/"
+            page.locator('.workspace-nav [data-nav-id="news-create"]').click()
+            page.wait_for_url(lambda u: urlsplit(u).path == "/create")
+            page.wait_for_load_state("networkidle")
+            expect(page.locator('form[action="/autopilot/quick-start"]')).to_have_attribute("data-easy-wired","true")
+            with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/autopilot/quick-start")) as prepared:
+                page.locator('form[action="/autopilot/quick-start"] button[type="submit"]').click()
+            assert prepared.value.status == 303, prepared.value.text()
+            assert "guide=consent" in prepared.value.headers.get("location", "")
+            page.wait_for_url(lambda u: "guide=consent" in u)
+            assert provider.calls == []
+            form = page.locator('form[action="/autopilot/confirm-start"]')
+            token = form.locator('[name="csrf_token"]').input_value()
+            flow = form.locator('[name="flow"]').input_value()
+            rejected = context.request.post(origin + "/autopilot/confirm-start", form={"csrf_token":token,"flow":flow,"workspace":"true"})
+            assert rejected.status == 422 and provider.calls == []
+            expect(form).to_have_attribute("data-easy-wired","true")
+            form.locator('[name="consent"]').check()
+            form.get_by_role("button", name="동의하고 제작 준비").click()
+            page.wait_for_url(lambda u: "task=" in u)
+            identifier = parse_qs(urlsplit(page.url).query)["task"][0]
+            coordinator.future.result(timeout=30)
+            job = coordinator.snapshot(identifier)
+&gt;           assert (job["status"],job["current_stage"]) == ("waiting_review","script"), job
+E           AssertionError: {'acquisition_policy': 'ai_web', 'ai_mode': 'claude_api', 'ai_model': 'claude-sonnet-4-6', 'ai_phase': None, ...}
+E           assert ('failed', 'script') == ('waiting_review', 'script')
+E             
+E             At index 0 diff: 'failed' != 'waiting_review'
+E             
+E             Full diff:
+E               (
+E             -     'waiting_review',
+E             +     'failed',
+E                   'script',
+E               )
+
+validation_tools\test_old_flow.py:173: AssertionError</failure></testcase></testsuite></testsuites>

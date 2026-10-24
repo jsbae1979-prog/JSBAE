@@ -1,0 +1,19 @@
+{
+  "link": {
+    "x": 200.5,
+    "y": 641.796875,
+    "width": 167.5,
+    "height": 44
+  },
+  "label": {
+    "width": 109.5,
+    "height": 21
+  },
+  "clipped": false,
+  "hit": true,
+  "click": "PASS",
+  "keyboard": "PASS",
+  "viewport": "390x844",
+  "css_modified": false,
+  "legacy_height_assertion_unchanged": true
+}

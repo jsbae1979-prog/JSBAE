@@ -1,0 +1,115 @@
+{
+  "sha": "17110a8ddc163694e7253814057e38da7fc5c345",
+  "product_sha": "f6aedc5db10ac7df9e6ce7b2b7f8aab7f5c6bdac",
+  "baseline_sha": "fbadd460d3005fca5c5aa613a78fd7c926c87be6",
+  "old_fixture_sha": "446236f639640260d358eabec73f15fd67998155",
+  "python": "3.14.9 (tags/v3.14.9:ead82c0, Oct 21 2026, 06:26:14) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-2025Server-10.0.26100-SP0",
+  "cases": {
+    "baseline-old": {
+      "counts": {
+        "passed": 0,
+        "failed": 2,
+        "error": 0,
+        "skipped": 0
+      },
+      "cases": {
+        "validation_tools.test_old_flow::test_api_to_render_review_and_existing_publish_services[openai]": "failed",
+        "validation_tools.test_old_flow::test_api_to_render_review_and_existing_publish_services[claude_api]": "failed"
+      },
+      "exit_code": 1,
+      "command": [
+        "D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "-p",
+        "windows_final_guard",
+        "-p",
+        "flow_failure_diagnostics",
+        "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\newsflow-flow-compare-oqhtz9mk\\baseline\\newsflow-ai\\validation_tools\\test_old_flow.py",
+        "--junitxml=D:\\a\\_temp\\newsflow-script-flow\\baseline-old\\tests.xml"
+      ]
+    },
+    "baseline-fixed": {
+      "counts": {
+        "passed": 2,
+        "failed": 0,
+        "error": 0,
+        "skipped": 0
+      },
+      "cases": {
+        "validation_tools.test_fixed_flow::test_api_to_render_review_and_existing_publish_services[openai]": "passed",
+        "validation_tools.test_fixed_flow::test_api_to_render_review_and_existing_publish_services[claude_api]": "passed"
+      },
+      "exit_code": 0,
+      "command": [
+        "D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "-p",
+        "windows_final_guard",
+        "-p",
+        "flow_failure_diagnostics",
+        "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\newsflow-flow-compare-oqhtz9mk\\baseline\\newsflow-ai\\validation_tools\\test_fixed_flow.py",
+        "--junitxml=D:\\a\\_temp\\newsflow-script-flow\\baseline-fixed\\tests.xml"
+      ]
+    },
+    "product-old": {
+      "counts": {
+        "passed": 0,
+        "failed": 2,
+        "error": 0,
+        "skipped": 0
+      },
+      "cases": {
+        "validation_tools.test_old_flow::test_api_to_render_review_and_existing_publish_services[openai]": "failed",
+        "validation_tools.test_old_flow::test_api_to_render_review_and_existing_publish_services[claude_api]": "failed"
+      },
+      "exit_code": 1,
+      "command": [
+        "D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "-p",
+        "windows_final_guard",
+        "-p",
+        "flow_failure_diagnostics",
+        "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\newsflow-flow-compare-oqhtz9mk\\product\\newsflow-ai\\validation_tools\\test_old_flow.py",
+        "--junitxml=D:\\a\\_temp\\newsflow-script-flow\\product-old\\tests.xml"
+      ]
+    },
+    "product-fixed": {
+      "counts": {
+        "passed": 1,
+        "failed": 1,
+        "error": 0,
+        "skipped": 0
+      },
+      "cases": {
+        "validation_tools.test_fixed_flow::test_api_to_render_review_and_existing_publish_services[openai]": "failed",
+        "validation_tools.test_fixed_flow::test_api_to_render_review_and_existing_publish_services[claude_api]": "passed"
+      },
+      "exit_code": 1,
+      "command": [
+        "D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "-rs",
+        "-p",
+        "windows_final_guard",
+        "-p",
+        "flow_failure_diagnostics",
+        "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\newsflow-flow-compare-oqhtz9mk\\product\\newsflow-ai\\validation_tools\\test_fixed_flow.py",
+        "--junitxml=D:\\a\\_temp\\newsflow-script-flow\\product-fixed\\tests.xml"
+      ]
+    }
+  },
+  "real_external_calls": 0
+}
