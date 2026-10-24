@@ -1,0 +1,72 @@
+[
+  {
+    "phase": "baseline",
+    "id": "tests.test_ai_estimate::test_gui_prices_form_and_estimate_text",
+    "message": "assert ('id=\"studio-estimate\"' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini... 사실 확인 미완료 · 2026-10-24 12:06 KST <a href=\"/ai?analysis_id=1\">분석 열기</a></p></details>\\n</div>\\n</main>\\n</body></html>')"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage[openai]",
+    "message": "assert {2000} == {1400, 1600}\n  \n  Extra items in the left set:\n  2000\n  Extra items in the right set:\n  1600\n  1400\n  \n  Full diff:\n    {\n  -     1400,\n  ?     ^^\n  +     2000,\n  ?     ^^\n  -     1600,\n    }"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage[claude_api]",
+    "message": "assert {2000} == {1400, 1600}\n  \n  Extra items in the left set:\n  2000\n  Extra items in the right set:\n  1600\n  1400\n  \n  Full diff:\n    {\n  -     1400,\n  ?     ^^\n  +     2000,\n  ?     ^^\n  -     1600,\n    }"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_ai_news_automation_gui::test_home_policy_change_has_matching_readiness_and_notice_without_execution",
+    "message": "AttributeError: 'NoneType' object has no attribute 'group'"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus",
+    "message": "assert 13 == 7\n +  where 13 = <built-in method count of str object at 0x000002349E0B0F40>('<a ')\n +    where <built-in method count of str object at 0x000002349E0B0F40> = ' class=\"workspace-nav navigation-catalog\">\\n\\n<div class=\"navigation-group\"><p class=\"navigation-group-label\">뉴스 쇼츠 스...ble=\"false\"><path d=\"M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 7v5l3 2\"/></svg><span>제작 스케줄</span></a></div></details>\\n'.count"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_easy_setup::test_wizard_is_optional_and_all_core_menus_remain",
+    "message": "assert ('action=\"/autopilot/quick-start\"' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...18 8-18 8 4-8-4-8zm4 8h14\"/></svg> 검토 후 게시 준비</a></section>\\n\\n    </div>\\n  </div>\\n</div>\\n\\n</main>\\n</body></html>')"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_gui::test_render[/settings-\\uc6cc\\ud06c\\uc2a4\\ud398\\uc774\\uc2a4 \\uc124\\uc815]",
+    "message": "assert '워크스페이스 설정' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...></div>\\n<section class=\"card\"><h2>최근 수집 오류 로그</h2><p class=\"empty\">기록된 오류가 없습니다.</p></section></main>\\n</body></html>'\n +  where '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...></div>\\n<section class=\"card\"><h2>최근 수집 오류 로그</h2><p class=\"empty\">기록된 오류가 없습니다.</p></section></main>\\n</body></html>' = <Response [200 OK]>.text"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_ai_estimate::test_gui_prices_form_and_estimate_text",
+    "message": "assert ('id=\"studio-estimate\"' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini... 사실 확인 미완료 · 2026-10-24 12:07 KST <a href=\"/ai?analysis_id=1\">분석 열기</a></p></details>\\n</div>\\n</main>\\n</body></html>')"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage[openai]",
+    "message": "assert {2000} == {1400, 1600}\n  \n  Extra items in the left set:\n  2000\n  Extra items in the right set:\n  1600\n  1400\n  \n  Full diff:\n    {\n  -     1400,\n  ?     ^^\n  +     2000,\n  ?     ^^\n  -     1600,\n    }"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage[claude_api]",
+    "message": "assert {2000} == {1400, 1600}\n  \n  Extra items in the left set:\n  2000\n  Extra items in the right set:\n  1600\n  1400\n  \n  Full diff:\n    {\n  -     1400,\n  ?     ^^\n  +     2000,\n  ?     ^^\n  -     1600,\n    }"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_ai_news_automation_gui::test_home_policy_change_has_matching_readiness_and_notice_without_execution",
+    "message": "AttributeError: 'NoneType' object has no attribute 'group'"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus",
+    "message": "assert 13 == 7\n +  where 13 = <built-in method count of str object at 0x0000027545FB9030>('<a ')\n +    where <built-in method count of str object at 0x0000027545FB9030> = ' class=\"workspace-nav navigation-catalog\">\\n\\n<div class=\"navigation-group\"><p class=\"navigation-group-label\">뉴스 쇼츠 스...ble=\"false\"><path d=\"M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M12 7v5l3 2\"/></svg><span>제작 스케줄</span></a></div></details>\\n'.count"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_easy_setup::test_wizard_is_optional_and_all_core_menus_remain",
+    "message": "assert ('action=\"/autopilot/quick-start\"' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...18 8-18 8 4-8-4-8zm4 8h14\"/></svg> 검토 후 게시 준비</a></section>\\n\\n    </div>\\n  </div>\\n</div>\\n\\n</main>\\n</body></html>')"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_gui::test_render[/settings-\\uc6cc\\ud06c\\uc2a4\\ud398\\uc774\\uc2a4 \\uc124\\uc815]",
+    "message": "assert '워크스페이스 설정' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...></div>\\n<section class=\"card\"><h2>최근 수집 오류 로그</h2><p class=\"empty\">기록된 오류가 없습니다.</p></section></main>\\n</body></html>'\n +  where '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...></div>\\n<section class=\"card\"><h2>최근 수집 오류 로그</h2><p class=\"empty\">기록된 오류가 없습니다.</p></section></main>\\n</body></html>' = <Response [200 OK]>.text"
+  }
+]

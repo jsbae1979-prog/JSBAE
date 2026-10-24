@@ -1,0 +1,20 @@
+{
+  "platform": "win32",
+  "credential_kind": "synthetic only",
+  "real_service_tokens": 0,
+  "real_oauth_calls": 0,
+  "real_publish_calls": 0,
+  "Windows11_user_PC": "NOT VERIFIED",
+  "current_user_DPAPI": "PASS",
+  "disk_ciphertext": "PASS",
+  "new_python_process_read": "PASS",
+  "Korean_space_path": "PASS",
+  "multiple_account_isolation": "PASS",
+  "rotation_and_delete": "PASS",
+  "expiry_and_expired_delete": "PASS",
+  "tamper_rejection": "PASS",
+  "real_token_storage_blocked": "PASS",
+  "atomic_temporary_cleanup": "PASS",
+  "owned_test_data_cleanup": "PASS",
+  "result": "PASS"
+}
