@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}영상 만들기 · NewsFlow AI{% endblock %}
-{% block extra_head %}<link rel="stylesheet" href="/static/css/video-modern.css">{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/video-modern.css"><script src="/static/js/video-review.js" defer></script>{% endblock %}
 {% block content %}
 <div class="video-modern">
 {% call studio_header('video','VIDEO STUDIO','영상 구성','저장한 대본에 음성과 자막을 더하고, 검토 후 제작하세요.') %}<a class="button" href="/character">캐릭터 쇼츠</a><a class="button" href="/videos">내 영상 보기 →</a>{% endcall %}
@@ -92,13 +92,15 @@
     <p class="soft-notice">{{ job_presentation.stage }} · {{ job_presentation.message }}</p>
     <p><a class="button primary" href="{{ job_presentation.action }}">해당 단계 설정 확인</a> <a class="button" href="/video?draft_id={{ project.draft_id }}">대본·제작 설정 확인</a> <a class="quiet-link" href="/simple-settings#selected-voice">음성·영상 연결 설정</a></p>
   {% endif %}
-  <details class="video-advanced" id="video-output-details">
-    <summary>제작 정보 · 출처 · 게시 준비</summary><p>{{ job.message }}</p>
-    <p>영상 작업 #{{ job.id }} · 저장 위치: {{ outputs }} / {{ job.output_name }}</p>
+  <details class="video-advanced" id="video-output-details" data-video-review-details>
+    <summary>{{ ui_icon('file',18) }} 영상 정보·출처</summary><div data-video-review-content><p><strong>{{ project.title }}</strong></p><p>{{ job.message }}</p>
+    <h3>뉴스 출처</h3>
     {% for a in project.sources.articles %}{% for s in a.sources %}<p>{{ s.publisher }} · <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ s.url }}</a></p>{% endfor %}{% endfor %}
-    <p>음성: {{ audio.provider }} · {{ audio.voice }} / {{ audio.status }} · 자막 {{ subtitles.font_size }}px</p>
+    <h3>장면 구성</h3>
     <ul>{% for s in scenes %}<li>{{ (s.start_ms/1000)|round(3) }}–{{ (s.end_ms/1000)|round(3) }}초 · <span class="scene-source">{{ 'AI 생성' if s.ai_generated else ('로컬 이미지' if s.material else '카드') }}</span> · {{ s.caption }}</li>{% endfor %}</ul>
-    {% if job.status=='success' and job.metadata_json.playable %}<a class="button" href="/publishing?render_job_id={{ job.id }}">이 영상으로 게시 준비</a>{% endif %}
+    <details data-video-technical><summary>저장 위치·기술 정보</summary><p>영상 작업 #{{ job.id }} · 저장 위치: {{ outputs }} / {{ job.output_name }}</p><p>음성: {{ audio.provider }} · {{ audio.voice }} / {{ audio.status }} · 자막 {{ subtitles.font_size }}px</p></details>
+    {% if job.status=='success' and job.metadata_json.playable %}<p>검토와 게시 승인은 별도입니다.</p><a class="button" href="/publishing?render_job_id={{ job.id }}">이 영상으로 게시 준비</a>{% endif %}
+    </div>
   </details>
 </div>
 {% endif %}

@@ -58,6 +58,7 @@ class RenderPlan:
     # New API drafts must return to review instead of silently padding or rewriting speech.
     strict_audio_fit: bool = False
     shortform: Shortform = field(default_factory=Shortform)
+    voice_attribution: bool = False
 
     @property
     def duration(self) -> float:
@@ -321,6 +322,50 @@ def text_lines(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFon
     return lines
 
 
+
+def draw_title(draw: ImageDraw.ImageDraw, title: str, font: Path, top: int) -> None:
+    # Fit the complete title; never silently discard a factual suffix.
+    for size in (56, 52, 48, 44, 40, 36, 32):
+        selected = ImageFont.truetype(str(font), size)
+        lines = text_lines(draw, title, selected, 900)
+        if len(lines) <= 4:
+            for index, line in enumerate(lines):
+                draw.text((90, top + index * 74), line, font=selected, fill="#f0f4ff")
+            return
+    raise RenderError("제목이 안전 영역을 초과합니다. 제목을 검토해 줄이세요.", kind="title")
+
+
+def draw_voice_attribution(draw: ImageDraw.ImageDraw, plan: RenderPlan, font: Path) -> None:
+    if plan.voice_attribution:
+        selected = ImageFont.truetype(str(font), 28)
+        draw.rounded_rectangle((90, 590, 990, 634), radius=8, fill="#101726")
+        draw.text((108, 596), "음성 제공 · elevenlabs.io", font=selected, fill="#c8d9f0")
+
+
+def draw_sources(draw: ImageDraw.ImageDraw, sources: list[dict], font: Path) -> None:
+    # One reference per line keeps hostnames intact. Full URLs remain in the review UI.
+    names = []
+    for source in sources[:100]:
+        publisher = str(source.get("publisher", "")).strip()
+        host = urlsplit(source.get("url", "")).hostname or ""
+        label = " · ".join(part for part in (publisher, host) if part)
+        if label and label not in names:
+            names.append(label[:200])
+        if len(names) == 3:
+            break
+    for index, label in enumerate(names):
+        text = ("출처: " if index == 0 else "") + label
+        for size in (26, 24, 22, 20, 18):
+            selected = ImageFont.truetype(str(font), size)
+            if draw.textlength(text, font=selected) <= 900:
+                break
+        while text and draw.textlength(text, font=selected) > 878:
+            text = text[:-1]
+        if text != ("출처: " if index == 0 else "") + label:
+            text += "…"
+        draw.text((90, 1805 + index * 33), text, font=selected, fill="#9ba9c1")
+
+
 def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Path) -> None:
     if plan.shortform.enabled:
         from .shortform_visuals import visual
@@ -337,8 +382,8 @@ def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Pat
     draw.text((90, 145), "NEWSFLOW · 미확인 보도 · 사람 검토 필요", font=small_font, fill="#b7adff")
     audio_label = "무음 검토영상 · 음성 없음" if plan.silent else "한국어 음성 · 발음 품질 미검증"
     draw.text((990 - draw.textlength(audio_label, font=small_font), 1762), audio_label, font=small_font, fill="#8d9ab3")
-    for i, line in enumerate(text_lines(draw, plan.title, title_font, 900)[:5]):
-        draw.text((90, 230 + i * 78), line, font=title_font, fill="#f0f4ff")
+    draw_title(draw, plan.title, font, 230)
+    draw_voice_attribution(draw, plan, font)
     if scene.image:
         asset = ImageOps.fit(load_image(scene.image), (900, 650))
         image.paste(asset, (90, 650))
@@ -360,15 +405,7 @@ def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Pat
             fill="#ffffff",
             stroke_width=1,
         )
-    names = []
-    for source in plan.sources[:100]:
-        label = source.get("publisher", "") + " · " + urlsplit(source.get("url", "")).netloc
-        if label not in names:
-            names.append(label[:200])
-            if len(names) == 3:
-                break
-    for i, line in enumerate(text_lines(draw, "출처: " + " / ".join(names), small_font, 900)[:2]):
-        draw.text((90, 1810 + i * 38), line, font=small_font, fill="#9ba9c1")
+    draw_sources(draw, plan.sources, font)
     image.save(target, format="PNG")
 
 
@@ -395,15 +432,14 @@ def overlay(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: 
         return
     image = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    title_font = ImageFont.truetype(str(font), 56)
     body_font = ImageFont.truetype(str(font), plan.font_size)
     small_font = ImageFont.truetype(str(font), 28)
     label_font = ImageFont.truetype(str(font), 40)
     draw.rectangle((0, 0, 1080, 600), fill=(16, 23, 38, 214))
     draw.rounded_rectangle((90, 105, 990, 115), fill="#8b83ff", radius=5)
     draw.text((90, 145), "NEWSFLOW · 미확인 보도 · 사람 검토 필요", font=small_font, fill="#b7adff")
-    for i, line in enumerate(text_lines(draw, plan.title, title_font, 900)[:4]):
-        draw.text((90, 210 + i * 74), line, font=title_font, fill="#f0f4ff")
+    draw_title(draw, plan.title, font, 210)
+    draw_voice_attribution(draw, plan, font)
     draw.rounded_rectangle((90, 500, 990, 580), radius=20, fill=(255, 196, 0, 255))
     width = draw.textlength(AI_SCENE_LABEL, font=label_font)
     draw.text((540 - width / 2, 516), AI_SCENE_LABEL, font=label_font, fill="#111111")
@@ -417,15 +453,7 @@ def overlay(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: 
         draw.text((90, plan.subtitle_y + i * (plan.font_size + 16)), line, font=body_font, fill="#ffffff", stroke_width=1)
     audio_label = "무음 검토영상 · 음성 없음" if plan.silent else "한국어 음성 · 발음 품질 미검증"
     draw.text((990 - draw.textlength(audio_label, font=small_font), 1762), audio_label, font=small_font, fill="#8d9ab3")
-    names = []
-    for source in plan.sources[:100]:
-        label = source.get("publisher", "") + " · " + urlsplit(source.get("url", "")).netloc
-        if label not in names:
-            names.append(label[:200])
-            if len(names) == 3:
-                break
-    for i, line in enumerate(text_lines(draw, "출처: " + " / ".join(names), small_font, 900)[:2]):
-        draw.text((90, 1810 + i * 38), line, font=small_font, fill="#9ba9c1")
+    draw_sources(draw, plan.sources, font)
     image.save(target, format="PNG")
 
 
@@ -679,7 +707,7 @@ class FFmpegAdapter:
             raise RenderError("숏폼 훅·종료 검사는 실제 음성이 필요합니다. 저장한 음성을 확인하세요.", kind="audio_review")
         rendered_duration = sum(scene.seconds for scene in scenes)
         if getattr(tts, "attribution_required", False):
-            plan = replace(plan, title=plan.title + " · elevenlabs.io")
+            plan = replace(plan, voice_attribution=True)
         for index, scene in enumerate(scenes):
             if cancel.is_set():
                 raise RenderError("영상 제작이 중단되었습니다.")

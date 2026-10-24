@@ -104,4 +104,6 @@ def visual(plan, scene, target, font_path, *, transparent=False):
         for i, line in enumerate(lines):
             draw.rectangle((75, plan.subtitle_y+i*65, 960, plan.subtitle_y+(i+1)*65), fill="#0b1526")
             draw.text((90, plan.subtitle_y+i*65), line, font=body, fill="#ffffff")
+    from .engine import draw_voice_attribution
+    draw_voice_attribution(draw, plan, font_path)
     image.save(target, format="PNG")

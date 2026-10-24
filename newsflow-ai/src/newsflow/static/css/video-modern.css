@@ -1,4 +1,14 @@
 /* Video Studio only. The canvas is a layout illustration, never a generated scene. */
+.video-review-trigger{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.video-review-dialog{box-sizing:border-box;width:780px;max-width:calc(100vw - 24px);max-height:85dvh;margin:auto;padding:20px;border:1px solid #456489;border-radius:14px;background:#101e30;color:#e9f1fc;overflow:auto;box-shadow:0 20px 70px #0007}
+.video-review-dialog::backdrop{background:#020811b8}
+.video-review-dialog>header{display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:-20px;margin:-20px -20px 16px;padding:16px 20px;border-bottom:1px solid #324a65;background:#101e30;z-index:1}
+.video-review-dialog h2{font-size:19px;margin:0;color:#e9f1fc}
+.video-review-dialog p,.video-review-dialog li{font-size:14px;line-height:1.8;overflow-wrap:anywhere}
+.video-review-dialog a{color:#a5ceff;overflow-wrap:anywhere}
+.video-review-dialog .video-review-close{min-height:44px;padding:8px 14px;border:1px solid #537598;background:#1a3553;color:#edf5ff;border-radius:8px;flex-shrink:0}
+.video-review-dialog :focus-visible,.video-review-trigger:focus-visible{outline:3px solid #8dc9ff;outline-offset:3px}
+.video-review-dialog [data-video-review-content]{min-width:0}
 .premium-shell .video-modern{--vm-surface:#101c2d;--vm-line:#2b3b51;--vm-muted:#a9bbd1;--vm-blue:#8bbaff;max-width:1500px;margin:auto;font-family:"Segoe UI","Malgun Gothic",sans-serif}
 .premium-shell .video-modern .suite-header{border-bottom:1px solid var(--vm-line);padding-bottom:18px;margin-bottom:22px}
 .premium-shell .video-modern .suite-header h1{font-size:27px;letter-spacing:-.6px}
