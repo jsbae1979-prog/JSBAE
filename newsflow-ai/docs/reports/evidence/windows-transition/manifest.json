@@ -1,0 +1,57 @@
+[
+  {
+    "path": "cloud.txt",
+    "bytes": 867,
+    "sha256": "185d6471882b2e4a5e6bf6c40fe4e4ce2407dec60161ed19044132c7eb48bd40"
+  },
+  {
+    "path": "cloud.xml",
+    "bytes": 3523,
+    "sha256": "7fedf35e4c50eed3d78c598f48e2bec585bb7fbf0b28c78a0a4f8d8ef2c95672"
+  },
+  {
+    "path": "summary.json",
+    "bytes": 3516,
+    "sha256": "b58fc560c681d9836c5c3dff67a75da2231b27f6b4b8cf456ec37331148586c2"
+  },
+  {
+    "path": "windows-3.12/bat.json",
+    "bytes": 589,
+    "sha256": "7e4a1d93ccf0dd3623e6170dc9022f0b0912896c08945c345a364fc5ea234c58"
+  },
+  {
+    "path": "windows-3.12/outcomes.json",
+    "bytes": 158,
+    "sha256": "0648175ffe21cfbf3c9746186de5985e01cb09cf14b81abf134173d5a5cd6b3c"
+  },
+  {
+    "path": "windows-3.12/tests.xml",
+    "bytes": 3310,
+    "sha256": "c3f5686d7aaaf0bf4e5ca9079e5b346950fcc85a0a39c97bd5902ae93d98e1b3"
+  },
+  {
+    "path": "windows-3.14/bat.json",
+    "bytes": 588,
+    "sha256": "255824cb917782cbd514ce397d17acd24aea8b885112b49cef25e7ce55183875"
+  },
+  {
+    "path": "windows-3.14/outcomes.json",
+    "bytes": 158,
+    "sha256": "9b04bab9faa76db1b8350f19a81bd683fa03c6d16fe852c8085ffe68ec0ea358"
+  },
+  {
+    "path": "windows-3.14/tests.xml",
+    "bytes": 3310,
+    "sha256": "654aaac543e202d5ee91bdbf49ddb2d03e85a4c3e3fb39925fa986e247a172a2"
+  },
+  {
+    "path": "windows-run.json",
+    "bytes": 4353,
+    "sha256": "074b6e54bae9155196d70801873d94b2def27acba396ce6247a92817d7a6b689"
+  },
+  {
+    "path": "windows-summary.txt",
+    "bytes": 1583,
+    "sha256": "745724b78392f5738687db3833d66954a61e21859c289e9cc2b215e2ef9ce66b"
+  }
+]

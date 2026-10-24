@@ -1,0 +1,12 @@
+transition (3.14)	Pinned dependencies and pip check	2026-10-24T05:15:24.2767783Z No broken requirements found.
+transition (3.14)	Prepare isolated rehearsal and FFmpeg	2026-10-24T05:15:51.1455556Z Python 3.14.9
+transition (3.14)	Prepare isolated rehearsal and FFmpeg	2026-10-24T05:15:51.2529514Z ffmpeg version 7.1.1-essentials_build-www.gyan.dev Copyright (c) 2000-2025 the FFmpeg developers
+transition (3.14)	Prepare isolated rehearsal and FFmpeg	2026-10-24T05:15:51.3271885Z ffprobe version 7.1.1-essentials_build-www.gyan.dev Copyright (c) 2007-2025 the FFmpeg developers
+transition (3.14)	Ruff rehearsal tests	2026-10-24T05:15:51.6410896Z All checks passed!
+transition (3.14)	Synthetic backup restore migration and native DPAPI	2026-10-24T05:16:03.3005448Z 15 passed, 1 warning in 8.01s
+transition (3.12)	Pinned dependencies and pip check	2026-10-24T05:15:21.6736634Z No broken requirements found.
+transition (3.12)	Prepare isolated rehearsal and FFmpeg	2026-10-24T05:15:42.5529338Z Python 3.12.10
+transition (3.12)	Prepare isolated rehearsal and FFmpeg	2026-10-24T05:15:42.6441827Z ffmpeg version 7.1.1-essentials_build-www.gyan.dev Copyright (c) 2000-2025 the FFmpeg developers
+transition (3.12)	Prepare isolated rehearsal and FFmpeg	2026-10-24T05:15:42.7377270Z ffprobe version 7.1.1-essentials_build-www.gyan.dev Copyright (c) 2007-2025 the FFmpeg developers
+transition (3.12)	Ruff rehearsal tests	2026-10-24T05:15:43.1494244Z All checks passed!
+transition (3.12)	Synthetic backup restore migration and native DPAPI	2026-10-24T05:15:56.2266484Z 15 passed, 1 warning in 9.09s
