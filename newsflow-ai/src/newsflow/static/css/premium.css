@@ -171,3 +171,24 @@ body.premium-shell {
 @media(max-width:1000px){.premium-shell .reference-home .reference-earth{height:100%;width:135%;top:0}}
 .sidebar-create{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;margin-top:16px;border:1px solid #315878;border-radius:8px;color:#c2dcf5;font-size:13px;min-height:44px}
 @media(max-width:760px){.workspace-nav .desktop-nav-item,.sidebar-create{display:none}}
+
+/* Library first-use illustration only; never replace a real video or action. */
+.premium-shell .creator-library .library-empty {
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(220px,40%);
+  align-items:center;
+  gap:24px;
+  padding:24px 32px;
+  border:1px solid #28415d;
+  background:#0c1829;
+}
+.library-empty-copy {min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+.premium-shell .library-empty-copy h2 {font-size:22px;line-height:1.5;color:#f8fafc}
+.premium-shell .library-empty-copy p {color:#b7c8dc;line-height:1.8;margin:8px 0 20px}
+.library-empty-art {display:block;width:100%;max-width:440px;height:auto;object-fit:contain;justify-self:center;pointer-events:none}
+@media(max-width:760px) {
+  .premium-shell .creator-library .library-empty {grid-template-columns:minmax(0,1fr);gap:16px;padding:24px}
+  .premium-shell .library-empty-copy h2 {font-size:20px}
+  .library-empty-art {max-width:240px}
+}
