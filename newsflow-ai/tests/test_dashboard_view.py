@@ -71,8 +71,8 @@ def test_legacy_dashboard_and_new_creator_routes_remain_separate(client):
     assert '뉴스 흐름을 한눈에' in legacy.text
     assert 'mockup-dashboard' not in legacy.text
     assert client.get('/create').status_code == 200
-    assert re.findall(r'class="studio-format-card[^\"]*" href="([^\"]+)"', home.text) == [
-        '/create', '/character', '/image-posts']
+    assert re.findall(r'<a class="button" href="([^\"]+)"', re.search(r'<nav class="workflow-formats".*?</nav>', home.text, re.DOTALL).group()) == [
+        '/create', '/image-posts', '/character']
     assert 'id="quick-production"' not in home.text
     assert 'id="production-title"' in client.get('/create').text
     assert 'workflow-record-scope' not in home.text

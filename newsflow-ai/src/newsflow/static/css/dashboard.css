@@ -185,3 +185,43 @@
 .mockup-dashboard .dash-preview .dash-preview-more>summary{cursor:pointer;color:#adc5df;font-size:12px;min-height:32px;display:flex;align-items:center}
 .mockup-dashboard .dash-preview .dash-preview-more .dash-preview-links{margin-top:4px;align-items:center}
 @media(max-width:760px){.mockup-dashboard .dash-preview .dash-preview-actions .button{min-height:44px}.mockup-dashboard .dash-preview .dash-preview-more>summary{min-height:44px}}
+
+/* Restore the established news/workflow dashboard without changing shared screens. */
+.dashboard-restored .dash-metric{min-height:88px!important;padding:14px!important;gap:12px}
+.dashboard-restored .dash-metric .dash-icon{width:40px;height:44px}
+.dashboard-restored .dash-metric strong{font-size:30px!important;margin:3px 0 0!important}
+.dashboard-restored .dash-metric>svg{margin-left:auto;flex-shrink:0;color:#8aafd0}
+.dashboard-restored .dash-news{min-height:0}
+.premium-shell .mockup-dashboard.dashboard-restored .dash-categories{flex-wrap:wrap;gap:5px;overflow:visible}
+.premium-shell .mockup-dashboard.dashboard-restored .dash-categories a{flex:0 1 auto;padding:6px 8px;min-height:34px;font-size:12px}
+.dashboard-restored .dash-news .dash-panel-heading{flex-wrap:wrap;gap:6px}
+.dashboard-restored .workflow-format-links{display:flex;flex-wrap:wrap;gap:6px}
+.dashboard-restored .workflow-format-links .button{flex:1;min-width:110px;padding:8px;font-size:12px}
+.dashboard-restored .workflow-review-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#b4cee8;min-height:36px;white-space:nowrap}
+.dashboard-restored .studio-task-row{gap:9px;flex-wrap:wrap}
+.dashboard-restored .studio-task-row .studio-task-actions{width:100%;margin-left:49px;justify-content:flex-start}
+.dashboard-restored .dash-video-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px!important;line-height:1.6!important;margin-top:10px!important}
+@media(min-width:1201px){.dashboard-restored .dash-columns{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr) minmax(235px,.85fr)}}
+@media(min-width:761px) and (max-width:1200px){.dashboard-restored .dash-columns{grid-template-columns:minmax(0,1fr) minmax(0,1.3fr)}.dashboard-restored .dash-right{grid-column:1/-1;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}.dashboard-restored .dash-preview{grid-row:span 2}}
+@media(max-width:760px){.dashboard-restored .dash-columns,.dashboard-restored .dash-right{display:grid;grid-template-columns:minmax(0,1fr)}.dashboard-restored .dash-center{grid-row:1}.dashboard-restored .dash-news{grid-row:3}.dashboard-restored .dash-metric{min-height:82px!important}.dashboard-restored .dash-metric strong{font-size:26px!important}.dashboard-restored .dash-metric>svg{display:none}.dashboard-restored .dash-workspace{display:none}.dashboard-restored .dash-heading-action{display:none}}
+
+.premium-shell .mockup-dashboard.dashboard-restored .dash-preview .dash-video-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:auto;max-height:3.2em;font-size:13px;line-height:1.6;margin:10px 0 8px}
+
+/* Use the existing SVG vocabulary: decorative icons always accompany readable actions. */
+.premium-shell .dashboard-restored .dash-panel-heading h2{display:flex;align-items:center;gap:8px}
+.dashboard-restored .dash-panel-heading h2>.ui-icon{color:#8fc4ff;flex-shrink:0}
+.dashboard-restored .dash-news .dash-panel-heading h2:before,.dashboard-restored .dash-publish .dash-panel-heading h2:before{display:none}
+.premium-shell .dashboard-restored .workflow-format-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.premium-shell .dashboard-restored .workflow-format-links .button{display:flex;flex-direction:column;gap:9px;padding:14px 6px 12px;min-width:0;min-height:90px;border:1px solid #315476;background:#10273f;border-radius:9px;line-height:1.5;font-size:12px}
+.premium-shell .dashboard-restored .workflow-format-links .button>.ui-icon{width:28px;height:28px;padding:8px;box-sizing:content-box;border-radius:10px;color:#9bc8ff;background:#1b3b60}
+.premium-shell .dashboard-restored .workflow-format-links .button:nth-child(2)>.ui-icon{color:#9cdecb;background:#194238}
+.premium-shell .dashboard-restored .workflow-format-links .button:nth-child(3)>.ui-icon{color:#dbc3ff;background:#362c50}
+.premium-shell .dashboard-restored .workflow-format-links .button:hover{background:#183750;border-color:#80baff}
+.dashboard-restored .workflow-steps .workflow-node>.ui-icon{width:17px;height:17px;stroke-width:1.8}
+.dashboard-restored .workflow-steps .is-error .workflow-node>.ui-icon{width:19px;height:19px}
+.dashboard-restored .workflow-card h2{margin-bottom:0}
+.dashboard-restored .workflow-title-row{margin-bottom:14px}
+.dashboard-restored .workflow-review-link .ui-icon{flex-shrink:0}
+.dashboard-restored .dash-quiet-link{display:inline-flex;align-items:center;gap:6px;min-height:36px;color:#a8c7e6;font-size:12px}
+.dashboard-restored .dash-preview-more>summary{gap:6px}
+@media(max-width:420px){.premium-shell .dashboard-restored .workflow-format-links{gap:5px}.premium-shell .dashboard-restored .workflow-format-links .button{font-size:12px;padding-inline:3px}.premium-shell .dashboard-restored .workflow-format-links .button>.ui-icon{width:24px;height:24px;padding:7px}.dashboard-restored .workflow-title-row{gap:6px}.dashboard-restored .workflow-review-link{font-size:12px}}

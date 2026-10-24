@@ -1,17 +1,18 @@
 {% set flow = dashboard.workflow %}
 <div class="workflow-card" data-workflow-card>
-  <div class="workflow-title-row"><h2 id="dash-workflow-title">AI 제작 워크플로</h2><label class="production-review-choice"><input type="checkbox" name="script_review" value="true" form="quick-production" {% if not entry_flow|default(none) or entry_flow.get('script_review', true) %}checked{% endif %}><span>대본 검토</span></label></div>
+  <div class="workflow-title-row"><h2 id="dash-workflow-title">AI 제작 워크플로</h2>{% if dashboard_compact|default(false) %}<a class="workflow-review-link" href="/create">{{ ui_icon('settings',16) }} 대본 검토 설정</a>{% else %}<label class="production-review-choice"><input type="checkbox" name="script_review" value="true" form="quick-production" {% if not entry_flow|default(none) or entry_flow.get('script_review', true) %}checked{% endif %}><span>대본 검토</span></label>{% endif %}</div>
   {% if image_posts_available|default(false) %}
-  <nav class="workflow-formats" aria-label="만들 콘텐츠">
+  <nav class="workflow-formats" {% if dashboard_compact|default(false) %}id="studio-create"{% endif %} aria-label="만들 콘텐츠">
     <div class="workflow-format-links">
-      <a class="button" href="#production-title">{{ ui_icon('video',18) }}<span>쇼츠 영상</span></a><a class="button" href="/image-posts">{{ ui_icon('file',18) }}<span>이미지 게시물</span></a>
-    </div>
+      <a class="button" href="{{ '/create' if dashboard_compact|default(false) else '#production-title' }}">{{ ui_icon('video',24) }}<span>쇼츠 영상</span></a><a class="button" href="/image-posts">{{ ui_icon('image',24) }}<span>이미지 게시물</span></a>
+    {% if dashboard_compact|default(false) %}<a class="button" href="/character">{{ ui_icon('character',24) }}<span>캐릭터 쇼츠</span></a>{% endif %}</div>
   </nav>
   {% endif %}
   <p class="workflow-context-note">현재 작업의 진행 상태</p>
+  {% set stage_icons = ['news','sparkles','edit','video','check'] %}
   <ol class="workflow-steps" aria-label="제작 단계">
     {% for step in flow.steps %}<li class="is-{{ step.state }}" {% if step.state in ['current','error'] %}aria-current="step"{% endif %}>
-      <span class="workflow-node">{% if step.state == 'done' %}<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 3 3 7-7"/></svg>{% elif step.state == 'error' %}!{% else %}{{ loop.index }}{% endif %}</span>
+      <span class="sr-only">{{ loop.index }}단계: </span><span class="workflow-node" aria-hidden="true">{% if step.state == 'done' %}<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 10 3 3 7-7"/></svg>{% elif step.state == 'error' %}{{ ui_icon('alert',18) }}{% else %}{{ ui_icon(stage_icons[loop.index0],18) }}{% endif %}</span>
       <span>{{ step.label }}</span><span class="sr-only">{{ {'done':'완료 기록 있음','current':'현재 단계','error':'확인 필요','pending':'완료 미확인'}[step.state] }}</span>
     </li>{% endfor %}
   </ol>

@@ -16,11 +16,11 @@ def test_nine_primary_items_keep_four_tools_and_reveal_current_tool():
 
 def test_home_has_one_creation_entry_per_type_without_duplicate_forms(client):
     html = client.get('/').text
-    assert html.count('class="studio-format-card ') == 3
+    assert html.count('class="workflow-formats"') == 1
     assert 'id="quick-production"' not in html
-    assert 'class="workflow-formats"' not in html
+    assert 'class="studio-format-card ' not in html
     assert 'studio-publish-shortcut' not in html
-    assert 'studio-status-strip' in html
+    assert 'aria-label="내 제작 현황"' in html
     assert 'action="/news" method="get"' in html
     create = client.get('/create').text
     assert create.count('id="quick-production"') == 1

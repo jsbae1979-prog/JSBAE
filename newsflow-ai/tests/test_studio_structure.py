@@ -145,9 +145,9 @@ def test_untrusted_record_identifiers_cannot_become_external_links(app):
 
 def test_dashboard_retains_archive_search_topics_and_links_to_one_news_form_without_running(client, app):
     html = client.get('/').text
-    assert '아이디어를,' in html
+    assert '오늘의 뉴스를,' in html
     for item in CONTENT_TYPES:
-        assert f'class="studio-format-card format-{item["id"]}"' in html
+        assert f'href="{item["href"]}"' in html
     assert 'action="/news" method="get"' in html and 'name="q"' in html
     for category in ('정치', '경제', '사회', 'IT·과학', '문화', '스포츠', '국제', '미분류'):
         assert f'data-dash-news-category="{category}"' in html
