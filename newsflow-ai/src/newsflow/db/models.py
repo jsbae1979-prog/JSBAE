@@ -32,6 +32,33 @@ class Base(DeclarativeBase):
     pass
 
 
+class ImagePost(Base):
+    """Immutable reviewed artwork; revisions create a new row, never a fake video."""
+    __tablename__ = "image_posts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    article_id: Mapped[int] = mapped_column(ForeignKey("news_articles.id"))
+    title: Mapped[str] = mapped_column(String(100))
+    caption: Mapped[str] = mapped_column(Text)
+    sources: Mapped[dict] = mapped_column(JSON)
+    filename: Mapped[str] = mapped_column(String(80), unique=True)
+    sha256: Mapped[str] = mapped_column(String(64))
+    ai_disclosure: Mapped[str] = mapped_column(String(30))
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class ImagePostDelivery(Base):
+    """One account/artwork attempt; interrupted and failed attempts are never replayed."""
+    __tablename__ = "image_post_deliveries"
+    __table_args__ = (UniqueConstraint("account_id", "media_sha256"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("image_posts.id"))
+    account_id: Mapped[int] = mapped_column(ForeignKey("platform_accounts.id"))
+    media_sha256: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(30))
+    detail: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
 class NewsSource(Base):
     __tablename__ = "news_sources"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -52,6 +79,17 @@ class NewsArticle(Base):
     summary: Mapped[str] = mapped_column(Text, default="")
     category: Mapped[str] = mapped_column(String(30), default="미분류")
     published_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    collected_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class ArticleThumbnail(Base):
+    """Source-provided preview only; no permission to reuse in a video is implied."""
+
+    __tablename__ = "article_thumbnails"
+    article_id: Mapped[int] = mapped_column(ForeignKey("news_articles.id", ondelete="CASCADE"), primary_key=True)
+    url: Mapped[str] = mapped_column(String(2048))
+    source_article_url: Mapped[str] = mapped_column(String(2048))
+    publisher: Mapped[str] = mapped_column(String(200))
     collected_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 
@@ -105,6 +143,21 @@ class AppSetting(Base):
     __tablename__ = "app_settings"
     key: Mapped[str] = mapped_column(String(50), primary_key=True)
     value: Mapped[str] = mapped_column(String(200))
+
+
+class NewsListState(Base):
+    """List visibility only; original articles and evidence are never erased."""
+    __tablename__ = "news_list_states"
+    article_id: Mapped[int] = mapped_column(ForeignKey("news_articles.id"), primary_key=True)
+    hidden: Mapped[bool] = mapped_column(Boolean, default=False)
+    used: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class WorkspaceRemoval(Base):
+    __tablename__ = "workspace_removals"
+    key: Mapped[str] = mapped_column(String(80), primary_key=True)
+    detail: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
 
 
 class IntelligenceRun(Base):
@@ -217,6 +270,7 @@ class PublishDraft(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     render_job_id: Mapped[int] = mapped_column(ForeignKey("render_jobs.id"))
     platform: Mapped[str] = mapped_column(String(20))
+    youtube_category_id: Mapped[str] = mapped_column(String(3), default="25", server_default="25")
     title: Mapped[str] = mapped_column(String(100))
     description: Mapped[str] = mapped_column(Text)
     hashtags: Mapped[list] = mapped_column(JSON)
@@ -582,3 +636,47 @@ class ScheduledRun(Base):
     revision: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class PublishSchedule(Base):
+    """Local calendar; approval snapshots never contain service credentials."""
+    __tablename__ = "publish_schedules"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    cohort_id: Mapped[int] = mapped_column(ForeignKey("publish_evidence.id"), unique=True)
+    due_at: Mapped[datetime] = mapped_column(UTCDateTime())
+    status: Mapped[str] = mapped_column(String(30), default="paused")
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    approval: Mapped[dict] = mapped_column(JSON, default=dict)
+    message: Mapped[str] = mapped_column(String(500), default="예약 대기")
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class SocialMetric(Base):
+    """One provider field per publication/window; missing fields are not zero."""
+    __tablename__ = "social_metrics"
+    __table_args__ = (UniqueConstraint("job_id", "metric", "period_start", "period_end", "synthetic"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("publish_jobs.id"))
+    account_id: Mapped[int] = mapped_column(ForeignKey("platform_accounts.id"))
+    platform: Mapped[str] = mapped_column(String(20))
+    remote_id: Mapped[str] = mapped_column(String(160))
+    metric: Mapped[str] = mapped_column(String(80))
+    value: Mapped[str] = mapped_column(String(60))
+    unit: Mapped[str] = mapped_column(String(30))
+    period_start: Mapped[str] = mapped_column(String(10))
+    period_end: Mapped[str] = mapped_column(String(10))
+    period_basis: Mapped[str] = mapped_column(String(40))
+    published_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    synthetic: Mapped[bool] = mapped_column(Boolean)
+    fetched_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+class SocialMetricRun(Base):
+    __tablename__ = "social_metric_runs"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("publish_jobs.id"))
+    status: Mapped[str] = mapped_column(String(30))
+    message: Mapped[str] = mapped_column(String(500))
+    synthetic: Mapped[bool] = mapped_column(Boolean)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)

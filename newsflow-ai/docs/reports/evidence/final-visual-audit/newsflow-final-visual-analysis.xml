@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="8.537" timestamp="2026-10-24T04:05:41.836859+00:00" hostname="aef6441a304e"><testcase classname="docs.reports.evidence.final-visual-audit.test_capture" name="test_analysis_entry_and_result" time="7.429" /></testsuite></testsuites>

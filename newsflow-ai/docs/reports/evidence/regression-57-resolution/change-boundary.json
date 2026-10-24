@@ -1,0 +1,41 @@
+{
+  "baseline_sha": "4b4e9c232f8b66ead8966e72556f283f39cb1fa0",
+  "tested_sha": "cc7b3190c9acd8a3bacbfbfbb0ce4bac004de1a9",
+  "unchanged_paths": {
+    "newsflow-ai/src/newsflow/db/migrations": true,
+    "newsflow-ai/pyproject.toml": true,
+    "newsflow-ai/run.bat": true,
+    ".github": true
+  },
+  "changed_files": [
+    "newsflow-ai/src/newsflow/autopilot/backend.py",
+    "newsflow-ai/src/newsflow/autopilot/service.py",
+    "newsflow-ai/src/newsflow/gui/autopilot_routes.py",
+    "newsflow-ai/src/newsflow/gui/templates/autopilot_start_guide.html",
+    "newsflow-ai/tests/test_ai_estimate.py",
+    "newsflow-ai/tests/test_ai_news_automation_backend.py",
+    "newsflow-ai/tests/test_ai_news_automation_gui.py",
+    "newsflow-ai/tests/test_ai_video_gui.py",
+    "newsflow-ai/tests/test_api_first_check_gui.py",
+    "newsflow-ai/tests/test_autopilot_state.py",
+    "newsflow-ai/tests/test_claude_connection_gui.py",
+    "newsflow-ai/tests/test_codex_adapter.py",
+    "newsflow-ai/tests/test_codex_studio.py",
+    "newsflow-ai/tests/test_easy_setup.py",
+    "newsflow-ai/tests/test_easy_ui.py",
+    "newsflow-ai/tests/test_gui.py",
+    "newsflow-ai/tests/test_news_usage_gui.py",
+    "newsflow-ai/tests/test_oauth_operations_gui.py",
+    "newsflow-ai/tests/test_oauth_production_gui.py",
+    "newsflow-ai/tests/test_realcontent.py",
+    "newsflow-ai/tests/test_topic_editor_gui.py",
+    "newsflow-ai/tests/test_ux_navigation.py",
+    "newsflow-ai/tests/test_ux_video.py",
+    "newsflow-ai/tests/test_ux_workflow.py",
+    "newsflow-ai/tests/test_ux_workflow_context.py"
+  ],
+  "remote_push_performed": false,
+  "pr_mutation_performed": false,
+  "operating_app_restart_performed": false,
+  "verification_scope": "Fake providers and isolated pytest data; no real-account validation"
+}

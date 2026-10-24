@@ -1,0 +1,32 @@
+{
+  "implementation_sha": "2f5002c9cc3009bdbeda2ed84078f93087c08eda",
+  "run_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39890613672",
+  "jobs": [
+    {
+      "python": "3.12.10",
+      "job_id": 120209209014,
+      "passed": 295,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS"
+    },
+    {
+      "python": "3.14.9",
+      "job_id": 120209209096,
+      "passed": 295,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS"
+    }
+  ],
+  "range": "tools/explainer_compatibility_targets.txt",
+  "real_api_calls": 0,
+  "real_quality": "NOT VERIFIED",
+  "real_cost_ratio": "NOT VERIFIED",
+  "operating_code_data_app": "UNTOUCHED",
+  "legacy_regression": "Earlier 57 FAIL preserved; not rerun. Two stale assertions reproduced on baseline bc8e0dc."
+}

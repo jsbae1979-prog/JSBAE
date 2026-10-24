@@ -20,7 +20,7 @@ newsflow = "newsflow.main:run"
 where = ["src"]
 
 [tool.setuptools.package-data]
-newsflow = ["gui/templates/*.html", "static/css/*.css", "static/js/*.js", "db/migrations/*.py", "db/migrations/versions/*.py", "video/*.ps1", "video/*.json", "news/vendor/LICENSE-CPYTHON.txt"]
+newsflow = ["gui/templates/*.html", "gui/templates/guides/*.html", "static/css/*.css", "static/js/*.js", "db/migrations/*.py", "db/migrations/versions/*.py", "video/*.ps1", "video/*.json", "character/assets/*.json", "character/assets/*.ttf", "character/assets/OFL.txt", "news/vendor/LICENSE-CPYTHON.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,78 @@
+..F..................................................................... [ 69%]
+................................                                         [100%]
+=================================== FAILURES ===================================
+____ test_settings_edit_save_reenter_and_creation_without_external_actions _____
+
+app = <fastapi.applications.FastAPI object at 0x7fb4c5487650>
+browser = <Browser type=<BrowserType name=chromium executable_path=/home/agent/.cache/ms-playwright/chromium-1194/chrome-linux/chrome> version=151.0.7922.173>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fb4c5e14110>
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-97/test_settings_edit_save_reente0')
+
+    def test_settings_edit_save_reenter_and_creation_without_external_actions(app, browser, monkeypatch, tmp_path):
+        output = Path(os.environ.get("NEWSFLOW_SETTINGS_EVIDENCE", os.environ.get("NEWSFLOW_VALIDATION_OUTPUT", str(tmp_path))))
+        output.mkdir(parents=True, exist_ok=True)
+        write_studio_settings(app.state.sessions, "openai", "gpt-4.1-mini")
+        monkeypatch.setitem(templates.env.globals, "ui_demo", True)
+        with local_server(app) as origin:
+            context = browser.new_context(viewport={"width": 1366, "height": 768}, locale="ko-KR")
+            external, errors = [], []
+            def guard(route):
+                if urlsplit(route.request.url).netloc == urlsplit(origin).netloc:
+                    route.continue_()
+                else:
+                    external.append(route.request.url)
+                    route.abort()
+            context.route("**/*", guard)
+            page = context.new_page()
+            page.on("pageerror", lambda error: errors.append(str(error)))
+            for path, name in (("/simple-settings", "settings-after.png"), ("/video-ai-settings", "higgsfield-after.png")):
+                assert page.goto(origin + path).status == 200
+                page.screenshot(path=str(output / name), full_page=True)
+            assert page.locator('#video-ai-reasons a').get_attribute('href') == '#video-ai-key'
+            sections = ['#video-ai-key', '#video-ai-models', '#video-ai-settings-form']
+            positions = [page.locator(selector).bounding_box()['y'] for selector in sections]
+            assert positions == sorted(positions)
+            for width, height in ((1366, 768), (1920, 1080), (390, 844)):
+                page.set_viewport_size({'width': width, 'height': height})
+                page.evaluate('scrollTo(0,0)')
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                page.screenshot(path=str(output / f'higgsfield-{width}.png'))
+            page.set_viewport_size({'width':1366,'height':768})
+            # Use synthetic key storage; its binding is identical to app initialization.
+            stores = synthetic_stores(app)
+            configured(app, "openai")
+            save_values(app, video_default_voice="supertonic:F1", autopilot_source="feeds",
+                        autopilot_acquisition_policy="rss", video_default_rate="0", video_default_pause_ms="250")
+            monkeypatch.setattr(production_status, "voice_choice_catalog", lambda: [{
+                "name": "supertonic:F1", "label": "Supertonic F1", "engine": "supertonic", "available": True}])
+            monkeypatch.setattr(production_routes, "voice_choice_catalog", production_status.voice_choice_catalog)
+            page.goto(origin + "/simple-settings")
+            expect(page.locator('#openai-key-settings')).not_to_have_attribute('open', '')
+            expect(page.locator('#openai-key-settings input[name="api_key"]')).to_be_hidden()
+            expect(page.locator('[name="provider"]')).to_have_value('openai')
+            assert page.locator('.settings-summary, [data-summary-stage], #settings-advanced-tools').count() == 0
+            assert page.locator('.settings-savebar').evaluate("e=>getComputedStyle(e).position") == 'static'
+            assert page.locator('a[href="/ai-settings"]').count() == 0
+            for text in ('권장', 'SDK', 'Authorization:', 'NEWSFLOW_', '%LOCALAPPDATA%', 'DPAPI'):
+                assert text not in page.locator('body').inner_text()
+            for width, height in ((1366, 768), (1920, 1080), (390, 844)):
+                page.set_viewport_size({"width": width, "height": height})
+                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                save = page.get_by_role('button', name='제작 구성 저장', exact=True)
+                page.locator('[role="tab"][aria-selected="true"]').focus()
+                save.focus()
+                expect(save).to_be_focused()
+                box = save.bounding_box()
+                assert box and 0 <= box['x'] and box['x']+box['width'] <= width
+>               assert 0 <= box['y'] and box['y']+box['height'] <= height
+E               assert (0 <= 1409.953125 and (1409.953125 + 44) <= 844)
+
+tests/test_settings_streamlined_browser.py:77: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/JSBAE/newsflow-ai/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+----------- generated xml file: /tmp/newsflow-ux-followup-final.xml ------------
+1 failed, 103 passed, 1 warning in 172.08s (0:02:52)

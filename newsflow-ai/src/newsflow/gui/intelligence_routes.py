@@ -11,10 +11,19 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 
-from newsflow.db.models import AutopilotArtifact, AutopilotJob, ContentDraft, IntelligenceRun, NewsArticle
+from newsflow.db.models import (
+    AutopilotArtifact,
+    AutopilotJob,
+    ContentDraft,
+    IntelligenceRun,
+    NewsArticle,
+    RenderJob,
+    VideoProject,
+)
 from newsflow.easy_setup import preview_preferences, speech_preferences
 from newsflow.intelligence.estimate import estimate_call, estimate_cost
-from newsflow.intelligence.news_usage import safe_topic_script
+from newsflow.intelligence.news_usage import API_SCRIPT_METHODS, safe_topic_script
+from newsflow.intelligence.presentation import AUDIENCES, STYLES, TONES
 from newsflow.intelligence.provider import SCRIPT_INSTRUCTION, Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import (
@@ -25,6 +34,7 @@ from newsflow.intelligence.settings import (
     read_studio_settings,
     write_studio_settings,
 )
+from newsflow.news.lifecycle import visible_news
 
 from .production_context import (
     context_for_draft,
@@ -42,7 +52,7 @@ router = APIRouter()
 def _topic_editor_options(draft: ContentDraft | None) -> list[dict]:
     """Only known text variants for this saved source and scene role enter controls."""
     if (not draft or not draft.sources.get("news_usage")
-            or draft.sources.get("script_method") == "api_grounded_v1"):
+            or draft.sources.get("script_method") in API_SCRIPT_METHODS):
         return []
     try:
         variants = [safe_topic_script(draft.sources, duration) for duration in (30, 45, 60)]
@@ -139,13 +149,17 @@ def claude_cancel(request: Request) -> dict:
     return {"cancel_requested": CLAUDE_PROVIDER.cancel()}
 
 
-def service(request: Request) -> IntelligenceService:
+def service(request: Request, production=None) -> IntelligenceService:
+    from newsflow.video.narration_planning import selected_voice
+
     speech = speech_preferences(request.app.state.sessions)
+    voice = selected_voice(request.app.state.sessions, (production or {}).get('initial_voice'))
     return IntelligenceService(
         request.app.state.sessions, getattr(request.app.state, "ai_provider", None),
         getattr(request.app.state, "ai_keys", None),
         speech={"rate": speech.rate, "pause_ms": speech.pause_ms},
         api_key_stores=getattr(request.app.state, "api_keys", None),
+        narration_root=getattr(getattr(request.app.state, 'video', None), 'root', None), narration_voice=voice,
     )
 
 
@@ -206,19 +220,32 @@ def studio(request: Request, analysis_id: int | None = None, draft_id: int | Non
         if analysis is not None and analysis.status == "success":
             estimate = estimate_call(SCRIPT_INSTRUCTION, {"duration": selected_duration, "evidence": analysis.evidence}, 1800)
             estimate["cost"] = estimate_cost(estimate, read_prices(request.app.state.sessions))
+        preview = None
+        if draft:
+            from .autopilot_routes import _workspace_video
+
+            latest = session.execute(select(RenderJob, VideoProject).join(VideoProject).where(
+                VideoProject.draft_id == draft.id, RenderJob.status == "success",
+            ).order_by(RenderJob.id.desc()).limit(1)).first()
+            if latest:
+                preview = _workspace_video(request, *latest)
         return page(
             request,
             "ai.html",
+            preview=preview,
+            script_styles=STYLES, script_tones=TONES, script_audiences=AUDIENCES,
             active="ai",
             analysis=analysis,
             draft=draft,
             topic_editor=bool(draft and draft.sources.get("news_usage")
-                              and draft.sources.get("script_method") != "api_grounded_v1"),
-            api_editor=bool(draft and draft.sources.get("script_method") == "api_grounded_v1"),
+                              and draft.sources.get("script_method") not in API_SCRIPT_METHODS),
+            api_editor=bool(draft and draft.sources.get("script_method") in API_SCRIPT_METHODS),
             topic_options=_topic_editor_options(draft),
             workspace_return=_draft_workspace_link(session, draft),
             draft_json=json.dumps(draft.content, ensure_ascii=False, indent=2) if draft else "",
-            articles=list(session.scalars(select(NewsArticle).order_by(NewsArticle.id.desc()).limit(100))),
+            articles=list(session.scalars(select(NewsArticle).where(
+                visible_news())
+                .order_by(NewsArticle.id.desc()).limit(100))),
             runs=list(session.scalars(select(IntelligenceRun).order_by(IntelligenceRun.id.desc()).limit(30))),
             drafts=list(session.scalars(select(ContentDraft).order_by(ContentDraft.id.desc()).limit(30))),
             key_available=bool(os.environ.get("NEWSFLOW_AI_API_KEY")) or bool(
@@ -261,6 +288,7 @@ def analyze(
 def generate(
     request: Request,
     analysis_id: int = Form(ge=1),
+    source_draft_id: int | None = Form(None, ge=1),
     duration: int = Form(),
     provider: str = Form("offline", max_length=20),
     consent: bool = Form(False),
@@ -269,17 +297,30 @@ def generate(
     timeout: int = Form(20),
     max_tokens: int = Form(1800),
     flow: str | None = Form(None, max_length=2000),
+    script_style: str = Form("news", max_length=20),
+    script_tone: str = Form("neutral", max_length=20),
+    script_audience: str = Form("general", max_length=20),
 ) -> RedirectResponse:
     try:
         incoming = parse_context(flow)
+        selected_ids = None
         with request.app.state.sessions() as session:
+            if source_draft_id is not None:
+                original = session.get(ContentDraft, source_draft_id)
+                original_run = session.get(IntelligenceRun, original.run_id) if original else None
+                if (not original_run or original_run.options.get("analysis_run_id") != analysis_id
+                        or original_run.provider != provider or original_run.options.get("model") != model):
+                    raise ValueError("원본 대본과 같은 분석·AI·모델을 사용하세요.")
+                selected_ids = original_run.options.get("selected_article_ids")
             production = context_for_run(session.get(IntelligenceRun, analysis_id)) or incoming
         if production:
             production = {**production, "analysis_id": analysis_id}
         options = Options(model, temperature, timeout, max_tokens)
-        identifier = service(request).generate(
+        identifier = service(request, production).generate(
             analysis_id, duration, provider, consent, options,
             on_run=remember_context(request.app.state.sessions, production),
+            script_style=script_style, script_tone=script_tone, script_audience=script_audience,
+            article_ids=selected_ids,
             news_usage=production.get("news_usage") if production and provider in {"openai", "claude_api"} else None,
         )
     except (IntelligenceError, ValueError) as exc:
@@ -312,6 +353,11 @@ async def edit(
                     for sec, n, c, m in zip(seconds, narrations, captions, materials)
                 ],
             }
+            note_fields = form.getlist("scene_review_notes")
+            if note_fields and len(note_fields) != len(payload["scenes"]):
+                raise ValueError
+            for scene, notes in zip(payload["scenes"], note_fields):
+                scene["review_notes"] = [line.strip() for line in str(notes).splitlines() if line.strip()]
             closing = form.get("closing")
             if isinstance(closing, str):
                 payload["closing"] = closing

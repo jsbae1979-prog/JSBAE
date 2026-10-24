@@ -30,7 +30,7 @@ def unified(app, instagram_ui, youtube_ui):
 def values(client, media, youtube, instagram, **changes):
     return {"csrf_token": csrf(client), "render_job_id": media, "target": "both",
             "youtube_account": youtube[2], "instagram_account": instagram[2], "title": "통합 검토 영상",
-            "description": "합성 자료입니다.", "hashtags": "#합성", "content_reviewed": "true",
+            "description": "합성 자료입니다.", "hashtags": "#합성", "youtube_category_id": "25", "content_reviewed": "true",
             "copyright_confirmed": "true", "sources_confirmed": "true", "ai_disclosure": "disclose", **changes}
 
 

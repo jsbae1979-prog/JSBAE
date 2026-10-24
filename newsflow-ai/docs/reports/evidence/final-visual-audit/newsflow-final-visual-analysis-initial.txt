@@ -1,0 +1,226 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________________ test_analysis_entry_and_result ________________________
+
+self = <sqlalchemy.engine.base.Connection object at 0x7f5cfe0375c0>
+dialect = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f5cfe670aa0>
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f5cfe037530>
+statement = <sqlalchemy.dialects.sqlite.base.SQLiteCompiler object at 0x7f5cfe003c20>
+parameters = [('analysis', 'success', 'offline', '{"model": "offline"}', '{"articles": [{"id": 1, "title": "[\\ud569\\uc131 \\uac10...b2e4. \\uc2e4\\uc81c AI \\ubd84\\uc11d \\uacb0\\uacfc\\uac00 \\uc544\\ub2d9\\ub2c8\\ub2e4.", "comparisons": []}', ...)]
+
+    def _exec_single_context(
+        self,
+        dialect: Dialect,
+        context: ExecutionContext,
+        statement: Union[str, Compiled],
+        parameters: Optional[_AnyMultiExecuteParams],
+    ) -> CursorResult[Unpack[TupleAny]]:
+        """continue the _execute_context() method for a single DBAPI
+        cursor.execute() or cursor.executemany() call.
+    
+        """
+        if dialect.bind_typing is BindTyping.SETINPUTSIZES:
+            generic_setinputsizes = context._prepare_set_input_sizes()
+    
+            if generic_setinputsizes:
+                try:
+                    dialect.do_set_input_sizes(
+                        context.cursor, generic_setinputsizes, context
+                    )
+                except BaseException as e:
+                    self._handle_dbapi_exception(
+                        e, str(statement), parameters, None, context
+                    )
+    
+        cursor, str_statement, parameters = (
+            context.cursor,
+            context.statement,
+            context.parameters,
+        )
+    
+        effective_parameters: Optional[_AnyExecuteParams]
+    
+        if not context.executemany:
+            effective_parameters = parameters[0]
+        else:
+            effective_parameters = parameters
+    
+        evt_handled: bool = False
+        try:
+            if self._has_events or self.engine._has_events:
+                for fn in self.dispatch.before_cursor_execute:
+                    str_statement, effective_parameters = fn(
+                        self,
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                        context.executemany,
+                    )
+    
+            if self._echo:
+                self._log_info(str_statement)
+    
+                stats = context._get_cache_stats()
+    
+                if not self.engine.hide_parameters:
+                    self._log_info(
+                        "[%s] %r",
+                        stats,
+                        sql_util._repr_params(
+                            effective_parameters,
+                            batches=10,
+                            ismulti=context.executemany,
+                        ),
+                    )
+                else:
+                    self._log_info(
+                        "[%s] [SQL parameters hidden due to "
+                        "hide_parameters=True]",
+                        stats,
+                    )
+            if context.execute_style is ExecuteStyle.EXECUTEMANY:
+                effective_parameters = cast(
+                    "_CoreMultiExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_executemany:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_executemany(
+                        cursor,
+                        str_statement,
+                        effective_parameters,
+                        context,
+                    )
+            elif not effective_parameters and context.no_parameters:
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute_no_params:
+                        if fn(cursor, str_statement, context):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute_no_params(
+                        cursor, str_statement, context
+                    )
+            else:
+                effective_parameters = cast(
+                    "_CoreSingleExecuteParams", effective_parameters
+                )
+                if self.dialect._has_events:
+                    for fn in self.dialect.dispatch.do_execute:
+                        if fn(
+                            cursor,
+                            str_statement,
+                            effective_parameters,
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+>                   self.dialect.do_execute(
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1946: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f5cfe670aa0>
+cursor = <sqlite3.Cursor object at 0x7f5cfe0679c0>
+statement = 'INSERT INTO intelligence_runs (kind, status, provider, options, evidence, result, message, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+parameters = ('analysis', 'success', 'offline', '{"model": "offline"}', '{"articles": [{"id": 1, "title": "[\\ud569\\uc131 \\uac10\...ub2e4. \\uc2e4\\uc81c AI \\ubd84\\uc11d \\uacb0\\uacfc\\uac00 \\uc544\\ub2d9\\ub2c8\\ub2e4.", "comparisons": []}', ...)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f5cfe037530>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlite3.IntegrityError: NOT NULL constraint failed: intelligence_runs.message
+
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+
+The above exception was the direct cause of the following exception:
+
+visual = (<fastapi.applications.FastAPI object at 0x7f5cfe57f560>, (1, 1, 2))
+browser = <Browser type=<BrowserType name=chromium executable_path=/home/agent/.cache/ms-playwright/chromium-1194/chrome-linux/chrome> version=151.0.7922.173>
+
+    def test_analysis_entry_and_result(visual, browser):
+        from newsflow.db.models import IntelligenceRun
+        app, (draft, _, _) = visual
+        article, _ = seed_archive(app, draft)
+        with app.state.sessions.begin() as session:
+            run=IntelligenceRun(kind='analysis',status='success',provider='offline',options={'model':'offline'},
+                evidence={'articles':[{'id':article,'title':'[합성 감사] 기사 선택 예시','summary':'실제 뉴스·분석이 아닌 화면 감사용 합성 자료입니다.',
+                    'sources':[{'url':'https://example.com/audit','publisher':'합성 출처'}]}]},
+                result={'overview':'[합성 감사] 결과 요약의 배치만 확인합니다. 실제 AI 분석 결과가 아닙니다.','comparisons':[]})
+>           session.add(run);session.flush();identifier=run.id
+                             ^^^^^^^^^^^^^^^
+
+docs/reports/evidence/final-visual-audit/test_capture.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4536: in flush
+    self._flush(objects)
+<sqlalchemy generated warned() wrapper for sqlalchemy.orm.session.Session._flush>:2: in _flush
+    return target(fn, self, objects=objects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/deprecations.py:281: in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4679: in _flush
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py:166: in __exit__
+    raise exc_value.with_traceback(exc_tb)
+.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py:4640: in _flush
+    flush_context.execute()
+.venv/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:467: in execute
+    rec.execute(self)
+.venv/lib/python3.12/site-packages/sqlalchemy/orm/unitofwork.py:643: in execute
+    util.preloaded.orm_persistence._save_obj(
+.venv/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:92: in _save_obj
+    _emit_insert_statements(
+.venv/lib/python3.12/site-packages/sqlalchemy/orm/persistence.py:1237: in _emit_insert_statements
+    result = connection.execute(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1451: in execute
+    return meth(
+.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py:533: in _execute_on_connection
+    return connection._execute_clauseelement(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1671: in _execute_clauseelement
+    ret = self._execute_context(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1825: in _execute_context
+    return self._exec_single_context(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1965: in _exec_single_context
+    self._handle_dbapi_exception(
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:2335: in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py:1946: in _exec_single_context
+    self.dialect.do_execute(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <sqlalchemy.dialects.sqlite.pysqlite.SQLiteDialect_pysqlite object at 0x7f5cfe670aa0>
+cursor = <sqlite3.Cursor object at 0x7f5cfe0679c0>
+statement = 'INSERT INTO intelligence_runs (kind, status, provider, options, evidence, result, message, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+parameters = ('analysis', 'success', 'offline', '{"model": "offline"}', '{"articles": [{"id": 1, "title": "[\\ud569\\uc131 \\uac10\...ub2e4. \\uc2e4\\uc81c AI \\ubd84\\uc11d \\uacb0\\uacfc\\uac00 \\uc544\\ub2d9\\ub2c8\\ub2e4.", "comparisons": []}', ...)
+context = <sqlalchemy.dialects.sqlite.base.SQLiteExecutionContext object at 0x7f5cfe037530>
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+>       cursor.execute(statement, parameters)
+E       sqlalchemy.exc.IntegrityError: (sqlite3.IntegrityError) NOT NULL constraint failed: intelligence_runs.message
+E       [SQL: INSERT INTO intelligence_runs (kind, status, provider, options, evidence, result, message, created_at, finished_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]
+E       [parameters: ('analysis', 'success', 'offline', '{"model": "offline"}', '{"articles": [{"id": 1, "title": "[\\ud569\\uc131 \\uac10\\uc0ac] \\uae30\\uc0ac \\uc120\\ud0dd \\uc608\\uc2dc", "summary": "\\uc2e4\\uc81c \\ub274\\ ... (89 characters truncated) ... d569\\uc131 \\uc790\\ub8cc\\uc785\\ub2c8\\ub2e4.", "sources": [{"url": "https://example.com/audit", "publisher": "\\ud569\\uc131 \\ucd9c\\ucc98"}]}]}', '{"overview": "[\\ud569\\uc131 \\uac10\\uc0ac] \\uacb0\\uacfc \\uc694\\uc57d\\uc758 \\ubc30\\uce58\\ub9cc \\ud655\\uc778\\ud569\\ub2c8\\ub2e4. \\uc2e4\\uc81c AI \\ubd84\\uc11d \\uacb0\\uacfc\\uac00 \\uc544\\ub2d9\\ub2c8\\ub2e4.", "comparisons": []}', None, '2026-10-24 04:04:01.134570', None)]
+E       (Background on this error at: https://sqlalche.me/e/21/gkpj)
+
+.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py:1192: IntegrityError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/JSBAE/newsflow-ai/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+--------- generated xml file: /tmp/newsflow-final-visual-analysis.xml ----------
+1 failed, 1 warning in 2.34s

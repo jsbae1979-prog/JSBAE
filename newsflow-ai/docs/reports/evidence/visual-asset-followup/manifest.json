@@ -1,0 +1,322 @@
+{
+  "baseline_sha": "c5ed43ffd7140aeca0e7c2521882a06227905805",
+  "tested_sha": "672bebd8f50030534c0dcb43332a5641265692ec",
+  "windows_run": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40064158836",
+  "files": [
+    {
+      "path": "after/ai-video-1366.png",
+      "bytes": 121404,
+      "sha256": "0ebd52d0b6bb09f6544b9edf6c671683fd959e0e7eaf4f8336ce87054bd8504d"
+    },
+    {
+      "path": "after/ai-video-1920.png",
+      "bytes": 164943,
+      "sha256": "ed0ec4e87aa2b86af7d5b3e50aedb34e18a11c67654cf9fb402ff70c16584c3a"
+    },
+    {
+      "path": "after/ai-video-390.png",
+      "bytes": 56380,
+      "sha256": "08090efcbb9eda0d437c67399eede44b44a8733ff9f047e56c885d43e8666975"
+    },
+    {
+      "path": "after/audit.json",
+      "bytes": 1136,
+      "sha256": "4952431bf33b50201cefa0dae0a5b6a99e2ea3b2e7a8095d441a8f7d19db8cee"
+    },
+    {
+      "path": "after/home-1366.png",
+      "bytes": 176992,
+      "sha256": "466608a39378c8df8b3cf51e9a5f5fcc9490cd768ceb0450747207d0c96be37b"
+    },
+    {
+      "path": "after/home-1920.png",
+      "bytes": 429485,
+      "sha256": "776fac824029afaf3d0edd2b9dfed3e294b4cd14e930671056482c6f0f33deb3"
+    },
+    {
+      "path": "after/home-390.png",
+      "bytes": 55042,
+      "sha256": "e92c5c1e8ae79f5a67e92839ff965e614bf3a5deb00ca71adc3cf5cf4ec2faec"
+    },
+    {
+      "path": "after/news-1366.png",
+      "bytes": 89552,
+      "sha256": "8ad15ce9c9d40135449c7d9f5233c9a193e8ed34d63fefdc4253ff3c4aeb97f6"
+    },
+    {
+      "path": "after/news-1920.png",
+      "bytes": 126220,
+      "sha256": "1084be2dacb5c2adb3b206738b8d6a12c39badb3f91a91cbfd729504c0e0faf3"
+    },
+    {
+      "path": "after/news-390.png",
+      "bytes": 40786,
+      "sha256": "c05fdb229ebe8582248c5f6ad216dc23da54e6ef8fbdcf349b48072ec7bed953"
+    },
+    {
+      "path": "baseline.txt",
+      "bytes": 2332,
+      "sha256": "acd8ffd15a98cea198d6cc8e3e0171c159d9613513302deaa5bf4495027e508e"
+    },
+    {
+      "path": "baseline.xml",
+      "bytes": 2009,
+      "sha256": "f0e38c3f1384e704783aa7c9fa03e02d6ce1c9ad796d9e86f56a2d65296fc34b"
+    },
+    {
+      "path": "before/ai-video-1366.png",
+      "bytes": 111941,
+      "sha256": "1deadb1240e4a1de605a275ac75698b4ea2f08d7e16022ad28287b55fc877295"
+    },
+    {
+      "path": "before/ai-video-1920.png",
+      "bytes": 151125,
+      "sha256": "349491cca8655e08c54e3576e644c72c5ee7247efa47365e6d1833beacd6e166"
+    },
+    {
+      "path": "before/ai-video-390.png",
+      "bytes": 53959,
+      "sha256": "f98bfc59f6d4aba4f8a30a129ff7e9c794ba93dc6c87f08197d076f5ff663b24"
+    },
+    {
+      "path": "before/audit.json",
+      "bytes": 1136,
+      "sha256": "4952431bf33b50201cefa0dae0a5b6a99e2ea3b2e7a8095d441a8f7d19db8cee"
+    },
+    {
+      "path": "before/home-1366.png",
+      "bytes": 199721,
+      "sha256": "6b5168b00d310a05eca4dc20185808ff9db0f3144db6b7416ff29133d01ac133"
+    },
+    {
+      "path": "before/home-1920.png",
+      "bytes": 480466,
+      "sha256": "35bd1c7cd44e849a643dfbbaf703a5eead313694d9c617be7f2b850d1a46ea71"
+    },
+    {
+      "path": "before/home-390.png",
+      "bytes": 86508,
+      "sha256": "70be3e33cde8d5e9a36c23e910ff8bdf5988365244d78d3e4fe29791c7fbc235"
+    },
+    {
+      "path": "before/news-1366.png",
+      "bytes": 131390,
+      "sha256": "1baf4b574d3e3bf71881eb7b34fa0b8749f16b1876f4745898aa6d1da62c25bc"
+    },
+    {
+      "path": "before/news-1920.png",
+      "bytes": 169428,
+      "sha256": "7513c433d09077315cdb5660df6e3bce3b5f8c5cb9e4fd781432f8c5233471e4"
+    },
+    {
+      "path": "before/news-390.png",
+      "bytes": 64499,
+      "sha256": "579efb5ac00cb6ff6c161547d81037fa819adbb1d86a42413a6094884871c97f"
+    },
+    {
+      "path": "before-fixture-error.txt",
+      "bytes": 1552,
+      "sha256": "4c4773867f756ae6845f984ef11dc801aba2dffc16f7e1b7bbf29ce3b5dc1f57"
+    },
+    {
+      "path": "before-fragment-race.txt",
+      "bytes": 3411,
+      "sha256": "7499f47c94b9c23125f02c116780e1b15da33b3a3258b9cb929d780a9eed04ee"
+    },
+    {
+      "path": "before-metadata-error.txt",
+      "bytes": 11002,
+      "sha256": "8e47034e72616787e8962b7fc32fb0e40a4906f2f759697bebb5b40fe62eff97"
+    },
+    {
+      "path": "before.txt",
+      "bytes": 596,
+      "sha256": "8cdcbc9f1594bb979f30fbad239b2fe59a62ca03f2cfbe814e537d1caf90d272"
+    },
+    {
+      "path": "cloud-initial.txt",
+      "bytes": 6591,
+      "sha256": "406b1e02b731028861138b2cfa68bde7a0de8c9a42aeb1fba1ccf0824ffd572b"
+    },
+    {
+      "path": "cloud-lazy-wait.txt",
+      "bytes": 5948,
+      "sha256": "0b9a3a01015744fe3b9c044d2b60dc4091a59c3871dd8002a64e84e20922f606"
+    },
+    {
+      "path": "cloud.txt",
+      "bytes": 2302,
+      "sha256": "efc88362b9808fed3fb2935688a3e8ebda82a79ac5a08ca0b9bf87659a08958b"
+    },
+    {
+      "path": "cloud.xml",
+      "bytes": 7214,
+      "sha256": "ceb21cab712fa38e23f0d7418fcddc033ac0bcbe8b08605559543bae2e51af5c"
+    },
+    {
+      "path": "comparison.json",
+      "bytes": 817,
+      "sha256": "17cd113ef7f36f98145cfca2ed9865fe6b8543719a6dcb7f293e92b570ef63c8"
+    },
+    {
+      "path": "test_before_capture.py",
+      "bytes": 268,
+      "sha256": "a6aed932b298b3811aeaabbb5c87a8b2b36d762dd2773f7ffe6c6e07e21a5d75"
+    },
+    {
+      "path": "ui.txt",
+      "bytes": 677,
+      "sha256": "4109e2f50bd684476df04effc79aed62c7564210e51265f4478f704c7cd4519d"
+    },
+    {
+      "path": "ui.xml",
+      "bytes": 626,
+      "sha256": "4d226ab397c07574b5a85992f8bbf4782aba2d4b3a28647c01996fef70bec3d2"
+    },
+    {
+      "path": "windows-3.12/ai-video-1366.png",
+      "bytes": 72105,
+      "sha256": "617d677baebf324c098ac41570d21c735be5115762e5a9f827b33c38c8c90a56"
+    },
+    {
+      "path": "windows-3.12/ai-video-1920.png",
+      "bytes": 99132,
+      "sha256": "22a26c5dae01084bab5f6bd179da8ef0529c927cd1e4f5a925a6ef0cef077d15"
+    },
+    {
+      "path": "windows-3.12/ai-video-390.png",
+      "bytes": 35771,
+      "sha256": "80bbbcbae11cc54ef69b9d77944645b3ea4e48f6ef7bf59bd1fdf72863f6bbcf"
+    },
+    {
+      "path": "windows-3.12/audit.json",
+      "bytes": 1193,
+      "sha256": "5a51168cc0ddae49ae79f87a75d9a9a37833545a177202ba0d04555bda9ec24c"
+    },
+    {
+      "path": "windows-3.12/baseline.xml",
+      "bytes": 2081,
+      "sha256": "2f0b362bf831d95b1df4cfbc0d9f6aa1104373d734acfa6120dd60b629acaa5b"
+    },
+    {
+      "path": "windows-3.12/environment.json",
+      "bytes": 196,
+      "sha256": "ff997c622dc5b12ce2ee73949352aad7f3e06e4127711bdf83d5c32c30881707"
+    },
+    {
+      "path": "windows-3.12/home-1366.png",
+      "bytes": 274114,
+      "sha256": "f195b01c6c8ab3c5c2a9c66b189dbd6ec10c0d430c4bdf75c88b08285a8a0ba2"
+    },
+    {
+      "path": "windows-3.12/home-1920.png",
+      "bytes": 376089,
+      "sha256": "ebd04f91936c7a08419992dbe8ef181e2ceb204a69bc0509a80698528ad5151c"
+    },
+    {
+      "path": "windows-3.12/home-390.png",
+      "bytes": 36485,
+      "sha256": "0d72e7b080845c7d52141fda0333711a051068b747903f2a83439b8ac5b69121"
+    },
+    {
+      "path": "windows-3.12/news-1366.png",
+      "bytes": 61012,
+      "sha256": "f10e1e38b0fc88cb7f83a652912352f249382c2279197db94b5ac83acfd586f7"
+    },
+    {
+      "path": "windows-3.12/news-1920.png",
+      "bytes": 84267,
+      "sha256": "b296ea57446161b2ecc606fe1f4ea9cb56ae2e33158c1d8f47552cf578902ba6"
+    },
+    {
+      "path": "windows-3.12/news-390.png",
+      "bytes": 26420,
+      "sha256": "24e20a5fa576090a852061f7c9ab2c07a380de364a13d5f7e2b4d6a646bc1b21"
+    },
+    {
+      "path": "windows-3.12/tests.xml",
+      "bytes": 7280,
+      "sha256": "6bfa8876f569a32b88ee1b3795b724425dffb17f7cc3302101773685e44df151"
+    },
+    {
+      "path": "windows-3.14/ai-video-1366.png",
+      "bytes": 72105,
+      "sha256": "617d677baebf324c098ac41570d21c735be5115762e5a9f827b33c38c8c90a56"
+    },
+    {
+      "path": "windows-3.14/ai-video-1920.png",
+      "bytes": 99138,
+      "sha256": "e3dc5e5a377dd7efbf1476310061681ffaca3315b574448b2cdef1945be0e683"
+    },
+    {
+      "path": "windows-3.14/ai-video-390.png",
+      "bytes": 35771,
+      "sha256": "80bbbcbae11cc54ef69b9d77944645b3ea4e48f6ef7bf59bd1fdf72863f6bbcf"
+    },
+    {
+      "path": "windows-3.14/audit.json",
+      "bytes": 1193,
+      "sha256": "5457767741db1f2c412ea5ecf4fb40414052ed3b8480142fccaf0ff33436eb3a"
+    },
+    {
+      "path": "windows-3.14/baseline.xml",
+      "bytes": 2081,
+      "sha256": "86016a47858c444c93c1c844858ee9023ce249188361dc8527debf082621aacb"
+    },
+    {
+      "path": "windows-3.14/environment.json",
+      "bytes": 196,
+      "sha256": "295880a51f9260cd89a75044c22d0448371d518e36156bf1b8a5d5dbee8c8da2"
+    },
+    {
+      "path": "windows-3.14/home-1366.png",
+      "bytes": 274114,
+      "sha256": "f195b01c6c8ab3c5c2a9c66b189dbd6ec10c0d430c4bdf75c88b08285a8a0ba2"
+    },
+    {
+      "path": "windows-3.14/home-1920.png",
+      "bytes": 376089,
+      "sha256": "ebd04f91936c7a08419992dbe8ef181e2ceb204a69bc0509a80698528ad5151c"
+    },
+    {
+      "path": "windows-3.14/home-390.png",
+      "bytes": 36485,
+      "sha256": "0d72e7b080845c7d52141fda0333711a051068b747903f2a83439b8ac5b69121"
+    },
+    {
+      "path": "windows-3.14/news-1366.png",
+      "bytes": 61012,
+      "sha256": "f10e1e38b0fc88cb7f83a652912352f249382c2279197db94b5ac83acfd586f7"
+    },
+    {
+      "path": "windows-3.14/news-1920.png",
+      "bytes": 84263,
+      "sha256": "dff2e6f7f87d7b36c534614a357bc2c05ceae85e8f964569f6c15e60cf6d44fb"
+    },
+    {
+      "path": "windows-3.14/news-390.png",
+      "bytes": 26420,
+      "sha256": "24e20a5fa576090a852061f7c9ab2c07a380de364a13d5f7e2b4d6a646bc1b21"
+    },
+    {
+      "path": "windows-3.14/tests.xml",
+      "bytes": 7280,
+      "sha256": "36945aef82de808d4ec304244897a001ef6d0394553fcce9dd63fb199a6e9b58"
+    },
+    {
+      "path": "windows-comparison.json",
+      "bytes": 1457,
+      "sha256": "7fd7d9a37c82290f689b47f313c4cef13e96fe720fc0e3e562c05d3b993d46e2"
+    },
+    {
+      "path": "windows-run.json",
+      "bytes": 4031,
+      "sha256": "988231945db3a081b806a6a9b2d6b53e9cc6a97a246695acbb0e295c8bfa2fbd"
+    },
+    {
+      "path": "windows-summary.txt",
+      "bytes": 1167,
+      "sha256": "1b66bbd2bbf7d66e767c34aef2a8c463686904b05054e0ad0be49e7e55bbba58"
+    }
+  ]
+}

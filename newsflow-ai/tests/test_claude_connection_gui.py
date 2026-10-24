@@ -97,7 +97,11 @@ def claude_panel(document):
 def test_connection_action_is_explicit_outside_cost_dialog_with_official_dashboard(client, claude_store):
     document = Document(client.get("/simple-settings").text)
     form = document.find("form", action="/api-settings/claude_api/check")[0]
-    assert not any(node.tag in {"details", "dialog", "form"} for node in form.ancestors)
+    assert not any(node.tag in {"dialog", "form"} for node in form.ancestors)
+    # Connection checks are folded independently, outside the cost dialog.
+    details = [node for node in form.ancestors if node.tag == "details"]
+    assert len(details) == 1 and details[0].attrs["id"] == "claude_api-connection-settings"
+    assert "open" not in details[0].attrs
     assert "data-settings-form" in form.attrs and "data-settings-watch" in form.attrs
     consent = next(node for node in document.find("input", name="consent") if form in node.ancestors)
     assert consent.attrs["type"] == "checkbox" and "checked" not in consent.attrs

@@ -1,0 +1,76 @@
+{
+  "product_sha": "f6aedc5db10ac7df9e6ce7b2b7f8aab7f5c6bdac",
+  "baseline_sha": "fbadd460d3005fca5c5aa613a78fd7c926c87be6",
+  "full_validation_sha": "3b9f8f5035ea39bcb0f721abee025c7e2d30eec1",
+  "history_validation_sha": "345cdc76355772e2cb5ef0ad89e8fc14ac92ba6f",
+  "full_run": 40056234817,
+  "history_run": 40056878190,
+  "overall": "NOT ALL PASS",
+  "versions": {
+    "3.12": {
+      "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+      "windows": "Windows-2025Server-10.0.26100-SP0",
+      "scoped": {
+        "passed": 125,
+        "failed": 5,
+        "error": 0,
+        "skipped": 0
+      },
+      "historical_corresponding_cases": {
+        "passed": 52,
+        "failed": 7,
+        "error": 0,
+        "skipped": 0
+      },
+      "new_failures_in_comparison": [],
+      "browser": {
+        "passed": 2,
+        "failed": 0
+      },
+      "bat": "PASS",
+      "native_synthetic_dpapi": "PASS",
+      "full_workflow": {
+        "passed": 0,
+        "failed": 2,
+        "stage": "script",
+        "later_steps": "NOT VERIFIED"
+      },
+      "screen_cases": 16,
+      "user_windows11_data_keys_mp4": "NOT VERIFIED; no access"
+    },
+    "3.14": {
+      "python": "3.14.9 (tags/v3.14.9:ead82c0, Oct 21 2026, 06:26:14) [MSC v.1944 64 bit (AMD64)]",
+      "windows": "Windows-2025Server-10.0.26100-SP0",
+      "scoped": {
+        "passed": 125,
+        "failed": 5,
+        "error": 0,
+        "skipped": 0
+      },
+      "historical_corresponding_cases": {
+        "passed": 52,
+        "failed": 7,
+        "error": 0,
+        "skipped": 0
+      },
+      "new_failures_in_comparison": [],
+      "browser": {
+        "passed": 2,
+        "failed": 0
+      },
+      "bat": "PASS",
+      "native_synthetic_dpapi": "PASS",
+      "full_workflow": {
+        "passed": 0,
+        "failed": 2,
+        "stage": "script",
+        "later_steps": "NOT VERIFIED"
+      },
+      "screen_cases": 16,
+      "user_windows11_data_keys_mp4": "NOT VERIFIED; no access"
+    }
+  },
+  "real_paid_api_oauth_sns_calls": 0,
+  "user_pc": "NOT VERIFIED",
+  "product_files_modified": false
+}

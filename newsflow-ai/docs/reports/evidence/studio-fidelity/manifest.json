@@ -1,0 +1,92 @@
+{
+  "sha": "03abeadfae9bc95fbc46a33c20dd0e983f7e5aad",
+  "environment": "Cloud Linux Chromium 151, Python 3.12.14",
+  "state": "Isolated synthetic records, silent 30-second MP4, no production data",
+  "settings_tab": "connections (explicit); accounts captured separately",
+  "screenshots": [
+    {
+      "name": "accounts-1366.png",
+      "sha256": "f4fde866748a1a647dea59a69708696c91d2d3d866fed99458de61f829b7efe7"
+    },
+    {
+      "name": "accounts-1920.png",
+      "sha256": "b0833519bb9cf94c2313313f68f823612928e2a9dd3f7bb8656ea5c0b4718c91"
+    },
+    {
+      "name": "accounts-390.png",
+      "sha256": "2d8560353f01e51a2a2d193f27f4347b0465182be4f66170a0480db0a35c8c9f"
+    },
+    {
+      "name": "analytics-1366.png",
+      "sha256": "f5cfd429979a11c3e63c2266ed867aafcb50cf4a695c35a1969120c1e8812996"
+    },
+    {
+      "name": "analytics-1920.png",
+      "sha256": "446e2107cadb3cc5055c8d1da3895fdb6eaecff4eed2a4eded496d022a23c28a"
+    },
+    {
+      "name": "analytics-390.png",
+      "sha256": "a81feb9025ce433560308d500b3fe2cbe9e8e00763464dfa006dbb75b8b18248"
+    },
+    {
+      "name": "news-1366.png",
+      "sha256": "455790ca7af21f11fe28ab52885b5915ee015f3eaf013c5da09a431a95ac7fd2"
+    },
+    {
+      "name": "news-1920.png",
+      "sha256": "a9ea5da56d5f425fb2d29fc57656b69c90df8ab90386a17be74021dd9c2b2f9b"
+    },
+    {
+      "name": "news-390.png",
+      "sha256": "29a48e1fddfd09da60bde24c9dcaedfe481c3a8b56aa5e490263ce48e50e3ee3"
+    },
+    {
+      "name": "publish-1366.png",
+      "sha256": "ab21c5b1f9c4d037fb952270ba004390c5e77ac3d5ce515ab9c1285262408474"
+    },
+    {
+      "name": "publish-1920.png",
+      "sha256": "50356d1216b1df7f25778e25fe1cb66c337c257a6635299ed5adbfbabdced76e"
+    },
+    {
+      "name": "publish-390.png",
+      "sha256": "5f24502f9399be8966e080e6722b2a76b6f488ff26437d43f7f5e84e929e7c31"
+    },
+    {
+      "name": "script-1366.png",
+      "sha256": "12bebca14be224711957aaa6ba55e6b373c30c1fc7bcda745169120d31192189"
+    },
+    {
+      "name": "script-1920.png",
+      "sha256": "db36e8496afedeeaa275448fc8c2ffe56bc71095c43e7f36ec92ab9bf825d713"
+    },
+    {
+      "name": "script-390.png",
+      "sha256": "03b378cca48f4b493530ed1efc2ee4b769ceb3ef2052c4420152f45c7b38643a"
+    },
+    {
+      "name": "settings-1366.png",
+      "sha256": "4945ff9050b1976a299cadc19224a773f2729688ec4abf99ca1b141173a956e1"
+    },
+    {
+      "name": "settings-1920.png",
+      "sha256": "1f845a040dd236c09ab4fd3b39b0438e949dd943c7dfa8d4ee04470a599b6c7e"
+    },
+    {
+      "name": "settings-390.png",
+      "sha256": "f9c7707181431620c3f8c8aafc02471e1e293b80fee88aee792bc163b0d8c3b7"
+    },
+    {
+      "name": "video-1366.png",
+      "sha256": "c574d280ada8470f862894dca2c6aa16f7692ec595d0f85a71b93c70364c3c4a"
+    },
+    {
+      "name": "video-1920.png",
+      "sha256": "76c799ea4380299d49accec45a3e64b46013b63ab81a93a5f12b83242edea4ad"
+    },
+    {
+      "name": "video-390.png",
+      "sha256": "d64e977e1ebaa5732dd2025a3edca08339b626a51cc053564a72368e54eb1488"
+    }
+  ]
+}

@@ -8,8 +8,10 @@ from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+import test_api_news_pipeline
 from conftest import csrf
 from sqlalchemy import select
+from test_api_news_pipeline import settled, start
 
 from newsflow.db.models import AIUsage, AppSetting, IntelligenceRun, NewsSource
 from newsflow.intelligence.credentials import AIKeyStore, FakeCipher
@@ -41,7 +43,10 @@ from newsflow.intelligence.settings import (
     read_settings,
     write_prices,
     write_settings,
+    write_studio_settings,
 )
+
+api_pipeline = test_api_news_pipeline.api_pipeline
 
 KEY = "sk-synthetic-not-a-real-key-0123456789abcdef"
 
@@ -193,68 +198,52 @@ def test_gui_prices_form_and_estimate_text(client, app, monkeypatch):
     app.state.ai_keys = AIKeyStore(app.state.config.data_dir, FakeCipher())
     monkeypatch.delenv("NEWSFLOW_AI_API_KEY", raising=False)
     page = client.get("/ai-settings")
-    assert page.status_code == 200 and 'id="ai-estimate"' in page.text and "단가 미입력" in page.text
-    assert "단가는 사용자가 입력한 값이며 공식 요금표를 확인하세요" in page.text
-    assert "요금을 보증하거나 결제하지 않습니다" in page.text
+    assert page.status_code == 200 and page.url.path == "/simple-settings"
+    assert 'id="ai-estimate"' not in page.text and 'action="/ai-settings/prices"' not in page.text
+    assert 'action="/api-settings/openai"' in page.text
+    assert "실제 청구액은 공급사에서 확인하세요" in page.text
     token = csrf(client)
     assert client.post("/ai-settings/prices", data={"csrf_token": token, "input_per_1m": "x", "output_per_1m": "1", "currency": "USD"}).status_code == 422
     assert client.post("/ai-settings/prices", data={"csrf_token": token, "input_per_1m": "0.15", "output_per_1m": "0.60", "currency": "XYZ"}).status_code == 422
     saved = client.post("/ai-settings/prices", data={"csrf_token": token, "input_per_1m": "0.15", "output_per_1m": "0.60", "currency": "USD"})
-    assert saved.status_code == 200 and "단가를 저장했습니다" in saved.text and "예상 비용 0." in saved.text and " USD" in saved.text
+    assert saved.status_code == 200 and "기존 단가 기록을 저장했습니다" in saved.text
+    assert read_prices(app.state.sessions)["input_per_1m"] == Decimal("0.15")
+    assert read_prices(app.state.sessions)["output_per_1m"] == Decimal("0.60")
     assert client.post("/ai-settings/prices", data={"input_per_1m": "1"}).status_code == 403
     _collect_fixture(app)
     write_settings(app.state.sessions, "openai", "gpt-4.1-mini", False, 0, 25)
+    write_studio_settings(app.state.sessions, "openai", "gpt-4.1-mini")
     studio = client.get("/ai")
     assert studio.status_code == 200
     assert 'value="gpt-4.1-mini"' in studio.text  # analysis form defaults to the saved model
     analysis_id = IntelligenceService(app.state.sessions).analyze([1])
     with_estimate = client.get(f"/ai?analysis_id={analysis_id}").text
-    assert 'value="25"' in with_estimate and with_estimate.count('value="gpt-4.1-mini"') == 2
+    # An existing Offline analysis keeps its own execution identity, not new global defaults.
+    assert 'value="25"' in with_estimate and 'value="offline" selected' in with_estimate
+    assert 'value="gpt-4.1-mini"' not in with_estimate
     assert 'id="studio-estimate"' in with_estimate and "단가 미입력" not in with_estimate and " USD" in with_estimate
 
 
-class _ScriptProvider(FakeProvider):
-    def analyze(self, evidence, options):
-        self.calls += 1
-        from newsflow.intelligence.provider import OfflineProvider
-
-        return OfflineProvider().analyze(evidence, options)
-
-
-def test_start_and_job_pages_show_estimate_then_actual_usage(client, app, monkeypatch):
-    from newsflow.video.engine import FakeRenderAdapter
-    from newsflow.video.tts import FakeTTS
-
-    monkeypatch.setenv("NEWSFLOW_AI_API_KEY", KEY)
-    _collect_fixture(app)
-    sessions = app.state.sessions
-    write_settings(sessions, "openai", "gpt-4o-mini", True, 100_000, 20)
-    start = client.get("/autopilot/start").text
-    assert 'id="start-ai-estimate"' in start and "예상 최대 약" in start and "단가 미입력" in start and "준비 안 됨" not in start
-    script = {
-        "title": "실제 뉴스 요약", "hook": "오늘의 보도입니다.", "summary": "보도된 내용의 요약입니다.", "closing": "원문을 확인하세요.",
-        "scenes": [{"seconds": 10, "narration": f"{n} 장면 내용입니다.", "caption": "자막", "material": "카드"} for n in ("첫", "둘째", "셋째")],
-    }
-    provider = _ScriptProvider(script, usage={"prompt_tokens": 50, "completion_tokens": 20, "total_tokens": 70})
-    app.state.autopilot_backend.intelligence.provider = provider
-    app.state.video.tts, app.state.video.engine = FakeTTS(), FakeRenderAdapter()
-    response = client.post("/autopilot/start", data={"csrf_token": csrf(client), "source": "feeds", "mode": "guided", "ai": "openai", "duration": "30"}, follow_redirects=False)
-    assert response.status_code == 303
-    app.state.autopilot.future.result(timeout=20)
-    job_id = response.headers["location"].rsplit("/", 1)[1]
-    snapshot = app.state.autopilot.snapshot(job_id)
-    assert snapshot["status"] == "waiting_review" and snapshot["current_stage"] == "select"
-    before = client.get(f"/autopilot/jobs/{job_id}").text
-    assert 'id="ai-estimate"' in before and "호출 2회" in before and "참고용 추정치" in before and provider.calls == 0
-    app.state.autopilot.resume(job_id, snapshot["revision"], article_id=snapshot["article_id"])
-    app.state.autopilot.future.result(timeout=20)
-    after = client.get(f"/autopilot/jobs/{job_id}").text
-    assert app.state.autopilot.snapshot(job_id)["current_stage"] == "script"
-    assert 'id="ai-actual"' in after and "실제 사용 140 토큰 (호출 2회" in after and 'id="ai-estimate"' not in after
+def test_start_and_job_pages_show_estimate_then_actual_usage(client, app, api_pipeline, monkeypatch):
+    """Historical name retained; the approved UI shows returned usage, not a pre-call quote."""
+    coordinator, backend, provider, sessions, mode, _ = api_pipeline
+    monkeypatch.setattr(app.state, "autopilot", coordinator)
+    monkeypatch.setattr(app.state, "autopilot_backend", backend)
+    page = client.get("/autopilot/start").text
+    assert 'id="start-ai-estimate"' not in page and "제작 시작은 홈에서" in page
+    assert provider.calls == []
+    identifier = start(api_pipeline, acquisition_policy="rss")
+    job = settled(api_pipeline, identifier)
+    assert (job["status"], job["current_stage"]) == ("waiting_review", "script")
+    page = client.get(f"/autopilot/jobs/{identifier}").text
+    assert 'id="ai-actual"' in page and "로컬 기록 400 토큰 (호출 2회" in page
+    assert 'id="ai-estimate"' not in page
+    assert provider.calls == ["analysis", "script"]
     with sessions() as session:
-        runs = session.scalars(select(IntelligenceRun).where(IntelligenceRun.provider == "openai")).all()
+        runs = list(session.scalars(select(IntelligenceRun).where(IntelligenceRun.provider == mode)))
         assert {run.options["max_tokens"] for run in runs} == {ANALYSIS_MAX_TOKENS, SCRIPT_MAX_TOKENS[30]}
-        assert all(run.options["model"] == "gpt-4o-mini" and run.options["timeout"] == 20 for run in runs)
+        assert all(run.options["model"] == job["ai_model"] for run in runs)
+        assert sum(row.total_tokens for row in session.scalars(select(AIUsage))) == 400
 
 
 def test_rendered_price_form_carries_its_own_csrf_token_and_saves(client, app, monkeypatch):
@@ -264,40 +253,50 @@ def test_rendered_price_form_carries_its_own_csrf_token_and_saves(client, app, m
     app.state.ai_keys = AIKeyStore(app.state.config.data_dir, FakeCipher())
     monkeypatch.delenv("NEWSFLOW_AI_API_KEY", raising=False)
     page = client.get("/ai-settings").text
-    form = re.search(r'<form method="post" action="/ai-settings/prices".*?</form>', page, re.DOTALL).group(0)
-    fields = dict(re.findall(r'<input[^>]*name="([^"]+)"[^>]*value="([^"]*)"', form))
-    assert fields.get("csrf_token"), "the prices form must render csrf_field()"
+    assert 'action="/ai-settings/prices"' not in page
+    form = re.search(r'<form method="post" action="/api-settings/openai".*?</form>', page, re.DOTALL).group(0)
+    token = re.search(r'name="csrf_token"[^>]*value="([^"]+)"', form).group(1)
+    fields = {"csrf_token": token}
+    assert token, "the canonical API cost form must render csrf_field()"
     fields.update({"input_per_1m": "0.15", "output_per_1m": "0.60", "currency": "USD"})
     saved = client.post("/ai-settings/prices", data=fields)
-    assert saved.status_code == 200 and "단가를 저장했습니다" in saved.text
+    assert saved.status_code == 200 and "기존 단가 기록을 저장했습니다" in saved.text
+    assert read_prices(app.state.sessions)["input_per_1m"] == Decimal("0.15")
     # Every POST form on the page renders its own token.
     assert page.count('name="csrf_token"') == page.count('method="post"')
 
 
-def test_retried_failed_script_tokens_stay_in_the_job_total(client, app, monkeypatch):
-    from newsflow.video.engine import FakeRenderAdapter
-    from newsflow.video.tts import FakeTTS
+def test_retried_failed_script_tokens_stay_in_the_job_total(client, app, api_pipeline, monkeypatch):
+    """Retain failed usage; the approved no-replay policy replaces the old retry expectation."""
+    from newsflow.autopilot.contracts import AutopilotConflict
+    from newsflow.gui.autopilot_routes import _ai_usage
+    from newsflow.intelligence.provider import ProviderResponseError
 
-    monkeypatch.setenv("NEWSFLOW_AI_API_KEY", KEY)
-    _collect_fixture(app)
-    write_settings(app.state.sessions, "openai", "gpt-4o-mini", True, 100_000, 20)
-    usage = {"prompt_tokens": 50, "completion_tokens": 20, "total_tokens": 70}
-    good = {
-        "title": "실제 뉴스 요약", "hook": "오늘의 보도입니다.", "summary": "보도된 내용의 요약입니다.", "closing": "원문을 확인하세요.",
-        "scenes": [{"seconds": 10, "narration": f"{n} 장면 내용입니다.", "caption": "자막", "material": "카드"} for n in ("첫", "둘째", "셋째")],
-    }
-    backend = app.state.autopilot_backend
-    backend.intelligence.provider = _ScriptProvider({"title": "형식이 틀린 응답"}, usage=usage)
-    app.state.video.tts, app.state.video.engine = FakeTTS(), FakeRenderAdapter()
-    response = client.post("/autopilot/start", data={"csrf_token": csrf(client), "source": "feeds", "mode": "easy", "ai": "openai", "duration": "30"}, follow_redirects=False)
-    app.state.autopilot.future.result(timeout=20)
-    job_id = response.headers["location"].rsplit("/", 1)[1]
-    failed = app.state.autopilot.snapshot(job_id)
-    assert failed["status"] == "failed" and failed["error_code"] == "ai_bad_response" and failed["retryable"]
-    backend.intelligence.provider = _ScriptProvider(good, usage=usage)
-    app.state.autopilot.retry(job_id, failed["revision"])
-    app.state.autopilot.future.result(timeout=20)
-    assert app.state.autopilot.snapshot(job_id)["current_stage"] == "script"
-    page = client.get(f"/autopilot/jobs/{job_id}").text
-    # analysis 70 + failed script 70 + successful script 70; the failed attempt is not dropped after the retry.
-    assert "실제 사용 210 토큰 (호출 3회 · 실패 1회 포함" in page
+    coordinator, backend, provider, sessions, _, _ = api_pipeline
+    monkeypatch.setattr(app.state, "autopilot", coordinator)
+    monkeypatch.setattr(app.state, "autopilot_backend", backend)
+    complete = provider.complete
+
+    def invalid_response(*args):
+        complete(*args)  # Records a synthetic returned usage event before schema rejection.
+        raise ProviderResponseError()
+
+    monkeypatch.setattr(provider, "complete", invalid_response)
+    identifier = start(api_pipeline, acquisition_policy="rss")
+    failed = settled(api_pipeline, identifier)
+    assert failed["status"] == "failed" and failed["error_code"] == "ai_bad_response"
+    assert failed["retryable"] is False and provider.calls == ["analysis", "script"]
+    with pytest.raises(AutopilotConflict):
+        coordinator.retry(identifier, failed["revision"])
+    assert coordinator.recover() == 0
+    assert provider.calls == ["analysis", "script"]
+    with sessions() as session:
+        rows = list(session.scalars(select(AIUsage).order_by(AIUsage.id)))
+        assert [row.status for row in rows] == ["success", "failed"]
+        assert sum(row.total_tokens for row in rows) == 400
+    from types import SimpleNamespace
+
+    _, actual = _ai_usage(SimpleNamespace(app=app), failed, None)
+    assert (actual["total"], actual["calls"], actual["failed"]) == (400, 2, 1)
+    page = client.get(f"/autopilot/jobs/{identifier}").text
+    assert "대본" in page and 'action="/autopilot/jobs/' + identifier + '/retry"' not in page

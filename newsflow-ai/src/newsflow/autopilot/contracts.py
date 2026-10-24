@@ -15,7 +15,7 @@ CONTENT_MODES = ("trial", "real")
 AI_MODES = ("offline", "openai", "claude_code", "codex", "claude_api")
 ARTIFACT_KEYS = frozenset({
     "collection_run_id", "search_run_id", "intelligence_run_id", "analysis_run_id", "script_run_id", "article_id", "content_draft_id",
-    "video_project_id", "render_job_id", "publish_draft_id",
+    "video_project_id", "render_job_id", "publish_draft_id", "ai_plan_id",
 })
 
 
@@ -44,6 +44,10 @@ class BackendError(AutopilotError):
         self.retryable = retryable
         self.outcome_unknown = outcome_unknown
         self.code = code
+
+
+class BackendWaiting(BackendError):
+    """An external approval phase is pending; not a completed or failed render."""
 
 
 class AutopilotBackend(Protocol):

@@ -1,0 +1,153 @@
+{
+  "run_id": 39187420264,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39187420264",
+  "head_sha": "eabc21ac532dc8fe694d7ae381817b7471ce90e6",
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "connected-workspace (3.12)",
+      "python": "3.12.10",
+      "id": 117852666101,
+      "conclusion": "success",
+      "passed": 283,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Pinned dependencies and pip check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare existing video and Chrome prerequisites",
+          "conclusion": "success"
+        },
+        {
+          "name": "Ruff",
+          "conclusion": "success"
+        },
+        {
+          "name": "Current API, publishing, UI and Windows contracts - no full suite replay",
+          "conclusion": "success"
+        },
+        {
+          "name": "Existing BAT start, duplicate block, stop and data restart",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload synthetic summaries and key screens only",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "fake_api_voice_flows": [
+        "openai",
+        "claude_api"
+      ]
+    },
+    {
+      "name": "connected-workspace (3.14)",
+      "python": "3.14.8",
+      "id": 117852665825,
+      "conclusion": "success",
+      "passed": 283,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "steps": [
+        {
+          "name": "Set up job",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/checkout@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Pinned dependencies and pip check",
+          "conclusion": "success"
+        },
+        {
+          "name": "Prepare existing video and Chrome prerequisites",
+          "conclusion": "success"
+        },
+        {
+          "name": "Ruff",
+          "conclusion": "success"
+        },
+        {
+          "name": "Current API, publishing, UI and Windows contracts - no full suite replay",
+          "conclusion": "success"
+        },
+        {
+          "name": "Existing BAT start, duplicate block, stop and data restart",
+          "conclusion": "success"
+        },
+        {
+          "name": "Upload synthetic summaries and key screens only",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/setup-python@v6",
+          "conclusion": "success"
+        },
+        {
+          "name": "Post Run actions/checkout@v5",
+          "conclusion": "success"
+        },
+        {
+          "name": "Complete job",
+          "conclusion": "success"
+        }
+      ],
+      "fake_api_voice_flows": [
+        "openai",
+        "claude_api"
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "name": "pr35-connected-workspace-3.12",
+      "id": 12158797498,
+      "size": 524931
+    },
+    {
+      "name": "pr35-connected-workspace-3.14",
+      "id": 12158543301,
+      "size": 525609
+    }
+  ],
+  "actual_paid_api_oauth_sns_calls": 0,
+  "user_windows_pc": "NOT VERIFIED",
+  "scope": "Changed contracts only, not full regression"
+}

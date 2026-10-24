@@ -107,7 +107,8 @@ def test_easy_synthetic_stages_are_durable_and_ordered(harness):
     assert len(identifier) == 32
     assert result["status"] == "completed" and result["progress"] == 100
     assert [stage for stage, _ in backend.calls] == list(STAGES)
-    assert list(result["stage_results"]) == list(STAGES)
+    assert result["stage_results"]["request"]["news_usage"] == "STANDARD"
+    assert [key for key in result["stage_results"] if key != "request"] == list(STAGES)
     assert [attempt["status"] for attempt in result["attempts"]] == ["completed"] * 6
     assert result["publish_draft_id"] == 501
     assert result["preview_playable"] is False  # Synthetic state fixture is not a rendered MP4.
@@ -381,7 +382,7 @@ def test_migration_0008_is_additive_and_retains_legacy_data(tmp_path):
             connection.execute(text("INSERT INTO news_sources(name,url,enabled,created_at) VALUES ('legacy','https://example.test/legacy',0,'2026-01-01 00:00:00')"))
         migrate(engine)
         with engine.connect() as connection:
-            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0013"
+            assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0015"
             assert connection.scalar(text("SELECT name FROM news_sources")) == "legacy"
         schema = inspect(engine)
         assert "autopilot_jobs" in schema.get_table_names()

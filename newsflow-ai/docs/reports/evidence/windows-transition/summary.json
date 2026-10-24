@@ -1,0 +1,118 @@
+{
+  "baseline_product": "0a59bfb41eec6b243e4470f67cd53c1e7cd07e52",
+  "tested_sha": "341f062303d83c5a2f430bf0651ac2fe811ba696",
+  "status": "CONDITIONAL",
+  "product_changes": false,
+  "environments": {
+    "cloud": {
+      "passed": 14,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 1,
+      "properties": {
+        "test_restore_point_update_failure_and_restart": {
+          "snapshot_files": "6",
+          "snapshot_bytes": "429513"
+        },
+        "test_additive_upgrade_preserves_every_old_table_and_restore_revision[0016]": {
+          "old_tables": "42",
+          "old_rows": "14"
+        },
+        "test_additive_upgrade_preserves_every_old_table_and_restore_revision[0017]": {
+          "old_tables": "44",
+          "old_rows": "14"
+        }
+      }
+    },
+    "windows-3.12": {
+      "pytest": {
+        "passed": 15,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "properties": {
+          "test_restore_point_update_failure_and_restart": {
+            "snapshot_files": "6",
+            "snapshot_bytes": "429528"
+          },
+          "test_additive_upgrade_preserves_every_old_table_and_restore_revision[0016]": {
+            "old_tables": "42",
+            "old_rows": "14"
+          },
+          "test_additive_upgrade_preserves_every_old_table_and_restore_revision[0017]": {
+            "old_tables": "44",
+            "old_rows": "14"
+          }
+        }
+      },
+      "bat": {
+        "status": "PASS",
+        "python": "3.12.10",
+        "actual_run_bat": true,
+        "actual_paid_api_oauth_sns": 0,
+        "user_windows_pc": "NOT VERIFIED",
+        "routes": [
+          "/",
+          "/create",
+          "/news",
+          "/videos",
+          "/queue",
+          "/simple-settings",
+          "/health"
+        ],
+        "loopback_port": 8765,
+        "default_localappdata": true,
+        "unicode_spaces_path": true,
+        "duplicate_run": "blocked",
+        "shutdown": "CTRL_BREAK with server_stop",
+        "restart": "same SQLite marker and integrity_check; no app migration edits",
+        "paid_services": "not configured; no OAuth/upload calls"
+      }
+    },
+    "windows-3.14": {
+      "pytest": {
+        "passed": 15,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0,
+        "properties": {
+          "test_restore_point_update_failure_and_restart": {
+            "snapshot_files": "6",
+            "snapshot_bytes": "429528"
+          },
+          "test_additive_upgrade_preserves_every_old_table_and_restore_revision[0016]": {
+            "old_tables": "42",
+            "old_rows": "14"
+          },
+          "test_additive_upgrade_preserves_every_old_table_and_restore_revision[0017]": {
+            "old_tables": "44",
+            "old_rows": "14"
+          }
+        }
+      },
+      "bat": {
+        "status": "PASS",
+        "python": "3.14.9",
+        "actual_run_bat": true,
+        "actual_paid_api_oauth_sns": 0,
+        "user_windows_pc": "NOT VERIFIED",
+        "routes": [
+          "/",
+          "/create",
+          "/news",
+          "/videos",
+          "/queue",
+          "/simple-settings",
+          "/health"
+        ],
+        "loopback_port": 8765,
+        "default_localappdata": true,
+        "unicode_spaces_path": true,
+        "duplicate_run": "blocked",
+        "shutdown": "CTRL_BREAK with server_stop",
+        "restart": "same SQLite marker and integrity_check; no app migration edits",
+        "paid_services": "not configured; no OAuth/upload calls"
+      }
+    }
+  }
+}

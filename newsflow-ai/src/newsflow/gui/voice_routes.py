@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 import sys
 from uuid import uuid4
@@ -19,6 +21,7 @@ from newsflow.easy_setup import (
     VOICE_INSTALL_GUIDE,
     SetupError,
     listening_summary,
+    preview_evidence,
     preview_preferences,
     record_listening,
     save_voice_preferences,
@@ -77,10 +80,16 @@ def voices(request: Request, preview: str = "", saved: bool = False, listened: b
     choices = voice_choice_catalog(catalog)
     speech = speech_preferences(sessions)
     playable = bool(preview) and _PREVIEW.fullmatch(preview) is not None and (_preview_dir(request) / preview).is_file()
+    sample = preview_evidence(request.app.state.config.data_dir, preview) if playable else None
+    from newsflow.video.voice_engines import provider_name
+
+    from .production_status import production_context
+
+    selected_status = production_context(request)["provider_statuses"][provider_name(voice)]
     sample_spoken = normalize_for_speech(PREVIEW_TEXT)
     return page(
         request, "voices.html", active="simple-settings", catalog=catalog, korean=korean, state=state, report=report,
-        voice=voice, speech=speech, rates=RATE_CHOICES, pauses=PAUSE_CHOICES, preview=preview if playable else "",
+        sample=sample, selected_status=selected_status, voice=voice, speech=speech, rates=RATE_CHOICES, pauses=PAUSE_CHOICES, preview=preview if playable else "",
         voice_choices=choices, saved_voice_listed=any(item['name'] == voice for item in choices),
         saved=saved, listened=listened, windows=_windows(), sample_text=PREVIEW_TEXT, sample_spoken=sample_spoken,
         sample_estimate=speech_seconds(sample_spoken, speech.rate, speech.pause_ms),
@@ -114,9 +123,6 @@ def preview(
     if voice == "offline-silence" or not any(v["name"] == voice for v in korean):
         raise HTTPException(422, "미리 듣기는 설치된 한국어 음성을 선택했을 때만 가능합니다.")
     directory = _preview_dir(request)
-    for old in directory.glob("preview-*"):
-        if old.is_file() and not old.is_symlink():
-            old.unlink(missing_ok=True)
     name = f"preview-{uuid4().hex}.wav"
     tts = getattr(request.app.state.video, "tts", None) or WindowsTTS()
     try:
@@ -128,6 +134,9 @@ def preview(
             )
     except TTSError as exc:
         raise HTTPException(422, str(exc)) from None
+    (directory / name).with_suffix('.json').write_text(json.dumps({"provider": "windows", "voice": voice,
+        "rate": int(rate), "pause_ms": int(pause_ms),
+        "sha256": hashlib.sha256((directory / name).read_bytes()).hexdigest()}, ensure_ascii=False), encoding='utf-8')
     return go(f"/voices?preview={name}")
 
 

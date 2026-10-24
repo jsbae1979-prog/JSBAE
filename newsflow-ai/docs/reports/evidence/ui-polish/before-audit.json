@@ -1,0 +1,2057 @@
+{
+  "results": [
+    {
+      "page": "home",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "진행·확인할 작업",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "제작된 영상",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "게시 초안",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "전체 작업 기록",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "전체 보기 ↗",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "reference-news-scope",
+          "text": "수집한 자료 · 발행일은 기사에서 확인하세요.",
+          "px": "10px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "01",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "데모 자료",
+          "px": "9px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "it",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "02",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "데모 자료",
+          "px": "9px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "it",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "03",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "데모 자료",
+          "px": "9px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "it",
+          "px": "9px"
+        },
+        {
+          "tag": "A",
+          "cls": "reference-news-footer",
+          "text": "보관 기사 검색 →",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "01",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "02",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "03",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "04",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-format",
+          "text": "9:16 SHORTS",
+          "px": "8px"
+        },
+        {
+          "tag": "STRONG",
+          "cls": "",
+          "text": "Offline",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "변경·연결 확인 ↗",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "hint studio-review-note",
+          "text": "생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "AI 웹 뉴스 조사 · 승인·검증 필요",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "9:16",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-phone-duration",
+          "text": "30초",
+          "px": "10px"
+        },
+        {
+          "tag": "SUMMARY",
+          "cls": "",
+          "text": "제작 준비 확인",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다. AI 웹 검색은 별도 API 조건을 확인합니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "음성 없음 · 검토용 · 로컬 설치 확인됨; 생성 시 검사",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "production-capability-note",
+          "text": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "저장한 기사 검색 →",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CONTINUE CREATING",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "RECENT SHORTS",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "지금 영상 만들기 →",
+          "height": 36
+        },
+        {
+          "label": "내 영상 보기",
+          "height": 36
+        },
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 42
+        },
+        {
+          "label": "보관 기사 검색 ↗",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "create",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "NEWS TO SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "01",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "02",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "03",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "04",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CREATE YOUR NEXT STORY",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-format",
+          "text": "9:16 SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "변경·연결 확인 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "hint studio-review-note",
+          "text": "생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "AI 웹 뉴스 조사 · 승인·검증 필요",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "9:16",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-phone-duration",
+          "text": "30초",
+          "px": "10px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다. AI 웹 검색은 별도 API 조건을 확인합니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "음성 없음 · 검토용 · 로컬 설치 확인됨; 생성 시 검사",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "production-capability-note",
+          "text": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+          "px": "11px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "settings",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "settings-pill",
+          "text": "외부 호출 없음",
+          "px": "11px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "작업실로 돌아가기 ↗",
+          "height": 43
+        },
+        {
+          "label": "FFmpeg 확인",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "앱 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "Google로 YouTube 연결",
+          "height": 44
+        },
+        {
+          "label": "연결 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "진단·현재 저장 경로",
+          "height": 44
+        },
+        {
+          "label": "제작 구성 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "library",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "MY SHORTS",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "＋ 새 쇼츠 만들기",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "editor",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "VIDEO PREVIEW",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "선택 기사 분석",
+          "height": 44
+        },
+        {
+          "label": "게시 준비 →",
+          "height": 44
+        },
+        {
+          "label": "이 대본으로 영상 구성",
+          "height": 44
+        },
+        {
+          "label": "장면 1",
+          "height": 40
+        },
+        {
+          "label": "장면 2",
+          "height": 40
+        },
+        {
+          "label": "장면 3",
+          "height": 40
+        },
+        {
+          "label": "수정 초안 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "publish",
+      "viewport": "1366x768",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "NEWS TO SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "01",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "02",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "03",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "04",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CREATE YOUR NEXT STORY",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-format",
+          "text": "9:16 SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "변경·연결 확인 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "hint studio-review-note",
+          "text": "생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "AI 웹 뉴스 조사 · 승인·검증 필요",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "9:16",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-phone-duration",
+          "text": "30초",
+          "px": "10px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다. AI 웹 검색은 별도 API 조건을 확인합니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "음성 없음 · 검토용 · 로컬 설치 확인됨; 생성 시 검사",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "production-capability-note",
+          "text": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CONTINUE CREATING",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "RECENT SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "검토 후 게시",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        },
+        {
+          "label": "MP4 저장 ↓",
+          "height": 44
+        },
+        {
+          "label": "대본·자막 편집 →",
+          "height": 44
+        },
+        {
+          "label": "검토 저장·파일 확인",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "home",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "진행·확인할 작업",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "제작된 영상",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "게시 초안",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "전체 작업 기록",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "전체 보기 ↗",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "reference-news-scope",
+          "text": "수집한 자료 · 발행일은 기사에서 확인하세요.",
+          "px": "10px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "01",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "데모 자료",
+          "px": "9px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "it",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "02",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "데모 자료",
+          "px": "9px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "it",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "03",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "데모 자료",
+          "px": "9px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "it",
+          "px": "9px"
+        },
+        {
+          "tag": "A",
+          "cls": "reference-news-footer",
+          "text": "보관 기사 검색 →",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "01",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "02",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "03",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "04",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-format",
+          "text": "9:16 SHORTS",
+          "px": "8px"
+        },
+        {
+          "tag": "STRONG",
+          "cls": "",
+          "text": "Offline",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "변경·연결 확인 ↗",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "hint studio-review-note",
+          "text": "생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "AI 웹 뉴스 조사 · 승인·검증 필요",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "9:16",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-phone-duration",
+          "text": "30초",
+          "px": "10px"
+        },
+        {
+          "tag": "SUMMARY",
+          "cls": "",
+          "text": "제작 준비 확인",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다. AI 웹 검색은 별도 API 조건을 확인합니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "음성 없음 · 검토용 · 로컬 설치 확인됨; 생성 시 검사",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "production-capability-note",
+          "text": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "저장한 기사 검색 →",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CONTINUE CREATING",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "RECENT SHORTS",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "지금 영상 만들기 →",
+          "height": 36
+        },
+        {
+          "label": "내 영상 보기",
+          "height": 36
+        },
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 42
+        },
+        {
+          "label": "보관 기사 검색 ↗",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "create",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "NEWS TO SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "01",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "02",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "03",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "04",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CREATE YOUR NEXT STORY",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-format",
+          "text": "9:16 SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "변경·연결 확인 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "hint studio-review-note",
+          "text": "생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "AI 웹 뉴스 조사 · 승인·검증 필요",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "9:16",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-phone-duration",
+          "text": "30초",
+          "px": "10px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다. AI 웹 검색은 별도 API 조건을 확인합니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "음성 없음 · 검토용 · 로컬 설치 확인됨; 생성 시 검사",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "production-capability-note",
+          "text": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+          "px": "11px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "settings",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "settings-pill",
+          "text": "외부 호출 없음",
+          "px": "11px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "작업실로 돌아가기 ↗",
+          "height": 43
+        },
+        {
+          "label": "FFmpeg 확인",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "앱 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "Google로 YouTube 연결",
+          "height": 44
+        },
+        {
+          "label": "연결 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "진단·현재 저장 경로",
+          "height": 44
+        },
+        {
+          "label": "제작 구성 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "library",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "MY SHORTS",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "＋ 새 쇼츠 만들기",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "editor",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "VIDEO PREVIEW",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "선택 기사 분석",
+          "height": 44
+        },
+        {
+          "label": "게시 준비 →",
+          "height": 44
+        },
+        {
+          "label": "이 대본으로 영상 구성",
+          "height": 44
+        },
+        {
+          "label": "장면 1",
+          "height": 40
+        },
+        {
+          "label": "장면 2",
+          "height": 40
+        },
+        {
+          "label": "장면 3",
+          "height": 40
+        },
+        {
+          "label": "수정 초안 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "publish",
+      "viewport": "1920x1080",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "nav-caption",
+          "text": "뉴스에서 영상으로.",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "게시 전, 직접 확인해 주세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "고급 도구 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "NEWS TO SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "01",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "02",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "03",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "04",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CREATE YOUR NEXT STORY",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-format",
+          "text": "9:16 SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "변경·연결 확인 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "hint studio-review-note",
+          "text": "생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "AI 웹 뉴스 조사 · 승인·검증 필요",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "9:16",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-phone-duration",
+          "text": "30초",
+          "px": "10px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다. AI 웹 검색은 별도 API 조건을 확인합니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "음성 없음 · 검토용 · 로컬 설치 확인됨; 생성 시 검사",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "production-capability-note",
+          "text": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CONTINUE CREATING",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "RECENT SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "검토 후 게시",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        },
+        {
+          "label": "MP4 저장 ↓",
+          "height": 44
+        },
+        {
+          "label": "대본·자막 편집 →",
+          "height": 44
+        },
+        {
+          "label": "검토 저장·파일 확인",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "home",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "보관한 뉴스에서 관심 있는 주제를 찾아보세요.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "↗",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "→",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "button",
+          "text": "내 영상 보기",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "진행·확인할 작업",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "제작된 영상",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "게시 초안",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "전체 작업 기록",
+          "px": "10px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "전체 보기 ↗",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "reference-news-scope",
+          "text": "수집한 자료 · 발행일은 기사에서 확인하세요.",
+          "px": "10px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "01",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "데모 자료",
+          "px": "9px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "it",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "02",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "데모 자료",
+          "px": "9px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "it",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "03",
+          "px": "9px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "데모 자료",
+          "px": "9px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "it",
+          "px": "9px"
+        },
+        {
+          "tag": "A",
+          "cls": "reference-news-footer",
+          "text": "보관 기사 검색 →",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "01",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "02",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "03",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "04",
+          "px": "10px"
+        },
+        {
+          "tag": "STRONG",
+          "cls": "",
+          "text": "Offline",
+          "px": "11px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "변경·연결 확인 ↗",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "hint studio-review-note",
+          "text": "생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "AI 웹 뉴스 조사 · 승인·검증 필요",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "9:16",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-phone-duration",
+          "text": "30초",
+          "px": "10px"
+        },
+        {
+          "tag": "SUMMARY",
+          "cls": "",
+          "text": "제작 준비 확인",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다. AI 웹 검색은 별도 API 조건을 확인합니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "음성 없음 · 검토용 · 로컬 설치 확인됨; 생성 시 검사",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "production-capability-note",
+          "text": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "저장한 기사 검색 →",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CONTINUE CREATING",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "RECENT SHORTS",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "지금 영상 만들기 →",
+          "height": 44
+        },
+        {
+          "label": "내 영상 보기",
+          "height": 44
+        },
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 42
+        },
+        {
+          "label": "보관 기사 검색 ↗",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "create",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "NEWS TO SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "01",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "02",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "03",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "04",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CREATE YOUR NEXT STORY",
+          "px": "10px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "변경·연결 확인 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "hint studio-review-note",
+          "text": "생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "AI 웹 뉴스 조사 · 승인·검증 필요",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "9:16",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-phone-duration",
+          "text": "30초",
+          "px": "10px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다. AI 웹 검색은 별도 API 조건을 확인합니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "음성 없음 · 검토용 · 로컬 설치 확인됨; 생성 시 검사",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "production-capability-note",
+          "text": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+          "px": "11px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "settings",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "나에게 맞는 제작 환경",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "settings-pill",
+          "text": "외부 호출 없음",
+          "px": "11px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "작업실로 돌아가기 ↗",
+          "height": 43
+        },
+        {
+          "label": "FFmpeg 확인",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "한도·사용 승인 변경",
+          "height": 44
+        },
+        {
+          "label": "앱 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "Google로 YouTube 연결",
+          "height": 44
+        },
+        {
+          "label": "연결 설정 저장",
+          "height": 44
+        },
+        {
+          "label": "진단·현재 저장 경로",
+          "height": 44
+        },
+        {
+          "label": "제작 구성 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "library",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "MY SHORTS",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "＋ 새 쇼츠 만들기",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "editor",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "VIDEO PREVIEW",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "선택 기사 분석",
+          "height": 44
+        },
+        {
+          "label": "게시 준비 →",
+          "height": 44
+        },
+        {
+          "label": "이 대본으로 영상 구성",
+          "height": 44
+        },
+        {
+          "label": "장면 1",
+          "height": 40
+        },
+        {
+          "label": "장면 2",
+          "height": 40
+        },
+        {
+          "label": "장면 3",
+          "height": 40
+        },
+        {
+          "label": "수정 초안 저장",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    },
+    {
+      "page": "publish",
+      "viewport": "390x844",
+      "http": 200,
+      "overflow": false,
+      "small_text": [
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "NEWS TO SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "01",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "02",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "03",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "04",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CREATE YOUR NEXT STORY",
+          "px": "10px"
+        },
+        {
+          "tag": "A",
+          "cls": "",
+          "text": "변경·연결 확인 ↗",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "hint studio-review-note",
+          "text": "생략해도 자동 안전 점검과 완성 영상 검토는 유지해요. 사실 검증 완료나 게시 승인은 아닙니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "AI 웹 뉴스 조사 · 승인·검증 필요",
+          "px": "11px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "",
+          "text": "9:16",
+          "px": "10px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "studio-phone-duration",
+          "text": "30초",
+          "px": "10px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "RSS 수집·보완을 선택할 때만 출처 등록이 필요합니다. AI 웹 검색은 별도 API 조건을 확인합니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "음성 없음 · 검토용 · 로컬 설치 확인됨; 생성 시 검사",
+          "px": "11px"
+        },
+        {
+          "tag": "SMALL",
+          "cls": "",
+          "text": "선택한 AI의 웹 검색이 승인·검증되지 않아 실행하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "production-capability-note",
+          "text": "선택한 AI 웹 뉴스 조사는 아직 실행할 수 없습니다. RSS로 자동 전환하지 않습니다.",
+          "px": "11px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "CONTINUE CREATING",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "RECENT SHORTS",
+          "px": "10px"
+        },
+        {
+          "tag": "P",
+          "cls": "eyebrow",
+          "text": "검토 후 게시",
+          "px": "10px"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "쇼츠 만들기 →",
+          "height": 48.5
+        },
+        {
+          "label": "MP4 저장 ↓",
+          "height": 44
+        },
+        {
+          "label": "대본·자막 편집 →",
+          "height": 44
+        },
+        {
+          "label": "검토 저장·파일 확인",
+          "height": 44
+        }
+      ],
+      "font": "\"Malgun Gothic\", \"맑은 고딕\", \"Noto Sans KR\", system-ui, sans-serif"
+    }
+  ],
+  "external_browser_requests": 0
+}

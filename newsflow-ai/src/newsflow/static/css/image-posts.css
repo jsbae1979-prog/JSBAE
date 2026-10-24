@@ -1,0 +1,25 @@
+.image-post-preview{display:grid;grid-template-columns:minmax(240px,420px) minmax(260px,1fr);gap:28px;align-items:start}
+.image-post-preview>img{width:100%;height:auto;border-radius:18px;box-shadow:0 12px 36px #0004}
+.image-actions{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.image-checks{display:grid;gap:12px;margin:20px 0}
+.image-checks label{display:flex;align-items:start;gap:10px}
+.image-post-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.image-post-list>a{display:flex;align-items:center;gap:16px;padding:12px;border:1px solid #36506f;border-radius:14px}
+.image-post-list img{object-fit:cover;border-radius:8px;max-width:108px}
+.image-post-list small{display:block;margin-top:8px;color:#abc1d9}
+[data-image-form] textarea,#image-caption{width:100%;box-sizing:border-box;resize:vertical}
+[data-image-error]{color:#ffc1bb}
+.feed-selection-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.feed-selection-item{min-width:0}.feed-selection-item h2{font-size:1.2rem;overflow-wrap:anywhere}
+.feed-card-mock{aspect-ratio:4/5;width:100%;max-width:280px;padding:22px;box-sizing:border-box;background:linear-gradient(150deg,#183659,#091526);border-radius:16px;margin:16px auto;display:flex;flex-direction:column;justify-content:space-between;gap:20px}
+.feed-card-mock strong{font-size:1.35rem;overflow-wrap:anywhere}.feed-card-mock small{color:#bed3ee}
+.feed-card-image{display:block;width:100%;max-width:280px;height:auto;border-radius:16px;margin:16px auto}
+.feed-body{white-space:pre-wrap;overflow-wrap:anywhere;max-height:220px;overflow:auto}
+@media(max-width:1000px){.feed-selection-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.image-post-preview{grid-template-columns:1fr}.image-post-preview>img{max-width:420px;margin:auto}}
+.ai-background { border:1px solid var(--border,#334155); border-radius:14px; padding:20px; margin:20px 0; }
+.generated-background { display:flex; align-items:center; gap:20px; margin:16px 0; }
+.generated-background img { width:180px; height:auto; border-radius:12px; }
+.ai-background small { display:block; margin-top:4px; }
+#codex-image .ai-background p { white-space:normal; overflow-wrap:anywhere; }
+@media(max-width:600px) { .generated-background { flex-direction:column; align-items:flex-start; } }

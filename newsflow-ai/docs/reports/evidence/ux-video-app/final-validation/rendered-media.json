@@ -1,0 +1,23 @@
+{
+  "programs": [],
+  "stream_groups": [],
+  "streams": [
+    {
+      "codec_name": "h264",
+      "codec_type": "video",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "codec_name": "aac",
+      "codec_type": "audio"
+    }
+  ],
+  "format": {
+    "duration": "30.021029"
+  },
+  "scope": "Only local silent MP4 rendering/playback; no human voice, subtitle sync, API content quality or SNS success",
+  "voice": "offline-silence",
+  "file_bytes": 261122,
+  "actual_paid_api_oauth_sns": 0
+}

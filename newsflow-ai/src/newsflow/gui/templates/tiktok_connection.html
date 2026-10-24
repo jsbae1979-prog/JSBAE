@@ -1,0 +1,26 @@
+<div class="tiktok-connection">
+<p><strong>{{ '합성 인증 검증 환경 · 실제 계정 아님' if tiktok.synthetic else 'Desktop 로그인 연동 준비 · 실제 로그인·게시 비활성' }}</strong></p>
+<details><summary>Desktop 앱 설정 · {{ '등록됨' if tiktok.client.configured else '등록 필요' }}</summary>
+<p>요청 권한: 계정 확인(user.info.basic) · 게시(video.publish). 게시 자체는 별도 승인합니다.</p>
+<p>운영자가 제공한 Desktop 앱 설정만 사용하세요. 설정 저장은 실제 로그인·게시를 활성화하지 않습니다.</p>
+<form data-tiktok-form method="post" action="/tiktok/client">{{ csrf_field() }}
+<label>Client key<input name="client_key" maxlength="128" required autocomplete="off"></label>
+<label>Client secret<input type="password" name="client_secret" maxlength="256" required autocomplete="new-password"></label>
+<label>콜백 포트 · 0은 자동 선택<input type="number" name="port" min="0" max="65535" value="{{ tiktok.port }}" required></label>
+<p>등록할 Desktop redirect: <code>{{ tiktok.redirect }}</code> · 기본 앱 포트 8765는 사용하지 않습니다. 고정 포트는 1024~65535 중 선택하세요.</p>
+<button {% if not tiktok.client.storage_supported or tiktok.pending %}disabled{% endif %}>앱 설정 저장</button>
+</form><p>기존 비밀값은 화면에 표시하지 않습니다. 다른 사람의 공용 Client secret을 배포본에 넣지 마세요.</p>
+</details>
+{% if not tiktok.client.storage_supported %}<p>앱 설정 저장에는 Windows 보호 저장소가 필요합니다.</p>{% endif %}
+{% for account in tiktok.accounts %}<div class="settings-connection-line"><strong>{{ account.label }}</strong><span>{{ {'connected':'합성 연결됨' if account.synthetic else '계정 연결됨', 'authorizing':'인증 대기', 'exchanging':'인증 확인 중', 'refreshing':'인증 갱신 중', 'revoking':'연결 해제 중', 'revoked':'연결 해제됨', 'cancelled':'취소됨', 'unknown':'결과 불명', 'error':'연결 오류', 'reconnect':'재연결 필요', 'expired':'인증 만료'}.get(account.status,'확인 필요') }}</span></div>
+<p>{{ account.message }}{% if account.expires_at %} · 유효 시각 {{ account.expires_at|kst }}{% endif %}</p>
+{% if account.status in ['authorizing','exchanging','refreshing','revoking'] %}<form data-tiktok-form method="post" action="/tiktok/accounts/{{ account.id }}/cancel">{{ csrf_field() }}<label class="check"><input name="consent" type="checkbox" value="true" required> 진행 중인 인증을 취소합니다.</label><button>인증 취소</button></form>{% endif %}
+{% if account.status in ['connected','expired'] %}{% for action,label in [('refresh','인증 갱신'),('revoke','연결 해제')] %}<form data-tiktok-form method="post" action="/tiktok/accounts/{{ account.id }}/{{ action }}">{{ csrf_field() }}<label class="check"><input name="consent" type="checkbox" value="true" required> 이번 {{ label }} 요청에 동의합니다.</label><button {% if not tiktok.enabled or tiktok.pending %}disabled{% endif %}>{{ label }}</button></form>{% endfor %}{% endif %}
+{% endfor %}
+<form data-tiktok-form method="post" action="/tiktok/connect">{{ csrf_field() }}
+{% if tiktok.accounts %}<label>연결할 계정<select name="account_id"><option value="">새 계정</option>{% for account in tiktok.accounts %}<option value="{{ account.id }}">{{ account.label }} · 다시 연결</option>{% endfor %}</select></label>{% endif %}
+<label class="check"><input name="consent" type="checkbox" value="true" required> TikTok 로그인·계정 조회·게시 권한 요청에 동의합니다. 실제 영상 게시는 별도 승인합니다.</label>
+<button {% if not tiktok.enabled or not tiktok.client.configured or tiktok.pending %}disabled{% endif %}>TikTok으로 연결</button>
+</form>
+<p><a href="/publishing/platforms#tiktok">연결 상태 새로고침</a> · 결과 불명 요청은 자동 재시도하지 않습니다.</p>
+</div>

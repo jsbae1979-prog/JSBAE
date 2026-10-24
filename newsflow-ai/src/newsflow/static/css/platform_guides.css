@@ -1,0 +1,36 @@
+.platform-guide {max-width:1200px; margin-inline:auto; min-width:0; color:#f8fafc;}
+.guide-platforms,.guide-contents {display:flex; flex-wrap:wrap; gap:8px; margin:20px 0;}
+.guide-platforms a,.guide-contents a {display:inline-flex; align-items:center; min-height:44px; padding:10px 16px; border:1px solid #354862; border-radius:10px; color:#dceaff; text-decoration:none; background:#101f34;}
+.guide-platforms a[aria-current="page"] {background:#1d4ed8; border-color:#60a5fa; color:white;}
+.platform-guide a:focus-visible,.platform-guide summary:focus-visible {outline:3px solid #67e8f9; outline-offset:4px;}
+.guide-note {color:#b7c5d8; line-height:1.8; font-size:.93rem;}
+.guide-body {max-width:960px; overflow-wrap:anywhere; line-height:1.85;}
+.guide-body>section {margin:28px 0; padding:24px; background:#0f172a; border:1px solid #2b3d57; border-radius:16px; scroll-margin-top:90px;}
+.guide-body h2 {font-size:1.3rem; margin:0 0 16px; line-height:1.5;}
+.guide-body h3 {font-size:1.1rem; line-height:1.5;}
+.guide-body p,.guide-body li {color:#d4deec;}
+.guide-body li {margin:12px 0;}
+.guide-body ol,.guide-body ul {padding-left:1.5rem;}
+.guide-body a {color:#93c5fd; text-decoration:underline; text-underline-offset:3px;}
+.guide-body code {white-space:normal; overflow-wrap:anywhere; color:#b4deff;}
+.guide-body details {padding:16px; border:1px solid #405776; border-radius:12px; margin:20px 0;}
+.guide-body summary {cursor:pointer; font-weight:600; min-height:32px;}
+.guide-body dt {font-weight:700; margin-top:18px;}
+.guide-body dd {margin:6px 0 20px; color:#c7d4e6;}
+.guide-choices {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px;}
+.guide-directory {list-style:none; padding:0!important;}
+.guide-directory li {padding:16px 0; border-bottom:1px solid #354862;}
+@media(max-width:600px) {.guide-choices {grid-template-columns:1fr;} .guide-body>section {padding:18px 14px;} .guide-platforms a,.guide-contents a {padding:10px 12px;} }
+@media print {
+  body,.workspace-main,.platform-guide,.guide-body>section {background:white!important; color:#111!important;}
+  .creator-sidebar,.workspace-commandbar,.guide-platforms,.guide-contents,.suite-header-actions,.skip-link {display:none!important;}
+  .workspace-main,main {margin:0!important; padding:0!important; width:auto!important;}
+  .guide-body {max-width:none;}
+  .guide-body *,.guide-note {color:#111!important; text-shadow:none!important; box-shadow:none!important;}
+  .guide-body details::details-content {content-visibility:visible!important; display:block!important;}
+  .guide-body details>* {display:block!important;}
+  .guide-body details {border-color:#aaa;}
+  .guide-body h2,.guide-body h3 {break-after:avoid;}
+  .guide-body li {break-inside:avoid;}
+  .guide-body>section {border:0; padding:0;}
+}

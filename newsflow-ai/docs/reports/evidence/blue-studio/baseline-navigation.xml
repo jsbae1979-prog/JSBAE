@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.542" timestamp="2026-10-19T04:42:28.185506+00:00" hostname="83de6bfc3517"><testcase classname="tests.test_ux_navigation" name="test_workspace_two_destinations_and_two_production_choices" time="0.469"><failure message="AttributeError: 'NoneType' object has no attribute 'group'">client = &lt;starlette.testclient.TestClient object at 0x7f38f3940140&gt;
+
+    def test_workspace_two_destinations_and_two_production_choices(client):
+        response = client.get("/")
+        assert response.status_code == 200
+        html = response.text
+        primary = re.search(r'&lt;nav aria-label="주 메뉴"[^&gt;]*&gt;(.*?)&lt;/nav&gt;', html, re.DOTALL).group(1)
+        assert re.findall(r'href="([^"]+)"', primary) == ["/", "/create", "/videos", "/queue", "/simple-settings"]
+        for label in ("홈", "쇼츠 만들기", "내 영상", "게시", "설정"):
+            assert label in primary
+        assert 'class="advanced-nav"' not in html
+        settings = client.get("/simple-settings").text
+&gt;       advanced = re.search(r'&lt;dialog[^&gt;]*id="settings-advanced-tools"[^&gt;]*&gt;(.*?)&lt;/dialog&gt;', settings, re.DOTALL).group(1)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'group'
+
+tests/test_ux_navigation.py:19: AttributeError</failure></testcase></testsuite></testsuites>

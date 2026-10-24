@@ -1,0 +1,126 @@
+{
+  "screens": [
+    {
+      "screen": "home",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "image_requests": [
+        "http://127.0.0.1:54582/static/images/studio-concepts/hero_news_studio-1024.webp"
+      ],
+      "image": {
+        "src": "http://127.0.0.1:54582/static/images/studio-concepts/hero_news_studio-1024.webp",
+        "naturalWidth": 614
+      }
+    },
+    {
+      "screen": "news",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "video",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "image_requests": [
+        "http://127.0.0.1:54582/static/images/video-canvas.svg"
+      ]
+    },
+    {
+      "screen": "library",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "script",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "feed",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "publish",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "settings",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "home",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "image_requests": [
+        "http://127.0.0.1:54582/static/images/studio-concepts/hero_news_studio-1024.webp"
+      ],
+      "image": {
+        "src": "http://127.0.0.1:54582/static/images/studio-concepts/hero_news_studio-1024.webp",
+        "naturalWidth": 740
+      }
+    },
+    {
+      "screen": "news",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "video",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "image_requests": [
+        "http://127.0.0.1:54582/static/images/video-canvas.svg"
+      ]
+    },
+    {
+      "screen": "library",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "script",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "feed",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "publish",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "image_requests": []
+    },
+    {
+      "screen": "settings",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "image_requests": []
+    }
+  ],
+  "external": [],
+  "posts": [],
+  "errors": [],
+  "records_settings_media_preserved": true,
+  "image_requests": [
+    "http://127.0.0.1:54582/static/images/studio-concepts/hero_news_studio-1024.webp",
+    "http://127.0.0.1:54582/static/images/video-canvas.svg",
+    "http://127.0.0.1:54582/static/images/studio-concepts/hero_news_studio-1024.webp",
+    "http://127.0.0.1:54582/static/images/video-canvas.svg"
+  ]
+}

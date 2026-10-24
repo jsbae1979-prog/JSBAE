@@ -1,0 +1,171 @@
+{
+  "test": "validation_tools/test_fixed_flow.py::test_api_to_render_review_and_existing_publish_services[claude_api]",
+  "outcome": "passed",
+  "provider": "claude_api",
+  "fake_calls": [
+    "search",
+    "analysis",
+    "script"
+  ],
+  "jobs": [
+    {
+      "status": "completed",
+      "current_stage": "queue",
+      "error_code": null,
+      "error_message": null,
+      "retryable": false
+    }
+  ],
+  "drafts": [
+    {
+      "duration": 30,
+      "narration": [
+        "뉴스를 그대로 믿어도 될까요? 합성 자료를 통해 뉴스의 출처와 내용을 검토하는 과정을 알아봅니다.",
+        "같은 주제라도 출처마다 표현과 근거가 다를 수 있으므로 서로 어떤 내용을 담았는지 구분해 살펴보세요.",
+        "확인되지 않은 내용은 사실로 단정하지 말고 원문과 이용 권한을 직접 검토하세요. 함께 읽는 분과 공유하세요."
+      ],
+      "sentence_counts": [
+        2,
+        1,
+        2
+      ],
+      "contract": {
+        "mode": "STANDARD",
+        "structure": "장면 4개. 자료에 후속 일정·이슈가 있으면 fact → meaning → action → next, 없으면 fact → meaning(왜 중요한지) → meaning(시청자 관점의 배경·핵심 쟁점) → action. fact는 모두 합쳐 최대 2문장. meaning과 action의 초 합계가 fact보다 길어야 합니다. hook은 질문 또는 흔한 오해, closing은 공유·다음 일정 기억·후속 확인. 각 장면은 role·내레이션·짧은 자막·소재 제안을 포함합니다.",
+        "grounding": "입력 제목·요약·검색 근거의 구체적 주제로 구성하고 고정 분야 설명으로 대체하지 마세요. 목록·검색 요약은 주제 참고 자료이며 개별 사건의 사실 검증이 아닙니다. 개별 기사 내용이 부족하면 같은 주제의 설명형 대본을 생성하고 미확인 사항을 밝히세요. 자료에 없는 사건·발언·수치·발행일·인물을 만들지 마세요. 검색 시각은 기사 발행일이 아닙니다. 확인된 입력 내용과 해설·추정을 구분하고, 사실 검증 완료라고 주장하지 마세요. 자료가 부족하면 fact는 최소화하고 같은 주제의 해석·일반적인 확인 방법으로 구성하세요. 시청자 관점의 해석은 허용하지만 새 사건 사실이 아니며, 자료에 없는 통계·수치·법령·가격·날짜는 넣지 마세요. 자료에 없는 향후 전망·원인·결과를 가능성이라는 표현으로 추가하지 마세요. 합성·가상 자료는 사실 장면의 내레이션과 자막에도 합성·가상 예시임을 표시하고 실제 보도로 소개하지 마세요. 후속 일정은 자료에 있을 때만 사용하고, 투자·상품·구매 권유 대신 확인할 일로 표현하세요.",
+        "verification_status": "NOT VERIFIED",
+        "human_review_required": true,
+        "selected_article_ids": [
+          1
+        ],
+        "tools": "추가 검색·외부 명령·Provider 전환 없이 제공된 자료만 사용하세요.",
+        "narration_voice": {
+          "provider": "supertonic",
+          "voice_id": "supertonic:F1"
+        },
+        "narration_voice_profile": null,
+        "prompt_version": "v2",
+        "role_orders": [
+          [
+            "fact",
+            "meaning",
+            "meaning",
+            "action"
+          ],
+          [
+            "fact",
+            "meaning",
+            "action",
+            "next"
+          ]
+        ],
+        "duration_seconds": 30,
+        "narration_spoken_units_target": {
+          "minimum": 122,
+          "maximum": 132,
+          "unit": "공백·문장부호를 제외한 한글 음절 수. 영문·숫자 묶음은 기존 발화 추정 단위 적용."
+        },
+        "speech_estimate": {
+          "rate": 0,
+          "pause_ms": 250,
+          "scene_count_hint": 4,
+          "sentence_count_hint": 6,
+          "target_seconds_minimum": 27.0,
+          "target_seconds_maximum": 29.1,
+          "estimated_pauses_seconds": 2.6,
+          "basis": "기존 한국어 음성 길이 추정식. 실제 엔진의 WAV 측정이나 품질 검증 결과가 아님."
+        },
+        "audio_fit": "전체 장면 내레이션은 목표 분량에 맞게 작성하고 장면별 음성 시간을 고려하세요. 긴 무음·정지 화면으로 길이를 채우거나 과도한 속도를 요구하지 마세요. 근거가 부족하면 그 한계를 설명하되 사실을 만들어 분량을 채우지 마세요.",
+        "scene_narration_budgets": [
+          {
+            "scene": 1,
+            "seconds": 6,
+            "maximum_sentences": 2,
+            "maximum_spoken_units": 24,
+            "maximum_characters": 36
+          },
+          {
+            "scene": 2,
+            "seconds": 8,
+            "maximum_sentences": 1,
+            "maximum_spoken_units": 37,
+            "maximum_characters": 55
+          },
+          {
+            "scene": 3,
+            "seconds": 8,
+            "maximum_sentences": 1,
+            "maximum_spoken_units": 37,
+            "maximum_characters": 55
+          },
+          {
+            "scene": 4,
+            "seconds": 8,
+            "maximum_sentences": 2,
+            "maximum_spoken_units": 34,
+            "maximum_characters": 51
+          }
+        ],
+        "narration_limits_version": "scene-characters-v1",
+        "narration_characters_maximum": 197,
+        "narration_length_rule": "maximum_characters는 내레이션의 공백·문장부호를 포함한 글자 수 상한입니다. 각 장면의 글자 수·문장 수·발화 단위·총 분량을 모두 지키세요. 중간 의미 장면은 짧은 문장 하나로 서로 다른 핵심만 말하고 해설을 반복하지 마세요. 긴 문장을 쉼표로 이어 붙이지 마세요. 도입·마무리도 같은 예산에 포함합니다. 검토 메모에 분량 준수라고 쓰는 것은 내레이션 검사 통과를 대신하지 않습니다.",
+        "spoken_boundaries": "hook은 첫 장면 내레이션의 맨 앞, closing은 마지막 장면의 맨 끝에 같은 문장으로 각각 한 번 포함하세요. 두 문장도 분량 예산에 포함합니다. 장면별 초와 발화 단위 예산을 사용하고, 초 배정을 바꾸면 같은 추정식으로 예산을 다시 계산하세요. 의미 장면끼리 설명을 반복하지 마세요."
+      },
+      "source_count": 1,
+      "source_links_present": true,
+      "speech_plan": {
+        "scenes": [
+          {
+            "scene": 1,
+            "budget_seconds": 10.0,
+            "estimated_seconds": 8.95,
+            "fits": true
+          },
+          {
+            "scene": 2,
+            "budget_seconds": 10.0,
+            "estimated_seconds": 8.75,
+            "fits": true
+          },
+          {
+            "scene": 3,
+            "budget_seconds": 10.0,
+            "estimated_seconds": 9.75,
+            "fits": true
+          }
+        ],
+        "estimated_total_seconds": 27.45,
+        "duration": 30,
+        "fits": true,
+        "rate": 0,
+        "pause_ms": 250
+      },
+      "notes": [
+        {
+          "code": "voice_planning_unmeasured",
+          "level": "info",
+          "message": "선택 음성의 완료 측정 근거가 없어 공통 추정을 사용합니다. 실제 WAV 길이는 별도로 검사합니다."
+        },
+        {
+          "code": "explainer_roles",
+          "level": "info",
+          "kind": "composition_warning",
+          "message": "해석형 장면 역할·순서가 권장 구성과 다릅니다. 사실·의미·확인할 일을 검토하세요."
+        }
+      ]
+    }
+  ],
+  "options": {
+    "version": 2,
+    "script_review": true,
+    "video_provider": "off",
+    "voice": "supertonic:F1",
+    "external_tts_consent": false,
+    "speech": {
+      "rate": 0,
+      "pause_ms": 250
+    },
+    "font_size": 48,
+    "subtitle_y": 1420
+  }
+}

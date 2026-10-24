@@ -1,0 +1,11 @@
+{
+  "cloud-claude-options.json": "1ca804f565ccad149a37a6dc0d194c0be61381e453196975c7392791c19307c8",
+  "cloud-openai-options.json": "4b69b624a6e5e2c5884629f097beb9d76473401862ec9ab9770f3be3d124c55a",
+  "cloud-summary.json": "4484a7239788db52bd5682a64c2b91c0c83fd649111fa96162271301a2efc0c3",
+  "legacy-five-comparison.json": "d1506d694cce140bd43018ab0702a45b8743a025730b2e2ea6fe3d5a4bc78b14",
+  "legacy-scene-gui-comparison.json": "2b956a7180bf62789e0496c6224228a68afbd30b88f62d2754491cd757546d25",
+  "production-options.png": "0e224e7bbae5b6debd8a617bffe5e7fe5bca9c26f86267058569b40190cc5933",
+  "windows-312-bat.json": "7e4a1d93ccf0dd3623e6170dc9022f0b0912896c08945c345a364fc5ea234c58",
+  "windows-314-bat.json": "46f3cf928d5da4ea9ca8cbdf58112de0cd0c19ff6b469553f19a71c000b55101",
+  "windows-actions.json": "fc8cc516e7d1f7c94fbdd4bd69e7f0e25c2e17bd047966b5f58806b9cd92c35b"
+}

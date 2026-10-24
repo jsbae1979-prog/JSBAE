@@ -25,6 +25,7 @@ from newsflow.db.models import (
     utcnow,
 )
 
+from .categories import valid_category
 from .media import FFprobeMediaInspector, MediaInspector
 
 
@@ -36,9 +37,11 @@ class ConflictError(PublishingError):
     pass
 
 
-PLATFORMS = {"instagram", "youtube"}
+PLATFORMS = {"instagram", "youtube", "tiktok", "facebook"}
 REAL_BLOCKERS = {"account", "permissions", "api_readiness", "instagram_delivery", "official_policy"}
 OFFICIAL_URLS = {
+    "tiktok": "https://developers.tiktok.com/doc/content-sharing-guidelines",
+    "facebook": "https://developers.facebook.com/documentation/video-api/guides/reels-publishing",
     "youtube": "https://developers.google.com/youtube/v3/docs/videos/insert",
     "instagram": "https://developers.facebook.com/docs/instagram-platform/content-publishing/",
 }
@@ -76,6 +79,11 @@ class PublishingService:
         )
 
     def media_path(self, job: RenderJob) -> Path:
+        from newsflow.db.models import WorkspaceRemoval
+
+        with self.sessions() as session:
+            if session.get(WorkspaceRemoval, f"video:{job.id}"):
+                raise PublishingError("휴지 보관한 영상입니다. 복원 후 다시 확인하세요.")
         if (
             job.status != "success"
             or not job.metadata_json.get("playable")
@@ -142,6 +150,8 @@ class PublishingService:
         types = {
             "instagram": {"professional_business", "professional_creator", "personal", "unknown"},
             "youtube": {"youtube_channel", "unknown"},
+            "tiktok": {"tiktok_creator", "unknown"},
+            "facebook": {"facebook_page", "unknown"},
         }
         if (
             platform not in types
@@ -178,8 +188,13 @@ class PublishingService:
         sources_confirmed: bool = False,
         ai_disclosure: str = "unreviewed",
         autopilot_task_id: str | None = None,
+        youtube_category_id: str = "25",
     ) -> int:
         fields = self.input(platform, title, description, hashtags, ai_disclosure)
+        if platform == "youtube":
+            if not valid_category(youtube_category_id):
+                raise PublishingError("YouTube 영상 카테고리를 선택하세요.")
+            fields["youtube_category_id"] = youtube_category_id
         if autopilot_task_id is not None and not re.fullmatch(r"[0-9a-f]{32}", autopilot_task_id):
             raise PublishingError("자동 제작 작업 식별자가 잘못되었습니다.")
         with self.sessions.begin() as session:
@@ -244,8 +259,13 @@ class PublishingService:
         copyright_confirmed: bool = False,
         sources_confirmed: bool = False,
         ai_disclosure: str = "unreviewed",
+        youtube_category_id: str | None = None,
     ) -> None:
         fields = self.input(platform, title, description, hashtags, ai_disclosure)
+        if platform == "youtube" and youtube_category_id is not None:
+            if not valid_category(youtube_category_id):
+                raise PublishingError("YouTube 영상 카테고리를 선택하세요.")
+            fields["youtube_category_id"] = youtube_category_id
         with self.sessions.begin() as session:
             if not session.get(PublishDraft, draft_id):
                 raise PublishingError("게시 초안이 없습니다.")
@@ -317,11 +337,16 @@ class PublishingService:
                 else "fail",
                 "앱 제목 프로파일 1~100자; 꺾쇠/줄바꿈 제외",
             )
+            if draft.platform == "youtube":
+                check("youtube_category", "pass" if valid_category(draft.youtube_category_id) else "fail",
+                      "YouTube 영상 카테고리를 선택하세요. 지역별 최종 지원은 YouTube에서 확인합니다.")
             caption = (
                 draft.title + "\n" + draft.description + "\n" + " ".join("#" + tag for tag in draft.hashtags)
             )
-            limit = 2200 if draft.platform == "instagram" else 5000
+            limit = 2200 if draft.platform in {"instagram", "tiktok"} else 5000
             description_valid = len(caption) <= limit
+            if draft.platform == "tiktok":
+                description_valid = len(caption.encode("utf-16-le")) // 2 <= 2200
             description_reason = (
                 f"제목/설명/태그 합친 앱 준비 예산 {limit}자; Instagram 최신 제한 재확인 필요"
             )

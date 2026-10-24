@@ -1,0 +1,31 @@
+{
+  "changes": {
+    "작업실": "워크스페이스",
+    "만들기": "콘텐츠 스튜디오",
+    "자료 · 보관": "뉴스 리서치",
+    "게시 · 운영": "게시·자동화",
+    "진행 · 검토": "제작 현황",
+    "이미지 게시물": "이미지 피드",
+    "뉴스 자료": "뉴스 큐레이션",
+    "게시 허브": "게시 관리",
+    "예약 제작": "제작 스케줄",
+    "설정": "환경 설정",
+    "보관·통계": "라이브러리·분석",
+    "AI 대본": "대본 라이브러리",
+    "뉴스 영상": "뉴스 영상 보관",
+    "음성 · 샘플": "보이스 라이브러리",
+    "성과 분석": "성과 리포트"
+  },
+  "unchanged": [
+    "URLs and services",
+    "Menu grouping and visibility",
+    "Saved settings and existing jobs",
+    "Required consents and review",
+    "Historical search aliases"
+  ],
+  "windows312_tests": 24,
+  "windows312_warnings": 1,
+  "windows314_tests": 26,
+  "final_search_test": 1,
+  "paid_api_oauth_generation_upload_publication_requests": 0
+}

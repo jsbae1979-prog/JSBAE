@@ -130,7 +130,7 @@ def youtube_media(app, youtube_ui):
 def review_values(client, render_id, account_id, **changes):
     values = {"csrf_token": csrf(client), "render_job_id": render_id, "account_id": account_id,
               "title": "합성 뉴스 검토 영상", "description": "사용자 검토를 위한 합성 영상입니다.",
-              "hashtags": "#합성", "content_reviewed": "true", "copyright_confirmed": "true",
+              "hashtags": "#합성", "youtube_category_id": "25", "content_reviewed": "true", "copyright_confirmed": "true",
               "sources_confirmed": "true", "ai_disclosure": "disclose"}
     values.update(changes)
     return values

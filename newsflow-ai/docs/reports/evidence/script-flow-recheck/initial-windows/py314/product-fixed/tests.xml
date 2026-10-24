@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="64.254" timestamp="2026-10-24T03:28:55.333319+00:00" hostname="runnervmdaln5"><testcase classname="validation_tools.test_fixed_flow" name="test_api_to_render_review_and_existing_publish_services[openai]" time="42.574"><failure message="assert not True&#10; +  where True = is_alive()&#10; +    where is_alive = &lt;Thread(Thread-1 (run), started daemon 2236)&gt;.is_alive">app = &lt;fastapi.applications.FastAPI object at 0x0000021BEE7BA120&gt;
+api_pipeline = (&lt;newsflow.autopilot.service.AutopilotCoordinator object at 0x0000021BEE19BED0&gt;, &lt;newsflow.autopilot.backend.PipelineB...flush=True, expire_on_commit=False), 'openai', &lt;newsflow.news.rss_adapter.FakeRSSAdapter object at 0x0000021BEE541810&gt;)
+browser = &lt;Browser type=&lt;BrowserType name=chromium executable_path=D:\a\_temp\newsflow-final-ui-profile\ms-playwright\chromium-1194\chrome-win\chrome.exe&gt; version=156.0.8078.48&gt;
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000021BEE24BA80&gt;
+tmp_path = WindowsPath('C:/Users/runneradmin/AppData/Local/Temp/pytest-of-runneradmin/pytest-3/test_api_to_render_review_and_0')
+
+    def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, browser, monkeypatch, tmp_path):
+        coordinator, backend, provider, sessions, mode, rss = api_pipeline
+        # The prior fixture appended repeated sentences to reach 27 seconds, but
+        # violated the current spoken hook/closing, synthetic disclosure and sentence
+        # limits. Change only this Fake response, never the product review policy.
+        from flow_script_fixture import valid_script
+        complete = provider.complete
+        def healthy_fake_script(evidence, seconds, options):
+            return valid_script(complete(evidence, seconds, options))
+        monkeypatch.setattr(provider, "complete", healthy_fake_script)
+        # The original factories/engines stay intact; only test dependencies are injected.
+        monkeypatch.setattr(app.state, "autopilot", coordinator)
+        monkeypatch.setattr(app.state, "autopilot_backend", backend)
+        monkeypatch.setattr(app.state, "api_keys", {mode: FixtureKey(),
+            ("claude_api" if mode == "openai" else "openai"): FixtureKey()})
+        if mode == "openai":
+            monkeypatch.setattr(app.state, "ai_keys", FixtureKey())
+        write_studio_settings(sessions, mode, "gpt-4.1-mini" if mode == "openai" else "claude-sonnet-4-6")
+        save_values(app, video_default_voice="supertonic:F1", autopilot_source="feeds",
+                    autopilot_acquisition_policy="ai_web", autopilot_duration="30")
+        tts = SyntheticTTS()
+        monkeypatch.setattr(app.state.video, "tts", tts)
+        monkeypatch.setattr(production_status, "voice_choice_catalog", lambda: [{
+            "name": "supertonic:F1", "label": "합성 측정 음성 · 사람 음성 아님", "engine": "supertonic", "available": True}])
+        monkeypatch.setitem(templates.env.globals, "ui_demo", True)
+        def forbidden(*_args, **_kwargs):
+            raise AssertionError("No external API/OAuth/SNS/CLI authentication allowed")
+        monkeypatch.setattr(urllib.request.OpenerDirector, "open", forbidden)
+        # Ignore no assertions: a fallback to a real network adapter fails immediately.
+        yt_connections, ig_connections = YouTubeConnections(), InstagramConnections()
+        yt_adapter, ig_adapter = YouTubeAdapter(), InstagramAdapter()
+        inspector = FFprobeMediaInspector()
+        youtube = LivePublishingService(sessions, app.state.video.outputs, yt_connections, inspector, lambda: yt_adapter)
+        instagram = InstagramPublishingService(sessions, app.state.video.outputs, ig_connections, inspector, lambda: ig_adapter)
+        unified = UnifiedPublishingService(sessions, app.state.video.outputs, youtube, instagram, inspector)
+        accounts = {"youtube": unified.local.add_account("youtube", "합성 YouTube · 실계정 아님", "youtube_channel"),
+                    "instagram": unified.local.add_account("instagram", "합성 Instagram · 실계정 아님", "professional_business")}
+        monkeypatch.setattr(yt_connections, "status", lambda: {"client_configured": True, "storage_supported": True,
+            "pending": False, "accounts": [{"id": accounts["youtube"], "label": "합성 YouTube · 실계정 아님", "ready": True}]}, raising=False)
+        monkeypatch.setattr(ig_connections, "status", lambda: {"configured": True, "connection_supported": True,
+            "accounts": [{"id": accounts["instagram"], "label": "합성 Instagram · 실계정 아님", "ready": True}]}, raising=False)
+        monkeypatch.setattr(app.state, "youtube", yt_connections)
+        monkeypatch.setattr(app.state, "instagram", ig_connections)
+        monkeypatch.setattr(app.state, "unified_publishing", unified)
+        output = Path(os.environ.get("NEWSFLOW_VALIDATION_OUTPUT", str(tmp_path / "evidence"))) / mode
+        output.mkdir(parents=True, exist_ok=True)
+        errors, external = [], []
+&gt;       with local_server(app) as origin:
+             ^^^^^^^^^^^^^^^^^
+
+validation_tools\test_fixed_flow.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\hostedtoolcache\windows\Python\3.14.9\x64\Lib\contextlib.py:148: in __exit__
+    next(self.gen)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+app = &lt;fastapi.applications.FastAPI object at 0x0000021BEE7BA120&gt;
+
+    @contextmanager
+    def local_server(app):
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            config = uvicorn.Config(app, log_level="error", access_log=False, lifespan="off")
+            server = uvicorn.Server(config)
+            thread = Thread(target=server.run, kwargs={"sockets": [sock]}, daemon=True)
+            thread.start()
+            try:
+                deadline = time.monotonic() + 15
+                while not server.started:
+                    assert thread.is_alive() and time.monotonic() &lt; deadline
+                    time.sleep(.02)
+                yield f"http://127.0.0.1:{sock.getsockname()[1]}"
+            finally:
+                server.should_exit = True
+                thread.join(timeout=15)
+&gt;               assert not thread.is_alive()
+E               assert not True
+E                +  where True = is_alive()
+E                +    where is_alive = &lt;Thread(Thread-1 (run), started daemon 2236)&gt;.is_alive
+
+validation_tools\test_fixed_flow.py:81: AssertionError</failure></testcase><testcase classname="validation_tools.test_fixed_flow" name="test_api_to_render_review_and_existing_publish_services[claude_api]" time="20.775" /></testsuite></testsuites>

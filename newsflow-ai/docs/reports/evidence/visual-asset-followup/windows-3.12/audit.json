@@ -1,0 +1,58 @@
+{
+  "screens": [
+    {
+      "page": "home",
+      "viewport": "1366x768",
+      "horizontal_overflow": 0
+    },
+    {
+      "page": "news",
+      "viewport": "1366x768",
+      "horizontal_overflow": 0
+    },
+    {
+      "page": "ai-video",
+      "viewport": "1366x768",
+      "horizontal_overflow": 0
+    },
+    {
+      "page": "home",
+      "viewport": "1920x1080",
+      "horizontal_overflow": 0
+    },
+    {
+      "page": "news",
+      "viewport": "1920x1080",
+      "horizontal_overflow": 0
+    },
+    {
+      "page": "ai-video",
+      "viewport": "1920x1080",
+      "horizontal_overflow": 0
+    },
+    {
+      "page": "home",
+      "viewport": "390x844",
+      "horizontal_overflow": 0
+    },
+    {
+      "page": "news",
+      "viewport": "390x844",
+      "horizontal_overflow": 0
+    },
+    {
+      "page": "ai-video",
+      "viewport": "390x844",
+      "horizontal_overflow": 0
+    }
+  ],
+  "external_or_post": [],
+  "js_errors": [],
+  "news_preserved": true,
+  "new_ai_plans": 0,
+  "synthetic_image_fetches": [
+    "https://img.example.com/failed.png",
+    "https://img.example.com/source.png"
+  ],
+  "real_external_calls": 0
+}

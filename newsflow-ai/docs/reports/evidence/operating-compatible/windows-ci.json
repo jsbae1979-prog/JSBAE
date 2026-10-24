@@ -1,0 +1,32 @@
+{
+  "sha": "7d6224f6f223e6daee4470e3f361cc19ff7d4d26",
+  "run_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39886504223",
+  "scope": "tools/operating_compatibility_targets.txt; changed integration and operating preservation only",
+  "full_regression": false,
+  "windows": [
+    {
+      "python": "3.12.10",
+      "job_id": 120195800517,
+      "passed": 443,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS",
+      "seconds": 548.22
+    },
+    {
+      "python": "3.14.8",
+      "job_id": 120195800734,
+      "passed": 443,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS",
+      "seconds": 350.22
+    }
+  ],
+  "real_paid_api_oauth_upload_publish": 0,
+  "operating_data_in_ci": false
+}

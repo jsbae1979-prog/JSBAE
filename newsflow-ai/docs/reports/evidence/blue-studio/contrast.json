@@ -1,0 +1,33 @@
+{
+  "code_sha": "8e53983e9706bd02276bc599d73d6c0c32e59fb0",
+  "platform": "Linux Chromium; not Windows scaling",
+  "viewport": "1366x768",
+  "computed_styles": {
+    "primary": {
+      "color": "rgb(255, 255, 255)",
+      "bg": "rgb(36, 99, 235)",
+      "border": "rgb(75, 139, 255)"
+    },
+    "field": {
+      "color": "rgb(238, 244, 255)",
+      "bg": "rgb(12, 23, 40)",
+      "border": "rgb(88, 116, 154)"
+    },
+    "panel": {
+      "color": "rgb(238, 244, 255)",
+      "bg": "rgb(17, 29, 46)",
+      "border": "rgb(43, 67, 100)"
+    },
+    "hover": {
+      "color": "rgb(255, 255, 255)",
+      "bg": "rgb(41, 105, 236)"
+    }
+  },
+  "contrast": {
+    "primary": 5.17,
+    "primary_hover": 4.85,
+    "field_text": 16.27,
+    "field_border_vs_panel": 3.53
+  },
+  "scope": "Sampled controls, not full WCAG certification"
+}

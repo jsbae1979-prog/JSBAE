@@ -412,7 +412,7 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
     assert estimate == {
         "scenes": [{"position": 2, "seconds": 5, "model": MODEL, "cost": "0.5", "usable": True}], "total": "0.5", "currency": "USD",
         "plan_spent": "0", "job_limit": "5", "monthly_limit": "20", "month_spent": "0", "remaining": "20",
-        "problems": [], "notices": [], "can_submit": True, "other_currency_spend": False, "compose_closed": False,
+        "problems": [], "notices": [], "can_submit": True, "other_currency_spend": False, "compose_closed": False, "accounting": "legacy_estimate",
     }
     assert estimate["scenes"][0]["usable"] is True
     assert service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True) == 1

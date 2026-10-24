@@ -1,0 +1,15 @@
+{
+  "implementation_sha": "275e2e1a204036a94683e82a37e9c9baa66f89a1",
+  "run_id": 39924785289,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39924785289",
+  "scope": "Changed narration planning, existing voice/cache/approval/GUI boundaries only",
+  "actual_AI_TTS_OAuth_upload_publish_calls": 0,
+  "operating_restart": false,
+  "actual_Sola_30_second_quality": "NOT VERIFIED",
+  "jobs": [
+    {"job_id": 120318393278, "python": "3.12.10", "passed": 461, "warnings": 1, "failed": 0, "skipped": 0, "ruff": "PASS", "pip_check": "PASS"},
+    {"job_id": 120318393087, "python": "3.14.8", "passed": 461, "warnings": 1, "failed": 0, "skipped": 0, "ruff": "PASS", "pip_check": "PASS"}
+  ],
+  "local_windows_python": {"version": "3.14.7", "passed": 461, "ruff": "PASS", "pip_check": "PASS"},
+  "legacy_full_regression_57_fail_history": "PRESERVED; full regression not repeated"
+}

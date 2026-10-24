@@ -1,0 +1,17 @@
+{
+  "base_sha": "590ffd447eebf76b9429c22a3354dbfa239dec16",
+  "tested_code_sha": "dbd4ba446c3f13705ac207a37cddbdd5339e6baa",
+  "unchanged": {
+    "src/newsflow/db": true,
+    "src/newsflow/intelligence": true,
+    "src/newsflow/video": true,
+    "src/newsflow/oauth": true,
+    "src/newsflow/publishing": true,
+    "src/newsflow/autopilot": true,
+    "src/newsflow/news": true,
+    "run.bat": true,
+    "pyproject.toml": true
+  },
+  "operational_data": "not opened; preview new TEMP only",
+  "scope": "new production feature/backend contract changes: none in final validation"
+}

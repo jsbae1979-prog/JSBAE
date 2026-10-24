@@ -1,0 +1,26 @@
+[
+  {
+    "method": "POST",
+    "path": "/youtube/connect",
+    "status": 403,
+    "external_action": "BLOCKED by demo boundary"
+  },
+  {
+    "method": "POST",
+    "path": "/instagram/connect",
+    "status": 403,
+    "external_action": "BLOCKED by demo boundary"
+  },
+  {
+    "method": "POST",
+    "path": "/publishing/unified/1/execute",
+    "status": 403,
+    "external_action": "BLOCKED by demo boundary"
+  },
+  {
+    "method": "POST",
+    "path": "/api-settings/openai/check-search",
+    "status": 403,
+    "external_action": "BLOCKED by demo boundary"
+  }
+]

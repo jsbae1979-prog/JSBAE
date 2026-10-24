@@ -110,3 +110,53 @@ def test_missing_entry_and_response_limit(rss):
 def test_timezone_missing_not_guessed(rss):
     articles = parse_feed(rss.replace(b"Tue, 13 Oct 2026 08:00:00 GMT", b"Tue, 13 Oct 2026 08:00:00"), "test")
     assert articles[0].published_at is None
+
+
+def dated_rss_item(date_xml: str, *, namespace: str = "http://purl.org/dc/elements/1.1/") -> bytes:
+    return (
+        f'<rss version="2.0" xmlns:dc="{namespace}"><channel><title>Test feed</title>'
+        '<item><title>Test article</title><link>https://example.com/news/1</link>'
+        f"{date_xml}</item></channel></rss>"
+    ).encode()
+
+
+def test_explicit_rss_dc_date_not_lost_as_updated():
+    # Exact date format observed in Khan's 2026-10-20 RSS response.
+    payload = dated_rss_item("<dc:date>2026-10-20T13:31:00+09:00</dc:date>")
+    assert parse_feed(payload, "test")[0].published_at == datetime(2026, 10, 20, 4, 31, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    "date_xml",
+    [
+        "<dc:date>invalid</dc:date>",
+        "<dc:date>2026-10-20T13:31:00</dc:date>",
+        "<dc:date>2026-10-20</dc:date>",
+        "<dc:date></dc:date>",
+        "<updated>2026-10-20T13:31:00+09:00</updated>",
+    ],
+)
+def test_rss_date_missing_invalid_or_only_updated_not_guessed(date_xml):
+    assert parse_feed(dated_rss_item(date_xml), "test")[0].published_at is None
+
+
+def test_rss_published_date_takes_precedence_over_dc_date():
+    payload = dated_rss_item(
+        "<pubDate>Tue, 20 Oct 2026 03:00:00 GMT</pubDate>"
+        "<dc:date>2026-10-20T13:31:00+09:00</dc:date>"
+    )
+    assert parse_feed(payload, "test")[0].published_at == datetime(2026, 10, 20, 3, tzinfo=UTC)
+
+
+def test_unrelated_date_namespace_not_treated_as_publication():
+    payload = dated_rss_item(
+        "<dc:date>2026-10-20T13:31:00+09:00</dc:date>", namespace="https://example.com/unrelated"
+    )
+    assert parse_feed(payload, "test")[0].published_at is None
+
+
+def test_rss_channel_date_not_assigned_to_articles():
+    payload = dated_rss_item("").replace(
+        b"<item>", b"<dc:date>2026-10-20T13:31:00+09:00</dc:date><item>"
+    )
+    assert parse_feed(payload, "test")[0].published_at is None

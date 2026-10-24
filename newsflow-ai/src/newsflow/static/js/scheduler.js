@@ -1,6 +1,14 @@
 // Read-only status refresh. Never dispatch or retry work from the browser timer.
 (() => {
   if (!document.querySelector('.schedule-page')) return;
+  const kind = document.querySelector('.schedule-editor [name="kind"]');
+  function showRelevantFields() {
+    document.querySelectorAll('[data-schedule-kind]').forEach(section => {
+      section.hidden = section.dataset.scheduleKind !== kind?.value;
+    });
+  }
+  kind?.addEventListener('change', showRelevantFields);
+  showRelevantFields();
   let busy = false;
   window.setInterval(async () => {
     if (busy || document.hidden || document.activeElement?.closest('form,details')) return;

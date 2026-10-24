@@ -12,7 +12,14 @@ import pytest
 from pydantic import SecretStr
 from sqlalchemy import select
 
-from newsflow.db.models import Base, OAuthConnection, OAuthLifecycleOperation, PlatformAccount, utcnow
+from newsflow.db.models import (
+    AuditLog,
+    Base,
+    OAuthConnection,
+    OAuthLifecycleOperation,
+    PlatformAccount,
+    utcnow,
+)
 from newsflow.db.session import make_engine, session_factory
 from newsflow.intelligence.credentials import FakeCipher
 from newsflow.oauth.activation import require_production_activation, youtube_operation
@@ -207,6 +214,138 @@ def test_failed_exchange_never_retries_and_sanitizes(service):
     assert service.tokens.calls == [("token", "authorization_code")]
     assert service.identity.calls == 0
     assert "DO_NOT_EXPOSE" not in str(service.status())
+
+
+@pytest.mark.parametrize("code,reason,stored_code,status", [
+    ("callback_invalid", "unknown_field", "callback_unknown_field", "error"),
+    ("callback_invalid", "duplicate_field", "callback_duplicate_field", "error"),
+    ("callback_invalid", "empty_field", "callback_empty_field", "error"),
+    ("provider_error", "provider_error", "callback_provider_error", "error"),
+    ("cancelled", "provider_denied", "cancelled", "cancelled"),
+])
+def test_callback_failure_reason_persists_without_exchange_retry_or_secret_disclosure(
+    service, code, reason, stored_code, status, capfd,
+):
+    failure = CallbackError(code, reason=reason)
+    failure.args = ("DO_NOT_EXPOSE_google_code_state_client_secret",)
+
+    class Rejected(FakeListener):
+        def wait(self):
+            raise failure
+
+    service.listener_factory = Rejected
+    service.save_client(CLIENT)
+    saved_client = service.client_store.path.read_bytes()
+    with service.sessions.begin() as session:
+        session.add(AuditLog(level="info", event="prior_record", message="preserved"))
+    account_id = service.begin(consent=True)
+    service._workers[account_id].join(5)
+    assert not service._workers[account_id].is_alive()
+    result = service.accounts()[0]
+    assert (result["status"], result["error_code"], result["ready"]) == (status, stored_code, False)
+    assert result["channel_id"] is None
+    assert service.recover() == 0
+    assert service.client_store.path.read_bytes() == saved_client
+    assert service.tokens.calls == [] and service.identity.calls == 0 and service.vault.data == {}
+    with service.sessions() as session:
+        assert session.scalar(select(AuditLog.message).where(AuditLog.event == "prior_record")) == "preserved"
+        audit = session.scalar(select(AuditLog.message).where(AuditLog.event == "youtube_callback_rejected"))
+        operation = session.scalar(select(OAuthLifecycleOperation))
+        assert json.loads(audit) == {
+            "account_id": account_id, "stage": "callback", "outcome": stored_code,
+            "operation_id": operation.id, "revision": operation.expected_revision,
+            "reason": reason, "last_rejected_request": None,
+            "observation": {},
+        }
+        assert session.scalar(select(OAuthLifecycleOperation.status)) == f"youtube_{status}"
+    assert "DO_NOT_EXPOSE" not in str(service.status()) + audit
+    assert capfd.readouterr() == ("", "")
+
+
+@pytest.mark.parametrize("observed", ["origin", "DO_NOT_EXPOSE_state_token"])
+def test_callback_expiry_records_observation_separately_and_only_if_allowlisted(service, observed):
+    class Expired(FakeListener):
+        def wait(self):
+            failure = CallbackError("expired")
+            failure.last_rejection = observed
+            raise failure
+
+    service.listener_factory = Expired
+    account_id = connect(service)
+    assert service.accounts()[0]["error_code"] == "callback_expired"
+    assert "로컬 인증 응답" in service.accounts()[0]["message"]
+    assert "Google 인증이 만료" not in service.accounts()[0]["message"]
+    with service.sessions() as session:
+        audit = session.scalar(select(AuditLog.message).where(AuditLog.event == "youtube_callback_rejected"))
+        operation = session.scalar(select(OAuthLifecycleOperation))
+    assert json.loads(audit) == {
+        "account_id": account_id, "stage": "callback", "outcome": "callback_expired", "reason": None,
+        "operation_id": operation.id, "revision": operation.expected_revision, "observation": {},
+        "last_rejected_request": "origin" if observed == "origin" else None,
+    }
+    assert "DO_NOT_EXPOSE" not in audit + str(service.status())
+    assert service.tokens.calls == [] and service.identity.calls == 0
+
+
+def test_callback_wait_observations_persist_with_no_exchange_retry_or_data_changes(service, capfd):
+    from newsflow.oauth.callback import SyntheticLoopbackCallback
+
+    class NoResponse(FakeListener):
+        def wait(self):
+            with SyntheticLoopbackCallback() as listener:
+                listener.start(self.key, ttl_seconds=0.02)
+                return listener.wait(1)
+
+    service.listener_factory = NoResponse
+    service.save_client(CLIENT)
+    saved_client = service.client_store.path.read_bytes()
+    account_id = service.begin(consent=True)
+    service._workers[account_id].join(5)
+    assert not service._workers[account_id].is_alive()
+    with service.sessions() as session:
+        audit = json.loads(session.scalar(select(AuditLog.message).where(
+            AuditLog.event == "youtube_callback_rejected")))
+    assert audit["outcome"] == "callback_expired"
+    assert audit["revision"] == 1 and audit["operation_id"]
+    assert audit["observation"]["tcp_connections"] == 0
+    assert audit["observation"]["http_requests"] == 0
+    assert audit["observation"]["accepted_callbacks"] == 0
+    assert audit["observation"]["rejected_requests"] == 0
+    assert audit["observation"]["listener_running"] is True
+    assert 0 <= audit["observation"]["elapsed_ms"] < 5000
+    assert service.recover() == 0
+    for _ in range(2):
+        assert service.status()["accounts"][0]["error_code"] == "callback_expired"
+    assert len(service.browser.calls) == 1
+    assert service.tokens.calls == [] and service.identity.calls == 0 and service.vault.data == {}
+    assert service.client_store.path.read_bytes() == saved_client
+    assert capfd.readouterr() == ("", "")
+
+
+def test_callback_observation_persistence_drops_injected_sensitive_values(service, capfd):
+    class Poisoned(FakeListener):
+        def wait(self):
+            failure = CallbackError("expired")
+            failure.args = ("DO_NOT_EXPOSE_secret",)
+            failure.observation = {
+                "tcp_connections": 1, "http_requests": "DO_NOT_EXPOSE_secret",
+                "read_failures": True, "accepted_callbacks": -1, "rejected_requests": 10**20,
+                "elapsed_ms": 300000, "listener_running": "DO_NOT_EXPOSE_secret",
+                "deadline_reached": True, "url": "DO_NOT_EXPOSE_secret",
+                "headers": {"code": "DO_NOT_EXPOSE_secret"},
+            }
+            raise failure
+
+    service.listener_factory = Poisoned
+    connect(service)
+    with service.sessions() as session:
+        raw = session.scalar(select(AuditLog.message).where(AuditLog.event == "youtube_callback_rejected"))
+    assert json.loads(raw)["observation"] == {
+        "tcp_connections": 1, "elapsed_ms": 300000, "deadline_reached": True,
+    }
+    assert "DO_NOT_EXPOSE" not in raw + str(service.status())
+    assert service.tokens.calls == [] and service.identity.calls == 0
+    assert capfd.readouterr() == ("", "")
 
 
 def test_cancel_before_callback_and_duplicate_begin(service):

@@ -1,0 +1,19 @@
+{
+  "baseline_sha": "3c5230942466a87e5bc191961538e9bbccddc90b",
+  "tested_sha": "d86357542e8f141b77989109b6147b5b21251fe2",
+  "method": "same absolute venv, dependencies, exact selected IDs/command; only hexadecimal object addresses normalized",
+  "rows": [
+    {
+      "id": "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage",
+      "baseline": "assert ('id=\"start-ai-estimate\"' in '<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initi...이를 고르는 화면을 하나로 모았습니다.</p><a class=\"button primary\" href=\"/\">홈에서 제작 시작</a></section>\\n\\n</div>\\n</main>\\n</body></html>')",
+      "current": "assert ('id=\"start-ai-estimate\"' in '<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initi...이를 고르는 화면을 하나로 모았습니다.</p><a class=\"button primary\" href=\"/\">홈에서 제작 시작</a></section>\\n\\n</div>\\n</main>\\n</body></html>')",
+      "same_normalized_assertion": true
+    },
+    {
+      "id": "tests.test_ai_estimate::test_retried_failed_script_tokens_stay_in_the_job_total",
+      "baseline": "AttributeError: 'NoneType' object has no attribute 'result'",
+      "current": "AttributeError: 'NoneType' object has no attribute 'result'",
+      "same_normalized_assertion": true
+    }
+  ]
+}

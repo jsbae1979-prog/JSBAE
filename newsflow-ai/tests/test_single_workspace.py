@@ -93,13 +93,13 @@ def start_workspace(client, app):
     return identifier, app.state.autopilot.snapshot(identifier)
 
 
-def test_workspace_has_two_destinations_one_start_and_no_eager_player(client):
+def test_workspace_has_creator_destinations_one_start_and_no_eager_player(client):
     response = client.get("/")
     assert response.status_code == 200
     html = response.text
     navigation = re.search(r'<nav[^>]*aria-label="주 메뉴"[^>]*>(.*?)</nav>', html, re.DOTALL).group(1)
-    assert re.findall(r'href="([^"]+)"', navigation) == ["/", "/simple-settings"]
-    assert "작업실" in navigation and "설정" in navigation
+    assert re.findall(r'href="([^"]+)"', navigation) == ["/", "/news", "/ai", "/videos", "/queue", "/analytics", "/simple-settings"]
+    assert all(label in navigation for label in ("대시보드", "뉴스 수집", "AI 대본", "영상 제작", "게시 허브", "성과 분석", "설정"))
     assert not re.search(r'<aside[^>]*class="[^"]*\bsidebar\b', html)
     assert html.count('action="/autopilot/quick-start"') == 1
     for marker in ("data-workspace-create", "data-workspace-tasks", "data-workspace-videos"):
@@ -126,7 +126,8 @@ def test_workspace_limits_cards_and_manual_completed_render_is_not_a_second_task
     assert len(client.get("/?show=videos").context["workspace_videos"]) == 7
     assert "대본 검토 fixture 0" not in response.text
     assert "완성 영상 fixture 0" not in response.text
-    assert '<video ' not in response.text  # cards load thumbnails, not every MP4
+    assert response.text.count('<video ') == 1  # One explicit player; never eagerly load every MP4.
+    assert 'preload="none"' in response.text and 'autoplay' not in response.text
 
 
 def test_selected_video_uses_existing_guarded_player_and_download(client, app):

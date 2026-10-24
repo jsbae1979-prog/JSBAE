@@ -36,7 +36,7 @@ def test_api_draft_is_editable_without_local_string_match_and_keeps_review(clien
     page = client.get(f"/ai?draft_id={identifier}")
     assert page.status_code == 200 and page.context["api_editor"]
     assert not page.context["topic_editor"] and page.context["topic_options"] == []
-    assert "선택한 API가 작성한 미확인 초안" in page.text
+    assert "AI 초안" in page.text and "원문·출처 검토 필요" in page.text
     assert "주제 설명 템플릿 · 추가 AI 호출 없음" not in page.text
     assert 'action="/ai/analyze"' not in page.text
     for field in ("title", "hook", "narration", "caption", "material"):

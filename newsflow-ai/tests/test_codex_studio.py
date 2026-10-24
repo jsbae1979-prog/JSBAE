@@ -8,6 +8,7 @@ from sqlalchemy import select
 from newsflow.config import Settings
 from newsflow.db.models import AIUsage, CollectionRun, ContentDraft, IntelligenceRun, NewsArticle, NewsSource
 from newsflow.intelligence import claude_code, codex
+from newsflow.intelligence.presentation import presentation
 from newsflow.intelligence.provider import FakeProvider, OpenAIProvider, Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import (
@@ -172,7 +173,8 @@ def test_codex_rss_analysis_script_and_video_flow(client, app, fake, monkeypatch
         draft_id = int(response.url.params["draft_id"])
         with app.state.sessions() as session:
             draft = session.get(ContentDraft, draft_id)
-            assert draft.duration == duration and draft.sources == evidence
+            assert draft.duration == duration
+            assert draft.sources == {**evidence, "presentation": presentation()}
             assert draft.review_status == "review_required"
             assert sum(scene["seconds"] for scene in draft.content["scenes"]) == duration
             assert session.get(IntelligenceRun, draft.run_id).provider == "codex"

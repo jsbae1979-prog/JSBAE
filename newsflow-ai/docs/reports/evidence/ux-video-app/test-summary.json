@@ -1,0 +1,20 @@
+{
+  "full": {
+    "tests": 3579,
+    "failures": 57,
+    "errors": 0,
+    "skipped": 20,
+    "passed": 3502
+  },
+  "ui": {
+    "tests": 109,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 109
+  },
+  "ruff": "PASS",
+  "browser": "PASS; 24 viewport combinations, 9 scenarios, 8 CSS zoom checks, separate empty fixtures, 7 contrast samples",
+  "windows_native": "NOT VERIFIED",
+  "actual_paid_ai_oauth_sns": 0
+}

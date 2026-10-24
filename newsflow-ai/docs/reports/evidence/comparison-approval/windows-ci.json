@@ -1,0 +1,34 @@
+{
+  "implementation_sha": "512c61689d9d7a71ac08fe02c22bbe31cf2514b1",
+  "workflow_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39894569540",
+  "jobs": [
+    {
+      "job_id": 120221893777,
+      "python": "3.12.10",
+      "passed": 208,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS"
+    },
+    {
+      "job_id": 120221894038,
+      "python": "3.14.9",
+      "passed": 208,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS"
+    }
+  ],
+  "target_manifest": "tools/comparison_approval_targets.txt",
+  "new_scope_tests": 35,
+  "actual_paid_api_calls": 0,
+  "actual_authentication_get_calls": 0,
+  "oauth_tts_render_publish_calls": 0,
+  "operating_app_data_keys_settings": "UNTOUCHED",
+  "real_account_and_script_quality": "NOT VERIFIED",
+  "full_regression": "NOT RUN; earlier 57 FAIL records preserved"
+}

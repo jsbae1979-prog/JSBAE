@@ -8,6 +8,17 @@ const acquisitionLabel = document.querySelector("[data-home-acquisition]");
 const policyWarning = document.querySelector("[data-home-policy-warning]");
 const policyStatesNode = document.querySelector("[data-home-policy-states]");
 const policyStates = policyStatesNode ? JSON.parse(policyStatesNode.dataset.homePolicyStates) : {};
+// Closed options still submit their existing values; this summary never writes settings.
+const optionSummary = document.querySelector('[data-production-options-summary]');
+function refreshOptionsSummary() {
+  if (!optionSummary) return;
+  optionSummary.textContent = ['source','category','period','news_usage'].map(name => {
+    const field = document.querySelector(`#quick-production select[name="${name}"]`);
+    return field?.selectedOptions[0]?.textContent?.trim();
+  }).filter(Boolean).join(' · ');
+}
+document.querySelectorAll('#quick-production select').forEach(field => field.addEventListener('change', refreshOptionsSummary));
+refreshOptionsSummary();
 function refreshPolicyReadiness() {
   const state = acquisitionChoice && policyStates[acquisitionChoice.value];
   if (!state) return;
@@ -45,4 +56,18 @@ if (newsChoice && actualAi && trialNotice) {
     refreshPolicyWarning();
     refreshPolicyReadiness();
   });
+}
+
+// A selection only reveals the existing approval requirements; it grants no consent.
+for (const [id, target, external] of [
+  ["quick-voice-method", "[data-external-voice-note]", "elevenlabs"],
+  ["quick-video-method", "[data-external-video-note]", "higgsfield"]
+]) {
+  const select = document.getElementById(id);
+  const note = document.querySelector(target);
+  if (select && note) {
+    const update = () => { note.hidden = select.value !== external; };
+    select.addEventListener("change", update);
+    update();
+  }
 }

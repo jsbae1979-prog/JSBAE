@@ -1,0 +1,712 @@
+{
+  "baseline_sha": "4b4e9c232f8b66ead8966e72556f283f39cb1fa0",
+  "tested_sha": "cc7b3190c9acd8a3bacbfbfbb0ce4bac004de1a9",
+  "historical_cases": 57,
+  "historical_cases_mapped_to": 59,
+  "unmapped": 0,
+  "resolved_historical_cases": 57,
+  "full_suite": {
+    "PASS": 3827,
+    "SKIP": 10
+  },
+  "categories": {
+    "test_contract": 16,
+    "no_replay_policy": 4,
+    "product_routing": 19,
+    "product_consent_and_test_contract": 6,
+    "fixture_isolation": 1,
+    "product_routing_and_consent": 9,
+    "fixture_gate": 2
+  },
+  "rows": [
+    {
+      "historical_test_id": "tests.test_ai_estimate::test_gui_prices_form_and_estimate_text",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_estimate::test_gui_prices_form_and_estimate_text"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "canonical Studio 기본값과 이미 생성된 분석의 실제 Provider/model을 구분; 단가 기록 보존."
+    },
+    {
+      "historical_test_id": "tests.test_ai_estimate::test_retried_failed_script_tokens_stay_in_the_job_total",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_estimate::test_retried_failed_script_tokens_stay_in_the_job_total[openai]",
+        "tests.test_ai_estimate::test_retried_failed_script_tokens_stay_in_the_job_total[claude_api]"
+      ],
+      "final_results": [
+        "PASS",
+        "PASS"
+      ],
+      "category": "no_replay_policy",
+      "reason": "기존 재시도 허용 기대를 승인된 재전송 금지 정책으로 교체. 실패 사용량·오류 코드·차단을 검사."
+    },
+    {
+      "historical_test_id": "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage[openai]",
+        "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage[claude_api]"
+      ],
+      "final_results": [
+        "PASS",
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "폐기된 시작화면 예상치 대신 Fake 두 API의 실제 반환 사용량 400토큰/2회를 검증; 자동 재요청 없음."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_cancel_is_delivered_to_only_operation_owned_provider",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_cancel_is_delivered_to_only_operation_owned_provider"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_category_and_unknown_old_future_dates_are_not_current_news",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_category_and_unknown_old_future_dates_are_not_current_news"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error0-analysis]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error0-analysis]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error0-script]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error0-script]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error1-analysis]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error1-analysis]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error1-script]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error1-script]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error2-analysis]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error2-analysis]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error2-script]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error2-script]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_idempotency_refuses_changed_policy_or_model",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_idempotency_refuses_changed_policy_or_model"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_offline_keeps_local_flow_and_explicit_policy",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_offline_keeps_local_flow_and_explicit_policy"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_restart_distinguishes_success_failure_and_unknown_without_replay[failed-ai_request_stopped-False]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_restart_distinguishes_success_failure_and_unknown_without_replay[failed-ai_request_stopped-False]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_restart_distinguishes_success_failure_and_unknown_without_replay[running-outcome_unknown-False]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_restart_distinguishes_success_failure_and_unknown_without_replay[running-outcome_unknown-False]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_restart_distinguishes_success_failure_and_unknown_without_replay[success-interrupted-True]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_restart_distinguishes_success_failure_and_unknown_without_replay[success-interrupted-True]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_resume_after_script_review_carries_voice_without_new_ai",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_resume_after_script_review_carries_voice_without_new_ai"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[30-claude_code]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[30-claude_code]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[30-codex]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[30-codex]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[45-claude_code]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[45-claude_code]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[45-codex]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[45-codex]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[60-claude_code]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[60-claude_code]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[60-codex]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[60-codex]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing",
+      "reason": "명시적으로 승인한 신규 CLI 작업이 로컬 대본으로 바뀌던 분기 수정. 기존 assertion 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_gui::test_home_policy_change_has_matching_readiness_and_notice_without_execution",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_gui::test_home_policy_change_has_matching_readiness_and_notice_without_execution"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[30-claude_code-sonnet]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[30-claude_code-sonnet]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_consent_and_test_contract",
+      "reason": "CLI 실행 동의 안내 복구 + 이미 도입된 STANDARD 작업 설정의 전달까지 검사."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[30-codex-default]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[30-codex-default]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_consent_and_test_contract",
+      "reason": "CLI 실행 동의 안내 복구 + 이미 도입된 STANDARD 작업 설정의 전달까지 검사."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[45-claude_code-sonnet]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[45-claude_code-sonnet]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_consent_and_test_contract",
+      "reason": "CLI 실행 동의 안내 복구 + 이미 도입된 STANDARD 작업 설정의 전달까지 검사."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[45-codex-default]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[45-codex-default]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_consent_and_test_contract",
+      "reason": "CLI 실행 동의 안내 복구 + 이미 도입된 STANDARD 작업 설정의 전달까지 검사."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[60-claude_code-sonnet]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[60-claude_code-sonnet]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_consent_and_test_contract",
+      "reason": "CLI 실행 동의 안내 복구 + 이미 도입된 STANDARD 작업 설정의 전달까지 검사."
+    },
+    {
+      "historical_test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[60-codex-default]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[60-codex-default]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_consent_and_test_contract",
+      "reason": "CLI 실행 동의 안내 복구 + 이미 도입된 STANDARD 작업 설정의 전달까지 검사."
+    },
+    {
+      "historical_test_id": "tests.test_ai_video_gui::test_key_form_stores_through_dpapi_store_and_never_renders_the_key",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_video_gui::test_key_form_stores_through_dpapi_store_and_never_renders_the_key"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "fixture_isolation",
+      "reason": "Linux stdlib까지 변경하던 sys.platform mock을 자격정보 모듈에 격리. FakeCipher이며 실제 DPAPI 검증 아님."
+    },
+    {
+      "historical_test_id": "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_autopilot_state::test_easy_synthetic_stages_are_durable_and_ordered",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_autopilot_state::test_easy_synthetic_stages_are_durable_and_ordered"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_codex_adapter::test_structured_rss_request_preserves_input_and_has_no_implicit_tools[analyze]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_codex_adapter::test_structured_rss_request_preserves_input_and_has_no_implicit_tools[analyze]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_easy_setup::test_wizard_is_optional_and_all_core_menus_remain",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_easy_setup::test_wizard_is_optional_and_all_core_menus_remain"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_gui::test_render[/dashboard-\\ub274\\uc2a4 \\ud750\\ub984\\uc744 \\ud55c\\ub208\\uc5d0]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_gui::test_render[/dashboard-\\ub274\\uc2a4 \\ud750\\ub984\\uc744 \\ud55c\\ub208\\uc5d0]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_gui::test_render[/news-\\ub274\\uc2a4 \\ud0d0\\uc0c9]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_gui::test_render[/news-\\ub274\\uc2a4 \\uc218\\uc9d1]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_gui::test_render[/settings-\\uc6cc\\ud06c\\uc2a4\\ud398\\uc774\\uc2a4 \\uc124\\uc815]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_gui::test_render[/settings-\\uc6cc\\ud06c\\uc2a4\\ud398\\uc774\\uc2a4 \\uc124\\uc815]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_oauth_operations_gui::test_operations_panel_keeps_real_connect_button_disabled",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_oauth_operations_gui::test_operations_panel_keeps_real_connect_button_disabled"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_oauth_production_gui::test_readiness_panel_distinguishes_preparation_from_real_verification",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_oauth_production_gui::test_readiness_panel_distinguishes_preparation_from_real_verification"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_realcontent::test_external_ai_failures_map_to_actionable_codes[error0-ai_rate_limited-True]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_realcontent::test_external_ai_failures_map_to_actionable_codes[error0-ai_rate_limited-False]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "no_replay_policy",
+      "reason": "기존 재시도 허용 기대를 승인된 재전송 금지 정책으로 교체. 실패 사용량·오류 코드·차단을 검사."
+    },
+    {
+      "historical_test_id": "tests.test_realcontent::test_external_ai_failures_map_to_actionable_codes[error1-ai_timeout-True]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_realcontent::test_external_ai_failures_map_to_actionable_codes[error1-ai_timeout-False]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "no_replay_policy",
+      "reason": "기존 재시도 허용 기대를 승인된 재전송 금지 정책으로 교체. 실패 사용량·오류 코드·차단을 검사."
+    },
+    {
+      "historical_test_id": "tests.test_realcontent::test_external_ai_failures_map_to_actionable_codes[error2-ai_bad_response-True]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_realcontent::test_external_ai_failures_map_to_actionable_codes[error2-ai_bad_response-False]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "no_replay_policy",
+      "reason": "기존 재시도 허용 기대를 승인된 재전송 금지 정책으로 교체. 실패 사용량·오류 코드·차단을 검사."
+    },
+    {
+      "historical_test_id": "tests.test_realcontent::test_gui_start_page_shows_readiness_and_disables_unready_external_ai",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_realcontent::test_gui_start_page_shows_readiness_and_disables_unready_external_ai"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_realcontent::test_simple_settings_rejects_external_ai_with_sample_news",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_realcontent::test_simple_settings_rejects_external_ai_with_sample_news"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[30-claude_code]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[30-claude_code]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing_and_consent",
+      "reason": "같은 선택 AI의 분석·대본 경로와 해당 실행 동의 안내 복구. 기존 테스트 변경 없음."
+    },
+    {
+      "historical_test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[30-codex]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[30-codex]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing_and_consent",
+      "reason": "같은 선택 AI의 분석·대본 경로와 해당 실행 동의 안내 복구. 기존 테스트 변경 없음."
+    },
+    {
+      "historical_test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[45-claude_code]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[45-claude_code]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing_and_consent",
+      "reason": "같은 선택 AI의 분석·대본 경로와 해당 실행 동의 안내 복구. 기존 테스트 변경 없음."
+    },
+    {
+      "historical_test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[45-codex]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[45-codex]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing_and_consent",
+      "reason": "같은 선택 AI의 분석·대본 경로와 해당 실행 동의 안내 복구. 기존 테스트 변경 없음."
+    },
+    {
+      "historical_test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[60-claude_code]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[60-claude_code]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing_and_consent",
+      "reason": "같은 선택 AI의 분석·대본 경로와 해당 실행 동의 안내 복구. 기존 테스트 변경 없음."
+    },
+    {
+      "historical_test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[60-codex]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[60-codex]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing_and_consent",
+      "reason": "같은 선택 AI의 분석·대본 경로와 해당 실행 동의 안내 복구. 기존 테스트 변경 없음."
+    },
+    {
+      "historical_test_id": "tests.test_unified_ai_workspace::test_unknown_script_result_remains_stopped_after_refresh_reconfirm_and_recovery",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_unified_ai_workspace::test_unknown_script_result_remains_stopped_after_refresh_reconfirm_and_recovery"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing_and_consent",
+      "reason": "같은 선택 AI의 분석·대본 경로와 해당 실행 동의 안내 복구. 기존 테스트 변경 없음."
+    },
+    {
+      "historical_test_id": "tests.test_ux_workflow::test_available_local_voice_is_forwarded_without_new_provider_settings",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ux_workflow::test_available_local_voice_is_forwarded_without_new_provider_settings"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "test_contract",
+      "reason": "승인된 현재 UI/데이터 계약에 맞춘 기대값 갱신; 기능·보안 검사는 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[claude_code-sonnet]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[claude_code-sonnet]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing_and_consent",
+      "reason": "같은 선택 AI의 분석·대본 경로와 해당 실행 동의 안내 복구. 기존 테스트 변경 없음."
+    },
+    {
+      "historical_test_id": "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[codex-default]",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[codex-default]"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "product_routing_and_consent",
+      "reason": "같은 선택 AI의 분석·대본 경로와 해당 실행 동의 안내 복구. 기존 테스트 변경 없음."
+    },
+    {
+      "historical_test_id": "tests.test_ux_workflow::test_stored_paid_approval_still_requires_per_job_transfer_consent",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ux_workflow::test_stored_paid_approval_still_requires_per_job_transfer_consent"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "fixture_gate",
+      "reason": "구 legacy gate 대신 현재 worker의 api_readiness를 Fake 준비 상태로 설정; 개별 전송 동의 없이는 시작하지 않는 검사 유지."
+    },
+    {
+      "historical_test_id": "tests.test_ux_workflow_context::test_different_openai_model_requires_consent_without_replacement",
+      "before": "FAIL",
+      "final_test_ids": [
+        "tests.test_ux_workflow_context::test_different_openai_model_requires_consent_without_replacement"
+      ],
+      "final_results": [
+        "PASS"
+      ],
+      "category": "fixture_gate",
+      "reason": "구 legacy gate 대신 현재 worker의 api_readiness를 Fake 준비 상태로 설정; 개별 전송 동의 없이는 시작하지 않는 검사 유지."
+    }
+  ],
+  "all_final_failures": []
+}

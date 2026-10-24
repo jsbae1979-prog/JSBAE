@@ -133,8 +133,8 @@ def test_trial_job_never_uses_external_ai_even_if_requested(real, app):
 
 
 @pytest.mark.parametrize("error,code,retryable", [
-    (ProviderRateLimitError("x"), "ai_rate_limited", True), (TimeoutError("x"), "ai_timeout", True),
-    ({"title": "bad"}, "ai_bad_response", True),
+    (ProviderRateLimitError("x"), "ai_rate_limited", False), (TimeoutError("x"), "ai_timeout", False),
+    ({"title": "bad"}, "ai_bad_response", False),
 ])
 def test_external_ai_failures_map_to_actionable_codes(real, app, error, code, retryable):
     backend, ctx, store = real
@@ -146,7 +146,7 @@ def test_external_ai_failures_map_to_actionable_codes(real, app, error, code, re
     with pytest.raises(BackendError) as failure:
         step(real, "script")
     assert failure.value.code == code and failure.value.retryable is retryable
-    assert backend.can_retry("script", ctx)
+    assert not backend.can_retry("script", ctx)  # External attempts are never automatically replayed.
     with app.state.sessions() as session:
         assert session.scalar(select(IntelligenceRun).where(IntelligenceRun.status == "failed"))
 
@@ -271,12 +271,19 @@ def test_simple_settings_rejects_external_ai_with_sample_news(client, app):
         assert session.get(AppSetting, "autopilot_ai") is None
     ok = client.post("/simple-settings", data={"csrf_token": csrf(client), "duration": "30", "platform": "youtube", "source": "feeds", "mode": "easy", "ai": "openai"})
     assert ok.status_code == 200
-    assert "외부 AI 대본" in client.get("/").text
+    with app.state.sessions() as session:
+        assert session.get(AppSetting, "autopilot_ai").value == "openai"
+        assert session.get(AppSetting, "autopilot_source").value == "feeds"
+    assert client.get("/").status_code == 200
 
 
 def test_gui_start_page_shows_readiness_and_disables_unready_external_ai(client, app, monkeypatch):
     monkeypatch.delenv("NEWSFLOW_AI_API_KEY", raising=False)
     app.state.ai_keys = AIKeyStore(app.state.config.data_dir, FakeCipher())
     page = client.get("/autopilot/start").text
-    assert "준비 안 됨" in page and 'value="openai"' in page and "disabled" in page
-    assert "RSS 출처 0개 사용 중" in page
+    assert "제작 시작은 홈에서" in page and 'href="/"' in page
+    # The legacy start screen delegates to Home; its direct POST must still fail closed.
+    response = client.post("/autopilot/start", data={"csrf_token": csrf(client),
+        "source": "feeds", "content_mode": "real", "ai": "openai", "duration": 30}, follow_redirects=False)
+    assert response.status_code == 422
+    assert app.state.autopilot.future is None

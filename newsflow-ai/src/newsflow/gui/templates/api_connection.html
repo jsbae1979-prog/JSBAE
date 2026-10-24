@@ -11,10 +11,26 @@
   </div>
   {% if key == 'claude_api' %}<p class="settings-inline-note"><a href="https://platform.claude.com/dashboard" target="_blank" rel="noopener noreferrer">Claude API 사이트 · 키·결제 관리 ↗</a></p>{% endif %}
   {% if failed_check %}<p class="settings-warning" role="status">{{ connection.message }}</p>{% endif %}
-  {% if not api.ready and api.reasons %}<p class="settings-warning">뉴스 웹 검색 — {{ api.reasons[0] }}</p>{% endif %}
+  {% if not api.ready and api.reasons and api.key.configured %}<p class="settings-warning">뉴스 웹 검색 — {{ api.reasons[0] }}</p>{% endif %}
   {% if api.usage.unknown or api.usage.pending %}
-  <p class="soft-notice" role="alert">결과 불명 {{ api.usage.unknown }}건 · 진행 중 {{ api.usage.pending }}건. 새 API 호출이 차단되어 있습니다. 예약 예산은 유지됩니다.</p>
+  <p class="soft-notice" role="alert">결과 불명 {{ api.usage.unknown }}건 · 진행 중 {{ api.usage.pending }}건.
+  {% if api.acknowledged_unknown_analyses|default(0) %}기존 분석 {{ api.acknowledged_unknown_analyses }}건의 인지 확인을 보존했습니다. 새 기사 분석만 차단 예외 대상이며 다른 실행 조건은 유지됩니다. 검색·대본의 결과 불명 차단은 유지됩니다.
+  {% else %}새 API 호출이 차단되어 있습니다.{% endif %} 기존 기록은 유지됩니다.</p>
+  {% for review in api.unknown_analysis_reviews|default([]) %}
+  {% if not review.acknowledged %}
+  <form method="post" action="/api-settings/{{ key }}/acknowledge-unknown-analysis" data-settings-form data-settings-watch>
+    {{ csrf_field() }}
+    <input type="hidden" name="reservation_id" value="{{ review.id }}">
+    <input type="hidden" name="fingerprint" value="{{ review.fingerprint }}">
+    <p>이전 분석 {{ review.request_id }} · {{ review.model }} — 공급사 처리·과금은 미확인입니다. 기존 기록은 변경하지 않습니다.</p>
+    <label class="check"><input type="checkbox" name="consent" value="true" required> 미확인 과금 가능성을 인지하고 새 기사 분석에만 차단 예외를 적용합니다. 원래 요청 재전송·검색·대본 실행은 허용하지 않습니다.</label>
+    <button type="submit">기록 보존·새 기사 분석 허용</button>
+    <p class="hint">이 확인은 API를 호출하지 않습니다. 실제 분석에는 별도 실행 동의와 기존 인증·예산 조건이 필요합니다.</p>
+  </form>
   {% endif %}
+  {% endfor %}
+  {% endif %}
+  <details class="settings-advanced" id="{{ key }}-key-settings" {% if not api.key.configured %}open{% endif %}><summary>API Key {{ '변경' if api.key.configured else '등록' }}</summary>
   {% if api.key.storage_supported %}
   <form method="post" action="/api-settings/{{ key }}/key" autocomplete="off" data-settings-form data-settings-watch>
     {{ csrf_field() }}
@@ -24,11 +40,13 @@
     <p class="hint" id="{{ key }}-key-help">이 PC의 Windows 계정에 암호화해 저장합니다. 키 저장은 연결 확인을 실행하지 않습니다.</p>
     <button type="submit">API Key {{ '교체' if api.key.configured else '저장' }}</button>
   </form>
-  {% else %}<p class="soft-notice">이 환경에서는 Windows DPAPI 키 저장을 사용할 수 없습니다.</p>{% endif %}
+  {% else %}<p class="soft-notice">키 저장은 Windows PC에서 진행하세요.</p>{% endif %}
   {% if api.key.stored %}
   <form method="post" action="/api-settings/{{ key }}/key/clear" data-settings-form data-settings-watch>{{ csrf_field() }}<button type="submit" class="subtle-button">저장된 키 삭제</button></form>
   {% endif %}
-  {% if api.key.environment %}<p class="hint">환경변수 키도 있습니다. 저장된 키를 삭제해도 환경변수는 유지됩니다.</p>{% endif %}
+  {% if api.key.environment %}<p class="hint">별도로 설정된 키도 있습니다. 여기서 저장한 키만 삭제합니다.</p>{% endif %}
+  </details>
+  <details class="settings-advanced" id="{{ key }}-connection-settings"><summary>연결 확인·뉴스 검색 검증</summary>
   <form method="post" action="/api-settings/{{ key }}/check" data-settings-form data-settings-watch>
     {{ csrf_field() }}
     <p class="hint">저장된 모델 <strong>{{ api.settings.model }}</strong>의 접근 권한만 확인합니다. 모델을 바꿨다면 제작 구성을 먼저 저장하세요. 생성·웹 검색은 실행하지 않습니다.</p>
@@ -41,9 +59,7 @@
   {% set probe = api.first_search %}
   <section aria-labelledby="{{ key }}-search-check-title">
     <h3 id="{{ key }}-search-check-title">최초 웹 검색 검증</h3>
-    <p class="hint">최근 24시간 IT 뉴스 1건 · 검색 요청 1회 · 검색 도구 최대 1회 · 출력 최대 {{ '{:,}'.format(probe.get('max_output_tokens', 3000)) }}토큰. 분석·대본·영상은 시작하지 않습니다.</p>
-    <p>응답의 사용량을 받아 비용을 집계합니다. 추정한 비용을 미리 예약하지 않습니다.</p>
-    <p class="hint">사용 승인·검색 동의·월 예산·계정 확인은 유지됩니다. 응답 후 집계하므로 한 요청의 최종 비용이나 월 예산 이내 완료를 보장하지 않습니다.</p>
+    <p class="hint">최근 IT 뉴스 1건으로 검색만 확인합니다. 분석·대본·영상은 만들지 않습니다.</p>
     {% if api.search_check %}<p role="status">{{ api.search_check.message }}</p>{% endif %}
     {% if not probe.ready %}<p class="settings-warning" role="status">{{ probe.reasons|join(' / ') }}</p>{% endif %}
     <form method="post" action="/api-settings/{{ key }}/check-search" data-settings-form data-settings-watch>
@@ -58,53 +74,7 @@
   </section>
   {% endif %}
 
-  <div class="api-budget-summary">
-    <p><strong>제작 시 월 한도 {{ api.settings.monthly_limit_usd }} USD</strong> · 사용 {{ '승인됨' if api.settings.approved else '승인 필요' }} · 검색 {{ '별도 승인됨' if api.settings.search_approved else '별도 승인 필요' }}</p>
-    <button type="button" data-settings-open="api-costs-{{ key }}">제작 비용 설정</button>
-  </div>
 
-  <dialog id="api-costs-{{ key }}" class="settings-dialog" aria-labelledby="api-costs-title-{{ key }}">
-    <div class="settings-dialog-head"><h2 id="api-costs-title-{{ key }}">{{ api_label }} 사용 승인·예산</h2><button type="button" data-settings-close aria-label="{{ api_label }} 사용 승인·예산 닫기">닫기</button></div>
-    <p>월 API 예산과 사용 승인을 관리합니다. {{ 'ChatGPT' if key == 'openai' else 'Claude Code' }} 구독과 별도 과금이며 검색·분석·대본은 각각 요청으로 계산합니다.</p>
-    <form method="post" action="/api-settings/{{ key }}" data-settings-form data-settings-watch>
-      {{ csrf_field() }}
-      <input type="hidden" name="model" value="{{ api.settings.model }}">
-      <p class="hint">저장된 모델: <strong>{{ api.settings.model }}</strong></p>
-      <label class="check"><input type="checkbox" name="approved" value="true" {% if api.settings.approved %}checked{% endif %}> 기사 분석·대본 생성의 API 비용 사용에 동의합니다.</label>
-      <label class="check"><input type="checkbox" name="search_enabled" value="true" {% if api.settings.search_enabled %}checked{% endif %}> 공식 뉴스 웹 검색 기능을 사용합니다.</label>
-      <label class="check"><input type="checkbox" name="search_approved" value="true" {% if api.settings.search_approved %}checked{% endif %}> 웹 검색 도구 및 검색 자료의 토큰 비용을 별도로 승인합니다.</label>
-      <div class="production-config-grid">
-        <label>월 API 예산 (USD)<input name="monthly_limit_usd" inputmode="decimal" maxlength="20" value="{{ api.settings.monthly_limit_usd }}" required></label>
-      </div>
-      {% if key == 'openai' and legacy_api_settings.monthly_token_limit <= 0 %}
-      <label>월 분석·대본 토큰 한도<input type="number" name="monthly_token_limit" min="0" max="50000000" value="{{ legacy_api_settings.monthly_token_limit }}" required></label>
-      <p class="hint">OpenAI 사용 승인에는 0보다 큰 토큰 한도가 필요합니다.</p>
-      {% endif %}
-      <p class="hint">실제 API 연결·검색 검증은 별도 승인이 필요합니다. 설정 저장만으로 호출하지 않습니다.</p>
-      <p class="soft-notice">보존된 예약 {{ api.usage.held_usd }} USD · 결과 불명 {{ api.usage.unknown }}건{% if api.usage.pending %} · 진행 중 {{ api.usage.pending }}건{% endif %}. 실패·시간 초과·결과 불명 요청은 자동 재전송하지 않으며 기존 예약과 기록을 유지합니다.</p>
-      <label>직접 확인한 계정 잔여 예산 (USD)<input name="account_remaining_usd" inputmode="decimal" maxlength="20" value="" placeholder="이번에 확인한 금액"></label>
-      <label class="check"><input type="checkbox" name="billing_confirmed" value="true"> 공급사 계정의 결제·모델·검색 권한과 잔여 예산을 직접 확인했습니다.</label>
-      <p class="hint">직접 확인은 24시간 유효하며 실제 인증 성공을 뜻하지 않습니다. 로컬 사용량·예약액은 공급사 청구액과 다릅니다.</p>
-      {% if api.settings.input_price_per_1m is none or api.settings.output_price_per_1m is none or api.settings.search_price_per_1k is none %}
-      <p class="soft-notice">단가 입력이 필요합니다. 아래 고급 설정에서 공식 요금을 확인해 입력하세요.</p>
-      {% endif %}
-      <details class="easy-advanced" {% if api.settings.input_price_per_1m is none or api.settings.output_price_per_1m is none or api.settings.search_price_per_1k is none %}open{% endif %}>
-        <summary>고급 설정 · 단가·제한시간·사용 기록</summary>
-        {% if key == 'claude_api' %}<p class="hint">지원 모델의 빈 단가에는 확인된 공식 기본값을 표시합니다. 기존에 저장한 단가는 유지합니다. <a href="https://platform.claude.com/docs/en/about-claude/pricing" target="_blank" rel="noopener noreferrer">공식 요금표 ↗</a></p>{% endif %}
-        <div class="production-config-grid">
-          <label>입력 100만 토큰 단가 (USD)<input name="input_price_per_1m" inputmode="decimal" maxlength="20" value="{{ api.settings.input_price_per_1m if api.settings.input_price_per_1m is not none else '' }}"></label>
-          <label>출력 100만 토큰 단가 (USD)<input name="output_price_per_1m" inputmode="decimal" maxlength="20" value="{{ api.settings.output_price_per_1m if api.settings.output_price_per_1m is not none else '' }}"></label>
-          <label>검색 1,000회 단가 (USD)<input name="search_price_per_1k" inputmode="decimal" maxlength="20" value="{{ api.settings.search_price_per_1k if api.settings.search_price_per_1k is not none else '' }}"></label>
-          {% if key == 'openai' %}
-          {% if legacy_api_settings.monthly_token_limit > 0 %}<label>월 분석·대본 토큰 한도<input type="number" name="monthly_token_limit" min="0" max="50000000" value="{{ legacy_api_settings.monthly_token_limit }}" required></label>{% endif %}
-          <label>분석·대본 제한시간 (초)<input type="number" name="timeout" min="1" max="60" value="{{ legacy_api_settings.timeout }}" required></label>
-          {% endif %}
-        </div>
-        <p class="hint">해당 모델·계정의 공식 단가를 입력하세요. 응답의 보고 사용량과 단가로 집계하며, 공급사 실제 청구액은 대시보드에서 확인하세요. 새 요청 전 월 예산을 확인하지만 응답 후 집계이므로 최종 비용 상한을 보장하지 않습니다.</p>
-        <p>이번 달 {{ api.usage.calls }}건 · 보고 사용량 기반 비용 집계 {{ api.usage.estimated_usd }} USD · Fake 검증 {{ api.usage.test_calls }}건</p>
-        <p class="hint">{{ '실제 요청 성공 기록 있음' if api.request_succeeded else '실제 요청 성공 미검증' }}</p>
-      </details>
-      <button type="submit" class="primary">API 사용 승인·예산 저장</button>
-    </form>
-  </dialog>
+
+  </details>
 </div>

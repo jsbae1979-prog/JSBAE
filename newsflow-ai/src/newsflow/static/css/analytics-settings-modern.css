@@ -1,0 +1,163 @@
+/* Presentation only: stored analytics, settings and local automation. */
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern){--as-surface:#101c2d;--as-line:#2b3b51;--as-muted:#b0c1d7;max-width:1500px;margin:0 auto;font-family:"Segoe UI","Malgun Gothic",sans-serif}
+.suite-shell.premium-shell .settings-workspace.settings-modern{padding:0 0 16px}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) .suite-header{padding-bottom:18px;margin-bottom:22px;border-bottom:1px solid var(--as-line)}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) .suite-header h1{font-size:27px;letter-spacing:-.6px}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) .suite-heading-icon{width:34px;height:34px;background:transparent;border:0;box-shadow:none;color:#8bbaff}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) :is(.suite-panel,.settings-card,.easy-panel){background:var(--as-surface);border:1px solid var(--as-line);border-radius:12px;box-shadow:none}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) :is(h2,h3){color:#edf3fd;letter-spacing:-.2px}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) h2{font-size:18px;font-weight:650}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) :is(p,.hint,small){font-size:13px;line-height:1.8;color:var(--as-muted)}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) .modern-kicker{display:block;font-size:12px;color:#91bbf3;font-weight:600;letter-spacing:.4px;margin-bottom:10px}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) :is(button,.button){min-height:42px;border-radius:8px;box-shadow:none;font-size:13px}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) :is(button.primary,.button.primary){color:#fff;background:#2769df;border:1px solid #4d89ee}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) :is(input:not([type=checkbox]),select,textarea){min-height:42px;border-radius:7px;background:#0b1627;border:1px solid #3a4d68;color:#e2ecfc;font-size:14px;max-width:100%}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) label{font-size:13px;color:#c4d5ec;line-height:1.8}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) input[type=checkbox]{width:18px;height:18px;min-height:0;accent-color:#4b8df7;flex:none}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) :is(a,button,input,select,textarea,summary,[role=tab]):focus-visible{outline:2px solid #91beff;outline-offset:3px}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) details>summary{font-size:13px;color:#c4d6ee;line-height:1.7;min-height:32px;cursor:pointer}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) details[open]>summary{margin-bottom:16px}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) .soft-notice{background:#182940;border:1px solid #39516f;color:#c4d7ef;border-radius:9px;box-shadow:none;padding:16px 18px}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) .soft-notice p{margin:7px 0 0}
+.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) .suite-section-bar{gap:12px;flex-wrap:wrap}
+/* Analytics has no decorative sample data. Missing values stay missing. */
+.suite-shell.premium-shell .analytics-modern .analytics-filter-panel{padding:20px 22px;background:#101c2d;border:1px solid var(--as-line);border-radius:12px;margin-bottom:24px}
+.suite-shell.premium-shell .analytics-modern .analytics-filter-heading{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
+.suite-shell.premium-shell .analytics-modern .analytics-filter-heading .modern-kicker{margin:0}
+.suite-shell.premium-shell .analytics-modern .analytics-filter-heading p{font-size:12px;margin:0}
+.suite-shell.premium-shell .analytics-modern .social-filter{display:flex;gap:16px;align-items:end;flex-wrap:wrap;margin:0}
+.suite-shell.premium-shell .analytics-modern .social-filter label{display:grid;gap:8px;flex:1;min-width:180px;max-width:340px;margin:0}
+.suite-shell.premium-shell .analytics-modern .social-filter :is(select,button){margin:0}
+.suite-shell.premium-shell .analytics-modern .analytics-empty{display:grid;grid-template-columns:90px minmax(0,1fr);gap:24px;align-items:start;min-height:0;padding:36px;margin-bottom:24px;text-align:left;background:#101c2d}
+.suite-shell.premium-shell .analytics-modern .analytics-empty-icon{width:82px;height:82px;background:#182e4c;border:1px solid #355275;border-radius:18px;color:#92bdff;display:grid;place-items:center}
+.suite-shell.premium-shell .analytics-modern .analytics-empty h2{font-size:23px;margin:0 0 12px;line-height:1.5}
+.suite-shell.premium-shell .analytics-modern .analytics-empty p{margin:0 0 8px}
+.suite-shell.premium-shell .analytics-modern .analytics-empty .hint{font-size:12px}
+.suite-shell.premium-shell .analytics-modern .analytics-empty-actions{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:20px;font-size:13px}
+.suite-shell.premium-shell .analytics-modern .social-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin:0 0 24px}
+.suite-shell.premium-shell .analytics-modern .social-kpis>article{padding:22px;min-width:0}
+.suite-shell.premium-shell .analytics-modern .social-kpis strong{font-size:30px;margin:12px 0;color:#eff5ff;line-height:1.2;overflow-wrap:anywhere}
+.suite-shell.premium-shell .analytics-modern .social-kpis small{font-size:12px}
+.suite-shell.premium-shell .analytics-modern .workstation-analytics-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px;margin-bottom:24px}
+.suite-shell.premium-shell .analytics-modern .workstation-analytics-grid>.suite-panel{padding:22px;min-width:0}
+.suite-shell.premium-shell .analytics-modern .workstation-analytics-grid>.workstation-chart{grid-column:1/-1;grid-row:auto}
+.suite-shell.premium-shell .analytics-modern .workstation-chart svg{max-height:260px;width:100%;margin-top:14px}
+.suite-shell.premium-shell .analytics-modern .workstation-chart svg text{font-size:12px;fill:#b9cde6}
+.suite-shell.premium-shell .analytics-modern .workstation-chart details{margin-top:16px;padding-top:14px;border-top:1px solid var(--as-line)}
+.suite-shell.premium-shell .analytics-modern .social-chart-empty{background:#0c1828;min-height:190px;border-radius:8px}
+.suite-shell.premium-shell .analytics-modern .category-performance-row{padding:16px 0;border-bottom:1px solid var(--as-line)}
+.suite-shell.premium-shell .analytics-modern .social-recommendation{background:#163052;border:1px solid #365781;border-radius:8px;padding:16px}
+.suite-shell.premium-shell .analytics-modern .social-metrics{padding:22px;margin-bottom:22px}
+.suite-shell.premium-shell .analytics-modern .social-table-wrap{overflow:auto;border:1px solid var(--as-line);border-radius:8px}
+.suite-shell.premium-shell .analytics-modern .social-table-wrap table{width:100%;font-size:13px;border-collapse:collapse}
+.suite-shell.premium-shell .analytics-modern table caption{text-align:left;padding:14px;color:#aec4e0;font-size:12px}
+.suite-shell.premium-shell .analytics-modern :is(th,td){padding:14px;text-align:left;vertical-align:top;border-bottom:1px solid #2b3d55;color:#c6d7eb;line-height:1.7}
+.suite-shell.premium-shell .analytics-modern th{background:#17273d;color:#dce9fb;font-weight:600}
+.suite-shell.premium-shell .analytics-modern>details.suite-panel{padding:18px 22px}
+.suite-shell.premium-shell .analytics-modern>details form{max-width:700px;border-top:1px solid var(--as-line);padding-top:18px;margin-top:16px}
+.suite-shell.premium-shell .analytics-modern .check{display:flex;align-items:flex-start;gap:9px;margin:18px 0}
+.suite-shell.premium-shell .analytics-modern .check input{margin-top:4px}
+/* Settings: stable form ownership, six existing tabs, explicit save. */
+.suite-shell.premium-shell .settings-modern .settings-context-strip{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:20px 24px;background:#101c2d;border:1px solid var(--as-line);border-radius:12px;margin-bottom:22px}
+.suite-shell.premium-shell .settings-modern .settings-current-choices{display:flex;gap:12px 24px;flex-wrap:wrap}
+.suite-shell.premium-shell .settings-modern .settings-current-choices>span{display:inline-flex;gap:7px;align-items:center;font-size:14px;color:#e2ecfc;font-weight:600}
+.suite-shell.premium-shell .settings-modern .settings-context-strip p{margin:9px 0 0;font-size:12px}
+.suite-shell.premium-shell .settings-modern .settings-context-strip button{display:inline-flex;gap:8px;align-items:center;justify-content:center;flex:none;background:#172b45;border:1px solid #3c587b;color:#c9ddfb}
+.suite-shell.premium-shell .settings-modern .suite-settings-layout{display:block}
+.suite-shell.premium-shell .settings-modern .suite-settings-index{display:block;position:static;background:transparent;border:0;border-bottom:1px solid var(--as-line);padding:0 0 12px;margin:0 0 22px;border-radius:0}
+.suite-shell.premium-shell .settings-modern .suite-settings-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.suite-shell.premium-shell .settings-modern .suite-settings-tabs>a{display:inline-flex;gap:7px;align-items:center;border:1px solid #304562;border-radius:8px;padding:10px 14px;min-height:42px;color:#bcd0eb;background:#0c192b;font-size:13px;white-space:normal}
+.suite-shell.premium-shell .settings-modern .suite-settings-tabs>a[aria-selected=true]{background:#1c447a;color:#e6f1ff;border-color:#6699de;box-shadow:none}
+.suite-shell.premium-shell .settings-modern .settings-card{margin:0 0 20px;scroll-margin-top:22px;overflow:visible}
+.suite-shell.premium-shell .settings-modern .settings-card-heading{padding:22px 24px;gap:12px;border-bottom:1px solid var(--as-line);background:transparent}
+.suite-shell.premium-shell .settings-modern .settings-card-heading h2{font-size:18px}
+.suite-shell.premium-shell .settings-modern .settings-card-heading p{font-size:13px;margin:5px 0 0}
+.suite-shell.premium-shell .settings-modern .settings-icon{width:34px;height:34px;border-radius:8px;color:#9bbff0;background:#192d48;border:0;box-shadow:none}
+.suite-shell.premium-shell .settings-modern .settings-section-number{display:none}
+.suite-shell.premium-shell .settings-modern .settings-section-content{padding:24px}
+.suite-shell.premium-shell .settings-modern #selected-ai{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px 28px}
+.suite-shell.premium-shell .settings-modern #selected-ai>.settings-ai-choices{grid-column:1;grid-row:1;min-width:0}
+.suite-shell.premium-shell .settings-modern #selected-ai>.provider-details{grid-column:2;grid-row:1;min-height:0;padding:18px;margin:0;border:1px solid #304864;border-radius:10px;background:#0d192b;min-width:0}
+.suite-shell.premium-shell .settings-modern #selected-ai>.settings-advanced{grid-column:1/-1;grid-row:2;margin:0}
+.suite-shell.premium-shell .settings-modern .settings-ai-choices>.settings-two-columns{display:grid;grid-template-columns:1fr;gap:4px}
+.suite-shell.premium-shell .settings-modern .settings-ai-choices>label,.suite-shell.premium-shell .settings-modern .settings-ai-choices>[data-custom-model]{display:block;margin-top:18px}
+.suite-shell.premium-shell .settings-modern .settings-ai-choices #model-choice-help{margin-top:8px}
+.suite-shell.premium-shell .settings-modern .settings-news-collection{border-top:1px solid var(--as-line);padding:0 24px}
+.suite-shell.premium-shell .settings-modern .settings-news-collection>.settings-card{border:0;border-radius:0;background:transparent;margin:0}
+.suite-shell.premium-shell .settings-modern .settings-news-collection .settings-card-heading{padding:22px 0;border-bottom:0}
+.suite-shell.premium-shell .settings-modern .settings-news-collection .settings-section-content{padding:0 0 24px}
+.suite-shell.premium-shell .settings-modern .settings-news-collection form{padding:18px;background:#0c1829;border:1px solid #30455e;border-radius:9px}
+.suite-shell.premium-shell .settings-modern .settings-two-columns{gap:16px 24px}
+.suite-shell.premium-shell .settings-modern .settings-inline-note,.suite-shell.premium-shell .settings-modern .hint{font-size:13px;line-height:1.8;margin:8px 0 14px}
+.suite-shell.premium-shell .settings-modern .status-chips{gap:8px;align-items:start;margin-bottom:16px}
+.suite-shell.premium-shell .settings-modern .status-chip{border-radius:6px;padding:6px 9px;font-size:12px;line-height:1.65;white-space:normal}
+.suite-shell.premium-shell .settings-modern .settings-warning{font-size:13px;color:#efd4a2;background:#30281d;border:1px solid #6d5534;border-radius:8px;padding:12px 14px;line-height:1.8}
+.suite-shell.premium-shell .settings-modern .settings-advanced{padding-top:16px;margin-top:18px;border-color:var(--as-line)}
+.suite-shell.premium-shell .settings-modern .check{display:flex;align-items:flex-start;gap:9px;font-size:13px;line-height:1.9;margin:16px 0;color:#cfddf0}
+.suite-shell.premium-shell .settings-modern .check input{margin:5px 0 0}
+.suite-shell.premium-shell .settings-modern .subtle-button{background:#14263e;border:1px solid #3c536f;color:#bad3f4;font-size:13px}
+.suite-shell.premium-shell .settings-modern .settings-connection-line{gap:14px;padding:14px 0;align-items:center}
+.suite-shell.premium-shell .settings-modern #costs .settings-connection-line{border-bottom:1px solid var(--as-line)}
+.suite-shell.premium-shell .settings-modern .social-additional-accounts{padding:0 24px 24px;gap:12px}
+.suite-shell.premium-shell .settings-modern .social-additional-accounts>a{background:#122239;border:1px solid #314761;border-radius:8px;padding:14px}
+.suite-shell.premium-shell .settings-modern .social-additional-accounts span{font-size:12px;color:#b6cbe5}
+.suite-shell.premium-shell .settings-modern .settings-tabs-ready>#advanced{padding:22px 24px;background:#101c2d;border:1px solid var(--as-line);border-radius:12px}
+.suite-shell.premium-shell .settings-modern .settings-operation-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.suite-shell.premium-shell .settings-modern .settings-operation-links>a{display:flex;align-items:center;gap:12px;padding:18px;background:#14243a;border:1px solid #344b69;border-radius:9px;text-decoration:none}
+.suite-shell.premium-shell .settings-modern .settings-operation-links>a>div{flex:1;min-width:0}
+.suite-shell.premium-shell .settings-modern .settings-operation-links strong{display:block;font-size:14px;line-height:1.6;color:#e1edfc}
+.suite-shell.premium-shell .settings-modern .settings-operation-links div>span{display:block;font-size:12px;color:#aec3df;margin-top:6px;line-height:1.7}
+.suite-shell.premium-shell .settings-modern .settings-operation-icon{color:#92bbf3}
+.suite-shell.premium-shell .settings-modern .settings-savebar{display:flex;position:static;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:20px 24px;border:1px solid #3a526f;border-radius:10px;background:#14253b;box-shadow:none;margin-top:22px}
+.suite-shell.premium-shell .settings-modern .settings-savebar p{font-size:13px}
+.suite-shell.premium-shell .settings-modern .settings-savebar small{font-size:12px;color:#b4c7e1}
+.suite-shell.premium-shell .settings-modern .settings-save-actions{gap:12px 18px}
+.suite-shell.premium-shell .settings-modern .settings-save-actions>a{font-size:13px}
+.suite-shell.premium-shell .settings-modern #production-unsaved{color:#f1cd8f}
+.suite-shell.premium-shell .settings-modern .settings-dialog{background:#101c2d;border:1px solid #4d6689;border-radius:12px;padding:24px;color:#e1ecfa;box-shadow:0 20px 60px #0007;max-height:85vh;overflow:auto}
+.suite-shell.premium-shell .settings-modern .settings-dialog::backdrop{background:#020812c9}
+.suite-shell.premium-shell .settings-modern .settings-dialog :is(.settings-dialog-heading,.settings-dialog-head){border-bottom:1px solid var(--as-line);padding-bottom:16px}
+.suite-shell.premium-shell .settings-modern .settings-diagnostic{border-color:var(--as-line)}
+.suite-shell.premium-shell .settings-modern .settings-diagnostic :is(dt,dd){font-size:13px;line-height:1.7;color:#bacee8;overflow-wrap:anywhere}
+.suite-shell.premium-shell .settings-modern .settings-diagnostic>strong{color:#b8d3fb;font-size:13px}
+/* Existing automation controls, consent and revisions remain unchanged. */
+.suite-shell.premium-shell .automation-modern .schedule-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px;align-items:start;margin-top:24px}
+.suite-shell.premium-shell .automation-modern .schedule-editor{padding:24px}
+.suite-shell.premium-shell .automation-modern .schedule-editor>h2{font-size:21px;margin:0 0 22px}
+.suite-shell.premium-shell .automation-modern .creation-form{display:grid;gap:18px}
+.suite-shell.premium-shell .automation-modern .creation-form label{margin:0}
+.suite-shell.premium-shell .automation-modern .creation-form :is(input,select){margin-top:7px;margin-bottom:0}
+.suite-shell.premium-shell .automation-modern .form-two-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.suite-shell.premium-shell .automation-modern fieldset{padding:16px;border:1px solid #354c69;border-radius:8px;margin:0;background:#0d192a;min-width:0}
+.suite-shell.premium-shell .automation-modern legend{font-size:13px;color:#c8d9ee;line-height:1.7;padding:0 6px}
+.suite-shell.premium-shell .automation-modern .weekday-choices{display:flex;gap:8px;flex-wrap:wrap}
+.suite-shell.premium-shell .automation-modern .weekday-choices>label{display:flex;gap:5px;align-items:center;padding:5px 7px;border-radius:5px;background:#1a2c46;font-size:12px}
+.suite-shell.premium-shell .automation-modern .weekday-choices input{margin:0;width:16px;height:16px}
+.suite-shell.premium-shell .automation-modern .schedule-card{padding:22px;margin-bottom:18px}
+.suite-shell.premium-shell .automation-modern .schedule-card h3{font-size:18px;margin:14px 0}
+.suite-shell.premium-shell .automation-modern .schedule-card .schedule-time{font-size:28px;color:#e2ecff;font-weight:600;line-height:1.4;margin:12px 0}
+.suite-shell.premium-shell .automation-modern .schedule-card details{border-top:1px solid var(--as-line);padding-top:14px;margin-top:18px}
+.suite-shell.premium-shell .automation-modern .schedule-consent,.suite-shell.premium-shell .operations-modern .operations-consent{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:#d0def1;line-height:1.9;margin:18px 0}
+.suite-shell.premium-shell .automation-modern .schedule-consent input,.suite-shell.premium-shell .operations-modern .operations-consent input{margin:5px 0 0}
+.suite-shell.premium-shell .automation-modern .schedule-policy details{border-top:1px solid #39516f;margin-top:14px;padding-top:14px}
+.suite-shell.premium-shell .automation-modern .gentle-empty{padding:24px;border:1px dashed #435c7a;background:#0f1e31;border-radius:10px;box-shadow:none}
+.suite-shell.premium-shell .automation-modern .easy-badge{border-radius:5px;background:#2d2930;border:1px solid #6f5b39;color:#f1d39f;font-size:12px}
+.suite-shell.premium-shell .automation-modern .easy-badge.active{background:#17372b;border-color:#3b7258;color:#b0e6c9}
+.suite-shell.premium-shell .automation-modern .easy-badge:is(.failed,.unknown){background:#3b242c;border-color:#88505b;color:#ffc1c4}
+.suite-shell.premium-shell .automation-modern #schedule-history{margin-top:30px;border-top:1px solid var(--as-line);padding-top:22px}
+.suite-shell.premium-shell .automation-modern .job-grid{gap:18px}
+.suite-shell.premium-shell .operations-modern .operations-modern-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+.suite-shell.premium-shell .operations-modern .operations-modern-grid>.easy-panel{padding:24px;margin:0}
+.suite-shell.premium-shell .operations-modern .operations-modern-grid>.easy-panel:first-child{grid-row:1/3;grid-column:1}
+.suite-shell.premium-shell .operations-modern .operations-modern-grid>.easy-panel:nth-child(2){grid-row:1;grid-column:2}
+.suite-shell.premium-shell .operations-modern .operations-modern-grid>.easy-panel:nth-child(3){grid-row:2;grid-column:2}
+.suite-shell.premium-shell .operations-modern .operations-modern-grid details{border-top:1px solid var(--as-line);padding-top:14px;margin-top:16px}
+.suite-shell.premium-shell .operations-modern .operations-modern-grid form{border-top:1px solid var(--as-line);padding-top:8px;margin-top:18px}
+.suite-shell.premium-shell .operations-modern .operations-review{padding:24px;margin-top:24px}
+.suite-shell.premium-shell .operations-modern .operations-review form{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;margin:22px 0}
+.suite-shell.premium-shell .operations-modern .operations-review form>label:not(.operations-consent){display:grid;gap:7px}
+.suite-shell.premium-shell .operations-modern .operations-review form>.operations-consent,.suite-shell.premium-shell .operations-modern .operations-review form>button,.suite-shell.premium-shell .operations-modern .operations-review form>.form-feedback{grid-column:1/-1}
+.suite-shell.premium-shell .operations-modern .operations-review form>button{justify-self:start}
+@media(max-width:1100px){.suite-shell.premium-shell .settings-modern #selected-ai{grid-template-columns:1fr}.suite-shell.premium-shell .settings-modern #selected-ai>.settings-ai-choices,.suite-shell.premium-shell .settings-modern #selected-ai>.provider-details,.suite-shell.premium-shell .settings-modern #selected-ai>.settings-advanced{grid-column:1;grid-row:auto}.suite-shell.premium-shell .settings-modern .settings-ai-choices>.settings-two-columns{grid-template-columns:1fr 1fr}.suite-shell.premium-shell .settings-modern .settings-context-strip{flex-wrap:wrap}.suite-shell.premium-shell .automation-modern .schedule-columns{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.suite-shell.premium-shell .automation-modern .schedule-columns,.suite-shell.premium-shell .operations-modern .operations-modern-grid{display:flex;flex-direction:column}.suite-shell.premium-shell .automation-modern .schedule-columns>*,.suite-shell.premium-shell .operations-modern .operations-modern-grid>*{width:100%;box-sizing:border-box}.suite-shell.premium-shell .analytics-modern .workstation-analytics-grid{grid-template-columns:1fr}.suite-shell.premium-shell .settings-modern .settings-operation-links{grid-template-columns:1fr}}
+@media(max-width:760px){.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) .suite-header h1{font-size:25px}.suite-shell.premium-shell :is(.analytics-modern,.settings-modern,.automation-modern,.operations-modern) :is(button,.button,details>summary){min-height:44px}.suite-shell.premium-shell .analytics-modern .analytics-filter-panel{padding:18px}.suite-shell.premium-shell .analytics-modern .social-filter{gap:14px}.suite-shell.premium-shell .analytics-modern .social-filter label{min-width:0;max-width:none;width:100%;flex-basis:100%}.suite-shell.premium-shell .analytics-modern .analytics-empty{grid-template-columns:1fr;padding:22px;gap:18px}.suite-shell.premium-shell .analytics-modern .analytics-empty-icon{width:64px;height:64px;border-radius:14px}.suite-shell.premium-shell .analytics-modern .analytics-empty h2{font-size:21px}.suite-shell.premium-shell .analytics-modern .social-kpis{grid-template-columns:1fr 1fr;gap:12px}.suite-shell.premium-shell .analytics-modern .social-kpis>article{padding:16px}.suite-shell.premium-shell .analytics-modern .social-kpis strong{font-size:25px}.suite-shell.premium-shell .analytics-modern :is(.workstation-analytics-grid>.suite-panel,.social-metrics){padding:18px}.suite-shell.premium-shell .analytics-modern .social-table-wrap{max-width:100%}.suite-shell.premium-shell .analytics-modern table{min-width:630px}.suite-shell.premium-shell .settings-modern .settings-context-strip{padding:18px}.suite-shell.premium-shell .settings-modern .settings-current-choices{gap:10px 18px}.suite-shell.premium-shell .settings-modern .settings-current-choices>span{font-size:13px}.suite-shell.premium-shell .settings-modern .suite-settings-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.suite-shell.premium-shell .settings-modern .suite-settings-tabs>a{font-size:12px;padding:10px;min-height:44px}.suite-shell.premium-shell .settings-modern :is(.settings-card-heading,.settings-section-content){padding:18px}.suite-shell.premium-shell .settings-modern #selected-ai{gap:20px}.suite-shell.premium-shell .settings-modern .settings-ai-choices>.settings-two-columns,.suite-shell.premium-shell .settings-modern .settings-two-columns{grid-template-columns:1fr}.suite-shell.premium-shell .settings-modern .settings-news-collection{padding:0 18px}.suite-shell.premium-shell .settings-modern .settings-savebar{padding:18px;gap:18px}.suite-shell.premium-shell .settings-modern .settings-save-actions{width:100%;gap:12px;flex-wrap:wrap}.suite-shell.premium-shell .settings-modern .settings-save-actions>.primary{flex:1}.suite-shell.premium-shell .settings-modern .settings-dialog{padding:18px;width:calc(100% - 28px);max-width:calc(100% - 28px);box-sizing:border-box}.suite-shell.premium-shell .settings-modern .settings-diagnostic dl{grid-template-columns:64px minmax(0,1fr);gap:8px}.suite-shell.premium-shell .settings-modern .settings-tabs-ready>#advanced{padding:18px}.suite-shell.premium-shell .settings-modern .social-additional-accounts{padding:0 18px 18px}.suite-shell.premium-shell .automation-modern :is(.schedule-editor,.schedule-card){padding:18px}.suite-shell.premium-shell .automation-modern .form-two-columns,.suite-shell.premium-shell .operations-modern .operations-review form{grid-template-columns:1fr}.suite-shell.premium-shell .automation-modern .schedule-time{font-size:25px}.suite-shell.premium-shell .operations-modern :is(.operations-modern-grid>.easy-panel,.operations-review){padding:18px}}

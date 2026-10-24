@@ -1,0 +1,24 @@
+{
+  "run": 40055916894,
+  "outcomes": {
+    "3.12": {
+      "flow": "failure",
+      "bat": "failure",
+      "comparison": "failure",
+      "sha": "4dd849889b01b3e1e618b4dd320dcc444254d64f",
+      "vault": "success",
+      "python": "3.12",
+      "browser": "success"
+    },
+    "3.14": {
+      "comparison": "failure",
+      "flow": "failure",
+      "sha": "4dd849889b01b3e1e618b4dd320dcc444254d64f",
+      "browser": "success",
+      "python": "3.14",
+      "bat": "failure",
+      "vault": "success"
+    }
+  },
+  "note": "Initial harness archive cwd/TEMP errors and old homepage test selector; not product failures. Corrected validation tools only."
+}

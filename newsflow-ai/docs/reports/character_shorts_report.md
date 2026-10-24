@@ -1,0 +1,45 @@
+# 캐릭터 쇼츠 구현 및 검증
+
+기준 `4164077021dce80c0b0063646d178cd5d5804931`, 기존 `codex/newsflow-ux-video-app` 및 Draft PR #35에서 구현했다. 운영 코드·앱·DB·설정·키·음성·MP4·기록은 변경하거나 재시작하지 않는다. 실제 Claude/Higgsfield 호출, 참조 이미지 외부 업로드, OAuth·SNS 게시도 수행하지 않는다.
+
+## 구현
+
+영상 제작 화면의 **캐릭터 쇼츠**에서 주제와 권한 있는 PNG 원본을 등록한다. 뉴스 검색·분석·대본과 별개 모드이며 기존 뉴스·음성·검토 설정을 바꾸지 않는다. 캐릭터 정보는 `character/assets/neutgeuthae.json`에 모았다. 직장인 카피바라, 귤, 느슨한 넥타이, 사원증, 플라밍고 팀장 및 성인 시청자 설정을 대본과 모든 장면 프롬프트에 고정한다.
+
+Claude는 기존 Messages 단일 요청 transport와 API 승인·인증·모델·사용량·결과 불명 보호를 재사용한다. 별도 캐릭터 JSON schema로 3~5개 장면, 정수 4~10초, 총 30초, setup → build/contrast → punchline 순서와 글자 수를 검사한다. 대사·립싱크·TTS 호출은 없다. 검증 실패는 기록하고 멈추며 자동 재생성하지 않는다. 기존 불명 요청을 캐릭터 작업이 우회하지 않는 것도 Fake로 확인했다.
+
+Higgsfield는 기존 HTTPS 인증·DNS pinning·안전 다운로드·ffprobe 검사를 확장해 재사용한다. 모델은 공식 참조 이미지 계약을 확인한 `bytedance/seedance-2.0/reference-to-video`, 720p·9:16·`generate_audio=false`다. 지시서 예시의 Seedance Mini 경로는 확인하지 못해 임의로 사용하지 않는다. 실제 계정 사용 가능 여부는 미검증이다. 이미지 업로드는 `generate-upload-url` → 반환된 모든 필수 storage header를 포함한 PUT → public URL이며 공급사 인증 헤더를 storage에 보내지 않는다. 동일 PNG와 동일 키 식별의 완료 업로드만 재사용한다. 캐릭터 config는 공용 불변 정보, 업로드 URL 영수증은 사용자별 로컬 캐시로 구분한다.
+
+작업 저장, Claude 1회, 대본 검토/참조 전송·견적, 전체 장면 생성, 상태 조회·다운로드, 장면 검토·합성의 승인을 분리했다. 생성 승인에는 대상 장면 수·모델·전송 내용·공식 견적을 표시한다. PNG 경로에만 bounded multipart를 허용하고 기존 signed CSRF·동일 출처·기타 경로의 64 KiB/이미지 전용 제한을 유지한다. 파일명으로 경로를 구성하지 않으며 PNG 실제 형식·크기·해상도를 검사한다.
+
+공식 `/estimate/{model}`에 실제 장면 파라미터를 보내 얻은 USD만 사용한다. 가격을 추측하지 않고 편당·일일 상한은 캐릭터 작업별로 명시 입력한다. 15분 이내 견적과 동일 모델·참조·설정·키 식별을 확인한 뒤 생성한다. 공식 견적 승인 합계는 실제 청구액이 아니다. 결과 불명 승인 노출액을 임의 해제하지 않으며 `reported_billed_usd`는 확인 전 null이다. 기존 뉴스·영상의 예약·사용량·실패·청구 기록과 설정은 수정하지 않는다.
+
+제출 전 장면별 idempotency key와 submitting 상태를 먼저 저장한다. 공식 문서는 동일 key replay를 지원한다고 설명하지만 이 기능은 기존 결과 불명 보호를 유지해 자동 재전송하지 않는다. 실패·nsfw·canceled·시간 초과도 자동 재요청/Provider 전환하지 않는다. 지시서의 추가 시도는 최대 2회로 제한하며 자동 활성화하지 않는다. 응답·사용량이 확인된 대본 형식 실패만 새 대본 1회씩 별도 승인할 수 있다. 영상은 공급사가 failed로 확정한 장면만 새 공식 견적 → 새 승인 → 새 idempotency key로 1회씩 생성하며, 이전 실패 영수증과 완료 클립을 보존한다. 결과 불명·nsfw·취소는 이 경로로 재개하지 않는다. 추가 견적도 편당·일일 승인 노출액에 포함하고 일자가 바뀌어도 승인 기록을 보존한다. 동시에 생성하는 수는 한 작품의 최대 5장면으로 제한한다. 앱 시작·예약에서 캐릭터 작업을 자동 재개하지 않는다. 저장된 request ID·완료 클립은 재사용하고 새 제출로 바꾸지 않는다.
+
+장면은 기존 FFmpeg 실행·로컬 프로세스 환경·ASS 작성·ffprobe를 사용해 합성한다. 1080×1920, 30fps, H.264/AAC, 30초를 확인하고 전체 디코딩한다. 0.2초 크로스페이드의 중첩 시간을 별도로 고려해 전체가 29.6초 등으로 줄어들지 않게 했다. 클립이 2초 넘게 부족하면 중단하고, 허용 범위의 짧은 끝 프레임 연장만 기록된 장면 길이에 적용한다. 뉴스 음성의 90% 분량 검사는 수정하지 않는다. 원본 생성 음성은 사용하지 않으며 대사·배경음악은 없다. 자막 훅은 첫 2초 상단, 장면 자막은 하단, 마무리는 마지막 2초, AI 가상 캐릭터 표시는 전체 구간이다. ASS 제어문은 기존 escape를 적용한다.
+
+효과음은 사용자가 권리를 확인한 로컬 WAV만 `character/sfx/sfx_map.json`으로 연결한다. 매칭되지 않은 효과는 무음이며, 상업 이용 확인/라이선스가 없는 등록은 차단한다. 실제 효과음 파일은 공급하지 않는다. 한국어 Noto Sans KR 원본은 기존 pinned SHA-256 도구로 확인해 OFL 1.1 원문과 함께 패키지에 포함했다. 참고: [글꼴 원문과 라이선스](https://github.com/google/fonts/tree/b38c5c93af322c45f633e17ac440ec1e6c94d489/ofl/notosanskr).
+
+작업 폴더는 기존 데이터 경로 아래 `character/{job_id}/`다. `jobs.json`, `script.json`, `prompts.json`, PNG 원본, 장면 MP4, `final.mp4`, `review.json`을 보존한다. 완료 결과를 재확인할 때 해시가 다르면 차단한다. 결과 검토는 자동 승인하지 않는다. `made_for_kids=false`는 캐릭터 설정/검수 제안이며 플랫폼 실제 업로드 설정이 아니다. SNS 자동 업로드는 연결하지 않았다.
+
+## 검증
+
+로컬 Windows Python 3.14.7: 최종 변경 범위 **70 PASS**, Ruff·pip check PASS. 수신 응답/사용량이 있는 형식 실패는 `failed`, 응답 불명은 `unknown`으로 구분하고 자동 재전송하지 않는다. 캐릭터 폴더의 symlink/junction과 변조된 업로드 캐시도 차단한다. 테스트는 외부 HTTP와 예약/자동 실행을 차단하는 기존 guard 및 Fake 응답만 사용한다. 실제 API 키·사용자 DB를 테스트에 넣지 않는다.
+
+첫 Windows CI `39930517695`의 Python 3.12/3.14 테스트 단계는 각각 **69 PASS**였으나, artifact 업로드가 C: 테스트 폴더와 D: workspace의 공통 루트를 잡지 못해 두 job이 마지막 단계에서 실패했다. 테스트 실패로 표시하거나 성공 job으로 숨기지 않는다. 합성 MP4·검토 JSON만 workspace 드라이브로 복사한 뒤 업로드하도록 수정했다. 수정 후 구현 SHA 7654048의 Windows CI 39930954335는 Python 3.12/3.14 각각 69 PASS 및 artifact 저장까지 성공했다. 최종 구현 SHA `5d60721126b9cfbe3ee1998bf0f3165521875913`의 [Windows CI 39931475676](https://github.com/jsbae1979-prog/JSBAE/actions/runs/39931475676)는 Python 3.12.10 / 3.14.9 각각 **74 PASS**, Ruff·pip check PASS 및 합성 MP4·검토 JSON artifact 업로드까지 성공했다. 두 환경 모두 warning 1건은 Starlette TestClient의 httpx deprecation이며 실패·skip은 없다. [CI 요약](evidence/character-shorts/windows-ci.json). 마지막 보고서 저장 커밋은 런타임 코드를 바꾸지 않는다.
+
+확대 점검 중 `test_gui.py::test_render`의 `/settings` 제목 기대값이 현행 화면과 다른 기존 실패를 확인했다. 기준 SHA 4164077을 git archive로 분리하고 실제 import 경로를 확인한 뒤 동일 실패(2 PASS 뒤 1 FAIL)를 재현했다. 기존 실패를 삭제/skip하거나 화면을 되돌리지 않았다. 이번 변경 범위는 캐릭터 테스트, 단일 이미지 게시 테스트 및 HTML escape·수집 실패 보존·복구 검사로 한정했다. 기존 전체 회귀 57 FAIL 기록은 그대로이며 전체 회귀 PASS를 주장하지 않는다.
+
+Windows CI의 가짜 공급사 클립으로 세 주제의 실제 로컬 MP4 합성을 검증하도록 구성했다. 이 클립은 테스트 패턴이며 실제 느긋해 대리 영상이 아니다. 자막·길이·코덱·재시작 시 기록 재사용 검증과 실제 캐릭터 일관성·웃음·영상 품질 평가를 구분한다. 참조 원본과 실제 생성 없이는 지시서의 최종 실사용 완료 기준을 충족했다고 표시하지 않는다.
+
+## 실제 제작 전 남은 조건
+
+1. source job `4cca8a6d-f872-4fc9-8c63-7007907cb6cf`의 소유/사용 권한 있는 원본 PNG를 사용자가 준비해야 한다. 웹사이트 계정 조회나 다운로드는 하지 않았다.
+2. Claude의 기존 인증·사용 승인·선택 모델과 Higgsfield `HF_KEY` 환경 설정/API 계정 접근을 확인해야 한다. HF_KEY는 서버 프로세스에서만 읽고 새 설정·로그·Git에 쓰지 않는다. 이 모드는 배포 시 기존 DPAPI 키를 자동 변환하거나 환경에 내보내지 않는다.
+3. 실제 요청 범위와 공식 견적·편당/일일 상한에 별도 동의한 뒤 처음 한 장면부터 실사용 확인이 필요하다. 이번 지시서만으로 실제 유료 호출을 실행하지 않는다.
+4. 원본 캐릭터의 일관성과 세 편의 내용·화질·효과음·최종 길이는 사람이 검수해야 한다. 실제 청구액도 공급사 기록으로 별도 확인한다.
+5. 운영 적용·백업·재시작은 별도 승인 단계다. 기존 운영 인스턴스는 계속 4164077로 유지한다.
+
+공식 계약 확인: [Seedance 참조 영상](https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video), [업로드](https://docs.higgsfield.ai/docs/concepts/file-uploads), [견적·보관](https://docs.higgsfield.ai/docs/concepts/billing-and-retention), [idempotency](https://docs.higgsfield.ai/docs/concepts/idempotency). 문서상의 지원과 실제 계정 검증을 구분했다.
+
+운영 보존 확인: 원래 4164077의 소스 320개 파일, DB/WAL 원시 바이트, 보호 파일 28개 및 Sola WAV 해시가 같았다. 원본 SQLite 조회 0회, 키 복호화 0회, 캐릭터 운영 폴더 생성 0회이며 기존 서버 프로세스(43496)를 유지했다. 검증 중 운영 앱 적용·재시작을 하지 않았다. 참조 원본과 실계정 생성/품질·수동 게시 검수는 계속 미검증이다.

@@ -52,6 +52,8 @@ if (state) {
 for (const form of document.querySelectorAll('form[method="post"]:not([data-easy-form]):not([data-ai-form]):not([data-claude-action]):not([data-codex-action])')) {
   form.addEventListener('submit', async (event) => {
     if (event.defaultPrevented) return;
+    // Image forms own their reviewed copy, one-shot request and failure handling.
+    if (form.matches('[data-generate-image], [data-generate-card], [data-image-form]')) return;
     event.preventDefault();
     const target = new URL(event.submitter?.getAttribute('formaction') || form.action, window.location.href);
     if (target.origin !== window.location.origin) return;
@@ -74,9 +76,18 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
         body: new URLSearchParams(new FormData(form))
       });
       if (!response.ok) {
+        if (response.status === 422 && form.hasAttribute('data-elevenlabs-voices-form')) {
+          // The server supplies sanitized HTML, not a vendor response or a JSON detail string.
+          const documentCopy = new DOMParser().parseFromString(await response.text(), 'text/html');
+          const explanation = documentCopy.getElementById('elevenlabs-voice-error');
+          const detail = explanation?.textContent?.trim();
+          alert.textContent = detail && detail.length <= 300
+            ? detail : '음성 목록 요청을 확인하지 못했습니다. 자동 재시도하지 않습니다.';
+          return;
+        }
         if (response.status === 422 && (form.hasAttribute('data-ai-studio') || form.hasAttribute('data-settings-form')
             || form.hasAttribute('data-topic-editor-form') || form.hasAttribute('data-youtube-form')
-            || form.hasAttribute('data-instagram-form') || form.hasAttribute('data-unified-publish-form'))) {
+            || form.hasAttribute('data-instagram-form') || form.hasAttribute('data-tiktok-form') || form.hasAttribute('data-unified-publish-form'))) {
           const failure = await response.json();
           alert.textContent = typeof failure.detail === 'string' && failure.detail.length <= 300
             ? failure.detail : '제공자·모델과 실행 동의 항목을 확인해 주세요.';
@@ -98,12 +109,22 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
       }
       const next = new URL(response.url);
       if (next.origin !== window.location.origin) throw new Error('Unexpected redirect');
+      // Clear saved-state guards before any same-page reload branch returns.
+      document.dispatchEvent(new CustomEvent('settings:form-saved', {detail: {form}}));
       if (form.hasAttribute('data-youtube-form')) {
         next.hash = next.pathname === '/simple-settings' ? 'youtube' : 'youtube-publish';
       }
       if (form.hasAttribute('data-instagram-form')) {
         next.hash = next.pathname === '/simple-settings' ? 'instagram' : 'instagram-publish';
         // Same-document navigation otherwise leaves stale draft IDs and processing controls on screen.
+        if (next.pathname === window.location.pathname && next.search === window.location.search) {
+          window.history.replaceState(null, '', next.href);
+          window.location.reload();
+          return;
+        }
+      }
+      if (form.hasAttribute('data-tiktok-form')) {
+        next.hash = 'tiktok';
         if (next.pathname === window.location.pathname && next.search === window.location.search) {
           window.history.replaceState(null, '', next.href);
           window.location.reload();
@@ -118,13 +139,13 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
           return;
         }
       }
-      document.dispatchEvent(new CustomEvent('settings:form-saved', {detail: {form}}));
       window.location.assign(next.href);
     } catch (_) {
       alert.textContent = '서버에 연결하지 못했습니다. 실행 상태를 확인하세요.';
     } finally {
       if (alert.textContent && form.closest('.settings-workspace')) alert.focus();
       if (submit) { submit.disabled = false; submit.textContent = label; }
+      if (alert?.textContent) { alert.tabIndex = -1; alert.focus(); }
     }
   });
 }

@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 from PIL import Image, ImageDraw, ImageFont, ImageOps, UnidentifiedImageError
 
 from newsflow.intelligence.korean import split_sentences
+from newsflow.shortform import Shortform
 
 from .tts import SpeechSettings, TTSProvider, local_process_env, wav_duration
 
@@ -40,6 +41,7 @@ class ScenePlan:
     clip: Path | None = None
     ai_generated: bool = False
     clip_format: str = "mov"
+    effect: str = "cut"
 
 
 @dataclass(frozen=True)
@@ -55,6 +57,8 @@ class RenderPlan:
     fit_audio: bool = False
     # New API drafts must return to review instead of silently padding or rewriting speech.
     strict_audio_fit: bool = False
+    shortform: Shortform = field(default_factory=Shortform)
+    voice_attribution: bool = False
 
     @property
     def duration(self) -> float:
@@ -65,6 +69,8 @@ class RenderPlan:
         return self.voice == "offline-silence"
 
     def validate(self) -> None:
+        if self.shortform.enabled and not 15 <= self.duration <= 35:
+            raise RenderError("숏폼 강조는 15~35초 대본을 선택하세요.")
         if not 1 <= len(self.scenes) <= 8 or not 0 < self.duration <= 60:
             raise RenderError("장면 수 또는 길이가 잘못되었습니다.")
         if not 36 <= self.font_size <= 64 or not 1100 <= self.subtitle_y <= 1500:
@@ -73,6 +79,8 @@ class RenderPlan:
             not 0.1 <= s.seconds <= 60 or len(s.narration) > 400 or len(s.caption) > 150 for s in self.scenes
         ):
             raise RenderError("장면 시간 또는 텍스트 길이를 확인하세요.")
+        if any(s.effect not in {"cut", "fade"} for s in self.scenes):
+            raise RenderError("지원하는 장면 효과를 선택하세요.")
 
 
 AUDIO_TAIL_SECONDS = 0.35
@@ -134,7 +142,7 @@ def fit_timings(audio_seconds: list[float], planned: list[float], total: float) 
     return result
 
 
-def prepare_audio(plan: RenderPlan, work: Path, tts: TTSProvider, cancel: Event) -> tuple[list[ScenePlan], list[dict]]:
+def prepare_audio(plan: RenderPlan, work: Path, tts: TTSProvider, cancel: Event, binary: Path | None = None) -> tuple[list[ScenePlan], list[dict]]:
     """Measure once for API drafts; retain legacy whole-sentence fitting for older projects."""
     scenes = list(plan.scenes)
     measured, cue_lists = [], []
@@ -149,12 +157,24 @@ def prepare_audio(plan: RenderPlan, work: Path, tts: TTSProvider, cancel: Event)
         else:
             tts.synthesize(scene.narration, audio, plan.voice, 120, plan.speech)
             cues = []
+        if plan.shortform.enabled and plan.shortform.speed != 1:
+            if binary is None:
+                raise RenderError("숏폼 음성 속도 처리를 위한 FFmpeg가 필요합니다.")
+            sped = work / f"scene-{index:03d}-paced.wav"
+            FFmpegAdapter.execute([str(binary), "-nostdin", "-v", "error", "-n", "-i", str(audio),
+                                   "-af", f"atempo={plan.shortform.speed:.3f}", str(sped)], work, cancel)
+            sped.replace(audio)
+            cues = [{**cue, "start_ms": round(cue["start_ms"] / plan.shortform.speed),
+                     "end_ms": round(cue["end_ms"] / plan.shortform.speed)} for cue in cues]
         duration = wav_duration(audio)
+        if cues and plan.shortform.enabled and plan.shortform.speed != 1:
+            for cue in cues:
+                cue["end_ms"] = min(cue["end_ms"], round(duration * 1000))
         if not math.isfinite(duration) or not 0 < duration <= 120:
             raise RenderError("음성 길이가 유효하지 않습니다.", kind="audio")
         if not cues:
             # No word/sentence alignment is claimed for adapters without timestamps.
-            cues = [{"start_ms": 0, "end_ms": round(duration * 1000), "text": scene.caption or scene.narration}]
+            cues = [{"start_ms": 0, "end_ms": round(duration * 1000), "text": scene.narration if plan.shortform.enabled and plan.shortform.hook and index == 0 else scene.caption or scene.narration}]
         previous = 0
         for cue in cues:
             if (not isinstance(cue.get("text"), str) or not 0 < len(cue["text"]) <= 400
@@ -169,9 +189,19 @@ def prepare_audio(plan: RenderPlan, work: Path, tts: TTSProvider, cancel: Event)
 
     for index in range(len(scenes)):
         synthesize(index)
-    if plan.strict_audio_fit:
+    if plan.shortform.enabled:
+        if plan.shortform.hook and measured[0] > 3:
+            raise RenderError("훅 음성이 3초를 넘습니다. 대본 검토에서 첫 문장을 줄이세요. 자동 재호출하지 않습니다.", kind="audio_review")
+        if plan.shortform.tight_ending:
+            # Frame-grid tails only; never fill the target with a long silent ending.
+            fitted = [math.ceil((a + (0.35 if i == len(measured)-1 else 0.1))*30)/30 for i,a in enumerate(measured)]
+            if not 15 <= sum(fitted) <= min(35, plan.duration) + .001:
+                raise RenderError("실제 음성 분량이 15초~목표 길이에 맞지 않습니다. 대본을 검토하세요. 자동 재생성하지 않습니다.", kind="audio_review")
+        else:
+            fitted = fit_api_timings(measured, plan.duration)
+    elif plan.strict_audio_fit:
         fitted = fit_api_timings(measured, plan.duration)
-    for attempt in range(0 if plan.strict_audio_fit else 9):
+    for attempt in range(0 if plan.strict_audio_fit or plan.shortform.enabled else 9):
         try:
             fitted = fit_timings(measured, [s.seconds for s in scenes], plan.duration)
             break
@@ -292,7 +322,57 @@ def text_lines(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFon
     return lines
 
 
+
+def draw_title(draw: ImageDraw.ImageDraw, title: str, font: Path, top: int) -> None:
+    # Fit the complete title; never silently discard a factual suffix.
+    for size in (56, 52, 48, 44, 40, 36, 32):
+        selected = ImageFont.truetype(str(font), size)
+        lines = text_lines(draw, title, selected, 900)
+        if len(lines) <= 4:
+            for index, line in enumerate(lines):
+                draw.text((90, top + index * 74), line, font=selected, fill="#f0f4ff")
+            return
+    raise RenderError("제목이 안전 영역을 초과합니다. 제목을 검토해 줄이세요.", kind="title")
+
+
+def draw_voice_attribution(draw: ImageDraw.ImageDraw, plan: RenderPlan, font: Path) -> None:
+    if plan.voice_attribution:
+        selected = ImageFont.truetype(str(font), 28)
+        draw.rounded_rectangle((90, 590, 990, 634), radius=8, fill="#101726")
+        draw.text((108, 596), "음성 제공 · elevenlabs.io", font=selected, fill="#c8d9f0")
+
+
+def draw_sources(draw: ImageDraw.ImageDraw, sources: list[dict], font: Path) -> None:
+    # One reference per line keeps hostnames intact. Full URLs remain in the review UI.
+    names = []
+    for source in sources[:100]:
+        publisher = str(source.get("publisher", "")).strip()
+        host = urlsplit(source.get("url", "")).hostname or ""
+        label = " · ".join(part for part in (publisher, host) if part)
+        if label and label not in names:
+            names.append(label[:200])
+        if len(names) == 3:
+            break
+    for index, label in enumerate(names):
+        text = ("출처: " if index == 0 else "") + label
+        for size in (26, 24, 22, 20, 18):
+            selected = ImageFont.truetype(str(font), size)
+            if draw.textlength(text, font=selected) <= 900:
+                break
+        while text and draw.textlength(text, font=selected) > 878:
+            text = text[:-1]
+        if text != ("출처: " if index == 0 else "") + label:
+            text += "…"
+        draw.text((90, 1805 + index * 33), text, font=selected, fill="#9ba9c1")
+
+
 def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Path) -> None:
+    if plan.shortform.enabled:
+        from .shortform_visuals import visual
+        if scene.image:
+            load_image(scene.image).close()
+        visual(plan, scene, target, font)
+        return
     image = Image.new("RGB", (1080, 1920), "#101726")
     draw = ImageDraw.Draw(image)
     title_font = ImageFont.truetype(str(font), 56)
@@ -302,8 +382,8 @@ def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Pat
     draw.text((90, 145), "NEWSFLOW · 미확인 보도 · 사람 검토 필요", font=small_font, fill="#b7adff")
     audio_label = "무음 검토영상 · 음성 없음" if plan.silent else "한국어 음성 · 발음 품질 미검증"
     draw.text((990 - draw.textlength(audio_label, font=small_font), 1762), audio_label, font=small_font, fill="#8d9ab3")
-    for i, line in enumerate(text_lines(draw, plan.title, title_font, 900)[:5]):
-        draw.text((90, 230 + i * 78), line, font=title_font, fill="#f0f4ff")
+    draw_title(draw, plan.title, font, 230)
+    draw_voice_attribution(draw, plan, font)
     if scene.image:
         asset = ImageOps.fit(load_image(scene.image), (900, 650))
         image.paste(asset, (90, 650))
@@ -325,15 +405,7 @@ def card(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: Pat
             fill="#ffffff",
             stroke_width=1,
         )
-    names = []
-    for source in plan.sources[:100]:
-        label = source.get("publisher", "") + " · " + urlsplit(source.get("url", "")).netloc
-        if label not in names:
-            names.append(label[:200])
-            if len(names) == 3:
-                break
-    for i, line in enumerate(text_lines(draw, "출처: " + " / ".join(names), small_font, 900)[:2]):
-        draw.text((90, 1810 + i * 38), line, font=small_font, fill="#9ba9c1")
+    draw_sources(draw, plan.sources, font)
     image.save(target, format="PNG")
 
 
@@ -354,17 +426,20 @@ def overlay(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: 
 
     The label cannot be turned off; it sits in its own opaque band so the clip never hides it.
     """
+    if plan.shortform.enabled:
+        from .shortform_visuals import visual
+        visual(plan, scene, target, font, transparent=True)
+        return
     image = Image.new("RGBA", (1080, 1920), (0, 0, 0, 0))
     draw = ImageDraw.Draw(image)
-    title_font = ImageFont.truetype(str(font), 56)
     body_font = ImageFont.truetype(str(font), plan.font_size)
     small_font = ImageFont.truetype(str(font), 28)
     label_font = ImageFont.truetype(str(font), 40)
     draw.rectangle((0, 0, 1080, 600), fill=(16, 23, 38, 214))
     draw.rounded_rectangle((90, 105, 990, 115), fill="#8b83ff", radius=5)
     draw.text((90, 145), "NEWSFLOW · 미확인 보도 · 사람 검토 필요", font=small_font, fill="#b7adff")
-    for i, line in enumerate(text_lines(draw, plan.title, title_font, 900)[:4]):
-        draw.text((90, 210 + i * 74), line, font=title_font, fill="#f0f4ff")
+    draw_title(draw, plan.title, font, 210)
+    draw_voice_attribution(draw, plan, font)
     draw.rounded_rectangle((90, 500, 990, 580), radius=20, fill=(255, 196, 0, 255))
     width = draw.textlength(AI_SCENE_LABEL, font=label_font)
     draw.text((540 - width / 2, 516), AI_SCENE_LABEL, font=label_font, fill="#111111")
@@ -378,15 +453,7 @@ def overlay(plan: RenderPlan, scene: ScenePlan, index: int, target: Path, font: 
         draw.text((90, plan.subtitle_y + i * (plan.font_size + 16)), line, font=body_font, fill="#ffffff", stroke_width=1)
     audio_label = "무음 검토영상 · 음성 없음" if plan.silent else "한국어 음성 · 발음 품질 미검증"
     draw.text((990 - draw.textlength(audio_label, font=small_font), 1762), audio_label, font=small_font, fill="#8d9ab3")
-    names = []
-    for source in plan.sources[:100]:
-        label = source.get("publisher", "") + " · " + urlsplit(source.get("url", "")).netloc
-        if label not in names:
-            names.append(label[:200])
-            if len(names) == 3:
-                break
-    for i, line in enumerate(text_lines(draw, "출처: " + " / ".join(names), small_font, 900)[:2]):
-        draw.text((90, 1810 + i * 38), line, font=small_font, fill="#9ba9c1")
+    draw_sources(draw, plan.sources, font)
     image.save(target, format="PNG")
 
 
@@ -522,6 +589,39 @@ class FFmpegAdapter:
         ]
 
     @staticmethod
+    def add_filter(command: list[str], value: str) -> list[str]:
+        command = list(command)
+        if "-filter_complex" in command:
+            i = command.index("-filter_complex") + 1
+            marker = f"style{command[i].count(chr(59))}"
+            command[i] = command[i].replace("[v]", f"[{marker}];[{marker}]{value}[v]")
+        elif "-vf" in command:
+            command[command.index("-vf") + 1] += "," + value
+        else:
+            command[-1:-1] = ["-vf", value]
+        return command
+
+    @staticmethod
+    def apply_effect(command: list[str], scene: ScenePlan) -> list[str]:
+        """Apply only our enum-based filters after captions; preserve narration/timing."""
+        if scene.effect not in {"cut", "fade"}:
+            raise RenderError("지원하는 장면 효과를 선택하세요.")
+        command = list(command)
+        if scene.effect == "cut":
+            return command
+        duration = min(0.25, scene.seconds / 4)
+        effect = f"fade=t=in:st=0:d={duration:.3f},fade=t=out:st={scene.seconds-duration:.3f}:d={duration:.3f}"
+        if "-filter_complex" in command:
+            index = command.index("-filter_complex") + 1
+            command[index] = command[index].replace("[v]", f"[effectbase];[effectbase]{effect}[v]")
+        elif "-vf" in command:
+            index = command.index("-vf") + 1
+            command[index] += "," + effect
+        else:
+            command[-1:-1] = ["-vf", effect]
+        return command
+
+    @staticmethod
     def execute(args: list[str], work: Path, cancel: Event, timeout: float = 600) -> None:
         try:
             with subprocess.Popen(
@@ -601,10 +701,13 @@ class FFmpegAdapter:
         progress(5)
         scenes = list(plan.scenes)
         timings: list[dict] = []
-        if (plan.fit_audio or plan.strict_audio_fit) and not plan.silent:
-            scenes, timings = prepare_audio(plan, work, tts, cancel)
+        if (plan.fit_audio or plan.strict_audio_fit or plan.shortform.enabled) and not plan.silent:
+            scenes, timings = prepare_audio(plan, work, tts, cancel, binary)
+        if plan.shortform.enabled and plan.silent:
+            raise RenderError("숏폼 훅·종료 검사는 실제 음성이 필요합니다. 저장한 음성을 확인하세요.", kind="audio_review")
+        rendered_duration = sum(scene.seconds for scene in scenes)
         if getattr(tts, "attribution_required", False):
-            plan = replace(plan, title=plan.title + " · elevenlabs.io")
+            plan = replace(plan, voice_attribution=True)
         for index, scene in enumerate(scenes):
             if cancel.is_set():
                 raise RenderError("영상 제작이 중단되었습니다.")
@@ -625,14 +728,19 @@ class FFmpegAdapter:
                 command = self.clip_command(binary, scene, image, audio, target)
             else:
                 command = self.command(binary, scene, image, audio, target)
+            if plan.shortform.enabled and plan.shortform.motion:
+                command = self.add_filter(command,
+                    "zoompan=z='1+0.025*mod(on,90)/90':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=1:s=1080x1920:fps=30,"
+                    "drawbox=x=90:y=590:w=150:h=8:color=0x3b82f6:t=fill:enable='lt(mod(t,3),0.35)'")
             if cues:
                 ass = work / f"scene-{index:03d}.ass"
-                write_ass(ass, cues, plan, font)
-                if scene.clip is not None:
-                    filter_index = command.index("-filter_complex") + 1
-                    command[filter_index] = command[filter_index].replace("[v]", f"[base];[base]ass={ass.name}[v]")
+                if plan.shortform.enabled and (plan.shortform.captions or index == 0 and plan.shortform.hook):
+                    from .shortform_visuals import write_captions
+                    write_captions(ass, cues, font, 72 if index == 0 and plan.shortform.hook else 64)
                 else:
-                    command[-1:-1] = ["-vf", f"ass={ass.name}"]
+                    write_ass(ass, cues, plan, font)
+                command = self.add_filter(command, f"ass={ass.name}")
+            command = self.apply_effect(command, scene)
             self.execute(command, work, cancel)
             progress(10 + int((index + 1) / len(scenes) * 75))
         manifest = work / "concat.txt"
@@ -657,7 +765,7 @@ class FFmpegAdapter:
                 "-i",
                 str(manifest),
                 "-t",
-                f"{plan.duration:.3f}",
+                f"{rendered_duration:.3f}",
                 "-c",
                 "copy",
                 "-movflags",
@@ -668,10 +776,18 @@ class FFmpegAdapter:
             cancel,
         )
         progress(95)
-        metadata = self.inspect(probe, final, plan.duration)
+        metadata = self.inspect(probe, final, rendered_duration)
         metadata["ffmpeg_version"] = version
         metadata["audio"] = "silent" if plan.silent else "voice"
         metadata["audio_fit"] = bool(timings)
+        if plan.shortform.enabled:
+            from dataclasses import asdict
+            metadata["shortform"] = asdict(plan.shortform)
+            metadata["target_duration"] = plan.duration
+            metadata["hook_audio_seconds"] = timings[0]["audio_seconds"]
+            metadata["final_tail_seconds"] = round(scenes[-1].seconds - timings[-1]["audio_seconds"], 3)
+            metadata["caption_alignment"] = "engine_sentence_timestamps_or_scene_estimate"
+            metadata["human_review_required"] = True
         if plan.voice == "elevenlabs":
             metadata["tts_provider"] = "elevenlabs"
             metadata["attribution_required"] = bool(getattr(tts, "attribution_required", False))

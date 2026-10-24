@@ -1,0 +1,18 @@
+{
+  "sha": "4af9f4c3891df19c6887df50dc665eb0a488fa36",
+  "command": [
+    ".venv/bin/python",
+    "-m",
+    "pytest",
+    "-p",
+    "cloud_validation_browser",
+    "-q",
+    "-rs",
+    "--tb=short",
+    "--junitxml=/tmp/newsflow-57-analysis/full.xml"
+  ],
+  "python": "Python 3.12.14",
+  "browser": "/usr/bin/chromium",
+  "live_opt_ins": false,
+  "paid_credentials_inherited": false
+}

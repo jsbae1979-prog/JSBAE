@@ -2,6 +2,7 @@
 
 import html
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -22,7 +23,10 @@ CHOICES = {
 @pytest.fixture(scope="module")
 def browser():
     with sync_playwright() as playwright:
-        instance = playwright.chromium.launch(channel="chrome", headless=True)
+        # Windows keeps its real Chrome default; Cloud can explicitly use installed Chromium.
+        executable = os.environ.get("NEWSFLOW_TEST_BROWSER_EXECUTABLE")
+        instance = playwright.chromium.launch(executable_path=executable, headless=True) if executable else (
+            playwright.chromium.launch(channel="chrome", headless=True))
         yield instance
         instance.close()
 

@@ -24,6 +24,7 @@ from newsflow.oauth.contracts import YOUTUBE_UPLOAD_SCOPE
 
 from .adapters import YouTubeAdapter
 from .auth import TokenBundle
+from .categories import valid_category
 
 UPLOAD_URL = "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status"
 MAX_BYTES = 2 * 1024**3
@@ -187,12 +188,13 @@ class YouTubeUploadAdapter:
             or YOUTUBE_UPLOAD_SCOPE not in bundle.scopes or not _CHANNEL.fullmatch(channel_id)
             or not re.fullmatch(r"[a-f0-9]{64}", expected_sha256)
             or type(payload.get("made_for_kids")) is not bool
+            or not valid_category(payload.get("youtube_category_id", "25"))
         ):
             raise YouTubeUploadError("invalid_input")
         prepared = YouTubeAdapter().prepare(payload)
         status = {**prepared["status"], "privacyStatus": privacy,
                   "selfDeclaredMadeForKids": payload["made_for_kids"]}
-        metadata = json.dumps({"snippet": {**prepared["snippet"], "categoryId": "25"}, "status": status},
+        metadata = json.dumps({"snippet": prepared["snippet"], "status": status},
                               ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         authorization = "Bearer " + bundle.access_token.get_secret_value()
         try:

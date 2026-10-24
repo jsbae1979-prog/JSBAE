@@ -1,0 +1,33 @@
+{
+  "implementation_sha": "5d60721126b9cfbe3ee1998bf0f3165521875913",
+  "run_id": 39931475676,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39931475676",
+  "verification": "Fake suppliers and synthetic source clips; real FFmpeg encode/probe/decode",
+  "jobs": [
+    {
+      "job_id": 120340530510,
+      "python": "3.12",
+      "passed": 74,
+      "warning": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_uploaded": true
+    },
+    {
+      "job_id": 120340529956,
+      "python": "3.14",
+      "passed": 74,
+      "warning": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS",
+      "status": "completed",
+      "conclusion": "success",
+      "artifact_uploaded": true
+    }
+  ],
+  "real_provider_calls": 0,
+  "mascot_consistency": "NOT VERIFIED",
+  "public_publication": "NOT EXECUTED"
+}

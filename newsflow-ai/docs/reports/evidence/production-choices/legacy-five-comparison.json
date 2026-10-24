@@ -1,0 +1,30 @@
+{
+  "base_sha": "044164b29240a10c9edd965ba35c6a303cd4e6c9",
+  "tested_sha": "73bb9ca88e07f0a108af8ac4266a635c3666f9b7",
+  "scope": "Five observed legacy failures only; same Python 3.12 venv, dependencies and test IDs, baseline archived sources via PYTHONPATH; no full suite replay",
+  "base_ids": [
+    "tests.test_ux_workflow::test_available_local_voice_is_forwarded_without_new_provider_settings",
+    "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[claude_code-sonnet]",
+    "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[codex-default]",
+    "tests.test_ux_workflow::test_stored_paid_approval_still_requires_per_job_transfer_consent",
+    "tests.test_ux_workflow_context::test_different_openai_model_requires_consent_without_replacement"
+  ],
+  "current_ids": [
+    "tests.test_ux_workflow::test_available_local_voice_is_forwarded_without_new_provider_settings",
+    "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[claude_code-sonnet]",
+    "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[codex-default]",
+    "tests.test_ux_workflow::test_stored_paid_approval_still_requires_per_job_transfer_consent",
+    "tests.test_ux_workflow_context::test_different_openai_model_requires_consent_without_replacement"
+  ],
+  "same_ids": true,
+  "same_assertion_messages_after_request_id_and_pytest_where_normalization": {
+    "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[claude_code-sonnet]": true,
+    "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[codex-default]": true,
+    "tests.test_ux_workflow::test_available_local_voice_is_forwarded_without_new_provider_settings": true,
+    "tests.test_ux_workflow::test_stored_paid_approval_still_requires_per_job_transfer_consent": true,
+    "tests.test_ux_workflow_context::test_different_openai_model_requires_consent_without_replacement": true
+  },
+  "new_failure_ids_in_this_comparison": [],
+  "historical_full_regression": "57 FAIL retained, NOT RERUN",
+  "normalization": "Only URL-encoded request_id UUID and optional pytest Response where-detail lines removed; assertions and destinations unchanged"
+}

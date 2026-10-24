@@ -1,0 +1,12 @@
+{
+  "id": "neutgeuthae",
+  "name_ko": "느긋해 대리",
+  "species": "capybara",
+  "personality": "회사에서 무슨 일이 터져도 평온한 만사태평형. 주변이 난리일수록 더 느긋해지는 대비가 웃음 포인트. 대사 없이 표정과 행동과 자막으로 반응한다.",
+  "appearance": "chubby round capybara with soft brown fur, sleepy half-closed relaxed eyes, tiny calm smile, small orange tangerine balanced on its head, white short-sleeve office shirt, loose navy necktie, employee ID badge on a lanyard",
+  "style_lock": "soft 3D animated film style, warm pastel lighting, consistent character design, vertical 9:16 framing, no text, no logos",
+  "source_job_id": "4cca8a6d-f872-4fc9-8c63-7007907cb6cf",
+  "supporting_cast": [{"id": "team_lead", "appearance": "stressed tall flamingo manager in a gray suit"}],
+  "audience": "adult office workers",
+  "made_for_kids": false
+}

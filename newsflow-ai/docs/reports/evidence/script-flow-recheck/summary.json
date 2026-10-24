@@ -1,0 +1,146 @@
+{
+  "tested_sha": "090202f6f1cacfb7656aa227ca4802811a79da9b",
+  "run": 40058732719,
+  "run_conclusion": "success",
+  "scope": "Fake flow and safety only; not full product regression",
+  "versions": {
+    "312": {
+      "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+      "platform": "Windows-2025Server-10.0.26100-SP0",
+      "comparison": {
+        "baseline-old": {
+          "passed": 0,
+          "failed": 2,
+          "error": 0,
+          "skipped": 0
+        },
+        "baseline-fixed": {
+          "passed": 2,
+          "failed": 0,
+          "error": 0,
+          "skipped": 0
+        },
+        "product-old": {
+          "passed": 0,
+          "failed": 2,
+          "error": 0,
+          "skipped": 0
+        },
+        "product-fixed": {
+          "passed": 2,
+          "failed": 0,
+          "error": 0,
+          "skipped": 0
+        }
+      },
+      "same_ids_and_status_per_fixture": true,
+      "safety": {
+        "tests": "84",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0"
+      },
+      "synthetic_mp4_sha256": "0ee914930bdf9295f7d38808092e7c59c6fa4d06a77e3d2d0922fd70f9f3df7f",
+      "synthetic_mp4_metadata": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "mobile": {
+        "link": {
+          "x": 200.5,
+          "y": 641.796875,
+          "width": 167.5,
+          "height": 64
+        },
+        "label": {
+          "width": 109.5,
+          "height": 42
+        },
+        "clipped": false,
+        "hit": true,
+        "click": "PASS",
+        "keyboard": "PASS",
+        "viewport": "390x844",
+        "css_modified": false,
+        "legacy_height_assertion_unchanged": true
+      }
+    },
+    "314": {
+      "python": "3.14.9 (tags/v3.14.9:ead82c0, Oct 21 2026, 06:26:14) [MSC v.1944 64 bit (AMD64)]",
+      "platform": "Windows-2025Server-10.0.26100-SP0",
+      "comparison": {
+        "baseline-old": {
+          "passed": 0,
+          "failed": 2,
+          "error": 0,
+          "skipped": 0
+        },
+        "baseline-fixed": {
+          "passed": 2,
+          "failed": 0,
+          "error": 0,
+          "skipped": 0
+        },
+        "product-old": {
+          "passed": 0,
+          "failed": 2,
+          "error": 0,
+          "skipped": 0
+        },
+        "product-fixed": {
+          "passed": 2,
+          "failed": 0,
+          "error": 0,
+          "skipped": 0
+        }
+      },
+      "same_ids_and_status_per_fixture": true,
+      "safety": {
+        "tests": "84",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0"
+      },
+      "synthetic_mp4_sha256": "0ee914930bdf9295f7d38808092e7c59c6fa4d06a77e3d2d0922fd70f9f3df7f",
+      "synthetic_mp4_metadata": {
+        "format": "mov,mp4,m4a,3gp,3g2,mj2",
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021029,
+        "fps": 30.0,
+        "audio_channels": 2,
+        "playable": true
+      },
+      "mobile": {
+        "link": {
+          "x": 200.5,
+          "y": 641.796875,
+          "width": 167.5,
+          "height": 64
+        },
+        "label": {
+          "width": 109.5,
+          "height": 42
+        },
+        "clipped": false,
+        "hit": true,
+        "click": "PASS",
+        "keyboard": "PASS",
+        "viewport": "390x844",
+        "css_modified": false,
+        "legacy_height_assertion_unchanged": true
+      }
+    }
+  },
+  "paid_oauth_sns_calls": 0,
+  "user_windows11": "NOT VERIFIED"
+}

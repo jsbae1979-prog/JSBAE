@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1280" viewBox="0 0 720 1280">
+ <defs>
+  <linearGradient id="base" x2="1" y2="1"><stop stop-color="#162b49"/><stop offset="1" stop-color="#080f1d"/></linearGradient>
+  <radialGradient id="light"><stop stop-color="#3f73ad" stop-opacity=".25"/><stop offset="1" stop-color="#13233d" stop-opacity="0"/></radialGradient>
+  <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M60 0H0v60" fill="none" stroke="#9cb4d0" stroke-opacity=".055"/></pattern>
+ </defs>
+ <path fill="url(#base)" d="M0 0h720v1280H0z"/>
+ <path fill="url(#grid)" d="M0 0h720v1280H0z"/>
+ <ellipse cx="610" cy="150" rx="420" ry="470" fill="url(#light)"/>
+ <g fill="none" stroke="#7da5d5" stroke-opacity=".13">
+  <circle cx="665" cy="165" r="235"/><circle cx="665" cy="165" r="315"/>
+  <path d="M-40 1080c180-190 360-200 800-55M-40 1130c260-200 490-150 800-40"/>
+ </g>
+</svg>

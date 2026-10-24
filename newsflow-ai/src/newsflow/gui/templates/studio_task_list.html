@@ -1,0 +1,7 @@
+<div class="studio-task-list" data-studio-task-list>
+{% for item in studio_rows %}<article class="studio-task-row" data-studio-task data-studio-category="{{ item.category }}" data-studio-type="{{ item.type }}">
+  <span class="studio-type-icon" aria-hidden="true">{{ ui_icon(item.icon,24) }}</span>
+  <div class="studio-task-copy"><div class="studio-task-meta"><span>{{ item.type_label }}</span><span class="studio-state state-{{ item.category }}">{{ item.label }}</span></div><h3>{{ item.title }}</h3></div>
+  <div class="studio-task-actions"><a class="button {{ 'primary' if loop.first and item.category != 'saved' }}" href="{{ item.href }}">{{ item.next_action }} {{ ui_icon('arrow',16) }}</a>{% if item.legacy_task is defined %}{% with task=item.legacy_task %}{% include 'remove_activity_button.html' %}{% endwith %}{% endif %}</div>
+</article>{% else %}<div class="studio-empty"><span>{{ ui_icon('check',28) }}</span><h3>지금 확인할 작업이 없습니다.</h3><p>새 콘텐츠를 준비하거나 저장한 결과물을 확인하세요.</p><a href="/#studio-create">만들 콘텐츠 고르기 →</a></div>{% endfor %}
+</div>

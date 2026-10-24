@@ -1,0 +1,102 @@
+{
+  "synthetic_only": true,
+  "actual_provider_calls": 0,
+  "not_verified": [
+    "actual model selection",
+    "semantic quality",
+    "real token cost increase"
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "title": "[합성] 한국은행 기준금리 3.00% 동결",
+      "summary": "2026-10-22 합성 자료입니다. 한국은행이 기준금리를 3.00%로 유지했습니다. 후속 일정은 제공되지 않았습니다.",
+      "sources": [
+        {
+          "url": "https://example.com/synthetic-rate",
+          "publisher": "합성 A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "[합성] 리치먼드 어린이집 총기 안전 사건",
+      "summary": "합성 자료입니다. 리치먼드 어린이집에서 2세 아동과 장전된 총기 관련 사건이 보도됐습니다. 상세 경위는 미확인입니다.",
+      "sources": [
+        {
+          "url": "https://example.org/synthetic-safety",
+          "publisher": "합성 B"
+        }
+      ]
+    }
+  ],
+  "v1_fixture": {
+    "title": "뉴스 검토: [합성] 한국은행 기준금리 3.00% 동결",
+    "hook": "보도된 내용을 출처와 함께 확인합니다.",
+    "summary": "선택한 RSS 보도에 대한 초안입니다. 사실 확인은 아직 완료되지 않았습니다.",
+    "scenes": [
+      {
+        "seconds": 10,
+        "narration": "선택한 보도 주제를 소개합니다. 상세한 사실은 원문 출처에서 확인해 주세요.",
+        "caption": "보도 내용 · 사실 확인 필요",
+        "material": "직접 제작한 주제 설명 그래픽"
+      },
+      {
+        "seconds": 10,
+        "narration": "복수 출처가 같은 보도를 했는지 비교하고, 차이점을 검토합니다.",
+        "caption": "출처 비교 · 독립 검증 미완료",
+        "material": "출처 목록 텍스트 카드"
+      },
+      {
+        "seconds": 10,
+        "narration": "미확인 정보는 단정하지 않습니다. 게시 전 사람이 원문과 이용 권한을 검토해야 합니다.",
+        "caption": "사람의 검토 필요",
+        "material": "검토 안내 카드"
+      }
+    ],
+    "closing": "자세한 내용은 원문 출처에서 확인해 주세요."
+  },
+  "v2_fixture": {
+    "analysis": {
+      "misconception": "기준금리와 내 계약 금리가 같다는 오해",
+      "viewer_relevance": "자신의 이자 조건을 이해하는 관점",
+      "viewer_action": "이용 중인 계약의 금리 유형과 변경 조건 확인",
+      "next_event": "",
+      "ad_risk": "low"
+    },
+    "title": "기준금리와 내 계약을 구분하는 방법",
+    "hook": "기준금리 동결이면 내 이자도 그대로일까요?",
+    "summary": "합성 자료에 대한 시청자 관점 해석이며 계약의 조건을 확인하는 내용입니다.",
+    "scenes": [
+      {
+        "seconds": 6,
+        "role": "fact",
+        "narration": "기준금리 동결이면 내 이자도 그대로일까요? 합성 자료는 한국은행이 기준금리를 3.00%로 유지했다고 전합니다.",
+        "caption": "기준금리 결정",
+        "material": "직접 제작한 계약 점검 아이콘"
+      },
+      {
+        "seconds": 8,
+        "role": "meaning",
+        "narration": "기준금리 결정과 개인에게 적용되는 계약 금리는 같은 값이 아닙니다. 이번 소식을 내 이자 부담에 곧바로 대입하기보다 계약 조건과 연결해 이해할 필요가 있습니다.",
+        "caption": "시청자 관점",
+        "material": "직접 제작한 계약 점검 아이콘"
+      },
+      {
+        "seconds": 8,
+        "role": "meaning",
+        "narration": "같은 결정을 보더라도 내가 이용하는 계약의 조건을 함께 보는 관점이 필요합니다. 뉴스의 결정과 자신의 계약을 구분해 이해해 보세요.",
+        "caption": "계약과 결정 구분",
+        "material": "직접 제작한 계약 점검 아이콘"
+      },
+      {
+        "seconds": 8,
+        "role": "action",
+        "narration": "지금은 이용 중인 계약의 금리 유형과 변경 조건을 확인해 보세요. 계약을 함께 보는 분에게 이 확인 방법을 공유해 주세요.",
+        "caption": "확인할 일",
+        "material": "직접 제작한 계약 점검 아이콘"
+      }
+    ],
+    "closing": "계약을 함께 보는 분에게 이 확인 방법을 공유해 주세요."
+  }
+}

@@ -8,6 +8,7 @@ from sqlalchemy import select
 
 from newsflow.autopilot.samples import SAMPLE_URL
 from newsflow.db.models import AuditLog, NewsArticle, NewsSource, NewsSourceCheck
+from newsflow.news.catalog import FEED_PRESETS
 from newsflow.news.rss_adapter import ErrorKind, FeedError
 
 
@@ -103,3 +104,43 @@ def test_collect_requires_enabled_sources_and_runs_registered_adapter(client, ap
 def test_sources_reject_cross_origin(client, origin):
     response = client.post("/sources", data={"csrf_token": csrf(client), "name": "x", "url": "https://example.com/rss", "permission": "true"}, headers={"Origin": origin})
     assert response.status_code == 403
+
+
+@pytest.mark.parametrize("preset", FEED_PRESETS, ids=lambda item: item.id)
+def test_preset_registers_disabled_without_fetching(client, app, fake, monkeypatch, preset):
+    def forbidden(*args, **kwargs):
+        pytest.fail("Registering a source must not fetch RSS")
+    monkeypatch.setattr(fake, "fetch", forbidden)
+    with app.state.sessions() as session:
+        existing = session.scalar(select(NewsSource).where(NewsSource.url == preset.url))
+    data = {"csrf_token": csrf(client), "preset": preset.id, "permission": "true"}
+    result = client.post("/sources/preset", data=data, follow_redirects=False)
+    assert result.status_code == (409 if existing else 303)
+    with app.state.sessions() as session:
+        rows = session.scalars(select(NewsSource).where(NewsSource.url == preset.url)).all()
+        assert len(rows) == 1 and not rows[0].enabled
+        assert session.get(NewsSourceCheck, rows[0].id) is None
+    assert client.post("/sources/preset", data=data).status_code == 409
+    page = client.get("/sources")
+    option = page.text.split(f'<option value="{preset.id}"', 1)[1].split("</option>", 1)[0]
+    assert option.startswith(" disabled>") and "등록됨" in option
+
+
+def test_preset_preserves_permission_csrf_and_existing_sources(client, app):
+    token = csrf(client)
+    assert client.post("/sources/preset", data={"preset": "yonhap", "permission": "true"}).status_code == 403
+    assert client.post("/sources/preset", data={"csrf_token": token, "preset": "yonhap"}).status_code == 422
+    assert client.post("/sources/preset", data={
+        "csrf_token": token, "preset": "http://127.0.0.1/rss", "permission": "true",
+    }).status_code == 422
+    add(client)
+    with app.state.sessions.begin() as session:
+        original = session.scalar(select(NewsSource).where(NewsSource.url == "https://example.com/rss"))
+        original.enabled = True
+        identifier = original.id
+    assert client.post("/sources/preset", data={
+        "csrf_token": token, "preset": "bbc_world", "permission": "true",
+    }, follow_redirects=False).status_code == 303
+    with app.state.sessions() as session:
+        original = session.get(NewsSource, identifier)
+        assert original.name == "공개 피드" and original.enabled

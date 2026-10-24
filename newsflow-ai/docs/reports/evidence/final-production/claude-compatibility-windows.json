@@ -1,0 +1,51 @@
+{
+  "scope": "Existing local Claude card diagnostics on the accepted final integration base",
+  "base_sha": "b9a2e6749efe5405a131767dff7a971521392c4b",
+  "tested_sha": "1aad2885071e6e61fd3ed709c7b3fd4d09c106ad",
+  "workflow_run": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39880941214",
+  "windows": [
+    {
+      "python": "3.12.10",
+      "job_id": 120177884878,
+      "passed": 203,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS"
+    },
+    {
+      "python": "3.14.9",
+      "job_id": 120177884740,
+      "passed": 203,
+      "failed": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "ruff": "PASS",
+      "pip_check": "PASS"
+    }
+  ],
+  "warning": "Existing Starlette/httpx TestClient deprecation",
+  "local_windows_python": "3.14.7",
+  "local_related_tests": {"passed": 202},
+  "local_chrome_1366_and_390": {"passed": 1},
+  "whole_suite_repeated": false,
+  "historical_57_failures": "Prior whole-suite record preserved; not rerun or declared resolved",
+  "guards": [
+    "Synthetic temporary databases and credentials only",
+    "HTTP transports and browser external requests blocked",
+    "Scheduler and AI video worker startup disabled in this test run",
+    "No operating code, DB, key, setting, media or process changes",
+    "No actual paid AI, OAuth, external upload or SNS publication"
+  ],
+  "preservation": {
+    "operating_head": "027644730c04b6b977baa9c4ede3eeb56115e61b",
+    "operating_source_hashes_unchanged": 14,
+    "three_local_supplement_files_identical_in_integration": true,
+    "backup_archive_sha256": "18f8cb3f68b70811e86ef3e419d845c6f0c86ba039900bb4434c57197fca95fe"
+  },
+  "actual_provider_quality_and_accounts": "NOT VERIFIED",
+  "operating_deployment": "NOT PERFORMED",
+  "pull_request": "https://github.com/jsbae1979-prog/JSBAE/pull/35",
+  "pull_request_policy": "Existing Draft; no new PR or merge"
+}

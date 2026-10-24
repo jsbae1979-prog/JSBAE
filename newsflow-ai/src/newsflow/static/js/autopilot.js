@@ -46,6 +46,13 @@ for (const form of document.querySelectorAll('form[data-easy-form]')) {
           form.querySelector('input[name="workspace"][value="true"]')) {
         next.hash = 'workspace-detail';
       }
+      // Resuming a review often redirects to the same task and fragment.
+      // Rehydrate its saved state; a same-document navigation leaves stale controls.
+      if (next.pathname === window.location.pathname && next.search === window.location.search) {
+        window.history.replaceState(null, '', next.href);
+        window.location.reload();
+        return;
+      }
       window.location.assign(next.href);
     } catch (_) {
       if (alert) alert.textContent = '서버 연결이 끊겨 결과를 확인하지 못했습니다. 다시 누르기 전에 나의 제작 작업에서 진행 상황을 확인해 주세요.';

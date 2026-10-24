@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="0.323" timestamp="2026-10-24T04:55:13.623122+00:00" hostname="runnervmdaln5"><testcase classname="tests.test_news_thumbnails" name="test_additive_migration_preserves_synthetic_legacy_tables" time="0.158"><failure message="AssertionError: assert '0018' == '0017'&#10;  &#10;  - 0017&#10;  ?    ^&#10;  + 0018&#10;  ?    ^">tmp_path = WindowsPath('C:/Users/runneradmin/AppData/Local/Temp/pytest-of-runneradmin/pytest-1/test_additive_migration_preser0')
+
+    def test_additive_migration_preserves_synthetic_legacy_tables(tmp_path):
+        engine = make_engine(tmp_path / "legacy.db")
+        config = Config()
+        config.set_main_option("script_location", str(Path(__file__).resolve().parents[1] / "src/newsflow/db/migrations"))
+        with engine.begin() as connection:
+            config.attributes["connection"] = connection
+            command.upgrade(config, "0015")
+            connection.execute(text("INSERT INTO news_sources (id,name,url,enabled,created_at) VALUES (1,'synthetic','https://example.com/feed',0,'2026-10-20')"))
+            connection.execute(text("INSERT INTO app_settings (key,value) VALUES ('keep','synthetic-only')"))
+            names = connection.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='alembic_version' ORDER BY name")).scalars().all()
+            before = {name: connection.execute(text(f'SELECT * FROM "{name}"')).all() for name in names}
+        migrate(engine)
+        with engine.connect() as connection:
+&gt;           assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0017"
+E           AssertionError: assert '0018' == '0017'
+E             
+E             - 0017
+E             ?    ^
+E             + 0018
+E             ?    ^
+
+D:\a\_temp\newsflow-visual-baseline\newsflow-ai\tests\test_news_thumbnails.py:181: AssertionError</failure></testcase></testsuite></testsuites>

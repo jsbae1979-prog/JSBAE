@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "path": "/oauth/youtube/start",
+      "method": "POST",
+      "http_status": 403
+    },
+    {
+      "path": "/unified-publishing/1/execute",
+      "method": "POST",
+      "http_status": 403
+    },
+    {
+      "path": "/simple-settings/api-check",
+      "method": "POST",
+      "http_status": 403
+    },
+    {
+      "path": "/simple-settings/ai-key",
+      "method": "POST",
+      "http_status": 403
+    }
+  ],
+  "actual_external_calls": 0,
+  "scope": "isolated demo middleware; not live OAuth or SNS test"
+}
