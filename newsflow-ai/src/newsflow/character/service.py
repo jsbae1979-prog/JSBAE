@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import re
+import time
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -84,7 +85,18 @@ class CharacterService:
             json.dump(job,f,ensure_ascii=False,indent=2)
             f.flush()
             os.fsync(f.fileno())
-        os.replace(temp,path)
+        # Windows scanners/readers can briefly deny an atomic rename. Retry this
+        # local commit only; never rerun the enclosing paid operation or discard
+        # either journal when replacement remains impossible.
+        for attempt in range(3):
+            try:
+                os.replace(temp,path)
+                break
+            except PermissionError as exc:
+                if os.name != "nt" or getattr(exc, "winerror", None) not in {5, 32, 33} or attempt == 2:
+                    raise
+                time.sleep(.025)
+
 
     def lock(self):
         if self.root.is_symlink() or self.root.is_junction():

@@ -9,7 +9,8 @@ import urllib.request
 from pathlib import Path
 
 CHILD = r"""
-import json,os,sys,threading,time
+import faulthandler,json,os,sys,threading,time
+faulthandler.dump_traceback_later(20)
 from pathlib import Path
 from pc_cloud_guard import audit,attempts
 sys.addaudithook(audit)
@@ -26,6 +27,9 @@ main.create_app=lambda settings,**kwargs:create(settings,FakeRSSAdapter({}),**kw
 import uvicorn
 server=uvicorn.Server
 class BoundedServer(server):
+    def __init__(self,config):
+        config.timeout_graceful_shutdown=3
+        super().__init__(config)
     async def startup(self,sockets=None):
         await super().startup(sockets)
         def wait_stop():
@@ -36,6 +40,7 @@ class BoundedServer(server):
         threading.Thread(target=wait_stop,daemon=True).start()
 uvicorn.Server=BoundedServer
 main.run()
+faulthandler.cancel_dump_traceback_later()
 Path(os.environ['NF_GUARD_RESULT']).write_text(json.dumps({'attempts':attempts,'shutdown':'normal'}))
 """
 
@@ -72,6 +77,7 @@ def test_windows_entrypoint_and_synthetic_profile_survive_normal_reopen(tmp_path
                     try:
                         with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=1) as response:
                             assert response.status == 200
+                            response.read()
                         break
                     except (OSError, TimeoutError):
                         assert time.monotonic() < deadline
@@ -79,9 +85,15 @@ def test_windows_entrypoint_and_synthetic_profile_survive_normal_reopen(tmp_path
                 for path in ("/news", "/ai", "/video", "/queue", "/analytics", "/simple-settings"):
                     with urllib.request.urlopen(f"http://127.0.0.1:{port}{path}", timeout=10) as response:
                         assert response.status == 200
+                        response.read()
             finally:
                 stop.touch()
-                process.wait(timeout=45)
+                try:
+                    process.wait(timeout=45)
+                except subprocess.TimeoutExpired:
+                    process.terminate()
+                    process.wait(timeout=10)
+                    raise
             assert process.returncode == 0, (tmp_path / f"entry-{attempt}.log").read_text(encoding="utf-8")
         assert json.loads(guard.read_text()) == {"attempts": [], "shutdown": "normal"}
         with sqlite3.connect(profile / "newsflow.db") as connection:

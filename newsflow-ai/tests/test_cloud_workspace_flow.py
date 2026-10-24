@@ -171,7 +171,7 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         page.goto(origin + f'/ai?draft_id={job["content_draft_id"]}')
         editor = page.locator('[data-script-editor]')
         if editor.count() and editor.get_attribute("open") is None:
-            editor.locator("summary").click()
+            editor.locator(":scope > summary").click()
         expect(page.locator('textarea[name="narration"]').first).not_to_have_attribute("readonly", "")
         with page.expect_navigation(wait_until="load"), page.expect_response(lambda r:r.request.method=="POST" and "/ai/drafts/" in r.url) as saved:
             page.get_by_role("button",name="수정 초안 저장").click()
@@ -179,7 +179,7 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         page.wait_for_url(lambda u:"draft_id=" in u)
         editor = page.locator('[data-script-editor]')
         if editor.count() and editor.get_attribute("open") is None:
-            editor.locator("summary").click()
+            editor.locator(":scope > summary").click()
         page.get_by_role("link", name="작업실에서 대본 검토 계속하기 →", exact=True).click()
         expect(page.locator('form[action$="/resume"]')).to_have_attribute("data-easy-wired","true")
         with page.expect_response(lambda r:r.request.method=="POST" and r.url.endswith("/resume")) as resumed:
@@ -226,7 +226,7 @@ def test_api_to_render_review_and_existing_publish_services(app, api_pipeline, b
         for field in ("content_reviewed","copyright_confirmed","sources_confirmed"):
             review.locator(f'[name="{field}"]').check()
         review.locator('[name="ai_disclosure"]').select_option("disclose")
-        review.get_by_role("button",name="검토 저장·파일 확인").click()
+        review.locator('[data-publish-save]').click()
         page.wait_for_load_state("networkidle")
         execute = page.locator('form[action$="/execute"]')
         expect(execute).to_be_visible()

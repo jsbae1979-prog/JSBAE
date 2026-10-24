@@ -78,7 +78,7 @@ def test_unknown_generation_is_not_resubmitted_after_restart_or_other_approval(p
     identifier = start(p["pipeline"], production_options=options(False, ai=True))
     plan_id = prepare_plan(p, identifier)
     p["service"].update_scenes(plan_id, revision(p, plan_id), [{"position": 0, "source": "generated",
-        "model_path": "vendor/model/text-to-video", "prompt": "푸른 추상 배경 [fake:ambiguous]"}])
+        "model_path": flows.MODEL, "prompt": "푸른 추상 배경 [fake:ambiguous]"}])
     quote = p["service"].estimate(plan_id)
     p["service"].confirm_generation(plan_id, revision(p, plan_id), quote["total"], True)
     p["service"].tick()

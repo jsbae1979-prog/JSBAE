@@ -384,3 +384,35 @@ def test_known_script_format_failure_can_only_get_two_separately_approved_new_in
         assert len(rows)==3 and all(r.status=='failed' for r in rows)
         assert len({r.request_id for r in rows})==3
     assert setup.writer.calls==3
+
+
+
+@pytest.mark.parametrize("persistent", [False, True])
+def test_windows_journal_rename_contention_never_replays_provider(setup, monkeypatch, persistent):
+    import os
+
+    identifier = create(setup)
+    job = setup.service.read(identifier)
+    original = setup.service.folder(identifier) / "jobs.json"
+    before = original.read_bytes()
+    job["local_note"] = "synthetic-only"
+    replace = os.replace
+    calls = []
+    def contended(source, destination):
+        calls.append(1)
+        if persistent or len(calls) < 3:
+            error = PermissionError("synthetic Windows sharing contention")
+            error.winerror = 5
+            raise error
+        return replace(source, destination)
+    monkeypatch.setattr("newsflow.character.service.os.replace", contended)
+    if persistent:
+        with pytest.raises(PermissionError):
+            setup.service.save(job)
+        assert original.read_bytes() == before
+        assert original.with_suffix(".tmp").is_file()
+    else:
+        setup.service.save(job)
+        assert setup.service.read(identifier)["local_note"] == "synthetic-only"
+    assert len(calls) == 3
+    assert setup.video.calls == 0 and setup.writer.calls == 0

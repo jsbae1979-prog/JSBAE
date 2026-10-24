@@ -2,7 +2,7 @@ name: PC Cloud Integration Windows
 on:
   push:
     branches: [codex/newsflow-pc-cloud-integration-20261024]
-    paths: ['newsflow-ai/**', '.github/workflows/pc-cloud-integration-windows.yml']
+    paths: ['newsflow-ai/src/**', 'newsflow-ai/tests/**', 'newsflow-ai/tools/**', 'newsflow-ai/pyproject.toml', 'newsflow-ai/requirements-dev.lock', '.github/workflows/pc-cloud-integration-windows.yml']
 permissions:
   contents: read
 jobs:
