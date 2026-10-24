@@ -1,0 +1,56 @@
+{
+  "3.12": {
+    "current": {
+      "total": 37,
+      "passed": 36,
+      "failures": [
+        {
+          "name": "test_additive_migration_preserves_synthetic_legacy_tables",
+          "message": "AssertionError: assert '0018' == '0017'\n  \n  - 0017\n  ?    ^\n  + 0018\n  ?    ^"
+        }
+      ],
+      "errors": 0,
+      "skipped": 0
+    },
+    "baseline_exact_test": {
+      "total": 1,
+      "passed": 0,
+      "failures": [
+        {
+          "name": "test_additive_migration_preserves_synthetic_legacy_tables",
+          "message": "AssertionError: assert '0018' == '0017'\n  \n  - 0017\n  ?    ^\n  + 0018\n  ?    ^"
+        }
+      ],
+      "errors": 0,
+      "skipped": 0
+    },
+    "failure_matches": true
+  },
+  "3.14": {
+    "current": {
+      "total": 37,
+      "passed": 36,
+      "failures": [
+        {
+          "name": "test_additive_migration_preserves_synthetic_legacy_tables",
+          "message": "AssertionError: assert '0018' == '0017'\n  \n  - 0017\n  ?    ^\n  + 0018\n  ?    ^"
+        }
+      ],
+      "errors": 0,
+      "skipped": 0
+    },
+    "baseline_exact_test": {
+      "total": 1,
+      "passed": 0,
+      "failures": [
+        {
+          "name": "test_additive_migration_preserves_synthetic_legacy_tables",
+          "message": "AssertionError: assert '0018' == '0017'\n  \n  - 0017\n  ?    ^\n  + 0018\n  ?    ^"
+        }
+      ],
+      "errors": 0,
+      "skipped": 0
+    },
+    "failure_matches": true
+  }
+}

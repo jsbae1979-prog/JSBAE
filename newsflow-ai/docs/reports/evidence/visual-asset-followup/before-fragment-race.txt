@@ -1,0 +1,61 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________________________ test_before __________________________________
+
+app = <fastapi.applications.FastAPI object at 0x7f733296e330>
+fake = <newsflow.news.rss_adapter.FakeRSSAdapter object at 0x7f7332aac9b0>
+browser = <Browser type=<BrowserType name=chromium executable_path=/home/agent/.cache/ms-playwright/chromium-1194/chrome-linux/chrome> version=151.0.7922.173>
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-76/test_before0')
+
+    def test_before(app, fake, browser, tmp_path):
+>       capture(app, fake, browser, tmp_path, check=False)
+
+docs/reports/evidence/visual-asset-followup/test_before_capture.py:7: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_visual_asset_followup.py:84: in capture
+    page.locator(container).first.scroll_into_view_if_needed()
+.venv/lib/python3.12/site-packages/playwright/sync_api/_generated.py:17481: in scroll_into_view_if_needed
+    self._sync(self._impl_obj.scroll_into_view_if_needed(timeout=timeout))
+.venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:563: in scroll_into_view_if_needed
+    return await self._with_element(
+.venv/lib/python3.12/site-packages/playwright/_impl/_locator.py:116: in _with_element
+    return await task(
+.venv/lib/python3.12/site-packages/playwright/_impl/_element_handle.py:113: in scroll_into_view_if_needed
+    await self._channel.send(
+.venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:69: in send
+    return await self._connection.wrap_api_call(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <playwright._impl._connection.Connection object at 0x7f7332e258b0>
+cb = <function Channel.send.<locals>.<lambda> at 0x7f7320b08540>
+is_internal = False, title = None
+
+    async def wrap_api_call(
+        self, cb: Callable[[], Any], is_internal: bool = False, title: str = None
+    ) -> Any:
+        if self._api_zone.get():
+            return await cb()
+        task = asyncio.current_task(self._loop)
+        st: List[inspect.FrameInfo] = getattr(
+            task, "__pw_stack__", None
+        ) or inspect.stack(0)
+    
+        parsed_st = _extract_stack_trace_information_from_stack(st, is_internal, title)
+        self._api_zone.set(parsed_st)
+        try:
+            return await cb()
+        except Exception as error:
+>           raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E           playwright._impl._errors.Error: Locator.scroll_into_view_if_needed: Element is not attached to the DOM
+E           Call log:
+E             - attempting scroll into view action
+E               - waiting for element to be stable
+
+.venv/lib/python3.12/site-packages/playwright/_impl/_connection.py:559: Error
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/JSBAE/newsflow-ai/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 failed, 1 warning in 10.28s

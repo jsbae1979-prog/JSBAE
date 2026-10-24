@@ -1,0 +1,28 @@
+{
+  "tested_sha": "672bebd8f50030534c0dcb43332a5641265692ec",
+  "baseline_sha": "c5ed43ffd7140aeca0e7c2521882a06227905805",
+  "cloud": {
+    "passed": 36,
+    "failures": [
+      {
+        "name": "test_additive_migration_preserves_synthetic_legacy_tables",
+        "message": "AssertionError: assert '0018' == '0017'\n  \n  - 0017\n  ?    ^\n  + 0018\n  ?    ^"
+      }
+    ],
+    "errors": 0,
+    "skipped": 0
+  },
+  "baseline_exact_failing_test": {
+    "passed": 0,
+    "failures": [
+      {
+        "name": "test_additive_migration_preserves_synthetic_legacy_tables",
+        "message": "AssertionError: assert '0018' == '0017'\n  \n  - 0017\n  ?    ^\n  + 0018\n  ?    ^"
+      }
+    ],
+    "errors": 0,
+    "skipped": 0
+  },
+  "failure_name_and_message_equal": true,
+  "full_57_failure_suite_repeated": false
+}
