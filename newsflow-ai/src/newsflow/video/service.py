@@ -38,6 +38,7 @@ from .ai.clips import ClipStore, probe_clip
 from .ai.contracts import ClipInvalidError
 from .elevenlabs_tts import PaymentRequiredError, SubscriptionError
 from .engine import FFmpegAdapter, RenderEngine, RenderError, RenderPlan, ScenePlan, load_image
+from .news_images import NewsImages, NewsImageError
 from .tts import SpeechSettings, TTSError, TTSProvider
 from .voice_engines import provider_for, provider_name
 
@@ -72,6 +73,7 @@ class VideoCoordinator:
         for directory in (self.outputs, self.temporary, self.assets):
             directory.mkdir(parents=True, exist_ok=True)
         # Phase 5D: validated provider clips; read only when an approved AI plan is composed.
+        self.news_images = NewsImages(self.root)
         self.clip_store = ClipStore(self.root)
         self.engine, self.tts = engine or FFmpegAdapter(), tts
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="newsflow-render")
@@ -134,11 +136,12 @@ class VideoCoordinator:
         asset_permission: bool = False,
         external_tts_consent: bool = False,
         effects: list[str] | None = None,
+        image_article_ids: list[int | None] | None = None,
     ) -> int:
         if not allowed_duration(duration, True) or not reviewed:
             raise VideoError("영상 길이를 선택하고 렌더링 전 대본·출처 검토를 확인하세요.")
         return self._start(draft_id, duration, voice, font_size, subtitle_y, images, asset_permission, False,
-                           fit_audio=voice != "offline-silence", external_tts_consent=external_tts_consent, effects=effects)
+                           fit_audio=voice != "offline-silence", external_tts_consent=external_tts_consent, effects=effects, image_article_ids=image_article_ids)
 
     def start_preview(
         self,
@@ -303,12 +306,13 @@ class VideoCoordinator:
         external_tts_consent: bool = False,
         elevenlabs_config: dict | None = None,
         effects: list[str] | None = None,
+        image_article_ids: list[int | None] | None = None,
     ) -> int:
         speech = speech or SpeechSettings()
         if self.cancel.is_set():
             raise VideoError("프로그램 종료 중에는 새 영상을 제작할 수 없습니다.")
         images = images or []
-        if any(images) and not asset_permission:
+        if any(name and name != "__card__" for name in images) and not asset_permission:
             raise VideoError("로컬 소재 이용 권한을 확인하세요.")
         if not self.guard.acquire(blocking=False):
             raise RenderBusy("이미 영상 제작이 실행 중입니다.")
@@ -364,6 +368,14 @@ class VideoCoordinator:
                 if clips is not None and len(clips) != len(times):
                     raise VideoError("장면별 AI 생성 영상 개수를 확인하세요.")
                 images = images or [""] * len(times)
+                # AI plans retain their own approved per-scene visual contract.
+                image_links = []
+                if ai_plan_id is None:
+                    try:
+                        images, image_links = self.news_images.choose(
+                            session, draft.sources, len(times), images, image_article_ids)
+                    except (NewsImageError, RenderError) as exc:
+                        raise VideoError(str(exc)) from None
                 clips = clips or [None] * len(times)
                 for name in images:
                     if name:
@@ -405,6 +417,7 @@ class VideoCoordinator:
                     duration=duration,
                     snapshot={
                         **draft.content, "draft_revision": draft.revision, "effects": list(effects),
+                        "news_images": image_links,
                         "shortform": asdict(shortform),
                         "speech": {"rate": speech.rate, "pause_ms": speech.pause_ms, "fit_audio": fit_audio,
                                    "strict_audio_fit": strict_audio_fit},
@@ -542,6 +555,11 @@ class VideoCoordinator:
                 plans = []
                 for index, scene in enumerate(scenes):
                     image = None
+                    image_link = next((row for row in project.snapshot.get("news_images", [])
+                                       if row.get("position") == index), None)
+                    if scene.material and image_link and image_link.get("sha256"):
+                        if file_sha256(self.asset(scene.material)) != image_link["sha256"]:
+                            raise RenderError("저장한 이미지가 변경되었습니다. 이미지를 확인하고 새 작업을 만드세요.", kind="image")
                     if scene.material:
                         image = work / f"asset-{index}.png"
                         with load_image(self.asset(scene.material)) as asset:

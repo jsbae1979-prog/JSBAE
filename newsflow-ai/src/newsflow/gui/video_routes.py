@@ -9,6 +9,8 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Resp
 from sqlalchemy import select
 
 from newsflow.db.models import (
+    ArticleThumbnail,
+    NewsArticle,
     AudioTrack,
     ContentDraft,
     IntelligenceRun,
@@ -241,6 +243,10 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
             draft_provider=draft_run.provider if draft_run else None,
             selected_voice=selected_voice,
             voice_available=voice_available,
+            news_image_articles=[{"article": session.get(NewsArticle, a.get("id", a.get("article_id"))),
+                                  "thumbnail": session.get(ArticleThumbnail, a.get("id", a.get("article_id")))}
+                                 for a in draft.sources.get("articles", [])] if draft else [],
+            image_links=video.news_images.choose(session, draft.sources, len(draft.content["scenes"]))[1] if draft else [],
             assets=video.assets_list(),
             outputs=video.outputs,
             assets_path=video.assets,
@@ -263,6 +269,7 @@ async def render(
 ) -> RedirectResponse:
     form = await request.form()
     try:
+        image_ids = [int(value) if value else None for value in form.getlist("image_article_ids")]
         identifier = request.app.state.video.start(
             draft_id,
             duration,
@@ -274,10 +281,11 @@ async def render(
             asset_permission,
             external_tts_consent=external_tts_consent,
             effects=[str(value) for value in form.getlist("effects")] or None,
+            image_article_ids=image_ids or None,
         )
     except RenderBusy:
         raise HTTPException(409, "이미 영상 제작이 실행 중입니다.") from None
-    except (VideoError, RenderError, TTSError):
+    except (VideoError, RenderError, TTSError, ValueError):
         raise HTTPException(
             422, "대본·영상 길이·음성·자막 안전 영역·소재 권한·디스크 공간을 확인하세요."
         ) from None
@@ -335,3 +343,44 @@ def video_thumbnail(request: Request, job_id: int) -> Response:
         except RenderError:
             raise HTTPException(503, "미리보기를 준비하지 못했습니다. 영상 재생은 별도로 확인할 수 있습니다.") from None
     return Response(preview, media_type="image/png", headers={"Cache-Control": "private, no-store"})
+
+
+@router.post("/video/news-image")
+def link_news_image(request: Request, draft_id: int = Form(ge=1), article_id: int = Form(ge=1),
+                    name: str = Form("", max_length=255), rights_basis: str = Form(min_length=3, max_length=400),
+                    permission: bool = Form(False)):
+    """Associate an existing local asset only. No image/network lookup on this route."""
+    from newsflow.video.news_images import NewsImageError
+    if not permission:
+        raise HTTPException(422, "영상 사용권을 확인하세요.")
+    with request.app.state.sessions() as session:
+        draft = session.get(ContentDraft, draft_id)
+        article = session.get(NewsArticle, article_id)
+        if not draft or not article or article_id not in {a.get("id", a.get("article_id")) for a in draft.sources.get("articles", [])}:
+            raise HTTPException(422, "대본과 뉴스 연결을 확인하세요.")
+        thumbnail = session.get(ArticleThumbnail, article_id)
+        try:
+            if name == "__thumbnail__" and thumbnail:
+                request.app.state.video.news_images.import_thumbnail(
+                    article, thumbnail, request.app.state.news_thumbnails.adapter, rights_basis=rights_basis)
+            else:
+                request.app.state.video.news_images.remember(
+                    article, name, source_url=article.url, rights_basis=rights_basis, origin="collected")
+        except Exception:  # no raw transport URL, supplier error or credential text in the UI
+            raise HTTPException(422, "이미지 연결 실패 · 형식·출처·사용권을 확인하세요. 기본 카드를 유지합니다.") from None
+    return go(f"/video?draft_id={draft_id}#news-image-links")
+
+
+@router.get("/video/news-images/articles/{article_id}")
+def news_image_preview(request: Request, article_id: int):
+    from newsflow.news.thumbnails import raster_preview
+    with request.app.state.sessions() as session:
+        article = session.get(NewsArticle, article_id)
+        rows = request.app.state.video.news_images.candidates(article) if article else []
+    if not rows:
+        raise HTTPException(404, "사용권이 확인된 뉴스 이미지가 없습니다.")
+    try:
+        preview = raster_preview(request.app.state.video.news_images.asset(rows[0]["name"]).read_bytes())
+    except (OSError, ValueError, RenderError):
+        raise HTTPException(404, "이미지를 확인하세요. 기본 카드를 유지합니다.") from None
+    return Response(preview, media_type="image/jpeg", headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})

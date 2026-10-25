@@ -14,6 +14,15 @@
   </form>
 </details>
 {% if draft %}
+<details class="suite-panel" id="news-image-links"><summary>{{ ui_icon('news',18) }} 뉴스 이미지 · 연결 확인</summary>
+<p>사용권을 확인해 연결한 이미지를 자동 사용합니다. 대표 이미지는 아래 버튼을 누를 때만 받습니다. 미확인·누락 이미지는 기본 카드로 표시합니다.</p>
+{% for link in image_links %}<p data-news-image-state="{{ link.mode }}">장면 {{ loop.index }} · {{ '뉴스 이미지 자동 연결' if link.mode=='automatic' else link.reason }}{% if link.mode=='automatic' %}<img class="news-image-linked-preview" src="/video/news-images/articles/{{ link.article_id }}" alt="장면 {{ loop.index }} · 사용권 확인 이미지" width="160" height="90">{% endif %}</p>{% endfor %}
+{% for item in news_image_articles if item.article %}<form method="post" action="/video/news-image">{{ csrf_field() }}<input type="hidden" name="draft_id" value="{{ draft.id }}"><input type="hidden" name="article_id" value="{{ item.article.id }}">
+<strong>{{ item.article.title }}</strong><p>출처: {{ item.article.publisher }} · <a href="{{ item.article.url }}" target="_blank" rel="noopener noreferrer">원문</a>{% if item.thumbnail %} · 대표 이미지 기록 있음 (사용권 별도){% endif %}</p>
+<label>연결할 로컬 이미지<select name="name" required>{% if item.thumbnail %}<option value="__thumbnail__">기사 대표 이미지 · 확인 후 1회 받기</option>{% endif %}{% for name in assets %}<option value="{{ name }}">{{ name }}</option>{% endfor %}</select></label>
+<label>사용권 근거<input name="rights_basis" required minlength="3" maxlength="400" placeholder="직접 제작 / 이용 허락 / 라이선스와 출처"></label>
+<label class="check"><input type="checkbox" name="permission" value="true" required>이 기사와 관련된 이미지이며 영상 이용 권한을 확인했습니다.</label>
+<button type="submit"{% if not assets and not item.thumbnail %} disabled{% endif %}>뉴스에 이미지 연결</button></form>{% endfor %}</details>
 {% if draft.sources.shortform and draft.sources.shortform.enabled %}<p class="soft-notice">숏폼 강조 · 한 이슈 · {{ draft.duration }}초 목표 · 저장된 음성 유지 · {{ draft.sources.shortform.speed }}배. 실제 음성 길이가 맞지 않으면 검토가 필요하며 자동 재생성하지 않습니다.</p>{% endif %}
 <div class="workstation-video-project">
   {% if production_context and production_context.get('initial_video') == 'higgsfield' %}
@@ -36,9 +45,9 @@
       <label>자막 위치<select name="subtitle_y">{% for position,label in [(1100,'중앙 아래'),(1280,'중앙 아래 안전 영역'),(1420,'하단 안전 영역'),(1500,'하단 (짧은 자막)')] %}<option value="{{ position }}"{% if preferences.subtitle_y|int==position %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
       <p class="hint">제목·출처를 표시하며 자막이 안전 영역을 넘으면 중단합니다. 변경한 구성은 새로 제작한 영상에 반영됩니다.</p>
       {% for s in draft.content.scenes %}
-      <fieldset data-video-scene="{{ loop.index0 }}"><legend>장면 {{ loop.index }} · 원본 {{ s.seconds }}초</legend><details class="video-scene-copy"><summary>선택 장면 대본·소재 보기</summary><p>내레이션: {{ s.narration }}</p><p>자막: {{ s.caption }}</p><p>소재 제안: {{ s.material }}</p></details><label>로컬 이미지<select name="images"><option value="">텍스트·배경·도형 기본 카드</option>{% for name in assets %}<option value="{{ name }}">{{ name }}</option>{% endfor %}</select></label><label>장면 전환<select name="effects" data-scene-effect="{{ loop.index0 }}"><option value="cut">바로 전환</option><option value="fade">부드럽게 · 검정 페이드</option></select></label></fieldset>
+      <fieldset data-video-scene="{{ loop.index0 }}"><legend>장면 {{ loop.index }} · 원본 {{ s.seconds }}초</legend><details class="video-scene-copy"><summary>선택 장면 대본·소재 보기</summary><p>내레이션: {{ s.narration }}</p><p>자막: {{ s.caption }}</p><p>소재 제안: {{ s.material }}</p></details><label>로컬 이미지<select name="images"><option value="">자동 연결 · 확인된 뉴스 이미지 / 기본 카드</option><option value="__card__">기본 카드만 사용</option>{% for name in assets %}<option value="{{ name }}">{{ name }}</option>{% endfor %}</select></label>{% if news_image_articles|length > 1 %}<label>장면 뉴스<select name="image_article_ids"><option value="">기사 연결 미지정 · 기본 카드</option>{% for item in news_image_articles if item.article %}<option value="{{ item.article.id }}">{{ item.article.title }}</option>{% endfor %}</select></label>{% endif %}<label>장면 전환<select name="effects" data-scene-effect="{{ loop.index0 }}"><option value="cut">바로 전환</option><option value="fade">부드럽게 · 검정 페이드</option></select></label></fieldset>
       {% endfor %}
-      <details class="video-policy-note"><summary>이미지 추가·사용 범위</summary><p>사용이 허용된 PNG/JPEG(20MB·1600만 픽셀 이하)를 {{ assets_path }}에 복사하면 목록에서 선택할 수 있습니다. 뉴스 이미지·영상을 자동 다운로드하지 않습니다.</p>
+      <details class="video-policy-note"><summary>이미지 추가·사용 범위</summary><p>사용이 허용된 PNG/JPEG(20MB·1600만 픽셀 이하)를 {{ assets_path }}에 복사하면 목록에서 선택할 수 있습니다. 사용권 확인 후 연결한 뉴스 이미지를 자동 배정합니다. 미확인 이미지와 외부 URL은 제작 중 다운로드하지 않습니다.</p>
       <label class="check"><input type="checkbox" name="asset_permission" value="true">선택한 로컬 소재의 이용 권한을 확인했습니다.</label>
       <p>Video Studio · 1080×1920 · 9:16 · H.264 MP4 · 로컬 FFmpeg 제작</p>
       <a class="quiet-link" href="/video/ai?draft_id={{ draft.id }}" id="video-ai-link">AI 고품질 제작 (선택) →</a></details>
@@ -96,6 +105,7 @@
     <summary>{{ ui_icon('file',18) }} 영상 정보·출처</summary><div data-video-review-content><p><strong>{{ project.title }}</strong></p><p>{{ job.message }}</p>
     <h3>뉴스 출처</h3>
     {% for a in project.sources.articles %}{% for s in a.sources %}<p>{{ s.publisher }} · <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer">{{ s.url }}</a></p>{% endfor %}{% endfor %}
+    <h3>이미지 출처·사용권</h3>{% for link in project.snapshot.get('news_images', []) if link.mode=='automatic' %}<p>장면 {{ link.position+1 }} · {{ link.publisher }} · <a href="{{ link.source_url }}" target="_blank" rel="noopener noreferrer">이미지 출처</a> · {{ link.rights_basis }}</p>{% endfor %}
     <h3>장면 구성</h3>
     <ul>{% for s in scenes %}<li>{{ (s.start_ms/1000)|round(3) }}–{{ (s.end_ms/1000)|round(3) }}초 · <span class="scene-source">{{ 'AI 생성' if s.ai_generated else ('로컬 이미지' if s.material else '카드') }}</span> · {{ s.caption }}</li>{% endfor %}</ul>
     <details data-video-technical><summary>저장 위치·기술 정보</summary><p>영상 작업 #{{ job.id }} · 저장 위치: {{ outputs }} / {{ job.output_name }}</p><p>음성: {{ audio.provider }} · {{ audio.voice }} / {{ audio.status }} · 자막 {{ subtitles.font_size }}px</p></details>
