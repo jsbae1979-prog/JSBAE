@@ -51,5 +51,8 @@ else:
  targets=[absolute_target(t) for t in targets]
  options=['-q','-rs','-p','no:cacheprovider','-p','step13_guard','-p','step13_fixtures','-p','browser_boundary','-p','conftest','-c',str(pathlib.Path(step13_guard.CONFIG['project'])/'pyproject.toml'),'--rootdir',step13_guard.CONFIG['project'],'--basetemp',str(out/'temp'),'--junitxml',str(out/'pytest.xml'),*targets]
  if sys.argv[1]=='security':
+  options[options.index('--rootdir')+1]=str(R)
+  options.extend(['--confcutdir',str(R),'--import-mode=importlib'])
   i=options.index('browser_boundary');del options[i-1:i+1]
  raise SystemExit(pytest.main(options))
+
