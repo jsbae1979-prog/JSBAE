@@ -9,7 +9,7 @@ sys.path.insert(0,str(R))
 if sys.argv[1]=="minimal":
  import observer
  observer.start(R)
-phase=sys.argv[1];assert phase in ('minimal','gui','remaining','full','security','envfix')
+phase=sys.argv[1];assert phase in ('minimal','gui','remaining','full','security','envfix','cwdcheck')
 for name in ('temp','home','local','roaming','artifacts'):(R/name).mkdir(exist_ok=True)
 c=json.loads((R/'guard-config-private.json').read_text());c['browser']['preload_SHA256']=hashlib.sha256((R/'node_boundary.cjs').read_bytes()).hexdigest();(R/'guard-config-private.json').write_text(json.dumps(c,indent=2),encoding='utf-8')
 env={k:v for k,v in os.environ.items() if k.upper() in {'SYSTEMROOT','WINDIR','COMSPEC','PATHEXT','PROCESSOR_ARCHITECTURE','NUMBER_OF_PROCESSORS','OS'}}
@@ -35,7 +35,7 @@ gate=R/'job-ready.signal';gate.unlink(missing_ok=True)
 started=datetime.datetime.now().astimezone().isoformat();process=None;assigned=False;timedout=False
 try:
  with (R/(phase+'-process.log')).open('wb') as log:
-  process=subprocess.Popen([str(runtime/'Scripts/python.exe'),'-B',str(R/'browser_bootstrap.py'),phase],cwd=P,env=env,stdout=log,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+  process=subprocess.Popen([str(runtime/'Scripts/python.exe'),'-B',str(R/'browser_bootstrap.py'),phase],cwd=R,env=env,stdout=log,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
   if not K.AssignProcessToJobObject(job,int(process._handle)):raise ctypes.WinError(ctypes.get_last_error())
   assigned=True;gate.write_text('owned test Job assigned',encoding='ascii')
   try:code=process.wait(timeout=180 if phase=='minimal' else (5400 if phase=='full' else 1500))

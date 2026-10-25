@@ -36,12 +36,18 @@ else:
  if sys.argv[1]=='gui':targets=[x for x in targets if 'test_pc_cloud_windows_browser.py::' in x]
  elif sys.argv[1]=='remaining':targets=[x for x in targets if 'test_pc_cloud_windows_browser.py::' not in x]
  elif sys.argv[1]=='full':targets=['tests']
+ elif sys.argv[1]=='cwdcheck':targets=json.loads((R/'cwd-impact-IDs-safe.json').read_text())
  elif sys.argv[1]=='envfix':targets=json.loads((R/'evidence-path-IDs-safe.json').read_text())
  elif sys.argv[1]=='security':targets=[str(R/'test_guard_security.py'),str(R/'test_browser_boundary_security.py')]
  out=R/sys.argv[1];out.mkdir(exist_ok=False)
  os.environ['NEWSFLOW_VALIDATION_OUTPUT']=str(out/'evidence')
  for key in json.loads((R/'evidence-env-keys-safe.json').read_text()):
   path=out/'evidence'/key.lower();path.mkdir(parents=True,exist_ok=False);os.environ[key]=str(path)
+ def absolute_target(value):
+  f,sep,selector=value.partition('::');p=pathlib.Path(f)
+  if not p.is_absolute():p=pathlib.Path(step13_guard.CONFIG['project'])/p
+  return str(p)+(sep+selector if sep else '')
+ targets=[absolute_target(t) for t in targets]
  options=['-q','-rs','-p','no:cacheprovider','-p','step13_guard','-p','step13_fixtures','-p','browser_boundary','-p','conftest','-c',str(pathlib.Path(step13_guard.CONFIG['project'])/'pyproject.toml'),'--rootdir',step13_guard.CONFIG['project'],'--basetemp',str(out/'temp'),'--junitxml',str(out/'pytest.xml'),*targets]
  if sys.argv[1]=='security':
   i=options.index('browser_boundary');del options[i-1:i+1]
