@@ -2,6 +2,9 @@
 from pathlib import Path
 import hashlib,json,os,shutil,subprocess,sys
 assert sys.version_info[:3] == (3,14,7)
+# Windows runner consoles may default to cp1252; preserve diagnostic Unicode.
+sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
 source=Path(__file__).parent;project=source.parents[2]
 root=Path(sys.argv[1]).resolve();assert not root.exists();assert not root.is_relative_to(project)
 root.mkdir(parents=True)
@@ -25,10 +28,22 @@ baseline=project.parent/'.step13i-baseline/newsflow-ai/src/newsflow'
 for part in ('gui/templates','static'):shutil.copytree(baseline/part,root/'baseline-src/newsflow'/part)
 for n in ('j_selected-targets-safe.json','j_flow-targets-safe.json'):shutil.copyfile(source/n,root/n)
 # Infrastructure setup has finished. Each test child starts under the original Guard.
+def failed_ids(xml_path):
+ import xml.etree.ElementTree as ET
+ if not xml_path.is_file():return {"xml_present":False,"failed":[]}
+ failed=[]
+ for case in ET.parse(xml_path).iter('testcase'):
+  for tag in ('failure','error'):
+   if case.find(tag) is not None:
+    failed.append({"ID":case.get('classname','')+'::'+case.get('name',''),"outcome":tag})
+ return {"xml_present":True,"failed":failed}
+
 summaries=[]
 for phase in ('security','i_contracts','i_tiktok3','i_sns_contracts','h','j_selected','j_flow'):
  result=subprocess.run([sys.executable,'-I','-S','-B',str(root/'run_browser_phase.py'),phase],cwd=root,check=False)
  if result.returncode:
+  evidence={"phase":phase,"exit":result.returncode,**failed_ids(root/phase/'pytest.xml')}
+  (root/'failure-IDs-safe.json').write_text(json.dumps(evidence,ensure_ascii=False,indent=2),encoding='utf-8')
   log=root/(phase+'-process.log')
   if log.exists():
    print('Synthetic test child diagnostic:',log.read_text(encoding='utf-8',errors='replace')[-12000:],flush=True)

@@ -63,6 +63,7 @@ jobs:
             ${{ runner.temp }}/newsflow-step13j/h/evidence/news-image-mp4/pixel-proof.json
             ${{ runner.temp }}/newsflow-step13j/*-supervisor-safe.json
             ${{ runner.temp }}/newsflow-step13j/ci-summary-safe.json
+            ${{ runner.temp }}/newsflow-step13j/failure-IDs-safe.json
             ${{ runner.temp }}/newsflow-step13j/ci-collected-IDs-safe.json
             ${{ runner.temp }}/newsflow-step13j/j_flow/evidence/step13j-user-flow/flow-safe.json
           if-no-files-found: ignore
