@@ -292,7 +292,7 @@ def test_audio_fit_branch_keeps_the_clip_with_fitted_seconds(tmp_path):
         work / "scene-000.png", work / "scene-000.wav", work / "scene-000.mp4",
     )
     filter_index = expected.index("-filter_complex") + 1
-    expected[filter_index] = expected[filter_index].replace("[v]", "[base];[base]ass=scene-000.ass[v]")
+    expected[filter_index] = expected[filter_index].replace("[v]", "[style1];[style1]ass=scene-000.ass[v]")
     assert first == expected
     assert first[first.index("-f") + 1] == "matroska" and first[first.index("-t") + 1] == f"{timings[0]['seconds']:.3f}"
     assert "-filter_complex" not in run.call_args_list[1].args[0]
@@ -607,7 +607,9 @@ def test_clip_replaced_by_garbage_after_validation_fails_the_job(studio, app):
     job_id = coordinator.start_ai(9, draft_id, 30, [{}, {"clip": name}, {}])
     wait(coordinator)
     job, project, scenes = project_rows(app, job_id)
-    assert job.status == "failed" and job.message == CLIP_FAILED and job.finished_at is not None
+    assert job.status == "failed" and job.finished_at is not None
+    assert "AI 생성 장면 파일(형식·검토한 파일과 같은지) 실패" in job.message
+    assert "설정과 승인 조건을 확인" in job.message and "자동 재시도하지 않습니다" in job.message
     assert project.ai_plan_id == 9 and scenes[1].clip_name == name and scenes[1].ai_generated
     assert coordinator.engine.calls == []  # never handed to the renderer
     assert not coordinator.output_path(job.output_name).exists()

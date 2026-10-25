@@ -1,5 +1,7 @@
 """First-run setup, failure recovery, data preservation and production boundaries."""
 import os
+import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -39,7 +41,8 @@ def test_wizard_is_optional_and_all_core_menus_remain(client):
         assert result.status_code == 200
         assert "script-src 'self'" in result.headers['content-security-policy']
     home = client.get('/').text
-    assert 'action="/autopilot/quick-start"' in home and '내 영상' in home
+    assert 'href="/create"' in home and '내 영상' in home
+    assert client.get('/create').text.count('action="/autopilot/quick-start"') == 1
     for path in ['/', '/simple-settings']:
         assert f'href="{path}"' in home
     settings = client.get('/simple-settings').text
@@ -257,12 +260,23 @@ def test_listening_record_service_rules_retention_and_summary(app):
     data_dir, sessions = app.state.config.data_dir, app.state.sessions
     values = {'listener': ' 홍길동 ', 'voice': 'Local Korean', 'rate': '0', 'pause_ms': '250', 'verdict': 'pass',
               **{key: 'ok' for key in LISTENING_ITEMS}}
+    # Human verdicts must be tied to a sample and its matching creation metadata.
+    preview = data_dir / 'voice-preview' / ('preview-' + 'a' * 32 + '.wav')
+    preview.parent.mkdir(parents=True, exist_ok=True)
+    preview.write_bytes(b'SYNTHETIC_LISTENING_SAMPLE')
+    proof = {'provider': 'windows', 'voice': 'Local Korean', 'rate': 0, 'pause_ms': 250,
+             'sha256': hashlib.sha256(preview.read_bytes()).hexdigest()}
+    preview.with_suffix('.json').write_text(json.dumps(proof), encoding='utf-8')
+    with pytest.raises(SetupError, match='연결된 음성 샘플'):
+        record_listening(data_dir, sessions, values)
+    values['preview'] = preview.name
     record = record_listening(data_dir, sessions, values)
-    assert record['verdict'] == 'pass' and record['listener'] == '홍길동' and record['preview_sha256'] == ''
+    assert record['verdict'] == 'pass' and record['listener'] == '홍길동'
+    assert record['preview_sha256'] == proof['sha256']
     assert LISTENING_NAME.fullmatch(record['file']) and (data_dir / 'voice-listening' / record['file']).is_file()
     date = record['created_at'][:10]
     assert listening_summary(sessions) == {'verdict': 'pass', 'label': 'PASS', 'date': date,
-                                           'listener': '홍길동', 'voice': 'Local Korean'}
+                                           'listener': '홍길동', 'voice': 'Local Korean', 'sample_linked': True}
     assert diagnostics(data_dir, sessions)['quality'] == f'사람 청취 결과: PASS ({date}, 홍길동)'
     for bad in [{'numbers': 'bad'}, {'numbers': 'unknown'}, {'listener': '김 · 철수'}, {'listener': ''}, {'listener': 'a\tb'}, {'clarity': 'x'}, {'verdict': 'ok'},
                 {'preview': 'preview-zz.wav'}, {'notes': 'n' * 501}, {'rate': '5'}, {'pause_ms': '999'}]:
@@ -271,14 +285,17 @@ def test_listening_record_service_rules_retention_and_summary(app):
     assert listening_summary(sessions)['verdict'] == 'pass'  # rejected forms change nothing
     record_listening(data_dir, sessions, {**values, 'numbers': 'bad', 'verdict': 'fail', 'notes': '줄\n바꿈 허용'})
     assert listening_summary(sessions)['verdict'] == 'fail'
-    # Pruning is by modification time; make the first record unambiguously oldest so the test does not
-    # depend on filesystem timestamp granularity (NTFS ticks can give several files the same mtime).
+    # Current append-only retention preserves old human verdicts, even when oldest.
+    # A new listening record must not delete history or its linked sample.
     os.utime(data_dir / 'voice-listening' / record['file'], (1_000_000, 1_000_000))
     for _ in range(55):
         record_listening(data_dir, sessions, {**values, 'verdict': 'not_verified'})
     kept = list((data_dir / 'voice-listening').glob('listening-*.json'))
-    assert len(kept) == 50 and record['file'] not in {p.name for p in kept}
+    assert len(kept) == 57 and record['file'] in {p.name for p in kept}
+    assert preview.is_file() and hashlib.sha256(preview.read_bytes()).hexdigest() == proof['sha256']
     assert listening_summary(sessions)['label'] == 'NOT VERIFIED'
+    proof['voice'] = 'v' * 200
+    preview.with_suffix('.json').write_text(json.dumps(proof), encoding='utf-8')
     record_listening(data_dir, sessions, {**values, 'voice': 'v' * 200, 'verdict': 'not_verified'})
     with sessions() as session:
         assert len(session.get(AppSetting, 'voice_listening_last').value) <= 200

@@ -67,7 +67,10 @@ def test_rejected_request_is_stored_safely_once_and_unknown_usage_is_preserved(s
     assert caught.value.code == "ai_bad_response"
     assert run.result == {"analysis_failure": {
         "failure_reason": "request_rejected", "http_status": 400, **extra}}
-    assert reservation.status == "unknown" and reservation.estimated_usd is None
+    # Explicit, allowlisted HTTP 400 rejection is a failed request; malformed
+    # evidence remains unknown. Missing billing data is never a zero-cost claim.
+    expected_status = "failed" if extra.get("error_type") == "invalid_request_error" else "unknown"
+    assert reservation.status == expected_status and reservation.estimated_usd is None
     assert SECRET not in json.dumps(run.result) + run.message + str(caught.value)
     if extra.get("request_issue") == "credit_balance_low":
         assert "크레딧 부족" in run.message and "Billing" in run.message

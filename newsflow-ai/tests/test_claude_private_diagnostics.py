@@ -43,7 +43,8 @@ def test_unclassified_rejection_survives_only_encrypted_and_bound_to_run(state, 
     assert "MUST_NOT_STORE" not in json.dumps(stored) and secret not in json.dumps(stored)
     encrypted = (recorder.root / (reference + ".dpapi")).read_bytes()
     assert secret.encode() not in encrypted and b"Unclassified diagnostic marker" not in encrypted
-    assert reservation.status == "unknown" and reservation.estimated_usd is None
+    assert reservation.status == "failed" and reservation.estimated_usd is None
+    assert reservation.usage == {"search_calls": 0}
     assert calls == [1] and not state["adapter"].last_retried
 
 
