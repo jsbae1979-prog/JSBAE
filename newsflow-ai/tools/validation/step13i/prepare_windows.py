@@ -34,6 +34,20 @@ for phase in ('security','i_contracts','i_tiktok3','i_sns_contracts','h','hflow'
  import xml.etree.ElementTree as ET
  suites=list(ET.parse(root/phase/'pytest.xml').iter('testsuite'))
  summary={'phase':phase,**{key:sum(int(s.get(key,0)) for s in suites) for key in ('tests','failures','errors','skipped')}}
+ cases=list(ET.parse(root/phase/'pytest.xml').iter('testcase'))
+ expected={'security':78,'i_contracts':24,'i_tiktok3':65,'i_sns_contracts':314,'h':123,'hflow':1}[phase]
+ summary['testcase_records']=len(cases)
+ summary['expected_records']=expected
+ evidence_path=root/'ci-collected-IDs-safe.json'
+ prior=json.loads(evidence_path.read_text()) if evidence_path.exists() else []
+ prior.append({'phase':phase,'suite_tests':summary['tests'],'testcase_records':len(cases),'expected_records':expected,'IDs':[c.get('classname','')+'::'+c.get('name','') for c in cases]})
+ evidence_path.write_text(json.dumps(prior,indent=2))
+ log=root/(phase+'-process.log')
+ if log.exists():
+  for line in log.read_text(encoding='utf-8',errors='replace').splitlines():
+   if ' passed' in line or ' failed' in line or ' error' in line:print('pytest-summary: '+line[-600:],flush=True)
+ assert len(cases)==expected and summary['tests']==expected, 'CI test ID count mismatch; never treat missing cases as PASS'
+ assert all(c.find('failure') is None and c.find('error') is None and c.find('skipped') is None for c in cases)
  summaries.append(summary)
  print(json.dumps(summary),flush=True)
 (root/'ci-summary-safe.json').write_text(json.dumps({'Python':'3.14.7','phases':summaries,'real_provider_calls':0,'operating_profile_used':False}),encoding='utf-8')

@@ -55,6 +55,7 @@ jobs:
             ${{ runner.temp }}/newsflow-step13i/h/evidence/news-image-mp4/pixel-proof.json
             ${{ runner.temp }}/newsflow-step13i/*-supervisor-safe.json
             ${{ runner.temp }}/newsflow-step13i/ci-summary-safe.json
+            ${{ runner.temp }}/newsflow-step13i/ci-collected-IDs-safe.json
             ${{ runner.temp }}/newsflow-step13i/hflow/evidence/real-click-flow-safe.json
           if-no-files-found: ignore
           retention-days: 14
