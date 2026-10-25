@@ -31,8 +31,15 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             $env:PATH += ';C:/ProgramData/chocolatey/bin;C:/tools/ffmpeg/bin'
           }
-          "NEWSFLOW_FFMPEG=$((Get-Command ffmpeg -ErrorAction Stop).Source)" >> $env:GITHUB_ENV
-          "NEWSFLOW_FFPROBE=$((Get-Command ffprobe -ErrorAction Stop).Source)" >> $env:GITHUB_ENV
+          $ffmpeg = (Get-Command ffmpeg -ErrorAction Stop).Source
+          $ffprobe = (Get-Command ffprobe -ErrorAction Stop).Source
+          if ($ffmpeg.Replace('\','/') -like '*/Chocolatey/bin/*') {
+            $ffmpeg = (Get-ChildItem -LiteralPath 'C:/ProgramData/chocolatey/lib/ffmpeg/tools' -Recurse -File -Filter 'ffmpeg.exe' | Select-Object -First 1).FullName
+            $ffprobe = (Get-ChildItem -LiteralPath 'C:/ProgramData/chocolatey/lib/ffmpeg/tools' -Recurse -File -Filter 'ffprobe.exe' | Select-Object -First 1).FullName
+          }
+          if (-not $ffmpeg -or -not $ffprobe) { throw 'Actual FFmpeg tools required; no shim allowed' }
+          "NEWSFLOW_FFMPEG=$ffmpeg" >> $env:GITHUB_ENV
+          "NEWSFLOW_FFPROBE=$ffprobe" >> $env:GITHUB_ENV
           "NEWSFLOW_TEST_BROWSER_EXECUTABLE=C:/Program Files/Google/Chrome/Application/chrome.exe" >> $env:GITHUB_ENV
       - name: Guarded synthetic images, Chrome and real FFmpeg MP4
         run: |

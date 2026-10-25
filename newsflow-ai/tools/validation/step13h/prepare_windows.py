@@ -22,4 +22,8 @@ browser={'node':str(node),'node_SHA256':sha(node),'cli':str(cli),'cli_SHA256':sh
 # Infrastructure setup has finished. Each test child starts under the original Guard.
 for phase in ('security','h'):
  result=subprocess.run([sys.executable,'-I','-S','-B',str(root/'run_browser_phase.py'),phase],cwd=root,check=False)
- if result.returncode:raise SystemExit(result.returncode)
+ if result.returncode:
+  log=root/(phase+'-process.log')
+  if log.exists():
+   print('Synthetic test child diagnostic:',log.read_text(encoding='utf-8',errors='replace')[-12000:],flush=True)
+  raise SystemExit(result.returncode)
