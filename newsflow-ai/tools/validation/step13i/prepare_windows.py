@@ -7,7 +7,7 @@ root=Path(sys.argv[1]).resolve();assert not root.exists();assert not root.is_rel
 root.mkdir(parents=True)
 for path in (source.parent/'step13h').iterdir():
  if path.is_file() and path.name!='prepare_windows.py':shutil.copyfile(path,root/path.name)
-for filename in ('run_browser_phase.py','browser_bootstrap.py'):
+for filename in ('run_browser_phase.py','browser_bootstrap.py','test_guard_security.py'):
  shutil.copyfile(source/filename,root/filename)
 for name in ('home/AppData/Local','home/AppData/Roaming','temp','artifacts'):(root/name).mkdir(parents=True,exist_ok=True)
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()

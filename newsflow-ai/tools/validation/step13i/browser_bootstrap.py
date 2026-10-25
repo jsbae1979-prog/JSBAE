@@ -37,7 +37,7 @@ else:
  elif sys.argv[1]=='remaining':targets=[x for x in targets if 'test_pc_cloud_windows_browser.py::' not in x]
  elif sys.argv[1]=='h3':targets=['tests/test_news_image_linking.py']
  elif sys.argv[1] in ('h','h2','h4'):targets=['tests/test_news_image_linking.py','tests/test_news_thumbnails.py','tests/test_video.py']
- elif sys.argv[1] in ('hflow','hflow2','hflow3'):targets=[str(R/'test_news_image_gui_flow.py')]
+ elif sys.argv[1] in ('security','hflow','hflow2','hflow3'):targets=[str(R/'test_news_image_gui_flow.py')]
  elif sys.argv[1]=='hformats':targets=['tests/test_news_image_linking.py::test_jpeg_and_webp_supplied_images_become_clean_local_png']
  elif sys.argv[1]=='tiktok_recheck':targets=['tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login']
  elif sys.argv[1] in ('i_tiktok','i_tiktok2','i_tiktok3'):targets=['tests/test_tiktok_gui.py','tests/test_tiktok_connection.py','tests/test_tiktok_callback_owner_contract.py','tests/test_tiktok_publishing_connection.py']
@@ -61,7 +61,7 @@ else:
   return str(p)+(sep+selector if sep else '')
  targets=[absolute_target(t) for t in targets]
  options=['-q','-rs','-p','no:cacheprovider','-p','step13_guard','-p','step13_fixtures','-p','browser_boundary','-p','conftest','-c',str(pathlib.Path(step13_guard.CONFIG['project'])/'pyproject.toml'),'--rootdir',step13_guard.CONFIG['project'],'--basetemp',str(out/'temp'),'--junitxml',str(out/'pytest.xml'),*targets]
- if sys.argv[1] in ('hflow','hflow2','hflow3'):
+ if sys.argv[1] in ('security','hflow','hflow2','hflow3'):
   options[options.index('--rootdir')+1]=str(R)
   options.extend(['--confcutdir',str(R),'--import-mode=importlib'])
  if sys.argv[1]=='security':
