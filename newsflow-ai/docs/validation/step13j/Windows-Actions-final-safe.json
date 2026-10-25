@@ -1,0 +1,368 @@
+{
+  "step": "13J",
+  "scope": "Windows Actions selected Fake verification",
+  "status": "PASS",
+  "conclusion": "success",
+  "run": 40175792084,
+  "run_id": 40175792084,
+  "job": 121116068570,
+  "job_id": 121116068570,
+  "run_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40175792084",
+  "branch": "codex/newsflow-step13j-20261025",
+  "code_SHA": "2c785afbb32e6d514343c1ec991698f3681bfa39",
+  "head_sha": "2c785afbb32e6d514343c1ec991698f3681bfa39",
+  "product_and_test_SHA": "db9e4df953764fe36260d89e8d68eec1687b3c5a",
+  "CI_only_delta": "UTF-8 diagnostic stdout/stderr and failed-test-ID artifact preservation; product/test sources unchanged",
+  "python": "3.14.7",
+  "runner_OS": "Microsoft Windows Server 2025",
+  "checked_at_utc": "2026-10-25T08:28:12.707116+00:00",
+  "counts": {
+    "PASS": 681,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "counts_partial": false,
+  "planned_testcase_records": 681,
+  "verified_pass": 681,
+  "verified_completed_phase_failures": 0,
+  "verified_completed_phase_errors": 0,
+  "verified_completed_phase_skipped": 0,
+  "phase_results": [
+    {
+      "phase": "security",
+      "tests": 78,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 78,
+      "expected_records": 78
+    },
+    {
+      "phase": "i_contracts",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 24,
+      "expected_records": 24
+    },
+    {
+      "phase": "i_tiktok3",
+      "tests": 65,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 65,
+      "expected_records": 65
+    },
+    {
+      "phase": "i_sns_contracts",
+      "tests": 314,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 314,
+      "expected_records": 314
+    },
+    {
+      "phase": "h",
+      "tests": 123,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 123,
+      "expected_records": 123
+    },
+    {
+      "phase": "j_selected",
+      "tests": 76,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 76,
+      "expected_records": 76
+    },
+    {
+      "phase": "j_flow",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 1,
+      "expected_records": 1
+    }
+  ],
+  "collected_ID_groups": [
+    {
+      "phase": "security",
+      "records": 78,
+      "unique": 78,
+      "expected": 78
+    },
+    {
+      "phase": "i_contracts",
+      "records": 24,
+      "unique": 24,
+      "expected": 24
+    },
+    {
+      "phase": "i_tiktok3",
+      "records": 65,
+      "unique": 65,
+      "expected": 65
+    },
+    {
+      "phase": "i_sns_contracts",
+      "records": 314,
+      "unique": 314,
+      "expected": 314
+    },
+    {
+      "phase": "h",
+      "records": 123,
+      "unique": 123,
+      "expected": 123
+    },
+    {
+      "phase": "j_selected",
+      "records": 76,
+      "unique": 76,
+      "expected": 76
+    },
+    {
+      "phase": "j_flow",
+      "records": 1,
+      "unique": 1,
+      "expected": 1
+    }
+  ],
+  "ID_validation": {
+    "records": 681,
+    "unique_IDs": 681,
+    "duplicates": {},
+    "missing_expected_records": 0,
+    "log_summary_artifact_agree": true
+  },
+  "j_selected": {
+    "expected_records": 76,
+    "PASS": 76,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0,
+    "exit": 0,
+    "timeout": false
+  },
+  "j_flow": {
+    "expected_records": 1,
+    "status": "PASS",
+    "evidence": {
+      "RSS": "one Fake feed collected and persisted",
+      "selected_article": true,
+      "analysis_script": "Offline provider, no paid request",
+      "automatic_images": true,
+      "manual_first_scene_preserved": true,
+      "voice": "FakeTTS silent PCM, not actual speech",
+      "speech_estimate": {
+        "scenes": [
+          {
+            "scene": 1,
+            "budget_seconds": 10.0,
+            "estimated_seconds": 7.15,
+            "fits": true
+          },
+          {
+            "scene": 2,
+            "budget_seconds": 10.0,
+            "estimated_seconds": 5.55,
+            "fits": true
+          },
+          {
+            "scene": 3,
+            "budget_seconds": 10.0,
+            "estimated_seconds": 7.95,
+            "fits": true
+          }
+        ],
+        "estimated_total_seconds": 20.65,
+        "duration": 30,
+        "fits": true,
+        "rate": 0,
+        "pause_ms": 250
+      },
+      "MP4": [
+        1080,
+        1920,
+        30
+      ],
+      "pixels": [
+        {
+          "scene": 0,
+          "pixel": [
+            34,
+            86,
+            219
+          ],
+          "expected": [
+            36,
+            86,
+            220
+          ]
+        },
+        {
+          "scene": 1,
+          "pixel": [
+            211,
+            33,
+            32
+          ],
+          "expected": [
+            213,
+            34,
+            34
+          ]
+        },
+        {
+          "scene": 2,
+          "pixel": [
+            211,
+            33,
+            32
+          ],
+          "expected": [
+            213,
+            34,
+            34
+          ]
+        }
+      ],
+      "browser_playback": true,
+      "local_publish_draft": true,
+      "public_approval": false,
+      "publish_validation": "blocked",
+      "publish_jobs": 0,
+      "publish_attempts": 0,
+      "defaults_and_source_draft_preserved": true,
+      "page_external_requests": 0,
+      "real_API_OAuth_SNS_calls": 0
+    }
+  },
+  "process_cleanup": {
+    "started_phases": 7,
+    "all_child_exited": true,
+    "all_active_before_close_zero": true,
+    "all_job_assigned": true,
+    "all_kill_on_close": true,
+    "all_timeout_false": true,
+    "phase_exit_codes": {
+      "h": 0,
+      "i_contracts": 0,
+      "i_sns_contracts": 0,
+      "i_tiktok3": 0,
+      "j_flow": 0,
+      "j_selected": 0,
+      "security": 0
+    }
+  },
+  "guard": {
+    "all_original_guard_preserved": true,
+    "any_provider_env_inherited": false
+  },
+  "real_provider_calls": 0,
+  "operating_profile_used": false,
+  "image_pixel_evidence": {
+    "size": [
+      1080,
+      1920
+    ],
+    "all_scenes": [
+      {
+        "scene": 0,
+        "pixel": [
+          211,
+          33,
+          32
+        ],
+        "expected": [
+          213,
+          34,
+          34
+        ],
+        "PASS": true
+      },
+      {
+        "scene": 1,
+        "pixel": [
+          32,
+          180,
+          51
+        ],
+        "expected": [
+          34,
+          181,
+          51
+        ],
+        "PASS": true
+      },
+      {
+        "scene": 2,
+        "pixel": [
+          34,
+          86,
+          219
+        ],
+        "expected": [
+          36,
+          86,
+          220
+        ],
+        "PASS": true
+      }
+    ]
+  },
+  "artifact": {
+    "id": 12592521167,
+    "name": "step13j-synthetic-evidence",
+    "size": 16872,
+    "sha256": "de8a1379a62e1636f476e9a2b42fe2900f174deaa6515cb53eba5200be90d419",
+    "digest_matches_GitHub": true,
+    "members": [
+      "ci-collected-IDs-safe.json",
+      "ci-summary-safe.json",
+      "h/evidence/news-image-mp4/pixel-proof.json",
+      "h-supervisor-safe.json",
+      "i_contracts-supervisor-safe.json",
+      "i_sns_contracts-supervisor-safe.json",
+      "i_tiktok3-supervisor-safe.json",
+      "j_flow/evidence/step13j-user-flow/flow-safe.json",
+      "j_flow-supervisor-safe.json",
+      "j_selected-supervisor-safe.json",
+      "security-supervisor-safe.json"
+    ]
+  },
+  "private_evidence_files": [
+    "Windows-Actions-run40175792084-log-private.txt",
+    "Windows-Actions-run40175792084-artifact-private.zip"
+  ],
+  "initial_failure_preservation": {
+    "run_id": 40174889893,
+    "summary_file": "Windows-Actions-initial-safe.json",
+    "summary_sha256": "c0f3be9ac95825b7a025aed0368179d68d0521a6599b13072ee6c3ee0367aeb2",
+    "evidence_deleted": false,
+    "underlying_j_selected_failure": "NOT VERIFIED — original failing test ID/message was not preserved; this success does not prove its prior cause"
+  },
+  "limitations": [
+    "Selected CI verification only; not the local full regression total.",
+    "Silent PCM FakeTTS and Offline analysis do not establish real provider quality, account permissions, or billing success.",
+    "Page request blocking is not proof of all Chrome OS-level background traffic blocking or complete OS isolation.",
+    "Native operating transition, package installation and multi-user credential isolation remain separate verification scopes."
+  ],
+  "changes_by_reviewer": {
+    "product": 0,
+    "tests": 0,
+    "workflow": 0,
+    "reruns": 0,
+    "operating_data": 0,
+    "report_files_only": true
+  }
+}

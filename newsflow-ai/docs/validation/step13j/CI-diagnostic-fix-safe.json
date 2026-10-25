@@ -1,0 +1,13 @@
+{
+  "initial_run": 40174889893,
+  "completed_before_failure": 604,
+  "initial_selected_failure": "Cause pending; wrapper cp1252 hid traceback",
+  "changed_files": [
+    "newsflow-ai/tools/validation/step13j/prepare_windows.py",
+    ".github/workflows/newsflow-step13j-windows.yml"
+  ],
+  "synthetic_helper_tests": "PASS",
+  "product_test_Guard_changes": 0,
+  "raw_messages_in_safe_JSON": false,
+  "full_PC_frozen_code_unchanged": true
+}

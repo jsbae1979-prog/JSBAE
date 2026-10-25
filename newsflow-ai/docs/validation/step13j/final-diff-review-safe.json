@@ -1,0 +1,49 @@
+{
+  "step": "13J",
+  "review_type": "read-only diff and source-contract review; no tests executed by reviewer",
+  "reviewed_source_checkpoint": "db9e4df",
+  "diff_file": "step13j-source.diff",
+  "diff_sha256": "df3eb78de5b09bd8439ee58a37cca4caf94aaa53df2a7e40197a5a82c2d4c812",
+  "verdict": "PASS FOR REVIEWED CHANGE SCOPE",
+  "scope_counts": {"total_files": 50, "workflow": 1, "product_css": 1, "test_files": 42, "test_tools": 6},
+  "confirmed_findings": [],
+  "resolved_during_prior_review": ["Temporary concurrent-edit indentation error in test_studio_controls_browser.py is absent in the frozen diff."],
+  "product_scope": {
+    "only_changed_product_file": "newsflow-ai/src/newsflow/static/css/studio-system.css",
+    "changes": "At widths up to 1100px, reset dashboard lane grid row/column placement and use a single-column right rail.",
+    "authentication_permission_retry_cost_approval_migration_logic_changed": false,
+    "guard_or_CSP_global_relaxation": false
+  },
+  "test_contract_review": [
+    "Retired dashboard controls are replaced by actual /create navigation and visible shared pickers; checked state, posted FormData, keyboard behavior and settings preservation remain asserted.",
+    "Production picker fixtures add a synthetic unavailable ElevenLabs choice without credentials; actual execution consent and no silent engine/provider transition assertions remain.",
+    "AI schema test permits only the three existing optional legacy comparison fields; mandatory group_id/reason/uncertainties, property sets, object-size bound and additionalProperties=false remain checked.",
+    "The healthy_three_scene fixture retains timing-fit and minimum-duration assertions and replaces repetitive synthetic filler with the existing V2 fixture helper; product safety review is unchanged.",
+    "Listening evidence is tied to existing preview metadata/hash; append-only historical listening records remain preserved.",
+    "External return-target test checks actual href/action and canonical workspace_return, allowing only inert nested data; it does not authorize external navigation.",
+    "Responsive label test uses the current two-line layout while preserving width and clipping bounds; new dashboard geometry assertions protect the CSS correction.",
+    "Existing security, source/media preservation, required review and no-publication assertions were not removed to conceal failures. Retired selector/style checks were replaced with checks of the current UI contract."
+  ],
+  "new_flow_review": {
+    "scope": "Synthetic RSS and licensed local images; Offline analysis/script; manual scene replacement; FakeTTS silent PCM; real FFmpeg output and frame pixels; browser playback; unapproved local publishing draft.",
+    "assertions": "Exact six-POST allowlist, no unexpected page requests/errors, frozen source/manual image hashes, unchanged defaults/draft, blocked publishing readiness and zero PublishJob/PublishAttempt.",
+    "wait_contract": "POST 303 Location, actual navigation GET 200, DOM readiness and destination URL; same-document history events do not count as loaded documents.",
+    "limitations": "This reviewer authored the new flow test, so review of that file is self-review. Silent PCM is not actual Korean voice quality; page routing is not an OS-wide network isolation claim."
+  },
+  "CI_review": [
+    "Windows Python 3.14.7 is pinned; checkout persists no credentials; workflow token is contents:read.",
+    "Runtime environment is allowlisted; synthetic data, AppData, profile and port18765 are used; original Guard and browser boundary are installed in test children.",
+    "FFmpeg/ffprobe and browser/driver hashes are recorded; test process tree is owned by a kill-on-close Windows Job.",
+    "Expected collected testcase counts and failure/error/skip absence are asserted for each selected phase; collected IDs are recorded.",
+    "Uploaded artifact paths are restricted to synthetic JSON summaries and pixel proof, excluding databases, media, credentials and private configuration files."
+  ],
+  "new_skip_skipif_xfail_markers": 0,
+  "secrets_review": "No newly added real credential was identified. Existing diagnostic credential-like strings are synthetic redaction fixtures. Workflow does not request provider secrets or upload private logs/configuration.",
+  "limitations": [
+    "Static diff review does not establish runtime test success; central regression and Windows Actions results must be reported separately.",
+    "Chrome background-network behavior remains a documented environmental limitation, not proven completely blocked by request routing.",
+    "Operating DB, ledger and backup hashes were not re-read by this reviewer; preservation evidence is owned by the central run."
+  ],
+  "reviewer_writes": ["final-diff-review-safe.json only"],
+  "operating_changes_or_provider_calls_by_reviewer": 0
+}

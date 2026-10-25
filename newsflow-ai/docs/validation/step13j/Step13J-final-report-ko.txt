@@ -1,0 +1,133 @@
+NewsFlow AI — Step 13J 최종 기능·안전성 통합 검증
+작성: 2026-10-25T17:59:33.008029+09:00
+최종 판정: CONDITIONAL
+검증 코드: db9e4df953764fe36260d89e8d68eec1687b3c5a
+개발 브랜치: codex/newsflow-step13j-20261025
+PR #35 Draft·미병합 유지. 운영 적용·재시작·실제 API·OAuth·게시·EXE 배포 없음.
+
+1. 전체 회귀와 핵심 결과
+기준: {'PASS': 5289, 'FAIL': 91, 'ERROR': 0, 'SKIP': 4}
+최종: {'PASS': 5366, 'FAIL': 15, 'ERROR': 0, 'SKIP': 4}
+기존 실패 해결 76건. 기존 PASS→FAIL/ERROR 0건. 신규 테스트 실패 0건.
+기존 ID 5384개 → 5385개. 누락 0개, 신규 1개, 추가 skip 0개. skip·xfail 추가 또는 단언 삭제로 실패를 숨기지 않았다.
+새 사용자 통합 흐름: {'PASS': 1}. 기존 이미지 자동 연결 검사: {'PASS': 55}. FFmpeg 제작 선택 조합: {'PASS': 16}.
+최종 집계는 full/pytest.xml 기준이며 중간 실패·집중 검증을 합산하지 않았다. 전체 항목 PASS를 주장하지 않는다.
+
+2. 기존 91 FAIL 최종 분류
+상호 배타적인 원인별 분류: {'Current product contract / test expectation': 47, 'current GUI/test contract mismatch': 25, 'Guard execution boundary': 14, 'test fixture boundary': 2, 'small product defect + current test retained': 1, 'Fixture / sample evidence': 1, 'Guard/native environment (inner cause NOT VERIFIED)': 1}
+최신 결과: {'PASS': 76, 'FAIL': 15}
+과거 기준선 동일 실패 10건 중 Step13I에도 남아 있던 7건은 별도 이력 태그로 추적한다. 원인별 합계에 중복 가산하지 않는다.
+ID별 위험은 native-validation-gaps-safe.json, 전체 91개 결과는 original91-final-safe.json을 참조한다.
+
+3. Windows Actions
+Run 40175792084; SHA 2c785afbb32e6d514343c1ec991698f3681bfa39; 결론 success.
+결과: {'PASS': 681, 'FAIL': 0, 'ERROR': 0, 'SKIP': 0}.
+각 단계의 testcase 수·ID와 skip 없는 실행을 확인한다. 기존 선택 범위 604건, 이번 정합화 대상 76건, 신규 통합 흐름 1건을 대상으로 했다. 이전 Actions 605건의 hflow 1건은 기존 증거를 보존하고 이번 CI 선택군에서는 더 넓은 새 통합 flow 1건으로 대체했다. 전체 회귀의 기존 테스트 ID는 별도로 비교한다. 제품·테스트는 db9e4df이며 Actions HEAD 2c785af의 차이는 CI 진단 출력과 실패 ID 보존뿐이다. native 15건은 전체 회귀에 유지했다.
+최초 run40174889893은 기존604개 통과 후 선택군에서 실패했으며 cp1252 진단 출력 오류로 원문과 실패ID가 보존되지 않았다. UTF-8 출력·실패ID 보존만 보완한 다음 실행이 통과했다. 최초 선택군 실패의 직접 원인은 여전히 NOT VERIFIED이며, 재실행 성공만으로 그 원인을 해결했다고 주장하지 않는다. 첫 실패 증거는 Windows-Actions-initial-safe.json에 보존했다.
+CI 의존성 설치 통신은 공급사 API 호출과 구분한다. 산출물은 합성 JSON이며 실제 DB·키·운영 미디어 업로드는 없다.
+
+4. 변경 파일과 증거
+총 50개 파일. 제품 CSS 1개, 테스트·Fixture 42개, CI·검증 도구 7개다. 파일별 SHA와 원격 Git blob은 code-file-checks-safe.json, CI-only-followup-safe.json 및 git-final-code-verified-safe.json에 기록했다.
+제품: newsflow-ai/src/newsflow/static/css/studio-system.css.
+새 통합 테스트: newsflow-ai/tests/test_step13j_user_flow.py.
+최종 diff 검토: final-diff-review-safe.json. 원문 diff는 로컬 step13j-source.diff에 보존했다. 민감 로그와 운영 절대 경로는 외부 보고에 포함하지 않는다.
+MP4·프레임·재생·무게시: j_flow3/evidence/step13j-user-flow/flow-safe.json 및 full의 합성 증거. 합성 미디어는 로컬에만 보관했다.
+1100px 배치 전후: j_gui 및 j_gui2의 temp/test_restored_dashboard_layout0/dashboard-1100.png. 배치용 placeholder 화면이므로 재생 성공 증거와 구분한다.
+
+5. 운영·백업·Git 보존
+운영 로컬 64개 변경 0건, 보호 데이터 SHA 불일치 0건, 운영 데이터 33개 SHA 불일치 0건.
+백업 A/B: {'A': {'files': 45572, 'bytes': 6388588775, 'missing': 0, 'extra': 0, 'metadata_mismatches': 0, 'critical_SHA_mismatches': 0, 'accepted_full_SHA_SQLite_Git_evidence_reused': True}, 'B': {'files': 45572, 'bytes': 6388588775, 'missing': 0, 'extra': 0, 'metadata_mismatches': 0, 'critical_SHA_mismatches': 0, 'accepted_full_SHA_SQLite_Git_evidence_reused': True}}
+기존 전체 SHA·SQLite 무결성·revision 0018·Git 복원 증거를 재사용했다. 이번에 새 전수 Git 객체 검사나 DB 접속·migration을 수행한 것으로 표시하지 않는다.
+API 결과 불명 7건·피드 1건·ElevenLabs reserved 1건·HTTP402 기록은 DB 해시 불변으로 보존 확인했다. 운영 DPAPI 복호화 0건.
+알려진 보조 Git 참조 누락 예외(과거 1개 및 Step13I 시작 전에 확인한 추가 1개)를 유지했다. 이번 예상치 못한 핵심 변경 0건. 원본 Git 전체가 누락 없이 불변이라고 주장하지 않는다. 참조 복구·gc·prune 0건.
+Step13I를 포함한 봉인 증거: {'step13g9-20261025-01': {'checked': 24, 'SHA_mismatches': 0}, 'step13g10a3-20261025-01': {'checked': 13, 'SHA_mismatches': 0}, 'step13g10a4-20261025-01': {'checked': 9, 'SHA_mismatches': 0}, 'step13g10b-20261025-01': {'checked': 12, 'SHA_mismatches': 0}, 'step13g10b-recheck-20261025-01': {'checked': 20, 'SHA_mismatches': 0}, 'step13g10b-netcontrol-20261025-01': {'checked': 10, 'SHA_mismatches': 0}, 'step13g10b-final-20261025-01': {'checked': 65, 'SHA_mismatches': 0}, 'step13h-20261025-01': {'checked': 35, 'SHA_mismatches': 0}, 'step13i-20261025-01': {'checked': 51, 'SHA_mismatches': 0}}
+최종 종료 확인: {'at': '2026-10-25T17:58:49.5569560+09:00', 'queries_verified': True, 'port8765_listeners': 0, 'port18765_listeners': 0, 'owned_test_processes_remaining': 0, 'operating_source_process_matches': 0, 'operating_restart_or_apply': 0, 'actual_paid_calls': 0, 'actual_OAuth_SNS_calls': 0, 'scope': 'After full regression and preservation helper exit; only query, no process termination'}
+
+6. 기능·안전·API·배포 검토
+
+범위
+Step 13I의 코드 b0a7185와 보고서 9510938을 기준으로 분리한 개발본에서 Windows Python 3.14.7로 진행했다. 운영 소스·프로필을 테스트 입력으로 사용하지 않았으며 운영 포트 8765도 사용하지 않았다. 운영 코드 적용, 앱 재시작, 운영 DB migration, 실제 공급사 API·OAuth·SNS 호출 및 배포는 모두 0건이다. 이번 단계에서는 공개 RSS도 다시 호출하지 않았으며, 이전에 승인된 RSS 파싱 증거와 Fake 응답을 사용했다.
+
+핵심 사용자 흐름
+신규 통합 테스트는 다음 흐름을 확인했다.
+합성 RSS 1회 수집 → 기사·썸네일 저장 → 기사 선택 → Offline 분석·대본 → 사용 권리가 명시된 로컬 합성 이미지 자동 연결 → 첫 장면 수동 교체 → 이번 작업의 음성 선택·발화 시간 추정 → FakeTTS → 기존 FFmpeg로 30초·1080×1920 MP4 합성 → 장면별 색상 대조 → Chrome에서 실제 재생 → 출처 팝업 → 계정 연결·동의 없는 로컬 YouTube 게시 초안 저장 → 게시 준비 검증 BLOCKED.
+PublishJob·PublishAttempt가 0건이며, 기본값·대본·이미지·snapshot이 보존되는지 단언했다.
+
+FakeTTS는 무음 PCM을 사용한다. 이번 결과는 실제 한국어 발음·음질, ElevenLabs 청구 또는 AI 대본 품질 검증을 의미하지 않는다. 대본은 Offline 합성 응답이며 실제 OpenAI·Claude는 호출하지 않았다. 별도의 기존 전체 AI 영상 GUI 테스트에서는 선택한 OpenAI·Claude의 Fake 응답, Higgsfield의 모든 장면 Fake 생성, ElevenLabs Fake, 검토·합성 승인, FFmpeg 및 원래 작업의 최종 화면을 검증했다. 실제 공급사 영상과 동일한 품질이나 계정 권한을 보장하지 않는다.
+
+제품 수정
+유일한 제품 변경 파일은 src/newsflow/static/css/studio-system.css이며, 1100px 이하 화면의 배치를 최소 수정했다. 넓은 화면용 grid의 행·열 지정이 남아 카드가 겹치던 현상을 해소하고, 좁은 오른쪽 영역의 영상·게시 카드를 세로로 배치했다. 글씨 크기·기능·동의·기본 설정 변경은 0건이다. 기존 대시보드 겹침 검사와 함께 카드 폭, 버튼 폭·높이 검사를 유지했다.
+
+테스트 정합화
+현재 /create 화면, 공통 선택기, 숨김 상태의 정식 입력값, 준비 상태, 팝업 및 장면 편집기에 맞게 선택자를 수정했다. 같은 URL에 저장할 때 replaceState를 문서 로딩 완료로 오인하지 않도록 POST 303, 실제 GET 문서 200 및 DOM 완료를 확인한다. Fake 음성 목록, 현재 V2 안전 기준을 충족하는 대본, stub 인자 및 이미지 기준 자산을 정합화했다. Step 13I 코드에서 검증된 GUI 자산 135개를 합성 테스트의 비교 기준으로 제공하며 운영 소스를 입력으로 읽지 않는다. 이 기준 자산이 과거 운영 디자인을 동일 시점에 복제한 것이라고 주장하지 않는다.
+
+HTTP 400의 확인된 invalid_request는 failed로, 불명확한 응답은 unknown으로 유지한다. HTTP 402·결과 불명 보호와 재시도·Provider 자동 전환 제한을 해제하지 않았다. Claude 토큰 기대값과 curation의 필수·선택 스키마를 현재 모델 계약에 맞췄으며, 기존 필수 필드·추가 필드 차단·원문 보호 단언을 유지했다. 음성 청취 기록에는 합성 샘플 파일의 실제 지문을 연결하고, 기존 기록을 지우지 않고 추가하는 append-only 정책을 유지했다. 새로운 skip·xfail 추가 및 테스트 함수 삭제는 0건이다. 제품의 인증·권한·DB schema·migration·비용·예약·공개 게시 정책 수정도 0건이다.
+
+잔여 위험 판정 원칙
+Guard가 별도 Python·PowerShell 프로세스를 실행 전에 차단한 실패를 제품 결함으로 확정하지 않는다. 동시에 제품의 독립 프로세스 잠금, 포트 독점, 업데이트·복원 및 자동 시작이 실제로 성공했다고 대신 판정하지 않는다. 이 검증 공백은 통합 Fake 핵심 흐름과 구분하여 운영 전환과 설치형 프로그램의 일반 배포 위험으로 기록한다. Windows 네이티브 예약 조회 1건은 wrapper 오류의 하위 원인이 미확정이다. 별도 검증에서도 고정된 합성 입력·명령·경로, 프로세스 정리 및 기존 Guard 유지가 필수다.
+
+실제 API 승인 준비
+모든 공급사의 테스트 키·계정 준비 상태는 미검증이며, 운영 자격증명을 조회·복호화·사용하지 않았다.
+
+SerpApi: 통합 수집기가 아닌 고정된 단일 페이지 GET 1회가 대상이다. 테스트 키, 쿼리·지역·언어, 크레딧·가격 확인 및 승인이 필요하다.
+
+OpenAI: 모델 metadata GET 1회와 추론 POST 1회는 별개다. 추론은 분석·대본 중 한 단계만 선택하고, 모델·합성 입력·출력 한도·실제 단가를 확인한 후 승인한다. metadata 응답은 잔액·생성 권한·과금 성공을 보장하지 않는다. 승인 후 실행할 때도 재시도 없는 경로로 고정한다.
+
+ElevenLabs: saved 음성 목록의 첫 페이지 GET 1회와 TTS는 별개다. 단일 synthesize_timed 호출은 구독 조회 GET 최대 1회와 timestamp 생성 POST 최대 1회이며, 캐시 적중 시 요청은 0회다. 정확한 텍스트·음성·모델, 외부 전송 동의 및 사용량 조건에 대한 승인이 필요하다. 길이를 맞추기 위한 재생성 반복을 단일 호출 1건으로 표현하지 않는다.
+
+Instagram·YouTube·TikTok: 실제 OAuth·refresh·upload·publish·delete는 0건이다. 각 실행은 범위·계정·권한·전송물별 승인이 필요하다. Instagram의 Professional 계정·Page·Meta 권한, 인증 중계 및 HTTPS 이미지 전달 인프라와 YouTube 앱·테스트 계정·할당량은 미검증이다. TikTok은 production_enabled=false를 유지했으므로 실제 호출 승인만으로 이 제한을 해제할 수 없다.
+
+비용은 확인되지 않아 숫자로 추정하지 않았으며, 예약금이나 임의 상한을 추가하지 않았다. 시간 초과·실패·결과 불명 시 중단하고, 자동 재시도와 무단 Provider 전환을 금지한다. 과거 모델 종료일·가격 자료를 이번에 최신 조회한 결과처럼 보고하지 않는다.
+
+Windows 설치형 배포 영향
+실제 EXE·설치 프로그램 빌드는 0건이다. 기존 run.bat·venv·pip를 통한 개발 실행은 Python이 설치되지 않은 PC에서 독립 실행할 수 있다는 증거가 아니다. PyInstaller·Nuitka와 Python 3.14.7의 호환성, 패키징된 실행 진입점, FFmpeg·DLL·폰트·tzdata·templates·static·migration 포함 여부와 라이선스·해시를 패키징 환경에서 검증해야 한다. 사용자별 LOCALAPPDATA·DPAPI·작업·사용량 구조도 해당 환경에서 확인해야 한다.
+
+실제 다중 Windows 사용자 간 ACL·암호문 분리, 다중 인스턴스·포트 및 GET·미디어 접근 인증은 미검증이다. loopback·CSRF·CSP를 다른 OS 사용자의 접근 차단과 동일하게 표시하지 않는다. 시작 시 migration·recovery·worker 동작을 포함해 업데이트·종료·제거·복구·서명 및 새 PC 실행을 Step 15~18에서 별도 승인 후 검증해야 한다.
+
+외부 통신 및 보호 한계
+Python·Node·페이지 요청 경계와 Fake 응답, 테스트 프로필, 합성 AppData·SQLite 및 포트 18765를 유지했다. 테스트 프로세스는 소유한 Windows Job으로 정리한다. 페이지 외부 요청 0건과 실제 공급사 API 호출 0건을 Chrome 자체의 모든 백그라운드 통신 또는 현재 사용자의 OS 파일 접근 권한까지 완전히 차단했다는 뜻으로 확대하지 않는다. 기존에 수용된 완전한 OS 격리 미검증 위험을 유지했다. Sandbox·Hyper-V·계정·ACL·방화벽·재부팅 변경은 0건이다.
+
+종료 및 다음 작업
+Step 13J 결과를 제출한 후 중단하며 다음 개발을 자동으로 시작하지 않는다. 우선 남은 네이티브 실행·복구 검증의 제한된 허용 범위, 공급사별 실제 연동에 필요한 키·데이터·횟수·비용 승인, 설치형 EXE의 사용자 분리·포트·패키징 검증을 검토해야 한다. Step 14 운영 적용·재시작, Step 15 패키징 및 Step 16~18 배포 검증은 별도 승인 대상이다. 핵심 Fake 테스트 통과를 운영 전환이나 일반 배포 승인으로 해석하지 않는다.
+
+7. 전체 Step 1~18 진행표
+1–9 | 기존 승인 증거 유지 | 사전조사·격리통합·Windows 검증·정상종료·백업·초기복원. 개별 번호별 확정 원문 부재로 임의 세부 판정을 만들지 않음
+10 | ACCEPTED | Git 읽기 진단; 명령 한정 longpaths. 복구 불필요
+11 | SKIPPED | Git 복구 불필요
+12 | PASS | 백업·Git·DB 보존 검증의 승인된 시점
+12-IMG | CONDITIONAL | 정적 증거와 실제 이미지 삽입을 구분
+13 | CONDITIONAL ACCEPTED | 전체 운영 적용 승인 아님
+13A | PASS | 격리 로컬 이미지 MP4 검증
+13B | PASS — 분석 | revision 기대값 분석
+13C | CONDITIONAL | 적용 준비 검토
+13D | NOT IMPLEMENTED | 뉴스 이미지 자동 연결 (과거 판정 보존; 최신 구현 검증은 13H로 분리)
+13E | CONDITIONAL | 테스트 계약 수정 및 회귀
+13F | CONDITIONAL | 운영 적용 안전성
+13G / 13G.1 | CONDITIONAL ACCEPTED | 회귀 분석·Guard/Fixture 계획
+13G.2-A | ACCEPTED | Guard 최소 수정
+13G.2-B | CONDITIONAL | Fake 및 회귀
+13G.3 / .4 / .5 | CONDITIONAL ACCEPTED | Git/revision 진단·테스트 정합화·Python 검토
+13G.6 | CONDITIONAL ACCEPTED | TikTok Fake·시간대·요청 크기 진단 PASS; 전체 회귀 잔여
+13G.7 | CONDITIONAL ACCEPTED | Guard A CONDITIONAL / Fixture B PASS / 계약 C 분석 PASS
+13G.8 | CONDITIONAL ACCEPTED | 계약·브라우저 검증 설계
+13G.9 | CONDITIONAL ACCEPTED | 5,147 PASS / 63 FAIL / 91 ERROR / 4 SKIP; 신규 실패 0은 해당 비교 범위
+13G.10-A | BLOCKED (과거 판정) | 종전 격리 준비 결과 보존 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행.
+13G.10-A.1 | CONDITIONAL (과거 판정) | 기능 활성화 계획만; Sandbox/Hyper-V 보류 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행.
+13G.10-A.2 | BLOCKED — 점검 완료 (과거 판정) | 실제 파일 접근 차단·native 자식 통신 차단 입증 부족. 원래 증거 15개 해시 일치 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행.
+13G.10-A.3 | BLOCKED — 준비·안전 점검 완료 (과거 판정) | 합성 DB/프로필/포트 준비. 현재 사용자 자료 접근 허용 및 native egress 차단 미입증. 실제 브라우저 실행0 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행.
+13G.10-A.4 | CONDITIONAL — 분석·설계 완료 (과거 판정) | 표준 계정 단독 BLOCKED; 추가 OS 자료/통신 경계 미검증. 계정/ACL/방화벽/브라우저 변경0 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행.
+13G.10-B | CONDITIONAL ACCEPTED | 사용자가 승인한 5210 PASS / 91 FAIL / 0 ERROR / 4 SKIP 기준
+13H | CONDITIONAL ACCEPTED | 사용자 승인: 이미지 자동 연결/MP4/GUI 통과, 전체5264 PASS/92 FAIL/0 ERROR/4 SKIP. 과거 판정 보존.
+13I | CONDITIONAL ACCEPTED | 사용자 승인 기준5289 PASS/91 FAIL/0 ERROR/4 SKIP; Windows Actions605 PASS.
+13J | CONDITIONAL | 승인된 통합 Fake·최소 수정·회귀 완료. 실제 API·운영 전환·배포 미실행.
+14 | NOT AUTHORIZED | 운영 적용·앱 재시작 금지 유지
+15 | PLAN ONLY | Windows3.14.7 EXE·데이터 분리·서명·설치 설계
+16 | PLAN ONLY | 다수 Windows 사용자 설치·데이터 분리 검증
+17 | PLAN ONLY | 업데이트·제거·복원·롤백 검증
+18 | PLAN ONLY | 배포 후보·일반 사용자 배포 승인
+
+8. 다음 작업과 승인
+Step14 운영 적용·재시작은 이번 검증만으로 승인되지 않는다. native 잠금·포트·종료·업데이트·복원 검증 공백과 적용 범위를 검토한 뒤 별도 승인이 필요하다.
+Step15는 미충족 항목이 정리되어 설계·합성 패키징의 착수 승인 검토가 가능하다. 새 PC 실행·사용자 간 격리·설치·업데이트·제거·복원·서명·배포 성공은 미검증이다.
+실제 공급사 요청은 API-approval-matrix-safe.json의 테스트 키·데이터·호출 수·비용·실패 중단 범위를 별도 승인해야 한다. SNS 공개 승인은 별개다.
+Step16~18과 일반 사용자 배포도 별도 승인 전까지 실행하지 않는다. 결과 보고 후 추가 개발 없이 중단하고 운영 앱 종료 상태를 유지한다.

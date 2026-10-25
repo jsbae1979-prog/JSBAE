@@ -1,0 +1,356 @@
+{
+  "Python": "3.14.7",
+  "guards": [
+    {
+      "file": "step13_guard.py",
+      "SHA256": "ba47fcc859eccfac9698b09b644fd65286456f2ce2c8421c70ce5e863f909302",
+      "unchanged_from_I": true
+    },
+    {
+      "file": "browser_boundary.py",
+      "SHA256": "522aaa8fdd92c5c23952524735c20724dce575f2c86d74a8d19d097527d70686",
+      "unchanged_from_I": true
+    },
+    {
+      "file": "node_boundary.cjs",
+      "SHA256": "d896617517230c81a24c5f00e5f608ae5b1ea2063b9e4f3d3bb3383dc5b159ae",
+      "unchanged_from_I": true
+    },
+    {
+      "file": "step13_fixtures.py",
+      "SHA256": "a87fc15f22064c1e22b9c4cce5e6129b98f9c9d48f0e76654a68323edeed8f28",
+      "unchanged_from_I": true
+    }
+  ],
+  "phases": [
+    {
+      "phase": "full",
+      "exit": 1,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "j_core",
+      "exit": 1,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "j_core2",
+      "exit": 1,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "j_flow",
+      "exit": 1,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "j_flow2",
+      "exit": 1,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "j_flow3",
+      "exit": 0,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "j_focus",
+      "exit": 1,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "j_gui",
+      "exit": 1,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "j_gui2",
+      "exit": 1,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "j_gui3",
+      "exit": 0,
+      "owned_active": 0,
+      "cleaned": true
+    },
+    {
+      "phase": "security",
+      "exit": 0,
+      "owned_active": 0,
+      "cleaned": true
+    }
+  ],
+  "browser_cleanup": {
+    "Playwright_loops": 47,
+    "owned_executor_threads": 36,
+    "owned_threads_remaining": [],
+    "Playwright_loops_still_open": 0,
+    "loop_detail": [
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      }
+    ],
+    "connected_browsers": 0,
+    "proof": "Only actual registered Playwright loop executors deferred; all app/unknown threads retain per-test assertion."
+  },
+  "browser_boundary_event_counts": {
+    "Playwright-test-boundary-installed": 1,
+    "fixture-server-fixed": 1,
+    "Node-approved": 94,
+    "Chrome-launch": 47,
+    "virtual-fulfill-origin": 60,
+    "pytest-finished": 1
+  },
+  "provider_keys_inherited": false,
+  "operating_profile_used": false,
+  "frozen_product_test_drift": [],
+  "CI_only_changes": [
+    "newsflow-ai/tools/validation/step13j/prepare_windows.py",
+    ".github/workflows/newsflow-step13j-windows.yml"
+  ],
+  "full_complete": true,
+  "OS_complete_isolation": "NOT VERIFIED; current user retains file rights and Chrome background native traffic is not fully audited",
+  "observed_paid_API_OAuth_SNS_calls": 0
+}

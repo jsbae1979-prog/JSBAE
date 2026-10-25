@@ -1,0 +1,74 @@
+[
+  {
+    "provider": "SerpApi",
+    "test_key_account": "NOT VERIFIED; no stored key loaded",
+    "minimum_plan": "One fixed Google News search page GET; do not invoke a multi-query collection plan",
+    "data": "Approved test query, language, region and dedicated test key",
+    "cost": "Search credit consumption and plan price must be confirmed",
+    "limit": "1 page / 1 request; no next_page or retry",
+    "ready": "Fake contract verified; real query requires separate approval",
+    "user_approval_required": true,
+    "failure_unknown_policy": "Stop, preserve failed/unknown/reserved ledger; no automatic retry or provider fallback",
+    "real_calls_this_step": 0
+  },
+  {
+    "provider": "OpenAI",
+    "test_key_account": "NOT VERIFIED",
+    "minimum_plan": "Metadata GET1 and one analysis OR script POST1 are separate approvals",
+    "data": "Dedicated key; fixed permitted model; synthetic news/prompt; output token maximum",
+    "cost": "Current selected-model input/output unit price and allowed usage must be confirmed; metadata is not balance verification",
+    "limit": "API-managed no-retry path; no generic legacy retry loop",
+    "ready": "Fake verified; real metadata/generation not verified",
+    "user_approval_required": true,
+    "failure_unknown_policy": "Stop, preserve failed/unknown/reserved ledger; no automatic retry or provider fallback",
+    "real_calls_this_step": 0
+  },
+  {
+    "provider": "ElevenLabs",
+    "test_key_account": "NOT VERIFIED",
+    "minimum_plan": "Saved voices first-page GET1 OR timed TTS subscription GET<=1 plus timestamp synthesis POST<=1; cache hit0",
+    "data": "Dedicated key, saved voice/model, exact approved synthetic Korean text and separate external-voice consent",
+    "cost": "Subscription entitlement, characters/credits and current price must be confirmed",
+    "limit": "No pagination/retry/voice switch/fit-regeneration loop; preserve reserved/402",
+    "ready": "Fake verified; real permission/audio/charge not verified",
+    "user_approval_required": true,
+    "failure_unknown_policy": "Stop, preserve failed/unknown/reserved ledger; no automatic retry or provider fallback",
+    "real_calls_this_step": 0
+  },
+  {
+    "provider": "Instagram",
+    "test_key_account": "NOT VERIFIED; app/scopes/account and relay infrastructure unverified",
+    "minimum_plan": "0 in this Step; OAuth, refresh, upload/IMAGE staging, publish and delete require individual action plans",
+    "data": "Only approved app/redirect/scopes and chosen media/metadata after separate approval",
+    "cost": "Media-delivery infrastructure and account conditions not confirmed",
+    "limit": "Separate public approval, idempotency and unknown protection retained",
+    "ready": "Fake verified; real account and HTTPS image delivery infrastructure NOT VERIFIED",
+    "user_approval_required": true,
+    "failure_unknown_policy": "Stop, preserve failed/unknown/reserved ledger; no automatic retry or provider fallback",
+    "real_calls_this_step": 0
+  },
+  {
+    "provider": "YouTube",
+    "test_key_account": "NOT VERIFIED; desktop client/test channel/quota not checked",
+    "minimum_plan": "0 in this Step; OAuth, refresh, upload and visibility/publish actions planned separately",
+    "data": "Approved redirect/scopes and selected MP4/title/description only",
+    "cost": "Quota and project/channel restrictions must be confirmed",
+    "limit": "Independent per-platform job state; successful upload not repeated",
+    "ready": "Fake verified; real account/rights/upload NOT VERIFIED",
+    "user_approval_required": true,
+    "failure_unknown_policy": "Stop, preserve failed/unknown/reserved ledger; no automatic retry or provider fallback",
+    "real_calls_this_step": 0
+  },
+  {
+    "provider": "TikTok",
+    "test_key_account": "NOT VERIFIED",
+    "minimum_plan": "0 while production_enabled=false; execution approval alone does not remove this product gate",
+    "data": "No actual OAuth/token/media data transmitted",
+    "cost": "Provider eligibility and account conditions unverified",
+    "limit": "State/PKCE/redirect/CSP and production gate retained",
+    "ready": "Fake verified; production BLOCKED pending separately approved policy/eligibility work",
+    "user_approval_required": true,
+    "failure_unknown_policy": "Stop, preserve failed/unknown/reserved ledger; no automatic retry or provider fallback",
+    "real_calls_this_step": 0
+  }
+]

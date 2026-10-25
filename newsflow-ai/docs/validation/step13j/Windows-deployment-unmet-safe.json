@@ -1,0 +1,44 @@
+{
+  "scope": "update unfulfilled gates only; prior plan retained",
+  "Python": "3.14.7",
+  "EXE_builds": 0,
+  "architecture_policy_changes": 0,
+  "gaps": [
+    {
+      "area": "EXE/runtime",
+      "status": "NOT IMPLEMENTED / NOT VERIFIED",
+      "evidence": "run.bat discovers Python3.12/3.14; launcher creates venv/pip; no installer/spec. Python3.14.7 test success is not EXE compatibility",
+      "next": "Step15 tool choice and frozen entrypoint; no build now"
+    },
+    {
+      "area": "worker/startup",
+      "status": "deployment blocker",
+      "evidence": "SAPI uses sys.executable -m; autorun references .venv/Scripts/python.exe; frozen child/normal exit not verified",
+      "next": "explicit frozen worker/autorun entrypoints and reentry protection"
+    },
+    {
+      "area": "assets/FFmpeg",
+      "status": "partial source ready",
+      "evidence": "templates/static/migrations/fonts listed; FFmpeg env/PATH resolution; frozen resource/DLL/tzdata/license/version checks not verified",
+      "next": "manifest and bundled path/rights validation"
+    },
+    {
+      "area": "per-user data/DPAPI",
+      "status": "synthetic separation PASS / real users NOT VERIFIED",
+      "evidence": "LOCALAPPDATA data root and current-user DPAPI reused; machine env/shared data overrides remain risk",
+      "next": "new-user SID/ACL/default scope and independent usage records"
+    },
+    {
+      "area": "local server",
+      "status": "deployment blocker",
+      "evidence": "loopback/CSRF/CSP not full local-user authentication; source contract fails closed on occupied fixed port 8765, but native port competition and multi-instance behavior remain NOT VERIFIED",
+      "next": "separate approval for bootstrap auth, sensitive GET protection, per-user port/OAuthredirect policy"
+    },
+    {
+      "area": "install/update/remove/rollback",
+      "status": "NOT IMPLEMENTED / NOT VERIFIED",
+      "evidence": "no actual installer/update/signing or new-PC no-Python proof; startup can migrate/recover/start workers",
+      "next": "Step15-17 explicit design/build/test, preserve data and same-point restore"
+    }
+  ]
+}

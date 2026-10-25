@@ -1,0 +1,102 @@
+[
+  {
+    "phase": "j_focus",
+    "tests": 1,
+    "FAIL": 1,
+    "ERROR": 0,
+    "SKIP": 0,
+    "PASS": 0,
+    "evidence_SHA256": "3e1349cdb14bd61eded5df10bf9fbf50b8fef8a2e066bb81e1c5ae088a9dce0f",
+    "intermediate_or_focused_not_full": true
+  },
+  {
+    "phase": "j_core",
+    "tests": 162,
+    "FAIL": 1,
+    "ERROR": 0,
+    "SKIP": 1,
+    "PASS": 160,
+    "evidence_SHA256": "c529a0cc91483d297a8f85952de5d00338ac888e2565d7e6d36777fb92562cbb",
+    "intermediate_or_focused_not_full": true
+  },
+  {
+    "phase": "j_gui",
+    "tests": 75,
+    "FAIL": 12,
+    "ERROR": 0,
+    "SKIP": 0,
+    "PASS": 63,
+    "evidence_SHA256": "674448d92992b4cf636553d4c3ccc93840cf52b49afa7fce1a15e8b075fd98d2",
+    "intermediate_or_focused_not_full": true
+  },
+  {
+    "phase": "j_core2",
+    "tests": 47,
+    "FAIL": 2,
+    "ERROR": 0,
+    "SKIP": 0,
+    "PASS": 45,
+    "evidence_SHA256": "b2b49ea2595f98f611e868b8f74857ba04f8b9a342f5ea36c4652f905e5b24a9",
+    "intermediate_or_focused_not_full": true
+  },
+  {
+    "phase": "j_flow",
+    "tests": 1,
+    "FAIL": 1,
+    "ERROR": 0,
+    "SKIP": 0,
+    "PASS": 0,
+    "evidence_SHA256": "d43563ec0fec434046e77a189274a6614e9237218ae28ccd9486ee3bee8c36a9",
+    "intermediate_or_focused_not_full": true
+  },
+  {
+    "phase": "j_gui2",
+    "tests": 20,
+    "FAIL": 8,
+    "ERROR": 0,
+    "SKIP": 0,
+    "PASS": 12,
+    "evidence_SHA256": "640631c6b46a2301113aab9e510ecd19fdd8644409df485d0275dcb7c6852af1",
+    "intermediate_or_focused_not_full": true
+  },
+  {
+    "phase": "j_flow2",
+    "tests": 1,
+    "FAIL": 1,
+    "ERROR": 0,
+    "SKIP": 0,
+    "PASS": 0,
+    "evidence_SHA256": "7fa27abc96aad7dc942c8c387ebb204ac72f53f744ce36f41ee60216b5cca41b",
+    "intermediate_or_focused_not_full": true
+  },
+  {
+    "phase": "j_flow3",
+    "tests": 3,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0,
+    "PASS": 3,
+    "evidence_SHA256": "fa5b924241b6ab080c65b0696863196eddfcc7fb7a0d451f215cdd4248e510ef",
+    "intermediate_or_focused_not_full": true
+  },
+  {
+    "phase": "j_gui3",
+    "tests": 8,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0,
+    "PASS": 8,
+    "evidence_SHA256": "7ed5523809fceb02413db530848586ef31f73b8bbeeed41d6c4ee979342b81c3",
+    "intermediate_or_focused_not_full": true
+  },
+  {
+    "phase": "security",
+    "tests": 78,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0,
+    "PASS": 78,
+    "evidence_SHA256": "b4d9a9b7c0ce6dd0abc9b7e63bf8484563f370339960ba32129666e8038749f8",
+    "intermediate_or_focused_not_full": true
+  }
+]

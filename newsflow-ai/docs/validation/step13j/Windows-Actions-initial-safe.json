@@ -1,0 +1,211 @@
+{
+  "step": "13J",
+  "scope": "Windows Actions selected Fake verification",
+  "status": "FAILURE — PARTIAL VERIFICATION",
+  "run_id": 40174889893,
+  "job_id": 121113342557,
+  "run_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40174889893",
+  "branch": "codex/newsflow-step13j-20261025",
+  "head_sha": "db9e4df953764fe36260d89e8d68eec1687b3c5a",
+  "python": "3.14.7",
+  "runner_OS": "Microsoft Windows Server 2025",
+  "checked_at_utc": "2026-10-25T08:13:16.005320+00:00",
+  "planned_testcase_records": 681,
+  "verified_pass": 604,
+  "verified_completed_phase_failures": 0,
+  "verified_completed_phase_errors": 0,
+  "verified_completed_phase_skipped": 0,
+  "phase_results": [
+    {
+      "phase": "security",
+      "tests": 78,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 78,
+      "expected_records": 78
+    },
+    {
+      "phase": "i_contracts",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 24,
+      "expected_records": 24
+    },
+    {
+      "phase": "i_tiktok3",
+      "tests": 65,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 65,
+      "expected_records": 65
+    },
+    {
+      "phase": "i_sns_contracts",
+      "tests": 314,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 314,
+      "expected_records": 314
+    },
+    {
+      "phase": "h",
+      "tests": 123,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 123,
+      "expected_records": 123
+    }
+  ],
+  "collected_ID_groups": [
+    {
+      "phase": "security",
+      "records": 78,
+      "expected": 78
+    },
+    {
+      "phase": "i_contracts",
+      "records": 24,
+      "expected": 24
+    },
+    {
+      "phase": "i_tiktok3",
+      "records": 65,
+      "expected": 65
+    },
+    {
+      "phase": "i_sns_contracts",
+      "records": 314,
+      "expected": 314
+    },
+    {
+      "phase": "h",
+      "records": 123,
+      "expected": 123
+    }
+  ],
+  "j_selected": {
+    "expected_records": 76,
+    "exit": 1,
+    "timeout": false,
+    "PASS": null,
+    "FAIL": null,
+    "ERROR": null,
+    "SKIP": null,
+    "failure_IDs": "NOT VERIFIED — pytest XML and child log absent from uploaded artifact"
+  },
+  "j_flow": {
+    "expected_records": 1,
+    "status": "NOT RUN"
+  },
+  "diagnostic_failure": {
+    "file": "tools/validation/step13j/prepare_windows.py",
+    "line": 34,
+    "type": "UnicodeEncodeError",
+    "cause": "The supervisor tried to print a UTF-8 child diagnostic through cp1252 stdout after j_selected exited 1. The encoding failure concealed the original test failure."
+  },
+  "underlying_selected_failure": "NOT VERIFIED — no recoverable original failure ID/message in available job log or artifact",
+  "process_cleanup": {
+    "started_phases": 6,
+    "all_child_exited": true,
+    "all_active_before_close_zero": true,
+    "all_job_assigned": true,
+    "all_kill_on_close": true,
+    "all_timeout_false": true
+  },
+  "guard": {
+    "all_original_guard_preserved": true,
+    "any_provider_env_inherited": false
+  },
+  "image_pixel_evidence": {
+    "size": [
+      1080,
+      1920
+    ],
+    "all_scenes": [
+      {
+        "scene": 0,
+        "pixel": [
+          211,
+          33,
+          32
+        ],
+        "expected": [
+          213,
+          34,
+          34
+        ],
+        "PASS": true
+      },
+      {
+        "scene": 1,
+        "pixel": [
+          32,
+          180,
+          51
+        ],
+        "expected": [
+          34,
+          181,
+          51
+        ],
+        "PASS": true
+      },
+      {
+        "scene": 2,
+        "pixel": [
+          34,
+          86,
+          219
+        ],
+        "expected": [
+          36,
+          86,
+          220
+        ],
+        "PASS": true
+      }
+    ]
+  },
+  "artifact": {
+    "id": 12591534273,
+    "name": "step13j-synthetic-evidence",
+    "size": 13187,
+    "sha256": "2f9d3e2052125d0054ded28c992f935518aaf47687bddf5a27323b233b4730b1",
+    "digest_matches_GitHub": true,
+    "members": [
+      "ci-collected-IDs-safe.json",
+      "h-supervisor-safe.json",
+      "h/evidence/news-image-mp4/pixel-proof.json",
+      "i_contracts-supervisor-safe.json",
+      "i_sns_contracts-supervisor-safe.json",
+      "i_tiktok3-supervisor-safe.json",
+      "j_selected-supervisor-safe.json",
+      "security-supervisor-safe.json"
+    ]
+  },
+  "private_evidence_files": [
+    "Windows-Actions-run40174889893-log-private.txt",
+    "Windows-Actions-run40174889893-artifact-private.zip"
+  ],
+  "limitations": [
+    "The planned 681 testcases did not all complete. Only 604 PASS is verified.",
+    "No j_selected failure ID or outcome count can be inferred from exit code 1.",
+    "j_flow was not executed in this run.",
+    "Chrome background networking and complete OS isolation are not established by page request mocks.",
+    "The reviewer used GitHub read-only calls and diagnostic-file writes only; no test rerun, product edit, or operating input."
+  ],
+  "changes_by_reviewer": {
+    "product": 0,
+    "tests": 0,
+    "workflow": 0,
+    "reruns": 0,
+    "operating_data": 0,
+    "report_files_only": true
+  }
+}

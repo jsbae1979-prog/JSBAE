@@ -1,0 +1,14 @@
+[
+  {
+    "path": "newsflow-ai/tools/validation/step13j/prepare_windows.py",
+    "before_SHA256": "86ac50f87b1c00782b653e80d556b6ddd0758d3080d05dc103b0601d87da8f52",
+    "after_SHA256": "c388d549aefb77bc5cd44e7208a79ea77cad9cc58fa8cdae73b08454ed970019",
+    "Git_blob_LF": "be4db7816a6745c3858a2ee55e67f3a6c6be4b14"
+  },
+  {
+    "path": ".github/workflows/newsflow-step13j-windows.yml",
+    "before_SHA256": "e2d33e84de2951e391bd99097698942eef41ba25c0858758de481ae60d38d0ed",
+    "after_SHA256": "cea5a34f3a286310443685629aecd4ffd17dd576d9016804693eed4b1f4fdeed",
+    "Git_blob_LF": "6f9bb276ee7cac2aa5a441b49eea366dbb30dc9e"
+  }
+]

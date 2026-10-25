@@ -1,0 +1,14 @@
+{
+  "sha": "2c785afbb32e6d514343c1ec991698f3681bfa39",
+  "files": 50,
+  "mismatch": [],
+  "tree": "0010dfe89be755e9788968fcd3c4004c33c17347",
+  "PR": {
+    "state": "open",
+    "draft": true,
+    "merged": false,
+    "head": "codex/newsflow-ux-video-app",
+    "head_SHA": "6aef983db5a8d31b604d9fafd4329a0b4f83787d"
+  },
+  "comparison": "48 files at product/test db9e4df plus two exact CI-only followup blobs; no operating Git writes"
+}
