@@ -1,0 +1,477 @@
+{
+  "at": "2026-10-25T12:42:06.812381+09:00",
+  "Step": "13G.10-B",
+  "verdict": "CONDITIONAL",
+  "Python": "Windows3.14.7 only",
+  "baseline_full": {
+    "PASS": 5147,
+    "FAIL": 63,
+    "ERROR": 91,
+    "SKIP": 4
+  },
+  "final_full": {
+    "PASS": 5210,
+    "FAIL": 91,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "delta": {
+    "PASS": 63,
+    "FAIL": 28,
+    "ERROR": -91,
+    "SKIP": 0
+  },
+  "baseline_unique_IDs": 5305,
+  "final_unique_IDs": 5305,
+  "missing_IDs": [],
+  "added_IDs": [],
+  "new_skipped_IDs": [],
+  "baseline_PASS_now_failed_IDs": [],
+  "original91": {
+    "baseline": {
+      "ERROR": 91
+    },
+    "latest_full": {
+      "FAIL": 28,
+      "PASS": 63
+    },
+    "executed": 91,
+    "missing": 0,
+    "residual_groups": {
+      "GUI 선택자/테스트 계약 차이 · 제품 판정 미확정": 20,
+      "Guard · 테스트 실행/파일 경계": 1,
+      "Guard · 과거 운영 소스 비교 입력 거부": 2,
+      "GUI 배치/기대값 차이 · 제품 판정 미확정": 3,
+      "GUI 선택자/테스트 계약 차이 · 숨김 canonical 입력 측정": 2
+    }
+  },
+  "security_PASS": 78,
+  "new_boundary_security_cases": 16,
+  "GUI_basic_routes": 15,
+  "GUI_widths": [
+    1440,
+    980,
+    390
+  ],
+  "GUI_screenshots": 45,
+  "GUI_external_requests": 0,
+  "GUI_mutations": 0,
+  "GUI_JS_errors": 0,
+  "GUI_missing_static_assets": 0,
+  "Fake_1080x1920_MP4_review_publish_workflows": {
+    "tests/test_cloud_workspace_flow.py::test_api_to_render_review_and_existing_publish_services[openai]": "PASS",
+    "tests/test_cloud_workspace_flow.py::test_api_to_render_review_and_existing_publish_services[claude_api]": "PASS"
+  },
+  "Guard_global_disabled": false,
+  "Node_DENY": 0,
+  "media_allowlist_retained": true,
+  "frozen_configuration_changed": [],
+  "cleanup": {
+    "Playwright_loops": 45,
+    "owned_executor_threads": 25,
+    "owned_threads_remaining": [],
+    "Playwright_loops_still_open": 0,
+    "loop_detail": [
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      },
+      {
+        "closed": true,
+        "running": false,
+        "pending_tasks": 0
+      }
+    ],
+    "connected_browsers": 0,
+    "proof": "Only actual registered Playwright loop executors deferred; all app/unknown threads retain per-test assertion."
+  },
+  "test_Job": {
+    "active_before_close": 0,
+    "total_processes": 1291
+  },
+  "preservation": {
+    "at": "2026-10-25T12:39:17.364179+09:00",
+    "critical194_changed": 0,
+    "original_local64_changed": 0,
+    "candidate655_changed": 0,
+    "G9_source2142_changed": 0,
+    "protected_data_files_checked": 10,
+    "DB_ledger_protected_SHA_mismatches": 0,
+    "DB_sidecars": {
+      "-wal": false,
+      "-shm": false,
+      "-journal": false
+    },
+    "backup": {
+      "A": {
+        "files": 45572,
+        "bytes": 6388588775,
+        "missing": 0,
+        "extra": 0,
+        "metadata_mismatches": 0,
+        "critical_SHA_mismatches": 0,
+        "accepted_full_SHA_SQLite_Git_evidence_reused": true
+      },
+      "B": {
+        "files": 45572,
+        "bytes": 6388588775,
+        "missing": 0,
+        "extra": 0,
+        "metadata_mismatches": 0,
+        "critical_SHA_mismatches": 0,
+        "accepted_full_SHA_SQLite_Git_evidence_reused": true
+      }
+    },
+    "prior_sealed_evidence": {
+      "step13g9-20261025-01": {
+        "checked": 24,
+        "SHA_mismatches": 0
+      },
+      "step13g10a3-20261025-01": {
+        "checked": 13,
+        "SHA_mismatches": 0
+      },
+      "step13g10a4-20261025-01": {
+        "checked": 9,
+        "SHA_mismatches": 0
+      },
+      "step13g10b-20261025-01": {
+        "checked": 12,
+        "SHA_mismatches": 0
+      },
+      "step13g10b-recheck-20261025-01": {
+        "checked": 20,
+        "SHA_mismatches": 0
+      },
+      "step13g10b-netcontrol-20261025-01": {
+        "checked": 10,
+        "SHA_mismatches": 0
+      }
+    },
+    "historical_auxiliary_ref_missing": 1,
+    "Git_object_metadata_full_rescan": false,
+    "operating_DB_connections": 0,
+    "operating_and_backup_writes": 0,
+    "protected_states_reused_from_unchanged_DB": {
+      "API_unknown": 7,
+      "feed_unknown": 1,
+      "ElevenLabs_reserved": 1,
+      "HTTP402": 1
+    }
+  },
+  "stop_state": {
+    "at": "2026-10-25T12:38:35.5362084+09:00",
+    "queries_verified": true,
+    "port8765_listeners": 0,
+    "port18765_listeners": 0,
+    "owned_test_processes_remaining": 0,
+    "operating_source_process_matches": 0,
+    "processes_stopped_by_this_check": 0,
+    "operating_restart_or_apply": 0,
+    "query_scope": "listener table and process command markers; read-only; Job accounting is recorded separately"
+  },
+  "new_product_source_changes": 0,
+  "assertions_removed_or_skip_xfail_added": 0,
+  "operating_apply_restart_migration": 0,
+  "real_NewsFlow_supplier_OAuth_SNS_calls": 0,
+  "OS_native_Chrome_background_networking": "NOT VERIFIED; no complete isolation claim",
+  "operating_OS_rights_of_current_user": "remain; limited Fake validation only",
+  "GitHub_branch": "codex/newsflow-step13g10b-checkpoint-20261025",
+  "tested_code_checkpoint_SHA": "d6ad167551adad0b4f90b3db8ec3e8bc6550ac44",
+  "PR35": "Draft unchanged; checkpoint branch not merged into it",
+  "Actions_this_step": "NOT RUN; inherited3.12 matrices not repeated; existing evidence retained",
+  "Step13H": "Review possible only after residual assessment and separate approval; NOT EXECUTED",
+  "Step14": "NOT AUTHORIZED",
+  "Step15to18": "PLAN ONLY",
+  "baseline_FAIL_still_FAIL": 63,
+  "changed_test_tool_files": [
+    "step13_guard.py",
+    "step13_fixtures.py",
+    "node_boundary.cjs",
+    "browser_boundary.py",
+    "browser_bootstrap.py",
+    "run_browser_phase.py",
+    "test_browser_boundary_security.py"
+  ],
+  "previously_approved_snapshot_files": {
+    "total": 35,
+    "product": 2,
+    "test_fixtures": 31,
+    "dependency_metadata": 2
+  },
+  "NOT_IMPLEMENTED": [
+    "13H news image automatic selection/scene linkage"
+  ],
+  "NOT_VERIFIED": [
+    "Live provider authentication/generation and SNS publishing",
+    "Complete native Chrome background network isolation",
+    "Historical before screenshots requiring forbidden operating input",
+    "Windows EXE install/multiuser/update/remove/signing"
+  ],
+  "GitHub_source_checkpoint_proof": {
+    "tested_source_files": 2142,
+    "test_tool_files": 9,
+    "matched": 2151,
+    "missing": [],
+    "mismatch": [],
+    "normalization": "Git blob bytes or UTF8 LF/BOM normalized text; binaries raw",
+    "checkpoint_SHA": "d6ad167551adad0b4f90b3db8ec3e8bc6550ac44"
+  },
+  "browser_contract_findings": {
+    "hidden_canonical_control_contract": {
+      "affected_IDs": [
+        "tests/test_all_scene_browser.py::test_workspace_all_ai_voice_approval_to_original_task_preview[openai]",
+        "tests/test_all_scene_browser.py::test_workspace_all_ai_voice_approval_to_original_task_preview[claude_api]",
+        "tests/test_production_options_browser.py::test_skip_review_elevenlabs_fake_to_real_mp4_final_review[openai]",
+        "tests/test_production_options_browser.py::test_skip_review_elevenlabs_fake_to_real_mp4_final_review[claude_api]"
+      ],
+      "evidence": [
+        "src/newsflow/gui/templates/production_form.html:16",
+        "tests/test_all_scene_browser.py select_option on hidden quick-voice-method",
+        "tests/test_production_options_browser.py:94 bounding_box on hidden canonical inputs"
+      ],
+      "current_contract": "Shared icon/picker UI writes hidden canonical voice_method/video_method fields",
+      "test_observation": "Two select_option waits and two bounding_box None assertions fail before voice/video generation",
+      "recommended_minimum": "Retarget browser interaction to actual shared picker; retain saved voice/video payload assertions, consent and review checks",
+      "product_contract_changed_this_step": false
+    },
+    "historical_baseline_comparison": {
+      "affected_files": [
+        "tests/test_dashboard_cohesion.py",
+        "tests/test_usability_browser.py"
+      ],
+      "observation": "Hardcoded operating source was rejected before read; HTTP500 follows guard rejection",
+      "actual_operating_source_used": false,
+      "proposed_followup": "Use explicitly approved immutable source baseline fixture, never operating files or backups; do not invent before screenshots"
+    },
+    "CSP_fixture": {
+      "file": "tests/test_tiktok_gui.py",
+      "observation": "String wait_for_function expression requires eval under current Chrome/CSP",
+      "proposed_followup": "Only if reproduced: review function-form predicate; retain strict CSP; no unsafe-eval",
+      "prior_targeted_outcome": "FAIL before final cwd correction",
+      "final_full_outcome": "PASS under frozen corrected environment",
+      "root_cause_status": "NOT ESTABLISHED; do not claim a CSP product fix"
+    },
+    "relative_FFmpeg_fixture": {
+      "file": "tools/ui_preview.py:121",
+      "observation": "Relative ffmpeg executable is rejected; production pinned absolute path works in Fake E2E",
+      "proposed_followup": "Use explicit pinned test binary in fixture; retain arbitrary-executable rejection"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "at": "2026-10-25T12:38:35.5362084+09:00",
+  "queries_verified": true,
+  "port8765_listeners": 0,
+  "port18765_listeners": 0,
+  "owned_test_processes_remaining": 0,
+  "operating_source_process_matches": 0,
+  "processes_stopped_by_this_check": 0,
+  "operating_restart_or_apply": 0,
+  "query_scope": "listener table and process command markers; read-only; Job accounting is recorded separately"
+}
