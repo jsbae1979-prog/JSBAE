@@ -45,7 +45,8 @@ def initial_context():
 
 def test_workspace_offers_one_news_usage_choice_with_standard_default(client, app):
     before = stored_values(app)
-    response = client.get("/")
+    assert 'href="/create"' in client.get("/").text
+    response = client.get("/create")
     assert response.status_code == 200
     html = response.text
     assert html.count('name="news_usage"') == 1
@@ -55,8 +56,8 @@ def test_workspace_offers_one_news_usage_choice_with_standard_default(client, ap
     assert all(label in choice for label in ("빠른 제작", "균형 제작"))
     assert "검증 우선" not in choice  # unsupported for new production; historical cases below remain covered
     assert 'aria-describedby="news-usage-help"' in html
-    assert "목록 페이지는 주제 참고용" in html
-    assert "선택한 AI" in html and "이번 분석 · 대본" not in html
+    assert "목록 자료는 주제 참고용" in html
+    assert "실제 제작 AI" in html and "이번 분석 · 대본" not in html
     assert 'data-home-ai data-selected-ai="' in html
     assert 'href="/simple-settings#connections"' in html
     assert stored_values(app) == before

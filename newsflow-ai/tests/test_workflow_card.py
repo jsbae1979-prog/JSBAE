@@ -85,7 +85,7 @@ def test_reference_card_browser_popovers_keyboard_and_no_mutation(studio_ui, bro
             card = page.locator('[data-workflow-card]')
             expect(card.locator('li.is-done')).to_have_count(2)
             expect(card.locator('[aria-current="step"]')).to_contain_text('대본 작성')
-            expect(card.locator('.production-review-choice input')).to_be_checked()
+            expect(card.locator('.workflow-review-link')).to_have_attribute('href', '/create')
             expect(card.get_by_role('link', name='대본 검토하기')).to_have_attribute('href', f'/ai?draft_id={draft_id}')
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
             labels = card.locator('.production-picker-option summary strong').evaluate_all(
@@ -111,6 +111,10 @@ def test_reference_card_browser_popovers_keyboard_and_no_mutation(studio_ui, bro
                 expect(control.locator('.production-picker-popover')).to_be_visible()
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 page.keyboard.press('Escape')
+            card.locator('.workflow-review-link').click()
+            expect(page.locator('[name=script_review]')).to_be_checked()
+            assert page.locator('#quick-production').evaluate('form=>new FormData(form).get("script_review")') == 'true'
+            page.goto(origin + '/')
             card.get_by_role('link', name='대본 검토하기').click()
             page.wait_for_url(f'**/ai?draft_id={draft_id}')
         assert not posts and not external and not errors

@@ -47,7 +47,7 @@ def test_topic_search_honestly_uses_existing_news_search_not_new_generation_cont
     assert '<option value="VERIFIED"' not in response.text
     create = client.get("/create").text
     assert 'action="/autopilot/quick-start"' in create and 'name="csrf_token"' in create
-    for step in ("자료 준비", "대본 작성", "음성·영상 제작", "미리보기"):
+    for step in ("영상 제작 전에 대본 확인하기", "실제 제작 AI", "자동 제작 시작", "뉴스 자료"):
         assert step in create
     assert '<input name="topic"' not in create  # No field silently discarded by the backend.
 
@@ -71,7 +71,7 @@ def test_editor_never_invents_a_preview_for_invalid_output(client, app, status, 
     page = client.get(f'/ai?draft_id={media["draft_id"]}')
     assert page.context["preview"] is None
     assert 'data-editor-player' not in page.text
-    assert '영상이 준비되면' in page.text
+    assert '이 대본으로 영상 구성' in page.text and f'/video?draft_id={media["draft_id"]}' in page.text
 
 
 def test_scene_edit_save_uses_revision_and_leaves_existing_video_unchanged(client, app):

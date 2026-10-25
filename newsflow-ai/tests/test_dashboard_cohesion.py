@@ -65,7 +65,9 @@ def test_archive_filters_visual_system_and_auxiliary_routes(visual, browser):
     external, mutations, errors = [], [], []
     with local_server(app) as origin:
         context = browser.new_context(viewport={'width': 1440, 'height': 1000}, locale='ko-KR')
-        original = Path('C:/Codex/NewsFlowAI/newsflow-ai/src/newsflow')
+        # The parent harness supplies accepted Step13I source assets, never operating files.
+        original = Path(os.environ['NEWSFLOW_BASELINE_GUI_SOURCE']).resolve()
+        assert original.is_dir() and (original / 'gui/templates').is_dir()
         phase = {'before': False}
         def guard(route):
             request = route.request
@@ -105,10 +107,20 @@ def test_archive_filters_visual_system_and_auxiliary_routes(visual, browser):
         categories = ['', '정치', '경제', '사회', 'IT·과학', '문화', '스포츠', '국제', '미분류']
         assert page.locator('.workflow-script .button.primary').evaluate('e=>getComputedStyle(e).backgroundImage') == 'none'
         assert page.locator('[data-dash-news-category]').evaluate_all('(els)=>els.map(e=>e.dataset.dashNewsCategory)') == categories
-        assert 'newsflow-earth-generated.png' in page.locator('.mockup-dashboard').evaluate("e=>getComputedStyle(e,'::before').backgroundImage")
+        art = page.locator('.studio-hero-art img')
+        expect(art).to_be_visible()
+        expect(art).to_have_attribute('src', '/static/images/studio-concepts/hero_news_studio-1024.webp')
+        assert art.evaluate('e=>e.complete && e.naturalWidth > 0')
+        expect(page.locator('.studio-hero-art figcaption')).to_contain_text('AI 생성 콘셉트 이미지')
         expect(page.locator('.dash-search')).to_have_attribute('action', '/news')
-        page.locator('.dashboard-create-drawer>summary').click()
-        page.locator('#quick-duration').select_option('45')
+        expect(page.locator('#quick-production')).to_have_count(0)
+        # Filtering only replaces news rows. Preserve unrelated unsaved controls.
+        video_choice = page.locator('[data-production-kind=video]')
+        video_choice.locator('summary').click()
+        video_choice.locator('select').select_option('higgsfield')
+        expect(video_choice.locator('[data-selection-pending]')).to_be_visible()
+        page.keyboard.press('Escape')
+        page.locator('#home-topic').fill('유지할 검색어')
         for category in categories[1:]:
             page.locator(f'[data-dash-news-category="{category}"]').click()
             expect(page.locator('[data-dash-news-status]')).to_contain_text(category + ' · 보관 뉴스')
@@ -116,9 +128,17 @@ def test_archive_filters_visual_system_and_auxiliary_routes(visual, browser):
             expect(page.locator('[data-dash-news-list] .dash-news-item')).to_have_count(1)
             expect(page.locator('[data-dash-news-category][aria-current=true]')).to_have_attribute('data-dash-news-category', category)
             assert page.url == origin + '/'
-            expect(page.locator('#quick-duration')).to_have_value('45')
+            expect(video_choice.locator('select')).to_have_value('higgsfield')
+            expect(page.locator('#home-topic')).to_have_value('유지할 검색어')
         page.locator('[data-dash-news-category=""]').click()
         expect(page.locator('[data-dash-news-status]')).to_contain_text('전체 · 보관 뉴스')
+        # The creation form remains available at its current route, without saving.
+        page.goto(origin + '/create')
+        page.locator('#quick-duration').select_option('45')
+        expect(page.locator('#quick-duration')).to_have_value('45')
+        assert page.locator('#quick-production').evaluate("f=>new FormData(f).get('duration')") == '45'
+        assert stored_values(app) == settings
+        page.goto(origin + '/')
         # A GET of stored data, never a collection or paid AI operation.
         page.locator('#home-topic').fill('합성 경제')
         page.locator('#archive-search button').click()
@@ -156,10 +176,13 @@ def test_archive_filters_visual_system_and_auxiliary_routes(visual, browser):
                 if width != 320:
                     page.screenshot(path=str(output / f'cohesion-{width}-{name}.png'), full_page=True)
             page.goto(origin + '/')
-            assert page.locator('.workspace-nav a:visible').count() == 7
             page.keyboard.press('Tab')
             expect(page.get_by_role('link', name='본문으로 이동')).to_be_focused()
             assert page.get_by_role('link', name='본문으로 이동').evaluate('e=>getComputedStyle(e).outlineStyle') != 'none'
+            menu = page.locator('[data-sidebar-menu]')
+            if menu.get_attribute('open') is None:
+                menu.locator('>summary').click()
+            assert page.locator('.workspace-nav a:visible').count() == 7
         assert not external and not mutations and not errors
         assert stored_values(app) == settings
         with app.state.sessions() as session:

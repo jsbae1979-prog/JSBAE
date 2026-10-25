@@ -60,8 +60,12 @@ def test_advanced_manual_analysis_script_and_video_preserve_home_context(client,
     assert context["initial_provider"] == provider and context["initial_voice"] == "supertonic:F1"
     guide = client.get(started.headers["location"]).text
     assert f"처음 선택한 길이 {duration}초" in guide and 'action="/autopilot/confirm-start"' in guide
-    prepared = client.get("/ai", params={"flow": flow}).text
-    assert f"최초 선택 · {duration}초" in prepared and "아직 AI를 실행하지 않았습니다" in prepared
+    prepared = client.get("/ai", params={"flow": flow})
+    assert prepared.context["production"] == context
+    assert prepared.context["selected_duration"] == duration
+    assert prepared.context["actual_run"] is None and fake.calls == 0
+    assert f'value="{provider}" selected' in prepared.text
+    assert f'name="model" value="{model}"' in prepared.text
     denied = client.post("/ai/analyze", data={
         "csrf_token": token, "article_ids": [news_id], "provider": provider, "model": model, "flow": flow,
     })
@@ -114,8 +118,11 @@ def test_initial_choices_are_not_claimed_as_actual_provider(client, app):
         "consent": "true", "flow": context_json(initial),
     })
     assert response.status_code == 200
-    assert "분석·대본 예정: Claude Code" in response.text
-    assert "분석 실행: Codex · 완료" in response.text
+    assert response.context["production"]["initial_provider"] == "claude_code"
+    assert response.context["actual_run"].provider == "codex"
+    assert response.context["actual_run"].status == "success"
+    assert response.context["execution_defaults"]["provider"] == "codex"
+    assert 'data-studio-provider-label>Codex</strong>' in response.text
     assert 'value="codex" selected' in response.text
     assert "Codex · 사용" in client.get("/autopilot/jobs").text
 

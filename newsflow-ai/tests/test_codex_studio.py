@@ -49,8 +49,8 @@ def test_codex_defaults_restart_without_cli_or_approval_changes(tmp_path, fake, 
             page = client.get("/ai")
             assert page.status_code == 200
             assert 'value="codex" selected' in page.text and 'value="default"' in page.text
-            assert "RSS 자료 분석" in page.text and "웹 검색을 실행하지 않습니다" in page.text
-            assert "무료·무제한이 아닙니다" in page.text
+            assert "Codex는 RSS 분석·대본만 지원합니다" in page.text
+            assert "본인 계정의 사용량·비용이 발생할 수 있음" in page.text
             assert 'href="/simple-settings#connections"' in page.text
             settings = client.get("/simple-settings")
             assert settings.status_code == 200

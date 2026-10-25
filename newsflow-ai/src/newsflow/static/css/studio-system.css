@@ -120,9 +120,9 @@ body.unified-studio.premium-shell.workspace-shell .publish-result[data-outcome=f
 @media(max-width:1100px) {
  .studio-journey {display:block}.journey-label {display:flex;gap:12px;margin-bottom:8px}
  body.unified-studio.premium-shell.workspace-shell .dash-columns {grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
- body.unified-studio.premium-shell.workspace-shell .dash-center {order:0;grid-column:1/-1}
- body.unified-studio.premium-shell.workspace-shell .dash-news {order:1}
- body.unified-studio.premium-shell.workspace-shell .dash-right {order:2}
+ body.unified-studio.premium-shell.workspace-shell .dash-center {order:0;grid-column:1/-1;grid-row:auto}
+ body.unified-studio.premium-shell.workspace-shell .dash-news {order:1;grid-column:auto;grid-row:auto}
+ body.unified-studio.premium-shell.workspace-shell .dash-right {order:2;grid-column:auto;grid-row:auto;grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:760px) {
  body.unified-studio.premium-shell.workspace-shell {--studio-gap:16px}

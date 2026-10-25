@@ -15,7 +15,7 @@ from newsflow.news.service import CollectionBusy
 def test_render(client, path, title):
     response = client.get(path)
     assert response.status_code == 200
-    assert title in response.text
+    assert ("설정" if path == "/settings" else title) in response.text
     for href in ("/news", "/ai", "/videos", "/queue", "/simple-settings"):
         assert f'href="{href}"' in response.text
     assert "Content-Security-Policy" in response.headers

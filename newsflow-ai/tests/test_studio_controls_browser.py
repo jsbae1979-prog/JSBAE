@@ -22,7 +22,7 @@ def test_style_generation_scene_effects_and_layout(api, app, browser, monkeypatc
     monkeypatch.setitem(templates.env.globals, "ui_demo", True)
     analysis = service.analyze(ids, mode, True, options, news_usage='QUICK')
     first = service.generate(analysis, 30, mode, True, options, article_ids=ids[:1])
-    monkeypatch.setattr('newsflow.gui.intelligence_routes.service', lambda _: service)
+    monkeypatch.setattr('newsflow.gui.intelligence_routes.service', lambda _request, _context=None: service)
     app.state.video.engine = FakeRenderAdapter()
     app.state.video.tts = FakeTTS()
     with sessions() as session:
@@ -49,6 +49,7 @@ def test_style_generation_scene_effects_and_layout(api, app, browser, monkeypatc
                 page.locator('.script-style-panel').scroll_into_view_if_needed()
                 page.screenshot(path=str(root / f'script-{width}.png'))
             page.goto(origin + f'/video?draft_id={first}')
+            page.locator('[data-video-scene-select="0"]').first.click()
             page.locator('[data-scene-effect="0"]').select_option('fade')
             expect(page.locator('.track-effect button').first).to_contain_text('페이드')
             page.locator('.track-effect button').last.click()
@@ -74,7 +75,9 @@ def test_style_generation_scene_effects_and_layout(api, app, browser, monkeypatc
             assert draft.review_status == 'review_required'
             assert session.get(ContentDraft, first).content == original
         page.goto(origin + f'/video?draft_id={second}')
+        page.locator('.video-voice-choice > summary').click()
         page.locator('[name=voice]').select_option('offline-silence')
+        page.locator('[data-video-scene-select="0"]').first.click()
         page.locator('[data-scene-effect="0"]').select_option('fade')
         page.locator('[name=reviewed]').check()
         page.get_by_role('button', name='영상 제작 실행', exact=True).click()

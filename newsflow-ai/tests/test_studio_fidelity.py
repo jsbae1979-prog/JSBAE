@@ -35,12 +35,12 @@ def test_composition_inspector_copy_and_render_controls_preserve_contract(studio
             page.set_viewport_size({'width': width, 'height': height})
             response = page.goto(origin + f'/ai?draft_id={draft_id}')
             assert response.status == 200, (width, response.status, page.locator('body').inner_text()[:500])
-            assert page.locator('[data-outline-scene]').count() > 0, (width, page.url, page.locator('body').inner_text()[-600:])
-            page.locator('.script-scene-outline summary').click()
-            last = page.locator('[data-outline-scene]').last
+            assert page.locator('[data-script-read-scene]').count() == scenes, (width, page.url, page.locator('body').inner_text()[-600:])
+            last = page.locator('[data-script-edit-scene]').last
             last.focus()
             page.keyboard.press('Enter')
-            expect(last).to_have_attribute('aria-pressed', 'true')
+            expect(page.locator('[data-script-editor]')).to_have_attribute('open', '')
+            expect(page.locator('[data-script-read-scene]').last).to_have_attribute('aria-current', 'location')
             expect(page.locator('[data-topic-scene]:visible')).to_have_count(1)
             editor = page.locator('[data-topic-scene]:visible [name=narration]')
             editor.fill('저장 전 편집한 합성 내레이션입니다.')
@@ -51,7 +51,9 @@ def test_composition_inspector_copy_and_render_controls_preserve_contract(studio
             # Revert before leaving: the existing dirty guard remains intact.
             editor.fill(original['scenes'][-1]['narration'])
             page.locator('.scene-tabs [data-edit-scene]').first.click()
-            expect(page.locator('[data-outline-scene]').first).to_have_attribute('aria-pressed', 'true')
+            expect(page.locator('.scene-tabs [data-edit-scene]').first).to_have_attribute('aria-pressed', 'true')
+            expect(page.locator('[data-topic-scene]').first).to_be_visible()
+            expect(page.locator('[data-topic-scene]').nth(1)).to_be_hidden()
             page.goto(origin + f'/video?draft_id={draft_id}')
             form = page.locator('form[action="/video/render"]')
             fields = form.evaluate('f=>Object.fromEntries(new FormData(f))')
@@ -60,6 +62,7 @@ def test_composition_inspector_copy_and_render_controls_preserve_contract(studio
             assert 'reviewed' not in fields and 'external_tts_consent' not in fields
             assert form.evaluate("f=>new FormData(f).getAll('images').length") == scenes
             assert page.locator('option').evaluate_all("es=>es.every(e=>e.closest('select,datalist'))")
+            page.locator('.video-voice-choice > summary').click()
             expect(page.locator('.workstation-media-panel select[name=voice]')).to_be_visible()
             expect(page.locator('.workstation-render-controls [name=reviewed]')).not_to_be_checked()
             page.locator('.track-caption [data-video-scene-select]').last.click()

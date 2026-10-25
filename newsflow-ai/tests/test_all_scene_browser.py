@@ -28,7 +28,8 @@ def test_workspace_all_ai_voice_approval_to_original_task_preview(production, br
     monkeypatch.setattr(app.state, "ai_keys", FixtureKey())
     monkeypatch.setattr("newsflow.video.elevenlabs_tts.ElevenLabsKeys.status", lambda _: {"configured": True})
     monkeypatch.setattr(production_status, "voice_choice_catalog", lambda: [{
-        "name": "supertonic:F1", "label": "Supertonic · 합성 응답", "engine": "supertonic", "available": True}])
+        "name": "supertonic:F1", "label": "Supertonic · 합성 응답", "engine": "supertonic", "available": True}, {
+        "name": "elevenlabs", "label": "ElevenLabs · 합성 API 응답", "engine": "elevenlabs", "available": False}])
     monkeypatch.setitem(templates.env.globals, "ui_demo", True)
     write_studio_settings(p["sessions"], p["mode"], MODELS[p["mode"]])
     save_values(app, autopilot_source="feeds", autopilot_acquisition_policy="ai_web")
@@ -48,15 +49,31 @@ def test_workspace_all_ai_voice_approval_to_original_task_preview(production, br
         page.on("pageerror", lambda e: errors.append(str(e)))
         assert page.goto(origin + "/create").status == 200
         expect(page.locator('[name="script_review"]')).to_be_checked()
+        # Shared visible pickers save defaults; the job freezes them only on start.
+        for kind, value in (("voice", "elevenlabs"), ("video", "higgsfield")):
+            picker = page.locator(f'[data-production-kind="{kind}"]')
+            picker.locator('summary').click()
+            picker.locator('select').select_option(value)
+            # The second save returns to the same URL. Wait for the new document,
+            # not a URL match that can succeed before the pending reload occurs.
+            with page.expect_navigation(wait_until='domcontentloaded') as loaded:
+                with page.expect_response(lambda response: response.url.endswith('/production/selection') and response.request.method == 'POST') as saved:
+                    picker.get_by_role('button', name='선택 저장', exact=True).click()
+            assert saved.value.status == 303
+            assert loaded.value.status == 200
+            expect(page).to_have_url(origin + '/create?selection_saved=true')
+        expect(page.locator('#quick-voice-method')).to_have_value('elevenlabs')
+        expect(page.locator('#quick-video-method')).to_have_value('higgsfield')
         page.locator('[name="script_review"]').uncheck()
-        page.locator('#quick-voice-method').select_option("elevenlabs")
-        page.locator('#quick-video-method').select_option("higgsfield")
         for width, height in ((1366, 768), (1920, 1080), (390, 844)):
             page.set_viewport_size({"width": width, "height": height})
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
         page.set_viewport_size({"width": 1366, "height": 768})
         expect(page.locator('form[action="/autopilot/quick-start"]')).to_have_attribute("data-easy-wired", "true")
-        page.get_by_role("button", name="쇼츠 만들기", exact=True).click()
+        with page.expect_response(lambda response: response.url.endswith('/autopilot/quick-start') and response.request.method == 'POST') as started:
+            page.get_by_role("button", name="자동 제작 시작", exact=False).click()
+        assert started.value.status == 303, (started.value.status, started.value.text())
+        assert 'guide=consent' in started.value.headers.get('location', ''), started.value.headers.get('location')
         page.wait_for_url(lambda u: "guide=consent" in u)
         form = page.locator('form[action="/autopilot/confirm-start"]')
         expect(form).to_have_attribute("data-easy-wired", "true")

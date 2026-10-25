@@ -100,7 +100,7 @@ def test_browser_edit_suggestion_save_reenter_and_mobile(app, browser, request, 
                 form.locator(f'[name="{name}"]').check()
             form.locator('[name="ai_disclosure"]').select_option("disclose")
             page.evaluate("document.documentElement.dataset.metadataBefore = 'yes'")
-            form.get_by_role("button", name="검토 저장·파일 확인").click()
+            form.get_by_role("button", name="검토 기록·파일 확인").click()
             expect(page.locator("html")).not_to_have_attribute("data-metadata-before", "yes")
             page.goto(origin + "/simple-settings")
             page.goto(url)

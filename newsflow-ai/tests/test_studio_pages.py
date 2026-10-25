@@ -23,7 +23,9 @@ def test_suite_empty_routes_and_security(client, app, url, title):
     before = stored_values(app)
     response = client.get(url)
     assert response.status_code == 200
-    assert f'<h1>{title}</h1>' in response.text
+    # Keep the original parameter ID while checking the unified activity heading.
+    current_title = '제작 현황' if url == '/?show=tasks' else title
+    assert re.search(r'<h1(?:\s[^>]*)?>' + re.escape(current_title) + r'</h1>', response.text)
     assert 'studio-pages.css' in response.text
     assert "script-src 'self'" in response.headers['content-security-policy']
     assert stored_values(app) == before
@@ -58,7 +60,7 @@ def test_suite_browser_navigation_filters_and_record_preservation(studio_ui, bro
         for width,height in [(1366,768),(1920,1080),(390,844)]:
             page.set_viewport_size({'width':width,'height':height})
             for url,title in [('/news','뉴스 수집'),('/ai','AI 대본'),('/videos','영상 제작'),
-                              ('/queue','게시 허브'),('/?show=tasks','제작 활동'),('/simple-settings','설정 · 자동화')]:
+                              ('/queue','게시 허브'),('/?show=tasks','제작 현황'),('/simple-settings','설정 · 자동화')]:
                 assert page.goto(origin+url).status == 200
                 expect(page.get_by_role('heading',name=title,exact=True,level=1)).to_be_visible()
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), (width,url)
@@ -73,13 +75,14 @@ def test_suite_browser_navigation_filters_and_record_preservation(studio_ui, bro
             page.locator('.suite-extra-filters summary').click()
             expect(page.locator('[name="start"]')).to_be_visible()
             page.goto(origin+'/?show=tasks')
+            page.locator('.studio-news-history > summary').click()
             expect(page.locator('[data-workspace-task]:visible')).to_have_count(2)
-            page.get_by_role('button',name='확인 필요',exact=True).focus();page.keyboard.press('Enter')
+            page.locator('.suite-activity-list').get_by_role('button',name='확인 필요',exact=True).focus();page.keyboard.press('Enter')
             expect(page.locator('[data-workspace-task]:visible')).to_have_count(1)
             expect(page.locator('[data-workspace-task]:visible')).to_have_attribute('data-task-status','failed')
             page.get_by_role('button',name='완료',exact=True).click()
             expect(page.locator('[data-activity-empty]')).to_be_visible()
-            page.get_by_role('button',name='검토 대기',exact=True).click()
+            page.locator('.suite-activity-list').get_by_role('button',name='검토 대기',exact=True).click()
             expect(page.locator('[data-workspace-task]:visible')).to_have_count(1)
             expect(page.locator('[data-activity-result]')).to_contain_text('1개 기록')
             page.locator('[data-workspace-task]:visible').click()
@@ -134,6 +137,7 @@ def test_workstation_scene_selection_filters_and_chart_are_read_only(studio_ui, 
             expect(page.locator('[name=category]')).to_have_value('경제')
             page.goto(origin + f'/video?draft_id={draft_id}')
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            page.locator('[data-video-scene-select="0"]').first.click()
             expect(page.locator('[data-video-scene]:visible')).to_have_count(1)
             page.get_by_role('button', name='자막 장면 2 · 25초', exact=True).focus()
             page.keyboard.press('Enter')
@@ -149,13 +153,16 @@ def test_workstation_scene_selection_filters_and_chart_are_read_only(studio_ui, 
             expect(page.locator('[name=reviewed]')).not_to_be_checked()
             expect(page.locator('[name=external_tts_consent]')).not_to_be_checked()
             page.goto(origin + '/?show=tasks')
+            page.locator('.studio-news-history > summary').click()
             page.locator('[data-activity-day]').first.click()
             expect(page.locator('[data-activity-day-result]')).to_contain_text('생성 완료 0건')
             page.goto(origin + f'/ai?draft_id={draft_id}')
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-            page.get_by_role('button', name='장면 2', exact=True).click()
+            page.locator('[data-script-edit-scene="1"]').click()
             expect(page.locator('[data-topic-scene]:visible textarea[name=narration]')).to_have_value('합성 두 번째 문장입니다.')
-            expect(page.locator('[data-workspace-return]')).to_have_count(1)
+            back = page.get_by_role('link', name='작업실로 돌아가기 →', exact=True)
+            expect(back).to_have_count(1)
+            expect(back).to_have_attribute('href', '/')
         assert not posts and not external and not errors
         context.close()
     assert stored_values(app) == before

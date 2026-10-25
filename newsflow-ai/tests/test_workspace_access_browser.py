@@ -102,7 +102,11 @@ def test_all_main_destinations_fit_small_windows(page, width, tmp_path):
         assert page.locator('.workspace-nav a:visible').count() == 13
         for label in page.locator('.workspace-nav a>span:visible').all():
             assert label.evaluate('(el) => el.getBoundingClientRect().width > 80'), (path, width, label.text_content())
-            assert label.evaluate('(el) => el.getBoundingClientRect().height < 42'), (path, width, label.text_content())
+            assert label.evaluate('''(el) => {
+                const style = getComputedStyle(el);
+                return el.getBoundingClientRect().height <= parseFloat(style.lineHeight) * 2 + 1
+                    && el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1;
+            }'''), (path, width, label.text_content())
         if width <= 760:
             assert page.locator('.navigation-catalog').evaluate('(el) => el.scrollWidth <= el.clientWidth + 2')
             page.keyboard.press('Escape')

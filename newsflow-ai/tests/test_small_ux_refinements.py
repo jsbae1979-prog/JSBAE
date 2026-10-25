@@ -78,7 +78,11 @@ def test_small_changes_keep_category_state_consent_and_one_preview(script_ui, br
             expect(page.locator('[data-dashboard-player] source')).to_have_attribute('src',f'/video/jobs/{latest}/file')
             expect(page.locator('[data-dash-download]')).to_have_attribute('href',f'/video/jobs/{latest}/file?download=true')
             expect(page.locator('[data-dash-review]')).to_have_attribute('href',f'/?video={latest}&publish_platform=unified#workspace-detail')
-            assert 'newsflow-earth-generated.png' in page.locator('.mockup-dashboard').evaluate("e=>getComputedStyle(e,'::before').backgroundImage")
+            art = page.locator('.studio-hero-art img')
+            expect(art).to_be_visible()
+            expect(art).to_have_attribute('src', '/static/images/studio-concepts/hero_news_studio-1024.webp')
+            assert art.evaluate('e=>e.complete && e.naturalWidth > 0')
+            expect(page.locator('.studio-hero-art figcaption')).to_contain_text('AI 생성 콘셉트 이미지')
             page.screenshot(path=str(output/f'dashboard-{width}.png'),full_page=True)
             assert page.goto(origin+f'/ai?analysis_id={analysis}').status == 200
             trigger=page.get_by_role('link',name='대본 생성 준비',exact=False)

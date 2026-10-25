@@ -87,11 +87,14 @@ def test_same_defaults_across_pages_and_existing_context_is_preserved(studio_ui,
         assert 'value="elevenlabs" selected' in response.text
     video = client.get(f'/video?draft_id={draft_id}').text
     assert 'Windows Korean synthetic selection' in video  # Per-draft voice never silently changes.
-    html = client.get('/').text
+    home = client.get('/').text
+    assert 'id="quick-production"' not in home and 'href="/create"' in home
+    html = client.get('/create').text
     assert 'name="voice_method" value="elevenlabs"' in html
     assert 'name="video_method" value="off"' in html
     assert 'form="quick-production" checked' in html
-    assert '영상 제작 전에 대본 확인하기' not in html and '이번 음성<select' not in html
+    assert html.count('name="script_review"') == 1
+    assert '영상 제작 전에 대본 확인하기' in html and '이번 음성<select' not in html
 
 
 def test_quick_start_freezes_saved_engines_and_review_without_running(studio_ui, client, monkeypatch):
@@ -139,6 +142,7 @@ def test_click_change_save_shared_defaults_keyboard_mobile_and_no_inference(stud
         page.wait_for_url('**/?selection_saved=true')
         expect(page.locator('[data-production-kind=news] summary')).to_contain_text('Claude API + RSS')
         page.goto(origin + '/news')
+        page.locator('.page-preferences > summary').click()
         expect(page.locator('[data-production-kind=news] summary')).to_contain_text('Claude API + RSS')
         voice = page.locator('[data-production-kind=voice]')
         voice.locator('summary').click()
@@ -165,19 +169,21 @@ def test_review_switch_does_not_overlap_text_or_exceed_track(studio_ui, browser)
         context, page, external, errors = guarded_page(browser, origin, (1366, 900))
         for width, height in [(1920, 1080), (1366, 900), (390, 844)]:
             page.set_viewport_size({'width': width, 'height': height})
-            page.goto(origin + '/')
+            page.goto(origin + '/create')
             label = page.locator('.production-review-choice')
             switch = label.locator('input')
             text = label.locator('span')
             for checked in (True, False):
                 switch.set_checked(checked)
                 box, words = switch.bounding_box(), text.bounding_box()
-                assert box['width'] == 28 and box['height'] == 16
-                assert switch.evaluate('e=>getComputedStyle(e).backgroundColor') == (
-                    'rgb(8, 124, 249)' if checked else 'rgb(29, 48, 72)')
+                # The current /create control is a native checkbox, not the retired dashboard slider.
+                assert box['width'] == 18 and box['height'] == 18
+                assert switch.evaluate('e=>getComputedStyle(e).appearance') == 'auto'
+                assert switch.evaluate('e=>getComputedStyle(e).accentColor') == 'rgb(56, 125, 255)'
+                assert switch.is_checked() is checked
                 assert words['x'] >= box['x'] + box['width'] + 7
-                knob = switch.evaluate('e=>{const s=getComputedStyle(e,"::before");return {left:parseFloat(s.left),width:parseFloat(s.width)}}')
-                assert knob['left'] + knob['width'] <= box['width'] - 2
+                assert box['x'] >= 0 and words['x'] + words['width'] <= width
+                assert switch.evaluate('e=>e.scrollWidth <= e.clientWidth')
                 assert page.locator('#quick-production').evaluate(
                     'form=>new FormData(form).get("script_review")') == ('true' if checked else None)
             switch.focus()

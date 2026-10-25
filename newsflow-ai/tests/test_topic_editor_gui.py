@@ -58,7 +58,12 @@ def test_topic_editor_only_offers_known_local_variants_and_workspace_return(clie
     html = response.text
     assert "실제 처리: 주제 설명 템플릿" in html and "원문 사실 NOT VERIFIED" in html
     assert "추가 AI 호출 없음" in html and "보도 기반 미확인 초안:" not in html
-    assert f'href="/?task={job_id}#workspace-detail"' in html and "foreign.example" not in html
+    assert f'href="/?task={job_id}#workspace-detail"' in html
+    # A nested return_to may be inert data in a local settings form; no navigation
+    # or form action may use the untrusted external destination.
+    targets = re.findall(r'(?:href|action)="([^"]*)"', html)
+    assert all("foreign.example" not in target for target in targets)
+    assert response.context["workspace_return"] == f"/?task={job_id}#workspace-detail"
     assert 'action="/ai/analyze"' not in html and 'action="/ai/generate"' not in html
     for name in ("title", "hook", "summary", "closing", "narration", "material"):
         assert all("readonly" in tag for tag in re.findall(rf'<(?:input|textarea)\b[^>]*name="{name}"[^>]*>', html))

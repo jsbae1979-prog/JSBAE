@@ -52,6 +52,7 @@ def test_grammar_is_identical_for_one_eighty_one_and_four_hundred_articles():
     schemas = []
     for count in (1, 81, 400):
         evidence, _ = example(count)
+        evidence["script_prompt_version"] = "v1"
         bodies = []
         adapter = AnthropicProvider(lambda: pytest.fail("No key read"))
         adapter._post = lambda body, _, bodies=bodies: bodies.append(body) or {}
@@ -64,7 +65,14 @@ def test_grammar_is_identical_for_one_eighty_one_and_four_hundred_articles():
     def check(node):
         if isinstance(node, dict):
             if node.get("type") == "object":
-                assert set(node["required"]) == set(node["properties"])
+                properties = set(node["properties"])
+                required = set(node["required"])
+                optional = {"ad_risk", "viewer_relevance", "viewer_angle"}
+                if "viewer_angle" in properties:
+                    assert properties == {"group_id", "reason", "uncertainties"} | optional
+                    assert required == {"group_id", "reason", "uncertainties"}
+                else:
+                    assert required == properties
                 assert len(node["properties"]) <= 6
                 assert node["additionalProperties"] is False
             for child in node.values():

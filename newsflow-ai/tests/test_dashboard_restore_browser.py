@@ -46,6 +46,17 @@ def test_restored_dashboard_layout_and_readonly_navigation(page, app, tmp_path):
             overlap_x = min(a['x'] + a['width'], b['x'] + b['width']) - max(a['x'], b['x'])
             overlap_y = min(a['y'] + a['height'], b['y'] + b['height']) - max(a['y'], b['y'])
             assert overlap_x <= 1 or overlap_y <= 1
+        if width == 1100:
+            # The right rail is one column within a half-width dashboard lane.
+            # A nested two-column rail crushed labels and action buttons vertically.
+            preview = page.locator('.dash-preview').bounding_box()
+            publish = page.locator('.dash-publish').bounding_box()
+            assert preview['width'] >= 300 and publish['width'] >= 300
+            assert publish['y'] >= preview['y'] + preview['height'] - 1
+            for selector in ('[data-dash-review]', '[data-dash-download]',
+                             '[data-dash-youtube]', '[data-dash-instagram]'):
+                action = page.locator(selector).bounding_box()
+                assert action['width'] >= 120 and action['height'] <= 90, (selector, action)
         page.screenshot(path=str(shots / f'dashboard-{width}.png'), full_page=True)
     page.locator('.workflow-review-link').click()
     expect(page).to_have_url('http://127.0.0.1/create')

@@ -69,39 +69,46 @@ def guarded_page(browser, origin, size):
 
 
 @pytest.mark.parametrize("size", SIZES, ids=["1366", "1920", "390"])
-def test_home_creation_choices_archive_and_keyboard(studio_ui, browser, size):
+def test_home_creation_choices_archive_and_keyboard(studio_ui, browser, size, monkeypatch):
     app = studio_ui
+    # The pending-picker scenario needs an external voice option, not credentials.
+    original_catalog = production_status.voice_choice_catalog
+    monkeypatch.setattr(production_status, 'voice_choice_catalog', lambda: [
+        *original_catalog(), {'name': 'elevenlabs', 'label': 'ElevenLabs · 합성 선택지',
+                              'engine': 'elevenlabs', 'available': False}])
     before = stored_values(app)
     with local_server(app) as origin:
         context, page, external, errors = guarded_page(browser, origin, size)
         response = page.goto(origin + "/")
         assert response.status == 200 and "script-src 'self'" in response.headers["content-security-policy"]
         expect(page.locator(".demo-banner")).to_be_visible()
-        form = page.locator('form[action="/autopilot/quick-start"]')
-        expect(form).to_be_visible()
-        expect(page.get_by_role("button", name="쇼츠 만들기", exact=True)).to_be_visible()
-        assert page.locator('details:has(form[action="/autopilot/quick-start"])').count() == 0
+        # Home has one discoverable creation link; the protected form lives at /create.
+        expect(page.locator('form[action="/autopilot/quick-start"]')).to_have_count(0)
         expect(page.locator(".studio-phone-empty")).to_be_visible()
         expect(page.locator(".reference-metric strong")).to_have_text(["0", "0", "0", "0"])
         expect(page.locator(".reference-news-empty")).to_be_visible()
         expect(page.locator(".reference-search")).to_have_attribute("action", "/news")
-        page.get_by_role("link", name="지금 영상 만들기", exact=False).click()
-        expect(page.locator("#production-title")).to_be_in_viewport()
-        page.evaluate("window.scrollTo({top:0,behavior:'instant'})")
         assert page.locator("video, progress, iframe").count() == 0
         expect(page.locator("#archive-search")).to_be_visible()
         assert page.locator('[name="topic"],option[value="VERIFIED"]').count() == 0
         assert page.locator(".studio-flow [aria-current]").count() == 0
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-        primary = page.get_by_role("button", name="쇼츠 만들기", exact=True)
-        assert "linear-gradient" in primary.evaluate("e=>getComputedStyle(e).backgroundImage")
         capture(page, f"home-empty-{size[0]}.png")
-        # Native keyboard entry, not element presence alone.
+        # Native keyboard entry, then the current visible creation action.
         page.goto(origin + "/")
         page.keyboard.press("Tab")
         expect(page.get_by_role("link", name="본문으로 이동")).to_be_focused()
         page.keyboard.press("Enter")
         expect(page.locator("#main-content")).to_be_focused()
+        page.get_by_role('navigation', name='만들 콘텐츠').get_by_role('link', name='쇼츠 영상', exact=True).click()
+        page.wait_for_url('**/create')
+        form = page.locator('form[action="/autopilot/quick-start"]')
+        expect(form).to_be_visible()
+        assert page.locator('details:has(form[action="/autopilot/quick-start"])').count() == 0
+        primary = page.get_by_role('button', name='자동 제작 시작', exact=False)
+        expect(primary).to_be_visible()
+        assert primary.evaluate('e=>getComputedStyle(e).backgroundColor') != 'rgba(0, 0, 0, 0)'
+        page.locator('[data-production-options] > summary').click()
         page.locator('#quick-source').select_option('sample')
         expect(page.locator('#quick-category')).to_be_hidden()
         page.locator('#quick-source').select_option('feeds')
@@ -109,22 +116,26 @@ def test_home_creation_choices_archive_and_keyboard(studio_ui, browser, size):
         page.locator('#quick-category').select_option('it')
         page.locator('#quick-duration').select_option('45')
         page.locator('#quick-period').select_option('24h')
-        page.locator('#quick-voice-method').select_option('elevenlabs')
-        page.locator('#quick-video-method').select_option('higgsfield')
-        expect(page.locator('[data-external-voice-note]')).to_be_visible()
-        expect(page.locator('[data-external-video-note]')).to_contain_text('모든 장면')
-        page.locator('[name="script_review"]').uncheck()
-        expect(page.locator('.studio-review-note')).to_contain_text('게시 승인')
-        assert stored_values(app) == before
-        page.locator('#quick-voice-method').select_option('local')
-        page.locator('#quick-video-method').select_option('off')
+        # A picker edit is pending until explicit save, never an engine or consent change.
+        for kind, value in (('voice', 'elevenlabs'), ('video', 'higgsfield')):
+            picker = page.locator(f'[data-production-kind={kind}]')
+            picker.locator('summary').click()
+            picker.locator('select').select_option(value)
+            expect(picker.locator('[data-selection-pending]')).to_be_visible()
+            expect(picker).to_contain_text('저장만으로 실행·승인되지 않습니다')
+            page.keyboard.press('Escape')
+        expect(page.locator('#quick-voice-method')).to_have_value('local')
+        expect(page.locator('#quick-video-method')).to_have_value('off')
         expect(page.locator('[data-external-voice-note]')).to_be_hidden()
         expect(page.locator('[data-external-video-note]')).to_be_hidden()
-        # Expanded option data is still posted through the original form contract.
+        page.locator('[name="script_review"]').uncheck()
+        expect(page.locator('.production-picker-note')).to_contain_text('최종 검토는 실행 시 확인')
+        assert stored_values(app) == before
         values = form.evaluate('f=>Object.fromEntries(new FormData(f))')
         assert {k: values[k] for k in ('category', 'duration', 'period', 'voice_method', 'video_method')} == {
             'category': 'it', 'duration': '45', 'period': '24h', 'voice_method': 'local', 'video_method': 'off'}
         assert 'script_review' not in values
+        page.goto(origin + '/')
         page.locator('#home-topic').fill('https://example.com/new-article')
         page.get_by_role('button', name='보관 기사 검색', exact=False).click()
         expect(page.locator('[data-topic-error]')).to_be_visible()
@@ -143,13 +154,23 @@ def test_home_creation_choices_archive_and_keyboard(studio_ui, browser, size):
         context.close()
 
 
-def test_portrait_library_edit_playback_and_publish_keep_original_boundaries(studio_ui, browser, tmp_path):
+def test_portrait_library_edit_playback_and_publish_keep_original_boundaries(studio_ui, browser, tmp_path, monkeypatch):
     app = studio_ui
     # Existing guarded demo seed: real local silent MP4s, synthetic covers/articles and error state.
     path = Path(__file__).resolve().parents[1] / 'tools' / 'ui_preview.py'
     spec = importlib.util.spec_from_file_location('blue_studio_preview_seed', path)
     demo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(demo)
+    # Only the seed's FFmpeg name is resolved to the approved absolute executable.
+    from types import SimpleNamespace
+    executable = Path(os.environ["NEWSFLOW_FFMPEG"]).resolve()
+    assert executable.is_absolute() and executable.is_file() and executable.name.lower() == "ffmpeg.exe"
+    import subprocess
+    real_run = subprocess.run
+    def seed_run(argv, **kwargs):
+        assert argv[0] == 'ffmpeg' and not kwargs.get('shell')
+        return real_run([str(executable), *argv[1:]], **kwargs)
+    monkeypatch.setattr(demo, 'subprocess', SimpleNamespace(run=seed_run))
     demo.seed(app, tmp_path)
     with app.state.sessions() as session:
         original_runs = session.scalar(select(func.count()).select_from(IntelligenceRun))
@@ -164,21 +185,20 @@ def test_portrait_library_edit_playback_and_publish_keep_original_boundaries(stu
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
                 capture(page, f'{name}-populated-{width}.png')
                 if name == 'home':
-                    drawer = page.locator('[data-home-create-drawer]')
-                    expect(drawer).to_have_count(1)
-                    expect(drawer).not_to_have_attribute('open', '')
-                    page.get_by_role('link', name='지금 영상 만들기', exact=False).click()
-                    expect(drawer).to_have_attribute('open', '')
-                    expect(page.locator('#quick-source')).to_be_visible()
-                    expect(page.locator('#production-title')).to_be_focused()
-                    page.locator('[data-home-create-drawer] > summary').focus()
+                    expect(page.locator('[data-home-create-drawer]')).to_have_count(0)
+                    creation = page.get_by_role('navigation', name='만들 콘텐츠').get_by_role('link', name='쇼츠 영상', exact=True)
+                    creation.focus()
                     page.keyboard.press('Enter')
-                    expect(drawer).not_to_have_attribute('open', '')
-                    page.evaluate("()=>window.scrollTo({top:0,behavior:'instant'})")
+                    page.wait_for_url('**/create')
+                    expect(page.locator('#quick-production')).to_be_visible()
+                    page.locator('[data-production-options] > summary').click()
+                    expect(page.locator('#quick-source')).to_be_visible()
+                    page.goto(origin + '/')
                     expect(page.locator('#workspace-tasks')).to_have_count(1)
                     expect(page.locator('#home-topic')).to_have_count(1)
                     expect(page.locator('.reference-news-item')).to_have_count(3)
-                    expect(page.locator('.reference-metric strong')).to_have_text(['3', '2', '3', '0'])
+                    # Unified actionable work counts the three unreviewed outputs and two jobs.
+                    expect(page.locator('.reference-metric strong')).to_have_text(['3', '5', '3', '0'])
                     assert page.locator('.reference-news-item').first.get_attribute('href').startswith('/news/')
                     player = page.locator('[data-dashboard-player]')
                     expect(player).to_have_attribute('preload', 'none')
@@ -186,23 +206,26 @@ def test_portrait_library_edit_playback_and_publish_keep_original_boundaries(stu
                     player.evaluate('async v=>{v.muted=true;await v.play()}')
                     page.wait_for_function('()=>document.querySelector("[data-dashboard-player]").currentTime > 0')
                     player.evaluate('v=>v.pause()')
-                    clips = page.locator('[data-dash-video]')
-                    second = clips.nth(1)
-                    video_id = second.get_attribute('data-video-id')
-                    draft_id = second.get_attribute('data-draft-id')
-                    second.click()
-                    expect(second).to_have_attribute('aria-current', 'true')
-                    expect(player.locator('source')).to_have_attribute('src', f'/video/jobs/{video_id}/file')
-                    expect(page.locator('[data-dash-edit]')).to_have_attribute('href', f'/ai?draft_id={draft_id}')
+                    expect(page.locator('[data-dash-video]')).to_have_count(0)
+                    video_id = player.locator('source').get_attribute('src').split('/')[-2]
+                    assert page.locator('[data-dash-edit]').get_attribute('href').startswith('/ai?draft_id=')
                     expect(page.locator('[data-dash-publish]')).to_have_attribute(
                         'href', f'/?video={video_id}&publish_platform=unified#publish-workspace')
                     assert player.evaluate('v=>v.paused')
-                    assert page.locator('[data-dash-ai-warning]').is_visible() == (second.get_attribute('data-ai-scenes') == 'true')
-                    assert page.locator('[data-dash-preview-warning]').is_visible() == (second.get_attribute('data-preview-only') == 'true')
+                    expect(page.locator('[data-dash-ai-warning]')).to_be_hidden()
+                    expect(page.locator('[data-dash-preview-warning]')).to_be_hidden()
+                    page.locator('.dashboard-history > summary').click()
                     page.locator('[data-chart-day]').last.focus()
                     page.keyboard.press('Enter')
                     expect(page.locator('#chart-readout')).to_contain_text('수집')
-                    clips.first.click()
+                    # Other saved videos remain reachable through the real library.
+                    page.locator('.dash-preview a[href="/videos"]').click()
+                    second = page.locator('.workspace-video-open').nth(1)
+                    target = second.get_attribute('href')
+                    second.click()
+                    expect(page).to_have_url(origin + target)
+                    expect(page.locator('[data-workspace-player]')).to_be_visible()
+                    page.goto(origin + '/')
                     page.evaluate("()=>window.scrollTo({top:0,behavior:'instant'})")
                     capture(page, f'home-populated-{width}.png')
                 if name == 'videos':
@@ -222,7 +245,7 @@ def test_portrait_library_edit_playback_and_publish_keep_original_boundaries(stu
                     capture(page, f'preview-populated-{width}.png')
                     page.get_by_role('link', name='대본·자막 편집 →', exact=True).click()
                     page.wait_for_url('**/ai?draft_id=1')
-                    page.get_by_role('button', name='장면 2', exact=True).click()
+                    page.locator('[data-script-edit-scene="1"]').click()
                     expect(page.locator('[data-topic-scene]:visible')).to_have_count(1)
                     expect(page.get_by_role('button', name='장면 2', exact=True)).to_have_attribute('aria-pressed', 'true')
                     capture(page, f'editor-{width}.png')

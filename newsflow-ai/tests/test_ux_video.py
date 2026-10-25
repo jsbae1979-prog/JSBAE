@@ -38,7 +38,8 @@ def test_simple_form_keeps_advanced_fields_and_explicit_review(client, studio_dr
     html = response.text
     document = Document(html)
     advanced = document.find("details", id="video-advanced-editing")[0]
-    assert "open" in advanced.attrs
+    assert "open" not in advanced.attrs
+    assert any(advanced in node.ancestors for node in document.find("summary"))
     # Parse nested details as a tree; a regex stopped at the first inner </details>.
     for name in ("font_size", "subtitle_y", "images", "effects", "asset_permission"):
         assert any(advanced in node.ancestors for node in document.find(name=name))

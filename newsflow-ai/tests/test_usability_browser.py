@@ -62,7 +62,9 @@ def test_local_workflow_and_all_screen_design(visual, browser):
     evidence = Path(os.environ['NEWSFLOW_USABILITY_EVIDENCE'])
     evidence.mkdir(parents=True, exist_ok=True)
     before_settings = stored_values(app)
-    original = Path('C:/Codex/NewsFlowAI/newsflow-ai/src/newsflow')
+    # The parent harness supplies accepted Step13I source assets, never operating files.
+    original = Path(os.environ['NEWSFLOW_BASELINE_GUI_SOURCE']).resolve()
+    assert original.is_dir() and (original / 'gui/templates').is_dir()
     external, posts, errors = [], [], []
     with local_server(app) as origin:
         context = browser.new_context(viewport={'width': 1440, 'height': 1000}, locale='ko-KR')

@@ -73,7 +73,7 @@ def test_toggle_save_reopen_and_restore_does_not_change_sources_or_publish(app, 
                 page.locator(f'[name="{name}"]').check()
             page.locator('[name="ai_disclosure"]').select_option("disclose")
             page.evaluate("document.documentElement.dataset.sourceBefore = 'yes'")
-            page.get_by_role("button", name="검토 저장·파일 확인", exact=True).click()
+            page.get_by_role("button", name="검토 기록·파일 확인" if platform == "unified" else "검토 저장·파일 확인", exact=True).click()
             expect(page.locator("html")).not_to_have_attribute("data-source-before", "yes")
             page.goto(origin + "/simple-settings")
             page.goto(url)

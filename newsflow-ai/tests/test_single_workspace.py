@@ -98,11 +98,14 @@ def test_workspace_has_creator_destinations_one_start_and_no_eager_player(client
     assert response.status_code == 200
     html = response.text
     navigation = re.search(r'<nav[^>]*aria-label="주 메뉴"[^>]*>(.*?)</nav>', html, re.DOTALL).group(1)
-    assert re.findall(r'href="([^"]+)"', navigation) == ["/", "/news", "/ai", "/videos", "/queue", "/analytics", "/simple-settings"]
-    assert all(label in navigation for label in ("대시보드", "뉴스 수집", "AI 대본", "영상 제작", "게시 허브", "성과 분석", "설정"))
+    primary = navigation.split('<details class="sidebar-tools"', 1)[0]
+    assert re.findall(r'href="([^"]+)"', primary) == ["/", "/create", "/news", "/?show=tasks", "/videos", "/queue", "/simple-settings"]
+    assert all(label in primary for label in ("홈", "쇼츠 만들기", "뉴스 선택", "작업 현황", "내 영상", "게시", "설정"))
+    assert all(f'href="{path}"' in navigation for path in ("/ai", "/analytics", "/character", "/image-posts", "/voices", "/schedules"))
     assert not re.search(r'<aside[^>]*class="[^"]*\bsidebar\b', html)
-    assert html.count('action="/autopilot/quick-start"') == 1
-    for marker in ("data-workspace-create", "data-workspace-tasks", "data-workspace-videos"):
+    assert html.count('action="/autopilot/quick-start"') == 0
+    assert client.get("/create").text.count('action="/autopilot/quick-start"') == 1
+    for marker in ("data-workspace-create", 'id="workspace-tasks"', "data-workspace-videos"):
         assert marker in html
     assert '<video ' not in html and '<iframe' not in html
     assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
@@ -120,8 +123,8 @@ def test_workspace_limits_cards_and_manual_completed_render_is_not_a_second_task
     assert response.context["task_count"] == 14  # expanded history retains completed manual tasks
     assert all("대본 검토 fixture" in row["title"] for row in response.context["active_jobs"])
     assert all("완성 영상 fixture" in row["title"] for row in response.context["completed"])
-    assert 'href="/?show=tasks#workspace-tasks"' in response.text
-    assert 'href="/?show=videos#workspace-videos"' in response.text
+    assert 'href="/?show=tasks"' in response.text
+    assert 'href="/videos"' in response.text
     assert len(client.get("/?show=tasks").context["workspace_tasks"]) == 14
     assert len(client.get("/?show=videos").context["workspace_videos"]) == 7
     assert "대본 검토 fixture 0" not in response.text
@@ -233,7 +236,7 @@ def test_pending_final_review_is_not_duplicated_in_completed_cards(client, app):
     assert response.context["completed"] == []
     assert f'/?task={identifier}#workspace-detail' in response.text
     assert "검토 중인 영상은 위 작업에서 확인해 주세요" in response.text
-    assert 'href="/?show=videos#workspace-videos"' in response.text
+    assert 'href="/videos"' in response.text
 
 
 @pytest.mark.parametrize("origin,include_token", [("https://foreign.example", True), ("null", True),
@@ -267,9 +270,11 @@ def test_workspace_reads_never_change_provider_preferences_or_start_inference(cl
     home = response.text
     assert response.context["ready"]["voice"]["name"] == "Missing Korean"
     assert response.context["ready"]["voice"]["installed"] is False
-    assert "Claude Code" in home and "선택한 음성 설치·연결 확인 필요" in home
-    assert 'value="60" selected' in home and 'value="feeds" selected' in home
-    assert "AI 웹 뉴스 조사 BLOCKED" in home
+    assert "Claude Code" in home and "음성 준비 필요" in home
+    creation = client.get("/create")
+    assert 'value="60" selected' in creation.text and 'value="feeds" selected' in creation.text
+    assert creation.context["production"]["policy_states"]["ai_web"]["supported"] is False
+    assert "다른 음성으로 자동 전환하지 않습니다" in home
     rss_state = response.context["production"]["policy_states"]["rss"]
     assert rss_state["supported"] is False
     assert "선택한 음성의 설치·제작별 승인이 필요합니다" in rss_state["notice"]

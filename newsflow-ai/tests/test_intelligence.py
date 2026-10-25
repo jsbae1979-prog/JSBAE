@@ -175,7 +175,7 @@ def test_gui_analysis_generate_edit_and_key_hidden(intelligence, client, monkeyp
     monkeypatch.setenv("NEWSFLOW_AI_API_KEY", "SECRET-NEVER-HTML")
     assert client.get("/ai").status_code == 200
     response = client.post("/ai/analyze", data={"csrf_token": csrf(client), "article_ids": ["1", "2"]})
-    assert response.status_code == 200 and "사실 확인: 미확인" in response.text
+    assert response.status_code == 200 and "사실 확인 미완료" in response.text
     response = client.post(
         "/ai/generate", data={"csrf_token": csrf(client), "analysis_id": 1, "duration": 45}
     )

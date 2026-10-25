@@ -45,7 +45,7 @@ def start_guided(client, app):
 ])
 def test_easy_and_advanced_pages_keep_security_headers(client, path, title):
     response = client.get(path)
-    assert response.status_code == 200 and title in response.text
+    assert response.status_code == 200 and ("게시 허브" if path == "/queue" else title) in response.text
     assert 'href="/simple-settings"' in response.text
     assert 'aria-label="주 메뉴"' in response.text
     assert "script-src 'self'" in response.headers["content-security-policy"]
@@ -145,7 +145,8 @@ def test_saved_simple_defaults_are_applied_by_home_button_and_remain_local(clien
     data = {"duration": "45", "platform": "instagram", "source": "sample", "mode": "guided"}
     response = client.post("/simple-settings", data={**data, "csrf_token": csrf(client)})
     assert response.status_code == 200 and "제작 구성을 저장했습니다" in response.text
-    home = client.get("/").text
+    assert 'href="/create"' in client.get("/").text
+    home = client.get("/create").text
     assert 'value="45" selected' in home and 'value="sample" selected' in home
     # Detailed defaults remain in the advanced setup, while the home shows two choices.
     advanced = client.get("/autopilot/start?advanced=true").text
@@ -165,10 +166,15 @@ def test_corrupt_saved_settings_fall_back_to_offline_defaults(client, app):
         session.add_all([AppSetting(key="autopilot_" + name, value="invalid") for name in (
             "duration", "platform", "source", "mode",
         )])
-    response = client.get("/")
+    assert 'href="/create"' in client.get("/").text
+    response = client.get("/create")
     assert response.status_code == 200
     assert 'value="30" selected' in response.text and 'value="feeds" selected' in response.text
-    assert "AI 웹 뉴스 조사 BLOCKED" in response.text
+    state = response.context["production"]["policy_states"]["ai_web"]
+    assert state["supported"] is False and state["title"] == "AI 웹 뉴스 조사 BLOCKED"
+    assert 'name="acquisition_policy" value="ai_web"' in response.text
+    assert "뉴스 검색 준비가 필요" in response.text
+    assert "hidden" not in response.text.split("data-home-policy-warning", 1)[1].split(">", 1)[0]
     assert response.context["defaults"]["ai"] == "offline"
     advanced = client.get("/autopilot/start?advanced=true").text
     assert 'value="easy" selected' in advanced and 'value="youtube" selected' in advanced
@@ -237,7 +243,7 @@ def test_queue_synthetic_media_fixture_detects_file_change_and_keeps_human_revie
     draft_id = service.create(render_id, "youtube", "합성 초안", "연습용", "", ai_disclosure="unreviewed")
     page = client.get("/queue")
     assert page.status_code == 200 and f'id="draft-{draft_id}"' in page.text
-    assert "SNS에 전송되거나 게시되지 않습니다" in page.text
+    assert "초안 저장과 실제 게시는 별도입니다." in page.text
     assert "내용 확인 필요" in page.text and "권리 확인 필요" in page.text
     assert 'class="queue-video"' in page.text
     output.write_bytes(b"CHANGED-SYNTHETIC-FILE")

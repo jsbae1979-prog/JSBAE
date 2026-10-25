@@ -98,7 +98,10 @@ def test_modern_script_scene_navigation_edit_preview_and_video_are_read_only(vis
             expect(page.locator('[data-video-scene-status]')).to_have_text('장면 2 선택됨')
             expect(page.locator('[name=reviewed]')).not_to_be_checked()
             expect(page.locator('[name=external_tts_consent]')).not_to_be_checked()
-            page.get_by_role('navigation',name='주 메뉴').get_by_role('link',name='대시보드',exact=True).click()
+            menu = page.locator('[data-sidebar-menu]')
+            if menu.get_attribute('open') is None:
+                menu.locator('>summary').click()
+            page.get_by_role('navigation',name='주 메뉴').get_by_role('link',name='홈',exact=True).click()
             expect(page.locator('#dash-workflow-title')).to_have_text('AI 제작 워크플로')
         assert not external and not posts and not errors
         context.close()

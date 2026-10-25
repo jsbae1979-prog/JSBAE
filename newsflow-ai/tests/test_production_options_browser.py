@@ -6,6 +6,7 @@ import os
 import urllib.request
 from pathlib import Path
 
+from pc_cloud_script_fixture import healthy_three_scene
 from playwright.sync_api import expect
 from test_api_news_pipeline import MODELS, FixtureKey
 from test_api_news_pipeline import api_pipeline as pipeline_fixture
@@ -17,7 +18,6 @@ from test_voice_engines import Keys, config
 from newsflow.db.models import ContentDraft, PublishDraft
 from newsflow.gui import production_status
 from newsflow.gui.routes import templates
-from newsflow.intelligence.korean import speech_plan
 from newsflow.intelligence.settings import write_studio_settings
 from newsflow.publishing.media import FFprobeMediaInspector
 from newsflow.video.elevenlabs_tts import ElevenLabsTTS, save_settings
@@ -41,14 +41,9 @@ def test_skip_review_elevenlabs_fake_to_real_mp4_final_review(app, api_pipeline,
 
     def sufficient_synthetic_script(evidence, seconds, options):
         result = complete(evidence, seconds, options)
-        # The shared legacy Fake is deliberately short (20s). Supply a well-formed
-        # synthetic 30s contract here; never weaken the product's short-script check.
-        while speech_plan(result, seconds)["estimated_total_seconds"] < seconds * .90:
-            plan = speech_plan(result, seconds)
-            index = min(range(len(plan["scenes"])), key=lambda i: plan["scenes"][i]["estimated_seconds"])
-            result["scenes"][index]["narration"] += " 살펴봅니다."
-        assert speech_plan(result, seconds)["fits"]
-        return result
+        # Match the current V2 speech/sentence/HOOK/ENDING contract without
+        # weakening automatic safety review or introducing repeated sentences.
+        return healthy_three_scene(result, seconds)
 
     monkeypatch.setattr(api, "complete", sufficient_synthetic_script)
     calls, sent = [], []
@@ -89,13 +84,13 @@ def test_skip_review_elevenlabs_fake_to_real_mp4_final_review(app, api_pipeline,
         for width, height in ((1366, 768), (1920, 1080), (390, 844)):
             page.set_viewport_size({"width": width, "height": height})
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
-            for selector in ("#quick-voice-method", "#quick-video-method"):
+            for selector in ("[data-production-kind=voice] > summary", "[data-production-kind=video] > summary"):
                 box = page.locator(selector).bounding_box()
                 assert box and box["x"] >= 0 and box["x"] + box["width"] <= width
         page.set_viewport_size({"width": 1366, "height": 768})
         page.locator('[data-workspace-create]').screenshot(path=str(output / "production-options.png"))
         expect(page.locator('form[action="/autopilot/quick-start"]')).to_have_attribute("data-easy-wired", "true")
-        page.get_by_role("button", name="쇼츠 만들기", exact=True).click()
+        page.get_by_role("button", name="자동 제작 시작", exact=False).click()
         page.wait_for_url(lambda url: "guide=consent" in url)
         form = page.locator('form[action="/autopilot/confirm-start"]')
         expect(form.locator('[name="external_tts_consent"]')).not_to_be_checked()

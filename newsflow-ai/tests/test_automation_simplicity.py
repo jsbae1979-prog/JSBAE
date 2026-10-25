@@ -51,7 +51,7 @@ def test_closed_job_options_preserve_payload_and_review_without_a_post(page):
 
 def test_sidebar_tools_stay_reachable_and_current_tool_opens_itself(page):
     page.goto('http://127.0.0.1/')
-    expect(page.locator('.workspace-nav a:visible')).to_have_count(9)
+    expect(page.locator('.workspace-nav a:visible')).to_have_count(7)  # Seven primary destinations; all thirteen remain reachable.
     page.locator('[data-sidebar-tools]>summary').click()
     expect(page.locator('.workspace-nav a:visible')).to_have_count(13)
     page.locator('.workspace-nav [href="/analytics"]').click()
