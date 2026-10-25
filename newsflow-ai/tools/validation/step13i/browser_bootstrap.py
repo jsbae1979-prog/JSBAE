@@ -37,7 +37,7 @@ else:
  elif sys.argv[1]=='remaining':targets=[x for x in targets if 'test_pc_cloud_windows_browser.py::' not in x]
  elif sys.argv[1]=='h3':targets=['tests/test_news_image_linking.py']
  elif sys.argv[1] in ('h','h2','h4'):targets=['tests/test_news_image_linking.py','tests/test_news_thumbnails.py','tests/test_video.py']
- elif sys.argv[1] in ('security','hflow','hflow2','hflow3'):targets=[str(R/'test_news_image_gui_flow.py')]
+ elif sys.argv[1] in ('hflow','hflow2','hflow3'):targets=[str(R/'test_news_image_gui_flow.py')]
  elif sys.argv[1]=='hformats':targets=['tests/test_news_image_linking.py::test_jpeg_and_webp_supplied_images_become_clean_local_png']
  elif sys.argv[1]=='tiktok_recheck':targets=['tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login']
  elif sys.argv[1] in ('i_tiktok','i_tiktok2','i_tiktok3'):targets=['tests/test_tiktok_gui.py','tests/test_tiktok_connection.py','tests/test_tiktok_callback_owner_contract.py','tests/test_tiktok_publishing_connection.py']
