@@ -1,5 +1,10 @@
-Development checkpoint,2026-10-25
-Base645c4b7788cdf665f98fb936c82081bc90875087. ExistingPR35 remains Draft; no main/operating update. ApprovedG2-G9 changes plus current test-only browser boundary and fixture ownership changes.
-GUI:15 routes x3 widths PASS; images/assets/menu/keyboard popup checks pass. Synthetic records unchanged.
-Original91 rerun and full regression pending; no claim all errors resolved.
-Push uses[skip ci] to avoid inherited Python3.12 matrix reruns; existing Windows Actions evidence retained. Local Windows Python3.14.7 tests run under strict Fake boundaries. No live authentication/generation/publishing calls.
+Windows Fake validation progress checkpoint,2026-10-25
+Python3.14.7 only. Baseline645c4b7; prior acceptedG2-G9 source fixes retained. No operating source/data update.
+GUI15 routes at1440/980/390 PASS. Original91 IDs all executed: initial55P/36F/0E, after evidence-path fixture repair59P/32F/0E. No IDs removed, skips added or assertions weakened. Remaining failures are NOT a claim of new product regressions: baseline browser bodies never executed.
+Guard security78 PASS before and after output-routing repair. Test-only exact Node/Chrome bridge; media, file, SQL, network boundaries retained. Real sockets127.0.0.1:18765 only; virtual TestClient fulfill origin cannot continue to a socket.
+Two historical before-screenshot tests hardcode an operating source path. Guard rejects reads; no operating files used as test inputs. Do not loosen the Guard or replace those screenshots with invented baseline evidence.
+An early partial full-regression attempt was stopped using its exact owned test Job only after missing evidence paths were found. Partial results retained, not counted as completed full regression. Corrected full regression is now running.
+Machine-local config files, original local62-case safety suite, runtime binaries and historical observer are deliberately not uploaded. This is a development checkpoint, not a self-contained installer or CI runtime. All local files persist across reboot. Minimal historical probe is not required for resume.
+Resume:keep operating app stopped and8765 free; validate runtime pins and private synthetic paths; inspect phase XML/supervisor status. Never overwrite completed evidence. Archive interrupted output into a unique attempt directory, then restart only the approved Fake phase. No live provider/OAuth/publish requests; no operating migration.
+Chrome native background networking is a separately recorded residual risk; no complete OS network isolation claim. No firewall/ACL/account/virtualization changes. ExistingPR35 stays Draft, no new PR or main merge.
+Push uses[skip ci] to avoid inherited Python3.12 matrices; current local Windows3.14.7 execution is reported separately from Actions. Previous Actions evidence remains unchanged.

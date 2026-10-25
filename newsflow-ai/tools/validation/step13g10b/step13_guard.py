@@ -294,5 +294,5 @@ def install():
 
 def pytest_sessionfinish(session,exitstatus):
  out=pathlib.Path(os.environ['NEWSFLOW_VALIDATION_OUTPUT']);out.mkdir(parents=True,exist_ok=True)
- (out/'strict-guard.json').write_text(json.dumps({'denied':ATTEMPTS,'allowed_binary_counts':{k:ALLOWED.count(k) for k in set(ALLOWED)},'exitstatus':exitstatus,'installed_before_pytest_import':True,'only_pinned_FFmpeg_ffprobe_allowed':True,'external_network_allowed':False,'operating_file_contents_allowed':False}),encoding='utf-8')
+ (out/'strict-guard.json').write_text(json.dumps({'denied':ATTEMPTS,'allowed_binary_counts':{k:ALLOWED.count(k) for k in set(ALLOWED)},'exitstatus':exitstatus,'installed_before_pytest_import':True,'only_pinned_FFmpeg_ffprobe_media_allowed':True,'only_registered_pinned_Node_entry_allowed':True,'browser_child_validated_by_Node_preload':True,'global_guard_disabled':False,'external_network_allowed':False,'operating_file_contents_allowed':False}),encoding='utf-8')
 

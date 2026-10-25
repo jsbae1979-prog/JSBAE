@@ -3,7 +3,7 @@ from pathlib import Path
 import os,json,hashlib,time,socket,contextlib,threading
 from urllib.parse import urlsplit
 R=Path(__file__).parent
-C=json.loads((R/'guard-config-private.json').read_text());B=C['browser'];EVENTS=[];PLAYWRIGHT_LOOPS=[];OWNED_EXECUTORS=set()
+C=json.loads((R/'guard-config-private.json').read_text());B=C['browser'];EVENTS=[];PLAYWRIGHT_LOOPS=[];OWNED_EXECUTORS=set();BROWSERS=[]
 class BoundaryViolation(PermissionError):pass
 def note(kind,**values):
  EVENTS.append({'kind':kind,**values});(R/'python-browser-events-safe.json').write_text(json.dumps(EVENTS,indent=2),encoding='utf-8')
@@ -32,11 +32,12 @@ def install_playwright():
   env={k:v for k,v in os.environ.items() if k.upper() in {'SYSTEMROOT','WINDIR','COMSPEC','PATH','PATHEXT','TEMP','TMP','USERPROFILE','LOCALAPPDATA','APPDATA','HOME','OS','PROCESSOR_ARCHITECTURE','NUMBER_OF_PROCESSORS'}}
   env['NODE_OPTIONS']='--require="'+Path(B['preload']).as_posix()+'"';kwargs['env']=env
   idx=sum(1 for x in EVENTS if x['kind']=='Chrome-launch')
-  logfile=R/'artifacts'/('netlog-'+str(idx)+'.json')
+  logdir=Path(os.environ['NEWSFLOW_VALIDATION_OUTPUT'])/'netlogs';logdir.mkdir(parents=True,exist_ok=True)
+  logfile=logdir/('netlog-'+str(idx)+'.json')
   kwargs['args']=['--proxy-server=http://127.0.0.1:18765','--proxy-bypass-list=127.0.0.1','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1','--disable-quic','--force-webrtc-ip-handling-policy=disable_non_proxied_udp','--disable-component-update','--log-net-log='+str(logfile),'--net-log-capture-mode=Default']
   note('Chrome-launch',temporary_profile=True,operating_port=False,flags_fixed=True)
   browser=oldlaunch(self,**kwargs)
-  PLAYWRIGHT_LOOPS.append(browser._impl_obj._loop)
+  PLAYWRIGHT_LOOPS.append(browser._impl_obj._loop);BROWSERS.append(browser)
   return browser
  def context(self,*args,**kwargs):
   kwargs['service_workers']='block';kwargs['accept_downloads']=False
@@ -104,7 +105,9 @@ def pytest_sessionfinish(session,exitstatus):
  for thread in owned:thread.join(max(0,deadline-time.monotonic()))
  live=[t.name for t in owned if t.is_alive()]
  loops_open=sum(not loop.is_closed() for loop in PLAYWRIGHT_LOOPS)
- (R/'browser-runtime-cleanup-safe.json').write_text(json.dumps({'Playwright_loops':len(PLAYWRIGHT_LOOPS),'owned_executor_threads':len(owned),'owned_threads_remaining':live,'Playwright_loops_still_open':loops_open,'proof':'Only actual registered Playwright loop executors deferred; all app/unknown threads retain per-test assertion.'}),encoding='utf-8')
+ import asyncio
+ loop_detail=[{'closed':loop.is_closed(),'running':loop.is_running(),'pending_tasks':sum(not t.done() for t in asyncio.all_tasks(loop)) if not loop.is_closed() else 0} for loop in PLAYWRIGHT_LOOPS]
+ (R/'browser-runtime-cleanup-safe.json').write_text(json.dumps({'Playwright_loops':len(PLAYWRIGHT_LOOPS),'owned_executor_threads':len(owned),'owned_threads_remaining':live,'Playwright_loops_still_open':loops_open,'loop_detail':loop_detail,'connected_browsers':sum(browser.is_connected() for browser in BROWSERS),'proof':'Only actual registered Playwright loop executors deferred; all app/unknown threads retain per-test assertion.'}),encoding='utf-8')
  if live or loops_open:session.exitstatus=1
  note('pytest-finished',exit=int(exitstatus))
 

@@ -1,0 +1,34 @@
+{
+  "original_IDs": 91,
+  "executed_unique_IDs": 91,
+  "latest_by_ID": {
+    "PASS": 59,
+    "FAIL": 32
+  },
+  "initial_complete91": {
+    "PASS": 55,
+    "FAIL": 36,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "after_evidence_output_fix": {
+    "PASS": 59,
+    "FAIL": 32
+  },
+  "missing_IDs": [],
+  "new_IDs": [],
+  "new_skips": [],
+  "changed_test_assertions": 0,
+  "additional_8_rechecks": true,
+  "remaining_failure_groups": {
+    "GUI selector/contract discrepancy; product decision pending": 20,
+    "Guard: unapproved test subprocess": 1,
+    "Unconfirmed: synthetic render/voice flow": 5,
+    "Guard: historical operating-source comparison blocked before read": 2,
+    "GUI layout/contract discrepancy; product decision pending": 3,
+    "Fixture/Playwright expression versus CSP; security policy retained": 1
+  },
+  "confirmed_product_defects": 0,
+  "confirmed_zero_product_defects_claim": false,
+  "historical_operating_comparison_guard_blocks": 2
+}

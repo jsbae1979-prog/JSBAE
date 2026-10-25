@@ -1,0 +1,10 @@
+[
+  "tests/test_dashboard_cohesion.py::test_archive_filters_visual_system_and_auxiliary_routes",
+  "tests/test_elevenlabs_voice_errors.py::test_chrome_displays_safe_list_error_once_and_keeps_settings[permission-\\uc624\\ub958 \\ucf54\\ub4dc insufficient_permissions]",
+  "tests/test_modern_script.py::test_modern_script_scene_navigation_edit_preview_and_video_are_read_only",
+  "tests/test_small_ux_refinements.py::test_small_changes_keep_category_state_consent_and_one_preview",
+  "tests/test_studio_dashboard_polish.py::test_studio_dashboard_polish_keeps_real_state_forms_and_reviews",
+  "tests/test_usability_browser.py::test_local_workflow_and_all_screen_design",
+  "tests/test_video_modern.py::test_video_inspector_timeline_form_and_settings_preserved",
+  "tests/test_workflow_signals.py::test_signal_colors_accessible_reasons_and_no_automatic_checks"
+]

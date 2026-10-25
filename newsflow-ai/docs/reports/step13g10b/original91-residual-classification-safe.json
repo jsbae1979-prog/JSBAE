@@ -1,0 +1,228 @@
+[
+  {
+    "ID": "tests/test_all_scene_browser.py::test_workspace_all_ai_voice_approval_to_original_task_preview[openai]",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_all_scene_browser.py::test_workspace_all_ai_voice_approval_to_original_task_preview[claude_api]",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_analytics_settings_modern.py::test_settings_tabs_models_dialogs_and_form_ownership",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_automation_simplicity.py::test_sidebar_tools_stay_reachable_and_current_tool_opens_itself",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_blue_studio_browser.py::test_home_creation_choices_archive_and_keyboard[1366]",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_blue_studio_browser.py::test_home_creation_choices_archive_and_keyboard[1920]",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_blue_studio_browser.py::test_home_creation_choices_archive_and_keyboard[390]",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_blue_studio_browser.py::test_portrait_library_edit_playback_and_publish_keep_original_boundaries",
+    "outcome": "FAIL",
+    "category": "Guard: unapproved test subprocess",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_cloud_workspace_flow.py::test_api_to_render_review_and_existing_publish_services[openai]",
+    "outcome": "FAIL",
+    "category": "Unconfirmed: synthetic render/voice flow",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_cloud_workspace_flow.py::test_api_to_render_review_and_existing_publish_services[claude_api]",
+    "outcome": "FAIL",
+    "category": "Unconfirmed: synthetic render/voice flow",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_dashboard_cohesion.py::test_archive_filters_visual_system_and_auxiliary_routes",
+    "outcome": "FAIL",
+    "category": "Guard: historical operating-source comparison blocked before read",
+    "source": "original browser body did not execute in baseline",
+    "evidence": "Captured ASGI stderr in envfix-process.log; original sources not read",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_dashboard_restore_browser.py::test_restored_dashboard_layout_and_readonly_navigation",
+    "outcome": "FAIL",
+    "category": "GUI layout/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_modern_script.py::test_modern_script_scene_navigation_edit_preview_and_video_are_read_only",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_production_options_browser.py::test_skip_review_elevenlabs_fake_to_real_mp4_final_review[openai]",
+    "outcome": "FAIL",
+    "category": "Unconfirmed: synthetic render/voice flow",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_production_options_browser.py::test_skip_review_elevenlabs_fake_to_real_mp4_final_review[claude_api]",
+    "outcome": "FAIL",
+    "category": "Unconfirmed: synthetic render/voice flow",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_production_picker.py::test_click_change_save_shared_defaults_keyboard_mobile_and_no_inference",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_production_picker.py::test_review_switch_does_not_overlap_text_or_exceed_track",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_publish_metadata_gui.py::test_browser_edit_suggestion_save_reenter_and_mobile",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_publish_source_choice.py::test_toggle_save_reopen_and_restore_does_not_change_sources_or_publish[unified]",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_small_ux_refinements.py::test_small_changes_keep_category_state_consent_and_one_preview",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_social_ui.py::test_social_browser_layout_navigation_and_empty_metrics",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_studio_controls_browser.py::test_style_generation_scene_effects_and_layout[openai]",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_studio_controls_browser.py::test_style_generation_scene_effects_and_layout[claude_api]",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_studio_fidelity.py::test_composition_inspector_copy_and_render_controls_preserve_contract",
+    "outcome": "FAIL",
+    "category": "GUI layout/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_studio_functional_controls.py::test_actual_ffmpeg_fade_mp4_and_decoded_frames",
+    "outcome": "FAIL",
+    "category": "Unconfirmed: synthetic render/voice flow",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_studio_pages.py::test_suite_browser_navigation_filters_and_record_preservation",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_studio_pages.py::test_workstation_scene_selection_filters_and_chart_are_read_only",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login",
+    "outcome": "FAIL",
+    "category": "Fixture/Playwright expression versus CSP; security policy retained",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_usability_browser.py::test_local_workflow_and_all_screen_design",
+    "outcome": "FAIL",
+    "category": "Guard: historical operating-source comparison blocked before read",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR",
+    "evidence": "Captured ASGI stderr; no source contents read"
+  },
+  {
+    "ID": "tests/test_workflow_card.py::test_reference_card_browser_popovers_keyboard_and_no_mutation",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_workspace_access_browser.py::test_all_main_destinations_fit_small_windows[390]",
+    "outcome": "FAIL",
+    "category": "GUI layout/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  },
+  {
+    "ID": "tests/test_youtube_category_gui.py::test_browser_choose_save_reopen_change_and_hide_for_instagram",
+    "outcome": "FAIL",
+    "category": "GUI selector/contract discrepancy; product decision pending",
+    "source": "original browser body did not execute in baseline",
+    "new_product_regression_status": "NOT ESTABLISHED from previous setup ERROR"
+  }
+]

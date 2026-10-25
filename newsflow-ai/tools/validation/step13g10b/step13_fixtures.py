@@ -11,6 +11,12 @@ def step13_isolation(monkeypatch,tmp_path,request):
  for name in ('TEMP','TMP','LOCALAPPDATA','APPDATA','NEWSFLOW_DATA_DIR'):
   target=env_root/('env-'+name.lower());target.mkdir()
   monkeypatch.setenv(name,str(target))
+ # Evidence-only test fixtures; never permit writes to product source.
+ if request.node.nodeid.endswith('test_workflow_signals.py::test_signal_colors_accessible_reasons_and_no_automatic_checks'):
+  monkeypatch.chdir(env_root)
+ evidence=getattr(request.module,'EVIDENCE',None)
+ if isinstance(evidence,Path) and evidence.is_absolute() and evidence.is_relative_to(guard.PROJECT/'validation-output'):
+  monkeypatch.setattr(request.module,'EVIDENCE',env_root/'evidence')
  from newsflow import main
  from newsflow.scheduler.service import Scheduler
  from newsflow.publishing.calendar import PublishingCalendar

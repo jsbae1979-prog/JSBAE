@@ -9,7 +9,7 @@ sys.path.insert(0,str(R))
 if sys.argv[1]=="minimal":
  import observer
  observer.start(R)
-phase=sys.argv[1];assert phase in ('minimal','gui','remaining','full')
+phase=sys.argv[1];assert phase in ('minimal','gui','remaining','full','security','envfix')
 for name in ('temp','home','local','roaming','artifacts'):(R/name).mkdir(exist_ok=True)
 c=json.loads((R/'guard-config-private.json').read_text());c['browser']['preload_SHA256']=hashlib.sha256((R/'node_boundary.cjs').read_bytes()).hexdigest();(R/'guard-config-private.json').write_text(json.dumps(c,indent=2),encoding='utf-8')
 env={k:v for k,v in os.environ.items() if k.upper() in {'SYSTEMROOT','WINDIR','COMSPEC','PATHEXT','PROCESSOR_ARCHITECTURE','NUMBER_OF_PROCESSORS','OS'}}
@@ -24,6 +24,9 @@ K.CreateJobObjectW.argtypes=[ctypes.c_void_p,W.LPCWSTR];K.CreateJobObjectW.resty
 K.SetInformationJobObject.argtypes=[W.HANDLE,ctypes.c_int,ctypes.c_void_p,W.DWORD];K.SetInformationJobObject.restype=W.BOOL
 K.AssignProcessToJobObject.argtypes=[W.HANDLE,W.HANDLE];K.AssignProcessToJobObject.restype=W.BOOL
 K.CloseHandle.argtypes=[W.HANDLE];K.CloseHandle.restype=W.BOOL
+class ACCOUNTING(ctypes.Structure):_fields_=[('TotalUserTime',ctypes.c_longlong),('TotalKernelTime',ctypes.c_longlong),('ThisPeriodTotalUserTime',ctypes.c_longlong),('ThisPeriodTotalKernelTime',ctypes.c_longlong),('TotalPageFaultCount',W.DWORD),('TotalProcesses',W.DWORD),('ActiveProcesses',W.DWORD),('TotalTerminatedProcesses',W.DWORD)]
+K.QueryInformationJobObject.argtypes=[W.HANDLE,ctypes.c_int,ctypes.c_void_p,W.DWORD,ctypes.c_void_p];K.QueryInformationJobObject.restype=W.BOOL
+job_counts=None
 job=K.CreateJobObjectW(None,None)
 if not job:raise ctypes.WinError(ctypes.get_last_error())
 limit=LIMIT();limit.BasicLimitInformation.LimitFlags=0x2000
@@ -38,12 +41,14 @@ try:
   try:code=process.wait(timeout=180 if phase=='minimal' else (5400 if phase=='full' else 1500))
   except subprocess.TimeoutExpired:timedout=True;code=124
 finally:
+ accounting=ACCOUNTING()
+ if K.QueryInformationJobObject(job,1,ctypes.byref(accounting),ctypes.sizeof(accounting),None):job_counts={'active_before_close':accounting.ActiveProcesses,'total_processes':accounting.TotalProcesses}
  K.CloseHandle(job)
  if process is not None:
   try:process.wait(timeout=15)
   except subprocess.TimeoutExpired:raise RuntimeError('owned child did not exit after Job close')
  gate.unlink(missing_ok=True)
 if sys.argv[1]=="minimal":observer.finish()
-result={'phase':phase,'started':started,'finished':datetime.datetime.now().astimezone().isoformat(),'exit':code,'child_PID':process.pid if process else None,'Job_assigned':assigned,'Job_kill_on_close':True,'child_exited':process.poll() is not None if process else True,'timeout':timedout,'provider_env_inherited':False,'operating_risk':'current Windows user still has operating OS file rights; no complete OS isolation claim','original_Guard_preserved':True}
+result={'phase':phase,'started':started,'finished':datetime.datetime.now().astimezone().isoformat(),'exit':code,'child_PID':process.pid if process else None,'Job_assigned':assigned,'Job_kill_on_close':True,'Job_process_counts':job_counts,'child_exited':process.poll() is not None if process else True,'timeout':timedout,'provider_env_inherited':False,'operating_risk':'current Windows user still has operating OS file rights; no complete OS isolation claim','original_Guard_preserved':True}
 (R/(phase+'-supervisor-safe.json')).write_text(json.dumps(result,indent=2),encoding='utf-8');print(json.dumps(result),flush=True)
 raise SystemExit(code)
