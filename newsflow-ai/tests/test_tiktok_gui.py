@@ -105,10 +105,16 @@ def test_browser_app_registration_reentry_and_synthetic_login(app, browser, tmp_
             expect(section.get_by_role("button", name="TikTok으로 연결")).to_be_enabled()
             assert "nf-synthetic-secret-private" not in page.content()
             section.locator('form[action="/tiktok/connect"] input[name="consent"]').check()
-            page.evaluate("window.__beforeTikTokSubmit = true")
-            with page.expect_response(lambda r: r.url.endswith("/tiktok/connect") and r.request.method == "POST") as sent:
-                section.get_by_role("button", name="TikTok으로 연결").click()
-            page.wait_for_function("!window.__beforeTikTokSubmit")
+            # Synchronize on the real POST and redirected document, without CSP eval.
+            with page.expect_response(lambda r: r.request.is_navigation_request()
+                                      and r.request.method == "GET"
+                                      and r.url.split("#")[0] == origin + "/publishing/platforms") as redirected:
+                with page.expect_response(lambda r: r.url.endswith("/tiktok/connect") and r.request.method == "POST") as sent:
+                    section.get_by_role("button", name="TikTok으로 연결").click()
+            assert redirected.value.status == 200
+            assert redirected.value.request.is_navigation_request()
+            assert "'unsafe-eval'" not in redirected.value.headers["content-security-policy"]
+            page.wait_for_load_state("domcontentloaded")
             assert sent.value.status == 303
             for worker in env.service._workers.values():
                 worker.join(5)
