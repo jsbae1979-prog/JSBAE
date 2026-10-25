@@ -1,0 +1,236 @@
+{
+  "status": "PASS",
+  "visited": [
+    {
+      "page": "dashboard",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "news",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "script",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "production",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "videos",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "publish",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "analytics",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "settings",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "sources",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "voices",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "automation",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "image-feed",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "ai-video",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "character",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "failure",
+      "width": 1440,
+      "status": 200
+    },
+    {
+      "page": "dashboard",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "news",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "script",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "production",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "videos",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "publish",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "analytics",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "settings",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "sources",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "voices",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "automation",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "image-feed",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "ai-video",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "character",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "failure",
+      "width": 980,
+      "status": 200
+    },
+    {
+      "page": "dashboard",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "news",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "script",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "production",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "videos",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "publish",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "analytics",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "settings",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "sources",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "voices",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "automation",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "image-feed",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "ai-video",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "character",
+      "width": 390,
+      "status": 200
+    },
+    {
+      "page": "failure",
+      "width": 390,
+      "status": 200
+    }
+  ],
+  "external_requests": [],
+  "mutations": [],
+  "javascript_errors": [],
+  "static_asset_failures": [],
+  "synthetic_records_unchanged": true,
+  "operating_port_used": false
+}
