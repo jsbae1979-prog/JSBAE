@@ -13,7 +13,8 @@ def video_presentation(job, *, playable=False):
         "simulated": ("모의 결과", "실제 재생 영상이 아닙니다."),
     }.get(status, ("상태 확인 필요", "저장된 작업 기록을 확인하세요."))
     stage = (job.metadata_json or {}).get("failure_stage")
-    stages = {"voice": ("음성 생성", "선택한 음성·연결·사용 조건을 확인하세요.", "/simple-settings#selected-voice"),
+    stages = {"image": ("뉴스 이미지", "연결 이미지·사용권·파일 변경 여부를 확인하고 새 작업을 만드세요.", "/video"),
+              "voice": ("음성 생성", "선택한 음성·연결·사용 조건을 확인하세요.", "/simple-settings#selected-voice"),
               "audio": ("음성 길이", "대본 분량과 실제 음성 길이를 확인하세요.", "/ai"),
               "audio_review": ("음성 분량 검토", "대본 분량을 수정한 뒤 직접 제작을 승인하세요.", "/ai"),
               "subtitle": ("자막 배치", "자막 길이와 안전 영역을 확인하세요.", "/video"),

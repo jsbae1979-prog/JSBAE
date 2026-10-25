@@ -356,3 +356,93 @@ def test_malformed_registration_is_safe_card_fallback(app, video, value):
     with app.state.sessions() as session:
         names, rows = coordinator.news_images.choose(session, session.get(ContentDraft, draft_id).sources, 3)
     assert names == [""] * 3 and all(row["mode"] == "card" for row in rows)
+
+
+
+def test_large_approved_local_image_preview_does_not_use_RSS_response_limit(client, app, video):
+    coordinator, _ = video
+    path = coordinator.assets / "large.png"
+    Image.frombytes("RGB", (1200, 800), os.urandom(1200 * 800 * 3)).save(path)
+    assert 2 * 1024 * 1024 < path.stat().st_size < 20 * 1024 * 1024
+    with app.state.sessions() as session:
+        row = coordinator.news_images.remember(session.get(NewsArticle, 1), path.name,
+            source_url="https://example.com/own-photo", rights_basis="직접 제작한 합성 이미지")
+    assert (coordinator.assets / row["name"]).stat().st_size > 2 * 1024 * 1024
+    response = client.get("/video/news-images/articles/1")
+    assert response.status_code == 200
+    with Image.open(BytesIO(response.content)) as image:
+        assert image.width <= 320 and image.height <= 180
+        assert image.format == "JPEG" and not image.getexif() and "icc_profile" not in image.info
+
+
+def test_registered_clean_image_strips_metadata_and_preserves_original(app, video):
+    coordinator, _ = video
+    path = coordinator.assets / "metadata.png"
+    Image.new("RGB", (640, 360), "red").save(path, icc_profile=b"SYNTHETIC_PRIVATE_PROFILE")
+    original = hashlib.sha256(path.read_bytes()).hexdigest()
+    with app.state.sessions() as session:
+        row = coordinator.news_images.remember(session.get(NewsArticle, 1), path.name,
+            source_url="https://example.com/own-photo", rights_basis="직접 제작한 합성 이미지")
+    with Image.open(coordinator.assets / row["name"]) as image:
+        assert "icc_profile" not in image.info and not image.getexif()
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == original
+
+
+@pytest.mark.parametrize("fault", ["cleared", "junction", "corrupt", "missing"])
+def test_frozen_job_rechecks_image_binding_and_parent_junction(app, video, monkeypatch, tmp_path, fault):
+    from concurrent.futures import Future
+    from _winapi import CreateJunction
+    coordinator, draft_id = video
+    row = registered(app, video);pending=[]
+    def hold(function, *args):
+        pending.append((function,args));future=Future();future.set_result(None);return future
+    monkeypatch.setattr(coordinator.executor,"submit",hold)
+    identifier=coordinator.start(draft_id,30,reviewed=True)
+    saved=None
+    if fault=="cleared":
+        with app.state.sessions.begin() as session:
+            job=session.get(RenderJob,identifier)
+            scene=session.scalar(select(Scene).where(Scene.project_id==job.project_id))
+            scene.material=""
+    elif fault in ("corrupt", "missing"):
+        target=coordinator.assets/row["name"]
+        if fault=="corrupt":target.write_bytes(b"corrupt")
+        else:target.unlink()
+    else:
+        outside=tmp_path/'outside-assets';outside.mkdir()
+        (outside/row["name"]).write_bytes((coordinator.assets/row["name"]).read_bytes())
+        saved=coordinator.root/'saved-assets'
+        assert saved.resolve().is_relative_to(coordinator.root)
+        coordinator.assets.rename(saved)
+        CreateJunction(str(outside),str(coordinator.assets))
+    try:
+        function,args=pending[0];function(*args)
+        with app.state.sessions() as session:
+            job=session.get(RenderJob,identifier)
+            assert job.status=="failed" and job.metadata_json["failure_stage"]=="image"
+        assert not list(coordinator.outputs.glob("*.mp4"))
+    finally:
+        if saved is not None:
+            coordinator.assets.rmdir();saved.rename(coordinator.assets)
+
+
+def test_image_failure_has_specific_local_recovery_action():
+    from types import SimpleNamespace
+    from newsflow.gui.video_presentation import video_presentation
+    shown=video_presentation(SimpleNamespace(status="failed", metadata_json={"failure_stage":"image"},message="합성 실패"))
+    assert shown["stage"]=="뉴스 이미지" and shown["action"]=="/video"
+    assert "새 작업" in shown["message"]
+
+
+@pytest.mark.parametrize("format", ["JPEG", "WEBP"])
+def test_jpeg_and_webp_supplied_images_become_clean_local_png(app, video, fake, format):
+    output=BytesIO();Image.new("RGB",(640,360),"#2468ac").save(output,format=format)
+    url="https://example.com/owned."+format.lower();fake.feeds[url]=output.getvalue()
+    with app.state.sessions() as session:
+        article=session.get(NewsArticle,1)
+        metadata=ArticleThumbnail(article_id=1,url=url,source_article_url=article.url,publisher=article.publisher)
+        row=video[0].news_images.import_thumbnail(article,metadata,fake,rights_basis="직접 제작한 합성 이미지")
+    with Image.open(video[0].assets/row["name"]) as image:
+        assert image.format=="PNG" and image.size==(640,360)
+        assert not image.getexif() and "icc_profile" not in image.info
+    assert fake.calls==[url]

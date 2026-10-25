@@ -20,10 +20,18 @@ browser={'node':str(node),'node_SHA256':sha(node),'cli':str(cli),'cli_SHA256':sh
 (root/'node-config-private.json').write_text(json.dumps({'root':str(root),'chrome':str(chrome),'chrome_SHA256':sha(chrome),'operating':str(root.parent/'forbidden-operating-profile'),'allowed_reads':list(map(str,reads+[chrome.parent,Path(os.environ.get('WINDIR','C:/Windows'))])),'log':str(root/'node-events-private.jsonl')}),encoding='utf-8')
 (root/'runtime-config-private.json').write_text(json.dumps({'project':str(project),'runtime':sys.prefix,'fixture_vendor':str(root)}),encoding='utf-8')
 # Infrastructure setup has finished. Each test child starts under the original Guard.
-for phase in ('security','h'):
+summaries=[]
+for phase in ('security','h','hflow'):
  result=subprocess.run([sys.executable,'-I','-S','-B',str(root/'run_browser_phase.py'),phase],cwd=root,check=False)
  if result.returncode:
   log=root/(phase+'-process.log')
   if log.exists():
    print('Synthetic test child diagnostic:',log.read_text(encoding='utf-8',errors='replace')[-12000:],flush=True)
   raise SystemExit(result.returncode)
+
+ import xml.etree.ElementTree as ET
+ suites=list(ET.parse(root/phase/'pytest.xml').iter('testsuite'))
+ summary={'phase':phase,**{key:sum(int(s.get(key,0)) for s in suites) for key in ('tests','failures','errors','skipped')}}
+ summaries.append(summary)
+ print(json.dumps(summary),flush=True)
+(root/'ci-summary-safe.json').write_text(json.dumps({'Python':'3.14.7','phases':summaries,'real_provider_calls':0,'operating_profile_used':False}),encoding='utf-8')

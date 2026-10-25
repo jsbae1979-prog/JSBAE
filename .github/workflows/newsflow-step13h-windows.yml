@@ -54,5 +54,7 @@ jobs:
           path: |
             ${{ runner.temp }}/newsflow-step13h/h/evidence/news-image-mp4/pixel-proof.json
             ${{ runner.temp }}/newsflow-step13h/*-supervisor-safe.json
+            ${{ runner.temp }}/newsflow-step13h/ci-summary-safe.json
+            ${{ runner.temp }}/newsflow-step13h/hflow/evidence/real-click-flow-safe.json
           if-no-files-found: ignore
           retention-days: 14

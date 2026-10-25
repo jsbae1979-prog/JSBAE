@@ -9,12 +9,12 @@ sys.path.insert(0,str(R))
 if sys.argv[1]=="minimal":
  import observer
  observer.start(R)
-phase=sys.argv[1];assert phase in ('minimal','gui','remaining','full','security','envfix','cwdcheck','h','h2')
+phase=sys.argv[1];assert phase in ('minimal','gui','remaining','full','security','envfix','cwdcheck','h','h2','hflow')
 for name in ('temp','home','local','roaming','artifacts'):(R/name).mkdir(exist_ok=True)
 c=json.loads((R/'guard-config-private.json').read_text());c['browser']['preload_SHA256']=hashlib.sha256((R/'node_boundary.cjs').read_bytes()).hexdigest();(R/'guard-config-private.json').write_text(json.dumps(c,indent=2),encoding='utf-8')
 env={k:v for k,v in os.environ.items() if k.upper() in {'SYSTEMROOT','WINDIR','COMSPEC','PATHEXT','PROCESSOR_ARCHITECTURE','NUMBER_OF_PROCESSORS','OS'}}
 binary=Path(next(iter(c['binaries']))).parent
-env.update(PYTHONUTF8='1',PYTHONDONTWRITEBYTECODE='1',PYTEST_DISABLE_PLUGIN_AUTOLOAD='1',PYTHONPATH=os.pathsep.join([str(R),str(vendor),str(P),str(P/'tests'),str(P/'tools'),str(P/'src')]),STEP13_ROOT=str(R),STEP13_PROJECT=str(P),NEWSFLOW_DATA_DIR=str(R/'synthetic-profile'),NEWSFLOW_VALIDATION_OUTPUT=str(R/'artifacts'),NEWSFLOW_PORT='18765',NEWSFLOW_LIVE_TEST='0',NEWSFLOW_AI_LIVE_TEST='0',LOCALAPPDATA=str(R/'home/AppData/Local'),APPDATA=str(R/'home/AppData/Roaming'),TEMP=str(R/'temp'),TMP=str(R/'temp'),USERPROFILE=str(R/'home'),HOME=str(R/'home'),NEWSFLOW_FFMPEG=str(binary/'ffmpeg.exe'),NEWSFLOW_FFPROBE=str(binary/'ffprobe.exe'),NEWSFLOW_FONT_PATH=r'C:\Windows\Fonts\malgun.ttf',STEP13_WORKER_MODE='suppressed',NEWSFLOW_TEST_BROWSER_EXECUTABLE=c['browser']['chrome'],NODE_OPTIONS='--require="'+Path(c['browser']['preload']).as_posix()+'"')
+env.update(PYTHONUTF8='1',PYTHONDONTWRITEBYTECODE='1',PYTEST_DISABLE_PLUGIN_AUTOLOAD='1',PYTHONPATH=os.pathsep.join([str(R),str(vendor),str(P),str(P/'tests'),str(P/'tools'),str(P/'src')]),STEP13_ROOT=str(R),STEP13_PROJECT=str(P),NEWSFLOW_DATA_DIR=str(R/('synthetic-profile-'+phase)),NEWSFLOW_VALIDATION_OUTPUT=str(R/'artifacts'),NEWSFLOW_PORT='18765',NEWSFLOW_LIVE_TEST='0',NEWSFLOW_AI_LIVE_TEST='0',LOCALAPPDATA=str(R/'home/AppData/Local'),APPDATA=str(R/'home/AppData/Roaming'),TEMP=str(R/'temp'),TMP=str(R/'temp'),USERPROFILE=str(R/'home'),HOME=str(R/'home'),NEWSFLOW_FFMPEG=str(binary/'ffmpeg.exe'),NEWSFLOW_FFPROBE=str(binary/'ffprobe.exe'),NEWSFLOW_FONT_PATH=r'C:\Windows\Fonts\malgun.ttf',STEP13_WORKER_MODE='suppressed',NEWSFLOW_TEST_BROWSER_EXECUTABLE=c['browser']['chrome'],NODE_OPTIONS='--require="'+Path(c['browser']['preload']).as_posix()+'"')
 env['PATH']=os.pathsep.join([str(binary),str(runtime/'Scripts'),r'C:\Windows\System32',r'C:\Windows'])
 K=ctypes.WinDLL('kernel32',use_last_error=True)
 class IO(ctypes.Structure):_fields_=[(x,ctypes.c_ulonglong) for x in ('ReadOperationCount','WriteOperationCount','OtherOperationCount','ReadTransferCount','WriteTransferCount','OtherTransferCount')]

@@ -36,6 +36,7 @@ else:
  if sys.argv[1]=='gui':targets=[x for x in targets if 'test_pc_cloud_windows_browser.py::' in x]
  elif sys.argv[1]=='remaining':targets=[x for x in targets if 'test_pc_cloud_windows_browser.py::' not in x]
  elif sys.argv[1] in ('h','h2'):targets=['tests/test_news_image_linking.py','tests/test_news_thumbnails.py','tests/test_video.py']
+ elif sys.argv[1]=='hflow':targets=[str(R/'test_news_image_gui_flow.py')]
  elif sys.argv[1]=='full':targets=['tests']
  elif sys.argv[1]=='cwdcheck':targets=json.loads((R/'cwd-impact-IDs-safe.json').read_text())
  elif sys.argv[1]=='envfix':targets=json.loads((R/'evidence-path-IDs-safe.json').read_text())
@@ -50,9 +51,10 @@ else:
   return str(p)+(sep+selector if sep else '')
  targets=[absolute_target(t) for t in targets]
  options=['-q','-rs','-p','no:cacheprovider','-p','step13_guard','-p','step13_fixtures','-p','browser_boundary','-p','conftest','-c',str(pathlib.Path(step13_guard.CONFIG['project'])/'pyproject.toml'),'--rootdir',step13_guard.CONFIG['project'],'--basetemp',str(out/'temp'),'--junitxml',str(out/'pytest.xml'),*targets]
- if sys.argv[1]=='security':
+ if sys.argv[1] in ('security','hflow'):
   options[options.index('--rootdir')+1]=str(R)
   options.extend(['--confcutdir',str(R),'--import-mode=importlib'])
+ if sys.argv[1]=='security':
   i=options.index('browser_boundary');del options[i-1:i+1]
  raise SystemExit(pytest.main(options))
 

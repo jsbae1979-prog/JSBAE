@@ -557,12 +557,18 @@ class VideoCoordinator:
                     image = None
                     image_link = next((row for row in project.snapshot.get("news_images", [])
                                        if row.get("position") == index), None)
-                    if scene.material and image_link and image_link.get("sha256"):
-                        if file_sha256(self.asset(scene.material)) != image_link["sha256"]:
-                            raise RenderError("저장한 이미지가 변경되었습니다. 이미지를 확인하고 새 작업을 만드세요.", kind="image")
+                    if image_link and (scene.material or "") != image_link.get("name", ""):
+                        raise RenderError("저장한 이미지 연결이 변경되었습니다. 새 작업에서 확인하세요.", kind="image")
                     if scene.material:
+                        try:
+                            # Recheck parent junctions/reparse points when the frozen job executes.
+                            source_image = self.news_images.asset(scene.material) if image_link else self.asset(scene.material)
+                        except (NewsImageError, RenderError):
+                            raise RenderError("연결된 이미지 경로·형식을 확인하세요.", kind="image") from None
+                        if image_link and image_link.get("sha256") and file_sha256(source_image) != image_link["sha256"]:
+                            raise RenderError("저장한 이미지가 변경되었습니다. 이미지를 확인하고 새 작업을 만드세요.", kind="image")
                         image = work / f"asset-{index}.png"
-                        with load_image(self.asset(scene.material)) as asset:
+                        with load_image(source_image) as asset:
                             asset.save(image, format="PNG")
                     clip, clip_format = None, "mov"
                     if scene.clip_name:
@@ -633,6 +639,7 @@ class VideoCoordinator:
                 "validation": "완성 MP4 코덱·해상도·길이·오디오",
                 "clip": "AI 생성 장면 파일(형식·검토한 파일과 같은지)",
                 "audio": "음성 길이",
+                "image": "뉴스 이미지·경로·저장한 파일 변경 여부",
             }
             kind = (
                 "음성 생성"

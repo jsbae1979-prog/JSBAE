@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
@@ -62,7 +61,10 @@ class NewsImages:
         # Freeze a clean, content-addressed PNG; preserve the user's original file.
         output = BytesIO()
         with load_image(source) as image:
-            image.save(output, format="PNG")
+            from PIL import Image
+            clean = Image.new("RGB", image.size)
+            clean.paste(image)
+            clean.save(output, format="PNG")
         raw = output.getvalue()
         if len(raw) > MAX_BYTES:
             raise NewsImageError("이미지는 20MB 이하로 준비하세요.")
@@ -102,7 +104,9 @@ class NewsImages:
                 with Image.open(BytesIO(raw), formats=("PNG", "JPEG", "WEBP")) as image:
                     if image.format not in {"PNG", "JPEG", "WEBP"} or image.width * image.height > 16_000_000:
                         raise NewsImageError("이미지 형식·픽셀 수를 확인하세요.")
-                    clean = ImageOps.exif_transpose(image).convert("RGB")
+                    frame = ImageOps.exif_transpose(image).convert("RGB")
+                    clean = Image.new("RGB", frame.size)
+                    clean.paste(frame)
                     output = BytesIO()
                     clean.save(output, format="PNG")
         except (OSError, Image.DecompressionBombError, Image.DecompressionBombWarning):

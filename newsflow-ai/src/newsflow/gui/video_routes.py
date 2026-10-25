@@ -20,7 +20,7 @@ from newsflow.db.models import (
     VideoProject,
 )
 from newsflow.easy_setup import initial_state
-from newsflow.video.engine import RenderError
+from newsflow.video.engine import RenderError, load_image
 from newsflow.video.service import RenderBusy, VideoError
 from newsflow.video.tts import POLICY_MESSAGE, TTSError, TTSPolicyError, WindowsTTS
 
@@ -373,14 +373,22 @@ def link_news_image(request: Request, draft_id: int = Form(ge=1), article_id: in
 
 @router.get("/video/news-images/articles/{article_id}")
 def news_image_preview(request: Request, article_id: int):
-    from newsflow.news.thumbnails import raster_preview
+    from io import BytesIO
+    from PIL import Image
     with request.app.state.sessions() as session:
         article = session.get(NewsArticle, article_id)
         rows = request.app.state.video.news_images.candidates(article) if article else []
     if not rows:
         raise HTTPException(404, "사용권이 확인된 뉴스 이미지가 없습니다.")
     try:
-        preview = raster_preview(request.app.state.video.news_images.asset(rows[0]["name"]).read_bytes())
+        # This is an already validated local 20MB asset, not an RSS response (2MB).
+        with load_image(request.app.state.video.news_images.asset(rows[0]["name"])) as image:
+            image.thumbnail((320, 180))
+            clean = Image.new("RGB", image.size)
+            clean.paste(image)
+            output = BytesIO()
+            clean.save(output, format="JPEG", quality=82)
+            preview = output.getvalue()
     except (OSError, ValueError, RenderError):
         raise HTTPException(404, "이미지를 확인하세요. 기본 카드를 유지합니다.") from None
     return Response(preview, media_type="image/jpeg", headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
