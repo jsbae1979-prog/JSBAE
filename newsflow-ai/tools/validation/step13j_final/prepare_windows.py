@@ -147,8 +147,9 @@ for definition in definitions:
                 print("pytest-summary: " + line[-600:], flush=True)
     if summary["status"] != "PASS":
         # Keep raw synthetic diagnostics only on the disposable runner, never upload them.
-        print("Phase failed; safe failure IDs recorded. Raw child logs remain on this runner.", flush=True)
+        print("Phase failed; safe failure IDs and bounded redacted diagnostics recorded. Raw child logs remain on this runner.", flush=True)
         raise SystemExit(result.returncode or 1)
+
 
 
 

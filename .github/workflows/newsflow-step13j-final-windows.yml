@@ -79,9 +79,11 @@ jobs:
             ${{ runner.temp }}/newsflow-step13j-final/*-supervisor-safe.json
             ${{ runner.temp }}/newsflow-step13j-final/ci-summary-safe.json
             ${{ runner.temp }}/newsflow-step13j-final/failure-IDs-safe.json
+            ${{ runner.temp }}/newsflow-step13j-final/failure-diagnostics-safe.json
             ${{ runner.temp }}/newsflow-step13j-final/ci-collected-IDs-safe.json
             ${{ runner.temp }}/newsflow-step13j-final/baseline-integrity-safe.json
           if-no-files-found: ignore
           retention-days: 14
+
 
 
