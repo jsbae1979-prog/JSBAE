@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-25T15:21:17.974266+09:00",
+  "type": "additional Codex auxiliary loose reference absent before any test started",
+  "separate_from_historical_missing_ref": true,
+  "locations": {
+    "operating": {
+      "ref_exists": false,
+      "ref_SHA256": null,
+      "target": null
+    },
+    "A": {
+      "ref_exists": true,
+      "ref_SHA256": "e9936cc8d486137feb7cfd4974614d5ec30b9ab8e63cd5c8841b1893068b2d22",
+      "target": "ac379ea0083142cebf09d931a65238ff430a6f20"
+    },
+    "B": {
+      "ref_exists": true,
+      "ref_SHA256": "e9936cc8d486137feb7cfd4974614d5ec30b9ab8e63cd5c8841b1893068b2d22",
+      "target": "ac379ea0083142cebf09d931a65238ff430a6f20"
+    }
+  },
+  "target_object_present": true,
+  "target_OID_verified": true,
+  "target_type": "tree",
+  "target_bytes": 200,
+  "current_HEAD": "ref: refs/heads/codex/newsflow-local-d4dc20f",
+  "operating_code_and_data_SHA_mismatches": 0,
+  "backup_mismatches": 0,
+  "deletion_cause": "NOT VERIFIED",
+  "Git_repair_performed": false,
+  "risk": "Auxiliary ref reproducibility warning; target object and both sealed refs retained. No code/data loss established. No operating/backup writes permitted.",
+  "test_decision": "Continue bounded isolated Fake tests; retain CONDITIONAL warning; do not restore reference"
+}

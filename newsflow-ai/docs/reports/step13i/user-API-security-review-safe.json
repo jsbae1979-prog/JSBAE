@@ -1,0 +1,68 @@
+{
+  "scope": "검토와 최소 변경 계획만; 운영 구조 또는 API 방식의 최종 선택/구현 안 함",
+  "existing": {
+    "data": "기본 %LOCALAPPDATA%/NewsFlowAI, 명시적 data_dir override. DB/미디어/승인/사용량/ledger/키는 기존 data_dir 사용. 새 이미지도 사용자 자산 경로 재사용.",
+    "DPAPI": "현재 Windows 사용자 문맥, CryptProtectData/UI_FORBIDDEN=1, LOCAL_MACHINE 사용 안 함. 공급사별 entropy·파일 분리. native 시험은 새 합성 자료에 한정.",
+    "OAuth": "YouTube/Instagram/TikTok 각각 계정·신원·참조 바인딩. 명시적 연결/갱신 및 결과 불명 journal. Instagram App Secret은 인증 중계에 유지.",
+    "server": "loopback bind, TrustedHost, CSRF HMAC cookie, SameSite/Origin/Fetch-site 검사, CSP self, no-store. 포트 충돌은 명확히 실패하며 무단 포트/인증 변경 없음.",
+    "cost": "사용자 DB의 요청별 사용량·실패·결과 불명 이력, 별도 ElevenLabs ledger 및 cache. 실제 비용 미확인은 null/NOT VERIFIED, 임의 추측 예약 추가 안 함."
+  },
+  "verified": "두 합성 프로필의 공급사별 키 저장·변경·삭제 독립성과 기본 경로 분리 검증. 기존 synthetic DPAPI 계정·owner 변조·재시작·암호문 보호 테스트 통과.",
+  "not_verified": [
+    "별도 실제 Windows 사용자 사이 DPAPI 복호화/파일 접근 차단",
+    "다수 사용자 동시 설치·실행·EXE 자산/업데이트/제거",
+    "실제 키·OAuth account·권한·과금·게시",
+    "native Chrome 모든 파일/배경 통신 추적·차단"
+  ],
+  "deployment_gaps": [
+    {
+      "priority": "P1",
+      "problem": "루프백·CSRF는 사용자 식별 인증 전체를 대신하지 않음. 다른 로컬 OS 사용자의 동일 포트 GET 접근 가능성 미검증",
+      "minimal_plan": "Step15에서 인스턴스별 bootstrap 인증과 미디어/API 모든 GET 보호, 사용자 데이터 ACL/SID 바인딩 정책 설계. Step16 실제 다수 사용자 검증."
+    },
+    {
+      "priority": "P1",
+      "problem": "기본 포트8765 고정은 다수 사용자 동시 실행 충돌 가능; 현재 안전하게 오류 반환",
+      "minimal_plan": "Step15에서 사용자별 포트/인스턴스 식별을 OAuth redirect 계약과 함께 설계. 자동 변경/현재 운영 포트 사용 금지 유지."
+    },
+    {
+      "priority": "P1",
+      "problem": "환경변수/NEWSFLOW_DATA_DIR override는 관리자가 공유 경로·머신 공통 키로 설정할 수 있음",
+      "minimal_plan": "EXE에서 사용자별 기본 경로를 유지하고 공유 경로/머신 공통 비밀값을 기본값으로 사용하지 않음. 범위 변경은 명시적 선택·경고·접근 검사 후 검토."
+    },
+    {
+      "priority": "P1",
+      "problem": "키 저장은 DPAPI current-user이나 같은 Windows 사용자에게는 비밀 경계 전체 격리가 아님; Windows 파일 ACL 범위 별도 점검 필요",
+      "minimal_plan": "새 설치의 사용자 데이터 디렉터리 최소 ACL과 로그 비밀값 마스킹을 Step15/16에서 검증. 이번 운영 ACL 변경0."
+    },
+    {
+      "priority": "P2",
+      "problem": "legacy OpenAIProvider default allow_retry=True가 남아 있으나 API-managed/metadata 경로는 False",
+      "minimal_plan": "실제 실행 승인은 API-managed 단일 요청 경로로 고정하고 legacy/메타데이터/생성의 재시도 정책을 명시적으로 구분. 현재 제품 계약 변경 안 함."
+    },
+    {
+      "priority": "P1",
+      "problem": "현재 허용 gpt-4.1-mini 계열의 공식 2027-01-14 종료 예정",
+      "minimal_plan": "실제 실행·배포 전에 선택 모델 유지/전환을 별도 검토하고 wire·응답·토큰·비용·작업별 고정 계약을 Fake로 검증. 이번 자동 모델 교체0.",
+      "source": "https://developers.openai.com/api/docs/deprecations"
+    }
+  ],
+  "options": [
+    {
+      "name": "사용자 직접 키 입력",
+      "reuse": "현행 키 UI·DPAPI 대부분 재사용",
+      "tradeoff": "사용자별 공급사 계정/과금/키 관리 필요, 설치 공통 키 금지"
+    },
+    {
+      "name": "서버 중계",
+      "reuse": "Instagram OAuth 인증 중계는 기존 별도 역할",
+      "tradeoff": "AI 통합 중계는 별도 서비스 로그인/tenant/청구·비밀값/배포·운영 정책 필요; 이번 미구현"
+    },
+    {
+      "name": "혼합",
+      "reuse": "공급사별 직접 키와 필요한 OAuth 중계 분리 가능",
+      "tradeoff": "계정·과금 책임·선택 UI 명확화 필요; 최종 선택 미승인"
+    }
+  ],
+  "decision": "방식 확정 안 함. 기존 직접 키와 Meta 인증 중계는 보존하고 추가 구조 변경은 승인 전 구현하지 않음. Step15~18 실행 안 함."
+}

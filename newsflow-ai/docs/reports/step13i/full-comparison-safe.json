@@ -1,0 +1,93 @@
+{
+  "Python": "3.14.7",
+  "baseline_SHA": "781a865f7528e32a7b270efd931fb0618d73b432",
+  "tested_test_code_SHA": "bd5393960f2ed4a37c6aad9cba257f89421dd4d7",
+  "CI_only_followup_SHA": "b0a718543865558cc3fe38df7ab318cb742ed140",
+  "baseline_counts": {
+    "PASS": 5264,
+    "FAIL": 92,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "counts": {
+    "PASS": 5289,
+    "FAIL": 91,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "baseline_IDs": 5360,
+  "unique_IDs": 5384,
+  "old_IDs_missing": [],
+  "added_IDs": [
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[401-auth_error-claude_api-claude-sonnet-4-6]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[401-auth_error-openai-gpt-4.1-mini]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[402-unavailable-claude_api-claude-sonnet-4-6]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[402-unavailable-openai-gpt-4.1-mini]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[403-permission-claude_api-claude-sonnet-4-6]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[403-permission-openai-gpt-4.1-mini]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[408-timeout-claude_api-claude-sonnet-4-6]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[408-timeout-openai-gpt-4.1-mini]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[429-rate_limit-claude_api-claude-sonnet-4-6]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[429-rate_limit-openai-gpt-4.1-mini]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[504-timeout-claude_api-claude-sonnet-4-6]",
+    "tests/test_step13i_api_contracts.py::test_metadata_errors_are_single_attempt_redacted_and_not_billing_proof[504-timeout-openai-gpt-4.1-mini]",
+    "tests/test_step13i_api_contracts.py::test_separate_profile_keys_never_load_or_replace_other_profile[AIKeyStore]",
+    "tests/test_step13i_api_contracts.py::test_separate_profile_keys_never_load_or_replace_other_profile[AnthropicKeyStore]",
+    "tests/test_step13i_api_contracts.py::test_separate_profile_keys_never_load_or_replace_other_profile[ElevenLabsKeys]",
+    "tests/test_step13i_api_contracts.py::test_separate_profile_keys_never_load_or_replace_other_profile[SerpApiKeys]",
+    "tests/test_step13i_api_contracts.py::test_serpapi_payment_auth_rate_errors_never_retry_or_disclose_key[401-auth_failed]",
+    "tests/test_step13i_api_contracts.py::test_serpapi_payment_auth_rate_errors_never_retry_or_disclose_key[402-usage_limited]",
+    "tests/test_step13i_api_contracts.py::test_serpapi_payment_auth_rate_errors_never_retry_or_disclose_key[403-auth_failed]",
+    "tests/test_step13i_api_contracts.py::test_serpapi_payment_auth_rate_errors_never_retry_or_disclose_key[429-usage_limited]",
+    "tests/test_step13i_api_contracts.py::test_serpapi_payment_auth_rate_errors_never_retry_or_disclose_key[500-http_failed]",
+    "tests/test_step13i_api_contracts.py::test_serpapi_timeout_is_unknown_without_automatic_resubmit[error0-timeout_unknown]",
+    "tests/test_step13i_api_contracts.py::test_serpapi_timeout_is_unknown_without_automatic_resubmit[error1-network_unknown]",
+    "tests/test_step13i_api_contracts.py::test_windows_data_roots_are_per_user_and_outside_installation"
+  ],
+  "old_failed_now_PASS": [
+    "tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login"
+  ],
+  "previous_PASS_now_FAILED": [],
+  "new_test_failures": [],
+  "new_skips": [],
+  "new_I_tests": {
+    "PASS": 24
+  },
+  "H_image_tests": {
+    "PASS": 55
+  },
+  "original91_browser_latest": {
+    "PASS": 63,
+    "FAIL": 28
+  },
+  "residual_categories": {
+    "기존 FAIL ID 지속 · 원인별 기존 근거와 비교 필요": 63,
+    "GUI 선택자/테스트 계약 차이 · 제품 판정 미확정": 20,
+    "Guard · 테스트 실행/파일 경계": 1,
+    "Guard · 과거 운영 소스 비교 입력 거부": 2,
+    "GUI 배치/기대값 차이 · 제품 판정 미확정": 3,
+    "GUI 선택자/테스트 계약 차이 · 숨김 canonical 입력 측정": 2
+  },
+  "frozen_existing_source_changes": [],
+  "post_freeze_added_files_are_CI_only": true,
+  "supervisor": {
+    "phase": "full",
+    "started": "2026-10-25T15:29:53.024488+09:00",
+    "finished": "2026-10-25T16:20:29.256608+09:00",
+    "exit": 1,
+    "child_PID": 63608,
+    "Job_assigned": true,
+    "Job_kill_on_close": true,
+    "Job_process_counts": {
+      "active_before_close": 0,
+      "total_processes": 1310
+    },
+    "child_exited": true,
+    "timeout": false,
+    "provider_env_inherited": false,
+    "operating_risk": "current Windows user still has operating OS file rights; no complete OS isolation claim",
+    "original_Guard_preserved": true
+  },
+  "full_regression_complete": true,
+  "partial_or_intermediate_runs_used_in_totals": false
+}

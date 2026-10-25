@@ -1,0 +1,20 @@
+{
+  "skill": "OpenAI Docs",
+  "source_scope": "Official documentation read only; no platform-key tooling, no live model call",
+  "sources": [
+    {
+      "title": "Retrieve model",
+      "url": "https://developers.openai.com/api/reference/resources/models/methods/retrieve",
+      "retrieved_at": "2026-10-25",
+      "supports": "GET /models/{model} returns basic model information/permissions; separate from generated outputs. Code endpoint/auth/fields matched; actual account and generation not verified."
+    },
+    {
+      "title": "Deprecations",
+      "url": "https://developers.openai.com/api/docs/deprecations",
+      "retrieved_at": "2026-10-25",
+      "supports": "2026-10-14 notice, GPT-4.1 mini (gpt-4.1-mini-2025-04-14) shutdown 2027-01-14. Current code still allows gpt-4.1-mini; no model change in Step13I."
+    }
+  ],
+  "account_entitlement_or_exact_cost": "NOT VERIFIED",
+  "migration": "Future separately scoped review; preserve selected model and current job settings."
+}

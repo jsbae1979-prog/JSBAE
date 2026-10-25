@@ -1,0 +1,246 @@
+{
+  "Step": "13I",
+  "verdict": "CONDITIONAL",
+  "Python": "Windows 3.14.7",
+  "baseline": {
+    "PASS": 5264,
+    "FAIL": 92,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "whole_regression": {
+    "PASS": 5289,
+    "FAIL": 91,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "delta": {
+    "PASS": 25,
+    "FAIL": -1,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "old_IDs_missing": [],
+  "old_FAILED_now_PASS": [
+    "tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login"
+  ],
+  "previous_PASS_now_FAILED": [],
+  "new_test_failures": [],
+  "new_test_results": {
+    "PASS": 24
+  },
+  "image_H_tests": {
+    "PASS": 55
+  },
+  "GUI_samples": 45,
+  "focused": {
+    "i_tiktok": {
+      "PASS": 5,
+      "FAIL": 0,
+      "ERROR": 1,
+      "SKIP": 0,
+      "failed": [
+        "tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login"
+      ]
+    },
+    "i_tiktok2": {
+      "PASS": 64,
+      "FAIL": 1,
+      "ERROR": 0,
+      "SKIP": 0,
+      "failed": [
+        "tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login"
+      ]
+    },
+    "i_tiktok3": {
+      "PASS": 65,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0,
+      "failed": []
+    },
+    "i_api": {
+      "PASS": 481,
+      "FAIL": 1,
+      "ERROR": 0,
+      "SKIP": 0,
+      "failed": [
+        "tests/test_api_providers.py::test_explicit_search_output_limit_9000_is_supported_but_still_bounded"
+      ]
+    },
+    "i_sns": {
+      "PASS": 320,
+      "FAIL": 1,
+      "ERROR": 0,
+      "SKIP": 0,
+      "failed": [
+        "tests/test_phase1a_security.py::test_diagnostic_rejects_secret_url_without_output"
+      ]
+    },
+    "security": {
+      "PASS": 78,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0,
+      "failed": []
+    },
+    "i_images": {
+      "PASS": 123,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0,
+      "failed": []
+    },
+    "i_gui": {
+      "PASS": 2,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0,
+      "failed": []
+    }
+  },
+  "public_RSS": [
+    {
+      "source": "Google News KR",
+      "status": "BLOCKED",
+      "error_kind": "robots",
+      "message": "robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.",
+      "elapsed_seconds": 0.24
+    },
+    {
+      "source": "BBC Korean",
+      "status": "PASS",
+      "articles": 21,
+      "with_thumbnail": 21,
+      "with_explicit_date": 21,
+      "original_article_requests": 0,
+      "images_downloaded": 0,
+      "elapsed_seconds": 1.19
+    }
+  ],
+  "real_paid_calls": 0,
+  "real_OAuth_SNS_calls": 0,
+  "operating_apply_restart": 0,
+  "GitHub": {
+    "branch": "codex/newsflow-step13i-20261025",
+    "code_SHA": "b0a718543865558cc3fe38df7ab318cb742ed140",
+    "product_test_change_SHA": "bd5393960f2ed4a37c6aad9cba257f89421dd4d7",
+    "CI_only_followups": true,
+    "remote_files_checked": 7,
+    "normalized_text_blob_mismatches": 0,
+    "PR35": {
+      "open": true,
+      "draft": true,
+      "merged": false,
+      "head": "6aef983db5a8d31b604d9fafd4329a0b4f83787d",
+      "head_branch": "codex/newsflow-ux-video-app"
+    },
+    "main_or_operating_branch_changed": false,
+    "new_PR_created": false,
+    "report_commit": "Will be separate; code SHA identifies tested source"
+  },
+  "Windows_Actions": {
+    "run": 40170107083,
+    "job": 121099041336,
+    "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40170107083",
+    "code_SHA": "b0a718543865558cc3fe38df7ab318cb742ed140",
+    "Python": "3.14.7",
+    "conclusion": "success",
+    "counts": {
+      "PASS": 605,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    "phases": [
+      {
+        "phase": "security",
+        "tests": 78,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 78,
+        "expected_records": 78
+      },
+      {
+        "phase": "i_contracts",
+        "tests": 24,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 24,
+        "expected_records": 24
+      },
+      {
+        "phase": "i_tiktok3",
+        "tests": 65,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 65,
+        "expected_records": 65
+      },
+      {
+        "phase": "i_sns_contracts",
+        "tests": 314,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 314,
+        "expected_records": 314
+      },
+      {
+        "phase": "h",
+        "tests": 123,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 123,
+        "expected_records": 123
+      },
+      {
+        "phase": "hflow",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 1,
+        "expected_records": 1
+      }
+    ],
+    "per_phase_expected_testcase_count_assertions": true,
+    "case_ID_evidence_saved": true,
+    "actual_paid_API_OAuth_SNS": 0,
+    "media_or_DB_uploaded": false,
+    "prior_runs": [
+      {
+        "run": 40169261845,
+        "status": "failure",
+        "reason": "Missing Guard test file in CI bundle; no test case executed"
+      },
+      {
+        "run": 40169493130,
+        "status": "success_with_incomplete_intended_coverage",
+        "reported_security_count": 1,
+        "reason": "Wrong CI-only dispatch; do not use as proof of intended 78 Guard tests"
+      },
+      {
+        "run": 40169869938,
+        "status": "failure",
+        "reason": "Strict count assertion caught wrong dispatch; 1 vs 78"
+      }
+    ]
+  },
+  "critical_preservation": {
+    "original64_changed": 0,
+    "all_operating_data_SHA_mismatches": 0,
+    "backup_data_SHA_mismatches": {
+      "A": 0,
+      "B": 0
+    },
+    "unexpected_critical_changes": 0,
+    "additional_aux_ref_missing": true
+  },
+  "native_OS_isolation": "NOT VERIFIED — existing current-user rights and native Chrome background risk retained",
+  "next_steps": "Step13J/14/15-18 are not authorized; real paid API/OAuth/SNS requires separate scoped approval"
+}

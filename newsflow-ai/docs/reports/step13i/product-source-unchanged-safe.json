@@ -1,0 +1,10 @@
+{
+  "all_product_source_files_equal_to_Step13H": true,
+  "CSP_policy_changed": false,
+  "migration_changed": false,
+  "API_adapters_changed": false,
+  "schema_head": "0018",
+  "migrate_data_contract": "0015",
+  "real_keys_read": 0,
+  "note": "Only test synchronization, new synthetic tests and CI preparation changed."
+}

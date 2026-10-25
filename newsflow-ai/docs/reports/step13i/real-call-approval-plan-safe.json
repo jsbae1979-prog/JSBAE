@@ -1,0 +1,56 @@
+[
+  {
+    "provider": "SerpApi",
+    "proposed_scope": "Google News 고정 지역·언어의 한 페이지 GET 1회. 기사 원문·이미지 다운로드/AI/TTS/게시0",
+    "maximum_requests": 1,
+    "key": "별도 지정 테스트 키를 사용자 프로필에 직접 입력; 운영 키 읽지 않음",
+    "cost": "검색 크레딧 사용 가능. 실제 플랜·단가·잔액 미확인, 금액 추측/사전 예약 없음",
+    "approval": "필수; 아직 호출하지 않음"
+  },
+  {
+    "provider": "OpenAI metadata",
+    "proposed_scope": "선택한 허용 모델 metadata GET 1회; inference/search/image0",
+    "maximum_requests": 1,
+    "key": "별도 사용자 테스트 OpenAI Key",
+    "cost": "생성 호출0; 공급사 과금·권한은 실제 확인 전 미검증. metadata로 잔액/생성 가능 추정 금지",
+    "approval": "필수; 아직 호출하지 않음"
+  },
+  {
+    "provider": "OpenAI analysis/script",
+    "proposed_scope": "합성 뉴스 입력1건, 선택 모델·출력 상한·전송 JSON을 먼저 고정한 후 POST 최대1회. 실패/시간 초과/unknown 즉시 중단",
+    "maximum_requests": 1,
+    "key": "metadata와 동일 계정인지 지정한 별도 테스트 키",
+    "cost": "토큰 사용량/청구액은 실제 공급사 보고값과 구분. 현재 정확 금액 미확인, 승인 전 견적 근거/비용 동의 필요",
+    "approval": "metadata와 별개 유료 승인; 아직 호출하지 않음"
+  },
+  {
+    "provider": "ElevenLabs list",
+    "proposed_scope": "voice_type=saved, page_size=100 한 페이지 GET1회. more/구독 조회/TTS 생성0",
+    "maximum_requests": 1,
+    "key": "별도 테스트 ElevenLabs key, Voices 읽기 권한",
+    "cost": "음성 생성0. 목록 호출 과금 여부·계정 조건은 미검증, 무과금이라고 단정하지 않음",
+    "approval": "필수; 아직 호출하지 않음"
+  },
+  {
+    "provider": "ElevenLabs TTS",
+    "proposed_scope": "별도 승인한 정확 문구1건·음성ID·모델로 synthesize_timed 단일 호출 및 길이 측정만. 영상 renderer/길이 재생성 경로는 진입하지 않음. 실패/unknown/길이 초과 즉시 중단, 음성 교체·재시도0.",
+    "maximum_requests": {
+      "GET_user_subscription": 1,
+      "POST_text_to_speech_with_timestamps": 1,
+      "total_maximum": 2,
+      "cache_hit": 0
+    },
+    "key": "별도 작업별 테스트 키와 외부 음성 승인",
+    "cost": "정확 비용/실제 청구 미확인. 상태 조회와 생성 승인 범위를 분리해 사전 보고",
+    "approval": "이번 요청에 승인 없음; 아직 호출하지 않음",
+    "source_evidence": "기존 단일 synthesize_timed는 subscription GET 후 생성 POST1회. 소스의 range(4)는 replace_metadata의 로컬 파일 rename 재시도이며 공급사 요청 재시도가 아님. 상위 영상 pipeline 재생성 루프를 사용하지 않는 별도 범위."
+  },
+  {
+    "provider": "Instagram / YouTube / TikTok",
+    "proposed_scope": "본 단계는 Fake만. 실제 OAuth/refresh/upload/publish/delete는 각각 별도 승인",
+    "maximum_requests": 0,
+    "key": "실계정 토큰 불러오지 않음",
+    "cost": "플랫폼 quota·계정 영향·이미지 전달 비용 등 미검증",
+    "approval": "실행 미승인"
+  }
+]

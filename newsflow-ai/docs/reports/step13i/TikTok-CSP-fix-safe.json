@@ -1,0 +1,25 @@
+{
+  "test_ID": "tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login",
+  "previous_PASS_checkpoint": "a3a4a1ec89e2ca9799023766854e2c3317a85c35",
+  "previous_FAIL_tested_SHA": "781a865f7528e32a7b270efd931fb0618d73b432",
+  "fix_SHA": "bd5393960f2ed4a37c6aad9cba257f89421dd4d7",
+  "cause": "Eval-based wait_for_function navigation sentinel conflicts with retained script-src self CSP. A fragment navigation can precede the real redirected document. Test synchronization issue; no observed product policy change.",
+  "fix": "Await exact POST/tiktok/connect 303 and redirected same-origin navigation GET/publishing/platforms 200, await DOM load; retain all consent, encrypted-key, secret-redaction, connection, keyboard, viewport, pageerror and external-request assertions; add unsafe-eval absence assertion.",
+  "test_only_fix": true,
+  "product_sources_unchanged": {
+    "src/newsflow/main.py": true,
+    "src/newsflow/gui/tiktok_routes.py": true,
+    "src/newsflow/oauth/tiktok.py": true,
+    "src/newsflow/static/js/app.js": true
+  },
+  "cache": "Fresh temporary Chrome profile; service workers blocked; Cache-Control no-store retained. No operating profile reused.",
+  "stages": {
+    "initial_profile_preparation": "5 PASS /1 ERROR; test AppData directory omission, Guard stopped execution; corrected only synthetic directory preparation",
+    "first_wait": "64 PASS /1 FAIL; navigation event returned None for fragment; corrected exact document-response wait",
+    "final": "65 PASS /0 FAIL /0 ERROR /0 SKIP"
+  },
+  "CSP_weakened": false,
+  "unsafe_eval_or_inline_added": false,
+  "authentication_bypass": false,
+  "existing_test_IDs_or_assertions_removed": false
+}

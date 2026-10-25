@@ -1,0 +1,18 @@
+{
+  "branch": "codex/newsflow-step13i-20261025",
+  "code_SHA": "b0a718543865558cc3fe38df7ab318cb742ed140",
+  "product_test_change_SHA": "bd5393960f2ed4a37c6aad9cba257f89421dd4d7",
+  "CI_only_followups": true,
+  "remote_files_checked": 7,
+  "normalized_text_blob_mismatches": 0,
+  "PR35": {
+    "open": true,
+    "draft": true,
+    "merged": false,
+    "head": "6aef983db5a8d31b604d9fafd4329a0b4f83787d",
+    "head_branch": "codex/newsflow-ux-video-app"
+  },
+  "main_or_operating_branch_changed": false,
+  "new_PR_created": false,
+  "report_commit": "Will be separate; code SHA identifies tested source"
+}

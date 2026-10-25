@@ -1,0 +1,11 @@
+{
+  "initial_green_run": 40169493130,
+  "strict_count_run": 40169869938,
+  "strict_count_verdict": "FAIL correctly detected 1 case instead of intended 78",
+  "cause": "The earlier CI-only collector-condition text replacement also matched elif and routed security phase to the single image GUI flow before its dedicated branch. Product and PC test dispatch were unaffected.",
+  "fix": "Restore exact hflow-only target condition; retain separate security branch and confcutdir; keep exact 78-count and published ID assertion.",
+  "tests_removed_skipped_or_assertions_weakened": false,
+  "PC_guard_78_pass_evidence_preserved": true,
+  "product_Guard_changes": 0,
+  "scope": "CI-only dispatch correction and evidence audit"
+}

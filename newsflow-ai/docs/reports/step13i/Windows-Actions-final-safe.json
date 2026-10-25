@@ -1,0 +1,92 @@
+{
+  "run": 40170107083,
+  "job": 121099041336,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40170107083",
+  "code_SHA": "b0a718543865558cc3fe38df7ab318cb742ed140",
+  "Python": "3.14.7",
+  "conclusion": "success",
+  "counts": {
+    "PASS": 605,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "phases": [
+    {
+      "phase": "security",
+      "tests": 78,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 78,
+      "expected_records": 78
+    },
+    {
+      "phase": "i_contracts",
+      "tests": 24,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 24,
+      "expected_records": 24
+    },
+    {
+      "phase": "i_tiktok3",
+      "tests": 65,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 65,
+      "expected_records": 65
+    },
+    {
+      "phase": "i_sns_contracts",
+      "tests": 314,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 314,
+      "expected_records": 314
+    },
+    {
+      "phase": "h",
+      "tests": 123,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 123,
+      "expected_records": 123
+    },
+    {
+      "phase": "hflow",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 1,
+      "expected_records": 1
+    }
+  ],
+  "per_phase_expected_testcase_count_assertions": true,
+  "case_ID_evidence_saved": true,
+  "actual_paid_API_OAuth_SNS": 0,
+  "media_or_DB_uploaded": false,
+  "prior_runs": [
+    {
+      "run": 40169261845,
+      "status": "failure",
+      "reason": "Missing Guard test file in CI bundle; no test case executed"
+    },
+    {
+      "run": 40169493130,
+      "status": "success_with_incomplete_intended_coverage",
+      "reported_security_count": 1,
+      "reason": "Wrong CI-only dispatch; do not use as proof of intended 78 Guard tests"
+    },
+    {
+      "run": 40169869938,
+      "status": "failure",
+      "reason": "Strict count assertion caught wrong dispatch; 1 vs 78"
+    }
+  ]
+}
