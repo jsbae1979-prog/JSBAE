@@ -145,22 +145,86 @@ def test_runtime_logging_is_separate(tmp_path):
     assert not (ROOT / "execution.log").exists()
 
 
-def test_migrate_existing_database_settings_and_key(tmp_path, rss):
+def _copy_contract_engine(root, revision="0015"):
+    from alembic import command
+    from alembic.config import Config
+    from newsflow.db import session as db_session
+
+    engine = db_session.make_engine(root / "newsflow.db")
+    config = Config()
+    config.set_main_option("script_location", str(Path(db_session.__file__).parent / "migrations").replace("%", "%%"))
+    try:
+        with engine.begin() as connection:
+            config.attributes["connection"] = connection
+            command.upgrade(config, revision)
+        return engine
+    except BaseException:
+        engine.dispose()
+        raise
+
+
+def _seed_copy_contract(engine):
+    from newsflow.db.models import APIRequestReservation, IntelligenceRun
+    from newsflow.db.session import session_factory
+
+    with session_factory(engine).begin() as session:
+        source = NewsSource(name="이전 테스트", url="https://example.test/copy-only", enabled=False)
+        session.add(source)
+        session.add(AppSetting(key="request_timeout", value="6"))
+        session.flush()
+        for number in range(3):
+            url = f"https://example.test/copy-only/{number}"
+            article = NewsArticle(title=f"합성 이전 기사 {number}", url=url, canonical_url=url,
+                                  source_id=source.id, publisher="Synthetic copy fixture")
+            session.add(article)
+            session.flush()
+            session.add(ArticleMention(article_id=article.id, source_id=source.id,
+                                       publisher=article.publisher, url=url))
+            session.add(ArticleScore(article_id=article.id, total=0, assessed_max=0, components={}))
+        for number in range(7):
+            session.add(APIRequestReservation(id=f"{number:032x}", request_id=f"synthetic-copy-{number}",
+                        provider="claude_api", kind="analysis", model="synthetic-model", status="unknown",
+                        reserved_usd="9.165", bounds={}, prices={}, usage={}, test_only=True))
+        session.add(IntelligenceRun(kind="feed_card", status="unknown", provider="claude_api", options={},
+                                   evidence={}, result={"error_code": "synthetic_timeout"}, message="synthetic preserved"))
+
+
+def _copy_fixture_files(root):
+    (root / "session.key").write_text("SYNTHETIC-COPY-ONLY-SESSION-KEY-" * 3, encoding="ascii")
+    ledger = root / "tts-elevenlabs" / "ledger.json"
+    ledger.parent.mkdir()
+    ledger.write_text(json.dumps({"synthetic-copy": {"state": "reserved", "http_status": 402}}), encoding="utf-8")
+    return ledger
+
+
+def test_migrate_existing_database_settings_and_key(tmp_path):
+    import sqlite3
+
     original = tmp_path / "기존 데이터"
     target = tmp_path / "새 사용자 공간"
-    from newsflow.news.rss_adapter import FakeRSSAdapter
-
-    app = create_app(Settings(data_dir=original), FakeRSSAdapter({"https://example.com/rss": rss}))
-    with TestClient(app, base_url="http://127.0.0.1"):
-        with app.state.sessions.begin() as session:
-            session.add(NewsSource(name="이전 테스트", url="https://example.com/rss"))
-            session.get(AppSetting, "request_timeout").value = "6"
-        app.state.coordinator.start()
-        app.state.coordinator.future.result(timeout=10)
+    engine = _copy_contract_engine(original)
+    try:
+        _seed_copy_contract(engine)
+    finally:
+        engine.dispose()
+    ledger = _copy_fixture_files(original)
     original_key = (original / "session.key").read_bytes()
+    original_db = (original / "newsflow.db").read_bytes()
+    original_ledger = ledger.read_bytes()
     migrate_data(original, target)
     assert (original / "newsflow.db").is_file()
     assert (target / "session.key").read_bytes() == original_key
+    assert (original / "newsflow.db").read_bytes() == original_db
+    assert (original / "session.key").read_bytes() == original_key
+    assert ledger.read_bytes() == original_ledger
+    assert not (target / "tts-elevenlabs" / "ledger.json").exists()  # Limited DB/key copy, not full-profile migration.
+    for root in (original, target):
+        with sqlite3.connect((root / "newsflow.db").as_uri() + "?mode=ro", uri=True) as connection:
+            assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == ("0015",)
+            assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+            assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+            assert connection.execute("SELECT COUNT(*) FROM api_request_reservations WHERE status='unknown'").fetchone() == (7,)
+            assert connection.execute("SELECT COUNT(*) FROM intelligence_runs WHERE kind='feed_card' AND status='unknown'").fetchone() == (1,)
     app = create_app(Settings(data_dir=target))
     with TestClient(app, base_url="http://127.0.0.1"), app.state.sessions() as session:
         assert session.get(AppSetting, "request_timeout").value == "6"
@@ -170,6 +234,35 @@ def test_migrate_existing_database_settings_and_key(tmp_path, rss):
     with pytest.raises(ValueError, match="덮어쓰지"):
         migrate_data(original, target)
     assert (target / "session.key").read_bytes() == original_key
+    assert (original / "newsflow.db").read_bytes() == original_db
+
+
+@pytest.mark.parametrize("revision", ["0016", "0017", "0018"])
+def test_copy_rejects_unsupported_revision_preserving_source(tmp_path, revision):
+    import sqlite3
+
+    source = tmp_path / "unsupported-source"
+    target = tmp_path / "unsupported-target"
+    engine = _copy_contract_engine(source, revision)
+    try:
+        _seed_copy_contract(engine)
+    finally:
+        engine.dispose()
+    ledger = _copy_fixture_files(source)
+    protected = {p: p.read_bytes() for p in (source / "newsflow.db", source / "session.key", ledger)}
+    with pytest.raises(ValueError, match="지원하지 않는 DB 버전"):
+        migrate_data(source, target)
+    assert all(p.read_bytes() == content for p, content in protected.items())
+    assert not (target / "newsflow.db").exists()
+    assert not (target / "session.key").exists()
+    assert not list(target.glob("migration-*"))
+    with sqlite3.connect((source / "newsflow.db").as_uri() + "?mode=ro", uri=True) as connection:
+        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (revision,)
+        assert connection.execute("PRAGMA integrity_check").fetchone() == ("ok",)
+        assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+        assert connection.execute("SELECT COUNT(*) FROM news_articles").fetchone() == (3,)
+        assert connection.execute("SELECT COUNT(*) FROM api_request_reservations WHERE status='unknown'").fetchone() == (7,)
+        assert connection.execute("SELECT COUNT(*) FROM intelligence_runs WHERE kind='feed_card' AND status='unknown'").fetchone() == (1,)
 
 
 def test_migration_bad_or_overlapping_source(tmp_path):

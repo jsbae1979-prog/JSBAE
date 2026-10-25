@@ -28,6 +28,8 @@ class TikTokCallback:
         self.state = SecretStr(secrets.token_urlsafe(32))
         self.redirect_uri = ""
         self.deadline = 0.0
+        self._observations = dict.fromkeys(
+            ("tcp_connections", "http_requests", "read_failures", "rejected_requests"), 0)
 
     def start(self, config: DesktopConfig, *, ttl=300) -> SecretStr:
         if not self.synthetic and not production_enabled():
@@ -57,6 +59,18 @@ class TikTokCallback:
                 "redirect_uri": self.redirect_uri, "state": self.state.get_secret_value(),
                 "code_challenge": challenge(self.verifier.get_secret_value()), "code_challenge_method": "S256",
             }))
+
+    def _observe(self, name: str) -> None:
+        # Shared HTTP handler diagnostics contain bounded counts, never callback data.
+        if name in self._observations:
+            with self._lock:
+                self._observations[name] = min(self._observations[name] + 1, 1_000_000)
+
+    def _reject(self, handler: _Handler, status: int, reason: str) -> None:
+        # Malformed/unauthenticated input must not consume the pending login or echo secrets.
+        self._observe("rejected_requests")
+        status = status if type(status) is int and 400 <= status <= 599 else 400
+        handler._reply(status, b"Local callback rejected. Return to NewsFlow AI.")
 
     def _finish(self, error=None, code=None):
         self._used, self._error, self._code = True, error, code

@@ -29,6 +29,7 @@ from newsflow.intelligence.provider import (
     OpenAIProvider,
     Options,
     user_message,
+    prompt_instruction,
 )
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import (
@@ -62,32 +63,35 @@ def test_estimate_tokens_is_conservative_and_monotone():
 
 
 def test_estimate_call_counts_exactly_what_the_provider_sends():
-    payload = {"duration": 30, "evidence": representative_evidence()}
-    estimate = estimate_call(SCRIPT_INSTRUCTION, payload, 1400)
-    assert estimate["prompt_tokens"] > 0 and estimate["total_max"] == estimate["prompt_tokens"] + 1400
-    assert estimate["prompt_chars"] == len(SCRIPT_INSTRUCTION) + len(user_message(payload))
+    for version in ("v1", "v2"):
+        payload = {"duration": 30, "evidence": {**representative_evidence(), "script_prompt_version": version}}
+        instruction = prompt_instruction("script", payload["evidence"])
+        output_maximum = 1400 + (600 if version == "v2" else 0)
+        estimate = estimate_call(instruction, payload, output_maximum)
+        assert estimate["prompt_tokens"] > 0 and estimate["total_max"] == estimate["prompt_tokens"] + output_maximum
+        assert estimate["prompt_chars"] == len(instruction) + len(user_message(payload))
 
-    class Response(io.BytesIO):
-        def __enter__(self):
-            return self
+        class Response(io.BytesIO):
+            def __enter__(self):
+                return self
 
-        def __exit__(self, *args):
-            return False
+            def __exit__(self, *args):
+                return False
 
-    body = {"choices": [{"message": {"content": json.dumps({"title": "x"})}}]}
-    captured = {}
+        body = {"choices": [{"message": {"content": json.dumps({"title": "x"})}}]}
+        captured = {}
 
-    class Opener:
-        def open(self, request, timeout=None):
-            captured["data"] = request.data
-            return Response(json.dumps(body).encode())
+        class Opener:
+            def open(self, request, timeout=None):
+                captured["data"] = request.data
+                return Response(json.dumps(body).encode())
 
-    provider = OpenAIProvider(lambda: KEY)
-    with patch("urllib.request.build_opener", return_value=Opener()):
-        provider.complete(payload["evidence"], 30, Options(max_tokens=1400))
-    sent = json.loads(captured["data"])
-    assert sent["messages"][1]["content"] == user_message(payload)
-    assert sent["messages"][0]["content"] == SCRIPT_INSTRUCTION and sent["max_tokens"] == 1400
+        provider = OpenAIProvider(lambda: KEY)
+        with patch("urllib.request.build_opener", return_value=Opener()):
+            provider.complete(payload["evidence"], 30, Options(max_tokens=1400))
+        sent = json.loads(captured["data"])
+        assert sent["messages"][1]["content"] == user_message(payload)
+        assert sent["messages"][0]["content"] == instruction and sent["max_tokens"] == output_maximum
 
 
 def test_estimate_job_counts_two_calls_and_per_duration_caps():
@@ -221,7 +225,10 @@ def test_gui_prices_form_and_estimate_text(client, app, monkeypatch):
     # An existing Offline analysis keeps its own execution identity, not new global defaults.
     assert 'value="25"' in with_estimate and 'value="offline" selected' in with_estimate
     assert 'value="gpt-4.1-mini"' not in with_estimate
-    assert 'id="studio-estimate"' in with_estimate and "단가 미입력" not in with_estimate and " USD" in with_estimate
+    assert 'id="studio-estimate"' not in with_estimate and "단가 미입력" not in with_estimate
+    assert 'action="/ai-settings/prices"' not in with_estimate
+    assert read_prices(app.state.sessions)["currency"] == "USD"
+    assert read_prices(app.state.sessions)["input_per_1m"] == Decimal("0.15")
 
 
 def test_start_and_job_pages_show_estimate_then_actual_usage(client, app, api_pipeline, monkeypatch):
@@ -241,7 +248,10 @@ def test_start_and_job_pages_show_estimate_then_actual_usage(client, app, api_pi
     assert provider.calls == ["analysis", "script"]
     with sessions() as session:
         runs = list(session.scalars(select(IntelligenceRun).where(IntelligenceRun.provider == mode)))
-        assert {run.options["max_tokens"] for run in runs} == {ANALYSIS_MAX_TOKENS, SCRIPT_MAX_TOKENS[30]}
+        assert {run.options["script_prompt_version"] for run in runs} == {"v2"}
+        assert {run.options["max_tokens"] for run in runs} == {ANALYSIS_MAX_TOKENS + 400, SCRIPT_MAX_TOKENS[30] + 600}
+        assert all(run.options["base_max_tokens"] == (ANALYSIS_MAX_TOKENS if run.kind == "analysis" else SCRIPT_MAX_TOKENS[30]) for run in runs)
+        assert all(run.options["output_token_allowance"] == (400 if run.kind == "analysis" else 600) for run in runs)
         assert all(run.options["model"] == job["ai_model"] for run in runs)
         assert sum(row.total_tokens for row in session.scalars(select(AIUsage))) == 400
 

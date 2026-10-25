@@ -178,7 +178,7 @@ def test_additive_migration_preserves_synthetic_legacy_tables(tmp_path):
         before = {name: connection.execute(text(f'SELECT * FROM "{name}"')).all() for name in names}
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0017"
+        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0018"
         assert connection.execute(text("PRAGMA integrity_check")).scalar() == "ok"
         for name, rows in before.items():
             assert connection.execute(text(f'SELECT * FROM "{name}"')).all() == rows

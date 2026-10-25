@@ -1,0 +1,5 @@
+Development checkpoint,2026-10-25
+Base645c4b7788cdf665f98fb936c82081bc90875087. ExistingPR35 remains Draft; no main/operating update. ApprovedG2-G9 changes plus current test-only browser boundary and fixture ownership changes.
+GUI:15 routes x3 widths PASS; images/assets/menu/keyboard popup checks pass. Synthetic records unchanged.
+Original91 rerun and full regression pending; no claim all errors resolved.
+Push uses[skip ci] to avoid inherited Python3.12 matrix reruns; existing Windows Actions evidence retained. Local Windows Python3.14.7 tests run under strict Fake boundaries. No live authentication/generation/publishing calls.

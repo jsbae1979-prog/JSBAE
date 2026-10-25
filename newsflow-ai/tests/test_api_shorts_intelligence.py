@@ -16,6 +16,7 @@ from newsflow.intelligence.provider import (
     OpenAIProvider,
     Options,
     ProviderTimeoutError,
+    prompt_instruction,
 )
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import write_settings
@@ -93,7 +94,8 @@ def test_api_analysis_and_script_use_input_contract_and_independent_reservations
         with sessions() as session:
             draft = session.get(ContentDraft, draft_id)
             outputs.append(deepcopy(draft.content))
-            assert draft.sources["script_method"] == API_SCRIPT_METHOD
+            assert draft.sources["script_method"] == "api_grounded_v2"
+            assert draft.sources["script_prompt_version"] == "v2"
             assert draft.sources["news_usage_result"]["verification_status"] == "NOT VERIFIED"
             assert draft.sources["articles"][0]["sources"]
             assert draft.sources["analysis_result"]["overview"] == session.get(IntelligenceRun, analysis).result["overview"]
@@ -133,8 +135,13 @@ def test_api_script_edit_does_not_require_local_strings_but_remains_review_requi
         assert draft.content == changed and draft.review_status == "review_required"
         assert any(note["code"] == "total_narration_too_short" for note in draft.review_notes)
     changed["scenes"][0]["narration"] = "판매가 9876억 원을 기록했습니다."
-    with pytest.raises(IntelligenceError, match="뉴스 활용 수준"):
+    with pytest.raises(IntelligenceError, match="해석형 대본의 수치·날짜·인용 근거") as rejected:
         service.edit(draft_id, revision + 1, changed)
+    assert rejected.value.code == "news_usage_blocked"
+    with sessions() as session:
+        stored = session.get(ContentDraft, draft_id)
+        assert stored.revision == revision + 1 and stored.review_status == "review_required"
+        assert "9876" not in stored.content["scenes"][0]["narration"]
     assert adapter.calls == ["analysis", "script"]
 
 
@@ -197,8 +204,14 @@ def test_quick_and_standard_have_distinct_api_instructions():
     quick = api_news_contract(payload, "QUICK", 60)
     standard = api_news_contract(payload, "STANDARD", 60)
     assert quick["structure"] != standard["structure"]
-    assert "배경 → 핵심 쟁점" in standard["structure"]
-    assert "간결하게" in quick["structure"]
+    assert standard["role_orders"] == [["fact", "meaning", "meaning", "action"], ["fact", "meaning", "action", "next"]]
+    assert quick["role_orders"] == [["fact", "meaning", "action"]]
+    assert "배경·핵심 쟁점" in standard["structure"] and "최대 2문장" in quick["structure"]
+    legacy_quick = api_news_contract(payload, "QUICK", 60, version="v1")
+    legacy_standard = api_news_contract(payload, "STANDARD", 60, version="v1")
+    assert legacy_quick["structure"] != legacy_standard["structure"]
+    assert "배경 → 핵심 쟁점" in legacy_standard["structure"]
+    assert "간결하게" in legacy_quick["structure"]
 
 
 def test_saved_speech_rate_and_pause_reach_api_planning_contract(api):
@@ -209,8 +222,18 @@ def test_saved_speech_rate_and_pause_reach_api_planning_contract(api):
     contract = adapter.payloads[-1][1]["news_usage_contract"]
     assert contract["speech_estimate"]["rate"] == 3
     assert contract["speech_estimate"]["pause_ms"] == 500
-    assert contract["speech_estimate"]["estimated_pauses_seconds"] == 4.8
-    assert contract["narration_spoken_units_target"]["minimum"] == 284
+    assert contract["prompt_version"] == "v2"
+    # Independent version-specific expectations: seconds, not speech rate.
+    for version, sentences, pauses, minimum in (("v1", 8, 4.8, 284), ("v2", 6, 3.1, 294)):
+        expected = api_news_contract({"articles": [{"id": 1, "title": "합성", "sources": []}]},
+                                     "STANDARD", 60, speech={"rate": 3, "pause_ms": 500}, version=version)
+        estimate = expected["speech_estimate"]
+        assert estimate["scene_count_hint"] == 4 and estimate["sentence_count_hint"] == sentences
+        assert estimate["rate"] == 3 and estimate["pause_ms"] == 500
+        assert estimate["estimated_pauses_seconds"] == pauses
+        assert expected["narration_spoken_units_target"]["minimum"] == minimum
+    assert contract["speech_estimate"]["estimated_pauses_seconds"] == 3.1
+    assert contract["narration_spoken_units_target"]["minimum"] == 294
     with sessions() as session:
         draft = session.get(ContentDraft, draft_id)
         assert any(note["code"] == "total_narration_too_short" for note in draft.review_notes)
@@ -257,6 +280,8 @@ def test_existing_api_adapters_send_news_contract_without_search_tool(factory, m
         monkeypatch.setattr(provider, "_message", capture)
     provider.analyze(payload, Options())
     provider.complete(payload, 45, Options())
-    assert calls[0][0] == ANALYSIS_INSTRUCTION and calls[1][0] == SCRIPT_INSTRUCTION
+    assert calls[0][0] == prompt_instruction("analysis", payload)
+    assert calls[1][0] == prompt_instruction("script", payload)
+    assert payload["news_usage_contract"]["prompt_version"] == "v2"
     assert calls[1][1] == {"duration": 45, "evidence": payload}
     assert not any(call[2].get("search") for call in calls)

@@ -293,7 +293,7 @@ def test_recommendations_require_comparable_complete_windows_and_one_account():
 
 def test_additive_schema_and_existing_tables_remain(app):
     with app.state.engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0015"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0018"
         names = {r[0] for r in connection.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))}
     assert {
         "news_articles",

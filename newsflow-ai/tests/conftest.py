@@ -21,7 +21,7 @@ def fake(rss: bytes) -> FakeRSSAdapter:
 
 
 @pytest.fixture
-def app(tmp_path: Path, fake: FakeRSSAdapter):
+def app(tmp_path: Path, fake: FakeRSSAdapter, step13_isolation):
     return create_app(Settings(data_dir=tmp_path / "test-data"), fake)
 
 

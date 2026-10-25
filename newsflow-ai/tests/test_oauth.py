@@ -739,7 +739,7 @@ def test_additive_0005_migration_preserves_phase4a_forensic_records(tmp_path):
     migrate(engine)
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0015"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0018"
     with sessions() as session:
         assert session.get(PlatformAccount, 1).label == "기존 준비 계정"
         assert (

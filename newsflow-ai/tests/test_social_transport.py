@@ -96,7 +96,7 @@ def test_untrusted_endpoint_is_rejected_before_http(url):
         allowed_request("facebook", "POST", url)
 
 
-@pytest.mark.parametrize("body", [b"not-json", b"[]", b"x" * (2 * 1024 * 1024 + 1)])
+@pytest.mark.parametrize("body", [b"not-json", b"[]", b"x" * (2 * 1024 * 1024 + 1)], ids=["malformed-json", "non-object", "oversize"])
 def test_bad_response_is_redacted_not_success(body):
     connection = Connection(200, body)
     transport = OfficialHTTPS(

@@ -122,6 +122,16 @@ def test_fake_budget_cannot_bypass_authentication_for_first_search(sessions):
 def test_all_existing_gates_apply_to_quote_and_reservation(sessions, changes, reason):
     stamp = configured(sessions, **changes)
     quote = first_search_readiness(sessions, "claude_api", StatusOnlyStore())
+    if changes == {"billing_confirmed": False}:
+        before = settings_values(sessions)
+        assert quote["ready"] and quote["reserved_usd"] is None
+        assert settings_values(sessions) == before
+        result = reserve(sessions, stamp)
+        with sessions() as session:
+            row = session.get(APIRequestReservation, result.id)
+            assert row.status == "reserved" and row.reserved_usd == "0"
+            assert row.bounds["accounting"] == "reported_usage"
+        return
     assert not quote["ready"] and any(reason in text for text in quote["reasons"])
     with pytest.raises(APISettingsError, match=reason):
         reserve(sessions, stamp)
@@ -141,6 +151,13 @@ def test_stale_proof_and_active_auth_check_block(sessions, field, value, reason)
     if field == "authentication_verified_at":
         stamp = value
     quote = first_search_readiness(sessions, "claude_api", StatusOnlyStore())
+    if field == "billing_confirmed_at":
+        before = settings_values(sessions)
+        assert quote["ready"] and settings_values(sessions) == before
+        result = reserve(sessions, stamp)
+        with sessions() as session:
+            assert session.get(APIRequestReservation, result.id).status == "reserved"
+        return
     assert not quote["ready"] and any(reason in text for text in quote["reasons"])
     with pytest.raises(APISettingsError, match=reason):
         reserve(sessions, stamp)
@@ -214,6 +231,16 @@ def test_reported_usage_consumes_month_and_account_limits(sessions, limit, reaso
     new_stamp = utcnow().isoformat()
     with sessions.begin() as session:
         _set(session, "api_claude_api_authentication_verified_at", new_stamp)
+    if limit == "account_remaining_usd":
+        before = settings_values(sessions)
+        assert first_search_readiness(sessions, "claude_api", StatusOnlyStore())["ready"]
+        assert settings_values(sessions) == before
+        next_request = reserve(sessions, new_stamp)
+        with sessions() as session:
+            prior = session.get(APIRequestReservation, result.id)
+            assert prior.status == "failed" and prior.usage == {"prompt_tokens": 100, "completion_tokens": 50, "search_calls": 1}
+            assert session.get(APIRequestReservation, next_request.id).status == "reserved"
+        return
     assert not first_search_readiness(sessions, "claude_api", StatusOnlyStore())["ready"]
     with pytest.raises(APISettingsError, match=reason):
         reserve(sessions, new_stamp)

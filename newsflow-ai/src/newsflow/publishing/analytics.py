@@ -7,7 +7,7 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from statistics import median
 from urllib.parse import urlencode
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import select, update
 
@@ -380,7 +380,13 @@ def recommend(rows: list, *, account_id: int | None, now=None) -> dict:
         example = next(iter(days.values()))
         if example.published_at > (now or utcnow()) - timedelta(days=8):
             continue
-        first = example.published_at.astimezone(ZoneInfo("America/Los_Angeles")).date()
+        try:
+            pacific = ZoneInfo("America/Los_Angeles")
+        except (ZoneInfoNotFoundError, ValueError, OSError):
+            raise PublishingError(
+                "시간대 데이터를 읽을 수 없습니다. tzdata 설치 상태를 확인하세요. 추천을 계산하지 않았습니다."
+            ) from None
+        first = example.published_at.astimezone(pacific).date()
         expected = [(first + timedelta(days=i)).isoformat() for i in range(7)]
         if not all(d in days for d in expected):
             continue

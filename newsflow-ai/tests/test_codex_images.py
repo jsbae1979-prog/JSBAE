@@ -329,8 +329,14 @@ def test_durable_claim_never_retries_or_falls_back_after_restart(prepared, failu
     assert len(service.codex_adapter.calls) == 1
 
 
-def test_gui_get_no_account_requests_post_requires_csrf_and_reviews(client, prepared):
+def test_gui_get_no_account_requests_post_requires_csrf_and_reviews(client, prepared, monkeypatch, tmp_path):
     service, news = prepared
+    # Local discovery is a fixture, never the host's installed CLI or account.
+    monkeypatch.setattr("newsflow.gui.image_post_routes.cli_path", lambda: None)
+    missing = client.get(f"/image-posts?article_id={news}")
+    assert "Codex 설치 파일을 찾지 못했습니다" in missing.text
+    assert not service.codex_adapter.calls
+    monkeypatch.setattr("newsflow.gui.image_post_routes.cli_path", lambda: tmp_path / "synthetic-codex-not-executed.exe")
     response = client.get(f"/image-posts?article_id={news}")
     assert response.status_code == 200 and "Codex로 전체 이미지" in response.text
     assert "로그인·이미지 생성 권한 미검증" in response.text

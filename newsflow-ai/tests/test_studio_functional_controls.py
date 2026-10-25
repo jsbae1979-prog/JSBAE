@@ -61,7 +61,7 @@ def test_invalid_style_or_missing_consent_never_calls_adapter(api, selection):
 def test_style_post_uses_existing_service_and_csrf(api, app, client, monkeypatch):
     service, adapter, sessions, mode, options, ids = api
     analysis = service.analyze(ids[:1], mode, True, options, news_usage='QUICK')
-    monkeypatch.setattr('newsflow.gui.intelligence_routes.service', lambda _: service)
+    monkeypatch.setattr('newsflow.gui.intelligence_routes.service', lambda request, production=None: service)
     token = csrf(client)
     data = {'analysis_id':analysis, 'duration':30, 'provider':mode, 'model':options.model,
             'script_style':'briefing', 'script_tone':'friendly', 'script_audience':'beginner', 'consent':'true'}

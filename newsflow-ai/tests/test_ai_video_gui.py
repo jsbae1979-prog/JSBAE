@@ -103,7 +103,10 @@ def test_post_requires_csrf_and_refusals_carry_the_fixed_detail(studio):
     _app, client, _provider, draft_id = studio
     assert client.post("/video-ai-settings", data={"provider": "higgsfield"}).status_code == 403
     refused = post(client, "/video-ai-settings", {"provider": "higgsfield", "approved": "true", "monthly_limit": "", "job_limit": ""})
-    assert refused.status_code == 422 and "0보다 큰 작업별 한도와 월 한도" in refused.json()["detail"]
+    assert refused.status_code == 303
+    with _app.state.sessions() as session:
+        assert session.scalar(select(VideoAIUsage)) is None
+    assert _provider.calls == []
     bad_model = post(client, "/video-ai-settings/models", {"path": "../etc/passwd", "label": "x", "durations": "5"})
     assert bad_model.status_code == 422 and "모델 경로" in bad_model.json()["detail"]
     plan_id = plan_id_for(client, draft_id)

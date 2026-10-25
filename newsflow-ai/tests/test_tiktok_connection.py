@@ -329,7 +329,7 @@ def test_callback_port_conflict_and_hex_pkce():
 
 
 @pytest.mark.parametrize("status,raw", [(408, b"{}"), (429, b"{}"), (500, b"{}"), (302, b"{}"),
-                                       (200, b"x" * 65537), (200, b"not-json")])
+                                       (200, b"x" * 65537), (200, b"not-json")], ids=["timeout", "rate-limit", "server-error", "redirect", "oversize", "malformed-json"])
 def test_transport_unknown_responses_are_not_retried(status, raw):
     wire = Wire()
     wire.status, wire.raw = status, raw

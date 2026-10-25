@@ -184,10 +184,22 @@ def test_curation_schema_overhead_has_a_bounded_limit_and_never_splits_requests(
     calls = []
     raw = json.dumps({"stop_reason": "end_turn", "content": [{"type": "text", "text": json.dumps(wire)}]}).encode()
     monkeypatch.setattr(adapter, "_open", lambda req, *_: calls.append(req) or raw)
-    evidence["articles"][0]["summary"] = "x" * 64000
-    assert adapter.analyze(evidence, Options("claude-sonnet-4-6", timeout=300))["comparisons"]
-    assert len(calls) == 1 and 64000 < len(calls[0].data) <= MAX_CURATION_REQUEST_BYTES
-    evidence["articles"][0]["summary"] = "x" * 80000
-    with pytest.raises(ProviderResponseError):
-        adapter.analyze(evidence, Options("claude-sonnet-4-6", timeout=300))
-    assert len(calls) == 1
+    options = Options("claude-sonnet-4-6", timeout=300)
+    evidence["articles"][0]["summary"] = ""
+    assert adapter.analyze(evidence, options)["comparisons"]
+    overhead = len(calls[0].data)
+    assert MAX_CURATION_REQUEST_BYTES == 80_000 and overhead + 64_000 == 81_131
+    evidence["articles"][0]["summary"] = "x" * (80_000 - overhead)
+    assert adapter.analyze(evidence, options)["comparisons"]
+    assert len(calls) == 2 and len(calls[-1].data) == MAX_CURATION_REQUEST_BYTES
+    # Each rejected input stays intact and never reaches the Fake transport.
+    for text, expected_bytes in (("x" * 64_000, 81_131),
+                                 ("x" * (80_001 - overhead), 80_001),
+                                 ("x" * (80_000 - overhead) + "한", 80_003),
+                                 ("x" * 80_000, overhead + 80_000)):
+        evidence["articles"][0]["summary"] = text
+        before = deepcopy(evidence)
+        assert overhead + len(text.encode("utf-8")) == expected_bytes > 80_000
+        with pytest.raises(ProviderResponseError):
+            adapter.analyze(evidence, options)
+        assert len(calls) == 2 and evidence == before

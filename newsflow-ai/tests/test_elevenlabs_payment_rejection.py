@@ -27,7 +27,9 @@ def test_402_annotation_preserves_reservation_and_only_new_voice_can_proceed(tmp
     rejected = json.loads(path.read_text())
     assert len(rejected) == 1
     record = next(iter(rejected.values()))
-    assert record["state"] == "reserved" and record["credits"] == len("시험.") * 2
+    assert record["state"] == "reserved" and record["credits"] == 0
+    assert record["accounting"] == "reported_usage" and record["reported_credits"] is None
+    assert record["vendor_billing"] == "NOT VERIFIED"
     assert rejected_payment(record)
     reject = False
     # The rejected request is never automatically submitted again.
@@ -70,3 +72,19 @@ def test_402_http_maps_to_safe_fixed_error_without_retry(tmp_path, monkeypatch):
     with pytest.raises(PaymentRequiredError) as error:
         tts._http("POST", "/text-to-speech/syntheticVoice", {"text": "시험."})
     assert calls == ["POST"] and "402" in str(error.value) and "secret" not in str(error.value)
+
+
+def test_legacy_402_credits_and_record_are_preserved_when_new_voice_is_used(tmp_path):
+    transport = Transport(tier="free", status="free")
+    cfg = {**config(), "commercial": False}
+    tts = ElevenLabsTTS(tmp_path, cfg, consent=True, transport=transport, keys=Keys())
+    tts.root.mkdir()
+    legacy = {"state": "reserved", "credits": 6, "month": "2026-10",
+              "provider_rejection": {"http_status": 402, "code": "payment_required"}}
+    ledger = tts.root / "ledger.json"
+    ledger.write_text(json.dumps({"legacy-request": legacy}), encoding="utf-8")
+    assert rejected_payment(legacy)
+    tts.synthesize_timed("새 문장.", tmp_path / "new.wav", "elevenlabs", 30)
+    result = json.loads(ledger.read_text(encoding="utf-8"))
+    assert result["legacy-request"] == legacy and len(result) == 2
+    assert transport.calls == ["GET", "POST"]
