@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import sqlite3
 import subprocess
@@ -105,7 +106,9 @@ def initialize(root, revision='0018'):
     engine.dispose()
     for folder in ['outputs/videos', 'assets', 'tts-elevenlabs', 'content']:
         (root/folder).mkdir(parents=True, exist_ok=True)
-    subprocess.run(['ffmpeg','-v','error','-f','lavfi','-i','color=c=blue:s=128x224:r=10',
+    ffmpeg = Path(os.environ.get('NEWSFLOW_FFMPEG') or shutil.which('ffmpeg') or '')
+    assert ffmpeg.is_absolute() and ffmpeg.is_file(), 'Use the verified absolute FFmpeg fixture path'
+    subprocess.run([str(ffmpeg),'-v','error','-f','lavfi','-i','color=c=blue:s=128x224:r=10',
                     '-t','0.3','-c:v','libx264','-pix_fmt','yuv420p',str(root/'outputs/videos/synthetic.mp4')], check=True)
     from PIL import Image
     Image.new('RGB', (32, 32), '#123456').save(root/'assets/synthetic.png')
@@ -185,9 +188,37 @@ def test_restore_point_update_failure_and_restart(tmp_path, record_property):
     plan = Rehearsal(tmp_path)
     backup = plan.backup(data, tmp_path/'backup-unique')
     archive = tmp_path/'release.tar'
-    subprocess.run(['git','-C',str(ROOT.parent),'archive',BASE_SHA,'--output='+str(archive),
-                    'newsflow-ai/src','newsflow-ai/run.bat','newsflow-ai/tools/windows_launcher.py',
-                    'newsflow-ai/pyproject.toml','newsflow-ai/requirements-dev.lock'], check=True)
+    # Read-only GitHub blob fixtures are fetched by the approved parent beforehand.
+    # This tests restoration of exactly five entry/dependency files, not all src.
+    # No Git subprocess or repository mutation is permitted in the test child.
+    validation_root = Path(os.environ['STEP13_ROOT']).resolve()
+    baseline = validation_root / 'baseline-code'
+    manifest_file = baseline / 'manifest-safe.json'
+    pins = json.loads((validation_root / 'native-config-private.json').read_text(encoding='utf-8'))
+    assert hashlib.sha256(manifest_file.read_bytes()).hexdigest() == pins['baseline_manifest_SHA256']
+    manifest = json.loads(manifest_file.read_text(encoding='utf-8-sig'))
+    assert manifest['commit'] == BASE_SHA
+    expected_paths = {
+        'newsflow-ai/src/newsflow/main.py', 'newsflow-ai/run.bat',
+        'newsflow-ai/tools/windows_launcher.py', 'newsflow-ai/pyproject.toml',
+        'newsflow-ai/requirements-dev.lock',
+    }
+    assert set(manifest['files']) == expected_paths
+    import io
+    import tarfile
+    with tarfile.open(archive, 'w') as packaged:
+        for relative in sorted(expected_paths):
+            source_file = baseline / 'files' / relative
+            assert source_file.resolve().is_relative_to((baseline / 'files').resolve())
+            assert not source_file.is_symlink() and not source_file.is_junction()
+            raw = source_file.read_bytes()
+            assert hashlib.sha256(raw).hexdigest() == manifest['files'][relative]
+            member = tarfile.TarInfo(relative)
+            member.size = len(raw)
+            member.mode = 0o644
+            packaged.addfile(member, io.BytesIO(raw))
+    record_property('code_baseline_commit', BASE_SHA)
+    record_property('code_baseline_files', len(expected_paths))
     archive_hash = hashlib.sha256(archive.read_bytes()).hexdigest()
     # Simulate a failed isolated migration transaction; never mutate the source/backup.
     candidate = plan.restore(backup, tmp_path/'candidate')
@@ -208,7 +239,16 @@ def test_restore_point_update_failure_and_restart(tmp_path, record_property):
     with tarfile.open(archive) as tar:
         tar.extractall(tmp_path/'rollback-code', filter='data')
     restored_code = tmp_path/'rollback-code/newsflow-ai'
-    assert (restored_code/'run.bat').read_bytes() == (ROOT/'run.bat').read_bytes()
+    for relative in expected_paths:
+        restored_file = tmp_path/'rollback-code'/relative
+        assert hashlib.sha256(restored_file.read_bytes()).hexdigest() == manifest['files'][relative]
+    # Git blob bytes use LF; the Windows .gitattributes checkout uses CRLF.
+    # Preserve all archive hashes, then compare launcher content without EOL conversion noise.
+    restored_launcher = (restored_code/'run.bat').read_bytes()
+    checkout_launcher = (ROOT/'run.bat').read_bytes()
+    assert b'\r\n' in checkout_launcher
+    assert b'\n' not in checkout_launcher.replace(b'\r\n', b'')
+    assert restored_launcher.replace(b'\r\n', b'\n') == checkout_launcher.replace(b'\r\n', b'\n')
     assert (restored_code/'src/newsflow/main.py').read_bytes() == (ROOT/'src/newsflow/main.py').read_bytes()
     for _ in range(2):
         app = create_app(Settings(data_dir=rolled), FakeRSSAdapter({}))

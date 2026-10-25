@@ -1,0 +1,87 @@
+name: Step13J final Windows scoped Fake
+on:
+  push:
+    branches: [codex/newsflow-step13j-final-20261025]
+    paths:
+      - 'newsflow-ai/src/**'
+      - 'newsflow-ai/tests/**'
+      - 'newsflow-ai/tools/validation/step13j_final/**'
+      - '.github/workflows/newsflow-step13j-final-windows.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scoped-fake:
+    if: github.ref == 'refs/heads/codex/newsflow-step13j-final-20261025'
+    runs-on: windows-latest
+    timeout-minutes: 55
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Exact historical code fixture, five files only
+        uses: actions/checkout@v5
+        env:
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: core.autocrlf
+          GIT_CONFIG_VALUE_0: 'false'
+        with:
+          ref: 0a59bfb41eec6b243e4470f67cd53c1e7cd07e52
+          path: .step13j-code-baseline
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /newsflow-ai/src/newsflow/main.py
+            /newsflow-ai/run.bat
+            /newsflow-ai/tools/windows_launcher.py
+            /newsflow-ai/pyproject.toml
+            /newsflow-ai/requirements-dev.lock
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Install test dependencies in disposable Python 3.14.7 environment
+        run: |
+          $venv = Join-Path $env:RUNNER_TEMP 'newsflow-final-314'
+          python -m venv $venv
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & "$venv/Scripts/python.exe" -m pip install -r requirements-dev.lock playwright==1.64.1 colorama tzdata==2026.5
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ';C:/ProgramData/chocolatey/bin;C:/tools/ffmpeg/bin'
+          }
+          $ffmpeg = (Get-Command ffmpeg -ErrorAction Stop).Source
+          $ffprobe = (Get-Command ffprobe -ErrorAction Stop).Source
+          if ($ffmpeg.Replace('\','/') -like '*/Chocolatey/bin/*') {
+            $ffmpeg = (Get-ChildItem -LiteralPath 'C:/ProgramData/chocolatey/lib/ffmpeg/tools' -Recurse -File -Filter 'ffmpeg.exe' | Select-Object -First 1).FullName
+            $ffprobe = (Get-ChildItem -LiteralPath 'C:/ProgramData/chocolatey/lib/ffmpeg/tools' -Recurse -File -Filter 'ffprobe.exe' | Select-Object -First 1).FullName
+          }
+          if (-not $ffmpeg -or -not $ffprobe) { throw 'Actual FFmpeg tools required; no shim allowed' }
+          "NEWSFLOW_FFMPEG=$ffmpeg" >> $env:GITHUB_ENV
+          "NEWSFLOW_FFPROBE=$ffprobe" >> $env:GITHUB_ENV
+          "NEWSFLOW_TEST_BROWSER_EXECUTABLE=C:/Program Files/Google/Chrome/Application/chrome.exe" >> $env:GITHUB_ENV
+      - name: Scoped Guard, native, model, GUI, image and integrated Fake phases
+        run: |
+          $python = Join-Path $env:RUNNER_TEMP 'newsflow-final-314/Scripts/python.exe'
+          & $python -I -B tools/validation/step13j_final/prepare_windows.py (Join-Path $env:RUNNER_TEMP 'newsflow-step13j-final')
+          exit $LASTEXITCODE
+      - name: Upload only nonsecret summary and test-ID evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: step13j-final-synthetic-summaries
+          path: |
+            ${{ runner.temp }}/newsflow-step13j-final/*-supervisor-safe.json
+            ${{ runner.temp }}/newsflow-step13j-final/ci-summary-safe.json
+            ${{ runner.temp }}/newsflow-step13j-final/failure-IDs-safe.json
+            ${{ runner.temp }}/newsflow-step13j-final/ci-collected-IDs-safe.json
+            ${{ runner.temp }}/newsflow-step13j-final/baseline-integrity-safe.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+

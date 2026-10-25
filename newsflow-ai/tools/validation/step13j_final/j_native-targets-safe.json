@@ -1,0 +1,17 @@
+[
+  "tests/test_autopilot_state.py::test_independent_process_lock_blocks_without_creating_job",
+  "tests/test_creator_preview_boundary.py::test_preview_boundary_blocks_external_dns_and_authentication_processes",
+  "tests/test_creator_preview_boundary.py::test_preview_refuses_existing_directory_without_touching_files",
+  "tests/test_feed_review_tool.py::test_cli_exit_zero_without_network",
+  "tests/test_oauth_callback.py::test_another_local_process_cannot_bind_listener_port",
+  "tests/test_operational_startup.py::test_native_windows_schema_roundtrip_without_registration",
+  "tests/test_pc_cloud_entrypoint.py::test_windows_entrypoint_and_synthetic_profile_survive_normal_reopen",
+  "tests/test_phase1a_security.py::test_diagnostic_rejects_secret_url_without_output",
+  "tests/test_windows.py::test_actual_server_lifecycle_and_port_collision",
+  "tests/test_windows.py::test_invalid_secret_not_printed",
+  "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0016]",
+  "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0017]",
+  "tests/test_windows_transition_plan.py::test_legacy_migrate_data_is_not_current_backup_tool",
+  "tests/test_windows_transition_plan.py::test_restore_point_update_failure_and_restart",
+  "tests/test_windows_transition_plan.py::test_tamper_and_overwrite_refused"
+]

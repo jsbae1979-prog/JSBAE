@@ -1,0 +1,19 @@
+[
+  "tests/test_step13j_model_selection_contracts.py",
+  "tests/test_production_picker.py::test_news_selection_preserves_models_approvals_history_and_job",
+  "tests/test_production_choices.py::test_options_persist_across_coordinator_restart_and_default_changes",
+  "tests/test_production_choices.py::test_elevenlabs_keeps_job_voice_model_after_saved_settings_change",
+  "tests/test_final_production.py::test_full_plan_all_scenes_model_style_and_no_guessed_reservation",
+  "tests/test_final_production.py::test_full_plan_no_card_fallback_and_model_change_blocks_before_post",
+  "tests/test_final_production.py::test_full_plan_unknown_never_replays",
+  "tests/test_final_production.py::test_current_status_and_preflight_do_not_require_guessed_money",
+  "tests/test_image_generation.py::test_official_wire_contract",
+  "tests/test_image_generation.py::test_single_request_reused_after_restart_with_usage_and_no_settings_change",
+  "tests/test_full_image_pipeline.py::test_two_separate_approvals_preserve_settings_and_entire_pixels",
+  "tests/test_full_image_pipeline.py::test_failure_preserves_unknown_and_does_not_replay_or_fallback",
+  "tests/test_character_shorts.py::test_successful_plan_reuses_reference_and_freezes_model",
+  "tests/test_character_shorts.py::test_upload_headers_and_exact_reference_schema",
+  "tests/test_character_shorts.py::test_changed_or_expired_plan_blocked_before_submit",
+  "tests/test_character_shorts.py::test_unknown_submit_preserved_and_never_replayed",
+  "tests/test_higgsfield_model_pricing.py::test_invalid_or_unapproved_registration_makes_zero_requests"
+]
