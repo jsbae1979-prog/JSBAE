@@ -46,13 +46,12 @@ jobs:
           $python = Join-Path $env:RUNNER_TEMP 'newsflow-314/Scripts/python.exe'
           & $python -I -B tools/validation/step13h/prepare_windows.py (Join-Path $env:RUNNER_TEMP 'newsflow-step13h')
           exit $LASTEXITCODE
-      - name: Publish only scoped synthetic screenshots and pixel evidence
+      - name: Publish non-media synthetic summaries only
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: step13h-synthetic-evidence
           path: |
-            ${{ runner.temp }}/newsflow-step13h/h/evidence/news-images-*.png
             ${{ runner.temp }}/newsflow-step13h/h/evidence/news-image-mp4/pixel-proof.json
             ${{ runner.temp }}/newsflow-step13h/*-supervisor-safe.json
           if-no-files-found: ignore
