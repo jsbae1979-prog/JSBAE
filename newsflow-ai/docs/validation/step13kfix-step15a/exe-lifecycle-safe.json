@@ -1,0 +1,25 @@
+{
+  "exit": 0,
+  "normal_lifecycle": true,
+  "runs": [
+    {
+      "run": 1,
+      "exit": 0,
+      "normal_stop": true,
+      "port_released": true
+    },
+    {
+      "run": 2,
+      "exit": 0,
+      "normal_stop": true,
+      "port_released": true
+    }
+  ],
+  "Job": {
+    "active_before_close": 0,
+    "total_processes": 3
+  },
+  "exe_sha256": "7a59124875e27b95131297730a868eae87b3c4d76eafd2aa1a86e65a4b80898c",
+  "operating_input": false,
+  "real_API": false
+}

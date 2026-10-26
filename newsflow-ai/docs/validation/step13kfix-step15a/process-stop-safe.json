@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-26T17:45:50.6019205+09:00",
+  "queries_verified": true,
+  "port8765_listeners": 0,
+  "port18765_listeners": 0,
+  "owned_test_processes_remaining": 0,
+  "operating_source_process_matches": 0,
+  "operating_restart_or_apply": 0,
+  "actual_paid_calls": 0,
+  "actual_OAuth_SNS_calls": 0,
+  "scope": "After full regression and preservation helper exit; only query, no process termination"
+}

@@ -1,0 +1,10 @@
+{
+  "product_files_changed": [
+    "src/newsflow/main.py",
+    "src/newsflow/runtime.py"
+  ],
+  "migration_changes": 0,
+  "Guard_product_policy_changed": false,
+  "normal_shutdown_timeout_before_and_after": 15,
+  "test_skip_xfail_added": false
+}
