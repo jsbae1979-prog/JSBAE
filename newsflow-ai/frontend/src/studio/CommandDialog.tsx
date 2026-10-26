@@ -137,7 +137,7 @@ function choices(
           },
         );
   if (["model", "script_model"].includes(f.name)) {
-    const models = (
+    const models: [string, string][] = (
       action.module === "images" && action.id.startsWith("creation_")
         ? (c.imageModels ?? [])
         : (c.apiModels?.[
