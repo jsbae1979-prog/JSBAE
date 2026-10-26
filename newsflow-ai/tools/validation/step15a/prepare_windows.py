@@ -19,6 +19,9 @@ checkout = source.parents[2]
 root = Path(sys.argv[1]).resolve()
 assert not root.exists() and not root.is_relative_to(checkout) and not checkout.is_relative_to(root)
 definitions = json.loads((plan_source / "phases-safe.json").read_text(encoding="utf-8-sig"))["phases"]
+if len(sys.argv)>2:
+    assert sys.argv[2:]==["--shutdown-only"],"Unknown focused phase selection"
+    definitions=[d for d in definitions if d["name"] in ("security","j_native_security") or d["name"].startswith("j_shutdown_repeat")]
 assert all(type(item["expected"]) is int and item["expected"] > 0 for item in definitions), (
     "Freeze phase testcase counts from reviewed local XML before CI; never guess coverage"
 )

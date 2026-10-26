@@ -1,4 +1,4 @@
-name: Step13K Fix and Step15A Windows validation
+name: Step13K Fix focused shutdown follow-up
 on:
   push:
     branches: [codex/newsflow-step13kfix-15a-20261026]
@@ -65,10 +65,10 @@ jobs:
           "NEWSFLOW_FFMPEG=$ffmpeg" >> $env:GITHUB_ENV
           "NEWSFLOW_FFPROBE=$ffprobe" >> $env:GITHUB_ENV
           "NEWSFLOW_TEST_BROWSER_EXECUTABLE=C:/Program Files/Google/Chrome/Application/chrome.exe" >> $env:GITHUB_ENV
-      - name: Scoped Guard, native, model, GUI, image and integrated Fake phases
+      - name: Focused Guard and five shutdown repeats; previous scoped failure retained
         run: |
           $python = Join-Path $env:RUNNER_TEMP 'newsflow-final-314/Scripts/python.exe'
-          & $python -I -B tools/validation/step15a/prepare_windows.py (Join-Path $env:RUNNER_TEMP 'newsflow-step15a')
+          & $python -I -B tools/validation/step15a/prepare_windows.py (Join-Path $env:RUNNER_TEMP 'newsflow-step15a') --shutdown-only
           exit $LASTEXITCODE
       - name: Upload only nonsecret summary and test-ID evidence
         if: always()
