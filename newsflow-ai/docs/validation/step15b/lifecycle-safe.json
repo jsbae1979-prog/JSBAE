@@ -1,0 +1,37 @@
+{
+  "normal_stop_runs": 2,
+  "normal_stop_PASS": 2,
+  "forced_cleanup": 0,
+  "restart_persistence": true,
+  "final_state": "STOPPED",
+  "runs": [
+    {
+      "status": "STOPPED",
+      "at": "2026-10-26T18:13:47.358939+09:00",
+      "session": "073fc0aec2af4029a7cc259abc7f3c9f",
+      "mode": "DEMO-FAKE",
+      "url": "http://127.0.0.1:18765",
+      "operating_profile": false,
+      "real_API": false,
+      "normal_stop": true,
+      "exit_code": 0,
+      "active_children": 0,
+      "port_released": true,
+      "force_cleanup": false
+    },
+    {
+      "status": "STOPPED",
+      "at": "2026-10-26T18:14:57.384471+09:00",
+      "session": "a461dd45780f473ebf7361c4ff5f9934",
+      "mode": "DEMO-FAKE",
+      "url": "http://127.0.0.1:18765",
+      "operating_profile": false,
+      "real_API": false,
+      "normal_stop": true,
+      "exit_code": 0,
+      "active_children": 0,
+      "port_released": true,
+      "force_cleanup": false
+    }
+  ]
+}

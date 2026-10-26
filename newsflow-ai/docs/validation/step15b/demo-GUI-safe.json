@@ -1,0 +1,53 @@
+{
+  "Python": "3.14.7",
+  "test_ID": "test_user_demo::test_user_demo_modes_and_download",
+  "latest": {
+    "PASS": 1,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "attempts": [
+    {
+      "phase": "j_demo",
+      "FAIL": 1,
+      "cause": "test requested browser downloads, existing Guard enforces accept_downloads=False"
+    },
+    {
+      "phase": "j_demo2",
+      "FAIL": 1,
+      "cause": "CRLF prevented intended harness replacement; same download Guard boundary"
+    },
+    {
+      "phase": "j_demo3",
+      "PASS": 1,
+      "cause": "bounded localhost attachment response + JPEG dimensions; browser download still NOT VERIFIED"
+    }
+  ],
+  "result": {
+    "pages": 6,
+    "image_defaults_saved": true,
+    "image_Fake_generation": true,
+    "download_endpoint": true,
+    "browser_download_not_verified": true,
+    "reuse": true,
+    "character_model_saved": true,
+    "mode_defaults_independent": true,
+    "news_video_playback": true,
+    "external_page_requests": 0,
+    "JavaScript_errors": 0,
+    "paid_API": 0
+  },
+  "product_modified": false,
+  "guards_identical_to_previous": [
+    "browser_boundary.py",
+    "node_boundary.cjs",
+    "step13_guard.py",
+    "step13_fixtures.py",
+    "native_boundary.py",
+    "native_child_bootstrap.py"
+  ],
+  "complete_OS_isolation": false,
+  "browser_background_network": "NOT VERIFIED; page requests restricted to localhost",
+  "GUI_driver_children_remaining": 0
+}

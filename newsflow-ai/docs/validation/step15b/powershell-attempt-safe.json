@@ -1,0 +1,8 @@
+{
+  "status": "BLOCKED",
+  "cause": "Script execution disabled by existing Windows PowerShell policy",
+  "script_executed": false,
+  "policy_changed": false,
+  "bypass_used": false,
+  "alternative": "Existing approved Windows Python 3.14.7 supervisor"
+}
