@@ -315,6 +315,8 @@ def create_app(
     app.include_router(unified_publishing_router)
     app.include_router(social_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
+    from .gui.studio_v3 import mount_studio
+    mount_studio(app)
     return app
 
 
