@@ -264,7 +264,10 @@ function initial(action: Action, context: Item, view: View) {
   }
   if (action.id.startsWith("creation_") && action.id !== "creation_reuse")
     Object.assign(v, view.catalog.imageDefaults ?? {}, context);
-  if (action.id === "character_create")
+  if (
+    action.id === "character_create" ||
+    action.id === "character_character_defaults"
+  )
     Object.assign(v, view.catalog.characterDefaults ?? {}, context);
   return v;
 }
