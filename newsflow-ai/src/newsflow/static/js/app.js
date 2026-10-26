@@ -57,6 +57,9 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
     event.preventDefault();
     const target = new URL(event.submitter?.getAttribute('formaction') || form.action, window.location.href);
     if (target.origin !== window.location.origin) return;
+    // Creation forms retain the selected submit action and bounded local image upload.
+    const creationData = form.hasAttribute('data-creation-form') ? new FormData(form, event.submitter) : null;
+    const creationEncoding = event.submitter?.getAttribute('formenctype') || form.enctype;
     const submit = event.submitter || form.querySelector('button[type="submit"], button:not([type])');
     const label = submit ? submit.textContent : '';
     if (submit) { submit.disabled = true; submit.textContent = '처리 중…'; }
@@ -73,7 +76,8 @@ for (const form of document.querySelectorAll('form[method="post"]:not([data-easy
     try {
       const response = await fetch(target.href, {
         method: 'POST', mode: 'cors', credentials: 'same-origin',
-        body: new URLSearchParams(new FormData(form))
+        body: creationData && creationEncoding === 'multipart/form-data'
+          ? creationData : new URLSearchParams(creationData || new FormData(form))
       });
       if (!response.ok) {
         if (response.status === 422 && form.hasAttribute('data-elevenlabs-voices-form')) {

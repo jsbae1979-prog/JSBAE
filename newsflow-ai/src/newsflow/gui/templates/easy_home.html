@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}작업실 · NewsFlow AI{% endblock %}
 {% block content %}
+{% if request.url.path == "/create" %}{% include "creation_modes.html" %}{% endif %}
 {% set detail_open = selected_video or selected_task_context or workspace_guide_context %}
 {% set reference_home = request.url.path == '/' and not detail_open %}
 <div class="easy-page home-hub single-workspace blue-studio {{ 'reference-home' if reference_home }}">

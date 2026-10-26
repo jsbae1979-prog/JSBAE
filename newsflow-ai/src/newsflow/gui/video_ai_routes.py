@@ -34,6 +34,7 @@ from newsflow.video.ai.settings import (
 )
 from newsflow.video.production_policy import plan_policy, voice_allowed
 
+from newsflow.creation.catalog import news_video_default, save_news_video_default, SelectionError
 from .production_context import context_for_draft
 from .routes import go, page
 
@@ -71,7 +72,7 @@ def plans(request: Request, draft_id: int | None = None) -> HTMLResponse:
         request, "video_ai.html", active="video", plans=rows, drafts=drafts, draft_id=draft_id,
         selected_duration=next((draft.duration for draft in drafts if draft.id == draft_id), 30),
         ready=service.readiness(reported=True), plan_labels=PLAN_LABELS, notice=VIDEO_NOTICE,
-        full_models=[model for model in service.models() if model_ready(model)], default_model=DEFAULT_MODEL,
+        full_models=[model for model in service.models() if model_ready(model)], default_model=news_video_default(service.sessions),
     )
 
 
@@ -367,3 +368,12 @@ def clear_key(request: Request, return_draft: int | None = Form(None, ge=1)) -> 
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
     return go("/video-ai-settings?saved=cleared" + (f"&return_draft={return_draft}" if return_draft else ""))
+
+
+@router.post('/video/ai/default-model')
+def default_model(request: Request, model_path: str = Form(..., max_length=160)):
+    try:
+        save_news_video_default(request.app.state.sessions, model_path)
+    except SelectionError as exc:
+        raise HTTPException(422, str(exc)) from None
+    return go('/video/ai')

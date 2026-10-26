@@ -14,6 +14,7 @@ NAV_GROUPS = (
     ('워크스페이스', (('home', '/', '대시보드', 'home'), ('tasks', '/?show=tasks', '제작 현황', 'clock'))),
     ('콘텐츠 스튜디오', tuple(('news-create' if item['id'] == 'news' else item['id'], item['href'],
                      item['label'], item['icon']) for item in CONTENT_TYPES)),
+    ('이미지 제작', (('image-studio', '/image-studio', '이미지 제작', 'image'),)),
     ('뉴스 리서치', (('news', '/news', '뉴스 큐레이션', 'folder'), ('script', '/ai', '대본 라이브러리', 'edit'),
                     ('videos', '/videos', '뉴스 영상 보관', 'video'), ('voices', '/voices', '보이스 라이브러리', 'voice'))),
     ('게시·자동화', (('publish', '/queue', '게시 관리', 'send'), ('analytics', '/analytics', '성과 리포트', 'chart'),
@@ -29,6 +30,8 @@ def navigation_context(path: str, query) -> dict:
                    else 'news-create' if query.get('task') or query.get('guide') else 'home')
     elif content:
         current = 'news-create' if content['id'] == 'news' else content['id']
+    elif path.startswith('/image-studio'):
+        current = 'image-studio'
     elif path == '/schedules':
         current = 'schedules'
     elif path in {'/voices', '/video/tts'}:

@@ -33,6 +33,7 @@ from .gui.ai_settings_routes import router as ai_settings_router
 from .gui.api_settings_routes import router as api_settings_router
 from .gui.autopilot_routes import router as autopilot_router
 from .gui.character_routes import router as character_router
+from .gui.creation_routes import router as creation_router
 from .gui.curation_routes import router as curation_router
 from .gui.image_post_routes import router as image_post_router
 from .gui.instagram_routes import router as instagram_router
@@ -192,7 +193,7 @@ def create_app(
     app.state.config, app.state.sessions, app.state.coordinator = settings, sessions, coordinator
     from .character.service import CharacterService
 
-    app.state.character = CharacterService(settings.data_dir, sessions, api_keys['claude_api'])
+    app.state.character = CharacterService(settings.data_dir, sessions, api_keys['claude_api'], video_keys=video_ai.keys)
     app.state.news_thumbnails = ThumbnailService(coordinator.service.collector.adapter)
     app.state.engine = engine
     app.state.video = video
@@ -213,6 +214,8 @@ def create_app(
     app.state.api_keys = api_keys
     app.state.claude_cards = claude_cards
     app.state.image_generation, app.state.image_posts = image_generation, image_posts
+    from .creation.image_studio import ImageStudio
+    app.state.image_studio = ImageStudio(sessions, settings.data_dir, image_generation)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 
     def valid(token: str) -> bool:
@@ -234,7 +237,7 @@ def create_app(
             if not valid(cookie):
                 return HTMLResponse("보안 토큰이 필요합니다.", status_code=403)
             encoding = request.headers.get("content-type", "").split(";", 1)[0]
-            character_upload = request.url.path == '/character' and encoding == 'multipart/form-data'
+            character_upload = request.url.path in {'/character', '/image-studio/drafts'} and encoding == 'multipart/form-data'
             if encoding != "application/x-www-form-urlencoded" and not character_upload:
                 return HTMLResponse("지원하지 않는 요청 형식입니다.", status_code=415)
             # Cache before form parsing so downstream FastAPI receives the same body.
@@ -302,6 +305,7 @@ def create_app(
     app.include_router(cleanup_router)
     app.include_router(video_router)
     app.include_router(character_router)
+    app.include_router(creation_router)
     app.include_router(video_ai_router)
     app.include_router(publishing_router)
     app.include_router(youtube_router)

@@ -2,6 +2,7 @@
 {% block title %}영상 만들기 · NewsFlow AI{% endblock %}
 {% block extra_head %}<link rel="stylesheet" href="/static/css/video-modern.css"><script src="/static/js/video-review.js" defer></script>{% endblock %}
 {% block content %}
+{% if request.query_params.get("image_asset") %}<p role="status">제작 이미지가 로컬 자산에 저장됐습니다. 대본의 장면별 이미지에서 선택하세요. 기존 장면은 바꾸지 않았습니다.</p>{% endif %}
 <div class="video-modern">
 {% call studio_header('video','VIDEO STUDIO','영상 구성','저장한 대본에 음성과 자막을 더하고, 검토 후 제작하세요.') %}<a class="button" href="/character">캐릭터 쇼츠</a><a class="button" href="/videos">내 영상 보기 →</a>{% endcall %}
 {% if not draft and not job %}{% include 'production_picker.html' %}{% endif %}

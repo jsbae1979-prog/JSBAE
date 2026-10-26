@@ -41,13 +41,25 @@ def day_exposure(job, day):
 
 
 class CharacterService:
-    def __init__(self, data_dir, sessions, keys, *, writer=None, video=None, budget=None, composer=None):
+    def __init__(self, data_dir, sessions, keys, *, writer=None, video=None, budget=None, composer=None, video_keys=None):
         self.root = Path(data_dir)/'character'
         self.sessions, self.keys = sessions, keys
         self.writer = writer or CharacterWriter(keys.key)
         self.video = video or HiggsfieldVideoClient()
+        self.video_override, self.video_keys = video, video_keys
         self.budget = budget or APIBudgetService(sessions)
         self.composer = composer or compose
+
+    def video_for(self, job):
+        if self.video_override is not None or not job.get('selection'):
+            return self.video
+        from newsflow.creation.catalog import check_snapshot
+        chosen = check_snapshot(job['selection'], 'character')
+        if chosen['credential_source'] == 'legacy_env':
+            return self.video
+        if self.video_keys is None:
+            raise CharacterError('Higgsfield API 키를 설정에서 등록하세요.')
+        return HiggsfieldVideoClient(self.video_keys.key)
 
     def folder(self, job_id):
         if not isinstance(job_id,str) or not re.fullmatch('[a-f0-9]{32}',job_id):
@@ -66,6 +78,11 @@ class CharacterService:
             result = json.loads(path.read_text(encoding='utf8'))
             if result['id'] != job_id or result['model'] != MODEL:
                 raise ValueError
+            if result.get('selection'):
+                from newsflow.creation.catalog import check_snapshot
+                chosen = check_snapshot(result['selection'], 'character')
+                if result['claude_model'] != chosen['script_model'] or result['model'] != chosen['video_model']:
+                    raise ValueError
             if result.get('script'):
                 Storyboard.model_validate(result['script'])
                 assert result['plan_hash'] == self.plan_hash(result)
@@ -76,7 +93,7 @@ class CharacterService:
     @staticmethod
     def plan_hash(job):
         return fingerprint({k:job[k] for k in ['topic','model','claude_model','character','script','prompts',
-                                               'episode_limit','day_limit','reference_sha256']})
+                                               'episode_limit','day_limit','reference_sha256'] + (['selection'] if 'selection' in job else [])})
 
     def save(self, job):
         path = self.folder(job['id'])/'jobs.json'
@@ -115,7 +132,9 @@ class CharacterService:
                 continue
         return sorted(rows,key=lambda r:r['created_at'],reverse=True)
 
-    def create(self, topic, episode_limit, day_limit, *, reference: bytes = b''):
+    def create(self, topic, episode_limit, day_limit, *, reference: bytes = b'', selection=None):
+        from newsflow.creation.catalog import snapshot
+        frozen = snapshot('character', selection) if selection is not None else None
         topic = clean_text(topic,150)
         per, daily = amount(episode_limit),amount(day_limit)
         if per>daily or len(reference)>10*1024*1024:
@@ -133,9 +152,11 @@ class CharacterService:
                 refhash=digest(path)
             character=load_character().model_dump()
             job={'id':identifier,'created_at':now().isoformat(),'state':'needs_script','topic':topic,
-                 'model':MODEL,'claude_model':config.model,'character':character,'script':None,
+                 'model':MODEL,'claude_model':frozen['script_model'] if frozen else config.model,'character':character,'script':None,
                  'reference_sha256':refhash,'episode_limit':str(per),'day_limit':str(daily),
                  'events':[],'scenes':[],'reported_billed_usd':None,'duration':30,'made_for_kids':False}
+            if frozen:
+                job['selection'] = frozen
             self.save(job)
             return identifier
 
@@ -203,11 +224,11 @@ class CharacterService:
                 if cachefile.is_symlink() or (cachefile.is_file() and cachefile.stat().st_size>1000000):
                     raise CharacterError()
                 cache=json.loads(cachefile.read_text(encoding='utf8')) if cachefile.is_file() else {}
-                key_id=hashlib.sha256(self.video.credential().encode()).hexdigest()
+                key_id=hashlib.sha256(self.video_for(job).credential().encode()).hexdigest()
                 cache_id=fingerprint([job['reference_sha256'],key_id])
                 public=cache.get(cache_id)
                 if not public:
-                    public=self.video.upload_reference(path)
+                    public=self.video_for(job).upload_reference(path)
                     cache[cache_id]=public
                     # A URL receipt is private local state; no signed upload URL or credentials are saved.
                     tmp=cachefile.with_suffix('.tmp')
@@ -216,8 +237,8 @@ class CharacterService:
                     os.replace(tmp,cachefile)
                 scenes=[]
                 for row in job['prompts']:
-                    payload=self.video.payload(row['prompt'],row['seconds'],public)
-                    quote=str(amount(self.video.estimate(payload)))
+                    payload=self.video_for(job).payload(row['prompt'],row['seconds'],public)
+                    quote=str(amount(self.video_for(job).estimate(payload)))
                     scenes.append({'position':row['position'],'payload':payload,'quote_usd':quote,
                                    'state':'not_submitted','idempotency_key':uuid4().hex,'attempt':1})
                 total=sum(amount(s['quote_usd']) for s in scenes)
@@ -242,7 +263,7 @@ class CharacterService:
             if job['state']!='quoted' or quote_hash!=job['quote_hash']:
                 raise CharacterError('blocked')
             if (now()-datetime.fromisoformat(job['quoted_at'])>timedelta(minutes=15)
-                    or hashlib.sha256(self.video.credential().encode()).hexdigest()!=job['quote_key_id']
+                    or hashlib.sha256(self.video_for(job).credential().encode()).hexdigest()!=job['quote_key_id']
                     or fingerprint([job['plan_hash'],job['scenes'],job['quoted_at'],job['quote_key_id']])!=quote_hash):
                 raise CharacterError('budget')
             # Official supplier quotes only, never estimated token-dollar reservations or actual bills.
@@ -261,7 +282,7 @@ class CharacterService:
                 scene['submitted_at']=now().isoformat()
                 self.save(job)
                 try:
-                    scene['handle']=self.video.submit_scene(scene['payload'],scene['idempotency_key'])
+                    scene['handle']=self.video_for(job).submit_scene(scene['payload'],scene['idempotency_key'])
                     scene['state']='submitted'
                     self.save(job)
                 except Exception:  # noqa: BLE001 - persist a stopped state without secret supplier diagnostics
@@ -285,7 +306,7 @@ class CharacterService:
                 if scene['state']!='submitted':
                     raise CharacterError('blocked')
                 try:
-                    status=self.video.check(scene['handle'])
+                    status=self.video_for(job).check(scene['handle'])
                     if status.state in {'failed','nsfw','canceled'}:
                         scene['state']=status.state
                         scene['finished_at']=now().isoformat()
@@ -296,7 +317,7 @@ class CharacterService:
                         path=folder/f'scene-{scene["position"]}.mp4'
                         scene['state']='downloading'
                         self.save(job)
-                        self.video.fetch(status,path,Event())
+                        self.video_for(job).fetch(status,path,Event())
                         info=probe_clip(path)
                         if info['duration']<scene['payload']['duration']-2:
                             raise CharacterError('media')
@@ -323,9 +344,9 @@ class CharacterService:
             job['state']='retry_quoting'
             self.save(job)
             try:
-                quote=str(amount(self.video.estimate(pending['payload'])))
+                quote=str(amount(self.video_for(job).estimate(pending['payload'])))
                 retry={'position':pending['position'],'quote_usd':quote,'at':now().isoformat(),
-                       'key_id':hashlib.sha256(self.video.credential().encode()).hexdigest(),
+                       'key_id':hashlib.sha256(self.video_for(job).credential().encode()).hexdigest(),
                        'original':fingerprint(pending)}
                 job['retry']=retry
                 job['retry_hash']=fingerprint(retry)
@@ -347,7 +368,7 @@ class CharacterService:
             if (fingerprint(retry)!=quote_hash or fingerprint(scene)!=retry['original']
                     or scene['state']!='failed' or scene['attempt']>=3
                     or now()-datetime.fromisoformat(retry['at'])>timedelta(minutes=15)
-                    or hashlib.sha256(self.video.credential().encode()).hexdigest()!=retry['key_id']):
+                    or hashlib.sha256(self.video_for(job).credential().encode()).hexdigest()!=retry['key_id']):
                 raise CharacterError('blocked')
             day=(now()+timedelta(hours=9)).date().isoformat()
             exposure=sum((day_exposure(j,day) for j in self.listing()),Decimal(0))
@@ -367,7 +388,7 @@ class CharacterService:
             job['state']='generating'
             self.save(job)
             try:
-                scene['handle']=self.video.submit_scene(scene['payload'],scene['idempotency_key'])
+                scene['handle']=self.video_for(job).submit_scene(scene['payload'],scene['idempotency_key'])
                 scene['state']='submitted'
                 self.save(job)
             except Exception:  # noqa: BLE001 - retain the new intent and prior terminal receipt

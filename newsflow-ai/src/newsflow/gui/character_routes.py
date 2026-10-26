@@ -9,31 +9,56 @@ from newsflow.character.schema import CharacterError, load_character
 from newsflow.character.service import SAFE_ERRORS
 
 from .routes import go, page
+from newsflow.creation.catalog import read_defaults, save_defaults, API_MODELS, SelectionError
+
+
+def choices(request, reference_asset=''):
+    service = request.app.state.image_studio
+    assets = service.assets()
+    if reference_asset and reference_asset not in assets:
+        raise HTTPException(422, '저장한 참조 이미지를 확인하세요.')
+    return dict(chosen=read_defaults(request.app.state.sessions, 'character'),
+                script_models=API_MODELS['claude_api'], reference_assets=assets,
+                reference_asset=reference_asset)
+
 
 router=APIRouter()
 
 
 @router.get('/character',response_class=HTMLResponse)
-def studio(request: Request, job_id: str = ''):
+def studio(request: Request, job_id: str = '', reference_asset: str = ''):
     service=request.app.state.character
     try:
         job=service.read(job_id) if job_id else None
         return page(request,'character.html',active='video',character=load_character(),job=job,
-                    jobs=service.listing()[:20],error='')
+                    jobs=service.listing()[:20],error='',**choices(request, reference_asset))
     except CharacterError:
         raise HTTPException(404,'캐릭터 작업을 찾지 못했습니다.') from None
 
 
 @router.post('/character')
-def create(request: Request,reference: Annotated[UploadFile, File()],topic: str=Form(...),
-           episode_limit: str=Form(...),day_limit: str=Form(...)):
+def create(request: Request, reference: Annotated[UploadFile | None, File()] = None, topic: str=Form(...),
+           episode_limit: str=Form(...),day_limit: str=Form(...), script_model: str=Form(''),
+           video_model: str=Form(''), reference_asset: str=Form('')):
     try:
+        selected = read_defaults(request.app.state.sessions, 'character')
+        if script_model:
+            selected['script_model'] = script_model
+        if video_model:
+            selected['video_model'] = video_model
+        raw = reference.file.read(10*1024*1024+1) if reference and reference.filename else b''
+        if reference_asset:
+            if raw:
+                raise ValueError('Select one reference')
+            raw = request.app.state.image_studio.asset(reference_asset).read_bytes()
+        if not raw:
+            raise ValueError('Reference required')
         identifier=request.app.state.character.create(topic,episode_limit,day_limit,
-                        reference=reference.file.read(10*1024*1024+1))
+                        reference=raw, selection=selected)
         return go('/character?job_id='+identifier)
     except (ValueError,OSError,*SAFE_ERRORS):
         return page(request,'character.html',active='video',character=load_character(),job=None,
-                    jobs=request.app.state.character.listing()[:20],error='입력과 PNG 원본·제작 한도를 확인하세요.')
+                    jobs=request.app.state.character.listing()[:20],error='입력과 PNG 원본·제작 한도를 확인하세요.',**choices(request))
 
 
 @router.post('/character/{job_id}/{action}')
@@ -65,7 +90,7 @@ def act(request: Request,job_id: str,action: str,consent: bool=Form(False),revie
             raise HTTPException(404,'작업을 확인하세요.') from None
         message=str(exc) if isinstance(exc,CharacterError) else '작업을 중단했습니다. 저장된 기록을 확인하세요.'
         return page(request,'character.html',active='video',character=load_character(),job=job,
-                    jobs=service.listing()[:20],error=message)
+                    jobs=service.listing()[:20],error=message,**choices(request))
 
 
 @router.get('/character/{job_id}/file')
@@ -103,3 +128,14 @@ def clip(request: Request,job_id: str,position: int):
         return FileResponse(path,media_type='video/mp4')
     except (CharacterError,StopIteration,OSError):
         raise HTTPException(404,'저장된 장면을 확인하세요.') from None
+
+
+@router.post('/character-defaults')
+def character_defaults(request: Request, script_model: str=Form(...), video_model: str=Form(...)):
+    selected = read_defaults(request.app.state.sessions, 'character')
+    selected.update(script_model=script_model, video_model=video_model)
+    try:
+        save_defaults(request.app.state.sessions, 'character', selected)
+    except SelectionError as exc:
+        raise HTTPException(422, str(exc)) from None
+    return go('/character')

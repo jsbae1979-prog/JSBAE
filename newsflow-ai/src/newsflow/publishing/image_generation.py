@@ -65,7 +65,7 @@ class ImageGenerationError(Exception):
         super().__init__(code)
 
 
-def clean_image(raw):
+def clean_image(raw, *, size=(1024, 1280)):
     """Decode bounded JPEG pixels, discard metadata, never fetch returned URLs."""
     try:
         if not raw or len(raw) > 4 * 1024 * 1024:
@@ -73,7 +73,7 @@ def clean_image(raw):
         with warnings.catch_warnings():
             warnings.simplefilter("error", Image.DecompressionBombWarning)
             with Image.open(BytesIO(raw)) as source:
-                if source.format != "JPEG" or source.size != (1024, 1280):
+                if source.format != "JPEG" or source.size != size:
                     raise ValueError
                 source.load()
                 output = BytesIO()
@@ -123,10 +123,14 @@ class OpenAIImageAdapter:
     def __init__(self, opener=None):
         self.opener = opener
 
-    def generate(self, prompt, key):
+    def generate(self, prompt, key, *, selection=None):
         payload = {"model": MODEL, "prompt": prompt, "n": 1, "size": "1024x1280",
                    "quality": "medium", "output_format": "jpeg", "output_compression": 85,
                    "background": "opaque", "moderation": "auto"}
+        if selection is not None:
+            from newsflow.creation.catalog import validate
+            selected = validate("image", selection)
+            payload.update(model=selected["model"], size=selected["size"], quality=selected["quality"])
         request = urllib.request.Request(
             "https://api.openai.com/v1/images/generations",
             data=json.dumps(payload).encode("utf-8"),
@@ -300,7 +304,7 @@ class ImageGenerationService:
                               draft_id=draft_id, provider="codex")
 
     def _generate(self, article_id, analysis_id, rank, style, context, prompt, *, card_id=None,
-                  draft_id=None, provider="openai"):
+                  draft_id=None, provider="openai", execution=None):
         # Inspect only the existing OpenAI credential; never store it in the run.
         key = None
         if provider == "openai":
@@ -312,9 +316,15 @@ class ImageGenerationService:
                 raise PublishingError("OpenAI API Key를 설정에서 등록해 주세요.") from None
         if (key and key in prompt) or re.search(r"\bsk-[A-Za-z0-9_-]{16,}", prompt):
             raise PublishingError("자료에 비밀정보로 보이는 내용이 있어 전송하지 않습니다.")
-        model = MODEL if provider == "openai" else "codex-default"
+        selected = None
+        if execution is not None:
+            from newsflow.creation.catalog import check_snapshot
+            selected = check_snapshot(execution, "image")
+            if provider != "openai":
+                raise PublishingError("이미지 모델 제공자를 확인하세요.")
+        model = selected["model"] if selected else MODEL if provider == "openai" else "codex-default"
         adapter = self.adapter if provider == "openai" else self.codex_adapter
-        digest = hashlib.sha256((model + prompt).encode()).hexdigest()
+        digest = hashlib.sha256((model + prompt + (json.dumps([execution, draft_id], sort_keys=True) if execution else "")).encode()).hexdigest()
         # AppSetting's existing 50-character primary key is an atomic durable claim.
         claim = "feed-image:" + digest[:39]
         try:
@@ -327,7 +337,8 @@ class ImageGenerationService:
                         options={"article_id": article_id, "analysis_id": analysis_id, "rank": rank,
                                  "model": model, "style": style, "request_hash": digest,
                                  "claude_card_run_id": card_id, "draft_id": draft_id,
-                                 "consented_at": datetime.now(UTC).isoformat(), "images": 1},
+                                 "consented_at": datetime.now(UTC).isoformat(), "images": 1,
+                                 **({"execution": execution, "credential_fingerprint": hashlib.sha256(key.encode()).hexdigest()} if execution else {})},
                         evidence={"source": context}, result={}, message=MESSAGES["running"])
                     session.add(run)
                     session.flush()
@@ -336,9 +347,10 @@ class ImageGenerationService:
                 started = time.monotonic()
                 usage = None
                 try:
-                    raw, usage = adapter.generate(prompt, key)
+                    raw, usage = (adapter.generate(prompt, key, selection=selected) if selected
+                                  else adapter.generate(prompt, key))
                     usage = safe_usage(usage)
-                    raw = clean_image(raw) if provider == "openai" else clean_codex_image(raw)
+                    raw = clean_image(raw, size=tuple(map(int, selected["size"].split("x"))) if selected else (1024, 1280)) if provider == "openai" else clean_codex_image(raw)
                     self.outputs.mkdir(parents=True, exist_ok=True)
                     name = f"generated-{identifier}.jpg"
                     with (self.outputs / name).open("xb") as output:
