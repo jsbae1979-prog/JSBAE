@@ -120,12 +120,16 @@ def test_all_main_destinations_fit_small_windows(page, width, tmp_path):
     page.screenshot(path=str(tmp_path / f'character-{width}.png'), full_page=True)
 
 
-def test_decorative_icons_preserve_button_name_and_required_consent(page):
+def test_decorative_icons_preserve_button_name_and_required_consent(page, app):
+    from test_creation_models import png
+    app.state.image_studio.asset_bytes(png())
     page.goto('http://127.0.0.1/character')
     button = page.get_by_role('button', name='주제·원본 저장', exact=True)
     expect(button).to_be_visible()
     expect(button.locator('svg')).to_have_attribute('aria-hidden', 'true')
-    assert page.locator('.character-form input[required]').count() == 4
+    assert page.locator('.character-form input[required]').count() == 3
+    assert set(page.locator('.character-form input[required]').evaluate_all('(nodes)=>nodes.map(n=>n.name)')) == {'topic','episode_limit','day_limit'}
+    expect(page.locator('.character-form [name=reference_asset]')).to_have_count(1)
     assert page.locator('.character-form [name=reference]').get_attribute('accept') == 'image/png'
     assert page.locator('.character-form [name=csrf_token]').input_value()
 
