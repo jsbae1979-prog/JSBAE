@@ -368,6 +368,7 @@ def test_publish_review_and_final_approval_are_separate_and_unknown_is_locked(cl
         "description": "합성 자료입니다.",
         "hashtags": "뉴스",
         "youtube_account": account,
+        "youtube_category_id": "25",
         "content_reviewed": "true",
         "copyright_confirmed": "true",
         "sources_confirmed": "true",
@@ -375,7 +376,8 @@ def test_publish_review_and_final_approval_are_separate_and_unknown_is_locked(cl
     }
     assert c.post("/publishing/unified/local-draft", data=fields).status_code == 303
     assert unified.local_draft(identifier)["approval"] is False
-    assert c.post("/publishing/unified/review", data=fields).status_code == 303
+    review_response = c.post("/publishing/unified/review", data=fields)
+    assert review_response.status_code == 303, review_response.text
     cohort = unified.for_video(identifier)
     assert cohort["reviewed"] and cohort["can_execute"]
     assert adapter.calls == connections.calls == 0
