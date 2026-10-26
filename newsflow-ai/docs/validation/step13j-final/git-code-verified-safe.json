@@ -1,0 +1,11 @@
+{
+  "branch": "codex/newsflow-step13j-final-20261025",
+  "SHA": "aaf86a4cfb527735b55caa0cfe9dd2bde579d5c2",
+  "tree": "860412f6a16d72202c66b26575773cc729afb571",
+  "published_files": 19,
+  "remote_blob_mismatches": 0,
+  "PR35_draft": true,
+  "PR35_merged": false,
+  "PR35_head_unchanged": "6aef983db5a8d31b604d9fafd4329a0b4f83787d",
+  "main_changed": false
+}

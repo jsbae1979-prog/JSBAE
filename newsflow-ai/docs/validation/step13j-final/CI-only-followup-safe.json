@@ -1,0 +1,24 @@
+{
+  "purpose": "CI-only sanitized failure diagnosis",
+  "previous_CI_run": "40180382149",
+  "previous_summary_preserved": true,
+  "changed_files": [
+    "newsflow-ai/tools/validation/step13j_final/prepare_windows.py",
+    "newsflow-ai/tools/validation/step13j_final/summarize.py",
+    ".github/workflows/newsflow-step13j-final-windows.yml"
+  ],
+  "before_SHA256": {
+    "newsflow-ai/tools/validation/step13j_final/prepare_windows.py": "5b974f338781b9e3a4253af98131f9bfb399023bbd207cd2208540147652c661",
+    "newsflow-ai/tools/validation/step13j_final/summarize.py": "ff5cafcf3c2b3b5048c4cb093f089534ac79cb895cb97796f13eae9dffc0e014",
+    ".github/workflows/newsflow-step13j-final-windows.yml": "e46c7fe8244c0ce6f77afade958085c17dc489f6bb5ef5acd65f7051b30a6576"
+  },
+  "after_SHA256": {
+    "newsflow-ai/tools/validation/step13j_final/prepare_windows.py": "c748e474c02910810305eb61cd21a80c69f85fff254ea87c91e90d0387b8b7cc",
+    "newsflow-ai/tools/validation/step13j_final/summarize.py": "5cf07e403daae5ee47770e3d5433e6b9b49e5478d2a45020b3b9e491bd1ec2a1",
+    ".github/workflows/newsflow-step13j-final-windows.yml": "e1682757e7c4a3396f04cad7a016a2ed8799ee042d19f73d605e9b48f883fc33"
+  },
+  "harness_or_product_changed": false,
+  "tests_executed": false,
+  "push_performed": false,
+  "CI_SHA": "43f391be4240925ad1a5582085428c3d01cb4ebe"
+}

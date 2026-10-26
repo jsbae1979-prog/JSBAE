@@ -1,0 +1,7 @@
+{
+  "security_initial": "78PASS; native50PASS1FAIL exactPSexe hash read blocked",
+  "security_combined_interrupted": "72PASS then deliberate denial caught by browser fixture; dedicated security phase restored",
+  "security3": "129PASS",
+  "native_initial": "13PASS2FAIL; PS canonical path and LF/CRLF fixture comparison",
+  "model_initial": "40PASS; harness-only edits occurred near execution, rerun after freeze required; product/model source unchanged"
+}

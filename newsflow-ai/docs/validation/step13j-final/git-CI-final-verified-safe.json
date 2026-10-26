@@ -1,0 +1,16 @@
+{
+  "SHA": "43f391be4240925ad1a5582085428c3d01cb4ebe",
+  "parent": "aaf86a4cfb527735b55caa0cfe9dd2bde579d5c2",
+  "remote_changed_files": [
+    ".github/workflows/newsflow-step13j-final-windows.yml",
+    "newsflow-ai/tools/validation/step13j_final/prepare_windows.py",
+    "newsflow-ai/tools/validation/step13j_final/summarize.py"
+  ],
+  "Git_blob_mismatches": 0,
+  "product_test_runtime_harness_changes": 0,
+  "purpose": "bounded redacted CI diagnostics only",
+  "Windows_Actions_run": 40180846654,
+  "conclusion": "success",
+  "PASS": 247,
+  "initial_run_cause": "NOT VERIFIED; preserved, not attributed to a product fix"
+}

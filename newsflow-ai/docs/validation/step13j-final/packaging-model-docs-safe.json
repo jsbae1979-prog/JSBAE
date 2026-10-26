@@ -1,0 +1,353 @@
+{
+  "report": "Step13J final supplement — packaging prerequisites and official model contracts",
+  "checked_on": "2026-10-25",
+  "scope": "Read-only source and public official documentation review. Prior deployment plan retained; unfulfilled conditions updated only.",
+  "source_baseline": "Step13J sealed worktree; prior product/test SHA db9e4df953764fe36260d89e8d68eec1687b3c5a; later CI-only checkpoint 2c785afbb32e6d514343c1ec991698f3681bfa39.",
+  "actions": {
+    "product_edits": 0,
+    "test_edits": 0,
+    "tests": 0,
+    "package_builds": 0,
+    "installations": 0,
+    "provider_calls": 0,
+    "account_or_key_reads": 0,
+    "operating_data_reads": 0
+  },
+  "verdict": "CONDITIONAL — documentation and static contracts verified; actual EXE and live model/account/billing remain NOT VERIFIED.",
+  "packaging_tools": [
+    {
+      "tool": "PyInstaller",
+      "observed_version": "6.22.3",
+      "documentation": "Python3.14 support introduced in6.15.0; Windows build required for Windows executable; bundles interpreter.",
+      "sources": [
+        "https://pyinstaller.org/en/stable/CHANGES.html",
+        "https://pyinstaller.org/en/stable/",
+        "https://pyinstaller.org/en/stable/requirements.html"
+      ],
+      "newsflow_build": "NOT VERIFIED",
+      "selected": false
+    },
+    {
+      "tool": "Nuitka",
+      "observed_version": "4.2 release and current manual",
+      "documentation": "4.2 announces official Python3.14 support. Windows requires supported compiler; manual lists MSVC2022+, Clang-cl and Zig. MinGW64 on Python3.13+ remains experimental.",
+      "sources": [
+        "https://nuitka.net/posts/nuitka-release-42.html",
+        "https://nuitka.net/user-documentation/user-manual.html"
+      ],
+      "newsflow_build": "NOT VERIFIED",
+      "selected": false
+    }
+  ],
+  "unfulfilled_deployment_gates": [
+    {
+      "id": "PKG-01",
+      "area": "Frozen entrypoint",
+      "status": "NOT IMPLEMENTED / NOT VERIFIED",
+      "evidence": [
+        "run.bat",
+        "tools/windows_launcher.py",
+        "pyproject.toml"
+      ],
+      "finding": "Current launcher discovers Python3.12/3.14, creates a venv and invokes pip editable installation. No installer/spec/Nuitka build definition identified. Python3.14.7 source tests do not establish executable compatibility.",
+      "needed": "Step15-approved tool selection, pinned Python3.14.7 build, clean Windows no-Python smoke test."
+    },
+    {
+      "id": "PKG-02",
+      "area": "Child workers/startup/normal shutdown",
+      "status": "DEPLOYMENT BLOCKER",
+      "evidence": [
+        "src/newsflow/video/tts.py:160",
+        "src/newsflow/operations/startup.py:95",
+        "src/newsflow/operations/startup.py:107",
+        "src/newsflow/main.py:358"
+      ],
+      "finding": "SAPI spawns sys.executable -m; autorun targets .venv/Scripts/python.exe. These paths assume an interpreter. Frozen child dispatch, normal exit and update reentry remain unverified.",
+      "needed": "Explicit frozen-compatible worker/autorun entrypoints, no accidental main-app recursion, owned child cleanup and restart protection; preserve existing approval boundaries."
+    },
+    {
+      "id": "PKG-03",
+      "area": "FFmpeg/assets/native dependencies",
+      "status": "PARTIAL SOURCE READY",
+      "evidence": [
+        "src/newsflow/video/engine.py:486",
+        "src/newsflow/video/engine.py:542",
+        "pyproject.toml",
+        "src/newsflow/character/assets/OFL.txt"
+      ],
+      "finding": "FFmpeg/ffprobe resolved by explicit path/env/PATH; libx264 encoding used. Templates/static assets/migrations/fonts are declared as package data, but frozen resource discovery, tzdata, pywin32/Pillow/SQLite DLLs and optional ONNX/Supertonic models are not packaged or tested.",
+      "needed": "Build manifest and integrity/license/version checks; no developer paths or actual user models/media bundled."
+    },
+    {
+      "id": "PKG-04",
+      "area": "FFmpeg redistribution",
+      "status": "NOT VERIFIED",
+      "finding": "Official licensing is LGPL2.1+ by default; enabled GPL components change the binary license. libx264 is a GPL component; enable-nonfree binaries are not redistributable. Current NewsFlow uses libx264, so the chosen redistributable FFmpeg build and corresponding source/notices/build configuration need review. This does not decide the license of the separate NewsFlow application.",
+      "sources": [
+        "https://www.ffmpeg.org/legal.html",
+        "https://www.ffmpeg.org/doxygen/4.3/md_LICENSE.html"
+      ],
+      "needed": "Choose exact redistributable FFmpeg/ffprobe binaries, record build flags/license/source availability and ship required notices. Do not assume an arbitrary FFmpeg download is LGPL-only."
+    },
+    {
+      "id": "PKG-05",
+      "area": "Node/Playwright/Chrome",
+      "status": "TEST TOOLS DISTINCT FROM PRODUCT RUNTIME",
+      "evidence": [
+        "pyproject.toml",
+        "tools/validation/step13j/prepare_windows.py",
+        "tools/validation/step13j/browser_boundary.py",
+        "src/newsflow/oauth/production.py",
+        "src/newsflow/oauth/instagram_relay.py",
+        "src/newsflow/oauth/tiktok_protocol.py"
+      ],
+      "finding": "Node/Playwright are used by GUI validation tooling, not listed product dependencies or normal product imports. Product serves a loopback GUI and OAuth uses the system webbrowser. Chrome155 is a tested browser, not a mandatory bundled Chrome contract. Optional Codex/Claude CLI features have their own external dependencies.",
+      "needed": "Decide supported user-browser launch experience and verify it in clean-PC packaging. Do not bundle test driver/profile/cookies or make Node mandatory without a product need."
+    },
+    {
+      "id": "PKG-06",
+      "area": "Per-user data and credentials",
+      "status": "SOURCE SEPARATION PRESENT / REAL MULTIUSER NOT VERIFIED",
+      "evidence": [
+        "src/newsflow/paths.py",
+        "src/newsflow/oauth/vault.py:169",
+        "src/newsflow/config.py"
+      ],
+      "finding": "Default data root is current-user LocalAppData/NewsFlowAI; DPAPI uses current-user protection without LOCAL_MACHINE. Environment data-root overrides and shared/global environment keys can still create shared configuration. Default Windows ACL, different-user SID isolation, credential restore and independent ledger behavior require native tests.",
+      "needed": "Retain per-user layout, prohibit accidental packaged shared secrets and test distinct standard users; API-key direct-entry/backend/hybrid policy remains undecided."
+    },
+    {
+      "id": "PKG-07",
+      "area": "Local server and ports",
+      "status": "DEPLOYMENT BLOCKER / PARTLY SOURCE VERIFIED",
+      "evidence": [
+        "src/newsflow/main.py:215",
+        "src/newsflow/main.py:225",
+        "src/newsflow/main.py:275",
+        "src/newsflow/runtime.py:15"
+      ],
+      "finding": "Loopback restriction, signed CSRF, Origin checks, CSP and exclusive Windows socket are present. These are not local-user identity authentication; GET can obtain a CSRF cookie. Same-host user access to GUI/media requires explicit policy. Fixed8765 conflicts fail closed in source; native simultaneous-user/instance behavior is not proven.",
+      "needed": "Approved bootstrap/local-auth and sensitive-GET access policy; per-user port and OAuth redirect compatibility; actual Windows duplicate-run tests."
+    },
+    {
+      "id": "PKG-08",
+      "area": "Installer/update/uninstall/rollback",
+      "status": "NOT IMPLEMENTED / NOT VERIFIED",
+      "finding": "No actual installer, code-signing, clean-PC installation, data-preserving update/removal or frozen rollback proof. Startup may migrate/recover/start workers.",
+      "needed": "Step15–18 separately approved builds/tests; same-point data/code restore and unknown-request no-replay protection. No installer or operating update performed here."
+    }
+  ],
+  "model_review_policy": {
+    "source_priority": "Model-specific public API reference preferred. Shared docs/openapi is supplementary; absence there does not prove unavailability.",
+    "source": "https://docs.higgsfield.ai/docs/llms.txt",
+    "old_urls": "Existing docs.higgsfield.ai/docs/models/... links were unavailable in this review; replacement public open.higgsfield.ai model API references were used.",
+    "account_availability": "NOT VERIFIED",
+    "real_quotes_and_charges": "NOT VERIFIED",
+    "automatic_model_switch": false
+  },
+  "model_contracts": [
+    {
+      "model": "Kling3.0 Turbo",
+      "mode": "T2V",
+      "path": "kling-video/v3.0-turbo/text-to-video",
+      "official": {
+        "duration": "integer3–15",
+        "resolution": [
+          "720p",
+          "1080p"
+        ],
+        "aspect_ratio": [
+          "16:9",
+          "9:16",
+          "1:1"
+        ],
+        "required": [
+          "prompt"
+        ]
+      },
+      "source": "https://open.higgsfield.ai/models/kling-video/v3.0-turbo/text-to-video/api-reference",
+      "code": "src/newsflow/video/ai/model_contracts.py; higgsfield.py",
+      "verdict": "DOCUMENTED CONTRACT MATCH for existing common payload; live execution NOT VERIFIED"
+    },
+    {
+      "model": "PixVerseV6",
+      "mode": "T2V",
+      "path": "pixverse/v6/text-to-video",
+      "official": {
+        "duration": "number1–15",
+        "resolution": [
+          "360p",
+          "540p",
+          "720p",
+          "1080p"
+        ],
+        "aspect_ratio_includes": "9:16",
+        "required": [
+          "prompt"
+        ],
+        "audio": "generate_audio optional; code explicitly false"
+      },
+      "source": "https://open.higgsfield.ai/models/pixverse/v6/text-to-video/api-reference",
+      "code": "Default full-video model; code restricts to integer seconds, a valid subset.",
+      "verdict": "DOCUMENTED CONTRACT MATCH for used subset; live execution NOT VERIFIED"
+    },
+    {
+      "model": "Wan3.0",
+      "mode": "T2V",
+      "path": "alibaba/wan-3.0/text-to-video",
+      "official": {
+        "duration": "integer2–30",
+        "resolution": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "aspect_ratio_includes": "9:16",
+        "required": [
+          "prompt"
+        ],
+        "audio": "generate_audio optional; code explicitly false"
+      },
+      "source": "https://open.higgsfield.ai/models/alibaba/wan-3.0/text-to-video/api-reference",
+      "verdict": "DOCUMENTED CONTRACT MATCH for existing common payload; live execution NOT VERIFIED"
+    },
+    {
+      "model": "Wan3.0 Prime",
+      "mode": "T2V",
+      "path": "alibaba/wan-3.0-prime/text-to-video",
+      "official": {
+        "duration": "integer2–30",
+        "resolution": [
+          "480p",
+          "720p",
+          "1080p"
+        ],
+        "aspect_ratio_includes": "9:16",
+        "required": [
+          "prompt"
+        ],
+        "audio": "generate_audio optional; code explicitly false"
+      },
+      "source": "https://open.higgsfield.ai/models/alibaba/wan-3.0-prime/text-to-video/api-reference",
+      "verdict": "DOCUMENTED CONTRACT MATCH for existing common payload; live execution NOT VERIFIED"
+    },
+    {
+      "model": "Seedance2.0",
+      "mode": "Reference-to-video CHARACTER ADAPTER",
+      "path": "bytedance/seedance-2.0/reference-to-video",
+      "official": {
+        "duration": "integer4–15",
+        "resolution": [
+          "480p",
+          "720p",
+          "1080p",
+          "4k"
+        ],
+        "aspect_ratio_includes": "9:16",
+        "reference_field": "image_urls"
+      },
+      "source": "https://open.higgsfield.ai/models/bytedance/seedance-2.0/reference-to-video/api-reference",
+      "code": "src/newsflow/character/higgsfield_client.py:19,92–97; separate adapter sends prompt,4–10seconds,720p,9:16,image_urls and generate_audio=false.",
+      "verdict": "DOCUMENTED CONTRACT MATCH for narrower character payload; NOT missing merely because absent from common T2V CONTRACTS; real upload/generation NOT VERIFIED"
+    },
+    {
+      "model": "Seedance2.0",
+      "mode": "T2V / I2V",
+      "paths": [
+        "bytedance/seedance-2.0/text-to-video",
+        "bytedance/seedance-2.0/image-to-video"
+      ],
+      "official": "T2V prompt required; I2V image_url required, end_image_url optional.4–15seconds,480p/720p/1080p/4k. I2V does not expose the common T2V aspect_ratio field in its table.",
+      "sources": [
+        "https://open.higgsfield.ai/models/bytedance/seedance-2.0/text-to-video/api-reference",
+        "https://open.higgsfield.ai/models/bytedance/seedance-2.0/image-to-video/api-reference"
+      ],
+      "verdict": "PUBLICLY DOCUMENTED; no corresponding verified common NewsFlow T2V/I2V adapter contract. Existing character reference adapter is separate; no automatic substitution."
+    },
+    {
+      "model": "Seedance2.5",
+      "mode": "T2V",
+      "path": "bytedance/seedance-2.5/text-to-video",
+      "official": "4–30seconds,480p/720p/1080p,9:16 supported,mp4/mov output,optional audio.",
+      "source": "https://open.higgsfield.ai/models/bytedance/seedance-2.5/text-to-video/api-reference",
+      "verdict": "PUBLICLY DOCUMENTED / NOT IMPLEMENTED as a verified NewsFlow model. No model replacement proposed or performed."
+    },
+    {
+      "model": "PixVerseV6 and Wan3.0",
+      "mode": "I2V",
+      "paths": [
+        "pixverse/v6/image-to-video",
+        "alibaba/wan-3.0/image-to-video"
+      ],
+      "official": "Both require image_url and prompt; optional end_image_url. PixVerse1–15seconds and360p/540p/720p/1080p;Wan2–30seconds and480p/720p/1080p. Wan exposes aspect_ratio including9:16; PixVerse I2V table does not.",
+      "sources": [
+        "https://open.higgsfield.ai/models/pixverse/v6/image-to-video/api-reference",
+        "https://open.higgsfield.ai/models/alibaba/wan-3.0/image-to-video/api-reference"
+      ],
+      "verdict": "PUBLICLY DOCUMENTED; general NewsFlow common submit has no image_url payload, so do not claim these I2V modes implemented."
+    },
+    {
+      "model": "Kling3.0 Turbo",
+      "mode": "I2V",
+      "path": "kling-video/v3.0-turbo/image-to-video",
+      "source": "https://open.higgsfield.ai/models/kling-video/v3.0-turbo/image-to-video/playground",
+      "verdict": "PUBLIC CATALOG/PAGE EXISTS; full API-reference retrieval timed out, so exact latest I2V schema NOT VERIFIED. Do not infer T2V compatibility."
+    }
+  ],
+  "upload_contract": {
+    "source": "https://docs.higgsfield.ai/docs/concepts/file-uploads",
+    "finding": "Public docs use POST files/generate-upload-url, returned upload_headers, PUT to presigned upload_url, then public_url as reference. Character adapter implements that shape for bounded PNG and filters credential/Host headers.",
+    "verdict": "STATIC SHAPE MATCH; real upload/storage permissions/retention/access NOT VERIFIED"
+  },
+  "cost_boundary": {
+    "finding": "Public model pages mix undiscounted, promotional and configuration-specific pricing. Seedance2.0 page describes video-token metering, while existing model settings generally store per-second rates. No public display is treated as the user's authenticated quote or actual bill.",
+    "needed": "Future explicit real-call scope must freeze model/mode/resolution/seconds/reference transmission and obtain a suitable supplier estimate; do not silently map Seedance token pricing to arbitrary per-second guesses.",
+    "calls": 0
+  },
+  "unchanged_scope": [
+    "No Step14 operating deployment/restart",
+    "No Step15 package build or tool selection",
+    "No account or secret inspection",
+    "No provider request or model generation",
+    "No operating/backup changes"
+  ],
+  "openai_image_contract": {
+    "checked_on": "2026-10-25",
+    "scope": "Official OpenAI documentation and sealed source comparison only; actual account access and image generation NOT VERIFIED.",
+    "model": "gpt-image-2.5-flare-2026-09-08",
+    "sources": [
+      "https://developers.openai.com/api/reference/resources/images/methods/generate",
+      "https://developers.openai.com/api/docs/pricing"
+    ],
+    "source_evidence": [
+      "src/newsflow/publishing/image_generation.py:29",
+      "src/newsflow/publishing/image_generation.py:127"
+    ],
+    "request": {
+      "endpoint": "POST /v1/images/generations",
+      "size": "1024x1280",
+      "quality": "medium",
+      "output_format": "jpeg",
+      "output_compression": 85,
+      "background": "opaque",
+      "moderation": "auto",
+      "n": 1
+    },
+    "static_contract": {
+      "verdict": "DOCUMENTED CONTRACT MATCH",
+      "finding": "The exact snapshot is listed. The API permits WIDTHxHEIGHT for this model with both edges divisible by16 and ratio between1:3 and3:1;1024x1280 satisfies those constraints. JPEG,medium,opaque,auto moderation,n=1 and compression85 match documented options. Live response dimensions/account access remain NOT VERIFIED."
+    },
+    "pricing": {
+      "basis": "Standard processing; USD per1,000,000 tokens",
+      "text_input": 5,
+      "image_input": 8,
+      "image_output": 30,
+      "per_image_fixed_price": false,
+      "actual_bill": "NOT VERIFIED",
+      "one_image_estimate": "UNDETERMINED without the applicable usage/token estimate; do not present token rates as a fixed per-image charge.",
+      "note": "Do not substitute Batch rates for the synchronous Image API request. No authenticated quote or actual usage was obtained."
+    },
+    "actual_provider_calls": 0,
+    "followup": "Keep existing model and request unchanged. A future real generation needs separate explicit approval; no key/account inspection or billing request performed."
+  }
+}

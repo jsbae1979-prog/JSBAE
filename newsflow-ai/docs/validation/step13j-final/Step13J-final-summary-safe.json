@@ -1,0 +1,265 @@
+{
+  "step": "13J final supplement",
+  "verdict": "CONDITIONAL",
+  "Python": "Windows3.14.7",
+  "code_SHA": "aaf86a4cfb527735b55caa0cfe9dd2bde579d5c2",
+  "baseline": {
+    "PASS": 5366,
+    "FAIL": 15,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "full": {
+    "PASS": 5386,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "resolved": 15,
+  "new_regressions": [],
+  "new_failures": [],
+  "old_IDs": 5385,
+  "current_IDs": 5390,
+  "missing_IDs": [],
+  "new_IDs": [
+    "tests/test_step13j_model_selection_contracts.py::test_character_fixed_model_reference_quote_and_plan_change_are_not_silently_substituted",
+    "tests/test_step13j_model_selection_contracts.py::test_image_generation_is_fixed_wire_and_does_not_accept_unimplemented_choices",
+    "tests/test_step13j_model_selection_contracts.py::test_image_unknown_preserves_model_context_without_claiming_zero_cost_or_replay",
+    "tests/test_step13j_model_selection_contracts.py::test_three_modes_keep_snapshots_when_next_job_defaults_change",
+    "tests/test_step13j_model_selection_contracts.py::test_unverified_video_model_has_no_invented_price_and_cannot_make_full_plan"
+  ],
+  "new_skips": [],
+  "existing_skips": [
+    {
+      "ID": "tests.test_ai_video_compose::test_clip_store_rejects_symlinks",
+      "reason": "symlinks are not available for this user"
+    },
+    {
+      "ID": "tests.test_ai_video_settings::test_video_key_store_fails_closed_without_dpapi",
+      "reason": "Windows has a real DPAPI cipher"
+    },
+    {
+      "ID": "tests.test_live_ai::test_single_approved_openai_script_generation",
+      "reason": "opt-in paid AI live test: set NEWSFLOW_AI_LIVE_TEST=1, NEWSFLOW_AI_API_KEY and NEWSFLOW_AI_LIVE_MAX_TOKENS"
+    },
+    {
+      "ID": "tests.test_live_rss::test_google_news_live",
+      "reason": "opt-in live RSS: set NEWSFLOW_LIVE_TEST=1"
+    }
+  ],
+  "focused": {
+    "Python": "3.14.7",
+    "total": 247,
+    "phases": [
+      {
+        "phase": "j_security4",
+        "PASS": 130,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 0,
+        "Job_active_at_end": 0
+      },
+      {
+        "phase": "j_native2",
+        "PASS": 15,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 0,
+        "Job_active_at_end": 0
+      },
+      {
+        "phase": "j_models2",
+        "PASS": 40,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 0,
+        "Job_active_at_end": 0
+      },
+      {
+        "phase": "j_mode_gui",
+        "PASS": 6,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 0,
+        "Job_active_at_end": 0
+      },
+      {
+        "phase": "h3",
+        "PASS": 55,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 0,
+        "Job_active_at_end": 0
+      },
+      {
+        "phase": "j_flow",
+        "PASS": 1,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 0,
+        "Job_active_at_end": 0
+      }
+    ],
+    "independent_test_scopes": "Focused counts are not added to full regression.",
+    "actual_provider_calls_authorized": false
+  },
+  "Windows_Actions": {
+    "run": 40180846654,
+    "job": 121131397597,
+    "SHA": "43f391be4240925ad1a5582085428c3d01cb4ebe",
+    "tested_source_SHA": "aaf86a4cfb527735b55caa0cfe9dd2bde579d5c2",
+    "conclusion": "success",
+    "counts": {
+      "PASS": 247,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    "phases": [
+      {
+        "phase": "security",
+        "exit": 0,
+        "expected_records": 78,
+        "xml_present": true,
+        "status": "PASS",
+        "tests": 78,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 78,
+        "count_matches": true,
+        "unique_IDs": true,
+        "ID_set_matches": true,
+        "failed_IDs": []
+      },
+      {
+        "phase": "j_native_security",
+        "exit": 0,
+        "expected_records": 52,
+        "xml_present": true,
+        "status": "PASS",
+        "tests": 52,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 52,
+        "count_matches": true,
+        "unique_IDs": true,
+        "ID_set_matches": true,
+        "failed_IDs": []
+      },
+      {
+        "phase": "j_native",
+        "exit": 0,
+        "expected_records": 15,
+        "xml_present": true,
+        "status": "PASS",
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 15,
+        "count_matches": true,
+        "unique_IDs": true,
+        "ID_set_matches": true,
+        "failed_IDs": []
+      },
+      {
+        "phase": "j_models",
+        "exit": 0,
+        "expected_records": 40,
+        "xml_present": true,
+        "status": "PASS",
+        "tests": 40,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 40,
+        "count_matches": true,
+        "unique_IDs": true,
+        "ID_set_matches": true,
+        "failed_IDs": []
+      },
+      {
+        "phase": "j_mode_gui",
+        "exit": 0,
+        "expected_records": 6,
+        "xml_present": true,
+        "status": "PASS",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 6,
+        "count_matches": true,
+        "unique_IDs": true,
+        "ID_set_matches": true,
+        "failed_IDs": []
+      },
+      {
+        "phase": "h3",
+        "exit": 0,
+        "expected_records": 55,
+        "xml_present": true,
+        "status": "PASS",
+        "tests": 55,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 55,
+        "count_matches": true,
+        "unique_IDs": true,
+        "ID_set_matches": true,
+        "failed_IDs": []
+      },
+      {
+        "phase": "j_flow",
+        "exit": 0,
+        "expected_records": 1,
+        "xml_present": true,
+        "status": "PASS",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "testcase_records": 1,
+        "count_matches": true,
+        "unique_IDs": true,
+        "ID_set_matches": true,
+        "failed_IDs": []
+      }
+    ],
+    "artifact_SHA256": "06fad165822815adf814b3cf1d6faacca70a311c86064946ae9e4e3a2d935001",
+    "artifact_verified": true,
+    "all_owned_processes_exited": true,
+    "initial_run": {
+      "run": 40180382149,
+      "SHA": "aaf86a4cfb527735b55caa0cfe9dd2bde579d5c2",
+      "PASS": 144,
+      "FAIL": 1,
+      "ERROR": 0,
+      "remaining_NOT_RUN": 102,
+      "failed_ID": "tests.test_operational_startup::test_native_windows_schema_roundtrip_without_registration",
+      "direct_cause": "NOT VERIFIED: only outer failure preserved; no diagnostic details in first artifact",
+      "reproduced_after_diagnostic_only_change": false,
+      "claim": "Later PASS does not establish the original failure cause or prove a product fix."
+    },
+    "CI_only_changes": [
+      "redacted failure diagnostic collector",
+      "diagnostic summary print",
+      "safe diagnostic artifact allowlist"
+    ],
+    "provider_API_OAuth_SNS_calls": 0,
+    "note": "CI dependency download is distinct from provider calls; current-user OS access and browser background network not completely isolated."
+  },
+  "operating_data_changed": false,
+  "operating_restart_or_apply": false,
+  "real_provider_OAuth_SNS": false,
+  "EXE_build_or_general_release": false,
+  "next": "Step14/15 and paid/live calls require separate approval",
+  "CI_only_SHA": "43f391be4240925ad1a5582085428c3d01cb4ebe",
+  "product_source_SHA": "db9e4df",
+  "warnings": 20,
+  "mode_default_independence": "NOT IMPLEMENTED: common Provider defaults partly shared; saved job snapshots PASS",
+  "historical_native_startup_inner_cause": "NOT VERIFIED"
+}

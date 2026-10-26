@@ -1,0 +1,140 @@
+{
+  "stage": "Step 13J final model-selection contract review",
+  "status": "CONDITIONAL — static review complete; new synthetic tests not executed",
+  "scope": "Isolated final development copy only. Product source unchanged. No provider, OAuth, publication or operating-data access.",
+  "models": [
+    {
+      "mode": "news_video",
+      "status": "IMPLEMENTED_WITH_LIMITATIONS",
+      "provider": "Basic: FFmpeg. Full AI: Higgsfield. Analysis/script: selected OpenAI or Claude independently.",
+      "selection": "Full AI registered model selector; default suggestion pixverse/v6/text-to-video. Advanced mixed mode keeps per-scene model selection.",
+      "snapshot": "Production options freeze voice/model/consent; full plan stores model path/resolution/durations. Changed model conditions stop execution.",
+      "cost": "Full mode records provider usage and does not require a guessed upfront reservation. Legacy mixed mode retains its separate configured price/limit behavior. Neither is a verified invoice.",
+      "approval": "Generation, scene relation review, composition and publication remain separate.",
+      "unknown": "No automatic replay or provider fallback.",
+      "evidence": [
+        "src/newsflow/autopilot/service.py:247",
+        "src/newsflow/autopilot/service.py:255",
+        "src/newsflow/autopilot/production_options.py:9",
+        "src/newsflow/video/ai/service.py:245",
+        "src/newsflow/video/ai/service.py:304",
+        "src/newsflow/video/ai/service.py:534",
+        "src/newsflow/video/ai/service.py:694",
+        "src/newsflow/video/ai/production.py:13"
+      ],
+      "not_verified": [
+        "Real account availability, current quota, paid success and actual invoice."
+      ]
+    },
+    {
+      "mode": "single_image_feed",
+      "status": "IMPLEMENTED_FIXED_MODEL",
+      "provider": "Claude for stored copy/image plan; OpenAI for image generation. Basic local composition makes zero image API calls.",
+      "model": "gpt-image-2.5-flare-2026-09-08",
+      "selection": "No selectable image model, aspect ratio or image-reference generation adapter. All generation/storage routes require a news article.",
+      "snapshot": "Saved model, style, source/FullImagePlan, request hash, approval time, one-shot claim and file hash. Exact composed prompt/size/quality/output-format are not separately versioned.",
+      "cost": "Reported usage only; null usage is unknown, not zero cost. provider_invoice_not_verified is retained.",
+      "approval": "Copy/plan generation, image generation and human image review are separate.",
+      "unknown": "Failed and unknown one-shot claims cannot auto-replay. No silent fallback.",
+      "evidence": [
+        "src/newsflow/publishing/image_generation.py:29",
+        "src/newsflow/publishing/image_generation.py:126",
+        "src/newsflow/publishing/image_generation.py:241",
+        "src/newsflow/publishing/image_generation.py:317",
+        "src/newsflow/publishing/image_generation.py:347",
+        "src/newsflow/gui/image_post_routes.py:150",
+        "src/newsflow/gui/image_post_routes.py:170",
+        "src/newsflow/publishing/image_posts.py:81",
+        "src/newsflow/gui/templates/image_posts.html:103"
+      ],
+      "not_implemented": [
+        "Article-independent image production",
+        "Image model selector",
+        "Aspect-ratio selector",
+        "Reference-image editing/generation API"
+      ],
+      "not_verified": [
+        "Real account/model availability, paid generation success and actual invoice."
+      ]
+    },
+    {
+      "mode": "character_video",
+      "status": "IMPLEMENTED_FIXED_MODEL",
+      "provider": "Claude script and Higgsfield Seedance reference-to-video; no automatic provider switch.",
+      "model": "bytedance/seedance-2.0/reference-to-video",
+      "selection": "Fixed 720p, 9:16, 4–10 second clips and generate_audio=false. Claude model frozen when job is created.",
+      "snapshot": "Character configuration, script/prompts, reference SHA-256, model, Claude model, episode/day limits and quote hash are frozen. Plan changes fail validation.",
+      "cost": "Official provider estimates are separate from reported_billed_usd, which remains null unless actually reported. Unknown submissions retain approved quote exposure.",
+      "approval": "Script, reference upload/quote, scene submission, any authorized retry and final composition are separately gated.",
+      "unknown": "Ambiguous scene submission stops further submissions and cannot silently replay.",
+      "evidence": [
+        "src/newsflow/character/higgsfield_client.py:19",
+        "src/newsflow/character/higgsfield_client.py:57",
+        "src/newsflow/character/higgsfield_client.py:93",
+        "src/newsflow/character/service.py:61",
+        "src/newsflow/character/service.py:118",
+        "src/newsflow/character/service.py:195",
+        "src/newsflow/character/service.py:230",
+        "src/newsflow/character/service.py:238",
+        "src/newsflow/character/service.py:268"
+      ],
+      "not_implemented": [
+        "Selectable character video model/provider",
+        "Using the news-video model selector as a character model selector"
+      ],
+      "not_verified": [
+        "Real Seedance account contract, model availability, quotation and generated result."
+      ]
+    }
+  ],
+  "minimal_followup_plan": [
+    {
+      "priority": 1,
+      "change": "명확한 표시와 계약 테스트",
+      "detail": "뉴스 분석 모델, 뉴스 영상 모델, 이미지 고정 모델, 캐릭터 고정 모델을 구분한다. 지원되지 않는 모델·비율·reference 선택을 지원 완료로 표시하지 않는다.",
+      "new_adapter": false
+    },
+    {
+      "priority": 2,
+      "change": "이미지 요청 snapshot 최소 설계",
+      "detail": "향후 승인을 받은 경우에만 exact prompt와 size/quality/format 및 template version을 작업별 저장한다. 기존 결과 및 claim을 유지하고 재생성은 별도 실행으로 취급한다.",
+      "requires_separate_product_approval": true
+    },
+    {
+      "priority": 3,
+      "change": "캐릭터 기존 작업 호환 계획",
+      "detail": "다중 모델을 추가하려면 read()의 현재 MODEL 일치 제한과 모델별 계약 dispatch를 먼저 설계한다. 현재 단계에서는 고정 모델 계약을 유지한다.",
+      "requires_separate_product_approval": true
+    },
+    {
+      "priority": 4,
+      "change": "인증정보 출처 구분",
+      "detail": "캐릭터 기본 인증은 HF_KEY 환경변수이며 뉴스 영상의 DPAPI 키 설정과 같다고 주장하지 않는다. 사용자별 배포 통합은 별도 승인한다.",
+      "requires_separate_product_approval": true
+    },
+    {
+      "priority": 5,
+      "change": "실계정 확인",
+      "detail": "공식 문서/코드 계약과 실제 계정 사용 가능성은 구분한다. 별도 승인된 테스트 키·호출 수·비용 한도가 확정될 때만 실호출한다.",
+      "requires_separate_execution_approval": true
+    }
+  ],
+  "added_tests": {
+    "file": "tests/test_step13j_model_selection_contracts.py",
+    "count": 5,
+    "execution": "NOT RUN — parent controls execution",
+    "goals": [
+      "Three modes preserve existing snapshots after next-job default edits",
+      "Unverified video model retains unknown price and is rejected for full AI",
+      "Fixed image wire rejects unsupported model/ratio/reference choices and missing news",
+      "Unknown image result preserves context, usage unknown and non-replay claim",
+      "Character model/reference/quote stay fixed; altered plan cannot submit"
+    ]
+  },
+  "safety": {
+    "product_files_changed": 0,
+    "operating_files_used_as_test_input": 0,
+    "external_calls": 0,
+    "tests_executed_by_this_agent": 0
+  }
+}

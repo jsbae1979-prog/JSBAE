@@ -1,0 +1,401 @@
+{
+  "step": "13J-final / native remaining 15 focused validation",
+  "verdict": "PASS — focused scope only",
+  "Python": "Windows 3.14.7",
+  "previous_failure_count": 15,
+  "previous_direct_Guard_denials": 14,
+  "previous_wrapped_unconfirmed": 1,
+  "initial_focused": {
+    "counts": {
+      "PASS": 13,
+      "FAIL": 2,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    "unique_test_IDs": 15,
+    "duration_seconds": 43.618,
+    "exit_code": 1,
+    "Job_assigned": true,
+    "Job_kill_on_close": true,
+    "active_processes_after": 0,
+    "owned_processes_total": 29,
+    "test_ID_results": {
+      "tests/test_autopilot_state.py::test_independent_process_lock_blocks_without_creating_job": "PASS",
+      "tests/test_creator_preview_boundary.py::test_preview_boundary_blocks_external_dns_and_authentication_processes": "PASS",
+      "tests/test_creator_preview_boundary.py::test_preview_refuses_existing_directory_without_touching_files": "PASS",
+      "tests/test_feed_review_tool.py::test_cli_exit_zero_without_network": "PASS",
+      "tests/test_oauth_callback.py::test_another_local_process_cannot_bind_listener_port": "PASS",
+      "tests/test_operational_startup.py::test_native_windows_schema_roundtrip_without_registration": "FAIL",
+      "tests/test_pc_cloud_entrypoint.py::test_windows_entrypoint_and_synthetic_profile_survive_normal_reopen": "PASS",
+      "tests/test_phase1a_security.py::test_diagnostic_rejects_secret_url_without_output": "PASS",
+      "tests/test_windows.py::test_actual_server_lifecycle_and_port_collision": "PASS",
+      "tests/test_windows.py::test_invalid_secret_not_printed": "PASS",
+      "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0016]": "PASS",
+      "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0017]": "PASS",
+      "tests/test_windows_transition_plan.py::test_legacy_migrate_data_is_not_current_backup_tool": "PASS",
+      "tests/test_windows_transition_plan.py::test_restore_point_update_failure_and_restart": "FAIL",
+      "tests/test_windows_transition_plan.py::test_tamper_and_overwrite_refused": "PASS"
+    },
+    "evidence_files": [
+      "j_native/pytest.xml",
+      "j_native-supervisor-safe.json",
+      "j_native/evidence/native-boundary-safe.json"
+    ]
+  },
+  "final_focused": {
+    "counts": {
+      "PASS": 15,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    "unique_test_IDs": 15,
+    "duration_seconds": 47.007,
+    "exit_code": 0,
+    "Job_assigned": true,
+    "Job_kill_on_close": true,
+    "active_processes_after": 0,
+    "owned_processes_total": 31,
+    "test_ID_results": {
+      "tests/test_autopilot_state.py::test_independent_process_lock_blocks_without_creating_job": "PASS",
+      "tests/test_creator_preview_boundary.py::test_preview_boundary_blocks_external_dns_and_authentication_processes": "PASS",
+      "tests/test_creator_preview_boundary.py::test_preview_refuses_existing_directory_without_touching_files": "PASS",
+      "tests/test_feed_review_tool.py::test_cli_exit_zero_without_network": "PASS",
+      "tests/test_oauth_callback.py::test_another_local_process_cannot_bind_listener_port": "PASS",
+      "tests/test_operational_startup.py::test_native_windows_schema_roundtrip_without_registration": "PASS",
+      "tests/test_pc_cloud_entrypoint.py::test_windows_entrypoint_and_synthetic_profile_survive_normal_reopen": "PASS",
+      "tests/test_phase1a_security.py::test_diagnostic_rejects_secret_url_without_output": "PASS",
+      "tests/test_windows.py::test_actual_server_lifecycle_and_port_collision": "PASS",
+      "tests/test_windows.py::test_invalid_secret_not_printed": "PASS",
+      "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0016]": "PASS",
+      "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0017]": "PASS",
+      "tests/test_windows_transition_plan.py::test_legacy_migrate_data_is_not_current_backup_tool": "PASS",
+      "tests/test_windows_transition_plan.py::test_restore_point_update_failure_and_restart": "PASS",
+      "tests/test_windows_transition_plan.py::test_tamper_and_overwrite_refused": "PASS"
+    },
+    "evidence_files": [
+      "j_native2/pytest.xml",
+      "j_native2-supervisor-safe.json",
+      "j_native2/evidence/native-boundary-safe.json"
+    ]
+  },
+  "security": {
+    "counts": {
+      "PASS": 130,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    "unique_test_IDs": 130,
+    "duration_seconds": 3.521,
+    "exit_code": 0,
+    "Job_assigned": true,
+    "Job_kill_on_close": true,
+    "active_processes_after": 0,
+    "owned_processes_total": 7,
+    "evidence_files": [
+      "j_security4/pytest.xml",
+      "j_security4-supervisor-safe.json",
+      "j_security4/evidence/native-boundary-safe.json"
+    ]
+  },
+  "security_split": {
+    "existing": 78,
+    "new_native_boundary": 52
+  },
+  "product_source_changes": 0,
+  "migration_changes": 0,
+  "modified_validation_files": [
+    {
+      "path": "tools/validation/step13j_final/native_boundary.py",
+      "SHA256": "fed3f546ef8333eaac5e26bee2a228d999a358b522fc648b05ee2344aae3f787",
+      "isolated_mirror_identical": true
+    },
+    {
+      "path": "tools/validation/step13j_final/native_child_bootstrap.py",
+      "SHA256": "2fe20d8b11b6fb937fd8e235a25a388f5eea7c8657476d2353d9d902f8879abe",
+      "isolated_mirror_identical": true
+    },
+    {
+      "path": "tools/validation/step13j_final/prepare_native_config.py",
+      "SHA256": "a3639cc49f4d4a0e4016f11a4e2fc1a73c863dc017829d651f97860dcbd005cc",
+      "isolated_mirror_identical": true
+    },
+    {
+      "path": "tools/validation/step13j_final/step13_guard.py",
+      "SHA256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+      "isolated_mirror_identical": true
+    },
+    {
+      "path": "tools/validation/step13j_final/test_native_boundary_security.py",
+      "SHA256": "7020b8911c111bc086b9e3e1c3060fcabda5e3ddff4a7f470b8378a20c5b0c03",
+      "isolated_mirror_identical": true
+    },
+    {
+      "path": "tests/test_windows_transition_plan.py",
+      "SHA256": "8095cd26da8964d8177a0d2a84eaceeaf9f217ab0058f0c1de570364388c6090"
+    }
+  ],
+  "items": [
+    {
+      "test_ID": "tests/test_autopilot_state.py::test_independent_process_lock_blocks_without_creating_job",
+      "area": "독립 프로세스 중복 실행 잠금",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "테스트용 Python 자식 프로세스가 기존 Guard의 승인되지 않은 실행파일 경계에서 거부됨.",
+      "minimal_change": "고정 스크립트·모듈·인자만 허용하고 Guard를 먼저 설치하는 별도 bootstrap으로 재실행. 합성 경로·환경·키 sentinel·Job 소유권 검증 유지.",
+      "verified": "해당 기존 테스트 ID의 원래 기능·보호 단언이 별도 프로세스 실행을 거쳐 통과.",
+      "remaining_scope": "합성 입력 기반의 제한된 native 실행 검증. 실제 계정·공급사 호출·운영 프로필 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_creator_preview_boundary.py::test_preview_refuses_existing_directory_without_touching_files",
+      "area": "미리보기 도구의 기존 폴더·외부 요청 보호",
+      "severity": "MEDIUM",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "테스트용 Python 자식 프로세스가 기존 Guard의 승인되지 않은 실행파일 경계에서 거부됨.",
+      "minimal_change": "고정 스크립트·모듈·인자만 허용하고 Guard를 먼저 설치하는 별도 bootstrap으로 재실행. 합성 경로·환경·키 sentinel·Job 소유권 검증 유지.",
+      "verified": "해당 기존 테스트 ID의 원래 기능·보호 단언이 별도 프로세스 실행을 거쳐 통과.",
+      "remaining_scope": "합성 입력 기반의 제한된 native 실행 검증. 실제 계정·공급사 호출·운영 프로필 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_creator_preview_boundary.py::test_preview_boundary_blocks_external_dns_and_authentication_processes",
+      "area": "미리보기 도구의 기존 폴더·외부 요청 보호",
+      "severity": "MEDIUM",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "테스트용 Python 자식 프로세스가 기존 Guard의 승인되지 않은 실행파일 경계에서 거부됨.",
+      "minimal_change": "고정 스크립트·모듈·인자만 허용하고 Guard를 먼저 설치하는 별도 bootstrap으로 재실행. 합성 경로·환경·키 sentinel·Job 소유권 검증 유지.",
+      "verified": "해당 기존 테스트 ID의 원래 기능·보호 단언이 별도 프로세스 실행을 거쳐 통과.",
+      "remaining_scope": "합성 입력 기반의 제한된 native 실행 검증. 실제 계정·공급사 호출·운영 프로필 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_feed_review_tool.py::test_cli_exit_zero_without_network",
+      "area": "피드 검토 CLI 실행",
+      "severity": "LOW",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "테스트용 Python 자식 프로세스가 기존 Guard의 승인되지 않은 실행파일 경계에서 거부됨.",
+      "minimal_change": "고정 스크립트·모듈·인자만 허용하고 Guard를 먼저 설치하는 별도 bootstrap으로 재실행. 합성 경로·환경·키 sentinel·Job 소유권 검증 유지.",
+      "verified": "해당 기존 테스트 ID의 원래 기능·보호 단언이 별도 프로세스 실행을 거쳐 통과.",
+      "remaining_scope": "합성 입력 기반의 제한된 native 실행 검증. 실제 계정·공급사 호출·운영 프로필 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_oauth_callback.py::test_another_local_process_cannot_bind_listener_port",
+      "area": "OAuth callback 포트 독점",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "테스트용 Python 자식 프로세스가 기존 Guard의 승인되지 않은 실행파일 경계에서 거부됨.",
+      "minimal_change": "고정 스크립트·모듈·인자만 허용하고 Guard를 먼저 설치하는 별도 bootstrap으로 재실행. 합성 경로·환경·키 sentinel·Job 소유권 검증 유지.",
+      "verified": "해당 기존 테스트 ID의 원래 기능·보호 단언이 별도 프로세스 실행을 거쳐 통과.",
+      "remaining_scope": "합성 입력 기반의 제한된 native 실행 검증. 실제 계정·공급사 호출·운영 프로필 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_operational_startup.py::test_native_windows_schema_roundtrip_without_registration",
+      "area": "Windows 자동 시작 native 계약",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "FAIL",
+      "product_change_required": false,
+      "direct_cause": "이전 Step13J의 StartupError 내부 원인은 당시 직접 증거가 없어 NOT VERIFIED로 유지한다. 이번 제한된 실행 경계의 첫 재검증에서는 새 테스트 bridge의 PowerShell 실행파일 문자열 대소문자 비교가 OS 실행 전에 거부한 원인이 확인됐다. 두 실패의 원인을 동일하다고 확정하지 않는다.",
+      "minimal_change": "고정 PowerShell 실행파일은 절대경로를 정규화하여 일치 여부를 검사. 정확한 인자·스크립트 해시·stdin identity/validate 허용은 유지.",
+      "verified": "Windows 실제 엔진 identity와 합성 작업 XML validate 모두 종료 코드 0. 등록·변경·삭제는 실행하지 않음.",
+      "remaining_scope": "실제 자동 시작 등록·로그온 재실행·제거는 별도 승인 및 검증 대상.",
+      "historical_inner_cause": "NOT VERIFIED — previous wrapped StartupError evidence did not expose its original inner exception.",
+      "current_focused_harness_cause": "CONFIRMED — exact-string PowerShell-arguments comparison rejected equivalent Windows path spelling before native execution.",
+      "current_product_fault_reproduced": false
+    },
+    {
+      "test_ID": "tests/test_pc_cloud_entrypoint.py::test_windows_entrypoint_and_synthetic_profile_survive_normal_reopen",
+      "area": "Windows 진입점 정상 재실행",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "테스트용 Python 자식 프로세스가 기존 Guard의 승인되지 않은 실행파일 경계에서 거부됨.",
+      "minimal_change": "고정 스크립트·모듈·인자만 허용하고 Guard를 먼저 설치하는 별도 bootstrap으로 재실행. 합성 경로·환경·키 sentinel·Job 소유권 검증 유지.",
+      "verified": "해당 기존 테스트 ID의 원래 기능·보호 단언이 별도 프로세스 실행을 거쳐 통과.",
+      "remaining_scope": "합성 입력 기반의 제한된 native 실행 검증. 실제 계정·공급사 호출·운영 프로필 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_phase1a_security.py::test_diagnostic_rejects_secret_url_without_output",
+      "area": "진단 CLI 비밀값 비노출",
+      "severity": "MEDIUM",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "테스트용 Python 자식 프로세스가 기존 Guard의 승인되지 않은 실행파일 경계에서 거부됨.",
+      "minimal_change": "고정 스크립트·모듈·인자만 허용하고 Guard를 먼저 설치하는 별도 bootstrap으로 재실행. 합성 경로·환경·키 sentinel·Job 소유권 검증 유지.",
+      "verified": "해당 기존 테스트 ID의 원래 기능·보호 단언이 별도 프로세스 실행을 거쳐 통과.",
+      "remaining_scope": "합성 입력 기반의 제한된 native 실행 검증. 실제 계정·공급사 호출·운영 프로필 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_windows.py::test_actual_server_lifecycle_and_port_collision",
+      "area": "실제 서버 lifecycle/포트 및 비밀값 처리",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "테스트용 Python 자식 프로세스가 기존 Guard의 승인되지 않은 실행파일 경계에서 거부됨.",
+      "minimal_change": "고정 스크립트·모듈·인자만 허용하고 Guard를 먼저 설치하는 별도 bootstrap으로 재실행. 합성 경로·환경·키 sentinel·Job 소유권 검증 유지.",
+      "verified": "해당 기존 테스트 ID의 원래 기능·보호 단언이 별도 프로세스 실행을 거쳐 통과.",
+      "remaining_scope": "합성 입력 기반의 제한된 native 실행 검증. 실제 계정·공급사 호출·운영 프로필 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_windows.py::test_invalid_secret_not_printed",
+      "area": "Windows 진입점의 비밀값 비노출",
+      "severity": "MEDIUM",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "테스트용 Python 자식 프로세스가 기존 Guard의 승인되지 않은 실행파일 경계에서 거부됨.",
+      "minimal_change": "고정 스크립트·모듈·인자만 허용하고 Guard를 먼저 설치하는 별도 bootstrap으로 재실행. 합성 경로·환경·키 sentinel·Job 소유권 검증 유지.",
+      "verified": "해당 기존 테스트 ID의 원래 기능·보호 단언이 별도 프로세스 실행을 거쳐 통과.",
+      "remaining_scope": "합성 입력 기반의 제한된 native 실행 검증. 실제 계정·공급사 호출·운영 프로필 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_windows_transition_plan.py::test_restore_point_update_failure_and_restart",
+      "area": "업데이트·복원·변조·복사 범위 보호",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "FAIL",
+      "product_change_required": false,
+      "direct_cause": "FFmpeg 실행 경계 외에도 Git archive 요청이 승인 범위 밖이었음. 고정 GitHub blob fixture로 대체한 첫 실행에서는 Git LF blob과 Windows CRLF checkout의 byte 비교가 실패.",
+      "minimal_change": "고정 baseline 5개 파일과 manifest 해시를 검증해 로컬 tar를 구성. 추출한 5개 파일 byte SHA를 각각 검증. run.bat은 checkout CRLF 형식을 검증하고 내용 비교에만 CRLF/LF 차이를 정규화.",
+      "verified": "5개 파일의 보존·추출 SHA, 합성 DB transaction rollback 및 보존 단언, 합성 프로필 2회 reopen 통과.",
+      "remaining_scope": "고정 5개 진입점·의존성 파일의 복원 검증이며 전체 소스 트리·운영 Git·운영 코드 적용 검증이 아님."
+    },
+    {
+      "test_ID": "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0016]",
+      "area": "업데이트·복원·변조·복사 범위 보호",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "FFmpeg fixture가 상대 실행파일명을 전달해 고정 실행파일 Guard 경계에서 거부됨.",
+      "minimal_change": "검증된 FFmpeg 절대경로 fixture를 사용. 제품 코드·migration·과금 정책 변경 없음.",
+      "verified": "합성 DB·설정·미디어를 대상으로 기존 테스트 단언 통과.",
+      "remaining_scope": "운영 DB·사용자 백업의 실제 복원 또는 업데이트를 수행한 결과가 아님."
+    },
+    {
+      "test_ID": "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0017]",
+      "area": "업데이트·복원·변조·복사 범위 보호",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "FFmpeg fixture가 상대 실행파일명을 전달해 고정 실행파일 Guard 경계에서 거부됨.",
+      "minimal_change": "검증된 FFmpeg 절대경로 fixture를 사용. 제품 코드·migration·과금 정책 변경 없음.",
+      "verified": "합성 DB·설정·미디어를 대상으로 기존 테스트 단언 통과.",
+      "remaining_scope": "운영 DB·사용자 백업의 실제 복원 또는 업데이트를 수행한 결과가 아님."
+    },
+    {
+      "test_ID": "tests/test_windows_transition_plan.py::test_tamper_and_overwrite_refused",
+      "area": "업데이트·복원·변조·복사 범위 보호",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "FFmpeg fixture가 상대 실행파일명을 전달해 고정 실행파일 Guard 경계에서 거부됨.",
+      "minimal_change": "검증된 FFmpeg 절대경로 fixture를 사용. 제품 코드·migration·과금 정책 변경 없음.",
+      "verified": "합성 DB·설정·미디어를 대상으로 기존 테스트 단언 통과.",
+      "remaining_scope": "운영 DB·사용자 백업의 실제 복원 또는 업데이트를 수행한 결과가 아님."
+    },
+    {
+      "test_ID": "tests/test_windows_transition_plan.py::test_legacy_migrate_data_is_not_current_backup_tool",
+      "area": "업데이트·복원·변조·복사 범위 보호",
+      "severity": "HIGH",
+      "previous_status": "FAIL",
+      "final_status": "PASS",
+      "initial_focused_result": "PASS",
+      "product_change_required": false,
+      "direct_cause": "FFmpeg fixture가 상대 실행파일명을 전달해 고정 실행파일 Guard 경계에서 거부됨.",
+      "minimal_change": "검증된 FFmpeg 절대경로 fixture를 사용. 제품 코드·migration·과금 정책 변경 없음.",
+      "verified": "합성 DB·설정·미디어를 대상으로 기존 테스트 단언 통과.",
+      "remaining_scope": "운영 DB·사용자 백업의 실제 복원 또는 업데이트를 수행한 결과가 아님."
+    }
+  ],
+  "task_scheduler": {
+    "identity": "PASS",
+    "synthetic_XML_validate": "PASS",
+    "create_update_delete_or_registration_calls": 0,
+    "real_user_SID_or_identity_logged": false,
+    "note": "Current identity is used transiently for the read-only schema contract; it is not persisted in this report.",
+    "historical_error_cause_resolved": false,
+    "historical_error_note": "Current successful identity/validate execution does not retroactively prove the previous wrapped StartupError cause."
+  },
+  "restore_fixture": {
+    "commit": "0a59bfb41eec6b243e4470f67cd53c1e7cd07e52",
+    "file_count": 5,
+    "scope": [
+      "newsflow-ai/src/newsflow/main.py",
+      "newsflow-ai/run.bat",
+      "newsflow-ai/tools/windows_launcher.py",
+      "newsflow-ai/pyproject.toml",
+      "newsflow-ai/requirements-dev.lock"
+    ],
+    "all_restored_blob_byte_SHA_verified": true,
+    "full_source_tree_restore_claimed": false,
+    "Git_subprocess_allowed": false
+  },
+  "safety": {
+    "guard_disabled": false,
+    "arbitrary_executable_allowed": false,
+    "shell_allowed": false,
+    "PowerShell_folder_read_allowed": false,
+    "PowerShell_pinned_file_hash_read_only": true,
+    "PowerShell_identity_validate_stdin_only": true,
+    "source_and_bridge_hashes_pinned": true,
+    "child_Guard_before_product_import": true,
+    "synthetic_environment_only": true,
+    "worker_autostart_suppressed_in_test_children": true,
+    "operations_port_8765_allowed": false,
+    "external_provider_requests_authorized": false,
+    "network_policy": "Guard denies external Python DNS/socket requests; this is not full OS traffic observation.",
+    "expected_or_safe_denials_recorded": {
+      "native_unapproved_Python_entry": 12,
+      "protected_read_denials": 2
+    },
+    "complete_OS_isolation_claimed": false,
+    "host_user_operating_file_permissions_still_exist": true
+  },
+  "preservation_scope": {
+    "operating_source_DB_ledger_or_backups_used_as_test_inputs": false,
+    "changes_to_operating_files_by_this_work": 0,
+    "sealed_previous_evidence_modified": false,
+    "operating_hash_recheck": "Parent final preservation audit; not independently repeated for this focused report."
+  },
+  "full_regression_status": "COMPLETE: see full-comparison-safe.json; 5386 PASS / 0 FAIL / 0 ERROR / 4 SKIP",
+  "next_approval_required": [
+    "Actual operating deployment/restart remains unauthorized.",
+    "Real Task Scheduler registration/logon lifecycle remains separate.",
+    "Real API/OAuth/SNS actions and EXE distribution remain separate."
+  ],
+  "report_contains_absolute_paths_or_real_credentials": false,
+  "previous_wrapped_unconfirmed_status": "Historical inner cause remains NOT VERIFIED; current bounded identity/schema execution passes without reproducing a product defect.",
+  "publication_redactions": {
+    "security_parameterized_ID_map_omitted": 130,
+    "reason": "Local operating/backup path parameters omitted from public report; exact raw evidence remains local. Security counts and native15 IDs retained."
+  }
+}
