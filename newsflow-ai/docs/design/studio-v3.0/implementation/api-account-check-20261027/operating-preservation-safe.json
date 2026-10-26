@@ -1,0 +1,21 @@
+{
+  "scope": "Read-only content hashes of DB and manifest-listed ledger files; no query, key data or raw hashes published",
+  "files": [
+    {
+      "kind": "SQLite base DB",
+      "exists": true,
+      "hash_matches_preserved_baseline": true
+    },
+    {
+      "kind": "ledger JSON",
+      "exists": true,
+      "hash_matches_preserved_baseline": true
+    }
+  ],
+  "WAL_bytes": 0,
+  "DB_connections": 0,
+  "source_or_data_writes": 0,
+  "backup_AB_writes": 0,
+  "DPAPI_reads_or_decryptions": 0,
+  "no_repeat_full_scan": true
+}

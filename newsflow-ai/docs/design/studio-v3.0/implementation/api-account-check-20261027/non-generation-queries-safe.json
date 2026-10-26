@@ -1,0 +1,74 @@
+{
+  "actual_provider_requests": 0,
+  "actual_quotes": 0,
+  "actual_generations": 0,
+  "queries": [
+    {
+      "provider": "Claude",
+      "candidate_queries": [
+        {
+          "method": "GET",
+          "path": "/v1/models",
+          "limit": "one page only"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/models/claude-sonnet-4-6",
+          "limit": "once"
+        }
+      ],
+      "executed": 0,
+      "requires": "Explicit test account/key and approved bounded read-only execution path",
+      "scope_limit": "Model metadata is not proof of credits, generation permission or successful output"
+    },
+    {
+      "provider": "OpenAI",
+      "candidate_queries": [
+        {
+          "method": "GET",
+          "path": "/v1/models/gpt-image-2.5-flare-2026-09-08",
+          "limit": "once"
+        }
+      ],
+      "executed": 0,
+      "account_spend_limit": "Not inferred from model GET. Read-only test-project owner evidence or correctly scoped admin read required; no admin key requested or settings change performed.",
+      "scope_limit": "Spend alerts and hard limits differ; enforcement can lag, so even a hard monthly limit is not an exact per-image price guarantee."
+    },
+    {
+      "provider": "ElevenLabs",
+      "candidate_queries": [
+        {
+          "method": "GET",
+          "path": "/v1/user/subscription",
+          "limit": "once"
+        },
+        {
+          "method": "GET",
+          "path": "/v2/voices?voice_type=saved&page_size=100",
+          "limit": "one explicit page; no sample fetch"
+        },
+        {
+          "method": "GET",
+          "path": "/v1/models",
+          "limit": "once"
+        }
+      ],
+      "executed": 0,
+      "scope_limit": "Check returned voice gender/language/tier/model multipliers; do not infer stock female ID, free eligibility or rights."
+    },
+    {
+      "provider": "Higgsfield",
+      "candidate_queries": [],
+      "executed": 0,
+      "estimates_requested": 0,
+      "reason": "No authorized test key; free/non-mutating quote access not established; existing prepare uploads reference first, which is not authorized.",
+      "not_executed": [
+        "POST /files/generate-upload-url",
+        "PUT reference PNG",
+        "POST /estimate/bytedance/seedance-2.0/reference-to-video",
+        "POST generation"
+      ],
+      "scope_limit": "No unverified auth-check/HEAD/dry_run endpoint is invented."
+    }
+  ]
+}

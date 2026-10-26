@@ -1,0 +1,91 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>실제 API 연결·권한 확인</title><style>body{max-width:1240px;margin:30px auto;padding:0 20px;background:#0b1222;color:#e7eefb;font:16px/1.75 system-ui}h1,h2{color:#c9baff}a{color:#93bfff}pre{white-space:pre-wrap;font:15px/1.85 system-ui}table{border-collapse:collapse;width:100%}td,th{border:1px solid #34425b;padding:12px;vertical-align:top}.note{border:1px solid #b98a44;padding:16px;border-radius:12px}</style><h1>실계정 확인 — BLOCKED</h1><p class="note">확인한 테스트 프로필에 공급사 키가 없어 인증 조회를 보내지 않았습니다. 운영 키의 부재/삭제나 API 장애를 뜻하지 않습니다. 실제 공급사 요청 0 · 생성0 · 운영변경0.</p><p><a href="CONNECTION_CHECK_REPORT.ko.txt">전체 보고</a> · <a href="credential-presence-safe.json">키 존재 metadata</a> · <a href="non-generation-queries-safe.json">비생성 조회 결과/범위</a> · <a href="provider-results-safe.json">공급사별 비용·준비</a> · <a href="official-sources.json">공식 출처</a></p><table><tr><th>공급사</th><th>키</th><th>실계정 권한</th><th>실행 판정</th></tr><tr><td>Claude</td><td>검사한 테스트 영역 미등록</td><td>NOT VERIFIED</td><td>BLOCKED — missing authorized test credentials</td></tr><tr><td>ElevenLabs</td><td>검사한 테스트 영역 미등록</td><td>NOT VERIFIED</td><td>BLOCKED — missing key, female voice ID and account billing contract</td></tr><tr><td>OpenAI</td><td>검사한 테스트 영역 미등록</td><td>NOT VERIFIED</td><td>BLOCKED — no test project key or confirmed spend settings</td></tr><tr><td>Higgsfield</td><td>검사한 테스트 영역 미등록</td><td>NOT VERIFIED</td><td>BLOCKED — no key, no approved PNG transmission, quote conditions unknown</td></tr></table><h2>상세 보고</h2><pre>NewsFlow AI — 실제 API 연결·권한·비용 확인 결과
+2026-10-27 KST
+판정: 실계정 확인 BLOCKED / 공개 문서 확인 완료 / 유료 생성 NOT AUTHORIZED
+
+1. 직접 확인한 결과
+현재/직전 기술 EXE 합성 프로필 2개와 기존 fixture 후보 경로를 파일 metadata로 점검했습니다. 네 공급사의 키 파일은 확인한 테스트 영역에서 모두 미등록입니다. 검사 프로세스의 알려진 테스트용 환경변수 이름도 없었습니다.
+키 파일 내용 읽기·DPAPI 복호화·키 복사·운영 key fallback 0회입니다. 이 결과는 Windows PC 전체 또는 운영 저장소에 키가 없다는 뜻이 아닙니다. 운영에 저장된 키는 이번 검사 대상·실조회 자격증명으로 사용하지 않았습니다.
+별도로 등록한 테스트 계정/프로필 위치를 질문했으며, 보고 준비 시점에 승인된 별도 프로필은 제공되지 않았습니다. 사용자 지시 4항에 따라 임의 계정이나 운영 키로 인증 조회를 대신하지 않았습니다.
+실제 공급사 API 요청 0회, 견적 0회, 생성 0회. 연결 실패 응답을 받은 것이 아니라, 자격증명 조건이 없어 요청 전 차단한 상태입니다. 공식 웹 문서 열람은 별도로 수행했습니다.
+
+2. 공급사별 연결/권한 판정
+Claude: 검사한 테스트 키 미등록. Sonnet 4.6 모델 metadata 조회·계정 모델 목록·잔액·실제 권한은 NOT VERIFIED. 공개 공식 모델/가격 문서에는 기존 Sonnet 4.6이 있습니다. 모델 목록 응답에 나타나더라도 생성 성공·충분한 잔액으로 확대하지 않습니다.
+ElevenLabs: 테스트 키·계정 요금제·잔여량·내 음성·여성 voice_id·계정별 TTS 모델·문자/voice 배율 모두 NOT VERIFIED. 임의 여성 ID를 넣거나 기존 운영 음성을 복사하지 않았습니다.
+OpenAI: 테스트 프로젝트 키가 없으므로 Flare 조회·이미지 권한·조직 인증·계정 지출 한도는 NOT VERIFIED. 공식 문서의 모델 존재와 계정 접근 권한을 구분했습니다.
+Higgsfield: 테스트 키/계정 권한·Seedance 접근·할인 적용·720p 견적 모두 NOT VERIFIED. key를 쓰는 계정 조회는 수행하지 않았습니다.
+
+3. 비생성 조회 범위와 미실행 사유
+Claude: GET /v1/models 1페이지와 GET /v1/models/claude-sonnet-4-6 최대 각1회가 후보입니다. 현재 실제0회. 토큰 계수 등 추가 인증 POST는 별도 확인된 범위에서만 허용합니다.
+ElevenLabs: GET /v1/user/subscription, GET /v2/voices?voice_type=saved&amp;page_size=100, GET /v1/models 각1회가 후보입니다. 현재0회. 음성 샘플 다운로드·다음 페이지 자동 조회·음성 등록/설정 변경 없음. [E2,E3,E4]
+OpenAI: GET /v1/models/gpt-image-2.5-flare-2026-09-08 1회가 후보이며 현재0회. 모델 조회로 프로젝트 지출 설정을 알 수 없습니다. 테스트 프로젝트 소유자의 읽기 전용 제한 정보 또는 적절한 권한이 필요합니다. 관리자 키를 무단 요구·사용하거나 한도를 변경하지 않습니다. [O2,O3]
+Higgsfield: 무료·비변경 계정 확인 endpoint와 견적 요청 자체의 무과금 조건을 이번에 입증하지 못했습니다. 존재가 불명확한 dry_run/HEAD 인증 검사를 만들어 호출하지 않았습니다. 기존 캐릭터 prepare는 PNG 업로드 후 장면별 견적을 요청하므로 이번 승인에서는 실행하지 않았습니다. 생성0회만으로 참조 업로드가 허용되는 것은 아닙니다.
+어느 공급사도 조회 API가 유료이거나 상태를 바꿀 가능성이 확인되지 않은 상태에서 추정하여 보내지 않았습니다.
+
+4. 공식 가격·모델 규격과 비용 계산
+Claude Sonnet 4.6: 표준 입력 $3 / 출력 $15, 각100만token 기준. 제안한 총3회는 뉴스 분석1·대본1·캐릭터 스토리1입니다. [C1]
+실제 청구 입력&lt;=8000·출력&lt;=3000 조건을 매 요청 만족하고 검색/tool/cache/fast/지역 premium이 없다면 요청당 $0.069, 총 $0.207의 조건부 산술 예입니다. 실제 token 계수·계정 가격·사용량은 미확인으로 무조건 최대 요금 또는 확정 청구액이 아닙니다.
+최종 wire 출력3000을 계획하며 V2 증가(+400 분석/+600 대본)를 반영한 Options base2600/2400 및 캐릭터3000을 직전 본문에서 확인해야 합니다. 현재 계정 RPM/TPM·요청 가능 한도는 미검증입니다. 과거 전역100,000 설정을 이 시험에 적용하지 않습니다.
+ElevenAPI 공개 단가: Multilingual v2/v3 $0.08/1000자, Flash/Turbo $0.04/1000자. Multilingual 총200자면 $0.016 참고 계산입니다. [E1]
+실제 계정의 credit/USD 청구 기준, subscription tier/status/overage, model_rates 및 voice 배율은 조회하지 못했습니다. 기존 Adapter가 요구하는 credit/tier 필드와 현재 계정의 호환성도 NOT VERIFIED입니다. 이 참고값을 실제 계정 최대 비용으로 저장하지 않습니다.
+Flare: 공식 100만token당 텍스트 입력 $5·이미지 입력 $8·이미지 출력 $30. 기존 low/medium/high 및 1024×1024 등 선택을 유지합니다. 첫 제안은1024×1024 low JPEG 1장, 참조 없음입니다. 공식 단가만으로 정확한 장당 요금이나 이미지1장 현금 상한을 확정하지 않았습니다. [O1]
+OpenAI 공식 문서는 spend alert와 hard spend limit을 구분합니다. 알림은 차단 한도가 아니며 hard limit은429로 요청을 막지만 적용 지연에 따른 소폭 초과 가능성을 명시합니다. 어떤 설정이 해당 테스트 계정에 적용됐는지는 미검증이고 변경하지 않았습니다. hard limit을 정확한 이미지1장 요금 보장으로 표시하지 않습니다. [O3]
+Seedance: 공식 image_urls 참조 입력,720p,9:16,4~15초를 확인했습니다. 프로그램의4~10초는 공식 범위의 부분집합입니다. 최소30초 캐릭터안은10초×3개, 무대사·generate_audio=false입니다. [H1]
+공개 가격의 다른 해상도 최저가나 행사율을720p 계정 견적으로 대입하지 않았습니다. Q1·Q2·Q3가 없어 예상/최대 금액과 할인 적용 모두 미확정입니다. 각 exact payload의 무료·비변경 견적 조회 조건부터 확인한 뒤 합계Q를 보고 별도 생성 승인을 받아야 합니다. [H2]
+총현금 상한은 확정하지 못했습니다. 최대 허용 비용은 공급사별 사용자 최종 승인값이 필요하며 현재 모두 미지정입니다. 임의 금액 예약·새 요청별 비용 제한 로직을 추가하지 않았습니다.
+
+5. 실제 생성 준비표 — 실행 승인 아님
+Claude: Sonnet4.6 /3회 / 승인된 합성 기사·스토리 자료 / 뉴스30초·캐릭터30초 JSON / 위 token 조건부 계산 / 금액 승인값 미지정 / 최종 승인 필요.
+ElevenLabs: Multilingual v2 제안 / 검토된 장면 최대3POST / 여성voice_id와 각문구·총문자 미확정 / 실제 길이 측정 후 FFmpeg / 계정 기준 비용 미확정 / 최종 승인 필요. 각 장면 생성 전 기존 Adapter의 subscription GET1회가 추가되므로 합성3회는 조회3회도 동반합니다.
+OpenAI: Flare dated ID /1POST·1장 / 기존 synthetic-inputs.json 프롬프트 /1024×1024 low JPEG·참조없음 / token 과금·장당 상한 미확정 / 최종 승인 필요. 참조 이미지 기반 편집은 앱 미구현으로 실행하지 않습니다.
+Higgsfield: Seedance reference-to-video /3POST 생성 예정 / 승인된 스토리와10초×3장면·PNG /720p9:16·무음 /견적3개 미확정 / 참조 PNG 외부 전송·공급사 보관·생성 비용에 각각 최종 승인 필요.
+합성 전송 자료는 이전 real-api-plan-20261027/synthetic-inputs.json과 해시를 재사용합니다. 최종 시스템 지시문/schema/본문·음성 문구·참조 hash는 실제 송신 전에 다시 고정해야 합니다.
+성공 산출물은 운영과 분리된 실API 시험 프로필 아래 검증용 뉴스/이미지/캐릭터 결과 폴더에만 저장합니다. 정확한 로컬 위치는 해당 프로필 지정 후 비공개로 확정하며, 운영 폴더나 기술 EXE 합성 폴더를 실제 키 저장/호출용으로 재사용하지 않습니다.
+401/403/402/429·응답 검증 실패·시간 초과·결과 불명 시 나머지도 중단합니다. 이미 전송된 요청의 비용을0으로 가정하지 않고 진단/usage/request_id를 보호 저장하며 자동재시도·모델전환·성공요청 재생성을 하지 않습니다.
+
+6. 보안·운영·검증
+기술 EXE의 credential 차단·loopback 제한·Fake Adapter·Guard·CSP 변경0. 실제 키·OAuth 토큰 출력/복호화/사용/복사0. 운영 DB·ledger·미디어·원본PNG 입력/업로드0. 백업A/B 쓰기/삭제0.
+운영8765 기존 PID55740을 읽기 전용으로 확인했고18765 리스너는 없었습니다. 운영 HTTP·시작·종료·재시작·코드 적용·migration0.
+이전 캐릭터 수정 EXE15 PASS·Windows Actions42 PASS, 소스173·암호문6·미디어12 보존 검증을 재사용했습니다. 이번에는 DB와 manifest에 포함된 별도ledger 파일만 내용을 출력하지 않는 해시로 재대조해 보존 기준과 일치를 확인했으며 WAL은0바이트입니다. 운영 DB 연결은0회입니다. 이번 전수 재hash·동일 회귀·새 EXE 빌드는 수행하지 않았습니다. 이번 결과를 과거 전체5454 PASS의 새 실행으로 표시하지 않습니다.
+제품 기준476d14a, 이전 보고2286a87, 이번 시작 HEAD c2e6681. 브랜치 codex/newsflow-studio-v3-20261026. 이번 변경은 보고 자료뿐입니다. 기존4개 줄바꿈 미커밋 차이는 보존했습니다.
+PR#35는open/Draft/미병합, 원래 head codex/newsflow-ux-video-app/6aef983 유지. main·운영 브랜치 변경 없음.
+
+7. 전체 Step 진행표
+1 운영 조사: 기존 증거 보존
+2 로컬 변경 분류: 기존 증거 보존
+3 격리 비교: 기존 승인 보존
+4 통합 인수 기준: 기존 승인 보존
+5 백업 계획: 기존 승인 보존
+6 정상 종료·백업: 기존 승인 보존 /이번미실행
+7 A/B 무결성: 기존 증거 재사용 /변경0
+8 격리 복원·SQLite: 기존PASS재사용
+9 통합 후보: 기존승인보존
+10 Git진단: ACCEPTED
+11 Git복구: SKIPPED
+12 통합복원: 기존PASS/IMG후속증거보존
+13 A~K/Fix: 기존판정보존, 캐릭터표시수정ACCEPTED. 이번실계정조회 BLOCKED(테스트키/프로필부재)
+14 최신운영적용·재시작: NOT AUTHORIZED
+15 기술EXE집중검증ACCEPTED /실제공급사실행모드로변경안함
+16 다수사용자설치·분리: NOT AUTHORIZED
+17 업데이트·제거·복구: NOT AUTHORIZED
+18 일반사용자배포: NOT AUTHORIZED
+
+8. 다음에 필요한 정보·최종 승인
+- 먼저 별도 테스트 계정/키가 등록된 프로필 이름·위치를 확인해야 합니다. 실제 키 값은 채팅으로 보내지 않습니다. 운영 키를 대신 쓰는 승인은 이번에 없으며 임의 사용하지 않습니다.
+- 테스트 키가 준비되면 그 계정·무료/비변경임이 확인된 조회 범위에서만 정식 허용 경로로 진행합니다. 조회 성공과 생성 권한·잔액·가격·한도는 각각 판정합니다.
+- 생성은 아직 전혀 승인되지 않았습니다. 공급사/모델·입력·횟수·범위·조건부 비용/확정견적·사용자허용금액을 확인한 후 별도 승인이 필요합니다.
+- PNG외부전송, OAuth/SNS, 운영적용/재시작, 일반배포는 어느 조회 승인에도 포함하지 않습니다.
+보고 후 추가 실행 없이 중단합니다. BLOCKED는실계정정보가없어조회하지못한판정이며, API가동작하지않거나키가삭제됐다는판정이아닙니다.
+
+공식 공개 출처 (2026-10-27 열람):
+[C1] Claude prices — https://platform.claude.com/docs/en/about-claude/pricing
+[C2] Claude model retrieval — https://platform.claude.com/docs/en/api/models/retrieve
+[O1] Flare model and token pricing — https://developers.openai.com/api/docs/models/gpt-image-2.5-flare
+[O2] OpenAI model retrieval — https://developers.openai.com/api/reference/resources/models/methods/retrieve
+[O3] OpenAI spend limits — https://developers.openai.com/api/docs/guides/spend-limits
+[E1] ElevenAPI pricing — https://elevenlabs.io/pricing/api
+[E2] ElevenLabs subscription GET — https://elevenlabs.io/docs/api-reference/user/subscription/get
+[E3] ElevenLabs saved voice list — https://elevenlabs.io/docs/api-reference/voices/search
+[E4] ElevenLabs model list — https://elevenlabs.io/docs/api-reference/models/list
+[H1] Seedance reference input schema — https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video
+[H2] Higgsfield public pricing — https://open.higgsfield.ai/pricing
+</pre></html>
