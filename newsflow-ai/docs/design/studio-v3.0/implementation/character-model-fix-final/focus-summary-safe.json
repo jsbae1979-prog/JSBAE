@@ -1,0 +1,15 @@
+{
+  "PASS": 15,
+  "FAIL": 0,
+  "ERROR": 0,
+  "phases": [
+    "before EXE restart",
+    "after EXE restart"
+  ],
+  "baseline_reused_PASS": 13,
+  "previous_failed_case": "Character defaults dialog restores stored selection",
+  "previous_case_now": "PASS",
+  "new_skip_xfail": 0,
+  "new_product_changes": "one UI initialization condition",
+  "full_regression_rerun": false
+}

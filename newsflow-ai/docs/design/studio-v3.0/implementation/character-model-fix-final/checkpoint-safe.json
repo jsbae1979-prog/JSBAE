@@ -1,0 +1,35 @@
+{
+  "scope_status": "PASS",
+  "code_commit": "476d14ad844ec3c636b1250b389f6da97f817617",
+  "branch": "codex/newsflow-studio-v3-20261026",
+  "exe_sha256": "b72452f5027e77155b21943edf2457de4d38b30c7479ec3afd6d315be831434b",
+  "focused_EXE_checks": {
+    "PASS": 15,
+    "FAIL": 0,
+    "ERROR": 0
+  },
+  "ci": {
+    "run_id": 40419060240,
+    "job_id": 121908583041,
+    "status": "completed",
+    "conclusion": "success",
+    "code_sha": "476d14ad844ec3c636b1250b389f6da97f817617",
+    "windows_python": "3.14.7",
+    "react_typecheck_build": "PASS",
+    "readmodel_resource_PASS": 30,
+    "original_form_integration_PASS": 12,
+    "total_PASS": 42,
+    "FAIL": 0,
+    "ERROR": 0,
+    "log_evidence": [
+      "30 passed in 1.33s",
+      "12 passed, 1 warning in 4.84s"
+    ],
+    "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40419060240",
+    "full_regression_rerun": false
+  },
+  "production_changes": 0,
+  "paid_API_calls": 0,
+  "PR35_draft": true,
+  "next": "Wait for review. Actual API, operating application and installation/distribution require separate approval."
+}

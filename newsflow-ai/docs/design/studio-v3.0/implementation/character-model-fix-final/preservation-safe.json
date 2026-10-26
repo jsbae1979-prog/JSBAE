@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-10-27T08:21:00.775837+09:00",
+  "operating_source_checked": 173,
+  "source_hash_mismatches": 0,
+  "credentials_checked": 6,
+  "credential_hash_mismatches": 0,
+  "media_checked": 12,
+  "media_hash_mismatches": 0,
+  "DB_matches_preserved_hash": true,
+  "operating_wal_bytes": 0,
+  "DB_connections": 0,
+  "key_decryption": 0,
+  "operating_writes": 0,
+  "operating_restart": 0,
+  "backup_AB_writes": 0
+}

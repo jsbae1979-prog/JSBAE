@@ -1,0 +1,34 @@
+{
+  "phase": "after",
+  "checks": [
+    {
+      "name": "Saved model IDs and job snapshot persist across actual EXE restart",
+      "status": "PASS",
+      "detail": {
+        "provider": "claude_api",
+        "script_model": "claude-haiku-4-5-20251001",
+        "video_model": "bytedance/seedance-2.0/reference-to-video"
+      }
+    },
+    {
+      "name": "Reopened form displays both saved models after EXE restart",
+      "status": "PASS"
+    },
+    {
+      "name": "Other mode defaults remain unchanged after EXE restart",
+      "status": "PASS",
+      "detail": {
+        "separate_defaults": true
+      }
+    },
+    {
+      "name": "No React exceptions or external page requests",
+      "status": "PASS"
+    }
+  ],
+  "page_errors": [],
+  "external_page_requests": [],
+  "actual_EXE": true,
+  "live_provider_calls": 0,
+  "status": "PASS"
+}

@@ -1,0 +1,48 @@
+{
+  "scope": "Synthetic bundled engine probe; no live providers",
+  "pages": {
+    "/": 200,
+    "/news": 200,
+    "/ai": 200,
+    "/video": 200,
+    "/image-studio": 200,
+    "/character": 200,
+    "/publishing": 200,
+    "/settings": 200
+  },
+  "boundary_denial_checks": [
+    "outside-read",
+    "bundle-write",
+    "shell",
+    "media-traversal",
+    "media-filter",
+    "external-connect-before-send"
+  ],
+  "news": {
+    "render_id": 1,
+    "MP4": [
+      1080,
+      1920,
+      30
+    ],
+    "image_automatic": true,
+    "voice": "FakeTTS silent PCM"
+  },
+  "image": {
+    "draft": 3,
+    "Fake_calls": 1,
+    "reviewed_asset": true
+  },
+  "character": {
+    "selection_frozen": true,
+    "MP4": [
+      1080,
+      1920,
+      30
+    ],
+    "live_generation": false
+  },
+  "real_API_OAuth_SNS_calls": 0,
+  "data_outside_installation": true,
+  "status": "PASS"
+}
