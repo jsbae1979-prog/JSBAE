@@ -282,14 +282,23 @@ export default function Workbench({
         account_id: selected.id,
       }
     : {};
+  function unavailable(action:Action){
+    if(action.unsupported)return action.reason??"미지원 기능입니다.";
+    if(action.id==="creation_generate"&&selected?.reference)return "참조 기반 유료 이미지 편집 생성은 미구현입니다.";
+    if(action.id==="creation_generate"&&selected?.outputId!=null)return "기존 생성·실패·결과 불명 기록을 보존합니다. 자동 재요청하지 않습니다.";
+    if(action.id==="creation_reuse"&&selected&&!safeMedia(selected.mediaUrl))return "성공한 검증 이미지가 필요합니다.";
+    const allowed:Record<string,string[]>={character_act_write:["needs_script","script_failed"],character_act_prepare:["script_review"],character_act_submit:["quoted"],character_act_check:["generating"],character_act_render:["clips_review"]};
+    if(allowed[action.id]&&selected?.state&&!allowed[action.id].includes(selected.state))return "현재 작업 단계에서 실행할 수 없습니다. 저장된 상태를 먼저 확인하세요.";
+    return "";
+  }
   const button = (id: string, ctx: Item = context, primary = false) => {
     const a = actions.find((x) => x.id === id);
     return a ? (
       <button
         type="button"
         className={primary ? "primary" : ""}
-        disabled={!view?.commandsAvailable || a.unsupported}
-        title={a.reason}
+        disabled={!view?.commandsAvailable || !!unavailable(a)}
+        title={unavailable(a)}
         onClick={() => open(id, ctx)}
       >
         <Plus size={16} />
@@ -388,7 +397,7 @@ export default function Workbench({
       {notice && (
         <div className="work-notice" role="status">
           <Info size={18} />
-          {notice}
+          <span>{notice}</span>
           <button className="text-button" onClick={() => setNotice("")}>
             닫기
           </button>
@@ -1606,8 +1615,8 @@ export default function Workbench({
                   .map((x) => (
                     <button
                       key={x.id}
-                      disabled={!view.commandsAvailable || x.unsupported}
-                      title={x.reason}
+                      disabled={!view.commandsAvailable || !!unavailable(x)}
+                      title={unavailable(x)}
                       onClick={() => open(x.id, context)}
                     >
                       <span>{x.label}</span>

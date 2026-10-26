@@ -20,7 +20,22 @@ def client(tmp_path,monkeypatch):
         folder=root/key;folder.mkdir(exist_ok=True);monkeypatch.setenv(key,str(folder))
     import socket,subprocess,urllib.request
     def denied(*args,**kwargs):raise AssertionError("Actual network/process access forbidden in synthetic app integration")
-    monkeypatch.setattr(socket.socket,"connect",denied)
+    # CPython on Windows implements its event-loop self-pipe with a socketpair
+    # connected to its own ephemeral listener. No general loopback exception.
+    import sys
+    original_connect=socket.socket.connect
+    socketpair_code=socket.socketpair.__code__
+    def guarded_connect(sock,address):
+        if sys._getframe(1).f_code is socketpair_code and isinstance(address,tuple) and address[0] in {"127.0.0.1","::1"} and address[1]!=8765:
+            return original_connect(sock,address)
+        return denied()
+    monkeypatch.setattr(socket.socket,"connect",guarded_connect)
+    monkeypatch.setattr(socket.socket,"connect_ex",denied)
+    monkeypatch.setattr(socket,"getaddrinfo",denied)
+    # Assert the exception cannot be used by application or adapter callers.
+    for address in [("127.0.0.1",18765),("198.51.100.1",443)]:
+        with socket.socket() as sock, pytest.raises(AssertionError):
+            sock.connect(address)
     monkeypatch.setattr(subprocess,"Popen",denied)
     monkeypatch.setattr(urllib.request.OpenerDirector,"open",denied)
     from newsflow.config import Settings

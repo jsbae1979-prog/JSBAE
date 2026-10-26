@@ -7,6 +7,12 @@ import {
   type View,
   label,
 } from "./contracts";
+function ReferencePreview({file}:{file:File}) {
+  const canvas=useRef<HTMLCanvasElement>(null);
+  const [message,setMessage]=useState("로컬 이미지 확인 중");
+  useEffect(()=>{let active=true;createImageBitmap(file).then(bitmap=>{if(!active){bitmap.close();return;}const node=canvas.current;if(node){const scale=Math.min(280/bitmap.width,240/bitmap.height,1);node.width=Math.max(1,Math.round(bitmap.width*scale));node.height=Math.max(1,Math.round(bitmap.height*scale));node.getContext("2d")?.drawImage(bitmap,0,0,node.width,node.height);setMessage(`${bitmap.width}×${bitmap.height} · 저장 전 로컬 미리보기`);}bitmap.close();}).catch(()=>setMessage("이미지 형식을 확인하세요."));return()=>{active=false;};},[file]);
+  return <div className="local-reference-preview"><canvas ref={canvas} role="img" aria-label="선택한 참조 이미지 로컬 미리보기"/><small>{message}</small></div>;
+}
 const secrets = /(?:^key$|api_key|secret|access_token|refresh_token)/;
 function choices(
   f: Field,
@@ -285,10 +291,10 @@ export function CommandDialog({
           <input
               aria-label={label(f.name)}
             type="file"
-            accept="image/png,image/jpeg,image/webp"
+            accept="image/png"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) setFiles({ ...files, [f.name]: file });
+              if (file) { if(file.size>10*1024*1024||file.type!=="image/png"){setError("참조 이미지는 10MB 이하 PNG를 선택하세요.");return;} setError(""); setFiles({ ...files, [f.name]: file }); }
             }}
           />
         ) : opts.length ? (
@@ -354,6 +360,7 @@ export function CommandDialog({
             }
           />
         )}
+        {f.type==="file" && files[f.name] && <ReferencePreview file={files[f.name]}/>}
       </label>
     );
   };

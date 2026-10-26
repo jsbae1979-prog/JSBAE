@@ -10,3 +10,5 @@
 - 이미지 Adapter는 단일 Fake 결과만 반환하며 유료 호출 0회
 - 실제 키·운영 DB·미디어·백업 접근 없음
 - 이 결과는 Windows Runner 통합 증거이며 PC의 Guard 아래 전체 앱 기동 PASS를 의미하지 않습니다.
+
+Windows CPython 이벤트 루프의 내부 self-pipe만 표준 `socket.socketpair`의 정확한 코드 객체 호출 및 수치 loopback·비운영 포트 조건으로 허용합니다. 애플리케이션 호출의 localhost/외부 connect, connect_ex, DNS 및 공급사 transport는 계속 차단하며 음성·브라우저 프로세스는 실행하지 않습니다. 일반 loopback 허용이나 로컬 Guard 수정이 아닙니다.
