@@ -1,0 +1,13 @@
+{
+  "Python": "3.14.7",
+  "AST_PASS": [
+    "src/newsflow/gui/studio_v3.py",
+    "src/newsflow/main.py",
+    "tools/studio_v3/tests/test_read_model.py"
+  ],
+  "existing_engine_rewritten": false,
+  "existing_route_deleted": false,
+  "main_change": "import/mount optional Studio only",
+  "migration_changed": false,
+  "guards_changed": false
+}

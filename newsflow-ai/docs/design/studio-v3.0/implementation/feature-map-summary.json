@@ -1,0 +1,14 @@
+{
+  "groups": 56,
+  "with_existing_files": 56,
+  "route_expectations": 100,
+  "exact_literal_route_matches": 93,
+  "runtime_groups_all_PASS": false,
+  "screens_implemented": [
+    "dashboard",
+    "content creation home"
+  ],
+  "others": "preserved legacy; React conversion pending",
+  "images_workflows_separate": true,
+  "source_baseline": "b1eadb3686bfe5765ab1aa64d51688e180980b97 plus design docs; operating source08bfec1 preserved"
+}

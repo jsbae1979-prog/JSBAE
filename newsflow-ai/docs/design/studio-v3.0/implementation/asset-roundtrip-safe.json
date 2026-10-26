@@ -1,0 +1,11 @@
+{
+  "status": "VERIFIED_IN_REPO",
+  "PNG_SHA256": "ee910d5d975fffdd551f26a097051b1f998caea415246fdf8a33b48255de9b99",
+  "bytes": 2881357,
+  "dimensions": [
+    1658,
+    938
+  ],
+  "commit": "5d48f1c",
+  "roundtrip": true
+}
