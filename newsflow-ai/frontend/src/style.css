@@ -1757,3 +1757,20 @@ dialog::backdrop {
 .secondary:disabled:hover {
   filter: none;
 }
+
+/* Preserve card geometry while decode/error state stays explicit. */
+.project-visual .asset-thumb-img,
+.media-tile-art .asset-thumb-img,
+.character-reference-frame .asset-thumb-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+.project-visual .asset-thumb-img.loaded,
+.media-tile-art .asset-thumb-img.loaded,
+.character-reference-frame .asset-thumb-img.loaded {
+  opacity: 1;
+}

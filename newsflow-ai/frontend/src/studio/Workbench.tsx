@@ -38,6 +38,7 @@ import {
 } from "./contracts";
 import { CommandDialog, submitOriginal } from "./CommandDialog";
 import "./workbench.css";
+import { Thumbnail } from "./Thumbnail";
 const intro: Record<string, string> = {
   news: "보관 기사에서 이야기를 선택하세요.",
   shorts: "기사 · 대본 · 음성 · 영상을 한 작업으로 이어갑니다.",
@@ -445,7 +446,12 @@ export default function Workbench({
       return "현재 작업 단계에서 실행할 수 없습니다. 저장된 상태를 먼저 확인하세요.";
     return "";
   }
-  const button = (id: string, ctx: Item = context, primary = false) => {
+  const button = (
+    id: string,
+    ctx: Item = context,
+    primary = false,
+    caption?: string,
+  ) => {
     const a = actions.find((x) => x.id === id);
     return a ? (
       <button
@@ -456,7 +462,7 @@ export default function Workbench({
         onClick={() => open(id, ctx)}
       >
         <Plus size={16} />
-        {a.label}
+        {caption ?? a.label}
       </button>
     ) : null;
   };
@@ -1207,15 +1213,34 @@ export default function Workbench({
                     </section>
                   </div>
                   <aside className="work-stack">
+                    <section
+                      className="work-panel character-reference-panel"
+                      aria-label="캐릭터 참조 이미지"
+                    >
+                      <h2>
+                        <ImageIcon size={18} />
+                        캐릭터 참조 PNG
+                      </h2>
+                      <div className="character-reference-frame">
+                        <Thumbnail
+                          src={
+                            selected?.referenceUrl ===
+                            `/api/studio/characters/${selected?.id}/reference`
+                              ? selected.referenceUrl
+                              : null
+                          }
+                          alt="선택한 작업에 저장된 캐릭터 참조 PNG"
+                          eager
+                        />
+                      </div>
+                      <p className="muted">
+                        {selected?.referenceUrl
+                          ? "이 작업에 저장한 참조 파일 · 생성 결과와 별개"
+                          : "저장된 참조 PNG 없음 · 캐릭터 작업 초안에서 선택하세요."}
+                      </p>
+                    </section>
                     {preview(currentMedia)}
                     <section className="work-panel inspector">
-                      {selected?.referenceUrl && (
-                        <img
-                          className="character-reference"
-                          src={selected.referenceUrl}
-                          alt="검증된 캐릭터 참조 PNG"
-                        />
-                      )}
                       <h2>작업에 고정된 설정</h2>
                       <dl className="property-list">
                         {Object.entries(
@@ -1587,11 +1612,17 @@ export default function Workbench({
                         onClick={() => setSelected(x)}
                       >
                         <div className="media-tile-art">
-                          {safeMedia(x.thumbnailUrl) ? (
-                            <img src={x.thumbnailUrl} alt="저장된 소재" />
-                          ) : (
-                            <FolderOpen size={36} />
-                          )}
+                          <Thumbnail
+                            src={
+                              typeof x.thumbnailUrl === "string" &&
+                              x.thumbnailUrl.startsWith(
+                                "/studio/assets/design-art-",
+                              )
+                                ? null
+                                : safeMedia(x.thumbnailUrl)
+                            }
+                            alt="저장된 소재 미리보기"
+                          />
                         </div>
                         <strong>{x.title}</strong>
                         <Badge value={x.technicalStatus} />
@@ -1902,9 +1933,24 @@ export default function Workbench({
                         </div>
                       ))}
                       <div className="work-actions">
-                        {button("ai_settings_save_key", {})}
-                        {button("video_save_tts_key", {})}
-                        {button("video_ai_save_key", {})}
+                        {button(
+                          "ai_settings_save_key",
+                          {},
+                          false,
+                          "OpenAI · Claude 키 설정",
+                        )}
+                        {button(
+                          "video_save_tts_key",
+                          {},
+                          false,
+                          "ElevenLabs 키 설정",
+                        )}
+                        {button(
+                          "video_ai_save_key",
+                          {},
+                          false,
+                          "Higgsfield 키 설정",
+                        )}
                       </div>
                       <p className="muted">
                         저장된 비밀값을 화면·로그·브라우저 저장소로 보내지

@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import "./style.css";
 import Workbench from "./studio/Workbench";
+import { Thumbnail } from "./studio/Thumbnail";
 
 type Kind = "news" | "character" | "image";
 type Project = {
@@ -416,21 +417,11 @@ function App() {
               }
             >
               <div className="project-visual">
-                {p.thumbnailUrl ? (
-                  <img
-                    src={localHref(p.thumbnailUrl)}
-                    alt={`${p.title} · ${p.sourceLabel}`}
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.hidden = true;
-                    }}
-                  />
-                ) : (
-                  <div className={`project-placeholder ${p.kind}`}>
-                    <Film size={30} />
-                    <span>미리보기 없음</span>
-                  </div>
-                )}
+                <Thumbnail
+                  src={p.thumbnailUrl ? localHref(p.thumbnailUrl) : null}
+                  alt={`${p.title} · ${p.sourceLabel}`}
+                  kind={p.kind}
+                />
                 <span className="type-tag">
                   {TYPES.find((t) => t.id === p.kind)?.title}
                 </span>

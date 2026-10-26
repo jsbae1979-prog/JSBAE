@@ -1095,3 +1095,54 @@
   color: #b8c6dd;
   font-size: 13px;
 }
+
+/* Final acceptance: scoped polish only; approved home layout is unchanged. */
+.character-reference-frame {
+  position: relative;
+  height: clamp(120px, 19dvh, 205px);
+  border-radius: 9px;
+  overflow: hidden;
+  background: #0e192a;
+}
+.character-reference-frame .asset-thumb-img {
+  object-fit: contain;
+}
+.character-reference-panel .muted {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 10px 0 0;
+}
+.character-reference-frame .project-placeholder {
+  flex-direction: column;
+  font-size: 12px;
+}
+.media-tile-art {
+  position: relative;
+}
+.media-tile-art .project-placeholder {
+  width: 100%;
+  font-size: 12px;
+  flex-direction: column;
+}
+.workbench[data-module="shorts"] .script-editor .scene-tabs {
+  position: sticky;
+  top: 10px;
+  z-index: 2;
+  background: #182238;
+  padding: 10px 0;
+  border-bottom: 1px solid #34425b;
+}
+.workbench[data-module="shorts"] .script-editor {
+  scroll-margin-top: 16px;
+}
+.workbench[data-module="shorts"] .studio-canvas {
+  max-height: min(52dvh, 560px);
+}
+.workbench[data-module="settings"] .settings-cards button {
+  margin-right: 6px;
+}
+@media (max-width: 700px) {
+  .workbench[data-module="shorts"] .studio-canvas {
+    max-height: 520px;
+  }
+}
