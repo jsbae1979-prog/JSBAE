@@ -1,0 +1,22 @@
+{
+  "existing_captures": 33,
+  "changed_capture_hashes": [],
+  "existing_synthetic_ui_checks": 11,
+  "new_browser_runs": 0,
+  "full_144_form_rerun": false,
+  "all_regression_rerun": false,
+  "ffmpeg_evidence": {
+    "new_render": false,
+    "source": "prior accepted Step 13H FFmpeg 1080x1920 30s and prior React synthetic media 11-flow proof; reused because renderer unchanged",
+    "local_synthetic_file_exists": true,
+    "local_synthetic_sha256": "3d0eba87f6b1c9387adcea1e371bb18f683b8cbec741d5307f8cf1375e5425a2",
+    "local_synthetic_file_is_product_engine_proof": false
+  },
+  "dpi": {
+    "100": "NOT VERIFIED",
+    "125": "NOT VERIFIED",
+    "150": "NOT VERIFIED",
+    "200": "NOT VERIFIED"
+  },
+  "local_guard_full_app": "NOT VERIFIED"
+}

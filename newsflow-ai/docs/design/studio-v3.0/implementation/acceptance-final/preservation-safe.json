@@ -1,0 +1,13 @@
+{
+  "operating_source_changed": 0,
+  "operating_files_checked": 173,
+  "credential_files": 6,
+  "credential_hash_mismatches": 0,
+  "media_files": 12,
+  "media_hash_mismatches": 0,
+  "operating_DB_SHA_matches_before_update": true,
+  "operating_DB_connections": 0,
+  "key_decryption": 0,
+  "operating_restart_this_task": 0,
+  "backup_AB_writes": 0
+}

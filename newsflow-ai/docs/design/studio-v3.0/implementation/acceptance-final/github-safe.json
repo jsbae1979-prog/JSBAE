@@ -1,0 +1,9 @@
+{
+  "number": 35,
+  "state": "open",
+  "draft": true,
+  "headBranch": "codex/newsflow-ux-video-app",
+  "headSHA": "6aef983db5a8d31b604d9fafd4329a0b4f83787d",
+  "changed_by_this_task": false,
+  "new_pr_created": false
+}

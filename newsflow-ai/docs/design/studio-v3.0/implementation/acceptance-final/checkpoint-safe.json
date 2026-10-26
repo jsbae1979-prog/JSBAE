@@ -1,0 +1,10 @@
+{
+  "branch": "codex/newsflow-studio-v3-20261026",
+  "verified_test_sha": "f64043b2df34c49c498c3349d721e4a75dd56703",
+  "product_source_sha": "626a7ba231a48fd6e49d589920558ea5bc214656",
+  "ci": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40359338411",
+  "state": "acceptance supplement complete; stop for user judgment",
+  "operating_deploy": false,
+  "new_pr": false,
+  "actual_provider_calls": 0
+}
