@@ -137,4 +137,11 @@ def serve(root,bundle):
         app.state.image_generation.adapter=ImageFake()
         return app
     main.create_app=factory
-    main.run()
+    try:
+        main.run()
+    except KeyboardInterrupt:
+        # Uvicorn re-raises SIGBREAK after its normal cleanup. Do not convert an
+        # interrupt before confirmed server cleanup to a successful technical exit.
+        log=root/"AppData/Local/NewsFlowAI/logs/execution.log"
+        if not log.is_file() or not log.read_text(encoding="utf-8").rstrip().endswith("server_stop"):
+            raise
