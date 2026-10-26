@@ -1,0 +1,13 @@
+{
+  "code_sha": "626a7ba231a48fd6e49d589920558ea5bc214656",
+  "ci": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40355811611",
+  "synthetic_only": true,
+  "screenshot_count": 33,
+  "viewport_captures": 24,
+  "interaction_checks": 11,
+  "master_sha256": "ee910d5d975fffdd551f26a097051b1f998caea415246fdf8a33b48255de9b99",
+  "new_paid_provider_calls": 0,
+  "operating_restart": 0,
+  "windows_os_dpi": "NOT VERIFIED",
+  "all_feature_runtime_acceptance": false
+}
