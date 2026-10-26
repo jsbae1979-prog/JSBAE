@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 
 from newsflow.db.models import (
     ContentDraft,
+    ImagePost,
     IntelligenceRun,
     ProductionSchedule,
     PublishDraft,
@@ -130,6 +131,26 @@ def workspace(request: Request):
                     f"/image-studio?draft_id={image.id}",
                     thumb=url,
                     media=url,
+                )
+            )
+        for post in session.scalars(select(ImagePost).order_by(ImagePost.id.desc()).limit(100)):
+            media = None
+            status = "success"
+            try:
+                state.image_posts.path(post.id)
+                media = f"/image-posts/{post.id}/file"
+            except (PublishingError, ValueError, OSError):
+                status = "missing"
+            projects.append(
+                _project(
+                    f"post:{post.id}",
+                    post.title,
+                    "image",
+                    status,
+                    post.created_at,
+                    f"/image-posts?post_id={post.id}",
+                    thumb=media,
+                    media=media,
                 )
             )
         schedules = [

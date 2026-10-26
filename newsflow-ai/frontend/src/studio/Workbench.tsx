@@ -139,7 +139,12 @@ export default function Workbench({
   const [selected, setSelected] = useState<Item | null>(null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("전체");
-  const [tab, setTab] = useState("independent");
+  const [tab, setTab] = useState(
+    location.pathname.includes("/feed") ||
+      new URLSearchParams(location.search).get("mode") === "news"
+      ? "news"
+      : "independent",
+  );
   const [selectedArticles, setSelectedArticles] = useState<number[]>([]);
   const [scene, setScene] = useState(0);
   const [stage, setStage] = useState(1);
@@ -152,6 +157,7 @@ export default function Workbench({
   const [zoom, setZoom] = useState(false);
   const [startupStatus, setStartupStatus] = useState<Item | null>(null);
   const video = useRef<HTMLVideoElement>(null);
+  const routeInitialized = useRef(false);
   async function load() {
     setLoading(true);
     setError("");
@@ -170,6 +176,49 @@ export default function Workbench({
       )
         throw Error("화면 데이터 형식을 확인하세요.");
       setView(data);
+      if (!routeInitialized.current) {
+        routeInitialized.current = true;
+        const query = new URLSearchParams(location.search);
+        const last = location.pathname.split("/").at(-1) ?? "";
+        if (module === "images") {
+          const post = query.get("post_id");
+          const id = post ?? query.get("draft_id");
+          if (id) {
+            const item = (
+              data.collections[post ? "posts" : "drafts"] ?? []
+            ).find((x) => String(x.id) === id);
+            if (item)
+              setSelected({ ...item, __collection: post ? "posts" : "drafts" });
+          }
+          if (post) setTab("news");
+        }
+        if (module === "characters") {
+          const id =
+            query.get("job_id") ?? (/^[a-f0-9]{32}$/.test(last) ? last : "");
+          const item = data.collections.jobs?.find((x) => x.id === id);
+          if (item) setSelected(item);
+        }
+        if (module === "shorts") {
+          const id =
+            query.get("draft_id") ??
+            (/script\/\d+$/.test(location.pathname) ? last : "");
+          const draft = data.collections.drafts?.find(
+            (x) => String(x.id) === id,
+          );
+          if (draft) selectDraft(draft);
+          const job = query.get("job_id");
+          const project = data.projects?.find((x) => x.id === `news:${job}`);
+          if (project) setSelected(project);
+        }
+        if (module === "news") {
+          const id =
+            query.get("article_id") ?? (/^\d+$/.test(last) ? last : "");
+          const item = data.collections.articles?.find(
+            (x) => String(x.id) === id,
+          );
+          if (item) setSelected(item);
+        }
+      }
       setActiveDraft((old) =>
         old
           ? (data.collections.drafts?.find(
@@ -179,6 +228,26 @@ export default function Workbench({
       );
       setSelected((old) => {
         if (!old) return null;
+        if (old.__collection) {
+          const fresh = data.collections[old.__collection]?.find(
+            (x) => String(x.id ?? x.key) === String(old.id ?? old.key),
+          );
+          return fresh ? { ...fresh, __collection: old.__collection } : old;
+        }
+        if (old.__type === "plan") {
+          const fresh = data.collections.plans?.find(
+            (x) => String(x.id) === String(old.id),
+          );
+          return fresh ? { ...fresh, __type: "plan" } : old;
+        }
+        if (old.__type === "cohort") {
+          const fresh = data.collections.cohorts?.find(
+            (x) => String(x.id) === String(old.id),
+          );
+          return fresh ? { ...fresh, __type: "cohort" } : old;
+        }
+        if (typeof old.id === "string" && old.id.includes(":"))
+          return data.projects?.find((x) => x.id === old.id) ?? old;
         for (const list of Object.values(data.collections)) {
           const found = list.find((x) => String(x.id) === String(old.id));
           if (found) return found;
@@ -192,6 +261,7 @@ export default function Workbench({
     }
   }
   useEffect(() => {
+    routeInitialized.current = false;
     setView(null);
     setSelected(null);
     setEditor(null);
@@ -469,6 +539,13 @@ export default function Workbench({
           <AlertTriangle size={19} />
           {error}
           <button onClick={() => void load()}>다시 불러오기</button>
+        </div>
+      )}
+      {(view?.catalog.imageError || view?.catalog.characterError) && (
+        <div className="command-error" role="alert">
+          <AlertTriangle size={18} />
+          <span>{view.catalog.imageError ?? view.catalog.characterError}</span>
+          <button onClick={() => onNavigate("settings")}>기본값 확인</button>
         </div>
       )}
       {notice && (
@@ -891,6 +968,15 @@ export default function Workbench({
                           로컬 음성 목록 확인
                         </button>
                       </div>
+                      {view.listeningSummary && (
+                        <p className="muted">
+                          최근 사람 청취: {view.listeningSummary.label} ·{" "}
+                          {view.listeningSummary.date} ·{" "}
+                          {view.listeningSummary.sample_linked
+                            ? "실제 샘플 연결 기록"
+                            : "샘플 연결 확인 필요 · 과거 기록"}
+                        </p>
+                      )}
                       <div className="audio-samples">
                         {list("audioSamples").map((sample) => (
                           <div key={sample.id}>
@@ -1203,7 +1289,9 @@ export default function Workbench({
                         <Collection
                           title="이미지 초안과 결과"
                           items={list("drafts")}
-                          onSelect={setSelected}
+                          onSelect={(x) =>
+                            setSelected({ ...x, __collection: "drafts" })
+                          }
                           selected={selected?.id}
                         />
                         {selected && (
@@ -1255,14 +1343,76 @@ export default function Workbench({
                           </div>
                         </section>
                         <Collection
+                          title="Claude 카드 · 이미지 지시문"
+                          items={list("cards")}
+                          onSelect={(x) =>
+                            setSelected({ ...x, __collection: "cards" })
+                          }
+                        />
+                        <Collection
+                          title="뉴스 이미지 생성 결과"
+                          items={list("generations")}
+                          onSelect={(x) =>
+                            setSelected({ ...x, __collection: "generations" })
+                          }
+                        />
+                        {selected?.plan && (
+                          <section className="work-panel">
+                            <h2>{selected.title}</h2>
+                            <Badge value={selected.status} />
+                            <p>{selected.plan.body}</p>
+                            <details>
+                              <summary>이미지 지시문</summary>
+                              <p>
+                                {selected.plan.image_prompt ?? "기존 저장 기획"}
+                              </p>
+                            </details>
+                            <div className="work-actions">
+                              {selected.__collection === "cards" &&
+                                selected.status === "success" &&
+                                button(
+                                  "image_post_generate_card_image",
+                                  { ...selected.options, card_id: selected.id },
+                                  true,
+                                )}
+                              {selected.__collection === "generations" &&
+                                safeMedia(selected.mediaUrl) &&
+                                button(
+                                  "image_post_create",
+                                  {
+                                    ...selected.options,
+                                    card_id: undefined,
+                                    generated_id: selected.id,
+                                    title: selected.plan.title,
+                                    body: selected.plan.body,
+                                    hashtags: Array.isArray(
+                                      selected.plan.hashtags,
+                                    )
+                                      ? selected.plan.hashtags.join(" ")
+                                      : (selected.plan.hashtags ?? ""),
+                                  },
+                                  true,
+                                )}
+                            </div>
+                            <p className="muted">
+                              지시문과 생성 파일, 검토한 게시 이미지는 각각
+                              보존됩니다.
+                            </p>
+                          </section>
+                        )}
+                        <Collection
                           title="뉴스 이미지 게시물"
                           items={list("posts")}
-                          onSelect={setSelected}
+                          onSelect={(x) =>
+                            setSelected({ ...x, __collection: "posts" })
+                          }
                         />
                         <Collection
                           title="상위 3건 선정 기록"
                           items={list("selections")}
-                          onSelect={setSelected}
+                          onSelect={(x) =>
+                            setSelected({ ...x, __collection: "selections" })
+                          }
                         />
                         <p className="muted">
                           순위는 저장된 화제성 평가를 사용합니다. 단일 이미지

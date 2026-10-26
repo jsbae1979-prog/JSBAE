@@ -124,7 +124,10 @@ function choices(
         ? (c.imageModels ?? [])
         : (c.apiModels?.[
             values.provider ??
-              (action.module === "characters" ? "claude_api" : "offline")
+              (action.module === "characters" ||
+              action.id === "image_post_claude_card"
+                ? "claude_api"
+                : "offline")
           ] ?? [])
     ).map((x: string) => [x, x]);
   if (f.name === "video_model")
@@ -617,6 +620,13 @@ export function CommandDialog({
       </div>
       <form onSubmit={submit}>
         <div className="command-body">
+          {view.dataOrigin === "development-fixtures" &&
+            action.fields.some((f) => secrets.test(f.name)) && (
+              <p className="scope-note">
+                합성 검증 화면입니다. 실제 키·개인정보를 입력하지 마세요. 이
+                화면의 인증정보 저장은 차단됩니다.
+              </p>
+            )}
           {action.unsupported ? (
             <p role="alert">
               {action.reason ?? "현재 Adapter에서 지원하지 않습니다."}
@@ -691,6 +701,8 @@ export function CommandDialog({
             disabled={
               busy ||
               !!responseSummary ||
+              (view.dataOrigin === "development-fixtures" &&
+                action.fields.some((f) => secrets.test(f.name))) ||
               action.unsupported ||
               !view.commandsAvailable ||
               (risky && !ack)

@@ -13,6 +13,7 @@ export type View = {
   settings?: Record<string, string>;
   policy?: Item;
   operationsReview?: Item;
+  listeningSummary?: Item | null;
 };
 export type Field = {
   name: string;
@@ -217,7 +218,7 @@ export function label(key: string) {
 }
 export function safeMedia(url: unknown) {
   return typeof url === "string" &&
-    /^\/(?:video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/\d+\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
+    /^\/(?:video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/(?:\d+|backgrounds\/\d+)\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
       url,
     )
     ? url

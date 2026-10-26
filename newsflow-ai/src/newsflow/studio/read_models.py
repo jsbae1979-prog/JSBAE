@@ -317,6 +317,61 @@ def module_view(request: Request, module: Module):
                             "ranking": [],
                         }
                     )
+            result["collections"]["cards"] = []
+            result["collections"]["generations"] = []
+            for run in session.scalars(
+                select(m.IntelligenceRun)
+                .where(m.IntelligenceRun.kind.in_(["feed_card", "feed_image"]))
+                .order_by(m.IntelligenceRun.id.desc())
+                .limit(100)
+            ):
+                if run.kind == "feed_image" and run.options.get("style") == "studio":
+                    continue
+                source_plan = (
+                    run.result.get("plan", {})
+                    if run.kind == "feed_card"
+                    else run.evidence.get("source", {}).get("plan", {})
+                )
+                plan = {
+                    key: source_plan[key]
+                    for key in (
+                        "title",
+                        "body",
+                        "hashtags",
+                        "image_prompt",
+                        "negative_prompt",
+                        "composition",
+                        "source_article_ids",
+                    )
+                    if key in source_plan
+                }
+                item = {
+                    "id": run.id,
+                    "title": plan.get("title", "뉴스 이미지 작업 #" + str(run.id)),
+                    "status": run.status,
+                    "plan": plan,
+                    "options": {
+                        key: run.options[key]
+                        for key in (
+                            "article_id",
+                            "analysis_id",
+                            "rank",
+                            "draft_id",
+                            "card_id",
+                            "purpose",
+                            "style",
+                        )
+                        if key in run.options
+                    },
+                    "mediaUrl": None,
+                }
+                if run.kind == "feed_image" and run.status == "success":
+                    try:
+                        state.image_generation.path(run.id)
+                        item["mediaUrl"] = f"/image-posts/backgrounds/{run.id}/file"
+                    except (PublishingError, ValueError, OSError):
+                        item["status"] = "missing"
+                result["collections"]["cards" if run.kind == "feed_card" else "generations"].append(item)
             for post in result["collections"]["posts"]:
                 try:
                     state.image_posts.path(post["id"])
@@ -478,6 +533,9 @@ def module_view(request: Request, module: Module):
                             "mediaUrl": f"/voices/preview/{sample.name}",
                         }
                     )
+        from newsflow.easy_setup import listening_summary
+
+        result["listeningSummary"] = listening_summary(state.sessions)
         result["catalog"]["listening"] = {
             "items": LISTENING_ITEMS,
             "values": LISTENING_VALUES,

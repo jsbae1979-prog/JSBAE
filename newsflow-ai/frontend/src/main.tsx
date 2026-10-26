@@ -194,7 +194,10 @@ function localHref(url: string) {
     /\/(?:file|thumbnail|clip)(?:\?|$)/.test(url)
   )
     return url;
-  const [path, params] = url.split("?");
+  const [path, rawParams] = url.split("?");
+  const query = new URLSearchParams(rawParams ?? "");
+  if (path.startsWith("/image-posts")) query.set("mode", "news");
+  const params = query.toString();
   const page = path.startsWith("/schedules")
     ? "automation"
     : path.startsWith("/character")
@@ -338,8 +341,10 @@ function App() {
                     : "library";
     setDialog(null);
     go(target);
-    const params = href.split("?")[1];
-    if (params) history.replaceState({}, "", `/studio/${target}?${params}`);
+    const params = new URLSearchParams(href.split("?")[1] ?? "");
+    if (href.startsWith("/image-posts")) params.set("mode", "news");
+    if (params.size)
+      history.replaceState({}, "", `/studio/${target}?${params.toString()}`);
   }
   const projects = (data?.projects ?? []).filter(
     (p) =>

@@ -87,3 +87,17 @@ def test_registry_preserves_every_original_post_route_and_no_write_proxy():
     studio=(root/'src/newsflow/studio/read_models.py').read_text(encoding='utf-8')
     assert '@router.post' not in studio
     assert '/schedules' in {x['path'] for x in registry} and '/schedule' not in {x['path'] for x in registry}
+
+def test_news_image_post_is_independent_from_image_generation_draft(tmp_path):
+    from newsflow.db.models import ImagePost
+    request,engine,sessions=setup(tmp_path)
+    called=[]
+    request.app.state.image_posts=NS(path=lambda identifier:called.append(identifier) or tmp_path/"synthetic.jpg")
+    with sessions.begin() as session:
+        source=NewsSource(name="synthetic",url="https://example.invalid/rss",enabled=False);session.add(source);session.flush()
+        article=NewsArticle(title="synthetic",url="https://example.invalid/news",canonical_url="https://example.invalid/news",source_id=source.id,publisher="synthetic");session.add(article);session.flush()
+        post=ImagePost(article_id=article.id,title="합성 뉴스 피드",caption="합성 본문",sources={},filename="synthetic.jpg",sha256="0"*64,ai_disclosure="disclose");session.add(post);session.flush();identifier=post.id
+    item=workspace(request)["projects"][0]
+    assert item["id"]==f"post:{identifier}" and item["href"]==f"/image-posts?post_id={identifier}"
+    assert item["mediaUrl"]==f"/image-posts/{identifier}/file" and called==[identifier]
+    engine.dispose()
