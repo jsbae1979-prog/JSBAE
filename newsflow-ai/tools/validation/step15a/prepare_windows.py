@@ -20,8 +20,11 @@ root = Path(sys.argv[1]).resolve()
 assert not root.exists() and not root.is_relative_to(checkout) and not checkout.is_relative_to(root)
 definitions = json.loads((plan_source / "phases-safe.json").read_text(encoding="utf-8-sig"))["phases"]
 if len(sys.argv)>2:
-    assert sys.argv[2:]==["--shutdown-only"],"Unknown focused phase selection"
-    definitions=[d for d in definitions if d["name"] in ("security","j_native_security") or d["name"].startswith("j_shutdown_repeat")]
+    assert sys.argv[2:] in (["--shutdown-only"], ["--identity-only"]), "Unknown focused phase selection"
+    if sys.argv[2:] == ["--identity-only"]:
+        definitions=[{"name":"j_identity_once","expected":1}]
+    else:
+        definitions=[d for d in definitions if d["name"] in ("security","j_native_security") or d["name"].startswith("j_shutdown_repeat")]
 assert all(type(item["expected"]) is int and item["expected"] > 0 for item in definitions), (
     "Freeze phase testcase counts from reviewed local XML before CI; never guess coverage"
 )
@@ -136,6 +139,10 @@ browser = {"node": str(node), "node_SHA256": sha(node), "cli": str(cli), "cli_SH
 }), encoding="utf-8")
 subprocess.run([sys.executable, "-I", "-S", "-B", str(root / "prepare_native_config.py")],
                cwd=root, check=True)
+
+(root / "j_identity_once-targets-safe.json").write_text(json.dumps([
+    "tests/test_operational_startup.py::test_native_windows_schema_roundtrip_without_registration"
+]), encoding="utf-8")
 
 # Helpers are setup code only; every test child is launched through the reviewed Job+Guard.
 sys.path.insert(0, str(source))
