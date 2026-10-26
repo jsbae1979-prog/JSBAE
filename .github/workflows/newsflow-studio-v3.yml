@@ -38,7 +38,7 @@ jobs:
         run: pnpm --dir frontend run build
       - name: Install isolated read-model test dependencies
         run: |
-          python -m pip install -e . pytest==8.4.2
+          python -m pip install -e . pytest==8.4.2 httpx==0.28.1
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Synthetic read-only projection tests, no full app or provider calls
         env:

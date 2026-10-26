@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
@@ -293,4 +293,23 @@ def mount_studio(app):
     @app.get("/studio/settings", include_in_schema=False)
     @app.get("/studio/onboarding", include_in_schema=False)
     def studio_shell():
+        return FileResponse(dist / "index.html", media_type="text/html")
+
+    @app.get("/studio/{page_path:path}", include_in_schema=False)
+    def studio_subpage(page_path: str):
+        # All feature aliases use the same React router, never an HTML iframe.
+        if page_path.split("/", 1)[0] not in {
+            "news",
+            "create",
+            "shorts",
+            "characters",
+            "images",
+            "automation",
+            "library",
+            "publishing",
+            "analytics",
+            "settings",
+            "onboarding",
+        }:
+            raise HTTPException(404)
         return FileResponse(dist / "index.html", media_type="text/html")

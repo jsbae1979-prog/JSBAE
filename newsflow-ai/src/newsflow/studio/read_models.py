@@ -269,20 +269,54 @@ def module_view(request: Request, module: Module):
             result["collections"][key] = rows(session, name, columns)
         if module == "images":
             result["collections"]["drafts"] = image_rows(state, session)
-            result["collections"]["selections"] = [
-                {
-                    "id": row.id,
-                    "title": f"화제성 평가 #{row.id}",
-                    "status": row.status,
-                    "ranking": row.result.get("ranking", []),
-                }
-                for row in session.scalars(
-                    select(m.IntelligenceRun)
-                    .where(m.IntelligenceRun.kind == "curation")
-                    .order_by(m.IntelligenceRun.id.desc())
-                    .limit(20)
+            result["collections"]["selections"] = []
+            candidates = session.scalars(
+                select(m.IntelligenceRun)
+                .where(
+                    m.IntelligenceRun.kind == "analysis",
+                    m.IntelligenceRun.status == "success",
+                    m.IntelligenceRun.evidence["curation_contract"]["top_k"].as_integer() == 3,
                 )
-            ]
+                .order_by(m.IntelligenceRun.id.desc())
+                .limit(20)
+            )
+            for row in candidates:
+                try:
+                    group = state.image_posts.selection(row.id)
+                    items = [
+                        {
+                            k: item[k]
+                            for k in (
+                                "rank",
+                                "score",
+                                "title",
+                                "body",
+                                "article_id",
+                                "article_ids",
+                                "references",
+                                "selection",
+                                "origin",
+                            )
+                        }
+                        for item in group["items"]
+                    ]
+                    result["collections"]["selections"].append(
+                        {
+                            "id": row.id,
+                            "title": f"화제성 평가 #{row.id}",
+                            "status": row.status,
+                            "ranking": items,
+                        }
+                    )
+                except PublishingError:
+                    result["collections"]["selections"].append(
+                        {
+                            "id": row.id,
+                            "title": f"화제성 평가 #{row.id} · 출처 연결 확인 필요",
+                            "status": "blocked",
+                            "ranking": [],
+                        }
+                    )
             for post in result["collections"]["posts"]:
                 try:
                     state.image_posts.path(post["id"])
@@ -306,7 +340,51 @@ def module_view(request: Request, module: Module):
             result["collections"]["deliveries"] = rows(
                 session, "ImagePostDelivery", "id post_id account_id status created_at"
             )
+        if module == "publishing":
+            result["collections"]["cohorts"] = []
+            for row in session.scalars(
+                select(m.PublishEvidence)
+                .where(m.PublishEvidence.kind == "unified_review")
+                .order_by(m.PublishEvidence.id.desc())
+                .limit(50)
+            ):
+                try:
+                    cohort = state.unified_publishing.get(row.id)
+                except PublishingError:
+                    continue
+                result["collections"]["cohorts"].append(
+                    {
+                        "id": row.id,
+                        "title": "게시 검토 #" + str(row.id),
+                        "approval_token": cohort["approval_token"],
+                        "can_execute": cohort["can_execute"],
+                        "reviewed": cohort["reviewed"],
+                        "locked": cohort["locked"],
+                        "targets": [
+                            {
+                                k: target[k]
+                                for k in ("platform", "status", "draft_id", "can_continue")
+                                if k in target
+                            }
+                            for target in cohort["targets"]
+                        ],
+                    }
+                )
         if module == "shorts":
+            for clip in result["collections"]["scenes"]:
+                clip["mediaUrl"] = None
+                if (
+                    clip["source"] == "generated"
+                    and hasattr(state, "video_ai")
+                    and hasattr(state.video_ai, "clip_path")
+                ):
+                    from newsflow.video.ai.service import AIVideoError
+
+                    try:
+                        state.video_ai.clip_path(clip["id"])
+                        clip["mediaUrl"] = f"/video/ai/scenes/{clip['id']}/clip"
+                    except (AIVideoError, OSError):
+                        pass
             for draft in result["collections"]["drafts"]:
                 try:
                     draft["imageLinks"] = draft["sources"].get("news_images", [])

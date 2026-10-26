@@ -28,8 +28,13 @@ class Handler(SimpleHTTPRequestHandler):
    if name in models:return self.result(models[name])
    return self.result({'detail':'Unknown synthetic module'},404)
   if path=='/video/jobs/1/file':
-   raw=media.read_bytes();self.send_response(200);self.send_header('Content-Type','video/mp4');self.send_header('Content-Length',str(len(raw)));self.end_headers();self.wfile.write(raw);return
-  if re.fullmatch(r'/studio/(?:dashboard|create|news|shorts|characters|images|automation|library|publishing|analytics|settings|onboarding)?',path):self.path='/index.html'
+   raw=media.read_bytes();total=len(raw);match=re.fullmatch(r'bytes=(\d+)-(\d*)',self.headers.get('Range',''))
+   start=int(match[1]) if match else 0;end=min(int(match[2]) if match and match[2] else total-1,total-1)
+   if start>=total:self.send_error(416);return
+   self.send_response(206 if match else 200);self.send_header('Content-Type','video/mp4');self.send_header('Accept-Ranges','bytes')
+   if match:self.send_header('Content-Range',f'bytes {start}-{end}/{total}')
+   self.send_header('Content-Length',str(end-start+1));self.end_headers();self.wfile.write(raw[start:end+1]);return
+  if re.fullmatch(r'/studio/(?:dashboard|create|news|shorts|characters|images|automation|library|publishing|analytics|settings|onboarding)(?:/[a-zA-Z0-9_-]+)*',path):self.path='/index.html'
   elif re.fullmatch(r'/studio/assets/[a-zA-Z0-9._-]+',path):self.path=path[7:]
   else:self.send_error(404,'Synthetic harness has no engine/legacy pages');return
   super().do_GET()

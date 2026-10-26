@@ -191,9 +191,14 @@ function localHref(url: string) {
     ? url
     : "/studio/dashboard";
 }
+function routePage() {
+  const parts = location.pathname.split("/");
+  if(parts[2] === "create" && parts[3]) return ({news:"shorts",character:"characters",image:"images"} as Record<string,string>)[parts[3]] ?? "create";
+  return parts[2] || "dashboard";
+}
 function App() {
   const [page, setPage] = useState(
-    location.pathname.split("/")[2] || "dashboard",
+    routePage(),
   );
   const [data, setData] = useState<Workspace | null>(null);
   const [error, setError] = useState("");
@@ -229,7 +234,7 @@ function App() {
   }
   useEffect(() => {
     void load();
-    const pop = () => setPage(location.pathname.split("/")[2] || "dashboard");
+    const pop = () => setPage(routePage());
     window.addEventListener("popstate", pop);
     const key = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {

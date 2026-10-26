@@ -872,9 +872,7 @@ export default function Workbench({
                           <h3>{selected.topic}</h3>
                           <Badge value={selected.state} />
                           <div className="story-copy">
-                            {typeof selected.story === "string"
-                              ? selected.story
-                              : JSON.stringify(selected.story ?? {}, null, 2)}
+                            {typeof selected.story === "string" ? selected.story : <><h3>{selected.story?.title}</h3><p>{selected.story?.plan?.situation ?? "저장된 장면 구성을 확인하세요."}</p></>}
                           </div>
                           <div className="timeline">
                             {(selected.scenes?.length ? selected.scenes : selected.story?.scenes ?? []).map((x: Item, i: number) => (
@@ -885,7 +883,7 @@ export default function Workbench({
                               >
                                 <span>장면 {(x.position ?? i) + 1}</span>
                                 <Badge value={x.state} />
-                                <p>{x.narration ?? x.prompt}</p>
+                                <p>{x.caption ?? x.narration ?? x.action ?? x.prompt}</p>
                                 <small>{x.seconds ?? "규격 확인"}초</small>
                               </button>
                             ))}
@@ -1309,6 +1307,7 @@ export default function Workbench({
                           <h3>{itemTitle(selected)}</h3>
                           <p>{selected.description}</p>
                           <Badge value={selected.state ?? selected.status} />
+                          {selected.__type==="cohort" && <><div className="review-checklist">{(selected.targets??[]).map((x:Item)=><p key={x.platform}>{x.platform} <Badge value={x.status}/></p>)}</div>{selected.can_execute?button("unified_publishing_execute",{cohort_id:selected.id,approval_token:selected.approval_token},true):<p className="command-error">검토·권한·플랫폼별 상태를 먼저 확인하세요.</p>}</>}
                           <div className="review-checklist">
                             {[
                               "content_reviewed",

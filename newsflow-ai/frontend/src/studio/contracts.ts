@@ -172,11 +172,13 @@ export const labels: Record<string, string> = {
   source_text: "출처 표기",
 };
 export function label(key: string) {
+  const scene=key.match(/^(source|material|prompt|model|discard)_(\d+)$/);
+  if(scene)return `장면 ${Number(scene[2])+1} · ${{source:"영상 소재 방식",material:"소재 파일",prompt:"영상 지시문",model:"영상 모델",discard:"기존 결과 폐기 확인"}[scene[1]]}`;
   return labels[key] ?? key.replaceAll("_", " ");
 }
 export function safeMedia(url: unknown) {
   return typeof url === "string" &&
-    /^\/(?:video\/jobs\/\d+\/(?:file|thumbnail)|image-studio\/\d+\/file|image-posts\/\d+\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
+    /^\/(?:video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/\d+\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
       url,
     )
     ? url
