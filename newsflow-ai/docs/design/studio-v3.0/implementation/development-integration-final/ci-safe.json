@@ -1,0 +1,95 @@
+{
+  "run": 40411887006,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40411887006",
+  "sha": "317504152877139737991a737f56f5b97b9dea24",
+  "result": "success",
+  "windows_python": "3.14.7",
+  "react_typecheck_build": "PASS",
+  "readmodel_and_resource_tests": 30,
+  "app_form_tests": 12,
+  "total_pass": 42,
+  "fail": 0,
+  "error": 0,
+  "new_tests": 6,
+  "removed_tests": 0,
+  "new_skip_xfail": 0,
+  "previous_ux_focus_pass": 36,
+  "previous_ui_flows": 11,
+  "previous_captures": 36,
+  "previous_full_regression": "5454 PASS / 0 FAIL / 0 ERROR / 4 SKIP; reused historical evidence only",
+  "full_regression_rerun": false,
+  "existing_windows_identity_failure": 1,
+  "new_demo_work": 0,
+  "new_exe_build": 0,
+  "live_api_calls": 0,
+  "real_oauth_sns": 0,
+  "local_guard_full_app": "NOT VERIFIED",
+  "windows_dpi": {
+    "100": "NOT VERIFIED",
+    "125": "NOT VERIFIED",
+    "150": "NOT VERIFIED"
+  },
+  "prior_incremental_run": {
+    "run": 40411522841,
+    "pass": 41,
+    "conclusion": "success"
+  },
+  "steps": [
+    {
+      "name": "Set up job",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@v5",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-node@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-python@v6",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install pinned frontend dependencies",
+      "conclusion": "success"
+    },
+    {
+      "name": "Typecheck and build React",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install isolated read-model test dependencies",
+      "conclusion": "success"
+    },
+    {
+      "name": "Synthetic read-only projection tests, no full app or provider calls",
+      "conclusion": "success"
+    },
+    {
+      "name": "Approved Windows disposable synthetic full-app form integration",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/upload-artifact@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/setup-python@v6",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/setup-node@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/checkout@v5",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "conclusion": "success"
+    }
+  ]
+}

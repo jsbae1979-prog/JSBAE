@@ -1,0 +1,40 @@
+{
+  "baseline": "68c3eca5055d971c5b9926d0eb37e15c928b87ad",
+  "head": "317504152877139737991a737f56f5b97b9dea24",
+  "changed_files": [
+    {
+      "status": "M",
+      "path": "newsflow-ai/frontend/src/studio/Workbench.tsx"
+    },
+    {
+      "status": "M",
+      "path": "newsflow-ai/src/newsflow/gui/studio_v3.py"
+    },
+    {
+      "status": "A",
+      "path": "newsflow-ai/src/newsflow/studio/resources.py"
+    },
+    {
+      "status": "M",
+      "path": "newsflow-ai/tools/packaging/newsflow-technical.spec"
+    },
+    {
+      "status": "A",
+      "path": "newsflow-ai/tools/studio_v3/integration/test_model_setting_integration.py"
+    },
+    {
+      "status": "A",
+      "path": "newsflow-ai/tools/studio_v3/tests/test_resource_integration.py"
+    }
+  ],
+  "new_test_ids": [
+    "newsflow-ai/tools/studio_v3/integration/test_model_setting_integration.py::test_creation_defaults_restore_independently_without_mutating_saved_jobs",
+    "newsflow-ai/tools/studio_v3/integration/test_model_setting_integration.py::test_provider_key_form_targets_fake_store_without_returning_secret",
+    "newsflow-ai/tools/studio_v3/tests/test_resource_integration.py::test_source_and_frozen_asset_roots_are_profile_independent",
+    "newsflow-ai/tools/studio_v3/tests/test_resource_integration.py::test_spec_includes_react_and_preserves_legacy_static_assets",
+    "newsflow-ai/tools/studio_v3/tests/test_resource_integration.py::test_spec_refuses_missing_react_build",
+    "newsflow-ai/tools/studio_v3/tests/test_resource_integration.py::test_spec_refuses_unexpected_private_payload"
+  ],
+  "removed_test_ids": [],
+  "skip_xfail_added": false
+}
