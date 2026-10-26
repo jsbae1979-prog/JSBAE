@@ -57,7 +57,7 @@ for name in ("step13_fixtures.py", "browser_bootstrap.py", "run_browser_phase.py
 for name in ("j_native-targets-safe.json", "j_models-targets-safe.json",
              "j_mode_gui-targets-safe.json", "j_flow-targets-safe.json"):
     shutil.copyfile(source / name, root / name)
-for name in ("j_k_models-targets-safe.json", "j_k_gui-targets-safe.json"):
+for name in ("j_k_models-targets-safe.json", "j_k_gui-targets-safe.json", "j_k_navigation-targets-safe.json"):
     shutil.copyfile(plan_source / name, root / name)
 (root / "j_native_security-targets-safe.json").write_text(
     json.dumps([str(root / "test_native_boundary_security.py")]), encoding="utf-8"

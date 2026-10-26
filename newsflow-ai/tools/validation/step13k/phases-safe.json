@@ -1,6 +1,6 @@
 {
   "Python": "3.14.7",
-  "scope": "Step13K: retained 247 scoped checks plus 62 model contracts and 4 GUI cases. Fake only.",
+  "scope": "Step13K: retained 247 scoped checks plus 62 model, 4 new GUI and 16 existing navigation checks. Fake only.",
   "phases": [
     {
       "name": "security",
@@ -34,6 +34,10 @@
     {
       "name": "j_k_gui",
       "expected": 4
+    },
+    {
+      "name": "j_k_navigation",
+      "expected": 16
     },
     {
       "name": "j_native",

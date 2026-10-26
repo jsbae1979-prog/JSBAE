@@ -1,0 +1,4 @@
+[
+  "tests/test_ai_video_gui.py",
+  "tests/test_automation_simplicity.py"
+]
