@@ -1,20 +1,22 @@
 """Read-only Studio v3 projection. No provider sync, credential decode or state mutation."""
 
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 from hashlib import sha256
+from pathlib import Path
+
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import select, func
+from sqlalchemy import func, select
+
 from newsflow.db.models import (
-    RenderJob,
-    VideoProject,
     ContentDraft,
     IntelligenceRun,
-    PublishDraft,
     ProductionSchedule,
+    PublishDraft,
     PublishSchedule,
+    RenderJob,
+    VideoProject,
     WorkspaceRemoval,
 )
 from newsflow.publishing.service import PublishingError, PublishingService
@@ -29,19 +31,19 @@ def _iso(value):
 
 
 def _project(identifier, title, kind, status, at, href, *, thumb=None, media=None, review="review_required"):
-    return dict(
-        id=identifier,
-        title=str(title)[:150],
-        kind=kind,
-        technicalStatus=status,
-        contentReviewStatus=review,
-        publishApprovalStatus="separate_approval_required",
-        updatedAt=_iso(at),
-        href=href,
-        thumbnailUrl=thumb,
-        mediaUrl=media,
-        sourceLabel="저장된 로컬 제작 자료",
-    )
+    return {
+        "id": identifier,
+        "title": str(title)[:150],
+        "kind": kind,
+        "technicalStatus": status,
+        "contentReviewStatus": review,
+        "publishApprovalStatus": "separate_approval_required",
+        "updatedAt": _iso(at),
+        "href": href,
+        "thumbnailUrl": thumb,
+        "mediaUrl": media,
+        "sourceLabel": "저장된 로컬 제작 자료",
+    }
 
 
 @router.get("/api/studio/workspace")
@@ -118,7 +120,7 @@ def workspace(request: Request):
                 )
             )
         schedules = [
-            dict(title=x.name, at=_iso(x.next_run_at), href="/schedule")
+            {"title": x.name, "at": _iso(x.next_run_at), "href": "/schedule"}
             for x in session.scalars(
                 select(ProductionSchedule)
                 .where(ProductionSchedule.status == "active", ProductionSchedule.next_run_at >= now)
@@ -127,7 +129,7 @@ def workspace(request: Request):
             )
         ]
         schedules += [
-            dict(title="게시 예약 #" + str(x.id), at=_iso(x.due_at), href="/publishing/calendar")
+            {"title": "게시 예약 #" + str(x.id), "at": _iso(x.due_at), "href": "/publishing/calendar"}
             for x in session.scalars(
                 select(PublishSchedule)
                 .where(PublishSchedule.status == "active", PublishSchedule.due_at >= now)
@@ -215,29 +217,40 @@ def workspace(request: Request):
                 os.environ.get("NEWSFLOW_ELEVENLABS_KEY", "")
             )
         services.append(
-            dict(id=identifier, label=label, configured=configured, verified=False, href="/settings")
+            {
+                "id": identifier,
+                "label": label,
+                "configured": configured,
+                "verified": False,
+                "href": "/settings",
+            }
         )
-    return dict(
-        schemaVersion=1,
-        capabilities=dict(legacyAvailable=True, workspaceReadOnly=True),
-        dataOrigin="development-fixtures" if synthetic else "local-workspace",
-        projects=projects[:100],
-        stats=dict(running=running, ready=completed, publishDrafts=publish_count, total=len(projects)),
-        today=daily,
-        services=services,
-        upcoming=sorted(schedules, key=lambda x: x["at"])[:5],
-        upcomingStatus="connected",
-        activity=[
-            dict(
-                title=p["title"]
+    return {
+        "schemaVersion": 1,
+        "capabilities": {"legacyAvailable": True, "workspaceReadOnly": True},
+        "dataOrigin": "development-fixtures" if synthetic else "local-workspace",
+        "projects": projects[:100],
+        "stats": {
+            "running": running,
+            "ready": completed,
+            "publishDrafts": publish_count,
+            "total": len(projects),
+        },
+        "today": daily,
+        "services": services,
+        "upcoming": sorted(schedules, key=lambda x: x["at"])[:5],
+        "upcomingStatus": "connected",
+        "activity": [
+            {
+                "title": p["title"]
                 + " · "
                 + ("결과 불명" if p["technicalStatus"] == "unknown" else "작업 기록"),
-                at=p["updatedAt"],
-                href=p["href"],
-            )
+                "at": p["updatedAt"],
+                "href": p["href"],
+            }
             for p in projects[:5]
         ],
-    )
+    }
 
 
 def mount_studio(app):

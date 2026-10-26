@@ -1,10 +1,11 @@
-from pathlib import Path
+import json
 from types import SimpleNamespace as NS
-from datetime import UTC, datetime
-import json, pytest
+
+import pytest
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
-from newsflow.db.models import Base, IntelligenceRun, AppSetting
+
+from newsflow.db.models import AppSetting, Base, IntelligenceRun
 from newsflow.gui.studio_v3 import workspace
 
 
@@ -24,7 +25,7 @@ def setup(tmp_path):
         sessions=sessions,
         config=NS(data_dir=tmp_path),
         video=NS(outputs=tmp_path),
-        character=NS(listing=lambda: []),
+        character=NS(listing=list),
         ai_keys=MetadataOnly(),
         api_keys={"claude_api": MetadataOnly()},
         video_ai=NS(keys=MetadataOnly()),
@@ -81,7 +82,7 @@ def test_unfinished_image_never_has_media(tmp_path, status):
 
 
 def test_key_presence_is_not_verified_connection(tmp_path):
-    request, engine, sessions = setup(tmp_path)
+    request, engine, _sessions = setup(tmp_path)
     (tmp_path / "tts-elevenlabs-key.dpapi").write_bytes(b"SYNTHETIC-NOT-A-KEY")
     result = workspace(request)
     voice = next(x for x in result["services"] if x["id"] == "elevenlabs")
@@ -113,7 +114,8 @@ def test_sample_art_is_explicit_and_never_production_fallback(tmp_path):
 
 @pytest.fixture(autouse=True)
 def prohibit_network_and_process(monkeypatch):
-    import socket, subprocess
+    import socket
+    import subprocess
 
     def blocked(*args, **kwargs):
         raise AssertionError("No network or external process in read-model tests")
