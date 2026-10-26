@@ -7,6 +7,7 @@ import hmac
 import re
 import secrets
 import signal
+import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -347,7 +348,8 @@ def run(*, automatic_data_dir: Path | None = None) -> None:
             try:
                 uvicorn.Server(
                     uvicorn.Config(
-                        app, host=settings.host, port=settings.port, log_level="warning", access_log=False
+                        app, host=settings.host, port=settings.port, log_level="warning", access_log=False,
+                        loop="newsflow.runtime:windows_server_loop" if sys.platform == "win32" else "auto",
                     )
                 ).run(sockets=[listener])
             finally:

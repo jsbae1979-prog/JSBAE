@@ -46,3 +46,15 @@ def runtime_logger(data_dir: Path) -> logging.Logger:
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
+
+
+def windows_server_loop():
+    """Use Selector only for the local HTTP server, without a global loop policy.
+
+    CPython 3.14 Proactor transport cleanup can raise WinError 10054 before
+    detaching a reset socket from its Server, leaving wait_closed pending.
+    The app uses synchronous worker subprocesses, not asyncio pipe transports.
+    """
+    import asyncio
+
+    return asyncio.SelectorEventLoop()

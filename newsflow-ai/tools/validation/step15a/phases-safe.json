@@ -1,0 +1,69 @@
+{
+  "Python": "3.14.7",
+  "scope": "Step13K-Fix: 381 retained scoped checks and five repetitions of three shutdown checks. Fake only; no production profile.",
+  "phases": [
+    {
+      "name": "security",
+      "expected": 78
+    },
+    {
+      "name": "j_native_security",
+      "expected": 52
+    },
+    {
+      "name": "j_models",
+      "expected": 40,
+      "expected_ids_file": "j_models-expected-IDs-safe.json"
+    },
+    {
+      "name": "j_mode_gui",
+      "expected": 6
+    },
+    {
+      "name": "h3",
+      "expected": 55
+    },
+    {
+      "name": "j_flow",
+      "expected": 1
+    },
+    {
+      "name": "j_k_models",
+      "expected": 62
+    },
+    {
+      "name": "j_k_gui",
+      "expected": 4
+    },
+    {
+      "name": "j_k_navigation",
+      "expected": 68
+    },
+    {
+      "name": "j_native",
+      "expected": 15
+    },
+    {
+      "name": "j_shutdown_repeat1",
+      "expected": 3
+    },
+    {
+      "name": "j_shutdown_repeat2",
+      "expected": 3
+    },
+    {
+      "name": "j_shutdown_repeat3",
+      "expected": 3
+    },
+    {
+      "name": "j_shutdown_repeat4",
+      "expected": 3
+    },
+    {
+      "name": "j_shutdown_repeat5",
+      "expected": 3
+    }
+  ],
+  "model_count_basis": "Parent-controlled local j_models/pytest.xml: 40 PASS; exact testcase IDs preserved in j_models-expected-IDs-safe.json",
+  "fail_closed": "Missing XML, changed testcase counts, skipped cases or failures fail the workflow"
+}

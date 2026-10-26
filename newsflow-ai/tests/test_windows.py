@@ -273,6 +273,14 @@ def test_migration_bad_or_overlapping_source(tmp_path):
 
 
 def test_actual_server_lifecycle_and_port_collision(tmp_path):
+    _actual_server_lifecycle(tmp_path)
+
+
+def test_connection_reset_still_shuts_down_and_releases_port(tmp_path):
+    _actual_server_lifecycle(tmp_path, reset_connections=True)
+
+
+def _actual_server_lifecycle(tmp_path, *, reset_connections=False):
     with socket.socket() as candidate:
         candidate.bind(("127.0.0.1", 0))
         port = candidate.getsockname()[1]
@@ -282,10 +290,12 @@ def test_actual_server_lifecycle_and_port_collision(tmp_path):
     )
     from urllib.request import urlopen
 
-    process = subprocess.Popen(
-        [sys.executable, "-m", "newsflow.main"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0,
-    )
+    stderr_log = tmp_path / "synthetic-server-stderr.log"
+    with stderr_log.open("wb") as stderr_file:
+        process = subprocess.Popen(
+            [sys.executable, "-m", "newsflow.main"], env=env, stdout=subprocess.DEVNULL, stderr=stderr_file,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0,
+        )
     try:
         for _ in range(80):
             assert process.poll() is None
@@ -333,6 +343,15 @@ def test_actual_server_lifecycle_and_port_collision(tmp_path):
                 break
             time.sleep(0.1)
         assert status == "empty"  # Offline: registered source was deliberately disabled.
+        if reset_connections:
+            import struct
+            # Browser/tab cancellation can reset an HTTP connection during a response.
+            for _ in range(12):
+                with socket.create_connection(("127.0.0.1", port), timeout=3) as cancelled:
+                    cancelled.sendall(b"GET /settings HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: keep-alive\r\n\r\n")
+                    assert cancelled.recv(1)
+                    cancelled.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("hh", 1, 0))
+            time.sleep(.1)
         duplicate = subprocess.run(
             [sys.executable, "-m", "newsflow.main"],
             env=env,
@@ -359,6 +378,12 @@ def test_actual_server_lifecycle_and_port_collision(tmp_path):
     with socket.socket() as check:
         assert check.connect_ex(("127.0.0.1", port)) != 0
     assert (tmp_path / "운영 데이터/logs/execution.log").exists()
+    stderr = stderr_log.read_text(encoding="utf-8", errors="replace")
+    assert "Exception in callback" not in stderr
+    assert "WinError 10054" not in stderr
+    # The same data/port can be reserved after normal cleanup without deleting data.
+    with reserve_socket("127.0.0.1", port):
+        pass
 
 
 def test_invalid_secret_not_printed(tmp_path):
@@ -402,3 +427,19 @@ def test_migration_closes_sqlite_handles(tmp_path, monkeypatch):
     for handle in handles:
         with pytest.raises(sqlite3.ProgrammingError):
             handle.execute("SELECT 1")
+
+
+def test_windows_http_loop_is_local_and_supports_server_contract():
+    import asyncio
+    import uvicorn
+    from newsflow.runtime import windows_server_loop
+    original = asyncio.new_event_loop
+    config = uvicorn.Config("unused:app", loop="newsflow.runtime:windows_server_loop")
+    assert config.get_loop_factory() is windows_server_loop
+    loop = config.get_loop_factory()()
+    try:
+        assert isinstance(loop, asyncio.SelectorEventLoop)
+        assert asyncio.new_event_loop is original
+        assert not loop.is_running()
+    finally:
+        loop.close()
