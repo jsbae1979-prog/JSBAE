@@ -549,6 +549,51 @@ def module_view(request: Request, module: Module):
 
         result["operationsReview"] = evidence.read(state.sessions)
         result["catalog"]["operationsItems"] = evidence.ITEMS
+    # Read current non-secret defaults through existing helpers. Never replace a
+    # saved configuration with the original Form() defaults merely by opening it.
+    from newsflow.easy_setup import preview_preferences, speech_preferences
+    from newsflow.intelligence.settings import read_settings as ai_settings
+    from newsflow.video.ai.settings import read_settings as video_settings
+    from newsflow.video.elevenlabs_tts import settings as tts_settings
+
+    result["formDefaults"] = {}
+    ai = ai_settings(state.sessions)
+    result["formDefaults"]["ai_settings_save_ai_settings"] = {
+        key: getattr(ai, key) for key in ("provider", "model", "approved", "monthly_token_limit", "timeout")
+    }
+    tts = tts_settings(state.sessions)
+    result["formDefaults"]["video_save_tts"] = {
+        key: tts[key] for key in ("enabled", "voice_id", "model", "job_limit", "monthly_limit", "commercial")
+    }
+    video = video_settings(state.sessions)
+    result["formDefaults"]["video_ai_save_settings"] = {
+        key: value(getattr(video, key))
+        if key not in {"job_limit", "monthly_limit"}
+        else str(getattr(video, key))
+        for key in (
+            "provider",
+            "host",
+            "approved",
+            "monthly_limit",
+            "job_limit",
+            "currency",
+            "max_active",
+            "timeout_minutes",
+            "poll_seconds",
+        )
+    }
+    try:
+        voice, size, position = preview_preferences(state.sessions)
+        speech = speech_preferences(state.sessions)
+        result["formDefaults"]["voice_save"] = {
+            "voice": voice,
+            "rate": str(speech.rate),
+            "pause_ms": str(speech.pause_ms),
+        }
+        result["formDefaults"]["voice_preview"] = dict(result["formDefaults"]["voice_save"])
+        result["formDefaults"]["video_render"] = {"voice": voice, "font_size": size, "subtitle_y": position}
+    except ValueError:
+        pass
     result["policy"] = {
         "automaticRetry": False,
         "providerFallback": False,

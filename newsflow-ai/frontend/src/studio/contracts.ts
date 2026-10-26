@@ -13,6 +13,7 @@ export type View = {
   settings?: Record<string, string>;
   policy?: Item;
   operationsReview?: Item;
+  formDefaults?: Record<string, Item>;
   listeningSummary?: Item | null;
 };
 export type Field = {

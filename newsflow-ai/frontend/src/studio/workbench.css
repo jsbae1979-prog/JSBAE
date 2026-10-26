@@ -1051,3 +1051,47 @@
     grid-template-columns: 1fr;
   }
 }
+
+.global-search {
+  position: relative;
+}
+.global-search-results {
+  position: absolute;
+  top: calc(100% + 9px);
+  left: 0;
+  right: 0;
+  background: #18243a;
+  border: 1px solid #4a5775;
+  box-shadow: 0 14px 40px #0008;
+  border-radius: 12px;
+  z-index: 40;
+  overflow: hidden;
+}
+.global-search-results button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid #2e405b;
+  color: #e4ecfa;
+  padding: 14px;
+}
+.global-search-results button:hover {
+  background: #2e3b58;
+}
+.global-search-results span {
+  flex: 1;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.global-search-results p {
+  padding: 14px;
+  margin: 0;
+  color: #b8c6dd;
+  font-size: 13px;
+}

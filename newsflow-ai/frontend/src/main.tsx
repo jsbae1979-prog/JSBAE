@@ -623,6 +623,30 @@ function App() {
               aria-label="보관 프로젝트 검색"
             />
             <kbd>Ctrl + K</kbd>
+            {query && !["dashboard", "create"].includes(page) && (
+              <div
+                className="global-search-results"
+                role="listbox"
+                aria-label="보관 프로젝트 검색 결과"
+              >
+                {projects.length ? (
+                  projects.slice(0, 6).map((project) => (
+                    <button
+                      key={project.id}
+                      role="option"
+                      aria-selected="false"
+                      onClick={() => bridge(project.title, project.href)}
+                    >
+                      <FileText size={17} />
+                      <span>{project.title}</span>
+                      <ChevronRight size={16} />
+                    </button>
+                  ))
+                ) : (
+                  <p>검색된 보관 프로젝트가 없습니다.</p>
+                )}
+              </div>
+            )}
           </div>
           <div className="top-actions">
             {synthetic && <span className="dev-badge">개발용 합성 자료</span>}

@@ -227,7 +227,19 @@ function initial(action: Action, context: Item, view: View) {
   const v: Item = {};
   for (const f of action.fields) {
     v[f.name] =
-      f.type === "boolean" ? false : (context[f.name] ?? f.default ?? "");
+      f.type === "boolean"
+        ? /consent|reviewed|confirmed|permission|rights/.test(f.name)
+          ? false
+          : Boolean(
+              context[f.name] ??
+              view.formDefaults?.[action.id]?.[f.name] ??
+              f.default ??
+              false,
+            )
+        : (context[f.name] ??
+          view.formDefaults?.[action.id]?.[f.name] ??
+          f.default ??
+          "");
   }
   if (action.id.startsWith("creation_") && action.id !== "creation_reuse")
     Object.assign(v, view.catalog.imageDefaults ?? {}, context);
@@ -578,6 +590,7 @@ export function CommandDialog({
     (f) =>
       f.required ||
       f.path ||
+      f.type === "boolean" ||
       [
         "prompt",
         "model",
