@@ -479,6 +479,9 @@ def module_view(request: Request, module: Module):
             result["catalog"][mode + "Defaults"] = read_defaults(state.sessions, mode)
         except ValueError as exc:
             result["catalog"][mode + "Error"] = str(exc)
+    from newsflow.gui.production_picker import NEWS_METHODS
+
+    result["catalog"]["newsMethods"] = NEWS_METHODS
     result["catalog"]["referenceAssets"] = (
         state.image_studio.assets() if hasattr(state, "image_studio") else []
     )

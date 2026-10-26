@@ -68,7 +68,7 @@ function choices(
   if (action.id === "operations_startup" && f.name === "command")
     return [
       ["register", "자동 시작 등록"],
-      ["unregister", "자동 시작 해제"],
+      ["remove", "자동 시작 해제"],
     ];
   if (/^source_\d+$/.test(f.name))
     return [
@@ -105,6 +105,11 @@ function choices(
     return list(view.collections[resources[f.name]]);
   if (f.name === "reference_asset")
     return (c.referenceAssets ?? []).map((x: string) => [x, x]);
+  if (f.name === "provider" && action.id.startsWith("api_settings_"))
+    return Object.keys(c.apiModels ?? {}).map((x) => [
+      x,
+      x === "claude_api" ? "Claude API" : "OpenAI API",
+    ]);
   if (f.name === "provider")
     return action.module === "images"
       ? [["openai", "OpenAI · 이미지"]]
@@ -167,11 +172,7 @@ function choices(
         ]
       : values.kind === "voice"
         ? (c.voices ?? []).map((x: Item) => [x.id, x.label])
-        : [
-            ["offline|rss", "RSS · 로컬 분석"],
-            ["claude_api|rss", "RSS · Claude 분석"],
-            ["claude_api|web_search", "Claude 웹 검색"],
-          ];
+        : Object.entries(c.newsMethods ?? {});
   if (f.name === "kind")
     return [
       ["daily", "매일"],
