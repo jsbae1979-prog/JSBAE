@@ -69,3 +69,35 @@ def test_creation_defaults_restore_independently_without_mutating_saved_jobs(cli
         == 422
     )
     assert c.get("/api/studio/modules/images").json()["collections"]["drafts"][0]["status"] == "saved"
+
+
+def test_provider_key_form_targets_fake_store_without_returning_secret(client):
+    c, app = client
+
+    class FakeKeys:
+        def __init__(self):
+            self.saved = []
+
+        def save(self, value):
+            self.saved.append(value)
+
+        def status(self):
+            return {"configured": bool(self.saved)}
+
+        def key(self):
+            raise AssertionError("Key loading/decryption is forbidden in this test")
+
+    stores = {provider: FakeKeys() for provider in ("openai", "claude_api")}
+    app.state.api_keys = stores
+    csrf = token(c)
+    for provider, store in stores.items():
+        marker = "SYNTHETIC-KEY-ONLY-" + provider
+        path = f"/api-settings/{provider}/key"
+        assert c.post(path, data={"api_key": marker}).status_code == 403
+        assert store.saved == []
+        response = c.post(path, data={"csrf_token": csrf, "api_key": marker})
+        assert response.status_code == 303, response.text
+        assert store.saved == [marker]
+        assert marker not in response.text
+        assert marker not in c.get("/api/studio/modules/settings").text
+    assert stores["openai"].saved != stores["claude_api"].saved

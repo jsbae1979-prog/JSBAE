@@ -1934,7 +1934,7 @@ export default function Workbench({
                       ))}
                       <div className="work-actions">
                         {button(
-                          "ai_settings_save_key",
+                          "api_settings_save_key",
                           {},
                           false,
                           "OpenAI · Claude 키 설정",
