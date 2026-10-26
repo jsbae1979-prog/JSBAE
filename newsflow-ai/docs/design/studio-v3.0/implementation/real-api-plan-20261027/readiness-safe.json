@@ -1,0 +1,47 @@
+{
+  "basis_product": "476d14ad844ec3c636b1250b389f6da97f817617",
+  "basis_report": "2286a87a31da6b8a1161889720d56c47b17a3c1e",
+  "overall": "CONDITIONAL — plan ready, no paid execution approval",
+  "product_source_changes": 0,
+  "tests_rerun": 0,
+  "prior_evidence": {
+    "EXE": {
+      "PASS": 15,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "Windows_Actions_PASS": 42
+  },
+  "operating_port": 8765,
+  "observed_operating_PID": 55740,
+  "test_port": 18765,
+  "test_listener_observed": false,
+  "operating_key_reads": 0,
+  "DPAPI_decryption": 0,
+  "provider_API_calls": 0,
+  "RSS_queries": 0,
+  "authenticated_account_queries": 0,
+  "SNS_calls": 0,
+  "operating_restarts": 0,
+  "operating_DB_or_ledger_writes": 0,
+  "backup_AB_writes": 0,
+  "preservation_evidence": "Prior character-model-fix-final hash evidence reused; no repeated full hash scan. Port owner observed unchanged.",
+  "synthetic_material_SHA256": "b350736fcb8209759433389deee5fdfab6c283f423df30cdfac5dbca95734bf4",
+  "execution_blockers": [
+    "Current technical EXE is synthetic-only: credential-like environments refused, supplier sockets blocked, Fake adapters installed. Never relax this boundary.",
+    "Existing tools/ai_live_check.py is legacy OpenAI/real-article-only, rejects synthetic samples, may migrate its selected profile; do NOT point at operating/default data. An approved isolated real-API entry path is required.",
+    "No authorized dedicated test credentials/account supplied for this plan.",
+    "Final serialized wire input/actual narration/reference hash and exact account quotes not frozen yet.",
+    "OpenAI image token billing has no verified fixed per-image maximum.",
+    "ElevenAPI USD billing page and existing credit/tier guard compatibility require real non-generation subscription verification.",
+    "Planned request/token/scene ceilings need verification in the approved real-test execution boundary; no such runner was implemented in this planning task."
+  ],
+  "PR35": {
+    "draft": true,
+    "state": "open",
+    "merged": false,
+    "head_branch": "codex/newsflow-ux-video-app",
+    "head_sha": "6aef983db5a8d31b604d9fafd4329a0b4f83787d"
+  },
+  "reference_candidate_review": "Metadata/hash of the user-supplied attachment only; not copied to any test profile, not uploaded. No operating DB/key/media execution input."
+}

@@ -1,0 +1,70 @@
+{
+  "currency": "USD",
+  "checked_on": "2026-10-27",
+  "not_invoice": true,
+  "tax_FX_discounts_not_included": true,
+  "text_per_million": {
+    "gpt-4.1-mini": {
+      "input": 0.4,
+      "output": 1.6,
+      "source": "O1",
+      "shutdown": "2027-01-14"
+    },
+    "claude-sonnet-4-6": {
+      "input": 3,
+      "output": 15,
+      "source": "A1"
+    },
+    "claude-haiku-4-5-20251001": {
+      "input": 1,
+      "output": 5,
+      "source": "A1"
+    },
+    "claude-opus-4-6": {
+      "input": 5,
+      "output": 25,
+      "source": "A1"
+    }
+  },
+  "text_arithmetic_example": {
+    "condition": "Per request actual billed input <=8000 and output <=3000, no search/tools/caching/fast/region premium. Count endpoint is an estimate; this is NOT a provider-enforced cash ceiling.",
+    "one_call": {
+      "gpt-4.1-mini": 0.008,
+      "claude-sonnet-4-6": 0.069,
+      "claude-haiku-4-5-20251001": 0.023,
+      "claude-opus-4-6": 0.115
+    },
+    "sonnet_news_2_and_character_1_total": 0.207
+  },
+  "image_2_5_per_million": {
+    "text_input": 5,
+    "image_input": 8,
+    "image_output": 30,
+    "source": [
+      "O3",
+      "O4"
+    ],
+    "fixed_per_image_price": null,
+    "hard_cash_cap": null,
+    "generation_gate": "BLOCKED until user accepts measured-token billing and approval boundary; no invented per-image quote"
+  },
+  "elevenAPI_public_per_1000_characters": {
+    "multilingual_v2_or_v3": 0.08,
+    "flash_turbo": 0.04,
+    "source": "E1",
+    "two_hundred_character_example": {
+      "multilingual": 0.016,
+      "flash": 0.008
+    },
+    "existing_account_price_and_legacy_credit_subscription_contract": "NOT VERIFIED"
+  },
+  "higgsfield": {
+    "seedance_reference_public_480p_price_per_second": 0.118,
+    "kling_turbo_public_1080p_price_per_second": 0.07,
+    "source": "H1",
+    "requested_720p_price": null,
+    "account_quote": null,
+    "cash_cap": null,
+    "generation_gate": "BLOCKED pending exact authenticated quote and generation approval; public different-resolution promotional prices are NOT applied to requested model settings"
+  }
+}

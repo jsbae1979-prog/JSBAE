@@ -1,0 +1,81 @@
+{
+  "checked_on": "2026-10-27 KST",
+  "scope": "Public official documentation only. No authenticated provider/API/RSS requests.",
+  "sources": [
+    {
+      "id": "O1",
+      "title": "OpenAI GPT-4.1 mini model",
+      "url": "https://developers.openai.com/api/docs/models/gpt-4.1-mini"
+    },
+    {
+      "id": "O2",
+      "title": "OpenAI deprecations",
+      "url": "https://developers.openai.com/api/docs/deprecations"
+    },
+    {
+      "id": "O3",
+      "title": "OpenAI GPT Image 2.5 Flare",
+      "url": "https://developers.openai.com/api/docs/models/gpt-image-2.5-flare"
+    },
+    {
+      "id": "O4",
+      "title": "OpenAI GPT Image 2.5 Sunburst",
+      "url": "https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst"
+    },
+    {
+      "id": "O5",
+      "title": "OpenAI image generation guide",
+      "url": "https://developers.openai.com/api/docs/guides/image-generation"
+    },
+    {
+      "id": "A1",
+      "title": "Claude model pricing",
+      "url": "https://platform.claude.com/docs/en/about-claude/pricing"
+    },
+    {
+      "id": "A2",
+      "title": "Claude token counting",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/token-counting"
+    },
+    {
+      "id": "E1",
+      "title": "ElevenAPI pricing",
+      "url": "https://elevenlabs.io/pricing/api"
+    },
+    {
+      "id": "E2",
+      "title": "ElevenLabs speech with timestamps",
+      "url": "https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps"
+    },
+    {
+      "id": "S1",
+      "title": "SerpApi pricing",
+      "url": "https://serpapi.com/pricing"
+    },
+    {
+      "id": "H1",
+      "title": "Higgsfield pricing",
+      "url": "https://open.higgsfield.ai/pricing"
+    },
+    {
+      "id": "H2",
+      "title": "Seedance 2.0 reference-to-video schema",
+      "url": "https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video"
+    },
+    {
+      "id": "H3",
+      "title": "Kling 3.0 Turbo T2V schema",
+      "url": "https://open.higgsfield.ai/models/kling-video/v3.0-turbo/text-to-video/api-reference"
+    },
+    {
+      "id": "H4",
+      "title": "PixVerse V6 T2V schema",
+      "url": "https://open.higgsfield.ai/models/pixverse/v6/text-to-video/api-reference"
+    },
+    {
+      "id": "H5",
+      "title": "Wan 3.0 T2V schema",
+      "url": "https://open.higgsfield.ai/models/alibaba/wan-3.0/text-to-video/api-reference"
+    }
+  ]
+}
