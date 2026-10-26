@@ -1,5 +1,8 @@
 # [Codex PC 세션 전달용] NewsFlow AI Studio 전체 UX/UI 전면 교체 통합 실행 지시 — v3.0
 
+
+> **마스터 원본 PNG 필수 검증:** GitHub 설계 브랜치 `design/newsflow-ai-studio-v3-20261026`의 `assets/master_dashboard_reference.png`를 먼저 검사한다. 현재 GitHub에는 원본 PNG가 없으며, SHA-256 `ee910d5d975fffdd551f26a097051b1f998caea415246fdf8a33b48255de9b99` 파일을 사용자에게서 전달받아야 한다. 이미지가 없으면 마스터 디자인 동일성 Gate는 BLOCKED이며 대체 이미지로 PASS 처리하지 않는다. `MASTER_PNG_UPLOAD_GUIDE.md` 참조.
+
 ## 결정과 목표
 사용자가 NewsFlow AI 기존 기능 개발 완료를 알렸다. 신규 UX/UI 사전 설계는 완료 단계이므로, **별도 개발 브랜치에서 React + TypeScript 프런트엔드 전면 교체 작업에 착수**한다.
 

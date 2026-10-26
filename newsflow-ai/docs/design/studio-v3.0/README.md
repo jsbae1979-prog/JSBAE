@@ -23,6 +23,7 @@
 | [Media_Component_Contract_v2.5.md](Media_Component_Contract_v2.5.md) | 영상·이미지·승인·결과불명 UI 규칙 |
 | [prototypes/NewsFlow_Master_Experience_v2.4.html](prototypes/NewsFlow_Master_Experience_v2.4.html) | 이미지가 내장된 오프라인 HTML 화면 예시; 실제 React·API 앱 아님 |
 | [MASTER_ASSET_STATUS.md](MASTER_ASSET_STATUS.md) | 사용자 선정 원본 PNG의 정확한 해시·업로드 상태 |
+| [MASTER_PNG_UPLOAD_GUIDE.md](MASTER_PNG_UPLOAD_GUIDE.md) | 원본 PNG GitHub 등록과 SHA-256 확인 방법 |
 
 ## 마스터 PNG 처리
 
