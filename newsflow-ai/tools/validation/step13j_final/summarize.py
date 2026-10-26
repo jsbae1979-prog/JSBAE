@@ -66,7 +66,7 @@ def native_detail(root, phase):
             if not isinstance(event, dict):
                 continue
             kind = event.get("kind")
-            if kind not in {"DENY", "Python-approved", "PowerShell-approved", "PowerShell-complete"}:
+            if kind not in {"DENY", "Python-approved", "PowerShell-approved", "PowerShell-complete", "PowerShell-exception"}:
                 continue
             safe = {"kind": kind}
             reason = event.get("reason")
@@ -74,6 +74,8 @@ def native_detail(root, phase):
                 safe["reason"] = reason
             if kind.startswith("PowerShell-") and event.get("operation") in {"identity", "validate"}:
                 safe["operation"] = event["operation"]
+            if kind == "PowerShell-exception" and event.get("error_type") in {"TimeoutExpired", "OSError", "PermissionError", "FileNotFoundError"}:
+                safe["error_type"] = event["error_type"]
             if kind == "PowerShell-complete" and type(event.get("exit")) is int:
                 safe["exit"] = event["exit"]
                 result["powershell_exits"].append({k: v for k, v in safe.items() if k in {"operation", "exit"}})

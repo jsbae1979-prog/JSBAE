@@ -84,7 +84,8 @@ def test_pages_render_default_off_and_keep_six_main_menus(studio):
     assert home.status_code == 200 and "기본 FFmpeg 제작" in home.text and "전체 AI 영상 · 모든 시각 장면" in home.text
     assert "AI 영상 유료 생성 승인이 저장되지 않았습니다." in home.text and "테스트 전용 Fake 공급자" in home.text
     nav = home.text.split('aria-label="주 메뉴"', 1)[1].split("</nav>", 1)[0]
-    assert nav.count('data-nav-id=') == 13
+    assert nav.count('data-nav-id=') == 14
+    assert 'href="/image-studio"' in nav
     assert 'data-sidebar-tools' in nav
     for href in ("/", "/news", "/ai", "/videos", "/queue", "/analytics", "/simple-settings"):
         assert f'href="{href}"' in nav

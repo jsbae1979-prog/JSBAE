@@ -11,10 +11,6 @@
       "expected": 52
     },
     {
-      "name": "j_native",
-      "expected": 15
-    },
-    {
       "name": "j_models",
       "expected": 40,
       "expected_ids_file": "j_models-expected-IDs-safe.json"
@@ -38,6 +34,10 @@
     {
       "name": "j_k_gui",
       "expected": 4
+    },
+    {
+      "name": "j_native",
+      "expected": 15
     }
   ],
   "model_count_basis": "Parent-controlled local j_models/pytest.xml: 40 PASS; exact testcase IDs preserved in j_models-expected-IDs-safe.json",

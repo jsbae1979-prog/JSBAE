@@ -294,6 +294,11 @@ def install_run_boundary():
                     IDENTITIES.add(sid)
                 except (ValueError,TypeError,KeyError):deny('PowerShell-identity-response')
             return result
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            # Diagnostic type only: never record argv, SID, stdout, stderr or environment.
+            EVENTS.append({'kind':'PowerShell-exception','operation':payload['operation'],
+                           'error_type':type(exc).__name__})
+            raise
         finally:PS_CONTEXT.reset(token)
     subprocess.run=limited_run;INSTALLED=True
 

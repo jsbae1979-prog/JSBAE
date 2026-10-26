@@ -180,6 +180,8 @@ class Rehearsal:
 
 
 def test_restore_point_update_failure_and_restart(tmp_path, record_property):
+    current_main = ROOT/'src/newsflow/main.py'
+    current_main_hash = hashlib.sha256(current_main.read_bytes()).hexdigest()
     data = initialize(tmp_path/'한글 사용자 data')
     original = logical(data/'newsflow.db')
     file_hashes = inventory(data)
@@ -249,7 +251,9 @@ def test_restore_point_update_failure_and_restart(tmp_path, record_property):
     assert b'\r\n' in checkout_launcher
     assert b'\n' not in checkout_launcher.replace(b'\r\n', b'')
     assert restored_launcher.replace(b'\r\n', b'\n') == checkout_launcher.replace(b'\r\n', b'\n')
-    assert (restored_code/'src/newsflow/main.py').read_bytes() == (ROOT/'src/newsflow/main.py').read_bytes()
+    # An old release is restored exactly, not expected to equal a newer working tree.
+    assert (restored_code/'src/newsflow/main.py').read_bytes() == (baseline/'files/newsflow-ai/src/newsflow/main.py').read_bytes()
+    assert hashlib.sha256(current_main.read_bytes()).hexdigest() == current_main_hash
     for _ in range(2):
         app = create_app(Settings(data_dir=rolled), FakeRSSAdapter({}))
         with TestClient(app, base_url='http://127.0.0.1') as client:
@@ -260,6 +264,7 @@ def test_restore_point_update_failure_and_restart(tmp_path, record_property):
                 assert set(s.scalars(select(PublishJob.status))) == {'success','unknown','failed'}
                 assert s.get(ProductionSchedule,'a'*32).status == 'paused'
     assert inventory(data) == file_hashes
+    assert hashlib.sha256(current_main.read_bytes()).hexdigest() == current_main_hash
     for name, value in file_hashes.items():
         if not name.startswith('newsflow.db'):
             assert inventory(rolled)[name] == value
