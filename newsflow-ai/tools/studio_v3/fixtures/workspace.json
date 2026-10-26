@@ -17,7 +17,8 @@
       "href": "/video?job_id=1",
       "thumbnailUrl": "/studio/assets/design-art-2.webp",
       "mediaUrl": null,
-      "sourceLabel": "합성 프로젝트 · 실제 파일 생성 아님"
+      "sourceLabel": "합성 프로젝트 · 실제 파일 생성 아님",
+      "draftId": 1
     },
     {
       "id": "character:demo-character",

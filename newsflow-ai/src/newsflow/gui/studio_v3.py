@@ -98,6 +98,7 @@ def workspace(request: Request):
                     review=draft.review_status,
                 )
             )
+            projects[-1]["draftId"] = draft.id
         outputs = list(
             session.scalars(
                 select(IntelligenceRun)

@@ -142,6 +142,7 @@ export default function Workbench({
   const [tab, setTab] = useState("independent");
   const [selectedArticles, setSelectedArticles] = useState<number[]>([]);
   const [scene, setScene] = useState(0);
+  const [stage, setStage] = useState(1);
   const [editor, setEditor] = useState<Item | null>(null);
   const [editorDirty, setEditorDirty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -298,7 +299,7 @@ export default function Workbench({
   };
   const editorScenes = Array.isArray(editor?.scenes) ? editor.scenes : [];
   const project = (view?.projects ?? []).find(
-    (x) => selected && String(x.id) === `news:${selected.id}`,
+    (x) => selected && String(x.draftId) === String(selected.id),
   );
   const currentMedia = safeMedia(selected?.mediaUrl ?? project?.mediaUrl);
   const preview = (media: string | null, kind = "video") => (
@@ -554,7 +555,7 @@ export default function Workbench({
                     (x, i) => (
                       <button
                         key={x}
-                        aria-current={scene === i ? "step" : undefined}
+                        aria-current={stage === i ? "step" : undefined}
                         onClick={() => {
                           document
                             .getElementById(
@@ -654,7 +655,7 @@ export default function Workbench({
                             <div className="scene-editor">
                               <label className="form-field">
                                 <span>방송용 내레이션</span>
-                                <textarea
+                                <textarea aria-label="방송용 내레이션"
                                   value={editorScenes[scene].narration ?? ""}
                                   maxLength={400}
                                   onChange={(e) => {
@@ -667,7 +668,7 @@ export default function Workbench({
                               </label>
                               <label className="form-field">
                                 <span>화면 자막</span>
-                                <textarea
+                                <textarea aria-label="화면 자막"
                                   value={editorScenes[scene].caption ?? ""}
                                   maxLength={150}
                                   onChange={(e) => {

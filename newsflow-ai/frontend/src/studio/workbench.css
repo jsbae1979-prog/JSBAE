@@ -966,3 +966,5 @@
     display: none;
   }
 }
+
+.record-row>.state-badge{flex:0 0 auto!important;width:fit-content}.character-reference{display:block;max-width:100%;max-height:330px;object-fit:contain;margin:0 auto 20px;border-radius:12px;background:#0e192a}

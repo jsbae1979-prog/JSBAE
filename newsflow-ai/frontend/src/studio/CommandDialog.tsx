@@ -242,7 +242,7 @@ export function CommandDialog({
     setBusy(true);
     setError("");
     try {
-      await submitOriginal(action, values, view, files, context.__extra ?? {});
+      await submitOriginal(effective, values, view, files, context.__extra ?? {});
       onSaved();
       onClose();
     } catch (e) {
@@ -274,6 +274,7 @@ export function CommandDialog({
         {f.type === "boolean" ? (
           <>
             <input
+              aria-label={label(f.name)}
               type="checkbox"
               checked={v === true}
               onChange={(e) => set(f.name, e.target.checked)}
@@ -282,6 +283,7 @@ export function CommandDialog({
           </>
         ) : f.type === "file" ? (
           <input
+              aria-label={label(f.name)}
             type="file"
             accept="image/png,image/jpeg,image/webp"
             onChange={(e) => {
@@ -291,6 +293,7 @@ export function CommandDialog({
           />
         ) : opts.length ? (
           <select
+              aria-label={label(f.name)}
             required={f.required}
             multiple={f.type === "array"}
             value={f.type === "array" ? (Array.isArray(v) ? v : []) : String(v)}
@@ -312,10 +315,11 @@ export function CommandDialog({
               </option>
             ))}
           </select>
-        ) : /prompt|description|caption|content|summary|statement|source_text|review_notes/.test(
+        ) : /prompt|description|caption|content|summary|statement|source_text|review_notes|body/.test(
             f.name,
           ) ? (
           <textarea
+              aria-label={label(f.name)}
             rows={4}
             required={f.required}
             value={String(v ?? "")}
@@ -324,6 +328,7 @@ export function CommandDialog({
           />
         ) : (
           <input
+              aria-label={label(f.name)}
             type={
               secrets.test(f.name)
                 ? "password"
@@ -429,6 +434,7 @@ export function CommandDialog({
               {risky && (
                 <label className="check-field approval">
                   <input
+              aria-label="이 요청의 실행 범위 확인"
                     type="checkbox"
                     checked={ack}
                     onChange={(e) => setAck(e.target.checked)}
