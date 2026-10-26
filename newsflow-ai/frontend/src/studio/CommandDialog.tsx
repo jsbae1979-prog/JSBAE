@@ -136,8 +136,8 @@ function choices(
             claude_api: "Claude API",
           },
         );
-  if (["model", "script_model"].includes(f.name))
-    return (
+  if (["model", "script_model"].includes(f.name)) {
+    const models = (
       action.module === "images" && action.id.startsWith("creation_")
         ? (c.imageModels ?? [])
         : (c.apiModels?.[
@@ -147,7 +147,15 @@ function choices(
                 ? "claude_api"
                 : "offline")
           ] ?? [])
-    ).map((x: string) => [x, x]);
+    ).map((x: string) => [x, x] as [string, string]);
+    const stored = values[f.name];
+    if (stored && !models.some((x) => x[0] === stored))
+      models.unshift([
+        String(stored),
+        String(stored) + " · 저장 선택 · 지원 확인 필요",
+      ]);
+    return models;
+  }
   if (f.name === "video_model")
     return c.characterDefaults?.video_model
       ? [[c.characterDefaults.video_model, c.characterDefaults.video_model]]
@@ -443,7 +451,8 @@ export function CommandDialog({
   const set = (key: string, v: unknown) => {
     setValues((old) => {
       const next = { ...old, [key]: v };
-      if (key === "provider") next.model = "";
+      if (key === "provider")
+        next.model = view.catalog.studioModels?.[String(v)] ?? "";
       return next;
     });
   };

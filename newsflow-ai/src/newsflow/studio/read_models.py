@@ -563,6 +563,13 @@ def module_view(request: Request, module: Module):
     from newsflow.video.elevenlabs_tts import settings as tts_settings
 
     result["formDefaults"] = {}
+    from newsflow.intelligence.settings import read_studio_settings
+
+    studio = read_studio_settings(state.sessions)
+    result["catalog"]["studioModels"] = studio["models"]
+    for action in ("intelligence_analyze", "intelligence_generate", "intelligence_studio_preferences"):
+        result["formDefaults"][action] = {"provider": studio["provider"], "model": studio["model"]}
+
     ai = ai_settings(state.sessions)
     result["formDefaults"]["ai_settings_save_ai_settings"] = {
         key: getattr(ai, key) for key in ("provider", "model", "approved", "monthly_token_limit", "timeout")
