@@ -144,10 +144,13 @@ export default function Workbench({
   const [scene, setScene] = useState(0);
   const [stage, setStage] = useState(1);
   const [editor, setEditor] = useState<Item | null>(null);
+  const [activeDraft, setActiveDraft] = useState<Item | null>(null);
+  const [sceneImages, setSceneImages] = useState<string[]>([]);
   const [editorDirty, setEditorDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [zoom, setZoom] = useState(false);
+  const [startupStatus, setStartupStatus] = useState<Item | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   async function load() {
     setLoading(true);
@@ -167,6 +170,13 @@ export default function Workbench({
       )
         throw Error("화면 데이터 형식을 확인하세요.");
       setView(data);
+      setActiveDraft((old) =>
+        old
+          ? (data.collections.drafts?.find(
+              (x) => String(x.id) === String(old.id),
+            ) ?? old)
+          : null,
+      );
       setSelected((old) => {
         if (!old) return null;
         for (const list of Object.values(data.collections)) {
@@ -185,6 +195,8 @@ export default function Workbench({
     setView(null);
     setSelected(null);
     setEditor(null);
+    setActiveDraft(null);
+    setSceneImages([]);
     setEditorDirty(false);
     setQuery("");
     setNotice("");
@@ -206,6 +218,41 @@ export default function Workbench({
     }
     setCommand({ action, context });
   }
+  async function inspectLocal(kind: "voices" | "startup") {
+    try {
+      const response = await fetch(
+        `/api/studio/${kind === "voices" ? "local-voices" : "system-startup"}`,
+        { cache: "no-store", credentials: "same-origin" },
+      );
+      if (!response.ok)
+        throw Error(
+          "로컬 상태 조회를 완료하지 못했습니다. 기존 설정은 유지됩니다.",
+        );
+      const result: Item = await response.json();
+      if (kind === "startup") setStartupStatus(result);
+      else
+        setView((old) =>
+          old
+            ? {
+                ...old,
+                catalog: {
+                  ...old.catalog,
+                  voices: result.voices.filter((x: Item) => x.available),
+                },
+              }
+            : old,
+        );
+      setNotice(
+        kind === "voices"
+          ? "로컬 목록을 확인했습니다. 실제 음성 생성·사용 가능 검증은 별도입니다."
+          : "자동 시작의 현재 상태를 확인했습니다. 등록·해제는 별도 동의가 필요합니다.",
+      );
+    } catch (e) {
+      setNotice(
+        e instanceof Error ? e.message : "로컬 정책과 준비 상태를 확인하세요.",
+      );
+    }
+  }
   function saved() {
     setNotice(
       "요청 응답을 받았습니다. 갱신된 기록에서 저장·생성 상태를 확인하세요.",
@@ -221,6 +268,12 @@ export default function Workbench({
     )
       return;
     setSelected(draft);
+    setActiveDraft(draft);
+    setSceneImages(
+      (draft.imageLinks ?? []).map((x: Item) =>
+        x.mode === "manual" ? (x.name ?? "") : "",
+      ),
+    );
     let content = draft.content;
     try {
       const recovery = sessionStorage.getItem(
@@ -238,29 +291,29 @@ export default function Workbench({
   function updateEditor(next: Item) {
     setEditor(next);
     setEditorDirty(true);
-    if (selected)
+    if (activeDraft)
       sessionStorage.setItem(
-        `studio-script-${selected.id}-${selected.revision}`,
+        `studio-script-${activeDraft.id}-${activeDraft.revision}`,
         JSON.stringify(next),
       );
   }
   async function saveScript() {
-    if (!view || !selected || !editor || busy) return;
+    if (!view || !activeDraft || !editor || busy) return;
     setBusy(true);
     try {
       const action = actions.find((x) => x.id === "intelligence_edit")!;
       await submitOriginal(
         action,
         {
-          draft_id: selected.id,
-          revision: selected.revision,
+          draft_id: activeDraft.id,
+          revision: activeDraft.revision,
           content: JSON.stringify(editor),
         },
         view,
         {},
       );
       sessionStorage.removeItem(
-        `studio-script-${selected.id}-${selected.revision}`,
+        `studio-script-${activeDraft.id}-${activeDraft.revision}`,
       );
       setEditorDirty(false);
       saved();
@@ -282,13 +335,31 @@ export default function Workbench({
         account_id: selected.id,
       }
     : {};
-  function unavailable(action:Action){
-    if(action.unsupported)return action.reason??"미지원 기능입니다.";
-    if(action.id==="creation_generate"&&selected?.reference)return "참조 기반 유료 이미지 편집 생성은 미구현입니다.";
-    if(action.id==="creation_generate"&&selected?.outputId!=null)return "기존 생성·실패·결과 불명 기록을 보존합니다. 자동 재요청하지 않습니다.";
-    if(action.id==="creation_reuse"&&selected&&!safeMedia(selected.mediaUrl))return "성공한 검증 이미지가 필요합니다.";
-    const allowed:Record<string,string[]>={character_act_write:["needs_script","script_failed"],character_act_prepare:["script_review"],character_act_submit:["quoted"],character_act_check:["generating"],character_act_render:["clips_review"]};
-    if(allowed[action.id]&&selected?.state&&!allowed[action.id].includes(selected.state))return "현재 작업 단계에서 실행할 수 없습니다. 저장된 상태를 먼저 확인하세요.";
+  function unavailable(action: Action) {
+    if (action.unsupported) return action.reason ?? "미지원 기능입니다.";
+    if (action.id === "creation_generate" && selected?.reference)
+      return "참조 기반 유료 이미지 편집 생성은 미구현입니다.";
+    if (action.id === "creation_generate" && selected?.outputId != null)
+      return "기존 생성·실패·결과 불명 기록을 보존합니다. 자동 재요청하지 않습니다.";
+    if (
+      action.id === "creation_reuse" &&
+      selected &&
+      !safeMedia(selected.mediaUrl)
+    )
+      return "성공한 검증 이미지가 필요합니다.";
+    const allowed: Record<string, string[]> = {
+      character_act_write: ["needs_script", "script_failed"],
+      character_act_prepare: ["script_review"],
+      character_act_submit: ["quoted"],
+      character_act_check: ["generating"],
+      character_act_render: ["clips_review"],
+    };
+    if (
+      allowed[action.id] &&
+      selected?.state &&
+      !allowed[action.id].includes(selected.state)
+    )
+      return "현재 작업 단계에서 실행할 수 없습니다. 저장된 상태를 먼저 확인하세요.";
     return "";
   }
   const button = (id: string, ctx: Item = context, primary = false) => {
@@ -308,9 +379,15 @@ export default function Workbench({
   };
   const editorScenes = Array.isArray(editor?.scenes) ? editor.scenes : [];
   const project = (view?.projects ?? []).find(
-    (x) => selected && String(x.draftId) === String(selected.id),
+    (x) => activeDraft && String(x.draftId) === String(activeDraft.id),
   );
-  const currentMedia = safeMedia(selected?.mediaUrl ?? project?.mediaUrl);
+  const currentClip =
+    selected?.__type === "plan"
+      ? list("scenes").filter((x) => x.plan_id === selected.id)[scene]?.mediaUrl
+      : null;
+  const currentMedia = safeMedia(
+    currentClip ?? selected?.mediaUrl ?? project?.mediaUrl,
+  );
   const preview = (media: string | null, kind = "video") => (
     <section className="work-panel preview-panel">
       <div className="section-heading">
@@ -608,7 +685,9 @@ export default function Workbench({
                     >
                       <div className="section-heading">
                         <h2>대본 · 장면 편집</h2>
-                        {selected && <span>버전 {selected.revision}</span>}
+                        {activeDraft && (
+                          <span>버전 {activeDraft.revision}</span>
+                        )}
                       </div>
                       {editor ? (
                         <>
@@ -664,7 +743,8 @@ export default function Workbench({
                             <div className="scene-editor">
                               <label className="form-field">
                                 <span>방송용 내레이션</span>
-                                <textarea aria-label="방송용 내레이션"
+                                <textarea
+                                  aria-label="방송용 내레이션"
                                   value={editorScenes[scene].narration ?? ""}
                                   maxLength={400}
                                   onChange={(e) => {
@@ -677,7 +757,8 @@ export default function Workbench({
                               </label>
                               <label className="form-field">
                                 <span>화면 자막</span>
-                                <textarea aria-label="화면 자막"
+                                <textarea
+                                  aria-label="화면 자막"
                                   value={editorScenes[scene].caption ?? ""}
                                   maxLength={150}
                                   onChange={(e) => {
@@ -700,6 +781,40 @@ export default function Workbench({
                                   }}
                                 />
                               </label>
+                              <label className="form-field">
+                                <span>이번 장면 이미지</span>
+                                <select
+                                  aria-label="이번 장면 이미지"
+                                  value={sceneImages[scene] ?? ""}
+                                  onChange={(e) =>
+                                    setSceneImages((old) => {
+                                      const next = [...old];
+                                      next[scene] = e.target.value;
+                                      return next;
+                                    })
+                                  }
+                                >
+                                  <option value="">
+                                    뉴스 연결 이미지 자동 선택
+                                  </option>
+                                  <option value="__card__">
+                                    기본 이미지 카드
+                                  </option>
+                                  {(catalog.assets ?? []).map(
+                                    (name: string) => (
+                                      <option key={name} value={name}>
+                                        {name}
+                                      </option>
+                                    ),
+                                  )}
+                                </select>
+                              </label>
+                              <p className="muted">
+                                {activeDraft?.imageLinks?.[scene]?.reason ??
+                                  (activeDraft?.imageLinks?.[scene]?.name
+                                    ? `저장 연결 · ${activeDraft.imageLinks[scene].name}`
+                                    : "이미지 사용권과 출처를 확인한 뒤 제작합니다.")}
+                              </p>
                               <div className="review-note">
                                 <ShieldCheck size={17} />
                                 <span>
@@ -707,7 +822,7 @@ export default function Workbench({
                                   <br />
                                   {(
                                     editorScenes[scene].review_notes ??
-                                    selected?.review_notes ??
+                                    activeDraft?.review_notes ??
                                     []
                                   ).join(" · ") || "별도 검토 메모 없음"}
                                 </span>
@@ -734,7 +849,11 @@ export default function Workbench({
                           <details>
                             <summary>출처 확인</summary>
                             <pre>
-                              {JSON.stringify(selected?.sources ?? {}, null, 2)}
+                              {JSON.stringify(
+                                activeDraft?.sources ?? {},
+                                null,
+                                2,
+                              )}
                             </pre>
                           </details>
                         </>
@@ -754,14 +873,51 @@ export default function Workbench({
                         {button(
                           "video_render",
                           {
-                            draft_id: selected?.id,
-                            duration: selected?.duration,
+                            draft_id: activeDraft?.id,
+                            duration: activeDraft?.duration,
+                            __extra: {
+                              images: editorScenes.map(
+                                (_: Item, i: number) => sceneImages[i] ?? "",
+                              ),
+                            },
                           },
                           true,
                         )}
                         {button("video_load_elevenlabs_voices", {})}
                         {button("video_select_elevenlabs_voice", {})}
                         {button("voice_preview", {})}
+                        <button onClick={() => void inspectLocal("voices")}>
+                          <RefreshCw size={16} />
+                          로컬 음성 목록 확인
+                        </button>
+                      </div>
+                      <div className="audio-samples">
+                        {list("audioSamples").map((sample) => (
+                          <div key={sample.id}>
+                            <strong>{sample.title}</strong>
+                            <span className="muted">
+                              {sample.provider === "windows"
+                                ? "로컬 음성 · 샘플 근거 있음"
+                                : "ElevenLabs · 저장된 공개 샘플"}
+                            </span>
+                            {/^\/(?:video\/tts\/voices\/[a-zA-Z0-9_-]+\/sample|voices\/preview\/preview-[a-f0-9]{32}\.wav)$/.test(
+                              sample.mediaUrl ?? "",
+                            ) && (
+                              <audio
+                                controls
+                                preload="none"
+                                src={sample.mediaUrl}
+                              />
+                            )}{" "}
+                            {sample.provider === "windows" &&
+                              button("voice_listening", {
+                                preview: sample.id,
+                                voice: sample.voice,
+                                rate: sample.rate,
+                                pause_ms: sample.pause_ms,
+                              })}
+                          </div>
+                        ))}
                       </div>
                     </section>
                     <section className="work-panel" id="ai-scenes">
@@ -770,8 +926,8 @@ export default function Workbench({
                           <Layers size={19} /> AI 영상 · 장면 타임라인
                         </h2>
                         {button("video_ai_create_plan", {
-                          draft_id: selected?.id,
-                          duration: selected?.duration,
+                          draft_id: activeDraft?.id,
+                          duration: activeDraft?.duration,
                         })}
                       </div>
                       <Collection
@@ -881,10 +1037,23 @@ export default function Workbench({
                           <h3>{selected.topic}</h3>
                           <Badge value={selected.state} />
                           <div className="story-copy">
-                            {typeof selected.story === "string" ? selected.story : <><h3>{selected.story?.title}</h3><p>{selected.story?.plan?.situation ?? "저장된 장면 구성을 확인하세요."}</p></>}
+                            {typeof selected.story === "string" ? (
+                              selected.story
+                            ) : (
+                              <>
+                                <h3>{selected.story?.title}</h3>
+                                <p>
+                                  {selected.story?.plan?.situation ??
+                                    "저장된 장면 구성을 확인하세요."}
+                                </p>
+                              </>
+                            )}
                           </div>
                           <div className="timeline">
-                            {(selected.scenes?.length ? selected.scenes : selected.story?.scenes ?? []).map((x: Item, i: number) => (
+                            {(selected.scenes?.length
+                              ? selected.scenes
+                              : (selected.story?.scenes ?? [])
+                            ).map((x: Item, i: number) => (
                               <button
                                 key={x.position ?? i}
                                 onClick={() => setScene(x.position ?? i)}
@@ -892,7 +1061,12 @@ export default function Workbench({
                               >
                                 <span>장면 {(x.position ?? i) + 1}</span>
                                 <Badge value={x.state} />
-                                <p>{x.caption ?? x.narration ?? x.action ?? x.prompt}</p>
+                                <p>
+                                  {x.caption ??
+                                    x.narration ??
+                                    x.action ??
+                                    x.prompt}
+                                </p>
                                 <small>{x.seconds ?? "규격 확인"}초</small>
                               </button>
                             ))}
@@ -924,8 +1098,14 @@ export default function Workbench({
                   <aside className="work-stack">
                     {preview(currentMedia)}
                     <section className="work-panel inspector">
-                      {selected?.referenceUrl && <img className="character-reference" src={selected.referenceUrl} alt="검증된 캐릭터 참조 PNG"/>}
-        <h2>작업에 고정된 설정</h2>
+                      {selected?.referenceUrl && (
+                        <img
+                          className="character-reference"
+                          src={selected.referenceUrl}
+                          alt="검증된 캐릭터 참조 PNG"
+                        />
+                      )}
+                      <h2>작업에 고정된 설정</h2>
                       <dl className="property-list">
                         {Object.entries(
                           selected?.selection ??
@@ -1267,9 +1447,10 @@ export default function Workbench({
                       </button>
                       <details>
                         <summary>보관 관리</summary>
-                        {selected.kind === "news" && button("cleanup_remove_video", {
-                          identifier: String(selected.id).split(":")[1],
-                        })}
+                        {selected.kind === "news" &&
+                          button("cleanup_remove_video", {
+                            identifier: String(selected.id).split(":")[1],
+                          })}
                       </details>
                     </section>
                   </div>
@@ -1316,7 +1497,31 @@ export default function Workbench({
                           <h3>{itemTitle(selected)}</h3>
                           <p>{selected.description}</p>
                           <Badge value={selected.state ?? selected.status} />
-                          {selected.__type==="cohort" && <><div className="review-checklist">{(selected.targets??[]).map((x:Item)=><p key={x.platform}>{x.platform} <Badge value={x.status}/></p>)}</div>{selected.can_execute?button("unified_publishing_execute",{cohort_id:selected.id,approval_token:selected.approval_token},true):<p className="command-error">검토·권한·플랫폼별 상태를 먼저 확인하세요.</p>}</>}
+                          {selected.__type === "cohort" && (
+                            <>
+                              <div className="review-checklist">
+                                {(selected.targets ?? []).map((x: Item) => (
+                                  <p key={x.platform}>
+                                    {x.platform} <Badge value={x.status} />
+                                  </p>
+                                ))}
+                              </div>
+                              {selected.can_execute ? (
+                                button(
+                                  "unified_publishing_execute",
+                                  {
+                                    cohort_id: selected.id,
+                                    approval_token: selected.approval_token,
+                                  },
+                                  true,
+                                )
+                              ) : (
+                                <p className="command-error">
+                                  검토·권한·플랫폼별 상태를 먼저 확인하세요.
+                                </p>
+                              )}
+                            </>
+                          )}
                           <div className="review-checklist">
                             {[
                               "content_reviewed",
@@ -1532,7 +1737,31 @@ export default function Workbench({
                       </p>
                     </section>
                     <section className="work-panel">
-                      <h2>처음 시작하나요?</h2>
+                      <h2>Windows 실행 · 사용자 검토</h2>
+                      <p className="muted">
+                        상태는 버튼을 선택할 때만 조회합니다. 등록·해제와 사람
+                        검토 기록은 별도입니다.
+                      </p>
+                      <div className="work-actions">
+                        <button onClick={() => void inspectLocal("startup")}>
+                          <RefreshCw size={16} />
+                          자동 시작 상태 확인
+                        </button>
+                        {startupStatus?.revision &&
+                          button("operations_startup", {
+                            revision: startupStatus.revision,
+                          })}
+                        {button("operations_review", {
+                          revision: view.operationsReview?.revision ?? 0,
+                        })}
+                      </div>
+                      {startupStatus && (
+                        <p>
+                          {startupStatus.status} ·{" "}
+                          {startupStatus.message ?? "조회 완료 · 변경 없음"}
+                        </p>
+                      )}
+                      <h2 className="setup-guide-heading">처음 시작하나요?</h2>
                       <p>기본 설정과 제작 준비 상태를 순서대로 확인합니다.</p>
                       <button onClick={() => onNavigate("onboarding")}>
                         시작 가이드 <ChevronRight size={16} />
@@ -1548,12 +1777,12 @@ export default function Workbench({
                   <h2>제작 환경 준비</h2>
                   <div className="setup-steps">
                     {[
+                      "시작",
                       "뉴스 자료",
                       "분석 AI",
-                      "콘텐츠 길이",
-                      "자막",
-                      "음성",
-                      "제작 점검",
+                      "영상 형식",
+                      "음성 · 자막",
+                      "저장 위치",
                       "완료",
                     ].map((x, i) => (
                       <button

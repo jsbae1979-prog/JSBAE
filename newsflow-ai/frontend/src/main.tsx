@@ -187,19 +187,52 @@ function date(s: string) {
       }).format(d);
 }
 function localHref(url: string) {
-  return url.startsWith("/") && !url.startsWith("//") && !url.includes("\\")
-    ? url
-    : "/studio/dashboard";
+  if (!url.startsWith("/") || url.startsWith("//") || url.includes("\\"))
+    return "/studio/dashboard";
+  if (
+    url.startsWith("/studio/") ||
+    /\/(?:file|thumbnail|clip)(?:\?|$)/.test(url)
+  )
+    return url;
+  const [path, params] = url.split("?");
+  const page = path.startsWith("/schedules")
+    ? "automation"
+    : path.startsWith("/character")
+      ? "characters"
+      : path.startsWith("/image")
+        ? "images"
+        : path.startsWith("/video") ||
+            path.startsWith("/ai") ||
+            path === "/create"
+          ? "shorts"
+          : path.startsWith("/news") || path.startsWith("/sources")
+            ? "news"
+            : path.startsWith("/publishing")
+              ? "publishing"
+              : path.startsWith("/analytics")
+                ? "analytics"
+                : path.includes("settings")
+                  ? "settings"
+                  : "library";
+  return `/studio/${page}${params ? "?" + params : ""}`;
 }
+
 function routePage() {
   const parts = location.pathname.split("/");
-  if(parts[2] === "create" && parts[3]) return ({news:"shorts",character:"characters",image:"images"} as Record<string,string>)[parts[3]] ?? "create";
+  if (parts[2] === "create" && parts[3])
+    return (
+      (
+        { news: "shorts", character: "characters", image: "images" } as Record<
+          string,
+          string
+        >
+      )[parts[3]] ?? "create"
+    );
   return parts[2] || "dashboard";
 }
 function App() {
-  const [page, setPage] = useState(
-    routePage(),
-  );
+  const [page, setPage] = useState(routePage());
+  const [routeVersion, setRouteVersion] = useState(0);
   const [data, setData] = useState<Workspace | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -255,6 +288,7 @@ function App() {
   function go(value: string) {
     setPage(value);
     history.pushState({}, "", `/studio/${value}`);
+    setRouteVersion((x) => x + 1);
     window.scrollTo({ top: 0 });
     setQuery("");
     setKind("all");
@@ -271,7 +305,14 @@ function App() {
     children: ReactNode;
     className?: string;
   }) {
-    return <button className={className} onClick={() => bridge("작업 이어가기", href)}>{children}</button>;
+    return (
+      <button
+        className={className}
+        onClick={() => bridge("작업 이어가기", href)}
+      >
+        {children}
+      </button>
+    );
   }
 
   function bridge(label: string, href: string) {
@@ -297,6 +338,8 @@ function App() {
                     : "library";
     setDialog(null);
     go(target);
+    const params = href.split("?")[1];
+    if (params) history.replaceState({}, "", `/studio/${target}?${params}`);
   }
   const projects = (data?.projects ?? []).filter(
     (p) =>
@@ -525,8 +568,14 @@ function App() {
           {NAV.map((n) => (
             <button
               key={n.id}
-              className={`nav-item ${page === n.id ? "active" : ""}`}
-              aria-current={page === n.id ? "page" : undefined}
+              className={`nav-item ${page === n.id || (n.id === "create" && ["shorts", "characters", "images"].includes(page)) ? "active" : ""}`}
+              aria-current={
+                page === n.id ||
+                (n.id === "create" &&
+                  ["shorts", "characters", "images"].includes(page))
+                  ? "page"
+                  : undefined
+              }
               title={n.label}
               onClick={() =>
                 n.id === "dashboard" || n.id === "create"
@@ -969,7 +1018,11 @@ function App() {
               </div>
             </div>
           ) : (
-            <Workbench module={page} onNavigate={go} />
+            <Workbench
+              key={`${page}-${routeVersion}`}
+              module={page}
+              onNavigate={go}
+            />
           )}
         </main>
         <dialog

@@ -116,3 +116,23 @@ def test_paused_schedule_and_local_post_without_account(client):
     row=c.get('/api/studio/modules/automation').json()['collections']['schedules'][0]
     assert row['status']!='active'
     assert c.post(f"/schedules/{row['id']}/state",data={'csrf_token':csrf,'action':'enable','revision':row['revision']}).status_code==422
+
+def test_script_edit_keeps_revision_and_review_boundary(client):
+    c,app=client
+    import json
+    from newsflow.db.models import IntelligenceRun,ContentDraft
+    content={"title":"합성 편집","hook":"합성 뉴스의 변화를 살펴봅니다.","summary":"실제 사건을 주장하지 않는 합성 자료입니다.","scenes":[{"seconds":10,"narration":"합성 첫 장면입니다.","caption":"합성 첫 장면","material":"기본 카드"},{"seconds":10,"narration":"합성 둘째 장면입니다.","caption":"합성 둘째 장면","material":"기본 카드"},{"seconds":10,"narration":"합성 셋째 장면입니다.","caption":"합성 셋째 장면","material":"기본 카드"}],"closing":"합성 자료 검토를 마칩니다."}
+    with app.state.sessions.begin() as session:
+        run=IntelligenceRun(kind="script",status="success",provider="offline",options={},evidence={},result=content,message="")
+        session.add(run);session.flush()
+        draft=ContentDraft(run_id=run.id,duration=30,content=content,sources={"articles":[]},revision=1,review_status="review_required",review_notes=[])
+        session.add(draft);session.flush();identifier=draft.id
+    csrf=token(c)
+    changed={**content,"title":"합성 편집 저장 검증"}
+    response=c.post(f"/ai/drafts/{identifier}",data={"csrf_token":csrf,"revision":1,"content":json.dumps(changed,ensure_ascii=False)})
+    assert response.status_code==303,response.text
+    read=c.get('/api/studio/modules/shorts').json()['collections']['drafts'][0]
+    assert read['revision']==2 and read['content']['title']==changed['title'] and read['review_status']!='approved'
+    conflict=c.post(f"/ai/drafts/{identifier}",data={"csrf_token":csrf,"revision":1,"content":json.dumps(content,ensure_ascii=False)})
+    assert conflict.status_code==409
+    assert c.get('/api/studio/modules/shorts').json()['collections']['drafts'][0]['content']['title']==changed['title']

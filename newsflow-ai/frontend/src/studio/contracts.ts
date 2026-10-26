@@ -12,6 +12,7 @@ export type View = {
   services?: Item[];
   settings?: Record<string, string>;
   policy?: Item;
+  operationsReview?: Item;
 };
 export type Field = {
   name: string;
@@ -73,6 +74,41 @@ export const status: Record<string, string> = {
   blocked: "진행 차단",
 };
 export const labels: Record<string, string> = {
+  font_size: "자막 크기",
+  rate: "발화 속도",
+  pause_ms: "문장 사이 쉼(ms)",
+  storage_confirmed: "저장 위치 확인",
+  image_article_ids: "장면에 연결할 기사",
+  images: "장면별 로컬 이미지",
+  effects: "장면 전환 효과",
+  value: "선택값",
+  rights: "이미지 이용 권한을 확인했습니다",
+  card_id: "카드 기획",
+  generated_id: "생성 이미지 결과",
+  rank: "선정 순위",
+  item: "휴지 보관 항목",
+  youtube_account: "YouTube 계정",
+  instagram_account: "Instagram 계정",
+  tiktok_account: "TikTok 계정",
+  facebook_account: "Facebook 계정",
+  youtube_public_consent: "YouTube 공개 게시에 동의합니다",
+  instagram_public_consent: "Instagram 공개 게시에 동의합니다",
+  facebook_public_consent: "Facebook 공개 게시에 동의합니다",
+  monthly_token_limit: "월 토큰 사용 한도",
+  voice_id: "저장된 ElevenLabs 음성",
+  sample_consent: "공개 음성 샘플 다운로드에 동의합니다 · 음성 생성 없음",
+  listener: "청취자",
+  preview: "확인한 음성 샘플",
+  verdict: "청취 종합 판정",
+  notes: "청취 메모",
+  clarity: "명료도·음량·잡음·끝 잘림",
+  numbers: "숫자 읽기",
+  dates: "날짜·시간",
+  english: "영문 읽기",
+  pauses: "문장 사이 쉼",
+  speed: "속도",
+  length: "실제 길이와 예상 길이",
+  subtitle_sync: "자막 동기",
   prompt: "이미지 지시문",
   model: "AI 모델",
   provider: "제공사",
@@ -172,8 +208,11 @@ export const labels: Record<string, string> = {
   source_text: "출처 표기",
 };
 export function label(key: string) {
-  const scene=key.match(/^(source|material|prompt|model|discard)_(\d+)$/);
-  if(scene)return `장면 ${Number(scene[2])+1} · ${{source:"영상 소재 방식",material:"소재 파일",prompt:"영상 지시문",model:"영상 모델",discard:"기존 결과 폐기 확인"}[scene[1]]}`;
+  if (/^reviewed_\d+$/.test(key))
+    return `장면 ${Number(key.split("_")[1]) + 1}을 시청·검토했습니다`;
+  const scene = key.match(/^(source|material|prompt|model|discard)_(\d+)$/);
+  if (scene)
+    return `장면 ${Number(scene[2]) + 1} · ${{ source: "영상 소재 방식", material: "소재 파일", prompt: "영상 지시문", model: "영상 모델", discard: "기존 결과 폐기 확인" }[scene[1]]}`;
   return labels[key] ?? key.replaceAll("_", " ");
 }
 export function safeMedia(url: unknown) {
@@ -187,6 +226,7 @@ export function safeMedia(url: unknown) {
 export function itemTitle(item: Item) {
   return String(
     item.title ??
+      item.content?.title ??
       item.topic ??
       item.name ??
       item.prompt ??

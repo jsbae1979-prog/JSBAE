@@ -1,0 +1,91 @@
+[
+  {
+    "id": "NF-06",
+    "expected": "GET /news/{article_id}",
+    "classification": "SOURCE_REFERENCE_MISMATCH",
+    "actual": [
+      "GET /news/{article_id}"
+    ],
+    "source": "gui/routes.py",
+    "route_existence_verified": true,
+    "product_defect_confirmed": false,
+    "note": "기사 상세는 routes.py, 대표 이미지는 news_thumbnail_routes.py의 별도 라우트입니다."
+  },
+  {
+    "id": "NF-11",
+    "expected": "POST .../cancel",
+    "classification": "DOCUMENT_SHORTHAND",
+    "actual": [
+      "POST /ai/codex/cancel",
+      "POST /ai/claude/cancel"
+    ],
+    "source": "gui/intelligence_routes.py",
+    "route_existence_verified": true,
+    "product_defect_confirmed": false,
+    "note": "생략 기호를 두 실제 취소 라우트로 전개합니다."
+  },
+  {
+    "id": "CR-03",
+    "expected": "POST /autopilot/jobs/{job_id}/{cancel|resume|retry}",
+    "classification": "ALTERNATIVE_NOTATION",
+    "actual": [
+      "POST /autopilot/jobs/{job_id}/cancel",
+      "POST /autopilot/jobs/{job_id}/resume",
+      "POST /autopilot/jobs/{job_id}/retry"
+    ],
+    "source": "gui/autopilot_routes.py",
+    "route_existence_verified": true,
+    "product_defect_confirmed": false,
+    "note": "문서의 대안 표기를 실제 독립 라우트로 전개합니다."
+  },
+  {
+    "id": "CR-10",
+    "expected": "POST /video/ai/plans/{plan_id}/scenes/{position}/{cancel|resolve|refetch}",
+    "classification": "ALTERNATIVE_NOTATION",
+    "actual": [
+      "POST /video/ai/plans/{plan_id}/scenes/{position}/cancel",
+      "POST /video/ai/plans/{plan_id}/scenes/{position}/resolve",
+      "POST /video/ai/plans/{plan_id}/scenes/{position}/refetch"
+    ],
+    "source": "gui/video_ai_routes.py",
+    "route_existence_verified": true,
+    "product_defect_confirmed": false,
+    "note": "장면별 취소·결과 확인·재조회는 서로 다른 보호 동작입니다."
+  },
+  {
+    "id": "OP-05",
+    "expected": "GET /video/jobs/{job_id}/file",
+    "classification": "SOURCE_REFERENCE_MISMATCH",
+    "actual": [
+      "GET /video/jobs/{job_id}/file"
+    ],
+    "source": "gui/video_routes.py",
+    "route_existence_verified": true,
+    "product_defect_confirmed": false,
+    "note": "목록은 setup_routes.py, 검증된 영상 파일은 video_routes.py입니다."
+  },
+  {
+    "id": "CR-21",
+    "expected": "POST /image-studio/drafts",
+    "classification": "SERVICE_ROUTER_SPLIT",
+    "actual": [
+      "POST /image-studio/drafts"
+    ],
+    "source": "gui/creation_routes.py",
+    "route_existence_verified": true,
+    "product_defect_confirmed": false,
+    "note": "서비스 구현과 HTTP 어댑터 파일을 구분합니다."
+  },
+  {
+    "id": "CR-21",
+    "expected": "POST /image-studio/{identifier}/reuse",
+    "classification": "SERVICE_ROUTER_SPLIT",
+    "actual": [
+      "POST /image-studio/{identifier}/reuse"
+    ],
+    "source": "gui/creation_routes.py",
+    "route_existence_verified": true,
+    "product_defect_confirmed": false,
+    "note": "로컬 참조 저장·소재 재사용이며 참조 기반 유료 편집은 미구현입니다."
+  }
+]

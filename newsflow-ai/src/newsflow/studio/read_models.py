@@ -387,9 +387,16 @@ def module_view(request: Request, module: Module):
                         pass
             for draft in result["collections"]["drafts"]:
                 try:
-                    draft["imageLinks"] = draft["sources"].get("news_images", [])
-                except (AttributeError, TypeError):
+                    draft["imageLinks"] = (
+                        state.video.news_images.choose(
+                            session, draft["sources"], len(draft["content"].get("scenes", []))
+                        )[1]
+                        if hasattr(state.video, "news_images")
+                        else []
+                    )
+                except (AttributeError, TypeError, ValueError, OSError):
                     draft["imageLinks"] = []
+                    draft["imageError"] = "장면 이미지 연결을 확인하세요."
         if module == "news":
             # Thumbnail URLs are read from records; no network lookup on page load.
             for article in result["collections"]["articles"]:
@@ -420,11 +427,67 @@ def module_view(request: Request, module: Module):
     result["catalog"]["referenceAssets"] = (
         state.image_studio.assets() if hasattr(state, "image_studio") else []
     )
+    result["catalog"]["assets"] = state.video.assets_list() if hasattr(state.video, "assets_list") else []
     result["catalog"]["voices"] = [{"id": "offline-silence", "label": "무음 검토영상"}]
     with state.sessions() as session:
         voice = session.get(m.AppSetting, "video_default_voice")
         if voice and voice.value != "offline-silence":
             result["catalog"]["voices"].append({"id": voice.value, "label": "저장된 선택 · " + voice.value})
+    if module in {"shorts", "settings"}:
+        from newsflow.easy_setup import (
+            LISTENING_ITEMS,
+            LISTENING_VALUES,
+            LISTENING_VERDICTS,
+            preview_evidence,
+        )
+        from newsflow.video.elevenlabs_tts import ElevenLabsKeys
+        from newsflow.video.elevenlabs_voices import ElevenLabsVoices
+        from newsflow.video.tts import TTSError
+
+        catalog = ElevenLabsVoices(state.config.data_dir, ElevenLabsKeys(state.config.data_dir))
+        result["catalog"]["elevenVoices"] = []
+        result["collections"]["audioSamples"] = []
+        for voice in catalog.cached()["voices"]:
+            result["catalog"]["elevenVoices"].append({"id": voice["voice_id"], "label": voice["name"]})
+            try:
+                sample = catalog.sample_path(voice["voice_id"])
+                if sample.is_file() and not sample.is_symlink():
+                    result["collections"]["audioSamples"].append(
+                        {
+                            "id": voice["voice_id"],
+                            "title": voice["name"],
+                            "provider": "elevenlabs",
+                            "mediaUrl": f"/video/tts/voices/{voice['voice_id']}/sample",
+                        }
+                    )
+            except TTSError:
+                pass
+        folder = state.config.data_dir / "voice-preview"
+        if folder.is_dir() and not folder.is_symlink():
+            for sample in sorted(folder.glob("preview-*.wav"))[-50:]:
+                proof = preview_evidence(state.config.data_dir, sample.name)
+                if proof:
+                    result["collections"]["audioSamples"].append(
+                        {
+                            "id": sample.name,
+                            "title": proof["voice"],
+                            "provider": "windows",
+                            "voice": proof["voice"],
+                            "rate": proof["rate"],
+                            "pause_ms": proof["pause_ms"],
+                            "mediaUrl": f"/voices/preview/{sample.name}",
+                        }
+                    )
+        result["catalog"]["listening"] = {
+            "items": LISTENING_ITEMS,
+            "values": LISTENING_VALUES,
+            "verdicts": LISTENING_VERDICTS,
+        }
+    if module == "settings":
+        from newsflow.operations import evidence
+
+        result["operationsReview"] = evidence.read(state.sessions)
+        result["catalog"]["operationsItems"] = evidence.ITEMS
     result["policy"] = {
         "automaticRetry": False,
         "providerFallback": False,
@@ -451,3 +514,27 @@ def character_reference(request: Request, identifier: str):
         return FileResponse(path, media_type="image/png", headers={"Cache-Control": "no-store"})
     except (OSError, ValueError, CharacterError):
         raise HTTPException(404, "검증된 참조 PNG를 찾지 못했습니다.") from None
+
+
+@router.get("/api/studio/local-voices")
+def local_voices(request: Request):
+    # Explicit user action only, same SAPI catalog as the existing voice page.
+    from newsflow.easy_setup import voice_choice_catalog
+    from newsflow.gui.voice_routes import _voices
+
+    _all, korean, status, _report = _voices()
+    return {
+        "status": status,
+        "voices": [
+            {"id": row["name"], "label": row["label"], "available": row["available"]}
+            for row in voice_choice_catalog(korean)
+        ],
+    }
+
+
+@router.get("/api/studio/system-startup")
+def system_startup(request: Request):
+    from newsflow.gui.operations_routes import status
+
+    record = status(request)
+    return {key: record[key] for key in ("status", "revision", "prepared", "message") if key in record}
