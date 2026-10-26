@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-10-27T08:02:59.468513+09:00",
+  "source_checked": 173,
+  "source_hash_mismatches": 0,
+  "credential_files_checked": 6,
+  "credential_hash_mismatches": 0,
+  "media_checked": 12,
+  "media_hash_mismatches": 0,
+  "DB_matches_preserved_preupdate_hash": true,
+  "operating_DB_connections_this_check": 0,
+  "DPAPI_decryption": 0,
+  "backup_AB_writes": 0,
+  "operating_writes": 0,
+  "operating_as_test_input": false
+}

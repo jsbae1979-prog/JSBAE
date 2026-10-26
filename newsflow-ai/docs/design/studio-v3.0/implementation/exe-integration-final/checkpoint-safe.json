@@ -1,0 +1,24 @@
+{
+  "status": "CONDITIONAL",
+  "target_code": "317504152877139737991a737f56f5b97b9dea24",
+  "build_checkout": "220e196f50da5855bbdda7bb651a17d6bb1b4a54",
+  "branch": "codex/newsflow-studio-v3-20261026",
+  "windows_python": "3.14.7",
+  "new_product_changes": 0,
+  "new_test_validator": "tools/packaging/validation/react_exe.cjs",
+  "React_checks": {
+    "PASS": 13,
+    "FAIL": 1,
+    "ERROR": 0,
+    "new_skip_xfail": 0
+  },
+  "known_defect": "Character defaults dialog does not initialize saved script/video model selections; backend defaults and existing job snapshot are preserved. Present in 3175041, not a demonstrated packaging regression.",
+  "exe_sha256": "9491df21d5fae4edf693ac02ed70249657404aa809ebf4aff0d4544f9e5ac1b4",
+  "PR35": {
+    "draft": true,
+    "merged": false,
+    "head_branch": "codex/newsflow-ux-video-app",
+    "head_sha": "6aef983db5a8d31b604d9fafd4329a0b4f83787d"
+  },
+  "resume": "Review the one UI restoration defect and authorize the minimum product fix. Do not apply operating code, restart production, use credentials, call providers or publish."
+}

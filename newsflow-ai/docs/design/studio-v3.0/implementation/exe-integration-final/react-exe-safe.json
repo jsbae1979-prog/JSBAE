@@ -1,0 +1,160 @@
+{
+  "checks": [
+    {
+      "name": "React EXE routes and static assets",
+      "status": "PASS",
+      "detail": {
+        "screens": 5,
+        "widths": [
+          1920,
+          1366
+        ],
+        "actual_server": true
+      }
+    },
+    {
+      "name": "Actual React menu and creation-home navigation",
+      "status": "PASS",
+      "detail": {
+        "navigation": true,
+        "creation_choices": 3
+      }
+    },
+    {
+      "name": "News real FFmpeg MP4 playback",
+      "status": "PASS",
+      "detail": {
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021354
+      }
+    },
+    {
+      "name": "Image real Fake output preview and download",
+      "status": "PASS",
+      "detail": {
+        "width": 1024,
+        "height": 1024,
+        "download_bytes": 17014
+      }
+    },
+    {
+      "name": "Image model size quality save restore",
+      "status": "PASS",
+      "detail": {
+        "existing_image_snapshot_preserved": true,
+        "other_mode_preserved": true
+      }
+    },
+    {
+      "name": "Reviewed image reuse to character source",
+      "status": "PASS",
+      "detail": {
+        "review_required": true,
+        "reference_assets": 1
+      }
+    },
+    {
+      "name": "Character saved reference, Seedance contract and job snapshot",
+      "status": "PASS",
+      "detail": {
+        "reference": {
+          "width": 1080,
+          "height": 1920
+        },
+        "video_model": "bytedance/seedance-2.0/reference-to-video",
+        "existing_job_frozen": true
+      }
+    },
+    {
+      "name": "Character defaults dialog restores stored selection",
+      "status": "FAIL",
+      "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ ''\n- 'claude-sonnet-4-6'\n"
+    },
+    {
+      "name": "News script provider model save restore",
+      "status": "PASS",
+      "detail": {
+        "provider": "claude_api",
+        "model": "claude-sonnet-4-6",
+        "stored_draft_unchanged": true
+      }
+    },
+    {
+      "name": "ElevenLabs model save without voice lookup or generation",
+      "status": "PASS",
+      "detail": {
+        "model": "eleven_multilingual_v2",
+        "enabled": false,
+        "voice_lookup": 0,
+        "generation": 0
+      }
+    },
+    {
+      "name": "Higgsfield provider choices and confirmed model boundary",
+      "status": "PASS",
+      "detail": {
+        "provider_options": [
+          "",
+          "off",
+          "higgsfield"
+        ],
+        "confirmed_model_count": 0,
+        "settings_not_approved": true,
+        "account_verified": false
+      }
+    },
+    {
+      "name": "Provider-specific empty key forms",
+      "status": "PASS",
+      "detail": [
+        {
+          "provider": "OpenAI · Claude 키 설정",
+          "path": "/api-settings/{provider}/key",
+          "blank": true
+        },
+        {
+          "provider": "ElevenLabs 키 설정",
+          "path": "/video/tts/key",
+          "blank": true
+        },
+        {
+          "provider": "Higgsfield 키 설정",
+          "path": "/video-ai-settings/key",
+          "blank": true
+        }
+      ]
+    },
+    {
+      "name": "Actual synthetic EXE authentication and missing media refusal",
+      "status": "PASS",
+      "detail": {
+        "missing_csrf": 403,
+        "missing_media": 404
+      }
+    },
+    {
+      "name": "No React exceptions or requested external URLs",
+      "status": "PASS",
+      "detail": {
+        "page_errors": 0,
+        "external_page_requests": 0,
+        "background_network": "Not proven OS-wide; proxy and resolver restrictions retained",
+        "actual_provider_calls": 0
+      }
+    }
+  ],
+  "errors": [],
+  "staticErrors": [],
+  "external_requests": 0,
+  "posts": [
+    "/image-studio/defaults",
+    "/image-studio/3/reuse",
+    "/character-defaults",
+    "/ai/preferences",
+    "/video/tts"
+  ],
+  "real_API_OAuth_SNS_calls": 0,
+  "actual_EXE_server": true,
+  "operating_input": false
+}

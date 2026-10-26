@@ -1,0 +1,79 @@
+{
+  "react_files": 17,
+  "react_hash_mismatches": 0,
+  "private_payload_found": false,
+  "source_path_expected_in_analysis": true,
+  "exe_sha256": "9491df21d5fae4edf693ac02ed70249657404aa809ebf4aff0d4544f9e5ac1b4",
+  "build_exit": 0,
+  "new_exe": true,
+  "files": [
+    {
+      "path": "assets/design-art-0.webp",
+      "sha256": "b36510bbccca4178d6bef55b6438a30ef1147b93fd1792988670d57dc232512a"
+    },
+    {
+      "path": "assets/design-art-1.webp",
+      "sha256": "268d71b6222959bba9957f3355810179b0a8f3727844c9bad3df044492a53d26"
+    },
+    {
+      "path": "assets/design-art-10.webp",
+      "sha256": "323462f84f632ada0a150b2534f7d38056a18ba0f9f3c0b6a67035df6abb666a"
+    },
+    {
+      "path": "assets/design-art-2.webp",
+      "sha256": "12817bb88c0dd8d32399530c1601f993b6a71c6742a5992c0c6eaa2f5d3b8065"
+    },
+    {
+      "path": "assets/design-art-3.webp",
+      "sha256": "7f6f75201420b042b59fc2562dd5620356c7fc41244784e29e9677ae67957fc0"
+    },
+    {
+      "path": "assets/design-art-4.webp",
+      "sha256": "c6bae6a92515b1fcf619e66ab9dbaf76199fe9b0126597de8742db64940fb8c5"
+    },
+    {
+      "path": "assets/design-art-5.webp",
+      "sha256": "3e36c521f7d8384cb1c8d78f79a1a845764596122e4198ec108b65a1f9a8f05c"
+    },
+    {
+      "path": "assets/design-art-6.webp",
+      "sha256": "d7761c7e70dd9d3b922e309a8334ecbfbeda74eaea0ba9ab87a9c3d4cfe39008"
+    },
+    {
+      "path": "assets/design-art-7.webp",
+      "sha256": "470ae1d90de7607b302504cdc298d2c172d1877c17c00b47a12062ece4700adb"
+    },
+    {
+      "path": "assets/design-art-8.webp",
+      "sha256": "0e6e0e9516a86736785188a9a8a9db7240d84df5e25b50cc8fdf624cea74d72d"
+    },
+    {
+      "path": "assets/design-art-9.webp",
+      "sha256": "695c880be8b32292df73d544938e8d6382ebb4d750c477ff2d108334b5b45ee0"
+    },
+    {
+      "path": "assets/index-DfjKoOHL.css",
+      "sha256": "3ea4b130bf98bfc8b948e15e580f3772ba76fdaf7ad65ac0a7876bc12c61c0d3"
+    },
+    {
+      "path": "assets/index-ovOtxz9j.js",
+      "sha256": "159ffdf806aff2dde4f15f2b40a7e3a76dad666c792b26499470cb6d6d3b4f50"
+    },
+    {
+      "path": "assets/NotoSansKR.ttf",
+      "sha256": "194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252"
+    },
+    {
+      "path": "assets/OFL.txt",
+      "sha256": "e35ffdebb2225b49814c31889cbb3ce69cb3509e6a9f431edaba5e1a6de8cd15"
+    },
+    {
+      "path": "assets/README.md",
+      "sha256": "843fed51fd5ac4286db8a1a24b27d7c366b63175437ac4adffc12e624e2789af"
+    },
+    {
+      "path": "index.html",
+      "sha256": "3adb96b68f7562341772b7d2263a5dfaee37d8bd3bc9e7c5979ca60cb1569e20"
+    }
+  ]
+}
