@@ -69,6 +69,18 @@ function Empty({ text = "아직 저장된 항목이 없습니다." }: { text?: s
     </div>
   );
 }
+function recordDate(value: unknown) {
+  const date = new Date(String(value ?? ""));
+  return Number.isFinite(date.getTime())
+    ? new Intl.DateTimeFormat("ko-KR", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Seoul",
+      }).format(date)
+    : "저장 기록";
+}
 function Collection({
   title,
   items,
@@ -106,11 +118,12 @@ function Collection({
                     x.platform ??
                     x.model ??
                     x.local_time ??
-                    x.created_at ??
-                    "저장 기록"}
+                    (x.created_at ? recordDate(x.created_at) : "저장 기록")}
                 </small>
               </span>
-              <Badge value={x.status ?? x.state ?? x.review_status} />
+              {(x.status ?? x.state ?? x.review_status) && (
+                <Badge value={x.status ?? x.state ?? x.review_status} />
+              )}
               {onSelect && <ChevronRight size={16} />}
             </button>
           ))}
@@ -480,7 +493,19 @@ export default function Workbench({
           kind === "image" ? (
             <img src={media} alt="검증된 생성 결과" />
           ) : (
-            <video ref={video} controls preload="metadata" src={media} />
+            <video
+              ref={video}
+              controls
+              preload="metadata"
+              src={media}
+              poster={
+                !currentClip
+                  ? (safeMedia(
+                      selected?.thumbnailUrl ?? project?.thumbnailUrl,
+                    ) ?? undefined)
+                  : undefined
+              }
+            />
           )
         ) : (
           <div className="canvas-placeholder">

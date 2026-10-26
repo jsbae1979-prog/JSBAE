@@ -2792,7 +2792,7 @@
   {
     "id": "production_preferences",
     "module": "shorts",
-    "label": "제작 기본값 저장",
+    "label": "다음 작업 제작 기본값 저장",
     "path": "/production/preferences",
     "risk": "local",
     "fields": [
@@ -3288,7 +3288,7 @@
   {
     "id": "routes_collect",
     "module": "news",
-    "label": "뉴스 수집",
+    "label": "등록 RSS 수집",
     "path": "/collection",
     "risk": "external",
     "fields": [],
@@ -3527,7 +3527,7 @@
   {
     "id": "serpapi_collect",
     "module": "news",
-    "label": "뉴스 수집",
+    "label": "Google News + Trends 수집",
     "path": "/news/curation/serpapi",
     "risk": "external",
     "fields": [
@@ -3863,7 +3863,7 @@
   {
     "id": "sources_collect",
     "module": "news",
-    "label": "뉴스 수집",
+    "label": "선택 RSS 수집",
     "path": "/sources/collect",
     "risk": "external",
     "fields": [],
@@ -4623,7 +4623,7 @@
   {
     "id": "video_ai_save_settings",
     "module": "shorts",
-    "label": "기본 설정 저장",
+    "label": "AI 영상 기본 설정 저장",
     "path": "/video-ai-settings",
     "risk": "local",
     "fields": [

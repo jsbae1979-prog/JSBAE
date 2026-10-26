@@ -39,12 +39,19 @@ class Handler(SimpleHTTPRequestHandler):
   else:self.send_error(404,'Synthetic harness has no engine/legacy pages');return
   super().do_GET()
  def do_POST(self):
+  global models
   if self.headers.get('Host')!='127.0.0.1:18765' or self.headers.get('Origin')!='http://127.0.0.1:18765':return self.result({'detail':'Invalid origin'},403)
   if self.headers.get('Content-Type','').split(';')[0]!='application/x-www-form-urlencoded':return self.result({'detail':'Synthetic harness accepts reviewed local form tests only'},415)
   size=int(self.headers.get('Content-Length','0'))
   if not 0<size<=65536:return self.result({'detail':'Invalid size'},413)
   data=urllib.parse.parse_qs(self.rfile.read(size).decode('utf-8'),keep_blank_values=True)
   if data.get('csrf_token')!=['studio-synthetic-local-only']:return self.result({'detail':'CSRF rejected'},403)
+  if self.path=='/__fixture/reset':
+   models={p.stem:json.loads(p.read_text(encoding='utf-8')) for p in F.glob('*.json')}
+   if media.is_file():
+    for name in models:
+     if 'projects' in models[name]:models[name]['projects'][0]['mediaUrl']='/video/jobs/1/file'
+   return self.result({'saved':True,'synthetic':True})
   # These are UI simulation contracts, not a replacement for product validation.
   if self.path=='/ai/drafts/1':
    draft=models['shorts']['collections']['drafts'][0]

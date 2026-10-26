@@ -52,6 +52,18 @@ export const titles: Record<string, string> = {
   onboarding: "시작 가이드",
 };
 export const status: Record<string, string> = {
+  writing: "대본 작성 중",
+  script_failed: "대본 확인 필요",
+  script_review: "대본 검토",
+  preparing: "견적 확인 중",
+  prepare_failed: "견적 확인 필요",
+  generating: "장면 생성 중",
+  submission_unknown: "결과 불명 · 재요청 금지",
+  scene_review: "장면 확인 필요",
+  retry_quoted: "추가 견적 승인 대기",
+  clips_review: "장면 검토",
+  composing: "합성 중",
+  compose_failed: "합성 확인 필요",
   saved: "초안 저장",
   success: "생성 완료",
   completed: "생성 완료",
