@@ -38,6 +38,7 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 import "./style.css";
+import Workbench from "./studio/Workbench";
 
 type Kind = "news" | "character" | "image";
 type Project = {
@@ -131,7 +132,7 @@ const NAV = [
   { id: "dashboard", label: "홈", icon: House },
   { id: "create", label: "콘텐츠 제작", icon: WandSparkles },
   { id: "news", label: "뉴스 스튜디오", icon: Clapperboard, legacy: "/news" },
-  { id: "automation", label: "자동화 센터", icon: Bot, legacy: "/schedule" },
+  { id: "automation", label: "자동화 센터", icon: Bot, legacy: "/schedules" },
   {
     id: "library",
     label: "라이브러리",
@@ -192,7 +193,7 @@ function localHref(url: string) {
 }
 function App() {
   const [page, setPage] = useState(
-    location.pathname.endsWith("/create") ? "create" : "dashboard",
+    location.pathname.split("/")[2] || "dashboard",
   );
   const [data, setData] = useState<Workspace | null>(null);
   const [error, setError] = useState("");
@@ -228,8 +229,7 @@ function App() {
   }
   useEffect(() => {
     void load();
-    const pop = () =>
-      setPage(location.pathname.endsWith("/create") ? "create" : "dashboard");
+    const pop = () => setPage(location.pathname.split("/")[2] || "dashboard");
     window.addEventListener("popstate", pop);
     const key = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
@@ -266,42 +266,32 @@ function App() {
     children: ReactNode;
     className?: string;
   }) {
-    return data?.capabilities?.legacyAvailable ? (
-      <a className={className} href={localHref(href)}>
-        {children}
-      </a>
-    ) : (
-      <button
-        className={className}
-        disabled
-        title="시각 검증 서버: Python 제작실 연결 대기"
-      >
-        {children}
-      </button>
-    );
+    return <button className={className} onClick={() => bridge("작업 이어가기", href)}>{children}</button>;
   }
+
   function bridge(label: string, href: string) {
-    info(
-      label,
-      <>
-        <p>
-          이 작업의 기존 제작실로 이동합니다. 저장된 설정과 검토·승인 절차를
-          이어서 사용할 수 있습니다.
-        </p>
-        <p className="muted">
-          React 전환은 대시보드와 제작 홈부터 진행 중입니다. 화면 이동으로
-          생성·게시 요청을 실행하지 않습니다.
-        </p>
-        <LegacyLink href={href}>
-          기존 {label} 열기 <ArrowRight size={17} />
-        </LegacyLink>
-        <p className="muted">
-          {data?.capabilities?.legacyAvailable
-            ? "현재 엔진으로 연결됩니다."
-            : "시각 검증 서버에서는 Python 제작실 연결이 대기 중입니다."}
-        </p>
-      </>,
-    );
+    const target = href.startsWith("/schedules")
+      ? "automation"
+      : href.startsWith("/character")
+        ? "characters"
+        : href.startsWith("/image")
+          ? "images"
+          : href.startsWith("/ai") ||
+              href.startsWith("/video") ||
+              href === "/create"
+            ? "shorts"
+            : href.startsWith("/news") || href.startsWith("/sources")
+              ? "news"
+              : href.startsWith("/publishing")
+                ? "publishing"
+                : href.startsWith("/analytics")
+                  ? "analytics"
+                  : href.startsWith("/settings") ||
+                      href.startsWith("/api-settings")
+                    ? "settings"
+                    : "library";
+    setDialog(null);
+    go(target);
   }
   const projects = (data?.projects ?? []).filter(
     (p) =>
@@ -811,7 +801,7 @@ function App() {
                     <h2>다가오는 일정</h2>
                     <button
                       className="text-button"
-                      onClick={() => bridge("제작 스케줄", "/schedule")}
+                      onClick={() => bridge("제작 스케줄", "/schedules")}
                     >
                       전체 보기 <ChevronRight size={14} />
                     </button>
@@ -835,7 +825,7 @@ function App() {
                       </strong>
                       <button
                         className="text-button"
-                        onClick={() => bridge("제작 스케줄", "/schedule")}
+                        onClick={() => bridge("제작 스케줄", "/schedules")}
                       >
                         제작 일정 살펴보기 <ChevronRight size={14} />
                       </button>
@@ -909,7 +899,7 @@ function App() {
                 </section>
               </aside>
             </div>
-          ) : (
+          ) : page === "create" ? (
             <div className="create-page">
               <div className="create-heading">
                 <div>
@@ -973,6 +963,8 @@ function App() {
                 </span>
               </div>
             </div>
+          ) : (
+            <Workbench module={page} onNavigate={go} />
           )}
         </main>
         <dialog

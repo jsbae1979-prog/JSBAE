@@ -1,0 +1,314 @@
+{
+  "schemaVersion": 1,
+  "module": "shorts",
+  "dataOrigin": "development-fixtures",
+  "csrfToken": "studio-synthetic-local-only",
+  "commandsAvailable": true,
+  "collections": {
+    "drafts": [
+      {
+        "id": 1,
+        "run_id": 2,
+        "duration": 30,
+        "content": {
+          "title": "도시의 새로운 이동 · 합성 기사",
+          "hook": "도시의 이동 방식은 어떻게 달라질까요?",
+          "summary": "지역 이동 실험을 설명하는 합성 자료입니다.",
+          "closing": "새로운 변화의 결과를 확인해 보세요.",
+          "scenes": [
+            {
+              "seconds": 10,
+              "narration": "이 내용은 화면 검증을 위한 합성 뉴스입니다.",
+              "caption": "합성 검증 자료",
+              "material": "도시 이미지",
+              "review_notes": [
+                "원문 확인이 필요한 검토 메모입니다."
+              ]
+            },
+            {
+              "seconds": 10,
+              "narration": "시민의 일상과 이동을 중심으로 변화의 의미를 살펴봅니다.",
+              "caption": "일상 속 이동의 변화",
+              "material": "거리 이미지"
+            },
+            {
+              "seconds": 10,
+              "narration": "사실 확인과 사용 권한을 검토한 뒤 게시를 준비합니다.",
+              "caption": "출처 검토 후 게시",
+              "material": "검토 카드"
+            }
+          ]
+        },
+        "sources": {
+          "articles": [
+            {
+              "id": 1,
+              "title": "도시의 새로운 이동 · 합성 기사",
+              "url": "https://example.invalid/news/1"
+            }
+          ]
+        },
+        "revision": 1,
+        "review_status": "review_required",
+        "review_notes": [
+          "합성 검증용 원문 확인 메모"
+        ]
+      }
+    ],
+    "plans": [
+      {
+        "id": 7,
+        "draft_id": 1,
+        "duration": 30,
+        "status": "draft",
+        "revision": 1,
+        "currency": "USD"
+      }
+    ],
+    "scenes": [
+      {
+        "id": 1,
+        "plan_id": 7,
+        "position": 0,
+        "start_ms": 0,
+        "end_ms": 10000,
+        "narration": "이 내용은 화면 검증을 위한 합성 뉴스입니다.",
+        "caption": "합성 검증 자료",
+        "source": "card",
+        "material": "도시 이미지",
+        "prompt": "합성 장면",
+        "model_path": "",
+        "status": "draft",
+        "clip_seconds": 10,
+        "estimated_cost": null
+      },
+      {
+        "id": 2,
+        "plan_id": 7,
+        "position": 1,
+        "start_ms": 10000,
+        "end_ms": 20000,
+        "narration": "시민의 일상과 이동을 중심으로 변화의 의미를 살펴봅니다.",
+        "caption": "일상 속 이동의 변화",
+        "source": "card",
+        "material": "거리 이미지",
+        "prompt": "합성 장면",
+        "model_path": "",
+        "status": "draft",
+        "clip_seconds": 10,
+        "estimated_cost": null
+      },
+      {
+        "id": 3,
+        "plan_id": 7,
+        "position": 2,
+        "start_ms": 20000,
+        "end_ms": 30000,
+        "narration": "사실 확인과 사용 권한을 검토한 뒤 게시를 준비합니다.",
+        "caption": "출처 검토 후 게시",
+        "source": "card",
+        "material": "검토 카드",
+        "prompt": "합성 장면",
+        "model_path": "",
+        "status": "draft",
+        "clip_seconds": 10,
+        "estimated_cost": null
+      }
+    ],
+    "renders": [
+      {
+        "id": 1,
+        "status": "success",
+        "project_id": 1
+      }
+    ],
+    "analyses": [
+      {
+        "id": 2,
+        "kind": "analysis",
+        "provider": "offline",
+        "status": "success"
+      }
+    ],
+    "articles": [
+      {
+        "id": 1,
+        "title": "도시의 새로운 이동 · 합성 기사",
+        "publisher": "합성 뉴스룸",
+        "summary": "실제 사건·날짜·수치를 주장하지 않는 GUI 검증용 자료입니다.",
+        "category": "사회",
+        "published_at": "2026-10-26T09:00:00+00:00",
+        "collected_at": "2026-10-26T09:00:00+00:00",
+        "url": "https://example.invalid/news/1",
+        "thumbnailUrl": "/studio/assets/design-art-2.webp"
+      },
+      {
+        "id": 2,
+        "title": "기술과 일상의 변화 · 합성 기사",
+        "publisher": "합성 뉴스룸",
+        "summary": "실제 사건·날짜·수치를 주장하지 않는 GUI 검증용 자료입니다.",
+        "category": "IT·과학",
+        "published_at": "2026-10-26T09:00:00+00:00",
+        "collected_at": "2026-10-26T09:00:00+00:00",
+        "url": "https://example.invalid/news/2",
+        "thumbnailUrl": "/studio/assets/design-art-4.webp"
+      },
+      {
+        "id": 3,
+        "title": "함께 만드는 문화 · 합성 기사",
+        "publisher": "합성 뉴스룸",
+        "summary": "실제 사건·날짜·수치를 주장하지 않는 GUI 검증용 자료입니다.",
+        "category": "문화",
+        "published_at": "2026-10-26T09:00:00+00:00",
+        "collected_at": "2026-10-26T09:00:00+00:00",
+        "url": "https://example.invalid/news/3",
+        "thumbnailUrl": "/studio/assets/design-art-6.webp"
+      }
+    ],
+    "models": []
+  },
+  "catalog": {
+    "apiModels": {
+      "openai": [
+        "gpt-4.1-mini"
+      ],
+      "claude_api": [
+        "claude-sonnet-4-6",
+        "claude-haiku-4-5-20251001"
+      ]
+    },
+    "imageModels": [
+      "gpt-image-2.5-flare-2026-09-08",
+      "gpt-image-2.5-sunburst-2026-09-08"
+    ],
+    "sizes": {
+      "1024x1280": "4:5 · 피드",
+      "1024x1024": "1:1 · 정사각형",
+      "864x1536": "9:16 · 영상"
+    },
+    "qualities": {
+      "low": "초안",
+      "medium": "표준 · 추천",
+      "high": "고품질"
+    },
+    "imageDefaults": {
+      "provider": "openai",
+      "model": "gpt-image-2.5-flare-2026-09-08",
+      "size": "1024x1280",
+      "quality": "medium"
+    },
+    "characterDefaults": {
+      "script_provider": "claude_api",
+      "script_model": "claude-sonnet-4-6",
+      "video_provider": "higgsfield",
+      "video_model": "bytedance/seedance-2.0/reference-to-video",
+      "resolution": "720p",
+      "aspect_ratio": "9:16"
+    },
+    "referenceAssets": [],
+    "voices": [
+      {
+        "id": "offline-silence",
+        "label": "무음 검토영상"
+      },
+      {
+        "id": "supertonic:F2",
+        "label": "Supertonic · 여성 F2 · 합성 설정"
+      }
+    ],
+    "accountVerified": false
+  },
+  "projects": [
+    {
+      "id": "news:1",
+      "title": "도시의 새로운 이동 · 합성 기사",
+      "kind": "news",
+      "technicalStatus": "success",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/video?job_id=1",
+      "thumbnailUrl": "/studio/assets/design-art-2.webp",
+      "mediaUrl": null,
+      "sourceLabel": "합성 프로젝트 · 실제 파일 생성 아님"
+    },
+    {
+      "id": "character:demo-character",
+      "title": "느긋한 월요일 · 합성 캐릭터",
+      "kind": "character",
+      "technicalStatus": "needs_script",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/character?job_id=demo-character",
+      "thumbnailUrl": "/studio/assets/design-art-0.webp",
+      "mediaUrl": null,
+      "sourceLabel": "합성 프로젝트"
+    },
+    {
+      "id": "image:4",
+      "title": "지속 가능한 도시 · 합성 이미지",
+      "kind": "image",
+      "technicalStatus": "saved",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/image-studio?draft_id=4",
+      "thumbnailUrl": "/studio/assets/design-art-3.webp",
+      "mediaUrl": null,
+      "sourceLabel": "설계 일러스트 · 합성"
+    },
+    {
+      "id": "image:5",
+      "title": "결과 불명 · 재요청 금지 합성 사례",
+      "kind": "image",
+      "technicalStatus": "unknown",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/image-studio?draft_id=5",
+      "thumbnailUrl": null,
+      "mediaUrl": null,
+      "sourceLabel": "합성 오류 사례"
+    }
+  ],
+  "services": [
+    {
+      "id": "openai",
+      "label": "OpenAI",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    },
+    {
+      "id": "claude",
+      "label": "Claude",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    },
+    {
+      "id": "elevenlabs",
+      "label": "ElevenLabs",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    },
+    {
+      "id": "higgsfield",
+      "label": "Higgsfield",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    }
+  ],
+  "settings": {
+    "easy_setup": "{\"revision\": 0, \"step\": 1, \"completed\": false, \"values\": {}}"
+  },
+  "policy": {
+    "paidReferenceEdit": false,
+    "automaticRetry": false,
+    "providerFallback": false,
+    "price": "합성 화면 검증 · 실제 공급사 견적·청구액 없음"
+  }
+}

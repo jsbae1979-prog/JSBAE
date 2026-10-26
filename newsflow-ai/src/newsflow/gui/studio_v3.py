@@ -98,29 +98,41 @@ def workspace(request: Request):
                     review=draft.review_status,
                 )
             )
+        outputs = list(
+            session.scalars(
+                select(IntelligenceRun)
+                .where(IntelligenceRun.kind == "feed_image")
+                .order_by(IntelligenceRun.id.desc())
+            )
+        )
+        latest_outputs = {}
+        for output in outputs:
+            if output.options.get("style") == "studio" and type(output.options.get("draft_id")) is int:
+                latest_outputs.setdefault(output.options["draft_id"], output)
         for image in images:
-            status = image.status
+            output = latest_outputs.get(image.id)
+            status = output.status if output else image.status
             url = None
-            if status == "success":
+            if output is not None and output.status == "success":
                 try:
-                    state.image_generation.path(image.id)
+                    state.image_generation.path(output.id)
                     url = f"/image-studio/{image.id}/file"
                 except (PublishingError, ValueError, OSError):
                     status = "missing"
             projects.append(
                 _project(
                     f"image:{image.id}",
-                    image.options.get("prompt", "이미지 초안"),
+                    image.result.get("prompt", "이미지 초안"),
                     "image",
                     status,
-                    image.finished_at or image.created_at,
+                    (output.finished_at or output.created_at) if output else image.created_at,
                     f"/image-studio?draft_id={image.id}",
                     thumb=url,
                     media=url,
                 )
             )
         schedules = [
-            {"title": x.name, "at": _iso(x.next_run_at), "href": "/schedule"}
+            {"title": x.name, "at": _iso(x.next_run_at), "href": "/schedules"}
             for x in session.scalars(
                 select(ProductionSchedule)
                 .where(ProductionSchedule.status == "active", ProductionSchedule.next_run_at >= now)
@@ -255,7 +267,10 @@ def workspace(request: Request):
 
 def mount_studio(app):
     """Optional static build in source development. Existing routes stay available."""
+    from newsflow.studio.read_models import router as module_router
+
     app.include_router(router)
+    app.include_router(module_router)
     dist = Path(__file__).resolve().parents[3] / "frontend" / "dist"
     if not (dist / "index.html").is_file():
         return
@@ -266,5 +281,15 @@ def mount_studio(app):
     @app.get("/studio/", include_in_schema=False)
     @app.get("/studio/dashboard", include_in_schema=False)
     @app.get("/studio/create", include_in_schema=False)
+    @app.get("/studio/news", include_in_schema=False)
+    @app.get("/studio/shorts", include_in_schema=False)
+    @app.get("/studio/characters", include_in_schema=False)
+    @app.get("/studio/images", include_in_schema=False)
+    @app.get("/studio/automation", include_in_schema=False)
+    @app.get("/studio/library", include_in_schema=False)
+    @app.get("/studio/publishing", include_in_schema=False)
+    @app.get("/studio/analytics", include_in_schema=False)
+    @app.get("/studio/settings", include_in_schema=False)
+    @app.get("/studio/onboarding", include_in_schema=False)
     def studio_shell():
         return FileResponse(dist / "index.html", media_type="text/html")

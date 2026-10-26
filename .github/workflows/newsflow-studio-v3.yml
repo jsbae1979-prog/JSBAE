@@ -5,6 +5,7 @@ on:
     paths:
       - 'newsflow-ai/frontend/**'
       - 'newsflow-ai/src/newsflow/gui/studio_v3.py'
+      - 'newsflow-ai/src/newsflow/studio/**'
       - 'newsflow-ai/tools/studio_v3/**'
       - '.github/workflows/newsflow-studio-v3.yml'
 permissions:
@@ -43,8 +44,14 @@ jobs:
         env:
           PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
         run: python -m pytest -q -p no:cacheprovider --confcutdir tools/studio_v3/tests --junitxml=studio-readmodel.xml tools/studio_v3/tests
+      - name: Approved Windows disposable synthetic full-app form integration
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+        run: python -m pytest -q -p no:cacheprovider --confcutdir tools/studio_v3/integration --basetemp "$env:RUNNER_TEMP/studio-v3-form-tests" --junitxml=studio-integration.xml tools/studio_v3/integration
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: studio-v3-focused-results
-          path: newsflow-ai/studio-readmodel.xml
+          path: |
+            newsflow-ai/studio-readmodel.xml
+            newsflow-ai/studio-integration.xml

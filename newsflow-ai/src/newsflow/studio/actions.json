@@ -1,0 +1,5585 @@
+[
+  {
+    "id": "ai_settings_save_ai_settings",
+    "module": "settings",
+    "label": "AI 기본 설정 저장",
+    "path": "/ai-settings",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "approved",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "monthly_token_limit",
+        "type": "number",
+        "required": false,
+        "default": 0,
+        "path": false
+      },
+      {
+        "name": "timeout",
+        "type": "number",
+        "required": false,
+        "default": 20,
+        "path": false
+      }
+    ],
+    "source": "gui/ai_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "ai_settings_save_prices",
+    "module": "settings",
+    "label": "확인한 단가 저장",
+    "path": "/ai-settings/prices",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "input_per_1m",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "output_per_1m",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": false,
+        "default": "USD",
+        "path": false,
+        "max_length": 3
+      }
+    ],
+    "source": "gui/ai_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "ai_settings_save_key",
+    "module": "settings",
+    "label": "API 키 저장",
+    "path": "/ai-settings/key",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "api_key",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/ai_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "ai_settings_clear_key",
+    "module": "settings",
+    "label": "저장된 키 제거",
+    "path": "/ai-settings/key/clear",
+    "risk": "destructive",
+    "fields": [],
+    "source": "gui/ai_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "ai_settings_check_connection",
+    "module": "settings",
+    "label": "인증·연결 확인",
+    "path": "/ai-settings/check",
+    "risk": "external",
+    "fields": [],
+    "source": "gui/ai_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "api_settings_acknowledge_analysis",
+    "module": "settings",
+    "label": "결과 불명 요청 인지 확인",
+    "path": "/api-settings/{provider}/acknowledge-unknown-analysis",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "reservation_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "fingerprint",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/api_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "api_settings_check_connection",
+    "module": "settings",
+    "label": "인증·연결 확인",
+    "path": "/api-settings/{provider}/check",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/api_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "api_settings_check_search",
+    "module": "settings",
+    "label": "검색 연결 확인",
+    "path": "/api-settings/{provider}/check-search",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "authentication_at",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "max_cost_usd",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      }
+    ],
+    "source": "gui/api_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "api_settings_save_configuration",
+    "module": "settings",
+    "label": "API 모델·사용 설정 저장",
+    "path": "/api-settings/{provider}",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "approved",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "search_enabled",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "search_approved",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "request_limit_usd",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "monthly_limit_usd",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "input_price_per_1m",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "output_price_per_1m",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "search_price_per_1k",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "billing_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "account_remaining_usd",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "monthly_token_limit",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "timeout",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/api_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "api_settings_save_key",
+    "module": "settings",
+    "label": "API 키 저장",
+    "path": "/api-settings/{provider}/key",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "api_key",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/api_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "api_settings_clear_key",
+    "module": "settings",
+    "label": "저장된 키 제거",
+    "path": "/api-settings/{provider}/key/clear",
+    "risk": "destructive",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/api_settings_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "autopilot_quick_start",
+    "module": "automation",
+    "label": "새 제작 작업 준비",
+    "path": "/autopilot/quick-start",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "source",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "duration",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "acquisition_policy",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "period",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "news_usage",
+        "type": "text",
+        "required": false,
+        "default": "STANDARD",
+        "path": false,
+        "max_length": 12
+      },
+      {
+        "name": "workspace",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "production_options_version",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "script_review",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "voice_method",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "video_method",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      }
+    ],
+    "source": "gui/autopilot_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "autopilot_confirm_start",
+    "module": "automation",
+    "label": "선택한 제작 시작",
+    "path": "/autopilot/confirm-start",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "flow",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 2000
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "workspace",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "external_tts_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/autopilot_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "autopilot_renew_voice_consent",
+    "module": "automation",
+    "label": "현재 작업 외부 음성 승인",
+    "path": "/autopilot/jobs/{job_id}/voice-consent",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/autopilot_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "autopilot_start",
+    "module": "automation",
+    "label": "제작 시작",
+    "path": "/autopilot/start",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "mode",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "duration",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "platform",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "ai",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "voice",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 200
+      }
+    ],
+    "source": "gui/autopilot_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "autopilot_cancel",
+    "module": "automation",
+    "label": "작업 취소",
+    "path": "/autopilot/jobs/{job_id}/cancel",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "workspace",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/autopilot_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "autopilot_resume",
+    "module": "automation",
+    "label": "허용된 작업 재개",
+    "path": "/autopilot/jobs/{job_id}/resume",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "article_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "workspace",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/autopilot_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "autopilot_retry",
+    "module": "automation",
+    "label": "실패 작업 재검토",
+    "path": "/autopilot/jobs/{job_id}/retry",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "workspace",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/autopilot_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "autopilot_save_settings",
+    "module": "automation",
+    "label": "기본 설정 저장",
+    "path": "/simple-settings",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "duration",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "platform",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "mode",
+        "type": "text",
+        "required": false,
+        "default": "easy",
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "ai",
+        "type": "text",
+        "required": false,
+        "default": "offline",
+        "path": false,
+        "max_length": 10
+      }
+    ],
+    "source": "gui/autopilot_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "character_create",
+    "module": "characters",
+    "label": "캐릭터 작업 초안 저장",
+    "path": "/character",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "reference",
+        "type": "file",
+        "required": false,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "topic",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "episode_limit",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "day_limit",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "script_model",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "video_model",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "reference_asset",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "character_act_write",
+    "module": "characters",
+    "label": "Claude 스토리 작성",
+    "path": "/character/{job_id}/write",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "character_act_prepare",
+    "module": "characters",
+    "label": "장면 공식 견적 조회",
+    "path": "/character/{job_id}/prepare",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "character_act_submit",
+    "module": "characters",
+    "label": "견적 승인 후 장면 생성",
+    "path": "/character/{job_id}/submit",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "character_act_check",
+    "module": "characters",
+    "label": "장면 상태·클립 확인",
+    "path": "/character/{job_id}/check",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "character_act_retry-quote",
+    "module": "characters",
+    "label": "실패 장면 새 견적",
+    "path": "/character/{job_id}/retry-quote",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "character_act_retry-scene",
+    "module": "characters",
+    "label": "새 승인으로 실패 장면 요청",
+    "path": "/character/{job_id}/retry-scene",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "character_act_render",
+    "module": "characters",
+    "label": "검토한 장면 최종 합성",
+    "path": "/character/{job_id}/render",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "character_character_defaults",
+    "module": "characters",
+    "label": "다음 캐릭터 모델 저장",
+    "path": "/character-defaults",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "script_model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "video_model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "cleanup_remove_activity",
+    "module": "library",
+    "label": "활동 기록 휴지 보관",
+    "path": "/workspace/activity/remove",
+    "risk": "destructive",
+    "fields": [
+      {
+        "name": "item",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 70
+      },
+      {
+        "name": "confirm",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/cleanup_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "cleanup_remove_video",
+    "module": "library",
+    "label": "영상 휴지 보관",
+    "path": "/workspace/videos/{identifier}/remove",
+    "risk": "destructive",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "confirm",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/cleanup_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "cleanup_restore",
+    "module": "library",
+    "label": "휴지 보관 복원",
+    "path": "/workspace/trash/restore",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "item",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "confirm",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/cleanup_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_draft",
+    "module": "images",
+    "label": "이미지 초안 저장",
+    "path": "/image-studio/drafts",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "prompt",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "size",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "quality",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "provider",
+        "type": "text",
+        "required": false,
+        "default": "openai",
+        "path": false
+      },
+      {
+        "name": "reference",
+        "type": "file",
+        "required": false,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_defaults",
+    "module": "images",
+    "label": "다음 이미지 기본값 저장",
+    "path": "/image-studio/defaults",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "size",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "quality",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "provider",
+        "type": "text",
+        "required": false,
+        "default": "openai",
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_generate",
+    "module": "images",
+    "label": "승인 후 이미지 1회 생성",
+    "path": "/image-studio/{identifier}/generate",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_reuse",
+    "module": "images",
+    "label": "검토한 소재 재사용",
+    "path": "/image-studio/{identifier}/reuse",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "target",
+        "type": "text",
+        "required": false,
+        "default": "news",
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "curation_refresh",
+    "module": "news",
+    "label": "공개 뉴스 갱신",
+    "path": "/news/curation/refresh",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/curation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "curation_import_rss",
+    "module": "news",
+    "label": "RSS 자료 가져오기",
+    "path": "/news/curation/import",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "rss_xml",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20000
+      },
+      {
+        "name": "permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/curation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "curation_analyze",
+    "module": "news",
+    "label": "기사 분석",
+    "path": "/news/curation/analyze",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "collection_context_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/curation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "curation_generate",
+    "module": "news",
+    "label": "선정 뉴스 대본 생성",
+    "path": "/news/curation/generate",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "analysis_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1,
+        "le": 10
+      },
+      {
+        "name": "duration",
+        "type": "number",
+        "required": false,
+        "default": 30,
+        "path": false
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/curation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "image_post_create",
+    "module": "images",
+    "label": "뉴스 이미지 파일 저장",
+    "path": "/image-posts/create",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 100
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 1800
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 200
+      },
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "analysis_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1,
+        "le": 3
+      },
+      {
+        "name": "generated_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "card_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "image_base64",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 6000000
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "rights",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "text",
+        "required": false,
+        "default": "unreviewed",
+        "path": false,
+        "max_length": 30
+      }
+    ],
+    "source": "gui/image_post_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "image_post_claude_card",
+    "module": "images",
+    "label": "Claude 카드 기획",
+    "path": "/image-posts/claude-card",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "analysis_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1,
+        "le": 3
+      },
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "review_token",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 64
+      },
+      {
+        "name": "review_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "purpose",
+        "type": "text",
+        "required": false,
+        "default": "full_image",
+        "path": false,
+        "max_length": 20
+      }
+    ],
+    "source": "gui/image_post_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "image_post_generate_card_image",
+    "module": "images",
+    "label": "전체 카드 이미지 생성",
+    "path": "/image-posts/generate-card-image",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "card_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "analysis_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1,
+        "le": 3
+      },
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "plan_reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/image_post_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "image_post_generate_background",
+    "module": "images",
+    "label": "배경 이미지 생성",
+    "path": "/image-posts/generate-background",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "analysis_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1,
+        "le": 3
+      },
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "style",
+        "type": "text",
+        "required": false,
+        "default": "illustration",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/image_post_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "image_post_generate_codex_image",
+    "module": "images",
+    "label": "Codex 이미지 생성",
+    "path": "/image-posts/generate-codex-image",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 60
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 200
+      },
+      {
+        "name": "analysis_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1,
+        "le": 3
+      },
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/image_post_routes.py",
+    "unsupported": true,
+    "unavailableReason": "기존 Codex 이미지 전용 연결은 BLOCKED 상태입니다."
+  },
+  {
+    "id": "image_post_prepare",
+    "module": "images",
+    "label": "게시 전 준비",
+    "path": "/image-posts/{identifier}/prepare",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "image_url",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 2048
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/image_post_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "image_post_delivery_publish",
+    "module": "images",
+    "label": "단일 이미지 게시 승인",
+    "path": "/image-posts/deliveries/{identifier}/publish",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/image_post_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "image_post_delivery_check",
+    "module": "images",
+    "label": "이미지 게시 상태 확인",
+    "path": "/image-posts/deliveries/{identifier}/check",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/image_post_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "instagram_relay_config",
+    "module": "publishing",
+    "label": "인증 중계 설정",
+    "path": "/instagram/relay-config",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 300
+      },
+      {
+        "name": "app_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 40
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/instagram_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "instagram_cancel_connection",
+    "module": "publishing",
+    "label": "계정 연결 취소",
+    "path": "/instagram/connect/{account_id}/cancel",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/instagram_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "instagram_select_page",
+    "module": "publishing",
+    "label": "Instagram 페이지 선택",
+    "path": "/instagram/connect/{account_id}/page",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "page_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "pattern": "^[1-9][0-9]{0,29}$"
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/instagram_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "instagram_connect",
+    "module": "publishing",
+    "label": "계정 연결 시작",
+    "path": "/instagram/connect",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/instagram_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "instagram_save_review",
+    "module": "publishing",
+    "label": "플랫폼 검토 저장",
+    "path": "/instagram/draft",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 100
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 5000
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 2000
+      },
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": false,
+        "default": 1,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "content_reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "text",
+        "required": false,
+        "default": "unreviewed",
+        "path": false,
+        "max_length": 30
+      }
+    ],
+    "source": "gui/instagram_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "instagram_prepare",
+    "module": "publishing",
+    "label": "게시 전 준비",
+    "path": "/instagram/prepare/{draft_id}",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/instagram_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "instagram_check",
+    "module": "publishing",
+    "label": "준비 상태 확인",
+    "path": "/instagram/check/{job_id}",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/instagram_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "instagram_publish",
+    "module": "publishing",
+    "label": "플랫폼 게시 승인",
+    "path": "/instagram/publish/{job_id}",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "media_sha256",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "public_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/instagram_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "instagram_image_delivery_config",
+    "module": "publishing",
+    "label": "단일 이미지 HTTPS 전달 설정",
+    "path": "/instagram/image-delivery-config",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "origin",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 300
+      },
+      {
+        "name": "upload_key",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 256
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/instagram_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "intelligence_codex_status",
+    "module": "shorts",
+    "label": "Codex 연결 확인",
+    "path": "/ai/codex/status",
+    "risk": "local",
+    "fields": [],
+    "source": "gui/intelligence_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "intelligence_codex_cancel",
+    "module": "shorts",
+    "label": "Codex 작업 취소",
+    "path": "/ai/codex/cancel",
+    "risk": "local",
+    "fields": [],
+    "source": "gui/intelligence_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "intelligence_claude_status",
+    "module": "shorts",
+    "label": "Claude Code 상태 확인",
+    "path": "/ai/claude/status",
+    "risk": "local",
+    "fields": [],
+    "source": "gui/intelligence_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "intelligence_claude_login",
+    "module": "shorts",
+    "label": "Claude Code 로그인 준비",
+    "path": "/ai/claude/login",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/intelligence_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "intelligence_studio_preferences",
+    "module": "shorts",
+    "label": "분석·대본 모델 선택",
+    "path": "/ai/preferences",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "return_to",
+        "type": "text",
+        "required": false,
+        "default": "studio",
+        "path": false,
+        "max_length": 20
+      }
+    ],
+    "source": "gui/intelligence_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "intelligence_claude_cancel",
+    "module": "shorts",
+    "label": "Claude Code 연결 취소",
+    "path": "/ai/claude/cancel",
+    "risk": "local",
+    "fields": [],
+    "source": "gui/intelligence_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "intelligence_analyze",
+    "module": "shorts",
+    "label": "기사 분석",
+    "path": "/ai/analyze",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "article_ids",
+        "type": "array",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "provider",
+        "type": "text",
+        "required": false,
+        "default": "offline",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": false,
+        "default": "gpt-4o-mini",
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "temperature",
+        "type": "number",
+        "required": false,
+        "default": 0.2,
+        "path": false
+      },
+      {
+        "name": "timeout",
+        "type": "number",
+        "required": false,
+        "default": 20,
+        "path": false
+      },
+      {
+        "name": "max_tokens",
+        "type": "number",
+        "required": false,
+        "default": 1800,
+        "path": false
+      },
+      {
+        "name": "flow",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 2000
+      }
+    ],
+    "source": "gui/intelligence_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "intelligence_generate",
+    "module": "shorts",
+    "label": "대본 생성",
+    "path": "/ai/generate",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "analysis_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "source_draft_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "duration",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "provider",
+        "type": "text",
+        "required": false,
+        "default": "offline",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": false,
+        "default": "gpt-4o-mini",
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "temperature",
+        "type": "number",
+        "required": false,
+        "default": 0.2,
+        "path": false
+      },
+      {
+        "name": "timeout",
+        "type": "number",
+        "required": false,
+        "default": 20,
+        "path": false
+      },
+      {
+        "name": "max_tokens",
+        "type": "number",
+        "required": false,
+        "default": 1800,
+        "path": false
+      },
+      {
+        "name": "flow",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 2000
+      },
+      {
+        "name": "script_style",
+        "type": "text",
+        "required": false,
+        "default": "news",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "script_tone",
+        "type": "text",
+        "required": false,
+        "default": "neutral",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "script_audience",
+        "type": "text",
+        "required": false,
+        "default": "general",
+        "path": false,
+        "max_length": 20
+      }
+    ],
+    "source": "gui/intelligence_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "intelligence_edit",
+    "module": "shorts",
+    "label": "내용 저장",
+    "path": "/ai/drafts/{draft_id}",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20000
+      }
+    ],
+    "source": "gui/intelligence_routes.py",
+    "unsupported": false,
+    "extraFields": "script-editor"
+  },
+  {
+    "id": "operations_startup",
+    "module": "settings",
+    "label": "Windows 자동 시작 설정",
+    "path": "/operations/startup",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "command",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "revision",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 64
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/operations_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "operations_review",
+    "module": "settings",
+    "label": "검토 기록 저장",
+    "path": "/operations/review",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 0
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/operations_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "production_shortform_preferences",
+    "module": "shorts",
+    "label": "쇼츠 연출 기본값 저장",
+    "path": "/production/shortform",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "hook",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "captions",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "motion",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "source",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "tight_ending",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "speed",
+        "type": "number",
+        "required": false,
+        "default": 1.1,
+        "path": false
+      },
+      {
+        "name": "target_seconds",
+        "type": "number",
+        "required": false,
+        "default": 30,
+        "path": false
+      }
+    ],
+    "source": "gui/production_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "production_selection",
+    "module": "shorts",
+    "label": "다음 작업 제작 방식 선택",
+    "path": "/production/selection",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "kind",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "value",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 200
+      },
+      {
+        "name": "return_to",
+        "type": "text",
+        "required": false,
+        "default": "/",
+        "path": false,
+        "max_length": 2500
+      }
+    ],
+    "source": "gui/production_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "production_preferences",
+    "module": "shorts",
+    "label": "제작 기본값 저장",
+    "path": "/production/preferences",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "duration",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "platform",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "voice",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 200
+      },
+      {
+        "name": "rate",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 3
+      },
+      {
+        "name": "pause_ms",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 4
+      },
+      {
+        "name": "video_provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "acquisition_policy",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "period",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      }
+    ],
+    "source": "gui/production_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "production_check_local",
+    "module": "shorts",
+    "label": "로컬 엔진 확인",
+    "path": "/production/check-local",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "engine",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      }
+    ],
+    "source": "gui/production_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "publishing_create",
+    "module": "publishing",
+    "label": "게시 초안 저장",
+    "path": "/publishing/drafts",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "platform",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "account_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "content_reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "text",
+        "required": false,
+        "default": "unreviewed",
+        "path": false
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 3
+      }
+    ],
+    "source": "gui/publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "publishing_edit",
+    "module": "publishing",
+    "label": "내용 저장",
+    "path": "/publishing/drafts/{draft_id}",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "platform",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "account_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "content_reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "text",
+        "required": false,
+        "default": "unreviewed",
+        "path": false
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 3
+      }
+    ],
+    "source": "gui/publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "publishing_validate",
+    "module": "publishing",
+    "label": "게시 준비 검사",
+    "path": "/publishing/drafts/{draft_id}/validate",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "publishing_account",
+    "module": "publishing",
+    "label": "게시 계정 정보 등록",
+    "path": "/publishing/accounts",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "platform",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "account_type",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "publishing_oauth_prepare",
+    "module": "publishing",
+    "label": "계정 연결 준비",
+    "path": "/publishing/accounts/{account_id}/oauth/prepare",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "publishing_oauth_disconnect_prepare",
+    "module": "publishing",
+    "label": "연결 해제 준비",
+    "path": "/publishing/accounts/{account_id}/oauth/disconnect-prepare",
+    "risk": "destructive",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "publishing_oauth_start",
+    "module": "publishing",
+    "label": "계정 연결 승인",
+    "path": "/publishing/accounts/{account_id}/oauth/start",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "routes_add_source",
+    "module": "news",
+    "label": "RSS 출처 등록",
+    "path": "/settings/sources",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "min_length": 1,
+        "max_length": 100
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 2048
+      },
+      {
+        "name": "permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "routes_toggle_source",
+    "module": "news",
+    "label": "출처 사용 변경",
+    "path": "/settings/sources/{source_id}/toggle",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "source_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "routes_update_settings",
+    "module": "news",
+    "label": "뉴스 수집 설정 저장",
+    "path": "/settings/collection",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "timeout",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1,
+        "le": 30
+      }
+    ],
+    "source": "gui/routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "routes_collect",
+    "module": "news",
+    "label": "뉴스 수집",
+    "path": "/collection",
+    "risk": "external",
+    "fields": [],
+    "source": "gui/routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "scheduler_save",
+    "module": "automation",
+    "label": "제작 예약 저장",
+    "path": "/schedules",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "kind",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "local_time",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 5
+      },
+      {
+        "name": "weekdays",
+        "type": "array",
+        "required": false,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "once_date",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "source",
+        "type": "text",
+        "required": false,
+        "default": "sample",
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "duration",
+        "type": "number",
+        "required": false,
+        "default": 30,
+        "path": false
+      },
+      {
+        "name": "platform",
+        "type": "text",
+        "required": false,
+        "default": "youtube",
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "voice",
+        "type": "text",
+        "required": false,
+        "default": "offline-silence",
+        "path": false,
+        "max_length": 30
+      },
+      {
+        "name": "schedule_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 32
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": false,
+        "default": 0,
+        "path": false,
+        "ge": 0
+      }
+    ],
+    "source": "gui/scheduler_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "scheduler_state",
+    "module": "automation",
+    "label": "예약 상태 변경",
+    "path": "/schedules/{schedule_id}/state",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "schedule_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 10,
+        "choices": [
+          [
+            "enable",
+            "예약 활성화"
+          ],
+          [
+            "pause",
+            "일시 중지"
+          ],
+          [
+            "remove",
+            "예약 해제"
+          ]
+        ]
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/scheduler_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "scheduler_command_cancel",
+    "module": "automation",
+    "label": "예약 작업 취소",
+    "path": "/schedules/runs/{run_id}/cancel",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "run_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/scheduler_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "scheduler_command_retry",
+    "module": "automation",
+    "label": "실패 예약 재검토",
+    "path": "/schedules/runs/{run_id}/retry",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "run_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/scheduler_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "serpapi_settings",
+    "module": "news",
+    "label": "수집 연결 설정 저장",
+    "path": "/serpapi/settings",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "api_key",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "approved",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/serpapi_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "serpapi_collect",
+    "module": "news",
+    "label": "뉴스 수집",
+    "path": "/news/curation/serpapi",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "request_token",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 32
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "collection_policy",
+        "type": "text",
+        "required": false,
+        "default": "korea_v1",
+        "path": false,
+        "max_length": 30
+      },
+      {
+        "name": "maximum_requests",
+        "type": "number",
+        "required": false,
+        "default": 1,
+        "path": false
+      }
+    ],
+    "source": "gui/serpapi_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "setup_check",
+    "module": "onboarding",
+    "label": "준비 상태 확인",
+    "path": "/setup/check",
+    "risk": "local",
+    "fields": [],
+    "source": "gui/setup_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "setup_step_save",
+    "module": "onboarding",
+    "label": "초기 설정 단계 저장",
+    "path": "/setup/step",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "step",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1,
+        "le": 7
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 0
+      }
+    ],
+    "source": "gui/setup_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "setup_test_production",
+    "module": "onboarding",
+    "label": "로컬 제작 점검",
+    "path": "/setup/test-production",
+    "risk": "local",
+    "fields": [],
+    "source": "gui/setup_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "social_collect",
+    "module": "analytics",
+    "label": "성과 지표 조회",
+    "path": "/analytics/collect",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "start",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "end",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "job_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/social_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "social_schedule",
+    "module": "publishing",
+    "label": "게시 예약 저장",
+    "path": "/publishing/calendar",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "cohort_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "due",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 30
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/social_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "social_cancel",
+    "module": "publishing",
+    "label": "작업 취소",
+    "path": "/publishing/calendar/{identifier}/cancel",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/social_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "sources_add_preset",
+    "module": "news",
+    "label": "추천 출처 추가",
+    "path": "/sources/preset",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "preset",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 40
+      },
+      {
+        "name": "permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/sources_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "sources_add_source",
+    "module": "news",
+    "label": "RSS 출처 등록",
+    "path": "/sources",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "min_length": 1,
+        "max_length": 100
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 2048
+      },
+      {
+        "name": "permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/sources_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "sources_edit_source",
+    "module": "news",
+    "label": "출처 수정",
+    "path": "/sources/{source_id}/edit",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "source_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "min_length": 1,
+        "max_length": 100
+      },
+      {
+        "name": "url",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 2048
+      },
+      {
+        "name": "permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/sources_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "sources_toggle_source",
+    "module": "news",
+    "label": "출처 사용 변경",
+    "path": "/sources/{source_id}/toggle",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "source_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/sources_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "sources_test_source",
+    "module": "news",
+    "label": "RSS 연결 확인",
+    "path": "/sources/{source_id}/test",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "source_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/sources_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "sources_collect",
+    "module": "news",
+    "label": "뉴스 수집",
+    "path": "/sources/collect",
+    "risk": "external",
+    "fields": [],
+    "source": "gui/sources_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "tiktok_save_client",
+    "module": "publishing",
+    "label": "플랫폼 앱 인증정보 저장",
+    "path": "/tiktok/client",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "client_key",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 128
+      },
+      {
+        "name": "client_secret",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 256
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "required": false,
+        "default": 0,
+        "path": false,
+        "ge": 0,
+        "le": 65535
+      }
+    ],
+    "source": "gui/tiktok_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "tiktok_connect",
+    "module": "publishing",
+    "label": "계정 연결 시작",
+    "path": "/tiktok/connect",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/tiktok_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "unified_publishing_local_draft",
+    "module": "publishing",
+    "label": "로컬 게시 초안 저장",
+    "path": "/publishing/unified/local-draft",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "target",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 15
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 100
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 5000
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 2000
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 3
+      }
+    ],
+    "source": "gui/unified_publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "unified_publishing_review",
+    "module": "publishing",
+    "label": "검토 기록 저장",
+    "path": "/publishing/unified/review",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "target",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 15
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 100
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 5000
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 2000
+      },
+      {
+        "name": "youtube_account",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "instagram_account",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "tiktok_account",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "facebook_account",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "content_reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "text",
+        "required": false,
+        "default": "unreviewed",
+        "path": false,
+        "max_length": 30
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 3
+      }
+    ],
+    "source": "gui/unified_publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "unified_publishing_execute",
+    "module": "publishing",
+    "label": "선택 플랫폼 게시 승인",
+    "path": "/publishing/unified/{cohort_id}/execute",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "cohort_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "approval_token",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "privacy",
+        "type": "text",
+        "required": false,
+        "default": "private",
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "made_for_kids",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 3
+      },
+      {
+        "name": "youtube_public_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "instagram_public_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "facebook_public_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "tiktok_privacy",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 30
+      },
+      {
+        "name": "tiktok_music_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "tiktok_brand_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "tiktok_branded",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "tiktok_own_brand",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "tiktok_allow_comment",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "tiktok_allow_duet",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "tiktok_allow_stitch",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/unified_publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "unified_publishing_tiktok_options",
+    "module": "publishing",
+    "label": "TikTok 게시 옵션 조회",
+    "path": "/publishing/unified/{cohort_id}/tiktok-options",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "cohort_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/unified_publishing_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_create_plan",
+    "module": "shorts",
+    "label": "AI 장면 계획",
+    "path": "/video/ai/plans",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "duration",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "mode",
+        "type": "text",
+        "required": false,
+        "default": "mixed",
+        "path": false
+      },
+      {
+        "name": "model_path",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 160
+      },
+      {
+        "name": "external_tts_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_voice_consent",
+    "module": "shorts",
+    "label": "외부 음성 사용 승인",
+    "path": "/video/ai/plans/{plan_id}/voice-consent",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_save_scenes",
+    "module": "shorts",
+    "label": "장면 설정 저장",
+    "path": "/video/ai/plans/{plan_id}/scenes",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "asset_permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false,
+    "extraFields": "scene-edits"
+  },
+  {
+    "id": "video_ai_confirm",
+    "module": "shorts",
+    "label": "AI 장면 생성 승인",
+    "path": "/video/ai/plans/{plan_id}/confirm",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "shown_total",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 40
+      },
+      {
+        "name": "confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_cancel",
+    "module": "shorts",
+    "label": "작업 취소",
+    "path": "/video/ai/plans/{plan_id}/scenes/{position}/cancel",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "position",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_resolve",
+    "module": "shorts",
+    "label": "결과 상태 확인",
+    "path": "/video/ai/plans/{plan_id}/scenes/{position}/resolve",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "position",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_rebase",
+    "module": "shorts",
+    "label": "대본 변경 반영",
+    "path": "/video/ai/plans/{plan_id}/rebase",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_refetch",
+    "module": "shorts",
+    "label": "장면 결과 다시 확인",
+    "path": "/video/ai/plans/{plan_id}/scenes/{position}/refetch",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "position",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_review",
+    "module": "shorts",
+    "label": "검토 기록 저장",
+    "path": "/video/ai/plans/{plan_id}/review",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "statement",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_approve",
+    "module": "shorts",
+    "label": "최종 합성 승인",
+    "path": "/video/ai/plans/{plan_id}/approve",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "approved",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_start_preflight",
+    "module": "shorts",
+    "label": "로컬 제작 준비 확인",
+    "path": "/video-ai-settings/preflight",
+    "risk": "local",
+    "fields": [],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_save_settings",
+    "module": "shorts",
+    "label": "기본 설정 저장",
+    "path": "/video-ai-settings",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "host",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 40
+      },
+      {
+        "name": "approved",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "monthly_limit",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "job_limit",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": false,
+        "default": "USD",
+        "path": false,
+        "max_length": 3
+      },
+      {
+        "name": "max_active",
+        "type": "number",
+        "required": false,
+        "default": 2,
+        "path": false
+      },
+      {
+        "name": "timeout_minutes",
+        "type": "number",
+        "required": false,
+        "default": 30,
+        "path": false
+      },
+      {
+        "name": "poll_seconds",
+        "type": "number",
+        "required": false,
+        "default": 10,
+        "path": false
+      },
+      {
+        "name": "return_draft",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_save_model_route",
+    "module": "shorts",
+    "label": "영상 모델 등록·가격 확인",
+    "path": "/video-ai-settings/models",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "path",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 160
+      },
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "price_per_second",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "durations",
+        "type": "text",
+        "required": false,
+        "default": "5",
+        "path": false,
+        "max_length": 60
+      },
+      {
+        "name": "resolution",
+        "type": "text",
+        "required": false,
+        "default": "720p",
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "model_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "return_draft",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "pricing_mode",
+        "type": "text",
+        "required": false,
+        "default": "manual",
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "estimate_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_delete_model_route",
+    "module": "shorts",
+    "label": "영상 모델 제거",
+    "path": "/video-ai-settings/models/{model_id}/delete",
+    "risk": "destructive",
+    "fields": [
+      {
+        "name": "model_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "return_draft",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_save_key",
+    "module": "shorts",
+    "label": "API 키 저장",
+    "path": "/video-ai-settings/key",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "api_key",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 520
+      },
+      {
+        "name": "return_draft",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_clear_key",
+    "module": "shorts",
+    "label": "저장된 키 제거",
+    "path": "/video-ai-settings/key/clear",
+    "risk": "destructive",
+    "fields": [
+      {
+        "name": "return_draft",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_ai_default_model",
+    "module": "shorts",
+    "label": "다음 작업 영상 모델 저장",
+    "path": "/video/ai/default-model",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "model_path",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 160
+      }
+    ],
+    "source": "gui/video_ai_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_load_elevenlabs_voices",
+    "module": "shorts",
+    "label": "내 음성 목록 조회",
+    "path": "/video/tts/voices/load",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "more",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_select_elevenlabs_voice",
+    "module": "shorts",
+    "label": "음성 선택 저장",
+    "path": "/video/tts/voices/select",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "voice_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 100
+      }
+    ],
+    "source": "gui/video_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_preview_elevenlabs_voice",
+    "module": "shorts",
+    "label": "선택 음성 샘플 열기",
+    "path": "/video/tts/voices/preview",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "voice_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 100
+      },
+      {
+        "name": "sample_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_save_tts",
+    "module": "shorts",
+    "label": "외부 음성 기본값 저장",
+    "path": "/video/tts",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "voice_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 100
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": false,
+        "default": "eleven_multilingual_v2",
+        "path": false
+      },
+      {
+        "name": "job_limit",
+        "type": "number",
+        "required": false,
+        "default": 1000,
+        "path": false
+      },
+      {
+        "name": "monthly_limit",
+        "type": "number",
+        "required": false,
+        "default": 10000,
+        "path": false
+      },
+      {
+        "name": "commercial",
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "path": false
+      }
+    ],
+    "source": "gui/video_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_save_tts_key",
+    "module": "shorts",
+    "label": "ElevenLabs 키 저장",
+    "path": "/video/tts/key",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "api_key",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "min_length": 20,
+        "max_length": 256
+      }
+    ],
+    "source": "gui/video_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_check_tts",
+    "module": "shorts",
+    "label": "음성 계정 상태 확인",
+    "path": "/video/tts/check",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_render",
+    "module": "shorts",
+    "label": "영상 제작",
+    "path": "/video/render",
+    "risk": "media",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "duration",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "voice",
+        "type": "text",
+        "required": false,
+        "default": "offline-silence",
+        "path": false,
+        "max_length": 200
+      },
+      {
+        "name": "font_size",
+        "type": "number",
+        "required": false,
+        "default": 48,
+        "path": false
+      },
+      {
+        "name": "subtitle_y",
+        "type": "number",
+        "required": false,
+        "default": 1420,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "asset_permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "external_tts_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "video_link_news_image",
+    "module": "shorts",
+    "label": "장면 이미지 연결",
+    "path": "/video/news-image",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "article_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 255
+      },
+      {
+        "name": "rights_basis",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "min_length": 3,
+        "max_length": 400
+      },
+      {
+        "name": "permission",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/video_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "voice_save",
+    "module": "settings",
+    "label": "음성 기본값 저장",
+    "path": "/voices",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "voice",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 200
+      },
+      {
+        "name": "rate",
+        "type": "text",
+        "required": false,
+        "default": "0",
+        "path": false,
+        "max_length": 3
+      },
+      {
+        "name": "pause_ms",
+        "type": "text",
+        "required": false,
+        "default": "250",
+        "path": false,
+        "max_length": 4
+      }
+    ],
+    "source": "gui/voice_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "voice_preview",
+    "module": "settings",
+    "label": "로컬 음성 미리듣기",
+    "path": "/voices/preview",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "voice",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 200
+      },
+      {
+        "name": "rate",
+        "type": "text",
+        "required": false,
+        "default": "0",
+        "path": false,
+        "max_length": 3
+      },
+      {
+        "name": "pause_ms",
+        "type": "text",
+        "required": false,
+        "default": "250",
+        "path": false,
+        "max_length": 4
+      }
+    ],
+    "source": "gui/voice_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "voice_listening",
+    "module": "settings",
+    "label": "청취 검토 기록",
+    "path": "/voices/listening",
+    "risk": "local",
+    "fields": [],
+    "source": "gui/voice_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "youtube_save_client",
+    "module": "publishing",
+    "label": "플랫폼 앱 인증정보 저장",
+    "path": "/youtube/client",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "client_json",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 16384
+      }
+    ],
+    "source": "gui/youtube_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "youtube_connect",
+    "module": "publishing",
+    "label": "계정 연결 시작",
+    "path": "/youtube/connect",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      }
+    ],
+    "source": "gui/youtube_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "youtube_cancel",
+    "module": "publishing",
+    "label": "작업 취소",
+    "path": "/youtube/connect/{account_id}/cancel",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/youtube_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "youtube_authorization_link",
+    "module": "publishing",
+    "label": "인증 링크 준비",
+    "path": "/youtube/connect/{account_id}/link",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/youtube_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "youtube_reopen_authorization",
+    "module": "publishing",
+    "label": "인증 링크 다시 열기",
+    "path": "/youtube/connect/{account_id}/reopen",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ],
+    "source": "gui/youtube_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "youtube_save_review",
+    "module": "publishing",
+    "label": "플랫폼 검토 저장",
+    "path": "/youtube/draft",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 100
+      },
+      {
+        "name": "description",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 5000
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 2000
+      },
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": false,
+        "default": 1,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "content_reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "text",
+        "required": false,
+        "default": "unreviewed",
+        "path": false,
+        "max_length": 30
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 3
+      }
+    ],
+    "source": "gui/youtube_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "youtube_publish",
+    "module": "publishing",
+    "label": "플랫폼 게시 승인",
+    "path": "/youtube/publish/{draft_id}",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "privacy",
+        "type": "text",
+        "required": false,
+        "default": "private",
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "made_for_kids",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 3
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "public_consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/youtube_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "tiktok_action_cancel",
+    "module": "publishing",
+    "label": "TikTok 연결 준비 취소",
+    "path": "/tiktok/accounts/{account_id}/cancel",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/tiktok_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "tiktok_action_refresh",
+    "module": "publishing",
+    "label": "TikTok 토큰 갱신 승인",
+    "path": "/tiktok/accounts/{account_id}/refresh",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/tiktok_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "tiktok_action_revoke",
+    "module": "publishing",
+    "label": "TikTok 연결 해제 승인",
+    "path": "/tiktok/accounts/{account_id}/revoke",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/tiktok_routes.py",
+    "unsupported": false
+  }
+]

@@ -1,0 +1,4577 @@
+[
+  {
+    "file": "ai_settings_routes.py",
+    "function": "ai_settings",
+    "method": "GET",
+    "path": "/ai-settings",
+    "fields": [
+      {
+        "name": "saved",
+        "type": "str",
+        "default": "''"
+      }
+    ]
+  },
+  {
+    "file": "ai_settings_routes.py",
+    "function": "save_ai_settings",
+    "method": "POST",
+    "path": "/ai-settings",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": "Form(max_length=20)"
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form(max_length=80)"
+      },
+      {
+        "name": "approved",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "monthly_token_limit",
+        "type": "int",
+        "default": "Form(0)"
+      },
+      {
+        "name": "timeout",
+        "type": "int",
+        "default": "Form(20)"
+      }
+    ]
+  },
+  {
+    "file": "ai_settings_routes.py",
+    "function": "save_prices",
+    "method": "POST",
+    "path": "/ai-settings/prices",
+    "fields": [
+      {
+        "name": "input_per_1m",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "output_per_1m",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "currency",
+        "type": "str",
+        "default": "Form('USD', max_length=3)"
+      }
+    ]
+  },
+  {
+    "file": "ai_settings_routes.py",
+    "function": "save_key",
+    "method": "POST",
+    "path": "/ai-settings/key",
+    "fields": [
+      {
+        "name": "api_key",
+        "type": "str",
+        "default": "Form('')"
+      }
+    ]
+  },
+  {
+    "file": "ai_settings_routes.py",
+    "function": "clear_key",
+    "method": "POST",
+    "path": "/ai-settings/key/clear",
+    "fields": []
+  },
+  {
+    "file": "ai_settings_routes.py",
+    "function": "check_connection",
+    "method": "POST",
+    "path": "/ai-settings/check",
+    "fields": []
+  },
+  {
+    "file": "api_settings_routes.py",
+    "function": "acknowledge_analysis",
+    "method": "POST",
+    "path": "/api-settings/{provider}/acknowledge-unknown-analysis",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "reservation_id",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "fingerprint",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "api_settings_routes.py",
+    "function": "check_connection",
+    "method": "POST",
+    "path": "/api-settings/{provider}/check",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "api_settings_routes.py",
+    "function": "check_search",
+    "method": "POST",
+    "path": "/api-settings/{provider}/check-search",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form('', max_length=80)"
+      },
+      {
+        "name": "authentication_at",
+        "type": "str",
+        "default": "Form('', max_length=80)"
+      },
+      {
+        "name": "max_cost_usd",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      }
+    ]
+  },
+  {
+    "file": "api_settings_routes.py",
+    "function": "save_configuration",
+    "method": "POST",
+    "path": "/api-settings/{provider}",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form(max_length=80)"
+      },
+      {
+        "name": "approved",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "search_enabled",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "search_approved",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "request_limit_usd",
+        "type": "str | None",
+        "default": "Form(None, max_length=20)"
+      },
+      {
+        "name": "monthly_limit_usd",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "input_price_per_1m",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "output_price_per_1m",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "search_price_per_1k",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "billing_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "account_remaining_usd",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "monthly_token_limit",
+        "type": "int | None",
+        "default": "Form(None)"
+      },
+      {
+        "name": "timeout",
+        "type": "int | None",
+        "default": "Form(None)"
+      }
+    ]
+  },
+  {
+    "file": "api_settings_routes.py",
+    "function": "save_key",
+    "method": "POST",
+    "path": "/api-settings/{provider}/key",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "api_key",
+        "type": "str",
+        "default": "Form('')"
+      }
+    ]
+  },
+  {
+    "file": "api_settings_routes.py",
+    "function": "clear_key",
+    "method": "POST",
+    "path": "/api-settings/{provider}/key/clear",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "home",
+    "method": "GET",
+    "path": "/create",
+    "fields": [
+      {
+        "name": "task",
+        "type": "str | None",
+        "default": "None"
+      },
+      {
+        "name": "video",
+        "type": "int | None",
+        "default": "None"
+      },
+      {
+        "name": "show",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "guide",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "flow",
+        "type": "str | None",
+        "default": "None"
+      },
+      {
+        "name": "publish_platform",
+        "type": "str",
+        "default": "'youtube'"
+      },
+      {
+        "name": "news_category",
+        "type": "str",
+        "default": "''"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "home",
+    "method": "GET",
+    "path": "/",
+    "fields": [
+      {
+        "name": "task",
+        "type": "str | None",
+        "default": "None"
+      },
+      {
+        "name": "video",
+        "type": "int | None",
+        "default": "None"
+      },
+      {
+        "name": "show",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "guide",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "flow",
+        "type": "str | None",
+        "default": "None"
+      },
+      {
+        "name": "publish_platform",
+        "type": "str",
+        "default": "'youtube'"
+      },
+      {
+        "name": "news_category",
+        "type": "str",
+        "default": "''"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "dashboard_news",
+    "method": "GET",
+    "path": "/dashboard/news",
+    "fields": [
+      {
+        "name": "category",
+        "type": "str",
+        "default": "''"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "start_page",
+    "method": "GET",
+    "path": "/autopilot/start",
+    "fields": [
+      {
+        "name": "guide",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "flow",
+        "type": "str | None",
+        "default": "None"
+      },
+      {
+        "name": "advanced",
+        "type": "bool",
+        "default": "False"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "quick_start",
+    "method": "POST",
+    "path": "/autopilot/quick-start",
+    "fields": [
+      {
+        "name": "source",
+        "type": "str",
+        "default": "Form(max_length=10)"
+      },
+      {
+        "name": "duration",
+        "type": "int",
+        "default": "Form()"
+      },
+      {
+        "name": "acquisition_policy",
+        "type": "str | None",
+        "default": "Form(None, max_length=10)"
+      },
+      {
+        "name": "category",
+        "type": "str | None",
+        "default": "Form(None, max_length=20)"
+      },
+      {
+        "name": "period",
+        "type": "str | None",
+        "default": "Form(None, max_length=10)"
+      },
+      {
+        "name": "news_usage",
+        "type": "str",
+        "default": "Form('STANDARD', max_length=12)"
+      },
+      {
+        "name": "workspace",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "production_options_version",
+        "type": "int | None",
+        "default": "Form(None)"
+      },
+      {
+        "name": "script_review",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "voice_method",
+        "type": "str | None",
+        "default": "Form(None, max_length=20)"
+      },
+      {
+        "name": "video_method",
+        "type": "str | None",
+        "default": "Form(None, max_length=20)"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "confirm_start",
+    "method": "POST",
+    "path": "/autopilot/confirm-start",
+    "fields": [
+      {
+        "name": "flow",
+        "type": "str",
+        "default": "Form(max_length=2000)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "workspace",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "external_tts_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "renew_voice_consent",
+    "method": "POST",
+    "path": "/autopilot/jobs/{job_id}/voice-consent",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "start",
+    "method": "POST",
+    "path": "/autopilot/start",
+    "fields": [
+      {
+        "name": "mode",
+        "type": "str | None",
+        "default": "Form(None, max_length=10)"
+      },
+      {
+        "name": "source",
+        "type": "str | None",
+        "default": "Form(None, max_length=10)"
+      },
+      {
+        "name": "duration",
+        "type": "int | None",
+        "default": "Form(None)"
+      },
+      {
+        "name": "platform",
+        "type": "str | None",
+        "default": "Form(None, max_length=20)"
+      },
+      {
+        "name": "ai",
+        "type": "str | None",
+        "default": "Form(None, max_length=10)"
+      },
+      {
+        "name": "voice",
+        "type": "str | None",
+        "default": "Form(None, max_length=200)"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "jobs",
+    "method": "GET",
+    "path": "/autopilot/jobs",
+    "fields": []
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "job",
+    "method": "GET",
+    "path": "/autopilot/jobs/{job_id}",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "job_status",
+    "method": "GET",
+    "path": "/api/autopilot/jobs/{job_id}",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "cancel",
+    "method": "POST",
+    "path": "/autopilot/jobs/{job_id}/cancel",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "workspace",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "resume",
+    "method": "POST",
+    "path": "/autopilot/jobs/{job_id}/resume",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "article_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "workspace",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "retry",
+    "method": "POST",
+    "path": "/autopilot/jobs/{job_id}/retry",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "workspace",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "queue",
+    "method": "GET",
+    "path": "/queue",
+    "fields": [
+      {
+        "name": "month",
+        "type": "str | None",
+        "default": "None"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "simple_settings",
+    "method": "GET",
+    "path": "/simple-settings",
+    "fields": [
+      {
+        "name": "saved",
+        "type": "str",
+        "default": "''"
+      }
+    ]
+  },
+  {
+    "file": "autopilot_routes.py",
+    "function": "save_settings",
+    "method": "POST",
+    "path": "/simple-settings",
+    "fields": [
+      {
+        "name": "duration",
+        "type": "int",
+        "default": "Form()"
+      },
+      {
+        "name": "platform",
+        "type": "str",
+        "default": "Form(max_length=20)"
+      },
+      {
+        "name": "source",
+        "type": "str",
+        "default": "Form(max_length=10)"
+      },
+      {
+        "name": "mode",
+        "type": "str",
+        "default": "Form('easy', max_length=10)"
+      },
+      {
+        "name": "ai",
+        "type": "str",
+        "default": "Form('offline', max_length=10)"
+      }
+    ]
+  },
+  {
+    "file": "character_routes.py",
+    "function": "studio",
+    "method": "GET",
+    "path": "/character",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "reference_asset",
+        "type": "str",
+        "default": "''"
+      }
+    ]
+  },
+  {
+    "file": "character_routes.py",
+    "function": "create",
+    "method": "POST",
+    "path": "/character",
+    "fields": [
+      {
+        "name": "reference",
+        "type": "Annotated[UploadFile | None, File()]",
+        "default": "None"
+      },
+      {
+        "name": "topic",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "episode_limit",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "day_limit",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "script_model",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "video_model",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "reference_asset",
+        "type": "str",
+        "default": "Form('')"
+      }
+    ]
+  },
+  {
+    "file": "character_routes.py",
+    "function": "act",
+    "method": "POST",
+    "path": "/character/{job_id}/{action}",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "action",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "quote_hash",
+        "type": "str",
+        "default": "Form('')"
+      }
+    ]
+  },
+  {
+    "file": "character_routes.py",
+    "function": "output",
+    "method": "GET",
+    "path": "/character/{job_id}/file",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "download",
+        "type": "bool",
+        "default": "False"
+      }
+    ]
+  },
+  {
+    "file": "character_routes.py",
+    "function": "clips",
+    "method": "GET",
+    "path": "/character/{job_id}/clips",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "character_routes.py",
+    "function": "clip",
+    "method": "GET",
+    "path": "/character/{job_id}/clips/{position}",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "position",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "character_routes.py",
+    "function": "character_defaults",
+    "method": "POST",
+    "path": "/character-defaults",
+    "fields": [
+      {
+        "name": "script_model",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "video_model",
+        "type": "str",
+        "default": "Form(...)"
+      }
+    ]
+  },
+  {
+    "file": "cleanup_routes.py",
+    "function": "trash",
+    "method": "GET",
+    "path": "/workspace/trash",
+    "fields": []
+  },
+  {
+    "file": "cleanup_routes.py",
+    "function": "remove_activity",
+    "method": "POST",
+    "path": "/workspace/activity/remove",
+    "fields": [
+      {
+        "name": "item",
+        "type": "str",
+        "default": "Form(max_length=70)"
+      },
+      {
+        "name": "confirm",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "cleanup_routes.py",
+    "function": "remove_video",
+    "method": "POST",
+    "path": "/workspace/videos/{identifier}/remove",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "confirm",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "cleanup_routes.py",
+    "function": "restore",
+    "method": "POST",
+    "path": "/workspace/trash/restore",
+    "fields": [
+      {
+        "name": "item",
+        "type": "str",
+        "default": "Form(max_length=80)"
+      },
+      {
+        "name": "confirm",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "creation_routes.py",
+    "function": "studio",
+    "method": "GET",
+    "path": "/image-studio",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "None"
+      }
+    ]
+  },
+  {
+    "file": "creation_routes.py",
+    "function": "draft",
+    "method": "POST",
+    "path": "/image-studio/drafts",
+    "fields": [
+      {
+        "name": "prompt",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "size",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "quality",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "provider",
+        "type": "str",
+        "default": "Form('openai')"
+      },
+      {
+        "name": "reference",
+        "type": "Annotated[UploadFile | None, File()]",
+        "default": "None"
+      }
+    ]
+  },
+  {
+    "file": "creation_routes.py",
+    "function": "defaults",
+    "method": "POST",
+    "path": "/image-studio/defaults",
+    "fields": [
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "size",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "quality",
+        "type": "str",
+        "default": "Form(...)"
+      },
+      {
+        "name": "provider",
+        "type": "str",
+        "default": "Form('openai')"
+      }
+    ]
+  },
+  {
+    "file": "creation_routes.py",
+    "function": "generate",
+    "method": "POST",
+    "path": "/image-studio/{identifier}/generate",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "creation_routes.py",
+    "function": "image_file",
+    "method": "GET",
+    "path": "/image-studio/{identifier}/file",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "download",
+        "type": "bool",
+        "default": "False"
+      }
+    ]
+  },
+  {
+    "file": "creation_routes.py",
+    "function": "asset",
+    "method": "GET",
+    "path": "/image-studio/assets/{name}",
+    "fields": [
+      {
+        "name": "name",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "creation_routes.py",
+    "function": "reuse",
+    "method": "POST",
+    "path": "/image-studio/{identifier}/reuse",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "target",
+        "type": "str",
+        "default": "Form('news')"
+      }
+    ]
+  },
+  {
+    "file": "curation_routes.py",
+    "function": "refresh",
+    "method": "POST",
+    "path": "/news/curation/refresh",
+    "fields": [
+      {
+        "name": "permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "curation_routes.py",
+    "function": "import_rss",
+    "method": "POST",
+    "path": "/news/curation/import",
+    "fields": [
+      {
+        "name": "rss_xml",
+        "type": "str",
+        "default": "Form(max_length=20000)"
+      },
+      {
+        "name": "permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "curation_routes.py",
+    "function": "analyze",
+    "method": "POST",
+    "path": "/news/curation/analyze",
+    "fields": [
+      {
+        "name": "collection_context_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "curation_routes.py",
+    "function": "generate",
+    "method": "POST",
+    "path": "/news/curation/generate",
+    "fields": [
+      {
+        "name": "analysis_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "rank",
+        "type": "int",
+        "default": "Form(ge=1, le=10)"
+      },
+      {
+        "name": "duration",
+        "type": "int",
+        "default": "Form(30)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "curation_routes.py",
+    "function": "export_ranking",
+    "method": "GET",
+    "path": "/news/curation/{analysis_id}/ranking.json",
+    "fields": [
+      {
+        "name": "analysis_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "curation_routes.py",
+    "function": "export_script",
+    "method": "GET",
+    "path": "/news/curation/drafts/{draft_id}/script.json",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "workspace",
+    "method": "GET",
+    "path": "/image-posts",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      },
+      {
+        "name": "post_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      },
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      },
+      {
+        "name": "analysis_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      },
+      {
+        "name": "rank",
+        "type": "int | None",
+        "default": "Query(None, ge=1, le=3)"
+      },
+      {
+        "name": "generated_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      },
+      {
+        "name": "card_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "selected_feeds",
+    "method": "GET",
+    "path": "/image-posts/selection",
+    "fields": [
+      {
+        "name": "analysis_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "create",
+    "method": "POST",
+    "path": "/image-posts/create",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "title",
+        "type": "str",
+        "default": "Form(max_length=100)"
+      },
+      {
+        "name": "body",
+        "type": "str",
+        "default": "Form(max_length=1800)"
+      },
+      {
+        "name": "hashtags",
+        "type": "str",
+        "default": "Form('', max_length=200)"
+      },
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "analysis_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "rank",
+        "type": "int | None",
+        "default": "Form(None, ge=1, le=3)"
+      },
+      {
+        "name": "generated_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "card_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "image_base64",
+        "type": "str",
+        "default": "Form('', max_length=6000000)"
+      },
+      {
+        "name": "reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "rights",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "str",
+        "default": "Form('unreviewed', max_length=30)"
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "claude_card",
+    "method": "POST",
+    "path": "/image-posts/claude-card",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "analysis_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "rank",
+        "type": "int | None",
+        "default": "Form(None, ge=1, le=3)"
+      },
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form(max_length=80)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "review_token",
+        "type": "str",
+        "default": "Form('', max_length=64)"
+      },
+      {
+        "name": "review_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "purpose",
+        "type": "str",
+        "default": "Form('full_image', max_length=20)"
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "generate_card_image",
+    "method": "POST",
+    "path": "/image-posts/generate-card-image",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "card_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "analysis_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "rank",
+        "type": "int | None",
+        "default": "Form(None, ge=1, le=3)"
+      },
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "plan_reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "generate_background",
+    "method": "POST",
+    "path": "/image-posts/generate-background",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "analysis_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "rank",
+        "type": "int | None",
+        "default": "Form(None, ge=1, le=3)"
+      },
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "style",
+        "type": "str",
+        "default": "Form('illustration', max_length=20)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "generate_codex_image",
+    "method": "POST",
+    "path": "/image-posts/generate-codex-image",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "title",
+        "type": "str",
+        "default": "Form(max_length=60)"
+      },
+      {
+        "name": "body",
+        "type": "str",
+        "default": "Form(max_length=200)"
+      },
+      {
+        "name": "analysis_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "rank",
+        "type": "int | None",
+        "default": "Form(None, ge=1, le=3)"
+      },
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "card_preview",
+    "method": "GET",
+    "path": "/image-posts/cards/{identifier}/preview",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "generated_file",
+    "method": "GET",
+    "path": "/image-posts/backgrounds/{identifier}/file",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "file",
+    "method": "GET",
+    "path": "/image-posts/{identifier}/file",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "download",
+        "type": "bool",
+        "default": "False"
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "caption",
+    "method": "GET",
+    "path": "/image-posts/{identifier}/caption",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "prepare",
+    "method": "POST",
+    "path": "/image-posts/{identifier}/prepare",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "image_url",
+        "type": "str",
+        "default": "Form('', max_length=2048)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "image_post_routes.py",
+    "function": "delivery",
+    "method": "POST",
+    "path": "/image-posts/deliveries/{identifier}/{action}",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "action",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "instagram_routes.py",
+    "function": "relay_config",
+    "method": "POST",
+    "path": "/instagram/relay-config",
+    "fields": [
+      {
+        "name": "url",
+        "type": "str",
+        "default": "Form(max_length=300)"
+      },
+      {
+        "name": "app_id",
+        "type": "str",
+        "default": "Form(max_length=40)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "instagram_routes.py",
+    "function": "cancel_connection",
+    "method": "POST",
+    "path": "/instagram/connect/{account_id}/cancel",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "instagram_routes.py",
+    "function": "select_page",
+    "method": "POST",
+    "path": "/instagram/connect/{account_id}/page",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "page_id",
+        "type": "str",
+        "default": "Form(pattern='^[1-9][0-9]{0,29}$')"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "instagram_routes.py",
+    "function": "connect",
+    "method": "POST",
+    "path": "/instagram/connect",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "account_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "instagram_routes.py",
+    "function": "save_review",
+    "method": "POST",
+    "path": "/instagram/draft",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "title",
+        "type": "str",
+        "default": "Form(max_length=100)"
+      },
+      {
+        "name": "description",
+        "type": "str",
+        "default": "Form('', max_length=5000)"
+      },
+      {
+        "name": "hashtags",
+        "type": "str",
+        "default": "Form('', max_length=2000)"
+      },
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(1, ge=1)"
+      },
+      {
+        "name": "content_reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "str",
+        "default": "Form('unreviewed', max_length=30)"
+      }
+    ]
+  },
+  {
+    "file": "instagram_routes.py",
+    "function": "prepare",
+    "method": "POST",
+    "path": "/instagram/prepare/{draft_id}",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "instagram_routes.py",
+    "function": "check",
+    "method": "POST",
+    "path": "/instagram/check/{job_id}",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "instagram_routes.py",
+    "function": "publish",
+    "method": "POST",
+    "path": "/instagram/publish/{job_id}",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "media_sha256",
+        "type": "str",
+        "default": "Form(pattern='^[a-f0-9]{64}$')"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "public_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "instagram_routes.py",
+    "function": "image_delivery_config",
+    "method": "POST",
+    "path": "/instagram/image-delivery-config",
+    "fields": [
+      {
+        "name": "origin",
+        "type": "str",
+        "default": "Form(max_length=300)"
+      },
+      {
+        "name": "upload_key",
+        "type": "str",
+        "default": "Form('', max_length=256)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "codex_status",
+    "method": "POST",
+    "path": "/ai/codex/status",
+    "fields": []
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "codex_cancel",
+    "method": "POST",
+    "path": "/ai/codex/cancel",
+    "fields": []
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "claude_status",
+    "method": "POST",
+    "path": "/ai/claude/status",
+    "fields": []
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "claude_login",
+    "method": "POST",
+    "path": "/ai/claude/login",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "studio_preferences",
+    "method": "POST",
+    "path": "/ai/preferences",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": "Form(max_length=20)"
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form(max_length=80)"
+      },
+      {
+        "name": "return_to",
+        "type": "str",
+        "default": "Form('studio', max_length=20)"
+      }
+    ]
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "claude_cancel",
+    "method": "POST",
+    "path": "/ai/claude/cancel",
+    "fields": []
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "studio",
+    "method": "GET",
+    "path": "/ai",
+    "fields": [
+      {
+        "name": "analysis_id",
+        "type": "int | None",
+        "default": "None"
+      },
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "None"
+      },
+      {
+        "name": "saved",
+        "type": "bool",
+        "default": "False"
+      },
+      {
+        "name": "flow",
+        "type": "str | None",
+        "default": "None"
+      },
+      {
+        "name": "failed_run_id",
+        "type": "int | None",
+        "default": "None"
+      }
+    ]
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "analyze",
+    "method": "POST",
+    "path": "/ai/analyze",
+    "fields": [
+      {
+        "name": "article_ids",
+        "type": "Annotated[list[int], Form()]",
+        "default": null
+      },
+      {
+        "name": "provider",
+        "type": "str",
+        "default": "Form('offline', max_length=20)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form('gpt-4o-mini', max_length=80)"
+      },
+      {
+        "name": "temperature",
+        "type": "float",
+        "default": "Form(0.2)"
+      },
+      {
+        "name": "timeout",
+        "type": "int",
+        "default": "Form(20)"
+      },
+      {
+        "name": "max_tokens",
+        "type": "int",
+        "default": "Form(1800)"
+      },
+      {
+        "name": "flow",
+        "type": "str | None",
+        "default": "Form(None, max_length=2000)"
+      }
+    ]
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "generate",
+    "method": "POST",
+    "path": "/ai/generate",
+    "fields": [
+      {
+        "name": "analysis_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "source_draft_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "duration",
+        "type": "int",
+        "default": "Form()"
+      },
+      {
+        "name": "provider",
+        "type": "str",
+        "default": "Form('offline', max_length=20)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form('gpt-4o-mini', max_length=80)"
+      },
+      {
+        "name": "temperature",
+        "type": "float",
+        "default": "Form(0.2)"
+      },
+      {
+        "name": "timeout",
+        "type": "int",
+        "default": "Form(20)"
+      },
+      {
+        "name": "max_tokens",
+        "type": "int",
+        "default": "Form(1800)"
+      },
+      {
+        "name": "flow",
+        "type": "str | None",
+        "default": "Form(None, max_length=2000)"
+      },
+      {
+        "name": "script_style",
+        "type": "str",
+        "default": "Form('news', max_length=20)"
+      },
+      {
+        "name": "script_tone",
+        "type": "str",
+        "default": "Form('neutral', max_length=20)"
+      },
+      {
+        "name": "script_audience",
+        "type": "str",
+        "default": "Form('general', max_length=20)"
+      }
+    ]
+  },
+  {
+    "file": "intelligence_routes.py",
+    "function": "edit",
+    "method": "POST",
+    "path": "/ai/drafts/{draft_id}",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "content",
+        "type": "str | None",
+        "default": "Form(None, max_length=20000)"
+      }
+    ]
+  },
+  {
+    "file": "news_thumbnail_routes.py",
+    "function": "thumbnail",
+    "method": "GET",
+    "path": "/news/{article_id}/thumbnail",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "operations_routes.py",
+    "function": "operations",
+    "method": "GET",
+    "path": "/operations",
+    "fields": [
+      {
+        "name": "saved",
+        "type": "bool",
+        "default": "False"
+      }
+    ]
+  },
+  {
+    "file": "operations_routes.py",
+    "function": "startup",
+    "method": "POST",
+    "path": "/operations/startup",
+    "fields": [
+      {
+        "name": "command",
+        "type": "str",
+        "default": "Form(max_length=10)"
+      },
+      {
+        "name": "revision",
+        "type": "str",
+        "default": "Form(max_length=64)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "operations_routes.py",
+    "function": "review",
+    "method": "POST",
+    "path": "/operations/review",
+    "fields": [
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=0)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "operations_routes.py",
+    "function": "download",
+    "method": "GET",
+    "path": "/operations/evidence.json",
+    "fields": []
+  },
+  {
+    "file": "production_routes.py",
+    "function": "shortform_preferences",
+    "method": "POST",
+    "path": "/production/shortform",
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "hook",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "captions",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "motion",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "source",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "tight_ending",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "speed",
+        "type": "float",
+        "default": "Form(1.1)"
+      },
+      {
+        "name": "target_seconds",
+        "type": "int",
+        "default": "Form(30)"
+      }
+    ]
+  },
+  {
+    "file": "production_routes.py",
+    "function": "selection",
+    "method": "POST",
+    "path": "/production/selection",
+    "fields": [
+      {
+        "name": "kind",
+        "type": "str",
+        "default": "Form(max_length=10)"
+      },
+      {
+        "name": "value",
+        "type": "str",
+        "default": "Form(max_length=200)"
+      },
+      {
+        "name": "return_to",
+        "type": "str",
+        "default": "Form('/', max_length=2500)"
+      }
+    ]
+  },
+  {
+    "file": "production_routes.py",
+    "function": "preferences",
+    "method": "POST",
+    "path": "/production/preferences",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": "Form(max_length=20)"
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form(max_length=80)"
+      },
+      {
+        "name": "source",
+        "type": "str",
+        "default": "Form(max_length=10)"
+      },
+      {
+        "name": "duration",
+        "type": "int",
+        "default": "Form()"
+      },
+      {
+        "name": "platform",
+        "type": "str",
+        "default": "Form(max_length=20)"
+      },
+      {
+        "name": "voice",
+        "type": "str",
+        "default": "Form(max_length=200)"
+      },
+      {
+        "name": "rate",
+        "type": "str",
+        "default": "Form(max_length=3)"
+      },
+      {
+        "name": "pause_ms",
+        "type": "str",
+        "default": "Form(max_length=4)"
+      },
+      {
+        "name": "video_provider",
+        "type": "str",
+        "default": "Form(max_length=20)"
+      },
+      {
+        "name": "acquisition_policy",
+        "type": "str | None",
+        "default": "Form(None, max_length=10)"
+      },
+      {
+        "name": "category",
+        "type": "str | None",
+        "default": "Form(None, max_length=20)"
+      },
+      {
+        "name": "period",
+        "type": "str | None",
+        "default": "Form(None, max_length=10)"
+      }
+    ]
+  },
+  {
+    "file": "production_routes.py",
+    "function": "check_local",
+    "method": "POST",
+    "path": "/production/check-local",
+    "fields": [
+      {
+        "name": "engine",
+        "type": "str",
+        "default": "Form(max_length=20)"
+      }
+    ]
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "studio",
+    "method": "GET",
+    "path": "/publishing",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      },
+      {
+        "name": "render_job_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "create",
+    "method": "POST",
+    "path": "/publishing/drafts",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "platform",
+        "type": "str",
+        "default": "Form()"
+      },
+      {
+        "name": "title",
+        "type": "str",
+        "default": "Form()"
+      },
+      {
+        "name": "description",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "hashtags",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "account_id",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "content_reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "str",
+        "default": "Form('unreviewed')"
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "str | None",
+        "default": "Form(None, max_length=3)"
+      }
+    ]
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "edit",
+    "method": "POST",
+    "path": "/publishing/drafts/{draft_id}",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "platform",
+        "type": "str",
+        "default": "Form()"
+      },
+      {
+        "name": "title",
+        "type": "str",
+        "default": "Form()"
+      },
+      {
+        "name": "description",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "hashtags",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "account_id",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "content_reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "str",
+        "default": "Form('unreviewed')"
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "str | None",
+        "default": "Form(None, max_length=3)"
+      }
+    ]
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "validate",
+    "method": "POST",
+    "path": "/publishing/drafts/{draft_id}/validate",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "account",
+    "method": "POST",
+    "path": "/publishing/accounts",
+    "fields": [
+      {
+        "name": "platform",
+        "type": "str",
+        "default": "Form()"
+      },
+      {
+        "name": "label",
+        "type": "str",
+        "default": "Form()"
+      },
+      {
+        "name": "account_type",
+        "type": "str",
+        "default": "Form()"
+      }
+    ]
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "publishing_safety",
+    "method": "GET",
+    "path": "/api/publishing/safety",
+    "fields": []
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "oauth_prepare",
+    "method": "POST",
+    "path": "/publishing/accounts/{account_id}/oauth/prepare",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "oauth_disconnect_prepare",
+    "method": "POST",
+    "path": "/publishing/accounts/{account_id}/oauth/disconnect-prepare",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "oauth_start",
+    "method": "POST",
+    "path": "/publishing/accounts/{account_id}/oauth/start",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "oauth_safety",
+    "method": "GET",
+    "path": "/api/oauth/safety",
+    "fields": []
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "oauth_production_readiness",
+    "method": "GET",
+    "path": "/api/oauth/production-readiness",
+    "fields": []
+  },
+  {
+    "file": "publishing_routes.py",
+    "function": "oauth_operations_readiness",
+    "method": "GET",
+    "path": "/api/oauth/operations-readiness",
+    "fields": []
+  },
+  {
+    "file": "routes.py",
+    "function": "dashboard",
+    "method": "GET",
+    "path": "/dashboard",
+    "fields": []
+  },
+  {
+    "file": "routes.py",
+    "function": "news",
+    "method": "GET",
+    "path": "/news",
+    "fields": [
+      {
+        "name": "q",
+        "type": "str",
+        "default": "Query('', max_length=200)"
+      },
+      {
+        "name": "category",
+        "type": "str",
+        "default": "Query('', max_length=30)"
+      },
+      {
+        "name": "source",
+        "type": "str",
+        "default": "Query('', max_length=10)"
+      },
+      {
+        "name": "start",
+        "type": "str",
+        "default": "Query('', max_length=10)"
+      },
+      {
+        "name": "end",
+        "type": "str",
+        "default": "Query('', max_length=10)"
+      },
+      {
+        "name": "sort",
+        "type": "Literal['score', 'newest']",
+        "default": "'score'"
+      },
+      {
+        "name": "page_number",
+        "type": "int",
+        "default": "Query(1, ge=1, le=100000)"
+      },
+      {
+        "name": "curation_id",
+        "type": "int | None",
+        "default": "Query(None, ge=1)"
+      },
+      {
+        "name": "view",
+        "type": "Literal['current', 'used']",
+        "default": "'current'"
+      }
+    ]
+  },
+  {
+    "file": "routes.py",
+    "function": "detail",
+    "method": "GET",
+    "path": "/news/{article_id}",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "routes.py",
+    "function": "settings",
+    "method": "GET",
+    "path": "/settings",
+    "fields": []
+  },
+  {
+    "file": "routes.py",
+    "function": "add_source",
+    "method": "POST",
+    "path": "/settings/sources",
+    "fields": [
+      {
+        "name": "name",
+        "type": "str",
+        "default": "Form(min_length=1, max_length=100)"
+      },
+      {
+        "name": "url",
+        "type": "str",
+        "default": "Form(max_length=2048)"
+      },
+      {
+        "name": "permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "routes.py",
+    "function": "toggle_source",
+    "method": "POST",
+    "path": "/settings/sources/{source_id}/toggle",
+    "fields": [
+      {
+        "name": "source_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "routes.py",
+    "function": "update_settings",
+    "method": "POST",
+    "path": "/settings/collection",
+    "fields": [
+      {
+        "name": "timeout",
+        "type": "int",
+        "default": "Form(ge=1, le=30)"
+      }
+    ]
+  },
+  {
+    "file": "routes.py",
+    "function": "collect",
+    "method": "POST",
+    "path": "/collection",
+    "fields": []
+  },
+  {
+    "file": "routes.py",
+    "function": "collection_status",
+    "method": "GET",
+    "path": "/api/collection",
+    "fields": []
+  },
+  {
+    "file": "routes.py",
+    "function": "health",
+    "method": "GET",
+    "path": "/health",
+    "fields": []
+  },
+  {
+    "file": "scheduler_routes.py",
+    "function": "schedules",
+    "method": "GET",
+    "path": "/schedules",
+    "fields": [
+      {
+        "name": "edit",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "saved",
+        "type": "bool",
+        "default": "False"
+      }
+    ]
+  },
+  {
+    "file": "scheduler_routes.py",
+    "function": "save",
+    "method": "POST",
+    "path": "/schedules",
+    "fields": [
+      {
+        "name": "name",
+        "type": "str",
+        "default": "Form(max_length=80)"
+      },
+      {
+        "name": "kind",
+        "type": "str",
+        "default": "Form(max_length=10)"
+      },
+      {
+        "name": "local_time",
+        "type": "str",
+        "default": "Form(max_length=5)"
+      },
+      {
+        "name": "weekdays",
+        "type": "Annotated[list[int] | None, Form()]",
+        "default": "None"
+      },
+      {
+        "name": "once_date",
+        "type": "str",
+        "default": "Form('', max_length=10)"
+      },
+      {
+        "name": "source",
+        "type": "str",
+        "default": "Form('sample', max_length=10)"
+      },
+      {
+        "name": "duration",
+        "type": "int",
+        "default": "Form(30)"
+      },
+      {
+        "name": "platform",
+        "type": "str",
+        "default": "Form('youtube', max_length=10)"
+      },
+      {
+        "name": "voice",
+        "type": "str",
+        "default": "Form('offline-silence', max_length=30)"
+      },
+      {
+        "name": "schedule_id",
+        "type": "str",
+        "default": "Form('', max_length=32)"
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(0, ge=0)"
+      }
+    ]
+  },
+  {
+    "file": "scheduler_routes.py",
+    "function": "state",
+    "method": "POST",
+    "path": "/schedules/{schedule_id}/state",
+    "fields": [
+      {
+        "name": "schedule_id",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "action",
+        "type": "str",
+        "default": "Form(max_length=10)"
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "scheduler_routes.py",
+    "function": "command",
+    "method": "POST",
+    "path": "/schedules/runs/{run_id}/{action}",
+    "fields": [
+      {
+        "name": "run_id",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "action",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "serpapi_routes.py",
+    "function": "settings",
+    "method": "POST",
+    "path": "/serpapi/settings",
+    "fields": [
+      {
+        "name": "api_key",
+        "type": "str",
+        "default": "Form('')"
+      },
+      {
+        "name": "approved",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "serpapi_routes.py",
+    "function": "collect",
+    "method": "POST",
+    "path": "/news/curation/serpapi",
+    "fields": [
+      {
+        "name": "request_token",
+        "type": "str",
+        "default": "Form(max_length=32)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "collection_policy",
+        "type": "str",
+        "default": "Form('korea_v1', max_length=30)"
+      },
+      {
+        "name": "maximum_requests",
+        "type": "int",
+        "default": "Form(1)"
+      }
+    ]
+  },
+  {
+    "file": "setup_routes.py",
+    "function": "wizard",
+    "method": "GET",
+    "path": "/setup",
+    "fields": [
+      {
+        "name": "step",
+        "type": "int | None",
+        "default": "None"
+      }
+    ]
+  },
+  {
+    "file": "setup_routes.py",
+    "function": "check",
+    "method": "POST",
+    "path": "/setup/check",
+    "fields": []
+  },
+  {
+    "file": "setup_routes.py",
+    "function": "step_save",
+    "method": "POST",
+    "path": "/setup/step",
+    "fields": [
+      {
+        "name": "step",
+        "type": "int",
+        "default": "Form(ge=1, le=7)"
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=0)"
+      }
+    ]
+  },
+  {
+    "file": "setup_routes.py",
+    "function": "test_production",
+    "method": "POST",
+    "path": "/setup/test-production",
+    "fields": []
+  },
+  {
+    "file": "setup_routes.py",
+    "function": "library",
+    "method": "GET",
+    "path": "/videos",
+    "fields": []
+  },
+  {
+    "file": "social_routes.py",
+    "function": "platform_guide_index",
+    "method": "GET",
+    "path": "/guides/platforms",
+    "fields": []
+  },
+  {
+    "file": "social_routes.py",
+    "function": "platform_guide",
+    "method": "GET",
+    "path": "/guides/platforms/{platform}",
+    "fields": [
+      {
+        "name": "platform",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "social_routes.py",
+    "function": "analytics",
+    "method": "GET",
+    "path": "/analytics",
+    "fields": [
+      {
+        "name": "platform",
+        "type": "str",
+        "default": "'youtube'"
+      },
+      {
+        "name": "account",
+        "type": "str",
+        "default": "''"
+      }
+    ]
+  },
+  {
+    "file": "social_routes.py",
+    "function": "collect",
+    "method": "POST",
+    "path": "/analytics/collect",
+    "fields": [
+      {
+        "name": "start",
+        "type": "Annotated[date, Form()]",
+        "default": null
+      },
+      {
+        "name": "end",
+        "type": "Annotated[date, Form()]",
+        "default": null
+      },
+      {
+        "name": "job_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "social_routes.py",
+    "function": "platforms",
+    "method": "GET",
+    "path": "/publishing/platforms",
+    "fields": []
+  },
+  {
+    "file": "social_routes.py",
+    "function": "schedule",
+    "method": "POST",
+    "path": "/publishing/calendar",
+    "fields": [
+      {
+        "name": "cohort_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "due",
+        "type": "str",
+        "default": "Form(max_length=30)"
+      },
+      {
+        "name": "revision",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "social_routes.py",
+    "function": "cancel",
+    "method": "POST",
+    "path": "/publishing/calendar/{identifier}/cancel",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "social_routes.py",
+    "function": "schedule_detail",
+    "method": "GET",
+    "path": "/publishing/calendar/{identifier}",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "sources_routes.py",
+    "function": "sources",
+    "method": "GET",
+    "path": "/sources",
+    "fields": [
+      {
+        "name": "tested",
+        "type": "int | None",
+        "default": "None"
+      }
+    ]
+  },
+  {
+    "file": "sources_routes.py",
+    "function": "add_preset",
+    "method": "POST",
+    "path": "/sources/preset",
+    "fields": [
+      {
+        "name": "preset",
+        "type": "str",
+        "default": "Form(max_length=40)"
+      },
+      {
+        "name": "permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "sources_routes.py",
+    "function": "add_source",
+    "method": "POST",
+    "path": "/sources",
+    "fields": [
+      {
+        "name": "name",
+        "type": "str",
+        "default": "Form(min_length=1, max_length=100)"
+      },
+      {
+        "name": "url",
+        "type": "str",
+        "default": "Form(max_length=2048)"
+      },
+      {
+        "name": "permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "sources_routes.py",
+    "function": "edit_source",
+    "method": "POST",
+    "path": "/sources/{source_id}/edit",
+    "fields": [
+      {
+        "name": "source_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "name",
+        "type": "str",
+        "default": "Form(min_length=1, max_length=100)"
+      },
+      {
+        "name": "url",
+        "type": "str",
+        "default": "Form(max_length=2048)"
+      },
+      {
+        "name": "permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "sources_routes.py",
+    "function": "toggle_source",
+    "method": "POST",
+    "path": "/sources/{source_id}/toggle",
+    "fields": [
+      {
+        "name": "source_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "sources_routes.py",
+    "function": "test_source",
+    "method": "POST",
+    "path": "/sources/{source_id}/test",
+    "fields": [
+      {
+        "name": "source_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "sources_routes.py",
+    "function": "collect",
+    "method": "POST",
+    "path": "/sources/collect",
+    "fields": []
+  },
+  {
+    "file": "tiktok_routes.py",
+    "function": "save_client",
+    "method": "POST",
+    "path": "/tiktok/client",
+    "fields": [
+      {
+        "name": "client_key",
+        "type": "str",
+        "default": "Form(max_length=128)"
+      },
+      {
+        "name": "client_secret",
+        "type": "str",
+        "default": "Form(max_length=256)"
+      },
+      {
+        "name": "port",
+        "type": "int",
+        "default": "Form(0, ge=0, le=65535)"
+      }
+    ]
+  },
+  {
+    "file": "tiktok_routes.py",
+    "function": "connect",
+    "method": "POST",
+    "path": "/tiktok/connect",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "account_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "tiktok_routes.py",
+    "function": "action",
+    "method": "POST",
+    "path": "/tiktok/accounts/{account_id}/{action}",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "action",
+        "type": "str",
+        "default": null
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "unified_publishing_routes.py",
+    "function": "local_draft",
+    "method": "POST",
+    "path": "/publishing/unified/local-draft",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "target",
+        "type": "str",
+        "default": "Form(max_length=15)"
+      },
+      {
+        "name": "title",
+        "type": "str",
+        "default": "Form('', max_length=100)"
+      },
+      {
+        "name": "description",
+        "type": "str",
+        "default": "Form('', max_length=5000)"
+      },
+      {
+        "name": "hashtags",
+        "type": "str",
+        "default": "Form('', max_length=2000)"
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "str",
+        "default": "Form('', max_length=3)"
+      }
+    ]
+  },
+  {
+    "file": "unified_publishing_routes.py",
+    "function": "review",
+    "method": "POST",
+    "path": "/publishing/unified/review",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "target",
+        "type": "str",
+        "default": "Form(max_length=15)"
+      },
+      {
+        "name": "title",
+        "type": "str",
+        "default": "Form(max_length=100)"
+      },
+      {
+        "name": "description",
+        "type": "str",
+        "default": "Form('', max_length=5000)"
+      },
+      {
+        "name": "hashtags",
+        "type": "str",
+        "default": "Form('', max_length=2000)"
+      },
+      {
+        "name": "youtube_account",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "instagram_account",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "tiktok_account",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "facebook_account",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "content_reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "str",
+        "default": "Form('unreviewed', max_length=30)"
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "str",
+        "default": "Form('', max_length=3)"
+      }
+    ]
+  },
+  {
+    "file": "unified_publishing_routes.py",
+    "function": "execute",
+    "method": "POST",
+    "path": "/publishing/unified/{cohort_id}/execute",
+    "fields": [
+      {
+        "name": "cohort_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "approval_token",
+        "type": "str",
+        "default": "Form(pattern='^[a-f0-9]{64}$')"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "privacy",
+        "type": "str",
+        "default": "Form('private', max_length=10)"
+      },
+      {
+        "name": "made_for_kids",
+        "type": "str",
+        "default": "Form('', max_length=3)"
+      },
+      {
+        "name": "youtube_public_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "instagram_public_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "facebook_public_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "tiktok_privacy",
+        "type": "str",
+        "default": "Form('', max_length=30)"
+      },
+      {
+        "name": "tiktok_music_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "tiktok_brand_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "tiktok_branded",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "tiktok_own_brand",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "tiktok_allow_comment",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "tiktok_allow_duet",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "tiktok_allow_stitch",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "unified_publishing_routes.py",
+    "function": "tiktok_options",
+    "method": "POST",
+    "path": "/publishing/unified/{cohort_id}/tiktok-options",
+    "fields": [
+      {
+        "name": "cohort_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "plans",
+    "method": "GET",
+    "path": "/video/ai",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "None"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "create_plan",
+    "method": "POST",
+    "path": "/video/ai/plans",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "duration",
+        "type": "int",
+        "default": "Form()"
+      },
+      {
+        "name": "mode",
+        "type": "str",
+        "default": "Form('mixed')"
+      },
+      {
+        "name": "model_path",
+        "type": "str",
+        "default": "Form('', max_length=160)"
+      },
+      {
+        "name": "external_tts_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "voice_consent",
+    "method": "POST",
+    "path": "/video/ai/plans/{plan_id}/voice-consent",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "plan_page",
+    "method": "GET",
+    "path": "/video/ai/plans/{plan_id}",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "saved",
+        "type": "str",
+        "default": "''"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "plan_status",
+    "method": "GET",
+    "path": "/api/video/ai/plans/{plan_id}",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "save_scenes",
+    "method": "POST",
+    "path": "/video/ai/plans/{plan_id}/scenes",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "asset_permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "confirm",
+    "method": "POST",
+    "path": "/video/ai/plans/{plan_id}/confirm",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "shown_total",
+        "type": "str",
+        "default": "Form('', max_length=40)"
+      },
+      {
+        "name": "confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "cancel",
+    "method": "POST",
+    "path": "/video/ai/plans/{plan_id}/scenes/{position}/cancel",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "position",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "resolve",
+    "method": "POST",
+    "path": "/video/ai/plans/{plan_id}/scenes/{position}/resolve",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "position",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "rebase",
+    "method": "POST",
+    "path": "/video/ai/plans/{plan_id}/rebase",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "refetch",
+    "method": "POST",
+    "path": "/video/ai/plans/{plan_id}/scenes/{position}/refetch",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "position",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "review",
+    "method": "POST",
+    "path": "/video/ai/plans/{plan_id}/review",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "statement",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "approve",
+    "method": "POST",
+    "path": "/video/ai/plans/{plan_id}/approve",
+    "fields": [
+      {
+        "name": "plan_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "approved",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "clip",
+    "method": "GET",
+    "path": "/video/ai/scenes/{scene_id}/clip",
+    "fields": [
+      {
+        "name": "scene_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "settings_page",
+    "method": "GET",
+    "path": "/video-ai-settings",
+    "fields": [
+      {
+        "name": "saved",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "return_draft",
+        "type": "int | None",
+        "default": "None"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "start_preflight",
+    "method": "POST",
+    "path": "/video-ai-settings/preflight",
+    "fields": []
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "preflight",
+    "method": "GET",
+    "path": "/video-ai-settings/preflight",
+    "fields": []
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "save_settings",
+    "method": "POST",
+    "path": "/video-ai-settings",
+    "fields": [
+      {
+        "name": "provider",
+        "type": "str",
+        "default": "Form(max_length=20)"
+      },
+      {
+        "name": "host",
+        "type": "str",
+        "default": "Form(HOSTS[0], max_length=40)"
+      },
+      {
+        "name": "approved",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "monthly_limit",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "job_limit",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "currency",
+        "type": "str",
+        "default": "Form('USD', max_length=3)"
+      },
+      {
+        "name": "max_active",
+        "type": "int",
+        "default": "Form(2)"
+      },
+      {
+        "name": "timeout_minutes",
+        "type": "int",
+        "default": "Form(30)"
+      },
+      {
+        "name": "poll_seconds",
+        "type": "int",
+        "default": "Form(10)"
+      },
+      {
+        "name": "return_draft",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "save_model_route",
+    "method": "POST",
+    "path": "/video-ai-settings/models",
+    "fields": [
+      {
+        "name": "path",
+        "type": "str",
+        "default": "Form(max_length=160)"
+      },
+      {
+        "name": "label",
+        "type": "str",
+        "default": "Form(max_length=80)"
+      },
+      {
+        "name": "price_per_second",
+        "type": "str",
+        "default": "Form('', max_length=20)"
+      },
+      {
+        "name": "durations",
+        "type": "str",
+        "default": "Form('5', max_length=60)"
+      },
+      {
+        "name": "resolution",
+        "type": "str",
+        "default": "Form('720p', max_length=10)"
+      },
+      {
+        "name": "confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "model_id",
+        "type": "int | None",
+        "default": "Form(None)"
+      },
+      {
+        "name": "return_draft",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "pricing_mode",
+        "type": "str",
+        "default": "Form('manual', max_length=20)"
+      },
+      {
+        "name": "estimate_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "delete_model_route",
+    "method": "POST",
+    "path": "/video-ai-settings/models/{model_id}/delete",
+    "fields": [
+      {
+        "name": "model_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "return_draft",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "save_key",
+    "method": "POST",
+    "path": "/video-ai-settings/key",
+    "fields": [
+      {
+        "name": "api_key",
+        "type": "str",
+        "default": "Form(max_length=520)"
+      },
+      {
+        "name": "return_draft",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "clear_key",
+    "method": "POST",
+    "path": "/video-ai-settings/key/clear",
+    "fields": [
+      {
+        "name": "return_draft",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "video_ai_routes.py",
+    "function": "default_model",
+    "method": "POST",
+    "path": "/video/ai/default-model",
+    "fields": [
+      {
+        "name": "model_path",
+        "type": "str",
+        "default": "Form(..., max_length=160)"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "tts_settings",
+    "method": "GET",
+    "path": "/video/tts",
+    "fields": [
+      {
+        "name": "sample",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "saved_voice",
+        "type": "bool",
+        "default": "False"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "load_elevenlabs_voices",
+    "method": "POST",
+    "path": "/video/tts/voices/load",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "more",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "select_elevenlabs_voice",
+    "method": "POST",
+    "path": "/video/tts/voices/select",
+    "fields": [
+      {
+        "name": "voice_id",
+        "type": "str",
+        "default": "Form('', max_length=100)"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "preview_elevenlabs_voice",
+    "method": "POST",
+    "path": "/video/tts/voices/preview",
+    "fields": [
+      {
+        "name": "voice_id",
+        "type": "str",
+        "default": "Form('', max_length=100)"
+      },
+      {
+        "name": "sample_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "elevenlabs_sample",
+    "method": "GET",
+    "path": "/video/tts/voices/{voice_id}/sample",
+    "fields": [
+      {
+        "name": "voice_id",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "save_tts",
+    "method": "POST",
+    "path": "/video/tts",
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "voice_id",
+        "type": "str",
+        "default": "Form('', max_length=100)"
+      },
+      {
+        "name": "model",
+        "type": "str",
+        "default": "Form('eleven_multilingual_v2')"
+      },
+      {
+        "name": "job_limit",
+        "type": "int",
+        "default": "Form(1000)"
+      },
+      {
+        "name": "monthly_limit",
+        "type": "int",
+        "default": "Form(10000)"
+      },
+      {
+        "name": "commercial",
+        "type": "bool",
+        "default": "Form(True)"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "save_tts_key",
+    "method": "POST",
+    "path": "/video/tts/key",
+    "fields": [
+      {
+        "name": "api_key",
+        "type": "str",
+        "default": "Form(min_length=20, max_length=256)"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "check_tts",
+    "method": "POST",
+    "path": "/video/tts/check",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "studio",
+    "method": "GET",
+    "path": "/video",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "None"
+      },
+      {
+        "name": "job_id",
+        "type": "int | None",
+        "default": "None"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "render",
+    "method": "POST",
+    "path": "/video/render",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "duration",
+        "type": "int",
+        "default": "Form()"
+      },
+      {
+        "name": "voice",
+        "type": "str",
+        "default": "Form('offline-silence', max_length=200)"
+      },
+      {
+        "name": "font_size",
+        "type": "int",
+        "default": "Form(48)"
+      },
+      {
+        "name": "subtitle_y",
+        "type": "int",
+        "default": "Form(1420)"
+      },
+      {
+        "name": "reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "asset_permission",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "external_tts_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "status",
+    "method": "GET",
+    "path": "/api/video/jobs/{job_id}",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "media",
+    "method": "GET",
+    "path": "/video/jobs/{job_id}/file",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "download",
+        "type": "bool",
+        "default": "False"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "video_thumbnail",
+    "method": "GET",
+    "path": "/video/jobs/{job_id}/thumbnail",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "link_news_image",
+    "method": "POST",
+    "path": "/video/news-image",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "article_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "name",
+        "type": "str",
+        "default": "Form('', max_length=255)"
+      },
+      {
+        "name": "rights_basis",
+        "type": "str",
+        "default": "Form(min_length=3, max_length=400)"
+      },
+      {
+        "name": "permission",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  },
+  {
+    "file": "video_routes.py",
+    "function": "news_image_preview",
+    "method": "GET",
+    "path": "/video/news-images/articles/{article_id}",
+    "fields": [
+      {
+        "name": "article_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "voice_routes.py",
+    "function": "voices",
+    "method": "GET",
+    "path": "/voices",
+    "fields": [
+      {
+        "name": "preview",
+        "type": "str",
+        "default": "''"
+      },
+      {
+        "name": "saved",
+        "type": "bool",
+        "default": "False"
+      },
+      {
+        "name": "listened",
+        "type": "bool",
+        "default": "False"
+      }
+    ]
+  },
+  {
+    "file": "voice_routes.py",
+    "function": "save",
+    "method": "POST",
+    "path": "/voices",
+    "fields": [
+      {
+        "name": "voice",
+        "type": "str",
+        "default": "Form(max_length=200)"
+      },
+      {
+        "name": "rate",
+        "type": "str",
+        "default": "Form('0', max_length=3)"
+      },
+      {
+        "name": "pause_ms",
+        "type": "str",
+        "default": "Form('250', max_length=4)"
+      }
+    ]
+  },
+  {
+    "file": "voice_routes.py",
+    "function": "preview",
+    "method": "POST",
+    "path": "/voices/preview",
+    "fields": [
+      {
+        "name": "voice",
+        "type": "str",
+        "default": "Form(max_length=200)"
+      },
+      {
+        "name": "rate",
+        "type": "str",
+        "default": "Form('0', max_length=3)"
+      },
+      {
+        "name": "pause_ms",
+        "type": "str",
+        "default": "Form('250', max_length=4)"
+      }
+    ]
+  },
+  {
+    "file": "voice_routes.py",
+    "function": "preview_file",
+    "method": "GET",
+    "path": "/voices/preview/{name}",
+    "fields": [
+      {
+        "name": "name",
+        "type": "str",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "voice_routes.py",
+    "function": "listening",
+    "method": "POST",
+    "path": "/voices/listening",
+    "fields": []
+  },
+  {
+    "file": "youtube_routes.py",
+    "function": "save_client",
+    "method": "POST",
+    "path": "/youtube/client",
+    "fields": [
+      {
+        "name": "client_json",
+        "type": "str",
+        "default": "Form(max_length=16384)"
+      }
+    ]
+  },
+  {
+    "file": "youtube_routes.py",
+    "function": "connect",
+    "method": "POST",
+    "path": "/youtube/connect",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "account_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      }
+    ]
+  },
+  {
+    "file": "youtube_routes.py",
+    "function": "cancel",
+    "method": "POST",
+    "path": "/youtube/connect/{account_id}/cancel",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "youtube_routes.py",
+    "function": "authorization_link",
+    "method": "POST",
+    "path": "/youtube/connect/{account_id}/link",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "youtube_routes.py",
+    "function": "reopen_authorization",
+    "method": "POST",
+    "path": "/youtube/connect/{account_id}/reopen",
+    "fields": [
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": null
+      }
+    ]
+  },
+  {
+    "file": "youtube_routes.py",
+    "function": "save_review",
+    "method": "POST",
+    "path": "/youtube/draft",
+    "fields": [
+      {
+        "name": "render_job_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "title",
+        "type": "str",
+        "default": "Form(max_length=100)"
+      },
+      {
+        "name": "description",
+        "type": "str",
+        "default": "Form('', max_length=5000)"
+      },
+      {
+        "name": "hashtags",
+        "type": "str",
+        "default": "Form('', max_length=2000)"
+      },
+      {
+        "name": "account_id",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "draft_id",
+        "type": "int | None",
+        "default": "Form(None, ge=1)"
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(1, ge=1)"
+      },
+      {
+        "name": "content_reviewed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "copyright_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "str",
+        "default": "Form('unreviewed', max_length=30)"
+      },
+      {
+        "name": "youtube_category_id",
+        "type": "str",
+        "default": "Form('', max_length=3)"
+      }
+    ]
+  },
+  {
+    "file": "youtube_routes.py",
+    "function": "publish",
+    "method": "POST",
+    "path": "/youtube/publish/{draft_id}",
+    "fields": [
+      {
+        "name": "draft_id",
+        "type": "int",
+        "default": null
+      },
+      {
+        "name": "revision",
+        "type": "int",
+        "default": "Form(ge=1)"
+      },
+      {
+        "name": "privacy",
+        "type": "str",
+        "default": "Form('private', max_length=10)"
+      },
+      {
+        "name": "made_for_kids",
+        "type": "str",
+        "default": "Form('', max_length=3)"
+      },
+      {
+        "name": "consent",
+        "type": "bool",
+        "default": "Form(False)"
+      },
+      {
+        "name": "public_consent",
+        "type": "bool",
+        "default": "Form(False)"
+      }
+    ]
+  }
+]
