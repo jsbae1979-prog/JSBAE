@@ -1,7 +1,7 @@
 name: Step13K Fix and Step15A Windows validation
 on:
   push:
-    branches: [codex/newsflow-step15afix-15a-20261026]
+    branches: [codex/newsflow-step13kfix-15a-20261026]
     paths:
       - 'newsflow-ai/src/**'
       - 'newsflow-ai/tests/**'
@@ -12,7 +12,7 @@ permissions:
   contents: read
 jobs:
   scoped-fake:
-    if: github.ref == 'refs/heads/codex/newsflow-step15afix-15a-20261026'
+    if: github.ref == 'refs/heads/codex/newsflow-step13kfix-15a-20261026'
     runs-on: windows-latest
     timeout-minutes: 55
     defaults:
