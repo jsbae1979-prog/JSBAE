@@ -105,6 +105,22 @@ function choices(
     return list(view.collections[resources[f.name]]);
   if (f.name === "reference_asset")
     return (c.referenceAssets ?? []).map((x: string) => [x, x]);
+  if (f.name === "provider" && action.id === "video_ai_save_settings")
+    return [
+      ["off", "기본 영상 · 외부 영상 생성 없음"],
+      ["higgsfield", "Higgsfield · 별도 승인 필요"],
+    ];
+  if (f.name === "video_provider")
+    return [
+      ["off", "기본 FFmpeg 영상"],
+      ["higgsfield", "Higgsfield AI 영상"],
+    ];
+  if (f.name === "provider" && action.id === "ai_settings_save_ai_settings")
+    return Object.entries(c.legacyProviders ?? {});
+  if (f.name === "model" && action.id === "ai_settings_save_ai_settings")
+    return [];
+  if (f.name === "model" && action.id === "video_save_tts")
+    return (c.ttsModels ?? []).map((x: string) => [x, x]);
   if (f.name === "provider" && action.id.startsWith("api_settings_"))
     return Object.keys(c.apiModels ?? {}).map((x) => [
       x,
@@ -113,16 +129,13 @@ function choices(
   if (f.name === "provider")
     return action.module === "images"
       ? [["openai", "OpenAI · 이미지"]]
-      : ["offline", ...Object.keys(c.apiModels ?? {})].map((x) => [
-          x,
-          x === "claude_api"
-            ? "Claude API"
-            : x === "openai_api"
-              ? "OpenAI API"
-              : x === "offline"
-                ? "로컬 체험"
-                : x,
-        ]);
+      : Object.entries(
+          c.analysisProviders ?? {
+            offline: "로컬 체험",
+            openai: "OpenAI API",
+            claude_api: "Claude API",
+          },
+        );
   if (["model", "script_model"].includes(f.name))
     return (
       action.module === "images" && action.id.startsWith("creation_")

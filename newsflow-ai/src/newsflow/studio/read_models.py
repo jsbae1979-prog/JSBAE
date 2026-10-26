@@ -482,6 +482,12 @@ def module_view(request: Request, module: Module):
     from newsflow.gui.production_picker import NEWS_METHODS
 
     result["catalog"]["newsMethods"] = NEWS_METHODS
+    from newsflow.intelligence.settings import PROVIDERS, STUDIO_PROVIDERS
+    from newsflow.video.elevenlabs_tts import MODELS as TTS_MODELS
+
+    result["catalog"]["legacyProviders"] = PROVIDERS
+    result["catalog"]["analysisProviders"] = STUDIO_PROVIDERS
+    result["catalog"]["ttsModels"] = list(TTS_MODELS)
     result["catalog"]["referenceAssets"] = (
         state.image_studio.assets() if hasattr(state, "image_studio") else []
     )
