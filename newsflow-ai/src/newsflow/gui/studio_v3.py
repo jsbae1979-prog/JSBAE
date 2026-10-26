@@ -293,7 +293,9 @@ def mount_studio(app):
 
     app.include_router(router)
     app.include_router(module_router)
-    dist = Path(__file__).resolve().parents[3] / "frontend" / "dist"
+    from newsflow.studio.resources import studio_dist_root
+
+    dist = studio_dist_root()
     if not (dist / "index.html").is_file():
         return
     app.mount(

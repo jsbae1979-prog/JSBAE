@@ -10,6 +10,20 @@ for f in (src/"newsflow").rglob("*"):
         rel=f.relative_to(src)
         if f.suffix!=".py" or "migrations" in rel.parts:
             datas.append((str(f),str(rel.parent)))
+# React uses the same frontend/dist layout in source and the frozen bundle.
+# Fail closed rather than silently shipping a bundle without the Studio UI.
+frontend = p / "frontend" / "dist"
+if not (frontend / "index.html").is_file() or not (frontend / "assets").is_dir():
+    raise SystemExit("Build the reviewed React frontend before packaging")
+allowed_static = {".html", ".js", ".css", ".ttf", ".woff", ".woff2", ".svg", ".webp", ".png", ".jpg", ".jpeg", ".ico", ".txt", ".md"}
+for f in sorted(frontend.rglob("*")):
+    if f.is_symlink() or f.is_junction() or not f.resolve().is_relative_to(frontend.resolve()):
+        raise SystemExit("Linked frontend assets are not accepted")
+    if f.is_file():
+        if f.suffix.lower() not in allowed_static:
+            raise SystemExit("Unexpected file type in the frontend build")
+        datas.append((str(f), str(Path("frontend/dist") / f.relative_to(frontend).parent)))
+
 hidden=[]
 for f in (src/"newsflow").rglob("*.py"):
     rel=f.relative_to(src).with_suffix("")
