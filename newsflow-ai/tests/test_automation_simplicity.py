@@ -52,10 +52,10 @@ def test_closed_job_options_preserve_payload_and_review_without_a_post(page):
 
 def test_sidebar_tools_stay_reachable_and_current_tool_opens_itself(page):
     page.goto('http://127.0.0.1/')
-    expect(page.locator('.workspace-nav a:visible')).to_have_count(8)  # Image studio adds one primary entry; existing destinations stay reachable.
-    expect(page.locator('.workspace-nav [href="/image-studio"]')).to_be_visible()
+    expect(page.locator('.workspace-nav a:visible')).to_have_count(7)  # Existing primary destinations stay unchanged; image studio is reachable in tools.
     page.locator('[data-sidebar-tools]>summary').click()
     expect(page.locator('.workspace-nav a:visible')).to_have_count(14)
+    expect(page.locator('.workspace-nav [href="/image-studio"]')).to_be_visible()
     page.locator('.workspace-nav [href="/analytics"]').click()
     expect(page.locator('[data-sidebar-tools]')).to_have_attribute('open', '')
     expect(page.locator('.workspace-nav [aria-current=page]')).to_have_attribute('href', '/analytics')

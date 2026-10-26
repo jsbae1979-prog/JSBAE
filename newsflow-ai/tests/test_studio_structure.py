@@ -49,7 +49,8 @@ def test_content_catalogue_and_creation_sidebar_share_destinations():
     menu = navigation_context('/', {})
     creation = next(group for group in menu['groups'] if group['label'] == '콘텐츠 스튜디오')['items']
     assert [row['href'] for row in creation] == [row['href'] for row in CONTENT_TYPES]
-    assert len({row['id'] for group in menu['groups'] for row in group['items']}) == 13
+    assert len({row['id'] for group in menu['groups'] for row in group['items']}) == 14
+    assert navigation_context('/image-studio', {})['current'] == 'image-studio'
 
 
 def test_mixed_types_keep_independent_states_and_do_not_mutate_records(app):

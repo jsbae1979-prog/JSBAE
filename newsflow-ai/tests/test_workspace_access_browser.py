@@ -96,10 +96,11 @@ def test_all_main_destinations_fit_small_windows(page, width, tmp_path):
             expect(page.locator('[data-sidebar-menu]')).not_to_have_attribute('open', '')
             page.locator('[data-sidebar-menu]>summary').click()
         tools = page.locator('[data-sidebar-tools]')
-        assert page.locator('.workspace-nav a:visible').count() == (13 if tools.get_attribute('open') is not None else 7)
+        assert page.locator('.workspace-nav a:visible').count() == (14 if tools.get_attribute('open') is not None else 7)
         if tools.get_attribute('open') is None:
             tools.locator('summary').click()
-        assert page.locator('.workspace-nav a:visible').count() == 13
+        assert page.locator('.workspace-nav a:visible').count() == 14
+        expect(page.locator('.workspace-nav [href="/image-studio"]')).to_be_visible()
         for label in page.locator('.workspace-nav a>span:visible').all():
             assert label.evaluate('(el) => el.getBoundingClientRect().width > 80'), (path, width, label.text_content())
             assert label.evaluate('''(el) => {

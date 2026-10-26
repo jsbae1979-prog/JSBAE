@@ -1,4 +1,8 @@
 [
   "tests/test_ai_video_gui.py",
-  "tests/test_automation_simplicity.py"
+  "tests/test_automation_simplicity.py",
+  "tests/test_studio_design_system.py",
+  "tests/test_studio_structure.py",
+  "tests/test_workspace_access.py",
+  "tests/test_workspace_access_browser.py"
 ]

@@ -27,7 +27,8 @@ def test_all_categories_have_one_correct_current_menu_and_safe_finder(client, pa
     current = [tag for tag in anchors if 'aria-current="page"' in tag]
     assert len(current) == 1
     assert f'href="{selected}"' in current[0]
-    assert len(anchors) == 13
+    assert len(anchors) == 14
+    assert any('href="/image-studio"' in tag for tag in anchors)
     dialog = re.search(r'<dialog id="access-dialog".*?</dialog>', response.text, re.DOTALL).group(0)
     assert '<form' not in dialog and 'method="post"' not in dialog
     assert 'aria-labelledby="access-title"' in dialog
