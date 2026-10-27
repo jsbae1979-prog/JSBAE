@@ -1,0 +1,10 @@
+{
+  "phase": "after",
+  "attempt": "windows-state01",
+  "exit": 1,
+  "timeout": false,
+  "active_test_processes_after_exit": 0,
+  "owned_job_cleanup": true,
+  "provider_credentials_inherited": false,
+  "operating_app_started": false
+}

@@ -1,0 +1,31 @@
+{
+  "phase": "after",
+  "captures": [],
+  "checks": [],
+  "errors": [],
+  "externalRequests": [],
+  "posts": [],
+  "networkMode": "Playwright routes fulfill all application requests; pinned Node/Chrome boundary preserved; browser background egress NOT VERIFIED",
+  "WindowsOSDPI": "NOT VERIFIED",
+  "realAPICalls": 0,
+  "productAppStarted": false,
+  "characterSceneContract": {
+    "input": [
+      "downloaded",
+      "failed",
+      "unknown"
+    ],
+    "actual": [
+      "대기",
+      "대기",
+      "대기"
+    ],
+    "expected": [
+      "클립 저장",
+      "실패 · 확인 필요",
+      "결과 불명 · 재요청 금지"
+    ],
+    "verdict": "FAIL",
+    "evidenceKind": "actual rebuilt React + synthetic DTO matching real Python API shape; not a live full-app browser connection"
+  }
+}

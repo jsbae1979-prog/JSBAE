@@ -1,0 +1,20 @@
+{
+  "observed_at_utc": "2026-10-27T11:40:48.1221229Z",
+  "process_control_performed": false,
+  "test_18765_listener_count": 0,
+  "host_os": {
+    "Caption": "Microsoft Windows 11 Pro",
+    "Version": "10.0.26300",
+    "BuildNumber": "26300",
+    "OSArchitecture": "64비트"
+  },
+  "initial_operating_pid": 55740,
+  "operating_pid_still_present": true,
+  "related_listeners": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8765,
+      "OwningProcess": 55740
+    }
+  ]
+}

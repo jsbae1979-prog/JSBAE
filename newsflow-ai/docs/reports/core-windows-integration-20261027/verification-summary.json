@@ -1,0 +1,50 @@
+{
+  "baseline": "ebe163e9c61e478af2a99e3e1352bf9cda6b45cf",
+  "validated_code": "dcf7c0dfca79b911c2e84ed9bf3fe0f8090a90ad",
+  "new_windows_routes": {
+    "run_id": 40497641341,
+    "environment": "Microsoft Windows Server 2025, windows-2025-vs2026",
+    "python": "3.14.7",
+    "pass": 7,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "warnings": 1,
+    "mode": "real FastAPI application, SQLite and synthetic files through TestClient ASGI transport; no bound TCP server or React browser execution"
+  },
+  "existing_focused_automatic": {
+    "run_id": 40497641175,
+    "pass": 59,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "coverage": "58 projections + 1 HTTP; existing workflow automatically triggered by single React field correction"
+  },
+  "character_browser": {
+    "initial_fail": 1,
+    "after_pass": 1,
+    "after_fail": 0,
+    "page_errors": 0,
+    "external_application_requests": 0,
+    "network": "existing route-fulfilled synthetic Chrome boundary",
+    "live_python_app_connection": false
+  },
+  "first_windows_attempt": {
+    "run_id": 40497210843,
+    "pass": 4,
+    "fail": 3,
+    "error": 0,
+    "causes": [
+      "Synthetic script source omitted summary required by the unchanged edit contract",
+      "Synthetic character action violated the existing English visual prompt contract",
+      "Fake image dimensions differed from requested snapshot size"
+    ],
+    "correction": "fixtures only; assertions and product policies retained"
+  },
+  "DPI_100_125_150_200": "NOT VERIFIED",
+  "local_full_python_app": "BLOCKED by previously documented filelock/ntdll Guard boundary; not retried or bypassed",
+  "real_supplier_calls": 0,
+  "SNS_calls": 0,
+  "full_regression_rerun": false,
+  "final_verdict": "CONDITIONAL"
+}

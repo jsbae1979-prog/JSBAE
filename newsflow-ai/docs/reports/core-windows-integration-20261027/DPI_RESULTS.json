@@ -1,0 +1,21 @@
+{
+  "environment": "Current Windows 11 PC; no OS scale changes performed",
+  "test": {
+    "100": {
+      "verdict": "NOT VERIFIED",
+      "reason": "No approved local full-Python-app desktop execution; viewport, CSS zoom and headless captures are not OS DPI proof"
+    },
+    "125": {
+      "verdict": "NOT VERIFIED",
+      "reason": "No approved local full-Python-app desktop execution; viewport, CSS zoom and headless captures are not OS DPI proof"
+    },
+    "150": {
+      "verdict": "NOT VERIFIED",
+      "reason": "No approved local full-Python-app desktop execution; viewport, CSS zoom and headless captures are not OS DPI proof"
+    },
+    "200": {
+      "verdict": "NOT VERIFIED",
+      "reason": "No approved local full-Python-app desktop execution; viewport, CSS zoom and headless captures are not OS DPI proof"
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "baseline": "ebe163e9c61e478af2a99e3e1352bf9cda6b45cf",
+  "product_sha": "dcf7c0dfca79b911c2e84ed9bf3fe0f8090a90ad",
+  "product_files_changed": [
+    "newsflow-ai/frontend/src/studio/core/CharacterStudio.tsx"
+  ],
+  "product_change": "Only character scene state field binding; no APIs/schema/security/cost/data changes",
+  "protected_frontend_modules_changed": false,
+  "local_validation_existing_untracked_preserved": true,
+  "operating_files_read_or_written": false,
+  "local_full_python_app_started": false,
+  "operating_app_stopped_or_restarted": false,
+  "DPI_settings_changed": false,
+  "real_paid_calls": 0,
+  "OAuth_or_SNS_calls": 0
+}
