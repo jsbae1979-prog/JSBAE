@@ -60,3 +60,9 @@
 - 승인 PNG 전체 원본 식별: NOT VERIFIED
 - 최신 코드 실제 UX/UI 반영: NOT EXECUTED
 - 제품/운영 코드 변경: NONE
+
+## 2026-10-27 바이너리 등록 후속 상태
+
+이번 사용자 지시에 따라 지정 문서 브랜치의 `newsflow-ai/docs/design/approved-20261027/candidate-assets/`에 후보 PNG 11개와 원본 ZIP을 등록했다. 위 읽기 전용 감사 단계의 GitHub 업로드 금지 문구는 과거 단계의 범위다. 이번 승인도 제품 구현·PR #35 변경 승인은 아니다.
+
+후보 파일의 원격 SHA-256·크기·해상도·URL 검증은 12/12 PASS다. **승인 PNG 원본 식별은 여전히 미완료이며 11개 모두 CANDIDATE**다. 특히 뉴스 쇼츠 2차는 원본 대조가 우선 필요하다. 세부 링크와 근거는 [등록 결과 보고서](../approved-20261027/DESIGN_ASSET_UPLOAD_REPORT_20261027.md)를 참조한다. 홈·콘텐츠 제작 홈의 변경 금지는 유지한다.

@@ -1,8 +1,8 @@
-# NewsFlow AI — 승인 시안 후보 PNG 등록 대장 (바이너리 업로드 대기)
+# NewsFlow AI — 승인 시안 후보 PNG 등록 대장 (후보 바이너리 등록 완료)
 
-기준: 2026-10-27 KST. 상태: **METADATA REGISTERED / PNG & ZIP NOT UPLOADED**.
+기준: 2026-10-27 KST. 상태: **CANDIDATE BINARIES UPLOADED / REMOTE INTEGRITY VERIFIED / APPROVAL IDENTITY PENDING**.
 
-이 파일은 로컬 인수 패키지의 파일명·SHA-256을 기록한 목록이다. GitHub에 PNG/ZIP이 등록되었다는 뜻이 아니다. **사용자 승인 이미지와 1:1 식별은 아직 미검증**이며, 특히 뉴스 쇼츠 2차는 추가 대조가 필요하다.
+이 표는 로컬 인수 패키지의 파일명·SHA-256을 기록한 목록이며, 후속 사용자 승인으로 실제 PNG 11개와 ZIP 원본도 지정 후보 폴더에 등록했다. 원격 바이트 대조는 12/12 PASS다. **사용자 승인 이미지와 1:1 식별은 아직 미검증**이며, 특히 뉴스 쇼츠 2차는 추가 대조가 필요하다.
 
 | 시안 후보 | 파일명 | SHA-256 |
 |---|---|---|
@@ -29,3 +29,9 @@
 6. 운영 코드·PR #35·main·사용자 DB/키는 변경하지 않는다.
 
 현재 문서 브랜치는 Codex의 진행 중인 읽기 전용 감사와 독립적이다.
+
+## 실제 등록 결과
+
+바이너리 커밋: `a4a4fee713439cd7b9436d96ee10bf4a0646dd74`. 모든 PNG는 1536×1024이며 표의 SHA-256과 로컬·원격 모두 일치했다. 원본 ZIP SHA-256: `8e13a2fc686051729a50e41c2eca69916f3cfb61b6d9e9f82f3562dab0cd366e`.
+
+**11개 모두 CANDIDATE이며 승인 원본 VERIFIED가 아니다.** 개별 GitHub 링크·바이트 수·확인 방법은 [통합 등록 보고서](../approved-20261027/DESIGN_ASSET_UPLOAD_REPORT_20261027.md)에 기록했다. 승인 원본 판정이나 React 구현은 수행하지 않았다.
