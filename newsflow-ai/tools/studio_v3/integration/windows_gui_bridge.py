@@ -74,7 +74,23 @@ try:
                     assert method in {"GET","HEAD"} or (method=="POST" and allowed_post.fullmatch(url.split("?")[0]))
                     body=base64.b64decode(data.get("body",""),validate=True);assert len(body)<=11*1024*1024
                     headers={k:v for k,v in data.get("headers",{}).items() if k.lower() in {"content-type","origin","cookie","range","sec-fetch-site"}}
-                    response=c.request(method,url,content=body,headers=headers,follow_redirects=False)
+                    if data.get("multipartFile") is not None:
+                        from email.parser import BytesParser
+                        from email.policy import default
+                        upload=data["multipartFile"]
+                        file_bytes=base64.b64decode(upload["body"],validate=True)
+                        assert url=="/character" and upload["filename"]=="reference.png"
+                        assert file_bytes==png and file_bytes.startswith(b"\x89PNG\r\n\x1a\n")
+                        mime=BytesParser(policy=default).parsebytes(("Content-Type: "+headers["content-type"]+"\r\nMIME-Version: 1.0\r\n\r\n").encode()+body)
+                        fields={}
+                        for part in mime.iter_parts():
+                            name=part.get_param("name",header="content-disposition")
+                            if name and part.get_filename() is None:
+                                fields[name]=part.get_payload(decode=True).decode("utf-8")
+                        headers.pop("content-type",None)
+                        response=c.request(method,url,data=fields,files={"reference":("reference.png",file_bytes,"image/png")},headers=headers,follow_redirects=False)
+                    else:
+                        response=c.request(method,url,content=body,headers=headers,follow_redirects=False)
                     answer={"status":response.status_code,"headers":dict(response.headers),"body":base64.b64encode(response.content).decode("ascii")}
                     events.append({"method":method,"path":url.split("?")[0],"status":response.status_code})
                 temp=ROOT/"responses"/(f.name+".tmp")

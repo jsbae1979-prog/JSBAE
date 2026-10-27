@@ -22,7 +22,22 @@ const control=action=>ipc({kind:"control",action});
  await context.route("**/*",async route=>{
   const req=route.request(),url=new URL(req.url());
   if(url.origin!==origin){result.externalRequests.push(url.origin);return route.abort();}
-  const response=await ipc({method:req.method(),url:url.pathname+url.search,headers:req.headers(),body:(req.postDataBuffer()||Buffer.alloc(0)).toString("base64")});
+  const body=req.postDataBuffer()||Buffer.alloc(0);
+  const packet={method:req.method(),url:url.pathname+url.search,headers:req.headers(),body:body.toString("base64")};
+  if(req.method()==="POST" && url.pathname==="/character" && (req.headers()["content-type"]||"").startsWith("multipart/form-data")){
+    // CDP omits uploaded file bytes from multipart postData. Read the selected synthetic DOM File.
+    const file=await req.frame().evaluate(async()=>{
+      const f=document.querySelector("dialog input[type=file]")?.files?.[0];
+      if(!f)return null;return {filename:f.name,type:f.type,bytes:Array.from(new Uint8Array(await f.arrayBuffer()))};
+    });
+    if(file){
+      const bytes=Buffer.from(file.bytes),expected=fs.readFileSync(path.join(root,"reference.png"));
+      assert.equal(file.filename,"reference.png");assert(bytes.equals(expected),"Only the selected synthetic PNG is permitted");
+      packet.multipartFile={filename:file.filename,type:file.type,body:bytes.toString("base64")};
+      result.uploadTransport={CDPcontainsFullFile:body.includes(bytes),DOMfileBytes:bytes.length,syntheticBytesMatch:true};
+    }
+  }
+  const response=await ipc(packet);
   const headers={...response.headers};delete headers["transfer-encoding"];delete headers["content-encoding"];
   return route.fulfill({status:response.status,headers,body:Buffer.from(response.body,"base64")});
  });
@@ -101,7 +116,8 @@ const control=action=>ipc({kind:"control",action});
   const d=page.getByRole("dialog");await d.waitFor();
   for(const box of await d.locator("input[type=checkbox]").all()){assert.equal(await box.isChecked(),false);await box.check();}
   await d.locator("footer button.primary").click();await d.waitFor({state:"hidden"});
-  await page.locator(".core-image-result img").waitFor();assert(await page.locator(".core-image-result img").evaluate(i=>i.naturalWidth)>0);
+  await page.locator(".core-image-result img").waitFor();assert(await page.locator(".core-image-result img").evaluate(async i=>{await i.decode();return i.naturalWidth;})>0);
+  assert(await page.getByRole("button",{name:"견적 · 생성 승인",exact:true}).isDisabled(),"completed image must not resubmit");
   await page.getByRole("button",{name:"검토 후 재사용",exact:true}).click();await page.getByRole("dialog").waitFor();await page.keyboard.press("Escape");
  });
  await check("TOP3 actual stored analysis, independent Fake outputs and review separation",async()=>{
@@ -118,6 +134,7 @@ const control=action=>ipc({kind:"control",action});
   assert.equal(await page.getByText("이미지 제작 방식",{exact:true}).count(),0);
   const reviews=page.getByRole("button",{name:"게시용 검토본 저장",exact:true});assert.equal(await reviews.count(),1);for(const button of await reviews.all())assert(await button.isDisabled());
   assert.equal((await saved()).analysisCount,1);
+  assert(await page.getByRole("button",{name:"TOP 3 생성 · 비용 승인",exact:true}).isDisabled());
  });
  for(const [width,height] of [[1920,1080],[1366,768]]){
   await page.setViewportSize({width,height});
