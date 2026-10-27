@@ -1,0 +1,46 @@
+{
+  "base_SHA": "a5fed98cdaa841b7e90f0302b010f64d1a9eed08",
+  "product_SHA": "0789b14c0d2bddc701c3c0e523cc759a6a390f11",
+  "classification_counts": {
+    "MAJOR": 6,
+    "MINOR": 3,
+    "MATCH": 1,
+    "FUNCTIONAL_CONSTRAINT": 1
+  },
+  "new_verification": {
+    "typecheck": "PASS",
+    "vite_build": "PASS",
+    "Windows_Chrome_synthetic_checks": 17,
+    "FAIL": 0,
+    "ERROR": 0,
+    "new_captures": 8,
+    "changed_screen_captures": 4,
+    "home_protection_captures": 4,
+    "real_provider_calls": 0,
+    "form_submissions": 0
+  },
+  "initial_attempt": {
+    "status": "FAIL",
+    "cause": "Inherited record-row display:flex !important prevented the intended scoped grid. Corrected only in independent image history; final attempt passed.",
+    "assertion": "Status stays below title inside card",
+    "evidence": "initial-attempt.json"
+  },
+  "reused_only": {
+    "Windows_Actions": 88,
+    "browser_checks": 40,
+    "CI_run": 40467597750,
+    "prior_full_regression": "5454 PASS / 4 SKIP; historical only"
+  },
+  "not_verified": [
+    "Windows OS DPI",
+    "local full Python application integration",
+    "real provider API/OAuth/SNS",
+    "Chrome background OS-level egress"
+  ],
+  "operating_data_access": "Not used or written by this task; no fresh full DB/backup hash audit performed",
+  "test_processes_after_exit": 0,
+  "guard_modified": false,
+  "backend_modified": false,
+  "new_skip_or_xfail": false,
+  "CI_policy": "Existing backend 88 PASS reused; scoped local validation performed. Product/report commits use [skip ci] to avoid duplicate backend CI; no workflow or test assertion disabled."
+}

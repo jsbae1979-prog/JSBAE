@@ -1,0 +1,104 @@
+diff --git a/newsflow-ai/frontend/src/studio/approved.css b/newsflow-ai/frontend/src/studio/approved.css
+index ca523c0..70b788a 100644
+--- a/newsflow-ai/frontend/src/studio/approved.css
++++ b/newsflow-ai/frontend/src/studio/approved.css
+@@ -1314,3 +1314,49 @@
+     grid-template-columns: 1fr;
+   }
+ }
++
++/* Visual acceptance: local readability only; protected home routes never match. */
++.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row {
++  display: grid !important;
++  grid-template-columns: 26px minmax(0, 1fr) 12px;
++  gap: 8px !important;
++  align-items: start !important;
++}
++.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-icon {
++  width: 26px;
++  height: 34px;
++  grid-column: 1;
++  grid-row: 1;
++}
++.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row > span:nth-child(2) {
++  grid-column: 2;
++  grid-row: 1;
++  min-width: 0;
++}
++.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row strong {
++  white-space: normal;
++  display: -webkit-box;
++  -webkit-line-clamp: 2;
++  -webkit-box-orient: vertical;
++  overflow: hidden;
++}
++.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row > .state-badge {
++  grid-column: 1 / 3;
++  grid-row: 2;
++  justify-self: start;
++  max-width: 100%;
++}
++.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row > svg {
++  grid-column: 3;
++  grid-row: 1;
++  max-width: 12px;
++}
++.approved-studio[data-module="analytics"] .account-filter {
++  white-space: nowrap;
++  flex-shrink: 0;
++}
++.approved-studio[data-module="analytics"] .account-filter select {
++  width: auto;
++  min-width: 160px;
++  max-width: 240px;
++}
+diff --git a/newsflow-ai/tools/studio_v3/tests/approved_ui.browser.cjs b/newsflow-ai/tools/studio_v3/tests/approved_ui.browser.cjs
+index ee32eaf..58e5cfe 100644
+--- a/newsflow-ai/tools/studio_v3/tests/approved_ui.browser.cjs
++++ b/newsflow-ai/tools/studio_v3/tests/approved_ui.browser.cjs
+@@ -72,11 +72,26 @@ function mime(f){return ({".js":"application/javascript",".css":"text/css",".png
+   const vid=page.locator("video").first();if(await vid.count()){const metadata=await vid.evaluate(async v=>{if(v.readyState<1)await new Promise(r=>v.addEventListener("loadedmetadata",r,{once:true}));v.pause();if(Math.abs(v.currentTime-1)>.01){const seek=new Promise(r=>v.addEventListener("seeked",r,{once:true}));v.currentTime=1;await seek;}return {width:v.videoWidth,height:v.videoHeight,seconds:v.duration};});assert.deepEqual([metadata.width,metadata.height,Math.round(metadata.seconds)],[1080,1920,30]);}
+   await page.evaluate(()=>scrollTo(0,0));await settle();
+  }
+- const names=phase==="baseline"?["dashboard","create"]:["dashboard","create","shorts","characters","images","images-news","images-top3","news","automation","library","publishing","analytics","settings"];
++ const allNames=phase==="baseline"?["dashboard","create"]:["dashboard","create","shorts","characters","images","images-news","images-top3","news","automation","library","publishing","analytics","settings"];
++ const names=process.env.NF_UI_SCREEN_FILTER?process.env.NF_UI_SCREEN_FILTER.split(","):allNames;
++ assert(names.every(n=>allNames.includes(n)),"Known synthetic screens only");
+  for(const [width,height] of [[1920,1080],[1366,768]]){
+-  await page.setViewportSize({width,height});for(const name of names){await open(name);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),`${name} ${width}: horizontal overflow`);const filename=`${name}-${width}.png`;await page.screenshot({path:path.join(out,filename),animations:"disabled",caret:"hide"});result.captures.push({name,width,height,file:filename});check("screen renders without overflow",{name,width});}
++  await page.setViewportSize({width,height});for(const name of names){await open(name);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),`${name} ${width}: horizontal overflow`);const filename=`${name}-${width}.png`;await page.screenshot({path:path.join(out,filename),animations:"disabled",caret:"hide"});result.captures.push({name,width,height,file:filename});check("screen renders without overflow",{name,width});
++   if(process.env.NF_UI_VISUAL_ONLY==="1" && name==="images"){
++    const geometry=await page.locator(".image-history .record-row").evaluateAll(rows=>rows.map(row=>{
++     const title=row.querySelector("strong"),badge=row.querySelector(".state-badge");const r=row.getBoundingClientRect(),t=title.getBoundingClientRect(),b=badge.getBoundingClientRect();
++     return {titleWidth:t.width,titleHeight:t.height,badgeWithin:b.left>=r.left&&b.right<=r.right+1,separateRows:b.top>=t.bottom-1};
++    }));
++    assert.equal(geometry.length,3);for(const g of geometry){assert(g.titleWidth>=50,"History title needs readable space");assert(g.titleHeight>0);assert(g.badgeWithin&&g.separateRows,"Status stays below title inside card");}
++    check("history titles and status remain readable",{width,geometry});
++   }
++   if(process.env.NF_UI_VISUAL_ONLY==="1" && name==="analytics"){
++    const label=await page.locator(".account-filter").evaluate(el=>{const range=document.createRange();range.selectNodeContents(el.firstChild);const rect=range.getBoundingClientRect(),select=el.querySelector("select").getBoundingClientRect();return {textHeight:rect.height,textWidth:rect.width,selectWidth:select.width,whiteSpace:getComputedStyle(el).whiteSpace};});
++    assert.equal(label.whiteSpace,"nowrap");assert(label.textHeight<25&&label.textWidth>20&&label.selectWidth>=160);check("account label stays on one readable line",{width,...label});
++   }
++}
+  }
+- if(phase!=="baseline"){
++ if(phase!=="baseline" && process.env.NF_UI_VISUAL_ONLY!=="1"){
+   await page.setViewportSize({width:1366,height:768});
+   await open("shorts");const narration=page.getByRole("textbox",{name:"방송용 내레이션",exact:true});await narration.fill("수정한 합성 내레이션");await page.getByRole("button",{name:"대본 저장",exact:true}).click();await page.getByText("저장된 내용",{exact:true}).waitFor();await page.reload();await narration.waitFor();assert.equal(await narration.inputValue(),"수정한 합성 내레이션");check("script save and reload through unchanged revision contract");
+   const d=models.shorts.collections.drafts[0];d.revision++;await narration.fill("충돌 시 유지할 합성 편집");await page.getByRole("button",{name:"대본 저장",exact:true}).click();await page.getByRole("status").getByText(/다른 화면에서 변경/).waitFor();assert.equal(await narration.inputValue(),"충돌 시 유지할 합성 편집");check("revision conflict preserves typed script");
+@@ -92,6 +107,15 @@ function mime(f){return ({".js":"application/javascript",".css":"text/css",".png
+   await open("publishing");assert(await page.getByText("확인 필요",{exact:false}).count()>0);assert.equal(result.posts.filter(x=>/execute|submit|publish|generate|oauth|check/.test(x.path)).length,0);check("content review separate from actual execution");
+   const violations=await page.evaluate(()=>[...document.styleSheets].flatMap(sheet=>{try{const out=[];function visit(rules){for(const rule of rules){if(rule.selectorText&&rule.selectorText.includes("approved-")&&rule.selectorText.split(",").some(s=>!s.trim().startsWith(".approved-studio")))out.push(rule.selectorText);if(rule.cssRules)visit(rule.cssRules);}}visit(sheet.cssRules);return out;}catch{return [];}}));assert.deepEqual(violations,[]);check("all new CSS selectors are workspace scoped");
+  }
++
++ if(process.env.NF_UI_VISUAL_ONLY==="1"){
++  await open("images");await page.locator(".image-history .record-row").filter({hasText:"검증된 Fake 이미지"}).click();assert.equal(await page.locator(".image-canvas img").count(),1);check("restyled history retains selected success preview");
++  await page.locator(".image-history .record-row").filter({hasText:"결과 불명"}).click();assert.equal(await page.locator(".image-canvas img").count(),0);check("restyled unknown history retains no-preview boundary");
++  await open("analytics");await page.getByLabel("성과 계정 필터",{exact:true}).selectOption("12");assert.equal(await page.getByLabel("성과 계정 필터",{exact:true}).inputValue(),"12");check("restyled account filter retains selection");
++  const rules=await page.evaluate(()=>[...document.styleSheets].flatMap(sheet=>{try{return [...sheet.cssRules].filter(r=>r.selectorText?.includes('data-module="images"')&&r.selectorText.includes('.image-history')||r.selectorText?.includes('data-module="analytics"')&&r.selectorText.includes('.account-filter')).map(r=>r.selectorText);}catch{return [];}}));
++  assert(rules.length>=8);assert(rules.every(r=>r.startsWith(".approved-studio")));check("minor corrections stay scoped away from protected home routes");
++  assert.equal(result.posts.length,0);check("focused visual run submits no forms or paid requests");
++ }
+  assert.deepEqual(result.errors,[]);assert.deepEqual(result.externalRequests,[]);
+  await context.close();
+ }finally{if(browser)await browser.close();fs.writeFileSync(path.join(out,"browser-results.json"),JSON.stringify(result,null,2));}

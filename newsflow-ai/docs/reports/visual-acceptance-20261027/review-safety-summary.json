@@ -1,0 +1,9 @@
+{
+  "report_link_check": "PASS",
+  "synthetic_before_capture_reuse": "4/4 byte identical",
+  "sensitive_text_scan": "PASS",
+  "local_absolute_paths_in_report": "none",
+  "Guard_boundary_unchanged": true,
+  "operating_data_not_inputs": true,
+  "verification_scope": "Visual only; no new full audit or regression"
+}

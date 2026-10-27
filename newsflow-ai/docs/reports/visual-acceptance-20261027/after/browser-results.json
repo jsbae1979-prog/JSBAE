@@ -1,0 +1,173 @@
+{
+  "phase": "after",
+  "captures": [
+    {
+      "name": "images",
+      "width": 1920,
+      "height": 1080,
+      "file": "images-1920.png"
+    },
+    {
+      "name": "analytics",
+      "width": 1920,
+      "height": 1080,
+      "file": "analytics-1920.png"
+    },
+    {
+      "name": "dashboard",
+      "width": 1920,
+      "height": 1080,
+      "file": "dashboard-1920.png"
+    },
+    {
+      "name": "create",
+      "width": 1920,
+      "height": 1080,
+      "file": "create-1920.png"
+    },
+    {
+      "name": "images",
+      "width": 1366,
+      "height": 768,
+      "file": "images-1366.png"
+    },
+    {
+      "name": "analytics",
+      "width": 1366,
+      "height": 768,
+      "file": "analytics-1366.png"
+    },
+    {
+      "name": "dashboard",
+      "width": 1366,
+      "height": 768,
+      "file": "dashboard-1366.png"
+    },
+    {
+      "name": "create",
+      "width": 1366,
+      "height": 768,
+      "file": "create-1366.png"
+    }
+  ],
+  "checks": [
+    {
+      "name": "images",
+      "width": 1920
+    },
+    {
+      "name": "history titles and status remain readable",
+      "width": 1920,
+      "geometry": [
+        {
+          "titleWidth": 194.796875,
+          "titleHeight": 20.796875,
+          "badgeWithin": true,
+          "separateRows": true
+        },
+        {
+          "titleWidth": 194.796875,
+          "titleHeight": 20.796875,
+          "badgeWithin": true,
+          "separateRows": true
+        },
+        {
+          "titleWidth": 194.796875,
+          "titleHeight": 20.796875,
+          "badgeWithin": true,
+          "separateRows": true
+        }
+      ]
+    },
+    {
+      "name": "analytics",
+      "width": 1920
+    },
+    {
+      "name": "account label stays on one readable line",
+      "width": 1920,
+      "textHeight": 19,
+      "textWidth": 23.921875,
+      "selectWidth": 160,
+      "whiteSpace": "nowrap"
+    },
+    {
+      "name": "dashboard",
+      "width": 1920
+    },
+    {
+      "name": "create",
+      "width": 1920
+    },
+    {
+      "name": "images",
+      "width": 1366
+    },
+    {
+      "name": "history titles and status remain readable",
+      "width": 1366,
+      "geometry": [
+        {
+          "titleWidth": 96.40625,
+          "titleHeight": 41.59375,
+          "badgeWithin": true,
+          "separateRows": true
+        },
+        {
+          "titleWidth": 96.40625,
+          "titleHeight": 41.59375,
+          "badgeWithin": true,
+          "separateRows": true
+        },
+        {
+          "titleWidth": 96.40625,
+          "titleHeight": 41.59375,
+          "badgeWithin": true,
+          "separateRows": true
+        }
+      ]
+    },
+    {
+      "name": "analytics",
+      "width": 1366
+    },
+    {
+      "name": "account label stays on one readable line",
+      "width": 1366,
+      "textHeight": 17,
+      "textWidth": 22.09375,
+      "selectWidth": 160,
+      "whiteSpace": "nowrap"
+    },
+    {
+      "name": "dashboard",
+      "width": 1366
+    },
+    {
+      "name": "create",
+      "width": 1366
+    },
+    {
+      "name": "restyled history retains selected success preview"
+    },
+    {
+      "name": "restyled unknown history retains no-preview boundary"
+    },
+    {
+      "name": "restyled account filter retains selection"
+    },
+    {
+      "name": "minor corrections stay scoped away from protected home routes"
+    },
+    {
+      "name": "focused visual run submits no forms or paid requests"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "posts": [],
+  "networkMode": "Playwright routes fulfill all application requests; pinned Node/Chrome boundary preserved; browser background egress NOT VERIFIED",
+  "WindowsOSDPI": "NOT VERIFIED",
+  "realAPICalls": 0,
+  "productAppStarted": false
+}
