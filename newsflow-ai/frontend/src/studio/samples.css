@@ -73,20 +73,20 @@
   font-size: 12px;
   margin: 8px 0;
 }
-.sample-cards .sample-preview {
+.sample-gallery .sample-cards .sample-preview {
   display: block;
   width: 100%;
   padding: 0;
   overflow: hidden;
 }
-.sample-preview img {
+.sample-gallery .sample-cards .sample-preview img {
   display: block;
   width: 100%;
   height: 140px;
   object-fit: contain;
   background: #020d19;
 }
-.sample-preview span {
+.sample-gallery .sample-cards .sample-preview span {
   display: block;
   padding: 5px;
   font-size: 11px;

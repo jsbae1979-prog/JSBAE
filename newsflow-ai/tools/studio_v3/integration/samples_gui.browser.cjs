@@ -12,10 +12,10 @@ function ipc(data){const task=serial.then(async()=>{
  while(!fs.existsSync(answer)){assert(Date.now()<deadline,"Python ASGI response timeout");await new Promise(r=>setTimeout(r,15));}
  const value=JSON.parse(fs.readFileSync(answer,"utf8"));fs.unlinkSync(answer);assert(!value.error,value.error);return value;
 });serial=task.catch(()=>{});return task;}
-(async()=>{let browser;try{
+(async()=>{let browser,context;try{
  browser=await chromium.launch({channel:"chrome",headless:true,chromiumSandbox:true,args:["--disable-background-networking","--disable-component-update","--disable-quic","--proxy-server=http://127.0.0.1:18765","--proxy-bypass-list=127.0.0.1","--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"]});
  result.browserVersion=browser.version();
- const context=await browser.newContext({locale:"ko-KR",serviceWorkers:"block",acceptDownloads:false});
+ context=await browser.newContext({locale:"ko-KR",serviceWorkers:"block",acceptDownloads:false});
  await context.route("**/*",async route=>{
   const req=route.request(),url=new URL(req.url());
   if(url.origin!==origin){result.externalRequests.push(url.origin);return route.abort();}
@@ -91,13 +91,20 @@ function ipc(data){const task=serial.then(async()=>{
   await page.setViewportSize({width,height});
   for(const [screen,url] of [["images","images"],["top3","images?mode=top3"],["characters","characters"],["shorts","shorts"],["library","library"]]){
    await check(`samples viewport ${screen} ${width}`,async()=>{
-    await open(url);await page.evaluate(()=>document.fonts.ready);assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2)));
+    await open(url);await page.evaluate(async()=>{await document.fonts.ready;const visible=[...document.images].filter(i=>{const r=i.getBoundingClientRect();return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;});await Promise.all(visible.map(i=>i.decode().catch(()=>{})));});assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2)));
     const file=`${screen}-${width}.png`;await page.screenshot({path:path.join(out,file),animations:"disabled",caret:"hide"});result.captures.push({screen,width,height,file,overflow:false});
    });
   }
  }
  assert.deepEqual(result.externalRequests,[]);assert.deepEqual(result.pageErrors,[]);
 }catch(e){result.failures.push({name:"harness",error:String(e)});}
-finally{if(browser)await browser.close();fs.writeFileSync(path.join(root,"STOP"),"stop");result.browserClosed=true;result.pass=result.checks.filter(x=>x.status==="PASS").length;result.fail=result.checks.filter(x=>x.status==="FAIL").length+result.failures.filter(x=>x.name==="harness").length;result.skip=0;fs.writeFileSync(path.join(root,"gui-results.json"),JSON.stringify(result,null,2));console.log("SAMPLE_GUI_RESULT="+JSON.stringify(result));}
+finally{
+ try {
+  // Keep ASGI alive until every intercepted request has received its response.
+  // Stop real transport before removing routes; no request is replayed.
+  if(context){await context.setOffline(true);await context.unrouteAll({behavior:"wait"});await serial;}
+  result.requestDrainCompleted=true;
+ } catch(e){result.failures.push({name:"cleanup drain",error:String(e)});}
+ if(browser)await browser.close();fs.writeFileSync(path.join(root,"STOP"),"stop");result.browserClosed=true;result.pass=result.checks.filter(x=>x.status==="PASS").length;result.fail=result.checks.filter(x=>x.status==="FAIL").length+result.failures.filter(x=>!result.checks.some(c=>c.name===x.name)).length;result.skip=0;fs.writeFileSync(path.join(root,"gui-results.json"),JSON.stringify(result,null,2));console.log("SAMPLE_GUI_RESULT="+JSON.stringify(result));}
 if(result.failures.length)process.exitCode=1;
 })();

@@ -67,7 +67,7 @@ jobs:
             }
             $appProcess.Refresh()
             $chromeRemaining = @(Get-Process chrome,chrome-headless-shell -ErrorAction SilentlyContinue).Count
-            @{pythonPid=$appProcess.Id;pythonExited=$appProcess.HasExited;forcedCleanup=$forced;chromeRemaining=$chromeRemaining;operatingProcessAccess=$false} | ConvertTo-Json | Set-Content "$root/process-cleanup.json"
+            @{pythonPid=$appProcess.Id;pythonExited=$appProcess.HasExited;pythonExitCode=$appProcess.ExitCode;nodeExitCode=$nodeExit;pendingRequests=@(Get-ChildItem "$root/requests/*.json" -ErrorAction SilentlyContinue).Count;forcedCleanup=$forced;chromeRemaining=$chromeRemaining;operatingProcessAccess=$false} | ConvertTo-Json | Set-Content "$root/process-cleanup.json"
             if (Test-Path "$root/gui-results.json") { Get-Content "$root/gui-results.json" -Raw }
             if (Test-Path "$root/backend-summary.json") { Get-Content "$root/backend-summary.json" -Raw }
             if (Test-Path "$root/backend-stderr.txt") { Get-Content "$root/backend-stderr.txt" }

@@ -14,11 +14,11 @@ function ipc(data){const task=serial.then(async()=>{
  const value=JSON.parse(fs.readFileSync(answer,"utf8"));fs.unlinkSync(answer);assert(!value.error,value.error);return value;
 });serial=task.catch(()=>{});return task;}
 const control=action=>ipc({kind:"control",action});
-(async()=>{let browser;try{
+(async()=>{let browser,context;try{
  browser=await chromium.launch({channel:"chrome",headless:true,chromiumSandbox:true,args:["--disable-background-networking","--disable-component-update","--disable-quic",
  "--proxy-server=http://127.0.0.1:18765","--proxy-bypass-list=127.0.0.1","--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"]});
  result.browserVersion=browser.version();
- const context=await browser.newContext({locale:"ko-KR",serviceWorkers:"block",acceptDownloads:false});
+ context=await browser.newContext({locale:"ko-KR",serviceWorkers:"block",acceptDownloads:false});
  await context.route("**/*",async route=>{
   const req=route.request(),url=new URL(req.url());
   if(url.origin!==origin){result.externalRequests.push(url.origin);return route.abort();}
@@ -44,7 +44,7 @@ const control=action=>ipc({kind:"control",action});
  const page=await context.newPage();page.setDefaultTimeout(12000);
  page.on("pageerror",e=>result.pageErrors.push(String(e)));page.on("dialog",d=>d.accept());
  async function open(module){await page.goto(origin+"/studio/"+module);await page.locator(".core-studio").waitFor();await page.evaluate(()=>document.fonts.ready);}
- async function check(name,fn){try{await fn();result.checks.push({name,status:"PASS"});}catch(e){result.checks.push({name,status:"FAIL"});result.failures.push({name,error:String(e)});await page.screenshot({path:path.join(out,"failure-"+result.failures.length+".png"),fullPage:true}).catch(()=>{});await page.keyboard.press("Escape").catch(()=>{});}}
+ async function check(name,fn){console.log("GUI_CHECK_START="+name);try{await fn();result.checks.push({name,status:"PASS"});}catch(e){result.checks.push({name,status:"FAIL"});result.failures.push({name,error:String(e)});await page.screenshot({path:path.join(out,"failure-"+result.failures.length+".png"),fullPage:true}).catch(()=>{});await page.keyboard.press("Escape").catch(()=>{});}}
  async function saved(){return control("stats");}
  await page.setViewportSize({width:1920,height:1080});
  await check("news search, source and existing analysis to shorts",async()=>{
@@ -142,7 +142,9 @@ const control=action=>ipc({kind:"control",action});
    await check("viewport "+name+" "+width,async()=>{
     await open(url);
     if(name==="characters")await page.locator(".core-job-list button").filter({hasText:"합성 GUI 캐릭터 주제"}).click();
-    await page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})));});
+    await page.evaluate(async()=>{await document.fonts.ready;
+     const visible=[...document.images].filter(i=>{const r=i.getBoundingClientRect();return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;});
+     await Promise.all(visible.map(i=>i.decode().catch(()=>{})));});
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);assert(!overflow,"horizontal overflow");
     const buttons=await page.locator(".core-shorts button,.core-character button,.core-image-grid button,.core-top3 button,.core-news-grid button").evaluateAll(ns=>ns.filter(n=>!n.disabled).map(n=>{const r=n.getBoundingClientRect();return {text:n.textContent.trim().slice(0,45),x:r.x,width:r.width};}));
     const file=name+"-"+width+".png";await page.screenshot({path:path.join(out,file),animations:"disabled",caret:"hide"});
@@ -166,8 +168,15 @@ const control=action=>ipc({kind:"control",action});
  result.backendStats=await saved();
  assert.deepEqual(result.externalRequests,[]);assert.deepEqual(result.pageErrors,[]);
 }catch(e){result.failures.push({name:"harness",error:String(e)});}
-finally{if(browser)await browser.close();fs.writeFileSync(path.join(root,"STOP"),"stop");result.browserClosed=true;
- result.pass=result.checks.filter(x=>x.status==="PASS").length;result.fail=result.checks.filter(x=>x.status==="FAIL").length+result.failures.filter(x=>x.name==="harness").length;
+finally{
+ try {
+  // Keep ASGI alive until every intercepted request has received its response.
+  // Stop real transport before removing routes; no request is replayed.
+  if(context){await context.setOffline(true);await context.unrouteAll({behavior:"wait"});await serial;}
+  result.requestDrainCompleted=true;
+ } catch(e){result.failures.push({name:"cleanup drain",error:String(e)});}
+ if(browser)await browser.close();fs.writeFileSync(path.join(root,"STOP"),"stop");result.browserClosed=true;
+ result.pass=result.checks.filter(x=>x.status==="PASS").length;result.fail=result.checks.filter(x=>x.status==="FAIL").length+result.failures.filter(x=>!result.checks.some(c=>c.name===x.name)).length;
  result.skip=0;fs.writeFileSync(path.join(root,"gui-results.json"),JSON.stringify(result,null,2));console.log("WINDOWS_GUI_RESULT="+JSON.stringify(result));}
 if(result.failures.length)process.exitCode=1;
 })();
