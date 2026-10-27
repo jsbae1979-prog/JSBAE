@@ -1,0 +1,18 @@
+{
+  "original_guard_sha256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+  "verification_guard_sha256": "0ae7a526bf21b999b3afdead9721dd21702b403ff78bc98066ce88eb150dbffd",
+  "native_boundary_original_sha256": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+  "modified_existing_functions": [
+    "audit",
+    "_guarded_windll"
+  ],
+  "all_other_existing_function_AST_identical": true,
+  "original_module_statements_preserved": true,
+  "appended_functions": [
+    "register_verification_capability",
+    "_verification_capability_event",
+    "_verification_private_binding"
+  ],
+  "global_DLL_and_symbol_allowlists_changed": false,
+  "copy_line_endings": "LF; original bytes preserved separately"
+}

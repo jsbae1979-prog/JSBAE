@@ -1,0 +1,4 @@
+* text eol=lf
+guard_original.py -text whitespace=cr-at-eol,-blank-at-eof
+native_boundary_original.py -text whitespace=cr-at-eol,-blank-at-eof
+guard_copy.patch whitespace=-blank-at-eol

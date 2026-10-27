@@ -1,0 +1,48 @@
+--- guard_original.py
++++ guard_verification.py
+@@ -153,6 +153,7 @@
+  except ValueError:local=host=='localhost'
+  if not local or port==8765:deny('external-or-operating-socket')
+ def audit(event,args):
++ if _verification_capability_event(event,args):return
+  if event in ('socket.connect','socket.bind','socket.sendto','socket.sendmsg'):address_check(args[-1])
+  elif event=='socket.getaddrinfo':
+   if args[0] not in (None,'','localhost'):
+@@ -254,6 +255,8 @@
+   if (self.name,symbol) not in _NATIVE:deny('unapproved-native-symbol')
+   return _GuardedFunction(self.name,symbol)
+ def _guarded_windll(name,*args,**kwargs):
++ private=_verification_private_binding(name,args,kwargs)
++ if private is not None:return private
+  if not isinstance(name,str) or name.lower() not in _SYSTEM_DLLS:deny('unapproved-native-DLL')
+  return _GuardedDLL(name.lower())
+ 
+@@ -317,3 +320,28 @@
+  out=pathlib.Path(os.environ['NEWSFLOW_VALIDATION_OUTPUT']);out.mkdir(parents=True,exist_ok=True)
+  (out/'strict-guard.json').write_text(json.dumps({'denied':ATTEMPTS,'allowed_binary_counts':{k:ALLOWED.count(k) for k in set(ALLOWED)},'exitstatus':exitstatus,'installed_before_pytest_import':True,'only_pinned_FFmpeg_ffprobe_media_allowed':True,'only_registered_pinned_Node_entry_allowed':True,'browser_child_validated_by_Node_preload':True,'global_guard_disabled':False,'external_network_allowed':False,'operating_file_contents_allowed':False,'fixed_guarded_Python_children_only':True,'PowerShell_identity_validate_only':True}),encoding='utf-8')
+ 
++# Verification-copy-only capability registration. No global DLL/symbol expansion.
++_VERIFICATION_CAPABILITY=None
++_VERIFICATION_ORIGINAL_LOADER=ctypes.WinDLL
++
++def register_verification_capability(capability):
++ global _VERIFICATION_CAPABILITY
++ if not INSTALLED:deny('capability-registration-before-Guard')
++ if _VERIFICATION_CAPABILITY is not None:deny('capability-already-registered')
++ kind=type(capability)
++ if kind.__name__!='NativeRegistration' or kind.__module__!='guard_capability':deny('unreviewed-capability-type')
++ module=sys.modules.get(kind.__module__)
++ expected=CONFIG.get('verification_capability_sha256')
++ if module is None or not re.fullmatch(r'[0-9a-f]{64}',expected or ''):deny('capability-manifest-required')
++ if hashlib.sha256(pathlib.Path(module.__file__).read_bytes()).hexdigest()!=expected:deny('capability-source-hash')
++ capability.attach_private_loader(_VERIFICATION_ORIGINAL_LOADER)
++ _VERIFICATION_CAPABILITY=capability
++ return 'registered-synthetic-native-lock-v1'
++
++def _verification_capability_event(event,args):
++ if _VERIFICATION_CAPABILITY is None:return False
++ return _VERIFICATION_CAPABILITY.audit_event(event,args)
++
++def _verification_private_binding(name,args,kwargs):
++ if _VERIFICATION_CAPABILITY is None:return None
++ return _VERIFICATION_CAPABILITY.private_binding(name,args,kwargs)
