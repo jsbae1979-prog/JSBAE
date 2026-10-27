@@ -1,0 +1,60 @@
+[
+  {
+    "run": 40508484217,
+    "sha": "7951adc05c9b686b150d83532188f2c2cc052f9d",
+    "pass": 0,
+    "fail": 0,
+    "error": 37,
+    "skip": 0,
+    "workflow": "failure",
+    "reason": "New test-only gate denied ctypes.call_function for approved native calls; no operating Guard modified.",
+    "artifact": 12736560718
+  },
+  {
+    "run": 40508963320,
+    "sha": "9b654b52187db0fa22e4a469fc213f1d0e3aff7b",
+    "pass": 0,
+    "fail": 0,
+    "error": 39,
+    "skip": 0,
+    "workflow": "failure",
+    "reason": "Owned Unicode buffer ctypes.cast itself emitted a native-call audit event outside the fixed invocation context. Replaced with addressof on the Python-owned buffer; did not expand gate permissions.",
+    "first_error": {
+      "id": "test_capability.CapabilityTests.test_01_guard_first",
+      "traceback": "Traceback (most recent call last):\n  File \"D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\tools\\native_capability\\test_capability.py\", line 23, in setUp\n    self.scope = self.new_scope()\n                 ~~~~~~~~~~~~~~^^\n  File \"D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\tools\\native_capability\\test_capability.py\", line 31, in new_scope\n    scope = LockScope(NATIVE, GATE.new_scope())\n  File \"D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\tools\\native_capability\\adapter.py\", line 206, in __init__\n    handle = native.relative(self._directories[-1], component, directory=True)\n  File \"D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\tools\\native_capability\\adapter.py\", line 142, in relative\n    unicode = _Unicode(length, length + 2, C.cast(text, _P))\n                                           ~~~~~~^^^^^^^^^^\n  File \"C:\\hostedtoolcache\\windows\\Python\\3.14.7\\x64\\Lib\\ctypes\\__init__.py\", line 614, in cast\n    return _cast(obj, obj, typ)\n  File \"D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\tools\\native_capability\\verification_gate.py\", line 158, in audit\n    self.deny(\"unregistered-native-call-context\")\n    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"D:\\a\\JSBAE\\JSBAE\\newsflow-ai\\tools\\native_capability\\verification_gate.py\", line 76, in deny\n    raise Denied(reason)\nverification_gate.Denied: unregistered-native-call-context\n"
+    },
+    "cleanup_failures": [],
+    "remaining_native_handles": 0
+  },
+  {
+    "run": 40509291808,
+    "sha": "60551c4a39b0df7d16cc99baf7fc06b3a57bcaec",
+    "pass": 39,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "workflow": "failure",
+    "reason": "Security cases passed, but top-level synthetic junction cleanup failed. Kept CI failure until junction itself was removed without following target.",
+    "cleanup_failures": [
+      {
+        "name": "scope-6408f07943924b93874bd992728e67ba",
+        "error_type": "OSError",
+        "message": "Cannot call rmtree on a symbolic link"
+      }
+    ],
+    "remaining_native_handles": 0
+  },
+  {
+    "run": 40509608323,
+    "sha": "4774553264b19cd4fc7b63f272a00b521f4acdb9",
+    "pass": 39,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "workflow": "success",
+    "cleanup_failures": [],
+    "remaining_native_handles": 0,
+    "artifact": 12736058467,
+    "artifact_zip_SHA256": "bbba6aeee311c092a0c76cd7719bb68afca41f1fce037b221ea490ef53b1facd"
+  }
+]

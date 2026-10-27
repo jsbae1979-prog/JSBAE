@@ -1,0 +1,33 @@
+{
+  "host_guard_SHA256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+  "host_guard_unchanged": true,
+  "installed_filelock_sources_unchanged": true,
+  "filelock_source_SHA256": {
+    "asyncio.py": "62eacaf6800c7410ec01f36b6db24bc104aae17d88a07ab5da50758d4fdcbd4d",
+    "version.py": "173687862a968cfa61e8d2cee044de219031311b51d57627750fa5e8388cbe27",
+    "_api.py": "2ecb7338958fe65bb4263d4314b63e9a1d08f93a326d861625e00b6fbd53c39b",
+    "_async.py": "aceea0b7587a66f4f6830ff43f55e67f58d9b3cda4122a59f715f8feb2549b79",
+    "_async_read_write.py": "640249d360802e067aba18567b0e0379f4ed9c453b96c952a06f958e63290c1b",
+    "_descriptor.py": "b2cd457f2100cab675401dcb0d752d24793964501f48068275a6b9629d55ce4e",
+    "_error.py": "6bc3e644919437acedd72deea01d55b2e90da7fbb4e16298509e83ff6cd2ec5d",
+    "_identity.py": "819184e494b5b7cc8d193aee5e344fd41af4c7a0909fcea4b7cf50a80e7b6666",
+    "_lease.py": "dbeafade6a02afa04226cacea36f27e076569b596e6ea8f9b6fee8ce907a021f",
+    "_marker.py": "ed5256cb2ae1f305bc572c124cb2c847b382fff68d527e331677a5e49750c162",
+    "_read_write.py": "3c194b83f7db92a0dca51c89e4d91982858b47d0c450733ed6c43306766c383f",
+    "_soft.py": "c9da56d79af78065b6901687863f05be7013430e7e91f5e7496c9885b11034a0",
+    "_soft_protocol.py": "a84336c7d373f7382e5f0c168d9b02b0f11f6ace67a87949fbfa07bc0334528e",
+    "_strict.py": "41564e8e8253a0ac0ed146fdaebdbed94afa3f7d604bd6b0ce25410f8dc436df",
+    "_unix.py": "5bde6028b8d88af35960b4f7eb7e28ee5d2941fbd4f127415bfd82ddba3794bc",
+    "_util.py": "a7ddeff19ce057a8a62bdf35d81d03c52a02c56447395bbec0d19f7ab1e22421",
+    "_windows.py": "3318fda8b336f7537347a0d7b10fd04787f79245e06a92027b7a08bdaa9e064b",
+    "__init__.py": "644857d02a33bd1c45430b26f1861ceae88bbee2187be6a80f6d0009f8f28b38"
+  },
+  "operating_data_accessed_or_used": false,
+  "operating_application_restarted": false,
+  "host_native_verification_executed": false,
+  "host_full_application_executed": false,
+  "OS_DPI_changed": false,
+  "PR35_modified": false,
+  "main_modified": false,
+  "limitation": "Operating DB/ledger/backup were not reopened or newly hashed; prior preservation evidence reused."
+}
