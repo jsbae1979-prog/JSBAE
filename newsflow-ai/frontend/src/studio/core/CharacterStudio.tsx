@@ -38,7 +38,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     clips = job?.scenes ?? [],
     clip = clips[scene];
   const ref =
-    job?.referenceUrl === `/api/studio/characters/${job.id}/reference`
+    job && job.referenceUrl === `/api/studio/characters/${job.id}/reference`
       ? job.referenceUrl
       : null;
   const refAssets = c.view?.catalog.referenceAssets ?? [],

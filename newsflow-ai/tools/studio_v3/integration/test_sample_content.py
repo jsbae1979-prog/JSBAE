@@ -106,6 +106,10 @@ def test_hide_restart_restore_and_user_isolation(app_client,tmp_path):
     AppSetting.__table__.create(engine)
     other=Samples(sessionmaker(engine),tmp_path/'other-user',app.state.image_studio)
     assert not any(x['hidden'] or x['copied'] for x in other.listing()['assets'])
+    other.copy('standalone-cat')
+    assert other.copy_path(other.get('standalone-cat')).is_file()
+    assert not service(app).copy_path(service(app).get('standalone-cat')).exists()
+    assert not any(x['copied'] for x in service(app).listing()['assets'])
     engine.dispose()
     assert c.post('/api/samples/character-cat/visibility',data={'csrf_token':csrf,'hidden':'false'}).status_code==200
     assert not any(x['hidden'] for x in service(app).listing()['assets'])

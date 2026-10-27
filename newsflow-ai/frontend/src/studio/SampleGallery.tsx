@@ -88,7 +88,8 @@ export default function SampleGallery({
           if (onUse) onUse({ asset: item, copy });
           else
             setNotice(
-              copy.message + " 아래 제작실 링크에서 참조 자료로 활용하세요.",
+              copy.message +
+                " 아래 내 참조 파일 다운로드로 활용하세요. 편집 원본 프로젝트는 아닙니다.",
             );
         }
       }
