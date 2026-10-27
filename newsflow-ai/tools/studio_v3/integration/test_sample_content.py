@@ -163,3 +163,31 @@ def test_existing_copy_not_overwritten_when_modified(app_client):
     with pytest.raises(SampleError):s.copy('standalone-earth')
     assert path.read_bytes()==b'user-edited-file'
     assert hashlib.sha256(s.checked(row).read_bytes()).hexdigest()==row['sha256']
+
+
+def test_full_app_reinitialization_keeps_private_copy_and_visibility(tmp_path):
+    # Recreate the actual app/services/SQLite engine against the same synthetic
+    # user directory. This is not an EXE or Windows 11 process restart claim.
+    root=tmp_path/'repeated-start'
+    first=app_client.__wrapped__(root)
+    try:
+        c,app=next(first);csrf=token(c)
+        assert c.post('/api/samples/standalone-city/copy',data={'csrf_token':csrf}).status_code==200
+        assert c.post('/api/samples/character-cat/visibility',data={'csrf_token':csrf,'hidden':'true'}).status_code==200
+        folder=app.state.config.data_dir
+        sentinel=folder/'existing-project.txt';sentinel.write_text('preserve-on-update')
+        before=sorted(str(x.relative_to(folder)) for x in folder.rglob('*.png'))
+    finally:
+        first.close()
+    second=app_client.__wrapped__(root)
+    try:
+        c,app=next(second)
+        listing=c.get('/api/samples').json()['assets']
+        assert len(listing)==12
+        assert next(x for x in listing if x['id']=='character-cat')['hidden']
+        copied=next(x for x in listing if x['id']=='standalone-city')
+        assert copied['copied'] and c.get(copied['copyUrl']).status_code==200
+        assert sorted(str(x.relative_to(folder)) for x in folder.rglob('*.png'))==before
+        assert sentinel.read_text()=='preserve-on-update' and counts(app)==[0,0]
+    finally:
+        second.close()
