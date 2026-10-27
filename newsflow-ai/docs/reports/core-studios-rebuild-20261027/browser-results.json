@@ -1,0 +1,345 @@
+{
+  "phase": "after",
+  "captures": [
+    {
+      "name": "shorts",
+      "width": 1920,
+      "height": 1080,
+      "file": "shorts-1920.png"
+    },
+    {
+      "name": "characters",
+      "width": 1920,
+      "height": 1080,
+      "file": "characters-1920.png"
+    },
+    {
+      "name": "images",
+      "width": 1920,
+      "height": 1080,
+      "file": "images-1920.png"
+    },
+    {
+      "name": "images-top3",
+      "width": 1920,
+      "height": 1080,
+      "file": "images-top3-1920.png"
+    },
+    {
+      "name": "news",
+      "width": 1920,
+      "height": 1080,
+      "file": "news-1920.png"
+    },
+    {
+      "name": "dashboard",
+      "width": 1920,
+      "height": 1080,
+      "file": "dashboard-1920.png"
+    },
+    {
+      "name": "create",
+      "width": 1920,
+      "height": 1080,
+      "file": "create-1920.png"
+    },
+    {
+      "name": "automation",
+      "width": 1920,
+      "height": 1080,
+      "file": "automation-1920.png"
+    },
+    {
+      "name": "library",
+      "width": 1920,
+      "height": 1080,
+      "file": "library-1920.png"
+    },
+    {
+      "name": "publishing",
+      "width": 1920,
+      "height": 1080,
+      "file": "publishing-1920.png"
+    },
+    {
+      "name": "analytics",
+      "width": 1920,
+      "height": 1080,
+      "file": "analytics-1920.png"
+    },
+    {
+      "name": "settings",
+      "width": 1920,
+      "height": 1080,
+      "file": "settings-1920.png"
+    },
+    {
+      "name": "shorts",
+      "width": 1366,
+      "height": 768,
+      "file": "shorts-1366.png"
+    },
+    {
+      "name": "characters",
+      "width": 1366,
+      "height": 768,
+      "file": "characters-1366.png"
+    },
+    {
+      "name": "images",
+      "width": 1366,
+      "height": 768,
+      "file": "images-1366.png"
+    },
+    {
+      "name": "images-top3",
+      "width": 1366,
+      "height": 768,
+      "file": "images-top3-1366.png"
+    },
+    {
+      "name": "news",
+      "width": 1366,
+      "height": 768,
+      "file": "news-1366.png"
+    },
+    {
+      "name": "dashboard",
+      "width": 1366,
+      "height": 768,
+      "file": "dashboard-1366.png"
+    },
+    {
+      "name": "create",
+      "width": 1366,
+      "height": 768,
+      "file": "create-1366.png"
+    },
+    {
+      "name": "automation",
+      "width": 1366,
+      "height": 768,
+      "file": "automation-1366.png"
+    },
+    {
+      "name": "library",
+      "width": 1366,
+      "height": 768,
+      "file": "library-1366.png"
+    },
+    {
+      "name": "publishing",
+      "width": 1366,
+      "height": 768,
+      "file": "publishing-1366.png"
+    },
+    {
+      "name": "analytics",
+      "width": 1366,
+      "height": 768,
+      "file": "analytics-1366.png"
+    },
+    {
+      "name": "settings",
+      "width": 1366,
+      "height": 768,
+      "file": "settings-1366.png"
+    }
+  ],
+  "checks": [
+    {
+      "name": "shorts",
+      "width": 1920
+    },
+    {
+      "name": "characters",
+      "width": 1920
+    },
+    {
+      "name": "images",
+      "width": 1920
+    },
+    {
+      "name": "images-top3",
+      "width": 1920
+    },
+    {
+      "name": "news",
+      "width": 1920
+    },
+    {
+      "name": "dashboard",
+      "width": 1920
+    },
+    {
+      "name": "create",
+      "width": 1920
+    },
+    {
+      "name": "automation",
+      "width": 1920
+    },
+    {
+      "name": "library",
+      "width": 1920
+    },
+    {
+      "name": "publishing",
+      "width": 1920
+    },
+    {
+      "name": "analytics",
+      "width": 1920
+    },
+    {
+      "name": "settings",
+      "width": 1920
+    },
+    {
+      "name": "shorts",
+      "width": 1366
+    },
+    {
+      "name": "characters",
+      "width": 1366
+    },
+    {
+      "name": "images",
+      "width": 1366
+    },
+    {
+      "name": "images-top3",
+      "width": 1366
+    },
+    {
+      "name": "news",
+      "width": 1366
+    },
+    {
+      "name": "dashboard",
+      "width": 1366
+    },
+    {
+      "name": "create",
+      "width": 1366
+    },
+    {
+      "name": "automation",
+      "width": 1366
+    },
+    {
+      "name": "library",
+      "width": 1366
+    },
+    {
+      "name": "publishing",
+      "width": 1366
+    },
+    {
+      "name": "analytics",
+      "width": 1366
+    },
+    {
+      "name": "settings",
+      "width": 1366
+    },
+    {
+      "name": "news shorts shows only TOP ranks and no numbered production steps"
+    },
+    {
+      "name": "script and simple portrait preview grouped above accessible render strip"
+    },
+    {
+      "name": "TOP rank selection binds existing analysis and rank without reanalysis"
+    },
+    {
+      "name": "script edits use original revision-preserving POST"
+    },
+    {
+      "name": "revision conflict preserves recoverable text across reload"
+    },
+    {
+      "name": "refresh cannot silently rebase dirty text onto newer server revision"
+    },
+    {
+      "name": "older edit recovery retains original revision for explicit conflict resolution"
+    },
+    {
+      "name": "render is not sent before original review and permission modal"
+    },
+    {
+      "name": "character reference, three-step layout, fixed model and state-gated approval preserved"
+    },
+    {
+      "name": "missing character reference and unknown submission fail closed"
+    },
+    {
+      "name": "independent prompt and model options bind original draft dialog without paid calls"
+    },
+    {
+      "name": "only validated success previews and completed output cannot regenerate implicitly"
+    },
+    {
+      "name": "TOP3-only news mode preserves three independent outputs and fail-closed price approval"
+    },
+    {
+      "name": "unknown item cannot replay and other success files remain visible"
+    },
+    {
+      "name": "news studio searches stored articles and reuses real analysis fields without a video editor"
+    },
+    {
+      "name": "missing TOP3 explicitly blocks script generation without fallback invented news"
+    },
+    {
+      "name": "read errors do not trigger automatic mutations"
+    },
+    {
+      "name": "no generation, OAuth, posting or render submitted by navigation and review"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "posts": [
+    {
+      "path": "/ai/drafts/1",
+      "keys": [
+        "csrf_token",
+        "revision",
+        "content"
+      ],
+      "synthetic": true
+    },
+    {
+      "path": "/ai/drafts/1",
+      "keys": [
+        "csrf_token",
+        "revision",
+        "content"
+      ],
+      "synthetic": true
+    },
+    {
+      "path": "/ai/drafts/1",
+      "keys": [
+        "csrf_token",
+        "revision",
+        "content"
+      ],
+      "synthetic": true
+    },
+    {
+      "path": "/ai/drafts/1",
+      "keys": [
+        "csrf_token",
+        "revision",
+        "content"
+      ],
+      "synthetic": true
+    }
+  ],
+  "networkMode": "Playwright routes fulfill all application requests; pinned Node/Chrome boundary preserved; browser background egress NOT VERIFIED",
+  "WindowsOSDPI": "NOT VERIFIED",
+  "realAPICalls": 0,
+  "productAppStarted": false
+}

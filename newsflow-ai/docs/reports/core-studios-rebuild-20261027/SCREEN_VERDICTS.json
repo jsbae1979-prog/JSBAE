@@ -1,0 +1,42 @@
+[
+  {
+    "screen": "뉴스 쇼츠",
+    "key": "shorts",
+    "reference": "news_shorts_v2.png",
+    "verdict": "MINOR",
+    "result": "상단 TOP 3, 중앙 대본/간편 설정·9:16 미리보기, 하단 제작·저장 그룹을 독립 컴포넌트로 구현. 제작 단계 번호 없음.",
+    "difference": "현재 작업의 실제 장면 수와 텍스트를 사용하므로 시안의 예시 5문단과 다름. 작은 글꼴·간격 차이, 승인 창의 필수 검토 항목은 유지."
+  },
+  {
+    "screen": "캐릭터 쇼츠",
+    "key": "characters",
+    "reference": "character_shorts_v4.png",
+    "verdict": "FUNCTIONAL_CONSTRAINT",
+    "result": "3단계 배너, 참조 PNG/주제·Claude/미리보기·견적의 3열, 하단 스토리보드. 1366에서는 정상 세로 재배치.",
+    "difference": "실제 계약의 720p Seedance 참조 입력과 FFmpeg 1080×1920 출력을 구분. 가상 캐릭터·클립·120크레딧을 채우지 않음. 새 작업 저장과 유료 스토리/영상 승인을 분리."
+  },
+  {
+    "screen": "독립 AI 이미지",
+    "key": "images",
+    "reference": "standalone_image_v2.png",
+    "verdict": "MINOR",
+    "result": "왼쪽 프롬프트·스타일·모델 설정, 중앙 실제 결과 캔버스, 오른쪽 이력과 하단 최근 이미지.",
+    "difference": "실제 성공 파일만 표시. 참조 기반 유료 편집·가상 결과 탐색은 구현된 것처럼 보이지 않음. 스타일은 프롬프트에 반영하는 텍스트 프리셋이며 별도 모델 기능으로 주장하지 않음."
+  },
+  {
+    "screen": "뉴스 기반 TOP 3 이미지",
+    "key": "images-top3",
+    "reference": "top3_feed_v3.png",
+    "verdict": "FUNCTIONAL_CONSTRAINT",
+    "result": "두 제작실 탭, 왼쪽 완료 TOP 3, 중앙 공통 설정·독립 결과 3개, 오른쪽 문구·출력 검토, 하단 작업 이력. 개별 뉴스 제작 방식 선택 UI 제거.",
+    "difference": "임의 날짜·카테고리·로고 출력 스위치를 만들지 않음. 출처·AI 표시·사용권 검토는 필수. 공식 견적/실계정 권한 미확정 유료 실행 차단 유지. 완료 이미지 문구 변경은 기존 재생성 승인 계약 적용."
+  },
+  {
+    "screen": "뉴스 스튜디오",
+    "key": "news",
+    "reference": "news_studio_v2.png",
+    "verdict": "FUNCTIONAL_CONSTRAINT",
+    "result": "왼쪽 보관 검색·기사 선택, 중앙 기사 상세·연결 분석 요약/선정 근거, 오른쪽 제작 이동·TOP 3·출처, 하단 이번 화면 확인 기록.",
+    "difference": "저장된 분석 필드만 노출. 존재하지 않는 키워드·관련 추천·즐겨찾기·공유 서비스는 가상 버튼으로 만들지 않음. 유료 분석을 화면 로딩 때 실행하지 않음."
+  }
+]

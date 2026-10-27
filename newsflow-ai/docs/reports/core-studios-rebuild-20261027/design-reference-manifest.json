@@ -1,0 +1,76 @@
+{
+  "date_kst": "2026-10-27",
+  "branch": "docs/newsflow-approved-design-handoff-20261027",
+  "previous_commit": "769f0627a07dcd9267fc6d2a789a24d56e5f4cee",
+  "approval_basis": "User subsequently requested updating the news shorts studio with their final attached PNG. The other four designs retain the preceding approval.",
+  "files": [
+    {
+      "title": "뉴스 쇼츠 제작실 — 사용자 최종 수정본",
+      "path": "newsflow-ai/docs/design/approved-20261027/approved-assets/news_shorts_v2.png",
+      "sha256": "e7aa918622ae460f0b372dae5f1ac8b0e76d5f864fa03bd35a9fb7e515fb911e",
+      "git_blob_sha": "a2624f3c46becd213f88105b928e811702a8efd4",
+      "bytes": 1820991,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "source": "사용자 첨부: 뉴스 쇼츠 제작실 대시보드.png",
+      "decision": "USER_FINAL_REPLACEMENT"
+    },
+    {
+      "title": "캐릭터 쇼츠 제작실",
+      "path": "newsflow-ai/docs/design/approved-20261027/approved-assets/character_shorts_v4.png",
+      "sha256": "f0e5154f096676ba9ac626e6c6312e6ee114ed467968e38559002a564c0350ec",
+      "git_blob_sha": "c02faee9a4e901f6589ea9126eef9b5fbdd74397",
+      "bytes": 1777744,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "source": "https://github.com/jsbae1979-prog/JSBAE/blob/e6e493c0dbd5ab8ef017d716f466d715ec9896a9/newsflow-ai/docs/design/approved-20261027/approved-assets/character_shorts_v4.png",
+      "decision": "PRESERVED_EXISTING_APPROVED_BYTES"
+    },
+    {
+      "title": "독립 AI 이미지 제작",
+      "path": "newsflow-ai/docs/design/approved-20261027/approved-assets/standalone_image_v2.png",
+      "sha256": "60f6ae67f45fd1c30b3a7cbc19d9090136b40741e18f41f82ac3addc1e706cf4",
+      "git_blob_sha": "6354390c5a11666718c0e216d1b4255b3d116f51",
+      "bytes": 2161405,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "source": "https://github.com/jsbae1979-prog/JSBAE/blob/e6e493c0dbd5ab8ef017d716f466d715ec9896a9/newsflow-ai/docs/design/approved-20261027/approved-assets/standalone_image_v2.png",
+      "decision": "PRESERVED_EXISTING_APPROVED_BYTES"
+    },
+    {
+      "title": "뉴스 스튜디오",
+      "path": "newsflow-ai/docs/design/approved-20261027/approved-assets/news_studio_v2.png",
+      "sha256": "2fe099e812fdac82c69504fe143af8db80e2d71ef921513b34d03960fe124e0f",
+      "git_blob_sha": "a5ea2cdf52aab95535ef28b22384cda347d0b4fa",
+      "bytes": 1976839,
+      "dimensions": [
+        1536,
+        1024
+      ],
+      "source": "https://github.com/jsbae1979-prog/JSBAE/blob/e6e493c0dbd5ab8ef017d716f466d715ec9896a9/newsflow-ai/docs/design/approved-20261027/approved-assets/news_studio_v2.png",
+      "decision": "PRESERVED_EXISTING_APPROVED_BYTES"
+    },
+    {
+      "title": "TOP 3 뉴스 기반 이미지 — 사용자 최종 수정본",
+      "path": "newsflow-ai/docs/design/approved-20261027/approved-assets/top3_feed_v3.png",
+      "sha256": "b5977d3c3ac55c39b43135843aead887726b6ccb38f750aed7c7e617748551b4",
+      "git_blob_sha": "fc2ef518154ee196802d66cd67e2d64f92319dd7",
+      "bytes": 2074914,
+      "dimensions": [
+        1610,
+        977
+      ],
+      "source": "사용자 재첨부: 네온 뉴스 AI 이미지 제작실 대시보드.png",
+      "decision": "USER_FINAL_REPLACEMENT"
+    }
+  ],
+  "verification_scope": "Source SHA-256 / Git blob identity / PNG decode and dimensions / change scope. No product runtime or historical TOP 3 pixel equivalence claimed.",
+  "production_code_changes": 0,
+  "pr35_changes": 0
+}

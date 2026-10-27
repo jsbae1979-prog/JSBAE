@@ -1,0 +1,19 @@
+{
+  "run_id": 40494128890,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40494128890",
+  "head_sha": "f398c61ea0d42d30f11563d225a53922e28ac8ab",
+  "conclusion": "success",
+  "python": "3.14.7",
+  "windows": "windows-latest disposable runner",
+  "projection_pass": 58,
+  "new_context_cases": 15,
+  "previous_projection_cases": 43,
+  "new_HTTP_integration_pass": 1,
+  "fail": 0,
+  "error": 0,
+  "skip": 0,
+  "warnings": 1,
+  "frontend_build": "success",
+  "actual_supplier_calls": 0,
+  "full_local_python_app": "NOT VERIFIED"
+}

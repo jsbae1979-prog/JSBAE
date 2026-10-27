@@ -1,0 +1,14 @@
+[
+  {
+    "check": "format",
+    "exit": 0
+  },
+  {
+    "check": "typecheck",
+    "exit": 0
+  },
+  {
+    "check": "build",
+    "exit": 0
+  }
+]
