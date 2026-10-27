@@ -309,6 +309,8 @@ def create_app(
     app.include_router(video_router)
     app.include_router(character_router)
     app.include_router(creation_router)
+    from .samples.routes import router as samples_router
+    app.include_router(samples_router)
     app.include_router(video_ai_router)
     app.include_router(publishing_router)
     app.include_router(youtube_router)

@@ -25,28 +25,31 @@ class GUIMonkeyPatch(pytest.MonkeyPatch):
 mp=GUIMonkeyPatch();fixture=None;events=[];errors=[]
 try:
     fixture=client.__wrapped__(ROOT/"profile",mp);c,app=next(fixture)
-    from test_top3_feed_integration import seed
-    from test_core_windows_roundtrip import script_sources
-    aid=seed(app);did,ids,content=script_sources(app,aid)
-    from PIL import Image
-    raw=BytesIO();Image.new("RGB",(128,128),"navy").save(raw,"PNG");png=raw.getvalue()
-    (ROOT/"reference.png").write_bytes(png)
-    csrf=token(c)
-    defaults=c.get("/api/studio/modules/characters").json()["catalog"]["characterDefaults"]
-    r=c.post("/character",data={"csrf_token":csrf,"topic":"합성 GUI 캐릭터 주제","episode_limit":"5","day_limit":"20",
-       "script_model":defaults["script_model"],"video_model":defaults["video_model"]},files={"reference":("synthetic.png",png,"image/png")})
-    assert r.status_code==303,r.text
-    job_id=c.get("/api/studio/modules/characters").json()["collections"]["jobs"][0]["id"]
-    from newsflow.character.schema import Storyboard,Character,prompts
-    story=Storyboard.model_validate({"title":"합성 GUI 스토리","plan":{"situation":"합성 사무실","contrast":"바쁨과 여유","punchline":"조용한 결말"},
-       "hook_caption":"합성 시작","end_caption":"합성 끝","scenes":[{"seconds":10,"caption":f"합성 {i}",
-       "action":f"The character walks through synthetic room {i}.","role":["setup","build","punchline"][i-1],"sfx":""} for i in range(1,4)]})
-    service=app.state.character;job=service.read(job_id)
-    job.update(state="submission_unknown",script=story.model_dump(),scenes=[{"position":i,"state":v} for i,v in enumerate(["downloaded","failed","unknown"],1)])
-    job["prompts"]=prompts(story,Character.model_validate(job["character"]));job["plan_hash"]=service.plan_hash(job);service.save(job)
-    (ROOT/"ready.json").write_text(json.dumps({"analysis":aid,"draft":did,"character":job_id,"synthetic":True}),encoding="utf-8")
+    if os.environ.get("NF_GUI_SCENARIO") != "samples":
+        from test_top3_feed_integration import seed
+        from test_core_windows_roundtrip import script_sources
+        aid=seed(app);did,ids,content=script_sources(app,aid)
+        from PIL import Image
+        raw=BytesIO();Image.new("RGB",(128,128),"navy").save(raw,"PNG");png=raw.getvalue()
+        (ROOT/"reference.png").write_bytes(png)
+        csrf=token(c)
+        defaults=c.get("/api/studio/modules/characters").json()["catalog"]["characterDefaults"]
+        r=c.post("/character",data={"csrf_token":csrf,"topic":"합성 GUI 캐릭터 주제","episode_limit":"5","day_limit":"20",
+           "script_model":defaults["script_model"],"video_model":defaults["video_model"]},files={"reference":("synthetic.png",png,"image/png")})
+        assert r.status_code==303,r.text
+        job_id=c.get("/api/studio/modules/characters").json()["collections"]["jobs"][0]["id"]
+        from newsflow.character.schema import Storyboard,Character,prompts
+        story=Storyboard.model_validate({"title":"합성 GUI 스토리","plan":{"situation":"합성 사무실","contrast":"바쁨과 여유","punchline":"조용한 결말"},
+           "hook_caption":"합성 시작","end_caption":"합성 끝","scenes":[{"seconds":10,"caption":f"합성 {i}",
+           "action":f"The character walks through synthetic room {i}.","role":["setup","build","punchline"][i-1],"sfx":""} for i in range(1,4)]})
+        service=app.state.character;job=service.read(job_id)
+        job.update(state="submission_unknown",script=story.model_dump(),scenes=[{"position":i,"state":v} for i,v in enumerate(["downloaded","failed","unknown"],1)])
+        job["prompts"]=prompts(story,Character.model_validate(job["character"]));job["plan_hash"]=service.plan_hash(job);service.save(job)
+        (ROOT/"ready.json").write_text(json.dumps({"analysis":aid,"draft":did,"character":job_id,"synthetic":True}),encoding="utf-8")
+    else:
+        (ROOT/"ready.json").write_text(json.dumps({"synthetic":True,"samples":True}),encoding="utf-8")
     deadline=time.monotonic()+600
-    allowed_post=re.compile(r"^/(?:ai/drafts/\d+|character|image-studio/(?:drafts|defaults|\d+/(?:generate|reuse))|api/feed-batches(?:/defaults|/\d+/(?:step|pause|resume)|/\d+/items/[123]/(?:edit|review))?)$")
+    allowed_post=re.compile(r"^/(?:api/samples/[a-z0-9-]+/(?:copy|visibility)|ai/drafts/\d+|character|image-studio/(?:drafts|defaults|\d+/(?:generate|reuse))|api/feed-batches(?:/defaults|/\d+/(?:step|pause|resume)|/\d+/items/[123]/(?:edit|review))?)$")
     while not (ROOT/"STOP").exists():
         if time.monotonic()>deadline:raise TimeoutError("GUI protocol session expired")
         pending=sorted((ROOT/"requests").glob("*.json"))

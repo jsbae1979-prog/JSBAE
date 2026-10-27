@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SampleGallery from "../SampleGallery";
 import { Sparkles, Save, Download } from "lucide-react";
 import { safeMedia, type Item } from "../contracts";
 import {
@@ -41,6 +42,17 @@ export default function ImageStudio({ c }: { c: Controller }) {
   }
   return (
     <>
+      <SampleGallery
+        types={["standalone"]}
+        csrf={c.view?.csrfToken ?? ""}
+        onUse={({ copy }) => {
+          setPrompt(copy.promptExample);
+          setId(null);
+          c.setNotice(
+            "샘플 프롬프트 예제를 입력했습니다. 초안 저장 후 별도 승인해야 생성됩니다.",
+          );
+        }}
+      />
       <div className="core-image-grid">
         <div className="core-image-input">
           <Panel title="이미지 주제 입력">

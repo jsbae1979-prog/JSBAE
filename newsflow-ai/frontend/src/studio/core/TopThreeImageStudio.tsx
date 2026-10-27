@@ -1,3 +1,4 @@
+import SampleGallery from "../SampleGallery";
 import { useState } from "react";
 import { Sparkles, Save, Pause, Download } from "lucide-react";
 import TopThreeFeeds from "../TopThreeFeeds";
@@ -313,11 +314,14 @@ function FeedLayout({ c, f }: { c: Controller; f: any }) {
 }
 export default function TopThreeImageStudio({ c }: { c: Controller }) {
   return c.view ? (
-    <TopThreeFeeds
-      selections={c.list("selections")}
-      catalog={c.view.catalog}
-      csrf={c.view.csrfToken}
-      render={(f) => <FeedLayout c={c} f={f} />}
-    />
+    <>
+      <SampleGallery types={["news-top3"]} csrf={c.view.csrfToken} />
+      <TopThreeFeeds
+        selections={c.list("selections")}
+        catalog={c.view.catalog}
+        csrf={c.view.csrfToken}
+        render={(f) => <FeedLayout c={c} f={f} />}
+      />
+    </>
   ) : null;
 }

@@ -1,0 +1,99 @@
+name: NewsFlow offline starter samples Windows
+on:
+  push:
+    branches: [codex/newsflow-core-studios-rebuild-20261027]
+    paths:
+      - 'newsflow-ai/src/newsflow/samples/**'
+      - 'newsflow-ai/src/newsflow/assets/samples/**'
+      - 'newsflow-ai/frontend/src/studio/SampleGallery.tsx'
+      - 'newsflow-ai/frontend/src/studio/samples.css'
+      - 'newsflow-ai/tools/studio_v3/integration/test_sample_content.py'
+      - 'newsflow-ai/tools/studio_v3/integration/samples_gui.browser.cjs'
+      - '.github/workflows/newsflow-samples.yml'
+permissions:
+  contents: read
+jobs:
+  offline-samples:
+    runs-on: windows-latest
+    timeout-minutes: 18
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Build unchanged React and prepare test runtime
+        run: |
+          npm install --global pnpm@11.25.0 --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend install --frozen-lockfile --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend exec tsc --noEmit
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend exec vite build --configLoader runner
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm install --prefix "$env:RUNNER_TEMP/gui-runtime" --ignore-scripts playwright@1.64.1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install -e . pytest==8.4.2 httpx==0.28.1 filelock==3.32.7
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Sample catalog, copies, isolation and existing approval boundaries
+        run: |
+          python -m pytest tools/studio_v3/integration/test_sample_content.py -q -ra --junitxml="$env:RUNNER_TEMP/sample-tests.xml"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Existing approved app fixture plus real Chrome flows
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP ("newsflow-gui-" + [guid]::NewGuid().ToString("N"))
+          New-Item -ItemType Directory -Path $root | Out-Null
+          $env:NF_GUI_SCENARIO = "samples"
+          $env:NF_GUI_ROOT = $root
+          $env:NF_GUI_RUNTIME = Join-Path $env:RUNNER_TEMP "gui-runtime"
+          "NF_GUI_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $python = (Get-Command python).Source
+          $bridge = Join-Path $PWD "tools/studio_v3/integration/windows_gui_bridge.py"
+          $appProcess = Start-Process -FilePath $python -ArgumentList @("-I","-B",('"'+$bridge+'"'),('"'+$root+'"')) -WorkingDirectory $PWD -RedirectStandardOutput "$root/backend-stdout.txt" -RedirectStandardError "$root/backend-stderr.txt" -WindowStyle Hidden -PassThru
+          $nodeExit = 1
+          $forced = $false
+          try {
+            $deadline = (Get-Date).AddSeconds(60)
+            while (!(Test-Path "$root/ready.json")) {
+              if ($appProcess.HasExited) { throw "Synthetic app fixture exited before ready" }
+              if ((Get-Date) -gt $deadline) { throw "Synthetic app initialization timeout" }
+              Start-Sleep -Milliseconds 100
+            }
+            node tools/studio_v3/integration/samples_gui.browser.cjs
+            $nodeExit = $LASTEXITCODE
+          } finally {
+            Set-Content -LiteralPath "$root/STOP" -Value "stop"
+            if (!$appProcess.WaitForExit(15000)) {
+              $forced = $true
+              Stop-Process -Id $appProcess.Id -Force
+            }
+            $appProcess.Refresh()
+            $chromeRemaining = @(Get-Process chrome,chrome-headless-shell -ErrorAction SilentlyContinue).Count
+            @{pythonPid=$appProcess.Id;pythonExited=$appProcess.HasExited;forcedCleanup=$forced;chromeRemaining=$chromeRemaining;operatingProcessAccess=$false} | ConvertTo-Json | Set-Content "$root/process-cleanup.json"
+            if (Test-Path "$root/gui-results.json") { Get-Content "$root/gui-results.json" -Raw }
+            if (Test-Path "$root/backend-summary.json") { Get-Content "$root/backend-summary.json" -Raw }
+            if (Test-Path "$root/backend-stderr.txt") { Get-Content "$root/backend-stderr.txt" }
+          }
+          if ($forced -or $chromeRemaining -or $appProcess.ExitCode -ne 0) { exit 2 }
+          exit $nodeExit
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: offline-samples-windows-evidence
+          path: |
+            ${{ runner.temp }}/sample-tests.xml
+            ${{ env.NF_GUI_ROOT }}/gui-results.json
+            ${{ env.NF_GUI_ROOT }}/backend-summary.json
+            ${{ env.NF_GUI_ROOT }}/process-cleanup.json
+            ${{ env.NF_GUI_ROOT }}/screenshots/*.png
+            ${{ env.NF_GUI_ROOT }}/backend-stderr.txt
+          if-no-files-found: error

@@ -39,6 +39,7 @@ import {
 import { CommandDialog, submitOriginal } from "./CommandDialog";
 import "./workbench.css";
 import { Thumbnail } from "./Thumbnail";
+import SampleGallery from "./SampleGallery";
 import TopThreeFeeds from "./TopThreeFeeds";
 import {
   WorkflowSteps,
@@ -173,6 +174,7 @@ function LegacyWorkbench({
   const [selected, setSelected] = useState<Item | null>(null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("전체");
+  const [libraryScope, setLibraryScope] = useState("all");
   const [tab, setTab] = useState(
     location.pathname.includes("/feed") ||
       new URLSearchParams(location.search).get("mode") === "news"
@@ -2060,7 +2062,8 @@ function LegacyWorkbench({
             )}
             {module === "library" && (
               <>
-                <div className="approved-library-grid">
+                <SampleGallery csrf={view.csrfToken} library onScope={setLibraryScope} />
+                {libraryScope !== "samples" && <div className="approved-library-grid">
                   <div className="work-toolbar">
                     <label className="work-search">
                       <Search size={18} />
@@ -2154,6 +2157,7 @@ function LegacyWorkbench({
                     </div>
                   )}
                 </div>
+                }
                 <Collection
                   title="휴지 보관"
                   items={list("removed")}
