@@ -205,7 +205,7 @@ const control=action=>ipc({kind:"control",action});
    const expand=page.getByRole("button",{name:"샘플 펼치기",exact:true});
    if(await expand.count())await expand.click();
    const gallery=page.locator(".sample-gallery");await gallery.scrollIntoViewIfNeeded();
-   const articles=gallery.locator(".sample-cards article");assert(await articles.count()>0);
+   const articles=gallery.locator(".sample-cards article");await articles.first().waitFor();assert(await articles.count()>0);
    const bounds=await gallery.boundingBox();result.sampleGeometry.push({screen:url,bounds,count:await articles.count()});
    if(variant==="after")assert(bounds.height<330,"sample strip dominates the workspace");
    const preview=articles.first().getByRole("button",{name:/미리보기$/});await preview.click();
