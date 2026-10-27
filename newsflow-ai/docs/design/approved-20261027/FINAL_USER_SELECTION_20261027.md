@@ -24,3 +24,11 @@
 - 기존 candidate 11개 및 ZIP은 보존한다. 승인 바이너리 등록 전 `approved-assets` 완성으로 표시하지 않는다.
 - 홈/콘텐츠 제작 홈 변경 금지. 실제 지원하지 않는 버튼·가상 계정명·금액을 제품 기능으로 해석하지 않는다.
 - React/CSS/Python 코드, PR #35, main, 운영 앱은 변경하지 않는다.
+
+## 최종 바이너리 등록 완료 — 2026-10-27 후속 기록
+
+기존 선택 기록을 보존하며 최종 상태를 갱신한다. 사용자 지정 원본 5개 등록 및 기존 일치 후보 6개 동일 바이트 복사를 `4daadfc6432b9dc7c99d0a05c8167aca345c784f`에서 완료했다. **DESIGN ASSET VERIFIED 11/11**. 원격 SHA-256·크기·1536×1024 해상도·파일 URL 검증은 전부 통과했다. 이전의 BINARY REPLACEMENT PENDING은 이 후속 기록으로 해소되었다.
+
+[최종 승인 경로·해시·기능 상태 매니페스트](approved-assets/APPROVED_DESIGN_MANIFEST.md) · [단일 결과 보고서](APPROVED_DESIGN_REGISTRATION_REPORT_20261027.md).
+
+기존 후보 11개·ZIP은 변경하지 않는다. TOP 3 기존 잘못된 라이브러리 후보는 제외 상태로 보존하고, 승인 폴더의 새 원본만 구현 기준으로 사용한다. 실제 React 반영은 미착수이며 별도 구현 지시가 필요하다.

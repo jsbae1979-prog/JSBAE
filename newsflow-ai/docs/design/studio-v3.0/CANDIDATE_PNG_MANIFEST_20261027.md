@@ -35,3 +35,9 @@
 바이너리 커밋: `a4a4fee713439cd7b9436d96ee10bf4a0646dd74`. 모든 PNG는 1536×1024이며 표의 SHA-256과 로컬·원격 모두 일치했다. 원본 ZIP SHA-256: `8e13a2fc686051729a50e41c2eca69916f3cfb61b6d9e9f82f3562dab0cd366e`.
 
 **11개 모두 CANDIDATE이며 승인 원본 VERIFIED가 아니다.** 개별 GitHub 링크·바이트 수·확인 방법은 [통합 등록 보고서](../approved-20261027/DESIGN_ASSET_UPLOAD_REPORT_20261027.md)에 기록했다. 승인 원본 판정이나 React 구현은 수행하지 않았다.
+
+## 사용자 최종 선택 이후 상태 — 2026-10-27
+
+이 대장의 후보 원본·해시는 역사 자료로 그대로 유지한다. 이후 사용자 선택으로 기존 일치 6개 유지 및 다른 최종 원본 5개 선택이 확정되었다. `4daadfc6432b9dc7c99d0a05c8167aca345c784f`에 **승인 PNG 11개**를 별도 `approved-assets/` 경로로 등록하고 원격 검증을 완료했다. 위 CANDIDATE/IDENTITY PENDING은 후보 등록 당시 상태이며, 현재 최종 원본은 [승인 매니페스트](../approved-20261027/approved-assets/APPROVED_DESIGN_MANIFEST.md)를 따른다.
+
+특히 이 대장의 `top3_feed_v3.png`는 잘못된 라이브러리 화면으로 보존되며 TOP 3 구현 기준에서 제외된다. 승인 폴더의 새 TOP 3 파일과 해시가 다르므로 혼용하지 않는다. 후보 폴더의 기존 PNG 11개와 ZIP은 변경하지 않았다.
