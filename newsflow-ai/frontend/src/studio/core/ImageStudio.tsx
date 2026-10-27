@@ -42,18 +42,7 @@ export default function ImageStudio({ c }: { c: Controller }) {
   }
   return (
     <>
-      <SampleGallery
-        initialExpanded={drafts.length === 0}
-        types={["standalone"]}
-        csrf={c.view?.csrfToken ?? ""}
-        onUse={({ copy }) => {
-          setPrompt(copy.promptExample);
-          setId(null);
-          c.setNotice(
-            "샘플 프롬프트 예제를 입력했습니다. 초안 저장 후 별도 승인해야 생성됩니다.",
-          );
-        }}
-      />
+
       <div className="core-image-grid">
         <div className="core-image-input">
           <Panel title="이미지 주제 입력">
@@ -231,6 +220,18 @@ export default function ImageStudio({ c }: { c: Controller }) {
           )}
         </div>
       </Panel>
+      <SampleGallery
+        initialExpanded={drafts.length === 0}
+        types={["standalone"]}
+        csrf={c.view?.csrfToken ?? ""}
+        onUse={({ copy }) => {
+          setPrompt(copy.promptExample);
+          setId(null);
+          c.setNotice(
+            "샘플 프롬프트 예제를 입력했습니다. 초안 저장 후 별도 승인해야 생성됩니다.",
+          );
+        }}
+      />
     </>
   );
 }

@@ -67,20 +67,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   );
   return (
     <>
-      <SampleGallery
-        onBusyChange={setSampleBusy}
-        initialExpanded={jobs.length === 0}
-        types={["character", "character-short"]}
-        csrf={c.view?.csrfToken ?? ""}
-        onUse={async ({ asset: sample, copy }) => {
-          setAsset(copy.referenceAsset ?? "");
-          setSampleRef(`/api/samples/${sample.referenceId || sample.id}/file`);
-          await c.load();
-          c.setNotice(
-            "샘플 참조 PNG를 새 작업 입력에 연결했습니다. 주제를 입력해 새 작업을 저장하세요. 기존 작업은 보존됩니다.",
-          );
-        }}
-      />
+
       <div className="core-character" aria-busy={sampleBusy}>
         <div className="core-character-steps">
           <div>
@@ -331,6 +318,20 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           </div>
         </Panel>
       </div>
+      <SampleGallery
+        onBusyChange={setSampleBusy}
+        initialExpanded={jobs.length === 0}
+        types={["character", "character-short"]}
+        csrf={c.view?.csrfToken ?? ""}
+        onUse={async ({ asset: sample, copy }) => {
+          setAsset(copy.referenceAsset ?? "");
+          setSampleRef(`/api/samples/${sample.referenceId || sample.id}/file`);
+          await c.load();
+          c.setNotice(
+            "샘플 참조 PNG를 새 작업 입력에 연결했습니다. 주제를 입력해 새 작업을 저장하세요. 기존 작업은 보존됩니다.",
+          );
+        }}
+      />
     </>
   );
 }

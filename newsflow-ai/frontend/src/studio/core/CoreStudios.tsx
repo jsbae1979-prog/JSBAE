@@ -6,6 +6,7 @@ import ImageStudio from "./ImageStudio";
 import TopThreeImageStudio from "./TopThreeImageStudio";
 import NewsStudio from "./NewsStudio";
 import "./core-studios.css";
+import "./precision.css";
 export default function CoreStudios({
   module,
   onNavigate,

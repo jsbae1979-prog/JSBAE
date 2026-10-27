@@ -161,11 +161,7 @@ export default function NewsShortsStudio({
   );
   return (
     <>
-      <SampleGallery
-        initialExpanded={c.list("drafts").length === 0}
-        types={["news-short"]}
-        csrf={c.view?.csrfToken ?? ""}
-      />
+
       <div className="core-shorts">
         <Panel
           title="분석된 뉴스 TOP 3"
@@ -528,6 +524,11 @@ export default function NewsShortsStudio({
           ))}
         </details>
       </div>
+      <SampleGallery
+        initialExpanded={c.list("drafts").length === 0}
+        types={["news-short"]}
+        csrf={c.view?.csrfToken ?? ""}
+      />
     </>
   );
 }
