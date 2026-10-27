@@ -1,0 +1,103 @@
+{
+  "base_SHA": "f88c8146dd8b79b9d020ecf02b04d7944f88abd6",
+  "product_SHA": "c892ba5ac3725072cd2f63ab2fcbd1b1d0a76025",
+  "test_SHA": "db616e474c16d04ca14649d9d3134beef05096b1",
+  "final": "CONDITIONAL",
+  "counts": {
+    "MINOR": 4,
+    "FUNCTIONAL_CONSTRAINT": 2
+  },
+  "MAJOR_remaining": 0,
+  "screens": [
+    {
+      "id": "shorts",
+      "screen": "뉴스 쇼츠",
+      "asset": "news_shorts_v2.png",
+      "verdict": "MINOR",
+      "change": "기사/자료 · 중앙 대본+9:16 미리보기 그룹 · 우측 음성/영상 명령의 3영역으로 재배치했다. 단계/명령 높이를 줄이고 저장 버튼은 편집 스크롤 밖에 유지했다. 타임라인은 1920 첫 화면 안에 배치했다. 1366 좁은 기사/대본 제목도 상태 배지와 분리했다.",
+      "remaining": "시안의 인라인 음성·영상 옵션 대신 기존 모델·비용 승인 폼을 유지한다. 패널 밀도·아이콘·간격은 작은 차이가 있다. 1366은 내부/본문 스크롤을 허용한다.",
+      "preserved": "대본 저장/재조회, Revision 409 편집 보존, 장면 선택, 음성·영상 및 비용 승인 동작 유지.",
+      "before": "MAJOR",
+      "viewports": [
+        "1920x1080",
+        "1366x768"
+      ],
+      "approved_url": "https://github.com/jsbae1979-prog/JSBAE/blob/e6e493c0dbd5ab8ef017d716f466d715ec9896a9/newsflow-ai/docs/design/approved-20261027/approved-assets/news_shorts_v2.png"
+    },
+    {
+      "id": "characters",
+      "screen": "캐릭터 쇼츠",
+      "asset": "character_shorts_v4.png",
+      "verdict": "MINOR",
+      "change": "3단계를 유지하고 참조 PNG·주제/스토리·영상+모델/견적 그룹을 첫 행에 배치했다. 실제 모델 고정값·공식 견적·검토 명령은 미리보기 옆에 있고 나머지 고급 설정만 접는다. 스토리보드를 프로젝트 목록보다 앞에 옮겼다.",
+      "remaining": "실제 클립/장면 이미지가 없는 상태는 텍스트 장면과 빈 미리보기로 표시한다. 원본의 캐릭터 사진·완성 영상·가상 견적을 복제하지 않는다. 1366은 스토리보드까지 본문 스크롤이 필요하다.",
+      "preserved": "참조/주제·작업 고정값·장면 선택, Claude → 견적/승인 → Seedance → FFmpeg 명령 및 원래 상태 게이트 유지.",
+      "before": "MAJOR",
+      "viewports": [
+        "1920x1080",
+        "1366x768"
+      ],
+      "approved_url": "https://github.com/jsbae1979-prog/JSBAE/blob/e6e493c0dbd5ab8ef017d716f466d715ec9896a9/newsflow-ai/docs/design/approved-20261027/approved-assets/character_shorts_v4.png"
+    },
+    {
+      "id": "news",
+      "screen": "뉴스 스튜디오",
+      "asset": "news_studio_v2.png",
+      "verdict": "FUNCTIONAL_CONSTRAINT",
+      "change": "왼쪽 검색/필터/기사, 중앙 선택 기사+저장 요약+AI 분석 정보, 오른쪽 출처/검토와 제작실 이동으로 분리했다. 제공되는 분석 실행 메타데이터만 표시하고 기사별 분석 본문/키워드 미제공을 명시했다.",
+      "remaining": "현재 read model은 articles.summary 및 analyses의 id/kind/provider/status/created_at만 제공한다. 기사별 분석 본문·키워드·연결 식별자가 없으므로 원본 분석 탭은 재현하지 않았다. 기사 요약이나 전체 실행 기록을 선택 기사의 AI 분석으로 오인시키지 않는다.",
+      "preserved": "검색·선택·출처와 기존 분석 승인 명령 유지. 관련 뉴스 추천·즐겨찾기·새 분석 탭·영상 편집 기능 추가 없음.",
+      "before": "MAJOR",
+      "viewports": [
+        "1920x1080",
+        "1366x768"
+      ],
+      "approved_url": "https://github.com/jsbae1979-prog/JSBAE/blob/e6e493c0dbd5ab8ef017d716f466d715ec9896a9/newsflow-ai/docs/design/approved-20261027/approved-assets/news_studio_v2.png"
+    },
+    {
+      "id": "automation",
+      "screen": "자동화 센터",
+      "asset": "automation_v1.png",
+      "verdict": "FUNCTIONAL_CONSTRAINT",
+      "change": "예약명·주기·실행 시간·다음 실행·상태의 중앙 예약 테이블과 오른쪽 선택 상세/저장/상태 변경을 구성했다. 하단 예약 실행 기록과 자동 제작 기록을 구분했다.",
+      "remaining": "원본 왼쪽의 여러 제작 유형/예약 템플릿을 뒷받침하는 계약이 없어 추가하지 않았다. 가상 유형 없이 테이블+상세 2영역을 유지한다. 다음 실행이 없으면 미정으로 표시한다.",
+      "preserved": "기존 일정 선택과 revision, 저장 시 paused 및 별도 활성화 폼 유지. 결과 불명 자동 재실행·무인 유료 실행 없음.",
+      "before": "MAJOR",
+      "viewports": [
+        "1920x1080",
+        "1366x768"
+      ],
+      "approved_url": "https://github.com/jsbae1979-prog/JSBAE/blob/e6e493c0dbd5ab8ef017d716f466d715ec9896a9/newsflow-ai/docs/design/approved-20261027/approved-assets/automation_v1.png"
+    },
+    {
+      "id": "publishing",
+      "screen": "게시 스튜디오",
+      "asset": "publishing_v4.png",
+      "verdict": "MINOR",
+      "change": "초안 선택·중앙 미리보기+검토 나란히·플랫폼 계정으로 묶었다. 1366은 검토 폭을 확보하고 4플랫폼 계정을 다음 행에 배치했다. 게시/단일 이미지 전달 기록은 별도 하단 영역이며 값이 있는 두 기록의 겹침 방지를 검사했다.",
+      "remaining": "원본의 인라인 편집·일괄 예약을 새로 구현하지 않고 기존 편집·검토·최종 승인 폼을 유지한다. 1366의 플랫폼/기록은 본문 스크롤로 확인한다. 시안보다 검토 안내 문구가 많다.",
+      "preserved": "Instagram 다중 계정·YouTube·TikTok·Facebook 구분, 검토/저작권/출처/권한과 최종 실행 분리, TikTok/Facebook 실전송 차단 유지.",
+      "before": "MAJOR",
+      "viewports": [
+        "1920x1080",
+        "1366x768"
+      ],
+      "approved_url": "https://github.com/jsbae1979-prog/JSBAE/blob/e6e493c0dbd5ab8ef017d716f466d715ec9896a9/newsflow-ai/docs/design/approved-20261027/approved-assets/publishing_v4.png"
+    },
+    {
+      "id": "analytics",
+      "screen": "성과·비용",
+      "asset": "analytics_v4_option2.png",
+      "verdict": "MINOR",
+      "change": "큰 계정 카드를 기본 닫힌 등록 계정/권한 요약으로 바꾸고 플랫폼·계정 선택을 유지했다. 성과·콘텐츠·AI 사용량을 위로 올리고 추정 비용/실제 청구액은 상단 요약에서 구분한다. 계정 라벨 nowrap을 보존했다.",
+      "remaining": "시안의 콘텐츠 격자·그래픽 차트 대신 기존 실제 지표/사용량 표와 콘텐츠 목록을 재사용한다. 미수집/미확인 표시와 9:16 미리보기로 정보 밀도 차이가 남는다.",
+      "preserved": "Instagram 복수 계정, 계정 식별자 없는 지표 비귀속, 공급사 견적/청구액 분리 유지. 가짜 조회수·수익·비용 생성 없음.",
+      "before": "MAJOR",
+      "viewports": [
+        "1920x1080",
+        "1366x768"
+      ],
+      "approved_url": "https://github.com/jsbae1979-prog/JSBAE/blob/e6e493c0dbd5ab8ef017d716f466d715ec9896a9/newsflow-ai/docs/design/approved-20261027/approved-assets/analytics_v4_option2.png"
+    }
+  ]
+}

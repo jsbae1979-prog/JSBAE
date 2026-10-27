@@ -1,0 +1,158 @@
+[
+  {
+    "file": "dashboard-1920.png",
+    "before_SHA256": "9ca65f4e9c83d88434c7df6d4183df70d57ffb566b135b54378a65a8e70398eb",
+    "after_SHA256": "9ca65f4e9c83d88434c7df6d4183df70d57ffb566b135b54378a65a8e70398eb",
+    "PNG_bytes_identical": true,
+    "different_pixels": 0,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": null
+  },
+  {
+    "file": "dashboard-1366.png",
+    "before_SHA256": "6360df4e92e119eda49414ccfcbab31a9282828310ca1ad62c32eff1bf3691b6",
+    "after_SHA256": "6360df4e92e119eda49414ccfcbab31a9282828310ca1ad62c32eff1bf3691b6",
+    "PNG_bytes_identical": true,
+    "different_pixels": 0,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": null
+  },
+  {
+    "file": "create-1920.png",
+    "before_SHA256": "8af48da1eca295929a5624dc9775805fbd5fbb5a139add0d6fd17b86619b06a0",
+    "after_SHA256": "8af48da1eca295929a5624dc9775805fbd5fbb5a139add0d6fd17b86619b06a0",
+    "PNG_bytes_identical": true,
+    "different_pixels": 0,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": null
+  },
+  {
+    "file": "create-1366.png",
+    "before_SHA256": "ac00bc3df2d3c3dda050e514d47fee921a7dc34b3789a0d11097d837b279781b",
+    "after_SHA256": "ac00bc3df2d3c3dda050e514d47fee921a7dc34b3789a0d11097d837b279781b",
+    "PNG_bytes_identical": true,
+    "different_pixels": 0,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": null
+  },
+  {
+    "file": "images-1920.png",
+    "before_SHA256": "001daec196b29b9eaa682d6d9a5948d50db6444261d182d01e15fb865bbd6a27",
+    "after_SHA256": "001daec196b29b9eaa682d6d9a5948d50db6444261d182d01e15fb865bbd6a27",
+    "PNG_bytes_identical": true,
+    "different_pixels": 0,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": null
+  },
+  {
+    "file": "images-1366.png",
+    "before_SHA256": "ad850257622b1c758104b558f09a61aa89888f36850ecfd5406a23ed9e8ebacd",
+    "after_SHA256": "ad850257622b1c758104b558f09a61aa89888f36850ecfd5406a23ed9e8ebacd",
+    "PNG_bytes_identical": true,
+    "different_pixels": 0,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": null
+  },
+  {
+    "file": "images-news-1920.png",
+    "before_SHA256": "24ddb0ea7c42fdb7c685d01fbeef97adfe97bf41b5b6fe8a20e88ea0611d947c",
+    "after_SHA256": "2130225233cb2841f63a1693764a3d2df398165586903b9fc0f30cf88d7d6674",
+    "PNG_bytes_identical": false,
+    "different_pixels": 2196,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": [
+      316,
+      495,
+      356,
+      604
+    ]
+  },
+  {
+    "file": "images-news-1366.png",
+    "before_SHA256": "d52a045fa9b014a44d253971a8f862019925cb8c8a0dce7520c532a054f5a046",
+    "after_SHA256": "c8151f395a2161d030852d8cd81bf7091914bea64a320209151b92895e546ca0",
+    "PNG_bytes_identical": false,
+    "different_pixels": 9282,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": [
+      301,
+      402,
+      1042,
+      610
+    ]
+  },
+  {
+    "file": "images-top3-1920.png",
+    "before_SHA256": "01bbb5261e536b8f97dfcb497e6ca2662e024500697af2beedc0b8c459e93fc3",
+    "after_SHA256": "5c414e68fc143579408ee1beeae3bf425541c5b933ea15cd660e7d196014d13c",
+    "PNG_bytes_identical": false,
+    "different_pixels": 23442,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": [
+      718,
+      653,
+      1528,
+      962
+    ]
+  },
+  {
+    "file": "images-top3-1366.png",
+    "before_SHA256": "cd720f57250a6d544c89631efce6307aaef441c782fc3556496958fe4cd70a46",
+    "after_SHA256": "b325d7abfeb1a0081abfe1734eb2723c41a4afb2ea44495fe96c1db1264823d3",
+    "PNG_bytes_identical": false,
+    "different_pixels": 7824,
+    "different_pixels_outside_media": 2430,
+    "difference_bbox": [
+      305,
+      441,
+      1064,
+      768
+    ]
+  },
+  {
+    "file": "library-1920.png",
+    "before_SHA256": "8b36c2a6e60e86f8e476cad176d252bcb877979aa2a50eaf535938c1c4a7ce91",
+    "after_SHA256": "dcf16a5daaeffbd5c40fb5e294da5f37bb53e30b21039a3e3462a66e382e65b6",
+    "PNG_bytes_identical": false,
+    "different_pixels": 731,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": [
+      1559,
+      502,
+      1631,
+      574
+    ]
+  },
+  {
+    "file": "library-1366.png",
+    "before_SHA256": "c4ad170c2e13278f3ea40732e65e341d4bb25240584d6055282ec1dc69dafc50",
+    "after_SHA256": "a4b2505936e5dbd84dd1d4dafb5e8f5d746bb05354bd40f4e1934fd59c06b45b",
+    "PNG_bytes_identical": false,
+    "different_pixels": 750,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": [
+      1117,
+      491,
+      1188,
+      563
+    ]
+  },
+  {
+    "file": "settings-1920.png",
+    "before_SHA256": "50ec843753990ea626458f4f6b0eb03d279b85c76fe9836b095f2a1b112770de",
+    "after_SHA256": "50ec843753990ea626458f4f6b0eb03d279b85c76fe9836b095f2a1b112770de",
+    "PNG_bytes_identical": true,
+    "different_pixels": 0,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": null
+  },
+  {
+    "file": "settings-1366.png",
+    "before_SHA256": "aa677a42fd27919dcfd389f5cbf82be26616d1792f9d2da8d89b0a2bc0b14cbd",
+    "after_SHA256": "aa677a42fd27919dcfd389f5cbf82be26616d1792f9d2da8d89b0a2bc0b14cbd",
+    "PNG_bytes_identical": true,
+    "different_pixels": 0,
+    "different_pixels_outside_media": 0,
+    "difference_bbox": null
+  }
+]

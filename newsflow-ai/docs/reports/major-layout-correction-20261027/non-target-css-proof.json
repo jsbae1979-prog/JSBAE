@@ -1,0 +1,7 @@
+{
+  "name": "TOP3 CSS rules remain identical despite capture rendering variability",
+  "same": true,
+  "matchedRulesBefore": 50,
+  "matchedRulesAfter": 50,
+  "nodes": 266
+}

@@ -1,0 +1,1170 @@
+{
+  "phase": "after",
+  "captures": [
+    {
+      "name": "shorts",
+      "width": 1920,
+      "height": 1080,
+      "file": "shorts-1920.png",
+      "mediaRects": [
+        {
+          "x": 316,
+          "y": 388.75,
+          "width": 25.984375,
+          "height": 11.0625,
+          "tag": "IMG"
+        },
+        {
+          "x": 316,
+          "y": 457.828125,
+          "width": 25.984375,
+          "height": 27.5,
+          "tag": "IMG"
+        },
+        {
+          "x": 316,
+          "y": 535.375,
+          "width": 25.984375,
+          "height": 27,
+          "tag": "IMG"
+        },
+        {
+          "x": 1181.53125,
+          "y": 377.78125,
+          "width": 196,
+          "height": 350,
+          "tag": "VIDEO"
+        }
+      ]
+    },
+    {
+      "name": "characters",
+      "width": 1920,
+      "height": 1080,
+      "file": "characters-1920.png",
+      "mediaRects": [
+        {
+          "x": 303,
+          "y": 366.28125,
+          "width": 365.1875,
+          "height": 300,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "news",
+      "width": 1920,
+      "height": 1080,
+      "file": "news-1920.png",
+      "mediaRects": [
+        {
+          "x": 364.59375,
+          "y": 398.78125,
+          "width": 90,
+          "height": 100,
+          "tag": "IMG"
+        },
+        {
+          "x": 364.59375,
+          "y": 548.78125,
+          "width": 90,
+          "height": 100,
+          "tag": "IMG"
+        },
+        {
+          "x": 364.59375,
+          "y": 698.78125,
+          "width": 90,
+          "height": 100,
+          "tag": "IMG"
+        },
+        {
+          "x": 813.5,
+          "y": 419.78125,
+          "width": 125,
+          "height": 145,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "automation",
+      "width": 1920,
+      "height": 1080,
+      "file": "automation-1920.png",
+      "mediaRects": []
+    },
+    {
+      "name": "publishing",
+      "width": 1920,
+      "height": 1080,
+      "file": "publishing-1920.png",
+      "mediaRects": [
+        {
+          "x": 734.40625,
+          "y": 383.78125,
+          "width": 196,
+          "height": 350,
+          "tag": "VIDEO"
+        }
+      ]
+    },
+    {
+      "name": "analytics",
+      "width": 1920,
+      "height": 1080,
+      "file": "analytics-1920.png",
+      "mediaRects": [
+        {
+          "x": 1323.546875,
+          "y": 596.265625,
+          "width": 39.984375,
+          "height": 17.015625,
+          "tag": "IMG"
+        },
+        {
+          "x": 1323.5625,
+          "y": 675.171875,
+          "width": 39.953125,
+          "height": 17.203125,
+          "tag": "IMG"
+        },
+        {
+          "x": 1323.546875,
+          "y": 754.265625,
+          "width": 39.984375,
+          "height": 17.015625,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "dashboard",
+      "width": 1920,
+      "height": 1080,
+      "file": "dashboard-1920.png",
+      "mediaRects": [
+        {
+          "x": 736.484375,
+          "y": 81,
+          "width": 772.515625,
+          "height": 314,
+          "tag": "IMG"
+        },
+        {
+          "x": 263,
+          "y": 595,
+          "width": 298,
+          "height": 141.890625,
+          "tag": "IMG"
+        },
+        {
+          "x": 579,
+          "y": 595,
+          "width": 298,
+          "height": 141.890625,
+          "tag": "IMG"
+        },
+        {
+          "x": 895,
+          "y": 595,
+          "width": 298,
+          "height": 141.890625,
+          "tag": "IMG"
+        },
+        {
+          "x": 468.703125,
+          "y": 867.6875,
+          "width": 197.625,
+          "height": 194,
+          "tag": "IMG"
+        },
+        {
+          "x": 890.03125,
+          "y": 867.6875,
+          "width": 197.625,
+          "height": 194,
+          "tag": "IMG"
+        },
+        {
+          "x": 1311.375,
+          "y": 867.6875,
+          "width": 197.625,
+          "height": 194,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "width": 1920,
+      "height": 1080,
+      "file": "create-1920.png",
+      "mediaRects": [
+        {
+          "x": 574.671875,
+          "y": 244,
+          "width": 243.65625,
+          "height": 308,
+          "tag": "IMG"
+        },
+        {
+          "x": 1080,
+          "y": 244,
+          "width": 243.65625,
+          "height": 308,
+          "tag": "IMG"
+        },
+        {
+          "x": 1585.328125,
+          "y": 244,
+          "width": 243.671875,
+          "height": 308,
+          "tag": "IMG"
+        },
+        {
+          "x": 331,
+          "y": 723,
+          "width": 361,
+          "height": 171.890625,
+          "tag": "IMG"
+        },
+        {
+          "x": 710,
+          "y": 723,
+          "width": 361,
+          "height": 171.890625,
+          "tag": "IMG"
+        },
+        {
+          "x": 1089,
+          "y": 723,
+          "width": 361,
+          "height": 171.890625,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "images",
+      "width": 1920,
+      "height": 1080,
+      "file": "images-1920.png",
+      "mediaRects": [
+        {
+          "x": 929.25,
+          "y": 371.78125,
+          "width": 510,
+          "height": 638,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "images-news",
+      "width": 1920,
+      "height": 1080,
+      "file": "images-news-1920.png",
+      "mediaRects": [
+        {
+          "x": 316,
+          "y": 494.953125,
+          "width": 39.984375,
+          "height": 17.015625,
+          "tag": "IMG"
+        },
+        {
+          "x": 316,
+          "y": 561.3125,
+          "width": 39.984375,
+          "height": 42.3125,
+          "tag": "IMG"
+        },
+        {
+          "x": 316,
+          "y": 640.6875,
+          "width": 39.984375,
+          "height": 41.546875,
+          "tag": "IMG"
+        },
+        {
+          "x": 1096.65625,
+          "y": 371.78125,
+          "width": 373.34375,
+          "height": 467.171875,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "images-top3",
+      "width": 1920,
+      "height": 1080,
+      "file": "images-top3-1920.png",
+      "mediaRects": [
+        {
+          "x": 718.984375,
+          "y": 653.78125,
+          "width": 246.953125,
+          "height": 308.6875,
+          "tag": "IMG"
+        },
+        {
+          "x": 999.9375,
+          "y": 653.78125,
+          "width": 246.96875,
+          "height": 308.703125,
+          "tag": "IMG"
+        },
+        {
+          "x": 1280.90625,
+          "y": 653.78125,
+          "width": 246.953125,
+          "height": 308.6875,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "library",
+      "width": 1920,
+      "height": 1080,
+      "file": "library-1920.png",
+      "mediaRects": [
+        {
+          "x": 1463.96875,
+          "y": 315.78125,
+          "width": 262.375,
+          "height": 468,
+          "tag": "VIDEO"
+        }
+      ]
+    },
+    {
+      "name": "settings",
+      "width": 1920,
+      "height": 1080,
+      "file": "settings-1920.png",
+      "mediaRects": []
+    },
+    {
+      "name": "shorts",
+      "width": 1366,
+      "height": 768,
+      "file": "shorts-1366.png",
+      "mediaRects": [
+        {
+          "x": 301,
+          "y": 382.046875,
+          "width": 25.984375,
+          "height": 11.0625,
+          "tag": "IMG"
+        },
+        {
+          "x": 301,
+          "y": 471.921875,
+          "width": 25.984375,
+          "height": 27.5,
+          "tag": "IMG"
+        },
+        {
+          "x": 301,
+          "y": 570.265625,
+          "width": 25.984375,
+          "height": 27,
+          "tag": "IMG"
+        },
+        {
+          "x": 834.96875,
+          "y": 375.078125,
+          "width": 196,
+          "height": 350,
+          "tag": "VIDEO"
+        }
+      ]
+    },
+    {
+      "name": "characters",
+      "width": 1366,
+      "height": 768,
+      "file": "characters-1366.png",
+      "mediaRects": [
+        {
+          "x": 288,
+          "y": 359.578125,
+          "width": 236.390625,
+          "height": 300,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "news",
+      "width": 1366,
+      "height": 768,
+      "file": "news-1366.png",
+      "mediaRects": [
+        {
+          "x": 340.421875,
+          "y": 404.375,
+          "width": 90,
+          "height": 100,
+          "tag": "IMG"
+        },
+        {
+          "x": 340.421875,
+          "y": 578.96875,
+          "width": 90,
+          "height": 100,
+          "tag": "IMG"
+        },
+        {
+          "x": 340.421875,
+          "y": 753.5625,
+          "width": 90,
+          "height": 100,
+          "tag": "IMG"
+        },
+        {
+          "x": 629.609375,
+          "y": 413.078125,
+          "width": 125,
+          "height": 145,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "automation",
+      "width": 1366,
+      "height": 768,
+      "file": "automation-1366.png",
+      "mediaRects": []
+    },
+    {
+      "name": "publishing",
+      "width": 1366,
+      "height": 768,
+      "file": "publishing-1366.png",
+      "mediaRects": [
+        {
+          "x": 651.109375,
+          "y": 377.078125,
+          "width": 196,
+          "height": 350,
+          "tag": "VIDEO"
+        }
+      ]
+    },
+    {
+      "name": "analytics",
+      "width": 1366,
+      "height": 768,
+      "file": "analytics-1366.png",
+      "mediaRects": [
+        {
+          "x": 973.578125,
+          "y": 583.5625,
+          "width": 39.984375,
+          "height": 17.015625,
+          "tag": "IMG"
+        },
+        {
+          "x": 973.59375,
+          "y": 662.46875,
+          "width": 39.953125,
+          "height": 17.203125,
+          "tag": "IMG"
+        },
+        {
+          "x": 973.578125,
+          "y": 741.5625,
+          "width": 39.984375,
+          "height": 17.015625,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "dashboard",
+      "width": 1366,
+      "height": 768,
+      "file": "dashboard-1366.png",
+      "mediaRects": [
+        {
+          "x": 489.40625,
+          "y": 80,
+          "width": 544.59375,
+          "height": 283,
+          "tag": "IMG"
+        },
+        {
+          "x": 256,
+          "y": 541,
+          "width": 185.5,
+          "height": 86.265625,
+          "tag": "IMG"
+        },
+        {
+          "x": 453.5,
+          "y": 541,
+          "width": 185.5,
+          "height": 86.265625,
+          "tag": "IMG"
+        },
+        {
+          "x": 651,
+          "y": 541,
+          "width": 185.5,
+          "height": 86.265625,
+          "tag": "IMG"
+        },
+        {
+          "x": 384.1875,
+          "y": 748.859375,
+          "width": 123.140625,
+          "height": 182,
+          "tag": "IMG"
+        },
+        {
+          "x": 647.515625,
+          "y": 748.859375,
+          "width": 123.140625,
+          "height": 182,
+          "tag": "IMG"
+        },
+        {
+          "x": 910.84375,
+          "y": 748.859375,
+          "width": 123.140625,
+          "height": 182,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "width": 1366,
+      "height": 768,
+      "file": "create-1366.png",
+      "mediaRects": [
+        {
+          "x": 434.328125,
+          "y": 243,
+          "width": 178.328125,
+          "height": 308,
+          "tag": "IMG"
+        },
+        {
+          "x": 803,
+          "y": 243,
+          "width": 178.328125,
+          "height": 308,
+          "tag": "IMG"
+        },
+        {
+          "x": 1171.65625,
+          "y": 243,
+          "width": 178.328125,
+          "height": 308,
+          "tag": "IMG"
+        },
+        {
+          "x": 256,
+          "y": 722,
+          "width": 264.5,
+          "height": 123.015625,
+          "tag": "IMG"
+        },
+        {
+          "x": 532.5,
+          "y": 722,
+          "width": 264.5,
+          "height": 123.015625,
+          "tag": "IMG"
+        },
+        {
+          "x": 809,
+          "y": 722,
+          "width": 264.5,
+          "height": 123.015625,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "images",
+      "width": 1366,
+      "height": 768,
+      "file": "images-1366.png",
+      "mediaRects": [
+        {
+          "x": 647,
+          "y": 361.078125,
+          "width": 449.59375,
+          "height": 562.484375,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "images-news",
+      "width": 1366,
+      "height": 768,
+      "file": "images-news-1366.png",
+      "mediaRects": [
+        {
+          "x": 301,
+          "y": 480.84375,
+          "width": 39.984375,
+          "height": 17.015625,
+          "tag": "IMG"
+        },
+        {
+          "x": 301,
+          "y": 547.203125,
+          "width": 39.984375,
+          "height": 42.3125,
+          "tag": "IMG"
+        },
+        {
+          "x": 301,
+          "y": 626.578125,
+          "width": 39.984375,
+          "height": 41.546875,
+          "tag": "IMG"
+        },
+        {
+          "x": 823.984375,
+          "y": 361.078125,
+          "width": 239.0625,
+          "height": 299.328125,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "images-top3",
+      "width": 1366,
+      "height": 768,
+      "file": "images-top3-1366.png",
+      "mediaRects": [
+        {
+          "x": 592.625,
+          "y": 658.078125,
+          "width": 141.25,
+          "height": 176.5625,
+          "tag": "IMG"
+        },
+        {
+          "x": 763.875,
+          "y": 658.078125,
+          "width": 141.25,
+          "height": 176.5625,
+          "tag": "IMG"
+        },
+        {
+          "x": 935.125,
+          "y": 658.078125,
+          "width": 141.25,
+          "height": 176.5625,
+          "tag": "IMG"
+        }
+      ]
+    },
+    {
+      "name": "library",
+      "width": 1366,
+      "height": 768,
+      "file": "library-1366.png",
+      "mediaRects": [
+        {
+          "x": 1022.265625,
+          "y": 305.078125,
+          "width": 262.375,
+          "height": 468,
+          "tag": "VIDEO"
+        }
+      ]
+    },
+    {
+      "name": "settings",
+      "width": 1366,
+      "height": 768,
+      "file": "settings-1366.png",
+      "mediaRects": []
+    }
+  ],
+  "checks": [
+    {
+      "name": "shorts",
+      "width": 1920
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "shorts",
+      "width": 1920,
+      "geometry": {
+        "editor": {
+          "x": 645.5,
+          "y": 320.78125,
+          "width": 447.796875,
+          "height": 430
+        },
+        "preview": {
+          "x": 1107.296875,
+          "y": 320.78125,
+          "width": 344.46875,
+          "height": 452.390625
+        },
+        "timeline": {
+          "x": 303,
+          "y": 892.78125,
+          "width": 1553.984375,
+          "height": 141.59375
+        },
+        "stage": {
+          "x": 284,
+          "y": 199.78125,
+          "width": 1592,
+          "height": 46
+        }
+      }
+    },
+    {
+      "name": "characters",
+      "width": 1920
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "characters",
+      "width": 1920,
+      "geometry": {
+        "preview": {
+          "x": 1159.1875,
+          "y": 307.78125,
+          "width": 324.75,
+          "height": 426.390625
+        },
+        "quote": {
+          "x": 1493.9375,
+          "y": 307.78125,
+          "width": 382.046875,
+          "height": 410
+        },
+        "storyboard": {
+          "x": 303,
+          "y": 804.671875,
+          "width": 1554,
+          "height": 171.6875
+        }
+      }
+    },
+    {
+      "name": "news",
+      "width": 1920
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "news",
+      "width": 1920,
+      "geometry": {
+        "analysis": {
+          "x": 813.5,
+          "y": 653.265625,
+          "width": 607.453125,
+          "height": 309.265625
+        },
+        "source": {
+          "x": 1472.953125,
+          "y": 338.78125,
+          "width": 384.03125,
+          "height": 175.28125
+        }
+      }
+    },
+    {
+      "name": "automation",
+      "width": 1920
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "automation",
+      "width": 1920,
+      "geometry": {
+        "table": {
+          "x": 303,
+          "y": 338.78125,
+          "width": 955.546875,
+          "height": 110
+        },
+        "details": {
+          "x": 1291.546875,
+          "y": 279.78125,
+          "width": 584.453125,
+          "height": 411.484375
+        }
+      }
+    },
+    {
+      "name": "publishing",
+      "width": 1920
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "publishing",
+      "width": 1920,
+      "geometry": {
+        "preview": {
+          "x": 643.296875,
+          "y": 307.78125,
+          "width": 378.21875,
+          "height": 490.390625
+        },
+        "review": {
+          "x": 1035.515625,
+          "y": 307.78125,
+          "width": 420.234375,
+          "height": 490.390625
+        }
+      }
+    },
+    {
+      "name": "analytics",
+      "width": 1920
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "analytics",
+      "width": 1920,
+      "geometry": {
+        "metrics": {
+          "x": 284,
+          "y": 510.78125,
+          "width": 993.546875,
+          "height": 262
+        },
+        "accountSummary": {
+          "x": 284,
+          "y": 400.78125,
+          "width": 1592,
+          "height": 41
+        }
+      }
+    },
+    {
+      "name": "dashboard",
+      "width": 1920
+    },
+    {
+      "name": "create",
+      "width": 1920
+    },
+    {
+      "name": "images",
+      "width": 1920
+    },
+    {
+      "name": "images-news",
+      "width": 1920
+    },
+    {
+      "name": "images-top3",
+      "width": 1920
+    },
+    {
+      "name": "library",
+      "width": 1920
+    },
+    {
+      "name": "settings",
+      "width": 1920
+    },
+    {
+      "name": "shorts",
+      "width": 1366
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "shorts",
+      "width": 1366,
+      "geometry": {
+        "editor": {
+          "x": 521,
+          "y": 318.078125,
+          "width": 287.421875,
+          "height": 430
+        },
+        "preview": {
+          "x": 822.421875,
+          "y": 318.078125,
+          "width": 221.109375,
+          "height": 472.78125
+        },
+        "timeline": {
+          "x": 288,
+          "y": 886.078125,
+          "width": 1029.984375,
+          "height": 138.59375
+        },
+        "stage": {
+          "x": 273,
+          "y": 197.078125,
+          "width": 1060,
+          "height": 46
+        }
+      }
+    },
+    {
+      "name": "characters",
+      "width": 1366
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "characters",
+      "width": 1366,
+      "geometry": {
+        "preview": {
+          "x": 859.390625,
+          "y": 305.078125,
+          "width": 213,
+          "height": 446.78125
+        },
+        "quote": {
+          "x": 1082.390625,
+          "y": 305.078125,
+          "width": 250.609375,
+          "height": 410
+        },
+        "storyboard": {
+          "x": 288,
+          "y": 818.359375,
+          "width": 1030,
+          "height": 168.6875
+        }
+      }
+    },
+    {
+      "name": "news",
+      "width": 1366
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "news",
+      "width": 1366,
+      "geometry": {
+        "analysis": {
+          "x": 629.609375,
+          "y": 643.859375,
+          "width": 395.90625,
+          "height": 309.265625
+        },
+        "source": {
+          "x": 1069.515625,
+          "y": 332.078125,
+          "width": 248.484375,
+          "height": 195.671875
+        }
+      }
+    },
+    {
+      "name": "automation",
+      "width": 1366
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "automation",
+      "width": 1366,
+      "geometry": {
+        "table": {
+          "x": 288,
+          "y": 332.078125,
+          "width": 628.578125,
+          "height": 110
+        },
+        "details": {
+          "x": 945.578125,
+          "y": 277.078125,
+          "width": 387.421875,
+          "height": 418.171875
+        }
+      }
+    },
+    {
+      "name": "publishing",
+      "width": 1366
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "publishing",
+      "width": 1366,
+      "geometry": {
+        "preview": {
+          "x": 572.265625,
+          "y": 305.078125,
+          "width": 353.703125,
+          "height": 482.390625
+        },
+        "review": {
+          "x": 939.96875,
+          "y": 305.078125,
+          "width": 393.03125,
+          "height": 482.390625
+        }
+      }
+    },
+    {
+      "name": "analytics",
+      "width": 1366
+    },
+    {
+      "name": "approved layout grouping and accessibility",
+      "screen": "analytics",
+      "width": 1366,
+      "geometry": {
+        "metrics": {
+          "x": 273,
+          "y": 502.078125,
+          "width": 658.578125,
+          "height": 252
+        },
+        "accountSummary": {
+          "x": 273,
+          "y": 396.078125,
+          "width": 1060,
+          "height": 39
+        }
+      }
+    },
+    {
+      "name": "dashboard",
+      "width": 1366
+    },
+    {
+      "name": "create",
+      "width": 1366
+    },
+    {
+      "name": "images",
+      "width": 1366
+    },
+    {
+      "name": "images-news",
+      "width": 1366
+    },
+    {
+      "name": "images-top3",
+      "width": 1366
+    },
+    {
+      "name": "TOP3 CSS rules remain identical despite capture rendering variability",
+      "same": true,
+      "matchedRulesBefore": 50,
+      "matchedRulesAfter": 50,
+      "nodes": 266
+    },
+    {
+      "name": "library",
+      "width": 1366
+    },
+    {
+      "name": "settings",
+      "width": 1366
+    },
+    {
+      "name": "shorts preserves save and reload"
+    },
+    {
+      "name": "shorts revision conflict preserves edits"
+    },
+    {
+      "name": "shorts scene selection survives regrouping"
+    },
+    {
+      "name": "character storyboard retains saved scene selection"
+    },
+    {
+      "name": "character topic reaches existing draft approval form"
+    },
+    {
+      "name": "character advanced fixed settings and generation gate retained"
+    },
+    {
+      "name": "missing reference remains explicit empty state"
+    },
+    {
+      "name": "news search and honest unavailable analysis state"
+    },
+    {
+      "name": "table selection preserves save-paused and separate state-change form"
+    },
+    {
+      "name": "independent publishing histories do not overlap",
+      "width": 1920
+    },
+    {
+      "name": "independent publishing histories do not overlap",
+      "width": 1366
+    },
+    {
+      "name": "publishing review remains distinct from final execution"
+    },
+    {
+      "name": "all platform accounts remain accessible with blocked real transmission"
+    },
+    {
+      "name": "analytics retains multiple accounts without inventing unlinked metrics or billing"
+    },
+    {
+      "name": "no paid generation or final publishing request submitted"
+    },
+    {
+      "name": "existing strict CSS workspace scope assertion retained"
+    },
+    {
+      "name": "load failure retains explicit safe retry UI"
+    }
+  ],
+  "errors": [],
+  "externalRequests": [],
+  "posts": [
+    {
+      "path": "/ai/drafts/1",
+      "keys": [
+        "csrf_token",
+        "revision",
+        "content"
+      ],
+      "synthetic": true
+    },
+    {
+      "path": "/ai/drafts/1",
+      "keys": [
+        "csrf_token",
+        "revision",
+        "content"
+      ],
+      "synthetic": true
+    },
+    {
+      "path": "/schedules",
+      "keys": [
+        "csrf_token",
+        "name",
+        "kind",
+        "local_time",
+        "source",
+        "duration",
+        "platform",
+        "voice",
+        "revision"
+      ],
+      "synthetic": true
+    }
+  ],
+  "networkMode": "Playwright routes fulfill all application requests; pinned Node/Chrome boundary preserved; browser background egress NOT VERIFIED",
+  "WindowsOSDPI": "NOT VERIFIED",
+  "realAPICalls": 0,
+  "productAppStarted": false
+}

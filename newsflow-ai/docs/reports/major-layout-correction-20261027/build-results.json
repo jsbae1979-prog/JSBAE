@@ -1,0 +1,15 @@
+{
+  "TypeScript_typecheck": {
+    "exit": 0,
+    "scope": "final JSX; subsequent changes CSS and browser checks only"
+  },
+  "Vite_final_build": {
+    "exit": 0,
+    "used_by": "major06 56-check run"
+  },
+  "intermediate_build_failure": {
+    "exit": 1,
+    "cause": "selector expansion comment",
+    "resolved": true
+  }
+}

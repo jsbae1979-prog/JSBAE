@@ -1,0 +1,48 @@
+{
+  "base_SHA": "f88c8146dd8b79b9d020ecf02b04d7944f88abd6",
+  "product_SHA": "c892ba5ac3725072cd2f63ab2fcbd1b1d0a76025",
+  "test_SHA": "db616e474c16d04ca14649d9d3134beef05096b1",
+  "TypeScript": "PASS",
+  "Vite": "PASS",
+  "Windows_Chrome_synthetic_checks": 56,
+  "target_checks": 41,
+  "protection_checks": 15,
+  "FAIL": 0,
+  "ERROR": 0,
+  "captures": 26,
+  "target_captures": 12,
+  "home_exact_pairs": 4,
+  "other_exact_pairs": 4,
+  "other_media_only_pairs": 5,
+  "other_text_pixel_variant_pairs": 1,
+  "TOP3_matching_CSS_rules": "50 before / 50 after, identical; 266 DOM nodes checked",
+  "real_provider_calls": 0,
+  "external_application_requests": 0,
+  "test_processes_after_exit": 0,
+  "reused_only": {
+    "Windows_CI": 88,
+    "browser_checks": 40,
+    "previous_visual_checks": 17,
+    "full_regression": "5454 PASS / 4 SKIP, historical only"
+  },
+  "not_verified": [
+    "Windows OS DPI 100/125/150/200",
+    "local full Python app integration",
+    "actual suppliers/OAuth/SNS",
+    "Chrome OS-level background egress",
+    "TOP3 text raster difference root cause"
+  ],
+  "intermediate_issues": [
+    {
+      "kind": "layout assertion",
+      "cause": "Inherited first nested panel top margin; corrected within shorts group",
+      "resolved": true
+    },
+    {
+      "kind": "build failure",
+      "cause": "Comment mishandled during selector expansion; own transformation corrected",
+      "resolved": true
+    }
+  ],
+  "CI_policy": "Reuse previous 88 PASS; no new Actions run. [skip ci] avoids duplicate backend jobs; no workflow, assertions, skip/xfail or safety policy weakened."
+}
