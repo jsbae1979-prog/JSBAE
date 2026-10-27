@@ -45,7 +45,9 @@ hashes_after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
 cleanup_failures = []
 for child in list(workspace.iterdir()):
     try:
-        if child.is_dir() and not child.is_symlink():
+        if child.is_junction():
+            child.rmdir()  # Remove the synthetic junction itself, never follow it.
+        elif child.is_dir() and not child.is_symlink():
             shutil.rmtree(child)
         else:
             child.unlink()
