@@ -31,7 +31,7 @@ def script_sources(app, aid):
         identifiers=[x['article_ids'][0] for x in analysis.result['ranking']]
         draft=s.scalar(select(ContentDraft).join(IntelligenceRun, ContentDraft.run_id==IntelligenceRun.id).where(IntelligenceRun.options['analysis_run_id'].as_integer()==aid))
         content={'title':'합성 통합 대본','hook':'합성 자료의 변화를 살펴봅니다.','summary':'실제 사건을 주장하지 않는 합성 자료입니다.','closing':'출처 검토 후 제작합니다.','scenes':[{'seconds':10,'narration':f'합성 장면 {i}입니다.','caption':f'합성 장면 {i}','material':'기본 카드'} for i in range(1,4)]}
-        draft.content=content;draft.revision=1;draft.review_status='review_required'
+        draft.content=content;draft.sources={'articles':[deepcopy(analysis.evidence['articles'][0])]};draft.revision=1;draft.review_status='review_required'
         return draft.id,identifiers,deepcopy(content)
 
 
@@ -98,7 +98,7 @@ def test_character_png_story_scene_contract_and_unknown_preservation(client):
     assert hashlib.sha256(c.get(row['referenceUrl']).content).digest()==hashlib.sha256(original).digest()
     from newsflow.character.schema import Character,Storyboard,prompts
     service=app.state.character;job=service.read(identifier)
-    story=Storyboard.model_validate({'title':'합성 스토리','plan':{'situation':'합성 사무실','contrast':'바쁨과 여유','punchline':'조용한 결말'},'hook_caption':'합성 시작','end_caption':'합성 끝','scenes':[{'seconds':10,'caption':f'합성 {i}','action':f'합성 동작 {i}','role':['setup','build','punchline'][i-1],'sfx':''} for i in range(1,4)]})
+    story=Storyboard.model_validate({'title':'합성 스토리','plan':{'situation':'합성 사무실','contrast':'바쁨과 여유','punchline':'조용한 결말'},'hook_caption':'합성 시작','end_caption':'합성 끝','scenes':[{'seconds':10,'caption':f'합성 {i}','action':f'The character walks through synthetic room {i}.','role':['setup','build','punchline'][i-1],'sfx':''} for i in range(1,4)]})
     job.update(state='submission_unknown',script=story.model_dump(),scenes=[{'position':i,'state':state} for i,state in enumerate(['downloaded','failed','unknown'],1)])
     job['prompts']=prompts(story,Character.model_validate(job['character']));job['plan_hash']=service.plan_hash(job);service.save(job)
     before=deepcopy(service.read(identifier));reopened=next(x for x in view(c,'characters')['collections']['jobs'] if x['id']==identifier)
@@ -124,14 +124,14 @@ def test_independent_image_settings_snapshot_fake_result_and_reuse(client):
         calls=0
         def generate(self,prompt,key,*,selection):
             assert key=='synthetic-only-image-key';self.calls+=1
-            raw=BytesIO();Image.new('RGB',(1024,1024),'teal').save(raw,'JPEG')
+            raw=BytesIO();Image.new('RGB',tuple(map(int,selection['size'].split('x'))),'teal').save(raw,'JPEG')
             return raw.getvalue(),{'input_tokens':1,'output_tokens':1,'total_tokens':2}
     fake=Fake();app.state.image_generation.adapter=fake;app.state.image_generation.keys=NS(key=lambda:'synthetic-only-image-key',status=lambda:{'configured':True})
     for _ in range(2):assert c.post(f'/image-studio/{identifier}/generate',data={'csrf_token':csrf,'consent':'true','reviewed':'true'}).status_code==303
     reopened=next(x for x in view(c,'images')['collections']['drafts'] if x['id']==identifier)
     assert fake.calls==1 and reopened['status']=='success' and reopened['selection']==initial
     response=c.get(reopened['mediaUrl']);assert response.status_code==200
-    with Image.open(BytesIO(response.content)) as image:assert image.size==(1024,1024)
+    with Image.open(BytesIO(response.content)) as image:assert image.size==tuple(map(int,initial['size'].split('x')))
     assert c.post(f'/image-studio/{identifier}/reuse',data={'csrf_token':csrf,'reviewed':'true','target':'news'}).status_code==303
     assert fake.calls==1
 

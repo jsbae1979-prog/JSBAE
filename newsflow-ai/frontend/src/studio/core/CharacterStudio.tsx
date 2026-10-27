@@ -281,7 +281,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               <strong>{s.caption || `장면 ${i + 1}`}</strong>
               <p>{s.action}</p>
               <small>
-                {s.seconds}초 · <State value={clips[i]?.status ?? "pending"} />
+                {s.seconds}초 · <State value={clips[i]?.state ?? "pending"} />
               </small>
             </button>
           ))}
