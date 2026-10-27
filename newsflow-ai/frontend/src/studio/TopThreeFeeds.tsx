@@ -70,6 +70,7 @@ export default function TopThreeFeeds({
     [rights, setRights] = useState(false),
     [sources, setSources] = useState(false);
   const [ready, setReady] = useState(false);
+  const [runningRank, setRunningRank] = useState<number | null>(null);
   const loadVersion = useRef(0);
   const stop = useRef(false),
     mounted = useRef(true);
@@ -140,7 +141,10 @@ export default function TopThreeFeeds({
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "작업을 확인하세요.");
     } finally {
-      if (mounted.current) setBusy(false);
+      if (mounted.current) {
+        setBusy(false);
+        setRunningRank(null);
+      }
     }
   }
   const chosen = selections.find((x) => String(x.id) === analysis);
@@ -172,6 +176,9 @@ export default function TopThreeFeeds({
         !stop.current &&
         b.items.some((x: Item) => x.status === "pending")
       ) {
+        setRunningRank(
+          b.items.find((x: Item) => x.status === "pending")?.rank ?? null,
+        );
         b = await post(`/api/feed-batches/${b.id}/step`, { consent, reviewed });
         show(b);
         if (b.items.some((x: Item) => x.status === "unknown")) break;
@@ -194,9 +201,7 @@ export default function TopThreeFeeds({
           <span className="section-heading">
             <strong>
               <ImageIcon size={20} />
-              {batch
-                ? "새 TOP 3 작업"
-                : "뉴스 TOP 3 자동 제작"}
+              {batch ? "새 TOP 3 작업" : "뉴스 TOP 3 자동 제작"}
             </strong>
             <span className="pill">이미지 3개 · 개별 피드</span>
           </span>
@@ -445,6 +450,12 @@ export default function TopThreeFeeds({
                 현재 항목 후 중지
               </button>
             </div>
+            {runningRank !== null && (
+              <p className="review-note" role="status">
+                TOP {runningRank} 이미지 생성 중 · 현재 요청은 다시 보내지
+                마세요.
+              </p>
+            )}
             <div className="top3-results">
               {batch.items.map((x: Item) => (
                 <article className="top3-result" key={x.rank}>
@@ -453,7 +464,9 @@ export default function TopThreeFeeds({
                     <span
                       className={`state-badge ${x.status === "success" ? "good" : x.status === "unknown" ? "warn" : ""}`}
                     >
-                      {states[x.status] ?? x.status}
+                      {runningRank === x.rank
+                        ? states.running
+                        : (states[x.status] ?? x.status)}
                     </span>
                   </div>
                   {x.mediaUrl ? (
