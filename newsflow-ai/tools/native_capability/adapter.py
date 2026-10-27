@@ -139,7 +139,7 @@ class _Native:
             raise Denied("invalid-relative-component")
         text = C.create_unicode_buffer(component)
         length = len(component.encode("utf-16-le"))
-        unicode = _Unicode(length, length + 2, C.cast(text, _P))
+        unicode = _Unicode(length, length + 2, C.addressof(text))
         attributes = _Attributes(C.sizeof(_Attributes), parent,
                                  C.pointer(unicode), 0x40, None, None)
         io, result = _IO(), _H()
