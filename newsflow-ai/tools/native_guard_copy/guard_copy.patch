@@ -17,7 +17,7 @@
   if not isinstance(name,str) or name.lower() not in _SYSTEM_DLLS:deny('unapproved-native-DLL')
   return _GuardedDLL(name.lower())
  
-@@ -317,3 +320,28 @@
+@@ -317,3 +320,29 @@
   out=pathlib.Path(os.environ['NEWSFLOW_VALIDATION_OUTPUT']);out.mkdir(parents=True,exist_ok=True)
   (out/'strict-guard.json').write_text(json.dumps({'denied':ATTEMPTS,'allowed_binary_counts':{k:ALLOWED.count(k) for k in set(ALLOWED)},'exitstatus':exitstatus,'installed_before_pytest_import':True,'only_pinned_FFmpeg_ffprobe_media_allowed':True,'only_registered_pinned_Node_entry_allowed':True,'browser_child_validated_by_Node_preload':True,'global_guard_disabled':False,'external_network_allowed':False,'operating_file_contents_allowed':False,'fixed_guarded_Python_children_only':True,'PowerShell_identity_validate_only':True}),encoding='utf-8')
  
@@ -33,7 +33,8 @@
 + if kind.__name__!='NativeRegistration' or kind.__module__!='guard_capability':deny('unreviewed-capability-type')
 + module=sys.modules.get(kind.__module__)
 + expected=CONFIG.get('verification_capability_sha256')
-+ if module is None or not re.fullmatch(r'[0-9a-f]{64}',expected or ''):deny('capability-manifest-required')
++ if module is None or kind is not getattr(module,'NativeRegistration',None):deny('spoofed-capability-class')
++ if not re.fullmatch(r'[0-9a-f]{64}',expected or ''):deny('capability-manifest-required')
 + if hashlib.sha256(pathlib.Path(module.__file__).read_bytes()).hexdigest()!=expected:deny('capability-source-hash')
 + capability.attach_private_loader(_VERIFICATION_ORIGINAL_LOADER)
 + _VERIFICATION_CAPABILITY=capability

@@ -332,7 +332,8 @@ def register_verification_capability(capability):
  if kind.__name__!='NativeRegistration' or kind.__module__!='guard_capability':deny('unreviewed-capability-type')
  module=sys.modules.get(kind.__module__)
  expected=CONFIG.get('verification_capability_sha256')
- if module is None or not re.fullmatch(r'[0-9a-f]{64}',expected or ''):deny('capability-manifest-required')
+ if module is None or kind is not getattr(module,'NativeRegistration',None):deny('spoofed-capability-class')
+ if not re.fullmatch(r'[0-9a-f]{64}',expected or ''):deny('capability-manifest-required')
  if hashlib.sha256(pathlib.Path(module.__file__).read_bytes()).hexdigest()!=expected:deny('capability-source-hash')
  capability.attach_private_loader(_VERIFICATION_ORIGINAL_LOADER)
  _VERIFICATION_CAPABILITY=capability

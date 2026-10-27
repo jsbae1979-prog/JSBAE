@@ -63,6 +63,17 @@ gate=VerificationGate(workspace,SOURCE)
 gate.install()
 facts["initialization_order"].append("capability-gate-installed")
 from guard_capability import NativeRegistration
+spoof_calls=[]
+Spoof=type("NativeRegistration",(),{"__module__":"guard_capability",
+    "attach_private_loader":lambda self,loader:spoof_calls.append("must-not-receive-loader")})
+facts["spoofed_registration_denied"]=False
+try:
+    guard.register_verification_capability(Spoof())
+except PermissionError:
+    facts["spoofed_registration_denied"]=True
+else:
+    raise AssertionError("same-name spoofed capability accepted")
+assert not spoof_calls
 registration=NativeRegistration(gate)
 guard.register_verification_capability(registration)
 facts["initialization_order"].append("registered-source-pinned-capability")

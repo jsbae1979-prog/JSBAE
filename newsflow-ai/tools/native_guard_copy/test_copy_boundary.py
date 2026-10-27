@@ -47,6 +47,7 @@ class CopyBoundaryTests(unittest.TestCase):
         self.assertTrue(FACTS["provenance"]["all_other_existing_function_AST_identical"])
         self.assertFalse(FACTS["provenance"]["global_DLL_and_symbol_allowlists_changed"])
     def test_03_registration_is_once_only(self):
+        self.assertTrue(FACTS["spoofed_registration_denied"])
         with self.assertRaises(PermissionError):
             GUARD.register_verification_capability(REGISTRATION)
     def test_04_CRT_transfer_removes_native_close_ownership(self):
