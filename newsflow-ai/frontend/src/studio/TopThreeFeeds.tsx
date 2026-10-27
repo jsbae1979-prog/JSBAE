@@ -69,21 +69,30 @@ export default function TopThreeFeeds({
   const [postReview, setPostReview] = useState<Item | null>(null),
     [rights, setRights] = useState(false),
     [sources, setSources] = useState(false);
+  const [ready, setReady] = useState(false);
+  const loadVersion = useRef(0);
   const stop = useRef(false),
     mounted = useRef(true);
   async function load() {
-    const r = await fetch("/api/feed-batches", {
-      credentials: "same-origin",
-      cache: "no-store",
-    });
-    if (!r.ok) throw Error("TOP 3 제작 기록을 불러오지 못했습니다.");
-    const d = await r.json();
-    setBatches(d.batches);
-    setOptions(d.defaults ?? catalog.imageDefaults ?? {});
-    setBatch(
-      (b) =>
-        d.batches.find((x: Item) => x.id === b?.id) ?? d.batches[0] ?? null,
-    );
+    const version = ++loadVersion.current;
+    setReady(false);
+    try {
+      const r = await fetch("/api/feed-batches", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      if (!r.ok) throw Error("TOP 3 제작 기록을 불러오지 못했습니다.");
+      const d = await r.json();
+      if (!mounted.current || version !== loadVersion.current) return;
+      setBatches(d.batches);
+      setOptions(d.defaults ?? catalog.imageDefaults ?? {});
+      setBatch(
+        (b) =>
+          d.batches.find((x: Item) => x.id === b?.id) ?? d.batches[0] ?? null,
+      );
+    } finally {
+      if (mounted.current && version === loadVersion.current) setReady(true);
+    }
   }
   useEffect(() => {
     mounted.current = true;
@@ -91,6 +100,7 @@ export default function TopThreeFeeds({
     return () => {
       stop.current = true;
       mounted.current = false;
+      ++loadVersion.current;
     };
   }, []);
   async function post(path: string, data: Item) {
@@ -178,14 +188,19 @@ export default function TopThreeFeeds({
   }
   const [regenerate, setRegenerate] = useState<Item | null>(null);
   return (
-    <div className="top3-workflow work-stack">
-      <section className="work-panel">
-        <div className="section-heading">
-          <h2>
-            <ImageIcon size={20} /> 뉴스 TOP 3 자동 제작
-          </h2>
-          <span className="pill">이미지 3개 · 개별 피드</span>
-        </div>
+    <div className="top3-workflow work-stack" aria-busy={busy || !ready}>
+      <details className="work-panel top3-new-job" open={!batch}>
+        <summary>
+          <span className="section-heading">
+            <strong>
+              <ImageIcon size={20} />
+              {batch
+                ? "새 TOP 3 작업"
+                : "뉴스 TOP 3 자동 제작"}
+            </strong>
+            <span className="pill">이미지 3개 · 개별 피드</span>
+          </span>
+        </summary>
         <p className="muted">
           저장된 분석과 대본을 재사용합니다. 새 분석·예약 실행·자동 게시를
           요청하지 않습니다.
@@ -196,7 +211,7 @@ export default function TopThreeFeeds({
             <select
               aria-label="TOP 3 분석 결과"
               value={analysis}
-              disabled={busy}
+              disabled={busy || !ready}
               onChange={(e) => setAnalysis(e.target.value)}
             >
               <option value="">선택하세요</option>
@@ -217,7 +232,7 @@ export default function TopThreeFeeds({
             <select
               aria-label="TOP 3 이미지 모델"
               value={options.model ?? ""}
-              disabled={busy}
+              disabled={busy || !ready}
               onChange={(e) =>
                 setOptions({ ...options, model: e.target.value })
               }
@@ -234,7 +249,7 @@ export default function TopThreeFeeds({
             <select
               aria-label="TOP 3 생성 비율"
               value={options.size ?? "1024x1280"}
-              disabled={busy}
+              disabled={busy || !ready}
               onChange={(e) => setOptions({ ...options, size: e.target.value })}
             >
               <option value="1024x1280">4:5 · 피드 권장</option>
@@ -247,12 +262,12 @@ export default function TopThreeFeeds({
             <select
               aria-label="TOP 3 품질"
               value={options.quality ?? "medium"}
-              disabled={busy}
+              disabled={busy || !ready}
               onChange={(e) =>
                 setOptions({ ...options, quality: e.target.value })
               }
             >
-              {Object.entries(catalog.imageQualities ?? {}).map(([k, v]) => (
+              {Object.entries(catalog.qualities ?? {}).map(([k, v]) => (
                 <option key={k} value={k}>
                   {String(v)}
                 </option>
@@ -282,8 +297,8 @@ export default function TopThreeFeeds({
         </p>
         <div className="work-actions">
           <button
-            className="primary-button"
-            disabled={busy || !chosen || chosen.ranking?.length !== 3}
+            className="primary"
+            disabled={busy || !ready || !chosen || chosen.ranking?.length !== 3}
             onClick={() =>
               local(async () => {
                 show(
@@ -302,7 +317,7 @@ export default function TopThreeFeeds({
             TOP 3 제작 작업 저장
           </button>
           <button
-            disabled={busy}
+            disabled={busy || !ready}
             onClick={() =>
               local(async () => {
                 await post("/api/feed-batches/defaults", options);
@@ -314,8 +329,11 @@ export default function TopThreeFeeds({
           >
             자동 제작 기본값 저장
           </button>
+          <a className="studio-link" href="/studio/settings">
+            OpenAI 키 설정
+          </a>
         </div>
-      </section>
+      </details>
       {message && (
         <div className="review-note" role="status">
           <AlertTriangle size={18} />
@@ -327,7 +345,7 @@ export default function TopThreeFeeds({
           <h2>자동 제작 작업</h2>
           <button
             aria-label="TOP 3 상태 새로고침"
-            disabled={busy}
+            disabled={busy || !ready}
             onClick={() => local(load)}
           >
             <RefreshCw size={16} />
@@ -338,7 +356,7 @@ export default function TopThreeFeeds({
           <select
             aria-label="TOP 3 저장된 작업"
             value={batch?.id ?? ""}
-            disabled={busy}
+            disabled={busy || !ready}
             onChange={(e) =>
               setBatch(
                 batches.find((x) => String(x.id) === e.target.value) ?? null,
@@ -376,7 +394,7 @@ export default function TopThreeFeeds({
             <div className="work-actions">
               {batch.items.some((x: Item) => x.status === "running") && (
                 <button
-                  disabled={busy}
+                  disabled={busy || !ready}
                   onClick={() =>
                     local(async () => {
                       show(
@@ -395,7 +413,7 @@ export default function TopThreeFeeds({
                 </button>
               )}
               <button
-                className="primary-button"
+                className="primary"
                 disabled={
                   busy ||
                   !batch.canGenerate ||
@@ -610,7 +628,7 @@ export default function TopThreeFeeds({
           <p>원문에 없는 사실·수치·발언을 추가하지 마세요.</p>
           <div className="work-actions">
             <button
-              disabled={busy}
+              disabled={busy || !ready}
               onClick={() =>
                 local(async () => {
                   show(

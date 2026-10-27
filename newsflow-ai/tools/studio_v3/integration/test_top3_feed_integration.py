@@ -60,3 +60,28 @@ def test_top3_defaults_independent_and_real_unquoted_execution_blocked(client):
  assert b['simulation'] is False and b['canGenerate'] is False
  assert c.post(f"/api/feed-batches/{b['id']}/step",data={'csrf_token':csrf,'consent':'true','reviewed':'true','simulation':'true','estimated_cost':'0.01'}).status_code==422
  assert not app.state.image_generation.adapter.calls
+
+
+def test_top3_reviewed_local_post_matches_preview_and_is_idempotent(client):
+ c,app=client;aid=seed(app);csrf=token(c)
+ from newsflow.creation.catalog import DEFAULTS
+ from newsflow.db.models import IntelligenceRun,ImagePostDelivery
+ from sqlalchemy import select
+ b=c.post('/api/feed-batches',data={**DEFAULTS['image'],'size':'1024x1024','analysis_id':aid,'csrf_token':csrf}).json()['id']
+ assert c.post(f'/api/feed-batches/{b}/step',data={'csrf_token':csrf,'consent':'true','reviewed':'true'}).status_code==200
+ # A synthetic, already-completed production-shaped record tests only local review/storage.
+ # No generation becomes available and no real key/adapter is installed.
+ with app.state.sessions.begin() as s:
+  row=s.get(IntelligenceRun,b);row.options={**row.options,'simulation':False}
+ path=f'/api/feed-batches/{b}/items/1/review'
+ assert c.post(path,data={'csrf_token':csrf}).status_code==422
+ assert c.post(path,data={'csrf_token':csrf,'reviewed':'true','rights':'true','sources_confirmed':'true'}).status_code==422
+ body={'csrf_token':csrf,'reviewed':'true','rights':'true','sources_confirmed':'true','ai_disclosure':'disclose'}
+ first=c.post(path,data=body);assert first.status_code==200,first.text
+ second=c.post(path,data=body);assert second.status_code==200,second.text
+ assert first.json()['postId']==second.json()['postId'] and first.json()['published'] is False
+ post_id=first.json()['postId']
+ assert c.get(f'/image-posts/{post_id}/file').content==c.get(f'/api/feed-batches/{b}/items/1/file').content
+ assert 'AI 생성 이미지' in c.get(f'/image-posts/{post_id}/caption').text
+ with app.state.sessions() as s:assert not list(s.scalars(select(ImagePostDelivery)))
+ assert len(app.state.image_generation.adapter.calls)==1

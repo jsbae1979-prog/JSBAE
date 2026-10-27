@@ -160,19 +160,9 @@ def feed_batch_review(request: Request, identifier: int, rank: int, reviewed: bo
                       ai_disclosure: str = Form("unreviewed")):
     service = request.app.state.top_three_feeds
     try:
-        row = service.get(identifier)
-        if row.options["simulation"]:
-            raise PublishingError("Fake 산출물은 실제 Instagram 게시 준비에 사용할 수 없습니다.")
-        service.path(identifier, rank)
-        item = next(i for i in row.result["items"] if i["rank"] == rank)
-        source = row.evidence["sources"][rank-1]
-        if ai_disclosure != "disclose":
-            raise PublishingError("AI 생성 이미지 표시를 검토하세요.")
-        # Local reviewed post only. No account/HTTPS upload/container/publish in this endpoint.
-        post_id = request.app.state.image_posts.create(source["article_id"], **item["content"],
-            reviewed=reviewed, rights=rights, sources_confirmed=sources_confirmed,
-            ai_disclosure=ai_disclosure, draft_id=source["draft_id"],
-            analysis_id=row.evidence["analysis_id"], rank=rank, generated_id=item["generation_id"])
+        # Local reviewed post only; no upload, account query or publish in this endpoint.
+        post_id = service.review(identifier, rank, request.app.state.image_posts,
+            reviewed=reviewed, rights=rights, sources_confirmed=sources_confirmed, ai_disclosure=ai_disclosure)
         return {"postId": post_id, "href": f"/image-posts?post_id={post_id}", "published": False,
                 "message": "로컬 검토본 저장 · 계정 선택·이미지 전달·공개 게시 승인은 별도입니다."}
     except (PublishingError, SelectionError, StopIteration) as exc:

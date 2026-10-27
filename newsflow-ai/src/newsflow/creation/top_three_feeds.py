@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw, ImageOps
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from newsflow.db.models import AppSetting, IntelligenceRun
+from newsflow.db.models import AppSetting, IntelligenceRun, ImagePost
 from newsflow.publishing.image_selection import selection
 from newsflow.publishing.service import PublishingError
 from newsflow.video.news_images import NewsImages
@@ -303,13 +303,43 @@ class TopThreeFeeds:
                         if item["status"] == "pending": raise PublishingError("이미 생성 대기 중인 항목입니다.")
                         item["history"].append({k: deepcopy(v) for k, v in item.items() if k != "history"})
                         item.update(status="pending", generation_id=None, attempt=item["attempt"]+1)
-                        for key in ("filename", "sha256", "message"): item.pop(key, None)
+                        for key in ("filename", "sha256", "message", "post_id"): item.pop(key, None)
                         options = {**row.options, "max_generations": row.options["max_generations"]+1}
                         row.options = options
                 else: raise PublishingError("지원하지 않는 작업입니다.")
                 result["revision"] += 1; self._save(identifier, result, options=row.options)
         except Timeout:
             raise PublishingError("생성이 끝난 뒤 작업을 변경하세요.") from None
+
+    def review(self, identifier, rank, posts, *, reviewed=False, rights=False, sources_confirmed=False, ai_disclosure="unreviewed"):
+        if not (reviewed is True and rights is True and sources_confirmed is True) or ai_disclosure != "disclose":
+            raise PublishingError("내용·출처·이미지 권리와 AI 생성 표시를 모두 검토하세요.")
+        try:
+            with self.lock:
+                row = self.get(identifier)
+                if row.options["simulation"]:
+                    raise PublishingError("Fake 산출물은 실제 Instagram 게시 준비에 사용할 수 없습니다.")
+                self.path(identifier, rank)
+                result = deepcopy(row.result)
+                item = next(i for i in result["items"] if i["rank"] == rank)
+                source = row.evidence["sources"][rank-1]
+                # Recover a local save gap by its immutable generation relationship, never resubmit/publish.
+                with self.sessions() as s:
+                    previous = s.scalar(select(ImagePost).where(ImagePost.article_id == source["article_id"],
+                        ImagePost.sources["generated_image_run_id"].as_integer() == item["generation_id"])
+                        .order_by(ImagePost.id))
+                post_id = item.get("post_id") or (previous.id if previous else None)
+                if post_id is not None:
+                    posts.path(post_id)
+                else:
+                    post_id = posts.create(source["article_id"], **item["content"], reviewed=True, rights=True,
+                        sources_confirmed=True, ai_disclosure="disclose", draft_id=source["draft_id"],
+                        analysis_id=row.evidence["analysis_id"], rank=rank, generated_id=item["generation_id"])
+                if item.get("post_id") != post_id:
+                    item["post_id"] = post_id; result["revision"] += 1; self._save(identifier, result)
+                return post_id
+        except Timeout:
+            raise PublishingError("생성 요청이 끝난 후 검토본을 저장하세요.") from None
 
     def path(self, identifier, rank):
         row = self.get(identifier)
