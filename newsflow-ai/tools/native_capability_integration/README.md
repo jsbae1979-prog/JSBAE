@@ -10,6 +10,8 @@ The approved native adapter and verification gate are reused without changes.
 - Unheld release is a no-op. Failed acquisition does not change another owner.
 - Unlock failure retains held state; post-unlock close failure records unheld
   cleanup-required state. Neither permits automatic reacquisition.
+- Unknown native outcomes retain physical_lock_state=UNKNOWN and held=null; logical ownership is recorded separately.
+- A real OS-acquire-then-error probe verifies no replay and explicit owned-handle cleanup.
 - Atomic synthetic state journals; journal failure blocks new execution.
 - Explicit deterministic cleanup, no new subprocess or owner/PID inspection.
 

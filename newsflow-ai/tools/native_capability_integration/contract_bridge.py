@@ -112,7 +112,11 @@ class ContractSession:
         if self._closed:
             raise Denied("closed-session")
     def snapshot(self):
-        return {"state": self._state, "depth": self._depth, "held": self._depth > 0,
+        uncertain = self._state in {"acquire_uncertain", "release_uncertain"}
+        return {"state": self._state, "depth": self._depth,
+                "logical_owned": self._depth > 0,
+                "held": None if uncertain else self._depth > 0,
+                "physical_lock_state": "UNKNOWN" if uncertain else ("HELD" if self._depth else "NOT_HELD"),
                 "pending_cleanup": self._token is not None and self._depth == 0,
                 "closed": self._closed, "events": list(self._events)}
     def _persist(self):

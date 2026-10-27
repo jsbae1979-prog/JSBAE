@@ -139,7 +139,8 @@ class IntegrationTests(unittest.TestCase):
         try:
             with self.assertRaises(NativeFailure):
                 self.lock.release()
-            self.assertTrue(self.lock.snapshot()["held"])
+            self.assertTrue(self.lock.snapshot()["logical_owned"])
+            self.assertIsNone(self.journal()["held"])
             self.assertEqual(self.journal()["state"], "release_uncertain")
             with self.assertRaises(CompatibilityBlocked):
                 self.lock.acquire()
@@ -170,21 +171,34 @@ class IntegrationTests(unittest.TestCase):
         peer.release()
     def test_19_uncertain_acquire_is_not_replayed(self):
         original = NATIVE.lock
-        calls = []
-        def fail(handle):
+        peer = self.peer()
+        calls, target = [], []
+        def fail_after_success(handle):
+            if not target:
+                target.append(handle)
+            if handle != target[0]:
+                return original(handle)
             calls.append(handle)
-            raise NativeFailure("synthetic-unknown-outcome")
-        NATIVE.lock = fail
+            self.assertTrue(original(handle))  # The actual OS lock is acquired.
+            raise NativeFailure("synthetic-error-after-OS-acquire")
+        NATIVE.lock = fail_after_success
         try:
             with self.assertRaises(NativeFailure):
                 self.lock.acquire()
-            self.assertEqual(self.journal()["state"], "acquire_uncertain")
+            saved = self.journal()
+            self.assertEqual(saved["state"], "acquire_uncertain")
+            self.assertIsNone(saved["held"])
+            self.assertEqual(saved["physical_lock_state"], "UNKNOWN")
             with self.assertRaises(CompatibilityBlocked):
                 self.lock.acquire()
             self.assertEqual(len(calls), 1)
+            with self.assertRaises(LockTimeout):
+                peer.acquire()  # Proves the first OS lock really remains held.
         finally:
             NATIVE.lock = original
-        self.lock.close()
+        self.lock.close()  # Explicit owned-handle cleanup, not a normal unlock PASS.
+        peer.acquire()
+        peer.release()
     def test_20_context_body_and_release_failure_both_preserved(self):
         original = NATIVE.unlock
         def fail(handle):
@@ -195,7 +209,8 @@ class IntegrationTests(unittest.TestCase):
                 with self.lock:
                     raise ValueError("synthetic-body")
             self.assertIsInstance(captured.exception.__context__, ValueError)
-            self.assertTrue(self.lock.snapshot()["held"])
+            self.assertTrue(self.lock.snapshot()["logical_owned"])
+            self.assertEqual(self.lock.snapshot()["physical_lock_state"], "UNKNOWN")
         finally:
             NATIVE.unlock = original
         self.lock.release()
