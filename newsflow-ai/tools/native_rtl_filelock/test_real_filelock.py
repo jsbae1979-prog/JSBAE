@@ -246,3 +246,18 @@ class RealFileLockTests(unittest.TestCase):
             with self.assertRaises(Denied):self.lock().acquire(timeout=0)
         finally:B.native.verify=original
         self.assertEqual(len(B.handles),0);self.assertEqual(len(B.fds),0)
+
+    def test_26_actual_default_unlink_success_under_owned_generation(self):
+        item=self.lock()
+        with self.assertRaises(Denied):B.retire_anchor_for_default_cleanup(self.path)
+        item.acquire(timeout=0)
+        B.retire_anchor_for_default_cleanup(self.path)
+        with self.assertRaises(Denied):B.retire_anchor_for_default_cleanup(self.path)
+        before=B.unlink_attempts
+        item.release()
+        self.assertFalse(item.is_locked)
+        self.assertFalse(Path(self.path).exists())
+        self.assertGreater(B.unlink_attempts,before)
+        alloc=B.allocations
+        with self.assertRaises(Denied):self.lock().acquire(timeout=0)
+        self.assertEqual(B.allocations,alloc)

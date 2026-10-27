@@ -38,7 +38,7 @@ class RtlBoundary:
         self.native,self.registration,self.gate=native,registration,native.gate
         self.scope=LockScope(native,self.gate.new_scope())
         self.paths={};self.buffers={};self.by_user={}
-        self.handles={};self.fds={};self.blocked=set()
+        self.handles={};self.fds={};self.blocked=set();self.retired=set()
         self.events=[];self.allocations=0;self.frees=0;self.nt_opens=0
         self.lock_calls=0;self.unlock_calls=0;self.unlink_attempts=0
         self._owner=threading.get_ident();self.closed=False;self._cleanup=False
@@ -65,6 +65,7 @@ class RtlBoundary:
     def register_path(self,name):
         self._live()
         path,_=self.scope._path(str(Path(self.scope.root)/(name+".lock")))
+        if path in self.retired:raise Denied("retired-path-needs-new-generation")
         if path not in self.paths:
             token=self.scope.register(path)
             anchor=self.scope._registrations[token]
@@ -73,6 +74,7 @@ class RtlBoundary:
     def _path(self,path):
         self._live();canonical,_=self.scope._path(path)
         if canonical not in self.paths:raise Denied("unregistered-lock-path")
+        if canonical in self.retired:raise Denied("retired-generation-no-reopen")
         if canonical in self.blocked:raise OutcomeUnknown("path-quarantined-no-replay")
         return canonical
     def prepare_buffer(self,path,user=None):
@@ -322,6 +324,18 @@ class RtlBoundary:
         del self.fds[fd];entry.state="closed"
         self.events.append("CRT-close-not-CloseHandle")
         if self._fault=="close-after":raise OSError("synthetic-after-close-notification")
+    def retire_anchor_for_default_cleanup(self,path):
+        path=self._path(path)
+        held=[e for e in self.fds.values() if e.path==path and e.state=="held"]
+        if len(held)!=1 or any(e.path==path for e in self.handles.values()):
+            raise Denied("retirement-requires-one-live-owned-FileLock")
+        token,identity=self.paths[path]
+        anchor=self.scope._registrations[token]
+        self.native.verify(anchor.handle,path,False,identity)
+        self.native.close(anchor.handle)
+        del self.scope._registrations[token]
+        self.retired.add(path)
+        self.events.append("anchor-retired-under-owned-FileLock-no-next-generation")
     def note_unlink(self,path):
         try:canonical=dos_path(os.fsdecode(path))
         except Denied:return
@@ -346,6 +360,7 @@ class RtlBoundary:
                 "allocations":self.allocations,"frees":self.frees,"NtCreateFile_calls":self.nt_opens,
                 "lock_calls":self.lock_calls,"unlock_calls":self.unlock_calls,
                 "default_unlink_attempts":self.unlink_attempts,"quarantined_paths":len(self.blocked),
+                "retired_generations":len(self.retired),
                 "events":list(self.events),"closed":self.closed}
     def close(self):
         if self.closed:return

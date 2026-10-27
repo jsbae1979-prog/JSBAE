@@ -110,7 +110,7 @@ import native_boundary
 evidence={"commit":os.environ.get("GITHUB_SHA"),"python":sys.version.split()[0],"Windows":str(sys.getwindowsversion()),
 "pass":result.testsRun-len(result.failures)-len(result.errors)-len(result.skipped),
 "fail":len(result.failures),"error":len(result.errors),"skip":len(result.skipped),
-"new_tests":25,"selected_previous_tests":2,"passed_test_ids":result.passed,
+"new_tests":26,"selected_previous_tests":2,"passed_test_ids":result.passed,
 "failures":[{"id":t.id(),"traceback":tb} for t,tb in result.failures],
 "errors":[{"id":t.id(),"traceback":tb} for t,tb in result.errors],
 "facts":FACTS,"filelock_methods_not_replaced":unchanged_codes,

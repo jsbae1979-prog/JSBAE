@@ -31,9 +31,8 @@ Limits are explicit: registered fresh test paths, finite acquisition timeouts,
 same-thread use, no descriptor callbacks/lifetime/process owner recovery.
 A retained anchor prevents default unlink while registered; upstream's real
 unlink attempt and allowed Windows persistence are observed, not replaced.
-Successful deletion without the anchor and all package variants are not
-claimed. This remains trusted-harness isolation, not an OS sandbox against
+A dedicated case retires the anchor only while one actual FileLock owns the\nfile; the package then successfully deletes it on release. That generation\ncannot be reopened. Automatic recreation and all package variants are not claimed. This remains trusted-harness isolation, not an OS sandbox against
 hostile Python reflection.
 
-CI runs 25 new cases and 2 selected prior path checks; previous 39/32/29
+CI runs 26 new cases and 2 selected prior path checks; previous 39/32/29
 evidence is reused rather than repeated wholesale. Full app is never started.
