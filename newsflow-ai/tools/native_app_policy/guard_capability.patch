@@ -1,0 +1,29 @@
+--- existing/guard_capability
++++ app-verification/guard_capability
+@@ -41,6 +41,7 @@
+         self.gate,self.sources=gate,package_sources
+         self.bridge=None;self._loader=None;self._crt=threading.local()
+         self.native_bindings=0;self.facade_bindings=0;self.crt_calls=0
++        self.app_policy=None
+     def attach_private_loader(self,loader):
+         if self._loader is not None or self.gate.bound:raise Denied("registration-once")
+         self._loader=loader
+@@ -80,8 +81,17 @@
+                 if module=="filelock._identity" and name!="kernel32":raise Denied("identity-DLL")
+                 self.facade_bindings+=1
+                 return SafeLibrary(self,module,name)
+-        return None
++        raise Denied('unapproved-app-native-DLL')
++    def attach_app_policy(self,policy,expected_sha256):
++        import hashlib
++        from app_policy import AppPolicy
++        module=sys.modules.get('app_policy')
++        if (self.app_policy is not None or self.gate.app_policy is not None or type(policy) is not AppPolicy
++            or module is None or hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest()!=expected_sha256):
++            raise Denied('unreviewed-app-policy-registration')
++        self.app_policy=policy;self.gate.app_policy=policy
+     def audit_event(self,event,args):
++        if self.app_policy is not None and self.app_policy.audit(event,args):return True
+         if event in {"ctypes.dlopen","ctypes.dlsym","ctypes.dlsym/handle"}:
+             if not getattr(self.gate.binding,"active",False) or not self._private_frame():return False
+             self.gate.audit(event,args);return True

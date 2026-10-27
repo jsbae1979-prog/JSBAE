@@ -1,0 +1,45 @@
+name: NewsFlow bounded app initialization policy
+on:
+  push:
+    branches: [codex/newsflow-core-studios-rebuild-20261027]
+    paths:
+      - 'newsflow-ai/tools/native_app_policy/**'
+      - '.github/workflows/newsflow-native-app-policy.yml'
+permissions:
+  contents: read
+jobs:
+  guarded-app-initialization:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Build unchanged React resources
+        run: |
+          npm install --global pnpm@11.25.0 --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend install --frozen-lockfile --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend exec vite build --configLoader runner
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Install isolated dependencies before Guard (no product import)
+        run: python -m pip install -e . httpx==0.28.1 filelock==3.32.7
+      - name: New policy boundaries and guarded create_app only
+        run: python -I -B tools/native_app_policy/run_app_policy.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bounded-app-policy-evidence
+          path: ${{ runner.temp }}/newsflow-app-policy-*/app-policy-evidence.json
+          if-no-files-found: error

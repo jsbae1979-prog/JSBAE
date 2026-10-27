@@ -1,0 +1,27 @@
+--- existing/verification_gate_app
++++ app-verification/verification_gate_app
+@@ -1,7 +1,7 @@
+ """Verification-only gate. Never imported by the product or existing host Guard.
+ 
+ Trusted Python harness, not an OS sandbox against arbitrary Python reflection.
+-No application, provider, DPAPI, subprocess or network capability is granted.
++App I/O is delegated only to the separately pinned synthetic AppPolicy. Native permissions stay fixed.
+ """
+ from __future__ import annotations
+ import contextlib
+@@ -75,6 +75,7 @@
+         self._rtl_bound = False
+         self._owned_memory_read = None
+         self._reader_address = None
++        self.app_policy = None
+     def deny(self, reason):
+         self.denials[reason] = self.denials.get(reason, 0) + 1
+         raise Denied(reason)
+@@ -137,6 +138,7 @@
+         return invoke
+ 
+     def audit(self, event, args):
++        if self.app_policy is not None and self.app_policy.audit(event,args):return
+         if event in {"socket.connect", "socket.bind", "socket.sendto", "socket.sendmsg",
+                      "socket.getaddrinfo", "subprocess.Popen", "_winapi.CreateProcess",
+                      "os.system", "os.startfile", "os.startfile/2", "os.exec",

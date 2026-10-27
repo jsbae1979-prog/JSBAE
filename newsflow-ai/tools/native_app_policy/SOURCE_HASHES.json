@@ -1,0 +1,8 @@
+{
+  "app_initialization.py": "31961e6c72b0fb912ad9f6313f0a178a8cb04b5b9cb0b549a44c20c0f6fac3bc",
+  "app_policy.py": "3536ff7a26c3db960c8399c54eea3175452c727275c8791407f78a5ff661a1e4",
+  "guard_capability.py": "74f5c1bac00609babe8391e604741ea6b99877531fbcaadc6ac336c097e1aedb",
+  "run_app_policy.py": "8d2f41920774b584934663ccec93b54b56f6cb228e0886b531535c2400702148",
+  "test_app_policy.py": "ecaa208a587d42b74cff48279085c0686f5353bd97d992d40d31ebe977fded3f",
+  "verification_gate_app.py": "475c2ffa453512323996e39a3cae2f4f95b75899d6b895563adefb6f0bf6c968"
+}
