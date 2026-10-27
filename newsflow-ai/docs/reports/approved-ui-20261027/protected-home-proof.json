@@ -1,0 +1,69 @@
+{
+  "protected_sources": [
+    {
+      "path": "frontend/src/main.tsx",
+      "unchanged": true,
+      "SHA256": "1d4dbac68763595464721d9b9ac5382abef4d915e442eb1955dcd23e08cb44ed"
+    },
+    {
+      "path": "frontend/src/style.css",
+      "unchanged": true,
+      "SHA256": "f65676b8fd8f6cacf171c33a8979133b614f8989c8731c43ce8ed5f154ab67c6"
+    },
+    {
+      "path": "frontend/src/studio/workbench.css",
+      "unchanged": true,
+      "SHA256": "46f8cf46277af6d46e4669b7367bff9cb3263354bfb948e1dbad0b78d040378c"
+    },
+    {
+      "path": "frontend/src/legacy-actions.json",
+      "unchanged": true,
+      "SHA256": "d3e27c3c51f522dc67d28355f308f011a37c823aabf3209312357505f5232412"
+    },
+    {
+      "path": "frontend/src/studio/CommandDialog.tsx",
+      "unchanged": true,
+      "SHA256": "44f0952b96c34626fbc4a75ac09a0f3728d55ae30cd13e3b11b1854ea118c424"
+    },
+    {
+      "path": "frontend/src/studio/contracts.ts",
+      "unchanged": true,
+      "SHA256": "f14fc2a4f6cdfe868c35da70c45e77a552b9386864394cec3777fc02bcdc9248"
+    }
+  ],
+  "protected_captures": [
+    {
+      "file": "dashboard-1920.png",
+      "PNG_bytes_identical": true,
+      "before_SHA256": "9ca65f4e9c83d88434c7df6d4183df70d57ffb566b135b54378a65a8e70398eb",
+      "after_SHA256": "9ca65f4e9c83d88434c7df6d4183df70d57ffb566b135b54378a65a8e70398eb"
+    },
+    {
+      "file": "dashboard-1366.png",
+      "PNG_bytes_identical": true,
+      "before_SHA256": "6360df4e92e119eda49414ccfcbab31a9282828310ca1ad62c32eff1bf3691b6",
+      "after_SHA256": "6360df4e92e119eda49414ccfcbab31a9282828310ca1ad62c32eff1bf3691b6"
+    },
+    {
+      "file": "create-1920.png",
+      "PNG_bytes_identical": true,
+      "before_SHA256": "8af48da1eca295929a5624dc9775805fbd5fbb5a139add0d6fd17b86619b06a0",
+      "after_SHA256": "8af48da1eca295929a5624dc9775805fbd5fbb5a139add0d6fd17b86619b06a0"
+    },
+    {
+      "file": "create-1366.png",
+      "PNG_bytes_identical": true,
+      "before_SHA256": "ac00bc3df2d3c3dda050e514d47fee921a7dc34b3789a0d11097d837b279781b",
+      "after_SHA256": "ac00bc3df2d3c3dda050e514d47fee921a7dc34b3789a0d11097d837b279781b"
+    }
+  ],
+  "Git_normalized_diff_scope": [
+    ".github/workflows/newsflow-studio-v3.yml",
+    "newsflow-ai/frontend/src/studio/ApprovedPanels.tsx",
+    "newsflow-ai/frontend/src/studio/TopThreeFeeds.tsx",
+    "newsflow-ai/frontend/src/studio/Workbench.tsx",
+    "newsflow-ai/frontend/src/studio/approved.css",
+    "newsflow-ai/tools/studio_v3/tests/approved_ui.browser.cjs"
+  ],
+  "product_SHA": "95d61470e9df36582b9e29361bbdba0bc0a5d76e"
+}

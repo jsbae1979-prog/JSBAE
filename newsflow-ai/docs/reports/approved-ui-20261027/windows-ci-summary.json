@@ -1,0 +1,21 @@
+{
+  "workflow": "NewsFlow Studio v3 focused validation",
+  "run_id": 40467597750,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40467597750",
+  "job_id": 122066666312,
+  "product_SHA": "95d61470e9df36582b9e29361bbdba0bc0a5d76e",
+  "Python": "3.14.7",
+  "OS": "Windows GitHub Actions runner",
+  "conclusion": "success",
+  "typecheck_and_build": "PASS",
+  "read_model_passed": 43,
+  "TOP3_Fake_passed": 25,
+  "synthetic_app_forms_passed": 20,
+  "total_passed": 88,
+  "failed": 0,
+  "errors": 0,
+  "warnings_in_integration": 1,
+  "whole_regression_repeated": false,
+  "operating_PC_app_started": false,
+  "paid_AI_or_real_OAuth_SNS": false
+}

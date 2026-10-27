@@ -1,0 +1,10 @@
+{
+  "phase": "baseline",
+  "attempt": "profile2",
+  "exit": 0,
+  "timeout": false,
+  "active_test_processes_after_exit": 0,
+  "owned_job_cleanup": true,
+  "provider_credentials_inherited": false,
+  "operating_app_started": false
+}
