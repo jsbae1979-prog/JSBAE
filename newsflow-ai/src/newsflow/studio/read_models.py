@@ -218,7 +218,10 @@ def character_rows(state):
         item["referenceUrl"] = (
             f"/api/studio/characters/{job['id']}/reference" if job.get("reference_sha256") else None
         )
-        story_scenes = (job.get("script") or {}).get("scenes", [])
+        story = job.get("script")
+        story_scenes = story.get("scenes") if isinstance(story, dict) else None
+        if not isinstance(story_scenes, list):
+            story_scenes = []
         if job.get("state") == "retry_quoted" and job.get("retry"):
             item["retryQuote"] = {
                 k: job["retry"][k] for k in ("position", "quote_usd", "at") if k in job["retry"]
@@ -228,7 +231,7 @@ def character_rows(state):
             if isinstance(position, int) and 1 <= position <= len(story_scenes):
                 planned = story_scenes[position - 1]
                 for field in ("caption", "action", "seconds"):
-                    if field not in scene and field in planned:
+                    if isinstance(planned, dict) and field not in scene and field in planned:
                         scene[field] = planned[field]
             original = next((x for x in job.get("scenes", []) if x["position"] == scene["position"]), {})
             if "cost" not in scene and "quote_usd" in original:

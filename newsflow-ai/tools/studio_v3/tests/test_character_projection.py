@@ -101,6 +101,13 @@ class CharacterProjectionTests(unittest.TestCase):
         self.job["script"] = {"scenes": []}
         self.assertNotIn("action", self.read()["scenes"][0])
 
+    def test_legacy_text_or_malformed_story_keeps_existing_display_without_guessing(self):
+        for stored in ("Saved legacy story", {"scenes": None}, {"scenes": "legacy"}, {"scenes": ["legacy"]}):
+            self.job["script"] = stored
+            row = self.read()
+            self.assertEqual(row["story"], stored)
+            self.assertNotIn("seconds", row["scenes"][0])
+
     def test_projection_never_mutates_saved_job_or_model_snapshot(self):
         self.job["selection"] = {"script_model": "claude-sonnet-4-6", "video_model": "fixed-model"}
         before = deepcopy(self.job)
