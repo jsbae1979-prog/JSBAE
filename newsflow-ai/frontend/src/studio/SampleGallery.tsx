@@ -14,7 +14,7 @@ export default function SampleGallery({
 }: {
   types?: string[];
   csrf: string;
-  onUse?: (value: SampleUse) => void;
+  onUse?: (value: SampleUse) => void | Promise<void>;
   library?: boolean;
   onScope?: (scope: string) => void;
   initialExpanded?: boolean;
@@ -92,7 +92,7 @@ export default function SampleGallery({
         setNotice(copy.message);
         if (kind === "use") {
           if (onUse) {
-            onUse({ asset: item, copy });
+            await onUse({ asset: item, copy });
             setExpanded(false);
           } else
             setNotice(

@@ -72,10 +72,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         initialExpanded={jobs.length === 0}
         types={["character", "character-short"]}
         csrf={c.view?.csrfToken ?? ""}
-        onUse={({ asset: sample, copy }) => {
+        onUse={async ({ asset: sample, copy }) => {
           setAsset(copy.referenceAsset ?? "");
           setSampleRef(`/api/samples/${sample.referenceId || sample.id}/file`);
-          void c.load();
+          await c.load();
           c.setNotice(
             "샘플 참조 PNG를 새 작업 입력에 연결했습니다. 주제를 입력해 새 작업을 저장하세요. 기존 작업은 보존됩니다.",
           );
@@ -144,10 +144,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     setSampleRef(null);
                   }}
                   options={Object.fromEntries(
-                    refAssets.map((x: Item) => [
-                      x.id ?? x.key,
-                      x.label ?? x.title ?? x.id,
-                    ]),
+                    refAssets.map((x: Item | string) =>
+                      typeof x === "string"
+                        ? [x, x]
+                        : [x.id ?? x.key, x.label ?? x.title ?? x.id ?? x.key],
+                    ),
                   )}
                 />
                 <small>
