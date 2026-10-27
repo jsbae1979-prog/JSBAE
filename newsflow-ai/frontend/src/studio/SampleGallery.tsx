@@ -10,6 +10,7 @@ export default function SampleGallery({
   library = false,
   onScope,
   initialExpanded = true,
+  onBusyChange,
 }: {
   types?: string[];
   csrf: string;
@@ -17,6 +18,7 @@ export default function SampleGallery({
   library?: boolean;
   onScope?: (scope: string) => void;
   initialExpanded?: boolean;
+  onBusyChange?: (busy: boolean) => void;
 }) {
   const [rows, setRows] = useState<Item[]>([]),
     [error, setError] = useState("");
@@ -76,6 +78,7 @@ export default function SampleGallery({
   async function action(item: Item, kind: "copy" | "use" | "hide") {
     if (busy) return;
     setBusy(true);
+    onBusyChange?.(true);
     setNotice("");
     try {
       if (kind === "hide")
@@ -103,6 +106,7 @@ export default function SampleGallery({
       setNotice(e instanceof Error ? e.message : "샘플 작업 실패");
     } finally {
       setBusy(false);
+      onBusyChange?.(false);
     }
   }
   const filtered = rows.filter(

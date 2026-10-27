@@ -25,7 +25,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     [topic, setTopic] = useState(""),
     [model, setModel] = useState(""),
     [scene, setScene] = useState(-1),
-    [sampleRef, setSampleRef] = useState<string | null>(null);
+    [sampleRef, setSampleRef] = useState<string | null>(null),
+    [sampleBusy, setSampleBusy] = useState(false);
   const jobs = c.list("jobs"),
     job = jobs.find((x) => String(x.id) === id) ?? jobs[0],
     defaults = c.view?.catalog.characterDefaults ?? {};
@@ -55,6 +56,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         quote_hash: kind === "retry-scene" ? job?.retry_hash : job?.quote_hash,
       }}
       disabled={
+        sampleBusy ||
         !job ||
         (allowed[kind] && !allowed[kind].includes(job.state)) ||
         (kind === "retry-scene" && (!job.retry_hash || !job.retryQuote))
@@ -66,6 +68,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   return (
     <>
       <SampleGallery
+        onBusyChange={setSampleBusy}
         initialExpanded={jobs.length === 0}
         types={["character", "character-short"]}
         csrf={c.view?.csrfToken ?? ""}
@@ -78,7 +81,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           );
         }}
       />
-      <div className="core-character">
+      <div className="core-character" aria-busy={sampleBusy}>
         <div className="core-character-steps">
           <div>
             <b>1</b>
@@ -117,6 +120,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </div>
               <div className="core-options">
                 <button
+                  disabled={sampleBusy}
                   onClick={() => {
                     setSampleRef(null);
                     setAsset("");
@@ -133,6 +137,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 </button>
                 <Select
                   label="저장한 참조 소재"
+                  disabled={sampleBusy}
                   value={asset}
                   onChange={(value) => {
                     setAsset(value);
@@ -162,6 +167,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               {jobs.map((x) => (
                 <button
                   key={x.id}
+                  disabled={sampleBusy}
                   aria-pressed={job?.id === x.id}
                   onClick={() => {
                     setSampleRef(null);
@@ -201,7 +207,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 video_model: defaults.video_model,
                 reference_asset: asset,
               }}
-              disabled={!topic.trim()}
+              disabled={sampleBusy || !topic.trim()}
               primary
             >
               이 주제로 작업 저장
