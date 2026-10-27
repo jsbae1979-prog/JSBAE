@@ -815,7 +815,7 @@ export default function Workbench({
                     )}
                   </section>
                   <aside className="work-panel inspector news-inspector">
-                    <h2>기사와 출처</h2>
+                    <h2>선택한 기사</h2>
                     {selected ? (
                       <>
                         <Badge value="review_required" />
@@ -827,35 +827,69 @@ export default function Workbench({
                           />
                           <h3>{selected.title}</h3>
                         </div>
-                        <p>{selected.summary}</p>
-                        <p className="muted">
-                          {selected.publisher} ·{" "}
-                          {selected.published_at ?? "발행일 미확인"}
-                        </p>
-                        {/^https?:\/\//.test(selected.url ?? "") && (
-                          <a
-                            className="text-button"
-                            href={selected.url}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            기사 원문 <ExternalLink size={16} />
-                          </a>
-                        )}
-                        {button(
-                          "intelligence_analyze",
-                          { article_ids: [selected.id] },
-                          true,
-                        )}
-                        <p className="muted">
-                          대표 이미지의 목록 표시와 영상 사용 권한은 별개입니다.
-                        </p>
+                        <h3>저장된 기사 요약</h3>
+                        <p>{selected.summary || "저장된 요약 없음"}</p>
                       </>
                     ) : (
                       <Empty text="기사를 선택하세요." />
                     )}
+                    <section
+                      className="news-analysis-panel"
+                      aria-label="AI 분석 정보"
+                    >
+                      <h2>
+                        <Bot size={18} /> AI 분석 정보
+                      </h2>
+                      <p className="review-note">
+                        현재 응답에는 기사별 AI 분석 본문·키워드 연결이 제공되지
+                        않습니다. 저장된 기사 요약을 AI 분석 결과로 표시하지
+                        않습니다.
+                      </p>
+                      <Collection
+                        title="저장된 분석 실행 기록"
+                        items={list("analyses")}
+                      />
+                      <p className="muted">
+                        실행 기록은 선택한 기사에 귀속된 분석 본문이 아닙니다.
+                      </p>
+                    </section>
                   </aside>
                   <aside className="work-panel news-next">
+                    <section className="news-source-review">
+                      <h2>출처 · 검토</h2>
+                      {selected ? (
+                        <>
+                          {" "}
+                          <p className="muted">
+                            {selected.publisher} ·{" "}
+                            {selected.published_at ?? "발행일 미확인"}
+                          </p>
+                          {/^https?:\/\//.test(selected.url ?? "") && (
+                            <a
+                              className="text-button"
+                              href={selected.url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              기사 원문 <ExternalLink size={16} />
+                            </a>
+                          )}
+                          {button(
+                            "intelligence_analyze",
+                            { article_ids: [selected.id] },
+                            true,
+                          )}
+                          <p className="muted">
+                            대표 이미지의 목록 표시와 영상 사용 권한은
+                            별개입니다.
+                          </p>
+                        </>
+                      ) : (
+                        <p className="muted">
+                          기사를 선택하면 출처를 확인할 수 있습니다.
+                        </p>
+                      )}
+                    </section>
                     <h2>
                       <ChevronRight size={19} />
                       다음 단계로 이동
@@ -982,188 +1016,204 @@ export default function Workbench({
                       />{" "}
                     </section>
                     <section
-                      className="work-panel script-editor"
-                      id="script-editor"
+                      className="work-panel shorts-edit-group"
+                      aria-label="대본 및 세로 미리보기"
                     >
-                      <div className="section-heading">
-                        <h2>대본 · 장면 편집</h2>
-                        {activeDraft && (
-                          <span>버전 {activeDraft.revision}</span>
-                        )}
-                      </div>
-                      {editor ? (
-                        <>
-                          <label className="form-field">
-                            <span>제목</span>
-                            <input
-                              value={editor.title ?? ""}
-                              maxLength={100}
-                              onChange={(e) =>
-                                updateEditor({
-                                  ...editor,
-                                  title: e.target.value,
-                                })
-                              }
-                            />
-                          </label>
-                          <label className="form-field">
-                            <span>HOOK · 첫 문장</span>
-                            <textarea
-                              value={editor.hook ?? ""}
-                              maxLength={200}
-                              onChange={(e) =>
-                                updateEditor({
-                                  ...editor,
-                                  hook: e.target.value,
-                                })
-                              }
-                            />
-                          </label>
-                          <div className="scene-tabs">
-                            {editorScenes.map((s: Item, i: number) => (
-                              <button
-                                key={i}
-                                aria-pressed={scene === i}
-                                onClick={() => {
-                                  setScene(i);
-                                  if (video.current)
-                                    video.current.currentTime = editorScenes
-                                      .slice(0, i)
-                                      .reduce(
-                                        (n: number, x: Item) =>
-                                          n + Number(x.seconds ?? 0),
-                                        0,
-                                      );
-                                }}
-                              >
-                                <span>장면 {i + 1}</span>
-                                <small>{s.seconds}초</small>
-                              </button>
-                            ))}
-                          </div>
-                          {editorScenes[scene] && (
-                            <div className="scene-editor">
+                      <section
+                        className="work-panel script-editor"
+                        id="script-editor"
+                      >
+                        <div className="section-heading">
+                          <h2>대본 · 장면 편집</h2>
+                          {activeDraft && (
+                            <span>버전 {activeDraft.revision}</span>
+                          )}
+                        </div>
+                        {editor ? (
+                          <>
+                            <div className="shorts-editor-fields">
                               <label className="form-field">
-                                <span>방송용 내레이션</span>
-                                <textarea
-                                  aria-label="방송용 내레이션"
-                                  value={editorScenes[scene].narration ?? ""}
-                                  maxLength={400}
-                                  onChange={(e) => {
-                                    const scenes =
-                                      structuredClone(editorScenes);
-                                    scenes[scene].narration = e.target.value;
-                                    updateEditor({ ...editor, scenes });
-                                  }}
-                                />
-                              </label>
-                              <label className="form-field">
-                                <span>화면 자막</span>
-                                <textarea
-                                  aria-label="화면 자막"
-                                  value={editorScenes[scene].caption ?? ""}
-                                  maxLength={150}
-                                  onChange={(e) => {
-                                    const scenes =
-                                      structuredClone(editorScenes);
-                                    scenes[scene].caption = e.target.value;
-                                    updateEditor({ ...editor, scenes });
-                                  }}
-                                />
-                              </label>
-                              <label className="form-field">
-                                <span>장면 소재</span>
+                                <span>제목</span>
                                 <input
-                                  value={editorScenes[scene].material ?? ""}
-                                  onChange={(e) => {
-                                    const scenes =
-                                      structuredClone(editorScenes);
-                                    scenes[scene].material = e.target.value;
-                                    updateEditor({ ...editor, scenes });
-                                  }}
-                                />
-                              </label>
-                              <label className="form-field">
-                                <span>이번 장면 이미지</span>
-                                <select
-                                  aria-label="이번 장면 이미지"
-                                  value={sceneImages[scene] ?? ""}
+                                  value={editor.title ?? ""}
+                                  maxLength={100}
                                   onChange={(e) =>
-                                    setSceneImages((old) => {
-                                      const next = [...old];
-                                      next[scene] = e.target.value;
-                                      return next;
+                                    updateEditor({
+                                      ...editor,
+                                      title: e.target.value,
                                     })
                                   }
-                                >
-                                  <option value="">
-                                    뉴스 연결 이미지 자동 선택
-                                  </option>
-                                  <option value="__card__">
-                                    기본 이미지 카드
-                                  </option>
-                                  {(catalog.assets ?? []).map(
-                                    (name: string) => (
-                                      <option key={name} value={name}>
-                                        {name}
-                                      </option>
-                                    ),
-                                  )}
-                                </select>
+                                />
                               </label>
-                              <p className="muted">
-                                {activeDraft?.imageLinks?.[scene]?.reason ??
-                                  (activeDraft?.imageLinks?.[scene]?.name
-                                    ? `저장 연결 · ${activeDraft.imageLinks[scene].name}`
-                                    : "이미지 사용권과 출처를 확인한 뒤 제작합니다.")}
-                              </p>
-                              <div className="review-note">
-                                <ShieldCheck size={17} />
-                                <span>
-                                  검토 메모 · 방송에 포함하지 않음
-                                  <br />
-                                  {(
-                                    editorScenes[scene].review_notes ??
-                                    activeDraft?.review_notes ??
-                                    []
-                                  ).join(" · ") || "별도 검토 메모 없음"}
-                                </span>
+                              <label className="form-field">
+                                <span>HOOK · 첫 문장</span>
+                                <textarea
+                                  value={editor.hook ?? ""}
+                                  maxLength={200}
+                                  onChange={(e) =>
+                                    updateEditor({
+                                      ...editor,
+                                      hook: e.target.value,
+                                    })
+                                  }
+                                />
+                              </label>
+                              <div className="scene-tabs">
+                                {editorScenes.map((s: Item, i: number) => (
+                                  <button
+                                    key={i}
+                                    aria-pressed={scene === i}
+                                    onClick={() => {
+                                      setScene(i);
+                                      if (video.current)
+                                        video.current.currentTime = editorScenes
+                                          .slice(0, i)
+                                          .reduce(
+                                            (n: number, x: Item) =>
+                                              n + Number(x.seconds ?? 0),
+                                            0,
+                                          );
+                                    }}
+                                  >
+                                    <span>장면 {i + 1}</span>
+                                    <small>{s.seconds}초</small>
+                                  </button>
+                                ))}
                               </div>
-                            </div>
-                          )}
-                          <div className="work-actions">
-                            <button
-                              className="primary"
-                              disabled={
-                                busy || !editorDirty || !view.commandsAvailable
-                              }
-                              onClick={() => void saveScript()}
-                            >
-                              <Save size={17} />
-                              {busy ? "저장 확인 중" : "대본 저장"}
-                            </button>
-                            <span className="muted">
-                              {editorDirty
-                                ? "저장 전 편집 · 브라우저 복구 가능"
-                                : "저장된 내용"}
-                            </span>
-                          </div>
-                          <details>
-                            <summary>출처 확인</summary>
-                            <pre>
-                              {JSON.stringify(
-                                activeDraft?.sources ?? {},
-                                null,
-                                2,
+                              {editorScenes[scene] && (
+                                <div className="scene-editor">
+                                  <label className="form-field">
+                                    <span>방송용 내레이션</span>
+                                    <textarea
+                                      aria-label="방송용 내레이션"
+                                      value={
+                                        editorScenes[scene].narration ?? ""
+                                      }
+                                      maxLength={400}
+                                      onChange={(e) => {
+                                        const scenes =
+                                          structuredClone(editorScenes);
+                                        scenes[scene].narration =
+                                          e.target.value;
+                                        updateEditor({ ...editor, scenes });
+                                      }}
+                                    />
+                                  </label>
+                                  <label className="form-field">
+                                    <span>화면 자막</span>
+                                    <textarea
+                                      aria-label="화면 자막"
+                                      value={editorScenes[scene].caption ?? ""}
+                                      maxLength={150}
+                                      onChange={(e) => {
+                                        const scenes =
+                                          structuredClone(editorScenes);
+                                        scenes[scene].caption = e.target.value;
+                                        updateEditor({ ...editor, scenes });
+                                      }}
+                                    />
+                                  </label>
+                                  <label className="form-field">
+                                    <span>장면 소재</span>
+                                    <input
+                                      value={editorScenes[scene].material ?? ""}
+                                      onChange={(e) => {
+                                        const scenes =
+                                          structuredClone(editorScenes);
+                                        scenes[scene].material = e.target.value;
+                                        updateEditor({ ...editor, scenes });
+                                      }}
+                                    />
+                                  </label>
+                                  <label className="form-field">
+                                    <span>이번 장면 이미지</span>
+                                    <select
+                                      aria-label="이번 장면 이미지"
+                                      value={sceneImages[scene] ?? ""}
+                                      onChange={(e) =>
+                                        setSceneImages((old) => {
+                                          const next = [...old];
+                                          next[scene] = e.target.value;
+                                          return next;
+                                        })
+                                      }
+                                    >
+                                      <option value="">
+                                        뉴스 연결 이미지 자동 선택
+                                      </option>
+                                      <option value="__card__">
+                                        기본 이미지 카드
+                                      </option>
+                                      {(catalog.assets ?? []).map(
+                                        (name: string) => (
+                                          <option key={name} value={name}>
+                                            {name}
+                                          </option>
+                                        ),
+                                      )}
+                                    </select>
+                                  </label>
+                                  <p className="muted">
+                                    {activeDraft?.imageLinks?.[scene]?.reason ??
+                                      (activeDraft?.imageLinks?.[scene]?.name
+                                        ? `저장 연결 · ${activeDraft.imageLinks[scene].name}`
+                                        : "이미지 사용권과 출처를 확인한 뒤 제작합니다.")}
+                                  </p>
+                                  <div className="review-note">
+                                    <ShieldCheck size={17} />
+                                    <span>
+                                      검토 메모 · 방송에 포함하지 않음
+                                      <br />
+                                      {(
+                                        editorScenes[scene].review_notes ??
+                                        activeDraft?.review_notes ??
+                                        []
+                                      ).join(" · ") || "별도 검토 메모 없음"}
+                                    </span>
+                                  </div>
+                                </div>
                               )}
-                            </pre>
-                          </details>
-                        </>
-                      ) : (
-                        <Empty text="대본을 선택해 장면을 편집하세요." />
-                      )}
+                            </div>
+                            <div className="work-actions">
+                              <button
+                                className="primary"
+                                disabled={
+                                  busy ||
+                                  !editorDirty ||
+                                  !view.commandsAvailable
+                                }
+                                onClick={() => void saveScript()}
+                              >
+                                <Save size={17} />
+                                {busy ? "저장 확인 중" : "대본 저장"}
+                              </button>
+                              <span className="muted">
+                                {editorDirty
+                                  ? "저장 전 편집 · 브라우저 복구 가능"
+                                  : "저장된 내용"}
+                              </span>
+                            </div>
+                            <details>
+                              <summary>출처 확인</summary>
+                              <pre>
+                                {JSON.stringify(
+                                  activeDraft?.sources ?? {},
+                                  null,
+                                  2,
+                                )}
+                              </pre>
+                            </details>
+                          </>
+                        ) : (
+                          <Empty text="대본을 선택해 장면을 편집하세요." />
+                        )}
+                      </section>
+                      {preview(currentMedia)}
                     </section>
-                    <section className="work-panel" id="voice-options">
+                    <section
+                      className="work-panel shorts-settings"
+                      id="voice-options"
+                    >
                       <h2>
                         <Mic size={19} /> 이번 작업 음성
                       </h2>
@@ -1316,7 +1366,6 @@ export default function Workbench({
                     </section>
                   </div>
                   <aside className="work-stack">
-                    {preview(currentMedia)}
                     <section className="work-panel shorts-files">
                       <h2>완성 파일</h2>
                       {(view.projects ?? [])
@@ -1362,13 +1411,6 @@ export default function Workbench({
                 </div>
                 <div className="work-columns production-columns approved-character-grid">
                   <div className="work-stack">
-                    <Collection
-                      className="character-projects"
-                      title="캐릭터 프로젝트"
-                      items={list("jobs")}
-                      onSelect={setSelected}
-                      selected={selected?.id}
-                    />
                     <section className="work-panel character-story">
                       <h2>스토리 · 스토리보드</h2>
                       <label className="form-field">
@@ -1411,31 +1453,13 @@ export default function Workbench({
                           </div>
 
                           <div className="work-actions">
-                            {selected.state === "completed" &&
-                              selected.mediaUrl && (
-                                <button
-                                  type="button"
-                                  onClick={() => setCharacterScene(null)}
-                                >
-                                  <Play size={16} />
-                                  완성 영상 보기
-                                </button>
-                              )}
-                            {[
-                              "write",
-                              "prepare",
-                              "submit",
-                              "check",
-                              "render",
-                            ].map((x) =>
-                              button(
-                                `character_act_${x}`,
-                                {
-                                  job_id: selected.id,
-                                  quote_hash: selected.quote_hash ?? "",
-                                },
-                                x === "write",
-                              ),
+                            {button(
+                              "character_act_write",
+                              {
+                                job_id: selected.id,
+                                quote_hash: selected.quote_hash ?? "",
+                              },
+                              true,
                             )}
                           </div>
                         </>
@@ -1471,43 +1495,111 @@ export default function Workbench({
                           : "저장된 참조 PNG 없음 · 캐릭터 작업 초안에서 선택하세요."}
                       </p>
                     </section>
-                    {preview(currentMedia)}
-                    <section className="work-panel inspector">
-                      <h2>작업에 고정된 설정</h2>
-                      <dl className="property-list">
-                        {Object.entries(
-                          selected?.selection ??
-                            catalog.characterDefaults ??
-                            {},
-                        )
-                          .filter(
-                            ([k]) =>
-                              !/(fingerprint|credential|price_basis)/.test(k),
+                    <section
+                      className="character-video-group"
+                      aria-label="영상 미리보기와 견적"
+                    >
+                      {preview(currentMedia)}
+                      <section className="work-panel inspector">
+                        <h2>영상 설정 · 견적</h2>
+                        <dl className="property-list">
+                          {Object.entries(
+                            selected?.selection ??
+                              catalog.characterDefaults ??
+                              {},
                           )
-                          .map(([k, v]) => (
-                            <div key={k}>
-                              <dt>{label(k)}</dt>
-                              <dd>
-                                {typeof v === "object"
-                                  ? "저장된 설정"
-                                  : String(v)}
-                              </dd>
+                            .filter(([k]) =>
+                              [
+                                "script_model",
+                                "video_model",
+                                "resolution",
+                                "aspect_ratio",
+                              ].includes(k),
+                            )
+                            .map(([k, v]) => (
+                              <div key={k}>
+                                <dt>{label(k)}</dt>
+                                <dd>
+                                  {typeof v === "object"
+                                    ? "저장된 설정"
+                                    : String(v)}
+                                </dd>
+                              </div>
+                            ))}
+                        </dl>
+                        <details className="character-advanced">
+                          <summary>고급 설정 · 저장된 작업 값</summary>
+                          <dl className="property-list">
+                            {Object.entries(
+                              selected?.selection ??
+                                catalog.characterDefaults ??
+                                {},
+                            )
+                              .filter(
+                                ([k]) =>
+                                  !/(fingerprint|credential|price_basis)/.test(
+                                    k,
+                                  ) &&
+                                  ![
+                                    "script_model",
+                                    "video_model",
+                                    "resolution",
+                                    "aspect_ratio",
+                                  ].includes(k),
+                              )
+                              .map(([k, v]) => (
+                                <div key={k}>
+                                  <dt>{label(k)}</dt>
+                                  <dd>
+                                    {typeof v === "object"
+                                      ? "저장된 설정"
+                                      : String(v)}
+                                  </dd>
+                                </div>
+                              ))}
+                          </dl>
+                        </details>
+                        <h3>공식 견적</h3>
+                        <p>
+                          {selected?.state === "retry_quoted" &&
+                          selected?.retryQuote
+                            ? `장면 ${selected.retryQuote.position} 재시도 · USD ${selected.retryQuote.quote_usd}`
+                            : selected?.quote
+                              ? `전체 장면 · USD ${selected.quote}`
+                              : "아직 조회하지 않았습니다."}
+                        </p>
+                        {selected && (
+                          <>
+                            <div className="work-actions">
+                              {selected.state === "completed" &&
+                                selected.mediaUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setCharacterScene(null)}
+                                  >
+                                    <Play size={16} />
+                                    완성 영상 보기
+                                  </button>
+                                )}
+                              {["prepare", "submit", "check", "render"].map(
+                                (x) =>
+                                  button(
+                                    `character_act_${x}`,
+                                    {
+                                      job_id: selected.id,
+                                      quote_hash: selected.quote_hash ?? "",
+                                    },
+                                    x === "write",
+                                  ),
+                              )}
                             </div>
-                          ))}
-                      </dl>
-                      <h3>공식 견적</h3>
-                      <p>
-                        {selected?.state === "retry_quoted" &&
-                        selected?.retryQuote
-                          ? `장면 ${selected.retryQuote.position} 재시도 · USD ${selected.retryQuote.quote_usd}`
-                          : selected?.quote
-                            ? `전체 장면 · USD ${selected.quote}`
-                            : "아직 조회하지 않았습니다."}
-                      </p>
-                      <p className="muted">
-                        Seedance 참조 계약을 유지합니다. 계정 지원 여부는 실제
-                        조회 전 미검증입니다.
-                      </p>
+                          </>
+                        )}
+                        <p className="muted">
+                          Seedance 참조 계약을 유지합니다. 계정 지원 여부는 실제
+                          조회 전 미검증입니다.
+                        </p>
+                      </section>
                     </section>
                   </aside>
                 </div>
@@ -1549,6 +1641,13 @@ export default function Workbench({
                     </div>
                   </section>
                 )}
+                <Collection
+                  className="character-projects"
+                  title="캐릭터 프로젝트"
+                  items={list("jobs")}
+                  onSelect={setSelected}
+                  selected={selected?.id}
+                />
               </>
             )}
             {module === "images" && (
@@ -1830,15 +1929,76 @@ export default function Workbench({
                 </div>
                 <div className="work-columns approved-automation-grid">
                   <div className="work-stack">
-                    <Collection
-                      className="schedule-list"
-                      title="제작 예약"
-                      items={list("schedules")}
-                      onSelect={(x) =>
-                        setSelected({ ...x, __type: "schedule" })
-                      }
-                      selected={selected?.id}
-                    />
+                    <section className="work-panel schedule-list">
+                      <div className="section-heading">
+                        <h2>제작 예약</h2>
+                        <span className="muted">
+                          {list("schedules").length}개
+                        </span>
+                      </div>
+                      {list("schedules").length ? (
+                        <div className="table-scroll">
+                          <table className="schedule-table">
+                            <thead>
+                              <tr>
+                                <th>예약명</th>
+                                <th>주기</th>
+                                <th>실행 시간</th>
+                                <th>다음 실행</th>
+                                <th>상태</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {list("schedules").map((x) => (
+                                <tr
+                                  key={x.id}
+                                  className={
+                                    selected?.__type === "schedule" &&
+                                    selected.id === x.id
+                                      ? "selected"
+                                      : ""
+                                  }
+                                >
+                                  <td>
+                                    <button
+                                      type="button"
+                                      aria-pressed={
+                                        selected?.__type === "schedule" &&
+                                        selected.id === x.id
+                                      }
+                                      onClick={() =>
+                                        setSelected({
+                                          ...x,
+                                          __type: "schedule",
+                                        })
+                                      }
+                                    >
+                                      {x.name || `예약 #${x.id}`}
+                                    </button>
+                                  </td>
+                                  <td>{label(x.kind)}</td>
+                                  <td>{x.local_time || "미정"}</td>
+                                  <td>
+                                    {x.next_run_at
+                                      ? recordDate(x.next_run_at)
+                                      : "미정"}
+                                  </td>
+                                  <td>
+                                    <Badge value={x.status} />
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <Empty text="저장된 예약이 없습니다." />
+                      )}
+                      <p className="muted">
+                        예약 저장과 활성화는 별도입니다. 지원되지 않는 제작
+                        유형은 표시하지 않습니다.
+                      </p>
+                    </section>
                     <Collection
                       className="schedule-history"
                       title="예약 실행 기록"
@@ -2038,88 +2198,93 @@ export default function Workbench({
                     />
                   </div>
                   <aside className="work-stack">
-                    {preview(
-                      safeMedia(
-                        selected?.mediaUrl ??
-                          (view.projects ?? []).find(
-                            (x) => x.id === `news:${selected?.render_job_id}`,
-                          )?.mediaUrl,
-                      ),
-                    )}
-                    <section className="work-panel inspector">
-                      <h2>
-                        <Send size={20} /> 게시 검토
-                      </h2>
-                      {selected ? (
-                        <>
-                          <h3>{itemTitle(selected)}</h3>
-                          <p>{selected.description}</p>
-                          <Badge value={selected.state ?? selected.status} />
-                          {selected.__type === "cohort" && (
-                            <>
-                              <div className="review-checklist">
-                                {(selected.targets ?? []).map((x: Item) => (
-                                  <p key={x.platform}>
-                                    {x.platform} <Badge value={x.status} />
-                                  </p>
-                                ))}
-                              </div>
-                              {selected.can_execute ? (
-                                button(
-                                  "unified_publishing_execute",
-                                  {
-                                    cohort_id: selected.id,
-                                    approval_token: selected.approval_token,
-                                  },
-                                  true,
-                                )
-                              ) : (
-                                <p className="command-error">
-                                  검토·권한·플랫폼별 상태를 먼저 확인하세요.
-                                </p>
-                              )}
-                            </>
-                          )}
-                          <div className="review-checklist">
-                            {[
-                              "content_reviewed",
-                              "copyright_confirmed",
-                              "sources_confirmed",
-                            ].map((k) => (
-                              <p key={k}>
-                                {selected[k] ? (
-                                  <Check size={16} />
-                                ) : (
-                                  <AlertTriangle size={16} />
-                                )}
-                                {label(k)} ·{" "}
-                                {selected[k] ? "기록 있음" : "확인 필요"}
-                              </p>
-                            ))}
-                          </div>
-                          <div className="work-actions">
-                            {button("publishing_edit", {
-                              draft_id: selected.id,
-                              ...selected,
-                            })}
-                            {button("publishing_validate", {
-                              draft_id: selected.id,
-                            })}
-                          </div>
-                          <p className="muted">
-                            로컬 초안 저장은 계정 연결 없이 가능합니다. 실제
-                            게시에는 플랫폼별 승인과 권한이 필요합니다.
-                          </p>
-                        </>
-                      ) : (
-                        <Empty text="초안을 선택하세요." />
+                    <section
+                      className="publish-review-group"
+                      aria-label="콘텐츠 미리보기와 게시 검토"
+                    >
+                      {preview(
+                        safeMedia(
+                          selected?.mediaUrl ??
+                            (view.projects ?? []).find(
+                              (x) => x.id === `news:${selected?.render_job_id}`,
+                            )?.mediaUrl,
+                        ),
                       )}
+                      <section className="work-panel inspector">
+                        <h2>
+                          <Send size={20} /> 게시 검토
+                        </h2>
+                        {selected ? (
+                          <>
+                            <h3>{itemTitle(selected)}</h3>
+                            <p>{selected.description}</p>
+                            <Badge value={selected.state ?? selected.status} />
+                            {selected.__type === "cohort" && (
+                              <>
+                                <div className="review-checklist">
+                                  {(selected.targets ?? []).map((x: Item) => (
+                                    <p key={x.platform}>
+                                      {x.platform} <Badge value={x.status} />
+                                    </p>
+                                  ))}
+                                </div>
+                                {selected.can_execute ? (
+                                  button(
+                                    "unified_publishing_execute",
+                                    {
+                                      cohort_id: selected.id,
+                                      approval_token: selected.approval_token,
+                                    },
+                                    true,
+                                  )
+                                ) : (
+                                  <p className="command-error">
+                                    검토·권한·플랫폼별 상태를 먼저 확인하세요.
+                                  </p>
+                                )}
+                              </>
+                            )}
+                            <div className="review-checklist">
+                              {[
+                                "content_reviewed",
+                                "copyright_confirmed",
+                                "sources_confirmed",
+                              ].map((k) => (
+                                <p key={k}>
+                                  {selected[k] ? (
+                                    <Check size={16} />
+                                  ) : (
+                                    <AlertTriangle size={16} />
+                                  )}
+                                  {label(k)} ·{" "}
+                                  {selected[k] ? "기록 있음" : "확인 필요"}
+                                </p>
+                              ))}
+                            </div>
+                            <div className="work-actions">
+                              {button("publishing_edit", {
+                                draft_id: selected.id,
+                                ...selected,
+                              })}
+                              {button("publishing_validate", {
+                                draft_id: selected.id,
+                              })}
+                            </div>
+                            <p className="muted">
+                              로컬 초안 저장은 계정 연결 없이 가능합니다. 실제
+                              게시에는 플랫폼별 승인과 권한이 필요합니다.
+                            </p>
+                          </>
+                        ) : (
+                          <Empty text="초안을 선택하세요." />
+                        )}
+                      </section>
                     </section>
                     <PlatformAccounts
                       accounts={list("accounts")}
                       onSettings={() => onNavigate("settings")}
                     />
-                    <section className="work-panel">
+                    <section className="work-panel publish-policy">
                       <h2>공개 게시 전 확인</h2>
                       <p>
                         MP4 · 단일 이미지의 게시 상태는 독립적으로 보존됩니다.
@@ -2143,10 +2308,20 @@ export default function Workbench({
                   account={accountFilter}
                   onAccount={setAccountFilter}
                 />
-                <PlatformAccounts
-                  accounts={accountMetadata}
-                  onSettings={() => onNavigate("settings")}
-                />
+                <details className="analytics-account-details">
+                  <summary>
+                    등록 계정 · 권한 확인{" "}
+                    <span>
+                      {accountMetadata === null
+                        ? "계정 정보 미확인"
+                        : `${accountMetadata.length}개 등록 · 실제 권한 별도 확인`}
+                    </span>
+                  </summary>
+                  <PlatformAccounts
+                    accounts={accountMetadata}
+                    onSettings={() => onNavigate("settings")}
+                  />
+                </details>
                 <div className="work-toolbar">
                   {button("social_collect", {})}
                 </div>
