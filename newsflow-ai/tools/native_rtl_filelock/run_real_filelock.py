@@ -18,12 +18,29 @@ if os.name!="nt" or sys.version_info[:3]!=(3,14,7) or os.environ.get("GITHUB_ACT
     raise SystemExit("Windows CI only; do not spoof CI locally.")
 for key in list(os.environ):
     if any(x in key.upper() for x in ("API_KEY","OAUTH","ACCESS_TOKEN","AUTH_TOKEN","NEWSFLOW_")):os.environ.pop(key,None)
+workspace=Path(tempfile.mkdtemp(prefix="newsflow-real-filelock-",dir=os.environ["RUNNER_TEMP"]))
+def startup_failure(kind,value,tb):
+    evidence={"commit":os.environ.get("GITHUB_SHA"),"startup_blocked":True,"tests_executed":False,
+              "error_type":kind.__name__,"reason":str(value),
+              "pass":0,"fail":0,"error":0,"skip":0,
+              "full_app_executed":False,"native_resources":"not certified after incomplete startup"}
+    try:
+        (workspace/"real-filelock-evidence.json").write_text(json.dumps(evidence,indent=2),encoding="utf-8")
+        print("REAL_FILELOCK_EVIDENCE_JSON="+json.dumps(evidence))
+    finally:sys.__excepthook__(kind,value,tb)
+sys.excepthook=startup_failure
 manifest=json.loads((HERE/"SOURCE_HASHES.json").read_text(encoding="utf-8"))
 before={name:hashlib.sha256((HERE/name).read_bytes()).hexdigest() for name in manifest}
 assert before==manifest
 borrowed=json.loads((HERE/"BORROWED_SOURCES.json").read_text(encoding="utf-8"))
+def borrowed_hash(name):
+    data=(TOOLS/name).read_bytes()
+    # The repository pins .py to LF; JSON may check out as CRLF on Windows.
+    # Only CRLF -> LF normalization is allowed for this metadata, not value changes.
+    return hashlib.sha256(data.replace(b"\r\n",b"\n") if name.endswith(".json") else data).hexdigest()
+borrowed_raw_hashes={name:hashlib.sha256((TOOLS/name).read_bytes()).hexdigest() for name in borrowed}
 for name,digest in borrowed.items():
-    assert hashlib.sha256((TOOLS/name).read_bytes()).hexdigest()==digest,name
+    assert borrowed_hash(name)==digest,name
 dist=importlib.metadata.distribution("filelock")
 assert dist.version=="3.32.7"
 package_root=Path(dist.locate_file("filelock")).resolve()
@@ -31,7 +48,6 @@ vendor_before={str(p.relative_to(package_root)):hashlib.sha256(p.read_bytes()).h
 sources={("filelock" if name=="__init__.py" else "filelock."+name[:-3]):str(package_root/name)
          for name in ("__init__.py","_api.py","_descriptor.py","_windows.py","_identity.py","_marker.py","_lease.py","_util.py")}
 assert "filelock" not in sys.modules
-workspace=Path(tempfile.mkdtemp(prefix="newsflow-real-filelock-",dir=os.environ["RUNNER_TEMP"]))
 (workspace/"step13_guard.py").write_bytes((OLD/"guard_verification.py").read_bytes())
 (workspace/"native_boundary.py").write_bytes((OLD/"native_boundary_original.py").read_bytes())
 (workspace/"verification_gate.py").write_bytes((HERE/"verification_gate_copy.py").read_bytes())
@@ -104,7 +120,9 @@ evidence={"commit":os.environ.get("GITHUB_SHA"),"python":sys.version.split()[0],
 "remaining_native_handles":len(native._owned_handles),"close_errors":close_errors,
 "cleanup_errors":cleanup_errors,"remaining_synthetic_entries":[p.name for p in workspace.iterdir()],
 "source_hashes_before":before,"source_hashes_after":after,"source_unchanged":before==after,
-"borrowed_sources_unchanged":all(hashlib.sha256((TOOLS/name).read_bytes()).hexdigest()==digest for name,digest in borrowed.items()),
+"borrowed_sources_unchanged":all(borrowed_hash(name)==digest for name,digest in borrowed.items()),
+"borrowed_raw_hashes":borrowed_raw_hashes,
+"borrowed_JSON_hash_rule":"CRLF-to-LF only; all code uses exact byte SHA256",
 "legacy_DLL_symbol_tables_unchanged":native_keys==set(guard._NATIVE) and dll_keys==set(guard._SYSTEM_DLLS),
 "native_DLL_SHA256":gate.native_hashes,"guard_denials":guard.ATTEMPTS,"gate_denials":gate.denials,
 "private_native_bindings":registration.native_bindings,"filelock_facade_bindings":registration.facade_bindings,
