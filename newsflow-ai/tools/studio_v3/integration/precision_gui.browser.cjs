@@ -143,9 +143,16 @@ const control=action=>ipc({kind:"control",action});
    await check("viewport "+name+" "+width,async()=>{
     await open(url);
     if(name==="characters")await page.locator(".core-job-list button").filter({hasText:"합성 GUI 캐릭터 주제"}).click();
+    await page.evaluate(()=>{window.scrollTo(0,0);document.querySelector("main")?.scrollTo(0,0);});
+    await page.waitForLoadState("networkidle");await serial;
     await page.evaluate(async()=>{await document.fonts.ready;
-     const visible=[...document.images].filter(i=>{const r=i.getBoundingClientRect();return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;});
-     await Promise.all(visible.map(i=>i.decode().catch(()=>{})));});
+      const visible=[...document.images].filter(i=>{const r=i.getBoundingClientRect();return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;});
+      await Promise.all(visible.map(i=>i.decode()));
+    });
+    await page.waitForFunction(()=>[...document.querySelectorAll(".core-studio img")].filter(i=>{
+      const r=i.getBoundingClientRect();return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;
+    }).every(i=>i.complete&&i.naturalWidth>0&&(!i.classList.contains("asset-thumb-img")||i.classList.contains("loaded"))));
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);assert(!overflow,"horizontal overflow");
     const buttons=await page.locator(".core-shorts button,.core-character button,.core-image-grid button,.core-top3 button,.core-news-grid button").evaluateAll(ns=>ns.filter(n=>!n.disabled).map(n=>{const r=n.getBoundingClientRect();return {text:n.textContent.trim().slice(0,45),x:r.x,width:r.width};}));
 
@@ -172,7 +179,8 @@ const control=action=>ipc({kind:"control",action});
       if(geometry.preview)assert(Math.abs(geometry.preview.width/geometry.preview.height-9/16)<.02,"portrait preview ratio");
     }
     const file=name+"-"+width+".png";await page.screenshot({path:path.join(out,file),animations:"disabled",caret:"hide"});
-    const capture={screen:name,width,height,file,overflow,buttons,geometry};
+    const media=await page.locator(".core-studio img").evaluateAll(ns=>ns.map(i=>({src:i.getAttribute("src"),width:i.naturalWidth,height:i.naturalHeight,loaded:i.complete,visible:i.getBoundingClientRect().top<innerHeight})));
+    const capture={screen:name,width,height,file,overflow,buttons,geometry,media};
     result.captures.push(capture);
     if(width===1366 && ["shorts","characters","images"].includes(name)){
       const title={shorts:"영상 제작 · 승인 확인",characters:"참조 PNG 등록 · 새 작업",images:"검토 후 재사용"}[name];
