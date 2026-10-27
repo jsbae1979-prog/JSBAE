@@ -1,7 +1,7 @@
 {
   "verification_gate_app": {
     "base_SHA256": "7c3abebf27b241a2da78d201af62c8b6c551ee6715f4082994d6ed042bb198d7",
-    "copy_SHA256": "475c2ffa453512323996e39a3cae2f4f95b75899d6b895563adefb6f0bf6c968"
+    "copy_SHA256": "9ebce3335bb1b405319950ab66864e55191c15785d277888df604d3fb4b9501b"
   },
   "guard_capability": {
     "base_SHA256": "6dde5174e6301eae0f308452fdd47bbb34be748efe7d1286c36605180d105389",

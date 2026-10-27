@@ -9,7 +9,26 @@
  """
  from __future__ import annotations
  import contextlib
-@@ -75,6 +75,7 @@
+@@ -56,13 +56,15 @@
+         self.root = root
+ 
+ class VerificationGate:
+-    def __init__(self, workspace: Path, source: Path):
++    def __init__(self, workspace: Path, source: Path, *, read_roots=()):
+         if os.name != "nt" or sys.version_info[:3] != (3, 14, 7):
+             raise Denied("Windows-Python-3.14.7-required")
+         self.workspace = dos_path(str(workspace))
+         self.source = dos_path(str(source))
+-        self.read_roots = (self.workspace, self.source, dos_path(sys.base_prefix),
+-                           dos_path(sys.prefix))
++        # One reviewed read-only source list, shared with the outer Guard.
++        # Writes remain confined to workspace; native/network restrictions are separate.
++        self.read_roots = tuple(dict.fromkeys((self.workspace, self.source, dos_path(sys.base_prefix),
++                           dos_path(sys.prefix)) + tuple(dos_path(str(p)) for p in read_roots)))
+         self.system32 = dos_path(str(Path(os.environ["SystemRoot"]) / "System32"))
+         self.grants = {}
+         self.installed = False
+@@ -75,6 +77,7 @@
          self._rtl_bound = False
          self._owned_memory_read = None
          self._reader_address = None
@@ -17,7 +36,7 @@
      def deny(self, reason):
          self.denials[reason] = self.denials.get(reason, 0) + 1
          raise Denied(reason)
-@@ -137,6 +138,7 @@
+@@ -137,6 +140,7 @@
          return invoke
  
      def audit(self, event, args):

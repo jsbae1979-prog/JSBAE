@@ -56,13 +56,15 @@ class Grant:
         self.root = root
 
 class VerificationGate:
-    def __init__(self, workspace: Path, source: Path):
+    def __init__(self, workspace: Path, source: Path, *, read_roots=()):
         if os.name != "nt" or sys.version_info[:3] != (3, 14, 7):
             raise Denied("Windows-Python-3.14.7-required")
         self.workspace = dos_path(str(workspace))
         self.source = dos_path(str(source))
-        self.read_roots = (self.workspace, self.source, dos_path(sys.base_prefix),
-                           dos_path(sys.prefix))
+        # One reviewed read-only source list, shared with the outer Guard.
+        # Writes remain confined to workspace; native/network restrictions are separate.
+        self.read_roots = tuple(dict.fromkeys((self.workspace, self.source, dos_path(sys.base_prefix),
+                           dos_path(sys.prefix)) + tuple(dos_path(str(p)) for p in read_roots)))
         self.system32 = dos_path(str(Path(os.environ["SystemRoot"]) / "System32"))
         self.grants = {}
         self.installed = False

@@ -9,3 +9,5 @@ Existing 28/39/32/29 and 7/59/42 evidence is reused, not replayed.
 This is a trusted CI harness, not hostile-Python OS isolation. App operation, Windows 11 GUI and OS DPI are not certified.
 
 Current evidence: run 40531809814 is BLOCKED before certified security/app results. Bootstrap source reads are not in the gate read roots. No permission is added and no retry is dispatched. Later logging/resource-accounting fixes are compile-only, NOT CI VERIFIED. Workflow is manual-only pending approval.
+
+User-approved simplification: one read-only source list is shared by the outer Guard, bootstrap gate and AppPolicy. The prior rejection remains in history. No per-file read approval cycle is needed for the fixed verification source folders. Runtime writes, SQLite, credentials, native calls, processes, network and paid execution boundaries remain protected. A new scoped CI run validates the change.

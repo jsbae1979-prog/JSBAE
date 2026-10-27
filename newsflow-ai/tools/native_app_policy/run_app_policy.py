@@ -55,7 +55,8 @@ try:
     import step13_guard as guard
     guard.install()
     from verification_gate import VerificationGate
-    gate=VerificationGate(workspace,PROJECT/"src");gate.install()
+    gate=VerificationGate(workspace,PROJECT/"src",read_roots=reads);gate.install()
+    evidence["bootstrap_read_roots_shared"]=all(str(p).lower() in gate.read_roots for p in reads)
     from guard_capability import NativeRegistration
     registration=NativeRegistration(gate,sources)
     guard.register_verification_capability(registration)
