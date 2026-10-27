@@ -2,7 +2,7 @@
   "app_initialization.py": "31961e6c72b0fb912ad9f6313f0a178a8cb04b5b9cb0b549a44c20c0f6fac3bc",
   "app_policy.py": "3536ff7a26c3db960c8399c54eea3175452c727275c8791407f78a5ff661a1e4",
   "guard_capability.py": "74f5c1bac00609babe8391e604741ea6b99877531fbcaadc6ac336c097e1aedb",
-  "run_app_policy.py": "c252bd5242ce67bc0641e486ccdafd4703157a30c8c9e33a69bf7b23d5421e8a",
-  "test_app_policy.py": "ecaa208a587d42b74cff48279085c0686f5353bd97d992d40d31ebe977fded3f",
+  "run_app_policy.py": "8540f29bddeffb43e7c5971e7d3fc2efec52dbd5a6eca81a91e1d819527e243d",
+  "test_app_policy.py": "fb00fd7ef749af194ebded9e3b55ec99d6976f2211358196c6f686f2fc661e61",
   "verification_gate_app.py": "9ebce3335bb1b405319950ab66864e55191c15785d277888df604d3fb4b9501b"
 }

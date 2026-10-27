@@ -62,7 +62,8 @@ class PolicyTests(unittest.TestCase):
             RESULTS["loopback_probe_port"]=address[1]
     def test_07_operating_port_external_DNS_proxy_and_unowned_loopback_denied(self):
         for address in (("127.0.0.1",8765),("127.0.0.1",18765),("198.51.100.1",443),("::1",18765)):
-            with socket.socket() as s,self.assertRaises(Denied):s.connect(address)
+            family=socket.AF_INET6 if ":" in address[0] else socket.AF_INET
+            with socket.socket(family) as s,self.assertRaises(Denied):s.connect(address)
         with self.assertRaises(Denied):socket.getaddrinfo("example.invalid",443)
         with socket.socket(type=socket.SOCK_DGRAM) as s,self.assertRaises(Denied):s.sendto(b"x",("127.0.0.1",53))
     def test_08_process_and_background_thread_denied(self):

@@ -25,6 +25,7 @@ old_env=os.environ.copy()
 keep={k:v for k,v in old_env.items() if k.upper() in {"SYSTEMROOT","WINDIR","SYSTEMDRIVE","COMSPEC","NUMBER_OF_PROCESSORS","PROCESSOR_ARCHITECTURE","PATHEXT"}}
 # No inherited credentials, proxy, provider flags, real profile or developer PATH.
 os.environ.clear();os.environ.update(keep)
+old_env.clear()  # Do not retain inherited credentials in a spare dictionary.
 os.environ.update({"GITHUB_ACTIONS":"true","RUNNER_TEMP":str(runner),"TEMP":str(workspace),"TMP":str(workspace),
  "APPDATA":str(workspace/"Roaming"),"LOCALAPPDATA":str(workspace/"Local"),"USERPROFILE":str(workspace/"Profile"),
  "PATH":str(Path(sys.executable).parent),"NEWSFLOW_DATA_DIR":str(workspace/"not-used-default")})
