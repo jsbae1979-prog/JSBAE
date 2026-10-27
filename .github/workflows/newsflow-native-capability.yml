@@ -1,0 +1,31 @@
+name: NewsFlow verification-only native capability
+on:
+  push:
+    branches: [codex/newsflow-core-studios-rebuild-20261027]
+    paths:
+      - 'newsflow-ai/tools/native_capability/**'
+      - '.github/workflows/newsflow-native-capability.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic-native-security:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Guard-first native lock tests only (no application import)
+        run: python -I -B newsflow-ai/tools/native_capability/run_verification.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-capability-security-evidence
+          path: ${{ runner.temp }}/newsflow-native-*/evidence.json
+          if-no-files-found: error
