@@ -27,22 +27,30 @@ from newsflow.intelligence.api_search import (
     safe_source_url,
 )
 from newsflow.intelligence.provider import (
-    ANALYSIS_INSTRUCTION,
-    SCRIPT_INSTRUCTION,
+    AnalysisResponseError,
     NoRedirect,
     OfflineProvider,
     OpenAIProvider,
     Options,
     ProviderError,
+    ProviderHTTPResponseError,
     ProviderKeyMissing,
     ProviderResponseError,
     ProviderTimeoutError,
     ProviderUnavailableError,
+    ScriptResponseError,
+    prompt_instruction,
+    prompt_options,
+    prompt_version,
     user_message,
 )
 from newsflow.news.dedup import canonical_url
 
+from .schema import Analysis, Script
+
 MAX_REQUEST_BYTES = 64000
+# The required per-article curation schema adds bounded metadata, not more source text.
+MAX_CURATION_REQUEST_BYTES = 80000
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 API_MODELS = {"openai": ("gpt-4.1-mini",),
               "claude_api": ("claude-sonnet-4-6", "claude-haiku-4-5-20251001", "claude-opus-4-6")}
@@ -52,9 +60,17 @@ class APICancelled(ProviderError):
     code = "ai_cancelled"
 
 
-def _safe_json(text: str) -> dict:
+def _safe_json(text: str, *, reject_duplicates: bool = False) -> dict:
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate JSON field")
+            result[key] = value
+        return result
+
     try:
-        result = json.loads(text)
+        result = json.loads(text, object_pairs_hook=unique if reject_duplicates else None)
         if not isinstance(result, dict):
             raise TypeError
         return result
@@ -62,19 +78,80 @@ def _safe_json(text: str) -> dict:
         raise ProviderResponseError("AI JSON 형식을 확인하지 못했습니다. 자동 재요청하지 않습니다.") from None
 
 
-def _claude_search_json(text: str) -> dict:
+def _claude_json_object(text: str) -> dict:
     """Accept one whole JSON document, optionally in one complete Markdown fence.
 
     Never search prose for braces, repair JSON, or choose among several objects.
-    Envelope parsing, other providers and analysis/script parsing stay strict.
-    The unchanged article/source validators still run after this presentation step.
+    Envelope parsing and other providers stay strict. Local schema/source and
+    script safety validators remain mandatory after this step.
     """
     text = text.strip()
     lines = text.splitlines()
     if (len(lines) >= 3 and lines[0].lower() in {"```json", "```"}
             and lines[-1] == "```"):
         text = "\n".join(lines[1:-1])
-    return _safe_json(text)
+    return _safe_json(text, reject_duplicates=True)
+
+
+def _output_schema(model) -> dict:
+    """Send supported wire constraints; retain the original strict local schema.
+
+    Claude's raw JSON schema API does not support string/numeric bounds or
+    maxItems. Describe those bounds on the wire and still enforce them locally.
+    https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+    """
+    unsupported = {"minimum", "maximum", "minLength", "maxLength", "maxItems"}
+
+    def wire(value):
+        if isinstance(value, list):
+            return [wire(item) for item in value]
+        if not isinstance(value, dict):
+            return value
+        limits = {name: value[name] for name in unsupported if name in value}
+        result = {name: wire(item) for name, item in value.items() if name not in unsupported}
+        if result.get('type') == 'object':
+            result['additionalProperties'] = False
+        if limits:
+            result["description"] = (result.get("description", "") + " Local validation: "
+                                     + json.dumps(limits, sort_keys=True)).strip()
+        return result
+
+    return wire(model.model_json_schema())
+
+
+def _legacy_wire(schema, *, script):
+    if script:
+        schema['properties'].pop('analysis', None)
+        schema.get('$defs', {}).pop('ScriptAnalysis', None)
+        schema.get('$defs', {}).get('Scene', {}).get('properties', {}).pop('role', None)
+    else:
+        schema['properties'].pop('recommended_angle', None)
+        props = schema.get('$defs', {}).get('Comparison', {}).get('properties', {})
+        for name in ('ad_risk', 'viewer_relevance', 'viewer_angle'):
+            props.pop(name, None)
+    return schema
+
+
+def _analysis_output_schema(version='v1') -> dict:
+    schema = _output_schema(Analysis)
+    return _legacy_wire(schema, script=False) if version == 'v1' else schema
+
+
+def _script_output_schema(version='v1', evidence=None) -> dict:
+    schema = _output_schema(Script)
+    if version == 'v1':
+        return _legacy_wire(schema, script=True)
+    contract = (evidence or {}).get('news_usage_contract') or {}
+    if contract.get('narration_limits_version') == 'scene-characters-v1':
+        budgets = contract['scene_narration_budgets']
+        limits = ', '.join(f"{b['scene']}번: {b['maximum_characters']}자/{b['maximum_sentences']}문장"
+                           for b in budgets)
+        schema['$defs']['Scene']['properties']['narration']['description'] = (
+            '실제로 읽을 한국어 문장. 공백·문장부호 포함 최대 글자 수와 최대 문장 수: ' + limits
+            + '. hook/closing도 포함. 배정 초를 바꾸면 같은 시간 추정식으로 예산을 다시 계산. '
+              '발화 단위와 전체 분량 상한도 함께 지킬 것. 초과 시 자동 재생성하지 않고 검토 대상으로 저장됨.'
+        )
+    return schema
 
 
 def _usage(document: dict, *, anthropic: bool = False) -> dict[str, int]:
@@ -107,8 +184,9 @@ class _APITransport:
     provider: str
     endpoint: str
 
-    def __init__(self, key_provider: Callable[[], str]) -> None:
+    def __init__(self, key_provider: Callable[[], str], *, error_recorder=None) -> None:
         self.key_provider = key_provider
+        self.error_recorder = error_recorder
         self.last_usage: dict | None = None
         self.last_elapsed_ms = 0
         self.last_retried = False
@@ -170,8 +248,11 @@ class _APITransport:
         key = key.strip()
         if any(ord(char) < 33 or ord(char) > 126 for char in key):
             raise ProviderKeyMissing("API 키 형식을 확인해 주세요.")
-        raw = json.dumps(body, ensure_ascii=False).encode("utf-8")
-        if len(raw) > MAX_REQUEST_BYTES:
+        raw = json.dumps(body, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        properties = body.get("output_config", {}).get("format", {}).get("schema", {}).get("properties", {})
+        request_limit = (MAX_CURATION_REQUEST_BYTES if self.provider == "claude_api"
+                         and "article_groups" in properties else MAX_REQUEST_BYTES)
+        if len(raw) > request_limit:
             raise ProviderResponseError("API 입력 크기가 제한을 초과했습니다.")
         headers = {"Content-Type": "application/json", "Accept-Encoding": "identity"}
         if self.provider == "openai":
@@ -189,6 +270,9 @@ class _APITransport:
             self.last_usage = _usage(document, anthropic=self.provider == "claude_api")
             return document
         except urllib.error.HTTPError as exc:
+            if self.provider == "claude_api" and type(OpenAIProvider._classify(exc)) is ProviderResponseError:
+                raise ProviderHTTPResponseError.from_http_error(
+                    exc, recorder=self.error_recorder, secret=key) from None
             raise OpenAIProvider._classify(exc) from None
         except TimeoutError:
             raise ProviderTimeoutError("API 요청 결과가 불명확합니다. 자동 재요청하지 않습니다.") from None
@@ -282,7 +366,8 @@ class AnthropicProvider(_APITransport):
     provider = "claude_api"
     endpoint = "https://api.anthropic.com/v1/messages"
 
-    def _message(self, instruction: str, payload: dict, options: Options, *, search=False) -> dict:
+    def _message(self, instruction: str, payload: dict, options: Options, *,
+                 search=False, analysis=False, script=False) -> dict:
         body = {
             "model": options.model, "max_tokens": options.max_tokens,
             "system": instruction, "temperature": options.temperature,
@@ -293,6 +378,23 @@ class AnthropicProvider(_APITransport):
                 "type": "web_search_20250305", "name": "web_search", "max_uses": 1,
                 "allowed_callers": ["direct"],
             }]
+        if analysis or script:
+            body["system"] += " Return exactly one JSON object, with no Markdown fences or surrounding prose."
+            version = prompt_version(payload.get('evidence'))
+            schema = _script_output_schema(version, payload.get('evidence')) if script else _analysis_output_schema(version)
+            if analysis and payload.get("evidence", {}).get("curation_contract"):
+                from .curation import ranking_model, wire_evidence
+                from .curation_wire import INSTRUCTION, output_schema
+
+                contract = payload["evidence"]["curation_contract"]
+                ranking_schema = _output_schema(ranking_model(contract))
+                if version == "v1":
+                    ranking_schema = _legacy_wire(ranking_schema, script=False)
+                schema = output_schema(ranking_schema, payload["evidence"])
+                body["system"] += INSTRUCTION
+                body["messages"][0]["content"] = json.dumps(
+                    {**payload, "evidence": wire_evidence(payload["evidence"])}, ensure_ascii=False, separators=(",", ":"))
+            body["output_config"] = {"format": {"type": "json_schema", "schema": schema}}
         return self._post(body, options)
 
     @staticmethod
@@ -314,12 +416,47 @@ class AnthropicProvider(_APITransport):
             raise ProviderResponseError("Claude API 응답 형식이 올바르지 않습니다.") from None
 
     def analyze(self, evidence: dict, options: Options) -> dict:
-        document = self._message(ANALYSIS_INSTRUCTION, {"evidence": evidence}, options)
-        return _safe_json(self._text(document, search=False))
+        stage, stop_reason = "response_envelope", None
+        try:
+            document = self._message(prompt_instruction('analysis', evidence), {"evidence": evidence},
+                                     prompt_options(options, 'analysis', prompt_version(evidence)), analysis=True)
+            stop_reason = document.get("stop_reason")
+            if stop_reason != "end_turn":
+                raise AnalysisResponseError("incomplete_response", stop_reason=stop_reason)
+            stage = "response_text"
+            text = self._text(document, search=False)
+            stage = "result_json"
+            output = _claude_json_object(text)
+            if evidence.get("curation_contract"):
+                from .curation_wire import decode
+
+                output = decode(output, evidence)
+            return output
+        except AnalysisResponseError:
+            raise
+        except ProviderHTTPResponseError as exc:
+            raise AnalysisResponseError("request_rejected", **exc.diagnostics()) from None
+        except ProviderResponseError:
+            raise AnalysisResponseError(stage, stop_reason=stop_reason) from None
 
     def complete(self, evidence: dict, duration: int, options: Options) -> dict:
-        document = self._message(SCRIPT_INSTRUCTION, {"duration": duration, "evidence": evidence}, options)
-        return _safe_json(self._text(document, search=False))
+        stage, stop_reason = "response_envelope", None
+        try:
+            document = self._message(prompt_instruction('script', evidence), {"duration": duration, "evidence": evidence},
+                                     prompt_options(options, 'script', prompt_version(evidence)), script=True)
+            stop_reason = document.get("stop_reason")
+            if stop_reason != "end_turn":
+                raise ScriptResponseError("incomplete_response", stop_reason=stop_reason)
+            stage = "response_text"
+            text = self._text(document, search=False)
+            stage = "result_json"
+            return _claude_json_object(text)
+        except ScriptResponseError:
+            raise
+        except ProviderHTTPResponseError as exc:
+            raise ScriptResponseError("request_rejected", **exc.diagnostics()) from None
+        except ProviderResponseError:
+            raise ScriptResponseError(stage, stop_reason=stop_reason) from None
 
     def search(self, request: SearchRequest, options: Options) -> SearchResult:
         # Retain a fixed failure stage, never the response or exception payload.
@@ -376,7 +513,7 @@ class AnthropicProvider(_APITransport):
             )
             self.last_search_evidence = evidence.model_dump(mode="json")
             stage = "result_json"
-            payload = _claude_search_json(text)
+            payload = _claude_json_object(text)
             return bind_search_result(
                 payload, provider=self.provider, model=options.model,
                 request=request, tool_evidence=evidence, usage=self.last_usage or {},

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}{% block title %}작업 현황 · NewsFlow AI{% endblock %}{% block content %}
 <div class="easy-page">
-<div class="page-head"><div><p class="eyebrow">제작·검토를 한곳에서</p><h1>작업 현황</h1><p>자동 제작과 대본 검토 흐름을 함께 보여줍니다. 선택 예정과 실제 실행 기록을 구분해요.</p></div><a href="/">홈으로</a></div>
+<div class="page-head"><div><p class="eyebrow">제작·검토를 한곳에서</p><h1>작업 현황</h1><p>현재 단계와 다음 행동을 확인하세요. 선택 설정과 실제 실행 기록은 별도로 표시합니다.</p></div><a href="/">홈으로</a></div>
 <div class="job-grid">{% for task in jobs %}<a class="work-card" href="{{ task.href }}">
 <div class="work-card-top"><span class="easy-badge {{ task.status }}">{{ task.status_label }}</span><span>{{ task.duration }}초</span></div>
 <h2>{{ task.title }}</h2><p>현재 단계 · {{ task.stage }}</p><p class="hint">AI 실행 · {{ task.provider }}</p><p class="hint">음성 · {{ task.voice }}</p>{% if task.news_usage_label %}<p class="hint">뉴스 활용 수준 · {{ task.news_usage_label }}</p>{% endif %}

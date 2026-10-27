@@ -1,0 +1,9 @@
+{
+  "operating_source_files_present": 313,
+  "missing": [],
+  "original_local_changes_exact": [
+    "newsflow-ai/src/newsflow/publishing/claude_cards.py",
+    "newsflow-ai/src/newsflow/publishing/card_diagnostics.py",
+    "newsflow-ai/tests/test_card_response_diagnostics.py"
+  ]
+}

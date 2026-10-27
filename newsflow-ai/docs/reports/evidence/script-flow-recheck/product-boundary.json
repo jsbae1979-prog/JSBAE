@@ -1,0 +1,11 @@
+{
+  "product_sha": "f6aedc5db10ac7df9e6ce7b2b7f8aab7f5c6bdac",
+  "tested_sha": "090202f6f1cacfb7656aa227ca4802811a79da9b",
+  "unchanged_paths": [
+    "newsflow-ai/src",
+    "newsflow-ai/tests",
+    "newsflow-ai/run.bat",
+    "newsflow-ai/pyproject.toml"
+  ],
+  "diff": ""
+}

@@ -1,0 +1,9 @@
+{
+  "run": 40169493130,
+  "conclusion": "success",
+  "reported_security_tests": 1,
+  "PC_security_tests": 78,
+  "issue": "Reported CI count differs from intended 78; do not claim all intended cases verified from success status alone",
+  "followup": "Assert per-phase unique testcase-record counts and publish IDs; no test or Guard weakening",
+  "provider_calls": 0
+}

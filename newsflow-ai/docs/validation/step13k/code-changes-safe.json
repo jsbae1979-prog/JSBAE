@@ -1,0 +1,230 @@
+[
+  {
+    "path": "newsflow-ai/tests/test_ai_video_gui.py",
+    "status": "modified",
+    "SHA256": "0f33589ae4c248a5d9152cfbceca5d00c1ae7a637be321bca080ad569314459d",
+    "git_blob": "3b4b4f49388fe47655c4b58a85b0138905b869b3"
+  },
+  {
+    "path": "newsflow-ai/tests/test_automation_simplicity.py",
+    "status": "modified",
+    "SHA256": "7d34362c9554822253ef779f3c218a8753e127032c96d9d2f7a491206f9a977e",
+    "git_blob": "c9776676f641ea47e7a0a7e38952b697ca553bce"
+  },
+  {
+    "path": "newsflow-ai/tests/test_creation_models.py",
+    "status": "added",
+    "SHA256": "bbda67c2675d364a8b66f82ab400d447d235716287ff6a0aadb47944e7f2d1cf",
+    "git_blob": "40c3ff843cce5c7a5299906301a83135048e2374"
+  },
+  {
+    "path": "newsflow-ai/tests/test_creation_models_gui.py",
+    "status": "added",
+    "SHA256": "6141c950394f93d10987d5856c09d5f476807b70679b0c3465bc1310b022049b",
+    "git_blob": "001b6fc671a39a8aec065f9d928769b7873593dc"
+  },
+  {
+    "path": "newsflow-ai/tests/test_studio_design_system.py",
+    "status": "modified",
+    "SHA256": "64a2dd4d76394bb8acddb6b991b0774e758bd9e7ed06e984aa418d67ff8189d5",
+    "git_blob": "998b7e43725b2794bc38337d5610ed251ef135dc"
+  },
+  {
+    "path": "newsflow-ai/tests/test_studio_structure.py",
+    "status": "modified",
+    "SHA256": "060d5487467321fdfd4c8089c68a91255776fd578a5afc6555f5ca1a95ff3782",
+    "git_blob": "7c0bd60d29cbbe4836b2c89f1de36858c11ae0c4"
+  },
+  {
+    "path": "newsflow-ai/tests/test_windows_transition_plan.py",
+    "status": "modified",
+    "SHA256": "5659be0714e67c841c63f1cec0ade3351dcbefa82d9c426270300736a309713e",
+    "git_blob": "fe8ad22c0ef922088301fc1fc5e3f068e1dfec84"
+  },
+  {
+    "path": "newsflow-ai/tests/test_workspace_access.py",
+    "status": "modified",
+    "SHA256": "abc8fcf03f1e6a8bcc74e3be30c268fa33269a4615dd1e4214fb978441dbb2ef",
+    "git_blob": "0aaf998a9d078a6cbfda9d30867c748af141b81c"
+  },
+  {
+    "path": "newsflow-ai/tests/test_workspace_access_browser.py",
+    "status": "modified",
+    "SHA256": "9908fc20683ecf5e84e6fcba86c86c7974252c6e86e788f9c4c901480178db1c",
+    "git_blob": "12d18bedd420a4e715e82681a22ba23c0240717d"
+  },
+  {
+    "path": "newsflow-ai/tools/validation/step13j_final/native_boundary.py",
+    "status": "modified",
+    "SHA256": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+    "git_blob": "d170c3c083262823a26a7430de3a0776a6962438"
+  },
+  {
+    "path": "newsflow-ai/tools/validation/step13j_final/summarize.py",
+    "status": "modified",
+    "SHA256": "2a31799c14b390e446d21115da6660092471b7a3e151c8ddbaf40c95e1320462",
+    "git_blob": "4312f5c12e9fb80c4253398798906124b20e1b47"
+  },
+  {
+    "path": "newsflow-ai/tools/validation/step13k/j_k_gui-targets-safe.json",
+    "status": "added",
+    "SHA256": "d813ced2f4436de1e9295934d4a2b45c34304fe59e0fa560e71951ff0f395176",
+    "git_blob": "848409caf55027bf2e1f0d88c811c75422b43674"
+  },
+  {
+    "path": "newsflow-ai/tools/validation/step13k/j_k_models-targets-safe.json",
+    "status": "added",
+    "SHA256": "e2be1967a1838576a10bcc44b7f5e345ef84dea82b85ab13f9e6e1c7ce09ef59",
+    "git_blob": "6dc29508b2f143af443fed82f02ce534b1b95574"
+  },
+  {
+    "path": "newsflow-ai/tools/validation/step13k/j_k_navigation-targets-safe.json",
+    "status": "added",
+    "SHA256": "e2ecbc4c17afdfbc186a1b729b7a39c1df0e5d1f4632510cfaf8529842b2261f",
+    "git_blob": "5b83a72e46c1083d4a82470032041e46a6083107"
+  },
+  {
+    "path": "newsflow-ai/tools/validation/step13k/phases-safe.json",
+    "status": "added",
+    "SHA256": "1612d1f244a4b46f5d6de748d116ad23fe3f2ef7ae76d488cb49aed5a8afd808",
+    "git_blob": "2fc7f7162a8e31c74d4c8b44f7876f492312d4f9"
+  },
+  {
+    "path": "newsflow-ai/tools/validation/step13k/prepare_windows.py",
+    "status": "added",
+    "SHA256": "8937af0f4bae10c1d168e5765d175e9954663d4ef62ff793145117b185986ce0",
+    "git_blob": "b2b7e0f6354d8078fdd4542b3adf8be7498abb54"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/main.py",
+    "status": "modified",
+    "SHA256": "6af4d3f5957094f12bf2696c88f695bad038a2b85b838d3d1caa54c1637840d1",
+    "git_blob": "ae40c7e32a40bdc490081914e89cf6240dd33546"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/character/service.py",
+    "status": "modified",
+    "SHA256": "03cb4b09bef6237df63a51aeb2abec3d91d11307dcce725fad14933505bb7217",
+    "git_blob": "bad9334e2446ab1c91cec25af704a3e3c9ba458f"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/creation/catalog.py",
+    "status": "added",
+    "SHA256": "f341884432958a59cdbaa3c5f80fe876db2eff72eaeb66599d2e528b70e14baf",
+    "git_blob": "03e302ca6caec39265d62ff69a20b5af2286f1e8"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/creation/image_studio.py",
+    "status": "added",
+    "SHA256": "06a13fb679256c11b7f357f489c848ec1fae2ba8073f8e80b7b1f3665a99803f",
+    "git_blob": "8522691e17c0bf130c75b91a0710479d08b0c5bc"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/creation/__init__.py",
+    "status": "added",
+    "SHA256": "6bf05d28a1dfd61658e877ea59ff8a2c3bfd81ee2434d9f2543a36abf34ee62e",
+    "git_blob": "c35c56e7398f2ebfbd4c6b5e322a7f7a02bdd930"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/character_routes.py",
+    "status": "modified",
+    "SHA256": "abc725e0ed66bda1a18603f826850a3b4fdafa042be194271112ae25d1a30277",
+    "git_blob": "949d2ced247bf0704e91c2d987d0c4d9ec610cdf"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/creation_routes.py",
+    "status": "added",
+    "SHA256": "d3bb9c77fed5c085993cffa87dd260e6decff6891363ea6ef752eb862a8a4ce7",
+    "git_blob": "583376f8b3f1616b7332d7a4eb11796bd652c9b6"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/navigation.py",
+    "status": "modified",
+    "SHA256": "6f54f389c492fac985c7a74bc24c0e1dd7698928fc7aa5cc1740708d9be29b3a",
+    "git_blob": "6a7de3286ff3ece890d80566854970b99be3deec"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/video_ai_routes.py",
+    "status": "modified",
+    "SHA256": "7edd7b18477be323c94acbe42c2732caaabe897bf8a2bda0711bdd299030a7d9",
+    "git_blob": "6453d2b999f0edcf7e6066f0db5d398fecd11bf7"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/publishing/image_generation.py",
+    "status": "modified",
+    "SHA256": "d5ab47f46da4ee9af117fb719d3dbae54e7328632a26b1b41173107b47c86c91",
+    "git_blob": "a35599a5f6a0947a33c22bb3ee8e0d190273a13a"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/static/css/creation-models.css",
+    "status": "added",
+    "SHA256": "07fa8a6acaefeb5f1f1242a37910788e772945b991d48fc75a093f2c9380de3e",
+    "git_blob": "3e72f138c08943818ec47d1a7c848688b2642731"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/static/js/app.js",
+    "status": "modified",
+    "SHA256": "92367dd209e600435dae65a319bfa7b394ccc6d55e7cb5bc3d77b4a5a80b4593",
+    "git_blob": "bb53826cde852df05d5c4687592c467b96459e63"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/static/js/video_ai.js",
+    "status": "modified",
+    "SHA256": "3c36579321f215330f438475004752e0ddfe5b14143cb2b767ae5882c3af5894",
+    "git_blob": "0c6af50a62a79e10feab5135e49e935a89cb6de8"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/templates/base.html",
+    "status": "modified",
+    "SHA256": "114a0a63508ccb524b4430e58b58485dda7f24077edb3e706de772dda9287f5f",
+    "git_blob": "cd6b9ce3935166c3838340cb1b2d6897cd450a16"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/templates/character.html",
+    "status": "modified",
+    "SHA256": "2a2fe59212b6e3d8f6599b3a35001c571a3e08cafabae74486f9565dd1b792fd",
+    "git_blob": "46e166f5e84bbff3dcede2df7127841eb6afc80a"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/templates/creation_modes.html",
+    "status": "added",
+    "SHA256": "a846099e021edf35168ba6d11221dcd24e4f713ca9c7921e63ce7b0cfb7f61fb",
+    "git_blob": "60c62ced3ce0ef9dbcc02a3f71ba84e38a5be11c"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/templates/easy_home.html",
+    "status": "modified",
+    "SHA256": "56c48f3c3c8c015f2cc01dfe95ecb4fd01c920886670d5980019f1c21e07bd1b",
+    "git_blob": "28e4cbb97041308863b85bab1d3d721ced64a89c"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/templates/image_studio.html",
+    "status": "added",
+    "SHA256": "6cf62c50ed6ba041819b1aa0b13300dbc46e213ae302cc66dc14c20cd28daec0",
+    "git_blob": "cb33de7d6723ca8517533811f31ca5d83471f29d"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/templates/video.html",
+    "status": "modified",
+    "SHA256": "db3d5f1924371e8bbeaf30a8ce3a8d1afdfa1f9fc95b75058a761106d6147810",
+    "git_blob": "e4a9ff279e758de407a0dfba6751b82a342bb96c"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/templates/video_ai.html",
+    "status": "modified",
+    "SHA256": "2bae1a82d6b00eb86555cc310d2922a1559d8bcb58e3acd26c497076bef097b0",
+    "git_blob": "41413c7755236acda9fc1422b61211dfb5683ddc"
+  },
+  {
+    "path": "newsflow-ai/docs/reports/step13k-checkpoint.md",
+    "status": "added",
+    "SHA256": "07b52f8e71f4ea3eef54be40ed4c9384621c0b0677666d268ba9d63cb83a512c",
+    "git_blob": "0b9e4265a74c14c15bc9134ef0d9755d14d33743"
+  },
+  {
+    "path": ".github/workflows/newsflow-step13k-windows.yml",
+    "status": "added",
+    "SHA256": "c09e049b953fad1f0f6b480ff3b26e28fc13ff4b41ba5d71b08d5ed59c103ec2",
+    "git_blob": "961e04f7bb379bba17b99f24d689fa58b04108e5"
+  }
+]

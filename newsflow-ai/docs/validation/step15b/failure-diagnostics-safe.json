@@ -1,0 +1,34 @@
+[
+  {
+    "phase": "j_identity_once",
+    "test_failures": [
+      {
+        "ID": "tests.test_operational_startup::test_native_windows_schema_roundtrip_without_registration",
+        "outcome": "failure",
+        "message": "newsflow.operations.startup.StartupError: 작업 상태를 확인하지 못했습니다. 자동 재시도하지 않습니다. 새로고침 후 Windows 작업 스케줄러와 권한을 확인하세요.",
+        "exception_summaries": "newsflow.operations.startup.StartupError: 작업 상태를 확인하지 못했습니다. 자동 재시도하지 않습니다. 새로고침 후 Windows 작업 스케줄러와 권한을 확인하세요.",
+        "bounded_and_redacted": true
+      }
+    ],
+    "test_failures_truncated": false,
+    "native_boundary": {
+      "present": true,
+      "events": [
+        {
+          "kind": "PowerShell-approved",
+          "operation": "identity"
+        },
+        {
+          "kind": "PowerShell-exception",
+          "operation": "identity",
+          "error_type": "TimeoutExpired"
+        }
+      ],
+      "powershell_exits": [],
+      "total_events": 2,
+      "events_truncated": false,
+      "read_status": "SAFE_FIELDS_ONLY"
+    },
+    "excluded": "SID, filesystem paths, credentials, argv, environment, raw logs and payloads"
+  }
+]

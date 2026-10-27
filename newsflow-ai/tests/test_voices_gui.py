@@ -41,7 +41,7 @@ def test_page_without_voices_explains_install_and_keeps_silent_default(client, m
     monkeypatch.setattr("newsflow.gui.voice_routes.voice_catalog", list)
     page = client.get("/voices")
     assert page.status_code == 200 and 'id="voice-install-guide"' in page.text
-    assert "무음 검토영상" in page.text and "다른 언어 음성으로 몰래 대체하지 않습니다" in page.text
+    assert "무음 검토영상" in page.text and "선택한 음성이 없으면 제작을 멈춥니다" in page.text
     assert client.post("/voices/preview", data={"csrf_token": csrf(client), "voice": "offline-silence"}).status_code == 422
 
 
@@ -113,7 +113,7 @@ def test_onecore_only_shows_pending_chip_and_guide(client, monkeypatch):
     assert 'id="voice-onecore-guide"' in text and "Microsoft Heami" in text and "UNCERTAIN" in text
     assert "절대 수정하지 않" in text and "무음 검토영상 유지" in text and "한국어 음성 팩 재설치" in text
     assert 'id="voice-install-guide"' in text and "run.bat를 다시 실행하세요" in text
-    assert "다른 언어 음성으로 몰래 대체하지 않습니다" in text
+    assert "선택한 음성이 없으면 제작을 멈춥니다" in text
     assert text.count("<option") >= 1 and 'value="Microsoft Heami"' not in text  # never offered for selection
 
 
@@ -196,6 +196,6 @@ def test_listening_record_persists_file_setting_and_summary(client, app, korean)
     quality = diagnostics(app.state.config.data_dir, app.state.sessions)["quality"]
     assert quality == f"사람 청취 결과: FAIL ({record['created_at'][:10]}, 홍길동)"
     # a later PASS record (all items accurate) replaces the summary; the app never derives it
-    passed = client.post("/voices/listening", data=listening_form(client))
+    passed = client.post("/voices/listening", data=listening_form(client, preview=name))
     assert passed.status_code == 200 and "사람 청취 결과: PASS (" in passed.text
     assert len(list((app.state.config.data_dir / "voice-listening").glob("listening-*.json"))) == 2

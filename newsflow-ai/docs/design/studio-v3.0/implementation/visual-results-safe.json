@@ -1,0 +1,109 @@
+{
+  "PASS": true,
+  "captures": [
+    {
+      "page": "dashboard",
+      "width": 1920,
+      "height": 1080,
+      "dpr": 1,
+      "overflow": false
+    },
+    {
+      "page": "create",
+      "width": 1920,
+      "height": 1080,
+      "dpr": 1,
+      "overflow": false
+    },
+    {
+      "page": "dashboard",
+      "width": 1366,
+      "height": 768,
+      "dpr": 1,
+      "overflow": false
+    },
+    {
+      "page": "create",
+      "width": 1366,
+      "height": 768,
+      "dpr": 1,
+      "overflow": false
+    },
+    {
+      "page": "dashboard",
+      "width": 390,
+      "height": 844,
+      "dpr": 1,
+      "overflow": false
+    },
+    {
+      "page": "create",
+      "width": 390,
+      "height": 844,
+      "dpr": 1,
+      "overflow": false
+    },
+    {
+      "page": "dashboard",
+      "width": 1536,
+      "height": 864,
+      "dpr": 1.25,
+      "overflow": false
+    },
+    {
+      "page": "create",
+      "width": 1536,
+      "height": 864,
+      "dpr": 1.25,
+      "overflow": false
+    },
+    {
+      "page": "dashboard",
+      "width": 1280,
+      "height": 720,
+      "dpr": 1.5,
+      "overflow": false
+    },
+    {
+      "page": "create",
+      "width": 1280,
+      "height": 720,
+      "dpr": 1.5,
+      "overflow": false
+    },
+    {
+      "page": "dashboard",
+      "width": 960,
+      "height": 540,
+      "dpr": 2,
+      "overflow": false
+    },
+    {
+      "page": "create",
+      "width": 960,
+      "height": 540,
+      "dpr": 2,
+      "overflow": false
+    }
+  ],
+  "interactions": [
+    "creation navigation",
+    "type filtering",
+    "local title search and empty state",
+    "grid/list",
+    "distinct image workflows",
+    "unknown no playback",
+    "dialog Escape and close",
+    "sidebar toggle",
+    "deep reload",
+    "legacy bridge",
+    "keyboard search",
+    "empty production state",
+    "error state",
+    "manual reload"
+  ],
+  "JavaScript_errors": [],
+  "external_page_requests": [],
+  "OS_DPI": "NOT VERIFIED; browser viewport/device-scale emulation only",
+  "backend_engine": "NOT VERIFIED; visual fixtures only"
+}

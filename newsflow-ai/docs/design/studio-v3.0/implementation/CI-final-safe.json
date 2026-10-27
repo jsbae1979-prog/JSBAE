@@ -1,0 +1,13 @@
+{
+  "code": "512dca1b4d85c274e7b2e62f87c07a6934184ba8",
+  "Windows": "windows-latest",
+  "status": "completed",
+  "pytest_pass": 7,
+  "conclusion": "success",
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40311197182",
+  "run": 40311197182,
+  "frontend_build": "PASS",
+  "Python": "3.14.7",
+  "frontend_typecheck": "PASS",
+  "full_regression_run": false
+}

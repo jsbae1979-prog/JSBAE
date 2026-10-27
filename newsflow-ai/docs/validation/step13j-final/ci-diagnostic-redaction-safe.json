@@ -1,0 +1,7 @@
+{
+  "checks": 10,
+  "PASS": true,
+  "real_secrets_used": false,
+  "native_processes": 0,
+  "network_calls": 0
+}

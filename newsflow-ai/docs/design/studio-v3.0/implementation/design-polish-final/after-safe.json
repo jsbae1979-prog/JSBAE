@@ -1,0 +1,720 @@
+{
+  "phase": "after",
+  "structures": [
+    {
+      "screen": "dashboard",
+      "width": 1920,
+      "boxes": [
+        {
+          "class": "sidebar",
+          "x": 0,
+          "y": 0,
+          "width": 240,
+          "height": 1080
+        },
+        {
+          "class": "hero panel",
+          "x": 262,
+          "y": 80,
+          "width": 1248,
+          "height": 316
+        },
+        {
+          "class": "stats",
+          "x": 262,
+          "y": 414,
+          "width": 1248,
+          "height": 112
+        },
+        {
+          "class": "project-visual",
+          "x": 263,
+          "y": 595,
+          "width": 298,
+          "height": 142
+        },
+        {
+          "class": "project-visual",
+          "x": 579,
+          "y": 595,
+          "width": 298,
+          "height": 142
+        },
+        {
+          "class": "project-visual",
+          "x": 895,
+          "y": 595,
+          "width": 298,
+          "height": 142
+        },
+        {
+          "class": "project-visual",
+          "x": 1211,
+          "y": 595,
+          "width": 298,
+          "height": 142
+        },
+        {
+          "class": "quick-card news",
+          "x": 262,
+          "y": 867,
+          "width": 405,
+          "height": 196
+        },
+        {
+          "class": "quick-card character",
+          "x": 683,
+          "y": 867,
+          "width": 405,
+          "height": 196
+        },
+        {
+          "class": "quick-card image",
+          "x": 1105,
+          "y": 867,
+          "width": 405,
+          "height": 196
+        }
+      ]
+    },
+    {
+      "screen": "create",
+      "width": 1920,
+      "boxes": [
+        {
+          "class": "sidebar",
+          "x": 0,
+          "y": 0,
+          "width": 240,
+          "height": 1080
+        },
+        {
+          "class": "quick-card news",
+          "x": 330,
+          "y": 243,
+          "width": 489,
+          "height": 310
+        },
+        {
+          "class": "quick-card character",
+          "x": 835,
+          "y": 243,
+          "width": 489,
+          "height": 310
+        },
+        {
+          "class": "quick-card image",
+          "x": 1341,
+          "y": 243,
+          "width": 489,
+          "height": 310
+        },
+        {
+          "class": "project-visual",
+          "x": 331,
+          "y": 723,
+          "width": 361,
+          "height": 172
+        },
+        {
+          "class": "project-visual",
+          "x": 710,
+          "y": 723,
+          "width": 361,
+          "height": 172
+        },
+        {
+          "class": "project-visual",
+          "x": 1089,
+          "y": 723,
+          "width": 361,
+          "height": 172
+        },
+        {
+          "class": "project-visual",
+          "x": 1468,
+          "y": 723,
+          "width": 361,
+          "height": 172
+        }
+      ]
+    },
+    {
+      "screen": "dashboard",
+      "width": 1366,
+      "boxes": [
+        {
+          "class": "sidebar",
+          "x": 0,
+          "y": 0,
+          "width": 240,
+          "height": 768
+        },
+        {
+          "class": "hero panel",
+          "x": 255,
+          "y": 79,
+          "width": 780,
+          "height": 285
+        },
+        {
+          "class": "stats",
+          "x": 255,
+          "y": 380,
+          "width": 780,
+          "height": 94
+        },
+        {
+          "class": "project-visual",
+          "x": 256,
+          "y": 541,
+          "width": 186,
+          "height": 86
+        },
+        {
+          "class": "project-visual",
+          "x": 454,
+          "y": 541,
+          "width": 186,
+          "height": 86
+        },
+        {
+          "class": "project-visual",
+          "x": 651,
+          "y": 541,
+          "width": 186,
+          "height": 86
+        },
+        {
+          "class": "project-visual",
+          "x": 849,
+          "y": 541,
+          "width": 186,
+          "height": 86
+        },
+        {
+          "class": "quick-card news",
+          "x": 255,
+          "y": 748,
+          "width": 253,
+          "height": 184
+        },
+        {
+          "class": "quick-card character",
+          "x": 518,
+          "y": 748,
+          "width": 253,
+          "height": 184
+        },
+        {
+          "class": "quick-card image",
+          "x": 782,
+          "y": 748,
+          "width": 253,
+          "height": 184
+        }
+      ]
+    },
+    {
+      "screen": "create",
+      "width": 1366,
+      "boxes": [
+        {
+          "class": "sidebar",
+          "x": 0,
+          "y": 0,
+          "width": 240,
+          "height": 768
+        },
+        {
+          "class": "quick-card news",
+          "x": 255,
+          "y": 242,
+          "width": 359,
+          "height": 310
+        },
+        {
+          "class": "quick-card character",
+          "x": 624,
+          "y": 242,
+          "width": 359,
+          "height": 310
+        },
+        {
+          "class": "quick-card image",
+          "x": 992,
+          "y": 242,
+          "width": 359,
+          "height": 310
+        },
+        {
+          "class": "project-visual",
+          "x": 256,
+          "y": 722,
+          "width": 265,
+          "height": 123
+        },
+        {
+          "class": "project-visual",
+          "x": 533,
+          "y": 722,
+          "width": 265,
+          "height": 123
+        },
+        {
+          "class": "project-visual",
+          "x": 809,
+          "y": 722,
+          "width": 265,
+          "height": 123
+        },
+        {
+          "class": "project-visual",
+          "x": 1086,
+          "y": 722,
+          "width": 265,
+          "height": 123
+        }
+      ]
+    }
+  ],
+  "images": [
+    {
+      "width": 1920,
+      "stage": "before-decode-wait",
+      "values": [
+        {
+          "src": "/studio/assets/design-art-2.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 715,
+          "height": 172
+        },
+        {
+          "src": "/studio/assets/design-art-0.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 230,
+          "hidden": false,
+          "y": 715,
+          "height": 172
+        },
+        {
+          "src": "/studio/assets/design-art-3.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 715,
+          "height": 172
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "stage": "after-decode-wait",
+      "values": [
+        {
+          "src": "/studio/assets/design-art-2.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 723,
+          "height": 172
+        },
+        {
+          "src": "/studio/assets/design-art-0.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 230,
+          "hidden": false,
+          "y": 723,
+          "height": 172
+        },
+        {
+          "src": "/studio/assets/design-art-3.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 723,
+          "height": 172
+        }
+      ]
+    },
+    {
+      "width": 1366,
+      "stage": "before-decode-wait",
+      "values": [
+        {
+          "src": "/studio/assets/design-art-2.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 714,
+          "height": 123
+        },
+        {
+          "src": "/studio/assets/design-art-0.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 230,
+          "hidden": false,
+          "y": 714,
+          "height": 123
+        },
+        {
+          "src": "/studio/assets/design-art-3.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 714,
+          "height": 123
+        }
+      ]
+    },
+    {
+      "width": 1366,
+      "stage": "after-decode-wait",
+      "values": [
+        {
+          "src": "/studio/assets/design-art-2.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 722,
+          "height": 123
+        },
+        {
+          "src": "/studio/assets/design-art-0.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 230,
+          "hidden": false,
+          "y": 722,
+          "height": 123
+        },
+        {
+          "src": "/studio/assets/design-art-3.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 722,
+          "height": 123
+        }
+      ]
+    }
+  ],
+  "responses": [
+    {
+      "path": "/studio/assets/design-art-7.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/api/studio/characters/demo-character/reference",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-7.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/api/studio/characters/demo-character/reference",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 404
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    }
+  ],
+  "captures": [
+    {
+      "name": "dashboard",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "create",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "shorts",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "characters",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "images",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "images-news",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "library",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "settings",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "dashboard",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "create",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "shorts",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "characters",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "images",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "images-news",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "library",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "settings",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    }
+  ],
+  "checks": [
+    {
+      "name": "existing vertical synthetic MP4 metadata and decoded frame",
+      "viewportWidth": 1920,
+      "width": 1080,
+      "height": 1920,
+      "duration": 30
+    },
+    {
+      "name": "saved synthetic reference PNG visible in first viewport",
+      "width": 1920
+    },
+    {
+      "name": "decorative duration images omitted from library",
+      "width": 1920
+    },
+    {
+      "name": "distinct credential settings labels",
+      "width": 1920
+    },
+    {
+      "name": "1366 quick creation reachable by normal page scroll",
+      "y": 584.859375
+    },
+    {
+      "name": "existing vertical synthetic MP4 metadata and decoded frame",
+      "viewportWidth": 1366,
+      "width": 1080,
+      "height": 1920,
+      "duration": 30
+    },
+    {
+      "name": "scene controls remain visible during narration editing",
+      "viewportWidth": 1366,
+      "top": 195.78125
+    },
+    {
+      "name": "saved synthetic reference PNG visible in first viewport",
+      "width": 1366
+    },
+    {
+      "name": "decorative duration images omitted from library",
+      "width": 1366
+    },
+    {
+      "name": "distinct credential settings labels",
+      "width": 1366
+    },
+    {
+      "name": "missing reference PNG has explicit empty state"
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "productEngine": false,
+  "windowsOSDPI": "NOT VERIFIED",
+  "failedImage": {
+    "text": "미리보기 없음뉴스 쇼츠합성 자료",
+    "hiddenImages": 0,
+    "images": 0
+  }
+}

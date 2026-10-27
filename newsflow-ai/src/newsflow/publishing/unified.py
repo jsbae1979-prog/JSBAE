@@ -26,14 +26,16 @@ from newsflow.db.models import (
 from newsflow.oauth.instagram import InstagramConnectionError
 from newsflow.oauth.youtube import YouTubeConnectionError
 
+from .categories import valid_category
+from .platforms import PlatformBlocked
 from .service import REAL_BLOCKERS, ConflictError, PublishingError, PublishingService, hash_file
 
-_PLATFORMS = ("youtube", "instagram")
+_PLATFORMS = ("youtube", "instagram", "tiktok", "facebook")
 _REVIEW = "unified_review"
 _STATE = "unified_state"
-_WAITING = {"ig_processing", "ig_ready", "ig_status_failed"}
+_WAITING = {"ext_waiting","ig_processing", "ig_ready", "ig_status_failed"}
 _SUCCESS = {"uploaded", "ig_published", "ig_published_no_link"}
-_FAILED = {"failed", "ig_failed"}
+_FAILED = {"ext_failed","failed", "ig_failed"}
 _BLOCKED_CONNECTION = {"not_connected", "auth_relay_required", "client_missing", "client_changed",
                        "permission_denied", "professional_required", "expired", "consent_required",
                        "pending", "identity_mismatch"}
@@ -45,15 +47,49 @@ def _digest(value: dict) -> str:
 
 
 class UnifiedPublishingService:
-    def __init__(self, sessions, outputs_dir: Path, youtube, instagram, inspector=None):
+    def __init__(self, sessions, outputs_dir: Path, youtube, instagram, inspector=None, extensions=None):
         self.sessions, self.outputs = sessions, outputs_dir
         self.youtube, self.instagram = youtube, instagram
+        self.extensions = extensions or {}
         self.local = PublishingService(sessions, outputs_dir, inspector)
         self._save_lock = RLock()
 
+    def save_local_draft(self, render_job_id: int, *, target: str, title: str = "",
+                         description: str = "", hashtags: str = "", youtube_category_id: str = "") -> int:
+        """Save unfinished copy only. No account checks, validation, approval or transport."""
+        if target not in {"youtube", "instagram", "both", "tiktok", "facebook", "all"}:
+            raise PublishingError("게시할 플랫폼을 선택하세요.")
+        if len(title) > 100 or len(description) > 5000 or len(hashtags) > 2000 or len(youtube_category_id) > 3:
+            raise PublishingError("게시 초안의 입력 길이를 확인하세요.")
+        with self._save_lock, self.sessions.begin() as session:
+            if not session.get(RenderJob, render_job_id):
+                raise PublishingError("영상 작업을 찾지 못했습니다.")
+            draft = PublishDraft(render_job_id=render_job_id, platform="youtube" if target in {"both", "all"} else target,
+                title=title, description=description, hashtags=hashtags.split(), account_id=None,
+                sources={}, media_sha256="", state="local_draft", youtube_category_id=youtube_category_id or "25")
+            session.add(draft)
+            session.flush()
+            evidence = PublishEvidence(draft_id=draft.id, kind="local_workspace", payload={
+                "render_job_id": render_job_id, "target": target,
+                "metadata": {"title": title, "description": description, "hashtags": hashtags.split(),
+                             "youtube_category_id": youtube_category_id}, "approval": False})
+            session.add(evidence)
+            session.flush()
+            return evidence.id
+
+    def local_draft(self, render_job_id: int) -> dict | None:
+        with self.sessions() as session:
+            row = session.scalar(select(PublishEvidence).where(PublishEvidence.kind == "local_workspace",
+                PublishEvidence.payload["render_job_id"].as_integer() == render_job_id
+            ).order_by(PublishEvidence.id.desc()).limit(1))
+            return {**deepcopy(row.payload), "id": row.id, "saved_at": row.created_at} if row else None
+
     @staticmethod
     def _snapshot(draft: PublishDraft) -> dict:
-        return {"id": draft.id, "revision": draft.revision, "platform": draft.platform,
+        # Legacy snapshots omitted the previously fixed category25. Preserve their approval hashes.
+        category = {"youtube_category_id": draft.youtube_category_id} if (
+            draft.platform == "youtube" and draft.youtube_category_id != "25") else {}
+        return {**category, "id": draft.id, "revision": draft.revision, "platform": draft.platform,
                 "account_id": draft.account_id, "media_sha256": draft.media_sha256,
                 "render_job_id": draft.render_job_id, "sources": draft.sources,
                 **{name: getattr(draft, name) for name in _FIELDS}}
@@ -85,12 +121,14 @@ class UnifiedPublishingService:
     def _snapshot_matches(self, target: dict) -> bool:
         with self.sessions() as session:
             draft = session.get(PublishDraft, target["draft_id"])
-            return bool(draft and self._snapshot(draft) == target["snapshot"])
+            extension = self.extensions.get(target["platform"])
+            identity_matches = not extension or extension.account_identity(target["account_id"]) == target.get("connection_identity")
+            return bool(draft and self._snapshot(draft) == target["snapshot"] and identity_matches)
 
     def save_review(
         self, render_job_id: int, accounts: dict[str, int], *, title: str, description: str = "", hashtags: str = "",
         content_reviewed: bool = False, copyright_confirmed: bool = False, sources_confirmed: bool = False,
-        ai_disclosure: str = "unreviewed",
+        ai_disclosure: str = "unreviewed", youtube_category_id: str | None = None,
     ) -> int:
         """Save local reviews only. Repeated saves retain previous outcomes, including failures."""
         if (not isinstance(accounts, dict) or not accounts or not set(accounts) <= set(_PLATFORMS)
@@ -99,6 +137,10 @@ class UnifiedPublishingService:
         fields = {"title": title, "description": description, "hashtags": hashtags,
                   "content_reviewed": content_reviewed is True, "copyright_confirmed": copyright_confirmed is True,
                   "sources_confirmed": sources_confirmed is True, "ai_disclosure": ai_disclosure}
+        if "youtube" in accounts and youtube_category_id is not None:
+            if not valid_category(youtube_category_id):
+                raise PublishingError("YouTube 영상 카테고리를 선택하세요.")
+            fields["youtube_category_id"] = youtube_category_id
         normalized = self.local.input(next(iter(accounts)), title, description, hashtags, ai_disclosure)
         metadata = {**fields, **{key: normalized[key] for key in ("title", "description", "hashtags")}}
         with self._save_lock:
@@ -109,7 +151,8 @@ class UnifiedPublishingService:
                 media_hash = hash_file(self.local.media_path(render))
                 for platform, account_id in accounts.items():
                     self.local.account_check(session, account_id, platform)
-            fingerprint = _digest({"render_job_id": render_job_id, "media_sha256": media_hash,
+            identities = {p: self.extensions[p].account_identity(a) for p, a in accounts.items() if p in self.extensions}
+            fingerprint = _digest({"connection_identities": identities, "render_job_id": render_job_id, "media_sha256": media_hash,
                                    "accounts": accounts, "metadata": metadata})
             previous = self._previous_targets(render_job_id)
             for review, state in previous:
@@ -139,13 +182,14 @@ class UnifiedPublishingService:
                 if reused is not None:
                     targets[platform] = reused
                     continue
-                draft_id = self.local.create(render_job_id, platform, account_id=accounts[platform], **fields)
+                draft_fields = {k: v for k, v in fields.items() if k != "youtube_category_id" or platform == "youtube"}
+                draft_id = self.local.create(render_job_id, platform, account_id=accounts[platform], **draft_fields)
                 self.local.validate(draft_id)
                 with self.sessions() as session:
                     snapshot = self._snapshot(session.get(PublishDraft, draft_id))
                     label = session.get(PlatformAccount, accounts[platform]).label
                 targets[platform] = {"platform": platform, "draft_id": draft_id, "revision": snapshot["revision"],
-                                     "account_id": accounts[platform], "account_label": label,
+                                     "account_id": accounts[platform], "account_label": label, "connection_identity": identities.get(platform),
                                      "snapshot": snapshot, "job_id": None, "status": "ready",
                                      "message": "검토한 내용을 게시할 준비가 되었습니다.", "url": None}
             anchor = next(iter(targets.values()))["draft_id"]
@@ -261,7 +305,7 @@ class UnifiedPublishingService:
             self._record(session, review, state)
 
     def _platform_result(self, platform: str, job_id: int) -> dict:
-        service = self.youtube if platform == "youtube" else self.instagram
+        service = self.extensions.get(platform) or (self.youtube if platform == "youtube" else self.instagram)
         result = next((item for item in service.results() if item.get("id", item.get("job_id")) == job_id), None)
         with self.sessions() as session:
             job = session.get(PublishJob, job_id)
@@ -269,14 +313,14 @@ class UnifiedPublishingService:
                 raise PublishingError("플랫폼 게시 작업 기록을 확인하지 못했습니다.")
             status, message = job.status, job.message
         return {**(result or {}), "job_id": job_id, "platform_status": status, "message": message,
-                "status": "complete" if status in _SUCCESS else "waiting" if status in _WAITING else
+                "status": "simulated" if status == "ext_simulated" else "complete" if status in _SUCCESS else "waiting" if status in _WAITING else
                           "failed" if status in _FAILED else "unknown",
                 "url": (result or {}).get("url") or (result or {}).get("video_url")}
 
     def execute(
         self, cohort_id: int, *, consent: bool = False, approval_token: str = "", privacy: str = "private",
         made_for_kids: bool | None = None, youtube_public_consent: bool = False,
-        instagram_public_consent: bool = False,
+        instagram_public_consent: bool = False, extension_options: dict | None = None,
     ) -> dict:
         if consent is not True:
             raise PublishingError("선택한 계정과 영상의 이번 게시 실행에 동의하세요.")
@@ -288,7 +332,15 @@ class UnifiedPublishingService:
             raise PublishingError("YouTube 공개 범위·아동용 여부와 필요한 공개 동의를 확인하세요.")
         if "instagram" in active and instagram_public_consent is not True:
             raise PublishingError("선택한 Instagram 계정과 영상의 공개 게시에 동의하세요.")
-        approval = {"approval_token": approval_token, "consent": True,
+        extension_options = extension_options or {}
+        for platform in active & {"tiktok", "facebook"}:
+            service = self.extensions.get(platform)
+            if not service:
+                raise PublishingError("추가 플랫폼의 연결 준비가 필요합니다.")
+            service.validate_options(extension_options.get(platform, {}))
+            if service.account_identity(selected[platform]["account_id"]) != selected[platform].get("connection_identity"):
+                raise PublishingError("게시 대상 계정이 검토 이후 변경되었습니다. 다시 검토하세요.")
+        approval = {"extension_options": extension_options, "approval_token": approval_token, "consent": True,
                     "privacy": privacy if "youtube" in active else None,
                     "made_for_kids": made_for_kids if "youtube" in active else None,
                     "youtube_public_consent": "youtube" in active and youtube_public_consent is True,
@@ -303,6 +355,12 @@ class UnifiedPublishingService:
                 if platform == "youtube":
                     job_id = self.youtube.execute(target["draft_id"], target["revision"], privacy=privacy,
                         made_for_kids=made_for_kids, consent=True, public_consent=youtube_public_consent)
+                elif platform in self.extensions:
+                    if target.get("job_id"):
+                        job_id = self.extensions[platform].check(target["job_id"], consent=True)
+                    else:
+                        job_id = self.extensions[platform].execute(target["draft_id"], target["revision"],
+                            consent=True, options=extension_options.get(platform, {}), expected_identity=target.get("connection_identity"))
                 else:
                     job_id = target.get("job_id")
                     if job_id is None:
@@ -320,10 +378,10 @@ class UnifiedPublishingService:
                     "job_id", "platform_status", "status", "message", "url", "media_id", "video_id",
                 )})
             except Exception as error:  # noqa: BLE001 - no raw OAuth/provider detail and no retry
-                blocked = (isinstance(error, (YouTubeConnectionError, InstagramConnectionError))
+                blocked = isinstance(error, PlatformBlocked) or (isinstance(error, (YouTubeConnectionError, InstagramConnectionError))
                            and error.code in _BLOCKED_CONNECTION)
                 self._finish(cohort_id, platform, status="blocked" if blocked else "unknown",
-                    error_code=error.code if blocked else "unknown",
+                    error_code=getattr(error, "code", "activation_required") if blocked else "unknown",
                     message="계정 연결 또는 게시 권한 준비가 필요합니다. 자동 재실행하지 않습니다." if blocked else
                             "게시 요청을 완료하거나 결과를 확인하지 못했습니다. 자동 재시도하지 않습니다.")
         return self.get(cohort_id)
@@ -345,7 +403,7 @@ class UnifiedPublishingService:
                             job_id = session.scalar(select(PublishJob.id).where(
                                 PublishJob.draft_id == target["draft_id"],
                                 PublishJob.platform == target["platform"],
-                                PublishJob.status.in_(_SUCCESS | _WAITING | _FAILED | {"unknown", "ig_unknown"}),
+                                PublishJob.status.in_(_SUCCESS | _WAITING | _FAILED | {"unknown", "ig_unknown", "ext_simulated"}),
                             ).order_by(PublishJob.id.desc()).limit(1))
                         try:
                             result = self._platform_result(target["platform"], job_id) if job_id is not None else None

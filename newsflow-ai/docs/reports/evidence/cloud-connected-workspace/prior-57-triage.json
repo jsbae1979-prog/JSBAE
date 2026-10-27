@@ -1,0 +1,407 @@
+{
+  "historical_tested_sha": "dbd4ba446c3f13705ac207a37cddbdd5339e6baa",
+  "historical_failures": 57,
+  "current_full_regression": "NOT RERUN per user; prior FAIL remains; no claim of newly updated full-suite counts",
+  "method": "Review prior exact IDs and JUnit failure messages, current code and scoped current API tests. Not all failures are declared obsolete or fixed.",
+  "rows": [
+    {
+      "test_id": "tests.test_ai_estimate::test_gui_prices_form_and_estimate_text",
+      "classification": "범위 외 추정·이전 재시도 기대값",
+      "evidence_note": "화면 추정치·재시도 사용량 기대. 요청별 추정 비용/예약을 재도입하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_estimate::test_retried_failed_script_tokens_stay_in_the_job_total",
+      "classification": "범위 외 추정·이전 재시도 기대값",
+      "evidence_note": "화면 추정치·재시도 사용량 기대. 요청별 추정 비용/예약을 재도입하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage",
+      "classification": "범위 외 추정·이전 재시도 기대값",
+      "evidence_note": "화면 추정치·재시도 사용량 기대. 요청별 추정 비용/예약을 재도입하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_cancel_is_delivered_to_only_operation_owned_provider",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_category_and_unknown_old_future_dates_are_not_current_news",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error0-analysis]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error0-script]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error1-analysis]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error1-script]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error2-analysis]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_failed_and_unknown_external_requests_never_replay[error2-script]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_idempotency_refuses_changed_policy_or_model",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_offline_keeps_local_flow_and_explicit_policy",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_restart_distinguishes_success_failure_and_unknown_without_replay[failed-ai_request_stopped-False]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_restart_distinguishes_success_failure_and_unknown_without_replay[running-outcome_unknown-False]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_restart_distinguishes_success_failure_and_unknown_without_replay[success-interrupted-True]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_resume_after_script_review_carries_voice_without_new_ai",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[30-claude_code]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[30-codex]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[45-claude_code]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[45-codex]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[60-claude_code]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_backend::test_same_provider_pipeline_preserves_selection_context_usage_and_review[60-codex]",
+      "classification": "이전 CLI/로컬 경로 계약 차이",
+      "evidence_note": "CLI fixtures가 AI 선택·호출을 기대하지만 topic_reference 경로가 실행됨. 새 OpenAI/Claude API 경로와 분리. 기존 CLI 기능 완전성은 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_gui::test_home_policy_change_has_matching_readiness_and_notice_without_execution",
+      "classification": "이전 CLI 안내·호출 문구",
+      "evidence_note": "같은 AI/RSS 분석 문구 기대와 현재 로컬 경로 안내 차이. API 계약 테스트는 별도 실행.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[30-claude_code-sonnet]",
+      "classification": "이전 CLI 안내·호출 문구",
+      "evidence_note": "같은 AI/RSS 분석 문구 기대와 현재 로컬 경로 안내 차이. API 계약 테스트는 별도 실행.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[30-codex-default]",
+      "classification": "이전 CLI 안내·호출 문구",
+      "evidence_note": "같은 AI/RSS 분석 문구 기대와 현재 로컬 경로 안내 차이. API 계약 테스트는 별도 실행.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[45-claude_code-sonnet]",
+      "classification": "이전 CLI 안내·호출 문구",
+      "evidence_note": "같은 AI/RSS 분석 문구 기대와 현재 로컬 경로 안내 차이. API 계약 테스트는 별도 실행.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[45-codex-default]",
+      "classification": "이전 CLI 안내·호출 문구",
+      "evidence_note": "같은 AI/RSS 분석 문구 기대와 현재 로컬 경로 안내 차이. API 계약 테스트는 별도 실행.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[60-claude_code-sonnet]",
+      "classification": "이전 CLI 안내·호출 문구",
+      "evidence_note": "같은 AI/RSS 분석 문구 기대와 현재 로컬 경로 안내 차이. API 계약 테스트는 별도 실행.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_news_automation_gui::test_one_home_request_preserves_choices_and_requires_explicit_consent[60-codex-default]",
+      "classification": "이전 CLI 안내·호출 문구",
+      "evidence_note": "같은 AI/RSS 분석 문구 기대와 현재 로컬 경로 안내 차이. API 계약 테스트는 별도 실행.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_video_gui::test_key_form_stores_through_dpapi_store_and_never_renders_the_key",
+      "classification": "기존 메뉴/Cloud 모의 Windows 문제",
+      "evidence_note": "메뉴 수 기대값 및 os.name 모의 환경의 kernel32 접근 오류. native DPAPI는 Windows에서 별도 검증. 유료 영상 기능 미검증 유지.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus",
+      "classification": "기존 메뉴/Cloud 모의 Windows 문제",
+      "evidence_note": "메뉴 수 기대값 및 os.name 모의 환경의 kernel32 접근 오류. native DPAPI는 Windows에서 별도 검증. 유료 영상 기능 미검증 유지.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_autopilot_state::test_easy_synthetic_stages_are_durable_and_ordered",
+      "classification": "저장 저널 키 기대값",
+      "evidence_note": "stage_results에 영속 request 키가 추가되어 순서 기대값 불일치. 기존 테스트는 수정하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_codex_adapter::test_structured_rss_request_preserves_input_and_has_no_implicit_tools[analyze]",
+      "classification": "이전 CLI 응답 구조",
+      "evidence_note": "분석 응답에 recommendation 필드가 추가된 비교 실패. CLI 로그인/실행 검증은 제외.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_easy_setup::test_wizard_is_optional_and_all_core_menus_remain",
+      "classification": "이전 홈 문구",
+      "evidence_note": "제작 시작 텍스트 기대. 초기 설정 전체의 PASS를 의미하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_gui::test_render[/dashboard-\\ub274\\uc2a4 \\ud750\\ub984\\uc744 \\ud55c\\ub208\\uc5d0]",
+      "classification": "이전 화면 제목/개발 예정 문구",
+      "evidence_note": "Phase1의 개발 예정 또는 이전 제목 기대. 이번 기본 라우트/HTTP/POST와 따로 구분.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_gui::test_render[/news-\\ub274\\uc2a4 \\ud0d0\\uc0c9]",
+      "classification": "이전 화면 제목/개발 예정 문구",
+      "evidence_note": "Phase1의 개발 예정 또는 이전 제목 기대. 이번 기본 라우트/HTTP/POST와 따로 구분.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_gui::test_render[/settings-\\uc6cc\\ud06c\\uc2a4\\ud398\\uc774\\uc2a4 \\uc124\\uc815]",
+      "classification": "이전 화면 제목/개발 예정 문구",
+      "evidence_note": "Phase1의 개발 예정 또는 이전 제목 기대. 이번 기본 라우트/HTTP/POST와 따로 구분.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_oauth_operations_gui::test_operations_panel_keeps_real_connect_button_disabled",
+      "classification": "이전 운영 화면 제목",
+      "evidence_note": "PHASE 5F 제목 기대. 실계정 인증은 미실행.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_oauth_production_gui::test_readiness_panel_distinguishes_preparation_from_real_verification",
+      "classification": "이전 운영 화면 제목",
+      "evidence_note": "PHASE 5F 제목 기대. 실계정 인증은 미실행.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_realcontent::test_external_ai_failures_map_to_actionable_codes[error0-ai_rate_limited-True]",
+      "classification": "재시도 안전 정책·이전 문구",
+      "evidence_note": "3건은 timeout/rate limit/잘못된 응답에 retryable=True 기대. 현재 False인 보호를 완화하지 않음. 2건은 이전 홈/시작 화면 기대.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_realcontent::test_external_ai_failures_map_to_actionable_codes[error1-ai_timeout-True]",
+      "classification": "재시도 안전 정책·이전 문구",
+      "evidence_note": "3건은 timeout/rate limit/잘못된 응답에 retryable=True 기대. 현재 False인 보호를 완화하지 않음. 2건은 이전 홈/시작 화면 기대.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_realcontent::test_external_ai_failures_map_to_actionable_codes[error2-ai_bad_response-True]",
+      "classification": "재시도 안전 정책·이전 문구",
+      "evidence_note": "3건은 timeout/rate limit/잘못된 응답에 retryable=True 기대. 현재 False인 보호를 완화하지 않음. 2건은 이전 홈/시작 화면 기대.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_realcontent::test_gui_start_page_shows_readiness_and_disables_unready_external_ai",
+      "classification": "재시도 안전 정책·이전 문구",
+      "evidence_note": "3건은 timeout/rate limit/잘못된 응답에 retryable=True 기대. 현재 False인 보호를 완화하지 않음. 2건은 이전 홈/시작 화면 기대.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_realcontent::test_simple_settings_rejects_external_ai_with_sample_news",
+      "classification": "재시도 안전 정책·이전 문구",
+      "evidence_note": "3건은 timeout/rate limit/잘못된 응답에 retryable=True 기대. 현재 False인 보호를 완화하지 않음. 2건은 이전 홈/시작 화면 기대.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[30-claude_code]",
+      "classification": "이전 CLI 통합 경로",
+      "evidence_note": "6건은 이전 분석 안내, 1건은 CLI script 실패 대신 로컬 대본 검토에 도달. API 두 제공자의 현재 통합 경로를 새로 검증. CLI 통합 결함 여부는 별도 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[30-codex]",
+      "classification": "이전 CLI 통합 경로",
+      "evidence_note": "6건은 이전 분석 안내, 1건은 CLI script 실패 대신 로컬 대본 검토에 도달. API 두 제공자의 현재 통합 경로를 새로 검증. CLI 통합 결함 여부는 별도 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[45-claude_code]",
+      "classification": "이전 CLI 통합 경로",
+      "evidence_note": "6건은 이전 분석 안내, 1건은 CLI script 실패 대신 로컬 대본 검토에 도달. API 두 제공자의 현재 통합 경로를 새로 검증. CLI 통합 결함 여부는 별도 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[45-codex]",
+      "classification": "이전 CLI 통합 경로",
+      "evidence_note": "6건은 이전 분석 안내, 1건은 CLI script 실패 대신 로컬 대본 검토에 도달. API 두 제공자의 현재 통합 경로를 새로 검증. CLI 통합 결함 여부는 별도 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[60-claude_code]",
+      "classification": "이전 CLI 통합 경로",
+      "evidence_note": "6건은 이전 분석 안내, 1건은 CLI script 실패 대신 로컬 대본 검토에 도달. API 두 제공자의 현재 통합 경로를 새로 검증. CLI 통합 결함 여부는 별도 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_unified_ai_workspace::test_inline_consent_to_saved_script_stays_in_workspace_without_repeated_ai[60-codex]",
+      "classification": "이전 CLI 통합 경로",
+      "evidence_note": "6건은 이전 분석 안내, 1건은 CLI script 실패 대신 로컬 대본 검토에 도달. API 두 제공자의 현재 통합 경로를 새로 검증. CLI 통합 결함 여부는 별도 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_unified_ai_workspace::test_unknown_script_result_remains_stopped_after_refresh_reconfirm_and_recovery",
+      "classification": "이전 CLI 통합 경로",
+      "evidence_note": "6건은 이전 분석 안내, 1건은 CLI script 실패 대신 로컬 대본 검토에 도달. API 두 제공자의 현재 통합 경로를 새로 검증. CLI 통합 결함 여부는 별도 미해결.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ux_workflow::test_available_local_voice_is_forwarded_without_new_provider_settings",
+      "classification": "이전 CLI·호출 인수·준비 게이트",
+      "evidence_note": "기존 CLI 동의 문구, news_usage 추가 인수, API 미설정 시 consent 대신 approval 안내. 보수적 차단을 우회하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[claude_code-sonnet]",
+      "classification": "이전 CLI·호출 인수·준비 게이트",
+      "evidence_note": "기존 CLI 동의 문구, news_usage 추가 인수, API 미설정 시 consent 대신 approval 안내. 보수적 차단을 우회하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ux_workflow::test_saved_account_provider_requires_consent_without_job_or_replacement[codex-default]",
+      "classification": "이전 CLI·호출 인수·준비 게이트",
+      "evidence_note": "기존 CLI 동의 문구, news_usage 추가 인수, API 미설정 시 consent 대신 approval 안내. 보수적 차단을 우회하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ux_workflow::test_stored_paid_approval_still_requires_per_job_transfer_consent",
+      "classification": "이전 CLI·호출 인수·준비 게이트",
+      "evidence_note": "기존 CLI 동의 문구, news_usage 추가 인수, API 미설정 시 consent 대신 approval 안내. 보수적 차단을 우회하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    },
+    {
+      "test_id": "tests.test_ux_workflow_context::test_different_openai_model_requires_consent_without_replacement",
+      "classification": "API 준비 게이트 기대 차이",
+      "evidence_note": "모델/실제 API 설정 미준비 상태에서 consent 대신 approval로 차단. 이 테스트만으로 전체 모델 처리 결함을 확정하지 않음.",
+      "status": "OPEN - historical failure; no full-suite rerun",
+      "current_api_flow": "covered separately with injected OpenAI/Claude API and actual local media; no conclusion about CLI completeness"
+    }
+  ]
+}

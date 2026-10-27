@@ -1,0 +1,81 @@
+NewsFlow AI — Step 13I 최종 검증 보고서
+작성: 2026-10-25T16:22:14.800759+09:00
+판정: CONDITIONAL
+
+1. 범위 및 실제 수행
+검증된 Step13H 보고 HEAD 29e0d05(제품/테스트 코드 781a865)를 기반으로 새 개발 브랜치에서 진행했다. Windows Python3.14.7만 사용했다. 공개 RSS 소량 읽기, 기존 API·SNS 연동/오류/키 보호 Fake, TikTok CSP 테스트 최소 보완, 사용자별 API 운영 구조 검토를 완료했다. 제품 소스·migration·기존 운영 앱을 변경하지 않았다. 실제 유료 공급사 호출·OAuth 로그인·토큰 갱신·SNS 업로드/게시/삭제0. 별도 API 키/운영 credential load0. 공급사 상태/청구를 추정하거나 결과 불명 재전송하지 않았다.
+
+2. 변경 파일 및 diff
+제품 소스 변경0, migration 변경0. 테스트·CI 파일7개:
+- newsflow-ai/tests/test_tiktok_gui.py: CSP eval sentinel 대신 POST303·후속 문서 GET200 동기화, DOM 대기. 기존 승인/비밀값/응답/화면/키보드/오류/외부 요청 단언 유지, unsafe-eval 부재 검사 추가.
+- newsflow-ai/tests/test_step13i_api_contracts.py: 합성 키·주입 응답의 신규24개 검사.
+- .github/workflows/newsflow-step13i-windows.yml
+- newsflow-ai/tools/validation/step13i/prepare_windows.py
+- newsflow-ai/tools/validation/step13i/run_browser_phase.py
+- newsflow-ai/tools/validation/step13i/browser_bootstrap.py
+- newsflow-ai/tools/validation/step13i/test_guard_security.py
+소스 diff는 step13i-source.diff, 파일/원격 blob 증거는 code-file-checks-safe.json 및 git-final-state-safe.json. Git blob은 UTF-8/LF 텍스트 정규화로 대조하며 로컬 원본 CRLF 바이트 SHA-256도 별도로 기록했다. 공개 GitHub에 비밀정보·운영 DB·사용자 미디어·모델·백업을 넣지 않았다.
+
+3. API별 구현·검증
+RSS/Google News: 기존 PublicRSSAdapter/Collector, robots, 공개 DNS pinning, 크기/시간 제한을 그대로 사용했다. BBC 실제 파싱 PASS, Google News RSS는 정책 차단 유지.
+SerpApi: 고정 HTTPS host, GET·키 위치·무리디렉션·단일 요청·오류/파싱·키 보호·중복 claim·기존 수집/이미지 연계 Fake 통과. 실제 인증/쿼터/과금은 NOT VERIFIED.
+OpenAI: metadata GET과 생성·검색을 구분한다. 정상/401/403/402/429/timeout·손상 JSON·usage·reserved·중복/승인 경계를 Fake로 검증했다. 기존 출력 토큰 상한 기대값1 실패는 보존했다. API-managed/metadata는 단일 실행, generic legacy Provider의 기본 retry=True 경로는 따로 구분해 실제 승인 실행에서 사용하지 않아야 한다. 실제 모델 접근·생성·과금은 NOT VERIFIED.
+ElevenLabs: 저장 음성 한 페이지 조회, 401 세부 진단, 결제402, timeout, cache/ledger, reserved 보존, 작업별 음성/동의 Fake 통과. 실제 목록·구독·TTS0, 실제 권한·음질/청구는 NOT VERIFIED.
+Instagram: 기존 HTTPS 인증 중계·Meta 권한/계정 검증·DPAPI·Reels/단일 IMAGE·HTTPS 이미지 전달·별도 공개 게시 승인을 재사용해 Fake 검증했다. 실제 앱·권한·중계/이미지 인프라·게시 성공은 NOT VERIFIED. 외부 배포/스토리지 생성0.
+YouTube: 기존 Desktop OAuth/PKCE/state/loopback/신원 바인딩/DPAPI 및 동의/업로드 상태를 Fake 검증했다. 실계정 연결/갱신/업로드0.
+TikTok: callback·PKCE/state/redirect/취소·갱신·토큰·게시 계약 Fake 통과. production_enabled=false 유지. 실계정 경로 BLOCKED/NOT VERIFIED.
+상세와 API별 제한: API-readiness-matrix-safe.json.
+
+4. 실제 공개 RSS 조회
+정상화 후 실제 HTTP GET3건: Google News robots.txt200, BBC robots.txt200, BBC 한국어 RSS200. BBC 기사21건/썸네일 메타데이터21건/명시 날짜21건을 메모리에서 파싱했다. 운영 뉴스 목록/DB 반영0, 기사 원문·이미지 다운로드0, 인증·쿠키·개인 데이터 전송0.
+Google News는 robots 정책으로 RSS 경로가 차단돼 본문 GET을 하지 않았다. 우회 또는 사설/프록시 경로를 추가하지 않았다.
+첫 RSS 검증 도구는 DNS에서 검증한 고정 IP의 재조회까지 거부해 HTTP 전송 전2회 실패했다. 그 도구의 고정 IP 처리만 보완하고 원본 실패도 남겼다. 제품 RSS/기존 Fake Guard는 변경하지 않았다. 자동 재시도0이며 공개 조회와 Fake 실행을 분리했다. public-RSS-live-safe.json 참조.
+
+5. 집중 Fake 검증
+TikTok 관련65 PASS. API481 PASS/기존 FAIL1, SNS/RSS320 PASS/기존 Guard FAIL1. 세 그룹을 중복 ID 없이 합치면849 ID:847 PASS/2 FAIL. 신규 API 계약24 PASS.
+Guard78 PASS. 이미지/썸네일/기존 FFmpeg123 PASS. GUI2 PASS, 15화면×1440/980/390 너비45개 표본. JS 오류/자산 오류/페이지 외부 요청/데이터 mutation0. 보관 기사·실제 API 연결 검증으로 확대하지 않는다.
+기존 FAIL2는 test_api_providers의9000 토큰 기대값과 test_phase1a_security의진단 subprocess 금지 경계다. 제품 계약/Guard 완화, skip/xfail·단언 삭제로 해결하지 않았다. 파일별 실제 결과는 API-Fake-test-file-results-safe.json.
+
+6. TikTok CSP 회귀 원인과 보완
+실패 ID: tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login.
+이전 PASS 체크포인트 a3a4a1e, Step13H FAIL 코드781a865. 제품 main/CSP, TikTok route/서비스 및 관련 기존 소스는 동일했다. 문자열 wait_for_function의 eval 방식이 유지된 script-src self 정책과 충돌했다. 초기 대체 navigation 이벤트는 fragment 이동에서 None을 반환해 실제 redirect 문서 응답을 기다리도록 정정했다.
+최종 테스트는 실제 POST303·navigation GET200 및 DOM 로딩을 관측한다. 원래 동의, 키 암호화/비반영, synthetic 연결,303, worker 완료,3너비, 키보드 초점, 페이지 오류0·외부 요청0 단언을 보존했다. CSP/unsafe-inline/unsafe-eval/인증 우회 추가0. 관련65 PASS와 전체 회귀에서 결과를 따로 확인했다.
+신규 폴더의 첫 Chrome 시도는 합성 home/AppData Local/Roaming 누락으로5 PASS/1 ERROR 후 Guard가 중단했다. 기존 승인된 Known Folder 구성을 테스트 폴더에만 재현했다. 중간 동기화 시도64 PASS/1 FAIL도 보존하며 최종 집계에 섞지 않았다. TikTok-CSP-fix-safe.json 참조.
+
+7. 전체 회귀와 테스트 ID
+기준: {'PASS': 5264, 'FAIL': 92, 'ERROR': 0, 'SKIP': 4}. 최종: {'PASS': 5289, 'FAIL': 91, 'ERROR': 0, 'SKIP': 4}. 변화: {'PASS': 25, 'FAIL': -1, 'ERROR': 0, 'SKIP': 0}.
+이전 ID 5360개, 현재 5384개. 기존 ID 누락 0개. 신규24개, 신규 skip 0개. 기존 실패→PASS 1건. 기존 PASS→FAIL/ERROR 0건, 신규 테스트 FAIL/ERROR 0건.
+잔여 분류: {'기존 FAIL ID 지속 · 원인별 기존 근거와 비교 필요': 63, 'GUI 선택자/테스트 계약 차이 · 제품 판정 미확정': 20, 'Guard · 테스트 실행/파일 경계': 1, 'Guard · 과거 운영 소스 비교 입력 거부': 2, 'GUI 배치/기대값 차이 · 제품 판정 미확정': 3, 'GUI 선택자/테스트 계약 차이 · 숨김 canonical 입력 측정': 2}. 기존 GUI28 실패는 분류/영향을 유지하고 별도 파일에 실제 최신 결과를 기록했다. 전체 PASS를 주장하지 않는다. full-comparison-safe.json, remaining-failures-safe.json, GUI28-review-safe.json 참조.
+
+8. Windows Actions
+최종 SHA/Run 및 엄격한 테스트 건수·ID 대조 결과는 Windows-Actions-final-safe.json. 최초 실행은 security 파일 누락으로 수집 단계에서 실패했으며 테스트 해결 수로 계산하지 않았다. CI 묶음에 기존 Guard 검사를 포함하고 수집 경계를 맞췄다. 다음 성공 실행의 건수 표시에 불일치가 있어 정확 testcase/ID 대조를 추가했다. 선행 실행/로그도 보존한다. 테스트/Guard/제품 정책을 완화하지 않았다. Actions에는 비민감 합성 JSON만 업로드, MP4/PNG/WAV/DB/키/미디어 업로드0.
+
+9. 사용자별 API 인증정보 관리
+기본 사용자 data_dir와 설치 경로를 분리하며 기존 Windows LOCALAPPDATA 기본값을 재사용한다. 공급사별 키 파일/entropy, 사용자 DB·설정·승인·usage, ElevenLabs ledger/cache, 이미지 자산이 사용자 루트를 따른다. 두 합성 프로필의 키 저장·교체·삭제 독립성이 통과했다. DPAPI는 현재 사용자 범위와 UI_FORBIDDEN을 사용하며 LOCAL_MACHINE을 쓰지 않는다. native 시험은 새 합성 암호문에만 한정했다.
+실제 별도 Windows 사용자 사이 복호화/ACL 차단과 설치/EXE는 미검증이다. 로컬 loopback·TrustedHost·CSRF/CSP가 다른 OS 사용자의 모든 GET 접근을 막는 사용자 인증이라고 주장하지 않는다. 사용자별 포트/인스턴스 인증, 데이터 ACL, 환경변수 공유 override 위험을 Step15/16 계획에 남겼다.
+직접 키 입력/서버 중계/혼합의 최종 선택은 하지 않았다. 기존 직접 키와 Instagram 인증 중계의 역할을 보존한다. user-API-security-review-safe.json 참조.
+
+10. 실제 API 호출 승인 필요 범위
+SerpApi 한 페이지 검색GET1회는 테스트 키·지역/언어·검색 크레딧 사용 승인 필요. OpenAI 모델 metadata GET1회와 생성POST1회는 별개 승인이다. 생성은 전송할 합성 입력·선택 모델·출력 한도·실제 단가/비용 동의를 먼저 고정한다. ElevenLabs 저장 음성 GET1페이지와 TTS는 별개이며 TTS의 상태 조회/생성 수·문구·음성/모델·비용을 실행 전에 명시해야 한다. 실제 비용 미확인에 임의 금액·예약을 추가하지 않는다. 실계정 OAuth/refresh/upload/publish/delete는 각각 별도 명시 승인이다. 어떤 키도 채팅/소스/로그에 보내지 않는다. real-call-approval-plan-safe.json 참조. 이번 작업에서 해당 실호출0.
+
+11. 운영·기존 증거·백업 보존
+기존 로컬64 변경0, 후보655 변경0, G9소스2142 변경0. 운영 데이터33파일 및 보호자료10파일의 SHA 불일치0. DB sidecar 생성0, DB 연결/migration/checkpoint/운영 DPAPI 복호화0. 기존 해시가 일치하는 논리 검증을 재사용해 revision0018, APIunknown7/feedunknown1/ElevenLabsreserved1/HTTP402 기록을 보존했다.
+백업 A/B 각각45,572파일·6,388,588,775bytes. 경로/용량/mtime/핵심·전체 데이터 SHA 대조 불일치0. 이전 전체 SHA/SQLite/Git 증거를 재사용하며 새 전체 백업 해시 전수 검사를 했다고 표현하지 않는다. 기존 Step13H 포함 봉인 증거 보존 결과는 preservation-end-safe.json.
+중요 예외: 첫 검사에서 기존 알려진 보조 ref와 별개인 Codex 보조 ref1개가 추가로 누락돼 있었다. 실제 테스트는 아직 시작 전이었다. 양쪽 백업의 해당 참조·원본 대상 tree 객체의 ID/내용은 정상이고 HEAD/운영 수정/데이터는 일치했다. 직접 삭제 원인은 미확정이다. 참조 복구/객체 정리/gc/prune0. 원본 Git 전체 불변이라고 표시하지 않으며 추가 보존 검토 경고를 남긴다. additional-aux-ref-safe.json 참조.
+
+12. Guard·외부 통신·종료 상태
+기존 Step13H Guard/Node boundary/브라우저 boundary/fixture/보안 테스트 바이트는 동일하다. 테스트 전용 프로필·AppData·합성 SQLite·Fake·18765, Python/Node 소유 Windows Job을 사용했다. 8765 사용0. 마지막 운영 앱/테스트 프로세스/포트 확인: {'at': '2026-10-25T16:22:14.2110893+09:00', 'queries_verified': True, 'port8765_listeners': 0, 'port18765_listeners': 0, 'owned_test_processes_remaining': 0, 'operating_source_process_matches': 0, 'operating_restart_or_apply': 0, 'actual_paid_calls': 0, 'actual_OAuth_SNS_calls': 0, 'scope': 'After full regression and preservation helper exit; only query, no process termination'}.
+공개 RSS의 명시적 고정-host 호출과 공식 문서 웹 열람은 별도 기록했다. 실제 유료·OAuth·SNS 호출0. Python/Node/페이지 요청 Mock 보호를 native Chrome의 모든 배경 통신/OS 파일 접근 차단으로 확대하지 않는다. 현재 OS 사용자 권한 위험 및 완전 OS 격리 NOT VERIFIED를 유지했다. 계정/ACL/방화벽/Sandbox/Hyper-V/재부팅 변경0.
+
+13. GitHub·커밋·재개
+개발 브랜치 codex/newsflow-step13i-20261025, 코드/CI HEAD b0a718543865558cc3fe38df7ab318cb742ed140. 제품/테스트 동작 보완 커밋 bd539396, 후속은 CI 준비/증거 검사만 변경했다. 원격 파일 blob과 로컬 검증본 대조 결과는 git-final-state-safe.json. PR35 Draft/open/미병합 유지, main/운영 브랜치 수정0. 재부팅 시 GitHub-checkpoint-safe.json와 task-checkpoint-safe.json, 완료 supervisor/XML을 우선 재사용한다. 부분 결과를 최종 합계로 쓰지 않고 이전 실패 로그를 보존한다. 다음 Step 자동 착수0.
+
+14. Windows 배포 영향·남은 위험
+EXE/설치파일 제작과 일반 배포0. 사용자별 data_dir/이미지 경로·DPAPI·FFmpeg/static 자산 구조를 보존했다. 다수 사용자 인증·포트/ACL·설치/업데이트/제거·코드 서명은 아직 별도 검증 대상이다.
+OpenAI 공식 문서의 모델 GET은 모델 기본 정보/권한 조회이며 생성/잔액 보증이 아니다: https://developers.openai.com/api/reference/resources/models/methods/retrieve
+현재 허용 gpt-4.1-mini 계열은 공식 2027-01-14 종료 예정이다. 모델 자동 교체0. 실제 공급사 권한/비용·새 모델 wire/품질 검증과 작업별 선택 고정은 별도 승인 후 검토해야 한다: https://developers.openai.com/api/docs/deprecations
+잔여91 계열 회귀, Google News 직접 RSS 정책, 유료/실계정 미검증, 추가 보조 Git참조, 다수 사용자 서버 인증/포트·배포 미검증은 무조건 수용한 것이 아니다.
+
+15. Step 진행표·다음 조건
+Step1~18 전체 표는 Step1to18-matrix-safe.json. 과거 Step13D NOT IMPLEMENTED 등 당시 판정을 소급 변경하지 않는다. Step13H는 사용자 CONDITIONAL ACCEPTED, 이번13I는 CONDITIONAL. Step13J는 결과 검토 회부 가능하나 실행 미승인이다. 잔여 실패 처리/수용 근거, 실연동 승인·테스트 키/비용·데이터 범위, 보존 예외와 배포 위험을 검토한 뒤 별도 승인이 필요하다. Step14 운영 적용/재시작,15~18 설치·배포도 미승인이다.
+승인된13I 개발·검증 후 중단한다. 운영 앱 종료 상태를 유지하며 자동 실호출·게시·다음 Step을 시작하지 않는다.

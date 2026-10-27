@@ -237,6 +237,9 @@ def test_structured_rss_request_preserves_input_and_has_no_implicit_tools(connec
     provider, starts = connect(server)
     result = (provider.analyze(EVIDENCE, OPTIONS) if method == "analyze"
               else provider.complete(EVIDENCE, 30, OPTIONS))
+    if method == "analyze":
+        # The validated recommendation schema supplies optional defaults.
+        answer = {**answer, "recommended_article_id": None, "selection_reason": ""}
     assert result == answer and len(starts) == 1 and starts[0]["web"] is False
     assert server.closed and not starts[0]["cwd"].exists()
     assert provider.last_usage == {"prompt_tokens": 11, "completion_tokens": 7, "total_tokens": 18}

@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-25T11:44:10.830312+09:00",
+  "Python": "3.14.7",
+  "cwd": "synthetic output root",
+  "absolute_pytest_targets": true,
+  "guard_security_PASS": 78,
+  "previous_PASS_cases_restored": 56,
+  "Fake_OpenAI_and_Claude_MP4_publish_flow_PASS": 2,
+  "pending_related_failures": 2,
+  "operating_or_backup_test_inputs_allowed": false,
+  "actual_operating_file_reads_allowed": false,
+  "disallowed_historical_baseline_reads_stay_DENIED": true,
+  "real_provider_OAuth_SNS_calls_allowed": false,
+  "OS_Chrome_background_network_blocking_claim": false,
+  "configuration_frozen_until_run_ends": true
+}

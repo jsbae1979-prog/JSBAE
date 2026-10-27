@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-26T15:10:51.692056+09:00",
+  "full_regression_verified": true,
+  "full_counts": {
+    "PASS": 5386,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "old_IDs_preserved": true,
+  "source_frozen_except_recorded_CI_only_files": true,
+  "operating_and_backup_content_checks": "PASS",
+  "prior_evidence_preserved": true,
+  "source_or_test_execution_in_this_check": false,
+  "operating_write_or_restart": false,
+  "final_process_query": "NEXT"
+}

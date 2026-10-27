@@ -1,0 +1,60 @@
+{
+  "step14_apply_completed": true,
+  "applied_product_sha": "08bfec12f71fbe10b2bf2b7df4a2b8efd4283ba8",
+  "operating_git_head": "027644730c04b6b977baa9c4ede3eeb56115e61b",
+  "operating_branch": "codex/newsflow-local-d4dc20f",
+  "git_head_vs_applied_source": "Git refs were preserved; applied file hashes identify product version separately",
+  "checked_at": "2026-10-27T07:16:02.0448735+09:00",
+  "port8765_listeners": [
+    {
+      "port": 8765,
+      "pid": 55740,
+      "name": "python.exe",
+      "children": []
+    }
+  ],
+  "recorded_process_binding": {
+    "same_pid_as_step14_policy": true,
+    "parent_matches_recorded_launcher": true,
+    "created": "2026-10-26T19:05:15.482572+09:00",
+    "in_memory_module_path": "NOT VERIFIED; no native introspection or HTTP request"
+  },
+  "preservation": {
+    "source_compared_to_applied_08bfec1": {
+      "checked": 173,
+      "hash_mismatches": 0
+    },
+    "protected_groups": {
+      "credentials": {
+        "checked": 6,
+        "hash_mismatches": 0
+      },
+      "media": {
+        "checked": 12,
+        "hash_mismatches": 0
+      },
+      "db_settings_ledger": {
+        "checked": 7,
+        "hash_mismatches": 0
+      }
+    },
+    "base_database_revision": [
+      "0018"
+    ],
+    "wal_present": true,
+    "wal_bytes": 0,
+    "shm_present": true,
+    "sqlite_mode": "ro immutable; no WAL replay; base DB only",
+    "live_ledger_logical_rows": "base DB complete at observation: WAL length zero; row-by-row historical replay not performed",
+    "operating_writes": 0,
+    "new_backup_writes": 0,
+    "key_decryption": 0,
+    "actual_api_calls": 0,
+    "source_path_resolution": "manifest paths are repository-relative, operating setting is project-relative; resolved via read-only Git top-level"
+  },
+  "latest_react_deployed": false,
+  "current_task_new_apply": 0,
+  "current_task_restart": 0,
+  "current_task_operating_http": 0,
+  "operating_absolute_paths_reported": false
+}

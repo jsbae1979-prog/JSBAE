@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "script_review": false,
+  "voice": "elevenlabs",
+  "all_ai": true,
+  "media": {
+    "format": "mov,mp4,m4a,3gp,3g2,mj2",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "width": 1080,
+    "height": 1920,
+    "duration": 30.021029,
+    "fps": 30.0,
+    "audio_channels": 2,
+    "playable": true
+  },
+  "source_api_calls": [
+    "search",
+    "analysis",
+    "script"
+  ],
+  "actual_paid_calls": 0,
+  "human_audio_quality": "NOT VERIFIED",
+  "output": "temporary synthetic MP4; not committed"
+}

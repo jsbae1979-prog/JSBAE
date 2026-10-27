@@ -1,0 +1,33 @@
+{
+  "run": 40362970780,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40362970780",
+  "sha": "ccd28a2a0901bdd2500eb012ca0c3a90325f3fea",
+  "conclusion": "success",
+  "typecheck_build": "PASS",
+  "windows_python": "3.14.7",
+  "readmodel_pass": 26,
+  "python_integration_pass": 10,
+  "new_fail": 0,
+  "new_error": 0,
+  "full_regression_rerun": false,
+  "trigger": "existing automatic focused workflow on frontend push",
+  "new_browser_test_scope": [
+    "dashboard",
+    "create",
+    "shorts",
+    "characters",
+    "images",
+    "library",
+    "settings"
+  ],
+  "unchanged_pass_screen_browser_retests": 0,
+  "previous_5454_pass_4_skip": "reused prior evidence only",
+  "existing_windows_identity_failure": 1,
+  "windows_os_dpi": {
+    "100": "NOT VERIFIED",
+    "125": "NOT VERIFIED",
+    "150": "NOT VERIFIED",
+    "200": "NOT VERIFIED"
+  },
+  "local_guard_full_app": "NOT VERIFIED"
+}

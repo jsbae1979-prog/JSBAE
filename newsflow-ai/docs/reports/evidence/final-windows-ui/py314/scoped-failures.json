@@ -1,0 +1,52 @@
+[
+  {
+    "phase": "baseline",
+    "id": "tests.test_creator_ui::test_topic_search_honestly_uses_existing_news_search_not_new_generation_contract",
+    "message": "assert '자료 준비' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\\n</div><script src=\"/static/js/home_production.js\" defer></script>\\n</main>\\n</body></html>'"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_creator_ui::test_editor_never_invents_a_preview_for_invalid_output[running-True-True]",
+    "message": "assert '영상이 준비되면' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:57 KST</p></details>\\n</div>\\n</main>\\n</body></html>'\n +  where '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:57 KST</p></details>\\n</div>\\n</main>\\n</body></html>' = <Response [200 OK]>.text"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_creator_ui::test_editor_never_invents_a_preview_for_invalid_output[success-False-True]",
+    "message": "assert '영상이 준비되면' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:57 KST</p></details>\\n</div>\\n</main>\\n</body></html>'\n +  where '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:57 KST</p></details>\\n</div>\\n</main>\\n</body></html>' = <Response [200 OK]>.text"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_creator_ui::test_editor_never_invents_a_preview_for_invalid_output[success-True-False]",
+    "message": "assert '영상이 준비되면' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:57 KST</p></details>\\n</div>\\n</main>\\n</body></html>'\n +  where '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:57 KST</p></details>\\n</div>\\n</main>\\n</body></html>' = <Response [200 OK]>.text"
+  },
+  {
+    "phase": "baseline",
+    "id": "tests.test_workspace_access_browser::test_all_main_destinations_fit_small_windows[390]",
+    "message": "AssertionError: ('/', 390, '보이스 라이브러리')\nassert False\n +  where False = evaluate('(el) => el.getBoundingClientRect().height < 42')\n +    where evaluate = <Locator frame=<Frame name= url='http://127.0.0.1/'> selector='.workspace-nav a>span:visible >> nth=10'>.evaluate"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_creator_ui::test_topic_search_honestly_uses_existing_news_search_not_new_generation_contract",
+    "message": "assert '자료 준비' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\\n</div><script src=\"/static/js/home_production.js\" defer></script>\\n</main>\\n</body></html>'"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_creator_ui::test_editor_never_invents_a_preview_for_invalid_output[running-True-True]",
+    "message": "assert '영상이 준비되면' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:59 KST</p></details>\\n</div>\\n</main>\\n</body></html>'\n +  where '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:59 KST</p></details>\\n</div>\\n</main>\\n</body></html>' = <Response [200 OK]>.text"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_creator_ui::test_editor_never_invents_a_preview_for_invalid_output[success-False-True]",
+    "message": "assert '영상이 준비되면' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:59 KST</p></details>\\n</div>\\n</main>\\n</body></html>'\n +  where '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:59 KST</p></details>\\n</div>\\n</main>\\n</body></html>' = <Response [200 OK]>.text"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_creator_ui::test_editor_never_invents_a_preview_for_invalid_output[success-True-False]",
+    "message": "assert '영상이 준비되면' in '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:59 KST</p></details>\\n</div>\\n</main>\\n</body></html>'\n +  where '\\n<!doctype html>\\n<html lang=\"ko\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, ini...pan class=\"badge success\">성공</span> · 합성 fixture · 2026-10-24 11:59 KST</p></details>\\n</div>\\n</main>\\n</body></html>' = <Response [200 OK]>.text"
+  },
+  {
+    "phase": "final",
+    "id": "tests.test_workspace_access_browser::test_all_main_destinations_fit_small_windows[390]",
+    "message": "AssertionError: ('/', 390, '보이스 라이브러리')\nassert False\n +  where False = evaluate('(el) => el.getBoundingClientRect().height < 42')\n +    where evaluate = <Locator frame=<Frame name= url='http://127.0.0.1/'> selector='.workspace-nav a>span:visible >> nth=10'>.evaluate"
+  }
+]

@@ -1,0 +1,337 @@
+"""Read-only Studio v3 projection. No provider sync, credential decode or state mutation."""
+
+from datetime import UTC, datetime, timedelta
+from hashlib import sha256
+
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import func, select
+
+from newsflow.db.models import (
+    ContentDraft,
+    ImagePost,
+    IntelligenceRun,
+    ProductionSchedule,
+    PublishDraft,
+    PublishSchedule,
+    RenderJob,
+    VideoProject,
+    WorkspaceRemoval,
+)
+from newsflow.publishing.service import PublishingError, PublishingService
+
+router = APIRouter()
+ACTIVE = {"running", "queued", "submitting", "waiting", "in_progress", "downloading", "composing"}
+COMPLETE = {"success", "completed", "ready"}
+
+
+def _iso(value):
+    return value.isoformat() if isinstance(value, datetime) else str(value or "")
+
+
+def _project(identifier, title, kind, status, at, href, *, thumb=None, media=None, review="review_required"):
+    return {
+        "id": identifier,
+        "title": str(title)[:150],
+        "kind": kind,
+        "technicalStatus": status,
+        "contentReviewStatus": review,
+        "publishApprovalStatus": "separate_approval_required",
+        "updatedAt": _iso(at),
+        "href": href,
+        "thumbnailUrl": thumb,
+        "mediaUrl": media,
+        "sourceLabel": "저장된 로컬 제작 자료",
+    }
+
+
+@router.get("/api/studio/workspace")
+def workspace(request: Request):
+    import os
+
+    state = request.app.state
+    projects = []
+    now = datetime.now(UTC)
+    with state.sessions() as session:
+        removed = {x.key for x in session.scalars(select(WorkspaceRemoval))}
+        renders = list(
+            session.execute(
+                select(RenderJob, VideoProject, ContentDraft)
+                .join(VideoProject, RenderJob.project_id == VideoProject.id)
+                .join(ContentDraft, VideoProject.draft_id == ContentDraft.id)
+                .order_by(RenderJob.id.desc())
+            )
+        )
+        images = list(
+            session.scalars(
+                select(IntelligenceRun)
+                .where(IntelligenceRun.kind == "image_draft")
+                .order_by(IntelligenceRun.id.desc())
+            )
+        )
+        for job, project, draft in renders:
+            if f"video:{job.id}" in removed:
+                continue
+            status = job.status
+            media = thumb = None
+            if status == "success":
+                try:
+                    path = PublishingService(state.sessions, state.video.outputs).media_path(job)
+                except (PublishingError, OSError, ValueError):
+                    path = None
+                if path is not None:
+                    media = f"/video/jobs/{job.id}/file"
+                    thumb = f"/video/jobs/{job.id}/thumbnail"
+                else:
+                    status = "missing"
+            projects.append(
+                _project(
+                    f"news:{job.id}",
+                    project.title,
+                    "news",
+                    status,
+                    job.finished_at or job.created_at,
+                    f"/video?job_id={job.id}",
+                    media=media,
+                    thumb=thumb,
+                    review=draft.review_status,
+                )
+            )
+            projects[-1]["draftId"] = draft.id
+        outputs = list(
+            session.scalars(
+                select(IntelligenceRun)
+                .where(IntelligenceRun.kind == "feed_image")
+                .order_by(IntelligenceRun.id.desc())
+            )
+        )
+        latest_outputs = {}
+        for output in outputs:
+            if output.options.get("style") == "studio" and type(output.options.get("draft_id")) is int:
+                latest_outputs.setdefault(output.options["draft_id"], output)
+        for image in images:
+            output = latest_outputs.get(image.id)
+            status = output.status if output else image.status
+            url = None
+            if output is not None and output.status == "success":
+                try:
+                    state.image_generation.path(output.id)
+                    url = f"/image-studio/{image.id}/file"
+                except (PublishingError, ValueError, OSError):
+                    status = "missing"
+            projects.append(
+                _project(
+                    f"image:{image.id}",
+                    image.result.get("prompt", "이미지 초안"),
+                    "image",
+                    status,
+                    (output.finished_at or output.created_at) if output else image.created_at,
+                    f"/image-studio?draft_id={image.id}",
+                    thumb=url,
+                    media=url,
+                )
+            )
+        for post in session.scalars(select(ImagePost).order_by(ImagePost.id.desc()).limit(100)):
+            media = None
+            status = "success"
+            try:
+                state.image_posts.path(post.id)
+                media = f"/image-posts/{post.id}/file"
+            except (PublishingError, ValueError, OSError):
+                status = "missing"
+            projects.append(
+                _project(
+                    f"post:{post.id}",
+                    post.title,
+                    "image",
+                    status,
+                    post.created_at,
+                    f"/image-posts?post_id={post.id}",
+                    thumb=media,
+                    media=media,
+                )
+            )
+        schedules = [
+            {"title": x.name, "at": _iso(x.next_run_at), "href": "/schedules"}
+            for x in session.scalars(
+                select(ProductionSchedule)
+                .where(ProductionSchedule.status == "active", ProductionSchedule.next_run_at >= now)
+                .order_by(ProductionSchedule.next_run_at)
+                .limit(5)
+            )
+        ]
+        schedules += [
+            {"title": "게시 예약 #" + str(x.id), "at": _iso(x.due_at), "href": "/publishing/calendar"}
+            for x in session.scalars(
+                select(PublishSchedule)
+                .where(PublishSchedule.status == "active", PublishSchedule.due_at >= now)
+                .order_by(PublishSchedule.due_at)
+                .limit(5)
+            )
+        ]
+        publish_count = session.scalar(select(func.count(PublishDraft.id))) or 0
+    for job in state.character.listing():
+        status = job["state"]
+        url = None
+        if status == "completed":
+            try:
+                path = state.character.folder(job["id"]) / "final.mp4"
+                if (
+                    path.is_symlink()
+                    or not path.is_file()
+                    or sha256(path.read_bytes()).hexdigest() != job["output"]["sha256"]
+                ):
+                    status = "missing"
+                else:
+                    url = f"/character/{job['id']}/file"
+            except (OSError, KeyError, ValueError):
+                status = "missing"
+        projects.append(
+            _project(
+                "character:" + job["id"],
+                job.get("topic", "캐릭터 쇼츠"),
+                "character",
+                status,
+                job.get("created_at"),
+                "/character?job_id=" + job["id"],
+                media=url,
+            )
+        )
+    projects.sort(key=lambda x: x["updatedAt"], reverse=True)
+    synthetic = getattr(state, "studio_synthetic", False)
+    if synthetic:
+        # Design illustration only; never used as a real production media fallback.
+        for i, item in enumerate(projects):
+            item["thumbnailUrl"] = "/studio/assets/design-art-" + str([2, 0, 3, 10][i % 4]) + ".webp"
+            item["sourceLabel"] = "개발용 합성 프로젝트의 설계 일러스트"
+    completed = sum(p["technicalStatus"] in COMPLETE for p in projects)
+    running = sum(p["technicalStatus"] in ACTIVE for p in projects)
+    kst = now + timedelta(hours=9)
+    today = []
+    for p in projects:
+        try:
+            at = datetime.fromisoformat(p["updatedAt"])
+            at = at.replace(tzinfo=UTC) if at.tzinfo is None else at
+            if (at.astimezone(UTC) + timedelta(hours=9)).date() == kst.date():
+                today.append(p)
+        except (ValueError, TypeError):
+            pass
+    daily = {k: 0 for k in ["done", "running", "waiting", "failed", "unknown"]}
+    for p in today:
+        status = p["technicalStatus"]
+        key = (
+            "done"
+            if status in COMPLETE
+            else "running"
+            if status in ACTIVE
+            else "failed"
+            if status == "failed"
+            else "unknown"
+            if status == "unknown"
+            else "waiting"
+        )
+        daily[key] += 1
+    daily["total"] = len(today)
+    providers = [
+        ("openai", "OpenAI", getattr(state, "ai_keys", None)),
+        ("claude", "Claude", getattr(state, "api_keys", {}).get("claude_api")),
+        ("elevenlabs", "ElevenLabs", None),
+        ("higgsfield", "Higgsfield", getattr(getattr(state, "video_ai", None), "keys", None)),
+    ]
+    services = []
+    for identifier, label, store in providers:
+        configured = False
+        if store is not None:
+            configured = bool(store.status().get("configured"))  # metadata only; never key()
+        if identifier == "elevenlabs":
+            p = state.config.data_dir / "tts-elevenlabs-key.dpapi"
+            configured = (p.is_file() and not p.is_symlink()) or bool(
+                os.environ.get("NEWSFLOW_ELEVENLABS_KEY", "")
+            )
+        services.append(
+            {
+                "id": identifier,
+                "label": label,
+                "configured": configured,
+                "verified": False,
+                "href": "/settings",
+            }
+        )
+    return {
+        "schemaVersion": 1,
+        "capabilities": {"legacyAvailable": True, "workspaceReadOnly": True},
+        "dataOrigin": "development-fixtures" if synthetic else "local-workspace",
+        "projects": projects[:100],
+        "stats": {
+            "running": running,
+            "ready": completed,
+            "publishDrafts": publish_count,
+            "total": len(projects),
+        },
+        "today": daily,
+        "services": services,
+        "upcoming": sorted(schedules, key=lambda x: x["at"])[:5],
+        "upcomingStatus": "connected",
+        "activity": [
+            {
+                "title": p["title"]
+                + " · "
+                + ("결과 불명" if p["technicalStatus"] == "unknown" else "작업 기록"),
+                "at": p["updatedAt"],
+                "href": p["href"],
+            }
+            for p in projects[:5]
+        ],
+    }
+
+
+def mount_studio(app):
+    """Optional static build in source development. Existing routes stay available."""
+    from newsflow.studio.read_models import router as module_router
+
+    app.include_router(router)
+    app.include_router(module_router)
+    from newsflow.studio.resources import studio_dist_root
+
+    dist = studio_dist_root()
+    if not (dist / "index.html").is_file():
+        return
+    app.mount(
+        "/studio/assets", StaticFiles(directory=dist / "assets", follow_symlink=False), name="studio-assets"
+    )
+
+    @app.get("/studio/", include_in_schema=False)
+    @app.get("/studio/dashboard", include_in_schema=False)
+    @app.get("/studio/create", include_in_schema=False)
+    @app.get("/studio/news", include_in_schema=False)
+    @app.get("/studio/shorts", include_in_schema=False)
+    @app.get("/studio/characters", include_in_schema=False)
+    @app.get("/studio/images", include_in_schema=False)
+    @app.get("/studio/automation", include_in_schema=False)
+    @app.get("/studio/library", include_in_schema=False)
+    @app.get("/studio/publishing", include_in_schema=False)
+    @app.get("/studio/analytics", include_in_schema=False)
+    @app.get("/studio/settings", include_in_schema=False)
+    @app.get("/studio/onboarding", include_in_schema=False)
+    def studio_shell():
+        return FileResponse(dist / "index.html", media_type="text/html")
+
+    @app.get("/studio/{page_path:path}", include_in_schema=False)
+    def studio_subpage(page_path: str):
+        # All feature aliases use the same React router, never an HTML iframe.
+        if page_path.split("/", 1)[0] not in {
+            "news",
+            "create",
+            "shorts",
+            "characters",
+            "images",
+            "automation",
+            "library",
+            "publishing",
+            "analytics",
+            "settings",
+            "onboarding",
+        }:
+            raise HTTPException(404)
+        return FileResponse(dist / "index.html", media_type="text/html")

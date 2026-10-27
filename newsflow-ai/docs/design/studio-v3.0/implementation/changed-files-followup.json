@@ -1,0 +1,134 @@
+[
+  {
+    "status": "M",
+    "path": ".github/workflows/newsflow-studio-v3.yml"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/docs/design/studio-v3.0/implementation/Feature_Trace_current.csv"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/docs/design/studio-v3.0/implementation/approved-windows-integration-procedure.md"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/docs/design/studio-v3.0/implementation/feature-map-summary.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/docs/design/studio-v3.0/implementation/legacy-route-contracts.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/docs/design/studio-v3.0/implementation/literal-mapping-seven.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/frontend/src/legacy-actions.json"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/frontend/src/main.tsx"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/frontend/src/studio/CommandDialog.tsx"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/frontend/src/studio/Workbench.tsx"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/frontend/src/studio/contracts.ts"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/frontend/src/studio/workbench.css"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/frontend/tests/studio-flow.cjs"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/src/newsflow/gui/studio_v3.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/src/newsflow/studio/__init__.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/src/newsflow/studio/actions.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/src/newsflow/studio/read_models.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/build_feature_mapping.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/analytics.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/automation.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/characters.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/images.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/library.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/news.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/onboarding.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/publishing.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/settings.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/shorts.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/fixtures/workspace.json"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/integration/test_full_app_forms.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/tests/conftest.py"
+  },
+  {
+    "status": "A",
+    "path": "newsflow-ai/tools/studio_v3/tests/test_module_views.py"
+  },
+  {
+    "status": "M",
+    "path": "newsflow-ai/tools/studio_v3/visual_preview.py"
+  }
+]

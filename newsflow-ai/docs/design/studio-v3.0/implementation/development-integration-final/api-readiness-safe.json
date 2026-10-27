@@ -1,0 +1,109 @@
+{
+  "models_are_code_contracts_not_live_availability": true,
+  "actual_provider_calls": 0,
+  "no_new_adapter": true,
+  "rows": [
+    {
+      "provider": "RSS / SerpApi",
+      "code_models": [
+        "공개 RSS",
+        "SerpApi google_news"
+      ],
+      "usage": "뉴스 수집·기존 Trends 연결. 보관 검색과 구분.",
+      "key_form": "RSS 키 없음 / /serpapi/settings",
+      "account_access": "이번 실조회 없음. 과거 성공을 현재 권한 성공으로 승격하지 않음.",
+      "cost": "공개 RSS와 SerpApi 계정 크레딧은 별개. 계정 가격·잔액 미조회.",
+      "minimum_approval": "RSS 소량 읽기 범위 또는 테스트 키·지역·쿼리·횟수 승인. 단일 검색 최소 1 GET; 전체 News+Trends 수집 요청 수는 별도 확정."
+    },
+    {
+      "provider": "OpenAI",
+      "code_models": [
+        "gpt-4.1-mini",
+        "gpt-image-2.5-flare-2026-09-08",
+        "gpt-image-2.5-sunburst-2026-09-08"
+      ],
+      "usage": "뉴스 분석·대본 / 선택형 독립·뉴스 피드 이미지.",
+      "key_form": "선택형 /api-settings/{provider}/key; 기존 /ai-settings/key 호환 보존.",
+      "account_access": "코드 목록·Adapter 존재. 실제 모델 제공·계정 권한은 이번 미검증.",
+      "cost": "텍스트와 이미지 모델·크기·품질 과금 구분. 실견적·청구 총액 미확정.",
+      "minimum_approval": "테스트 키·단계·모델·전송 범위·호출/이미지 수·비용 조건 승인. 저장 프롬프트 재사용 시 이미지 1장 요청 1회. 실패·불명 자동 재호출/전환 금지."
+    },
+    {
+      "provider": "Claude API",
+      "code_models": [
+        "claude-sonnet-4-6",
+        "claude-haiku-4-5-20251001",
+        "claude-opus-4-6"
+      ],
+      "usage": "뉴스 분석·대본, 카드 원고/지시문, 캐릭터 스토리. 이미지 픽셀 생성은 아님.",
+      "key_form": "/api-settings/claude_api/key, 별도 DPAPI. 복합 키 버튼의 연결 오류 수정.",
+      "account_access": "이번 실제 인증 조회·유료 호출 0. 과거 증거와 현재 권한 구분.",
+      "cost": "저장 단가·사용량과 실제 청구 구분. 현재 공식 가격·총액 미확정.",
+      "minimum_approval": "테스트 키·모델·단계·자료·호출 1회·출력 상한·시간 제한 승인. 기존 불명 차단 유지."
+    },
+    {
+      "provider": "ElevenLabs",
+      "code_models": [
+        "eleven_multilingual_v2",
+        "eleven_flash_v2_5",
+        "eleven_v3"
+      ],
+      "usage": "뉴스 외부 음성. Supertonic/Windows SAPI 선택 시 외부 TTS 호출 없음.",
+      "key_form": "/video/tts/key, 별도 보호 키·캐시·ledger",
+      "account_access": "캐시 샘플과 새 API 구분. 실제 조회/생성 없음.",
+      "cost": "문자·분할·모델·요금제 단가 미확정. reserved/402 이력 유지.",
+      "minimum_approval": "목록 조회와 합성 각각 승인. 음성 ID·모델·텍스트·분할/조회 수·비용 범위 확정. 불명 자동 재전송 금지."
+    },
+    {
+      "provider": "Higgsfield",
+      "code_models": [
+        "pixverse/v6/text-to-video",
+        "kling-video/v3.0-turbo/text-to-video",
+        "alibaba/wan-3.0/text-to-video",
+        "alibaba/wan-3.0-prime/text-to-video",
+        "wan/v2.7/text-to-video",
+        "lightricks/ltx-2.5/text-to-video/fast",
+        "bytedance/seedance-2.0/reference-to-video (character)"
+      ],
+      "usage": "뉴스 전체 AI/고급 장면 선택; 캐릭터 참조 영상. 기본 FFmpeg는 호출 0.",
+      "key_form": "/video-ai-settings/key; 모델 등록·견적/승인·작업 snapshot",
+      "account_access": "뉴스 모델은 날짜가 있는 코드 스키마 후보. 등록·확인 조건 필요; Seedance도 계정 사용 미검증.",
+      "cost": "실제 계정 공식 견적·잔액 미확정. 기존 한도와 가격 근거 변경 안함.",
+      "minimum_approval": "테스트 키·모델·장면 수/길이/해상도·참조 전송·견적/생성/조회 범위·비용 승인. 참조 업로드/견적과 장면 제출 승인 분리."
+    },
+    {
+      "provider": "Instagram",
+      "code_models": [
+        "Reels MP4",
+        "single IMAGE feed"
+      ],
+      "usage": "검토된 영상/단일 이미지 게시. Carousel 추가 없음.",
+      "key_form": "기존 Meta OAuth 설정·보호 토큰. 이미지 HTTPS 전달 설정 별도.",
+      "account_access": "Fake/계약만 인정. 권한·토큰·게시·전달 인프라 실검증 없음.",
+      "cost": "AI 생성과 HTTPS 전달 인프라 비용 분리; 가격 미확정.",
+      "minimum_approval": "OAuth 별도 승인. 계정·파일 해시·문구·공개 대상 최종 승인. 피드 HTTPS 인프라 미준비면 BLOCKED."
+    },
+    {
+      "provider": "YouTube",
+      "code_models": [
+        "YouTube Shorts MP4"
+      ],
+      "usage": "기존 영상 게시; Instagram과 독립 결과 이력.",
+      "key_form": "기존 YouTube OAuth 클라이언트·계정·보호 토큰",
+      "account_access": "이번 실계정 연결·권한·업로드 미검증.",
+      "cost": "AI 생성과 업로드 쿼터 별개; 실계정 잔여 미조회.",
+      "minimum_approval": "OAuth 별도 승인 후 계정·파일·공개 범위·아동용 여부·업로드 1건 승인. 성공/불명 재업로드 금지."
+    },
+    {
+      "provider": "TikTok",
+      "code_models": [
+        "video publishing"
+      ],
+      "usage": "기존 콜백·계정 옵션·검토/최종 승인 계약.",
+      "key_form": "기존 TikTok OAuth/클라이언트·보호 토큰",
+      "account_access": "콜백/CSP/Fake 증거 재사용. 앱 심사·권한·계정 옵션·게시 실검증 없음.",
+      "cost": "생성 비용과 계정 API 한도 별개; 실제 조건 미조회.",
+      "minimum_approval": "연결·옵션 조회 별도 승인. 계정·공개 범위·저작권/브랜드/음악 조건·게시 1건 최종 승인."
+    }
+  ]
+}

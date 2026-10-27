@@ -1,0 +1,56 @@
+{
+  "screens": [
+    {
+      "screen": "dashboard",
+      "name": "홈",
+      "state": "보정 완료 / 현 상태 수용",
+      "detail": "메뉴·히어로·카드·주요 영역·동선 변경 0. 크롭·글꼴·발광·그림자는 현 상태 수용하여 손대지 않았습니다. 공유 썸네일 오류 상태만 보완. 1366에서 빠른 제작 카드가 일반 페이지 스크롤로 접근되는 것을 확인했습니다."
+    },
+    {
+      "screen": "create",
+      "name": "콘텐츠 제작 홈",
+      "state": "보정 완료",
+      "detail": "1920 첫 로딩 시 naturalWidth=0/complete=false인 순간을 재현했지만 디코딩 대기 후 3개 모두 HTTP 200·naturalWidth=235/230/235로 표시됐습니다. 지속 누락은 재현되지 않아 lazy loading·원본 이미지는 유지했습니다. 모의 404에서 기존 hidden=true 빈 칸을 재현해 명시적인 로딩/미리보기 없음 상태로 보완했습니다."
+    },
+    {
+      "screen": "shorts",
+      "name": "뉴스 쇼츠",
+      "state": "보정 완료",
+      "detail": "장면 선택 탭을 편집 패널 안에서 sticky로 유지하고 세로 미리보기 높이를 viewport에 맞게 제한했습니다. 글씨 크기·대본·검토·장면/합성 동작은 유지. 저장된 1080×1920·30초 합성 MP4의 1초 디코딩 프레임을 사용했습니다. 가로 포스터를 실제 9:16 재생 품질의 근거로 사용하지 않았습니다."
+    },
+    {
+      "screen": "characters",
+      "name": "캐릭터 쇼츠",
+      "state": "보정 완료",
+      "detail": "참조 PNG 패널을 긴 완성 영상 빈 상태 위로 옮겨 1920/1366 첫 viewport에서 확인할 수 있습니다. 참조가 없으면 명시적 빈 상태. 기존 작업별 /api/studio/characters/{id}/reference URL만 허용해 표시합니다. 32×32 합성 PNG로 레이아웃을 확인했으며 실제 사용자 캐릭터 원본의 화질 검증은 하지 않았습니다."
+    },
+    {
+      "screen": "images",
+      "name": "이미지 제작",
+      "state": "현 상태 수용",
+      "detail": "UI 소스 변경 없이 독립 AI 이미지/뉴스 이미지 게시물 탭을 각각 1920×1080·1366×768, scrollY=0으로 캡처했습니다. 두 흐름의 제목·버튼·출처·캔버스가 구분되며 추가 배치 수정은 불필요했습니다."
+    },
+    {
+      "screen": "library",
+      "name": "라이브러리",
+      "state": "보정 완료",
+      "detail": "design-art-* 장식 자산을 실제 자료 썸네일로 표시하지 않습니다. 그림에 박힌 02:31 같은 장식 시간이 실제 길이로 보이는 표현을 제거했습니다. 실제 검증된 썸네일 URL은 유지하며 파일/썸네일이 없으면 미리보기 없음으로 표시합니다."
+    },
+    {
+      "screen": "settings",
+      "name": "설정·관리",
+      "state": "보정 완료",
+      "detail": "동일한 API 키 저장 버튼을 OpenAI · Claude 키 설정 / ElevenLabs 키 설정 / Higgsfield 키 설정으로 구분했습니다. 원래 action·폼·저장 서비스는 유지. 각 버튼이 기존 대화창을 열고 비밀 입력이 빈 값인 것을 확인했습니다. 기본값 버튼 간격만 소폭 보정했습니다."
+    }
+  ],
+  "unchanged_pass_screens": [
+    "news",
+    "automation",
+    "publishing",
+    "analytics",
+    "onboarding"
+  ],
+  "windows_os_dpi": "NOT VERIFIED",
+  "design_final": "CONDITIONAL",
+  "unchanged_pass_screen_browser_retests": 0
+}

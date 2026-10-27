@@ -1,0 +1,30 @@
+{
+  "base_sha": "fc4c149445a6cd5a3378510bd928741785f80e5e",
+  "tested_code_sha": "8e53983e9706bd02276bc599d73d6c0c32e59fb0",
+  "platform": "Linux Cloud, Python 3.12.14, Chromium 151",
+  "tests": {
+    "passed": 135,
+    "failed": 1,
+    "errors": 0,
+    "skipped": 0,
+    "seconds": "196.319"
+  },
+  "same_baseline_failure": true,
+  "failure_test": "tests.test_ux_navigation::test_workspace_two_destinations_and_two_production_choices",
+  "first_failure": "AttributeError: 'NoneType' object has no attribute 'group'",
+  "test_file_sha256": [
+    "291e8aad1388b9cc0eb9fe2507175380b25e215eda544e1ccd340baf0fcfd7ef",
+    "291e8aad1388b9cc0eb9fe2507175380b25e215eda544e1ccd340baf0fcfd7ef"
+  ],
+  "browser_viewports": [
+    "1366x768",
+    "1920x1080",
+    "390x844"
+  ],
+  "real_paid_api_oauth_sns_calls": 0,
+  "windows_user_pc": "NOT VERIFIED",
+  "windows_scaling": "NOT VERIFIED",
+  "real_voice_quality": "NOT VERIFIED",
+  "full_regression": "NOT RUN; preserve historical 57 FAIL record; not replaced by scoped results",
+  "evidence_note": "Before images: baseline isolated ui_preview seed. After: current app with synthetic test records; no registered real keys. Stable preview image uses the same guarded demo launcher and reduced motion for capture. All are real viewport screenshots."
+}

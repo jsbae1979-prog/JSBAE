@@ -1,0 +1,51 @@
+{
+  "PASS": 7,
+  "FAIL": 0,
+  "execution": "direct function assertions without pytest native console formatter",
+  "cases": [
+    {
+      "test": "test_empty_readonly_and_no_credentials",
+      "parameters": [],
+      "PASS": true
+    },
+    {
+      "test": "test_unfinished_image_never_has_media",
+      "parameters": [
+        "unknown"
+      ],
+      "PASS": true
+    },
+    {
+      "test": "test_unfinished_image_never_has_media",
+      "parameters": [
+        "failed"
+      ],
+      "PASS": true
+    },
+    {
+      "test": "test_unfinished_image_never_has_media",
+      "parameters": [
+        "running"
+      ],
+      "PASS": true
+    },
+    {
+      "test": "test_unfinished_image_never_has_media",
+      "parameters": [
+        "draft"
+      ],
+      "PASS": true
+    },
+    {
+      "test": "test_key_presence_is_not_verified_connection",
+      "parameters": [],
+      "PASS": true
+    },
+    {
+      "test": "test_sample_art_is_explicit_and_never_production_fallback",
+      "parameters": [],
+      "PASS": true
+    }
+  ],
+  "full_product_startup": "NOT VERIFIED; prior native boundary remains blocked"
+}

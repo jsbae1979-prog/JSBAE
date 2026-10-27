@@ -1,0 +1,29 @@
+{
+  "phase": "full",
+  "Python": "3.14.7",
+  "counts": {
+    "PASS": 5210,
+    "FAIL": 91,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "unique_IDs": 5305,
+  "baseline_counts": {
+    "PASS": 5147,
+    "FAIL": 63,
+    "ERROR": 91,
+    "SKIP": 4
+  },
+  "previous_PASS_now_failed": [],
+  "missing_from_original91": [],
+  "new_skips": [],
+  "missing_old_IDs": [],
+  "added_IDs": [],
+  "old_failed_now_PASS": 63,
+  "ID_SHA256": "058b4b9ef5481953b1e49010e181ef757dfaebd34ca12d77bb484296e60d0133",
+  "failure_groups": {
+    "Needs static review": 57,
+    "GUI selector/contract mismatch; product classification pending static review": 19,
+    "Guard execution boundary": 15
+  }
+}

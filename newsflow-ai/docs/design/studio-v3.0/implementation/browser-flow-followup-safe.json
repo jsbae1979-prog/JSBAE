@@ -1,0 +1,22 @@
+{
+  "captures": [],
+  "checks": [
+    "article search/select and unpaid approval cancel",
+    "script narration/caption separation, save and reload",
+    "actual local synthetic MP4 1080x1920, 30s and seek",
+    "revision conflict preserves unsaved narration",
+    "both image workflows and unknown image has no preview",
+    "original schedules POST from React and paused fixture save",
+    "key input blank, no returned credential",
+    "local PNG canvas preview without upload or blob CSP change",
+    "creation home routes news feed separately from standalone image",
+    "saved script and rendered MP4 deep links open selected objects",
+    "global search remains local projects and opens the saved job"
+  ],
+  "jsErrors": [],
+  "externalPageRequests": [],
+  "realProviderCalls": 0,
+  "productEngine": false,
+  "fullAppGuard": "not bypassed",
+  "windowsOSDPI": "NOT VERIFIED"
+}

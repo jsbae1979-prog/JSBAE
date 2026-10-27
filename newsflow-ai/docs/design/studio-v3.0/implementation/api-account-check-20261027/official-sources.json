@@ -1,0 +1,62 @@
+{
+  "checked_on": "2026-10-27 KST",
+  "public_documentation_accessed": true,
+  "provider_API_requests": 0,
+  "sources": [
+    {
+      "id": "C1",
+      "title": "Claude prices",
+      "url": "https://platform.claude.com/docs/en/about-claude/pricing"
+    },
+    {
+      "id": "C2",
+      "title": "Claude model retrieval",
+      "url": "https://platform.claude.com/docs/en/api/models/retrieve"
+    },
+    {
+      "id": "O1",
+      "title": "Flare model and token pricing",
+      "url": "https://developers.openai.com/api/docs/models/gpt-image-2.5-flare"
+    },
+    {
+      "id": "O2",
+      "title": "OpenAI model retrieval",
+      "url": "https://developers.openai.com/api/reference/resources/models/methods/retrieve"
+    },
+    {
+      "id": "O3",
+      "title": "OpenAI spend limits",
+      "url": "https://developers.openai.com/api/docs/guides/spend-limits"
+    },
+    {
+      "id": "E1",
+      "title": "ElevenAPI pricing",
+      "url": "https://elevenlabs.io/pricing/api"
+    },
+    {
+      "id": "E2",
+      "title": "ElevenLabs subscription GET",
+      "url": "https://elevenlabs.io/docs/api-reference/user/subscription/get"
+    },
+    {
+      "id": "E3",
+      "title": "ElevenLabs saved voice list",
+      "url": "https://elevenlabs.io/docs/api-reference/voices/search"
+    },
+    {
+      "id": "E4",
+      "title": "ElevenLabs model list",
+      "url": "https://elevenlabs.io/docs/api-reference/models/list"
+    },
+    {
+      "id": "H1",
+      "title": "Seedance reference input schema",
+      "url": "https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video"
+    },
+    {
+      "id": "H2",
+      "title": "Higgsfield public pricing",
+      "url": "https://open.higgsfield.ai/pricing"
+    }
+  ]
+}

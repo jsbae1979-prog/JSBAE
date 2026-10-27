@@ -1,0 +1,91 @@
+{
+  "reported_at_kst": "2026-10-19T12:24:16.653141+09:00",
+  "final_tested_code_sha": "d7e74bb8f227d224a4dc494bbfb6a97ae3d80cc3",
+  "base_sha": "3c5230942466a87e5bc191961538e9bbccddc90b",
+  "branch": "codex/newsflow-ux-video-app",
+  "environment": {
+    "python": "3.12.14",
+    "pytest": "8.4.2",
+    "fastapi": "0.143.0",
+    "SQLAlchemy": "2.1.4",
+    "ruff": "0.17.0",
+    "playwright": "1.56.0",
+    "browser": "Chromium 151 (Cloud)",
+    "ffmpeg": "7.1.5",
+    "font": "Noto Sans CJK"
+  },
+  "scopes": {
+    "integrated_choices": {
+      "sha": "63431bf261eebefe1ea63e90c4e8d1eed2f77369",
+      "passed": 332,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 1,
+      "failure_ids": []
+    },
+    "legacy_impact": {
+      "sha": "63431bf261eebefe1ea63e90c4e8d1eed2f77369",
+      "passed": 236,
+      "failed": 3,
+      "errors": 0,
+      "skipped": 0,
+      "failure_ids": [
+        "tests.test_autopilot_state::test_easy_synthetic_stages_are_durable_and_ordered",
+        "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus",
+        "tests.test_ai_video_gui::test_key_form_stores_through_dpapi_store_and_never_renders_the_key"
+      ]
+    },
+    "settings_and_api_before_css_fix": {
+      "sha": "6f3fab4f66df1c30320f2e99e9e9c278918381de",
+      "passed": 547,
+      "failed": 4,
+      "errors": 0,
+      "skipped": 0,
+      "failure_ids": [
+        "tests.test_settings_streamlined_browser::test_settings_edit_save_reenter_and_creation_without_external_actions",
+        "tests.test_ai_estimate::test_gui_prices_form_and_estimate_text",
+        "tests.test_ai_estimate::test_start_and_job_pages_show_estimate_then_actual_usage",
+        "tests.test_ai_estimate::test_retried_failed_script_tokens_stay_in_the_job_total"
+      ]
+    },
+    "final_settings_ui": {
+      "sha": "d7e74bb8f227d224a4dc494bbfb6a97ae3d80cc3",
+      "passed": 95,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0,
+      "failure_ids": [
+        "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus",
+        "tests.test_ai_video_gui::test_key_form_stores_through_dpapi_store_and_never_renders_the_key"
+      ]
+    },
+    "final_all_ai_elevenlabs_ffmpeg_sample": {
+      "sha": "d7e74bb8f227d224a4dc494bbfb6a97ae3d80cc3",
+      "passed": 1,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "failure_ids": []
+    }
+  },
+  "warning": "existing Starlette/httpx TestClient deprecation; pip cache permission warning does not change dependency check result",
+  "checks": {
+    "ruff": "PASS",
+    "pip_check": "PASS",
+    "diff_check": "PASS",
+    "windows_312_314_latest_code": "NOT VERIFIED - no push / no workflow activation under current instruction",
+    "real_paid_api_calls": 0,
+    "real_oauth_sns_calls": 0,
+    "full_regression": "NOT RERUN; historical 57 FAIL preserved"
+  },
+  "core_files_unchanged_since_16_case_matrix": {
+    "src/newsflow/autopilot/backend.py": "f24d79e2401a5b6b092b1e8e145065d78a8ce70c30381ae57ce57dee7b4d9cb2",
+    "src/newsflow/autopilot/service.py": "2f97321d9324ecdabf818376d07c7c74130bb3de14e66d1a5cc433d49c536f69",
+    "src/newsflow/video/service.py": "4fbe265c5f8e5b4435fc5d2c7c32dee8e79ecf57ced388bcd1d41527521f2de0",
+    "src/newsflow/video/production_policy.py": "d9d602b14844be3b84b756833298452f35fafd318b2eaa1ec8dcdef03b7c54f9",
+    "src/newsflow/video/voice_engines.py": "f44542cf07d4afa7d1cf61a73a4371d83b417ddbfa77d7c61aa586c58c742535",
+    "src/newsflow/video/ai/service.py": "3f908dd659914c806eee0b3a20a9b44d470fc585a0b273fa21c762fa97a6c4ee"
+  },
+  "preservation": "No operational DB/key/config/MP4 access or app restart; no migration/DB model/dependency changes; no push/PR update/merge/main changes",
+  "verdict": "CONDITIONAL; Fake/Cloud integrations pass within documented scope, known regressions and operating/live validation remain"
+}

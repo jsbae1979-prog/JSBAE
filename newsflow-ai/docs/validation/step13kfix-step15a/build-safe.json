@@ -1,0 +1,10 @@
+{
+  "exit": 0,
+  "tool": "PyInstaller6.22.3",
+  "Python": "3.14.7",
+  "exe_exists": true,
+  "public_distribution": false,
+  "operating_input": false,
+  "exe_bytes": 16877478,
+  "exe_sha256": "7a59124875e27b95131297730a868eae87b3c4d76eafd2aa1a86e65a4b80898c"
+}

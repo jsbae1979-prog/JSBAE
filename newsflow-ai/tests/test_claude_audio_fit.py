@@ -1,10 +1,13 @@
 import json
 import sys
+import tempfile
 import wave
 from pathlib import Path
 from threading import Event, Timer
+from types import SimpleNamespace
 
 import pytest
+from cli_process_fixture import popen_for_script
 from conftest import csrf
 from sqlalchemy import select
 
@@ -43,6 +46,8 @@ def cli(monkeypatch, tmp_path):
     def configure(code):
         script.write_text(code, encoding="utf-8")
         monkeypatch.setattr(provider, "command", lambda *_args: [sys.executable, str(script)])
+        monkeypatch.setattr("newsflow.intelligence.claude_code.subprocess", SimpleNamespace(
+            Popen=popen_for_script(code, [sys.executable, str(script)], Path(tempfile.gettempdir()))))
         return provider
 
     return configure
@@ -181,3 +186,4 @@ def test_fake_cli_service_preserves_sources_consent_and_separate_usage(app, clie
     monkeypatch.setattr("newsflow.intelligence.claude_code.CLAUDE_PROVIDER", ClaudeCodeProvider())
     response = client.post("/ai/claude/cancel", data={"csrf_token": token})
     assert response.status_code == 200 and response.json() == {"cancel_requested": False}
+

@@ -1,0 +1,49 @@
+{
+  "scope": "Workspace navigation, dashboard, creation defaults, conditional schedule inputs; synthetic data only",
+  "windows_python_31210": {
+    "tests": 54,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "python312_warning": "Starlette TestClient httpx deprecation; no test failed",
+  "windows_python_3147": {
+    "tests": 54,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "final_width_and_payload_check": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "chrome_widths": [
+    390,
+    640,
+    980,
+    1440
+  ],
+  "populated_screens": 13,
+  "paid_api_oauth_upload_publication_requests": 0,
+  "primary_navigation": 9,
+  "expandable_tools": 4,
+  "db_migrations_added": 0,
+  "preserved": [
+    "Saved defaults",
+    "Frozen existing jobs",
+    "Paid/external consent",
+    "Script and final review",
+    "Unknown request records and retry protections",
+    "News archive GET search and all topic filters",
+    "Existing publishing services"
+  ],
+  "historical_full_regression": "Previous 57 FAIL record remains; no full regression or CI rerun claimed",
+  "not_verified": [
+    "Actual paid provider calls",
+    "Actual account OAuth",
+    "Actual media generation quality",
+    "Actual SNS publishing"
+  ]
+}

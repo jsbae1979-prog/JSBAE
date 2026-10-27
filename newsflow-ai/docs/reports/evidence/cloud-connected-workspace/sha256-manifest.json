@@ -1,0 +1,15 @@
+{
+  "cloud_connected_workspace_report.md": "79af69a1d8f50e5513171ea86f994efe97787d93682409b67113e184b6d745b8",
+  "evidence/cloud-connected-workspace/cloud-api-script-review.png": "9fcb6e62cbafe9a87b9cb62b7527078ada345d91827bee18a173ce0035c5f73f",
+  "evidence/cloud-connected-workspace/cloud-claude_api-flow.json": "31afc5baa20c01587497d5df3c1bff2ec2ce81d12c4585fd64041a216238a642",
+  "evidence/cloud-connected-workspace/cloud-openai-flow.json": "68f0f41f3d0b6a4ebb39c19ec51ba5195e31268ab815a4533d12eebb0f72700d",
+  "evidence/cloud-connected-workspace/cloud-summary.json": "75f289b1f2abb9582ce637bf55437e8080cc3594c0d6bce481e364f0b70e1860",
+  "evidence/cloud-connected-workspace/cloud-synthetic-partial-result.png": "cd9c5ff105e8157b1b65dbf9ebfbe8002972527483a0d92ad6d44515feda2c0c",
+  "evidence/cloud-connected-workspace/navigation-defect-reproduction.json": "4ad403def258900e93da64720f6a754983e0357bf7d6e9c6f5005b23afb308df",
+  "evidence/cloud-connected-workspace/preservation.json": "782c17b394370209337cfce9781a65b153b47ce6376667cc629bc399cc1f4e38",
+  "evidence/cloud-connected-workspace/prior-57-triage.json": "a5f5c0505987cabc970f67d75db6ed5a83e979aea45a74bc1a8cafe4d8631459",
+  "evidence/cloud-connected-workspace/windows-312-bat.json": "a6804fb8522c4c33510516e54137d73c3ae2cc6d20018bac740eda17473e8785",
+  "evidence/cloud-connected-workspace/windows-314-bat.json": "7ca11e903e451205665f5a10cf0ba744dacd4c3451d6294bb2109dac1deaa10f",
+  "evidence/cloud-connected-workspace/windows-actions.json": "dd4bfb02c6ce140741913389b5c7275afb15361e98055b17105655da01fdc0aa",
+  "evidence/cloud-connected-workspace/windows-attempts.json": "001908d60ef49841ac7546845a4f282c49ee16d2723bd99bc2fd882f995f7957"
+}

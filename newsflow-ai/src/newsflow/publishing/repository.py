@@ -71,6 +71,7 @@ class PublishJobRepository:
                 "description": draft.description,
                 "hashtags": draft.hashtags,
                 "ai_disclosure": draft.ai_disclosure,
+                **({"youtube_category_id": draft.youtube_category_id} if draft.platform == "youtube" else {}),
                 "media_sha256": draft.media_sha256,
                 "simulation_only": True,
                 "account_id": draft.account_id,

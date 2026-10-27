@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-10-27T08:07:31.7740312+09:00",
+  "operating_port8765": [
+    {
+      "LocalPort": 8765,
+      "OwningProcess": 55740
+    }
+  ],
+  "test_port18765_listeners": 0,
+  "test_matching_processes": 0,
+  "operating_restart_this_task": 0,
+  "operating_http_requests": 0,
+  "backup_AB_writes": 0
+}

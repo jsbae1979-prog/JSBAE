@@ -7,6 +7,7 @@ of produced audio and never replace the actual WAV duration check in the rendere
 from __future__ import annotations
 
 import re
+from math import floor, isfinite
 
 # Typical Korean SAPI narration at rate 0: about 5 syllables (characters) per second.
 CHARS_PER_SECOND = 5.0
@@ -43,12 +44,28 @@ def speech_seconds(text: str, rate: int = 0, pause_ms: int = 250) -> float:
     return round(seconds, 2)
 
 
-def speech_plan(content: dict, duration: int, rate: int = 0, pause_ms: int = 250) -> dict:
+def narration_budget(seconds: int, sentences: int, *, rate: int = 0, pause_ms: int = 250,
+                     speed: float = 1.0, timing_ratio: float = 1) -> dict:
+    """A countable writing ceiling, alongside (not instead of) the speech estimate."""
+    validate_timing_ratio(timing_ratio)
+    pauses = SENTENCE_PAUSE_SECONDS * sentences + pause_ms / 1000 * max(0, sentences - 1)
+    units = max(1, floor((seconds * .97 / timing_ratio - pauses) * CHARS_PER_SECOND * rate_factor(rate) * speed))
+    return {'seconds': seconds, 'maximum_sentences': sentences, 'maximum_spoken_units': units,
+            'maximum_characters': min(400, max(1, floor(units * 1.5)))}
+
+
+def validate_timing_ratio(value):
+    if type(value) not in (int, float) or not isfinite(value) or not .65 <= value <= 1.4:
+        raise ValueError('음성 분량 안내의 측정 근거를 확인하세요.')
+
+
+def speech_plan(content: dict, duration: int, rate: int = 0, pause_ms: int = 250, *, timing_ratio: float = 1) -> dict:
     """Per-scene estimates against the scene budget; scene seconds are the script's own values."""
+    validate_timing_ratio(timing_ratio)
     scenes = []
     total = 0.0
     for index, scene in enumerate(content.get("scenes", []), 1):
-        estimate = speech_seconds(str(scene.get("narration", "")), rate, pause_ms)
+        estimate = round(speech_seconds(str(scene.get("narration", "")), rate, pause_ms) * timing_ratio, 2)
         budget = float(scene.get("seconds", 0))
         total += estimate
         scenes.append({
@@ -65,7 +82,8 @@ def _numbers(text: str) -> set[str]:
     return set(re.findall(r"\d+(?:[.,]\d+)?", text))
 
 
-def assess_script(content: dict, evidence: dict, duration: int, rate: int = 0, pause_ms: int = 250) -> list[dict]:
+def assess_script(content: dict, evidence: dict, duration: int, rate: int = 0, pause_ms: int = 250,
+                  *, timing_ratio: float = 1) -> list[dict]:
     """Deterministic review findings; they flag, never approve, and never rewrite the script."""
     notes: list[dict] = []
     articles = evidence.get("articles", []) if isinstance(evidence, dict) else []
@@ -95,7 +113,7 @@ def assess_script(content: dict, evidence: dict, duration: int, rate: int = 0, p
             "code": "unknown_publication_date", "level": "info",
             "message": "원문 발행 시각을 확인하지 못한 기사가 있습니다. 시점을 단정하는 표현이 없는지 확인하세요.",
         })
-    plan = speech_plan(content, duration, rate, pause_ms)
+    plan = speech_plan(content, duration, rate, pause_ms, timing_ratio=timing_ratio)
     for scene in plan["scenes"]:
         if not scene["fits"]:
             notes.append({

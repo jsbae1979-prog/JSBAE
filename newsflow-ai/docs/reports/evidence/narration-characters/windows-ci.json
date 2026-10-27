@@ -1,0 +1,20 @@
+{
+  "implementation_sha": "e5486ab83cff143231aebaa8724c87b715ca0959",
+  "workflow_run_id": 39911345234,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39911345234",
+  "conclusion": "success",
+  "targets": "tools/explainer_review_targets.txt",
+  "jobs": [
+    {"id": 120274829746, "python": "3.12.10", "passed": 291, "failed": 0, "skipped": 0, "warnings": 1, "ruff": "PASS", "pip_check": "PASS"},
+    {"id": 120274829947, "python": "3.14.8", "passed": 291, "failed": 0, "skipped": 0, "warnings": 1, "ruff": "PASS", "pip_check": "PASS"}
+  ],
+  "local_windows_python": "3.14.7",
+  "local_passed": 291,
+  "live_ai_calls": 0,
+  "real_auth_tts_render_oauth_upload_publish_calls": 0,
+  "new_live_generation_quality": "NOT VERIFIED",
+  "operating_application_or_data_changes": false,
+  "previous_response_54_unchanged": true,
+  "full_regression_run": false,
+  "historical_full_regression_failures_preserved": 57
+}

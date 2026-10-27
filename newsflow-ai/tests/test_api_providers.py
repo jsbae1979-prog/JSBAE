@@ -24,8 +24,11 @@ KEY = "unit-test-not-a-credential"
 
 def test_explicit_search_output_limit_9000_is_supported_but_still_bounded():
     assert Options(model="claude-sonnet-4-6", max_tokens=9000).max_tokens == 9000
+    assert Options(model="claude-sonnet-4-6", max_tokens=100_000).max_tokens == 100_000
     with pytest.raises(ValueError):
-        Options(model="claude-sonnet-4-6", max_tokens=9001)
+        Options(model="claude-sonnet-4-6", max_tokens=100_001)
+    with pytest.raises(ValueError):
+        Options(model="gpt-4o-mini", max_tokens=9001)
 
 
 def article_payload():

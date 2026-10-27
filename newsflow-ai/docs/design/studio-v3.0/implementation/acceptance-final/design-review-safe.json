@@ -1,0 +1,263 @@
+{
+  "reviewed_existing_captures": 24,
+  "new_browser_tests": 0,
+  "new_ui_changes": 0,
+  "confirmed_severe_overlap": 0,
+  "master_sha256": "ee910d5d975fffdd551f26a097051b1f998caea415246fdf8a33b48255de9b99",
+  "design_acceptance": "CONDITIONAL",
+  "scope": "manual visual review of existing synthetic captures, not Windows DPI or user approval",
+  "screens": [
+    {
+      "screen": "dashboard",
+      "name": "대시보드",
+      "design_status": "CONDITIONAL",
+      "observed": "히어로·좌측 메뉴·최근 프로젝트·빠른 제작·우측 패널 순서 유지.",
+      "remaining_difference": "마스터보다 발광·그림자를 줄였고 히어로 그림 크롭과 행간이 다름. 1366 높이에서 빠른 제작 하단은 스크롤 필요. 계정 사진·네이티브 창 버튼·크레딧 업그레이드는 구현 계약에 맞는 로컬 작업실로 표시. 예시 수치·일정은 복사하지 않음.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/dashboard-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "362762e19aac7a51d7bf9da0f2250502b7b31c2c27ec4d2da779ef68c6da88f5"
+        },
+        {
+          "file": "../screenshots-v2/dashboard-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "2a39a2d9d898606cc125a52a00cf2e010ee7b0a0a98258d65191b2f72944e17f"
+        }
+      ]
+    },
+    {
+      "screen": "create",
+      "name": "콘텐츠 제작 홈",
+      "design_status": "CONDITIONAL",
+      "observed": "뉴스/캐릭터/이미지 카드와 이어서 작업하기 유지.",
+      "remaining_difference": "1366에서 얼굴 크롭이 확대됨. 1920 캡처의 첫 3개 프로젝트 썸네일 영역이 비어 있음. lazy-load/캡처 시점인지 제품 오류인지 현재 정지 이미지로 확정 불가. 기존 1366 캡처에는 표시됨; 최종 시각 인수는 유보.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/create-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "4e573761fe54d9725c510d8a16ae6ea0177c0b01304d13eee9b595296697c2d3"
+        },
+        {
+          "file": "../screenshots-v2/create-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "a847a5c9067d010bbaeafddfd0f93ab5e0d1ce6cb5ffbd56c196574e4cce2660"
+        }
+      ]
+    },
+    {
+      "screen": "news",
+      "name": "뉴스 스튜디오",
+      "design_status": "PASS",
+      "observed": "검색·주제 탭·목록·출처 패널과 공통 색상/아이콘 정렬 확인.",
+      "remaining_difference": "마스터는 해당 상세 화면 시안이 없으므로 픽셀 일치를 주장하지 않음. 작은 창에서 기사 선택 뒤 출처를 보는 구성이며 필수 항목 겹침은 캡처에서 발견하지 못함.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/news-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "e89efb1373a1a362a43064e7fe58846cf2dfac91e82a97a9b5c612918d06f39b"
+        },
+        {
+          "file": "../screenshots-v2/news-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "97d27ce987fa9c1c16013c81ca13f630bad256cda74694e297c6d70f1086249e"
+        }
+      ]
+    },
+    {
+      "screen": "shorts",
+      "name": "뉴스 쇼츠 제작실",
+      "design_status": "CONDITIONAL",
+      "observed": "대본·자막·검토 메모 분리, 장면 선택과 우측 9:16 재생 영역 확인.",
+      "remaining_difference": "긴 편집 페이지 때문에 음성·AI 계획은 아래로 스크롤. 가로 원본 테스트 영상은 세로 플레이어에 검은 여백으로 표시됨. 이는 실제 세로 FFmpeg 결과의 프레이밍 증거가 아님. full-page 캡처의 고정 메뉴 위치는 실제 viewport와 구분.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/shorts-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "8889433383d446fa836f37801e46cb5068ab8539858e0881fce805b2406b9afa"
+        },
+        {
+          "file": "../screenshots-v2/shorts-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "80e358dd2af76504dd7fddf385ae4a34094ae07490070c70692e3cca25b16030"
+        }
+      ]
+    },
+    {
+      "screen": "characters",
+      "name": "캐릭터 쇼츠 제작실",
+      "design_status": "CONDITIONAL",
+      "observed": "스토리보드 3장·견적/생성/조회/합성 버튼과 상태 표시 확인.",
+      "remaining_difference": "검증된 완성 영상이 없는 큰 미리보기는 빈 상태. 참조 PNG는 우측 설정 영역이 미리보기 뒤에 있어 첫 viewport에서 보이지 않음. 기존 캡처에는 referenceUrl이 채워진 실제 표시 증거가 부족. 참조 PNG 렌더링의 최종 시각 인수는 NOT VERIFIED.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/characters-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "327b994f276424218286a7c7e9fbf1adfa7c31240a83be5da9d9adce756645b4"
+        },
+        {
+          "file": "../screenshots-v2/characters-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "af23a94bc5c5385eab5c5a1f00831669e28b3e257189b855e1b4a1f18d8439d2"
+        }
+      ]
+    },
+    {
+      "screen": "images",
+      "name": "이미지 제작실",
+      "design_status": "CONDITIONAL",
+      "observed": "독립 AI 이미지/뉴스 게시물은 탭·초안·동작이 분리됨. 실패·결과 불명은 빈 캔버스.",
+      "remaining_difference": "1366 기본 탭 캡처는 중간 스크롤 위치이고 뉴스 탭 캡처는 첫 화면. 두 방식 모두 같은 위치에서 비교한 최종 캡처가 아님. 긴 모델 이름은 줄바꿈. 참조 기반 유료 편집은 미구현 안내 유지.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/images-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "db9851c931e9a5919adf2bde8bf9edfb9958eda6518288ca10a00578f98ffe35"
+        },
+        {
+          "file": "../screenshots-v2/images-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "4e91172ec6667c1c07f2a054792088f77cfc1e2337440b6489e84b473d5dc409"
+        }
+      ]
+    },
+    {
+      "screen": "automation",
+      "name": "자동화 센터",
+      "design_status": "PASS",
+      "observed": "예약 상태와 선택 패널, 실행 기록의 공통 카드/문구 확인.",
+      "remaining_difference": "선택 전 빈 상태가 넓지만 데이터와 실행 이력을 임의 샘플로 채우지 않음. 마스터의 예정 일정 장식과 실제 예약 목록은 동일 목적이 아님.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/automation-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "2e792543d5087e4e661c427e774b9479e3ed54a5077ee257d3727c7bcdecc304"
+        },
+        {
+          "file": "../screenshots-v2/automation-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "d60af885293669126654d4a2573fe84dc83cee254d3993da0de7c1b620cec3b5"
+        }
+      ]
+    },
+    {
+      "screen": "library",
+      "name": "라이브러리",
+      "design_status": "CONDITIONAL",
+      "observed": "유형 필터·자료 카드·휴지 보관의 구조와 상태 확인.",
+      "remaining_difference": "1366에서 3열/1920에서 4열. 합성 디자인 자산에 포함된 시간 그림이 잘리는 썸네일이 있음. 이것을 실제 영상 길이 메타데이터로 인정하지 않음. 운영 데이터의 실제 썸네일 경로와는 구분.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/library-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "4dc9f446596a5fa96bf447480b81f74cc1ab1f0b2939a43f6d0e7a9c2f6bca05"
+        },
+        {
+          "file": "../screenshots-v2/library-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "8927b2a0f249a47873f2719235b7ee79b707b99295fd4ec6d3bf7b24335d1e1c"
+        }
+      ]
+    },
+    {
+      "screen": "publishing",
+      "name": "게시 스튜디오",
+      "design_status": "PASS",
+      "observed": "로컬 초안·플랫폼 결과·검토·계정·단일 이미지 영역 분리 확인.",
+      "remaining_difference": "미선택 상태와 이력 없음 영역은 마스터보다 여백이 큼. 공개 게시 없이 실제 계정/완성 이력이 차 있는 상세 화면의 최종 디자인은 미검증.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/publishing-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "34c7a43f30e2361c4e0ed0923e1efa4245e42eb4db4b2c18b6d23277c6216253"
+        },
+        {
+          "file": "../screenshots-v2/publishing-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "9294eaa422f866984cb45a3f114d964eacd5df92e7cb0faa4a6d289d51f93b96"
+        }
+      ]
+    },
+    {
+      "screen": "analytics",
+      "name": "성과·비용",
+      "design_status": "PASS",
+      "observed": "성과·사용량 표·결과 불명 기록의 제목/색상/간격 확인.",
+      "remaining_difference": "실제 성과가 없으므로 빈 상태 유지. 마스터의 예시 상승률/크레딧 수치를 만들어 넣지 않음. 대량 행·긴 비용 기록의 시각 인수는 별도.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/analytics-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "b9bcf5f55d28adac3df3f7989645b3e26726827f9932b6c3a96741b0a2b697ed"
+        },
+        {
+          "file": "../screenshots-v2/analytics-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "4ee2d3ea0b654ee8c3d3bfdc149953d0b3a10042a4daa35a740536c76fa6488f"
+        }
+      ]
+    },
+    {
+      "screen": "settings",
+      "name": "설정·관리",
+      "design_status": "CONDITIONAL",
+      "observed": "제작 기본값·연결 상태·모델·Windows/검토 패널의 공통 체계 확인.",
+      "remaining_difference": "1920은 기본값 3열/1366은 2열. API 키 저장이라는 같은 글자의 버튼 2개가 있어 공급사 식별은 다이얼로그에서 해야 함. 버튼 간격이 촘촘하나 겹침 확정 없음. 네이티브 OS 동작과 DPI는 미검증.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/settings-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "5cba1b8c002557d8b775baca78ba7b4cfc74b850bda0df4a4f840fbd0a985366"
+        },
+        {
+          "file": "../screenshots-v2/settings-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "2821cd2b4a71c7e031bf26ce6dde74addced9850a93acaf79c1574dbeb3cd7b9"
+        }
+      ]
+    },
+    {
+      "screen": "onboarding",
+      "name": "초기 설정",
+      "design_status": "PASS",
+      "observed": "7단계와 저장·준비 상태·로컬 점검의 명시적 행동 확인.",
+      "remaining_difference": "마스터에 상세 시안 없음. 단계 카드 높이·하단 접기 메뉴는 업무별 확장; 실제 Windows 배율과 장문 오류는 현재 캡처로 승인하지 않음.",
+      "captures": [
+        {
+          "file": "../screenshots-v2/onboarding-1920.png",
+          "width": 1920,
+          "height": 1080,
+          "sha256": "54f9310f39d5c67f791c734842c574cdef83e0051a555f2ee94630c232393d8b"
+        },
+        {
+          "file": "../screenshots-v2/onboarding-1366.png",
+          "width": 1366,
+          "height": 768,
+          "sha256": "0f0f8d12ae0ded03c2f41de81377a5035b373ea4210e1c0fc98bf9a6521f1e49"
+        }
+      ]
+    }
+  ]
+}

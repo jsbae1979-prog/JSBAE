@@ -1,0 +1,88 @@
+{
+  "run": 40359338411,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40359338411",
+  "sha": "f64043b2df34c49c498c3349d721e4a75dd56703",
+  "conclusion": "success",
+  "windows_python": "3.14.7",
+  "react_build": "PASS",
+  "readmodel_pass": 26,
+  "app_integration_pass": 10,
+  "existing_integration_tests": 5,
+  "new_acceptance_tests": 5,
+  "focused_pass": 36,
+  "fail": 0,
+  "error": 0,
+  "new_skip_xfail": 0,
+  "whole_regression_rerun": false,
+  "previous_full_regression": "5454 PASS / 4 SKIP: prior evidence only",
+  "existing_windows_identity_fail": 1,
+  "first_attempt": {
+    "run": 40358766769,
+    "readmodel_pass": 26,
+    "integration_pass": 9,
+    "integration_fail": 1,
+    "cause": "new fixture omitted required youtube_category_id; product rejected with 422",
+    "resolved_by": "explicit category 25 in synthetic fixture; assertions unchanged"
+  },
+  "steps": [
+    {
+      "name": "Set up job",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@v5",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-node@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-python@v6",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install pinned frontend dependencies",
+      "conclusion": "success"
+    },
+    {
+      "name": "Typecheck and build React",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install isolated read-model test dependencies",
+      "conclusion": "success"
+    },
+    {
+      "name": "Synthetic read-only projection tests, no full app or provider calls",
+      "conclusion": "success"
+    },
+    {
+      "name": "Approved Windows disposable synthetic full-app form integration",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/upload-artifact@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/setup-python@v6",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/setup-node@v4",
+      "conclusion": "success"
+    },
+    {
+      "name": "Post Run actions/checkout@v5",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "conclusion": "success"
+    }
+  ],
+  "actual_paid_api_calls": 0,
+  "actual_oauth_calls": 0,
+  "actual_sns_posts": 0
+}

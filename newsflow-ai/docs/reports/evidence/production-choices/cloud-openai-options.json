@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "provider": "openai",
+  "analysis_script_calls": [
+    "search",
+    "analysis",
+    "script"
+  ],
+  "voice": "ElevenLabs adapter + synthetic silent PCM transport",
+  "voice_fake_posts": 3,
+  "script_review": "skipped; automatic checks passed; not human verified",
+  "final_review": "waiting; no publish draft",
+  "media": {
+    "format": "mov,mp4,m4a,3gp,3g2,mj2",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "width": 1080,
+    "height": 1920,
+    "duration": 30.021029,
+    "fps": 30.0,
+    "audio_channels": 2,
+    "playable": true
+  },
+  "actual_external_calls": 0,
+  "human_voice_quality": "NOT VERIFIED",
+  "javascript_errors": []
+}

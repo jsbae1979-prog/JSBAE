@@ -1,0 +1,43 @@
+{
+  "Python": "3.14.7",
+  "single_full": {
+    "passed": 5454,
+    "skipped": 4,
+    "failure": 0,
+    "error": 0
+  },
+  "total_unique_IDs": 5458,
+  "previous_single_full": {
+    "passed": 5419,
+    "failure": 33,
+    "error": 0,
+    "skipped": 4
+  },
+  "previous_latest_ID_aggregate": {
+    "passed": 5451,
+    "failure": 1,
+    "error": 0,
+    "skipped": 4
+  },
+  "existing_IDs_missing_after_documented_UUID_normalization": [],
+  "added_IDs": [
+    "tests.test_windows::test_connection_reset_still_shuts_down_and_releases_port",
+    "tests.test_windows::test_windows_http_loop_is_local_and_supports_server_contract"
+  ],
+  "existing_full_failures_now_PASS": 33,
+  "already_fixed_in_prior_ID_aggregate": 32,
+  "this_shutdown_failure_now_PASS": 1,
+  "same_skip_IDs": true,
+  "new_failed_IDs": [],
+  "random_UUID_parameter_changes": 1,
+  "UUID_evidence": "test_easy_ui.py:255-257 uses uuid4().hex at collection; no source change",
+  "raw_IDs_removed": [
+    "tests.test_easy_ui::test_missing_or_malformed_task_is_not_found[/autopilot/jobs/ece9518f3d1e489f85ec575ad5c56424]"
+  ],
+  "raw_IDs_added": [
+    "tests.test_easy_ui::test_missing_or_malformed_task_is_not_found[/autopilot/jobs/5261c4284dc44bb39ecac06d73c1e5f6]",
+    "tests.test_windows::test_connection_reset_still_shuts_down_and_releases_port",
+    "tests.test_windows::test_windows_http_loop_is_local_and_supports_server_contract"
+  ],
+  "duration_seconds": 2167.75
+}

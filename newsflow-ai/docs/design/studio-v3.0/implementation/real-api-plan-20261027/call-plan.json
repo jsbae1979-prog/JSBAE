@@ -1,0 +1,128 @@
+{
+  "plan_only": true,
+  "actual_calls_today": 0,
+  "accounts_queried_today": 0,
+  "scopes": [
+    {
+      "scope": "RSS",
+      "selected": "One approved public RSS source; no article scraping or thumbnail download",
+      "minimum_HTTP": 2,
+      "maximum_HTTP_current_code": 20,
+      "explanation": "One logical feed includes robots.txt; redirects can raise HTTP count. Feed URL/host must be approved. No RSS request was sent today.",
+      "key": "none",
+      "status": "CONDITIONAL"
+    },
+    {
+      "scope": "SerpApi",
+      "selected": "google_news; KR/ko; q=도서관 독서 안내; no Trends",
+      "generation_or_search_requests": 1,
+      "key": "dedicated test key, 1 available search credit",
+      "price": "1 successful search credit; incremental $0 only if confirmed within existing allowance; no subscription purchase/auto renewal",
+      "status": "AWAITING KEY/APPROVAL"
+    },
+    {
+      "scope": "News text",
+      "selected": "claude-sonnet-4-6; analysis once + STANDARD 30s script once; tools/search off",
+      "generation_requests": 2,
+      "optional_model_GET": 1,
+      "optional_count_token_POST": 2,
+      "output_token_cap_each": 3000,
+      "base_options_for_V2": {
+        "analysis": 2600,
+        "script": 2400
+      },
+      "key": "dedicated Anthropic test workspace key",
+      "status": "CONDITIONAL"
+    },
+    {
+      "scope": "OpenAI text comparison",
+      "selected": "gpt-4.1-mini; separate explicit selection, not fallback",
+      "generation_requests": 2,
+      "optional_model_GET": 1,
+      "status": "OPTIONAL / DEPRECATED MODEL, NO AUTO REPLACEMENT"
+    },
+    {
+      "scope": "ElevenLabs",
+      "selected": "eleven_multilingual_v2; female voice ID pending; reviewed script N<=3 scenes, total <=200 characters",
+      "prior_subscription_GET": 1,
+      "saved_voice_list_GET": 1,
+      "generation_POST": {
+        "min": 1,
+        "max": 3
+      },
+      "subscription_GET_inside_generation": {
+        "min": 1,
+        "max": 3
+      },
+      "optional_extra_smoke": "1 separate POST plus 1 subscription GET only if separately approved; never silently added",
+      "status": "CONDITIONAL / BILLING-SCHEMA AND VOICE PENDING"
+    },
+    {
+      "scope": "Independent image",
+      "selected": "gpt-image-2.5-flare-2026-09-08 / 1024x1024 low / JPEG / n=1 / no reference",
+      "generation_requests": 1,
+      "optional_model_GET": 1,
+      "alternative_sunburst": "1 generation only with separate approval, not automatic fallback",
+      "status": "BLOCKED FOR PAID EXECUTION UNTIL COST/KEY/APPROVAL RESOLVED"
+    },
+    {
+      "scope": "News AI video smoke",
+      "selected": "kling-video/v3.0-turbo/text-to-video / 720p 9:16 5s; NOT full-news production",
+      "estimate_POST": 1,
+      "generation_POST": 1,
+      "status_GET": {
+        "min": 1,
+        "max": 30
+      },
+      "download_GET": {
+        "min": 1,
+        "max": 4
+      },
+      "generation_cost": "Exact quote pending",
+      "status": "BLOCKED PENDING QUOTE/ACCOUNT/APPROVAL"
+    },
+    {
+      "scope": "Full news AI video",
+      "selected": "All selected visual scenes, N frozen after script review; no card substitution",
+      "estimate_POST": "N",
+      "generation_POST": "N",
+      "status_GET_max": "30*N",
+      "download_GET_max": "4*N",
+      "status": "SEPARATE FULL-SCENE APPROVAL; NOT COVERED BY ONE-CLIP SMOKE"
+    },
+    {
+      "scope": "Character 30s",
+      "selected": "Sonnet story once; Seedance reference 720p 9:16; three 10s scenes; silent; no ElevenLabs",
+      "Claude_generation_POST": 1,
+      "optional_count_token_POST": 1,
+      "upload_url_POST": 1,
+      "reference_upload_PUT": 1,
+      "estimate_POST": 3,
+      "generation_POST": 3,
+      "status_GET": {
+        "min": 3,
+        "max": 90
+      },
+      "download_GET": {
+        "min": 3,
+        "max": 12
+      },
+      "minimum_HTTP_without_optional_token_count": 15,
+      "maximum_HTTP_with_optional_token_count": 112,
+      "story_other_scene_count": "STOP if generated story has 4 or 5 scenes; no unapproved extra estimates/generations",
+      "status": "BLOCKED PENDING REFERENCE/QUOTE/ACCOUNT/APPROVAL"
+    },
+    {
+      "scope": "FFmpeg",
+      "selected": "Reuse local approved composition path; 1080x1920 30s",
+      "provider_requests": 0,
+      "status": "READY / PRIOR PASS REUSED"
+    },
+    {
+      "scope": "SNS",
+      "selected": "Instagram / YouTube / TikTok",
+      "requests": 0,
+      "status": "NOT AUTHORIZED"
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "commit": "0a59bfb41eec6b243e4470f67cd53c1e7cd07e52",
+  "files": {
+    "newsflow-ai/src/newsflow/main.py": "c6286c6fd514b8d9d5b16cc94f63e345f26306380f25bd44761690baea6dda3e",
+    "newsflow-ai/run.bat": "fb3e277cd05b0e6e507b5252b6174589f9a53f715afd23883754d7b98f3a5877",
+    "newsflow-ai/tools/windows_launcher.py": "b481e99f743d9c59f4e5d541fa590b290be04c8d82af2202b69d8811b5ce4424",
+    "newsflow-ai/pyproject.toml": "adabdeebad2c417cd55ef7dac4087df3490891ddd71116f423f965e511fc389e",
+    "newsflow-ai/requirements-dev.lock": "24717350881220386b70ef8d6a49fd99b9367ccc90c1de76e6bd511f153c9cea"
+  },
+  "provenance": [
+    {
+      "path": "newsflow-ai/src/newsflow/main.py",
+      "bytes": 18481,
+      "SHA256": "c6286c6fd514b8d9d5b16cc94f63e345f26306380f25bd44761690baea6dda3e",
+      "Git_blob": "74f91bb29ac06312f7411ee1c7e9c8338d455a24"
+    },
+    {
+      "path": "newsflow-ai/run.bat",
+      "bytes": 1562,
+      "SHA256": "fb3e277cd05b0e6e507b5252b6174589f9a53f715afd23883754d7b98f3a5877",
+      "Git_blob": "0173941ba0b4d7810ee576031691863f19df722b"
+    },
+    {
+      "path": "newsflow-ai/tools/windows_launcher.py",
+      "bytes": 6276,
+      "SHA256": "b481e99f743d9c59f4e5d541fa590b290be04c8d82af2202b69d8811b5ce4424",
+      "Git_blob": "fb4829f3a83d6660b2d7ed44dcc9f7036c678880"
+    },
+    {
+      "path": "newsflow-ai/pyproject.toml",
+      "bytes": 1502,
+      "SHA256": "adabdeebad2c417cd55ef7dac4087df3490891ddd71116f423f965e511fc389e",
+      "Git_blob": "914140d04a22a4790a9fde1cf0404561652256a9"
+    },
+    {
+      "path": "newsflow-ai/requirements-dev.lock",
+      "bytes": 638,
+      "SHA256": "24717350881220386b70ef8d6a49fd99b9367ccc90c1de76e6bd511f153c9cea",
+      "Git_blob": "33248276e47358d0951ac77ed588ee79da9a838c"
+    }
+  ],
+  "source": "GitHub immutable commit read; no operating Git"
+}

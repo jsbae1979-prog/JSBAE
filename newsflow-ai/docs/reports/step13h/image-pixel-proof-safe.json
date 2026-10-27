@@ -1,0 +1,1 @@
+{"size": [1080, 1920], "all_scenes": [{"scene": 0, "pixel": [211, 33, 32], "expected": [213, 34, 34], "PASS": true}, {"scene": 1, "pixel": [32, 180, 51], "expected": [34, 181, 51], "PASS": true}, {"scene": 2, "pixel": [34, 86, 219], "expected": [36, 86, 220], "PASS": true}]}

@@ -1,0 +1,80 @@
+......F.FFF.............                                                 [100%]
+=================================== FAILURES ===================================
+_ test_topic_search_honestly_uses_existing_news_search_not_new_generation_contract _
+
+client = <starlette.testclient.TestClient object at 0x7f4e9191c710>
+
+    def test_topic_search_honestly_uses_existing_news_search_not_new_generation_contract(client):
+        response = client.get("/")
+        assert 'action="/news" method="get" data-topic-search' in response.text
+        assert 'id="home-topic" name="q"' in response.text
+        assert "이미 수집해 보관한 기사만 검색합니다" in response.text
+        assert "보관 기사 검색" in response.text
+        assert "기사를 선택한 뒤 분석·대본 작성" in response.text
+        assert "새 기사 URL 가져오기" in response.text
+        assert '<option value="VERIFIED"' not in response.text
+        create = client.get("/create").text
+        assert 'action="/autopilot/quick-start"' in create and 'name="csrf_token"' in create
+        for step in ("자료 준비", "대본 작성", "음성·영상 제작", "미리보기"):
+>           assert step in create
+E           assert '자료 준비' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini... 내용·출처·권리를 직접 확인해 주세요.</p>\n</div><script src="/static/js/home_production.js" defer></script>\n</main>\n</body></html>'
+
+tests/test_creator_ui.py:51: AssertionError
+__ test_editor_never_invents_a_preview_for_invalid_output[running-True-True] ___
+
+client = <starlette.testclient.TestClient object at 0x7f4e916cbda0>
+app = <fastapi.applications.FastAPI object at 0x7f4e91cd6d50>
+status = 'running', playable = True, exists = True
+
+    @pytest.mark.parametrize("status,playable,exists", [("running", True, True), ("success", False, True), ("success", True, False)])
+    def test_editor_never_invents_a_preview_for_invalid_output(client, app, status, playable, exists):
+        media = video_fixture(app, "영상 확인 필요", status=status, playable=playable, exists=exists)
+        page = client.get(f'/ai?draft_id={media["draft_id"]}')
+        assert page.context["preview"] is None
+        assert 'data-editor-player' not in page.text
+>       assert '영상이 준비되면' in page.text
+E       assert '영상이 준비되면' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...pan class="badge success">성공</span> · 합성 fixture · 2026-10-24 11:01 KST</p></details>\n</div>\n</main>\n</body></html>'
+E        +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...pan class="badge success">성공</span> · 합성 fixture · 2026-10-24 11:01 KST</p></details>\n</div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+
+tests/test_creator_ui.py:74: AssertionError
+__ test_editor_never_invents_a_preview_for_invalid_output[success-False-True] __
+
+client = <starlette.testclient.TestClient object at 0x7f4e9185af30>
+app = <fastapi.applications.FastAPI object at 0x7f4e91d20a40>
+status = 'success', playable = False, exists = True
+
+    @pytest.mark.parametrize("status,playable,exists", [("running", True, True), ("success", False, True), ("success", True, False)])
+    def test_editor_never_invents_a_preview_for_invalid_output(client, app, status, playable, exists):
+        media = video_fixture(app, "영상 확인 필요", status=status, playable=playable, exists=exists)
+        page = client.get(f'/ai?draft_id={media["draft_id"]}')
+        assert page.context["preview"] is None
+        assert 'data-editor-player' not in page.text
+>       assert '영상이 준비되면' in page.text
+E       assert '영상이 준비되면' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...pan class="badge success">성공</span> · 합성 fixture · 2026-10-24 11:01 KST</p></details>\n</div>\n</main>\n</body></html>'
+E        +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...pan class="badge success">성공</span> · 합성 fixture · 2026-10-24 11:01 KST</p></details>\n</div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+
+tests/test_creator_ui.py:74: AssertionError
+__ test_editor_never_invents_a_preview_for_invalid_output[success-True-False] __
+
+client = <starlette.testclient.TestClient object at 0x7f4e9196e3f0>
+app = <fastapi.applications.FastAPI object at 0x7f4e91400260>
+status = 'success', playable = True, exists = False
+
+    @pytest.mark.parametrize("status,playable,exists", [("running", True, True), ("success", False, True), ("success", True, False)])
+    def test_editor_never_invents_a_preview_for_invalid_output(client, app, status, playable, exists):
+        media = video_fixture(app, "영상 확인 필요", status=status, playable=playable, exists=exists)
+        page = client.get(f'/ai?draft_id={media["draft_id"]}')
+        assert page.context["preview"] is None
+        assert 'data-editor-player' not in page.text
+>       assert '영상이 준비되면' in page.text
+E       assert '영상이 준비되면' in '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...pan class="badge success">성공</span> · 합성 fixture · 2026-10-24 11:01 KST</p></details>\n</div>\n</main>\n</body></html>'
+E        +  where '\n<!doctype html>\n<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, ini...pan class="badge success">성공</span> · 합성 fixture · 2026-10-24 11:01 KST</p></details>\n</div>\n</main>\n</body></html>' = <Response [200 OK]>.text
+
+tests/test_creator_ui.py:74: AssertionError
+=============================== warnings summary ===============================
+../../../workspace/JSBAE/newsflow-ai/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/JSBAE/newsflow-ai/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+4 failed, 20 passed, 1 warning in 21.32s

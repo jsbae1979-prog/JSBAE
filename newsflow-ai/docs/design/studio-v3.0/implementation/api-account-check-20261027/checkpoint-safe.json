@@ -1,0 +1,25 @@
+{
+  "status": "BLOCKED for authenticated provider verification",
+  "public_document_review": "completed",
+  "source_product": "476d14a",
+  "basis_plan": "c2e6681",
+  "branch": "codex/newsflow-studio-v3-20261026",
+  "provider_API_calls": {
+    "Claude": 0,
+    "OpenAI": 0,
+    "ElevenLabs": 0,
+    "Higgsfield": 0
+  },
+  "total_provider_API_calls": 0,
+  "generation_calls": 0,
+  "source_changes": 0,
+  "old_tests_reused": {
+    "EXE_PASS": 15,
+    "Windows_Actions_PASS": 42
+  },
+  "operating_restart": 0,
+  "operating_DB_ledger_writes": 0,
+  "backup_AB_writes": 0,
+  "PR35_draft": true,
+  "next": "Need an explicitly identified dedicated test credential/profile. Do not use operating credentials, weaken the Fake EXE boundary or perform any generation."
+}

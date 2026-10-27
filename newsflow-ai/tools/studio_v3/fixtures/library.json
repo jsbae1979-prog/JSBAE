@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "module": "library",
+  "dataOrigin": "development-fixtures",
+  "csrfToken": "studio-synthetic-local-only",
+  "commandsAvailable": true,
+  "collections": {
+    "removed": [
+      {
+        "key": "activity:sample",
+        "title": "합성 휴지 보관 기록",
+        "created_at": "2026-10-26T09:00:00+00:00"
+      }
+    ]
+  },
+  "catalog": {
+    "apiModels": {
+      "openai": [
+        "gpt-4.1-mini"
+      ],
+      "claude_api": [
+        "claude-sonnet-4-6",
+        "claude-haiku-4-5-20251001"
+      ]
+    },
+    "imageModels": [
+      "gpt-image-2.5-flare-2026-09-08",
+      "gpt-image-2.5-sunburst-2026-09-08"
+    ],
+    "sizes": {
+      "1024x1280": "4:5 · 피드",
+      "1024x1024": "1:1 · 정사각형",
+      "864x1536": "9:16 · 영상"
+    },
+    "qualities": {
+      "low": "초안",
+      "medium": "표준 · 추천",
+      "high": "고품질"
+    },
+    "imageDefaults": {
+      "provider": "openai",
+      "model": "gpt-image-2.5-flare-2026-09-08",
+      "size": "1024x1280",
+      "quality": "medium"
+    },
+    "characterDefaults": {
+      "script_provider": "claude_api",
+      "script_model": "claude-sonnet-4-6",
+      "video_provider": "higgsfield",
+      "video_model": "bytedance/seedance-2.0/reference-to-video",
+      "resolution": "720p",
+      "aspect_ratio": "9:16"
+    },
+    "referenceAssets": [],
+    "voices": [
+      {
+        "id": "offline-silence",
+        "label": "무음 검토영상"
+      },
+      {
+        "id": "supertonic:F2",
+        "label": "Supertonic · 여성 F2 · 합성 설정"
+      }
+    ],
+    "accountVerified": false
+  },
+  "projects": [
+    {
+      "id": "news:1",
+      "title": "도시의 새로운 이동 · 합성 기사",
+      "kind": "news",
+      "technicalStatus": "success",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/video?job_id=1",
+      "thumbnailUrl": "/studio/assets/design-art-2.webp",
+      "mediaUrl": null,
+      "sourceLabel": "합성 프로젝트 · 실제 파일 생성 아님",
+      "draftId": 1
+    },
+    {
+      "id": "character:demo-character",
+      "title": "느긋한 월요일 · 합성 캐릭터",
+      "kind": "character",
+      "technicalStatus": "needs_script",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/character?job_id=demo-character",
+      "thumbnailUrl": "/studio/assets/design-art-0.webp",
+      "mediaUrl": null,
+      "sourceLabel": "합성 프로젝트"
+    },
+    {
+      "id": "image:4",
+      "title": "지속 가능한 도시 · 합성 이미지",
+      "kind": "image",
+      "technicalStatus": "saved",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/image-studio?draft_id=4",
+      "thumbnailUrl": "/studio/assets/design-art-3.webp",
+      "mediaUrl": null,
+      "sourceLabel": "설계 일러스트 · 합성"
+    },
+    {
+      "id": "image:5",
+      "title": "결과 불명 · 재요청 금지 합성 사례",
+      "kind": "image",
+      "technicalStatus": "unknown",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/image-studio?draft_id=5",
+      "thumbnailUrl": null,
+      "mediaUrl": null,
+      "sourceLabel": "합성 오류 사례"
+    }
+  ],
+  "services": [
+    {
+      "id": "openai",
+      "label": "OpenAI",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    },
+    {
+      "id": "claude",
+      "label": "Claude",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    },
+    {
+      "id": "elevenlabs",
+      "label": "ElevenLabs",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    },
+    {
+      "id": "higgsfield",
+      "label": "Higgsfield",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    }
+  ],
+  "settings": {
+    "easy_setup": "{\"revision\": 0, \"step\": 1, \"completed\": false, \"values\": {}}"
+  },
+  "policy": {
+    "paidReferenceEdit": false,
+    "automaticRetry": false,
+    "providerFallback": false,
+    "price": "합성 화면 검증 · 실제 공급사 견적·청구액 없음"
+  }
+}

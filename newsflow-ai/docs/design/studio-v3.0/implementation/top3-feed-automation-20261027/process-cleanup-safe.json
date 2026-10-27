@@ -1,0 +1,7 @@
+{
+  "test_port_18765_released": true,
+  "test_server_exit": "Ctrl+C to owned synthetic server; exit 1, no force kill",
+  "operating_8765_same_pid": true,
+  "actual_provider_calls": 0,
+  "test_runtime_processes_remaining": 0
+}

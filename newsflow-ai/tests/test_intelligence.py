@@ -175,7 +175,7 @@ def test_gui_analysis_generate_edit_and_key_hidden(intelligence, client, monkeyp
     monkeypatch.setenv("NEWSFLOW_AI_API_KEY", "SECRET-NEVER-HTML")
     assert client.get("/ai").status_code == 200
     response = client.post("/ai/analyze", data={"csrf_token": csrf(client), "article_ids": ["1", "2"]})
-    assert response.status_code == 200 and "사실 확인: 미확인" in response.text
+    assert response.status_code == 200 and "사실 확인 미완료" in response.text
     response = client.post(
         "/ai/generate", data={"csrf_token": csrf(client), "analysis_id": 1, "duration": 45}
     )
@@ -236,7 +236,7 @@ def test_upgrade_phase1_preserves_data(app):
     migrate(engine)
     with engine.connect() as connection:
         assert connection.scalar(text("SELECT value FROM app_settings WHERE key='request_timeout'")) == "7"
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0013"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0018"
     engine.dispose()
 
 

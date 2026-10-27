@@ -1,0 +1,10 @@
+{
+  "baseline": {
+    "imported": "/tmp/newsflow-final-comparison/baseline/newsflow-ai/src/newsflow/__init__.py",
+    "correct_source": true
+  },
+  "final": {
+    "imported": "/workspace/JSBAE/newsflow-ai/src/newsflow/__init__.py",
+    "correct_source": true
+  }
+}

@@ -1,0 +1,1 @@
+{"status": "PASS", "launches": 2, "shutdown": "normal", "revision": "0018", "integrity": "ok", "foreign_key_errors": 0, "stored_counts_preserved": {"news_articles": 0, "content_drafts": 0, "publish_jobs": 0, "api_request_reservations": 0}, "external_requests": 0, "operating_profile_used": false}

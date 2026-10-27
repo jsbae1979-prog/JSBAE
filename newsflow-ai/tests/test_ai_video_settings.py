@@ -80,7 +80,7 @@ from newsflow.video.ai.settings import (
 )
 from newsflow.video.engine import AI_SCENE_LABEL
 
-PATH = "kling-video/v2.6/pro/text-to-video"
+PATH = "fixture/model/text-to-video"  # Synthetic catalog, never a live vendor model
 OTHER_PATH = "bytedance/seedance-2.0/text-to-video"
 VIDEO_KEY = "abcd1234:secretvalue123"
 OPENAI_KEY = "sk-synthetic-not-a-real-key-0123456789abcdef"
@@ -174,7 +174,7 @@ def save_settings(sessions, **overrides) -> VideoAISettings:
 
 def add_model(sessions, **overrides):
     values = {
-        "path": PATH, "label": "Kling 2.6 Pro", "price_per_second": "0.05", "durations": "5,10",
+        "path": PATH, "label": "합성 계약 모델", "price_per_second": "0.05", "durations": "5,10",
         "resolution": "720p", "confirmed": True,
     }
     values.update(overrides)
@@ -290,6 +290,17 @@ def test_read_settings_falls_back_to_safe_defaults_for_tampered_rows(sessions):
     ],
 )
 def test_write_settings_rejects_invalid_values_and_stores_nothing(sessions, overrides, expected):
+    # Historical parameter IDs retained. Blank speculative caps are valid settings,
+    # while saving them does not plan/submit a paid video request.
+    if expected == MSG_APPROVAL_LIMITS:
+        saved = save_settings(sessions, **overrides)
+        assert read_settings(sessions) == saved and saved.approved
+        assert saved.monthly_limit == Decimal(overrides.get("monthly_limit", "100") or "0")
+        assert saved.job_limit == Decimal(overrides.get("job_limit", "10") or "0")
+        with sessions() as session:
+            assert session.scalar(select(AIVideoPlan)) is None
+            assert session.scalar(select(VideoAIUsage)) is None
+        return
     with pytest.raises(VideoSettingsError) as excinfo:
         save_settings(sessions, **overrides)
     assert message(excinfo) == expected
@@ -449,14 +460,14 @@ def test_validate_path_rejects_everything_else(path):
 
 
 def test_save_model_stores_parsed_values_and_is_usable(sessions):
-    entry = add_model(sessions, label="  Kling 2.6 Pro  ", price_per_second="0.0512", durations="10, 5,5",
+    entry = add_model(sessions, label="  합성 계약 모델  ", price_per_second="0.0512", durations="10, 5,5",
                       resolution="1080p")
-    assert entry.provider == "higgsfield" and entry.path == PATH and entry.label == "Kling 2.6 Pro"
+    assert entry.provider == "higgsfield" and entry.path == PATH and entry.label == "합성 계약 모델"
     assert entry.price_per_second == Decimal("0.0512") and entry.durations == (5, 10)
     assert entry.resolution == "1080p" and entry.confirmed and entry.usable
     with sessions() as session:
         row = session.get(VideoAIModel, entry.id)
-        assert (row.price_per_second, row.durations, row.label) == ("0.0512", "5,10", "Kling 2.6 Pro")
+        assert (row.price_per_second, row.durations, row.label) == ("0.0512", "5,10", "합성 계약 모델")
         assert row.confirmed_at is not None and row.confirmed_at.tzinfo is not None
     assert list_models(sessions) == [entry]
     assert find_model(sessions, PATH) == entry
@@ -495,6 +506,14 @@ def test_every_listed_resolution_is_accepted(sessions, resolution):
     ],
 )
 def test_save_model_rejects_invalid_values(sessions, overrides, expected):
+    if expected == MSG_CONFIRM_PRICE:
+        entry = add_model(sessions, **overrides)
+        assert entry.confirmed and not entry.usable
+        assert entry.price_per_second == (None if overrides["price_per_second"] == "" else Decimal(0))
+        assert list_models(sessions) == [entry]
+        with sessions() as session:
+            assert session.scalar(select(VideoAIUsage)) is None
+        return
     with pytest.raises(VideoSettingsError) as excinfo:
         add_model(sessions, **overrides)
     assert message(excinfo) == expected
@@ -1285,9 +1304,9 @@ def counts(engine) -> dict[str, int]:
         }
 
 
-def test_migration_head_is_0013_and_retains_ai_tables_and_columns(engine):
-    assert ScriptDirectory.from_config(alembic_config()).get_current_head() == "0013"
-    assert version(engine) == "0013"
+def test_migration_head_is_0015_and_retains_ai_tables_and_columns(engine):
+    assert ScriptDirectory.from_config(alembic_config()).get_current_head() == "0018"
+    assert version(engine) == "0018"
     tables, columns = schema(engine)
     assert NEW_TABLES <= tables
     assert NEW_COLUMNS <= columns
@@ -1322,11 +1341,11 @@ def test_downgrade_to_0009_and_upgrade_again(engine):
     assert not any(t.startswith("_alembic_tmp") for t in tables)
 
     run_alembic(engine, "upgrade", "head")
-    assert version(engine) == "0013"
+    assert version(engine) == "0018"
     tables, columns = schema(engine)
     assert NEW_TABLES <= tables and NEW_COLUMNS <= columns
     db_session.migrate(engine)  # repeat is a no-op
-    assert version(engine) == "0013"
+    assert version(engine) == "0018"
 
 
 def test_settings_work_after_downgrade_and_upgrade(engine):
@@ -1381,7 +1400,7 @@ def test_a_database_stamped_with_the_published_0010_gets_the_0011_reservation_co
     _tables, columns = schema(engine)
     assert ("video_ai_usage", "resolution") not in columns and ("video_ai_usage", "approval") not in columns
     db_session.migrate(engine)
-    assert version(engine) == "0013"
+    assert version(engine) == "0018"
     _tables, columns = schema(engine)
     assert {("video_ai_usage", "resolution"), ("video_ai_usage", "approval")} <= columns
 
@@ -1394,6 +1413,12 @@ def test_0011_upgrades_a_0010_that_already_has_the_resolution_column(engine):
         connection.exec_driver_sql(
             "ALTER TABLE video_ai_usage ADD COLUMN resolution VARCHAR(10) DEFAULT '' NOT NULL")
     db_session.migrate(engine)
-    assert version(engine) == "0013"
+    assert version(engine) == "0018"
     _tables, columns = schema(engine)
     assert {("video_ai_usage", "resolution"), ("video_ai_usage", "approval")} <= columns
+
+
+def test_step13_incompatible_legacy_model_still_rejected(sessions):
+    with pytest.raises(VideoSettingsError):
+        add_model(sessions, path="kling-video/v2.6/pro/text-to-video")
+    assert list_models(sessions) == []

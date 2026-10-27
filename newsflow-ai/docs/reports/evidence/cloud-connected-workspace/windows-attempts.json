@@ -1,0 +1,16 @@
+[
+  {
+    "run_id": 39180889013,
+    "sha": "f78202b250ad43e6bdf1cd04d50ea37727aa7b7a",
+    "status": "FAIL",
+    "python_312": "221 passed; BAT TEMP invocation refused",
+    "python_314": "220 passed / 1 failed (page reload raced pending navigation); BAT not run"
+  },
+  {
+    "run_id": 39181710354,
+    "sha": "f8326f78e7ed15e9719c3cd174cbbea255dce846",
+    "status": "FAIL",
+    "python_312": "223 passed; BAT started and duplicate blocked; immediate server_stop check failed",
+    "python_314": "223 passed; BAT started and duplicate blocked; immediate server_stop check failed"
+  }
+]

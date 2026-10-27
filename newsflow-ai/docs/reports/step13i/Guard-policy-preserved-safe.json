@@ -1,0 +1,14 @@
+{
+  "bytes_equal_to_accepted_Step13H": {
+    "step13_guard.py": true,
+    "node_boundary.cjs": true,
+    "browser_boundary.py": true,
+    "step13_fixtures.py": true,
+    "test_guard_security.py": true
+  },
+  "global_disabled": false,
+  "product_Guard_changed": false,
+  "test_launch_changes": "Only new authorized phase targets, creation of existing synthetic Known Folder layout; CI fixture inclusion/collection checks",
+  "public_RSS": "Separate explicitly approved fixed-host tool; not a relaxation of Fake Guard. Paid endpoints and DB forbidden.",
+  "operating_native_access": "Current Windows user still has OS file rights; no OS-complete isolation assertion."
+}

@@ -1,0 +1,62 @@
+{
+  "at": "2026-10-25T15:25:52.795880+09:00",
+  "Python": "3.14.7",
+  "scope": "Explicit credential-free public RSS read, separate from Fake tests",
+  "max_GETs": 4,
+  "GETs": 3,
+  "requests": [
+    {
+      "url": "https://news.google.com/robots.txt",
+      "method": "GET",
+      "auth_headers": false,
+      "attempt": 1,
+      "status": 200,
+      "bytes": 515,
+      "body_SHA256": "b7233dfe338c30329a8936be1011b16181f7f4ed47d6175954be90abcf842c07"
+    },
+    {
+      "url": "https://feeds.bbci.co.uk/robots.txt",
+      "method": "GET",
+      "auth_headers": false,
+      "attempt": 1,
+      "status": 200,
+      "bytes": 904,
+      "body_SHA256": "0d37c3bfbe5c2eab79859f7b8290816c47a6f63b8713315b2f62d24a4950cdb1"
+    },
+    {
+      "url": "https://feeds.bbci.co.uk/korean/rss.xml",
+      "method": "GET",
+      "auth_headers": false,
+      "attempt": 1,
+      "status": 200,
+      "bytes": 17508,
+      "body_SHA256": "8cbac5f5804e4f801cbd411f49540d44644bc5f1c8b57ddeb0976e447f8b4ee4"
+    }
+  ],
+  "results": [
+    {
+      "source": "Google News KR",
+      "status": "BLOCKED",
+      "error_kind": "robots",
+      "message": "robots.txt 정책에서 이 RSS 경로를 허용하지 않습니다.",
+      "elapsed_seconds": 0.24
+    },
+    {
+      "source": "BBC Korean",
+      "status": "PASS",
+      "articles": 21,
+      "with_thumbnail": 21,
+      "with_explicit_date": 21,
+      "original_article_requests": 0,
+      "images_downloaded": 0,
+      "elapsed_seconds": 1.19
+    }
+  ],
+  "automatic_retry": 0,
+  "paid_supplier_calls": 0,
+  "OAuth_SNS_calls": 0,
+  "operating_inputs": 0,
+  "raw_news_payload_saved": false,
+  "DB_connections": 0,
+  "audit_denials": []
+}

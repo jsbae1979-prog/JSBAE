@@ -1,0 +1,15 @@
+{
+  "bundle_files_verified": 856,
+  "bundle_mismatches": 0,
+  "exe_sha256": "7a59124875e27b95131297730a868eae87b3c4d76eafd2aa1a86e65a4b80898c",
+  "synthetic_seed": "Prior Step15A Fake-only probe6",
+  "seed_data_changed": false,
+  "copy_relocated_fields": 0,
+  "new_synthetic_SQLite_integrity": "ok",
+  "new_synthetic_foreign_key_violations": 0,
+  "operating_input": false,
+  "copied_session_key": false,
+  "copied_DPAPI": false,
+  "paid_calls": 0,
+  "time": "2026-10-26T17:58:54.769529+09:00"
+}

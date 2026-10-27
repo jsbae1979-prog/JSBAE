@@ -16,6 +16,7 @@ The local FFmpeg path never depends on anything here.
 from __future__ import annotations
 
 import hashlib
+import json
 import shutil
 import uuid
 from datetime import UTC, timedelta
@@ -28,12 +29,16 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
+from newsflow.autopilot.contracts import AutopilotError
 from newsflow.autopilot.samples import SAMPLE_URL
 from newsflow.db.models import (
     AIVideoPlan,
     AIVideoScene,
     ArticleMention,
+    AutopilotArtifact,
+    AutopilotJob,
     ContentDraft,
+    IntelligenceRun,
     NewsArticle,
     NewsSource,
     RenderJob,
@@ -41,7 +46,9 @@ from newsflow.db.models import (
     VideoAIUsage,
     utcnow,
 )
+from newsflow.video.production_policy import check_draft, full_job, plan_policy, write_policy
 from newsflow.video.service import VideoCoordinator, VideoError
+from newsflow.video.tts import TTSError
 
 from .clips import ClipStore, probe_clip
 from .contracts import (
@@ -65,6 +72,16 @@ from .download import MAX_CLIP_BYTES
 from .higgsfield import HiggsfieldProvider
 from .keys import VideoAIKeyStore
 from .policy import DEFAULT_PROMPT, PromptPolicyError, check_prompt, provider_prompt, same_prompt
+from .pricing import ModelPricingService
+from .production import (
+    COMMON_STYLE,
+    draft_choices,
+    model_ready,
+    read_contract,
+    scene_prompt,
+    speech_snapshot,
+    write_contract,
+)
 from .settings import (
     CURRENCY_CHANGED,
     ModelEntry,
@@ -181,6 +198,7 @@ class AIVideoCoordinator:
     ) -> None:
         self.sessions, self.root, self.video = sessions, data_dir.resolve(), video
         self.keys = key_store or VideoAIKeyStore(data_dir)
+        self.model_pricing = ModelPricingService(sessions, self.keys)
         self.injected = provider
         self.clips = ClipStore(self.root)
         self.poll_interval = poll_interval
@@ -205,9 +223,10 @@ class AIVideoCoordinator:
             return self.injected.name
         return read_settings(self.sessions).provider
 
-    def readiness(self, *, submitting: bool = False) -> dict:
+    def readiness(self, *, submitting: bool = False, reported: bool = False) -> dict:
         override = self.injected.name if self.injected is not None else None
-        result = readiness(self.sessions, self.keys, provider_override=override, submitting=submitting)
+        result = readiness(self.sessions, self.keys, provider_override=override,
+                           submitting=submitting, reported=reported)
         result["provider_label"] = self.injected.label if self.injected is not None else (
             "Higgsfield" if result["provider"] == "higgsfield" else "사용 안 함")
         result["test_provider"] = self.injected is not None
@@ -215,17 +234,78 @@ class AIVideoCoordinator:
 
     # ------------------------------------------------------------------ plan editing
 
-    def create_plan(self, draft_id: int, duration: int) -> int:
-        if duration not in (30, 45, 60):
+    def create_plan(self, draft_id: int, duration: int, *, production_job_id: str | None = None,
+                    mode: str = "mixed", model_path: str = "", external_tts_consent: bool = False) -> int:
+        from newsflow.shortform import allowed_duration, frozen
+
+        if not allowed_duration(duration, True):
             raise AIVideoError("영상 길이는 30초, 45초, 60초 중 선택하세요.")
+        if mode not in {"full", "mixed"}:
+            raise AIVideoError("영상 제작 방식을 확인하세요.")
+        selected_model = next((model for model in list_models(self.sessions) if model.path == model_path), None)
+        if mode == "full" and not model_ready(selected_model):
+            raise AIVideoError("전체 AI 영상에 사용할 모델의 공식 입력 규격을 먼저 등록·확인하세요. 계정 동작은 미검증입니다.")
         with self.sessions.begin() as session:
+            self._locked(session)
             draft = session.get(ContentDraft, draft_id)
             if draft is None:
                 raise AIVideoError("저장된 대본을 찾지 못했습니다.", 404)
+            if not allowed_duration(duration, frozen(draft.sources).enabled):
+                raise AIVideoError("15~35초는 숏폼 강조 대본을 선택하세요.")
             try:
                 times = self.video.timings(draft.content, duration)
             except (VideoError, ValueError):
                 raise AIVideoError("대본 장면을 영상 시간으로 나누지 못했습니다. 대본을 확인하세요.") from None
+            owner = full_job(session, draft_id)
+            if owner:
+                if (production_job_id is not None and production_job_id != owner.id
+                        or owner.duration != duration
+                        or owner.current_stage != "render" or owner.status not in {"running", "waiting_review"}
+                        or owner.cancel_requested):
+                    raise AIVideoError("원래 작업의 대본 확인·자동 검사와 현재 단계를 먼저 확인하세요.", 409)
+                old = session.scalar(select(AutopilotArtifact).where(AutopilotArtifact.job_id == owner.id,
+                                                                    AutopilotArtifact.kind == "ai_plan_id"))
+                if old:
+                    return int(old.reference)  # Restart/navigation never creates another plan or paid request.
+            elif production_job_id:
+                raise AIVideoError("영상 제작 작업과 대본의 연결을 확인할 수 없습니다.", 409)
+            else:
+                run = session.get(IntelligenceRun, draft.run_id)
+                context = (run.options or {}).get("production_context", {}) if run and isinstance(run.options, dict) else {}
+                if isinstance(context, dict) and context.get("production_options_version") == 2 and context.get("initial_video") == "higgsfield":
+                    raise AIVideoError("모든 장면 AI 영상은 서버에 저장된 제작 작업에서 시작하세요.", 409)
+            contract = None
+            if mode == "full":
+                from newsflow.intelligence.service import IntelligenceError
+                try:
+                    production = draft_choices(self.sessions, draft, external_consent=external_tts_consent)
+                    if production["script_review"] is False:
+                        if production.get("version") == 2:
+                            check_draft(self.sessions, draft, production, self.root)
+                        else:
+                            from newsflow.intelligence.service import IntelligenceService
+                            checker = IntelligenceService(self.sessions)
+                            checker.validate(draft.content, duration)
+                            checker.check_news_usage(draft.content, draft.sources)
+                            checker.check_copy(draft.content, draft.sources)
+                            checker._check_stored_secret(draft.content)
+                            notes = checker._review_notes(draft.content, draft.sources, duration)
+                            if (any(note.get("level") != "info" for note in notes)
+                                    or not draft.sources.get("articles")
+                                    or any(not a.get("sources") for a in draft.sources["articles"])):
+                                raise ValueError("Automatic checks require review")
+                    if any((end-start)/1000 > max(selected_model.durations) for start, end in times):
+                        raise ValueError("scene duration")
+                    lengths = [clip_seconds((end-start)/1000, selected_model.durations) for start, end in times]
+                    prompts = [scene_prompt(draft.content["title"], scene["caption"], index)
+                               for index, scene in enumerate(draft.content["scenes"])]
+                except (ValueError, AutopilotError, IntelligenceError):
+                    raise AIVideoError("장면 길이·프롬프트·음성 동의를 확인하세요. 긴 장면은 대본에서 나눈 뒤 계획하세요.") from None
+                contract = {"version": 1, "mode": "full", "accounting": "reported_usage",
+                            "production": production,
+                            "speech": production.get("speech") or speech_snapshot(self.sessions), "style": COMMON_STYLE,
+                            "model": {"path": selected_model.path, "resolution": selected_model.resolution,
+                                      "durations": list(selected_model.durations)}}
             plan = AIVideoPlan(
                 draft_id=draft.id, draft_revision=draft.revision, duration=duration, provider=self.provider_name(),
                 status="draft", currency=read_settings(self.sessions).currency,
@@ -233,12 +313,68 @@ class AIVideoCoordinator:
             )
             session.add(plan)
             session.flush()
+            if contract:
+                write_contract(session, plan.id, contract)
+                plan.message = "전체 AI 장면 계획 · 선택한 음성·모델 고정 · 생성·관계 검토·합성 승인은 별도입니다."
             for index, ((start, end), scene) in enumerate(zip(times, draft.content["scenes"])):
                 session.add(AIVideoScene(
                     plan_id=plan.id, position=index, start_ms=start, end_ms=end, narration=scene["narration"],
-                    caption=scene["caption"], source="card", prompt=DEFAULT_PROMPT, status="planned",
+                    caption=scene["caption"], source="generated" if contract or owner or (index == 0 and frozen(draft.sources).enabled and frozen(draft.sources).hook) else "card",
+                    prompt=prompts[index] if contract else (
+                        scene_prompt(draft.content["title"], scene["caption"], index) if owner else DEFAULT_PROMPT),
+                    status="planned",
+                    model_path=selected_model.path if contract else "",
+                    clip_seconds=lengths[index] if contract else None, estimated_cost="0" if contract else None,
                 ))
+            if owner:
+                from copy import deepcopy
+
+                policy = {"mode": "all_higgsfield", "accounting": "reported_usage", "style": COMMON_STYLE,
+                          "job_id": owner.id,
+                          "options": deepcopy(owner.stage_results["request"]["production_options"]),
+                          "source": {key: owner.stage_results["request"].get(key) for key in
+                                     ("ai_model", "analysis_provider", "script_provider", "news_method", "acquisition_policy")},
+                          "created_at": utcnow().isoformat(), "generation_approvals": []}
+                write_policy(session, owner, plan.id, policy)
+                session.add(AutopilotArtifact(job_id=owner.id, kind="ai_plan_id", reference=str(plan.id)))
+                plan.message = "모든 시각 장면을 AI 생성 클립으로 제작합니다. 모델·프롬프트 확인과 별도 유료 생성 승인이 필요합니다."
             return plan.id
+
+    def check_full_plan(self, session: Session, plan: AIVideoPlan, *, require_ready: bool = False) -> dict | None:
+        try:
+            policy = plan_policy(session, plan.id)
+        except ValueError as exc:
+            raise AIVideoError(str(exc), 409) from None
+        if not policy:
+            return None  # Never apply a new all-generated requirement to legacy mixed plans.
+        job = session.get(AutopilotJob, policy["job_id"])
+        draft = session.get(ContentDraft, plan.draft_id)
+        scenes = self._scenes(session, plan.id)
+        if not job or job.cancel_requested or job.status in {"cancelled", "interrupted"}:
+            raise AIVideoError("원래 제작 작업이 취소·중단되어 새 생성이나 합성을 시작하지 않습니다.", 409)
+        if plan.duration != job.duration or policy["options"] != job.stage_results.get("request", {}).get("production_options"):
+            raise AIVideoError("영상 길이·음성·제작 설정이 원래 작업의 승인 범위와 다릅니다.", 409)
+        if not draft or draft.revision != plan.draft_revision:
+            raise AIVideoError(DRAFT_CHANGED, 409)
+        from newsflow.intelligence.service import IntelligenceError
+
+        try:
+            check_draft(self.sessions, draft, policy["options"], self.root)
+        except IntelligenceError:
+            raise AIVideoError("대본 자동 검사에서 확인할 내용이 있습니다. 검토·수정 전에는 생성·합성하지 않습니다.", 409) from None
+        times = self.video.timings(draft.content, plan.duration)
+        if len(scenes) != len(times) or not scenes:
+            raise AIVideoError("AI 영상은 도입·본문·마무리의 모든 장면이 필요합니다.", 409)
+        for index, (scene, timing, text) in enumerate(zip(scenes, times, draft.content["scenes"], strict=True)):
+            if (scene.position != index or scene.source != "generated" or scene.material
+                    or (scene.start_ms, scene.end_ms) != tuple(timing)
+                    or (scene.narration, scene.caption) != (text["narration"], text["caption"])):
+                raise AIVideoError("모든 장면 AI 모드는 카드·정지 이미지·누락·다른 대본 장면으로 대신할 수 없습니다.", 409)
+            if require_ready and (scene.status != "ready" or not scene.reviewed or not scene.clip_name
+                                  or not (scene.clip_meta or {}).get("sha256")
+                                  or self._digest(scene.clip_name) != scene.clip_meta["sha256"]):
+                raise AIVideoError("AI 생성 장면의 수신·무결성·관계 검토를 모두 완료하세요.", 409)
+        return policy
 
     def _plan(self, session: Session, plan_id: int, revision: int | None = None) -> AIVideoPlan:
         plan = session.get(AIVideoPlan, plan_id)
@@ -268,12 +404,19 @@ class AIVideoCoordinator:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
             self._reopen_compose(session, plan)
+            full = self.check_full_plan(session, plan)
+            contract = read_contract(session, plan_id)
             scenes = {s.position: s for s in self._scenes(session, plan_id)}
             for edit in edits:
                 scene = scenes.get(edit.get("position"))
                 if scene is None:
                     raise AIVideoError("장면 번호를 확인하세요.")
                 source = edit.get("source", scene.source)
+                if contract and (source != "generated" or edit.get("model_path", scene.model_path)
+                                 != contract["model"]["path"]):
+                    raise AIVideoError("전체 AI 영상의 장면·모델은 고정됩니다. 카드·다른 모델로 자동 대체하지 않습니다.")
+                if full and source != "generated":
+                    raise AIVideoError("모든 장면 AI 모드에서는 카드나 로컬 이미지로 대체할 수 없습니다.")
                 if source not in SOURCES:
                     raise AIVideoError("장면 소재는 카드·로컬 이미지·AI 생성 중에서 고르세요.")
                 material = (edit.get("material") or "").strip() if source == "local" else ""
@@ -307,10 +450,10 @@ class AIVideoCoordinator:
                     except PromptPolicyError as exc:
                         raise AIVideoError(f"장면 {scene.position + 1}: {exc}") from None
                     model = models.get(model_path)
-                    if model is None or not model.usable:
+                    if model is None or not (model_ready(model) if contract else model.usable):
                         raise AIVideoError(f"장면 {scene.position + 1}의 모델을 공식 문서 확인·단가 입력이 끝난 목록에서 고르세요.")
                     seconds = clip_seconds((scene.end_ms - scene.start_ms) / 1000, model.durations)
-                    estimate = money(scene_cost(seconds, model.price_per_second))
+                    estimate = "0" if contract else money(scene_cost(seconds, model.price_per_second))
                 else:
                     prompt = scene.prompt if source != "generated" else prompt
                     seconds, estimate = 0, ""
@@ -369,13 +512,29 @@ class AIVideoCoordinator:
     # ------------------------------------------------------------------ estimate and confirmation
 
     @staticmethod
-    def _quote(scene: AIVideoScene, models: dict[str, ModelEntry]) -> tuple[int, str] | None:
+    def _quote(scene: AIVideoScene, models: dict[str, ModelEntry], reported: bool = False) -> tuple[int, str] | None:
         """Clip seconds and cost at the model's CURRENT confirmed price and lengths (None: not usable)."""
         model = models.get(scene.model_path)
-        if model is None or not model.usable:
+        if model is None or not (model_ready(model) if reported else model.usable):
             return None
         seconds = clip_seconds((scene.end_ms - scene.start_ms) / 1000, model.durations)
-        return seconds, money(scene_cost(seconds, model.price_per_second))
+        return seconds, "0" if reported else money(scene_cost(seconds, model.price_per_second))
+
+    def _reported(self, plan_id, session=None):
+        if session is not None:
+            return bool(read_contract(session, plan_id) or
+                        (plan_policy(session, plan_id) or {}).get("accounting") == "reported_usage")
+        with self.sessions() as current:
+            return self._reported(plan_id, current)
+
+    @staticmethod
+    def _model_matches(contract, models):
+        if not contract:
+            return True
+        snapshot = contract["model"]
+        model = models.get(snapshot["path"])
+        return (model_ready(model) and model.resolution == snapshot["resolution"]
+                and list(model.durations) == snapshot["durations"])
 
     @staticmethod
     def _refetchable(scene: AIVideoScene) -> bool:
@@ -406,14 +565,17 @@ class AIVideoCoordinator:
         return [s for s in scenes if s.source == "generated" and s.status in RETRYABLE_END and not self._refetchable(s)]
 
     def estimate(self, plan_id: int) -> dict:
-        ready = self.readiness()
+        reported = self._reported(plan_id)
+        ready = self.readiness(reported=reported)
         settings = ready["settings"]
         models = {m.path: m for m in list_models(self.sessions)}
         with self.sessions() as session:
             plan = self._plan(session, plan_id)
             scenes = self._scenes(session, plan_id)
             pending = self._pending(scenes)
-            quotes = {s.id: self._quote(s, models) for s in pending}
+            if reported:
+                pending = [s for s in pending if s.attempt == 0]
+            quotes = {s.id: self._quote(s, models, reported) for s in pending}
             lines = [{"position": s.position, "seconds": (quotes[s.id] or (s.clip_seconds, ""))[0], "model": s.model_path,
                       "cost": (quotes[s.id] or (0, ""))[1], "usable": quotes[s.id] is not None} for s in pending]
             total = sum((Decimal(q[1]) for q in quotes.values() if q), Decimal(0))
@@ -421,6 +583,15 @@ class AIVideoCoordinator:
             other_currency = plan_currency_mismatch(session, plan_id, settings.currency)
             draft = session.get(ContentDraft, plan.draft_id)
             problems = list(ready["reasons"])
+            if reported and len({s.model_path for s in scenes}) != 1:
+                problems.append("전체 AI 영상에는 한 가지 모델을 선택하세요. 다른 모델로 자동 전환하지 않습니다.")
+            if reported and any(
+                s.model_path in models and (s.end_ms-s.start_ms)/1000 > max(models[s.model_path].durations)
+                for s in scenes
+            ):
+                problems.append("모델의 최대 클립 길이보다 긴 장면이 있습니다. 대본에서 장면을 나눈 뒤 계획하세요.")
+            if not self._model_matches(read_contract(session, plan_id), models):
+                problems.append("고정한 모델 규격이 변경되었습니다. 자동 전환하지 않습니다.")
             closed = self._compose_closed(session, plan)
             if draft is None or draft.revision != plan.draft_revision:
                 problems.append(DRAFT_CHANGED_CLOSED if closed else DRAFT_CHANGED)
@@ -456,16 +627,17 @@ class AIVideoCoordinator:
             for scene in pending:
                 if quotes[scene.id] is None:
                     problems.append(f"장면 {scene.position + 1}의 모델이 바뀌었거나 사용할 수 없습니다. 모델을 다시 고르세요.")
-            if pending and not problems:
+            if pending and not problems and not reported:
                 try:
                     check_budget(session, settings, plan_id, total)
                 except VideoSettingsError as exc:
                     problems.append(str(exc))
         return {
             "scenes": lines,
-            "total": money(total), "currency": settings.currency, "plan_spent": money(spent),
+            "accounting": "reported_usage" if reported else "legacy_estimate",
+            "total": "" if reported else money(total), "currency": settings.currency, "plan_spent": money(spent),
             "job_limit": money(settings.job_limit), "monthly_limit": money(settings.monthly_limit),
-            "month_spent": money(ready["usage"]["spent"]), "remaining": money(ready["remaining"]),
+            "month_spent": money(ready["usage"]["spent"]), "remaining": None if reported else money(ready["remaining"]),
             "problems": problems, "notices": notices, "can_submit": not problems,
             "other_currency_spend": other_currency, "compose_closed": closed,
         }
@@ -475,6 +647,7 @@ class AIVideoCoordinator:
         if not confirmed:
             raise AIVideoError("예상 비용과 유료 생성을 확인한다는 항목에 체크하세요.")
         current = self.estimate(plan_id)
+        reported = current["accounting"] == "reported_usage"
         if not current["can_submit"]:
             raise AIVideoError(" ".join(current["problems"]))
         if shown_total != current["total"]:
@@ -486,7 +659,10 @@ class AIVideoCoordinator:
             settings = read_settings(self.sessions)  # read under the write lock
             plan = self._plan(session, plan_id, revision)
             self._reopen_compose(session, plan)
+            policy = self.check_full_plan(session, plan)
             pending = self._pending(self._scenes(session, plan_id))
+            if reported:
+                pending = [s for s in pending if s.attempt == 0]
             models = {m.path: m for m in list_models(self.sessions)}  # read under the write lock
             # The newest attempt that left this app: a resend cancelled before sending (not_sent) is skipped,
             # so an identical request after an unknown outcome keeps its key however often it was re-confirmed.
@@ -497,22 +673,30 @@ class AIVideoCoordinator:
             holders = {s.id: session.scalar(select(VideoAIUsage).where(
                 VideoAIUsage.scene_id == s.id, VideoAIUsage.attempt == s.attempt)) for s in pending}
             for scene in pending:
-                quote = self._quote(scene, models)
+                quote = self._quote(scene, models, reported)
                 if quote is None:
                     raise AIVideoError(f"장면 {scene.position + 1}의 모델이 바뀌었거나 사용할 수 없습니다. 모델을 다시 고르세요.", 409)
                 # The reservation, the limit check and the request all use today's confirmed price.
                 scene.clip_seconds, scene.estimated_cost = quote
             batch = sum((Decimal(s.estimated_cost or "0") for s in pending), Decimal(0))
-            if not pending or money(batch) != shown_total:
+            if not pending or (not reported and money(batch) != shown_total):
                 raise AIVideoError("표시된 예상 비용이 바뀌었습니다. 새로고침해 다시 확인하세요.", 409)
             for scene in pending:
                 if self._has_secret(scene.prompt, secrets):
                     raise AIVideoError("프롬프트에 비밀정보가 포함되어 보낼 수 없습니다.")
             try:
-                check_budget(session, settings, plan_id, batch)
+                if not reported:
+                    check_budget(session, settings, plan_id, batch)
             except VideoSettingsError as exc:
                 raise AIVideoError(str(exc)) from None
             now = utcnow()
+            if policy:
+                policy["generation_approvals"].append({"approved_at": now.isoformat(), "revision": revision,
+                    "shown_total": shown_total, "currency": settings.currency,
+                    "scenes": [{"position": scene.position, "prompt": scene.prompt, "model": scene.model_path,
+                                "seconds": scene.clip_seconds, "resolution": models[scene.model_path].resolution}
+                               for scene in pending]})
+                write_policy(session, session.get(AutopilotJob, policy["job_id"]), plan.id, policy)
             for scene in pending:
                 # A resend after an unknown outcome keeps its key only for the identical request, so a
                 # provider that honours Idempotency-Key answers with the first request instead of
@@ -539,10 +723,18 @@ class AIVideoCoordinator:
                     resolution=resolution, approval=settings.approved_at or "", currency=settings.currency,
                     status="reserved", created_at=now, updated_at=now,
                 ))
+            if reported and read_contract(session, plan_id):
+                from newsflow.db.models import AppSetting
+                contract = read_contract(session, plan_id)
+                contract["script_review_confirmed_at"] = now.isoformat() if contract["production"]["script_review"] else None
+                contract["confirmed_draft_revision"] = plan.draft_revision
+                session.get(AppSetting, f"ai_plan_contract:{plan_id}").value = json.dumps(contract, ensure_ascii=False)
             plan.confirmed_at, plan.currency = now, settings.currency
             plan.revision += 1
             plan.reviewed_at = None
             plan.message = f"유료 생성 {len(pending)}개 장면 확인됨 · 예상 {money(batch)} {settings.currency}"
+            if reported:
+                plan.message = f"전체 AI 장면 {len(pending)}개 생성 승인됨 · 실제 사용량·청구액 미확인"
             self._refresh(session, plan)
             count = len(pending)
         self.wake()
@@ -592,6 +784,12 @@ class AIVideoCoordinator:
                 job = session.get(RenderJob, plan.render_job_id)
                 if job is None or job.status != "running":
                     self._refresh(session, plan)
+        callback = getattr(self, "on_complete", None)
+        if callback:
+            with self.sessions() as session:
+                completed = list(session.scalars(select(AIVideoPlan.id).where(AIVideoPlan.status == "composed")))
+            for plan_id in completed:
+                callback(plan_id)
 
     def refetch(self, plan_id: int, revision: int, position: int) -> None:
         """Download a completed clip again (no new paid request): the status is re-checked for a fresh URL.
@@ -657,6 +855,8 @@ class AIVideoCoordinator:
             plan = self._plan(session, plan_id, revision)
             self._reopen_compose(session, plan)
             scenes = self._scenes(session, plan_id)
+            if read_contract(session, plan_id) and not all(s.source == "generated" for s in scenes):
+                raise AIVideoError("전체 AI 영상은 모든 장면의 AI 클립이 필요합니다. 카드로 대체하지 않습니다.")
             generated = [s for s in scenes if s.source == "generated"]
             for scene in generated:
                 scene.reviewed = scene.status == "ready" and scene.position in positions
@@ -675,11 +875,16 @@ class AIVideoCoordinator:
             self._locked(session)
             plan = self._plan(session, plan_id, revision)
             self._compose_open(session, plan)
+            policy = self.check_full_plan(session, plan, require_ready=True)
+            if policy and (paused or not read_settings(self.sessions).approved):
+                raise AIVideoError("AI 영상 공급사 사용이 중지되어 합성을 시작하지 않습니다.", 409)
             plan.render_job_id = None  # retry after a failed or interrupted composition
             draft = session.get(ContentDraft, plan.draft_id)
             if draft is None or draft.revision != plan.draft_revision:
                 raise AIVideoError(DRAFT_CHANGED, 409)
             scenes = self._scenes(session, plan_id)
+            if self._reported(plan_id, session) and not all(s.source == "generated" for s in scenes):
+                raise AIVideoError("전체 AI 영상의 모든 장면에 생성 클립이 필요합니다. 카드로 대체하지 않습니다.")
             for scene in scenes:
                 if scene.source == "generated" and (scene.status != "ready" or not scene.reviewed or not scene.clip_name):
                     n = scene.position + 1
@@ -736,7 +941,7 @@ class AIVideoCoordinator:
                 plan.approved_at = None
                 self._refresh(session, plan)
                 plan.message = "최종 합성을 시작하지 못했습니다. 제작 중인 영상이 끝난 뒤 다시 시도하세요."
-            if isinstance(exc, VideoError):
+            if isinstance(exc, (VideoError, TTSError)):
                 raise AIVideoError(str(exc), 409 if "실행 중" in str(exc) else 422) from None
             raise
         with self.sessions.begin() as session:
@@ -977,7 +1182,6 @@ class AIVideoCoordinator:
                 # compare-and-set below commits.
                 settings = read_settings(self.sessions)
                 busy = session.scalar(select(func.count(AIVideoScene.id)).where(AIVideoScene.status.in_(SUBMITTED)))
-                ready = self.readiness(submitting=True)
                 provider = self.provider()
                 models = {m.path: m for m in list_models(self.sessions)}
                 scene = session.get(AIVideoScene, scene_id)
@@ -990,12 +1194,20 @@ class AIVideoCoordinator:
                     self._refresh(session, session.get(AIVideoPlan, scene.plan_id))
                     continue
                 plan = session.get(AIVideoPlan, scene.plan_id)
+                reported = self._reported(plan.id, session)
+                ready = self.readiness(submitting=True, reported=reported)
                 draft = session.get(ContentDraft, plan.draft_id) if plan else None
                 model = models.get(scene.model_path)
                 reserved = session.scalar(select(VideoAIUsage).where(
                     VideoAIUsage.scene_id == scene.id, VideoAIUsage.attempt == scene.attempt))
                 problem = None
-                if provider is None or not ready["ready"]:
+                try:
+                    self.check_full_plan(session, plan)
+                except (AIVideoError, ValueError):
+                    problem = "원래 작업의 취소·대본·모든 장면 정책이 바뀌어 새 생성 요청을 보내지 않았습니다."
+                if problem:
+                    pass
+                elif provider is None or not ready["ready"]:
                     problem = "설정이 바뀌어 AI 영상 생성 조건을 만족하지 않아 제출하지 않았습니다. " + " ".join(ready["reasons"])
                 elif reserved is None or not settings.approved_at or reserved.approval != settings.approved_at:
                     # This reservation was confirmed under another approval (withdrawn and granted
@@ -1006,14 +1218,14 @@ class AIVideoCoordinator:
                     problem = "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
                 elif plan_currency_mismatch(session, plan.id, settings.currency):
                     problem = CURRENCY_CHANGED
-                elif plan_spent(session, plan.id) > settings.job_limit:
+                elif not reported and plan_spent(session, plan.id) > settings.job_limit:
                     problem = "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
                 elif draft is None or draft.revision != plan.draft_revision or not draft_is_real(session, draft):
                     problem = "대본이 바뀌었거나 체험 뉴스여서 제출하지 않았습니다."
                 elif (
-                    model is None or not model.usable or reserved is None
+                    model is None or not (model_ready(model) if reported else model.usable) or reserved is None
                     or (reserved.model_path, reserved.seconds, reserved.estimated_cost, reserved.resolution)
-                    != (scene.model_path, *(self._quote(scene, models) or (None, None)), model.resolution)
+                    != (scene.model_path, *(self._quote(scene, models, reported) or (None, None)), model.resolution)
                 ):
                     # The request must be exactly what was confirmed and limit-checked.
                     problem = "모델 설정이 바뀌어 제출하지 않았습니다. 장면을 다시 확인하세요."
@@ -1022,6 +1234,9 @@ class AIVideoCoordinator:
                     try:
                         # Re-checked at send time: a prompt saved under an older rule is never sent.
                         prompt = provider_prompt(scene.prompt)
+                        contract = read_contract(session, plan.id) or plan_policy(session, plan.id)
+                        if contract and contract.get("style") and contract["style"] not in scene.prompt:
+                            prompt += "\n\n" + contract["style"]
                     except PromptPolicyError:
                         problem = "프롬프트가 현재 정책을 통과하지 못해 제출하지 않았습니다. 프롬프트를 고친 뒤 다시 확인하세요."
                 if problem:

@@ -2,7 +2,8 @@
 
 New requests do not reserve speculative dollar amounts. Reported token/tool usage
 is priced after a response; this local estimate is never a vendor bill or hard cap.
-Legacy reservations remain unchanged. Unknown outcomes and request replay block.
+Legacy reservations remain unchanged. Explicitly acknowledged unknown analyses
+may permit new analyses only; request replay and all other gates still block.
 Only an injected Fake budget skips proof of a real authenticated API connection.
 Neither settings saves nor readiness reads perform any network operation.
 """
@@ -10,6 +11,7 @@ Neither settings saves nor readiness reads perform any network operation.
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import uuid
 from dataclasses import dataclass
@@ -19,7 +21,7 @@ from decimal import ROUND_UP, Decimal, InvalidOperation
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
-from newsflow.db.models import APIRequestReservation, utcnow
+from newsflow.db.models import APIRequestReservation, AuditLog, IntelligenceRun, utcnow
 
 from .api_providers import API_MODELS
 from .settings import SettingsError, _set, _value, month_start
@@ -156,7 +158,7 @@ def read_api_settings(sessions: sessionmaker[Session], provider: str) -> APISett
 
 def _invalidate(session: Session, provider: str) -> None:
     for key in ("authentication_verified_at", "search_verified_at", "request_succeeded_at", "verified_model",
-                "billing_confirmed_at", "account_remaining_usd", "search_check_summary"):
+                "search_check_summary"):
         _set(session, f"api_{provider}_{key}", "")
     from .api_connection import invalidate_connection_check
 
@@ -181,7 +183,7 @@ def save_api_settings(
         raise APISettingsError("모델 이름은 영문·숫자·점·하이픈 80자 이내여야 합니다.")
     if (provider == "claude_api") != model.startswith("claude-"):
         raise APISettingsError("선택한 API 제공자의 모델을 입력하세요.")
-    for value in (approved, search_enabled, search_approved, billing_confirmed):
+    for value in (approved, search_enabled, search_approved):
         if type(value) is not bool:
             raise APISettingsError("승인 설정을 다시 확인하세요.")
     values = {
@@ -189,7 +191,6 @@ def save_api_settings(
         "input_price_per_1m": _amount(input_price_per_1m, optional=True),
         "output_price_per_1m": _amount(output_price_per_1m, optional=True),
         "search_price_per_1k": _amount(search_price_per_1k, optional=True),
-        "account_remaining_usd": _amount(account_remaining_usd, optional=True),
     }
     # Accept old clients without resetting saved legacy values when omitted.
     # The retained field no longer participates in any dispatch decision.
@@ -197,8 +198,8 @@ def save_api_settings(
         values["request_limit_usd"] = _amount(request_limit_usd)
     if approved and values["monthly_limit_usd"] <= 0:
         raise APISettingsError("API 사용 승인에는 0보다 큰 월별 USD 한도가 필요합니다.")
-    if billing_confirmed and (values["account_remaining_usd"] is None or values["account_remaining_usd"] <= 0):
-        raise APISettingsError("공급사 대시보드에서 확인한 잔여 API 예산을 입력하세요.")
+    # Deprecated balance arguments remain accepted for old clients. Neither a
+    # normal save nor key/model changes overwrite the retained historical values.
     with sessions.begin() as session:
         session.connection().exec_driver_sql("BEGIN IMMEDIATE")
         old = _read(session, provider)
@@ -213,8 +214,6 @@ def save_api_settings(
              (old.search_approved_at or utcnow().isoformat()) if search_approved else "")
         for key, value in values.items():
             _set(session, prefix + key, str(value) if value is not None else "")
-        # An unconfirmed save cannot silently renew or preserve old account evidence.
-        _set(session, prefix + "billing_confirmed_at", utcnow().isoformat() if billing_confirmed else "")
     return read_api_settings(sessions, provider)
 
 
@@ -254,8 +253,6 @@ def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *
         prices += (settings.search_price_per_1k,)
     if any(price is None or price <= 0 for price in prices):
         reasons.append("공식 요금표에서 확인한 단가 입력 필요")
-    if not _recent(settings.billing_confirmed_at, now) or not settings.account_remaining_usd:
-        reasons.append("공급사 결제·잔여 예산 사용자 확인 필요 (24시간 유효)")
     if not fake:
         if settings.verified_model != settings.model or not _recent(settings.authentication_verified_at, now):
             reasons.append("실제 API 연결 미확인 · 별도 승인 후 검증 필요")
@@ -275,17 +272,23 @@ def _readiness(sessions, provider, key_store, capability="search", *, fake=False
     with sessions() as session:
         settings = _read(session, provider)
         rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
+        reviews = _unknown_analysis_reviews(session, settings, rows)
+        rejected = _confirmed_rejections(session, rows)
     key = key_store.status() if key_store is not None else {"configured": False}
     usage = _usage(rows, now)
     reasons = _reasons(settings, key, capability, now, fake=fake)
-    reasons.extend(_limit_reasons(settings, rows, now))
+    acknowledged = {row["id"] for row in reviews if row["acknowledged"]}
+    reasons.extend(_limit_reasons(settings, rows, now, capability=capability, acknowledged=acknowledged,
+                                 rejected=rejected))
     auth = settings.verified_model == settings.model and _recent(settings.authentication_verified_at, now)
     return {"ready": not reasons, "state": "ready" if not reasons else "blocked", "reasons": reasons,
             "provider": provider, "model": settings.model, "capability": capability, "key": key,
             "configured": bool(key.get("configured")), "authentication_verified": auth,
             "request_succeeded": bool(auth and settings.request_succeeded_at), "settings": settings,
             "connection_check": asdict(read_connection_check(sessions, provider)),
-            "usage": usage, "disclaimer": DISCLAIMER, "account_evidence": "USER CONFIRMED" if
+            "usage": usage, "unknown_analysis_reviews": reviews,
+            "acknowledged_unknown_analyses": len(acknowledged),
+            "disclaimer": DISCLAIMER, "account_evidence": "USER CONFIRMED" if
             _recent(settings.billing_confirmed_at, now) else "NOT VERIFIED"}
 
 
@@ -305,22 +308,220 @@ def _prices(settings: APISettings) -> dict:
               "search": str(max(settings.search_price_per_1k or Decimal(0), Decimal(10)))}
 
 
-def _limit_reasons(settings: APISettings, rows: list[APIRequestReservation], now: datetime) -> list[str]:
+def _unknown_fingerprint(row: APIRequestReservation) -> str:
+    # Bind the confirmation to the entire original journal entry without copying
+    # its payload into the audit log. A changed entry requires a fresh review.
+    original = {column.name: getattr(row, column.name) for column in row.__table__.columns}
+    encoded = json.dumps(original, sort_keys=True, separators=(",", ":"), default=str).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _unknown_analysis_reviews(session: Session, settings: APISettings,
+                              rows: list[APIRequestReservation]) -> list[dict]:
+    confirmations = set()
+    for entry in session.scalars(select(AuditLog).where(AuditLog.event == "api_unknown_analysis_ack")):
+        try:
+            value = json.loads(entry.message)
+            if isinstance(value, dict) and value.get("scope") == "new_analysis_only":
+                confirmations.add((value["provider"], value["model"], value["reservation_id"], value["fingerprint"]))
+        except (ValueError, KeyError, TypeError):
+            continue
+    reviews = []
+    for row in rows:
+        if (row.status != "unknown" or row.kind != "analysis" or row.finished_at is None
+                or row.model != settings.model):
+            continue
+        fingerprint = _unknown_fingerprint(row)
+        reviews.append({"id": row.id, "request_id": row.request_id, "model": row.model,
+                        "fingerprint": fingerprint,
+                        "acknowledged": (settings.provider, settings.model, row.id, fingerprint) in confirmations})
+    return reviews
+
+
+def acknowledge_unknown_analysis(sessions: sessionmaker[Session], provider: str, *, reservation_id: str,
+                                 fingerprint: str, consent: bool) -> None:
+    """Append a local risk acknowledgement; never alter/replay the old request.
+
+    This is not execution consent, an authentication/billing proof or a refund.
+    Search and script requests cannot use this exception. Duplicate POSTs are
+    idempotent, and the original unique request ID remains permanently blocked.
+    """
+    _provider(provider)
+    if consent is not True:
+        raise APISettingsError("기존 요청의 처리·과금 미확인 상태에 대한 명시적 인지 확인이 필요합니다.")
+    if not re.fullmatch(r"[a-f0-9]{32}", reservation_id) or not re.fullmatch(r"[a-f0-9]{64}", fingerprint):
+        raise APISettingsError("결과 불명 요청 정보를 다시 확인하세요.")
+    with sessions.begin() as session:
+        session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+        settings = _read(session, provider)
+        row = session.get(APIRequestReservation, reservation_id)
+        if row is None or row.provider != provider:
+            raise APISettingsError("해당 API의 결과 불명 분석 요청을 찾을 수 없습니다.")
+        reviews = _unknown_analysis_reviews(session, settings, [row])
+        if not reviews or reviews[0]["fingerprint"] != fingerprint:
+            raise APISettingsError("요청 상태 또는 모델이 변경되었습니다. 결과 불명 분석 기록을 다시 확인하세요.")
+        if reviews[0]["acknowledged"]:
+            return
+        message = {"provider": provider, "model": settings.model, "reservation_id": row.id,
+                   "fingerprint": fingerprint, "scope": "new_analysis_only"}
+        session.add(AuditLog(level="info", event="api_unknown_analysis_ack",
+                             message=json.dumps(message, separators=(",", ":"))))
+
+
+def _confirmed_rejections(session: Session, rows: list[APIRequestReservation]) -> set[str]:
+    """Read-only interpretation of recorded Claude rejection evidence, not a refund.
+
+    Legacy unknown rows and acknowledgements stay byte-for-byte intact. Only a
+    matching, completed failure with an explicit invalid-request response can
+    stop blocking a *new* request. Original request IDs remain non-replayable.
+    """
+    rejected = set()
+    for row in rows:
+        match = re.fullmatch(r"intelligence:([1-9][0-9]*)", row.request_id)
+        if (row.provider != "claude_api" or row.kind not in {"analysis", "script"}
+                or row.status not in {"reserved", "unknown"} or not match
+                or (row.status == "unknown" and row.finished_at is None)
+                or not isinstance(row.usage, dict)
+                or any(type(value) is not int or value != 0 for value in row.usage.values())):
+            continue
+        run = session.get(IntelligenceRun, int(match[1]))
+        if (not run or run.status != "failed" or run.finished_at is None
+                or run.provider != row.provider or run.kind != row.kind
+                or not isinstance(run.options, dict) or run.options.get("model") != row.model
+                or not isinstance(run.result, dict)):
+            continue
+        detail = run.result.get(f"{row.kind}_failure")
+        if (isinstance(detail, dict) and detail.get("failure_reason") == "request_rejected"
+                and type(detail.get("http_status")) is int and detail["http_status"] == 400
+                and detail.get("error_type") == "invalid_request_error"):
+            rejected.add(row.id)
+    return rejected
+
+
+def _card_unknown_review(session, settings, rows, context):
+    rejected = _confirmed_rejections(session, rows)
+    unknown = [r for r in rows if r.status == "unknown" and r.id not in rejected]
+    if (not unknown or any(r.status == "reserved" for r in rows)
+            or any(r.finished_at is None for r in unknown)):
+        return {"token": "", "requests": [], "ids": set()}
+    value = {"scope": "new_feed_card_once", "model": settings.model, "context": context,
+             "unknowns": {r.id: _unknown_fingerprint(r) for r in unknown}}
+    token = hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    return {"token": token, "requests": [r.request_id for r in unknown], "ids": {r.id for r in unknown}}
+
+
+def _limit_reasons(settings: APISettings, rows: list[APIRequestReservation], now: datetime, *,
+                   capability: str = "search", acknowledged: set[str] | None = None,
+                   script_exception: bool = False, rejected: set[str] | None = None,
+                   scoped_unknowns: set[str] | None = None) -> list[str]:
     reasons = []
-    if any(row.status in ("reserved", "unknown") for row in rows):
+    acknowledged = acknowledged or set()
+    rejected = rejected or set()
+    scoped_unknowns = scoped_unknowns or set()
+    if any(row.status == "reserved" or (row.status == "unknown" and row.id not in rejected and row.id not in scoped_unknowns and not (
+            (capability == "analysis" or script_exception) and row.id in acknowledged)) for row in rows):
         reasons.append("진행 중이거나 결과 불명인 API 요청이 있어 새 호출을 차단합니다.")
     monthly = sum((Decimal(row.estimated_usd or "0") for row in rows
                    if row.created_at >= month_start(now)), Decimal(0))
     # Only response-reported usage enters these totals. Missing usage remains an
     # unknown-outcome blocker, never an invented zero-cost success or refund.
-    confirmed_at = _time(settings.billing_confirmed_at)
-    after_check = sum((Decimal(row.estimated_usd or "0") for row in rows
-                       if confirmed_at is not None and row.created_at >= confirmed_at), Decimal(0))
     if settings.monthly_limit_usd > 0 and monthly >= settings.monthly_limit_usd:
         reasons.append("보고된 사용량 기준 월별 비용 한도에 도달했습니다.")
-    if settings.account_remaining_usd is not None and after_check >= settings.account_remaining_usd:
-        reasons.append("보고된 사용량이 사용자가 확인한 공급사 잔여 예산에 도달했습니다.")
     return reasons
+
+
+def allow_script_once(sessions: sessionmaker[Session], provider: str, *, analysis_id: int,
+                      model: str, duration: int, consent: bool, previous_script_id: int | None = None) -> None:
+    """Append one scoped approval; never edit the old unknown or acknowledgement."""
+    _provider(provider)
+    if consent is not True or type(analysis_id) is not int or duration not in (30, 45, 60):
+        raise APISettingsError("대상 분석·길이와 이번 대본 1회에 대한 명시적 승인이 필요합니다.")
+    with sessions.begin() as session:
+        session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+        settings = _read(session, provider)
+        analysis = session.get(IntelligenceRun, analysis_id)
+        if (not analysis or analysis.kind != "analysis" or analysis.status != "success"
+                or analysis.provider != provider or analysis.options.get("model") != model or settings.model != model):
+            raise APISettingsError("성공한 분석과 저장된 API·모델이 일치해야 합니다.")
+        rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
+        reviewed = _unknown_analysis_reviews(session, settings, rows)
+        acknowledged = {row["id"] for row in reviewed if row["acknowledged"]}
+        if not acknowledged or _limit_reasons(settings, rows, utcnow(), capability="analysis", acknowledged=acknowledged,
+                                              rejected=_confirmed_rejections(session, rows)):
+            raise APISettingsError("기존 결과 불명 인지 확인과 다른 실행 차단 조건을 먼저 확인하세요.")
+        previous = [run for run in session.scalars(select(IntelligenceRun).where(IntelligenceRun.kind == "script"))
+                    if run.options.get("analysis_run_id") == analysis_id]
+        if previous_script_id is not None:
+            if (type(previous_script_id) is not int or not previous
+                    or max(run.id for run in previous) != previous_script_id):
+                raise APISettingsError("명시적으로 재검증할 마지막 실패 대본을 확인하세요.")
+            for run in previous:
+                request = session.scalar(select(APIRequestReservation).where(
+                    APIRequestReservation.request_id == f"intelligence:{run.id}"))
+                if (run.status != "failed" or run.provider != provider or run.options.get("model") != model
+                        or run.options.get("duration") != duration or request is None or request.status != "failed"
+                        or request.provider != provider or request.model != model or request.kind != "script"
+                        or request.finished_at is None or request.estimated_usd is None
+                        or any(type(request.usage.get(key)) is not int for key in
+                               ("prompt_tokens", "completion_tokens", "search_calls"))):
+                    raise APISettingsError("성공·진행 중·결과 불명 대본은 재검증 승인 대상이 아닙니다.")
+        elif previous:
+            raise APISettingsError("이미 대본 요청 기록이 있는 분석입니다. 자동 재생성하지 않습니다.")
+        consumed = {json.loads(entry.message).get("approval_id") for entry in session.scalars(
+            select(AuditLog).where(AuditLog.event == "api_script_once_consumed"))}
+        for entry in session.scalars(select(AuditLog).where(AuditLog.event == "api_script_once_approval")):
+            value = json.loads(entry.message)
+            if value.get("analysis_id") == analysis_id and (
+                    previous_script_id is None or value.get("previous_script_id") == previous_script_id
+                    or entry.id not in consumed):
+                raise APISettingsError("이 분석의 대본 1회 승인이 이미 기록되어 있습니다. 재승인하지 않습니다.")
+        value = {"analysis_id": analysis_id, "provider": provider, "model": model, "duration": duration,
+                 "analysis_fingerprint": _unknown_fingerprint(analysis),
+                 "unknowns": {row["id"]: row["fingerprint"] for row in reviewed if row["acknowledged"]},
+                 "expires_at": (utcnow() + timedelta(minutes=30)).isoformat()}
+        if previous_script_id is not None:
+            value.update(previous_script_id=previous_script_id,
+                         previous_scripts={str(run.id): _unknown_fingerprint(run) for run in previous})
+        session.add(AuditLog(level="info", event="api_script_once_approval",
+                             message=json.dumps(value, separators=(",", ":"))))
+
+
+def _script_approval(session: Session, settings: APISettings, request_id: str, kind: str,
+                     rows: list[APIRequestReservation], acknowledged: set[str]) -> int | None:
+    """Resolve an exact script run, then consume its approval inside the reservation transaction."""
+    if kind != "script" or not re.fullmatch(r"intelligence:[1-9][0-9]*", request_id):
+        return None
+    run = session.get(IntelligenceRun, int(request_id.split(":")[1]))
+    if not run or run.kind != "script" or run.status != "running" or run.provider != settings.provider:
+        return None
+    analysis_id = run.options.get("analysis_run_id")
+    analysis = session.get(IntelligenceRun, analysis_id) if type(analysis_id) is int else None
+    if not analysis or analysis.kind != "analysis" or analysis.status != "success":
+        return None
+    for entry in session.scalars(select(AuditLog).where(AuditLog.event == "api_script_once_approval")):
+        try:
+            grant = json.loads(entry.message)
+            if (grant.get("analysis_id") != analysis_id or grant.get("provider") != settings.provider
+                    or grant.get("model") != settings.model or run.options.get("model") != settings.model
+                    or grant.get("duration") != run.options.get("duration")
+                    or grant.get("analysis_fingerprint") != _unknown_fingerprint(analysis)
+                    or datetime.fromisoformat(grant["expires_at"]) <= utcnow()):
+                continue
+            expected = {row.id: _unknown_fingerprint(row) for row in rows if row.status == "unknown"}
+            if not expected or grant.get("unknowns") != expected or not set(expected) <= acknowledged:
+                continue
+            previous = {str(other.id): _unknown_fingerprint(other) for other in session.scalars(
+                select(IntelligenceRun).where(IntelligenceRun.kind == "script", IntelligenceRun.id != run.id))
+                if other.options.get("analysis_run_id") == analysis_id}
+            if previous != grant.get("previous_scripts", {}):
+                continue
+            if any(json.loads(used.message).get("approval_id") == entry.id for used in session.scalars(
+                    select(AuditLog).where(AuditLog.event == "api_script_once_consumed"))):
+                continue
+        except (ValueError, KeyError, TypeError):
+            continue
+        return entry.id
+    return None
 
 
 def first_search_readiness(sessions: sessionmaker[Session], provider: str, key_store) -> dict:
@@ -330,6 +531,7 @@ def first_search_readiness(sessions: sessionmaker[Session], provider: str, key_s
         settings = _read(session, provider)
         rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
         connection_busy = bool(_value(session, f"api_{provider}_connection_check_id"))
+        rejected = _confirmed_rejections(session, rows)
     key = key_store.status() if key_store is not None else {"configured": False}
     reasons = _reasons(settings, key, "search", now, first_search=True)
     if connection_busy:
@@ -339,7 +541,7 @@ def first_search_readiness(sessions: sessionmaker[Session], provider: str, key_s
     attempt = next((row for row in rows if row.request_id == request_id), None)
     if attempt is not None:
         reasons.append("이미 기록된 최초 검색 검증입니다. 실패·결과 불명 요청도 재전송하지 않습니다.")
-    reasons.extend(_limit_reasons(settings, rows, now))
+    reasons.extend(_limit_reasons(settings, rows, now, rejected=rejected))
     return {"ready": not reasons, "reasons": reasons, "provider": provider, "model": settings.model,
             "reserved_usd": None, "accounting": "reported_usage", "request_id": request_id,
             "max_output_tokens": FIRST_SEARCH_OUTPUT_TOKENS,
@@ -364,6 +566,27 @@ class APIBudgetService:
         result = _readiness(self.sessions, provider, key_store, capability, fake=self.test_only)
         result["test_only"] = self.test_only
         return result
+
+    def feed_card_review(self, key_store, context):
+        """Preview only. GET never saves acknowledgement or grants an execution."""
+        with self.sessions() as session:
+            settings = _read(session, "claude_api")
+            rows = list(session.scalars(select(APIRequestReservation).where(
+                APIRequestReservation.provider == "claude_api")))
+            review = _card_unknown_review(session, settings, rows, context)
+            reasons = _reasons(settings, key_store.status(), "script", utcnow(), fake=self.test_only)
+            reasons += _limit_reasons(settings, rows, utcnow(), capability="script",
+                                     rejected=_confirmed_rejections(session, rows) | review["ids"])
+        return {"token": review["token"], "requests": review["requests"],
+                "ready": bool(review["token"]) and not reasons}
+
+    def reserve_feed_card(self, *, run_id, model, key_store, review_token="", review_consent=False,
+                          max_output_tokens=2000):
+        if review_token and review_consent is not True:
+            raise APISettingsError("기존 결과 불명 요청을 확인하고 이번 카드 1회에 동의해 주세요.")
+        return self._reserve(provider="claude_api", request_id=f"feed-card:{run_id}", kind="script",
+                             model=model, max_output_tokens=max_output_tokens, key_store=key_store,
+                             card_review_token=review_token if review_consent is True else "")
 
     def reserve(self, *, provider: str, request_id: str, kind: str, model: str, max_input_tokens: int | None = None,
                 max_output_tokens: int, key_store, max_search_calls: int = 0) -> Reservation:
@@ -393,7 +616,7 @@ class APIBudgetService:
 
     def _reserve(self, *, provider: str, request_id: str, kind: str, model: str, max_input_tokens: int | None = None,
                  max_output_tokens: int, key_store, max_search_calls: int = 0,
-                 first_search_authentication: str | None = None) -> Reservation:
+                 first_search_authentication: str | None = None, card_review_token: str = "") -> Reservation:
         _provider(provider)
         if kind not in ("search", "analysis", "script") or not re.fullmatch(r"[A-Za-z0-9:._-]{1,128}", request_id):
             raise APISettingsError("API 요청 식별자와 작업 유형을 확인하세요.")
@@ -426,13 +649,46 @@ class APIBudgetService:
             bounds = {"accounting": "reported_usage", "search_calls": max_search_calls}
             prices = _prices(settings)
             rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
-            reasons = _limit_reasons(settings, rows, now)
+            reviews = _unknown_analysis_reviews(session, settings, rows)
+            acknowledged = {row["id"] for row in reviews if row["acknowledged"]}
+            script_approval = _script_approval(session, settings, request_id, kind, rows, acknowledged)
+            card_ids = set()
+            if card_review_token:
+                match = re.fullmatch(r"feed-card:([1-9][0-9]*)", request_id)
+                run = session.get(IntelligenceRun, int(match[1])) if match else None
+                if (provider != "claude_api" or kind != "script" or max_search_calls != 0
+                        or not run or run.kind != "feed_card" or run.status != "running"
+                        or run.provider != provider or run.options.get("model") != model):
+                    raise APISettingsError("이번 카드 구성에만 적용할 수 있는 인지 확인입니다.")
+                context = {k: run.options.get(k) for k in ("article_id", "analysis_id", "rank", "draft_id")}
+                context["source"] = run.evidence
+                review = _card_unknown_review(session, settings, rows, context)
+                if not review["token"] or card_review_token != review["token"]:
+                    raise APISettingsError("뉴스·모델·결과 불명 기록이 변경되었습니다. 화면을 새로 확인하세요.")
+                card_ids = review["ids"]
+            from .comparison_approval import CONSUMED, authorize_step
+
+            comparison = authorize_step(session, settings, request_id, kind, rows, max_output_tokens)
+            reasons = _limit_reasons(settings, rows, now, capability=kind, acknowledged=acknowledged,
+                                     script_exception=script_approval is not None,
+                                     rejected=_confirmed_rejections(session, rows) | card_ids,
+                                     scoped_unknowns=set(comparison["unknown_ids"]) if comparison else None)
             if reasons:
                 raise APISettingsError(" / ".join(reasons))
             row = APIRequestReservation(id=uuid.uuid4().hex, request_id=request_id, provider=provider, kind=kind,
                                         model=model, status="reserved", reserved_usd="0", bounds=bounds,
                                         prices=prices, usage={}, test_only=self.test_only, created_at=now)
             session.add(row)
+            if comparison:
+                session.add(AuditLog(level='info', event=CONSUMED, message=json.dumps(
+                    comparison, separators=(',', ':'))))
+            if card_ids:
+                session.add(AuditLog(level="info", event="api_feed_card_once_ack", message=json.dumps({
+                    "scope": "new_feed_card_once", "request_id": request_id, "model": model,
+                    "review_fingerprint": card_review_token, "unknown_ids": sorted(card_ids)}, separators=(",", ":"))))
+            if script_approval is not None:
+                session.add(AuditLog(level="info", event="api_script_once_consumed", message=json.dumps(
+                    {"approval_id": script_approval, "request_id": request_id}, separators=(",", ":"))))
         return Reservation(row.id, request_id, Decimal(0))
 
     @staticmethod
@@ -460,6 +716,7 @@ class APIBudgetService:
                 if type(value) is int and 0 <= value <= 10_000_000:
                     safe[name] = value
             row.usage = safe
+            rejected = status == "failed" and row.id in _confirmed_rejections(session, [row])
             row.status = status
             if len(safe) == 3:
                 row.estimated_usd = str(self._cost(safe, row.prices))
@@ -469,11 +726,14 @@ class APIBudgetService:
                 elif any(safe[name] > row.bounds[name] for name in safe):
                     row.status = "unknown"
                     row.reserved_usd = str(max(Decimal(row.reserved_usd), Decimal(row.estimated_usd)))
-            elif status == "success" or row.bounds.get("accounting") == "reported_usage":
+            elif not rejected and (status == "success" or row.bounds.get("accounting") == "reported_usage"):
                 row.status = "unknown"
             if status in ("cancelled", "unknown"):
                 row.status = "unknown"
             row.finished_at = utcnow()
+            from .comparison_approval import record_finished
+
+            record_finished(session, row)
 
 
 class FakeAPIBudgetService(APIBudgetService):

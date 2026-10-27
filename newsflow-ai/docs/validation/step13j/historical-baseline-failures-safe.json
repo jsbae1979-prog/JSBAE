@@ -1,0 +1,18 @@
+{
+  "historical_total": 10,
+  "still_failed_in_Step13I": [
+    "tests/test_ai_news_automation_gui.py::test_home_policy_change_has_matching_readiness_and_notice_without_execution",
+    "tests/test_creator_ui.py::test_topic_search_honestly_uses_existing_news_search_not_new_generation_contract",
+    "tests/test_creator_ui.py::test_editor_never_invents_a_preview_for_invalid_output[running-True-True]",
+    "tests/test_creator_ui.py::test_editor_never_invents_a_preview_for_invalid_output[success-False-True]",
+    "tests/test_creator_ui.py::test_editor_never_invents_a_preview_for_invalid_output[success-True-False]",
+    "tests/test_easy_setup.py::test_wizard_is_optional_and_all_core_menus_remain",
+    "tests/test_gui.py::test_render[/settings-\\uc6cc\\ud06c\\uc2a4\\ud398\\uc774\\uc2a4 \\uc124\\uc815]"
+  ],
+  "previously_no_longer_in_fail_list": [
+    "tests/test_ai_estimate.py::test_gui_prices_form_and_estimate_text",
+    "tests/test_ai_estimate.py::test_start_and_job_pages_show_estimate_then_actual_usage[openai]",
+    "tests/test_ai_estimate.py::test_start_and_job_pages_show_estimate_then_actual_usage[claude_api]"
+  ],
+  "history_tag_not_added_to_mutually_exclusive_cause_totals": true
+}

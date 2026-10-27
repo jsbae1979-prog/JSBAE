@@ -6,7 +6,7 @@ for (const form of document.querySelectorAll('form[data-ai-form]')) {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (pending) return;
-    const target = new URL(form.action, window.location.href);
+    const target = new URL(event.submitter?.getAttribute('formaction') || form.action, window.location.href);
     if (target.origin !== window.location.origin) return;
     const submit = form.querySelector('button[type="submit"]');
     const alert = form.querySelector('[data-submit-error]');

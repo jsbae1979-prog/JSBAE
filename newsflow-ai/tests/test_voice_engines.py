@@ -51,7 +51,7 @@ def test_elevenlabs_fake_timing_cache_and_no_key_leak(tmp_path):
 
 
 @pytest.mark.parametrize("account", [{"tier": "free"}, {"max_credit_limit_extension": "unlimited"},
-                                    {"max_credit_limit_extension": 100}, {"character_limit": 1},
+                                    {"max_credit_limit_extension": 100}, {"character_limit": 1, "character_count": 1},
                                     {"status": "unknown"}, {"character_count": "0"}])
 def test_elevenlabs_blocks_unapproved_or_unknown_account(tmp_path, account):
     transport = Transport(**account)
@@ -72,7 +72,7 @@ def test_elevenlabs_timeout_never_replays(tmp_path):
     assert "reserved" in (tmp_path / "tts-elevenlabs/ledger.json").read_text()
 
 
-def test_elevenlabs_consent_cancel_and_local_limit(tmp_path):
+def test_elevenlabs_consent_cancel_and_reported_usage_policy(tmp_path):
     transport = Transport()
     provider = ElevenLabsTTS(tmp_path, config(), transport=transport, keys=Keys())
     with pytest.raises(TTSError):
@@ -82,10 +82,10 @@ def test_elevenlabs_consent_cancel_and_local_limit(tmp_path):
     cancel.set()
     with pytest.raises(TTSError):
         provider.synthesize_timed("시험.", tmp_path / "no.wav", "elevenlabs", 30, cancel=cancel)
-    provider.config["job_limit"] = 1
-    with pytest.raises(TTSError):
-        provider.synthesize_timed("시험.", tmp_path / "no.wav", "elevenlabs", 30)
     assert transport.calls == []
+    provider.config["job_limit"] = 1
+    provider.synthesize_timed("시험.", tmp_path / "yes.wav", "elevenlabs", 30)
+    assert transport.calls == ["GET", "POST"]
 
 
 def test_free_plan_only_explicit_noncommercial(tmp_path):

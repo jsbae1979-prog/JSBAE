@@ -1,0 +1,64 @@
+{
+  "overall": "BLOCKED for authenticated verification; public-document review complete",
+  "rows": [
+    {
+      "provider": "Claude",
+      "test_key": "NOT REGISTERED in checked profiles",
+      "connection": "NOT VERIFIED",
+      "account_access": "NOT VERIFIED",
+      "execution": "BLOCKED — missing authorized test credentials",
+      "model": "claude-sonnet-4-6",
+      "public_model": "DOCUMENTED",
+      "price": "$3 input / $15 output per 1M tokens",
+      "planned_generations": 3,
+      "planned_input": "Approved synthetic news analysis, news script, character story; prior materials hash reused",
+      "token_limits": "Actual input not counted. Proposed actual wire output cap 3000 each; V2 analysis/script base 2600/2400, character writer 3000.",
+      "cost_example_USD": 0.207,
+      "cost_condition": "Each actual billed input <=8000, output <=3000, standard processing, no tools/search/cache/regional premium. Conditional arithmetic, NOT guaranteed billing ceiling.",
+      "user_cash_cap": null
+    },
+    {
+      "provider": "ElevenLabs",
+      "test_key": "NOT REGISTERED in checked profiles",
+      "connection": "NOT VERIFIED",
+      "account_access": "NOT VERIFIED",
+      "execution": "BLOCKED — missing key, female voice ID and account billing contract",
+      "model": "eleven_multilingual_v2; existing flash_v2_5/v3 choices preserved",
+      "female_voice_id": null,
+      "plan_or_remaining": null,
+      "public_price": "Multilingual/v3 $0.08 per 1000 characters; Flash/Turbo $0.04",
+      "planned_generations": "at most 3 scenes, <=200 characters total, each <=400 program limit",
+      "cost_example_USD": 0.016,
+      "cost_condition": "Public ElevenAPI USD rate only; account-specific tier, model/voice multiplier and legacy subscription guard compatibility unverified",
+      "user_cash_cap": null
+    },
+    {
+      "provider": "OpenAI",
+      "test_key": "NOT REGISTERED in checked profiles",
+      "connection": "NOT VERIFIED",
+      "account_access": "NOT VERIFIED",
+      "execution": "BLOCKED — no test project key or confirmed spend settings",
+      "model": "gpt-image-2.5-flare-2026-09-08",
+      "public_model": "DOCUMENTED",
+      "settings": "1 image, 1024x1024, low, JPEG, no reference",
+      "public_price": "Per 1M: text input $5 / image input $8 / image output $30",
+      "fixed_image_price": null,
+      "account_spend_limit": null,
+      "user_cash_cap": null
+    },
+    {
+      "provider": "Higgsfield",
+      "test_key": "NOT REGISTERED in checked profiles",
+      "connection": "NOT VERIFIED",
+      "account_access": "NOT VERIFIED",
+      "execution": "BLOCKED — no key, no approved PNG transmission, quote conditions unknown",
+      "model": "bytedance/seedance-2.0/reference-to-video",
+      "public_schema": "720p / 9:16 / duration4..15 seconds; program narrows4..10; generate_audio=false",
+      "planned_generations": "three 10s scenes, 30s total, after 3 exact quotes and separate generation approval",
+      "quote_USD": null,
+      "discount_applied": null,
+      "maximum_cost_USD": null,
+      "user_cash_cap": null
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "code_sha": "f7a25a2d1e8721864b003a873d6c7eafb5e17d78",
+  "time_kst": "2026-10-19T14:02:39.088470+09:00",
+  "environment": "Cloud Linux / Python 3.12 / real Chromium, isolated synthetic data",
+  "pytest": {
+    "passed": 130,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "warnings": 1
+  },
+  "windows": "NOT VERIFIED",
+  "actual_paid_provider_oauth_sns_calls": 0,
+  "files": {
+    "create-1366.png": "dc932a80200f7e5ed14d8a253d3263f09ace0716a1da07f5a844a5490157c2b6",
+    "home-1366.png": "356974d9705b6b78813fe4ff8f9fb8137357e62a79405dd570bea7de9b466587",
+    "home-1920.png": "8b43da57a009266e1d73461acc219952a20b5056c7fa3f9ff56cf96e5cdd93f1",
+    "home-390.png": "d627bc637d5e25355a0608a47dce267d47e8c31b301ce8c20975c51f0ebb0280",
+    "home-mobile-production.png": "df451794050c76428e4b78584949892797224e6e95e44f908a36175593f73c0a",
+    "layout.json": "dcf7bd2236a1b1876a6de5c62a5d9b2c69168ebe0e732a1e4c2e37f65c94c93f",
+    "scoped.log": "ca16d1da04dd8334bbd1940d58bb124ae78f9779b14e83d342ab746713da6e94",
+    "scoped.xml": "67b03f868398137c353955673fc9e33cb4bf9149fa3c5214525c4f9d276dafbe",
+    "settings-1366.png": "59db7992171120b2063fd255c31636e3f5439e3f2e1b5b8e25d4e7b024b2e8bb"
+  }
+}

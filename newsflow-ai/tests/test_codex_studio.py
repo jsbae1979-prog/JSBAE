@@ -8,6 +8,7 @@ from sqlalchemy import select
 from newsflow.config import Settings
 from newsflow.db.models import AIUsage, CollectionRun, ContentDraft, IntelligenceRun, NewsArticle, NewsSource
 from newsflow.intelligence import claude_code, codex
+from newsflow.intelligence.presentation import presentation
 from newsflow.intelligence.provider import FakeProvider, OpenAIProvider, Options
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import (
@@ -48,8 +49,8 @@ def test_codex_defaults_restart_without_cli_or_approval_changes(tmp_path, fake, 
             page = client.get("/ai")
             assert page.status_code == 200
             assert 'value="codex" selected' in page.text and 'value="default"' in page.text
-            assert "RSS 자료 분석" in page.text and "웹 검색을 실행하지 않습니다" in page.text
-            assert "무료·무제한이 아닙니다" in page.text
+            assert "Codex는 RSS 분석·대본만 지원합니다" in page.text
+            assert "본인 계정의 사용량·비용이 발생할 수 있음" in page.text
             assert 'href="/simple-settings#connections"' in page.text
             settings = client.get("/simple-settings")
             assert settings.status_code == 200
@@ -172,7 +173,12 @@ def test_codex_rss_analysis_script_and_video_flow(client, app, fake, monkeypatch
         draft_id = int(response.url.params["draft_id"])
         with app.state.sessions() as session:
             draft = session.get(ContentDraft, draft_id)
-            assert draft.duration == duration and draft.sources == evidence
+            assert draft.duration == duration
+            assert draft.sources == {**evidence, "presentation": presentation(), "synthesis": {
+                "article_ids": ids, "facts_verified": False,
+                "instruction": "같은 주제의 제공 자료를 한 편으로 종합하되 서로 다른 수치·날짜·주장을 합치거나 다수결로 확정하지 마세요. "
+                               "출처별 차이와 미확인 사항을 구분하고 같은 보도의 재전재를 독립 확인으로 취급하지 마세요.",
+            }}
             assert draft.review_status == "review_required"
             assert sum(scene["seconds"] for scene in draft.content["scenes"]) == duration
             assert session.get(IntelligenceRun, draft.run_id).provider == "codex"

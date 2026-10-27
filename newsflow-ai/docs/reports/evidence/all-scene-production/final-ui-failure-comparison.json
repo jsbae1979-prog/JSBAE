@@ -1,0 +1,18 @@
+{
+  "baseline_sha": "3c5230942466a87e5bc191961538e9bbccddc90b",
+  "tested_sha": "d7e74bb8f227d224a4dc494bbfb6a97ae3d80cc3",
+  "matching_exact_ids_and_normalized_assertions": true,
+  "test_file_unchanged": true,
+  "rows": [
+    {
+      "id": "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus",
+      "baseline": "assert 5 == 6\n +  where 5 = <built-in method count of str object at 0x1b73f090>('<a ')\n +    where <built-in method count of str object at 0x1b73f090> = ' class=\"workspace-nav\">\\n\\n\\n<a href=\"/\" class=\"\" ><span aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" width=\"21\" heigh...path d=\"M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0\"/></svg></span>설정</a>'.count",
+      "current": "assert 5 == 6\n +  where 5 = <built-in method count of str object at 0x22e46bb0>('<a ')\n +    where <built-in method count of str object at 0x22e46bb0> = ' class=\"workspace-nav\">\\n\\n\\n<a href=\"/\" class=\"\" ><span aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\" width=\"21\" heigh...path d=\"M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z M9 12a3 3 0 1 0 6 0 3 3 0 1 0-6 0\"/></svg></span>설정</a>'.count"
+    },
+    {
+      "id": "tests.test_ai_video_gui::test_key_form_stores_through_dpapi_store_and_never_renders_the_key",
+      "baseline": "AttributeError: 'NoneType' object has no attribute 'NeedCurrentDirectoryForExePath'",
+      "current": "AttributeError: 'NoneType' object has no attribute 'NeedCurrentDirectoryForExePath'"
+    }
+  ]
+}

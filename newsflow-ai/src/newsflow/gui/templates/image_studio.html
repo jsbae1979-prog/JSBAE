@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}이미지 제작 · NewsFlow AI{% endblock %}
+{% block content %}
+{% call studio_header('image','IMAGE STUDIO','이미지 제작','지시문과 모델을 고르고, 저장한 이미지를 영상에 활용하세요.') %}<a class="button" href="/image-posts">뉴스 이미지 피드</a>{% endcall %}
+{% include 'creation_modes.html' %}
+{% if error %}<p role="alert" class="error">{{ error }}</p>{% endif %}
+<p class="hint">{{ '키 등록됨 · 실제 연결 미검증' if key_ready else 'OpenAI API 키 미설정' }} · <a href="/api-budget?provider=openai">API 연결 설정</a></p>
+{% if not draft %}
+<section class="suite-panel"><form data-creation-form action="/image-studio/drafts" method="post" enctype="multipart/form-data" class="creation-form">
+<input type="hidden" name="csrf_token" value="{{ csrf }}">
+<label>이미지 지시문<textarea name="prompt" maxlength="4000" rows="4" required placeholder="예: 푸른 배경의 미래 도시를 설명하는 일러스트"></textarea></label>
+<div class="form-grid"><label>이미지 Provider<select name="provider" aria-label="이미지 Provider"><option value="openai">OpenAI</option></select></label>
+<label>이미지 모델<select name="model" aria-label="이미지 모델">{% for model in image_models %}<option value="{{ model }}" {% if selected.model==model %}selected{% endif %}>{{ model }}{{ ' · 기본 추천' if loop.first else '' }}</option>{% endfor %}</select></label>
+<label>화면 비율·해상도<select name="size" aria-label="화면 비율·해상도">{% for value,label in image_sizes.items() %}<option value="{{ value }}" {% if selected.size==value %}selected{% endif %}>{{ label }} · {{ value }}</option>{% endfor %}</select></label>
+<label>품질<select name="quality" aria-label="품질">{% for value,label in image_qualities.items() %}<option value="{{ value }}" {% if selected.quality==value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label></div>
+<details><summary>참조 이미지 · 로컬 보관</summary><label>참조 이미지<input type="file" name="reference" accept="image/png,image/jpeg,image/webp"></label><p>10MB 이내. 로컬 저장·영상 재사용을 지원합니다. 참조 기반 API 생성은 미구현이며, 첨부한 초안은 유료 생성할 수 없습니다.</p></details>
+<p class="hint">두 모델은 같은 입력·출력 옵션을 지원합니다. 공식 계약 확인 · 실계정 사용 가능 여부 미검증.</p><p>예상 비용: 총액 미확정 · 생성 전 별도 승인 · 저장 후 이 작업의 모델과 옵션은 고정됩니다.</p>
+<button class="primary">{{ ui_icon('file',18) }} 이미지 초안 저장</button>
+<button formaction="/image-studio/defaults" formenctype="application/x-www-form-urlencoded" formnovalidate>다음 이미지 기본값 저장</button>
+</form></section>
+{% else %}
+<section class="suite-panel"><h2>이미지 초안 #{{ draft.id }}</h2><p class="creation-prompt">{{ draft.result.prompt }}</p>
+<p>{{ draft.options.selection.model }} · {{ draft.options.selection.size }} · {{ image_qualities[draft.options.selection.quality] }}</p><p>예상 비용: {{ draft.options.selection.price_basis.note }}</p>
+{% if draft.options.reference %}<img class="creation-preview" src="/image-studio/assets/{{ draft.options.reference }}" alt="로컬 참조 이미지"><p>참조 기반 API 생성 미구현 · 저장한 이미지는 캐릭터 참조로 선택할 수 있습니다.</p><a class="button" href="/character?reference_asset={{ draft.options.reference }}">캐릭터 참조로 사용</a>
+{% elif output %}<p role="status">{{ output.message }}</p>{% if output.status=='success' %}<img class="creation-preview" src="/image-studio/{{ draft.id }}/file" alt="생성 결과 · 내용과 사용권 검토 필요"><a class="button" href="/image-studio/{{ draft.id }}/file?download=true">이미지 다운로드</a>
+<form data-creation-form action="/image-studio/{{ draft.id }}/reuse" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><label class="check"><input type="checkbox" name="reviewed" value="true" required>내용·권리·AI 표시를 검토했습니다.</label><button name="target" value="news">뉴스 영상 자산에 저장</button><button name="target" value="character">캐릭터 참조로 저장</button></form>{% endif %}
+{% else %}<form data-creation-form action="/image-studio/{{ draft.id }}/generate" method="post"><input type="hidden" name="csrf_token" value="{{ csrf }}"><label class="check"><input type="checkbox" name="reviewed" value="true" required>지시문·모델·출력 옵션을 검토했습니다.</label><label class="check"><input type="checkbox" name="consent" value="true" required>지시문을 OpenAI에 전송해 이미지 1장을 유료 생성하는 데 동의합니다. 총 청구액은 미확정이며 자동 재요청하지 않습니다.</label><button class="primary" {% if not key_ready %}disabled{% endif %}>이미지 1회 생성</button></form>{% endif %}
+<a class="button" href="/image-studio">새 이미지 준비</a></section>{% endif %}
+{% if drafts %}<section class="suite-panel"><h2>저장한 이미지 초안</h2><ul>{% for row in drafts %}<li><a href="/image-studio?draft_id={{ row.id }}">#{{ row.id }} · {{ row.result.prompt[:80] }}</a></li>{% endfor %}</ul></section>{% endif %}
+{% endblock %}

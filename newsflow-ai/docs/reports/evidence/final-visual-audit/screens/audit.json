@@ -1,0 +1,466 @@
+{
+  "screens": [
+    {
+      "screen": "home",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/static/images/studio-concepts/hero_news_studio-1024.webp",
+          "alt": "",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "오늘의 뉴스를, 다음 영상으로."
+    },
+    {
+      "screen": "create",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "뉴스 쇼츠 만들기"
+    },
+    {
+      "screen": "workspace",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": false,
+          "visible": true
+        },
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "나의 영상 작업실"
+    },
+    {
+      "screen": "news",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "뉴스 수집"
+    },
+    {
+      "screen": "script",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "AI 대본"
+    },
+    {
+      "screen": "voices",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "한국어 음성 설정"
+    },
+    {
+      "screen": "video",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "영상 구성"
+    },
+    {
+      "screen": "ai-video",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "AI 고품질 제작\n선택 기능"
+    },
+    {
+      "screen": "ai-video-settings",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "AI 영상 설정"
+    },
+    {
+      "screen": "library",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "영상 제작"
+    },
+    {
+      "screen": "publish",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": false,
+          "visible": true
+        },
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "나의 영상 작업실"
+    },
+    {
+      "screen": "feed",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": " 이미지 뉴스 게시물"
+    },
+    {
+      "screen": "feed-selected",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": " 이미지 뉴스 게시물"
+    },
+    {
+      "screen": "settings",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "설정 · 자동화"
+    },
+    {
+      "screen": "error",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "영상 구성"
+    },
+    {
+      "screen": "queue",
+      "viewport": "1366x768",
+      "overflow": 0,
+      "images": [],
+      "h1": "게시 허브"
+    },
+    {
+      "screen": "home",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/static/images/studio-concepts/hero_news_studio-1024.webp",
+          "alt": "",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "오늘의 뉴스를, 다음 영상으로."
+    },
+    {
+      "screen": "create",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "뉴스 쇼츠 만들기"
+    },
+    {
+      "screen": "workspace",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": false,
+          "visible": true
+        },
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "나의 영상 작업실"
+    },
+    {
+      "screen": "news",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "뉴스 수집"
+    },
+    {
+      "screen": "script",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "AI 대본"
+    },
+    {
+      "screen": "voices",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "한국어 음성 설정"
+    },
+    {
+      "screen": "video",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "영상 구성"
+    },
+    {
+      "screen": "ai-video",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "AI 고품질 제작\n선택 기능"
+    },
+    {
+      "screen": "ai-video-settings",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "AI 영상 설정"
+    },
+    {
+      "screen": "library",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "영상 제작"
+    },
+    {
+      "screen": "publish",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": false,
+          "visible": true
+        },
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "나의 영상 작업실"
+    },
+    {
+      "screen": "feed",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": " 이미지 뉴스 게시물"
+    },
+    {
+      "screen": "feed-selected",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": " 이미지 뉴스 게시물"
+    },
+    {
+      "screen": "settings",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "설정 · 자동화"
+    },
+    {
+      "screen": "error",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "영상 구성"
+    },
+    {
+      "screen": "queue",
+      "viewport": "1920x1080",
+      "overflow": 0,
+      "images": [],
+      "h1": "게시 허브"
+    },
+    {
+      "screen": "home",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/static/images/studio-concepts/hero_news_studio-1024.webp",
+          "alt": "",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "오늘의 뉴스를,\n다음 영상으로."
+    },
+    {
+      "screen": "create",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "뉴스 쇼츠 만들기"
+    },
+    {
+      "screen": "workspace",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": false,
+          "visible": true
+        },
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "나의 영상 작업실"
+    },
+    {
+      "screen": "news",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "뉴스 수집"
+    },
+    {
+      "screen": "script",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "AI 대본"
+    },
+    {
+      "screen": "voices",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "한국어 음성 설정"
+    },
+    {
+      "screen": "video",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "영상 구성"
+    },
+    {
+      "screen": "ai-video",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "AI 고품질 제작\n선택 기능"
+    },
+    {
+      "screen": "ai-video-settings",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "AI 영상 설정"
+    },
+    {
+      "screen": "library",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "영상 제작"
+    },
+    {
+      "screen": "publish",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": false,
+          "visible": true
+        },
+        {
+          "src": "/video/jobs/1/thumbnail",
+          "alt": "합성 영상 영상 첫 화면",
+          "loaded": true,
+          "visible": true
+        }
+      ],
+      "h1": "나의 영상 작업실"
+    },
+    {
+      "screen": "feed",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": " 이미지 뉴스 게시물"
+    },
+    {
+      "screen": "feed-selected",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": " 이미지 뉴스 게시물"
+    },
+    {
+      "screen": "settings",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "설정 · 자동화"
+    },
+    {
+      "screen": "error",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "영상 구성"
+    },
+    {
+      "screen": "queue",
+      "viewport": "390x844",
+      "overflow": 0,
+      "images": [],
+      "h1": "게시 허브"
+    }
+  ],
+  "external": [],
+  "posts": [],
+  "errors": [],
+  "records_settings_media_preserved": true,
+  "source_sha": "a3e9bad7ca46abc9a390166272a02f7c0f292f87",
+  "environment": "Cloud Chromium; synthetic DB; GET only"
+}

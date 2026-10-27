@@ -1,0 +1,44 @@
+{
+  "code_sha": "cbdda2da51ba53b5e0ef09aa0364d283bd4e527d",
+  "cloud_base": "6aef983db5a8d31b604d9fafd4329a0b4f83787d",
+  "run_id": 40080805175,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40080805175",
+  "conclusion": "success",
+  "matrix": [
+    {
+      "python": "3.12.10",
+      "job_id": 120833778764,
+      "core": 584,
+      "media": 4,
+      "browser": 18,
+      "passed": 606,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": [
+        474.33,
+        120.05,
+        144
+      ]
+    },
+    {
+      "python": "3.14.9",
+      "job_id": 120833778569,
+      "core": 584,
+      "media": 4,
+      "browser": 18,
+      "passed": 606,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "seconds": [
+        274.6,
+        74.45,
+        100.46
+      ]
+    }
+  ],
+  "whole_regression_run": false,
+  "historical_57_fail_preserved": true,
+  "real_provider_oauth_sns_requests": 0
+}

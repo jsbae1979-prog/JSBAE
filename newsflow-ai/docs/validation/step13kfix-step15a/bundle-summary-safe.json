@@ -1,0 +1,13 @@
+{
+  "files": 856,
+  "bytes": 288241901,
+  "manifest_sha256": "10895b14767d542f5f92ab1f435f681e4a4ec66b05fae462c2e9ba0e95b700a4",
+  "python_dll": true,
+  "ffmpeg": true,
+  "ffprobe": true,
+  "static_files": 64,
+  "HTML_templates": 74,
+  "fonts": 1,
+  "packaged_user_DB": false,
+  "Node_Chrome_included": false
+}

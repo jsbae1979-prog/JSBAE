@@ -45,18 +45,21 @@ def initial_context():
 
 def test_workspace_offers_one_news_usage_choice_with_standard_default(client, app):
     before = stored_values(app)
-    response = client.get("/")
+    assert 'href="/create"' in client.get("/").text
+    response = client.get("/create")
     assert response.status_code == 200
     html = response.text
     assert html.count('name="news_usage"') == 1
     choice = re.search(r'<select id="quick-news-usage"[^>]*>(.*?)</select>', html, re.DOTALL).group(1)
-    assert re.findall(r'<option value="([^"]+)"', choice) == ["QUICK", "STANDARD", "VERIFIED"]
+    assert re.findall(r'<option value="([^"]+)"', choice) == ["QUICK", "STANDARD"]
     assert '<option value="STANDARD" selected>' in choice
-    assert all(label in choice for label in ("빠른 제작", "균형 제작", "검증 우선"))
+    assert all(label in choice for label in ("빠른 제작", "균형 제작"))
+    assert "검증 우선" not in choice  # unsupported for new production; historical cases below remain covered
     assert 'aria-describedby="news-usage-help"' in html
-    assert "목록 페이지는 주제 참고용" in html
-    assert "선택한 AI" in html and "이번 분석 · 대본" not in html
-    assert "API 선택 시 해당 API로 분석·대본을 만듭니다" in html
+    assert "목록 자료는 주제 참고용" in html
+    assert "실제 제작 AI" in html and "이번 분석 · 대본" not in html
+    assert 'data-home-ai data-selected-ai="' in html
+    assert 'href="/simple-settings#connections"' in html
     assert stored_values(app) == before
 
 
@@ -123,7 +126,11 @@ def test_external_consent_preserves_mode_and_does_not_grant_any_saved_approval(
     assert parse_context(flow)["news_usage"] == mode
     guide = client.get(response.headers["location"])
     assert guide.status_code == 200
-    assert f'<option value="{mode}" selected>' in guide.text
+    if mode == "VERIFIED":
+        assert '<option value="VERIFIED"' not in guide.text
+        assert "검증 우선" in guide.text  # preserve the legacy flow record, never offer it for new production
+    else:
+        assert f'<option value="{mode}" selected>' in guide.text
     assert "검색 도구 최대 1회" in guide.text and "자동 재검색은 없습니다" in guide.text
     assert "기사 비교·분석 1회" in guide.text and "대본 1회" in guide.text
     assert "분석·대본의 추가 AI 호출과 자동 재검색은 없습니다" not in guide.text

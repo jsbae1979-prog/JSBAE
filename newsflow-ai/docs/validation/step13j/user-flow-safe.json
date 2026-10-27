@@ -1,0 +1,90 @@
+{
+  "RSS": "one Fake feed collected and persisted",
+  "selected_article": true,
+  "analysis_script": "Offline provider, no paid request",
+  "automatic_images": true,
+  "manual_first_scene_preserved": true,
+  "voice": "FakeTTS silent PCM, not actual speech",
+  "speech_estimate": {
+    "scenes": [
+      {
+        "scene": 1,
+        "budget_seconds": 10.0,
+        "estimated_seconds": 7.15,
+        "fits": true
+      },
+      {
+        "scene": 2,
+        "budget_seconds": 10.0,
+        "estimated_seconds": 5.55,
+        "fits": true
+      },
+      {
+        "scene": 3,
+        "budget_seconds": 10.0,
+        "estimated_seconds": 7.95,
+        "fits": true
+      }
+    ],
+    "estimated_total_seconds": 20.65,
+    "duration": 30,
+    "fits": true,
+    "rate": 0,
+    "pause_ms": 250
+  },
+  "MP4": [
+    1080,
+    1920,
+    30
+  ],
+  "pixels": [
+    {
+      "scene": 0,
+      "pixel": [
+        34,
+        86,
+        219
+      ],
+      "expected": [
+        36,
+        86,
+        220
+      ]
+    },
+    {
+      "scene": 1,
+      "pixel": [
+        211,
+        33,
+        32
+      ],
+      "expected": [
+        213,
+        34,
+        34
+      ]
+    },
+    {
+      "scene": 2,
+      "pixel": [
+        211,
+        33,
+        32
+      ],
+      "expected": [
+        213,
+        34,
+        34
+      ]
+    }
+  ],
+  "browser_playback": true,
+  "local_publish_draft": true,
+  "public_approval": false,
+  "publish_validation": "blocked",
+  "publish_jobs": 0,
+  "publish_attempts": 0,
+  "defaults_and_source_draft_preserved": true,
+  "page_external_requests": 0,
+  "real_API_OAuth_SNS_calls": 0
+}

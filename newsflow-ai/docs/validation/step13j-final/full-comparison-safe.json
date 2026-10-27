@@ -1,0 +1,85 @@
+{
+  "Python": "3.14.7",
+  "baseline_SHA": "db9e4df953764fe36260d89e8d68eec1687b3c5a",
+  "baseline_counts": {
+    "PASS": 5366,
+    "FAIL": 15,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "counts": {
+    "PASS": 5386,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "baseline_IDs": 5385,
+  "unique_IDs": 5390,
+  "old_IDs_missing": [],
+  "added_IDs": [
+    "tests/test_step13j_model_selection_contracts.py::test_character_fixed_model_reference_quote_and_plan_change_are_not_silently_substituted",
+    "tests/test_step13j_model_selection_contracts.py::test_image_generation_is_fixed_wire_and_does_not_accept_unimplemented_choices",
+    "tests/test_step13j_model_selection_contracts.py::test_image_unknown_preserves_model_context_without_claiming_zero_cost_or_replay",
+    "tests/test_step13j_model_selection_contracts.py::test_three_modes_keep_snapshots_when_next_job_defaults_change",
+    "tests/test_step13j_model_selection_contracts.py::test_unverified_video_model_has_no_invented_price_and_cannot_make_full_plan"
+  ],
+  "old_failed_now_PASS": [
+    "tests/test_autopilot_state.py::test_independent_process_lock_blocks_without_creating_job",
+    "tests/test_creator_preview_boundary.py::test_preview_boundary_blocks_external_dns_and_authentication_processes",
+    "tests/test_creator_preview_boundary.py::test_preview_refuses_existing_directory_without_touching_files",
+    "tests/test_feed_review_tool.py::test_cli_exit_zero_without_network",
+    "tests/test_oauth_callback.py::test_another_local_process_cannot_bind_listener_port",
+    "tests/test_operational_startup.py::test_native_windows_schema_roundtrip_without_registration",
+    "tests/test_pc_cloud_entrypoint.py::test_windows_entrypoint_and_synthetic_profile_survive_normal_reopen",
+    "tests/test_phase1a_security.py::test_diagnostic_rejects_secret_url_without_output",
+    "tests/test_windows.py::test_actual_server_lifecycle_and_port_collision",
+    "tests/test_windows.py::test_invalid_secret_not_printed",
+    "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0016]",
+    "tests/test_windows_transition_plan.py::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0017]",
+    "tests/test_windows_transition_plan.py::test_legacy_migrate_data_is_not_current_backup_tool",
+    "tests/test_windows_transition_plan.py::test_restore_point_update_failure_and_restart",
+    "tests/test_windows_transition_plan.py::test_tamper_and_overwrite_refused"
+  ],
+  "previous_PASS_now_FAILED": [],
+  "new_test_failures": [],
+  "new_skips": [],
+  "frozen_source_changes": [],
+  "supervisor": {
+    "phase": "full",
+    "started": "2026-10-25T18:23:12.224935+09:00",
+    "finished": "2026-10-25T18:57:53.129602+09:00",
+    "exit": 0,
+    "child_PID": 32256,
+    "Job_assigned": true,
+    "Job_kill_on_close": true,
+    "Job_process_counts": {
+      "active_before_close": 0,
+      "total_processes": 1389
+    },
+    "child_exited": true,
+    "timeout": false,
+    "provider_env_inherited": false,
+    "operating_risk": "current Windows user still has operating OS file rights; no complete OS isolation claim",
+    "original_Guard_preserved": true
+  },
+  "full_regression_complete": true,
+  "CI_only_changes": [
+    "newsflow-ai/tools/validation/step13j_final/prepare_windows.py",
+    "newsflow-ai/tools/validation/step13j_final/summarize.py",
+    ".github/workflows/newsflow-step13j-final-windows.yml"
+  ],
+  "intermediate_counts_used": false,
+  "remaining": [],
+  "image_tests": {
+    "PASS": 55
+  },
+  "model_selection": {
+    "PASS": 5
+  },
+  "new_flow": {
+    "PASS": 1
+  },
+  "FFmpeg_choice_matrix": {
+    "PASS": 16
+  }
+}

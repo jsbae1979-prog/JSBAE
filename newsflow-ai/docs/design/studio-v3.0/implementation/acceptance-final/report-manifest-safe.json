@@ -1,0 +1,47 @@
+[
+  {
+    "file": "checkpoint-safe.json",
+    "bytes": 420,
+    "sha256": "91eaeb701ce5524231cfac6b2134b62fe1ef878efe22c9ff1df4a0a97cd3ecaf"
+  },
+  {
+    "file": "ci-safe.json",
+    "bytes": 2286,
+    "sha256": "6e14d93c1eaf97cc5e279710ea1d6cafeaff439144b1e194e12a00ab279a5c23"
+  },
+  {
+    "file": "design-review-safe.json",
+    "bytes": 12011,
+    "sha256": "f03aa7a3d210403c55f5432e99e14ace21389af333b43a02999214d981871617"
+  },
+  {
+    "file": "FINAL_ACCEPTANCE_REPORT.html",
+    "bytes": 21360,
+    "sha256": "f57e4c3aab349e337781f7923332d7120d24a1566ae172b6b0bebbb440936f5b"
+  },
+  {
+    "file": "FINAL_ACCEPTANCE_REPORT.ko.txt",
+    "bytes": 13640,
+    "sha256": "1ca0f5ba02eb8fca112acd77e6274c3b67a5b99f4933f578af2af7bd824302ca"
+  },
+  {
+    "file": "github-safe.json",
+    "bytes": 218,
+    "sha256": "7fe400639270e2e2e644b7b4d8c3bb55f693b3e49eb134380d7bcc13fedc195a"
+  },
+  {
+    "file": "preservation-safe.json",
+    "bytes": 359,
+    "sha256": "8e4f823785529c8384597dafa77b457252c0490f96d092e800f1d229f685fb24"
+  },
+  {
+    "file": "reused-evidence-safe.json",
+    "bytes": 770,
+    "sha256": "cef9b6d5bf69709aaebf483966c39e369dfeacf8e4535da30e14437e868044a7"
+  },
+  {
+    "file": "test-id-delta-safe.json",
+    "bytes": 1077,
+    "sha256": "01b526cc642ff8d566ccd33dd6378667f98481cc4d801cd294cf4a96e4ada868"
+  }
+]

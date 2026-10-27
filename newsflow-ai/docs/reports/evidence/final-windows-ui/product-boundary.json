@@ -1,0 +1,12 @@
+{
+  "product_sha": "f6aedc5db10ac7df9e6ce7b2b7f8aab7f5c6bdac",
+  "validation_sha": "345cdc76355772e2cb5ef0ad89e8fc14ac92ba6f",
+  "src_run_bat_pyproject_existing_tests_diff": [],
+  "validation_only_files": [
+    ".github/workflows/newsflow-cloud-connect-windows.yml",
+    "newsflow-ai/tools/ci_final_windows_ui.py",
+    "newsflow-ai/tools/test_windows_final_flow.py",
+    "newsflow-ai/tools/test_windows_final_visual.py",
+    "newsflow-ai/tools/windows_final_guard.py"
+  ]
+}

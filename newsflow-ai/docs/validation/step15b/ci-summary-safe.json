@@ -1,0 +1,34 @@
+{
+  "Python": "3.14.7",
+  "scope": "selected Fake tests only",
+  "status": "INCOMPLETE_OR_FAILED",
+  "phases": [
+    {
+      "phase": "j_identity_once",
+      "exit": 1,
+      "expected_records": 1,
+      "xml_present": true,
+      "status": "FAIL",
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "testcase_records": 1,
+      "count_matches": true,
+      "unique_IDs": true,
+      "ID_set_matches": true,
+      "failed_IDs": [
+        {
+          "ID": "tests.test_operational_startup::test_native_windows_schema_roundtrip_without_registration",
+          "outcome": "failure"
+        }
+      ]
+    }
+  ],
+  "production_profile_used": false,
+  "real_provider_execution_authorized": false,
+  "provider_environment_inherited": false,
+  "complete_OS_isolation_claimed": false,
+  "browser_background_network": "NOT VERIFIED by Playwright request mocks",
+  "uploaded_contents": "counts, IDs and bounded redacted failure diagnostics; no raw logs, DB, keys, media"
+}

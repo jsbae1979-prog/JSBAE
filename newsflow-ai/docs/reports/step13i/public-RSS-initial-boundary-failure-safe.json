@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-25T15:25:27.125701+09:00",
+  "Python": "3.14.7",
+  "scope": "Explicit credential-free public RSS read, separate from Fake tests",
+  "max_GETs": 4,
+  "GETs": 2,
+  "requests": [
+    {
+      "url": "https://news.google.com/robots.txt",
+      "method": "GET",
+      "auth_headers": false,
+      "attempt": 1,
+      "error": "network"
+    },
+    {
+      "url": "https://feeds.bbci.co.uk/robots.txt",
+      "method": "GET",
+      "auth_headers": false,
+      "attempt": 1,
+      "error": "network"
+    }
+  ],
+  "results": [
+    {
+      "source": "Google News KR",
+      "status": "FAIL",
+      "error_kind": "network",
+      "message": "RSS 연결 또는 TLS 검증에 실패했습니다.",
+      "elapsed_seconds": 0.03
+    },
+    {
+      "source": "BBC Korean",
+      "status": "FAIL",
+      "error_kind": "network",
+      "message": "RSS 연결 또는 TLS 검증에 실패했습니다.",
+      "elapsed_seconds": 0.01
+    }
+  ],
+  "automatic_retry": 0,
+  "paid_supplier_calls": 0,
+  "OAuth_SNS_calls": 0,
+  "operating_inputs": 0,
+  "raw_news_payload_saved": false,
+  "DB_connections": 0,
+  "audit_denials": []
+}

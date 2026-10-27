@@ -1,0 +1,55 @@
+{
+  "purpose": "Synthetic validation only; not real news, not for publication; not the final API wire body.",
+  "articles": [
+    {
+      "id": "synthetic-A",
+      "title": "[합성 검증] 가상의 하늘도서관이 독서 안내를 준비합니다",
+      "publisher": "합성 검증 편집부",
+      "url": "https://example.com/newsflow-validation/a",
+      "published_at": null,
+      "summary": "실제 기관이나 사건이 아닌 합성 검증 자료입니다. 가상의 하늘도서관은 방문객을 위한 독서 안내를 준비합니다. 운영 시간과 이용 인원 수치는 제공되지 않았습니다."
+    },
+    {
+      "id": "synthetic-B",
+      "title": "[합성 검증] 가상의 솔빛공원이 산책 안내를 준비합니다",
+      "publisher": "합성 검증 편집부",
+      "url": "https://example.com/newsflow-validation/b",
+      "published_at": null,
+      "summary": "실제 공원이나 정책이 아닌 합성 검증 자료입니다. 가상의 솔빛공원은 산책 동선을 설명하는 안내를 준비합니다. 예산·성과·인용문은 제공되지 않았습니다."
+    }
+  ],
+  "image": {
+    "provider": "openai",
+    "model": "gpt-image-2.5-flare-2026-09-08",
+    "size": "1024x1024",
+    "quality": "low",
+    "n": 1,
+    "prompt": "Create a calm editorial illustration of a fictional public library reading corner, with a desk, books and a leafy plant. Navy and warm neutral colors. No readable text, no numbers, no dates, no logos, no real persons. Clearly an illustration, not documentary photography.",
+    "reference_input": null
+  },
+  "voice_smoke_example": {
+    "text": "이 내용은 뉴스플로 AI의 합성 검증 자료입니다. 가상의 하늘도서관에서 독서 안내를 준비합니다. 실제 사건이나 기관을 설명하지 않습니다.",
+    "model": "eleven_multilingual_v2",
+    "voice_id": null,
+    "voice_requirement": "User-approved female voice from test account; ID pending. This optional smoke is separate from the reviewed generated script.",
+    "characters": 76
+  },
+  "character": {
+    "topic": "가상의 직장에서 회의 준비로 모두 바쁜 동안, 독창적인 카피바라 직장인은 머그잔을 들고 차분히 기다립니다. 실제 인물·기업·브랜드는 등장하지 않습니다.",
+    "script_model": "claude-sonnet-4-6",
+    "video_model": "bytedance/seedance-2.0/reference-to-video",
+    "resolution": "720p",
+    "aspect_ratio": "9:16",
+    "generate_audio": false,
+    "total_seconds": 30,
+    "approved_initial_scene_count": 3,
+    "approved_initial_seconds": [
+      10,
+      10,
+      10
+    ],
+    "reference_png": null,
+    "reference_status": "Test-owned PNG, hash, rights and external upload consent must be provided; no operating asset copied."
+  },
+  "wire_freeze": "Final system prompt/schema/JSON payload and actual narration are assembled by existing services after approval; record content hash and confirm exact token/character counts before paid transmission."
+}

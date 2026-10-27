@@ -1,0 +1,25 @@
+{
+  "files": [
+    {
+      "kind": "SQLite base DB",
+      "hash_matches_preserved_baseline": true,
+      "stable_during_read": true
+    },
+    {
+      "kind": "ledger JSON",
+      "hash_matches_preserved_baseline": true,
+      "stable_during_read": true
+    },
+    {
+      "kind": "SQLite base DB",
+      "hash_matches_preserved_baseline": true,
+      "stable_during_read": true
+    }
+  ],
+  "WAL_bytes": 0,
+  "DB_connections": 0,
+  "operating_writes": 0,
+  "backup_AB_writes": 0,
+  "key_reads_or_decryptions": 0,
+  "scope": "DB/ledger hashes only; existing source/key/media preservation evidence reused; no full rescan"
+}

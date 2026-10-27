@@ -1,0 +1,20 @@
+{
+  "Python": "3.14.7",
+  "architecture": "64bit",
+  "platform": "win32",
+  "runtime_packages": {
+    "pyinstaller": "NOT INSTALLED",
+    "nuitka": "NOT INSTALLED",
+    "pillow": "12.3.0",
+    "SQLAlchemy": "2.1.4",
+    "fastapi": "0.143.0",
+    "uvicorn": "0.54.0",
+    "playwright": "1.64.1",
+    "tzdata": "NOT INSTALLED",
+    "onnxruntime": "NOT INSTALLED"
+  },
+  "runtime_package_count": 45,
+  "imports_of_product": 0,
+  "EXE_builds": 0,
+  "package_installs": 0
+}

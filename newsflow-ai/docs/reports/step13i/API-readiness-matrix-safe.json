@@ -1,0 +1,66 @@
+{
+  "at": "2026-10-25T15:34:31.870809+09:00",
+  "Python": "3.14.7",
+  "rows": [
+    {
+      "API": "RSS / Google News",
+      "implementation": "기존 PublicRSSAdapter·Collector·robots/DNS pinning·2MiB 제한 재사용",
+      "Fake": "Collector/오류/SSRF/뉴스 썸네일 테스트 및 이미지 회귀 통과; 별도 실행 도구 호출은 기존 Guard 실패로 분리",
+      "live": "BBC 한국어 RSS 21건 파싱 PASS. Google News robots 정책 BLOCKED. 본문·이미지 요청0",
+      "status": "CONDITIONAL",
+      "remaining": "Google News 직접 RSS는 이번 로봇 정책 차단 유지. 허용된 등록 RSS 또는 별도 승인 SerpApi 경로 사용. 우회0"
+    },
+    {
+      "API": "SerpApi",
+      "implementation": "fixed HTTPS search.json, query-key, TLS/no redirect, bounded response, no retry, request token claim·결과 기록",
+      "Fake": "정상·401/403·402/429·timeout/network unknown·빈/손상 응답·비밀값 비반영·요청 중복·키 교체 보존 검사 통과",
+      "live": "NOT VERIFIED — 실제 키 로드/계정/검색 호출0",
+      "status": "Fake PASS / live NOT VERIFIED",
+      "remaining": "사용자 테스트 키·조회1회 범위·검색 크레딧 사용 승인 필요"
+    },
+    {
+      "API": "OpenAI",
+      "implementation": "기존 모델 metadata GET·Responses 검색·분석/대본·키 저장·usage journal 재사용. API-managed와 metadata는 재전송 없이 단일 실행",
+      "Fake": "정상 응답·auth/rate/payment HTTP·timeout·malformed·분석 wire·토큰/단가 기록·결과 불명·동의/중복 경계 검증. 기존 9000 출력 제한 기대값 FAIL1 보존",
+      "live": "NOT VERIFIED — 실제 모델 조회/생성/이미지 호출0",
+      "status": "CONDITIONAL",
+      "remaining": "metadata 성공은 결제/생성/검색 성공 아님. 실제 테스트는 선택 모델·키·전송 문구·호출 수·요금 별도 승인"
+    },
+    {
+      "API": "ElevenLabs",
+      "implementation": "기존 current-user key store, 저장 음성 v2/voices 한 페이지/명시적 동작, timed TTS·cache·ledger",
+      "Fake": "목록 정상/401 상세 코드/422·429·402·timeout·reserved·기존 ledger 보존·완료 캐시·작업별 동의 검증 통과",
+      "live": "NOT VERIFIED — 실제 목록/구독/생성/샘플 외부 요청0",
+      "status": "Fake PASS / live NOT VERIFIED",
+      "remaining": "별도 승인 시 내 음성 한 페이지 GET 1회, 생성0. TTS는 별도 작업별 승인·문구·음성·호출 수·요금 필요"
+    },
+    {
+      "API": "Instagram",
+      "implementation": "기존 Facebook Login for Business HTTPS relay·DPAPI·권한/identity 바인딩·Reels/단일 IMAGE·HTTPS 이미지 전달·별도 게시 승인",
+      "Fake": "연결/취소/state·redirect/권한/신원·사용자 비밀정보 보호·upload/publish timeout/중복/플랫폼별 상태 검증 통과",
+      "live": "NOT VERIFIED — OAuth·token refresh·upload·게시·삭제0",
+      "status": "Fake PASS / live NOT VERIFIED",
+      "remaining": "실제 Meta 앱/권한/Professional/Page 연결·인증 중계·단일 이미지 HTTPS 전달 인프라 확인 및 별도 승인. 인프라 배포 안 함"
+    },
+    {
+      "API": "YouTube",
+      "implementation": "기존 Desktop OAuth·PKCE/state·loopback·계정 바인딩·current-user DPAPI·explicit operation·resumable upload",
+      "Fake": "연결·취소·만료·갱신·callback·신원 및 승인·unknown·중복 upload/publish·secret redaction 검증 통과",
+      "live": "NOT VERIFIED — 계정 로그인·토큰 갱신·업로드·게시·삭제0",
+      "status": "Fake PASS / live NOT VERIFIED",
+      "remaining": "승인된 테스트 Desktop client와 테스트 계정, 동작별 별도 실행 승인 및 실제 권한 검증"
+    },
+    {
+      "API": "TikTok",
+      "implementation": "기존 Desktop callback·PKCE/state·계정/신원 바인딩·vault·upload 계약. production_enabled 기본 false 유지",
+      "Fake": "CSP 포함 관련65 PASS. callback/state/redirect/취소/갱신/토큰 보호/게시 경계 Fake 검증 통과",
+      "live": "BLOCKED / NOT VERIFIED — 실제 로그인·token·게시0",
+      "status": "Fake PASS / production BLOCKED",
+      "remaining": "실제 TikTok 제품/앱·권한 계약 승인 및 production 활성화 별도 개발/검증. 환경변수/GUI로 활성화 불가"
+    }
+  ],
+  "all_real_paid_supplier_calls": 0,
+  "all_real_OAuth_SNS_calls": 0,
+  "partial_Fake_counts": "focused-phases-safe.json; 전체 회귀는 완료 후 별도 집계",
+  "native_background_traffic": "Chrome 자체 native 배경 통신 전체 차단 NOT VERIFIED. 페이지 요청 Mock·Node/Python Guard·고정 proxy/DNS/임시 profile 유지. OS 완전 격리 주장 안 함."
+}

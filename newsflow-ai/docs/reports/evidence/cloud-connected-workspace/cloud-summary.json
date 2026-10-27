@@ -1,0 +1,33 @@
+{
+  "api_and_publishing_before_copy": {
+    "failure": 0,
+    "error": 0,
+    "skipped": 0,
+    "total": 201,
+    "passed": 201,
+    "tested_sha": "75077729adcbe67fcf9954462485405747db621d"
+  },
+  "code_sha": "f8326f78e7ed15e9719c3cd174cbbea255dce846",
+  "python": "3.12.14",
+  "browser": "Cloud Chromium (not Windows)",
+  "initial_harness_issues": "Invalid synthetic Instagram account enum and missing response/DOM waits corrected. One invocation omitted Cloud browser path (25 passed/5 setup errors), then explicit Chromium scope passed 18/18. No product engine or security change.",
+  "ruff": "PASS",
+  "pip_check": "PASS",
+  "full_regression": "NOT RERUN; prior full result remains FAIL with 57 failures at dbd4ba4",
+  "actual_external_api_oauth_sns": 0,
+  "final_connected_scope": {
+    "total": 50,
+    "passed": 50,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "warning_count": 1,
+    "exit_code": 0
+  },
+  "reproduced_product_defects": [
+    "same-task approval navigation left stale review document",
+    "saved publishing review may prompt as unsaved before same-page reload"
+  ],
+  "latest_windows_tool_sha": "009d6095aceacecf8cdd55fefa76bb38db8f3095",
+  "code_sha_scope": "App/UI Cloud tests at f8326f7; unchanged at 009d609. Only CI BAT cleanup waiting changed after Cloud tests."
+}

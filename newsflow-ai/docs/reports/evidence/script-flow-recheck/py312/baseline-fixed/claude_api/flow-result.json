@@ -1,0 +1,40 @@
+{
+  "status": "PASS",
+  "provider": "claude_api",
+  "api_calls": [
+    "search",
+    "analysis",
+    "script"
+  ],
+  "target": "youtube",
+  "youtube_fake_uploads": 1,
+  "instagram_fake_calls": [],
+  "media": {
+    "format": "mov,mp4,m4a,3gp,3g2,mj2",
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "width": 1080,
+    "height": 1920,
+    "duration": 30.021029,
+    "fps": 30.0,
+    "audio_channels": 2,
+    "playable": true
+  },
+  "media_sha256": "0ee914930bdf9295f7d38808092e7c59c6fa4d06a77e3d2d0922fd70f9f3df7f",
+  "tts": "synthetic timed WAV silence, not speech",
+  "steps": {
+    "news": "PASS: Fake search once",
+    "analysis": "PASS: selected Fake provider once",
+    "script": "PASS: automatic validators and user review wait",
+    "edit": "PASS: existing form POST, revision 2, no inference",
+    "render": "PASS: synthetic TTS and actual FFmpeg",
+    "playback": "PASS: Windows Chrome when run on Windows; advancing currentTime",
+    "final_review": "PASS: explicit resume before local queue",
+    "publishing": "PASS: Fake services only, approval and successful-target replay guards"
+  },
+  "human_quality": "NOT VERIFIED",
+  "actual_external_api_oauth_sns": 0,
+  "javascript_errors": [],
+  "external_browser_requests": [],
+  "restart": "publisher coordinator reconstructed; same SQLite evidence, no successful-platform replay"
+}

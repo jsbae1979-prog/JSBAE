@@ -1,0 +1,7 @@
+{
+  "platform": "Windows Chrome",
+  "live_services": "blocked by windows_final_guard",
+  "scope": "visual-assets",
+  "sha": "672bebd8f50030534c0dcb43332a5641265692ec",
+  "python": "3.14"
+}

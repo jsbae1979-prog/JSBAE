@@ -1,0 +1,18 @@
+{
+  "phase": "full",
+  "started": "2026-10-25T13:42:33.684443+09:00",
+  "finished": "2026-10-25T14:23:40.719931+09:00",
+  "exit": 1,
+  "child_PID": 34732,
+  "Job_assigned": true,
+  "Job_kill_on_close": true,
+  "Job_process_counts": {
+    "active_before_close": 0,
+    "total_processes": 1308
+  },
+  "child_exited": true,
+  "timeout": false,
+  "provider_env_inherited": false,
+  "operating_risk": "current Windows user still has operating OS file rights; no complete OS isolation claim",
+  "original_Guard_preserved": true
+}

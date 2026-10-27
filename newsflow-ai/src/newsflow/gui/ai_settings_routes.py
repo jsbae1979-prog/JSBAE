@@ -9,25 +9,20 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
-from sqlalchemy import select
+from fastapi.responses import RedirectResponse
 
-from newsflow.db.models import AIUsage, AppSetting, utcnow
+from newsflow.db.models import AppSetting, utcnow
 from newsflow.intelligence.api_settings import invalidate_api_verification
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.intelligence.provider import OpenAIProvider, ProviderError
 from newsflow.intelligence.settings import (
-    CURRENCIES,
-    PRICE_DISCLAIMER,
-    PROVIDERS,
     SettingsError,
-    external_ready,
     read_settings,
     write_prices,
     write_settings,
 )
 
-from .routes import go, page
+from .routes import go
 
 router = APIRouter()
 
@@ -36,20 +31,11 @@ def _store(request: Request):
     return request.app.state.ai_keys
 
 
-@router.get("/ai-settings", response_class=HTMLResponse)
-def ai_settings(request: Request, saved: str = "") -> HTMLResponse:
-    sessions = request.app.state.sessions
-    settings = read_settings(sessions)
-    status = external_ready(sessions, _store(request))
-    with sessions() as session:
-        row = session.get(AppSetting, "ai_last_check")
-        last_check = json.loads(row.value) if row else None
-        usage = list(session.scalars(select(AIUsage).order_by(AIUsage.id.desc()).limit(20)))
-    return page(
-        request, "ai_settings.html", active="simple-settings", settings=settings, status=status,
-        providers=PROVIDERS, last_check=last_check, usage=usage, saved=saved[:20],
-        estimate=status["estimate"], prices=status["prices"], currencies=CURRENCIES, disclaimer=PRICE_DISCLAIMER,
-    )
+@router.get("/ai-settings")
+def ai_settings(request: Request, saved: str = "") -> RedirectResponse:
+    notices = {"settings": "legacy", "prices": "legacy-prices", "check": "legacy-check",
+               "key": "key", "cleared": "key_removed"}
+    return go("/simple-settings?saved=" + notices.get(saved, "") + "#selected-ai")
 
 
 @router.post("/ai-settings")

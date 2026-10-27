@@ -28,7 +28,8 @@ def test_settings_view_preserves_selection_and_never_checks_cli(client, app, mon
     assert page.text.count('action="/production/preferences"') == 1
     assert 'action="/ai/preferences"' not in page.text
     assert 'value="codex" selected' in page.text
-    assert "Claude Code · 권장" in page.text and "웹 검색: BLOCKED" in page.text
+    assert "Claude Code · RSS 전용" in page.text and "웹 검색: BLOCKED" in page.text
+    assert "Claude Code · 권장" not in page.text
     assert 'action="/ai/claude/status"' in page.text
     assert 'action="/ai/claude/login"' in page.text
     assert 'action="/ai/codex/status"' in page.text
@@ -38,11 +39,13 @@ def test_settings_view_preserves_selection_and_never_checks_cli(client, app, mon
     studio = client.get("/ai#claude-connection")
     assert studio.status_code == 200
     assert 'href="/simple-settings#connections"' in studio.text
-    assert 'id="claude-connection"' in studio.text and 'id="codex-connection"' in studio.text
+    assert 'action="/ai/claude/status"' in page.text and 'action="/ai/codex/status"' in page.text
+    assert 'action="/ai/codex/status"' not in studio.text
     assert 'action="/ai/preferences"' not in studio.text
     assert 'action="/ai/claude/login"' not in studio.text
     assert 'action="/ai/analyze"' in studio.text
-    assert "이번 분석의 AI·모델 변경" in studio.text
+    assert "이번 분석:" in studio.text and 'data-studio-provider-label' in studio.text
+    assert 'name="provider"' in studio.text and 'name="model"' in studio.text
 
 
 def test_unified_save_reuses_studio_source_and_survives_restart(tmp_path, fake, monkeypatch):

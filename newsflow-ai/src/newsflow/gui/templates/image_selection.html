@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}상위 3건 피드 · NewsFlow AI{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="/static/css/image-posts.css">{% endblock %}
+{% block content %}
+<div class="page-head"><div><a href="/">← 작업실</a><h1>{{ ui_icon('file',28) }} 상위 3건으로 피드 만들기</h1><p>저장된 선정 결과를 재사용합니다. 추가 AI 호출·공개 게시 없음.</p></div></div>
+{% if error %}<section class="card"><p role="status">{{ error }}</p><a href="/news#curation-results">선정 결과 확인 →</a></section>{% endif %}
+{% if group %}
+<section class="card"><strong>추천 1건 + 다른 후보 2건 → 개별 피드 3개</strong>
+<p>평가 #{{ group.run.id }} · {{ group.run.created_at|kst }} 저장 결과 · 최신 뉴스를 새로 검색한 결과가 아닙니다.</p>
+<p>문구 확인 → 내 사진 선택 또는 텍스트 카드 → 저장. 기존 릴스·대본은 그대로 보존됩니다.</p>
+<a href="/news?curation_id={{ group.run.id }}#curation-results">이 선정 결과 보기 ↗</a></section>
+<div class="feed-selection-grid">
+{% for item in group['items'] %}
+<article class="card feed-selection-item">
+<span class="badge">{{ '추천 1건' if item.rank == 1 else '다른 후보 ' ~ (item.rank - 1) }}</span>
+{% if item.saved %}<a href="/image-posts?post_id={{ item.saved[0].id }}#image-result"><img class="feed-card-image" src="/image-posts/{{ item.saved[0].id }}/file" alt="{{ item.saved[0].title }}" loading="lazy"></a>
+{% else %}<div class="feed-card-mock" aria-label="저장 전 문구 미리보기"><span>NEWSFLOW · {{ item.rank }}</span><strong>{{ item.title }}</strong><small>사진 미선택 · 저장 전</small></div>{% endif %}
+<h2>{{ item.title }}</h2><p>{{ item.origin }}{% if item.draft %} #{{ item.draft.id }}{% endif %}</p>
+<p class="feed-body">{{ item.body or '저장된 요약이 없습니다. 원문 확인 후 직접 작성하세요.' }}</p>
+<p class="hint">AI 선정 점수 {{ item.score if item.score is not none else '미평가' }} · 내용·날짜 검토 필요</p>
+<details><summary>보존할 출처 {{ item.references|length }}개</summary>{% for source in item.references %}<p>{{ source.publisher or '원문' }} · 발행: {{ source.published_at|default('미확인', true) }} <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer">출처 ↗</a></p>{% endfor %}</details>
+<div class="image-actions">
+{% if item.saved %}<a class="button primary" href="/image-posts?post_id={{ item.saved[0].id }}#image-result">저장한 피드 확인</a>{% endif %}
+<a class="button {{ '' if item.saved else 'primary' }}" href="/image-posts?analysis_id={{ group.run.id }}&amp;rank={{ item.rank }}">{{ '새 버전 편집' if item.saved else '문구·사진 편집 후 저장' }}</a>
+</div>
+</article>
+{% endfor %}
+</div>
+<p class="hint">뉴스 사진은 게시 이용 권한이 확인된 경우에만 사용하세요. 이미지 제작과 공개 게시 승인은 별도입니다.</p>
+{% endif %}
+{% endblock %}

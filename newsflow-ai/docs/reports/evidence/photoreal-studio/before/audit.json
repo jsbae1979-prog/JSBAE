@@ -1,0 +1,68 @@
+{
+  "screens": [
+    {
+      "screen": "home",
+      "viewport": "1366x768",
+      "overflow": 0
+    },
+    {
+      "screen": "news",
+      "viewport": "1366x768",
+      "overflow": 0
+    },
+    {
+      "screen": "video",
+      "viewport": "1366x768",
+      "overflow": 0
+    },
+    {
+      "screen": "library",
+      "viewport": "1366x768",
+      "overflow": 0
+    },
+    {
+      "screen": "home",
+      "viewport": "1920x1080",
+      "overflow": 0
+    },
+    {
+      "screen": "news",
+      "viewport": "1920x1080",
+      "overflow": 0
+    },
+    {
+      "screen": "video",
+      "viewport": "1920x1080",
+      "overflow": 0
+    },
+    {
+      "screen": "library",
+      "viewport": "1920x1080",
+      "overflow": 0
+    },
+    {
+      "screen": "home",
+      "viewport": "390x844",
+      "overflow": 0
+    },
+    {
+      "screen": "news",
+      "viewport": "390x844",
+      "overflow": 0
+    },
+    {
+      "screen": "video",
+      "viewport": "390x844",
+      "overflow": 0
+    },
+    {
+      "screen": "library",
+      "viewport": "390x844",
+      "overflow": 0
+    }
+  ],
+  "external": [],
+  "posts": [],
+  "errors": [],
+  "records_settings_media_preserved": true
+}

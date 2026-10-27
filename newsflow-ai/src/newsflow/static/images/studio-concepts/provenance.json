@@ -1,0 +1,38 @@
+{
+  "source": "User supplied newsflow_ai_photoreal_design_assets.zip; ChatGPT-generated concept art, not event photography",
+  "conversion": "Pillow LANCZOS resize, WebP quality 78 method 6, metadata omitted; no generative API",
+  "assets": [
+    {
+      "file": "hero_news_studio-512.webp",
+      "width": 512,
+      "height": 288,
+      "bytes": 27168,
+      "sha256": "a5c3931bfc0486c99a471aec5c0320e976d3a8d95c7f24f50ddc8d65eef8398c",
+      "source_sha256": "8ed5cd79f991a344496d7569bae817ff83f67bc90078720e96ae8ad86b11e017"
+    },
+    {
+      "file": "hero_news_studio-1024.webp",
+      "width": 1024,
+      "height": 576,
+      "bytes": 78102,
+      "sha256": "ae0eff921d40969f28e35b7cd2b80cb2bce9811ba391e155f10549345bdbf783",
+      "source_sha256": "8ed5cd79f991a344496d7569bae817ff83f67bc90078720e96ae8ad86b11e017"
+    },
+    {
+      "file": "media_gallery_studio-512.webp",
+      "width": 512,
+      "height": 288,
+      "bytes": 23410,
+      "sha256": "88b995d35021ed509f00366b20e75d15e2a1a7dd3a99cb71669ec76b33b03f21",
+      "source_sha256": "89510edfd51e29355da1b9690bbc96c049ed3cf2e0aac89d6b960b819b61103d"
+    },
+    {
+      "file": "media_gallery_studio-1024.webp",
+      "width": 1024,
+      "height": 576,
+      "bytes": 64008,
+      "sha256": "169c6ebd863729652654c06eb6c25fefe400493c41c13211660cd072e8550acc",
+      "source_sha256": "89510edfd51e29355da1b9690bbc96c049ed3cf2e0aac89d6b960b819b61103d"
+    }
+  ]
+}

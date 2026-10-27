@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "capabilities": {
+    "legacyAvailable": false,
+    "workspaceReadOnly": true
+  },
+  "dataOrigin": "development-fixtures",
+  "projects": [
+    {
+      "id": "news:1",
+      "title": "도시의 새로운 이동 · 합성 기사",
+      "kind": "news",
+      "technicalStatus": "success",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/video?job_id=1",
+      "thumbnailUrl": "/studio/assets/design-art-2.webp",
+      "mediaUrl": null,
+      "sourceLabel": "합성 프로젝트 · 실제 파일 생성 아님",
+      "draftId": 1
+    },
+    {
+      "id": "character:demo-character",
+      "title": "느긋한 월요일 · 합성 캐릭터",
+      "kind": "character",
+      "technicalStatus": "needs_script",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/character?job_id=demo-character",
+      "thumbnailUrl": "/studio/assets/design-art-0.webp",
+      "mediaUrl": null,
+      "sourceLabel": "합성 프로젝트"
+    },
+    {
+      "id": "image:4",
+      "title": "지속 가능한 도시 · 합성 이미지",
+      "kind": "image",
+      "technicalStatus": "saved",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/image-studio?draft_id=4",
+      "thumbnailUrl": "/studio/assets/design-art-3.webp",
+      "mediaUrl": null,
+      "sourceLabel": "설계 일러스트 · 합성"
+    },
+    {
+      "id": "image:5",
+      "title": "결과 불명 · 재요청 금지 합성 사례",
+      "kind": "image",
+      "technicalStatus": "unknown",
+      "contentReviewStatus": "review_required",
+      "publishApprovalStatus": "separate_approval_required",
+      "updatedAt": "2026-10-26T09:00:00+00:00",
+      "href": "/image-studio?draft_id=5",
+      "thumbnailUrl": null,
+      "mediaUrl": null,
+      "sourceLabel": "합성 오류 사례"
+    }
+  ],
+  "stats": {
+    "running": 0,
+    "ready": 1,
+    "publishDrafts": 1,
+    "total": 4
+  },
+  "today": {
+    "done": 1,
+    "running": 0,
+    "waiting": 2,
+    "failed": 0,
+    "unknown": 1,
+    "total": 4
+  },
+  "services": [
+    {
+      "id": "openai",
+      "label": "OpenAI",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    },
+    {
+      "id": "claude",
+      "label": "Claude",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    },
+    {
+      "id": "elevenlabs",
+      "label": "ElevenLabs",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    },
+    {
+      "id": "higgsfield",
+      "label": "Higgsfield",
+      "configured": false,
+      "verified": false,
+      "href": "/settings"
+    }
+  ],
+  "upcoming": [],
+  "upcomingStatus": "connected",
+  "activity": [
+    {
+      "title": "도시의 새로운 이동 · 합성 기사",
+      "at": "2026-10-26T09:00:00+00:00",
+      "href": "/video?job_id=1"
+    },
+    {
+      "title": "느긋한 월요일 · 합성 캐릭터",
+      "at": "2026-10-26T09:00:00+00:00",
+      "href": "/character?job_id=demo-character"
+    },
+    {
+      "title": "지속 가능한 도시 · 합성 이미지",
+      "at": "2026-10-26T09:00:00+00:00",
+      "href": "/image-studio?draft_id=4"
+    }
+  ]
+}

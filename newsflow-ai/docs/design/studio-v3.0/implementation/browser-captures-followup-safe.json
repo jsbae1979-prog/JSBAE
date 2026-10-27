@@ -1,0 +1,155 @@
+{
+  "captures": [
+    {
+      "screen": "dashboard",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "create",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "news",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "shorts",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "characters",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "images",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "automation",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "library",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "publishing",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "analytics",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "settings",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "onboarding",
+      "width": 1920,
+      "height": 1080,
+      "overflow": false
+    },
+    {
+      "screen": "dashboard",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "create",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "news",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "shorts",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "characters",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "images",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "automation",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "library",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "publishing",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "analytics",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "settings",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "screen": "onboarding",
+      "width": 1366,
+      "height": 768,
+      "overflow": false
+    }
+  ],
+  "checks": [],
+  "jsErrors": [],
+  "externalPageRequests": [],
+  "realProviderCalls": 0,
+  "productEngine": false,
+  "fullAppGuard": "not bypassed",
+  "windowsOSDPI": "NOT VERIFIED"
+}

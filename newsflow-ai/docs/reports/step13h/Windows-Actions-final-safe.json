@@ -1,0 +1,83 @@
+{
+  "run_id": 40162858700,
+  "job_id": 121077868756,
+  "code_SHA": "781a865f7528e32a7b270efd931fb0618d73b432",
+  "conclusion": "success",
+  "phase_evidence": [
+    {
+      "phase": "security",
+      "started": "2026-10-25T04:43:53.413834+00:00",
+      "finished": "2026-10-25T04:43:56.530945+00:00",
+      "exit": 0,
+      "child_PID": 5776,
+      "Job_assigned": true,
+      "Job_kill_on_close": true,
+      "Job_process_counts": {
+        "active_before_close": 0,
+        "total_processes": 2
+      },
+      "child_exited": true,
+      "timeout": false,
+      "provider_env_inherited": false,
+      "operating_risk": "current Windows user still has operating OS file rights; no complete OS isolation claim",
+      "original_Guard_preserved": true
+    },
+    {
+      "phase": "security",
+      "tests": 16,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "phase": "h",
+      "started": "2026-10-25T04:43:56.605244+00:00",
+      "finished": "2026-10-25T04:44:42.932622+00:00",
+      "exit": 0,
+      "child_PID": 9472,
+      "Job_assigned": true,
+      "Job_kill_on_close": true,
+      "Job_process_counts": {
+        "active_before_close": 0,
+        "total_processes": 27
+      },
+      "child_exited": true,
+      "timeout": false,
+      "provider_env_inherited": false,
+      "operating_risk": "current Windows user still has operating OS file rights; no complete OS isolation claim",
+      "original_Guard_preserved": true
+    },
+    {
+      "phase": "h",
+      "tests": 123,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "phase": "hflow",
+      "started": "2026-10-25T04:44:42.996847+00:00",
+      "finished": "2026-10-25T04:45:02.609437+00:00",
+      "exit": 0,
+      "child_PID": 8380,
+      "Job_assigned": true,
+      "Job_kill_on_close": true,
+      "Job_process_counts": {
+        "active_before_close": 0,
+        "total_processes": 21
+      },
+      "child_exited": true,
+      "timeout": false,
+      "provider_env_inherited": false,
+      "operating_risk": "current Windows user still has operating OS file rights; no complete OS isolation claim",
+      "original_Guard_preserved": true
+    },
+    {
+      "phase": "hflow",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ]
+}

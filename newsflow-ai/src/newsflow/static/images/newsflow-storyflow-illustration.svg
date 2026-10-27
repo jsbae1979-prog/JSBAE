@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="t d">
+<title id="t">NewsFlow AI 영상 제작 흐름 장식 그래픽</title>
+<desc id="d">뉴스 기사 카드가 영상 장면과 오디오 파형으로 이어지는 추상적인 파란색 미디어 스튜디오 그림입니다. 실제 뉴스나 게시 결과를 표현하지 않습니다.</desc>
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1c356a"/><stop offset=".53" stop-color="#304caa"/><stop offset="1" stop-color="#0b9cc3"/></linearGradient>
+  <linearGradient id="aqua" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#2563eb"/><stop offset=".6" stop-color="#29c9ed"/><stop offset="1" stop-color="#b5ecff"/></linearGradient>
+  <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8587ff"/><stop offset="1" stop-color="#4069d1"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#39d0ff" stop-opacity=".26"/><stop offset="1" stop-color="#39d0ff" stop-opacity="0"/></radialGradient>
+  <filter id="shadow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceAlpha" stdDeviation="13"/><feOffset dy="14"/><feComponentTransfer><feFuncA type="linear" slope=".25"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <clipPath id="clip"><rect x="488" y="110" width="308" height="504" rx="26"/></clipPath>
+</defs>
+<ellipse cx="750" cy="352" rx="520" ry="350" fill="url(#glow)"/>
+<g fill="none" stroke-linecap="round">
+  <path d="M70 502C310 315 354 440 508 344S875 204 1210 270" stroke="#2357bd" stroke-width="10" opacity=".37"/>
+  <path d="M65 521C320 332 345 454 524 353S895 215 1202 284" stroke="url(#aqua)" stroke-width="3" opacity=".85"/>
+  <path d="M198 590C438 418 626 587 800 410S1017 396 1207 339" stroke="#8d8bff" stroke-width="2" opacity=".46"/>
+</g>
+<g filter="url(#shadow)" transform="rotate(-9 358 371)">
+  <rect x="161" y="190" width="340" height="404" rx="22" fill="#0c1a31" stroke="#4d90dd" stroke-opacity=".78" stroke-width="2"/>
+  <rect x="181" y="210" width="300" height="165" rx="12" fill="url(#sky)"/>
+  <circle cx="395" cy="248" r="23" fill="#d4f4ff" opacity=".16"/>
+  <path d="M206 333l65-57 45 33 68-74 79 98z" fill="#061b3a" opacity=".52"/>
+  <rect x="184" y="408" width="207" height="12" rx="6" fill="#62bfff" opacity=".7"/>
+  <rect x="184" y="434" width="258" height="9" rx="4.5" fill="#7e9bce" opacity=".52"/>
+  <rect x="184" y="455" width="237" height="9" rx="4.5" fill="#7e9bce" opacity=".37"/>
+  <rect x="184" y="488" width="118" height="54" rx="11" fill="#16487e"/>
+  <g stroke="#94dfff" stroke-width="3" fill="none"><path d="M208 505h69M208 520h51"/></g>
+</g>
+<g filter="url(#shadow)">
+  <rect x="488" y="110" width="308" height="504" rx="26" fill="#101b37" stroke="#7bcdff" stroke-width="3"/>
+  <g clip-path="url(#clip)">
+    <rect x="492" y="114" width="300" height="497" fill="url(#sky)"/>
+    <path d="M473 423l112-164 96 90 103-175 70 335H473z" fill="#051a3b" opacity=".67"/>
+    <circle cx="688" cy="227" r="74" fill="#eaf7ff" opacity=".15"/>
+    <path d="M478 512c110-92 221-72 345-190" fill="none" stroke="#33d4fc" stroke-width="4" opacity=".8"/>
+    <path d="M482 550c98-85 244-87 340-154" fill="none" stroke="#a3acff" stroke-width="3" opacity=".64"/>
+    <g fill="#d8faff" opacity=".8"><rect x="527" y="553" width="26" height="7" rx="3.5"/><rect x="562" y="553" width="26" height="7" rx="3.5"/><rect x="597" y="553" width="26" height="7" rx="3.5"/></g>
+  </g>
+  <circle cx="642" cy="356" r="54" fill="#09234d" fill-opacity=".82" stroke="#b5efff" stroke-width="3"/>
+  <path d="M624 325l51 31-51 31z" fill="#d2f9ff"/>
+</g>
+<g filter="url(#shadow)" transform="rotate(9 935 380)">
+  <rect x="801" y="179" width="327" height="409" rx="22" fill="#0b1c35" stroke="#7a9ff6" stroke-width="2"/>
+  <rect x="821" y="200" width="287" height="177" rx="12" fill="url(#violet)"/>
+  <circle cx="968" cy="288" r="59" fill="#6eaeff" opacity=".18"/>
+  <path d="M827 356l55-68 42 21 44-58 73 105z" fill="#0d2c5b" opacity=".65"/>
+  <rect x="827" y="411" width="252" height="3" rx="2" fill="#31588b"/>
+  <g fill="url(#aqua)">
+    <rect x="837" y="464" width="10" height="36" rx="5"/><rect x="858" y="449" width="10" height="65" rx="5"/><rect x="879" y="461" width="10" height="40" rx="5"/>
+    <rect x="900" y="437" width="10" height="88" rx="5"/><rect x="921" y="457" width="10" height="47" rx="5"/><rect x="942" y="445" width="10" height="71" rx="5"/>
+    <rect x="963" y="469" width="10" height="27" rx="5"/><rect x="984" y="432" width="10" height="96" rx="5"/><rect x="1005" y="451" width="10" height="58" rx="5"/>
+    <rect x="1026" y="462" width="10" height="37" rx="5"/><rect x="1047" y="446" width="10" height="67" rx="5"/><rect x="1068" y="462" width="10" height="39" rx="5"/>
+  </g>
+</g>
+<g fill="#88d9ff" opacity=".7"><circle cx="121" cy="143" r="3"/><circle cx="353" cy="106" r="2"/><circle cx="1065" cy="105" r="2"/><circle cx="1172" cy="493" r="3"/><circle cx="299" cy="648" r="2"/></g>
+</svg>

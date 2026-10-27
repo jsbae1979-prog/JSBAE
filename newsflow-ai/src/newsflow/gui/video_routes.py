@@ -9,33 +9,115 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Resp
 from sqlalchemy import select
 
 from newsflow.db.models import (
+    ArticleThumbnail,
     AudioTrack,
     ContentDraft,
     IntelligenceRun,
+    NewsArticle,
     RenderJob,
     Scene,
     SubtitleTrack,
     VideoProject,
 )
 from newsflow.easy_setup import initial_state
-from newsflow.video.engine import RenderError
+from newsflow.video.engine import RenderError, load_image
 from newsflow.video.service import RenderBusy, VideoError
 from newsflow.video.tts import POLICY_MESSAGE, TTSError, TTSPolicyError, WindowsTTS
 
 from .production_context import context_for_draft
 from .routes import go, page
+from .video_presentation import video_presentation
 
 router = APIRouter()
 
 
 @router.get("/video/tts", response_class=HTMLResponse)
-def tts_settings(request: Request):
+def tts_settings(request: Request, sample: str = "", saved_voice: bool = False):
+    return _tts_page(request, sample=sample, message="음성 선택을 저장했습니다." if saved_voice else "")
+
+
+def _voice_catalog(request):
+    from newsflow.video.elevenlabs_tts import ElevenLabsKeys
+    from newsflow.video.elevenlabs_voices import ElevenLabsVoices
+
+    root = request.app.state.video.root
+    return ElevenLabsVoices(root, ElevenLabsKeys(root))
+
+
+def _tts_page(request, *, sample="", message="", error=False):
     from newsflow.video.elevenlabs_tts import MODELS, ElevenLabsKeys, settings
     from newsflow.video.supertonic_tts import SupertonicTTS
 
     video = request.app.state.video
-    return page(request, "tts_settings.html", active="video", config=settings(video.sessions), models=MODELS,
-                key=ElevenLabsKeys(video.root).status(), supertonic_ready=bool(SupertonicTTS().voices()))
+    catalog = _voice_catalog(request)
+    preview = None
+    if sample:
+        try:
+            if catalog.sample_path(sample).is_file():
+                preview = catalog.voice(sample)
+        except TTSError:
+            pass
+    response = page(request, "tts_settings.html", active="video", config=settings(video.sessions),
+                    models=MODELS, key=ElevenLabsKeys(video.root).status(),
+                    supertonic_ready=bool(SupertonicTTS().voices()), voice_catalog=catalog.cached(),
+                    voice_message=message, voice_error=error, sample_voice=preview)
+    if error:
+        response.status_code = 422
+    return response
+
+
+@router.post("/video/tts/voices/load")
+def load_elevenlabs_voices(request: Request, consent: bool = Form(False), more: bool = Form(False)):
+    if not consent:
+        return _tts_page(request, error=True, message="등록된 키로 음성 목록을 조회하는 데 동의하세요.")
+    catalog = _voice_catalog(request)
+    try:
+        catalog.load(more=more)
+    except TTSError as exc:
+        catalog.record_failure(exc)
+        return _tts_page(request, error=True, message=str(exc))
+    return go("/video/tts#elevenlabs-voices")
+
+
+@router.post("/video/tts/voices/select")
+def select_elevenlabs_voice(request: Request, voice_id: str = Form("", max_length=100)):
+    from newsflow.video.elevenlabs_voices import select_voice
+
+    try:
+        select_voice(request.app.state.sessions, voice_id, _voice_catalog(request))
+    except TTSError as exc:
+        return _tts_page(request, error=True, message=str(exc))
+    return go("/video/tts?saved_voice=true#elevenlabs-voices")
+
+
+@router.post("/video/tts/voices/preview")
+def preview_elevenlabs_voice(request: Request, voice_id: str = Form("", max_length=100),
+                            sample_consent: bool = Form(False)):
+    if not sample_consent:
+        return _tts_page(request, error=True, message="공개 샘플 다운로드에 동의하세요. 음성 생성은 하지 않습니다.")
+    try:
+        _voice_catalog(request).prepare_sample(voice_id)
+    except TTSError as exc:
+        return _tts_page(request, error=True, message=str(exc))
+    return go(f"/video/tts?sample={voice_id}#elevenlabs-voices")
+
+
+@router.get("/video/tts/voices/{voice_id}/sample")
+def elevenlabs_sample(request: Request, voice_id: str):
+    # Media GET is local-cache-only. External downloads require the protected POST above.
+    if (request.cookies.get("newsflow_csrf") != request.state.csrf
+            or request.headers.get("sec-fetch-site") == "cross-site"
+            or request.headers.get("origin", str(request.base_url).rstrip("/"))
+            != str(request.base_url).rstrip("/")):
+        raise HTTPException(403, "같은 앱 화면에서 샘플을 재생하세요.")
+    try:
+        path = _voice_catalog(request).sample_path(voice_id)
+    except TTSError:
+        raise HTTPException(404, "준비된 샘플이 없습니다.") from None
+    if not path.is_file():
+        raise HTTPException(404, "미리듣기 버튼으로 샘플을 먼저 준비하세요.")
+    return FileResponse(path, media_type="audio/mpeg", headers={"Cache-Control": "private, no-store",
+                                                               "X-Content-Type-Options": "nosniff"})
 
 
 @router.post("/video/tts")
@@ -131,12 +213,25 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
         voice_available = selected_voice == "offline-silence" or any(
             item["name"] == selected_voice for item in voices
         )
+        preview_job = None
+        if draft:
+            candidate = session.scalar(select(RenderJob).join(VideoProject).where(
+                VideoProject.draft_id == draft.id, RenderJob.status == "success",
+            ).order_by(RenderJob.id.desc()).limit(1))
+            if candidate and candidate.metadata_json.get("playable"):
+                try:
+                    if video.output_path(candidate.output_name).is_file():
+                        preview_job = candidate
+                except VideoError:
+                    pass
         return page(
             request,
             "video.html",
             active="video",
             draft=draft,
+            preview_job=preview_job,
             job=job,
+            job_presentation=video_presentation(job, playable=bool(job.metadata_json.get("playable"))) if job else None,
             project=project,
             scenes=scenes,
             subtitles=subtitles,
@@ -148,6 +243,10 @@ def studio(request: Request, draft_id: int | None = None, job_id: int | None = N
             draft_provider=draft_run.provider if draft_run else None,
             selected_voice=selected_voice,
             voice_available=voice_available,
+            news_image_articles=[{"article": session.get(NewsArticle, a.get("id", a.get("article_id"))),
+                                  "thumbnail": session.get(ArticleThumbnail, a.get("id", a.get("article_id")))}
+                                 for a in draft.sources.get("articles", [])] if draft else [],
+            image_links=video.news_images.choose(session, draft.sources, len(draft.content["scenes"]))[1] if draft else [],
             assets=video.assets_list(),
             outputs=video.outputs,
             assets_path=video.assets,
@@ -170,6 +269,7 @@ async def render(
 ) -> RedirectResponse:
     form = await request.form()
     try:
+        image_ids = [int(value) if value else None for value in form.getlist("image_article_ids")]
         identifier = request.app.state.video.start(
             draft_id,
             duration,
@@ -180,10 +280,12 @@ async def render(
             reviewed,
             asset_permission,
             external_tts_consent=external_tts_consent,
+            effects=[str(value) for value in form.getlist("effects")] or None,
+            image_article_ids=image_ids or None,
         )
     except RenderBusy:
         raise HTTPException(409, "이미 영상 제작이 실행 중입니다.") from None
-    except (VideoError, RenderError, TTSError):
+    except (VideoError, RenderError, TTSError, ValueError):
         raise HTTPException(
             422, "대본·영상 길이·음성·자막 안전 영역·소재 권한·디스크 공간을 확인하세요."
         ) from None
@@ -201,7 +303,11 @@ def status(request: Request, job_id: int) -> dict:
 
 @router.get("/video/jobs/{job_id}/file")
 def media(request: Request, job_id: int, download: bool = False) -> FileResponse:
+    from newsflow.db.models import WorkspaceRemoval
+
     with request.app.state.sessions() as session:
+        if session.get(WorkspaceRemoval, f"video:{job_id}"):
+            raise HTTPException(404, "휴지 보관한 영상입니다.")
         job = session.get(RenderJob, job_id)
         if not job or job.status != "success" or not job.metadata_json.get("playable"):
             raise HTTPException(404, "검증된 완성 영상이 없습니다.")
@@ -237,3 +343,52 @@ def video_thumbnail(request: Request, job_id: int) -> Response:
         except RenderError:
             raise HTTPException(503, "미리보기를 준비하지 못했습니다. 영상 재생은 별도로 확인할 수 있습니다.") from None
     return Response(preview, media_type="image/png", headers={"Cache-Control": "private, no-store"})
+
+
+@router.post("/video/news-image")
+def link_news_image(request: Request, draft_id: int = Form(ge=1), article_id: int = Form(ge=1),
+                    name: str = Form("", max_length=255), rights_basis: str = Form(min_length=3, max_length=400),
+                    permission: bool = Form(False)):
+    """Associate an existing local asset only. No image/network lookup on this route."""
+    if not permission:
+        raise HTTPException(422, "영상 사용권을 확인하세요.")
+    with request.app.state.sessions() as session:
+        draft = session.get(ContentDraft, draft_id)
+        article = session.get(NewsArticle, article_id)
+        if not draft or not article or article_id not in {a.get("id", a.get("article_id")) for a in draft.sources.get("articles", [])}:
+            raise HTTPException(422, "대본과 뉴스 연결을 확인하세요.")
+        thumbnail = session.get(ArticleThumbnail, article_id)
+        try:
+            if name == "__thumbnail__" and thumbnail:
+                request.app.state.video.news_images.import_thumbnail(
+                    article, thumbnail, request.app.state.news_thumbnails.adapter, rights_basis=rights_basis)
+            else:
+                request.app.state.video.news_images.remember(
+                    article, name, source_url=article.url, rights_basis=rights_basis, origin="collected")
+        except Exception:  # noqa: BLE001 -- redact every transport failure; never expose supplier URLs/credentials.
+            raise HTTPException(422, "이미지 연결 실패 · 형식·출처·사용권을 확인하세요. 기본 카드를 유지합니다.") from None
+    return go(f"/video?draft_id={draft_id}#news-image-links")
+
+
+@router.get("/video/news-images/articles/{article_id}")
+def news_image_preview(request: Request, article_id: int):
+    from io import BytesIO
+
+    from PIL import Image
+    with request.app.state.sessions() as session:
+        article = session.get(NewsArticle, article_id)
+        rows = request.app.state.video.news_images.candidates(article) if article else []
+    if not rows:
+        raise HTTPException(404, "사용권이 확인된 뉴스 이미지가 없습니다.")
+    try:
+        # This is an already validated local 20MB asset, not an RSS response (2MB).
+        with load_image(request.app.state.video.news_images.asset(rows[0]["name"])) as image:
+            image.thumbnail((320, 180))
+            clean = Image.new("RGB", image.size)
+            clean.paste(image)
+            output = BytesIO()
+            clean.save(output, format="JPEG", quality=82)
+            preview = output.getvalue()
+    except (OSError, ValueError, RenderError):
+        raise HTTPException(404, "이미지를 확인하세요. 기본 카드를 유지합니다.") from None
+    return Response(preview, media_type="image/jpeg", headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})

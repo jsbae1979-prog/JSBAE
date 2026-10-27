@@ -1,0 +1,172 @@
+[
+  [
+    "1–9",
+    "기존 승인 증거 유지",
+    "사전조사·격리통합·Windows 검증·정상종료·백업·초기복원. 개별 번호별 확정 원문 부재로 임의 세부 판정을 만들지 않음"
+  ],
+  [
+    "10",
+    "ACCEPTED",
+    "Git 읽기 진단; 명령 한정 longpaths. 복구 불필요"
+  ],
+  [
+    "11",
+    "SKIPPED",
+    "Git 복구 불필요"
+  ],
+  [
+    "12",
+    "PASS",
+    "백업·Git·DB 보존 검증의 승인된 시점"
+  ],
+  [
+    "12-IMG",
+    "CONDITIONAL",
+    "정적 증거와 실제 이미지 삽입을 구분"
+  ],
+  [
+    "13",
+    "CONDITIONAL ACCEPTED",
+    "전체 운영 적용 승인 아님"
+  ],
+  [
+    "13A",
+    "PASS",
+    "격리 로컬 이미지 MP4 검증"
+  ],
+  [
+    "13B",
+    "PASS — 분석",
+    "revision 기대값 분석"
+  ],
+  [
+    "13C",
+    "CONDITIONAL",
+    "적용 준비 검토"
+  ],
+  [
+    "13D",
+    "NOT IMPLEMENTED",
+    "뉴스 이미지 자동 연결 (과거 판정 보존; 최신 구현 검증은 13H로 분리)"
+  ],
+  [
+    "13E",
+    "CONDITIONAL",
+    "테스트 계약 수정 및 회귀"
+  ],
+  [
+    "13F",
+    "CONDITIONAL",
+    "운영 적용 안전성"
+  ],
+  [
+    "13G / 13G.1",
+    "CONDITIONAL ACCEPTED",
+    "회귀 분석·Guard/Fixture 계획"
+  ],
+  [
+    "13G.2-A",
+    "ACCEPTED",
+    "Guard 최소 수정"
+  ],
+  [
+    "13G.2-B",
+    "CONDITIONAL",
+    "Fake 및 회귀"
+  ],
+  [
+    "13G.3 / .4 / .5",
+    "CONDITIONAL ACCEPTED",
+    "Git/revision 진단·테스트 정합화·Python 검토"
+  ],
+  [
+    "13G.6",
+    "CONDITIONAL ACCEPTED",
+    "TikTok Fake·시간대·요청 크기 진단 PASS; 전체 회귀 잔여"
+  ],
+  [
+    "13G.7",
+    "CONDITIONAL ACCEPTED",
+    "Guard A CONDITIONAL / Fixture B PASS / 계약 C 분석 PASS"
+  ],
+  [
+    "13G.8",
+    "CONDITIONAL ACCEPTED",
+    "계약·브라우저 검증 설계"
+  ],
+  [
+    "13G.9",
+    "CONDITIONAL ACCEPTED",
+    "5,147 PASS / 63 FAIL / 91 ERROR / 4 SKIP; 신규 실패 0은 해당 비교 범위"
+  ],
+  [
+    "13G.10-A",
+    "BLOCKED (과거 판정)",
+    "종전 격리 준비 결과 보존 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행."
+  ],
+  [
+    "13G.10-A.1",
+    "CONDITIONAL (과거 판정)",
+    "기능 활성화 계획만; Sandbox/Hyper-V 보류 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행."
+  ],
+  [
+    "13G.10-A.2",
+    "BLOCKED — 점검 완료 (과거 판정)",
+    "실제 파일 접근 차단·native 자식 통신 차단 입증 부족. 원래 증거 15개 해시 일치 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행."
+  ],
+  [
+    "13G.10-A.3",
+    "BLOCKED — 준비·안전 점검 완료 (과거 판정)",
+    "합성 DB/프로필/포트 준비. 현재 사용자 자료 접근 허용 및 native egress 차단 미입증. 실제 브라우저 실행0 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행."
+  ],
+  [
+    "13G.10-A.4",
+    "CONDITIONAL — 분석·설계 완료 (과거 판정)",
+    "표준 계정 단독 BLOCKED; 추가 OS 자료/통신 경계 미검증. 계정/ACL/방화벽/브라우저 변경0 · 선행점검 종료. 최신 지시로 일반 Fake의 OS 완전격리 필수 조건을 적용하지 않고 B를 수행."
+  ],
+  [
+    "13G.10-B",
+    "CONDITIONAL ACCEPTED",
+    "사용자가 승인한 5210 PASS / 91 FAIL / 0 ERROR / 4 SKIP 기준"
+  ],
+  [
+    "13H",
+    "CONDITIONAL ACCEPTED",
+    "사용자 승인: 이미지 자동 연결/MP4/GUI 통과, 전체5264 PASS/92 FAIL/0 ERROR/4 SKIP. 과거 판정 보존."
+  ],
+  [
+    "13I",
+    "CONDITIONAL",
+    "공개RSS·Fake·TikTok CSP·사용자별 구조 검토 완료. 실제 유료·OAuth/SNS는 미검증. 전체 집계는 본 Step 보고서 참조."
+  ],
+  [
+    "13J",
+    "NOT AUTHORIZED",
+    "최종 핵심 기능·운영 안전성 검증은 별도 승인 대상."
+  ],
+  [
+    "14",
+    "NOT AUTHORIZED",
+    "운영 적용·앱 재시작 금지 유지"
+  ],
+  [
+    "15",
+    "PLAN ONLY",
+    "Windows3.14.7 EXE·데이터 분리·서명·설치 설계"
+  ],
+  [
+    "16",
+    "PLAN ONLY",
+    "다수 Windows 사용자 설치·데이터 분리 검증"
+  ],
+  [
+    "17",
+    "PLAN ONLY",
+    "업데이트·제거·복원·롤백 검증"
+  ],
+  [
+    "18",
+    "PLAN ONLY",
+    "배포 후보·일반 사용자 배포 승인"
+  ]
+]

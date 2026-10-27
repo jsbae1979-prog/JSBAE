@@ -1,0 +1,190 @@
+{
+  "run": {
+    "conclusion": "success",
+    "created_at": "2026-10-19T00:44:40Z",
+    "event": "push",
+    "head_sha": "009d6095aceacecf8cdd55fefa76bb38db8f3095",
+    "html_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/39182144245",
+    "id": 39182144245,
+    "status": "completed",
+    "updated_at": "2026-10-19T00:49:47Z"
+  },
+  "jobs": [
+    {
+      "conclusion": "success",
+      "id": 117836966557,
+      "name": "connected-workspace (3.12)",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v5",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-python@v6",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Pinned dependencies and pip check",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Prepare existing video and Chrome prerequisites",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Ruff",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Current API, publishing, UI and Windows contracts - no full suite replay",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Existing BAT start, duplicate block, stop and data restart",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Upload synthetic summaries and key screens only",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/setup-python@v6",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job",
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "conclusion": "success",
+      "id": 117836966726,
+      "name": "connected-workspace (3.14)",
+      "status": "completed",
+      "steps": [
+        {
+          "conclusion": "success",
+          "name": "Set up job",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/checkout@v5",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Run actions/setup-python@v6",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Pinned dependencies and pip check",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Prepare existing video and Chrome prerequisites",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Ruff",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Current API, publishing, UI and Windows contracts - no full suite replay",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Existing BAT start, duplicate block, stop and data restart",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Upload synthetic summaries and key screens only",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/setup-python@v6",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Post Run actions/checkout@v5",
+          "status": "completed"
+        },
+        {
+          "conclusion": "success",
+          "name": "Complete job",
+          "status": "completed"
+        }
+      ]
+    }
+  ],
+  "versions": {
+    "312": {
+      "python": "3.12.10",
+      "passed": 223,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "actual_bat": true,
+      "shutdown_restart": "PASS",
+      "pytest_summary": "223 passed, 1 warning in 166.79s (0:02:46)"
+    },
+    "314": {
+      "python": "3.14.8",
+      "passed": 223,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "warnings": 1,
+      "actual_bat": true,
+      "shutdown_restart": "PASS",
+      "pytest_summary": "223 passed, 1 warning in 193.89s (0:03:13)"
+    }
+  },
+  "artifacts": [
+    {
+      "expired": false,
+      "id": 12156766502,
+      "name": "pr35-connected-workspace-3.14",
+      "size_in_bytes": 372646
+    },
+    {
+      "expired": false,
+      "id": 12156234479,
+      "name": "pr35-connected-workspace-3.12",
+      "size_in_bytes": 372655
+    }
+  ],
+  "user_windows_11_pc": "NOT VERIFIED",
+  "actual_paid_oauth_sns_calls": 0
+}

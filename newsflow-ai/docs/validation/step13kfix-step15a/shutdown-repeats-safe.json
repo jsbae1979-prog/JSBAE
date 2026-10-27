@@ -1,0 +1,42 @@
+[
+  {
+    "phase": "j_shutdown_fixed1",
+    "exit": 0,
+    "Job": {
+      "active_before_close": 0,
+      "total_processes": 10
+    }
+  },
+  {
+    "phase": "j_shutdown_fixed2",
+    "exit": 0,
+    "Job": {
+      "active_before_close": 0,
+      "total_processes": 10
+    }
+  },
+  {
+    "phase": "j_shutdown_fixed3",
+    "exit": 0,
+    "Job": {
+      "active_before_close": 0,
+      "total_processes": 10
+    }
+  },
+  {
+    "phase": "j_shutdown_fixed4",
+    "exit": 0,
+    "Job": {
+      "active_before_close": 0,
+      "total_processes": 10
+    }
+  },
+  {
+    "phase": "j_shutdown_fixed5",
+    "exit": 0,
+    "Job": {
+      "active_before_close": 0,
+      "total_processes": 10
+    }
+  }
+]

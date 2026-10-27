@@ -1,0 +1,25 @@
+{
+  "ID": "tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login",
+  "new_in_this_full_vs_accepted_PASS": true,
+  "error": "Test-injected string JavaScript evaluation conflicts with retained CSP unsafe-eval restriction",
+  "historical_same_error_before_accepted_full": [
+    {
+      "phase_file": "remaining-details-private.json",
+      "CSP_unsafe_eval": true,
+      "message": "playwright._impl._errors.Error: Page.wait_for_function: EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed so"
+    }
+  ],
+  "source_unchanged": {
+    "tests/test_tiktok_gui.py": true,
+    "src/newsflow/gui/tiktok_routes.py": true,
+    "src/newsflow/oauth/tiktok.py": true,
+    "src/newsflow/main.py": true
+  },
+  "product_causality": "NOT VERIFIED",
+  "policy_changed": false,
+  "recheck": "FAIL 1 / PASS 0 / ERROR 0 / SKIP 0; same retained-CSP string-evaluation error",
+  "minimal_plan": "Replace test string-evaluation navigation sentinel with response/navigation/DOM state waits, preserving all consent, 303, secret-redaction, remote-request and page-error assertions; separate approval. No unsafe-eval or CSP bypass.",
+  "recheck_policy_or_test_changes": 0,
+  "new_product_regression_confirmed": false,
+  "pending": "Separate approval for the unrelated TikTok test synchronization fix; preserve CSP and all assertions"
+}

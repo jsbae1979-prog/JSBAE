@@ -1,0 +1,249 @@
+{
+  "at": "2026-10-25T15:36:45.926565+09:00",
+  "scope": "Completed focused API/SNS/TikTok phases; duplicate IDs counted once",
+  "unique_IDs": 849,
+  "totals": {
+    "PASS": 847,
+    "FAIL": 2
+  },
+  "files": [
+    {
+      "file": "tests/test_api_connection.py",
+      "PASS": 36,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_api_providers.py",
+      "PASS": 24,
+      "FAIL": 1,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_api_rejection_classification.py",
+      "PASS": 19,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_api_script_once.py",
+      "PASS": 21,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_api_unknown_acknowledgement.py",
+      "PASS": 17,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_collection_errors.py",
+      "PASS": 6,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_collector.py",
+      "PASS": 23,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_elevenlabs_401_codes.py",
+      "PASS": 23,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_elevenlabs_payment_rejection.py",
+      "PASS": 6,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_elevenlabs_saved_voices.py",
+      "PASS": 2,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_elevenlabs_subscription_status.py",
+      "PASS": 29,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_elevenlabs_voice_errors.py",
+      "PASS": 17,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_instagram_connection.py",
+      "PASS": 27,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_instagram_relay.py",
+      "PASS": 32,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_instagram_relay_client.py",
+      "PASS": 37,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_instagram_upload.py",
+      "PASS": 45,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_oauth_operations_flow.py",
+      "PASS": 32,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_oauth_protocol.py",
+      "PASS": 80,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_oauth_protocol_binding.py",
+      "PASS": 19,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_oauth_vault.py",
+      "PASS": 38,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_openai_connection.py",
+      "PASS": 18,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_phase1a_security.py",
+      "PASS": 6,
+      "FAIL": 1,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_production_dpapi.py",
+      "PASS": 46,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_production_vault.py",
+      "PASS": 36,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_serpapi_news.py",
+      "PASS": 20,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_social_transport.py",
+      "PASS": 22,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_step13i_api_contracts.py",
+      "PASS": 24,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_tiktok_callback_owner_contract.py",
+      "PASS": 14,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_tiktok_connection.py",
+      "PASS": 39,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_tiktok_gui.py",
+      "PASS": 7,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_tiktok_publishing_connection.py",
+      "PASS": 5,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_voice_engines.py",
+      "PASS": 15,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_youtube_connection.py",
+      "PASS": 29,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    {
+      "file": "tests/test_youtube_upload.py",
+      "PASS": 33,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    }
+  ]
+}

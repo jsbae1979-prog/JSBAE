@@ -1,0 +1,18 @@
+{
+  "base_sha": "044164b29240a10c9edd965ba35c6a303cd4e6c9",
+  "tested_sha": "eabc21ac532dc8fe694d7ae381817b7471ce90e6",
+  "scope": "Existing AI-scene GUI module 9 passed / 2 failed, two failed IDs rerun against baseline archived source in same venv",
+  "base_failures": {
+    "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus": "assert 5 == 6",
+    "tests.test_ai_video_gui::test_key_form_stores_through_dpapi_store_and_never_renders_the_key": "AttributeError: 'NoneType' object has no attribute 'NeedCurrentDirectoryForExePath'"
+  },
+  "current_failures": {
+    "tests.test_ai_video_gui::test_pages_render_default_off_and_keep_six_main_menus": "assert 5 == 6",
+    "tests.test_ai_video_gui::test_key_form_stores_through_dpapi_store_and_never_renders_the_key": "AttributeError: 'NoneType' object has no attribute 'NeedCurrentDirectoryForExePath'"
+  },
+  "same_ids": true,
+  "same_primary_failure_messages": true,
+  "new_failure_ids": [],
+  "historical_57_membership": true,
+  "full_suite": "NOT RERUN; historical FAIL retained"
+}

@@ -1,0 +1,61 @@
+name: Step13I Windows API and CSP Fake
+on:
+  push:
+    branches: [codex/newsflow-step13i-20261025]
+    paths: ['newsflow-ai/src/**', 'newsflow-ai/tests/**', 'newsflow-ai/tools/validation/step13i/**', '.github/workflows/newsflow-step13i-windows.yml']
+permissions:
+  contents: read
+jobs:
+  fake-images:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Test dependencies only
+        run: |
+          $venv = Join-Path $env:RUNNER_TEMP 'newsflow-314'
+          python -m venv $venv
+          & "$venv/Scripts/python.exe" -m pip install -r requirements-dev.lock playwright==1.64.1 colorama tzdata==2026.5
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ';C:/ProgramData/chocolatey/bin;C:/tools/ffmpeg/bin'
+          }
+          $ffmpeg = (Get-Command ffmpeg -ErrorAction Stop).Source
+          $ffprobe = (Get-Command ffprobe -ErrorAction Stop).Source
+          if ($ffmpeg.Replace('\','/') -like '*/Chocolatey/bin/*') {
+            $ffmpeg = (Get-ChildItem -LiteralPath 'C:/ProgramData/chocolatey/lib/ffmpeg/tools' -Recurse -File -Filter 'ffmpeg.exe' | Select-Object -First 1).FullName
+            $ffprobe = (Get-ChildItem -LiteralPath 'C:/ProgramData/chocolatey/lib/ffmpeg/tools' -Recurse -File -Filter 'ffprobe.exe' | Select-Object -First 1).FullName
+          }
+          if (-not $ffmpeg -or -not $ffprobe) { throw 'Actual FFmpeg tools required; no shim allowed' }
+          "NEWSFLOW_FFMPEG=$ffmpeg" >> $env:GITHUB_ENV
+          "NEWSFLOW_FFPROBE=$ffprobe" >> $env:GITHUB_ENV
+          "NEWSFLOW_TEST_BROWSER_EXECUTABLE=C:/Program Files/Google/Chrome/Application/chrome.exe" >> $env:GITHUB_ENV
+      - name: Guarded API, CSP, SNS, images and real FFmpeg Fake checks
+        run: |
+          $python = Join-Path $env:RUNNER_TEMP 'newsflow-314/Scripts/python.exe'
+          & $python -I -B tools/validation/step13i/prepare_windows.py (Join-Path $env:RUNNER_TEMP 'newsflow-step13i')
+          exit $LASTEXITCODE
+      - name: Publish non-media synthetic summaries only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: step13i-synthetic-evidence
+          path: |
+            ${{ runner.temp }}/newsflow-step13i/h/evidence/news-image-mp4/pixel-proof.json
+            ${{ runner.temp }}/newsflow-step13i/*-supervisor-safe.json
+            ${{ runner.temp }}/newsflow-step13i/ci-summary-safe.json
+            ${{ runner.temp }}/newsflow-step13i/ci-collected-IDs-safe.json
+            ${{ runner.temp }}/newsflow-step13i/hflow/evidence/real-click-flow-safe.json
+          if-no-files-found: ignore
+          retention-days: 14

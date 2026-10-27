@@ -1,0 +1,26 @@
+{
+  "create-1366x768-dpr1.png": [
+    1366,
+    978
+  ],
+  "create-1920x1080-dpr1.png": [
+    1920,
+    1080
+  ],
+  "dashboard-1366x768-dpr1.png": [
+    1366,
+    1072
+  ],
+  "dashboard-1920x1080-dpr1.png": [
+    1920,
+    1080
+  ],
+  "dashboard-empty-1920.png": [
+    1920,
+    1080
+  ],
+  "dashboard-error-1920.png": [
+    1920,
+    1136
+  ]
+}

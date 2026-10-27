@@ -16,6 +16,7 @@ from newsflow.db.models import (
     AppSetting,
     ArticleMention,
     ArticleScore,
+    ArticleThumbnail,
     AuditLog,
     CollectionRun,
     NewsArticle,
@@ -120,10 +121,16 @@ class NewsService:
                 session.add(ArticleMention(
                     article_id=article.id, source_id=source_id, publisher=item.publisher, url=item.url,
                 ))
+            from .thumbnails import thumbnail_url
+
+            image = thumbnail_url(getattr(item, "thumbnail_url", None))
+            if image and article.canonical_url == canonical and session.get(ArticleThumbnail, article.id) is None:
+                session.add(ArticleThumbnail(article_id=article.id, url=image, source_article_url=item.url,
+                                             publisher=item.publisher))
             identifiers.append(article.id)
         return {"article_ids": list(dict.fromkeys(identifiers)), "added": added, "duplicates": duplicates}
 
-    def collect(self, run_id: int, source_ids: list[int] | None = None) -> None:
+    def collect(self, run_id: int, source_ids: list[int] | None = None) -> dict:
         with self.sessions() as session:
             query = select(NewsSource).order_by(NewsSource.id)
             query = query.where(NewsSource.enabled if source_ids is None else NewsSource.id.in_(source_ids))
@@ -131,6 +138,7 @@ class NewsService:
             timeout = session.get(AppSetting, "request_timeout")
             timeout_value = int(timeout.value) if timeout else 10
         added = duplicates = succeeded = failed = 0
+        article_ids = []
         for source_id, name, url in sources:
             try:
                 articles = self.collector.collect(url, name, timeout_value)
@@ -138,6 +146,7 @@ class NewsService:
                 with self.sessions.begin() as session:
                     stored = self.store_articles(session, source_id, articles, rss_metadata=True)
                     source_added, source_duplicates = stored["added"], stored["duplicates"]
+                    article_ids.extend(stored["article_ids"])
                     session.add(
                         AuditLog(
                             run_id=run_id,
@@ -166,6 +175,10 @@ class NewsService:
                     )
         with self.sessions.begin() as session:
             self.rescore(session)
+            if succeeded and not failed:
+                from .lifecycle import replace_collection
+
+                replace_collection(session, article_ids)
             run = session.get(CollectionRun, run_id)
             assert run is not None
             run.added, run.duplicates = added, duplicates
@@ -188,6 +201,9 @@ class NewsService:
                     message=f"성공 {succeeded}, 실패 {failed}, 신규 {added}",
                 )
             )
+
+        return {"article_ids": list(dict.fromkeys(article_ids)), "added": added, "duplicates": duplicates,
+                "succeeded": succeeded, "failed": failed}
 
     def rescore(self, session: Session) -> None:
         now = utcnow()

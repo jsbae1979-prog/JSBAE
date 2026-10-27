@@ -1,0 +1,13 @@
+{
+  "run": 40169261845,
+  "job": 121096608166,
+  "SHA": "bd5393960f2ed4a37c6aad9cba257f89421dd4d7",
+  "status": "FAIL",
+  "phase": "security collection",
+  "cause": "PC bootstrap expected test_guard_security.py, but Step13H reusable CI bundle contained only browser-boundary security tests. No actual test case ran.",
+  "minimal_fix": "Include existing deny-before-I/O Guard tests with a generic forbidden path; preserve all assertions; apply accepted confcutdir/importlib collection boundary.",
+  "product_changes": 0,
+  "Guard_policy_changes": 0,
+  "test_skip_or_assertion_removal": 0,
+  "owned_active_processes_after_failure": 0
+}

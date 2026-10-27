@@ -18,6 +18,7 @@ from newsflow.db.models import (
 from newsflow.oauth.contracts import OAuthBlocked, OAuthError
 from newsflow.oauth.providers import oauth_safety_status
 from newsflow.oauth.service import AccountConnectionService
+from newsflow.publishing.categories import YOUTUBE_CATEGORIES
 from newsflow.publishing.service import ConflictError, PublishingError, PublishingService
 
 from .routes import go, page
@@ -100,6 +101,7 @@ def studio(
             request,
             "publishing.html",
             active="publishing",
+            youtube_categories=YOUTUBE_CATEGORIES,
             draft=draft,
             job=job,
             project=project,
@@ -129,6 +131,7 @@ def create(
     copyright_confirmed: bool = Form(False),
     sources_confirmed: bool = Form(False),
     ai_disclosure: str = Form("unreviewed"),
+    youtube_category_id: str | None = Form(None, max_length=3),
 ) -> RedirectResponse:
     try:
         identifier = service(request).create(
@@ -142,6 +145,7 @@ def create(
             copyright_confirmed=copyright_confirmed,
             sources_confirmed=sources_confirmed,
             ai_disclosure=ai_disclosure,
+            **({"youtube_category_id": youtube_category_id} if youtube_category_id is not None else {}),
         )
     except PublishingError as exc:
         raise HTTPException(422, str(exc)) from None
@@ -162,6 +166,7 @@ def edit(
     copyright_confirmed: bool = Form(False),
     sources_confirmed: bool = Form(False),
     ai_disclosure: str = Form("unreviewed"),
+    youtube_category_id: str | None = Form(None, max_length=3),
 ) -> RedirectResponse:
     try:
         service(request).edit(
@@ -176,6 +181,7 @@ def edit(
             copyright_confirmed=copyright_confirmed,
             sources_confirmed=sources_confirmed,
             ai_disclosure=ai_disclosure,
+            **({"youtube_category_id": youtube_category_id} if youtube_category_id is not None else {}),
         )
     except ConflictError as exc:
         raise HTTPException(409, str(exc)) from None

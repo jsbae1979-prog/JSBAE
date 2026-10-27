@@ -1,0 +1,153 @@
+NewsFlow AI — 실제 API 연동 준비 및 실행 계획
+2026-10-27 KST / 최종 판정: CONDITIONAL — 계획 작성 완료, 실제 실행은 미승인
+기준 제품 476d14a / 기준 보고 2286a87 / Python Windows 3.14.7
+
+1. 이번에 한 일과 하지 않은 일
+기존 소스·승인 증거를 읽고 공식 공개 문서의 모델·가격을 대조했습니다. 제품·테스트·EXE는 수정/실행하지 않았습니다.
+이전 EXE 15 PASS 및 Windows Actions 42 PASS를 재사용하고 동일 검사·전체 회귀를 반복하지 않았습니다.
+공식 웹 문서 열람은 수행했으나 공급사 API·인증·계정/잔액 조회·RSS 조회·생성·OAuth·SNS 요청은 모두 0회입니다.
+운영 키·토큰 값을 읽거나 복호화하지 않았습니다. 테스트 전용 계정/키는 이번 실행에 사용할 것으로 승인/제공된 것이 없습니다.
+
+2. 실제 실행을 막고 있는 조건
+- 현재 기술 EXE는 합성 전용입니다. credential-like 환경변수를 거부하고 공급사 socket을 차단하며 Fake Adapter를 설치합니다. 이 EXE에 실제 키를 넣거나 Guard를 풀어서 테스트하지 않습니다.
+- tools/ai_live_check.py는 과거 OpenAI/실기사 전용 검사이며 합성 기사를 거부합니다. 기본 실행은 선택 데이터 경로에서 migration도 할 수 있고, 현재 요구의 범용 실검증 도구가 아닙니다. 운영 앱 종료를 요구하는 방식으로 사용하지 않습니다.
+- 기존 Adapter를 재사용하는 정식 허용 실검증 진입점이 필요합니다. 새 테스트 프로필·테스트 키만 사용하고 승인 카운터/최종 전송 본문을 확인할 경계를 지정해야 합니다. 이번 계획 단계에서 이 도구를 구현하거나 실행하지 않았습니다.
+- 로컬 Guard에서 거절된 전체 앱 실행을 사전 import·간접 실행으로 우회하지 않습니다. 정식 실행 심사가 허용하지 않으면 해당 실검증은 BLOCKED입니다.
+- 테스트 키·계정 권한·여성 음성 ID·실제 계정 요금·720p 영상 견적은 미확정입니다. 공개 문서의 모델 존재와 실계정 사용 권한은 별개입니다.
+
+3. 세 제작 기능의 연결 구조
+뉴스 기본 영상:
+공개 RSS 또는 SerpApi google_news → 선택 기사 → 사용자가 승인한 OpenAI/Claude 분석 1회 → 대본 1회 → 권리 확인된 로컬 이미지 자동 연결 → 선택 음성 → 기존 FFmpeg → 1080×1920 MP4 → 미리보기/사람 검토.
+기본 FFmpeg는 Higgsfield 호출 0회입니다. 이번 실험의 모델 전송 자료는 synthetic-inputs.json의 가상 기사이며, RSS 실제 수집 성공과 합성 자료 분석 성공을 따로 기록합니다. 실제 RSS 결과를 합성 기사로 바꾸거나 과거 기사를 최신 뉴스라고 표시하지 않습니다.
+뉴스 AI 영상:
+검토된 대본 → 전체 시각 장면 계획 N개 → 각 장면 공식 견적·별도 승인 → Higgsfield N개 → 검토 → 음성/자막·FFmpeg. 단일 5초 클립 스모크와 전체 AI 뉴스 검증은 구분합니다. 실패 시 카드 영상/다른 Provider로 자동 전환하지 않습니다.
+독립 이미지:
+프롬프트·OpenAI 모델·크기·품질 → 로컬 초안 → 별도 생성 승인 → /v1/images/generations → JPEG 검증·저장·다운로드 → 검토 후 뉴스/캐릭터 소재 재사용.
+뉴스 이미지 게시물은 기사·카드 원고/출처 검토와 별도입니다. 기본 피드 이미지는 OpenAI 호출 0회이며 최종 카드 텍스트는 로컬 렌더링합니다.
+캐릭터 영상:
+독립 Claude 모델·참조 PNG → 30초 스토리(3~5장면) → 참조 업로드 및 장면별 견적 → 승인된 장면 제출 → 상태/파일 검증 → 장면 검토·FFmpeg 합성. 기존 구조는 무대사 코미디이며 ElevenLabs를 자동 호출하지 않습니다.
+
+4. 모델 선택·공식 문서 대조
+뉴스 OpenAI 텍스트: gpt-4.1-mini. 현재 코드 목록에 있고 /v1/chat/completions를 사용합니다. 공식 문서는 deprecated이며 종료 예정일 2027-01-14를 표시합니다. 임의 최신 모델로 교체하지 않습니다. [O1,O2]
+뉴스/캐릭터 Claude: claude-sonnet-4-6 / claude-haiku-4-5-20251001 / claude-opus-4-6. 기존 목록·Messages/JSON 계약을 유지합니다. 초기 시험 제안은 Sonnet 4.6이며 사용자 선택 승인 전 Provider를 바꾸지 않습니다. [A1]
+이미지: gpt-image-2.5-flare-2026-09-08 및 gpt-image-2.5-sunburst-2026-09-08의 공식 모델 ID를 확인했습니다. 시험 제안은 Flare / 1024×1024 / low / JPEG / n=1 / 참조 없음. Sunburst는 별도 비교 승인 1회로만 추가합니다. 앱 크기 선택은 1024×1280, 1024×1024, 1024×1536, 1536×1024, 864×1536이며 품질은 low/medium/high입니다. 공급사의 추가 옵션을 앱 지원으로 주장하지 않습니다. [O3,O4,O5]
+음성: eleven_multilingual_v2 / eleven_flash_v2_5 / eleven_v3. 시험 제안은 기존 multilingual_v2와 테스트 계정의 사용자 승인 여성 음성입니다. 음성 ID는 아직 정하지 않았고 운영 선택값을 복사하지 않습니다. [E1,E2]
+뉴스 Higgsfield:
+- kling-video/v3.0-turbo/text-to-video: 공식 3~15초·720p/1080p·9:16 확인. 최초 단일 클립 시험 제안은 5초·720p·9:16. [H3]
+- pixverse/v6/text-to-video: 공식 1~15초·720p·9:16 확인. [H4]
+- alibaba/wan-3.0/text-to-video: 공식 2~30초·720p·9:16 확인. [H5]
+- Wan 3.0 Prime / Wan 2.7 / LTX 2.5 fast는 기존 코드 후보로 유지하되 이번 최신 공식 계약 재확인은 NOT VERIFIED입니다. 새 모델을 등록하지 않습니다.
+- 현재 뉴스 공통 Adapter는 prompt/duration/aspect_ratio/resolution 4필드를 전송합니다. PixVerse/Wan 공식 기본 generate_audio=true는 명시적으로 끄지 않으므로 음성 생성·가격 조건을 견적에서 확인해야 합니다. 이번에 입력 계약을 바꾸지 않습니다.
+캐릭터: bytedance/seedance-2.0/reference-to-video. 공식 720p·9:16·4~15초·image_urls를 확인했습니다. 앱은 더 좁은 4~10초, 총 30초 계약과 generate_audio=false를 유지합니다. 계정의 API 접근 권한은 미검증입니다. [H2]
+
+5. 계정·키·권한 준비
+모든 공급사에 운영과 분리된 테스트 계정/프로젝트 또는 별도 테스트 키를 사용합니다. 운영 DPAPI 암호문을 복사하거나 기본 운영 환경변수로 fallback하지 않습니다. 실제 키는 채팅·보고·GitHub·로그에 넣지 않고 승인된 테스트 프로필의 공급사별 보호 저장소에 사용자가 입력해야 합니다.
+- SerpApi: google_news 검색 권한, 검색 크레딧 최소 1개, 자동 조기갱신 여부 확인. /serpapi/settings 경로 재사용.
+- OpenAI: 테스트 프로젝트 API 키, 선택 텍스트/Images 권한·결제 상태·모델 사용 Tier, 필요한 경우 조직 인증. /api-settings/openai/key 재사용. ChatGPT 구독만으로 API 결제 권한을 확인한 것으로 처리하지 않음.
+- Claude: Claude Console의 테스트 Workspace API 키와 Messages 권한·크레딧. /api-settings/claude_api/key 재사용.
+- ElevenLabs: /video/tts/key, saved Voices 읽기·TTS·사용량 조회 권한, 여성 음성 ID와 해당 음성 사용 권한.
+- Higgsfield: /video-ai-settings/key. 공식 KEY_ID:KEY_SECRET 형식의 서버 자격증명·API 결제·해당 모델 권한. 공급사 웹 구독/할인 표시를 API 사용 가능이나 현재 잔액으로 가정하지 않음.
+계정/키 준비와 권한은 이번 미검증이며 기존 운영 키가 저장되어 있다는 사실로 대신하지 않습니다.
+
+6. 최소 호출 수와 시험 승인 범위 (계획 수치, 실행 허가 아님)
+RSS: 공개 Feed 1개. 정상 직접 연결 최소 robots.txt 1 GET + Feed 1 GET =2 HTTP. 현재 각 _get은 4회 리디렉션 hop을 허용하므로 서로 다른 origin 경유 최악의 상한은 20 HTTP입니다. 승인된 출처 URL을 먼저 지정해야 합니다. 기사 본문·원격 썸네일 다운로드는 이 범위에서 제외합니다.
+SerpApi: q=도서관 독서 안내 / KR / ko / google_news 1 GET. Trends·추가 검색·추가 페이지 0. 검색 1크레딧과 무료 현금 비용은 별개입니다.
+뉴스 Claude: 분석 1 POST + STANDARD 30초 대본 1 POST =2 생성. 별도 모델 확인 GET 최대1, 입력 토큰 계수 POST 최대2는 비생성 조회로 별도 승인합니다. AI 웹 검색/tool 사용은 0회입니다.
+OpenAI 텍스트: 사용자가 따로 선택한 경우만 분석+대본 2 POST, 모델 확인 GET 최대1. Claude 실패 시 fallback으로 호출하지 않습니다.
+ElevenLabs: 선행 구독 상태 1 GET + 내 음성 목록 1페이지 1 GET. 실제 검토 대본의 N개 장면은 각각 구독 상태 1 GET + 합성 1 POST이므로 N=1~3이면 추가 2N HTTP입니다. 3장면 최대안은 선행 포함 8 HTTP / 유료 합성 최대3회입니다. 총 전송문자 C<=200, 각 장면 <=400자를 시험 조건으로 제안하며 실제 대본 확정 후 승인받습니다. 4장면 이상이면 추가 승인 전 중단합니다. sample 다운로드나 별도 음성 스모크는 포함하지 않습니다.
+이미지: Flare 이미지 1장 1 POST, 필요 시 선택 모델 확인 GET 1회. Sunburst 비교는 별도 1 POST 승인. 실패/불명 시 다른 모델 생성 0회.
+뉴스 AI 클립 스모크: Kling 720p 9:16 5초, 견적 1 POST → 별도 생성 승인 → 생성 1 POST → 상태 GET 최대30(10초 간격/5분) → 다운로드 GET 1~4(최대3 redirect). 이 결과는 전체 뉴스 영상 성공이 아닙니다.
+뉴스 전체 AI: 최종 검토된 N개 시각 장면을 고정하고 견적 N / 생성 N / 상태 최대30N / 다운로드 최대4N. 기본 영상 승인에 포함하지 않습니다.
+캐릭터 30초 최소안: Claude 스토리 1 POST → 사용자 검토 → 장면이 10초×3개일 때만 참조 upload URL 1 POST + PNG 1 PUT → 견적 3 POST → 별도 승인 → 생성 3 POST → 상태 최소3/최대90 GET → 다운로드 최소3/최대12 GET. 최소15 HTTP, 별도 토큰 계수 1 POST까지 포함한 계획상 최대112 HTTP입니다. 4~5장면 결과는 허용하지 말고 추가 전송 전에 멈춥니다. 서브스크립션/SDK의 무제한 자동 polling을 사용하지 않습니다.
+FFmpeg: 로컬 합성 1회, 공급사 API 0회. 성공한 기존 음성·클립을 해시 검증 후 재사용합니다.
+상태 조회는 이미 알려진 request_id의 진행 확인이며 새 생성 재제출과 구분합니다. 5분 후 진행 중이면 ID와 pending 상태를 보존하고 추가 조회 범위를 승인받습니다.
+위 최대치는 계획한 시험 제한입니다. 이를 보장할 송신 카운터·최종 wire 점검을 승인된 실행 경계에서 확인하기 전 실제 실행 READY로 표시하지 않습니다.
+
+7. 공식 단가·예상 비용·상한 판정 (USD, 세금/환율/계정별 할인 제외)
+텍스트 / 100만 token당 입력·출력:
+- GPT-4.1 mini: $0.40 / $1.60 [O1]
+- Sonnet 4.6: $3 / $15, Haiku 4.5: $1 / $5, Opus 4.6: $5 / $25 [A1]
+산술 예: 실제 청구 입력 <=8,000·출력 <=3,000, 검색/tool/cache/fast/지역 premium 없음이라는 조건에서 요청당 각각 $0.008 / $0.069 / $0.023 / $0.115입니다. Sonnet 뉴스2+캐릭터1은 같은 조건에서 $0.207입니다. 이는 조건식 계산이며 확정 청구액·공급사 강제 현금 상한이 아닙니다.
+실제 송신 max_tokens=3,000을 기준으로 검토합니다. V2 보정(+400 분석/+600 대본)을 포함하려면 기존 Options base를 각각 2,600/2,400으로 지정하고 최종 본문을 확인해야 합니다. 캐릭터 Writer는 기존 3,000입니다. 과거 100,000 선택을 이 시험에 자동 계승하지 않습니다.
+Claude count_tokens는 공식 무료 계수 조회이나 계수 결과도 추정입니다. 현재 통합 전송 전용 계수 도구를 이 작업에서 구현하지 않았습니다. 계수/예상치를 절대 결제 한도로 오인하지 않습니다. [A2]
+OpenAI 이미지 2.5 Flare/Sunburst: 100만 token당 텍스트 입력 $5, 이미지 입력 $8, 이미지 출력 $30. 최초 시험은 참조 이미지 입력 0. 공식 GPT Image 2 계산기는 2.5 token량을 예측하지 않으므로 장당 고정 금액이나 총액 상한을 만들지 않습니다. 1장·1024²·low는 호출/품질 제한일 뿐 현금 한도가 아닙니다. 확정 견적 또는 변동 token 과금에 대한 사용자 승인 없이 생성은 BLOCKED. [O3,O4]
+ElevenAPI 공개 USD 단가: Multilingual v2/v3 $0.08/1,000자, Flash/Turbo $0.04/1,000자. C=200자라면 각각 $0.016/$0.008 산술 예시입니다. 고정 예문 76자는 Multilingual 기준 $0.00608입니다. 실제 생성할 대본/모델/음성은 별도 고정해야 합니다. [E1]
+특히 현 Adapter는 기존 subscription의 credit/tier/status/max_credit_limit_extension 필드를 검증합니다. 공식 ElevenAPI USD 과금 계정이 이 구형 필드·요금제 검사를 통과하는지 미검증입니다. 구독 요금·voice multiplier·해당 계정 단가와 잔액이 확정되지 않으면 USD 예시를 실제 상한으로 쓰거나 Guard를 풀지 않습니다.
+Higgsfield: 공개 페이지의 Seedance Reference 480p $0.118/초, Kling Turbo 1080p $0.070/초는 해상도·할인 조건이 다릅니다. 현재 시험 설정인 720p의 가격으로 대입하지 않습니다. 해당 exact payload의 /estimate 결과 Q_i가 필요하고, 전체 Q=sum(Q_i) 검토·승인 전 생성은 BLOCKED입니다. 견적은 청구 확정액이 아니며 15분 유효 조건을 지킵니다. 견적/업로드 요청 자체의 무과금 여부도 계정 확인 없이 단정하지 않습니다. [H1,H2,H3]
+RSS는 공급사 생성 요금 없음. SerpApi 무료 플랜은 월250검색, Starter 월$25/1,000검색이나 테스트가 신규 구독 결제를 허용하지는 않습니다. 남은 할당 안에서 검색 1크레딧 사용이면 추가 현금 결제 $0일 수 있으나 계정 한도·갱신 설정 미검증 상태에서는 보장하지 않습니다. [S1]
+따라서 현금 총상한은 지금 확정할 수 없습니다. 단가 확인·요청 수 고정과 현금 청구 상한은 구분합니다. 추측 금액 예약·새로운 요청별 임의 금액 차단 로직은 추가하지 않습니다.
+
+8. 전송 데이터와 참조 후보
+합성 기사2개, 이미지 프롬프트, 76자 음성 예문, 캐릭터 주제·모델·해상도는 synthetic-inputs.json에 저장했습니다. 실제 뉴스·개인정보·키·운영 이력을 포함하지 않습니다. 예문은 별도 음성 스모크 참고값으로 전체 대본 출력과 동일하다고 가정하지 않습니다.
+최종 system/schema/본문은 기존 서비스가 조립한 실제 wire로 별도 고정하고 hash·token·문자 수를 확인해야 합니다. 대본 검토 후 음성 문구가 바뀌면 변경분을 승인 없이 전송하지 않습니다.
+사용자가 이전에 제공한 캐릭터 PNG 후보는 1536×2752 / 6,301,438 bytes로 기존 제한(10MiB·4096px 이하)에 맞습니다. SHA-256:
+eab398be4bdd13ce9ffe501256ea34ab2173fbf3e53b5987ba593605a9ed4bd0
+이번에는 원본의 metadata/hash만 읽었고 테스트 프로필로 복사하거나 실행 입력으로 쓰거나 업로드하지 않았습니다. 이미지 자체·실제 저장 경로는 GitHub에 넣지 않습니다.
+이 파일을 시험에 사용할 권리·개발 복사·Higgsfield 공개 접근 URL 업로드·공급사 저장/삭제 조건은 별도 승인이 필요합니다. 사용자 PNG 전송 승인이 없으면 테스트 전용 PNG를 새로 지정하고 그 해시를 승인받습니다. 자동 대체하지 않습니다.
+
+9. 성공 판정·실패 처리
+RSS/SerpApi: HTTP·출처 URL·발행시각/모름·중복·요청 수 확인. 실제 기사 본문 scraping·원격 사진 자동 사용 없음. 이미지 자동 연결은 권리 근거 있는 로컬 합성 이미지로 검증합니다.
+분석/대본: 선택 Provider/모델·버전·schema·근거 없는 숫자/날짜/인용·길이·사용량 확인. 합성 결과는 검증 자료이며 실제 뉴스/사실검증 완료/게시 승인으로 표시하지 않습니다.
+음성: PCM 24kHz·alignment·WAV 길이·자막 cue·끝 잘림·사람의 여성 음성 청취 확인. 길이 초과면 중단하고 자동 축약·음성 재합성·다른 TTS 전환 없음. API V2/strict_audio_fit 경로에서 장면당 최초 1회만 허용하며 구형 자동 재합성 루프는 시험에 사용하지 않습니다.
+이미지: JPEG 실제 디코딩·선택 해상도·파일 크기·해시·내용/권리 검토·다운로드·뉴스/캐릭터 재사용 확인. 참조 기반 API 편집은 실행하지 않습니다.
+영상: request_id·완료 상태·다운로드 파일 해시·720p/9:16/장면 길이 확인 → 장면 검토·합성 승인 → 1080×1920·30초 MP4·장면별 프레임·음성/자막 싱크 확인. 로컬 최종 합성과 공급사 원본 규격을 구분합니다.
+401/403/402/429/timeout/불명/응답 파싱·안전 검사 실패 시 나머지 단계도 중단합니다. 응답 usage가 없는 실패를 $0로 쓰지 않습니다. 기존 결과 불명 API7·피드1·ElevenLabs reserved/402 기록은 로드/수정하지 않고, 새 시험 기록만 별도 저장합니다.
+동일 제출 자동 재시도·Provider 전환·성공 요청 재실행 금지. 알려진 request_id 조회는 승인한 횟수 안에서만 수행합니다. 서명 URL·응답 원문·인증 Header·키·토큰은 공개 보고에서 제외합니다. 새 원격 파일 삭제/유료 취소도 자동 실행하지 않습니다.
+
+10. 미구현/미검증 구분
+미구현: 참조 PNG 기반 OpenAI 유료 이미지 편집 연결, 현재 기술 EXE의 실제 공급사 실행 모드, 이번 요구에 맞는 승인형 합성 실API 실행 도구/계수·송신 카운터 연결(이번에는 개발하지 않음).
+미검증: 테스트 계정 권한·실키 인증·잔액·가격 조건, 이미지 장당 최대 요금, ElevenAPI USD 계정과 기존 구독 Guard의 호환성, 뉴스/캐릭터 HF 720p 공식 계정 견적·요청·다운로드, 여성 음성의 실제 출력, 실제 SNS 및 설치형 배포.
+기존 구현과 Fake PASS는 유지됩니다. 이번 신규 기능 결함으로 단정하거나 제품 코드를 고치지 않았습니다.
+
+11. 운영·GitHub·검증 보존
+운영 8765의 기존 PID 55740 유지, 18765 리스너 없음. 운영 앱 HTTP 요청·종료·재시작·코드 적용·DB/ledger 쓰기·키 사용·backup A/B 변경 0.
+직전 character-model-fix-final의 소스173·암호문6·미디어12·DB 해시 보존 PASS를 재사용했습니다. 이번에 불필요한 전수 해시나 동일 테스트를 반복하지 않았습니다.
+이번 변경은 이 계획 자료뿐이며 제품 기준 커밋 476d14a는 그대로입니다. 개발 브랜치 codex/newsflow-studio-v3-20261026, 시작 HEAD 2286a87. 계획 보고 커밋은 별도 Git 이력으로 기록합니다.
+PR #35 open/Draft/미병합, 원래 head codex/newsflow-ux-video-app / 6aef983 유지. main·운영 브랜치 변경 없음. 기존 4개 미커밋 줄바꿈 차이 보존.
+
+12. 전체 Step 1~18
+1 운영 조사: 기존 증거 보존
+2 로컬 변경 분류: 기존 증거 보존
+3 격리 비교: 기존 승인 보존
+4 통합 인수 기준: 기존 승인 보존
+5 백업 계획: 기존 승인 보존
+6 정상 종료·백업: 기존 승인 보존 / 이번 미실행
+7 A/B 무결성: 기존 근거 재사용 / 변경0
+8 격리 복원·SQLite: 기존 PASS 재사용
+9 통합 후보: 기존 승인 보존
+10 Git 진단: ACCEPTED
+11 Git 복구: SKIPPED
+12 통합 복원: 기존 PASS / IMG 후속 증거 보존
+13 A~K/Fix: 기존 판정 보존, 캐릭터 표시 수정 ACCEPTED. 새 실계정 API 검증 준비 CONDITIONAL / 실행 미승인
+14 최신 React 운영 적용·재시작: NOT AUTHORIZED
+15 기술 EXE 집중 검증 ACCEPTED / 설치형 제품 전체 조건부 유지
+16 다수 사용자 설치·분리: NOT AUTHORIZED
+17 업데이트·제거·복구: NOT AUTHORIZED
+18 일반 배포: NOT AUTHORIZED
+
+13. 실제 실행 전에 필요한 승인 요청 항목
+A. 실검증용 별도 프로필·정식 실행 경계·테스트 키/계정 alias 지정. 운영 키/DPAPI 자동복사 금지. 키는 채팅에 보내지 말고 승인된 보호 설정에 사용자가 직접 입력.
+B. 비생성 조회: RSS 출처/호스트와 최대HTTP, SerpApi 검색1크레딧, 선택 모델 조회, Claude token 계수, ElevenLabs 구독/내음성1페이지 각각의 횟수·권한 승인. 조회와 유료 생성은 별개.
+C. 뉴스 분석/대본: Sonnet 4.6 두 생성, 합성 자료 해시·최종 출력3000·시간300초·비용 조건 승인. OpenAI 비교를 원하면 Provider/모델과 두 요청을 따로 승인.
+D. 여성 음성: 테스트 음성 ID·검토된 각 문구·N·총문자수·요금제/단가 확인 후 장면별 생성 횟수 승인. 미확정 ID·요금으로 실행하지 않음.
+E. 독립 이미지: Flare 1장 설정과 실제 token 과금 방식·상한 불확정 조건에 대한 승인. 절대 현금 상한이 필수라면 확인될 때까지 BLOCKED.
+F. Higgsfield: 먼저 계정/모델 사용 가능·요금 확인, 참조 후보의 권리/복사/외부 업로드/저장 정책 승인, exact payload 견적만 지정 횟수로 조회. 그 Q_i 합계와 유효시간을 본 뒤 뉴스 단일 클립 또는 전체 장면/캐릭터3장면 생성·조회·다운로드를 별도 승인.
+G. 공개 게시·OAuth·운영 적용·일반 배포는 어느 승인 묶음에도 포함하지 않음.
+이 계획은 실행 승인이 아닙니다. 준비 결과를 보존하고 추가 실행 없이 중단합니다.
+
+공식 출처 (2026-10-27 열람):
+[O1] OpenAI GPT-4.1 mini model — https://developers.openai.com/api/docs/models/gpt-4.1-mini
+[O2] OpenAI deprecations — https://developers.openai.com/api/docs/deprecations
+[O3] OpenAI GPT Image 2.5 Flare — https://developers.openai.com/api/docs/models/gpt-image-2.5-flare
+[O4] OpenAI GPT Image 2.5 Sunburst — https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst
+[O5] OpenAI image generation guide — https://developers.openai.com/api/docs/guides/image-generation
+[A1] Claude model pricing — https://platform.claude.com/docs/en/about-claude/pricing
+[A2] Claude token counting — https://platform.claude.com/docs/en/build-with-claude/token-counting
+[E1] ElevenAPI pricing — https://elevenlabs.io/pricing/api
+[E2] ElevenLabs speech with timestamps — https://elevenlabs.io/docs/api-reference/text-to-speech/convert-with-timestamps
+[S1] SerpApi pricing — https://serpapi.com/pricing
+[H1] Higgsfield pricing — https://open.higgsfield.ai/pricing
+[H2] Seedance 2.0 reference-to-video schema — https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video
+[H3] Kling 3.0 Turbo T2V schema — https://open.higgsfield.ai/models/kling-video/v3.0-turbo/text-to-video/api-reference
+[H4] PixVerse V6 T2V schema — https://open.higgsfield.ai/models/pixverse/v6/text-to-video/api-reference
+[H5] Wan 3.0 T2V schema — https://open.higgsfield.ai/models/alibaba/wan-3.0/text-to-video/api-reference

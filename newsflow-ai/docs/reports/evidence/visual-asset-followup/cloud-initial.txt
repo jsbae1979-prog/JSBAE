@@ -1,0 +1,98 @@
+F..........................F.........                                    [100%]
+=================================== FAILURES ===================================
+_________________ test_news_fallback_and_mode_guidance_browser _________________
+
+app = <fastapi.applications.FastAPI object at 0x7fae5168ef90>
+fake = <newsflow.news.rss_adapter.FakeRSSAdapter object at 0x7fae51b76c90>
+browser = <Browser type=<BrowserType name=chromium executable_path=/home/agent/.cache/ms-playwright/chromium-1194/chrome-linux/chrome> version=151.0.7922.173>
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-78/test_news_fallback_and_mode_gu0')
+
+    def test_news_fallback_and_mode_guidance_browser(app, fake, browser, tmp_path):
+>       capture(app, fake, browser, tmp_path)
+
+tests/test_visual_asset_followup.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+app = <fastapi.applications.FastAPI object at 0x7fae5168ef90>
+fake = <newsflow.news.rss_adapter.FakeRSSAdapter object at 0x7fae51b76c90>
+browser = <Browser type=<BrowserType name=chromium executable_path=/home/agent/.cache/ms-playwright/chromium-1194/chrome-linux/chrome> version=151.0.7922.173>
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-78/test_news_fallback_and_mode_gu0')
+
+    def capture(app, fake, browser, tmp_path, *, check=True):
+        ids = seed_news(app, fake)
+        output = Path(os.environ.get('NEWSFLOW_VALIDATION_OUTPUT', str(tmp_path)))
+        output.mkdir(parents=True, exist_ok=True)
+        blocked, errors, observations = [], [], []
+        with app.state.sessions() as session:
+            before = [(a.id, a.title, a.url, a.summary) for a in session.scalars(select(NewsArticle))]
+        with local_server(app) as origin:
+            context = browser.new_context(locale='ko-KR', reduced_motion='reduce')
+            def guard(route):
+                if urlsplit(route.request.url).netloc == urlsplit(origin).netloc and route.request.method == 'GET':
+                    route.continue_()
+                else:
+                    blocked.append(route.request.url)
+                    route.abort()
+            context.route('**/*', guard)
+            page = context.new_page()
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            for width, height in [(1366, 768), (1920, 1080), (390, 844)]:
+                page.set_viewport_size({'width': width, 'height': height})
+                for name, path in [('home', '/'), ('news', '/news'), ('ai-video', '/video/ai')]:
+                    assert page.goto(origin + path, wait_until='networkidle').status == 200
+                    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2')
+                    if name != 'ai-video':
+                        container = '.dash-news-art' if name == 'home' else '.suite-topic-art'
+                        for key, identifier in ids.items():
+                            article = page.locator(f'a[href="/news/{identifier}"]').filter(has=page.locator(container)).first
+                            article.scroll_into_view_if_needed()
+                            if key == 'source':
+                                image = article.locator('img[data-news-thumbnail]')
+                                expect(image).to_be_visible()
+                                assert image.evaluate('(e)=>e.complete && e.naturalWidth > 0')
+                            if check:
+>                               expect(article.locator('.news-thumbnail-fallback')).to_be_hidden() if key == 'source' else expect(article.locator('.news-thumbnail-fallback')).to_be_visible()
+                                                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E                               AssertionError: Locator expected to be visible
+E                               Actual value: hidden 
+E                               Call log:
+E                                 - Expect "to_be_visible" with timeout 5000ms
+E                                 - waiting for locator("a[href=\"/news/3\"]").filter(has=locator(".suite-topic-art")).first.locator(".news-thumbnail-fallback")
+E                                   9 × locator resolved to <span class="news-thumbnail-fallback">…</span>
+E                                     - unexpected value "hidden"
+
+tests/test_visual_asset_followup.py:74: AssertionError
+__________ test_additive_migration_preserves_synthetic_legacy_tables ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-78/test_additive_migration_preser0')
+
+    def test_additive_migration_preserves_synthetic_legacy_tables(tmp_path):
+        engine = make_engine(tmp_path / "legacy.db")
+        config = Config()
+        config.set_main_option("script_location", str(Path(__file__).resolve().parents[1] / "src/newsflow/db/migrations"))
+        with engine.begin() as connection:
+            config.attributes["connection"] = connection
+            command.upgrade(config, "0015")
+            connection.execute(text("INSERT INTO news_sources (id,name,url,enabled,created_at) VALUES (1,'synthetic','https://example.com/feed',0,'2026-10-20')"))
+            connection.execute(text("INSERT INTO app_settings (key,value) VALUES ('keep','synthetic-only')"))
+            names = connection.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='alembic_version' ORDER BY name")).scalars().all()
+            before = {name: connection.execute(text(f'SELECT * FROM "{name}"')).all() for name in names}
+        migrate(engine)
+        with engine.connect() as connection:
+>           assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar() == "0017"
+E           AssertionError: assert '0018' == '0017'
+E             
+E             - 0017
+E             ?    ^
+E             + 0018
+E             ?    ^
+
+tests/test_news_thumbnails.py:181: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /workspace/JSBAE/newsflow-ai/.venv/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------- generated xml file: /tmp/newsflow-followup-cloud.xml -------------
+2 failed, 35 passed, 1 warning in 19.21s

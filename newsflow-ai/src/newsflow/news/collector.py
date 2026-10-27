@@ -35,6 +35,7 @@ class CollectedArticle:
     publisher: str
     summary: str
     published_at: datetime | None
+    thumbnail_url: str | None = None
 
 
 def parse_feed(payload: bytes, source_name: str) -> list[CollectedArticle]:
@@ -52,7 +53,8 @@ def parse_feed(payload: bytes, source_name: str) -> list[CollectedArticle]:
     result: list[CollectedArticle] = []
     if len(parsed.entries) > 1000:
         raise FeedError("RSS 항목이 최대 1000개를 초과했습니다.")
-    for entry in parsed.entries:
+    rss_items = root.findall("./channel/item") if root.tag == "rss" else []
+    for index, entry in enumerate(parsed.entries):
         title = plain(entry.get("title", ""), 500)
         url = entry.get("link", "")
         if not title or not url:
@@ -61,6 +63,12 @@ def parse_feed(payload: bytes, source_name: str) -> list[CollectedArticle]:
         validate_url(url)
         published = None
         raw_date = entry.get("published", "")
+        if not raw_date and len(rss_items) == len(parsed.entries):
+            raw_item = rss_items[index]
+            # feedparser maps RSS dc:date to updated. Read that explicit source
+            # field only; Atom updated and channel dates are not publication dates.
+            if (raw_item.findtext("link") or "").strip() == url:
+                raw_date = raw_item.findtext("{http://purl.org/dc/elements/1.1/}date") or ""
         if raw_date:
             try:
                 try:
@@ -72,9 +80,10 @@ def parse_feed(payload: bytes, source_name: str) -> list[CollectedArticle]:
             except (ValueError, TypeError, OverflowError):
                 pass
         publisher = plain(entry.get("source", {}).get("title", source_name), 200) or source_name
-        result.append(
-            CollectedArticle(title, url, publisher, plain(entry.get("summary", ""), 2000), published)
-        )
+        from .thumbnails import rss_thumbnail
+
+        result.append(CollectedArticle(title, url, publisher, plain(entry.get("summary", ""), 2000), published,
+                                       rss_thumbnail(entry, url)))
     return result
 
 

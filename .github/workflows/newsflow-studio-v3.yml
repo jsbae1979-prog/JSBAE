@@ -1,0 +1,68 @@
+name: NewsFlow Studio v3 focused validation
+on:
+  push:
+    branches: [codex/newsflow-studio-v3-20261026, codex/newsflow-ux-video-app]
+    paths:
+      - 'newsflow-ai/frontend/**'
+      - 'newsflow-ai/src/newsflow/gui/studio_v3.py'
+      - 'newsflow-ai/src/newsflow/studio/**'
+      - 'newsflow-ai/src/newsflow/creation/top_three_feeds.py'
+      - 'newsflow-ai/src/newsflow/gui/creation_routes.py'
+      - 'newsflow-ai/src/newsflow/main.py'
+      - 'newsflow-ai/tools/feed_top3/**'
+      - 'newsflow-ai/tools/studio_v3/**'
+      - '.github/workflows/newsflow-studio-v3.yml'
+permissions:
+  contents: read
+jobs:
+  frontend-and-readmodel:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Install pinned frontend dependencies
+        run: |
+          npm install --global pnpm@11.25.0 --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend install --frozen-lockfile --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Typecheck and build React
+        run: pnpm --dir frontend run build
+      - name: Install isolated read-model test dependencies
+        run: |
+          python -m pip install -e . pytest==8.4.2 httpx==0.28.1
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Synthetic read-only projection tests, no full app or provider calls
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+        run: python -m pytest -q -p no:cacheprovider --confcutdir tools/studio_v3/tests --junitxml=studio-readmodel.xml tools/studio_v3/tests
+      - name: TOP 3 batch Fake tests, no network or app startup
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+          NEWSFLOW_TOP3_EVIDENCE: '${{ runner.temp }}/top3-feed-evidence'
+        run: python -m pytest -q -p no:cacheprovider --confcutdir tools/feed_top3/tests --basetemp "$env:RUNNER_TEMP/top3-feed-tests" --junitxml=top3-feed-tests.xml tools/feed_top3/tests
+      - name: Approved Windows disposable synthetic full-app form integration
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+        run: python -m pytest -q -p no:cacheprovider --confcutdir tools/studio_v3/integration --basetemp "$env:RUNNER_TEMP/studio-v3-form-tests" --junitxml=studio-integration.xml tools/studio_v3/integration
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: studio-v3-focused-results
+          path: |
+            newsflow-ai/studio-readmodel.xml
+            newsflow-ai/studio-integration.xml
+            newsflow-ai/top3-feed-tests.xml
+            ${{ runner.temp }}/top3-feed-evidence

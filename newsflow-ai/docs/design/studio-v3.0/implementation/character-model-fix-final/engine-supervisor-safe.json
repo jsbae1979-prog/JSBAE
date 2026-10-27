@@ -1,0 +1,11 @@
+{
+  "exit": 0,
+  "Job": {
+    "active_before_close": 0,
+    "total_processes": 19
+  },
+  "exe_sha256": "b72452f5027e77155b21943edf2457de4d38b30c7479ec3afd6d315be831434b",
+  "PATH_contains_Python": false,
+  "operating_input": false,
+  "real_API": false
+}

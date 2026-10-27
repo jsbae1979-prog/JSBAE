@@ -1,0 +1,90 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "width": 1366,
+      "height": 768,
+      "button_rectangles": [
+        {
+          "x": 710.625,
+          "y": 600.6875,
+          "width": 122.5625,
+          "height": 44
+        },
+        {
+          "x": 833.1875,
+          "y": 600.6875,
+          "width": 122.5625,
+          "height": 44
+        },
+        {
+          "x": 955.75,
+          "y": 600.6875,
+          "width": 174.09375,
+          "height": 44
+        }
+      ],
+      "overlap": false,
+      "horizontal_overflow": false,
+      "saved_caption": "반도체",
+      "readonly": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "button_rectangles": [
+        {
+          "x": 728,
+          "y": 1178.0625,
+          "width": 122.5625,
+          "height": 44
+        },
+        {
+          "x": 850.5625,
+          "y": 1178.0625,
+          "width": 122.5625,
+          "height": 44
+        },
+        {
+          "x": 973.125,
+          "y": 1178.0625,
+          "width": 174.09375,
+          "height": 44
+        }
+      ],
+      "overlap": false,
+      "horizontal_overflow": false,
+      "saved_caption": "반도체",
+      "readonly": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "button_rectangles": [
+        {
+          "x": 56,
+          "y": 664.546875,
+          "width": 122.5625,
+          "height": 44
+        },
+        {
+          "x": 178.5625,
+          "y": 664.546875,
+          "width": 122.5625,
+          "height": 44
+        },
+        {
+          "x": 56,
+          "y": 708.546875,
+          "width": 174.09375,
+          "height": 44
+        }
+      ],
+      "overlap": false,
+      "horizontal_overflow": false,
+      "saved_caption": "반도체",
+      "readonly": true
+    }
+  ],
+  "scope": "saved synthetic protected scene; no POST"
+}

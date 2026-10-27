@@ -1,0 +1,8 @@
+[
+  "tests/test_model_picker_browser.py::test_known_choices_preserve_each_provider_edits_and_submit_only_canonical_model",
+  "tests/test_model_picker_browser.py::test_unknown_saved_model_stays_visible_and_is_never_replaced",
+  "tests/test_production_picker.py::test_click_change_save_shared_defaults_keyboard_mobile_and_no_inference",
+  "tests/test_higgsfield_model_pricing_browser.py::test_automatic_price_registration_consent_failure_and_narrow_layout",
+  "tests/test_full_image_pipeline.py::test_gui_plan_review_image_review_csrf_no_get_calls",
+  "tests/test_character_shorts.py::test_fake_gui_stages_csrf_and_no_new_startup_dispatch"
+]

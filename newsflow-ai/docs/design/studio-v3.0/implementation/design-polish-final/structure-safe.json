@@ -1,0 +1,35 @@
+{
+  "home_and_creation_layout_changes": 0,
+  "existing_home_styles_unchanged": true,
+  "upper_regions": [
+    {
+      "screen": "dashboard",
+      "width": 1920,
+      "unchanged_top_region_height": 580,
+      "pixel_identical": true,
+      "difference_bounds": null
+    },
+    {
+      "screen": "dashboard",
+      "width": 1366,
+      "unchanged_top_region_height": 530,
+      "pixel_identical": true,
+      "difference_bounds": null
+    },
+    {
+      "screen": "create",
+      "width": 1920,
+      "unchanged_top_region_height": 700,
+      "pixel_identical": true,
+      "difference_bounds": null
+    },
+    {
+      "screen": "create",
+      "width": 1366,
+      "unchanged_top_region_height": 700,
+      "pixel_identical": true,
+      "difference_bounds": null
+    }
+  ],
+  "scope": "pixel comparison of same synthetic captures after font/image decode; excludes project thumbnail fallback changes"
+}

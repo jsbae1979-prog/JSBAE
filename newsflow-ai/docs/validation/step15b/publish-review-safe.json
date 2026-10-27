@@ -1,0 +1,93 @@
+{
+  "files": 15,
+  "allowed_extensions": [
+    ".py",
+    ".txt",
+    ".json"
+  ],
+  "operating_paths": 0,
+  "credential_pattern_matches": 0,
+  "DB_media_backups_included": false,
+  "product_source_changed": false,
+  "Guard_modified": false,
+  "existing_test_modified": false,
+  "new_demo_harness_only": true,
+  "no_added_skip_xfail": true,
+  "rows": [
+    {
+      "path": "newsflow-ai/docs/validation/step15b/API-readiness-safe.json",
+      "bytes": 13398,
+      "sha256": "8eb8e2a9f0a6b8552848cc91dcf9d6e0c677fa01111922d0f4f9ecc5d4abfe85"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/ci-summary-safe.json",
+      "bytes": 1029,
+      "sha256": "ae115e3b1ea84da653ad5f70c10935dbbd1ecf3975ff6b10536b4c081b16ae59"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/demo-GUI-safe.json",
+      "bytes": 1478,
+      "sha256": "74aa307f0fbe188043bc05b455ef2ab57cd061f137a41f4757f135081a2fb9d8"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/deployment-unmet-safe.json",
+      "bytes": 1462,
+      "sha256": "336e53f9a1aa770b8d6f2c00f22bf0d89f6235fdf667ad05d44e4cedfb97db51"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/failure-diagnostics-safe.json",
+      "bytes": 1331,
+      "sha256": "120128e769b4d6851deffd085e6a212e64ae31ea218fe9fb212526d6fa54f39e"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/final-stop-safe.json",
+      "bytes": 218,
+      "sha256": "f5ef992574a46aecf7962af7acf58d6f4114f0769a29f41e9107a24e79f861fd"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/lifecycle-safe.json",
+      "bytes": 988,
+      "sha256": "02a2bbd5fef8db1cd01281231cb8ccdace3f04822cd17549f294730d7baddc3c"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/powershell-attempt-safe.json",
+      "bytes": 260,
+      "sha256": "cda73365f44bc7cdd70ccf40ef0e7bcda6c541108f563766722819b801b3c533"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/preparation-safe.json",
+      "bytes": 508,
+      "sha256": "3cb090cdb78072e970e0720e950bf68c5f615b7c0749519c9c680c56e34dd5a2"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/preservation-after-safe.json",
+      "bytes": 2433,
+      "sha256": "9fdfacdbcd344730b5d57fa2816ea424c44e9d8de4fbcd5006b816434aae7a27"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/REPORT.ko.txt",
+      "bytes": 13917,
+      "sha256": "401799a8dae586d9dcdd3228e6fba4dce0be4452741b8aca08dd53b8be77503e"
+    },
+    {
+      "path": "newsflow-ai/docs/validation/step15b/restart-persistence-safe.json",
+      "bytes": 296,
+      "sha256": "5ff25846a9b2364696b2492c5c65ba24f7ec9bf794a64ee85a7feb9fa8b198f2"
+    },
+    {
+      "path": "newsflow-ai/tools/demo/demo.py",
+      "bytes": 8683,
+      "sha256": "296f66b919ae37fdb84b7deac49e91ceb17fb51cdbeea02360206d1c07f7467d"
+    },
+    {
+      "path": "newsflow-ai/tools/demo/README.txt",
+      "bytes": 2637,
+      "sha256": "e8c378a3478dc47928bd6d9be3fa91d9955e3345fb2e4b3dea4c507b2239cb05"
+    },
+    {
+      "path": "newsflow-ai/tools/demo/test_user_demo.py",
+      "bytes": 4907,
+      "sha256": "69fd5617a99501b8a667f4195e8f52c22d2763008fd4f9cfc051f26c6d8714ce"
+    }
+  ]
+}

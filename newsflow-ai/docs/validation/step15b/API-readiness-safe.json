@@ -1,0 +1,197 @@
+{
+  "as_of": "2026-10-26",
+  "public_document_reading_only": true,
+  "account_calls": 0,
+  "paid_calls": 0,
+  "OAuth_SNS_calls": 0,
+  "demo_is_not_live_API_profile": true,
+  "providers": [
+    {
+      "provider": "RSS / Google News",
+      "models": "기존 RSS adapter, Google News/Trends RSS; LLM 없음",
+      "settings": "뉴스 수집·출처 관리",
+      "implemented": "기존 수집·파싱·이미지 출처 연결. Demo serve는 빈 FakeRSS 응답",
+      "approval_plan": "고정 공개 RSS URL 1개 GET 1회; 무인증·무과금 계약 확인 후 별도 범위 확정",
+      "data": "고정 지역/언어 또는 합성 검색어; 인증정보 없음",
+      "free_scope": "공개 문서 읽기 외 이번 뉴스 조회 0회. 공개 피드 접근은 공급사 정책/응답 상태 확인 필요",
+      "permission_cost": "API 키 없음; RSS 접근 보장 아님",
+      "readiness": "구현/Fake 증거 재사용; 이번 실제 피드 호출 없음",
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    },
+    {
+      "provider": "SerpApi",
+      "models": "google_news 엔진; 수집 계획의 복수 검색과 단일 검색 구분",
+      "settings": "설정 → 뉴스 수집 / SerpApi 키",
+      "implemented": "기존 검색 adapter·페이지·기사 파싱·이미지 메타데이터",
+      "approval_plan": "전용 테스트 키로 합성 query, 1 page GET 1회. 자동 페이지/재시도 없음",
+      "data": "고정 검색어,국가·언어,테스트 키",
+      "free_scope": "공개 가격표 Free 250 searches/month·50/hour. 실제 무료 잔여량 미확인",
+      "permission_cost": "Starter $25/month·1,000 searches. 성공 검색 1credit; 계정 권한/한도 별도 확인",
+      "readiness": "전용 키 미확인; 실제 요청 별도 승인",
+      "sources": [
+        "https://serpapi.com/pricing"
+      ],
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    },
+    {
+      "provider": "OpenAI text",
+      "models": [
+        "gpt-4.1-mini"
+      ],
+      "settings": "설정 → 뉴스·대본 AI / OpenAI API",
+      "implemented": "기존 API-managed 분석/대본 wire·오류/사용량 기록",
+      "approval_plan": "모델 접근 GET 1회 또는 합성 분석/대본 POST 1회는 분리 승인. 입력/출력 token 상한 고정; 자동 재시도 없음",
+      "data": "합성 기사/지시문,전용 테스트 키,선택 model",
+      "free_scope": "문서 공개. 모델 조회가 잔액 또는 무료 생성 보장은 아님",
+      "permission_cost": "gpt-4.1-mini 공개 문서 Deprecated 표시. $0.40 입력/$1.60 출력 per1M tokens, cached $0.10. 실계정 제공/종료 일정 확인 전 실행 대상 확정 금지",
+      "readiness": "Adapter 있음; 계정 접근/현행 모델 수명 NOT VERIFIED. 모델 자동 전환 안 함",
+      "sources": [
+        "https://developers.openai.com/api/docs/models/gpt-4.1-mini"
+      ],
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    },
+    {
+      "provider": "OpenAI image",
+      "models": [
+        "gpt-image-2.5-flare-2026-09-08",
+        "gpt-image-2.5-sunburst-2026-09-08"
+      ],
+      "settings": "이미지 제작 모델 선택 + 설정 OpenAI API 키",
+      "implemented": "독립 이미지 generation Adapter, 초안/검토/저장/재사용; reference 첨부는 로컬 보관, 유료 edit는 미구현",
+      "approval_plan": "참조 첨부 없이 합성 prompt·1024x1024·low·n=1, generation POST 최대1회. 테스트 키·비용 근거·별도 동의 먼저 확정",
+      "data": "합성 지시문,model/size/quality,test key; 사용자 이미지 전송 없음",
+      "free_scope": "공개 모델 문서에서 Free tier 미지원. 조직 확인이 요구될 수 있음",
+      "permission_cost": "두 모델 Standard: 텍스트 입력 $5, 이미지 입력 $8, 이미지 출력 $30 per1M tokens. 생성 장당 고정 요금 아님. token 사용량/옵션별 총액 미확정; 임의 장당 금액 표시 안 함",
+      "readiness": "공식 dated model ID 확인; 실제 계정·생성·청구 NOT VERIFIED",
+      "sources": [
+        "https://developers.openai.com/api/docs/models/gpt-image-2.5-flare",
+        "https://developers.openai.com/api/docs/models/gpt-image-2.5-sunburst",
+        "https://developers.openai.com/api/docs/guides/image-generation"
+      ],
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    },
+    {
+      "provider": "Claude",
+      "models": [
+        "claude-sonnet-4-6",
+        "claude-opus-4-6",
+        "claude-haiku-4-5-20251001"
+      ],
+      "settings": "설정 → 뉴스·대본 AI / Claude API; 캐릭터 화면 별도 모델",
+      "implemented": "뉴스 분석/대본·캐릭터 대본 Adapter 재사용. Claude 자체 이미지·영상 생성 아님",
+      "approval_plan": "합성 기사 또는 캐릭터 주제 중 하나, 메시지 POST 최대1회, 모델·token 상한·5분 제한·명시 승인, 실패시 중단",
+      "data": "합성 텍스트,선택 model,전용 테스트 키",
+      "free_scope": "공개 문서만 조회. 생성 무료로 간주 안 함",
+      "permission_cost": "Sonnet4.6 $3/$15, Opus4.6 $5/$25, Haiku4.5 $1/$5 (입력/출력 per1M tokens). 실제 요청 token/총액·계정 권한 미확인",
+      "readiness": "구현/Fake 재사용; 실제 모델·잔액·요청 미검증",
+      "sources": [
+        "https://platform.claude.com/docs/en/about-claude/pricing"
+      ],
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    },
+    {
+      "provider": "ElevenLabs",
+      "models": [
+        "eleven_multilingual_v2",
+        "eleven_flash_v2_5",
+        "eleven_v3"
+      ],
+      "settings": "설정 → 음성 / ElevenLabs 키·내 음성",
+      "implemented": "목록/샘플,subscription gate, timestamps PCM→WAV/cues,ledger/cache; 무단 다른TTS전환 없음",
+      "approval_plan": "목록 첫 page GET 1회 또는 고정 짧은 한국어 문장 TTS: subscription GET<=1 + synthesis POST<=1 별도 승인. 30초 전체 경로는 문장 분할로 요청이 늘 수 있어 이 승인과 분리",
+      "data": "test key,승인 voice ID,model,고정 합성 한국어 문장(예: 오늘은 합성 자료로 음성 연결을 확인합니다.)",
+      "free_scope": "목록/샘플도 권한 필요. 무료 계정에서 선택 voice 사용 가능 여부 미확인",
+      "permission_cost": "공개 API 표 Multilingual v2 $0.08/1k chars, Flash/Turbo $0.04/1k chars. v3 및 실제 플랜·voice multiplier·크레딧·청구 금액 별도 확인",
+      "readiness": "실제 키·음성 접근/과금 NOT VERIFIED; reserved/402 기록 보존",
+      "sources": [
+        "https://elevenlabs.io/pricing/api"
+      ],
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    },
+    {
+      "provider": "Higgsfield",
+      "models": [
+        "pixverse/v6/text-to-video",
+        "kling-video/v3.0-turbo/text-to-video",
+        "wan/v2.7/text-to-video",
+        "alibaba/wan-3.0/text-to-video",
+        "alibaba/wan-3.0-prime/text-to-video",
+        "lightricks/ltx-2.5/text-to-video/fast",
+        "bytedance/seedance-2.0/reference-to-video"
+      ],
+      "settings": "/video-ai-settings 및 캐릭터 모델·참조 설정",
+      "implemented": "기존 등록 model contract/견적·제출·status·다운로드 adapter. 뉴스 default PixVerse, 캐릭터 Seedance 참조만. 목록은 등록 계약이지 실계정 사용 보장 아님",
+      "approval_plan": "먼저 합성 prompt·최소 지원길이·720p·9:16 estimate POST 1회 별도 승인. 생성은 견적 승인 후 submit1+승인한 status횟수+download1의 별도 계획; 무제한 polling 금지",
+      "data": "test key,model/options,prompt; Seedance는 승인된 합성 참조 이미지 URL이 추가되어 외부 전달 준비 필요",
+      "free_scope": "인증 estimate도 무과금 확정 아님; 별도 승인 후 권한/청구 여부 확인",
+      "permission_cost": "계정별 공식 견적 미조회. 기존 사용자입력 단가는 실제 청구액으로 표시하지 않음. 임의 비용 금지",
+      "readiness": "실계정 모델권한·estimate·generation NOT VERIFIED; 참조 delivery 미준비이면 BLOCKED",
+      "sources": [
+        "https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video"
+      ],
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    },
+    {
+      "provider": "Instagram",
+      "models": "Reels / 단일 IMAGE feed; Carousel 제외",
+      "settings": "게시 허브 → Instagram 연결·설정",
+      "implemented": "Meta OAuth/토큰/중복보호,Reels 및 IMAGE container/media_publish 계약",
+      "approval_plan": "이번 0회. App/권한/테스트 프로계정·OAuth를 먼저 별도승인. 이후 미디어1개 컨테이너생성1+정해진상태조회+publish1 등을 사전확정; 인증과 공개게시 분리",
+      "data": "승인 redirect/scopes/account,선택한 합성 MP4/JPG·caption만; HTTPS image delivery 별도 승인",
+      "free_scope": "문서 읽기 외 계정조회도 승인 필요",
+      "permission_cost": "최신 Meta 문서 429로 이번 재확인 제한. App review/권한·HTTPS저장소비용·실계정 미검증",
+      "readiness": "Fake 증거 재사용; 실제 계정·HTTPS 전달 준비 전 실게시 BLOCKED",
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    },
+    {
+      "provider": "YouTube",
+      "models": "Shorts 동영상; image upload대상 아님",
+      "settings": "게시 허브 → YouTube 연결·설정",
+      "implemented": "OAuth/upload/독립 게시 상태/중복 방지 Adapter",
+      "approval_plan": "이번0회. 전용 테스트채널 OAuth 별도 승인 후 합성MP4 1개 private upload1을 별도승인. resumable session/chunk/status HTTP횟수는 파일크기로 사전고정",
+      "data": "승인 scope/redirect,합성MP4,title/description/privacy",
+      "free_scope": "quota 기반; OAuth권한/프로젝트 quota 조회 안 함",
+      "permission_cost": "계정·프로젝트 quota/업로드제약 미검증. 비용0으로 확정하지 않음",
+      "readiness": "Fake 재사용; 실연결/업로드 NOT VERIFIED",
+      "sources": [
+        "https://developers.google.com/youtube/data/reference/rest/v3/videos/insert"
+      ],
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    },
+    {
+      "provider": "TikTok",
+      "models": "Content Posting 동영상",
+      "settings": "게시 허브 → TikTok 연결·설정",
+      "implemented": "Fake OAuth/PKCE/state/redirect/CSP·게시계약. production_enabled=false 보호 유지",
+      "approval_plan": "실제호출0. 제품 production gate/권한 심사 해결 없이는 실행승인만으로 요청 불가. 관련 정책 변경 별도 승인",
+      "data": "이번 전송 없음. 향후 승인scope/redirect/testaccount/media만",
+      "free_scope": "개발자 App/권한·검토조건 별도",
+      "permission_cost": "계정 권한·프로젝트 정책 미확인; 공개 문서상 미검토client private visibility 제한",
+      "readiness": "실운영 BLOCKED; Fake PASS는 공개게시 지원증명이 아님",
+      "sources": [
+        "https://developers.tiktok.com/docs/en/content-posting-api-get-started"
+      ],
+      "real_calls_this_step": 0,
+      "test_credentials": "NOT VERIFIED; no stored key/token read",
+      "common_failure_policy": "실패/timeout/결과불명은 기록 보존 후 중단. 무승인 재시도·Provider 전환·공개게시 없음"
+    }
+  ]
+}

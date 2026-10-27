@@ -1,0 +1,432 @@
+{
+  "phase": "before",
+  "images": [
+    {
+      "width": 1920,
+      "stage": "before-decode-wait",
+      "values": [
+        {
+          "src": "/studio/assets/design-art-2.webp",
+          "loading": "lazy",
+          "complete": false,
+          "naturalWidth": 0,
+          "hidden": false,
+          "y": 715,
+          "height": 172
+        },
+        {
+          "src": "/studio/assets/design-art-0.webp",
+          "loading": "lazy",
+          "complete": false,
+          "naturalWidth": 0,
+          "hidden": false,
+          "y": 715,
+          "height": 172
+        },
+        {
+          "src": "/studio/assets/design-art-3.webp",
+          "loading": "lazy",
+          "complete": false,
+          "naturalWidth": 0,
+          "hidden": false,
+          "y": 715,
+          "height": 172
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "stage": "after-decode-wait",
+      "values": [
+        {
+          "src": "/studio/assets/design-art-2.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 723,
+          "height": 172
+        },
+        {
+          "src": "/studio/assets/design-art-0.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 230,
+          "hidden": false,
+          "y": 723,
+          "height": 172
+        },
+        {
+          "src": "/studio/assets/design-art-3.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 723,
+          "height": 172
+        }
+      ]
+    },
+    {
+      "width": 1366,
+      "stage": "before-decode-wait",
+      "values": [
+        {
+          "src": "/studio/assets/design-art-2.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 714,
+          "height": 123
+        },
+        {
+          "src": "/studio/assets/design-art-0.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 230,
+          "hidden": false,
+          "y": 714,
+          "height": 123
+        },
+        {
+          "src": "/studio/assets/design-art-3.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 714,
+          "height": 123
+        }
+      ]
+    },
+    {
+      "width": 1366,
+      "stage": "after-decode-wait",
+      "values": [
+        {
+          "src": "/studio/assets/design-art-2.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 722,
+          "height": 123
+        },
+        {
+          "src": "/studio/assets/design-art-0.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 230,
+          "hidden": false,
+          "y": 722,
+          "height": 123
+        },
+        {
+          "src": "/studio/assets/design-art-3.webp",
+          "loading": "lazy",
+          "complete": true,
+          "naturalWidth": 235,
+          "hidden": false,
+          "y": 722,
+          "height": 123
+        }
+      ]
+    }
+  ],
+  "responses": [
+    {
+      "path": "/studio/assets/design-art-7.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/api/studio/characters/demo-character/reference",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-7.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/api/studio/characters/demo-character/reference",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-4.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-1.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-6.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-2.webp",
+      "status": 404
+    },
+    {
+      "path": "/studio/assets/design-art-0.webp",
+      "status": 200
+    },
+    {
+      "path": "/studio/assets/design-art-3.webp",
+      "status": 200
+    }
+  ],
+  "captures": [
+    {
+      "name": "dashboard",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "create",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "shorts",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "characters",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "images",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "images-news",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "library",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "settings",
+      "width": 1920,
+      "height": 1080,
+      "scrollY": 0
+    },
+    {
+      "name": "dashboard",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "create",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "shorts",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "characters",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "images",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "images-news",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "library",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    },
+    {
+      "name": "settings",
+      "width": 1366,
+      "height": 768,
+      "scrollY": 0
+    }
+  ],
+  "checks": [
+    {
+      "name": "existing vertical synthetic MP4 metadata and decoded frame",
+      "width": 1080,
+      "height": 1920,
+      "duration": 30
+    },
+    {
+      "name": "1366 quick creation reachable by normal page scroll",
+      "y": 584.859375
+    },
+    {
+      "name": "existing vertical synthetic MP4 metadata and decoded frame",
+      "width": 1080,
+      "height": 1920,
+      "duration": 30
+    }
+  ],
+  "errors": [],
+  "external": [],
+  "productEngine": false,
+  "windowsOSDPI": "NOT VERIFIED",
+  "failedImage": {
+    "text": "뉴스 쇼츠합성 자료",
+    "hiddenImages": 1,
+    "images": 1
+  }
+}

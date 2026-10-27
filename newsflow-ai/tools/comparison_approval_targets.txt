@@ -1,0 +1,9 @@
+# Scoped Method B approval and touched authentication/history boundaries only.
+tests/test_comparison_approval.py
+tests/test_api_settings.py
+tests/test_api_unknown_acknowledgement.py
+tests/test_api_script_once.py
+tests/test_claude_script_response.py
+tests/test_claude_analysis_response.py
+tests/test_explainer_prompts.py
+tests/test_explainer_compatibility.py

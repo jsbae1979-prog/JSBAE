@@ -1,0 +1,97 @@
+{
+  "step": "13K",
+  "state": "CONDITIONAL - Fake implemented; approved scope limits and native shutdown risk remain",
+  "live_provider_requests": 0,
+  "modes": {
+    "news": {
+      "settings": "Existing search/script/voice defaults reused; new creation_news_video_model for future manual AI plans only",
+      "selection": "Existing Provider/model picker and registered Higgsfield model contract",
+      "job_freeze": "Existing production_context / ai_plan_contract; existing choices never rewritten",
+      "voice": "Existing local / ElevenLabs choice and model snapshot",
+      "video": "FFmpeg or full Higgsfield; model-ready gate preserved",
+      "account_verified": false
+    },
+    "image": {
+      "settings": "creation_image_defaults",
+      "provider": "OpenAI existing generations Adapter",
+      "models": [
+        "gpt-image-2.5-flare-2026-09-08",
+        "gpt-image-2.5-sunburst-2026-09-08"
+      ],
+      "input": "Independent prompt and local optional reference",
+      "output_sizes": [
+        "1024x1280",
+        "1024x1024",
+        "1024x1536",
+        "1536x1024",
+        "864x1536"
+      ],
+      "quality": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "freeze": "Versioned selection fingerprint in image_draft; explicit approval; durable claim in feed_image",
+      "reuse": "Reviewed clean PNG in own assets; explicit manual scene/character selection",
+      "reference_API_generation": "NOT IMPLEMENTED: separate edits API contract requires approval",
+      "account_verified": false
+    },
+    "character": {
+      "settings": "creation_character_defaults",
+      "script_provider": "Claude existing writer",
+      "script_models": [
+        "claude-sonnet-4-6",
+        "claude-haiku-4-5-20251001",
+        "claude-opus-4-6"
+      ],
+      "video_provider": "Higgsfield",
+      "video_model": "bytedance/seedance-2.0/reference-to-video",
+      "adapter_contract": "720p / 9:16 / scene 4-10 seconds, existing validated subset",
+      "new_credentials": "User-scoped VideoAIKeyStore; never silently fall back to HF_KEY",
+      "legacy_credentials": "Existing jobs retain original HF_KEY path",
+      "job_freeze": "Selection fingerprint + existing plan hash/quote key hash",
+      "account_verified": false
+    }
+  },
+  "cost_policy": {
+    "image": "No invented total; verified usage preserved, invoice unverified",
+    "character": "Existing explicit reference upload/official estimate approval, frozen quote hash and billed amount distinction",
+    "news": "Existing quote/use/invoice distinction; no arbitrary policy changes"
+  },
+  "approval_required": [
+    {
+      "item": "OpenAI reference-conditioned image edits",
+      "reason": "New API input/adapter contract; current approved scope forbids adding it"
+    },
+    {
+      "item": "Other character video families",
+      "reason": "Requires supported reference API schema and independent adapter verification"
+    },
+    {
+      "item": "Independent per-mode Claude verification records",
+      "reason": "Existing APIBudget model/verification gate remains global; changing auth policy requires approval"
+    },
+    {
+      "item": "Actual provider availability, fees and successful generation",
+      "reason": "Test account/key and bounded paid request approval required"
+    },
+    {
+      "item": "Step14 and Step15-18",
+      "reason": "Operating update and packaging/deployment not authorized"
+    }
+  ],
+  "security": {
+    "operating_paths_as_inputs": false,
+    "new_migration": false,
+    "Guard_changes": "No policy changes; test diagnostic exception type recording only",
+    "CSP_changes": false,
+    "new_shared_secret": false,
+    "HTTP_unknown_auto_retry": false
+  },
+  "Windows_distribution": {
+    "per_user_data": "Existing configured data root, no installation-relative image output",
+    "credentials": "Existing user-scoped encrypted key stores; actual secret decryption not tested",
+    "assets": "New static CSS/templates packaged by existing static resource collection; actual EXE NOT VERIFIED",
+    "build": "NOT STARTED"
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "step": "13J-final",
+  "verdict": "PASS — static final diff review; full regression pending",
+  "review_basis": [
+    "source-start-private.json: hash map only",
+    "tested-source-before-regression-private.json: hash map only",
+    "source-diff-before-focus.diff",
+    "immutable previous test file matching source-start hash"
+  ],
+  "files_reviewed": 19,
+  "changes": {
+    "modified_existing": 1,
+    "added": 18,
+    "deleted": 0,
+    "product_source": 0,
+    "migration": 0
+  },
+  "frozen_source_recheck": {
+    "files": 2209,
+    "missing": 0,
+    "hash_mismatches": 0
+  },
+  "files": [
+    {
+      "path": "newsflow-ai/tests/test_step13j_model_selection_contracts.py",
+      "change": "ADDED",
+      "scope": "new synthetic contract tests",
+      "SHA256": "2198e40764bfa5162f1ce5b70e09e0df790c0bd95e8702803a347d8dceb56d1f"
+    },
+    {
+      "path": "newsflow-ai/tests/test_windows_transition_plan.py",
+      "change": "MODIFIED",
+      "scope": "existing test fixture",
+      "SHA256": "8095cd26da8964d8177a0d2a84eaceeaf9f217ab0058f0c1de570364388c6090"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/baseline-code-manifest-safe.json",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "2cea1f953fc7de164ffefc462dab19b81d801c6821bba06a0e251732f2c18638"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/browser_bootstrap.py",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "2971405ba07276d3a0a95ede7b78daaf12cc4b3f7b8446a1400fab68b87ef3bf"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_flow-targets-safe.json",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "6840d828bb861e2c675e31351b7607469d144bf197f9eee292640c1ff4764f21"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_models-expected-IDs-safe.json",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "e0f4fbca623a3452675b9dba36cc6b8165299f9dc24d9253a3b4e68d649d7ba8"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_models-targets-safe.json",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "fd23d932f8fc0cbd7eebcae87e7ce2cbe69960a13524274390700a4b0fd16347"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_mode_gui-targets-safe.json",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "044a8955751865fa81c0a87a94fc9282161a0f080c97b76ce98124c68fca6091"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_native-targets-safe.json",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "822e64dffaed2d4c9f590f7d367430b381b36261fa210f7f679982f2e9891d4f"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/native_boundary.py",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "fed3f546ef8333eaac5e26bee2a228d999a358b522fc648b05ee2344aae3f787"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/native_child_bootstrap.py",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "2fe20d8b11b6fb937fd8e235a25a388f5eea7c8657476d2353d9d902f8879abe"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/phases-safe.json",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "7b695df6625fec6ab3c3ebfd30495d63ee1ccb8c89d2bf8af42527fe2febfd18"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/prepare_native_config.py",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "a3639cc49f4d4a0e4016f11a4e2fc1a73c863dc017829d651f97860dcbd005cc"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/prepare_windows.py",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "5b974f338781b9e3a4253af98131f9bfb399023bbd207cd2208540147652c661"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/README.md",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "33332eb4323171eac9c2e41940d105770837ed6e0ddf2f8a1f46e4047c6957c7"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/step13_guard.py",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/summarize.py",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "ff5cafcf3c2b3b5048c4cb093f089534ac79cb895cb97796f13eae9dffc0e014"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/test_native_boundary_security.py",
+      "change": "ADDED",
+      "scope": "test-only validation helper or manifest",
+      "SHA256": "7020b8911c111bc086b9e3e1c3060fcabda5e3ddff4a7f470b8378a20c5b0c03"
+    },
+    {
+      "path": ".github/workflows/newsflow-step13j-final-windows.yml",
+      "change": "ADDED",
+      "scope": "CI workflow",
+      "SHA256": "e46c7fe8244c0ce6f77afade958085c17dc489f6bb5ef5acd65f7051b30a6576"
+    }
+  ],
+  "test_contract_review": {
+    "existing_test_function_names_unchanged": true,
+    "existing_test_parameter_decorators_unchanged": true,
+    "existing_test_argument_signatures_unchanged": true,
+    "test_deletions": 0,
+    "skip_or_xfail_additions": 0,
+    "old_assertions": 32,
+    "new_assertions": 42,
+    "replaced_assertions": 1,
+    "replacement_reason": "run.bat checkout byte equality replaced by immutable restored byte SHA plus Windows CRLF format and CRLF/LF-normalized content equality. Main.py byte equality and all DB/media/approval/state assertions remain.",
+    "runtime_collection_ID_equality": "Parent full-regression comparison pending; AST preserves pre-existing test names and decorators."
+  },
+  "restoration_scope": {
+    "baseline_commit": "0a59bfb41eec6b243e4470f67cd53c1e7cd07e52",
+    "approved_fixed_file_count": 5,
+    "manifest_SHA_pinned": true,
+    "individual_input_and_restored_byte_SHA_verified": true,
+    "test_source_deleted_assertions": false,
+    "scope_change_explicit": "Original archive command requested the whole src subtree; this restricted test now covers the five explicitly approved immutable entry/dependency files. It does not certify full source-tree restoration.",
+    "logical_data_preservation_assertions_retained": true,
+    "rollback_transaction_failure_and_reopen_assertions_retained": true,
+    "unapproved_Git_archive_execution_removed": true
+  },
+  "security_review": {
+    "native_code_imported_by_product": false,
+    "Guard_global_disable_added": false,
+    "arbitrary_shell_or_executable_allow_added": false,
+    "PowerShell_only_pinned_hash_and_identity_validate": true,
+    "operating_database_input_added": false,
+    "provider_credentials_added": false,
+    "new_model_tests_use_Fake_adapters_and_reject_external_transports": true,
+    "unsupported_model_modes_are_explicit_rejection_cases": true,
+    "complete_OS_network_isolation_claimed": false,
+    "test_only_worker_suppression_documented": true
+  },
+  "CI_review": {
+    "Windows_Python": "3.14.7",
+    "permissions": "contents: read",
+    "GitHub_credentials_persisted": false,
+    "selected_phase_expected_total": 247,
+    "selected_counts": [
+      78,
+      52,
+      15,
+      40,
+      6,
+      55,
+      1
+    ],
+    "no_failure_skip_or_count_mismatch_acceptance": true,
+    "immutable_baseline_read_from_fixed_Git_blob": true,
+    "artifact_scope": "Safe counts, IDs and supervisor/baseline summaries only; raw logs, private configs, DB, media and credentials excluded.",
+    "live_CI_result": "Not concluded by static review."
+  },
+  "not_verified": [
+    "Full regression final results and original/new runtime ID set comparison are pending.",
+    "Actual operating migration, deployment, recovery and restart are not performed.",
+    "Task registration/logon automation is outside the identity/validate-only native scope.",
+    "Real provider, OAuth, SNS, EXE and complete OS traffic isolation are not certified."
+  ],
+  "source_changes_made_by_review": 0,
+  "test_executions_made_by_review": 0,
+  "report_contains_absolute_paths_or_private_values": false
+}

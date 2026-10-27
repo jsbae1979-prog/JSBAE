@@ -1,0 +1,42 @@
+[
+  {
+    "test": "tests.test_claude_audio_fit::test_ass_escapes_instruction_tags",
+    "reason": "Local Korean font unavailable"
+  },
+  {
+    "test": "tests.test_live_ai::test_single_approved_openai_script_generation",
+    "reason": "opt-in paid AI live test: set NEWSFLOW_AI_LIVE_TEST=1, NEWSFLOW_AI_API_KEY and NEWSFLOW_AI_LIVE_MAX_TOKENS"
+  },
+  {
+    "test": "tests.test_live_rss::test_google_news_live",
+    "reason": "opt-in live RSS: set NEWSFLOW_LIVE_TEST=1"
+  },
+  {
+    "test": "tests.test_oauth_callback::test_windows_callback_socket_uses_exclusive_bind",
+    "reason": "Native Windows SO_EXCLUSIVEADDRUSE requires Windows runner"
+  },
+  {
+    "test": "tests.test_oauth_lifecycle::test_native_dpapi_lifecycle_crash_reopen_preserves_account_isolation",
+    "reason": "Actual current-user DPAPI requires Windows"
+  },
+  {
+    "test": "tests.test_oauth_vault::test_real_windows_dpapi_synthetic_restart_isolation_rotation",
+    "reason": "Real current-user DPAPI requires Windows; Cloud NOT VERIFIED"
+  },
+  {
+    "test": "tests.test_operational_startup::test_native_windows_schema_roundtrip_without_registration",
+    "reason": "Actual Windows Task Scheduler XML engine, read-only; no OS registration"
+  },
+  {
+    "test": "tests.test_production_dpapi::test_real_windows_production_dpapi_restart_tampering_account_binding",
+    "reason": "Native production-kernel DPAPI needs Windows; Cloud NOT VERIFIED"
+  },
+  {
+    "test": "tests.test_production_vault::test_native_windows_synthetic_boundary_rotation_reopen_and_account_isolation",
+    "reason": "Native current-user DPAPI requires Windows"
+  },
+  {
+    "test": "tests.test_youtube_connection::test_native_youtube_client_and_token_vault_roundtrip_without_network",
+    "reason": "Windows current-user DPAPI requires Windows"
+  }
+]

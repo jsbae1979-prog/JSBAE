@@ -1,0 +1,14 @@
+{
+  "branch": "codex/newsflow-studio-v3-20261026",
+  "product_test_sha": "626a7ba231a48fd6e49d589920558ea5bc214656",
+  "run": 40355811611,
+  "status": "CONDITIONAL: approved React implementation and focused checks complete; stop for acceptance",
+  "resume": "Read FOLLOWUP_REPORT.ko.txt and CI-followup-safe.json. No operating update or native Guard bypass. Await final acceptance after report.",
+  "profile": "synthetic only",
+  "operating_update": false,
+  "paid_calls": 0,
+  "new_pr_created": false,
+  "pr35": "open Draft; old branch preserved",
+  "windows_focused_pass": 31,
+  "synthetic_ui_flows": 11
+}

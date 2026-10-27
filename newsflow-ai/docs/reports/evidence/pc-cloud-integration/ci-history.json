@@ -1,0 +1,26 @@
+[
+  {
+    "id": 40079555214,
+    "sha": "8064c13621499c7296cc7e40931646056284b6bf",
+    "conclusion": "failure",
+    "reason": "Legacy fixture/model/UI entrypoint mismatches; fixed without weakening production checks."
+  },
+  {
+    "id": 40079863502,
+    "sha": "d226849619a9fba72e547ce884f4735827c53c5c",
+    "conclusion": "success",
+    "reason": "Intermediate 605-case scope passed; later dialog event/stream teardown flakiness was separately found and covered."
+  },
+  {
+    "id": 40080069576,
+    "sha": "70d6805aa2a6efad0fd97862551385c84f67b2c3",
+    "conclusion": "failure",
+    "reason": "3.12 all passed; 3.14 core/media passed, a browser server teardown held an open stream. Test-only teardown bounded with regression."
+  },
+  {
+    "id": 40080805175,
+    "sha": "cbdda2da51ba53b5e0ef09aa0364d283bd4e527d",
+    "conclusion": "success",
+    "reason": "Both Windows matrices 606 passed; no failed/error/skipped tests."
+  }
+]

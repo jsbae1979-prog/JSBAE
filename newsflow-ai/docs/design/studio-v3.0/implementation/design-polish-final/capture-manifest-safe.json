@@ -1,0 +1,254 @@
+[
+  {
+    "file": "before/characters-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "602e6ae254201f4e187a2beb811738eda978edb6f7d03ca398fd0273d27a2884",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/characters-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "c1fead6c50932619c2476b8d5eb72e3f29497d99520a58d457b1c737b0b261ad",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/create-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "a847a5c9067d010bbaeafddfd0f93ab5e0d1ce6cb5ffbd56c196574e4cce2660",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/create-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "69495c22711bf4262b5a1e1e4041eac2ea3e2651c39844621f5d37da9d2cdac6",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/create-http404-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "c63c503cc2137df2233bdda87b64e9249eda871bd546dddcb6511c99187d3c2f",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/dashboard-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "2a39a2d9d898606cc125a52a00cf2e010ee7b0a0a98258d65191b2f72944e17f",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/dashboard-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "6e51690f4ad0a89281a59a27546bba1bd6bac4bcb43f05b48b42d571781ee39a",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/images-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "a50ee8196b27949378fc508945f77c125698eefb3e0d5ff7c137b65a9c2db228",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/images-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "1a26bdb03a28f4bc0478eca2a394c5864fcad0a6fb2ccf4a484b46e64458b917",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/images-news-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "9817fd1d2465b0bd60c00edd7515c153d7c41785f7f435a39a483cfce9ab3728",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/images-news-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "dba2ee733401d2598ed02ca593f3d8e3c576d00e93dfb14576789818a7c51d2c",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/library-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "8927b2a0f249a47873f2719235b7ee79b707b99295fd4ec6d3bf7b24335d1e1c",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/library-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "5518ebf9619db80a86f357f71d6e5ba3259b7d3858faf36bcf55b04ae34766eb",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/settings-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "2821cd2b4a71c7e031bf26ce6dde74addced9850a93acaf79c1574dbeb3cd7b9",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/settings-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "5cba1b8c002557d8b775baca78ba7b4cfc74b850bda0df4a4f840fbd0a985366",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/shorts-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "d20ab845132c1ee3628b28d6cdb46f8a7f8ba54e3f0e9e6693af6c0cd0804f53",
+    "content": "synthetic only"
+  },
+  {
+    "file": "before/shorts-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "acd1610a27fd1e48ec90beb560f2f2d2a364de54eaf19170e4b1b283e377c6c1",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/characters-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "e562a396d1f6fbb61646b0273e8b19c2ee581c9b365a43b4e9101243d12a9649",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/characters-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "83966fb467bb4926b2c7933381670ec38b0a12f879cd3975776fe64d7f3b01d7",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/characters-no-reference-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "aa1eea125347dcb225d4fc3f7eae09493379bf73abb4a15b100bbde838ee22b5",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/create-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "ac00bc3df2d3c3dda050e514d47fee921a7dc34b3789a0d11097d837b279781b",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/create-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "8af48da1eca295929a5624dc9775805fbd5fbb5a139add0d6fd17b86619b06a0",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/create-http404-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "5b6d1a331289083771e1355ac7a14e24da23ba8f4e74c29086e8fa982030fe25",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/dashboard-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "6360df4e92e119eda49414ccfcbab31a9282828310ca1ad62c32eff1bf3691b6",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/dashboard-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "9ca65f4e9c83d88434c7df6d4183df70d57ffb566b135b54378a65a8e70398eb",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/images-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "a50ee8196b27949378fc508945f77c125698eefb3e0d5ff7c137b65a9c2db228",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/images-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "1a26bdb03a28f4bc0478eca2a394c5864fcad0a6fb2ccf4a484b46e64458b917",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/images-news-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "9817fd1d2465b0bd60c00edd7515c153d7c41785f7f435a39a483cfce9ab3728",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/images-news-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "dba2ee733401d2598ed02ca593f3d8e3c576d00e93dfb14576789818a7c51d2c",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/library-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "887a1f6bd8d23650ab78869025ec39f83d91df31683a59c55501ddff911f061d",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/library-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "4048efa00d202d93f59998b5aafc83ee8272617a6a397ab8f1abf65f04582d91",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/settings-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "e4854f7ab2c94e6bd9a6b28bf29bbb52de891b864aa4d99d84ac574184ccf1b4",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/settings-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "6953de7d1ac4249b948ec72920ada6f10e610713c49d3949d3b3d570debc918c",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/shorts-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "354e9a0cf71c386d85bfd8d7fb956f7233250b3ceccff4068cc1e1c3fb92ec70",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/shorts-1920.png",
+    "width": 1920,
+    "height": 1080,
+    "sha256": "b35ca6e55a1b7675bd1df92586e6e5e11cae0e93c1b64cc5f2984e079ab9603c",
+    "content": "synthetic only"
+  },
+  {
+    "file": "after/shorts-editor-scroll-1366.png",
+    "width": 1366,
+    "height": 768,
+    "sha256": "a63c8e4e5d5da4bc6e615454ec33db8fc93e52572fbfff9ee490655922566975",
+    "content": "synthetic only"
+  }
+]

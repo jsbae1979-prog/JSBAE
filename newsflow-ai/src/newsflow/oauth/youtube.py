@@ -12,6 +12,7 @@ import json
 import threading
 from datetime import timedelta
 from pathlib import Path
+from time import monotonic
 from typing import Any
 from urllib.parse import urlencode
 from uuid import uuid4
@@ -21,6 +22,7 @@ from sqlalchemy import select, update
 
 from newsflow.db.models import (
     AppSetting,
+    AuditLog,
     OAuthConnection,
     OAuthIdentityBinding,
     OAuthLifecycleOperation,
@@ -31,7 +33,7 @@ from newsflow.intelligence.credentials import AIKeyStore, CredentialError
 from newsflow.publishing.auth import TokenBundle
 
 from .activation import youtube_operation
-from .callback import LoopbackCallbackListener
+from .callback import CALLBACK_REJECTION_MESSAGES, CallbackError, LoopbackCallbackListener
 from .identity import (
     IDENTITY_LINK_SCOPES,
     YouTubeHTTPSIdentityTransport,
@@ -40,6 +42,7 @@ from .identity import (
 )
 from .production import (
     GOOGLE_AUTHORIZATION_ENDPOINT,
+    BrowserLaunchError,
     DesktopClientConfig,
     GoogleHTTPSOAuthTransport,
     GoogleOAuthProtocol,
@@ -65,6 +68,10 @@ _MESSAGES = {
     "ambiguous_identity": "게시할 YouTube 채널 한 개를 확인하지 못했습니다.",
     "outcome_unknown": "인증 처리 결과를 확인하지 못했습니다. 자동으로 다시 요청하지 않습니다.",
     "connection_failed": "YouTube 연결에 실패했습니다. 계정과 Google 앱 설정을 확인해 주세요.",
+    "callback_invalid": "Google 인증 응답을 안전하게 검증하지 못했습니다.",
+    "callback_timeout": "Google 인증 응답 대기 시간이 만료되었습니다.",
+    "port_conflict": "로컬 인증 응답 포트를 사용할 수 없습니다.",
+    **{f"callback_{reason}": message for reason, message in CALLBACK_REJECTION_MESSAGES.items()},
 }
 
 
@@ -165,6 +172,8 @@ class YouTubeConnectionService:
         self.listener_factory = listener_factory or LoopbackCallbackListener
         self._listeners: dict[int, Any] = {}
         self._workers: dict[int, threading.Thread] = {}
+        # Authorization URLs contain state. Keep them only in memory, never in status/DB/logs.
+        self._authorization_links: dict[int, tuple[int, SecretStr, float]] = {}
         self._lock = threading.RLock()
 
     def save_client(self, raw_json: str) -> None:
@@ -256,6 +265,7 @@ class YouTubeConnectionService:
             self._listeners[account_id] = listener
             try:
                 with youtube_operation(consent=True):
+                    deadline = monotonic() + 300
                     launch = listener.start(f"youtube:{account_id}", scopes=IDENTITY_LINK_SCOPES)
                     url = GOOGLE_AUTHORIZATION_ENDPOINT + "?" + urlencode({
                         "client_id": client.client_id, "redirect_uri": launch.redirect_uri,
@@ -264,21 +274,52 @@ class YouTubeConnectionService:
                         "code_challenge": launch.request.code_challenge, "code_challenge_method": "S256",
                         "access_type": "offline", "prompt": "consent",
                     })
-                    self.browser.open(SecretStr(url))
+                    self._authorization_links[account_id] = (revision, SecretStr(url), deadline)
+                    try:
+                        self.browser.open(SecretStr(url))
+                    except BrowserLaunchError:
+                        # A validated URL remains usable manually on this PC until callback expiry.
+                        pass
                 worker = threading.Thread(target=self._complete, args=(account_id, operation_id, revision, client, listener),
                                           name="newsflow-youtube-connect", daemon=True)
                 self._workers[account_id] = worker
                 worker.start()
                 return account_id
             except Exception as error:  # noqa: BLE001 - sanitize browser and callback failures
+                self._authorization_links.pop(account_id, None)
                 listener.close()
                 self._fail(account_id, operation_id, revision, error)
                 raise YouTubeConnectionError("connection_failed") from None
+
+    def authorization_link(self, account_id: int) -> tuple[SecretStr, int]:
+        """Explicit local POST only; never create, extend or replay an OAuth operation."""
+        with self._lock:
+            saved = self._authorization_links.get(account_id)
+            if saved is None:
+                raise YouTubeConnectionError("expired")
+            revision, url, deadline = saved
+            with self.sessions() as session:
+                connection = session.get(OAuthConnection, account_id)
+                if (deadline <= monotonic() or account_id not in self._listeners
+                        or connection is None or connection.mode != MODE
+                        or connection.revision != revision or connection.status != "authorizing"):
+                    self._authorization_links.pop(account_id, None)
+                    raise YouTubeConnectionError("expired")
+            return url, max(0, int(deadline - monotonic()))
+
+    def reopen_authorization(self, account_id: int) -> None:
+        with self._lock:
+            url, _ = self.authorization_link(account_id)
+            with youtube_operation(consent=True):
+                self.browser.open(url)
 
     def _complete(self, account_id: int, operation_id: str, revision: int, client: DesktopClientConfig,
                   listener: Any) -> None:
         try:
             callback = listener.wait()
+            with self._lock:
+                if self._listeners.get(account_id) is listener:
+                    self._authorization_links.pop(account_id, None)
             with youtube_operation(consent=True):
                 callback.assert_valid(f"youtube:{account_id}", production=True)
                 if tuple(callback.scopes) != IDENTITY_LINK_SCOPES:
@@ -303,7 +344,9 @@ class YouTubeConnectionService:
         finally:
             listener.close()
             with self._lock:
-                self._listeners.pop(account_id, None)
+                if self._listeners.get(account_id) is listener:
+                    self._authorization_links.pop(account_id, None)
+                    self._listeners.pop(account_id, None)
 
     def _commit(self, account_id: int, operation_id: str, revision: int, client: DesktopClientConfig,
                 bundle: TokenBundle, channel: str, refresh_deadline: str | None) -> None:
@@ -356,6 +399,20 @@ class YouTubeConnectionService:
 
     def _fail(self, account_id: int, operation_id: str, revision: int, error: Exception) -> None:
         code = getattr(error, "code", "connection_failed")
+        callback_reason = None
+        observed_rejection = None
+        if isinstance(error, CallbackError):
+            # Only allowlisted classifications reach storage/UI; never the exception text.
+            if code == "expired":
+                # A local callback deadline is not evidence that Google rejected a token.
+                code = "callback_expired"
+            if isinstance(error.reason, str) and error.reason in CALLBACK_REJECTION_MESSAGES:
+                callback_reason = error.reason
+                if code in {"callback_invalid", "state_mismatch", "provider_error"}:
+                    code = f"callback_{callback_reason}"
+            if (isinstance(error.last_rejection, str)
+                    and error.last_rejection in CALLBACK_REJECTION_MESSAGES):
+                observed_rejection = error.last_rejection
         if getattr(error, "outcome_unknown", False) or isinstance(error, (TimeoutError, OSError)):
             code = "outcome_unknown"
         if code not in _MESSAGES:
@@ -370,6 +427,15 @@ class YouTubeConnectionService:
                 code = "outcome_unknown"
             if connection.status in {"cancelled", "unknown"}:
                 return
+            if isinstance(error, CallbackError):
+                session.add(AuditLog(level="warning", event="youtube_callback_rejected", message=json.dumps({
+                    "account_id": account_id, "stage": "callback", "outcome": code,
+                    "operation_id": operation_id, "revision": revision,
+                    "reason": callback_reason,
+                    # A pre-state rejection is an observation, not proof of why login expired.
+                    "last_rejected_request": observed_rejection if callback_reason is None else None,
+                    "observation": error.safe_observation(),
+                }, separators=(",", ":"))))
             status = "unknown" if code == "outcome_unknown" else "cancelled" if code == "cancelled" else "error"
             connection.status, connection.error_code, connection.updated_at = status, code, utcnow()
             account.api_ready, account.status = False, "not_connected"
@@ -378,6 +444,7 @@ class YouTubeConnectionService:
 
     def cancel(self, account_id: int) -> None:
         with self._lock:
+            self._authorization_links.pop(account_id, None)
             listener = self._listeners.get(account_id)
             if listener:
                 listener.cancel()

@@ -1,0 +1,27 @@
+{
+  "wide_run": 40290221694,
+  "attempts": [
+    {
+      "attempt": 1,
+      "passed": 380,
+      "failed": 1,
+      "error": 0
+    },
+    {
+      "attempt": 2,
+      "passed": 380,
+      "failed": 1,
+      "error": 0
+    }
+  ],
+  "failed_ID": "tests.test_operational_startup::test_native_windows_schema_roundtrip_without_registration",
+  "direct_error": "PowerShell-approved identity -> TimeoutExpired",
+  "root_cause": "NOT VERIFIED; Windows runner environment difference; same ID passes locally",
+  "focused_run": 40292282593,
+  "focused_pass_records": 145,
+  "focused_unique_IDs": 133,
+  "focused_guard_records": 130,
+  "focused_shutdown_records": 15,
+  "wide_failure_resolved": false,
+  "EXE_runner_build": false
+}

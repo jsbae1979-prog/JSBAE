@@ -1,0 +1,124 @@
+{
+  "step": "13H",
+  "verdict": "CONDITIONAL",
+  "feature_verdict": "PASS",
+  "Python": "3.14.7",
+  "code_SHA": "781a865f7528e32a7b270efd931fb0618d73b432",
+  "branch": "codex/newsflow-step13h-20261025",
+  "whole_regression": {
+    "PASS": 5264,
+    "FAIL": 92,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "old_IDs_missing": [],
+  "new_global_test_IDs": 55,
+  "new_global_H_tests": {
+    "PASS": 55
+  },
+  "old_failures_resolved": 0,
+  "new_old_PASS_regressions": [
+    "tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login"
+  ],
+  "new_test_failures": [],
+  "focused_image_and_video": {
+    "tests": 121,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "JPEG_WebP": {
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "real_click_flow": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "Guard": {
+    "tests": 78,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "Windows_Actions": {
+    "run_id": 40162858700,
+    "code_SHA": "781a865f7528e32a7b270efd931fb0618d73b432",
+    "conclusion": "success",
+    "counts": [
+      {
+        "phase": "security",
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "phase": "h",
+        "tests": 123,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "phase": "hflow",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "main_GUI": {
+    "routes": 15,
+    "viewport_samples": 45,
+    "JS_errors": 0,
+    "asset_failures": 0,
+    "external_page_requests": 0
+  },
+  "product_files_changed": 6,
+  "source_and_test_files": 19,
+  "actual_provider_calls": 0,
+  "OAuth_or_SNS_calls": 0,
+  "operating_apply_or_restart": 0,
+  "DB_migration_operating": 0,
+  "backup_modified": 0,
+  "known_limitations": [
+    "Actual RSS/SerpApi/vendor/account use not tested.",
+    "Image rights require explicit user confirmation; thumbnail metadata is not a reuse licence.",
+    "Ambiguous multiple-article scenes use cards until the article is selected.",
+    "A frozen job stops if its image changes, disappears, or becomes a reparse path.",
+    "Chrome background native traffic is not proven completely blocked; no OS-isolation claim.",
+    "Legacy GUI and other regression failures remain; no skips/xfails added."
+  ],
+  "additional_TikTok_GUI_observation": {
+    "ID": "tests/test_tiktok_gui.py::test_browser_app_registration_reentry_and_synthetic_login",
+    "new_in_this_full_vs_accepted_PASS": true,
+    "error": "Test-injected string JavaScript evaluation conflicts with retained CSP unsafe-eval restriction",
+    "historical_same_error_before_accepted_full": [
+      {
+        "phase_file": "remaining-details-private.json",
+        "CSP_unsafe_eval": true,
+        "message": "playwright._impl._errors.Error: Page.wait_for_function: EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval' is not an allowed so"
+      }
+    ],
+    "source_unchanged": {
+      "tests/test_tiktok_gui.py": true,
+      "src/newsflow/gui/tiktok_routes.py": true,
+      "src/newsflow/oauth/tiktok.py": true,
+      "src/newsflow/main.py": true
+    },
+    "product_causality": "NOT VERIFIED",
+    "policy_changed": false,
+    "recheck": "FAIL 1 / PASS 0 / ERROR 0 / SKIP 0; same retained-CSP string-evaluation error",
+    "minimal_plan": "Replace test string-evaluation navigation sentinel with response/navigation/DOM state waits, preserving all consent, 303, secret-redaction, remote-request and page-error assertions; separate approval. No unsafe-eval or CSP bypass.",
+    "recheck_policy_or_test_changes": 0,
+    "new_product_regression_confirmed": false,
+    "pending": "Separate approval for the unrelated TikTok test synchronization fix; preserve CSP and all assertions"
+  },
+  "next_step": "13I requires separate approval and defined test account/key/call scope; 14 and 15-18 not authorized"
+}

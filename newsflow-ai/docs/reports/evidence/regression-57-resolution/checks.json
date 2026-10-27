@@ -1,0 +1,9 @@
+{
+  "sha": "cc7b3190c9acd8a3bacbfbfbb0ce4bac004de1a9",
+  "ruff": "All checks passed!",
+  "pip_check": "No broken requirements found.",
+  "commands": [
+    ".venv/bin/ruff check src tests",
+    ".venv/bin/python -m pip check"
+  ]
+}

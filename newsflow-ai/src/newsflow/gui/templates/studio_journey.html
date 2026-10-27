@@ -1,0 +1,12 @@
+{# Section navigation, never a completion/progress indicator or an execution command. #}
+{% set journey_step = 'news' if current_path.startswith('/news') or current_path in ['/sources','/create'] else 'script' if current_path == '/ai' or current_path.startswith('/ai/drafts/') else 'voice' if current_path in ['/voices','/video/tts'] else 'video' if current_path in ['/video','/video/ai'] or current_path.startswith('/video/ai/plans/') else 'review' if current_path == '/videos' or selected_video|default(none) else 'publish' if current_path == '/queue' or current_path.startswith('/publishing') and current_path != '/publishing/platforms' else '' %}
+{% if journey_step %}
+{% set journey_draft = selected_video.draft_id if selected_video|default(none) else draft.id if draft|default(none) else request.query_params.get('draft_id','') %}
+{% set review_link = '/?video=' ~ selected_video.id ~ '&publish_platform=unified#workspace-detail' if selected_video|default(none) else '/videos' %}
+{% set publish_link = '/?video=' ~ selected_video.id ~ '&publish_platform=unified#publish-workspace' if selected_video|default(none) else '/queue' %}
+{% set draft_query = '?draft_id=' ~ (journey_draft|string|urlencode) if journey_draft else '' %}
+<nav data-journey-workspace="{{ 'true' if selected_video|default(none) else 'false' }}" class="studio-journey" aria-label="뉴스 쇼츠 제작 단계별 화면">
+<span class="journey-label">뉴스에서 게시까지 <small>단계별 화면 이동</small></span>
+<ol>{% for key,label,icon,href in [('news','뉴스 선택','news','/news'),('script','대본 검토','edit','/ai' ~ draft_query),('voice','음성 선택','voice','/voices'),('video','영상 제작','video','/video' ~ draft_query),('review','최종 검토','check',review_link),('publish','게시','send',publish_link)] %}<li><a data-journey-step="{{ key }}" href="{{ href }}" {% if key == journey_step %}aria-current="page"{% endif %}><span class="journey-index" aria-hidden="true">{{ loop.index }}</span><span>{{ label }}</span><span class="sr-only" data-journey-current {% if key != journey_step %}hidden{% endif %}>현재 화면</span></a></li>{% endfor %}</ol>
+</nav>
+{% endif %}

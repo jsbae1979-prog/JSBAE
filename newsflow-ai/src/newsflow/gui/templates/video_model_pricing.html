@@ -1,0 +1,15 @@
+{% macro pricing_controls(mode) %}
+{% if official_pricing_available|default(false) %}
+<label>가격 확인 방식<select name="pricing_mode" data-model-price-mode><option value="official" {{ 'selected' if mode == 'official' }}>공식 견적 자동 조회</option><option value="manual" {{ 'selected' if mode == 'manual' }}>기존 가격 유지·직접 입력</option></select></label>
+<div data-official-price-fields {% if mode != 'official' %}hidden{% endif %}>
+  <p class="hint">선택한 길이마다 견적 1회 · <span data-model-quote-count></span>영상은 생성하지 않습니다.</p>
+  <label class="check"><input type="checkbox" name="estimate_consent" value="true" {% if mode == 'official' %}required{% endif %}>모델·해상도·선택 길이와 고정 예시 문장을 Higgsfield로 보내 견적을 조회하는 데 동의합니다. 기사·대본은 보내지 않습니다.</label>
+  <p class="hint">길이별 견적을 모두 충족하도록 올림한 환산 단가를 자동 입력합니다. 조회 실패 시 기존 가격 유지 · 자동 재시도 없음 · 실제 청구액과 별개입니다.</p>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro quote_details(model) %}
+{% set quote = model_quotes|default({}) %}{% set quote = quote.get(model.id) %}
+{% if quote %}<div class="hint" data-model-price-evidence data-quoted-path="{{ quote.path }}" data-quoted-resolution="{{ quote.resolution }}" data-quoted-durations="{{ quote.durations }}" data-quoted-price="{{ quote.unit_price }}" role="status"><strong>공식 견적 조회됨 · 영상 생성 미검증</strong><p data-price-conditions-changed hidden>설정 변경됨 · 아래는 이전 저장 조건의 견적입니다. 새 조건의 가격은 조회 전까지 미확인입니다.</p><p>{{ quote.checked_time|kst }} · {{ quote.resolution }} · {{ quote.aspect_ratio }} · USD</p><p>{% for amount in quote.amounts %}{{ amount.seconds }}초 ${{ amount.usd }}{{ ' / ' if not loop.last }}{% endfor %}</p><p>한도 계산용 환산 상한 단가 ${{ quote.unit_price }}/초 · 고정 예시 조건의 조회 기록이며 실시간 가격이나 실제 청구액이 아닙니다.</p></div>{% endif %}
+{% endmacro %}

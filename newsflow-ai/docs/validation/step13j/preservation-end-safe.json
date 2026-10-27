@@ -1,0 +1,90 @@
+{
+  "at": "2026-10-25T17:58:22.702966+09:00",
+  "critical194_changed": 1,
+  "known_additional_aux_ref_missing": true,
+  "unexpected_critical_changes": 0,
+  "original_local64_changed": 0,
+  "candidate655_changed": 0,
+  "G9_source2142_changed": 0,
+  "protected_data_files_checked": 10,
+  "DB_ledger_protected_SHA_mismatches": 0,
+  "DB_sidecars": {
+    "-wal": false,
+    "-shm": false,
+    "-journal": false
+  },
+  "all_operating_data_files_checked": 33,
+  "all_operating_data_SHA_mismatches": 0,
+  "backup_data_SHA_mismatches": {
+    "A": 0,
+    "B": 0
+  },
+  "backup": {
+    "A": {
+      "files": 45572,
+      "bytes": 6388588775,
+      "missing": 0,
+      "extra": 0,
+      "metadata_mismatches": 0,
+      "critical_SHA_mismatches": 0,
+      "accepted_full_SHA_SQLite_Git_evidence_reused": true
+    },
+    "B": {
+      "files": 45572,
+      "bytes": 6388588775,
+      "missing": 0,
+      "extra": 0,
+      "metadata_mismatches": 0,
+      "critical_SHA_mismatches": 0,
+      "accepted_full_SHA_SQLite_Git_evidence_reused": true
+    }
+  },
+  "prior_sealed_evidence": {
+    "step13g9-20261025-01": {
+      "checked": 24,
+      "SHA_mismatches": 0
+    },
+    "step13g10a3-20261025-01": {
+      "checked": 13,
+      "SHA_mismatches": 0
+    },
+    "step13g10a4-20261025-01": {
+      "checked": 9,
+      "SHA_mismatches": 0
+    },
+    "step13g10b-20261025-01": {
+      "checked": 12,
+      "SHA_mismatches": 0
+    },
+    "step13g10b-recheck-20261025-01": {
+      "checked": 20,
+      "SHA_mismatches": 0
+    },
+    "step13g10b-netcontrol-20261025-01": {
+      "checked": 10,
+      "SHA_mismatches": 0
+    },
+    "step13g10b-final-20261025-01": {
+      "checked": 65,
+      "SHA_mismatches": 0
+    },
+    "step13h-20261025-01": {
+      "checked": 35,
+      "SHA_mismatches": 0
+    },
+    "step13i-20261025-01": {
+      "checked": 51,
+      "SHA_mismatches": 0
+    }
+  },
+  "historical_auxiliary_ref_missing": 1,
+  "Git_object_metadata_full_rescan": false,
+  "operating_DB_connections": 0,
+  "operating_and_backup_writes": 0,
+  "protected_states_reused_from_unchanged_DB": {
+    "API_unknown": 7,
+    "feed_unknown": 1,
+    "ElevenLabs_reserved": 1,
+    "HTTP402": 1
+  }
+}

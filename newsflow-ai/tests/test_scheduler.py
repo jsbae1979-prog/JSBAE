@@ -375,24 +375,52 @@ def test_scheduler_background_lifecycle(scheduler):
 
 
 def test_database_copy_preserves_original_and_pauses_copy(scheduler, tmp_path):
+    from pathlib import Path
+
+    from alembic import command
+    from alembic.config import Config
+
+    from newsflow.db import session as db_session
     from newsflow.db.session import make_engine, session_factory
     from newsflow.migrate_data import migrate_data
 
-    service, _clock, _coordinator, _backend, _sessions, root = scheduler
-    identifier = add(service)
-    enable(service, identifier)
-    target = tmp_path/'다른 사용자 폴더'
-    migrate_data(root, target)
-    engine = make_engine(target/'newsflow.db')
+    _service, clock, coordinator, backend, _sessions, _root = scheduler
+    root = tmp_path / "지원 계약 0015"
+    source_engine = make_engine(root / "newsflow.db")
+    config = Config()
+    config.set_main_option("script_location", str(Path(db_session.__file__).parent / "migrations").replace("%", "%%"))
+    service = Scheduler(session_factory(source_engine), root, coordinator, clock=lambda: clock[0])
     try:
-        with session_factory(engine)() as session:
-            copied = session.get(ProductionSchedule, identifier)
-            assert copied.status == 'paused'
-            assert copied.options == row(service, identifier).options
-            assert copied.revision == row(service, identifier).revision+1
-        assert row(service, identifier).status == 'active'
+        with source_engine.begin() as connection:
+            config.attributes["connection"] = connection
+            command.upgrade(config, "0015")
+        identifier = add(service)
+        enable(service, identifier)
+        source_engine.dispose()
+        original_db = (root / "newsflow.db").read_bytes()
+        target = tmp_path/'다른 사용자 폴더'
+        migrate_data(root, target)
+        assert (root / "newsflow.db").read_bytes() == original_db
+        engine = make_engine(target/'newsflow.db')
+        try:
+            with session_factory(engine)() as session:
+                copied = session.get(ProductionSchedule, identifier)
+                assert copied.status == 'paused'
+                assert copied.options == row(service, identifier).options
+                assert copied.revision == row(service, identifier).revision+1
+            assert row(service, identifier).status == 'active'
+            with source_engine.connect() as connection:
+                assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0015"
+            with engine.connect() as connection:
+                assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0015"
+                assert connection.exec_driver_sql("PRAGMA integrity_check").scalar() == "ok"
+                assert connection.exec_driver_sql("PRAGMA foreign_key_check").fetchall() == []
+            assert backend.calls == []
+        finally:
+            engine.dispose()
     finally:
-        engine.dispose()
+        service.close()
+        source_engine.dispose()
 
 
 def test_restart_recovers_job_without_recreating_completed_stages(scheduler):
@@ -447,7 +475,7 @@ def test_additive_migration_0011_preserves_legacy_settings_and_sources(tmp_path)
         migrate(engine)
         with engine.connect() as connection:
             assert connection.scalar(text("SELECT value FROM app_settings WHERE key='legacy'")) == 'preserved'
-            assert connection.scalar(text('SELECT version_num FROM alembic_version')) == '0013'
+            assert connection.scalar(text('SELECT version_num FROM alembic_version')) == '0018'
         assert {'production_schedules','scheduled_runs'} <= set(inspect(engine).get_table_names())
         migrate(engine)
     finally:

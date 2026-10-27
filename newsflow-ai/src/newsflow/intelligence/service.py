@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Callable
+from copy import deepcopy
 from difflib import SequenceMatcher
 from threading import Event, Thread
 
@@ -24,23 +25,30 @@ from .credentials import CredentialError
 from .estimate import estimate_call
 from .korean import assess_script, speech_plan
 from .news_usage import (
-    API_SCRIPT_METHOD,
+    API_SCRIPT_METHODS,
     api_news_contract,
     assess_news_usage,
+    explainer_findings,
     safe_topic_script,
     validate_api_news_script,
+    validate_explainer_analysis,
     validate_news_usage,
     validate_news_usage_script,
 )
+from .presentation import presentation
 from .provider import (
-    ANALYSIS_INSTRUCTION,
-    SCRIPT_INSTRUCTION,
+    AnalysisResponseError,
     OfflineProvider,
     OpenAIProvider,
     Options,
     Provider,
     ProviderError,
+    ProviderOutputLimitError,
     ProviderTimeoutError,
+    ScriptResponseError,
+    prompt_instruction,
+    prompt_options,
+    prompt_version,
 )
 from .schema import CAUTION, Analysis, Script
 
@@ -78,7 +86,8 @@ class IntelligenceError(Exception):
 
 class IntelligenceService:
     def __init__(self, sessions, provider: Provider | None = None, key_store=None, speech: dict | None = None,
-                 *, api_key_stores: dict | None = None, api_providers: dict | None = None, api_budget=None):
+                 *, api_key_stores: dict | None = None, api_providers: dict | None = None, api_budget=None,
+                 narration_root=None, narration_voice: dict | None = None, narration_keys=None):
         self.sessions, self.provider, self.key_store = sessions, provider, key_store
         self.api_key_stores = dict(api_key_stores or {})
         if key_store is not None:
@@ -88,6 +97,8 @@ class IntelligenceService:
         self.api_managed = api_key_stores is not None or api_budget is not None
         # Speech settings only affect review estimates; they never alter the saved script.
         self.speech = {"rate": 0, "pause_ms": 250, **(speech or {})}
+        self.narration_root, self.narration_voice = narration_root, narration_voice
+        self.narration_keys = narration_keys
 
     def _key(self) -> str:
         if self.key_store is not None:
@@ -101,8 +112,12 @@ class IntelligenceService:
             return self.provider
         if mode == "claude_api":
             from .api_providers import AnthropicProvider
+            from .credentials import AnthropicKeyStore
+            from .error_diagnostics import ErrorDiagnosticStore
 
-            return AnthropicProvider(lambda: self._api_key(mode))
+            store = self.api_key_stores.get(mode)
+            recorder = ErrorDiagnosticStore(store.path.parent) if isinstance(store, AnthropicKeyStore) else None
+            return AnthropicProvider(lambda: self._api_key(mode), error_recorder=recorder)
         if mode == "codex":
             from .codex import CODEX_PROVIDER
 
@@ -161,6 +176,8 @@ class IntelligenceService:
     @staticmethod
     def _failure(exc: Exception, fallback: str) -> tuple[str, str, bool]:
         """Fixed messages per failure class; provider exception text is never persisted."""
+        if isinstance(exc, AnalysisResponseError):
+            return str(exc.safe_copy()), "ai_bad_response", False
         if isinstance(exc, (TimeoutError, ProviderTimeoutError)):
             return "AI 요청 시간이 초과되었습니다.", "ai_timeout", True
         if isinstance(exc, ProviderError):
@@ -237,6 +254,9 @@ class IntelligenceService:
                 stored = NewsService.store_articles(session, source.id, [CollectedArticle(
                     article.title, article.url, article.publisher[:200], article.summary, article.published_at,
                 ) for article in result.articles])
+                from newsflow.news.lifecycle import replace_collection
+
+                replace_collection(session, stored["article_ids"])
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.finished_at = "success", utcnow()
                 run.message = "검색 도구 출처 확인 · 발행일·언론사·원문 사실은 별도 검토 필요"
@@ -273,16 +293,22 @@ class IntelligenceService:
                 raise IntelligenceError("선택한 기사가 없습니다.", "invalid_selection", False)
             search_by_article = {}
             for search in session.scalars(select(IntelligenceRun).where(
-                IntelligenceRun.kind == "search", IntelligenceRun.status == "success",
+                IntelligenceRun.kind.in_(["search", "news_search"]),
+                IntelligenceRun.status.in_(["success", "failed", "unknown"]),
             ).order_by(IntelligenceRun.id)):
                 for identifier in search.result.get("article_ids", []):
                     if identifier in ids:
                         search_by_article[identifier] = {
                             "search_run_id": search.id, "provider": search.provider,
+                            "search_status": search.status,
                             "model": search.options.get("model"), "searched_at": search.result.get("searched_at"),
+                            "collection_policy": search.result.get("collection_policy"),
+                            "edition_appearances": search.result.get("article_origins", {}).get(str(identifier), []),
+                            "frequency_meaning": "이번 수집에서 등장한 조회 판 수 · 실제 기사 노출수/조회수/SNS 통계 아님",
                             "tool_evidence": search.result.get("tool_evidence"),
                             "full_body_verified": False, "facts_verified": False,
-                            "summary_kind": "AI 검색 요약 · 원문 본문 미확인",
+                            "summary_kind": ("SerpApi Google News 자료 · 원문 본문 미확인" if search.provider == "serpapi"
+                                             else "AI 검색 요약 · 원문 본문 미확인"),
                             "topic_candidates": [
                                 {"url": candidate.get("url"), "title": candidate.get("claimed_title")}
                                 for candidate in search.result.get("articles", []) if isinstance(candidate, dict)
@@ -314,7 +340,9 @@ class IntelligenceService:
                         }
                         if score
                         else None,
-                        "popularity": ("AI 검색 후보 · 실제 조회수/검색량 미측정" if a.id in search_by_article
+                        "popularity": ("SerpApi Google News 후보 · 실제 조회수 미측정"
+                                       if search_by_article.get(a.id, {}).get("provider") == "serpapi" else
+                                       "AI 검색 후보 · 실제 조회수/검색량 미측정" if a.id in search_by_article
                                        else "RSS 내부 휴리스틱 · 실제 조회수/검색량 미측정"),
                         **({"search_provenance": search_by_article[a.id]} if a.id in search_by_article else {}),
                     }
@@ -330,7 +358,8 @@ class IntelligenceService:
             "articles": evidence,
             "groups": groups,
             "comparison": "제목 유사도 0.65 기준 후보 그룹입니다. 서로 다른 보도 내용과 독립 출처 여부는 사람이 확인해야 합니다.",
-            "caution": CAUTION,
+            "caution": (CAUTION.replace("RSS 제목/요약", "SerpApi 제목/제공 요약")
+                        if any(v.get("provider") == "serpapi" for v in search_by_article.values()) else CAUTION),
         }
 
     def create_topic_analysis(
@@ -472,13 +501,20 @@ class IntelligenceService:
     @staticmethod
     def check_news_usage(content: dict, evidence: dict) -> None:
         """Reusable review/render gate; legacy drafts without this policy are unchanged."""
-        if "news_usage" not in evidence and "news_usage_result" not in evidence:
+        from newsflow.shortform import validate_script as validate_shortform
+
+        try:
+            validate_shortform(content, evidence)
+        except ValueError:
+            raise IntelligenceError("숏폼 훅·장면·분량을 검토하세요.", "shortform_review", False) from None
+        if ("news_usage" not in evidence and "news_usage_result" not in evidence
+                and evidence.get('script_method') != 'api_grounded_v2'):
             return
         try:
-            if "news_usage" not in evidence:
+            if "news_usage" not in evidence and evidence.get('script_method') != 'api_grounded_v2':
                 raise ValueError
-            assessment = assess_news_usage(evidence, evidence["news_usage"])
-            if evidence.get("script_method") == API_SCRIPT_METHOD:
+            assessment = assess_news_usage(evidence, evidence.get("news_usage"))
+            if evidence.get("script_method") in API_SCRIPT_METHODS:
                 validate_api_news_script(content, evidence)
             else:
                 validate_news_usage_script(content, evidence, assessment)
@@ -496,31 +532,66 @@ class IntelligenceService:
         options: Options | None = None,
         on_run: Callable[[int], None] | None = None,
         news_usage: str | None = None,
+        curate: bool = False,
+        trend_snapshot: dict | None = None,
+        curation_top_k: int = 10,
+        script_prompt_version: str | None = None,
+        comparison_approval_id: int | None = None,
+        comparison_step: str | None = None,
     ) -> int:
         if mode not in MODES or (mode != "offline" and not consent):
             raise IntelligenceError("외부 AI 분석에는 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
         if news_usage is not None and mode in {"openai", "claude_api"} and not self.api_managed:
             raise IntelligenceError("API 단계별 비용 보호가 연결되지 않아 실행을 차단했습니다.", "ai_budget", False)
         options = options or Options()
-        if not ids or len(ids) > 10 or len(set(ids)) != len(ids):
-            raise IntelligenceError("기사 1~10개를 선택하세요.", "invalid_selection", False)
+        base_options = options
+        comparison_options = {}
+        if comparison_approval_id is not None or comparison_step is not None:
+            if (mode != 'claude_api' or type(comparison_approval_id) is not int or comparison_approval_id < 1
+                    or not isinstance(comparison_step, str)):
+                raise IntelligenceError('비교 승인 식별자·Provider를 확인하세요.', 'ai_consent', False)
+            comparison_options = {'comparison_approval_id': comparison_approval_id, 'comparison_step': comparison_step}
+        selected_version = prompt_version(selected=script_prompt_version) if mode in {'openai', 'claude_api'} else 'v1'
+        options = prompt_options(options, 'analysis', selected_version)
+        instruction_text = prompt_instruction('analysis', version=selected_version)
+        from .curation import MAX_CURATION_ARTICLES
+
+        limit = MAX_CURATION_ARTICLES if curate else 10
+        if not ids or len(ids) > limit or len(set(ids)) != len(ids):
+            message = ("전체 뉴스가 한 번의 평가 범위를 초과했습니다. 일부 제외·자동 추가 호출 없이 중단합니다."
+                       if curate else "기사 1~10개를 선택하세요.")
+            raise IntelligenceError(message, "invalid_selection", False)
         payload = self.evidence_for(ids)
+        if mode in {'openai', 'claude_api'}:
+            payload = {**payload, 'script_prompt_version': selected_version}
+        if curate:
+            if mode not in {"openai", "claude_api"} or not self.api_managed:
+                raise IntelligenceError("화제성 평가는 선택한 API의 승인 경로로 실행하세요.", "ai_budget", False)
+            from .curation import enrich
+
+            payload = enrich(payload, trend_snapshot, utcnow(), top_k=curation_top_k)
+            if mode == "claude_api":
+                from .curation_wire import SCORE_DERIVATION
+
+                payload["curation_contract"]["score_derivation"] = dict(SCORE_DERIVATION)
         if news_usage is not None:
             if mode not in {"openai", "claude_api"}:
                 raise IntelligenceError("선택한 API 분석 경로를 확인하세요.", "invalid_selection", False)
             try:
                 level = validate_news_usage(news_usage)
-                contract = api_news_contract(payload, level)
+                contract = api_news_contract(payload, level, version=selected_version)
             except ValueError:
                 raise IntelligenceError("뉴스 활용 수준의 근거 요건을 확인하세요.", "news_usage_blocked", False) from None
             payload = {**payload, "news_usage": level, "news_usage_result": assess_news_usage(payload, level),
-                       "script_method": API_SCRIPT_METHOD, "news_usage_contract": contract}
+                       "script_method": 'api_grounded_' + selected_version, "news_usage_contract": contract}
         with self.sessions.begin() as session:
             run = IntelligenceRun(
                 kind="analysis",
                 status="running",
                 provider=mode,
-                options=vars(options),
+                options={**vars(options), **comparison_options, 'script_prompt_version': selected_version,
+                         'base_max_tokens': base_options.max_tokens,
+                         'output_token_allowance': options.max_tokens-base_options.max_tokens},
                 evidence=payload,
                 result={},
                 message="제공된 출처 근거 분석; 사실 확인 미완료",
@@ -533,11 +604,20 @@ class IntelligenceService:
         try:
             if on_run:
                 on_run(run_id)
-            self._budget(mode, options, ANALYSIS_INSTRUCTION, {"evidence": payload})
+            self._budget(mode, options, instruction_text, {"evidence": payload})
             reservation = self._reserve_api(mode, run_id, "analysis", options,
-                                            {"instruction": ANALYSIS_INSTRUCTION, "evidence": payload})
+                                            {"instruction": instruction_text, "evidence": payload})
             try:
-                result = Analysis.model_validate(provider.analyze(payload, options)).model_dump()
+                output = provider.analyze(payload, base_options)
+                self._check_stored_secret(output)
+                if mode in {'openai', 'claude_api'}:
+                    validate_explainer_analysis(output, payload)
+                if curate:
+                    from .curation import validate_ranking
+
+                    result = validate_ranking(output, payload)
+                else:
+                    result = Analysis.model_validate(output).model_dump()
             except IntelligenceError:
                 raise
             except ProviderError:
@@ -545,12 +625,18 @@ class IntelligenceService:
             except Exception as exc:
                 if isinstance(exc, TimeoutError):
                     raise
+                if mode == "claude_api":
+                    raise AnalysisResponseError("analysis_schema") from None
                 raise IntelligenceError("AI 분석 응답 형식이 올바르지 않습니다.", "ai_bad_response", True) from None
             referenced = {i for comparison in result["comparisons"] for i in comparison["article_ids"]}
             if referenced != set(ids):
+                if mode == "claude_api":
+                    raise AnalysisResponseError("source_binding")
                 raise IntelligenceError("분석 출처가 선택 기사와 일치하지 않습니다.", "ai_bad_response", True)
             recommended = result.get("recommended_article_id")
             if recommended is not None and (recommended not in ids or not result["selection_reason"].strip()):
+                if mode == "claude_api":
+                    raise AnalysisResponseError("source_binding")
                 raise IntelligenceError("추천 기사와 근거가 선택 자료와 일치하지 않습니다.", "ai_bad_response", False)
             self._check_stored_secret(result)
             self.check_copy(result, payload)
@@ -565,6 +651,12 @@ class IntelligenceService:
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.message, run.finished_at = "failed", message, utcnow()
+                if isinstance(exc, AnalysisResponseError):
+                    run.result = {"analysis_failure": exc.diagnostics()}
+                    if exc.stop_reason == 'max_tokens':
+                        run.result = {**run.result, 'output_limit': {'stop_reason': 'max_tokens'}}
+                elif isinstance(exc, ProviderOutputLimitError):
+                    run.result = {'output_limit': {'finish_reason': 'length'}}
             self._usage(provider, run_id, mode, options, "analysis", "failed")
             self._finish_api(reservation, provider, "unknown" if code in {"ai_timeout", "ai_unavailable", "ai_cancelled"} else "failed")
             raise IntelligenceError(message, code, retryable) from None
@@ -603,18 +695,66 @@ class IntelligenceService:
         on_run: Callable[[int], None] | None = None,
         article_ids: list[int] | None = None,
         news_usage: str | None = None,
+        script_style: str = "news",
+        script_tone: str = "neutral",
+        script_audience: str = "general",
+        shortform_profile: dict | None = None,
+        script_prompt_version: str | None = None,
+        comparison_approval_id: int | None = None,
+        comparison_step: str | None = None,
+        narration_voice: dict | None = None,
     ) -> int:
-        if duration not in (30, 45, 60) or mode not in MODES:
+        from dataclasses import asdict
+
+        from newsflow.shortform import Shortform, allowed_duration, instruction
+        from newsflow.shortform import read as read_shortform
+
+        profile = read_shortform(self.sessions) if shortform_profile is None else Shortform(**shortform_profile)
+        profile_on = profile.enabled and 15 <= duration <= 35 and mode in {"openai", "claude_api"}
+        chosen_presentation = presentation(script_style, script_tone, script_audience)
+        if mode == "offline" and (script_style, script_tone, script_audience) != ("news", "neutral", "general"):
+            raise IntelligenceError("스타일 적용은 연결된 AI로 대본을 생성할 때 사용할 수 있습니다.", "invalid_selection", False)
+        if not allowed_duration(duration, profile_on) or mode not in MODES:
             raise IntelligenceError("영상 길이 또는 Provider가 잘못되었습니다.", "invalid_selection", False)
         if mode != "offline" and not consent:
             raise IntelligenceError("외부 API 전송과 비용 발생에 대한 명시적 동의가 필요합니다.", "ai_consent", False)
         options = options or Options()
+        base_options = options
+        comparison_options = {}
+        if comparison_approval_id is not None or comparison_step is not None:
+            if (mode != 'claude_api' or type(comparison_approval_id) is not int or comparison_approval_id < 1
+                    or not isinstance(comparison_step, str)):
+                raise IntelligenceError('비교 승인 식별자·Provider를 확인하세요.', 'ai_consent', False)
+            comparison_options = {'comparison_approval_id': comparison_approval_id, 'comparison_step': comparison_step}
+        selected_version = prompt_version(selected=script_prompt_version) if mode in {'openai', 'claude_api'} else 'v1'
+        from newsflow.video.narration_planning import planning
+
+        narration = (planning(self.narration_root, narration_voice or self.narration_voice, self.speech,
+                              keys=self.narration_keys)
+                     if selected_version == 'v2' else None)
+        options = prompt_options(options, 'script', selected_version)
+        instruction_text = prompt_instruction('script', version=selected_version)
         with self.sessions.begin() as session:
             analysis = session.get(IntelligenceRun, analysis_id)
             if not analysis or analysis.kind != "analysis" or analysis.status != "success":
                 raise IntelligenceError("먼저 기사 분석을 실행하세요.", "invalid_selection", False)
             evidence = analysis.evidence
-            api_news = evidence.get("script_method") == API_SCRIPT_METHOD
+            if profile_on:
+                evidence = {**evidence, "shortform": asdict(profile)}
+            if evidence.get("curation_contract"):
+                if (mode not in {"openai", "claude_api"} or mode != analysis.provider
+                        or options.model != analysis.options.get("model") or not self.api_managed):
+                    raise IntelligenceError("화제성 평가와 같은 승인된 API·모델을 사용하세요.", "invalid_selection", False)
+                groups = [item["article_ids"] for item in analysis.result["ranking"]]
+                article_ids = article_ids or groups[0]
+                if not any(set(article_ids) == set(group) for group in groups):
+                    raise IntelligenceError("선정된 한 뉴스 그룹을 선택하세요.", "invalid_selection", False)
+                evidence = {**evidence, "analysis_result": analysis.result}
+            api_news = evidence.get("script_method") in API_SCRIPT_METHODS
+            if mode in {'openai', 'claude_api'}:
+                evidence = {**evidence, 'script_prompt_version': selected_version,
+                            'script_method': 'api_grounded_' + selected_version,
+                            **({'analysis_result': analysis.result} if selected_version == 'v2' else {})}
             if api_news:
                 if not self.api_managed:
                     raise IntelligenceError("API 단계별 비용 보호가 연결되지 않아 실행을 차단했습니다.", "ai_budget", False)
@@ -625,7 +765,8 @@ class IntelligenceService:
                     level = validate_news_usage(news_usage if news_usage is not None else evidence.get("news_usage"))
                     if level != evidence.get("news_usage"):
                         raise ValueError
-                    contract = api_news_contract(evidence, level, duration, speech=self.speech)
+                    contract = api_news_contract(evidence, level, duration, speech=self.speech, version=selected_version,
+                                                 narration=narration)
                 except ValueError:
                     raise IntelligenceError("저장된 분석의 뉴스 활용 수준을 확인하세요.", "news_usage_blocked", False) from None
                 evidence = {**evidence, "news_usage_contract": contract, "analysis_result": analysis.result}
@@ -636,7 +777,10 @@ class IntelligenceService:
                 )
             if article_ids is not None:
                 known = {a["id"] for a in evidence["articles"]}
-                if (not isinstance(article_ids, list) or not article_ids or len(article_ids) > 10
+                from .curation import MAX_CURATION_ARTICLES
+
+                limit = MAX_CURATION_ARTICLES if evidence.get("curation_contract") else 10
+                if (not isinstance(article_ids, list) or not article_ids or len(article_ids) > limit
                         or any(type(i) is not int for i in article_ids)
                         or len(article_ids) != len(set(article_ids)) or not set(article_ids) <= known):
                     raise IntelligenceError("대본 뉴스가 저장된 분석 자료와 다릅니다.", "invalid_selection", False)
@@ -647,14 +791,33 @@ class IntelligenceService:
             if api_news:
                 evidence = {**evidence, "news_usage_result": assess_news_usage(evidence, evidence["news_usage"]),
                             "news_usage_contract": api_news_contract(
-                                evidence, evidence["news_usage"], duration, speech=self.speech,
+                                evidence, evidence["news_usage"], duration, speech=self.speech, version=selected_version,
+                                narration=narration,
                             )}
+            if profile_on:
+                if len(evidence.get("groups", [])) > 1:
+                    raise IntelligenceError("숏폼 강조는 한 이슈만 선택하세요.", "invalid_selection", False)
+                evidence = {**evidence, "shortform": asdict(profile), "shortform_contract": instruction(profile)}
+            if len(evidence.get("articles", [])) > 1:
+                evidence = {**evidence, "synthesis": {
+                    "article_ids": [a["id"] for a in evidence["articles"]],
+                    "facts_verified": False,
+                    "instruction": "같은 주제의 제공 자료를 한 편으로 종합하되 서로 다른 수치·날짜·주장을 합치거나 다수결로 확정하지 마세요. "
+                                   "출처별 차이와 미확인 사항을 구분하고 같은 보도의 재전재를 독립 확인으로 취급하지 마세요.",
+                }}
+            evidence = {**evidence, "presentation": chosen_presentation}
+            if mode in {'openai', 'claude_api'} and selected_version == 'v2' and not evidence.get('news_usage_contract'):
+                evidence = {**evidence, 'news_usage_contract': api_news_contract(
+                    evidence, 'STANDARD', duration, speech=self.speech, version=selected_version, narration=narration)}
             run = IntelligenceRun(
                 kind="script",
                 provider=mode,
                 status="running",
                 evidence=evidence,
-                options={**vars(options), "duration": duration, "analysis_run_id": analysis_id,
+                options={**vars(options), **comparison_options, "duration": duration, "analysis_run_id": analysis_id,
+                         'script_prompt_version': selected_version, 'base_max_tokens': base_options.max_tokens,
+                         'output_token_allowance': options.max_tokens-base_options.max_tokens,
+                         "presentation": chosen_presentation,
                          **({"selected_article_ids": article_ids} if article_ids is not None else {})},
                 result={},
                 message="대본 생성 중",
@@ -667,14 +830,31 @@ class IntelligenceService:
         try:
             if on_run:
                 on_run(run_id)
-            self._budget(mode, options, SCRIPT_INSTRUCTION, {"duration": duration, "evidence": evidence})
+            self._budget(mode, options, instruction_text, {"duration": duration, "evidence": evidence})
             reservation = self._reserve_api(mode, run_id, "script", options,
-                                            {"instruction": SCRIPT_INSTRUCTION, "duration": duration, "evidence": evidence})
-            output = provider.complete(evidence, duration, options)
-            script = self.validate(output, duration)
-            self.check_news_usage(script, evidence)
-            self._check_stored_secret(script)
-            self.check_copy(script, evidence)
+                                            {"instruction": instruction_text, "duration": duration, "evidence": evidence})
+            output = provider.complete(evidence, duration, base_options)
+            self._check_stored_secret(output)
+            try:
+                script = self.validate(output, duration)
+                if mode in {'openai', 'claude_api'} and (selected_version == 'v2' or isinstance(output.get('analysis'), dict)):
+                    try:
+                        validate_api_news_script(output, evidence)
+                    except ValueError:
+                        raise IntelligenceError('해석형 대본의 수치·날짜·인용 근거를 확인하세요.', 'news_usage_blocked', False) from None
+                self.check_news_usage(script, evidence)
+                from .curation import validate_script as validate_curated_script
+
+                try:
+                    validate_curated_script(script, evidence)
+                except ValueError:
+                    raise IntelligenceError("화제성 쇼츠의 구성·분량·근거 조건을 확인하세요.", "ai_bad_response", False) from None
+                self._check_stored_secret(script)
+                self.check_copy(script, evidence)
+            except IntelligenceError as exc:
+                if mode == "claude_api" and exc.code == "ai_bad_response":
+                    raise ScriptResponseError("script_validation") from None
+                raise
             notes = self._review_notes(script, evidence, duration)
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
@@ -705,12 +885,19 @@ class IntelligenceService:
             with self.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.message, run.finished_at = "failed", message, utcnow()
+                if isinstance(exc, ScriptResponseError):
+                    run.result = {"script_failure": exc.diagnostics()}
+                    if exc.stop_reason == 'max_tokens':
+                        run.result = {**run.result, 'output_limit': {'stop_reason': 'max_tokens'}}
+                elif isinstance(exc, ProviderOutputLimitError):
+                    run.result = {'output_limit': {'finish_reason': 'length'}}
             self._usage(provider, run_id, mode, options, "script", "failed")
             self._finish_api(reservation, provider, "unknown" if code in {"ai_timeout", "ai_unavailable", "ai_cancelled"} else "failed")
             raise IntelligenceError(message, code, retryable) from None
 
     @staticmethod
     def validate(output: dict, duration: int) -> dict:
+        IntelligenceService.check_secret(output)
         try:
             script = Script.model_validate(output)
         except Exception:  # noqa: BLE001 - pydantic detail may echo provider output
@@ -725,10 +912,40 @@ class IntelligenceService:
             raise IntelligenceError("대본 본문에는 URL을 넣을 수 없습니다. 출처는 별도로 표시됩니다.", "ai_bad_response", True)
         return script.model_dump()
 
+    def _timing_context(self, evidence: dict) -> tuple[float, list[dict]]:
+        contract = evidence.get('news_usage_contract') or {}
+        if not contract.get('narration_voice'):
+            return 1, []  # Never reinterpret older work with today's default voice.
+        from newsflow.video.narration_planning import load_profile
+
+        expected = contract.get('narration_voice_profile')
+        if expected is None:
+            return 1, [{'code': 'voice_planning_unmeasured', 'level': 'info',
+                        'message': '선택 음성의 완료 측정 근거가 없어 공통 추정을 사용합니다. 실제 WAV 길이는 별도로 검사합니다.'}]
+        current = (load_profile(getattr(self, 'narration_root', None), contract['narration_voice'], self.speech,
+                               sample_checksums=expected.get('sample_checksums', []),
+                               keys=getattr(self, 'narration_keys', None))
+                   if isinstance(expected, dict) else None)
+        if current != expected:
+            return 1, [{'code': 'voice_planning_evidence_changed', 'level': 'warning',
+                        'message': '이 대본의 음성·모델·속도 측정 근거가 없거나 달라졌습니다. 새 분량 안내를 검토하세요. 자동 재생성하지 않습니다.'}]
+        return current['ratio'], [{'code': 'voice_planning_estimate', 'level': 'info',
+                                  'message': '동일 음성의 완료 기록에 따른 작성 추정입니다. 새 WAV 길이·음질·사실 검증을 보장하지 않습니다.'}]
+
+    def review_speech_plan(self, content: dict, evidence: dict, duration: int) -> dict:
+        ratio, _ = self._timing_context(evidence)
+        return speech_plan(content, duration, **self.speech, timing_ratio=ratio)
+
     def _review_notes(self, content: dict, evidence: dict, duration: int) -> list[dict]:
-        notes = assess_script(content, evidence, duration, **self.speech)
-        if evidence.get("script_method") == API_SCRIPT_METHOD:
-            estimated = speech_plan(content, duration, **self.speech)["estimated_total_seconds"]
+        ratio, guidance = self._timing_context(evidence)
+        notes = assess_script(content, evidence, duration, **self.speech, timing_ratio=ratio)
+        notes.extend(guidance)
+        if any(a.get("search_provenance", {}).get("provider") == "serpapi" for a in evidence.get("articles", [])):
+            notes = [{**note, "message": note["message"].replace("원문 RSS 요약", "공급사 제공 요약")}
+                     for note in notes]
+        notes.extend(explainer_findings(content, evidence, speech=self.speech, timing_ratio=ratio))
+        if evidence.get("script_method") in API_SCRIPT_METHODS:
+            estimated = speech_plan(content, duration, **self.speech, timing_ratio=ratio)["estimated_total_seconds"]
             if estimated < duration * .90:
                 notes.append({
                     "code": "total_narration_too_short", "level": "warning",
@@ -744,8 +961,34 @@ class IntelligenceService:
             draft = session.get(ContentDraft, draft_id)
             if not draft:
                 raise IntelligenceError("초안이 없습니다.", "invalid_selection", False)
+            # Older editors may omit the additive notes field; preserve notes for unchanged scenes.
+            output = deepcopy(output)
+            self._check_stored_secret(output)
+            if 'analysis' not in output and draft.content.get('analysis') is not None:
+                output['analysis'] = deepcopy(draft.content['analysis'])
+            for scene in output.get("scenes", []):
+                if "review_notes" not in scene:
+                    previous = next((old for old in draft.content.get("scenes", [])
+                                     if old.get("narration") == scene.get("narration")), {})
+                    scene["review_notes"] = previous.get("review_notes", [])
+            if len(output.get('scenes', [])) == len(draft.content.get('scenes', [])):
+                for scene, previous in zip(output['scenes'], draft.content['scenes']):
+                    if 'role' not in scene and previous.get('role') is not None:
+                        scene['role'] = previous['role']
             content = self.validate(output, draft.duration)
+            if (draft.sources.get('script_method') == 'api_grounded_v2'
+                    or draft.sources.get('script_method') in API_SCRIPT_METHODS and isinstance(output.get('analysis'), dict)):
+                try:
+                    validate_api_news_script(output, draft.sources)
+                except ValueError:
+                    raise IntelligenceError('해석형 대본의 수치·날짜·인용 근거를 확인하세요.', 'news_usage_blocked', False) from None
             self.check_news_usage(content, draft.sources)
+            from .curation import validate_script as validate_curated_script
+
+            try:
+                validate_curated_script(content, draft.sources)
+            except ValueError:
+                raise IntelligenceError("화제성 쇼츠의 구성·분량·근거 조건을 확인하세요.", "ai_bad_response", False) from None
             self._check_stored_secret(content)
             self.check_copy(content, draft.sources)
             notes = self._review_notes(content, draft.sources, draft.duration)

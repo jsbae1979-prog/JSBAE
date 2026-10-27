@@ -1,0 +1,87 @@
+{
+  "phase": "before",
+  "checks": [
+    {
+      "name": "Initial form restores saved model IDs and matching Select options",
+      "status": "PASS",
+      "detail": {
+        "script_provider": "claude_api",
+        "script_model": "claude-sonnet-4-6",
+        "video_provider": "higgsfield",
+        "video_model": "bytedance/seedance-2.0/reference-to-video",
+        "resolution": "720p",
+        "aspect_ratio": "9:16",
+        "credential_source": "user_store"
+      }
+    },
+    {
+      "name": "Save new Claude model, close and reopen displays saved values",
+      "status": "PASS",
+      "detail": {
+        "saved": "claude-haiku-4-5-20251001",
+        "video_model": "bytedance/seedance-2.0/reference-to-video"
+      }
+    },
+    {
+      "name": "Cancel discards unsaved selection and reopening preserves saved values",
+      "status": "PASS"
+    },
+    {
+      "name": "Existing job selection and independent news/image defaults unchanged",
+      "status": "PASS"
+    },
+    {
+      "name": "Missing keys do not clear locally stored model choice",
+      "status": "PASS",
+      "detail": {
+        "Claude_key": false,
+        "Higgsfield_key": false,
+        "live_lookup": 0
+      }
+    },
+    {
+      "name": "Delayed model catalog loads before form initialization",
+      "status": "PASS"
+    },
+    {
+      "name": "Failed model catalog shows explicit error and recovery preserves selection",
+      "status": "PASS"
+    },
+    {
+      "name": "News, image and character EXE routes and React assets load",
+      "status": "PASS",
+      "detail": [
+        "shorts",
+        "images",
+        "characters"
+      ]
+    },
+    {
+      "name": "New bundle displays generated Fake image file",
+      "status": "PASS",
+      "detail": {
+        "width": 1024,
+        "actual_synthetic_file": true
+      }
+    },
+    {
+      "name": "New bundle plays FFmpeg synthetic vertical MP4",
+      "status": "PASS",
+      "detail": {
+        "width": 1080,
+        "height": 1920,
+        "duration": 30.021354,
+        "currentTime": 0.295344
+      }
+    },
+    {
+      "name": "No React exceptions or external page requests",
+      "status": "PASS"
+    }
+  ],
+  "page_errors": [],
+  "external_page_requests": [],
+  "actual_EXE": true,
+  "live_provider_calls": 0,
+  "status": "PASS"
+}

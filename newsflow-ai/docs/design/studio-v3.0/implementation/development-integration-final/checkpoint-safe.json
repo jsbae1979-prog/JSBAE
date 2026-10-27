@@ -1,0 +1,12 @@
+{
+  "branch": "codex/newsflow-studio-v3-20261026",
+  "verified_product_sha": "317504152877139737991a737f56f5b97b9dea24",
+  "result": "CONDITIONAL",
+  "windows_focus_pass": 42,
+  "operating_applied_product": "08bfec1",
+  "latest_react_operating_deploy": false,
+  "new_demo_work": 0,
+  "new_exe_build": 0,
+  "live_api_calls": 0,
+  "stop": "await next explicit approval; no deployment or feature continuation"
+}

@@ -1,0 +1,235 @@
+{
+  "environment": "Cloud Chromium; not Windows display scaling",
+  "checks": [
+    "topic search → saved article → existing analysis selection; URL import honestly blocked",
+    "existing Offline analysis and draft generation POST, no content engine changes",
+    "existing /video/render POST after explicit review → real silent FFmpeg MP4 → browser playback",
+    "real MP4 playback; scene edit POST persisted; output hash preserved; stale edit 409 focused without retry",
+    "existing offline guided Autopilot POST; actual stage display; unsupported VERIFIED hidden",
+    "long Korean title/narration; synthetic render failure and recovery guidance",
+    "synthetic platform partial success / failure / unknown; no execute action offered",
+    "settings dialog keyboard/return focus; 200% CSS zoom with no horizontal overflow",
+    "separate empty demo: home/videos/publishing, no fake player or success"
+  ],
+  "layout": [
+    {
+      "page": "home",
+      "width": 1366,
+      "height": 768,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "create",
+      "width": 1366,
+      "height": 768,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "videos",
+      "width": 1366,
+      "height": 768,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "preview",
+      "width": 1366,
+      "height": 768,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "settings",
+      "width": 1366,
+      "height": 768,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "publishing",
+      "width": 1366,
+      "height": 768,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "news",
+      "width": 1366,
+      "height": 768,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "queue",
+      "width": 1366,
+      "height": 768,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "home",
+      "width": 1920,
+      "height": 1080,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "create",
+      "width": 1920,
+      "height": 1080,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "videos",
+      "width": 1920,
+      "height": 1080,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "preview",
+      "width": 1920,
+      "height": 1080,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "settings",
+      "width": 1920,
+      "height": 1080,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "publishing",
+      "width": 1920,
+      "height": 1080,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "news",
+      "width": 1920,
+      "height": 1080,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "queue",
+      "width": 1920,
+      "height": 1080,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "home",
+      "width": 390,
+      "height": 844,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "create",
+      "width": 390,
+      "height": 844,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "videos",
+      "width": 390,
+      "height": 844,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "preview",
+      "width": 390,
+      "height": 844,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "settings",
+      "width": 390,
+      "height": 844,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "publishing",
+      "width": 390,
+      "height": 844,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "news",
+      "width": 390,
+      "height": 844,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    },
+    {
+      "page": "queue",
+      "width": 390,
+      "height": 844,
+      "horizontal_overflow": false,
+      "visible_inputs_named": true
+    }
+  ],
+  "contrast_samples": [
+    {
+      "selector": "body",
+      "foreground": "rgb(238, 240, 247)",
+      "background": "rgb(16, 18, 25)",
+      "contrast_ratio": 16.43
+    },
+    {
+      "selector": ".creator-heading h1",
+      "foreground": "rgb(238, 240, 247)",
+      "background": "rgb(16, 18, 25)",
+      "contrast_ratio": 16.43
+    },
+    {
+      "selector": ".creator-heading>p:last-child",
+      "foreground": "rgb(176, 184, 204)",
+      "background": "rgb(16, 18, 25)",
+      "contrast_ratio": 9.42
+    },
+    {
+      "selector": ".topic-hero label",
+      "foreground": "rgb(226, 223, 248)",
+      "background": "rgb(27, 31, 45)",
+      "contrast_ratio": 12.61
+    },
+    {
+      "selector": ".topic-actions p",
+      "foreground": "rgb(176, 184, 204)",
+      "background": "rgb(27, 31, 45)",
+      "contrast_ratio": 8.26
+    },
+    {
+      "selector": ".topic-actions button",
+      "foreground": "rgb(22, 19, 46)",
+      "background": "rgb(170, 162, 255)",
+      "contrast_ratio": 7.99
+    },
+    {
+      "selector": ".creator-sidebar .workspace-nav a",
+      "foreground": "rgb(229, 224, 255)",
+      "background": "rgb(48, 45, 73)",
+      "contrast_ratio": 10.29
+    }
+  ],
+  "status": "PASS",
+  "javascript_errors": [],
+  "external_browser_requests": [],
+  "actual_oauth": 0,
+  "actual_upload_publish": 0,
+  "paid_api_calls": 0,
+  "simulated_publish_outcomes": "presentation fixtures, never actual publishing success"
+}

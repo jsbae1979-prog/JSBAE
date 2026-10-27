@@ -1,0 +1,24 @@
+{
+  "source_sha": "7d6224f6f223e6daee4470e3f361cc19ff7d4d26",
+  "source_files_verified": 318,
+  "changed_source_files": 29,
+  "deleted_files": 0,
+  "backup_files": 37,
+  "schema": [
+    "0018"
+  ],
+  "preserved_tables": 47,
+  "changed_tables": [],
+  "user_content_files_verified": 28,
+  "user_content_unchanged": true,
+  "backup_unchanged": true,
+  "live_db_inspection_connections": 0,
+  "runtime_lock_files_excluded": 2,
+  "browser_views": 12,
+  "javascript_errors": 0,
+  "non_read_only_or_external_browser_requests": 0,
+  "api_oauth_upload_publish": 0,
+  "migration_required": false,
+  "operating_screens_publicly_uploaded": false,
+  "startup_stderr_bytes": 0
+}

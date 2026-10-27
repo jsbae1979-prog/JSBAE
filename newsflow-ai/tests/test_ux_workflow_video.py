@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 import pytest
 from conftest import csrf
@@ -105,9 +106,14 @@ def test_per_production_voice_and_duration_survive_changed_global_defaults(clien
         }}
     save_voice_preferences(app.state.sessions, "Heami", "0", "250")
     html = client.get(f"/video?draft_id={identifier}").text
-    assert 'value="45" selected' in html and 'value="supertonic:F1" selected' in html
+    current_form = re.search(r'<form\b[^>]*action="/video/render"[^>]*>.*?</form>', html, re.DOTALL).group(0)
+    next_form = next(form for form in re.findall(r'<form\b[^>]*action="/production/selection"[^>]*>.*?</form>', html, re.DOTALL) if 'name="kind" value="voice"' in form)
+    assert 'value="45" selected' in current_form and 'value="supertonic:F1" selected' in current_form
     assert "홈에서 선택: 45초" in html
-    assert 'value="Heami" selected' not in html
+    assert 'value="Heami" selected' not in current_form
+    assert 'value="Heami" selected' in next_form
+    with app.state.sessions() as session:
+        assert session.get(IntelligenceRun, run.id).options["production_context"]["initial_voice"] == "supertonic:F1"
 
     class SelectedFakeVoice(FakeTTS):
         def voices(self):

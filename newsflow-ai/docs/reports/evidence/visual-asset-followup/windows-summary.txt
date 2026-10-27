@@ -1,0 +1,10 @@
+visual-assets (3.12)	Pinned dependencies and pip check	2026-10-24T04:55:08.0471014Z No broken requirements found.
+visual-assets (3.12)	Isolate native profile and verify Chrome	2026-10-24T04:55:08.5957492Z Python 3.12.10
+visual-assets (3.12)	Ruff	2026-10-24T04:55:08.9619795Z All checks passed!
+visual-assets (3.12)	News images and existing AI mode safety - no live services	2026-10-24T04:55:51.2289368Z 1 failed, 36 passed, 1 warning in 38.11s
+visual-assets (3.12)	Reproduce existing migration assertion on unchanged baseline	2026-10-24T04:55:55.6256221Z 1 failed, 1 warning in 0.45s
+visual-assets (3.14)	Pinned dependencies and pip check	2026-10-24T04:54:44.8899926Z No broken requirements found.
+visual-assets (3.14)	Isolate native profile and verify Chrome	2026-10-24T04:54:45.3122944Z Python 3.14.9
+visual-assets (3.14)	Ruff	2026-10-24T04:54:45.5880680Z All checks passed!
+visual-assets (3.14)	News images and existing AI mode safety - no live services	2026-10-24T04:55:10.9884945Z 1 failed, 36 passed, 1 warning in 22.29s
+visual-assets (3.14)	Reproduce existing migration assertion on unchanged baseline	2026-10-24T04:55:14.2218233Z 1 failed, 1 warning in 0.32s

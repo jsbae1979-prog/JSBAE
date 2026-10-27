@@ -1,0 +1,60 @@
+{
+  "frames": [
+    {
+      "mode": "news",
+      "second": 5,
+      "size": [
+        1080,
+        1920
+      ],
+      "status": "PASS"
+    },
+    {
+      "mode": "news",
+      "second": 15,
+      "size": [
+        1080,
+        1920
+      ],
+      "status": "PASS"
+    },
+    {
+      "mode": "news",
+      "second": 25,
+      "size": [
+        1080,
+        1920
+      ],
+      "status": "PASS"
+    },
+    {
+      "mode": "character",
+      "second": 5,
+      "size": [
+        1080,
+        1920
+      ],
+      "status": "PASS"
+    },
+    {
+      "mode": "character",
+      "second": 15,
+      "size": [
+        1080,
+        1920
+      ],
+      "status": "PASS"
+    },
+    {
+      "mode": "character",
+      "second": 25,
+      "size": [
+        1080,
+        1920
+      ],
+      "status": "PASS"
+    }
+  ],
+  "news_image_matches_all_three": true,
+  "real_API": false
+}

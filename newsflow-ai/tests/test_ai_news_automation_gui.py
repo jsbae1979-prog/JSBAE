@@ -39,9 +39,14 @@ def test_new_user_defaults_to_blocked_ai_web_without_silently_running_rss(client
     monkeypatch.setattr(app.state.autopilot, "start", start)
     token = csrf(client)
     before = settings(app)
-    home = client.get("/").text
-    assert 'value="feeds" selected' in home and 'value="ai_web" selected' in home
-    assert "AI 웹 뉴스 조사 BLOCKED" in home
+    assert 'href="/create"' in client.get("/").text
+    creation = client.get("/create")
+    home = creation.text
+    assert 'value="feeds" selected' in home and 'name="acquisition_policy" value="ai_web"' in home
+    state = creation.context["production"]["policy_states"]["ai_web"]
+    assert state["supported"] is False and state["title"] == "AI 웹 뉴스 조사 BLOCKED"
+    assert "뉴스 검색 준비가 필요" in home and 'href="/simple-settings#connections"' in home
+    assert "hidden" not in home.split("data-home-policy-warning", 1)[1].split(">", 1)[0]
     response = client.post("/autopilot/quick-start", data={
         "csrf_token": token, "source": "feeds", "duration": 30,
     }, follow_redirects=False)
@@ -52,8 +57,9 @@ def test_new_user_defaults_to_blocked_ai_web_without_silently_running_rss(client
 def test_saved_rss_and_sample_selection_survive_new_ai_web_default(client, app):
     save(app, autopilot_acquisition_policy="rss", autopilot_source="sample")
     before = settings(app)
-    home = client.get("/").text
-    assert 'value="sample" selected' in home and 'value="rss" selected' in home
+    assert 'href="/create"' in client.get("/").text
+    home = client.get("/create").text
+    assert 'value="sample" selected' in home and 'name="acquisition_policy" value="rss"' in home
     settings_page = client.get("/simple-settings").text
     assert 'value="sample" selected' in settings_page and 'value="rss" selected' in settings_page
     assert settings(app) == before
@@ -64,16 +70,20 @@ def test_home_policy_change_has_matching_readiness_and_notice_without_execution(
     save(app, autopilot_source="feeds", video_default_voice="offline-silence")
     start = Mock()
     monkeypatch.setattr(app.state.autopilot, "start", start)
-    home = client.get("/").text
+    assert 'href="/create"' in client.get("/").text
+    home = client.get("/create").text
     states = json.loads(re.search(r"data-home-policy-states='([^']+)'", home).group(1))
     assert states["rss"]["supported"] is True
     assert states["rss"]["title"] == "RSS 분석·대본 경로 지원"
     assert "현재 로그인·사용 가능 상태를 보장하지 않습니다" in states["rss"]["detail"]
-    assert "RSS 확보 → 같은 AI" in states["rss"]["notice"]
+    assert "RSS 자료 확인" in states["rss"]["notice"]  # Unsaved provider defaults to Offline.
     assert states["ai_web"]["supported"] is False
     assert states["hybrid"]["title"] == "AI 웹 뉴스 조사 BLOCKED"
-    assert 'data-home-policy-title>AI 웹 뉴스 조사 BLOCKED' in home
-    assert 'data-home-policy-notice' in home and 'data-home-policy-detail' in home
+    assert 'name="acquisition_policy" value="ai_web"' in home
+    assert 'data-home-policy-warning' in home and 'AI 연결·사용 승인 확인' in home
+    # Dashboard folds details; the full creation screen retains the execution notice.
+    create = client.get('/create').text
+    assert 'data-home-policy-states' in create and 'data-home-policy-warning' in create
     script = client.get("/static/js/home_production.js").text
     assert 'acquisitionChoice.addEventListener("change"' in script
     assert 'for (const key of ["title", "detail", "notice"])' in script
@@ -120,7 +130,7 @@ def test_one_home_request_preserves_choices_and_requires_explicit_consent(
         "mode": "guided", "source": "feeds", "duration": duration, "platform": "instagram",
         "content_mode": "real", "ai_mode": provider, "ai_model": model, "voice": "supertonic:F1",
         "acquisition_policy": "rss", "category": "it", "period": "24h", "external_consent": True,
-        "request_id": parse_context(flow)["request_id"],
+        "request_id": parse_context(flow)["request_id"], "news_usage": "STANDARD",
     }
     assert settings(app)["studio_provider"] == "offline"  # job creation never rewrites defaults
 
@@ -155,7 +165,8 @@ def test_rss_policy_save_is_canonical_and_read_only_get_does_not_infer(client, a
     assert response.status_code == 200
     saved = settings(app)
     assert saved["autopilot_acquisition_policy"] == "rss" and saved["autopilot_category"] == "world"
-    home = client.get("/").text
+    assert 'href="/create"' in client.get("/").text
+    home = client.get("/create").text
     assert 'name="acquisition_policy"' in home and 'value="world" selected' in home
     assert "RSS 분석·대본 통합 제작 지원" in response.text
     assert "웹 검색 BLOCKED" in response.text and "설치·인증 검사와 실제 생성 성공은 별개" in response.text

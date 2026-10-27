@@ -11,25 +11,31 @@ def test_workspace_two_destinations_and_two_production_choices(client):
     assert response.status_code == 200
     html = response.text
     primary = re.search(r'<nav aria-label="주 메뉴"[^>]*>(.*?)</nav>', html, re.DOTALL).group(1)
-    assert re.findall(r'href="([^"]+)"', primary) == ["/", "/simple-settings"]
-    for label in ("작업실", "설정"):
+    tools = primary.split('<details class="sidebar-tools"', 1)[1]
+    primary = primary.split('<details class="sidebar-tools"', 1)[0]
+    assert re.findall(r'href="([^"]+)"', primary) == [
+        "/", "/create", "/news", "/?show=tasks", "/videos", "/queue", "/simple-settings"]
+    assert all(f'href="{path}"' in tools for path in ("/ai", "/analytics", "/character", "/image-posts", "/voices", "/schedules"))
+    for label in ("홈", "쇼츠 만들기", "뉴스 선택", "작업 현황", "내 영상", "게시", "설정"):
         assert label in primary
-    assert 'class="advanced-nav"' not in html
+    assert 'href="/create"' in html and 'class="advanced-nav"' not in html
     settings = client.get("/simple-settings").text
-    advanced = re.search(r'<section[^>]*id="advanced"[^>]*>(.*?)</section>', settings, re.DOTALL).group(1)
-    for destination in ("/news", "/ai", "/video", "/sources", "/queue", "/publishing"):
-        assert f'href="{destination}"' in advanced
-    assert 'href="/operations"' in settings  # scheduling group owns this entry
-    assert 'href="/ai"' not in html and 'href="/video"' not in html
-    form = re.search(r'<form action="/autopilot/quick-start".*?</form>', html, re.DOTALL).group(0)
-    advanced_choices = re.search(r'<details class="easy-advanced"[^>]*>.*?</details>', form, re.DOTALL).group(0)
-    assert ' open' not in advanced_choices.split('>', 1)[0]
-    assert re.findall(r'<select[^>]+name="([^"]+)"', form.replace(advanced_choices, '')) == ["source", "duration"]
-    assert re.findall(r'<select[^>]+name="([^"]+)"', advanced_choices) == ["acquisition_policy", "category", "period"]
+    assert 'id="settings-advanced-tools"' not in settings  # Removed duplicate tool menu stays removed.
+    assert 'id="advanced"' in settings
+    for destination in ("/schedules", "/operations", "/sources"):
+        assert f'href="{destination}"' in settings
+    creation = client.get("/create").text
+    form = re.search(r'<form action="/autopilot/quick-start".*?</form>', creation, re.DOTALL).group(0)
+    assert 'class="studio-job-options"' in form
+    assert re.findall(r'<select[^>]+name="([^"]+)"', form) == [
+        "duration", "source", "category", "period", "news_usage"]
+    for name in ("voice_method", "video_method", "acquisition_policy"):
+        assert re.search(rf'<input[^>]*type="hidden"[^>]*name="{name}"', form)
+    assert '<option value="VERIFIED"' not in form
     assert 'name="csrf_token"' in form and 'method="post"' in form
     assert 'name="provider"' not in form and 'name="voice"' not in form
-    assert "뉴스 영상 제작 시작" in form
-    assert "완성한 영상이 여기에 모입니다" in html
+    assert re.search(r'<input[^>]*name="script_review"[^>]*form="quick-production"[^>]*checked', creation)
+    assert "자동 제작 시작" in form and "첫 쇼츠가 기다리고 있어요" in html
     assert '<progress ' not in html  # no invented progress when no job exists
     assert "script-src 'self'" in response.headers["content-security-policy"]
 
@@ -60,12 +66,14 @@ def test_home_preserves_defaults_and_shows_review_snapshot_safely(client, app, m
     response = client.get("/")
     assert response.status_code == 200
     html = response.text
-    assert 'value="feeds" selected' in html and 'value="45" selected' in html
+    creation = client.get("/create").text
+    assert 'value="feeds" selected' in creation and 'value="45" selected' in creation
     assert read_studio_settings(app.state.sessions)["provider"] == "codex"
-    assert "AI 웹 뉴스 조사 BLOCKED" in html
+    assert response.context["production"]["policy_states"]["ai_web"]["supported"] is False
     assert response.context["production"]["policy_states"]["rss"]["supported"] is True
-    assert "대본과 원문 확인 후 제작" in html
-    assert '<progress value="50" max="100"' in html
+    assert 'name="script_review"' in creation and "영상 제작 전에 대본 확인하기" in creation
+    assert '<progress ' not in html  # stage labels, not an estimated percentage
+    assert "대본 작성" in html
     assert 'href="/?task=fixture-review#workspace-detail"' in html
     assert '<script>alert(' not in html
     assert "최근 뉴스</h2>" not in html  # only production and results on home

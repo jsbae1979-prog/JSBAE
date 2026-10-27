@@ -1,0 +1,24 @@
+{
+  "basis": "6671aa1",
+  "code_sha": "c4f5b63a1079d65b54cd4a7d7c80c7910e5cd651",
+  "files": [
+    ".github/workflows/newsflow-studio-v3.yml",
+    "newsflow-ai/frontend/src/legacy-actions.json",
+    "newsflow-ai/frontend/src/studio/TopThreeFeeds.tsx",
+    "newsflow-ai/frontend/src/studio/Workbench.tsx",
+    "newsflow-ai/frontend/src/studio/workbench.css",
+    "newsflow-ai/src/newsflow/creation/top_three_feeds.py",
+    "newsflow-ai/src/newsflow/gui/creation_routes.py",
+    "newsflow-ai/src/newsflow/main.py",
+    "newsflow-ai/src/newsflow/publishing/image_posts.py",
+    "newsflow-ai/src/newsflow/studio/actions.json",
+    "newsflow-ai/tools/feed_top3/browser-flow.cjs",
+    "newsflow-ai/tools/feed_top3/tests/conftest.py",
+    "newsflow-ai/tools/feed_top3/tests/test_top_three_feeds.py",
+    "newsflow-ai/tools/studio_v3/integration/test_top3_feed_integration.py"
+  ],
+  "source_migrations_changed": false,
+  "old_144_form_contracts_preserved": true,
+  "new_form_contracts": 5,
+  "old_uncommitted_files_excluded": 4
+}

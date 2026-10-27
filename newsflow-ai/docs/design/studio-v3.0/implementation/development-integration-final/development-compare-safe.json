@@ -1,0 +1,295 @@
+{
+  "base": "08bfec12f71fbe10b2bf2b7df4a2b8efd4283ba8",
+  "ux_sha": "ccd28a2a0901bdd2500eb012ca0c3a90325f3fea",
+  "official_compare_status": "ahead",
+  "ahead_by": 28,
+  "behind_by": 0,
+  "merge_base": "08bfec12f71fbe10b2bf2b7df4a2b8efd4283ba8",
+  "comparison_files": 177,
+  "changed_files": [
+    {
+      "path": ".github/workflows/newsflow-step15b-windows.yml",
+      "status": "added",
+      "changes": 87
+    },
+    {
+      "path": ".github/workflows/newsflow-studio-v3.yml",
+      "status": "added",
+      "changes": 57
+    },
+    {
+      "path": "newsflow-ai/frontend/.gitignore",
+      "status": "added",
+      "changes": 3
+    },
+    {
+      "path": "newsflow-ai/frontend/README.txt",
+      "status": "added",
+      "changes": 31
+    },
+    {
+      "path": "newsflow-ai/frontend/index.html",
+      "status": "added",
+      "changes": 1
+    },
+    {
+      "path": "newsflow-ai/frontend/package.json",
+      "status": "added",
+      "changes": 24
+    },
+    {
+      "path": "newsflow-ai/frontend/pnpm-lock.yaml",
+      "status": "added",
+      "changes": 750
+    },
+    {
+      "path": "newsflow-ai/frontend/public/assets/OFL.txt",
+      "status": "added",
+      "changes": 93
+    },
+    {
+      "path": "newsflow-ai/frontend/public/assets/README.md",
+      "status": "added",
+      "changes": 11
+    },
+    {
+      "path": "newsflow-ai/frontend/src/legacy-actions.json",
+      "status": "added",
+      "changes": 5585
+    },
+    {
+      "path": "newsflow-ai/frontend/src/main.tsx",
+      "status": "added",
+      "changes": 1072
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/CommandDialog.tsx",
+      "status": "added",
+      "changes": 758
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/Thumbnail.tsx",
+      "status": "added",
+      "changes": 62
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/Workbench.tsx",
+      "status": "added",
+      "changes": 2100
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/contracts.ts",
+      "status": "added",
+      "changes": 250
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/workbench.css",
+      "status": "added",
+      "changes": 1148
+    },
+    {
+      "path": "newsflow-ai/frontend/src/style.css",
+      "status": "added",
+      "changes": 1776
+    },
+    {
+      "path": "newsflow-ai/frontend/src/vite-env.d.ts",
+      "status": "added",
+      "changes": 1
+    },
+    {
+      "path": "newsflow-ai/frontend/tests/design-polish.cjs",
+      "status": "added",
+      "changes": 49
+    },
+    {
+      "path": "newsflow-ai/frontend/tests/studio-flow.cjs",
+      "status": "added",
+      "changes": 34
+    },
+    {
+      "path": "newsflow-ai/frontend/tests/visual.cjs",
+      "status": "added",
+      "changes": 268
+    },
+    {
+      "path": "newsflow-ai/frontend/tsconfig.json",
+      "status": "added",
+      "changes": 14
+    },
+    {
+      "path": "newsflow-ai/frontend/vite.config.ts",
+      "status": "added",
+      "changes": 6
+    },
+    {
+      "path": "newsflow-ai/src/newsflow/gui/studio_v3.py",
+      "status": "added",
+      "changes": 336
+    },
+    {
+      "path": "newsflow-ai/src/newsflow/main.py",
+      "status": "modified",
+      "changes": 2
+    },
+    {
+      "path": "newsflow-ai/src/newsflow/studio/__init__.py",
+      "status": "added",
+      "changes": 1
+    },
+    {
+      "path": "newsflow-ai/src/newsflow/studio/actions.json",
+      "status": "added",
+      "changes": 5585
+    },
+    {
+      "path": "newsflow-ai/src/newsflow/studio/read_models.py",
+      "status": "added",
+      "changes": 659
+    },
+    {
+      "path": "newsflow-ai/tools/demo/README.txt",
+      "status": "added",
+      "changes": 31
+    },
+    {
+      "path": "newsflow-ai/tools/demo/demo.py",
+      "status": "added",
+      "changes": 111
+    },
+    {
+      "path": "newsflow-ai/tools/demo/test_user_demo.py",
+      "status": "added",
+      "changes": 60
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/build_feature_mapping.py",
+      "status": "added",
+      "changes": 38
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/analytics.json",
+      "status": "added",
+      "changes": 176
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/automation.json",
+      "status": "added",
+      "changes": 168
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/characters.json",
+      "status": "added",
+      "changes": 197
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/images.json",
+      "status": "added",
+      "changes": 247
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/library.json",
+      "status": "added",
+      "changes": 161
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/news.json",
+      "status": "added",
+      "changes": 205
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/onboarding.json",
+      "status": "added",
+      "changes": 153
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/publishing.json",
+      "status": "added",
+      "changes": 181
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/settings.json",
+      "status": "added",
+      "changes": 163
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/shorts.json",
+      "status": "added",
+      "changes": 315
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/fixtures/workspace.json",
+      "status": "added",
+      "changes": 126
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/integration/test_acceptance_risks.py",
+      "status": "added",
+      "changes": 412
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/integration/test_full_app_forms.py",
+      "status": "added",
+      "changes": 138
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/tests/conftest.py",
+      "status": "added",
+      "changes": 7
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/tests/test_module_views.py",
+      "status": "added",
+      "changes": 118
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/tests/test_read_model.py",
+      "status": "added",
+      "changes": 124
+    },
+    {
+      "path": "newsflow-ai/tools/studio_v3/visual_preview.py",
+      "status": "added",
+      "changes": 77
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step15a/prepare_windows.py",
+      "status": "modified",
+      "changes": 345
+    }
+  ],
+  "core_engine_files": [
+    {
+      "path": "newsflow-ai/src/newsflow/character/service.py",
+      "changed_since_15A": false
+    },
+    {
+      "path": "newsflow-ai/src/newsflow/video/engine.py",
+      "changed_since_15A": false
+    },
+    {
+      "path": "newsflow-ai/src/newsflow/video/elevenlabs_tts.py",
+      "changed_since_15A": false
+    },
+    {
+      "path": "newsflow-ai/src/newsflow/publishing/live.py",
+      "changed_since_15A": false
+    },
+    {
+      "path": "newsflow-ai/src/newsflow/intelligence/api_settings.py",
+      "changed_since_15A": false
+    },
+    {
+      "path": "newsflow-ai/tools/packaging/technical_entry.py",
+      "changed_since_15A": false
+    },
+    {
+      "path": "newsflow-ai/run.bat",
+      "changed_since_15A": false
+    }
+  ],
+  "new_migrations": [],
+  "existing_branch_merge_required": false,
+  "raw_diff_uploaded": false,
+  "path_list_scope": "product, frontend, tests and tools only; docs/assets summarized in total"
+}

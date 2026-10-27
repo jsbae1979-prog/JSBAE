@@ -1,0 +1,1075 @@
+--- before/.github/workflows/newsflow-step15a-windows.yml
++++ after/.github/workflows/newsflow-step15a-windows.yml
+@@ -0,0 +1,89 @@
++name: Step13K Fix focused shutdown follow-up
++on:
++  push:
++    branches: [codex/newsflow-step13kfix-15a-20261026]
++    paths:
++      - 'newsflow-ai/src/**'
++      - 'newsflow-ai/tests/**'
++      - 'newsflow-ai/tools/validation/step15a/**'
++      - '.github/workflows/newsflow-step15a-windows.yml'
++  workflow_dispatch:
++permissions:
++  contents: read
++jobs:
++  scoped-fake:
++    if: github.ref == 'refs/heads/codex/newsflow-step13kfix-15a-20261026'
++    runs-on: windows-latest
++    timeout-minutes: 55
++    defaults:
++      run:
++        shell: pwsh
++        working-directory: newsflow-ai
++    steps:
++      - uses: actions/checkout@v5
++        with:
++          persist-credentials: false
++      - name: Exact historical code fixture, five files only
++        uses: actions/checkout@v5
++        env:
++          GIT_CONFIG_COUNT: '1'
++          GIT_CONFIG_KEY_0: core.autocrlf
++          GIT_CONFIG_VALUE_0: 'false'
++        with:
++          ref: 0a59bfb41eec6b243e4470f67cd53c1e7cd07e52
++          path: .step13j-code-baseline
++          persist-credentials: false
++          sparse-checkout-cone-mode: false
++          sparse-checkout: |
++            /newsflow-ai/src/newsflow/main.py
++            /newsflow-ai/run.bat
++            /newsflow-ai/tools/windows_launcher.py
++            /newsflow-ai/pyproject.toml
++            /newsflow-ai/requirements-dev.lock
++      - uses: actions/setup-python@v6
++        with:
++          python-version: '3.14.7'
++      - name: Install test dependencies in disposable Python 3.14.7 environment
++        run: |
++          $venv = Join-Path $env:RUNNER_TEMP 'newsflow-final-314'
++          python -m venv $venv
++          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
++          & "$venv/Scripts/python.exe" -m pip install -r requirements-dev.lock playwright==1.64.1 colorama tzdata==2026.5
++          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
++          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
++            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
++            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
++            $env:PATH += ';C:/ProgramData/chocolatey/bin;C:/tools/ffmpeg/bin'
++          }
++          $ffmpeg = (Get-Command ffmpeg -ErrorAction Stop).Source
++          $ffprobe = (Get-Command ffprobe -ErrorAction Stop).Source
++          if ($ffmpeg.Replace('\','/') -like '*/Chocolatey/bin/*') {
++            $ffmpeg = (Get-ChildItem -LiteralPath 'C:/ProgramData/chocolatey/lib/ffmpeg/tools' -Recurse -File -Filter 'ffmpeg.exe' | Select-Object -First 1).FullName
++            $ffprobe = (Get-ChildItem -LiteralPath 'C:/ProgramData/chocolatey/lib/ffmpeg/tools' -Recurse -File -Filter 'ffprobe.exe' | Select-Object -First 1).FullName
++          }
++          if (-not $ffmpeg -or -not $ffprobe) { throw 'Actual FFmpeg tools required; no shim allowed' }
++          "NEWSFLOW_FFMPEG=$ffmpeg" >> $env:GITHUB_ENV
++          "NEWSFLOW_FFPROBE=$ffprobe" >> $env:GITHUB_ENV
++          "NEWSFLOW_TEST_BROWSER_EXECUTABLE=C:/Program Files/Google/Chrome/Application/chrome.exe" >> $env:GITHUB_ENV
++      - name: Focused Guard and five shutdown repeats; previous scoped failure retained
++        run: |
++          $python = Join-Path $env:RUNNER_TEMP 'newsflow-final-314/Scripts/python.exe'
++          & $python -I -B tools/validation/step15a/prepare_windows.py (Join-Path $env:RUNNER_TEMP 'newsflow-step15a') --shutdown-only
++          exit $LASTEXITCODE
++      - name: Upload only nonsecret summary and test-ID evidence
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: step15a-synthetic-summaries
++          path: |
++            ${{ runner.temp }}/newsflow-step15a/*-supervisor-safe.json
++            ${{ runner.temp }}/newsflow-step15a/ci-summary-safe.json
++            ${{ runner.temp }}/newsflow-step15a/failure-IDs-safe.json
++            ${{ runner.temp }}/newsflow-step15a/failure-diagnostics-safe.json
++            ${{ runner.temp }}/newsflow-step15a/ci-collected-IDs-safe.json
++            ${{ runner.temp }}/newsflow-step15a/baseline-integrity-safe.json
++          if-no-files-found: ignore
++          retention-days: 14
++
++
++
+--- before/newsflow-ai/src/newsflow/main.py
++++ after/newsflow-ai/src/newsflow/main.py
+@@ -7,6 +7,7 @@
+ import re
+ import secrets
+ import signal
++import sys
+ from contextlib import asynccontextmanager
+ from pathlib import Path
+ 
+@@ -347,7 +348,8 @@
+             try:
+                 uvicorn.Server(
+                     uvicorn.Config(
+-                        app, host=settings.host, port=settings.port, log_level="warning", access_log=False
++                        app, host=settings.host, port=settings.port, log_level="warning", access_log=False,
++                        loop="newsflow.runtime:windows_server_loop" if sys.platform == "win32" else "auto",
+                     )
+                 ).run(sockets=[listener])
+             finally:
+--- before/newsflow-ai/src/newsflow/runtime.py
++++ after/newsflow-ai/src/newsflow/runtime.py
+@@ -46,3 +46,15 @@
+     handler.setFormatter(formatter)
+     logger.addHandler(handler)
+     return logger
++
++
++def windows_server_loop():
++    """Use Selector only for the local HTTP server, without a global loop policy.
++
++    CPython 3.14 Proactor transport cleanup can raise WinError 10054 before
++    detaching a reset socket from its Server, leaving wait_closed pending.
++    The app uses synchronous worker subprocesses, not asyncio pipe transports.
++    """
++    import asyncio
++
++    return asyncio.SelectorEventLoop()
+--- before/newsflow-ai/tests/test_windows.py
++++ after/newsflow-ai/tests/test_windows.py
+@@ -273,6 +273,14 @@
+ 
+ 
+ def test_actual_server_lifecycle_and_port_collision(tmp_path):
++    _actual_server_lifecycle(tmp_path)
++
++
++def test_connection_reset_still_shuts_down_and_releases_port(tmp_path):
++    _actual_server_lifecycle(tmp_path, reset_connections=True)
++
++
++def _actual_server_lifecycle(tmp_path, *, reset_connections=False):
+     with socket.socket() as candidate:
+         candidate.bind(("127.0.0.1", 0))
+         port = candidate.getsockname()[1]
+@@ -282,10 +290,12 @@
+     )
+     from urllib.request import urlopen
+ 
+-    process = subprocess.Popen(
+-        [sys.executable, "-m", "newsflow.main"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0,
+-    )
++    stderr_log = tmp_path / "synthetic-server-stderr.log"
++    with stderr_log.open("wb") as stderr_file:
++        process = subprocess.Popen(
++            [sys.executable, "-m", "newsflow.main"], env=env, stdout=subprocess.DEVNULL, stderr=stderr_file,
++            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if sys.platform == "win32" else 0,
++        )
+     try:
+         for _ in range(80):
+             assert process.poll() is None
+@@ -333,6 +343,15 @@
+                 break
+             time.sleep(0.1)
+         assert status == "empty"  # Offline: registered source was deliberately disabled.
++        if reset_connections:
++            import struct
++            # Browser/tab cancellation can reset an HTTP connection during a response.
++            for _ in range(12):
++                with socket.create_connection(("127.0.0.1", port), timeout=3) as cancelled:
++                    cancelled.sendall(b"GET /settings HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: keep-alive\r\n\r\n")
++                    assert cancelled.recv(1)
++                    cancelled.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack("hh", 1, 0))
++            time.sleep(.1)
+         duplicate = subprocess.run(
+             [sys.executable, "-m", "newsflow.main"],
+             env=env,
+@@ -359,6 +378,12 @@
+     with socket.socket() as check:
+         assert check.connect_ex(("127.0.0.1", port)) != 0
+     assert (tmp_path / "운영 데이터/logs/execution.log").exists()
++    stderr = stderr_log.read_text(encoding="utf-8", errors="replace")
++    assert "Exception in callback" not in stderr
++    assert "WinError 10054" not in stderr
++    # The same data/port can be reserved after normal cleanup without deleting data.
++    with reserve_socket("127.0.0.1", port):
++        pass
+ 
+ 
+ def test_invalid_secret_not_printed(tmp_path):
+@@ -402,3 +427,19 @@
+     for handle in handles:
+         with pytest.raises(sqlite3.ProgrammingError):
+             handle.execute("SELECT 1")
++
++
++def test_windows_http_loop_is_local_and_supports_server_contract():
++    import asyncio
++    import uvicorn
++    from newsflow.runtime import windows_server_loop
++    original = asyncio.new_event_loop
++    config = uvicorn.Config("unused:app", loop="newsflow.runtime:windows_server_loop")
++    assert config.get_loop_factory() is windows_server_loop
++    loop = config.get_loop_factory()()
++    try:
++        assert isinstance(loop, asyncio.SelectorEventLoop)
++        assert asyncio.new_event_loop is original
++        assert not loop.is_running()
++    finally:
++        loop.close()
+--- before/newsflow-ai/tools/packaging/README.md
++++ after/newsflow-ai/tools/packaging/README.md
+@@ -0,0 +1,43 @@
++# Internal Windows technical bundle (Step 15-A)
++
++This is a synthetic-only engineering artifact, not a consumer release or installer.
++The existing product source and engines are included. A separate entry point enforces
++a marked synthetic data root and blocks supplier execution. It never selects an existing
++NewsFlow profile. Keep the complete onedir folder beside the EXE; it is not a one-file binary.
++
++## Rebuild
++
++Use a separate Windows Python 3.14.7 venv with requirements-dev.lock and PyInstaller==6.22.3.
++Run build_technical.py --output NEW_SEPARATE_FOLDER --media-dir TRUSTED_FFMPEG_BIN.
++The builder strips inherited provider variables, uses private temporary folders and records hashes.
++No EXE is uploaded by the validation workflow.
++
++## Internal execution
++
++The new synthetic root must contain synthetic-only.json with exactly:
++{"kind":"NewsFlow-Step15A-SYNTHETIC","port":18765}
++
++Run NewsFlowAI-Technical.exe probe SYNTHETIC_ROOT for TestClient/Fake/real FFmpeg checks,
++or serve SYNTHETIC_ROOT for the bundled local server. Use an owning Windows Job supervisor.
++The process receives a credential-free environment and no Python directory in PATH.
++All outputs go to this root. Never use an operating DB or credential store as input.
++
++The technical media validator reuses the reviewed test Guard parser and allowlist.
++File reads are limited to the bundle, explicit EXE archive, synthetic root and Windows runtime.
++Writes/SQLite are limited to the synthetic root. External sockets, shell execution and arbitrary
++executables are denied. The existing product and test Guard are not globally modified.
++Browser inspection uses the existing temporary-profile Playwright boundary independently;
++request mocks do not prove OS-wide Chrome background traffic isolation.
++
++## Scope and release gates
++
++Included: Python runtime, existing GUI/engines, HTML/CSS/JS/SVG/WebP, character fonts,
++FFmpeg/ffprobe. Node/Chrome are test/browser dependencies, not embedded app runtimes.
++Optional Supertonic models/onnxruntime, SAPI voice availability and live provider access
++are not proven by FakeTTS. No paid image, voice or video generation is performed.
++A clean PC without Python, consumer entry point, installer, signing, antivirus reputation,
++license redistribution obligations, multi-user ACLs and update/uninstall/rollback remain
++separate approval gates. This artifact must not be distributed to general users.
++
++PyInstaller was selected after an actual Python 3.14.7 build. Nuitka's Python support alone
++does not establish this application's build; no redundant second compiler build was run.
+--- before/newsflow-ai/tools/packaging/build_technical.py
++++ after/newsflow-ai/tools/packaging/build_technical.py
+@@ -0,0 +1,41 @@
++"""Build an internal synthetic-only onedir bundle; does not install or launch."""
++from pathlib import Path
++import argparse,hashlib,json,os,subprocess,sys
++def main():
++    if os.name!="nt" or sys.version_info[:3]!=(3,14,7):
++        raise SystemExit("Windows Python 3.14.7 required")
++    parser=argparse.ArgumentParser()
++    parser.add_argument("--output",type=Path,required=True)
++    parser.add_argument("--media-dir",type=Path,required=True)
++    args=parser.parse_args()
++    output=args.output.resolve();media=args.media_dir.resolve()
++    project=Path(__file__).resolve().parents[2]
++    if output.exists() or output.is_relative_to(project) or project.is_relative_to(output):
++        raise SystemExit("A new, separate technical build directory is required")
++    import PyInstaller
++    if PyInstaller.__version__!="6.22.3":raise SystemExit("Pin PyInstaller 6.22.3 in a separate build venv")
++    binaries={}
++    for name in ("ffmpeg.exe","ffprobe.exe"):
++        binary=media/name
++        if not binary.is_file() or binary.is_symlink():raise SystemExit("Actual trusted FFmpeg binaries required")
++        binaries[name]=hashlib.sha256(binary.read_bytes()).hexdigest()
++    output.mkdir()
++    for name in ("home","temp","home/Local","home/Roaming"):(output/name).mkdir(parents=True,exist_ok=True)
++    manifest=output/"technical-media.json";manifest.write_text(json.dumps(binaries))
++    env={k:v for k,v in os.environ.items() if k.upper() in {"SYSTEMROOT","WINDIR","COMSPEC","PATHEXT","PROCESSOR_ARCHITECTURE","NUMBER_OF_PROCESSORS","OS"}}
++    env.update(PATH=str(Path(sys.executable).parent)+os.pathsep+str(Path(env["SYSTEMROOT"])/"System32"),
++               USERPROFILE=str(output/"home"),HOME=str(output/"home"),LOCALAPPDATA=str(output/"home/Local"),
++               APPDATA=str(output/"home/Roaming"),TEMP=str(output/"temp"),TMP=str(output/"temp"),
++               NEWSFLOW_BUILD_MEDIA=str(media),NEWSFLOW_BUILD_MANIFEST=str(manifest))
++    with (output/"build.log").open("wb") as log:
++        result=subprocess.run([sys.executable,"-I","-B","-m","PyInstaller","--noconfirm",
++            "--workpath",str(output/"work"),"--distpath",str(output/"dist"),
++            str(Path(__file__).with_name("newsflow-technical.spec"))],
++            cwd=output,env=env,stdout=log,stderr=subprocess.STDOUT,check=False)
++    exe=output/"dist/NewsFlowAI-Technical/NewsFlowAI-Technical.exe"
++    summary={"exit":result.returncode,"Python":sys.version.split()[0],"tool":"PyInstaller6.22.3",
++             "exe_exists":exe.is_file(),"public_distribution":False,"production_profile":False}
++    if exe.is_file():summary["exe_sha256"]=hashlib.sha256(exe.read_bytes()).hexdigest()
++    (output/"build-safe.json").write_text(json.dumps(summary,indent=2))
++    raise SystemExit(result.returncode)
++if __name__=="__main__":main()
+--- before/newsflow-ai/tools/packaging/newsflow-technical.spec
++++ after/newsflow-ai/tools/packaging/newsflow-technical.spec
+@@ -0,0 +1,33 @@
++# Internal one-directory technical bundle; not an installer or public release.
++import os, json, hashlib
++from pathlib import Path
++p=Path(SPECPATH).parents[1]
++src=p/"src"
++media=Path(os.environ["NEWSFLOW_BUILD_MEDIA"]).resolve()
++datas=[]
++for f in (src/"newsflow").rglob("*"):
++    if f.is_file() and "__pycache__" not in f.parts:
++        rel=f.relative_to(src)
++        if f.suffix!=".py" or "migrations" in rel.parts:
++            datas.append((str(f),str(rel.parent)))
++hidden=[]
++for f in (src/"newsflow").rglob("*.py"):
++    rel=f.relative_to(src).with_suffix("")
++    if "migrations" in rel.parts:continue
++    parts=list(rel.parts)
++    if parts[-1]=="__init__":parts.pop()
++    hidden.append(".".join(parts))
++hidden += ["uvicorn.protocols.http.h11_impl","uvicorn.protocols.websockets.websockets_impl",
++           "uvicorn.lifespan.on","uvicorn.loops.asyncio","sqlalchemy.dialects.sqlite",
++           "PIL.PngImagePlugin","PIL.JpegImagePlugin","PIL.WebPImagePlugin","tzdata","win32crypt"]
++binaries=[(str(media/n),"media") for n in ("ffmpeg.exe","ffprobe.exe")]
++manifest=Path(os.environ["NEWSFLOW_BUILD_MANIFEST"])
++datas.append((str(manifest),"."))
++a=Analysis([str(p/"tools/packaging/technical_entry.py")],
++    pathex=[str(src),str(p/"tools/packaging")],binaries=binaries,datas=datas,
++    hiddenimports=sorted(set(hidden)),hookspath=[],runtime_hooks=[],
++    excludes=["playwright","pytest","ruff","tkinter"],noarchive=False)
++pyz=PYZ(a.pure)
++exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name="NewsFlowAI-Technical",
++    debug=False,bootloader_ignore_signals=False,strip=False,upx=False,console=True)
++coll=COLLECT(exe,a.binaries,a.datas,strip=False,upx=False,name="NewsFlowAI-Technical")
+--- before/newsflow-ai/tools/packaging/technical_boundary.py
++++ after/newsflow-ai/tools/packaging/technical_boundary.py
+@@ -0,0 +1,85 @@
++"""Build-only boundary. Not imported by the product or shipped as a release policy."""
++from pathlib import Path
++import ctypes, hashlib, ipaddress, json, os, socket, sys
++
++def install():
++    if not getattr(sys, "frozen", False) or sys.version_info[:3] != (3,14,7):
++        raise SystemExit("Frozen Windows Python 3.14.7 required")
++    if len(sys.argv)!=3 or sys.argv[1] not in ("probe","serve"):
++        raise SystemExit("Internal technical build requires explicit synthetic profile")
++    root=Path(sys.argv[2]).resolve()
++    if not root.is_dir() or root.is_symlink() or root.is_junction():
++        raise SystemExit("Invalid synthetic root")
++    marker=root/"synthetic-only.json"
++    if json.loads(marker.read_text())!={"kind":"NewsFlow-Step15A-SYNTHETIC","port":18765}:
++        raise SystemExit("Synthetic marker required")
++    bundle=Path(sys._MEIPASS).resolve()
++    if root.is_relative_to(bundle) or bundle.is_relative_to(root):
++        raise SystemExit("Separate output root required")
++    for key in list(os.environ):
++        if any(x in key.upper() for x in ("API_KEY","TOKEN","SECRET","PASSWORD","HF_KEY","OAUTH")):
++            raise SystemExit("Credential-like environment refused")
++    os.environ.update(NEWSFLOW_DATA_DIR=str(root/"AppData/Local/NewsFlowAI"),
++        NEWSFLOW_PORT="18765",NEWSFLOW_HOST="127.0.0.1",
++        LOCALAPPDATA=str(root/"AppData/Local"),APPDATA=str(root/"AppData/Roaming"),
++        USERPROFILE=str(root/"home"),HOME=str(root/"home"),TEMP=str(root/"temp"),TMP=str(root/"temp"),
++        NEWSFLOW_FFMPEG=str(bundle/"media/ffmpeg.exe"),NEWSFLOW_FFPROBE=str(bundle/"media/ffprobe.exe"),
++        NEWSFLOW_FONT_PATH=str(bundle/"newsflow/character/assets/NotoSansKR.ttf"))
++    for name in ("temp","home","AppData/Local","AppData/Roaming"):(root/name).mkdir(parents=True,exist_ok=True)
++    os.chdir(root)
++    windows=Path(os.environ["SystemRoot"]).resolve()
++    allowed_read=(root,bundle,windows)
++    archive=Path(sys.executable).resolve()
++    shell=ctypes.WinDLL("shell32",use_last_error=True)
++    parse=shell.CommandLineToArgvW;parse.argtypes=[ctypes.c_wchar_p,ctypes.POINTER(ctypes.c_int)];parse.restype=ctypes.POINTER(ctypes.c_wchar_p)
++    free=ctypes.WinDLL("kernel32").LocalFree;free.argtypes=[ctypes.c_void_p];free.restype=ctypes.c_void_p
++    def split_args(value):
++        if isinstance(value,list):return value
++        if not isinstance(value,str):deny("process arguments")
++        count=ctypes.c_int();items=parse(value,ctypes.byref(count))
++        if not items:deny("process parse")
++        try:return [items[n] for n in range(count.value)]
++        finally:free(items)
++    binaries={str((bundle/"media"/n).resolve()).lower():hashlib.sha256((bundle/"media"/n).read_bytes()).hexdigest() for n in ("ffmpeg.exe","ffprobe.exe")}
++    manifest=json.loads((bundle/"technical-media.json").read_text())
++    assert {Path(k).name:v for k,v in binaries.items()}==manifest
++    import technical_media
++    technical_media.configure(root,binaries)
++    events=[]
++    def under(path,roots):
++        if isinstance(path,int):return True
++        if path is None:return False
++        q=Path(os.fsdecode(path)).resolve()
++        return any(q.is_relative_to(a) for a in roots)
++    def deny(reason):
++        events.append(reason)
++        (root/"boundary-denials-safe.json").write_text(json.dumps(events))
++        raise PermissionError("Technical boundary: "+reason)
++    def audit(event,args):
++        if event=="open":
++            path,mode,flags=args
++            if isinstance(path,str) and path.lower()==os.devnull.lower():return
++            write=bool((flags or 0)&(os.O_WRONLY|os.O_RDWR|os.O_CREAT|os.O_TRUNC|os.O_APPEND)) or isinstance(mode,str) and any(x in mode for x in "wax+")
++            if not under(path,(root,) if write else allowed_read) and not (not write and not isinstance(path,int) and Path(path).resolve()==archive):deny("file access")
++        elif event in ("os.remove","os.mkdir","os.rmdir","os.chmod","os.utime","os.truncate"):
++            if not under(args[0],(root,)):deny("filesystem write")
++        elif event in ("os.rename","os.link","os.symlink"):
++            if not all(under(p,(root,)) for p in args[:2]):deny("filesystem move/link")
++        elif event=="sqlite3.connect":
++            path=str(args[0])
++            if path!=":memory:" and not under(path,(root,)):deny("database")
++        elif event=="socket.getaddrinfo":
++            if args[0] not in ("127.0.0.1","localhost") or args[1]==8765:deny("external DNS")
++        elif event in ("socket.connect","socket.bind"):
++            address=args[1]
++            if not isinstance(address,tuple) or address[0] not in ("127.0.0.1","::1") or address[1]==8765:
++                deny("external socket")
++        elif event=="subprocess.Popen":
++            technical_media.validate_process(*args)
++        elif event in ("os.system","os.exec","os.spawn","ctypes.dlsym/handle"):
++            deny("unsupported execution")
++    sys.addaudithook(audit)
++    (root/"runtime-safe.json").write_text(json.dumps({"Python":sys.version.split()[0],"frozen":True,
++        "python_on_PATH":False,"bundled_runtime":True,"production_profile_used":False,
++        "external_network_policy":"loopback only excluding operating port; no supplier transport","normal_vs_forced_exit_separate":True},indent=2))
++    return root,bundle
+--- before/newsflow-ai/tools/packaging/technical_entry.py
++++ after/newsflow-ai/tools/packaging/technical_entry.py
+@@ -0,0 +1,15 @@
++"""Internal Step15-A binary. Requires a fresh, marked synthetic profile; never deploy."""
++from pathlib import Path
++import json, os, sys
++import multiprocessing
++multiprocessing.freeze_support()
++if __name__ == "__main__":
++    from technical_boundary import install
++    root, bundle = install()
++    from technical_probe import probe, serve
++    if sys.argv[1] == "probe":
++        probe(root, bundle)
++    elif sys.argv[1] == "serve":
++        serve(root, bundle)
++    else:
++        raise SystemExit("Unknown technical mode")
+--- before/newsflow-ai/tools/packaging/technical_media.py
++++ after/newsflow-ai/tools/packaging/technical_media.py
+@@ -0,0 +1,111 @@
++"""Technical-build media validation reused from the accepted test Guard.
++No native Python, Node, browser or arbitrary binary exception is present.
++"""
++import os,re,ctypes,pathlib,hashlib
++ROOT=None;PINNED={};VERIFIED={};ALLOWED=[];ATTEMPTS=[]
++_shell=ctypes.WinDLL("shell32",use_last_error=True)
++_parse=_shell.CommandLineToArgvW;_parse.argtypes=[ctypes.c_wchar_p,ctypes.POINTER(ctypes.c_int)];_parse.restype=ctypes.POINTER(ctypes.c_wchar_p)
++_free=ctypes.WinDLL("kernel32").LocalFree;_free.argtypes=[ctypes.c_void_p];_free.restype=ctypes.c_void_p
++def configure(root,binaries):
++ global ROOT,PINNED
++ ROOT=root;PINNED={pathlib.Path(k).resolve():v for k,v in binaries.items()}
++def deny(reason):
++ ATTEMPTS.append(reason);raise PermissionError("Technical media boundary: "+reason)
++def inside(p,base):return p==base or p.is_relative_to(base)
++def path(value,cwd=None):
++ try:
++  raw=os.fsdecode(value)
++  if '\x00' in raw or raw.startswith(('\\\\','//')):deny('device-UNC-or-invalid-path')
++  p=pathlib.Path(raw)
++  if not p.is_absolute():p=(pathlib.Path(cwd) if cwd else pathlib.Path.cwd())/p
++  if ':' in str(p)[2:]:deny('ADS-path')
++  return p.resolve()
++ except PermissionError:raise
++ except (ValueError,OSError,TypeError):deny('unresolvable-path')
++def check_file(value,write=False,cwd=None):
++ p=path(value,cwd)
++ if not inside(p,ROOT):deny("outside-synthetic-media")
++ return p
++def split_windows(args):
++ if isinstance(args,(tuple,list)):
++  if not args or not all(isinstance(x,(str,bytes,os.PathLike)) for x in args):deny('invalid-argv')
++  return [os.fsdecode(x) for x in args]
++ if not isinstance(args,str) or not args or len(args)>32767 or '\x00' in args:deny('invalid-commandline')
++ count=ctypes.c_int();data=_parse(args,ctypes.byref(count))
++ if not data:deny('invalid-commandline')
++ try:return [data[i] for i in range(count.value)]
++ finally:_free(data)
++FLAGS={'-hide_banner','-nostdin','-n','-y','-an','-vn','-shortest','-show_streams','-show_format','-show_packets','-show_frames','-version'}
++VALUES={'-loglevel','-v','-f','-format_whitelist','-i','-t','-ss','-sseof','-frames:v','-vframes','-r','-framerate','-loop','-stream_loop','-c:v','-c:a','-codec:v','-codec:a','-c','-preset','-crf','-pix_fmt','-ar','-ac','-b:a','-vf','-af','-filter:v','-filter:a','-filter_complex','-map','-movflags','-threads','-filter_threads','-filter_complex_threads','-safe','-protocol_whitelist','-of','-print_format','-show_entries','-select_streams','-vsync','-s','-s:v','-read_intervals','-video_track_timescale','-tag:v','-color_range','-colorspace','-color_primaries','-color_trc','-map_metadata','-flags','-fflags','-sws_flags','-fps_mode','-sample_fmt','-channel_layout'}
++FORMATS={'lavfi','concat','mp4','mov','matroska','webm','image2','image2pipe','wav','s16le','f32le','rawvideo','null'}
++def media_path(value,cwd,output=False):
++ if value in ('-','pipe:1') and output:return None
++ if value=='-':deny('stdin-media-input')
++ if '://' in value or value.lower().startswith(('file:','pipe:','crypto:','concat:','data:','http:','https:','tcp:','udp:')):deny('media-protocol')
++ return check_file(value,write=output,cwd=cwd)
++def validate_lavfi(value):
++ # Preserve the existing generator policy. One bounded numeric hue fixture is also safe data.
++ if re.fullmatch(r'(?:testsrc2?|color|anullsrc|sine)=[A-Za-z0-9_:=.,+#@/\-]+',value) and '/' not in value:return
++ match=re.fullmatch(r'testsrc2?=size=(\d{1,4})x(\d{1,4}):rate=(\d{1,3}):duration=(\d{1,2}),hue=H=2\*PI\*t/([1-9]\d?)',value)
++ if match:
++  width,height,rate,seconds,divisor=map(int,match.groups())
++  if 1<=width<=4096 and 1<=height<=4096 and 1<=rate<=120 and 1<=seconds<=60 and 1<=divisor<=60:return
++ deny('unsafe-lavfi')
++
++def validate_filter(value):
++ # A whole setsar ratio is arithmetic, never a path or an extra filter chain.
++ if re.fullmatch(r'setsar=[1-9]\d{0,2}/[1-9]\d{0,2}',value):return
++ if re.search(r'(?i)(movie|amovie|subtitles|drawtext|zmq|sendcmd|asendcmd|frei0r|ladspa|lv2|[a-z]+://|[/\\])',value):deny('unsafe-filter')
++
++def validate_process(executable,args,cwd,env):
++ argv=split_windows(args)
++ binary=path(argv[0],cwd)
++ if not pathlib.Path(argv[0]).is_absolute() or binary not in PINNED:deny('unapproved-executable')
++ if executable is not None and (not pathlib.Path(os.fsdecode(executable)).is_absolute() or path(executable,cwd)!=binary):deny('executable-argv-mismatch')
++ work=path(cwd or os.getcwd())
++ if not inside(work,ROOT):deny('process-cwd')
++ actualenv=os.environ if env is None else env
++ if any(k.upper()=='FFREPORT' or k.upper().endswith(('_KEY','_TOKEN','_PASSWORD','_SECRET')) for k in actualenv):deny('process-secret-or-report-env')
++ st=binary.stat();stamp=(st.st_size,st.st_mtime_ns)
++ if VERIFIED.get(binary)!=stamp:
++  if hashlib.sha256(binary.read_bytes()).hexdigest()!=PINNED[binary]:deny('binary-hash-mismatch')
++  VERIFIED[binary]=stamp
++ fmt=None;i=1;positions=[];inputs=[]
++ while i<len(argv):
++  v=argv[i]
++  if v in FLAGS:i+=1;continue
++  if v!='-' and v.startswith('-') and v not in VALUES:deny('unapproved-media-option')
++  if v in VALUES:
++   if i+1>=len(argv):deny('missing-option-value')
++   val=argv[i+1]
++   if any(c in val for c in '\r\n\x00'):deny('control-in-argv')
++   if v=='-f':
++    if val not in FORMATS:deny('unapproved-demuxer')
++    fmt=val
++   elif v=='-i':
++    if fmt=='lavfi':
++     validate_lavfi(val)
++    else:
++     inp=media_path(val,work);inputs.append(inp)
++     # Local playlist contents cannot smuggle any URL or path outside the output root.
++     if inp and (fmt=='concat' or inp.suffix.lower()=='.txt'):
++      for line in inp.read_text(encoding='utf-8-sig').splitlines():
++       m=re.fullmatch(r"file '([A-Za-z0-9_.-]+)'",line)
++       if not m:deny('unsafe-concat-manifest')
++       media_path(m[1],inp.parent)
++    fmt=None
++   elif v=='-protocol_whitelist' and set(val.split(','))-{'file','pipe'}:deny('protocol-whitelist')
++   elif v=='-safe' and val!='1':deny('unsafe-concat-mode')
++   elif v=='-format_whitelist' and set(val.split(','))-{'mov','mp4','m4a','3gp','3g2','mj2','matroska','webm'}:deny('format-whitelist')
++   elif v in ('-vf','-af','-filter:v','-filter:a','-filter_complex'):
++    validate_filter(val)
++   elif '://' in val or val.startswith(('\\\\','//')):deny('network-in-option')
++   i+=2;continue
++  positions.append(v);i+=1
++ probe=binary.stem.lower()=='ffprobe'
++ if len(positions)>1:deny('multiple-positional-outputs')
++ for v in positions:media_path(v,work,output=not probe)
++ if any(p and p.suffix.lower() in ('.m3u8','.m3u','.sdp','.ffconcat') for p in inputs):deny('playlist-input')
++ ALLOWED.append(binary.stem)
++ return argv
++
+--- before/newsflow-ai/tools/packaging/technical_probe.py
++++ after/newsflow-ai/tools/packaging/technical_probe.py
+@@ -0,0 +1,147 @@
++"""Synthetic inputs only, exercising the bundled product classes and real FFmpeg."""
++from pathlib import Path
++from io import BytesIO
++from types import SimpleNamespace
++import hashlib, json, os, subprocess
++from PIL import Image
++
++def picture():
++    buf=BytesIO();Image.new("RGB",(1080,1920),"#2456dc").save(buf,"PNG");return buf.getvalue()
++
++class ImageFake:
++    def __init__(self):self.calls=0
++    def generate(self,prompt,key,*,selection):
++        assert key=="synthetic-only-image-key"
++        self.calls+=1
++        buf=BytesIO();Image.new("RGB",tuple(map(int,selection["size"].split("x"))),"teal").save(buf,"JPEG")
++        return buf.getvalue(),{"input_tokens":10,"output_tokens":20,"total_tokens":30}
++
++def make_app(settings):
++    from newsflow.main import create_app
++    from newsflow.news.rss_adapter import FakeRSSAdapter
++    from newsflow.scheduler.service import Scheduler
++    from newsflow.publishing.calendar import PublishingCalendar
++    from newsflow.video.ai.service import AIVideoCoordinator
++    Scheduler.start=lambda self:None
++    PublishingCalendar.start=lambda self:None
++    AIVideoCoordinator.start=lambda self:None
++    feed="https://example.com/synthetic/rss"
++    image="https://example.com/synthetic/image.png"
++    rss=b'<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/"><channel><title>Synthetic</title><item><title>Synthetic news</title><link>https://example.com/synthetic/article</link><description>Test-only news facts</description><media:thumbnail url="https://example.com/synthetic/image.png"/></item></channel></rss>'
++    app=create_app(settings,FakeRSSAdapter({feed:rss,image:picture()}))
++    app.state.image_generation.keys=SimpleNamespace(key=lambda:"synthetic-only-image-key",status=lambda:{"configured":True})
++    app.state.image_generation.adapter=ImageFake()
++    return app
++
++def probe(root,bundle):
++    from fastapi.testclient import TestClient
++    from sqlalchemy import select
++    from newsflow.config import Settings
++    from newsflow.db.models import NewsSource, NewsArticle, RenderJob, VideoProject
++    from newsflow.intelligence.service import IntelligenceService
++    from newsflow.video.engine import FFmpegAdapter
++    from newsflow.video.tts import FakeTTS, local_process_env
++    from newsflow.creation.catalog import DEFAULTS,save_defaults,read_defaults
++    from newsflow.character.schema import Storyboard
++    from newsflow.character.compose import compose
++    from newsflow.video.ai.clips import probe_clip
++    settings=Settings.from_env()
++    assert settings.data_dir==root/"AppData/Local/NewsFlowAI"
++    app=make_app(settings)
++    result={"scope":"Synthetic bundled engine probe; no live providers","pages":{}}
++    import socket,technical_media
++    blocked=[]
++    checks=[
++        ("outside-read",lambda:(root.parent/"not-an-operating-file.txt").read_bytes()),
++        ("bundle-write",lambda:(bundle/"forbidden-write.txt").write_text("denied")),
++        ("shell",lambda:subprocess.run([str(Path(os.environ["SystemRoot"])/"System32/cmd.exe"),"/c","exit"],check=True)),
++        ("media-traversal",lambda:technical_media.validate_process(None,[str(bundle/"media/ffmpeg.exe"),"-i","../outside.mp4",str(root/"never.mp4")],root,{})),
++        ("media-filter",lambda:technical_media.validate_filter("movie=../outside.mp4")),
++    ]
++    for name,call in checks:
++        try:call()
++        except PermissionError:blocked.append(name)
++        else:raise AssertionError("Boundary did not deny "+name)
++    with socket.socket() as network:
++        try:network.connect(("203.0.113.1",443))
++        except PermissionError:blocked.append("external-connect-before-send")
++        else:raise AssertionError("External boundary failed")
++    result["boundary_denial_checks"]=blocked
++    with TestClient(app,base_url="http://127.0.0.1:18765") as client:
++        for route in ("/","/news","/ai","/video","/image-studio","/character","/publishing","/settings"):
++            response=client.get(route);assert response.status_code==200,(route,response.status_code)
++            result["pages"][route]=response.status_code
++        with app.state.sessions.begin() as session:
++            for source in session.scalars(select(NewsSource)):source.enabled=False
++            session.add(NewsSource(name="Synthetic feed",url="https://example.com/synthetic/rss",enabled=True))
++        app.state.coordinator.start();app.state.coordinator.future.result(30)
++        with app.state.sessions() as session:
++            article=session.scalar(select(NewsArticle));assert article
++            article_id=article.id
++            asset=app.state.video.assets/"synthetic-news.png";asset.write_bytes(picture())
++            app.state.video.news_images.remember(article,asset.name,source_url="https://example.com/synthetic/image.png",rights_basis="Locally generated synthetic fixture",origin="representative")
++        ai=IntelligenceService(app.state.sessions)
++        analysis=ai.analyze([article_id]);draft=ai.generate(analysis,30)
++        class ObservedFFmpeg(FFmpegAdapter):
++            def render(self,*args,**kwargs):
++                try:return super().render(*args,**kwargs)
++                except Exception:
++                    import traceback
++                    traceback.print_exc()
++                    raise
++        app.state.video.engine=ObservedFFmpeg();app.state.video.tts=FakeTTS()
++        render=app.state.video.start(draft,30,reviewed=True,asset_permission=True)
++        app.state.video.future.result(240)
++        with app.state.sessions() as session:
++            job=session.get(RenderJob,render);assert job.status=="success",job.message
++            assert (job.metadata_json["width"],job.metadata_json["height"])==(1080,1920)
++            project=session.get(VideoProject,job.project_id)
++            assert any(x["mode"]=="automatic" for x in project.snapshot["news_images"])
++            result["news"]={"render_id":render,"MP4":[1080,1920,30],"image_automatic":True,"voice":"FakeTTS silent PCM"}
++        chosen={**DEFAULTS["image"],"size":"1024x1024","quality":"high"}
++        char_before=read_defaults(app.state.sessions,"character")
++        save_defaults(app.state.sessions,"image",chosen)
++        studio=app.state.image_studio;i=studio.create("Synthetic geometry",chosen)
++        run=studio.execute(i,consent=True,reviewed=True);name=studio.export(i,reviewed=True)
++        assert studio.asset(name).is_file() and read_defaults(app.state.sessions,"character")==char_before
++        result["image"]={"draft":i,"Fake_calls":app.state.image_generation.adapter.calls,"reviewed_asset":True}
++        c=app.state.character
++        char_selection={**DEFAULTS["character"],"script_model":"claude-opus-4-6"}
++        identifier=c.create("Synthetic office","5","20",reference=picture(),selection=char_selection)
++        assert c.read(identifier)["claude_model"]=="claude-opus-4-6"
++        clip=root/"synthetic-clip.mp4"
++        subprocess.run([str(FFmpegAdapter.executable("ffmpeg",None)),"-nostdin","-n","-v","error","-f","lavfi","-i","testsrc2=size=144x256:rate=30","-t","10","-an","-c:v","libx264","-pix_fmt","yuv420p","-preset","ultrafast",str(clip)],check=True,capture_output=True,timeout=60,env=local_process_env())
++        story=Storyboard.model_validate({"plan":{"situation":"합성 직장 예시","contrast":"분주함과 여유","punchline":"귤의 평온"},"title":"합성 캐릭터","hook_caption":"테스트 장면","scenes":[{"seconds":10,"role":role,"action":"A calm capybara waits in a synthetic office.","caption":"합성 장면 "+str(n),"sfx":""} for n,role in enumerate(("setup","contrast","punchline"))],"end_caption":"합성 검증 종료"})
++        outputfolder=root/"character-media";outputfolder.mkdir()
++        output=compose(outputfolder,story,[clip]*3)
++        info=probe_clip(outputfolder/output["file"]);assert(info["width"],info["height"],info["duration"])==(1080,1920,30.0)
++        result["character"]={"selection_frozen":True,"MP4":[1080,1920,30],"live_generation":False}
++        result["real_API_OAuth_SNS_calls"]=0
++        result["data_outside_installation"]=not settings.data_dir.is_relative_to(bundle)
++        result["status"]="PASS"
++    (root/"probe-safe.json").write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding="utf-8")
++
++def serve(root,bundle):
++    import newsflow.main as main
++    original=main.create_app
++    # Capture before replacing factory to avoid recursion.
++    global make_app
++    from newsflow.news.rss_adapter import FakeRSSAdapter
++    def factory(settings,**kwargs):
++        from newsflow.scheduler.service import Scheduler
++        from newsflow.publishing.calendar import PublishingCalendar
++        from newsflow.video.ai.service import AIVideoCoordinator
++        Scheduler.start=lambda self:None;PublishingCalendar.start=lambda self:None;AIVideoCoordinator.start=lambda self:None
++        app=original(settings,FakeRSSAdapter({}),**kwargs)
++        app.state.image_generation.keys=SimpleNamespace(key=lambda:"synthetic-only-image-key",status=lambda:{"configured":True})
++        app.state.image_generation.adapter=ImageFake()
++        return app
++    main.create_app=factory
++    try:
++        main.run()
++    except KeyboardInterrupt:
++        # Uvicorn re-raises SIGBREAK after its normal cleanup. Do not convert an
++        # interrupt before confirmed server cleanup to a successful technical exit.
++        log=root/"AppData/Local/NewsFlowAI/logs/execution.log"
++        if not log.is_file() or not log.read_text(encoding="utf-8").rstrip().endswith("server_stop"):
++            raise
+--- before/newsflow-ai/tools/packaging/validation/README.md
++++ after/newsflow-ai/tools/packaging/validation/README.md
+@@ -0,0 +1,17 @@
++# Step 15-A frozen-engine checks
++
++These are opt-in synthetic technical-bundle checks, not live-provider tests.
++Run through the reviewed Step 13 Windows Python 3.14.7 browser/media Guard boundary.
++Do not invoke against an operating profile. STEP13_ROOT identifies a private test root;
++NEWSFLOW_VALIDATION_OUTPUT is a fresh evidence directory. NEWSFLOW_FFMPEG must be
++hash-pinned by that boundary. The frame test names the retained final probe `exe-probe6`.
++The GUI test requires the marked synthetic EXE server on 127.0.0.1:18765 with the probe's
++synthetic draft IDs; use a temporary Chrome profile and block non-local page requests.
++
++A Windows Job supervisor owns only the test tree. After checks, send CTRL_BREAK and
++require server_stop, exit 0, released port and zero active children before closing the Job.
++Forced failure cleanup is recorded separately and never counted as a normal-stop PASS.
++Keep the synthetic root to verify normal restart; do not re-execute paid or unknown jobs.
++The GUI check uses bounded Python polling for video playback to honor the existing CSP;
++no unsafe-eval exemption is needed. These files are outside ordinary tests/ collection.
++No profile, database, EXE, audio/video or private environment is stored in this repository.
+--- before/newsflow-ai/tools/packaging/validation/test_exe_gui.py
++++ after/newsflow-ai/tools/packaging/validation/test_exe_gui.py
+@@ -0,0 +1,53 @@
++"""Actual bundled server, synthetic profile, reviewed Chrome/Node boundary."""
++import json,os,time
++from pathlib import Path
++from urllib.parse import urlsplit
++from playwright.sync_api import sync_playwright,expect
++
++def test_frozen_gui_assets_models_video_and_reuse():
++    output=Path(os.environ['NEWSFLOW_VALIDATION_OUTPUT'])/'frozen-gui';output.mkdir(parents=True)
++    origin='http://127.0.0.1:18765'
++    pages=[];external=[];errors=[];bad_assets=[]
++    with sync_playwright() as pw:
++        browser=pw.chromium.launch(headless=True)
++        context=browser.new_context(locale='ko-KR',reduced_motion='reduce')
++        def route_guard(route):
++            if urlsplit(route.request.url).netloc!=urlsplit(origin).netloc:
++                external.append(route.request.url);route.abort()
++            else:route.continue_()
++        context.route('**/*',route_guard)
++        page=context.new_page()
++        page.on('pageerror',lambda error:errors.append(str(error)))
++        page.on('response',lambda r:bad_assets.append(r.url) if '/static/' in r.url and r.status>=400 else None)
++        for width in (1440,980,390):
++            page.set_viewport_size({'width':width,'height':900})
++            for name,path in [('home','/'),('news','/news'),('create','/create'),('script','/ai'),('video','/video?job_id=1'),('video-ai','/video/ai'),('image','/image-studio?draft_id=3'),('character','/character'),('publish','/publishing'),('settings','/settings')]:
++                assert page.goto(origin+path,wait_until='networkidle').status==200
++                expect(page.locator('h1').first).to_be_visible()
++                assert page.evaluate('document.documentElement.scrollWidth <= innerWidth + 2'),(name,width)
++                page.screenshot(path=str(output/f'{name}-{width}.png'),animations='disabled')
++                pages.append({'page':name,'width':width,'status':'PASS'})
++        page.set_viewport_size({'width':1440,'height':900})
++        page.goto(origin+'/video?job_id=1',wait_until='networkidle')
++        video=page.locator('video').first
++        expect(video).to_be_visible()
++        video.evaluate('(v)=>{v.muted=true;return v.play()}')
++        deadline=time.monotonic()+10
++        while video.evaluate('(v)=>v.currentTime')<=0.2:
++            assert time.monotonic()<deadline,"Video playback did not advance"
++            page.wait_for_timeout(50)
++        assert video.evaluate('(v)=>[v.videoWidth,v.videoHeight]')==[1080,1920]
++        video.evaluate('(v)=>v.pause()')
++        page.screenshot(path=str(output/'video-playing.png'),animations='disabled')
++        page.goto(origin+'/image-studio?draft_id=3',wait_until='networkidle')
++        preview=page.get_by_alt_text('생성 결과 · 내용과 사용권 검토 필요')
++        expect(preview).to_be_visible()
++        assert preview.evaluate('(i)=>i.complete && i.naturalWidth===1024')
++        page.locator('input[name=reviewed]').check()
++        page.get_by_role('button',name='캐릭터 참조로 저장',exact=True).click()
++        expect(page.get_by_alt_text('선택한 캐릭터 참조')).to_be_visible()
++        assert page.locator('select[name=reference_asset]').input_value().startswith('studio-')
++        page.screenshot(path=str(output/'image-reuse-character.png'),animations='disabled')
++        assert not external and not errors and not bad_assets
++        context.close();browser.close()
++    (output/'result-safe.json').write_text(json.dumps({'pages':pages,'video_playback':True,'image_reuse':True,'external_page_requests':0,'javascript_errors':0,'static_failures':0,'real_API':False},indent=2))
+--- before/newsflow-ai/tools/packaging/validation/test_exe_media_frames.py
++++ after/newsflow-ai/tools/packaging/validation/test_exe_media_frames.py
+@@ -0,0 +1,27 @@
++"""Read only synthetic MP4s from the frozen-engine probe."""
++from pathlib import Path
++import os,json,subprocess
++from PIL import Image,ImageDraw
++def test_frozen_news_and_character_actual_frames():
++    root=Path(os.environ['STEP13_ROOT'])
++    probe=root/'exe-probe6'
++    news=list((probe/'AppData/Local/NewsFlowAI').rglob('*.mp4'))
++    assert len(news)==1
++    videos={'news':news[0],'character':probe/'character-media/final.mp4'}
++    out=Path(os.environ['NEWSFLOW_VALIDATION_OUTPUT'])/'frozen-media';out.mkdir(parents=True)
++    evidence=[]
++    sheet=Image.new('RGB',(810,960),'#101726')
++    for row,(mode,video) in enumerate(videos.items()):
++        for col,second in enumerate((5,15,25)):
++            frame=out/f'{mode}-{second}.png'
++            subprocess.run([os.environ['NEWSFLOW_FFMPEG'],'-nostdin','-v','error','-n','-ss',str(second),
++                '-i',str(video),'-frames:v','1',str(frame)],check=True,timeout=40,capture_output=True)
++            with Image.open(frame) as image:
++                assert image.size==(1080,1920)
++                if mode=='news':
++                    pixel=image.convert('RGB').getpixel((540,900))
++                    assert max(abs(x-y) for x,y in zip(pixel,(36,86,220)))<12,pixel
++                tile=image.convert('RGB').resize((270,480));sheet.paste(tile,(col*270,row*480))
++            evidence.append({'mode':mode,'second':second,'size':[1080,1920],'status':'PASS'})
++    sheet.save(out/'contact-sheet.png')
++    (out/'result-safe.json').write_text(json.dumps({'frames':evidence,'news_image_matches_all_three':True,'real_API':False},indent=2))
+--- before/newsflow-ai/tools/validation/step15a/j_k_gui-targets-safe.json
++++ after/newsflow-ai/tools/validation/step15a/j_k_gui-targets-safe.json
+@@ -0,0 +1 @@
++["tests/test_creation_models_gui.py"]--- before/newsflow-ai/tools/validation/step15a/j_k_models-targets-safe.json
++++ after/newsflow-ai/tools/validation/step15a/j_k_models-targets-safe.json
+@@ -0,0 +1 @@
++["tests/test_creation_models.py"]--- before/newsflow-ai/tools/validation/step15a/j_k_navigation-targets-safe.json
++++ after/newsflow-ai/tools/validation/step15a/j_k_navigation-targets-safe.json
+@@ -0,0 +1,8 @@
++[
++  "tests/test_ai_video_gui.py",
++  "tests/test_automation_simplicity.py",
++  "tests/test_studio_design_system.py",
++  "tests/test_studio_structure.py",
++  "tests/test_workspace_access.py",
++  "tests/test_workspace_access_browser.py"
++]
+--- before/newsflow-ai/tools/validation/step15a/phases-safe.json
++++ after/newsflow-ai/tools/validation/step15a/phases-safe.json
+@@ -0,0 +1,69 @@
++{
++  "Python": "3.14.7",
++  "scope": "Step13K-Fix: 381 retained scoped checks and five repetitions of three shutdown checks. Fake only; no production profile.",
++  "phases": [
++    {
++      "name": "security",
++      "expected": 78
++    },
++    {
++      "name": "j_native_security",
++      "expected": 52
++    },
++    {
++      "name": "j_models",
++      "expected": 40,
++      "expected_ids_file": "j_models-expected-IDs-safe.json"
++    },
++    {
++      "name": "j_mode_gui",
++      "expected": 6
++    },
++    {
++      "name": "h3",
++      "expected": 55
++    },
++    {
++      "name": "j_flow",
++      "expected": 1
++    },
++    {
++      "name": "j_k_models",
++      "expected": 62
++    },
++    {
++      "name": "j_k_gui",
++      "expected": 4
++    },
++    {
++      "name": "j_k_navigation",
++      "expected": 68
++    },
++    {
++      "name": "j_native",
++      "expected": 15
++    },
++    {
++      "name": "j_shutdown_repeat1",
++      "expected": 3
++    },
++    {
++      "name": "j_shutdown_repeat2",
++      "expected": 3
++    },
++    {
++      "name": "j_shutdown_repeat3",
++      "expected": 3
++    },
++    {
++      "name": "j_shutdown_repeat4",
++      "expected": 3
++    },
++    {
++      "name": "j_shutdown_repeat5",
++      "expected": 3
++    }
++  ],
++  "model_count_basis": "Parent-controlled local j_models/pytest.xml: 40 PASS; exact testcase IDs preserved in j_models-expected-IDs-safe.json",
++  "fail_closed": "Missing XML, changed testcase counts, skipped cases or failures fail the workflow"
++}--- before/newsflow-ai/tools/validation/step15a/prepare_windows.py
++++ after/newsflow-ai/tools/validation/step15a/prepare_windows.py
+@@ -0,0 +1,169 @@
++"""Build a disposable CI source/profile and run only approved final phases."""
++from __future__ import annotations
++
++import hashlib
++import json
++import os
++from pathlib import Path
++import shutil
++import subprocess
++import sys
++
++assert os.name == "nt" and sys.version_info[:3] == (3, 14, 7)
++sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
++sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
++
++plan_source = Path(__file__).resolve().parent
++source = plan_source.parent / "step13j_final"
++checkout = source.parents[2]
++root = Path(sys.argv[1]).resolve()
++assert not root.exists() and not root.is_relative_to(checkout) and not checkout.is_relative_to(root)
++definitions = json.loads((plan_source / "phases-safe.json").read_text(encoding="utf-8-sig"))["phases"]
++if len(sys.argv)>2:
++    assert sys.argv[2:]==["--shutdown-only"],"Unknown focused phase selection"
++    definitions=[d for d in definitions if d["name"] in ("security","j_native_security") or d["name"].startswith("j_shutdown_repeat")]
++assert all(type(item["expected"]) is int and item["expected"] > 0 for item in definitions), (
++    "Freeze phase testcase counts from reviewed local XML before CI; never guess coverage"
++)
++root.mkdir(parents=True)
++project = root / "worktree/newsflow-ai"
++project.mkdir(parents=True)
++
++# Copy only checked-out source/tests/tools and required top-level launch manifests.
++# No .git, docs/reports, environment files, databases, backups or user media roots.
++ignore = shutil.ignore_patterns("__pycache__", "*.pyc", ".pytest_cache", ".ruff_cache",
++                                ".venv", "validation-output", "dist", "build", ".git")
++for directory in ("src", "tests", "tools"):
++    source_tree = checkout / directory
++    assert not source_tree.is_symlink() and not source_tree.is_junction()
++    for entry in source_tree.rglob("*"):
++        assert not entry.is_symlink() and not entry.is_junction(), "Source fixture links are not permitted"
++    shutil.copytree(source_tree, project / directory, ignore=ignore, symlinks=False)
++for name in ("pyproject.toml", "requirements-dev.lock", "requirements-supertonic.lock",
++             "run.bat", "setup.bat", "README.md", "AGENTS.md", "START_HERE.html"):
++    shutil.copyfile(checkout / name, project / name)
++
++# Existing reviewed browser/FFmpeg boundary; final native overlay comes from core review.
++for name in ("step13_guard.py", "step13_fixtures.py", "browser_boundary.py", "node_boundary.cjs",
++             "test_browser_boundary_security.py", "test_news_image_gui_flow.py",
++             "evidence-env-keys-safe.json", "original91-IDs-safe.json"):
++    shutil.copyfile(source.parent / "step13h" / name, root / name)
++for name in ("run_browser_phase.py", "browser_bootstrap.py", "test_guard_security.py"):
++    shutil.copyfile(source.parent / "step13j" / name, root / name)
++for name in ("native_boundary.py", "native_child_bootstrap.py", "prepare_native_config.py",
++             "test_native_boundary_security.py", "step13_guard.py"):
++    shutil.copyfile(source / name, root / name)
++# A reviewed final fixture overlay is required for native child cleanup and immutable code fixtures.
++for name in ("step13_fixtures.py", "browser_bootstrap.py", "run_browser_phase.py"):
++    if (source / name).is_file():
++        shutil.copyfile(source / name, root / name)
++for name in ("j_native-targets-safe.json", "j_models-targets-safe.json",
++             "j_mode_gui-targets-safe.json", "j_flow-targets-safe.json"):
++    shutil.copyfile(source / name, root / name)
++for name in ("j_k_models-targets-safe.json", "j_k_gui-targets-safe.json", "j_k_navigation-targets-safe.json"):
++    shutil.copyfile(plan_source / name, root / name)
++for number in range(1,6):
++    (root / f"j_shutdown_repeat{number}-targets-safe.json").write_text(json.dumps([
++        "tests/test_windows.py::test_actual_server_lifecycle_and_port_collision",
++        "tests/test_windows.py::test_connection_reset_still_shuts_down_and_releases_port",
++        "tests/test_windows.py::test_windows_http_loop_is_local_and_supports_server_contract"
++    ]),encoding="utf-8")
++(root / "j_native_security-targets-safe.json").write_text(
++    json.dumps([str(root / "test_native_boundary_security.py")]), encoding="utf-8"
++)
++for path in ("home/AppData/Local", "home/AppData/Roaming", "temp", "artifacts"):
++    (root / path).mkdir(parents=True, exist_ok=True)
++
++
++def sha(path):
++    return hashlib.sha256(path.read_bytes()).hexdigest()
++
++
++# Validate exact immutable baseline bytes, not mutable operating sources or Git refs.
++manifest = json.loads((source / "baseline-code-manifest-safe.json").read_text(encoding="utf-8-sig"))
++baseline = checkout.parent / ".step13j-code-baseline"
++assert subprocess.run(["git", "-C", str(baseline), "rev-parse", "HEAD"], check=True,
++                      capture_output=True, text=True).stdout.strip() == manifest["commit"]
++for relative, expected in manifest["files"].items():
++    # Read raw Git blob bytes, not checkout bytes: .gitattributes may force CRLF.
++    raw = subprocess.run(
++        ["git", "-C", str(baseline), "show", "--no-textconv", "--no-ext-diff",
++         manifest["commit"] + ":" + relative],
++        check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
++    ).stdout
++    assert hashlib.sha256(raw).hexdigest() == expected, "Pinned baseline blob mismatch"
++    dest = root / "baseline-code/files" / relative
++    dest.parent.mkdir(parents=True, exist_ok=True)
++    with dest.open("xb") as output:
++        output.write(raw)
++    assert sha(dest) == expected
++(root / "baseline-code/manifest-safe.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
++(root / "baseline-integrity-safe.json").write_text(json.dumps({
++    "commit": manifest["commit"], "files_verified": len(manifest["files"]),
++    "content_mismatches": 0, "operating_Git_used": False,
++    "read_method": "pinned Git blob binary stdout; checkout line endings unused",
++}), encoding="utf-8")
++
++import tzdata
++vendor = root / "fixture-vendor"
++shutil.copytree(Path(tzdata.__file__).parent, vendor / "tzdata", ignore=ignore)
++
++import playwright
++node = Path(playwright.__file__).parent / "driver/node.exe"
++cli = node.parent / "package/cli.js"
++chrome = Path(os.environ["NEWSFLOW_TEST_BROWSER_EXECUTABLE"]).resolve()
++ffmpeg = Path(os.environ["NEWSFLOW_FFMPEG"]).resolve()
++ffprobe = Path(os.environ["NEWSFLOW_FFPROBE"]).resolve()
++for binary in (node, cli, chrome, ffmpeg, ffprobe):
++    assert binary.is_file() and not binary.is_symlink()
++fonts = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
++reads = [root, project, Path(sys.prefix), Path(sys.base_prefix), fonts]
++browser = {"node": str(node), "node_SHA256": sha(node), "cli": str(cli), "cli_SHA256": sha(cli),
++           "chrome": str(chrome), "chrome_SHA256": sha(chrome),
++           "preload": str(root / "node_boundary.cjs"), "preload_SHA256": sha(root / "node_boundary.cjs")}
++(root / "guard-config-private.json").write_text(json.dumps({
++    "root": str(root), "project": str(project), "read_roots": list(map(str, reads)),
++    "binaries": {str(ffmpeg): sha(ffmpeg), str(ffprobe): sha(ffprobe)}, "browser": browser,
++}), encoding="utf-8")
++(root / "node-config-private.json").write_text(json.dumps({
++    "root": str(root), "chrome": str(chrome), "chrome_SHA256": sha(chrome),
++    "operating": str(root.parent / "forbidden-operating-profile"),
++    "allowed_reads": list(map(str, reads + [chrome.parent, Path(os.environ.get("WINDIR", "C:/Windows"))])),
++    "log": str(root / "node-events-private.jsonl"),
++}), encoding="utf-8")
++(root / "runtime-config-private.json").write_text(json.dumps({
++    "project": str(project), "runtime": sys.prefix, "fixture_vendor": str(vendor),
++}), encoding="utf-8")
++subprocess.run([sys.executable, "-I", "-S", "-B", str(root / "prepare_native_config.py")],
++               cwd=root, check=True)
++
++# Helpers are setup code only; every test child is launched through the reviewed Job+Guard.
++sys.path.insert(0, str(source))
++from summarize import record_phase, write_summary
++summaries = []
++write_summary(root, definitions, summaries)
++for definition in definitions:
++    phase = definition["name"]
++    result = subprocess.run([sys.executable, "-I", "-S", "-B", str(root / "run_browser_phase.py"), phase],
++                            cwd=root, check=False)
++    expected_ids = None
++    if definition.get("expected_ids_file"):
++        expected_ids = json.loads((source / definition["expected_ids_file"]).read_text(encoding="utf-8-sig"))
++    summary = record_phase(root, phase, definition["expected"], result.returncode, expected_ids)
++    summaries.append(summary)
++    write_summary(root, definitions, summaries)
++    log = root / (phase + "-process.log")
++    if log.exists():
++        for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
++            if " passed" in line or " failed" in line or " error" in line:
++                print("pytest-summary: " + line[-600:], flush=True)
++    if summary["status"] != "PASS":
++        # Keep raw synthetic diagnostics only on the disposable runner, never upload them.
++        print("Phase failed; safe failure IDs and bounded redacted diagnostics recorded. Raw child logs remain on this runner.", flush=True)
++        raise SystemExit(result.returncode or 1)
++
++
++
++
++
++

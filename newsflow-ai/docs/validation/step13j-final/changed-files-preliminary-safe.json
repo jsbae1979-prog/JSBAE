@@ -1,0 +1,121 @@
+{
+  "files": [
+    {
+      "path": "newsflow-ai/tests/test_step13j_model_selection_contracts.py",
+      "status": "A",
+      "SHA256": "2198e40764bfa5162f1ce5b70e09e0df790c0bd95e8702803a347d8dceb56d1f",
+      "bytes": 10092
+    },
+    {
+      "path": "newsflow-ai/tests/test_windows_transition_plan.py",
+      "status": "M",
+      "SHA256": "8095cd26da8964d8177a0d2a84eaceeaf9f217ab0058f0c1de570364388c6090",
+      "bytes": 18944
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/baseline-code-manifest-safe.json",
+      "status": "A",
+      "SHA256": "2cea1f953fc7de164ffefc462dab19b81d801c6821bba06a0e251732f2c18638",
+      "bytes": 1860
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/browser_bootstrap.py",
+      "status": "A",
+      "SHA256": "2971405ba07276d3a0a95ede7b78daaf12cc4b3f7b8446a1400fab68b87ef3bf",
+      "bytes": 5586
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_flow-targets-safe.json",
+      "status": "A",
+      "SHA256": "6840d828bb861e2c675e31351b7607469d144bf197f9eee292640c1ff4764f21",
+      "bytes": 35
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_models-expected-IDs-safe.json",
+      "status": "A",
+      "SHA256": "e0f4fbca623a3452675b9dba36cc6b8165299f9dc24d9253a3b4e68d649d7ba8",
+      "bytes": 4367
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_models-targets-safe.json",
+      "status": "A",
+      "SHA256": "fd23d932f8fc0cbd7eebcae87e7ce2cbe69960a13524274390700a4b0fd16347",
+      "bytes": 1607
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_mode_gui-targets-safe.json",
+      "status": "A",
+      "SHA256": "044a8955751865fa81c0a87a94fc9282161a0f080c97b76ce98124c68fca6091",
+      "bytes": 646
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/j_native-targets-safe.json",
+      "status": "A",
+      "SHA256": "822e64dffaed2d4c9f590f7d367430b381b36261fa210f7f679982f2e9891d4f",
+      "bytes": 1427
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/native_boundary.py",
+      "status": "A",
+      "SHA256": "fed3f546ef8333eaac5e26bee2a228d999a358b522fc648b05ee2344aae3f787",
+      "bytes": 19191
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/native_child_bootstrap.py",
+      "status": "A",
+      "SHA256": "2fe20d8b11b6fb937fd8e235a25a388f5eea7c8657476d2353d9d902f8879abe",
+      "bytes": 5495
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/phases-safe.json",
+      "status": "A",
+      "SHA256": "7b695df6625fec6ab3c3ebfd30495d63ee1ccb8c89d2bf8af42527fe2febfd18",
+      "bytes": 906
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/prepare_native_config.py",
+      "status": "A",
+      "SHA256": "a3639cc49f4d4a0e4016f11a4e2fc1a73c863dc017829d651f97860dcbd005cc",
+      "bytes": 2852
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/prepare_windows.py",
+      "status": "A",
+      "SHA256": "5b974f338781b9e3a4253af98131f9bfb399023bbd207cd2208540147652c661",
+      "bytes": 8304
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/README.md",
+      "status": "A",
+      "SHA256": "33332eb4323171eac9c2e41940d105770837ed6e0ddf2f8a1f46e4047c6957c7",
+      "bytes": 2311
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/step13_guard.py",
+      "status": "A",
+      "SHA256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+      "bytes": 19604
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/summarize.py",
+      "status": "A",
+      "SHA256": "ff5cafcf3c2b3b5048c4cb093f089534ac79cb895cb97796f13eae9dffc0e014",
+      "bytes": 3533
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13j_final/test_native_boundary_security.py",
+      "status": "A",
+      "SHA256": "7020b8911c111bc086b9e3e1c3060fcabda5e3ddff4a7f470b8378a20c5b0c03",
+      "bytes": 9631
+    },
+    {
+      "path": ".github/workflows/newsflow-step13j-final-windows.yml",
+      "status": "A",
+      "SHA256": "e46c7fe8244c0ce6f77afade958085c17dc489f6bb5ef5acd65f7051b30a6576",
+      "bytes": 4044
+    }
+  ],
+  "deleted": [],
+  "product_source_changes": 0,
+  "AST": "PASS"
+}

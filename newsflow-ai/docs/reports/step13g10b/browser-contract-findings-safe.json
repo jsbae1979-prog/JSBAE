@@ -1,0 +1,41 @@
+{
+  "hidden_canonical_control_contract": {
+    "affected_IDs": [
+      "tests/test_all_scene_browser.py::test_workspace_all_ai_voice_approval_to_original_task_preview[openai]",
+      "tests/test_all_scene_browser.py::test_workspace_all_ai_voice_approval_to_original_task_preview[claude_api]",
+      "tests/test_production_options_browser.py::test_skip_review_elevenlabs_fake_to_real_mp4_final_review[openai]",
+      "tests/test_production_options_browser.py::test_skip_review_elevenlabs_fake_to_real_mp4_final_review[claude_api]"
+    ],
+    "evidence": [
+      "src/newsflow/gui/templates/production_form.html:16",
+      "tests/test_all_scene_browser.py select_option on hidden quick-voice-method",
+      "tests/test_production_options_browser.py:94 bounding_box on hidden canonical inputs"
+    ],
+    "current_contract": "Shared icon/picker UI writes hidden canonical voice_method/video_method fields",
+    "test_observation": "Two select_option waits and two bounding_box None assertions fail before voice/video generation",
+    "recommended_minimum": "Retarget browser interaction to actual shared picker; retain saved voice/video payload assertions, consent and review checks",
+    "product_contract_changed_this_step": false
+  },
+  "historical_baseline_comparison": {
+    "affected_files": [
+      "tests/test_dashboard_cohesion.py",
+      "tests/test_usability_browser.py"
+    ],
+    "observation": "Hardcoded operating source was rejected before read; HTTP500 follows guard rejection",
+    "actual_operating_source_used": false,
+    "proposed_followup": "Use explicitly approved immutable source baseline fixture, never operating files or backups; do not invent before screenshots"
+  },
+  "CSP_fixture": {
+    "file": "tests/test_tiktok_gui.py",
+    "observation": "String wait_for_function expression requires eval under current Chrome/CSP",
+    "proposed_followup": "Only if reproduced: review function-form predicate; retain strict CSP; no unsafe-eval",
+    "prior_targeted_outcome": "FAIL before final cwd correction",
+    "final_full_outcome": "PASS under frozen corrected environment",
+    "root_cause_status": "NOT ESTABLISHED; do not claim a CSP product fix"
+  },
+  "relative_FFmpeg_fixture": {
+    "file": "tools/ui_preview.py:121",
+    "observation": "Relative ffmpeg executable is rejected; production pinned absolute path works in Fake E2E",
+    "proposed_followup": "Use explicit pinned test binary in fixture; retain arbitrary-executable rejection"
+  }
+}

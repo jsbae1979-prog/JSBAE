@@ -1,0 +1,60 @@
+{
+  "phase": "after",
+  "metrics": [
+    {
+      "viewport": "1366x768",
+      "cta": {
+        "x": 281,
+        "y": 413.71875,
+        "width": 114.328125,
+        "height": 34.796875
+      },
+      "outline": "rgb(139, 200, 255)",
+      "text": "rgb(248, 250, 252)",
+      "colors": {
+        "button": "rgb(255, 255, 255)",
+        "buttonBackground": "rgb(39, 101, 235)",
+        "body": "rgb(183, 200, 220)",
+        "panel": "rgb(12, 24, 41)"
+      }
+    },
+    {
+      "viewport": "1920x1080",
+      "cta": {
+        "x": 365,
+        "y": 429.828125,
+        "width": 114.328125,
+        "height": 34.796875
+      },
+      "outline": "rgb(139, 200, 255)",
+      "text": "rgb(248, 250, 252)",
+      "colors": {
+        "button": "rgb(255, 255, 255)",
+        "buttonBackground": "rgb(39, 101, 235)",
+        "body": "rgb(183, 200, 220)",
+        "panel": "rgb(12, 24, 41)"
+      }
+    },
+    {
+      "viewport": "390x844",
+      "cta": {
+        "x": 39,
+        "y": 511.8125,
+        "width": 114.328125,
+        "height": 44
+      },
+      "outline": "rgb(139, 200, 255)",
+      "text": "rgb(248, 250, 252)",
+      "colors": {
+        "button": "rgb(255, 255, 255)",
+        "buttonBackground": "rgb(39, 101, 235)",
+        "body": "rgb(183, 200, 220)",
+        "panel": "rgb(12, 24, 41)"
+      }
+    }
+  ],
+  "external_requests": [],
+  "mutations": [],
+  "page_errors": [],
+  "database_bytes_preserved": true
+}

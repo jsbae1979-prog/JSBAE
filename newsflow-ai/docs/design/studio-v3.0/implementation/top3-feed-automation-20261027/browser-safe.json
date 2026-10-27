@@ -1,0 +1,40 @@
+{
+  "checks": [
+    "Original independent/manual news image workflows retained",
+    "Select stored analysis, preserve rank/source and freeze model/quality",
+    "Unchecked generation consent and Escape do not generate",
+    "Individual editable short feed copy persists",
+    "Pause after current item preserves first result and remaining pending",
+    "Reload/resume finishes only pending images; three independent results",
+    "Fake outputs cannot become real Instagram publication input",
+    "Explicit single-item regeneration keeps prior result history and other ranks",
+    "Unknown request blocks automatic restart and individual regeneration",
+    "Unquoted paid batch remains blocked"
+  ],
+  "shots": [
+    {
+      "width": 1920,
+      "height": 1080,
+      "horizontalOverflow": false,
+      "topAndResultsCaptured": true
+    },
+    {
+      "width": 1366,
+      "height": 768,
+      "horizontalOverflow": false,
+      "topAndResultsCaptured": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "horizontalOverflow": false,
+      "topAndResultsCaptured": true
+    }
+  ],
+  "jsErrors": [],
+  "externalPageRequests": [],
+  "realProviderCalls": 0,
+  "syntheticStepRequests": 4,
+  "engine": "React synthetic API simulation; actual Python form integration separate Windows CI",
+  "windowsDPI": "NOT VERIFIED"
+}

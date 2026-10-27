@@ -2,12 +2,12 @@
 {% block title %}제작 흐름 안내 · NewsFlow AI{% endblock %}
 {% block content %}
 <div class="easy-page narrow-page">
-<div class="page-head"><div><p class="eyebrow">선택한 구성으로 이어가기</p><h1>뉴스 영상 만들기</h1><p>지원하는 제작 경로를 확인한 뒤 이어집니다. 여기서는 AI·음성·영상을 실행하지 않았습니다.</p></div><a href="/">홈으로</a></div>
+<div class="page-head"><div><p class="eyebrow">선택한 구성으로 이어가기</p><h1>뉴스 영상 만들기</h1><p>선택한 제작 방식과 다음 단계를 확인하세요. 실행 전 안내 화면입니다.</p></div><a href="/">홈으로</a></div>
 {% include 'autopilot_start_guide.html' %}
 {% if not guide and not advanced %}<section class="easy-panel"><h2>제작 시작은 홈에서</h2><p>뉴스와 길이를 고르는 화면을 하나로 모았습니다.</p><a class="button primary" href="/">홈에서 제작 시작</a></section>{% endif %}
 {% if advanced %}
   <details class="easy-panel advanced-settings" open><summary>고급 제작 설정</summary>
-    <p>자동 제작 엔진의 기존 옵션입니다. Claude Code·Codex 통합 제작은 <a href="/">홈</a>에서 시작합니다. 개별 편집은 <a href="/ai">AI Studio</a>를 이용하세요. 선택한 AI나 음성을 자동으로 대체하지 않습니다.</p>
+    <p>자동 제작 엔진의 기존 옵션입니다. Claude Code·Codex 통합 제작은 <a href="/">홈</a>에서 시작합니다. 개별 편집은 <a href="/ai">AI 대본</a>을 이용하세요. 선택한 AI나 음성을 자동으로 대체하지 않습니다.</p>
     <form action="/autopilot/start" method="post" class="creation-form" data-easy-form>{{ csrf_field() }}
       <div class="form-two-columns"><label>뉴스 종류<select name="source"><option value="sample" {% if defaults.source == 'sample' %}selected{% endif %}>체험 뉴스</option><option value="feeds" {% if defaults.source == 'feeds' %}selected{% endif %}>등록된 뉴스</option></select></label><label>영상 길이<select name="duration">{% for seconds in [30,45,60] %}<option value="{{ seconds }}" {% if defaults.duration == seconds %}selected{% endif %}>{{ seconds }}초</option>{% endfor %}</select></label></div>
       <div class="form-two-columns"><label>제작 방식<select name="mode"><option value="easy" {% if defaults.mode == 'easy' %}selected{% endif %}>간편 제작</option><option value="guided" {% if defaults.mode == 'guided' %}selected{% endif %}>뉴스부터 단계별 검토</option></select></label><label>영상의 목적지<select name="platform">{% for value, label in platform_labels.items() %}<option value="{{ value }}" {% if defaults.platform == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label></div>

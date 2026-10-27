@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block title %}캐릭터 장면 검토 · NewsFlow AI{% endblock %}
+{% block content %}
+{% call studio_header('video','SCENE REVIEW','캐릭터 장면 검토','외모·표정·자막과 장면 순서를 확인하세요.') %}<a class="button" href="/character?job_id={{ job.id }}">작업으로 돌아가기</a>{% endcall %}
+{% for scene in job.scenes %}{% if scene.state=='downloaded' %}<section class="suite-panel"><h2>{{ ui_icon('play',20) }} 장면 {{ scene.position }}</h2><video class="character-scenes-video" controls preload="none" src="/character/{{ job.id }}/clips/{{ scene.position }}" aria-label="캐릭터 장면 {{ scene.position }}"></video><p>{{ job.script.scenes[scene.position-1].caption }}</p></section>{% endif %}{% endfor %}
+{% endblock %}

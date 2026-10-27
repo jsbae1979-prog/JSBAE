@@ -1,0 +1,7 @@
+{% set presentation = draft.sources.get('presentation', {}) if draft else {} %}
+<div class="script-style-controls">
+<label>대본 스타일<select name="script_style">{% for value,label in script_styles.items() %}<option value="{{ value }}" {{ 'selected' if presentation.get('style','news') == value }}>{{ label }}</option>{% endfor %}</select></label>
+<label>톤<select name="script_tone">{% for value,label in script_tones.items() %}<option value="{{ value }}" {{ 'selected' if presentation.get('tone','neutral') == value }}>{{ label }}</option>{% endfor %}</select></label>
+<label>시청자<select name="script_audience">{% for value,label in script_audiences.items() %}<option value="{{ value }}" {{ 'selected' if presentation.get('audience','general') == value }}>{{ label }}</option>{% endfor %}</select></label>
+<p class="hint">한국어 · AI 생성 시 적용됩니다. 표현을 바꿔도 사실 확인은 별도로 필요합니다.</p>
+</div>

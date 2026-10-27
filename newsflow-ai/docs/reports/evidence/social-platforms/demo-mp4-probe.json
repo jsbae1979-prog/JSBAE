@@ -1,0 +1,89 @@
+{
+  "scope": "Synthetic silent preview playback only. Not speech/subtitle sync or platform acceptance.",
+  "videos": [
+    {
+      "file": "video-00000000000000000000000000000001.mp4",
+      "sha256": "9e0e92e58526570a668608099df2f8afe55bca56cbe71ada5302c888f94c809e",
+      "synthetic": true,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1080,
+            "height": 1920,
+            "avg_frame_rate": "10/1"
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "sample_rate": "44100",
+            "channels": 2,
+            "avg_frame_rate": "0/0"
+          }
+        ],
+        "format": {
+          "duration": "30.000000"
+        }
+      }
+    },
+    {
+      "file": "video-00000000000000000000000000000002.mp4",
+      "sha256": "ce7c7107e59ac7c8042f7960ec82e6e5043a29473f02d125ea5dda02b1cbc0ff",
+      "synthetic": true,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1080,
+            "height": 1920,
+            "avg_frame_rate": "10/1"
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "sample_rate": "44100",
+            "channels": 2,
+            "avg_frame_rate": "0/0"
+          }
+        ],
+        "format": {
+          "duration": "30.000000"
+        }
+      }
+    },
+    {
+      "file": "video-00000000000000000000000000000003.mp4",
+      "sha256": "e48fa7ff2f78a640bbda7440ff947b46c7be34a854f0901d6e0666c47b318990",
+      "synthetic": true,
+      "probe": {
+        "programs": [],
+        "stream_groups": [],
+        "streams": [
+          {
+            "codec_name": "h264",
+            "codec_type": "video",
+            "width": 1080,
+            "height": 1920,
+            "avg_frame_rate": "10/1"
+          },
+          {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "sample_rate": "44100",
+            "channels": 2,
+            "avg_frame_rate": "0/0"
+          }
+        ],
+        "format": {
+          "duration": "30.000000"
+        }
+      }
+    }
+  ]
+}

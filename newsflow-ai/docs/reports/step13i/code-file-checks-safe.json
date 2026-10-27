@@ -1,0 +1,62 @@
+{
+  "code_SHA": "b0a718543865558cc3fe38df7ab318cb742ed140",
+  "files": [
+    {
+      "path": "newsflow-ai/tests/test_tiktok_gui.py",
+      "bytes": 10085,
+      "SHA256": "81a8bd8b5df2442a8c5810eb7a1429a2d4715ab8f3bab61ed7cfb86df89ba1b4",
+      "Git_blob_SHA": "8f4a5ebdeda5428bcd2a8d7355d771453ff5de30",
+      "remote_matches": true,
+      "normalization": "UTF-8 text, LF line endings, no BOM; raw local SHA256 separately preserved"
+    },
+    {
+      "path": "newsflow-ai/tests/test_step13i_api_contracts.py",
+      "bytes": 5022,
+      "SHA256": "84aa4b7d4852576d6b2902cd6c815b744d81797b74a3dc21719f82687e0f18ed",
+      "Git_blob_SHA": "927c93c5b4f7572de05fe142fe4ef8053c0beedd",
+      "remote_matches": true,
+      "normalization": "UTF-8 text, LF line endings, no BOM; raw local SHA256 separately preserved"
+    },
+    {
+      "path": ".github/workflows/newsflow-step13i-windows.yml",
+      "bytes": 3160,
+      "SHA256": "5e084ca2bf2d5d074871cb26666ba36a8c4ee43b7a9516815fec21edfe8e8f78",
+      "Git_blob_SHA": "bddd2392d5465ff388ef0b99c8fc03408a5e1abe",
+      "remote_matches": true,
+      "normalization": "UTF-8 text, LF line endings, no BOM; raw local SHA256 separately preserved"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13i/prepare_windows.py",
+      "bytes": 4339,
+      "SHA256": "3db99e8d09d5e52fdc99c457a9a547ce339d84728af86fabc9739e93e071ac99",
+      "Git_blob_SHA": "7d8b64a61ba6c8b17ed4098d00bbc8feb57e4746",
+      "remote_matches": true,
+      "normalization": "UTF-8 text, LF line endings, no BOM; raw local SHA256 separately preserved"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13i/run_browser_phase.py",
+      "bytes": 6250,
+      "SHA256": "9931107c20d3a643d840de6365e1cab00be0f959604582f18af10d17b2be467b",
+      "Git_blob_SHA": "cace631e3eb26818915132dfc867f3bfc13635ae",
+      "remote_matches": true,
+      "normalization": "UTF-8 text, LF line endings, no BOM; raw local SHA256 separately preserved"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13i/browser_bootstrap.py",
+      "bytes": 5791,
+      "SHA256": "d77ddde5b7549c05df267bce730bfe8a4b08775fd906b043428b17d58a339bc7",
+      "Git_blob_SHA": "144aa3704af1d10bfe54e2e5af5a2fc71c65ad05",
+      "remote_matches": true,
+      "normalization": "UTF-8 text, LF line endings, no BOM; raw local SHA256 separately preserved"
+    },
+    {
+      "path": "newsflow-ai/tools/validation/step13i/test_guard_security.py",
+      "bytes": 9756,
+      "SHA256": "086704c6dab723b48648b6341131b9758f181d09e15df7ad0edffbb55cef5850",
+      "Git_blob_SHA": "ac97cc015dc9ba47e0351ab0cd61dd100c49c1a6",
+      "remote_matches": true,
+      "normalization": "UTF-8 text, LF line endings, no BOM; raw local SHA256 separately preserved"
+    }
+  ],
+  "remote_blob_mismatches": 0
+}

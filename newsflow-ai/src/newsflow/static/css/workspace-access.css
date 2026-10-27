@@ -1,0 +1,119 @@
+/* Shared, readable controls for every existing screen. No backend policy changes. */
+.premium-shell{--access-panel:#101f32;--access-line:#2a405b;--access-blue:#387dff;--access-muted:#b0c0d5}
+.premium-shell :is(button,.button,input,select,textarea,summary){font-family:inherit}
+.premium-shell :is(a,button,input,select,textarea,summary):focus-visible{outline:3px solid #8bc8ff;outline-offset:3px}
+.premium-shell :is(button,.button){min-height:44px;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.45}
+.premium-shell :is(input:not([type=checkbox]):not([type=radio]):not([type=hidden]),select){min-height:44px}
+.premium-shell input:is([type=checkbox],[type=radio]){accent-color:#387dff;flex-shrink:0}
+.premium-shell .check{align-items:flex-start;line-height:1.65}
+.premium-shell .check input{margin-top:5px;min-width:18px;min-height:18px}
+.premium-shell :is(.hint,small,.settings-inline-note){line-height:1.6}
+.premium-shell :is(.suite-header-actions,.oauth-actions,.workspace-video-actions,.settings-button-row){flex-wrap:wrap;gap:8px}
+.premium-shell :is(.card,.suite-panel,.settings-card){scroll-margin-top:80px}
+.premium-shell h2{scroll-margin-top:85px}
+.premium-shell video{max-width:100%}
+.premium-shell:has(#access-dialog[open]){overflow:hidden}
+.premium-shell .access-icon-action{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.premium-shell .access-icon-action>.ui-icon{flex-shrink:0}
+.premium-shell .workspace-nav a{min-height:46px;gap:12px}
+.premium-shell .workspace-nav a[aria-current=page]{background:#17365b;box-shadow:inset 3px 0 #66b4ff;border-color:#315e94}
+.premium-shell .workspace-nav a:hover{background:#132c49;text-decoration:none}
+.premium-shell .suite-heading-icon{border-radius:14px;background:#142e4e;box-shadow:none}
+.premium-shell .suite-header{gap:16px;align-items:center}
+.premium-shell .suite-header :is(.eyebrow,.workstation-number){display:none}
+.premium-shell .suite-header h1{margin:0 0 6px;line-height:1.35}
+.premium-shell .suite-header p{margin:0;max-width:68ch;color:var(--access-muted)}
+.premium-shell .suite-topbar{display:none}
+.premium-shell .access-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px;padding:0 0 12px;border-bottom:1px solid var(--access-line)}
+.access-location,.access-toolbar-actions{display:flex;align-items:center;gap:10px;min-width:0}
+.access-location{font-weight:600;color:#c9d8eb}
+.access-location-icon{display:flex;color:#78b8ff}
+.premium-shell .access-launch{display:flex;align-items:center;justify-content:center;gap:8px;background:#14263c;border-color:#344e6f;border-radius:10px;padding:8px 12px}
+.access-launch kbd{font:inherit;font-size:11px;color:#aabbd0;background:#0b192a;border:1px solid #344e6f;border-radius:4px;padding:1px 5px}
+.premium-shell .access-outline{position:relative;margin:0;padding:0;border:0;background:none}
+.premium-shell .access-outline>summary{display:flex;align-items:center;gap:8px;list-style:none;min-height:44px;padding:8px 12px;cursor:pointer;border:1px solid #344e6f;border-radius:10px;color:#c9d8eb}
+.access-outline summary::-webkit-details-marker{display:none}
+.premium-shell .access-outline nav{position:absolute;right:0;top:calc(100% + 6px);z-index:45;display:grid;min-width:240px;max-width:min(360px,80vw);max-height:50vh;overflow:auto;padding:8px;margin:0;border:1px solid #456485;border-radius:12px;background:#102139;box-shadow:0 12px 28px #0006}
+.premium-shell .access-outline nav a{display:block;margin:0;padding:10px;border-radius:6px;color:#dae6f5;overflow-wrap:anywhere;white-space:normal;line-height:1.4}
+.premium-shell .access-outline nav a:hover{background:#1b3c60;text-decoration:none}
+.premium-shell .access-dialog{position:fixed;inset:0;width:min(720px,calc(100vw - 32px));max-width:none;max-height:calc(100dvh - 40px);padding:24px;border:1px solid #456485;border-radius:20px;background:#0e1c2e;color:#edf4ff;box-shadow:0 24px 80px #0009;overflow:auto}
+.access-dialog::backdrop{background:#030a16c9;backdrop-filter:blur(5px)}
+.access-dialog:not([open]),.access-dialog [hidden],.access-outline[hidden]{display:none!important}
+.access-dialog header{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+.access-dialog h2{margin:0 0 6px;font-size:22px}
+.access-dialog header p{margin:0;color:#b6c6d9;line-height:1.6}
+.premium-shell .access-close{padding:8px;display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;background:#192f49}
+.premium-shell .access-dialog .access-search{display:flex;align-items:center;gap:12px;border:1px solid #4a6e99;border-radius:12px;padding:0 14px;margin:20px 0 10px;background:#071426;color:#87bdff}
+.premium-shell #access-dialog .access-search input{background:none;border:0;box-shadow:none;margin:0;width:100%;min-height:50px;padding:10px 0;font-size:16px;color:#f2f6fc}
+.premium-shell .access-dialog .access-search:focus-within{outline:2px solid #82bbff;outline-offset:2px}
+.premium-shell #access-dialog .access-search input:focus{outline:none}
+.access-count{font-size:12px;color:#a6bad2;margin:0 0 12px}
+.access-group{margin-bottom:18px}
+.access-group h3{font-size:13px;margin:0 0 8px;color:#aabfd9;font-weight:600}
+.access-group>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.access-group a{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid #243d5c;border-radius:12px;color:#e9f1fc;background:#12253b;min-width:0}
+.access-group a>span:nth-child(2){flex:1;min-width:0}
+.access-group a>svg{flex-shrink:0;color:#82a5cf}
+.access-group a:hover{background:#1b385c;border-color:#6498d8;text-decoration:none}
+.access-group strong{font-size:14px;display:block;line-height:1.5}
+.access-group small{font-size:12px;color:#afc2da;line-height:1.5;display:block;margin-top:3px}
+.access-entry-icon{display:flex;align-items:center;justify-content:center;color:#8ac3ff;flex-shrink:0}
+.access-no-results{padding:20px 8px;color:#d1dfef;line-height:1.8}
+.premium-shell details>summary{cursor:pointer;min-height:36px;line-height:1.6}
+.premium-shell details[open]>summary{margin-bottom:12px}
+.premium-shell :is(.error,.oauth-error,[role=alert]){overflow-wrap:anywhere}
+.premium-shell .character-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(240px,.8fr);gap:20px;align-items:start}
+.character-form{display:grid;gap:18px}
+.character-form label{font-size:14px;color:#dae5f5}
+.character-form input{margin:8px 0 0}
+.character-form .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.character-reference-picker{border:1px dashed #4f7199;border-radius:12px;background:#0b1c30;padding:18px}
+.character-reference-picker p{margin:0 0 12px}
+.character-reference-preview{display:block;max-width:200px;max-height:260px;object-fit:contain;margin:12px auto 0;border-radius:12px}
+.character-reference-preview[hidden]{display:none}
+.character-summary{padding:20px;border:1px solid var(--access-line);border-radius:16px;background:#102138}
+.character-summary h2{display:flex;gap:10px;align-items:center}
+.character-summary dl{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:16px 0}
+.character-summary dt,.character-summary dd{margin:0}
+.character-summary dt{color:#adbed4}
+.character-summary dd{color:#e7effb;text-align:right}
+.character-path{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));list-style:none;gap:8px;padding:0;margin:0 0 20px}
+.character-path li{padding:12px 8px;border:1px solid #2a4362;border-radius:10px;text-align:center;color:#afc1d8;background:#0d1f33;line-height:1.6}
+.character-path li svg{display:block;margin:0 auto 5px}
+.character-path li[aria-current=step]{border-color:#6aacf9;background:#173b61;color:#f2f6ff}
+.character-scene-list{display:grid;gap:12px;padding:0;list-style:none}
+.character-scene-list>li{border:1px solid #2b4565;border-radius:12px;padding:16px;background:#0d1d30}
+.character-scene-list strong{display:block;font-size:12px;color:#b0c9e8;margin-bottom:8px}
+.character-scene-list .scene-caption{font-size:17px;line-height:1.65;color:#f3f7ff;margin:0 0 10px}
+.character-scenes-video{width:100%;max-width:320px;aspect-ratio:9/16;display:block;margin:16px auto;background:#000;border-radius:14px}
+.character-saved-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.character-saved-list li{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid #263e58;min-width:0}
+.character-saved-list a{color:#dceaff;overflow-wrap:anywhere}
+.character-status{padding:4px 10px;border-radius:6px;background:#203850;color:#c8dcf3;display:inline-block;font-size:12px;line-height:1.5}
+.character-status.is-error{background:#48232d;color:#ffbdc8}
+.character-status.is-review{background:#44351b;color:#ffd68d}
+.character-status.is-complete{background:#143d32;color:#8de4be}
+@media(prefers-reduced-motion:reduce){.premium-shell *{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media(max-width:1100px){.premium-shell .character-layout{grid-template-columns:minmax(0,1fr)}.character-summary dl{max-width:450px}}
+@media(max-width:760px){
+  .premium-shell #main-content{padding-bottom:32px}
+  .premium-shell .creator-sidebar .workspace-nav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .premium-shell .creator-sidebar .workspace-nav a{display:flex!important;flex-direction:column;gap:4px;align-items:center;justify-content:center;text-align:center;min-width:0;min-height:62px;padding:8px 4px;margin:0;font-size:12px;line-height:1.4;white-space:normal}
+  .premium-shell .creator-sidebar .workspace-nav .desktop-nav-item{display:flex!important}
+  .premium-shell .creator-sidebar .nav-caption{display:none}
+  .premium-shell .creator-sidebar .brand{margin-bottom:8px}
+  .premium-shell .access-toolbar{margin-bottom:14px;gap:8px;padding-bottom:10px;flex-wrap:wrap}
+  .access-location{font-size:13px}
+  .access-toolbar-actions{gap:6px}
+  .access-launch kbd{display:none}
+  .premium-shell .access-launch,.premium-shell .access-outline>summary{padding:8px 10px;font-size:12px}
+  .premium-shell .suite-header{align-items:flex-start}
+  .premium-shell .suite-header-actions{width:100%}
+  .premium-shell .suite-header-actions>.button{flex:1}
+  .premium-shell .access-dialog{padding:18px;max-height:calc(100dvh - 24px);width:calc(100vw - 24px);border-radius:16px}
+  .access-group>div{grid-template-columns:1fr}
+  .access-dialog h2{font-size:20px}
+  .character-path{gap:6px}
+  .character-path li{font-size:12px;padding:10px 4px}
+  .character-form .form-grid{grid-template-columns:1fr}
+}

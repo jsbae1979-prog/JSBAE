@@ -1,0 +1,26 @@
+{
+  "preservation_after": "PASS",
+  "product_files_changed": [
+    "newsflow-ai/src/newsflow/main.py",
+    "newsflow-ai/src/newsflow/runtime.py"
+  ],
+  "all_prior_source_files_changed": [
+    "newsflow-ai/tests/test_windows.py",
+    "newsflow-ai/src/newsflow/main.py",
+    "newsflow-ai/src/newsflow/runtime.py"
+  ],
+  "migration_changes": 0,
+  "prior_step13k_sealed_artifacts_checked": 8,
+  "prior_step13k_seal_mismatches": 0,
+  "Guard_fixture_files_unchanged": 7,
+  "source_hashes_pinned_before_full_checked": 10,
+  "source_changes_after_full_pin": 0,
+  "full_result": "5454 PASS / 0 FAIL / 0 ERROR / 4 SKIP",
+  "EXE_probe": "PASS",
+  "EXE_GUI": "30 page-width checks PASS; playback and image reuse PASS",
+  "EXE_shutdown": "2 normal exits code 0, ports released, no child left",
+  "EXE_frame_checks": 6,
+  "previous_auxiliary_ref_missing": 1,
+  "new_auxiliary_ref_changes": 0,
+  "seal_locator_note": "Prior post-publication stop file is at diagnostic root; first locator check was corrected, actual artifact hash matches."
+}

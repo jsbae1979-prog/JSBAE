@@ -16,6 +16,7 @@ from newsflow.db.models import (
     AppSetting,
     ArticleMention,
     ArticleScore,
+    ArticleThumbnail,
     AuditLog,
     CollectionRun,
     NewsArticle,
@@ -24,6 +25,8 @@ from newsflow.db.models import (
 from newsflow.news.ranking import CATEGORY_WORDS
 from newsflow.news.rss_adapter import URLPolicyError, validate_url
 from newsflow.news.service import CollectionBusy
+
+from .navigation import navigation_context
 
 router = APIRouter()
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -51,10 +54,40 @@ def kst_day(value: str | None) -> str:
 templates.env.filters["kst"] = kst
 templates.env.filters["kst_day"] = kst_day
 
+templates.env.globals["workspace_navigation"] = navigation_context
+
 
 def page(request: Request, name: str, **context: object) -> HTMLResponse:
+    if name in {"simple_settings.html", "ai.html", "video.html", "video_ai.html", "creator_dashboard.html", "easy_home.html", "news.html"}:
+        from dataclasses import asdict
+
+        from newsflow.shortform import choices
+        from newsflow.shortform import read as shortform_settings
+
+        profile = shortform_settings(request.app.state.sessions)
+        context["shortform_settings"] = asdict(profile)
+        context["shortform_durations"] = choices(profile.enabled, profile.target_seconds)
+        if name == "video.html" and context.get("draft"):
+            from newsflow.shortform import frozen
+
+            draft_profile = frozen(context["draft"].sources)
+            context["shortform_durations"] = choices(draft_profile.enabled, context["draft"].duration)
+        if name == "ai.html" and profile.enabled and not context.get("draft") and not context.get("production_context"):
+            context["selected_duration"] = profile.target_seconds
+    if name in {"creator_dashboard.html", "easy_home.html", "news.html", "ai.html", "video.html"}:
+        from .production_picker import selection_context
+
+        overview = context if "production_config" in context else None
+        context["production_picker"] = selection_context(request, overview)
+    if name == "ai.html":
+        from newsflow.intelligence.review import scene_findings
+
+        draft = context.get("draft")
+        context["scene_findings"] = scene_findings(draft.content) if draft else []
     return templates.TemplateResponse(
-        request=request, name=name, context={"csrf": request.state.csrf, **context}
+        request=request, name=name, context={"csrf": request.state.csrf,
+        "image_selection_available": hasattr(getattr(request.app.state, "image_posts", None), "selection"),
+        "image_posts_available": hasattr(request.app.state, "image_posts"), **context}
     )
 
 
@@ -107,7 +140,14 @@ def news(
     end: str = Query("", max_length=10),
     sort: Literal["score", "newest"] = "score",
     page_number: int = Query(1, ge=1, le=100000),
+    curation_id: int | None = Query(None, ge=1),
+    view: Literal["current", "used"] = "current",
 ) -> HTMLResponse:
+    from newsflow.db.models import IntelligenceRun
+    from newsflow.intelligence.curation import COMPONENTS, GLOBAL_COMPONENTS, GLOBAL_PROFILE, PROFILE
+
+    from .curation_routes import context as curation_context
+
     try:
         source = int(source) if source else None
         if source is not None and source < 1:
@@ -123,6 +163,10 @@ def news(
     if category and category not in {*CATEGORY_WORDS, "미분류"}:
         raise HTTPException(422, "알 수 없는 카테고리입니다.")
     statement = select(NewsArticle, ArticleScore).outerjoin(ArticleScore)
+    from newsflow.news.lifecycle import used_article_ids, visible_news
+
+    if view == "current":
+        statement = statement.where(visible_news())
     if q:
         statement = statement.where(
             or_(
@@ -145,6 +189,8 @@ def news(
             NewsArticle.published_at < datetime.combine(end + timedelta(days=1), datetime.min.time(), KST).astimezone(UTC)
         )
     with request.app.state.sessions() as session:
+        if view == "used":
+            statement = statement.where(NewsArticle.id.in_(used_article_ids(session)))
         count = session.scalar(select(func.count()).select_from(statement.subquery()))
         order = (
             (ArticleScore.total.desc().nullslast(), NewsArticle.id.desc())
@@ -152,11 +198,24 @@ def news(
             else (NewsArticle.published_at.desc().nullslast(), NewsArticle.id.desc())
         )
         articles = session.execute(statement.order_by(*order).offset((page_number - 1) * 20).limit(20)).all()
+        curation_run = session.get(IntelligenceRun, curation_id) if curation_id else session.scalar(
+            select(IntelligenceRun).where(IntelligenceRun.kind == "analysis", IntelligenceRun.status == "success",
+                                          IntelligenceRun.evidence["curation_contract"]["profile"].as_string().in_([PROFILE, GLOBAL_PROFILE]))
+            .order_by(IntelligenceRun.id.desc()).limit(1))
+        if curation_id and (not curation_run or curation_run.kind != "analysis"
+                            or not curation_run.evidence.get("curation_contract")):
+            raise HTTPException(404, "화제성 평가를 찾지 못했습니다.")
         return page(
             request,
             "news.html",
+            curation=curation_context(request), curation_run=curation_run,
+            curation_components=GLOBAL_COMPONENTS if curation_run and
+            curation_run.evidence.get("curation_contract", {}).get("profile") == GLOBAL_PROFILE else COMPONENTS,
             active="news",
+            news_view=view,
             articles=articles,
+            news_thumbnails={image.article_id: image for image in session.scalars(
+                select(ArticleThumbnail).where(ArticleThumbnail.article_id.in_([a.id for a, _s in articles])))},
             categories=list(CATEGORY_WORDS) + ["미분류"],
             sources=list(session.scalars(select(NewsSource))),
             q=q,

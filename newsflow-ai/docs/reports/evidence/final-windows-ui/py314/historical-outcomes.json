@@ -1,0 +1,9 @@
+{
+  "python": "3.14",
+  "browser": "skipped",
+  "comparison": "failure",
+  "sha": "345cdc76355772e2cb5ef0ad89e8fc14ac92ba6f",
+  "vault": "skipped",
+  "flow": "skipped",
+  "bat": "skipped"
+}
