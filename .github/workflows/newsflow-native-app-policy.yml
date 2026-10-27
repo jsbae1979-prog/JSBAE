@@ -1,10 +1,7 @@
 name: NewsFlow bounded app initialization policy
+# Guard rejection retained. Re-execution requires explicit approval; do not auto-retry.
 on:
-  push:
-    branches: [codex/newsflow-core-studios-rebuild-20261027]
-    paths:
-      - 'newsflow-ai/tools/native_app_policy/**'
-      - '.github/workflows/newsflow-native-app-policy.yml'
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

@@ -96,7 +96,12 @@ try:
     evidence["responses"]=asyncio.run(app_module.read_models(policy))
     evidence["read_only_ASGI"]="PASS"
 except BaseException as error:
-    evidence["blocked"]={"phase":phase,"type":type(error).__name__,"reason":str(error),"traceback":traceback.format_exc()}
+    frames=[];tb=error.__traceback__
+    while tb is not None:
+        frames.append({"file":tb.tb_frame.f_code.co_filename,"line":tb.tb_lineno,"function":tb.tb_frame.f_code.co_name})
+        tb=tb.tb_next
+    evidence["blocked"]={"phase":phase,"type":type(error).__name__,"reason":str(error),"frames":frames}
+    print("APP_POLICY_BLOCKED="+json.dumps(evidence["blocked"]))
     if evidence["app_initialization"]!="PASS":evidence["app_initialization"]="BLOCKED" if phase.startswith("create_app") else "NOT EXECUTED"
     else:evidence["read_only_ASGI"]="BLOCKED"
 finally:
@@ -119,8 +124,15 @@ finally:
         evidence["gate_denials"]=gate.denials
         evidence["legacy_DLL_symbol_tables_unchanged"]=legacy_native==set(guard._NATIVE) and legacy_DLL==set(guard._SYSTEM_DLLS)
     evidence["package_unchanged"]=vendor_before=={str(p.relative_to(package)):digest(p) for p in package.rglob("*.py")}
-    evidence["borrowed_sources_unchanged"]=all(digest(TOOLS/name)==value for name,value in borrowed.items())
-    evidence["sources_unchanged"]={name:digest(HERE/name) for name in manifest}==manifest
+    # Never let an evidence read rejection mask the original Guard rejection.
+    try:evidence["borrowed_sources_unchanged"]=all(digest(TOOLS/name)==value for name,value in borrowed.items())
+    except Exception as error:
+        evidence["borrowed_sources_unchanged"]=None
+        evidence["integrity_read_blocked"]={"type":type(error).__name__,"reason":str(error)}
+    try:evidence["sources_unchanged"]={name:digest(HERE/name) for name in manifest}==manifest
+    except Exception as error:
+        evidence["sources_unchanged"]=None
+        evidence["source_read_blocked"]={"type":type(error).__name__,"reason":str(error)}
     # Remove synthetic DB/media/staged code only after every owned resource is closed.
     for child in list(workspace.iterdir()):
         try:
@@ -129,8 +141,15 @@ finally:
             else:child.unlink()
         except Exception as error:evidence["cleanup_errors"].append({"resource":child.name,"type":type(error).__name__,"reason":str(error)})
     evidence["remaining_synthetic_entries"]=[p.name for p in workspace.iterdir()]
+    evidence["tests_executed"]=result is not None
     evidence["final"]="CONDITIONAL" if evidence["app_initialization"]=="PASS" and evidence["read_only_ASGI"]=="PASS" else "BLOCKED"
-    if evidence["cleanup_errors"] or not evidence["package_unchanged"] or not evidence["borrowed_sources_unchanged"] or not evidence["sources_unchanged"]:
+    resources=evidence.get("lock_resources",{})
+    unsafe_residue=(evidence.get("remaining_native_handles",0) or evidence.get("remaining_synthetic_entries")
+        or any(resources.get(k,0) for k in ("native_handles","CRT_descriptors","native_buffers","unresolved_calls"))
+        or evidence.get("policy",{}).get("threads_alive",0)
+        or evidence.get("policy",{}).get("remaining_SQLite_connections",0))
+    evidence["resource_cleanup_certified"]=not bool(unsafe_residue or evidence["cleanup_errors"])
+    if unsafe_residue or evidence["cleanup_errors"] or not evidence["package_unchanged"] or evidence["borrowed_sources_unchanged"] is not True or evidence["sources_unchanged"] is not True:
         evidence["final"]="BLOCKED"
     (workspace/"app-policy-evidence.json").write_text(json.dumps(evidence,indent=2),encoding="utf-8")
     print("APP_POLICY_EVIDENCE_JSON="+json.dumps(evidence))

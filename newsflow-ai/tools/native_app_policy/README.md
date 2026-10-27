@@ -7,3 +7,5 @@ Actual create_app uses explicit synthetic Settings and Fake RSS, automatic_start
 No installed dependency is imported early to avoid Guard. An unapproved native request stops and records BLOCKED.
 Existing 28/39/32/29 and 7/59/42 evidence is reused, not replayed.
 This is a trusted CI harness, not hostile-Python OS isolation. App operation, Windows 11 GUI and OS DPI are not certified.
+
+Current evidence: run 40531809814 is BLOCKED before certified security/app results. Bootstrap source reads are not in the gate read roots. No permission is added and no retry is dispatched. Later logging/resource-accounting fixes are compile-only, NOT CI VERIFIED. Workflow is manual-only pending approval.
