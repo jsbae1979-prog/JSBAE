@@ -1,0 +1,83 @@
+{
+  "examined_without_execution": true,
+  "baseline_head": "fddca7c5c7b27672837cfbd80114060b5fedc72f",
+  "product_sha": "dcf7c0dfca79b911c2e84ed9bf3fe0f8090a90ad",
+  "sources": [
+    {
+      "name": "step13_guard.py",
+      "sha256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+      "lines": [
+        170,
+        183,
+        184,
+        185,
+        186,
+        187,
+        251,
+        252,
+        253,
+        254,
+        255,
+        256,
+        257,
+        258,
+        294,
+        295,
+        296,
+        297
+      ]
+    },
+    {
+      "name": "filelock/_windows.py",
+      "sha256": "3318fda8b336f7537347a0d7b10fd04787f79245e06a92027b7a08bdaa9e064b",
+      "lines": [
+        58,
+        107,
+        108
+      ]
+    },
+    {
+      "name": "tools/studio_v3/integration/test_full_app_forms.py",
+      "sha256": "8e381a9a8abbd51b9d622ad23f5001ac0fedfa39442b32cdbe0469a411792408",
+      "lines": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ]
+    }
+  ],
+  "guard_native_libraries": [
+    "kernel32",
+    "crypt32",
+    "advapi32"
+  ],
+  "ntdll_in_guard_native_allowlist": false,
+  "filelock_requires_ntdll": true,
+  "full_app_fixture_scope": "Disposable Windows Actions only; unchanged",
+  "local_formal_full_app_path_found": false,
+  "existing_browser_path": "Synthetic route fulfilment only; not a full Python app connection",
+  "new_app_launch_attempts": 0,
+  "guard_edits": 0,
+  "import_reordering": 0,
+  "indirect_exe_launches": 0,
+  "DPI_changes": 0,
+  "new_tests": {
+    "PASS": 0,
+    "FAIL": 0,
+    "SKIP": 0
+  },
+  "local_full_app": "BLOCKED",
+  "live_React_Python_connection": "NOT VERIFIED",
+  "DPI": {
+    "100": "NOT VERIFIED",
+    "125": "NOT VERIFIED",
+    "150": "NOT VERIFIED",
+    "200": "NOT VERIFIED"
+  },
+  "real_paid_API_calls": 0,
+  "OAuth_SNS_calls": 0,
+  "final_verdict": "BLOCKED"
+}

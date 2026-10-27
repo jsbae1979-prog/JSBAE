@@ -1,0 +1,14 @@
+{
+  "listeners": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8765,
+      "OwningProcess": 55740
+    }
+  ],
+  "process_control_performed": false,
+  "operating_pid_matches_previous": true,
+  "test_port_listeners": 0,
+  "observed_at_utc": "2026-10-27T12:28:46.9642877Z",
+  "operating_HTTP_requests": 0
+}
