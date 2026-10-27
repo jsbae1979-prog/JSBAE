@@ -1,0 +1,22 @@
+[
+  {
+    "run_id": 40512311931,
+    "sha": "74e109b7f17334d78d7eccb64320215b366c8ae1",
+    "pass": 32,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "note": "Initial subset integration passed. Subsequently strengthened unknown physical-state representation and real OS-acquire-then-error probe; not a failure fix."
+  },
+  {
+    "run_id": 40512952761,
+    "sha": "48c93e55cf37baaac03e1541871400f1bc376125",
+    "pass": 32,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "note": "Final same 32 test IDs, including real OS-lock-success followed by error and no automatic replay.",
+    "artifact_id": 12736959284,
+    "artifact_zip_sha256": "e5fb55de4aa990c67809f2c5a9466aa33cf8219fc3f3ece237d20c5ad2557ef9"
+  }
+]

@@ -1,0 +1,35 @@
+{
+  "baseline_HEAD": "3f568113e4252b5a643144a5388358e4f74f22fe",
+  "code_HEAD": "48c93e55cf37baaac03e1541871400f1bc376125",
+  "existing_guard_SHA256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+  "existing_guard_unchanged": true,
+  "installed_filelock_sources_unchanged": true,
+  "original_native_capability_changed": false,
+  "code_changed_paths": [
+    ".github/workflows/newsflow-native-contract.yml",
+    "newsflow-ai/tools/native_capability_integration/README.md",
+    "newsflow-ai/tools/native_capability_integration/contract_bridge.py",
+    "newsflow-ai/tools/native_capability_integration/contract_probe.py",
+    "newsflow-ai/tools/native_capability_integration/contract_snapshot.json",
+    "newsflow-ai/tools/native_capability_integration/run_integration.py",
+    "newsflow-ai/tools/native_capability_integration/test_contract_bridge.py"
+  ],
+  "product_changes": 0,
+  "operating_Guard_modified": false,
+  "host_upstream_filelock_imported": false,
+  "operating_app_restarted": false,
+  "host_full_app_executed": false,
+  "OS_DPI_changed": false,
+  "operating_DB_keys_media_backup_used_or_modified": false,
+  "operating_data_new_hash_scan_performed": false,
+  "paid_API_or_SNS_calls": 0,
+  "PR35": {
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "state": "open",
+    "draft": true,
+    "merged": false
+  },
+  "main_changed": false,
+  "existing_validation_directory_preserved": true,
+  "preservation_limit": "Operating data was not reopened; historical preservation evidence reused. No claim about natural changes made by a running operating app."
+}

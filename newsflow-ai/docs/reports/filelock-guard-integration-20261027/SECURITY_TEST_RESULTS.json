@@ -1,0 +1,674 @@
+{
+  "commit": "48c93e55cf37baaac03e1541871400f1bc376125",
+  "python": "3.14.7",
+  "Windows": "sys.getwindowsversion(major=10, minor=0, build=26100, platform=2, service_pack='')",
+  "pass": 32,
+  "fail": 0,
+  "error": 0,
+  "skip": 0,
+  "new_test_count": 24,
+  "selected_prior_test_count": 8,
+  "passed_test_ids": [
+    "test_contract_bridge.IntegrationTests.test_01_guard_first_and_no_preimport",
+    "test_contract_bridge.IntegrationTests.test_02_actual_filelock_source_contract_matches",
+    "test_contract_bridge.IntegrationTests.test_03_existing_Guard_registration_stays_blocked",
+    "test_contract_bridge.IntegrationTests.test_04_registration_before_guard_denied",
+    "test_contract_bridge.IntegrationTests.test_05_unknown_capability_denied",
+    "test_contract_bridge.IntegrationTests.test_06_native_reentrancy_retains_outer_lock",
+    "test_contract_bridge.IntegrationTests.test_07_context_proxy_does_not_double_acquire",
+    "test_contract_bridge.IntegrationTests.test_08_nested_contexts_and_body_exception",
+    "test_contract_bridge.IntegrationTests.test_09_timeout_rolls_back_only_failed_session",
+    "test_contract_bridge.IntegrationTests.test_10_nonblocking_attempt",
+    "test_contract_bridge.IntegrationTests.test_11_unbounded_and_unsupported_options_blocked",
+    "test_contract_bridge.IntegrationTests.test_12_unheld_release_is_noop",
+    "test_contract_bridge.IntegrationTests.test_13_explicit_force_releases_only_owned_lock",
+    "test_contract_bridge.IntegrationTests.test_14_cross_thread_denied",
+    "test_contract_bridge.IntegrationTests.test_15_descriptor_PID_DLL_exports_blocked",
+    "test_contract_bridge.IntegrationTests.test_16_paths_cannot_be_smuggled_as_registration_names",
+    "test_contract_bridge.IntegrationTests.test_17_unlock_failure_retains_lock_and_journal",
+    "test_contract_bridge.IntegrationTests.test_18_post_unlock_close_failure_is_not_held",
+    "test_contract_bridge.IntegrationTests.test_19_uncertain_acquire_is_not_replayed",
+    "test_contract_bridge.IntegrationTests.test_20_context_body_and_release_failure_both_preserved",
+    "test_contract_bridge.IntegrationTests.test_21_journal_failure_blocks_new_execution",
+    "test_contract_bridge.IntegrationTests.test_22_closed_session_and_registry_deny_reuse",
+    "test_contract_bridge.IntegrationTests.test_23_sessions_do_not_change_each_others_state",
+    "test_contract_bridge.IntegrationTests.test_24_restart_record_does_not_authorize_reacquire",
+    "test_capability.CapabilityTests.test_01_guard_first",
+    "test_capability.CapabilityTests.test_02_real_exclusive_lock_and_release",
+    "test_capability.CapabilityTests.test_05_raw_and_forged_handles",
+    "test_capability.CapabilityTests.test_20_external_PID_blocked_before_OS",
+    "test_capability.CapabilityTests.test_21_raw_DLL_blocked",
+    "test_capability.CapabilityTests.test_27_parent_junction_is_denied",
+    "test_capability.CapabilityTests.test_31_handle_path_mismatch_is_denied",
+    "test_capability.CapabilityTests.test_33_failed_unlock_preserves_state"
+  ],
+  "failures": [],
+  "errors": [],
+  "filelock_source_contract": {
+    "version": "3.32.7",
+    "expected_version": "3.32.7",
+    "all_source_contracts_match": true,
+    "modules": {
+      "__init__.py": {
+        "sha256": "644857d02a33bd1c45430b26f1861ceae88bbee2187be6a80f6d0009f8f28b38",
+        "ast_sha256": "2675feb9ce0ce01d409bb38e89330869645568f9fc731acb00d889fac1104a6a",
+        "matches_local_installed_AST": true
+      },
+      "_api.py": {
+        "sha256": "2ecb7338958fe65bb4263d4314b63e9a1d08f93a326d861625e00b6fbd53c39b",
+        "ast_sha256": "19d7dc7b57a0a0fd74edec8e3a16be133cc6ff7f66a6dccbe4542a22bce33608",
+        "matches_local_installed_AST": true
+      },
+      "_descriptor.py": {
+        "sha256": "b2cd457f2100cab675401dcb0d752d24793964501f48068275a6b9629d55ce4e",
+        "ast_sha256": "c6e137cb877dd2115844a1418a59c05e533df0d69e478364373055ebb90b661c",
+        "matches_local_installed_AST": true
+      },
+      "_windows.py": {
+        "sha256": "3318fda8b336f7537347a0d7b10fd04787f79245e06a92027b7a08bdaa9e064b",
+        "ast_sha256": "eb6ebf9cb1f7ce68778bee352d9453b74c2d9cfcfc0a0a76f2f27679d2bb393b",
+        "matches_local_installed_AST": true
+      },
+      "_identity.py": {
+        "sha256": "819184e494b5b7cc8d193aee5e344fd41af4c7a0909fcea4b7cf50a80e7b6666",
+        "ast_sha256": "7f80902f8fc41740efad791953221e69ed42f9c4d999069adc547d1361a352f6",
+        "matches_local_installed_AST": true
+      },
+      "_marker.py": {
+        "sha256": "ed5256cb2ae1f305bc572c124cb2c847b382fff68d527e331677a5e49750c162",
+        "ast_sha256": "314def90daa9c87b0178dfb1815ba1e23a9a568d8793fd1ac7d19d0eafff9e13",
+        "matches_local_installed_AST": true
+      },
+      "_lease.py": {
+        "sha256": "dbeafade6a02afa04226cacea36f27e076569b596e6ea8f9b6fee8ce907a021f",
+        "ast_sha256": "c821733e6e53a826a9fddc7b010c1343bdd85289c0dae076c9a39ad373e6d528",
+        "matches_local_installed_AST": true
+      },
+      "_util.py": {
+        "sha256": "a7ddeff19ce057a8a62bdf35d81d03c52a02c56447395bbec0d19f7ab1e22421",
+        "ast_sha256": "281f5995deeeda2a8e99dc34fb086d7045e82a180af0d428fe4a982eb63aa854",
+        "matches_local_installed_AST": true
+      }
+    },
+    "existing_Guard_registration": "BLOCKED",
+    "upstream_runtime_compatibility": "BLOCKED",
+    "reason": "Existing Guard has no reviewed capability hook; upstream needs raw CRT fd and additional native binding contracts.",
+    "full_app_allowed": false
+  },
+  "source_hashes_before": {
+    "newsflow-ai\\tools\\native_capability_integration\\contract_bridge.py": "e1188c1af42619fa6abd30c01568569fff8d9763551288a8f7053868b1a370a4",
+    "newsflow-ai\\tools\\native_capability_integration\\contract_probe.py": "488b22e995b1194f2fdd9627284cc81690a5bb808e57df4e24b0a38d4079aa70",
+    "newsflow-ai\\tools\\native_capability_integration\\run_integration.py": "9c82f4f8fab88fe144bd7667a0ad1912b614c32bf598aa3b6a32cf9f813c0b66",
+    "newsflow-ai\\tools\\native_capability_integration\\test_contract_bridge.py": "015dc76400fa41cd242212e2a7e2977fd9233d3d04eec2e848a3dc81550d2e16",
+    "newsflow-ai\\tools\\native_capability_integration\\contract_snapshot.json": "556fc14cfb483df3439444a9b836e21770bcf7b66be6b688316d952ba527aa40",
+    "newsflow-ai\\tools\\native_capability\\adapter.py": "bcd4c7e13f64a98889bd87f1075bf8ec3c8431703f16b86e95bad3c62c5984f3",
+    "newsflow-ai\\tools\\native_capability\\run_verification.py": "92833d37bf7b190282f2c8023010310fa8e83741d94a37cc776dc412ef0f8752",
+    "newsflow-ai\\tools\\native_capability\\test_capability.py": "0c80b75b3579b40ba388c65d35197f862f4c00bbf2b78c5a342c9db8ee43c226",
+    "newsflow-ai\\tools\\native_capability\\verification_gate.py": "3dac9c0e018ef0419335ea7f409b552f10a0fe6a819d39ccad923e31ae0eb1f1"
+  },
+  "source_hashes_after": {
+    "newsflow-ai\\tools\\native_capability_integration\\contract_bridge.py": "e1188c1af42619fa6abd30c01568569fff8d9763551288a8f7053868b1a370a4",
+    "newsflow-ai\\tools\\native_capability_integration\\contract_probe.py": "488b22e995b1194f2fdd9627284cc81690a5bb808e57df4e24b0a38d4079aa70",
+    "newsflow-ai\\tools\\native_capability_integration\\run_integration.py": "9c82f4f8fab88fe144bd7667a0ad1912b614c32bf598aa3b6a32cf9f813c0b66",
+    "newsflow-ai\\tools\\native_capability_integration\\test_contract_bridge.py": "015dc76400fa41cd242212e2a7e2977fd9233d3d04eec2e848a3dc81550d2e16",
+    "newsflow-ai\\tools\\native_capability_integration\\contract_snapshot.json": "556fc14cfb483df3439444a9b836e21770bcf7b66be6b688316d952ba527aa40",
+    "newsflow-ai\\tools\\native_capability\\adapter.py": "bcd4c7e13f64a98889bd87f1075bf8ec3c8431703f16b86e95bad3c62c5984f3",
+    "newsflow-ai\\tools\\native_capability\\run_verification.py": "92833d37bf7b190282f2c8023010310fa8e83741d94a37cc776dc412ef0f8752",
+    "newsflow-ai\\tools\\native_capability\\test_capability.py": "0c80b75b3579b40ba388c65d35197f862f4c00bbf2b78c5a342c9db8ee43c226",
+    "newsflow-ai\\tools\\native_capability\\verification_gate.py": "3dac9c0e018ef0419335ea7f409b552f10a0fe6a819d39ccad923e31ae0eb1f1"
+  },
+  "source_unchanged": true,
+  "native_DLL_SHA256": {
+    "kernel32.dll": "601aaacb3bdcbea24aec832d08a2f12ec7046183b6f40d18d61458d5e7008991",
+    "ntdll.dll": "160ef9b82e2895ef48fa031cb1cf683a8b123febf7cf7d5590cd3104864424b3"
+  },
+  "gate_events": [
+    "gate-installed-before-adapter-import-and-DLL-binding",
+    "fixed-native-bindings-complete"
+  ],
+  "gate_denials": {
+    "raw-DLL-denied": 1
+  },
+  "synthetic_journal_count": 33,
+  "synthetic_final_journals": [
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "contended-timeout",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "contended-timeout",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquire-failed-no-replay",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "contended-timeout",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlock-failed-no-replay",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "reentered",
+        "nested-release",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "reentered",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "post-unlock-close-failed",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlock-failed-no-replay",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "contended-timeout",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "reentered",
+        "nested-release",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "contended-timeout",
+        "explicit-close"
+      ]
+    },
+    {
+      "state": "closed",
+      "depth": 0,
+      "logical_owned": false,
+      "held": false,
+      "physical_lock_state": "NOT_HELD",
+      "pending_cleanup": false,
+      "closed": true,
+      "events": [
+        "created",
+        "acquire-started",
+        "acquired",
+        "unlocked",
+        "released",
+        "explicit-close"
+      ]
+    }
+  ],
+  "remaining_native_handles": 0,
+  "cleanup_errors": [],
+  "remaining_synthetic_entries": [],
+  "upstream_filelock_imported": false,
+  "product_imported": false,
+  "new_processes_created": 0,
+  "external_API_requests": 0,
+  "existing_Guard_runtime_registration": "BLOCKED",
+  "local_full_app": "BLOCKED / not performed",
+  "OS_DPI": "NOT VERIFIED / unchanged"
+}
