@@ -106,6 +106,31 @@ class VerificationGate:
             yield
         finally:
             self.binding.active = False
+
+    def _register_function(self, name, function):
+        if not getattr(self.binding, "active", False):
+            self.deny("function-registration-outside-binding")
+        if name not in set().union(*SYMBOLS.values()):
+            self.deny("unapproved-function-registration")
+        # Only the fixed ctypes cast used to record a just-bound function address.
+        # No DLL routine is executed in this registration probe.
+        self.binding.address_probe = True
+        try:
+            address = ctypes.cast(function, ctypes.c_void_p).value
+        finally:
+            self.binding.address_probe = False
+        if not address:
+            self.deny("native-function-has-no-address")
+        def invoke(*arguments):
+            if getattr(self.binding, "call", None) is not None:
+                self.deny("nested-native-call")
+            self.binding.call = (address, arguments)
+            try:
+                return function(*arguments)
+            finally:
+                self.binding.call = None
+        return invoke
+
     def audit(self, event, args):
         if event in {"socket.connect", "socket.bind", "socket.sendto", "socket.sendmsg",
                      "socket.getaddrinfo", "subprocess.Popen", "_winapi.CreateProcess",
@@ -126,7 +151,12 @@ class VerificationGate:
                 dos_path(str(library)) != ntpath.join(self.system32, ntpath.basename(str(library))) or
                 name not in SYMBOLS.get(ntpath.basename(str(library)).lower(), ())):
                 self.deny("unapproved-native-symbol")
-        if event in {"ctypes.string_at", "ctypes.wstring_at", "ctypes.memoryview_at", "ctypes.call_function"}:
+        if event == "ctypes.call_function":
+            registered_call = getattr(self.binding, "call", None)
+            binding_probe = getattr(self.binding, "active", False) and getattr(self.binding, "address_probe", False)
+            if not binding_probe and (registered_call is None or args[0] != registered_call[0] or tuple(args[1]) != registered_call[1]):
+                self.deny("unregistered-native-call-context")
+        if event in {"ctypes.string_at", "ctypes.wstring_at", "ctypes.memoryview_at"}:
             self.deny("arbitrary-native-memory-or-call")
         if event in {"sqlite3.enable_load_extension", "sqlite3.load_extension"}:
             self.deny("SQLite-extension-denied")

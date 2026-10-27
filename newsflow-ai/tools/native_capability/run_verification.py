@@ -32,7 +32,14 @@ import test_capability
 native = adapter._Native(gate)
 test_capability.GATE, test_capability.NATIVE = gate, native
 suite = unittest.defaultTestLoader.loadTestsFromModule(test_capability)
-result = unittest.TextTestRunner(verbosity=2).run(suite)
+class RecordingResult(unittest.TextTestResult):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.success_ids = []
+    def addSuccess(self, test):
+        self.success_ids.append(test.id())
+        super().addSuccess(test)
+result = unittest.TextTestRunner(verbosity=2, resultclass=RecordingResult).run(suite)
 hashes_after = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in HERE.glob("*.py")}
 cleanup_failures = []
@@ -51,6 +58,8 @@ evidence = {
     "tests_run": result.testsRun,
     "pass": result.testsRun - len(result.failures) - len(result.errors) - len(result.skipped),
     "fail": len(result.failures), "error": len(result.errors), "skip": len(result.skipped),
+    "passed_test_ids": result.success_ids,
+    "remaining_native_handles": len(native._owned_handles),
     "failures": [{"id": test.id(), "traceback": tb} for test, tb in result.failures],
     "errors": [{"id": test.id(), "traceback": tb} for test, tb in result.errors],
     "gate_events": gate.events, "gate_denials": gate.denials,
@@ -70,5 +79,6 @@ evidence = {
 path = workspace / "evidence.json"
 path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
 print("EVIDENCE=" + str(path))
-if not result.wasSuccessful() or cleanup_failures or hashes_before != hashes_after:
+print("NATIVE_EVIDENCE_JSON=" + json.dumps(evidence, ensure_ascii=False))
+if not result.wasSuccessful() or cleanup_failures or native._owned_handles or hashes_before != hashes_after:
     raise SystemExit(1)

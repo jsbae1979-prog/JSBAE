@@ -71,27 +71,35 @@ class _Native:
             },
         }
         self._functions = {}
+        self._owned_handles = set()
         with gate._binding_only():
             for dll, symbols in signatures.items():
                 library = C.WinDLL(gate.dll_path(dll), use_last_error=True)
                 for name, (arguments, result) in symbols.items():
                     fn = getattr(library, name)
                     fn.argtypes, fn.restype = arguments, result
-                    self._functions[name] = fn
+                    self._functions[name] = gate._register_function(name, fn)
         gate.events.append("fixed-native-bindings-complete")
     def _fn(self, name):
         return self._functions[name]
     def error(self, label):
         return NativeFailure(C.get_last_error(), label)
+    def _require_owned(self, handle):
+        if type(handle) is not int or handle not in self._owned_handles:
+            raise Denied("unregistered-native-handle")
     def close(self, handle):
+        self._require_owned(handle)
         if not self._fn("CloseHandle")(handle):
             raise self.error("owned-handle-close-failed")
+        self._owned_handles.remove(handle)
     def info(self, handle):
+        self._require_owned(handle)
         result = _Info()
         if not self._fn("GetFileInformationByHandle")(handle, C.byref(result)):
             raise self.error("owned-handle-info-failed")
         return result
     def final(self, handle):
+        self._require_owned(handle)
         buffer = C.create_unicode_buffer(32768)
         n = self._fn("GetFinalPathNameByHandleW")(handle, buffer, len(buffer), 0)
         if not n or n >= len(buffer):
@@ -122,8 +130,10 @@ class _Native:
                                          0x02200000, None)
         if handle in (None, C.c_void_p(-1).value):
             raise self.error("drive-root-open-failed")
+        self._owned_handles.add(handle)
         return handle
     def relative(self, parent, component, directory=False, create=False):
+        self._require_owned(parent)
         # One validated component, NEVER a caller-supplied NT namespace or pointer.
         if not re.fullmatch(r"[\w .()@+-]{1,120}", component, re.ASCII) or component in (".", ".."):
             raise Denied("invalid-relative-component")
@@ -143,8 +153,10 @@ class _Native:
             raise NativeFailure(error, "bounded-NtCreateFile-failed")
         if not result.value:
             raise NativeFailure("NtCreateFile-returned-no-handle")
+        self._owned_handles.add(result.value)
         return result.value
     def lock(self, handle):
+        self._require_owned(handle)
         overlap = _Overlapped()
         if self._fn("LockFileEx")(handle, 3, 0, 1, 0, C.byref(overlap)):
             return True
@@ -153,6 +165,7 @@ class _Native:
             return False
         raise NativeFailure(error, "byte-lock-acquire-failed")
     def unlock(self, handle):
+        self._require_owned(handle)
         overlap = _Overlapped()
         if not self._fn("UnlockFileEx")(handle, 0, 1, 0, C.byref(overlap)):
             raise self.error("byte-lock-release-failed")

@@ -282,3 +282,13 @@ class CapabilityTests(unittest.TestCase):
         grant.root = str(Path(GATE.workspace) / "foreign-synthetic")
         with self.assertRaises(Denied):
             LockScope(NATIVE, grant)
+
+    def test_38_raw_function_address_is_denied(self):
+        with self.assertRaises(Denied):
+            sys.audit("ctypes.call_function", 1, ())
+
+    def test_39_private_backend_rejects_foreign_handle_before_OS(self):
+        for action in (NATIVE.info, NATIVE.final, NATIVE.lock, NATIVE.unlock, NATIVE.close):
+            with self.subTest(action=action.__name__):
+                with self.assertRaises(Denied):
+                    action(-123456789)
