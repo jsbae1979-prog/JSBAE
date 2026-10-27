@@ -11,7 +11,18 @@ ROOT.mkdir(exist_ok=True);(ROOT/"requests").mkdir(exist_ok=True);(ROOT/"response
 sys.path.insert(0,str(HERE))
 import pytest
 from test_full_app_forms import client,token
-mp=pytest.MonkeyPatch();fixture=None;events=[];errors=[]
+# Preserve a class-shaped deny boundary: asyncio subclasses Popen on Windows.
+# No dependency is preimported and no child process can be constructed.
+import subprocess
+class DeniedPopen(subprocess.Popen):
+    def __new__(cls,*args,**kwargs):
+        raise AssertionError("Actual process access forbidden in synthetic app integration")
+class GUIMonkeyPatch(pytest.MonkeyPatch):
+    def setattr(self,*args,**kwargs):
+        if len(args)>=3 and args[0] is subprocess and args[1]=="Popen":
+            args=(args[0],args[1],DeniedPopen)+args[3:]
+        return super().setattr(*args,**kwargs)
+mp=GUIMonkeyPatch();fixture=None;events=[];errors=[]
 try:
     fixture=client.__wrapped__(ROOT/"profile",mp);c,app=next(fixture)
     from test_top3_feed_integration import seed
@@ -72,7 +83,7 @@ try:
                 errors.append({"type":type(error).__name__,"reason":str(error)})
                 (ROOT/"responses"/f.name).write_text(json.dumps({"error":str(error)}),encoding="utf-8")
             f.unlink()
-    summary={"events":events,"errors":errors,"actual_create_app":True,"approved_fixture":"test_full_app_forms.client unchanged",
+    summary={"events":events,"errors":errors,"actual_create_app":True,"approved_fixture":"test_full_app_forms.client with class-shaped Popen denial (no permission expansion)",
              "transport":"Playwright -> synthetic file IPC -> real TestClient ASGI, no TCP app server",
              "paid_API_SNS_calls":0,"operating_data_used":False,"synthetic":True}
 except Exception as error:
