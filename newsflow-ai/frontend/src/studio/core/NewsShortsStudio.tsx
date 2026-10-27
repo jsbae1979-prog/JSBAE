@@ -35,7 +35,7 @@ export default function NewsShortsStudio({
     [duration, setDuration] = useState("30"),
     [voice, setVoice] = useState("offline-silence"),
     [subtitle, setSubtitle] = useState("48:1420"),
-    [visual, setVisual] = useState("card");
+    [visual, setVisual] = useState("news");
   const [editor, setEditor] = useState<Item | null>(null),
     [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
@@ -49,6 +49,18 @@ export default function NewsShortsStudio({
     editorVersion = useRef("");
   const key = draft ? `studio-script-${draft.id}-${draft.revision}` : "";
   useEffect(() => {
+    if (
+      dirty &&
+      draft &&
+      editorVersion.current &&
+      editorVersion.current !== key &&
+      editorVersion.current.startsWith(`studio-script-${draft.id}-`)
+    ) {
+      c.setNotice(
+        "새 저장 버전이 있습니다. 현재 편집과 원래 Revision을 보존했습니다. 고급 설정에서 최신본 열기 또는 이전 편집 복구를 선택하세요.",
+      );
+      return;
+    }
     if (editorVersion.current === key) return;
     editorVersion.current = key;
     let value = draft?.content ? structuredClone(draft.content) : null,
@@ -91,7 +103,8 @@ export default function NewsShortsStudio({
     setEditor(next);
     setDirty(true);
     try {
-      if (key) sessionStorage.setItem(key, JSON.stringify(next));
+      if (editorVersion.current)
+        sessionStorage.setItem(editorVersion.current, JSON.stringify(next));
     } catch {
       c.setNotice("임시 복원 공간이 부족합니다. 대본을 저장하세요.");
     }
@@ -116,13 +129,13 @@ export default function NewsShortsStudio({
         a,
         {
           draft_id: draft.id,
-          revision: draft.revision,
+          revision: Number(editorVersion.current.split("-").at(-1)),
           content: JSON.stringify(editor),
         },
         c.view,
         {},
       );
-      sessionStorage.removeItem(key);
+      sessionStorage.removeItem(editorVersion.current);
       setDirty(false);
       c.setNotice("대본을 저장했습니다.");
       await c.load();
@@ -287,7 +300,7 @@ export default function NewsShortsStudio({
                 onChange={setVisual}
                 options={{
                   card: "FFmpeg 기본 카드",
-                  news: "연결 뉴스 이미지",
+                  news: "FFmpeg · 뉴스 이미지 자동 연결",
                   ai: "AI 장면 · 별도 견적",
                 }}
               />
@@ -353,6 +366,57 @@ export default function NewsShortsStudio({
           <SlidersHorizontal size={15} />
           고급 장면 편집 · 기존 작업
         </summary>
+        <div className="core-actions">
+          <button
+            disabled={!draft}
+            onClick={() => {
+              if (
+                dirty &&
+                !window.confirm(
+                  "현재 편집은 임시 복원본으로 남기고 최신 저장본을 열까요?",
+                )
+              )
+                return;
+              editorVersion.current = key;
+              setEditor(structuredClone(draft!.content));
+              setDirty(false);
+              c.setNotice(
+                "최신 저장본을 열었습니다. 이전 편집 복원본은 보존됩니다.",
+              );
+            }}
+          >
+            최신 저장본 다시 열기
+          </button>
+          <button
+            disabled={!draft}
+            onClick={() => {
+              try {
+                const keys = Object.keys(sessionStorage)
+                  .filter((k) => k.startsWith(`studio-script-${draft!.id}-`))
+                  .sort(
+                    (a, b) =>
+                      Number(b.split("-").at(-1)) - Number(a.split("-").at(-1)),
+                  );
+                if (!keys.length) {
+                  c.setNotice("이전 편집 복원본이 없습니다.");
+                  return;
+                }
+                const value = JSON.parse(sessionStorage.getItem(keys[0])!);
+                if (!value || !Array.isArray(value.scenes)) throw Error();
+                editorVersion.current = keys[0];
+                setEditor(value);
+                setDirty(true);
+                c.setNotice(
+                  "이전 편집과 당시 Revision을 복구했습니다. 최신본과 대조 후 저장하세요.",
+                );
+              } catch {
+                c.setNotice("편집 복원본 형식을 확인하세요.");
+              }
+            }}
+          >
+            이전 버전 편집 복구
+          </button>
+        </div>
         {scenes.length > 0 && (
           <>
             <div className="core-timeline">
