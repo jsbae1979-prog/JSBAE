@@ -218,8 +218,21 @@ def character_rows(state):
         item["referenceUrl"] = (
             f"/api/studio/characters/{job['id']}/reference" if job.get("reference_sha256") else None
         )
+        story_scenes = (job.get("script") or {}).get("scenes", [])
+        if job.get("state") == "retry_quoted" and job.get("retry"):
+            item["retryQuote"] = {
+                k: job["retry"][k] for k in ("position", "quote_usd", "at") if k in job["retry"]
+            }
         for scene in item["scenes"]:
+            position = scene["position"]
+            if isinstance(position, int) and 1 <= position <= len(story_scenes):
+                planned = story_scenes[position - 1]
+                for field in ("caption", "action", "seconds"):
+                    if field not in scene and field in planned:
+                        scene[field] = planned[field]
             original = next((x for x in job.get("scenes", []) if x["position"] == scene["position"]), {})
+            if "cost" not in scene and "quote_usd" in original:
+                scene["cost"] = original["quote_usd"]
             clip = state.character.folder(job["id"]) / f"scene-{scene['position']}.mp4"
             scene["mediaUrl"] = (
                 f"/character/{job['id']}/clips/{scene['position']}"
@@ -657,3 +670,4 @@ def system_startup(request: Request):
 
     record = status(request)
     return {key: record[key] for key in ("status", "revision", "prepared", "message") if key in record}
+

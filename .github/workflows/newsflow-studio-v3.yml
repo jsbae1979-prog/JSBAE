@@ -1,7 +1,7 @@
 name: NewsFlow Studio v3 focused validation
 on:
   push:
-    branches: [codex/newsflow-studio-v3-20261026]
+    branches: [codex/newsflow-studio-v3-20261026, codex/newsflow-ux-video-app]
     paths:
       - 'newsflow-ai/frontend/**'
       - 'newsflow-ai/src/newsflow/gui/studio_v3.py'

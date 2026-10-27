@@ -15,19 +15,16 @@
           "title": "느긋한 월요일",
           "scenes": [
             {
-              "position": 0,
               "seconds": 10,
               "caption": "월요일 아침",
               "action": "조용히 커피를 마시는 캐릭터"
             },
             {
-              "position": 1,
               "seconds": 10,
               "caption": "회의가 시작되면",
               "action": "생각을 정리하는 캐릭터"
             },
             {
-              "position": 2,
               "seconds": 10,
               "caption": "잠깐의 여유",
               "action": "미소로 마무리"
@@ -195,3 +192,4 @@
     "price": "합성 화면 검증 · 실제 공급사 견적·청구액 없음"
   }
 }
+

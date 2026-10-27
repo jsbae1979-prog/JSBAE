@@ -262,6 +262,9 @@ function initial(action: Action, context: Item, view: View) {
           f.default ??
           "");
   }
+  if (action.id === "character_act_retry-scene")
+    v.quote_hash =
+      context.state === "retry_quoted" ? (context.retry_hash ?? "") : "";
   if (action.id.startsWith("creation_") && action.id !== "creation_reuse")
     Object.assign(v, view.catalog.imageDefaults ?? {}, context);
   if (
@@ -682,6 +685,13 @@ export function CommandDialog({
                   </p>
                 </div>
               )}
+              {action.id === "character_act_retry-scene" &&
+                context.retryQuote && (
+                  <p className="scope-note">
+                    재시도 대상 장면 {context.retryQuote.position} · 공식 견적
+                    USD {context.retryQuote.quote_usd}
+                  </p>
+                )}
               <div className="form-grid">{basic.map(field)}</div>
               {advanced.length > 0 && (
                 <details className="advanced">
@@ -759,3 +769,4 @@ export function CommandDialog({
     </dialog>
   );
 }
+

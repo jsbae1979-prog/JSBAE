@@ -162,6 +162,15 @@ export default function Workbench({
   );
   const [selectedArticles, setSelectedArticles] = useState<number[]>([]);
   const [scene, setScene] = useState(0);
+  const [characterScene, setCharacterScene] = useState<{
+    jobId: string;
+    index: number;
+  } | null>(null);
+  const characterSceneSelected =
+    characterScene !== null && characterScene.jobId === selected?.id;
+  const characterSceneIndex = characterSceneSelected
+    ? (characterScene?.index ?? 0)
+    : 0;
   const [stage, setStage] = useState(1);
   const [editor, setEditor] = useState<Item | null>(null);
   const [activeDraft, setActiveDraft] = useState<Item | null>(null);
@@ -438,7 +447,13 @@ export default function Workbench({
       character_act_submit: ["quoted"],
       character_act_check: ["generating"],
       character_act_render: ["clips_review"],
+      "character_act_retry-scene": ["retry_quoted"],
     };
+    if (
+      action.id === "character_act_retry-scene" &&
+      (!selected?.retry_hash || !selected?.retryQuote)
+    )
+      return "실패 장면의 새 공식 견적과 승인을 먼저 확인하세요.";
     if (
       allowed[action.id] &&
       selected?.state &&
@@ -471,12 +486,18 @@ export default function Workbench({
   const project = (view?.projects ?? []).find(
     (x) => activeDraft && String(x.draftId) === String(activeDraft.id),
   );
-  const currentClip =
-    selected?.__type === "plan"
+  const characterClipMode =
+    module === "characters" &&
+    (characterSceneSelected || selected?.state === "clips_review");
+  const currentClip = characterClipMode
+    ? (selected?.scenes?.[characterSceneIndex]?.mediaUrl ?? null)
+    : selected?.__type === "plan"
       ? list("scenes").filter((x) => x.plan_id === selected.id)[scene]?.mediaUrl
       : null;
   const currentMedia = safeMedia(
-    currentClip ?? selected?.mediaUrl ?? project?.mediaUrl,
+    characterClipMode
+      ? currentClip
+      : (currentClip ?? selected?.mediaUrl ?? project?.mediaUrl),
   );
   const preview = (media: string | null, kind = "video") => (
     <section className="work-panel preview-panel">
@@ -1174,22 +1195,43 @@ export default function Workbench({
                             ).map((x: Item, i: number) => (
                               <button
                                 key={x.position ?? i}
-                                onClick={() => setScene(x.position ?? i)}
-                                aria-pressed={scene === (x.position ?? i)}
+                                onClick={() => {
+                                  setCharacterScene({
+                                    jobId: selected.id,
+                                    index: i,
+                                  });
+                                }}
+                                aria-pressed={
+                                  (characterSceneSelected ||
+                                    selected.state === "clips_review") &&
+                                  characterSceneIndex === i
+                                }
                               >
-                                <span>장면 {(x.position ?? i) + 1}</span>
+                                <span>장면 {x.position ?? i + 1}</span>
                                 <Badge value={x.state} />
                                 <p>
-                                  {x.caption ??
-                                    x.narration ??
-                                    x.action ??
-                                    x.prompt}
+                                  {[
+                                    x.caption ?? x.narration,
+                                    x.action ?? x.prompt,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" · ")}
                                 </p>
                                 <small>{x.seconds ?? "규격 확인"}초</small>
                               </button>
                             ))}
                           </div>
                           <div className="work-actions">
+                            {selected.state === "completed" &&
+                              selected.mediaUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => setCharacterScene(null)}
+                                >
+                                  <Play size={16} />
+                                  완성 영상 보기
+                                </button>
+                              )}
                             {[
                               "write",
                               "prepare",
@@ -1266,9 +1308,12 @@ export default function Workbench({
                       </dl>
                       <h3>공식 견적</h3>
                       <p>
-                        {selected?.quote
-                          ? JSON.stringify(selected.quote)
-                          : "아직 조회하지 않았습니다."}
+                        {selected?.state === "retry_quoted" &&
+                        selected?.retryQuote
+                          ? `장면 ${selected.retryQuote.position} 재시도 · USD ${selected.retryQuote.quote_usd}`
+                          : selected?.quote
+                            ? `전체 장면 · USD ${selected.quote}`
+                            : "아직 조회하지 않았습니다."}
                       </p>
                       <p className="muted">
                         Seedance 참조 계약을 유지합니다. 계정 지원 여부는 실제
@@ -2125,3 +2170,4 @@ export default function Workbench({
     </div>
   );
 }
+
