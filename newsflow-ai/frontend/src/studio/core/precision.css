@@ -190,13 +190,13 @@
 .approved-studio.core-studio .core-top3-news-list > button[aria-pressed="true"],
 .approved-studio.core-studio .core-job-list > button[aria-pressed="true"],
 .approved-studio.core-studio .core-history-grid > button[aria-pressed="true"] {
-  background:linear-gradient(130deg,#24105444,transparent 75%),#031325;
+  background:linear-gradient(130deg,#24105444,transparent 75%),#031325 !important;
   border-color:#af48ff;
   box-shadow:inset 0 0 12px #7132d522,0 0 9px #9e41ff55;
 }
 .approved-studio.core-studio button.core-news-card.selected { border-width:2px; }
 .approved-studio.core-studio .core-news-list > button[aria-pressed="true"] {
-  background:linear-gradient(120deg,#28135255,#052039);
+  background:linear-gradient(120deg,#28135255,#052039) !important;
   border-color:#9950ff;
 }
 .approved-studio.core-studio .core-news-list strong,

@@ -13,7 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [before, after]
+        # Frozen baseline is retained from run 40605050446; only changed UI is rerun.
+        variant: [after]
     runs-on: windows-latest
     timeout-minutes: 18
     defaults:

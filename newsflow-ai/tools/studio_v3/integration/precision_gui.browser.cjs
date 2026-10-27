@@ -171,6 +171,7 @@ const control=action=>ipc({kind:"control",action});
         assert(Math.max(...boxes.map(b=>b.y))-Math.min(...boxes.map(b=>b.y))<3,"work panels no longer share a row");
         for(let i=1;i<boxes.length;i++)assert(boxes[i].x>=boxes[i-1].x+boxes[i-1].width-2,"work panels overlap");};
       if(name==="shorts"){row(["script","simple"]);assert(geometry.samples.y>=geometry.render.bottom,"samples displace production");
+        assert.equal(await page.locator(".core-news-card.selected").evaluate(e=>getComputedStyle(e).backgroundColor),"rgb(3, 19, 37)","shared important selection rule overrides approved dark card");
         if(width===1920)assert(geometry.render.bottom<1080,"production bar not visible at desktop size");}
       if(name==="characters")row(["reference","story","characterVideo"]);
       if(name==="images")row(["imageInput","imageResult","imageHistory"]);
