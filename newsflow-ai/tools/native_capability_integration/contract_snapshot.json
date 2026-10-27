@@ -1,0 +1,540 @@
+{
+  "filelock_version": "3.32.7",
+  "modules": {
+    "__init__.py": {
+      "sha256": "644857d02a33bd1c45430b26f1861ceae88bbee2187be6a80f6d0009f8f28b38",
+      "ast_sha256": "2675feb9ce0ce01d409bb38e89330869645568f9fc731acb00d889fac1104a6a",
+      "classes": {},
+      "native_calls": []
+    },
+    "_api.py": {
+      "sha256": "2ecb7338958fe65bb4263d4314b63e9a1d08f93a326d861625e00b6fbd53c39b",
+      "ast_sha256": "19d7dc7b57a0a0fd74edec8e3a16be133cc6ff7f66a6dccbe4542a22bce33608",
+      "classes": {
+        "LockOptions": {},
+        "_ThreadLocalRegistry": {
+          "__init__": {
+            "line": 329,
+            "end_line": 331
+          }
+        },
+        "FileLockMeta": {
+          "__call__": {
+            "line": 345,
+            "end_line": 446
+          },
+          "_create_instance": {
+            "line": 448,
+            "end_line": 468
+          }
+        },
+        "_InitParameterModel": {},
+        "BaseFileLock": {
+          "__init_subclass__": {
+            "line": 633,
+            "end_line": 639
+          },
+          "_reset_class_after_fork": {
+            "line": 642,
+            "end_line": 645
+          },
+          "__init__": {
+            "line": 647,
+            "end_line": 735
+          },
+          "is_thread_local": {
+            "line": 737,
+            "end_line": 739
+          },
+          "is_singleton": {
+            "line": 742,
+            "end_line": 749
+          },
+          "context_error_policy": {
+            "line": 752,
+            "end_line": 759
+          },
+          "close_error_policy": {
+            "line": 762,
+            "end_line": 769
+          },
+          "_close_released_fd": {
+            "line": 771,
+            "end_line": 779
+          },
+          "fallback_to_soft": {
+            "line": 782,
+            "end_line": 792
+          },
+          "preserve_lock_file": {
+            "line": 795,
+            "end_line": 805
+          },
+          "on_acquired": {
+            "line": 808,
+            "end_line": 818
+          },
+          "lock_file": {
+            "line": 821,
+            "end_line": 823
+          },
+          "timeout": {
+            "line": 836,
+            "end_line": 843
+          },
+          "blocking": {
+            "line": 856,
+            "end_line": 863
+          },
+          "poll_interval": {
+            "line": 876,
+            "end_line": 883
+          },
+          "lifetime": {
+            "line": 899,
+            "end_line": 909
+          },
+          "mode": {
+            "line": 912,
+            "end_line": 914
+          },
+          "has_explicit_mode": {
+            "line": 917,
+            "end_line": 919
+          },
+          "_open_mode": {
+            "line": 921,
+            "end_line": 923
+          },
+          "is_locked": {
+            "line": 926,
+            "end_line": 936
+          },
+          "lock_counter": {
+            "line": 939,
+            "end_line": 942
+          },
+          "__enter__": {
+            "line": 944,
+            "end_line": 952
+          },
+          "__exit__": {
+            "line": 954,
+            "end_line": 961
+          },
+          "_release_in_context": {
+            "line": 963,
+            "end_line": 971
+          },
+          "__del__": {
+            "line": 973,
+            "end_line": 981
+          },
+          "acquire": {
+            "line": 983,
+            "end_line": 1070
+          },
+          "_transition_admission": {
+            "line": 1073,
+            "end_line": 1097
+          },
+          "release": {
+            "line": 1099,
+            "end_line": 1129
+          },
+          "_raise_if_inherited": {
+            "line": 1131,
+            "end_line": 1134
+          },
+          "_mark_descriptor_owned": {
+            "line": 1136,
+            "end_line": 1140
+          },
+          "_mark_descriptor_pending": {
+            "line": 1142,
+            "end_line": 1144
+          },
+          "_mark_descriptor_released": {
+            "line": 1146,
+            "end_line": 1150
+          },
+          "_reset_after_fork_in_child": {
+            "line": 1152,
+            "end_line": 1163
+          },
+          "_descriptors_for_fork": {
+            "line": 1165,
+            "end_line": 1171
+          },
+          "_raise_if_would_deadlock": {
+            "line": 1173,
+            "end_line": 1187
+          },
+          "_registry_key": {
+            "line": 1189,
+            "end_line": 1190
+          },
+          "_deadlock_scope": {
+            "line": 1193,
+            "end_line": 1201
+          },
+          "_poll_until_acquired": {
+            "line": 1203,
+            "end_line": 1236
+          },
+          "_poll_delay": {
+            "line": 1238,
+            "end_line": 1249
+          },
+          "_reconcile_failed_acquire": {
+            "line": 1251,
+            "end_line": 1258
+          },
+          "_invoke_on_acquired": {
+            "line": 1260,
+            "end_line": 1273
+          },
+          "_acquire_with_fork_tracking": {
+            "line": 1275,
+            "end_line": 1288
+          },
+          "_rollback_failed_acquire": {
+            "line": 1290,
+            "end_line": 1317
+          },
+          "_rollback_failed_registration": {
+            "line": 1319,
+            "end_line": 1333
+          },
+          "_release_with_fork_tracking": {
+            "line": 1335,
+            "end_line": 1340
+          },
+          "_register_context_descriptor": {
+            "line": 1342,
+            "end_line": 1347
+          },
+          "_register_unverified_context_descriptor": {
+            "line": 1349,
+            "end_line": 1352
+          },
+          "_unregister_released_descriptor": {
+            "line": 1354,
+            "end_line": 1359
+          },
+          "_undo_acquire": {
+            "line": 1361,
+            "end_line": 1365
+          },
+          "_commit_acquire": {
+            "line": 1367,
+            "end_line": 1373
+          },
+          "_drop_registry_entry": {
+            "line": 1375,
+            "end_line": 1380
+          },
+          "_commit_release": {
+            "line": 1382,
+            "end_line": 1385
+          },
+          "_try_break_expired_lock": {
+            "line": 1387,
+            "end_line": 1399
+          },
+          "_check_give_up": {
+            "line": 1401,
+            "end_line": 1419
+          },
+          "_acquire": {
+            "line": 1422,
+            "end_line": 1424
+          },
+          "_release": {
+            "line": 1427,
+            "end_line": 1429
+          }
+        },
+        "AcquireReturnProxy": {
+          "__init__": {
+            "line": 1437,
+            "end_line": 1438
+          },
+          "__enter__": {
+            "line": 1440,
+            "end_line": 1441
+          },
+          "__exit__": {
+            "line": 1443,
+            "end_line": 1452
+          }
+        },
+        "FileLockContext": {},
+        "ThreadLocalFileContext": {},
+        "_OwnedDescriptor": {},
+        "_ForkTransitionContext": {},
+        "_ForkState": {
+          "__init__": {
+            "line": 1516,
+            "end_line": 1528
+          },
+          "reset_synchronization": {
+            "line": 1530,
+            "end_line": 1541
+          }
+        },
+        "_ForkResettable": {
+          "_reset_after_fork_in_child": {
+            "line": 50,
+            "end_line": 50
+          }
+        },
+        "_ForkDescriptorOwner": {
+          "_descriptors_for_fork": {
+            "line": 53,
+            "end_line": 53
+          }
+        },
+        "_ForkResettableClass": {
+          "_reset_class_after_fork": {
+            "line": 58,
+            "end_line": 58
+          }
+        },
+        "_RegisterAtFork": {
+          "__call__": {
+            "line": 61,
+            "end_line": 67
+          }
+        },
+        "_ExceptionGroupProtocol": {
+          "message": {
+            "line": 240,
+            "end_line": 240
+          },
+          "exceptions": {
+            "line": 243,
+            "end_line": 243
+          }
+        }
+      },
+      "native_calls": []
+    },
+    "_descriptor.py": {
+      "sha256": "b2cd457f2100cab675401dcb0d752d24793964501f48068275a6b9629d55ce4e",
+      "ast_sha256": "c6e137cb877dd2115844a1418a59c05e533df0d69e478364373055ebb90b661c",
+      "classes": {},
+      "native_calls": []
+    },
+    "_windows.py": {
+      "sha256": "3318fda8b336f7537347a0d7b10fd04787f79245e06a92027b7a08bdaa9e064b",
+      "ast_sha256": "eb6ebf9cb1f7ce68778bee352d9453b74c2d9cfcfc0a0a76f2f27679d2bb393b",
+      "classes": {
+        "_UNICODE_STRING": {},
+        "_OBJECT_ATTRIBUTES": {},
+        "_IO_STATUS_BLOCK": {},
+        "_OVERLAPPED": {},
+        "_BY_HANDLE_FILE_INFORMATION": {},
+        "WindowsFileLock": {
+          "_acquire": {
+            "line": 326,
+            "end_line": 327
+          },
+          "_release": {
+            "line": 329,
+            "end_line": 330
+          }
+        }
+      },
+      "native_calls": [
+        "CloseHandle",
+        "GetFileInformationByHandle",
+        "LockFileEx",
+        "NtCreateFile",
+        "RtlDosPathNameToNtPathName_U_WithStatus",
+        "RtlFreeUnicodeString",
+        "RtlNtStatusToDosError",
+        "UnlockFileEx"
+      ]
+    },
+    "_identity.py": {
+      "sha256": "819184e494b5b7cc8d193aee5e344fd41af4c7a0909fcea4b7cf50a80e7b6666",
+      "ast_sha256": "7f80902f8fc41740efad791953221e69ed42f9c4d999069adc547d1361a352f6",
+      "classes": {},
+      "native_calls": [
+        "CloseHandle",
+        "GetProcessTimes",
+        "OpenProcess"
+      ]
+    },
+    "_marker.py": {
+      "sha256": "ed5256cb2ae1f305bc572c124cb2c847b382fff68d527e331677a5e49750c162",
+      "ast_sha256": "314def90daa9c87b0178dfb1815ba1e23a9a568d8793fd1ac7d19d0eafff9e13",
+      "classes": {
+        "OwnerRecord": {},
+        "MarkerSoftFileLock": {
+          "owner": {
+            "line": 42,
+            "end_line": 49
+          },
+          "pid": {
+            "line": 52,
+            "end_line": 59
+          },
+          "is_lock_held_by_us": {
+            "line": 62,
+            "end_line": 70
+          },
+          "force_break": {
+            "line": 72,
+            "end_line": 79
+          },
+          "_read_owner": {
+            "line": 81,
+            "end_line": 84
+          },
+          "_write_lock_info": {
+            "line": 86,
+            "end_line": 87
+          },
+          "_published_record": {
+            "line": 89,
+            "end_line": 95
+          }
+        }
+      },
+      "native_calls": []
+    },
+    "_lease.py": {
+      "sha256": "dbeafade6a02afa04226cacea36f27e076569b596e6ea8f9b6fee8ce907a021f",
+      "ast_sha256": "c821733e6e53a826a9fddc7b010c1343bdd85289c0dae076c9a39ad373e6d528",
+      "classes": {
+        "LeaseCompromise": {},
+        "_Heartbeat": {},
+        "_LeaseClaim": {},
+        "_LeaseClaimHolder": {
+          "__init__": {
+            "line": 67,
+            "end_line": 68
+          }
+        },
+        "_ThreadLocalLeaseClaimHolder": {},
+        "SoftFileLease": {
+          "__init__": {
+            "line": 112,
+            "end_line": 154
+          },
+          "_claim": {
+            "line": 157,
+            "end_line": 158
+          },
+          "lease_duration": {
+            "line": 161,
+            "end_line": 163
+          },
+          "token": {
+            "line": 166,
+            "end_line": 173
+          },
+          "compromise": {
+            "line": 176,
+            "end_line": 183
+          },
+          "_acquire": {
+            "line": 185,
+            "end_line": 203
+          },
+          "_release": {
+            "line": 205,
+            "end_line": 208
+          },
+          "_published_record": {
+            "line": 210,
+            "end_line": 211
+          },
+          "_try_break_stale_lock": {
+            "line": 213,
+            "end_line": 241
+          },
+          "_read_peer": {
+            "line": 243,
+            "end_line": 248
+          },
+          "_start_heartbeat": {
+            "line": 250,
+            "end_line": 264
+          },
+          "_stop_heartbeat": {
+            "line": 266,
+            "end_line": 276
+          },
+          "_refresh_until_stopped": {
+            "line": 278,
+            "end_line": 300
+          },
+          "_refresh_claim": {
+            "line": 302,
+            "end_line": 324
+          },
+          "_report_compromise": {
+            "line": 326,
+            "end_line": 338
+          }
+        }
+      },
+      "native_calls": []
+    },
+    "_util.py": {
+      "sha256": "a7ddeff19ce057a8a62bdf35d81d03c52a02c56447395bbec0d19f7ab1e22421",
+      "ast_sha256": "281f5995deeeda2a8e99dc34fb086d7045e82a180af0d428fe4a982eb63aa854",
+      "classes": {},
+      "native_calls": []
+    }
+  },
+  "existing_guard": {
+    "sha256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+    "symbols": {
+      "kernel32": [
+        "CreateFileW",
+        "CloseHandle",
+        "GetFinalPathNameByHandleW",
+        "SetFileInformationByHandle",
+        "LocalFree",
+        "GetCurrentProcess",
+        "GetCurrentThread"
+      ],
+      "crypt32": [
+        "CryptProtectData",
+        "CryptUnprotectData"
+      ],
+      "advapi32": [
+        "OpenProcessToken",
+        "OpenThreadToken",
+        "GetTokenInformation",
+        "ConvertSidToStringSidW"
+      ]
+    },
+    "top_level_functions": {
+      "deny": 18,
+      "inside": 20,
+      "path": 21,
+      "check_file": 31,
+      "database_path": 40,
+      "split_windows": 58,
+      "media_path": 70,
+      "validate_lavfi": 75,
+      "validate_filter": 84,
+      "validate_process": 89,
+      "address_check": 149,
+      "audit": 155,
+      "_number": 194,
+      "_native_handle_path": 195,
+      "_guarded_windll": 256,
+      "install": 260,
+      "pytest_sessionfinish": 314
+    },
+    "registration_hook_present": false,
+    "status": "BLOCKED: no supported capability-registration hook; do not patch globals or monkey patch ctypes"
+  },
+  "runtime_upstream_filelock": "NOT VERIFIED; no preimport, module replacement, copied source execution or full-app launch"
+}

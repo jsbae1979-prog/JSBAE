@@ -1,0 +1,33 @@
+name: NewsFlow verification-only filelock contract integration
+on:
+  push:
+    branches: [codex/newsflow-core-studios-rebuild-20261027]
+    paths:
+      - 'newsflow-ai/tools/native_capability_integration/**'
+      - '.github/workflows/newsflow-native-contract.yml'
+permissions:
+  contents: read
+jobs:
+  bounded-contract-security:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Install matching upstream package for read-only source inspection
+        run: python -m pip install --disable-pip-version-check --no-deps filelock==3.32.7
+      - name: Guard-first contract subset and selected boundary tests only
+        run: python -I -B newsflow-ai/tools/native_capability_integration/run_integration.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-filelock-contract-evidence
+          path: ${{ runner.temp }}/newsflow-contract-*/integration-evidence.json
+          if-no-files-found: error
