@@ -78,6 +78,14 @@ function mime(f){return ({".js":"application/javascript",".css":"text/css",".png
  assert(names.every(n=>allNames.includes(n)),"Known synthetic screens only");
  for(const [width,height] of [[1920,1080],[1366,768]]){
   await page.setViewportSize({width,height});for(const name of names){await open(name);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),`${name} ${width}: horizontal overflow`);const filename=`${name}-${width}.png`;await page.screenshot({path:path.join(out,filename),animations:"disabled",caret:"hide"});result.captures.push({name,width,height,file:filename,mediaRects:major?await page.locator("img,video").evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,tag:n.tagName};})):undefined});check("screen renders without overflow",{name,width});
+   if(major && name==="images-top3" && width===1366){
+    const cssProof=await page.evaluate(({before,after})=>{
+     const nodes=[...document.querySelectorAll(".approved-studio, .approved-studio *")];
+     const matched=text=>{const sheet=new CSSStyleSheet();sheet.replaceSync(text);const out=[];function visit(rules){for(const rule of rules){if(rule.selectorText){if(nodes.some(n=>n.matches(rule.selectorText)))out.push([rule.selectorText,rule.style.cssText]);}else if(rule.cssRules&&(!rule.conditionText||matchMedia(rule.conditionText).matches))visit(rule.cssRules);}}visit(sheet.cssRules);return out;};
+     const a=matched(before),b=matched(after);return {same:JSON.stringify(a)===JSON.stringify(b),matchedRulesBefore:a.length,matchedRulesAfter:b.length,nodes:nodes.length};
+    },{before:fs.readFileSync(path.join(project,"../validation/major-baseline/approved.css"),"utf8"),after:fs.readFileSync(path.join(project,"frontend/src/studio/approved.css"),"utf8")});
+    assert(cssProof.same,"TOP3 applied workspace rules must remain identical");check("TOP3 CSS rules remain identical despite capture rendering variability",cssProof);
+   }
    if(major && ["shorts","characters","news","automation","publishing","analytics"].includes(name)){
     const box=async selector=>page.locator(selector).first().boundingBox();
     let geometry={};
