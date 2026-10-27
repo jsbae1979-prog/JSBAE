@@ -1,0 +1,548 @@
+{
+  "commit": "b9fa0426cb676c20c1223359e92e2548b63b0e02",
+  "python": "3.14.7",
+  "Windows": "sys.getwindowsversion(major=10, minor=0, build=26100, platform=2, service_pack='')",
+  "pass": 29,
+  "fail": 0,
+  "error": 0,
+  "skip": 0,
+  "new_tests": 27,
+  "selected_previous_tests": 2,
+  "passed_test_ids": [
+    "test_copy_boundary.CopyBoundaryTests.test_01_real_Guard_copy_first",
+    "test_copy_boundary.CopyBoundaryTests.test_02_guard_AST_delta_is_only_registration",
+    "test_copy_boundary.CopyBoundaryTests.test_03_registration_is_once_only",
+    "test_copy_boundary.CopyBoundaryTests.test_04_CRT_transfer_removes_native_close_ownership",
+    "test_copy_boundary.CopyBoundaryTests.test_05_real_lock_contention_and_release",
+    "test_copy_boundary.CopyBoundaryTests.test_06_reentrancy_keeps_outer_OS_lock",
+    "test_copy_boundary.CopyBoundaryTests.test_07_CRT_close_never_calls_native_CloseHandle",
+    "test_copy_boundary.CopyBoundaryTests.test_08_foreign_closed_and_integer_descriptors_denied",
+    "test_copy_boundary.CopyBoundaryTests.test_09_raw_CRT_transfer_is_not_a_capability",
+    "test_copy_boundary.CopyBoundaryTests.test_10_external_path_and_handle_denied",
+    "test_copy_boundary.CopyBoundaryTests.test_11_UNC_ADS_device_relative_denied",
+    "test_copy_boundary.CopyBoundaryTests.test_12_buffer_lifetime_and_double_free",
+    "test_copy_boundary.CopyBoundaryTests.test_13_in_use_buffer_cannot_be_freed",
+    "test_copy_boundary.CopyBoundaryTests.test_14_native_Rtl_conversion_and_free_remain_blocked",
+    "test_copy_boundary.CopyBoundaryTests.test_15_pre_transfer_failure_has_native_owner_cleanup",
+    "test_copy_boundary.CopyBoundaryTests.test_16_post_transfer_notification_retains_descriptor_and_blocks_replay",
+    "test_copy_boundary.CopyBoundaryTests.test_17_pre_close_failure_preserves_owned_descriptor",
+    "test_copy_boundary.CopyBoundaryTests.test_18_post_close_notification_is_not_a_live_descriptor",
+    "test_copy_boundary.CopyBoundaryTests.test_19_unlock_failure_does_not_drop_ownership",
+    "test_copy_boundary.CopyBoundaryTests.test_20_raw_DLL_and_unregistered_symbol_still_denied",
+    "test_copy_boundary.CopyBoundaryTests.test_21_external_PID_and_descriptor_export_denied",
+    "test_copy_boundary.CopyBoundaryTests.test_22_network_process_and_DB_boundaries_preserved",
+    "test_copy_boundary.CopyBoundaryTests.test_23_write_to_configured_project_remains_denied",
+    "test_copy_boundary.CopyBoundaryTests.test_24_invalid_timeout_and_foreign_buffer_denied",
+    "test_copy_boundary.CopyBoundaryTests.test_25_native_lock_success_then_error_is_not_replayed",
+    "test_copy_boundary.CopyBoundaryTests.test_26_private_CRT_dispatch_requires_pending_owned_transfer",
+    "test_copy_boundary.CopyBoundaryTests.test_99_unmodified_filelock_import_still_fails_closed",
+    "test_capability.CapabilityTests.test_27_parent_junction_is_denied",
+    "test_capability.CapabilityTests.test_31_handle_path_mismatch_is_denied"
+  ],
+  "failures": [],
+  "errors": [],
+  "guard_copy": {
+    "provenance": {
+      "original_guard_sha256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+      "verification_guard_sha256": "9446556de593c9d59d11a9b2260a5ecb4d4be1e55fe7e2d8bcc45c9626438257",
+      "native_boundary_original_sha256": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+      "modified_existing_functions": [
+        "audit",
+        "_guarded_windll"
+      ],
+      "all_other_existing_function_AST_identical": true,
+      "original_module_statements_preserved": true,
+      "appended_functions": [
+        "register_verification_capability",
+        "_verification_capability_event",
+        "_verification_private_binding"
+      ],
+      "global_DLL_and_symbol_allowlists_changed": false,
+      "copy_line_endings": "LF; original bytes preserved separately"
+    },
+    "registration_before_install_denied": true,
+    "initialization_order": [
+      "verification-Guard-copy-installed",
+      "capability-gate-installed",
+      "registered-source-pinned-capability",
+      "native-binding-after-registration"
+    ],
+    "spoofed_registration_denied": true,
+    "upstream_filelock_full_import": "BLOCKED at guarded native binding",
+    "legacy_DLL_symbol_tables_unchanged": true
+  },
+  "filelock_source_contract": {
+    "version": "3.32.7",
+    "expected_version": "3.32.7",
+    "all_source_contracts_match": true,
+    "modules": {
+      "__init__.py": {
+        "sha256": "644857d02a33bd1c45430b26f1861ceae88bbee2187be6a80f6d0009f8f28b38",
+        "ast_sha256": "2675feb9ce0ce01d409bb38e89330869645568f9fc731acb00d889fac1104a6a",
+        "matches_local_installed_AST": true
+      },
+      "_api.py": {
+        "sha256": "2ecb7338958fe65bb4263d4314b63e9a1d08f93a326d861625e00b6fbd53c39b",
+        "ast_sha256": "19d7dc7b57a0a0fd74edec8e3a16be133cc6ff7f66a6dccbe4542a22bce33608",
+        "matches_local_installed_AST": true
+      },
+      "_descriptor.py": {
+        "sha256": "b2cd457f2100cab675401dcb0d752d24793964501f48068275a6b9629d55ce4e",
+        "ast_sha256": "c6e137cb877dd2115844a1418a59c05e533df0d69e478364373055ebb90b661c",
+        "matches_local_installed_AST": true
+      },
+      "_windows.py": {
+        "sha256": "3318fda8b336f7537347a0d7b10fd04787f79245e06a92027b7a08bdaa9e064b",
+        "ast_sha256": "eb6ebf9cb1f7ce68778bee352d9453b74c2d9cfcfc0a0a76f2f27679d2bb393b",
+        "matches_local_installed_AST": true
+      },
+      "_identity.py": {
+        "sha256": "819184e494b5b7cc8d193aee5e344fd41af4c7a0909fcea4b7cf50a80e7b6666",
+        "ast_sha256": "7f80902f8fc41740efad791953221e69ed42f9c4d999069adc547d1361a352f6",
+        "matches_local_installed_AST": true
+      },
+      "_marker.py": {
+        "sha256": "ed5256cb2ae1f305bc572c124cb2c847b382fff68d527e331677a5e49750c162",
+        "ast_sha256": "314def90daa9c87b0178dfb1815ba1e23a9a568d8793fd1ac7d19d0eafff9e13",
+        "matches_local_installed_AST": true
+      },
+      "_lease.py": {
+        "sha256": "dbeafade6a02afa04226cacea36f27e076569b596e6ea8f9b6fee8ce907a021f",
+        "ast_sha256": "c821733e6e53a826a9fddc7b010c1343bdd85289c0dae076c9a39ad373e6d528",
+        "matches_local_installed_AST": true
+      },
+      "_util.py": {
+        "sha256": "a7ddeff19ce057a8a62bdf35d81d03c52a02c56447395bbec0d19f7ab1e22421",
+        "ast_sha256": "281f5995deeeda2a8e99dc34fb086d7045e82a180af0d428fe4a982eb63aa854",
+        "matches_local_installed_AST": true
+      }
+    },
+    "existing_Guard_registration": "BLOCKED",
+    "upstream_runtime_compatibility": "BLOCKED",
+    "reason": "Existing Guard has no reviewed capability hook; upstream needs raw CRT fd and additional native binding contracts.",
+    "full_app_allowed": false
+  },
+  "new_source_hashes_before": {
+    "descriptor_boundary.py": "de7f974f034cff8078ce3742c5e5502766c920cd11b767f075c4aa84dc1c52c4",
+    "guard_capability.py": "007995637b5a9e41e0b5931b0deecbbf5181fd70e57fbb184722dbaa6192e9a7",
+    "guard_original.py": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+    "guard_verification.py": "9446556de593c9d59d11a9b2260a5ecb4d4be1e55fe7e2d8bcc45c9626438257",
+    "native_boundary_original.py": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+    "run_copy_verification.py": "af4e756809400c9b10fd7c2c945f29df6d6ac8c4875b935bcf58884f7936a8f2",
+    "test_copy_boundary.py": "9e66509d4a347bcec6fa7db0087b60866eb10d4e9637fac29513b201c1bdfcc6"
+  },
+  "new_source_hashes_after": {
+    "descriptor_boundary.py": "de7f974f034cff8078ce3742c5e5502766c920cd11b767f075c4aa84dc1c52c4",
+    "guard_capability.py": "007995637b5a9e41e0b5931b0deecbbf5181fd70e57fbb184722dbaa6192e9a7",
+    "guard_original.py": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+    "guard_verification.py": "9446556de593c9d59d11a9b2260a5ecb4d4be1e55fe7e2d8bcc45c9626438257",
+    "native_boundary_original.py": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+    "run_copy_verification.py": "af4e756809400c9b10fd7c2c945f29df6d6ac8c4875b935bcf58884f7936a8f2",
+    "test_copy_boundary.py": "9e66509d4a347bcec6fa7db0087b60866eb10d4e9637fac29513b201c1bdfcc6"
+  },
+  "source_unchanged": true,
+  "native_DLL_SHA256": {
+    "kernel32.dll": "601aaacb3bdcbea24aec832d08a2f12ec7046183b6f40d18d61458d5e7008991",
+    "ntdll.dll": "160ef9b82e2895ef48fa031cb1cf683a8b123febf7cf7d5590cd3104864424b3"
+  },
+  "capability_private_binding_count": 2,
+  "capability_CRT_dispatch_count": 85,
+  "guard_denials": [
+    "capability-registration-before-Guard",
+    "spoofed-capability-class",
+    "capability-already-registered",
+    "unapproved-native-DLL",
+    "unapproved-native-symbol",
+    "external-or-operating-socket",
+    "external-or-operating-socket",
+    "external-DNS",
+    "unapproved-executable",
+    "write-outside-synthetic-output",
+    "unapproved-native-DLL"
+  ],
+  "gate_denials": {
+    "SQLite-not-needed-in-native-verification": 1
+  },
+  "remaining_native_handles": 0,
+  "remaining_CRT_descriptors": 0,
+  "remaining_buffers": 0,
+  "unresolved_transfers": 0,
+  "descriptor_boundary_final_states": [
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "Python-buffer-released-once",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "Python-buffer-released-once",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "transfer-not-started-native-close",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "native-to-CRT-ownership-committed",
+        "post-transfer-notification-unknown-descriptor-retained",
+        "CRT-close-committed-no-CloseHandle",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "post-close-notification-failed-but-ownership-retired",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    },
+    {
+      "descriptors": 0,
+      "buffers": 0,
+      "unresolved_transfers": 0,
+      "states": [],
+      "depths": [],
+      "closed": true,
+      "history": [
+        "native-to-CRT-ownership-committed",
+        "CRT-close-committed-no-CloseHandle",
+        "Python-buffer-released-once"
+      ]
+    }
+  ],
+  "cleanup_errors": [],
+  "remaining_synthetic_entries": [],
+  "native_boundary_launches": 0,
+  "legacy_owned_handles": 0,
+  "product_imported": false,
+  "upstream_filelock_full_imported": false,
+  "Rtl_native_conversion_and_free": "BLOCKED; Python-owned buffers only",
+  "host_full_app": "NOT PERFORMED",
+  "OS_DPI": "NOT VERIFIED / unchanged",
+  "paid_API_SNS_requests": 0
+}

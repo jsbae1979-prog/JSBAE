@@ -1,0 +1,42 @@
+{
+  "baseline_HEAD": "65c9d469bd7c58e1908d2f5fd4b03d5f769c5df6",
+  "verified_code_HEAD": "b9fa0426cb676c20c1223359e92e2548b63b0e02",
+  "original_guard_sha256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+  "original_Guard_unchanged": true,
+  "exact_guard_copy_matches_original_bytes": true,
+  "dependency_copy_matches_original_bytes": true,
+  "installed_filelock_sources_unchanged": true,
+  "previous_native_adapter_and_contract_layer_changed": false,
+  "product_changes": 0,
+  "operating_Guard_modified": false,
+  "local_app_started": false,
+  "operating_app_restarted": false,
+  "operating_DB_keys_settings_media_backups_used_or_modified": false,
+  "new_operating_data_hash_scan": false,
+  "OS_DPI_changed": false,
+  "paid_API_SNS_calls": 0,
+  "PR35": {
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "state": "open",
+    "draft": true,
+    "merged": false
+  },
+  "main_changed": false,
+  "existing_validation_directory_preserved": true,
+  "code_changed_paths": [
+    ".github/workflows/newsflow-native-guard-copy.yml",
+    "newsflow-ai/tools/native_guard_copy/.gitattributes",
+    "newsflow-ai/tools/native_guard_copy/GUARD_COPY_PROVENANCE.json",
+    "newsflow-ai/tools/native_guard_copy/README.md",
+    "newsflow-ai/tools/native_guard_copy/SOURCE_HASHES.json",
+    "newsflow-ai/tools/native_guard_copy/descriptor_boundary.py",
+    "newsflow-ai/tools/native_guard_copy/guard_capability.py",
+    "newsflow-ai/tools/native_guard_copy/guard_copy.patch",
+    "newsflow-ai/tools/native_guard_copy/guard_original.py",
+    "newsflow-ai/tools/native_guard_copy/guard_verification.py",
+    "newsflow-ai/tools/native_guard_copy/native_boundary_original.py",
+    "newsflow-ai/tools/native_guard_copy/run_copy_verification.py",
+    "newsflow-ai/tools/native_guard_copy/test_copy_boundary.py"
+  ],
+  "preservation_limit": "Operating files were not reopened or newly hashed; existing data preservation evidence reused."
+}

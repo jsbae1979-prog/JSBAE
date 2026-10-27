@@ -1,0 +1,22 @@
+[
+  {
+    "run": 40518067937,
+    "sha": "546c4b2e968ae15b72b0c0accae88dcbe88be521",
+    "pass": 29,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "note": "Initial Guard-copy/CRT verification passed; subsequently hardened actual class identity and added same-name spoof rejection."
+  },
+  {
+    "run": 40518651508,
+    "sha": "b9fa0426cb676c20c1223359e92e2548b63b0e02",
+    "pass": 29,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "artifact_id": 12741400473,
+    "artifact_zip_SHA256": "cf30014db59e0ffb1d14a33235797aa2bfbcb983d2c6c3140c6a778aaa31d4ec",
+    "note": "Final same 29 IDs; Guard copy installed, source-pinned registration, owned CRT and Python buffer boundaries verified."
+  }
+]
