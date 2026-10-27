@@ -57,11 +57,98 @@ jobs:
           }
           @((Split-Path (Get-Command ffmpeg -ErrorAction Stop).Source), (Split-Path (Get-Command ffprobe -ErrorAction Stop).Source)) | Select-Object -Unique | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           "PYTHONPATH=$pwd/src;$pwd/tests" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Register current synthetic profile and worker ownership fixture
+        run: |
+          $ciSupport = Join-Path $env:RUNNER_TEMP 'newsflow-current-fixtures'
+          New-Item -ItemType Directory -Force $ciSupport | Out-Null
+          @'
+          """Current per-test profile ownership for disposable Windows Actions only.
+          
+          This complements claude_compat_safety; it never replaces or disables its guard.
+          """
+          import json
+          import os
+          import threading
+          import time
+          from pathlib import Path
+          
+          import pytest
+          
+          CLEANUP = []
+          
+          
+          @pytest.fixture(autouse=True)
+          def step13_isolation(monkeypatch, tmp_path):
+              for name in (
+                  "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN",
+                  "CLAUDE_CODE_OAUTH_TOKEN", "NEWSFLOW_AI_API_KEY", "NEWSFLOW_ANTHROPIC_API_KEY",
+                  "NEWSFLOW_VIDEO_AI_KEY", "NEWSFLOW_ELEVENLABS_KEY", "NEWSFLOW_META_APP_SECRET",
+                  "HF_KEY", "HF_API_KEY", "HF_API_SECRET",
+              ):
+                  assert not os.environ.get(name), "Unexpected provider credential in disposable CI"
+              for name in ("TEMP", "TMP", "LOCALAPPDATA", "APPDATA", "NEWSFLOW_DATA_DIR"):
+                  target = tmp_path / "ci-profile" / name.lower()
+                  target.mkdir(parents=True)
+                  monkeypatch.setenv(name, str(target))
+          
+              from newsflow import main
+          
+              apps = []
+              baseline = set(threading.enumerate())
+              original = main.FastAPI
+          
+              def tracked_app(*args, **kwargs):
+                  app = original(*args, **kwargs)
+                  apps.append(app)
+                  return app
+          
+              monkeypatch.setattr(main, "FastAPI", tracked_app)
+              try:
+                  yield
+              finally:
+                  for app in reversed(apps):
+                      for name in (
+                          "scheduler", "publishing_calendar", "video_ai", "autopilot",
+                          "autopilot_backend", "youtube", "tiktok", "instagram", "coordinator", "video",
+                      ):
+                          owner = getattr(app.state, name, None)
+                          close = getattr(owner, "close", None)
+                          if callable(close):
+                              close()
+                      engine = getattr(app.state, "engine", None)
+                      if engine is not None:
+                          engine.dispose()
+                  deadline = time.monotonic() + 3
+                  remaining = []
+                  while time.monotonic() < deadline:
+                      remaining = [t for t in threading.enumerate() if t not in baseline and t.is_alive()]
+                      if not remaining:
+                          break
+                      for thread in remaining:
+                          thread.join(timeout=0.05)
+                  CLEANUP.append({"apps": len(apps), "remaining_threads": len(remaining)})
+                  assert not remaining, "CI synthetic fixture left live threads"
+          
+          
+          def pytest_sessionfinish(session, exitstatus):
+              output = Path(session.config.getoption("basetemp")) / "fixture-cleanup-safe.json"
+              output.parent.mkdir(parents=True, exist_ok=True)
+              output.write_text(json.dumps({
+                  "tests": len(CLEANUP),
+                  "tests_with_remaining_threads": sum(bool(x["remaining_threads"]) for x in CLEANUP),
+                  "tracked_apps": sum(x["apps"] for x in CLEANUP),
+                  "real_keys_loaded": False,
+                  "isolation_guard": "claude_compat_safety remains enabled",
+              }), encoding="utf-8")
+          '@ | Set-Content -LiteralPath (Join-Path $ciSupport 'ci_current_isolation.py') -Encoding utf8
+          "PYTHONPATH=$PWD/src;$PWD/tests;$ciSupport" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          .venv/Scripts/python -m ruff check (Join-Path $ciSupport 'ci_current_isolation.py')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Changed contracts only with external requests and schedulers blocked
         run: |
           .venv/Scripts/python -m ruff check src/newsflow/character src/newsflow/gui/character_routes.py src/newsflow/main.py tests/test_character_shorts.py tests/test_character_media.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          .venv/Scripts/python -m pytest -q -rs --tb=short -p claude_compat_safety --basetemp=C:/nf-character-${{ matrix.python }} --junitxml=validation-output/character-windows.xml tests/test_character_shorts.py tests/test_character_media.py tests/test_image_posts.py tests/test_gui.py::test_html_escape tests/test_gui.py::test_partial_and_failures_keep_data_no_secrets tests/test_gui.py::test_cross_coordinator_and_crash_recovery
+          .venv/Scripts/python -m pytest -q -rs --tb=short -p claude_compat_safety -p ci_current_isolation --basetemp=C:/nf-character-${{ matrix.python }} --junitxml=validation-output/character-windows.xml tests/test_character_shorts.py tests/test_character_media.py tests/test_image_posts.py tests/test_gui.py::test_html_escape tests/test_gui.py::test_partial_and_failures_keep_data_no_secrets tests/test_gui.py::test_cross_coordinator_and_crash_recovery
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Stage only synthetic media inside the workspace drive
         if: always()
