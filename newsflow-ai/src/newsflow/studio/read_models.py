@@ -674,3 +674,11 @@ def system_startup(request: Request):
     record = status(request)
     return {key: record[key] for key in ("status", "revision", "prepared", "message") if key in record}
 
+
+
+@router.get("/api/studio/production-context")
+def core_production_context(request: Request):
+    """Reuse saved TOP3/analysis/script associations; never invoke a provider."""
+    from .core_context import production_context
+    with request.app.state.sessions() as session:
+        return production_context(session)

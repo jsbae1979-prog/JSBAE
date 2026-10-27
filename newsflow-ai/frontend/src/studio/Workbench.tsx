@@ -49,6 +49,7 @@ import {
   SetupOverview,
 } from "./ApprovedPanels";
 import "./approved.css";
+import CoreStudios from "./core/CoreStudios";
 const intro: Record<string, string> = {
   news: "보관 기사에서 이야기를 선택하세요.",
   shorts: "기사 · 대본 · 음성 · 영상을 한 작업으로 이어갑니다.",
@@ -154,7 +155,7 @@ function Collection({
     </section>
   );
 }
-export default function Workbench({
+function LegacyWorkbench({
   module,
   onNavigate,
 }: {
@@ -2743,4 +2744,10 @@ export default function Workbench({
       )}
     </div>
   );
+}
+
+export default function Workbench(props: {module: string; onNavigate: (page: string) => void}) {
+ return ["shorts", "characters", "images", "news"].includes(props.module)
+  ? <CoreStudios key={props.module} {...props}/>
+  : <LegacyWorkbench {...props}/>;
 }

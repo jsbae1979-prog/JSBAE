@@ -51,10 +51,12 @@ export default function TopThreeFeeds({
   selections,
   catalog,
   csrf,
+  render,
 }: {
   selections: Item[];
   catalog: Item;
   csrf: string;
+  render?: (controller: any) => ReactNode;
 }) {
   const [batches, setBatches] = useState<Item[]>([]),
     [batch, setBatch] = useState<Item | null>(null);
@@ -194,6 +196,229 @@ export default function TopThreeFeeds({
     });
   }
   const [regenerate, setRegenerate] = useState<Item | null>(null);
+  const dialogs = (
+    <>
+      {" "}
+      {approval && (
+        <FeedDialog
+          name="TOP 3 생성 범위 승인"
+          onClose={() => setApproval(false)}
+        >
+          <h2>
+            {regenerate
+              ? `TOP ${regenerate.rank} 재생성 준비`
+              : "TOP 3 자동 제작 승인"}
+          </h2>
+          <p>
+            {batch?.simulation
+              ? "Fake 이미지 검증 · 실제 과금 없음"
+              : batch?.price}
+          </p>
+          <p>
+            {regenerate
+              ? "기존 결과를 보존하고 1회 추가 생성을 준비합니다."
+              : "대기 항목만 각 1회 생성합니다. 결과 불명 요청은 재시도하지 않습니다."}
+          </p>
+          <label>
+            <input
+              type="checkbox"
+              checked={reviewed}
+              onChange={(e) => setReviewed(e.target.checked)}
+            />
+            뉴스·문구·출처·모델을 검토했습니다.
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+            />
+            {batch?.simulation
+              ? "표시된 Fake 생성 범위에 동의합니다."
+              : "표시된 외부 전송·유료 생성 범위에 동의합니다."}
+          </label>
+          <div className="work-actions">
+            <button
+              disabled={!consent || !reviewed || !batch?.canGenerate}
+              onClick={() => run(regenerate ?? undefined)}
+            >
+              {regenerate ? "1회 재생성 준비" : "자동 제작 시작"}
+            </button>
+            <button onClick={() => setApproval(false)}>취소</button>
+          </div>
+        </FeedDialog>
+      )}
+      {editing && (
+        <FeedDialog name="피드 문구 수정" onClose={() => setEditing(null)}>
+          <h2>TOP {editing.rank} 문구 수정</h2>
+          <label>
+            제목
+            <input
+              aria-label="TOP 3 수정 제목"
+              maxLength={60}
+              value={editing.title}
+              onChange={(e) =>
+                setEditing({ ...editing, title: e.target.value })
+              }
+            />
+          </label>
+          <label>
+            짧은 요약
+            <textarea
+              aria-label="TOP 3 수정 요약"
+              maxLength={180}
+              value={editing.body}
+              onChange={(e) => setEditing({ ...editing, body: e.target.value })}
+            />
+          </label>
+          <label>
+            해시태그
+            <input
+              aria-label="TOP 3 수정 해시태그"
+              maxLength={200}
+              value={editing.hashtags}
+              onChange={(e) =>
+                setEditing({ ...editing, hashtags: e.target.value })
+              }
+            />
+          </label>
+          <p>원문에 없는 사실·수치·발언을 추가하지 마세요.</p>
+          <div className="work-actions">
+            <button
+              disabled={busy || !ready}
+              onClick={() =>
+                local(async () => {
+                  show(
+                    await post(`/api/feed-batches/${batch!.id}/change`, {
+                      revision: batch!.revision,
+                      action: "edit",
+                      ...editing,
+                    }),
+                  );
+                  setEditing(null);
+                })
+              }
+            >
+              문구 저장
+            </button>
+            <button onClick={() => setEditing(null)}>취소</button>
+          </div>
+        </FeedDialog>
+      )}
+      {postReview && (
+        <FeedDialog name="피드 게시용 검토" onClose={() => setPostReview(null)}>
+          <h2>TOP {postReview.rank} 게시용 검토</h2>
+          <p>
+            AI 생성물 표시를 포함한 로컬 검토본만 저장합니다. 계정 연결·이미지
+            업로드·공개 게시를 실행하지 않습니다.
+          </p>
+          <label>
+            <input
+              type="checkbox"
+              checked={reviewed}
+              onChange={(e) => setReviewed(e.target.checked)}
+            />
+            이미지·캡션·해시태그·AI 표시 검토
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={rights}
+              onChange={(e) => setRights(e.target.checked)}
+            />
+            이미지 사용 권한 확인
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={sources}
+              onChange={(e) => setSources(e.target.checked)}
+            />
+            원문 출처 확인
+          </label>
+          <div className="work-actions">
+            <button
+              disabled={busy || !reviewed || !rights || !sources}
+              onClick={() =>
+                local(async () => {
+                  const r = await post(
+                    `/api/feed-batches/${batch!.id}/items/${postReview.rank}/review`,
+                    {
+                      reviewed,
+                      rights,
+                      sources_confirmed: sources,
+                      ai_disclosure: "disclose",
+                    },
+                  );
+                  setMessage(r.message);
+                  setPostReview(null);
+                })
+              }
+            >
+              로컬 검토본 저장
+            </button>
+            <button onClick={() => setPostReview(null)}>취소</button>
+          </div>
+        </FeedDialog>
+      )}
+    </>
+  );
+  if (render)
+    return (
+      <>
+        {render({
+          batches,
+          batch,
+          analysis,
+          setAnalysis,
+          options,
+          setOptions,
+          busy,
+          message,
+          ready,
+          runningRank,
+          chosen,
+          local,
+          post,
+          show,
+          load,
+          setMessage,
+          approve: (item?: Item) => {
+            if (
+              !ready ||
+              busy ||
+              !batch?.canGenerate ||
+              batch.items.some((x: Item) =>
+                ["unknown", "running"].includes(x.status),
+              )
+            )
+              return;
+            setRegenerate(item ?? null);
+            setConsent(false);
+            setReviewed(false);
+            setApproval(true);
+          },
+          edit: (item: Item) => {
+            if (!ready || busy || item.status !== "pending") return;
+            setEditing({ ...item.content, rank: item.rank });
+          },
+          review: (item: Item) => {
+            if (busy || batch?.simulation || item.status !== "success") return;
+            setPostReview(item);
+            setRights(false);
+            setSources(false);
+            setReviewed(false);
+          },
+          pause: () => {
+            stop.current = true;
+          },
+          select: (b: Item) => {
+            if (!busy) show(b);
+          },
+        })}
+        {dialogs}
+      </>
+    );
   return (
     <div className="top3-workflow work-stack" aria-busy={busy || !ready}>
       <details className="work-panel top3-new-job" open>
@@ -588,168 +813,7 @@ export default function TopThreeFeeds({
           API 키·모델 설정
         </a>
       </aside>
-      {approval && (
-        <FeedDialog
-          name="TOP 3 생성 범위 승인"
-          onClose={() => setApproval(false)}
-        >
-          <h2>
-            {regenerate
-              ? `TOP ${regenerate.rank} 재생성 준비`
-              : "TOP 3 자동 제작 승인"}
-          </h2>
-          <p>
-            {batch?.simulation
-              ? "Fake 이미지 검증 · 실제 과금 없음"
-              : batch?.price}
-          </p>
-          <p>
-            {regenerate
-              ? "기존 결과를 보존하고 1회 추가 생성을 준비합니다."
-              : "대기 항목만 각 1회 생성합니다. 결과 불명 요청은 재시도하지 않습니다."}
-          </p>
-          <label>
-            <input
-              type="checkbox"
-              checked={reviewed}
-              onChange={(e) => setReviewed(e.target.checked)}
-            />
-            뉴스·문구·출처·모델을 검토했습니다.
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={(e) => setConsent(e.target.checked)}
-            />
-            {batch?.simulation
-              ? "표시된 Fake 생성 범위에 동의합니다."
-              : "표시된 외부 전송·유료 생성 범위에 동의합니다."}
-          </label>
-          <div className="work-actions">
-            <button
-              disabled={!consent || !reviewed || !batch?.canGenerate}
-              onClick={() => run(regenerate ?? undefined)}
-            >
-              {regenerate ? "1회 재생성 준비" : "자동 제작 시작"}
-            </button>
-            <button onClick={() => setApproval(false)}>취소</button>
-          </div>
-        </FeedDialog>
-      )}
-      {editing && (
-        <FeedDialog name="피드 문구 수정" onClose={() => setEditing(null)}>
-          <h2>TOP {editing.rank} 문구 수정</h2>
-          <label>
-            제목
-            <input
-              aria-label="TOP 3 수정 제목"
-              maxLength={60}
-              value={editing.title}
-              onChange={(e) =>
-                setEditing({ ...editing, title: e.target.value })
-              }
-            />
-          </label>
-          <label>
-            짧은 요약
-            <textarea
-              aria-label="TOP 3 수정 요약"
-              maxLength={180}
-              value={editing.body}
-              onChange={(e) => setEditing({ ...editing, body: e.target.value })}
-            />
-          </label>
-          <label>
-            해시태그
-            <input
-              aria-label="TOP 3 수정 해시태그"
-              maxLength={200}
-              value={editing.hashtags}
-              onChange={(e) =>
-                setEditing({ ...editing, hashtags: e.target.value })
-              }
-            />
-          </label>
-          <p>원문에 없는 사실·수치·발언을 추가하지 마세요.</p>
-          <div className="work-actions">
-            <button
-              disabled={busy || !ready}
-              onClick={() =>
-                local(async () => {
-                  show(
-                    await post(`/api/feed-batches/${batch!.id}/change`, {
-                      revision: batch!.revision,
-                      action: "edit",
-                      ...editing,
-                    }),
-                  );
-                  setEditing(null);
-                })
-              }
-            >
-              문구 저장
-            </button>
-            <button onClick={() => setEditing(null)}>취소</button>
-          </div>
-        </FeedDialog>
-      )}
-      {postReview && (
-        <FeedDialog name="피드 게시용 검토" onClose={() => setPostReview(null)}>
-          <h2>TOP {postReview.rank} 게시용 검토</h2>
-          <p>
-            AI 생성물 표시를 포함한 로컬 검토본만 저장합니다. 계정 연결·이미지
-            업로드·공개 게시를 실행하지 않습니다.
-          </p>
-          <label>
-            <input
-              type="checkbox"
-              checked={reviewed}
-              onChange={(e) => setReviewed(e.target.checked)}
-            />
-            이미지·캡션·해시태그·AI 표시 검토
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={rights}
-              onChange={(e) => setRights(e.target.checked)}
-            />
-            이미지 사용 권한 확인
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={sources}
-              onChange={(e) => setSources(e.target.checked)}
-            />
-            원문 출처 확인
-          </label>
-          <div className="work-actions">
-            <button
-              disabled={busy || !reviewed || !rights || !sources}
-              onClick={() =>
-                local(async () => {
-                  const r = await post(
-                    `/api/feed-batches/${batch!.id}/items/${postReview.rank}/review`,
-                    {
-                      reviewed,
-                      rights,
-                      sources_confirmed: sources,
-                      ai_disclosure: "disclose",
-                    },
-                  );
-                  setMessage(r.message);
-                  setPostReview(null);
-                })
-              }
-            >
-              로컬 검토본 저장
-            </button>
-            <button onClick={() => setPostReview(null)}>취소</button>
-          </div>
-        </FeedDialog>
-      )}
+      {dialogs}
     </div>
   );
 }
