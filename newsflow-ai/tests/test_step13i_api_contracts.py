@@ -1,6 +1,5 @@
 """Step13I readiness: synthetic credentials and injected transports only."""
 import io
-import json
 import urllib.error
 
 import pytest

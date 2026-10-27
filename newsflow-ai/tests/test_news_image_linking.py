@@ -1,29 +1,30 @@
 """Synthetic, offline rights/provenance -> immutable scenes -> real MP4 and Chrome."""
-from copy import deepcopy
-from io import BytesIO
 import hashlib
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
+from copy import deepcopy
+from io import BytesIO
+from pathlib import Path
 
 import pytest
+from conftest import csrf
 from PIL import Image
 from sqlalchemy import select
-from conftest import csrf
-from test_video import video
-from test_model_picker_browser import browser
 from test_cloud_workspace_flow import local_server
+from test_model_picker_browser import browser
+from test_video import video
+
 from newsflow.db.models import ArticleThumbnail, ContentDraft, NewsArticle, RenderJob, Scene, VideoProject
 from newsflow.news.collector import parse_feed
 from newsflow.news.serpapi import parse_result
 from newsflow.video.engine import FFmpegAdapter, RenderError
-from newsflow.video.news_images import NewsImages, NewsImageError
+from newsflow.video.news_images import NewsImageError, NewsImages
 from newsflow.video.service import VideoError
 from newsflow.video.tts import local_process_env
 
-__all__ = ["video", "browser"]
+__all__ = ["browser", "video"]
 
 
 def picture(color="#d52222", size=(640, 360)):
@@ -39,7 +40,7 @@ def local(coordinator, name="fixture.png", color="#d52222"):
 
 
 def registered(app, video, origin="representative", name="fixture.png", color="#d52222"):
-    coordinator, draft_id = video
+    coordinator, _draft_id = video
     local(coordinator, name, color)
     with app.state.sessions() as session:
         article = session.get(NewsArticle, 1)
@@ -248,7 +249,7 @@ def test_real_mp4_every_auto_scene_has_expected_pixels(app, video, tmp_path):
         checks = []
         for index, scene in enumerate(scenes):
             frame = evidence / f"scene-{index+1}.png"
-            result = subprocess.run([str(FFmpegAdapter.executable("ffmpeg", None)), "-nostdin", "-v", "error", "-ss", str((scene.start_ms+scene.end_ms)/2000), "-i", str(output), "-frames:v", "1", "-threads", "1", str(frame)], shell=False, env=local_process_env(), capture_output=True, timeout=30)
+            result = subprocess.run([str(FFmpegAdapter.executable("ffmpeg", None)), "-nostdin", "-v", "error", "-ss", str((scene.start_ms+scene.end_ms)/2000), "-i", str(output), "-frames:v", "1", "-threads", "1", str(frame)], shell=False, env=local_process_env(), capture_output=True, timeout=30, check=False)
             assert result.returncode == 0
             with Image.open(frame) as image:
                 pixel = image.getpixel((500, 900))[:3]
@@ -390,8 +391,8 @@ def test_registered_clean_image_strips_metadata_and_preserves_original(app, vide
 
 @pytest.mark.parametrize("fault", ["cleared", "junction", "corrupt", "missing"])
 def test_frozen_job_rechecks_image_binding_and_parent_junction(app, video, monkeypatch, tmp_path, fault):
-    from concurrent.futures import Future
     from _winapi import CreateJunction
+    from concurrent.futures import Future
     coordinator, draft_id = video
     row = registered(app, video);pending=[]
     def hold(function, *args):
@@ -428,6 +429,7 @@ def test_frozen_job_rechecks_image_binding_and_parent_junction(app, video, monke
 
 def test_image_failure_has_specific_local_recovery_action():
     from types import SimpleNamespace
+
     from newsflow.gui.video_presentation import video_presentation
     shown=video_presentation(SimpleNamespace(status="failed", metadata_json={"failure_stage":"image"},message="합성 실패"))
     assert shown["stage"]=="뉴스 이미지" and shown["action"]=="/video"

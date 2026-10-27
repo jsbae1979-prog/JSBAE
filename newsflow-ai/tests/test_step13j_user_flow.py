@@ -3,27 +3,37 @@
 No real provider or credentials. FakeTTS produces silent PCM; this does not
 claim human Korean voice quality or actual supplier API success.
 """
-from copy import deepcopy
 import hashlib
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import time
+from copy import deepcopy
+from pathlib import Path
 from urllib.parse import parse_qs, urljoin, urlsplit
 
 from PIL import Image
 from playwright.sync_api import expect
 from sqlalchemy import func, select
-
 from test_cloud_workspace_flow import local_server
 from test_model_picker_browser import browser
 from test_news_image_linking import picture
+
 from newsflow.db.models import (
-    AppSetting, ArticleThumbnail, AudioTrack, CollectionRun, ContentDraft,
-    NewsArticle, NewsSource, PublishAttempt, PublishDraft, PublishJob,
-    RenderJob, Scene, VideoProject,
+    AppSetting,
+    ArticleThumbnail,
+    AudioTrack,
+    CollectionRun,
+    ContentDraft,
+    NewsArticle,
+    NewsSource,
+    PublishAttempt,
+    PublishDraft,
+    PublishJob,
+    RenderJob,
+    Scene,
+    VideoProject,
 )
 from newsflow.intelligence.korean import speech_plan
 from newsflow.video.engine import FFmpegAdapter
@@ -41,23 +51,22 @@ def _post(page, path, action):
     target = {"url": None}
     # Easy forms perform a fetch redirect, then replaceState and reload. A generic
     # navigation wait can resolve on replaceState with no document response.
-    with page.expect_event("domcontentloaded"):
+    with page.expect_event("domcontentloaded"), page.expect_response(
+        lambda r: target["url"] is not None
+        and r.request.is_navigation_request()
+        and r.request.method == "GET"
+        and r.url.split("#")[0] == target["url"].split("#")[0]
+    ) as redirected:
         with page.expect_response(
-            lambda r: target["url"] is not None
-            and r.request.is_navigation_request()
-            and r.request.method == "GET"
-            and r.url.split("#")[0] == target["url"].split("#")[0]
-        ) as redirected:
-            with page.expect_response(
-                lambda r: urlsplit(r.url).path == path and r.request.method == "POST"
-            ) as response:
-                action()
-            posted = response.value
-            assert posted.status == 303
-            location = posted.headers.get("location")
-            assert location, "protected form must return its real redirect target"
-            target["url"] = urljoin(posted.url, location)
-            assert urlsplit(target["url"]).netloc == urlsplit(posted.url).netloc
+            lambda r: urlsplit(r.url).path == path and r.request.method == "POST"
+        ) as response:
+            action()
+        posted = response.value
+        assert posted.status == 303
+        location = posted.headers.get("location")
+        assert location, "protected form must return its real redirect target"
+        target["url"] = urljoin(posted.url, location)
+        assert urlsplit(target["url"]).netloc == urlsplit(posted.url).netloc
     document = redirected.value
     assert document.status == 200 and document.request.is_navigation_request()
     assert "'unsafe-eval'" not in document.headers["content-security-policy"]
@@ -199,7 +208,7 @@ def test_synthetic_rss_to_manual_image_video_and_unapproved_local_publish_draft(
                     result = subprocess.run([str(FFmpegAdapter.executable("ffmpeg", None)), "-nostdin", "-v", "error",
                         "-ss", str((scene.start_ms + scene.end_ms) / 2000), "-i", str(output),
                         "-frames:v", "1", "-threads", "1", str(frame)], shell=False,
-                        env=local_process_env(), capture_output=True, timeout=30)
+                        env=local_process_env(), capture_output=True, timeout=30, check=False)
                     assert result.returncode == 0
                     with Image.open(frame) as image:
                         pixel = image.getpixel((500, 900))[:3]

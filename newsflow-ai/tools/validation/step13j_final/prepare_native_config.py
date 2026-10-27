@@ -1,6 +1,9 @@
 """Register hashes for this isolated test run; never executes native programs."""
+import hashlib
+import json
+import os
+import sys
 from pathlib import Path
-import hashlib,json,os,sys
 
 ROOT=Path(__file__).resolve().parent
 assert sys.version_info[:3]==(3,14,7)

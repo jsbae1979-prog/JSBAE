@@ -1,8 +1,12 @@
 """Actual bundled server, synthetic profile, reviewed Chrome/Node boundary."""
-import json,os,time
+import json
+import os
+import time
 from pathlib import Path
 from urllib.parse import urlsplit
-from playwright.sync_api import sync_playwright,expect
+
+from playwright.sync_api import expect, sync_playwright
+
 
 def test_frozen_gui_assets_models_video_and_reuse():
     output=Path(os.environ['NEWSFLOW_VALIDATION_OUTPUT'])/'frozen-gui';output.mkdir(parents=True)

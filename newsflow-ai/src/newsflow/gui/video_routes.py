@@ -10,10 +10,10 @@ from sqlalchemy import select
 
 from newsflow.db.models import (
     ArticleThumbnail,
-    NewsArticle,
     AudioTrack,
     ContentDraft,
     IntelligenceRun,
+    NewsArticle,
     RenderJob,
     Scene,
     SubtitleTrack,
@@ -350,7 +350,6 @@ def link_news_image(request: Request, draft_id: int = Form(ge=1), article_id: in
                     name: str = Form("", max_length=255), rights_basis: str = Form(min_length=3, max_length=400),
                     permission: bool = Form(False)):
     """Associate an existing local asset only. No image/network lookup on this route."""
-    from newsflow.video.news_images import NewsImageError
     if not permission:
         raise HTTPException(422, "영상 사용권을 확인하세요.")
     with request.app.state.sessions() as session:
@@ -366,7 +365,7 @@ def link_news_image(request: Request, draft_id: int = Form(ge=1), article_id: in
             else:
                 request.app.state.video.news_images.remember(
                     article, name, source_url=article.url, rights_basis=rights_basis, origin="collected")
-        except Exception:  # no raw transport URL, supplier error or credential text in the UI
+        except Exception:  # noqa: BLE001 -- redact every transport failure; never expose supplier URLs/credentials.
             raise HTTPException(422, "이미지 연결 실패 · 형식·출처·사용권을 확인하세요. 기본 카드를 유지합니다.") from None
     return go(f"/video?draft_id={draft_id}#news-image-links")
 
@@ -374,6 +373,7 @@ def link_news_image(request: Request, draft_id: int = Form(ge=1), article_id: in
 @router.get("/video/news-images/articles/{article_id}")
 def news_image_preview(request: Request, article_id: int):
     from io import BytesIO
+
     from PIL import Image
     with request.app.state.sessions() as session:
         article = session.get(NewsArticle, article_id)

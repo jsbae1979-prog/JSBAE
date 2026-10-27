@@ -1,6 +1,10 @@
 """Reconcile documentation shorthand against real router decorators; no app import."""
+import ast
+import csv
+import json
+import re
 from pathlib import Path
-import ast,csv,json,re
+
 P=Path(__file__).resolve().parents[2]
 D=P/'docs/design/studio-v3.0';S=P/'src/newsflow';O=D/'implementation'
 all_routes={}

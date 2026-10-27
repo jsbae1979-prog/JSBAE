@@ -1,6 +1,12 @@
 """Configure a disposable runner profile; no service credentials, no production profile."""
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
 from pathlib import Path
-import hashlib,json,os,shutil,subprocess,sys
+
 assert sys.version_info[:3] == (3,14,7)
 # Windows runner consoles may default to cp1252; preserve diagnostic Unicode.
 sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
@@ -15,6 +21,7 @@ for filename in ('run_browser_phase.py','browser_bootstrap.py','test_guard_secur
 for name in ('home/AppData/Local','home/AppData/Roaming','temp','artifacts'):(root/name).mkdir(parents=True,exist_ok=True)
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 import playwright
+
 node=Path(playwright.__file__).parent/'driver/node.exe';cli=node.parent/'package/cli.js'
 chrome=Path(os.environ['NEWSFLOW_TEST_BROWSER_EXECUTABLE']).resolve()
 ffmpeg=Path(os.environ['NEWSFLOW_FFMPEG']).resolve();ffprobe=Path(os.environ['NEWSFLOW_FFPROBE']).resolve()

@@ -1,16 +1,17 @@
+import json
 from copy import deepcopy
-from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace as NS
-import json
+
 import pytest
 from PIL import Image
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
-from newsflow.db.models import Base, NewsSource, NewsArticle, IntelligenceRun, ContentDraft, AppSetting
+
 from newsflow.creation.catalog import DEFAULTS, read_defaults
-from newsflow.creation.top_three_feeds import TopThreeFeeds, LocalFeedPreviewAdapter, KIND
-from newsflow.publishing.image_generation import ImageGenerationService, ImageGenerationError
+from newsflow.creation.top_three_feeds import LocalFeedPreviewAdapter, TopThreeFeeds
+from newsflow.db.models import Base, ContentDraft, IntelligenceRun, NewsArticle, NewsSource
+from newsflow.publishing.image_generation import ImageGenerationError, ImageGenerationService
 from newsflow.publishing.service import PublishingError
 
 
@@ -155,8 +156,7 @@ def test_tampered_output_and_frozen_source_rejected(env):
 def test_lock_contention_prevents_duplicate_submit(env):
  from filelock import FileLock
  b=create(env)
- with FileLock(env.service.lock.lock_file):
-  with pytest.raises(PublishingError,match="진행 중"):step(env,b)
+ with FileLock(env.service.lock.lock_file), pytest.raises(PublishingError,match="진행 중"):step(env,b)
  assert not env.adapter.calls
 
 def test_edited_source_after_batch_does_not_change_snapshot(env):

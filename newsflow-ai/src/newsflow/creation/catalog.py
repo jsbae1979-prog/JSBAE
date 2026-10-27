@@ -1,12 +1,12 @@
 """Versioned, local model contracts. No discovery, credentials, approval or invoice claims."""
-from copy import deepcopy
 import hashlib
 import json
+from copy import deepcopy
 
+from newsflow.character.higgsfield_client import MODEL as CHARACTER_MODEL
 from newsflow.db.models import AppSetting
 from newsflow.intelligence.api_providers import API_MODELS
 from newsflow.publishing.image_generation import MODEL as IMAGE_MODEL
-from newsflow.character.higgsfield_client import MODEL as CHARACTER_MODEL
 
 IMAGE_MODELS = (IMAGE_MODEL, "gpt-image-2.5-sunburst-2026-09-08")
 IMAGE_SIZES = {"1024x1280": "4:5 · 피드", "1024x1024": "1:1 · 정사각형",
@@ -103,8 +103,8 @@ def news_video_default(sessions):
 
 
 def save_news_video_default(sessions, model_path):
-    from newsflow.video.ai.settings import find_model
     from newsflow.video.ai.production import model_ready
+    from newsflow.video.ai.settings import find_model
     if not model_ready(find_model(sessions, model_path)):
         raise SelectionError('공식 입력 규격이 확인된 뉴스 영상 모델을 등록하세요. 계정 사용 가능 여부는 미검증입니다.')
     with sessions.begin() as session:

@@ -1,9 +1,13 @@
 """Synthetic inputs only, exercising the bundled product classes and real FFmpeg."""
-from pathlib import Path
+import json
+import os
+import subprocess
 from io import BytesIO
+from pathlib import Path
 from types import SimpleNamespace
-import hashlib, json, os, subprocess
+
 from PIL import Image
+
 
 def picture():
     buf=BytesIO();Image.new("RGB",(1080,1920),"#2456dc").save(buf,"PNG");return buf.getvalue()
@@ -19,8 +23,8 @@ class ImageFake:
 def make_app(settings):
     from newsflow.main import create_app
     from newsflow.news.rss_adapter import FakeRSSAdapter
-    from newsflow.scheduler.service import Scheduler
     from newsflow.publishing.calendar import PublishingCalendar
+    from newsflow.scheduler.service import Scheduler
     from newsflow.video.ai.service import AIVideoCoordinator
     Scheduler.start=lambda self:None
     PublishingCalendar.start=lambda self:None
@@ -36,20 +40,23 @@ def make_app(settings):
 def probe(root,bundle):
     from fastapi.testclient import TestClient
     from sqlalchemy import select
+
+    from newsflow.character.compose import compose
+    from newsflow.character.schema import Storyboard
     from newsflow.config import Settings
-    from newsflow.db.models import NewsSource, NewsArticle, RenderJob, VideoProject
+    from newsflow.creation.catalog import DEFAULTS, read_defaults, save_defaults
+    from newsflow.db.models import NewsArticle, NewsSource, RenderJob, VideoProject
     from newsflow.intelligence.service import IntelligenceService
+    from newsflow.video.ai.clips import probe_clip
     from newsflow.video.engine import FFmpegAdapter
     from newsflow.video.tts import FakeTTS, local_process_env
-    from newsflow.creation.catalog import DEFAULTS,save_defaults,read_defaults
-    from newsflow.character.schema import Storyboard
-    from newsflow.character.compose import compose
-    from newsflow.video.ai.clips import probe_clip
     settings=Settings.from_env()
     assert settings.data_dir==root/"AppData/Local/NewsFlowAI"
     app=make_app(settings)
     result={"scope":"Synthetic bundled engine probe; no live providers","pages":{}}
-    import socket,technical_media
+    import socket
+
+    import technical_media
     blocked=[]
     checks=[
         ("outside-read",lambda:(root.parent/"not-an-operating-file.txt").read_bytes()),
@@ -102,7 +109,7 @@ def probe(root,bundle):
         char_before=read_defaults(app.state.sessions,"character")
         save_defaults(app.state.sessions,"image",chosen)
         studio=app.state.image_studio;i=studio.create("Synthetic geometry",chosen)
-        run=studio.execute(i,consent=True,reviewed=True);name=studio.export(i,reviewed=True)
+        _run=studio.execute(i,consent=True,reviewed=True);name=studio.export(i,reviewed=True)
         assert studio.asset(name).is_file() and read_defaults(app.state.sessions,"character")==char_before
         result["image"]={"draft":i,"Fake_calls":app.state.image_generation.adapter.calls,"reviewed_asset":True}
         c=app.state.character
@@ -122,14 +129,13 @@ def probe(root,bundle):
     (root/"probe-safe.json").write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding="utf-8")
 
 def serve(root,bundle):
-    import newsflow.main as main
+    from newsflow import main
     original=main.create_app
     # Capture before replacing factory to avoid recursion.
-    global make_app
     from newsflow.news.rss_adapter import FakeRSSAdapter
     def factory(settings,**kwargs):
-        from newsflow.scheduler.service import Scheduler
         from newsflow.publishing.calendar import PublishingCalendar
+        from newsflow.scheduler.service import Scheduler
         from newsflow.video.ai.service import AIVideoCoordinator
         Scheduler.start=lambda self:None;PublishingCalendar.start=lambda self:None;AIVideoCoordinator.start=lambda self:None
         app=original(settings,FakeRSSAdapter({}),**kwargs)

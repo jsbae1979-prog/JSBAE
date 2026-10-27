@@ -2,18 +2,19 @@
 import json
 import os
 from pathlib import Path
-from urllib.parse import urlsplit, parse_qs
+from urllib.parse import parse_qs, urlsplit
 
 from playwright.sync_api import expect
 from sqlalchemy import select
-from test_video import video
-from test_news_image_linking import registered
-from test_model_picker_browser import browser
 from test_cloud_workspace_flow import local_server
+from test_model_picker_browser import browser
+from test_news_image_linking import registered
+from test_video import video
+
 from newsflow.db.models import ContentDraft, RenderJob, Scene, VideoProject
 from newsflow.video.engine import FFmpegAdapter
 
-__all__ = ["video", "browser"]
+__all__ = ["browser", "video"]
 
 
 def test_gui_news_click_selection_to_real_image_video_no_provider_calls(app, video, browser, fake):

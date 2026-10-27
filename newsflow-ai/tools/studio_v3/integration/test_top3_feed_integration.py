@@ -1,10 +1,11 @@
 """New TOP3 forms through the real app; only disposable Windows Actions may run this."""
-from copy import deepcopy
-from io import BytesIO
 import importlib.util
+from io import BytesIO
 from pathlib import Path
-import pytest
-from test_full_app_forms import client as client, token
+
+from test_full_app_forms import client, token
+
+__all__ = ["client"]
 
 
 def seed(app):
@@ -13,8 +14,9 @@ def seed(app):
     mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
     # Insert synthetic rows with the app DB's own IDs; preserve its initial RSS presets.
     e=mod.setup(app.state.config.data_dir, sessions=app.state.sessions)
-    from newsflow.creation.top_three_feeds import TopThreeFeeds,LocalFeedPreviewAdapter
     from types import SimpleNamespace as NS
+
+    from newsflow.creation.top_three_feeds import LocalFeedPreviewAdapter, TopThreeFeeds
     app.state.image_generation.adapter=LocalFeedPreviewAdapter()
     app.state.image_generation.keys=NS(key=lambda:"synthetic-top3-key",status=lambda:{"configured":True})
     app.state.top_three_feeds=TopThreeFeeds(app.state.sessions,app.state.config.data_dir,app.state.image_generation,simulation=True)
@@ -64,9 +66,10 @@ def test_top3_defaults_independent_and_real_unquoted_execution_blocked(client):
 
 def test_top3_reviewed_local_post_matches_preview_and_is_idempotent(client):
  c,app=client;aid=seed(app);csrf=token(c)
- from newsflow.creation.catalog import DEFAULTS
- from newsflow.db.models import IntelligenceRun,ImagePostDelivery
  from sqlalchemy import select
+
+ from newsflow.creation.catalog import DEFAULTS
+ from newsflow.db.models import ImagePostDelivery, IntelligenceRun
  b=c.post('/api/feed-batches',data={**DEFAULTS['image'],'size':'1024x1024','analysis_id':aid,'csrf_token':csrf}).json()['id']
  assert c.post(f'/api/feed-batches/{b}/step',data={'csrf_token':csrf,'consent':'true','reviewed':'true'}).status_code==200
  # A synthetic, already-completed production-shaped record tests only local review/storage.

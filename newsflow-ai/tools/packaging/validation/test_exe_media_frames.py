@@ -1,7 +1,12 @@
 """Read only synthetic MP4s from the frozen-engine probe."""
+import json
+import os
+import subprocess
 from pathlib import Path
-import os,json,subprocess
-from PIL import Image,ImageDraw
+
+from PIL import Image
+
+
 def test_frozen_news_and_character_actual_frames():
     root=Path(os.environ['STEP13_ROOT'])
     probe=root/'exe-probe6'

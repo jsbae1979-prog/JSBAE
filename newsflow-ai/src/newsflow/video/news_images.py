@@ -9,7 +9,8 @@ from pathlib import Path
 from uuid import uuid4
 
 from newsflow.news.thumbnails import thumbnail_url
-from .engine import load_image, RenderError
+
+from .engine import RenderError, load_image
 
 MAX_BYTES = 20 * 1024 * 1024
 ORIGINS = {"representative": 0, "collected": 1, "search": 2}
@@ -97,6 +98,7 @@ class NewsImages:
         if not isinstance(raw, bytes) or not raw or len(raw) > MAX_BYTES:
             raise NewsImageError("이미지 크기를 확인하세요.")
         import warnings
+
         from PIL import Image, ImageOps
         try:
             with warnings.catch_warnings():

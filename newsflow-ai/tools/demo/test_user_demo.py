@@ -1,10 +1,15 @@
-import os,json,re,time
+import json
+import os
+import re
+import time
 import urllib.request
-from PIL import Image
 from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlsplit
-from playwright.sync_api import sync_playwright,expect
+
+from PIL import Image
+from playwright.sync_api import expect, sync_playwright
+
 
 def test_user_demo_modes_and_download():
     out=Path(os.environ['NEWSFLOW_VALIDATION_OUTPUT'])/'user-demo';out.mkdir(parents=True)

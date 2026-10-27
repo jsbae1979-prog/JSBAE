@@ -1,5 +1,5 @@
 """Authorized B-only bridge; original media/file/network guard remains installed."""
-from pathlib import Path
+from pathlib import Path  # noqa: I001 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
 import os,json,hashlib,time,socket,contextlib,threading
 from urllib.parse import urlsplit
 R=Path(__file__).parent
@@ -23,7 +23,7 @@ def safe_url(url):
  return url=='about:blank' or u.scheme=='data' or (u.scheme=='http' and u.hostname=='127.0.0.1' and u.port==18765 and not u.username and not u.password)
 
 def install_playwright():
- from playwright.sync_api import BrowserType,Browser,BrowserContext,Page,Route
+ from playwright.sync_api import BrowserType,Browser,BrowserContext,Page,Route  # noqa: F401, I001 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
  oldlaunch=BrowserType.launch;oldctx=Browser.new_context;oldgoto=Page.goto;oldcontinue=Route.continue_;oldfallback=Route.fallback
  def launch(self,*args,**kwargs):
   if self.name!='chromium' or args:fail('browser type')

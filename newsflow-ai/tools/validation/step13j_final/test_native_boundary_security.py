@@ -1,9 +1,13 @@
 """Deny/parse-only tests for the native bridge; these cases launch no process."""
+import os
+import subprocess
+import sys
 from pathlib import Path
-import json, os, subprocess, sys
-import pytest
+
 import native_boundary as native
+import pytest
 import step13_guard as guard
+
 
 @pytest.fixture
 def cfg():

@@ -1,8 +1,10 @@
-from types import SimpleNamespace
-from concurrent.futures import ThreadPoolExecutor
 import threading
-import pytest
+from concurrent.futures import ThreadPoolExecutor
+from types import SimpleNamespace
+
 import browser_boundary as b
+import pytest
+
 
 @pytest.mark.parametrize('url',["http://127.0.0.1/","http://127.0.0.1:8765/","http://localhost:18765/","https://127.0.0.1:18765/","http://127.0.0.1:18765@other.invalid/","file:///C:/private","https://example.invalid/"])
 def test_real_network_policy_remains_exact_localhost18765(url):
@@ -28,7 +30,7 @@ def test_virtual_mock_origin_cannot_continue_to_a_socket():
  with pytest.raises(b.BoundaryViolation):Route.continue_(fake)
  with pytest.raises(b.BoundaryViolation):Route.fallback(fake)
 def test_owned_thread_identity_does_not_exempt_a_same_named_app_thread(monkeypatch):
- event=threading.Event();ex=ThreadPoolExecutor(max_workers=1,thread_name_prefix='asyncio');future=ex.submit(event.wait)
+ event=threading.Event();ex=ThreadPoolExecutor(max_workers=1,thread_name_prefix='asyncio');_future=ex.submit(event.wait)
  unknown=threading.Thread(target=event.wait,name='asyncio_0');unknown.start()
  loop=SimpleNamespace(_default_executor=ex);monkeypatch.setattr(b,'PLAYWRIGHT_LOOPS',[loop])
  try:

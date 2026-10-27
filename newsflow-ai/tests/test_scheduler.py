@@ -375,9 +375,11 @@ def test_scheduler_background_lifecycle(scheduler):
 
 
 def test_database_copy_preserves_original_and_pauses_copy(scheduler, tmp_path):
+    from pathlib import Path
+
     from alembic import command
     from alembic.config import Config
-    from pathlib import Path
+
     from newsflow.db import session as db_session
     from newsflow.db.session import make_engine, session_factory
     from newsflow.migrate_data import migrate_data

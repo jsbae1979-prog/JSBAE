@@ -24,12 +24,11 @@ from newsflow.intelligence.estimate import (
     representative_evidence,
 )
 from newsflow.intelligence.provider import (
-    SCRIPT_INSTRUCTION,
     FakeProvider,
     OpenAIProvider,
     Options,
-    user_message,
     prompt_instruction,
+    user_message,
 )
 from newsflow.intelligence.service import IntelligenceError, IntelligenceService
 from newsflow.intelligence.settings import (
@@ -82,7 +81,7 @@ def test_estimate_call_counts_exactly_what_the_provider_sends():
         captured = {}
 
         class Opener:
-            def open(self, request, timeout=None):
+            def open(self, request, timeout=None, *, captured=captured, body=body):
                 captured["data"] = request.data
                 return Response(json.dumps(body).encode())
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import json
 import re
-from pathlib import Path
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 
 def write_json(path: Path, value):
@@ -59,7 +59,7 @@ def native_detail(root, phase):
         value = json.loads(path.read_text(encoding="utf-8-sig"))
         events = value.get("events", [])
         if not isinstance(events, list):
-            raise ValueError
+            raise ValueError  # noqa: TRY004 -- malformed evidence is handled by the existing ValueError redaction boundary.
         result["total_events"] = len(events)
         result["events_truncated"] = len(events) > 200
         for event in events[:200]:

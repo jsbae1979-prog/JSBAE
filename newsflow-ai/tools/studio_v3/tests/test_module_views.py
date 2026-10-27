@@ -3,12 +3,15 @@ import ast
 import json
 from pathlib import Path
 from types import SimpleNamespace as NS
+
 import pytest
 from sqlalchemy import select
-from newsflow.db.models import IntelligenceRun, AppSetting, NewsArticle, NewsListState, NewsSource
+from test_read_model import setup
+
+from newsflow.db.models import AppSetting, IntelligenceRun, NewsArticle, NewsListState, NewsSource
 from newsflow.gui.studio_v3 import workspace
 from newsflow.studio.read_models import SPECS, module_view, rows
-from test_read_model import setup
+
 
 @pytest.mark.parametrize("module", list(SPECS))
 def test_all_module_views_are_readonly_and_secret_free(tmp_path, module):
@@ -53,7 +56,7 @@ def test_image_draft_latest_output_link_and_filename_validation(tmp_path, latest
     engine.dispose()
 
 def test_news_hidden_records_remain_archived(tmp_path):
-    request,engine,sessions=setup(tmp_path)
+    _request,engine,sessions=setup(tmp_path)
     with sessions.begin() as s:
         source=NewsSource(name="synthetic",url="https://example.invalid/rss",enabled=False);s.add(source);s.flush()
         for i in range(2):

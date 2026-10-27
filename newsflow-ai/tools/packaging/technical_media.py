@@ -1,7 +1,12 @@
 """Technical-build media validation reused from the accepted test Guard.
 No native Python, Node, browser or arbitrary binary exception is present.
 """
-import os,re,ctypes,pathlib,hashlib
+import ctypes
+import hashlib
+import os
+import pathlib
+import re
+
 ROOT=None;PINNED={};VERIFIED={};ALLOWED=[];ATTEMPTS=[]
 _shell=ctypes.WinDLL("shell32",use_last_error=True)
 _parse=_shell.CommandLineToArgvW;_parse.argtypes=[ctypes.c_wchar_p,ctypes.POINTER(ctypes.c_int)];_parse.restype=ctypes.POINTER(ctypes.c_wchar_p)

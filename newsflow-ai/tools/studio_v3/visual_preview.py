@@ -1,15 +1,20 @@
 """Local synthetic UI harness only. Never imports or starts the product engine."""
+import json
+import os
+import re
+import sys
+import urllib.parse
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-import sys,json,os,re,urllib.parse,hashlib
-from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler
+
 R=Path(os.environ["NEWSFLOW_VISUAL_ROOT"]).resolve()
 P=R/'repo/newsflow-ai';D=P/'frontend/dist';F=P/'tools/studio_v3/fixtures'
 models={p.stem:json.loads(p.read_text(encoding='utf-8')) for p in F.glob('*.json')}
 media=R/'preview-media/synthetic.mp4'
 if media.is_file():
  models['workspace']['projects'][0]['mediaUrl']='/video/jobs/1/file'
- for name in models:
-  if 'projects' in models[name]:models[name]['projects'][0]['mediaUrl']='/video/jobs/1/file'
+ for model in models.values():
+  if 'projects' in model:model['projects'][0]['mediaUrl']='/video/jobs/1/file'
 records=R/'synthetic-form-events.jsonl'
 class Handler(SimpleHTTPRequestHandler):
  def log_message(self,*args):pass
@@ -28,7 +33,9 @@ class Handler(SimpleHTTPRequestHandler):
    if name in models:return self.result(models[name])
    return self.result({'detail':'Unknown synthetic module'},404)
   if path=='/video/jobs/1/file':
-   raw=media.read_bytes();total=len(raw);match=re.fullmatch(r'bytes=(\d+)-(\d*)',self.headers.get('Range',''))
+   raw=media.read_bytes()
+   total=len(raw)
+   match=re.fullmatch(r'bytes=(\d+)-(\d*)',self.headers.get('Range',''))
    start=int(match[1]) if match else 0;end=min(int(match[2]) if match and match[2] else total-1,total-1)
    if start>=total:self.send_error(416);return
    self.send_response(206 if match else 200);self.send_header('Content-Type','video/mp4');self.send_header('Accept-Ranges','bytes')
@@ -49,8 +56,8 @@ class Handler(SimpleHTTPRequestHandler):
   if self.path=='/__fixture/reset':
    models={p.stem:json.loads(p.read_text(encoding='utf-8')) for p in F.glob('*.json')}
    if media.is_file():
-    for name in models:
-     if 'projects' in models[name]:models[name]['projects'][0]['mediaUrl']='/video/jobs/1/file'
+    for model in models.values():
+     if 'projects' in model:model['projects'][0]['mediaUrl']='/video/jobs/1/file'
    return self.result({'saved':True,'synthetic':True})
   # These are UI simulation contracts, not a replacement for product validation.
   if self.path=='/ai/drafts/1':
@@ -70,6 +77,7 @@ class Handler(SimpleHTTPRequestHandler):
  def do_CONNECT(self):self.send_error(403)
 sys.path.insert(0,str(R))
 import step13_guard
+
 step13_guard.install()
 server=ThreadingHTTPServer(('127.0.0.1',18765),Handler)
 (R/'visual-server-safe.json').write_text(json.dumps({'pid':os.getpid(),'port':18765,'kind':'Synthetic React UI harness','product_engine_started':False,'Guard':True,'external_calls':0},indent=2))

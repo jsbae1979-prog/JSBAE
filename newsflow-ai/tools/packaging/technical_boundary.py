@@ -1,6 +1,6 @@
 """Build-only boundary. Not imported by the product or shipped as a release policy."""
-from pathlib import Path
-import ctypes, hashlib, ipaddress, json, os, socket, sys
+from pathlib import Path  # noqa: I001 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
+import ctypes, hashlib, ipaddress, json, os, socket, sys  # noqa: F401 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
 
 def install():
     if not getattr(sys, "frozen", False) or sys.version_info[:3] != (3,14,7):

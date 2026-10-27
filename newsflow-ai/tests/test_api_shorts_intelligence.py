@@ -11,8 +11,6 @@ from newsflow.intelligence.api_providers import AnthropicProvider, FakeAPIProvid
 from newsflow.intelligence.api_settings import FakeAPIBudgetService, save_api_settings
 from newsflow.intelligence.news_usage import API_SCRIPT_METHOD, api_news_contract, safe_topic_script
 from newsflow.intelligence.provider import (
-    ANALYSIS_INSTRUCTION,
-    SCRIPT_INSTRUCTION,
     OpenAIProvider,
     Options,
     ProviderTimeoutError,

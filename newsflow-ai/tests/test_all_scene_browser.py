@@ -56,9 +56,8 @@ def test_workspace_all_ai_voice_approval_to_original_task_preview(production, br
             picker.locator('select').select_option(value)
             # The second save returns to the same URL. Wait for the new document,
             # not a URL match that can succeed before the pending reload occurs.
-            with page.expect_navigation(wait_until='domcontentloaded') as loaded:
-                with page.expect_response(lambda response: response.url.endswith('/production/selection') and response.request.method == 'POST') as saved:
-                    picker.get_by_role('button', name='선택 저장', exact=True).click()
+            with page.expect_navigation(wait_until='domcontentloaded') as loaded, page.expect_response(lambda response: response.url.endswith('/production/selection') and response.request.method == 'POST') as saved:
+                picker.get_by_role('button', name='선택 저장', exact=True).click()
             assert saved.value.status == 303
             assert loaded.value.status == 200
             expect(page).to_have_url(origin + '/create?selection_saved=true')

@@ -106,11 +106,8 @@ def test_browser_app_registration_reentry_and_synthetic_login(app, browser, tmp_
             assert "nf-synthetic-secret-private" not in page.content()
             section.locator('form[action="/tiktok/connect"] input[name="consent"]').check()
             # Synchronize on the real POST and redirected document, without CSP eval.
-            with page.expect_response(lambda r: r.request.is_navigation_request()
-                                      and r.request.method == "GET"
-                                      and r.url.split("#")[0] == origin + "/publishing/platforms") as redirected:
-                with page.expect_response(lambda r: r.url.endswith("/tiktok/connect") and r.request.method == "POST") as sent:
-                    section.get_by_role("button", name="TikTok으로 연결").click()
+            with page.expect_response(lambda r: r.request.is_navigation_request() and r.request.method == 'GET' and (r.url.split('#')[0] == origin + '/publishing/platforms')) as redirected, page.expect_response(lambda r: r.url.endswith('/tiktok/connect') and r.request.method == 'POST') as sent:
+                section.get_by_role("button", name="TikTok으로 연결").click()
             assert redirected.value.status == 200
             assert redirected.value.request.is_navigation_request()
             assert "'unsafe-eval'" not in redirected.value.headers["content-security-policy"]

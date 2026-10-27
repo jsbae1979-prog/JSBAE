@@ -1,8 +1,15 @@
 """Real deny-before-I/O checks, synthetic files and pinned local FFmpeg only."""
+import ctypes
+import json
+import os
+import socket
+import sqlite3
+import subprocess
 from pathlib import Path
-import os,sqlite3,socket,subprocess,ctypes,json
+
 import pytest
 import step13_guard as g
+
 
 def binary(name='ffmpeg'):
  return next(p for p in g.PINNED if p.stem==name)
@@ -12,9 +19,9 @@ def test_windows_none_executable_and_explicit_path_are_parsed(tmp_path):
  assert g.validate_process(str(binary()),args,str(tmp_path),{})==args
 @pytest.mark.parametrize('argv',[['ffmpeg','-version'],['cmd.exe','/c','echo x'],['powershell.exe','-NoProfile'],['claude','--version'],['codex','--version'],['curl','https://example.com']])
 def test_arbitrary_or_relative_executable_is_denied(tmp_path,argv):
- with pytest.raises(PermissionError):subprocess.run(argv,cwd=tmp_path,env={})
+ with pytest.raises(PermissionError):subprocess.run(argv,cwd=tmp_path,env={}, check=False)
 def test_shell_is_denied_before_creation(tmp_path):
- with pytest.raises(PermissionError,match='shell-prohibited'):subprocess.run([str(binary()),'-version'],shell=True,cwd=tmp_path,env={})
+ with pytest.raises(PermissionError,match='shell-prohibited'):subprocess.run([str(binary()),'-version'],shell=True,cwd=tmp_path,env={}, check=False)
 def test_separate_executable_cannot_disagree(tmp_path):
  with pytest.raises(PermissionError):g.validate_process(str(binary('ffprobe')),[str(binary()),'-version'],str(tmp_path),{})
 @pytest.mark.parametrize('tail',[
@@ -47,11 +54,11 @@ def test_operating_read_and_outside_write_denied(tmp_path):
  assert not outside.exists()
 @pytest.mark.parametrize('host,port',[('203.0.113.2',443),('127.0.0.1',8765),('::1',8765)])
 def test_network_boundary_without_transmission(host,port):
- with socket.socket(socket.AF_INET6 if ':' in host else socket.AF_INET,socket.SOCK_STREAM) as s:
-  with pytest.raises(PermissionError):s.connect((host,port))
+ with socket.socket(socket.AF_INET6 if ':' in host else socket.AF_INET, socket.SOCK_STREAM) as s, pytest.raises(PermissionError):
+     s.connect((host,port))
 def test_udp_and_system_execution_denied():
- with socket.socket(socket.AF_INET,socket.SOCK_DGRAM) as s:
-  with pytest.raises(PermissionError):s.sendto(b'NO SEND',('203.0.113.2',443))
+ with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s, pytest.raises(PermissionError):
+     s.sendto(b'NO SEND',('203.0.113.2',443))
  with pytest.raises(PermissionError):os.system('echo MUST_NOT_RUN')
  with pytest.raises(PermissionError):ctypes.WinDLL('wininet')
 def test_pinned_ffmpeg_and_ffprobe_run_without_network(tmp_path):
@@ -83,12 +90,12 @@ def test_native_file_handle_is_limited_to_synthetic_root(tmp_path):
 
 def test_native_process_and_network_symbols_are_not_available():
  kernel=ctypes.WinDLL('kernel32',use_last_error=True)
- with pytest.raises(PermissionError):kernel.CreateProcessW
+ with pytest.raises(PermissionError):_unavailable = kernel.CreateProcessW
  with pytest.raises(PermissionError):ctypes.WinDLL('wininet')
  with pytest.raises(PermissionError):kernel.CloseHandle(1234567)
 
 def test_dpapi_can_only_decrypt_this_process_minted_synthetic_blob():
- from newsflow.oauth.vault import _DPAPI,VaultError
+ from newsflow.oauth.vault import _DPAPI, VaultError
  cipher=_DPAPI();plain=bytearray(b'SYNTHETIC_GUARD_ONLY');entropy=bytearray(b'SYNTHETIC_ENTROPY')
  encrypted=cipher.protect(plain,entropy)
  assert cipher.unprotect(encrypted,entropy)==plain
@@ -139,5 +146,5 @@ def test_sqlite_uri_roundtrip_stays_synthetic_and_attach_outside_is_denied(tmp_p
 
 @pytest.mark.parametrize('name', [r'C:\Program Files\Google\Chrome\Application\chrome.exe', r'C:\unapproved\playwright\node.exe'])
 def test_browser_and_driver_are_still_not_approved_executables(tmp_path,name):
- with pytest.raises(PermissionError,match='unapproved-executable'):subprocess.run([name,'--version'],cwd=tmp_path,env={})
+ with pytest.raises(PermissionError,match='unapproved-executable'):subprocess.run([name,'--version'],cwd=tmp_path,env={}, check=False)
  assert {p.stem.lower() for p in g.PINNED}=={'ffmpeg','ffprobe'}

@@ -1,18 +1,17 @@
 """Per-video categories survive review/restart and reach the official upload payload; Fake only."""
 
 import json
+from pathlib import Path
 
 import pytest
-from sqlalchemy import select, text, inspect
 from alembic import command
 from alembic.config import Config
-from pathlib import Path
-import newsflow.db.session as db_session
-from newsflow.db.models import Base
+from sqlalchemy import inspect, select, text
 from test_unified_publishing import arguments, environment, instagram_environment, save  # noqa: F401
 from test_youtube_upload import CHANNEL, bundle, media, payload, successful_transport  # noqa: F401
 
-from newsflow.db.models import PublishDraft, PublishEvidence
+import newsflow.db.session as db_session
+from newsflow.db.models import Base, PublishDraft, PublishEvidence
 from newsflow.db.session import migrate
 from newsflow.publishing.categories import YOUTUBE_CATEGORIES
 from newsflow.publishing.service import ConflictError, PublishingError

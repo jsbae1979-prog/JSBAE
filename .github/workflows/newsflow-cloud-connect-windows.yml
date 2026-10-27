@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.12', '3.14']
+        python: ['3.14.7']
     env:
       PYTHONUTF8: '1'
       NEWSFLOW_LIVE_TEST: '0'
@@ -50,6 +50,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+      - name: Verify exact approved Python version
+        run: python -c "import sys; assert sys.version_info[:3] == (3, 14, 7), sys.version; print(sys.version)"
       - name: Pinned dependencies and pip check
         run: |
           python -m venv .venv
@@ -110,7 +112,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.12', '3.14']
+        python: ['3.14.7']
     env:
       PYTHONUTF8: '1'
       NEWSFLOW_LIVE_TEST: '0'
@@ -137,6 +139,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+      - name: Verify exact approved Python version
+        run: python -c "import sys; assert sys.version_info[:3] == (3, 14, 7), sys.version; print(sys.version)"
       - name: Pinned dependencies and pip check
         run: |
           python -m venv .venv
@@ -231,7 +235,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.12', '3.14']
+        python: ['3.14.7']
     env:
       PYTHONUTF8: '1'
       NEWSFLOW_LIVE_TEST: '0'
@@ -258,6 +262,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+      - name: Verify exact approved Python version
+        run: python -c "import sys; assert sys.version_info[:3] == (3, 14, 7), sys.version; print(sys.version)"
       - name: Pinned dependencies and pip check
         run: |
           python -m venv .venv
@@ -331,7 +337,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.12', '3.14']
+        python: ['3.14.7']
     env:
       PYTHONUTF8: '1'
       NEWSFLOW_LIVE_TEST: '0'
@@ -358,6 +364,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+      - name: Verify exact approved Python version
+        run: python -c "import sys; assert sys.version_info[:3] == (3, 14, 7), sys.version; print(sys.version)"
       - name: Pinned dependencies and pip check
         run: |
           python -m venv .venv
@@ -416,7 +424,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.12', '3.14']
+        python: ['3.14.7']
     env:
       PYTHONUTF8: '1'
       NEWSFLOW_LIVE_TEST: '0'
@@ -443,6 +451,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
+      - name: Verify exact approved Python version
+        run: python -c "import sys; assert sys.version_info[:3] == (3, 14, 7), sys.version; print(sys.version)"
       - name: Pinned dependencies and pip check
         run: |
           python -m venv .venv

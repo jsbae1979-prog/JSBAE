@@ -7,9 +7,9 @@ from fastapi.responses import FileResponse, HTMLResponse
 from newsflow.character.compose import digest
 from newsflow.character.schema import CharacterError, load_character
 from newsflow.character.service import SAFE_ERRORS
+from newsflow.creation.catalog import API_MODELS, SelectionError, read_defaults, save_defaults
 
 from .routes import go, page
-from newsflow.creation.catalog import read_defaults, save_defaults, API_MODELS, SelectionError
 
 
 def choices(request, reference_asset=''):
@@ -17,9 +17,9 @@ def choices(request, reference_asset=''):
     assets = service.assets()
     if reference_asset and reference_asset not in assets:
         raise HTTPException(422, '저장한 참조 이미지를 확인하세요.')
-    return dict(chosen=read_defaults(request.app.state.sessions, 'character'),
-                script_models=API_MODELS['claude_api'], reference_assets=assets,
-                reference_asset=reference_asset)
+    return {'chosen': read_defaults(request.app.state.sessions, 'character'),
+                'script_models': API_MODELS['claude_api'], 'reference_assets': assets,
+                'reference_asset': reference_asset}
 
 
 router=APIRouter()

@@ -1,11 +1,20 @@
 """Independent image studio; all writes retain the application's CSRF boundary."""
 from typing import Annotated
-from fastapi import APIRouter, Request, Form, File, UploadFile, HTTPException
+
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
-from newsflow.creation.catalog import (IMAGE_MODELS, IMAGE_SIZES, IMAGE_QUALITIES, DEFAULTS,
-    SelectionError, read_defaults, save_defaults)
+
+from newsflow.creation.catalog import (
+    IMAGE_MODELS,
+    IMAGE_QUALITIES,
+    IMAGE_SIZES,
+    SelectionError,
+    read_defaults,
+    save_defaults,
+)
 from newsflow.publishing.service import PublishingError
-from .routes import page, go
+
+from .routes import go, page
 
 router = APIRouter()
 
@@ -13,11 +22,11 @@ router = APIRouter()
 def context(request, identifier=None, error=''):
     service = request.app.state.image_studio
     draft = service.get(identifier) if identifier else None
-    return dict(active='image', image_models=IMAGE_MODELS, image_sizes=IMAGE_SIZES,
-        image_qualities=IMAGE_QUALITIES, selected=read_defaults(service.sessions, 'image'),
-        draft=draft, output=service.output(identifier) if draft else None,
-        drafts=service.recent(), assets=service.assets(), error=error,
-        key_ready=service.generation.keys.status()['configured'])
+    return {'active': 'image', 'image_models': IMAGE_MODELS, 'image_sizes': IMAGE_SIZES,
+        'image_qualities': IMAGE_QUALITIES, 'selected': read_defaults(service.sessions, 'image'),
+        'draft': draft, 'output': service.output(identifier) if draft else None,
+        'drafts': service.recent(), 'assets': service.assets(), 'error': error,
+        'key_ready': service.generation.keys.status()['configured']}
 
 
 @router.get('/image-studio')
@@ -34,7 +43,7 @@ def draft(request: Request, prompt: str = Form(...), model: str = Form(...),
           reference: Annotated[UploadFile | None, File()] = None):
     service = request.app.state.image_studio
     try:
-        identifier = service.create(prompt, dict(provider=provider, model=model, size=size, quality=quality),
+        identifier = service.create(prompt, {'provider': provider, 'model': model, 'size': size, 'quality': quality},
                          reference=reference.file.read(10*1024*1024+1) if reference and reference.filename else b'')
         return go('/image-studio?draft_id=' + str(identifier))
     except (PublishingError, SelectionError, ValueError, OSError) as exc:
@@ -46,7 +55,7 @@ def draft(request: Request, prompt: str = Form(...), model: str = Form(...),
 def defaults(request: Request, model: str = Form(...), size: str = Form(...),
              quality: str = Form(...), provider: str = Form('openai')):
     try:
-        save_defaults(request.app.state.sessions, 'image', dict(provider=provider,model=model,size=size,quality=quality))
+        save_defaults(request.app.state.sessions, 'image', {'provider': provider,'model': model,'size': size,'quality': quality})
     except SelectionError as exc:
         raise HTTPException(422, str(exc)) from None
     return go('/image-studio')
@@ -89,7 +98,7 @@ def reuse(request: Request, identifier: int, reviewed: bool = Form(False), targe
         raise HTTPException(422, '재사용할 제작 모드를 선택하세요.')
     try:
         name = request.app.state.image_studio.export(identifier, reviewed=reviewed)
-    except (PublishingError, SelectionError, ValueError, OSError) as exc:
+    except (PublishingError, SelectionError, ValueError, OSError):
         raise HTTPException(422, '완성 이미지와 내용·사용권 검토를 확인하세요.') from None
     return go('/character?reference_asset=' + name if target == 'character' else '/video?image_asset=' + name)
 
@@ -104,7 +113,7 @@ def feed_batches(request: Request):
 def feed_batch_defaults(request: Request, model: str = Form(...), size: str = Form("1024x1280"),
                         quality: str = Form("medium")):
     try:
-        return request.app.state.top_three_feeds.save_defaults(dict(provider="openai", model=model, size=size, quality=quality))
+        return request.app.state.top_three_feeds.save_defaults({'provider': "openai", 'model': model, 'size': size, 'quality': quality})
     except (PublishingError, SelectionError) as exc:
         raise HTTPException(422, str(exc)) from None
 
@@ -114,7 +123,7 @@ def feed_batch_create(request: Request, analysis_id: int = Form(ge=1), model: st
                       size: str = Form("1024x1280"), quality: str = Form("medium")):
     try:
         service = request.app.state.top_three_feeds
-        identifier = service.create(analysis_id, dict(provider="openai", model=model, size=size, quality=quality))
+        identifier = service.create(analysis_id, {'provider': "openai", 'model': model, 'size': size, 'quality': quality})
         return service.view(identifier)
     except (PublishingError, SelectionError) as exc:
         raise HTTPException(422, str(exc)) from None

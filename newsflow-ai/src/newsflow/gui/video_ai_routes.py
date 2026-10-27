@@ -12,13 +12,14 @@ from sqlalchemy import select
 from starlette.concurrency import run_in_threadpool
 
 from newsflow.autopilot.contracts import AutopilotError
+from newsflow.creation.catalog import SelectionError, news_video_default, save_news_video_default
 from newsflow.db.models import AIVideoPlan, AIVideoScene, AutopilotJob, ContentDraft, VideoAIUsage
 from newsflow.easy_setup import SetupError, preview_preferences
 from newsflow.intelligence.credentials import CredentialError
 from newsflow.video.ai.costs import CURRENCIES
 from newsflow.video.ai.policy import DEFAULT_PROMPT, SCENE_LABEL, STYLE_GUARD, VIDEO_NOTICE
 from newsflow.video.ai.preflight import inspect_setup
-from newsflow.video.ai.production import DEFAULT_MODEL, model_ready, read_contract
+from newsflow.video.ai.production import model_ready, read_contract
 from newsflow.video.ai.service import DISCARD_LABEL, AIVideoError
 from newsflow.video.ai.settings import (
     CANDIDATE_PATHS,
@@ -34,7 +35,6 @@ from newsflow.video.ai.settings import (
 )
 from newsflow.video.production_policy import plan_policy, voice_allowed
 
-from newsflow.creation.catalog import news_video_default, save_news_video_default, SelectionError
 from .production_context import context_for_draft
 from .routes import go, page
 

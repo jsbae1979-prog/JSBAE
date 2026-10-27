@@ -1,5 +1,10 @@
-import socket, subprocess, urllib.request
+import socket
+import subprocess
+import urllib.request
+
 import pytest
+
+
 @pytest.fixture(autouse=True)
 def deny_external(monkeypatch):
  def denied(*a,**k):raise AssertionError("Network/process use forbidden in TOP3 unit tests")

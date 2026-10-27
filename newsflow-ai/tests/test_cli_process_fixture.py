@@ -3,7 +3,6 @@ import io
 import json
 
 import pytest
-
 from cli_process_fixture import FixtureProcess, popen_for_script, script_output
 
 
@@ -39,7 +38,7 @@ def test_delayed_fake_requires_cleanup_and_tracks_termination():
 def test_stub_is_scoped_to_the_expected_argv_and_never_accepts_shell(tmp_path):
     argv = ['synthetic-python', 'fake_cli.py']
     factory = popen_for_script("print('ok')", argv, tmp_path)
-    kwargs = dict(cwd=tmp_path, shell=False, stdin=io.BytesIO(b'{}'), stdout=io.BytesIO())
+    kwargs = {'cwd': tmp_path, 'shell': False, 'stdin': io.BytesIO(b'{}'), 'stdout': io.BytesIO()}
     assert factory(argv, **kwargs).poll() == 0
     with pytest.raises(AssertionError):
         factory(['other-program'], **kwargs)

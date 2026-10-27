@@ -4,7 +4,7 @@ Only pinned Python re-exec through the guarded child bootstrap, and the existing
 PowerShell startup program with identity/validate stdin, can cross this boundary.
 All other interpreters, raw Python entry points, shell and task mutations deny.
 """
-from pathlib import Path
+from pathlib import Path  # noqa: I001 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
 import hashlib, json, os, re, subprocess, sys, threading, uuid
 from contextvars import ContextVar
 
@@ -125,7 +125,7 @@ def sanitized_env(original,mode,c):
         if upper.get(k)!=trusted.get(k):deny('OS-environment-redirection')
     allowed_sentinels={'preview_boundary':{'NEWSFLOW_AI_API_KEY':'synthetic-only-must-be-removed'},'main':{'NEWSFLOW_SECRET_KEY':'SECRET-SENTINEL'}}.get(mode,{})
     for k,v in original.items():
-        if k.upper().endswith(('_KEY','_TOKEN','_PASSWORD','_SECRET')):
+        if k.upper().endswith(('_KEY','_TOKEN','_PASSWORD','_SECRET')):  # noqa: SIM102 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
             if allowed_sentinels.get(k)!=v:deny('credential-environment')
     out=dict(trusted)
     for k in PATH_ENV:

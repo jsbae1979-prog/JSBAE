@@ -38,7 +38,7 @@ from .ai.clips import ClipStore, probe_clip
 from .ai.contracts import ClipInvalidError
 from .elevenlabs_tts import PaymentRequiredError, SubscriptionError
 from .engine import FFmpegAdapter, RenderEngine, RenderError, RenderPlan, ScenePlan, load_image
-from .news_images import NewsImages, NewsImageError
+from .news_images import NewsImageError, NewsImages
 from .tts import SpeechSettings, TTSError, TTSProvider
 from .voice_engines import provider_for, provider_name
 

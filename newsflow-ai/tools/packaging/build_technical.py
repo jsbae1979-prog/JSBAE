@@ -1,6 +1,13 @@
 """Build an internal synthetic-only onedir bundle; does not install or launch."""
+import argparse
+import hashlib
+import json
+import os
+import subprocess
+import sys
 from pathlib import Path
-import argparse,hashlib,json,os,subprocess,sys
+
+
 def main():
     if os.name!="nt" or sys.version_info[:3]!=(3,14,7):
         raise SystemExit("Windows Python 3.14.7 required")

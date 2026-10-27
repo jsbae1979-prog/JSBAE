@@ -3,8 +3,8 @@
 Unsupported image/character options are rejection cases, not newly supported models.
 These tests do not certify any provider account, model availability or invoice.
 """
-from copy import deepcopy
 import json
+from copy import deepcopy
 from types import SimpleNamespace
 
 import pytest
@@ -24,6 +24,8 @@ from newsflow.intelligence.api_settings import FakeAPIBudgetService
 from newsflow.intelligence.credentials import AnthropicKeyStore, FakeCipher
 from newsflow.publishing.image_generation import (
     MODEL as IMAGE_MODEL,
+)
+from newsflow.publishing.image_generation import (
     ImageGenerationService,
     OpenAIImageAdapter,
 )

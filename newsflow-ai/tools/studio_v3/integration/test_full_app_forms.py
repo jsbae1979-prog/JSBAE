@@ -1,9 +1,11 @@
 """Approved disposable Windows Actions procedure. Never run against a PC profile."""
 import os
+from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace as NS
-from io import BytesIO
+
 import pytest
+
 
 @pytest.fixture
 def client(tmp_path,monkeypatch):
@@ -18,7 +20,9 @@ def client(tmp_path,monkeypatch):
             monkeypatch.delenv(key,raising=False)
     for key in ("LOCALAPPDATA","APPDATA"):
         folder=root/key;folder.mkdir(exist_ok=True);monkeypatch.setenv(key,str(folder))
-    import socket,subprocess,urllib.request
+    import socket
+    import subprocess
+    import urllib.request
     def denied(*args,**kwargs):raise AssertionError("Actual network/process access forbidden in synthetic app integration")
     # CPython on Windows implements its event-loop self-pipe with a socketpair
     # connected to its own ephemeral listener. No general loopback exception.
@@ -41,8 +45,8 @@ def client(tmp_path,monkeypatch):
     from newsflow.config import Settings
     from newsflow.main import create_app
     from newsflow.news.rss_adapter import FakeRSSAdapter
-    from newsflow.scheduler.service import Scheduler
     from newsflow.publishing.calendar import PublishingCalendar
+    from newsflow.scheduler.service import Scheduler
     monkeypatch.setattr(Scheduler,"start",lambda self:None)
     monkeypatch.setattr(PublishingCalendar,"start",lambda self:None)
     from fastapi.testclient import TestClient
@@ -57,7 +61,7 @@ def token(client):
     return response.json()['csrfToken']
 
 def test_all_react_shells_and_read_models(client):
-    c,app=client
+    c,_app=client
     for module in ['dashboard','create','news','shorts','characters','images','automation','library','publishing','analytics','settings','onboarding']:
         response=c.get('/studio/'+module)
         assert response.status_code==200 and '<div id="root">' in response.text
@@ -69,7 +73,7 @@ def test_all_react_shells_and_read_models(client):
     assert c.get('/api/studio/modules/not-supported').status_code==422
 
 def test_original_forms_csrf_origin_and_local_save(client):
-    c,app=client
+    c,_app=client
     csrf=token(c)
     payload={'prompt':'합성 이미지 지시문','model':'gpt-image-2.5-flare-2026-09-08','size':'1024x1024','quality':'low','provider':'openai'}
     assert c.post('/image-studio/drafts',data=payload).status_code==403
@@ -109,7 +113,7 @@ def test_fake_generation_once_verified_image_and_reference_boundary(client):
     assert c.get('/api/studio/modules/images').json()['collections']['drafts'][0]['mediaUrl'] is None
 
 def test_paused_schedule_and_local_post_without_account(client):
-    c,app=client
+    c,_app=client
     csrf=token(c)
     response=c.post('/schedules',data={'csrf_token':csrf,'name':'합성 예약','kind':'daily','local_time':'09:00','source':'sample','duration':'30','platform':'youtube','voice':'offline-silence'})
     assert response.status_code==303,response.text
@@ -120,7 +124,8 @@ def test_paused_schedule_and_local_post_without_account(client):
 def test_script_edit_keeps_revision_and_review_boundary(client):
     c,app=client
     import json
-    from newsflow.db.models import IntelligenceRun,ContentDraft
+
+    from newsflow.db.models import ContentDraft, IntelligenceRun
     content={"title":"합성 편집","hook":"합성 뉴스의 변화를 살펴봅니다.","summary":"실제 사건을 주장하지 않는 합성 자료입니다.","scenes":[{"seconds":10,"narration":"합성 첫 장면입니다.","caption":"합성 첫 장면","material":"기본 카드"},{"seconds":10,"narration":"합성 둘째 장면입니다.","caption":"합성 둘째 장면","material":"기본 카드"},{"seconds":10,"narration":"합성 셋째 장면입니다.","caption":"합성 셋째 장면","material":"기본 카드"}],"closing":"합성 자료 검토를 마칩니다."}
     with app.state.sessions.begin() as session:
         run=IntelligenceRun(kind="script",status="success",provider="offline",options={},evidence={},result=content,message="")

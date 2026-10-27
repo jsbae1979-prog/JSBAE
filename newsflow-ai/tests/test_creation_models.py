@@ -1,19 +1,30 @@
 """Step 13K synthetic mode contracts. No provider traffic, live keys or user media."""
+import json
 from copy import deepcopy
 from io import BytesIO
 from types import SimpleNamespace
-import json
+
 import pytest
-from PIL import Image
 from conftest import csrf
-from test_character_shorts import Video, Writer, png
-from newsflow.creation.catalog import (DEFAULTS, IMAGE_MODELS, IMAGE_SIZES, IMAGE_QUALITIES,
-    SelectionError, validate, read_defaults, save_defaults, snapshot, check_snapshot)
-from newsflow.character.service import CharacterService
+from PIL import Image
+from test_character_shorts import Video, png
+
 from newsflow.character.schema import CharacterError
+from newsflow.character.service import CharacterService
+from newsflow.creation.catalog import (
+    DEFAULTS,
+    IMAGE_MODELS,
+    IMAGE_QUALITIES,
+    IMAGE_SIZES,
+    SelectionError,
+    check_snapshot,
+    read_defaults,
+    save_defaults,
+    validate,
+)
 from newsflow.db.models import AppSetting
-from newsflow.publishing.service import PublishingError
 from newsflow.publishing.image_generation import ImageGenerationError, OpenAIImageAdapter
+from newsflow.publishing.service import PublishingError
 
 
 @pytest.fixture(autouse=True)
@@ -65,7 +76,7 @@ def test_mode_defaults_do_not_write_other_mode_or_news(app,mode):
 @pytest.mark.parametrize('size',IMAGE_SIZES)
 @pytest.mark.parametrize('quality',IMAGE_QUALITIES)
 def test_image_contract_variants_frozen_and_wire_options(service,model,size,quality):
-    chosen=dict(provider='openai',model=model,size=size,quality=quality)
+    chosen={'provider': 'openai','model': model,'size': size,'quality': quality}
     identifier=service.create('합성 그림 '+model+size+quality,chosen)
     save_defaults(service.sessions,'image',DEFAULTS['image'])
     assert check_snapshot(service.get(identifier).options['selection'],'image')==chosen
@@ -163,7 +174,7 @@ def test_character_selection_frozen_and_injected_video_preserved(app,tmp_path):
 def test_ui_local_save_no_provider_call_and_csrf(client,service):
     token=csrf(client)
     assert client.get('/image-studio').status_code==200
-    form=dict(prompt='GUI 합성 이미지',model=IMAGE_MODELS[0],size='1024x1024',quality='low')
+    form={'prompt': 'GUI 합성 이미지','model': IMAGE_MODELS[0],'size': '1024x1024','quality': 'low'}
     assert client.post('/image-studio/drafts',data=form).status_code==403
     response=client.post('/image-studio/drafts',data={**form,'csrf_token':token})
     assert response.status_code==200
@@ -177,8 +188,8 @@ def test_character_ui_choice_and_saved_reference(client,service):
     name=service.asset_bytes(png())
     response=client.get('/character?reference_asset='+name)
     assert response.status_code==200 and 'claude-opus-4-6' in response.text
-    response=client.post('/character',data=dict(csrf_token=token,topic='GUI 캐릭터',episode_limit='5',day_limit='20',
-        reference_asset=name,script_model='claude-opus-4-6',video_model=DEFAULTS['character']['video_model']))
+    response=client.post('/character',data={'csrf_token': token,'topic': 'GUI 캐릭터','episode_limit': '5','day_limit': '20',
+        'reference_asset': name,'script_model': 'claude-opus-4-6','video_model': DEFAULTS['character']['video_model']})
     assert response.status_code==200 and 'claude-opus-4-6' in response.text
     assert service.generation.adapter.calls==[]
 
@@ -215,7 +226,7 @@ def test_character_new_key_source_and_legacy_source_do_not_mix(app,tmp_path):
 
 @pytest.mark.parametrize('model',IMAGE_MODELS)
 def test_adapter_preserves_existing_endpoint_with_chosen_options(model):
-    from test_image_generation import Wire, KEY
+    from test_image_generation import KEY, Wire
     wire=Wire()
     chosen={**DEFAULTS['image'],'model':model,'size':'1024x1024','quality':'high'}
     OpenAIImageAdapter(wire).generate('합성 wire',KEY,selection=chosen)

@@ -148,6 +148,7 @@ def test_runtime_logging_is_separate(tmp_path):
 def _copy_contract_engine(root, revision="0015"):
     from alembic import command
     from alembic.config import Config
+
     from newsflow.db import session as db_session
 
     engine = db_session.make_engine(root / "newsflow.db")
@@ -431,7 +432,9 @@ def test_migration_closes_sqlite_handles(tmp_path, monkeypatch):
 
 def test_windows_http_loop_is_local_and_supports_server_contract():
     import asyncio
+
     import uvicorn
+
     from newsflow.runtime import windows_server_loop
     original = asyncio.new_event_loop
     config = uvicorn.Config("unused:app", loop="newsflow.runtime:windows_server_loop")

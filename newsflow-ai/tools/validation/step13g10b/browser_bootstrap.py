@@ -1,17 +1,17 @@
-import sys,os,json,pathlib,time
+import sys,os,json,pathlib,time  # noqa: I001 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
 R=pathlib.Path(__file__).parent
 assert sys.version_info[:3]==(3,14,7)
 deadline=time.monotonic()+10
 while not (R/'job-ready.signal').exists():
  if time.monotonic()>deadline:raise SystemExit('owned process Job not assigned')
  time.sleep(.01)
-import step13_guard
-import click._winconsole,filelock,colorama.win32
+import step13_guard  # noqa: I001 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
+import click._winconsole,filelock,colorama.win32  # noqa: F401 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
 step13_guard.install()
-import browser_boundary
+import browser_boundary  # noqa: I001 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
 browser_boundary.install_playwright()
 if sys.argv[1]=='minimal':
- from http.server import HTTPServer,BaseHTTPRequestHandler
+ from http.server import HTTPServer,BaseHTTPRequestHandler  # noqa: I001 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
  import threading
  class Handler(BaseHTTPRequestHandler):
   def log_message(self,*args):pass

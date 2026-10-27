@@ -4,10 +4,10 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 assert os.name == "nt" and sys.version_info[:3] == (3, 14, 7)
 sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
@@ -80,7 +80,7 @@ for relative, expected in manifest["files"].items():
     raw = subprocess.run(
         ["git", "-C", str(baseline), "show", "--no-textconv", "--no-ext-diff",
          manifest["commit"] + ":" + relative],
-        check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        check=True, capture_output=True,
     ).stdout
     assert hashlib.sha256(raw).hexdigest() == expected, "Pinned baseline blob mismatch"
     dest = root / "baseline-code/files" / relative
@@ -96,10 +96,12 @@ for relative, expected in manifest["files"].items():
 }), encoding="utf-8")
 
 import tzdata
+
 vendor = root / "fixture-vendor"
 shutil.copytree(Path(tzdata.__file__).parent, vendor / "tzdata", ignore=ignore)
 
 import playwright
+
 node = Path(playwright.__file__).parent / "driver/node.exe"
 cli = node.parent / "package/cli.js"
 chrome = Path(os.environ["NEWSFLOW_TEST_BROWSER_EXECUTABLE"]).resolve()
@@ -131,6 +133,7 @@ subprocess.run([sys.executable, "-I", "-S", "-B", str(root / "prepare_native_con
 # Helpers are setup code only; every test child is launched through the reviewed Job+Guard.
 sys.path.insert(0, str(source))
 from summarize import record_phase, write_summary
+
 summaries = []
 write_summary(root, definitions, summaries)
 for definition in definitions:

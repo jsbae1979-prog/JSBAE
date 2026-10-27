@@ -7,7 +7,7 @@ import pytest
 from pydantic import SecretStr
 
 from newsflow.oauth.tiktok_callback import TikTokCallback
-from newsflow.oauth.tiktok_protocol import DesktopConfig, SCOPES, TikTokError, challenge
+from newsflow.oauth.tiktok_protocol import SCOPES, DesktopConfig, TikTokError, challenge
 
 CONFIG = DesktopConfig('nf-synthetic-client', SecretStr('nf-synthetic-private-secret'))
 

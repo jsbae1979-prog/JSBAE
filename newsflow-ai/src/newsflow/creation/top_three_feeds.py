@@ -3,13 +3,12 @@
 Reuse stored selection, one-shot ImageGenerationService and IntelligenceRun JSON.
 Unquoted production generation is fail-closed. Test simulation is constructor-only.
 """
+import json
+import re
 from copy import deepcopy
-from datetime import UTC, datetime
 from hashlib import sha256
 from io import BytesIO
-import json
 from pathlib import Path
-import re
 from urllib.parse import urlsplit
 
 from filelock import FileLock, Timeout
@@ -17,11 +16,12 @@ from PIL import Image, ImageDraw, ImageOps
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from newsflow.db.models import AppSetting, IntelligenceRun, ImagePost
+from newsflow.db.models import AppSetting, ImagePost, IntelligenceRun
 from newsflow.publishing.image_selection import selection
 from newsflow.publishing.service import PublishingError
 from newsflow.video.news_images import NewsImages
-from .catalog import snapshot, check_snapshot, validate, DEFAULTS
+
+from .catalog import DEFAULTS, check_snapshot, snapshot, validate
 
 KIND = "feed_top3_batch"
 DISCLOSURE = "AI 생성 이미지 · 실제 현장 사진 아님"
@@ -48,7 +48,7 @@ def excerpt(value, limit):
 def content_for(item):
     title, body = excerpt(item["title"], 60), excerpt(item["body"], 180)
     hashtags = f"#뉴스 #뉴스요약 #TOP{item['rank']}"
-    return dict(title=title, body=body, hashtags=hashtags)
+    return {"title": title, "body": body, "hashtags": hashtags}
 
 
 def prompt_for(source, content, batch_id, attempt):
@@ -130,51 +130,50 @@ class TopThreeFeeds:
             raise PublishingError("피드는 4:5·1:1·2:3 생성 크기를 선택하세요. 최종 출력은 1080×1350입니다.")
         claim = "top3-feed:" + str(analysis_id)
         try:
-            with self.lock:
-                with self.sessions.begin() as s:
-                    prior = s.get(AppSetting, claim)
-                    if prior:
-                        return int(prior.value)
-                    group = selection(s, analysis_id)
-                    if len(group["items"]) != 3 or group["run"].evidence["curation_contract"].get("top_k") != 3:
-                        raise PublishingError("완료된 TOP 3 분석이 필요합니다.")
-                    sources, items, urls, titles, event_claims = [], [], set(), set(), set()
-                    for item in group["items"]:
-                        refs = [{"url": r["url"], "publisher": r.get("publisher") or "원문"}
-                                for r in item["references"]]
-                        canonical = set()
-                        for ref in refs:
-                            u = urlsplit(ref["url"])
-                            if u.scheme not in {"http", "https"} or not u.hostname or u.username or u.password:
-                                raise PublishingError("공개 원문 출처 주소를 확인하세요.")
-                            canonical.add((u.hostname.lower(), u.path.rstrip("/")))
-                        # Shared sources/article IDs or duplicate normalized headline are never auto-rendered twice.
-                        title_key = re.sub(r"[\W_]+", "", item["title"]).casefold()
-                        if urls & canonical or title_key in titles:
-                            raise PublishingError("동일 사건으로 보이는 후보가 중복됐습니다. TOP 3 선정을 검토하세요.")
-                        urls.update(canonical); titles.add(title_key)
-                        keys = {"top3-event:" + digest(["headline", title_key])[:38]}
-                        keys.update("top3-event:" + digest(["source", *u])[:38] for u in canonical)
-                        if any(s.get(AppSetting, key) for key in keys):
-                            raise PublishingError("이미 TOP 3 제작 작업에 포함된 사건입니다. 기존 결과에서 개별 재생성을 검토하세요.")
-                        event_claims.update(keys)
-                        src = {"rank": item["rank"], "article_id": item["article_id"],
-                               "article_ids": item["article_ids"], "title": item["title"],
-                               "body": item["body"], "references": refs,
-                               "draft_id": item["selection"]["draft_id"], "origin": item["origin"]}
-                        sources.append(src)
-                        items.append({"rank": src["rank"], "content": content_for(item), "attempt": 1,
-                                      "status": "pending", "generation_id": None, "history": []})
-                    evidence = {"analysis_id": group["run"].id, "sources": sources}
-                    row = IntelligenceRun(kind=KIND, status="saved", provider="openai",
-                        options={"selection": frozen, "source_hash": digest(evidence),
-                                 "simulation": self.simulation, "max_generations": 3}, evidence=evidence,
-                        result={"revision": 1, "paused": False, "items": items},
-                        message="TOP 3 고정 · 이미지 3개 · 게시 승인 별도")
-                    s.add(row); s.flush(); identifier = row.id
-                    s.add(AppSetting(key=claim, value=str(identifier)))
-                    for key in event_claims: s.add(AppSetting(key=key, value=str(identifier)))
-                    return identifier
+            with self.lock, self.sessions.begin() as s:
+                prior = s.get(AppSetting, claim)
+                if prior:
+                    return int(prior.value)
+                group = selection(s, analysis_id)
+                if len(group["items"]) != 3 or group["run"].evidence["curation_contract"].get("top_k") != 3:
+                    raise PublishingError("완료된 TOP 3 분석이 필요합니다.")
+                sources, items, urls, titles, event_claims = [], [], set(), set(), set()
+                for item in group["items"]:
+                    refs = [{"url": r["url"], "publisher": r.get("publisher") or "원문"}
+                            for r in item["references"]]
+                    canonical = set()
+                    for ref in refs:
+                        u = urlsplit(ref["url"])
+                        if u.scheme not in {"http", "https"} or not u.hostname or u.username or u.password:
+                            raise PublishingError("공개 원문 출처 주소를 확인하세요.")
+                        canonical.add((u.hostname.lower(), u.path.rstrip("/")))
+                    # Shared sources/article IDs or duplicate normalized headline are never auto-rendered twice.
+                    title_key = re.sub(r"[\W_]+", "", item["title"]).casefold()
+                    if urls & canonical or title_key in titles:
+                        raise PublishingError("동일 사건으로 보이는 후보가 중복됐습니다. TOP 3 선정을 검토하세요.")
+                    urls.update(canonical); titles.add(title_key)
+                    keys = {"top3-event:" + digest(["headline", title_key])[:38]}
+                    keys.update("top3-event:" + digest(["source", *u])[:38] for u in canonical)
+                    if any(s.get(AppSetting, key) for key in keys):
+                        raise PublishingError("이미 TOP 3 제작 작업에 포함된 사건입니다. 기존 결과에서 개별 재생성을 검토하세요.")
+                    event_claims.update(keys)
+                    src = {"rank": item["rank"], "article_id": item["article_id"],
+                           "article_ids": item["article_ids"], "title": item["title"],
+                           "body": item["body"], "references": refs,
+                           "draft_id": item["selection"]["draft_id"], "origin": item["origin"]}
+                    sources.append(src)
+                    items.append({"rank": src["rank"], "content": content_for(item), "attempt": 1,
+                                  "status": "pending", "generation_id": None, "history": []})
+                evidence = {"analysis_id": group["run"].id, "sources": sources}
+                row = IntelligenceRun(kind=KIND, status="saved", provider="openai",
+                    options={"selection": frozen, "source_hash": digest(evidence),
+                             "simulation": self.simulation, "max_generations": 3}, evidence=evidence,
+                    result={"revision": 1, "paused": False, "items": items},
+                    message="TOP 3 고정 · 이미지 3개 · 게시 승인 별도")
+                s.add(row); s.flush(); identifier = row.id
+                s.add(AppSetting(key=claim, value=str(identifier)))
+                for key in event_claims: s.add(AppSetting(key=key, value=str(identifier)))
+                return identifier
         except (Timeout, IntegrityError):
             raise PublishingError("다른 화면에서 작업을 저장 중입니다. 저장된 TOP 3 작업을 확인하세요.") from None
 
@@ -265,7 +264,7 @@ class TopThreeFeeds:
                         item["rank"], "full_card", context, prompt,
                         draft_id=source["draft_id"], execution=row.options["selection"])
                     self._accept(row, item, output_id)
-                except Exception:
+                except Exception:  # noqa: BLE001 -- any uncertain generation/save outcome stays unknown; never auto-replay.
                     item.update(status="unknown", message="생성 또는 저장 결과 불명 · 재전송 금지")
                 result["revision"] += 1; self._save(identifier, result)
         except Timeout:
@@ -297,7 +296,7 @@ class TopThreeFeeds:
                         for text in (title, body, hashtags):
                             if re.search(r"\bsk-[A-Za-z0-9_-]{16,}", text) or any(ord(c)<32 and c not in "\n\t\r" for c in text):
                                 raise PublishingError("문구의 비밀정보·제어문자를 제거하세요.")
-                        item["content"] = dict(title=title.strip(), body=body.strip(), hashtags=hashtags.strip())
+                        item["content"] = {"title": title.strip(), "body": body.strip(), "hashtags": hashtags.strip()}
                     else:
                         self._authorize(row, consent, reviewed)
                         if item["status"] == "pending": raise PublishingError("이미 생성 대기 중인 항목입니다.")

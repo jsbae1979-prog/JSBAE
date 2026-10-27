@@ -1,5 +1,5 @@
 """Step13G.2 test-only, fail-closed boundary. Never imported by the product."""
-import os,sys,json,pathlib,hashlib,ipaddress,re,sqlite3,threading,ctypes,subprocess
+import os,sys,json,pathlib,hashlib,ipaddress,re,sqlite3,threading,ctypes,subprocess  # noqa: I001 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
 from urllib.parse import urlsplit,unquote,parse_qsl
 ROOT=pathlib.Path(__file__).parent.resolve()
 CONFIG=json.loads((ROOT/'guard-config-private.json').read_text(encoding='utf-8'))
@@ -197,7 +197,7 @@ def _native_handle_path(handle):
  count=_NATIVE[('kernel32','GetFinalPathNameByHandleW')](handle,buffer,len(buffer),0)
  if not 0<count<len(buffer):deny('native-file-path')
  text=buffer.value
- if text.startswith('\\\\?\\'):text=text[4:]
+ if text.startswith('\\\\?\\'):text=text[4:]  # noqa: FURB188 -- audited Guard preload/order or bounded execution; keep runtime unchanged.
  p=path(text)
  if not inside(p,ROOT):deny('native-file-outside-synthetic-root')
  return p

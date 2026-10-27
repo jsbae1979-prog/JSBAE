@@ -3,12 +3,17 @@ import json
 import os
 from pathlib import Path
 from urllib.parse import urlsplit
+
 import pytest
 from playwright.sync_api import expect
 from test_cloud_workspace_flow import local_server
+from test_creation_models import no_network, service
 from test_usability_browser import browser, studio_ui
-from test_creation_models import service, no_network
+
 from newsflow.creation.catalog import IMAGE_MODELS
+
+# Explicit pytest fixture exports; do not delete these registration imports.
+__all__ = ["browser", "no_network", "service", "studio_ui"]
 
 
 @pytest.mark.parametrize('width',[1440,980,390])
@@ -56,10 +61,11 @@ def test_three_creation_modes_local_draft_to_fake_image_reuse(app,studio_ui,serv
 
 
 def test_news_default_button_saves_only_future_model(studio_ui,browser):
+    from sqlalchemy import func, select
+
     from newsflow.creation.catalog import news_video_default, read_defaults
-    from newsflow.video.ai.settings import save_model
     from newsflow.db.models import AIVideoPlan
-    from sqlalchemy import select,func
+    from newsflow.video.ai.settings import save_model
     app=studio_ui
     model='kling-video/v3.0-turbo/text-to-video'
     save_model(app.state.sessions,path=model,label='Kling synthetic contract',price_per_second='',

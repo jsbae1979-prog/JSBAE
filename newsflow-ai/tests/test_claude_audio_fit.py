@@ -6,9 +6,8 @@ from pathlib import Path
 from threading import Event, Timer
 from types import SimpleNamespace
 
-from cli_process_fixture import popen_for_script
-
 import pytest
+from cli_process_fixture import popen_for_script
 from conftest import csrf
 from sqlalchemy import select
 

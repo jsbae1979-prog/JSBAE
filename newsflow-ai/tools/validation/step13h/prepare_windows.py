@@ -1,6 +1,12 @@
 """Configure a disposable runner profile; no service credentials, no production profile."""
+import hashlib
+import json
+import os
+import shutil
+import subprocess
+import sys
 from pathlib import Path
-import hashlib,json,os,shutil,subprocess,sys
+
 assert sys.version_info[:3] == (3,14,7)
 source=Path(__file__).parent;project=source.parents[2]
 root=Path(sys.argv[1]).resolve();assert not root.exists();assert not root.is_relative_to(project)
@@ -10,6 +16,7 @@ for path in source.iterdir():
 for name in ('home/AppData/Local','home/AppData/Roaming','temp','artifacts'):(root/name).mkdir(parents=True,exist_ok=True)
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 import playwright
+
 node=Path(playwright.__file__).parent/'driver/node.exe';cli=node.parent/'package/cli.js'
 chrome=Path(os.environ['NEWSFLOW_TEST_BROWSER_EXECUTABLE']).resolve()
 ffmpeg=Path(os.environ['NEWSFLOW_FFMPEG']).resolve();ffprobe=Path(os.environ['NEWSFLOW_FFPROBE']).resolve()

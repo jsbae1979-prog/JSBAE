@@ -1,8 +1,15 @@
 """Synthetic profile/worker ownership only; no product policy bypass."""
-import os,time,threading,inspect,json,hashlib,sys
+import hashlib
+import json
+import os
+import sys
+import threading
+import time
 from pathlib import Path
+
 import pytest
 import step13_guard as guard
+
 RESOURCES=[]
 @pytest.fixture(autouse=True)
 def step13_isolation(monkeypatch,tmp_path,request):
@@ -18,8 +25,8 @@ def step13_isolation(monkeypatch,tmp_path,request):
  if isinstance(evidence,Path) and evidence.is_absolute() and evidence.is_relative_to(guard.PROJECT/'validation-output'):
   monkeypatch.setattr(request.module,'EVIDENCE',env_root/'evidence')
  from newsflow import main
- from newsflow.scheduler.service import Scheduler
  from newsflow.publishing.calendar import PublishingCalendar
+ from newsflow.scheduler.service import Scheduler
  from newsflow.video.ai.service import AIVideoCoordinator
  apps=[];baseline=set(threading.enumerate())
  original_factory=main.FastAPI

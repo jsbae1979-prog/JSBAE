@@ -1,8 +1,20 @@
 """Current-PC synthetic demo supervisor. No product policy or PowerShell changes."""
-import argparse,sys,os,json,hashlib,subprocess,ctypes,signal,time,socket,uuid,msvcrt
-from pathlib import Path
+import argparse
+import ctypes
+import hashlib
+import json
+import msvcrt
+import os
+import signal
+import socket
+import subprocess
+import sys
+import time
+import uuid
 from ctypes import wintypes as W
 from datetime import datetime
+from pathlib import Path
+
 assert sys.version_info[:3]==(3,14,7) and os.name=='nt'
 K=ctypes.WinDLL('kernel32',use_last_error=True)
 class IO(ctypes.Structure):_fields_=[(x,ctypes.c_ulonglong) for x in ('ReadOperationCount','WriteOperationCount','OtherOperationCount','ReadTransferCount','WriteTransferCount','OtherTransferCount')]
