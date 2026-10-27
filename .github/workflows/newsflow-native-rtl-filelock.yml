@@ -1,0 +1,33 @@
+name: NewsFlow real Rtl and unchanged FileLock verification
+on:
+  push:
+    branches: [codex/newsflow-core-studios-rebuild-20261027]
+    paths:
+      - 'newsflow-ai/tools/native_rtl_filelock/**'
+      - '.github/workflows/newsflow-native-rtl-filelock.yml'
+permissions:
+  contents: read
+jobs:
+  real-rtl-and-filelock:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Install unchanged pinned upstream package in CI
+        run: python -m pip install --disable-pip-version-check --no-deps filelock==3.32.7
+      - name: Real Rtl ownership and actual FileLock tests (no app)
+        run: python -I -B newsflow-ai/tools/native_rtl_filelock/run_real_filelock.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: real-rtl-filelock-evidence
+          path: ${{ runner.temp }}/newsflow-real-filelock-*/real-filelock-evidence.json
+          if-no-files-found: error

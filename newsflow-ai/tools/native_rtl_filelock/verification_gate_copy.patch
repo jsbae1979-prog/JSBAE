@@ -1,0 +1,76 @@
+--- verification_gate.py
++++ verification_gate_copy.py
+@@ -71,6 +71,10 @@
+         self.native_hashes = {}
+         self.denials = {}
+         self.events = []
++        self._rtl_owner = None
++        self._rtl_bound = False
++        self._owned_memory_read = None
++        self._reader_address = None
+     def deny(self, reason):
+         self.denials[reason] = self.denials.get(reason, 0) + 1
+         raise Denied(reason)
+@@ -110,7 +114,8 @@
+     def _register_function(self, name, function):
+         if not getattr(self.binding, "active", False):
+             self.deny("function-registration-outside-binding")
+-        if name not in set().union(*SYMBOLS.values()):
++        permitted = {"RtlDosPathNameToNtPathName_U_WithStatus", "RtlFreeUnicodeString"} if getattr(self.binding,"rtl",False) else set().union(*SYMBOLS.values())
++        if name not in permitted:
+             self.deny("unapproved-function-registration")
+         # Only the fixed ctypes cast used to record a just-bound function address.
+         # No DLL routine is executed in this registration probe.
+@@ -149,14 +154,17 @@
+             library = getattr(args[0], "_name", "")
+             if (not getattr(self.binding, "active", False) or
+                 dos_path(str(library)) != ntpath.join(self.system32, ntpath.basename(str(library))) or
+-                name not in SYMBOLS.get(ntpath.basename(str(library)).lower(), ())):
++                name not in ({"RtlDosPathNameToNtPathName_U_WithStatus", "RtlFreeUnicodeString"} if getattr(self.binding,"rtl",False) else SYMBOLS.get(ntpath.basename(str(library)).lower(), ()))):
+                 self.deny("unapproved-native-symbol")
+         if event == "ctypes.call_function":
+             registered_call = getattr(self.binding, "call", None)
+             binding_probe = getattr(self.binding, "active", False) and getattr(self.binding, "address_probe", False)
+-            if not binding_probe and (registered_call is None or args[0] != registered_call[0] or tuple(args[1]) != registered_call[1]):
++            owned_read = self._reader_address is not None and args[0]==self._reader_address and (threading.get_ident(),)+tuple(args[1])==self._owned_memory_read
++            if not binding_probe and not owned_read and (registered_call is None or args[0] != registered_call[0] or tuple(args[1]) != registered_call[1]):
+                 self.deny("unregistered-native-call-context")
+         if event in {"ctypes.string_at", "ctypes.wstring_at", "ctypes.memoryview_at"}:
++            if event=="ctypes.string_at" and (threading.get_ident(),)+tuple(args)==self._owned_memory_read:
++                return
+             self.deny("arbitrary-native-memory-or-call")
+         if event in {"sqlite3.enable_load_extension", "sqlite3.load_extension"}:
+             self.deny("SQLite-extension-denied")
+@@ -182,3 +190,32 @@
+         path = Path(self.system32) / name
+         self.native_hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+         return str(path)
++
++    def register_rtl_owner(self, owner):
++        module=sys.modules.get("rtl_boundary")
++        if module is None or type(owner) is not module.RtlBoundary:
++            self.deny("unreviewed-RTL-owner")
++        if not self.installed or self._rtl_owner is not None:
++            self.deny("RTL-owner-registration")
++        self._rtl_owner=owner
++    @contextlib.contextmanager
++    def _rtl_binding(self, owner):
++        if owner is not self._rtl_owner or not self.bound or self._rtl_bound or getattr(self.binding,"active",False):
++            self.deny("RTL-fixed-binding-denied")
++        self._rtl_bound=True
++        self.binding.active=True;self.binding.rtl=True
++        try:yield
++        finally:self.binding.active=False;self.binding.rtl=False
++    def _read_rtl_owned(self, owner, pointer, size):
++        if owner is not self._rtl_owner or not owner.owns_memory_read(pointer,size) or self._owned_memory_read is not None:
++            self.deny("unowned-RTL-memory-read")
++        self._owned_memory_read=(threading.get_ident(),pointer,size)
++        try:return ctypes.string_at(pointer,size)
++        finally:self._owned_memory_read=None
++
++    def _bind_owned_reader(self, owner):
++        if owner is not self._rtl_owner or not getattr(self.binding,"rtl",False) or self._reader_address is not None:
++            self.deny("owned-reader-binding-denied")
++        self.binding.address_probe=True
++        try:self._reader_address=ctypes.cast(ctypes._string_at,ctypes.c_void_p).value
++        finally:self.binding.address_probe=False

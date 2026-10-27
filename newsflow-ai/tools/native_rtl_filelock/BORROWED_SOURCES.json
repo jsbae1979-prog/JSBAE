@@ -1,0 +1,10 @@
+{
+  "native_guard_copy/guard_verification.py": "9446556de593c9d59d11a9b2260a5ecb4d4be1e55fe7e2d8bcc45c9626438257",
+  "native_guard_copy/guard_original.py": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+  "native_guard_copy/native_boundary_original.py": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+  "native_capability/adapter.py": "bcd4c7e13f64a98889bd87f1075bf8ec3c8431703f16b86e95bad3c62c5984f3",
+  "native_capability/test_capability.py": "0c80b75b3579b40ba388c65d35197f862f4c00bbf2b78c5a342c9db8ee43c226",
+  "native_capability/verification_gate.py": "3dac9c0e018ef0419335ea7f409b552f10a0fe6a819d39ccad923e31ae0eb1f1",
+  "native_capability_integration/contract_probe.py": "488b22e995b1194f2fdd9627284cc81690a5bb808e57df4e24b0a38d4079aa70",
+  "native_capability_integration/contract_snapshot.json": "bcd4ed2e9ef123103d78b727f62542818fb2a210b45090a5dc945ce77cd694b8"
+}

@@ -1,0 +1,7 @@
+{
+  "base_capability_gate_sha256": "3dac9c0e018ef0419335ea7f409b552f10a0fe6a819d39ccad923e31ae0eb1f1",
+  "copy_gate_sha256": "7c3abebf27b241a2da78d201af62c8b6c551ee6715f4082994d6ed042bb198d7",
+  "global_SYMBOLS_AST_unchanged": true,
+  "changes": "Instance-only one-use Rtl owner/bindings and bounded owned-buffer read; original paths/network/process/DB policies unchanged.",
+  "owned_reader": "Exact ctypes string_at helper address + current thread + native-owned pointer/size; no general native-call permission"
+}
