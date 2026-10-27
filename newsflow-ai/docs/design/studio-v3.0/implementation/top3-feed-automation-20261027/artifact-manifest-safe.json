@@ -1,5 +1,10 @@
 [
   {
+    "path": ".gitattributes",
+    "bytes": 109,
+    "sha256": "75c184f9487a1bee82ab6972365665ac826d354841a813238cd60ecc04c8bc25"
+  },
+  {
     "path": "browser-safe.json",
     "bytes": 1330,
     "sha256": "570c50151048604a983593bffe7943d2c7c29091fe3ec38a72200cd69b868f14"
