@@ -1,0 +1,30 @@
+{
+  "base": "7c0bf7e89e29e54039a6594634d482ea62027786",
+  "code": "b7870b9bb8ef1257f09c72b1dd0f12004ec7025d",
+  "unchanged_protected_sources": [
+    "frontend/src/main.tsx",
+    "frontend/src/style.css",
+    "frontend/src/studio/workbench.css",
+    "frontend/src/legacy-actions.json",
+    "frontend/src/studio/CommandDialog.tsx",
+    "frontend/src/studio/contracts.ts",
+    "frontend/src/studio/approved.css",
+    "frontend/src/studio/ApprovedPanels.tsx",
+    "frontend/src/studio/Thumbnail.tsx"
+  ],
+  "protected_diff": "empty",
+  "main_change": "two lines registering samples router only; security middleware unchanged",
+  "Workbench_change": "SampleGallery import, isolated library scope state, library branch only",
+  "sample_CSS": "Only sample-gallery/sample-dialog/sample-* descendants; no global selectors",
+  "production_DB_keys_media_backups": "not used or changed",
+  "existing_validation_directory": "preserved",
+  "sample_binary_change_since_registration": "none",
+  "PR35": {
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "draft": true,
+    "merged": false,
+    "state": "open"
+  },
+  "operating_port_8765": "not bound/requested by tests",
+  "guard_CSP_Origin_CSRF": "Existing middleware and Guard unchanged; CSRF/Origin denial checked"
+}

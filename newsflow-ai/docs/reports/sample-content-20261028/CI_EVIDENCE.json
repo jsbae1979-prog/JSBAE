@@ -1,0 +1,47 @@
+{
+  "code": "b7870b9bb8ef1257f09c72b1dd0f12004ec7025d",
+  "sample": {
+    "run": 40600439451,
+    "job": 122526914833,
+    "api": {
+      "pass": 9,
+      "fail": 0,
+      "error": 0,
+      "skip": 0
+    },
+    "gui": {
+      "pass": 21,
+      "fail": 0,
+      "skip": 0
+    },
+    "artifact": 12778356934,
+    "artifact_zip_sha256": "ac33cef57429a4a2e5f8f43a2b0724b379328cf646196dd1a3f02fb634787cc4",
+    "conclusion": "success"
+  },
+  "core": {
+    "run": 40600439652,
+    "job": 122526915755,
+    "pass": 59,
+    "fail": 0,
+    "artifact": 12778756326,
+    "conclusion": "success"
+  },
+  "legacy_gui": {
+    "run": 40595192217,
+    "job": 122509232309,
+    "code": "46f5b7dc2ce75760d022684f63be02e2d325a974",
+    "pass": 18,
+    "fail": 0,
+    "conclusion": "success",
+    "new_run": false
+  },
+  "PR35": {
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "draft": true,
+    "merged": false,
+    "state": "open"
+  },
+  "whole_regression": "NOT RUN - earlier evidence retained",
+  "Windows11_GUI": "NOT VERIFIED",
+  "DPI": "NOT VERIFIED"
+}

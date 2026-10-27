@@ -1,0 +1,1337 @@
+{
+  "events": [
+    {
+      "method": "GET",
+      "path": "/studio/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/samples/standalone-city/copy",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/samples/standalone-city/copy",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/copy-file",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/samples/standalone-city/visibility",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/samples/standalone-city/visibility",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/samples/standalone-city/copy",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/image-studio/drafts",
+      "status": 303
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/poster",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/samples/character-cat/copy",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/samples/character-cat/copy",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/character",
+      "status": 303
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/shorts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/shorts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/production-context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/news-short/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/news-short/file",
+      "status": 206
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/news-short/file",
+      "status": 206
+    },
+    {
+      "method": "GET",
+      "path": "/studio/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/characters/99fabfc2317d4cf588ca5b4d1e43de55/reference",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/file",
+      "status": 206
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/file",
+      "status": 206
+    },
+    {
+      "method": "GET",
+      "path": "/studio/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/characters/99fabfc2317d4cf588ca5b4d1e43de55/reference",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/file",
+      "status": 206
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/file",
+      "status": 206
+    },
+    {
+      "method": "GET",
+      "path": "/studio/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/feed-batches",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ai/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ev/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-economy/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/production-context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/library",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/library",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ai/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ev/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-economy/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/news-short/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/feed-batches",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ai/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ev/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-economy/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/characters/99fabfc2317d4cf588ca5b4d1e43de55/reference",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/shorts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/shorts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/production-context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/news-short/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/library",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/library",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ai/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ev/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-economy/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/news-short/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/feed-batches",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ai/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ev/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-economy/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/characters/99fabfc2317d4cf588ca5b4d1e43de55/reference",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/shorts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/shorts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/production-context",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/news-short/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/library",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-BX8y2zyR.js",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DJhn03Hh.css",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/library",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ai/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-ev/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/top3-economy/file",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-robot/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-short-cat/poster",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/news-short/poster",
+      "status": 200
+    }
+  ],
+  "errors": [],
+  "actual_create_app": true,
+  "approved_fixture": "test_full_app_forms.client with class-shaped Popen denial (no permission expansion)",
+  "transport": "Playwright -> synthetic file IPC -> real TestClient ASGI, no TCP app server",
+  "paid_API_SNS_calls": 0,
+  "operating_data_used": false,
+  "synthetic": true,
+  "app_context_closed": true
+}

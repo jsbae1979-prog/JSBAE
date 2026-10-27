@@ -1,0 +1,201 @@
+{
+  "checks": [
+    {
+      "name": "first run shows three independent samples without history insertion",
+      "status": "PASS"
+    },
+    {
+      "name": "copy is repeatable and creates a real private reference download",
+      "status": "PASS"
+    },
+    {
+      "name": "hide persists across reload and can be restored",
+      "status": "PASS"
+    },
+    {
+      "name": "sample prompt starts an explicit saved draft without paid generation",
+      "status": "PASS"
+    },
+    {
+      "name": "sample character selection attaches PNG to a new local character draft",
+      "status": "PASS"
+    },
+    {
+      "name": "actual MP4 playback news-short",
+      "status": "PASS"
+    },
+    {
+      "name": "actual MP4 playback character-short-robot",
+      "status": "PASS"
+    },
+    {
+      "name": "actual MP4 playback character-short-cat",
+      "status": "PASS"
+    },
+    {
+      "name": "TOP3 examples are separate from real analysis and generation results",
+      "status": "PASS"
+    },
+    {
+      "name": "library all, my copies and samples remain distinct",
+      "status": "PASS"
+    },
+    {
+      "name": "offline page reload and catalog require no outside requests",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport images 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport top3 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport characters 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport shorts 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport library 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport images 1366",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport top3 1366",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport characters 1366",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport shorts 1366",
+      "status": "PASS"
+    },
+    {
+      "name": "samples viewport library 1366",
+      "status": "PASS"
+    }
+  ],
+  "failures": [],
+  "pageErrors": [],
+  "externalRequests": [],
+  "captures": [
+    {
+      "screen": "images",
+      "width": 1920,
+      "height": 1080,
+      "file": "images-1920.png",
+      "overflow": false
+    },
+    {
+      "screen": "top3",
+      "width": 1920,
+      "height": 1080,
+      "file": "top3-1920.png",
+      "overflow": false
+    },
+    {
+      "screen": "characters",
+      "width": 1920,
+      "height": 1080,
+      "file": "characters-1920.png",
+      "overflow": false
+    },
+    {
+      "screen": "shorts",
+      "width": 1920,
+      "height": 1080,
+      "file": "shorts-1920.png",
+      "overflow": false
+    },
+    {
+      "screen": "library",
+      "width": 1920,
+      "height": 1080,
+      "file": "library-1920.png",
+      "overflow": false
+    },
+    {
+      "screen": "images",
+      "width": 1366,
+      "height": 768,
+      "file": "images-1366.png",
+      "overflow": false
+    },
+    {
+      "screen": "top3",
+      "width": 1366,
+      "height": 768,
+      "file": "top3-1366.png",
+      "overflow": false
+    },
+    {
+      "screen": "characters",
+      "width": 1366,
+      "height": 768,
+      "file": "characters-1366.png",
+      "overflow": false
+    },
+    {
+      "screen": "shorts",
+      "width": 1366,
+      "height": 768,
+      "file": "shorts-1366.png",
+      "overflow": false
+    },
+    {
+      "screen": "library",
+      "width": 1366,
+      "height": 768,
+      "file": "library-1366.png",
+      "overflow": false
+    }
+  ],
+  "videos": [
+    {
+      "id": "news-short",
+      "width": 720,
+      "height": 1280,
+      "duration": 12,
+      "played": true,
+      "seeked": true,
+      "audio": false
+    },
+    {
+      "id": "character-short-robot",
+      "width": 720,
+      "height": 1280,
+      "duration": 12,
+      "played": true,
+      "seeked": true,
+      "audio": false
+    },
+    {
+      "id": "character-short-cat",
+      "width": 720,
+      "height": 1280,
+      "duration": 12,
+      "played": true,
+      "seeked": true,
+      "audio": false
+    }
+  ],
+  "transport": "real Python ASGI through synthetic file IPC",
+  "realPaidCalls": 0,
+  "OS_DPI": "NOT VERIFIED",
+  "browserVersion": "156.0.8078.48",
+  "requestDrainCompleted": true,
+  "browserClosed": true,
+  "pass": 21,
+  "fail": 0,
+  "skip": 0
+}

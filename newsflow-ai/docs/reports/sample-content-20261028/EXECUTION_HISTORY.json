@@ -1,0 +1,137 @@
+[
+  {
+    "code": "2cac31f4ba273592421b374e522b92ad15098f21",
+    "run": 40593497192,
+    "api": {
+      "pass": 6,
+      "fail": 2
+    },
+    "gui": "not run",
+    "reason": "Three approved MP4s were excluded by existing global media ignore. Corrected exact file-path exceptions."
+  },
+  {
+    "code": "2cac31f4ba273592421b374e522b92ad15098f21",
+    "run": 40593497001,
+    "kind": "existing GUI",
+    "result": "cancelled at CI time limit",
+    "reason": "Unfinished capture run preserved. Viewport image decode waiting and request teardown corrected; later existing GUI run passed all 18."
+  },
+  {
+    "code": "6e579557d436a43ed7d85a01abe991a7b2f2de25",
+    "run": 40593796822,
+    "api": {
+      "pass": 8,
+      "fail": 0
+    },
+    "gui": {
+      "pass": 15,
+      "failedCases": 6,
+      "aggregateFailure": 1
+    },
+    "reason": "Existing empty character job reference expression dereferenced job.id. Fixed guard; dependent copy filter check also failed after character flow stopped."
+  },
+  {
+    "code": "48b8ea7fb88b118b5d604ceeb5691419b47003d7",
+    "run": 40594460319,
+    "api": {
+      "pass": 8,
+      "fail": 0
+    },
+    "gui": {
+      "pass": 21,
+      "fail": 0
+    },
+    "workflow": "failure",
+    "reason": "GUI checks passed but a pending IPC request timed out after ASGI shutdown. Normal processes exited, no Chrome remaining."
+  },
+  {
+    "code": "46f5b7dc2ce75760d022684f63be02e2d325a974",
+    "run": 40595192196,
+    "api": {
+      "pass": 8,
+      "fail": 0
+    },
+    "workflow": "failure",
+    "reason": "Active route disposal caused Route is already handled in sample harness. Existing GUI 40595192217 passed 18; core 40595192201 passed 59."
+  },
+  {
+    "code": "6aaea1a0052e647e859cfbd55639e5767fe53a56",
+    "run": 40596383849,
+    "api": {
+      "pass": 8,
+      "fail": 0
+    },
+    "gui": {
+      "pass": 21,
+      "fail": 0
+    },
+    "workflow": "success",
+    "reason": "Wait for requests before offline transitions and teardown; log genuine transport errors."
+  },
+  {
+    "code": "6d298ac5905ec50f67fef65f629e4715d435fb93",
+    "run": 40596848017,
+    "api": {
+      "pass": 8,
+      "fail": 0
+    },
+    "gui": {
+      "pass": 21,
+      "fail": 0
+    },
+    "workflow": "success",
+    "reason": "Preserve typed topic and separate manual PNG upload from selected reference."
+  },
+  {
+    "code": "6eb9eae40930520e1122e59c36d97028e37cf7c3",
+    "run": 40597504904,
+    "api": {
+      "pass": 9,
+      "fail": 0
+    },
+    "workflow": "success",
+    "reason": "Added real app/SQLite reinitialization durability check, unchanged production code."
+  },
+  {
+    "code": "3b1c09dc77e9f4a74dec47859449334726d01ddc",
+    "run": 40598260903,
+    "api": {
+      "pass": 9,
+      "fail": 0
+    },
+    "gui": {
+      "pass": 20,
+      "fail": 1
+    },
+    "workflow": "failure",
+    "reason": "Compact gallery exposed a race between pending reference selection and manual upload. No paid calls or lost user data. Added pending-state controls and completion checks."
+  },
+  {
+    "code": "4aceb2ceb4f41f159e5cb503630f432799ceead7",
+    "run": 40599334275,
+    "api": {
+      "pass": 9,
+      "fail": 0
+    },
+    "gui": {
+      "pass": 21,
+      "fail": 0
+    },
+    "workflow": "success",
+    "reason": "Reference selection busy controls verified; subsequent producer string-to-select mapping also corrected."
+  },
+  {
+    "code": "b7870b9bb8ef1257f09c72b1dd0f12004ec7025d",
+    "run": 40600439451,
+    "api": {
+      "pass": 9,
+      "fail": 0
+    },
+    "gui": {
+      "pass": 21,
+      "fail": 0
+    },
+    "workflow": "success",
+    "reason": "Final: selected canonical reference displayed, catalog refresh awaited, user topic preserved. Core 40600439652 also passed 59."
+  }
+]
