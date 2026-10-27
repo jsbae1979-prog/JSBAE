@@ -65,6 +65,12 @@ function ipc(data){const task=serial.then(async()=>{
  });
  await check("sample character selection attaches PNG to a new local character draft",async()=>{
   await open("characters");assert.equal(await page.locator(".sample-cards article").count(),5);
+  await page.getByLabel("스토리 주제",{exact:true}).fill("샘플 선택 전에 입력한 주제");
+  await card("character-cat").getByRole("button",{name:"참조 PNG로 선택",exact:true}).click();
+  assert.equal(await page.getByLabel("스토리 주제",{exact:true}).inputValue(),"샘플 선택 전에 입력한 주제");
+  await page.getByRole("button",{name:"참조 PNG 등록 · 새 작업",exact:true}).click();
+  const upload=page.getByRole("dialog");await upload.waitFor();assert.equal(await upload.getByLabel("저장한 참조 소재",{exact:true}).inputValue(),"");
+  await page.keyboard.press("Escape");await upload.waitFor({state:"hidden"});
   await card("character-cat").getByRole("button",{name:"참조 PNG로 선택",exact:true}).click();
   await page.locator('.core-reference img[src="/api/samples/character-cat/file"]').waitFor();
   assert.equal((await api("/api/studio/modules/characters")).collections.jobs.length,0);

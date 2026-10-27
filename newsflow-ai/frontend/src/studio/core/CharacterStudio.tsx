@@ -71,7 +71,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         onUse={({ asset: sample, copy }) => {
           setAsset(copy.referenceAsset ?? "");
           setSampleRef(`/api/samples/${sample.referenceId || sample.id}/file`);
-          setTopic("");
           void c.load();
           c.setNotice(
             "샘플 참조 PNG를 새 작업 입력에 연결했습니다. 주제를 입력해 새 작업을 저장하세요. 기존 작업은 보존됩니다.",
@@ -117,14 +116,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </div>
               <div className="core-options">
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    setSampleRef(null);
+                    setAsset("");
                     c.open("character_create", {
                       topic,
                       script_model: model,
                       video_model: defaults.video_model,
-                      reference_asset: asset,
-                    })
-                  }
+                      reference_asset: "",
+                    });
+                  }}
                 >
                   <ImagePlus size={19} />
                   참조 PNG 등록 · 새 작업
@@ -132,7 +133,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 <Select
                   label="저장한 참조 소재"
                   value={asset}
-                  onChange={setAsset}
+                  onChange={(value) => {
+                    setAsset(value);
+                    setSampleRef(null);
+                  }}
                   options={Object.fromEntries(
                     refAssets.map((x: Item) => [
                       x.id ?? x.key,
