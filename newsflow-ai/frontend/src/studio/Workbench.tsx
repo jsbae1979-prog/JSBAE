@@ -2062,7 +2062,7 @@ function LegacyWorkbench({
             )}
             {module === "library" && (
               <>
-                <SampleGallery csrf={view.csrfToken} library onScope={setLibraryScope} />
+                <SampleGallery initialExpanded={!(view.projects ?? []).length} csrf={view.csrfToken} library onScope={setLibraryScope} />
                 {libraryScope !== "samples" && <div className="approved-library-grid">
                   <div className="work-toolbar">
                     <label className="work-search">

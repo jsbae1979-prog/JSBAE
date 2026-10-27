@@ -315,7 +315,11 @@ function FeedLayout({ c, f }: { c: Controller; f: any }) {
 export default function TopThreeImageStudio({ c }: { c: Controller }) {
   return c.view ? (
     <>
-      <SampleGallery types={["news-top3"]} csrf={c.view.csrfToken} />
+      <SampleGallery
+        initialExpanded={c.list("selections").length === 0}
+        types={["news-top3"]}
+        csrf={c.view.csrfToken}
+      />
       <TopThreeFeeds
         selections={c.list("selections")}
         catalog={c.view.catalog}

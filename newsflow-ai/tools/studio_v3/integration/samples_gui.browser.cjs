@@ -33,7 +33,8 @@ function ipc(data){const task=serial.then(async()=>{
   }
  });
  page=await context.newPage();page.setDefaultTimeout(12000);page.on("pageerror",e=>result.pageErrors.push(String(e)));
- async function open(s){await page.waitForLoadState("networkidle");await serial;await page.goto(origin+"/studio/"+s);await page.locator(".sample-gallery").waitFor();await page.locator(".sample-cards article").first().waitFor();}
+ async function showSamples(){const toggle=page.getByRole("button",{name:"샘플 펼치기",exact:true});if(await toggle.count())await toggle.click();}
+ async function open(s){await page.waitForLoadState("networkidle");await serial;await page.goto(origin+"/studio/"+s);await page.locator(".sample-gallery").waitFor();await showSamples();await page.locator(".sample-cards article").first().waitFor();}
  const card=id=>page.locator(`[data-sample-id="${id}"]`);
  async function check(name,fn){try{await fn();result.checks.push({name,status:"PASS"});}catch(e){result.checks.push({name,status:"FAIL"});result.failures.push({name,error:String(e)});await page.screenshot({path:path.join(out,"failure-"+result.failures.length+".png"),fullPage:true}).catch(()=>{});await page.keyboard.press("Escape").catch(()=>{});}}
  async function api(url){const r=await ipc({method:"GET",url,headers:{}});assert.equal(r.status,200);return JSON.parse(Buffer.from(r.body,"base64"));}
@@ -60,6 +61,7 @@ function ipc(data){const task=serial.then(async()=>{
   await card("standalone-city").getByRole("button",{name:"프롬프트로 새 작업",exact:true}).click();
   const expected=(await api("/api/samples")).assets.find(x=>x.id==="standalone-city").promptExample;
   await page.waitForFunction(v=>document.querySelector('[aria-label="이미지 프롬프트"]')?.value===v,expected);
+  assert(await page.getByRole("button",{name:"샘플 펼치기",exact:true}).isVisible(),"using a sample returns focus to the editing workspace");
   await page.getByRole("button",{name:"초안 저장 · 참조 첨부",exact:true}).click();const d=page.getByRole("dialog");await d.waitFor();await d.locator("footer button.primary").click();await d.waitFor({state:"hidden"});
   const drafts=(await api("/api/studio/modules/images")).collections.drafts;assert.equal(drafts.length,1);assert.equal(drafts[0].status,"saved");assert.equal(drafts[0].mediaUrl,null);
  });
@@ -70,7 +72,7 @@ function ipc(data){const task=serial.then(async()=>{
   assert.equal(await page.getByLabel("스토리 주제",{exact:true}).inputValue(),"샘플 선택 전에 입력한 주제");
   await page.getByRole("button",{name:"참조 PNG 등록 · 새 작업",exact:true}).click();
   const upload=page.getByRole("dialog");await upload.waitFor();assert.equal(await upload.getByLabel("저장한 참조 소재",{exact:true}).inputValue(),"");
-  await page.keyboard.press("Escape");await upload.waitFor({state:"hidden"});
+  await page.keyboard.press("Escape");await upload.waitFor({state:"hidden"});await showSamples();
   await card("character-cat").getByRole("button",{name:"참조 PNG로 선택",exact:true}).click();
   await page.locator('.core-reference img[src="/api/samples/character-cat/file"]').waitFor();
   assert.equal((await api("/api/studio/modules/characters")).collections.jobs.length,0);

@@ -66,6 +66,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   return (
     <>
       <SampleGallery
+        initialExpanded={jobs.length === 0}
         types={["character", "character-short"]}
         csrf={c.view?.csrfToken ?? ""}
         onUse={({ asset: sample, copy }) => {

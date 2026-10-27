@@ -135,3 +135,19 @@
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 }
+
+/* Compact example strip: the existing editing workspace stays easy to reach. */
+.sample-compact .sample-cards {
+  display: flex;
+  overflow-x: auto;
+  align-items: stretch;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+}
+.sample-compact .sample-cards article {
+  flex: 0 0 230px;
+  scroll-snap-align: start;
+}
+.sample-compact .sample-cards .sample-preview img {
+  height: 120px;
+}

@@ -43,6 +43,7 @@ export default function ImageStudio({ c }: { c: Controller }) {
   return (
     <>
       <SampleGallery
+        initialExpanded={drafts.length === 0}
         types={["standalone"]}
         csrf={c.view?.csrfToken ?? ""}
         onUse={({ copy }) => {
