@@ -1,0 +1,60 @@
+{
+  "product_code": "1dc4ec70a35b87f9cfde90aa8d63d8159bb354ae",
+  "test_code": "1dc4ec70a35b87f9cfde90aa8d63d8159bb354ae",
+  "before_run": 40605050446,
+  "before_job": 122542351279,
+  "after_run": 40605184617,
+  "after_job": 122542800895,
+  "core_run": 40605184616,
+  "core_job": 122542801036,
+  "pr": {
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "draft": true,
+    "merged": false,
+    "state": "open"
+  },
+  "artifacts": [
+    {
+      "name": "ui-precision-before",
+      "id": 12779913389,
+      "digest": "sha256:df4755d7dab7fbcb78b6001d7bb288d29a26a336f9978dfdcd8cc173c0b6d82b"
+    },
+    {
+      "name": "ui-precision-after",
+      "id": 12779838622,
+      "digest": "sha256:9a75d5c031eb4fdc20b1b9402af219a27420b71219fcbe8c6400d0eae7bd77c7"
+    }
+  ],
+  "history": [
+    {
+      "code": "7f857be",
+      "run": 40603863273,
+      "before": 20,
+      "after": 20,
+      "conclusion": "success"
+    },
+    {
+      "code": "10be238",
+      "run": 40604551669,
+      "before": {
+        "pass": 19,
+        "fail": 1,
+        "cause": "asynchronous sample response readiness"
+      },
+      "after": 20
+    },
+    {
+      "code": "b48681a",
+      "run": 40605050446,
+      "before": 20,
+      "after": 20
+    },
+    {
+      "code": "1dc4ec7",
+      "run": 40605184617,
+      "after": 20,
+      "conclusion": "success",
+      "beforeReused": true
+    }
+  ]
+}

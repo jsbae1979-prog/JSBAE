@@ -1,0 +1,1306 @@
+[
+  {
+    "screen": "shorts",
+    "viewport": [
+      1920,
+      1080
+    ],
+    "before": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1185.875,
+        "bottom": 1265.875
+      },
+      "top3": {
+        "x": 302,
+        "y": 387.234375,
+        "width": 1556,
+        "height": 132,
+        "bottom": 519.234375
+      },
+      "script": {
+        "x": 284,
+        "y": 552.234375,
+        "width": 788.5,
+        "height": 504.5,
+        "bottom": 1056.734375
+      },
+      "simple": {
+        "x": 1087.5,
+        "y": 552.234375,
+        "width": 788.5,
+        "height": 504.5,
+        "bottom": 1056.734375
+      },
+      "render": {
+        "x": 284,
+        "y": 1071.734375,
+        "width": 1592,
+        "height": 79,
+        "bottom": 1150.734375
+      },
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 284,
+        "y": 183.4375,
+        "width": 1592,
+        "height": 89,
+        "bottom": 272.4375
+      },
+      "preview": {
+        "x": 1595.25,
+        "y": 607.734375,
+        "width": 188,
+        "height": 334.21875,
+        "bottom": 941.953125
+      }
+    },
+    "after": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1189.640625,
+        "bottom": 1269.640625
+      },
+      "top3": {
+        "x": 297,
+        "y": 249.59375,
+        "width": 1566,
+        "height": 190,
+        "bottom": 439.59375
+      },
+      "script": {
+        "x": 282,
+        "y": 466.59375,
+        "width": 792,
+        "height": 514,
+        "bottom": 980.59375
+      },
+      "simple": {
+        "x": 1086,
+        "y": 466.59375,
+        "width": 792,
+        "height": 514,
+        "bottom": 980.59375
+      },
+      "render": {
+        "x": 282,
+        "y": 992.59375,
+        "width": 1596,
+        "height": 78,
+        "bottom": 1070.59375
+      },
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 282,
+        "y": 1138.59375,
+        "width": 1596,
+        "height": 78,
+        "bottom": 1216.59375
+      },
+      "preview": {
+        "x": 1584.109375,
+        "y": 519.59375,
+        "width": 215,
+        "height": 382.21875,
+        "bottom": 901.8125
+      }
+    },
+    "visible_media": [],
+    "classification": "MINOR"
+  },
+  {
+    "screen": "shorts",
+    "viewport": [
+      1366,
+      768
+    ],
+    "before": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1236.015625,
+        "bottom": 1315.015625
+      },
+      "top3": {
+        "x": 289,
+        "y": 382.234375,
+        "width": 1028,
+        "height": 198.140625,
+        "bottom": 580.375
+      },
+      "script": {
+        "x": 271,
+        "y": 613.375,
+        "width": 524.5,
+        "height": 504.5,
+        "bottom": 1117.875
+      },
+      "simple": {
+        "x": 810.5,
+        "y": 613.375,
+        "width": 524.5,
+        "height": 504.5,
+        "bottom": 1117.875
+      },
+      "render": {
+        "x": 271,
+        "y": 1132.875,
+        "width": 1064,
+        "height": 79,
+        "bottom": 1211.875
+      },
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 271,
+        "y": 178.4375,
+        "width": 1064,
+        "height": 89,
+        "bottom": 267.4375
+      },
+      "preview": {
+        "x": 1117.109375,
+        "y": 668.875,
+        "width": 188,
+        "height": 334.21875,
+        "bottom": 1003.09375
+      }
+    },
+    "after": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1134.640625,
+        "bottom": 1213.640625
+      },
+      "top3": {
+        "x": 282,
+        "y": 243.59375,
+        "width": 1042,
+        "height": 168,
+        "bottom": 411.59375
+      },
+      "script": {
+        "x": 269,
+        "y": 436.59375,
+        "width": 528,
+        "height": 497,
+        "bottom": 933.59375
+      },
+      "simple": {
+        "x": 809,
+        "y": 436.59375,
+        "width": 528,
+        "height": 497,
+        "bottom": 933.59375
+      },
+      "render": {
+        "x": 269,
+        "y": 945.59375,
+        "width": 1068,
+        "height": 78,
+        "bottom": 1023.59375
+      },
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 269,
+        "y": 1090.59375,
+        "width": 1068,
+        "height": 78,
+        "bottom": 1168.59375
+      },
+      "preview": {
+        "x": 1174,
+        "y": 507.859375,
+        "width": 150,
+        "height": 266.65625,
+        "bottom": 774.515625
+      }
+    },
+    "visible_media": [],
+    "classification": "MINOR"
+  },
+  {
+    "screen": "characters",
+    "viewport": [
+      1920,
+      1080
+    ],
+    "before": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1200.40625,
+        "bottom": 1280.40625
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": {
+        "x": 284,
+        "y": 380.4375,
+        "width": 474.53125,
+        "height": 569.4375,
+        "bottom": 949.875
+      },
+      "story": {
+        "x": 771.53125,
+        "y": 380.4375,
+        "width": 474.546875,
+        "height": 569.4375,
+        "bottom": 949.875
+      },
+      "characterVideo": {
+        "x": 1259.078125,
+        "y": 380.4375,
+        "width": 616.921875,
+        "height": 569.4375,
+        "bottom": 949.875
+      },
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 284,
+        "y": 183.4375,
+        "width": 1592,
+        "height": 89,
+        "bottom": 272.4375
+      },
+      "preview": {
+        "x": 1334.046875,
+        "y": 504.421875,
+        "width": 170,
+        "height": 302.21875,
+        "bottom": 806.640625
+      }
+    },
+    "after": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1145.671875,
+        "bottom": 1225.671875
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": {
+        "x": 282,
+        "y": 244,
+        "width": 483.6875,
+        "height": 579.640625,
+        "bottom": 823.640625
+      },
+      "story": {
+        "x": 777.6875,
+        "y": 244,
+        "width": 483.6875,
+        "height": 579.640625,
+        "bottom": 823.640625
+      },
+      "characterVideo": {
+        "x": 1273.375,
+        "y": 244,
+        "width": 604.625,
+        "height": 579.640625,
+        "bottom": 823.640625
+      },
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 282,
+        "y": 1094.625,
+        "width": 1596,
+        "height": 78,
+        "bottom": 1172.625
+      },
+      "preview": {
+        "x": 1322.625,
+        "y": 335.609375,
+        "width": 190,
+        "height": 337.765625,
+        "bottom": 673.375
+      }
+    },
+    "visible_media": [
+      {
+        "src": "/api/studio/characters/9ad4339dfcf64ea585128a306d89715b/reference",
+        "width": 128,
+        "height": 128,
+        "loaded": true,
+        "visible": true
+      }
+    ],
+    "classification": "MINOR"
+  },
+  {
+    "screen": "characters",
+    "viewport": [
+      1366,
+      768
+    ],
+    "before": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1628.125,
+        "bottom": 1707.125
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": {
+        "x": 271,
+        "y": 375.4375,
+        "width": 525.5,
+        "height": 569.4375,
+        "bottom": 944.875
+      },
+      "story": {
+        "x": 809.5,
+        "y": 375.4375,
+        "width": 525.5,
+        "height": 569.4375,
+        "bottom": 944.875
+      },
+      "characterVideo": {
+        "x": 271,
+        "y": 957.875,
+        "width": 1064,
+        "height": 430.71875,
+        "bottom": 1388.59375
+      },
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 271,
+        "y": 178.4375,
+        "width": 1064,
+        "height": 89,
+        "bottom": 267.4375
+      },
+      "preview": {
+        "x": 304,
+        "y": 1013.375,
+        "width": 170,
+        "height": 302.21875,
+        "bottom": 1315.59375
+      }
+    },
+    "after": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1137.671875,
+        "bottom": 1216.671875
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": {
+        "x": 269,
+        "y": 241,
+        "width": 314.84375,
+        "height": 589.234375,
+        "bottom": 830.234375
+      },
+      "story": {
+        "x": 595.84375,
+        "y": 241,
+        "width": 314.859375,
+        "height": 589.234375,
+        "bottom": 830.234375
+      },
+      "characterVideo": {
+        "x": 922.703125,
+        "y": 241,
+        "width": 414.28125,
+        "height": 589.234375,
+        "bottom": 830.234375
+      },
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 269,
+        "y": 1093.625,
+        "width": 1068,
+        "height": 78,
+        "bottom": 1171.625
+      },
+      "preview": {
+        "x": 935.703125,
+        "y": 383.375,
+        "width": 125,
+        "height": 222.21875,
+        "bottom": 605.59375
+      }
+    },
+    "visible_media": [
+      {
+        "src": "/api/studio/characters/9ad4339dfcf64ea585128a306d89715b/reference",
+        "width": 128,
+        "height": 128,
+        "loaded": true,
+        "visible": true
+      }
+    ],
+    "classification": "MINOR"
+  },
+  {
+    "screen": "images",
+    "viewport": [
+      1920,
+      1080
+    ],
+    "before": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1338.375,
+        "bottom": 1418.375
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": {
+        "x": 284,
+        "y": 347.4375,
+        "width": 656.875,
+        "height": 742.296875,
+        "bottom": 1089.734375
+      },
+      "imageResult": {
+        "x": 954.875,
+        "y": 347.4375,
+        "width": 625.59375,
+        "height": 742.296875,
+        "bottom": 1089.734375
+      },
+      "imageHistory": {
+        "x": 1594.46875,
+        "y": 347.4375,
+        "width": 281.515625,
+        "height": 742.296875,
+        "bottom": 1089.734375
+      },
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 284,
+        "y": 240.4375,
+        "width": 1592,
+        "height": 89,
+        "bottom": 329.4375
+      },
+      "preview": null
+    },
+    "after": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1239.640625,
+        "bottom": 1319.640625
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": {
+        "x": 282,
+        "y": 218,
+        "width": 660.234375,
+        "height": 699.59375,
+        "bottom": 917.59375
+      },
+      "imageResult": {
+        "x": 954.234375,
+        "y": 218,
+        "width": 628.796875,
+        "height": 699.59375,
+        "bottom": 917.59375
+      },
+      "imageHistory": {
+        "x": 1595.03125,
+        "y": 218,
+        "width": 282.953125,
+        "height": 699.59375,
+        "bottom": 917.59375
+      },
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 282,
+        "y": 1188.59375,
+        "width": 1596,
+        "height": 78,
+        "bottom": 1266.59375
+      },
+      "preview": null
+    },
+    "visible_media": [
+      {
+        "src": "/image-studio/3/file",
+        "width": 1024,
+        "height": 1280,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/image-studio/3/file",
+        "width": 1024,
+        "height": 1280,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/image-studio/3/file",
+        "width": 1024,
+        "height": 1280,
+        "loaded": true,
+        "visible": true
+      }
+    ],
+    "classification": "MINOR"
+  },
+  {
+    "screen": "images",
+    "viewport": [
+      1366,
+      768
+    ],
+    "before": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1619.671875,
+        "bottom": 1698.671875
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": {
+        "x": 271,
+        "y": 342.4375,
+        "width": 525,
+        "height": 762.09375,
+        "bottom": 1104.53125
+      },
+      "imageResult": {
+        "x": 810,
+        "y": 342.4375,
+        "width": 525,
+        "height": 762.09375,
+        "bottom": 1104.53125
+      },
+      "imageHistory": {
+        "x": 271,
+        "y": 1118.53125,
+        "width": 1064,
+        "height": 263.5,
+        "bottom": 1382.03125
+      },
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 271,
+        "y": 235.4375,
+        "width": 1064,
+        "height": 89,
+        "bottom": 324.4375
+      },
+      "preview": null
+    },
+    "after": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1289.234375,
+        "bottom": 1368.234375
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": {
+        "x": 269,
+        "y": 215,
+        "width": 429.875,
+        "height": 765.1875,
+        "bottom": 980.1875
+      },
+      "imageResult": {
+        "x": 710.875,
+        "y": 215,
+        "width": 409.40625,
+        "height": 765.1875,
+        "bottom": 980.1875
+      },
+      "imageHistory": {
+        "x": 1132.28125,
+        "y": 215,
+        "width": 204.71875,
+        "height": 765.1875,
+        "bottom": 980.1875
+      },
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 269,
+        "y": 1245.1875,
+        "width": 1068,
+        "height": 78,
+        "bottom": 1323.1875
+      },
+      "preview": null
+    },
+    "visible_media": [
+      {
+        "src": "/image-studio/3/file",
+        "width": 1024,
+        "height": 1280,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/image-studio/3/file",
+        "width": 1024,
+        "height": 1280,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/image-studio/3/file",
+        "width": 1024,
+        "height": 1280,
+        "loaded": true,
+        "visible": false
+      }
+    ],
+    "classification": "MINOR"
+  },
+  {
+    "screen": "images-top3",
+    "viewport": [
+      1920,
+      1080
+    ],
+    "before": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1484.296875,
+        "bottom": 1564.296875
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": {
+        "x": 284,
+        "y": 347.4375,
+        "width": 409.359375,
+        "height": 924.21875,
+        "bottom": 1271.65625
+      },
+      "feedCenter": {
+        "x": 707.359375,
+        "y": 347.4375,
+        "width": 813.484375,
+        "height": 924.21875,
+        "bottom": 1271.65625
+      },
+      "feedCopy": {
+        "x": 1534.84375,
+        "y": 347.4375,
+        "width": 341.140625,
+        "height": 924.21875,
+        "bottom": 1271.65625
+      },
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 284,
+        "y": 240.4375,
+        "width": 1592,
+        "height": 89,
+        "bottom": 329.4375
+      },
+      "preview": null
+    },
+    "after": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1441.375,
+        "bottom": 1521.375
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": {
+        "x": 282,
+        "y": 218,
+        "width": 532.4375,
+        "height": 931.328125,
+        "bottom": 1149.328125
+      },
+      "feedCenter": {
+        "x": 826.4375,
+        "y": 218,
+        "width": 709.9375,
+        "height": 931.328125,
+        "bottom": 1149.328125
+      },
+      "feedCopy": {
+        "x": 1548.375,
+        "y": 218,
+        "width": 329.625,
+        "height": 931.328125,
+        "bottom": 1149.328125
+      },
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 282,
+        "y": 1390.328125,
+        "width": 1596,
+        "height": 78,
+        "bottom": 1468.328125
+      },
+      "preview": null
+    },
+    "visible_media": [
+      {
+        "src": "/api/feed-batches/5/items/1/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/api/feed-batches/5/items/2/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/api/feed-batches/5/items/3/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/api/feed-batches/5/items/1/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": false
+      },
+      {
+        "src": "/api/feed-batches/5/items/2/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": false
+      },
+      {
+        "src": "/api/feed-batches/5/items/3/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": false
+      }
+    ],
+    "classification": "FUNCTIONAL_CONSTRAINT"
+  },
+  {
+    "screen": "images-top3",
+    "viewport": [
+      1366,
+      768
+    ],
+    "before": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1922.265625,
+        "bottom": 2001.265625
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": {
+        "x": 271,
+        "y": 342.4375,
+        "width": 367.5,
+        "height": 951.625,
+        "bottom": 1294.0625
+      },
+      "feedCenter": {
+        "x": 652.5,
+        "y": 342.4375,
+        "width": 682.5,
+        "height": 951.625,
+        "bottom": 1294.0625
+      },
+      "feedCopy": {
+        "x": 271,
+        "y": 1308.0625,
+        "width": 1064,
+        "height": 412.5625,
+        "bottom": 1720.625
+      },
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 271,
+        "y": 235.4375,
+        "width": 1064,
+        "height": 89,
+        "bottom": 324.4375
+      },
+      "preview": null
+    },
+    "after": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1368.890625,
+        "bottom": 1447.890625
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": {
+        "x": 269,
+        "y": 215,
+        "width": 325.171875,
+        "height": 874.84375,
+        "bottom": 1089.84375
+      },
+      "feedCenter": {
+        "x": 606.171875,
+        "y": 215,
+        "width": 479.21875,
+        "height": 874.84375,
+        "bottom": 1089.84375
+      },
+      "feedCopy": {
+        "x": 1097.390625,
+        "y": 215,
+        "width": 239.59375,
+        "height": 874.84375,
+        "bottom": 1089.84375
+      },
+      "newsSearch": null,
+      "newsCenter": null,
+      "newsRight": null,
+      "samples": {
+        "x": 269,
+        "y": 1324.84375,
+        "width": 1068,
+        "height": 78,
+        "bottom": 1402.84375
+      },
+      "preview": null
+    },
+    "visible_media": [
+      {
+        "src": "/api/feed-batches/5/items/1/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/api/feed-batches/5/items/2/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/api/feed-batches/5/items/3/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": true
+      },
+      {
+        "src": "/api/feed-batches/5/items/1/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": false
+      },
+      {
+        "src": "/api/feed-batches/5/items/2/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": false
+      },
+      {
+        "src": "/api/feed-batches/5/items/3/file",
+        "width": 1080,
+        "height": 1350,
+        "loaded": true,
+        "visible": false
+      }
+    ],
+    "classification": "FUNCTIONAL_CONSTRAINT"
+  },
+  {
+    "screen": "news",
+    "viewport": [
+      1920,
+      1080
+    ],
+    "before": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1101.40625,
+        "bottom": 1181.40625
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": {
+        "x": 284,
+        "y": 183.4375,
+        "width": 512.78125,
+        "height": 723.328125,
+        "bottom": 906.765625
+      },
+      "newsCenter": {
+        "x": 810.78125,
+        "y": 183.4375,
+        "width": 615.34375,
+        "height": 723.328125,
+        "bottom": 906.765625
+      },
+      "newsRight": {
+        "x": 1440.125,
+        "y": 183.4375,
+        "width": 435.859375,
+        "height": 723.328125,
+        "bottom": 906.765625
+      },
+      "samples": null,
+      "preview": null
+    },
+    "after": {
+      "studio": {
+        "x": 262,
+        "y": 80,
+        "width": 1636,
+        "height": 1037.515625,
+        "bottom": 1117.515625
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": {
+        "x": 282,
+        "y": 158,
+        "width": 523.984375,
+        "height": 717.46875,
+        "bottom": 875.46875
+      },
+      "newsCenter": {
+        "x": 817.984375,
+        "y": 158,
+        "width": 598.859375,
+        "height": 717.46875,
+        "bottom": 875.46875
+      },
+      "newsRight": {
+        "x": 1428.84375,
+        "y": 158,
+        "width": 449.140625,
+        "height": 717.46875,
+        "bottom": 875.46875
+      },
+      "samples": null,
+      "preview": null
+    },
+    "visible_media": [],
+    "classification": "FUNCTIONAL_CONSTRAINT"
+  },
+  {
+    "screen": "news",
+    "viewport": [
+      1366,
+      768
+    ],
+    "before": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1176.453125,
+        "bottom": 1255.453125
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": {
+        "x": 271,
+        "y": 178.4375,
+        "width": 472.5,
+        "height": 507.28125,
+        "bottom": 685.71875
+      },
+      "newsCenter": {
+        "x": 757.5,
+        "y": 178.4375,
+        "width": 577.5,
+        "height": 507.28125,
+        "bottom": 685.71875
+      },
+      "newsRight": {
+        "x": 271,
+        "y": 699.71875,
+        "width": 1064,
+        "height": 293.09375,
+        "bottom": 992.8125
+      },
+      "samples": null,
+      "preview": null
+    },
+    "after": {
+      "studio": {
+        "x": 255,
+        "y": 79,
+        "width": 1096,
+        "height": 1027.5625,
+        "bottom": 1106.5625
+      },
+      "top3": null,
+      "script": null,
+      "simple": null,
+      "render": null,
+      "reference": null,
+      "story": null,
+      "characterVideo": null,
+      "imageInput": null,
+      "imageResult": null,
+      "imageHistory": null,
+      "feedNews": null,
+      "feedCenter": null,
+      "feedCopy": null,
+      "newsSearch": {
+        "x": 269,
+        "y": 155,
+        "width": 348,
+        "height": 721.515625,
+        "bottom": 876.515625
+      },
+      "newsCenter": {
+        "x": 629,
+        "y": 155,
+        "width": 400.1875,
+        "height": 721.515625,
+        "bottom": 876.515625
+      },
+      "newsRight": {
+        "x": 1041.1875,
+        "y": 155,
+        "width": 295.8125,
+        "height": 721.515625,
+        "bottom": 876.515625
+      },
+      "samples": null,
+      "preview": null
+    },
+    "visible_media": [],
+    "classification": "FUNCTIONAL_CONSTRAINT"
+  }
+]

@@ -1,0 +1,49 @@
+[
+  {
+    "module": "dashboard",
+    "width": 1920,
+    "computed_styles_and_geometry_equal": true,
+    "different_pixels": 276,
+    "difference_bbox": [
+      347,
+      783,
+      1671,
+      1013
+    ],
+    "explanation": "Independent synthetic runs have different saved-at timestamps; source/style/geometry unchanged. Pixel identity is not claimed."
+  },
+  {
+    "module": "create",
+    "width": 1920,
+    "computed_styles_and_geometry_equal": true,
+    "different_pixels": 162,
+    "difference_bbox": [
+      415,
+      723,
+      1180,
+      950
+    ],
+    "explanation": "Independent synthetic runs have different saved-at timestamps; source/style/geometry unchanged. Pixel identity is not claimed."
+  },
+  {
+    "module": "dashboard",
+    "width": 1366,
+    "computed_styles_and_geometry_equal": true,
+    "different_pixels": 117,
+    "difference_bbox": [
+      331,
+      663,
+      732,
+      685
+    ],
+    "explanation": "Independent synthetic runs have different saved-at timestamps; source/style/geometry unchanged. Pixel identity is not claimed."
+  },
+  {
+    "module": "create",
+    "width": 1366,
+    "computed_styles_and_geometry_equal": true,
+    "different_pixels": 0,
+    "difference_bbox": null,
+    "explanation": "Independent synthetic runs have different saved-at timestamps; source/style/geometry unchanged. Pixel identity is not claimed."
+  }
+]

@@ -1,0 +1,46 @@
+{
+  "base": "12e0d1a0c077a9bd2615060d299b7633d5cc0148",
+  "code": "1dc4ec70a35b87f9cfde90aa8d63d8159bb354ae",
+  "protected_sources_unchanged": [
+    "newsflow-ai/frontend/src/main.tsx",
+    "newsflow-ai/frontend/src/style.css",
+    "newsflow-ai/frontend/src/studio/workbench.css",
+    "newsflow-ai/frontend/src/legacy-actions.json",
+    "newsflow-ai/frontend/src/studio/CommandDialog.tsx",
+    "newsflow-ai/frontend/src/studio/contracts.ts",
+    "newsflow-ai/frontend/src/studio/approved.css",
+    "newsflow-ai/frontend/src/studio/ApprovedPanels.tsx",
+    "newsflow-ai/frontend/src/studio/Thumbnail.tsx",
+    "newsflow-ai/frontend/src/studio/Workbench.tsx",
+    "newsflow-ai/frontend/src/studio/SampleGallery.tsx",
+    "newsflow-ai/frontend/src/studio/samples.css"
+  ],
+  "backend_assets_security_schema_changes": [],
+  "functional_parity": {
+    "ImageStudio.tsx": {
+      "business_logic_and_handlers": "unchanged",
+      "sample_component_props": "unchanged",
+      "change": "gallery placement only"
+    },
+    "CharacterStudio.tsx": {
+      "business_logic_and_handlers": "unchanged",
+      "sample_component_props": "unchanged",
+      "change": "gallery placement only"
+    },
+    "NewsShortsStudio.tsx": {
+      "business_logic_and_handlers": "unchanged",
+      "sample_component_props": "unchanged",
+      "change": "gallery placement only"
+    },
+    "TopThreeImageStudio.tsx": {
+      "business_logic_and_handlers": "unchanged",
+      "sample_component_props": "unchanged",
+      "change": "gallery placement only"
+    }
+  },
+  "operating_data": "not accessed or modified",
+  "port8765": "not used",
+  "local_validation_directory": "preserved",
+  "scope": "Only .approved-studio.core-studio descendants; no shared shell selectors",
+  "sample12_integrity": "prior evidence reused; sample files and catalog not modified"
+}
