@@ -1,0 +1,19 @@
+{
+  "verdict": "CONDITIONAL",
+  "code_sha": "c4f5b63a1079d65b54cd4a7d7c80c7910e5cd651",
+  "branch": "codex/newsflow-studio-v3-20261026",
+  "PR35": "Draft / unmerged / original head unchanged",
+  "provider_calls": 0,
+  "generation": "Fake only; 3 outputs verified, explicit regeneration tested",
+  "paid_execution": "BLOCKED: official cost and account readiness not connected",
+  "latest_backend_windows_tests": 70,
+  "browser_checks": 10,
+  "full_regression": "not rerun; historical 5454 PASS / 4 SKIP only",
+  "operating_port": "8765 existing PID unchanged",
+  "test_port": "18765 released",
+  "operating_writes": 0,
+  "backup_AB_writes": 0,
+  "next": "Report then stop. Test credentials, authoritative cost readiness, real generation, Instagram, operating changes and EXE work require their own scope/approval.",
+  "windows_actions_run": 40428853999,
+  "windows_actions_status": "70 PASS /0 FAIL /0 ERROR /0 SKIP"
+}

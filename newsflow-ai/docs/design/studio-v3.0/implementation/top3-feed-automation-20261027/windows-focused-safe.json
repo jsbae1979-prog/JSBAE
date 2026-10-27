@@ -1,0 +1,322 @@
+{
+  "code": "c4f5b63a1079d65b54cd4a7d7c80c7910e5cd651",
+  "run": 40428853999,
+  "total_pass": 70,
+  "results": {
+    "studio-integration": {
+      "counts": {
+        "tests": 15,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "cases": [
+        {
+          "id": "tools.studio_v3.integration.test_acceptance_risks::test_trash_restore_requires_confirmation_and_rejects_changed_media",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_acceptance_risks::test_schedule_pause_resume_keeps_revision_and_never_dispatches",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_acceptance_risks::test_unknown_image_is_not_replayed_or_misclassified_as_news_card",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_acceptance_risks::test_character_quote_approval_and_unknown_submission_are_one_shot",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_acceptance_risks::test_publish_review_and_final_approval_are_separate_and_unknown_is_locked",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_full_app_forms::test_all_react_shells_and_read_models",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_full_app_forms::test_original_forms_csrf_origin_and_local_save",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_full_app_forms::test_fake_generation_once_verified_image_and_reference_boundary",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_full_app_forms::test_paused_schedule_and_local_post_without_account",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_full_app_forms::test_script_edit_keeps_revision_and_review_boundary",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_model_setting_integration::test_creation_defaults_restore_independently_without_mutating_saved_jobs",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_model_setting_integration::test_provider_key_form_targets_fake_store_without_returning_secret",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_top3_feed_integration::test_top3_json_forms_fake_output_review_and_csrf_boundaries",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_top3_feed_integration::test_top3_defaults_independent_and_real_unquoted_execution_blocked",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.integration.test_top3_feed_integration::test_top3_reviewed_local_post_matches_preview_and_is_idempotent",
+          "status": "PASS"
+        }
+      ]
+    },
+    "studio-readmodel": {
+      "counts": {
+        "tests": 30,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "cases": [
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[news]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[shorts]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[images]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[automation]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[publishing]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[analytics]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[library]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[settings]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[onboarding]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_all_module_views_are_readonly_and_secret_free[characters]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_image_draft_latest_output_link_and_filename_validation[success]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_image_draft_latest_output_link_and_filename_validation[failed]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_image_draft_latest_output_link_and_filename_validation[unknown]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_image_draft_latest_output_link_and_filename_validation[running]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_news_hidden_records_remain_archived",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_projection_column_contracts_exist",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_registry_preserves_every_original_post_route_and_no_write_proxy",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_news_image_post_is_independent_from_image_generation_draft",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_module_views::test_current_tts_and_video_limits_are_read_without_reset",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_read_model::test_empty_readonly_and_no_credentials",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_read_model::test_unfinished_image_never_has_media[unknown]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_read_model::test_unfinished_image_never_has_media[failed]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_read_model::test_unfinished_image_never_has_media[running]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_read_model::test_unfinished_image_never_has_media[draft]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_read_model::test_key_presence_is_not_verified_connection",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_read_model::test_sample_art_is_explicit_and_never_production_fallback",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_resource_integration::test_source_and_frozen_asset_roots_are_profile_independent",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_resource_integration::test_spec_includes_react_and_preserves_legacy_static_assets",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_resource_integration::test_spec_refuses_missing_react_build",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.studio_v3.tests.test_resource_integration::test_spec_refuses_unexpected_private_payload",
+          "status": "PASS"
+        }
+      ]
+    },
+    "top3-feed-tests": {
+      "counts": {
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "cases": [
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_rank_sources_script_reuse_and_short_copy",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_three_fake_outputs_and_request_dedup",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_supported_sizes_preserve_whole_layout_with_padding[1024x1024]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_supported_sizes_preserve_whole_layout_with_padding[1024x1536]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_supported_sizes_preserve_whole_layout_with_padding[1024x1280]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_approval_boundaries[False-False]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_approval_boundaries[True-False]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_approval_boundaries[False-True]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_real_price_unknown_blocks_before_credentials",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_incomplete_or_duplicate_selection_blocked[incomplete]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_incomplete_or_duplicate_selection_blocked[failed]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_incomplete_or_duplicate_selection_blocked[overlap]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_incomplete_or_duplicate_selection_blocked[same_url]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_incomplete_or_duplicate_selection_blocked[same_title]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_incomplete_or_duplicate_selection_blocked[bad_url]",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_failure_preserves_other_results_and_explicit_regenerate",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_timeout_unknown_not_replayed_or_regenerated",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_interrupted_before_provider_is_unknown_and_restart_keeps_success",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_pause_resume_edit_conflict_and_defaults_independent",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_tampered_output_and_frozen_source_rejected",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_lock_contention_prevents_duplicate_submit",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_edited_source_after_batch_does_not_change_snapshot",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_same_events_in_a_new_analysis_are_not_automatically_rendered_twice",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_export_synthetic_three_results_only",
+          "status": "PASS"
+        },
+        {
+          "id": "tools.feed_top3.tests.test_top_three_feeds::test_explicit_recover_after_write_gap_reuses_output_without_new_request",
+          "status": "PASS"
+        }
+      ]
+    }
+  },
+  "zip_sha256": "e8c6e23407ec40a3eb1e8c5ade150f087a48576b24dd61b83965aff7e5321e25",
+  "latest_frontend_checkpoint": "c4f5b63",
+  "latest_frontend_CI": "PASS: Windows Python 3.14.7; 30 read-model +25 TOP3 +15 full-app form integration",
+  "case_detail_artifact_code": "56e8ed7ec2ed0e00652c6390d86e75bcf98117b8",
+  "case_detail_reuse": "Python test files unchanged between 56e8ed7 and c4f5b63; latest run logs confirm all 70 passed"
+}

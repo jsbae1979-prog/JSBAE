@@ -1,0 +1,97 @@
+[
+  {
+    "path": "browser-safe.json",
+    "bytes": 1330,
+    "sha256": "570c50151048604a983593bffe7943d2c7c29091fe3ec38a72200cd69b868f14"
+  },
+  {
+    "path": "changes-safe.json",
+    "bytes": 1022,
+    "sha256": "882c5f0eb2b994c0f7f2be07edcae5360c7f84c2f2f958b1d7403be1093a0c72"
+  },
+  {
+    "path": "checkpoint-safe.json",
+    "bytes": 917,
+    "sha256": "6a0de6f4f4ba0fd2dd5c7c205fb6d062e1557f8ce792144fe6d7a0538dfa00bc"
+  },
+  {
+    "path": "fake-results/fake-batch.json",
+    "bytes": 9961,
+    "sha256": "f8783712664b1ad2aec1110f85051807b237aab090fa0314e53fea3b095153c6"
+  },
+  {
+    "path": "fake-results/fake-top1.jpg",
+    "bytes": 51610,
+    "sha256": "6262bb66c2acbfcbad933ee62b4c126cde75c62c85eacf3ee8c84ceb87263835"
+  },
+  {
+    "path": "fake-results/fake-top2.jpg",
+    "bytes": 50504,
+    "sha256": "3a5ae6b119916b844365eb179f55f4646023baee0bddb98201961c3cfca846c2"
+  },
+  {
+    "path": "fake-results/fake-top3.jpg",
+    "bytes": 50776,
+    "sha256": "93b9edda00e45d393669d3665b07f74904f5cd729d6d37f3afbe0fea882ba8fc"
+  },
+  {
+    "path": "operating-preservation-safe.json",
+    "bytes": 623,
+    "sha256": "d431bd0c8ecc2f5421138dba194da35a09f3644f522919fca9140289d7f4e888"
+  },
+  {
+    "path": "process-cleanup-safe.json",
+    "bytes": 226,
+    "sha256": "8b3786fbbe5208a1a4899e01a667321a2190e10a52006a05d0a98541f65ce7de"
+  },
+  {
+    "path": "screenshots/top3-1366.png",
+    "bytes": 293343,
+    "sha256": "5660a12fc67cd12540a51acc0a03abae3c7d1a53125b00db5213068f6ae5c670"
+  },
+  {
+    "path": "screenshots/top3-1920.png",
+    "bytes": 394892,
+    "sha256": "e85823bc90330e95da7a4cd15d0dedfe06ad42c63d8108d013f4e07a8071ea1b"
+  },
+  {
+    "path": "screenshots/top3-390.png",
+    "bytes": 150114,
+    "sha256": "fa0cb7ed9504f3e3187f8cd4333d6e987f4e606e8b5f3e36ab3db81955a6b414"
+  },
+  {
+    "path": "screenshots/top3-approval-1366.png",
+    "bytes": 144333,
+    "sha256": "fb91179cde870b3f3fa065c1adbb035b7e17ff1dbe5fcea26ab976f0af7fbc9f"
+  },
+  {
+    "path": "screenshots/top3-results-1366.png",
+    "bytes": 238068,
+    "sha256": "bae1310b8c7c73961f36d53dd156f3e29234dea46a3d63c0f1e5616faaed7aae"
+  },
+  {
+    "path": "screenshots/top3-results-1920.png",
+    "bytes": 340720,
+    "sha256": "5e21e2e6c9b7c26416aa925a6432ac3a230ab1e161c5ec51d6f4af46905a3ae1"
+  },
+  {
+    "path": "screenshots/top3-results-390.png",
+    "bytes": 102337,
+    "sha256": "b97bb1ed7cc003441b9a09aed522d8c00bb3f15cfaa01d0834bd614189359496"
+  },
+  {
+    "path": "TOP3_AUTOMATION_REPORT.html",
+    "bytes": 20836,
+    "sha256": "43e7e8687446a67672c9ac36604bb575e8b54f332c695ea65c9cce2a874f3a8c"
+  },
+  {
+    "path": "TOP3_AUTOMATION_REPORT.ko.txt",
+    "bytes": 17833,
+    "sha256": "3dee7f3db22788f4b137293784e95fe7d26d6b0b3b93443d2035197a658a6da6"
+  },
+  {
+    "path": "windows-focused-safe.json",
+    "bytes": 12855,
+    "sha256": "d146b475ec84f4064d6cdd1ef0e12a2b05e95f8cbce5419f5d949fadc6416322"
+  }
+]
