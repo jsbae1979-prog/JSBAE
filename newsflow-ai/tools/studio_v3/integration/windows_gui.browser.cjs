@@ -53,7 +53,7 @@ const control=action=>ipc({kind:"control",action});
   await page.reload();await text.waitFor();assert.equal(await text.inputValue(),"Windows 실제 앱 GUI에서 저장한 합성 대본입니다.");
   await text.fill("충돌 시 보존할 GUI 합성 대본");await control("conflict");
   await page.getByRole("button",{name:"대본 저장",exact:true}).click();
-  await page.getByRole("status").getByText(/다른 화면|다른.*변경|Revision|충돌/).waitFor();
+  await page.getByRole("status").getByText(/다른 편집|다른 화면|다른.*변경|Revision|충돌/).waitFor();
   assert.equal(await text.inputValue(),"충돌 시 보존할 GUI 합성 대본");
  });
  await check("shorts simplified settings and separate production approval",async()=>{
@@ -78,13 +78,14 @@ const control=action=>ipc({kind:"control",action});
   const d=page.getByRole("dialog");await d.waitFor();
   await d.locator("input[type=file]").setInputFiles(path.join(root,"reference.png"));
   const topic=d.getByLabel("이야기 주제",{exact:true});if(await topic.count())await topic.fill("Windows GUI 새 합성 주제");
+  await d.getByLabel("이번 작업 한도",{exact:true}).fill("5");await d.getByLabel("하루 한도",{exact:true}).fill("20");
   await d.locator("footer button.primary").click();await d.waitFor({state:"hidden"});
   await page.locator(".core-job-list").getByText("Windows GUI 새 합성 주제",{exact:true}).waitFor();
  });
  let imageId;
  await check("independent image options, actual draft save and reopen",async()=>{
   await open("images");
-  await page.getByLabel("이미지 지시문",{exact:true}).fill("Windows GUI 합성 도형 이미지");
+  await page.getByLabel("이미지 프롬프트",{exact:true}).fill("Windows GUI 합성 도형 이미지");
   await page.getByLabel("이미지 품질",{exact:true}).selectOption("low");
   await page.getByRole("button",{name:"초안 저장 · 참조 첨부",exact:true}).click();
   const d=page.getByRole("dialog");await d.waitFor();await d.locator("footer button.primary").click();await d.waitFor({state:"hidden"});
@@ -104,7 +105,7 @@ const control=action=>ipc({kind:"control",action});
   await page.getByRole("button",{name:"검토 후 재사용",exact:true}).click();await page.getByRole("dialog").waitFor();await page.keyboard.press("Escape");
  });
  await check("TOP3 actual stored analysis, independent Fake outputs and review separation",async()=>{
-  await open("images?mode=top3");await page.getByRole("button",{name:"TOP 3 제작 작업 저장",exact:true}).click();
+  await open("images?mode=top3");await page.getByLabel("완료된 TOP 3 분석",{exact:true}).selectOption(String(meta.analysis));await page.getByRole("button",{name:"TOP 3 제작 작업 저장",exact:true}).click();
   await page.locator(".core-feed-results article").first().waitFor();assert.equal(await page.locator(".core-feed-results article").count(),3);
   await page.getByRole("button",{name:"TOP 3 생성 · 비용 승인",exact:true}).click();
   const d=page.getByRole("dialog",{name:"TOP 3 생성 범위 승인"});await d.waitFor();
@@ -115,7 +116,7 @@ const control=action=>ipc({kind:"control",action});
   assert.equal(await page.locator(".core-feed-results img").count(),3);
   for(const img of await page.locator(".core-feed-results img").all()){await img.evaluate(i=>i.decode());assert.deepEqual(await img.evaluate(i=>[i.naturalWidth,i.naturalHeight]),[1080,1350]);}
   assert.equal(await page.getByText("이미지 제작 방식",{exact:true}).count(),0);
-  for(const button of await page.getByRole("button",{name:"게시용 검토",exact:true}).all())assert(await button.isDisabled());
+  const reviews=page.getByRole("button",{name:"게시용 검토본 저장",exact:true});assert.equal(await reviews.count(),1);for(const button of await reviews.all())assert(await button.isDisabled());
   assert.equal((await saved()).analysisCount,1);
  });
  for(const [width,height] of [[1920,1080],[1366,768]]){
@@ -128,7 +129,20 @@ const control=action=>ipc({kind:"control",action});
     const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2);assert(!overflow,"horizontal overflow");
     const buttons=await page.locator(".core-shorts button,.core-character button,.core-image-grid button,.core-top3 button,.core-news-grid button").evaluateAll(ns=>ns.filter(n=>!n.disabled).map(n=>{const r=n.getBoundingClientRect();return {text:n.textContent.trim().slice(0,45),x:r.x,width:r.width};}));
     const file=name+"-"+width+".png";await page.screenshot({path:path.join(out,file),animations:"disabled",caret:"hide"});
-    result.captures.push({screen:name,width,height,file,overflow,buttons});
+    const capture={screen:name,width,height,file,overflow,buttons};
+    result.captures.push(capture);
+    if(width===1366 && ["shorts","characters","images"].includes(name)){
+      const title={shorts:"영상 제작 · 승인 확인",characters:"참조 PNG 등록 · 새 작업",images:"검토 후 재사용"}[name];
+      const action=page.getByRole("button",{name:title,exact:true});
+      if(await action.count() && await action.isEnabled()){
+        await action.scrollIntoViewIfNeeded();await action.click();
+        const dialog=page.getByRole("dialog");await dialog.waitFor();
+        const b=await dialog.boundingBox();assert(b && b.x>=0 && b.y>=0 && b.x+b.width<=width+2 && b.y+b.height<=height+2,"approval modal clipped");
+        capture.modalBounds=b;
+        await page.screenshot({path:path.join(out,name+"-modal-1366.png"),animations:"disabled"});
+        await page.keyboard.press("Escape");
+      }else capture.modalState="NOT VERIFIED / action unavailable in current state";
+    }
    });
   }
  }
