@@ -7,9 +7,19 @@
 
 ## 핵심 5종 최종 갱신 — 2026-10-27
 
-사용자가 GitHub 반영을 명시적으로 요청한 핵심 5종은 [CORE_5_APPROVED_MANIFEST.json](CORE_5_APPROVED_MANIFEST.json)을 기준으로 한다. 뉴스 쇼츠·캐릭터 쇼츠·독립 AI 이미지·뉴스 스튜디오 4개는 기존 승인 바이트를 유지한다. TOP 3는 재첨부한 **네온 뉴스 AI 이미지 제작실 대시보드.png** 원본으로 교체했다. 잘못 첨부했던 독립 이미지와 AI 생성 미검증 참고 시안은 사용하지 않았다.
+사용자가 GitHub 반영을 명시적으로 요청한 핵심 5종은 [CORE_5_APPROVED_MANIFEST.json](CORE_5_APPROVED_MANIFEST.json)을 기준으로 한다. 캐릭터 쇼츠·독립 AI 이미지·뉴스 스튜디오는 기존 승인 바이트를 유지한다. 뉴스 쇼츠는 아래 후속 최종 수정본으로 갱신했다. TOP 3는 재첨부한 **네온 뉴스 AI 이미지 제작실 대시보드.png** 원본으로 교체했다. 잘못 첨부했던 독립 이미지와 AI 생성 미검증 참고 시안은 사용하지 않았다.
 
 현재 TOP 3: [top3_feed_v3.png](top3_feed_v3.png), **1610×977**, 2,074,914 bytes, SHA-256 `b5977d3c3ac55c39b43135843aead887726b6ccb38f750aed7c7e617748551b4`. 사용자 최종 지정 파일과 동일하며 재생성·리사이즈·편집하지 않았다. 과거 3차 원본과 픽셀 동일성을 주장하지 않는다. 이전 파일은 Git 이력에서 보존된다. 승인 파일명은 기존 참조 호환을 위해 유지한다.
+
+## 뉴스 쇼츠 최종 수정본 후속 갱신 — 2026-10-27
+
+사용자가 첨부한 **뉴스 쇼츠 제작실 대시보드.png**를 뉴스 쇼츠 제작실 최종 수정본으로 지정하여 업데이트를 요청했다. [news_shorts_v2.png](news_shorts_v2.png)에 원본 바이트 그대로 반영했다. 파일명은 기존 참조 호환을 위해 유지한다.
+
+- SHA-256: `e7aa918622ae460f0b372dae5f1ac8b0e76d5f864fa03bd35a9fb7e515fb911e`
+- 해상도: **1536×1024**, 크기: **1,820,991 bytes**
+- 분석된 최신 뉴스 TOP 3 선택, AI 대본 작성, 영상 설정·미리보기, 영상 제작·저장 영역이 있는 사용자 제공 화면이다.
+- 재생성·리사이즈·문구 수정 없음. 이전 뉴스 쇼츠 원본은 Git 이력으로 보존한다. 나머지 핵심 디자인 4개는 직전 승인 상태를 유지한다.
+- 기존 뉴스 쇼츠 SHA-256 `738db2ba3bfc03084758c9209679b21dcaed1436fedc8b9d2f754fb6341aaea0`는 교체 전 이력이다.
 
 ## 승인 근거와 해시 구분
 
@@ -19,15 +29,15 @@
 - [새 5개 전송 명세](https://github.com/jsbae1979-prog/JSBAE/blob/0fc3da0578dfd3ce4af8a12994e7e7a330139fc1/newsflow-ai/docs/design/approved-20261027/APPROVED_5_BINARY_UPLOAD_MANIFEST_20261027.md).
 - 파일명이나 BYTE_MATCH만으로 승격한 것이 아니다. 사용자 최종 선택 근거와 각 원본의 바이트 일치를 함께 확인했다.
 - 아래 SHA-256은 원본 바이트 해시다. Git blob SHA(별도 Git 객체 식별자)와 다르다. Git blob ID로 SHA-256 검사를 대체하지 않았다.
-- 최초 등록 당시 PNG 11개는 1536×1024였고 검증 11/11 PASS였다. 현재는 TOP 3만 사용자 최종 수정본 **1610×977**로 갱신했으며 나머지 10개는 그대로다. 이번 작업은 핵심 5종 원본 바이트 일치와 변경 범위를 확인한다.
+- 최초 등록 당시 PNG 11개는 1536×1024였고 검증 11/11 PASS였다. 현재는 TOP 3를 사용자 최종 수정본 **1610×977**, 뉴스 쇼츠를 후속 사용자 최종 수정본 **1536×1024**로 갱신했으며 나머지 9개는 그대로다. 이번 작업은 핵심 5종 원본 바이트 일치와 변경 범위를 확인한다.
 
 ## 최종 PNG 11개
 
-기본 경로: `newsflow-ai/docs/design/approved-20261027/approved-assets/`. 변경 없는 파일 링크는 최초 등록 커밋으로 고정했고, TOP 3 링크는 이 문서와 같은 버전의 파일을 가리킨다.
+기본 경로: `newsflow-ai/docs/design/approved-20261027/approved-assets/`. 변경 없는 파일 링크는 최초 등록 커밋으로 고정했고, TOP 3와 뉴스 쇼츠 링크는 이 문서와 같은 버전의 파일을 가리킨다.
 
 | 화면 | 승인 버전 | 최종 PNG 경로·URL | SHA-256 | 해상도 | 승인 근거 | 기존 후보와 관계 | 자산 판정 | 실제 기능 대응(기존 감사) |
 |---|---|---|---|---|---|---|---|---|
-| 뉴스 쇼츠 제작실 | 2차 | [newsflow-ai/docs/design/approved-20261027/approved-assets/news_shorts_v2.png](https://github.com/jsbae1979-prog/JSBAE/blob/4daadfc6432b9dc7c99d0a05c8167aca345c784f/newsflow-ai/docs/design/approved-20261027/approved-assets/news_shorts_v2.png) | `738db2ba3bfc03084758c9209679b21dcaed1436fedc8b9d2f754fb6341aaea0` | 1536×1024 | 오른쪽 원본 선택 사용자 승인 + 첨부 원본/지정 해시 | 기존 candidate를 보존하고 새 승인 바이트를 별도 경로에 등록 | VERIFIED | PARTIAL |
+| 뉴스 쇼츠 제작실 | 사용자 최종 수정본 (2026-10-27) | [news_shorts_v2.png](news_shorts_v2.png) | `e7aa918622ae460f0b372dae5f1ac8b0e76d5f864fa03bd35a9fb7e515fb911e` | 1536×1024 | 사용자 첨부 최종 수정본 지정 + 업데이트 요청 | 승인 경로 교체, 과거 버전 Git 이력 보존 | VERIFIED (사용자 첨부와 바이트 일치) | PARTIAL |
 | 캐릭터 쇼츠 제작실 | 4차 간편 | [newsflow-ai/docs/design/approved-20261027/approved-assets/character_shorts_v4.png](https://github.com/jsbae1979-prog/JSBAE/blob/4daadfc6432b9dc7c99d0a05c8167aca345c784f/newsflow-ai/docs/design/approved-20261027/approved-assets/character_shorts_v4.png) | `f0e5154f096676ba9ac626e6c6312e6ee114ed467968e38559002a564c0350ec` | 1536×1024 | 기존 일치 6개 유지 사용자 승인 + 비교 기록 | 기존 candidate와 동일 바이트 복사 | VERIFIED | PARTIAL |
 | 독립 AI 이미지 제작 | 2차 | [newsflow-ai/docs/design/approved-20261027/approved-assets/standalone_image_v2.png](https://github.com/jsbae1979-prog/JSBAE/blob/4daadfc6432b9dc7c99d0a05c8167aca345c784f/newsflow-ai/docs/design/approved-20261027/approved-assets/standalone_image_v2.png) | `60f6ae67f45fd1c30b3a7cbc19d9090136b40741e18f41f82ac3addc1e706cf4` | 1536×1024 | 오른쪽 원본 선택 사용자 승인 + 첨부 원본/지정 해시 | 기존 candidate를 보존하고 새 승인 바이트를 별도 경로에 등록 | VERIFIED | PARTIAL |
 | 뉴스 기반 이미지 제작 | 2차 | [newsflow-ai/docs/design/approved-20261027/approved-assets/news_image_v2.png](https://github.com/jsbae1979-prog/JSBAE/blob/4daadfc6432b9dc7c99d0a05c8167aca345c784f/newsflow-ai/docs/design/approved-20261027/approved-assets/news_image_v2.png) | `c8a704d76ffa432cc5781fbf2535697899b159099820e2a487f911c50bb42398` | 1536×1024 | 기존 일치 6개 유지 사용자 승인 + 비교 기록 | 기존 candidate와 동일 바이트 복사 | VERIFIED | PARTIAL |
