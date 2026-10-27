@@ -5581,5 +5581,242 @@
     ],
     "source": "gui/tiktok_routes.py",
     "unsupported": false
+  },
+  {
+    "id": "creation_feed_batch_defaults",
+    "module": "images",
+    "label": "TOP 3 기본값 저장",
+    "path": "/api/feed-batches/defaults",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "size",
+        "type": "text",
+        "required": false,
+        "default": "1024x1280",
+        "path": false
+      },
+      {
+        "name": "quality",
+        "type": "text",
+        "required": false,
+        "default": "medium",
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_feed_batch_create",
+    "module": "images",
+    "label": "TOP 3 제작 작업 저장",
+    "path": "/api/feed-batches",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "analysis_id",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "model",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "size",
+        "type": "text",
+        "required": false,
+        "default": "1024x1280",
+        "path": false
+      },
+      {
+        "name": "quality",
+        "type": "text",
+        "required": false,
+        "default": "medium",
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_feed_batch_step",
+    "module": "images",
+    "label": "TOP 3 검토 후 생성",
+    "path": "/api/feed-batches/{identifier}/step",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_feed_batch_change",
+    "module": "images",
+    "label": "TOP 3 작업 변경",
+    "path": "/api/feed-batches/{identifier}/change",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1,
+        "le": 3
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 60
+      },
+      {
+        "name": "body",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 180
+      },
+      {
+        "name": "hashtags",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 200
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_feed_batch_review",
+    "module": "images",
+    "label": "TOP 3 로컬 게시 검토본 저장",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/review",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "rights",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "sources_confirmed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "ai_disclosure",
+        "type": "text",
+        "required": false,
+        "default": "unreviewed",
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
   }
 ]

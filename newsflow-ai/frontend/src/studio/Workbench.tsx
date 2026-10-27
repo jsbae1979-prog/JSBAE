@@ -39,6 +39,7 @@ import {
 import { CommandDialog, submitOriginal } from "./CommandDialog";
 import "./workbench.css";
 import { Thumbnail } from "./Thumbnail";
+import TopThreeFeeds from "./TopThreeFeeds";
 const intro: Record<string, string> = {
   news: "보관 기사에서 이야기를 선택하세요.",
   shorts: "기사 · 대본 · 음성 · 영상을 한 작업으로 이어갑니다.",
@@ -1305,8 +1306,9 @@ export default function Workbench({
                   >
                     뉴스 이미지 게시물
                   </button>
+                  <button role="tab" aria-selected={tab === "top3"} onClick={() => {setTab("top3");setSelected(null);}}>뉴스 TOP 3 자동 제작</button>
                 </div>
-                <div className="work-columns production-columns">
+                {tab === "top3" ? <TopThreeFeeds selections={list("selections")} catalog={catalog} csrf={view.csrfToken} /> : <div className="work-columns production-columns">
                   <div className="work-stack">
                     {tab === "independent" ? (
                       <>
@@ -1493,7 +1495,7 @@ export default function Workbench({
                       </button>
                     </section>
                   </aside>
-                </div>
+                </div>}
               </>
             )}
             {module === "automation" && (

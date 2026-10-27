@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import urlencode, urlsplit
 from uuid import uuid4
 
-from PIL import Image
+from PIL import Image, ImageOps
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
@@ -178,8 +178,8 @@ class ImagePostService:
             # Preserve the API's entire composition; resize only, no local card/template overlay.
             with Image.open(BytesIO(photo)) as image:
                 output = BytesIO()
-                image.convert("RGB").resize((1080, 1350), Image.Resampling.LANCZOS).save(
-                    output, format="JPEG", quality=90)
+                ImageOps.pad(image.convert("RGB"), (1080, 1350), method=Image.Resampling.LANCZOS,
+                             color=(11, 22, 40)).save(output, format="JPEG", quality=90)
                 raw = output.getvalue()
         self.outputs.mkdir(parents=True, exist_ok=True)
         name = f"image-{uuid4().hex}.jpg"

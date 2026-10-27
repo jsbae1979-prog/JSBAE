@@ -217,6 +217,8 @@ def create_app(
     app.state.image_generation, app.state.image_posts = image_generation, image_posts
     from .creation.image_studio import ImageStudio
     app.state.image_studio = ImageStudio(sessions, settings.data_dir, image_generation)
+    from .creation.top_three_feeds import TopThreeFeeds
+    app.state.top_three_feeds = TopThreeFeeds(sessions, settings.data_dir, image_generation)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 
     def valid(token: str) -> bool:
