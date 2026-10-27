@@ -1,0 +1,108 @@
+{
+  "baseline_report": "cf2fdb4684cfab15419d64fbff7847ab86f2457d",
+  "CI_code": "545f09dab03c68c51c48515d75e6910638128e52",
+  "prepared_code_not_CI_reexecuted": "a911be550ddd61f80a324d454728ef6a6550e325",
+  "run_id": 40531809814,
+  "job_id": 122286346398,
+  "run_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40531809814",
+  "CI_conclusion": "failure",
+  "artifact_uploaded": false,
+  "new_test_results": {
+    "PASS": 0,
+    "FAIL": "NO TEST RESULT / not a test assertion failure",
+    "BLOCKED": 1,
+    "NOT_VERIFIED_security_cases": 9
+  },
+  "test_results_certified": false,
+  "application_initialization": "BLOCKED / no certified result",
+  "FileLock_current_in_app_policy": "NOT VERIFIED; prior 28 PASS reused",
+  "SQLite_current": "NOT VERIFIED",
+  "React_responses_current": "NOT VERIFIED",
+  "boundary_rejection": "verification_gate.Denied: read-outside-verification-roots",
+  "confirmed_failure_location": "finally post-run source-integrity read (runner line 122 at tested commit)",
+  "primary_exception_runtime_details": "NOT RETAINED: evidence integrity read rejection masked earlier exception; no artifact produced.",
+  "static_cause": "gate read_roots excludes the verification source modules required before AppPolicy registration; original Guard read roots include them.",
+  "new_native_calls_granted": [],
+  "Guard_permissions_after_rejection_changed": false,
+  "retry_dispatched": false,
+  "resource_remaining_native_handles": "NOT CERTIFIED after incomplete bootstrap",
+  "resource_remaining_CRT_descriptors": "NOT CERTIFIED after incomplete bootstrap",
+  "resource_remaining_buffers": "NOT CERTIFIED after incomplete bootstrap",
+  "resource_remaining_synthetic_files": "NOT CERTIFIED; no artifact or normal cleanup certificate",
+  "local_app_executed": false,
+  "DPI_changed": false,
+  "paid_API_SNS_calls": 0,
+  "dependencies_from_CI": {
+    "python": "3.14.7",
+    "filelock": "3.32.7",
+    "fastapi": "0.162.0",
+    "starlette": "1.10.0",
+    "SQLAlchemy": "2.1.6",
+    "alembic": "1.20.1",
+    "httpx": "0.28.1",
+    "anyio": "4.15.1"
+  },
+  "CI_steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/checkout@v5",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-node@v4",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Run actions/setup-python@v6",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Build unchanged React resources",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install isolated dependencies before Guard (no product import)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "New policy boundaries and guarded create_app only",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Run actions/upload-artifact@v4",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Post Run actions/setup-python@v6",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Post Run actions/setup-node@v4",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Post Run actions/checkout@v5",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "final": "BLOCKED"
+}

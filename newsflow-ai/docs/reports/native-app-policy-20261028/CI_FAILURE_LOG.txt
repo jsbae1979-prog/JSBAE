@@ -1,0 +1,32 @@
+2026-10-27T15:33:23.0173866Z Traceback (most recent call last):
+2026-10-27T15:33:23.0186810Z   File "D:\a\JSBAE\JSBAE\newsflow-ai\tools\native_app_policy\run_app_policy.py", line 122, in <module>
+2026-10-27T15:33:23.0188012Z   File "D:\a\JSBAE\JSBAE\newsflow-ai\tools\native_app_policy\run_app_policy.py", line 122, in <genexpr>
+2026-10-27T15:33:23.0188953Z   File "D:\a\JSBAE\JSBAE\newsflow-ai\tools\native_app_policy\run_app_policy.py", line 31, in <lambda>
+2026-10-27T15:33:23.0189887Z   File "C:\hostedtoolcache\windows\Python\3.14.7\x64\Lib\pathlib\__init__.py", line 777, in read_bytes
+2026-10-27T15:33:23.0190549Z     with self.open(mode='rb', buffering=0) as f:
+2026-10-27T15:33:23.0190919Z          ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-27T15:33:23.0191515Z   File "C:\hostedtoolcache\windows\Python\3.14.7\x64\Lib\pathlib\__init__.py", line 771, in open
+2026-10-27T15:33:23.0192224Z     return io.open(self, mode, buffering, encoding, errors, newline)
+2026-10-27T15:33:23.0192730Z            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-27T15:33:23.0193366Z   File "D:\a\_temp\newsflow-app-policy-wvuajfqt\verification_gate.py", line 182, in audit
+2026-10-27T15:33:23.0193993Z     self.deny("read-outside-verification-roots")
+2026-10-27T15:33:23.0194396Z     ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-27T15:33:23.0194967Z   File "D:\a\_temp\newsflow-app-policy-wvuajfqt\verification_gate.py", line 81, in deny
+2026-10-27T15:33:23.0195506Z     raise Denied(reason)
+2026-10-27T15:33:23.0195926Z verification_gate.Denied: read-outside-verification-roots
+2026-10-27T15:33:23.1674760Z ##[error]Process completed with exit code 1.
+2026-10-27T15:33:23.1890184Z ##[group]Run actions/upload-artifact@v4
+2026-10-27T15:33:23.1890550Z with:
+2026-10-27T15:33:23.1890764Z   name: bounded-app-policy-evidence
+2026-10-27T15:33:23.1891143Z   path: D:\a\_temp/newsflow-app-policy-*/app-policy-evidence.json
+2026-10-27T15:33:23.1891525Z   if-no-files-found: error
+2026-10-27T15:33:23.1891764Z   compression-level: 6
+2026-10-27T15:33:23.1892027Z   overwrite: false
+2026-10-27T15:33:23.1892330Z   include-hidden-files: false
+2026-10-27T15:33:23.1892684Z env:
+2026-10-27T15:33:23.1894722Z   Python2_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.14.7\x64
+2026-10-27T15:33:23.1895280Z   Python3_ROOT_DIR: C:\hostedtoolcache\windows\Python\3.14.7\x64
+2026-10-27T15:33:23.1895786Z ##[endgroup]
+2026-10-27T15:33:23.3954678Z (node:7200) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-10-27T15:33:23.3955764Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-10-27T15:33:23.4040926Z ##[error]No files were found with the provided path: D:\a\_temp/newsflow-app-policy-*/app-policy-evidence.json. No artifacts will be uploaded.

@@ -1,0 +1,30 @@
+{
+  "host_guard_matches_baseline": true,
+  "host_guard_SHA256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+  "host_native_boundary_SHA256": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+  "installed_filelock_source_files_match": true,
+  "installed_filelock_files_checked": 18,
+  "protected_source_diff": [],
+  "product_and_previous_tools_unchanged": true,
+  "operating_data_keys_media_backups_used_or_modified": false,
+  "operating_process_control": false,
+  "local_full_app_or_DPI_run": false,
+  "PR35": {
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "draft": true,
+    "merged": false,
+    "state": "open"
+  },
+  "existing_results": {
+    "FileLock": 28,
+    "Guard_CRT": 29,
+    "integration": 32,
+    "native": 39,
+    "Windows_app_API": 7,
+    "Windows_focused_CI": 59,
+    "synthetic_browser": 42,
+    "reused_only": true,
+    "not_aggregated_with_new": true
+  },
+  "new_full_hash_scan_of_operating_data": false
+}
