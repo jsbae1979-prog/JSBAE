@@ -20,28 +20,58 @@ def initialize(data,policy):
             "scheduler_started":False,"publishing_started":False,"data_dir_in_runner_temp":True}
 
 async def read_models(policy):
-    import httpx
+    # Real ASGI messages to the unchanged app; no unrelated HTTP CLI/console import.
+    import json
+    from urllib.parse import urlsplit
     results=[];assets=set()
-    transport=httpx.ASGITransport(app=APP)
+    async def get(url):
+        parsed=urlsplit(url);started=None;chunks=[];received=False
+        scope={"type":"http","asgi":{"version":"3.0","spec_version":"2.4"},
+               "http_version":"1.1","scheme":"http","method":"GET",
+               "path":parsed.path,"raw_path":parsed.path.encode("ascii"),
+               "query_string":parsed.query.encode("ascii"),"root_path":"",
+               "headers":[(b"host",b"127.0.0.1:18765")],
+               "server":("127.0.0.1",18765),"client":("127.0.0.1",18766),"extensions":{}}
+        async def receive():
+            nonlocal received
+            if not received:
+                received=True
+                return {"type":"http.request","body":b"","more_body":False}
+            await asyncio.Event().wait()
+        async def send(message):
+            nonlocal started
+            if message["type"]=="http.response.start":started=message
+            elif message["type"]=="http.response.body":chunks.append(message.get("body",b""))
+            else:raise AssertionError("Unrequested ASGI response extension")
+        async with asyncio.timeout(10):
+            await APP(scope,receive,send)
+        assert started is not None,"No HTTP response start"
+        body=b"".join(chunks)
+        class Response:
+            status_code=started["status"]
+            headers={k.decode("latin1").lower():v.decode("latin1") for k,v in started["headers"]}
+            content=body
+            text=body.decode("utf-8")
+            def json(self):return json.loads(self.text)
+        return Response()
     with policy.read_only_asgi():
-        async with httpx.AsyncClient(transport=transport,base_url="http://127.0.0.1:18765",follow_redirects=False) as client:
-            for url in ("/studio/shorts","/studio/characters","/studio/images","/studio/images?mode=top3","/studio/news"):
-                response=await client.get(url)
-                assert response.status_code==200,(url,response.status_code)
-                assert '<div id="root">' in response.text
-                csp=response.headers["content-security-policy"]
-                assert "unsafe-inline" not in csp and "unsafe-eval" not in csp
-                assets.update(re.findall(r'(?:src|href)="(/studio/assets/[^"<>]+\.(?:js|css))"',response.text))
-                results.append({"path":url,"status":200,"CSP":"preserved"})
-            assert any(x.endswith(".js") for x in assets) and any(x.endswith(".css") for x in assets)
-            for url in sorted(assets):
-                response=await client.get(url);assert response.status_code==200 and len(response.content)>100
-                results.append({"path":url,"status":200,"bytes":len(response.content)})
-            for module in ("news","shorts","characters","images"):
-                url="/api/studio/modules/"+module;response=await client.get(url)
-                assert response.status_code==200,(url,response.status_code,response.text[:100])
-                payload=response.json();assert payload["module"]==module and payload["schemaVersion"]==1
-                results.append({"path":url,"status":200,"synthetic_empty_state":True})
+        for url in ("/studio/shorts","/studio/characters","/studio/images","/studio/images?mode=top3","/studio/news"):
+            response=await get(url)
+            assert response.status_code==200,(url,response.status_code)
+            assert '<div id="root">' in response.text
+            csp=response.headers["content-security-policy"]
+            assert "unsafe-inline" not in csp and "unsafe-eval" not in csp
+            assets.update(re.findall(r'(?:src|href)="(/studio/assets/[^"<>]+\.(?:js|css))"',response.text))
+            results.append({"path":url,"status":200,"CSP":"preserved"})
+        assert any(x.endswith(".js") for x in assets) and any(x.endswith(".css") for x in assets)
+        for url in sorted(assets):
+            response=await get(url);assert response.status_code==200 and len(response.content)>100
+            results.append({"path":url,"status":200,"bytes":len(response.content)})
+        for module in ("news","shorts","characters","images"):
+            url="/api/studio/modules/"+module;response=await get(url)
+            assert response.status_code==200,(url,response.status_code,response.text[:100])
+            payload=response.json();assert payload["module"]==module and payload["schemaVersion"]==1
+            results.append({"path":url,"status":200,"synthetic_empty_state":True})
     return results
 
 def cleanup():
