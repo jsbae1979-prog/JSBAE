@@ -1,0 +1,48 @@
+{
+  "not_aggregate": true,
+  "previous_evidence": [
+    {
+      "pass": 39,
+      "run": 40509608323
+    },
+    {
+      "pass": 32,
+      "run": 40512952761
+    },
+    {
+      "pass": 29,
+      "run": 40518651508
+    }
+  ],
+  "executions": [
+    {
+      "run": 40525860869,
+      "commit": "558397864227f1c2bc277bf7192967bd739a683e",
+      "status": "startup blocked",
+      "tests_executed": false,
+      "cause": "contract_snapshot.json Windows CRLF raw hash mismatch before Guard/native/test execution"
+    },
+    {
+      "run": 40526957854,
+      "commit": "d1b5968bde082136e5d8abb29be833cb1771ce97",
+      "pass": 27,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "new_tests": 25,
+      "selected_previous_tests": 2
+    },
+    {
+      "run": 40528900618,
+      "commit": "11ad046394267bd2589ccff67c37549839f555db",
+      "pass": 28,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "new_tests": 26,
+      "selected_previous_tests": 2,
+      "artifact_id": 12744554677,
+      "artifact_zip_SHA256": "b170733e7775d6bfc0f2edffe510c7556d1f149f7d03d9c0c2a8cfb59be20324"
+    }
+  ]
+}

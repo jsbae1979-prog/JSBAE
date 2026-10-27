@@ -1,0 +1,32 @@
+{
+  "base": "297510601be4709b69db9ece264cba501ae15532",
+  "code_commit": "11ad046394267bd2589ccff67c37549839f555db",
+  "host_guard_SHA256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+  "host_guard_matches_baseline": true,
+  "host_native_boundary_SHA256": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+  "installed_filelock_top_level_files_checked": 18,
+  "all_installed_filelock_source_hashes_match": true,
+  "changed_scope": [
+    "tools/native_rtl_filelock/",
+    "one dedicated workflow"
+  ],
+  "previous_three_verification_folders_unchanged": true,
+  "product_python_React_unchanged": true,
+  "PR35": {
+    "head_sha": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "draft": true,
+    "state": "open",
+    "merged": false
+  },
+  "main_not_changed": true,
+  "operating_data_used_or_written": false,
+  "operating_app_started_stopped_or_restarted": false,
+  "backup_files_used_or_written": false,
+  "local_native_runtime_executed": false,
+  "local_full_app_executed": false,
+  "OS_DPI_changed": false,
+  "paid_API_SNS_calls": 0,
+  "untracked_validation_preserved": true,
+  "operating_data_new_full_hash_scan": false,
+  "note": "Operating data preservation reuses prior evidence; no new runtime/state query."
+}
