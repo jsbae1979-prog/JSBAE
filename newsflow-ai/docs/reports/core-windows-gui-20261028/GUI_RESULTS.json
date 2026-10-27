@@ -1,0 +1,763 @@
+{
+  "checks": [
+    {
+      "name": "news search, source and existing analysis to shorts",
+      "status": "PASS"
+    },
+    {
+      "name": "shorts real script save, reopen and Revision conflict",
+      "status": "PASS"
+    },
+    {
+      "name": "shorts simplified settings and separate production approval",
+      "status": "PASS"
+    },
+    {
+      "name": "character reference, saved story, storyboard and unknown guard",
+      "status": "PASS"
+    },
+    {
+      "name": "character topic and PNG registration through actual app",
+      "status": "PASS"
+    },
+    {
+      "name": "independent image options, actual draft save and reopen",
+      "status": "PASS"
+    },
+    {
+      "name": "independent Fake generation requires approval, preview and reuse gate",
+      "status": "PASS"
+    },
+    {
+      "name": "TOP3 actual stored analysis, independent Fake outputs and review separation",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport shorts 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport characters 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport images 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport images-top3 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport news 1920",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport shorts 1366",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport characters 1366",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport images 1366",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport images-top3 1366",
+      "status": "PASS"
+    },
+    {
+      "name": "viewport news 1366",
+      "status": "PASS"
+    }
+  ],
+  "failures": [],
+  "pageErrors": [],
+  "externalRequests": [],
+  "captures": [
+    {
+      "screen": "shorts",
+      "width": 1920,
+      "height": 1080,
+      "file": "shorts-1920.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "뉴스 스튜디오",
+          "x": 1735.59375,
+          "width": 122.40625
+        },
+        {
+          "text": "미리보기 없음TOP 1미분류합성 도서관 운영 안내합성 요약 1번입니다. 실제 사건",
+          "x": 302,
+          "width": 509.328125
+        },
+        {
+          "text": "미리보기 없음TOP 2미분류합성 버스 노선 안내합성 요약 2번입니다. 실제 사건이",
+          "x": 825.328125,
+          "width": 509.328125
+        },
+        {
+          "text": "미리보기 없음TOP 3미분류합성 과학 전시 안내합성 요약 3번입니다. 실제 사건이",
+          "x": 1348.65625,
+          "width": 509.34375
+        },
+        {
+          "text": "AI 대본 생성",
+          "x": 936.46875,
+          "width": 118.03125
+        },
+        {
+          "text": "영상 제작 · 승인 확인",
+          "x": 1686.109375,
+          "width": 168.890625
+        },
+        {
+          "text": "최신 저장본 다시 열기",
+          "x": 296,
+          "width": 144.5625
+        },
+        {
+          "text": "이전 버전 편집 복구",
+          "x": 448.5625,
+          "width": 132.609375
+        },
+        {
+          "text": "장면 1합성 장면 110초",
+          "x": 296,
+          "width": 514.65625
+        },
+        {
+          "text": "장면 2합성 장면 210초",
+          "x": 822.65625,
+          "width": 514.671875
+        },
+        {
+          "text": "장면 3합성 장면 310초",
+          "x": 1349.328125,
+          "width": 514.671875
+        }
+      ]
+    },
+    {
+      "screen": "characters",
+      "width": 1920,
+      "height": 1080,
+      "file": "characters-1920.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "참조 PNG 등록 · 새 작업",
+          "x": 527.265625,
+          "width": 213.265625
+        },
+        {
+          "text": "Windows GUI 새 합성 주제대본 준비",
+          "x": 302,
+          "width": 438.53125
+        },
+        {
+          "text": "합성 GUI 캐릭터 주제결과 불명 · 재요청 금지",
+          "x": 302,
+          "width": 438.53125
+        },
+        {
+          "text": "다음 작업 모델 기본값",
+          "x": 1289.078125,
+          "width": 144.5625
+        },
+        {
+          "text": "1합성 1The character walks through synthetic ro",
+          "x": 302,
+          "width": 510.65625
+        },
+        {
+          "text": "2합성 2The character walks through synthetic ro",
+          "x": 824.65625,
+          "width": 510.671875
+        },
+        {
+          "text": "3합성 3The character walks through synthetic ro",
+          "x": 1347.328125,
+          "width": 510.671875
+        }
+      ]
+    },
+    {
+      "screen": "images",
+      "width": 1920,
+      "height": 1080,
+      "file": "images-1920.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "여행",
+          "x": 302,
+          "width": 49.921875
+        },
+        {
+          "text": "일상",
+          "x": 358.921875,
+          "width": 49.921875
+        },
+        {
+          "text": "판타지",
+          "x": 415.84375,
+          "width": 61.890625
+        },
+        {
+          "text": "도시",
+          "x": 484.734375,
+          "width": 49.921875
+        },
+        {
+          "text": "자연",
+          "x": 541.65625,
+          "width": 49.921875
+        },
+        {
+          "text": "3D 애니메이션",
+          "x": 302,
+          "width": 97.640625
+        },
+        {
+          "text": "애니메이션",
+          "x": 406.640625,
+          "width": 97.65625
+        },
+        {
+          "text": "실사풍",
+          "x": 511.296875,
+          "width": 97.640625
+        },
+        {
+          "text": "일러스트",
+          "x": 615.9375,
+          "width": 97.65625
+        },
+        {
+          "text": "만화풍",
+          "x": 720.59375,
+          "width": 97.640625
+        },
+        {
+          "text": "스케치",
+          "x": 825.234375,
+          "width": 97.640625
+        },
+        {
+          "text": "다음 작업 기본값 저장",
+          "x": 477.890625,
+          "width": 144.5625
+        },
+        {
+          "text": "검토 후 재사용",
+          "x": 1121.203125,
+          "width": 105.046875
+        },
+        {
+          "text": "저장Windows GUI 합성 도형 이미지생성 완료",
+          "x": 1612.46875,
+          "width": 245.515625
+        }
+      ]
+    },
+    {
+      "screen": "images-top3",
+      "width": 1920,
+      "height": 1080,
+      "file": "images-top3-1920.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "TOP 1합성 통합 대본Windows 실제 앱 GUI에서 저장한 합성 대본입니다.",
+          "x": 302,
+          "width": 373.359375
+        },
+        {
+          "text": "TOP 2합성 버스 노선 안내합성 요약 2번입니다. 실제 사건이 아닙니다.저장된 ",
+          "x": 302,
+          "width": 373.359375
+        },
+        {
+          "text": "TOP 3합성 과학 전시 안내합성 요약 3번입니다. 실제 사건이 아닙니다.저장된 ",
+          "x": 302,
+          "width": 373.359375
+        },
+        {
+          "text": "자동 제작 기본값 저장",
+          "x": 903.515625,
+          "width": 144.5625
+        },
+        {
+          "text": "TOP 1 · 합성 통합 대본",
+          "x": 734.359375,
+          "width": 234.484375
+        },
+        {
+          "text": "추가 견적",
+          "x": 892.84375,
+          "width": 69.5625
+        },
+        {
+          "text": "TOP 2 · 합성 버스 노선 안내",
+          "x": 996.84375,
+          "width": 234.5
+        },
+        {
+          "text": "추가 견적",
+          "x": 1155.328125,
+          "width": 69.5625
+        },
+        {
+          "text": "TOP 3 · 합성 과학 전시 안내",
+          "x": 1259.34375,
+          "width": 234.5
+        },
+        {
+          "text": "추가 견적",
+          "x": 1417.828125,
+          "width": 69.5625
+        },
+        {
+          "text": "작업 #53/3 성공 · 기존 결과 보존",
+          "x": 302,
+          "width": 170
+        }
+      ]
+    },
+    {
+      "screen": "news",
+      "width": 1920,
+      "height": 1080,
+      "file": "news-1920.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "미리보기 없음합성 과학 전시 안내미분류 · 테스트 출처합성 요약 3번입니다. 실제",
+          "x": 302,
+          "width": 476.78125
+        },
+        {
+          "text": "미리보기 없음합성 버스 노선 안내미분류 · 테스트 출처합성 요약 2번입니다. 실제",
+          "x": 302,
+          "width": 476.78125
+        },
+        {
+          "text": "미리보기 없음합성 도서관 운영 안내미분류 · 테스트 출처합성 요약 1번입니다. 실",
+          "x": 302,
+          "width": 476.78125
+        },
+        {
+          "text": "등록 RSS 수집 · 확인",
+          "x": 302,
+          "width": 142.515625
+        },
+        {
+          "text": "인기 뉴스 수집 · 확인",
+          "x": 452.515625,
+          "width": 142.890625
+        },
+        {
+          "text": "선택 기사 분석 · 승인",
+          "x": 828.78125,
+          "width": 164.890625
+        },
+        {
+          "text": "캐릭터 쇼츠 제작실",
+          "x": 1458.125,
+          "width": 399.859375
+        },
+        {
+          "text": "1합성 도서관 운영 안내",
+          "x": 1458.125,
+          "width": 399.859375
+        },
+        {
+          "text": "2합성 버스 노선 안내",
+          "x": 1458.125,
+          "width": 399.859375
+        },
+        {
+          "text": "3합성 과학 전시 안내",
+          "x": 1458.125,
+          "width": 399.859375
+        }
+      ]
+    },
+    {
+      "screen": "shorts",
+      "width": 1366,
+      "height": 768,
+      "file": "shorts-1366.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "뉴스 스튜디오",
+          "x": 1194.59375,
+          "width": 122.40625
+        },
+        {
+          "text": "미리보기 없음TOP 1미분류합성 도서관 운영 안내합성 요약 1번입니다. 실제 사건",
+          "x": 289,
+          "width": 333.328125
+        },
+        {
+          "text": "미리보기 없음TOP 2미분류합성 버스 노선 안내합성 요약 2번입니다. 실제 사건이",
+          "x": 636.328125,
+          "width": 333.328125
+        },
+        {
+          "text": "미리보기 없음TOP 3미분류합성 과학 전시 안내합성 요약 3번입니다. 실제 사건이",
+          "x": 983.65625,
+          "width": 333.34375
+        },
+        {
+          "text": "AI 대본 생성",
+          "x": 659.46875,
+          "width": 118.03125
+        },
+        {
+          "text": "영상 제작 · 승인 확인",
+          "x": 1145.109375,
+          "width": 168.890625
+        },
+        {
+          "text": "최신 저장본 다시 열기",
+          "x": 283,
+          "width": 144.5625
+        },
+        {
+          "text": "이전 버전 편집 복구",
+          "x": 435.5625,
+          "width": 132.609375
+        },
+        {
+          "text": "장면 1합성 장면 110초",
+          "x": 283,
+          "width": 338.65625
+        },
+        {
+          "text": "장면 2합성 장면 210초",
+          "x": 633.65625,
+          "width": 338.671875
+        },
+        {
+          "text": "장면 3합성 장면 310초",
+          "x": 984.328125,
+          "width": 338.671875
+        }
+      ],
+      "modalBounds": {
+        "x": 293,
+        "y": 38.40625,
+        "width": 780,
+        "height": 691.1875
+      }
+    },
+    {
+      "screen": "characters",
+      "width": 1366,
+      "height": 768,
+      "file": "characters-1366.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "참조 PNG 등록 · 새 작업",
+          "x": 539.75,
+          "width": 238.75
+        },
+        {
+          "text": "Windows GUI 새 합성 주제대본 준비",
+          "x": 289,
+          "width": 489.5
+        },
+        {
+          "text": "합성 GUI 캐릭터 주제결과 불명 · 재요청 금지",
+          "x": 289,
+          "width": 489.5
+        },
+        {
+          "text": "다음 작업 모델 기본값",
+          "x": 301,
+          "width": 144.5625
+        },
+        {
+          "text": "1합성 1The character walks through synthetic ro",
+          "x": 289,
+          "width": 334.65625
+        },
+        {
+          "text": "2합성 2The character walks through synthetic ro",
+          "x": 635.65625,
+          "width": 334.671875
+        },
+        {
+          "text": "3합성 3The character walks through synthetic ro",
+          "x": 982.328125,
+          "width": 334.671875
+        }
+      ],
+      "modalBounds": {
+        "x": 293,
+        "y": 83.90625,
+        "width": 780,
+        "height": 600.1875
+      }
+    },
+    {
+      "screen": "images",
+      "width": 1366,
+      "height": 768,
+      "file": "images-1366.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "여행",
+          "x": 289,
+          "width": 49.921875
+        },
+        {
+          "text": "일상",
+          "x": 345.921875,
+          "width": 49.921875
+        },
+        {
+          "text": "판타지",
+          "x": 402.84375,
+          "width": 61.890625
+        },
+        {
+          "text": "도시",
+          "x": 471.734375,
+          "width": 49.921875
+        },
+        {
+          "text": "자연",
+          "x": 528.65625,
+          "width": 49.921875
+        },
+        {
+          "text": "3D 애니메이션",
+          "x": 289,
+          "width": 75.65625
+        },
+        {
+          "text": "애니메이션",
+          "x": 371.65625,
+          "width": 75.671875
+        },
+        {
+          "text": "실사풍",
+          "x": 454.328125,
+          "width": 75.65625
+        },
+        {
+          "text": "일러스트",
+          "x": 536.984375,
+          "width": 75.671875
+        },
+        {
+          "text": "만화풍",
+          "x": 619.65625,
+          "width": 75.671875
+        },
+        {
+          "text": "스케치",
+          "x": 702.328125,
+          "width": 75.671875
+        },
+        {
+          "text": "다음 작업 기본값 저장",
+          "x": 464.890625,
+          "width": 144.5625
+        },
+        {
+          "text": "검토 후 재사용",
+          "x": 976.328125,
+          "width": 105.046875
+        },
+        {
+          "text": "저장Windows GUI 합성 도형 이미지생성 완료",
+          "x": 289,
+          "width": 180
+        }
+      ],
+      "modalBounds": {
+        "x": 293,
+        "y": 163.28125,
+        "width": 780,
+        "height": 441.421875
+      }
+    },
+    {
+      "screen": "images-top3",
+      "width": 1366,
+      "height": 768,
+      "file": "images-top3-1366.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "TOP 1합성 통합 대본Windows 실제 앱 GUI에서 저장한 합성 대본입니다.",
+          "x": 289,
+          "width": 331.5
+        },
+        {
+          "text": "TOP 2합성 버스 노선 안내합성 요약 2번입니다. 실제 사건이 아닙니다.저장된 ",
+          "x": 289,
+          "width": 331.5
+        },
+        {
+          "text": "TOP 3합성 과학 전시 안내합성 요약 3번입니다. 실제 사건이 아닙니다.저장된 ",
+          "x": 289,
+          "width": 331.5
+        },
+        {
+          "text": "자동 제작 기본값 저장",
+          "x": 848.65625,
+          "width": 144.5625
+        },
+        {
+          "text": "TOP 1 · 합성 통합 대본",
+          "x": 679.5,
+          "width": 190.828125
+        },
+        {
+          "text": "추가 견적",
+          "x": 679.5,
+          "width": 69.5625
+        },
+        {
+          "text": "TOP 2 · 합성 버스 노선 안내",
+          "x": 898.328125,
+          "width": 190.828125
+        },
+        {
+          "text": "추가 견적",
+          "x": 898.328125,
+          "width": 69.5625
+        },
+        {
+          "text": "TOP 3 · 합성 과학 전시 안내",
+          "x": 1117.15625,
+          "width": 190.828125
+        },
+        {
+          "text": "추가 견적",
+          "x": 1117.15625,
+          "width": 69.5625
+        },
+        {
+          "text": "작업 #53/3 성공 · 기존 결과 보존",
+          "x": 289,
+          "width": 170
+        }
+      ]
+    },
+    {
+      "screen": "news",
+      "width": 1366,
+      "height": 768,
+      "file": "news-1366.png",
+      "overflow": false,
+      "buttons": [
+        {
+          "text": "미리보기 없음합성 과학 전시 안내미분류 · 테스트 출처합성 요약 3번입니다. 실제",
+          "x": 289,
+          "width": 436.5
+        },
+        {
+          "text": "미리보기 없음합성 버스 노선 안내미분류 · 테스트 출처합성 요약 2번입니다. 실제",
+          "x": 289,
+          "width": 436.5
+        },
+        {
+          "text": "미리보기 없음합성 도서관 운영 안내미분류 · 테스트 출처합성 요약 1번입니다. 실",
+          "x": 289,
+          "width": 436.5
+        },
+        {
+          "text": "등록 RSS 수집 · 확인",
+          "x": 289,
+          "width": 142.515625
+        },
+        {
+          "text": "인기 뉴스 수집 · 확인",
+          "x": 439.515625,
+          "width": 142.890625
+        },
+        {
+          "text": "선택 기사 분석 · 승인",
+          "x": 775.5,
+          "width": 164.890625
+        },
+        {
+          "text": "캐릭터 쇼츠 제작실",
+          "x": 289,
+          "width": 309.328125
+        },
+        {
+          "text": "1합성 도서관 운영 안내",
+          "x": 648.328125,
+          "width": 309.328125
+        },
+        {
+          "text": "2합성 버스 노선 안내",
+          "x": 648.328125,
+          "width": 309.328125
+        },
+        {
+          "text": "3합성 과학 전시 안내",
+          "x": 648.328125,
+          "width": 309.328125
+        }
+      ]
+    }
+  ],
+  "transport": "real Python ASGI through synthetic file IPC",
+  "OS_DPI": "NOT VERIFIED",
+  "realPaidCalls": 0,
+  "browserVersion": "156.0.8078.48",
+  "uploadTransport": {
+    "CDPcontainsFullFile": false,
+    "DOMfileBytes": 358,
+    "syntheticBytesMatch": true
+  },
+  "backendStats": {
+    "draft": {
+      "title": "합성 통합 대본",
+      "hook": "합성 자료의 변화를 살펴봅니다.",
+      "summary": "실제 사건을 주장하지 않는 합성 자료입니다.",
+      "scenes": [
+        {
+          "seconds": 10,
+          "narration": "Windows 실제 앱 GUI에서 저장한 합성 대본입니다.",
+          "caption": "합성 장면 1",
+          "material": "기본 카드"
+        },
+        {
+          "seconds": 10,
+          "narration": "합성 장면 2입니다.",
+          "caption": "합성 장면 2",
+          "material": "기본 카드"
+        },
+        {
+          "seconds": 10,
+          "narration": "합성 장면 3입니다.",
+          "caption": "합성 장면 3",
+          "material": "기본 카드"
+        }
+      ],
+      "closing": "출처 검토 후 제작합니다."
+    },
+    "revision": 3,
+    "analysisCount": 1,
+    "imageCalls": 4
+  },
+  "browserClosed": true,
+  "pass": 18,
+  "fail": 0,
+  "skip": 0
+}

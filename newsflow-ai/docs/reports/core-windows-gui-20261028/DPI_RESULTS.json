@@ -1,0 +1,23 @@
+{
+  "platform_tested": "GitHub Actions Windows Server 2025, Chrome headless",
+  "Windows11LocalGUI": "NOT VERIFIED",
+  "actual_OS_DPI": {
+    "100%": {
+      "result": "NOT VERIFIED",
+      "reason": "Operating Windows user session was not changed; no approved independent OS DPI session available."
+    },
+    "125%": {
+      "result": "NOT VERIFIED",
+      "reason": "Operating Windows user session was not changed; no approved independent OS DPI session available."
+    },
+    "150%": {
+      "result": "NOT VERIFIED",
+      "reason": "Operating Windows user session was not changed; no approved independent OS DPI session available."
+    },
+    "200%": {
+      "result": "NOT VERIFIED",
+      "reason": "Operating Windows user session was not changed; no approved independent OS DPI session available."
+    }
+  },
+  "viewport_is_not_OS_DPI": true
+}

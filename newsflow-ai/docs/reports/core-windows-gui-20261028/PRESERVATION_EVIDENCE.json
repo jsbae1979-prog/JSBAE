@@ -1,0 +1,26 @@
+{
+  "base": "d4a47060c8ec4b04f48bb43b50dfc8c7238e61a1",
+  "tested": "b98925f702a518dd3f8c501ce0194d1ec3558bd5",
+  "unchanged_git_paths": [
+    "newsflow-ai/src",
+    "newsflow-ai/frontend",
+    "newsflow-ai/tools/native_capability",
+    "newsflow-ai/tools/native_capability_integration",
+    "newsflow-ai/tools/native_guard_copy",
+    "newsflow-ai/tools/native_rtl_filelock",
+    "newsflow-ai/tools/native_app_policy"
+  ],
+  "diff_result": "empty",
+  "preexisting_untracked": [
+    "validation/"
+  ],
+  "PR35": {
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "draft": true,
+    "merged": false,
+    "changed": false
+  },
+  "operating_data": "Not opened, used, decrypted or written by this verification. No live global byte-for-byte immutability audit performed.",
+  "app_port_8765": "No test binding or HTTP requests; operating tab left untouched.",
+  "operating_Guard": "Not changed or retested. Existing native/security evidence reused."
+}

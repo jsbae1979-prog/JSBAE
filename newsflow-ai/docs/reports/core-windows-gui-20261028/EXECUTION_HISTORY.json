@@ -1,0 +1,34 @@
+[
+  {
+    "attempt": 1,
+    "code": "efdb7baa7acb9e07a013154a45e9fd96fc585a58",
+    "run": 40589702360,
+    "result": "SETUP FAILURE before GUI",
+    "cause": "Existing fixture replaced Popen with a function; asyncio.windows_utils requires a class. New harness preserves class shape and denies creation in __new__. No pre-import or Guard change."
+  },
+  {
+    "attempt": 2,
+    "code": "96b059f4f468c48341da7efeaa5a76453de084a8",
+    "run": 40590086935,
+    "pass": 13,
+    "fail": 5,
+    "cause": "Harness selectors/conflict message, unfilled required character budgets, and missing explicit TOP3 analysis selection."
+  },
+  {
+    "attempt": 3,
+    "code": "790d8487d1ce3f866e0de37df0bf1a058b969e27",
+    "run": 40590862658,
+    "pass": 16,
+    "fail": 2,
+    "cause": "CDP multipart omits uploaded file bytes; image width checked before decode. Test transport/decode corrected; no product change."
+  },
+  {
+    "attempt": 4,
+    "code": "b98925f702a518dd3f8c501ce0194d1ec3558bd5",
+    "run": 40591562445,
+    "pass": 18,
+    "fail": 0,
+    "skip": 0,
+    "cause": "Final synthetic browser-to-real-ASGI verification succeeded."
+  }
+]
