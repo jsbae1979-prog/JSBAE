@@ -49,3 +49,8 @@ auth.json
 *.safetensors
 *.pem
 *.key
+
+# Explicit user-approved offline starter clips only; user/generated MP4s remain private.
+!src/newsflow/assets/samples/videos/news-shorts/SHORTS_NEWS_S01.mp4
+!src/newsflow/assets/samples/videos/character-shorts/SHORTS_CHAR_S01.mp4
+!src/newsflow/assets/samples/videos/character-shorts/SHORTS_CHAR_S02.mp4
