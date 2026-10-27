@@ -138,7 +138,7 @@ class TopThreeFeeds:
                     group = selection(s, analysis_id)
                     if len(group["items"]) != 3 or group["run"].evidence["curation_contract"].get("top_k") != 3:
                         raise PublishingError("완료된 TOP 3 분석이 필요합니다.")
-                    sources, items, urls, titles = [], [], set(), set()
+                    sources, items, urls, titles, event_claims = [], [], set(), set(), set()
                     for item in group["items"]:
                         refs = [{"url": r["url"], "publisher": r.get("publisher") or "원문"}
                                 for r in item["references"]]
@@ -153,6 +153,11 @@ class TopThreeFeeds:
                         if urls & canonical or title_key in titles:
                             raise PublishingError("동일 사건으로 보이는 후보가 중복됐습니다. TOP 3 선정을 검토하세요.")
                         urls.update(canonical); titles.add(title_key)
+                        keys = {"top3-event:" + digest(["headline", title_key])[:38]}
+                        keys.update("top3-event:" + digest(["source", *u])[:38] for u in canonical)
+                        if any(s.get(AppSetting, key) for key in keys):
+                            raise PublishingError("이미 TOP 3 제작 작업에 포함된 사건입니다. 기존 결과에서 개별 재생성을 검토하세요.")
+                        event_claims.update(keys)
                         src = {"rank": item["rank"], "article_id": item["article_id"],
                                "article_ids": item["article_ids"], "title": item["title"],
                                "body": item["body"], "references": refs,
@@ -168,6 +173,7 @@ class TopThreeFeeds:
                         message="TOP 3 고정 · 이미지 3개 · 게시 승인 별도")
                     s.add(row); s.flush(); identifier = row.id
                     s.add(AppSetting(key=claim, value=str(identifier)))
+                    for key in event_claims: s.add(AppSetting(key=key, value=str(identifier)))
                     return identifier
         except (Timeout, IntegrityError):
             raise PublishingError("다른 화면에서 작업을 저장 중입니다. 저장된 TOP 3 작업을 확인하세요.") from None
@@ -192,7 +198,10 @@ class TopThreeFeeds:
                     IntelligenceRun.evidence["source"]["rank"].as_integer() == item["rank"],
                     IntelligenceRun.evidence["source"]["attempt"].as_integer() == item["attempt"])))
             if len(found) == 1 and found[0].status in {"success", "failed", "unknown"}:
-                self._accept(row, item, found[0].id)
+                try:
+                    self._accept(row, item, found[0].id)
+                except (PublishingError, OSError, ValueError):
+                    item.update(status="unknown", message="기존 결과 파일을 확인하지 못했습니다. 재전송 금지")
             else:
                 item.update(status="unknown", message="중단된 요청 · 결과 불명 · 자동 재요청 금지")
         if changed:
@@ -217,6 +226,7 @@ class TopThreeFeeds:
             return
         path = self.generation.path(output_id, article_id=row.evidence["sources"][item["rank"]-1]["article_id"],
                                     analysis_id=row.evidence["analysis_id"], rank=item["rank"])
+        self.safe_paths.safe(path, self.generation.outputs)
         self.safe_paths.safe(self.root, self.root).mkdir(parents=True, exist_ok=True)
         name = f"feed-{row.id}-{item['rank']}-{item['attempt']}.jpg"
         target = self.safe_paths.safe(self.root / name, self.root)
@@ -264,7 +274,13 @@ class TopThreeFeeds:
     def change(self, identifier, revision, action, *, rank=None, title="", body="", hashtags="", consent=False, reviewed=False):
         try:
             with self.lock:
-                row = self.get(identifier); result = self._recover(row)
+                row = self.get(identifier)
+                if action == "recover":
+                    if type(revision) is not int or row.result["revision"] != revision:
+                        raise PublishingError("다른 화면에서 작업이 변경됐습니다. 새로고침 후 확인하세요.")
+                    self._recover(row)
+                    return
+                result = self._recover(row)
                 if type(revision) is not int or result["revision"] != revision:
                     raise PublishingError("다른 화면에서 작업이 변경됐습니다. 새로고침 후 확인하세요.")
                 if action in {"pause", "resume"}:

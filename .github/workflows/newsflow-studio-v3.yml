@@ -51,6 +51,7 @@ jobs:
       - name: TOP 3 batch Fake tests, no network or app startup
         env:
           PYTEST_DISABLE_PLUGIN_AUTOLOAD: '1'
+          NEWSFLOW_TOP3_EVIDENCE: '${{ runner.temp }}/top3-feed-evidence'
         run: python -m pytest -q -p no:cacheprovider --confcutdir tools/feed_top3/tests --basetemp "$env:RUNNER_TEMP/top3-feed-tests" --junitxml=top3-feed-tests.xml tools/feed_top3/tests
       - name: Approved Windows disposable synthetic full-app form integration
         env:
@@ -64,3 +65,4 @@ jobs:
             newsflow-ai/studio-readmodel.xml
             newsflow-ai/studio-integration.xml
             newsflow-ai/top3-feed-tests.xml
+            ${{ runner.temp }}/top3-feed-evidence

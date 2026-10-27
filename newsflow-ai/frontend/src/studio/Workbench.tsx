@@ -1306,196 +1306,217 @@ export default function Workbench({
                   >
                     뉴스 이미지 게시물
                   </button>
-                  <button role="tab" aria-selected={tab === "top3"} onClick={() => {setTab("top3");setSelected(null);}}>뉴스 TOP 3 자동 제작</button>
+                  <button
+                    role="tab"
+                    aria-selected={tab === "top3"}
+                    onClick={() => {
+                      setTab("top3");
+                      setSelected(null);
+                    }}
+                  >
+                    뉴스 TOP 3 자동 제작
+                  </button>
                 </div>
-                {tab === "top3" ? <TopThreeFeeds selections={list("selections")} catalog={catalog} csrf={view.csrfToken} /> : <div className="work-columns production-columns">
-                  <div className="work-stack">
-                    {tab === "independent" ? (
-                      <>
-                        <section className="work-panel prompt-panel">
-                          <div className="section-heading">
-                            <h2>
-                              <ImageIcon size={20} /> 이미지 지시문
-                            </h2>
-                            <span className="pill">OpenAI · 별도 선택</span>
-                          </div>
-                          <textarea
-                            className="prompt-input"
-                            aria-label="이미지 지시문"
-                            placeholder="어떤 이미지를 만들까요? 주제 · 구도 · 분위기를 적어주세요."
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                          />
-                          <div className="work-actions">
-                            {button("creation_draft", { prompt }, true)}
-                            {button("creation_defaults", {})}
-                          </div>
-                          <div className="review-note">
-                            <Info size={17} />
-                            <span>
-                              참조 이미지는 로컬에 보관됩니다. 참조 기반 유료 AI
-                              편집 생성은 미구현이며 실행되지 않습니다.
-                            </span>
-                          </div>
-                        </section>
-                        <Collection
-                          title="이미지 초안과 결과"
-                          items={list("drafts")}
-                          onSelect={(x) =>
-                            setSelected({ ...x, __collection: "drafts" })
-                          }
-                          selected={selected?.id}
-                        />
-                        {selected && (
-                          <section className="work-panel">
-                            <h2>{itemTitle(selected)}</h2>
-                            <Badge value={selected.status} />
-                            <div className="work-actions">
-                              {button(
-                                "creation_generate",
-                                { identifier: selected.id },
-                                true,
-                              )}
-                              {button("creation_reuse", {
-                                identifier: selected.id,
-                              })}
+                {tab === "top3" ? (
+                  <TopThreeFeeds
+                    selections={list("selections")}
+                    catalog={catalog}
+                    csrf={view.csrfToken}
+                  />
+                ) : (
+                  <div className="work-columns production-columns">
+                    <div className="work-stack">
+                      {tab === "independent" ? (
+                        <>
+                          <section className="work-panel prompt-panel">
+                            <div className="section-heading">
+                              <h2>
+                                <ImageIcon size={20} /> 이미지 지시문
+                              </h2>
+                              <span className="pill">OpenAI · 별도 선택</span>
                             </div>
-                            <p className="muted">
-                              이미지 초안 #{selected.id} · 생성 결과{" "}
-                              {selected.outputId
-                                ? `#${selected.outputId}`
-                                : "없음"}
-                            </p>
+                            <textarea
+                              className="prompt-input"
+                              aria-label="이미지 지시문"
+                              placeholder="어떤 이미지를 만들까요? 주제 · 구도 · 분위기를 적어주세요."
+                              value={prompt}
+                              onChange={(e) => setPrompt(e.target.value)}
+                            />
+                            <div className="work-actions">
+                              {button("creation_draft", { prompt }, true)}
+                              {button("creation_defaults", {})}
+                            </div>
+                            <div className="review-note">
+                              <Info size={17} />
+                              <span>
+                                참조 이미지는 로컬에 보관됩니다. 참조 기반 유료
+                                AI 편집 생성은 미구현이며 실행되지 않습니다.
+                              </span>
+                            </div>
                           </section>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <section className="work-panel">
-                          <h2>뉴스 기반 이미지</h2>
-                          <p>
-                            기사 선택 → 카드 기획 → 이미지·문구 확인 → 출처 검토
-                            → 게시 준비
-                          </p>
                           <Collection
-                            title="보관 기사"
-                            items={list("articles")}
-                            onSelect={setSelected}
+                            title="이미지 초안과 결과"
+                            items={list("drafts")}
+                            onSelect={(x) =>
+                              setSelected({ ...x, __collection: "drafts" })
+                            }
                             selected={selected?.id}
                           />
-                          <div className="work-actions">
-                            {button("image_post_claude_card", {
-                              article_id: selected?.id,
-                            })}
-                            {button(
-                              "image_post_create",
-                              { article_id: selected?.id },
-                              true,
-                            )}
-                          </div>
-                        </section>
-                        <Collection
-                          title="Claude 카드 · 이미지 지시문"
-                          items={list("cards")}
-                          onSelect={(x) =>
-                            setSelected({ ...x, __collection: "cards" })
-                          }
-                        />
-                        <Collection
-                          title="뉴스 이미지 생성 결과"
-                          items={list("generations")}
-                          onSelect={(x) =>
-                            setSelected({ ...x, __collection: "generations" })
-                          }
-                        />
-                        {selected?.plan && (
-                          <section className="work-panel">
-                            <h2>{selected.title}</h2>
-                            <Badge value={selected.status} />
-                            <p>{selected.plan.body}</p>
-                            <details>
-                              <summary>이미지 지시문</summary>
-                              <p>
-                                {selected.plan.image_prompt ?? "기존 저장 기획"}
+                          {selected && (
+                            <section className="work-panel">
+                              <h2>{itemTitle(selected)}</h2>
+                              <Badge value={selected.status} />
+                              <div className="work-actions">
+                                {button(
+                                  "creation_generate",
+                                  { identifier: selected.id },
+                                  true,
+                                )}
+                                {button("creation_reuse", {
+                                  identifier: selected.id,
+                                })}
+                              </div>
+                              <p className="muted">
+                                이미지 초안 #{selected.id} · 생성 결과{" "}
+                                {selected.outputId
+                                  ? `#${selected.outputId}`
+                                  : "없음"}
                               </p>
-                            </details>
-                            <div className="work-actions">
-                              {selected.__collection === "cards" &&
-                                selected.status === "success" &&
-                                button(
-                                  "image_post_generate_card_image",
-                                  { ...selected.options, card_id: selected.id },
-                                  true,
-                                )}
-                              {selected.__collection === "generations" &&
-                                safeMedia(selected.mediaUrl) &&
-                                button(
-                                  "image_post_create",
-                                  {
-                                    ...selected.options,
-                                    card_id: undefined,
-                                    generated_id: selected.id,
-                                    title: selected.plan.title,
-                                    body: selected.plan.body,
-                                    hashtags: Array.isArray(
-                                      selected.plan.hashtags,
-                                    )
-                                      ? selected.plan.hashtags.join(" ")
-                                      : (selected.plan.hashtags ?? ""),
-                                  },
-                                  true,
-                                )}
-                            </div>
-                            <p className="muted">
-                              지시문과 생성 파일, 검토한 게시 이미지는 각각
-                              보존됩니다.
+                            </section>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <section className="work-panel">
+                            <h2>뉴스 기반 이미지</h2>
+                            <p>
+                              기사 선택 → 카드 기획 → 이미지·문구 확인 → 출처
+                              검토 → 게시 준비
                             </p>
+                            <Collection
+                              title="보관 기사"
+                              items={list("articles")}
+                              onSelect={setSelected}
+                              selected={selected?.id}
+                            />
+                            <div className="work-actions">
+                              {button("image_post_claude_card", {
+                                article_id: selected?.id,
+                              })}
+                              {button(
+                                "image_post_create",
+                                { article_id: selected?.id },
+                                true,
+                              )}
+                            </div>
                           </section>
-                        )}
-                        <Collection
-                          title="뉴스 이미지 게시물"
-                          items={list("posts")}
-                          onSelect={(x) =>
-                            setSelected({ ...x, __collection: "posts" })
-                          }
-                        />
-                        <Collection
-                          title="상위 3건 선정 기록"
-                          items={list("selections")}
-                          onSelect={(x) =>
-                            setSelected({ ...x, __collection: "selections" })
-                          }
-                        />
-                        <p className="muted">
-                          순위는 저장된 화제성 평가를 사용합니다. 단일 이미지
-                          피드만 지원합니다.
-                        </p>
-                      </>
-                    )}
+                          <Collection
+                            title="Claude 카드 · 이미지 지시문"
+                            items={list("cards")}
+                            onSelect={(x) =>
+                              setSelected({ ...x, __collection: "cards" })
+                            }
+                          />
+                          <Collection
+                            title="뉴스 이미지 생성 결과"
+                            items={list("generations")}
+                            onSelect={(x) =>
+                              setSelected({ ...x, __collection: "generations" })
+                            }
+                          />
+                          {selected?.plan && (
+                            <section className="work-panel">
+                              <h2>{selected.title}</h2>
+                              <Badge value={selected.status} />
+                              <p>{selected.plan.body}</p>
+                              <details>
+                                <summary>이미지 지시문</summary>
+                                <p>
+                                  {selected.plan.image_prompt ??
+                                    "기존 저장 기획"}
+                                </p>
+                              </details>
+                              <div className="work-actions">
+                                {selected.__collection === "cards" &&
+                                  selected.status === "success" &&
+                                  button(
+                                    "image_post_generate_card_image",
+                                    {
+                                      ...selected.options,
+                                      card_id: selected.id,
+                                    },
+                                    true,
+                                  )}
+                                {selected.__collection === "generations" &&
+                                  safeMedia(selected.mediaUrl) &&
+                                  button(
+                                    "image_post_create",
+                                    {
+                                      ...selected.options,
+                                      card_id: undefined,
+                                      generated_id: selected.id,
+                                      title: selected.plan.title,
+                                      body: selected.plan.body,
+                                      hashtags: Array.isArray(
+                                        selected.plan.hashtags,
+                                      )
+                                        ? selected.plan.hashtags.join(" ")
+                                        : (selected.plan.hashtags ?? ""),
+                                    },
+                                    true,
+                                  )}
+                              </div>
+                              <p className="muted">
+                                지시문과 생성 파일, 검토한 게시 이미지는 각각
+                                보존됩니다.
+                              </p>
+                            </section>
+                          )}
+                          <Collection
+                            title="뉴스 이미지 게시물"
+                            items={list("posts")}
+                            onSelect={(x) =>
+                              setSelected({ ...x, __collection: "posts" })
+                            }
+                          />
+                          <Collection
+                            title="상위 3건 선정 기록"
+                            items={list("selections")}
+                            onSelect={(x) =>
+                              setSelected({ ...x, __collection: "selections" })
+                            }
+                          />
+                          <p className="muted">
+                            순위는 저장된 화제성 평가를 사용합니다. 단일 이미지
+                            피드만 지원합니다.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <aside className="work-stack">
+                      {preview(currentMedia, "image")}
+                      <section className="work-panel inspector">
+                        <h2>이미지 속성</h2>
+                        <dl className="property-list">
+                          {Object.entries(
+                            selected?.selection ?? catalog.imageDefaults ?? {},
+                          ).map(([k, v]) => (
+                            <div key={k}>
+                              <dt>{label(k)}</dt>
+                              <dd>{String(v)}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                        <Badge value={selected?.status ?? "draft"} />
+                        <p className="muted">{view.policy?.price}</p>
+                        <button onClick={() => onNavigate("library")}>
+                          <FolderOpen size={17} />
+                          소재 라이브러리
+                        </button>
+                      </section>
+                    </aside>
                   </div>
-                  <aside className="work-stack">
-                    {preview(currentMedia, "image")}
-                    <section className="work-panel inspector">
-                      <h2>이미지 속성</h2>
-                      <dl className="property-list">
-                        {Object.entries(
-                          selected?.selection ?? catalog.imageDefaults ?? {},
-                        ).map(([k, v]) => (
-                          <div key={k}>
-                            <dt>{label(k)}</dt>
-                            <dd>{String(v)}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                      <Badge value={selected?.status ?? "draft"} />
-                      <p className="muted">{view.policy?.price}</p>
-                      <button onClick={() => onNavigate("library")}>
-                        <FolderOpen size={17} />
-                        소재 라이브러리
-                      </button>
-                    </section>
-                  </aside>
-                </div>}
+                )}
               </>
             )}
             {module === "automation" && (
@@ -2063,7 +2084,11 @@ export default function Workbench({
               </p>
               <div className="catalog-actions">
                 {actions
-                  .filter((x) => x.module === module)
+                  .filter(
+                    (x) =>
+                      x.module === module &&
+                      !x.id.startsWith("creation_feed_batch_"),
+                  )
                   .map((x) => (
                     <button
                       key={x.id}

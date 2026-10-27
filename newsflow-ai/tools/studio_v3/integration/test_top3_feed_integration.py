@@ -11,22 +11,14 @@ def seed(app):
     path=Path(__file__).resolve().parents[2]/"feed_top3/tests/test_top_three_feeds.py"
     spec=importlib.util.spec_from_file_location("top3_synthetic_fixture",path)
     mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
-    # Copy only synthetic rows, never an operating DB or credential.
-    from newsflow.db.models import NewsSource, NewsArticle, IntelligenceRun, ContentDraft
-    from sqlalchemy import select
-    e=mod.setup(app.state.config.data_dir/"top3-fixture")
-    with e.sessions() as source, app.state.sessions.begin() as target:
-      for model in (NewsSource,NewsArticle,IntelligenceRun,ContentDraft):
-       for row in source.scalars(select(model)):
-        values={c.name:deepcopy(getattr(row,c.name)) for c in model.__table__.columns}
-        target.add(model(**values))
-       target.flush()
+    # Insert synthetic rows with the app DB's own IDs; preserve its initial RSS presets.
+    e=mod.setup(app.state.config.data_dir, sessions=app.state.sessions)
     from newsflow.creation.top_three_feeds import TopThreeFeeds,LocalFeedPreviewAdapter
     from types import SimpleNamespace as NS
     app.state.image_generation.adapter=LocalFeedPreviewAdapter()
     app.state.image_generation.keys=NS(key=lambda:"synthetic-top3-key",status=lambda:{"configured":True})
     app.state.top_three_feeds=TopThreeFeeds(app.state.sessions,app.state.config.data_dir,app.state.image_generation,simulation=True)
-    aid=e.analysis_id;e.engine.dispose();return aid
+    return e.analysis_id
 
 
 def test_top3_json_forms_fake_output_review_and_csrf_boundaries(client):

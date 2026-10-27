@@ -14,9 +14,11 @@ from newsflow.publishing.image_generation import ImageGenerationService, ImageGe
 from newsflow.publishing.service import PublishingError
 
 
-def setup(tmp_path, *, simulation=True):
- engine=create_engine("sqlite:///:memory:");Base.metadata.create_all(engine)
- sessions=sessionmaker(engine,expire_on_commit=False)
+def setup(tmp_path, *, simulation=True, sessions=None):
+ engine=None
+ if sessions is None:
+  engine=create_engine("sqlite:///:memory:");Base.metadata.create_all(engine)
+  sessions=sessionmaker(engine,expire_on_commit=False)
  adapter=LocalFeedPreviewAdapter()
  generation=ImageGenerationService(sessions,tmp_path,NS(key=lambda:"synthetic-top3-key"),adapter=adapter)
  service=TopThreeFeeds(sessions,tmp_path,generation,simulation=simulation)
@@ -163,3 +165,36 @@ def test_edited_source_after_batch_does_not_change_snapshot(env):
   row=s.get(IntelligenceRun,env.analysis_id);row.result={"ranking":[]}
  assert env.service.get(b).evidence==before
  step(env,b);assert len(env.adapter.calls)==1
+
+
+def test_same_events_in_a_new_analysis_are_not_automatically_rendered_twice(env):
+ b=create(env)
+ with env.sessions.begin() as s:
+  old=s.get(IntelligenceRun,env.analysis_id)
+  newer=IntelligenceRun(kind="analysis",status="success",provider=old.provider,options={},evidence=deepcopy(old.evidence),result=deepcopy(old.result),message="synthetic reranking")
+  s.add(newer);s.flush();identifier=newer.id
+ with pytest.raises(PublishingError,match="이미 TOP 3"):env.service.create(identifier,DEFAULTS['image'])
+ assert not env.adapter.calls and env.service.get(b).status=="saved"
+
+
+def test_export_synthetic_three_results_only(env):
+ import os
+ b=create(env)
+ for _ in range(3):step(env,b)
+ view=env.service.view(b)
+ assert view['simulation'] is True and len(env.adapter.calls)==3
+ output=os.environ.get('NEWSFLOW_TOP3_EVIDENCE')
+ if output:
+  root=Path(output);root.mkdir(parents=True,exist_ok=True)
+  for n in (1,2,3):(root/f'fake-top{n}.jpg').write_bytes(env.service.path(b,n).read_bytes())
+  (root/'fake-batch.json').write_text(json.dumps(view,ensure_ascii=False,indent=2),encoding='utf-8')
+
+
+def test_explicit_recover_after_write_gap_reuses_output_without_new_request(env):
+ b=create(env);step(env,b)
+ before=env.service.path(b,1).read_bytes()
+ with env.sessions.begin() as s:
+  row=s.get(IntelligenceRun,b);data=deepcopy(row.result);data['items'][0]['status']='running';data['items'][0]['generation_id']=None;row.result=data
+ v=env.service.view(b);env.service.change(b,v['revision'],'recover')
+ assert len(env.adapter.calls)==1 and env.service.view(b)['items'][0]['status']=='success'
+ assert env.service.path(b,1).read_bytes()==before
