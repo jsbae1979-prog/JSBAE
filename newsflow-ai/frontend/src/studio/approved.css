@@ -1314,3 +1314,49 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Visual acceptance: local readability only; protected home routes never match. */
+.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row {
+  display: grid !important;
+  grid-template-columns: 26px minmax(0, 1fr) 12px;
+  gap: 8px !important;
+  align-items: start !important;
+}
+.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-icon {
+  width: 26px;
+  height: 34px;
+  grid-column: 1;
+  grid-row: 1;
+}
+.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row > span:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row strong {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row > .state-badge {
+  grid-column: 1 / 3;
+  grid-row: 2;
+  justify-self: start;
+  max-width: 100%;
+}
+.approved-studio[data-module="images"][data-image-mode="independent"] .image-history .record-row > svg {
+  grid-column: 3;
+  grid-row: 1;
+  max-width: 12px;
+}
+.approved-studio[data-module="analytics"] .account-filter {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.approved-studio[data-module="analytics"] .account-filter select {
+  width: auto;
+  min-width: 160px;
+  max-width: 240px;
+}
