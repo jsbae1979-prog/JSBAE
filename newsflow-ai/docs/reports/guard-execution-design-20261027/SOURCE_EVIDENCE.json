@@ -1,0 +1,43 @@
+{
+  "mode": "read-only static review; no imports of filelock or application; no retries",
+  "baseline_head": "2cb13fa4fa25dc931ed404e427e9ce175da1987a",
+  "installed_distribution_version": "3.32.7",
+  "historical_blocked_run_filelock_version": "NOT CONFIRMED from original raw runtime metadata",
+  "file_hashes": {
+    "local_guard": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+    "native_boundary": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+    "child_bootstrap": "2fe20d8b11b6fb937fd8e235a25a388f5eea7c8657476d2353d9d902f8879abe",
+    "guard_config": "21fc49debce8976758deb3808fcd4d169f0f03f04e70beafe221bb4924a369dd",
+    "native_config": "2b0841153091d74840548c2a122cc51119729e4bff7f40134f5bf7afa8726952",
+    "filelock_init": "644857d02a33bd1c45430b26f1861ceae88bbee2187be6a80f6d0009f8f28b38",
+    "filelock_descriptor": "b2cd457f2100cab675401dcb0d752d24793964501f48068275a6b9629d55ce4e",
+    "filelock_windows": "3318fda8b336f7537347a0d7b10fd04787f79245e06a92027b7a08bdaa9e064b",
+    "filelock_identity": "819184e494b5b7cc8d193aee5e344fd41af4c7a0909fcea4b7cf50a80e7b6666",
+    "windows_fixture": "8e381a9a8abbd51b9d622ad23f5001ac0fedfa39442b32cdbe0469a411792408"
+  },
+  "raw_historical_traceback_recovered": false,
+  "historical_summary_evidence": [
+    "docs/design/studio-v3.0/implementation/REPORT.ko.txt section 7",
+    "docs/design/studio-v3.0/implementation/FOLLOWUP_REPORT.ko.txt section 6"
+  ],
+  "local_guard_allows_ntdll": false,
+  "guarded_dlls": [
+    "kernel32",
+    "crypt32",
+    "advapi32"
+  ],
+  "guard_project_matches_requested_checkout": false,
+  "legacy_bootstrap_dependency_preload_before_guard": true,
+  "legacy_bridge_current_eligibility": "NOT ESTABLISHED; do not execute",
+  "test_calls": 0,
+  "policy_modifications": 0,
+  "product_modifications": 0,
+  "package_modifications": 0,
+  "import_order_changes": 0,
+  "DPI_changes": 0,
+  "new_app_processes": 0,
+  "paid_API_OAuth_SNS_calls": 0,
+  "analysis_verdict": "CONDITIONAL",
+  "local_execution_status": "BLOCKED",
+  "OS_DPI_status": "NOT VERIFIED"
+}

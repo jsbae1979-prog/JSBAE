@@ -1,0 +1,86 @@
+{
+  "status": "candidate inventory from installed package; not a complete runtime allowlist",
+  "calls": [
+    {
+      "library": "ntdll",
+      "symbol": "WinDLL loading",
+      "stage": "module import: filelock/__init__.py:16 -> _descriptor.py:11 -> _windows.py:58",
+      "existing_policy": "rejected by step13_guard._guarded_windll:256-258",
+      "proposed_control": "reviewed System32 DLL binding inside Guard only; fixed binary identity; no general DLL loader"
+    },
+    {
+      "library": "ntdll",
+      "symbol": "NtCreateFile",
+      "stage": "binding:107-119; invocation:_nt_open:300",
+      "existing_policy": "DLL and symbol absent",
+      "proposed_control": "approved synthetic lock path capability, bounded OBJECT_ATTRIBUTES/UNICODE_STRING, fixed access/share/create flags, reparse checks, post-open canonical handle verification; never arbitrary NT object access"
+    },
+    {
+      "library": "ntdll",
+      "symbol": "RtlDosPathNameToNtPathName_U_WithStatus",
+      "stage": "binding:121-126; invocation:289",
+      "existing_policy": "DLL and symbol absent",
+      "proposed_control": "exact validated path input, bounded result, reject UNC/device/ADS/foreign root and RootDirectory ambiguity"
+    },
+    {
+      "library": "ntdll",
+      "symbol": "RtlFreeUnicodeString",
+      "stage": "binding:128-129; invocation:316",
+      "existing_policy": "DLL and symbol absent",
+      "proposed_control": "only buffers minted by approved conversion, exactly-once free"
+    },
+    {
+      "library": "ntdll",
+      "symbol": "RtlNtStatusToDosError",
+      "stage": "binding:130-131; invocation:259",
+      "existing_policy": "DLL and symbol absent",
+      "proposed_control": "bounded scalar conversion only"
+    },
+    {
+      "library": "kernel32",
+      "symbol": "GetFileInformationByHandle",
+      "stage": "binding:135-136; invocation:264",
+      "existing_policy": "symbol absent",
+      "proposed_control": "owned synthetic file handle only; reparse and canonical path validation"
+    },
+    {
+      "library": "kernel32",
+      "symbol": "LockFileEx / UnlockFileEx",
+      "stage": "binding:137-153; invocation:161/172",
+      "existing_policy": "symbols absent",
+      "proposed_control": "owned synchronous synthetic lock handle, fixed one-byte zero-offset range, tracked lock lifecycle"
+    },
+    {
+      "library": "kernel32",
+      "symbol": "CloseHandle",
+      "stage": "binding:133-134; error/cleanup paths",
+      "existing_policy": "already restricted to registered file/token handles",
+      "proposed_control": "do not broaden close policy; register/transfer/release approved file and query-only process handles safely"
+    },
+    {
+      "library": "kernel32",
+      "symbol": "OpenProcess / GetProcessTimes",
+      "stage": "_identity.py:64-73 binding; 82/90/95 execution for owner identity",
+      "existing_policy": "symbols absent",
+      "proposed_control": "test-owned registered PIDs only, exact query/synchronize rights, no injection/write/termination; unknown foreign owner must remain fail-closed"
+    }
+  ],
+  "forbidden_broad_capabilities": [
+    "arbitrary DLL/symbol loading",
+    "arbitrary native file handles or NT paths",
+    "cross-process write/injection/termination",
+    "shell or unrestricted Python child execution",
+    "external network",
+    "operating files, database or credentials"
+  ],
+  "negative_test_plan_only": [
+    "synthetic-root lock contention and release",
+    "outside-root dummy files blocked before access",
+    "UNC/ADS/device/relative/parent-junction and leaf-reparse rejection",
+    "foreign, closed and recycled handles",
+    "unregistered PIDs and excessive access flags",
+    "failed acquisition and cleanup semantics",
+    "external network, DNS, operating port denial without actual connections",
+    "SQLite URI/ATTACH and non-test DPAPI ciphertext denial"
+  ]
+}
