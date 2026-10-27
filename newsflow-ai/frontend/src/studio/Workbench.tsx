@@ -40,6 +40,15 @@ import { CommandDialog, submitOriginal } from "./CommandDialog";
 import "./workbench.css";
 import { Thumbnail } from "./Thumbnail";
 import TopThreeFeeds from "./TopThreeFeeds";
+import {
+  WorkflowSteps,
+  PlatformAccounts,
+  PlatformFilter,
+  CostSummary,
+  ImageOptions,
+  SetupOverview,
+} from "./ApprovedPanels";
+import "./approved.css";
 const intro: Record<string, string> = {
   news: "보관 기사에서 이야기를 선택하세요.",
   shorts: "기사 · 대본 · 음성 · 영상을 한 작업으로 이어갑니다.",
@@ -88,14 +97,16 @@ function Collection({
   items,
   onSelect,
   selected,
+  className = "",
 }: {
   title: string;
   items: Item[];
   onSelect?: (x: Item) => void;
   selected?: unknown;
+  className?: string;
 }) {
   return (
-    <section className="work-panel">
+    <section className={`work-panel ${className}`}>
       <div className="section-heading">
         <h2>{title}</h2>
         <span className="muted">{items.length}개</span>
@@ -111,7 +122,14 @@ function Collection({
               disabled={!onSelect}
             >
               <span className="record-icon">
-                <FileText size={19} />
+                {safeMedia(x.thumbnailUrl) ? (
+                  <Thumbnail
+                    src={safeMedia(x.thumbnailUrl)}
+                    alt="저장된 항목 썸네일"
+                  />
+                ) : (
+                  <FileText size={19} />
+                )}
               </span>
               <span>
                 <strong>{itemTitle(x)}</strong>
@@ -178,7 +196,44 @@ export default function Workbench({
   const [editorDirty, setEditorDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [characterTopic, setCharacterTopic] = useState("");
   const [zoom, setZoom] = useState(false);
+  const [settingsTab, setSettingsTab] = useState("overview");
+  const [platformFilter, setPlatformFilter] = useState("all");
+  const [accountFilter, setAccountFilter] = useState("all");
+  const [accountMetadata, setAccountMetadata] = useState<Item[] | null>(null);
+  const [newsMetadata, setNewsMetadata] = useState<Item[] | null>(null);
+  const [imageOptions, setImageOptions] = useState<Item>({});
+  useEffect(() => {
+    setAccountMetadata(null);
+    setNewsMetadata(null);
+    setPlatformFilter("all");
+    setAccountFilter("all");
+    if (!["settings", "analytics", "shorts"].includes(module)) return;
+    const controller = new AbortController();
+    const sourceModule = module === "shorts" ? "news" : "publishing";
+    fetch(`/api/studio/modules/${sourceModule}`, {
+      credentials: "same-origin",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((r) => {
+        if (!r.ok) throw Error("account metadata unavailable");
+        return r.json();
+      })
+      .then((d) => {
+        if (controller.signal.aborted) return;
+        if (d.schemaVersion !== 1 || d.module !== sourceModule) return;
+        if (sourceModule === "news" && Array.isArray(d.collections?.articles))
+          setNewsMetadata(d.collections.articles);
+        else if (Array.isArray(d.collections?.accounts))
+          setAccountMetadata(d.collections.accounts);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setAccountMetadata(null);
+      });
+    return () => controller.abort();
+  }, [module]);
   const [startupStatus, setStartupStatus] = useState<Item | null>(null);
   const video = useRef<HTMLVideoElement>(null);
   const routeInitialized = useRef(false);
@@ -300,6 +355,9 @@ export default function Workbench({
   const collections = view?.collections ?? {};
   const list = (key: string) => collections[key] ?? [];
   const catalog = view?.catalog ?? {};
+  const imageSelection = Object.keys(imageOptions).length
+    ? imageOptions
+    : (catalog.imageDefaults ?? {});
   function open(id: string, context: Item = {}) {
     const action = actions.find((x) => x.id === id);
     if (!action) {
@@ -469,6 +527,15 @@ export default function Workbench({
     caption?: string,
   ) => {
     const a = actions.find((x) => x.id === id);
+    const Icon = /key|review|approve|confirm/.test(id)
+      ? ShieldCheck
+      : /render|video/.test(id)
+        ? Clapperboard
+        : /write|analyze|generate/.test(id)
+          ? Bot
+          : /save|draft|defaults|selection/.test(id)
+            ? Save
+            : Plus;
     return a ? (
       <button
         type="button"
@@ -477,7 +544,7 @@ export default function Workbench({
         title={unavailable(a)}
         onClick={() => open(id, ctx)}
       >
-        <Plus size={16} />
+        <Icon size={16} />
         {caption ?? a.label}
       </button>
     ) : null;
@@ -560,11 +627,31 @@ export default function Workbench({
     </section>
   );
   return (
-    <div className="workbench" data-module={module}>
+    <div
+      className="workbench approved-studio"
+      data-module={module}
+      data-image-mode={tab}
+      data-settings-tab={settingsTab}
+    >
       <header className="work-heading">
         <div>
           <span className="eyebrow">NEWSFLOW AI STUDIO</span>
-          <h1>{titles[module] ?? "작업 화면"}</h1>
+          <h1>
+            <span className="approved-heading-icon">
+              {module === "characters" ? (
+                <Bot />
+              ) : module === "images" ? (
+                <ImageIcon />
+              ) : module === "settings" ? (
+                <SlidersHorizontal />
+              ) : module === "shorts" ? (
+                <Clapperboard />
+              ) : (
+                <Layers />
+              )}
+            </span>
+            {titles[module] ?? "작업 화면"}
+          </h1>
           <p>{intro[module]}</p>
         </div>
         <div className="work-actions">
@@ -664,8 +751,8 @@ export default function Workbench({
                       </button>
                     ))}
                 </div>
-                <div className="work-columns news-columns">
-                  <section className="work-panel">
+                <div className="work-columns news-columns approved-news-grid">
+                  <section className="work-panel news-archive">
                     <div className="section-heading">
                       <h2>보관 뉴스</h2>
                       <span>{selectedArticles.length}건 선택</span>
@@ -727,12 +814,19 @@ export default function Workbench({
                       <Empty text="먼저 뉴스를 수집하세요." />
                     )}
                   </section>
-                  <aside className="work-panel inspector">
+                  <aside className="work-panel inspector news-inspector">
                     <h2>기사와 출처</h2>
                     {selected ? (
                       <>
                         <Badge value="review_required" />
-                        <h3>{selected.title}</h3>
+                        <div className="approved-article-hero">
+                          <Thumbnail
+                            src={safeMedia(selected.thumbnailUrl)}
+                            alt="선택한 기사 대표 이미지"
+                            eager
+                          />
+                          <h3>{selected.title}</h3>
+                        </div>
                         <p>{selected.summary}</p>
                         <p className="muted">
                           {selected.publisher} ·{" "}
@@ -760,6 +854,42 @@ export default function Workbench({
                     ) : (
                       <Empty text="기사를 선택하세요." />
                     )}
+                  </aside>
+                  <aside className="work-panel news-next">
+                    <h2>
+                      <ChevronRight size={19} />
+                      다음 단계로 이동
+                    </h2>
+                    <p className="muted">
+                      선택한 기사와 출처를 확인한 후 제작실로 이동하세요.
+                    </p>
+                    <button
+                      className="primary"
+                      onClick={() => onNavigate("shorts")}
+                    >
+                      <Clapperboard size={18} />
+                      뉴스 쇼츠 제작실
+                    </button>
+                    <button onClick={() => onNavigate("images")}>
+                      <ImageIcon size={18} />
+                      이미지 제작실
+                    </button>
+                    <button onClick={() => onNavigate("characters")}>
+                      <Bot size={18} />
+                      캐릭터 쇼츠 제작실
+                    </button>
+                    <h3>뉴스 수집 · 분석</h3>
+                    <div className="work-actions">
+                      {button("routes_collect", {})}
+                      {button("serpapi_collect", {})}
+                      {button("intelligence_analyze", {
+                        article_ids: selectedArticles,
+                      })}
+                    </div>
+                    <p className="review-note">
+                      보관 기사 검색과 신규 뉴스 수집은 구분됩니다. 수집 실패 시
+                      과거 기사를 최신 뉴스로 표시하지 않습니다.
+                    </p>
                   </aside>
                 </div>
               </>
@@ -801,14 +931,56 @@ export default function Workbench({
                     뉴스 선택
                   </button>
                 </div>
-                <div className="work-columns production-columns">
+                <div className="work-columns production-columns approved-shorts-grid">
                   <div className="work-stack">
-                    <Collection
-                      title="저장된 대본"
-                      items={list("drafts")}
-                      onSelect={selectDraft}
-                      selected={selected?.id}
-                    />
+                    <section className="work-panel shorts-source">
+                      <h2>
+                        <FileText size={18} />
+                        기사 및 소재 선택
+                      </h2>
+                      <div className="record-list">
+                        {(newsMetadata ?? []).map((x) => (
+                          <button
+                            key={x.id}
+                            className="record-row"
+                            disabled={!view.commandsAvailable}
+                            aria-label={`기사 분석 검토 · ${x.title}`}
+                            onClick={() =>
+                              open("intelligence_analyze", {
+                                article_ids: [x.id],
+                              })
+                            }
+                          >
+                            <span className="record-icon">
+                              <Thumbnail
+                                src={safeMedia(x.thumbnailUrl)}
+                                alt="기사 출처 제공 썸네일"
+                              />
+                            </span>
+                            <span>
+                              <strong>{x.title}</strong>
+                              <small>
+                                {x.publisher} · {x.category}
+                              </small>
+                            </span>
+                            <ChevronRight size={14} />
+                          </button>
+                        ))}
+                      </div>
+                      {newsMetadata === null && (
+                        <p className="muted">
+                          기사 목록 미확인 · 뉴스 스튜디오에서 선택할 수
+                          있습니다.
+                        </p>
+                      )}
+                      <Collection
+                        className="shorts-drafts"
+                        title="저장된 대본"
+                        items={list("drafts")}
+                        onSelect={selectDraft}
+                        selected={selected?.id}
+                      />{" "}
+                    </section>
                     <section
                       className="work-panel script-editor"
                       id="script-editor"
@@ -1079,23 +1251,47 @@ export default function Workbench({
                         selected={selected?.id}
                       />
                       <div className="timeline">
-                        {list("scenes")
-                          .filter((x) => x.plan_id === selected?.id)
-                          .map((x, i) => (
-                            <button
-                              key={x.id}
-                              aria-pressed={scene === i}
-                              onClick={() => setScene(i)}
-                            >
-                              <span>장면 {(x.position ?? i) + 1}</span>
-                              <Badge value={x.status} />
-                              <small>
-                                {Math.round(x.start_ms / 1000)}–
-                                {Math.round(x.end_ms / 1000)}초
-                              </small>
-                              <p>{x.caption}</p>
-                            </button>
-                          ))}
+                        {(selected?.__type === "plan"
+                          ? list("scenes").filter(
+                              (x) => x.plan_id === selected.id,
+                            )
+                          : editorScenes.map((x: Item, i: number) => ({
+                              ...x,
+                              id: `draft-scene-${i}`,
+                              position: i,
+                              start_ms:
+                                editorScenes
+                                  .slice(0, i)
+                                  .reduce(
+                                    (n: number, v: Item) =>
+                                      n + Number(v.seconds ?? 0),
+                                    0,
+                                  ) * 1000,
+                              end_ms:
+                                editorScenes
+                                  .slice(0, i + 1)
+                                  .reduce(
+                                    (n: number, v: Item) =>
+                                      n + Number(v.seconds ?? 0),
+                                    0,
+                                  ) * 1000,
+                              status: "review_required",
+                            }))
+                        ).map((x: Item, i: number) => (
+                          <button
+                            key={x.id}
+                            aria-pressed={scene === i}
+                            onClick={() => setScene(i)}
+                          >
+                            <span>장면 {(x.position ?? i) + 1}</span>
+                            <Badge value={x.status} />
+                            <small>
+                              {Math.round(x.start_ms / 1000)}–
+                              {Math.round(x.end_ms / 1000)}초
+                            </small>
+                            <p>{x.caption}</p>
+                          </button>
+                        ))}
                       </div>
                       {selected?.__type === "plan" && (
                         <div className="work-actions">
@@ -1121,7 +1317,7 @@ export default function Workbench({
                   </div>
                   <aside className="work-stack">
                     {preview(currentMedia)}
-                    <section className="work-panel">
+                    <section className="work-panel shorts-files">
                       <h2>완성 파일</h2>
                       {(view.projects ?? [])
                         .filter((x) => x.kind === "news")
@@ -1137,7 +1333,7 @@ export default function Workbench({
                           </button>
                         ))}
                     </section>
-                    <section className="work-panel">
+                    <section className="work-panel shorts-preflight">
                       <h2>
                         <ShieldCheck size={19} /> 제작 준비
                       </h2>
@@ -1157,20 +1353,45 @@ export default function Workbench({
             )}
             {module === "characters" && (
               <>
+                <WorkflowSteps
+                  labels={["캐릭터 선택", "스토리 생성", "영상 제작 · 검토"]}
+                />
                 <div className="work-toolbar">
                   {button("character_create", {}, true)}
                   {button("character_character_defaults", {})}
                 </div>
-                <div className="work-columns production-columns">
+                <div className="work-columns production-columns approved-character-grid">
                   <div className="work-stack">
                     <Collection
+                      className="character-projects"
                       title="캐릭터 프로젝트"
                       items={list("jobs")}
                       onSelect={setSelected}
                       selected={selected?.id}
                     />
-                    <section className="work-panel">
+                    <section className="work-panel character-story">
                       <h2>스토리 · 스토리보드</h2>
+                      <label className="form-field">
+                        <span>새 이야기 주제</span>
+                        <textarea
+                          aria-label="새 캐릭터 이야기 주제"
+                          placeholder="캐릭터가 어떤 이야기를 들려줄까요?"
+                          value={characterTopic}
+                          onChange={(e) => setCharacterTopic(e.target.value)}
+                        />
+                      </label>
+                      <div className="work-actions">
+                        {button(
+                          "character_create",
+                          { topic: characterTopic },
+                          true,
+                          "이 주제로 새 작업 초안",
+                        )}
+                      </div>
+                      <p className="muted">
+                        새 작업에만 적용 · 아래 저장된 스토리는 변경하지
+                        않습니다.
+                      </p>
                       {selected ? (
                         <>
                           <h3>{selected.topic}</h3>
@@ -1188,39 +1409,7 @@ export default function Workbench({
                               </>
                             )}
                           </div>
-                          <div className="timeline">
-                            {(selected.scenes?.length
-                              ? selected.scenes
-                              : (selected.story?.scenes ?? [])
-                            ).map((x: Item, i: number) => (
-                              <button
-                                key={x.position ?? i}
-                                onClick={() => {
-                                  setCharacterScene({
-                                    jobId: selected.id,
-                                    index: i,
-                                  });
-                                }}
-                                aria-pressed={
-                                  (characterSceneSelected ||
-                                    selected.state === "clips_review") &&
-                                  characterSceneIndex === i
-                                }
-                              >
-                                <span>장면 {x.position ?? i + 1}</span>
-                                <Badge value={x.state} />
-                                <p>
-                                  {[
-                                    x.caption ?? x.narration,
-                                    x.action ?? x.prompt,
-                                  ]
-                                    .filter(Boolean)
-                                    .join(" · ")}
-                                </p>
-                                <small>{x.seconds ?? "규격 확인"}초</small>
-                              </button>
-                            ))}
-                          </div>
+
                           <div className="work-actions">
                             {selected.state === "completed" &&
                               selected.mediaUrl && (
@@ -1322,6 +1511,44 @@ export default function Workbench({
                     </section>
                   </aside>
                 </div>
+                {selected && (
+                  <section className="work-panel character-storyboard">
+                    <h2>
+                      <Layers size={19} />
+                      장면 스토리보드
+                    </h2>{" "}
+                    <div className="timeline">
+                      {(selected.scenes?.length
+                        ? selected.scenes
+                        : (selected.story?.scenes ?? [])
+                      ).map((x: Item, i: number) => (
+                        <button
+                          key={x.position ?? i}
+                          onClick={() => {
+                            setCharacterScene({
+                              jobId: selected.id,
+                              index: i,
+                            });
+                          }}
+                          aria-pressed={
+                            (characterSceneSelected ||
+                              selected.state === "clips_review") &&
+                            characterSceneIndex === i
+                          }
+                        >
+                          <span>장면 {x.position ?? i + 1}</span>
+                          <Badge value={x.state} />
+                          <p>
+                            {[x.caption ?? x.narration, x.action ?? x.prompt]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                          <small>{x.seconds ?? "규격 확인"}초</small>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </>
             )}
             {module === "images" && (
@@ -1369,7 +1596,9 @@ export default function Workbench({
                     csrf={view.csrfToken}
                   />
                 ) : (
-                  <div className="work-columns production-columns">
+                  <div
+                    className={`work-columns production-columns approved-image-grid image-layout-${tab}`}
+                  >
                     <div className="work-stack">
                       {tab === "independent" ? (
                         <>
@@ -1387,9 +1616,18 @@ export default function Workbench({
                               value={prompt}
                               onChange={(e) => setPrompt(e.target.value)}
                             />
+                            <ImageOptions
+                              catalog={catalog}
+                              value={imageSelection}
+                              onChange={setImageOptions}
+                            />
                             <div className="work-actions">
-                              {button("creation_draft", { prompt }, true)}
-                              {button("creation_defaults", {})}
+                              {button(
+                                "creation_draft",
+                                { prompt, ...imageSelection },
+                                true,
+                              )}
+                              {button("creation_defaults", imageSelection)}
                             </div>
                             <div className="review-note">
                               <Info size={17} />
@@ -1400,6 +1638,7 @@ export default function Workbench({
                             </div>
                           </section>
                           <Collection
+                            className="image-history"
                             title="이미지 초안과 결과"
                             items={list("drafts")}
                             onSelect={(x) =>
@@ -1408,7 +1647,7 @@ export default function Workbench({
                             selected={selected?.id}
                           />
                           {selected && (
-                            <section className="work-panel">
+                            <section className="work-panel image-selected">
                               <h2>{itemTitle(selected)}</h2>
                               <Badge value={selected.status} />
                               <div className="work-actions">
@@ -1432,7 +1671,7 @@ export default function Workbench({
                         </>
                       ) : (
                         <>
-                          <section className="work-panel">
+                          <section className="work-panel news-image-input">
                             <h2>뉴스 기반 이미지</h2>
                             <p>
                               기사 선택 → 카드 기획 → 이미지·문구 확인 → 출처
@@ -1456,6 +1695,7 @@ export default function Workbench({
                             </div>
                           </section>
                           <Collection
+                            className="news-image-concepts"
                             title="Claude 카드 · 이미지 지시문"
                             items={list("cards")}
                             onSelect={(x) =>
@@ -1463,6 +1703,7 @@ export default function Workbench({
                             }
                           />
                           <Collection
+                            className="news-image-generations"
                             title="뉴스 이미지 생성 결과"
                             items={list("generations")}
                             onSelect={(x) =>
@@ -1470,7 +1711,7 @@ export default function Workbench({
                             }
                           />
                           {selected?.plan && (
-                            <section className="work-panel">
+                            <section className="work-panel news-image-plan">
                               <h2>{selected.title}</h2>
                               <Badge value={selected.status} />
                               <p>{selected.plan.body}</p>
@@ -1518,6 +1759,7 @@ export default function Workbench({
                             </section>
                           )}
                           <Collection
+                            className="news-image-posts"
                             title="뉴스 이미지 게시물"
                             items={list("posts")}
                             onSelect={(x) =>
@@ -1525,6 +1767,7 @@ export default function Workbench({
                             }
                           />
                           <Collection
+                            className="news-image-selections"
                             title="상위 3건 선정 기록"
                             items={list("selections")}
                             onSelect={(x) =>
@@ -1540,8 +1783,23 @@ export default function Workbench({
                     </div>
                     <aside className="work-stack">
                       {preview(currentMedia, "image")}
-                      <section className="work-panel inspector">
-                        <h2>이미지 속성</h2>
+                      <section className="work-panel inspector image-properties">
+                        <h2>이미지 속성 · 출처</h2>
+                        {tab === "news" && selected && (
+                          <div className="image-copy-review">
+                            <h3>{itemTitle(selected)}</h3>
+                            <p>
+                              {selected.plan?.body ??
+                                selected.body ??
+                                selected.summary ??
+                                "문구 검토 필요"}
+                            </p>
+                            <p className="muted">
+                              {selected.publisher ??
+                                "저장된 출처와 사용권을 확인하세요."}
+                            </p>
+                          </div>
+                        )}
                         <dl className="property-list">
                           {Object.entries(
                             selected?.selection ?? catalog.imageDefaults ?? {},
@@ -1570,9 +1828,10 @@ export default function Workbench({
                   {button("scheduler_save", {}, true)}
                   {button("autopilot_quick_start", {})}
                 </div>
-                <div className="work-columns">
+                <div className="work-columns approved-automation-grid">
                   <div className="work-stack">
                     <Collection
+                      className="schedule-list"
                       title="제작 예약"
                       items={list("schedules")}
                       onSelect={(x) =>
@@ -1581,11 +1840,13 @@ export default function Workbench({
                       selected={selected?.id}
                     />
                     <Collection
+                      className="schedule-history"
                       title="예약 실행 기록"
                       items={list("runs")}
                       onSelect={setSelected}
                     />
                     <Collection
+                      className="autopilot-history"
                       title="자동 제작 작업"
                       items={list("jobs")}
                       onSelect={setSelected}
@@ -1638,97 +1899,100 @@ export default function Workbench({
             )}
             {module === "library" && (
               <>
-                <div className="work-toolbar">
-                  <label className="work-search">
-                    <Search size={18} />
-                    <input
-                      aria-label="라이브러리 검색"
-                      placeholder="프로젝트·소재 검색"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                    />
-                  </label>
-                  <div className="filters">
-                    {["전체", "news", "character", "image"].map((x) => (
-                      <button
-                        key={x}
-                        aria-pressed={category === x}
-                        onClick={() => setCategory(x)}
-                      >
-                        {(
-                          {
-                            news: "뉴스 영상",
-                            character: "캐릭터",
-                            image: "이미지",
-                          } as Item
-                        )[x] ?? x}
-                      </button>
-                    ))}
+                <div className="approved-library-grid">
+                  <div className="work-toolbar">
+                    <label className="work-search">
+                      <Search size={18} />
+                      <input
+                        aria-label="라이브러리 검색"
+                        placeholder="프로젝트·소재 검색"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                      />
+                    </label>
+                    <div className="filters">
+                      {["전체", "news", "character", "image"].map((x) => (
+                        <button
+                          key={x}
+                          aria-pressed={category === x}
+                          onClick={() => setCategory(x)}
+                        >
+                          {(
+                            {
+                              news: "뉴스 영상",
+                              character: "캐릭터",
+                              image: "이미지",
+                            } as Item
+                          )[x] ?? x}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="media-library">
-                  {(view.projects ?? [])
-                    .filter(
-                      (x) =>
-                        (category === "전체" || x.kind === category) &&
-                        x.title.toLowerCase().includes(query.toLowerCase()),
-                    )
-                    .map((x) => (
-                      <button
-                        className="media-tile work-panel"
-                        key={x.id}
-                        onClick={() => setSelected(x)}
-                      >
-                        <div className="media-tile-art">
-                          <Thumbnail
-                            src={
-                              typeof x.thumbnailUrl === "string" &&
-                              x.thumbnailUrl.startsWith(
-                                "/studio/assets/design-art-",
-                              )
-                                ? null
-                                : safeMedia(x.thumbnailUrl)
-                            }
-                            alt="저장된 소재 미리보기"
-                          />
-                        </div>
-                        <strong>{x.title}</strong>
-                        <Badge value={x.technicalStatus} />
-                      </button>
-                    ))}
-                </div>
-                {selected && (
-                  <div className="work-columns">
-                    {preview(
-                      currentMedia,
-                      selected.kind === "image" ? "image" : "video",
-                    )}
-                    <section className="work-panel">
-                      <h2>{selected.title}</h2>
-                      <Badge value={selected.technicalStatus} />
-                      <button
-                        onClick={() =>
-                          onNavigate(
-                            selected.kind === "news"
-                              ? "shorts"
-                              : selected.kind === "image"
-                                ? "images"
-                                : "characters",
-                          )
-                        }
-                      >
-                        제작실로 이동 <ChevronRight size={16} />
-                      </button>
-                      <details>
-                        <summary>보관 관리</summary>
-                        {selected.kind === "news" &&
-                          button("cleanup_remove_video", {
-                            identifier: String(selected.id).split(":")[1],
-                          })}
-                      </details>
-                    </section>
+                  <div className="media-library">
+                    {(view.projects ?? [])
+                      .filter(
+                        (x) =>
+                          (category === "전체" || x.kind === category) &&
+                          x.title.toLowerCase().includes(query.toLowerCase()),
+                      )
+                      .map((x) => (
+                        <button
+                          className="media-tile work-panel"
+                          aria-pressed={selected?.id === x.id}
+                          key={x.id}
+                          onClick={() => setSelected(x)}
+                        >
+                          <div className="media-tile-art">
+                            <Thumbnail
+                              src={
+                                typeof x.thumbnailUrl === "string" &&
+                                x.thumbnailUrl.startsWith(
+                                  "/studio/assets/design-art-",
+                                )
+                                  ? null
+                                  : safeMedia(x.thumbnailUrl)
+                              }
+                              alt="저장된 소재 미리보기"
+                            />
+                          </div>
+                          <strong>{x.title}</strong>
+                          <Badge value={x.technicalStatus} />
+                        </button>
+                      ))}
                   </div>
-                )}
+                  {selected && (
+                    <div className="work-columns">
+                      {preview(
+                        currentMedia,
+                        selected.kind === "image" ? "image" : "video",
+                      )}
+                      <section className="work-panel">
+                        <h2>{selected.title}</h2>
+                        <Badge value={selected.technicalStatus} />
+                        <button
+                          onClick={() =>
+                            onNavigate(
+                              selected.kind === "news"
+                                ? "shorts"
+                                : selected.kind === "image"
+                                  ? "images"
+                                  : "characters",
+                            )
+                          }
+                        >
+                          제작실로 이동 <ChevronRight size={16} />
+                        </button>
+                        <details>
+                          <summary>보관 관리</summary>
+                          {selected.kind === "news" &&
+                            button("cleanup_remove_video", {
+                              identifier: String(selected.id).split(":")[1],
+                            })}
+                        </details>
+                      </section>
+                    </div>
+                  )}
+                </div>
                 <Collection
                   title="휴지 보관"
                   items={list("removed")}
@@ -1738,30 +2002,50 @@ export default function Workbench({
             )}
             {module === "publishing" && (
               <>
+                <WorkflowSteps
+                  labels={[
+                    "콘텐츠 선택",
+                    "게시 설정",
+                    "검토",
+                    "최종 승인",
+                    "결과 확인",
+                  ]}
+                />
                 <div className="work-toolbar">
                   {button("unified_publishing_local_draft", {}, true)}
                   {button("unified_publishing_review", {})}
                 </div>
-                <div className="work-columns">
+                <div className="work-columns approved-publishing-grid">
                   <div className="work-stack">
                     <Collection
+                      className="publish-drafts"
                       title="로컬 게시 초안"
                       items={list("drafts")}
                       onSelect={setSelected}
                       selected={selected?.id}
                     />
                     <Collection
+                      className="publish-history"
                       title="플랫폼별 게시 기록"
                       items={list("jobs")}
                       onSelect={setSelected}
                     />
                     <Collection
+                      className="publish-deliveries"
                       title="단일 이미지 전달 · 게시"
                       items={list("deliveries")}
                       onSelect={setSelected}
                     />
                   </div>
                   <aside className="work-stack">
+                    {preview(
+                      safeMedia(
+                        selected?.mediaUrl ??
+                          (view.projects ?? []).find(
+                            (x) => x.id === `news:${selected?.render_job_id}`,
+                          )?.mediaUrl,
+                      ),
+                    )}
                     <section className="work-panel inspector">
                       <h2>
                         <Send size={20} /> 게시 검토
@@ -1803,7 +2087,11 @@ export default function Workbench({
                               "sources_confirmed",
                             ].map((k) => (
                               <p key={k}>
-                                <Check size={16} />
+                                {selected[k] ? (
+                                  <Check size={16} />
+                                ) : (
+                                  <AlertTriangle size={16} />
+                                )}
                                 {label(k)} ·{" "}
                                 {selected[k] ? "기록 있음" : "확인 필요"}
                               </p>
@@ -1827,9 +2115,9 @@ export default function Workbench({
                         <Empty text="초안을 선택하세요." />
                       )}
                     </section>
-                    <Collection
-                      title="계정 연결 메타데이터"
-                      items={list("accounts")}
+                    <PlatformAccounts
+                      accounts={list("accounts")}
+                      onSettings={() => onNavigate("settings")}
                     />
                     <section className="work-panel">
                       <h2>공개 게시 전 확인</h2>
@@ -1844,80 +2132,175 @@ export default function Workbench({
             )}
             {module === "analytics" && (
               <>
+                <CostSummary usage={list("usage")} />
+                <PlatformFilter
+                  value={platformFilter}
+                  onChange={(value) => {
+                    setPlatformFilter(value);
+                    setAccountFilter("all");
+                  }}
+                  accounts={accountMetadata}
+                  account={accountFilter}
+                  onAccount={setAccountFilter}
+                />
+                <PlatformAccounts
+                  accounts={accountMetadata}
+                  onSettings={() => onNavigate("settings")}
+                />
                 <div className="work-toolbar">
                   {button("social_collect", {})}
                 </div>
-                <section className="work-panel">
-                  <div className="section-heading">
-                    <h2>플랫폼 성과</h2>
-                    <span className="muted">실제 수집 기록 기준</span>
-                  </div>
-                  {list("metrics").length ? (
-                    <div className="metric-grid">
-                      {list("metrics").map((x) => (
-                        <div key={x.id}>
-                          <small>
-                            {x.platform} ·{" "}
-                            {x.synthetic ? "합성 검증 자료" : "수집 지표"}
-                          </small>
-                          <h3>{x.metric}</h3>
-                          <strong>
-                            {x.value} <small>{x.unit}</small>
-                          </strong>
+                <div className="approved-analytics-grid">
+                  <div className="work-stack">
+                    {" "}
+                    <section className="work-panel analytics-metrics">
+                      <div className="section-heading">
+                        <h2>플랫폼 성과</h2>
+                        <span className="muted">수집 · 합성 · 미수집 구분</span>
+                      </div>
+                      {list("metrics").length ? (
+                        <div className="metric-grid">
+                          {list("metrics")
+                            .filter(
+                              (x) =>
+                                (platformFilter === "all" ||
+                                  x.platform === platformFilter) &&
+                                (accountFilter === "all" ||
+                                  String(x.account_id) === accountFilter),
+                            )
+                            .map((x) => (
+                              <div key={x.id}>
+                                <small>
+                                  {x.platform} ·{" "}
+                                  {x.synthetic ? "합성 검증 자료" : "수집 지표"}
+                                </small>
+                                <h3>{x.metric}</h3>
+                                <strong>
+                                  {x.value == null ? "미수집" : x.value}{" "}
+                                  <small>{x.unit}</small>
+                                </strong>
+                              </div>
+                            ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <Empty text="아직 수집된 성과 지표가 없습니다." />
-                  )}
-                </section>
-                <section className="work-panel">
-                  <h2>AI 사용량</h2>
-                  <div className="table-scroll">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>모델</th>
-                          <th>작업</th>
-                          <th>상태</th>
-                          <th>입력 토큰</th>
-                          <th>출력 토큰</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {list("usage").map((x) => (
-                          <tr key={x.id}>
-                            <td>
-                              {x.provider}
-                              <small>{x.model}</small>
-                            </td>
-                            <td>{x.kind}</td>
-                            <td>
-                              <Badge value={x.status} />
-                            </td>
-                            <td>{x.prompt_tokens}</td>
-                            <td>{x.completion_tokens}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                      ) : (
+                        <Empty text="아직 수집된 성과 지표가 없습니다." />
+                      )}
+                    </section>
+                    <section className="work-panel">
+                      <h2>AI 사용량</h2>
+                      <div className="table-scroll">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th>모델</th>
+                              <th>작업</th>
+                              <th>상태</th>
+                              <th>입력 토큰</th>
+                              <th>출력 토큰</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {list("usage").map((x) => (
+                              <tr key={x.id}>
+                                <td>
+                                  {x.provider}
+                                  <small>{x.model}</small>
+                                </td>
+                                <td>{x.kind}</td>
+                                <td>
+                                  <Badge value={x.status} />
+                                </td>
+                                <td>{x.prompt_tokens}</td>
+                                <td>{x.completion_tokens}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="muted">
+                        토큰 사용량은 실제 청구액과 다릅니다. 확인되지 않은
+                        비용을 0원으로 표시하지 않습니다.
+                      </p>
+                    </section>
+                    <p className="review-note">
+                      계정 정보가 없는 지표는 계정별 성과로 표시하지 않습니다.
+                      계정 선택 시 해당 계정 식별자가 있는 기록만 표시합니다.
+                    </p>
+                    <Collection
+                      title="요청 · 결과 불명 기록"
+                      items={list("requests")}
+                    />
                   </div>
-                  <p className="muted">
-                    토큰 사용량은 실제 청구액과 다릅니다. 확인되지 않은 비용을
-                    0원으로 표시하지 않습니다.
-                  </p>
-                </section>
-                <Collection
-                  title="요청 · 결과 불명 기록"
-                  items={list("requests")}
-                />
+                  <aside className="work-stack">
+                    <Collection
+                      title="콘텐츠 기록"
+                      items={view.projects ?? []}
+                      onSelect={setSelected}
+                      selected={selected?.id}
+                    />
+                    {preview(
+                      currentMedia,
+                      selected?.kind === "image" ? "image" : "video",
+                    )}
+                    <section className="work-panel">
+                      <h2>비용 자료 구분</h2>
+                      <p>
+                        AI 토큰 사용량 · 공식 견적 · 실제 청구액은 서로 다른
+                        자료입니다.
+                      </p>
+                      <p className="muted">
+                        확인되지 않은 금액과 계정 수는 임의로 채우지 않습니다.
+                      </p>
+                    </section>
+                  </aside>
+                </div>
               </>
             )}
             {module === "settings" && (
               <>
+                <nav
+                  className="approved-settings-tabs"
+                  aria-label="설정 항목"
+                  role="tablist"
+                >
+                  {[
+                    ["overview", "개요"],
+                    ["accounts", "플랫폼 계정"],
+                    ["ai", "AI 모델 · API 키"],
+                    ["defaults", "제작 기본값"],
+                    ["sources", "뉴스 수집"],
+                    ["windows", "Windows · 실행"],
+                    ["system", "시스템 · 가이드"],
+                  ].map(([id, title]) => (
+                    <button
+                      key={id}
+                      role="tab"
+                      aria-selected={settingsTab === id}
+                      onClick={() => setSettingsTab(id)}
+                    >
+                      {title}
+                    </button>
+                  ))}
+                </nav>
+                {settingsTab === "overview" && (
+                  <SetupOverview
+                    settings={view.settings}
+                    onGuide={() => onNavigate("onboarding")}
+                  />
+                )}
+                {(settingsTab === "overview" || settingsTab === "accounts") && (
+                  <PlatformAccounts
+                    accounts={accountMetadata}
+                    onSettings={() => setSettingsTab("ai")}
+                  />
+                )}
+
                 <div className="work-columns">
                   <div className="work-stack">
-                    <section className="work-panel">
+                    <section
+                      className="work-panel settings-defaults"
+                      hidden={!["overview", "defaults"].includes(settingsTab)}
+                    >
                       <h2>제작 모드별 기본값</h2>
                       <div className="settings-cards">
                         {[
@@ -1952,7 +2335,10 @@ export default function Workbench({
                         ))}
                       </div>
                     </section>
-                    <section className="work-panel">
+                    <section
+                      className="work-panel settings-models"
+                      hidden={!["overview", "ai"].includes(settingsTab)}
+                    >
                       <h2>AI · 음성 · 영상 모델</h2>
                       <div className="work-actions">
                         {button("ai_settings_save_ai_settings", {})}
@@ -1969,6 +2355,11 @@ export default function Workbench({
                       </p>
                     </section>
                     <Collection
+                      className={
+                        !["overview", "sources"].includes(settingsTab)
+                          ? "settings-sources tab-hidden"
+                          : "settings-sources"
+                      }
                       title="수집 출처"
                       items={list("sources")}
                       onSelect={(x) =>
@@ -1977,7 +2368,10 @@ export default function Workbench({
                     />
                   </div>
                   <aside className="work-stack">
-                    <section className="work-panel">
+                    <section
+                      className="work-panel settings-api"
+                      hidden={!["overview", "ai"].includes(settingsTab)}
+                    >
                       <h2>
                         <ShieldCheck size={20} /> API 연결
                       </h2>
@@ -2025,7 +2419,12 @@ export default function Workbench({
                         않습니다.
                       </p>
                     </section>
-                    <section className="work-panel">
+                    <section
+                      className="work-panel settings-windows"
+                      hidden={
+                        !["overview", "windows", "system"].includes(settingsTab)
+                      }
+                    >
                       <h2>Windows 실행 · 사용자 검토</h2>
                       <p className="muted">
                         상태는 버튼을 선택할 때만 조회합니다. 등록·해제와 사람
@@ -2170,4 +2569,3 @@ export default function Workbench({
     </div>
   );
 }
-

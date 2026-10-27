@@ -196,7 +196,7 @@ export default function TopThreeFeeds({
   const [regenerate, setRegenerate] = useState<Item | null>(null);
   return (
     <div className="top3-workflow work-stack" aria-busy={busy || !ready}>
-      <details className="work-panel top3-new-job" open={!batch}>
+      <details className="work-panel top3-new-job" open>
         <summary>
           <span className="section-heading">
             <strong>
@@ -280,9 +280,17 @@ export default function TopThreeFeeds({
             </select>
           </label>
         </div>
-        {chosen && (
+        {(chosen || batch) && (
           <ol className="top3-selection">
-            {chosen.ranking.map((x: Item) => (
+            {(
+              chosen?.ranking ??
+              batch?.items.map((x: Item) => ({
+                ...x.source,
+                ...x.content,
+                rank: x.rank,
+              })) ??
+              []
+            ).map((x: Item) => (
               <li key={x.rank}>
                 <strong>
                   TOP {x.rank} · {x.title}
@@ -290,7 +298,9 @@ export default function TopThreeFeeds({
                 <p>{x.body}</p>
                 <small>
                   {x.origin} ·{" "}
-                  {x.references.map((r: Item) => r.publisher).join(" · ")}
+                  {(x.references ?? [])
+                    .map((r: Item) => r.publisher)
+                    .join(" · ")}
                 </small>
               </li>
             ))}
@@ -345,7 +355,7 @@ export default function TopThreeFeeds({
           {message}
         </div>
       )}
-      <section className="work-panel">
+      <section className="work-panel top3-run-panel">
         <div className="section-heading">
           <h2>자동 제작 작업</h2>
           <button
@@ -555,6 +565,29 @@ export default function TopThreeFeeds({
           </>
         )}
       </section>
+      <aside className="work-panel top3-policy">
+        <h2>
+          <ShieldCheck size={18} />
+          문구 · 출처 검토
+        </h2>
+        <p>뉴스 1·2·3위를 각각 하나의 피드 이미지로 제작합니다.</p>
+        <p className="muted">
+          저장된 뉴스 요약과 대본만 재사용하며, 출처에 없는 사실을 추가하지
+          않습니다.
+        </p>
+        <div className="review-checklist">
+          <p>기사별 문구·해시태그·출처 개별 보존</p>
+          <p>사용권·AI 표시·최종 게시 승인 별도</p>
+          <p>실패·결과 불명은 자동 재요청 금지</p>
+        </div>
+        <p className="review-note">
+          모델·옵션은 작업 저장 시 고정됩니다. 새 기본값은 기존 작업을 바꾸지
+          않습니다.
+        </p>
+        <a className="studio-link" href="/studio/settings">
+          API 키·모델 설정
+        </a>
+      </aside>
       {approval && (
         <FeedDialog
           name="TOP 3 생성 범위 승인"
