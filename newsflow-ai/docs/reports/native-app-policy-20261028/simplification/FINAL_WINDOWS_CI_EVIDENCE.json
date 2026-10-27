@@ -1,0 +1,281 @@
+{
+  "commit": "b0f530d73562284d407011f9de55869b7c8f1204",
+  "python": "3.14.7",
+  "Windows": "sys.getwindowsversion(major=10, minor=0, build=26100, platform=2, service_pack='')",
+  "local_app_executed": false,
+  "OS_DPI": "NOT VERIFIED / unchanged",
+  "paid_API_SNS_calls": 0,
+  "security": {
+    "pass": 9,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "passed_test_ids": [
+      "test_app_policy.PolicyTests.test_01_synthetic_file_roundtrip_and_external_write_denied",
+      "test_app_policy.PolicyTests.test_02_UNC_ADS_device_relative_and_credential_paths",
+      "test_app_policy.PolicyTests.test_03_reparse_inspection_and_link_creation_denied",
+      "test_app_policy.PolicyTests.test_04_registered_SQLite_transaction_close_reopen",
+      "test_app_policy.PolicyTests.test_05_SQLite_ATTACH_extension_factory_and_URI_denied",
+      "test_app_policy.PolicyTests.test_06_owned_literal_loopback_exchange",
+      "test_app_policy.PolicyTests.test_07_operating_port_external_DNS_proxy_and_unowned_loopback_denied",
+      "test_app_policy.PolicyTests.test_08_process_and_background_thread_denied",
+      "test_app_policy.PolicyTests.test_09_actual_FileLock_in_app_data_directory"
+    ],
+    "failures": [],
+    "errors": []
+  },
+  "app_initialization": "PASS",
+  "read_only_ASGI": "PASS",
+  "processes_started": 0,
+  "cleanup_errors": [],
+  "borrowed_sources_before": {
+    "native_guard_copy/guard_verification.py": "9446556de593c9d59d11a9b2260a5ecb4d4be1e55fe7e2d8bcc45c9626438257",
+    "native_guard_copy/native_boundary_original.py": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+    "native_capability/adapter.py": "bcd4c7e13f64a98889bd87f1075bf8ec3c8431703f16b86e95bad3c62c5984f3",
+    "native_rtl_filelock/rtl_boundary.py": "dccfee633e65247c0ace10882bcd895246c0513e3f2513f3b379c82ba9b40ae3"
+  },
+  "bootstrap_read_roots_shared": true,
+  "Guard_first": true,
+  "environment_secret_names_remaining": [],
+  "security_facts": {
+    "loopback_probe_port": 57532,
+    "actual_FileLock": true
+  },
+  "app_facts": {
+    "create_app": "PASS",
+    "automatic_start": true,
+    "lifespan_entered": false,
+    "scheduler_started": false,
+    "publishing_started": false,
+    "data_dir_in_runner_temp": true
+  },
+  "responses": [
+    {
+      "path": "/studio/shorts",
+      "status": 200,
+      "CSP": "preserved"
+    },
+    {
+      "path": "/studio/characters",
+      "status": 200,
+      "CSP": "preserved"
+    },
+    {
+      "path": "/studio/images",
+      "status": 200,
+      "CSP": "preserved"
+    },
+    {
+      "path": "/studio/images?mode=top3",
+      "status": 200,
+      "CSP": "preserved"
+    },
+    {
+      "path": "/studio/news",
+      "status": 200,
+      "CSP": "preserved"
+    },
+    {
+      "path": "/studio/assets/index-7vJUSuUi.js",
+      "status": 200,
+      "bytes": 474728
+    },
+    {
+      "path": "/studio/assets/index-JhgHrGSi.css",
+      "status": 200,
+      "bytes": 101811
+    },
+    {
+      "path": "/api/studio/modules/news",
+      "status": 200,
+      "synthetic_empty_state": true
+    },
+    {
+      "path": "/api/studio/modules/shorts",
+      "status": 200,
+      "synthetic_empty_state": true
+    },
+    {
+      "path": "/api/studio/modules/characters",
+      "status": 200,
+      "synthetic_empty_state": true
+    },
+    {
+      "path": "/api/studio/modules/images",
+      "status": 200,
+      "synthetic_empty_state": true
+    }
+  ],
+  "lock_resources": {
+    "native_handles": 0,
+    "CRT_descriptors": 0,
+    "native_buffers": 0,
+    "unresolved_calls": 0,
+    "allocations": 8,
+    "frees": 8,
+    "NtCreateFile_calls": 8,
+    "lock_calls": 8,
+    "unlock_calls": 8,
+    "default_unlink_attempts": 0,
+    "quarantined_paths": 0,
+    "retired_generations": 0,
+    "events": [
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle"
+    ],
+    "closed": true
+  },
+  "remaining_native_handles": 0,
+  "policy": {
+    "phase": "explicit-cleanup",
+    "remaining_SQLite_connections": 0,
+    "SQLite_closed": 4,
+    "threads_started": 1,
+    "threads_alive": 0,
+    "allowed_events": {
+      "open": 2352,
+      "os.listdir": 216,
+      "os.remove": 52,
+      "sqlite3.connect": 10,
+      "socket.bind": 4,
+      "socket.connect": 4,
+      "os.mkdir": 36,
+      "os.utime": 2,
+      "os.scandir": 56,
+      "os.rmdir": 14
+    },
+    "denials": [
+      {
+        "phase": "new-security-tests",
+        "reason": "outside-synthetic-write"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "UNC-device-path"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "UNC-device-path"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "ADS-path"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "relative-traversal"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "credential-file"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "reparse-path-component"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "link-creation-not-required"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "SQLite-authorizer-replacement"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "SQLite-native-extension"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "outside-synthetic-write"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "unregistered-SQLite-URI-memory"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "unregistered-SQLite-URI-memory"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "SQLite-connect-options"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "foreign-SQLite-connection-type"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "only-owned-IPv4-loopback"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "unowned-loopback-or-server-port"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "only-owned-IPv4-loopback"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "only-owned-IPv4-loopback"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "DNS-datagram-or-external-network"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "DNS-datagram-or-external-network"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "unapproved-thread-start"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "raw-thread-start"
+      },
+      {
+        "phase": "new-security-tests",
+        "reason": "link-creation-not-required"
+      }
+    ],
+    "processes_started": 0
+  },
+  "guard_denials": [
+    "unapproved-executable"
+  ],
+  "gate_denials": {},
+  "legacy_DLL_symbol_tables_unchanged": true,
+  "package_unchanged": true,
+  "borrowed_sources_unchanged": true,
+  "sources_unchanged": true,
+  "remaining_synthetic_entries": [],
+  "tests_executed": true,
+  "final": "CONDITIONAL",
+  "resource_cleanup_certified": true
+}

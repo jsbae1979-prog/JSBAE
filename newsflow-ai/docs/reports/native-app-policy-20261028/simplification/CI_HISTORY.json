@@ -1,0 +1,38 @@
+{
+  "not_aggregate": true,
+  "executions": [
+    {
+      "run": 40534745092,
+      "commit": "76ef6a5fb47544b37886db50ac7fc2af68817d32",
+      "pass": 8,
+      "fail": 0,
+      "error": 1,
+      "skip": 0,
+      "app": "NOT EXECUTED",
+      "cause": "IPv6 probe used AF_INET socket; fixture corrected"
+    },
+    {
+      "run": 40535289797,
+      "commit": "ed79908c250debab480b60f6bbc124e372717934",
+      "pass": 9,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "app": "PASS",
+      "ASGI": "BLOCKED",
+      "cause": "HTTPX imports optional Click Windows console native module; unrelated dependency removed, no DLL grant"
+    },
+    {
+      "run": 40535977417,
+      "commit": "b0f530d73562284d407011f9de55869b7c8f1204",
+      "pass": 9,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "app": "PASS",
+      "ASGI": "PASS",
+      "artifact_id": 12748646799,
+      "artifact_zip_SHA256": "de88c0cc114caa77ea10d0d9b53c4bf1164164833c0c1569f05aca9a58a484d8"
+    }
+  ]
+}
