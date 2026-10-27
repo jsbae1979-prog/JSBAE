@@ -23,8 +23,22 @@ def test_character_scene_display_preserves_jobs_and_approval_boundary(client, st
         state=status,
         script={
             "title": "Synthetic",
+            "plan": {
+                "situation": "Synthetic office",
+                "contrast": "Busy and calm",
+                "punchline": "A quiet ending",
+            },
+            "hook_caption": "Synthetic start",
+            "end_caption": "Synthetic end",
             "scenes": [
-                {"seconds": 10, "caption": f"Caption {i}", "action": f"Action {i}"} for i in range(1, 4)
+                {
+                    "seconds": 10,
+                    "caption": f"Caption {i}",
+                    "action": f"Action {i}",
+                    "role": ["setup", "build", "punchline"][i - 1],
+                    "sfx": "",
+                }
+                for i in range(1, 4)
             ],
         },
         scenes=[
@@ -48,6 +62,12 @@ def test_character_scene_display_preserves_jobs_and_approval_boundary(client, st
             "original": "PRIVATE-ORIGINAL",
         },
     )
+    from newsflow.character.schema import Character, Storyboard, prompts
+
+    story = Storyboard.model_validate(job["script"])
+    job["script"] = story.model_dump()
+    job["prompts"] = prompts(story, Character.model_validate(job["character"]))
+    job["plan_hash"] = service.plan_hash(job)
     service.save(job)
     before = deepcopy(service.read(job["id"]))
     response = c.get("/api/studio/modules/characters")
