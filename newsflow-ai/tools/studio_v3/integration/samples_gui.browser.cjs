@@ -12,19 +12,28 @@ function ipc(data){const task=serial.then(async()=>{
  while(!fs.existsSync(answer)){assert(Date.now()<deadline,"Python ASGI response timeout");await new Promise(r=>setTimeout(r,15));}
  const value=JSON.parse(fs.readFileSync(answer,"utf8"));fs.unlinkSync(answer);assert(!value.error,value.error);return value;
 });serial=task.catch(()=>{});return task;}
-(async()=>{let browser,context;try{
+(async()=>{let browser,context,page;try{
  browser=await chromium.launch({channel:"chrome",headless:true,chromiumSandbox:true,args:["--disable-background-networking","--disable-component-update","--disable-quic","--proxy-server=http://127.0.0.1:18765","--proxy-bypass-list=127.0.0.1","--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"]});
  result.browserVersion=browser.version();
  context=await browser.newContext({locale:"ko-KR",serviceWorkers:"block",acceptDownloads:false});
  await context.route("**/*",async route=>{
   const req=route.request(),url=new URL(req.url());
   if(url.origin!==origin){result.externalRequests.push(url.origin);return route.abort();}
-  const response=await ipc({method:req.method(),url:url.pathname+url.search,headers:req.headers(),body:(req.postDataBuffer()||Buffer.alloc(0)).toString("base64")});
-  const headers={...response.headers};delete headers["transfer-encoding"];delete headers["content-encoding"];
-  await route.fulfill({status:response.status,headers,body:Buffer.from(response.body,"base64")});
+  try {
+   const response=await ipc({method:req.method(),url:url.pathname+url.search,headers:req.headers(),body:(req.postDataBuffer()||Buffer.alloc(0)).toString("base64")});
+   const headers={...response.headers};delete headers["transfer-encoding"];delete headers["content-encoding"];
+   await route.fulfill({status:response.status,headers,body:Buffer.from(response.body,"base64")});
+  } catch(e) {
+   if(req.failure()?.errorText==="net::ERR_ABORTED"){
+    (result.navigationCancellations??=[]).push(url.pathname);
+   } else {
+    result.failures.push({name:"request transport",path:url.pathname,error:String(e)});
+    await route.abort().catch(()=>{});
+   }
+  }
  });
- const page=await context.newPage();page.setDefaultTimeout(12000);page.on("pageerror",e=>result.pageErrors.push(String(e)));
- async function open(s){await page.goto(origin+"/studio/"+s);await page.locator(".sample-gallery").waitFor();await page.locator(".sample-cards article").first().waitFor();}
+ page=await context.newPage();page.setDefaultTimeout(12000);page.on("pageerror",e=>result.pageErrors.push(String(e)));
+ async function open(s){await page.waitForLoadState("networkidle");await serial;await page.goto(origin+"/studio/"+s);await page.locator(".sample-gallery").waitFor();await page.locator(".sample-cards article").first().waitFor();}
  const card=id=>page.locator(`[data-sample-id="${id}"]`);
  async function check(name,fn){try{await fn();result.checks.push({name,status:"PASS"});}catch(e){result.checks.push({name,status:"FAIL"});result.failures.push({name,error:String(e)});await page.screenshot({path:path.join(out,"failure-"+result.failures.length+".png"),fullPage:true}).catch(()=>{});await page.keyboard.press("Escape").catch(()=>{});}}
  async function api(url){const r=await ipc({method:"GET",url,headers:{}});assert.equal(r.status,200);return JSON.parse(Buffer.from(r.body,"base64"));}
@@ -85,7 +94,7 @@ function ipc(data){const task=serial.then(async()=>{
   await scopes.getByRole("button",{name:"샘플 콘텐츠",exact:true}).click();assert.equal(await page.locator(".sample-cards article").count(),12);assert.equal(await page.locator(".approved-library-grid").count(),0);
  });
  await check("offline page reload and catalog require no outside requests",async()=>{
-  await context.setOffline(true);await open("images");assert.equal(await page.locator(".sample-cards article").count(),3);await context.setOffline(false);
+  await page.waitForLoadState("networkidle");await serial;await context.setOffline(true);await open("images");assert.equal(await page.locator(".sample-cards article").count(),3);await page.waitForLoadState("networkidle");await serial;await context.setOffline(false);
  });
  for(const [width,height] of [[1920,1080],[1366,768]]){
   await page.setViewportSize({width,height});
@@ -101,10 +110,10 @@ function ipc(data){const task=serial.then(async()=>{
 finally{
  try {
   // Keep ASGI alive until every intercepted request has received its response.
-  // Stop real transport before removing routes; no request is replayed.
-  if(context){await context.setOffline(true);await context.unrouteAll({behavior:"wait"});await serial;}
+  // Keep interception installed until browser close; never dispose active routes.
+  if(page && !page.isClosed())await page.waitForLoadState("networkidle");await serial;
   result.requestDrainCompleted=true;
  } catch(e){result.failures.push({name:"cleanup drain",error:String(e)});}
- if(browser)await browser.close();fs.writeFileSync(path.join(root,"STOP"),"stop");result.browserClosed=true;result.pass=result.checks.filter(x=>x.status==="PASS").length;result.fail=result.checks.filter(x=>x.status==="FAIL").length+result.failures.filter(x=>!result.checks.some(c=>c.name===x.name)).length;result.skip=0;fs.writeFileSync(path.join(root,"gui-results.json"),JSON.stringify(result,null,2));console.log("SAMPLE_GUI_RESULT="+JSON.stringify(result));}
+ if(browser)await browser.close();await serial;fs.writeFileSync(path.join(root,"STOP"),"stop");result.browserClosed=true;result.pass=result.checks.filter(x=>x.status==="PASS").length;result.fail=result.checks.filter(x=>x.status==="FAIL").length+result.failures.filter(x=>!result.checks.some(c=>c.name===x.name)).length;result.skip=0;fs.writeFileSync(path.join(root,"gui-results.json"),JSON.stringify(result,null,2));console.log("SAMPLE_GUI_RESULT="+JSON.stringify(result));}
 if(result.failures.length)process.exitCode=1;
 })();
