@@ -1,0 +1,99 @@
+{
+  "scope": "Provenance/visual risk review; hashes reused from prior audit",
+  "source_records_found": [
+    "User ZIP MANIFEST.json",
+    "User ZIP README.txt",
+    "Existing app sample manifest",
+    "Existing sample file audit"
+  ],
+  "generating_conversation_available": false,
+  "original_collage_available": false,
+  "commercial_redistribution_grant_available": false,
+  "rights_verified": 0,
+  "rows": [
+    {
+      "id": "character-robot",
+      "path": "characters/CHAR_S01_robot.png",
+      "sha256_reused": "6832ac0a0828d3e819fa3a4105f7a7ba12fee6cfc4143dfd9caff9b42171f5bf",
+      "rightsVerified": false,
+      "assessment": "로봇 일러스트. 특정 제품·캐릭터와의 권리관계는 시각 검사만으로 확정 불가."
+    },
+    {
+      "id": "character-cat",
+      "path": "characters/CHAR_S02_cat.png",
+      "sha256_reused": "18f5702917c7908e3f65a5dc937cc01cbb36ef60549d16fc74c2bd70979fe9c8",
+      "rightsVerified": false,
+      "assessment": "고양이 일러스트. 뚜렷한 상표를 확인하지 못했으나 원본/입력 권리 미확인."
+    },
+    {
+      "id": "character-dragon",
+      "path": "characters/CHAR_S03_dragon.png",
+      "sha256_reused": "a22daa60e3eb9ec7f062210ae0d4dfcf553cf8c8315ef9529835484cccccefac",
+      "rightsVerified": false,
+      "assessment": "드래곤 일러스트. 제3자 캐릭터 유사성/원본 생성 이력 미확인."
+    },
+    {
+      "id": "standalone-city",
+      "path": "images/standalone/IMG_S01_city.png",
+      "sha256_reused": "c9608819f1b030d034af87c0f26064cead7fa2c4bf7e1b1785a21d99338369ea",
+      "rightsVerified": false,
+      "assessment": "랜드마크를 연상시키는 도시. 원본 사진·입력·건축물 표현 권리 확인 필요."
+    },
+    {
+      "id": "standalone-cat",
+      "path": "images/standalone/IMG_S02_cat.png",
+      "sha256_reused": "462566d59e2eaac0f17edf4d11dee2433506bc47cd95e2bb4adaee74476a9acb",
+      "rightsVerified": false,
+      "assessment": "고양이 일러스트. 원본·생성 계정·이용 권리 미확인."
+    },
+    {
+      "id": "standalone-earth",
+      "path": "images/standalone/IMG_S03_earth.png",
+      "sha256_reused": "dd781fe0c716cb746870bbc7c0309f64f62eb53d761a6e6d9d962045c2558e4a",
+      "rightsVerified": false,
+      "assessment": "지구/야경 표현. 위성사진 등 원본 사용 여부 미확인."
+    },
+    {
+      "id": "top3-ai",
+      "path": "images/news-top3/TOP3_S01_ai.png",
+      "sha256_reused": "e28c902251e217d53672f5858fc095986c46dc1c8b75877ffc211cddc38a1474",
+      "rightsVerified": false,
+      "assessment": "AI 칩 일러스트. 명백한 공급사 로고는 확인하지 못했으나 생성 출처 미확인."
+    },
+    {
+      "id": "top3-ev",
+      "path": "images/news-top3/TOP3_S02_ev.png",
+      "sha256_reused": "1624c901b4108a647e7c87a602f3882edcc521be26862a0e6abbc71a1d22f341",
+      "rightsVerified": false,
+      "assessment": "차량 외관·후면 엠블럼/번호판 유사 표현. 상표·디자인 검토 우선."
+    },
+    {
+      "id": "top3-economy",
+      "path": "images/news-top3/TOP3_S03_economy.png",
+      "sha256_reused": "4f9aad8e4fc51052c90c9fd6e1b7a26ae270d82800c1eca673acc705e50588c6",
+      "rightsVerified": false,
+      "assessment": "예시 금융 차트. 실제 수치 아님. 차트/입력 원본 권리 미확인."
+    },
+    {
+      "id": "character-short-robot",
+      "path": "videos/character-shorts/SHORTS_CHAR_S01.mp4",
+      "sha256_reused": "7fda267e97d574426c5d1024185aa3a28265510790b77994c527294aa11bf8b0",
+      "rightsVerified": false,
+      "assessment": "기존 무음 12초 슬라이드. 원본 로봇 이미지 권리 승계 확인 필요."
+    },
+    {
+      "id": "character-short-cat",
+      "path": "videos/character-shorts/SHORTS_CHAR_S02.mp4",
+      "sha256_reused": "9da45f543a4ab5b7ab737fd3128d0706a7b542ddaf91da133effbc4245742189",
+      "rightsVerified": false,
+      "assessment": "기존 무음 12초 슬라이드. 원본 고양이 이미지 권리 승계 확인 필요."
+    },
+    {
+      "id": "news-short",
+      "path": "videos/news-shorts/SHORTS_NEWS_S01.mp4",
+      "sha256_reused": "3609e4c56a88d9a79df912991086bbbc1dd17945543623659085af394049f3b8",
+      "rightsVerified": false,
+      "assessment": "기존 무음 12초 슬라이드. 사용 뉴스 예시 이미지 각각의 권리 승계 확인 필요."
+    }
+  ]
+}

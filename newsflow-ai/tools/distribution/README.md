@@ -1,6 +1,6 @@
 # Windows private deployment preparation
 
-Internal build and synthetic filesystem retention contracts only. This directory
+Internal build, access contracts, native probes and private CI installer checks. This directory
 does not authorize public release, execution against the operating profile,
 production migrations, real credentials, paid APIs, or publishing.
 
@@ -17,9 +17,9 @@ production migrations, real credentials, paid APIs, or publishing.
   and an expiring one-time browser bootstrap outside the existing app CSRF layer.
   Only the SAPI worker has been launched locally. Full first-run testing still
   requires a clean test profile/environment with no real credentials.
-- `newsflow-private.iss`: uncompiled per-user Inno Setup definition, lowest
-  privileges, no startup/shortcut/run section, no user-data deletion. Selection of
-  an installer is provisional until compilation and real lifecycle tests pass.
+- `newsflow-private.iss`: per-user Inno Setup definition, lowest
+  privileges, no startup/shortcut/run section, no user-data deletion. The private
+  installer passed Windows Server CI lifecycle checks at run 40640414466; Windows11 clean-user first-run and public release remain unverified.
 - `package_contract.py`: inventory, exact payload comparison and an owned synthetic
   filesystem model. The model's staged versions and rollback pointer are **not an
   implementation or test of Inno Setup's update/rollback behavior**.

@@ -1,0 +1,15 @@
+{
+  "scope": "Development Python worker",
+  "list_exit": 0,
+  "paid_calls": 0,
+  "app_server_launched": false,
+  "voice_quality_human_review": "NOT VERIFIED",
+  "voice_count": 2,
+  "korean_voice_count": 1,
+  "synthesis_exit": 0,
+  "channels": 1,
+  "sample_width": 2,
+  "sample_rate": 16000,
+  "seconds": 3.24,
+  "has_signal": true
+}

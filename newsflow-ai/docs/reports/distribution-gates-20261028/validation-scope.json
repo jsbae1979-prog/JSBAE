@@ -1,0 +1,15 @@
+{
+  "powershell_parser_errors": 0,
+  "syntax_python_version": "3.14.7",
+  "source_base": "53207f8",
+  "local_candidate_signature": "NotSigned",
+  "actual_signed_success": false,
+  "cross_sid_test": "NOT VERIFIED",
+  "os_dpi_100": "NOT VERIFIED",
+  "os_dpi_125": "NOT VERIFIED",
+  "os_dpi_150": "NOT VERIFIED",
+  "os_dpi_200": "NOT VERIFIED",
+  "local_full_server_started": false,
+  "paid_calls": 0,
+  "sns_calls": 0
+}

@@ -1,0 +1,63 @@
+{
+  "run": 40639658464,
+  "commit": "f47d4ab61ccf54535e38901d753ff9f9148fe32c",
+  "conclusion": "failure",
+  "unit_result": "28 PASS / 0 FAIL / 0 ERROR",
+  "failure": "Final synthetic CI uninstall assumed unins000.exe after reinstall; fixed to owned UninstallString and registration/self-cleanup completion. Earlier ordered stages reached reinstall; no final success claimed for this run.",
+  "observations": [
+    {
+      "private_acl_create_and_reopen": true,
+      "dacl_protected": true,
+      "acl_principal_count": 3,
+      "dpapi_same_user_roundtrip": true,
+      "reopen_preserves_ciphertext": true,
+      "unsafe_existing_acl_rejected": true,
+      "two_owned_ports_differ": true,
+      "actual_other_windows_sid": "NOT VERIFIED",
+      "real_keys_used": false,
+      "production_data_accessed": false
+    },
+    {
+      "source": "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip",
+      "archive_sha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba",
+      "tools": {
+        "ffmpeg.exe": "3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec",
+        "ffprobe.exe": "f0d36ecbbdd3bcfac3efa078c96c7271c2e68b3810595552ac3b7f17e9a65c52"
+      }
+    },
+    {
+      "Python": "3.14.7",
+      "PyInstaller": "6.22.3",
+      "exit": 0,
+      "app_executed": false,
+      "installer_compiled": false,
+      "public_distribution": false,
+      "exe_bytes": 16581845,
+      "exe_sha256": "bbc639e0ab92dc54ff786973f0dbf47bf6c52732574b1daf68a1f31bde459626",
+      "file_count": 967,
+      "payload_bytes": 307092513,
+      "sample_count": 12,
+      "sample_missing": [],
+      "verification_modules": [],
+      "python_runtime": true,
+      "react": true,
+      "media_binaries": true,
+      "sample_rights_verified": false
+    },
+    {
+      "scope": "Frozen worker",
+      "list_exit": 0,
+      "paid_calls": 0,
+      "app_server_launched": false,
+      "voice_quality_human_review": "NOT VERIFIED",
+      "voice_count": 2,
+      "korean_voice_count": 0,
+      "synthesis_exit": 0,
+      "channels": 1,
+      "sample_width": 2,
+      "sample_rate": 16000,
+      "seconds": 3.645,
+      "has_signal": true
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-28",
+  "base": "9a54ec8e26f33ae6312b3d5eb80715b9a7f01342",
+  "implementation": "53207f8485ccffb9fb02cc71461ed7af834a883a",
+  "probe_fix": "f47d4ab61ccf54535e38901d753ff9f9148fe32c",
+  "protected_source_changes": [],
+  "production_listener": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8765,
+      "OwningProcess": 55740
+    }
+  ],
+  "production_restarted": false,
+  "production_db_read": false,
+  "production_data_written": false,
+  "real_keys_loaded": false,
+  "paid_calls": 0,
+  "sns_calls": 0,
+  "local_full_app_started": false,
+  "native_scope": "New synthetic owned directories, current Windows SID only",
+  "native_probe_initial_harness_exit": 1,
+  "native_probe_initial_reason": "6 successful checks plus false real_keys_used metadata were mistakenly aggregated as a check; corrected to six named assertions. Not a product/native failure.",
+  "os_dpi": {
+    "150": "NOT VERIFIED",
+    "125": "NOT VERIFIED",
+    "100": "NOT VERIFIED",
+    "200": "NOT VERIFIED"
+  },
+  "publisher_pin_provisioned": false,
+  "signing_success_verified": false,
+  "publisher_subject_recorded": false,
+  "exe_signature_status": "NotSigned",
+  "sample_rights_verified": 0,
+  "public_release": false,
+  "installer_probe_fix": "1ab226a2789a26af13979b5319f296e00885206d",
+  "successful_ci_run": 40640414466
+}

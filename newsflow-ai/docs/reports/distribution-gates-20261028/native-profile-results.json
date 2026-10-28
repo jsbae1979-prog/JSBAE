@@ -1,0 +1,12 @@
+{
+  "private_acl_create_and_reopen": true,
+  "dacl_protected": true,
+  "acl_principal_count": 3,
+  "dpapi_same_user_roundtrip": true,
+  "reopen_preserves_ciphertext": true,
+  "unsafe_existing_acl_rejected": true,
+  "two_owned_ports_differ": true,
+  "actual_other_windows_sid": "NOT VERIFIED",
+  "real_keys_used": false,
+  "production_data_accessed": false
+}

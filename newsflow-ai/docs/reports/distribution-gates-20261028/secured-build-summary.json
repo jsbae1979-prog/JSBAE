@@ -1,0 +1,19 @@
+{
+  "Python": "3.14.7",
+  "PyInstaller": "6.22.3",
+  "exit": 0,
+  "app_executed": false,
+  "installer_compiled": false,
+  "public_distribution": false,
+  "exe_bytes": 16581845,
+  "exe_sha256": "f4e0d09cf9b7218b419454c8c6cfaeb8de7730dc70366bca7720d208b007e512",
+  "file_count": 967,
+  "payload_bytes": 307088684,
+  "sample_count": 12,
+  "sample_missing": [],
+  "verification_modules": [],
+  "python_runtime": true,
+  "react": true,
+  "media_binaries": true,
+  "sample_rights_verified": false
+}
