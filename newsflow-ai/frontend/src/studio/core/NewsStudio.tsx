@@ -146,6 +146,10 @@ export default function NewsStudio({
                 <p className="core-analysis-summary">
                   {ranked.summary || "저장된 요약 필드 없음"}
                 </p>
+                <h3>핵심 키워드</h3>
+                <p className="core-muted core-missing-keywords">
+                  저장된 분석에 별도 키워드 필드가 없습니다.
+                </p>
                 <h3>선정 근거</h3>
                 <p>{ranked.reason || "저장된 근거 필드 없음"}</p>
                 <small>

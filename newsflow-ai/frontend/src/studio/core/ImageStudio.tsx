@@ -1,6 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
 import SampleGallery from "../SampleGallery";
-import { Sparkles, Save, Download } from "lucide-react";
+import {
+  Sparkles,
+  Save,
+  Download,
+  Box,
+  Palette,
+  Camera,
+  Paintbrush,
+  Brush,
+  Pencil,
+} from "lucide-react";
 import { safeMedia, type Item } from "../contracts";
 import {
   Panel,
@@ -75,16 +85,21 @@ export default function ImageStudio({
           </Panel>
           <Panel title="스타일 선택">
             <div className="core-style-options">
-              {styles.map((s) => (
-                <button
-                  key={s}
-                  aria-pressed={style === s}
-                  onClick={() => setStyle(style === s ? "" : s)}
-                >
-                  <Sparkles size={21} />
-                  {s}
-                </button>
-              ))}
+              {styles.map((s, index) => {
+                const Icon = [Box, Palette, Camera, Paintbrush, Brush, Pencil][
+                  index
+                ];
+                return (
+                  <button
+                    key={s}
+                    aria-pressed={style === s}
+                    onClick={() => setStyle(style === s ? "" : s)}
+                  >
+                    <Icon size={26} />
+                    {s}
+                  </button>
+                );
+              })}
             </div>
           </Panel>
           <Panel title="모델 · 생성 설정">

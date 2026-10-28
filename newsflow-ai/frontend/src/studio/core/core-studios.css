@@ -1,4 +1,4 @@
-/* Core production routes only. Protected home and management screens have no .core-studio ancestor. */
+/* Independent production studios. All presentation is restricted to .core-studio or a shell containing it. */
 .core-studio {
   --core-border: #264a72;
   --core-muted: #a6b2cc;
@@ -10,14 +10,12 @@
   font-size: 14px;
   min-height: 100vh;
 }
-
 .core-studio *,
 .core-studio *::before,
 .core-studio *::after {
   box-sizing: border-box;
   min-width: 0;
 }
-
 .core-studio .core-heading {
   display: flex;
   align-items: center;
@@ -26,19 +24,16 @@
   margin-bottom: 16px;
   min-height: 44px;
 }
-
 .core-studio h1 {
   font-size: 27px;
   margin: 0 0 5px;
   letter-spacing: -0.7px;
 }
-
 .core-studio .core-heading p {
   margin: 0;
   color: var(--core-muted);
   font-size: 13px;
 }
-
 .core-studio .core-panel {
   border: 1px solid #28466a;
   background: linear-gradient(135deg, #15233b60, transparent 70%), #0b1528;
@@ -49,7 +44,6 @@
     0 5px 16px #00000018;
   overflow-wrap: anywhere;
 }
-
 .core-studio .core-panel > header {
   display: flex;
   justify-content: space-between;
@@ -58,7 +52,6 @@
   margin-bottom: 12px;
   min-height: 28px;
 }
-
 .core-studio .core-panel > header h2 {
   font-size: 18px;
   margin: 0;
@@ -69,7 +62,6 @@
   gap: 8px;
   font-weight: 650;
 }
-
 .core-studio .core-panel > header h2::before {
   content: "";
   display: none;
@@ -81,28 +73,24 @@
   background: #12dfea;
   box-shadow: 0 0 8px #04c7df88;
 }
-
 .core-studio h3 {
   margin: 11px 0 8px;
   font-size: 14px;
 }
-
 .core-studio p {
   line-height: 1.55;
   margin: 8px 0;
 }
-
 .core-studio button,
 .core-studio a {
   color: #e5eaff;
 }
-
 .core-studio button,
 .core-studio .core-destination,
 .core-studio .core-actions > a {
   border: 1px solid #2c4c77;
   border-radius: 7px;
-  background: linear-gradient(150deg, #10233e, #071628);
+  background: linear-gradient(135deg, #1c2841, #152035);
   padding: 9px 13px;
   min-height: 36px;
   display: inline-flex;
@@ -112,41 +100,37 @@
   font: inherit;
   cursor: pointer;
   text-decoration: none;
+  border-color: #3b496b;
+  font-size: 13px;
 }
-
 .core-studio button:hover:not(:disabled),
 .core-studio a:hover {
   border-color: #9a6cff;
 }
-
 .core-studio button.primary,
 .core-studio .primary {
-  background: linear-gradient(110deg, #921fff, #3423f3 55%, #008eea);
-  border-color: #aa67ff;
+  background: linear-gradient(105deg, #9d42eb, #692fe8 55%, #365cf3);
+  border-color: #a47bf0;
   box-shadow:
-    0 0 14px #6d27ff33,
-    inset 0 0 10px #ca66ff33;
+    inset 0 1px 0 #ead5ff44,
+    0 0 13px #743de549;
 }
-
 .core-studio button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
-
 .core-studio button[aria-pressed="true"],
 .core-studio button[aria-selected="true"],
 .core-studio .selected {
-  border-color: #9c50ff;
+  border-color: #9e79ee;
   box-shadow:
-    inset 0 0 14px #652fff22,
-    0 0 11px #6f27ff44;
+    inset 0 0 18px #7641dc1f,
+    0 0 10px #754de538;
 }
-
 .core-studio :focus-visible {
   outline: 2px solid #3ce9ff;
   outline-offset: 3px;
 }
-
 .core-studio label {
   display: flex;
   flex-direction: column;
@@ -154,53 +138,46 @@
   margin: 8px 0;
   color: #dce6fa;
 }
-
 .core-studio input,
 .core-studio textarea,
 .core-studio select {
   width: 100%;
-  color: #eaf1ff;
-  background: #071a2e;
+  color: #f1f2fc;
+  background: #101a30;
   border: 1px solid #284e79;
-  border-radius: 6px;
+  border-radius: 7px;
   padding: 10px 11px;
   font: inherit;
+  border-color: #354564;
 }
-
 .core-studio textarea {
   resize: vertical;
   min-height: 90px;
   line-height: 1.7;
 }
-
 .core-studio select {
   text-overflow: ellipsis;
 }
-
 .core-studio .core-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
-
 .core-studio .core-actions label {
   margin: 0;
   flex: 1;
 }
-
 .core-studio .core-muted,
 .core-studio small,
 .core-studio .core-origin {
   color: var(--core-muted);
   font-size: 12px;
 }
-
 .core-studio .core-warning {
   color: #f6cf83;
   font-size: 12px;
 }
-
 .core-studio .core-notice {
   margin: 12px 0;
   padding: 12px;
@@ -211,7 +188,6 @@
   gap: 12px;
   justify-content: space-between;
 }
-
 .core-studio .core-empty {
   min-height: 100px;
   display: flex;
@@ -224,7 +200,6 @@
   text-align: center;
   background: linear-gradient(135deg, #12294244, transparent);
 }
-
 .core-studio .core-tag,
 .core-studio .core-state {
   display: inline-flex;
@@ -234,12 +209,10 @@
   font-size: 11px;
   color: #9fdcee;
 }
-
 .core-studio .core-state.attention {
   color: #f7cf84;
   border-color: #635238;
 }
-
 .core-studio .core-safety {
   font-size: 11px;
   color: #a2b3cc;
@@ -248,7 +221,6 @@
   align-items: center;
   margin: 14px 0 0;
 }
-
 .core-studio .core-media {
   position: relative;
   display: flex;
@@ -260,17 +232,14 @@
   border: 1px solid #2b5477;
   border-radius: 9px;
 }
-
 .core-studio .core-media.video {
   aspect-ratio: 9/16;
   max-height: 400px;
   margin: auto;
 }
-
 .core-studio .core-media.image {
   aspect-ratio: 4/3;
 }
-
 .core-studio .core-media video,
 .core-studio .core-media img {
   display: block;
@@ -279,12 +248,10 @@
   object-fit: contain;
   max-height: 100%;
 }
-
 .core-studio .core-media .core-empty {
   width: 100%;
   height: 100%;
 }
-
 .core-studio .core-download {
   position: absolute;
   bottom: 7px;
@@ -295,13 +262,11 @@
   display: flex;
   gap: 4px;
 }
-
 .core-studio .core-news-top3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
-
 .core-studio button.core-news-card {
   display: grid;
   grid-template-columns: 40% minmax(0, 1fr);
@@ -312,14 +277,12 @@
   border-radius: 8px;
   min-height: 192px;
 }
-
 .core-studio .core-news-picture {
   position: relative;
   min-height: 192px;
   background: #071c32;
   height: 100%;
 }
-
 .core-studio .core-news-picture img {
   width: 100%;
   height: 100%;
@@ -327,7 +290,6 @@
   position: absolute;
   inset: 0;
 }
-
 .core-studio .core-news-picture b {
   position: absolute;
   top: 8px;
@@ -337,18 +299,15 @@
   background: linear-gradient(135deg, #a32df6, #035ad3);
   font-size: 16px;
 }
-
 .core-studio .core-news-card > div:last-child {
   padding: 14px;
 }
-
 .core-studio .core-news-card strong {
   display: block;
   margin: 4px 0;
   line-height: 1.5;
   font-size: 17px;
 }
-
 .core-studio .core-news-card p {
   font-size: 13px;
   color: #b8cce3;
@@ -359,27 +318,23 @@
   margin: 7px 0 0;
   margin-top: 8px;
 }
-
 .core-studio .core-short-work {
   display: grid;
   grid-template-columns: 1.04fr 1fr;
   gap: 16px;
   margin: 16px 0;
 }
-
 .core-studio .core-script-scroll {
-  max-height: 330px;
+  max-height: 280px;
   overflow: auto;
   padding-right: 7px;
   padding: 0 6px 0 0;
 }
-
 .core-studio .core-script-scroll textarea {
   min-height: 82px;
   padding: 8px;
   line-height: 1.55;
 }
-
 .core-studio .core-script-scroll label {
   border-left: 2px solid transparent;
   padding-left: 9px;
@@ -391,34 +346,28 @@
   margin: 3px 0;
   border-radius: 6px;
 }
-
 .core-studio .core-script-scroll .active-script {
   border-color: #ad49ff;
   background: #1c195133;
 }
-
 .core-studio .core-settings-preview {
   display: grid;
   grid-template-columns: 1.12fr 1fr;
   gap: 24px;
   align-items: start;
 }
-
 .core-studio .core-simple-video .core-media {
   width: 100%;
   max-width: 230px;
 }
-
 .core-studio .core-options {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .core-studio .core-options label {
   margin: 0;
 }
-
 .core-studio .core-render-bar {
   border: 1px solid #34629a;
   border-radius: 9px;
@@ -431,40 +380,34 @@
   border-color: #3a5076;
   min-height: 86px;
 }
-
 .core-studio .core-render-bar > div {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .core-studio .core-render-bar strong,
 .core-studio .core-render-bar small {
   display: block;
   margin: 3px;
 }
-
 .core-studio .core-advanced {
   margin-top: 12px;
   border: 1px solid #204163;
   padding: 11px;
   border-radius: 7px;
 }
-
 .core-studio .core-advanced summary {
   display: flex;
   gap: 8px;
   cursor: pointer;
   align-items: center;
 }
-
 .core-studio .core-timeline {
   display: flex;
   gap: 12px;
   overflow: auto;
   padding: 7px 0;
 }
-
 .core-studio .core-timeline > button {
   position: relative;
   flex: 1 0 150px;
@@ -475,12 +418,10 @@
   flex-basis: 180px;
   padding: 12px;
 }
-
 .core-studio .core-timeline p,
 .core-studio .core-timeline span {
   line-height: 1.6;
 }
-
 .core-studio .core-timeline .core-scene-number {
   position: absolute;
   right: 8px;
@@ -488,14 +429,12 @@
   color: #2fd9ff;
   font-size: 21px;
 }
-
 .core-studio .core-character-steps {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 12px;
 }
-
 .core-studio .core-character-steps > div {
   display: flex;
   align-items: center;
@@ -507,7 +446,6 @@
   min-height: 76px;
   border-color: #4e426d;
 }
-
 .core-studio .core-character-steps b {
   display: grid;
   place-items: center;
@@ -519,26 +457,22 @@
   font-size: 23px;
   box-shadow: 0 0 14px #6632ed55;
 }
-
 .core-studio .core-character-steps strong,
 .core-studio .core-character-steps small {
   display: block;
   margin: 3px 0;
 }
-
 .core-studio .core-character-grid {
   display: grid;
   grid-template-columns: 1.03fr 1fr 1.26fr;
   gap: 16px;
   margin-bottom: 12px;
 }
-
 .core-studio .core-reference-layout {
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 12px;
 }
-
 .core-studio .core-reference {
   height: 260px;
   border: 1px solid #786298;
@@ -546,52 +480,43 @@
   overflow: hidden;
   background: #090e21;
 }
-
 .core-studio .core-reference img {
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
-
 .core-studio .core-reference .core-empty {
   height: 100%;
 }
-
 .core-studio .core-job-list {
   max-height: 82px;
   overflow: auto;
   display: grid;
   gap: 7px;
 }
-
 .core-studio .core-job-list > button {
   justify-content: space-between;
   text-align: left;
 }
-
 .core-studio .core-story-text {
   max-height: 150px;
   overflow: auto;
   border-top: 1px solid #244465;
   margin-top: 10px;
 }
-
 .core-studio .core-bound-model {
   font-size: 11px;
   overflow-wrap: anywhere;
   color: #a2d6eb;
 }
-
 .core-studio .core-character-video .core-settings-preview {
   grid-template-columns: 0.92fr 1fr;
   gap: 14px;
 }
-
 .core-studio .core-character-video .core-media {
   width: 100%;
   max-height: 325px;
 }
-
 .core-studio dl {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -599,36 +524,30 @@
   gap: 8px 10px;
   margin: 10px 0;
 }
-
 .core-studio dt {
   color: #98b7d7;
 }
-
 .core-studio dd {
   margin: 0;
   overflow-wrap: anywhere;
 }
-
 .core-studio .core-quote {
   border: 1px solid #25466c;
   border-radius: 7px;
   padding: 10px;
   color: #52e1e7;
 }
-
 .core-studio .core-quote p {
   max-height: 80px;
   overflow: auto;
   font-size: 12px;
 }
-
 .core-studio .core-tabs {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
   margin: 0;
 }
-
 .core-studio .core-tabs button {
   min-width: 0;
   justify-content: center;
@@ -638,11 +557,9 @@
   flex: 1;
   font-size: 15px;
 }
-
 .core-studio .core-tabs button[aria-selected="true"] {
   background: linear-gradient(110deg, #8126f8, #1345ef);
 }
-
 .core-studio .core-image-grid {
   display: grid;
   grid-template-columns: 1.08fr 1fr 0.46fr;
@@ -650,29 +567,24 @@
   margin-bottom: 12px;
   align-items: stretch;
 }
-
 .core-studio .core-image-input {
   display: flex;
   gap: 12px;
   flex-direction: column;
 }
-
 .core-studio .core-image-input textarea {
   min-height: 130px;
 }
-
 .core-studio .core-tags,
 .core-studio .core-style-options {
   display: flex;
   gap: 7px;
   flex-wrap: wrap;
 }
-
 .core-studio .core-tags button {
   padding: 5px 10px;
   min-height: 29px;
 }
-
 .core-studio .core-style-options button {
   flex: 1;
   flex-direction: column;
@@ -682,28 +594,23 @@
   font-size: 11px;
   background: radial-gradient(ellipse at top, #60398b80, transparent), #152237;
 }
-
 .core-studio .core-two-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px 12px;
 }
-
 .core-studio .core-image-result .core-media {
   aspect-ratio: 4/3;
   min-height: 270px;
 }
-
 .core-studio .core-image-result .core-actions {
   margin: 12px 0;
   gap: 8px;
 }
-
 .core-studio .core-saved-selection {
   border-top: 1px solid #183a5e;
   padding-top: 10px;
 }
-
 .core-studio .core-history-grid {
   display: grid;
   gap: 8px;
@@ -711,71 +618,60 @@
   overflow: auto;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-
 .core-studio .core-history-grid > button {
   display: block;
   padding: 5px;
   text-align: left;
   width: 100%;
 }
-
 .core-studio .core-history-grid .core-media {
   min-height: 95px;
   aspect-ratio: 3/4;
   margin-bottom: 8px;
 }
-
 .core-studio .core-history-grid .core-empty {
   min-height: 85px;
   padding: 8px;
   font-size: 11px;
 }
-
 .core-studio .core-recent {
   display: flex;
   gap: 10px;
   overflow: auto;
   padding: 3px 0;
 }
-
 .core-studio .core-recent > button {
   display: block;
   flex: 0 0 170px;
   text-align: left;
   flex-basis: 160px;
 }
-
 .core-studio .core-recent img {
   width: 100%;
   height: 105px;
   object-fit: cover;
   border-radius: 5px;
 }
-
 .core-studio .core-recent .core-media {
   min-height: 105px;
   max-height: 115px;
   margin-bottom: 8px;
 }
-
 .core-studio .core-top3-grid {
   display: grid;
   grid-template-columns: 1.04fr 1.36fr 0.55fr;
   gap: 14px;
   margin-bottom: 15px;
 }
-
 .core-studio .core-top3-center {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
-
 .core-studio .core-top3-news-list {
   display: grid;
   gap: 10px;
 }
-
 .core-studio .core-top3-news-list > button {
   flex-direction: column;
   align-items: flex-start;
@@ -786,7 +682,6 @@
   gap: 0;
   overflow: hidden;
 }
-
 .core-studio .core-top3-news-list b {
   color: #fff;
   padding: 3px 8px;
@@ -794,13 +689,11 @@
   border-radius: 5px;
   background: linear-gradient(100deg, #8b28f7, #2430d7);
 }
-
 .core-studio .core-top3-news-list p {
   font-size: 12px;
   margin: 7px 0;
   line-height: 1.6;
 }
-
 .core-studio .core-output-spec {
   display: flex;
   flex-direction: column;
@@ -811,88 +704,73 @@
   border-radius: 6px;
   font-size: 12px;
 }
-
 .core-studio .core-feed-results {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 12px 0;
 }
-
 .core-studio .core-feed-results article {
   border: 1px solid #214870;
   border-radius: 8px;
   padding: 7px;
 }
-
 .core-studio .core-result-select {
   display: block;
   width: 100%;
   padding: 0;
   text-align: left;
 }
-
 .core-studio .core-result-select img {
   width: 100%;
   aspect-ratio: 4/5;
   object-fit: contain;
   background: #04101c;
 }
-
 .core-studio .core-result-select .core-empty {
   aspect-ratio: 4/5;
   padding: 8px;
   font-size: 11px;
   min-height: 190px;
 }
-
 .core-studio .core-result-select strong {
   display: block;
   padding: 8px;
 }
-
 .core-studio .core-feed-results .core-actions {
   margin-top: 8px;
 }
-
 .core-studio .core-feed-results .core-actions button {
   padding: 5px;
   font-size: 11px;
 }
-
 .core-studio .core-feed-mini {
   display: flex;
   gap: 4px;
 }
-
 .core-studio .core-feed-mini img {
   width: 32%;
   height: 80px;
 }
-
 .core-studio .core-copy-output p {
   white-space: pre-wrap;
   font-size: 12px;
 }
-
 .core-studio .core-hashtags {
   color: #54cfee;
 }
-
 .core-studio .core-news-grid {
   display: grid;
   grid-template-columns: 1.05fr 1.23fr 0.92fr;
   gap: 16px;
   margin-bottom: 15px;
 }
-
 .core-studio .core-news-center,
 .core-studio .core-news-right {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
-
 .core-studio .core-search {
   flex-direction: row;
   align-items: center;
@@ -900,11 +778,9 @@
   border-radius: 7px;
   padding: 0 9px;
 }
-
 .core-studio .core-search input {
   border: 0;
 }
-
 .core-studio .core-news-list {
   max-height: 520px;
   overflow: auto;
@@ -912,7 +788,6 @@
   flex-direction: column;
   gap: 9px;
 }
-
 .core-studio .core-news-list > button {
   display: grid;
   grid-template-columns: 100px minmax(0, 1fr);
@@ -920,14 +795,12 @@
   padding: 8px;
   gap: 10px;
 }
-
 .core-studio .core-news-list img {
   width: 100%;
   height: 110px;
   object-fit: cover;
   border-radius: 5px;
 }
-
 .core-studio .core-news-list p {
   font-size: 12px;
   display: -webkit-box;
@@ -935,20 +808,17 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
 .core-studio .core-article-head {
   display: grid;
   grid-template-columns: 38% minmax(0, 1fr);
   gap: 14px;
 }
-
 .core-studio .core-article-head img {
   width: 100%;
   height: 180px;
   object-fit: cover;
   border-radius: 7px;
 }
-
 .core-studio .core-analysis-summary {
   background: #0a2038;
   border: 1px solid #18446a;
@@ -956,7 +826,6 @@
   padding: 15px;
   min-height: 90px;
 }
-
 .core-studio .core-destination {
   display: flex;
   width: 100%;
@@ -965,7 +834,6 @@
   padding: 12px;
   min-height: 48px;
 }
-
 .core-studio .core-ranked-row {
   display: flex;
   width: 100%;
@@ -975,19 +843,16 @@
   margin: 8px 0;
   padding: 8px;
 }
-
 .core-studio .core-ranked-row b {
   font-size: 20px;
   color: #54dcfb;
 }
-
 .core-studio .core-history {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   padding: 12px 0;
 }
-
 .core-studio .top3-dialog {
   background: #08182d;
   color: #eef4ff;
@@ -997,27 +862,22 @@
   width: 90vw;
   padding: 24px;
 }
-
 .core-studio .top3-dialog::backdrop {
   background: #000b;
 }
-
 .core-studio .top3-dialog label {
   flex-direction: row;
   align-items: center;
 }
-
 .core-studio .top3-dialog input[type="checkbox"] {
   width: 18px;
 }
-
 .core-studio .core-heading > div:first-child {
   display: flex;
-  align-items: baseline;
-  gap: 24px;
+  align-items: center;
+  gap: 14px;
   flex-wrap: wrap;
 }
-
 .core-studio .core-heading h1 {
   font-size: 28px;
   letter-spacing: -0.9px;
@@ -1025,26 +885,22 @@
   line-height: 1.4;
   font-weight: 700;
 }
-
 .core-studio input,
 .core-studio select {
   min-height: 36px;
   padding: 8px 10px;
 }
-
 .core-studio button,
 .core-studio .core-actions > a {
   min-height: 36px;
   padding: 8px 12px;
 }
-
 .core-studio button.primary {
   background: linear-gradient(105deg, #9b28ff, #4720ff 65%, #008bef);
   box-shadow:
     0 0 14px #7838ff38,
     inset 0 1px 0 #e3abff55;
 }
-
 .core-studio button[aria-pressed="true"],
 .core-studio button.selected {
   border-color: #ad52ff;
@@ -1052,13 +908,11 @@
     inset 0 0 16px #6537f020,
     0 0 10px #9239ff50;
 }
-
 .core-studio .core-script-scroll label > span {
   font-size: 13px;
   color: #a8beec;
   padding-top: 8px;
 }
-
 .core-studio .core-simple-video .core-media.video {
   width: min(100%, 238px);
   max-height: none;
@@ -1066,79 +920,64 @@
   border: 2px solid #4c4c7c;
   box-shadow: 0 0 16px #3f2c8255;
 }
-
 .core-studio .core-render-bar > .primary {
   min-height: 48px;
   min-width: 280px;
   font-size: 16px;
 }
-
 .core-studio .core-reference-panel .core-options {
   gap: 10px;
 }
-
 .core-studio .core-story-panel textarea {
   min-height: 96px;
 }
-
 .core-studio .core-character-video {
   grid-column: auto;
 }
-
 .core-studio .core-character-video .core-media.video {
   width: min(100%, 200px);
   aspect-ratio: 9/16;
   max-height: none;
 }
-
 .core-studio .core-character-video .core-options {
   display: flex;
   gap: 6px;
 }
-
 .core-studio .core-character-video dl {
   grid-template-columns: 70px minmax(0, 1fr);
   gap: 6px;
   margin: 5px 0;
   font-size: 12px;
 }
-
 .core-studio .core-character-video .core-options button {
   width: 100%;
   font-size: 12px;
   padding: 7px;
   min-height: 32px;
 }
-
 .core-studio .core-character-video .core-advanced {
   margin-top: 10px;
   padding: 9px;
   font-size: 12px;
 }
-
 .core-studio .core-timeline p {
   margin: 6px 0;
 }
-
 .core-studio .core-style-options {
   flex-wrap: nowrap;
   gap: 6px;
 }
-
 .core-studio .core-image-result .core-media.image {
   min-height: 320px;
   aspect-ratio: 3/2;
 }
-
 .core-studio .core-saved-selection > p {
   max-height: 100px;
   overflow: auto;
 }
-
 .core-studio .core-image-history {
   grid-column: auto;
 }
-
 .core-studio .core-history-grid strong {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1146,55 +985,44 @@
   overflow: hidden;
   font-size: 11px;
 }
-
 .core-studio .core-copy-output {
   grid-column: auto;
   padding: 12px;
 }
-
 .core-studio .core-top3-news-list strong {
   font-size: 15px;
 }
-
 .core-studio .core-feed-results .core-result-select {
   padding: 0;
   min-height: 0;
 }
-
 .core-studio .core-copy-output > p {
   font-size: 13px;
 }
-
 .core-studio .core-news-right {
   grid-column: auto;
   display: flex;
   gap: 12px;
 }
-
 .core-studio .core-news-center {
   gap: 12px;
 }
-
 .core-studio .core-news-list strong {
   font-size: 14px;
 }
-
 .core-studio .sample-gallery.sample-compact {
   margin: 16px 0;
   padding: 12px;
   border-radius: 9px;
   background: #0b172a;
 }
-
 .core-studio .sample-compact > p {
   margin: 6px 0;
   font-size: 11px;
 }
-
 .core-studio .sample-compact > header h2 {
   font-size: 14px;
 }
-
 .core-studio .sample-compact .sample-cards {
   display: flex;
   gap: 10px;
@@ -1203,7 +1031,6 @@
   padding: 0 0 6px;
   padding-bottom: 6px;
 }
-
 .core-studio .sample-compact .sample-cards article {
   display: grid;
   grid-template-columns: 86px minmax(0, 1fr);
@@ -1212,121 +1039,69 @@
   flex: 0 0 310px;
   padding: 8px;
 }
-
 .core-studio .sample-compact .sample-cards .sample-preview {
   grid-column: 1;
   grid-row: 1/5;
   min-height: 0;
 }
-
 .core-studio .sample-compact .sample-cards .sample-preview img {
   height: 100px;
 }
-
 .core-studio .sample-compact .sample-preview span {
   font-size: 10px;
   padding: 3px;
 }
-
 .core-studio .sample-compact .sample-cards h3 {
   font-size: 12px;
   margin: 0;
 }
-
 .core-studio .sample-compact .sample-cards small {
   font-size: 10px;
 }
-
 .core-studio .sample-compact .sample-cards details {
   grid-column: 2;
   font-size: 10px;
   margin: 0;
 }
-
 .core-studio .sample-compact .sample-cards .sample-actions {
   grid-column: 2;
   margin: 0;
   gap: 4px;
 }
-
 .core-studio .sample-compact button {
   min-height: 28px;
   padding: 4px 7px;
   font-size: 11px;
 }
-
 .core-studio .sample-compact .sample-cards a {
   grid-column: 2;
   font-size: 10px;
   margin: 0;
 }
-
 .app:has(.core-studio) > .sidebar {
   display: none;
 }
-
 .app:has(.core-studio) > .workspace {
   margin-left: 0;
   width: 100%;
 }
-
 .app:has(.core-studio) > .workspace > .topbar {
   display: none;
 }
-
 .app:has(.core-studio) > .workspace > .main {
   padding: 0;
 }
-
 .core-studio .core-content {
   max-width: 1920px;
   padding: 20px 28px 24px;
   margin: auto;
 }
-
 .core-studio .core-panel-icon {
   display: inline-flex;
   color: #9d72ff;
   filter: drop-shadow(0 0 6px #5732bd77);
   flex-shrink: 0;
 }
-
-.core-studio input,
-.core-studio textarea,
-.core-studio select {
-  background: #101a30;
-  border-color: #354564;
-  color: #f1f2fc;
-  border-radius: 7px;
-}
-
-.core-studio button,
-.core-studio .core-destination,
-.core-studio .core-actions > a {
-  background: linear-gradient(135deg, #1c2841, #152035);
-  border-color: #3b496b;
-  border-radius: 7px;
-  font-size: 13px;
-}
-
-.core-studio button.primary,
-.core-studio .primary {
-  background: linear-gradient(105deg, #9d42eb, #692fe8 55%, #365cf3);
-  border-color: #a47bf0;
-  box-shadow:
-    inset 0 1px 0 #ead5ff44,
-    0 0 13px #743de549;
-}
-
-.core-studio button[aria-pressed="true"],
-.core-studio button[aria-selected="true"],
-.core-studio .selected {
-  border-color: #9e79ee;
-  box-shadow:
-    inset 0 0 18px #7641dc1f,
-    0 0 10px #754de538;
-}
-
 .core-studio .core-navigation {
   display: flex;
   align-items: center;
@@ -1336,7 +1111,6 @@
   border-bottom: 1px solid #29344e;
   background: #0b1124;
 }
-
 .core-studio .core-navigation button {
   background: none;
   border: 0;
@@ -1345,7 +1119,6 @@
   min-height: 34px;
   white-space: nowrap;
 }
-
 .core-studio .core-navigation .core-brand {
   gap: 10px;
   font-size: 23px;
@@ -1353,15 +1126,12 @@
   color: #dbdbff;
   flex-shrink: 0;
 }
-
 .core-studio .core-brand > svg {
   color: #af83ff;
 }
-
 .core-studio .core-brand span {
   color: #a99bff;
 }
-
 .core-studio .core-navigation-links {
   display: flex;
   align-items: center;
@@ -1369,25 +1139,21 @@
   flex: 1;
   justify-content: flex-end;
 }
-
 .core-studio .core-navigation button[aria-current="page"] {
   color: #d6c0ff;
   background: linear-gradient(110deg, #6833b48c, #343b9160);
   border: 1px solid #8459c0;
 }
-
 .core-studio .core-studio-switch {
   position: relative;
   flex-shrink: 0;
 }
-
 .core-studio .core-studio-switch summary {
   display: flex;
   gap: 5px;
   cursor: pointer;
   padding: 9px;
 }
-
 .core-studio .core-studio-switch > div {
   position: absolute;
   right: 0;
@@ -1400,135 +1166,52 @@
   border: 1px solid #4c447a;
   border-radius: 8px;
 }
-
-.core-studio .core-reference-samples .sample-gallery {
-  margin: 12px 0 0;
-}
-
-.core-studio .core-reference-samples .sample-gallery > header {
-  align-items: start;
-}
-
-.core-studio .core-reference-samples .sample-gallery > header h2 {
-  font-size: 12px;
-}
-
-.core-studio .core-reference-samples .sample-gallery > header h2 span {
-  display: block;
-  font-size: 10px;
-}
-
-.core-studio .core-reference-samples .sample-gallery > header .sample-actions {
-  flex-direction: column;
-  flex-shrink: 0;
-}
-
-.core-studio .core-reference-samples .sample-gallery > p {
-  font-size: 10px;
-}
-
-.core-studio .core-reference-samples .sample-cards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  overflow: visible;
-}
-
-.core-studio .core-reference-samples .sample-cards article {
-  display: flex;
-  flex-direction: column;
-  padding: 5px;
-  gap: 4px;
-}
-
-.core-studio .core-reference-samples .sample-cards .sample-preview img {
-  height: 64px;
-}
-
-.core-studio .core-reference-samples .sample-cards .sample-preview {
-  width: 100%;
-}
-
-.core-studio .core-reference-samples .sample-cards .sample-actions {
-  display: grid;
-  gap: 4px;
-}
-
-.core-studio .core-reference-samples .sample-cards .sample-actions button {
-  width: 100%;
-  padding: 4px;
-  font-size: 10px;
-}
-
-.core-studio .core-reference-samples .sample-cards h3 {
-  font-size: 11px;
-}
-
-.core-studio .core-reference-samples .sample-cards small {
-  font-size: 9px;
-}
-
-.core-studio .core-reference-samples .sample-cards .sample-preview span {
-  font-size: 9px;
-}
-
 .core-studio .core-image-history .core-empty {
   font-size: 11px;
   padding: 7px;
 }
-
 .core-studio .core-recent-panel {
   margin-top: 16px;
 }
-
 .core-studio .core-recent > .core-empty {
   width: 100%;
   min-height: 90px;
 }
-
 .core-studio .core-top3-left {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-
 .core-studio .core-top3-left .core-tabs button {
   font-size: 14px;
 }
-
 .core-studio .core-top3-article-image {
   position: relative;
   height: 150px;
   background: #0a192c;
 }
-
 .core-studio .core-top3-article-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .core-studio .core-top3-article-image b {
   position: absolute;
   top: 7px;
   left: 7px;
 }
-
 .core-studio .core-top3-article-image .core-empty {
   padding: 5px;
   min-height: 100%;
   font-size: 11px;
 }
-
 .core-studio .core-top3-article-copy {
   padding: 12px;
 }
-
 .core-studio .core-top3-article-copy strong {
   font-size: 15px;
   line-height: 1.5;
 }
-
 .core-studio .core-top3-article-copy p {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1536,44 +1219,179 @@
   overflow: hidden;
   font-size: 12px;
 }
-
 .core-studio .core-top3-article-copy small {
   font-size: 10px;
 }
-
 .core-studio .core-top3-center .core-two-fields {
   grid-template-columns: 1.2fr 1fr 1fr 0.8fr;
   gap: 8px;
 }
-
 .core-studio .core-top3-center .core-two-fields label {
   font-size: 12px;
 }
-
 .core-studio .core-top3-center .core-two-fields select {
   padding: 8px 5px;
   font-size: 12px;
 }
-
 .core-studio .core-output-spec small {
   font-size: 10px;
 }
-
 .core-studio .core-copy-output button {
   width: 100%;
   padding: 8px;
 }
-
 .core-studio .core-news-list .core-empty {
   min-height: 100px;
   padding: 8px;
   font-size: 10px;
 }
-
 .core-studio .core-article-head .core-empty {
   min-height: 160px;
 }
-
+.core-studio .core-script-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.core-studio .core-script-modes button {
+  min-height: 42px;
+}
+.core-studio .core-choice-field {
+  border: 0;
+  padding: 0;
+  margin: 4px 0;
+}
+.core-studio .core-choice-field legend {
+  padding: 0;
+  margin-bottom: 8px;
+  color: #dce6fa;
+}
+.core-studio .core-choice-field > div {
+  display: flex;
+  gap: 8px;
+}
+.core-studio .core-choice-field button {
+  flex: 1;
+}
+.core-studio .core-subtitle-choices button {
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+.core-studio .core-subtitle-choices button > span {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.core-studio .core-subtitle-choices button:nth-child(2) > span {
+  color: #f1dc3a;
+}
+.core-studio .core-subtitle-choices button:nth-child(3) > span {
+  -webkit-text-stroke: 1px #f3f3ff;
+  color: transparent;
+}
+.core-studio .core-saved-script {
+  max-height: 400px;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #354564;
+  border-radius: 8px;
+}
+.core-studio .core-missing-keywords {
+  padding: 10px;
+  border: 1px dashed #344764;
+  border-radius: 7px;
+}
+.core-studio .core-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: #faf2ff;
+  border: 1px solid #aa79f3;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #7024dc, #6531bf 45%, #244b9c);
+  box-shadow:
+    0 0 14px #7547d750,
+    inset 0 1px 0 #e5c4ff66;
+  flex-shrink: 0;
+}
+.core-studio .core-news-card:nth-child(2) .core-news-picture b {
+  background: linear-gradient(120deg, #4943ff, #2455b4);
+}
+.core-studio .core-news-card:nth-child(3) .core-news-picture b {
+  background: linear-gradient(120deg, #ed6e9b, #983677);
+}
+.core-studio .core-character-samples h3 {
+  font-size: 12px;
+  margin: 8px 0;
+}
+.core-studio .core-character-samples h3 small {
+  font-size: 10px;
+  color: #a6b2cc;
+}
+.core-studio .core-character-samples > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.core-studio .core-character-samples article {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.core-studio .core-character-samples img {
+  width: 100%;
+  height: 62px;
+  object-fit: cover;
+  border: 1px solid #635785;
+  border-radius: 6px;
+}
+.core-studio .core-character-samples article strong {
+  font-size: 10px;
+  line-height: 1.3;
+}
+.core-studio .core-character-samples article button {
+  min-height: 28px;
+  padding: 4px;
+  font-size: 10px;
+}
+.core-studio .core-character-samples > small {
+  display: block;
+  margin-top: 7px;
+  font-size: 10px;
+  color: #a6b2cc;
+  line-height: 1.4;
+}
+.core-studio .core-top3-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.core-studio .core-news-list strong,
+.core-studio .core-news-list small {
+  display: block;
+}
+.core-studio .core-news-list small {
+  margin-top: 5px;
+}
+.core-studio .core-style-options button:nth-child(2) {
+  background: linear-gradient(140deg, #3c325e, #18333f);
+}
+.core-studio .core-style-options button:nth-child(3) {
+  background: linear-gradient(140deg, #293c3d, #203555);
+}
+.core-studio .core-style-options button:nth-child(4) {
+  background: linear-gradient(140deg, #56363e, #34204c);
+}
+.core-studio .core-style-options button:nth-child(5) {
+  background: linear-gradient(140deg, #513a64, #172c47);
+}
+.core-studio .core-style-options button:nth-child(6) {
+  background: linear-gradient(140deg, #3f414a, #1b293b);
+}
 @media (min-width: 1600px) {
   .core-studio[data-module="shorts"] .core-content {
     padding-top: 22px;
@@ -1800,5 +1618,38 @@
   .core-studio .core-render-bar > .primary {
     min-width: 0;
     width: 100%;
+  }
+}
+
+@media (min-width: 1600px) {
+  .core-studio {
+    font-size: 15px;
+  }
+  .core-studio .core-heading h1 {
+    font-size: 30px;
+  }
+  .core-studio .core-panel > header h2 {
+    font-size: 20px;
+  }
+  .core-studio .core-news-card strong {
+    font-size: 20px;
+  }
+  .core-studio .core-news-card p {
+    font-size: 14px;
+  }
+  .core-studio .core-script-scroll label > span {
+    font-size: 14px;
+  }
+  .core-studio .core-image-input textarea {
+    min-height: 112px;
+  }
+  .core-studio .core-style-options button {
+    min-height: 70px;
+  }
+}
+@media (max-width: 1450px) {
+  .core-studio .core-top3-header-tools > .core-muted {
+    max-width: 330px;
+    font-size: 11px;
   }
 }

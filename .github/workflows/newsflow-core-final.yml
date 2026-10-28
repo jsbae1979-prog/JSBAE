@@ -13,8 +13,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-         # Baseline includes all accepted management work and existing core/sample history.
-        variant: [before, after]
+         # Before baseline retained from successful Windows run 40619701492 at 4580e89; do not repeat.
+        variant: [after]
     runs-on: windows-latest
     timeout-minutes: 18
     defaults:

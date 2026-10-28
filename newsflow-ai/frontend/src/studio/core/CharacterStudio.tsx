@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import SampleGallery from "../SampleGallery";
+import type { SampleUse } from "../SampleGallery";
+import CharacterReferenceSamples from "./CharacterReferenceSamples";
 import { Sparkles, ImagePlus, Film, Settings2 } from "lucide-react";
 import { Thumbnail } from "../Thumbnail";
 import { safeMedia, type Item } from "../contracts";
@@ -65,6 +67,14 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       {caption}
     </ActionButton>
   );
+  async function useSample({ asset: sample, copy }: SampleUse) {
+    setAsset(copy.referenceAsset ?? "");
+    setSampleRef(`/api/samples/${sample.referenceId || sample.id}/file`);
+    await c.load();
+    c.setNotice(
+      "샘플 참조 PNG를 새 작업 입력에 연결했습니다. 주제를 입력해 새 작업을 저장하세요. 기존 작업은 보존됩니다.",
+    );
+  }
   return (
     <>
       <div className="core-character" aria-busy={sampleBusy}>
@@ -141,26 +151,15 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   참조 이미지는 로컬에 보관됩니다. 외부 전송은 생성 승인 시 별도
                   확인합니다.
                 </small>
+                <div className="core-reference-samples">
+                  <CharacterReferenceSamples
+                    csrf={c.view?.csrfToken ?? ""}
+                    busy={sampleBusy}
+                    onBusy={setSampleBusy}
+                    onUse={useSample}
+                  />
+                </div>
               </div>
-            </div>
-            <div className="core-reference-samples">
-              {" "}
-              <SampleGallery
-                onBusyChange={setSampleBusy}
-                initialExpanded={true}
-                types={["character"]}
-                csrf={c.view?.csrfToken ?? ""}
-                onUse={async ({ asset: sample, copy }) => {
-                  setAsset(copy.referenceAsset ?? "");
-                  setSampleRef(
-                    `/api/samples/${sample.referenceId || sample.id}/file`,
-                  );
-                  await c.load();
-                  c.setNotice(
-                    "샘플 참조 PNG를 새 작업 입력에 연결했습니다. 주제를 입력해 새 작업을 저장하세요. 기존 작업은 보존됩니다.",
-                  );
-                }}
-              />
             </div>
             {sampleRef && (
               <p className="core-muted">
@@ -339,16 +338,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       <SampleGallery
         onBusyChange={setSampleBusy}
         initialExpanded={jobs.length === 0}
-        types={["character-short"]}
+        types={["character", "character-short"]}
         csrf={c.view?.csrfToken ?? ""}
-        onUse={async ({ asset: sample, copy }) => {
-          setAsset(copy.referenceAsset ?? "");
-          setSampleRef(`/api/samples/${sample.referenceId || sample.id}/file`);
-          await c.load();
-          c.setNotice(
-            "샘플 참조 PNG를 새 작업 입력에 연결했습니다. 주제를 입력해 새 작업을 저장하세요. 기존 작업은 보존됩니다.",
-          );
-        }}
+        onUse={useSample}
       />
     </>
   );

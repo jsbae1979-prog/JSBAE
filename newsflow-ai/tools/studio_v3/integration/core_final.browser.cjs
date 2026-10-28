@@ -61,6 +61,7 @@ const control=action=>ipc({kind:"control",action});
     await page.locator(".core-studio .core-origin").filter({hasNotText:"불러오는 중"}).waitFor();
    }else if(!["dashboard","create"].includes(name))await page.locator(".management-ui").waitFor();
    if(name==="images-top3")await page.getByLabel("완료된 TOP 3 분석",{exact:true}).selectOption(String(meta.analysis));
+   await page.waitForLoadState("networkidle");await serial;
    await page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].filter(i=>{const r=i.getBoundingClientRect();return r.width&&r.height&&r.top<innerHeight&&r.bottom>0}).map(i=>i.decode().catch(()=>{})));});
    const geometry=await page.evaluate(()=>{
     const selectors=[".core-heading",".core-navigation",".core-news-top3",".core-short-work",".core-script",".core-simple-video",".core-render-bar",".core-character-steps",".core-character-grid",".core-timeline",".core-image-grid",".core-image-input",".core-image-result",".core-image-history",".core-top3-grid",".core-top3-left",".core-top3-news",".core-top3-center",".core-copy-output",".core-feed-results",".core-news-grid",".core-news-search",".core-news-center",".core-news-right"];
@@ -204,6 +205,17 @@ const control=action=>ipc({kind:"control",action});
    assert.equal(await page.locator(".core-top3-left .core-tabs").count(),1);
    await page.getByRole("tab",{name:"AI 이미지 생성",exact:true}).click();
    await page.locator(".core-image-input .core-tabs").waitFor();
+  });
+  await check("script saved-view preserves unsaved editor and simple option approval boundary",async()=>{
+   await open("shorts?draft_id="+meta.draft);const editor=page.getByRole("textbox",{name:"장면 1 대본",exact:true});
+   await editor.fill("보기 전환으로 보존할 합성 편집");
+   await page.getByRole("button",{name:"저장된 대본",exact:true}).click();
+   const savedView=page.getByLabel("저장된 대본 읽기",{exact:true});await savedView.waitFor();
+   assert(!(await savedView.textContent()).includes("보기 전환으로 보존할 합성 편집"));
+   await page.getByRole("button",{name:"대본 편집",exact:true}).click();assert.equal(await editor.inputValue(),"보기 전환으로 보존할 합성 편집");
+   for(const label of ["30초","45초","60초"]){const b=page.getByRole("button",{name:label,exact:true});await b.click();assert.equal(await b.getAttribute("aria-pressed"),"true");}
+   await page.getByRole("button",{name:"크게",exact:true}).click();assert.equal(await page.getByRole("button",{name:"크게",exact:true}).getAttribute("aria-pressed"),"true");
+   assert(await page.getByRole("button",{name:"영상 제작 · 승인 확인",exact:true}).isDisabled(),"unsaved script must not render");
   });
   await check("three sample character references available without replacing saved job",async()=>{
    await open("characters");const gallery=page.locator(".core-reference-samples");

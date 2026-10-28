@@ -41,6 +41,7 @@ export default function NewsShortsStudio({
     [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
     [scene, setScene] = useState(0),
+    [scriptView, setScriptView] = useState("edit"),
     [imagePaths, setImagePaths] = useState<Record<number, string>>({});
   const rows = c.context?.top3 ?? [],
     chosen = rows.find((x: Item) => x.rank === rank),
@@ -161,21 +162,23 @@ export default function NewsShortsStudio({
   );
   return (
     <>
-
       <div className="core-shorts">
         <Panel
           title="분석된 뉴스 TOP 3"
           tools={
-            <button onClick={() => onNavigate("news")}>
-              뉴스 스튜디오 <ChevronRight size={14} />
-            </button>
+            <div className="core-top3-header-tools">
+              {" "}
+              <span className="core-muted">
+                저장된 분석 #{c.context?.selection?.id ?? "—"} ·{" "}
+                {c.context?.selection?.provider ?? "분석 대기"} · 순위와 출처를
+                그대로 연결합니다.
+              </span>{" "}
+              <button onClick={() => onNavigate("news")}>
+                뉴스 스튜디오 <ChevronRight size={14} />
+              </button>
+            </div>
           }
         >
-          <p className="core-muted">
-            저장된 분석 #{c.context?.selection?.id ?? "—"} ·{" "}
-            {c.context?.selection?.provider ?? "분석 대기"} · 순위와 출처를
-            그대로 연결합니다.
-          </p>
           {c.context?.blockedReason && (
             <p className="core-warning">{c.context.blockedReason}</p>
           )}
@@ -215,13 +218,10 @@ export default function NewsShortsStudio({
               </span>
             }
           >
-            <div className="core-actions">
-              <Select
-                label="영상 길이"
-                value={duration}
-                onChange={setDuration}
-                options={{ 30: "30초", 45: "45초", 60: "60초" }}
-              />
+            <div
+              className="core-actions core-script-modes"
+              aria-label="대본 작업"
+            >
               <ActionButton
                 c={c}
                 id="curation_generate"
@@ -236,8 +236,37 @@ export default function NewsShortsStudio({
                 <Sparkles size={16} />
                 AI 대본 생성
               </ActionButton>
+              <button
+                aria-pressed={scriptView === "edit"}
+                onClick={() => setScriptView("edit")}
+              >
+                대본 편집
+              </button>
+              <button
+                aria-pressed={scriptView === "saved"}
+                disabled={!draft}
+                onClick={() => setScriptView("saved")}
+              >
+                저장된 대본
+              </button>
             </div>
-            {draft && editor ? (
+            {scriptView === "saved" && draft ? (
+              <div className="core-saved-script" aria-label="저장된 대본 읽기">
+                <h3>{draft.content?.title}</h3>
+                <small>
+                  저장 버전 {draft.revision} · 현재 편집 내용과 별도
+                </small>
+                {(draft.content?.scenes ?? []).map((s: Item, i: number) => (
+                  <p key={i}>
+                    <strong>
+                      장면 {i + 1} · {s.seconds}초
+                    </strong>
+                    <br />
+                    {s.narration}
+                  </p>
+                ))}
+              </div>
+            ) : draft && editor ? (
               <>
                 <label>
                   대본 제목
@@ -315,16 +344,41 @@ export default function NewsShortsStudio({
                     ai: "AI 장면 · 별도 견적",
                   }}
                 />
-                <Select
-                  label="자막"
-                  value={subtitle}
-                  onChange={setSubtitle}
-                  options={{
-                    "48:1420": "기본 · 하단",
-                    "56:1320": "크게 · 중앙 하단",
-                    "40:1460": "작게 · 하단",
-                  }}
-                />
+                <fieldset className="core-choice-field">
+                  <legend>영상 길이</legend>
+                  <div>
+                    {["30", "45", "60"].map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        aria-pressed={duration === v}
+                        onClick={() => setDuration(v)}
+                      >
+                        {v}초
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+                <fieldset className="core-choice-field core-subtitle-choices">
+                  <legend>자막 스타일</legend>
+                  <div>
+                    {[
+                      ["48:1420", "기본"],
+                      ["56:1320", "크게"],
+                      ["40:1460", "작게"],
+                    ].map(([v, label]) => (
+                      <button
+                        key={v}
+                        type="button"
+                        aria-pressed={subtitle === v}
+                        onClick={() => setSubtitle(v)}
+                      >
+                        <span aria-hidden="true">A</span>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
                 <p className="core-muted">
                   1080×1920 · 9:16
                   <br />

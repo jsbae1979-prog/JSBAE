@@ -290,6 +290,15 @@ export function StudioFrame({
       <div className="core-content">
         <div className="core-heading">
           <div>
+            <span className="core-title-icon" aria-hidden="true">
+              {module === "news" ? (
+                <Newspaper size={27} />
+              ) : module === "images" ? (
+                <ImageIcon size={27} />
+              ) : (
+                <Film size={27} />
+              )}
+            </span>
             <h1>{title}</h1>
             <p>{subtitle}</p>
           </div>
