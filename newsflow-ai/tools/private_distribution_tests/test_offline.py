@@ -255,3 +255,35 @@ def test_shipped_entry_rejects_before_profile_or_payload_access(tmp_path, monkey
     with pytest.raises((OfflineBlocked, UpdateBlocked)):
         entry.main()
     assert list(local.iterdir()) == []
+
+
+def test_installer_entry_creates_protected_slots_before_inno_copy(tmp_path, monkeypatch):
+    import importlib.util
+    import sys
+    from newsflow.distribution.windows_profile import private_directory
+    local = tmp_path / 'Local'
+    local.mkdir()
+    bundle = tmp_path / 'Bundle'
+    bundle.mkdir()
+    (bundle / 'private-mode.json').write_text(json.dumps({'mode': 'launcher'}))
+    spec = importlib.util.spec_from_file_location('offline_setup_entry_test', Path(__file__).parents[1] / 'private_distribution/private_entry.py')
+    entry = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(entry)
+    monkeypatch.setattr(sys, 'frozen', True, raising=False)
+    monkeypatch.setattr(sys, '_MEIPASS', str(bundle), raising=False)
+    monkeypatch.setenv('LOCALAPPDATA', str(local))
+    root = local / 'Programs/NewsFlowAI-Private'
+    monkeypatch.setattr(sys, 'argv', ['helper.exe', '--prepare-install', str(root)])
+    entry.main()
+    assert private_directory(root / 'slots') == root / 'slots'
+    assert private_directory(local / 'NewsFlowAI-Desktop/v1/update-backups').exists()
+    with pytest.raises(OfflineBlocked):
+        entry.main()  # no adoption/overwrite of an existing installation
+    slot = root / 'slots/1.0.0'
+    slot.mkdir()
+    (slot / 'NewsFlowAI-Candidate.exe').write_bytes(b'SYNTHETIC-INNO-COPY')
+    initial = manifest(slot, '1.0.0', 1)
+    (root / 'initial-release.json').write_text(json.dumps(initial))
+    monkeypatch.setattr(sys, 'argv', ['helper.exe', '--finalize-install', str(root)])
+    entry.main()
+    assert json.loads((root / 'current.json').read_bytes())['version'] == '1.0.0'

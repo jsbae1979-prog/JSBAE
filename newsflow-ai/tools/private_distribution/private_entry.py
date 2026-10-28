@@ -77,6 +77,9 @@ def main():
             if not root.parent.exists():
                 private_directory(root.parent)
             private_directory(root)
+            private_directory(root / 'slots')
+            profile = distribution_profile(local)
+            private_directory(profile / 'update-backups')
             return
         manifest = json.loads((root / 'initial-release.json').read_bytes())
         OfflineInstall(root, distribution_profile(local)).finalize_preinstalled(manifest)
