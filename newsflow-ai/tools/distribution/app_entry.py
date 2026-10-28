@@ -15,14 +15,15 @@ def main():
         if path.is_symlink() or not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest()!=expected[name]:
             raise SystemExit('Bundled media integrity check failed')
         os.environ[variable]=str(path)
-    if len(sys.argv) > 1:
+    no_browser = sys.argv[1:] == ['--no-browser']
+    if len(sys.argv) > 1 and not no_browser:
         if sys.argv[1:3] != ['-m','newsflow.video.windows_sapi']:
             raise SystemExit('Unsupported packaged operation')
         sys.argv = [sys.argv[0], *sys.argv[3:]]
         from newsflow.video.windows_sapi import main as voice_main
         raise SystemExit(voice_main())
     from newsflow.distribution.launch import run
-    run()
+    run(open_browser=not no_browser)
 
 if __name__=='__main__':
     multiprocessing.freeze_support();main()

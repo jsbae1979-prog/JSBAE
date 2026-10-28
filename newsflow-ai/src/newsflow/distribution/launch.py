@@ -10,7 +10,7 @@ from .local_access import LaunchSession, LocalAccess
 from .windows_profile import distribution_profile, reserve_user_socket
 
 
-def run():
+def run(*, open_browser: bool = True):
     if sys.platform != 'win32':
         raise SystemExit('Windows desktop only')
     root = distribution_profile(Path(os.environ.get('LOCALAPPDATA','')))
@@ -33,11 +33,13 @@ def run():
             if server.started:
                 webbrowser.open(session.launch_url(),new=1)
         opener = threading.Thread(target=open_ready,daemon=True)
-        opener.start()
+        if open_browser:
+            opener.start()
         previous = signal.signal(signal.SIGBREAK,signal.default_int_handler)
         try:
             server.run(sockets=[listener])
         finally:
             server.should_exit = True
             signal.signal(signal.SIGBREAK,previous)
-            opener.join(timeout=1)
+            if open_browser:
+                opener.join(timeout=1)

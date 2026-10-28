@@ -1,0 +1,73 @@
+name: Two product revisions and real failed-update recovery
+on:
+  push:
+    branches: [codex/newsflow-update-recovery-final-20261028]
+    paths:
+      - 'newsflow-ai/tools/distribution_recovery/**'
+      - 'newsflow-ai/tools/distribution/app_entry.py'
+      - 'newsflow-ai/src/newsflow/distribution/launch.py'
+      - '.github/workflows/newsflow-real-update-recovery.yml'
+permissions:
+  contents: read
+jobs:
+  private-two-product-recovery:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: current/newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: current
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/checkout@v5
+        with:
+          ref: 9a54ec8e26f33ae6312b3d5eb80715b9a7f01342
+          path: previous
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+      - name: Reuse reviewed runtime and identical frontend source
+        run: |
+          python -m pip install -r requirements-dev.lock pyinstaller==6.22.3 pywin32==312 tzdata==2026.5
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          git diff --exit-code 9a54ec8e26f33ae6312b3d5eb80715b9a7f01342 HEAD -- frontend
+          if ($LASTEXITCODE -ne 0) { throw 'Frontend differs; do not reuse generated assets' }
+          npm install --global pnpm@11.25.0 --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend install --frozen-lockfile --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend exec vite build --configLoader runner
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item -LiteralPath frontend/dist -Destination ../../previous/newsflow-ai/frontend/dist -Recurse -ErrorAction Stop
+      - name: Build genuinely different product checkpoints; no private data in bundle
+        run: |
+          $media = Join-Path $env:RUNNER_TEMP 'reviewed-media'
+          python -B tools/distribution/fetch_reviewed_media.py $media
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -I -B ../../previous/newsflow-ai/tools/distribution/build_candidate.py --output (Join-Path $env:RUNNER_TEMP 'previous-product') --media-dir $media
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -I -B tools/distribution/build_candidate.py --output (Join-Path $env:RUNNER_TEMP 'new-product') --media-dir $media
+          exit $LASTEXITCODE
+      - name: Real private installs, copy failure, activation rollback, product startup and preservation
+        run: |
+          $env:PYTHONPATH = Join-Path $PWD 'src'
+          python -B tools/distribution_recovery/recovery_ci.py --old (Join-Path $env:RUNNER_TEMP 'previous-product/dist/NewsFlowAI-Candidate') --new (Join-Path $env:RUNNER_TEMP 'new-product/dist/NewsFlowAI-Candidate') --workspace (Join-Path $env:RUNNER_TEMP 'real-update-recovery') --old-sha 9a54ec8e26f33ae6312b3d5eb80715b9a7f01342 --new-sha $env:GITHUB_SHA
+          exit $LASTEXITCODE
+      - name: Nonsecret evidence only; never binaries DB DPAPI or private logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: different-product-update-evidence
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/previous-product/build-summary.json
+            ${{ runner.temp }}/new-product/build-summary.json
+            ${{ runner.temp }}/real-update-recovery/recovery-results.json
