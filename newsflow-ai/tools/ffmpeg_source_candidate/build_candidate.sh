@@ -6,7 +6,7 @@ PREFIX="$ROOT/prefix"
 export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig"
 export PKG_CONFIG_PATH="$PKG_CONFIG_LIBDIR"
 export PATH="$PREFIX/bin:$PATH"
-source_dir() { find "$ROOT/src/$1" -mindepth 1 -maxdepth 1 -type d | head -n 1; }
+source_dir() { printf '%s\n' "$ROOT/src/$1"; }
 FT=$(source_dir freetype); FB=$(source_dir fribidi); HB=$(source_dir harfbuzz)
 ASS=$(source_dir libass); X264=$(source_dir x264); FF=$(source_dir ffmpeg)
 pacman -Q > "$ROOT/evidence/toolchain-packages.txt"

@@ -23,7 +23,16 @@ def main():
             if sum(m.size for m in t.getmembers())>700*1024*1024:raise ValueError('source extraction bound')
             t.extractall(dest,filter='data')
         entries=list(dest.iterdir())
-        r['source_dir']=str(entries[0] if len(entries)==1 and entries[0].is_dir() else dest)
+        if len(entries)==1 and entries[0].is_dir():
+            # Short directory names avoid Windows' command-line limit in
+            # HarfBuzz's generated-source step. Source bytes stay unchanged.
+            short=root/'src'/(r['name']+'-flattening')
+            if short.exists() or not entries[0].resolve().is_relative_to(root) or not short.resolve().is_relative_to(root):
+                raise ValueError('source relocation ownership')
+            entries[0].rename(short)
+            dest.rmdir()
+            short.rename(dest)
+        r['source_dir']=str(dest)
     (root/'evidence/SOURCE_INPUTS.json').write_text(json.dumps(manifest,indent=2),encoding='utf8')
     print('Verified source archives:',len(manifest['sources']))
 
