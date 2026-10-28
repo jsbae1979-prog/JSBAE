@@ -45,6 +45,9 @@ try:
                         if action=="conflict":
                             draft=session.get(PublishDraft,meta["draft"]);draft.revision+=1
                             answer={"ok":True}
+                        elif action=="trash-fixture":
+                            from management_seed import seed_trash_fixture
+                            answer=seed_trash_fixture(c,app,session)
                         elif action=="stats":
                             answer={"reservations":[{"id":x.id,"status":x.status} for x in session.scalars(select(APIRequestReservation))],
                                 "publishAttempts":session.scalar(select(func.count()).select_from(PublishAttempt)),

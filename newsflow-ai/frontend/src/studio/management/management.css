@@ -19,6 +19,7 @@
     radial-gradient(ellipse at 45% -20%, #04345e75, transparent 65%), #00101f;
   min-height: 100vh;
   font-size: 13px;
+  font-weight: 400;
 }
 .management-ui *,
 .management-ui *::before,
@@ -939,7 +940,7 @@
 }
 .management-ui .mg-accounts {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 8px;
 }
 .management-ui .mg-accounts article {
@@ -1365,4 +1366,65 @@
   right: 8px;
   top: 8px;
   z-index: 2;
+}
+
+/* Keep the approved publishing preview/editor and schedule within one desktop workspace. */
+.management-ui .mg-publish-list .mg-thumb {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.management-ui .mg-publish-list .mg-thumb > span {
+  min-height: 70px;
+}
+.management-ui .mg-publish-platforms article {
+  position: relative;
+  padding: 7px 0;
+}
+.management-ui .mg-publish-platforms article > header {
+  margin-bottom: 3px;
+}
+.management-ui .mg-publish-platforms article > small {
+  font-size: 10px;
+}
+.management-ui .mg-publish-platforms label.mg-inline {
+  margin: 5px 0;
+  padding-right: 65px;
+}
+.management-ui .mg-publish-platforms article > button {
+  position: absolute;
+  right: 0;
+  bottom: 7px;
+}
+.management-ui .mg-publish-platforms article > .mg-muted {
+  padding-right: 75px;
+  margin: 5px 0;
+}
+.management-ui .mg-publish-edit-grid textarea {
+  min-height: 85px;
+}
+.management-ui .mg-publish-edit-grid textarea[aria-label="게시 해시태그"] {
+  min-height: 55px;
+}
+.management-ui .mg-publish-editor .mg-review-checks p {
+  margin: 6px 0;
+}
+.management-ui .mg-publish-content,
+.management-ui .mg-publish-editor {
+  align-self: start;
+  min-height: 570px;
+}
+.management-ui .mg-thumb {
+  width: 100%;
+}
+@media (min-width: 1600px) {
+  .management-ui .mg-publish-right .mg-panel {
+    padding: 11px;
+  }
+  .management-ui .mg-publish-right .mg-panel > header {
+    margin-bottom: 6px;
+  }
+  .management-ui .mg-publish-platforms article {
+    padding: 5px 0;
+  }
 }

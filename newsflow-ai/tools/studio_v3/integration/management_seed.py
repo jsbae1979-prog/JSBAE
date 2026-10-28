@@ -21,7 +21,7 @@ def seed_management(c, app, root, monkeypatch):
  output=BytesIO()
  with Image.open(BytesIO(poster)) as image:image.convert('RGB').save(output,'PNG')
  def synthetic_thumbnail(source,*a):
-  assert Path(source).resolve()==target.resolve()
+  assert Path(source).resolve().parent==target.resolve().parent and Path(source).read_bytes()==raw
   return output.getvalue()
  monkeypatch.setattr(thumbnails,'thumbnail',synthetic_thumbnail)
  now=datetime.now(UTC)
@@ -51,3 +51,13 @@ def seed_management(c, app, root, monkeypatch):
  from newsflow.gui import operations_routes
  monkeypatch.setattr(operations_routes,'status',lambda request:{'status':'synthetic-unregistered','revision':1,'prepared':False,'message':'합성 상태 조회 · OS 등록/프로세스 호출 없음'})
  return result
+
+def seed_trash_fixture(c,app,session):
+ from newsflow.db import models as m
+ raw=c.get('/api/samples/news-short/file').content
+ name='video-'+uuid.uuid4().hex+'.mp4';(app.state.video.outputs/name).write_bytes(raw)
+ from sqlalchemy import select
+ existing=session.scalar(select(m.VideoProject).order_by(m.VideoProject.id))
+ project=m.VideoProject(draft_id=existing.draft_id,title='휴지 보관 전용 합성 영상',duration=12,snapshot={},sources={});session.add(project);session.flush()
+ render=m.RenderJob(project_id=project.id,status='success',progress=100,output_name=name,message='Synthetic unlinked reference',metadata_json={'playable':True,'duration':12,'synthetic':True});session.add(render);session.flush()
+ return {'render':render.id}

@@ -197,6 +197,11 @@ export function Thumb({ item }: { item: Item }) {
     ? sampleMedia(item.posterUrl || item.mediaUrl)
     : safeMedia(item.thumbnailUrl);
   if (src?.startsWith("/studio/assets/design-art-")) src = null;
+  if (!src && !item.sample && item.kind === "news") {
+    const media = safeMedia(item.mediaUrl);
+    if (media && /^\/video\/jobs\/\d+\/file$/.test(media))
+      src = media.replace(/\/file$/, "/thumbnail");
+  }
   return (
     <div className="mg-thumb">
       {src ? (
@@ -218,12 +223,17 @@ export function Accounts({
   compact?: boolean;
 }) {
   const accounts = c.publishing?.collections?.accounts;
+  const cards = platforms.flatMap((p) => {
+    const rows = accounts?.filter((a: Item) => a.platform === p.id) ?? [];
+    return rows.length
+      ? rows.map((a: Item) => ({ p, rows: [a], key: p.id + a.id }))
+      : [{ p, rows: [], key: p.id }];
+  });
   return (
     <div className={compact ? "mg-accounts compact" : "mg-accounts"}>
-      {platforms.map((p) => {
-        const rows = accounts?.filter((a: Item) => a.platform === p.id) ?? [];
+      {cards.map(({ p, rows, key }) => {
         return (
-          <article key={p.id}>
+          <article key={key}>
             <h3>
               <PlatformIcon id={p.id} />
               {p.label}

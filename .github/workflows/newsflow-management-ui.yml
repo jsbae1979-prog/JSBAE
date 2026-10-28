@@ -15,7 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [before, after]
+        # Before baseline: successful run 40609939982 (8ecf7e2), retained unchanged.
+        variant: [after]
     runs-on: windows-latest
     timeout-minutes: 18
     defaults:
