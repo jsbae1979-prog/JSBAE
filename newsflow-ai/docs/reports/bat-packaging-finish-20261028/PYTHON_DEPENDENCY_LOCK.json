@@ -1,0 +1,543 @@
+{
+  "python": "3.14.7",
+  "architecture": "AMD64",
+  "GIL": "standard-cp314-not-cp314t",
+  "source": "Single previously approved build-runtime/Lib/site-packages metadata; no imports of dependency modules",
+  "buildEnvironmentPythonVersion": "3.14.7",
+  "pyprojectSha256": "cc0bbac9fe805ada1f09032784cb5f84825a13c61ba6ec96895e298770fb8a5e",
+  "directRequirements": [
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.32,<1",
+    "jinja2>=3.1.5,<4",
+    "SQLAlchemy>=2.0.36,<3",
+    "alembic>=1.14,<2",
+    "feedparser>=6.0.11,<7",
+    "defusedxml>=0.7.1,<1",
+    "python-multipart>=0.0.20,<1",
+    "filelock>=3.16,<4",
+    "pydantic>=2.10,<3",
+    "Pillow>=11.3,<13",
+    "pywin32==312; sys_platform == 'win32'",
+    "tzdata==2026.5; sys_platform == 'win32'"
+  ],
+  "resolvedDistributions": [
+    {
+      "name": "alembic",
+      "version": "1.20.0",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "alembic>=1.14,<2"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "annotated-doc",
+      "version": "0.0.5",
+      "requirements": [
+        {
+          "from": "fastapi",
+          "requirement": "annotated-doc>=0.0.2"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "annotated-types",
+      "version": "0.8.0",
+      "requirements": [
+        {
+          "from": "pydantic",
+          "requirement": "annotated-types>=0.6.0"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "anyio",
+      "version": "4.15.1",
+      "requirements": [
+        {
+          "from": "starlette",
+          "requirement": "anyio<5,>=4.0.0"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "click",
+      "version": "8.5.0",
+      "requirements": [
+        {
+          "from": "uvicorn",
+          "requirement": "click>=7.0"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "defusedxml",
+      "version": "0.7.1",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "defusedxml>=0.7.1,<1"
+        }
+      ],
+      "wheelTags": [
+        "py2-none-any",
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "fastapi",
+      "version": "0.143.0",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "fastapi>=0.115,<1"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "feedparser",
+      "version": "6.0.14",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "feedparser>=6.0.11,<7"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "feedparser-sgmllib",
+      "version": "2.1.0",
+      "requirements": [
+        {
+          "from": "feedparser",
+          "requirement": "feedparser-sgmllib<3,>=2"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "filelock",
+      "version": "3.32.7",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "filelock>=3.16,<4"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "requirements": [
+        {
+          "from": "uvicorn",
+          "requirement": "h11>=0.8"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "requirements": [
+        {
+          "from": "anyio",
+          "requirement": "idna>=2.8"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "jinja2",
+      "version": "3.1.6",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "jinja2>=3.1.5,<4"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "mako",
+      "version": "1.4.3",
+      "requirements": [
+        {
+          "from": "alembic",
+          "requirement": "Mako"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "markupsafe",
+      "version": "3.0.4",
+      "requirements": [
+        {
+          "from": "jinja2",
+          "requirement": "MarkupSafe>=2.0"
+        },
+        {
+          "from": "mako",
+          "requirement": "MarkupSafe>=2.0"
+        }
+      ],
+      "wheelTags": [
+        "cp314-cp314-win_amd64"
+      ],
+      "nativeArtifactNames": [
+        "markupsafe/_speedups.cp314-win_amd64.pyd"
+      ]
+    },
+    {
+      "name": "opentelemetry-api",
+      "version": "1.45.1",
+      "requirements": [
+        {
+          "from": "fastapi",
+          "requirement": "opentelemetry-api>=1.44.0"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "pillow",
+      "version": "12.3.0",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "Pillow>=11.3,<13"
+        }
+      ],
+      "wheelTags": [
+        "cp314-cp314-win_amd64"
+      ],
+      "nativeArtifactNames": [
+        "PIL/_avif.cp314-win_amd64.pyd",
+        "PIL/_imaging.cp314-win_amd64.pyd",
+        "PIL/_imagingcms.cp314-win_amd64.pyd",
+        "PIL/_imagingft.cp314-win_amd64.pyd",
+        "PIL/_imagingmath.cp314-win_amd64.pyd",
+        "PIL/_imagingmorph.cp314-win_amd64.pyd",
+        "PIL/_imagingtk.cp314-win_amd64.pyd",
+        "PIL/_webp.cp314-win_amd64.pyd"
+      ]
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.1",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "pydantic>=2.10,<3"
+        },
+        {
+          "from": "fastapi",
+          "requirement": "pydantic>=2.9.0"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "pydantic-core",
+      "version": "2.50.1",
+      "requirements": [
+        {
+          "from": "pydantic",
+          "requirement": "pydantic-core==2.50.1"
+        }
+      ],
+      "wheelTags": [
+        "cp314-cp314-win_amd64"
+      ],
+      "nativeArtifactNames": [
+        "pydantic_core/_pydantic_core.cp314-win_amd64.pyd"
+      ]
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.32",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "python-multipart>=0.0.20,<1"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "pywin32",
+      "version": "312",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "pywin32==312; sys_platform == 'win32'"
+        }
+      ],
+      "wheelTags": [
+        "cp314-cp314-win_amd64"
+      ],
+      "nativeArtifactNames": [
+        "isapi/PyISAPI_loader.dll",
+        "pythonwin/dde.pyd",
+        "pythonwin/scintilla.dll",
+        "pythonwin/win32ui.pyd",
+        "pythonwin/win32uiole.pyd",
+        "pywin32_system32/pythoncom314.dll",
+        "pywin32_system32/pywintypes314.dll",
+        "win32/_win32sysloader.pyd",
+        "win32/_winxptheme.pyd",
+        "win32/mmapfile.pyd",
+        "win32/odbc.pyd",
+        "win32/perfmon.pyd",
+        "win32/perfmondata.dll",
+        "win32/servicemanager.pyd",
+        "win32/timer.pyd",
+        "win32/win32api.pyd",
+        "win32/win32clipboard.pyd",
+        "win32/win32console.pyd",
+        "win32/win32cred.pyd",
+        "win32/win32crypt.pyd",
+        "win32/win32event.pyd",
+        "win32/win32evtlog.pyd",
+        "win32/win32file.pyd",
+        "win32/win32gui.pyd",
+        "win32/win32help.pyd",
+        "win32/win32inet.pyd",
+        "win32/win32job.pyd",
+        "win32/win32lz.pyd",
+        "win32/win32net.pyd",
+        "win32/win32pdh.pyd",
+        "win32/win32pipe.pyd",
+        "win32/win32print.pyd",
+        "win32/win32process.pyd",
+        "win32/win32profile.pyd",
+        "win32/win32ras.pyd",
+        "win32/win32security.pyd",
+        "win32/win32service.pyd",
+        "win32/win32trace.pyd",
+        "win32/win32transaction.pyd",
+        "win32/win32ts.pyd",
+        "win32/win32wnet.pyd",
+        "win32comext/adsi/adsi.pyd",
+        "win32comext/authorization/authorization.pyd",
+        "win32comext/axcontrol/axcontrol.pyd",
+        "win32comext/axdebug/axdebug.pyd",
+        "win32comext/axscript/axscript.pyd",
+        "win32comext/bits/bits.pyd",
+        "win32comext/directsound/directsound.pyd",
+        "win32comext/ifilter/ifilter.pyd",
+        "win32comext/internet/internet.pyd",
+        "win32comext/mapi/exchange.pyd",
+        "win32comext/mapi/mapi.pyd",
+        "win32comext/propsys/propsys.pyd",
+        "win32comext/shell/shell.pyd",
+        "win32comext/taskscheduler/taskscheduler.pyd"
+      ]
+    },
+    {
+      "name": "sqlalchemy",
+      "version": "2.1.4",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "SQLAlchemy>=2.0.36,<3"
+        },
+        {
+          "from": "alembic",
+          "requirement": "SQLAlchemy>=2.0"
+        }
+      ],
+      "wheelTags": [
+        "cp314-cp314-win_amd64"
+      ],
+      "nativeArtifactNames": [
+        "sqlalchemy/engine/_processors_cy.cp314-win_amd64.pyd",
+        "sqlalchemy/engine/_result_cy.cp314-win_amd64.pyd",
+        "sqlalchemy/engine/_row_cy.cp314-win_amd64.pyd",
+        "sqlalchemy/engine/_util_cy.cp314-win_amd64.pyd",
+        "sqlalchemy/sql/_cache_key_cy.cp314-win_amd64.pyd",
+        "sqlalchemy/sql/_util_cy.cp314-win_amd64.pyd",
+        "sqlalchemy/util/_collections_cy.cp314-win_amd64.pyd",
+        "sqlalchemy/util/_immutabledict_cy.cp314-win_amd64.pyd"
+      ]
+    },
+    {
+      "name": "starlette",
+      "version": "1.8.0",
+      "requirements": [
+        {
+          "from": "fastapi",
+          "requirement": "starlette>=0.46.0"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "requirements": [
+        {
+          "from": "fastapi",
+          "requirement": "typing-extensions>=4.8.0"
+        },
+        {
+          "from": "sqlalchemy",
+          "requirement": "typing-extensions>=4.6.0"
+        },
+        {
+          "from": "alembic",
+          "requirement": "typing-extensions>=4.12"
+        },
+        {
+          "from": "pydantic",
+          "requirement": "typing-extensions>=4.16.0"
+        },
+        {
+          "from": "typing-inspection",
+          "requirement": "typing-extensions>=4.15.0"
+        },
+        {
+          "from": "opentelemetry-api",
+          "requirement": "typing-extensions>=4.5.0"
+        },
+        {
+          "from": "pydantic-core",
+          "requirement": "typing-extensions>=4.16.0"
+        },
+        {
+          "from": "anyio",
+          "requirement": "typing_extensions>=4.16.0; python_version < \"3.15\""
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "typing-inspection",
+      "version": "0.4.4",
+      "requirements": [
+        {
+          "from": "fastapi",
+          "requirement": "typing-inspection>=0.4.2"
+        },
+        {
+          "from": "pydantic",
+          "requirement": "typing-inspection>=0.4.4"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "tzdata",
+      "version": "2026.5",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "tzdata==2026.5; sys_platform == 'win32'"
+        }
+      ],
+      "wheelTags": [
+        "py2-none-any",
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.54.0",
+      "requirements": [
+        {
+          "from": "<project>",
+          "requirement": "uvicorn>=0.32,<1"
+        }
+      ],
+      "wheelTags": [
+        "py3-none-any"
+      ],
+      "nativeArtifactNames": []
+    }
+  ],
+  "wheelArtifactsDownloaded": false,
+  "wheelHashesVerified": false,
+  "portableRuntimeImportsVerified": false,
+  "excludedOptionalGroups": {
+    "local-tts": [
+      "supertonic==1.3.1",
+      "onnxruntime==1.31.0",
+      "numpy==2.5.4"
+    ],
+    "dev": [
+      "pytest>=8.3,<9",
+      "httpx>=0.28,<1",
+      "ruff>=0.9,<1"
+    ]
+  },
+  "testVenvObservation": "integration venv lacks tzdata; not used as complete packaging dependency source"
+}

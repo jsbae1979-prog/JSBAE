@@ -1,0 +1,7 @@
+{
+  "state": "COMPLETE_CONDITIONAL_NON_EXECUTING_PREPARATION",
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "accepted78Rerun": false,
+  "automaticResumeExecution": false,
+  "next": "Official execution policy resolution, actual publisher materials and separate live-test authorization"
+}

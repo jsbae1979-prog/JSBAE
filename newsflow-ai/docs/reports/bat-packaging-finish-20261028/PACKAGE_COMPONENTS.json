@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "python": "3.14.7",
+  "architecture": "AMD64",
+  "applicationZipCreated": false,
+  "runtimeMaterialZip": {
+    "file": "python-3.14.7-embed-amd64.zip",
+    "url": "https://www.python.org/ftp/python/3.14.7/python-3.14.7-embed-amd64.zip",
+    "bytes": 12673227,
+    "sha256": "d297e5ff019966817ad8502465176139f2d3d840fa4ed84b13bed399a6ab1f15"
+  },
+  "runtimeFileCount": 37,
+  "runtimeDistributions": 27,
+  "mapping": [
+    {
+      "source": "official Python3.14.7 embed-amd64 ZIP (37 members)",
+      "destination": "app/runtime/",
+      "status": "SOURCE_MATERIAL_ACQUIRED_NOT_EXECUTED"
+    },
+    {
+      "source": "reviewed build environment metadata, 27 distributions",
+      "destination": "app/site-packages/",
+      "status": "EXACT_VERSION_LIST_FIXED_WHEELS_NOT_COLLECTED"
+    },
+    {
+      "source": "src/newsflow/",
+      "destination": "app/product/newsflow/",
+      "status": "MAPPING_ONLY_NO_APP_COPY",
+      "exclude": [
+        "assets/samples/**",
+        "user data",
+        "keys",
+        "tokens",
+        "DB",
+        "logs",
+        "tests",
+        "__pycache__"
+      ]
+    },
+    {
+      "source": "frontend/dist/",
+      "destination": "app/frontend/dist/",
+      "status": "EXISTING_BUILD_MAPPING_NOT_REBUILT"
+    },
+    {
+      "source": "tools/bat_distribution/ selected controller modules",
+      "destination": "app/controller/bat_distribution/",
+      "include": [
+        "__init__.py",
+        "contract_entry.py",
+        "lifecycle.py",
+        "zip_update.py",
+        "publisher_verifier.py",
+        "verify_manifest_content.ps1"
+      ],
+      "exclude": [
+        "tests/**",
+        "dependency_inventory.py",
+        "publisher-trust.json",
+        "publisher-anchor.example.json"
+      ],
+      "status": "CONTROLLER_PREPARED_LIVE_ENTRY_STILL_DISABLED"
+    },
+    {
+      "source": "existing source-built media candidate",
+      "destination": "tools/ffmpeg.exe and tools/ffprobe.exe",
+      "status": "PRIOR_7_PASS_REUSED_NO_NEW_EXECUTION"
+    },
+    {
+      "source": "existing notices and corresponding sources/recipe",
+      "destination": "licenses/ and separately accompanying sources",
+      "status": "FINAL_DELIVERY_COMPLIANCE_PENDING"
+    },
+    {
+      "source": "rights-unverified 12 samples",
+      "destination": null,
+      "status": "EXCLUDED_NO_ORIGINAL_MODIFICATION"
+    }
+  ],
+  "profile": {
+    "path": "%LOCALAPPDATA%/NewsFlowAI-Desktop/v1",
+    "programOverlapAllowed": false,
+    "operatingDefaultNotAdopted": "%LOCALAPPDATA%/NewsFlowAI",
+    "operatingPort8765Allowed": false
+  },
+  "externalTrust": {
+    "path": "%LOCALAPPDATA%/NewsFlowAI-Desktop/v1/security/publisher-trust.json",
+    "publicCertificate": "publisher.cer",
+    "privateKeyAllowed": false,
+    "provisioned": false,
+    "inBandZipTrustAllowed": false,
+    "offlineQualification": false
+  },
+  "mediaConfiguration": {
+    "NEWSFLOW_FFMPEG": "<program>/tools/ffmpeg.exe",
+    "NEWSFLOW_FFPROBE": "<program>/tools/ffprobe.exe",
+    "actuallyApplied": false
+  },
+  "nodeRequiredByEndUser": false,
+  "pipOrNodeAutoInstallOnUserPC": false,
+  "actualRuntimeImportsOrDllLoadingVerified": false
+}

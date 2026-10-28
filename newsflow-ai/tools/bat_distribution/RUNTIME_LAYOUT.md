@@ -16,7 +16,7 @@ NewsFlowAI/
       python314.zip        # 표준 라이브러리 및 해당 런타임 구성
       ...                  # VC/runtime DLL 등 실제 의존성 전체 확인 필요
     product/newsflow/      # 기존 서비스·DB migration·정적 리소스
-    frontend/              # 이미 빌드한 React 자산, 사용자 Node 설치 불필요
+    frontend/dist/         # 이미 빌드한 React 자산, 사용자 Node 설치 불필요
     controller/bat_distribution/
     site-packages/         # 잠근 Windows 3.14.7 의존성, .pyd/pywin32 포함
   tools/ffmpeg.exe

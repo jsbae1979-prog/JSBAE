@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "channel": "private-bat",
+  "updatesEnabled": false,
+  "publisherCertificateSha256": "",
+  "certificateFile": "publisher.cer",
+  "verifierScriptSha256": "82ac2338a777cfbb5be2e0f33516df628866901640d51786541f771b0bcfd743",
+  "offlineValidationAccepted": false
+}

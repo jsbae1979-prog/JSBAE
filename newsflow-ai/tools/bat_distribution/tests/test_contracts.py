@@ -27,7 +27,7 @@ def plan(tmp_path):
     files = {
         'app/runtime/python.exe': b'NON_EXECUTABLE_SYNTHETIC_RUNTIME',
         'app/runtime/python314.dll': b'NON_EXECUTABLE_SYNTHETIC_DLL',
-        'app/frontend/index.html': b'<p>synthetic static bytes</p>',
+        'app/frontend/dist/index.html': b'<p>synthetic static bytes</p>',
         'tools/ffmpeg.exe': b'NON_EXECUTABLE_SYNTHETIC_FFMPEG',
         'tools/ffprobe.exe': b'NON_EXECUTABLE_SYNTHETIC_FFPROBE',
     }

@@ -1,0 +1,81 @@
+{
+  "dateKST": "2026-10-28",
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "baselineHead": "e7827837092c4b2548e0efb76a1882ae753225b4",
+  "verdict": "CONDITIONAL",
+  "accepted78Rerun": false,
+  "newTests": {
+    "PASS": 31,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "testBatches": [
+    {
+      "newCases": 30,
+      "PASS": 30,
+      "seconds": 0.7
+    },
+    {
+      "newCases": 1,
+      "PASS": 1,
+      "seconds": 0.27
+    }
+  ],
+  "static": {
+    "ruff": "PASS",
+    "newPowerShellAST": "PASS_NOT_EXECUTED"
+  },
+  "runtime": {
+    "officialSourceZipAcquired": true,
+    "memberCount": 37,
+    "publishedHashMatches": true,
+    "sigstoreAndSBOMAcquired": true,
+    "sigstoreCryptographicallyVerified": false,
+    "runtimeExtractedToRunnableTree": false,
+    "runtimeExecuted": false,
+    "directDependencies": 13,
+    "transitiveClosure": 27,
+    "wheelArtifactsOrHashesAcquired": false
+  },
+  "signature": {
+    "preparedNativeAdapter": true,
+    "actuallyVerifiedRealSignature": false,
+    "actualPublisherCertificatePresent": false,
+    "trustAnchorProvisioned": false,
+    "updatesEnabled": false,
+    "offlineValidationAccepted": false,
+    "liveBATEntryChanged": false
+  },
+  "zip": {
+    "NewsFlowInitialZipCreated": false,
+    "NewsFlowUpdateZipCreated": false,
+    "samplesIncluded": 0,
+    "syntheticUnitZipOnly": true
+  },
+  "changes": {
+    "newBuilderAndSignatureAdapter": true,
+    "frontendLayoutPathOnlyCorrection": true,
+    "operatingOrProductCodeChanged": false,
+    "ReactAssetsChanged": false
+  },
+  "protected": {
+    "existingEXECandidatesModified": false,
+    "sampleOriginalsOrRightsChanged": false,
+    "operatingDBKeysMediaBackupsUsedOrChanged": false,
+    "V3AnalysisRepeated": false,
+    "V3OrSecuritySettingsChanged": false,
+    "realAPI_OAuth_SNSCalls": 0,
+    "externalUserDistribution": false,
+    "mainOrPR35Changed": false,
+    "existingUntrackedValidationPreserved": true
+  },
+  "remaining": [
+    "Official resolution of application execution policy before any live app validation",
+    "Vendor-clearance/official runtime Sigstore verification and complete pinned wheels/native/runtime integration",
+    "Real publisher certificate, protected out-of-band anchor and offline chain/revocation/timestamp qualification",
+    "FFmpeg final corresponding-source/license delivery clearance; samples excluded unless rights confirmed",
+    "Separate authorization for live Windows/BAT/actual update tests and any external distribution"
+  ],
+  "automaticResumeExecution": false
+}

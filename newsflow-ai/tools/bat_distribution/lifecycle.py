@@ -79,7 +79,7 @@ def inspect_layout(plan: StartPlan) -> None:
         layout = json.loads(file.read_bytes())
         required = {
             'app/runtime/python.exe', 'app/runtime/python314.dll',
-            'app/frontend/index.html', 'tools/ffmpeg.exe', 'tools/ffprobe.exe',
+            'app/frontend/dist/index.html', 'tools/ffmpeg.exe', 'tools/ffprobe.exe',
         }
         if (type(layout['schemaVersion']) is not int or layout['schemaVersion'] != 1 or layout['pythonVersion'] != '3.14.7'
                 or layout['architecture'] != 'AMD64' or not isinstance(layout['files'], list)
