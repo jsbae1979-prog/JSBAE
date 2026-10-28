@@ -44,7 +44,9 @@ def payload_name(value: str) -> str:
     allowed = value in {'Start_NewsFlowAI.bat', 'Stop_NewsFlowAI.bat', 'Update_NewsFlowAI.bat', 'README.txt', 'app/layout.json'}
     allowed |= value.startswith(('app/runtime/', 'app/product/', 'app/frontend/', 'app/controller/',
                                  'app/site-packages/', 'tools/', 'licenses/'))
-    if (not allowed or any(p in {'samples', '.git', '.env', 'user-data', 'update-backups'} for p in lowered)
+    sample_code = value.startswith('app/product/newsflow/samples/') and Path(value).suffix == '.py'
+    if (not allowed or ('samples' in lowered and not sample_code)
+            or any(p in {'.git', '.env', 'user-data', 'update-backups'} for p in lowered)
             or Path(value).suffix.casefold() in {'.db', '.sqlite', '.sqlite3', '.dpapi', '.log'}
             or lowered[-1] in {'settings.json', 'ledger.json', 'oauth.json', 'tokens.json', 'publisher-trust.json'}):
         raise Blocked('nonprogram-or-unverified-sample-payload')
