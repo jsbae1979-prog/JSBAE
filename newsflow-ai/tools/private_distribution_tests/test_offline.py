@@ -299,3 +299,16 @@ def test_sample_poster_mime_preserves_existing_jpeg_and_supports_new_png(tmp_pat
     monkeypatch.setattr(routes, 'service', lambda request: service)
     response = routes.poster(None, 'synthetic')
     assert response.headers['content-type'] == mime
+
+
+@pytest.mark.parametrize('error', [ValueError('sk-proj-synthetic-secret-never-print'), PermissionError(13, 'SYNTHETIC-TOKEN-NEVER-PRINT')])
+def test_failure_message_excludes_arbitrary_secret_error_text(error):
+    import importlib.util
+    entry_path = Path(__file__).parents[1] / 'private_distribution/private_entry.py'
+    spec = importlib.util.spec_from_file_location('private_error_display_test', entry_path)
+    entry = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(entry)
+    text = entry.failure_message(error)
+    assert str(error) not in text
+    assert 'sk-proj' not in text and 'SYNTHETIC-TOKEN' not in text
+    assert type(error).__name__ in text

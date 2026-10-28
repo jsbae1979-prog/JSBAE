@@ -14,6 +14,20 @@ def notify(message):
         ctypes.windll.user32.MessageBoxW(None, message, 'NewsFlow AI', 0x40)
 
 
+def failure_message(error):
+    """Only exception type, numeric Win32 code and trusted source frames.
+
+    Never echo error text: provider errors can contain a key, token or URL.
+    """
+    import traceback
+    number = getattr(error, 'winerror', None)
+    code = ':winerror=' + str(number) if type(number) is int and 0 <= number <= 65535 else ''
+    frames = [f.name + ':' + str(f.lineno) for f in traceback.extract_tb(error.__traceback__)
+              if Path(f.filename).name in {'private_entry.py', 'offline.py', 'windows_profile.py'}]
+    return ('NewsFlow AI could not continue [' + type(error).__name__ + code + ';' + ','.join(frames)
+            + ']. Updates require a trusted publisher signature; close the app normally before updating. Incomplete updates require explicit recovery.')
+
+
 def main():
     if os.name != 'nt' or not getattr(sys, 'frozen', False):
         raise SystemExit('Packaged Windows private entry only')
@@ -132,7 +146,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except Exception:
+    except Exception as error:
         # No provider credentials, paths, SQL or certificate details in UI/log.
-        notify('NewsFlow AI could not continue. Updates require a trusted publisher signature; close the app normally before updating. Incomplete updates require explicit recovery.')
+        notify(failure_message(error))
         raise SystemExit(2)

@@ -106,10 +106,11 @@ def main():
                              env=env, capture_output=True, timeout=240).returncode
         check('uninstall_exit', rc == 0)
         for _ in range(100):
-            if not (installed / 'NewsFlowAI.exe').exists():
+            if not installed.exists():
                 break
             time.sleep(.2)
         check('program_removed', not (installed / 'NewsFlowAI.exe').exists())
+        check('owned_empty_program_directory_removed', not installed.exists())
     def preserved_rows():
         with closing(sqlite3.connect(profile / 'newsflow.db')) as db:
             return db.execute("SELECT key,value FROM app_settings WHERE key IN ('private-install-marker','sample_content:v1:hidden:synthetic-marker') ORDER BY key").fetchall()
