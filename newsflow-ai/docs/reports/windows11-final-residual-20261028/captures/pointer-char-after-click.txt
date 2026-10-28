@@ -1,0 +1,142 @@
+Browser tab: 5, Title: "NewsFlow AI Studio", URL: "http://127.0.0.1:18765/studio/images".
+1 AXWebArea NewsFlow AI Studio, URL: 127.0.0.1:18765/studio/images
+	2 container root
+		3 link Description: 본문으로 이동, Value: 127.0.0.1:18765/studio/images#main
+		4 container main
+			5 text 1개 프로젝트
+			6 container 제작실 메뉴
+				7 button NewsFlow AI
+					8 container
+						9 text NewsFlow  AI
+				10 container
+					11 button 홈
+					12 button 콘텐츠 제작
+					13 button 뉴스 쇼츠 제작
+					14 button 캐릭터 쇼츠 제작
+					15 button 이미지 제작
+					16 button 뉴스 스튜디오
+					17 button 자동화 센터
+					18 button 라이브러리
+					19 button 성과·비용
+					20 button 설정·관리
+				21 button (collapsed) 제작실, Secondary Actions: Expand
+					22 text 제작실
+			23 heading 이미지 제작실, Value: 1
+				24 text 이미지 제작실
+			25 text 합성 검증 자료
+			26 button 제작실 새로고침
+			27 tab group 이미지 제작실
+				28 tab (selected, settable, boolean) Description: AI 이미지 생성, Value: 1
+AI 이미지 생성
+원하는 이미지를 직접 생성합니다
+				29 tab (selectable, settable, boolean) Description: 뉴스 기반 이미지, Value: 0
+뉴스 기반 이미지
+저장된 TOP 3 분석을 재사용합니다
+			30 container
+				31 heading 이미지 주제 입력, Value: 2
+					32 text 이미지 주제 입력
+				33 text 프롬프트
+				34 text entry area (settable) 이미지 프롬프트
+				35 button 여행
+				36 button 일상
+				37 button 판타지
+				38 button 도시
+				39 button 자연
+			40 container
+				41 heading 스타일 선택, Value: 2
+					42 text 스타일 선택
+				43 checkbox 3D 애니메이션, Value: 0
+				44 checkbox 애니메이션, Value: 0
+				45 checkbox 실사풍, Value: 0
+				46 checkbox 일러스트, Value: 0
+				47 checkbox 만화풍, Value: 0
+				48 checkbox 스케치, Value: 0
+			49 container
+				50 heading 모델 · 생성 설정, Value: 2
+					51 text 모델 · 생성 설정
+				52 text 이미지 모델
+				53 pop up button (collapsed, settable) Description: 이미지 모델, Value: gpt-image-2.5-flare-2026-09-08, Secondary Actions: Expand
+					54 menu
+						55 (disabled) 선택하세요
+						56 (selected) gpt-image-2.5-flare-2026-09-08
+						57 gpt-image-2.5-sunburst-2026-09-08
+				58 text 화면 비율 · 크기
+				59 pop up button (collapsed, settable) Description: 화면 비율 · 크기, Value: 4:5 · 피드, Secondary Actions: Expand
+					60 menu
+						61 (disabled) 선택하세요
+						62 (selected) 4:5 · 피드
+						63 1:1 · 정사각형
+						64 2:3 · 세로
+						65 3:2 · 가로
+						66 9:16 · 영상
+				67 text 이미지 품질
+				68 pop up button (collapsed, settable) Description: 이미지 품질, Value: 표준 · 추천, Secondary Actions: Expand
+					69 menu
+						70 (disabled) 선택하세요
+						71 초안
+						72 (selected) 표준 · 추천
+						73 고품질
+				74 button (disabled) 초안 저장 · 참조 첨부
+				75 button 다음 작업 기본값 저장
+				76 text 참조 PNG는 초안 창에서 첨부·보관할 수 있습니다. 참조 기반 유료 이미지 편집 생성은 미구현입니다.
+			77 container
+				78 heading 생성 결과, Value: 2
+					79 text 생성 결과
+				80 container 실제 생성 결과
+					81 text 미리보기 없음
+				82 text 공식 견적을 확인한 후 승인합니다. 미확정 비용은 0원으로 표시하지 않습니다.
+			83 container
+				84 heading 생성 이력, Value: 2
+					85 text 생성 이력
+				86 text 아직 저장한 생성 이력이 없습니다.
+			87 container
+				88 heading 최근 생성 이미지, Value: 2
+					89 text 최근 생성 이미지
+				90 text 검증된 생성 성공 파일만 표시합니다.
+			91 container 기본 샘플 콘텐츠
+				92 container
+					93 heading 기본 샘플 콘텐츠 샘플 · 실제 생성 이력 아님, Value: 2
+						94 text 기본 샘플 콘텐츠  샘플 · 실제 생성 이력 아님
+					95 button (expanded) 샘플 접기, Secondary Actions: Collapse
+					96 checkbox 숨긴 샘플 관리, Value: 0
+				97 text 오프라인 예제입니다. 실제 최신 뉴스·AI 공급사 결과가 아닙니다. 영상은 무음 12초 슬라이드이며 편집 원본 프로젝트가 없습니다. 사용권·재배포 권한은 별도 확인이 필요합니다.
+				98 container
+					99 button 도시 이미지 예제 미리보기
+						100 image 도시 이미지 예제 샘플
+						101 text 샘플 이미지
+					102 heading 도시 이미지 예제, Value: 3
+						103 text 도시 이미지 예제
+					104 container
+						105 text 720 × 1080
+					106 button (collapsed) 프롬프트 예제 · 원본 지시문 아님, Secondary Actions: Expand
+						107 text 프롬프트 예제 · 원본 지시문 아님
+					108 button 내 작업으로 복사
+					109 button 프롬프트로 새 작업
+					110 button 샘플 숨기기
+					111 button 고양이 이미지 예제 미리보기
+						112 image 고양이 이미지 예제 샘플
+						113 text 샘플 이미지
+					114 heading 고양이 이미지 예제, Value: 3
+						115 text 고양이 이미지 예제
+					116 container
+						117 text 720 × 1080
+					118 button (collapsed) 프롬프트 예제 · 원본 지시문 아님, Secondary Actions: Expand
+						119 text 프롬프트 예제 · 원본 지시문 아님
+					120 button 내 작업으로 복사
+					121 button 프롬프트로 새 작업
+					122 button 샘플 숨기기
+					123 button 지구 이미지 예제 미리보기
+						124 image 지구 이미지 예제 샘플
+						125 text 샘플 이미지
+					126 heading 지구 이미지 예제, Value: 3
+						127 text 지구 이미지 예제
+					128 container
+						129 text 720 × 1080
+					130 button (collapsed) 프롬프트 예제 · 원본 지시문 아님, Secondary Actions: Expand
+						131 text 프롬프트 예제 · 원본 지시문 아님
+					132 button 내 작업으로 복사
+					133 button 프롬프트로 새 작업
+					134 button 샘플 숨기기
+			135 text 생성·비용 승인과 최종 게시 승인은 별도입니다. 결과 불명 요청은 자동 재실행하지 않습니다.
+
+The focused UI element is 1 AXWebArea NewsFlow AI Studio, URL: 127.0.0.1:18765/studio/images

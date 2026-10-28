@@ -1,0 +1,599 @@
+{
+  "python": "3.14.7",
+  "Windows": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+  "diagnostic_only": false,
+  "CI_environment_used": false,
+  "paid_API_SNS_calls": 0,
+  "OS_DPI": "NOT VERIFIED / unchanged",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/studio/images",
+      "status": 200,
+      "bytes": 418
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-ZgKApAGk.js",
+      "status": 200,
+      "bytes": 546646
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-CwDp5Gqh.css",
+      "status": 200,
+      "bytes": 143511
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200,
+      "bytes": 10414588
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200,
+      "bytes": 5403
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200,
+      "bytes": 1344
+    },
+    {
+      "method": "GET",
+      "path": "/api/feed-batches",
+      "status": 200,
+      "bytes": 6005
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200,
+      "bytes": 12382
+    },
+    {
+      "method": "GET",
+      "path": "/studio/characters",
+      "status": 200,
+      "bytes": 418
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-CwDp5Gqh.css",
+      "status": 200,
+      "bytes": 143511
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-ZgKApAGk.js",
+      "status": 200,
+      "bytes": 546646
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200,
+      "bytes": 5175
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200,
+      "bytes": 1344
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200,
+      "bytes": 10414588
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/characters/e507805437f5475b972ebf51026f99c4/reference",
+      "status": 200,
+      "bytes": 567227
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200,
+      "bytes": 12382
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200,
+      "bytes": 12382
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200,
+      "bytes": 567227
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200,
+      "bytes": 588410
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200,
+      "bytes": 658198
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/news",
+      "status": 200,
+      "bytes": 4582
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/production-context",
+      "status": 200,
+      "bytes": 1645
+    },
+    {
+      "method": "GET",
+      "path": "/studio/news",
+      "status": 200,
+      "bytes": 418
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DH-ao1BP.css",
+      "status": 200,
+      "bytes": 143580
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-ab6HOv-4.js",
+      "status": 200,
+      "bytes": 546646
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/news",
+      "status": 200,
+      "bytes": 4582
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/production-context",
+      "status": 200,
+      "bytes": 1645
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200,
+      "bytes": 1344
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200,
+      "bytes": 10414588
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200,
+      "bytes": 5175
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200,
+      "bytes": 12382
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200,
+      "bytes": 12382
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/characters/e507805437f5475b972ebf51026f99c4/reference",
+      "status": 200,
+      "bytes": 567227
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200,
+      "bytes": 567227
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200,
+      "bytes": 588410
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200,
+      "bytes": 658198
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200,
+      "bytes": 5403
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200,
+      "bytes": 12382
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200,
+      "bytes": 780022
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200,
+      "bytes": 808413
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200,
+      "bytes": 838128
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/automation",
+      "status": 200,
+      "bytes": 3304
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200,
+      "bytes": 1344
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/publishing",
+      "status": 200,
+      "bytes": 4699
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200,
+      "bytes": 1344
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/publishing",
+      "status": 200,
+      "bytes": 4699
+    },
+    {
+      "method": "GET",
+      "path": "/studio/characters",
+      "status": 200,
+      "bytes": 418
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-DH-ao1BP.css",
+      "status": 200,
+      "bytes": 143580
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/index-ab6HOv-4.js",
+      "status": 200,
+      "bytes": 546646
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/characters",
+      "status": 200,
+      "bytes": 5175
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200,
+      "bytes": 1344
+    },
+    {
+      "method": "GET",
+      "path": "/studio/assets/NotoSansKR.ttf",
+      "status": 200,
+      "bytes": 10414588
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200,
+      "bytes": 12382
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/characters/e507805437f5475b972ebf51026f99c4/reference",
+      "status": 200,
+      "bytes": 567227
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200,
+      "bytes": 12382
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-robot/file",
+      "status": 200,
+      "bytes": 567227
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-cat/file",
+      "status": 200,
+      "bytes": 588410
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/character-dragon/file",
+      "status": 200,
+      "bytes": 658198
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/images",
+      "status": 200,
+      "bytes": 5403
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples",
+      "status": 200,
+      "bytes": 12382
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-city/file",
+      "status": 200,
+      "bytes": 780022
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-cat/file",
+      "status": 200,
+      "bytes": 808413
+    },
+    {
+      "method": "GET",
+      "path": "/api/samples/standalone-earth/file",
+      "status": 200,
+      "bytes": 838128
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/automation",
+      "status": 200,
+      "bytes": 3304
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200,
+      "bytes": 1344
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/publishing",
+      "status": 200,
+      "bytes": 4699
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/workspace",
+      "status": 200,
+      "bytes": 1344
+    },
+    {
+      "method": "GET",
+      "path": "/api/studio/modules/publishing",
+      "status": 200,
+      "bytes": 4699
+    }
+  ],
+  "cleanup_errors": [],
+  "final": "CONDITIONAL",
+  "http_scope_rejections": [
+    {
+      "method": "GET",
+      "path": "/news/1/thumbnail"
+    },
+    {
+      "method": "GET",
+      "path": "/news/2/thumbnail"
+    },
+    {
+      "method": "GET",
+      "path": "/news/3/thumbnail"
+    },
+    {
+      "method": "GET",
+      "path": "/news/3/thumbnail"
+    },
+    {
+      "method": "GET",
+      "path": "/news/2/thumbnail"
+    },
+    {
+      "method": "GET",
+      "path": "/news/1/thumbnail"
+    },
+    {
+      "method": "GET",
+      "path": "/news/3/thumbnail"
+    },
+    {
+      "method": "GET",
+      "path": "/news/2/thumbnail"
+    },
+    {
+      "method": "GET",
+      "path": "/news/1/thumbnail"
+    }
+  ],
+  "feed_batches_reads": [
+    {
+      "status": 200,
+      "batches": [
+        {
+          "id": 3,
+          "status": "saved",
+          "revision": 1,
+          "ranks": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    }
+  ],
+  "unneeded_import_search_entries_removed": 1,
+  "Guard_first": true,
+  "lifespan_entered": false,
+  "scheduler_started": false,
+  "data_path": "<SYNTHETIC_RESIDUAL>\\scope-3e7dd99064a4469e9a16ed44bef21bf1",
+  "real_create_app": "PASS",
+  "seed": {
+    "analysis_id": 1,
+    "draft_id": 1,
+    "article_ids": [
+      1,
+      2,
+      3
+    ],
+    "feed_batch_id": 3,
+    "feed_batch_snapshot": {
+      "id": 3,
+      "status": "saved",
+      "revision": 1,
+      "items": [
+        [
+          1,
+          "pending"
+        ],
+        [
+          2,
+          "pending"
+        ],
+        [
+          3,
+          "pending"
+        ]
+      ]
+    },
+    "character_id": "e507805437f5475b972ebf51026f99c4"
+  },
+  "feed_batch_after_reads": {
+    "id": 3,
+    "status": "saved",
+    "revision": 1,
+    "items": [
+      [
+        1,
+        "pending"
+      ],
+      [
+        2,
+        "pending"
+      ],
+      [
+        3,
+        "pending"
+      ]
+    ]
+  },
+  "feed_batch_logically_unchanged": true,
+  "lock_resources": {
+    "native_handles": 0,
+    "CRT_descriptors": 0,
+    "native_buffers": 0,
+    "unresolved_calls": 0,
+    "allocations": 8,
+    "frees": 8,
+    "NtCreateFile_calls": 8,
+    "lock_calls": 8,
+    "unlock_calls": 8,
+    "default_unlink_attempts": 0,
+    "quarantined_paths": 0,
+    "retired_generations": 0,
+    "events": [
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle"
+    ],
+    "closed": true
+  },
+  "remaining_native_handles": 0,
+  "policy": {
+    "phase": "explicit-cleanup",
+    "denials": [],
+    "remaining_SQLite_connections": 0,
+    "SQLite_closed": 2,
+    "threads_alive": 0,
+    "processes_started": 0,
+    "halt": false,
+    "allowed": {
+      "open": 3254,
+      "os.listdir": 220,
+      "os.remove": 20,
+      "os.mkdir": 42,
+      "os.utime": 2,
+      "os.scandir": 94,
+      "os.rmdir": 2,
+      "os.rename": 2,
+      "socket.bind": 4,
+      "socket.connect": 2
+    }
+  },
+  "optional_link_probes_suppressed": 1,
+  "guard_denials": [],
+  "native_tables_unchanged": true,
+  "gate_denials": {},
+  "borrowed_sources_unchanged": true
+}

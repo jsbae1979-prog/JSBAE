@@ -20,6 +20,12 @@ def populate(app):
         draft=ContentDraft(run_id=script.id,duration=30,content={'title':'합성 통합 대본','hook':'합성 자료 안내','summary':'실제 사건이 아닌 검증용 자료입니다.','closing':'출처를 검토하세요.','scenes':[{'seconds':10,'narration':f'합성 장면 {i}입니다.','caption':f'합성 장면 {i}','material':'기본 카드'} for i in range(1,4)]},sources={'articles':[evidence['articles'][0]]},revision=1,review_status='review_required',review_notes=[])
         db.add(draft);db.flush()
         facts={'analysis_id':analysis.id,'draft_id':draft.id,'article_ids':[a.id for a in articles]}
+    # Real local saved history, no generation/approval/POST/vendor request.
+    from newsflow.creation.catalog import DEFAULTS
+    batch_id=app.state.top_three_feeds.create(facts['analysis_id'],DEFAULTS['image'])
+    batch=app.state.top_three_feeds.view(batch_id)
+    facts['feed_batch_id']=batch_id
+    facts['feed_batch_snapshot']={'id':batch['id'],'status':batch['status'],'revision':batch['revision'],'items':[(i['rank'],i['status']) for i in batch['items']]}
     # Saved storyboard fixture, not a successful generated/paid project.
     from newsflow.character.schema import load_character, Storyboard, prompts, Character
     from newsflow.character.higgsfield_client import MODEL

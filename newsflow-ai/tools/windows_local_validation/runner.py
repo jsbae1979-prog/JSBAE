@@ -40,6 +40,7 @@ before_paths=list(sys.path)
 sys.path[:]=bounded_import_paths(sys.path,reads)
 pruned_count=len(before_paths)-len(sys.path)
 evidence={'python':sys.version.split()[0],'Windows':str(sys.getwindowsversion()),'diagnostic_only':options.diagnostic,'CI_environment_used':False,'paid_API_SNS_calls':0,'OS_DPI':'NOT VERIFIED / unchanged','requests':[],'cleanup_errors':[],'final':'BLOCKED'}
+evidence['http_scope_rejections']=[];evidence['feed_batches_reads']=[]
 evidence['unneeded_import_search_entries_removed']=pruned_count
 policy=bridge=native=app=server=loop=None
 phase='Guard-first-bootstrap'
@@ -91,12 +92,7 @@ try:
     from urllib.parse import urlsplit
     loop=asyncio.new_event_loop();asyncio.set_event_loop(loop)
     # Writes are local-only and still traverse unchanged product Origin/CSRF.
-    import re
-    local_posts=[r'/ai/drafts/[0-9]+',r'/api/samples/[^/]+/(?:copy|visibility)',r'/image-studio/drafts',r'/image-studio/defaults',r'/image-studio/[^/]+/reuse']
-    def allowed(method,path):
-        if method in {'GET','HEAD'}:
-            return path=='/' or path.startswith(('/studio/','/static/','/api/studio/','/api/samples','/media/','/video/','/character/','/image-studio/assets/','/favicon')) and not any(w in path for w in ('oauth','connect','callback','/start','/stop','events','stream'))
-        return method=='POST' and any(re.fullmatch(p,path) for p in local_posts)
+    from http_surface import request_allowed as allowed
     async def dispatch(method,url,headers,body):
         p=urlsplit(url);messages=[];received=False;size=0
         scope={'type':'http','asgi':{'version':'3.0','spec_version':'2.4'},'http_version':'1.1','scheme':'http','method':method,'path':p.path,'raw_path':p.path.encode('ascii'),'query_string':p.query.encode('ascii'),'root_path':'','headers':[(k.lower().encode('latin1'),v.encode('latin1')) for k,v in headers.items()],'server':('127.0.0.1',18765),'client':('127.0.0.1',18766),'extensions':{}}
@@ -122,7 +118,9 @@ try:
         def serve(self):
             path=urlsplit(self.path).path
             if self.client_address[0]!='127.0.0.1' or self.headers.get('Host')!='127.0.0.1:18765':self.send_error(403);return
-            if not allowed(self.command,path):self.send_error(403,'Not in local validation scope');return
+            if not allowed(self.command,path):
+                evidence['http_scope_rejections'].append({'method':self.command,'path':path})
+                self.send_error(403,'Not in local validation scope');return
             try:
                 length=int(self.headers.get('Content-Length','0'))
                 if length<0 or length>1024*1024:self.send_error(413);return
@@ -137,6 +135,9 @@ try:
                 self.send_header('Connection','close');self.end_headers();self.close_connection=True
                 if self.command!='HEAD':self.wfile.write(content)
                 evidence['requests'].append({'method':self.command,'path':path,'status':start['status'],'bytes':len(content)})
+                if self.command=='GET' and path=='/api/feed-batches' and start['status']==200:
+                    data=json.loads(content)
+                    evidence['feed_batches_reads'].append({'status':200,'batches':[{'id':b['id'],'status':b['status'],'revision':b['revision'],'ranks':[i['rank'] for i in b['items']]} for b in data['batches']]})
                 if guard.ATTEMPTS or gate.denials:policy.halt=True
             except (BrokenPipeError,ConnectionResetError):self.close_connection=True
             except BaseException as exc:
@@ -162,6 +163,13 @@ finally:
         try:loop.run_until_complete(loop.shutdown_asyncgens());loop.run_until_complete(loop.shutdown_default_executor(timeout=2));loop.close()
         except BaseException as exc:evidence['cleanup_errors'].append({'resource':'eventloop','type':type(exc).__name__,'reason':str(exc)})
     if app is not None:
+        if evidence.get('seed',{}).get('feed_batch_id'):
+            try:
+                b=app.state.top_three_feeds.view(evidence['seed']['feed_batch_id'])
+                after={'id':b['id'],'status':b['status'],'revision':b['revision'],'items':[(i['rank'],i['status']) for i in b['items']]}
+                evidence['feed_batch_after_reads']=after
+                evidence['feed_batch_logically_unchanged']=after==evidence['seed']['feed_batch_snapshot']
+            except BaseException as exc:evidence['cleanup_errors'].append({'resource':'feed-read-check','reason':str(exc)})
         for name in ('youtube','tiktok','instagram','publishing_calendar','scheduler','video_ai','autopilot','autopilot_backend','coordinator','video'):
             item=getattr(app.state,name,None)
             if item is not None:

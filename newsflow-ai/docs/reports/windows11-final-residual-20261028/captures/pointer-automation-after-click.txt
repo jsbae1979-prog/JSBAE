@@ -1,0 +1,97 @@
+Browser tab: 5, Title: "NewsFlow AI Studio", URL: "http://127.0.0.1:18765/studio/automation".
+1 AXWebArea NewsFlow AI Studio, URL: 127.0.0.1:18765/studio/automation
+	2 container root
+		3 link Description: 본문으로 이동, Value: 127.0.0.1:18765/studio/automation#main
+		4 container main
+			5 text 1개 프로젝트
+			6 container 관리 화면 주 메뉴
+				7 button NewsFlow AI
+					8 text NewsFlow
+					9 text AI
+				10 button 홈
+				11 button 콘텐츠 제작
+				12 button 뉴스 스튜디오
+				13 button 자동화 센터
+				14 button 라이브러리
+				15 button 게시 스튜디오
+				16 button 성과 · 비용
+				17 button 설정 · 관리
+			18 container
+				19 heading 자동화 센터, Value: 1
+					20 text 자동화 센터
+				21 text 제작 예약과 실행 상태를 한곳에서 관리하세요. 합성 검증 자료
+				22 button 관리 화면 새로고침
+			23 button 자동 제작 빠른 시작 범위를 확인한 뒤 별도 승인
+				24 text 자동 제작 빠른 시작
+				25 text 범위를 확인한 뒤 별도 승인
+			26 button 새 예약 만들기 저장과 활성화는 별도
+				27 text 새 예약 만들기
+				28 text 저장과 활성화는 별도
+			29 button 자동화 설정 기존 실행 정책 확인
+				30 text 자동화 설정
+				31 text 기존 실행 정책 확인
+			32 button 운영 가이드 시작 가이드 열기
+				33 text 운영 가이드
+				34 text 시작 가이드 열기
+			35 container
+				36 heading 제작 유형, Value: 2
+					37 text 제작 유형
+				38 checkbox 전체 예약, Value: 1
+				39 checkbox 뉴스 쇼츠 · 기존 예약, Value: 0
+				40 text 현재 예약 서비스가 지원하는 제작만 표시합니다. 캐릭터·이미지·TOP 3 무인 유료 예약은 추가하지 않았습니다.
+				41 heading 자동화 현황, Value: 2
+					42 text 자동화 현황
+				43 text 저장된 예약
+				44 text 0
+				45 text 활성 예약
+				46 text 0
+				47 text 확인 필요
+				48 text 0
+			49 container
+				50 heading 제작 예약 목록, Value: 2
+					51 text 제작 예약 목록
+				52 text 0 개
+				53 text field (settable) 예약 검색
+				54 table
+					55 row
+						56 cell
+							57 text 상태
+						58 cell
+							59 text 제목 / 주제
+						60 cell
+							61 text 제작 유형
+						62 cell
+							63 text 주기 · 시간
+						64 cell
+							65 text 다음 실행
+				66 text 저장된 제작 예약이 없습니다. 예약을 선택하여 저장된 Revision과 실행 상태를 확인하세요.
+			67 container
+				68 heading 예약 상세 설정, Value: 2
+					69 text 예약 상세 설정
+				70 button (disabled) 편집 · 저장
+				71 text 예약 선택 대기 결과 불명 작업은 자동 재요청하지 않습니다.
+			72 container
+				73 heading 예약 실행 기록, Value: 2
+					74 text 예약 실행 기록
+				75 table
+					76 row
+						77 cell
+							78 text 실행 시간
+						79 cell
+							80 text 예약
+						81 cell
+							82 text 상태
+						83 cell
+							84 text 결과 요약
+						85 cell
+							86 text 검토
+				87 text 예약 실행 기록 없음 · 자동 실행하지 않습니다.
+			88 button (collapsed) 자동 제작 작업 기록 · 0개, Secondary Actions: Expand
+				89 text 자동 제작 작업 기록 ·
+				90 text 0
+				91 text 개
+			92 button (collapsed) 기존 상세 기능 · 승인 및 복구, Secondary Actions: Expand
+				93 text 기존 상세 기능 · 승인 및 복구
+			94 text 유료 생성·실제 계정 인증·공개 게시는 별도 승인입니다. 결과 불명 요청은 자동 재전송하지 않습니다.
+
+The focused UI element is 1 AXWebArea NewsFlow AI Studio, URL: 127.0.0.1:18765/studio/automation

@@ -1,0 +1,21 @@
+{
+  "centerElement": null,
+  "flexShrink": "0",
+  "label": "이미지 제작",
+  "nav": {
+    "left": 174.203125,
+    "scrollLeft": 0,
+    "scrollWidth": 739,
+    "width": 245
+  },
+  "rect": {
+    "height": 34,
+    "width": 72.5625,
+    "x": 470.78125,
+    "y": 12
+  },
+  "viewport": {
+    "height": 860,
+    "width": 530
+  }
+}

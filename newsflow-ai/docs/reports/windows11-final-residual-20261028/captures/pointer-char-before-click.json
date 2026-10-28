@@ -1,0 +1,36 @@
+{
+  "sentViewportPoint": {
+    "x": 285,
+    "y": 29
+  },
+  "intended": "이미지 제작",
+  "before": {
+    "ancestor": "core-navigation-links",
+    "centerElement": "뉴스 스튜디오",
+    "label": "이미지 제작",
+    "rect": {
+      "height": 34,
+      "width": 21.8125,
+      "x": 274.453125,
+      "y": 12
+    },
+    "rootZoom": "1",
+    "scrolling": {
+      "left": 0,
+      "top": 0
+    },
+    "style": {
+      "display": "flex",
+      "pointerEvents": "auto",
+      "position": "static",
+      "visibility": "visible",
+      "zIndex": "auto"
+    },
+    "tag": "BUTTON",
+    "viewport": {
+      "height": 860,
+      "width": 530
+    }
+  },
+  "urlAfter": "http://127.0.0.1:18765/studio/news"
+}

@@ -44,10 +44,14 @@ No actual supplier generation, posting, Windows task registration or DPI change.
 
 ## Known remaining limits
 
-- `/api/feed-batches` is not in the local HTTP read surface; TOP3 history shows
-  a load failure. No permission was automatically added and no app rerun occurred.
-- Two pointer menu activations in the narrow IAB surface reached an adjacent
-  destination. Keyboard Enter navigation worked; tool/UI cause remains unconfirmed.
+- Following explicit approval, only exact GET `/api/feed-batches` is added to
+  the local HTTP surface. No HEAD, POST, prefix, generation or publishing grant.
+  A saved synthetic batch is seeded without generation; actual GET returned 200
+  and the batch state/revision remained unchanged after GUI reads.
+- The narrow pointer issue was reproduced as a product CSS overlap: flex items
+  shrank below their no-wrap text width. Four scoped CSS lines prevent menu
+  button shrinking and keep horizontal scrolling. Explicit-coordinate pointer
+  checks passed at nominal 545px and 1366px browser widths; no event handler changed.
 - Actual OS DPI 100/125/150/200% and full production lifespan remain NOT VERIFIED.
 - Image/video generation and character write stages were not exercised here.
 
@@ -61,3 +65,7 @@ The prior `test_local_policy` eight-test result is reused, not reported as a new
 
 Evidence: `docs/reports/windows11-local-block-fix-20261028/LOCAL_BLOCK_FIX_REPORT.md`.
 The previous BLOCKED attempt/report is retained as historical evidence.
+
+Latest focused acceptance: `docs/reports/windows11-final-residual-20261028/FINAL_RESIDUAL_REPORT.md`.
+New HTTP-surface contracts: `python -B -m unittest test_feed_read_surface -v` (5 PASS).
+The earlier checks and 12-screen/media results were reused, not rerun in full.

@@ -1,0 +1,29 @@
+{
+  "Source": "Current tool console results; not rerun for logging",
+  "Python": "3.14.7",
+  "Suite": "test_feed_read_surface",
+  "Pass": 5,
+  "Fail": 0,
+  "Error": 0,
+  "Skip": 0,
+  "Tests": [
+    "test_exact_get",
+    "test_existing_local_save_surface_preserved",
+    "test_no_generation_publication_or_account_write",
+    "test_no_prefix_grant",
+    "test_other_methods_remain_denied"
+  ],
+  "TypeScriptExit": 0,
+  "ViteExit": 0,
+  "ViteVersion": "8.3.5",
+  "CSSAsset": "index-DH-ao1BP.css",
+  "JSAsset": "index-ab6HOv-4.js",
+  "BuildWarnings": [
+    "NotoSansKR.ttf resolved at runtime",
+    "lucide use client directive",
+    "chunk larger than 500 kB"
+  ],
+  "GUIResults": "captures/RESULTS.json",
+  "OldTestsReused": true,
+  "FullRegressionExecuted": false
+}

@@ -1,0 +1,21 @@
+{
+  "LauncherPID": 29068,
+  "ActualHTTPPID": 26760,
+  "LauncherRemaining": false,
+  "ActualHTTPRemaining": false,
+  "Listeners": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8765,
+      "OwningProcess": 55740
+    }
+  ],
+  "Operating8765PIDUnchanged": true,
+  "ForcedCleanup": false,
+  "OSSettingsChanged": 0,
+  "DPI100": "NOT VERIFIED",
+  "DPI125": "NOT VERIFIED",
+  "DPI150": "NOT VERIFIED",
+  "DPI200": "NOT VERIFIED",
+  "DPIEvidence": "No Settings/Display window or separate test session exposed to available GUI tools. No scale-change attempted."
+}
