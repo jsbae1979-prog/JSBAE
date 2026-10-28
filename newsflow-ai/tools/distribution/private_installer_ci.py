@@ -5,7 +5,7 @@ No binaries or synthetic user data are uploaded as public artifacts.
 """
 import argparse,hashlib,json,os
 from pathlib import Path
-import sqlite3,subprocess,time,winreg
+import sqlite3,subprocess,time,winreg,re
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--bundle',type=Path,required=True);ap.add_argument('--workspace',type=Path,required=True);a=ap.parse_args()
@@ -38,13 +38,30 @@ def main():
         if result.returncode:raise RuntimeError('Private installation failed; exit '+str(result.returncode))
         if hashlib.sha256((target/exe.name).read_bytes()).hexdigest()!=digest:raise RuntimeError('Installed executable differs')
         if fingerprint()!=baseline:raise RuntimeError('Synthetic data changed')
+    def registered_uninstaller():
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER,key) as entry:
+                value=winreg.QueryValueEx(entry,'UninstallString')[0]
+        except FileNotFoundError:
+            return None
+        # Registry entry created by this test's stable AppId only; never shell-evaluate.
+        candidate=Path(value.strip('"')).resolve()
+        if candidate.parent!=target.resolve() or not re.fullmatch(r'unins[0-9]{3}\.exe',candidate.name):
+            raise RuntimeError('Unexpected owned uninstall registration')
+        return candidate
     def uninstall():
-        result=subprocess.run([str(target/'unins000.exe'),'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART'],capture_output=True,timeout=120)
+        owned=registered_uninstaller()
+        if owned is None or not owned.is_file():raise RuntimeError('Owned uninstaller missing')
+        result=subprocess.run([str(owned),'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART'],capture_output=True,timeout=120)
         if result.returncode:raise RuntimeError('Private uninstall failed')
+        # Wait for the actual uninstall registration AND self-cleanup, not merely
+        # application disappearance. Never assume the current filename is unins000.
+        settled=False
         for _ in range(100):
-            if not (target/exe.name).exists():break
+            if not (target/exe.name).exists() and not list(target.glob('unins*')) and registered_uninstaller() is None:
+                settled=True;break
             time.sleep(.1)
-        if (target/exe.name).exists() or fingerprint()!=baseline:raise RuntimeError('Uninstall/data contract failed')
+        if not settled or fingerprint()!=baseline:raise RuntimeError('Uninstall/data contract failed')
     install(setups[0]);results['actual_new_install']='PASS'
     install(setups[1]);results['actual_installer_version_update_same_payload']='PASS'
     uninstall();results['actual_uninstall_data_preserved']='PASS'

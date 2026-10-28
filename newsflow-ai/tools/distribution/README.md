@@ -10,11 +10,13 @@ production migrations, real credentials, paid APIs, or publishing.
   6.22.3 onedir layout with Python 3.14.7. Include the reviewed React build,
   runtime resources, sample catalog and pinned FFmpeg/FFprobe. Do not include test
   runners or verification Guard modules. Build output must be a new separate path.
-- `app_entry.py`: frozen candidate entry using the unchanged ordinary product
-  entry. It checks bundled media digests. **It has not been executed.** The normal
-  product default is `%LOCALAPPDATA%\NewsFlowAI` and port 8765. Do not launch it in
-  the operating user's session. A clean, separate Windows test account/environment
-  with no real credentials is required before first-run testing.
+- `app_entry.py`: private frozen entry with pinned bundled-media verification.
+  Only the exact SAPI worker operation or the new `newsflow.distribution.launch`
+  desktop entry is accepted. The desktop entry uses a protected per-user
+  `%LOCALAPPDATA%\NewsFlowAI-Desktop\v1` root, an OS-assigned port excluding 8765,
+  and an expiring one-time browser bootstrap outside the existing app CSRF layer.
+  Only the SAPI worker has been launched locally. Full first-run testing still
+  requires a clean test profile/environment with no real credentials.
 - `newsflow-private.iss`: uncompiled per-user Inno Setup definition, lowest
   privileges, no startup/shortcut/run section, no user-data deletion. Selection of
   an installer is provisional until compilation and real lifecycle tests pass.
@@ -52,7 +54,9 @@ authenticated distribution channel remain release requirements.
 
 ## Release gates
 
-See `docs/reports/windows-deployment-prep-20261028/DEPLOYMENT_PREPARATION_REPORT.md`.
+See `docs/reports/distribution-gates-20261028/DISTRIBUTION_GATES_REPORT.md` (current) and the retained deployment-preparation report (historical).
 Sample redistribution rights, FFmpeg/component license delivery, Windows
 cross-user HTTP authorization and ACL proof, signed installer/update behavior,
 clean-PC runtime tests and real OS DPI validation remain open.
+
+New focused checks: test_distribution_boundaries.py (ASGI and stub signature contracts), probe_windows_profile.py (new synthetic ACL/DPAPI/ports), probe_voice.py (offline Python/frozen SAPI), private_installer_ci.py (actual Setup only in disposable CI). No real cross-Windows-user or public signing success is implied.
