@@ -1,0 +1,101 @@
+{
+  "completedDateKST": "2026-10-29",
+  "workIdentifier": "20261028 retained; task crossed midnight",
+  "verdict": "CONDITIONAL",
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "baselineHead": "b1169c35eba9df2df4c1295e353e5c1b4220c25b",
+  "packagedImplementationHead": "3b3598f4f6a0b9d3c04e92bb75efae026216fdc2",
+  "candidateDirectory": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\packages-browser",
+  "candidates": {
+    "initial": {
+      "file": "NewsFlowAI_v1.0.0.zip",
+      "bytes": 232213326,
+      "sha256": "0228c117409c94b2d70ce0957633a8457f156e017b1a90fef422e7e980ef93d2",
+      "members": 2874,
+      "prefix": "NewsFlowAI/"
+    },
+    "update": {
+      "file": "NewsFlowAI_Update_v1.1.0.zip",
+      "bytes": 232150098,
+      "sha256": "18b5369709d7bc6c506becac8b72087746d5d6460a6b8e390013c5aa9661a765",
+      "members": 2874,
+      "prefix": ""
+    }
+  },
+  "sourceMaterial": {
+    "runtimeSourceFiles": 37,
+    "runtimeFilesUnchanged": 36,
+    "runtimeConfigurationChanged": [
+      "python314._pth"
+    ],
+    "wheelOriginals": 27,
+    "wheelPublishedHashesMatch": 27,
+    "wheelRECORDHashes": 2360,
+    "installedRECORDHashes": 2230,
+    "dependencyConflicts": 0,
+    "nativeImagesAMD64": 103,
+    "unbundledCRTNames": []
+  },
+  "newUnitTests": {
+    "PASS": 30,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0,
+    "batches": [
+      26,
+      2,
+      2
+    ]
+  },
+  "materialChecks": {
+    "PASS": 16,
+    "FAIL": 0,
+    "ERROR": 0,
+    "type": "static artifact checks, not app runtime"
+  },
+  "reusedNotRerun": {
+    "BATContracts": "78 PASS",
+    "PackagingPreparation": "31 PASS",
+    "WindowsCI": "45 PASS",
+    "InstallerDataPreservation": "19 PASS",
+    "FFmpeg": "7 PASS"
+  },
+  "history": [
+    "First assembly blocked on six PyWin32 ISAPI developer example paths; no ZIP emitted",
+    "Intermediate full-pywin32 candidates had optional PythonWin/MAPI CRT imports; kept but superseded",
+    "Final browser profile excludes optional PythonWin/MAPI and ISAPI examples; originals preserved"
+  ],
+  "held": {
+    "liveStartStopConnected": false,
+    "updatesEnabled": false,
+    "publisherCertificateProvided": false,
+    "signatureFileGenerated": false,
+    "actualAppOrBATExecuted": false,
+    "candidatePythonOrFFmpegExecuted": false,
+    "nativeDLLLoadingVerified": false,
+    "realSignatureChainVerified": false,
+    "actualOfflineUpdateVerified": false
+  },
+  "preserved": {
+    "operatingAppOrPort8765Used": false,
+    "operatingDBKeysOAuthMediaBackupsUsedOrChanged": false,
+    "originalEXECandidatesModified": false,
+    "original12SamplesOrUserCopiesModified": false,
+    "unverifiedSampleAssetsIncluded": 0,
+    "AhnLabAnalysisRequestMade": false,
+    "V3DiagnosticsRepeated": false,
+    "V3DisabledOrExceptionsOrACLRelaxation": false,
+    "realAI_OAuth_SNSCalls": 0,
+    "externalUserDistribution": false,
+    "mainOrPR35Changed": false,
+    "existingUntrackedValidationPreserved": true
+  },
+  "remaining": [
+    "Live application/process adapters remain intentionally disconnected pending permitted execution conditions",
+    "Real publisher certificate/protected trust provisioning/offline chain-revocation-timestamp qualification",
+    "Portable Python imports/Windows DLL search/COM/SAPI/GUI/actual compose/start-stop/update need separate live validation",
+    "FFmpeg source/license final delivery clearance; sample rights remain unconfirmed and files excluded",
+    "Two candidate versions use the same product source, metadata differs; no genuine product-upgrade runtime proof"
+  ],
+  "automaticResumeExecution": false
+}

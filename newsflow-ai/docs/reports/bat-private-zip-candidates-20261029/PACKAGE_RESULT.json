@@ -1,0 +1,584 @@
+{
+  "candidateOnly": true,
+  "sourceSha": "3b3598f4f6a0b9d3c04e92bb75efae026216fdc2",
+  "productPayloadSameCode": true,
+  "liveStartStopConnected": false,
+  "updatesEnabled": false,
+  "publisherSignaturePresent": false,
+  "samplesIncluded": 0,
+  "runtimeSourceFiles": 37,
+  "runtimePthModifiedAsDataOnly": true,
+  "wheels": [
+    {
+      "distribution": "alembic",
+      "files": 103,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "annotated-doc",
+      "files": 8,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "annotated-types",
+      "files": 7,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "anyio",
+      "files": 53,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "click",
+      "files": 22,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "defusedxml",
+      "files": 16,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "fastapi",
+      "files": 65,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "feedparser",
+      "files": 37,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "feedparser-sgmllib",
+      "files": 7,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "filelock",
+      "files": 26,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "h11",
+      "files": 17,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "idna",
+      "files": 16,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "jinja2",
+      "files": 31,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "mako",
+      "files": 39,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "markupsafe",
+      "files": 11,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "opentelemetry-api",
+      "files": 47,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "pillow",
+      "files": 121,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "pydantic",
+      "files": 111,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "pydantic-core",
+      "files": 11,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "python-multipart",
+      "files": 13,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "pywin32",
+      "files": 481,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [
+        "isapi/samples/README.txt",
+        "isapi/samples/advanced.py",
+        "isapi/samples/redirector.py",
+        "isapi/samples/redirector_asynch.py",
+        "isapi/samples/redirector_with_filter.py",
+        "isapi/samples/test.py"
+      ],
+      "excludedUnusedPythonWinMAPI": [
+        "pythonwin/License.txt",
+        "pythonwin/Pythonwin.exe",
+        "pythonwin/Scintilla-License.txt",
+        "pythonwin/dde.pyd",
+        "pythonwin/scintilla.dll",
+        "pythonwin/start_pythonwin.pyw",
+        "pythonwin/win32ui.pyd",
+        "pythonwin/win32uiole.pyd",
+        "pythonwin/pywin/IDLE.cfg",
+        "pythonwin/pywin/__init__.py",
+        "pythonwin/pywin/default.cfg",
+        "pythonwin/pywin/Demos/cmdserver.py",
+        "pythonwin/pywin/Demos/createwin.py",
+        "pythonwin/pywin/Demos/demoutils.py",
+        "pythonwin/pywin/Demos/dibdemo.py",
+        "pythonwin/pywin/Demos/dlgtest.py",
+        "pythonwin/pywin/Demos/dyndlg.py",
+        "pythonwin/pywin/Demos/fontdemo.py",
+        "pythonwin/pywin/Demos/guidemo.py",
+        "pythonwin/pywin/Demos/hiertest.py",
+        "pythonwin/pywin/Demos/menutest.py",
+        "pythonwin/pywin/Demos/objdoc.py",
+        "pythonwin/pywin/Demos/openGLDemo.py",
+        "pythonwin/pywin/Demos/progressbar.py",
+        "pythonwin/pywin/Demos/sliderdemo.py",
+        "pythonwin/pywin/Demos/splittst.py",
+        "pythonwin/pywin/Demos/threadedgui.py",
+        "pythonwin/pywin/Demos/toolbar.py",
+        "pythonwin/pywin/Demos/app/basictimerapp.py",
+        "pythonwin/pywin/Demos/app/customprint.py",
+        "pythonwin/pywin/Demos/app/demoutils.py",
+        "pythonwin/pywin/Demos/app/dlgappdemo.py",
+        "pythonwin/pywin/Demos/app/dojobapp.py",
+        "pythonwin/pywin/Demos/app/helloapp.py",
+        "pythonwin/pywin/Demos/ocx/demoutils.py",
+        "pythonwin/pywin/Demos/ocx/flash.py",
+        "pythonwin/pywin/Demos/ocx/msoffice.py",
+        "pythonwin/pywin/Demos/ocx/ocxserialtest.py",
+        "pythonwin/pywin/Demos/ocx/ocxtest.py",
+        "pythonwin/pywin/Demos/ocx/webbrowser.py",
+        "pythonwin/pywin/debugger/__init__.py",
+        "pythonwin/pywin/debugger/configui.py",
+        "pythonwin/pywin/debugger/dbgcon.py",
+        "pythonwin/pywin/debugger/dbgpyapp.py",
+        "pythonwin/pywin/debugger/debugger.py",
+        "pythonwin/pywin/debugger/fail.py",
+        "pythonwin/pywin/dialogs/__init__.py",
+        "pythonwin/pywin/dialogs/ideoptions.py",
+        "pythonwin/pywin/dialogs/list.py",
+        "pythonwin/pywin/dialogs/login.py",
+        "pythonwin/pywin/dialogs/status.py",
+        "pythonwin/pywin/docking/DockingBar.py",
+        "pythonwin/pywin/docking/__init__.py",
+        "pythonwin/pywin/framework/__init__.py",
+        "pythonwin/pywin/framework/app.py",
+        "pythonwin/pywin/framework/bitmap.py",
+        "pythonwin/pywin/framework/cmdline.py",
+        "pythonwin/pywin/framework/dbgcommands.py",
+        "pythonwin/pywin/framework/dlgappcore.py",
+        "pythonwin/pywin/framework/help.py",
+        "pythonwin/pywin/framework/interact.py",
+        "pythonwin/pywin/framework/intpyapp.py",
+        "pythonwin/pywin/framework/intpydde.py",
+        "pythonwin/pywin/framework/scriptutils.py",
+        "pythonwin/pywin/framework/sgrepmdi.py",
+        "pythonwin/pywin/framework/startup.py",
+        "pythonwin/pywin/framework/stdin.py",
+        "pythonwin/pywin/framework/toolmenu.py",
+        "pythonwin/pywin/framework/window.py",
+        "pythonwin/pywin/framework/winout.py",
+        "pythonwin/pywin/framework/editor/ModuleBrowser.py",
+        "pythonwin/pywin/framework/editor/__init__.py",
+        "pythonwin/pywin/framework/editor/configui.py",
+        "pythonwin/pywin/framework/editor/document.py",
+        "pythonwin/pywin/framework/editor/editor.py",
+        "pythonwin/pywin/framework/editor/frame.py",
+        "pythonwin/pywin/framework/editor/template.py",
+        "pythonwin/pywin/framework/editor/vss.py",
+        "pythonwin/pywin/framework/editor/color/__init__.py",
+        "pythonwin/pywin/framework/editor/color/coloreditor.py",
+        "pythonwin/pywin/idle/AutoExpand.py",
+        "pythonwin/pywin/idle/AutoIndent.py",
+        "pythonwin/pywin/idle/CallTips.py",
+        "pythonwin/pywin/idle/FormatParagraph.py",
+        "pythonwin/pywin/idle/IdleHistory.py",
+        "pythonwin/pywin/idle/LICENSE.txt",
+        "pythonwin/pywin/idle/PyParse.py",
+        "pythonwin/pywin/idle/__init__.py",
+        "pythonwin/pywin/mfc/__init__.py",
+        "pythonwin/pywin/mfc/activex.py",
+        "pythonwin/pywin/mfc/afxres.py",
+        "pythonwin/pywin/mfc/dialog.py",
+        "pythonwin/pywin/mfc/docview.py",
+        "pythonwin/pywin/mfc/object.py",
+        "pythonwin/pywin/mfc/thread.py",
+        "pythonwin/pywin/mfc/window.py",
+        "pythonwin/pywin/scintilla/IDLEenvironment.py",
+        "pythonwin/pywin/scintilla/__init__.py",
+        "pythonwin/pywin/scintilla/bindings.py",
+        "pythonwin/pywin/scintilla/config.py",
+        "pythonwin/pywin/scintilla/configui.py",
+        "pythonwin/pywin/scintilla/control.py",
+        "pythonwin/pywin/scintilla/document.py",
+        "pythonwin/pywin/scintilla/find.py",
+        "pythonwin/pywin/scintilla/formatter.py",
+        "pythonwin/pywin/scintilla/keycodes.py",
+        "pythonwin/pywin/scintilla/scintillacon.py",
+        "pythonwin/pywin/scintilla/view.py",
+        "pythonwin/pywin/tools/TraceCollector.py",
+        "pythonwin/pywin/tools/__init__.py",
+        "pythonwin/pywin/tools/browseProjects.py",
+        "pythonwin/pywin/tools/browser.py",
+        "pythonwin/pywin/tools/hierlist.py",
+        "pythonwin/pywin/tools/regedit.py",
+        "pythonwin/pywin/tools/regpy.py",
+        "win32comext/mapi/MAPIStubLibrary-License.txt",
+        "win32comext/mapi/NOTICE.md",
+        "win32comext/mapi/__init__.py",
+        "win32comext/mapi/emsabtags.py",
+        "win32comext/mapi/exchange.pyd",
+        "win32comext/mapi/mapi.pyd",
+        "win32comext/mapi/mapitags.py",
+        "win32comext/mapi/mapiutil.py",
+        "win32comext/mapi/demos/mapisend.py"
+      ]
+    },
+    {
+      "distribution": "sqlalchemy",
+      "files": 276,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "starlette",
+      "files": 41,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "typing-extensions",
+      "files": 5,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "typing-inspection",
+      "files": 9,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "tzdata",
+      "files": 633,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    },
+    {
+      "distribution": "uvicorn",
+      "files": 51,
+      "postinstallExecuted": false,
+      "pthExecuted": false,
+      "bytecodeCompiled": false,
+      "scriptsRewrittenOrExecuted": false,
+      "excludedISAPIDeveloperExamples": [],
+      "excludedUnusedPythonWinMAPI": []
+    }
+  ],
+  "sourcesIncluded": 7,
+  "initial": {
+    "file": "NewsFlowAI_v1.0.0.zip",
+    "bytes": 232213326,
+    "sha256": "0228c117409c94b2d70ce0957633a8457f156e017b1a90fef422e7e980ef93d2",
+    "members": 2874,
+    "prefix": "NewsFlowAI/"
+  },
+  "update": {
+    "file": "NewsFlowAI_Update_v1.1.0.zip",
+    "bytes": 232150098,
+    "sha256": "18b5369709d7bc6c506becac8b72087746d5d6460a6b8e390013c5aa9661a765",
+    "members": 2874,
+    "prefix": ""
+  },
+  "runtimeSourceManifest": [
+    {
+      "file": "python.exe",
+      "sha256": "4942b86a6597e5aee0128daa00050ed79bc21f6e709a78eb19cbfeb0c2f39ac9"
+    },
+    {
+      "file": "pythonw.exe",
+      "sha256": "c197268f7e7cf2848b8c1ae59bbd0e0c14defe668a2d365302137ea929b47769"
+    },
+    {
+      "file": "python314.dll",
+      "sha256": "0f9857ffdfe010fe6b99328d58c2e3c7472ce75f336bf9c2ad9bd5bca3bce700"
+    },
+    {
+      "file": "python3.dll",
+      "sha256": "6c45910e7c82617ca6360820de861699cc99f9efee434df290aa4c6e38f39886"
+    },
+    {
+      "file": "vcruntime140.dll",
+      "sha256": "d1f4225df2cd877dbf130d5668a021dce3f94118455ff5ec952061c30afc9ce7"
+    },
+    {
+      "file": "vcruntime140_1.dll",
+      "sha256": "a7146c08f89fe5b04541ab507cdb59ff7b44534d4ba3c668a426c6450a03434e"
+    },
+    {
+      "file": "LICENSE.txt",
+      "sha256": "935cf13e19f8c31b497d20b05d73623431a226b230c3599bc30fa3348979bc68"
+    },
+    {
+      "file": "pyexpat.pyd",
+      "sha256": "e34347c4e11b2ecc57df2ce1627ba7f98fd076e9df59951e9034f5aa8e95a2fc"
+    },
+    {
+      "file": "select.pyd",
+      "sha256": "722328e7fad8048057fc966474ba73966d2ceebaa32e7344cce09640ab4dc9bd"
+    },
+    {
+      "file": "unicodedata.pyd",
+      "sha256": "280b09bd97b598d18c0ed9542dc18ed35fa57a16e84f8e65fd9c6e96516c28d6"
+    },
+    {
+      "file": "winsound.pyd",
+      "sha256": "6a27340660de89d5da59445a77ac6b08d471e373304ce7294c198238f09f2dc2"
+    },
+    {
+      "file": "_asyncio.pyd",
+      "sha256": "f9594a2a4f45570dbfdf1f3471194ae7b27dc117c54b9af6bc22df9c93830f8b"
+    },
+    {
+      "file": "_bz2.pyd",
+      "sha256": "b938073c85cf6b9fe80556d7899ed1901e5e60b7adea2832442376239fb36b36"
+    },
+    {
+      "file": "_ctypes.pyd",
+      "sha256": "408cc4e7a22ffa418ca52f5e13fe9268a3c50a2bc9de02b0530b555ef591bc5a"
+    },
+    {
+      "file": "_decimal.pyd",
+      "sha256": "bc3a61685825ae37a4cd2b2b87fa27af12e01575c4f920788ea806e6781a2c79"
+    },
+    {
+      "file": "_elementtree.pyd",
+      "sha256": "d8a17f9c831e313b440e19e0d26e6c0e7ed830ff1f657887cbc26664d6ef4973"
+    },
+    {
+      "file": "_hashlib.pyd",
+      "sha256": "5933ef5eda7c0bca0b3874a6e2c5f13b91b8f2cfc29bc46160df3212a1dbee79"
+    },
+    {
+      "file": "_lzma.pyd",
+      "sha256": "d2abf8db7fb0cf6285663b177991691a41b37e215c3d71fd087a98d8ec1bee63"
+    },
+    {
+      "file": "_multiprocessing.pyd",
+      "sha256": "cea83c9bf3131d079c20066b626f67ab33021b476777be2d7be26d1fa5e4eb66"
+    },
+    {
+      "file": "_overlapped.pyd",
+      "sha256": "1d7028683e6ec50c159139238f90a6c8431ece139a4764900ca11c941ba05d46"
+    },
+    {
+      "file": "_queue.pyd",
+      "sha256": "2fd8668f52b34d0e71ae48784bd2e7d35e5d99df6f641edb0fc279235a187c8e"
+    },
+    {
+      "file": "_remote_debugging.pyd",
+      "sha256": "32b58c85e29ecc2378eddfe367745998fdb131e1ab6bb84d54e16f33806b584c"
+    },
+    {
+      "file": "_socket.pyd",
+      "sha256": "02265dd0d0287f3ffd287ea5d8e3c918a5a056e8ef2c4529857f5e84ec9e2519"
+    },
+    {
+      "file": "_sqlite3.pyd",
+      "sha256": "ec9694e5929747e93e05bc32427d24350dc4de5074b61a37bc961c3048794a67"
+    },
+    {
+      "file": "_ssl.pyd",
+      "sha256": "4cfb154c7cc525d57020c0e64f2dd876a78b46cd38419446392478de6b7b13b8"
+    },
+    {
+      "file": "_uuid.pyd",
+      "sha256": "fbfd7fe8583b346ba20b174b2510c0830237f5092bdf9fc26da9d6b25b018385"
+    },
+    {
+      "file": "_wmi.pyd",
+      "sha256": "b6fd41f079da0c0054829855360e88b8b762f5c42bb474c2fa02eae367839ad2"
+    },
+    {
+      "file": "_zoneinfo.pyd",
+      "sha256": "07469c7fc221663e423a2e6023a5b2ead3b10d0b40eb297887f4447a1ff1b2a3"
+    },
+    {
+      "file": "_zstd.pyd",
+      "sha256": "33c6eca99470c3eb9d776b617c550ad41b002a668336f062a9ab7be677a7409a"
+    },
+    {
+      "file": "libcrypto-3.dll",
+      "sha256": "53c529145339fb042a3dcd3a09c2d7753204f8b4fc79d99e0d31e69a33985958"
+    },
+    {
+      "file": "libffi-8.dll",
+      "sha256": "eff52743773eb550fcc6ce3efc37c85724502233b6b002a35496d828bd7b280a"
+    },
+    {
+      "file": "libssl-3.dll",
+      "sha256": "b17a87979862d19241edc4318f967e24c3ec356ed6c2368f561179fab2311001"
+    },
+    {
+      "file": "libtommath.dll",
+      "sha256": "bf18448a56de62e56adb5a50040c08648f0bcf556217de90eca283490ee8c0c3"
+    },
+    {
+      "file": "sqlite3.dll",
+      "sha256": "d3e60dd22e62c9fbdb64b31b1b8c48782e1d4958d04d0bf830cffd31ace3275f"
+    },
+    {
+      "file": "python314.zip",
+      "sha256": "5a7a66daf1a2c2e3c8d7a4a0d095685ec301efc3ef28cc2419e3041bf5729b65"
+    },
+    {
+      "file": "python314._pth",
+      "sha256": "2ed7ccda80e9e28ab5877902a9a325586c8a7b7b3e6731d944565bee082e216c"
+    },
+    {
+      "file": "python.cat",
+      "sha256": "bd98c1a5acc6dc6850425221a755506571eac182cb0aa85f2f45a9a077a3c71b"
+    }
+  ],
+  "appExecuted": false,
+  "BATExecuted": false,
+  "postinstallExecuted": false,
+  "externalDelivery": false
+}

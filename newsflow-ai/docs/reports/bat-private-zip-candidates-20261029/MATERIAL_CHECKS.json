@@ -1,0 +1,83 @@
+{
+  "checks": [
+    {
+      "id": "INITIAL_ZIP_HASH_SIZE",
+      "status": "PASS"
+    },
+    {
+      "id": "UPDATE_ZIP_HASH_SIZE",
+      "status": "PASS"
+    },
+    {
+      "id": "SOURCE_RUNTIME_37",
+      "status": "PASS"
+    },
+    {
+      "id": "RUNTIME_36_UNCHANGED_AND_CONTROLLED_PTH",
+      "status": "PASS"
+    },
+    {
+      "id": "VENDORED_27_VERSION_CLOSURE",
+      "status": "PASS"
+    },
+    {
+      "id": "INSTALLED_RECORDS_HASH_BOUND",
+      "status": "PASS"
+    },
+    {
+      "id": "LAYOUT_ALL_DECLARED_FILES",
+      "status": "PASS"
+    },
+    {
+      "id": "REACT_DIST_AND_MEDIA_PRESENT",
+      "status": "PASS"
+    },
+    {
+      "id": "NO_USER_DATA_TRUST_OR_VERIFICATION_TOOL_PAYLOAD",
+      "status": "PASS"
+    },
+    {
+      "id": "NO_SAMPLE_ASSETS_BUT_CATALOG_CODE_RETAINED",
+      "status": "PASS"
+    },
+    {
+      "id": "BAT_TEMPLATES_STATIC_AND_DISPATCHER_HELD",
+      "status": "PASS"
+    },
+    {
+      "id": "REAL_UPDATE_DISABLED_WITHOUT_PUBLISHER_TRUST",
+      "status": "PASS"
+    },
+    {
+      "id": "SOURCE_ARCHIVES_7_AND_LICENSES_PRESENT",
+      "status": "PASS"
+    },
+    {
+      "id": "NATIVE_STATIC_AMD64_NO_UNBUNDLED_CRT_NAMES",
+      "status": "PASS"
+    },
+    {
+      "id": "INITIAL_ZIP_ROOT_NEWSFLOWAI",
+      "status": "PASS"
+    },
+    {
+      "id": "UPDATE_ZIP_RELATIVE_PROGRAM_ROOT",
+      "status": "PASS"
+    }
+  ],
+  "PASS": 16,
+  "FAIL": 0,
+  "ERROR": 0,
+  "installedRecordHashes": 2230,
+  "originalWheelCount": 27,
+  "runtimeBytesModified": [
+    "python314._pth"
+  ],
+  "appExecuted": false,
+  "BATExecuted": false,
+  "FFmpegExecuted": false,
+  "candidatePythonExecuted": false,
+  "actualSignatureVerified": false,
+  "userDataReadOrWritten": false,
+  "ffmpegRecipeBindingVerified": true
+}
