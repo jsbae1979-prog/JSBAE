@@ -1,0 +1,61 @@
+{
+  "scope": "Read-only normal-user queries; no security configuration changed",
+  "channels": [
+    {
+      "name": "CodeIntegrity/Operational",
+      "enabled": true,
+      "records": 1244,
+      "lastEventAtQuery": "2026-10-28T18:13:04.3150791+09:00",
+      "lastId": 3089
+    },
+    {
+      "name": "AppLocker/EXE and DLL",
+      "enabled": true,
+      "records": 392,
+      "lastEventAtQuery": "2025-01-25T01:59:18.6421595+09:00",
+      "lastId": 8001
+    },
+    {
+      "name": "Windows Defender/Operational",
+      "enabled": true,
+      "records": 339,
+      "lastEventAtQuery": "2025-01-25T01:59:20.5698322+09:00",
+      "lastId": 5007
+    }
+  ],
+  "sinceLocal": "2026-10-28T18:40:00+09:00",
+  "queryResult": "NoMatchingEventsFound; not an inaccessible channel",
+  "appLockerEffectiveRuleCollections": 0,
+  "verifiedAndReputablePolicyState": 0,
+  "ciToolListPolicies": {
+    "operationResult": -2147024891,
+    "hex": "0x80070005",
+    "adminRetry": false
+  },
+  "registeredProducts": [
+    {
+      "displayName": "AhnLab V3 Lite",
+      "productState": 266256
+    },
+    {
+      "displayName": "Windows Defender",
+      "productState": 393472
+    }
+  ],
+  "vendorEventProviderPatterns": {
+    "Ahn*": "NoMatchingProvidersFound",
+    "ASD*": "NoMatchingProvidersFound",
+    "V3*": "NoMatchingProvidersFound"
+  },
+  "vendorLogs": "Only name match counts and format metadata retained; raw logs, authentication logs, config and quarantine not exported",
+  "vendorUiAutomated": false,
+  "vendorRecordProvided": false,
+  "attribution": "NOT VERIFIED: no evidence identifying the denying product or policy",
+  "imageMetadata": {
+    "alternateStreams": [
+      ":$DATA"
+    ],
+    "zoneIdentifierPresent": false,
+    "exactIFEOKeyPresent": false
+  }
+}

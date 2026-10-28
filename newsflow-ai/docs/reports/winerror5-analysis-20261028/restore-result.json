@@ -1,0 +1,9 @@
+{
+  "step": "restore exact original synthetic failure path",
+  "setupSha256": "46eb1254658c7498e3ac625bf5e4b023ed01517a496572c50812437ca5596b93",
+  "exit": 0,
+  "elevated": false,
+  "callerPid": 77584,
+  "applicationStarted": false,
+  "operatingDataUsed": false
+}

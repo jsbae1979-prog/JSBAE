@@ -1,0 +1,18 @@
+{
+  "callerPid": 90248,
+  "dllDirectoryState": "default",
+  "mitigations": {
+    "DynamicCode": {
+      "flags": 0
+    },
+    "Signature": {
+      "flags": 0
+    },
+    "ImageLoad": {
+      "flags": 0
+    },
+    "ChildProcess": {
+      "flags": 0
+    }
+  }
+}

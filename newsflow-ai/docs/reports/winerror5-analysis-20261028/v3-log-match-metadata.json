@@ -1,0 +1,122 @@
+[
+  {
+    "file": "ASDi.dll.logs",
+    "bytes": 3647360,
+    "targetMatches": {
+      "NewsFlowAI-Candidate.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "NewsFlowAI.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "nfpu-20261028": {
+        "utf8": 0,
+        "utf16le": 0
+      }
+    },
+    "bom": "none",
+    "plainAsciiRatio": 0.378
+  },
+  {
+    "file": "CORE.dll.logs",
+    "bytes": 1188864,
+    "targetMatches": {
+      "NewsFlowAI-Candidate.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "NewsFlowAI.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "nfpu-20261028": {
+        "utf8": 0,
+        "utf16le": 0
+      }
+    },
+    "bom": "none",
+    "plainAsciiRatio": 0.383
+  },
+  {
+    "file": "Av.dll.logs",
+    "bytes": 6510592,
+    "targetMatches": {
+      "NewsFlowAI-Candidate.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "NewsFlowAI.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "nfpu-20261028": {
+        "utf8": 0,
+        "utf16le": 0
+      }
+    },
+    "bom": "none",
+    "plainAsciiRatio": 0.389
+  },
+  {
+    "file": "v3l4sp.exe.logs",
+    "bytes": 1088,
+    "targetMatches": {
+      "NewsFlowAI-Candidate.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "NewsFlowAI.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "nfpu-20261028": {
+        "utf8": 0,
+        "utf16le": 0
+      }
+    },
+    "bom": "none",
+    "plainAsciiRatio": 0.405
+  },
+  {
+    "file": "V3L4Cli.exe.logs",
+    "bytes": 696512,
+    "targetMatches": {
+      "NewsFlowAI-Candidate.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "NewsFlowAI.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "nfpu-20261028": {
+        "utf8": 0,
+        "utf16le": 0
+      }
+    },
+    "bom": "none",
+    "plainAsciiRatio": 0.345
+  },
+  {
+    "file": "V3Lite4Exp.log",
+    "bytes": 2698553,
+    "targetMatches": {
+      "NewsFlowAI-Candidate.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "NewsFlowAI.exe": {
+        "utf8": 0,
+        "utf16le": 0
+      },
+      "nfpu-20261028": {
+        "utf8": 0,
+        "utf16le": 0
+      }
+    },
+    "bom": "none",
+    "plainAsciiRatio": 0.388
+  }
+]

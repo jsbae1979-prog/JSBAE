@@ -1,0 +1,18 @@
+{
+  "callerPid": 59416,
+  "explicitApplicationName": true,
+  "sameFileSamePath": true,
+  "elevated": false,
+  "pathLength": 121,
+  "shellUsed": false,
+  "argv": [
+    "NewsFlowAI-Candidate.exe",
+    "--offline-runtime-check"
+  ],
+  "processCreation": "DENIED",
+  "childPid": null,
+  "exception": "PermissionError",
+  "winerror": 5,
+  "errno": 13,
+  "seconds": 0.515
+}

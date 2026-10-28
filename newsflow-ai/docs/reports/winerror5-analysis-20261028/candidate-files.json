@@ -1,0 +1,16 @@
+[
+  {
+    "file": "NewsFlowAI_Setup_v1.0.0.exe",
+    "sha256": "46eb1254658c7498e3ac625bf5e4b023ed01517a496572c50812437ca5596b93",
+    "bytes": 118134171,
+    "authenticode": "NotSigned",
+    "signerPresent": false
+  },
+  {
+    "file": "NewsFlowAI_Update_v1.1.0.exe",
+    "sha256": "9f77700f7bddf1e347b00b45642330f9ac485c954014171ef694b2a992f8909e",
+    "bytes": 123583587,
+    "authenticode": "NotSigned",
+    "signerPresent": false
+  }
+]

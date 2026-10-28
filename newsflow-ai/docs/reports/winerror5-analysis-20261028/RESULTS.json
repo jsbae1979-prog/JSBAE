@@ -1,0 +1,71 @@
+{
+  "verdict": "BLOCKED",
+  "baselineHead": "eb1d115ccb0a0de77fcd51645305967f39492de9",
+  "branch": "codex/newsflow-private-installer-updater",
+  "productFilesChanged": 0,
+  "candidateRebuilt": false,
+  "codeFixApplied": false,
+  "directFailureStage": "Windows CreateProcess, before a child PID/application initialization",
+  "specificDenyingPolicyOrProduct": "NOT VERIFIED",
+  "fieldChecks": [
+    {
+      "id": "RESTORE_SAME_PATH_STANDARD_TOKEN",
+      "status": "PASS"
+    },
+    {
+      "id": "READ_ONLY_INSPECTOR",
+      "status": "PASS"
+    },
+    {
+      "id": "CREATE_AUTO_APPLICATION_NAME",
+      "status": "FAIL",
+      "winerror": 5,
+      "defect": "existing-native-denial"
+    },
+    {
+      "id": "CREATE_EXPLICIT_APPLICATION_NAME",
+      "status": "FAIL",
+      "winerror": 5,
+      "defect": "same-existing-native-denial"
+    },
+    {
+      "id": "OWNED_INSTALL_CLEANUP",
+      "status": "PASS"
+    }
+  ],
+  "fieldCounts": {
+    "PASS": 3,
+    "FAIL": 2,
+    "ERROR": 0,
+    "distinctUnresolvedDefects": 1
+  },
+  "reusedNotRerun": {
+    "windowsCI": "45 PASS",
+    "installerDataPreservation": "19 PASS",
+    "FFmpeg": "7 PASS"
+  },
+  "notVerified": [
+    "current React GUI",
+    "current app DB/settings/auth initialization",
+    "app-connected FFmpeg",
+    "normal app shutdown/relaunch",
+    "actual signed offline update",
+    "clean new Windows11 account/PC"
+  ],
+  "protected": {
+    "operatingRestarted": false,
+    "port8765Used": false,
+    "operatingDataUsed": false,
+    "securityPolicyChanged": false,
+    "adminExecution": false,
+    "executableRelocatedToRun": false,
+    "forceKillUsed": false,
+    "realAI_OAuth_SNSCalls": 0,
+    "testProcessesRemaining": 0
+  },
+  "diagnosticLimitations": [
+    "CiTool policy query denied to standard token; no admin retry",
+    "pywin32 does not expose the explored AccessCheck/GetBinaryType methods; static PE and native file-handle checks used instead",
+    "vendor-owned log format produced no plain target record; no decoding/exception/GUI automation used"
+  ]
+}

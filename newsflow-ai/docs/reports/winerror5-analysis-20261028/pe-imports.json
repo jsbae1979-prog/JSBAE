@@ -1,0 +1,10 @@
+{
+  "machine": "0x8664",
+  "subsystem": 3,
+  "dllCharacteristics": "0xc160",
+  "importDlls": [
+    "USER32.dll",
+    "KERNEL32.dll",
+    "ADVAPI32.dll"
+  ]
+}

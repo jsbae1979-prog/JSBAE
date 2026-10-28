@@ -1,0 +1,9 @@
+{
+  "callerPid": 77432,
+  "binaryTypeError": "AttributeError",
+  "tokenIsAppContainer": false,
+  "job": {
+    "LimitFlags": 12288,
+    "ActiveProcessLimit": 0
+  }
+}

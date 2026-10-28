@@ -1,0 +1,11 @@
+{
+  "state": "COMPLETE_BLOCKED_NATIVE_CREATION",
+  "branch": "codex/newsflow-private-installer-updater",
+  "baselineHead": "eb1d115ccb0a0de77fcd51645305967f39492de9",
+  "automaticResumeExecution": false,
+  "samePathApplicationCurrentlyInstalled": false,
+  "productCodeChanged": false,
+  "candidateRebuilt": false,
+  "nextEvidence": "Official denying policy/security-product record; do not change security controls or relocate the EXE to run it",
+  "operatingRestartAuthorized": false
+}

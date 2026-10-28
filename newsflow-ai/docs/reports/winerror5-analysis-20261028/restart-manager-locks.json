@@ -1,0 +1,11 @@
+{
+  "startCode": 0,
+  "shutdownCalled": false,
+  "restartCalled": false,
+  "registeredFileCount": 1,
+  "registerCode": 0,
+  "queryCode": 0,
+  "needed": 0,
+  "holders": [],
+  "endCode": 0
+}

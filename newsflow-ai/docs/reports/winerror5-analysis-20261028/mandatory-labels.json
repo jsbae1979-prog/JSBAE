@@ -1,0 +1,14 @@
+[
+  {
+    "kind": "directory",
+    "mandatoryLabels": []
+  },
+  {
+    "kind": "directory",
+    "mandatoryLabels": []
+  },
+  {
+    "kind": "EXE",
+    "mandatoryLabels": []
+  }
+]
