@@ -1,0 +1,105 @@
+{
+  "final_run": 40611504906,
+  "code_sha": "5a05167d762bcea7b65a4c7a06d3c2c1208a9ff3",
+  "runs": [
+    {
+      "id": 40609422480,
+      "sha": "be331e4e4fcb243a0a863e5c092ac134764eae40",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40609422480",
+      "created_at": "2026-10-28T00:32:38Z",
+      "updated_at": "2026-10-28T00:35:05Z"
+    },
+    {
+      "id": 40609939982,
+      "sha": "281ce4749c6a95683aab98af56f3e04830a93dad",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40609939982",
+      "created_at": "2026-10-28T00:37:31Z",
+      "updated_at": "2026-10-28T00:41:28Z"
+    },
+    {
+      "id": 40610724312,
+      "sha": "639b25b3ca18b8df6d1216326422afcec4dd3c1f",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40610724312",
+      "created_at": "2026-10-28T00:44:52Z",
+      "updated_at": "2026-10-28T00:47:50Z"
+    },
+    {
+      "id": 40610889231,
+      "sha": "1a1b84d72c1f844426a5e1f2626daf1aa0e725e8",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40610889231",
+      "created_at": "2026-10-28T00:46:22Z",
+      "updated_at": "2026-10-28T00:50:17Z"
+    },
+    {
+      "id": 40611052098,
+      "sha": "b405665f8ada7f7e30c7b5d124ef40b993e9f8f7",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40611052098",
+      "created_at": "2026-10-28T00:47:55Z",
+      "updated_at": "2026-10-28T00:51:46Z"
+    },
+    {
+      "id": 40611504906,
+      "sha": "5a05167d762bcea7b65a4c7a06d3c2c1208a9ff3",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40611504906",
+      "created_at": "2026-10-28T00:52:12Z",
+      "updated_at": "2026-10-28T00:52:15Z"
+    }
+  ],
+  "artifacts_final": [
+    {
+      "id": 12782533695,
+      "name": "management-ui-after",
+      "digest": "sha256:e89820c7dd25513e3ecd845f18d85bef2d023738053ec96508be5c64f8d3a045",
+      "size_in_bytes": 18138869
+    },
+    {
+      "id": 12782478910,
+      "name": "management-api",
+      "digest": "sha256:7af5eeff0870b4b540f6f21d40829eda3b7b653dd0d8952781e2bce2a13957f3",
+      "size_in_bytes": 504
+    }
+  ],
+  "artifacts_baseline": [
+    {
+      "id": 12782676071,
+      "name": "management-ui-before",
+      "digest": "sha256:722eb7bd0d46e14a8c964ea928fbd9d00457a8ca9ac25d491abf479055daf65e"
+    }
+  ],
+  "reused": {
+    "before": {
+      "run": 40609939982,
+      "source": "8ecf7e29f3d73a598e26d68d388a7a3ec232e0f6",
+      "pass": 11
+    },
+    "coreWindowsGUI": 20,
+    "focusedCI": 59,
+    "samplesAPI": 9,
+    "samplesGUI": 21
+  },
+  "PR35": {
+    "number": 35,
+    "url": "https://github.com/jsbae1979-prog/JSBAE/pull/35",
+    "head": "codex/newsflow-ux-video-app",
+    "head_sha": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "draft": true,
+    "state": "open",
+    "merged": false
+  },
+  "main_sha": "aa2f056d78ceed24874d0b4c50c6033f7168bf4d",
+  "paid_API_calls": 0,
+  "SNS_calls": 0,
+  "operating_data_used": false
+}

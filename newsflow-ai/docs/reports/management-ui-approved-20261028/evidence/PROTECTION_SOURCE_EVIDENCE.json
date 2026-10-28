@@ -1,0 +1,626 @@
+{
+  "base": "8ecf7e29f3d73a598e26d68d388a7a3ec232e0f6",
+  "code_head": "5a05167d762bcea7b65a4c7a06d3c2c1208a9ff3",
+  "protected_files": [
+    {
+      "file": "newsflow-ai/frontend/src/legacy-actions.json",
+      "same": true,
+      "base_sha256": "ca28ccd377ee3be7dc93d7991ae6175867ff58b491abf6af8ce0a5a5dd0bcd4f",
+      "head_sha256": "ca28ccd377ee3be7dc93d7991ae6175867ff58b491abf6af8ce0a5a5dd0bcd4f"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/main.tsx",
+      "same": true,
+      "base_sha256": "92b5d743715ec15ff7ae4d343c132142570610a7a400b3fa88adb73bfd04e44a",
+      "head_sha256": "92b5d743715ec15ff7ae4d343c132142570610a7a400b3fa88adb73bfd04e44a"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/ApprovedPanels.tsx",
+      "same": true,
+      "base_sha256": "06325cc507775aae73c18448d119d89325e8e579c00ff39cd224062d6a3133ad",
+      "head_sha256": "06325cc507775aae73c18448d119d89325e8e579c00ff39cd224062d6a3133ad"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/CommandDialog.tsx",
+      "same": true,
+      "base_sha256": "ddefc1f6a95f909dd80ea1bf5edad47fc78975ec2a790f40ff3a18afd6b7a589",
+      "head_sha256": "ddefc1f6a95f909dd80ea1bf5edad47fc78975ec2a790f40ff3a18afd6b7a589"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/SampleGallery.tsx",
+      "same": true,
+      "base_sha256": "53231c24f7805ef1550079b7bd69f96b944ac2d9209b5cd42188f228074ed032",
+      "head_sha256": "53231c24f7805ef1550079b7bd69f96b944ac2d9209b5cd42188f228074ed032"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/Thumbnail.tsx",
+      "same": true,
+      "base_sha256": "169e0b7aba7c221ba6e44cb4ba589333407413702096c74778544e95341684a9",
+      "head_sha256": "169e0b7aba7c221ba6e44cb4ba589333407413702096c74778544e95341684a9"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/approved.css",
+      "same": true,
+      "base_sha256": "ca34325c3f53c53902831ab17f4a4d370b99eb1524d0ab9c8507b7a9da1e4880",
+      "head_sha256": "ca34325c3f53c53902831ab17f4a4d370b99eb1524d0ab9c8507b7a9da1e4880"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/contracts.ts",
+      "same": true,
+      "base_sha256": "f3644669eb78066e004d8f1695c727d319242cf403d69752f626db526a205c68",
+      "head_sha256": "f3644669eb78066e004d8f1695c727d319242cf403d69752f626db526a205c68"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/core/CharacterStudio.tsx",
+      "same": true,
+      "base_sha256": "3a3e68461b4a07e29102019a6b124ec13f638eadb2c8f6255d5b3811d013e163",
+      "head_sha256": "3a3e68461b4a07e29102019a6b124ec13f638eadb2c8f6255d5b3811d013e163"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/core/CoreStudios.tsx",
+      "same": true,
+      "base_sha256": "c79fe59bc4bd200124346f14d628484fbaf9fbb8bca75aa685b2b61902c0c9b3",
+      "head_sha256": "c79fe59bc4bd200124346f14d628484fbaf9fbb8bca75aa685b2b61902c0c9b3"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/core/ImageStudio.tsx",
+      "same": true,
+      "base_sha256": "dc6fe23bbcde08af9c003102f916bc77a25ef305e2d7efc9277b8e2405bb2678",
+      "head_sha256": "dc6fe23bbcde08af9c003102f916bc77a25ef305e2d7efc9277b8e2405bb2678"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/core/NewsShortsStudio.tsx",
+      "same": true,
+      "base_sha256": "73ff57ed4ba78aa73f0f914548855014720748fb526d7883b4f02e11430644dc",
+      "head_sha256": "73ff57ed4ba78aa73f0f914548855014720748fb526d7883b4f02e11430644dc"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/core/NewsStudio.tsx",
+      "same": true,
+      "base_sha256": "47aa2c946246953e1ce89c69aea97e36cd8f8bf17aac8f3c046a224ddba511c3",
+      "head_sha256": "47aa2c946246953e1ce89c69aea97e36cd8f8bf17aac8f3c046a224ddba511c3"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/core/TopThreeImageStudio.tsx",
+      "same": true,
+      "base_sha256": "d648c89cc02d3e4adf42b97fbf950051280491ec1e543f98fb06b09aa82b2bf9",
+      "head_sha256": "d648c89cc02d3e4adf42b97fbf950051280491ec1e543f98fb06b09aa82b2bf9"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/core/core-studios.css",
+      "same": true,
+      "base_sha256": "77596a095fc91bf02ec71e44de8e16ea6d5042d59d19d768a50dad7b0fe40d08",
+      "head_sha256": "77596a095fc91bf02ec71e44de8e16ea6d5042d59d19d768a50dad7b0fe40d08"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/core/precision.css",
+      "same": true,
+      "base_sha256": "9f60219bf61846e795c4387cac05a84336b4f90917e649c4e19337ac8c606ae1",
+      "head_sha256": "9f60219bf61846e795c4387cac05a84336b4f90917e649c4e19337ac8c606ae1"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/core/shared.tsx",
+      "same": true,
+      "base_sha256": "cdc3b4919987f2a17c53ba1d9c52d66255b2a6b4178150581554c3729d286e73",
+      "head_sha256": "cdc3b4919987f2a17c53ba1d9c52d66255b2a6b4178150581554c3729d286e73"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/samples.css",
+      "same": true,
+      "base_sha256": "a88281d74268bd9687ba234bc7d904f01095c4b28c31d9f011ae59f5ea10d5d2",
+      "head_sha256": "a88281d74268bd9687ba234bc7d904f01095c4b28c31d9f011ae59f5ea10d5d2"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/workbench.css",
+      "same": true,
+      "base_sha256": "9f9b03d364341ae54895dccada46122d2127b81ecd2f5716713f19c2aa40f430",
+      "head_sha256": "9f9b03d364341ae54895dccada46122d2127b81ecd2f5716713f19c2aa40f430"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/style.css",
+      "same": true,
+      "base_sha256": "1d416c0dd6638804c76d0bbbc05e6dd1f6b4715432a14facb274494b98a1e24e",
+      "head_sha256": "1d416c0dd6638804c76d0bbbc05e6dd1f6b4715432a14facb274494b98a1e24e"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/SOURCE_MANIFEST.json",
+      "same": true,
+      "base_sha256": "1756f1c0269c9d6958631b0ee03d452d65bbe9f0d0e09bef1e905b64d041d91d",
+      "head_sha256": "1756f1c0269c9d6958631b0ee03d452d65bbe9f0d0e09bef1e905b64d041d91d"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/SOURCE_README.txt",
+      "same": true,
+      "base_sha256": "77364e699fd9624064666c28a9bfa6c25afecef79b630288201d28096636a7ce",
+      "head_sha256": "77364e699fd9624064666c28a9bfa6c25afecef79b630288201d28096636a7ce"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/characters/CHAR_S01_robot.png",
+      "same": true,
+      "base_sha256": "6832ac0a0828d3e819fa3a4105f7a7ba12fee6cfc4143dfd9caff9b42171f5bf",
+      "head_sha256": "6832ac0a0828d3e819fa3a4105f7a7ba12fee6cfc4143dfd9caff9b42171f5bf"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/characters/CHAR_S02_cat.png",
+      "same": true,
+      "base_sha256": "18f5702917c7908e3f65a5dc937cc01cbb36ef60549d16fc74c2bd70979fe9c8",
+      "head_sha256": "18f5702917c7908e3f65a5dc937cc01cbb36ef60549d16fc74c2bd70979fe9c8"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/characters/CHAR_S03_dragon.png",
+      "same": true,
+      "base_sha256": "a22daa60e3eb9ec7f062210ae0d4dfcf553cf8c8315ef9529835484cccccefac",
+      "head_sha256": "a22daa60e3eb9ec7f062210ae0d4dfcf553cf8c8315ef9529835484cccccefac"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/images/news-top3/TOP3_S01_ai.png",
+      "same": true,
+      "base_sha256": "e28c902251e217d53672f5858fc095986c46dc1c8b75877ffc211cddc38a1474",
+      "head_sha256": "e28c902251e217d53672f5858fc095986c46dc1c8b75877ffc211cddc38a1474"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/images/news-top3/TOP3_S02_ev.png",
+      "same": true,
+      "base_sha256": "1624c901b4108a647e7c87a602f3882edcc521be26862a0e6abbc71a1d22f341",
+      "head_sha256": "1624c901b4108a647e7c87a602f3882edcc521be26862a0e6abbc71a1d22f341"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/images/news-top3/TOP3_S03_economy.png",
+      "same": true,
+      "base_sha256": "4f9aad8e4fc51052c90c9fd6e1b7a26ae270d82800c1eca673acc705e50588c6",
+      "head_sha256": "4f9aad8e4fc51052c90c9fd6e1b7a26ae270d82800c1eca673acc705e50588c6"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/images/standalone/IMG_S01_city.png",
+      "same": true,
+      "base_sha256": "c9608819f1b030d034af87c0f26064cead7fa2c4bf7e1b1785a21d99338369ea",
+      "head_sha256": "c9608819f1b030d034af87c0f26064cead7fa2c4bf7e1b1785a21d99338369ea"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/images/standalone/IMG_S02_cat.png",
+      "same": true,
+      "base_sha256": "462566d59e2eaac0f17edf4d11dee2433506bc47cd95e2bb4adaee74476a9acb",
+      "head_sha256": "462566d59e2eaac0f17edf4d11dee2433506bc47cd95e2bb4adaee74476a9acb"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/images/standalone/IMG_S03_earth.png",
+      "same": true,
+      "base_sha256": "dd781fe0c716cb746870bbc7c0309f64f62eb53d761a6e6d9d962045c2558e4a",
+      "head_sha256": "dd781fe0c716cb746870bbc7c0309f64f62eb53d761a6e6d9d962045c2558e4a"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/manifest.json",
+      "same": true,
+      "base_sha256": "d01c9869d3492e7e697dd0af8b8820759aa64e935fc968d5a6338e823652149b",
+      "head_sha256": "d01c9869d3492e7e697dd0af8b8820759aa64e935fc968d5a6338e823652149b"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/posters/SHORTS_CHAR_S01_1.jpg",
+      "same": true,
+      "base_sha256": "245a4bb517e621dd7704518f8775181caf86c44ac9656e8a30763548fc434a0c",
+      "head_sha256": "245a4bb517e621dd7704518f8775181caf86c44ac9656e8a30763548fc434a0c"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/posters/SHORTS_CHAR_S02_1.jpg",
+      "same": true,
+      "base_sha256": "a152810bc2277b462a792dc8a437e266317644bae84795572b2bcc3c6b502bca",
+      "head_sha256": "a152810bc2277b462a792dc8a437e266317644bae84795572b2bcc3c6b502bca"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/posters/SHORTS_NEWS_S01_1.jpg",
+      "same": true,
+      "base_sha256": "d8196744ad148d3f0e43e08106d21b0494ecd3c6b64a245ef5a00408a1589dc3",
+      "head_sha256": "d8196744ad148d3f0e43e08106d21b0494ecd3c6b64a245ef5a00408a1589dc3"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/videos/character-shorts/SHORTS_CHAR_S01.mp4",
+      "same": true,
+      "base_sha256": "7fda267e97d574426c5d1024185aa3a28265510790b77994c527294aa11bf8b0",
+      "head_sha256": "7fda267e97d574426c5d1024185aa3a28265510790b77994c527294aa11bf8b0"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/videos/character-shorts/SHORTS_CHAR_S02.mp4",
+      "same": true,
+      "base_sha256": "9da45f543a4ab5b7ab737fd3128d0706a7b542ddaf91da133effbc4245742189",
+      "head_sha256": "9da45f543a4ab5b7ab737fd3128d0706a7b542ddaf91da133effbc4245742189"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/assets/samples/videos/news-shorts/SHORTS_NEWS_S01.mp4",
+      "same": true,
+      "base_sha256": "3609e4c56a88d9a79df912991086bbbc1dd17945543623659085af394049f3b8",
+      "head_sha256": "3609e4c56a88d9a79df912991086bbbc1dd17945543623659085af394049f3b8"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/__init__.py",
+      "same": true,
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "head_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/env.py",
+      "same": true,
+      "base_sha256": "a252c1f9cbde8fad9ff8483a957996ee6236b4709481e7574bf4446459f2ad92",
+      "head_sha256": "a252c1f9cbde8fad9ff8483a957996ee6236b4709481e7574bf4446459f2ad92"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0001_initial.py",
+      "same": true,
+      "base_sha256": "94eeed2fb8e0cc76d2bd620158a060f4a0746417dc6c2aee82b423d06000b9e3",
+      "head_sha256": "94eeed2fb8e0cc76d2bd620158a060f4a0746417dc6c2aee82b423d06000b9e3"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0002_intelligence.py",
+      "same": true,
+      "base_sha256": "5e86919e19b57979f0ead7f5f731063ffd4c92baa22c3473218b2d9b46831e78",
+      "head_sha256": "5e86919e19b57979f0ead7f5f731063ffd4c92baa22c3473218b2d9b46831e78"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0003_video.py",
+      "same": true,
+      "base_sha256": "3e39d0e016e8a19a77b61207665be590ed8fae4a1a75adbad0304e3f0963b225",
+      "head_sha256": "3e39d0e016e8a19a77b61207665be590ed8fae4a1a75adbad0304e3f0963b225"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0004_publishing.py",
+      "same": true,
+      "base_sha256": "9a41b317fb21d91861fc0f4efb5bb470bb0cecc8427cc94b00dab9efacbd0d34",
+      "head_sha256": "9a41b317fb21d91861fc0f4efb5bb470bb0cecc8427cc94b00dab9efacbd0d34"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0005_oauth.py",
+      "same": true,
+      "base_sha256": "057176eb54e9ebb7ec8c3e5562b98111d09982c9f8a5d8e3d78074856991f435",
+      "head_sha256": "057176eb54e9ebb7ec8c3e5562b98111d09982c9f8a5d8e3d78074856991f435"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0006_credential_boundary.py",
+      "same": true,
+      "base_sha256": "5e176f3415f2221825bdabd24b214015fa66ceee59bb4d65f0fcdd8f8fddad9d",
+      "head_sha256": "5e176f3415f2221825bdabd24b214015fa66ceee59bb4d65f0fcdd8f8fddad9d"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0007_operational_oauth.py",
+      "same": true,
+      "base_sha256": "7f29b9cf9d92c6d8410256de5d9c085279f45a9aba190c6bbceae92a41700bde",
+      "head_sha256": "7f29b9cf9d92c6d8410256de5d9c085279f45a9aba190c6bbceae92a41700bde"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0008_autopilot.py",
+      "same": true,
+      "base_sha256": "a5e534ebe43c9060ea040102aed0f9489a6ffa972837977be9afa54088e5d562",
+      "head_sha256": "a5e534ebe43c9060ea040102aed0f9489a6ffa972837977be9afa54088e5d562"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0009_realcontent.py",
+      "same": true,
+      "base_sha256": "02c0af10e68487444f0c4ab2c6d52521a8e95616eb966894a4fa83161c78e8dc",
+      "head_sha256": "02c0af10e68487444f0c4ab2c6d52521a8e95616eb966894a4fa83161c78e8dc"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0010_ai_video.py",
+      "same": true,
+      "base_sha256": "6480333b46441e362ef126200c01fe1cabd6444b4e75b2199377b994cc98854b",
+      "head_sha256": "6480333b46441e362ef126200c01fe1cabd6444b4e75b2199377b994cc98854b"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0011_ai_video_reservation.py",
+      "same": true,
+      "base_sha256": "b72fb713a50a5d98cb6674e2fa4f1da8048916c12a0de1b576ef4fd15e505ccf",
+      "head_sha256": "b72fb713a50a5d98cb6674e2fa4f1da8048916c12a0de1b576ef4fd15e505ccf"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0012_scheduler.py",
+      "same": true,
+      "base_sha256": "d3bf24a8aff53a315f79de374c452b47f41fbc4b83001fda1db22f3dbf874525",
+      "head_sha256": "d3bf24a8aff53a315f79de374c452b47f41fbc4b83001fda1db22f3dbf874525"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0013_api_requests.py",
+      "same": true,
+      "base_sha256": "f722a3fec9dd7359e2ca3e1ee00bd6b6e8da0b7805fe3607e56fa910b41fa38f",
+      "head_sha256": "f722a3fec9dd7359e2ca3e1ee00bd6b6e8da0b7805fe3607e56fa910b41fa38f"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0014_social_operations.py",
+      "same": true,
+      "base_sha256": "ecab84bc8c56d196f443a6f8a3b7389f0a4fba1db445805474d95d581811e5e5",
+      "head_sha256": "ecab84bc8c56d196f443a6f8a3b7389f0a4fba1db445805474d95d581811e5e5"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0015_youtube_category.py",
+      "same": true,
+      "base_sha256": "63207ecaf103cee4f54459b20acd3d4513b6bf09e1715e383499f09b9220aa9f",
+      "head_sha256": "63207ecaf103cee4f54459b20acd3d4513b6bf09e1715e383499f09b9220aa9f"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0016_article_thumbnails.py",
+      "same": true,
+      "base_sha256": "4f4bd832ff09faff1d01f3fb51752febf68f3af130db04c48fb566bcf0bd30f3",
+      "head_sha256": "4f4bd832ff09faff1d01f3fb51752febf68f3af130db04c48fb566bcf0bd30f3"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0017_workspace_cleanup.py",
+      "same": true,
+      "base_sha256": "f4dad49f5b2fc0392ed908c6f7271b18074f676f497b1420aba7eca553cf0b6c",
+      "head_sha256": "f4dad49f5b2fc0392ed908c6f7271b18074f676f497b1420aba7eca553cf0b6c"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/migrations/versions/0018_image_posts.py",
+      "same": true,
+      "base_sha256": "7e0b9139a403dbaaaa47f4ae5e7984cf510bb9fd27e8e9753eae70981955b01d",
+      "head_sha256": "7e0b9139a403dbaaaa47f4ae5e7984cf510bb9fd27e8e9753eae70981955b01d"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/models.py",
+      "same": true,
+      "base_sha256": "d580c7e112437a807e035bcabb1ad0e9889d87cbfc14779a3c05ecaaddd5f960",
+      "head_sha256": "d580c7e112437a807e035bcabb1ad0e9889d87cbfc14779a3c05ecaaddd5f960"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/db/session.py",
+      "same": true,
+      "base_sha256": "f2a3c37491647c1db54859997b67977ffedfb4b7d52fd12d35fb4d38870315a0",
+      "head_sha256": "f2a3c37491647c1db54859997b67977ffedfb4b7d52fd12d35fb4d38870315a0"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/samples/__init__.py",
+      "same": true,
+      "base_sha256": "d30a5b157016dfb493c85b86397eff62f6b570efcdb2920ae987e0783932d6fe",
+      "head_sha256": "d30a5b157016dfb493c85b86397eff62f6b570efcdb2920ae987e0783932d6fe"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/samples/catalog.py",
+      "same": true,
+      "base_sha256": "3b6c1c266929595ea2fe30dfccbbe0b127402f322ce8b6dbfa8adeb29b8994df",
+      "head_sha256": "3b6c1c266929595ea2fe30dfccbbe0b127402f322ce8b6dbfa8adeb29b8994df"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/samples/routes.py",
+      "same": true,
+      "base_sha256": "dbc0bb116b082663f3661af426065a4a4efe207b44ab3d0868c445460fefdf37",
+      "head_sha256": "dbc0bb116b082663f3661af426065a4a4efe207b44ab3d0868c445460fefdf37"
+    },
+    {
+      "file": "newsflow-ai/src/newsflow/studio/actions.json",
+      "same": true,
+      "base_sha256": "ca28ccd377ee3be7dc93d7991ae6175867ff58b491abf6af8ce0a5a5dd0bcd4f",
+      "head_sha256": "ca28ccd377ee3be7dc93d7991ae6175867ff58b491abf6af8ce0a5a5dd0bcd4f"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability/README.md",
+      "same": true,
+      "base_sha256": "fee5d0aebfe8c052b2a17f55fb239e4b91ccb9c8cc1d954b57cdb97c90c22a92",
+      "head_sha256": "fee5d0aebfe8c052b2a17f55fb239e4b91ccb9c8cc1d954b57cdb97c90c22a92"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability/adapter.py",
+      "same": true,
+      "base_sha256": "bcd4c7e13f64a98889bd87f1075bf8ec3c8431703f16b86e95bad3c62c5984f3",
+      "head_sha256": "bcd4c7e13f64a98889bd87f1075bf8ec3c8431703f16b86e95bad3c62c5984f3"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability/run_verification.py",
+      "same": true,
+      "base_sha256": "92833d37bf7b190282f2c8023010310fa8e83741d94a37cc776dc412ef0f8752",
+      "head_sha256": "92833d37bf7b190282f2c8023010310fa8e83741d94a37cc776dc412ef0f8752"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability/test_capability.py",
+      "same": true,
+      "base_sha256": "0c80b75b3579b40ba388c65d35197f862f4c00bbf2b78c5a342c9db8ee43c226",
+      "head_sha256": "0c80b75b3579b40ba388c65d35197f862f4c00bbf2b78c5a342c9db8ee43c226"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability/verification_gate.py",
+      "same": true,
+      "base_sha256": "3dac9c0e018ef0419335ea7f409b552f10a0fe6a819d39ccad923e31ae0eb1f1",
+      "head_sha256": "3dac9c0e018ef0419335ea7f409b552f10a0fe6a819d39ccad923e31ae0eb1f1"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability_integration/README.md",
+      "same": true,
+      "base_sha256": "ead28438f1683887bbc765f86fc382bae2f0fb8cdace4e578ea7d234197171eb",
+      "head_sha256": "ead28438f1683887bbc765f86fc382bae2f0fb8cdace4e578ea7d234197171eb"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability_integration/contract_bridge.py",
+      "same": true,
+      "base_sha256": "e1188c1af42619fa6abd30c01568569fff8d9763551288a8f7053868b1a370a4",
+      "head_sha256": "e1188c1af42619fa6abd30c01568569fff8d9763551288a8f7053868b1a370a4"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability_integration/contract_probe.py",
+      "same": true,
+      "base_sha256": "488b22e995b1194f2fdd9627284cc81690a5bb808e57df4e24b0a38d4079aa70",
+      "head_sha256": "488b22e995b1194f2fdd9627284cc81690a5bb808e57df4e24b0a38d4079aa70"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability_integration/contract_snapshot.json",
+      "same": true,
+      "base_sha256": "bcd4ed2e9ef123103d78b727f62542818fb2a210b45090a5dc945ce77cd694b8",
+      "head_sha256": "bcd4ed2e9ef123103d78b727f62542818fb2a210b45090a5dc945ce77cd694b8"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability_integration/run_integration.py",
+      "same": true,
+      "base_sha256": "9c82f4f8fab88fe144bd7667a0ad1912b614c32bf598aa3b6a32cf9f813c0b66",
+      "head_sha256": "9c82f4f8fab88fe144bd7667a0ad1912b614c32bf598aa3b6a32cf9f813c0b66"
+    },
+    {
+      "file": "newsflow-ai/tools/native_capability_integration/test_contract_bridge.py",
+      "same": true,
+      "base_sha256": "015dc76400fa41cd242212e2a7e2977fd9233d3d04eec2e848a3dc81550d2e16",
+      "head_sha256": "015dc76400fa41cd242212e2a7e2977fd9233d3d04eec2e848a3dc81550d2e16"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/.gitattributes",
+      "same": true,
+      "base_sha256": "76d9e9a03cb312574398cc6042c5b0f2b9d871d568b5511911dc828e4a19dd56",
+      "head_sha256": "76d9e9a03cb312574398cc6042c5b0f2b9d871d568b5511911dc828e4a19dd56"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/GUARD_COPY_PROVENANCE.json",
+      "same": true,
+      "base_sha256": "a30f0a726e303a325e4d6cf1dd710626cf5c8e59fc1bb851efc23a692ab1fe49",
+      "head_sha256": "a30f0a726e303a325e4d6cf1dd710626cf5c8e59fc1bb851efc23a692ab1fe49"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/README.md",
+      "same": true,
+      "base_sha256": "2721c241f30c02b3efade481b3161bc87aa84822b4987c9a829e46441a1b2187",
+      "head_sha256": "2721c241f30c02b3efade481b3161bc87aa84822b4987c9a829e46441a1b2187"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/SOURCE_HASHES.json",
+      "same": true,
+      "base_sha256": "3849d010b19e36dd8c099c0b0fa7ec52bb039820b9690be1b9920d0114c11bfc",
+      "head_sha256": "3849d010b19e36dd8c099c0b0fa7ec52bb039820b9690be1b9920d0114c11bfc"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/descriptor_boundary.py",
+      "same": true,
+      "base_sha256": "de7f974f034cff8078ce3742c5e5502766c920cd11b767f075c4aa84dc1c52c4",
+      "head_sha256": "de7f974f034cff8078ce3742c5e5502766c920cd11b767f075c4aa84dc1c52c4"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/guard_capability.py",
+      "same": true,
+      "base_sha256": "007995637b5a9e41e0b5931b0deecbbf5181fd70e57fbb184722dbaa6192e9a7",
+      "head_sha256": "007995637b5a9e41e0b5931b0deecbbf5181fd70e57fbb184722dbaa6192e9a7"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/guard_copy.patch",
+      "same": true,
+      "base_sha256": "f0c7d3cecec0fc30031ac414e9f4f2bd5eca0e82e9af5e68fb9c414e3083427f",
+      "head_sha256": "f0c7d3cecec0fc30031ac414e9f4f2bd5eca0e82e9af5e68fb9c414e3083427f"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/guard_original.py",
+      "same": true,
+      "base_sha256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9",
+      "head_sha256": "d59add898d2e3d846932705a94354810a8a4a4fb394da5193b717949fc43a6d9"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/guard_verification.py",
+      "same": true,
+      "base_sha256": "9446556de593c9d59d11a9b2260a5ecb4d4be1e55fe7e2d8bcc45c9626438257",
+      "head_sha256": "9446556de593c9d59d11a9b2260a5ecb4d4be1e55fe7e2d8bcc45c9626438257"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/native_boundary_original.py",
+      "same": true,
+      "base_sha256": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa",
+      "head_sha256": "85738677846fbc86b0169d41854e616b94ef674849e3f7190d4c3452ede628fa"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/run_copy_verification.py",
+      "same": true,
+      "base_sha256": "af4e756809400c9b10fd7c2c945f29df6d6ac8c4875b935bcf58884f7936a8f2",
+      "head_sha256": "af4e756809400c9b10fd7c2c945f29df6d6ac8c4875b935bcf58884f7936a8f2"
+    },
+    {
+      "file": "newsflow-ai/tools/native_guard_copy/test_copy_boundary.py",
+      "same": true,
+      "base_sha256": "9e66509d4a347bcec6fa7db0087b60866eb10d4e9637fac29513b201c1bdfcc6",
+      "head_sha256": "9e66509d4a347bcec6fa7db0087b60866eb10d4e9637fac29513b201c1bdfcc6"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/.gitattributes",
+      "same": true,
+      "base_sha256": "5eb3907c30d0d343b9bea34f22d230a24697ad286b547bc5ac1a8de2cc9c8179",
+      "head_sha256": "5eb3907c30d0d343b9bea34f22d230a24697ad286b547bc5ac1a8de2cc9c8179"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/BORROWED_SOURCES.json",
+      "same": true,
+      "base_sha256": "3c22770b8e869360268e6cdacb4a646ab832f0d337e58d05d49c27283fe35185",
+      "head_sha256": "3c22770b8e869360268e6cdacb4a646ab832f0d337e58d05d49c27283fe35185"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/GATE_COPY_PROVENANCE.json",
+      "same": true,
+      "base_sha256": "f12f867b0720c0c13c23101d16aeeb06814e083f59c9cc8be4d857ea85380e35",
+      "head_sha256": "f12f867b0720c0c13c23101d16aeeb06814e083f59c9cc8be4d857ea85380e35"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/README.md",
+      "same": true,
+      "base_sha256": "bd1d0b633281c78ca89c212de1cd87cb8c8f4f2dc16d0f803280080eb523a4b4",
+      "head_sha256": "bd1d0b633281c78ca89c212de1cd87cb8c8f4f2dc16d0f803280080eb523a4b4"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/SOURCE_HASHES.json",
+      "same": true,
+      "base_sha256": "3337fa4780e3fe1cad76e207d2c8c2de6c7bb4c98cffd9407501d089ac6454c5",
+      "head_sha256": "3337fa4780e3fe1cad76e207d2c8c2de6c7bb4c98cffd9407501d089ac6454c5"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/guard_capability.py",
+      "same": true,
+      "base_sha256": "6dde5174e6301eae0f308452fdd47bbb34be748efe7d1286c36605180d105389",
+      "head_sha256": "6dde5174e6301eae0f308452fdd47bbb34be748efe7d1286c36605180d105389"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/rtl_boundary.py",
+      "same": true,
+      "base_sha256": "dccfee633e65247c0ace10882bcd895246c0513e3f2513f3b379c82ba9b40ae3",
+      "head_sha256": "dccfee633e65247c0ace10882bcd895246c0513e3f2513f3b379c82ba9b40ae3"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/run_real_filelock.py",
+      "same": true,
+      "base_sha256": "2d04d326eb3a5b918bbc0a694eea02a2c123f883668d9bf6c83f7f288a406410",
+      "head_sha256": "2d04d326eb3a5b918bbc0a694eea02a2c123f883668d9bf6c83f7f288a406410"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/test_real_filelock.py",
+      "same": true,
+      "base_sha256": "24385ec737057f8f57ed9119dc6be118ff1b15275c79d5d6344f2e148ff553ad",
+      "head_sha256": "24385ec737057f8f57ed9119dc6be118ff1b15275c79d5d6344f2e148ff553ad"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/verification_gate_copy.patch",
+      "same": true,
+      "base_sha256": "36a2f6e7d125a65ab2362616fb34209af90f02993fb92d2544fa1582ad9fc125",
+      "head_sha256": "36a2f6e7d125a65ab2362616fb34209af90f02993fb92d2544fa1582ad9fc125"
+    },
+    {
+      "file": "newsflow-ai/tools/native_rtl_filelock/verification_gate_copy.py",
+      "same": true,
+      "base_sha256": "7c3abebf27b241a2da78d201af62c8b6c551ee6715f4082994d6ed042bb198d7",
+      "head_sha256": "7c3abebf27b241a2da78d201af62c8b6c551ee6715f4082994d6ed042bb198d7"
+    },
+    {
+      "file": "newsflow-ai/tools/validation/step13j_final/step13_guard.py",
+      "same": true,
+      "base_sha256": "de55411bc50baacad91e9ea7dc465df45a279f698dcb7ed3fe3dc54afea1e0be",
+      "head_sha256": "de55411bc50baacad91e9ea7dc465df45a279f698dcb7ed3fe3dc54afea1e0be"
+    }
+  ],
+  "legacyWorkbench_body_identical": true,
+  "core_branch_head": "8ecf7e29f3d73a598e26d68d388a7a3ec232e0f6",
+  "local_status": "?? validation/\n",
+  "changed_files": [
+    ".github/workflows/newsflow-management-ui.yml",
+    "newsflow-ai/frontend/src/studio/Workbench.tsx",
+    "newsflow-ai/frontend/src/studio/management/Analytics.tsx",
+    "newsflow-ai/frontend/src/studio/management/Automation.tsx",
+    "newsflow-ai/frontend/src/studio/management/Library.tsx",
+    "newsflow-ai/frontend/src/studio/management/Management.tsx",
+    "newsflow-ai/frontend/src/studio/management/Publishing.tsx",
+    "newsflow-ai/frontend/src/studio/management/Settings.tsx",
+    "newsflow-ai/frontend/src/studio/management/management.css",
+    "newsflow-ai/frontend/src/studio/management/shared.tsx",
+    "newsflow-ai/src/newsflow/studio/read_models.py",
+    "newsflow-ai/tools/studio_v3/integration/management_gui.browser.cjs",
+    "newsflow-ai/tools/studio_v3/integration/management_gui_bridge.py",
+    "newsflow-ai/tools/studio_v3/integration/management_seed.py",
+    "newsflow-ai/tools/studio_v3/integration/test_management_api.py"
+  ],
+  "operating_data_read": false,
+  "operating_data_modified": false,
+  "operating_hash_audit_repeated": false,
+  "operating_app_restart": false,
+  "PR35_or_main_mutation": false,
+  "evidence_scope": "Git source identity and test transport/action scope; no new operating DB/backup content audit"
+}

@@ -1,0 +1,214 @@
+[
+  {
+    "screen": "dashboard",
+    "width": 1920,
+    "element_count_before": 294,
+    "element_count_after": 294,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 164,
+      "bbox": [
+        342,
+        783,
+        1671,
+        923
+      ],
+      "mean_absolute_channel_difference": 0.0038070666152263378
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "create",
+    "width": 1920,
+    "element_count_before": 150,
+    "element_count_after": 150,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 82,
+      "bbox": [
+        410,
+        941,
+        422,
+        950
+      ],
+      "mean_absolute_channel_difference": 0.0019503922325102882
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "shorts",
+    "width": 1920,
+    "element_count_before": 237,
+    "element_count_after": 237,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 842,
+      "bbox": [
+        1656,
+        663,
+        1722,
+        735
+      ],
+      "mean_absolute_channel_difference": 0.026332465277777776
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "characters",
+    "width": 1920,
+    "element_count_before": 203,
+    "element_count_after": 203,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 0,
+      "bbox": null,
+      "mean_absolute_channel_difference": 0.0
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "images",
+    "width": 1920,
+    "element_count_before": 181,
+    "element_count_after": 181,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 0,
+      "bbox": null,
+      "mean_absolute_channel_difference": 0.0
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "images-top3",
+    "width": 1920,
+    "element_count_before": 103,
+    "element_count_after": 103,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 0,
+      "bbox": null,
+      "mean_absolute_channel_difference": 0.0
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "news",
+    "width": 1920,
+    "element_count_before": 172,
+    "element_count_after": 172,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 0,
+      "bbox": null,
+      "mean_absolute_channel_difference": 0.0
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "dashboard",
+    "width": 1366,
+    "element_count_before": 294,
+    "element_count_after": 294,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 68,
+      "bbox": [
+        326,
+        668,
+        337,
+        676
+      ],
+      "mean_absolute_channel_difference": 0.0028650281641451115
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "create",
+    "width": 1366,
+    "element_count_before": 150,
+    "element_count_after": 150,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 0,
+      "bbox": null,
+      "mean_absolute_channel_difference": 0.0
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "shorts",
+    "width": 1366,
+    "element_count_before": 237,
+    "element_count_after": 237,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 922,
+      "bbox": [
+        1213,
+        593,
+        1285,
+        665
+      ],
+      "mean_absolute_channel_difference": 0.052919615259476166
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "characters",
+    "width": 1366,
+    "element_count_before": 203,
+    "element_count_after": 203,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 0,
+      "bbox": null,
+      "mean_absolute_channel_difference": 0.0
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "images",
+    "width": 1366,
+    "element_count_before": 181,
+    "element_count_after": 181,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 0,
+      "bbox": null,
+      "mean_absolute_channel_difference": 0.0
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "images-top3",
+    "width": 1366,
+    "element_count_before": 103,
+    "element_count_after": 103,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 0,
+      "bbox": null,
+      "mean_absolute_channel_difference": 0.0
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  },
+  {
+    "screen": "news",
+    "width": 1366,
+    "element_count_before": 172,
+    "element_count_after": 172,
+    "computed_layout_and_style_identical": true,
+    "pixel_difference": {
+      "changed_pixels": 10,
+      "bbox": [
+        282,
+        723,
+        284,
+        751
+      ],
+      "mean_absolute_channel_difference": 5.083780706035465e-06
+    },
+    "note": "Capture timestamps/clock text can differ; pixel equality is not inferred from source identity."
+  }
+]

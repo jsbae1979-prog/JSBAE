@@ -1,0 +1,42 @@
+[
+  {
+    "file": "automation_v1.png",
+    "sha256": "bc0dcd1e05e6d87cea78e230ebe14b05595d0b550d6496b96056b9e696b3a299",
+    "width": 1536,
+    "height": 1024,
+    "approval": "VERIFIED per approved manifest",
+    "commit": "e6e493c0dbd5ab8ef017d716f466d715ec9896a9"
+  },
+  {
+    "file": "library_v2.png",
+    "sha256": "019422eca6db623e0483a2865730347397b5badc95619895606d37727a87e36a",
+    "width": 1536,
+    "height": 1024,
+    "approval": "VERIFIED per approved manifest",
+    "commit": "e6e493c0dbd5ab8ef017d716f466d715ec9896a9"
+  },
+  {
+    "file": "publishing_v4.png",
+    "sha256": "cd25bfa116fe1013646bad0a590512f06cd3f7326e0c5cb6a8b9071b2166e4a8",
+    "width": 1536,
+    "height": 1024,
+    "approval": "VERIFIED per approved manifest",
+    "commit": "e6e493c0dbd5ab8ef017d716f466d715ec9896a9"
+  },
+  {
+    "file": "analytics_v4_option2.png",
+    "sha256": "e3cf05889a6409b01b0c912972fd1697cd0fbba904cbd8ed1bc734993477ccb3",
+    "width": 1536,
+    "height": 1024,
+    "approval": "VERIFIED per approved manifest",
+    "commit": "e6e493c0dbd5ab8ef017d716f466d715ec9896a9"
+  },
+  {
+    "file": "settings_v2.png",
+    "sha256": "34df44fbb0c636263111430aa1f375939ac4c9b153c8332fd389a737880389cc",
+    "width": 1536,
+    "height": 1024,
+    "approval": "VERIFIED per approved manifest",
+    "commit": "e6e493c0dbd5ab8ef017d716f466d715ec9896a9"
+  }
+]
