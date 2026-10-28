@@ -23,7 +23,12 @@ def main():
         from newsflow.video.windows_sapi import main as voice_main
         raise SystemExit(voice_main())
     from newsflow.distribution.launch import run
-    run(open_browser=not no_browser)
+    try:
+        run(open_browser=not no_browser)
+    except KeyboardInterrupt:
+        # Uvicorn re-raises the console signal after its lifespan cleanup.
+        # A user-requested normal close must not become a bootloader error.
+        pass
 
 if __name__=='__main__':
     multiprocessing.freeze_support();main()

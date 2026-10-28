@@ -136,6 +136,8 @@ def main():
         return next((p for p in ports if p!=8765),None)
 
     def start_stop(name,label):
+        execution_log=profile/'logs/execution.log'
+        before_stops=execution_log.read_text(encoding='utf8',errors='replace').count('server_stop') if execution_log.exists() else 0
         executable=slot(name)/'NewsFlowAI-Candidate.exe'
         args=[str(executable)]+(['--no-browser'] if name=='candidate' else [])
         with (root/(label+'.private.log')).open('wb') as log:
@@ -174,7 +176,16 @@ def main():
                     check(label+'_react_asset',http(port,'/studio/dashboard')==200)
                 process.send_signal(signal.CTRL_BREAK_EVENT)
                 process.wait(timeout=15)
-                check(label+'_normal_shutdown',process.returncode in (0,130,-1073741510,3221225786))
+                log.flush()
+                shutdown_log=(root/(label+'.private.log')).read_text(encoding='utf8',errors='replace')
+                stop_marker=(execution_log.read_text(encoding='utf8',errors='replace').count('server_stop')>before_stops
+                             if execution_log.exists() else False)
+                expected_old_interrupt=(name=='previous' and process.returncode==1 and stop_marker
+                    and re.search(r'(?m)^KeyboardInterrupt\s*$',shutdown_log) is not None
+                    and re.search(r'(?m)^[A-Za-z]+(?:Error|Exception):',shutdown_log) is None)
+                results.setdefault('shutdown',{})[label]={'exit':process.returncode,
+                    'server_stop_marker':stop_marker,'historical_pyinstaller_keyboardinterrupt':bool(expected_old_interrupt)}
+                check(label+'_normal_shutdown',process.returncode==0 or expected_old_interrupt)
                 released=False
                 import socket
                 for _ in range(30):
@@ -247,6 +258,13 @@ def main():
             if not (slot('candidate')/'NewsFlowAI-Candidate.exe').exists() and not list(installed.glob('unins*')):
                 break
             time.sleep(.1)
+        check('installed_slots_removed',not any(installed.glob('slots/*/NewsFlowAI-Candidate.exe')))
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER,key):
+                registration_removed=False
+        except FileNotFoundError:
+            registration_removed=True
+        check('owned_registration_removed',registration_removed)
         check('data_preserved_after_uninstall',persisted()==before)
         check('no_owned_process_remains',all(p.poll() is not None for p in processes))
         results['result']='PASS'
