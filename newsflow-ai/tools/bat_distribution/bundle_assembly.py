@@ -121,6 +121,9 @@ SHA-256은 무결성 자료이며 배포자 진위 증명이 아닙니다. manif
 
 licenses/의 Python·wheel notices와 FFmpeg source/recipe는 보존 자료입니다.
 라이선스·대응 소스 완전성·외부 전달 권리의 최종 승인을 의미하지 않습니다.
+
+기본 browser runtime에서는 미사용 PythonWin GUI·MAPI 및 ISAPI 개발 예제를 제외했습니다.
+원본 wheel27개는 별도로 보존하며 실제 COM/DLL 초기화 성공은 미검증입니다.
 '''
     _generated(root, 'README.txt', readme.replace('\n', '\r\n').encode('utf8'))
     rows = [row for row in program_records(root) if row['path'] != 'app/layout.json']
@@ -156,7 +159,7 @@ def assemble(project, output, python_zip, wheels, wheelhouse, media, source_side
     spread = []
     for wheel in wheels:
         checked = read_wheel(wheelhouse / wheel['file'], wheel)
-        spread.append(spread_wheel(root, checked, omit_optional_examples=True))
+        spread.append(spread_wheel(root, checked, omit_optional_examples=True, omit_unused_windows_extras=True))
     product_excluded = {'__pycache__', 'tests', 'validation', '.git'}
     for relative in tracked_product:
         if any(part.casefold() in product_excluded for part in Path(relative).parts):

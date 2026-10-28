@@ -149,20 +149,24 @@ def write_member(root: Path, name: str, data: bytes):
     return target
 
 
-def spread_wheel(root: Path, verified: dict, *, omit_optional_examples=False):
+def spread_wheel(root: Path, verified: dict, *, omit_optional_examples=False, omit_unused_windows_extras=False):
     """PEP427 spread; retain original wheel elsewhere and rewrite installed RECORD.
 
     Do not run .pth/postinstall, create launchers, call pip or compile bytecode.
     Script shebangs remain inactive originals; this package uses no wheel CLI.
     """
     root = ordinary_absolute(root)
-    installed, rows, excluded = [], [], []
+    installed, rows, excluded, windows_extras = [], [], [], []
     site = root / 'app/site-packages'
     for name, data in verified['files'].items():
         if name == verified['record']:
             continue
         if omit_optional_examples and name.startswith('isapi/samples/'):
             excluded.append(name)
+            continue
+        if (omit_unused_windows_extras and verified['name'] == 'pywin32'
+                and name.casefold().startswith(('pythonwin/', 'win32comext/mapi/'))):
+            windows_extras.append(name)
             continue
         target = write_member(root, spread_target(name), data)
         record_relative = Path(os.path.relpath(target, site)).as_posix()
@@ -176,7 +180,7 @@ def spread_wheel(root: Path, verified: dict, *, omit_optional_examples=False):
     write_member(root, 'app/site-packages/' + verified['record'], output.getvalue().encode('utf8'))
     return {'distribution': verified['name'], 'files': len(installed) + 1,
             'postinstallExecuted': False, 'pthExecuted': False, 'bytecodeCompiled': False,
-            'scriptsRewrittenOrExecuted': False, 'excludedISAPIDeveloperExamples': excluded}
+            'scriptsRewrittenOrExecuted': False, 'excludedISAPIDeveloperExamples': excluded, 'excludedUnusedPythonWinMAPI': windows_extras}
 
 
 def read_plan(path):

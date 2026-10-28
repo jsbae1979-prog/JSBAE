@@ -168,3 +168,18 @@ def test_optional_isapi_examples_filter_preserves_original_wheel_and_runtime(tmp
     assert path.read_bytes()==original
     record=(root/'app/site-packages/demo-1.0.dist-info/RECORD').read_text()
     assert ('isapi/samples/advanced.py' in record) is not exclude
+
+
+@pytest.mark.parametrize('trim', [False, True])
+def test_browser_profile_preserves_core_and_only_omits_known_unused_extras(tmp_path, trim):
+    root=tmp_path/'program';root.mkdir()
+    data={'win32/win32api.pyd':b'core-native-bytes', 'pywin32_system32/pythoncom314.dll':b'core-COM-bytes',
+          'Pythonwin/win32ui.pyd':b'optional-GUI', 'win32comext/mapi/mapi.pyd':b'optional-MAPI',
+          'pywin32-312.dist-info/RECORD':b''}
+    checked={'name':'pywin32','files':data,'record':'pywin32-312.dist-info/RECORD'}
+    result=wheels.spread_wheel(root,checked,omit_unused_windows_extras=trim)
+    assert (root/'app/site-packages/win32/win32api.pyd').read_bytes()==b'core-native-bytes'
+    assert (root/'app/site-packages/pywin32_system32/pythoncom314.dll').read_bytes()==b'core-COM-bytes'
+    assert (root/'app/site-packages/Pythonwin/win32ui.pyd').exists() is not trim
+    assert (root/'app/site-packages/win32comext/mapi/mapi.pyd').exists() is not trim
+    assert len(result['excludedUnusedPythonWinMAPI'])==2*int(trim)
