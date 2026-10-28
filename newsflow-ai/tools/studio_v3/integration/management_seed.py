@@ -30,12 +30,15 @@ def seed_management(c, app, root, monkeypatch):
   render=m.RenderJob(project_id=project.id,status='success',progress=100,output_name=name,message='Synthetic reference media; no generation API',metadata_json={'playable':True,'duration':12,'synthetic':True});s.add(render);s.flush()
   accounts=[]
   for platform,label in [('instagram','합성 IG 계정 A'),('instagram','합성 IG 계정 B'),('youtube','합성 YouTube 계정')]:
-   a=m.PlatformAccount(platform=platform,label=label,account_type='business' if platform=='instagram' else 'channel',status='not_connected',api_ready=False,credential_ref='synthetic-forbidden-reference');s.add(a);s.flush();accounts.append(a.id)
+   a=m.PlatformAccount(platform=platform,label=label,account_type='professional_business' if platform=='instagram' else 'youtube_channel',status='not_connected',api_ready=False,credential_ref='synthetic-forbidden-reference');s.add(a);s.flush();accounts.append(a.id)
   draft=m.PublishDraft(render_job_id=render.id,platform='youtube',title='합성 게시 초안',description='실제 게시하지 않는 검증 자료',hashtags=['#합성'],account_id=None,sources={},media_sha256=sha256(raw).hexdigest(),content_reviewed=False,copyright_confirmed=False,sources_confirmed=False,ai_disclosure='unreviewed',revision=1,state='unvalidated');s.add(draft);s.flush()
-  job=m.PublishJob(draft_id=draft.id,platform='instagram',status='success',message='합성 과거 기록 · 실제 SNS 호출 없음',idempotency_key='1'*64);s.add(job);s.flush()
   s.add(m.PublishJob(draft_id=draft.id,platform='youtube',status='unknown',message='합성 결과 불명 · 재전송 금지',idempotency_key='2'*64))
   for index,account in enumerate(accounts[:2]):
-   s.add(m.SocialMetric(job_id=job.id,account_id=account,platform='instagram',remote_id='synthetic',metric='views',value=str(12+index*23),unit='views',period_start=(now-timedelta(days=2)).date().isoformat(),period_end=now.date().isoformat(),period_basis='synthetic',synthetic=True))
+   instagram_draft=m.PublishDraft(render_job_id=render.id,platform='instagram',title='합성 게시 초안',description='실제 게시하지 않는 검증 자료',hashtags=['#합성'],account_id=account,sources={},media_sha256=sha256(raw).hexdigest(),content_reviewed=False,copyright_confirmed=False,sources_confirmed=False,ai_disclosure='unreviewed',revision=1,state='unvalidated')
+   s.add(instagram_draft);s.flush()
+   job=m.PublishJob(draft_id=instagram_draft.id,platform='instagram',status='success',message='합성 과거 기록 · 실제 SNS 호출 없음',idempotency_key=str(index+3)*64);s.add(job);s.flush()
+   s.add(m.SocialMetric(job_id=job.id,account_id=account,platform='instagram',remote_id='synthetic-'+str(index),metric='views',value=str(12+index*23),unit='views',period_start=(now-timedelta(days=2)).date().isoformat(),period_end=now.date().isoformat(),period_basis='synthetic',synthetic=True))
+  draft=instagram_draft
   for index in range(3):s.add(m.AIUsage(provider='openai',model='synthetic-model',kind='analysis',status='success',prompt_tokens=100,completion_tokens=20,total_tokens=120,created_at=now-timedelta(days=index)))
   s.add(m.APIRequestReservation(id='d'*32,request_id='synthetic-unknown',provider='openai_api',kind='analysis',model='synthetic-model',status='unknown',reserved_usd='0.5',estimated_usd=None,bounds={},prices={},test_only=True))
   result={'analysis':analysis,'draft':draft.id,'render':render.id,'accounts':accounts,'synthetic':True}
