@@ -19,7 +19,7 @@ def main():
         if voices:
             voice=next((v for v in voices if v.get('culture','').lower()=='ko-kr'),voices[0])
             target=work/'synthetic.wav';spec=work/'synthetic-spec.json'
-            spec.write_text(json.dumps({'voice':voice['name'],'target':str(target),'sentences':['뉴스플로 합성 음성 검사입니다.'],'rate':0,'pause_ms':0},ensure_ascii=False),encoding='utf8')
+            spec.write_text(json.dumps({'voice':voice['name'],'target':str(target),'sentences':['뉴스플로 합성 음성 검사입니다.' if voice.get('culture','').lower()=='ko-kr' else 'This is an offline synthetic NewsFlow voice check.'],'rate':0,'pause_ms':0},ensure_ascii=False),encoding='utf8')
             run=subprocess.run(command+['-Spec',str(spec)],capture_output=True,env=env,timeout=40)
             facts['synthesis_exit']=run.returncode
             if run.returncode==0 and target.is_file():
