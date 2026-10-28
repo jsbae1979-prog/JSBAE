@@ -1,10 +1,17 @@
 import SampleGallery from "../SampleGallery";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Sparkles, Save, Pause, Download } from "lucide-react";
 import TopThreeFeeds from "../TopThreeFeeds";
 import { Thumbnail } from "../Thumbnail";
 import type { Item } from "../contracts";
-import { Panel, Empty, Select, State, type Controller } from "./shared";
+import {
+  Panel,
+  Empty,
+  Select,
+  State,
+  NewsImage,
+  type Controller,
+} from "./shared";
 function FeedImage({ batch, item }: { batch: Item; item: Item }) {
   const expected = `/api/feed-batches/${batch.id}/items/${item.rank}/file`;
   return item.status === "success" && item.mediaUrl === expected ? (
@@ -17,7 +24,15 @@ function FeedImage({ batch, item }: { batch: Item; item: Item }) {
     </Empty>
   );
 }
-function FeedLayout({ c, f }: { c: Controller; f: any }) {
+function FeedLayout({
+  c,
+  f,
+  tabs,
+}: {
+  c: Controller;
+  f: any;
+  tabs: ReactNode;
+}) {
   const [active, setActive] = useState(1),
     b = f.batch,
     blocked = f.busy || !f.ready,
@@ -37,43 +52,57 @@ function FeedLayout({ c, f }: { c: Controller; f: any }) {
   return (
     <div className="core-top3">
       <div className="core-top3-grid">
-        <Panel title="실시간 인기 뉴스 TOP 3" className="core-top3-news">
-          <Select
-            label="완료된 TOP 3 분석"
-            value={f.analysis}
-            onChange={f.setAnalysis}
-            disabled={blocked}
-            options={Object.fromEntries(
-              c
-                .list("selections")
-                .filter(
-                  (x) => x.status === "success" && x.ranking?.length === 3,
-                )
-                .map((x) => [String(x.id), x.title]),
-            )}
-          />
-          <div className="core-top3-news-list">
-            {ranking.map((x: Item) => (
-              <button
-                key={x.rank}
-                aria-pressed={active === x.rank}
-                onClick={() => setActive(x.rank)}
-              >
-                <b>TOP {x.rank}</b>
-                <strong>{x.title}</strong>
-                <p>{x.body ?? x.summary ?? "저장 요약 확인 필요"}</p>
-                <small>{x.origin ?? "저장된 분석"}</small>
-              </button>
-            ))}
-            {!ranking.length && (
-              <Empty>완료된 분석 결과 3건을 선택하세요.</Empty>
-            )}
-          </div>
-          <p className="core-muted">
-            1·2·3위의 뉴스·대본·출처를 재사용합니다. 추가 분석을 요청하지
-            않습니다.
-          </p>
-        </Panel>
+        <div className="core-top3-left">
+          {tabs}
+          <Panel title="실시간 인기 뉴스 TOP 3" className="core-top3-news">
+            <Select
+              label="완료된 TOP 3 분석"
+              value={f.analysis}
+              onChange={f.setAnalysis}
+              disabled={blocked}
+              options={Object.fromEntries(
+                c
+                  .list("selections")
+                  .filter(
+                    (x) => x.status === "success" && x.ranking?.length === 3,
+                  )
+                  .map((x) => [String(x.id), x.title]),
+              )}
+            />
+            <div className="core-top3-news-list">
+              {ranking.map((x: Item) => (
+                <button
+                  key={x.rank}
+                  aria-pressed={active === x.rank}
+                  onClick={() => setActive(x.rank)}
+                >
+                  <div className="core-top3-article-image">
+                    <NewsImage
+                      item={{
+                        thumbnailUrl: Number.isInteger(x.article_ids?.[0])
+                          ? `/news/${x.article_ids[0]}/thumbnail`
+                          : null,
+                      }}
+                    />
+                    <b>TOP {x.rank}</b>
+                  </div>
+                  <div className="core-top3-article-copy">
+                    <strong>{x.title}</strong>
+                    <p>{x.body ?? x.summary ?? "저장 요약 확인 필요"}</p>
+                    <small>{x.origin ?? "저장된 분석"}</small>
+                  </div>
+                </button>
+              ))}
+              {!ranking.length && (
+                <Empty>완료된 분석 결과 3건을 선택하세요.</Empty>
+              )}
+            </div>
+            <p className="core-muted">
+              1·2·3위의 뉴스·대본·출처를 재사용합니다. 추가 분석을 요청하지
+              않습니다.
+            </p>
+          </Panel>
+        </div>
         <div className="core-top3-center">
           <Panel title="공통 이미지 생성 설정">
             <div className="core-two-fields">
@@ -235,7 +264,20 @@ function FeedLayout({ c, f }: { c: Controller; f: any }) {
                 </p>
               </>
             ) : (
-              <Empty>저장한 TOP 3 작업의 결과 3개가 여기에 표시됩니다.</Empty>
+              <div
+                className="core-feed-results"
+                aria-label="아직 제작하지 않은 TOP 3 결과"
+              >
+                {[1, 2, 3].map((rank) => (
+                  <article key={rank}>
+                    <div className="core-result-select">
+                      <Empty>TOP {rank} · 제작 작업을 먼저 저장하세요.</Empty>
+                      <strong>TOP {rank} · 결과 없음</strong>
+                    </div>
+                    <State value="pending" />
+                  </article>
+                ))}
+              </div>
             )}
           </Panel>
         </div>
@@ -286,7 +328,7 @@ function FeedLayout({ c, f }: { c: Controller; f: any }) {
           {f.message}
         </div>
       )}
-      <Panel title="최근 생성 이미지 · 작업 기록">
+      <Panel title="최근 생성 이미지 · 작업 기록" className="core-recent-panel">
         <div className="core-recent">
           {f.batches.map((x: Item) => (
             <button
@@ -312,15 +354,20 @@ function FeedLayout({ c, f }: { c: Controller; f: any }) {
     </div>
   );
 }
-export default function TopThreeImageStudio({ c }: { c: Controller }) {
+export default function TopThreeImageStudio({
+  c,
+  tabs,
+}: {
+  c: Controller;
+  tabs: ReactNode;
+}) {
   return c.view ? (
     <>
-
       <TopThreeFeeds
         selections={c.list("selections")}
         catalog={c.view.catalog}
         csrf={c.view.csrfToken}
-        render={(f) => <FeedLayout c={c} f={f} />}
+        render={(f) => <FeedLayout c={c} f={f} tabs={tabs} />}
       />
       <SampleGallery
         initialExpanded={c.list("selections").length === 0}

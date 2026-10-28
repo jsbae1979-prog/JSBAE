@@ -6,7 +6,7 @@ import ImageStudio from "./ImageStudio";
 import TopThreeImageStudio from "./TopThreeImageStudio";
 import NewsStudio from "./NewsStudio";
 import "./core-studios.css";
-import "./precision.css";
+
 export default function CoreStudios({
   module,
   onNavigate,
@@ -29,6 +29,9 @@ export default function CoreStudios({
   return (
     <StudioFrame
       c={c}
+      module={module}
+      imageMode={imageMode}
+      onNavigate={onNavigate}
       title={titles[module]}
       subtitle={
         module === "shorts"
@@ -48,11 +51,16 @@ export default function CoreStudios({
         <NewsStudio c={c} onNavigate={onNavigate} />
       ) : (
         <>
-          <ImageTabs mode={imageMode} onChange={setImageMode} />
           {imageMode === "top3" ? (
-            <TopThreeImageStudio c={c} />
+            <TopThreeImageStudio
+              c={c}
+              tabs={<ImageTabs mode={imageMode} onChange={setImageMode} />}
+            />
           ) : (
-            <ImageStudio c={c} />
+            <ImageStudio
+              c={c}
+              tabs={<ImageTabs mode={imageMode} onChange={setImageMode} />}
+            />
           )}
         </>
       )}

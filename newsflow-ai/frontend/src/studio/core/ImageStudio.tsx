@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import SampleGallery from "../SampleGallery";
 import { Sparkles, Save, Download } from "lucide-react";
 import { safeMedia, type Item } from "../contracts";
@@ -11,7 +11,13 @@ import {
   ActionButton,
   type Controller,
 } from "./shared";
-export default function ImageStudio({ c }: { c: Controller }) {
+export default function ImageStudio({
+  c,
+  tabs,
+}: {
+  c: Controller;
+  tabs: ReactNode;
+}) {
   const [prompt, setPrompt] = useState(""),
     [style, setStyle] = useState(""),
     [options, setOptions] = useState<Item>({}),
@@ -42,9 +48,9 @@ export default function ImageStudio({ c }: { c: Controller }) {
   }
   return (
     <>
-
       <div className="core-image-grid">
         <div className="core-image-input">
+          {tabs}
           <Panel title="이미지 주제 입력">
             <label>
               프롬프트
@@ -207,7 +213,7 @@ export default function ImageStudio({ c }: { c: Controller }) {
           </div>
         </Panel>
       </div>
-      <Panel title="최근 생성 이미지">
+      <Panel title="최근 생성 이미지" className="core-recent-panel">
         <div className="core-recent">
           {success.map((x) => (
             <button key={x.id} onClick={() => choose(x)}>

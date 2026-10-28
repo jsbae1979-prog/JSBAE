@@ -11,6 +11,9 @@ import {
   Image as ImageIcon,
   Download,
   Film,
+  Sparkles,
+  Newspaper,
+  Layers3,
 } from "lucide-react";
 import {
   actions,
@@ -20,6 +23,7 @@ import {
   type View,
   type Action,
 } from "../contracts";
+import CoreNavigation from "./CoreNavigation";
 import { CommandDialog } from "../CommandDialog";
 import { Thumbnail } from "../Thumbnail";
 
@@ -117,7 +121,20 @@ export function Panel({
   return (
     <section className={`core-panel ${className}`}>
       <header>
-        <h2>{title}</h2>
+        <h2>
+          <span className="core-panel-icon" aria-hidden="true">
+            {/영상|스토리보드/.test(title) ? (
+              <Film size={20} />
+            ) : /뉴스|출처/.test(title) ? (
+              <Newspaper size={20} />
+            ) : /설정|기록|이력/.test(title) ? (
+              <Layers3 size={20} />
+            ) : (
+              <Sparkles size={20} />
+            )}
+          </span>
+          {title}
+        </h2>
         {tools}
       </header>
       {children}
@@ -247,56 +264,72 @@ export function StudioFrame({
   c,
   title,
   subtitle,
+  module,
+  imageMode,
+  onNavigate,
   children,
 }: {
   c: Controller;
   title: string;
   subtitle: string;
+  module: string;
+  imageMode: string;
+  onNavigate: (page: string) => void;
   children: ReactNode;
 }) {
   return (
-    <div className="core-studio approved-studio" data-module={c.view?.module}>
-      <div className="core-heading">
-        <div>
-          <h1>{title}</h1>
-          <p>{subtitle}</p>
+    <div
+      className="core-studio"
+      data-module={module}
+      data-image-mode={imageMode}
+    >
+      {module !== "shorts" &&
+        !(module === "images" && imageMode === "top3") && (
+          <CoreNavigation module={module} onNavigate={onNavigate} />
+        )}
+      <div className="core-content">
+        <div className="core-heading">
+          <div>
+            <h1>{title}</h1>
+            <p>{subtitle}</p>
+          </div>
+          <div className="core-actions">
+            <span className="core-origin">
+              {c.view
+                ? /fixture|synthetic/.test(c.view.dataOrigin)
+                  ? "합성 검증 자료"
+                  : "로컬 저장 자료"
+                : "불러오는 중"}
+            </span>
+            <button
+              onClick={() => void c.load()}
+              disabled={c.loading}
+              aria-label="제작실 새로고침"
+            >
+              <RefreshCw size={16} />
+            </button>
+          </div>
         </div>
-        <div className="core-actions">
-          <span className="core-origin">
-            {c.view
-              ? /fixture|synthetic/.test(c.view.dataOrigin)
-                ? "합성 검증 자료"
-                : "로컬 저장 자료"
-              : "불러오는 중"}
-          </span>
-          <button
-            onClick={() => void c.load()}
-            disabled={c.loading}
-            aria-label="제작실 새로고침"
-          >
-            <RefreshCw size={16} />
-          </button>
-        </div>
+        {c.error ? (
+          <div role="alert" className="core-notice">
+            {c.error}
+            <button onClick={() => void c.load()}>다시 읽기</button>
+          </div>
+        ) : c.view ? (
+          children
+        ) : (
+          <Empty>제작실 자료를 불러오는 중입니다.</Empty>
+        )}
+        {c.notice && (
+          <div role="status" className="core-notice">
+            {c.notice}
+          </div>
+        )}
+        <p className="core-safety">
+          <ShieldCheck size={14} /> 생성·비용 승인과 최종 게시 승인은
+          별도입니다. 결과 불명 요청은 자동 재실행하지 않습니다.
+        </p>
       </div>
-      {c.error ? (
-        <div role="alert" className="core-notice">
-          {c.error}
-          <button onClick={() => void c.load()}>다시 읽기</button>
-        </div>
-      ) : c.view ? (
-        children
-      ) : (
-        <Empty>제작실 자료를 불러오는 중입니다.</Empty>
-      )}
-      {c.notice && (
-        <div role="status" className="core-notice">
-          {c.notice}
-        </div>
-      )}
-      <p className="core-safety">
-        <ShieldCheck size={14} /> 생성·비용 승인과 최종 게시 승인은 별도입니다.
-        결과 불명 요청은 자동 재실행하지 않습니다.
-      </p>
       <Command c={c} />
     </div>
   );
