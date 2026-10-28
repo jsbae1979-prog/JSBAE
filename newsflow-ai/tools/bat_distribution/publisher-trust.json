@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "channel": "private-bat",
+  "updatesEnabled": false,
+  "publisherCertificateSha256": "",
+  "reason": "No independently provisioned publisher trust or live signature verifier. Synthetic tests cannot enable real updates."
+}
