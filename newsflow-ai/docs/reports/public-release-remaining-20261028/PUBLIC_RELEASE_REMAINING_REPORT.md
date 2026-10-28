@@ -70,8 +70,32 @@ Server에서 새로 수행한 이번 candidate test를 Win11 인수로 확대하
 activation 전환 실패/이전 pointer 복구·재기동→신제품 정상 전환/기동/재시작→
 제거/데이터 보존을 검사한다. 현재 서명 public updater는 활성화하지 않았다.
 
-**최종 CI 결과는 아래 검증 결과 절과 CI_EVIDENCE.json/recovery-results.json에
-기록한다. 실행 완료 전의 계획을 PASS로 합산하지 않는다.**
+**실제 CI40652775097: SUCCESS /42 PASS /0 FAIL /0 SKIP.**
+[실행 증거](https://github.com/jsbae1979-prog/JSBAE/actions/runs/40652775097).
+검증 코드84685ea849f542a1d11db2bdce9c8c7a867c4114, Windows Server2025,
+Python3.14.7/PyInstaller6.22.3. 실제 복사 실패 Setup exit5를 확인했다.
+이전 제품의 정상 기동/종료, 실패 후 이전 제품 재기동2회, 신제품 정상 기동과
+재실행, 익명 API403, 포트 해제, 합성 SQLite rows/settings/media/session.key/
+DPAPI ciphertext 보존 및 실제 복호화, 설치 제거와 slot/등록 제거 모두PASS다.
+강제 정리false이며 테스트 프로세스/포트가 남지 않았다.
+
+역사적 이전 EXE는 CTRL_BREAK 뒤 bootloader exit1을 반환하지만 새 server_stop
+기록+정확한 KeyboardInterrupt-only stack+포트 해제를 세 번 모두 확인했다.
+새 EXE는 종료/재실행 두 번 모두 exit0이며 user console interrupt 외 오류는
+숨기지 않는다. 이것을 무조건적인 exit1 허용으로 구현하지 않았다.
+
+이전 EXE SHA256 `81604f6e8f0f0e5ef7366818d6463161d58cacfa90a74e5b6c7d77edd9de6807`.
+신규 EXE SHA256 `e4f37867e9558cd02fcd13d7dc427f9ffda813fa2246d63dc2a05c7dd8310f6d`.
+신규 Setup SHA256 `f18db3476eb8712454e9d68ad37871e58b1307aa1158c650bb415fed80c9ae27`.
+두 build 모두 sample_count12/missing0, React/Python runtime/media 포함,
+verification_modules0다. build-summary의 app_executed:false는 빌드 단계만의
+상태이며 이후 실제 설치/앱 기동 증거와 혼동하지 않는다.
+
+JSON artifact12800582685를 실제 다운로드했고 ZIP SHA256
+`6c4a61b984be3a82b3930729f660d1024d2bdc4a9befbf9132e89ddd2f744244`가
+원격 digest와 일치한다. 예상 JSON3개만 추출/보존했다. EXE/Setup/DB/암호문/
+private log는 공개 artifact로 올리지 않았다. 상세 CI_EVIDENCE.json,
+recovery-results.json/PREVIOUS_BUILD_SUMMARY.json/NEW_BUILD_SUMMARY.json 참조.
 
 이번 실패는 신제품 최초 기동/DB migration 전이다. post-migration DB rollback,
 전원 중단·실행 중 파일 교체·기본 profile 경로 migration·실제 서명 public apply는
@@ -120,7 +144,10 @@ SHA256·신뢰 timestamp·배포자 pin·체인/EKU 검증 절차와 서명 대�
 
 ## 8. 검증 결과
 
-최종 새 실행 집계/CI 링크는 CI_EVIDENCE.json에 기록한다.
+최종 새 실행은 CI42 PASS/0 FAIL/0 SKIP과 로컬 entry7 PASS/0 FAIL/0 SKIP이다.
+이전 실패4개 run은 삭제/skip/xfail 처리하지 않았으며 최종 동일 검사에서 해소했다.
+최종 코드 이후 보고서/집중 test 문서만 추가되어 제품 코드 diff0임을 확인한다.
+CI 링크/집계는 CI_EVIDENCE.json에 기록한다.
 로컬 Windows Python3.14.7 entry 집중 테스트는 **7 PASS /0 FAIL /0 SKIP**다.
 기본 browser 동작, no-browser, 미지원 operation/unfrozen/tampered media 거부,
 정상 console interrupt, 다른 runtime 오류가 은폐되지 않음을 검사했다.

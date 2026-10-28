@@ -1,0 +1,223 @@
+{
+  "scope": "Windows Server CI, not Windows11 installation",
+  "checks": [
+    {
+      "name": "different_product_source_commits",
+      "status": "PASS"
+    },
+    {
+      "name": "different_product_executables",
+      "status": "PASS"
+    },
+    {
+      "name": "compile_old-setup",
+      "status": "PASS"
+    },
+    {
+      "name": "compile_new-setup",
+      "status": "PASS"
+    },
+    {
+      "name": "previous_actual_install",
+      "status": "PASS"
+    },
+    {
+      "name": "initial_previous_actual_product_http_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "initial_previous_react_asset",
+      "status": "PASS"
+    },
+    {
+      "name": "initial_previous_normal_shutdown",
+      "status": "PASS"
+    },
+    {
+      "name": "initial_previous_port_released",
+      "status": "PASS"
+    },
+    {
+      "name": "synthetic_copy_target_not_overwritten",
+      "status": "PASS"
+    },
+    {
+      "name": "injected_installer_failure_observed",
+      "status": "PASS"
+    },
+    {
+      "name": "previous_exe_intact_after_failed_copy",
+      "status": "PASS"
+    },
+    {
+      "name": "active_previous_after_failed_install",
+      "status": "PASS"
+    },
+    {
+      "name": "data_preserved_after_failed_install",
+      "status": "PASS"
+    },
+    {
+      "name": "failed_install_recovery_previous_actual_product_http_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "failed_install_recovery_previous_react_asset",
+      "status": "PASS"
+    },
+    {
+      "name": "failed_install_recovery_previous_normal_shutdown",
+      "status": "PASS"
+    },
+    {
+      "name": "failed_install_recovery_previous_port_released",
+      "status": "PASS"
+    },
+    {
+      "name": "different_product_update_install",
+      "status": "PASS"
+    },
+    {
+      "name": "candidate_installed_exact_bytes",
+      "status": "PASS"
+    },
+    {
+      "name": "failed_activation_restored_previous_pointer",
+      "status": "PASS"
+    },
+    {
+      "name": "failed_activation_recovery_previous_actual_product_http_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "failed_activation_recovery_previous_react_asset",
+      "status": "PASS"
+    },
+    {
+      "name": "failed_activation_recovery_previous_normal_shutdown",
+      "status": "PASS"
+    },
+    {
+      "name": "failed_activation_recovery_previous_port_released",
+      "status": "PASS"
+    },
+    {
+      "name": "data_preserved_after_activation_recovery",
+      "status": "PASS"
+    },
+    {
+      "name": "successful_candidate_actual_product_http_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "successful_candidate_anonymous_api_denied",
+      "status": "PASS"
+    },
+    {
+      "name": "successful_candidate_normal_shutdown",
+      "status": "PASS"
+    },
+    {
+      "name": "successful_candidate_port_released",
+      "status": "PASS"
+    },
+    {
+      "name": "restarted_candidate_actual_product_http_ready",
+      "status": "PASS"
+    },
+    {
+      "name": "restarted_candidate_anonymous_api_denied",
+      "status": "PASS"
+    },
+    {
+      "name": "restarted_candidate_normal_shutdown",
+      "status": "PASS"
+    },
+    {
+      "name": "restarted_candidate_port_released",
+      "status": "PASS"
+    },
+    {
+      "name": "data_preserved_after_real_product_update",
+      "status": "PASS"
+    },
+    {
+      "name": "native_dpapi_still_decrypts",
+      "status": "PASS"
+    },
+    {
+      "name": "owned_uninstaller",
+      "status": "PASS"
+    },
+    {
+      "name": "actual_uninstall",
+      "status": "PASS"
+    },
+    {
+      "name": "installed_slots_removed",
+      "status": "PASS"
+    },
+    {
+      "name": "owned_registration_removed",
+      "status": "PASS"
+    },
+    {
+      "name": "data_preserved_after_uninstall",
+      "status": "PASS"
+    },
+    {
+      "name": "no_owned_process_remains",
+      "status": "PASS"
+    }
+  ],
+  "public_updater": false,
+  "publisher_signed": false,
+  "post_migration_rollback": "NOT VERIFIED",
+  "default_profile_migration": "NOT VERIFIED",
+  "old_source": "9a54ec8e26f33ae6312b3d5eb80715b9a7f01342",
+  "new_source": "84685ea849f542a1d11db2bdce9c8c7a867c4114",
+  "forced_cleanup": false,
+  "product_exe_sha256": {
+    "previous": "81604f6e8f0f0e5ef7366818d6463161d58cacfa90a74e5b6c7d77edd9de6807",
+    "candidate": "e4f37867e9558cd02fcd13d7dc427f9ffda813fa2246d63dc2a05c7dd8310f6d"
+  },
+  "setups": {
+    "old-setup": {
+      "sha256": "f3b59c0839c5d1f392f021755e76fdf25cf42ed10e5592f852fd892bfaceca4d",
+      "bytes": 308529843
+    },
+    "new-setup": {
+      "sha256": "f18db3476eb8712454e9d68ad37871e58b1307aa1158c650bb415fed80c9ae27",
+      "bytes": 309231185
+    }
+  },
+  "shutdown": {
+    "initial_previous": {
+      "exit": 1,
+      "server_stop_marker": true,
+      "historical_pyinstaller_keyboardinterrupt": true
+    },
+    "failed_install_recovery_previous": {
+      "exit": 1,
+      "server_stop_marker": true,
+      "historical_pyinstaller_keyboardinterrupt": true
+    },
+    "failed_activation_recovery_previous": {
+      "exit": 1,
+      "server_stop_marker": true,
+      "historical_pyinstaller_keyboardinterrupt": true
+    },
+    "successful_candidate": {
+      "exit": 0,
+      "server_stop_marker": false,
+      "historical_pyinstaller_keyboardinterrupt": false
+    },
+    "restarted_candidate": {
+      "exit": 0,
+      "server_stop_marker": false,
+      "historical_pyinstaller_keyboardinterrupt": false
+    }
+  },
+  "injected_installer_exit": 5,
+  "result": "PASS"
+}

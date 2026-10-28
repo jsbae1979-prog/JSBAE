@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-28",
+  "branch": "codex/newsflow-update-recovery-final-20261028",
+  "baseline": "3103560e62c12f73d65c4832f99b3b3831808d93",
+  "tested_code": "84685ea849f542a1d11db2bdce9c8c7a867c4114",
+  "old_product_source": "9a54ec8e26f33ae6312b3d5eb80715b9a7f01342",
+  "shared_packaging_delta": "PyInstaller X utf8 option for both; old product Python source unchanged",
+  "run_id": 40652775097,
+  "run_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40652775097",
+  "runner": "Windows Server 2025, Windows-latest disposable CI; not Windows11",
+  "python": "3.14.7",
+  "pyinstaller": "6.22.3",
+  "job_conclusion": "success",
+  "new_checks": {
+    "pass": 42,
+    "fail": 0,
+    "skip": 0
+  },
+  "local_entry_unit_tests": {
+    "os": "Windows11",
+    "python": "3.14.7",
+    "pass": 7,
+    "fail": 0,
+    "skip": 0,
+    "scope": "Mocked frozen entry only, not GUI/install"
+  },
+  "installed_product_start": true,
+  "failed_copy_installer_exit": 5,
+  "forced_cleanup": false,
+  "artifact": {
+    "id": 12800582685,
+    "sha256": "sha256:6c4a61b984be3a82b3930729f660d1024d2bdc4a9befbf9132e89ddd2f744244",
+    "download_sha256_matched": true,
+    "entries_checked": 3,
+    "raw_json_preserved": true,
+    "public_binary_artifacts": false
+  },
+  "not_verified": [
+    "Windows11 new standard-user installation",
+    "Windows11 cross-user full product startup",
+    "OS DPI changes",
+    "Default user-profile migration",
+    "Post-migration DB rollback",
+    "Actual publisher signing and signed public updater application"
+  ],
+  "old_runs_not_concealed": [
+    40650273246,
+    40650938236,
+    40651406870,
+    40652078486
+  ],
+  "reused_not_rerun": {
+    "windows_users_security_unit": 28,
+    "native_checks": 6,
+    "windows_server_real_standard_users": "40644408628",
+    "old_installer_same_payload": "40640414466; never relabeled real product update",
+    "windows11_gui_screens": 12,
+    "sample_mp4_playback": 3,
+    "korean_offline_sapi": "previous PASS"
+  },
+  "paid_api_calls": 0,
+  "sns_oauth_calls": 0,
+  "production_updates": 0
+}
