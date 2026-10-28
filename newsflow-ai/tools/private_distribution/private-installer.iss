@@ -30,6 +30,8 @@ CloseApplications=no
 RestartApplications=no
 AllowNoIcons=yes
 UninstallDisplayName=NewsFlow AI Private Candidate (user data retained)
+[Dirs]
+Name: "{app}"; Flags: uninsalwaysuninstall
 [Files]
 Source: "{#Launcher}"; Flags: dontcopy
 Source: "{#Launcher}"; DestDir: "{app}"; DestName: "NewsFlowAI.exe"; Flags: ignoreversion
@@ -40,6 +42,7 @@ Name: "{userprograms}\NewsFlow AI (Private)"; Filename: "{app}\NewsFlowAI.exe"
 [UninstallDelete]
 Type: files; Name: "{app}\install.lock"
 Type: dirifempty; Name: "{app}\slots"
+Type: dirifempty; Name: "{app}"
 [Code]
 var FinalizationFailed: Boolean;
 function InitializeSetup(): Boolean;

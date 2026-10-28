@@ -17,6 +17,7 @@ import time
 import urllib.error
 import urllib.request
 import winreg
+from contextlib import closing
 
 
 def main():
@@ -109,6 +110,9 @@ def main():
                 break
             time.sleep(.2)
         check('program_removed', not (installed / 'NewsFlowAI.exe').exists())
+    def preserved_rows():
+        with closing(sqlite3.connect(profile / 'newsflow.db')) as db:
+            return db.execute("SELECT key,value FROM app_settings WHERE key IN ('private-install-marker','sample_content:v1:hidden:synthetic-marker') ORDER BY key").fetchall()
     try:
         check('private_initial_installer', install() == 0)
         check('initial_pointer', json.loads((installed / 'current.json').read_bytes())['version'] == '1.0.0')
@@ -118,8 +122,14 @@ def main():
         opaque = win32crypt.CryptProtectData(b'SYNTHETIC-NOT-A-REAL-KEY', 'private-offline', None, None, None, 0)
         (profile / 'synthetic.dpapi').write_bytes(opaque)
         (profile / 'synthetic-media.bin').write_bytes(b'SYNTHETIC-MEDIA-PRESERVE')
+        (profile / 'synthetic-settings.json').write_text('{"synthetic":true}')
+        with closing(sqlite3.connect(profile / 'newsflow.db')) as db:
+            with db:
+                db.executemany('INSERT INTO app_settings(key,value) VALUES (?,?)',
+                    [('private-install-marker', 'retain'), ('sample_content:v1:hidden:synthetic-marker', 'true')])
+        original_rows = preserved_rows()
         before = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in
-                  (profile / 'synthetic.dpapi', profile / 'synthetic-media.bin', profile / 'session.key')}
+                  (profile / 'synthetic.dpapi', profile / 'synthetic-media.bin', profile / 'session.key', profile / 'synthetic-settings.json')}
         state = (installed / 'current.json').read_bytes()
         rejected = subprocess.run([str(update)], env=env, capture_output=True, timeout=60)
         check('actual_unsigned_update_rejected', rejected.returncode == 2)
@@ -137,9 +147,11 @@ def main():
         check('react_index_present', (installed / 'slots/1.0.0/_internal/frontend/dist/index.html').is_file())
         uninstall()
         check('data_retained_after_uninstall', before == {n: hashlib.sha256((profile / n).read_bytes()).hexdigest() for n in before})
+        check('db_and_sample_hidden_state_after_uninstall', preserved_rows() == original_rows)
         check('same_user_native_dpapi_retained', win32crypt.CryptUnprotectData((profile / 'synthetic.dpapi').read_bytes(), None, None, None, 0)[1] == b'SYNTHETIC-NOT-A-REAL-KEY')
         check('reinstall', install() == 0)
         check('data_retained_after_reinstall', before == {n: hashlib.sha256((profile / n).read_bytes()).hexdigest() for n in before})
+        check('db_and_sample_hidden_state_after_reinstall', preserved_rows() == original_rows)
         launch('reinstalled_launch')
         uninstall()
         check('no_owned_process_left', all(p.poll() is not None for p in processes))
