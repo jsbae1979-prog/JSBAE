@@ -74,8 +74,12 @@ export default function CharacterReferenceSamples({
           <article key={a.id} data-sample-id={a.id}>
             <Thumbnail src={a.mediaUrl} alt={`${a.title} 샘플`} />
             <strong>{a.title}</strong>
-            <button disabled={busy || !csrf} onClick={() => void select(a)}>
-              참조 PNG로 선택
+            <button
+              aria-label="참조 PNG로 선택"
+              disabled={busy || !csrf}
+              onClick={() => void select(a)}
+            >
+              선택
             </button>
           </article>
         ))}

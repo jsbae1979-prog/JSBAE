@@ -1392,6 +1392,71 @@
 .core-studio .core-style-options button:nth-child(6) {
   background: linear-gradient(140deg, #3f414a, #1b293b);
 }
+
+.core-studio .core-tabs button {
+  min-height: 64px;
+  text-align: left;
+  justify-content: start;
+  gap: 10px;
+}
+.core-studio .core-tabs button > span {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.core-studio .core-tabs button small {
+  font-size: 11px;
+  color: #c0cce4;
+  line-height: 1.4;
+}
+.core-studio .core-character-steps > div:not(:last-child) {
+  clip-path: polygon(0 0, 95% 0, 100% 50%, 95% 100%, 0 100%);
+  border-right-color: #7e73ce;
+}
+.core-studio .core-news-list > button {
+  grid-template-columns: 32% minmax(0, 1fr);
+  min-height: 154px;
+}
+.core-studio .core-news-list-picture {
+  height: 136px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.core-studio .core-news-list-picture img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.core-studio .core-news-list-picture .core-empty {
+  height: 100%;
+}
+.core-studio .core-news-list-picture b {
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  padding: 4px 7px;
+  color: #f3ecff;
+  background: linear-gradient(120deg, #8b32f3, #334ad1);
+  border-radius: 5px;
+  font-size: 12px;
+}
+.core-studio .core-news-list {
+  max-height: 488px;
+}
+.core-studio .core-news-list strong {
+  font-size: 16px;
+}
+.core-studio .core-news-list p {
+  -webkit-line-clamp: 3;
+  line-height: 1.6;
+}
+.core-studio .core-news-center > .core-panel:last-child {
+  flex: 1;
+}
+.core-studio .core-article-head img {
+  height: 210px;
+}
 @media (min-width: 1600px) {
   .core-studio[data-module="shorts"] .core-content {
     padding-top: 22px;
@@ -1651,5 +1716,21 @@
   .core-studio .core-top3-header-tools > .core-muted {
     max-width: 330px;
     font-size: 11px;
+  }
+}
+
+@media (max-width: 1450px) {
+  .core-studio .core-tabs button {
+    min-height: 56px;
+    gap: 7px;
+  }
+  .core-studio .core-tabs button small {
+    font-size: 10px;
+  }
+  .core-studio .core-news-list > button {
+    grid-template-columns: 32% minmax(0, 1fr);
+  }
+  .core-studio .core-news-list strong {
+    font-size: 14px;
   }
 }

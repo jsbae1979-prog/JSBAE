@@ -14,6 +14,8 @@ import {
   Sparkles,
   Newspaper,
   Layers3,
+  Bot,
+  BookOpen,
 } from "lucide-react";
 import {
   actions,
@@ -231,17 +233,27 @@ export function ImageTabs({
     <div className="core-tabs" role="tablist" aria-label="이미지 제작실">
       <button
         role="tab"
+        aria-label="AI 이미지 생성"
         aria-selected={mode === "standalone"}
         onClick={() => onChange("standalone")}
       >
-        AI 이미지 생성
+        <ImageIcon size={25} />
+        <span>
+          <strong>AI 이미지 생성</strong>
+          <small>원하는 이미지를 직접 생성합니다</small>
+        </span>
       </button>
       <button
         role="tab"
+        aria-label="뉴스 기반 이미지"
         aria-selected={mode === "top3"}
         onClick={() => onChange("top3")}
       >
-        뉴스 기반 이미지
+        <Newspaper size={25} />
+        <span>
+          <strong>뉴스 기반 이미지</strong>
+          <small>저장된 TOP 3 분석을 재사용합니다</small>
+        </span>
       </button>
     </div>
   );
@@ -291,7 +303,9 @@ export function StudioFrame({
         <div className="core-heading">
           <div>
             <span className="core-title-icon" aria-hidden="true">
-              {module === "news" ? (
+              {module === "characters" ? (
+                <Bot size={27} />
+              ) : module === "news" ? (
                 <Newspaper size={27} />
               ) : module === "images" ? (
                 <ImageIcon size={27} />

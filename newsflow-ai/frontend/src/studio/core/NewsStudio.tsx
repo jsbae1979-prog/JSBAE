@@ -82,7 +82,21 @@ export default function NewsStudio({
                 aria-pressed={selected?.id === x.id}
                 onClick={() => choose(x)}
               >
-                <NewsImage item={x} />
+                <div className="core-news-list-picture">
+                  <NewsImage item={x} />
+                  {(c.context?.top3 ?? []).some((r: Item) =>
+                    r.articleIds.includes(x.id),
+                  ) && (
+                    <b>
+                      TOP{" "}
+                      {
+                        (c.context?.top3 ?? []).find((r: Item) =>
+                          r.articleIds.includes(x.id),
+                        )?.rank
+                      }
+                    </b>
+                  )}
+                </div>
                 <div>
                   <strong>{x.title}</strong>
                   <small>

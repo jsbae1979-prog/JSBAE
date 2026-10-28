@@ -206,6 +206,12 @@ const control=action=>ipc({kind:"control",action});
    await page.getByRole("tab",{name:"AI 이미지 생성",exact:true}).click();
    await page.locator(".core-image-input .core-tabs").waitFor();
   });
+  await check("desktop production and storyboard stay in initial viewport",async()=>{
+   const shorts=result.initialCaptures.find(x=>x.screen==="shorts"&&x.width===1920),character=result.initialCaptures.find(x=>x.screen==="characters"&&x.width===1920);
+   const bar=shorts.boxes[".core-render-bar"],timeline=character.boxes[".core-timeline"];
+   assert(bar.y+bar.height<=1080,"desktop video production bar is clipped");assert(timeline.y<1080,"desktop storyboard is below the first screen");
+   result.desktopWorkflow={productionBar:bar,storyboard:timeline};
+  });
   await check("script saved-view preserves unsaved editor and simple option approval boundary",async()=>{
    await open("shorts?draft_id="+meta.draft);const editor=page.getByRole("textbox",{name:"장면 1 대본",exact:true});
    await editor.fill("보기 전환으로 보존할 합성 편집");
@@ -218,6 +224,8 @@ const control=action=>ipc({kind:"control",action});
    assert(await page.getByRole("button",{name:"영상 제작 · 승인 확인",exact:true}).isDisabled(),"unsaved script must not render");
   });
   await check("three sample character references available without replacing saved job",async()=>{
+   const catalogResponse=await ipc({method:"GET",url:"/api/samples",headers:{}}),catalog=JSON.parse(Buffer.from(catalogResponse.body,"base64"));assert.equal(catalogResponse.status,200);assert.equal(catalog.assets.length,12);
+   result.sampleInventory={total:catalog.assets.length,images:catalog.assets.filter(x=>x.mime.startsWith("image/")).length,videos:catalog.assets.filter(x=>x.mime==="video/mp4").length};assert.equal(result.sampleInventory.images,9);assert.equal(result.sampleInventory.videos,3);
    await open("characters");const gallery=page.locator(".core-reference-samples");
    if(await gallery.getByRole("button",{name:"샘플 펼치기",exact:true}).count())await gallery.getByRole("button",{name:"샘플 펼치기",exact:true}).click();
    await gallery.locator("[data-sample-id]").nth(2).waitFor();assert.equal(await gallery.locator("[data-sample-id]").count(),3);

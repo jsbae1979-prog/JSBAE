@@ -209,6 +209,7 @@ export default function ImageStudio({
           </p>
         </Panel>
         <Panel title="생성 이력" className="core-image-history">
+          {!drafts.length && <Empty>아직 저장한 생성 이력이 없습니다.</Empty>}
           <div className="core-history-grid">
             {drafts.map((x) => (
               <button

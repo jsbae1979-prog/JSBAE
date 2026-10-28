@@ -38,7 +38,16 @@ export default function CoreNavigation({
         </strong>
       </button>
       <div className="core-navigation-links">
-        {links.map(([key, label, Icon]) => (
+        {(module === "news"
+          ? links
+          : ([
+              ...links.slice(0, 2),
+              ["shorts", "뉴스 쇼츠 제작", Video],
+              ["characters", "캐릭터 쇼츠 제작", Bot],
+              ["images", "이미지 제작", Image],
+              ...links.slice(2).filter(([key]) => key !== "publishing"),
+            ] as const)
+        ).map(([key, label, Icon]) => (
           <button
             key={key}
             aria-current={
