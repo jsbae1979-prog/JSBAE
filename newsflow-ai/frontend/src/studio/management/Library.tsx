@@ -323,21 +323,24 @@ export default function Library({ c }: { c: Controller }) {
                   <a
                     className="mg-button mg-primary"
                     href={
-                      "/studio/" +
-                      destination +
-                      (selected.kind === "news" && selected.draftId
-                        ? "?draft_id=" + selected.draftId
-                        : selected.kind === "image"
-                          ? "?draft_id=" + String(selected.id).split(":")[1]
-                          : selected.kind === "character"
-                            ? "?job_id=" + String(selected.id).split(":")[1]
-                            : "")
+                      String(selected.id).startsWith("post:")
+                        ? "/image-posts?post_id=" +
+                          String(selected.id).split(":")[1]
+                        : "/studio/" +
+                          destination +
+                          (selected.kind === "news" && selected.draftId
+                            ? "?draft_id=" + selected.draftId
+                            : selected.kind === "image"
+                              ? "?draft_id=" + String(selected.id).split(":")[1]
+                              : selected.kind === "character"
+                                ? "?job_id=" + String(selected.id).split(":")[1]
+                                : "")
                     }
                   >
                     제작실로 이동
                     <ArrowRight size={16} />
                   </a>
-                  {selected.kind === "image" &&
+                  {String(selected.id).startsWith("image:") &&
                     safeMedia(selected.mediaUrl) && (
                       <Action
                         c={c}
@@ -348,6 +351,23 @@ export default function Library({ c }: { c: Controller }) {
                       >
                         검토 후 재사용
                       </Action>
+                    )}
+                  {selected.kind !== "news" &&
+                    !String(selected.id).startsWith("post:") && (
+                      <a
+                        className="mg-button"
+                        href={
+                          selected.kind === "character"
+                            ? "/character?job_id=" +
+                              encodeURIComponent(
+                                String(selected.id).split(":")[1],
+                              )
+                            : "/image-studio?draft_id=" +
+                              Number(String(selected.id).split(":")[1])
+                        }
+                      >
+                        선택한 원본 작업 상세
+                      </a>
                     )}
                   {selected.kind === "news" && (
                     <Action
