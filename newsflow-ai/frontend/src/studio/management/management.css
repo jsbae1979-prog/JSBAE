@@ -12,14 +12,15 @@
   padding: 0;
 }
 .management-ui {
-  --mg-line: #185375;
+  --mg-line: #185477;
   --mg-muted: #a1b4d2;
   color: #edf6ff;
   background:
-    radial-gradient(ellipse at 45% -20%, #04345e75, transparent 65%), #00101f;
+    radial-gradient(ellipse at 45% -20%, #053b6875, transparent 65%), #00101f;
   min-height: 100vh;
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 14px;
+  font-weight: 450;
+  line-height: 1.5;
 }
 .management-ui *,
 .management-ui *::before,
@@ -49,7 +50,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 35px;
+  min-height: 36px;
   padding: 8px 12px;
   border: 1px solid #26567e;
   border-radius: 7px;
@@ -66,14 +67,27 @@
 .management-ui button[aria-current="page"],
 .management-ui button[aria-selected="true"],
 .management-ui .mg-type-menu button[aria-pressed="true"] {
-  background: linear-gradient(105deg, #951dff, #3127fd 65%, #009ff5);
+  background: linear-gradient(
+    105deg,
+    #a51fff,
+    #5620fb 48%,
+    #008dff 78%,
+    #00c5ee
+  );
   border-color: #956bff;
   box-shadow:
-    inset 0 0 8px #e2a5ff55,
-    0 0 12px #7a32ec66;
+    inset 0 0 8px #e2a5ff77,
+    0 0 13px #7a32ec66,
+    0 0 3px #23ddff77;
 }
 .management-ui .mg-primary {
-  background: linear-gradient(105deg, #a829ff, #5020ff 60%, #00a4ee);
+  background: linear-gradient(
+    105deg,
+    #b02aff,
+    #6020ff 50%,
+    #0098f5 85%,
+    #00c8ed
+  );
   border-color: #9567ff;
   box-shadow:
     0 0 12px #7d38ee55,
@@ -228,8 +242,9 @@
   min-height: 48px;
 }
 .management-ui .mg-page-heading h1 {
-  font-size: 30px;
-  letter-spacing: -0.8px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.7px;
   white-space: nowrap;
 }
 .management-ui .mg-page-heading > p {
@@ -263,7 +278,10 @@
   white-space: nowrap;
 }
 .management-ui .mg-panel {
-  background: linear-gradient(130deg, #06233c66, transparent 70%), #001323;
+  background: linear-gradient(135deg, #07355b66, transparent 64%), #001323;
+  box-shadow:
+    inset 0 1px 0 #3c71952b,
+    0 3px 12px #00000024;
   border: 1px solid var(--mg-line);
   border-radius: 9px;
   padding: 13px;
@@ -283,11 +301,16 @@
   align-items: center;
   gap: 8px;
   font-size: 17px;
-  letter-spacing: -0.3px;
+  font-weight: 650;
+  letter-spacing: -0.25px;
 }
 .management-ui .mg-heading-mark {
   color: #03e0ec;
-  font-size: 20px;
+  width: 21px;
+  height: 21px;
+  flex-shrink: 0;
+  stroke-width: 1.8;
+  filter: drop-shadow(0 0 3px #00c4ff44);
 }
 .management-ui h3 {
   font-size: 15px;
@@ -377,7 +400,7 @@
 .management-ui table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
 }
 .management-ui th {
@@ -395,7 +418,9 @@
 }
 .management-ui tr.selected {
   background: #1b154c66;
-  box-shadow: inset 3px 0 #9c3aff;
+  box-shadow:
+    inset 3px 0 #9c3aff,
+    inset 0 0 20px #6025c01c;
 }
 .management-ui .mg-table-select {
   text-align: left;
@@ -436,8 +461,13 @@
   font-weight: 650;
 }
 .management-ui .mg-shortcuts svg {
-  width: 32px;
-  height: 32px;
+  width: 42px;
+  height: 42px;
+  padding: 7px;
+  border: 1px solid #3e7fb1;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #333d8c88, #04395577);
+  box-shadow: inset 0 0 9px #3a95fb22;
   grid-row: 1/3;
   color: #d0e9ff;
 }
@@ -559,7 +589,7 @@
 .management-ui .mg-thumb {
   position: relative;
   min-height: 90px;
-  aspect-ratio: 16/10;
+  aspect-ratio: 4/3;
   background: #020d19;
   border-radius: 6px;
   overflow: hidden;
@@ -646,6 +676,7 @@
 .management-ui .mg-content-card[aria-pressed="true"],
 .management-ui .mg-performance-cards button[aria-pressed="true"] {
   border-color: #a748ff;
+  border-right-color: #1abde7;
   box-shadow:
     0 0 9px #7c20f477,
     inset 0 0 12px #6c2be133;
@@ -656,7 +687,8 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 8px 0;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
 }
 .management-ui .mg-content-card small {
   margin: 7px 0;
@@ -1125,6 +1157,9 @@
   margin: 13px 0 0;
 }
 @media (max-width: 1550px) {
+  .management-ui {
+    font-size: 13px;
+  }
   .management-ui .mg-topnav {
     gap: 4px;
     padding: 6px 12px;
@@ -1147,7 +1182,7 @@
     gap: 10px;
   }
   .management-ui .mg-page-heading h1 {
-    font-size: 26px;
+    font-size: 28px;
   }
   .management-ui .mg-page-heading > p {
     font-size: 12px;
@@ -1179,7 +1214,7 @@
   .management-ui th,
   .management-ui td {
     padding: 9px 7px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .management-ui .mg-library-grid {
     grid-template-columns: 0.65fr 2.2fr 1fr;
@@ -1249,14 +1284,24 @@
     min-width: 440px;
   }
   .management-ui .mg-accounts {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   }
   .management-ui .mg-accounts article {
     padding: 8px;
   }
   .management-ui .mg-accounts h3 {
-    flex-direction: column;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 25px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    font-size: 11px;
+    word-break: keep-all;
+  }
+  .management-ui .mg-accounts .mg-platform-icon {
+    width: 25px;
+    height: 27px;
+    font-size: 21px;
   }
 }
 @media (max-width: 1100px) {
@@ -1426,5 +1471,101 @@
   }
   .management-ui .mg-publish-platforms article {
     padding: 5px 0;
+  }
+}
+
+/* Fine finish only: scoped to the existing management shell and its existing panels. */
+.management-ui .mg-panel > header h2 {
+  line-height: 1.35;
+}
+.management-ui .mg-tabs button,
+.management-ui .mg-settings-tabs button {
+  font-weight: 550;
+}
+.management-ui .mg-content-card,
+.management-ui .mg-publish-list > button {
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.management-ui .mg-content-card:hover,
+.management-ui .mg-publish-list > button:hover {
+  border-color: #3b93c2;
+}
+.management-ui .mg-library-detail > button,
+.management-ui .mg-library-detail > a {
+  min-height: 39px;
+}
+.management-ui .mg-publish-edit-grid .mg-actions {
+  align-items: stretch;
+}
+.management-ui .mg-publish-edit-grid .mg-actions > button {
+  flex: 1 1 auto;
+}
+.management-ui .mg-accounts h3 {
+  min-height: 32px;
+  line-height: 1.4;
+}
+.management-ui .mg-accounts article {
+  display: flex;
+  flex-direction: column;
+}
+.management-ui .mg-accounts article > button {
+  margin-top: auto;
+}
+.management-ui .mg-accounts article > .mg-badge {
+  align-self: flex-start;
+  margin-bottom: 10px;
+}
+.management-ui .mg-guide li + li::before {
+  content: "";
+  position: absolute;
+  left: calc(-50% + 18px);
+  right: calc(50% + 18px);
+  top: 14px;
+  height: 1px;
+  background: #76c6ff70;
+}
+.management-ui .mg-mini-stats small,
+.management-ui .mg-cost-header small {
+  text-wrap: pretty;
+}
+.management-ui .mg-table-scroll,
+.management-ui .mg-library-cards,
+.management-ui .mg-publish-list,
+.management-ui .mg-draft-list,
+.management-ui .mg-source-list,
+.management-ui .mg-performance-cards {
+  scrollbar-width: thin;
+  scrollbar-color: #355879 #041525;
+}
+.management-ui .mg-table-scroll::-webkit-scrollbar,
+.management-ui .mg-library-cards::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+.management-ui .mg-table-scroll::-webkit-scrollbar-thumb,
+.management-ui .mg-library-cards::-webkit-scrollbar-thumb {
+  background: #355879;
+  border-radius: 6px;
+}
+@media (max-width: 1550px) {
+  .management-ui .mg-content-card strong {
+    font-size: 13px;
+  }
+  .management-ui .mg-shortcuts svg {
+    width: 30px;
+    height: 34px;
+    padding: 4px;
+  }
+  .management-ui .mg-mini-stats small {
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  .management-ui .mg-publish-platforms label.mg-inline {
+    padding-right: 70px;
+  }
+  .management-ui .mg-accounts article > p {
+    margin: 7px 0;
   }
 }

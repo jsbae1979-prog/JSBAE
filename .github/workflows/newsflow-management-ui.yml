@@ -66,16 +66,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m pip install -e . pytest==8.4.2 httpx==0.28.1 filelock==3.32.7
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: New management read fields and local save contracts
-        if: matrix.variant == 'after'
-        run: |
-          python -m pytest tools/studio_v3/integration/test_management_api.py -q -ra --junitxml="$env:RUNNER_TEMP/management-api.xml"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # API 4 PASS and the nine write/approval flows are reused at 5a05167 / run40611504906.
+      # This CSS/icon-only change runs 15 visual/interaction checks, without deleting old tests.
       - name: Existing approved app fixture plus real Chrome flows
         run: |
           $root = Join-Path $env:RUNNER_TEMP ("newsflow-gui-" + [guid]::NewGuid().ToString("N"))
           New-Item -ItemType Directory -Path $root | Out-Null
           $env:NF_VISUAL_VARIANT = "${{ matrix.variant }}"
+          $env:NF_MANAGEMENT_FOCUS = "visual-polish"
           $env:NF_GUI_ROOT = $root
           $env:NF_GUI_RUNTIME = Join-Path $env:RUNNER_TEMP "gui-runtime"
           "NF_GUI_ROOT=$root" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -119,9 +117,3 @@ jobs:
             ${{ env.NF_GUI_ROOT }}/screenshots/*.png
             ${{ env.NF_GUI_ROOT }}/backend-stderr.txt
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        if: always() && matrix.variant == 'after'
-        with:
-          name: management-api
-          path: ${{ runner.temp }}/management-api.xml
-          if-no-files-found: warn

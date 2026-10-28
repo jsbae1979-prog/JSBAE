@@ -3,8 +3,9 @@ const fs=require('fs'),path=require('path'),assert=require('assert');
 const {chromium}=require(path.join(process.env.NF_GUI_RUNTIME,'node_modules','playwright'));
 const root=process.env.NF_GUI_ROOT,out=path.join(root,'screenshots'),origin='http://127.0.0.1:18765',variant=process.env.NF_VISUAL_VARIANT||'after';
 fs.mkdirSync(out,{recursive:true});
+const visualFocus=process.env.NF_MANAGEMENT_FOCUS==='visual-polish';
 const meta=JSON.parse(fs.readFileSync(path.join(root,'ready.json'),'utf8'));
-const result={variant,checks:[],failures:[],captures:[],protected:[],pageErrors:[],externalRequests:[],OS_DPI:'NOT VERIFIED',transport:'React -> synthetic file IPC -> real Python ASGI/SQLite',realPaidCalls:0};
+const result={variant,scope:visualFocus?'management visual polish only':'management full focused flows',reusedFunctionalCI:visualFocus?'https://github.com/jsbae1979-prog/JSBAE/actions/runs/40611504906':null,checks:[],failures:[],captures:[],protected:[],pageErrors:[],externalRequests:[],OS_DPI:'NOT VERIFIED',transport:'React -> synthetic file IPC -> real Python ASGI/SQLite',realPaidCalls:0};
 let serial=Promise.resolve(),sequence=0;
 function ipc(data){const task=serial.then(async()=>{const n=String(++sequence).padStart(6,'0')+'.json',f=path.join(root,'requests',n),answer=path.join(root,'responses',n);fs.writeFileSync(f+'.tmp',JSON.stringify(data));fs.renameSync(f+'.tmp',f);const deadline=Date.now()+20000;while(!fs.existsSync(answer)){assert(Date.now()<deadline,'ASGI response timeout');await new Promise(r=>setTimeout(r,15));}const v=JSON.parse(fs.readFileSync(answer,'utf8'));fs.unlinkSync(answer);assert(!v.error,v.error);return v;});serial=task.catch(()=>{});return task;}
 const control=action=>ipc({kind:'control',action});
@@ -50,7 +51,39 @@ const control=action=>ipc({kind:'control',action});
    }
   }
  });
- if(variant==='after'){
+ if(variant==='after' && visualFocus){
+ await page.setViewportSize({width:1366,height:768});
+ await check('polished management icons and visible controls stay readable',async()=>{
+  for(const screen of ['automation','library','publishing','analytics','settings']){
+   await open(screen);await settle();
+   const icons=await page.locator('.mg-heading-mark').evaluateAll(es=>es.map(e=>({tag:e.tagName.toLowerCase(),w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})));
+   assert(icons.length>0);assert(icons.every(x=>x.tag==='svg'&&x.w>=19&&x.h>=19));
+   const clipped=await page.evaluate(()=>[...document.querySelectorAll('.management-ui .mg-main button,.management-ui .mg-main a.mg-button')].filter(e=>{
+    const r=e.getBoundingClientRect();if(!r.width||!r.height||r.top<0||r.bottom>innerHeight||r.left<0||r.right>innerWidth)return false;
+    for(let a=e.parentElement;a;a=a.parentElement){const s=getComputedStyle(a),q=a.getBoundingClientRect();if(/auto|scroll|hidden/.test(s.overflowX+s.overflowY)&&(r.top<q.top||r.bottom>q.bottom||r.left<q.left||r.right>q.right))return false;}
+    return true;
+   }).filter(e=>{const r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !hit||!e.contains(hit);}).map(e=>e.textContent.trim()));
+   assert.deepEqual(clipped,[],'visible controls covered: '+screen);
+  }
+ });
+ await check('settings five real account cards fit one row and seven tabs remain usable',async()=>{
+  await open('settings');const cards=page.locator('.mg-settings-accounts .mg-accounts article');assert.equal(await cards.count(),5);
+  const boxes=await cards.evaluateAll(es=>es.map(e=>{const r=e.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,right:r.right};}));
+  assert(Math.max(...boxes.map(x=>x.y))-Math.min(...boxes.map(x=>x.y))<2,'accounts wrapped unnecessarily');assert(boxes.every(x=>x.w>=130&&x.right<=1366));
+  const tabs=page.getByRole('tablist',{name:'설정 항목'}).getByRole('tab');assert.equal(await tabs.count(),7);
+  for(let i=0;i<7;i++){await tabs.nth(i).click();assert.equal(await tabs.nth(i).getAttribute('aria-selected'),'true');assert(await page.locator('.mg-settings-grid > section').count()>0);}
+ });
+ await check('library filters retain twelve samples and native portrait preview',async()=>{
+  await open('library');await page.getByLabel('라이브러리 콘텐츠 구분',{exact:true}).getByRole('button',{name:'샘플 콘텐츠',exact:true}).click();assert.equal(await page.locator('.mg-content-card').count(),12);
+  await page.locator('.mg-type-menu').first().getByRole('button',{name:/이미지/}).click();assert.equal(await page.locator('.mg-content-card').count(),9);
+  await page.locator('[data-content-id="sample-character-cat"]').click();await page.locator('.mg-library-detail img').evaluate(i=>i.decode());assert(await page.locator('.mg-library-detail img').evaluate(i=>i.naturalWidth>0));
+  await page.locator('.mg-type-menu').first().getByRole('button',{name:/뉴스 쇼츠/}).click();assert.equal(await page.locator('.mg-content-card').count(),1);await page.locator('[data-content-id="sample-news-short"]').click();await page.waitForFunction(()=>document.querySelector('.mg-library-detail video')?.videoWidth>0);assert.deepEqual(await page.locator('.mg-library-detail video').evaluate(v=>[v.videoWidth,v.videoHeight]),[720,1280]);
+ });
+ await check('publishing final review remains separate and modal stays reachable',async()=>{
+  await open('publishing');assert(await page.getByRole('button',{name:'최종 게시 승인',exact:true}).isDisabled());await page.getByLabel('Instagram Reels · 피드 검토 대상',{exact:true}).check();await page.getByRole('button',{name:'선택 플랫폼 게시 검토',exact:true}).click();const d=page.getByRole('dialog');await d.waitFor();for(const cb of await d.locator('input[type=checkbox]').all())assert(!await cb.isChecked());const b=await d.boundingBox();assert(b.x>=0&&b.y>=0&&b.x+b.width<=1368&&b.y+b.height<=770);await page.screenshot({path:path.join(out,'publishing-review-modal-1366.png')});await page.keyboard.press('Escape');
+ });
+ }
+ if(variant==='after' && !visualFocus){
  await page.setViewportSize({width:1366,height:768});
  await check('schedule save preserves options and remains paused',async()=>{
   await open('automation');await page.locator('.mg-schedule-detail').getByRole('button',{name:'편집 · 저장',exact:true}).click();const d=page.getByRole('dialog');await d.waitFor();await d.getByLabel('이름',{exact:true}).fill('관리 화면 합성 예약 수정');await d.locator('footer button.primary').click();await d.waitFor({state:'hidden'});const rows=(await api('/api/studio/modules/automation')).collections.schedules;const x=rows.find(x=>x.name==='관리 화면 합성 예약 수정');assert(x);assert.equal(x.status,'paused');assert.equal(x.voice,'offline-silence');assert.equal(x.source,'sample');

@@ -6,6 +6,16 @@ import {
   Image as ImageIcon,
   Download,
   ShieldCheck,
+  Settings2,
+  Layers3,
+  FolderSearch,
+  CalendarClock,
+  History,
+  ClipboardCheck,
+  ChartColumn,
+  MonitorCog,
+  Rss,
+  SlidersHorizontal,
 } from "lucide-react";
 import { actions, status, safeMedia, type Item } from "../contracts";
 import { Thumbnail } from "../Thumbnail";
@@ -57,11 +67,30 @@ export function Panel({
   tools?: ReactNode;
   className?: string;
 }) {
+  const Icon = /검색/.test(title)
+    ? FolderSearch
+    : /실행 기록|요청 기록|이력/.test(title)
+      ? History
+      : /일정|예약|기간/.test(title)
+        ? CalendarClock
+        : /Windows|시스템/.test(title)
+          ? MonitorCog
+          : /출처|수집/.test(title)
+            ? Rss
+            : /설정|기본값/.test(title)
+              ? SlidersHorizontal
+              : /성과|비용|사용량/.test(title)
+                ? ChartColumn
+                : /승인|검토/.test(title)
+                  ? ClipboardCheck
+                  : /유형|현황/.test(title)
+                    ? Settings2
+                    : Layers3;
   return (
     <section className={"mg-panel " + className}>
       <header>
         <h2>
-          <span className="mg-heading-mark">✦</span>
+          <Icon className="mg-heading-mark" aria-hidden="true" />
           {title}
         </h2>
         {tools}
