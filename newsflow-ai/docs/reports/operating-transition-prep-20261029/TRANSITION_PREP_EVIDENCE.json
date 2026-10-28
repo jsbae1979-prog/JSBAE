@@ -1,0 +1,103 @@
+{
+  "task": "operating-transition-preparation",
+  "date_kst": "2026-10-29",
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "base_head": "eab156829453fdd6ec865cc2fcfc32ef6c9b4066",
+  "packaged_code_head": "3b3598f4f6a0b9d3c04e92bb75efae026216fdc2",
+  "product_frontend_diff_from_packaged_code": [],
+  "observed_operating_port_8765_listener_count": 0,
+  "selected_operating_app_process_count": 0,
+  "operating_process_command_lines_read": false,
+  "operating_database": {
+    "read_only_aggregate_query": true,
+    "wal_bytes_at_observation": 0,
+    "db_wal_shm_metadata_unchanged": true,
+    "rows_or_user_text_exported": false
+  },
+  "credential_checks": {
+    "values_read": false,
+    "decryption": false,
+    "credential_hashes_calculated": false,
+    "acl_metadata_only": true,
+    "additional_inherited_entries_observed": true,
+    "effective_cross_user_access": "NOT VERIFIED",
+    "acl_modified": false
+  },
+  "packages": [
+    {
+      "name": "NewsFlowAI_v1.0.0.zip",
+      "bytes": 232213326,
+      "sha256": "0228c117409c94b2d70ce0957633a8457f156e017b1a90fef422e7e980ef93d2",
+      "matches_prior_sha256": true,
+      "files": 2874,
+      "central_directory_presence_only": {
+        "runtime": true,
+        "product": true,
+        "react": true,
+        "ffmpeg": true,
+        "ffprobe": true,
+        "licenses": true,
+        "start": true,
+        "stop": true,
+        "update": true
+      },
+      "payload_crc_or_member_hash_tests_repeated": false
+    },
+    {
+      "name": "NewsFlowAI_Update_v1.1.0.zip",
+      "bytes": 232150098,
+      "sha256": "18b5369709d7bc6c506becac8b72087746d5d6460a6b8e390013c5aa9661a765",
+      "matches_prior_sha256": true,
+      "files": 2874,
+      "central_directory_presence_only": {
+        "runtime": true,
+        "product": true,
+        "react": true,
+        "ffmpeg": true,
+        "ffprobe": true,
+        "licenses": true,
+        "start": true,
+        "stop": true,
+        "update": true
+      },
+      "payload_crc_or_member_hash_tests_repeated": false
+    }
+  ],
+  "reused_only": {
+    "contracts": 78,
+    "packaging_preparation": 31,
+    "packaging_new_unit": 30,
+    "artifact_static": 16
+  },
+  "new_tests_run": 0,
+  "package_rebuilds": 0,
+  "product_changes": 0,
+  "app_launches": 0,
+  "app_stops": 0,
+  "updates": 0,
+  "deletions": 0,
+  "operating_http_requests": 0,
+  "production_data_copies": 0,
+  "security_product_changes": 0,
+  "paid_ai_oauth_sns_calls": 0,
+  "read_only_results": {
+    "candidate_sha256": "PASS: 2/2 match prior",
+    "candidate_directory_presence": "PASS: existing index only",
+    "candidate_vs_latest_product_frontend": "PASS: zero source delta",
+    "db_read_only_and_metadata": "PASS",
+    "port_process_observation": "NO_LISTENER / no selected app processes at observation; no start/stop inference",
+    "acl_isolation": "NOT VERIFIED: inherited additional entries observed; no ACL changes",
+    "portable_app_acceptance": "NOT VERIFIED / dispatcher deliberately disabled",
+    "signed_update": "BLOCKED: no real certificate/trust anchor"
+  },
+  "pr35": {
+    "state": "open",
+    "draft": true,
+    "merged": false,
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "changed": false
+  },
+  "main_sha": "aa2f056d78ceed24874d0b4c50c6033f7168bf4d",
+  "verdict": "CONDITIONAL",
+  "operating_transition": "BLOCKED pending separate authorization and execution/data-preservation acceptance"
+}
