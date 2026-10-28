@@ -35,6 +35,8 @@ def main():
     output = args.output.resolve()
     if output.exists() or output.is_relative_to(project) or project.is_relative_to(output):
         raise SystemExit('New private separate output required')
+    if len(str(output)) > 90:
+        raise SystemExit('Use a short private TEMP build path; copy final candidates to durable private storage afterwards')
     output.mkdir()
     for name in ('home/Local', 'home/Roaming', 'temp', 'cache', 'helpers', 'candidates', 'recipes'):
         (output / name).mkdir(parents=True)
@@ -73,7 +75,21 @@ def main():
     # Minimal candidate provenance/notices are offline and travel with the bytes.
     notices = output / 'notices'
     shutil.copytree(project / 'docs/reports/sample-ffmpeg-rights-20261028/candidate-source-licenses', notices / 'source-licenses')
-    shutil.copytree(evidence, notices / 'ffmpeg-build-evidence', ignore=shutil.ignore_patterns('*.log', '*FUNCTIONAL*'))
+    shutil.copytree(evidence, notices / 'ffmpeg-build-evidence', ignore=shutil.ignore_patterns('*.log', '*FUNCTIONAL*', 'runtime-licenses'))
+    # Preserve notice bytes and provenance without shipping deep build-tool
+    # directory names that exceed Inno6/ordinary Windows install path limits.
+    runtime_notices = notices / 'runtime'
+    runtime_notices.mkdir()
+    runtime_index = []
+    for file in sorted((evidence / 'runtime-licenses').rglob('*')):
+        if file.is_file():
+            checksum = hashlib.sha256(file.read_bytes()).hexdigest()
+            target = runtime_notices / (checksum[:24] + '.txt')
+            if not target.exists():
+                shutil.copyfile(file, target)
+            runtime_index.append({'source': file.relative_to(evidence / 'runtime-licenses').as_posix(),
+                                  'file': 'runtime/' + target.name, 'sha256': checksum})
+    (notices / 'runtime-notice-index.json').write_text(json.dumps(runtime_index, indent=2))
     for name in ('PROVENANCE_MANIFEST.json', 'GENERATION_RECORDS.json', 'RIGHTS_BASIS.md'):
         shutil.copyfile(samples / name, notices / name)
     (notices / 'PRIVATE_CANDIDATE.txt').write_text('UNSIGNED PRIVATE VERIFICATION ONLY. Samples rightsVerified:false. No external delivery. GPL corresponding sources must accompany any future transfer. No public update server.\n')
