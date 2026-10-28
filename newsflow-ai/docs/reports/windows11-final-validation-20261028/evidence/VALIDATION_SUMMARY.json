@@ -1,0 +1,26 @@
+{
+  "baseline": "5a8a622748464897033a49e421725812267245d9",
+  "branch": "codex/newsflow-windows11-final-validation-20261028",
+  "new_media_tests": {
+    "PASS": 4,
+    "FAIL": 0,
+    "SKIP": 0
+  },
+  "local_full_app": "BLOCKED",
+  "screens_actual_local_verified": 0,
+  "screen_rows_blocked": 12,
+  "screen_rows_are_not_12_executed_tests": true,
+  "sample_browser_playback": "BLOCKED",
+  "OS_DPI": {
+    "100": "NOT VERIFIED",
+    "125": "NOT VERIFIED",
+    "150": "NOT VERIFIED",
+    "200": "NOT VERIFIED"
+  },
+  "product_changes": [],
+  "Guard_changes": [],
+  "full_app_attempts": 0,
+  "new_native_permissions": false,
+  "paid_API_OAuth_SNS_calls": 0,
+  "final_verdict": "BLOCKED"
+}

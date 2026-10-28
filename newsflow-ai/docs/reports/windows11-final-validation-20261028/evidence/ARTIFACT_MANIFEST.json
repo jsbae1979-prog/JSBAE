@@ -1,0 +1,77 @@
+{
+  "basis": "Canonical staged Git bytes after newline normalization. Git object IDs and SHA256 are distinct. Manifest excludes itself. New report and synthetic output only, no repeated sample integrity audit.",
+  "files": [
+    {
+      "path": "WINDOWS11_FINAL_VALIDATION_REPORT.md",
+      "bytes": 13737,
+      "SHA256": "5edd130a77e9dc25dee2af7a97d69245fc2936f9c971b581918b38ac602db391",
+      "GitBlobSHA": "e9622896911e2a2f5a125207ed91b2fc14f3cd71"
+    },
+    {
+      "path": "evidence/BRANCH_PROTECTION.json",
+      "bytes": 694,
+      "SHA256": "cdd46677887d28da1719829c0a753d999e88c2b592b0dfb74c76bcb6f3a6d0c0",
+      "GitBlobSHA": "71c3e7842f0ef364d81a526b25f3384072d6cad1"
+    },
+    {
+      "path": "evidence/BROWSER_POLICY_REJECTION.json",
+      "bytes": 454,
+      "SHA256": "11d3696c81976b1912c1c32f69a82a36005c5896a46798e8e1a823f38128c49f",
+      "GitBlobSHA": "a51997ffc1ed18143712741a5d6b209e6377f640"
+    },
+    {
+      "path": "evidence/GUI_SCREEN_MATRIX.json",
+      "bytes": 3432,
+      "SHA256": "7e0a5e74c622370319852f8998668313edc92aa4bab393a5f8264a629e9c253d",
+      "GitBlobSHA": "f56780c163306161ede5bc12cc776876a986f213"
+    },
+    {
+      "path": "evidence/LOCAL_FFMPEG_RESULT.json",
+      "bytes": 5314,
+      "SHA256": "305bafa5d23d4fa3a430f4e46cd3bdc3c15bba7b5c781f6a5a9121810252fcf1",
+      "GitBlobSHA": "4e0b2e0ba8cbc0fdac88ad68dfb68e1ea888fa42"
+    },
+    {
+      "path": "evidence/MEDIA_EXECUTION_PROVENANCE.json",
+      "bytes": 464,
+      "SHA256": "4f1e4e8b1b8e3f524d1ae0773d7d4e5135a593131d7a4989c94a1b314331402b",
+      "GitBlobSHA": "924ab9a24184e16c0875a537c4c34a0d4f2510e9"
+    },
+    {
+      "path": "evidence/PLAYBACK_INPUTS.json",
+      "bytes": 1326,
+      "SHA256": "b2449cbf0312a1cc9411db6707f4081025b6e7d426a62455efa7a0344ab7c0e1",
+      "GitBlobSHA": "45a15d3d03b626f89185b0c9698a209fd7c13a51"
+    },
+    {
+      "path": "evidence/VALIDATION_SUMMARY.json",
+      "bytes": 683,
+      "SHA256": "283bd0836d64f8daa8671043ca817e056d88581a7985fd825f3f9fc3235d9113",
+      "GitBlobSHA": "8fa2d4e365f6b9efafb568336084ff715cf797d7"
+    },
+    {
+      "path": "evidence/WINDOWS_ENVIRONMENT.json",
+      "bytes": 1084,
+      "SHA256": "836943d218c6a28ddb52d7a037df8e5ef6791ce18a4583e85846440f24dbd2dd",
+      "GitBlobSHA": "334fd4f27a2091e4956a5849e1e3abbddc08b592"
+    },
+    {
+      "path": "media/frame-1.png",
+      "bytes": 2035,
+      "SHA256": "134046d1c1389a00fedb3ddb703b8356dba0f880bbb0aaf2b5f18bccb88b2a20",
+      "GitBlobSHA": "22401035f9e0ffaeef80aa95225b75afef71399c"
+    },
+    {
+      "path": "media/frame-2.png",
+      "bytes": 2034,
+      "SHA256": "79c0c10069132de003e391f2e2debb3bb87c117796fd43095cc6963ad0046164",
+      "GitBlobSHA": "4fc738dccbd4e43818279dace1294bd9b5b65376"
+    },
+    {
+      "path": "media/frame-3.png",
+      "bytes": 2034,
+      "SHA256": "9206e3d44455fd88b63269388921c768aedfc62aa096ac3034de6e8091eeaebc",
+      "GitBlobSHA": "4a5e4b45b796d27276fcd96d69578016078acf31"
+    }
+  ]
+}

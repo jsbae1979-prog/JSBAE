@@ -1,0 +1,50 @@
+{
+  "catalogCount": 12,
+  "images": 9,
+  "videos": [
+    {
+      "id": "character-short-robot",
+      "title": "로봇 쇼츠 미리보기",
+      "source": "videos/character-shorts/SHORTS_CHAR_S01.mp4",
+      "testCopy": "sample-1.mp4",
+      "mime": "video/mp4",
+      "sample": true,
+      "manifestValues": {
+        "width": 720,
+        "height": 1280,
+        "duration": 12.0
+      },
+      "binaryRehashRepeated": false
+    },
+    {
+      "id": "character-short-cat",
+      "title": "고양이 쇼츠 미리보기",
+      "source": "videos/character-shorts/SHORTS_CHAR_S02.mp4",
+      "testCopy": "sample-2.mp4",
+      "mime": "video/mp4",
+      "sample": true,
+      "manifestValues": {
+        "width": 720,
+        "height": 1280,
+        "duration": 12.0
+      },
+      "binaryRehashRepeated": false
+    },
+    {
+      "id": "news-short",
+      "title": "뉴스 쇼츠 미리보기",
+      "source": "videos/news-shorts/SHORTS_NEWS_S01.mp4",
+      "testCopy": "sample-3.mp4",
+      "mime": "video/mp4",
+      "sample": true,
+      "manifestValues": {
+        "width": 720,
+        "height": 1280,
+        "duration": 12.0
+      },
+      "binaryRehashRepeated": false
+    }
+  ],
+  "license": "Existing commercial/redistribution rights remain unverified; local verification only.",
+  "operating_media_used": false
+}

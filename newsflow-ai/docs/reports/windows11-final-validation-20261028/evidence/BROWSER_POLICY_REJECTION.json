@@ -1,0 +1,10 @@
+{
+  "tool": "mcp__cua_repl.js",
+  "action": "createBrowserTab(iab, file URL of standalone local sample MP4 page)",
+  "result": "BLOCKED",
+  "reason": "The requested URL protocol is not allowed. Allowed protocols: http:, https:. Browser URL policy did not grant authority.",
+  "actual_provider_network_request": false,
+  "alternate_URL_or_surface_workaround_attempts": 0,
+  "security_policy_changed": false,
+  "full_app_or_operating_browser_used": false
+}

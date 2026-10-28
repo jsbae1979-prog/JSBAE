@@ -1,0 +1,10 @@
+{
+  "scope": "Standalone local FFmpeg only; no product imports/app/server/browser/DB",
+  "guard_source": "tools/validation/step13j_final/step13_guard.py",
+  "native_boundary_source": "tools/validation/step13j_final/native_boundary.py",
+  "guard_and_boundary_bytes_unchanged": true,
+  "new_native_or_process_permissions": false,
+  "binary_hash_reference": "previous technical build technical-media.json",
+  "full_app_attempts": 0,
+  "sample_binary_reaudit": false
+}

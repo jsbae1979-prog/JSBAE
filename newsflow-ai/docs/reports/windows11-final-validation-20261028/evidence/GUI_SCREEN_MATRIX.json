@@ -1,0 +1,86 @@
+[
+  {
+    "screen": "홈 대시보드",
+    "id": "dashboard",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "콘텐츠 제작 홈",
+    "id": "create",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "뉴스 쇼츠",
+    "id": "shorts",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "캐릭터 쇼츠",
+    "id": "characters",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "독립 AI 이미지",
+    "id": "images",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "뉴스 TOP3 이미지",
+    "id": "images-top3",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "뉴스 스튜디오",
+    "id": "news",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "자동화 센터",
+    "id": "automation",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "라이브러리",
+    "id": "library",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "게시 스튜디오",
+    "id": "publishing",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "성과·비용",
+    "id": "analytics",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  },
+  {
+    "screen": "설정·관리",
+    "id": "settings",
+    "current_Windows11_GUI": "BLOCKED",
+    "reason": "No existing Guard-compatible formal local full-app procedure; approved app fixtures remain CI-only. Not a new failed app launch.",
+    "prior_evidence_reused": true
+  }
+]

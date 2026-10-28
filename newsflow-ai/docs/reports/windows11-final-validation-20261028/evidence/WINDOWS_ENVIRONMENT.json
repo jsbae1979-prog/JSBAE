@@ -1,0 +1,34 @@
+{
+  "OS": {
+    "Caption": "Microsoft Windows 11 Pro",
+    "Version": "10.0.26300",
+    "BuildNumber": "26300",
+    "UBR": 9711,
+    "DisplayVersion": "26H2",
+    "Architecture": "64-bit",
+    "source": "Win32_OperatingSystem read-only CIM and HKLM CurrentVersion metadata"
+  },
+  "Python": "3.14.7",
+  "OS_DPI_registry_metadata": {
+    "AppliedDPI": 96,
+    "Win8DpiScaling": 0,
+    "LogPixels": null,
+    "active_monitor_scale_confirmed": false,
+    "visual_acceptance": "NOT VERIFIED"
+  },
+  "WindowsSettingsUI": {
+    "launch_attempts": 1,
+    "targetable_window_found": false,
+    "error": "launched app did not expose a targetable window",
+    "existing_process_predates_this_task": true,
+    "preexisting_process_terminated": false,
+    "DPI_values_changed": false
+  },
+  "product_source_SHA": "5a8a622748464897033a49e421725812267245d9",
+  "actual_local_app_launches": 0,
+  "operating_port_probed_or_used": false,
+  "operating_DB_keys_backups_used": false,
+  "new_browser_profile_created": false,
+  "sample_binary_rehash_repeated": false,
+  "whole_regression_repeated": false
+}

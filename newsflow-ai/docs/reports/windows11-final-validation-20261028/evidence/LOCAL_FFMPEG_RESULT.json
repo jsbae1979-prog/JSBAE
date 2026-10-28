@@ -1,0 +1,290 @@
+{
+  "scope": "New local synthetic media, not a NewsFlow production job",
+  "checks": [
+    {
+      "id": "local_ffmpeg_compose_3_scenes",
+      "status": "PASS"
+    },
+    {
+      "id": "vertical_1080x1920_30fps_30seconds",
+      "status": "PASS"
+    },
+    {
+      "id": "new_output_full_stream_decode",
+      "status": "PASS"
+    },
+    {
+      "id": "three_scene_frame_order_colors",
+      "status": "PASS"
+    }
+  ],
+  "commands": [
+    {
+      "binary": "ffmpeg.exe",
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-n",
+        "-f",
+        "lavfi",
+        "-i",
+        "color=c=0x173c68:s=1080x1920:r=30:d=10",
+        "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-crf",
+        "28",
+        "-pix_fmt",
+        "yuv420p",
+        "-threads",
+        "2",
+        "scene-1.mp4"
+      ],
+      "exitCode": 0,
+      "seconds": 0.719
+    },
+    {
+      "binary": "ffmpeg.exe",
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-n",
+        "-f",
+        "lavfi",
+        "-i",
+        "color=c=0x4d276c:s=1080x1920:r=30:d=10",
+        "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-crf",
+        "28",
+        "-pix_fmt",
+        "yuv420p",
+        "-threads",
+        "2",
+        "scene-2.mp4"
+      ],
+      "exitCode": 0,
+      "seconds": 0.561
+    },
+    {
+      "binary": "ffmpeg.exe",
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-n",
+        "-f",
+        "lavfi",
+        "-i",
+        "color=c=0x126a65:s=1080x1920:r=30:d=10",
+        "-an",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-crf",
+        "28",
+        "-pix_fmt",
+        "yuv420p",
+        "-threads",
+        "2",
+        "scene-3.mp4"
+      ],
+      "exitCode": 0,
+      "seconds": 0.551
+    },
+    {
+      "binary": "ffmpeg.exe",
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-n",
+        "-f",
+        "concat",
+        "-safe",
+        "1",
+        "-i",
+        "concat.txt",
+        "-c",
+        "copy",
+        "-movflags",
+        "+faststart",
+        "synthetic-3-scenes-30s.mp4"
+      ],
+      "exitCode": 0,
+      "seconds": 0.071
+    },
+    {
+      "binary": "ffprobe.exe",
+      "arguments": [
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration:stream=codec_type,codec_name,width,height,r_frame_rate",
+        "-of",
+        "json",
+        "synthetic-3-scenes-30s.mp4"
+      ],
+      "exitCode": 0,
+      "seconds": 0.208
+    },
+    {
+      "binary": "ffmpeg.exe",
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-i",
+        "synthetic-3-scenes-30s.mp4",
+        "-f",
+        "null",
+        "-"
+      ],
+      "exitCode": 0,
+      "seconds": 0.409
+    },
+    {
+      "binary": "ffmpeg.exe",
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-n",
+        "-ss",
+        "2",
+        "-i",
+        "synthetic-3-scenes-30s.mp4",
+        "-frames:v",
+        "1",
+        "-vf",
+        "scale=360:640",
+        "frame-1.png"
+      ],
+      "exitCode": 0,
+      "seconds": 0.134
+    },
+    {
+      "binary": "ffmpeg.exe",
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-n",
+        "-ss",
+        "12",
+        "-i",
+        "synthetic-3-scenes-30s.mp4",
+        "-frames:v",
+        "1",
+        "-vf",
+        "scale=360:640",
+        "frame-2.png"
+      ],
+      "exitCode": 0,
+      "seconds": 0.124
+    },
+    {
+      "binary": "ffmpeg.exe",
+      "arguments": [
+        "-hide_banner",
+        "-loglevel",
+        "error",
+        "-nostdin",
+        "-n",
+        "-ss",
+        "22",
+        "-i",
+        "synthetic-3-scenes-30s.mp4",
+        "-frames:v",
+        "1",
+        "-vf",
+        "scale=360:640",
+        "frame-3.png"
+      ],
+      "exitCode": 0,
+      "seconds": 0.123
+    }
+  ],
+  "paid_calls": 0,
+  "product_imports": false,
+  "operating_data_used": false,
+  "guard_installed": true,
+  "metadata": {
+    "programs": [],
+    "stream_groups": [],
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 1080,
+        "height": 1920,
+        "r_frame_rate": "30/1"
+      }
+    ],
+    "format": {
+      "duration": "30.000000"
+    }
+  },
+  "frames": [
+    "frame-1.png",
+    "frame-2.png",
+    "frame-3.png"
+  ],
+  "new_output": "synthetic-3-scenes-30s.mp4",
+  "guard_denials": [],
+  "allowed_media_calls": [
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffprobe",
+    "ffprobe",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg",
+    "ffmpeg"
+  ],
+  "full_app_executed": false,
+  "browser_playback": "NOT VERIFIED",
+  "automatic_retry": false,
+  "frameMeanRGB": [
+    [
+      22.0,
+      58.0,
+      103.0
+    ],
+    [
+      75.0,
+      38.0,
+      108.0
+    ],
+    [
+      17.0,
+      105.0,
+      100.0
+    ]
+  ]
+}
