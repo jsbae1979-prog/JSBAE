@@ -1,0 +1,121 @@
+{
+  "checks": [
+    {
+      "name": "character-robot-v2_decode_dimensions",
+      "status": "PASS"
+    },
+    {
+      "name": "character-cat-v2_decode_dimensions",
+      "status": "PASS"
+    },
+    {
+      "name": "character-dragon-v2_decode_dimensions",
+      "status": "PASS"
+    },
+    {
+      "name": "standalone-city-v2_decode_dimensions",
+      "status": "PASS"
+    },
+    {
+      "name": "standalone-cat-v2_decode_dimensions",
+      "status": "PASS"
+    },
+    {
+      "name": "standalone-earth-v2_decode_dimensions",
+      "status": "PASS"
+    },
+    {
+      "name": "top3-ai-v2_decode_dimensions",
+      "status": "PASS"
+    },
+    {
+      "name": "top3-ev-v2_decode_dimensions",
+      "status": "PASS"
+    },
+    {
+      "name": "top3-economy-v2_decode_dimensions",
+      "status": "PASS"
+    },
+    {
+      "name": "news-short-v2_format",
+      "status": "PASS"
+    },
+    {
+      "name": "news-short-v2_duration_audio",
+      "status": "PASS"
+    },
+    {
+      "name": "news-short-v2_full_decode",
+      "status": "PASS"
+    },
+    {
+      "name": "character-short-robot-v2_format",
+      "status": "PASS"
+    },
+    {
+      "name": "character-short-robot-v2_duration_audio",
+      "status": "PASS"
+    },
+    {
+      "name": "character-short-robot-v2_full_decode",
+      "status": "PASS"
+    },
+    {
+      "name": "character-short-cat-v2_format",
+      "status": "PASS"
+    },
+    {
+      "name": "character-short-cat-v2_duration_audio",
+      "status": "PASS"
+    },
+    {
+      "name": "character-short-cat-v2_full_decode",
+      "status": "PASS"
+    },
+    {
+      "name": "character-robot-v2_raw_source_identical",
+      "status": "PASS"
+    },
+    {
+      "name": "character-cat-v2_raw_source_identical",
+      "status": "PASS"
+    },
+    {
+      "name": "character-dragon-v2_raw_source_identical",
+      "status": "PASS"
+    },
+    {
+      "name": "standalone-city-v2_raw_source_identical",
+      "status": "PASS"
+    },
+    {
+      "name": "standalone-cat-v2_raw_source_identical",
+      "status": "PASS"
+    },
+    {
+      "name": "standalone-earth-v2_raw_source_identical",
+      "status": "PASS"
+    },
+    {
+      "name": "top3-ai-v2_raw_source_identical",
+      "status": "PASS"
+    },
+    {
+      "name": "top3-ev-v2_raw_source_identical",
+      "status": "PASS"
+    },
+    {
+      "name": "top3-economy-v2_raw_source_identical",
+      "status": "PASS"
+    },
+    {
+      "name": "unchanged_samples_catalog_loads_12_new_entries",
+      "status": "PASS"
+    }
+  ],
+  "pass": 28,
+  "fail": 0,
+  "browser_playback": "NOT VERIFIED",
+  "original_samples_rechecked": false,
+  "originals_modified": false
+}

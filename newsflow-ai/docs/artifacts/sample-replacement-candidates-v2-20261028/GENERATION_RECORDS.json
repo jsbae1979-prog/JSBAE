@@ -1,0 +1,88 @@
+{
+  "created_date": "2026-10-28",
+  "method": "Built-in image_gen in current user-authorized Codex conversation",
+  "external_provider_api_keys_used": false,
+  "external_paid_rest_or_sdk_calls": 0,
+  "generation_calls": 10,
+  "accepted_results": 9,
+  "rejected_results": 1,
+  "input_images": [],
+  "provider_model_id": "NOT EXPOSED BY TOOL; not guessed",
+  "original_product_samples_used": false,
+  "records": [
+    {
+      "id": "character-robot-v2",
+      "prompt": "Create a new original character reference image for NewsFlow AI sample content. Use case: stylized-concept. A friendly unbranded robot with a rounded trapezoid ivory ceramic torso, short plum-colored limbs, two small cyan circular eyes on a narrow horizontal faceplate, a single asymmetrical antenna, no mouth and no chest emblem. Full body standing, three-quarter view, generous margin, portrait composition 2:3. Premium softly lit clay-like 3D illustration, crisp simple silhouette, consistent neutral studio light. Transparent background. No text, numbers, logo, watermark, brand marks, recognizable existing character, real person, product imitation or photo reference. No input images; originate the design from this description.",
+      "transparent_requested": true,
+      "source_artifact_filename": "exec-26ab972c-7610-4194-abc6-d9056fa5c67d.png",
+      "preserved_raw": "raw/character-robot-v2.png"
+    },
+    {
+      "id": "character-cat-v2",
+      "prompt": "Create a new original character reference for NewsFlow AI sample content. Use case: stylized-concept. A friendly small cream-and-cinnamon cat with one dark ear, triangular ears, a curled tail, simple teal sleeveless vest with no badge, and warm amber eyes. Full body standing in a relaxed three-quarter pose, generous margin, portrait 2:3 composition. Premium softly lit clay-like 3D illustration and clean original silhouette. Transparent background. No text, logos, watermarks, real people, branded characters, product markings or references to existing entertainment properties. Use no input images.",
+      "transparent_requested": true,
+      "source_artifact_filename": "exec-07de6c7e-d6e1-4807-8960-9c700c62da12.png",
+      "preserved_raw": "raw/character-cat-v2.png"
+    },
+    {
+      "id": "character-dragon-v2",
+      "prompt": "Create an original small dragon character reference for NewsFlow AI sample content. Use case: stylized-concept. A friendly pear-shaped jade dragon with small leaf-shaped copper wings, three rounded lavender crown spines, pale mint belly, short feet and a curled tapering tail. Full body three-quarter standing pose, generous margin, portrait 2:3 composition. Premium clean clay-like 3D illustration, soft neutral studio lighting, expressive but simple face. Transparent background. No text, logo, watermark, existing fictional character, brand, costume insignia or borrowed photo. No input image references.",
+      "transparent_requested": true,
+      "source_artifact_filename": "exec-36a9fb54-410c-47b8-bd1d-e98990ee2578.png",
+      "preserved_raw": "raw/character-dragon-v2.png"
+    },
+    {
+      "id": "standalone-city-v2",
+      "prompt": "Create an original portrait illustration for NewsFlow AI's independent-image sample gallery. Use case: stylized-concept. A tranquil imaginary sustainable city at blue hour, terraced rounded architecture, rooftop gardens, an elevated pedestrian bridge, tiny abstract warm windows and a reflective waterway. Deep navy, cyan and warm amber light, premium cinematic 3D editorial illustration, balanced 2:3 portrait composition, room to breathe around the skyline. No real landmarks, recognizable real buildings, commercial products, logos, text, watermarks, people portraits, labels or news claims. Entirely fictional; no input photos.",
+      "transparent_requested": false,
+      "source_artifact_filename": "exec-1728eab8-e9ab-48a9-bf70-6e7d9b02d937.png",
+      "preserved_raw": "raw/standalone-city-v2.png"
+    },
+    {
+      "id": "standalone-cat-v2",
+      "prompt": "Create a new original portrait sample illustration for NewsFlow AI. Use case: illustration-story. An ordinary cinnamon tabby cat curled up beside a round window in a cozy imaginary plant-filled reading nook, soft lavender dusk outside, amber lamp glow, simple unmarked books and abstract ceramic shapes. Premium painterly 3D illustration, rich but gentle colors, 2:3 portrait framing. No text, logos, watermarks, branded character, real person, identifiable real house or copied artwork. No input image references; original generic domestic cat.",
+      "transparent_requested": false,
+      "source_artifact_filename": "exec-229c638b-a85b-4a15-b9d7-d84cf89516ca.png",
+      "preserved_raw": "raw/standalone-cat-v2.png"
+    },
+    {
+      "id": "standalone-earth-v2",
+      "prompt": "Create an original environmental concept illustration for the NewsFlow AI sample image gallery. Use case: scientific-educational. An abstract small blue-green planet sphere floating above a sculpted ring of leaves and water droplets, simplified imaginary land shapes rather than a precise world map, soft cyan rim light, navy background with subtle stars. Premium refined 3D editorial illustration, 2:3 portrait, centered elegant composition. This is a fictional visual example, no actual climate data or news claims. No text, numbers, logos, watermark, borrowed photo or branded elements.",
+      "transparent_requested": false,
+      "source_artifact_filename": "exec-d8569279-7cc1-4446-b4af-6aaffd77d003.png",
+      "preserved_raw": "raw/standalone-earth-v2.png"
+    },
+    {
+      "id": "top3-ai-v2",
+      "prompt": "Create a new original editorial-style sample image about a generic artificial-intelligence concept for NewsFlow AI. Use case: scientific-educational. An unbranded luminous abstract processor tile connected to small geometric nodes, violet and cyan light trails above a deep navy surface, premium editorial 3D illustration. 4:5 portrait composition with safe open space at top and bottom for later UI captions. No text, statistics, company logos, product designs, watermark, existing brand, real people or claimed current news event. No input images.",
+      "transparent_requested": false,
+      "source_artifact_filename": "exec-76f6965b-6177-4ab2-81f4-391087146781.png",
+      "preserved_raw": "raw/top3-ai-v2.png"
+    },
+    {
+      "id": "top3-ev-v2",
+      "prompt": "Create a new original abstract electric-mobility editorial sample illustration for NewsFlow AI. Use case: scientific-educational. Three tall smooth translucent emerald battery-like sculptural blocks beside two featureless rounded charging arches, subtle luminous energy ribbons and small leaf forms over a navy studio background. Premium refined 3D editorial illustration. 4:5 portrait, generous safe margins. Entirely abstract concept: no cars, bicycles, vehicles, product packaging, brands, logos, badges, emblems, text, numbers, currency, watermark, real people, exact statistics or real news claims. No reference images.",
+      "transparent_requested": false,
+      "source_artifact_filename": "exec-2b5d0549-bba9-4a7e-be78-e8647af34585.png",
+      "preserved_raw": "raw/top3-ev-v2.png"
+    },
+    {
+      "id": "top3-economy-v2",
+      "prompt": "Create an original abstract economic-literacy sample illustration for NewsFlow AI. Use case: scientific-educational. Unmarked metallic discs and translucent geometric blocks arranged in a balanced ascending spiral, soft gold and cyan lighting over navy background, a subtle non-numerical decorative curve. Premium clean editorial 3D illustration in 4:5 portrait framing, spacious margins. No currency symbol, national seal, real company logo, numbers, text, watermark, exact market chart, investment advice or claimed factual news event. No input photos or borrowed artwork.",
+      "transparent_requested": false,
+      "source_artifact_filename": "exec-0b4d8a62-235a-4144-b8f4-c70636f65cb8.png",
+      "preserved_raw": "raw/top3-economy-v2.png"
+    }
+  ],
+  "rejected": [
+    {
+      "id": "top3-ev-initial",
+      "prompt": "Create an original fictional editorial sample illustration for NewsFlow AI about electric mobility. Use case: stylized-concept. An imagined small rounded commuter pod and two bicycles beside simple sculptural charging posts in a lush urban pocket garden, no resemblance to a real vehicle brand or product, teal and lime highlights against navy dusk. Premium editorial 3D illustration, 4:5 portrait layout, safe margins for UI caption overlay. No logos, vehicle badges, text, numbers, watermark, branded designs, real people or real news claims. No reference images.",
+      "reason": "Small unidentified vehicle emblem/possible trade-dress ambiguity; excluded from approved replacement candidates",
+      "source_artifact_filename": "exec-a76892ab-38fe-45d7-84e5-50ac1e4e5f67.png",
+      "sha256": "0e0712b8662305381eba6dd76b440c6ad3f5608e574316f1aeab92aa4fc05c9a",
+      "included_in_candidates": false
+    }
+  ],
+  "public_release": false
+}

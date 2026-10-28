@@ -1,0 +1,96 @@
+{
+  "source_patches": [],
+  "files": [
+    {
+      "component": "ffmpeg",
+      "source_commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "source_license_path": "COPYING.GPLv2",
+      "path": "ffmpeg/COPYING.GPLv2",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+    },
+    {
+      "component": "ffmpeg",
+      "source_commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "source_license_path": "COPYING.GPLv3",
+      "path": "ffmpeg/COPYING.GPLv3",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    {
+      "component": "ffmpeg",
+      "source_commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "source_license_path": "COPYING.LGPLv2.1",
+      "path": "ffmpeg/COPYING.LGPLv2.1",
+      "sha256": "246041b6ecf9bc32d718a62c57877c78b5eb397b6467e74ed7ae2626ab189c30"
+    },
+    {
+      "component": "ffmpeg",
+      "source_commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "source_license_path": "COPYING.LGPLv3",
+      "path": "ffmpeg/COPYING.LGPLv3",
+      "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"
+    },
+    {
+      "component": "ffmpeg",
+      "source_commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "source_license_path": "LICENSE.md",
+      "path": "ffmpeg/LICENSE.md",
+      "sha256": "2e1d16c72fd74e12063776371da757322f8b77589386532f4fd8634bde7de1af"
+    },
+    {
+      "component": "x264",
+      "source_commit": "0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee",
+      "source_license_path": "COPYING",
+      "path": "x264/COPYING",
+      "sha256": "da0eca0fb517ac939d167924c9d4b3f8750a6b7191932ef2cb145acfa624ac7e"
+    },
+    {
+      "component": "freetype",
+      "source_commit": "0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+      "source_license_path": "LICENSE.TXT",
+      "path": "freetype/LICENSE.TXT",
+      "sha256": "bd36c8b474855fa294c2ec5c184544478ef3720aad37d65a6296a4f264fd2d3b"
+    },
+    {
+      "component": "freetype",
+      "source_commit": "0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+      "source_license_path": "docs/FTL.TXT",
+      "path": "freetype/docs__FTL.TXT",
+      "sha256": "5a5ee54c5001bbad1cdc1a57cc3dd4c42199b2da09d39c7ee41fab002d02967f"
+    },
+    {
+      "component": "freetype",
+      "source_commit": "0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+      "source_license_path": "docs/GPLv2.TXT",
+      "path": "freetype/docs__GPLv2.TXT",
+      "sha256": "c4120c6752c910c299e3bd9cb3a46ff262c268303ca2069b61f92f10a5656c18"
+    },
+    {
+      "component": "harfbuzz",
+      "source_commit": "36cb489cb02ce4b92099669ba9f9bea348eff93f",
+      "source_license_path": "COPYING",
+      "path": "harfbuzz/COPYING",
+      "sha256": "ba8f810f2455c2f08e2d56bb49b72f37fcf68f1f4fade38977cfd7372050ad64"
+    },
+    {
+      "component": "fribidi",
+      "source_commit": "68162babff4f39c4e2dc164a5e825af93bda9983",
+      "source_license_path": "COPYING",
+      "path": "fribidi/COPYING",
+      "sha256": "32434afcc8666ba060e111d715bfdb6c2d5dd8a35fa4d3ab8ad67d8f850d2f2b"
+    },
+    {
+      "component": "libass",
+      "source_commit": "4a05d8127f525943ebf45fdc6497c9e665947f0d",
+      "source_license_path": "COPYING",
+      "path": "libass/COPYING",
+      "sha256": "f7e30699d02798351e7f839e3d3bfeb29ce65e44efa7735c225464c4fd7dfe9c"
+    },
+    {
+      "component": "zlib",
+      "source_commit": "51b7f2abdade71cd9bb0e7a373ef2610ec6f9daf",
+      "source_license_path": "LICENSE",
+      "path": "zlib/LICENSE",
+      "sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243"
+    }
+  ]
+}

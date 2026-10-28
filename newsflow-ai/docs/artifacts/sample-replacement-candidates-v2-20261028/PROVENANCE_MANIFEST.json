@@ -1,0 +1,432 @@
+{
+  "schemaVersion": 1,
+  "version": 2,
+  "candidateOnly": true,
+  "activeInProduct": false,
+  "assets": [
+    {
+      "id": "character-robot-v2",
+      "path": "images/character-robot-v2-normalized.png",
+      "sha256": "3245d628d3f3f1c5bf0915f132e70559560e3aed7d2dfe405a011697086db3f1",
+      "bytes": 861918,
+      "dimensions": [
+        720,
+        1080
+      ],
+      "type": "character",
+      "source": {
+        "raw": "raw/character-robot-v2.png",
+        "sha256": "337469cc2e450f89dae6b51969d7059e4e98fead25dd1d22bcec5dbfae43b58b",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "mode": "RGBA",
+        "prompt": "Create a new original character reference image for NewsFlow AI sample content. Use case: stylized-concept. A friendly unbranded robot with a rounded trapezoid ivory ceramic torso, short plum-colored limbs, two small cyan circular eyes on a narrow horizontal faceplate, a single asymmetrical antenna, no mouth and no chest emblem. Full body standing, three-quarter view, generous margin, portrait composition 2:3. Premium softly lit clay-like 3D illustration, crisp simple silhouette, consistent neutral studio light. Transparent background. No text, numbers, logo, watermark, brand marks, recognizable existing character, real person, product imitation or photo reference. No input images; originate the design from this description.",
+        "generation": "built-in image_gen",
+        "modelId": "NOT EXPOSED"
+      },
+      "sample": true,
+      "version": 2,
+      "providerGenerated": true,
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "character-cat-v2",
+      "path": "images/character-cat-v2-normalized.png",
+      "sha256": "d018460652d661eb57373f7eee227fba7ce478a0dc2217ce71cff9b3df3d1362",
+      "bytes": 1128666,
+      "dimensions": [
+        720,
+        1080
+      ],
+      "type": "character",
+      "source": {
+        "raw": "raw/character-cat-v2.png",
+        "sha256": "2b48ead539599819d39daddac6e6a8d9ac6346743b37d51ec52a0b9487479bc0",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "mode": "RGBA",
+        "prompt": "Create a new original character reference for NewsFlow AI sample content. Use case: stylized-concept. A friendly small cream-and-cinnamon cat with one dark ear, triangular ears, a curled tail, simple teal sleeveless vest with no badge, and warm amber eyes. Full body standing in a relaxed three-quarter pose, generous margin, portrait 2:3 composition. Premium softly lit clay-like 3D illustration and clean original silhouette. Transparent background. No text, logos, watermarks, real people, branded characters, product markings or references to existing entertainment properties. Use no input images.",
+        "generation": "built-in image_gen",
+        "modelId": "NOT EXPOSED"
+      },
+      "sample": true,
+      "version": 2,
+      "providerGenerated": true,
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "character-dragon-v2",
+      "path": "images/character-dragon-v2-normalized.png",
+      "sha256": "e4e880d1e5454d4378bebccb3fb3559e48ed1e0260708447d5320c9e5abaffc5",
+      "bytes": 1106660,
+      "dimensions": [
+        720,
+        1080
+      ],
+      "type": "character",
+      "source": {
+        "raw": "raw/character-dragon-v2.png",
+        "sha256": "1da04bc851768fd00edac4bb246556efbfbd9e7e4b0e5a3262fccd589e552fac",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "mode": "RGBA",
+        "prompt": "Create an original small dragon character reference for NewsFlow AI sample content. Use case: stylized-concept. A friendly pear-shaped jade dragon with small leaf-shaped copper wings, three rounded lavender crown spines, pale mint belly, short feet and a curled tapering tail. Full body three-quarter standing pose, generous margin, portrait 2:3 composition. Premium clean clay-like 3D illustration, soft neutral studio lighting, expressive but simple face. Transparent background. No text, logo, watermark, existing fictional character, brand, costume insignia or borrowed photo. No input image references.",
+        "generation": "built-in image_gen",
+        "modelId": "NOT EXPOSED"
+      },
+      "sample": true,
+      "version": 2,
+      "providerGenerated": true,
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "standalone-city-v2",
+      "path": "images/standalone-city-v2-normalized.png",
+      "sha256": "48db77e5d748cbe50efd5b702316690762b480c4f96628e98ec564695cf86097",
+      "bytes": 1311640,
+      "dimensions": [
+        720,
+        1080
+      ],
+      "type": "standalone-image",
+      "source": {
+        "raw": "raw/standalone-city-v2.png",
+        "sha256": "49064cc94745b72991282fdbc73715467fcb96d04ee75630b3ab9649ee347e5b",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "mode": "RGB",
+        "prompt": "Create an original portrait illustration for NewsFlow AI's independent-image sample gallery. Use case: stylized-concept. A tranquil imaginary sustainable city at blue hour, terraced rounded architecture, rooftop gardens, an elevated pedestrian bridge, tiny abstract warm windows and a reflective waterway. Deep navy, cyan and warm amber light, premium cinematic 3D editorial illustration, balanced 2:3 portrait composition, room to breathe around the skyline. No real landmarks, recognizable real buildings, commercial products, logos, text, watermarks, people portraits, labels or news claims. Entirely fictional; no input photos.",
+        "generation": "built-in image_gen",
+        "modelId": "NOT EXPOSED"
+      },
+      "sample": true,
+      "version": 2,
+      "providerGenerated": true,
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "standalone-cat-v2",
+      "path": "images/standalone-cat-v2-normalized.png",
+      "sha256": "ff648400cfb3e4916889a3a0f10371088c6055057ddeea6d1c439c995badfcd4",
+      "bytes": 1211766,
+      "dimensions": [
+        720,
+        1080
+      ],
+      "type": "standalone-image",
+      "source": {
+        "raw": "raw/standalone-cat-v2.png",
+        "sha256": "1ef113c870c75b5c88106e7c31c49e854449b3acd829083845af826f8b16e0e9",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "mode": "RGB",
+        "prompt": "Create a new original portrait sample illustration for NewsFlow AI. Use case: illustration-story. An ordinary cinnamon tabby cat curled up beside a round window in a cozy imaginary plant-filled reading nook, soft lavender dusk outside, amber lamp glow, simple unmarked books and abstract ceramic shapes. Premium painterly 3D illustration, rich but gentle colors, 2:3 portrait framing. No text, logos, watermarks, branded character, real person, identifiable real house or copied artwork. No input image references; original generic domestic cat.",
+        "generation": "built-in image_gen",
+        "modelId": "NOT EXPOSED"
+      },
+      "sample": true,
+      "version": 2,
+      "providerGenerated": true,
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "standalone-earth-v2",
+      "path": "images/standalone-earth-v2-normalized.png",
+      "sha256": "1a7341eed239115daa2fd17787c2ffc0907f41c61194aca98a68ec5827f1319e",
+      "bytes": 1201121,
+      "dimensions": [
+        720,
+        1080
+      ],
+      "type": "standalone-image",
+      "source": {
+        "raw": "raw/standalone-earth-v2.png",
+        "sha256": "2a51082be99dd89ebbf8770177a181fd693e2d8a0b4a01ce09d0d81b333f4e15",
+        "dimensions": [
+          1024,
+          1536
+        ],
+        "mode": "RGB",
+        "prompt": "Create an original environmental concept illustration for the NewsFlow AI sample image gallery. Use case: scientific-educational. An abstract small blue-green planet sphere floating above a sculpted ring of leaves and water droplets, simplified imaginary land shapes rather than a precise world map, soft cyan rim light, navy background with subtle stars. Premium refined 3D editorial illustration, 2:3 portrait, centered elegant composition. This is a fictional visual example, no actual climate data or news claims. No text, numbers, logos, watermark, borrowed photo or branded elements.",
+        "generation": "built-in image_gen",
+        "modelId": "NOT EXPOSED"
+      },
+      "sample": true,
+      "version": 2,
+      "providerGenerated": true,
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "top3-ai-v2",
+      "path": "images/top3-ai-v2-normalized.png",
+      "sha256": "af62f089a07f6ce4bee4c9fc34faafa4ced705f6fd3316550fc28db1a09eb339",
+      "bytes": 1619788,
+      "dimensions": [
+        1080,
+        1350
+      ],
+      "type": "top3-image",
+      "source": {
+        "raw": "raw/top3-ai-v2.png",
+        "sha256": "a4575bab8056f911c971dda2ff8ed34c14398ff293a155a22b565dd31736b946",
+        "dimensions": [
+          1122,
+          1402
+        ],
+        "mode": "RGB",
+        "prompt": "Create a new original editorial-style sample image about a generic artificial-intelligence concept for NewsFlow AI. Use case: scientific-educational. An unbranded luminous abstract processor tile connected to small geometric nodes, violet and cyan light trails above a deep navy surface, premium editorial 3D illustration. 4:5 portrait composition with safe open space at top and bottom for later UI captions. No text, statistics, company logos, product designs, watermark, existing brand, real people or claimed current news event. No input images.",
+        "generation": "built-in image_gen",
+        "modelId": "NOT EXPOSED"
+      },
+      "sample": true,
+      "version": 2,
+      "providerGenerated": true,
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "top3-ev-v2",
+      "path": "images/top3-ev-v2-normalized.png",
+      "sha256": "0c417bec81057ce6a112feae079086635d13a81ecfe8c76c5d965a060a005076",
+      "bytes": 1555589,
+      "dimensions": [
+        1080,
+        1350
+      ],
+      "type": "top3-image",
+      "source": {
+        "raw": "raw/top3-ev-v2.png",
+        "sha256": "6c8db7ace4c9c548648630dc1d7cce734f33ccb9c85efc4d8f993af3dbe9ff43",
+        "dimensions": [
+          1122,
+          1402
+        ],
+        "mode": "RGB",
+        "prompt": "Create a new original abstract electric-mobility editorial sample illustration for NewsFlow AI. Use case: scientific-educational. Three tall smooth translucent emerald battery-like sculptural blocks beside two featureless rounded charging arches, subtle luminous energy ribbons and small leaf forms over a navy studio background. Premium refined 3D editorial illustration. 4:5 portrait, generous safe margins. Entirely abstract concept: no cars, bicycles, vehicles, product packaging, brands, logos, badges, emblems, text, numbers, currency, watermark, real people, exact statistics or real news claims. No reference images.",
+        "generation": "built-in image_gen",
+        "modelId": "NOT EXPOSED"
+      },
+      "sample": true,
+      "version": 2,
+      "providerGenerated": true,
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "top3-economy-v2",
+      "path": "images/top3-economy-v2-normalized.png",
+      "sha256": "bfcd410c3b746bf834b208d611694d05fa1eca2890ec539ff259e2b4a69568dd",
+      "bytes": 1577423,
+      "dimensions": [
+        1080,
+        1350
+      ],
+      "type": "top3-image",
+      "source": {
+        "raw": "raw/top3-economy-v2.png",
+        "sha256": "49f2b9ef225480bc108974314112530f64f5967fc7917ff5aa687f0b9a888e76",
+        "dimensions": [
+          1122,
+          1402
+        ],
+        "mode": "RGB",
+        "prompt": "Create an original abstract economic-literacy sample illustration for NewsFlow AI. Use case: scientific-educational. Unmarked metallic discs and translucent geometric blocks arranged in a balanced ascending spiral, soft gold and cyan lighting over navy background, a subtle non-numerical decorative curve. Premium clean editorial 3D illustration in 4:5 portrait framing, spacious margins. No currency symbol, national seal, real company logo, numbers, text, watermark, exact market chart, investment advice or claimed factual news event. No input photos or borrowed artwork.",
+        "generation": "built-in image_gen",
+        "modelId": "NOT EXPOSED"
+      },
+      "sample": true,
+      "version": 2,
+      "providerGenerated": true,
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "news-short-v2",
+      "path": "videos/news-short-v2.mp4",
+      "sha256": "b334dc7e3178758a65b7738b449e61c397b26a49674d14fee100241d01705074",
+      "bytes": 617587,
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "duration": 12.0,
+      "fps": "30/1",
+      "audio": false,
+      "sample": true,
+      "version": 2,
+      "providerGenerated": false,
+      "type": "news-video",
+      "construction": "Three 4-second still-image sections; no narration, generated character movement or editable original project",
+      "inputs": [
+        {
+          "id": "top3-ai-v2",
+          "sha256": "af62f089a07f6ce4bee4c9fc34faafa4ced705f6fd3316550fc28db1a09eb339"
+        },
+        {
+          "id": "top3-ev-v2",
+          "sha256": "0c417bec81057ce6a112feae079086635d13a81ecfe8c76c5d965a060a005076"
+        },
+        {
+          "id": "top3-economy-v2",
+          "sha256": "bfcd410c3b746bf834b208d611694d05fa1eca2890ec539ff259e2b4a69568dd"
+        }
+      ],
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "character-short-robot-v2",
+      "path": "videos/character-short-robot-v2.mp4",
+      "sha256": "3a921681dd3abbfaf03f7ddfd8656083382d02af314ebb8b8c967550ff9bbd05",
+      "bytes": 281583,
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "duration": 12.0,
+      "fps": "30/1",
+      "audio": false,
+      "sample": true,
+      "version": 2,
+      "providerGenerated": false,
+      "type": "character-video",
+      "construction": "Three 4-second still-image sections; no narration, generated character movement or editable original project",
+      "inputs": [
+        {
+          "id": "character-robot-v2",
+          "sha256": "3245d628d3f3f1c5bf0915f132e70559560e3aed7d2dfe405a011697086db3f1"
+        },
+        {
+          "id": "character-robot-v2",
+          "sha256": "3245d628d3f3f1c5bf0915f132e70559560e3aed7d2dfe405a011697086db3f1"
+        },
+        {
+          "id": "character-robot-v2",
+          "sha256": "3245d628d3f3f1c5bf0915f132e70559560e3aed7d2dfe405a011697086db3f1"
+        }
+      ],
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    },
+    {
+      "id": "character-short-cat-v2",
+      "path": "videos/character-short-cat-v2.mp4",
+      "sha256": "74153104234ac9a9bb5ddc7779813c7c86ba995abc776f2986c5bc2d161086f4",
+      "bytes": 409507,
+      "dimensions": [
+        1080,
+        1920
+      ],
+      "duration": 12.0,
+      "fps": "30/1",
+      "audio": false,
+      "sample": true,
+      "version": 2,
+      "providerGenerated": false,
+      "type": "character-video",
+      "construction": "Three 4-second still-image sections; no narration, generated character movement or editable original project",
+      "inputs": [
+        {
+          "id": "character-cat-v2",
+          "sha256": "d018460652d661eb57373f7eee227fba7ce478a0dc2217ce71cff9b3df3d1362"
+        },
+        {
+          "id": "character-cat-v2",
+          "sha256": "d018460652d661eb57373f7eee227fba7ce478a0dc2217ce71cff9b3df3d1362"
+        },
+        {
+          "id": "character-cat-v2",
+          "sha256": "d018460652d661eb57373f7eee227fba7ce478a0dc2217ce71cff9b3df3d1362"
+        }
+      ],
+      "activeInProduct": false,
+      "rightsVerified": false,
+      "commercialRedistribution": "CONDITIONAL: source/provenance and published OpenAI output terms recorded; publisher/account governing-agreement evidence not supplied",
+      "termsUrl": "https://openai.com/policies/terms-of-use/",
+      "thirdPartyInputUsed": false,
+      "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
+      "publicReleaseApproved": false
+    }
+  ],
+  "originalCatalogModified": false,
+  "generationRecord": "../ART_GENERATION_RECORDS.json",
+  "font": {
+    "path": "fonts/NotoSansKR.ttf",
+    "sha256": "194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252",
+    "license": "SIL OFL1.1; existing licensed Noto Sans KR source"
+  },
+  "externalPaidRestOrSdkCalls": 0,
+  "builtInImageGenerationCalls": 10,
+  "rejectedGenerationCount": 1
+}
