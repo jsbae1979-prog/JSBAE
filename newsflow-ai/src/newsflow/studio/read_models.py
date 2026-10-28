@@ -75,7 +75,7 @@ SPECS = {
         ("calendar", "PublishSchedule", "id due_at status revision"),
     ],
     "analytics": [
-        ("metrics", "SocialMetric", "id platform metric value unit synthetic fetched_at"),
+        ("metrics", "SocialMetric", "id job_id account_id platform metric value unit period_start period_end synthetic fetched_at"),
         (
             "usage",
             "AIUsage",
@@ -283,6 +283,11 @@ def module_view(request: Request, module: Module):
     with state.sessions() as session:
         for key, name, columns in SPECS[module]:
             result["collections"][key] = rows(session, name, columns)
+        if module == "automation":
+            # Explicit non-secret saved options, so editing never resets them.
+            for item in result["collections"]["schedules"]:
+                schedule = session.get(m.ProductionSchedule, item["id"])
+                item.update({key: schedule.options[key] for key in ("source", "duration", "platform", "voice") if key in schedule.options})
         if module == "images":
             result["collections"]["drafts"] = image_rows(state, session)
             result["collections"]["selections"] = []
@@ -567,6 +572,8 @@ def module_view(request: Request, module: Module):
             "verdicts": LISTENING_VERDICTS,
         }
     if module == "settings":
+        import platform
+        result["catalog"]["storage"] = {"dataDirectory": str(state.config.data_dir), "python": platform.python_version()}
         from newsflow.operations import evidence
 
         result["operationsReview"] = evidence.read(state.sessions)

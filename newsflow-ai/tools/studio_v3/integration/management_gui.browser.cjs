@@ -1,0 +1,87 @@
+"use strict";
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const {chromium}=require(path.join(process.env.NF_GUI_RUNTIME,'node_modules','playwright'));
+const root=process.env.NF_GUI_ROOT,out=path.join(root,'screenshots'),origin='http://127.0.0.1:18765',variant=process.env.NF_VISUAL_VARIANT||'after';
+fs.mkdirSync(out,{recursive:true});
+const meta=JSON.parse(fs.readFileSync(path.join(root,'ready.json'),'utf8'));
+const result={variant,checks:[],failures:[],captures:[],protected:[],pageErrors:[],externalRequests:[],OS_DPI:'NOT VERIFIED',transport:'React -> synthetic file IPC -> real Python ASGI/SQLite',realPaidCalls:0};
+let serial=Promise.resolve(),sequence=0;
+function ipc(data){const task=serial.then(async()=>{const n=String(++sequence).padStart(6,'0')+'.json',f=path.join(root,'requests',n),answer=path.join(root,'responses',n);fs.writeFileSync(f+'.tmp',JSON.stringify(data));fs.renameSync(f+'.tmp',f);const deadline=Date.now()+20000;while(!fs.existsSync(answer)){assert(Date.now()<deadline,'ASGI response timeout');await new Promise(r=>setTimeout(r,15));}const v=JSON.parse(fs.readFileSync(answer,'utf8'));fs.unlinkSync(answer);assert(!v.error,v.error);return v;});serial=task.catch(()=>{});return task;}
+const control=action=>ipc({kind:'control',action});
+(async()=>{let browser,context,page;try{
+ browser=await chromium.launch({channel:'chrome',headless:true,chromiumSandbox:true,args:['--disable-background-networking','--disable-component-update','--disable-quic','--proxy-server=http://127.0.0.1:18765','--proxy-bypass-list=127.0.0.1','--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1']});result.browserVersion=browser.version();
+ context=await browser.newContext({locale:'ko-KR',serviceWorkers:'block',acceptDownloads:false});
+ await context.route('**/*',async route=>{const req=route.request(),u=new URL(req.url());if(u.origin!==origin){result.externalRequests.push(u.origin);return route.abort();}try{const r=await ipc({method:req.method(),url:u.pathname+u.search,headers:req.headers(),body:(req.postDataBuffer()||Buffer.alloc(0)).toString('base64')});const h={...r.headers};delete h['content-encoding'];delete h['transfer-encoding'];await route.fulfill({status:r.status,headers:h,body:Buffer.from(r.body,'base64')});}catch(e){if(req.failure()?.errorText==='net::ERR_ABORTED')(result.navigationCancellations??=[]).push(u.pathname);else{result.failures.push({name:'transport',error:String(e),path:u.pathname});await route.abort().catch(()=>{});}}});
+ page=await context.newPage();page.setDefaultTimeout(12000);page.on('pageerror',e=>result.pageErrors.push(String(e)));page.on('dialog',d=>d.accept());
+ async function api(url){const r=await ipc({method:'GET',url,headers:{}});assert.equal(r.status,200);return JSON.parse(Buffer.from(r.body,'base64'));}
+ async function open(module,management=true){await page.waitForLoadState('networkidle');await serial;await page.goto(origin+'/studio/'+module);await page.locator(management?(variant==='after'?'.management-ui .mg-panel':'.workbench'): 'main').first().waitFor();await page.waitForLoadState('networkidle');await serial;await page.evaluate(()=>document.fonts.ready);}
+ async function check(name,fn){console.log('MANAGEMENT_CHECK='+name);try{await fn();result.checks.push({name,status:'PASS'});}catch(e){result.checks.push({name,status:'FAIL'});result.failures.push({name,error:String(e)});await page.screenshot({path:path.join(out,'failure-'+result.failures.length+'.png'),fullPage:true}).catch(()=>{});await page.keyboard.press('Escape').catch(()=>{});}}
+ async function settle(){await page.waitForLoadState('networkidle');await serial;await page.evaluate(()=>{window.scrollTo(0,0);document.querySelector('main')?.scrollTo(0,0);});await page.evaluate(async()=>{await document.fonts.ready;const visible=[...document.images].filter(i=>{const r=i.getBoundingClientRect();return r.width>0&&r.height>0&&r.bottom>0&&r.top<innerHeight;});await Promise.all(visible.map(i=>i.decode().catch(()=>{})));});await page.evaluate(()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r))));}
+ for(const [width,height] of [[1920,1080],[1366,768]]){
+  await page.setViewportSize({width,height});
+  for(const screen of ['automation','library','publishing','analytics','settings'])await check(`viewport ${screen} ${width}`,async()=>{
+   await open(screen);
+   if(variant==='before'){
+    const target={automation:'합성 저녁 뉴스',library:'합성 뉴스 미리보기',publishing:'합성 게시 초안',analytics:'합성 뉴스 미리보기'}[screen];
+    if(target){const b=page.getByRole('button',{name:new RegExp(target)}).first();if(await b.count())await b.click();}
+   }
+   await settle();assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2)),'horizontal overflow');
+   const metrics=await page.evaluate(()=>{const rect=s=>{const e=document.querySelector(s);if(!e)return null;const r=e.getBoundingClientRect(),c=getComputedStyle(e);return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom,background:c.backgroundColor,border:c.borderColor,font:c.fontFamily,fontSize:c.fontSize,gap:c.gap};};return {root:rect('.management-ui'),automation:rect('.mg-automation-grid'),automationLeft:rect('.mg-automation-grid > aside'),schedule:rect('.mg-schedules'),scheduleDetail:rect('.mg-schedule-detail'),libraryLeft:rect('.mg-library-grid > aside'),cards:rect('.mg-library-content'),libraryPreview:rect('.mg-library-detail'),publishContent:rect('.mg-publish-content'),publishEditor:rect('.mg-publish-editor'),publishRight:rect('.mg-publish-right'),costSummary:rect('.mg-cost-header'),analyticsMain:rect('.mg-analytics-main'),analyticsSide:rect('.mg-analytics-side'),settingsAccounts:rect('.mg-settings-accounts'),settingsWindows:rect('.mg-settings-windows'),preview:rect('.mg-media.portrait')};});
+   if(variant==='after'){
+    function row(keys){const b=keys.map(k=>metrics[k]);assert(b.every(Boolean));assert(Math.max(...b.map(x=>x.y))-Math.min(...b.map(x=>x.y))<3,'panels not aligned');for(let i=1;i<b.length;i++)assert(b[i].x>=b[i-1].x+b[i-1].width-2,'overlapping panels');}
+    if(screen==='automation')row(['automationLeft','schedule','scheduleDetail']);
+    if(screen==='library')row(['libraryLeft','cards','libraryPreview']);
+    if(screen==='publishing')row(['publishContent','publishEditor','publishRight']);
+    if(screen==='analytics')row(['analyticsMain','analyticsSide']);
+    if(screen==='settings')row(['settingsAccounts','settingsWindows']);
+    if(metrics.preview)assert(Math.abs(metrics.preview.width/metrics.preview.height-9/16)<.02,'portrait preview ratio');
+    assert.equal(await page.locator('.app > .sidebar').evaluate(e=>getComputedStyle(e).display),'none');
+   }
+   const file=screen+'-'+width+'.png';await page.screenshot({path:path.join(out,file),animations:'disabled',caret:'hide'});result.captures.push({screen,width,height,file,overflow:false,metrics});
+  });
+ }
+ await check('protected home and five studios presentation',async()=>{
+  for(const [width,height] of [[1920,1080],[1366,768]]){await page.setViewportSize({width,height});
+   for(const [name,url] of [['dashboard','dashboard'],['create','create'],['shorts','shorts'],['characters','characters'],['images','images'],['images-top3','images?mode=top3'],['news','news']]){
+    await open(url,false);if(['shorts','characters','images','images-top3','news'].includes(name))await page.locator('.core-studio').waitFor();await settle();assert.equal(await page.locator('.management-ui').count(),0);
+    assert.notEqual(await page.locator('.app > .sidebar').evaluate(e=>getComputedStyle(e).display),'none');
+    const styles=await page.locator('main').evaluate(e=>[e,...e.querySelectorAll('*')].filter(e=>!['SCRIPT','STYLE'].includes(e.tagName)).map(e=>{const r=e.getBoundingClientRect(),s=getComputedStyle(e);return {tag:e.tagName,cls:e.className,x:r.x,y:r.y,w:r.width,h:r.height,color:s.color,bg:s.backgroundColor,font:s.fontFamily,size:s.fontSize,padding:s.padding,gap:s.gap,display:s.display};}));
+    result.protected.push({screen:name,width,styles});await page.screenshot({path:path.join(out,'protected-'+name+'-'+width+'.png'),animations:'disabled',caret:'hide'});
+   }
+  }
+ });
+ if(variant==='after'){
+ await page.setViewportSize({width:1366,height:768});
+ await check('schedule save preserves options and remains paused',async()=>{
+  await open('automation');await page.locator('.mg-schedule-detail').getByRole('button',{name:'편집 · 저장',exact:true}).click();const d=page.getByRole('dialog');await d.waitFor();await d.getByLabel('이름',{exact:true}).fill('관리 화면 합성 예약 수정');await d.locator('footer button.primary').click();await d.waitFor({state:'hidden'});const rows=(await api('/api/studio/modules/automation')).collections.schedules;const x=rows.find(x=>x.name==='관리 화면 합성 예약 수정');assert(x);assert.equal(x.status,'paused');assert.equal(x.voice,'offline-silence');assert.equal(x.source,'sample');
+  await page.locator('.mg-schedule-detail').getByRole('button',{name:'활성화 · 정지 검토'}).click();await d.waitFor();for(const cb of await d.locator('input[type=checkbox]').all())assert(!await cb.isChecked());await page.keyboard.press('Escape');
+ });
+ await check('publishing edit save and Revision conflict protect unsaved text',async()=>{
+  await open('publishing');await page.getByLabel('게시 제목',{exact:true}).fill('관리 화면 합성 게시 제목');await page.getByLabel('게시 해시태그',{exact:true}).fill('#합성 #검증');await page.getByRole('button',{name:'초안 수정 · 저장',exact:true}).click();const d=page.getByRole('dialog');await d.waitFor();for(const cb of await d.locator('input[type=checkbox]').all())assert(!await cb.isChecked());await d.locator('footer button.primary').click();await d.waitFor({state:'hidden'});const x=(await api('/api/studio/modules/publishing')).collections.drafts.find(x=>x.id===meta.draft);assert.equal(x.title,'관리 화면 합성 게시 제목');assert(!x.content_reviewed&&!x.copyright_confirmed&&!x.sources_confirmed);
+  await open('publishing');await page.getByLabel('게시 제목',{exact:true}).fill('충돌 시 보존할 제목');await control('conflict');await page.getByRole('button',{name:'초안 수정 · 저장',exact:true}).click();await d.waitFor();await d.locator('footer button.primary').click();await d.getByRole('alert').waitFor();assert.equal(await page.getByLabel('게시 제목',{exact:true}).inputValue(),'충돌 시 보존할 제목');await page.keyboard.press('Escape');
+ });
+ await check('publishing has separate review, approval and blocked platforms',async()=>{
+  await open('publishing');assert(await page.getByRole('button',{name:'최종 게시 승인',exact:true}).isDisabled());assert.equal(await page.locator('.mg-publish-platforms article').count(),4);assert.equal(await page.getByText('실전송 차단 · 로컬 검토만 지원',{exact:true}).count(),2);await page.getByLabel('Instagram Reels · 피드 검토 대상',{exact:true}).check();await page.getByRole('button',{name:'선택 플랫폼 게시 검토',exact:true}).click();const d=page.getByRole('dialog');await d.waitFor();for(const cb of await d.locator('input[type=checkbox]').all())assert(!await cb.isChecked());const b=await d.boundingBox();assert(b.x>=0&&b.y>=0&&b.x+b.width<=1368&&b.y+b.height<=770);await page.screenshot({path:path.join(out,'publishing-review-modal-1366.png')});await page.keyboard.press('Escape');
+ });
+ await check('library samples copy, hide and restore remain user scoped',async()=>{
+  await open('library');const scopes=page.getByLabel('라이브러리 콘텐츠 구분',{exact:true});await scopes.getByRole('button',{name:'샘플 콘텐츠',exact:true}).click();const card=page.locator('[data-content-id="sample-character-cat"]');await card.waitFor();assert.equal(await page.locator('.mg-content-card').count(),12);await card.click();const detail=page.locator('.mg-library-detail');await detail.locator('img').evaluate(i=>i.decode());assert.equal(await detail.locator('img').evaluate(i=>i.naturalWidth),720);await detail.getByRole('button',{name:'내 작업으로 복사',exact:true}).click();await detail.getByRole('link',{name:'다운로드',exact:true}).first().waitFor();await page.waitForFunction(async()=>{const d=await(await fetch('/api/samples')).json();return d.assets.find(x=>x.id==='character-cat').copied;});await detail.getByRole('button',{name:'샘플 숨기기',exact:true}).click();await card.waitFor({state:'hidden'});await detail.getByRole('button',{name:'숨긴 샘플 관리',exact:true}).click();await card.waitFor();await card.click();await detail.getByRole('button',{name:'샘플 다시 표시',exact:true}).click();await detail.getByRole('button',{name:'샘플 숨기기',exact:true}).waitFor();
+ });
+ await check('library actual MP4 playback and no editable-project claim',async()=>{
+  await open('library');await page.locator('[data-content-id="sample-news-short"]').click();const v=page.locator('.mg-library-detail video');await v.waitFor();await v.evaluate(async v=>{v.muted=true;await v.play();});await page.waitForFunction(()=>document.querySelector('.mg-library-detail video')?.currentTime>.2);assert.deepEqual(await v.evaluate(v=>[v.videoWidth,v.videoHeight]),[720,1280]);assert(await page.getByText(/편집 가능한 원본 프로젝트가 아닙니다/).count()>0);await v.evaluate(v=>v.pause());
+ });
+ await check('library trash and restore use existing confirmation',async()=>{
+  await open('library');await page.locator('[data-content-id="own-news:'+meta.render+'"]').click();await page.locator('.mg-library-detail').getByRole('button',{name:'휴지 보관',exact:true}).click();let d=page.getByRole('dialog');await d.waitFor();for(const cb of await d.locator('input[type=checkbox]').all())await cb.check();await d.locator('footer button.primary').click();await d.waitFor({state:'hidden'});await page.locator('[data-content-id="own-news:'+meta.render+'"]').waitFor({state:'hidden'});const trash=page.locator('details').filter({has:page.locator('summary').filter({hasText:/^휴지 보관/})}).first();await trash.locator('summary').click();await trash.getByRole('button',{name:'복원 검토',exact:true}).click();await d.waitFor();for(const cb of await d.locator('input[type=checkbox]').all())await cb.check();await d.locator('footer button.primary').click();await d.waitFor({state:'hidden'});await page.locator('[data-content-id="own-news:'+meta.render+'"]').waitFor();
+ });
+ await check('analytics account identities, synthetic labels and unknown cost',async()=>{
+  await open('analytics');await page.locator('.mg-platform-tabs').getByRole('button',{name:/Instagram/}).click();await page.getByLabel('성과 계정 필터',{exact:true}).selectOption(String(meta.accounts[0]));let rows=page.locator('.mg-performance-content tbody tr');assert.equal(await rows.count(),1);assert(await rows.first().textContent().then(t=>t.includes('12')));assert(await page.getByText('합성 검증 자료',{exact:true}).count()>0);assert(await page.getByText('견적 미확정',{exact:true}).count()>0);assert(await page.getByText('미확인',{exact:true}).count()>0);await page.getByLabel('성과 계정 필터',{exact:true}).selectOption(String(meta.accounts[1]));assert(await rows.first().textContent().then(t=>t.includes('35')));
+ });
+ await check('settings tabs, secret-free key dialogs and saved defaults',async()=>{
+  await open('settings');await page.getByRole('tab',{name:'AI 모델 · API 키',exact:true}).click();await page.getByRole('button',{name:'OpenAI 키 설정',exact:true}).click();const d=page.getByRole('dialog');await d.waitFor();assert.equal(await d.locator('input[type=password]').inputValue(),'');assert(await d.locator('footer button.primary').isDisabled());await page.keyboard.press('Escape');await page.getByRole('tab',{name:'제작 기본값',exact:true}).click();const row=page.locator('.mg-setting-row').filter({hasText:'독립 AI 이미지'});await row.getByRole('button',{name:'기본값 설정',exact:true}).click();await d.waitFor();await d.getByLabel('이미지 품질',{exact:true}).selectOption('low');await d.locator('footer button.primary').click();await d.waitFor({state:'hidden'});assert.equal((await api('/api/studio/modules/images')).catalog.imageDefaults.quality,'low');await page.getByRole('tab',{name:'시스템 관리',exact:true}).click();assert((await page.getByLabel('사용자 데이터 저장 경로',{exact:true}).inputValue()).includes('fresh-synthetic'));
+ });
+ }
+ result.stats=await control('stats');assert.equal(result.stats.publishAttempts,0);assert(result.stats.reservations.some(x=>x.status==='unknown'));assert.deepEqual(result.externalRequests,[]);assert.deepEqual(result.pageErrors,[]);
+}catch(e){result.failures.push({name:'harness',error:String(e)});}finally{
+ try{if(page&&!page.isClosed())await page.waitForLoadState('networkidle');await serial;result.requestDrainCompleted=true;}catch(e){result.failures.push({name:'cleanup',error:String(e)});}
+ if(browser)await browser.close();await serial;fs.writeFileSync(path.join(root,'STOP'),'stop');result.browserClosed=true;result.pass=result.checks.filter(x=>x.status==='PASS').length;result.fail=result.checks.filter(x=>x.status==='FAIL').length+result.failures.filter(x=>!result.checks.some(c=>c.name===x.name)).length;result.skip=0;fs.writeFileSync(path.join(root,'gui-results.json'),JSON.stringify(result,null,2));console.log('MANAGEMENT_GUI_RESULT='+JSON.stringify(result));}
+ if(result.failures.length)process.exitCode=1;
+})();

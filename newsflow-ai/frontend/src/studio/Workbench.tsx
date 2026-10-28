@@ -51,6 +51,7 @@ import {
 } from "./ApprovedPanels";
 import "./approved.css";
 import CoreStudios from "./core/CoreStudios";
+import Management from "./management/Management";
 const intro: Record<string, string> = {
   news: "보관 기사에서 이야기를 선택하세요.",
   shorts: "기사 · 대본 · 음성 · 영상을 한 작업으로 이어갑니다.",
@@ -2753,5 +2754,7 @@ function LegacyWorkbench({
 export default function Workbench(props: {module: string; onNavigate: (page: string) => void}) {
  return ["shorts", "characters", "images", "news"].includes(props.module)
   ? <CoreStudios key={props.module} {...props}/>
-  : <LegacyWorkbench {...props}/>;
+  : ["automation", "library", "publishing", "analytics", "settings"].includes(props.module)
+    ? <Management key={props.module} {...props}/>
+    : <LegacyWorkbench {...props}/>;
 }
