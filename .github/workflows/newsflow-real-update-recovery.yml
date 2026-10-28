@@ -5,6 +5,7 @@ on:
     paths:
       - 'newsflow-ai/tools/distribution_recovery/**'
       - 'newsflow-ai/tools/distribution/app_entry.py'
+      - 'newsflow-ai/tools/distribution/newsflow-candidate.spec'
       - 'newsflow-ai/src/newsflow/distribution/launch.py'
       - '.github/workflows/newsflow-real-update-recovery.yml'
 permissions:
@@ -52,6 +53,13 @@ jobs:
           $media = Join-Path $env:RUNNER_TEMP 'reviewed-media'
           python -B tools/distribution/fetch_reviewed_media.py $media
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # Keep historical product source intact; apply the same documented
+          # interpreter-encoding packaging fix to both candidate revisions.
+          $oldSpec = Resolve-Path ../../previous/newsflow-ai/tools/distribution/newsflow-candidate.spec
+          $specText = [IO.File]::ReadAllText($oldSpec)
+          if (-not $specText.Contains('exe=EXE(pyz,a.scripts,[],')) { throw 'Unexpected previous spec' }
+          $specText = $specText.Replace('exe=EXE(pyz,a.scripts,[],',"exe=EXE(pyz,a.scripts,[('X utf8',None,'OPTION')],")
+          [IO.File]::WriteAllText($oldSpec,$specText,[Text.UTF8Encoding]::new($false))
           python -I -B ../../previous/newsflow-ai/tools/distribution/build_candidate.py --output (Join-Path $env:RUNNER_TEMP 'previous-product') --media-dir $media
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -I -B tools/distribution/build_candidate.py --output (Join-Path $env:RUNNER_TEMP 'new-product') --media-dir $media
