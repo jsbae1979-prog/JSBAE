@@ -113,13 +113,18 @@ def main():
     from filelock import FileLock
     with FileLock(str(root / 'install.lock')).acquire(timeout=0):
         executable = install.active_executable()
-        child = subprocess.Popen([str(executable), *args], cwd=executable.parent)
+        import signal
+        previous = signal.signal(signal.SIGBREAK, signal.default_int_handler)
         try:
-            code = child.wait()
-        except KeyboardInterrupt:
-            # CTRL_BREAK reaches the owned child in the same console group.
-            # Wait for its normal lifespan cleanup; never force-kill it.
-            code = child.wait(timeout=15)
+            child = subprocess.Popen([str(executable), *args], cwd=executable.parent)
+            try:
+                code = child.wait()
+            except KeyboardInterrupt:
+                # CTRL_BREAK reaches the owned child in the same console group.
+                # Wait for its normal lifespan cleanup; never force-kill it.
+                code = child.wait(timeout=15)
+        finally:
+            signal.signal(signal.SIGBREAK, previous)
         if code:
             raise OfflineBlocked('Application stopped with an error. Preserve data and inspect privately.')
 

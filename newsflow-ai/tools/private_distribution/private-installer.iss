@@ -81,4 +81,4 @@ begin
   Result := Exec(ExpandConstant('{app}\NewsFlowAI.exe'), '--uninstall-programs', '', SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0);
   if not Result then MsgBox('Close NewsFlow AI normally; recover any incomplete update before uninstalling. User data was retained.', mbError, MB_OK);
 end;
-; No user-data deletion, scheduler/task registration or automatic app launch.
+// No user-data deletion, scheduler/task registration or automatic app launch.
