@@ -155,9 +155,14 @@ def main():
         data.mkdir()
         (data / 'private-mode.json').write_text(json.dumps({'mode': mode, 'productSource': source}))
         shutil.copyfile(project / 'src/newsflow/distribution/publisher-trust.json', data / 'publisher-trust.json')
+        file_version = (1, 1, 0, 0) if mode == 'update' else (1, 0, 0, 0)
+        version_text = '.'.join(map(str, file_version))
+        resource = "VSVersionInfo(ffi=FixedFileInfo(filevers=" + repr(file_version) + ",prodvers=" + repr(file_version) + ",mask=0x3f,flags=0x2,OS=0x40004,fileType=0x1,subtype=0x0,date=(0,0)),kids=[StringFileInfo([StringTable('040904B0',[StringStruct('ProductName','NewsFlow AI Private Candidate'),StringStruct('FileDescription','Unsigned private verification candidate'),StringStruct('FileVersion'," + repr(version_text) + "),StringStruct('ProductVersion'," + repr(version_text) + ")])]),VarFileInfo([VarStruct('Translation',[1033,1200])])])"
+        (data / 'version-resource.txt').write_text(resource)
         command = [sys.executable, '-I', '-B', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--name', filename,
                    '--paths', project / 'src', '--workpath', output / ('helper-work-' + mode),
                    '--specpath', output / 'recipes', '--distpath', output / 'helpers',
+                   '--version-file', data / 'version-resource.txt',
                    '--add-data', str(data / 'private-mode.json') + ';.',
                    '--add-data', str(data / 'publisher-trust.json') + ';.',
                    '--add-data', str(project / 'src/newsflow/distribution/verify_authenticode.ps1') + ';newsflow/distribution',
