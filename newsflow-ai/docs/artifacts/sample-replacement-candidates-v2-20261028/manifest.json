@@ -31,7 +31,8 @@
       "source": "현재 승인된 Codex 세션의 신규 image_gen 원본 및 로컬 FFmpeg 파생. GENERATION_RECORDS.json 참조.",
       "license": "공식 출력물 약관/생성 이력 확보. 배포 주체의 적용 계약·재배포 권한 최종 확인 전 상업 배포 보류.",
       "activeInProduct": false,
-      "mode": "RGBA"
+      "mode": "RGBA",
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "format": "PNG",
@@ -58,7 +59,8 @@
       "source": "현재 승인된 Codex 세션의 신규 image_gen 원본 및 로컬 FFmpeg 파생. GENERATION_RECORDS.json 참조.",
       "license": "공식 출력물 약관/생성 이력 확보. 배포 주체의 적용 계약·재배포 권한 최종 확인 전 상업 배포 보류.",
       "activeInProduct": false,
-      "mode": "RGBA"
+      "mode": "RGBA",
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "format": "PNG",
@@ -85,7 +87,8 @@
       "source": "현재 승인된 Codex 세션의 신규 image_gen 원본 및 로컬 FFmpeg 파생. GENERATION_RECORDS.json 참조.",
       "license": "공식 출력물 약관/생성 이력 확보. 배포 주체의 적용 계약·재배포 권한 최종 확인 전 상업 배포 보류.",
       "activeInProduct": false,
-      "mode": "RGBA"
+      "mode": "RGBA",
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "format": "PNG",
@@ -112,7 +115,8 @@
       "source": "현재 승인된 Codex 세션의 신규 image_gen 원본 및 로컬 FFmpeg 파생. GENERATION_RECORDS.json 참조.",
       "license": "공식 출력물 약관/생성 이력 확보. 배포 주체의 적용 계약·재배포 권한 최종 확인 전 상업 배포 보류.",
       "activeInProduct": false,
-      "mode": "RGB"
+      "mode": "RGB",
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "format": "PNG",
@@ -139,7 +143,8 @@
       "source": "현재 승인된 Codex 세션의 신규 image_gen 원본 및 로컬 FFmpeg 파생. GENERATION_RECORDS.json 참조.",
       "license": "공식 출력물 약관/생성 이력 확보. 배포 주체의 적용 계약·재배포 권한 최종 확인 전 상업 배포 보류.",
       "activeInProduct": false,
-      "mode": "RGB"
+      "mode": "RGB",
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "format": "PNG",
@@ -166,7 +171,8 @@
       "source": "현재 승인된 Codex 세션의 신규 image_gen 원본 및 로컬 FFmpeg 파생. GENERATION_RECORDS.json 참조.",
       "license": "공식 출력물 약관/생성 이력 확보. 배포 주체의 적용 계약·재배포 권한 최종 확인 전 상업 배포 보류.",
       "activeInProduct": false,
-      "mode": "RGB"
+      "mode": "RGB",
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "format": "PNG",
@@ -193,7 +199,8 @@
       "source": "현재 승인된 Codex 세션의 신규 image_gen 원본 및 로컬 FFmpeg 파생. GENERATION_RECORDS.json 참조.",
       "license": "공식 출력물 약관/생성 이력 확보. 배포 주체의 적용 계약·재배포 권한 최종 확인 전 상업 배포 보류.",
       "activeInProduct": false,
-      "mode": "RGB"
+      "mode": "RGB",
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "format": "PNG",
@@ -220,7 +227,8 @@
       "source": "현재 승인된 Codex 세션의 신규 image_gen 원본 및 로컬 FFmpeg 파생. GENERATION_RECORDS.json 참조.",
       "license": "공식 출력물 약관/생성 이력 확보. 배포 주체의 적용 계약·재배포 권한 최종 확인 전 상업 배포 보류.",
       "activeInProduct": false,
-      "mode": "RGB"
+      "mode": "RGB",
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "format": "PNG",
@@ -247,7 +255,8 @@
       "source": "현재 승인된 Codex 세션의 신규 image_gen 원본 및 로컬 FFmpeg 파생. GENERATION_RECORDS.json 참조.",
       "license": "공식 출력물 약관/생성 이력 확보. 배포 주체의 적용 계약·재배포 권한 최종 확인 전 상업 배포 보류.",
       "activeInProduct": false,
-      "mode": "RGB"
+      "mode": "RGB",
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "title": "뉴스 쇼츠 미리보기",
@@ -283,7 +292,8 @@
         "sha256": "d7aa523de0016a841a631d9fa328f440f29f26aae97f2200671095bdefb4d790",
         "width": 270,
         "height": 480
-      }
+      },
+      "remoteStorageStatus": "LOCAL_ONLY_APPROVAL_BLOCKED"
     },
     {
       "title": "로봇 쇼츠 미리보기",
@@ -320,7 +330,8 @@
         "width": 270,
         "height": 480
       },
-      "referenceId": "character-robot-v2"
+      "referenceId": "character-robot-v2",
+      "remoteStorageStatus": "LOCAL_ONLY_APPROVAL_BLOCKED"
     },
     {
       "title": "고양이 쇼츠 미리보기",
@@ -357,8 +368,13 @@
         "width": 270,
         "height": 480
       },
-      "referenceId": "character-cat-v2"
+      "referenceId": "character-cat-v2",
+      "remoteStorageStatus": "LOCAL_ONLY_APPROVAL_BLOCKED"
     }
   ],
-  "notice": "version1 is the unchanged loader schema; contentRevision2 and new -v2 IDs identify new content. Existing product catalog is untouched."
+  "notice": "version1 is the unchanged loader schema; contentRevision2 and new -v2 IDs identify new content. Existing product catalog is untouched.",
+  "remoteCatalogComplete": false,
+  "remoteImageCount": 9,
+  "remoteVideoCount": 0,
+  "localVideoCount": 3
 }

@@ -1,0 +1,12 @@
+ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers
+built with gcc 16.2.0 (Rev4, Built by MSYS2 project)
+configuration: --prefix=/d/a/_temp/newsflow-ffmpeg-candidate/prefix --pkg-config=pkg-config --pkg-config-flags=--static --enable-gpl --enable-version3 --enable-static --disable-shared --disable-autodetect --disable-network --disable-doc --disable-debug --disable-ffplay --enable-libx264 --enable-libass --enable-zlib --disable-pthreads --enable-w32threads --extra-cflags=-I/d/a/_temp/newsflow-ffmpeg-candidate/prefix/include --extra-ldflags='-L/d/a/_temp/newsflow-ffmpeg-candidate/prefix/lib -static -static-libgcc -static-libstdc++'
+libavutil      61.  1.102 / 61.  1.102
+libavcodec     63.  1.102 / 63.  1.102
+libavformat    63.  1.102 / 63.  1.102
+libavdevice    63.  1.102 / 63.  1.102
+libavfilter    12.  1.102 / 12.  1.102
+libswscale     10.  1.102 / 10.  1.102
+libswresample   7.  1.102 /  7.  1.102
+
+Exiting with exit code 0

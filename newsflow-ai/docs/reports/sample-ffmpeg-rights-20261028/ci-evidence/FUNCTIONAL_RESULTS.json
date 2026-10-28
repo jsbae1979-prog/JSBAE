@@ -1,0 +1,125 @@
+{
+  "checks": [
+    {
+      "name": "configured_gpl_static",
+      "status": "PASS"
+    },
+    {
+      "name": "network_not_enabled",
+      "status": "PASS"
+    },
+    {
+      "name": "encoder_libx264",
+      "status": "PASS"
+    },
+    {
+      "name": "encoder_aac",
+      "status": "PASS"
+    },
+    {
+      "name": "encoder_png",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_ass",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_xfade",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_scale",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_crop",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_overlay",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_apad",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_amix",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_tpad",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_zoompan",
+      "status": "PASS"
+    },
+    {
+      "name": "filter_drawbox",
+      "status": "PASS"
+    },
+    {
+      "name": "no_external_runtime_dll",
+      "status": "PASS"
+    },
+    {
+      "name": "product_preflight",
+      "status": "PASS"
+    },
+    {
+      "name": "unchanged_news_render_30s",
+      "status": "PASS"
+    },
+    {
+      "name": "news_full_decode",
+      "status": "PASS"
+    },
+    {
+      "name": "unchanged_character_compose_30s",
+      "status": "PASS"
+    },
+    {
+      "name": "character_full_decode",
+      "status": "PASS"
+    },
+    {
+      "name": "unchanged_ai_clip_overlay",
+      "status": "PASS"
+    }
+  ],
+  "product_media_replaced": false,
+  "paid_calls": 0,
+  "environment": "Windows Server native CI",
+  "version": "ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+  "import_dlls": [
+    "AVICAP32.dll",
+    "GDI32.dll",
+    "KERNEL32.dll",
+    "OLEAUT32.dll",
+    "SHELL32.dll",
+    "SHLWAPI.dll",
+    "USER32.dll",
+    "api-ms-win-crt-conio-l1-1-0.dll",
+    "api-ms-win-crt-convert-l1-1-0.dll",
+    "api-ms-win-crt-environment-l1-1-0.dll",
+    "api-ms-win-crt-filesystem-l1-1-0.dll",
+    "api-ms-win-crt-heap-l1-1-0.dll",
+    "api-ms-win-crt-locale-l1-1-0.dll",
+    "api-ms-win-crt-math-l1-1-0.dll",
+    "api-ms-win-crt-private-l1-1-0.dll",
+    "api-ms-win-crt-runtime-l1-1-0.dll",
+    "api-ms-win-crt-stdio-l1-1-0.dll",
+    "api-ms-win-crt-string-l1-1-0.dll",
+    "api-ms-win-crt-time-l1-1-0.dll",
+    "api-ms-win-crt-utility-l1-1-0.dll",
+    "bcrypt.dll",
+    "ole32.dll"
+  ],
+  "binary_hashes": {
+    "ffmpeg.exe": "081ad1c10cdf530d9ce47f03934dbd1a4343dce1d617af3f1030a9eb098b1569",
+    "ffprobe.exe": "cc7955c6bd13d9ab82fba80cf513e85b301fdb18f9d04f3172ec86bd14363e1f"
+  },
+  "result": "PASS"
+}

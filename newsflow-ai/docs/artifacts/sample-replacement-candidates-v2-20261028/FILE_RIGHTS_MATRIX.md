@@ -35,3 +35,5 @@
 | character-short-cat-v2 | 1080×1920 / 12.0초 / 무음 | `74153104234ac9a9bb5ddc7779813c7c86ba995abc776f2986c5bc2d161086f4` | 생성·가공 증거 확보 / rightsVerified:false / 비활성 후보 |
 
 신규 후보의 원본·프롬프트·가공·해시는 확인되었으나, 생성 이력 확인과 최종 상업 재배포 권리 판정을 동일시하지 않는다. 원본 약관과 공개 배포 전 확인 범위는 RIGHTS_BASIS.md를 참조한다.
+
+MP43개는 실제 제작했지만 자동 승인 심사 거절로 로컬에만 보존한다. 원격에는 poster/해시/metadata만 등록한다. MEDIA_UPLOAD_STATUS.json 참조.

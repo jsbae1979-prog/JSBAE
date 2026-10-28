@@ -1,0 +1,71 @@
+{
+  "sources": [
+    {
+      "name": "ffmpeg",
+      "commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "sha256": "0aa2b1de2a5698b20a23e93d539a9a8e82ca0117496c5bdf05d198805f42bb3b",
+      "license": "GPL-3.0-or-later (configured GPL/version3)",
+      "archive_bytes": 17333895,
+      "source_dir": "D:\\a\\_temp\\newsflow-ffmpeg-candidate\\src\\ffmpeg"
+    },
+    {
+      "name": "x264",
+      "commit": "0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee",
+      "url": "https://code.videolan.org/videolan/x264.git",
+      "sha256": "2ee0208201a22e4637462c566b0fc853da85dbda77533b8b7389a7f38fb1da04",
+      "license": "GPL-2.0-or-later",
+      "bundled": true,
+      "archive_bytes": 1048654,
+      "source_dir": "D:\\a\\_temp\\newsflow-ffmpeg-candidate\\src\\x264"
+    },
+    {
+      "name": "freetype",
+      "commit": "0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+      "url": "https://codeload.github.com/freetype/freetype/tar.gz/0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+      "sha256": "11cd478953fc1d382f20a233b8e2aed6c31b47cbf0568c4bdb3334bcc1550698",
+      "license": "FTL (selected)/GPL alternative",
+      "archive_bytes": 2517889,
+      "source_dir": "D:\\a\\_temp\\newsflow-ffmpeg-candidate\\src\\freetype"
+    },
+    {
+      "name": "harfbuzz",
+      "commit": "36cb489cb02ce4b92099669ba9f9bea348eff93f",
+      "url": "https://codeload.github.com/harfbuzz/harfbuzz/tar.gz/36cb489cb02ce4b92099669ba9f9bea348eff93f",
+      "sha256": "0afa12c8ef4bc4ffebd99e5d2a4a2c56dfe329c661feda08a9bc878b7352be89",
+      "license": "MIT, per-file notices",
+      "archive_bytes": 38408938,
+      "source_dir": "D:\\a\\_temp\\newsflow-ffmpeg-candidate\\src\\harfbuzz"
+    },
+    {
+      "name": "fribidi",
+      "commit": "68162babff4f39c4e2dc164a5e825af93bda9983",
+      "url": "https://codeload.github.com/fribidi/fribidi/tar.gz/68162babff4f39c4e2dc164a5e825af93bda9983",
+      "sha256": "fa34a057a414c85f7e1f3c0fd717bc93d74d370ed474ef2feca90868b4938f72",
+      "license": "LGPL-2.1-or-later",
+      "archive_bytes": 2144204,
+      "source_dir": "D:\\a\\_temp\\newsflow-ffmpeg-candidate\\src\\fribidi"
+    },
+    {
+      "name": "libass",
+      "commit": "4a05d8127f525943ebf45fdc6497c9e665947f0d",
+      "url": "https://codeload.github.com/libass/libass/tar.gz/4a05d8127f525943ebf45fdc6497c9e665947f0d",
+      "sha256": "3546ecc8748c62e100a9dd18e52ea2d17d7facedf89cfcad97000ad60b1bce2b",
+      "license": "ISC",
+      "archive_bytes": 351823,
+      "source_dir": "D:\\a\\_temp\\newsflow-ffmpeg-candidate\\src\\libass"
+    },
+    {
+      "name": "zlib",
+      "commit": "51b7f2abdade71cd9bb0e7a373ef2610ec6f9daf",
+      "url": "https://codeload.github.com/madler/zlib/tar.gz/51b7f2abdade71cd9bb0e7a373ef2610ec6f9daf",
+      "sha256": "d9e270d46252734aa49770fbc544125391617956266f220bd63216c834f3a522",
+      "license": "Zlib",
+      "archive_bytes": 1572004,
+      "source_dir": "D:\\a\\_temp\\newsflow-ffmpeg-candidate\\src\\zlib"
+    }
+  ],
+  "source_patches": [],
+  "installed_in_product": false,
+  "scope": "Separate native Windows GPL-static candidate; no product media pin changes"
+}

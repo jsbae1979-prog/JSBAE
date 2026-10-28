@@ -1,0 +1,99 @@
+{
+  "branch": "codex/newsflow-sample-ffmpeg-rights-20261028",
+  "baseline": "f44f65de1c4dcb74a6037ce5063cd44455a8e373",
+  "code_tested": "88bdfbbd1cf4327f80fd6d155f96b87819211e39",
+  "ffmpeg": {
+    "run": 40658108667,
+    "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40658108667",
+    "result": "success",
+    "pass": 22,
+    "fail": 0,
+    "runner": "Windows Server native UCRT64",
+    "python": "3.14.7",
+    "compiler": "GCC16.2.0 Rev4",
+    "source_archive_count": 7,
+    "source_hashes_verified": true,
+    "source_license_files": 13,
+    "import_dlls": "Windows/UCRT system only",
+    "product_replaced": false,
+    "hashes": {
+      "ffmpeg": "081ad1c10cdf530d9ce47f03934dbd1a4343dce1d617af3f1030a9eb098b1569",
+      "ffprobe": "cc7955c6bd13d9ab82fba80cf513e85b301fdb18f9d04f3172ec86bd14363e1f"
+    },
+    "artifacts": [
+      {
+        "id": 12803497630,
+        "name": "ffmpeg-source-candidate-evidence",
+        "digest": "sha256:5b071b1beb505efdc65aa4a79cd4b0b133b07c67874ae20480937f9048ef9877",
+        "expires_at": "2027-01-26T08:37:18Z",
+        "downloaded_and_digest_matched": true
+      },
+      {
+        "id": 12802589292,
+        "name": "ffmpeg-candidate-upstream-sources",
+        "digest": "sha256:5c9f86612852d547c21672c7ea06541d4e686cb835364993e1e13a4a38662d45",
+        "expires_at": "2027-01-26T08:37:18Z",
+        "downloaded_and_digest_matched": true
+      }
+    ],
+    "previous_failed_run": {
+      "id": 40657031044,
+      "sha": "8c2a673a2fd9dcd2baba956cf5211af151c15573",
+      "cause": "HarfBuzz native command-line length; fixed by source path flattening; not a product defect"
+    }
+  },
+  "samples": {
+    "created_images": 9,
+    "created_videos": 3,
+    "built_in_image_generation_calls": 10,
+    "rejected_generations": 1,
+    "external_paid_rest_sdk_calls": 0,
+    "new_checks_pass": 28,
+    "new_checks_fail": 0,
+    "new_browser_playback": "NOT VERIFIED",
+    "rights_verified": false,
+    "product_catalog_changed": false,
+    "remote_images": 9,
+    "remote_videos": 0,
+    "media_upload": "AUTO_REVIEW_BLOCKED; two requests denied; no workaround",
+    "video_storage": "Local only; metadata/posters/hashes in Git"
+  },
+  "reused_not_rerun": {
+    "update_recovery": 42,
+    "packaging": 7,
+    "windows_security": 28,
+    "real_windows_users": 2,
+    "windows11_gui_screens": 12,
+    "old_mp4_playback": 3
+  },
+  "product_src_diff": [],
+  "frontend_tree": "da901a912e7207aac94c1407775cab2450898444",
+  "old_sample_tree": "d1a4ef420d8875042bcfa47d2747f2e4b56f508f",
+  "pr35": {
+    "draft": true,
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "merged": false,
+    "state": "open"
+  },
+  "protected_remote": {
+    "main": "aa2f056d78ceed24874d0b4c50c6033f7168bf4d",
+    "update_baseline": "f44f65de1c4dcb74a6037ce5063cd44455a8e373",
+    "core": "5a8a622748464897033a49e421725812267245d9",
+    "management": "4580e8943a6e3a19d83ccad34995412f39bc21fa"
+  },
+  "production_runtime": {
+    "earlier_listener": {
+      "port": 8765,
+      "pid": 55740
+    },
+    "final_readonly_query": "SUCCESS",
+    "final_listeners": [],
+    "previous_pid_present": false,
+    "cause": "NOT DETERMINED",
+    "stop_commands": 0,
+    "restart_commands": 0,
+    "operating_files_accessed": false
+  },
+  "public_release": false,
+  "sns_oauth_calls": 0
+}

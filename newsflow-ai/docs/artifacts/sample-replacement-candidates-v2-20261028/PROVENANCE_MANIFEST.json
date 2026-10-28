@@ -35,7 +35,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "id": "character-cat-v2",
@@ -68,7 +69,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "id": "character-dragon-v2",
@@ -101,7 +103,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "id": "standalone-city-v2",
@@ -134,7 +137,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "id": "standalone-cat-v2",
@@ -167,7 +171,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "id": "standalone-earth-v2",
@@ -200,7 +205,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "id": "top3-ai-v2",
@@ -233,7 +239,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "id": "top3-ev-v2",
@@ -266,7 +273,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "id": "top3-economy-v2",
@@ -299,7 +307,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "GIT_REGISTERED"
     },
     {
       "id": "news-short-v2",
@@ -338,7 +347,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "LOCAL_ONLY_APPROVAL_BLOCKED"
     },
     {
       "id": "character-short-robot-v2",
@@ -377,7 +387,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "LOCAL_ONLY_APPROVAL_BLOCKED"
     },
     {
       "id": "character-short-cat-v2",
@@ -416,7 +427,8 @@
       "termsUrl": "https://openai.com/policies/terms-of-use/",
       "thirdPartyInputUsed": false,
       "visualReview": "No obvious third-party logo, real person or identifiable named character in selected outputs; not a legal clearance or exclusivity guarantee",
-      "publicReleaseApproved": false
+      "publicReleaseApproved": false,
+      "remoteStorageStatus": "LOCAL_ONLY_APPROVAL_BLOCKED"
     }
   ],
   "originalCatalogModified": false,
@@ -428,5 +440,9 @@
   },
   "externalPaidRestOrSdkCalls": 0,
   "builtInImageGenerationCalls": 10,
-  "rejectedGenerationCount": 1
+  "rejectedGenerationCount": 1,
+  "remoteCatalogComplete": false,
+  "remoteImageCount": 9,
+  "remoteVideoCount": 0,
+  "localVideoCount": 3
 }

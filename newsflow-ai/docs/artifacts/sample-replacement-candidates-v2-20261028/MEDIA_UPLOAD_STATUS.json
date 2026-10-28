@@ -1,0 +1,30 @@
+{
+  "status": "BLOCKED_BY_AUTOMATIC_APPROVAL_REVIEW",
+  "attempts": 2,
+  "files": [
+    {
+      "path": "videos/news-short-v2.mp4",
+      "bytes": 617587,
+      "sha256": "b334dc7e3178758a65b7738b449e61c397b26a49674d14fee100241d01705074"
+    },
+    {
+      "path": "videos/character-short-robot-v2.mp4",
+      "bytes": 281583,
+      "sha256": "3a921681dd3abbfaf03f7ddfd8656083382d02af314ebb8b8c967550ff9bbd05"
+    },
+    {
+      "path": "videos/character-short-cat-v2.mp4",
+      "bytes": 409507,
+      "sha256": "74153104234ac9a9bb5ddc7779813c7c86ba995abc776f2986c5bc2d161086f4"
+    }
+  ],
+  "actual_creation_and_decode_verified": true,
+  "stored_locally": true,
+  "uploaded_to_github": false,
+  "attempted_action": "git add -f -- three explicitly named newly generated MP4 sample files",
+  "review_reason": "Force-stages binary MP4 files despite interpreted restriction against uploading binaries to GitHub; retain hashes/metadata or approved artifact storage.",
+  "scope_clarification_submitted": true,
+  "clarified_attempt_also_rejected": true,
+  "workaround_used": false,
+  "next_input": "Explicit approval for these three non-sensitive sample MP4 files only, or an explicitly approved media artifact destination. Product EXE/DLL/Setup upload is excluded."
+}
