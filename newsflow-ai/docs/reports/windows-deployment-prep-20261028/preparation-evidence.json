@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-28",
+  "source_base": "39520d4ad99571b28d6ade7418f77837d2b7ffc4",
+  "branch": "codex/newsflow-windows-deployment-prep-20261028",
+  "source_changed": [],
+  "frozen_app_executed": false,
+  "installer_compiled": false,
+  "real_windows_setup_test": false,
+  "cross_windows_user_test": false,
+  "production_data_accessed": false,
+  "production_restarted": false,
+  "paid_api_calls": 0,
+  "sns_calls": 0,
+  "os_dpi_changed": false,
+  "real_dpi": {
+    "100": "NOT VERIFIED",
+    "150": "NOT VERIFIED",
+    "200": "NOT VERIFIED",
+    "125": "NOT VERIFIED"
+  },
+  "exe_signature_status": "NotSigned",
+  "build_inputs": [
+    {
+      "path": "tools/distribution/app_entry.py",
+      "sha256": "c380c753565a8c722415e500cda89cd671b175f1e5610f873ef8f941db7a3dc2"
+    },
+    {
+      "path": "tools/distribution/build_candidate.py",
+      "sha256": "9b9482f158316f352f9bdc0637d2c329402ea11d05fd964b5e9e36368a6e2beb"
+    },
+    {
+      "path": "tools/distribution/newsflow-candidate.spec",
+      "sha256": "5007cd5ed887078cf77c3bc25c378f725d7997c6cb94af507972b836ee2f7cdb"
+    },
+    {
+      "path": "tools/distribution/newsflow-private.iss",
+      "sha256": "0dbf233ad37fd38564a2271dc5e67e3ad06a968e13a9e1284581d8805c317e1d"
+    },
+    {
+      "path": "tools/distribution/package_contract.py",
+      "sha256": "0fc72f0d2034b399c168d0c67c59bcc0144f927bfe2b1a7255794a9de3009b6a"
+    },
+    {
+      "path": "tools/distribution/test_install_contract.py",
+      "sha256": "c2a83601e0b74ee84254b8025ad7c2a0a8d977ef0b34da9d0c7a90d6b88a299d"
+    },
+    {
+      "path": "tools/distribution/validate_payload.py",
+      "sha256": "b64a3a0442731326421acb0fd5e1ff49290212b84c10d8a715467c38132b23de"
+    }
+  ],
+  "production_listener_observation": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8765,
+      "OwningProcess": 55740
+    }
+  ],
+  "pr35": {
+    "merged": false,
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "draft": true
+  },
+  "main": "aa2f056d78ceed24874d0b4c50c6033f7168bf4d",
+  "public_distribution": false
+}

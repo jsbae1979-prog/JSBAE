@@ -1,0 +1,24 @@
+{
+  "scope": "Synthetic filesystem model, not compiled installer/app/OS multi-user proof",
+  "Python": "3.14.7",
+  "pass": 13,
+  "fail": 0,
+  "error": 0,
+  "skip": 0,
+  "passed_ids": [
+    "__main__.InstallContract.test_corrupt_payload_rejected_before_activation",
+    "__main__.InstallContract.test_data_cannot_be_recursive_cleanup_target",
+    "__main__.InstallContract.test_interrupted_stage_keeps_previous_pointer_and_cleans_owned_stage",
+    "__main__.InstallContract.test_new_stage",
+    "__main__.InstallContract.test_profile_paths_are_separate_not_distinct_windows_principals",
+    "__main__.InstallContract.test_reinstall_and_repeated_stage_do_not_duplicate_user_samples",
+    "__main__.InstallContract.test_tampered_manifest_rejected",
+    "__main__.InstallContract.test_test_guard_database_keys_and_logs_not_payload",
+    "__main__.InstallContract.test_traversal_unc_ads_and_reserved_paths_rejected",
+    "__main__.InstallContract.test_uninstall_preserves_all_user_data",
+    "__main__.InstallContract.test_unknown_program_file_is_not_deleted",
+    "__main__.InstallContract.test_unowned_existing_root_rejected",
+    "__main__.InstallContract.test_update_preserves_database_key_settings_media_hidden_state"
+  ],
+  "failures": []
+}

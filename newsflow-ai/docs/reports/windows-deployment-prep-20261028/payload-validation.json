@@ -1,0 +1,242 @@
+{
+  "scope": "Private payload ZIP and filesystem staging MODEL, not actual Windows Setup or frozen app launch",
+  "Python": "3.14.7",
+  "archive_sha256": "47f5153927a300850dcddf2319de54e3d4e17aa0850f3fed9ba4658592cab82f",
+  "archive_bytes": 140593840,
+  "payload_files": 891,
+  "verification_modules": [],
+  "packaged_samples": [
+    {
+      "id": "character-robot",
+      "type": "character",
+      "width": 720,
+      "height": 1080,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "character-cat",
+      "type": "character",
+      "width": 720,
+      "height": 1080,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "character-dragon",
+      "type": "character",
+      "width": 720,
+      "height": 1080,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "standalone-city",
+      "type": "standalone",
+      "width": 720,
+      "height": 1080,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "standalone-cat",
+      "type": "standalone",
+      "width": 720,
+      "height": 1080,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "standalone-earth",
+      "type": "standalone",
+      "width": 720,
+      "height": 1080,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "top3-ai",
+      "type": "news-top3",
+      "width": 720,
+      "height": 1080,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "top3-ev",
+      "type": "news-top3",
+      "width": 720,
+      "height": 1080,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "top3-economy",
+      "type": "news-top3",
+      "width": 720,
+      "height": 1080,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "character-short-robot",
+      "type": "character-short",
+      "width": 720,
+      "height": 1280,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "character-short-cat",
+      "type": "character-short",
+      "width": 720,
+      "height": 1280,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    },
+    {
+      "id": "news-short",
+      "type": "news-short",
+      "width": 720,
+      "height": 1280,
+      "packaged_sha_matches_manifest": true,
+      "rightsVerified": false,
+      "license": "사용권·상업적 이용·재배포 권한 미확인. 공개 게시/일반 배포 전 별도 확인 필요.",
+      "source": "사용자 제공 NewsFlowAI_Sample_Content_v1.zip · 콜라주 추출·확대 시연 자산"
+    }
+  ],
+  "new_stage": true,
+  "uninstall_user_data_preserved": true,
+  "reinstall_user_data_preserved": true,
+  "repeat_stage_no_duplicate": true,
+  "app_executed": false,
+  "installer_compiled": false,
+  "cross_windows_user_test": false,
+  "public_distribution": false,
+  "components_metadata_only": [
+    {
+      "name": "pyinstaller",
+      "version": "6.22.3",
+      "license_expression": null,
+      "license_metadata": "GPLv2-or-later with a special exception which allows to use PyInstaller to build and distribute non-free programs (including commercial ones)"
+    },
+    {
+      "name": "fastapi",
+      "version": "0.143.0",
+      "license_expression": "MIT",
+      "license_metadata": ""
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.54.0",
+      "license_expression": "BSD-3-Clause",
+      "license_metadata": ""
+    },
+    {
+      "name": "jinja2",
+      "version": "3.1.6",
+      "license_expression": null,
+      "license_metadata": ""
+    },
+    {
+      "name": "sqlalchemy",
+      "version": "2.1.4",
+      "license_expression": "MIT",
+      "license_metadata": ""
+    },
+    {
+      "name": "alembic",
+      "version": "1.20.0",
+      "license_expression": "MIT",
+      "license_metadata": ""
+    },
+    {
+      "name": "feedparser",
+      "version": "6.0.14",
+      "license_expression": null,
+      "license_metadata": "BSD-2-Clause"
+    },
+    {
+      "name": "defusedxml",
+      "version": "0.7.1",
+      "license_expression": null,
+      "license_metadata": "PSFL"
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.32",
+      "license_expression": "Apache-2.0",
+      "license_metadata": ""
+    },
+    {
+      "name": "filelock",
+      "version": "3.32.7",
+      "license_expression": "MIT",
+      "license_metadata": ""
+    },
+    {
+      "name": "pydantic",
+      "version": "2.14.1",
+      "license_expression": "MIT",
+      "license_metadata": ""
+    },
+    {
+      "name": "Pillow",
+      "version": "12.3.0",
+      "license_expression": "MIT-CMU",
+      "license_metadata": ""
+    },
+    {
+      "name": "pywin32",
+      "version": "312",
+      "license_expression": null,
+      "license_metadata": "PSF"
+    },
+    {
+      "name": "tzdata",
+      "version": "2026.5",
+      "license_expression": null,
+      "license_metadata": "Apache-2.0"
+    },
+    {
+      "name": "supertonic",
+      "installed": false
+    },
+    {
+      "name": "onnxruntime",
+      "installed": false
+    }
+  ],
+  "license_files": [
+    "_internal/click-8.5.0.dist-info/licenses/LICENSE.txt",
+    "_internal/frontend/dist/assets/OFL.txt",
+    "_internal/licenses/python/LICENSE.txt",
+    "_internal/markupsafe-3.0.4.dist-info/licenses/LICENSE.txt",
+    "_internal/newsflow/character/assets/OFL.txt",
+    "_internal/newsflow/news/vendor/LICENSE-CPYTHON.txt",
+    "_internal/opentelemetry_api-1.45.1.dist-info/licenses/LICENSE",
+    "_internal/pydantic-2.14.1.dist-info/licenses/LICENSE"
+  ]
+}

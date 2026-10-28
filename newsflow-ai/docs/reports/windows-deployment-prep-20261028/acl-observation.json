@@ -1,0 +1,69 @@
+{
+  "scope": "New synthetic folders only; same Windows SID, not a cross-user deny test",
+  "acl_changed": false,
+  "cross_user_verified": false,
+  "profiles": [
+    {
+      "label": "profile-A",
+      "owner_is_current_user": true,
+      "protected": false,
+      "rules": [
+        {
+          "principal": "OTHER_SID_REDACTED",
+          "access": "Allow",
+          "rights": "ReadAndExecute, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "ADMINISTRATORS",
+          "access": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "CURRENT_USER",
+          "access": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        }
+      ]
+    },
+    {
+      "label": "profile-B",
+      "owner_is_current_user": true,
+      "protected": false,
+      "rules": [
+        {
+          "principal": "OTHER_SID_REDACTED",
+          "access": "Allow",
+          "rights": "ReadAndExecute, Synchronize",
+          "inherited": true
+        },
+        {
+          "principal": "SYSTEM",
+          "access": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "ADMINISTRATORS",
+          "access": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        },
+        {
+          "principal": "CURRENT_USER",
+          "access": "Allow",
+          "rights": "FullControl",
+          "inherited": true
+        }
+      ]
+    }
+  ]
+}
