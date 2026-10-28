@@ -21,7 +21,8 @@ def main():
     from newsflow.distribution.windows_profile import distribution_profile, private_directory, unlinked
     from newsflow.distribution.updates import publisher_matches, authenticode
     bundle = Path(sys._MEIPASS)
-    mode = json.loads((bundle / 'private-mode.json').read_bytes())['mode']
+    configuration = json.loads((bundle / 'private-mode.json').read_bytes())
+    mode = configuration['mode']
     local = unlinked(Path(os.environ['LOCALAPPDATA']))
     args = sys.argv[1:]
     if mode == 'update':
@@ -36,6 +37,8 @@ def main():
         if not (root / 'current.json').is_file():
             raise OfflineBlocked('Private installation not found')
         manifest = json.loads((bundle / 'release.json').read_bytes())
+        if manifest.get('source') != configuration.get('productSource'):
+            raise OfflineBlocked('Migration helper and application source mismatch')
         payload = bundle / 'payload'
         payload_check(payload, manifest)
         install = OfflineInstall(root, distribution_profile(local))
@@ -95,8 +98,14 @@ def main():
     from filelock import FileLock
     with FileLock(str(root / 'install.lock')).acquire(timeout=0):
         executable = install.active_executable()
-        child = subprocess.run([str(executable), *args], cwd=executable.parent)
-        if child.returncode:
+        child = subprocess.Popen([str(executable), *args], cwd=executable.parent)
+        try:
+            code = child.wait()
+        except KeyboardInterrupt:
+            # CTRL_BREAK reaches the owned child in the same console group.
+            # Wait for its normal lifespan cleanup; never force-kill it.
+            code = child.wait(timeout=15)
+        if code:
             raise OfflineBlocked('Application stopped with an error. Preserve data and inspect privately.')
 
 

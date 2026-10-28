@@ -106,7 +106,7 @@ def main():
     for mode, filename in [('launcher', 'NewsFlowAI'), ('update', 'NewsFlowAI_Update_v1.1.0')]:
         data = output / ('helper-' + mode)
         data.mkdir()
-        (data / 'private-mode.json').write_text(json.dumps({'mode': mode}))
+        (data / 'private-mode.json').write_text(json.dumps({'mode': mode, 'productSource': source}))
         shutil.copyfile(project / 'src/newsflow/distribution/publisher-trust.json', data / 'publisher-trust.json')
         command = [sys.executable, '-I', '-B', '-m', 'PyInstaller', '--noconfirm', '--onefile', '--name', filename,
                    '--paths', project / 'src', '--workpath', output / ('helper-work-' + mode),
