@@ -1,0 +1,617 @@
+{
+  "basis": "Canonical staged Git blob bytes, including configured newline normalization. Git blob object ID and SHA-256 are distinct. Manifest excludes itself.",
+  "files": [
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/CORE_STUDIOS_FINAL_MATCH_REPORT.md",
+      "gitBlobSHA": "fc472f0b8c1501bb949066167b140318462e32c5",
+      "SHA256": "a56c88d1042b2e14193db9b7da944c10bf6813df2673ae7c36a5e18c18bfbddc",
+      "bytes": 13852
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/DESIGN_MEASUREMENTS.json",
+      "gitBlobSHA": "e8f97959b242733bc70402593396ca1e32d0751d",
+      "SHA256": "1ae49c29bca121bd86523ff6834a23b56ec82222125bce9273d790310c20a6bd",
+      "bytes": 18801
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/characters-1366.png",
+      "gitBlobSHA": "c18149c794cd0dbe4bb47f15140d382ea8111490",
+      "SHA256": "12ad1b7f307c48812d377e939b4765b399871721d9515d6a2036ad02d14a69f5",
+      "bytes": 473143
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/characters-1920.png",
+      "gitBlobSHA": "d8af7cfbdcf8d74acaff6684b347637b03ccd987",
+      "SHA256": "bc74d9fe5a8197decdeef61fd77c439b71d3fd4d7fe0c80728045a9dcea8232e",
+      "bytes": 731864
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/characters-modal-1366.png",
+      "gitBlobSHA": "692985dbc714975aaf2d3af01ee0253b65011aaf",
+      "SHA256": "ec37216dc20f9ceb18b01a9dd14dcaa9e5e72d9b7892058883c96ccc76afcd79",
+      "bytes": 141008
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-analytics-1366.png",
+      "gitBlobSHA": "6df6cf1fcd3e86ea3d2b7c4e20bbd23de9c46af8",
+      "SHA256": "5c4c669260a486d5f31c6377e06d118e27d03976f02015362d4577566ecb6fe4",
+      "bytes": 530632
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-analytics-1920.png",
+      "gitBlobSHA": "12d10b649c28e72a0f33e45c378f98aef8178124",
+      "SHA256": "0925d52d26986b6c26dd9463012548439e3505ccf4b7087701f3144325eb38be",
+      "bytes": 917306
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-automation-1366.png",
+      "gitBlobSHA": "21cb5332f2713c191b100f2dd8c12aaeb4739f65",
+      "SHA256": "8fe77ecade7fed19111418701201b5382b8e0f208335f24055fe31fd8e910ee4",
+      "bytes": 492281
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-automation-1920.png",
+      "gitBlobSHA": "8f0426283899f596032cd02d02002a97204b6637",
+      "SHA256": "b8c820f29b7af28a39fc6dedb782421828680b9539608a0392ff11026bdded23",
+      "bytes": 721455
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-characters-1366.png",
+      "gitBlobSHA": "863ce31a5b9b06c12b6300d3a5d62a7e693b48dd",
+      "SHA256": "fbbd6ae2a0602c5ec391c1d93d5934157b7c370644f8a57bae7cd3fe6dc06c8f",
+      "bytes": 478894
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-characters-1920.png",
+      "gitBlobSHA": "9e2700be733a63293205b67dce5d834cb7b33649",
+      "SHA256": "aec21160615ca7673be84f9d789fd8c4a89f7384be43e93a3f05b3dbe31b55f9",
+      "bytes": 724996
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-create-1366.png",
+      "gitBlobSHA": "8bf4f224ebe1adaeb70c937ddf47ef3784059740",
+      "SHA256": "5d952596dd16a13feb28d87143eaf76249cf416dd467c7449fc0051c0d9eba8a",
+      "bytes": 658830
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-create-1920.png",
+      "gitBlobSHA": "01e8bec68e35a00097b3478e4914609ccd38b6f0",
+      "SHA256": "721d2faf76aa91cac868cc6f6c627bb1057e174da59f37b522194f58ca77e154",
+      "bytes": 973391
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-dashboard-1366.png",
+      "gitBlobSHA": "722bfeaf7df296b48be22d2b3eefc4a7073ab520",
+      "SHA256": "0baf954c85e6f925256e6047a5fa1d1131b37e598d730579d60a97d1ebe409b2",
+      "bytes": 711910
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-dashboard-1920.png",
+      "gitBlobSHA": "419e5d05f6cee0954a67f702ff2349dd921742b0",
+      "SHA256": "d65f492acf922820083462d01b389325db3387134f2aa614a37b5adf62f78bef",
+      "bytes": 1348820
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-images-1366.png",
+      "gitBlobSHA": "30c806d4f0b3fd18dfda324ed11c47606593f386",
+      "SHA256": "4eae42121b4f4a69eceba005f5d71a4bd0c229c01a06651607604c4712964277",
+      "bytes": 402467
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-images-1920.png",
+      "gitBlobSHA": "532a35fe7670904b0eab825171d98b80841463c3",
+      "SHA256": "012fd2df32ab076b4a90e23ca72a0a20ed7b3d19bfe713320cadc3c8039af924",
+      "bytes": 634297
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-images-top3-1366.png",
+      "gitBlobSHA": "12f8b10db585a0077fc888ccc8739fe233a87c44",
+      "SHA256": "b3716938d01c297ff1ae26ea812d01b9e59e37646ec40d4d5aeb48ea0755261f",
+      "bytes": 527062
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-images-top3-1920.png",
+      "gitBlobSHA": "866773aa0e6dcafa98d62f48bd7fd543d6acebcf",
+      "SHA256": "bc7104d9e6c5f9165f5f412faf33f7b1d60f3491208f020d180c75931493800c",
+      "bytes": 778296
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-library-1366.png",
+      "gitBlobSHA": "2d14b794d135e812e21d219e47aeb52db3925039",
+      "SHA256": "7d46417e7c539da858d9a9a1128c730bed8b1582a1ac394243798a3955c4a2ac",
+      "bytes": 778942
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-library-1920.png",
+      "gitBlobSHA": "a7c931a04cbfe6038ec80f3fef6e120d30ba696d",
+      "SHA256": "60ae7ec01dc67fdc9f2819b8f4da888d09f7e888be89a9c15f2118fecff8684a",
+      "bytes": 1413862
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-news-1366.png",
+      "gitBlobSHA": "3260f877fb6b7b78916d7dfcf5a8ed09f42de16e",
+      "SHA256": "ec3793d8e90fde15647815c6451c5488dad06434eb373aa344ad43f8fe311ba0",
+      "bytes": 507887
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-news-1920.png",
+      "gitBlobSHA": "3d20179e2e489612a31f83f4636d74a53fa575cb",
+      "SHA256": "7f1722b8bcf57fa687cda52edb6306dae527bbbdcc425f4feee52175f8a093cc",
+      "bytes": 770867
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-publishing-1366.png",
+      "gitBlobSHA": "53c03f7b8ee42789daa59a7dba291962b6e08693",
+      "SHA256": "18c4ae78ce49c2133d78e9e5b23eaa4e532716a3a06d74a0fdb25fef83257e8c",
+      "bytes": 537164
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-publishing-1920.png",
+      "gitBlobSHA": "4831b4b8ddf76c1d75e09d9503b688a03a9707af",
+      "SHA256": "71910294e742850d01ab7b44cb46c65e2bc94e0f0f08c5fb455efb689e57452e",
+      "bytes": 897317
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-settings-1366.png",
+      "gitBlobSHA": "c662745ae001d8a4d2a90a7b2d4aff2e59ea9dc2",
+      "SHA256": "ef1472a51eeec295927180acd311099f73a9a716a1c2a3ad361c5c12b0965ec9",
+      "bytes": 541055
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-settings-1920.png",
+      "gitBlobSHA": "a88c81765d62be2fddc2409420343934de6f0125",
+      "SHA256": "402b0c91bb55cb9f70f5014d88a34ec999697e836905975fc1b2a5b2e56d1dd3",
+      "bytes": 869673
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-shorts-1366.png",
+      "gitBlobSHA": "05eeb8c1ae95f5e5faaafc7728ddc893629d3bb6",
+      "SHA256": "02bd1bb754987e3911d46d6bdc0d03c1f5a59a82dfe01d96eab560b716eed8a4",
+      "bytes": 431494
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/design-shorts-1920.png",
+      "gitBlobSHA": "7c153049bd6bb337dcf6448800d0608065ff9cf5",
+      "SHA256": "5ed78338e8986f05e95f2cc72d299b37aabedad237e4703129cb60ebc573b81c",
+      "bytes": 628957
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/images-1366.png",
+      "gitBlobSHA": "122df0247b9c32678357a2ceaf0bb04901787b6b",
+      "SHA256": "a3baef066fb469169fbe76d1fdf9f8ed7bc755e80d4e7c8c1807773cea6366bd",
+      "bytes": 377693
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/images-1920.png",
+      "gitBlobSHA": "774412e9a3fad37c439deee6f52af46bfea11146",
+      "SHA256": "f3fb4c21bf4bf5f7629eeb50edc145969247b094ea15f6a14f99163ad702be21",
+      "bytes": 570804
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/images-modal-1366.png",
+      "gitBlobSHA": "2014c38c38b3498978498f9d75f319178e3b8b29",
+      "SHA256": "e106f0ad3a0b695cb81f7d1cde97df1f7b5837eadd6e8933bb207b61f1a447ff",
+      "bytes": 147012
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/images-top3-1366.png",
+      "gitBlobSHA": "46a7fa73c4ee43d5e6f0bbbc41475b083e31569b",
+      "SHA256": "0b3231f7c0d601e7a70f8b6280bc68c9829e239e24993eab14206993f7ceb033",
+      "bytes": 540129
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/images-top3-1920.png",
+      "gitBlobSHA": "48ca2c80b8ede75726bc9e407230bf777a2281b7",
+      "SHA256": "c4e32583d5ec76ac82e28294efaffabc3f793133adde37713c587a7fd24a6cd2",
+      "bytes": 769795
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/news-1366.png",
+      "gitBlobSHA": "3260f877fb6b7b78916d7dfcf5a8ed09f42de16e",
+      "SHA256": "ec3793d8e90fde15647815c6451c5488dad06434eb373aa344ad43f8fe311ba0",
+      "bytes": 507887
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/news-1920.png",
+      "gitBlobSHA": "3d20179e2e489612a31f83f4636d74a53fa575cb",
+      "SHA256": "7f1722b8bcf57fa687cda52edb6306dae527bbbdcc425f4feee52175f8a093cc",
+      "bytes": 770867
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/shorts-1366.png",
+      "gitBlobSHA": "6e39afa79118cca81f36bf91d53b13e9793584d3",
+      "SHA256": "c8bd3d90c1e8190ab47bc23e803b8ef951d82c3cc3a470192ebfdb461056b018",
+      "bytes": 435029
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/shorts-1920.png",
+      "gitBlobSHA": "57b20e284540538a9d0b7af61e71b40713bcfe71",
+      "SHA256": "cdd1d6bd5f7a3e400e23ae1d262fd71c496455c2ee655fbb582af84d74da1d67",
+      "bytes": 632415
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/after/shorts-modal-1366.png",
+      "gitBlobSHA": "dc0cc1490a99afb143400ee843049eccb115e5b0",
+      "SHA256": "a9b2cfd6b6d3bb19ed841e87a663a3b94f9ce24f07ad7dd2118670703ec4bccb",
+      "bytes": 127490
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-analytics-1366.png",
+      "gitBlobSHA": "db8a0ef87959a8ea2c2b64dbdb5ad16449eb81b3",
+      "SHA256": "7208a6908b47b1b519b7cdc907c0ab36f636f0bf9157a3a699efe8fbb9140dc5",
+      "bytes": 530668
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-analytics-1920.png",
+      "gitBlobSHA": "9ee028838b6500def5987b6ce18d80f1dc34799c",
+      "SHA256": "7bd69c6dd8682100e1712a348dcd0a9100dbe4577e4dcea4d20537c427717a9e",
+      "bytes": 917221
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-automation-1366.png",
+      "gitBlobSHA": "21cb5332f2713c191b100f2dd8c12aaeb4739f65",
+      "SHA256": "8fe77ecade7fed19111418701201b5382b8e0f208335f24055fe31fd8e910ee4",
+      "bytes": 492281
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-automation-1920.png",
+      "gitBlobSHA": "8f0426283899f596032cd02d02002a97204b6637",
+      "SHA256": "b8c820f29b7af28a39fc6dedb782421828680b9539608a0392ff11026bdded23",
+      "bytes": 721455
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-characters-1366.png",
+      "gitBlobSHA": "a8ab0b5d71a80fa75db68a2730d18fe812f40c44",
+      "SHA256": "9dec01a366a61888e1f71358c4f21d63afe4c0dfb72110a95551905fd8544b79",
+      "bytes": 478032
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-characters-1920.png",
+      "gitBlobSHA": "edb5e1ce857a7fd06b9a3dc377f71e134f97ca7e",
+      "SHA256": "dc56f781902d53386f1964d8ad2910776112ce63812b4531789e66d75bd3335d",
+      "bytes": 684871
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-create-1366.png",
+      "gitBlobSHA": "8bf4f224ebe1adaeb70c937ddf47ef3784059740",
+      "SHA256": "5d952596dd16a13feb28d87143eaf76249cf416dd467c7449fc0051c0d9eba8a",
+      "bytes": 658830
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-create-1920.png",
+      "gitBlobSHA": "05fd0419cad2bba1b0fbdc5591edf3d28dcbaf85",
+      "SHA256": "6ebdcbd70dc4662b27a31452b8679e908219e9f9cf0df91d94986c319a49e62b",
+      "bytes": 973351
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-dashboard-1366.png",
+      "gitBlobSHA": "8e76afb1ba16f9f33f9440a29588b2183455a10c",
+      "SHA256": "13aa3ee093b6eab5aea21fcba8fcb0ecde8905596dbe158e72d661eaca369f67",
+      "bytes": 711870
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-dashboard-1920.png",
+      "gitBlobSHA": "7c33d68dfd0ff1400c93e53e847917a12df9372f",
+      "SHA256": "42c44a79d4b9e6b2f3c6c63a9964fe86c7cb12611a8600b4f995b0975b6d1fc8",
+      "bytes": 1348739
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-images-1366.png",
+      "gitBlobSHA": "09ef0ea07628a8d4f0438843eb932fa975f90b27",
+      "SHA256": "6beaac0fecc6ffa9eab8937e1e59979efb109e7637dcbbf088088cf381dd7a1a",
+      "bytes": 455954
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-images-1920.png",
+      "gitBlobSHA": "31ed6b2a4b020fb7a339c2e0280d62b00fee8f14",
+      "SHA256": "b84461d3dc294c1b28d90db1a4d2b709c2e3108fbac3fef52f5ef84edea4c065",
+      "bytes": 686754
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-images-top3-1366.png",
+      "gitBlobSHA": "97f5168e85ec50655170eea53345d7dea038503c",
+      "SHA256": "b3013e0ec00d3097658d9943e10d0fbc9b3da8a51e237d4cfee36cb20e4b16c1",
+      "bytes": 484655
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-images-top3-1920.png",
+      "gitBlobSHA": "012d408610dc744592459f7b580c227969989d62",
+      "SHA256": "98a572fb2186df0ceb2ad54a398d65d1bf3538470a3817a6823ac828e43d9541",
+      "bytes": 694536
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-library-1366.png",
+      "gitBlobSHA": "e892173b8a28261625fb64a376dcb64e73a89e34",
+      "SHA256": "682da8d04a798b3868f7f7014c95ecf406009a3ac3d276fe54da020ee2815538",
+      "bytes": 778852
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-library-1920.png",
+      "gitBlobSHA": "d6fcdd59400d8536a497218275541b3f1f44d49f",
+      "SHA256": "dc2e9dc671b5d236d669eee0b6585c45fbc971a3fe14e853bc2909051e294aad",
+      "bytes": 695609
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-news-1366.png",
+      "gitBlobSHA": "9c227ced2a6be8854a36e1bc42f58ce2b823a48d",
+      "SHA256": "6acbe833e7ff2bc14542974ea6253f30b1afc91e3b2f02aea0ae1ef47f50a805",
+      "bytes": 504665
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-news-1920.png",
+      "gitBlobSHA": "edadf8c92b87d1ac19bcb6f06b868fc00be46bbe",
+      "SHA256": "9dc161b27b5c8278fbadb9a28a8175aed0c7cba1b4d0f62280e8501c8c0ed902",
+      "bytes": 758874
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-publishing-1366.png",
+      "gitBlobSHA": "19c4a2a1941c733f00e5665d7168615e21a8aa25",
+      "SHA256": "5313a4de669f4a32fa33c8b20f2175a5767d8941142a1996b26f3159473ee93a",
+      "bytes": 537006
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-publishing-1920.png",
+      "gitBlobSHA": "1a9850ba5e03e7e7824f4db75df7cbaad9bdf3f7",
+      "SHA256": "69feb07ace1b559502e2767459a192be0dadce4d67ed5a17553d057895353132",
+      "bytes": 897277
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-settings-1366.png",
+      "gitBlobSHA": "c662745ae001d8a4d2a90a7b2d4aff2e59ea9dc2",
+      "SHA256": "ef1472a51eeec295927180acd311099f73a9a716a1c2a3ad361c5c12b0965ec9",
+      "bytes": 541055
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-settings-1920.png",
+      "gitBlobSHA": "a88c81765d62be2fddc2409420343934de6f0125",
+      "SHA256": "402b0c91bb55cb9f70f5014d88a34ec999697e836905975fc1b2a5b2e56d1dd3",
+      "bytes": 869673
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-shorts-1366.png",
+      "gitBlobSHA": "b7d2bd848c45c1a3ac63f583155797dfa40ea6ff",
+      "SHA256": "2243d3b7ad1af5ca5e2d3d670ffba71e7524c15c34626000210c1c69f0d91592",
+      "bytes": 423387
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/before/design-shorts-1920.png",
+      "gitBlobSHA": "411a4c6510cda0e29258bc828a3fbb29107f7925",
+      "SHA256": "1ae334746492c699d63a730992f40ab76c3bc59682bd0cd214ca3e8c44393b1e",
+      "bytes": 643697
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/characters-1366-difference-x3.png",
+      "gitBlobSHA": "92ec81ae384f23f8ce2218402dd3eed1cc8cb010",
+      "SHA256": "e7d861958c642939f97a79acc301d35b39b6a80f012f9be1f1c477a00b9439db",
+      "bytes": 1224975
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/characters-1366-overlay.png",
+      "gitBlobSHA": "c9274fb2b0e57288443f5166ce6b54cb918c9364",
+      "SHA256": "fc572ad8df6a2f4ddfbdc0cd7eb1a6b81ead63757d39ca88d829e36cc86f8c93",
+      "bytes": 1173860
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/characters-1920-difference-x3.png",
+      "gitBlobSHA": "d907c954e6a41da97f6be3abc55e109f9372f6c7",
+      "SHA256": "651386b17afa345b24fa446fcc3114b2474567de9124a2238f4b85ce275fd7fc",
+      "bytes": 2125742
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/characters-1920-overlay.png",
+      "gitBlobSHA": "0a3f519378318b36c4f8783a34028f4303bffedf",
+      "SHA256": "beb07e578a55b3494c36ebbbf3811aef10c52955178ced008ef9dbba8bdefa94",
+      "bytes": 1998452
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/images-1366-difference-x3.png",
+      "gitBlobSHA": "9729e61960918d8c9f38e5118c775a466043fcf5",
+      "SHA256": "80e581ee147161f792c9ab9bb42b1880acc68193c5a3e1d6d22fd4acfde2ce17",
+      "bytes": 1139141
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/images-1366-overlay.png",
+      "gitBlobSHA": "384f9e9ecd3e12024c600ce5afb945aa4e56cf4d",
+      "SHA256": "0dbf9e939e1d4235279b2ef18e998431b606d92faf06807de840434a16cba35b",
+      "bytes": 1319136
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/images-1920-difference-x3.png",
+      "gitBlobSHA": "ebf5b3a144d467add81ca6d1f06e52d8ac118039",
+      "SHA256": "10671c0bc07beeb56b62e328bccc0c39594936cf549238c652ddffe4cafcf6b3",
+      "bytes": 2005811
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/images-1920-overlay.png",
+      "gitBlobSHA": "1e8148c8720baa3e77fd3e37a6ce5bfb055226a6",
+      "SHA256": "e72486f2e52e606f9b4d232414b65c2dae3860f29bfcd675aa22b8b140a08c09",
+      "bytes": 2301877
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/images-top3-1366-difference-x3.png",
+      "gitBlobSHA": "c2440b5ede4a2d886a381edb9dad9ab45dcc64f2",
+      "SHA256": "2279aec383ab290d498984a864323c5a684aaff8b1e7079ebc7dc7a52783b1ce",
+      "bytes": 1365186
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/images-top3-1366-overlay.png",
+      "gitBlobSHA": "ca493875f0ea143fb7bedfb8a52f737245891699",
+      "SHA256": "79f94075b085e7e59c58c771c191c0c1494bcaf01b80d1c5b1a1fb0aac51713a",
+      "bytes": 1313904
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/images-top3-1920-difference-x3.png",
+      "gitBlobSHA": "f10b1f6c37c1e0d957b3f58d2f57f90f3558b109",
+      "SHA256": "eb23397f6adde85d84678fd81a4d5296bfd6a73a620de5d3f37198ea77c6df7b",
+      "bytes": 2385683
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/images-top3-1920-overlay.png",
+      "gitBlobSHA": "e9d942d683fc5cd09bacbd0fe5f37f0b21d3e50d",
+      "SHA256": "303606704f3f0a24930f33e049b9551016a88a2bf58c021a8cc01b985fee28a5",
+      "bytes": 2290035
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/news-1366-difference-x3.png",
+      "gitBlobSHA": "11229f4702f2e1471d94efc61bb6bf2105aa6539",
+      "SHA256": "9a8f7733c0caab866347c8fcc94ad7f4b574861aae113296bcef156855780643",
+      "bytes": 1355027
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/news-1366-overlay.png",
+      "gitBlobSHA": "0911cb6e61a32744aaa835202e34c6a9d5371681",
+      "SHA256": "43536e5eb75e8b547299f46c2b2945527d1b00adc3634e2fa273a3321339f324",
+      "bytes": 1272732
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/news-1920-difference-x3.png",
+      "gitBlobSHA": "528583b166a9a9e1be640d54b9515e258b608eff",
+      "SHA256": "270b21ec75f8f0664c4a027ce439763ef3d299941ec1499815f6aee5758d0fba",
+      "bytes": 2382266
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/news-1920-overlay.png",
+      "gitBlobSHA": "4da996d18959e0e7074ff2736ba1d392895d5a8b",
+      "SHA256": "1ec59d4cd51327116c4a3e81c7e313d51ac50e14f10f522ea255d2e7f2b6d68e",
+      "bytes": 2196260
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/shorts-1366-difference-x3.png",
+      "gitBlobSHA": "dee3ccff7393827a43d7c62310fc61dfabef3406",
+      "SHA256": "9aa2d33250419c28d83109ebe854f1346923e6d2e25f780ae8ff4d5adac402b1",
+      "bytes": 1242538
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/shorts-1366-overlay.png",
+      "gitBlobSHA": "90d0cfcab9d052fecf5ed8636db496164ac04d7c",
+      "SHA256": "5e1e271cf839c8f742b2d766f69f07dd9ab849a6ec21ec085af2aa9154b5a0d8",
+      "bytes": 1152847
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/shorts-1920-difference-x3.png",
+      "gitBlobSHA": "f506d99716368d01e9521fefda9b564a9c7051d9",
+      "SHA256": "b22e74669d48cafe438a84992070d689f1278414220eac165cb1268d05e677a5",
+      "bytes": 2128678
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/comparisons/shorts-1920-overlay.png",
+      "gitBlobSHA": "eef6f8689887f0be98c06d862762f8b0f93f992f",
+      "SHA256": "e8651a429e130a6b29d9252da92a7fe576aba326223123defabea527dbc6f68e",
+      "bytes": 1961465
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/APPROVED_SOURCE.json",
+      "gitBlobSHA": "e4ee3a2c798db90aa9c45600c2d2248c08890658",
+      "SHA256": "4724e7021ce061f0aef9366307362ba842ff3a9a60de3bcc86c3f59112fdca98",
+      "bytes": 3526
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/BRANCH_PROTECTION.json",
+      "gitBlobSHA": "ab3444069c4a1e1074da48086fbef12169460604",
+      "SHA256": "3fda7f03032aa628571f3e75824affa4d86f6a12dda06414ff391a12ca78b6fc",
+      "bytes": 642
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/PROTECTED_CAPTURE_COMPARISON.json",
+      "gitBlobSHA": "61086e569b1edf4ebe84af7b57051454170618c0",
+      "SHA256": "4129d9c2d368406991b9fe03ff3e16753067a045d528ad5aa823b489471e746f",
+      "bytes": 2758
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/PROTECTION.json",
+      "gitBlobSHA": "59f4d4c4fe74d31318adb1ff33d1f61eeccc43c7",
+      "SHA256": "e5595b5367d06b92780a6e3e6c8298e0ace04c97ea3805b92af9d3c220fa2b5b",
+      "bytes": 2833
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/TESTED_REVISION.json",
+      "gitBlobSHA": "6580d285a889fa779a2ba1e63293285f40070e00",
+      "SHA256": "4f409864c4131351840adf46181ea370b1684236f3381cc85600b2784145c984",
+      "bytes": 1048
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/after/backend-stderr.txt",
+      "gitBlobSHA": "ee01f62839286b81fedb7345a48817953301e099",
+      "SHA256": "b6e55b8df74d4c6aeb8c3a33e4892be92517ff95cc67c671762d71fccc759f39",
+      "bytes": 268
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/after/backend-summary.json",
+      "gitBlobSHA": "d02a9673edf1a5d3fbd330948f8a0dce3fbf52b1",
+      "SHA256": "66243c6b91d800d9d4412d8019f96afdd4577c0b78cf76111113b1c23e60eeea",
+      "bytes": 56162
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/after/gui-results.json",
+      "gitBlobSHA": "153e5e6a30e04532ed4b0670a8631525570dfcd1",
+      "SHA256": "957855fe1bdcc2a5c326bd81d423aff7dbd3e0629ab9823e55ddf2f4c93c051d",
+      "bytes": 449059
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/after/process-cleanup.json",
+      "gitBlobSHA": "2356060e81db20e1dfdee213a81c76ef9663451e",
+      "SHA256": "400717b7a73f713fad0f5450c3fe2710981f3639f4fdd741894191e62a279fe7",
+      "bytes": 201
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/before/backend-stderr.txt",
+      "gitBlobSHA": "ee01f62839286b81fedb7345a48817953301e099",
+      "SHA256": "b6e55b8df74d4c6aeb8c3a33e4892be92517ff95cc67c671762d71fccc759f39",
+      "bytes": 268
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/before/backend-summary.json",
+      "gitBlobSHA": "59a44806d4bcf8de9c2c9487e62ea032c00a1151",
+      "SHA256": "e3c70cd89609327abbed304d25b778dca335072fdf44223d71c14556399b822a",
+      "bytes": 48216
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/before/gui-results.json",
+      "gitBlobSHA": "11291ab14b0c3f6e812b5909ae54290549cfb637",
+      "SHA256": "b0d1a4f768b191659301d3a014fcd770874b339bffda2a4b88b4431bf570dd25",
+      "bytes": 443598
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/evidence/before/process-cleanup.json",
+      "gitBlobSHA": "a0c7c596bde6c2dac71f9b2a5702cf9d25b9aed0",
+      "SHA256": "54e31352df77735ea3ba34f0bace221e787be682eb2f2369444c45f82f65bde1",
+      "bytes": 201
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/reference/character_shorts_v4.png",
+      "gitBlobSHA": "c02faee9a4e901f6589ea9126eef9b5fbdd74397",
+      "SHA256": "f0e5154f096676ba9ac626e6c6312e6ee114ed467968e38559002a564c0350ec",
+      "bytes": 1777744
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/reference/news_shorts_v2.png",
+      "gitBlobSHA": "a2624f3c46becd213f88105b928e811702a8efd4",
+      "SHA256": "e7aa918622ae460f0b372dae5f1ac8b0e76d5f864fa03bd35a9fb7e515fb911e",
+      "bytes": 1820991
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/reference/news_studio_v2.png",
+      "gitBlobSHA": "a5ea2cdf52aab95535ef28b22384cda347d0b4fa",
+      "SHA256": "2fe099e812fdac82c69504fe143af8db80e2d71ef921513b34d03960fe124e0f",
+      "bytes": 1976839
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/reference/standalone_image_v2.png",
+      "gitBlobSHA": "6354390c5a11666718c0e216d1b4255b3d116f51",
+      "SHA256": "60f6ae67f45fd1c30b3a7cbc19d9090136b40741e18f41f82ac3addc1e706cf4",
+      "bytes": 2161405
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/reference/top3_feed_v3.png",
+      "gitBlobSHA": "fc2ef518154ee196802d66cd67e2d64f92319dd7",
+      "SHA256": "b5977d3c3ac55c39b43135843aead887726b6ccb38f750aed7c7e617748551b4",
+      "bytes": 2074914
+    },
+    {
+      "path": "newsflow-ai/docs/reports/core-studios-final-match-20261028/visual-comparison-final.html",
+      "gitBlobSHA": "d8c974550efce1c480eb25bfaa8918c83486b176",
+      "SHA256": "98d2c3accf30c59d1fedd00eed7d04ffd1d1f4f856634831d11c26c91760e4de",
+      "bytes": 8163
+    }
+  ]
+}

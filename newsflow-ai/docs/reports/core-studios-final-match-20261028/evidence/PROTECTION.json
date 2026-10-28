@@ -1,0 +1,86 @@
+{
+  "baseline": "4580e8943a6e3a19d83ccad34995412f39bc21fa",
+  "head": "9e3861ff2f4869cd5430ab14eed114094fc84e9b",
+  "checks": [
+    {
+      "path": "newsflow-ai/frontend/src/main.tsx",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/Workbench.tsx",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/management",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/SampleGallery.tsx",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/samples.css",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/TopThreeFeeds.tsx",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/CommandDialog.tsx",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "newsflow-ai/frontend/src/studio/contracts.ts",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "newsflow-ai/src",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "newsflow-ai/assets/samples",
+      "changedFiles": [],
+      "status": "PASS",
+      "basis": "Git difference only; no operating data or repeated sample binary check"
+    },
+    {
+      "path": "shared useStudio controller",
+      "status": "PASS",
+      "comparison": "whitespace-normalized source"
+    },
+    {
+      "path": "approval command",
+      "status": "PASS",
+      "comparison": "whitespace-normalized source"
+    },
+    {
+      "path": "guarded ActionButton/Select",
+      "status": "PASS",
+      "comparison": "whitespace-normalized source"
+    }
+  ],
+  "allPassed": true,
+  "existingUntrackedPreserved": "validation/",
+  "operatingFilesRead": false,
+  "operatingProcessOrPortAccess": false,
+  "scope": "isolated checkout source diff; not a fresh operating data hash comparison"
+}

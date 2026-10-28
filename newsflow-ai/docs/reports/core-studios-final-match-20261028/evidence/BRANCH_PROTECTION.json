@@ -1,0 +1,22 @@
+{
+  "management": {
+    "ref": "refs/heads/codex/newsflow-management-ui-approved-rebuild-20261028",
+    "sha": "4580e8943a6e3a19d83ccad34995412f39bc21fa"
+  },
+  "core": {
+    "ref": "refs/heads/codex/newsflow-core-studios-rebuild-20261027",
+    "sha": "8ecf7e29f3d73a598e26d68d388a7a3ec232e0f6"
+  },
+  "main": {
+    "ref": "refs/heads/main",
+    "sha": "aa2f056d78ceed24874d0b4c50c6033f7168bf4d"
+  },
+  "pr35": {
+    "state": "open",
+    "draft": true,
+    "merged": false,
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "branch": "codex/newsflow-ux-video-app",
+    "url": "https://github.com/jsbae1979-prog/JSBAE/pull/35"
+  }
+}

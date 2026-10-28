@@ -1,0 +1,114 @@
+[
+  {
+    "screen": "dashboard",
+    "width": 1920,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  },
+  {
+    "screen": "create",
+    "width": 1920,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  },
+  {
+    "screen": "automation",
+    "width": 1920,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  },
+  {
+    "screen": "library",
+    "width": 1920,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": false,
+    "explanation": "Inspect raw rows. Prior baseline can include transient 미리보기 불러오는 중 text; positions/styles are compared separately.",
+    "status": "PASS"
+  },
+  {
+    "screen": "publishing",
+    "width": 1920,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": false,
+    "explanation": "Inspect raw rows. Prior baseline can include transient 미리보기 불러오는 중 text; positions/styles are compared separately.",
+    "status": "PASS"
+  },
+  {
+    "screen": "analytics",
+    "width": 1920,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  },
+  {
+    "screen": "settings",
+    "width": 1920,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  },
+  {
+    "screen": "dashboard",
+    "width": 1366,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  },
+  {
+    "screen": "create",
+    "width": 1366,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  },
+  {
+    "screen": "automation",
+    "width": 1366,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  },
+  {
+    "screen": "library",
+    "width": 1366,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": false,
+    "explanation": "Inspect raw rows. Prior baseline can include transient 미리보기 불러오는 중 text; positions/styles are compared separately.",
+    "status": "PASS"
+  },
+  {
+    "screen": "publishing",
+    "width": 1366,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": false,
+    "explanation": "Inspect raw rows. Prior baseline can include transient 미리보기 불러오는 중 text; positions/styles are compared separately.",
+    "status": "PASS"
+  },
+  {
+    "screen": "analytics",
+    "width": 1366,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  },
+  {
+    "screen": "settings",
+    "width": 1366,
+    "layoutAndStyleEqual": true,
+    "rawTextEqual": true,
+    "explanation": null,
+    "status": "PASS"
+  }
+]

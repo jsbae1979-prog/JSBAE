@@ -1,0 +1,26 @@
+{
+  "productTestSHA": "9e3861ff2f4869cd5430ab14eed114094fc84e9b",
+  "workflowRun": 40621402316,
+  "baselineSHA": "4580e8943a6e3a19d83ccad34995412f39bc21fa",
+  "beforeRun": 40619701492,
+  "changedFiles": [
+    ".github/workflows/newsflow-core-final.yml",
+    "newsflow-ai/frontend/src/studio/core/CharacterReferenceSamples.tsx",
+    "newsflow-ai/frontend/src/studio/core/CharacterStudio.tsx",
+    "newsflow-ai/frontend/src/studio/core/CoreNavigation.tsx",
+    "newsflow-ai/frontend/src/studio/core/CoreStudios.tsx",
+    "newsflow-ai/frontend/src/studio/core/ImageStudio.tsx",
+    "newsflow-ai/frontend/src/studio/core/NewsShortsStudio.tsx",
+    "newsflow-ai/frontend/src/studio/core/NewsStudio.tsx",
+    "newsflow-ai/frontend/src/studio/core/TopThreeImageStudio.tsx",
+    "newsflow-ai/frontend/src/studio/core/core-studios.css",
+    "newsflow-ai/frontend/src/studio/core/shared.tsx",
+    "newsflow-ai/tools/studio_v3/integration/core_final.browser.cjs"
+  ],
+  "result": {
+    "pass": 22,
+    "fail": 0,
+    "skip": 0
+  },
+  "status": "CONDITIONAL"
+}
