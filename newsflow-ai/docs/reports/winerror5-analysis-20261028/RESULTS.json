@@ -6,7 +6,7 @@
   "candidateRebuilt": false,
   "codeFixApplied": false,
   "directFailureStage": "Windows CreateProcess, before a child PID/application initialization",
-  "specificDenyingPolicyOrProduct": "NOT VERIFIED",
+  "specificDenyingPolicyOrProduct": "AhnLab V3 Lite execution block confirmed by user observation; individual causal path/hash matching and vendor rule NOT VERIFIED",
   "fieldChecks": [
     {
       "id": "RESTORE_SAME_PATH_STANDARD_TOKEN",
@@ -67,5 +67,18 @@
     "CiTool policy query denied to standard token; no admin retry",
     "pywin32 does not expose the explored AccessCheck/GetBinaryType methods; static PE and native file-handle checks used instead",
     "vendor-owned log format produced no plain target record; no decoding/exception/GUI automation used"
-  ]
+  ],
+  "evidenceUpdate": {
+    "baselineReportHead": "ea48985e4312885b4d88c350666fad62f730527f",
+    "vendor": "AhnLab V3 Lite",
+    "userReportedBlocks": 6,
+    "falsePositive": "NOT VERIFIED",
+    "newRuntimeTests": 0,
+    "newDiagnosticReproductions": 0,
+    "newHashChecks": 0,
+    "filesSentExternally": 0,
+    "correlationReport": "V3_BLOCK_EVIDENCE_ADDENDUM.md",
+    "submissionPreparation": "AHNLAB_ANALYSIS_REQUEST_PREPARATION.md",
+    "historicalFieldCountsNotRerun": true
+  }
 }

@@ -1,0 +1,23 @@
+{
+  "artifacts": [
+    {
+      "artifact": "same-path-reproduction.json",
+      "mtimeUtc": "2026-10-28T11:39:25.824325+00:00",
+      "mtimeKST": "2026-10-28T20:39:25.824325+09:00",
+      "timeMeaning": "Diagnostic result file LastWriteTime, not exact CreateProcess/event timestamp",
+      "source": "Existing local diagnostic artifact; no process reexecution"
+    },
+    {
+      "artifact": "explicit-application-comparison.json",
+      "mtimeUtc": "2026-10-28T11:56:30.901317+00:00",
+      "mtimeKST": "2026-10-28T20:56:30.901317+09:00",
+      "timeMeaning": "Diagnostic result file LastWriteTime, not exact CreateProcess/event timestamp",
+      "source": "Existing local diagnostic artifact; no process reexecution"
+    }
+  ],
+  "reportedEventCount": 6,
+  "eventsIndividuallyMapped": 0,
+  "newHashCalculationPerformed": false,
+  "priorImageSHA256": "f3e24a91e7585089f95ac2e69063b1afb8e8a1e020c2786293d8bc66e0e955c4",
+  "falsePositive": "NOT VERIFIED"
+}

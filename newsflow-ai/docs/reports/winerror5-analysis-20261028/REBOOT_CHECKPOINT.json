@@ -1,11 +1,13 @@
 {
-  "state": "COMPLETE_BLOCKED_NATIVE_CREATION",
+  "state": "COMPLETE_BLOCKED_PENDING_VENDOR_ANALYSIS",
   "branch": "codex/newsflow-private-installer-updater",
   "baselineHead": "eb1d115ccb0a0de77fcd51645305967f39492de9",
   "automaticResumeExecution": false,
   "samePathApplicationCurrentlyInstalled": false,
   "productCodeChanged": false,
   "candidateRebuilt": false,
-  "nextEvidence": "Official denying policy/security-product record; do not change security controls or relocate the EXE to run it",
-  "operatingRestartAuthorized": false
+  "nextEvidence": "Original six vendor records with path/time/hash and official AhnLab analysis; no EXE repeat execution, exception or security changes",
+  "operatingRestartAuthorized": false,
+  "userReportedV3Blocks": 6,
+  "falsePositive": "NOT VERIFIED"
 }

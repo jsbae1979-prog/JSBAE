@@ -1,0 +1,44 @@
+{
+  "recordedDateKST": "2026-10-28",
+  "source": "Direct user report in this chat; original vendor export/screenshot not attached",
+  "sourceStatus": "USER_CONFIRMED_VENDOR_UI_OBSERVATION",
+  "vendor": "AhnLab V3 Lite",
+  "reportedExecutionBlockCount": 6,
+  "diagnosisName": "Program Execution Notification",
+  "detectionClassificationUserText": "행위 기반 진단",
+  "inspectionMethodUserText": "클라우드 평판 기반 진단",
+  "statusCodeAsReported": 5014,
+  "statusCodeInterpretation": "Not independently decoded; not Windows WinError 5",
+  "reportedTimeWindow": {
+    "date": "2026-10-28",
+    "startMinute": "19:53",
+    "endMinute": "20:56",
+    "timezone": "Asia/Seoul",
+    "precision": "minute",
+    "timezoneBasis": "User/client local context; original record timezone not independently verified"
+  },
+  "reportedTarget": "NewsFlowAI-Candidate.exe; user identifies it as the previous WinError 5 EXE",
+  "individualEventTimestamps": null,
+  "vendorRecordFullPaths": null,
+  "vendorRecordSHA256": null,
+  "priorLocallyVerifiedImage": {
+    "normalizedPath": "%TEMP%/nfpu-20261028/w3/Local/Programs/NewsFlowAI-Private/slots/1.0.0/NewsFlowAI-Candidate.exe",
+    "sha256": "f3e24a91e7585089f95ac2e69063b1afb8e8a1e020c2786293d8bc66e0e955c4",
+    "bytes": 16594320
+  },
+  "correlation": {
+    "executableName": "MATCH",
+    "targetIdentity": "Same target per user; exact vendor path/hash field comparison pending",
+    "timeWindow": "Minute-level overlap with existing diagnostic artifact write times",
+    "exactSixEventToAttemptMapping": "NOT VERIFIED",
+    "filePathByteIdentityFromVendorRecord": "NOT VERIFIED",
+    "byteIdentitySHA256FromVendorRecord": "NOT VERIFIED",
+    "inference": "V3 is an evidenced execution blocker per user report and a strongly supported explanation for the observed denial; individual CreateProcess failures are not independently paired to all six events"
+  },
+  "falsePositive": "NOT VERIFIED",
+  "newExecutionAttempts": 0,
+  "securityExceptionsAdded": 0,
+  "filesSentToVendor": 0,
+  "vendorRequestSubmitted": false,
+  "falsePositiveReason": "No vendor analysis result received"
+}

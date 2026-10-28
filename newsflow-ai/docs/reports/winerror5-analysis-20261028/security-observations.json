@@ -49,13 +49,14 @@
   },
   "vendorLogs": "Only name match counts and format metadata retained; raw logs, authentication logs, config and quarantine not exported",
   "vendorUiAutomated": false,
-  "vendorRecordProvided": false,
-  "attribution": "NOT VERIFIED: no evidence identifying the denying product or policy",
+  "vendorRecordProvided": true,
+  "attribution": "INITIAL investigation could not attribute denial; superseded by subsequent user-confirmed V3 execution-block records (see V3_USER_EVIDENCE.json), false positive unverified",
   "imageMetadata": {
     "alternateStreams": [
       ":$DATA"
     ],
     "zoneIdentifierPresent": false,
     "exactIFEOKeyPresent": false
-  }
+  },
+  "vendorRecordForm": "User textual report of six V3 execution-block records; original export/screenshot not supplied"
 }
