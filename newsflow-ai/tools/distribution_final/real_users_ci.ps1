@@ -13,7 +13,7 @@ try {
   foreach ($alias in @('A','B')) {
     $name='NFQA'+$alias+([guid]::NewGuid().ToString('N').Substring(0,8))
     $password=ConvertTo-SecureString ('Nf!9'+[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))) -AsPlainText -Force
-    $account=New-LocalUser -Name $name -Password $password -AccountNeverExpires -Description 'Disposable NewsFlow synthetic CI user; no production data'
+    $account=New-LocalUser -Name $name -Password $password -AccountNeverExpires -Description 'Disposable NewsFlow CI standard user'
     $group=Get-LocalGroup -SID 'S-1-5-32-545'
     Add-LocalGroupMember -Group $group -Member $account
     $users+=@{alias=$alias;name=$name;sid=$account.SID;credential=[pscredential]::new(($env:COMPUTERNAME+'\'+$name),$password)}
