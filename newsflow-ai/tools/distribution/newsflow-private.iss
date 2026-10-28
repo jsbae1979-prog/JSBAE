@@ -6,11 +6,14 @@
 #ifndef PrivateOutput
   #error PrivateOutput must be a separate test output directory
 #endif
+#ifndef CandidateVersion
+  #define CandidateVersion "0.6.0"
+#endif
 [Setup]
 AppId=NewsFlowAI-PrivateCandidate
 AppName=NewsFlow AI Private Candidate
-AppVersion=0.6.0b1
-VersionInfoVersion=0.6.0.1
+AppVersion={#CandidateVersion}
+VersionInfoVersion={#CandidateVersion}.0
 DefaultDirName={localappdata}\Programs\NewsFlowAI-PrivateCandidate
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible

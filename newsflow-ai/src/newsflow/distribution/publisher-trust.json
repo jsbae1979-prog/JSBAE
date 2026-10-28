@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "channel": "stable",
+  "publisherCertificateSha256": "",
+  "updatesEnabled": false,
+  "reason": "No real publisher code-signing certificate provisioned. Never trust a test certificate."
+}

@@ -1,0 +1,73 @@
+name: Private Windows distribution boundary and installer checks
+on:
+  push:
+    branches: [codex/newsflow-distribution-gates-20261028]
+    paths:
+      - 'newsflow-ai/src/newsflow/distribution/**'
+      - 'newsflow-ai/tools/distribution/**'
+      - 'newsflow-ai/src/newsflow/assets/distribution/**'
+      - '.github/workflows/newsflow-distribution-gates.yml'
+permissions:
+  contents: read
+jobs:
+  private-installer:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.1'
+      - name: Prepare disposable build runtime and reviewed React assets
+        run: |
+          python -m pip install -r requirements-dev.lock pyinstaller==6.22.3 pywin32==312 tzdata==2026.5
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm install --global pnpm@11.25.0 --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend install --frozen-lockfile --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend exec vite build --configLoader runner
+          exit $LASTEXITCODE
+      - name: Focused new boundaries only
+        run: |
+          $env:NEWSFLOW_DISTRIBUTION_TEST_ROOT = Join-Path $env:RUNNER_TEMP 'distribution-boundaries'
+          New-Item -ItemType Directory -Path $env:NEWSFLOW_DISTRIBUTION_TEST_ROOT -ErrorAction Stop | Out-Null
+          python -B tools/distribution/test_distribution_boundaries.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B tools/distribution/probe_windows_profile.py
+          exit $LASTEXITCODE
+      - name: Build private candidate and real Setup in Runner TEMP only
+        run: |
+          $media = Join-Path $env:RUNNER_TEMP 'reviewed-media'
+          python -B tools/distribution/fetch_reviewed_media.py $media
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $build = Join-Path $env:RUNNER_TEMP 'private-build'
+          python -I -B tools/distribution/build_candidate.py --output $build --media-dir $media
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:NEWSFLOW_DISTRIBUTION_TEST_ROOT = Join-Path $env:RUNNER_TEMP 'distribution-frozen-voice'
+          New-Item -ItemType Directory -Path $env:NEWSFLOW_DISTRIBUTION_TEST_ROOT -ErrorAction Stop | Out-Null
+          python -B tools/distribution/probe_voice.py --exe "$build/dist/NewsFlowAI-Candidate/NewsFlowAI-Candidate.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B tools/distribution/private_installer_ci.py --bundle "$build/dist/NewsFlowAI-Candidate" --workspace (Join-Path $env:RUNNER_TEMP 'private-installer')
+          exit $LASTEXITCODE
+      - name: Retain nonsecret JSON evidence only; no EXE ZIP DB keys or logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: private-distribution-evidence
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/distribution-boundaries/boundary-results.json
+            ${{ runner.temp }}/distribution-boundaries/native-profile-results.json
+            ${{ runner.temp }}/private-build/build-summary.json
+            ${{ runner.temp }}/private-installer/installer-results.json
+            ${{ runner.temp }}/distribution-frozen-voice/voice-results.json

@@ -29,7 +29,7 @@ def main():
         if forbidden:raise SystemExit('Verification/test module in archive')
         samples=json.loads((root/'_internal/newsflow/assets/samples/manifest.json').read_text(encoding='utf8'))
         missing=[r['id'] for r in samples['assets'] if not (root/'_internal/newsflow/assets/samples'/r['path']).is_file()]
-        package={'schemaVersion':1,'appId':'NewsFlowAI','version':'0.6.0b1-internal','internalOnly':True,'distributionAllowed':False,'sourceBase':'39520d4ad99571b28d6ade7418f77837d2b7ffc4','files':files}
+        package={'schemaVersion':1,'appId':'NewsFlowAI','version':'0.6.0b1-internal','internalOnly':True,'distributionAllowed':False,'sourceBase':subprocess.check_output(['git','rev-parse','HEAD'],cwd=project,text=True).strip(),'files':files}
         (output/'payload-manifest.json').write_text(json.dumps(package,indent=2),encoding='utf8')
         summary.update(exe_bytes=exe.stat().st_size,exe_sha256=hashlib.sha256(exe.read_bytes()).hexdigest(),file_count=len(files),payload_bytes=sum(r['bytes'] for r in files),sample_count=len(samples['assets']),sample_missing=missing,verification_modules=forbidden,python_runtime=(root/'_internal/python314.dll').is_file(),react=(root/'_internal/frontend/dist/index.html').is_file(),media_binaries=all((root/'_internal/media'/n).is_file() for n in pins),sample_rights_verified=all(r.get('rightsVerified') is True for r in samples['assets']))
     (output/'build-summary.json').write_text(json.dumps(summary,indent=2),encoding='utf8')

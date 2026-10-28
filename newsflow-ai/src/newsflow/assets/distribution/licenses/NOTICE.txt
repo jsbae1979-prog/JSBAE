@@ -1,0 +1,4 @@
+NewsFlow AI private distribution preparation.
+License texts are copied unmodified from installed distributions.
+FFmpeg GPL corresponding-source/build materials and sample redistribution rights remain unresolved.
+This collection does NOT authorize public release.
