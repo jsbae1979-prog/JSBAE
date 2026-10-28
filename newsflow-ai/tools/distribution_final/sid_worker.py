@@ -83,7 +83,7 @@ def main():
                 try:db.execute('select count(*) from sqlite_master').fetchone()
                 finally:db.close()
             except sqlite3.OperationalError as exc:
-                if getattr(exc,'sqlite_errorcode',None) not in {3,8,23}:raise
+                if getattr(exc,'sqlite_errorcode',0)&255 not in {sqlite3.SQLITE_PERM,sqlite3.SQLITE_CANTOPEN,sqlite3.SQLITE_AUTH}:raise
                 result['peer_sqlite_open_denied']=True
             else:raise RuntimeError('Other user database opened')
             exported=(common/'cipher-A-for-negative-test.bin').read_bytes()
