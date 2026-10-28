@@ -1,0 +1,141 @@
+- link "본문으로 이동":
+  - /url: "#main"
+- main:
+  - generic: 1개 프로젝트
+  - navigation "관리 화면 주 메뉴":
+    - button "NewsFlow AI":
+      - text: NewsFlow
+      - generic: AI
+    - button "홈":
+      - text: 홈
+    - button "콘텐츠 제작":
+      - text: 콘텐츠 제작
+    - button "뉴스 스튜디오":
+      - text: 뉴스 스튜디오
+    - button "자동화 센터":
+      - text: 자동화 센터
+    - button "라이브러리":
+      - text: 라이브러리
+    - button "게시 스튜디오":
+      - text: 게시 스튜디오
+    - button "성과 · 비용":
+      - text: 성과 · 비용
+    - button "설정 · 관리":
+      - text: 설정 · 관리
+  - heading "게시 스튜디오" [level=1]
+  - paragraph: 제작한 콘텐츠를 검토하고, 플랫폼별 승인과 결과를 확인하세요.
+  - generic: 합성 검증 자료
+  - button "관리 화면 새로고침":
+  - list:
+    - generic: "1"
+    - text: 콘텐츠 선택
+    - generic: 저장된 콘텐츠에서 선택
+    - generic: "2"
+    - text: 게시 설정
+    - generic: 플랫폼 및 옵션 설정
+    - generic: "3"
+    - text: 미리보기 및 검토
+    - generic: 내용·권한·출처 확인
+    - generic: "4"
+    - text: 예약 또는 최종 승인
+    - generic: 별도 사용자 승인 필요
+    - generic: "5"
+    - text: 결과 확인
+    - generic: 결과 불명 재전송 금지
+  - heading "콘텐츠 선택" [level=2]:
+    - text: 콘텐츠 선택
+  - textbox "게시 콘텐츠 검색":
+    - /placeholder: 제목으로 검색
+  - button "전체"
+  - button "뉴스 쇼츠"
+  - button "캐릭터"
+  - button "이미지"
+  - button "미리보기 없음 검증용 로봇 이야기 10. 28. 오후 01:13 결과 불명 · 재요청 금지" [pressed]:
+    - text: 미리보기 없음
+    - strong: 검증용 로봇 이야기
+    - generic: 10. 28. 오후 01:13
+    - generic: 결과 불명 · 재요청 금지
+  - heading "로컬 게시 초안" [level=3]
+  - button "새 로컬 초안 저장" [disabled]
+  - heading "콘텐츠 미리보기 및 편집" [level=2]:
+    - text: 콘텐츠 미리보기 및 편집
+  - generic "콘텐츠 미리보기":
+    - text: 미리보기 파일 없음
+  - text: 제목
+  - textbox "게시 제목": 검증용 로봇 이야기
+  - text: 설명
+  - textbox "게시 설명"
+  - text: 해시태그
+  - textbox "게시 해시태그"
+  - button "초안 수정 · 저장" [disabled]
+  - button "형식 검증" [disabled]
+  - paragraph: 저장과 검토·최종 게시 승인은 별도입니다. 수정한 내용은 기존 저장 창에서 확인합니다.
+  - paragraph:
+    - generic: 검토 필요
+    - text: 콘텐츠 검토
+  - paragraph:
+    - generic: 검토 필요
+    - text: 저작권·사용권
+  - paragraph:
+    - generic: 검토 필요
+    - text: 원문 출처
+  - complementary:
+    - heading "게시 플랫폼 설정" [level=2]:
+      - text: 게시 플랫폼 설정
+    - article:
+      - generic: ◎
+      - strong: Instagram Reels · 피드
+      - checkbox "Instagram Reels · 피드 검토 대상"
+      - generic: 게시 전 실제 계정 권한·승인 필요
+      - paragraph: 등록 계정 없음
+      - button "계정 설정"
+    - article:
+      - generic: ▶
+      - strong: YouTube Shorts
+      - checkbox "YouTube Shorts 검토 대상"
+      - generic: 게시 전 실제 계정 권한·승인 필요
+      - paragraph: 등록 계정 없음
+      - button "계정 설정"
+    - article:
+      - generic: ♪
+      - strong: TikTok
+      - checkbox "TikTok 검토 대상"
+      - generic: 실전송 차단 · 로컬 검토만 지원
+      - paragraph: 등록 계정 없음
+      - button "계정 설정"
+    - article:
+      - generic: f
+      - strong: Facebook Reels
+      - checkbox "Facebook Reels 검토 대상"
+      - generic: 실전송 차단 · 로컬 검토만 지원
+      - paragraph: 등록 계정 없음
+      - button "계정 설정"
+    - button "선택 플랫폼 게시 검토" [disabled]
+    - heading "게시 일정 · 승인" [level=2]:
+      - text: 게시 일정 · 승인
+    - text: 검토 기록
+    - combobox "게시 검토 기록":
+      - option "검토 기록 선택" [selected]
+    - text: 예약 일시
+    - textbox "게시 예약 일시"
+    - button "예약 저장 · 검토" [disabled]:
+      - text: 예약 저장 · 검토
+    - button "최종 게시 승인" [disabled]:
+      - text: 최종 게시 승인
+    - paragraph: 권한·검토·플랫폼별 승인이 없으면 실행할 수 없습니다. 성공·결과 불명 요청은 재전송하지 않습니다.
+  - heading "게시 대기 목록 · 결과 기록" [level=2]:
+    - text: 게시 대기 목록 · 결과 기록
+  - table:
+    - rowgroup:
+      - row "콘텐츠 / 기록 플랫폼 예약 일정 상태 결과·오류":
+        - columnheader "콘텐츠 / 기록"
+        - columnheader "플랫폼"
+        - columnheader "예약 일정"
+        - columnheader "상태"
+        - columnheader "결과·오류"
+    - rowgroup
+  - generic: 저장된 게시·예약 기록 없음
+  - generic "단일 피드 이미지 전달 기록 · 0개"
+  - generic "기존 상세 기능 · 승인 및 복구":
+    - text: 기존 상세 기능 · 승인 및 복구
+  - paragraph: 유료 생성·실제 계정 인증·공개 게시는 별도 승인입니다. 결과 불명 요청은 자동 재전송하지 않습니다.

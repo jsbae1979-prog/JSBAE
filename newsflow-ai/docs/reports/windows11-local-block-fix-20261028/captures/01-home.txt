@@ -1,0 +1,118 @@
+- link "본문으로 이동":
+  - /url: "#main"
+- complementary:
+  - button "NewsFlow AI Studio 홈":
+  - navigation "주 메뉴":
+    - button "홈":
+    - button "콘텐츠 제작":
+    - button "뉴스 스튜디오":
+    - button "자동화 센터":
+    - button "라이브러리":
+    - button "게시 스튜디오":
+    - button "성과 · 비용":
+    - button "설정 · 관리":
+  - button "메뉴 접기":
+- banner:
+  - textbox "보관 프로젝트 검색":
+    - /placeholder: 프로젝트 제목을 검색하세요...
+  - button "사용 안내":
+- main:
+  - generic: 1개 프로젝트
+  - img "지구와 뉴스·캐릭터 콘텐츠를 표현한 브랜드 일러스트"
+  - text: NEWSFLOW AI STUDIO
+  - heading "뉴스가 세상을 움직입니다 AI로 더 빠르고, 더 강력하게" [level=1]:
+    - text: 뉴스가 세상을 움직입니다
+    - emphasis: AI로 더 빠르고, 더 강력하게
+  - paragraph:
+    - text: 아이디어를 뉴스로, 뉴스를 영상으로.
+    - text: 세상의 모든 이야기를 AI와 함께 만드세요.
+  - button "새 프로젝트 시작하기":
+    - text: 새 프로젝트 시작하기
+  - region "제작 현황":
+    - button "진행 중 작업 0":
+      - text: 진행 중 작업
+      - strong: "0"
+    - button "생성된 파일 0":
+      - text: 생성된 파일
+      - strong: "0"
+    - button "게시 초안 0":
+      - text: 게시 초안
+      - strong: "0"
+    - button "전체 제작 기록 1":
+      - text: 전체 제작 기록
+      - strong: "1"
+  - heading "최근 프로젝트" [level=2]
+  - button "전체 보기":
+    - text: 전체 보기
+  - button "검증용 로봇 이야기 · 개발용 합성 프로젝트의 설계 일러스트 합성 자료 검증용 로봇 이야기 submission_unknown":
+    - img "검증용 로봇 이야기 · 개발용 합성 프로젝트의 설계 일러스트"
+    - generic: 합성 자료
+    - strong: 검증용 로봇 이야기
+    - generic: submission_unknown
+  - heading "빠른 제작 시작" [level=2]
+  - button "뉴스 쇼츠 뉴스를 AI 영상으로 빠르게 제작 뉴스 수집·화제성 선정 AI 분석 및 대본 검토 선택한 음성·영상 제작":
+    - heading "뉴스 쇼츠" [level=3]
+    - paragraph: 뉴스를 AI 영상으로 빠르게 제작
+    - list:
+      - text: 뉴스 수집·화제성 선정
+      - text: AI 분석 및 대본 검토
+      - text: 선택한 음성·영상 제작
+  - button "캐릭터 쇼츠 참조 캐릭터와 이야기로 만드는 영상 캐릭터 참조 이미지 Claude 스토리·장면 구성 공식 견적·검토 후 합성":
+    - heading "캐릭터 쇼츠" [level=3]
+    - paragraph: 참조 캐릭터와 이야기로 만드는 영상
+    - list:
+      - text: 캐릭터 참조 이미지
+      - text: Claude 스토리·장면 구성
+      - text: 공식 견적·검토 후 합성
+  - button "이미지 AI 이미지와 뉴스 이미지 게시물 독립 AI 이미지 생성 뉴스 이미지 카드·상위 3건 피드 검토·저장·소재 재사용":
+    - heading "이미지" [level=3]
+    - paragraph: AI 이미지와 뉴스 이미지 게시물
+    - list:
+      - text: 독립 AI 이미지 생성
+      - text: 뉴스 이미지 카드·상위 3건 피드
+      - text: 검토·저장·소재 재사용
+  - complementary "작업 현황과 연결 상태":
+    - heading "오늘의 작업 상태" [level=2]
+    - button "오늘 작업 상태 자세히":
+      - text: 자세히 보기
+    - paragraph: 2026년 10월 28일 수요일
+    - strong:
+      - text: "0"
+      - generic: /1
+    - generic: 오늘의 작업
+    - term: 완료
+    - definition: "0"
+    - term: 진행 중
+    - definition: "0"
+    - term: 검토·대기
+    - definition: "1"
+    - heading "다가오는 일정" [level=2]
+    - button "전체 보기":
+      - text: 전체 보기
+    - strong: 예약된 일정이 없습니다
+    - button "제작 일정 살펴보기":
+      - text: 제작 일정 살펴보기
+    - heading "AI 서비스" [level=2]
+    - button "관리하기":
+      - text: 관리하기
+    - button "OpenAI 미설정":
+      - strong: OpenAI
+      - generic: 미설정
+    - button "Claude 미설정":
+      - strong: Claude
+      - generic: 미설정
+    - button "ElevenLabs 미설정":
+      - strong: ElevenLabs
+      - generic: 미설정
+    - button "Higgsfield 미설정":
+      - strong: Higgsfield
+      - generic: 미설정
+    - paragraph: 저장된 키와 실제 연결 확인은 별개입니다.
+    - heading "최근 활동" [level=2]
+    - button "전체 보기":
+      - text: 전체 보기
+    - list:
+      - link "검증용 로봇 이야기 · 작업 기록 10. 28. 오후 01:13":
+        - /url: /studio/characters?job_id=64eb2dca30154bbdaad65690a5b6b0aa
+        - text: 검증용 로봇 이야기 · 작업 기록
+        - time: 10. 28. 오후 01:13

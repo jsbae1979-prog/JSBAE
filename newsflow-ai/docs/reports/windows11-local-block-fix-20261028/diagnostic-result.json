@@ -1,0 +1,474 @@
+{
+  "python": "3.14.7",
+  "Windows": "sys.getwindowsversion(major=10, minor=0, build=26300, platform=2, service_pack='')",
+  "diagnostic_only": true,
+  "CI_environment_used": false,
+  "paid_API_SNS_calls": 0,
+  "OS_DPI": "NOT VERIFIED / unchanged",
+  "requests": [],
+  "cleanup_errors": [],
+  "final": "BLOCKED",
+  "Guard_first": true,
+  "blocked": {
+    "phase": "create-app",
+    "type": "Denied",
+    "reason": "recorded-boundary-rejection-stops-before-next-phase",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tools\\windows_local_validation\\runner.py\", line 67, in <module>\n    policy.checkpoint(guard.ATTEMPTS,gate.denials)\n    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tools\\windows_local_validation\\local_policy.py\", line 61, in checkpoint\n    raise Denied('recorded-boundary-rejection-stops-before-next-phase')\nverification_gate.Denied: recorded-boundary-rejection-stops-before-next-phase\n"
+  },
+  "lock_resources": {
+    "native_handles": 0,
+    "CRT_descriptors": 0,
+    "native_buffers": 0,
+    "unresolved_calls": 0,
+    "allocations": 7,
+    "frees": 7,
+    "NtCreateFile_calls": 7,
+    "lock_calls": 7,
+    "unlock_calls": 7,
+    "default_unlink_attempts": 0,
+    "quarantined_paths": 0,
+    "retired_generations": 0,
+    "events": [
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle",
+      "native-Rtl-buffer-freed-once",
+      "owned-native-to-CRT-transfer",
+      "CRT-close-not-CloseHandle"
+    ],
+    "closed": true
+  },
+  "remaining_native_handles": 0,
+  "policy": {
+    "phase": "explicit-cleanup",
+    "denials": [
+      {
+        "phase": "create-app",
+        "reason": "outside-fixed-read-roots",
+        "event": "os.listdir",
+        "targets": [
+          "c:/codex/newsflowai-isolatedreview/integration-20261024/candidate/newsflow-ai/src"
+        ],
+        "monotonic_seconds": 446273.7119787,
+        "frames": [
+          {
+            "module": "local_policy",
+            "file": "c:/codex/newsflowai-isolatedreview/studio-v3-20261026/approved-ui-implementation-20261027/newsflow-ai/tools/windows_local_validation/local_policy.py",
+            "line": 69,
+            "function": "path"
+          },
+          {
+            "module": "local_policy",
+            "file": "c:/codex/newsflowai-isolatedreview/studio-v3-20261026/approved-ui-implementation-20261027/newsflow-ai/tools/windows_local_validation/local_policy.py",
+            "line": 117,
+            "function": "audit"
+          },
+          {
+            "module": "guard_capability",
+            "file": "c:/codex/newsflowai-isolatedreview/studio-v3-20261026/approved-ui-implementation-20261027/newsflow-ai/tools/windows_local_validation/guard_capability.py",
+            "line": 94,
+            "function": "audit_event"
+          },
+          {
+            "module": "step13_guard",
+            "file": "<SYNTHETIC>/step13_guard.py",
+            "line": 344,
+            "function": "_verification_capability_event"
+          },
+          {
+            "module": "step13_guard",
+            "file": "<SYNTHETIC>/step13_guard.py",
+            "line": 156,
+            "function": "audit"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 744,
+            "function": "children"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 789,
+            "function": "__init__"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 767,
+            "function": "lookup"
+          },
+          {
+            "module": "importlib.metadata._functools",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/_functools.py",
+            "line": 80,
+            "function": "wrapper"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 757,
+            "function": "search"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 891,
+            "function": "<genexpr>"
+          },
+          {
+            "module": "pydantic.plugin._loader",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/pydantic/plugin/_loader.py",
+            "line": 39,
+            "function": "get_plugins"
+          },
+          {
+            "module": "pydantic.plugin._schema_validator",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/pydantic/plugin/_schema_validator.py",
+            "line": 40,
+            "function": "create_schema_validator"
+          },
+          {
+            "module": "pydantic._internal._model_construction",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/pydantic/_internal/_model_construction.py",
+            "line": 651,
+            "function": "complete_model_class"
+          },
+          {
+            "module": "pydantic._internal._model_construction",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/pydantic/_internal/_model_construction.py",
+            "line": 253,
+            "function": "__new__"
+          },
+          {
+            "module": "pydantic.main",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/pydantic/main.py",
+            "line": 1932,
+            "function": "create_model"
+          },
+          {
+            "module": "fastapi.exceptions",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/fastapi/exceptions.py",
+            "line": 157,
+            "function": "<module>"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 491,
+            "function": "_call_with_frames_removed"
+          },
+          {
+            "module": "importlib._bootstrap_external",
+            "file": "<frozen importlib._bootstrap_external>",
+            "line": 759,
+            "function": "exec_module"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 938,
+            "function": "_load_unlocked"
+          }
+        ]
+      },
+      {
+        "phase": "create-app",
+        "reason": "outside-fixed-read-roots",
+        "event": "open",
+        "targets": [
+          "c:/codex/newsflowai-isolatedreview/integration-20261024/candidate/newsflow-ai/src"
+        ],
+        "monotonic_seconds": 446273.7126353,
+        "frames": [
+          {
+            "module": "local_policy",
+            "file": "c:/codex/newsflowai-isolatedreview/studio-v3-20261026/approved-ui-implementation-20261027/newsflow-ai/tools/windows_local_validation/local_policy.py",
+            "line": 69,
+            "function": "path"
+          },
+          {
+            "module": "local_policy",
+            "file": "c:/codex/newsflowai-isolatedreview/studio-v3-20261026/approved-ui-implementation-20261027/newsflow-ai/tools/windows_local_validation/local_policy.py",
+            "line": 116,
+            "function": "audit"
+          },
+          {
+            "module": "guard_capability",
+            "file": "c:/codex/newsflowai-isolatedreview/studio-v3-20261026/approved-ui-implementation-20261027/newsflow-ai/tools/windows_local_validation/guard_capability.py",
+            "line": 94,
+            "function": "audit_event"
+          },
+          {
+            "module": "step13_guard",
+            "file": "<SYNTHETIC>/step13_guard.py",
+            "line": 344,
+            "function": "_verification_capability_event"
+          },
+          {
+            "module": "step13_guard",
+            "file": "<SYNTHETIC>/step13_guard.py",
+            "line": 156,
+            "function": "audit"
+          },
+          {
+            "module": "zipfile",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/zipfile/__init__.py",
+            "line": 1462,
+            "function": "__init__"
+          },
+          {
+            "module": "zipfile._path",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/zipfile/_path/__init__.py",
+            "line": 91,
+            "function": "__init__"
+          },
+          {
+            "module": "zipfile._path",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/zipfile/_path/__init__.py",
+            "line": 156,
+            "function": "make"
+          },
+          {
+            "module": "zipfile._path",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/zipfile/_path/__init__.py",
+            "line": 319,
+            "function": "__init__"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 750,
+            "function": "zip_children"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 746,
+            "function": "children"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 789,
+            "function": "__init__"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 767,
+            "function": "lookup"
+          },
+          {
+            "module": "importlib.metadata._functools",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/_functools.py",
+            "line": 80,
+            "function": "wrapper"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 757,
+            "function": "search"
+          },
+          {
+            "module": "importlib.metadata",
+            "file": "c:/users/<USER>/appdata/local/python/pythoncore-3.14-64/lib/importlib/metadata/__init__.py",
+            "line": 891,
+            "function": "<genexpr>"
+          },
+          {
+            "module": "pydantic.plugin._loader",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/pydantic/plugin/_loader.py",
+            "line": 39,
+            "function": "get_plugins"
+          },
+          {
+            "module": "pydantic.plugin._schema_validator",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/pydantic/plugin/_schema_validator.py",
+            "line": 40,
+            "function": "create_schema_validator"
+          },
+          {
+            "module": "pydantic._internal._model_construction",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/pydantic/_internal/_model_construction.py",
+            "line": 651,
+            "function": "complete_model_class"
+          },
+          {
+            "module": "pydantic._internal._model_construction",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/pydantic/_internal/_model_construction.py",
+            "line": 253,
+            "function": "__new__"
+          }
+        ]
+      },
+      {
+        "phase": "create-app",
+        "reason": "link-creation",
+        "event": "os.link",
+        "targets": [
+          "<SYNTHETIC>/temp/tmpwrngh0qw/probe-source",
+          "<SYNTHETIC>/temp/tmpwrngh0qw/probe-link"
+        ],
+        "monotonic_seconds": 446274.5589409,
+        "frames": [
+          {
+            "module": "local_policy",
+            "file": "c:/codex/newsflowai-isolatedreview/studio-v3-20261026/approved-ui-implementation-20261027/newsflow-ai/tools/windows_local_validation/local_policy.py",
+            "line": 113,
+            "function": "audit"
+          },
+          {
+            "module": "guard_capability",
+            "file": "c:/codex/newsflowai-isolatedreview/studio-v3-20261026/approved-ui-implementation-20261027/newsflow-ai/tools/windows_local_validation/guard_capability.py",
+            "line": 94,
+            "function": "audit_event"
+          },
+          {
+            "module": "step13_guard",
+            "file": "<SYNTHETIC>/step13_guard.py",
+            "line": 344,
+            "function": "_verification_capability_event"
+          },
+          {
+            "module": "step13_guard",
+            "file": "<SYNTHETIC>/step13_guard.py",
+            "line": 156,
+            "function": "audit"
+          },
+          {
+            "module": "filelock._strict",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/filelock/_strict.py",
+            "line": 73,
+            "function": "_probe_link_follow_symlinks"
+          },
+          {
+            "module": "filelock._strict",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/filelock/_strict.py",
+            "line": 79,
+            "function": "<module>"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 491,
+            "function": "_call_with_frames_removed"
+          },
+          {
+            "module": "importlib._bootstrap_external",
+            "file": "<frozen importlib._bootstrap_external>",
+            "line": 759,
+            "function": "exec_module"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 938,
+            "function": "_load_unlocked"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 1342,
+            "function": "_find_and_load_unlocked"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 1371,
+            "function": "_find_and_load"
+          },
+          {
+            "module": "filelock",
+            "file": "c:/codex/newsflowai-isolatedreview/integration-20261024/venv314/lib/site-packages/filelock/__init__.py",
+            "line": 38,
+            "function": "<module>"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 491,
+            "function": "_call_with_frames_removed"
+          },
+          {
+            "module": "importlib._bootstrap_external",
+            "file": "<frozen importlib._bootstrap_external>",
+            "line": 759,
+            "function": "exec_module"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 938,
+            "function": "_load_unlocked"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 1342,
+            "function": "_find_and_load_unlocked"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 1371,
+            "function": "_find_and_load"
+          },
+          {
+            "module": "newsflow.main",
+            "file": "c:/codex/newsflowai-isolatedreview/studio-v3-20261026/approved-ui-implementation-20261027/newsflow-ai/src/newsflow/main.py",
+            "line": 17,
+            "function": "<module>"
+          },
+          {
+            "module": "importlib._bootstrap",
+            "file": "<frozen importlib._bootstrap>",
+            "line": 491,
+            "function": "_call_with_frames_removed"
+          },
+          {
+            "module": "importlib._bootstrap_external",
+            "file": "<frozen importlib._bootstrap_external>",
+            "line": 759,
+            "function": "exec_module"
+          }
+        ]
+      }
+    ],
+    "remaining_SQLite_connections": 0,
+    "SQLite_closed": 1,
+    "threads_alive": 0,
+    "processes_started": 0,
+    "halt": true,
+    "allowed": {
+      "open": 2280,
+      "os.listdir": 216,
+      "os.remove": 18,
+      "os.mkdir": 34,
+      "os.utime": 2,
+      "os.scandir": 8,
+      "os.rmdir": 2
+    }
+  },
+  "guard_denials": [],
+  "native_tables_unchanged": true,
+  "gate_denials": {},
+  "borrowed_sources_unchanged": true
+}

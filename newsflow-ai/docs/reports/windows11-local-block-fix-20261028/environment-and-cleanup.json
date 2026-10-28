@@ -1,0 +1,22 @@
+{
+  "DiagnosticAttempts": 1,
+  "ValidationAttempts": 1,
+  "DiagnosticPID": 92712,
+  "ValidationPID": 41548,
+  "DiagnosticRemaining": false,
+  "ValidationRemaining": false,
+  "Listeners": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8765,
+      "OwningProcess": 55740
+    }
+  ],
+  "Operating8765PIDUnchanged": true,
+  "ForcedCleanup": false,
+  "OSDPI": "NOT VERIFIED / no OS settings changed",
+  "OperatingDataAudit": "No operating data used or modified; no repeated full hash audit",
+  "ActualHTTPPID": 90196,
+  "ActualHTTPProcessRemaining": false,
+  "PIDClarification": "DiagnosticPID and ValidationPID are owned Windows venv launcher handles; ActualHTTPPID is runner ready.pid"
+}

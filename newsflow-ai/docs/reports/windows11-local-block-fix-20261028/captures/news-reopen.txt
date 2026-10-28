@@ -1,0 +1,97 @@
+Browser tab: 4, Title: "NewsFlow AI Studio", URL: "http://127.0.0.1:18765/studio/shorts".
+1 AXWebArea NewsFlow AI Studio, URL: 127.0.0.1:18765/studio/shorts
+	2 container root
+		3 link Description: 본문으로 이동, Value: 127.0.0.1:18765/studio/shorts#main
+		4 container main
+			5 text 1개 프로젝트
+			6 heading 뉴스 쇼츠 제작실, Value: 1
+				7 text 뉴스 쇼츠 제작실
+			8 text 합성 검증 자료
+			9 button 제작실 새로고침
+			10 container
+				11 heading 분석된 뉴스 TOP 3, Value: 2
+					12 text 분석된 뉴스 TOP 3
+				13 text 저장된 분석 # 1  · claude_api  · 순위와 출처를 그대로 연결합니다.
+				14 button 뉴스 스튜디오
+				15 checkbox TOP 1 미분류 합성 도서관 운영 안내 합성 요약 1번입니다. 실제 사건이 아닙니다., Value: 1
+					16 container
+						17 text 미리보기 없음 TOP  1
+					18 text 미분류
+					19 text 합성 도서관 운영 안내
+					20 text 합성 요약 1번입니다. 실제 사건이 아닙니다.
+				21 checkbox 기사 대표 이미지 TOP 2 미분류 합성 버스 노선 안내 합성 요약 2번입니다. 실제 사건이 아닙니다., Value: 0
+					22 container
+						23 image 기사 대표 이미지
+						24 text 미리보기 불러오는 중 TOP  2
+					25 text 미분류
+					26 text 합성 버스 노선 안내
+					27 text 합성 요약 2번입니다. 실제 사건이 아닙니다.
+				28 checkbox 기사 대표 이미지 TOP 3 미분류 합성 과학 전시 안내 합성 요약 3번입니다. 실제 사건이 아닙니다., Value: 0
+					29 container
+						30 image 기사 대표 이미지
+						31 text 미리보기 불러오는 중 TOP  3
+					32 text 미분류
+					33 text 합성 과학 전시 안내
+					34 text 합성 요약 3번입니다. 실제 사건이 아닙니다.
+			35 container
+				36 heading AI 대본 생성 · 편집, Value: 2
+					37 text AI 대본 생성 · 편집
+				38 text 저장 버전 2
+				39 container 대본 작업
+					40 button AI 대본 생성
+					41 checkbox 대본 편집, Value: 1
+					42 checkbox 저장된 대본, Value: 0
+				43 text 대본 제목
+				44 text field (settable) Description: 대본 제목, Value: 합성 통합 대본
+				45 text 장면  1  ·  10 초
+				46 text entry area (settable) Description: 장면 1 대본, Value: 합성 장면 1입니다. 로컬 저장 확인.
+				47 text 장면  2  ·  10 초
+				48 text entry area (settable) Description: 장면 2 대본, Value: 합성 장면 2입니다.
+				49 text 장면  3  ·  10 초
+				50 text entry area (settable) Description: 장면 3 대본, Value: 합성 장면 3입니다.
+				51 button (disabled) 대본 저장
+				52 text 검토 필요
+			53 container
+				54 heading 간편 영상 설정 · 미리보기, Value: 2
+					55 text 간편 영상 설정 · 미리보기
+				56 text 음성
+				57 pop up button (collapsed, settable) Description: 음성, Value: 무음 검토영상, Secondary Actions: Expand
+					58 menu
+						59 (disabled) 선택하세요
+						60 (selected) 무음 검토영상
+				61 text 영상 방식
+				62 pop up button (collapsed, settable) Description: 영상 방식, Value: FFmpeg · 뉴스 이미지 자동 연결, Secondary Actions: Expand
+					63 menu
+						64 (disabled) 선택하세요
+						65 FFmpeg 기본 카드
+						66 (selected) FFmpeg · 뉴스 이미지 자동 연결
+						67 AI 장면 · 별도 견적
+				68 container 영상 길이
+					69 text 영상 길이
+					70 checkbox 30초, Value: 1
+					71 checkbox 45초, Value: 0
+					72 checkbox 60초, Value: 0
+				73 container 자막 스타일
+					74 text 자막 스타일
+					75 checkbox 기본, Value: 1
+					76 checkbox 크게, Value: 0
+					77 checkbox 작게, Value: 0
+				78 text 1080×1920 · 9:16
+				79 text 음성·소재 권한과 비용은 제작 전 다시 확인합니다.
+				80 link Description: 음성·Provider 설정, Value: 127.0.0.1:18765/studio/settings
+				81 container 9:16 미리보기
+					82 text 완성 영상이 없습니다.
+			83 text 영상 제작 및 저장
+			84 text 대본 저장 → 검토·권한 확인 → 합성 → 결과 검토
+			85 button 영상 제작 · 승인 확인
+			86 button (collapsed) 고급 장면 편집 · 기존 작업, Secondary Actions: Expand
+				87 text 고급 장면 편집 · 기존 작업
+			88 container 기본 샘플 콘텐츠
+				89 container
+					90 heading 기본 샘플 콘텐츠 샘플 · 실제 생성 이력 아님, Value: 2
+						91 text 기본 샘플 콘텐츠  샘플 · 실제 생성 이력 아님
+					92 button (collapsed) 샘플 펼치기, Secondary Actions: Expand
+					93 checkbox 숨긴 샘플 관리, Value: 0
+			94 text 생성·비용 승인과 최종 게시 승인은 별도입니다. 결과 불명 요청은 자동 재실행하지 않습니다.
+
+The focused UI element is 1 AXWebArea NewsFlow AI Studio, URL: 127.0.0.1:18765/studio/shorts

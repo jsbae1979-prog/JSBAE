@@ -1,0 +1,23 @@
+[
+  {
+    "alt": "가상 AI 뉴스 카드 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/top3-ai/file",
+    "width": 720
+  },
+  {
+    "alt": "가상 전기차 뉴스 카드 샘플",
+    "complete": false,
+    "height": 0,
+    "src": "",
+    "width": 0
+  },
+  {
+    "alt": "가상 경제 뉴스 카드 샘플",
+    "complete": false,
+    "height": 0,
+    "src": "",
+    "width": 0
+  }
+]

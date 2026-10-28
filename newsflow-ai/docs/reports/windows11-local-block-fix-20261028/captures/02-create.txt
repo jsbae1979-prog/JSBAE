@@ -1,0 +1,61 @@
+- link "본문으로 이동":
+  - /url: "#main"
+- complementary:
+  - button "NewsFlow AI Studio 홈":
+  - navigation "주 메뉴":
+    - button "홈":
+    - button "콘텐츠 제작" [active]:
+    - button "뉴스 스튜디오":
+    - button "자동화 센터":
+    - button "라이브러리":
+    - button "게시 스튜디오":
+    - button "성과 · 비용":
+    - button "설정 · 관리":
+  - button "메뉴 접기":
+- banner:
+  - textbox "보관 프로젝트 검색":
+    - /placeholder: 프로젝트 제목을 검색하세요...
+  - button "사용 안내":
+- main:
+  - generic: 1개 프로젝트
+  - text: CONTENT CREATION
+  - heading "어떤 콘텐츠를 만들까요?" [level=1]
+  - paragraph: 뉴스, 캐릭터, 이미지. 아이디어에 맞는 제작실을 선택하세요.
+  - button "뉴스에서 영상까지 뉴스 쇼츠 뉴스를 AI 영상으로 빠르게 제작 뉴스 수집·화제성 선정 AI 분석 및 대본 검토 선택한 음성·영상 제작":
+    - text: 뉴스에서 영상까지
+    - heading "뉴스 쇼츠" [level=3]
+    - paragraph: 뉴스를 AI 영상으로 빠르게 제작
+    - list:
+      - text: 뉴스 수집·화제성 선정
+      - text: AI 분석 및 대본 검토
+      - text: 선택한 음성·영상 제작
+  - button "일관된 캐릭터, 새로운 이야기 캐릭터 쇼츠 참조 캐릭터와 이야기로 만드는 영상 캐릭터 참조 이미지 Claude 스토리·장면 구성 공식 견적·검토 후 합성":
+    - text: 일관된 캐릭터, 새로운 이야기
+    - heading "캐릭터 쇼츠" [level=3]
+    - paragraph: 참조 캐릭터와 이야기로 만드는 영상
+    - list:
+      - text: 캐릭터 참조 이미지
+      - text: Claude 스토리·장면 구성
+      - text: 공식 견적·검토 후 합성
+  - button "한 장으로 전하는 메시지 이미지 AI 이미지와 뉴스 이미지 게시물 독립 AI 이미지 생성 뉴스 이미지 카드·상위 3건 피드 검토·저장·소재 재사용":
+    - text: 한 장으로 전하는 메시지
+    - heading "이미지" [level=3]
+    - paragraph: AI 이미지와 뉴스 이미지 게시물
+    - list:
+      - text: 독립 AI 이미지 생성
+      - text: 뉴스 이미지 카드·상위 3건 피드
+      - text: 검토·저장·소재 재사용
+  - heading "이어서 작업하기" [level=2]
+  - button "카드 보기" [pressed]:
+  - button "목록 보기":
+  - generic "프로젝트 유형":
+    - button "전체" [pressed]
+    - button "뉴스 쇼츠"
+    - button "캐릭터 쇼츠"
+    - button "이미지"
+  - button "검증용 로봇 이야기 · 개발용 합성 프로젝트의 설계 일러스트 합성 자료 검증용 로봇 이야기 submission_unknown":
+    - img "검증용 로봇 이야기 · 개발용 합성 프로젝트의 설계 일러스트"
+    - generic: 합성 자료
+    - strong: 검증용 로봇 이야기
+    - generic: submission_unknown
+  - generic: 원본 파일은 내 PC에 보관됩니다. 외부 생성과 공개 게시는 별도 승인이 필요합니다.

@@ -11,6 +11,8 @@ import socket
 import sqlite3
 import sys
 import threading
+import re
+import time
 from verification_gate import Denied, dos_path, within
 
 FILES={'open','os.listdir','os.scandir','os.remove','os.rmdir','os.mkdir','os.rename','os.chmod','os.utime','os.link','os.symlink'}
@@ -30,11 +32,27 @@ class WindowsLocalPolicy:
         self.listener=None;self._socketpair_code=socket.socketpair.__code__
         self.owner=threading.get_ident();self.io_depth=0;self.threads=[];self._thread_grant=threading.local()
     def deny(self,reason):
-        frames=[];frame=sys._getframe(1)
-        for _ in range(12):
+        frames=[];frame=sys._getframe(1);event=None;targets=[]
+        for _ in range(20):
             if frame is None:break
-            frames.append({'file':frame.f_code.co_filename,'line':frame.f_lineno,'function':frame.f_code.co_name});frame=frame.f_back
-        self.halt=True;self.denials.append({'phase':self.phase,'reason':reason,'frames':frames});raise Denied(reason)
+            frames.append({'module':frame.f_globals.get('__name__',''),'file':self.describe_path(frame.f_code.co_filename),'line':frame.f_lineno,'function':frame.f_code.co_name})
+            if frame.f_code is WindowsLocalPolicy.audit.__code__:
+                event=frame.f_locals.get('event');values=frame.f_locals.get('args',())
+                count=2 if event in {'os.link','os.symlink','os.rename'} else 1
+                targets=[self.describe_path(v) for v in values[:count]]
+            frame=frame.f_back
+        self.halt=True;self.denials.append({'phase':self.phase,'reason':reason,'event':event,'targets':targets,'monotonic_seconds':time.monotonic(),'frames':frames});raise Denied(reason)
+    def describe_path(self,value):
+        # No file reads/resolution, argument repr, contents, query strings or credentials.
+        if not isinstance(value,(str,bytes,os.PathLike)):return '<NON_PATH>'
+        raw=os.fsdecode(value)
+        if raw.startswith('<'):return raw[:80]
+        path=ntpath.normcase(ntpath.abspath(raw))
+        operating=ntpath.normcase(r'C:\Codex\NewsFlowAI')
+        if within(path,operating):return '<OPERATING_PROTECTED>'
+        if within(path,self.workspace):return '<SYNTHETIC>/'+ntpath.relpath(path,self.workspace).replace('\\','/')
+        if Path(path).suffix.lower() in {'.dpapi','.token','.credentials','.key'}:return '<SECRET_PATH_REDACTED>'
+        return re.sub(r'(?i)([a-z]:\\users\\)[^\\]+',r'\1<USER>',path).replace('\\','/')
     def checkpoint(self,guard_denials=(),gate_denials=()):
         # Libraries can catch PermissionError for optional feature detection.
         # A returned create_app() is not permission to serve after such a denial.

@@ -1,0 +1,107 @@
+- link "본문으로 이동":
+  - /url: "#main"
+- main:
+  - generic: 1개 프로젝트
+  - heading "이미지 제작실" [level=1]
+  - generic: 합성 검증 자료
+  - button "제작실 새로고침":
+  - tablist "이미지 제작실":
+    - tab "AI 이미지 생성":
+      - strong: AI 이미지 생성
+      - generic: 원하는 이미지를 직접 생성합니다
+    - tab "뉴스 기반 이미지" [selected]:
+      - strong: 뉴스 기반 이미지
+      - generic: 저장된 TOP 3 분석을 재사용합니다
+  - heading "실시간 인기 뉴스 TOP 3" [level=2]:
+    - text: 실시간 인기 뉴스 TOP 3
+  - text: 완료된 TOP 3 분석
+  - combobox "완료된 TOP 3 분석":
+    - option "선택하세요" [disabled] [selected]
+    - 'option "화제성 평가 #1"'
+  - generic: 완료된 분석 결과 3건을 선택하세요.
+  - paragraph: 1·2·3위의 뉴스·대본·출처를 재사용합니다. 추가 분석을 요청하지 않습니다.
+  - heading "공통 이미지 생성 설정" [level=2]:
+    - text: 공통 이미지 생성 설정
+  - text: TOP 3 이미지 모델
+  - combobox "TOP 3 이미지 모델":
+    - option "선택하세요" [disabled]
+    - option "gpt-image-2.5-flare-2026-09-08" [selected]
+    - option "gpt-image-2.5-sunburst-2026-09-08"
+  - text: TOP 3 생성 비율
+  - combobox "TOP 3 생성 비율":
+    - option "선택하세요" [disabled]
+    - option "4:5 · 피드 권장" [selected]
+    - option "1:1 · 여백 변환"
+    - option "2:3 · 여백 변환"
+  - text: TOP 3 품질
+  - combobox "TOP 3 품질":
+    - option "선택하세요" [disabled]
+    - option "초안"
+    - option "표준 · 추천" [selected]
+    - option "고품질"
+  - strong: 최종 1080×1350
+  - generic: 개별 이미지 3개 · 4:5
+  - button "TOP 3 제작 작업 저장" [disabled]:
+    - text: TOP 3 제작 작업 저장
+  - button "자동 제작 기본값 저장"
+  - heading "TOP 3 이미지 결과" [level=2]:
+    - text: TOP 3 이미지 결과
+  - generic "아직 제작하지 않은 TOP 3 결과":
+    - article:
+      - generic: TOP 1 · 제작 작업을 먼저 저장하세요.
+      - strong: TOP 1 · 결과 없음
+      - generic: 대기
+    - article:
+      - generic: TOP 2 · 제작 작업을 먼저 저장하세요.
+      - strong: TOP 2 · 결과 없음
+      - generic: 대기
+    - article:
+      - generic: TOP 3 · 제작 작업을 먼저 저장하세요.
+      - strong: TOP 3 · 결과 없음
+      - generic: 대기
+  - heading "문구 · 출력 설정" [level=2]:
+    - text: 문구 · 출력 설정
+  - generic: 검토할 결과를 선택하세요.
+  - paragraph: 사용권·출처·AI 표시를 검토합니다. 자동 제작은 Instagram에 게시하지 않습니다.
+  - link "OpenAI 키 · 연결 안내":
+    - /url: /studio/settings
+  - status: TOP 3 제작 기록을 불러오지 못했습니다.
+  - heading "최근 생성 이미지 · 작업 기록" [level=2]:
+    - text: 최근 생성 이미지 · 작업 기록
+  - region "기본 샘플 콘텐츠":
+    - heading "기본 샘플 콘텐츠 샘플 · 실제 생성 이력 아님" [level=2]
+    - button "샘플 접기" [expanded] [active]
+    - button "숨긴 샘플 관리"
+    - paragraph: 오프라인 예제입니다. 실제 최신 뉴스·AI 공급사 결과가 아닙니다. 영상은 무음 12초 슬라이드이며 편집 원본 프로젝트가 없습니다. 사용권·재배포 권한은 별도 확인이 필요합니다.
+    - article:
+      - button "가상 AI 뉴스 카드 미리보기":
+        - img "가상 AI 뉴스 카드 샘플"
+        - generic: 샘플 이미지
+      - heading "가상 AI 뉴스 카드" [level=3]
+      - generic: 720×1080
+      - generic "프롬프트 예제 · 원본 지시문 아님"
+      - button "내 작업으로 복사"
+      - button "참조 자산으로 활용"
+      - button "샘플 숨기기"
+    - article:
+      - button "가상 전기차 뉴스 카드 미리보기":
+        - img "가상 전기차 뉴스 카드 샘플"
+        - generic: 샘플 이미지
+      - heading "가상 전기차 뉴스 카드" [level=3]
+      - generic: 720×1080
+      - generic "프롬프트 예제 · 원본 지시문 아님"
+      - button "내 작업으로 복사"
+      - button "참조 자산으로 활용"
+      - button "샘플 숨기기"
+    - article:
+      - button "가상 경제 뉴스 카드 미리보기":
+        - img "가상 경제 뉴스 카드 샘플"
+        - generic: 샘플 이미지
+      - heading "가상 경제 뉴스 카드" [level=3]
+      - generic: 720×1080
+      - generic "프롬프트 예제 · 원본 지시문 아님"
+      - button "내 작업으로 복사"
+      - button "참조 자산으로 활용"
+      - button "샘플 숨기기"
+  - paragraph:
+    - text: 생성·비용 승인과 최종 게시 승인은 별도입니다. 결과 불명 요청은 자동 재실행하지 않습니다.

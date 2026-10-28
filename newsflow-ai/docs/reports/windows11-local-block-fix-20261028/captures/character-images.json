@@ -1,0 +1,65 @@
+[
+  {
+    "alt": "저장한 캐릭터 참조 PNG",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/studio/characters/64eb2dca30154bbdaad65690a5b6b0aa/reference",
+    "width": 720
+  },
+  {
+    "alt": "로봇 캐릭터 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/character-robot/file",
+    "width": 720
+  },
+  {
+    "alt": "고양이 캐릭터 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/character-cat/file",
+    "width": 720
+  },
+  {
+    "alt": "드래곤 캐릭터 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/character-dragon/file",
+    "width": 720
+  },
+  {
+    "alt": "로봇 캐릭터 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/character-robot/file",
+    "width": 720
+  },
+  {
+    "alt": "고양이 캐릭터 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/character-cat/file",
+    "width": 720
+  },
+  {
+    "alt": "드래곤 캐릭터 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/character-dragon/file",
+    "width": 720
+  },
+  {
+    "alt": "로봇 쇼츠 미리보기 샘플",
+    "complete": true,
+    "height": 1280,
+    "src": "http://127.0.0.1:18765/api/samples/character-short-robot/poster",
+    "width": 720
+  },
+  {
+    "alt": "고양이 쇼츠 미리보기 샘플",
+    "complete": false,
+    "height": 0,
+    "src": "",
+    "width": 0
+  }
+]

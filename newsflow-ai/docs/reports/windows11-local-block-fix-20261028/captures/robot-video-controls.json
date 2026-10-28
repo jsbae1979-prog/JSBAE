@@ -1,0 +1,12 @@
+{
+  "robotPause": {
+    "currentTime": 10.2379,
+    "ended": false,
+    "paused": true
+  },
+  "robotSeek": {
+    "currentTime": 0.12,
+    "error": null,
+    "paused": true
+  }
+}

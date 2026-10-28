@@ -1,0 +1,10 @@
+{
+  "currentTime": 0.1776,
+  "duration": 12,
+  "error": null,
+  "height": 1280,
+  "paused": false,
+  "readyState": 4,
+  "src": "http://127.0.0.1:18765/api/samples/news-short/file",
+  "width": 720
+}

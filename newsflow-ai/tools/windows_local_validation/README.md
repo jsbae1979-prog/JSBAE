@@ -1,67 +1,63 @@
 # Windows 11 local synthetic validation runner
 
-Status: **BLOCKED for GUI acceptance**. No approved server run is presently certified.
+Status: **CONDITIONAL**. The original three startup rejections are resolved.
+One diagnostic run and one corrected app/HTTP run were executed on Windows 11
+Python 3.14.7. The corrected run recorded no Guard/gate/policy rejection.
+12 screen entries, nine decoded sample images, three HTTP sample MP4 playback
+sessions, and a draft save/reopen were observed. Full product acceptance is pending.
 
-This is a separate entry point, not the CI-only runner with a disabled check.
-It uses the unchanged verification Guard, native adapter, Rtl/filelock boundary
-and gate via source-pinned copies. Production Guard and product code are untouched.
-No `GITHUB_ACTIONS` value is created. The child receives a minimal new environment.
+This is a separate local entry, not a CI runner with its checks removed. No CI
+variable is spoofed. Production Guard, installed filelock, product sources,
+sample originals, DPAPI, OAuth and approval policies remain unchanged.
 
-The policy is a trusted Python verification harness, **not OS isolation against
-hostile Python reflection**. It provides one owned IPv4 HTTP listener on
-127.0.0.1:18765; outgoing connections/DNS, shell/child workers and real providers
-are denied. All writes/SQLite reside in a fresh synthetic profile. Source,
-packaged samples, built React files and fixed runtime folders are read only.
-No real credentials, proxy settings, OAuth or DPAPI files are inherited.
-The product `create_app`, CSRF/Origin middleware and FileResponse/Range are used.
-ASGI lifespan and scheduler/background startup are deliberately not entered.
-The HTTP surface limits writes to local draft/sample actions and rejects paid
-generation, OAuth, account changes, scheduling activation and publishing.
+## Minimal startup fixes
 
-## Latest attempt
+`runtime_fixes.bounded_import_paths` removes unused search entries outside the
+already registered read roots. One stale editable-install source directory was
+removed; it was being scanned by Pydantic's optional plugin metadata discovery.
+No new file read permission or Pydantic validation bypass is added.
 
-One real local attempt returned from create_app but recorded two out-of-root
-read rejections and one link-creation rejection during initialization. Libraries
-caught those exceptions. The initial harness incorrectly printed READY before
-checking the accumulated policy rejection flag. The loop exited without accepting
-any request, all resources closed, and the recorded final result was BLOCKED.
-The early READY line is **not evidence of a permitted GUI session**.
+The reviewed, source-hash-pinned `filelock._strict._probe_link_follow_symlinks`
+optional capability probe receives NotImplementedError for exactly its throwaway
+`Temp/.../probe-source -> probe-link`, `follow_symlinks=False` request. The unchanged
+probe treats that as unsupported. No link syscall occurs. Every other link call
+still reaches the unchanged Guard denial. WindowsFileLock acquisition/release,
+native ownership and lock semantics are untouched; no lockless substitution.
 
-The corrected code checks all accumulated Guard/gate/policy rejections immediately
-after create_app and before seeding/serving. Two focused tests cover caught-error
-and returned-initializer cases. It also records call-site frames for future
-diagnostics, without logging input values or secret contents. **The corrected
-app entry has not been rerun**; no read/link grant has been added after rejection.
+`local_policy` logs the denied event, normalized non-secret target and source
+frames. A caught PermissionError cannot authorize the next startup phase.
 
-Native FileLock ownership remains tied to the original thread. Future sync-route
-locks from AnyIO workers may therefore still be rejected. Nested character locks
-and other unregistered lock paths remain unsupported; no lockless substitution
-or cross-thread ownership grant is made. Fake image/video generation is not
-implemented by this runner, and no paid production route is enabled as a fallback.
+## Boundaries
 
-## Focused contracts
+Only fresh synthetic profile/SQLite/media/settings are used. The child inherits
+minimal system variables and no keys, tokens, proxies or real profile. Source,
+runtime, built React assets and samples are read only. The only server listener
+is owned IPv4 127.0.0.1:18765; 8765 is excluded. Outgoing DNS/connections, shell,
+arbitrary workers, paid generation, OAuth and SNS routes remain denied.
+Product Origin/CSRF and FileResponse/Range are unchanged. ASGI lifespan is not
+entered; scheduler and background workers do not start.
 
-From this directory, using the approved Windows Python 3.14.7:
+This is a trusted Python test harness, not OS isolation against hostile Python
+reflection. FileLock ownership is still tied to its original thread. Nested
+character locks and other unregistered lock paths have not been authorized.
+No actual supplier generation, posting, Windows task registration or DPI change.
 
-```powershell
-python -B -m unittest test_local_policy -v
-```
+## Known remaining limits
 
-This executes pure synthetic policy tests, without app/native/network execution.
-Do not use another Python version or set CI variables to satisfy a check.
+- `/api/feed-batches` is not in the local HTTP read surface; TOP3 history shows
+  a load failure. No permission was automatically added and no app rerun occurred.
+- Two pointer menu activations in the narrow IAB surface reached an adjacent
+  destination. Keyboard Enter navigation worked; tool/UI cause remains unconfirmed.
+- Actual OS DPI 100/125/150/200% and full production lifespan remain NOT VERIFIED.
+- Image/video generation and character write stages were not exercised here.
 
-## Future execution, only after the remaining boundary is resolved
+Normal stop uses the owned synthetic profile's STOP file. Exceptional forced
+cleanup is separately recorded, never counted as normal shutdown. Both current
+attempts exited normally and left zero handles, descriptors, buffers, SQLite
+connections, owned test threads or 18765 listener.
 
-```powershell
-<approved-python-3.14.7> -B launch.py --workspace <new-ordinary-synthetic-directory>
-```
+New focused tests: `python -B -m unittest test_initialization_fixes -v` (8 PASS).
+The prior `test_local_policy` eight-test result is reused, not reported as a new run.
 
-The directory must not exist. The owning parent retains exactly one child handle;
-normal stop is an empty `STOP` file in that owned synthetic profile. The child
-closes the server, app services, SQLite connections, event loop and native objects.
-An exceptional forced cleanup is separately recorded and never counted as a
-normal shutdown. Do not terminate processes by port/name, reuse the operating
-profile, relax Guard, pre-import filelock or substitute another executable.
-
-Current evidence: `docs/reports/windows11-local-runner-20261028/`.
-The 12-screen GUI, HTTP sample playback and actual monitor DPI remain unverified.
+Evidence: `docs/reports/windows11-local-block-fix-20261028/LOCAL_BLOCK_FIX_REPORT.md`.
+The previous BLOCKED attempt/report is retained as historical evidence.

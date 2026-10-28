@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess,sys,time
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--workspace',required=True);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--workspace',required=True);parser.add_argument('--diagnostic',action='store_true');args=parser.parse_args()
     if os.name!='nt' or sys.version_info[:3]!=(3,14,7) or sys.getwindowsversion().build<22000 or sys.getwindowsversion().product_type!=1:raise SystemExit('Windows11 workstation Python3.14.7 required')
     root=Path(args.workspace).resolve()
     # No overwrite/reuse, no traversal or reparse parent, no operating data.
@@ -14,6 +14,7 @@ def main():
     for name in ('Roaming','Local','Profile','Temp'):(root/name).mkdir()
     env.update({'APPDATA':str(root/'Roaming'),'LOCALAPPDATA':str(root/'Local'),'USERPROFILE':str(root/'Profile'),'HOME':str(root/'Profile'),'TEMP':str(root/'Temp'),'TMP':str(root/'Temp'),'PATH':str(Path(sys.executable).parent),'PYTHONDONTWRITEBYTECODE':'1','PYTHONNOUSERSITE':'1','NEWSFLOW_DATA_DIR':str(root/'unused-default')})
     command=[sys.executable,'-B',str(Path(__file__).with_name('runner.py')),'--workspace',str(root)]
+    if args.diagnostic:command.append('--diagnostic')
     log=(root/'process.log').open('w',encoding='utf8')
     child=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,creationflags=subprocess.CREATE_NO_WINDOW|subprocess.CREATE_NEW_PROCESS_GROUP)
     (root/'owned-process.json').write_text(json.dumps({'pid':child.pid,'python':sys.executable,'port':18765}),encoding='utf8')

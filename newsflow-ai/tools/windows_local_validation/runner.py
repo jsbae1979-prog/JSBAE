@@ -15,7 +15,7 @@ import traceback
 
 sys.dont_write_bytecode=True
 HERE=Path(__file__).resolve().parent;TOOLS=HERE.parent;PROJECT=HERE.parents[1]
-args=argparse.ArgumentParser();args.add_argument('--workspace',required=True);options=args.parse_args()
+args=argparse.ArgumentParser();args.add_argument('--workspace',required=True);args.add_argument('--diagnostic',action='store_true');options=args.parse_args()
 workspace=Path(options.workspace).resolve()
 if os.name!='nt' or sys.version_info[:3]!=(3,14,7) or sys.getwindowsversion().build<22000 or sys.getwindowsversion().product_type!=1:raise SystemExit('Windows11 workstation / Python3.14.7 required')
 if 'GITHUB_ACTIONS' in os.environ:raise SystemExit('Local runner does not accept CI environment')
@@ -35,7 +35,12 @@ if vendor.version!='3.32.7':raise SystemExit('Reviewed filelock version required
 package=Path(vendor.locate_file('filelock')).resolve()
 sources={('filelock' if n=='__init__.py' else 'filelock.'+n[:-3]):str(package/n) for n in ('__init__.py','_api.py','_descriptor.py','_windows.py','_identity.py','_marker.py','_lease.py','_util.py')}
 sys.path[:0]=[str(workspace),str(HERE),str(TOOLS/'native_rtl_filelock'),str(TOOLS/'native_capability'),str(PROJECT/'src')]
-evidence={'python':sys.version.split()[0],'Windows':str(sys.getwindowsversion()),'CI_environment_used':False,'paid_API_SNS_calls':0,'OS_DPI':'NOT VERIFIED / unchanged','requests':[],'cleanup_errors':[],'final':'BLOCKED'}
+from runtime_fixes import bounded_import_paths
+before_paths=list(sys.path)
+sys.path[:]=bounded_import_paths(sys.path,reads)
+pruned_count=len(before_paths)-len(sys.path)
+evidence={'python':sys.version.split()[0],'Windows':str(sys.getwindowsversion()),'diagnostic_only':options.diagnostic,'CI_environment_used':False,'paid_API_SNS_calls':0,'OS_DPI':'NOT VERIFIED / unchanged','requests':[],'cleanup_errors':[],'final':'BLOCKED'}
+evidence['unneeded_import_search_entries_removed']=pruned_count
 policy=bridge=native=app=server=loop=None
 phase='Guard-first-bootstrap'
 try:
@@ -57,6 +62,8 @@ try:
     data=Path(bridge.scope.root)
     for name in LOCK_NAMES:bridge.register_path(name)
     policy.install_sqlite([data/'newsflow.db']);policy.install_threads()
+    from runtime_fixes import install_optional_probe
+    optional_probe=install_optional_probe(policy,package)
     evidence['Guard_first']=guard.INSTALLED and gate.installed and 'filelock' not in sys.modules
     phase=policy.phase='create-app'
     from newsflow.config import Settings
@@ -65,6 +72,7 @@ try:
     import secrets
     app=create_app(Settings(data_dir=data,port=18765,secret_key=secrets.token_hex(32)),FakeRSSAdapter({}),automatic_start=True)
     policy.checkpoint(guard.ATTEMPTS,gate.denials)
+    if options.diagnostic:raise RuntimeError('Diagnostic-only run ends before seeding or HTTP')
     assert app.state.scheduler.thread is None and app.state.video_ai.thread is None
     evidence['lifespan_entered']=False;evidence['scheduler_started']=False
     evidence['data_path']=str(data);evidence['real_create_app']='PASS'
@@ -172,6 +180,7 @@ finally:
         evidence['lock_resources']=bridge.status()
     if native is not None:evidence['remaining_native_handles']=len(native._owned_handles)
     if policy is not None:evidence['policy']=policy.status()
+    if 'optional_probe' in globals():evidence['optional_link_probes_suppressed']=optional_probe.suppressed
     if 'guard' in globals():
         evidence['guard_denials']=guard.ATTEMPTS
         evidence['native_tables_unchanged']='old_native' in globals() and old_native==set(guard._NATIVE) and old_dll==set(guard._SYSTEM_DLLS)

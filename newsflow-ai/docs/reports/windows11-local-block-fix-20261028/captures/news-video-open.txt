@@ -1,0 +1,16 @@
+Browser tab: 4, Title: "NewsFlow AI Studio", URL: "http://127.0.0.1:18765/studio/shorts".
+1 AXWebArea NewsFlow AI Studio, URL: 127.0.0.1:18765/studio/shorts
+	2 container
+		3 heading 뉴스 쇼츠 미리보기 · 샘플, Value: 2
+			4 text 뉴스 쇼츠 미리보기  · 샘플
+		5 button 닫기
+		6 container 샘플 미리보기 영상
+			7 container 버퍼링
+			8 container
+				9 button
+				10 pop up button
+			11 slider 동영상 시간 스크러버
+		12 text 실제 최신 뉴스·실제 AI 공급사 결과가 아닌 오프라인 시연용 샘플입니다. 무음 12초 슬라이드 예제이며 편집 원본 프로젝트는 없습니다.
+		13 text 샘플 참조 자산 · 실제 생성 결과/편집 프로젝트 아님 · 사용권 별도 확인
+
+The focused UI element is 5 button 닫기

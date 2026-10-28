@@ -1,0 +1,111 @@
+- link "본문으로 이동":
+  - /url: "#main"
+- main:
+  - generic: 1개 프로젝트
+  - heading "뉴스 쇼츠 제작실" [level=1]
+  - generic: 합성 검증 자료
+  - button "제작실 새로고침":
+  - heading "분석된 뉴스 TOP 3" [level=2]:
+    - text: 분석된 뉴스 TOP 3
+  - generic: "저장된 분석 #1 · claude_api · 순위와 출처를 그대로 연결합니다."
+  - button "뉴스 스튜디오":
+    - text: 뉴스 스튜디오
+  - button "TOP 1 미분류 합성 도서관 운영 안내 합성 요약 1번입니다. 실제 사건이 아닙니다." [pressed]:
+    - status:
+      - generic: 미리보기 없음
+    - generic: TOP 1
+    - text: 미분류
+    - strong: 합성 도서관 운영 안내
+    - paragraph: 합성 요약 1번입니다. 실제 사건이 아닙니다.
+  - button "TOP 2 미분류 합성 버스 노선 안내 합성 요약 2번입니다. 실제 사건이 아닙니다.":
+    - status:
+      - generic: 미리보기 없음
+    - generic: TOP 2
+    - text: 미분류
+    - strong: 합성 버스 노선 안내
+    - paragraph: 합성 요약 2번입니다. 실제 사건이 아닙니다.
+  - button "TOP 3 미분류 합성 과학 전시 안내 합성 요약 3번입니다. 실제 사건이 아닙니다.":
+    - status:
+      - generic: 미리보기 없음
+    - generic: TOP 3
+    - text: 미분류
+    - strong: 합성 과학 전시 안내
+    - paragraph: 합성 요약 3번입니다. 실제 사건이 아닙니다.
+  - heading "AI 대본 생성 · 편집" [level=2]:
+    - text: AI 대본 생성 · 편집
+  - generic: 저장 버전 2
+  - generic "대본 작업":
+    - button "AI 대본 생성":
+      - text: AI 대본 생성
+    - button "대본 편집" [pressed]
+    - button "저장된 대본"
+  - text: 대본 제목
+  - textbox "대본 제목": 합성 통합 대본
+  - generic: 장면 1 · 10초
+  - textbox "장면 1 대본": 합성 장면 1입니다. 로컬 저장 확인.
+  - generic: 장면 2 · 10초
+  - textbox "장면 2 대본": 합성 장면 2입니다.
+  - generic: 장면 3 · 10초
+  - textbox "장면 3 대본": 합성 장면 3입니다.
+  - button "대본 저장" [disabled]:
+    - text: 대본 저장
+  - generic: 검토 필요
+  - heading "간편 영상 설정 · 미리보기" [level=2]:
+    - text: 간편 영상 설정 · 미리보기
+  - text: 음성
+  - combobox "음성":
+    - option "선택하세요" [disabled]
+    - option "무음 검토영상" [selected]
+  - text: 영상 방식
+  - combobox "영상 방식":
+    - option "선택하세요" [disabled]
+    - option "FFmpeg 기본 카드"
+    - option "FFmpeg · 뉴스 이미지 자동 연결" [selected]
+    - option "AI 장면 · 별도 견적"
+  - group "영상 길이":
+    - generic: 영상 길이
+    - button "30초" [pressed]
+    - button "45초"
+    - button "60초"
+  - group "자막 스타일":
+    - generic: 자막 스타일
+    - button "기본" [pressed]:
+      - generic: A
+      - text: 기본
+    - button "크게":
+      - generic: A
+      - text: 크게
+    - button "작게":
+      - generic: A
+      - text: 작게
+  - paragraph:
+    - text: 1080×1920 · 9:16
+    - text: 음성·소재 권한과 비용은 제작 전 다시 확인합니다.
+  - link "음성·Provider 설정":
+    - /url: /studio/settings
+  - generic "9:16 미리보기":
+    - text: 완성 영상이 없습니다.
+  - strong: 영상 제작 및 저장
+  - generic: 대본 저장 → 검토·권한 확인 → 합성 → 결과 검토
+  - button "영상 제작 · 승인 확인":
+    - text: 영상 제작 · 승인 확인
+  - generic "고급 장면 편집 · 기존 작업":
+    - text: 고급 장면 편집 · 기존 작업
+  - option "뉴스 연결 이미지 자동 선택" [selected]
+  - option "기본 이미지 카드"
+  - region "기본 샘플 콘텐츠":
+    - heading "기본 샘플 콘텐츠 샘플 · 실제 생성 이력 아님" [level=2]
+    - button "샘플 접기" [expanded] [active]
+    - button "숨긴 샘플 관리"
+    - paragraph: 오프라인 예제입니다. 실제 최신 뉴스·AI 공급사 결과가 아닙니다. 영상은 무음 12초 슬라이드이며 편집 원본 프로젝트가 없습니다. 사용권·재배포 권한은 별도 확인이 필요합니다.
+    - article:
+      - button "뉴스 쇼츠 미리보기 미리보기":
+        - img "뉴스 쇼츠 미리보기 샘플"
+        - generic: ▶ 샘플 미리보기 영상 · 무음 12초
+      - heading "뉴스 쇼츠 미리보기" [level=3]
+      - generic: 720×1280
+      - button "내 작업으로 복사"
+      - button "참조 자산으로 활용"
+      - button "샘플 숨기기"
+  - paragraph:
+    - text: 생성·비용 승인과 최종 게시 승인은 별도입니다. 결과 불명 요청은 자동 재실행하지 않습니다.

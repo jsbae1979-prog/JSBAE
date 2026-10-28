@@ -1,8 +1,10 @@
 {
-  "local_policy.py": "ee84ca2076ebe8d9b7bc2f28e40068816ccfa404f3b7619e9f160de408392aed",
+  "local_policy.py": "9cdd3bcaf88ddec3427bef5f340881771d9d686975c671623046adc4ebe784bd",
   "guard_capability.py": "1d3512d4c28b61bda554d0fbe8f917471d535de5324f4d729054f0ba28c092ba",
   "seed.py": "057f3d230928fe67fed8214ef2e8f323acabaeda6f0fd9abbed6ff40e415e8cc",
-  "runner.py": "ef6bc68100092c584c6a4860d664896d542caea3cc2eb4108dadf10798659066",
-  "launch.py": "01645ddf54f27b11c924102e1094899a0f33e5f5c94566ad2133088451590759",
-  "test_local_policy.py": "54e10ba8279288812b36e521329b215c04daf19926db72b048fe9facc1888ecd"
+  "runner.py": "e5f3ff8ff705f67a88a3a4a64867bbb314b0e7fede7ba0780d3b020d3e3b1e7d",
+  "launch.py": "a40830b92df4d224ed53e61204ad4376da75164a55d6f9d92eb8f612f6cb35ff",
+  "test_local_policy.py": "54e10ba8279288812b36e521329b215c04daf19926db72b048fe9facc1888ecd",
+  "runtime_fixes.py": "6d0881f712ed7b9d043b94f20fc315620ceada6e3bd97793f047c734b47f319d",
+  "test_initialization_fixes.py": "4021ac6ad34a8339c4c8cd26cbffd5e81fdc55c68418f38aa7e23180fd3d2f0a"
 }

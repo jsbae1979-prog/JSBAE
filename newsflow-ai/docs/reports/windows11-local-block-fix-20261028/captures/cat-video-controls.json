@@ -1,0 +1,12 @@
+{
+  "catPause": {
+    "currentTime": 4.8216,
+    "ended": false,
+    "paused": true
+  },
+  "catSeek": {
+    "currentTime": 0.12,
+    "error": null,
+    "paused": true
+  }
+}

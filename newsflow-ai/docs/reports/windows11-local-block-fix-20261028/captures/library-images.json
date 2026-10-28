@@ -1,0 +1,86 @@
+[
+  {
+    "alt": "로봇 캐릭터",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/character-robot/file",
+    "width": 720
+  },
+  {
+    "alt": "고양이 캐릭터",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/character-cat/file",
+    "width": 720
+  },
+  {
+    "alt": "드래곤 캐릭터",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/character-dragon/file",
+    "width": 720
+  },
+  {
+    "alt": "도시 이미지 예제",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/standalone-city/file",
+    "width": 720
+  },
+  {
+    "alt": "고양이 이미지 예제",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/standalone-cat/file",
+    "width": 720
+  },
+  {
+    "alt": "지구 이미지 예제",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/standalone-earth/file",
+    "width": 720
+  },
+  {
+    "alt": "가상 AI 뉴스 카드",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/top3-ai/file",
+    "width": 720
+  },
+  {
+    "alt": "가상 전기차 뉴스 카드",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/top3-ev/file",
+    "width": 720
+  },
+  {
+    "alt": "가상 경제 뉴스 카드",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/top3-economy/file",
+    "width": 720
+  },
+  {
+    "alt": "로봇 쇼츠 미리보기",
+    "complete": true,
+    "height": 1280,
+    "src": "http://127.0.0.1:18765/api/samples/character-short-robot/poster",
+    "width": 720
+  },
+  {
+    "alt": "고양이 쇼츠 미리보기",
+    "complete": true,
+    "height": 1280,
+    "src": "http://127.0.0.1:18765/api/samples/character-short-cat/poster",
+    "width": 720
+  },
+  {
+    "alt": "뉴스 쇼츠 미리보기",
+    "complete": true,
+    "height": 1280,
+    "src": "http://127.0.0.1:18765/api/samples/news-short/poster",
+    "width": 720
+  }
+]

@@ -1,0 +1,23 @@
+[
+  {
+    "alt": "도시 이미지 예제 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/standalone-city/file",
+    "width": 720
+  },
+  {
+    "alt": "고양이 이미지 예제 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/standalone-cat/file",
+    "width": 720
+  },
+  {
+    "alt": "지구 이미지 예제 샘플",
+    "complete": true,
+    "height": 1080,
+    "src": "http://127.0.0.1:18765/api/samples/standalone-earth/file",
+    "width": 720
+  }
+]

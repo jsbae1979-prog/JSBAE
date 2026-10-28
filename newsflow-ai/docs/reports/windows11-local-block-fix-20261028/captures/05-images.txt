@@ -1,0 +1,126 @@
+- link "본문으로 이동":
+  - /url: "#main"
+- main:
+  - generic: 1개 프로젝트
+  - navigation "제작실 메뉴":
+    - button "NewsFlow AI":
+      - strong: NewsFlow AI
+    - button "홈"
+    - button "콘텐츠 제작"
+    - button "뉴스 쇼츠 제작"
+    - button "캐릭터 쇼츠 제작"
+    - button "이미지 제작"
+    - button "뉴스 스튜디오"
+    - button "자동화 센터"
+    - button "라이브러리"
+    - button "성과·비용"
+    - button "설정·관리"
+    - generic "제작실":
+      - text: 제작실
+  - heading "이미지 제작실" [level=1]
+  - generic: 합성 검증 자료
+  - button "제작실 새로고침":
+  - tablist "이미지 제작실":
+    - tab "AI 이미지 생성" [selected]:
+      - strong: AI 이미지 생성
+      - generic: 원하는 이미지를 직접 생성합니다
+    - tab "뉴스 기반 이미지":
+      - strong: 뉴스 기반 이미지
+      - generic: 저장된 TOP 3 분석을 재사용합니다
+  - heading "이미지 주제 입력" [level=2]:
+    - text: 이미지 주제 입력
+  - text: 프롬프트
+  - textbox "이미지 프롬프트":
+    - /placeholder: 만들고 싶은 이미지를 설명해 주세요.
+  - button "여행"
+  - button "일상"
+  - button "판타지"
+  - button "도시"
+  - button "자연"
+  - heading "스타일 선택" [level=2]:
+    - text: 스타일 선택
+  - button "3D 애니메이션":
+    - text: 3D 애니메이션
+  - button "애니메이션":
+    - text: 애니메이션
+  - button "실사풍":
+    - text: 실사풍
+  - button "일러스트":
+    - text: 일러스트
+  - button "만화풍":
+    - text: 만화풍
+  - button "스케치":
+    - text: 스케치
+  - heading "모델 · 생성 설정" [level=2]:
+    - text: 모델 · 생성 설정
+  - text: 이미지 모델
+  - combobox "이미지 모델":
+    - option "선택하세요" [disabled]
+    - option "gpt-image-2.5-flare-2026-09-08" [selected]
+    - option "gpt-image-2.5-sunburst-2026-09-08"
+  - text: 화면 비율 · 크기
+  - combobox "화면 비율 · 크기":
+    - option "선택하세요" [disabled]
+    - option "4:5 · 피드" [selected]
+    - option "1:1 · 정사각형"
+    - option "2:3 · 세로"
+    - option "3:2 · 가로"
+    - option "9:16 · 영상"
+  - text: 이미지 품질
+  - combobox "이미지 품질":
+    - option "선택하세요" [disabled]
+    - option "초안"
+    - option "표준 · 추천" [selected]
+    - option "고품질"
+  - button "초안 저장 · 참조 첨부" [disabled]:
+    - text: 초안 저장 · 참조 첨부
+  - button "다음 작업 기본값 저장"
+  - paragraph: 참조 PNG는 초안 창에서 첨부·보관할 수 있습니다. 참조 기반 유료 이미지 편집 생성은 미구현입니다.
+  - heading "생성 결과" [level=2]:
+    - text: 생성 결과
+  - generic "실제 생성 결과":
+    - generic: 미리보기 없음
+  - paragraph: 공식 견적을 확인한 후 승인합니다. 미확정 비용은 0원으로 표시하지 않습니다.
+  - heading "생성 이력" [level=2]:
+    - text: 생성 이력
+  - generic: 아직 저장한 생성 이력이 없습니다.
+  - heading "최근 생성 이미지" [level=2]:
+    - text: 최근 생성 이미지
+  - generic: 검증된 생성 성공 파일만 표시합니다.
+  - region "기본 샘플 콘텐츠":
+    - heading "기본 샘플 콘텐츠 샘플 · 실제 생성 이력 아님" [level=2]
+    - button "샘플 접기" [expanded]
+    - button "숨긴 샘플 관리"
+    - paragraph: 오프라인 예제입니다. 실제 최신 뉴스·AI 공급사 결과가 아닙니다. 영상은 무음 12초 슬라이드이며 편집 원본 프로젝트가 없습니다. 사용권·재배포 권한은 별도 확인이 필요합니다.
+    - article:
+      - button "도시 이미지 예제 미리보기":
+        - img "도시 이미지 예제 샘플"
+        - generic: 샘플 이미지
+      - heading "도시 이미지 예제" [level=3]
+      - generic: 720×1080
+      - generic "프롬프트 예제 · 원본 지시문 아님"
+      - button "내 작업으로 복사"
+      - button "프롬프트로 새 작업"
+      - button "샘플 숨기기"
+    - article:
+      - button "고양이 이미지 예제 미리보기":
+        - img "고양이 이미지 예제 샘플"
+        - generic: 샘플 이미지
+      - heading "고양이 이미지 예제" [level=3]
+      - generic: 720×1080
+      - generic "프롬프트 예제 · 원본 지시문 아님"
+      - button "내 작업으로 복사"
+      - button "프롬프트로 새 작업"
+      - button "샘플 숨기기"
+    - article:
+      - button "지구 이미지 예제 미리보기":
+        - img "지구 이미지 예제 샘플"
+        - generic: 샘플 이미지
+      - heading "지구 이미지 예제" [level=3]
+      - generic: 720×1080
+      - generic "프롬프트 예제 · 원본 지시문 아님"
+      - button "내 작업으로 복사"
+      - button "프롬프트로 새 작업"
+      - button "샘플 숨기기"
+  - paragraph:
+    - text: 생성·비용 승인과 최종 게시 승인은 별도입니다. 결과 불명 요청은 자동 재실행하지 않습니다.

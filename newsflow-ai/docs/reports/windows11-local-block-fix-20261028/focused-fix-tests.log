@@ -1,0 +1,13 @@
+test_arbitrary_link_still_reaches_guard_rejection (test_initialization_fixes.InitializationFixes.test_arbitrary_link_still_reaches_guard_rejection) ... ok
+test_exact_optional_probe_creates_no_link (test_initialization_fixes.InitializationFixes.test_exact_optional_probe_creates_no_link) ... ok
+test_external_read_rejection_stops_next_phase (test_initialization_fixes.InitializationFixes.test_external_read_rejection_stops_next_phase) ... ok
+test_only_bounded_import_search_roots_remain (test_initialization_fixes.InitializationFixes.test_only_bounded_import_search_roots_remain) ... ok
+test_operating_path_rejected_without_reading_it (test_initialization_fixes.InitializationFixes.test_operating_path_rejected_without_reading_it) ... ok
+test_probe_cannot_touch_outside_path (test_initialization_fixes.InitializationFixes.test_probe_cannot_touch_outside_path) ... ok
+test_source_mismatch_does_not_replace_link_function (test_initialization_fixes.InitializationFixes.test_source_mismatch_does_not_replace_link_function) ... ok
+test_synthetic_file_read_is_unchanged (test_initialization_fixes.InitializationFixes.test_synthetic_file_read_is_unchanged) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.043s
+
+OK

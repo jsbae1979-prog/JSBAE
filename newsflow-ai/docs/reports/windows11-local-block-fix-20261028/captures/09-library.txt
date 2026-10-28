@@ -1,0 +1,164 @@
+- link "본문으로 이동":
+  - /url: "#main"
+- main:
+  - generic: 1개 프로젝트
+  - navigation "관리 화면 주 메뉴":
+    - button "NewsFlow AI":
+      - text: NewsFlow
+      - generic: AI
+    - button "홈":
+      - text: 홈
+    - button "콘텐츠 제작":
+      - text: 콘텐츠 제작
+    - button "뉴스 스튜디오":
+      - text: 뉴스 스튜디오
+    - button "자동화 센터":
+      - text: 자동화 센터
+    - button "라이브러리":
+      - text: 라이브러리
+    - button "게시 스튜디오":
+      - text: 게시 스튜디오
+    - button "성과 · 비용":
+      - text: 성과 · 비용
+    - button "설정 · 관리":
+      - text: 설정 · 관리
+  - heading "라이브러리" [level=1]
+  - paragraph: 생성된 이미지와 영상을 보관하고, 미리보기·재사용으로 이어갑니다.
+  - generic: 합성 검증 자료
+  - button "관리 화면 새로고침":
+  - complementary:
+    - heading "콘텐츠 유형" [level=2]:
+      - text: 콘텐츠 유형
+    - button "전체 13" [pressed]:
+      - text: 전체
+      - generic: "13"
+    - button "뉴스 쇼츠 1":
+      - text: 뉴스 쇼츠
+      - generic: "1"
+    - button "캐릭터 쇼츠 3":
+      - text: 캐릭터 쇼츠
+      - generic: "3"
+    - button "이미지 9":
+      - text: 이미지
+      - generic: "9"
+    - heading "검색" [level=2]:
+      - text: 검색
+    - textbox "라이브러리 검색":
+      - /placeholder: 제목, 키워드를 검색하세요
+    - heading "기간 필터" [level=2]:
+      - text: 기간 필터
+    - button "전체 기간" [pressed]
+    - button "오늘"
+    - button "최근 7일"
+    - button "최근 30일"
+    - paragraph: 샘플에는 생성 날짜를 임의 부여하지 않습니다.
+  - heading "콘텐츠 목록" [level=2]:
+    - text: 콘텐츠 목록
+  - generic: 13개
+  - generic "라이브러리 콘텐츠 구분":
+    - button "전체"
+    - button "내 콘텐츠"
+    - button "샘플 콘텐츠"
+  - combobox "콘텐츠 정렬":
+    - option "저장일 최신순" [selected]
+    - option "제목순"
+  - button "카드 보기" [pressed]:
+  - button "목록 보기":
+  - button "미리보기 없음 캐릭터 쇼츠 검증용 로봇 이야기 10. 28. 오후 01:13 결과 불명 · 재요청 금지" [pressed]:
+    - text: 미리보기 없음
+    - generic: 캐릭터 쇼츠
+    - strong: 검증용 로봇 이야기
+    - generic: 10. 28. 오후 01:13
+    - generic: 결과 불명 · 재요청 금지
+  - button "로봇 캐릭터 샘플 로봇 캐릭터 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "로봇 캐릭터"
+    - generic: 샘플
+    - strong: 로봇 캐릭터
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "고양이 캐릭터 샘플 고양이 캐릭터 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "고양이 캐릭터"
+    - generic: 샘플
+    - strong: 고양이 캐릭터
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "드래곤 캐릭터 샘플 드래곤 캐릭터 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "드래곤 캐릭터"
+    - generic: 샘플
+    - strong: 드래곤 캐릭터
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "도시 이미지 예제 샘플 도시 이미지 예제 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "도시 이미지 예제"
+    - generic: 샘플
+    - strong: 도시 이미지 예제
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "고양이 이미지 예제 샘플 고양이 이미지 예제 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "고양이 이미지 예제"
+    - generic: 샘플
+    - strong: 고양이 이미지 예제
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "지구 이미지 예제 샘플 지구 이미지 예제 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "지구 이미지 예제"
+    - generic: 샘플
+    - strong: 지구 이미지 예제
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "가상 AI 뉴스 카드 샘플 가상 AI 뉴스 카드 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "가상 AI 뉴스 카드"
+    - generic: 샘플
+    - strong: 가상 AI 뉴스 카드
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "가상 전기차 뉴스 카드 샘플 가상 전기차 뉴스 카드 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "가상 전기차 뉴스 카드"
+    - generic: 샘플
+    - strong: 가상 전기차 뉴스 카드
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "가상 경제 뉴스 카드 샘플 가상 경제 뉴스 카드 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "가상 경제 뉴스 카드"
+    - generic: 샘플
+    - strong: 가상 경제 뉴스 카드
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "로봇 쇼츠 미리보기 샘플 로봇 쇼츠 미리보기 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "로봇 쇼츠 미리보기"
+    - generic: 샘플
+    - strong: 로봇 쇼츠 미리보기
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "고양이 쇼츠 미리보기 샘플 고양이 쇼츠 미리보기 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "고양이 쇼츠 미리보기"
+    - generic: 샘플
+    - strong: 고양이 쇼츠 미리보기
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - button "뉴스 쇼츠 미리보기 샘플 뉴스 쇼츠 미리보기 오프라인 예제 · 실제 생성 이력 아님 sample":
+    - img "뉴스 쇼츠 미리보기"
+    - generic: 샘플
+    - strong: 뉴스 쇼츠 미리보기
+    - generic: 오프라인 예제 · 실제 생성 이력 아님
+    - generic: sample
+  - heading "콘텐츠 미리보기" [level=2]:
+    - text: 콘텐츠 미리보기
+  - generic "콘텐츠 미리보기":
+    - text: 미리보기 파일 없음
+  - heading "검증용 로봇 이야기" [level=3]
+  - term: 구분
+  - definition: 개발용 합성 프로젝트의 설계 일러스트
+  - term: 상태
+  - definition:
+    - generic: 결과 불명 · 재요청 금지
+  - link "제작실로 이동":
+    - /url: /studio/characters?job_id=64eb2dca30154bbdaad65690a5b6b0aa
+    - text: 제작실로 이동
+  - link "선택한 원본 작업 상세":
+    - /url: /character?job_id=64eb2dca30154bbdaad65690a5b6b0aa
+  - button "숨긴 샘플 관리"
+  - generic "휴지 보관 · 0개"
+  - generic "기존 상세 기능 · 승인 및 복구":
+    - text: 기존 상세 기능 · 승인 및 복구
+  - paragraph: 유료 생성·실제 계정 인증·공개 게시는 별도 승인입니다. 결과 불명 요청은 자동 재전송하지 않습니다.

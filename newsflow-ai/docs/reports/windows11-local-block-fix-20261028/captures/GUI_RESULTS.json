@@ -1,0 +1,125 @@
+[
+  {
+    "screen": "홈",
+    "result": "PASS",
+    "scope": "HTTP React 화면 표시",
+    "capture": "01-home.jpg"
+  },
+  {
+    "screen": "콘텐츠 제작 홈",
+    "result": "PASS",
+    "scope": "메뉴 이동·화면 표시",
+    "capture": "02-create.jpg"
+  },
+  {
+    "screen": "뉴스 쇼츠",
+    "result": "PASS",
+    "scope": "제작실 진입·저장된 합성 대본 및 TOP3 표시",
+    "capture": "03-shorts.jpg"
+  },
+  {
+    "flow": "뉴스 대본 저장",
+    "result": "PASS",
+    "revisionBefore": 1,
+    "revisionAfter": 2,
+    "scope": "합성 데이터·실제 CSRF 경유"
+  },
+  {
+    "flow": "뉴스 대본 재열기",
+    "result": "PASS",
+    "revision": 2,
+    "storedText": "합성 장면 1입니다. 로컬 저장 확인."
+  },
+  {
+    "media": "news-short",
+    "result": "PASS",
+    "scope": "HTTP 재생·일시정지·탐색",
+    "duration": 12,
+    "width": 720,
+    "height": 1280
+  },
+  {
+    "screen": "뉴스 스튜디오",
+    "result": "PASS",
+    "scope": "합성 기사·저장 분석·출처·TOP3·제작실 연결",
+    "capture": "07-news.jpg"
+  },
+  {
+    "screen": "캐릭터 쇼츠",
+    "result": "PASS",
+    "scope": "저장된 참조 PNG·스토리·결과 불명 상태·샘플 3종 표시",
+    "capture": "04-character.jpg"
+  },
+  {
+    "media": "character-short-robot",
+    "result": "PASS",
+    "scope": "HTTP 재생·일시정지·탐색",
+    "duration": 12,
+    "width": 720,
+    "height": 1280
+  },
+  {
+    "media": "character-short-cat",
+    "result": "PASS",
+    "scope": "HTTP 재생·일시정지·탐색",
+    "duration": 12,
+    "width": 720,
+    "height": 1280
+  },
+  {
+    "screen": "뉴스 TOP 3 이미지",
+    "result": "PASS",
+    "scope": "화면 접근·샘플 표시만; TOP3 작업 읽기는 BLOCKED",
+    "capture": "06-top3.jpg"
+  },
+  {
+    "screen": "독립 AI 이미지",
+    "result": "PASS",
+    "scope": "화면·모델·샘플 갤러리 표시",
+    "capture": "05-images.jpg"
+  },
+  {
+    "screen": "라이브러리",
+    "result": "PASS",
+    "scope": "합성 작업과 샘플12개 구분 표시",
+    "capture": "09-library.jpg"
+  },
+  {
+    "screen": "자동화 센터",
+    "result": "PASS",
+    "scope": "예약0·활성0·저장/활성화 분리 안내 표시; 실행 없음",
+    "capture": "08-automation.jpg"
+  },
+  {
+    "screen": "게시 스튜디오",
+    "result": "PASS",
+    "scope": "4개 플랫폼·미등록·최종 승인 차단 표시; 게시 없음",
+    "capture": "10-publishing.jpg"
+  },
+  {
+    "screen": "성과·비용",
+    "result": "PASS",
+    "scope": "미수집·견적 미확정·청구 미확인 표시",
+    "capture": "11-analytics.jpg"
+  },
+  {
+    "screen": "설정·관리",
+    "result": "PASS",
+    "scope": "합성 데이터 경로·키 미설정·계정 미연결 표시",
+    "capture": "12-settings.jpg"
+  },
+  {
+    "flow": "TOP3 작업 이력 조회",
+    "result": "BLOCKED",
+    "scope": "화면은 열리지만 이력 읽기 실패; 허용 범위 확대 없음"
+  },
+  {
+    "flow": "좁은 기본 IAB 폭에서 포인터 메뉴 이동",
+    "result": "NOT VERIFIED",
+    "observations": [
+      "캐릭터의 이미지 제작 클릭 후 뉴스 화면 도착",
+      "이미지의 자동화 클릭 후 라이브러리 도착"
+    ],
+    "note": "키보드 Enter 이동은 정상. 도구 좌표 처리와 UI 원인은 분리 미확정; 제품 수정 없음"
+  }
+]
