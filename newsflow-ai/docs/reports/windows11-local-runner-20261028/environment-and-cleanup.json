@@ -1,0 +1,19 @@
+{
+  "WindowsCaption": "Microsoft Windows 11 Pro",
+  "WindowsVersion": "10.0.26300",
+  "WindowsBuild": "26300",
+  "Architecture": "64비트",
+  "TestChildPID": 1928,
+  "TestChildRemaining": false,
+  "Listeners": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8765,
+      "OwningProcess": 55740
+    }
+  ],
+  "Operating8765PIDUnchanged": true,
+  "OSDPI": "NOT VERIFIED",
+  "DPIChanges": 0,
+  "ProductionCommandsExecuted": 0
+}

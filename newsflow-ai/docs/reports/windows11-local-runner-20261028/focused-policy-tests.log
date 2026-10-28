@@ -1,0 +1,13 @@
+test_arbitrary_process_never_executed (test_local_policy.LocalRunnerBoundary.test_arbitrary_process_never_executed) ... ok
+test_caught_permission_error_prevents_next_phase (test_local_policy.LocalRunnerBoundary.test_caught_permission_error_prevents_next_phase) ... ok
+test_dns_never_executed (test_local_policy.LocalRunnerBoundary.test_dns_never_executed) ... ok
+test_fixed_port_excludes_operating_port (test_local_policy.LocalRunnerBoundary.test_fixed_port_excludes_operating_port) ... ok
+test_guard_rejection_prevents_ready_even_when_library_returns (test_local_policy.LocalRunnerBoundary.test_guard_rejection_prevents_ready_even_when_library_returns) ... ok
+test_owned_listener_only (test_local_policy.LocalRunnerBoundary.test_owned_listener_only) ... ok
+test_secret_file_rejected (test_local_policy.LocalRunnerBoundary.test_secret_file_rejected) ... ok
+test_synthetic_write_only (test_local_policy.LocalRunnerBoundary.test_synthetic_write_only) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.011s
+
+OK
