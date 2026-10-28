@@ -1,0 +1,39 @@
+{
+  "scope": "unsigned private verification; no delivery",
+  "Python": "3.14.7 bundled python314.dll",
+  "PyInstaller": "6.22.3",
+  "InnoSetup": "6.7.3",
+  "React": "prebuilt approved dist, no Node runtime required",
+  "samples": {
+    "images": 9,
+    "silentMP4": 3,
+    "rightsVerified": false,
+    "posters": 3
+  },
+  "ffmpegBinaryHashes": {
+    "ffmpeg.exe": "26f21efe3d78e27699baa71c6fe668c28aaffd56db8ce11f361ed71987119dea",
+    "ffprobe.exe": "a9e63afd32450722e6b1ab94dac955edc643c4943322713c4652185f10246e50"
+  },
+  "correspondingSourceArchives": 7,
+  "payloadInventories": [
+    "release-1.0.0.json",
+    "release-1.1.0.json"
+  ],
+  "notices": "included newsflow/assets/distribution/licenses plus licenses/private-candidate; existing metadata not asserted as a complete new SBOM",
+  "SAPI": "OS-installed voices, voice files not redistributed",
+  "SupertonicWeights": "not bundled",
+  "candidateExecutables": [
+    {
+      "file": "NewsFlowAI_Update_v1.1.0.exe",
+      "sha256": "9f77700f7bddf1e347b00b45642330f9ac485c954014171ef694b2a992f8909e",
+      "bytes": 123583587,
+      "localCopyVerified": true
+    },
+    {
+      "file": "NewsFlowAI_Setup_v1.0.0.exe",
+      "sha256": "46eb1254658c7498e3ac625bf5e4b023ed01517a496572c50812437ca5596b93",
+      "bytes": 118134171,
+      "localCopyVerified": true
+    }
+  ]
+}

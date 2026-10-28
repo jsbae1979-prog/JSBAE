@@ -1,0 +1,66 @@
+{
+  "finalVerdict": "BLOCKED",
+  "developmentBranch": "codex/newsflow-private-installer-updater",
+  "sourceCheckpoint": "42392fd1afd23882bb542bd94b4ee3ee71b92e8d",
+  "payloadSource": "0f14ac3851cbdb370496552a62cd4d92bccd45a8",
+  "installerDefinitionRevision": "75d5ff19b121caeb0ccad890abbc95c594e4346c",
+  "frozenLauncherDiagnosticRevision": "not included; support diagnostics added later on source branch",
+  "privateArtifacts": [
+    {
+      "file": "NewsFlowAI_Update_v1.1.0.exe",
+      "sha256": "9f77700f7bddf1e347b00b45642330f9ac485c954014171ef694b2a992f8909e",
+      "bytes": 123583587,
+      "localCopyVerified": true
+    },
+    {
+      "file": "NewsFlowAI_Setup_v1.0.0.exe",
+      "sha256": "46eb1254658c7498e3ac625bf5e4b023ed01517a496572c50812437ca5596b93",
+      "bytes": 118134171,
+      "localCopyVerified": true
+    }
+  ],
+  "copiedSourceArchives": 7,
+  "releaseReady": false,
+  "unresolvedNativeApplicationFailure": {
+    "api": "CreateProcess via subprocess.Popen",
+    "winerror": 5,
+    "exception": "PermissionError",
+    "policyAttribution": "NOT VERIFIED",
+    "originalDiagnosticSourceFrame": "private_entry.main:119",
+    "noPolicyRelaxation": true
+  },
+  "rightsVerified": false,
+  "publisherCertificateProvided": false,
+  "actualSignedOfflineUpdate": "BLOCKED",
+  "installerOnlyChecks": {
+    "PASS": 19,
+    "FAIL": 0
+  },
+  "newMediaChecks": {
+    "PASS": 7,
+    "FAIL": 0
+  },
+  "localUnitChecks": {
+    "reusedWithinTask": 43,
+    "addedRedaction": 2,
+    "FAIL": 0
+  },
+  "operatingPort8765Listeners": 0,
+  "operatingRestarted": false,
+  "rawOperatingDataHashAudit": "not performed; operating data not read or used",
+  "existingUntrackedValidationPreserved": true,
+  "currentWindowsCI": {
+    "run": 40678895017,
+    "code": "42392fd1afd23882bb542bd94b4ee3ee71b92e8d",
+    "PASS": 45,
+    "FAIL": 0,
+    "result": "success",
+    "logSummary": "45 passed in 1.68s",
+    "environment": "Windows GitHub Actions Python3.14.7"
+  },
+  "newLocalFailureRedactionTests": {
+    "PASS": 2,
+    "FAIL": 0,
+    "deselectedReused": 43
+  }
+}

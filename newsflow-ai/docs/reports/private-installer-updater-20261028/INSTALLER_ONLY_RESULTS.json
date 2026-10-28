@@ -1,0 +1,84 @@
+{
+  "checks": [
+    {
+      "name": "prior_fixture_owned_and_failed_at_reinstall",
+      "status": "PASS"
+    },
+    {
+      "name": "old_fixture_directory_empty_unlinked",
+      "status": "PASS"
+    },
+    {
+      "name": "synthetic_db_and_hidden_markers_present",
+      "status": "PASS"
+    },
+    {
+      "name": "install_1",
+      "status": "PASS"
+    },
+    {
+      "name": "preserve_db_keys_media_settings_after_install_1",
+      "status": "PASS"
+    },
+    {
+      "name": "private_pointer_1",
+      "status": "PASS"
+    },
+    {
+      "name": "owned_uninstaller_1",
+      "status": "PASS"
+    },
+    {
+      "name": "uninstall_1",
+      "status": "PASS"
+    },
+    {
+      "name": "owned_program_root_removed_1",
+      "status": "PASS"
+    },
+    {
+      "name": "preserve_db_keys_media_settings_after_uninstall_1",
+      "status": "PASS"
+    },
+    {
+      "name": "install_2",
+      "status": "PASS"
+    },
+    {
+      "name": "preserve_db_keys_media_settings_after_install_2",
+      "status": "PASS"
+    },
+    {
+      "name": "private_pointer_2",
+      "status": "PASS"
+    },
+    {
+      "name": "owned_uninstaller_2",
+      "status": "PASS"
+    },
+    {
+      "name": "uninstall_2",
+      "status": "PASS"
+    },
+    {
+      "name": "owned_program_root_removed_2",
+      "status": "PASS"
+    },
+    {
+      "name": "preserve_db_keys_media_settings_after_uninstall_2",
+      "status": "PASS"
+    },
+    {
+      "name": "native_dpapi_still_decrypts",
+      "status": "PASS"
+    },
+    {
+      "name": "private_registration_removed",
+      "status": "PASS"
+    }
+  ],
+  "applicationExecution": "BLOCKED / not attempted in this installer-only continuation",
+  "forcedCleanup": false,
+  "externalCalls": 0,
+  "result": "PASS"
+}

@@ -1,0 +1,24 @@
+{
+  "state": "COMPLETE_WITH_BLOCKERS",
+  "branch": "codex/newsflow-private-installer-updater",
+  "codeCheckpoint": "42392fd1afd23882bb542bd94b4ee3ee71b92e8d",
+  "payloadSource": "0f14ac3851cbdb370496552a62cd4d92bccd45a8",
+  "installerRevision": "75d5ff19b121caeb0ccad890abbc95c594e4346c",
+  "localArtifacts": "approved-private-root/private-installer-updater-20261028/private-candidates",
+  "automaticResumeExecution": false,
+  "operatingRestartAuthorized": false,
+  "publicOrPrivateUserDeliveryAuthorized": false,
+  "blockers": [
+    "Windows CreateProcess WinError5, policy cause unconfirmed",
+    "real publisher signing certificate absent",
+    "sample rightsVerified:false",
+    "signed offline updater E2E and clean new Windows11 account not verified"
+  ],
+  "checks": {
+    "CI": 45,
+    "newMedia": 7,
+    "installerOnly": 19,
+    "nativeAppUnresolvedFAIL": 1
+  },
+  "nextAction": "Read the report and native denial evidence. Do not bypass the denial or auto-run a new app after reboot."
+}

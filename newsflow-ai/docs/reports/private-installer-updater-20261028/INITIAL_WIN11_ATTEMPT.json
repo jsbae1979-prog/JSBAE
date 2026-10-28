@@ -1,0 +1,125 @@
+{
+  "checks": [
+    {
+      "name": "private_initial_installer",
+      "status": "PASS"
+    },
+    {
+      "name": "initial_pointer",
+      "status": "PASS"
+    },
+    {
+      "name": "first_launch_actual_product_http",
+      "status": "PASS"
+    },
+    {
+      "name": "first_launch_anonymous_api_blocked",
+      "status": "PASS"
+    },
+    {
+      "name": "first_launch_separate_nonoperating_port",
+      "status": "PASS"
+    },
+    {
+      "name": "first_launch_normal_exit",
+      "status": "PASS"
+    },
+    {
+      "name": "first_launch_port_released",
+      "status": "PASS"
+    },
+    {
+      "name": "relaunch_actual_product_http",
+      "status": "PASS"
+    },
+    {
+      "name": "relaunch_anonymous_api_blocked",
+      "status": "PASS"
+    },
+    {
+      "name": "relaunch_separate_nonoperating_port",
+      "status": "PASS"
+    },
+    {
+      "name": "relaunch_normal_exit",
+      "status": "PASS"
+    },
+    {
+      "name": "relaunch_port_released",
+      "status": "PASS"
+    },
+    {
+      "name": "actual_unsigned_update_rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "rejected_update_did_not_change_version",
+      "status": "PASS"
+    },
+    {
+      "name": "rejected_update_no_transaction_or_migration",
+      "status": "PASS"
+    },
+    {
+      "name": "no_secrets_in_update_output",
+      "status": "PASS"
+    },
+    {
+      "name": "packaged_new_media_and_python_preflight",
+      "status": "PASS"
+    },
+    {
+      "name": "new_sample_count_12",
+      "status": "PASS"
+    },
+    {
+      "name": "new_samples_not_rights_approved",
+      "status": "PASS"
+    },
+    {
+      "name": "all_new_sample_files_present",
+      "status": "PASS"
+    },
+    {
+      "name": "react_index_present",
+      "status": "PASS"
+    },
+    {
+      "name": "owned_uninstaller",
+      "status": "PASS"
+    },
+    {
+      "name": "uninstall_exit",
+      "status": "PASS"
+    },
+    {
+      "name": "program_removed",
+      "status": "PASS"
+    },
+    {
+      "name": "data_retained_after_uninstall",
+      "status": "PASS"
+    },
+    {
+      "name": "db_and_sample_hidden_state_after_uninstall",
+      "status": "PASS"
+    },
+    {
+      "name": "same_user_native_dpapi_retained",
+      "status": "PASS"
+    },
+    {
+      "name": "reinstall",
+      "status": "FAIL"
+    }
+  ],
+  "environment": "Windows11 current SID, synthetic profile; not a new Windows account",
+  "externalCalls": 0,
+  "publisherSigned": false,
+  "forcedCleanup": false,
+  "signedEndToEndUpdate": "BLOCKED: no real publisher certificate",
+  "DPI": "NOT VERIFIED",
+  "result": "FAIL",
+  "errorClass": "AssertionError",
+  "failedCheck": "reinstall"
+}

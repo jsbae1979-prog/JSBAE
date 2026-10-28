@@ -1,0 +1,25 @@
+{
+  "checks": [
+    {
+      "name": "private_initial_installer",
+      "status": "PASS"
+    },
+    {
+      "name": "initial_pointer",
+      "status": "PASS"
+    },
+    {
+      "name": "first_launch_actual_product_http",
+      "status": "FAIL"
+    }
+  ],
+  "environment": "Windows11 current SID, synthetic profile; not a new Windows account",
+  "externalCalls": 0,
+  "publisherSigned": false,
+  "forcedCleanup": false,
+  "signedEndToEndUpdate": "BLOCKED: no real publisher certificate",
+  "DPI": "NOT VERIFIED",
+  "result": "FAIL",
+  "errorClass": "AssertionError",
+  "failedCheck": "first_launch_actual_product_http"
+}

@@ -1,0 +1,25 @@
+{
+  "scope": "Unsigned internal verification only; no external delivery",
+  "source": "0f14ac3851cbdb370496552a62cd4d92bccd45a8",
+  "sameProductCodeDifferentReleaseMetadata": true,
+  "publisherSigned": false,
+  "releaseReady": false,
+  "sampleCount": 12,
+  "sampleRightsVerified": false,
+  "media": {
+    "ffmpeg.exe": "26f21efe3d78e27699baa71c6fe668c28aaffd56db8ce11f361ed71987119dea",
+    "ffprobe.exe": "a9e63afd32450722e6b1ab94dac955edc643c4943322713c4652185f10246e50"
+  },
+  "testGuardsIncluded": false,
+  "files": {
+    "NewsFlowAI_Update_v1.1.0.exe": {
+      "sha256": "9f77700f7bddf1e347b00b45642330f9ac485c954014171ef694b2a992f8909e",
+      "bytes": 123583587
+    },
+    "NewsFlowAI_Setup_v1.0.0.exe": {
+      "sha256": "46eb1254658c7498e3ac625bf5e4b023ed01517a496572c50812437ca5596b93",
+      "bytes": 118134171
+    }
+  },
+  "installerRevision": "75d5ff1"
+}

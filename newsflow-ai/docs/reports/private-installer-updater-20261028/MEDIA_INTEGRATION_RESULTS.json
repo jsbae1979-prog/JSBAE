@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "name": "no_ffmpeg_network_support",
+      "status": "PASS"
+    },
+    {
+      "name": "unchanged_product_preflight",
+      "status": "PASS"
+    },
+    {
+      "name": "news_30s_1080x1920_h264",
+      "status": "PASS"
+    },
+    {
+      "name": "news_mp4_full_decode",
+      "status": "PASS"
+    },
+    {
+      "name": "character_3_scenes_30s_1080x1920",
+      "status": "PASS"
+    },
+    {
+      "name": "character_xfade_korean_subtitles_full_decode",
+      "status": "PASS"
+    },
+    {
+      "name": "windows_system_runtime_only",
+      "status": "PASS"
+    }
+  ],
+  "environment": "Windows11 native local source rebuild",
+  "externalCalls": 0,
+  "productMediaReplaced": false,
+  "binaryHashes": {
+    "ffmpeg.exe": "26f21efe3d78e27699baa71c6fe668c28aaffd56db8ce11f361ed71987119dea",
+    "ffprobe.exe": "a9e63afd32450722e6b1ab94dac955edc643c4943322713c4652185f10246e50"
+  },
+  "result": "PASS"
+}

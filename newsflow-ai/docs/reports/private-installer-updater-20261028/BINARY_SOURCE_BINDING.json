@@ -1,0 +1,56 @@
+{
+  "scope": "Local private verification candidate only",
+  "releaseReady": false,
+  "sourcePatches": [],
+  "sourceArchives": [
+    {
+      "file": "ffmpeg.tar.gz",
+      "sha256": "0aa2b1de2a5698b20a23e93d539a9a8e82ca0117496c5bdf05d198805f42bb3b",
+      "commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "license": "GPL-3.0-or-later (configured GPL/version3)"
+    },
+    {
+      "file": "x264.tar.gz",
+      "sha256": "2ee0208201a22e4637462c566b0fc853da85dbda77533b8b7389a7f38fb1da04",
+      "commit": "0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee",
+      "license": "GPL-2.0-or-later"
+    },
+    {
+      "file": "freetype.tar.gz",
+      "sha256": "11cd478953fc1d382f20a233b8e2aed6c31b47cbf0568c4bdb3334bcc1550698",
+      "commit": "0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+      "license": "FTL (selected)/GPL alternative"
+    },
+    {
+      "file": "harfbuzz.tar.gz",
+      "sha256": "0afa12c8ef4bc4ffebd99e5d2a4a2c56dfe329c661feda08a9bc878b7352be89",
+      "commit": "36cb489cb02ce4b92099669ba9f9bea348eff93f",
+      "license": "MIT, per-file notices"
+    },
+    {
+      "file": "fribidi.tar.gz",
+      "sha256": "fa34a057a414c85f7e1f3c0fd717bc93d74d370ed474ef2feca90868b4938f72",
+      "commit": "68162babff4f39c4e2dc164a5e825af93bda9983",
+      "license": "LGPL-2.1-or-later"
+    },
+    {
+      "file": "libass.tar.gz",
+      "sha256": "3546ecc8748c62e100a9dd18e52ea2d17d7facedf89cfcad97000ad60b1bce2b",
+      "commit": "4a05d8127f525943ebf45fdc6497c9e665947f0d",
+      "license": "ISC"
+    },
+    {
+      "file": "zlib.tar.gz",
+      "sha256": "d9e270d46252734aa49770fbc544125391617956266f220bd63216c834f3a522",
+      "commit": "51b7f2abdade71cd9bb0e7a373ef2610ec6f9daf",
+      "license": "Zlib"
+    }
+  ],
+  "recipeSha256": "b9be72781df1d6eeee313fdae24cee13b8acf470e57fd98f05f6579005c89d1e",
+  "binaryHashes": {
+    "ffmpeg.exe": "26f21efe3d78e27699baa71c6fe668c28aaffd56db8ce11f361ed71987119dea",
+    "ffprobe.exe": "a9e63afd32450722e6b1ab94dac955edc643c4943322713c4652185f10246e50"
+  },
+  "sourceDelivery": "Keep this sidecar with the corresponding binaries; not an expiring CI link.",
+  "legalClearance": "Not asserted. Runtime/system-library exceptions, source completeness and all asset rights remain release-review conditions."
+}

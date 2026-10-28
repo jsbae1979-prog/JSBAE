@@ -1,0 +1,10 @@
+{
+  "scope": "same installed synthetic executable; read-only --offline-runtime-check; no server or DB initialization",
+  "result": "process creation denied",
+  "processCreated": false,
+  "exception": "PermissionError",
+  "winerror": 5,
+  "errno": 13,
+  "policyRuleIdentified": false,
+  "workaroundApplied": false
+}
