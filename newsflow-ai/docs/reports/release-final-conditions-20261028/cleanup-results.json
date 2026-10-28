@@ -1,0 +1,7 @@
+{
+  "test_users_removed": true,
+  "forced_cleanup": false,
+  "normal_test_success": true,
+  "production_processes_touched": false,
+  "synthetic_profiles": "Retained only until disposable Runner destruction; no C:\\Users recursive deletion"
+}

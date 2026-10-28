@@ -1,0 +1,355 @@
+{
+  "scope": "Plan only; no originals replaced or new artwork generated",
+  "original_count": 12,
+  "rightsVerified_true_count": 0,
+  "files": [
+    {
+      "original_id": "character-robot",
+      "original_path": "characters/CHAR_S01_robot.png",
+      "original_sha256_reused": "6832ac0a0828d3e819fa3a4105f7a7ba12fee6cfc4143dfd9caff9b42171f5bf",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "character-robot-v2",
+      "created": false,
+      "method": "Hand-authored SVG/procedural geometry rasterized locally; no paid AI or borrowed art",
+      "concept": "Own geometric robot, no vendor/product imitation",
+      "target_dimensions": [
+        720,
+        1080
+      ],
+      "duration_seconds": null,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "character-cat",
+      "original_path": "characters/CHAR_S02_cat.png",
+      "original_sha256_reused": "18f5702917c7908e3f65a5dc937cc01cbb36ef60549d16fc74c2bd70979fe9c8",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "character-cat-v2",
+      "created": false,
+      "method": "Hand-authored SVG/procedural geometry rasterized locally; no paid AI or borrowed art",
+      "concept": "Own geometric cat, no branded character",
+      "target_dimensions": [
+        720,
+        1080
+      ],
+      "duration_seconds": null,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "character-dragon",
+      "original_path": "characters/CHAR_S03_dragon.png",
+      "original_sha256_reused": "a22daa60e3eb9ec7f062210ae0d4dfcf553cf8c8315ef9529835484cccccefac",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "character-dragon-v2",
+      "created": false,
+      "method": "Hand-authored SVG/procedural geometry rasterized locally; no paid AI or borrowed art",
+      "concept": "Own geometric dragon, no franchise resemblance",
+      "target_dimensions": [
+        720,
+        1080
+      ],
+      "duration_seconds": null,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "standalone-city",
+      "original_path": "images/standalone/IMG_S01_city.png",
+      "original_sha256_reused": "c9608819f1b030d034af87c0f26064cead7fa2c4bf7e1b1785a21d99338369ea",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "standalone-city-v2",
+      "created": false,
+      "method": "Hand-authored SVG/procedural geometry rasterized locally; no paid AI or borrowed art",
+      "concept": "Invented skyline, no copied photographs or real landmark facade",
+      "target_dimensions": [
+        720,
+        1080
+      ],
+      "duration_seconds": null,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "standalone-cat",
+      "original_path": "images/standalone/IMG_S02_cat.png",
+      "original_sha256_reused": "462566d59e2eaac0f17edf4d11dee2433506bc47cd95e2bb4adaee74476a9acb",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "standalone-cat-v2",
+      "created": false,
+      "method": "Hand-authored SVG/procedural geometry rasterized locally; no paid AI or borrowed art",
+      "concept": "Own composed cat illustration, no borrowed reference",
+      "target_dimensions": [
+        720,
+        1080
+      ],
+      "duration_seconds": null,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "standalone-earth",
+      "original_path": "images/standalone/IMG_S03_earth.png",
+      "original_sha256_reused": "dd781fe0c716cb746870bbc7c0309f64f62eb53d761a6e6d9d962045c2558e4a",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "standalone-earth-v2",
+      "created": false,
+      "method": "Hand-authored SVG/procedural geometry rasterized locally; no paid AI or borrowed art",
+      "concept": "Own vector globe, no satellite map/photograph",
+      "target_dimensions": [
+        720,
+        1080
+      ],
+      "duration_seconds": null,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "top3-ai",
+      "original_path": "images/news-top3/TOP3_S01_ai.png",
+      "original_sha256_reused": "e28c902251e217d53672f5858fc095986c46dc1c8b75877ffc211cddc38a1474",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "top3-ai-v2",
+      "created": false,
+      "method": "Hand-authored SVG/procedural geometry rasterized locally; no paid AI or borrowed art",
+      "concept": "Generic own vector circuits, no semiconductor marks",
+      "target_dimensions": [
+        720,
+        1080
+      ],
+      "duration_seconds": null,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "top3-ev",
+      "original_path": "images/news-top3/TOP3_S02_ev.png",
+      "original_sha256_reused": "1624c901b4108a647e7c87a602f3882edcc521be26862a0e6abbc71a1d22f341",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "top3-ev-v2",
+      "created": false,
+      "method": "Hand-authored SVG/procedural geometry rasterized locally; no paid AI or borrowed art",
+      "concept": "Generic own geometric EV, no badge/plate/product design",
+      "target_dimensions": [
+        720,
+        1080
+      ],
+      "duration_seconds": null,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "top3-economy",
+      "original_path": "images/news-top3/TOP3_S03_economy.png",
+      "original_sha256_reused": "4f9aad8e4fc51052c90c9fd6e1b7a26ae270d82800c1eca673acc705e50588c6",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "top3-economy-v2",
+      "created": false,
+      "method": "Hand-authored SVG/procedural geometry rasterized locally; no paid AI or borrowed art",
+      "concept": "Synthetic own chart clearly labeled as sample, no real financial claim",
+      "target_dimensions": [
+        720,
+        1080
+      ],
+      "duration_seconds": null,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "character-short-robot",
+      "original_path": "videos/character-shorts/SHORTS_CHAR_S01.mp4",
+      "original_sha256_reused": "7fda267e97d574426c5d1024185aa3a28265510790b77994c527294aa11bf8b0",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "character-short-robot-v2",
+      "created": false,
+      "method": "Local FFmpeg slide composition using ONLY cleared own v2 image assets; no music",
+      "concept": "Use cleared own robot/cat/news assets, explicit synthetic sample labels",
+      "target_dimensions": [
+        720,
+        1280
+      ],
+      "duration_seconds": 12,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "character-short-cat",
+      "original_path": "videos/character-shorts/SHORTS_CHAR_S02.mp4",
+      "original_sha256_reused": "9da45f543a4ab5b7ab737fd3128d0706a7b542ddaf91da133effbc4245742189",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "character-short-cat-v2",
+      "created": false,
+      "method": "Local FFmpeg slide composition using ONLY cleared own v2 image assets; no music",
+      "concept": "Use cleared own robot/cat/news assets, explicit synthetic sample labels",
+      "target_dimensions": [
+        720,
+        1280
+      ],
+      "duration_seconds": 12,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    },
+    {
+      "original_id": "news-short",
+      "original_path": "videos/news-shorts/SHORTS_NEWS_S01.mp4",
+      "original_sha256_reused": "3609e4c56a88d9a79df912991086bbbc1dd17945543623659085af394049f3b8",
+      "original_rightsVerified": false,
+      "original_preserved": true,
+      "planned_id": "news-short-v2",
+      "created": false,
+      "method": "Local FFmpeg slide composition using ONLY cleared own v2 image assets; no music",
+      "concept": "Use cleared own robot/cat/news assets, explicit synthetic sample labels",
+      "target_dimensions": [
+        720,
+        1280
+      ],
+      "duration_seconds": 12,
+      "required_evidence": [
+        "Author/creation date and source commit",
+        "All input rights and exact file hashes",
+        "Written commercial installation-package redistribution permission or explicit own-license grant",
+        "Third-party logo/character/photo review",
+        "User approval before catalog-v2 selection"
+      ],
+      "switch_conditions": [
+        "New asset actually created and reviewed; do not premark rightsVerified",
+        "Preserve old catalog and all user copies/hide state",
+        "Separate catalog version and immutable sample IDs",
+        "Visual preview and packaging acceptance before selecting v2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-28",
+  "product_source_changes": [],
+  "production_listener": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 8765,
+      "OwningProcess": 55740
+    }
+  ],
+  "local_test_users_created": 0,
+  "operating_app_restarted": false,
+  "operating_db_read_or_written": false,
+  "operating_keys_opened": false,
+  "public_certificate_metadata_only": true,
+  "source_archives_local_only": true,
+  "sample_originals_changed": false,
+  "prior_reports_preserved": true,
+  "git_reset_clean_stash_force": false
+}

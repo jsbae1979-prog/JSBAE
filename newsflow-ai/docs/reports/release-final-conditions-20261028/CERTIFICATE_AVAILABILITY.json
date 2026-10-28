@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-28",
+  "scope": "Public certificate metadata only; no signing or private-key export",
+  "stores": [
+    {
+      "currently_valid": 0,
+      "name": "CurrentUser/My",
+      "private_key_bindings": 0,
+      "code_signing_certificates": 0
+    },
+    {
+      "currently_valid": 0,
+      "name": "LocalMachine/My",
+      "private_key_bindings": 0,
+      "code_signing_certificates": 0
+    }
+  ],
+  "private_keys_opened": false,
+  "certificate_subjects_serials_or_tokens_logged": false,
+  "external_HSM_or_signing_service": "NOT VERIFIED / not configured",
+  "publisher_pin_provisioned": false,
+  "updates_enabled": false
+}

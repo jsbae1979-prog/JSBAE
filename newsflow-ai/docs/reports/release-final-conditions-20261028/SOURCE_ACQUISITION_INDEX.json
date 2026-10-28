@@ -1,0 +1,259 @@
+{
+  "date": "2026-10-28",
+  "binary_version": "9.0.2-essentials_build-www.gyan.dev",
+  "binary_license": "GPLv3 static",
+  "binary_archive_sha256_reused": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba",
+  "binary_ffmpeg_sha256_reused": "3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec",
+  "binary_ffprobe_sha256_reused": "f0d36ecbbdd3bcfac3efa078c96c7271c2e68b3810595552ac3b7f17e9a65c52",
+  "build_configuration_evidence": "../distribution-gates-20261028/FFMPEG_BUILD_README.txt",
+  "source_archives": [
+    {
+      "component": "ffmpeg",
+      "upstream_commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "repository": "FFmpeg/FFmpeg",
+      "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "local_filename": "ffmpeg-946fcce07b6dcd0331c8cc609192aeff5e1924f8.tar.gz",
+      "bytes": 17333895,
+      "sha256": "0aa2b1de2a5698b20a23e93d539a9a8e82ca0117496c5bdf05d198805f42bb3b",
+      "member_count": 10550,
+      "observed_files": [
+        "FFmpeg-946fcce07b6dcd0331c8cc609192aeff5e1924f8/COPYING.GPLv3",
+        "FFmpeg-946fcce07b6dcd0331c8cc609192aeff5e1924f8/configure"
+      ],
+      "code_executed": false,
+      "all_binary_patches_verified": false
+    },
+    {
+      "component": "x265",
+      "upstream_commit": "116b87573ed0cec20b75ccacd5641bf06f6e57bd",
+      "repository": "Multicorewareinc/x265",
+      "url": "https://codeload.github.com/Multicorewareinc/x265/tar.gz/116b87573ed0cec20b75ccacd5641bf06f6e57bd",
+      "local_filename": "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd.tar.gz",
+      "bytes": 2077215,
+      "sha256": "2d53caffd91f6a1409f56ca2268e86484c405feb482cedf02f56dd57d2929bef",
+      "member_count": 494,
+      "observed_files": [
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/COPYING",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/common/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/dynamicHDR10/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/encoder/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/profile/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/profile/PPA/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/profile/vtune/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/test/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/x265Version.txt"
+      ],
+      "code_executed": false,
+      "all_binary_patches_verified": false
+    },
+    {
+      "component": "x264",
+      "upstream_commit": "0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee",
+      "repository": "https://code.videolan.org/videolan/x264.git",
+      "local_filename": "x264-0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee.tar.gz",
+      "bytes": 1048654,
+      "sha256": "2ee0208201a22e4637462c566b0fc853da85dbda77533b8b7389a7f38fb1da04",
+      "acquisition": "git clone --bare from canonical VideoLAN, then git archive of pinned commit; no source scripts executed",
+      "version_evidence": {
+        "X264_BUILD": 165,
+        "full_history_revision_count": 3223,
+        "version_sh_inspected_not_executed": true
+      },
+      "all_binary_patches_verified": false,
+      "match_status": "UPSTREAM_VERSION_MATCHED_CANDIDATE; private build patches not proved"
+    }
+  ],
+  "external_libraries": [
+    {
+      "component": "AMF",
+      "build_reported_version": "v1.5.2-2-gc35f613",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "aom",
+      "build_reported_version": "v3.15.0-25-g023743a7d7",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "AviSynthPlus",
+      "build_reported_version": "v3.7.5-383-g5c82777b",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "cairo",
+      "build_reported_version": "1.18.5",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "ffnvcodec",
+      "build_reported_version": "n13.1.15.0-1-geddcea9",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "freetype",
+      "build_reported_version": "VER-2-14-3",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "fribidi",
+      "build_reported_version": "v1.0.16-19-gc928e4c",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "gsm",
+      "build_reported_version": "1.0.24",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "harfbuzz",
+      "build_reported_version": "14.4.0-108-g64e2b532",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "lame",
+      "build_reported_version": "3.100",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "libass",
+      "build_reported_version": "0.17.5-8-gb2fe9d8",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "libgme",
+      "build_reported_version": "0.6.6",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "libopencore-amrnb",
+      "build_reported_version": "0.1.6",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "libopencore-amrwb",
+      "build_reported_version": "0.1.6",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "libssh",
+      "build_reported_version": "0.12.2",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "libtheora",
+      "build_reported_version": "v1.2.0",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "libwebp",
+      "build_reported_version": "v1.6.0-249-g1f34635",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "openal-soft",
+      "build_reported_version": "1.25.2-48-g7532541",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "openjpeg2",
+      "build_reported_version": "2.5.4",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "openmpt",
+      "build_reported_version": "libopenmpt-0.6.30-3-g6c0a06bc",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "opus",
+      "build_reported_version": "v1.6.1-68-g503d81b1",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "rubberband",
+      "build_reported_version": "v4.0.0",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "SDL",
+      "build_reported_version": "release-2.32.0-234-gb90ac9502",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "speex",
+      "build_reported_version": "Speex-1.2.1-51-g0589522",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "srt",
+      "build_reported_version": "v1.5.7-7-gcae8f62",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "VAAPI",
+      "build_reported_version": "2.25.0.",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "vidstab",
+      "build_reported_version": "v1.1.2-214-ge2445c4",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "vmaf",
+      "build_reported_version": "v3.2.0-13-gf85a8536",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "vo-amrwbenc",
+      "build_reported_version": "0.1.3",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "vorbis",
+      "build_reported_version": "v1.3.7-37-g1b75110b",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "VPL",
+      "build_reported_version": "2.17",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "vpx",
+      "build_reported_version": "v1.17.0-57-gd2413e2ca",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "x264",
+      "build_reported_version": "v0.165.3223",
+      "source_state": "UPSTREAM_ARCHIVE_ACQUIRED; patches/build recipe still NOT VERIFIED"
+    },
+    {
+      "component": "x265",
+      "build_reported_version": "4.3-45-g116b875",
+      "source_state": "UPSTREAM_ARCHIVE_ACQUIRED; patches/build recipe still NOT VERIFIED"
+    },
+    {
+      "component": "xvid",
+      "build_reported_version": "v1.3.7",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "zeromq",
+      "build_reported_version": "4.3.5",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    },
+    {
+      "component": "zimg",
+      "build_reported_version": "release-3.0.6-253-g67e0603",
+      "source_state": "NOT VERIFIED; exact source/patch/build recipe pending"
+    }
+  ],
+  "complete_corresponding_source": false,
+  "all_build_patches_verified": false,
+  "source_scripts_executed": false,
+  "archives_publicly_published": false,
+  "local_archive_directory": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\release-evidence-final-20261028"
+}

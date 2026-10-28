@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-28",
+  "accepted_run": {
+    "id": 40644408628,
+    "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40644408628",
+    "commit": "011833af86987ea0e8acf430dac8a573f1ce1816",
+    "conclusion": "success",
+    "os": "Microsoft Windows Server 2025 / windows-2025-vs2026",
+    "python": "3.14.7",
+    "actual_standard_users": 2,
+    "full_product_app_started": false,
+    "artifact": {
+      "id": 12797261365,
+      "bytes": 1019,
+      "sha256": "6ec1d14762a812e2935c1a7e1d4e93a6b7de0a6bc329e766b4543bad5860eb84",
+      "download_hash_matches_metadata": true,
+      "json_files": [
+        "real-user-results.json",
+        "cleanup-results.json"
+      ]
+    }
+  },
+  "attempts": [
+    {
+      "run": 40643879815,
+      "commit": "494232d1e8425c113bc2b4ed9178bbf4dd5777a9",
+      "result": "failure",
+      "reason": "Test-user description exceeded Windows48-character limit; no product change."
+    },
+    {
+      "run": 40644220266,
+      "commit": "27fc671bb72287170da3c1070949ba9a9598730d",
+      "result": "failure",
+      "reason": "Expected SQLite CANTOPEN14 was misclassified. Failed-run forced cleanup also raised an exception; complete failed-run cleanup NOT VERIFIED. Disposable CI only."
+    },
+    {
+      "run": 40644408628,
+      "commit": "011833af86987ea0e8acf430dac8a573f1ce1816",
+      "result": "success",
+      "reason": "Named SQLite error constants; normal processes exited, both created test accounts removed."
+    }
+  ],
+  "historical_evidence_reused": {
+    "user_security_unit_pass": 28,
+    "native_checks": 6,
+    "installer_run": 40640414466,
+    "local_korean_SAPI": "PASS",
+    "Windows11_12_GUI": "historical PASS",
+    "sample_mp4_3": "historical PASS"
+  },
+  "production_account_used_for_app_or_crypto_test": false,
+  "local_account_created": false,
+  "product_source_changed": false,
+  "real_keys_used": false,
+  "paid_calls": 0,
+  "sns_calls": 0,
+  "public_release": false
+}
