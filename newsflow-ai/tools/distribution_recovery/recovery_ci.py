@@ -98,14 +98,12 @@ def main():
                 state.unlink(missing_ok=True)
             raise
 
-    def compile_setup(bundle, name, version, failure=False):
+    def compile_setup(bundle, name, version):
         out=root/name
         out.mkdir()
         args=[str(compiler),'/Qp','/DCandidateVersion='+version,
               '/DAppBundle='+str(bundle.resolve()),'/DPrivateOutput='+str(out),
               '/DSlot='+('previous' if name=='old-setup' else 'candidate')]
-        if failure:
-            args.append('/DInjectFailure=1')
         args.append(str(Path(__file__).with_name('recovery-slot.iss')))
         with (out/'compiler.log').open('wb') as log:
             rc=subprocess.run(args,stdout=log,stderr=subprocess.STDOUT,timeout=180).returncode
@@ -116,7 +114,7 @@ def main():
 
     def install(exe):
         return subprocess.run([str(exe),'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-',
-                               '/DIR='+str(installed)],capture_output=True,timeout=120).returncode
+                               '/DIR='+str(installed),'/LOG='+str(root/'private-install.log')],capture_output=True,timeout=120).returncode
 
     def http(port,path):
         try:
@@ -213,7 +211,6 @@ def main():
         results['product_exe_sha256']={'previous':old_hash,'candidate':new_hash}
         check('different_product_executables',old_hash!=new_hash)
         old_setup=compile_setup(a.old,'old-setup','0.6.0')
-        bad_setup=compile_setup(a.new,'failing-setup','0.7.0',True)
         new_setup=compile_setup(a.new,'new-setup','0.7.0')
         check('previous_actual_install',install(old_setup)==0)
         activate('previous')
@@ -227,7 +224,22 @@ def main():
             db.executemany('INSERT INTO app_settings(key,value) VALUES (?,?)',
                            [('release-recovery-marker','retain'),('sample_content:v1:recovery','hidden')])
         before=persisted()
-        rc=install(bad_setup)
+        # A real Windows sharing violation in the new candidate destination.
+        # The installer code is unchanged: no artificial post-install exception
+        # that Inno may report while still returning success.
+        blocked=slot('candidate')/'NewsFlowAI-Candidate.exe'
+        blocked.parent.mkdir(parents=True,exist_ok=True)
+        marker=b'SYNTHETIC-OWNED-COPY-FAILURE-TARGET'
+        blocked.write_bytes(marker)
+        import win32con,win32file
+        locked=win32file.CreateFile(str(blocked),win32con.GENERIC_READ,0,None,
+                                  win32con.OPEN_EXISTING,win32con.FILE_ATTRIBUTE_NORMAL,None)
+        try:
+            rc=install(new_setup)
+        finally:
+            locked.Close()
+        check('synthetic_copy_target_not_overwritten',blocked.read_bytes()==marker)
+        blocked.unlink()  # only the exact marker file just created/owned above
         results['injected_installer_exit']=rc
         check('injected_installer_failure_observed',rc!=0)
         check('previous_exe_intact_after_failed_copy',digest(slot('previous')/'NewsFlowAI-Candidate.exe')==old_hash)

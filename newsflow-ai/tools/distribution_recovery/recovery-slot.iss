@@ -26,11 +26,3 @@ RestartApplications=no
 [Files]
 Source: "{#AppBundle}\*"; DestDir: "{app}\slots\{#Slot}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Private CI candidate only. Never launches app or owns user data.
-#ifdef InjectFailure
-[Code]
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep = ssPostInstall then
-    RaiseException('SYNTHETIC_POST_COPY_FAILURE');
-end;
-#endif
