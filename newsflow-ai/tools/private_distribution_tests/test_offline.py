@@ -287,3 +287,15 @@ def test_installer_entry_creates_protected_slots_before_inno_copy(tmp_path, monk
     monkeypatch.setattr(sys, 'argv', ['helper.exe', '--finalize-install', str(root)])
     entry.main()
     assert json.loads((root / 'current.json').read_bytes())['version'] == '1.0.0'
+
+
+@pytest.mark.parametrize('extension,mime', [('.png', 'image/png'), ('.jpg', 'image/jpeg')])
+def test_sample_poster_mime_preserves_existing_jpeg_and_supports_new_png(tmp_path, monkeypatch, extension, mime):
+    from types import SimpleNamespace
+    from newsflow.samples import routes
+    path = tmp_path / ('synthetic-poster' + extension)
+    path.write_bytes(b'SYNTHETIC-HEADER-SELECTION-ONLY')
+    service = SimpleNamespace(get=lambda identifier: {}, checked=lambda row, poster: path)
+    monkeypatch.setattr(routes, 'service', lambda request: service)
+    response = routes.poster(None, 'synthetic')
+    assert response.headers['content-type'] == mime

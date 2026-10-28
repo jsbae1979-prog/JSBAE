@@ -35,7 +35,8 @@ def poster(request: Request, identifier: str):
     try:
         s = service(request)
         row = s.get(identifier)
-        return FileResponse(s.checked(row, poster=True), media_type='image/jpeg')
+        path = s.checked(row, poster=True)
+        return FileResponse(path, media_type='image/png' if path.suffix.lower() == '.png' else 'image/jpeg')
     except (OSError, SampleError, KeyError):
         raise HTTPException(404, '샘플 포스터를 확인하세요.') from None
 

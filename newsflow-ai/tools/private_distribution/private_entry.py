@@ -36,6 +36,12 @@ def main():
         root = unlinked(local / 'Programs/NewsFlowAI-Private')
         if not (root / 'current.json').is_file():
             raise OfflineBlocked('Private installation not found')
+        import winreg
+        registration = r'Software\Microsoft\Windows\CurrentVersion\Uninstall\NewsFlowAI-PrivateOffline-v1_is1'
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, registration) as key:
+            installed_at = Path(winreg.QueryValueEx(key, 'InstallLocation')[0]).absolute()
+        if unlinked(installed_at) != root:
+            raise OfflineBlocked('Private installation registration mismatch')
         manifest = json.loads((bundle / 'release.json').read_bytes())
         if manifest.get('source') != configuration.get('productSource'):
             raise OfflineBlocked('Migration helper and application source mismatch')
@@ -59,6 +65,12 @@ def main():
             if child.returncode:
                 raise OfflineBlocked('New version preflight/migration failed; restoring backup.')
         install.update_verified(payload, manifest, health)
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, registration, 0, winreg.KEY_SET_VALUE) as key:
+                winreg.SetValueEx(key, 'DisplayVersion', 0, winreg.REG_SZ, manifest['version'])
+        except OSError:
+            notify('Update applied. Windows app-list version needs repair; do not reapply this update.')
+            raise SystemExit(3)
         notify('Offline update complete. Open NewsFlow AI normally. Backup retained.')
         return
     if mode != 'launcher':
