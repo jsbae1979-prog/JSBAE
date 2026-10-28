@@ -1,0 +1,63 @@
+{
+  "dateKST": "2026-10-28",
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "baselineHead": "66c80be58205a6c52e4428fc4fb9171fe9734f3f",
+  "verdict": "BLOCKED",
+  "completedScope": "Documentation and static migration delta only",
+  "batLaunchersImplemented": false,
+  "zipCreated": false,
+  "initialZip": {
+    "plannedName": "NewsFlowAI_v1.0.0.zip",
+    "path": null,
+    "sha256": null
+  },
+  "updateZip": {
+    "plannedName": "NewsFlowAI_Update_v1.1.0.zip",
+    "path": null,
+    "sha256": null
+  },
+  "runtimeTestCounts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "ERROR": 0
+  },
+  "runtimeChecks": "NOT VERIFIED; no app/FFmpeg/BAT execution",
+  "V3ActiveApplicationExecution": "BLOCKED; existing execution block not circumvented",
+  "sampleManifestOnly": {
+    "assets": 12,
+    "rightsVerifiedTrue": 0,
+    "rightsVerifiedFalse": 12,
+    "binaryRevalidation": false
+  },
+  "publisherTrust": {
+    "updatesEnabled": false,
+    "certificatePinPresent": false,
+    "zipAuthenticationImplemented": false
+  },
+  "reusedNotRerun": {
+    "WindowsCI": "45 PASS",
+    "InstallerLifecycle": "19 PASS",
+    "FFmpeg": "7 PASS"
+  },
+  "protected": {
+    "productFilesChanged": 0,
+    "operatingDataAccessed": false,
+    "operatingRestarted": false,
+    "operatingPort8765Used": false,
+    "securityDisabledOrExceptionsAdded": false,
+    "ACLRelaxed": false,
+    "EXECandidatesModified": false,
+    "existingEXEBranchChanged": false,
+    "mainOrPR35Changed": false,
+    "API_OAuth_SNSCalls": 0,
+    "externalDistribution": false,
+    "existingUntrackedValidationPreserved": true
+  },
+  "blockReason": "Do not repackage/relaunch the known V3-blocked application through an alternate BAT/Python entry to evade its execution block",
+  "nextConditions": [
+    "Official vendor/security review and legitimate allowed application execution path",
+    "Authenticated ZIP manifest and independently provisioned publisher trust",
+    "Runtime/launcher/stop/ZIP transaction implementation and focused validation after execution boundary resolution",
+    "Rights-cleared sample assets and FFmpeg source/license delivery completion"
+  ]
+}
