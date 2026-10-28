@@ -1,0 +1,64 @@
+name: Native Windows source-built FFmpeg candidate
+on:
+  push:
+    branches: [codex/newsflow-sample-ffmpeg-rights-20261028]
+    paths:
+      - 'newsflow-ai/tools/ffmpeg_source_candidate/**'
+      - '.github/workflows/newsflow-ffmpeg-source-candidate.yml'
+permissions:
+  contents: read
+jobs:
+  native-source-build:
+    runs-on: windows-latest
+    timeout-minutes: 55
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Prepare pinned source archives in Runner TEMP
+        run: |
+          python -B tools/ffmpeg_source_candidate/prepare_candidate.py (Join-Path $env:RUNNER_TEMP 'newsflow-ffmpeg-candidate')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install -r requirements-dev.lock pywin32==312 tzdata==2026.5
+          exit $LASTEXITCODE
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: false
+          install: >-
+            make diffutils
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-meson
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-pkgconf
+            mingw-w64-ucrt-x86_64-nasm
+      - name: Build seven pinned sources, native Windows toolchain, no Docker or WSL
+        shell: msys2 {0}
+        run: bash tools/ffmpeg_source_candidate/build_candidate.sh
+      - name: Unchanged product news/clip/character composition with synthetic inputs
+        run: |
+          $env:PYTHONPATH = Join-Path $PWD 'src'
+          python -B tools/ffmpeg_source_candidate/verify_candidate.py (Join-Path $env:RUNNER_TEMP 'newsflow-ffmpeg-candidate')
+          exit $LASTEXITCODE
+      - name: Build and license evidence, never product binaries or user data
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-source-candidate-evidence
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/newsflow-ffmpeg-candidate/evidence/
+      - name: Preserve corresponding input sources, not a public product release
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-candidate-upstream-sources
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/newsflow-ffmpeg-candidate/sources/
