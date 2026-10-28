@@ -225,3 +225,33 @@ def test_no_backup_recursion_or_secret_content_in_journal(installed):
     new_backup = next(p for p in i.backups.iterdir() if p.name != 'previous-retained')
     assert not (new_backup / 'files/update-backups').exists()
     assert b'SYNTHETIC' not in i.journal.read_bytes()
+
+
+@pytest.mark.parametrize('enabled,observed', [
+    (False, None),
+    (True, {'status': 'NotSigned'}),
+    (True, {'status': 'Valid', 'certificateSha256': 'f'*64, 'timestamped': True, 'codeSigning': True}),
+    (True, {'status': 'Valid', 'certificateSha256': 'a'*64, 'timestamped': False, 'codeSigning': True}),
+])
+def test_shipped_entry_rejects_before_profile_or_payload_access(tmp_path, monkeypatch, enabled, observed):
+    import importlib.util
+    import sys
+    import newsflow.distribution.updates as updates
+    local = tmp_path / 'SyntheticLocal'
+    local.mkdir()
+    bundle = tmp_path / 'Bundle'
+    bundle.mkdir()
+    (bundle / 'private-mode.json').write_text(json.dumps({'mode': 'update'}))
+    (bundle / 'publisher-trust.json').write_text(json.dumps({'updatesEnabled': enabled, 'publisherCertificateSha256': 'a'*64}))
+    entry_path = Path(__file__).parents[1] / 'private_distribution/private_entry.py'
+    spec = importlib.util.spec_from_file_location('offline_frozen_entry_test', entry_path)
+    entry = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(entry)
+    monkeypatch.setattr(sys, 'frozen', True, raising=False)
+    monkeypatch.setattr(sys, '_MEIPASS', str(bundle), raising=False)
+    monkeypatch.setattr(sys, 'argv', ['synthetic-update.exe'])
+    monkeypatch.setenv('LOCALAPPDATA', str(local))
+    monkeypatch.setattr(updates, 'authenticode', lambda path: observed)
+    with pytest.raises((OfflineBlocked, UpdateBlocked)):
+        entry.main()
+    assert list(local.iterdir()) == []
