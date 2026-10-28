@@ -24,7 +24,10 @@ export default function Publishing({ c }: { c: Controller }) {
     [cohortId, setCohortId] = useState("");
   const drafts = c.list("drafts"),
     projects = c.workspace?.projects ?? [],
-    selected = drafts.find((x) => String(x.id) === id) ?? drafts[0];
+    selected =
+      id === "new"
+        ? undefined
+        : (drafts.find((x) => String(x.id) === id) ?? drafts[0]);
   const [projectId, setProjectId] = useState("");
   const project =
     projects.find(
@@ -52,17 +55,32 @@ export default function Publishing({ c }: { c: Controller }) {
         ? next
         : old,
     );
-    setProjectId("");
+    if (selected) setProjectId("news:" + selected.render_job_id);
   }, [selected?.id, selected?.revision]);
-  const cohort =
-    c.list("cohorts").find((x) => String(x.id) === cohortId) ??
-    c.list("cohorts")[0];
+  const cohorts = c
+    .list("cohorts")
+    .filter(
+      (x) =>
+        project?.kind === "news" &&
+        x.targets?.some((t: Item) =>
+          drafts.some(
+            (d) =>
+              d.id === t.draft_id && "news:" + d.render_job_id === project.id,
+          ),
+        ),
+    );
+  const cohort = cohorts.find((x) => String(x.id) === cohortId) ?? cohorts[0];
+  function selectProject(x: Item) {
+    const matching = drafts.find((d) => "news:" + d.render_job_id === x.id);
+    setId(matching ? String(matching.id) : "new");
+    setProjectId(x.id);
+    if (!matching) setForm({ title: x.title, description: "", hashtags: "" });
+    setCohortId("");
+  }
   const context = {
     ...form,
     render_job_id:
-      project?.kind === "news"
-        ? String(project.id).split(":")[1]
-        : selected?.render_job_id,
+      project?.kind === "news" ? String(project.id).split(":")[1] : undefined,
     target: targets,
     content_reviewed: false,
     copyright_confirmed: false,
@@ -138,7 +156,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 <button
                   key={x.id}
                   aria-pressed={project?.id === x.id}
-                  onClick={() => setProjectId(x.id)}
+                  onClick={() => selectProject(x)}
                 >
                   <Thumb item={x} />
                   <span>
@@ -156,7 +174,11 @@ export default function Publishing({ c }: { c: Controller }) {
               <button
                 key={x.id}
                 aria-pressed={selected?.id === x.id}
-                onClick={() => setId(String(x.id))}
+                onClick={() => {
+                  setId(String(x.id));
+                  setProjectId("news:" + x.render_job_id);
+                  setCohortId("");
+                }}
               >
                 {x.title}
                 <Badge value={x.state} />
@@ -308,7 +330,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 onChange={(e) => setCohortId(e.target.value)}
               >
                 <option value="">검토 기록 선택</option>
-                {c.list("cohorts").map((x) => (
+                {cohorts.map((x) => (
                   <option key={x.id} value={x.id}>
                     {x.title}
                   </option>
@@ -377,7 +399,7 @@ export default function Publishing({ c }: { c: Controller }) {
                     게시 #{x.id} · 초안 #{x.draft_id}
                   </td>
                   <td>{x.platform}</td>
-                  <td>{date(x.created_at)}</td>
+                  <td>기록 시각 · {date(x.created_at)}</td>
                   <td>
                     <Badge value={x.status} />
                   </td>

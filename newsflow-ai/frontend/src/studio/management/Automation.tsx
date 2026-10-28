@@ -176,7 +176,10 @@ export default function Automation({
               <div className="mg-next">
                 <Clock3 />
                 <span>
-                  다음 실행 예정<strong>{date(selected.next_run_at)}</strong>
+                  {selected.status === "active"
+                    ? "다음 실행 예정"
+                    : "저장된 실행 시각 · 일시 정지"}
+                  <strong>{date(selected.next_run_at)}</strong>
                 </span>
               </div>
               <Action
