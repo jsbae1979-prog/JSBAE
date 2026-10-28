@@ -1,5 +1,5 @@
 {
-  "basis": "Canonical staged Git bytes after newline normalization. Git object IDs and SHA256 are distinct. Manifest excludes itself. New report and synthetic output only, no repeated sample integrity audit.",
+  "basis": "Canonical indexed Git bytes after newline normalization. Git object IDs and SHA256 are distinct. Manifest excludes itself. New report and synthetic output only, no repeated sample integrity audit. Explicitly includes the small newly generated synthetic MP4; ordinary user media exclusion rules unchanged.",
   "files": [
     {
       "path": "WINDOWS11_FINAL_VALIDATION_REPORT.md",
@@ -72,6 +72,12 @@
       "bytes": 2034,
       "SHA256": "9206e3d44455fd88b63269388921c768aedfc62aa096ac3034de6e8091eeaebc",
       "GitBlobSHA": "4a5e4b45b796d27276fcd96d69578016078acf31"
+    },
+    {
+      "path": "media/synthetic-3-scenes-30s.mp4",
+      "bytes": 54179,
+      "SHA256": "571e736f4ff314967dccdf3dac76d0da8b8c61939fe45869760dc379b80daa82",
+      "GitBlobSHA": "172d0c8ae68d9d17382248d92f1715e1569cbd77"
     }
   ]
 }
