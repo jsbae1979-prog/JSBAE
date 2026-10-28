@@ -156,7 +156,7 @@ def assemble(project, output, python_zip, wheels, wheelhouse, media, source_side
     spread = []
     for wheel in wheels:
         checked = read_wheel(wheelhouse / wheel['file'], wheel)
-        spread.append(spread_wheel(root, checked))
+        spread.append(spread_wheel(root, checked, omit_optional_examples=True))
     product_excluded = {'__pycache__', 'tests', 'validation', '.git'}
     for relative in tracked_product:
         if any(part.casefold() in product_excluded for part in Path(relative).parts):

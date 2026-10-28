@@ -153,3 +153,18 @@ def test_package_pth_is_search_data_without_import_site_or_activation():
     assert 'import site\n' not in bundle.PTH
     assert '../product\n' in bundle.PTH and '../site-packages\n' in bundle.PTH
     assert not any(line.startswith('import ') for line in bundle.PTH.splitlines())
+
+
+@pytest.mark.parametrize('exclude', [False, True])
+def test_optional_isapi_examples_filter_preserves_original_wheel_and_runtime(tmp_path, exclude):
+    path, expected = make_wheel(tmp_path, additions={'isapi/__init__.py':b'runtime-code',
+        'isapi/samples/advanced.py':b'developer-example'})
+    original = path.read_bytes()
+    root=tmp_path/'program'; root.mkdir()
+    result=wheels.spread_wheel(root,wheels.read_wheel(path,expected),omit_optional_examples=exclude)
+    assert (root/'app/site-packages/isapi/__init__.py').read_bytes()==b'runtime-code'
+    assert (root/'app/site-packages/isapi/samples/advanced.py').exists() is not exclude
+    assert len(result['excludedISAPIDeveloperExamples'])==int(exclude)
+    assert path.read_bytes()==original
+    record=(root/'app/site-packages/demo-1.0.dist-info/RECORD').read_text()
+    assert ('isapi/samples/advanced.py' in record) is not exclude
