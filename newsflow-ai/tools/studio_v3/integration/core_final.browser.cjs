@@ -66,7 +66,7 @@ const control=action=>ipc({kind:"control",action});
    const geometry=await page.evaluate(()=>{
     const selectors=[".core-heading",".core-navigation",".core-news-top3",".core-short-work",".core-script",".core-simple-video",".core-render-bar",".core-character-steps",".core-character-grid",".core-timeline",".core-image-grid",".core-image-input",".core-image-result",".core-image-history",".core-top3-grid",".core-top3-left",".core-top3-news",".core-top3-center",".core-copy-output",".core-feed-results",".core-news-grid",".core-news-search",".core-news-center",".core-news-right"];
     const boxes={};for(const key of selectors){const n=document.querySelector(key);if(n){const r=n.getBoundingClientRect();boxes[key]={x:r.x,y:r.y,width:r.width,height:r.height};}}
-    return {boxes,overflow:document.documentElement.scrollWidth>innerWidth+2,bodyWidth:document.documentElement.scrollWidth,sidebarVisible:!!document.querySelector(".sidebar")&&getComputedStyle(document.querySelector(".sidebar")).display!=="none",samples:[...document.querySelectorAll("[data-sample-id]")].map(n=>n.dataset.sampleId),styles:[...document.querySelectorAll("h1,h2,.management-ui button,.sidebar,.topbar,.main")].slice(0,180).map(n=>{const c=getComputedStyle(n),r=n.getBoundingClientRect();return {tag:n.tagName,text:n.textContent.trim().slice(0,60),x:r.x,y:r.y,w:r.width,h:r.height,color:c.color,bg:c.background,border:c.border,font:c.font,gap:c.gap,padding:c.padding,display:c.display};})};
+    return {navigationSelection:[...document.querySelectorAll(".core-navigation [aria-current=page]")].map(n=>n.textContent.trim()),boxes,overflow:document.documentElement.scrollWidth>innerWidth+2,bodyWidth:document.documentElement.scrollWidth,sidebarVisible:!!document.querySelector(".sidebar")&&getComputedStyle(document.querySelector(".sidebar")).display!=="none",samples:[...document.querySelectorAll("[data-sample-id]")].map(n=>n.dataset.sampleId),styles:[...document.querySelectorAll("h1,h2,.management-ui button,.sidebar,.topbar,.main")].slice(0,180).map(n=>{const c=getComputedStyle(n),r=n.getBoundingClientRect();return {tag:n.tagName,text:n.textContent.trim().slice(0,60),x:r.x,y:r.y,w:r.width,h:r.height,color:c.color,bg:c.background,border:c.border,font:c.font,gap:c.gap,padding:c.padding,display:c.display};})};
    });
    const file="design-"+name+"-"+width+".png";
    await page.screenshot({path:path.join(out,file),animations:"disabled",caret:"hide"});
@@ -200,6 +200,7 @@ const control=action=>ipc({kind:"control",action});
    assert.equal(shots.length,10);
    for(const s of shots){assert(!s.overflow,s.screen+" overflow");assert(!s.sidebarVisible,s.screen+" legacy sidebar");
     assert.equal(!!s.boxes[".core-navigation"],["characters","images","news"].includes(s.screen),s.screen+" approved navigation");
+    if(s.boxes[".core-navigation"])assert.equal(s.navigationSelection.length,1,s.screen+" must highlight only its own route");
    }
    await open("images?mode=top3");assert.equal(await page.getByText("이미지 제작 방식",{exact:true}).count(),0);
    assert.equal(await page.locator(".core-top3-left .core-tabs").count(),1);

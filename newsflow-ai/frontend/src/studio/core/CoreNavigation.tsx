@@ -50,12 +50,7 @@ export default function CoreNavigation({
         ).map(([key, label, Icon]) => (
           <button
             key={key}
-            aria-current={
-              key === module ||
-              (key === "create" && ["characters", "images"].includes(module))
-                ? "page"
-                : undefined
-            }
+            aria-current={key === module ? "page" : undefined}
             onClick={() => onNavigate(key)}
           >
             <Icon size={17} />
