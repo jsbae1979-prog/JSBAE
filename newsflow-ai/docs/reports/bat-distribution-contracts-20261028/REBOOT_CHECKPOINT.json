@@ -1,0 +1,8 @@
+{
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "implementationHead": "0de0e19deb8e1e89d2f6b5f4745b7e63fc981b6d",
+  "verdict": "CONDITIONAL",
+  "automaticResumeExecution": false,
+  "runtimeOrAppExecuted": false,
+  "next": "Official policy resolution and separate live validation approval; do not auto-run BAT/app/update"
+}

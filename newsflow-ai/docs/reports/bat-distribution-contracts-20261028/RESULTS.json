@@ -1,0 +1,97 @@
+{
+  "dateKST": "2026-10-28",
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "baselineHead": "99334215f103e1fea94cf8fd92fe43b317f81058",
+  "implementationAndTestHead": "0de0e19deb8e1e89d2f6b5f4745b7e63fc981b6d",
+  "verdict": "CONDITIONAL",
+  "scope": "Non-executing lifecycle/signature/ZIP transaction contracts and synthetic tests only",
+  "newTests": {
+    "PASS": 78,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "newStaticChecks": {
+    "ruff": "PASS",
+    "AST_no_direct_process_network_native_or_app_import": "PASS",
+    "BAT_CRLF_quoted_paths_isolated_python_flags": "PASS_NOT_EXECUTED"
+  },
+  "history": {
+    "firstRun": {
+      "PASS": 72,
+      "FAIL": 2,
+      "ERROR": 0
+    },
+    "cause": "Test SQLite context manager committed but did not close connections; Windows replacement denied",
+    "fix": "Use contextlib.closing and explicit commit in synthetic tests only",
+    "focusedRecoveryRerun": {
+      "PASS": 2,
+      "FAIL": 0
+    },
+    "additionalBoundaryCases": 4,
+    "initialRuff": "11 style findings corrected in new files; final PASS"
+  },
+  "implementation": {
+    "runtimeLayout": "DESIGNED; no runtime binaries copied or executed",
+    "start": "Plan/path/layout/owner capability/single fixed-port lease contract; no app spawn backend",
+    "stop": "Retained-process-lease identity comparison and one graceful request; no native backend or kill API",
+    "signature": "Exact manifest bytes + signer pin + timestamp/purpose evidence contract; only synthetic verifier tested",
+    "zip": "Version/sequence/full declared inventory/archive and per-file hash/path/type/size verification",
+    "transaction": "Existing OfflineInstall SQLite backup/opaque bytes/side-by-side/journal/rollback reused",
+    "migration": "none only; required migrations blocked",
+    "defaultTrust": "disabled empty publisher pin; default verifier rejects",
+    "entryPoint": "Start/Stop exit2 and Update exit3; no live backend or activation switch"
+  },
+  "syntheticOnly": {
+    "portReservations": true,
+    "processIdentities": true,
+    "signatureVerifier": true,
+    "ACLAndNativeLocks": true,
+    "SQLiteAndFileOperations": "REAL_OPERATIONS_ON_SYNTHETIC_TEMP_FILES_ONLY"
+  },
+  "notVerified": [
+    "BAT/CMD execution",
+    "embedded Python deployment/runtime dependencies",
+    "Windows live port and process ownership/ACL/locking",
+    "real publisher signature cryptography/chain/revocation/offline verification",
+    "React GUI/FFmpeg and actual app-connected offline update",
+    "V3-active execution",
+    "new Windows user/PC and DPI"
+  ],
+  "reusedNotRerun": {
+    "WindowsCI": "45 PASS",
+    "InstallerLifecycle": "19 PASS",
+    "FFmpeg": "7 PASS"
+  },
+  "delivery": {
+    "initialZip": null,
+    "updateZip": null,
+    "runtimeBinariesIncluded": false,
+    "syntheticZipFixturesCreated": true,
+    "externalDelivery": false,
+    "samplesIncluded": 0,
+    "sampleRightsVerifiedChanged": false
+  },
+  "protected": {
+    "productSourceChanged": false,
+    "ReactChanged": false,
+    "existingInstallerChanged": false,
+    "operatingAppDataKeysMediaBackupsUsed": false,
+    "operatingPort8765Used": false,
+    "realAPI_OAuth_SNSCalls": 0,
+    "V3ChangesOrExceptions": false,
+    "mainAndPR35Changed": false,
+    "existingUntrackedValidationPreserved": true
+  },
+  "gitProtectedRefs": {
+    "main": "aa2f056d78ceed24874d0b4c50c6033f7168bf4d",
+    "privateInstaller": "66c80be58205a6c52e4428fc4fb9171fe9734f3f",
+    "PR35": {
+      "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+      "state": "open",
+      "draft": true,
+      "merged": false
+    }
+  },
+  "automaticResumeExecution": false
+}
