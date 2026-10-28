@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "status": "TEMPLATE_NOT_EVIDENCE",
+  "assetId": null,
+  "catalogVersion": 2,
+  "author": null,
+  "createdAtUtc": null,
+  "method": null,
+  "sourceCommit": null,
+  "authoringBriefOrPrompt": null,
+  "providerModelIfUsed": null,
+  "inputs": [],
+  "tools": [],
+  "sourceFiles": [],
+  "outputs": [],
+  "copyrightAndRedistributionGrant": null,
+  "thirdPartyReview": null,
+  "rightsVerified": false,
+  "reviewer": null,
+  "reviewDate": null,
+  "replacementApproved": false
+}

@@ -1,0 +1,142 @@
+{
+  "runs": [
+    {
+      "run": 40650273246,
+      "source": "3374c0c69cb73c9d24a96016c3bf303d48bbe4fd",
+      "result": {
+        "scope": "Windows Server CI, not Windows11 installation",
+        "checks": [
+          {
+            "name": "different_product_source_commits",
+            "status": "PASS"
+          },
+          {
+            "name": "different_product_executables",
+            "status": "PASS"
+          },
+          {
+            "name": "compile_old-setup",
+            "status": "PASS"
+          },
+          {
+            "name": "compile_failing-setup",
+            "status": "PASS"
+          },
+          {
+            "name": "compile_new-setup",
+            "status": "PASS"
+          },
+          {
+            "name": "previous_actual_install",
+            "status": "PASS"
+          },
+          {
+            "name": "initial_previous_actual_product_http_ready",
+            "status": "FAIL"
+          }
+        ],
+        "public_updater": false,
+        "publisher_signed": false,
+        "post_migration_rollback": "NOT VERIFIED",
+        "default_profile_migration": "NOT VERIFIED",
+        "old_source": "9a54ec8e26f33ae6312b3d5eb80715b9a7f01342",
+        "new_source": "3374c0c69cb73c9d24a96016c3bf303d48bbe4fd",
+        "forced_cleanup": false,
+        "product_exe_sha256": {
+          "previous": "82db274e9c425c7ddc0ecfa0e5cb3ba97d9bb64f420483c339735c5018bb1bda",
+          "candidate": "9e7f08e3e33cf0237a2ed8218c7231b038409ee4cc65ecae9f4d9ee279b41277"
+        },
+        "setups": {
+          "old-setup": {
+            "sha256": "31c5afc95a50312e917c7e364b990ad5473b3355516683cf09498a0614edc43e",
+            "bytes": 308529787
+          },
+          "failing-setup": {
+            "sha256": "1823fc6fa81d32b8f37ddb70458e8629a7781105978266af7f9d4bcbff896780",
+            "bytes": 309231326
+          },
+          "new-setup": {
+            "sha256": "4f193944fdd549f143c077fe1b614b92e8729dc843f10fc48d360905353c7125",
+            "bytes": 309231067
+          }
+        },
+        "result": "FAIL",
+        "failure": "AssertionError: initial_previous_actual_product_http_ready"
+      }
+    },
+    {
+      "run": 40650938236,
+      "source": "a264da13ad18fb24b851263a23dadd39b3ce2068",
+      "result": {
+        "scope": "Windows Server CI, not Windows11 installation",
+        "checks": [
+          {
+            "name": "different_product_source_commits",
+            "status": "PASS"
+          },
+          {
+            "name": "different_product_executables",
+            "status": "PASS"
+          },
+          {
+            "name": "compile_old-setup",
+            "status": "PASS"
+          },
+          {
+            "name": "compile_failing-setup",
+            "status": "PASS"
+          },
+          {
+            "name": "compile_new-setup",
+            "status": "PASS"
+          },
+          {
+            "name": "previous_actual_install",
+            "status": "PASS"
+          },
+          {
+            "name": "initial_previous_actual_product_http_ready",
+            "status": "FAIL"
+          }
+        ],
+        "public_updater": false,
+        "publisher_signed": false,
+        "post_migration_rollback": "NOT VERIFIED",
+        "default_profile_migration": "NOT VERIFIED",
+        "old_source": "9a54ec8e26f33ae6312b3d5eb80715b9a7f01342",
+        "new_source": "a264da13ad18fb24b851263a23dadd39b3ce2068",
+        "forced_cleanup": false,
+        "product_exe_sha256": {
+          "previous": "e29d25f7cc9b88275c047800e86ef04679f17fdc95ae8f74ffb1bdbcd146cf53",
+          "candidate": "d5b6892af3de6295a61aea21ddab57fa5d5392756255b0aa94e285df9fb89bfd"
+        },
+        "setups": {
+          "old-setup": {
+            "sha256": "b5216f9ddcc75645334228ca9e772d8b503ca41557ce057177b3ddd73ce47ffa",
+            "bytes": 308529787
+          },
+          "failing-setup": {
+            "sha256": "7ab475c0ffdffa2e1b3673cfb26a9e78339c4fbc851be504e027e546a1ba7644",
+            "bytes": 309231327
+          },
+          "new-setup": {
+            "sha256": "027c0c71e6f76ec3d6fcfabbf9079c9544d599b7347851ed05db4409caa6566e",
+            "bytes": 309231068
+          }
+        },
+        "startup_diagnostic": {
+          "exit": 1,
+          "exception_classes": [
+            "UnicodeEncodeError",
+            "UnicodeEncodeError"
+          ],
+          "missing_modules": [],
+          "startup_error_marker": false
+        },
+        "result": "FAIL",
+        "failure": "AssertionError: initial_previous_actual_product_http_ready"
+      }
+    }
+  ],
+  "classification": "Two startup failures retained; not concealed with skip/xfail or timeout increase. Second diagnostic identified frozen Windows UnicodeEncodeError. Shared PyInstaller UTF8 option subsequently corrected."
+}

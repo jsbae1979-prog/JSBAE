@@ -1,0 +1,39 @@
+{
+  "baseline": "3103560e62c12f73d65c4832f99b3b3831808d93",
+  "frontend_git_tree_before": "da901a912e7207aac94c1407775cab2450898444",
+  "frontend_git_tree_after": "da901a912e7207aac94c1407775cab2450898444",
+  "sample_git_tree_before": "d1a4ef420d8875042bcfa47d2747f2e4b56f508f",
+  "sample_git_tree_after": "d1a4ef420d8875042bcfa47d2747f2e4b56f508f",
+  "product_api_video_db_guard_diff": [],
+  "publisher_trust_changed": false,
+  "updatesEnabled": false,
+  "production_listener": {
+    "host": "127.0.0.1",
+    "port": 8765,
+    "pid": 55740
+  },
+  "production_file_contents_accessed": false,
+  "production_files_hashed": false,
+  "production_data_used": false,
+  "production_restarts": 0,
+  "paid_api_calls": 0,
+  "oauth_or_sns_calls": 0,
+  "public_distribution": false,
+  "existing_untracked_validation_preserved": true,
+  "pr35": {
+    "number": 35,
+    "draft": true,
+    "state": "open",
+    "merged": false,
+    "head": "75626f74cc1bfe750d24132e44019bcda478247b",
+    "base": "codex/newsflow-core-production"
+  },
+  "protected_remote_branches": {
+    "main": "aa2f056d78ceed24874d0b4c50c6033f7168bf4d",
+    "release_final": "3103560e62c12f73d65c4832f99b3b3831808d93",
+    "distribution_gates": "ce1142270ae4ab9a3e8ec8bb8ce5e9f9936f23e2",
+    "deployment_prep": "9a54ec8e26f33ae6312b3d5eb80715b9a7f01342",
+    "core_final": "5a8a622748464897033a49e421725812267245d9",
+    "management_final": "4580e8943a6e3a19d83ccad34995412f39bc21fa"
+  }
+}

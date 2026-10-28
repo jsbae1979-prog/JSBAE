@@ -1,0 +1,89 @@
+{
+  "run": 40652078486,
+  "source": "333a3351e78a73153bf3f7ff5c48a8b1df4f5718",
+  "result": {
+    "scope": "Windows Server CI, not Windows11 installation",
+    "checks": [
+      {
+        "name": "different_product_source_commits",
+        "status": "PASS"
+      },
+      {
+        "name": "different_product_executables",
+        "status": "PASS"
+      },
+      {
+        "name": "compile_old-setup",
+        "status": "PASS"
+      },
+      {
+        "name": "compile_failing-setup",
+        "status": "PASS"
+      },
+      {
+        "name": "compile_new-setup",
+        "status": "PASS"
+      },
+      {
+        "name": "previous_actual_install",
+        "status": "PASS"
+      },
+      {
+        "name": "initial_previous_actual_product_http_ready",
+        "status": "PASS"
+      },
+      {
+        "name": "initial_previous_react_asset",
+        "status": "PASS"
+      },
+      {
+        "name": "initial_previous_normal_shutdown",
+        "status": "PASS"
+      },
+      {
+        "name": "initial_previous_port_released",
+        "status": "PASS"
+      },
+      {
+        "name": "injected_installer_failure_observed",
+        "status": "FAIL"
+      }
+    ],
+    "public_updater": false,
+    "publisher_signed": false,
+    "post_migration_rollback": "NOT VERIFIED",
+    "default_profile_migration": "NOT VERIFIED",
+    "old_source": "9a54ec8e26f33ae6312b3d5eb80715b9a7f01342",
+    "new_source": "333a3351e78a73153bf3f7ff5c48a8b1df4f5718",
+    "forced_cleanup": false,
+    "product_exe_sha256": {
+      "previous": "f2a597bdb240f6cbb73a244afa947c652d74e2378426e85d87012ccff28a6255",
+      "candidate": "24c0d780a07c01863d4acad53aedf9fb461dd9be55b30c871a6596ad6e55ebd4"
+    },
+    "setups": {
+      "old-setup": {
+        "sha256": "47bd4324f8cdf973fae776df54d4a7be75730dc3fd0d43b4651a87c05caeb153",
+        "bytes": 308529822
+      },
+      "failing-setup": {
+        "sha256": "d5123758c1432cd0c388887fa211017c047439963f258acc28e79225c2785044",
+        "bytes": 309231443
+      },
+      "new-setup": {
+        "sha256": "42561c66aee2984dd905dc1baf41bcf8ad72fc9f31be8d95669da406fd64b585",
+        "bytes": 309231184
+      }
+    },
+    "shutdown": {
+      "initial_previous": {
+        "exit": 1,
+        "server_stop_marker": true,
+        "historical_pyinstaller_keyboardinterrupt": true
+      }
+    },
+    "injected_installer_exit": 0,
+    "result": "FAIL",
+    "failure": "AssertionError: injected_installer_failure_observed"
+  },
+  "classification": "Historical app started and cleaned up normally with server_stop + KeyboardInterrupt proof. Post-install script exception did not cause a failed Setup exit (0), so failure injection was rejected. Replaced with a real Windows sharing violation against a synthetic candidate target, without changing installer success semantics."
+}

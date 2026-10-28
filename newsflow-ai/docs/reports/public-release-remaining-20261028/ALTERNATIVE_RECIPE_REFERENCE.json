@@ -1,0 +1,34 @@
+[
+  {
+    "snapshotCommit": "b4a2b1d7cc241786eb8e2b588a7ade40cad48bbd",
+    "path": "README.md",
+    "bytes": 2777,
+    "sha256": "4f6f817fd57c5524e0d0832618e8f75d589093e2f05ef1ec2839af98e70e5053",
+    "executed": false,
+    "url": "https://raw.githubusercontent.com/BtbN/FFmpeg-Builds/b4a2b1d7cc241786eb8e2b588a7ade40cad48bbd/README.md"
+  },
+  {
+    "snapshotCommit": "b4a2b1d7cc241786eb8e2b588a7ade40cad48bbd",
+    "path": "scripts.d/50-x264.sh",
+    "bytes": 920,
+    "sha256": "37b598e715823c03347bd3ba782f829bf5e289c47cf350eae8042c2263dabfaa",
+    "executed": false,
+    "url": "https://raw.githubusercontent.com/BtbN/FFmpeg-Builds/b4a2b1d7cc241786eb8e2b588a7ade40cad48bbd/scripts.d/50-x264.sh"
+  },
+  {
+    "snapshotCommit": "b4a2b1d7cc241786eb8e2b588a7ade40cad48bbd",
+    "path": "scripts.d/50-x265.sh",
+    "bytes": 2103,
+    "sha256": "79b428eb57716cb6f87a59d721604b67923edb7f4d720229c482ced485391863",
+    "executed": false,
+    "url": "https://raw.githubusercontent.com/BtbN/FFmpeg-Builds/b4a2b1d7cc241786eb8e2b588a7ade40cad48bbd/scripts.d/50-x265.sh"
+  },
+  {
+    "snapshotCommit": "b4a2b1d7cc241786eb8e2b588a7ade40cad48bbd",
+    "path": "LICENSE",
+    "bytes": 1064,
+    "sha256": "c1b3cc7eec42bd9c4f6247169bb887b4a9bc904abfd2a7f7f9231ed357844993",
+    "executed": false,
+    "url": "https://raw.githubusercontent.com/BtbN/FFmpeg-Builds/b4a2b1d7cc241786eb8e2b588a7ade40cad48bbd/LICENSE"
+  }
+]

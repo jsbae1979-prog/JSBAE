@@ -1,0 +1,73 @@
+{
+  "run": 40651406870,
+  "source": "e9983eda5060da1ec7a71b6d95fc0bc0696ff7b9",
+  "result": {
+    "scope": "Windows Server CI, not Windows11 installation",
+    "checks": [
+      {
+        "name": "different_product_source_commits",
+        "status": "PASS"
+      },
+      {
+        "name": "different_product_executables",
+        "status": "PASS"
+      },
+      {
+        "name": "compile_old-setup",
+        "status": "PASS"
+      },
+      {
+        "name": "compile_failing-setup",
+        "status": "PASS"
+      },
+      {
+        "name": "compile_new-setup",
+        "status": "PASS"
+      },
+      {
+        "name": "previous_actual_install",
+        "status": "PASS"
+      },
+      {
+        "name": "initial_previous_actual_product_http_ready",
+        "status": "PASS"
+      },
+      {
+        "name": "initial_previous_react_asset",
+        "status": "PASS"
+      },
+      {
+        "name": "initial_previous_normal_shutdown",
+        "status": "FAIL"
+      }
+    ],
+    "public_updater": false,
+    "publisher_signed": false,
+    "post_migration_rollback": "NOT VERIFIED",
+    "default_profile_migration": "NOT VERIFIED",
+    "old_source": "9a54ec8e26f33ae6312b3d5eb80715b9a7f01342",
+    "new_source": "e9983eda5060da1ec7a71b6d95fc0bc0696ff7b9",
+    "forced_cleanup": false,
+    "product_exe_sha256": {
+      "previous": "fa55c5cf93cdacc143bc8611f425115a6f2c34a83701eef21cffae6851b9a635",
+      "candidate": "f614c60032456eb7dba97c3ba72b0c03f5a5c6b9b95628d2995fe7a91dc71779"
+    },
+    "setups": {
+      "old-setup": {
+        "sha256": "aac1e1c18adaba294ae4d4d806964bbbc8a744f04a5711ba4e2d638d1c17f152",
+        "bytes": 308529820
+      },
+      "failing-setup": {
+        "sha256": "580ec6e0122e426f126ff0d1e2d6a9a8ab5368dbbc188c325987f95bc8e4c921",
+        "bytes": 309231380
+      },
+      "new-setup": {
+        "sha256": "6d7f4ec8779e5f22dbe6b9e977399edc0448b5e3e24688af6aae8098ceb62fbd",
+        "bytes": 309231121
+      }
+    },
+    "result": "FAIL",
+    "failure": "AssertionError: initial_previous_normal_shutdown"
+  },
+  "classification": "UTF8 fix allowed real HTTP startup; shutdown exit-code check failed. Subsequent harness requires historical server_stop + KeyboardInterrupt-only record; current frozen entry normalizes KeyboardInterrupt after cleanup. No timeout increase/force-pass."
+}

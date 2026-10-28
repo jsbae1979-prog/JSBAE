@@ -1,0 +1,786 @@
+{
+  "binary_version": "9.0.2-essentials_build-www.gyan.dev",
+  "ffmpeg_sha256": "3256173f3f8bffd7df12227c68adf68025edb1832273a9530688a7bb1ed8edec",
+  "compiler_observed": "gcc 16.2.0 (Rev3, Built by MSYS2 project)",
+  "platform_evidence": "Gyan changelog: MSYS2 UCRT64",
+  "compiler_package_archive_and_hash": null,
+  "build_recipe_available": false,
+  "complete_corresponding_source": false,
+  "upstream_source_archives_reused": [
+    {
+      "component": "ffmpeg",
+      "upstream_commit": "946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "repository": "FFmpeg/FFmpeg",
+      "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/946fcce07b6dcd0331c8cc609192aeff5e1924f8",
+      "local_filename": "ffmpeg-946fcce07b6dcd0331c8cc609192aeff5e1924f8.tar.gz",
+      "bytes": 17333895,
+      "sha256": "0aa2b1de2a5698b20a23e93d539a9a8e82ca0117496c5bdf05d198805f42bb3b",
+      "member_count": 10550,
+      "observed_files": [
+        "FFmpeg-946fcce07b6dcd0331c8cc609192aeff5e1924f8/COPYING.GPLv3",
+        "FFmpeg-946fcce07b6dcd0331c8cc609192aeff5e1924f8/configure"
+      ],
+      "code_executed": false,
+      "all_binary_patches_verified": false
+    },
+    {
+      "component": "x265",
+      "upstream_commit": "116b87573ed0cec20b75ccacd5641bf06f6e57bd",
+      "repository": "Multicorewareinc/x265",
+      "url": "https://codeload.github.com/Multicorewareinc/x265/tar.gz/116b87573ed0cec20b75ccacd5641bf06f6e57bd",
+      "local_filename": "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd.tar.gz",
+      "bytes": 2077215,
+      "sha256": "2d53caffd91f6a1409f56ca2268e86484c405feb482cedf02f56dd57d2929bef",
+      "member_count": 494,
+      "observed_files": [
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/COPYING",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/common/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/dynamicHDR10/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/encoder/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/profile/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/profile/PPA/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/profile/vtune/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/source/test/CMakeLists.txt",
+        "x265-116b87573ed0cec20b75ccacd5641bf06f6e57bd/x265Version.txt"
+      ],
+      "code_executed": false,
+      "all_binary_patches_verified": false
+    },
+    {
+      "component": "x264",
+      "upstream_commit": "0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee",
+      "repository": "https://code.videolan.org/videolan/x264.git",
+      "local_filename": "x264-0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee.tar.gz",
+      "bytes": 1048654,
+      "sha256": "2ee0208201a22e4637462c566b0fc853da85dbda77533b8b7389a7f38fb1da04",
+      "acquisition": "git clone --bare from canonical VideoLAN, then git archive of pinned commit; no source scripts executed",
+      "version_evidence": {
+        "X264_BUILD": 165,
+        "full_history_revision_count": 3223,
+        "version_sh_inspected_not_executed": true
+      },
+      "all_binary_patches_verified": false,
+      "match_status": "UPSTREAM_VERSION_MATCHED_CANDIDATE; private build patches not proved"
+    }
+  ],
+  "enabled_components": [
+    {
+      "component": "avisynth",
+      "category": "external_library",
+      "build_reported_version": "v3.7.5-383-g5c82777b",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libmp3lame",
+      "category": "external_library",
+      "build_reported_version": "3.100",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libvorbis",
+      "category": "external_library",
+      "build_reported_version": "v1.3.7-37-g1b75110b",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "bzlib",
+      "category": "external_library",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libopencore_amrnb",
+      "category": "external_library",
+      "build_reported_version": "0.1.6",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libvpx",
+      "category": "external_library",
+      "build_reported_version": "v1.17.0-57-gd2413e2ca",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "cairo",
+      "category": "external_library",
+      "build_reported_version": "1.18.5",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libopencore_amrwb",
+      "category": "external_library",
+      "build_reported_version": "0.1.6",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libwebp",
+      "category": "external_library",
+      "build_reported_version": "v1.6.0-249-g1f34635",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "gmp",
+      "category": "external_library",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libopenjpeg",
+      "category": "external_library",
+      "build_reported_version": "2.5.4",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libx264",
+      "category": "external_library",
+      "build_reported_version": "v0.165.3223",
+      "source_status": "UPSTREAM_ARCHIVE_ACQUIRED; exact private patches/recipe missing",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "gnutls",
+      "category": "external_library",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libopenmpt",
+      "category": "external_library",
+      "build_reported_version": "libopenmpt-0.6.30-3-g6c0a06bc",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libx265",
+      "category": "external_library",
+      "build_reported_version": "4.3-45-g116b875",
+      "source_status": "UPSTREAM_ARCHIVE_ACQUIRED; exact private patches/recipe missing",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "iconv",
+      "category": "external_library",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libopus",
+      "category": "external_library",
+      "build_reported_version": "v1.6.1-68-g503d81b1",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libxml2",
+      "category": "external_library",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libaom",
+      "category": "external_library",
+      "build_reported_version": "v3.15.0-25-g023743a7d7",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "librubberband",
+      "category": "external_library",
+      "build_reported_version": "v4.0.0",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libxvid",
+      "category": "external_library",
+      "build_reported_version": "v1.3.7",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libass",
+      "category": "external_library",
+      "build_reported_version": "0.17.5-8-gb2fe9d8",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libspeex",
+      "category": "external_library",
+      "build_reported_version": "Speex-1.2.1-51-g0589522",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libzimg",
+      "category": "external_library",
+      "build_reported_version": "release-3.0.6-253-g67e0603",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libfontconfig",
+      "category": "external_library",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libsrt",
+      "category": "external_library",
+      "build_reported_version": "v1.5.7-7-gcae8f62",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libzmq",
+      "category": "external_library",
+      "build_reported_version": "4.3.5",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libfreetype",
+      "category": "external_library",
+      "build_reported_version": "VER-2-14-3",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libssh",
+      "category": "external_library",
+      "build_reported_version": "0.12.2",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "lzma",
+      "category": "external_library",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libfribidi",
+      "category": "external_library",
+      "build_reported_version": "v1.0.16-19-gc928e4c",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libtheora",
+      "category": "external_library",
+      "build_reported_version": "v1.2.0",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "mediafoundation",
+      "category": "external_library",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": "Requires assessment; Windows interface is not proof that every associated component is exempt",
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libgme",
+      "category": "external_library",
+      "build_reported_version": "0.6.6",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libvidstab",
+      "category": "external_library",
+      "build_reported_version": "v1.1.2-214-ge2445c4",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "openal",
+      "category": "external_library",
+      "build_reported_version": "1.25.2-48-g7532541",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libgsm",
+      "category": "external_library",
+      "build_reported_version": "1.0.24",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libvmaf",
+      "category": "external_library",
+      "build_reported_version": "v3.2.0-13-gf85a8536",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "sdl2",
+      "category": "external_library",
+      "build_reported_version": "release-2.32.0-234-gb90ac9502",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libharfbuzz",
+      "category": "external_library",
+      "build_reported_version": "14.4.0-108-g64e2b532",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libvo_amrwbenc",
+      "category": "external_library",
+      "build_reported_version": "0.1.3",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "zlib",
+      "category": "external_library",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "amf",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": "v1.5.2-2-gc35f613",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "d3d12va",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": "Requires assessment; Windows interface is not proof that every associated component is exempt",
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "nvdec",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "cuda",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "dxva2",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": "Requires assessment; Windows interface is not proof that every associated component is exempt",
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "nvenc",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "cuda_llvm",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "ffnvcodec",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": "n13.1.15.0-1-geddcea9",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "vaapi",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": "2.25.0.",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "cuvid",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libmfx",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "d3d11va",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": null,
+      "source_status": "NOT VERIFIED",
+      "system_exception": "Requires assessment; Windows interface is not proof that every associated component is exempt",
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    },
+    {
+      "component": "libvpl",
+      "category": "hardware_interface_or_headers",
+      "build_reported_version": "2.17",
+      "source_status": "NOT VERIFIED",
+      "system_exception": null,
+      "static_linkage": "Enabled in static build; individual linked-object inventory not supplied",
+      "required": [
+        "Exact source revision and license",
+        "Local patches or explicit no-patch record",
+        "Build/link instructions and transitive dependencies"
+      ]
+    }
+  ],
+  "transitive_dependency_closure": "NOT VERIFIED: do not equate enabled FFmpeg options with a complete static object/link map",
+  "configure_evidence": "../distribution-gates-20261028/FFMPEG_BUILD_README.txt"
+}
