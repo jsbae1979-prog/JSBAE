@@ -1,0 +1,40 @@
+name: Private offline update boundaries
+on:
+  push:
+    branches: [codex/newsflow-private-installer-updater]
+    paths:
+      - 'newsflow-ai/src/newsflow/distribution/offline.py'
+      - 'newsflow-ai/tools/private_distribution/**'
+      - 'newsflow-ai/tools/private_distribution_tests/**'
+      - 'newsflow-ai/tools/distribution/app_entry.py'
+      - '.github/workflows/newsflow-private-offline.yml'
+permissions:
+  contents: read
+jobs:
+  private-offline-contracts:
+    runs-on: windows-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14.7'
+      - name: Focused synthetic offline transaction tests only
+        run: |
+          python -m pip install -r requirements-dev.lock pywin32==312 tzdata==2026.5
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:PYTHONPATH = Join-Path $PWD 'src'
+          python -B -m pytest -q tools/private_distribution_tests -p no:cacheprovider --basetemp (Join-Path $env:RUNNER_TEMP 'offline-contracts') --junitxml=offline-tests.xml
+          exit $LASTEXITCODE
+      - name: Nonsecret test results only, no binaries or synthetic databases
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: private-offline-contract-evidence
+          path: newsflow-ai/offline-tests.xml

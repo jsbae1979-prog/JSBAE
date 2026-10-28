@@ -15,6 +15,19 @@ def main():
         if path.is_symlink() or not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest()!=expected[name]:
             raise SystemExit('Bundled media integrity check failed')
         os.environ[variable]=str(path)
+    if sys.argv[1:] == ['--offline-runtime-check']:
+        # Read-only packaged boot preflight. The signed updater holds the
+        # per-user locks and performs backed-up migration in its own process.
+        import subprocess
+        if not (bundle/'frontend/dist/index.html').is_file():
+            raise SystemExit('Packaged React missing')
+        from newsflow.main import create_app  # import only; never scheduler/jobs
+        for name in ('ffmpeg.exe', 'ffprobe.exe'):
+            check = subprocess.run([str(bundle/'media'/name), '-version'],
+                                   capture_output=True, timeout=15)
+            if check.returncode:
+                raise SystemExit('Packaged media preflight failed')
+        return
     no_browser = sys.argv[1:] == ['--no-browser']
     if len(sys.argv) > 1 and not no_browser:
         if sys.argv[1:3] != ['-m','newsflow.video.windows_sapi']:
