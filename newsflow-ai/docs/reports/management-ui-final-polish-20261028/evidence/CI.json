@@ -1,0 +1,25 @@
+{
+  "run": 40616662904,
+  "code_sha": "d7eb6b8faafc4f65aa9a83909431f900ecdc3275",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/40616662904",
+  "verdict": "ACCEPTED",
+  "verdict_scope": "Management presentation polish and approved synthetic Windows CI checks only",
+  "reused": {
+    "run": 40611504906,
+    "API_PASS": 4,
+    "Chrome_PASS": 20,
+    "base_HEAD": "7e3f17430cee6fac2b62b43e4375306095b963db"
+  },
+  "artifact": [
+    {
+      "id": 12785880960,
+      "name": "management-ui-after",
+      "digest": "sha256:2f5541ec96dc6035e93f9fc7a57de6640cbfb5d445ee838d88c24ef29d20a056"
+    }
+  ],
+  "OS_DPI": "NOT VERIFIED",
+  "Windows11_local_GUI": "NOT VERIFIED",
+  "paid_API_SNS_calls": 0
+}

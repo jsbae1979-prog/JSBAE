@@ -1,0 +1,49 @@
+{
+  "base": "7e3f17430cee6fac2b62b43e4375306095b963db",
+  "verified_code": "d7eb6b8faafc4f65aa9a83909431f900ecdc3275",
+  "changed_files": [
+    ".github/workflows/newsflow-management-ui.yml",
+    "newsflow-ai/frontend/src/studio/management/Management.tsx",
+    "newsflow-ai/frontend/src/studio/management/management.css",
+    "newsflow-ai/frontend/src/studio/management/shared.tsx",
+    "newsflow-ai/tools/studio_v3/integration/management_gui.browser.cjs"
+  ],
+  "protected_path_changes": [],
+  "management_screen_handler_sources": [
+    {
+      "file": "newsflow-ai/frontend/src/studio/management/Automation.tsx",
+      "same": true,
+      "sha256": "688675ee5634de09c996608a814d89a6fc7a1d05d79fc487b39dbe18cf96f742"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/management/Library.tsx",
+      "same": true,
+      "sha256": "f3654f1107457f1f40ab62328f8d46ab520392b187eb0cf6e8c95e6a501041bd"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/management/Publishing.tsx",
+      "same": true,
+      "sha256": "93af0f5ae685e0a98b1f0bc6bcb4f7ec98292c6d4612711dc6192cf845248cf2"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/management/Analytics.tsx",
+      "same": true,
+      "sha256": "e15933bc8c2f48a5d8b04af0736077c2a835d10fd86369cddec7fb3b3e93f7e1"
+    },
+    {
+      "file": "newsflow-ai/frontend/src/studio/management/Settings.tsx",
+      "same": true,
+      "sha256": "7bfb78c0939e77a3a945040a6144a454afb92f95947f60b2dcbf00c42dd9e32e"
+    }
+  ],
+  "shared_data_fetch_state_unchanged": true,
+  "shared_media_actions_and_approval_adapters_unchanged": true,
+  "reused_99_source_hash_evidence": "../management-ui-approved-20261028/evidence/PROTECTION_SOURCE_EVIDENCE.json",
+  "samples_decoding_or_integrity_tests_repeated": false,
+  "backend_guard_database_tests_repeated": false,
+  "existing_untracked_preserved": true,
+  "core_branch": "8ecf7e29f3d73a598e26d68d388a7a3ec232e0f6",
+  "operating_data_read_or_changed": false,
+  "PR35_main_mutations": false,
+  "paid_API_SNS_calls": 0
+}

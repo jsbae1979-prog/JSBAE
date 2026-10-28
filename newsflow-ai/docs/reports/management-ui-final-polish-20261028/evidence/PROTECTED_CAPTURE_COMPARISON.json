@@ -1,0 +1,100 @@
+[
+  {
+    "screen": "dashboard",
+    "width": 1920,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 294,
+    "elements_after": 294
+  },
+  {
+    "screen": "create",
+    "width": 1920,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 150,
+    "elements_after": 150
+  },
+  {
+    "screen": "shorts",
+    "width": 1920,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 237,
+    "elements_after": 237
+  },
+  {
+    "screen": "characters",
+    "width": 1920,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 203,
+    "elements_after": 203
+  },
+  {
+    "screen": "images",
+    "width": 1920,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 181,
+    "elements_after": 181
+  },
+  {
+    "screen": "images-top3",
+    "width": 1920,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 103,
+    "elements_after": 103
+  },
+  {
+    "screen": "news",
+    "width": 1920,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 172,
+    "elements_after": 172
+  },
+  {
+    "screen": "dashboard",
+    "width": 1366,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 294,
+    "elements_after": 294
+  },
+  {
+    "screen": "create",
+    "width": 1366,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 150,
+    "elements_after": 150
+  },
+  {
+    "screen": "shorts",
+    "width": 1366,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 237,
+    "elements_after": 237
+  },
+  {
+    "screen": "characters",
+    "width": 1366,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 203,
+    "elements_after": 203
+  },
+  {
+    "screen": "images",
+    "width": 1366,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 181,
+    "elements_after": 181
+  },
+  {
+    "screen": "images-top3",
+    "width": 1366,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 103,
+    "elements_after": 103
+  },
+  {
+    "screen": "news",
+    "width": 1366,
+    "same_computed_styles_and_coordinates": true,
+    "elements_before": 172,
+    "elements_after": 172
+  }
+]
