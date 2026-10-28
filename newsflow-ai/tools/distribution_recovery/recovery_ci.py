@@ -69,7 +69,8 @@ def main():
     env.update(PATH=str(Path(env['SYSTEMROOT'])/'System32'), USERPROFILE=str(root/'Home'),
                HOME=str(root/'Home'), LOCALAPPDATA=str(local), APPDATA=str(root/'Roaming'),
                TEMP=str(root/'Temp'), TMP=str(root/'Temp'), NEWSFLOW_DATA_DIR=str(profile),
-               NEWSFLOW_PORT='18765', NEWSFLOW_HOST='127.0.0.1')
+               NEWSFLOW_PORT='18765', NEWSFLOW_HOST='127.0.0.1',
+               PYTHONUTF8='1', PYTHONIOENCODING='utf-8')
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
     processes=[]
     evidence = root/'recovery-results.json'
@@ -157,6 +158,15 @@ def main():
                     if ready:
                         break
                     time.sleep(1)
+                if not ready:
+                    log.flush()
+                    diagnostic=(root/(label+'.private.log')).read_text(encoding='utf8',errors='replace')
+                    # The child has a fresh empty synthetic profile and no provider
+                    # secrets; expose only exception classes and missing module names.
+                    results['startup_diagnostic']={'exit':process.poll(),
+                        'exception_classes':re.findall(r'(?m)^([A-Za-z]+(?:Error|Exception)):',diagnostic),
+                        'missing_modules':re.findall(r'No module named ([^\r\n]+)',diagnostic),
+                        'startup_error_marker':'server_startup_or_runtime_error' in diagnostic}
                 check(label+'_actual_product_http_ready',ready and port!=8765)
                 if name=='candidate':
                     check(label+'_anonymous_api_denied',http(port,'/api/samples')==403)
