@@ -1,0 +1,102 @@
+[
+  {
+    "path": "app/product/newsflow/character/claude.py",
+    "sha256": "7f7bf43e21a18e51332b2f6acfd8aaf059530280b1afd2daef496a7500b7a931",
+    "bytes": 2509
+  },
+  {
+    "path": "app/product/newsflow/character/compose_studio.py",
+    "sha256": "8e6a5d2f8079ad4257daa92456aa931bd0e0798e394c2da6a1b2db70b3b4c3a3",
+    "bytes": 4859
+  },
+  {
+    "path": "app/product/newsflow/character/higgsfield_client.py",
+    "sha256": "39b57ae69beec9b138a26ebf3e81e4d7bdf611bf6b345aceba74b39de855e4c3",
+    "bytes": 5568
+  },
+  {
+    "path": "app/product/newsflow/character/kling.py",
+    "sha256": "04f2e80a37c8b22e63adceaf6ee853d74f2cd157be47ec6098b773372caee69b",
+    "bytes": 8291
+  },
+  {
+    "path": "app/product/newsflow/character/service.py",
+    "sha256": "846cfbcbaa77fb763f2a83f65b83e40b0c318f6c4d4b1bc145a30caf62de17b4",
+    "bytes": 30270
+  },
+  {
+    "path": "app/product/newsflow/character/studio_story.py",
+    "sha256": "a41584f7600b48dd5585b9d513862d539ea9d4eed0f12e98518d3f434a56b242",
+    "bytes": 2372
+  },
+  {
+    "path": "app/product/newsflow/config/README.txt",
+    "sha256": "d707874b975616f566c0b174532bd97fe9c46ed4d473bd5324661e9c8aa712d2",
+    "bytes": 366
+  },
+  {
+    "path": "app/product/newsflow/config/character_studio.yaml",
+    "sha256": "9a15bbb967db970b6fe1dafee4d817b11c89898327c556272054ef25e0176350",
+    "bytes": 413
+  },
+  {
+    "path": "app/product/newsflow/config/style_presets.yaml",
+    "sha256": "65e5cd2bc2ab886fe0268f812992e80ee1a9d06fe2af22be0a407c495aa14908",
+    "bytes": 862
+  },
+  {
+    "path": "app/product/newsflow/config/video_models.yaml",
+    "sha256": "86bf23ccfc0a013f48010ed00c2c6badc49c9a27bc73e6910ce724b0e0e00ead",
+    "bytes": 3758
+  },
+  {
+    "path": "app/product/newsflow/gui/character_routes.py",
+    "sha256": "d1dcd2bf20347dc261c9372550fa18f04c35da0b568108bcd7ff87e3369bd6ea",
+    "bytes": 10114
+  },
+  {
+    "path": "app/product/newsflow/samples/catalog.py",
+    "sha256": "895d0ab65688da0faaa0d0d60506e459723082cec3adedf7d9b5fc17874b4990",
+    "bytes": 4579
+  },
+  {
+    "path": "app/product/newsflow/samples/routes.py",
+    "sha256": "98b52c01781dd28f77859e373f82e86190a57896905d9203b04a971522163347",
+    "bytes": 1315
+  },
+  {
+    "path": "app/product/newsflow/studio/read_models.py",
+    "sha256": "c85e71687d97a299747ccc80c7cae8c1c65fb4f1b01fd22bcb6535a6daec8c15",
+    "bytes": 30770
+  },
+  {
+    "path": "app/product/newsflow/video_models/__init__.py",
+    "sha256": "9a3e5cbc04319424392c32f448b88ca91e0ed59da19bc9b9a914008ce6b4f30e",
+    "bytes": 75
+  },
+  {
+    "path": "app/product/newsflow/video_models/catalog.py",
+    "sha256": "62a1cd3121e91608bbf247494b10737666ed781085001c52a524eec19b6baf0f",
+    "bytes": 14602
+  },
+  {
+    "path": "app/controller/bat_distribution/operation.py",
+    "sha256": "f3982632a8ba86cff8f269115e588454def776fdb16d5229651df4a9f5ae0c78",
+    "bytes": 3538
+  },
+  {
+    "path": "app/frontend/dist/assets/index-Clbkk_tw.js",
+    "sha256": "5a9d3571a103576641bcf247482294abc3ff725783f2aa42ca89de29432c32ff",
+    "bytes": 547874
+  },
+  {
+    "path": "app/frontend/dist/assets/index-icAWusdq.css",
+    "sha256": "c9d6325e847078922034acbdbec10b8ca0b531e739097d693417c566cdd0f265",
+    "bytes": 160130
+  },
+  {
+    "path": "app/frontend/dist/index.html",
+    "sha256": "b4a87fa6f8a24464b068b8a4ca00c4620585d2706ccc20b387da67e7f444bcc6",
+    "bytes": 418
+  }
+]
