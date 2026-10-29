@@ -1,0 +1,74 @@
+{
+  "codeSHA": "5124e3610cd048de43c9d998ca4b0463d70e5c1f",
+  "operatingFilesApplied": 7,
+  "normalStopExitCode": 0,
+  "singleStartAttempted": true,
+  "ownedNewProcessMarker": true,
+  "manualCharacterVideoExecutionEnabled": true,
+  "tables": 47,
+  "articles": 169,
+  "protectedFilesAndACLUnchanged": 26,
+  "originalAndABUnchanged": true,
+  "snapshotVerified": true,
+  "priorPaidJournalsUnchanged": true,
+  "priorAPIReservationsUnchanged": true,
+  "newAPIReservationRows": 0,
+  "additionalClaudeRequests": 0,
+  "changedTables": [],
+  "creativeFilesChecked": 47,
+  "authorizedCreativeChanges": 1,
+  "authorizedCreativeAdditions": 1,
+  "originalExecutionLimitRestoredUSD": "5.00",
+  "quoteRetained": false,
+  "newQuoteAttempts": [
+    {
+      "state": "quoted",
+      "estimateRequests": 5,
+      "uploadRequests": 0
+    }
+  ],
+  "candidateUnchanged": true,
+  "storyState": "quoted",
+  "scriptAttempts": 2,
+  "storySceneCount": 5,
+  "storySceneSeconds": [
+    6,
+    6,
+    6,
+    6,
+    6
+  ],
+  "storyNarrationEmpty": true,
+  "officialVideoQuoteUSD": "3.360",
+  "quoteSceneCount": 5,
+  "sceneQuoteUSD": [
+    "0.672",
+    "0.672",
+    "0.672",
+    "0.672",
+    "0.672"
+  ],
+  "videoGenerationRequests": 0,
+  "automaticJobsEnabled": false,
+  "globalExternalExecutionEnabled": false,
+  "updatesEnabled": false,
+  "httpRequestsByVerifier": 0,
+  "providerCallsByVerifier": 0,
+  "chromeVerified": {
+    "freshAuthentication": true,
+    "requestedDescriptionsRemoved": 4,
+    "perExecutionLimitShownUSD": "5.00",
+    "officialQuoteShownUSD": "3.360",
+    "videoGenerateControlAvailable": true,
+    "paidSubmitClickedByAgent": false,
+    "screenshotKeptLocal": true
+  },
+  "process": {
+    "pid": 31408,
+    "parentPID": 38000,
+    "executable": "C:/NewsFlowAI/app/runtime/python.exe",
+    "loopback": "127.0.0.1:18768",
+    "connectionOwnerConfirmed": true
+  },
+  "livePaidSubmissionVerification": "NOT PERFORMED: this approval excluded paid generation"
+}

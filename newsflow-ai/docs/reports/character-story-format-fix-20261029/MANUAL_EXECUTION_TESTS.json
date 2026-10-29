@@ -1,19 +1,107 @@
 {
-  "manualSynthetic": {
-    "pass": 29,
-    "fail": 0
+  "schemaVersion": 2,
+  "date": "2026-10-30",
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "operatingCodeSHA": "5124e3610cd048de43c9d998ca4b0463d70e5c1f",
+  "newSyntheticTestsRunForThisReport": false,
+  "reusedDevelopmentEvidence": {
+    "manualSynthetic": {
+      "pass": 29,
+      "fail": 0,
+      "error": 0,
+      "scope": "Synthetic data and fake providers only",
+      "source": "Existing tool-output summary; not rerun after commit",
+      "junitCreated": false,
+      "rawOutputLogCreated": false
+    },
+    "quoteRetentionAndRoute": {
+      "pass": 11,
+      "fail": 0
+    },
+    "nodeUI": {
+      "pass": 19,
+      "fail": 0
+    },
+    "total": {
+      "pass": 59,
+      "fail": 0
+    },
+    "typeScript": "PASS",
+    "vite": "PASS",
+    "buildWarnings": "Existing font and chunk-size warnings retained"
   },
-  "quoteRetentionAndRoute": {
-    "pass": 11,
-    "fail": 0
+  "operatingVerification": {
+    "evidenceKind": "Sanitized post-apply observation; separate from reused synthetic test counts",
+    "operatingApplied": true,
+    "operatingFilesApplied": 7,
+    "normalStopExitCode": 0,
+    "startAttempts": 1,
+    "ownedNewProcessConfirmed": true,
+    "chromeAuthentication": "PASS",
+    "chromeSettingsAndQuoteDisplay": "PASS",
+    "repetitiveExplanationsRemoved": 4,
+    "loopbackConnection": "Observed established connection owned by new server; no separate LISTEN assertion",
+    "manualConnectionDefault": false,
+    "manualCharacterVideoExecutionEnabled": true,
+    "executionLimitUSD": "5.00",
+    "officialQuoteUSD": "3.360",
+    "quoteSceneCount": 5,
+    "sceneSeconds": [
+      6,
+      6,
+      6,
+      6,
+      6
+    ],
+    "sceneQuoteUSD": [
+      "0.672",
+      "0.672",
+      "0.672",
+      "0.672",
+      "0.672"
+    ],
+    "quoteRetained": false,
+    "newQuoteAttempts": [
+      {
+        "state": "quoted",
+        "estimateRequests": 5,
+        "uploadRequests": 0
+      }
+    ],
+    "additionalClaudeRequests": 0,
+    "videoGenerationRequests": 0,
+    "actualPaidVideoGeneration": "NOT VERIFIED",
+    "automationEnabled": false,
+    "globalExternalExecutionEnabled": false,
+    "updatesEnabled": false
   },
-  "nodeUI": {
-    "pass": 19,
-    "fail": 0
+  "preservation": {
+    "tables": 47,
+    "changedTableCount": 0,
+    "articles": 169,
+    "protectedFilesAndACLUnchanged": 26,
+    "originalAndABUnchanged": true,
+    "snapshotVerified": true,
+    "priorPaidJournalsUnchanged": true,
+    "priorAPIReservationsUnchanged": true,
+    "newAPIReservationRows": 0,
+    "creativeFilesChecked": 47,
+    "authorizedCreativeChanges": 1,
+    "authorizedCreativeAdditions": 1,
+    "storedStoryResponseUnchanged": true,
+    "httpRequestsByVerifier": 0,
+    "providerCallsByVerifier": 0
   },
-  "typeScript": "PASS",
-  "vite": "PASS",
-  "operatingApplied": false,
-  "providerVideoRequests": 0,
-  "manualConnectionDefault": false
+  "privacy": {
+    "privateEvidencePublished": false,
+    "browserCapturePublished": false,
+    "excluded": "Personal paths, user topic and reference image, keys, tokens, cookies, signed URLs and private task identifiers"
+  },
+  "notVerified": [
+    "Actual paid video generation",
+    "Provider result retrieval",
+    "Five-scene playback and review",
+    "Final composition"
+  ],
+  "verdict": "CONDITIONAL"
 }
