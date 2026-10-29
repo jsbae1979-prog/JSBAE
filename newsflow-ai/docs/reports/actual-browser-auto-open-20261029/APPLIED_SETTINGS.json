@@ -1,0 +1,32 @@
+{
+  "files": [
+    {
+      "file": "launch.json",
+      "bytesBefore": 237,
+      "sha256Before": "9ccc460d37998f4d1c18f691b8cdcd2a86dcd8321ec63214bda01042902b2cf0",
+      "bytesAfter": 236,
+      "sha256After": "775265e4edaaecc995b93654d9f834cb73bdab4b970504111d8c1f6fe2552d47",
+      "aclUnchanged": true
+    },
+    {
+      "file": "layout.json",
+      "bytesBefore": 532036,
+      "sha256Before": "9a26cd00a7d708feed8edd72e395b991b2f22befef479a4092191dc86fb7de28",
+      "bytesAfter": 532036,
+      "sha256After": "5e7a9eab07ce8be43d8686154edf87a260f9fe169f76aa2303ad70561b033e3d",
+      "aclUnchanged": true
+    }
+  ],
+  "changedFields": [
+    "launch.openBrowser false to true",
+    "layout.validationConfigSha256"
+  ],
+  "readOnly": true,
+  "decryptCredentials": false,
+  "updatesEnabled": false,
+  "fixedPort": 18768,
+  "programCodeChanged": false,
+  "oldOperatingAppChanged": false,
+  "backupVerified": true,
+  "backupLocation": "<LOCAL_PRIVATE_EVIDENCE>/browser-setting-acceptance-20261029/before-change"
+}

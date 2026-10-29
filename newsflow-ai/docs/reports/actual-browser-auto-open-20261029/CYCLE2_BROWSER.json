@@ -1,0 +1,11 @@
+{
+  "cycle": 2,
+  "browserOpenedNewTab": true,
+  "nativeBrowserWindowObserved": "NewsFlow AI Studio / Microsoft Edge",
+  "normalBrowserBootstrapConsumed": true,
+  "bootstrapReplaySeconds": 24.6,
+  "bootstrapReplayStatus": 403,
+  "browserFlagAndReadOnlyPersisted": true,
+  "fixedPort": 18768,
+  "launchHashBindingValid": true
+}

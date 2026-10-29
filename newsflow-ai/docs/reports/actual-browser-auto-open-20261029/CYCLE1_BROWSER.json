@@ -1,0 +1,13 @@
+{
+  "cycle": 1,
+  "fixedPort": 18768,
+  "nativeBrowserWindowObserved": "NewsFlow AI Studio / Microsoft Edge",
+  "browserOpenedNewTab": true,
+  "bootstrapReplayWithinExpirySeconds": 39.2,
+  "bootstrapReplayStatus": 403,
+  "normalBrowserBootstrapConsumed": true,
+  "unauthenticatedGUIStatus": 403,
+  "connectedDOMBrowserMatches": 0,
+  "fullNativeDOMCapture": "NOT VERIFIED: default Edge has no connected DOM channel",
+  "actualReadOnly": true
+}

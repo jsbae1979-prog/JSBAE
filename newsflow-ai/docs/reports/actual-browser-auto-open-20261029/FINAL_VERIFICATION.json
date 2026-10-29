@@ -1,0 +1,32 @@
+{
+  "verdict": "ACCEPTED: approved browser-setting scope only",
+  "newStartExitCodes": [
+    0,
+    0
+  ],
+  "newStopExitCodes": [
+    0,
+    0
+  ],
+  "browserAutoOpenBothCycles": true,
+  "normalBrowserAuthenticationBothCycles": true,
+  "configurationPreserved": true,
+  "readOnly": true,
+  "nativeCipherRequests": 0,
+  "schema": "0018",
+  "logicalTablesUnchanged": 47,
+  "dataTablesChanged": [],
+  "articleCount": 169,
+  "intelligenceRunCount": 48,
+  "draftCount": 6,
+  "videoProjectCount": 7,
+  "imagePostCount": 3,
+  "opaqueCredentialAndMediaFilesUnchanged": 26,
+  "configBackupsHashVerified": true,
+  "configAclUnchanged": true,
+  "realDataWriteActivation": false,
+  "schedulerOrPaidApiOrSNSActivated": false,
+  "originalOperatingAppModified": false,
+  "existingPassEvidenceReused": true,
+  "wholeRegressionRun": false
+}

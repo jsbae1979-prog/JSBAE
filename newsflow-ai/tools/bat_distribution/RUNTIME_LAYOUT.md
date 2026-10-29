@@ -1,3 +1,8 @@
+> 2026-10-29 별도 명시 승인: 실제 C:/NewsFlowAI의 브라우저 자동 열기 bool와 결속 해시
+> 두 필드 적용 완료. 실제 설치본 Start/Stop2주기·브라우저 정상 인증/설정 보존 PASS.
+> 실제169 데이터는 여전히 읽기 전용이다. 최신 보고:
+> `docs/reports/actual-browser-auto-open-20261029/BROWSER_AUTO_OPEN_REPORT.md`.
+
 > 2026-10-29 로컬 쓰기 준비: synthetic-local-work에서 저장/복구/브라우저 동선 검증
 > 신규44 PASS. 실제169 프로필과 C 설치본은 읽기 전용 상태 그대로이며 설정 후보만 보존했다.
 > 최신 보고는 `docs/reports/bat-local-work-20261029/LOCAL_WORK_REPORT.md` 참조.
