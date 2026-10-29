@@ -1,0 +1,28 @@
+{
+  "storyLength": {
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "curationInputBound": {
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "reusedPerExecutionBudget": {
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "limits": {
+    "situation": 300,
+    "contrast": 300,
+    "punchline": 300,
+    "sfx": 120
+  },
+  "providerCalls": 0,
+  "operatingRestartPerformed": false
+}

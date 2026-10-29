@@ -638,9 +638,11 @@ class APIBudgetService:
                                first_search=first_search_authentication is not None)
             if reasons:
                 raise APISettingsError(" / ".join(reasons))
-            from .api_providers import MAX_REQUEST_BYTES
-            # UTF-8 bytes bound direct prompt tokens; search may fill the model context.
-            input_bound = SEARCH_CONTEXT_BOUNDS[model] if max_search_calls else MAX_REQUEST_BYTES
+            from .api_providers import MAX_CURATION_REQUEST_BYTES, MAX_REQUEST_BYTES
+            # Curation schemas have a larger transport ceiling; stories retain the normal one.
+            direct_bound = (MAX_CURATION_REQUEST_BYTES if provider == "claude_api" and kind == "analysis"
+                            else MAX_REQUEST_BYTES)
+            input_bound = SEARCH_CONTEXT_BOUNDS[model] if max_search_calls else direct_bound
             prices = _prices(settings)
             upper = self._cost({"prompt_tokens": input_bound, "completion_tokens": max_output_tokens,
                                 "search_calls": max_search_calls}, prices)

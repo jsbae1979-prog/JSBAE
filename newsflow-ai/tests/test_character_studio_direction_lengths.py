@@ -36,8 +36,8 @@ def test_complete_existing_shape_is_valid_with_bounded_studio_direction_and_no_t
 
 
 @pytest.mark.parametrize('field',['situation','contrast','punchline'])
-def test_studio_plan_still_rejects_over_200_characters_and_keeps_original_candidate(monkeypatch,field):
-    value=candidate();value['plan'][field]='P'*201
+def test_studio_plan_still_rejects_over_300_characters_and_keeps_original_candidate(monkeypatch,field):
+    value=candidate();value['plan'][field]='P'*301
     writer=CharacterWriter(lambda:'synthetic-only')
     monkeypatch.setattr(writer,'_post',lambda *args:{'stop_reason':'end_turn','content':[{'type':'text','text':json.dumps(value)}]})
     with pytest.raises(StudioResponseError) as caught:
@@ -46,8 +46,15 @@ def test_studio_plan_still_rejects_over_200_characters_and_keeps_original_candid
     assert writer.last_candidate==value
 
 
-def test_studio_sfx_still_rejects_over_100_characters():
-    value=candidate();value['scenes'][0]['sfx']='S'*101
+def test_exact_doubled_studio_plan_and_sfx_boundaries_are_accepted():
+    value=candidate()
+    for field in ('situation','contrast','punchline'):value['plan'][field]='P'*300
+    for scene in value['scenes']:scene['sfx']='S'*120
+    assert StudioStoryboard.model_validate(value).model_dump()==value
+
+
+def test_studio_sfx_still_rejects_over_120_characters():
+    value=candidate();value['scenes'][0]['sfx']='S'*121
     with pytest.raises(ValidationError):StudioStoryboard.model_validate(value)
 
 
@@ -66,8 +73,8 @@ def test_wire_describes_supported_bounded_lengths_and_prompt_states_them_explici
     schema=studio_output_schema(PAYLOAD)
     for field in ('situation','contrast','punchline'):
         node=schema['$defs']['StudioPlan']['properties'][field]
-        assert '"maxLength": 200' in node['description'] and 'maxLength' not in node
+        assert '"maxLength": 300' in node['description'] and 'maxLength' not in node
     node=schema['$defs']['StudioScene']['properties']['sfx']
-    assert '"maxLength": 100' in node['description'] and 'maxLength' not in node
-    assert 'at most 200 characters' in INSTRUCTION and 'at most 100 characters' in INSTRUCTION
+    assert '"maxLength": 120' in node['description'] and 'maxLength' not in node
+    assert 'at most 300 characters' in INSTRUCTION and 'at most 120 characters' in INSTRUCTION
     assert schema['$defs']['StudioScene']['properties']['seconds']['enum']==[6]

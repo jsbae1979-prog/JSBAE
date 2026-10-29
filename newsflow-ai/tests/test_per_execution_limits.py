@@ -108,3 +108,22 @@ def test_unknown_price_cannot_be_zero_cost_video():
   durations=(5,),resolution='720p',confirmed=True)
  scene=SimpleNamespace(model_path=model.path,start_ms=0,end_ms=5000)
  assert AIVideoCoordinator._quote(scene,{model.path:model},reported=True) is None
+
+
+@pytest.mark.parametrize("kind,constant", [("analysis","MAX_CURATION_REQUEST_BYTES"), ("script","MAX_REQUEST_BYTES")])
+def test_curation_input_bound_matches_transport_and_story_stays_unchanged(env,kind,constant):
+ from newsflow.intelligence import api_providers
+ sessions,key,_=env
+ input_bound=getattr(api_providers,constant)
+ expected=(Decimal(input_bound)*3+Decimal(1000)*15)/1_000_000
+ budget=FakeAPIBudgetService(sessions)
+ kwargs=dict(provider='claude_api',kind=kind,model='claude-sonnet-4-6',max_output_tokens=1000,key_store=key)
+ configure(sessions,limit=str(expected-Decimal('.000001')))
+ with pytest.raises(APISettingsError,match='1회 실행'):
+  budget.reserve(request_id='synthetic:curation:over',**kwargs)
+ with sessions() as s:assert list(s.scalars(select(APIRequestReservation)))==[]
+ configure(sessions,limit=str(expected))
+ reservation=budget.reserve(request_id='synthetic:curation:exact',**kwargs)
+ assert reservation.reserved_usd==expected
+ with sessions() as s:
+  assert s.get(APIRequestReservation,reservation.id).bounds['prompt_tokens']==input_bound
