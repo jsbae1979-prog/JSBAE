@@ -6,6 +6,8 @@ import {
   type Item,
   type View,
   label,
+  safeMedia,
+  status,
 } from "./contracts";
 function ReferencePreview({ file }: { file: File }) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -50,6 +52,53 @@ function ReferencePreview({ file }: { file: File }) {
 }
 const secrets =
   /client_json|(?:^key$|api_key|secret|access_token|refresh_token)/;
+export function localCharacterRenderReview(
+  action: Action,
+  values: Item,
+  view: View,
+  loaded: Record<string, number> = {},
+) {
+  if (action.id !== "character_act_render") return null;
+  const id = String(values.job_id ?? "");
+  const job = (view.collections.jobs ?? []).find(
+    (item) => String(item.id) === id,
+  );
+  const rows: Item[] = Array.isArray(job?.scenes) ? job.scenes : [];
+  const clips = rows.map((item) => {
+    const position = item.position;
+    const mediaUrl =
+      Number.isInteger(position) &&
+      position > 0 &&
+      item.mediaUrl === `/character/${id}/clips/${position}`
+        ? safeMedia(item.mediaUrl)
+        : null;
+    const actual = loaded[String(position)] ?? item.media?.duration;
+    const actualKnown =
+      typeof actual === "number" && Number.isFinite(actual) && actual > 0;
+    const planned = rows.length === 1 ? job?.duration : item.seconds;
+    const seconds = actualKnown
+      ? actual
+      : typeof planned === "number" && planned > 0
+        ? planned
+        : null;
+    return {
+      position,
+      state: String(item.state ?? "unknown"),
+      mediaUrl,
+      seconds,
+      durationBasis: actualKnown ? "파일 확인" : "작업 기준",
+    };
+  });
+  return {
+    job,
+    clips,
+    ready:
+      !!job &&
+      ["clips_review", "completed"].includes(job.state) &&
+      clips.length > 0 &&
+      clips.every((clip) => clip.state === "downloaded" && !!clip.mediaUrl),
+  };
+}
 function choices(
   f: Field,
   view: View,
@@ -382,6 +431,9 @@ export function CommandDialog({
   const [busy, setBusy] = useState(false);
   const [ack, setAck] = useState(false);
   const [responseSummary, setResponseSummary] = useState<Item | null>(null);
+  const [clipDurations, setClipDurations] = useState<Record<string, number>>(
+    {},
+  );
   useEffect(() => {
     dialog.current?.showModal();
     return () => dialog.current?.close();
@@ -452,8 +504,20 @@ export function CommandDialog({
             default: scene[key === "model" ? "model_path" : key] ?? "",
             path: false,
           });
-  const effective = { ...action, fields: [...action.fields, ...dynamic] };
-  const risky = action.risk !== "local";
+  const localRender = localCharacterRenderReview(
+    action,
+    values,
+    view,
+    clipDurations,
+  );
+  const localRenderTitle = "장면 검토 후 영상 합성";
+  const effective = {
+    ...action,
+    fields: localRender
+      ? action.fields.filter((f) => ["job_id", "reviewed"].includes(f.name))
+      : [...action.fields, ...dynamic],
+  };
+  const risky = !localRender && action.risk !== "local";
   const set = (key: string, v: unknown) => {
     setValues((old) => {
       const next = { ...old, [key]: v };
@@ -465,6 +529,10 @@ export function CommandDialog({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy || (risky && !ack)) return;
+    if (localRender && (!localRender.ready || values.reviewed !== true)) {
+      setError("실제 합성 대상 영상을 확인한 뒤 장면 검토를 체크하세요.");
+      return;
+    }
     setBusy(true);
     setError("");
     try {
@@ -473,7 +541,7 @@ export function CommandDialog({
         values,
         view,
         files,
-        context.__extra ?? {},
+        localRender ? {} : (context.__extra ?? {}),
       );
       onSaved();
       if (result) setResponseSummary(result);
@@ -650,7 +718,7 @@ export function CommandDialog({
       }}
     >
       <div className="dialog-head">
-        <h2>{action.label}</h2>
+        <h2>{localRender ? localRenderTitle : action.label}</h2>
         <button
           className="icon-button"
           aria-label="닫기"
@@ -692,17 +760,92 @@ export function CommandDialog({
                     USD {context.retryQuote.quote_usd}
                   </p>
                 )}
-              <div className="form-grid">{basic.map(field)}</div>
-              {advanced.length > 0 && (
+              {localRender ? (
+                <section aria-label="실제 합성 대상 영상 검토">
+                  <p>
+                    저장된 실제 영상 {localRender.clips.length}개를 내 PC의
+                    FFmpeg로 합성·저장합니다. 새 AI 생성이나 외부 전송은
+                    실행하지 않습니다.
+                  </p>
+                  {localRender.job && (
+                    <p className="bound-field">
+                      대상 작업 <strong>{localRender.job.topic}</strong>
+                    </p>
+                  )}
+                  <div className="form-grid">
+                    {localRender.clips.map((clip) => (
+                      <article
+                        className="form-field"
+                        key={String(clip.position)}
+                      >
+                        <strong>실제 영상 {clip.position}</strong>
+                        <small>
+                          {clip.seconds === null
+                            ? "길이 확인 필요"
+                            : `${Number(clip.seconds.toFixed(3))}초 · ${clip.durationBasis}`}{" "}
+                          · {status[clip.state] ?? clip.state}
+                        </small>
+                        {clip.mediaUrl ? (
+                          <video
+                            controls
+                            preload="metadata"
+                            width="180"
+                            height="320"
+                            aria-label={`실제 합성 대상 영상 ${clip.position} 미리보기`}
+                            src={clip.mediaUrl}
+                            onLoadedMetadata={(event) => {
+                              const seconds = event.currentTarget.duration;
+                              if (Number.isFinite(seconds) && seconds > 0)
+                                setClipDurations((old) => ({
+                                  ...old,
+                                  [String(clip.position)]: seconds,
+                                }));
+                            }}
+                          />
+                        ) : (
+                          <p role="status">
+                            검증된 영상 파일을 확인할 수 없습니다.
+                          </p>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                  {!localRender.ready && (
+                    <p role="alert">
+                      다운로드·검증된 실제 영상이 모두 준비되어야 합성할 수
+                      있습니다.
+                    </p>
+                  )}
+                  <label className="check-field">
+                    <input
+                      type="checkbox"
+                      aria-label="실제 합성 대상 영상 검토 완료"
+                      required
+                      disabled={busy || !localRender.ready}
+                      checked={values.reviewed === true}
+                      onChange={(event) =>
+                        set("reviewed", event.target.checked)
+                      }
+                    />
+                    실제 영상 {localRender.clips.length}개의 화면·소리·장면
+                    연결을 검토했습니다.
+                  </label>
+                </section>
+              ) : (
+                <div className="form-grid">{basic.map(field)}</div>
+              )}
+              {!localRender && advanced.length > 0 && (
                 <details className="advanced">
                   <summary>세부 설정 · 검토 항목 ({advanced.length})</summary>
                   <div className="form-grid">{advanced.map(field)}</div>
                 </details>
               )}
-              <p className="muted">
-                {view.policy?.price ??
-                  "실제 계정 사용 가능 여부와 비용은 아직 확인되지 않았습니다."}
-              </p>
+              {!localRender && (
+                <p className="muted">
+                  {view.policy?.price ??
+                    "실제 계정 사용 가능 여부와 비용은 아직 확인되지 않았습니다."}
+                </p>
+              )}
               {risky && (
                 <label className="check-field approval">
                   <input
@@ -729,8 +872,9 @@ export function CommandDialog({
                 ))}
               </dl>
               <p className="muted">
-                이 요청의 응답입니다. 다른 기능의 연결·생성·과금 성공을 의미하지
-                않습니다.
+                {localRender
+                  ? "이 로컬 합성 요청의 응답입니다. 저장된 작업 상태를 확인하세요."
+                  : "이 요청의 응답입니다. 다른 기능의 연결·생성·과금 성공을 의미하지 않습니다."}
               </p>
             </div>
           )}
@@ -754,7 +898,9 @@ export function CommandDialog({
                 action.fields.some((f) => secrets.test(f.name))) ||
               action.unsupported ||
               !view.commandsAvailable ||
-              (risky && !ack)
+              (risky && !ack) ||
+              (!!localRender &&
+                (!localRender.ready || values.reviewed !== true))
             }
           >
             {busy ? (
@@ -762,11 +908,14 @@ export function CommandDialog({
             ) : (
               <ShieldCheck size={18} />
             )}{" "}
-            {busy ? "응답 확인 중 · 재요청 금지" : action.label}
+            {busy
+              ? "응답 확인 중 · 재요청 금지"
+              : localRender
+                ? localRenderTitle
+                : action.label}
           </button>
         </footer>
       </form>
     </dialog>
   );
 }
-

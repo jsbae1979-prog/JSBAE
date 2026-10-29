@@ -1,6 +1,8 @@
 """Durable, explicit character stages. Never dispatched by schedulers or app startup."""
 from __future__ import annotations
 
+from copy import deepcopy
+
 import hashlib
 import json
 import os
@@ -41,8 +43,25 @@ def day_exposure(job, day):
     return amount(job['quote_total_usd']) if job.get('approved_day')==day else Decimal(0)
 
 
+
+def quote_settings_editable(job):
+    """Only a never-submitted quote may be explicitly replaced by another quote."""
+    if (job.get('state') not in {'script_review','quoted','prepare_failed'}
+            or not job.get('studio_selection') or not job.get('script')
+            or job.get('quote_approvals') or job.get('approved_day')
+            or job.get('reported_billed_usd') is not None):
+        return False
+    evidence=('submitted_at','submit_diagnostics','reserved_usd','reserved_at','reservation',
+              'submit_reservation','billed_usd','retry','retry_hash')
+    if any(job.get(key) is not None for key in evidence):
+        return False
+    return all(scene.get('state')=='not_submitted'
+               and not any(scene.get(key) is not None for key in (*evidence,'handle','history'))
+               for scene in job.get('scenes',[]))
+
+
 def generation_rows(job):
-    """Keep the story plan intact; use one provider clip when its full length fits."""
+    """New prepares use each saved story beat as one actual provider clip."""
     rows=job['prompts']
     if not job.get('studio_selection'):
         return rows
@@ -53,32 +72,31 @@ def generation_rows(job):
     if model is None:
         raise CharacterError('provider')
     supported=duration_values(model)
-    if job['duration']>max(supported):
-        return rows  # Preserve the accepted multi-clip behavior for longer jobs.
-    if job['duration'] not in supported or not rows or sum(row['seconds'] for row in rows)!=job['duration']:
+    if (len(rows)!=5 or sum(row['seconds'] for row in rows)!=job['duration']
+            or any(row.get('position')!=position for position,row in enumerate(rows,1))
+            or any(type(row['seconds']) is not int or row['seconds'] not in supported
+                   or row['seconds']*5!=job['duration'] for row in rows)
+            or any(not isinstance(row.get('prompt'),str) or not row['prompt'].strip()
+                   or len(row['prompt'])>4500 for row in rows)):
         raise CharacterError('media')
-    if any(not isinstance(row['prompt'],str) or not row['prompt'] for row in rows):
-        raise CharacterError('media')
-    # studio_story.prompts prepends this exact appearance/style to each beat.
-    # Factor only that known common prefix; never truncate or rewrite actions.
-    character=job.get('character',{})
-    appearance,style=character.get('appearance'),character.get('style_lock')
-    prefix=f'{appearance} {style} ' if isinstance(appearance,str) and isinstance(style,str) else ''
-    shared=bool(prefix) and all(row['prompt'].startswith(prefix) for row in rows)
-    lines=[prefix.strip()] if shared else []
-    lines.append(f"Interpret the complete story as one continuous {job['duration']}-second situational film. Preserve the story order and reference character; choose the pacing, camera and acting within the total duration. Story labels and context are unspoken direction.")
-    story=job.get('script') or {}
-    context={key:story[key] for key in ('plan','title','hook_caption','end_caption') if key in story}
-    if context:
-        lines.append('Complete story context (unspoken; never read aloud): '+json.dumps(context,ensure_ascii=False))
-    for index,row in enumerate(rows,1):
-        text=row['prompt'][len(prefix):] if shared else row['prompt']
-        lines.append(f"Story beat {index}: {text}")
-    prompt='\n'.join(lines)
-    if len(prompt)>4500:
-        raise CharacterError('media')
-    return [{'position':1,'seconds':job['duration'],'prompt':prompt,
-             'story_positions':[row['position'] for row in rows]}]
+    from .studio_story import StudioStoryboard
+    story=StudioStoryboard.model_validate(job['script']).model_dump()
+    context={'title':story['title'],'plan':story['plan'],'ordered_story':[
+        {'beat':position,'seconds':scene['seconds'],'role':scene['role'],
+         'action':scene['action'],'caption':scene['caption']}
+        for position,scene in enumerate(story['scenes'],1)]}
+    shared=('Full story context (UNSPOKEN direction for continuity; not a script to read aloud): '
+            +json.dumps(context,ensure_ascii=False,sort_keys=True,separators=(',',':'))+'\n'
+            'No voiceover or narrator. Never read descriptions, captions, titles or timing markers aloud.\n')
+    result=[]
+    for row in rows:
+        focus=(f"Generate only this beat {row['position']} of 5, duration {row['seconds']} seconds. "
+               'Do not perform the other beats in this clip. Keep the reference character and story continuity consistent.\n')
+        prompt=shared+focus+row['prompt']
+        if len(prompt)>4500:
+            raise CharacterError('media')  # Never truncate the full story or silently omit a beat.
+        result.append({**row,'prompt':prompt})
+    return result  # Derived request prompts only: stored story/prompts/plan and earlier payloads stay unchanged.
 
 
 class CharacterService:
@@ -248,11 +266,13 @@ class CharacterService:
             self.save(job)
             return identifier,True
 
-    def reuse_story(self, source_id, settings, episode_limit, day_limit, *, request_id, dialogues=None, consent=False):
+    def reuse_story(self, source_id, settings, episode_limit, day_limit, *, request_id, dialogues=None,
+                    reference=None, reference_job='', consent=False):
         """Local explicit copy only. Never resubmit or mutate the source job."""
         self.consent(consent)
-        from .kling import snapshot,check
+        from .kling import snapshot,check,normalize_reference
         from .studio_story import StudioStoryboard,prompts as studio_prompts
+        if reference is not None and reference_job:raise CharacterError('reference')
         if not isinstance(request_id,str) or not re.fullmatch(r'[a-f0-9]{32}',request_id):
             raise CharacterError('blocked')
         frozen=snapshot(settings)
@@ -269,10 +289,19 @@ class CharacterService:
             if (chosen['duration']!=source['duration'] or chosen['clip_seconds']!=old['clip_seconds']
                     or chosen['script_model']!=source['claude_model']):
                 raise CharacterError('blocked')
-            reference=self.folder(source_id)/'reference.png'
-            raw=reference_bytes(reference)
+            source_reference=self.folder(source_id)/'reference.png'
+            raw=reference_bytes(source_reference)
+            source_reference_hash=hashlib.sha256(raw).hexdigest()
+            if source_reference_hash!=source.get('reference_sha256'):raise CharacterError('reference')
+            if reference is not None:
+                raw=normalize_reference(reference)
+            elif reference_job:
+                selected=self.read(reference_job)
+                selected_raw=reference_bytes(self.folder(reference_job)/'reference.png')
+                if hashlib.sha256(selected_raw).hexdigest()!=selected.get('reference_sha256'):
+                    raise CharacterError('reference')
+                raw=normalize_reference(selected_raw)
             reference_hash=hashlib.sha256(raw).hexdigest()
-            if reference_hash!=source.get('reference_sha256'):raise CharacterError('reference')
             story=StudioStoryboard.model_validate(source['script'])
             provided=dialogues not in (None,[])
             if provided and (not isinstance(dialogues,list) or len(dialogues)!=len(story.scenes)
@@ -289,9 +318,12 @@ class CharacterService:
                 else:scene['narration']=''
             revised=StudioStoryboard.model_validate(revised)
             provenance={'source_job_id':source_id,'source_story_sha256':fingerprint(source['script']),
-                        'source_plan_hash':source['plan_hash'],'source_reference_sha256':reference_hash,
+                        'source_plan_hash':source['plan_hash'],'source_reference_sha256':source_reference_hash,
                         'dialogue_source':'user_edited' if provided else 'story_inferred_audio'}
-            body_hash=fingerprint(['reuse_story_v1',provenance,revised.model_dump(),frozen,str(per),str(daily)])
+            if reference is not None or reference_job:
+                provenance['target_reference_sha256']=reference_hash
+            body_hash=fingerprint(['reuse_story_v1',provenance,revised.model_dump(),frozen,str(per),str(daily),
+                                   reference_hash,reference_job,reference is not None])
             # Durable local request identity also covers a failed/uncertain file copy.
             # Such receipts are preserved, never silently retried or deleted.
             for receipt in self.root.glob('*/reuse-request.json'):
@@ -339,11 +371,21 @@ class CharacterService:
         per,daily=amount(episode_limit),amount(day_limit)
         with self.lock():
             job=self.read(identifier)
-            if not job.get('studio_selection') or job['state']!='script_review': raise CharacterError('blocked')
+            if not quote_settings_editable(job): raise CharacterError('blocked')
             if (settings['duration']!=job['duration'] or settings['clip_seconds']!=check(job['studio_selection'])['clip_seconds']
                     or settings['script_model']!=job['claude_model']):
                 raise CharacterError('blocked')
             if per>daily: raise CharacterError('budget')
+            if job['state'] in {'quoted','prepare_failed'}:
+                archived={key:deepcopy(job[key]) for key in (
+                    'state','studio_selection','model','episode_limit','day_limit','plan_hash','prompts','scenes',
+                    'quote_total_usd','quoted_at','quote_key_id','quote_hash','message','prepare_failure','failure','error')
+                    if key in job}
+                archived['archived_at']=now().isoformat()
+                job.setdefault('quote_history',[]).append(archived)
+                for key in ('quote_total_usd','quoted_at','quote_key_id','quote_hash','message','prepare_failure','failure','error'):
+                    job.pop(key,None)
+                job.update(state='script_review',scenes=[])
             job.update(studio_selection=frozen,model=settings['video_model'],
                        episode_limit=str(per),day_limit=str(daily))
             job['prompts']=studio_prompts(StudioStoryboard.model_validate(job['script']),settings,job['character'])

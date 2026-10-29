@@ -192,7 +192,8 @@ def test_submission_diagnostics_preserve_unknown_payload_without_secret_fields_o
     assert len(calls)==1 and s.read(source)==original and studio.writer.calls==0
 
 
-def test_local_copy_route_requires_original_auth_csrf_origin_and_never_enables_paid_routes(studio):
+@pytest.mark.parametrize('upload_reference',[False,True])
+def test_local_copy_route_requires_original_auth_csrf_origin_and_never_enables_paid_routes(studio,upload_reference):
     import ast,hmac,re,secrets
     from fastapi import FastAPI,Request
     from fastapi.responses import HTMLResponse
@@ -218,17 +219,30 @@ def test_local_copy_route_requires_original_auth_csrf_origin_and_never_enables_p
     endpoint=f'/api/studio/characters/{source}/reuse-story'
     data={'settings':json.dumps(settings),'episode_limit':'2.50','day_limit':'20',
           'request_id':uuid4().hex,'consent':'true','csrf_token':'bad'}
-    assert client.post(endpoint,data=data,headers={'Origin':session.origin}).status_code==403
+    upload={'files':{'reference':('new.png',replacement_png(),'image/png')}} if upload_reference else {}
+    assert client.post(endpoint,data=data,headers={'Origin':session.origin},**upload).status_code==403
     token=session.launch_url().split('#',1)[1]
     assert client.post('/__local/claim',headers={'Origin':session.origin,'X-NewsFlow-Bootstrap':token}).status_code==204
     assert client.get('/api/studio/video-models').status_code==200
     assert client.post(endpoint,data=data,headers={'Origin':session.origin}).status_code==403
     data['csrf_token']=client.cookies.get('newsflow_csrf')
-    assert client.post(endpoint,data=data,headers={'Origin':'https://outside.invalid'}).status_code==403
-    response=client.post(endpoint,data=data,headers={'Origin':session.origin})
+    assert client.post(endpoint,data=data,headers={'Origin':'https://outside.invalid'},**upload).status_code==403
+    if upload_reference:
+        assert client.post(f'/api/studio/characters/{source}/settings',data=data,headers={'Origin':session.origin},**upload).status_code==415
+        huge={'reference':('huge.png',b'x'*(10*1024*1024+65537),'image/png')}
+        assert client.post(endpoint,data=data,headers={'Origin':session.origin},files=huge).status_code==413
+    response=client.post(endpoint,data=data,headers={'Origin':session.origin},**upload)
     assert response.status_code==200
     assert response.json()['additionalClaudeCalls']==0 and response.json()['reusedStory']
     assert response.json()['state']=='script_review' and response.json()['id']!=source
+    copied=s.read(response.json()['id'])
+    assert (copied['reference_sha256']!=s.read(source)['reference_sha256']) is upload_reference
+    if not upload_reference:
+        selected_data={**data,'request_id':uuid4().hex,'reference_job':source}
+        selected_response=client.post(endpoint,data=selected_data,headers={'Origin':session.origin})
+        assert selected_response.status_code==200
+        selected=s.read(selected_response.json()['id'])
+        assert selected['reused_story']['target_reference_sha256']==s.read(source)['reference_sha256']
     assert client.get(endpoint).status_code==403
     assert client.post(endpoint+'/',data=data,headers={'Origin':session.origin}).status_code==403
     assert client.post('/api/studio/characters/auto-story',data=data,headers={'Origin':session.origin}).status_code==403
@@ -350,3 +364,150 @@ def test_real_daily_limit_values_need_scoped_overlay_and_keep_original_quote(stu
     assert trial.prior_exposure()==Decimal('1.760')
     assert files(s,source)==old_files
     assert all(path.read_bytes()==data and path.stat().st_mtime_ns==mtime for path,(data,mtime) in old_journals.items())
+
+
+def replacement_png(color='red'):
+    import io
+    from PIL import Image
+    stream=io.BytesIO()
+    Image.new('RGB',(256,256),color).save(stream,format='PNG')
+    return stream.getvalue()
+
+
+@pytest.mark.parametrize('reference_kind',['upload','job'])
+def test_reuse_selected_reference_changes_only_copy_and_pins_request_identity(studio,reference_kind):
+    from newsflow.character.kling import normalize_reference
+    from test_character_kling_studio import create
+    s=studio.service
+    source,settings,provider=source_job(studio)
+    original=files(s,source)
+    raw=replacement_png()
+    selected=None
+    if reference_kind=='upload':
+        selection={'reference':raw}
+    else:
+        selected=create(studio)
+        selected_job=s.read(selected)
+        (s.folder(selected)/'reference.png').write_bytes(normalize_reference(raw))
+        selected_job['reference_sha256']=hashlib.sha256(normalize_reference(raw)).hexdigest()
+        s.save(selected_job)
+        selection={'reference_job':selected}
+    selected_before=files(s,selected) if selected else None
+    request=uuid4().hex
+    copied_id,created=s.reuse_story(source,settings,'2.50','20',request_id=request,consent=True,**selection)
+    copied=s.read(copied_id)
+    target_hash=hashlib.sha256(normalize_reference(raw)).hexdigest()
+    assert created and copied['state']=='script_review' and copied['scenes']==[]
+    assert copied['reference_sha256']==target_hash!=s.read(source)['reference_sha256']
+    assert copied['reused_story']['source_reference_sha256']==s.read(source)['reference_sha256']
+    assert copied['reused_story']['target_reference_sha256']==target_hash
+    assert (s.folder(copied_id)/'reference.png').read_bytes()==normalize_reference(raw)
+    assert s.reuse_story(source,settings,'2.50','20',request_id=request,consent=True,**selection)==(copied_id,False)
+    with pytest.raises(CharacterError):
+        s.reuse_story(source,settings,'2.50','20',request_id=request,reference=replacement_png('green'),consent=True)
+    assert files(s,source)==original
+    if selected:assert files(s,selected)==selected_before
+    assert studio.writer.calls==0 and provider.calls==0 and provider.uploads==0
+
+
+@pytest.mark.parametrize('raw',[b'',b'not a png',b'x'*(10*1024*1024+1)],ids=['empty','invalid','oversized'])
+def test_reuse_rejects_invalid_selected_upload_without_falling_back_to_source(studio,raw):
+    s=studio.service
+    source,settings,provider=source_job(studio)
+    before=files(s,source)
+    with pytest.raises(CharacterError):
+        s.reuse_story(source,settings,'2.50','20',request_id=uuid4().hex,reference=raw,consent=True)
+    assert files(s,source)==before and len(s.listing())==1
+    assert studio.writer.calls==0 and provider.calls==0
+
+
+def test_reuse_rejects_conflicting_or_tampered_reference_job(studio):
+    from test_character_kling_studio import create
+    s=studio.service
+    source,settings,provider=source_job(studio)
+    selected=create(studio)
+    original=files(s,source)
+    with pytest.raises(CharacterError):
+        s.reuse_story(source,settings,'2.50','20',request_id=uuid4().hex,
+                      reference=replacement_png(),reference_job=selected,consent=True)
+    (s.folder(selected)/'reference.png').write_bytes(replacement_png('green'))
+    with pytest.raises(CharacterError):
+        s.reuse_story(source,settings,'2.50','20',request_id=uuid4().hex,reference_job=selected,consent=True)
+    assert files(s,source)==original and len(s.listing())==2
+    assert studio.writer.calls==0 and provider.calls==0
+
+
+
+def test_explicit_quote_refresh_preserves_prior_quote_and_allows_unchanged_settings(studio):
+    s=studio.service
+    identifier,provider,estimates=seeded(studio)
+    s.prepare(identifier,consent=True,script_reviewed=True)
+    before=s.read(identifier)
+    settings=check(before['studio_selection'])
+    s.update_studio_settings(identifier,settings,'10','20')
+    reset=s.read(identifier)
+    assert reset['state']=='script_review' and reset['scenes']==[] and 'quote_hash' not in reset
+    assert reset['quote_history'][0]['quote_hash']==before['quote_hash']
+    assert reset['quote_history'][0]['scenes']==before['scenes']
+    assert reset['quote_history'][0]['quoted_at']==before['quoted_at']
+    assert reset['quote_history'][0]['studio_selection']==before['studio_selection']
+    assert len(estimates)==1 and provider.calls==0
+    s.prepare(identifier,consent=True,script_reviewed=True)
+    second=s.read(identifier)
+    assert second['state']=='quoted' and second['quote_hash']!=before['quote_hash'] and len(estimates)==2
+    s.update_studio_settings(identifier,settings,'10','20')
+    assert len(s.read(identifier)['quote_history'])==2 and len(estimates)==2 and provider.calls==0
+
+
+def test_failed_quote_requires_manual_settings_refresh_and_keeps_failure_history(studio):
+    s=studio.service
+    identifier,provider,estimates=seeded(studio)
+    def failed(payload):raise ConnectionError('synthetic quote failure')
+    provider.estimate=failed
+    with pytest.raises(CharacterError):s.prepare(identifier,consent=True,script_reviewed=True)
+    failed_job=s.read(identifier)
+    assert failed_job['state']=='prepare_failed'
+    with pytest.raises(CharacterError):s.prepare(identifier,consent=True,script_reviewed=True)
+    settings=check(failed_job['studio_selection'])
+    s.update_studio_settings(identifier,{**settings,'sound':'on'},'10','20')
+    reset=s.read(identifier)
+    assert reset['quote_history'][0]['state']=='prepare_failed' and reset['state']=='script_review'
+    assert reset['studio_selection']['sound']=='on' and provider.calls==0
+    provider.estimate=lambda payload:'0.10'
+    s.prepare(identifier,consent=True,script_reviewed=True)
+    assert s.read(identifier)['state']=='quoted' and provider.calls==0
+
+
+def test_settings_refresh_refuses_paid_reserved_submitted_and_unknown_records(studio):
+    from newsflow.character.service import quote_settings_editable
+    s=studio.service
+    identifier,provider,estimates=seeded(studio)
+    s.prepare(identifier,consent=True,script_reviewed=True)
+    base=s.read(identifier)
+    mutations=[{'state':'submission_unknown'}, {'state':'generating'},
+               {'quote_approvals':[{'day':'2026-10-29','usd':'0.10','scope':'initial'}]},
+               {'reported_billed_usd':'0.10'}, {'reserved_usd':'0.10'}, {'approved_day':'2026-10-29'}]
+    for changes in mutations:
+        job={**deepcopy(base),**changes};s.save(job)
+        before=files(s,identifier)
+        assert not quote_settings_editable(job)
+        with pytest.raises(CharacterError):s.update_studio_settings(identifier,check(job['studio_selection']),'10','20')
+        assert files(s,identifier)==before
+    job=deepcopy(base);job['scenes'][0].update(state='submitted',handle={'request_id':'synthetic'})
+    s.save(job);before=files(s,identifier)
+    with pytest.raises(CharacterError):s.update_studio_settings(identifier,check(job['studio_selection']),'10','20')
+    assert files(s,identifier)==before and provider.calls==0 and len(estimates)==1
+
+
+def test_normal_operating_quote_projection_hides_trial_caps_without_changing_trial(studio):
+    from newsflow.studio.read_models import module_view
+    trial=SimpleNamespace(policy={'total_limit_usd':'4.50','sound':'on','expires_at':'2026-10-29T23:59:59+00:00'})
+    s=studio.service;s._approved_character_trial=trial
+    state=SimpleNamespace(character=s,sessions=s.sessions,video=SimpleNamespace())
+    request=SimpleNamespace(app=SimpleNamespace(state=state),state=SimpleNamespace())
+    before=module_view(request,'characters')
+    assert before['catalog']['characterStudio']['liveTrial']['enabled']
+    s._operating_quote_only=True
+    normal=module_view(request,'characters')
+    assert 'liveTrial' not in normal['catalog']['characterStudio']
+    assert s._approved_character_trial is trial and trial.policy['total_limit_usd']=='4.50'

@@ -136,7 +136,7 @@ def test_video_settings_reach_quote_then_freeze_with_approval_and_unknown_protec
     s.prepare(i,consent=True,script_reviewed=True)
     job=s.read(i)
     assert job['quote_total_usd']=='0.50' and all(x['payload']['mode']=='std' and x['payload']['sound']=='on' for x in job['scenes'])
-    with pytest.raises(CharacterError):s.update_studio_settings(i,DEFAULTS,'10','20')
+    with pytest.raises(CharacterError):s.update_studio_settings(i,{**DEFAULTS,'duration':30},'10','20')
     with pytest.raises(CharacterError):s.submit(i,consent=True,quote_hash='altered')
     provider=s.video_for(job);provider.ambiguous=True
     with pytest.raises(CharacterError):s.submit(i,consent=True,quote_hash=job['quote_hash'])

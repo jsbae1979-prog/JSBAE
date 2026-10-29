@@ -36,28 +36,22 @@ def seeded(studio,*,duration=15,model=K3):
 
 
 @pytest.mark.parametrize('model',[K3,O3])
-def test_five_story_beats_become_exactly_one_15_second_estimate_and_submit(studio,model):
+def test_five_story_beats_become_five_actual_three_second_estimates_and_submits(studio,model):
     s=studio.service
     identifier,provider,estimates=seeded(studio,model=model)
     original=s.read(identifier)
     s.prepare(identifier,consent=True,script_reviewed=True)
     quoted=s.read(identifier)
-    assert len(estimates)==len(quoted['scenes'])==1
-    payload=quoted['scenes'][0]['payload']
-    assert payload['duration']==15 and payload['sound']=='off' and payload['multi_shots'] is False
-    assert quoted['scenes'][0]['story_positions']==[1,2,3,4,5]
-    assert all(f'distinct story beat {n}' in payload['prompt'] for n in range(1,6))
-    assert all(f'Story beat {n}:' in payload['prompt'] for n in range(1,6))
-    assert 'choose the pacing, camera and acting' in payload['prompt']
-    assert '0-3 seconds:' not in payload['prompt']
-    assert original['script']['plan']['situation'] in payload['prompt']
-    assert len(payload['prompt'])<=4500
+    assert len(estimates)==len(quoted['scenes'])==5
+    assert [row['payload']['duration'] for row in quoted['scenes']]==[3]*5
+    assert sum(row['payload']['duration'] for row in quoted['scenes'])==15
+    assert all(row['payload']['sound']=='off' for row in quoted['scenes'])
     assert quoted['prompts']==original['prompts'] and quoted['script']==original['script']
-    assert quoted['plan_hash']==original['plan_hash'] and quoted['quote_total_usd']=='0.10'
+    assert quoted['plan_hash']==original['plan_hash'] and quoted['quote_total_usd']=='0.50'
     s.submit(identifier,consent=True,quote_hash=quoted['quote_hash'])
-    assert provider.calls==1 and s.read(identifier)['state']=='generating'
+    assert provider.calls==5 and s.read(identifier)['state']=='generating'
     with pytest.raises(CharacterError):s.submit(identifier,consent=True,quote_hash=quoted['quote_hash'])
-    assert provider.calls==1
+    assert provider.calls==5
 
 
 def test_longer_than_model_max_preserves_existing_multi_clip_path(studio):
@@ -72,11 +66,11 @@ def test_longer_than_model_max_preserves_existing_multi_clip_path(studio):
     assert quoted['plan_hash']==original['plan_hash']
 
 
-def test_oversized_combined_prompt_stops_before_upload_or_quote_without_truncation(studio):
+def test_oversized_individual_prompt_stops_before_upload_or_quote_without_truncation(studio):
     s=studio.service
     identifier,provider,estimates=seeded(studio)
     job=s.read(identifier)
-    for row in job['prompts']:row['prompt']='A distinct complete action. '+('x'*1200)
+    for row in job['prompts']:row['prompt']='A distinct complete action. '+('x'*4600)
     job['plan_hash']=s.plan_hash(job)
     s.save(job)
     original=s.read(identifier)
@@ -93,7 +87,7 @@ def test_single_request_unknown_is_not_replayed(studio):
     provider.ambiguous=True
     with pytest.raises(CharacterError):s.submit(identifier,consent=True,quote_hash=quoted['quote_hash'])
     unknown=s.read(identifier)
-    assert unknown['state']=='submission_unknown' and len(unknown['scenes'])==1
+    assert unknown['state']=='submission_unknown' and len(unknown['scenes'])==5
     assert unknown['scenes'][0]['state']=='unknown' and provider.calls==1
     with pytest.raises(CharacterError):s.submit(identifier,consent=True,quote_hash=quoted['quote_hash'])
     assert provider.calls==1

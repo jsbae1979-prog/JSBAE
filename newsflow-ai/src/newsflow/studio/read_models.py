@@ -183,6 +183,7 @@ def image_rows(state, session):
 
 def character_rows(state):
     from newsflow.character.visibility import read_visibility
+    from newsflow.character.service import quote_settings_editable
     visibility = read_visibility(state.character.sessions)
     result = []
     for source in state.character.listing()[:100]:
@@ -212,6 +213,7 @@ def character_rows(state):
             )
             if k in job
         }
+        item['quoteSettingsEditable']=quote_settings_editable(job)
         item.update(visibility.get(job['id'], {'trashed': False, 'recentHidden': False}))
         # Reference and clips use existing validated file routes; do not expose local paths.
         item["scenes"] = [
@@ -255,6 +257,20 @@ def character_rows(state):
                 and sha256(clip.read_bytes()).hexdigest() == original.get("sha256")
                 else None
             )
+            media = original.get("media")
+            if scene["mediaUrl"] and isinstance(media, dict):
+                projected = {}
+                duration = media.get("duration")
+                if type(duration) in (int, float) and 0 < duration <= 86400:
+                    projected["duration"] = duration
+                for dimension in ("width", "height"):
+                    value = media.get(dimension)
+                    if type(value) is int and 0 < value <= 32768:
+                        projected[dimension] = value
+                if type(media.get("has_audio")) is bool:
+                    projected["has_audio"] = media["has_audio"]
+                if projected:
+                    scene["media"] = projected
         item["mediaUrl"] = None
         if job.get("state") == "completed":
             path = state.character.folder(job["id"]) / "final.mp4"
@@ -513,7 +529,7 @@ def module_view(request: Request, module: Module):
         from newsflow.character.kling import catalog as character_catalog
         result["catalog"]["characterStudio"] = character_catalog()
         live_trial = getattr(state.character, "_approved_character_trial", None)
-        if live_trial is not None:
+        if live_trial is not None and not getattr(state.character, "_operating_quote_only", False):
             result["catalog"]["characterStudio"]["liveTrial"] = {
                 "enabled": True, "duration": 15, "totalLimitUsd": live_trial.policy["total_limit_usd"],
                 "sound": live_trial.policy["sound"],
