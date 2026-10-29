@@ -1,0 +1,26 @@
+{
+  "newSyntheticUnitPass": 2,
+  "normalLocalAuthentication": true,
+  "gui": {
+    "dashboardStoredDraft": true,
+    "top3CorrectEmptyState": true,
+    "libraryStoredDraft": true,
+    "librarySamplesZero": true,
+    "settingsSeparateProfileAndNoKeys": true
+  },
+  "profileOwnerMatchesCurrentSID": true,
+  "protectedDACL": true,
+  "foreignACEs": false,
+  "operatingCredentialsCopied": false,
+  "testDpapiFiles": 0,
+  "testOAuthConnections": 0,
+  "actualCrossAccountACL": "NOT VERIFIED",
+  "actualCrossAccountDPAPI": "NOT VERIFIED",
+  "newDpapiDecryption": 0,
+  "paidApiOAuthSNSCalls": 0,
+  "testStopExitCode": 0,
+  "testAppExitCode": 0,
+  "testSessionRemoved": true,
+  "defaultBrowserSettingRestored": true,
+  "newWindowsAccountCreated": false
+}

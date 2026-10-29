@@ -1,0 +1,19 @@
+{
+  "operatingPidUnchanged": 23240,
+  "operatingStillRunning": true,
+  "operatingLayoutUnchanged": true,
+  "all47TablesUnchanged": true,
+  "articleCount": 169,
+  "profileFilesUnchanged": 36,
+  "originalAndABDatabaseHashesMatch": true,
+  "ports": {
+    "18768": true,
+    "18780": false
+  },
+  "zipBytes": 243232161,
+  "zipHashEvidence": "Reused accepted package result a3fa66d0f08f0622cf993e1dbb9b1180130c60dcc205b357f8fdc884faadfbd4",
+  "newPackageCreated": false,
+  "operatingStopOrRestart": false,
+  "dataDeletion": false,
+  "externalDelivery": false
+}

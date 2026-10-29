@@ -1,0 +1,17 @@
+{
+  "verdict": "CONDITIONAL",
+  "actualNewWindowsUserInstallation": "NOT VERIFIED",
+  "reason": "No approved additional interactive test account/session available. No account created and infrastructure/system accounts not used.",
+  "sameUserSeparateProfileAdditionalVerification": "PASS",
+  "newUnitPass": 2,
+  "newProductFail": 0,
+  "newProductError": 0,
+  "reusedUnitPass": 13,
+  "reusedFreshProfileStartStopCycles": 2,
+  "reusedFFmpegExit": 0,
+  "reusedFFprobeExit": 0,
+  "realPaidApiOAuthSNSCalls": 0,
+  "externalDelivery": false,
+  "newZipCreated": false,
+  "operatingChanged": false
+}

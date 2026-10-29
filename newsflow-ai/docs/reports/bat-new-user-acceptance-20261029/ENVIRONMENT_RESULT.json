@@ -1,0 +1,13 @@
+{
+  "actualOtherUserAvailable": false,
+  "accountCreation": false,
+  "systemOrToolAccountsUsed": false,
+  "separateExistingTestProfile": true,
+  "operatingPid": 23240,
+  "operatingPort": 18768,
+  "testPort": 18780,
+  "packageAndRuntimeEvidenceReused": true,
+  "os": "Windows 11 Pro",
+  "v3Service": "Running",
+  "loggedOnApprovedTestSessions": 0
+}
