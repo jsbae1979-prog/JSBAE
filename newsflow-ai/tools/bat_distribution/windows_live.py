@@ -32,6 +32,7 @@ class ValidationConfig:
     port: int
     installation_id: str
     open_browser: bool
+    profile_kind: str = "synthetic"
 
 
 def load_config(root):
@@ -39,6 +40,9 @@ def load_config(root):
     layout = json.loads((root / 'app/layout.json').read_bytes())
     if layout.get('liveStartStopConnected') is not True or layout.get('validationOnly') is not True:
         raise Blocked('live-validation-not-provisioned')
+    if layout.get('validationProfile') == 'restored-private-validation':
+        from .restored_install import load_restored
+        return load_restored(root, layout)
     # Test harness metadata lives outside the immutable distributable program.
     source = ordinary_absolute(root.parent / 'validation-launch.json')
     if source.stat().st_size > 4096:
@@ -98,6 +102,14 @@ def _profile(config, create):
     if not config.profile.exists() and not create:
         raise Blocked('no-owned-session')
     fresh = not config.profile.exists()
+    if config.profile_kind == 'restored-private-validation':
+        if fresh:
+            raise Blocked('restored-profile-must-be-migrated-first')
+        private_directory(config.profile)
+        from .restored_install import check_restored_profile
+        sid = win32security.ConvertSidToStringSid(current_sid())
+        check_restored_profile(config, sid)
+        return sid
     private_directory(config.profile)
     marker = config.profile / 'synthetic-install.json'
     if fresh:
@@ -265,6 +277,10 @@ def start(config, plan):
         with FileLock(str(config.profile / 'desktop.lock')).acquire(timeout=0):
             if marker.exists():
                 raise Blocked('owned-session-unresolved-no-retry')
+            credential_boundary = None
+            if config.profile_kind == 'restored-private-validation':
+                from .restored_install import disable_credential_decryption
+                credential_boundary = disable_credential_decryption()
             from newsflow.main import create_app
             app = create_app(Settings(data_dir=config.profile, host='127.0.0.1', port=config.port), automatic_start=True)
             # Instance-local test policy, not a product scheduler/Guard change.
@@ -280,7 +296,12 @@ def start(config, plan):
                 handle.Close()
             server = uvicorn.Server(uvicorn.Config(None, host='127.0.0.1', port=config.port,
                 log_level='warning', access_log=False, loop='newsflow.runtime:windows_server_loop'))
-            protected = Control(SyntheticRequests(LocalAccess(app, session)), identity, session.origin,
+            if config.profile_kind == 'restored-private-validation':
+                from .restored_install import RestoredRequests
+                request_boundary = RestoredRequests(LocalAccess(app, session))
+            else:
+                request_boundary = SyntheticRequests(LocalAccess(app, session))
+            protected = Control(request_boundary, identity, session.origin,
                                 lambda: setattr(server, 'should_exit', True))
             server.config.app = protected
             _atomic(marker, {'pid': identity.pid, 'creation_id': identity.creation_id,
@@ -307,7 +328,8 @@ def start(config, plan):
             if not clean:
                 raise Blocked('shutdown-result-not-confirmed')
             _atomic(config.profile / 'last-exit.json', {'result': 'STOPPED', 'exitCode': 0,
-                                                     'installationId': plan.installation_id})
+                                                     'installationId': plan.installation_id,
+                                                     'credentialBoundary': credential_boundary})
             marker.unlink()
             bootstrap_file.unlink(missing_ok=True)
             print('STOPPED: owned session closed normally; exit=0.', flush=True)
