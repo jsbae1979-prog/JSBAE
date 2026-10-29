@@ -43,8 +43,7 @@
 <label><input type="checkbox" name="enabled" value="true" {{ 'checked' if config.enabled }}>ElevenLabs 사용 설정 (음성 생성 시 별도 동의 필요)</label>
 <label>계정에서 선택한 음성 ID<input name="voice_id" value="{{ config.voice_id }}" maxlength="100"></label>
 <label>모델<select name="model">{% for model in models %}<option value="{{ model }}" {{ 'selected' if config.model==model }}>{{ model }}</option>{% endfor %}</select></label>
-<label>이번 제작 크레딧 상한<input type="number" name="job_limit" value="{{ config.job_limit }}" min="1" max="10000"></label>
-<label>월 로컬 크레딧 상한<input type="number" name="monthly_limit" value="{{ config.monthly_limit }}" min="1" max="1000000"></label>
+<label>1회 음성 입력 글자 수 한도<input type="number" name="job_limit" value="{{ config.job_limit }}" min="1" max="10000"></label>
 <label>사용 목적<select name="commercial"><option value="true" {{ 'selected' if config.commercial }}>상업적 이용 — 유효한 상업 라이선스 필요</option><option value="false" {{ 'selected' if not config.commercial }}>개인 비상업 검토용 — 무료 플랜 출처 표시 필요</option></select></label>
 <p>한도 조회 실패·잔여량 부족·초과 과금 활성화 시 생성이 차단됩니다. 타임아웃·결과 불명은 자동 재요청하지 않습니다.</p><button>설정 저장 (외부 호출 없음)</button></form></details>
 <form method="post" action="/video/tts/check">{{ csrf_field() }}<label><input type="checkbox" name="consent" value="true" required>등록된 API 키로 계정 플랜·한도만 조회하는 데 동의합니다.</label><button>계정 한도 확인 (음성 생성 없음)</button></form>

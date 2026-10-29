@@ -39,7 +39,15 @@ export type Action = {
   reason?: string;
   extraFields?: string;
 };
-export const actions = definitions as Action[];
+// Historical monthly/day values remain in stored records; only per-execution
+// spending controls are editable in current production forms.
+const cumulativeLimitFields = new Set([
+  "monthly_token_limit", "monthly_limit_usd", "monthly_limit", "day_limit",
+]);
+export const actions = (definitions as Action[]).map((action) => ({
+  ...action,
+  fields: action.fields.filter((field) => !cumulativeLimitFields.has(field.name)),
+}));
 export const titles: Record<string, string> = {
   news: "뉴스 스튜디오",
   shorts: "뉴스 쇼츠 제작실",
@@ -108,7 +116,9 @@ export const labels: Record<string, string> = {
   youtube_public_consent: "YouTube 공개 게시에 동의합니다",
   instagram_public_consent: "Instagram 공개 게시에 동의합니다",
   facebook_public_consent: "Facebook 공개 게시에 동의합니다",
-  monthly_token_limit: "월 토큰 사용 한도",
+  request_token_limit: "1회 실행 토큰 한도",
+  request_limit_usd: "1회 실행 비용 한도 (USD)",
+  job_limit: "1회 제작 한도",
   voice_id: "저장된 ElevenLabs 음성",
   sample_consent: "공개 음성 샘플 다운로드에 동의합니다 · 음성 생성 없음",
   listener: "청취자",
@@ -131,7 +141,6 @@ export const labels: Record<string, string> = {
   reference: "참조 PNG · 로컬 보관",
   topic: "이야기 주제",
   episode_limit: "이번 작업 한도",
-  day_limit: "하루 한도",
   script_model: "대본 모델",
   video_model: "영상 모델",
   reference_asset: "저장한 참조 소재",

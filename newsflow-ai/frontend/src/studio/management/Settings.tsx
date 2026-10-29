@@ -271,6 +271,28 @@ export default function Settings({
                               <KeyRound size={14} />
                               {p.name} 키 설정
                             </Action>
+                            <Action
+                              c={c}
+                              id={
+                                p.id === "elevenlabs"
+                                  ? "video_save_tts"
+                                  : p.id === "higgsfield"
+                                    ? "video_ai_save_settings"
+                                    : "api_settings_save_configuration"
+                              }
+                              context={
+                                p.id === "openai" || p.id === "claude"
+                                  ? {
+                                      ...c.view?.catalog.apiSettingsDefaults?.[
+                                        p.id === "openai" ? "openai" : "claude_api"
+                                      ],
+                                      provider: p.id === "openai" ? "openai" : "claude_api",
+                                    }
+                                  : {}
+                              }
+                            >
+                              1회 사용 한도
+                            </Action>
                           </td>
                         </tr>
                       );

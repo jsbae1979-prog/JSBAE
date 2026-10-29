@@ -3,7 +3,7 @@
 Flow (each step re-checks its preconditions in one IMMEDIATE transaction):
   plan from a reviewed draft (same scene split and timing as the local renderer)
   -> per-scene source (card / local image / generated) and prompt
-  -> estimate -> the user confirms the shown total (gate + per-job and monthly limits)
+  -> estimate -> the user confirms the shown total (gate + per-execution limit)
   -> background worker submits, polls, downloads and validates each clip
   -> the user reviews every generated scene's relation to the news
   -> the user approves the final composition -> the existing FFmpeg renderer composes the MP4.
@@ -515,10 +515,10 @@ class AIVideoCoordinator:
     def _quote(scene: AIVideoScene, models: dict[str, ModelEntry], reported: bool = False) -> tuple[int, str] | None:
         """Clip seconds and cost at the model's CURRENT confirmed price and lengths (None: not usable)."""
         model = models.get(scene.model_path)
-        if model is None or not (model_ready(model) if reported else model.usable):
+        if model is None or not model.usable or (reported and not model_ready(model)):
             return None
         seconds = clip_seconds((scene.end_ms - scene.start_ms) / 1000, model.durations)
-        return seconds, "0" if reported else money(scene_cost(seconds, model.price_per_second))
+        return seconds, money(scene_cost(seconds, model.price_per_second))
 
     def _reported(self, plan_id, session=None):
         if session is not None:
@@ -627,17 +627,17 @@ class AIVideoCoordinator:
             for scene in pending:
                 if quotes[scene.id] is None:
                     problems.append(f"장면 {scene.position + 1}의 모델이 바뀌었거나 사용할 수 없습니다. 모델을 다시 고르세요.")
-            if pending and not problems and not reported:
+            if pending and not problems:
                 try:
                     check_budget(session, settings, plan_id, total)
                 except VideoSettingsError as exc:
                     problems.append(str(exc))
         return {
             "scenes": lines,
-            "accounting": "reported_usage" if reported else "legacy_estimate",
-            "total": "" if reported else money(total), "currency": settings.currency, "plan_spent": money(spent),
-            "job_limit": money(settings.job_limit), "monthly_limit": money(settings.monthly_limit),
-            "month_spent": money(ready["usage"]["spent"]), "remaining": None if reported else money(ready["remaining"]),
+            "accounting": "quoted_execution" if reported else "legacy_estimate",
+            "total": money(total), "currency": settings.currency, "plan_spent": money(spent),
+            "job_limit": money(settings.job_limit), "limit_scope": "per_execution",
+            "month_spent": money(ready["usage"]["spent"]), "remaining": None,
             "problems": problems, "notices": notices, "can_submit": not problems,
             "other_currency_spend": other_currency, "compose_closed": closed,
         }
@@ -647,7 +647,7 @@ class AIVideoCoordinator:
         if not confirmed:
             raise AIVideoError("예상 비용과 유료 생성을 확인한다는 항목에 체크하세요.")
         current = self.estimate(plan_id)
-        reported = current["accounting"] == "reported_usage"
+        reported = self._reported(plan_id)
         if not current["can_submit"]:
             raise AIVideoError(" ".join(current["problems"]))
         if shown_total != current["total"]:
@@ -679,14 +679,13 @@ class AIVideoCoordinator:
                 # The reservation, the limit check and the request all use today's confirmed price.
                 scene.clip_seconds, scene.estimated_cost = quote
             batch = sum((Decimal(s.estimated_cost or "0") for s in pending), Decimal(0))
-            if not pending or (not reported and money(batch) != shown_total):
+            if not pending or money(batch) != shown_total:
                 raise AIVideoError("표시된 예상 비용이 바뀌었습니다. 새로고침해 다시 확인하세요.", 409)
             for scene in pending:
                 if self._has_secret(scene.prompt, secrets):
                     raise AIVideoError("프롬프트에 비밀정보가 포함되어 보낼 수 없습니다.")
             try:
-                if not reported:
-                    check_budget(session, settings, plan_id, batch)
+                check_budget(session, settings, plan_id, batch)
             except VideoSettingsError as exc:
                 raise AIVideoError(str(exc)) from None
             now = utcnow()
@@ -739,6 +738,14 @@ class AIVideoCoordinator:
             count = len(pending)
         self.wake()
         return count
+
+    @staticmethod
+    def _execution_spent(session, plan_id, approved_at):
+        """Only the batch reserved in one explicit confirmation, never older attempts."""
+        from .settings import COUNTED
+        return sum((Decimal(row.estimated_cost) for row in session.scalars(select(VideoAIUsage).where(
+            VideoAIUsage.plan_id == plan_id, VideoAIUsage.created_at == approved_at,
+            VideoAIUsage.status.in_(COUNTED)))), Decimal(0))
 
     @staticmethod
     def _same_resolution(session: Session, last: VideoAIUsage, resolution: str) -> bool:
@@ -1213,13 +1220,10 @@ class AIVideoCoordinator:
                     # This reservation was confirmed under another approval (withdrawn and granted
                     # again since): a confirmation never carries over to a new approval.
                     problem = "확인 뒤에 유료 생성 승인이 다시 저장되어 이전 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
-                elif reserved.created_at is not None and _as_utc(reserved.created_at) < month_start():
-                    # Confirmed under last month's limit: this month's limit never counted it.
-                    problem = "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
                 elif plan_currency_mismatch(session, plan.id, settings.currency):
                     problem = CURRENCY_CHANGED
-                elif not reported and plan_spent(session, plan.id) > settings.job_limit:
-                    problem = "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
+                elif self._execution_spent(session, plan.id, reserved.created_at) > settings.job_limit:
+                    problem = "1회 실행 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요."
                 elif draft is None or draft.revision != plan.draft_revision or not draft_is_real(session, draft):
                     problem = "대본이 바뀌었거나 체험 뉴스여서 제출하지 않았습니다."
                 elif (

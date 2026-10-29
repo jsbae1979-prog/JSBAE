@@ -30,7 +30,7 @@
         "path": false
       },
       {
-        "name": "monthly_token_limit",
+        "name": "request_token_limit",
         "type": "number",
         "required": false,
         "default": 0,
@@ -285,14 +285,6 @@
         "max_length": 20
       },
       {
-        "name": "monthly_limit_usd",
-        "type": "text",
-        "required": false,
-        "default": "",
-        "path": false,
-        "max_length": 20
-      },
-      {
         "name": "input_price_per_1m",
         "type": "text",
         "required": false,
@@ -332,7 +324,7 @@
         "max_length": 20
       },
       {
-        "name": "monthly_token_limit",
+        "name": "request_token_limit",
         "type": "number",
         "required": false,
         "default": null,
@@ -4651,14 +4643,6 @@
         "path": false
       },
       {
-        "name": "monthly_limit",
-        "type": "text",
-        "required": false,
-        "default": "",
-        "path": false,
-        "max_length": 20
-      },
-      {
         "name": "job_limit",
         "type": "text",
         "required": false,
@@ -4990,13 +4974,6 @@
         "type": "number",
         "required": false,
         "default": 1000,
-        "path": false
-      },
-      {
-        "name": "monthly_limit",
-        "type": "number",
-        "required": false,
-        "default": 10000,
         "path": false
       },
       {

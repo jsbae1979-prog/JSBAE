@@ -40,7 +40,7 @@ def freeze_options(value: dict, voice: str | None) -> dict:
                 or type(config["commercial"]) is not bool or type(config["job_limit"]) is not int
                 or type(config["monthly_limit"]) is not int
                 or not 1 <= config["job_limit"] <= 10000
-                or not config["job_limit"] <= config["monthly_limit"] <= 1000000):
+                or not 0 <= config["monthly_limit"] <= 1000000):
             raise AutopilotError("ElevenLabs 저장 설정을 다시 확인하세요.")
         result["elevenlabs"] = {key: deepcopy(config[key]) for key in keys}
         if value["version"] == 2:

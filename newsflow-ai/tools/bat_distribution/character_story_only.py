@@ -114,7 +114,7 @@ def validate_policy(value):
             or any(not isinstance(p[k], str) or not _SHA.fullmatch(p[k])
                    for k in ('topic_sha256', 'reference_sha256', 'selection_sha256'))
             or p['script_model'] != CLAUDE or not Decimal(0) < _money(p['script_limit_usd']) <= Decimal('.25')
-            or _money(p['story_total_limit_usd']) != Decimal('10')):
+            or _money(p['story_total_limit_usd']) < Decimal(0)):
         _deny()
     start, end = _time(p['approved_at']), _time(p['expires_at'])
     if not start <= _now() < end <= start + timedelta(hours=24):
@@ -126,8 +126,7 @@ def validate_policy(value):
                        or not isinstance(v, str) or not _SHA.fullmatch(v) for k, v in prior.items())):
             _deny()
     _money(p['prior_video_exposure_usd'])
-    if _money(p['prior_story_exposure_usd']) + _money(p['script_limit_usd']) > Decimal('10'):
-        _deny()
+    _money(p['prior_story_exposure_usd'])  # Historical reporting only, never a cumulative gate.
     return p
 
 
@@ -388,7 +387,7 @@ def _attempt_exposure(row):
 class StoryOnlyV2(StoryOnly):
     """A fresh explicit approval of one existing job, with bounded known retries.
 
-    The USD 10 story limit includes past story exposures, never video authority.
+    Historical totals remain auditable; only the explicitly approved request limit gates execution.
     Each explicit request retains its own <= USD .25 conservative reservation.
     """
 
@@ -554,8 +553,7 @@ class StoryOnlyV2(StoryOnly):
                 document = {'schemaVersion': 2, 'policy_sha256': self.policy_hash, 'job_id': identifier,
                             'generation_requests': 0, 'attempts': [], 'reserved_usd': '0'}
             own = sum((_attempt_exposure(attempt) for attempt in document['attempts']), Decimal(0))
-            if prior + own + self.request_limit() > _money(self.policy['story_total_limit_usd']):
-                _deny()
+            # User-approved per-execution policy: historical totals do not block a new explicit request.
             document['attempts'].append({'job_id': identifier, 'attempt': previous + 1,
                 'state': 'started_or_unknown', 'reserved_usd': str(self.request_limit()), 'reservation_id': None,
                 'claimed_at': _now().isoformat()})

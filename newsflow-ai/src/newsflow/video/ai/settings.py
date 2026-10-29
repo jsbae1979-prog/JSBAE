@@ -1,7 +1,7 @@
 """AI video provider settings, model catalog, paid-generation gate and cost limits (Phase 5D).
 
 Kept apart from the OpenAI settings on purpose: its own provider switch (off by default), its
-own dated approval, a per-job and a monthly cost limit in the user's currency, its own key file
+own dated approval, a per-execution cost limit in the user's currency, its own key file
 and its own usage table. A generation runs only when every check here passes at that moment.
 """
 
@@ -108,7 +108,7 @@ def read_settings(sessions: sessionmaker[Session]) -> VideoAISettings:
 
 
 def write_settings(
-    sessions: sessionmaker[Session], *, provider: str, host: str, approved: bool, monthly_limit: str,
+    sessions: sessionmaker[Session], *, provider: str, host: str, approved: bool, monthly_limit: str | None = None,
     job_limit: str, currency: str, max_active: int, timeout_minutes: int, poll_seconds: int,
 ) -> VideoAISettings:
     if provider not in PROVIDERS:
@@ -118,7 +118,6 @@ def write_settings(
     if currency not in CURRENCIES:
         raise VideoSettingsError("통화는 USD 또는 KRW 중에서 선택하세요.")
     try:
-        monthly = parse_money(monthly_limit) or Decimal(0)
         job = parse_money(job_limit) or Decimal(0)
     except CostError as exc:
         raise VideoSettingsError(str(exc)) from None
@@ -128,8 +127,8 @@ def write_settings(
     ):
         if type(value) is not int or not low <= value <= high:
             raise VideoSettingsError(f"{label} 사이여야 합니다.")
-    if job > monthly > 0:
-        raise VideoSettingsError("작업별 한도는 월 한도보다 클 수 없습니다.")
+    if approved and job <= 0:
+        raise VideoSettingsError("유료 영상 승인에는 0보다 큰 1회 실행 한도가 필요합니다.")
     with sessions.begin() as session:
         session.connection().exec_driver_sql("BEGIN IMMEDIATE")
         previous_currency = _value(session, "video_ai_currency") or "USD"
@@ -142,7 +141,7 @@ def write_settings(
                 model.confirmed_at = None
         previous = _value(session, "video_ai_approved_at")
         values = {
-            "provider": provider, "host": host, "monthly_limit": money(monthly), "job_limit": money(job),
+            "provider": provider, "host": host, "job_limit": money(job),
             "currency": currency, "max_active": str(max_active), "timeout_minutes": str(timeout_minutes),
             "poll_seconds": str(poll_seconds),
             # A dated, durable decision; re-saving keeps the original timestamp, unchecking clears it.
@@ -371,24 +370,19 @@ def ledger_valid(session: Session) -> bool:
 
 
 def check_budget(session: Session, settings: VideoAISettings, plan_id: int, batch: Decimal) -> None:
-    """Raise before any request when this plan or this month would pass the user's limits."""
+    """Check this explicit generation batch, keeping every historical ledger entry."""
     if not ledger_valid(session):
         raise VideoSettingsError(LEDGER_INVALID)
-    if settings.job_limit <= 0 or settings.monthly_limit <= 0:
-        raise VideoSettingsError("작업별 한도와 월 한도가 설정되지 않아 AI 영상을 생성하지 않습니다.")
+    if settings.job_limit <= 0:
+        raise VideoSettingsError("1회 실행 한도가 설정되지 않아 AI 영상을 생성하지 않습니다.")
     if plan_currency_mismatch(session, plan_id, settings.currency):
         raise VideoSettingsError(CURRENCY_CHANGED)
-    spent = plan_spent(session, plan_id)
-    if spent + batch > settings.job_limit:
+    if not batch.is_finite() or batch <= 0:
+        raise VideoSettingsError("이번 영상 요청의 견적을 먼저 확인하세요.")
+    if batch > settings.job_limit:
         raise VideoSettingsError(
-            f"작업별 한도를 넘습니다: 이 작업 사용 {money(spent)} + 이번 요청 예상 {money(batch)} > "
+            f"1회 실행 한도를 넘습니다: 이번 요청 예상 {money(batch)} > "
             f"한도 {money(settings.job_limit)} {settings.currency}. 장면 수를 줄이거나 한도를 확인하세요."
-        )
-    month = _sum(_month_rows(session))
-    if month + batch > settings.monthly_limit:
-        raise VideoSettingsError(
-            f"이번 달 AI 영상 한도를 넘습니다: 사용 {money(month)} + 이번 요청 예상 {money(batch)} > "
-            f"한도 {money(settings.monthly_limit)} {settings.currency}."
         )
 
 
@@ -414,11 +408,8 @@ def readiness(
         reasons.append("AI 영상 공급사가 '사용 안 함'입니다. 기본 FFmpeg 제작만 사용합니다.")
     if not settings.approved:
         reasons.append("AI 영상 유료 생성 승인이 저장되지 않았습니다.")
-    if not reported:
-        if settings.job_limit <= 0 or settings.monthly_limit <= 0:
-            reasons.append("작업별 한도와 월 한도가 없습니다.")
-        elif usage["spent"] > settings.monthly_limit if submitting else usage["spent"] >= settings.monthly_limit:
-            reasons.append("이번 달 AI 영상 한도를 모두 사용했습니다.")
+    if settings.job_limit <= 0:
+        reasons.append("1회 실행 한도가 없습니다.")
     if provider_override is None and not key["configured"]:
         reasons.append("AI 영상 API 키가 없습니다.")
     if reported:
@@ -429,6 +420,6 @@ def readiness(
         reasons.append("공식 문서 확인과 초당 단가를 입력한 모델이 없습니다.")
     return {
         "ready": not reasons, "reasons": reasons, "settings": settings, "provider": provider, "key": key,
-        "usage": usage, "remaining": None if reported else max(Decimal(0), settings.monthly_limit - usage["spent"]),
+        "usage": usage, "remaining": None, "limit_scope": "per_execution",
         "models": models,
     }

@@ -67,6 +67,7 @@ test("old history and an unrelated error do not disable a new saved-reference to
   assert.equal(h.posts[0].url, "/character");
   assert.equal(h.posts[0].body.topic, "토끼의 새로운 여행");
   assert.equal(h.posts[0].body.reference_asset, `studio-${"b".repeat(64)}.png`);
+  assert.equal(h.posts[0].body.day_limit, undefined);
   assert.notEqual(h.posts[0].body.request_id, "0".repeat(32));
   assert.deepEqual(JSON.parse(h.posts[0].body.studio_settings), h.context.settings);
   assert.deepEqual(h.storyCalls, [{ url: "/api/studio/characters/auto-story", body: {
@@ -174,4 +175,25 @@ test("old job reference is pinned across new job selection and a failed list ref
   await h.run();
   assert.equal(h.posts.length, 1); assert.equal(h.storyCalls.length, 1);
   h.assertOriginal();
+});
+
+test("fresh official quotes determine the execution cap while stale settings use the estimate", () => {
+  const budgetLogic = source.slice(source.indexOf("  const currentQuote ="), source.indexOf("  const settingsFrozen ="));
+  const calculate = (quote, upper, dirty) => vm.runInNewContext(
+    `${budgetLogic}\nbudgetExceeded`, { job: { state: "quoted", quote }, estimate: { upper }, per: "2", quoteSettingsChanged: dirty },
+  );
+  assert.equal(calculate("2.50", 1, false), true);
+  assert.equal(calculate("1.50", 3, false), false);
+  assert.equal(calculate("1.50", 3, true), true);
+});
+
+test("over-cap estimates do not disable explicit quote or requote actions", () => {
+  const first = source.slice(source.indexOf('title="스토리 검토·공식 견적을 확인한 후 비용을 별도로 승인합니다."'));
+  const refresh = source.slice(source.indexOf('job.quoteSettingsEditable === true && ('));
+  for (const section of [first, refresh]) {
+    const expression = section.match(/disabled=\{([\s\S]*?)\n\s+\}/)[1];
+    assert.equal(vm.runInNewContext(`(${expression})`, {
+      isBusy: false, pendingReferenceCopy: false, legacy: false, ready: true, budgetExceeded: true,
+    }), false);
+  }
 });

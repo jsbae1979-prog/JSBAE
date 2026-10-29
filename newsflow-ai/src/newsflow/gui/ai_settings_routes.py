@@ -41,10 +41,10 @@ def ai_settings(request: Request, saved: str = "") -> RedirectResponse:
 @router.post("/ai-settings")
 def save_ai_settings(
     request: Request, provider: str = Form(max_length=20), model: str = Form(max_length=80),
-    approved: bool = Form(False), monthly_token_limit: int = Form(0), timeout: int = Form(20),
+    approved: bool = Form(False), request_token_limit: int = Form(0), timeout: int = Form(20),
 ) -> RedirectResponse:
     try:
-        write_settings(request.app.state.sessions, provider, model.strip(), approved, monthly_token_limit, timeout)
+        write_settings(request.app.state.sessions, provider, model.strip(), approved, timeout=timeout, request_token_limit=request_token_limit)
     except SettingsError as exc:
         raise HTTPException(422, str(exc)) from None
     return go("/ai-settings?saved=settings")

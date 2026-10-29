@@ -205,8 +205,17 @@ def test_new_scope_keeps_existing_account_gate_and_monthly_rules(approved):
     assert approved.scope.read_receipt()['reserved_usd'] == '0.25'
 
 
-@pytest.mark.parametrize('changes', [{'story_total_limit_usd': '11'}, {'script_limit_usd': '.26'},
-    {'prior_story_exposure_usd': '10'}, {'job_id': 'other'}, {'approved_at': '2000-01-01T00:00:00+00:00'}])
-def test_policy_cannot_expand_ten_dollar_total_or_quarter_dollar_per_request(approved, changes):
+@pytest.mark.parametrize('changes', [{'script_limit_usd': '.26'}, {'job_id': 'other'}, {'approved_at': '2000-01-01T00:00:00+00:00'}])
+def test_policy_cannot_expand_per_request_authority(approved, changes):
     with pytest.raises(CharacterError):
         m.validate_policy({**approved.policy, **changes})
+
+
+def test_legacy_total_limit_does_not_block_explicit_bounded_request(approved):
+    a=approved
+    a.scope.policy['story_total_limit_usd']='0'
+    assert m.validate_policy(a.scope.policy)['story_total_limit_usd']=='0'
+    assert a.post()==200
+    assert a.scope.read_receipt()['reserved_usd']=='0.25'
+    assert a.scope.prior_exposure()==m.Decimal('.50')
+    assert a.old_path.read_bytes()==a.old_bytes

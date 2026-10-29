@@ -58,6 +58,7 @@ class OperatingRequests(LocalWorkRequests):
     CHARACTER_VISIBILITY = re.compile(r'/api/studio/characters/[a-f0-9]{32}/visibility\Z')
     CHARACTER_REUSE = re.compile(r'/api/studio/characters/[a-f0-9]{32}/reuse-story\Z')
     CHARACTER_RENDER = re.compile(r'/character/[a-f0-9]{32}/render\Z')
+    CHARACTER_RECOVER = re.compile(r'/api/studio/characters/[a-f0-9]{32}/recover-story\Z')
     COPIED_MEDIA = re.compile(r'/api/samples/[a-z0-9-]{1,48}/copy-file\Z')
     CHARACTER_CLIP = re.compile(r'/character/[a-f0-9]{32}/clips/[1-5]\Z')
 
@@ -68,6 +69,7 @@ class OperatingRequests(LocalWorkRequests):
                                                   or self.CHARACTER_VISIBILITY.fullmatch(path)
                                                   or self.CHARACTER_REUSE.fullmatch(path)
                                                   or self.CHARACTER_RENDER.fullmatch(path)
+                                                  or self.CHARACTER_RECOVER.fullmatch(path)
                                                   or path == '/api/studio/characters/library')
             copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path))
             if local_settings or copied_media:

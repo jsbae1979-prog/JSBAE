@@ -555,9 +555,13 @@ export function CommandDialog({
   }
   const field = (f: Field) => {
     const fieldLabel =
-      (action.id === "video_ai_review" && f.name === "statement"
-        ? "모든 장면과 AI 생성 표시를 검토했습니다"
-        : undefined) ??
+      (f.name === "job_limit"
+        ? action.id === "video_save_tts"
+          ? "1회 음성 입력 글자 수 한도"
+          : "1회 영상 제작 한도 (" + String(values.currency ?? "USD") + ")"
+        : action.id === "video_ai_review" && f.name === "statement"
+          ? "모든 장면과 AI 생성 표시를 검토했습니다"
+          : undefined) ??
       view.catalog.operationsItems?.[f.name] ??
       view.catalog.listening?.items?.[f.name] ??
       label(f.name);

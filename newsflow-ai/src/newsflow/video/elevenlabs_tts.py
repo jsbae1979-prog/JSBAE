@@ -100,14 +100,14 @@ def settings(sessions):
     return defaults
 
 
-def save_settings(sessions, *, enabled, voice_id, model, job_limit, monthly_limit, commercial):
+def save_settings(sessions, *, enabled, voice_id, model, job_limit, monthly_limit=None, commercial):
     from newsflow.db.models import AppSetting
 
     if (model not in MODELS or (voice_id and not re.fullmatch(r"[A-Za-z0-9_-]{1,100}", voice_id))
-            or not 1 <= job_limit <= 10000 or not job_limit <= monthly_limit <= 1000000):
+            or type(job_limit) is not int or not 1 <= job_limit <= 10000):
         raise TTSError("ElevenLabs 음성 ID·모델·크레딧 한도를 확인하세요.")
     values = {"enabled": bool(enabled), "voice_id": voice_id, "model": model, "job_limit": job_limit,
-              "monthly_limit": monthly_limit, "commercial": bool(commercial)}
+              "commercial": bool(commercial)}
     with sessions.begin() as session:
         for name, value in values.items():
             row = session.get(AppSetting, "tts_el_" + name)
@@ -262,7 +262,9 @@ class ElevenLabsTTS:
             raise TTSError("ElevenLabs는 키·음성 설정과 이번 제작의 외부 전송·사용량 동의가 필요합니다.")
         if cancel is not None and cancel.is_set():
             raise TTSError("외부 음성 요청 취소")
-        # Resource limits stay; speculative credit multipliers and reservations do not.
+        # This explicit synthesis request is limited by characters, not historical monthly usage.
+        if type(config.get("job_limit")) is not int or not 1 <= config["job_limit"] <= 10000 or len(text) > config["job_limit"]:
+            raise TTSError("이번 음성 요청의 글자 수가 1회 실행 한도를 넘습니다.")
         digest = self._cache_digest(text, speech)
         self.root.mkdir(parents=True, exist_ok=True)
         ledger_path, cache = self.root / "ledger.json", self.root / f"{digest}.wav"

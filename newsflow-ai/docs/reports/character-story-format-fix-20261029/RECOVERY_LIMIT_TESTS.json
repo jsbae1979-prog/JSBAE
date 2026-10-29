@@ -1,0 +1,23 @@
+{
+  "response_length": {
+    "tests": 38,
+    "failures": 0,
+    "errors": 0
+  },
+  "recovery_and_limits": {
+    "tests": 39,
+    "failures": 0,
+    "errors": 0
+  },
+  "character_budget_quote": {
+    "tests": 10,
+    "failures": 0,
+    "errors": 0
+  },
+  "typeScript": "PASS",
+  "vite": "PASS",
+  "nodeCharacterRequests": {
+    "tests": 11,
+    "failures": 0
+  }
+}

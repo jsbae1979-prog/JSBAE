@@ -64,9 +64,18 @@ def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False
         return JSONResponse({'id':job_id,'error':'스토리 요청을 중단했습니다. 작업 이력을 확인하세요. 자동 재요청하지 않습니다.'},status_code=409)
 
 
+@router.post('/api/studio/characters/{job_id}/recover-story')
+def recover_story(request: Request,job_id:str,consent:bool=Form(False)):
+    try:
+        request.app.state.character.recover_story_response(job_id,consent=consent)
+        return {'id':job_id,'state':'script_review','additionalProviderCalls':0}
+    except (ValueError,OSError,*SAFE_ERRORS):
+        raise HTTPException(409,'보관 응답을 복구하지 못했습니다. 기존 실패 기록은 보존됩니다.') from None
+
+
 @router.post('/api/studio/characters/{job_id}/settings')
 def studio_settings(request: Request,job_id:str,settings:str=Form(...),
-                    episode_limit:str=Form(...),day_limit:str=Form(...)):
+                    episode_limit:str=Form(...),day_limit:str=Form('')):
     import json
     try:
         from newsflow.character.kling import field_errors
@@ -81,7 +90,7 @@ def studio_settings(request: Request,job_id:str,settings:str=Form(...),
 
 @router.post('/api/studio/characters/{job_id}/reuse-story')
 def reuse_story(request: Request,job_id: str,settings: str=Form(...,max_length=16000),
-                episode_limit: str=Form(...),day_limit: str=Form(...),request_id: str=Form(...),
+                episode_limit: str=Form(...),day_limit: str=Form(''),request_id: str=Form(...),
                 dialogues: str=Form('[]',max_length=8000),consent: bool=Form(False),
                 reference: Annotated[UploadFile | None, File()]=None,
                 reference_job: str=Form('',max_length=32),
@@ -137,7 +146,7 @@ def studio(request: Request, job_id: str = '', reference_asset: str = ''):
 
 @router.post('/character')
 def create(request: Request, reference: Annotated[UploadFile | None, File()] = None, topic: str=Form(...),
-           episode_limit: str=Form(...),day_limit: str=Form(...), script_model: str=Form(''),
+           episode_limit: str=Form(...),day_limit: str=Form(''), script_model: str=Form(''),
            video_model: str=Form(''), reference_asset: str=Form(''), reference_job: str=Form(''),
            studio_settings: str=Form(''), request_id: str=Form('')):
     if studio_settings:

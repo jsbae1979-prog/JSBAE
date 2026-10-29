@@ -302,13 +302,13 @@ def preflight(request: Request) -> HTMLResponse:
 @router.post("/video-ai-settings")
 def save_settings(
     request: Request, provider: str = Form(max_length=20), host: str = Form(HOSTS[0], max_length=40),
-    approved: bool = Form(False), monthly_limit: str = Form("", max_length=20), job_limit: str = Form("", max_length=20),
+    approved: bool = Form(False), job_limit: str = Form("", max_length=20),
     currency: str = Form("USD", max_length=3), max_active: int = Form(2), timeout_minutes: int = Form(30),
     poll_seconds: int = Form(10), return_draft: int | None = Form(None, ge=1),
 ) -> RedirectResponse:
     try:
         write_settings(
-            request.app.state.sessions, provider=provider, host=host, approved=approved, monthly_limit=monthly_limit,
+            request.app.state.sessions, provider=provider, host=host, approved=approved,
             job_limit=job_limit, currency=currency, max_active=max_active, timeout_minutes=timeout_minutes,
             poll_seconds=poll_seconds,
         )

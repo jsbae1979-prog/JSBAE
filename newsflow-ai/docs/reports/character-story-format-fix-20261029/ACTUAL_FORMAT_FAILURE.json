@@ -1,0 +1,86 @@
+{
+  "codeSHA": "5f945e70ec76bd74ff41cd7069ebd564eb17e41f",
+  "operatingFilesApplied": 9,
+  "normalStopExitCode": 0,
+  "tables": 47,
+  "articles": 169,
+  "protectedFilesAndACLUnchanged": 26,
+  "creativeFilesChecked": 42,
+  "originalAndABUnchanged": true,
+  "snapshotVerified": true,
+  "priorPaidJournalsUnchanged": true,
+  "priorAPIReservationsUnchanged": true,
+  "newAPIReservationRows": 1,
+  "reservations": [
+    {
+      "requestAttempt": 2,
+      "status": "failed",
+      "usageCostEstimateUSD": "0.016092"
+    }
+  ],
+  "conservativeStoryExposureUSD": "1.00",
+  "storyState": "script_failed",
+  "scriptAttempts": 2,
+  "safeStoryFailure": {
+    "stage": "schema",
+    "message": "스토리의 장면 정보나 글자 길이가 형식에 맞지 않습니다.",
+    "failure_stage": "schema",
+    "stop_reason": "end_turn",
+    "validation_errors": [
+      {
+        "loc": [
+          "plan",
+          "situation"
+        ],
+        "type": "string_too_long"
+      },
+      {
+        "loc": [
+          "plan",
+          "contrast"
+        ],
+        "type": "string_too_long"
+      },
+      {
+        "loc": [
+          "plan",
+          "punchline"
+        ],
+        "type": "string_too_long"
+      },
+      {
+        "loc": [
+          "scenes",
+          0,
+          "sfx"
+        ],
+        "type": "string_too_long"
+      },
+      {
+        "loc": [
+          "scenes",
+          2,
+          "sfx"
+        ],
+        "type": "string_too_long"
+      },
+      {
+        "loc": [
+          "scenes",
+          3,
+          "sfx"
+        ],
+        "type": "string_too_long"
+      },
+      {
+        "loc": [
+          "scenes",
+          4,
+          "sfx"
+        ],
+        "type": "string_too_long"
+      }
+    ]
+  },
+  "videoGenerationRequests": 0
+}

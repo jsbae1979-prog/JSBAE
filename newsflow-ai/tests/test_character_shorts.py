@@ -181,18 +181,19 @@ def test_successful_plan_reuses_reference_and_freezes_model(setup):
     assert setup.video.calls==3
 
 
-def test_budget_and_daily_limits_before_generation(setup):
+def test_execution_limit_before_generation_ignores_prior_jobs(setup):
     i=create(setup,episode='1')
     setup.service.write(i,consent=True)
-    with pytest.raises(CharacterError):setup.service.prepare(i,consent=True,script_reviewed=True)
+    setup.service.prepare(i,consent=True,script_reviewed=True)
+    with pytest.raises(CharacterError):
+        setup.service.submit(i,consent=True,quote_hash=setup.service.read(i)['quote_hash'])
     assert setup.video.calls==0
     first=prepared(setup,episode='2',daily='2')
     quote=setup.service.read(first)['quote_hash']
     setup.service.submit(first,consent=True,quote_hash=quote)
     second=prepared(setup,episode='2',daily='2')
-    with pytest.raises(CharacterError):
-        setup.service.submit(second,consent=True,quote_hash=setup.service.read(second)['quote_hash'])
-    assert setup.video.calls==3
+    setup.service.submit(second,consent=True,quote_hash=setup.service.read(second)['quote_hash'])
+    assert setup.video.calls==6 and setup.service.read(first)['quote_hash']==quote
 
 
 def test_unknown_submit_preserved_and_never_replayed(setup,monkeypatch):

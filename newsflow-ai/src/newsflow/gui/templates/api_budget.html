@@ -1,6 +1,6 @@
   <dialog id="api-costs-{{ key }}" class="settings-dialog" aria-labelledby="api-costs-title-{{ key }}">
     <div class="settings-dialog-head"><h2 id="api-costs-title-{{ key }}">{{ api_label }} 사용 승인·예산</h2><button type="button" data-settings-close aria-label="{{ api_label }} 사용 승인·예산 닫기">닫기</button></div>
-    <p>월 API 예산과 사용 승인을 관리합니다. {{ 'ChatGPT' if key == 'openai' else 'Claude Code' }} 구독과 별도 과금이며 검색·분석·대본은 각각 요청으로 계산합니다.</p>
+    <p>1회 API 비용 한도와 사용 승인을 관리합니다. {{ 'ChatGPT' if key == 'openai' else 'Claude Code' }} 구독과 별도 과금이며 검색·분석·대본은 각각 요청으로 계산합니다.</p>
     <form method="post" action="/api-settings/{{ key }}" data-settings-form data-settings-watch>
       {{ csrf_field() }}
       <input type="hidden" name="model" value="{{ api.settings.model }}">
@@ -9,10 +9,10 @@
       <label class="check"><input type="checkbox" name="search_enabled" value="true" {% if api.settings.search_enabled %}checked{% endif %}> 공식 뉴스 웹 검색 기능을 사용합니다.</label>
       <label class="check"><input type="checkbox" name="search_approved" value="true" {% if api.settings.search_approved %}checked{% endif %}> 웹 검색 도구 및 검색 자료의 토큰 비용을 별도로 승인합니다.</label>
       <div class="production-config-grid">
-        <label>월 API 예산 (USD)<input name="monthly_limit_usd" inputmode="decimal" maxlength="20" value="{{ api.settings.monthly_limit_usd }}" required></label>
+        <label>1회 실행 비용 한도 (USD)<input name="request_limit_usd" inputmode="decimal" maxlength="20" value="{{ api.settings.request_limit_usd }}" required></label>
       </div>
-      {% if key == 'openai' and legacy_api_settings.monthly_token_limit <= 0 %}
-      <label>월 분석·대본 토큰 한도<input type="number" name="monthly_token_limit" min="0" max="50000000" value="{{ legacy_api_settings.monthly_token_limit }}" required></label>
+      {% if key == 'openai' and legacy_api_settings.request_token_limit <= 0 %}
+      <label>1회 분석·대본 토큰 한도<input type="number" name="request_token_limit" min="0" max="50000000" value="{{ legacy_api_settings.request_token_limit }}" required></label>
       <p class="hint">OpenAI 사용 승인에는 0보다 큰 토큰 한도가 필요합니다.</p>
       {% endif %}
       <p class="hint">실제 API 연결·검색 검증은 별도 승인이 필요합니다. 설정 저장만으로 호출하지 않습니다.</p>
@@ -28,11 +28,11 @@
           <label>출력 100만 토큰 단가 (USD)<input name="output_price_per_1m" inputmode="decimal" maxlength="20" value="{{ api.settings.output_price_per_1m if api.settings.output_price_per_1m is not none else '' }}"></label>
           <label>검색 1,000회 단가 (USD)<input name="search_price_per_1k" inputmode="decimal" maxlength="20" value="{{ api.settings.search_price_per_1k if api.settings.search_price_per_1k is not none else '' }}"></label>
           {% if key == 'openai' %}
-          {% if legacy_api_settings.monthly_token_limit > 0 %}<label>월 분석·대본 토큰 한도<input type="number" name="monthly_token_limit" min="0" max="50000000" value="{{ legacy_api_settings.monthly_token_limit }}" required></label>{% endif %}
+          {% if legacy_api_settings.request_token_limit > 0 %}<label>1회 분석·대본 토큰 한도<input type="number" name="request_token_limit" min="0" max="50000000" value="{{ legacy_api_settings.request_token_limit }}" required></label>{% endif %}
           <label>분석·대본 제한시간 (초)<input type="number" name="timeout" min="1" max="60" value="{{ legacy_api_settings.timeout }}" required></label>
           {% endif %}
         </div>
-        <p class="hint">해당 모델·계정의 공식 단가를 입력하세요. 응답의 보고 사용량과 단가로 집계하며, 공급사 실제 청구액은 대시보드에서 확인하세요. 새 요청 전 월 예산을 확인하지만 응답 후 집계이므로 최종 비용 상한을 보장하지 않습니다.</p>
+        <p class="hint">해당 모델·계정의 공식 단가를 입력하세요. 응답의 보고 사용량과 단가로 집계하며, 공급사 실제 청구액은 대시보드에서 확인하세요. 새 요청은 보수적 예상 비용이 1회 한도 안에 있을 때만 승인합니다. 공급사 청구액은 별도로 확인하며 결과 불명 요청은 자동 재전송하지 않습니다.</p>
         <p>이번 달 {{ api.usage.calls }}건 · 보고 사용량 기반 비용 집계 {{ api.usage.estimated_usd }} USD</p>
         <p class="hint">{{ '실제 요청 성공 기록 있음' if api.request_succeeded else '실제 요청 성공 미검증' }}</p>
       </details>

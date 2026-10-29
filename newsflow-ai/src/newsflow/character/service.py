@@ -124,7 +124,7 @@ class CharacterService:
         self.composer = composer or compose
         self.ffmpeg = Path(ffmpeg) if ffmpeg is not None else None
         self.ffprobe = Path(ffprobe) if ffprobe is not None else None
-        self.daily_limit_approval = None  # Optional server-owned scoped approval, never a form field.
+        self.daily_limit_approval = None  # Compatibility hook for older trial installers; no daily execution gate.
 
     def video_for(self, job):
         if self.video_override is not None or not (job.get('selection') or job.get('studio_selection')):
@@ -222,12 +222,13 @@ class CharacterService:
                 continue
         return sorted(rows,key=lambda r:r['created_at'],reverse=True)
 
-    def create(self, topic, episode_limit, day_limit, *, reference: bytes = b'', selection=None):
+    def create(self, topic, episode_limit, day_limit=None, *, reference: bytes = b'', selection=None):
         from newsflow.creation.catalog import snapshot
         frozen = snapshot('character', selection) if selection is not None else None
         topic = clean_topic(topic,150)
-        per, daily = amount(episode_limit),amount(day_limit)
-        if per>daily or len(reference)>10*1024*1024:
+        per=amount(episode_limit)
+        daily=amount(day_limit if day_limit not in (None,'') else episode_limit)
+        if len(reference)>10*1024*1024:
             raise CharacterError('budget')
         with self.lock():
             config = read_api_settings(self.sessions,'claude_api')
@@ -250,14 +251,14 @@ class CharacterService:
             self.save(job)
             return identifier
 
-    def create_studio(self, topic, episode_limit, day_limit, *, reference, settings, request_id):
+    def create_studio(self, topic, episode_limit, day_limit=None, *, reference, settings, request_id):
         from .kling import normalize_reference, snapshot, check
         from newsflow.video_models.catalog import character_config, styles
         topic=clean_topic(topic,150)
         if not re.fullmatch(r'[a-f0-9]{32}',request_id or ''): raise CharacterError()
         frozen=snapshot(settings)
-        per,daily=amount(episode_limit),amount(day_limit)
-        if per>daily: raise CharacterError('budget')
+        per=amount(episode_limit)
+        daily=amount(day_limit if day_limit not in (None,'') else episode_limit)
         raw=normalize_reference(reference)
         body_hash=fingerprint([topic,hashlib.sha256(raw).hexdigest(),frozen,str(per),str(daily)])
         with self.lock():
@@ -280,7 +281,7 @@ class CharacterService:
             self.save(job)
             return identifier,True
 
-    def reuse_story(self, source_id, settings, episode_limit, day_limit, *, request_id, dialogues=None,
+    def reuse_story(self, source_id, settings, episode_limit, day_limit=None, *, request_id, dialogues=None,
                     reference=None, reference_job='', consent=False):
         """Local explicit copy only. Never resubmit or mutate the source job."""
         self.consent(consent)
@@ -291,8 +292,8 @@ class CharacterService:
             raise CharacterError('blocked')
         frozen=snapshot(settings)
         chosen=check(frozen)
-        per,daily=amount(episode_limit),amount(day_limit)
-        if per>daily:raise CharacterError('budget')
+        per=amount(episode_limit)
+        daily=amount(day_limit if day_limit not in (None,'') else episode_limit)
         with self.lock():
             source=self.read(source_id)
             if source['state'] in {'writing','preparing','generating','retry_quoting','composing'}:
@@ -379,18 +380,18 @@ class CharacterService:
             os.replace(temporary,receipt)
             return identifier,True
 
-    def update_studio_settings(self, identifier, settings, episode_limit, day_limit):
+    def update_studio_settings(self, identifier, settings, episode_limit, day_limit=None):
         from .kling import snapshot, check
         from .studio_story import prompts as studio_prompts
         frozen=snapshot(settings)
         chosen=check(frozen)
-        per,daily=amount(episode_limit),amount(day_limit)
+        per=amount(episode_limit)
         with self.lock():
             job=self.read(identifier)
             if not quote_settings_editable(job): raise CharacterError('blocked')
+            daily=amount(day_limit if day_limit not in (None,'') else job.get('day_limit') or episode_limit)
             if chosen['script_model']!=job['claude_model']:
                 raise CharacterError('blocked')
-            if per>daily: raise CharacterError('budget')
             revised=retime_studio_story(job['script'],chosen)
             if job['state'] in {'quoted','prepare_failed'}:
                 archived={key:deepcopy(job[key]) for key in (
@@ -499,6 +500,52 @@ class CharacterService:
             (self.folder(identifier)/'script.json').write_text(story.model_dump_json(indent=2),encoding='utf8')
             (self.folder(identifier)/'prompts.json').write_text(json.dumps(job['prompts'],ensure_ascii=False,indent=2),encoding='utf8')
 
+    def recover_story_response(self, identifier, *, consent=False):
+        """Validate a complete saved response locally; never call or refund a provider."""
+        self.consent(consent)
+        from .studio_story import StudioStoryboard, timing_errors, prompts as studio_prompts
+        from .kling import check
+        with self.lock():
+            job=self.read(identifier)
+            failure=job.get('script_failure') or {}
+            if (job['state']!='script_failed' or job.get('response_received') is not True
+                    or not job.get('studio_selection') or job.get('script') or job.get('scenes')
+                    or failure.get('stop_reason')!='end_turn'
+                    or failure.get('failure_stage') not in {'schema','timing'}):
+                raise CharacterError('blocked')
+            attempt=job.get('script_attempts')
+            rows=[r for r in job.get('script_responses',[]) if r.get('attempt')==attempt]
+            if len(rows)!=1:raise CharacterError('blocked')
+            row=rows[0];folder=self.folder(identifier)
+            if row.get('file')!=f'story-response-attempt-{attempt}.private.json':raise CharacterError('blocked')
+            path=folder/row['file']
+            if (path.is_symlink() or path.is_junction() or not path.is_file()
+                    or not 0<path.stat().st_size<=512*1024 or digest(path)!=row.get('sha256')):
+                raise CharacterError('blocked')
+            record=json.loads(path.read_bytes())
+            if record.get('schemaVersion')!=1 or record.get('attempt')!=attempt or record.get('provider')!='claude_api':
+                raise CharacterError('blocked')
+            story=StudioStoryboard.model_validate(record['candidate'])
+            chosen=check(job['studio_selection'])
+            payload={'scene_count':job['duration']//chosen['clip_seconds'],
+                     'clip_seconds':chosen['clip_seconds'],'duration':job['duration']}
+            if timing_errors(story,payload) or any(s.narration for s in story.scenes):raise CharacterError('blocked')
+            if digest(folder/'reference.png')!=job['reference_sha256']:raise CharacterError('reference')
+            reference_bytes(folder/'reference.png')
+            prepared=studio_prompts(story,chosen,job['character'])
+            for name,data in [('script.json',story.model_dump_json(indent=2)),
+                              ('prompts.json',json.dumps(prepared,ensure_ascii=False,indent=2))]:
+                target=folder/name
+                if target.exists() and target.read_text(encoding='utf8')!=data:raise CharacterError('blocked')
+            job['script_recovery']={'at':now().isoformat(),'attempt':attempt,'sha256':row['sha256'],
+                                    'previous_failure':failure,'provider_calls':0}
+            job.update(script=story.model_dump(),prompts=prepared,state='script_review',claude_usage=record.get('usage',{}))
+            job.pop('script_failure',None)
+            job['plan_hash']=self.plan_hash(job)
+            (folder/'script.json').write_text(story.model_dump_json(indent=2),encoding='utf8')
+            (folder/'prompts.json').write_text(json.dumps(prepared,ensure_ascii=False,indent=2),encoding='utf8')
+            self.save(job)
+
     def prepare(self, identifier, *, consent=False, script_reviewed=False):
         self.consent(consent)
         self.consent(script_reviewed)
@@ -507,12 +554,6 @@ class CharacterService:
             if job['state']!='script_review':
                 raise CharacterError('blocked')
             planned=generation_rows(job)
-            if job.get('studio_selection'):
-                from .kling import check, as_generation
-                from newsflow.video_models.catalog import estimate
-                forecast=estimate(as_generation(check(job['studio_selection'])),job['duration'])
-                if forecast['maximum'] is not None and Decimal(forecast['maximum'])>amount(job['episode_limit']):
-                    raise CharacterError('budget')
             path=self.folder(identifier)/'reference.png'
             if not job['reference_sha256'] or digest(path)!=job['reference_sha256']:
                 raise CharacterError('reference')
@@ -546,8 +587,6 @@ class CharacterService:
                                    'state':'not_submitted','idempotency_key':uuid4().hex,'attempt':1})
                     if row.get('story_positions'):scenes[-1]['story_positions']=list(row['story_positions'])
                 total=sum(amount(s['quote_usd']) for s in scenes)
-                if total>amount(job['episode_limit']):
-                    raise CharacterError('budget')
                 job['scenes']=scenes
                 job['quote_total_usd']=str(total)
                 job['quoted_at']=now().isoformat()
@@ -572,26 +611,12 @@ class CharacterService:
                 raise CharacterError('budget')
             # Official supplier quotes only, never estimated token-dollar reservations or actual bills.
             day=(now()+timedelta(hours=9)).date().isoformat()
-            used=sum((day_exposure(j,day) for j in self.listing()),start=Decimal(0))
             total=amount(job['quote_total_usd'])
-            daily=amount(job['day_limit'])
-            approval=self.daily_limit_approval(job,day) if callable(self.daily_limit_approval) else None
-            if approval is not None:
-                if (not isinstance(approval,dict) or set(approval)!={'scope','trial_id','job_id','policy_sha256',
-                        'base_policy_sha256','limit_usd','day'}
-                        or approval['scope']!='character_trial_daily_total' or approval['job_id']!=identifier
-                        or approval['day']!=day or approval['limit_usd']!='4.50'
-                        or not re.fullmatch(r'[a-f0-9]{32}',approval['trial_id'])
-                        or any(not re.fullmatch(r'[a-f0-9]{64}',approval[k])
-                               for k in ('policy_sha256','base_policy_sha256'))):
-                    raise CharacterError('budget')
-                daily=amount(approval['limit_usd'])
-            if used+total>daily or total>amount(job['episode_limit']):
+            if total>amount(job['episode_limit']):
                 raise CharacterError('budget')
             # Unknown submissions continue consuming this approved quote exposure; no automatic release.
             job['approved_day']=day
             job['quote_approvals']=[{'day':day,'usd':str(total),'scope':'initial'}]
-            if approval is not None:job['quote_approvals'][0]['daily_limit_approval']=dict(approval)
             job['state']='generating'
             self.save(job)
             for scene in job['scenes']:
@@ -762,10 +787,8 @@ class CharacterService:
                     or hashlib.sha256(self.video_for(job).credential().encode()).hexdigest()!=retry['key_id']):
                 raise CharacterError('blocked')
             day=(now()+timedelta(hours=9)).date().isoformat()
-            exposure=sum((day_exposure(j,day) for j in self.listing()),Decimal(0))
             extra=amount(retry['quote_usd'])
-            if (amount(job['quote_total_usd'])+extra>amount(job['episode_limit'])
-                    or exposure+extra>amount(job['day_limit'])):
+            if extra>amount(job['episode_limit']):
                 raise CharacterError('budget')
             history=scene.get('history',[])
             history.append({k:v for k,v in scene.items() if k!='history'})

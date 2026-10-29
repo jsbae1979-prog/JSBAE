@@ -661,22 +661,33 @@ def module_view(request: Request, module: Module):
 
     ai = ai_settings(state.sessions)
     result["formDefaults"]["ai_settings_save_ai_settings"] = {
-        key: getattr(ai, key) for key in ("provider", "model", "approved", "monthly_token_limit", "timeout")
+        key: getattr(ai, key) for key in ("provider", "model", "approved", "request_token_limit", "timeout")
     }
+    from newsflow.intelligence.api_settings import read_api_settings
+    result["catalog"]["apiSettingsDefaults"] = {}
+    for provider in ("openai", "claude_api"):
+        current = read_api_settings(state.sessions, provider)
+        result["catalog"]["apiSettingsDefaults"][provider] = {
+            "provider": provider, "model": current.model, "approved": current.approved,
+            "search_enabled": current.search_enabled, "search_approved": current.search_approved,
+            "request_limit_usd": str(current.request_limit_usd),
+            "input_price_per_1m": str(current.input_price_per_1m or ""),
+            "output_price_per_1m": str(current.output_price_per_1m or ""),
+            "search_price_per_1k": str(current.search_price_per_1k or ""),
+            "request_token_limit": ai.request_token_limit, "timeout": ai.timeout}
     tts = tts_settings(state.sessions)
     result["formDefaults"]["video_save_tts"] = {
-        key: tts[key] for key in ("enabled", "voice_id", "model", "job_limit", "monthly_limit", "commercial")
+        key: tts[key] for key in ("enabled", "voice_id", "model", "job_limit", "commercial")
     }
     video = video_settings(state.sessions)
     result["formDefaults"]["video_ai_save_settings"] = {
         key: value(getattr(video, key))
-        if key not in {"job_limit", "monthly_limit"}
+        if key != "job_limit"
         else str(getattr(video, key))
         for key in (
             "provider",
             "host",
             "approved",
-            "monthly_limit",
             "job_limit",
             "currency",
             "max_active",

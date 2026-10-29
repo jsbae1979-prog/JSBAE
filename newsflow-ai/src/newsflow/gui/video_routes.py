@@ -123,12 +123,12 @@ def elevenlabs_sample(request: Request, voice_id: str):
 @router.post("/video/tts")
 def save_tts(request: Request, enabled: bool = Form(False), voice_id: str = Form("", max_length=100),
              model: str = Form("eleven_multilingual_v2"), job_limit: int = Form(1000),
-             monthly_limit: int = Form(10000), commercial: bool = Form(True)):
+             commercial: bool = Form(True)):
     from newsflow.video.elevenlabs_tts import save_settings
 
     try:
         save_settings(request.app.state.sessions, enabled=enabled, voice_id=voice_id, model=model,
-                      job_limit=job_limit, monthly_limit=monthly_limit, commercial=commercial)
+                      job_limit=job_limit, commercial=commercial)
     except TTSError as exc:
         raise HTTPException(422, str(exc)) from None
     return go("/video/tts")

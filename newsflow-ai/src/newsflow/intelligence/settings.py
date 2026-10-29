@@ -1,7 +1,7 @@
-"""GUI-managed AI provider settings, explicit paid-call approval and monthly token budget.
+"""GUI-managed AI provider settings, explicit paid-call approval and per-execution token budget.
 
 External calls require all of: provider=openai, a stored approval with timestamp, a
-positive monthly token limit that is not exhausted, and a configured key. Nothing here
+positive per-execution token limit, and a configured key. Nothing here
 reads the key value; it only asks the key store whether one exists.
 """
 
@@ -49,8 +49,9 @@ class AISettings:
     model: str = DEFAULT_MODEL
     approved: bool = False
     approved_at: str | None = None
-    monthly_token_limit: int = 0
+    monthly_token_limit: int = 0  # Retained history; never an execution gate.
     timeout: int = 20
+    request_token_limit: int = 0
 
     def options(self, max_tokens: int = 1800) -> Options:
         return Options(model=self.model, timeout=self.timeout, max_tokens=max_tokens)
@@ -123,6 +124,7 @@ def read_settings(sessions: sessionmaker[Session]) -> AISettings:
         model = _value(session, "ai_model") or DEFAULT_MODEL
         approved_at = _value(session, "ai_approved_at")
         limit = _value(session, "ai_monthly_token_limit")
+        request_limit = _value(session, "ai_request_token_limit")
         timeout = _value(session, "ai_timeout")
     try:
         Options(model=model)
@@ -134,34 +136,38 @@ def read_settings(sessions: sessionmaker[Session]) -> AISettings:
         approved=bool(approved_at),
         approved_at=approved_at or None,
         monthly_token_limit=int(limit) if limit and limit.isdigit() else 0,
+        request_token_limit=int(request_limit) if request_limit and request_limit.isdigit() else 0,
         timeout=int(timeout) if timeout and timeout.isdigit() and 1 <= int(timeout) <= 60 else 20,
     )
 
 
-def validate_settings(provider: str, model: str, approved: bool, monthly_token_limit: int, timeout: int) -> None:
+def validate_settings(provider: str, model: str, approved: bool, request_token_limit: int, timeout: int) -> None:
     """Validate legacy API gates without saving or invoking a provider."""
     if provider not in PROVIDERS:
         raise SettingsError("AI 제공자를 다시 선택하세요.")
     if not isinstance(model, str) or not re.fullmatch(r"[a-zA-Z0-9._-]{1,80}", model):
         raise SettingsError("모델 이름은 영문·숫자·점·하이픈 80자 이내여야 합니다.")
-    if type(monthly_token_limit) is not int or not 0 <= monthly_token_limit <= MAX_LIMIT:
-        raise SettingsError("월 토큰 한도는 0 이상 5천만 이하의 정수여야 합니다.")
+    if type(request_token_limit) is not int or not 0 <= request_token_limit <= MAX_LIMIT:
+        raise SettingsError("1회 토큰 한도는 0 이상 5천만 이하의 정수여야 합니다.")
     if type(timeout) is not int or not 1 <= timeout <= 60:
         raise SettingsError("요청 제한시간은 1~60초여야 합니다.")
-    if provider == "openai" and approved and monthly_token_limit <= 0:
-        raise SettingsError("외부 AI를 승인하려면 0보다 큰 월 토큰 한도를 함께 설정하세요.")
+    if provider == "openai" and approved and request_token_limit <= 0:
+        raise SettingsError("외부 AI를 승인하려면 0보다 큰 1회 토큰 한도를 함께 설정하세요.")
 
 
 def write_settings(
-    sessions: sessionmaker[Session], provider: str, model: str, approved: bool, monthly_token_limit: int, timeout: int,
+    sessions: sessionmaker[Session], provider: str, model: str, approved: bool, monthly_token_limit: int | None = None, timeout: int = 20,
+    *, request_token_limit: int | None = None,
 ) -> AISettings:
-    validate_settings(provider, model, approved, monthly_token_limit, timeout)
+    # Explicit legacy form submissions are interpreted as a per-run limit, never read from old monthly data.
+    request_token_limit = request_token_limit if request_token_limit is not None else monthly_token_limit
+    validate_settings(provider, model, approved, request_token_limit, timeout)
     with sessions.begin() as session:
         session.connection().exec_driver_sql("BEGIN IMMEDIATE")
         previous = _value(session, "ai_approved_at")
         _set(session, "ai_provider", provider)
         _set(session, "ai_model", model)
-        _set(session, "ai_monthly_token_limit", str(monthly_token_limit))
+        _set(session, "ai_request_token_limit", str(request_token_limit))
         _set(session, "ai_timeout", str(timeout))
         # Approval is a durable, dated user decision; re-saving keeps the original timestamp.
         _set(session, "ai_approved_at", (previous or utcnow().isoformat()) if approved else "")
@@ -208,20 +214,12 @@ def max_tokens_for(duration: int) -> int:
 def check_budget(
     sessions: sessionmaker[Session], settings: AISettings, options: Options, prompt_estimate: int = 0,
 ) -> None:
-    """Reject before any external request when the month could exceed the user's limit.
-
-    The reservation is the output cap plus the estimated prompt tokens of this call, so
-    a month cannot end above the limit by the size of one prompt.
-    """
-    if settings.monthly_token_limit <= 0:
-        raise SettingsError("월 토큰 한도가 설정되지 않아 외부 AI를 호출하지 않습니다.")
-    used = usage_this_month(sessions)["tokens"]
+    """Compare only this explicit request with its configured token ceiling."""
+    if settings.request_token_limit <= 0:
+        raise SettingsError("1회 토큰 한도가 설정되지 않아 외부 AI를 호출하지 않습니다.")
     needed = max(0, int(prompt_estimate)) + options.max_tokens
-    if used + needed > settings.monthly_token_limit:
-        raise SettingsError(
-            "이번 달 토큰 한도에 도달해 외부 AI를 호출하지 않습니다. "
-            f"사용 {used} + 이번 호출 예상 {needed} > 한도 {settings.monthly_token_limit}. 설정에서 한도를 확인하세요."
-        )
+    if needed > settings.request_token_limit:
+        raise SettingsError(f"이번 호출 예상 {needed} 토큰이 1회 한도 {settings.request_token_limit}을 넘습니다.")
 
 
 def read_prices(sessions: sessionmaker[Session]) -> dict:
@@ -281,18 +279,16 @@ def external_ready(sessions: sessionmaker[Session], key_store) -> dict:
         reasons.append("AI 제공자가 기본 대본(외부 호출 없음)입니다.")
     if not settings.approved:
         reasons.append("유료 호출 승인이 저장되지 않았습니다.")
-    if settings.monthly_token_limit <= 0:
-        reasons.append("월 토큰 한도가 없습니다.")
-    elif usage["tokens"] >= settings.monthly_token_limit:
-        reasons.append("이번 달 토큰 한도를 모두 사용했습니다.")
+    if settings.request_token_limit <= 0:
+        reasons.append("1회 토큰 한도가 없습니다.")
     if not key["configured"]:
         reasons.append("API 키가 없습니다.")
     prices = read_prices(sessions)
     return {
         "ready": not reasons, "reasons": reasons, "provider": settings.provider, "model": settings.model,
-        "approved": settings.approved, "approved_at": settings.approved_at, "limit": settings.monthly_token_limit,
+        "approved": settings.approved, "approved_at": settings.approved_at, "limit": settings.request_token_limit,
         "usage": usage, "key": key, "timeout": settings.timeout,
-        "remaining_tokens": max(0, settings.monthly_token_limit - usage["tokens"]),
+        "remaining_tokens": None, "limit_scope": "per_execution",
         "estimate": job_estimate(sessions, 30),
         "prices": {
             "input_per_1m": format(prices["input_per_1m"], "f") if prices["input_per_1m"] is not None else "",

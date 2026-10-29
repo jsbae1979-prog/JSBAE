@@ -504,7 +504,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     [help, setHelp] = useState(false),
     [videoAdvanced, setVideoAdvanced] = useState(false);
   const [per, setPer] = useState("10"),
-    [daily, setDaily] = useState("20"),
     [failure, setFailure] = useState("");
   const pending = useRef<string | null>(null),
     upload = useRef<HTMLInputElement>(null),
@@ -534,8 +533,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const trialEnabled = caps?.liveTrial?.enabled === true;
   const [adjustments, setAdjustments] = useState<Record<string, string>>({});
   const estimate = publicEstimate(currentModel, settings);
-  const budgetExceeded =
-    estimate.upper !== null && Number(per) > 0 && estimate.upper > Number(per);
   useEffect(() => {
     if (ready && !job?.studio_selection) {
       setSettings(
@@ -597,7 +594,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           ? ["asset", asset]
           : ["job", job?.id || ""];
     return JSON.stringify([
-      topic.replace(/[\r\n\t]+/g, " ").trim(), settings, Number(per), Number(daily), selected,
+      topic.replace(/[\r\n\t]+/g, " ").trim(), settings, Number(per), selected,
     ]);
   }
   const blockedStoryRequest = !!storyRequests[storyRequestKey()];
@@ -614,10 +611,18 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       settings,
       job.studio_selection,
       per,
-      daily,
+      String(job.day_limit ?? job.episode_limit),
       job.episode_limit,
-      job.day_limit,
+      job.day_limit ?? job.episode_limit,
     );
+  const currentQuote = job?.state === "quoted" && !quoteSettingsChanged
+    ? Number(job.quote)
+    : NaN;
+  const budgetAmount = Number.isFinite(currentQuote) && currentQuote > 0
+    ? currentQuote
+    : estimate.upper;
+  const budgetExceeded =
+    budgetAmount !== null && Number(per) > 0 && budgetAmount > Number(per);
   const settingsFrozen = frozen && !pendingReferenceCopy;
   const legacy = !!job && !job.studio_selection;
   const lockedScriptModel = !!job?.studio_selection;
@@ -631,7 +636,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         ) as Settings,
       );
       setPer(job.episode_limit);
-      setDaily(job.day_limit);
     }
     setScene(-1);
   }, [job?.id]);
@@ -811,7 +815,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       form.set("request_id", requestId);
       form.set("consent", "true");
       form.set("episode_limit", per);
-      form.set("day_limit", daily);
       if (referenceJob) form.set("reference_job", referenceJob);
       else if (file) form.set("reference", file);
       else if (asset) form.set("reference_asset", asset);
@@ -903,7 +906,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       body.set("consent", "true");
       body.set("settings", JSON.stringify(settings));
       body.set("episode_limit", per);
-      body.set("day_limit", daily);
       body.set("request_id", requestId);
       if (file && body instanceof FormData) body.set("reference", file);
       else if (referenceJob) body.set("reference_job", referenceJob);
@@ -974,7 +976,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     const form = new FormData();
     form.set("settings", JSON.stringify(settings));
     form.set("episode_limit", per);
-    form.set("day_limit", daily);
     const encoded = new URLSearchParams();
     form.set("csrf_token", c.view?.csrfToken ?? "");
     form.forEach((v, k) => encoded.set(k, String(v)));
@@ -989,6 +990,21 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         "영상 설정을 저장하지 못했습니다. 견적은 요청하지 않았습니다.",
       );
     await c.load();
+  }
+  async function recoverStory() {
+    if (!job || sending.current) return;
+    sending.current = true; setBusy(true); setFailure("");
+    try {
+      const body = new URLSearchParams({consent: "true", csrf_token: c.view?.csrfToken ?? ""});
+      const response = await fetch(`/api/studio/characters/${job.id}/recover-story`, {
+        method: "POST", credentials: "same-origin", body,
+      });
+      if (!response.ok) throw Error("저장된 스토리 응답을 복구하지 못했습니다. 추가 AI 요청은 하지 않았습니다.");
+      await c.load();
+      c.setNotice("저장된 Claude 응답을 복구했습니다. 추가 AI 호출·비용 없이 스토리를 검토하고 영상 견적을 확인할 수 있습니다.");
+    } catch (error) {
+      setFailure(error instanceof Error ? error.message : "복구 결과를 확인하세요. 자동 재요청하지 않습니다.");
+    } finally { setBusy(false); sending.current = false; }
   }
   async function quote() {
     if (sending.current || pendingReferenceCopy) return;
@@ -1341,6 +1357,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 {job.scriptResponseSaved && " 응답은 로컬에 보존되어 있습니다."}
               </p>
             )}
+            {job?.state === "script_failed" && job?.scriptResponseSaved && (
+              <button type="button" disabled={isBusy} onClick={recoverStory}>
+                저장된 스토리 복구 · 추가 비용 없음
+              </button>
+            )}
             {job?.scriptRetryAllowed === true && (
               <div className="kling-character-retry">
                 {action("write", "이 작업의 스토리 다시 생성하기", ["script_failed"])}
@@ -1467,15 +1488,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   value={per}
                   inputMode="decimal"
                   onChange={(e) => setPer(e.target.value)}
-                  disabled={isBusy || settingsFrozen}
-                />
-              </label>
-              <label>
-                일일 최대 승인 한도 (USD)
-                <input
-                  value={daily}
-                  inputMode="decimal"
-                  onChange={(e) => setDaily(e.target.value)}
                   disabled={isBusy || settingsFrozen}
                 />
               </label>
@@ -1692,8 +1704,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                           isBusy ||
                           pendingReferenceCopy ||
                           legacy ||
-                          !ready ||
-                          budgetExceeded
+                          !ready
                         }
                         onClick={() => void quote()}
                       >
@@ -1730,8 +1741,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                             isBusy ||
                             pendingReferenceCopy ||
                             legacy ||
-                            !ready ||
-                            budgetExceeded
+                            !ready
                           }
                           onClick={() => void quote()}
                         >

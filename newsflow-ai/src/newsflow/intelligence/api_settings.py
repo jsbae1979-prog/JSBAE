@@ -1,7 +1,8 @@
 """Explicit API approvals and atomic request/response usage accounting.
 
-New requests do not reserve speculative dollar amounts. Reported token/tool usage
-is priced after a response; this local estimate is never a vendor bill or hard cap.
+Each new request is checked against its configured per-execution USD ceiling.
+Token/tool bounds are conservative checks, not a vendor invoice. Reported usage
+is retained after a response; historical totals never block an independent run.
 Legacy reservations remain unchanged. Explicitly acknowledged unknown analyses
 may permit new analyses only; request replay and all other gates still block.
 Only an injected Fake budget skips proof of a real authenticated API connection.
@@ -43,8 +44,8 @@ PRICE_FLOORS = {"gpt-4.1-mini": ("0.40", "1.60"), "claude-sonnet-4-6": ("3", "15
 # Missing rates use the pinned model's public tariff; explicit saved values,
 # including zero/invalid values, are never silently repaired or overwritten.
 DISCLAIMER = (
-    "응답에 보고된 사용량의 사후 비용 추정은 공급사 실제 청구액이 아닙니다. 요청별 금액 한도와 "
-    "추정 사전 예약을 적용하지 않으므로 한 요청의 최종 금액이나 월 예산 이내 완료를 보장하지 않습니다. "
+    "한 번의 요청에 설정한 한도와 입력·출력·검색 상한을 비교한 뒤 실행합니다. "
+    "사용량 추정과 공급사 실제 청구액은 다르며 누적 사용액은 다음 요청을 제한하지 않습니다. "
     "다른 앱 사용·요금 변경은 실시간 반영되지 않습니다. 공급사 결제·한도를 함께 확인하세요."
 )
 
@@ -174,7 +175,7 @@ def invalidate_api_verification(sessions: sessionmaker[Session], provider: str) 
 
 def save_api_settings(
     sessions: sessionmaker[Session], provider: str, *, model: str, approved: bool, search_enabled: bool,
-    search_approved: bool, request_limit_usd: str | None = None, monthly_limit_usd: str, input_price_per_1m: str,
+    search_approved: bool, request_limit_usd: str | None = None, monthly_limit_usd: str | None = None, input_price_per_1m: str,
     output_price_per_1m: str, search_price_per_1k: str, billing_confirmed: bool = False,
     account_remaining_usd: str = "",
 ) -> APISettings:
@@ -187,22 +188,20 @@ def save_api_settings(
         if type(value) is not bool:
             raise APISettingsError("승인 설정을 다시 확인하세요.")
     values = {
-        "monthly_limit_usd": _amount(monthly_limit_usd),
         "input_price_per_1m": _amount(input_price_per_1m, optional=True),
         "output_price_per_1m": _amount(output_price_per_1m, optional=True),
         "search_price_per_1k": _amount(search_price_per_1k, optional=True),
     }
-    # Accept old clients without resetting saved legacy values when omitted.
-    # The retained field no longer participates in any dispatch decision.
+    # Keep legacy monthly values unchanged. Only the explicit request ceiling gates execution.
     if request_limit_usd is not None:
         values["request_limit_usd"] = _amount(request_limit_usd)
-    if approved and values["monthly_limit_usd"] <= 0:
-        raise APISettingsError("API 사용 승인에는 0보다 큰 월별 USD 한도가 필요합니다.")
     # Deprecated balance arguments remain accepted for old clients. Neither a
     # normal save nor key/model changes overwrite the retained historical values.
     with sessions.begin() as session:
         session.connection().exec_driver_sql("BEGIN IMMEDIATE")
         old = _read(session, provider)
+        if approved and values.get("request_limit_usd", old.request_limit_usd) <= 0:
+            raise APISettingsError("API 사용 승인에는 0보다 큰 1회 실행 USD 한도가 필요합니다.")
         if old.model != model:
             _invalidate(session, provider)
         prefix = f"api_{provider}_"
@@ -246,8 +245,8 @@ def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *
             reasons.append("웹 검색 비용 별도 승인 필요")
         if settings.model not in SEARCH_CONTEXT_BOUNDS:
             reasons.append("이 모델의 웹 검색 계약은 미검증입니다.")
-    if settings.monthly_limit_usd <= 0:
-        reasons.append("월별 비용 한도 필요")
+    if settings.request_limit_usd <= 0:
+        reasons.append("1회 실행 비용 한도 필요")
     prices = (settings.input_price_per_1m, settings.output_price_per_1m)
     if capability == "search":
         prices += (settings.search_price_per_1k,)
@@ -421,12 +420,7 @@ def _limit_reasons(settings: APISettings, rows: list[APIRequestReservation], now
     if any(row.status == "reserved" or (row.status == "unknown" and row.id not in rejected and row.id not in scoped_unknowns and not (
             (capability == "analysis" or script_exception) and row.id in acknowledged)) for row in rows):
         reasons.append("진행 중이거나 결과 불명인 API 요청이 있어 새 호출을 차단합니다.")
-    monthly = sum((Decimal(row.estimated_usd or "0") for row in rows
-                   if row.created_at >= month_start(now)), Decimal(0))
-    # Only response-reported usage enters these totals. Missing usage remains an
-    # unknown-outcome blocker, never an invented zero-cost success or refund.
-    if settings.monthly_limit_usd > 0 and monthly >= settings.monthly_limit_usd:
-        reasons.append("보고된 사용량 기준 월별 비용 한도에 도달했습니다.")
+    # Preserve all usage/unknown records. Completed historical spending is not a run limit.
     return reasons
 
 
@@ -644,10 +638,17 @@ class APIBudgetService:
                                first_search=first_search_authentication is not None)
             if reasons:
                 raise APISettingsError(" / ".join(reasons))
-            # Token output limits remain transport/resource controls. They are not
-            # a guessed dollar reservation or a claim about the final vendor bill.
-            bounds = {"accounting": "reported_usage", "search_calls": max_search_calls}
+            from .api_providers import MAX_REQUEST_BYTES
+            # UTF-8 bytes bound direct prompt tokens; search may fill the model context.
+            input_bound = SEARCH_CONTEXT_BOUNDS[model] if max_search_calls else MAX_REQUEST_BYTES
             prices = _prices(settings)
+            upper = self._cost({"prompt_tokens": input_bound, "completion_tokens": max_output_tokens,
+                                "search_calls": max_search_calls}, prices)
+            if upper > settings.request_limit_usd:
+                raise APISettingsError("이번 요청의 입력·출력·검색 상한이 1회 실행 비용 한도를 넘습니다.")
+            bounds = {"accounting": "per_execution", "prompt_tokens": input_bound,
+                      "completion_tokens": max_output_tokens, "search_calls": max_search_calls,
+                      "request_limit_usd": str(settings.request_limit_usd)}
             rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
             reviews = _unknown_analysis_reviews(session, settings, rows)
             acknowledged = {row["id"] for row in reviews if row["acknowledged"]}
@@ -676,7 +677,7 @@ class APIBudgetService:
             if reasons:
                 raise APISettingsError(" / ".join(reasons))
             row = APIRequestReservation(id=uuid.uuid4().hex, request_id=request_id, provider=provider, kind=kind,
-                                        model=model, status="reserved", reserved_usd="0", bounds=bounds,
+                                        model=model, status="reserved", reserved_usd=str(upper), bounds=bounds,
                                         prices=prices, usage={}, test_only=self.test_only, created_at=now)
             session.add(row)
             if comparison:
@@ -689,7 +690,7 @@ class APIBudgetService:
             if script_approval is not None:
                 session.add(AuditLog(level="info", event="api_script_once_consumed", message=json.dumps(
                     {"approval_id": script_approval, "request_id": request_id}, separators=(",", ":"))))
-        return Reservation(row.id, request_id, Decimal(0))
+        return Reservation(row.id, request_id, upper)
 
     @staticmethod
     def _cost(usage: dict, prices: dict) -> Decimal:
@@ -726,7 +727,7 @@ class APIBudgetService:
                 elif any(safe[name] > row.bounds[name] for name in safe):
                     row.status = "unknown"
                     row.reserved_usd = str(max(Decimal(row.reserved_usd), Decimal(row.estimated_usd)))
-            elif not rejected and (status == "success" or row.bounds.get("accounting") == "reported_usage"):
+            elif not rejected and (status == "success" or row.bounds.get("accounting") in {"reported_usage", "per_execution"}):
                 row.status = "unknown"
             if status in ("cancelled", "unknown"):
                 row.status = "unknown"

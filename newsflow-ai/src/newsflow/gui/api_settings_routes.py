@@ -84,30 +84,30 @@ def _store(request: Request, provider: str):
 def save_configuration(
     request: Request, provider: str, model: str = Form(max_length=80),
     approved: bool = Form(False), search_enabled: bool = Form(False), search_approved: bool = Form(False),
-    request_limit_usd: str | None = Form(None, max_length=20), monthly_limit_usd: str = Form("", max_length=20),
+    request_limit_usd: str | None = Form(None, max_length=20),
     input_price_per_1m: str = Form("", max_length=20), output_price_per_1m: str = Form("", max_length=20),
     search_price_per_1k: str = Form("", max_length=20), billing_confirmed: bool = Form(False),
     account_remaining_usd: str = Form("", max_length=20),
-    monthly_token_limit: int | None = Form(None), timeout: int | None = Form(None),
+    request_token_limit: int | None = Form(None), timeout: int | None = Form(None),
 ):
     _store(request, provider)
     try:
         if provider == "openai":
             previous = read_settings(request.app.state.sessions)
-            monthly_token_limit = previous.monthly_token_limit if monthly_token_limit is None else monthly_token_limit
+            request_token_limit = previous.request_token_limit if request_token_limit is None else request_token_limit
             timeout = previous.timeout if timeout is None else timeout
             # Check all existing token/timeout rules before changing either API policy.
-            validate_settings("openai", model.strip(), approved, monthly_token_limit, timeout)
+            validate_settings("openai", model.strip(), approved, request_token_limit, timeout)
         save_api_settings(
             request.app.state.sessions, provider, model=model.strip(), approved=approved,
             search_enabled=search_enabled, search_approved=search_approved,
-            request_limit_usd=request_limit_usd, monthly_limit_usd=monthly_limit_usd,
+            request_limit_usd=request_limit_usd,
             input_price_per_1m=input_price_per_1m, output_price_per_1m=output_price_per_1m,
             search_price_per_1k=search_price_per_1k, billing_confirmed=billing_confirmed,
             account_remaining_usd=account_remaining_usd,
         )
         if provider == "openai":
-            write_settings(request.app.state.sessions, "openai", model.strip(), approved, monthly_token_limit, timeout)
+            write_settings(request.app.state.sessions, "openai", model.strip(), approved, timeout=timeout, request_token_limit=request_token_limit)
     except (APIPolicyError, SettingsError) as exc:
         raise HTTPException(422, str(exc)) from None
     return go("/simple-settings?saved=api#selected-ai")
