@@ -6,6 +6,25 @@ from .schema import CHARACTER_SCRIPT_INSTRUCTION, Storyboard
 
 
 class CharacterWriter(AnthropicProvider):
+    def write_studio(self, payload, options, reference):
+        import base64
+        from .studio_story import INSTRUCTION, StudioStoryboard
+        body={'model':options.model,'max_tokens':options.max_tokens,'temperature':options.temperature,
+              'system':INSTRUCTION, 'messages':[{'role':'user','content':[
+                  {'type':'image','source':{'type':'base64','media_type':'image/png',
+                     'data':base64.b64encode(reference).decode('ascii')}},
+                  {'type':'text','text':user_message(payload)}]}],
+              'output_config':{'format':{'type':'json_schema','schema':_output_schema(StudioStoryboard)}}}
+        document=self._post(body,options)
+        try:
+            if document['stop_reason']!='end_turn' or len(document['content'])!=1:
+                raise ValueError
+            block=document['content'][0]
+            if block['type']!='text': raise ValueError
+            return StudioStoryboard.model_validate(_claude_json_object(block['text']))
+        except (KeyError,TypeError,ValueError):
+            raise ProviderResponseError('스토리 형식 검사 실패 · 자동 재생성하지 않습니다.') from None
+
     def write(self, payload, options):
         body = {'model': options.model, 'max_tokens': options.max_tokens, 'temperature': options.temperature,
                 'system': CHARACTER_SCRIPT_INSTRUCTION,

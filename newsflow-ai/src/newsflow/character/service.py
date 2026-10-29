@@ -20,6 +20,7 @@ from newsflow.video.ai.clips import probe_clip
 from newsflow.video.ai.contracts import ProviderAmbiguousSubmit, VideoProviderError
 
 from .claude import CharacterWriter
+from .kling import catalog as studio_catalog  # Load the local capability cache once, without network calls.
 from .compose import compose, digest
 from .higgsfield_client import MODEL, HiggsfieldVideoClient, amount, reference_bytes
 from .schema import Character, CharacterError, Storyboard, clean_text, load_character, prompts
@@ -51,8 +52,12 @@ class CharacterService:
         self.composer = composer or compose
 
     def video_for(self, job):
-        if self.video_override is not None or not job.get('selection'):
+        if self.video_override is not None or not (job.get('selection') or job.get('studio_selection')):
             return self.video
+        if job.get('studio_selection'):
+            from .kling import KlingClient, check
+            if self.video_keys is None: raise CharacterError('provider')
+            return KlingClient(self.video_keys.key, check(job['studio_selection']))
         from newsflow.creation.catalog import check_snapshot
         chosen = check_snapshot(job['selection'], 'character')
         if chosen['credential_source'] == 'legacy_env':
@@ -76,7 +81,14 @@ class CharacterService:
             if path.is_symlink() or path.stat().st_size > 200000:
                 raise ValueError
             result = json.loads(path.read_text(encoding='utf8'))
-            if result['id'] != job_id or result['model'] != MODEL:
+            from .kling import check
+            if result['id'] != job_id:
+                raise ValueError
+            if result.get('studio_selection'):
+                chosen=check(result['studio_selection'])
+                if result['model']!=chosen['video_model'] or result['claude_model']!=chosen['script_model'] or result['duration']!=chosen['duration']:
+                    raise ValueError
+            elif result['model']!=MODEL:
                 raise ValueError
             if result.get('selection'):
                 from newsflow.creation.catalog import check_snapshot
@@ -84,7 +96,10 @@ class CharacterService:
                 if result['claude_model'] != chosen['script_model'] or result['model'] != chosen['video_model']:
                     raise ValueError
             if result.get('script'):
-                Storyboard.model_validate(result['script'])
+                from .studio_story import StudioStoryboard
+                schema=StudioStoryboard if result.get('studio_selection') else Storyboard
+                script=schema.model_validate(result['script'])
+                if sum(s.seconds for s in script.scenes)!=result['duration']: raise ValueError
                 assert result['plan_hash'] == self.plan_hash(result)
             return result
         except (OSError,KeyError,AssertionError,ValueError,TypeError):
@@ -93,7 +108,7 @@ class CharacterService:
     @staticmethod
     def plan_hash(job):
         return fingerprint({k:job[k] for k in ['topic','model','claude_model','character','script','prompts',
-                                               'episode_limit','day_limit','reference_sha256'] + (['selection'] if 'selection' in job else [])})
+                                               'episode_limit','day_limit','reference_sha256'] + (['selection'] if 'selection' in job else []) + (['studio_selection'] if 'studio_selection' in job else [])})
 
     def save(self, job):
         path = self.folder(job['id'])/'jobs.json'
@@ -160,6 +175,54 @@ class CharacterService:
             self.save(job)
             return identifier
 
+    def create_studio(self, topic, episode_limit, day_limit, *, reference, settings, request_id):
+        from .kling import normalize_reference, snapshot, check
+        from newsflow.video_models.catalog import character_config, styles
+        topic=clean_text(topic,150)
+        if not re.fullmatch(r'[a-f0-9]{32}',request_id or ''): raise CharacterError()
+        frozen=snapshot(settings)
+        per,daily=amount(episode_limit),amount(day_limit)
+        if per>daily: raise CharacterError('budget')
+        raw=normalize_reference(reference)
+        body_hash=fingerprint([topic,hashlib.sha256(raw).hexdigest(),frozen,str(per),str(daily)])
+        with self.lock():
+            for existing in self.listing():
+                if existing.get('studio_request_id')==request_id:
+                    if existing.get('studio_body_hash')!=body_hash: raise CharacterError('blocked')
+                    return existing['id'],False
+            identifier=uuid4().hex
+            folder=self.folder(identifier)
+            folder.mkdir()
+            (folder/'reference.png').write_bytes(raw)
+            chosen=check(frozen)
+            job={'id':identifier,'created_at':now().isoformat(),'state':'needs_script','topic':topic,
+                 'model':chosen['video_model'],'claude_model':chosen['script_model'],
+                 'character':{**character_config(),'source':'user_reference','style_warn':styles()[chosen['style']]['warn']},'script':None,
+                 'reference_sha256':digest(folder/'reference.png'),'episode_limit':str(per),'day_limit':str(daily),
+                 'events':[],'scenes':[],'reported_billed_usd':None,'duration':chosen['duration'],
+                 'made_for_kids':None,'studio_selection':frozen,
+                 'studio_request_id':request_id,'studio_body_hash':body_hash}
+            self.save(job)
+            return identifier,True
+
+    def update_studio_settings(self, identifier, settings, episode_limit, day_limit):
+        from .kling import snapshot, check
+        from .studio_story import StudioStoryboard, prompts as studio_prompts
+        frozen=snapshot(settings)
+        per,daily=amount(episode_limit),amount(day_limit)
+        with self.lock():
+            job=self.read(identifier)
+            if not job.get('studio_selection') or job['state']!='script_review': raise CharacterError('blocked')
+            if (settings['duration']!=job['duration'] or settings['clip_seconds']!=check(job['studio_selection'])['clip_seconds']
+                    or settings['script_model']!=job['claude_model']):
+                raise CharacterError('blocked')
+            if per>daily: raise CharacterError('budget')
+            job.update(studio_selection=frozen,model=settings['video_model'],
+                       episode_limit=str(per),day_limit=str(daily))
+            job['prompts']=studio_prompts(StudioStoryboard.model_validate(job['script']),settings,job['character'])
+            job['plan_hash']=self.plan_hash(job)
+            self.save(job)
+
     @staticmethod
     def consent(value):
         if value is not True:
@@ -173,6 +236,10 @@ class CharacterService:
             retry_known=(job['state']=='script_failed' and job.get('response_received') is True and attempt<=3)
             if job['state']!='needs_script' and not retry_known:
                 raise CharacterError('blocked')
+            if job.get('studio_selection'):
+                reference=self.folder(identifier)/'reference.png'
+                if digest(reference)!=job['reference_sha256']: raise CharacterError('reference')
+                reference_bytes(reference)
             options=Options(model=job['claude_model'],timeout=300,max_tokens=3000)
             request_id='character:'+identifier+(':'+str(attempt) if attempt>1 else '')
             reservation=self.budget.reserve(provider='claude_api',request_id=request_id,
@@ -182,11 +249,22 @@ class CharacterService:
             job['events'].append({'stage':'claude','at':now().isoformat(),'request_id':request_id})
             self.save(job)
             try:
-                payload={'duration':30,'topic':job['topic'],'character':job['character'],
+                payload={'duration':job['duration'],'topic':job['topic'],'character':job['character'],
                          'recent_topics':[j['topic'] for j in self.listing() if j['id']!=identifier][:5]}
-                story=self.writer.write(payload,options)
-                if not isinstance(story,Storyboard):
-                    story=Storyboard.model_validate(story)
+                if job.get('studio_selection'):
+                    from .kling import check
+                    from .studio_story import StudioStoryboard
+                    settings=check(job['studio_selection'])
+                    payload.update(sound=settings['sound'],clip_seconds=settings['clip_seconds'],
+                                   scene_count=job['duration']//settings['clip_seconds'])
+                    story=self.writer.write_studio(payload,options,reference_bytes(self.folder(identifier)/'reference.png'))
+                    story=StudioStoryboard.model_validate(story)
+                    if (sum(s.seconds for s in story.scenes)!=job['duration'] or len(story.scenes)!=payload['scene_count']
+                            or any(s.seconds!=settings['clip_seconds'] for s in story.scenes)): raise CharacterError()
+                else:
+                    story=self.writer.write(payload,options)
+                    if not isinstance(story,Storyboard):
+                        story=Storyboard.model_validate(story)
             except Exception:  # noqa: BLE001 - persist a stopped state without secret supplier diagnostics
                 job['state']='script_failed'
                 usage=self.writer.last_usage
@@ -198,7 +276,12 @@ class CharacterService:
                 raise CharacterError('provider') from None
             self.budget.finish(reservation.id,status='success',usage=self.writer.last_usage)
             job['script']=story.model_dump()
-            job['prompts']=prompts(story,Character.model_validate(job['character']))
+            if job.get('studio_selection'):
+                from .kling import check
+                from .studio_story import prompts as studio_prompts
+                job['prompts']=studio_prompts(story,check(job['studio_selection']),job['character'])
+            else:
+                job['prompts']=prompts(story,Character.model_validate(job['character']))
             job['plan_hash']=self.plan_hash(job)
             job['state']='script_review'
             job['claude_usage']=self.writer.last_usage
@@ -213,6 +296,12 @@ class CharacterService:
             job=self.read(identifier)
             if job['state']!='script_review':
                 raise CharacterError('blocked')
+            if job.get('studio_selection'):
+                from .kling import check, as_generation
+                from newsflow.video_models.catalog import estimate
+                forecast=estimate(as_generation(check(job['studio_selection'])),job['duration'])
+                if forecast['maximum'] is not None and Decimal(forecast['maximum'])>amount(job['episode_limit']):
+                    raise CharacterError('budget')
             path=self.folder(identifier)/'reference.png'
             if not job['reference_sha256'] or digest(path)!=job['reference_sha256']:
                 raise CharacterError('reference')
@@ -220,12 +309,15 @@ class CharacterService:
             job['state']='preparing'
             self.save(job)
             try:
+                if job.get('studio_selection'):
+                    from .kling import check, generation_reference
+                    path=generation_reference(self.folder(identifier),check(job['studio_selection']))
                 cachefile=self.root/'references.json'
                 if cachefile.is_symlink() or (cachefile.is_file() and cachefile.stat().st_size>1000000):
                     raise CharacterError()
                 cache=json.loads(cachefile.read_text(encoding='utf8')) if cachefile.is_file() else {}
                 key_id=hashlib.sha256(self.video_for(job).credential().encode()).hexdigest()
-                cache_id=fingerprint([job['reference_sha256'],key_id])
+                cache_id=fingerprint([digest(path),key_id])
                 public=cache.get(cache_id)
                 if not public:
                     public=self.video_for(job).upload_reference(path)
@@ -415,7 +507,14 @@ class CharacterService:
             job['state']='composing'
             self.save(job)
             try:
-                output=self.composer(folder,Storyboard.model_validate(job['script']),clips,sfx_root=self.root/'sfx')
+                if job.get('studio_selection'):
+                    from .compose_studio import compose_studio
+                    from .studio_story import StudioStoryboard
+                    from .kling import check
+                    output=compose_studio(folder,StudioStoryboard.model_validate(job['script']),clips,
+                                          settings=check(job['studio_selection']))
+                else:
+                    output=self.composer(folder,Storyboard.model_validate(job['script']),clips,sfx_root=self.root/'sfx')
             except Exception:  # noqa: BLE001 - persist a stopped state without secret supplier diagnostics
                 job['state']='compose_failed'
                 self.save(job)
@@ -423,16 +522,18 @@ class CharacterService:
             job['output']=output
             job['state']='completed'
             self.save(job)
-            review={'title':job['script']['title'],'output':output,'model':job['model'],'made_for_kids':False,
+            review={'title':job['script']['title'],'output':output,'model':job['model'],'made_for_kids':job.get('made_for_kids'),
                     'quote_total_usd':job['quote_total_usd'],'reported_billed_usd':None,
                     'scenes':[{**{k:s[k] for k in ['position','file','sha256','state','attempt','quote_usd']},
                                'history':[{**{k:old.get(k) for k in ['attempt','state','quote_usd','submitted_at',
                                                                     'finished_at']},
                                            'request_id':old.get('handle',{}).get('request_id')}
                                           for old in s.get('history',[])]} for s in job['scenes']],
-                    'checklist':['캐릭터 일관성','자막·순서·30초','AI 생성 표시','아동용 아님 확인',
+                    'checklist':['캐릭터 일관성','자막·장면 순서·길이','AI 생성 표시','시청 연령·아동용 여부 확인',
                                  '음악은 플랫폼에서 직접 선택','최근 웃음 구조 반복 여부'],
                     'human_review':'NOT VERIFIED','automatic_upload':False}
+            if job.get('character',{}).get('style_warn'):
+                review['checklist'].append(job['character']['style_warn'])
             (folder/'review.json').write_text(json.dumps(review,ensure_ascii=False,indent=2),encoding='utf8')
             return folder/'final.mp4'
 

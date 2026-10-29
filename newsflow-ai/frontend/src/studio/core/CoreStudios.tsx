@@ -22,7 +22,7 @@ export default function CoreStudios({
     );
   const titles: Record<string, string> = {
     shorts: "뉴스 쇼츠 제작실",
-    characters: "캐릭터 쇼츠 제작실",
+    characters: "캐릭터 쇼츠 제작",
     images: "이미지 제작실",
     news: "뉴스 스튜디오",
   };
@@ -36,7 +36,7 @@ export default function CoreStudios({
         module === "shorts"
           ? "분석된 뉴스로 만드는 나만의 쇼츠"
           : module === "characters"
-            ? "캐릭터와 스토리로 완성하는 짧은 이야기"
+            ? "나만의 캐릭터와 스토리로 1분 이내의 쇼츠 영상을 쉽게 제작하세요."
             : module === "images"
               ? "아이디어와 뉴스를 이미지로 만드세요"
               : "뉴스를 모으고, 분석하고, 제작으로 이어갑니다"

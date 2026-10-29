@@ -1,0 +1,1 @@
+These .yaml files use JSON syntax (a YAML 1.2 subset), parsed without executable tags or a new runtime dependency. Edit quoted keys/values in these files to maintain model/preset options. See video_models/catalog.py for strict validation. Only the two user-approved Kling models are enabled. Public prices are approximate, never invoices or paid-execution consent.

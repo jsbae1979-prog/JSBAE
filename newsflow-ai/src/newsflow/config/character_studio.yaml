@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "style_id": "3d_animation",
+  "aspect_ratio": "9:16",
+  "appearance": "Preserve the character identity and appearance in the supplied reference image.",
+  "style_lock": "soft 3D animated film style, warm pastel lighting, consistent character design, no text, no logos",
+  "audio_default": false,
+  "clip_seconds": 11,
+  "max_total_seconds": 60,
+  "output_quality": "1080p"
+}

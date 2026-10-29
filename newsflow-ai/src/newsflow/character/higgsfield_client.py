@@ -61,7 +61,7 @@ class HiggsfieldVideoClient(HiggsfieldProvider):
     def _safe_call(self, method, path, payload=None, extra=None):
         status, data = self._call(method, path, payload, extra)
         if not 200 <= status < 300:
-            raise self._error(status, submit=path == '/'+MODEL)
+            raise self._error(status, submit=path == '/'+getattr(self, 'model', MODEL))
         key = self.credential().strip()
         if key and key in json.dumps(data):
             raise ProviderResponseError()
@@ -104,7 +104,7 @@ class HiggsfieldVideoClient(HiggsfieldProvider):
         if not re.fullmatch(r'[a-f0-9-]{8,64}', idem_key):
             raise CharacterError()
         try:
-            data = self._safe_call('POST', '/'+MODEL, payload, {'Idempotency-Key': idem_key})
+            data = self._safe_call('POST', '/'+getattr(self, 'model', MODEL), payload, {'Idempotency-Key': idem_key})
             rid = data.get('request_id')
             status_url = request_url(data.get('status_url'), rid)
             if data.get('status') not in {'queued', 'in_progress', 'completed', 'failed', 'nsfw', 'canceled'}:

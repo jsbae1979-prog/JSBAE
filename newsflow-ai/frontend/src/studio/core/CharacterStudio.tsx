@@ -1,12 +1,22 @@
-import { useEffect, useState } from "react";
-import SampleGallery from "../SampleGallery";
-import type { SampleUse } from "../SampleGallery";
+import { useEffect, useRef, useState } from "react";
+import {
+  BookOpen,
+  Bot,
+  ChevronRight,
+  Clapperboard,
+  Clock3,
+  ImagePlus,
+  Info,
+  Play,
+  Settings2,
+  Sparkles,
+  WandSparkles,
+} from "lucide-react";
+import SampleGallery, { type SampleUse } from "../SampleGallery";
 import CharacterReferenceSamples from "./CharacterReferenceSamples";
-import { Sparkles, ImagePlus, Film, Settings2 } from "lucide-react";
 import { Thumbnail } from "../Thumbnail";
 import { safeMedia, type Item } from "../contracts";
 import {
-  Panel,
   Empty,
   Media,
   Select,
@@ -14,331 +24,1010 @@ import {
   ActionButton,
   type Controller,
 } from "./shared";
-const allowed: Record<string, string[]> = {
-  write: ["needs_script", "script_failed"],
-  prepare: ["script_review"],
-  submit: ["quoted"],
-  check: ["generating"],
-  render: ["clips_review"],
-  "retry-scene": ["retry_quoted"],
+import "./character-studio.css";
+
+import {
+  adjustModel,
+  publicEstimate,
+  type CharacterVideoSettings as Settings,
+} from "./videoModelSettings";
+function CapabilitySelect({
+  label,
+  value,
+  onChange,
+  values,
+  supported,
+  disabled = false,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  values: Record<string, string>;
+  supported: string[];
+  disabled?: boolean;
+  hint?: string;
+}) {
+  return (
+    <label className="kling-capability-field">
+      <span>{label}</span>
+      <select
+        aria-label={label}
+        value={value}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {Object.entries(values).map(([id, title]) => (
+          <option
+            key={id}
+            value={id}
+            disabled={!supported.includes(id)}
+            title={
+              !supported.includes(id)
+                ? "이 모델에서는 지원하지 않아요"
+                : undefined
+            }
+          >
+            {title}
+          </option>
+        ))}
+      </select>
+      {hint && <small className="kling-field-note">{hint}</small>}
+    </label>
+  );
+}
+function LocalReference({ file }: { file: File }) {
+  const canvas = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    let active = true;
+    createImageBitmap(file)
+      .then((bitmap) => {
+        if (active && canvas.current) {
+          const k = Math.min(480 / bitmap.width, 640 / bitmap.height, 1);
+          canvas.current.width = Math.round(bitmap.width * k);
+          canvas.current.height = Math.round(bitmap.height * k);
+          canvas.current
+            .getContext("2d")
+            ?.drawImage(
+              bitmap,
+              0,
+              0,
+              canvas.current.width,
+              canvas.current.height,
+            );
+        }
+        bitmap.close();
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [file]);
+  return (
+    <canvas ref={canvas} role="img" aria-label="선택한 캐릭터 로컬 미리보기" />
+  );
+}
+const defaultSettings: Settings = {
+  video_model: "",
+  script_model: "",
+  style: "",
+  aspect_ratio: "9:16",
+  native_resolution: "model_default",
+  output_quality: "1080p",
+  sound: "off",
+  clip_seconds: 11,
+  duration: 55,
 };
+const stamp = (n: number) =>
+  `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+
 export default function CharacterStudio({ c }: { c: Controller }) {
   const [id, setId] = useState(""),
     [topic, setTopic] = useState(""),
-    [model, setModel] = useState(""),
-    [scene, setScene] = useState(-1),
-    [sampleRef, setSampleRef] = useState<string | null>(null),
-    [sampleBusy, setSampleBusy] = useState(false);
+    [scene, setScene] = useState(-1);
+  const [settings, setSettings] = useState<Settings>(defaultSettings),
+    [tab, setTab] = useState("upload");
+  const [file, setFile] = useState<File | null>(null);
+  const [asset, setAsset] = useState(""),
+    [sampleRef, setSampleRef] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false),
+    [sampleBusy, setSampleBusy] = useState(false),
+    [history, setHistory] = useState(false),
+    [help, setHelp] = useState(false);
+  const [per, setPer] = useState("10"),
+    [daily, setDaily] = useState("20"),
+    [failure, setFailure] = useState("");
+  const pending = useRef<string | null>(null),
+    upload = useRef<HTMLInputElement>(null),
+    sending = useRef(false);
   const jobs = c.list("jobs"),
-    job = jobs.find((x) => String(x.id) === id) ?? jobs[0],
-    defaults = c.view?.catalog.characterDefaults ?? {};
+    job =
+      id === "new"
+        ? undefined
+        : (jobs.find((x) => String(x.id) === id) ?? jobs[0]);
+  const caps = c.view?.catalog.characterStudio,
+    ready = caps?.version === 2,
+    choices = Object.fromEntries(
+      (caps?.modelsDetailed ?? [])
+        .filter((m: Item) => m.enabled)
+        .map((m: Item) => [
+          m.id,
+          `${m.label} · 기본 화질${m.recommended ? " (추천)" : ""}`,
+        ]),
+    );
+  const currentModel: Item | undefined = caps?.modelsDetailed?.find(
+    (m: Item) => m.id === settings.video_model,
+  );
+  const [adjustments, setAdjustments] = useState<Record<string, string>>({});
+  const estimate = publicEstimate(currentModel, settings);
+  const budgetExceeded =
+    estimate.upper !== null && Number(per) > 0 && estimate.upper > Number(per);
   useEffect(() => {
-    if (!model && defaults.script_model) setModel(defaults.script_model);
-  }, [defaults.script_model, model]);
-  const selection = job?.selection ?? {},
-    story = job?.story,
-    scenes = story?.scenes ?? [],
-    clips = job?.scenes ?? [],
-    clip = clips[scene];
-  const ref =
-    job && job.referenceUrl === `/api/studio/characters/${job.id}/reference`
+    if (ready && !job?.studio_selection) {
+      setSettings(caps.defaults);
+      setAdjustments(caps.restoredNotes ?? {});
+    }
+  }, [caps?.revision, job?.id]);
+  function changeModel(id: string) {
+    const model = caps?.modelsDetailed?.find((m: Item) => m.id === id);
+    if (!model) return;
+    const adjusted = adjustModel(settings, model, caps.character);
+    setSettings(adjusted.value);
+    setAdjustments(adjusted.notes);
+  }
+  function changeLength(v: string) {
+    const n = Number(v);
+    setSettings((x) => ({
+      ...x,
+      clip_seconds: n,
+      duration: n * Math.min(5, Math.floor(60 / n)),
+    }));
+  }
+  const story = job?.story,
+    scenes: Item[] = story?.scenes ?? [],
+    clips: Item[] = job?.scenes ?? [];
+  const selectedClip = clips.find((x) => x.position === scene + 1);
+  const selectedReference =
+    job?.referenceUrl === `/api/studio/characters/${job?.id}/reference`
       ? job.referenceUrl
       : null;
-  const refAssets = c.view?.catalog.referenceAssets ?? [],
-    [asset, setAsset] = useState("");
-  const button = (kind: string, caption: string) => (
-    <ActionButton
-      c={c}
-      id={`character_act_${kind}`}
-      context={{
-        state: job?.state,
-        retry_hash: job?.retry_hash,
-        retryQuote: job?.retryQuote,
-        job_id: job?.id,
-        quote_hash: kind === "retry-scene" ? job?.retry_hash : job?.quote_hash,
-      }}
-      disabled={
-        sampleBusy ||
-        !job ||
-        (allowed[kind] && !allowed[kind].includes(job.state)) ||
-        (kind === "retry-scene" && (!job.retry_hash || !job.retryQuote))
-      }
-    >
-      {caption}
-    </ActionButton>
-  );
+  const reference = file || sampleRef || selectedReference;
+  const isBusy = busy || sampleBusy,
+    frozen =
+      !!job &&
+      !["needs_script", "script_review", "script_failed"].includes(job.state);
+  const legacy = !!job && !job.studio_selection;
+  const lockedDuration = !!job?.studio_selection;
+  useEffect(() => {
+    if (job?.studio_selection) {
+      const s = job.studio_selection;
+      setSettings(
+        Object.fromEntries(
+          Object.keys(defaultSettings).map((k) => [k, s[k]]),
+        ) as Settings,
+      );
+      setPer(job.episode_limit);
+      setDaily(job.day_limit);
+    }
+    setScene(-1);
+  }, [job?.id]);
+  function setting(k: keyof Settings, v: string) {
+    setSettings((s) => ({
+      ...s,
+      [k]: ["duration", "clip_seconds"].includes(k) ? Number(v) : v,
+    }));
+  }
+  function reset() {
+    setId("new");
+    setTopic("");
+    setScene(-1);
+    setFailure("");
+    pending.current = null;
+  }
+  function selectFile(f: File | undefined) {
+    if (!f) return;
+    if (
+      !["image/png", "image/jpeg"].includes(f.type) ||
+      f.size > 10 * 1024 * 1024
+    ) {
+      setFailure("PNG/JPG, 최대 10MB 이미지를 선택하세요.");
+      return;
+    }
+    reset();
+    setFile(f);
+    setAsset("");
+    setSampleRef(null);
+  }
   async function useSample({ asset: sample, copy }: SampleUse) {
+    reset();
     setAsset(copy.referenceAsset ?? "");
+    setFile(null);
     setSampleRef(`/api/samples/${sample.referenceId || sample.id}/file`);
-    await c.load();
     c.setNotice(
-      "샘플 참조 PNG를 새 작업 입력에 연결했습니다. 주제를 입력해 새 작업을 저장하세요. 기존 작업은 보존됩니다.",
+      "샘플 참조를 새 작업에 연결했습니다. 스토리 주제를 입력하세요. 기존 작업은 보존됩니다.",
+    );
+    await c.load();
+  }
+  async function post(url: string, body: FormData) {
+    body.set("csrf_token", c.view?.csrfToken ?? "");
+    const r = await fetch(url, {
+      method: "POST",
+      credentials: "same-origin",
+      body,
+    });
+    const data = await r.json().catch(() => ({}));
+    if (data.id) setId(data.id);
+    if (data.fields) setAdjustments(data.fields);
+    if (!r.ok)
+      throw Error(
+        data.error ??
+          data.detail ??
+          "요청이 중단되었습니다. 작업 이력을 확인하세요. 자동 재전송하지 않습니다.",
+      );
+    return data;
+  }
+  async function autoStory() {
+    if (sending.current || !ready) return;
+    sending.current = true;
+    setBusy(true);
+    setFailure("");
+    // One durable request identity per click/uncertain outcome. Reload/history never retries it.
+    pending.current ??= crypto.randomUUID().replaceAll("-", "");
+    try {
+      const form = new FormData();
+      form.set("topic", topic.trim());
+      form.set("studio_settings", JSON.stringify(settings));
+      form.set("request_id", pending.current);
+      form.set("consent", "true");
+      form.set("episode_limit", per);
+      form.set("day_limit", daily);
+      if (file) form.set("reference", file);
+      else if (asset) form.set("reference_asset", asset);
+      else if (job?.id) form.set("reference_job", job.id);
+      else throw Error("참조 캐릭터 이미지를 먼저 선택하세요.");
+      const draft = await post("/character", form);
+      let data = draft;
+      if (draft.created) {
+        const encoded = new URLSearchParams({
+          job_id: draft.id,
+          consent: "true",
+          csrf_token: c.view?.csrfToken ?? "",
+        });
+        const response = await fetch("/api/studio/characters/auto-story", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: encoded,
+        });
+        data = await response.json().catch(() => ({}));
+        if (!response.ok)
+          throw Error(
+            data.error ??
+              "스토리 요청 결과를 확인하지 못했습니다. 작업 이력을 확인하세요. 자동 재전송하지 않습니다.",
+          );
+      }
+      if (!["script_review"].includes(data.state))
+        throw Error(
+          "이 요청은 이미 저장되어 있습니다. 작업 이력의 상태를 확인하세요. 자동 재생성하지 않습니다.",
+        );
+      setFile(null);
+      setSampleRef(null);
+      setAsset("");
+      setTopic("");
+      c.setNotice(
+        "스토리가 생성·저장되었습니다. 장면을 검토한 뒤 영상 견적을 확인하세요.",
+      );
+    } catch (e) {
+      setFailure(
+        e instanceof Error
+          ? e.message
+          : "스토리 요청 중단 · 자동 재전송하지 않습니다.",
+      );
+    } finally {
+      await c.load();
+      setBusy(false);
+      sending.current = false;
+    }
+  }
+  async function saveSettings() {
+    if (!job?.studio_selection) return;
+    const form = new FormData();
+    form.set("settings", JSON.stringify(settings));
+    form.set("episode_limit", per);
+    form.set("day_limit", daily);
+    const encoded = new URLSearchParams();
+    form.set("csrf_token", c.view?.csrfToken ?? "");
+    form.forEach((v, k) => encoded.set(k, String(v)));
+    const r = await fetch(`/api/studio/characters/${job.id}/settings`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: encoded,
+    });
+    if (!r.ok)
+      throw Error(
+        "영상 설정을 저장하지 못했습니다. 견적은 요청하지 않았습니다.",
+      );
+    await c.load();
+  }
+  async function quote() {
+    if (sending.current) return;
+    sending.current = true;
+    setBusy(true);
+    setFailure("");
+    try {
+      await saveSettings();
+      c.open("character_act_prepare", { job_id: job?.id, state: job?.state });
+    } catch (e) {
+      setFailure(e instanceof Error ? e.message : "영상 설정 저장 실패");
+    } finally {
+      setBusy(false);
+      sending.current = false;
+    }
+  }
+  function action(kind: string, label: string, allowed: string[]) {
+    return (
+      <ActionButton
+        c={c}
+        id={`character_act_${kind}`}
+        context={{
+          job_id: job?.id,
+          state: job?.state,
+          quote_hash:
+            kind === "retry-scene" ? job?.retry_hash : job?.quote_hash,
+          retry_hash: job?.retry_hash,
+          retryQuote: job?.retryQuote,
+        }}
+        disabled={
+          isBusy ||
+          !job ||
+          !allowed.includes(job.state) ||
+          (kind === "submit" && budgetExceeded)
+        }
+        primary
+      >
+        {label}
+      </ActionButton>
     );
   }
+  const refAssets = c.view?.catalog.referenceAssets ?? [];
+  let elapsed = 0;
   return (
     <>
-      <div className="core-character" aria-busy={sampleBusy}>
-        <div className="core-character-steps">
-          <div>
-            <b>1</b>
-            <span>
-              <strong>캐릭터 선택</strong>
-              <small>참조 PNG로 캐릭터를 설정합니다.</small>
-            </span>
-          </div>
-          <div>
-            <b>2</b>
-            <span>
-              <strong>스토리 생성</strong>
-              <small>주제를 입력하고 장면을 검토합니다.</small>
-            </span>
-          </div>
-          <div>
-            <b>3</b>
-            <span>
-              <strong>영상 제작</strong>
-              <small>견적·승인 후 장면을 합성합니다.</small>
-            </span>
-          </div>
+      <div className="kling-character-approved" aria-busy={isBusy}>
+        <div className="kling-character-tools">
+          <button onClick={() => setHelp((x) => !x)}>
+            <BookOpen size={16} />
+            튜토리얼 보기
+          </button>
+          <button onClick={() => setHistory((x) => !x)}>
+            <Clock3 size={16} />
+            작업 이력
+          </button>
         </div>
-        <div className="core-character-grid">
-          <Panel title="캐릭터 선택" className="core-reference-panel">
-            <div className="core-reference-layout">
-              <div className="core-reference">
-                {sampleRef || ref ? (
-                  <Thumbnail
-                    src={sampleRef || ref}
-                    alt="저장한 캐릭터 참조 PNG"
+        {help && (
+          <div
+            className="kling-character-help"
+            role="region"
+            aria-label="캐릭터 제작 안내"
+          >
+            참조 이미지 선택 → 주제 입력 → 스토리 자동 생성하기 → 장면 검토 →
+            영상 설정·공식 견적 → 비용 승인 → 장면 확인 → 합성·저장. 스토리는
+            Claude 1회 요청이며, 영상 생성은 별도의 견적 승인이 필요합니다.
+          </div>
+        )}
+        <div className="kling-character-steps" aria-label="캐릭터 제작 흐름">
+          {[
+            [Bot, "캐릭터 선택", "참조 이미지로 캐릭터를 설정합니다."],
+            [
+              BookOpen,
+              "스토리 생성",
+              "주제를 입력하면 AI가 스토리를 만듭니다.",
+            ],
+            [
+              Clapperboard,
+              "영상 제작",
+              "장면을 생성하고 검토 후 영상을 완성합니다.",
+            ],
+          ].map(([Icon, title, desc], i) => {
+            const Glyph = Icon as typeof Bot;
+            return (
+              <div key={i}>
+                <b>{i + 1}</b>
+                <span className="kling-character-step-icon">
+                  <Glyph />
+                </span>
+                <span>
+                  <strong>{title as string}</strong>
+                  <small>{desc as string}</small>
+                </span>
+                {i < 2 && <ChevronRight className="kling-character-chevron" />}
+              </div>
+            );
+          })}
+        </div>
+        <div className="kling-character-columns">
+          <section className="kling-character-card kling-character-reference">
+            <h2>
+              <em>1.</em> 캐릭터 선택 <Info size={14} />
+            </h2>
+            <div className="kling-character-tabs">
+              <button
+                aria-pressed={tab === "upload"}
+                onClick={() => setTab("upload")}
+              >
+                참조 이미지 업로드
+              </button>
+              <button
+                aria-pressed={tab === "mine"}
+                onClick={() => setTab("mine")}
+              >
+                내 캐릭터
+              </button>
+            </div>
+            <div className="kling-character-reference-content">
+              <div className="kling-character-reference-image">
+                {file ? (
+                  <LocalReference file={file} />
+                ) : reference ? (
+                  <img
+                    src={String(reference)}
+                    alt="선택한 캐릭터 참조 이미지"
                   />
                 ) : (
-                  <Empty>참조 PNG 없음 · 파일을 등록하세요.</Empty>
+                  <Empty>캐릭터 참조 이미지를 선택하세요.</Empty>
                 )}
               </div>
-              <div className="core-options">
+              <div className="kling-character-reference-options">
                 <button
-                  disabled={sampleBusy}
-                  onClick={() => {
-                    setSampleRef(null);
-                    setAsset("");
-                    c.open("character_create", {
-                      topic,
-                      script_model: model,
-                      video_model: defaults.video_model,
-                      reference_asset: "",
-                    });
-                  }}
+                  className="kling-character-upload"
+                  disabled={isBusy}
+                  onClick={() => upload.current?.click()}
                 >
-                  <ImagePlus size={19} />
-                  참조 PNG 등록 · 새 작업
+                  <ImagePlus size={27} />
+                  <strong>이미지 업로드</strong>
+                  <small>
+                    PNG, JPG
+                    <br />
+                    (최대 10MB)
+                  </small>
                 </button>
-                <Select
-                  label="저장한 참조 소재"
-                  disabled={sampleBusy}
-                  value={asset}
-                  onChange={(value) => {
-                    setAsset(value);
-                    setSampleRef(null);
-                  }}
-                  options={Object.fromEntries(
-                    refAssets.map((x: Item | string) =>
-                      typeof x === "string"
-                        ? [x, x]
-                        : [x.id ?? x.key, x.label ?? x.title ?? x.id ?? x.key],
-                    ),
-                  )}
+                <input
+                  ref={upload}
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  aria-label="캐릭터 참조 이미지 업로드"
+                  hidden
+                  onChange={(e) => selectFile(e.target.files?.[0])}
                 />
-                <small>
-                  참조 이미지는 로컬에 보관됩니다. 외부 전송은 생성 승인 시 별도
-                  확인합니다.
-                </small>
-                <div className="core-reference-samples">
-                  <CharacterReferenceSamples
-                    csrf={c.view?.csrfToken ?? ""}
-                    busy={sampleBusy}
-                    onBusy={setSampleBusy}
-                    onUse={useSample}
-                  />
+                <h3>최근 사용 캐릭터</h3>
+                <div className="kling-character-recent">
+                  {jobs
+                    .filter((x) => x.referenceUrl)
+                    .slice(0, 4)
+                    .map((x) => (
+                      <button
+                        key={x.id}
+                        disabled={isBusy}
+                        title={x.topic}
+                        aria-label={`캐릭터 작업 ${x.topic} 열기`}
+                        onClick={() => {
+                          setId(x.id);
+                          setFile(null);
+                          setSampleRef(null);
+                          setAsset("");
+                          pending.current = null;
+                        }}
+                      >
+                        <Thumbnail src={x.referenceUrl} alt={x.topic} />
+                      </button>
+                    ))}
+                  {!jobs.length && <small>저장된 캐릭터 없음</small>}
                 </div>
               </div>
             </div>
-            {sampleRef && (
-              <p className="core-muted">
-                샘플 참조 · 새 작업 입력용. 기존 캐릭터 작업은 변경되지
-                않았습니다.
-              </p>
+            {tab === "mine" && (
+              <Select
+                label="저장한 참조 소재"
+                disabled={isBusy}
+                value={asset}
+                onChange={(v) => {
+                  reset();
+                  setAsset(v);
+                  setFile(null);
+                  setSampleRef(null);
+                }}
+                options={Object.fromEntries(
+                  refAssets.map((x: Item | string) =>
+                    typeof x === "string"
+                      ? [x, x]
+                      : [x.id ?? x.key, x.label ?? x.title],
+                  ),
+                )}
+              />
             )}
-            <h3>내 캐릭터 작업</h3>
-            <div className="core-job-list">
-              {jobs.map((x) => (
-                <button
-                  key={x.id}
-                  disabled={sampleBusy}
-                  aria-pressed={job?.id === x.id}
-                  onClick={() => {
-                    setSampleRef(null);
-                    setId(String(x.id));
-                    setScene(-1);
-                  }}
-                >
-                  <strong>{x.topic}</strong>
-                  <State value={x.state} />
-                </button>
-              ))}
-            </div>
-          </Panel>
-          <Panel title="스토리 생성" className="core-story-panel">
+            <CharacterReferenceSamples
+              csrf={c.view?.csrfToken ?? ""}
+              busy={isBusy}
+              onBusy={setSampleBusy}
+              onUse={useSample}
+            />
+          </section>
+          <section className="kling-character-card kling-character-story">
+            <header>
+              <h2>
+                <em>2.</em> 스토리 생성 <Info size={14} />
+              </h2>
+              <button
+                className="kling-character-example"
+                disabled={isBusy}
+                onClick={() => {
+                  setTopic(
+                    "호기심 많은 캐릭터가 새로운 세상을 여행하는 이야기",
+                  );
+                  pending.current = null;
+                }}
+              >
+                <Sparkles size={14} />
+                예시 주제 보기
+              </button>
+            </header>
             <label>
               스토리 주제
-              <textarea
-                aria-label="스토리 주제"
-                placeholder="캐릭터가 어떤 이야기를 펼칠까요?"
-                maxLength={2000}
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-              />
-            </label>
-            <Select
-              label="Claude 대본 모델 · 새 작업"
-              value={model}
-              onChange={setModel}
-              options={c.view?.catalog.apiModels?.claude_api ?? []}
-            />
-            <ActionButton
-              c={c}
-              id="character_create"
-              context={{
-                topic,
-                script_model: model,
-                video_model: defaults.video_model,
-                reference_asset: asset,
-              }}
-              disabled={sampleBusy || !topic.trim()}
-              primary
-            >
-              이 주제로 작업 저장
-            </ActionButton>
-            <p className="core-muted">
-              저장 후 선택한 작업에 Claude 생성을 요청합니다. 기존 작업의 모델은
-              바뀌지 않습니다.
-            </p>
-            {job && (
-              <>
-                <p className="core-bound-model">
-                  작업 고정 모델 · {selection.script_model ?? "확인 필요"}
-                </p>
-                {button("write", "Claude 스토리 생성 · 승인")}
-                {story ? (
-                  <div className="core-story-text">
-                    <h3>{story.title}</h3>
-                    {scenes.map((s: Item, i: number) => (
-                      <p key={i}>
-                        <strong>
-                          장면 {i + 1} · {s.seconds}초
-                        </strong>
-                        <br />
-                        {s.caption}
-                        <br />
-                        {s.action}
-                      </p>
-                    ))}
-                  </div>
-                ) : (
-                  <Empty>생성된 스토리가 없습니다.</Empty>
-                )}
-              </>
-            )}
-          </Panel>
-          <Panel title="영상 제작" className="core-character-video">
-            <div className="core-settings-preview">
-              <Media url={scene >= 0 ? clip?.mediaUrl : job?.mediaUrl} />
-              <div className="core-options">
-                <h3>영상 설정</h3>
-                <dl>
-                  <dt>영상 모델</dt>
-                  <dd>
-                    {selection.video_model ??
-                      defaults.video_model ??
-                      "확인 필요"}
-                  </dd>
-                  <dt>화면 비율</dt>
-                  <dd>{selection.aspect_ratio ?? "9:16"}</dd>
-                  <dt>생성 해상도</dt>
-                  <dd>{selection.resolution ?? "견적 확인 필요"}</dd>
-                  <dt>최종 출력</dt>
-                  <dd>FFmpeg · 1080×1920</dd>
-                </dl>
-                <div className="core-quote">
-                  <strong>공식 견적</strong>
-                  <p>
-                    {job?.quote
-                      ? JSON.stringify(job.quote)
-                      : "미확정 · 유료 실행 차단"}
-                  </p>
-                </div>
-                {button("prepare", "공식 견적 · 검토")}
-                {button("submit", "장면 생성 · 비용 승인")}
-                {button("check", "요청한 장면 상태 확인")}
-                {button("render", "검토 장면 FFmpeg 합성")}
+              <div className="kling-character-topic">
+                <textarea
+                  aria-label="스토리 주제"
+                  value={topic}
+                  maxLength={100}
+                  placeholder="캐릭터가 어떤 이야기를 펼칠까요?"
+                  disabled={isBusy}
+                  onChange={(e) => {
+                    setTopic(e.target.value);
+                    if (!failure) pending.current = null;
+                  }}
+                />
+                <small>{topic.length}/100</small>
               </div>
-            </div>
-            <details className="core-advanced">
+            </label>
+            <button
+              className="kling-character-story-generate"
+              onClick={() => void autoStory()}
+              disabled={
+                isBusy ||
+                !ready ||
+                !c.view?.commandsAvailable ||
+                !topic.trim() ||
+                !reference ||
+                !!failure
+              }
+            >
+              <WandSparkles size={22} />
+              {busy ? "스토리 처리 중…" : "스토리 자동 생성하기"}
+              <span>→</span>
+            </button>
+            <p className="kling-character-consent">
+              클릭하면 주제·참조 이미지를 Claude에 보내 스토리 1회를
+              생성·저장합니다. 저장된 API 승인·사용 한도가 적용되며 영상 생성
+              비용은 별도 승인합니다.
+            </p>
+            {!ready && (
+              <p role="status">
+                새 제작실 API 연결 확인 전 · 생성할 수 없습니다.
+              </p>
+            )}
+            {failure && (
+              <div className="kling-character-error" role="alert">
+                {failure}
+                <button
+                  disabled={isBusy}
+                  onClick={() => {
+                    setFailure("");
+                    pending.current = null;
+                    reset();
+                  }}
+                >
+                  작업 이력 확인 후 새 작업
+                </button>
+              </div>
+            )}
+            {story ? (
+              <div className="kling-character-story-result">
+                <header>
+                  <h3>{story.title}</h3>
+                  <State value={job?.state} />
+                </header>
+                {scenes.map((s, i) => (
+                  <p key={i}>
+                    <strong>
+                      {i + 1}. {s.caption}
+                    </strong>
+                    <span>{s.action}</span>
+                    {s.narration && <small>대사 · {s.narration}</small>}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <div className="kling-character-story-empty">
+                <BookOpen />
+                <span>생성한 스토리가 여기에 표시됩니다.</span>
+              </div>
+            )}
+            <details className="kling-character-advanced">
               <summary>
                 <Settings2 size={14} />
-                고급 설정 · 실패 장면
+                스토리 세부 설정
               </summary>
-              <p>새 작업 기본값은 기존 작업을 변경하지 않습니다.</p>
-              <ActionButton c={c} id="character_character_defaults">
-                다음 작업 모델 기본값
-              </ActionButton>
-              {job?.state === "scene_review" &&
-                button("retry-quote", "실패 장면 새 견적 확인")}
-              {button("retry-scene", "추가 견적 승인 · 재생성")}
-              {job?.state === "submission_unknown" && (
-                <p className="core-warning">
-                  결과 불명 · 자동 재요청 금지. 기존 공급사 결과를 먼저
-                  확인하세요.
-                </p>
-              )}
+              <Select
+                label="Claude 모델"
+                disabled={isBusy || lockedDuration}
+                value={settings.script_model}
+                onChange={(v) => setting("script_model", v)}
+                options={c.view?.catalog.apiModels?.claude_api ?? []}
+              />
+              <p>
+                전체 {settings.duration}초 ·{" "}
+                {Math.min(5, Math.floor(60 / settings.clip_seconds))}장면. 장면
+                길이는 영상 설정에서 선택합니다.
+              </p>
+              <label>
+                편당 최대 승인 한도 (USD)
+                <input
+                  value={per}
+                  inputMode="decimal"
+                  onChange={(e) => setPer(e.target.value)}
+                  disabled={isBusy || frozen}
+                />
+              </label>
+              <label>
+                일일 최대 승인 한도 (USD)
+                <input
+                  value={daily}
+                  inputMode="decimal"
+                  onChange={(e) => setDaily(e.target.value)}
+                  disabled={isBusy || frozen}
+                />
+              </label>
             </details>
-          </Panel>
+          </section>
+          <section className="kling-character-card kling-character-video">
+            <h2>
+              <em>3.</em> 영상 제작 <Info size={14} />
+            </h2>
+            <div className="kling-character-video-content">
+              <div
+                className="kling-character-video-preview"
+                data-ratio={settings.aspect_ratio}
+              >
+                <Media
+                  url={scene >= 0 ? selectedClip?.mediaUrl : job?.mediaUrl}
+                  label={`${settings.aspect_ratio} 영상 미리보기`}
+                />
+                {!safeMedia(
+                  scene >= 0 ? selectedClip?.mediaUrl : job?.mediaUrl,
+                ) && <span>생성·검토된 영상 없음</span>}
+              </div>
+              <div className="kling-character-video-settings">
+                <header>
+                  <h3>
+                    영상 설정 <Info size={13} />
+                  </h3>
+                </header>
+                <fieldset disabled={isBusy || frozen || !ready}>
+                  <Select
+                    label="영상 모델"
+                    value={settings.video_model}
+                    onChange={changeModel}
+                    options={choices}
+                  />
+                  <CapabilitySelect
+                    label="영상 스타일"
+                    value={settings.style}
+                    onChange={() => {}}
+                    disabled
+                    values={caps?.styles ?? {}}
+                    supported={[caps?.character?.style_id ?? ""]}
+                    hint={
+                      adjustments.style ??
+                      "캐릭터 스타일 고정 · 프롬프트 반영 (모델별 차이 있음)"
+                    }
+                  />
+                  <CapabilitySelect
+                    label="화면 비율"
+                    value={settings.aspect_ratio}
+                    onChange={() => {}}
+                    disabled
+                    values={caps?.ratios ?? {}}
+                    supported={["9:16"]}
+                    hint={adjustments.aspect_ratio}
+                  />
+                  <CapabilitySelect
+                    label="화질"
+                    value={settings.native_resolution}
+                    onChange={(v) => setting("native_resolution", v)}
+                    values={{
+                      model_default: "모델 기본 (Standard)",
+                      ...Object.fromEntries(
+                        (caps?.resolutionChoices ?? []).map((x: string) => [
+                          x,
+                          x,
+                        ]),
+                      ),
+                    }}
+                    supported={currentModel?.resolutions ?? []}
+                    hint={adjustments.native_resolution}
+                  />
+                  <CapabilitySelect
+                    label="장면 길이 (초)"
+                    value={String(settings.clip_seconds)}
+                    onChange={changeLength}
+                    disabled={lockedDuration}
+                    values={Object.fromEntries(
+                      (caps?.durationChoices ?? []).map((x: number) => [
+                        String(x),
+                        `${x}초`,
+                      ]),
+                    )}
+                    supported={(currentModel?.duration_values ?? []).map(
+                      String,
+                    )}
+                    hint={
+                      adjustments.clip_seconds ??
+                      `전체 ${settings.duration}초 · 스토리 생성 후 고정`
+                    }
+                  />
+                  <label className="kling-sound-row">
+                    <span>소리 생성</span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-label="소리 생성"
+                      aria-checked={settings.sound === "on"}
+                      disabled={!currentModel?.audio.native}
+                      onClick={() =>
+                        setting("sound", settings.sound === "on" ? "off" : "on")
+                      }
+                    >
+                      <i />
+                      {settings.sound === "on" ? "켜기" : "끄기 (무음)"}
+                    </button>
+                    <small className="kling-field-note">
+                      {adjustments.sound ??
+                        "대사·효과음·배경음 함께 생성 · 음색 선택 없음"}
+                    </small>
+                  </label>
+                </fieldset>
+                {(
+                  job?.reviewWarnings ?? [
+                    caps?.stylePresets?.find(
+                      (x: Item) => x.id === settings.style,
+                    )?.warn,
+                  ]
+                )
+                  .filter(Boolean)
+                  .map((warning: string) => (
+                    <p
+                      className="kling-character-error"
+                      role="note"
+                      key={warning}
+                    >
+                      {warning}
+                    </p>
+                  ))}
+                {Object.entries(adjustments)
+                  .filter(
+                    ([k]) =>
+                      !["native_resolution", "clip_seconds", "sound"].includes(
+                        k,
+                      ),
+                  )
+                  .map(([k, v]) => (
+                    <p className="kling-field-note" role="status" key={k}>
+                      {v}
+                    </p>
+                  ))}
+                {caps?.cacheWarning && (
+                  <p role="status" className="kling-field-note">
+                    {caps.cacheWarning}
+                  </p>
+                )}
+                <div className="kling-character-cost">
+                  <strong>
+                    예상 비용 <Info size={13} />
+                  </strong>
+                  <b>
+                    {job?.quote ? `공식 견적 $${job.quote}` : estimate.label}
+                  </b>
+                </div>
+                <small className="kling-cost-note">
+                  {settings.duration}초 기준 ·{" "}
+                  {job?.quote
+                    ? "실제 청구액 아님"
+                    : (currentModel?.pricing.note ??
+                      "단가 미확인 · 공식 견적이 필요합니다.")}
+                </small>
+                {budgetExceeded && (
+                  <p className="kling-character-error" role="alert">
+                    예상 비용 상한이 편당 예산 ${per}를 넘습니다. 한도와 설정을
+                    확인하세요.
+                  </p>
+                )}
+                <div className="kling-character-generate">
+                  {job?.state === "script_review" ? (
+                    <button
+                      className="primary"
+                      disabled={isBusy || legacy || !ready || budgetExceeded}
+                      onClick={() => void quote()}
+                    >
+                      <Clapperboard size={21} />
+                      영상 생성하기 · 견적 확인
+                    </button>
+                  ) : job?.state === "quoted" ? (
+                    action("submit", "영상 생성하기 · 비용 승인", ["quoted"])
+                  ) : job?.state === "generating" ? (
+                    action("check", "요청한 장면 상태 확인", ["generating"])
+                  ) : job?.state === "clips_review" ? (
+                    action("render", "영상 완성 · 검토 후 합성", [
+                      "clips_review",
+                    ])
+                  ) : job?.state === "completed" && safeMedia(job.mediaUrl) ? (
+                    <a
+                      href={`${job.mediaUrl}?download=true`}
+                      className="primary"
+                    >
+                      완성 영상 저장
+                    </a>
+                  ) : (
+                    <button disabled>
+                      <Clapperboard size={21} />
+                      영상 생성하기
+                    </button>
+                  )}
+                </div>
+                <details className="kling-character-advanced">
+                  <summary>고급 설정·지원 범위</summary>
+                  <p>
+                    화질은 모델이 지원하는 네이티브 값만 전송합니다. 지원하지
+                    않는 720p·1080p·4K는 비활성입니다.
+                  </p>
+                  <Select
+                    label="최종 저장 크기 · 로컬 FFmpeg"
+                    disabled={isBusy || frozen}
+                    value={settings.output_quality}
+                    onChange={(v) => setting("output_quality", v)}
+                    options={caps?.outputQualities ?? {}}
+                  />
+                  <p>
+                    1080p 저장에는 로컬 확대가 포함될 수 있습니다. 모델의
+                    네이티브 1080p 생성과 다릅니다.
+                  </p>
+                  <p>
+                    {currentModel?.aspect_ratio_mode === "reference-padding"
+                      ? "비율: 별도 참조 복사본 여백 조정 → 최종 합성. 미지원 aspect_ratio 파라미터는 보내지 않습니다."
+                      : "비율: 모델의 aspect_ratio와 최종 합성에 반영합니다."}
+                  </p>
+                  <p>
+                    소리 생성 켜기는 모델의 오디오를 보존합니다. 한국어 발음·입
+                    모양·음색 일관성은 모델마다 다르며 별도 검수가 필요합니다.
+                  </p>
+                  {job?.state === "scene_review" &&
+                    action("retry-quote", "실패 장면 새 견적", [
+                      "scene_review",
+                    ])}
+                  {action("retry-scene", "실패 장면 추가 견적 승인", [
+                    "retry_quoted",
+                  ])}
+                </details>
+                {legacy && (
+                  <p className="kling-character-consent">
+                    기존 모델 작업은 보존됩니다. 참조를 선택해 새 Kling 작업을
+                    만드세요.
+                  </p>
+                )}
+                {/unknown|failed/.test(job?.state ?? "") && (
+                  <p role="status" className="kling-character-error">
+                    작업 중단 · 결과를 확인하세요. 자동 재요청하지 않습니다.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
         </div>
-        <Panel
-          title={`스토리보드 · ${scenes.length}장면`}
-          tools={
+        <section className="kling-character-card kling-character-storyboard">
+          <header>
+            <h2>
+              생성된 장면{" "}
+              <small>
+                ({scenes.length}개 장면 ·{" "}
+                {scenes.reduce((n, s) => n + s.seconds, 0)}초)
+              </small>
+            </h2>
             <button
               onClick={() => setScene(-1)}
               disabled={!safeMedia(job?.mediaUrl)}
             >
-              최종 영상 보기
+              <Play size={14} />
+              최종 영상
             </button>
-          }
-        >
-          <div className="core-timeline">
-            {scenes.map((s: Item, i: number) => (
-              <button
-                key={i}
-                aria-pressed={scene === i}
-                onClick={() => setScene(i)}
-              >
-                <span className="core-scene-number">{i + 1}</span>
-                <Film size={22} />
-                <strong>{s.caption || `장면 ${i + 1}`}</strong>
-                <p>{s.action}</p>
-                <small>
-                  {s.seconds}초 · <State value={clips[i]?.state ?? "pending"} />
-                </small>
-              </button>
-            ))}
-            {!scenes.length && (
-              <Empty>스토리가 생성되면 장면별 상태가 표시됩니다.</Empty>
-            )}
+          </header>
+          <div className="kling-character-scene-grid">
+            {(scenes.length
+              ? scenes
+              : Array.from({ length: 5 }, () => null)
+            ).map((s, i) => {
+              const start = elapsed;
+              elapsed += s?.seconds ?? 0;
+              const media = clips.find((x) => x.position === i + 1)?.mediaUrl;
+              return (
+                <button
+                  key={i}
+                  aria-pressed={scene === i}
+                  disabled={!s}
+                  onClick={() => setScene(i)}
+                >
+                  <div className="kling-character-scene-image">
+                    <b>{i + 1}</b>
+                    {safeMedia(media) ? (
+                      <video src={media} preload="metadata" muted />
+                    ) : (
+                      <Clapperboard size={32} />
+                    )}
+                  </div>
+                  <small>
+                    {s
+                      ? `${stamp(start)} - ${stamp(elapsed)}`
+                      : "스토리 생성 대기"}
+                  </small>
+                  <strong>{s?.caption ?? `장면 ${i + 1}`}</strong>
+                  {s && (
+                    <State
+                      value={
+                        clips.find((x) => x.position === i + 1)?.state ??
+                        "pending"
+                      }
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
-        </Panel>
+        </section>
+        {history && (
+          <section
+            className="kling-character-card kling-character-history"
+            aria-label="캐릭터 작업 이력"
+          >
+            <header>
+              <h2>작업 이력</h2>
+              <button onClick={reset}>새 작업</button>
+            </header>
+            {jobs.length ? (
+              jobs.map((x) => (
+                <button
+                  key={x.id}
+                  disabled={isBusy}
+                  onClick={() => {
+                    setId(x.id);
+                    setFile(null);
+                    setSampleRef(null);
+                    setAsset("");
+                    pending.current = null;
+                    setFailure("");
+                  }}
+                >
+                  <span>{x.topic}</span>
+                  <State value={x.state} />
+                </button>
+              ))
+            ) : (
+              <Empty>저장한 작업이 없습니다.</Empty>
+            )}
+          </section>
+        )}
       </div>
       <SampleGallery
         onBusyChange={setSampleBusy}
-        initialExpanded={jobs.length === 0}
-        types={["character", "character-short"]}
+        initialExpanded={false}
+        types={["character", "kling-character-short"]}
         csrf={c.view?.csrfToken ?? ""}
         onUse={useSample}
       />

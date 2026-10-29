@@ -2,7 +2,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from newsflow.character.compose import digest
 from newsflow.character.schema import CharacterError, load_character
@@ -25,6 +25,43 @@ def choices(request, reference_asset=''):
 router=APIRouter()
 
 
+@router.get('/api/studio/video-models')
+def video_models():
+    from newsflow.character.kling import catalog
+    return catalog()
+
+
+@router.post('/api/studio/characters/auto-story')
+def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False)):
+    service=request.app.state.character
+    try:
+        service.consent(consent)
+        job=service.read(job_id)
+        if not job.get('studio_selection'): raise CharacterError('blocked')
+        if job['state']=='needs_script':
+            service.write(job_id,consent=True)
+        elif job['state']!='script_review':
+            raise CharacterError('blocked')
+        return {'id':job_id,'state':service.read(job_id)['state']}
+    except (ValueError,OSError,*SAFE_ERRORS):
+        return JSONResponse({'id':job_id,'error':'스토리 요청을 중단했습니다. 작업 이력을 확인하세요. 자동 재요청하지 않습니다.'},status_code=409)
+
+
+@router.post('/api/studio/characters/{job_id}/settings')
+def studio_settings(request: Request,job_id:str,settings:str=Form(...),
+                    episode_limit:str=Form(...),day_limit:str=Form(...)):
+    import json
+    try:
+        from newsflow.character.kling import field_errors
+        parsed=json.loads(settings)
+        invalid=field_errors(parsed)
+        if invalid:return JSONResponse({'error':'모델 지원 설정을 확인하세요.','fields':invalid},status_code=422)
+        request.app.state.character.update_studio_settings(job_id,parsed,episode_limit,day_limit)
+        return {'id':job_id,'saved':True}
+    except (ValueError,OSError,*SAFE_ERRORS):
+        raise HTTPException(409,'견적 전 스토리 검토 단계에서만 영상 설정을 저장할 수 있습니다.') from None
+
+
 @router.get('/character',response_class=HTMLResponse)
 def studio(request: Request, job_id: str = '', reference_asset: str = ''):
     service=request.app.state.character
@@ -39,7 +76,30 @@ def studio(request: Request, job_id: str = '', reference_asset: str = ''):
 @router.post('/character')
 def create(request: Request, reference: Annotated[UploadFile | None, File()] = None, topic: str=Form(...),
            episode_limit: str=Form(...),day_limit: str=Form(...), script_model: str=Form(''),
-           video_model: str=Form(''), reference_asset: str=Form('')):
+           video_model: str=Form(''), reference_asset: str=Form(''), reference_job: str=Form(''),
+           studio_settings: str=Form(''), request_id: str=Form('')):
+    if studio_settings:
+        import json
+        try:
+            service=request.app.state.character
+            from newsflow.character.kling import field_errors
+            parsed=json.loads(studio_settings)
+            invalid=field_errors(parsed)
+            if invalid:return JSONResponse({'error':'모델 지원 설정을 확인하세요.','fields':invalid},status_code=422)
+            sources=int(bool(reference and reference.filename))+int(bool(reference_asset))+int(bool(reference_job))
+            if sources!=1: raise CharacterError('reference')
+            raw=reference.file.read(10*1024*1024+1) if reference and reference.filename else b''
+            if reference_asset: raw=request.app.state.image_studio.asset(reference_asset).read_bytes()
+            if reference_job:
+                source=service.read(reference_job)
+                path=service.folder(reference_job)/'reference.png'
+                if digest(path)!=source.get('reference_sha256'): raise CharacterError('reference')
+                raw=path.read_bytes()
+            identifier,created=service.create_studio(topic,episode_limit,day_limit,reference=raw,
+                          settings=parsed,request_id=request_id)
+            return JSONResponse({'id':identifier,'created':created,'state':service.read(identifier)['state']})
+        except (ValueError,OSError,*SAFE_ERRORS):
+            return JSONResponse({'error':'참조 이미지와 새 작업 설정을 확인하세요.'},status_code=422)
     try:
         selected = read_defaults(request.app.state.sessions, 'character')
         if script_model:

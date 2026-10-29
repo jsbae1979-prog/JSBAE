@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "presets": [
+    {
+      "id": "3d_animation",
+      "label": "3D 애니메이션",
+      "recommended": true,
+      "prefix": "soft 3D animated film style, warm pastel lighting,",
+      "suffix": "consistent character design, no text, no logos",
+      "warn": ""
+    },
+    {
+      "id": "realistic",
+      "label": "실사",
+      "recommended": false,
+      "prefix": "photorealistic cinematic footage, natural lighting,",
+      "suffix": "no text, no logos",
+      "warn": "실제 사람으로 보일 수 있어 업로드 시 AI 생성 표시 필수"
+    },
+    {
+      "id": "2d_cartoon",
+      "label": "2D 카툰",
+      "recommended": false,
+      "prefix": "flat 2D cartoon animation, bold outlines,",
+      "suffix": "consistent character design, no text, no logos",
+      "warn": ""
+    }
+  ]
+}

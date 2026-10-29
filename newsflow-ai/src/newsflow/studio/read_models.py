@@ -194,6 +194,10 @@ def character_rows(state):
                 "created_at",
                 "script",
                 "selection",
+                "studio_selection",
+                "duration",
+                "model",
+                "claude_model",
                 "quote_total_usd",
                 "quote_hash",
                 "retry_hash",
@@ -213,6 +217,7 @@ def character_rows(state):
             }
             for scene in job.get("scenes", [])
         ]
+        item["reviewWarnings"] = [job["character"]["style_warn"]] if job.get("character",{}).get("style_warn") else []
         item["story"] = job.get("script")
         item["quote"] = job.get("quote_total_usd")
         item["referenceUrl"] = (
@@ -316,6 +321,10 @@ def module_view(request: Request, module: Module):
                                 "article_ids",
                                 "references",
                                 "selection",
+                "studio_selection",
+                "duration",
+                "model",
+                "claude_model",
                                 "origin",
                             )
                         }
@@ -495,6 +504,26 @@ def module_view(request: Request, module: Module):
         "qualities": IMAGE_QUALITIES,
         "accountVerified": False,
     }
+    if module == "characters":
+        from newsflow.character.kling import catalog as character_catalog
+        result["catalog"]["characterStudio"] = character_catalog()
+        from newsflow.character.kling import DEFAULTS, as_generation, validate as validate_character
+        from newsflow.video_models.catalog import reconcile
+        for completed in state.character.listing():
+            if completed['state']=='completed' and completed.get('studio_selection'):
+                try:
+                    saved={k:completed['studio_selection'][k] for k in DEFAULTS}
+                    adjusted,notes=reconcile(as_generation(saved))
+                    saved.update(video_model=adjusted.model_id,aspect_ratio=adjusted.aspect_ratio,
+                        native_resolution=adjusted.resolution,clip_seconds=adjusted.duration,
+                        sound='on' if adjusted.audio else 'off',style=DEFAULTS['style'])
+                    saved['aspect_ratio']=DEFAULTS['aspect_ratio']
+                    saved['duration']=saved['clip_seconds']*min(5,60//saved['clip_seconds'])
+                    result["catalog"]["characterStudio"]["defaults"] = validate_character(saved)
+                    result["catalog"]["characterStudio"]["restoredNotes"] = notes
+                except (ValueError,KeyError,TypeError):
+                    result["catalog"]["characterStudio"]["restoredNotes"] = {'model':'마지막 성공 설정을 재사용할 수 없어 카탈로그 기본값을 표시합니다. 저장 작업은 변경하지 않습니다.'}
+                break
     for mode in ("image", "character"):
         try:
             result["catalog"][mode + "Defaults"] = read_defaults(state.sessions, mode)

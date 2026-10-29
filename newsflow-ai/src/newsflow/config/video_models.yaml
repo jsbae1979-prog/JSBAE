@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "source": "manual-official-model-reference",
+  "checked_on": "2026-10-29",
+  "models": [
+    {
+      "provider": "higgsfield",
+      "enabled": true,
+      "reference_image": true,
+      "resolutions": [
+        "model_default"
+      ],
+      "default_resolution": "model_default",
+      "duration": {
+        "min": 3,
+        "max": 15,
+        "step": 1,
+        "default": 11
+      },
+      "audio": {
+        "native": true,
+        "voice_select": false
+      },
+      "checked_on": "2026-10-29",
+      "quality_note": "Standard 기본 화질 · 별도 네이티브 해상도 파라미터 없음",
+      "pricing_ref": "https://open.higgsfield.ai/pricing",
+      "id": "kling-video/v3.0/std/image-to-video",
+      "label": "Kling 3.0 Standard",
+      "api_path": "kling-video/v3.0/std/image-to-video",
+      "recommended": true,
+      "aspect_ratios": [
+        "9:16"
+      ],
+      "default_aspect_ratio": "9:16",
+      "aspect_ratio_mode": "reference-padding",
+      "param_map": {
+        "aspect_ratio": null,
+        "resolution": null,
+        "duration": "duration",
+        "audio": "sound",
+        "reference": "image_url"
+      },
+      "fixed_params": {
+        "multi_shots": false
+      },
+      "audio_values": {
+        "on": "on",
+        "off": "off"
+      },
+      "docs_ref": "https://open.higgsfield.ai/models/kling-video/v3.0/std/image-to-video/api-reference",
+      "pricing": {
+        "currency": "USD",
+        "basis": "public-list-range",
+        "per_second": {
+          "off": [
+            "0.084",
+            "0.126"
+          ],
+          "on": [
+            "0.084",
+            "0.126"
+          ]
+        },
+        "audio_price_verified": false,
+        "note": "공개 정가 범위 추정치 · 소리별 단가 매핑 미확인. 실제 견적·청구와 다름."
+      }
+    },
+    {
+      "provider": "higgsfield",
+      "enabled": true,
+      "reference_image": true,
+      "resolutions": [
+        "model_default"
+      ],
+      "default_resolution": "model_default",
+      "duration": {
+        "min": 3,
+        "max": 15,
+        "step": 1,
+        "default": 11
+      },
+      "audio": {
+        "native": true,
+        "voice_select": false
+      },
+      "checked_on": "2026-10-29",
+      "quality_note": "Standard 기본 화질 · 별도 네이티브 해상도 파라미터 없음",
+      "pricing_ref": "https://open.higgsfield.ai/pricing",
+      "id": "kling-video/o3/image-reference",
+      "label": "Kling O3 Standard",
+      "api_path": "kling-video/o3/image-reference",
+      "recommended": false,
+      "aspect_ratios": [
+        "9:16",
+        "16:9",
+        "1:1"
+      ],
+      "default_aspect_ratio": "9:16",
+      "aspect_ratio_mode": "native",
+      "param_map": {
+        "aspect_ratio": "aspect_ratio",
+        "resolution": null,
+        "duration": "duration",
+        "audio": "sound",
+        "reference": "image_urls"
+      },
+      "fixed_params": {
+        "mode": "std",
+        "shot_type": "customize",
+        "multi_shots": false
+      },
+      "audio_values": {
+        "on": "on",
+        "off": "off"
+      },
+      "docs_ref": "https://open.higgsfield.ai/models/kling-video/o3/image-reference/api-reference",
+      "pricing": {
+        "currency": "USD",
+        "basis": "public-list-reference",
+        "per_second": {
+          "off": [
+            "0.084",
+            "0.084"
+          ],
+          "on": null
+        },
+        "audio_price_verified": false,
+        "note": "소리 끔 공개 정가 참고치. 소리 켬은 공식 견적 전 미확정. 실제 청구와 다름."
+      }
+    }
+  ]
+}
