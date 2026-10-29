@@ -1,0 +1,92 @@
+{
+  "prepared_at_kst": "2026-10-29T09:13:20.522667+09:00",
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "base_head": "d9b337c16b6b8db597e912651ac07efcfde95ba5",
+  "direction": "separate new installation; never overwrite existing operating program",
+  "change": {
+    "changed_product_source": [
+      "frontend/src/studio/core/CoreStudios.tsx"
+    ],
+    "source_matches_accepted_isolated_patch": true,
+    "source_normalized_sha256": "85614050837a50bf450a3c36508b34b314d702d5d9d2214b802e1959b938aa92",
+    "generated_build_reused_not_rebuilt": true,
+    "build_entries": [
+      {
+        "relative": "index.html",
+        "bytes": 418,
+        "sha256": "f4d10dc9a668a1ecf3af564e1e348d60a6aebb7b0a975ba78f73198ee78782ca",
+        "matches_validated_build": true
+      },
+      {
+        "relative": "assets/index-DsTSicNr.js",
+        "bytes": 546667,
+        "sha256": "eb406845bdbb54bbd7a21102f4f44b0e6571e3a9d2cf05f4005efd3c8919c0d7",
+        "matches_validated_build": true
+      },
+      {
+        "relative": "assets/index-DH-ao1BP.css",
+        "bytes": 143580,
+        "sha256": "81ae94f97e033ee3571a216beae1c613c9b669942ef6da4743e357e9b423b937",
+        "matches_validated_build": true
+      }
+    ],
+    "old_assets_deleted": 0,
+    "python_api_db_migrations_css_changed": false,
+    "bat_zip_candidates_modified": false,
+    "app_executions_this_task": 0
+  },
+  "reused_only": {
+    "focused_acceptance_pass": 15,
+    "focused_acceptance_fail": 0,
+    "typescript": "PASS in previous isolated verification",
+    "vite": "PASS in previous isolated verification",
+    "rendered_react_pages": 9,
+    "http200": 21,
+    "http206": 5,
+    "mode_news_top3_ranks": [
+      true,
+      true,
+      true
+    ],
+    "saved_script_and_revision": "previous isolated GUI evidence",
+    "originals_and_backups": "previous postcheck only; no new access this task"
+  },
+  "new_checks": {
+    "applied_source_normalized_equal_to_validated_copy": true,
+    "reused_build_entries_equal_to_validated_build": true,
+    "product_source_files_changed": 1,
+    "python_api_schema_css_changed": false,
+    "app_runs": 0,
+    "new_gui_tests": 0,
+    "new_full_regressions": 0
+  },
+  "shutdown": {
+    "review": "existing logs and code only",
+    "server_stop_and_cleanup": "previous PASS",
+    "controlled_cancel_stack": "asyncio CancelledError -> KeyboardInterrupt; main finally cleanup; launcher interrupt handling; cmd batch termination prompt accepted",
+    "outer_shell_exit_code": 1,
+    "zero_exit_verified": false,
+    "new_shutdown_run": false,
+    "single_component_exit_attribution": "not separately instrumented; do not equate outer shell code to application failure"
+  },
+  "execution_readiness": {
+    "existing_operating_bat": "unchanged; not started or stopped this task",
+    "isolated_latest_source": "previous restored-copy execution verified",
+    "current_bat_zip_dispatcher": "disabled / no activation",
+    "new_installed_package_run": "NOT VERIFIED / no actual installation performed",
+    "offline_update": "BLOCKED without actual publisher trust; unchanged",
+    "zip_candidates_contain_this_alias_patch": false
+  },
+  "future_authorization_required": [
+    "actual new installation in a separate program directory",
+    "new-install local runtime/controller connection after normal execution conditions confirmed",
+    "separate verification/approval for any historical data or DPAPI/media connection",
+    "any actual operating switch or removal"
+  ],
+  "operating_code_data_keys_media_backups_changes": 0,
+  "actual_install_or_operating_transition": 0,
+  "deletions": 0,
+  "paid_api_oauth_sns_calls": 0,
+  "main_pr35_changes": 0,
+  "verdict": "CONDITIONAL"
+}

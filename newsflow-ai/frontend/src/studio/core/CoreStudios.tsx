@@ -16,7 +16,7 @@ export default function CoreStudios({
 }) {
   const c = useStudio(module),
     [imageMode, setImageMode] = useState(() =>
-      new URLSearchParams(location.search).get("mode") === "top3"
+      ["top3", "news"].includes(new URLSearchParams(location.search).get("mode") ?? "")
         ? "top3"
         : "standalone",
     );
