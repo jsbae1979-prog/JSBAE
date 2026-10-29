@@ -1335,6 +1335,19 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               {busy ? "스토리 처리 중…" : "스토리 자동 생성하기"}
               <span>→</span>
             </button>
+            {job?.scriptFailure && (
+              <p className="kling-character-error" role="status">
+                {job.scriptFailure.message}
+                {job.scriptResponseSaved && " 응답은 로컬에 보존되어 있습니다."}
+              </p>
+            )}
+            {job?.scriptRetryAllowed === true && (
+              <div className="kling-character-retry">
+                {action("write", "이 작업의 스토리 다시 생성하기", ["script_failed"])}
+                <small>저장된 이 작업의 주제·캐릭터·설정으로 새 스토리를 요청합니다. 비용 승인은 유지됩니다.</small>
+              </div>
+            )}
+
             <p className="kling-character-consent">
               주제 텍스트로 Claude가 스토리를 만들고 저장합니다. 참조 PNG는
               스토리와 함께 Higgsfield 영상 제작에만 사용합니다. 저장된 API

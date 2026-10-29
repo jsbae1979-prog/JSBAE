@@ -174,7 +174,7 @@ def test_topic_and_generic_schema_are_sent_once_without_reference_or_legacy_masc
     seen=[]
     def reply(body,options):
         seen.append(body)
-        return {'stop_reason':'end_turn','content':[{'type':'text','text':json.dumps(story())}]}
+        return {'stop_reason':'end_turn','content':[{'type':'text','text':json.dumps(story(15))}]}
     monkeypatch.setattr(writer,'_post',reply)
     payload={'duration':15,'topic':'여행','sound':'off','clip_seconds':3,'scene_count':5}
     result=writer.write_studio(payload,Options(model='claude-sonnet-4-6'),png())
@@ -318,7 +318,7 @@ def test_studio_text_transport_never_reads_or_serializes_large_reference(monkeyp
     def capture(request, timeout, limit):
         requests.append(request.data)
         return json.dumps({'stop_reason': 'end_turn', 'content': [
-            {'type': 'text', 'text': json.dumps(story())}]}).encode('utf-8')
+            {'type': 'text', 'text': json.dumps(story(15))}]}).encode('utf-8')
 
     monkeypatch.setattr(writer, '_open', capture)
     payload = {'duration': 15, 'topic': '친구와 숲을 여행하는 이야기', 'sound': 'off',

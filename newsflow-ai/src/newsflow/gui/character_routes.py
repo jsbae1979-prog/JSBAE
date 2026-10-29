@@ -211,6 +211,9 @@ def act(request: Request,job_id: str,action: str,consent: bool=Form(False),revie
         except CharacterError:
             raise HTTPException(404,'작업을 확인하세요.') from None
         message=str(exc) if isinstance(exc,CharacterError) else '작업을 중단했습니다. 저장된 기록을 확인하세요.'
+        from newsflow.character.story_response import public_failure
+        diagnosed=public_failure(job.get('script_failure'))
+        if diagnosed:message=diagnosed['message']
         return page(request,'character.html',active='video',character=load_character(),job=job,
                     jobs=service.listing()[:20],error=message,**choices(request))
 

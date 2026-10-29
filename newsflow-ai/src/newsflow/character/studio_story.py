@@ -6,8 +6,11 @@ from pydantic import Field, model_validator
 from .schema import Plan, Scene, Strict, CharacterError
 from newsflow.video_models.catalog import compose_prompt, character_config
 
+ENGLISH_ACTION_PATTERN = r'^[^가-힣]*[A-Za-z][^가-힣]*$'
+
 class StudioScene(Scene):
     seconds:int=Field(ge=3,le=15)
+    action:str=Field(min_length=1,max_length=300,pattern=ENGLISH_ACTION_PATTERN)
     narration:str=Field(default='',max_length=160,description=
                         'Compatibility field. Always return an empty string; the video model interprets the story and sound setting.')
 
@@ -39,6 +42,21 @@ INSTRUCTION=(
     'No copyrighted characters, brands, logos, real people or music. No fixed mascot or workplace plot. '
     'Keep age suitability unassessed for human review. Do not claim generated media.'
 )
+
+
+def timing_errors(story, payload):
+    """Return finite locations/types for the requested beat timing, never values."""
+    errors=[]
+    count,seconds,duration=(payload.get(key) for key in ('scene_count','clip_seconds','duration'))
+    if type(count) is int and len(story.scenes)!=count:
+        errors.append({'loc':['scenes'],'type':'scene_count'})
+    if type(seconds) is int:
+        errors.extend({'loc':['scenes',index,'seconds'],'type':'clip_seconds'}
+                      for index,scene in enumerate(story.scenes) if scene.seconds!=seconds)
+    if type(duration) is int and sum(scene.seconds for scene in story.scenes)!=duration:
+        errors.append({'loc':['scenes'],'type':'total_duration'})
+    return errors
+
 
 def prompts(story,settings,character=None):
     character=character or character_config()

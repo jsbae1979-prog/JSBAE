@@ -21,7 +21,8 @@ from newsflow.intelligence.provider import Options, ProviderError
 from newsflow.video.ai.clips import probe_clip
 from newsflow.video.ai.contracts import ProviderAmbiguousSubmit, VideoProviderError
 
-from .claude import CharacterWriter
+from .claude import CharacterWriter, StudioResponseError
+from .story_response import persist_candidate, public_failure
 from .kling import catalog as studio_catalog  # Load the local capability cache once, without network calls.
 from .compose import compose, digest
 from .higgsfield_client import MODEL, HiggsfieldVideoClient, amount, reference_bytes
@@ -413,6 +414,17 @@ class CharacterService:
         if value is not True:
             raise CharacterError('consent')
 
+    def _record_story_response(self, job, attempt):
+        if not job.get('studio_selection'):return
+        try:
+            saved=persist_candidate(self.folder(job['id']),attempt,getattr(self.writer,'last_candidate',None),
+                                    getattr(self.writer,'last_usage',None))
+            if saved:
+                history=job.setdefault('script_responses',[])
+                if not any(row.get('attempt')==attempt for row in history):history.append(saved)
+        except (OSError,ValueError,TypeError):
+            job['script_evidence_error']='write_unavailable'
+
     def write(self, identifier, *, consent=False):
         self.consent(consent)
         with self.lock():
@@ -429,6 +441,10 @@ class CharacterService:
             request_id='character:'+identifier+(':'+str(attempt) if attempt>1 else '')
             reservation=self.budget.reserve(provider='claude_api',request_id=request_id,
                 kind='script',model=options.model,max_output_tokens=options.max_tokens,key_store=self.keys)
+            if attempt>1:
+                job.setdefault('script_attempt_history',[]).append({
+                    'attempt':attempt-1,'state':job['state'],'response_received':job.get('response_received',False),
+                    'failure':public_failure(job.get('script_failure'))})
             job['state']='writing'
             job.pop('script_failure', None)
             job['script_attempts']=attempt
@@ -455,6 +471,8 @@ class CharacterService:
                         story=Storyboard.model_validate(story)
             except Exception as error:  # noqa: BLE001 - only finite safe diagnostics may be retained
                 job['state']='script_failed'
+                self._record_story_response(job,attempt)
+                if isinstance(error,StudioResponseError):job['script_failure']=error.diagnostics()
                 from newsflow.intelligence.provider import ProviderHTTPResponseError
                 if isinstance(error, ProviderHTTPResponseError):
                     job['script_failure'] = error.diagnostics()
@@ -465,6 +483,7 @@ class CharacterService:
                 self.save(job)
                 self.budget.finish(reservation.id,status='failed' if response_known else 'unknown',usage=usage)
                 raise CharacterError('provider') from None
+            self._record_story_response(job,attempt)
             self.budget.finish(reservation.id,status='success',usage=self.writer.last_usage)
             job['script']=story.model_dump()
             if job.get('studio_selection'):

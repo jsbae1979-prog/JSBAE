@@ -213,6 +213,11 @@ def character_rows(state):
             )
             if k in job
         }
+        from newsflow.character.story_response import public_failure
+        item['scriptFailure']=public_failure(job.get('script_failure'))
+        item['scriptRetryAllowed']=(job.get('state')=='script_failed' and job.get('response_received') is True
+                                    and 0<job.get('script_attempts',0)<3)
+        item['scriptResponseSaved']=bool(job.get('script_responses'))
         item['quoteSettingsEditable']=quote_settings_editable(job)
         item.update(visibility.get(job['id'], {'trashed': False, 'recentHidden': False}))
         # Reference and clips use existing validated file routes; do not expose local paths.
