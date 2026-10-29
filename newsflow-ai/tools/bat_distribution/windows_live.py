@@ -171,11 +171,14 @@ class WindowsStart:
         private_directory(path)
 
     def reserve_exclusive(self, host, port):
-        from newsflow.runtime import reserve_socket
+        from newsflow.runtime import reserve_socket, PortInUseError
         class Lease:
             def __init__(self):
                 self.host, self.port = host, port
-                self.socket = reserve_socket(host, port)
+                try:
+                    self.socket = reserve_socket(host, port)
+                except PortInUseError:
+                    raise OSError('fixed-loopback-port-in-use') from None
             def close(self):
                 self.socket.close()
         return Lease()

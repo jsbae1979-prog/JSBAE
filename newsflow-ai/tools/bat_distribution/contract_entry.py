@@ -33,6 +33,8 @@ def main(argv=None) -> int:
     except Exception as error:
         # Never expose credential data, raw native errors or private paths.
         code = str(error) if type(error).__name__ == 'Blocked' else type(error).__name__
+        if code == 'port-unavailable-no-fallback':
+            print('지정 포트를 사용할 수 없습니다. 기존 실행을 확인하거나 종료 후 connection.json에서 포트를 명시하세요. 자동으로 변경하지 않습니다.', file=sys.stderr)
         print('BLOCKED_OR_FAILED: ' + code, file=sys.stderr)
         return 2
 

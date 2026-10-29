@@ -20,3 +20,14 @@ def test_release_has_no_restored_profile_identity_and_keeps_updates_disabled(tmp
     assert layout['portableFirstRun'] is True and layout['updatesEnabled'] is False
     assert 'validationConfigSha256' not in layout and 'operatingProfile' not in layout
     assert not any(r['path']=='connection.json' for r in layout['files'])
+
+
+def test_real_port_error_is_normalized_without_fallback(monkeypatch):
+    from newsflow import runtime
+    from bat_distribution.windows_live import WindowsStart
+    def occupied(host,port):
+        assert host=='127.0.0.1' and port==18780
+        raise runtime.PortInUseError('synthetic occupied port')
+    monkeypatch.setattr(runtime,'reserve_socket',occupied)
+    with pytest.raises(OSError,match='fixed-loopback-port-in-use'):
+        WindowsStart().reserve_exclusive('127.0.0.1',18780)
