@@ -61,7 +61,7 @@ class _Client:
         job = self.scope.local.read(context['job_id'])
         matches = [scene for scene in job.get('scenes', [])
                    if scene.get('state') == 'submitted' and scene.get('handle') == handle]
-        if job['state'] != 'generating' or len(matches) != 1:
+        if job['state'] not in {'generating', 'scene_review'} or len(matches) != 1:
             _deny()
         position = matches[0]['position']
         if position in context['statuses']:
@@ -79,7 +79,7 @@ class _Client:
                    if scene.get('state') == 'downloading'
                    and target == folder/f'scene-{scene["position"]}.mp4'
                    and context['statuses'].get(scene['position']) is status]
-        if (job['state'] != 'generating' or len(matches) != 1 or target in context['fetched']
+        if (job['state'] not in {'generating', 'scene_review'} or len(matches) != 1 or target in context['fetched']
                 or status.state != 'completed'):
             _deny()
         context['fetched'].add(target)

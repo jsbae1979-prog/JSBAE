@@ -675,10 +675,17 @@ class CharacterService:
         self.consent(consent)
         with self.lock():
             job=self.read(identifier)
-            if job['state']!='generating':
+            if job['state'] not in {'generating','scene_review'}:
+                raise CharacterError('blocked')
+            terminal={'failed','nsfw','canceled'}
+            # Collect already submitted siblings after a known terminal failure.
+            # Unknown/unsubmitted work must never become an implicit retry.
+            if not job.get('scenes') or any(s.get('state') not in terminal|{'submitted','downloaded'} for s in job['scenes']):
                 raise CharacterError('blocked')
             folder=self.folder(identifier)
             for scene in job['scenes']:
+                if scene['state'] in terminal:
+                    continue
                 if scene['state']=='downloaded':
                     if digest(folder/scene['file'])!=scene['sha256']:
                         raise CharacterError('media')
@@ -688,12 +695,12 @@ class CharacterService:
                 stage='status'
                 try:
                     status=self.video_for(job).check(scene['handle'])
-                    if status.state in {'failed','nsfw','canceled'}:
+                    if status.state in terminal:
                         scene['state']=status.state
                         scene['finished_at']=now().isoformat()
                         job['state']='scene_review'
                         self.save(job)
-                        raise CharacterError('blocked')
+                        continue
                     if status.state=='completed':
                         path=folder/f'scene-{scene["position"]}.mp4'
                         scene['state']='downloading'
@@ -716,6 +723,9 @@ class CharacterService:
                     raise CharacterError('media' if stage=='local_validation' else 'provider') from None
             if all(s['state']=='downloaded' for s in job['scenes']):
                 job['state']='clips_review'
+                self.save(job)
+            elif any(s['state'] in terminal for s in job['scenes']) and job['state']!='scene_review':
+                job['state']='scene_review'
                 self.save(job)
 
     def recover_local_download(self, identifier, *, consent=False, expected_sha256='', expected_bytes=0):

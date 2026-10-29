@@ -570,6 +570,14 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const story = job?.story,
     scenes: Item[] = story?.scenes ?? [],
     clips: Item[] = job?.scenes ?? [];
+  const pendingSceneChecks = clips.some((clip) => clip.state === "submitted");
+  const canCheckScenes = job?.state === "generating" || (job?.state === "scene_review" && pendingSceneChecks);
+  const sceneProgressSummary = [
+    ["failed", "실패"], ["submitted", "상태 확인 대기"], ["downloaded", "저장"], ["unknown", "결과 불명"],
+  ].map(([state, label]) => {
+    const count = clips.filter((clip) => clip.state === state).length;
+    return count ? `${label} ${count}` : "";
+  }).filter(Boolean).join(" · ");
   const selectedClip = clips.find((x) => x.position === scene + 1);
   const singleVideo =
     clips.length === 1 &&
@@ -1640,7 +1648,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       <p>
                         캐릭터 스타일과 화면 비율은 고정됩니다.
                       </p>
-                      {job?.state === "scene_review" &&
+                      {job?.state === "scene_review" && !pendingSceneChecks &&
                         action("retry-quote", "실패 장면 새 견적", [
                           "scene_review",
                         ])}
@@ -1691,8 +1699,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       </button>
                     ) : job?.state === "quoted" ? (
                       action("submit", "영상 생성하기", ["quoted"])
-                    ) : job?.state === "generating" ? (
-                      action("check", "장면 상태 확인", ["generating"])
+                    ) : canCheckScenes ? (
+                      action("check", job?.state === "scene_review" ? "남은 장면 상태 확인" : "장면 상태 확인", ["generating", "scene_review"])
                     ) : job?.state === "clips_review" ? (
                       action("render", "검토 후 영상 합성", ["clips_review"])
                     ) : job?.state === "completed" &&
@@ -1725,6 +1733,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         </button>
                       )}
                   </div>
+                  {sceneProgressSummary && ["generating", "scene_review", "submission_unknown", "clips_review"].includes(job?.state ?? "") && (
+                    <p className="kling-field-note" role="status">{sceneProgressSummary}</p>
+                  )}
                   {quoteSettingsChanged && (
                     <p role="status" className="kling-field-note">
                       설정이 바뀌었습니다. 견적을 다시 확인하세요.

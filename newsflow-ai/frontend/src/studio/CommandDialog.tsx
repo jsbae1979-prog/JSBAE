@@ -511,6 +511,7 @@ export function CommandDialog({
     clipDurations,
   );
   const localRenderTitle = "장면 검토 후 영상 합성";
+  const checkingCharacterScenes = action.id === "character_act_check";
   const effective = {
     ...action,
     fields: localRender
@@ -548,14 +549,20 @@ export function CommandDialog({
       else onClose();
     } catch (e) {
       setAck(false);
-      setError(e instanceof Error ? e.message : "저장 결과를 확인하세요.");
+      const detail = e instanceof Error ? e.message : "저장 결과를 확인하세요.";
+      if (checkingCharacterScenes) {
+        onSaved();
+        setError(`상태 조회가 중단됐습니다. 저장된 장면별 상태를 확인하세요. ${detail}`);
+      } else setError(detail);
     } finally {
       setBusy(false);
     }
   }
   const field = (f: Field) => {
     const fieldLabel =
-      (f.name === "job_limit"
+      (checkingCharacterScenes && f.name === "consent"
+        ? "기존 장면 상태 조회·완료 영상 저장에 동의합니다"
+        : f.name === "job_limit"
         ? action.id === "video_save_tts"
           ? "1회 음성 입력 글자 수 한도"
           : "1회 영상 제작 한도 (" + String(values.currency ?? "USD") + ")"
@@ -751,9 +758,9 @@ export function CommandDialog({
                 <div className="scope-note">
                   <ShieldCheck size={20} />
                   <p>
-                    대상과 선택 모델을 확인하세요. 외부 전송·유료 사용·공개 게시
-                    동의는 각각 별도로 적용되며, 실패·결과 불명 시 자동
-                    재요청하지 않습니다.
+                    {checkingCharacterScenes
+                      ? "이미 요청한 장면의 상태를 확인하고 완료된 영상을 저장합니다. 새 영상 생성이나 재생성은 하지 않습니다."
+                      : "대상과 선택 모델을 확인하세요. 외부 전송·유료 사용·공개 게시 동의는 각각 별도로 적용되며, 실패·결과 불명 시 자동 재요청하지 않습니다."}
                   </p>
                 </div>
               )}
