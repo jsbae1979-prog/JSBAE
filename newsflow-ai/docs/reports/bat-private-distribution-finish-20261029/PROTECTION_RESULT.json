@@ -1,0 +1,15 @@
+{
+  "operatingPidPreserved": 23240,
+  "operatingProgramFilesUnchanged": 2881,
+  "operatingProfileFilesUnchanged": 36,
+  "all47OperatingTablesUnchanged": true,
+  "originalAndABFilesUnchanged": 103,
+  "articleCount": 169,
+  "ports": {
+    "18768": true,
+    "18780": false
+  },
+  "testSessionCleaned": true,
+  "existingProgramDeleted": false,
+  "externalDelivery": false
+}

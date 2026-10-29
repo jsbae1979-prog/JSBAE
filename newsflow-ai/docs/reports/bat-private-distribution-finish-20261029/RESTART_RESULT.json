@@ -1,0 +1,9 @@
+{
+  "restartReady": true,
+  "browserAutoOpenAccepted": true,
+  "normalOneTimeAuthentication": true,
+  "bootstrapConsumedBeforeExpirySeconds": 23.5,
+  "imageDraftPreserved": true,
+  "settingsPreserved": true,
+  "currentOperatingProfileUsed": false
+}

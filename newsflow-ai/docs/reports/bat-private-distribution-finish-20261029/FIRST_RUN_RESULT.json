@@ -1,0 +1,25 @@
+{
+  "authenticatedReactGUI": [
+    "dashboard",
+    "shorts",
+    "images",
+    "characters"
+  ],
+  "imageDraftsSaved": 1,
+  "imageDefaultsSaved": true,
+  "realPaidProviderCalls": 0,
+  "oauthAndSNSCalls": 0,
+  "operatingDataUsed": false,
+  "runtimeFFmpegExit": 0,
+  "runtimeFFprobeExit": 0,
+  "testVideo": {
+    "width": 144,
+    "height": 256,
+    "fps": "30/1",
+    "seconds": "0.200000",
+    "audio": false
+  },
+  "actualOtherWindowsUser": "NOT VERIFIED: same current account with a separate initially empty profile",
+  "samplesExcluded": 12,
+  "sampleMissingCatalogWarning": "Existing UI shows a non-fatal missing-sample warning; no sample content substituted."
+}

@@ -1,0 +1,9 @@
+{
+  "extractedFiles": 2884,
+  "wheels": 27,
+  "runtime": "3.14.7",
+  "profileExistedBeforeStart": false,
+  "operatingProfileReferenced": false,
+  "connectionPublicDefaultPort": 18780,
+  "temporaryBrowserDeferralForNormalAuthTest": true
+}

@@ -1,0 +1,282 @@
+[
+  {
+    "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01",
+    "Classification": "REMOVE",
+    "Reason": "Synthetic pytest demo wheel and PE placeholders; source and junit retained",
+    "FileCount": 13,
+    "Bytes": 3855.0,
+    "RecoveryRequired": false,
+    "Files": [
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f0\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1361,
+        "Sha256": "39aff729a305e73fefe16aa9e811871e0e83a37958517055aa4f6637ac2e22ea"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f0\\program\\app\\site-packages\\demo\\__init__.py",
+        "Bytes": 46,
+        "Sha256": "9549122c01dd16459f6d91f387fcb31efdc32e01989882ab7d5511810425b2c0"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f0\\program\\app\\site-packages\\demo-1.0.dist-info\\METADATA",
+        "Bytes": 69,
+        "Sha256": "2ff06aba6361f16fb1cff9f137c65f2250ee66aeebe88f3fb126cfe796c5a566"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f0\\program\\app\\site-packages\\demo-1.0.dist-info\\RECORD",
+        "Bytes": 412,
+        "Sha256": "f13554881e7d28f433b7d0961b06e632aba2ce136d543466553d6a0cd17c6eb9"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f0\\program\\app\\site-packages\\demo-1.0.dist-info\\WHEEL",
+        "Bytes": 59,
+        "Sha256": "242557f73f15fa3b36695e6a9904761377e20acf98bb7bcf3bdd5c08198ed493"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f0\\program\\app\\site-packages\\isapi\\__init__.py",
+        "Bytes": 12,
+        "Sha256": "9c33b40d37bf9098b949de503e061a142cf37a74fc7ad8c77d59bacacf05fece"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f0\\program\\app\\site-packages\\isapi\\samples\\advanced.py",
+        "Bytes": 17,
+        "Sha256": "ecba6edbb4167567582394bf1d80bae6022ad6f19866b58e23b39fa7ba96e5c2"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f1\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1361,
+        "Sha256": "39aff729a305e73fefe16aa9e811871e0e83a37958517055aa4f6637ac2e22ea"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f1\\program\\app\\site-packages\\demo\\__init__.py",
+        "Bytes": 46,
+        "Sha256": "9549122c01dd16459f6d91f387fcb31efdc32e01989882ab7d5511810425b2c0"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f1\\program\\app\\site-packages\\demo-1.0.dist-info\\METADATA",
+        "Bytes": 69,
+        "Sha256": "2ff06aba6361f16fb1cff9f137c65f2250ee66aeebe88f3fb126cfe796c5a566"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f1\\program\\app\\site-packages\\demo-1.0.dist-info\\RECORD",
+        "Bytes": 332,
+        "Sha256": "9e4a8694a793bfa1dbb27c1246384cf38e1ff07c229a77a24ea5ff12b31813d1"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f1\\program\\app\\site-packages\\demo-1.0.dist-info\\WHEEL",
+        "Bytes": 59,
+        "Sha256": "242557f73f15fa3b36695e6a9904761377e20acf98bb7bcf3bdd5c08198ed493"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\filter-tests-01\\test_optional_isapi_examples_f1\\program\\app\\site-packages\\isapi\\__init__.py",
+        "Bytes": 12,
+        "Sha256": "9c33b40d37bf9098b949de503e061a142cf37a74fc7ad8c77d59bacacf05fece"
+      }
+    ]
+  },
+  {
+    "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\profile-tests-01",
+    "Classification": "REMOVE",
+    "Reason": "Synthetic pytest demo wheel and PE placeholders; source and junit retained",
+    "FileCount": 8,
+    "Bytes": 627.0,
+    "RecoveryRequired": false,
+    "Files": [
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\profile-tests-01\\test_browser_profile_preserves0\\program\\app\\site-packages\\Pythonwin\\win32ui.pyd",
+        "Bytes": 12,
+        "Sha256": "59d807831a908648ad6c00d7e463536024f50174644d71ba2daf97c2b5be3037"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\profile-tests-01\\test_browser_profile_preserves0\\program\\app\\site-packages\\pywin32-312.dist-info\\RECORD",
+        "Bytes": 348,
+        "Sha256": "35f62ef1e4c33006869d270941eca87689c87563a9defaa26615f161d96136b0"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\profile-tests-01\\test_browser_profile_preserves0\\program\\app\\site-packages\\pywin32_system32\\pythoncom314.dll",
+        "Bytes": 14,
+        "Sha256": "29bf5ed9113439be8dd372e42970897253a1c7585ee09210f792d4f4ae416e4d"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\profile-tests-01\\test_browser_profile_preserves0\\program\\app\\site-packages\\win32\\win32api.pyd",
+        "Bytes": 17,
+        "Sha256": "e70209572f4f342f2e97844413ba9b91ab433d1290332204a623eaee15767c52"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\profile-tests-01\\test_browser_profile_preserves0\\program\\app\\site-packages\\win32comext\\mapi\\mapi.pyd",
+        "Bytes": 13,
+        "Sha256": "4f5be874142f8d0b954dffc131c9979884dc2f9d543af98554984dcd3c8f8cd0"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\profile-tests-01\\test_browser_profile_preserves1\\program\\app\\site-packages\\pywin32-312.dist-info\\RECORD",
+        "Bytes": 192,
+        "Sha256": "b3e79526ccd36513c84c3f3880cfd866b7e06f3caf8d54723808a375f68f32b5"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\profile-tests-01\\test_browser_profile_preserves1\\program\\app\\site-packages\\pywin32_system32\\pythoncom314.dll",
+        "Bytes": 14,
+        "Sha256": "29bf5ed9113439be8dd372e42970897253a1c7585ee09210f792d4f4ae416e4d"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\profile-tests-01\\test_browser_profile_preserves1\\program\\app\\site-packages\\win32\\win32api.pyd",
+        "Bytes": 17,
+        "Sha256": "e70209572f4f342f2e97844413ba9b91ab433d1290332204a623eaee15767c52"
+      }
+    ]
+  },
+  {
+    "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01",
+    "Classification": "REMOVE",
+    "Reason": "Synthetic pytest demo wheel and PE placeholders; source and junit retained",
+    "FileCount": 29,
+    "Bytes": 18708.0,
+    "RecoveryRequired": false,
+    "Files": [
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_existing_different_file_i0\\program\\app\\site-packages\\a.py",
+        "Bytes": 3,
+        "Sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_generated_version_metadat0\\program\\README.txt",
+        "Bytes": 1785,
+        "Sha256": "5321c6d85427534fac479c350a05f459d4235a271737257376598e12cc76c387"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_generated_version_metadat0\\program\\app\\layout.json",
+        "Bytes": 570,
+        "Sha256": "8864f6bbaec1962526db8db2a5bdb06e80d57506bb5659200adbb0f9cd6b2629"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_generated_version_metadat0\\program\\app\\product\\info.txt",
+        "Bytes": 9,
+        "Sha256": "b3cc0475bb78a5026098858e9889acf666d31062d513d303314eca31d36e72f2"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_initial_and_update_zip_la0\\initial.zip",
+        "Bytes": 169,
+        "Sha256": "f020072c88865cee04e2ff677d464d0471d054a337d15f97a62a516cb186da8b"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_initial_and_update_zip_la0\\update.zip",
+        "Bytes": 147,
+        "Sha256": "b9cd4b1b09e02df56a3c5dcbaf5d4d8dc3750596e76b419f95a3a5cea38169c4"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_initial_and_update_zip_la0\\program\\app\\product\\info.txt",
+        "Bytes": 9,
+        "Sha256": "b3cc0475bb78a5026098858e9889acf666d31062d513d303314eca31d36e72f2"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_internal_wheel_contract_r0\\demo-1.0-py3-none-any.whl",
+        "Bytes": 944,
+        "Sha256": "b8e0b47d3f0462a80e83d71efca22da6c4b310631d80e26f4f549b863b103bd1"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_internal_wheel_contract_r1\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1056,
+        "Sha256": "756a53b2feccb31aac8cabf6f1f5a8a58511dc1179e1031e7c164bc8ad7ca7a1"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_internal_wheel_contract_r2\\demo-1.0-py3-none-any.whl",
+        "Bytes": 953,
+        "Sha256": "10966b51237d85445fce82063ecd7f961cec9a8f833a2fb1e39f51854d9876f7"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_internal_wheel_contract_r3\\demo-1.0-py3-none-any.whl",
+        "Bytes": 945,
+        "Sha256": "81051fbaaa01453ad87f90a865eda940f90e876d622c1ecfbfa4ad311135aff8"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_outer_wheel_hash_mismatch0\\demo-1.0-py3-none-any.whl",
+        "Bytes": 944,
+        "Sha256": "3641454c2e945810fada59538ce4c8496a6cabc5ca05e2d8050b4144ac51d0b1"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_record_verified_and_sprea0\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1412,
+        "Sha256": "beb78977150f415f329331b95194f7f58dbf01342ec0b03b6a7e97bc50981953"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_record_verified_and_sprea0\\program\\app\\runtime\\Scripts\\postinstall.py",
+        "Bytes": 39,
+        "Sha256": "c743d455df7ce4579a5ebc587671c79e5bffeccffd5800b9018ee62c1e7f959d"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_record_verified_and_sprea0\\program\\app\\site-packages\\demo.pth",
+        "Bytes": 35,
+        "Sha256": "90dea606b4ff9c23212ef3c76c6bb86995f601ae086a7ca4d15ac6628ff172d4"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_record_verified_and_sprea0\\program\\app\\site-packages\\demo\\__init__.py",
+        "Bytes": 46,
+        "Sha256": "9549122c01dd16459f6d91f387fcb31efdc32e01989882ab7d5511810425b2c0"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_record_verified_and_sprea0\\program\\app\\site-packages\\demo-1.0.dist-info\\METADATA",
+        "Bytes": 69,
+        "Sha256": "2ff06aba6361f16fb1cff9f137c65f2250ee66aeebe88f3fb126cfe796c5a566"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_record_verified_and_sprea0\\program\\app\\site-packages\\demo-1.0.dist-info\\RECORD",
+        "Bytes": 411,
+        "Sha256": "8c804f7937a60c8cda19e59b1e95d5a6e19e4006676b91f33adc283d2324b2ca"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_record_verified_and_sprea0\\program\\app\\site-packages\\demo-1.0.dist-info\\WHEEL",
+        "Bytes": 59,
+        "Sha256": "242557f73f15fa3b36695e6a9904761377e20acf98bb7bcf3bdd5c08198ed493"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_wheel_casefold_duplicate_0\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1284,
+        "Sha256": "2fbfe612733de5bf2860ae8f5dfa30814b2bf1d791d52ba23b69c907dd2567a6"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_wheel_path_rejections_bef0\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1119,
+        "Sha256": "ad2af0879fca5e4850a94f4985a760e6b1f966cd45e572739dfbaada781c2a05"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_wheel_path_rejections_bef1\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1104,
+        "Sha256": "ef2b726b3cd8a8cfbdb422da80bb17528013174cd4ab6ddb62a00a402638b490"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_wheel_path_rejections_bef2\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1137,
+        "Sha256": "f1841c0d76db7d905ae5576c24c9b64ece77937e6a09fec289729ef34db9c8bc"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_wheel_path_rejections_bef3\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1110,
+        "Sha256": "bc28f8820e5f454a5a46b1cf902069b74f2d47095606b0359c3bf1a206a3d293"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_wheel_path_rejections_bef4\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1116,
+        "Sha256": "d7764b6109c18bf450a5df5a03055a61d490c879b63ec60ffc9afc0b6d94b26f"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_wheel_path_rejections_bef5\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1104,
+        "Sha256": "38c5d9c359c65e974eeddebd7aa2aded5ebd70cb1e6d6703a2086d4d8a50e840"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_wheel_path_rejections_bef6\\demo-1.0-py3-none-any.whl",
+        "Bytes": 1112,
+        "Sha256": "04d94ec7af8d8f382c063f2d5938e65e10b79173183094e8e8522b87d9fcea52"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_zip_does_not_replace_old_0\\existing.zip",
+        "Bytes": 8,
+        "Sha256": "1daf82f62247f3a1d148c2d88b1828c9efa2d5f087d7059e98650aafe7afdea3"
+      },
+      {
+        "Path": "C:\\Users\\ching\\.codex\\visualizations\\2026\\10\\16\\01a14359-7240-7522-8c13-8bc085201d78\\bat-private-package-candidates-20261028\\unit-tests-01\\test_zip_does_not_replace_old_0\\program\\README.txt",
+        "Bytes": 9,
+        "Sha256": "b3cc0475bb78a5026098858e9889acf666d31062d513d303314eca31d36e72f2"
+      }
+    ]
+  }
+]

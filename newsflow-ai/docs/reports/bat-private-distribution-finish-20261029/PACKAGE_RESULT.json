@@ -1,0 +1,22 @@
+{
+  "sourceSha": "8a1d6322a2dc3aa41311e76f6e37f05ee4ee84c8",
+  "runtime": "3.14.7 AMD64",
+  "updatesEnabled": false,
+  "publisherSignaturePresent": false,
+  "externalDelivery": false,
+  "samplesIncluded": 0,
+  "operatingProfileIncluded": false,
+  "productPayloadSameCode": true,
+  "initial": {
+    "file": "NewsFlowAI_v1.0.0.zip",
+    "bytes": 243232161,
+    "sha256": "a3fa66d0f08f0622cf993e1dbb9b1180130c60dcc205b357f8fdc884faadfbd4",
+    "members": 2884
+  },
+  "update": {
+    "file": "NewsFlowAI_Update_v1.1.0.zip",
+    "bytes": 243168713,
+    "sha256": "0e19f694d2b8b88e66a052c186256160bc498b87e9560d25a7b03b414beb0419",
+    "members": 2884
+  }
+}

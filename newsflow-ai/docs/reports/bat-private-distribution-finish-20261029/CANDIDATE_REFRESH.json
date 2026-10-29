@@ -1,0 +1,10 @@
+{
+  "onlyProgramFilesChanged": [
+    "app/controller/bat_distribution/contract_entry.py",
+    "app/controller/bat_distribution/windows_live.py",
+    "app/layout.json",
+    "connection.json",
+    "README.txt"
+  ],
+  "userProfileNotOverwritten": true
+}

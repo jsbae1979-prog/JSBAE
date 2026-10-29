@@ -1,0 +1,12 @@
+{
+  "newUnitPass": 13,
+  "groups": {
+    "portable_bootstrap": 10,
+    "new_release_contract": 2,
+    "port_message_normalization": 1
+  },
+  "unresolvedProductFail": 0,
+  "unresolvedProductError": 0,
+  "actualOtherWindowsAccount": "NOT VERIFIED",
+  "existingPassEvidenceReused": true
+}
