@@ -1,0 +1,92 @@
+[
+  {
+    "action": "홈",
+    "pass": true,
+    "active": [
+      "홈"
+    ],
+    "path": "/studio/dashboard",
+    "title": "뉴스가 세상을 움직입니다AI로 더 빠르고, 더 강력하게"
+  },
+  {
+    "action": "콘텐츠 제작",
+    "pass": true,
+    "active": [
+      "콘텐츠 제작"
+    ],
+    "path": "/studio/create",
+    "title": "어떤 콘텐츠를 만들까요?"
+  },
+  {
+    "action": "뉴스 스튜디오",
+    "pass": true,
+    "active": [
+      "뉴스 스튜디오"
+    ],
+    "path": "/studio/news",
+    "title": "뉴스 스튜디오"
+  },
+  {
+    "action": "자동화 센터",
+    "pass": true,
+    "active": [
+      "자동화 센터"
+    ],
+    "path": "/studio/automation",
+    "title": "자동화 센터"
+  },
+  {
+    "action": "라이브러리",
+    "pass": true,
+    "active": [
+      "라이브러리"
+    ],
+    "path": "/studio/library",
+    "title": "라이브러리"
+  },
+  {
+    "action": "게시 스튜디오",
+    "pass": true,
+    "active": [
+      "게시 스튜디오"
+    ],
+    "path": "/studio/publishing",
+    "title": "게시 스튜디오"
+  },
+  {
+    "action": "성과 · 비용",
+    "pass": true,
+    "active": [
+      "성과 · 비용"
+    ],
+    "path": "/studio/analytics",
+    "title": "성과 · 비용"
+  },
+  {
+    "action": "설정 · 관리",
+    "pass": true,
+    "active": [
+      "설정 · 관리"
+    ],
+    "path": "/studio/settings",
+    "title": "설정 · 관리"
+  },
+  {
+    "action": "콘텐츠 제작 → 선택 대화상자 → news",
+    "pass": true,
+    "path": "/studio/shorts",
+    "title": "뉴스 쇼츠 제작실"
+  },
+  {
+    "action": "콘텐츠 제작 → 선택 대화상자 → character",
+    "pass": true,
+    "path": "/studio/characters",
+    "title": "캐릭터 쇼츠 제작실"
+  },
+  {
+    "action": "콘텐츠 제작 → 선택 대화상자 → image",
+    "pass": true,
+    "path": "/studio/images",
+    "title": "이미지 제작실"
+  }
+]

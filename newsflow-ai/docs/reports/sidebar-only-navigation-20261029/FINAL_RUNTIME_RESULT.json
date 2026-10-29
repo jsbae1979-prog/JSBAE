@@ -1,0 +1,13 @@
+{
+  "operatingPid": 35844,
+  "stillActive": true,
+  "port18768Accepting": true,
+  "unauthenticatedGuiAndNewJsDenied": {
+    "/studio/characters": 403,
+    "/studio/assets/index-B0EXIKkr.js": 403
+  },
+  "originalAndBackupABHashesUnchanged": true,
+  "restartCount": 0,
+  "operatingBrowserAutomation": false,
+  "paidOrSnsCalls": 0
+}

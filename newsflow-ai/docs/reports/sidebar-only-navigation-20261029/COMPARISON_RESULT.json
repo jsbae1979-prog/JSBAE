@@ -1,0 +1,114 @@
+[
+  {
+    "route": "dashboard",
+    "width": 1920,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": true
+  },
+  {
+    "route": "create",
+    "width": 1920,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": true
+  },
+  {
+    "route": "characters",
+    "width": 1920,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  },
+  {
+    "route": "images",
+    "width": 1920,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  },
+  {
+    "route": "publishing",
+    "width": 1920,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  },
+  {
+    "route": "settings",
+    "width": 1920,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  },
+  {
+    "route": "dashboard",
+    "width": 1366,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": true
+  },
+  {
+    "route": "create",
+    "width": 1366,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": true
+  },
+  {
+    "route": "characters",
+    "width": 1366,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  },
+  {
+    "route": "images",
+    "width": 1366,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  },
+  {
+    "route": "publishing",
+    "width": 1366,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  },
+  {
+    "route": "settings",
+    "width": 1366,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  },
+  {
+    "route": "automation",
+    "width": 1920,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  },
+  {
+    "route": "automation",
+    "width": 1366,
+    "actualViewportMatches": true,
+    "featureButtonsUnchanged": true,
+    "functionalTabsUnchanged": true,
+    "protectedGeometryUnchanged": null
+  }
+]

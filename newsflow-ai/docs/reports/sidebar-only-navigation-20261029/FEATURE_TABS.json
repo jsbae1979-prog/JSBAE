@@ -1,0 +1,38 @@
+[
+  {
+    "action": "뉴스 기반 이미지 탭",
+    "pass": true
+  },
+  {
+    "action": "AI 이미지 생성 탭",
+    "pass": true
+  },
+  {
+    "action": "설정 탭 개요",
+    "pass": true
+  },
+  {
+    "action": "설정 탭 플랫폼 계정",
+    "pass": true
+  },
+  {
+    "action": "설정 탭 AI 모델 · API 키",
+    "pass": true
+  },
+  {
+    "action": "설정 탭 제작 기본값",
+    "pass": true
+  },
+  {
+    "action": "설정 탭 뉴스 수집",
+    "pass": true
+  },
+  {
+    "action": "설정 탭 자동화 & 실행",
+    "pass": true
+  },
+  {
+    "action": "설정 탭 시스템 관리",
+    "pass": true
+  }
+]

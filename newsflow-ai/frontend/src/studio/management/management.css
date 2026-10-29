@@ -1,10 +1,4 @@
 /* Management-only shell. :has becomes false on every protected route. */
-.app:has(.management-ui) > .sidebar {
-  display: none;
-}
-.app:has(.management-ui) > .workspace {
-  margin-left: 0;
-}
 .app:has(.management-ui) > .workspace > .topbar {
   display: none;
 }
@@ -131,105 +125,9 @@
   outline: 2px solid #51f1f4;
   outline-offset: 3px;
 }
-.management-ui .mg-topnav {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 7px 18px;
-  min-height: 62px;
-  border-bottom: 1px solid #123c60;
-  background: linear-gradient(110deg, #000c18, #041c31);
-}
-.management-ui .mg-topnav > button {
-  border-color: transparent;
-  background: transparent;
-  padding: 9px 12px;
-  white-space: nowrap;
-  min-height: 43px;
-}
-.management-ui .mg-topnav > button[aria-current] {
-  background: linear-gradient(110deg, #8c15f9, #2046ff, #0098f9);
-  border-color: #8d57ff;
-}
-.management-ui .mg-topnav .mg-brand {
-  font-size: 20px;
-  padding-left: 0;
-  margin-right: 14px;
-  gap: 5px;
-  font-weight: 750;
-}
-.management-ui .mg-brand > svg {
-  color: #b77bff;
-  margin-right: 4px;
-}
-.management-ui .mg-brand b {
-  color: #00ddfa;
-  text-shadow: 0 0 12px #06d5ff;
-}
-.management-ui .mg-brand small {
-  font-size: 10px;
-  border: 1px solid #215276;
-  border-radius: 5px;
-  padding: 2px 4px;
-  margin-left: 5px;
-}
-.management-ui .mg-user {
-  margin-left: auto;
-  white-space: nowrap;
-  color: #b7d3eb;
-}
 .management-ui .mg-shell {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-}
-.management-ui.with-side .mg-shell {
-  grid-template-columns: 180px minmax(0, 1fr);
-}
-.management-ui .mg-side-nav {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: calc(100vh - 62px);
-  background: linear-gradient(160deg, #03172e, #00101d);
-  border: 1px solid #123a61;
-  border-radius: 0 12px 12px 0;
-  padding: 15px 10px;
-}
-.management-ui .mg-side-nav button {
-  display: flex;
-  width: 100%;
-  justify-content: flex-start;
-  min-height: 49px;
-  gap: 14px;
-  border-color: transparent;
-  background: transparent;
-  padding: 10px 12px;
-  margin: 4px 0;
-}
-.management-ui .mg-side-nav button svg {
-  width: 21px;
-  flex-shrink: 0;
-}
-.management-ui .mg-side-nav button[aria-current] {
-  background: linear-gradient(100deg, #a620ff, #3444ff, #0088ee);
-}
-.management-ui .mg-brand-card {
-  border: 1px solid #24628a;
-  border-radius: 9px;
-  padding: 18px 12px;
-  background: radial-gradient(
-    ellipse at bottom right,
-    #2236ceaa,
-    transparent 70%
-  );
-}
-.management-ui .mg-brand-card svg {
-  color: #02dcf5;
-}
-.management-ui .mg-brand-card strong {
-  display: block;
-  font-size: 18px;
-  margin-top: 12px;
 }
 .management-ui .mg-main {
   padding: 16px 20px 24px;
@@ -1160,21 +1058,6 @@
   .management-ui {
     font-size: 13px;
   }
-  .management-ui .mg-topnav {
-    gap: 4px;
-    padding: 6px 12px;
-  }
-  .management-ui .mg-topnav > button {
-    font-size: 12px;
-    padding: 8px;
-  }
-  .management-ui .mg-topnav .mg-brand {
-    font-size: 18px;
-    margin-right: 5px;
-  }
-  .management-ui .mg-topnav .mg-brand small {
-    display: none;
-  }
   .management-ui .mg-main {
     padding: 13px;
   }
@@ -1189,9 +1072,6 @@
   }
   .management-ui .mg-origin {
     font-size: 10px;
-  }
-  .management-ui.with-side .mg-shell {
-    grid-template-columns: 165px minmax(0, 1fr);
   }
   .management-ui .mg-panel {
     padding: 11px;
@@ -1305,21 +1185,6 @@
   }
 }
 @media (max-width: 1100px) {
-  .management-ui .mg-topnav {
-    overflow: auto;
-  }
-  .management-ui .mg-topnav > button {
-    flex-shrink: 0;
-  }
-  .management-ui .mg-user {
-    display: none;
-  }
-  .management-ui.with-side .mg-shell {
-    grid-template-columns: 1fr;
-  }
-  .management-ui .mg-side-nav {
-    display: none;
-  }
   .management-ui .mg-automation-grid,
   .management-ui .mg-library-grid {
     grid-template-columns: 200px minmax(0, 1fr);

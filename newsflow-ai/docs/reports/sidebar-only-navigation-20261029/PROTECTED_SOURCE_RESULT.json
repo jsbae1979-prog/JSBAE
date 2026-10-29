@@ -1,0 +1,16 @@
+{
+  "totalSourcesBefore": 33,
+  "changedSources": [
+    "src\\studio\\core\\core-studios.css",
+    "src\\studio\\core\\CoreNavigation.tsx",
+    "src\\studio\\core\\CoreStudios.tsx",
+    "src\\studio\\core\\shared.tsx",
+    "src\\studio\\management\\management.css",
+    "src\\studio\\management\\Management.tsx"
+  ],
+  "otherSourceFilesUnchanged": 27,
+  "mainTsxAndGlobalCssUnchanged": true,
+  "userOperatingConfirmation": "정상 표시됨",
+  "confirmationMethod": "User manual Ctrl+F5 in authenticated operating Chrome; no operating-browser automation",
+  "operatingRestartCount": 0
+}

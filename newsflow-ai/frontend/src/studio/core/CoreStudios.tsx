@@ -31,7 +31,6 @@ export default function CoreStudios({
       c={c}
       module={module}
       imageMode={imageMode}
-      onNavigate={onNavigate}
       title={titles[module]}
       subtitle={
         module === "shorts"

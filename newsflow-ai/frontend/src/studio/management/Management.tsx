@@ -1,7 +1,4 @@
 import {
-  House,
-  WandSparkles,
-  Newspaper,
   FolderOpen,
   Share2,
   ChartColumn,
@@ -17,16 +14,13 @@ import Analytics from "./Analytics";
 import SettingsPanel from "./Settings";
 import { useManagement, Advanced, Empty } from "./shared";
 import "./management.css";
-const nav = [
-  { id: "dashboard", label: "홈", icon: House },
-  { id: "create", label: "콘텐츠 제작", icon: WandSparkles },
-  { id: "news", label: "뉴스 스튜디오", icon: Newspaper },
-  { id: "automation", label: "자동화 센터", icon: Settings },
-  { id: "library", label: "라이브러리", icon: FolderOpen },
-  { id: "publishing", label: "게시 스튜디오", icon: Share2 },
-  { id: "analytics", label: "성과 · 비용", icon: ChartColumn },
-  { id: "settings", label: "설정 · 관리", icon: Settings },
-];
+const headingIcons = {
+  automation: Settings,
+  library: FolderOpen,
+  publishing: Share2,
+  analytics: ChartColumn,
+  settings: Settings,
+};
 export default function Management({
   module,
   onNavigate,
@@ -35,8 +29,7 @@ export default function Management({
   onNavigate: (page: string) => void;
 }) {
   const c = useManagement(module),
-    Icon = nav.find((x) => x.id === module)?.icon ?? Settings,
-    side = ["publishing", "analytics", "settings"].includes(module);
+    Icon = headingIcons[module as keyof typeof headingIcons] ?? Settings;
   const subtitle: Record<string, string> = {
     automation: "제작 예약과 실행 상태를 한곳에서 관리하세요.",
     library: "생성된 이미지와 영상을 보관하고, 미리보기·재사용으로 이어갑니다.",
@@ -46,54 +39,10 @@ export default function Management({
   };
   return (
     <div
-      className={"management-ui " + (side ? "with-side" : "")}
+      className="management-ui"
       data-management={module}
     >
-      <nav className="mg-topnav" aria-label="관리 화면 주 메뉴">
-        <button className="mg-brand" onClick={() => onNavigate("dashboard")}>
-          <WandSparkles />
-          NewsFlow <b>AI</b>
-          <small>Studio</small>
-        </button>
-        {nav.map((x) => (
-          <button
-            key={x.id}
-            aria-current={module === x.id ? "page" : undefined}
-            onClick={() => onNavigate(x.id)}
-          >
-            <x.icon size={18} />
-            {x.label}
-          </button>
-        ))}
-        <span className="mg-user">로컬 작업실</span>
-      </nav>
       <div className="mg-shell">
-        {side && (
-          <aside className="mg-side-nav">
-            <div>
-              {nav.map((x) => (
-                <button
-                  key={x.id}
-                  aria-current={module === x.id ? "page" : undefined}
-                  onClick={() => onNavigate(x.id)}
-                >
-                  <x.icon />
-                  {x.label}
-                </button>
-              ))}
-            </div>
-            <div className="mg-brand-card">
-              <WandSparkles size={34} />
-              <strong>NewsFlow AI</strong>
-              <p>
-                뉴스를 콘텐츠로,
-                <br />
-                콘텐츠를 내 작업으로
-              </p>
-              <small>저장 자료 · 실제 인증 별도 확인</small>
-            </div>
-          </aside>
-        )}
         <div className="mg-main">
           <header className="mg-page-heading">
             <span className="mg-page-icon">

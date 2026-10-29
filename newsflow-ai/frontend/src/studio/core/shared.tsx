@@ -25,7 +25,6 @@ import {
   type View,
   type Action,
 } from "../contracts";
-import CoreNavigation from "./CoreNavigation";
 import { CommandDialog } from "../CommandDialog";
 import { Thumbnail } from "../Thumbnail";
 
@@ -278,7 +277,6 @@ export function StudioFrame({
   subtitle,
   module,
   imageMode,
-  onNavigate,
   children,
 }: {
   c: Controller;
@@ -286,7 +284,6 @@ export function StudioFrame({
   subtitle: string;
   module: string;
   imageMode: string;
-  onNavigate: (page: string) => void;
   children: ReactNode;
 }) {
   return (
@@ -295,10 +292,6 @@ export function StudioFrame({
       data-module={module}
       data-image-mode={imageMode}
     >
-      {module !== "shorts" &&
-        !(module === "images" && imageMode === "top3") && (
-          <CoreNavigation module={module} onNavigate={onNavigate} />
-        )}
       <div className="core-content">
         <div className="core-heading">
           <div>
