@@ -1,0 +1,45 @@
+{
+  "sourceBaseSha": "1f8448a186f8670e10ec5c4734d11c907ede5634",
+  "newUnitTests": {
+    "startStop": 11,
+    "executionBoundary": 4,
+    "fail": 0
+  },
+  "actualBATStarts": 1,
+  "actualAppInitializations": 0,
+  "dispatcherReason": "nonprogram-or-unverified-sample-payload",
+  "staticRejectedManifestPaths": [
+    {
+      "path": "app/validation-launch.json",
+      "reason": "nonprogram-or-unverified-sample-payload"
+    },
+    {
+      "path": "README-VALIDATION.txt",
+      "reason": "nonprogram-or-unverified-sample-payload"
+    }
+  ],
+  "hostObservedExitCode": 1,
+  "dispatcherErrorExitCodeBySource": 2,
+  "normalStopExitCode": "NOT VERIFIED",
+  "candidateProfileFiles": [
+    "synthetic-install.json"
+  ],
+  "newSQLiteExists": false,
+  "newSessionExists": false,
+  "testPortListeners": 0,
+  "candidatePythonProcesses": 0,
+  "existingOperatingProcessIdsPresent": [
+    3684,
+    12700,
+    15012,
+    26288
+  ],
+  "runtimeDLLDirectoryProbe": "PASS CPython 3.14.7 and pywin32 imports after explicit shipped DLL directory registration",
+  "paidApiCalls": 0,
+  "oauthCalls": 0,
+  "snsCalls": 0,
+  "operatingDataReadOrWrittenByCandidate": false,
+  "restartAttempted": false,
+  "blockedExecutableUsed": false,
+  "finalVerdict": "BLOCKED"
+}

@@ -1,6 +1,6 @@
 @echo off
 setlocal DisableDelayedExpansion
-rem DEVELOPMENT TEMPLATE ONLY: dispatcher refuses live application execution.
+rem Private validation only; requires provisioned synthetic validation layout.
 if not exist "%~dp0app\runtime\python.exe" (
   echo BLOCKED: bundled Python runtime is missing.
   exit /b 2

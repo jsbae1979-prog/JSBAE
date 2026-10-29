@@ -1,6 +1,6 @@
 @echo off
 setlocal DisableDelayedExpansion
-rem DEVELOPMENT TEMPLATE ONLY: never taskkill, enumerate or stop host processes.
+rem Owned private session only; never taskkill or stop host processes.
 if not exist "%~dp0app\runtime\python.exe" (
   echo BLOCKED: bundled Python runtime is missing.
   exit /b 2

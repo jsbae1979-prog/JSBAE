@@ -15,7 +15,7 @@ MEDIA_HASHES = {
     'ffmpeg.exe': '26f21efe3d78e27699baa71c6fe668c28aaffd56db8ce11f361ed71987119dea',
     'ffprobe.exe': 'a9e63afd32450722e6b1ab94dac955edc643c4943322713c4652185f10246e50',
 }
-CONTROLLER = ('__init__.py', 'contract_entry.py', 'lifecycle.py', 'zip_update.py',
+CONTROLLER = ('__init__.py', 'contract_entry.py', 'windows_live.py', 'lifecycle.py', 'zip_update.py',
               'publisher_verifier.py', 'verify_manifest_content.ps1')
 PTH = ('python314.zip\n.\n../site-packages\n../site-packages/win32\n'
        '../site-packages/win32/lib\n../site-packages/pywin32_system32\n'

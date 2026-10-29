@@ -1,3 +1,9 @@
+> 2026-10-29 상태 보충: 아래 본문은 이전 비실행 계약의 이력이다. 기존 ZIP은 그대로
+> 비활성 상태다. 새 `windows_live.py`는 명시적인 합성 검증 후보 전용 Start/Stop 구현이며,
+> 첫 실제 BAT 시도는 새 설정 파일과 기존 inventory 경로 계약의 불일치로 **BLOCKED**다.
+> 제품 기동·정상 Stop·재실행 인수는 완료되지 않았다. 자세한 신규 결과는
+> `docs/reports/bat-startstop-validation-20261029/BAT_STARTSTOP_REPORT.md`를 참조한다.
+
 # 독립 Python 런타임 패키지 설계
 
 이 디렉터리는 실행하지 않은 개발 계약이다. 실제 Python/FFmpeg 바이너리나
