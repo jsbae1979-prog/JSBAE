@@ -1,0 +1,13 @@
+{
+  "metadataOnly": true,
+  "ageSecondsAtUserFailureReport": 245.3,
+  "lifetimeSeconds": 120,
+  "expiredAtObservation": true,
+  "userReportedMessage": "Local session unavailable. Open NewsFlow AI again from your own Windows account.",
+  "initialConnectScriptExecuted": true,
+  "exactClaimFailureReason": "NOT DETERMINED: no claim headers, cookie or token inspected",
+  "firstAttemptTimestamp": "NOT OBSERVED",
+  "additionalRestart": false,
+  "bootstrapReplayedByAgent": false,
+  "guiThreeStudios": "NOT VERIFIED"
+}

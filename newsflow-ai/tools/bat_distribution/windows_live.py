@@ -278,6 +278,42 @@ class WindowsStop:
         return Lease()
 
 
+def open_chrome_session(url):
+    """Open only the per-launch loopback URL in installed Chrome; no shell/logging.
+
+    This is a normal browser launch, not an extension navigation. The existing
+    LocalAccess one-time claim, 120-second lifetime and cookie policy are unchanged.
+    Never fall back to another browser that could consume the one-time claim.
+    """
+    import re
+    import subprocess
+    from urllib.parse import urlsplit
+    try:
+        parsed = urlsplit(url)
+        if (parsed.scheme != 'http' or parsed.hostname != '127.0.0.1'
+                or parsed.netloc != f'127.0.0.1:{fixed_port(parsed.port)}'
+                or parsed.path != '/__local/connect' or parsed.query
+                or not re.fullmatch(r'[A-Za-z0-9_-]{43}', parsed.fragment)):
+            return False
+        candidates = (
+            Path('C:/Program Files/Google/Chrome/Application/chrome.exe'),
+            Path('C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'),
+            Path.home() / 'AppData/Local/Google/Chrome/Application/chrome.exe',
+        )
+        for candidate in candidates:
+            candidate = ordinary_absolute(candidate)
+            if candidate.is_file():
+                process = subprocess.Popen(
+                    [str(candidate), '--new-window', url], shell=False,
+                    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL, close_fds=True)
+                return process.poll() in (None, 0)
+    except (OSError, TypeError, ValueError):
+        # Native/subprocess exception messages can contain the URL: never echo.
+        return False
+    return False
+
+
 def start(config, plan):
     from filelock import FileLock
     from newsflow.config import Settings
@@ -340,9 +376,9 @@ def start(config, plan):
                 if server.started:
                     print(f'READY: http://127.0.0.1:{config.port}/studio/dashboard (local authentication required)', flush=True)
                     if config.open_browser:
-                        import webbrowser
-                        opened = bool(webbrowser.open(session.launch_url(), new=1))
-                        _atomic(config.profile / 'browser-open-result.json', {'requested': True, 'accepted': opened})
+                        opened = open_chrome_session(session.launch_url())
+                        _atomic(config.profile / 'browser-open-result.json',
+                                {'requested': True, 'accepted': opened, 'browser': 'chrome'})
             thread = threading.Thread(target=ready, daemon=True)
             thread.start()
             phase = 'serve'
