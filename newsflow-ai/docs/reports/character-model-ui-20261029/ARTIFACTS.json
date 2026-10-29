@@ -1,0 +1,77 @@
+[
+  {
+    "file": "captures/after-1366-full.png",
+    "bytes": 174462,
+    "sha256": "bd2ec58747effbbaeae8b1cb605184b000909aed6a8dfad0aec058e586910d25"
+  },
+  {
+    "file": "captures/after-1920-full.png",
+    "bytes": 207799,
+    "sha256": "54dcac332a0b2fb92bd637ef21147b7b60b376706bc60333753e2634c8477dc3"
+  },
+  {
+    "file": "captures/approved-reference.png",
+    "bytes": 1616732,
+    "sha256": "c8e9c3c0c7c1b85198f57037cdfe13dc94dfc3392e8b0d4afe753b5a32f22ad7"
+  },
+  {
+    "file": "captures/before-1366-full.png",
+    "bytes": 168300,
+    "sha256": "efc82d84d2bc3a912e2ebe6234c9e37107f8a8059ae83b05c3e9a1251d6a4cc7"
+  },
+  {
+    "file": "captures/before-1920-full.png",
+    "bytes": 190064,
+    "sha256": "ad2eb7ddfb3b9cfa1df8b1c7fd2a6daa6fec54ded16fc1aa8032393fd696cb62"
+  },
+  {
+    "file": "CHANGED_FILES.txt",
+    "bytes": 1156,
+    "sha256": "8f371cc6d84c3dbc01f698e5c337c60df7502868aad513f974f86b92235cfdec"
+  },
+  {
+    "file": "CHARACTER_MODEL_UI_REPORT.md",
+    "bytes": 11652,
+    "sha256": "f8e0f01e5b02721d5d185c11fda3d53b69a89cad5a86539c23effeac3959b607"
+  },
+  {
+    "file": "final-geometry.json",
+    "bytes": 1904,
+    "sha256": "71a3a98ce8e27c0da288a0e7535677c2e784f9d35bf6b015c9ee7f69e06d1752"
+  },
+  {
+    "file": "IMPLEMENTATION.diff",
+    "bytes": 182255,
+    "sha256": "9bca2438c1c9b9393b45e516bb3405fe1936732c384fe0cdc11ae7a8febf9e18"
+  },
+  {
+    "file": "INPUTS.json",
+    "bytes": 378,
+    "sha256": "e0e4f2a637dc61db674bbe2b57d70f710121df06fcde8f8f65ba42cfccbe3120"
+  },
+  {
+    "file": "preservation.json",
+    "bytes": 743,
+    "sha256": "e59bddc114776d910675ee092ad3ff06b19c3e723c995a46759a3515b48fbadc"
+  },
+  {
+    "file": "synthetic-budget-results.json",
+    "bytes": 146,
+    "sha256": "615994ae95eecd75d729e9a8e77824141eaf299d5336cf3ceb614797a2ff1626"
+  },
+  {
+    "file": "synthetic-catalog-results.json",
+    "bytes": 995,
+    "sha256": "6a5b641953bc7e7e5eef93cac819af9e21bf9a4ed1e32fd3bbfbaae1a91db98c"
+  },
+  {
+    "file": "TEST_SUMMARY.json",
+    "bytes": 19711,
+    "sha256": "fbca4f4af1bef6c0b82a25dd2dbb68d26d3cd6e834709cd77aa27fb056fa1250"
+  },
+  {
+    "file": "visual-comparison.html",
+    "bytes": 1281,
+    "sha256": "f3b743a3e4e1a3d62f364bfccd668e05f161003f8b694ac9a782cf5a61210436"
+  }
+]

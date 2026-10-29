@@ -1,0 +1,592 @@
+{
+  "runs": [
+    {
+      "evidence": "model-ui-final-tests.xml",
+      "tests": 111,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "evidence": "model-ui-final-focused.xml",
+      "tests": 65,
+      "failures": 0,
+      "errors": 0
+    }
+  ],
+  "uniquePassed": 113,
+  "unresolvedFailures": 0,
+  "excludedExistingGuiTests": {
+    "count": 2,
+    "reason": "Existing step13_isolation fixture is not available in the plain local invocation. Unchanged full-app GUI evidence reused; new route and original middleware body tested in isolation."
+  },
+  "typeScript": "PASS",
+  "viteBuild": "PASS",
+  "realVendorCalls": 0,
+  "cases": [
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_only_two_user_approved_models_are_shipped_and_config_drives_choices",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_missing_fields_are_rejected[id]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_missing_fields_are_rejected[api_path]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_missing_fields_are_rejected[param_map]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_missing_fields_are_rejected[audio]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_missing_fields_are_rejected[duration]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_missing_fields_are_rejected[pricing_ref]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_missing_fields_are_rejected[enabled]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_missing_fields_are_rejected[resolutions]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_unknown_or_unsafe_catalog_values_are_rejected[extra]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_unknown_or_unsafe_catalog_values_are_rejected[duplicate]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_unknown_or_unsafe_catalog_values_are_rejected[invalid_resolution]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_unknown_or_unsafe_catalog_values_are_rejected[audio_pointer]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_unknown_or_unsafe_catalog_values_are_rejected[pro]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_unknown_or_unsafe_catalog_values_are_rejected[invalid_duration]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_unknown_or_unsafe_catalog_values_are_rejected[untrusted_docs]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_unknown_or_unsafe_catalog_values_are_rejected[unknown_audio]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_startup_once_24h_refresh_failure_preserves_last_good_catalog",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_reduced_options_are_warned_without_overwriting_user_jobs",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_three_models_adjust_only_unsupported_values_and_emit_field_notes",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_same_settings_use_model_specific_audio_parameter_names_and_types",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_prefix_suffix_and_character_style_priority_and_warning_are_data_driven",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_server_rejects_unsupported_combination_before_request_build[change0]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_server_rejects_unsupported_combination_before_request_build[change1]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_server_rejects_unsupported_combination_before_request_build[change2]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_server_rejects_unsupported_combination_before_request_build[change3]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_server_rejects_unsupported_combination_before_request_build[change4]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_server_rejects_unsupported_combination_before_request_build[change5]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_disabled_model_is_hidden_and_not_automatically_replaced",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_character_lock_is_also_enforced_on_server[style-realistic]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_character_lock_is_also_enforced_on_server[aspect_ratio-16:9]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_character_lock_is_also_enforced_on_server[native_resolution-1080p]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_video_model_catalog",
+      "name": "test_public_price_is_estimate_only_and_unverified_audio_price_is_not_invented",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_payload_uses_only_model_supported_fields[9:16-on-kling-video/v3.0/std/image-to-video]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_payload_uses_only_model_supported_fields[9:16-on-kling-video/o3/image-reference]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_payload_uses_only_model_supported_fields[9:16-off-kling-video/v3.0/std/image-to-video]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_payload_uses_only_model_supported_fields[9:16-off-kling-video/o3/image-reference]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_configuration_is_rejected[video_model-bytedance/seedance-2.0/reference-to-video]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_configuration_is_rejected[video_model-kling-pro]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_configuration_is_rejected[style-injected]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_configuration_is_rejected[aspect_ratio-4:3]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_configuration_is_rejected[output_quality-4k]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_configuration_is_rejected[sound-voice-id]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_configuration_is_rejected[duration-True]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_configuration_is_rejected[duration-61]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_configuration_is_rejected[script_model-not-supported]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_snapshot_mutation_is_not_silently_accepted",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_reference_original_is_preserved_and_ratio_is_prepared[kling-video/v3.0/std/image-to-video]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_reference_original_is_preserved_and_ratio_is_prepared[kling-video/o3/image-reference]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_topic_generates_one_story_with_selected_reference_and_duration[30]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_topic_generates_one_story_with_selected_reference_and_duration[45]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_topic_generates_one_story_with_selected_reference_and_duration[55]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_topic_generates_one_story_with_selected_reference_and_duration[60]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_duplicate_identity_never_replays_story_or_overwrites_different_input",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unknown_story_stays_unknown_without_replay",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_video_settings_reach_quote_then_freeze_with_approval_and_unknown_protection",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_reference_vision_and_generic_schema_are_sent_once_without_legacy_mascot",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_route_reuses_durable_id_without_auto_replay_and_requires_explicit_consent",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_read_view_never_exposes_reference_bytes_or_provider_receipts",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_actual_existing_security_middleware_still_guards_both_calls",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_estimated_budget_overage_blocks_before_reference_upload",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_reference_mutation_blocks_before_claude_request",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_unsupported_native_quality_reports_field_without_creating_a_job",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_media",
+      "name": "test_selected_ratio_output_and_audio_survive_real_local_composition[on-9:16]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_media",
+      "name": "test_selected_ratio_output_and_audio_survive_real_local_composition[off-9:16]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_media",
+      "name": "test_voice_request_is_not_silently_replaced_with_silence",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[sum]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[last]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[first]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[middle]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[count]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[seconds]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[extra]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[korean]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[length]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_story_rejects_wrong_shape[bool]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_character_config_and_locked_prompts",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_real_claude_envelope_uses_existing_transport_without_news_schema",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_claude_invalid_json_stops_without_second_request",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_explicit_consents_and_original_reservations_preserved",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_successful_plan_reuses_reference_and_freezes_model",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_budget_and_daily_limits_before_generation",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_unknown_submit_preserved_and_never_replayed",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_statuses_never_generate_additional_scenes[queued]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_statuses_never_generate_additional_scenes[in_progress]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_statuses_never_generate_additional_scenes[failed]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_statuses_never_generate_additional_scenes[nsfw]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_statuses_never_generate_additional_scenes[canceled]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_changed_or_expired_plan_blocked_before_submit[expired]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_changed_or_expired_plan_blocked_before_submit[key]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_changed_or_expired_plan_blocked_before_submit[quote]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_changed_or_expired_plan_blocked_before_submit[script]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_api_existing_unknown_not_bypassed",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_upload_headers_and_exact_reference_schema",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_official_six_statuses_and_video_url[queued]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_official_six_statuses_and_video_url[in_progress]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_official_six_statuses_and_video_url[completed]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_official_six_statuses_and_video_url[failed]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_official_six_statuses_and_video_url[nsfw]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_official_six_statuses_and_video_url[canceled]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_status_url_cannot_redirect_credentials[http://example.com/s]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_status_url_cannot_redirect_credentials[https://127.0.0.1/s]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_status_url_cannot_redirect_credentials[https://api.higgsfield.ai.evil.test/s]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_reference_validation_path_and_text_injection",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_known_failed_scene_requires_new_quote_and_consent_and_stops_after_two",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_moderation_cancellation_or_unknown_never_reenabled_by_retry[nsfw]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_moderation_cancellation_or_unknown_never_reenabled_by_retry[canceled]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_moderation_cancellation_or_unknown_never_reenabled_by_retry[unknown]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_known_script_format_failure_can_only_get_two_separately_approved_new_intents",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_windows_journal_rename_contention_never_replays_provider[False]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_shorts",
+      "name": "test_windows_journal_rename_contention_never_replays_provider[True]",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_style_warning_is_frozen_for_the_human_review_checklist",
+      "status": "PASS"
+    },
+    {
+      "class": "tests.test_character_kling_studio",
+      "name": "test_catalog_deactivation_preserves_existing_job_read_but_blocks_execution",
+      "status": "PASS"
+    }
+  ]
+}

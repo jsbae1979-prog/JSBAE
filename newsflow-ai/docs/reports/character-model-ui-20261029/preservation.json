@@ -1,0 +1,23 @@
+{
+  "table_count": 47,
+  "table_logical_hashes_unchanged": true,
+  "counts": {
+    "content_drafts": 6,
+    "image_posts": 3,
+    "intelligence_runs": 48,
+    "news_articles": 169,
+    "video_projects": 7
+  },
+  "protected_files_count": 26,
+  "protected_file_hashes_unchanged": true,
+  "original_backup_db_hashes": [
+    "238d0aea41bc1377a29b9a1eb4b30f43e9d38ad39bba22e8a2fe31d7e6726287",
+    "238d0aea41bc1377a29b9a1eb4b30f43e9d38ad39bba22e8a2fe31d7e6726287",
+    "238d0aea41bc1377a29b9a1eb4b30f43e9d38ad39bba22e8a2fe31d7e6726287"
+  ],
+  "operating_app_started_or_stopped_by_this_task": false,
+  "security_middleware_modified": false,
+  "provider_requests": 0,
+  "SNS_requests": 0,
+  "original_backups_unchanged": true
+}
