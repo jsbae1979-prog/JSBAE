@@ -207,6 +207,8 @@ def act(request: Request,job_id: str,action: str,consent: bool=Form(False),revie
             service.submit(job_id,consent=consent,quote_hash=quote_hash)
         elif action=='check':
             service.check(job_id,consent=consent)
+        elif action=='diagnose':
+            service.diagnose(job_id,consent=consent)
         elif action=='retry-quote':
             service.prepare_retry(job_id,consent=consent)
         elif action=='retry-scene':

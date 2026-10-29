@@ -578,6 +578,27 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     const count = clips.filter((clip) => clip.state === state).length;
     return count ? `${label} ${count}` : "";
   }).filter(Boolean).join(" · ");
+  const failureDetails = clips.filter((clip) => ["failed", "nsfw", "canceled"].includes(clip.state)).map((clip) => {
+    const details = clip.status_diagnostics;
+    const diagnosed = !!details && typeof details === "object" && !Array.isArray(details);
+    const observedLabels: Record<string, string> = {
+      failed: "실패", nsfw: "제한됨", canceled: "취소됨", queued: "대기",
+      in_progress: "진행 중", completed: "완료", unknown: "확인 불가",
+    };
+    return {
+      position: clip.position,
+      diagnosed,
+      observed: diagnosed ? observedLabels[details.observed_state] ?? "확인 불가" : "",
+      message: !diagnosed ? "아직 실패 상세를 확인하지 않았습니다."
+        : details.detail_available === true && typeof details.error_message === "string" && details.error_message.trim()
+          ? details.error_message : "공급사가 오류 설명을 제공하지 않았습니다.",
+      mismatch: diagnosed && details.state_mismatch === true,
+      checkedAt: diagnosed && typeof details.checked_at === "string" && Number.isFinite(Date.parse(details.checked_at))
+        ? new Date(details.checked_at).toLocaleString("ko-KR") : "",
+    };
+  });
+  const canDiagnoseScenes = job?.state === "scene_review" && !!job?.studio_selection && failureDetails.length > 0
+    && clips.every((clip) => ["failed", "nsfw", "canceled", "submitted", "downloaded"].includes(clip.state));
   const selectedClip = clips.find((x) => x.position === scene + 1);
   const singleVideo =
     clips.length === 1 &&
@@ -1050,9 +1071,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     }
   }
   function action(kind: string, label: string, allowed: string[]) {
-    const connectionUnavailable = !executionEnabled && ["submit", "check", "retry-quote", "retry-scene"].includes(kind);
+    const connectionUnavailable = !executionEnabled && ["submit", "check", "diagnose", "retry-quote", "retry-scene"].includes(kind);
     const actionLabel = connectionUnavailable
-      ? kind === "check" ? "상태 조회 연결 준비 중" : kind === "retry-quote" ? "추가 견적 연결 준비 중" : "영상 생성 연결 준비 중"
+      ? kind === "check" ? "상태 조회 연결 준비 중" : kind === "diagnose" ? "실패 상세 연결 준비 중" : kind === "retry-quote" ? "추가 견적 연결 준비 중" : "영상 생성 연결 준비 중"
       : label;
     return (
       <ActionButton
@@ -1735,6 +1756,21 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   </div>
                   {sceneProgressSummary && ["generating", "scene_review", "submission_unknown", "clips_review"].includes(job?.state ?? "") && (
                     <p className="kling-field-note" role="status">{sceneProgressSummary}</p>
+                  )}
+                  {canDiagnoseScenes && (
+                    <section aria-label="실패 상세">
+                      {action("diagnose", "실패 상세 확인", ["scene_review"])}
+                      <small>기존 요청의 오류 설명만 조회합니다. 새 영상·견적은 요청하지 않습니다.</small>
+                      {failureDetails.map((detail) => (
+                        <div className="kling-field-note" key={detail.position}>
+                          <strong>장면 {detail.position}</strong>
+                          {detail.diagnosed && <small>조회 상태: {detail.observed}</small>}
+                          <p>{detail.message}</p>
+                          {detail.mismatch && <p role="status">저장 상태와 조회 상태가 다릅니다. 기존 장면 상태는 유지됩니다.</p>}
+                          {detail.checkedAt && <small>확인 시각: {detail.checkedAt}</small>}
+                        </div>
+                      ))}
+                    </section>
                   )}
                   {quoteSettingsChanged && (
                     <p role="status" className="kling-field-note">

@@ -1,0 +1,55 @@
+{
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "baseCommit": "af2e23f82df7befe43826cdd338ed80e137441d5",
+  "providerConsole": {
+    "observedDateAsiaSeoul": "2026-10-30",
+    "provider": "Higgsfield",
+    "model": "kling-video/o3/image-reference",
+    "source": "User-visible signed-in Chrome console",
+    "localRequestIdsMatched": 5,
+    "duplicatesOrMissing": 0,
+    "requestListOrderMapsToScenePositions": [
+      5,
+      4,
+      3,
+      2,
+      1
+    ],
+    "requestStates": [
+      "failed",
+      "failed",
+      "failed",
+      "failed",
+      "failed"
+    ],
+    "requestDetailAmountChargedUSDPerScene": "0.672",
+    "transactionUsageRows": 5,
+    "transactionRefundRows": 5,
+    "allTenTransactionsCompleted": true,
+    "transactionRowDisplayRoundedToTwoDecimals": true,
+    "modelAnalyticsNetSpendUSD": "0.00",
+    "failureDetailVisibleInConsole": false,
+    "generationCallsDuringInspection": 0,
+    "requestIdOrCredentialIncluded": false,
+    "paths": {
+      "requests": "https://open.higgsfield.ai/models/kling-video/o3/image-reference/requests",
+      "analytics": "https://open.higgsfield.ai/usage",
+      "billing": "https://open.higgsfield.ai/billing",
+      "modelContract": "https://open.higgsfield.ai/models/kling-video/o3/image-reference/api-reference",
+      "statusContract": "https://docs.higgsfield.ai/docs/api-reference/requests/get-request-status"
+    }
+  },
+  "focusedPythonPass": 34,
+  "focusedNodePass": 10,
+  "nodeNewCases": 5,
+  "nodeAffectedPriorCases": 5,
+  "typeScript": "PASS",
+  "viteBuild": "PASS",
+  "operatingApplied": false,
+  "operatingRestarted": false,
+  "liveDiagnosticGETsThisRevision": 0,
+  "newGenerationRequests": 0,
+  "providerFailureCause": "NOT VERIFIED: console lacks detail; explicit status diagnostic is prepared but not operating-applied",
+  "rootCauseFixed": false,
+  "result": "CONDITIONAL"
+}

@@ -696,6 +696,8 @@ class CharacterService:
                 try:
                     status=self.video_for(job).check(scene['handle'])
                     if status.state in terminal:
+                        from .status_diagnostics import diagnostic, private_inputs
+                        scene['status_diagnostics']=diagnostic(status,status.state,now().isoformat(),private_inputs(job))
                         scene['state']=status.state
                         scene['finished_at']=now().isoformat()
                         job['state']='scene_review'
@@ -727,6 +729,43 @@ class CharacterService:
             elif any(s['state'] in terminal for s in job['scenes']) and job['state']!='scene_review':
                 job['state']='scene_review'
                 self.save(job)
+
+    def diagnose(self, identifier, *, consent=False):
+        """Explicit existing terminal-request observation; alter diagnostics only."""
+        self.consent(consent)
+        from .higgsfield_client import request_url
+        from .status_diagnostics import TERMINAL, diagnostic, private_inputs
+        with self.lock():
+            job=self.read(identifier)
+            scenes=job.get('scenes',[])
+            if (job['state']!='scene_review' or not 1<=len(scenes)<=5
+                    or any(s.get('state') not in TERMINAL|{'submitted','downloaded'} for s in scenes)):
+                raise CharacterError('blocked')
+            targets=[s for s in scenes if s['state'] in TERMINAL]
+            if not targets:
+                raise CharacterError('blocked')
+            positions=set()
+            handles=set()
+            # Validate the complete target set before the first GET.
+            for scene in targets:
+                position=scene.get('position')
+                handle=scene.get('handle')
+                if (type(position) is not int or not 1<=position<=5 or position in positions
+                        or not isinstance(handle,dict) or set(handle)!={'request_id','status_url'}):
+                    raise CharacterError('blocked')
+                try:
+                    request_url(handle['status_url'],handle['request_id'])
+                except (VideoProviderError,TypeError):
+                    raise CharacterError('blocked') from None
+                if handle['request_id'] in handles:
+                    raise CharacterError('blocked')
+                positions.add(position)
+                handles.add(handle['request_id'])
+            protected=private_inputs(job)
+            for scene in targets:
+                status=self.video_for(job).diagnose(scene['handle'],protected=protected)
+                scene['status_diagnostics']=diagnostic(status,scene['state'],now().isoformat(),protected)
+                self.save(job)  # No state/finished_at/quote/attempt/payload/handle changes.
 
     def recover_local_download(self, identifier, *, consent=False, expected_sha256='', expected_bytes=0):
         """Explicitly adopt an already downloaded clip; never contact a provider or retry a request."""

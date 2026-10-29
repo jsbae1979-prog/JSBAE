@@ -253,6 +253,10 @@ def character_rows(state):
             original = next((x for x in job.get("scenes", []) if x["position"] == scene["position"]), {})
             if "cost" not in scene and "quote_usd" in original:
                 scene["cost"] = original["quote_usd"]
+            from newsflow.character.status_diagnostics import public_diagnostic, private_inputs
+            details = public_diagnostic(original.get('status_diagnostics'), private_inputs(job))
+            if details is not None:
+                scene['status_diagnostics'] = details
             clip = state.character.folder(job["id"]) / f"scene-{scene['position']}.mp4"
             scene["mediaUrl"] = (
                 f"/character/{job['id']}/clips/{scene['position']}"

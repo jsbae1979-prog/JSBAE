@@ -169,12 +169,23 @@ class HiggsfieldVideoClient(HiggsfieldProvider):
             error.safe_diagnostics = diagnostics or {'error_code': error.code}
             raise error from None
 
-    def check(self, handle):
+    def _observe_status(self, handle, *, protected=(), include_media=False):
         url = request_url(handle.get('status_url'), handle.get('request_id'))
         data = self._safe_call('GET', urlsplit(url).path)
         state = data.get('status')
         if state not in {'queued', 'in_progress', 'completed', 'failed', 'nsfw', 'canceled'}:
             raise ProviderResponseError()
-        if state == 'completed':
-            return ClipStatus(state, safe_url(video_url(data)))
-        return ClipStatus(state)
+        from .status_diagnostics import facts
+        key = self.credential().strip()
+        protected = (*protected, key, *key.split(':'), handle.get('request_id'), handle.get('status_url'))
+        details = facts(data.get('error'), protected)
+        if state == 'completed' and include_media:
+            return ClipStatus(state, safe_url(video_url(data)), details)
+        return ClipStatus(state, facts=details)
+
+    def check(self, handle, *, protected=()):
+        return self._observe_status(handle, protected=protected, include_media=True)
+
+    def diagnose(self, handle, *, protected=()):
+        # Same registered status GET; never result download or another generation.
+        return self._observe_status(handle, protected=protected)

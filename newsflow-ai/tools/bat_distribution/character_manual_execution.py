@@ -15,7 +15,7 @@ from newsflow.character.schema import CharacterError
 from .character_quote_only import _Store, _ReadOnlyCipher, _unlinked
 from .lifecycle import Blocked
 
-PATH = re.compile(r'/character/([a-f0-9]{32})/(submit|check)\Z')
+PATH = re.compile(r'/character/([a-f0-9]{32})/(submit|check|diagnose)\Z')
 _REQUEST = ContextVar('newsflow_manual_character_request', default=None)
 _ACTIVE = ContextVar('newsflow_manual_character_active', default=None)
 
@@ -69,6 +69,20 @@ class _Client:
         status = self.original.check(handle)
         context['statuses'][position] = status
         return status
+
+    def diagnose(self, handle, *, protected=()):
+        context = self.scope.context('diagnose')
+        job = self.scope.local.read(context['job_id'])
+        from newsflow.character.status_diagnostics import TERMINAL
+        matches = [scene for scene in job.get('scenes', [])
+                   if scene.get('state') in TERMINAL and scene.get('handle') == handle]
+        if job['state'] != 'scene_review' or len(matches) != 1:
+            _deny()
+        position = matches[0]['position']
+        if position in context['statuses']:
+            _deny()
+        context['statuses'][position] = 'observing'
+        return self.original.diagnose(handle, protected=protected)
 
     def fetch(self, status, target, cancel):
         context = self.scope.context('check')
@@ -126,7 +140,7 @@ class ManualExecution:
         return _Client(self, KlingClient(self.keys.key, settings))
 
     def execute(self, action, identifier, *, consent=False, quote_hash=''):
-        if action not in {'submit', 'check'} or _REQUEST.get() != (self, identifier, action):
+        if action not in {'submit', 'check', 'diagnose'} or _REQUEST.get() != (self, identifier, action):
             _deny()
         self.local.consent(consent)
         # Product methods own the lock, quote approval, per-execution cap,
@@ -142,6 +156,8 @@ class ManualExecution:
         try:
             if action == 'submit':
                 return CharacterService.submit(self.local, identifier, consent=True, quote_hash=quote_hash)
+            if action == 'diagnose':
+                return CharacterService.diagnose(self.local, identifier, consent=True)
             return CharacterService.check(self.local, identifier, consent=True)
         finally:
             _ACTIVE.reset(token)
@@ -172,7 +188,7 @@ def install(app, profile, nativefactory):
             or _unlinked(app.state.config.data_dir) != _unlinked(profile)):
         _deny()
     manual = ManualExecution(service, Path(profile), nativefactory)
-    for action in ('submit', 'check'):
+    for action in ('submit', 'check', 'diagnose'):
         original = getattr(service, action)
         def wrapped(identifier, *args, _action=action, _original=original, **kwargs):
             if _REQUEST.get() == (manual, identifier, _action):

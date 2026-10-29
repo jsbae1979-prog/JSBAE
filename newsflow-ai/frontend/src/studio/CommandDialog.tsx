@@ -512,6 +512,7 @@ export function CommandDialog({
   );
   const localRenderTitle = "장면 검토 후 영상 합성";
   const checkingCharacterScenes = action.id === "character_act_check";
+  const diagnosingCharacterScenes = action.id === "character_act_diagnose";
   const effective = {
     ...action,
     fields: localRender
@@ -553,6 +554,9 @@ export function CommandDialog({
       if (checkingCharacterScenes) {
         onSaved();
         setError(`상태 조회가 중단됐습니다. 저장된 장면별 상태를 확인하세요. ${detail}`);
+      } else if (diagnosingCharacterScenes) {
+        onSaved();
+        setError(`실패 상세 조회를 완료하지 못했습니다. 저장된 조회 결과를 확인하세요. ${detail}`);
       } else setError(detail);
     } finally {
       setBusy(false);
@@ -560,7 +564,9 @@ export function CommandDialog({
   }
   const field = (f: Field) => {
     const fieldLabel =
-      (checkingCharacterScenes && f.name === "consent"
+      (diagnosingCharacterScenes && f.name === "consent"
+        ? "기존 실패 상세 조회에 동의합니다"
+        : checkingCharacterScenes && f.name === "consent"
         ? "기존 장면 상태 조회·완료 영상 저장에 동의합니다"
         : f.name === "job_limit"
         ? action.id === "video_save_tts"
@@ -758,7 +764,9 @@ export function CommandDialog({
                 <div className="scope-note">
                   <ShieldCheck size={20} />
                   <p>
-                    {checkingCharacterScenes
+                    {diagnosingCharacterScenes
+                      ? "실패한 기존 요청의 처리 결과와 오류 설명만 확인합니다. 영상 생성·재시도·새 견적은 요청하지 않습니다."
+                      : checkingCharacterScenes
                       ? "이미 요청한 장면의 상태를 확인하고 완료된 영상을 저장합니다. 새 영상 생성이나 재생성은 하지 않습니다."
                       : "대상과 선택 모델을 확인하세요. 외부 전송·유료 사용·공개 게시 동의는 각각 별도로 적용되며, 실패·결과 불명 시 자동 재요청하지 않습니다."}
                   </p>

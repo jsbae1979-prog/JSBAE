@@ -984,6 +984,31 @@
     "unsupported": false
   },
   {
+    "id": "character_act_diagnose",
+    "module": "characters",
+    "label": "실패 상세 확인",
+    "path": "/character/{job_id}/diagnose",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": true,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
     "id": "character_act_retry-quote",
     "module": "characters",
     "label": "실패 장면 새 견적",

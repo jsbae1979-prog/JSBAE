@@ -6,7 +6,7 @@ import vm from "node:vm";
 
 const studio = readFileSync(new URL("../frontend/src/studio/core/CharacterStudio.tsx", import.meta.url), "utf8");
 const dialog = readFileSync(new URL("../frontend/src/studio/CommandDialog.tsx", import.meta.url), "utf8");
-const progressLogic = studio.slice(studio.indexOf("  const pendingSceneChecks ="), studio.indexOf("  const selectedClip ="));
+const progressLogic = studio.slice(studio.indexOf("  const pendingSceneChecks ="), studio.indexOf("  const failureDetails ="));
 const checkAction = studio.match(/action\("check", job\?\.state[^\n]+/)[0].trim();
 const submitLogic = dialog.slice(dialog.indexOf("  async function submit(e:"), dialog.indexOf("  const field ="))
   .replace("submit(e: React.FormEvent)", "submit(e)");
@@ -43,7 +43,7 @@ test("downloaded and unknown scenes remain distinct from confirmed failures", ()
 async function submitDialog({ check = true, reject = true, ack = true } = {}) {
   const calls = { requests: 0, reloads: 0, closes: 0, error: "", busy: false };
   const context = { Error, busy: false, risky: true, ack, localRender: null,
-    checkingCharacterScenes: check, effective: {}, values: {}, view: {}, files: {}, context: {},
+    checkingCharacterScenes: check, diagnosingCharacterScenes: false, effective: {}, values: {}, view: {}, files: {}, context: {},
     submitOriginal: async () => { calls.requests++; if (reject) throw Error("이전 요청 결과를 확인하세요. 자동 재전송하지 않습니다."); },
     onSaved: () => { calls.reloads++; }, onClose: () => { calls.closes++; },
     setBusy: (value) => { calls.busy = value; }, setError: (value) => { calls.error = value; },
