@@ -845,7 +845,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       setScene(-1);
       pending.current = null;
       c.setNotice(
-        "기존 스토리와 참조를 새 영상 작업으로 복사했습니다. Claude 추가 호출 없이 한국어 대사·소리 켜기를 요청합니다. 영상 생성은 별도 견적·승인 후 실행됩니다.",
+        "기존 스토리와 참조를 새 영상 작업으로 복사했습니다. 스토리·참조 이미지·영상 설정을 바탕으로 상황극과 자연스러운 한국어 소리를 요청합니다. 영상 생성은 별도 견적·승인 후 실행됩니다.",
       );
     } catch (error) {
       setFailure(
@@ -1253,13 +1253,13 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         <Mic size={15} /> 이 스토리로 새 영상
                       </button>
                       <small>
-                        Claude 추가 호출 없음 · 원본·기존 한도 보존 · 소리
-                        켜기·한국어 대사 요청
+                        Claude 추가 호출 없음 · 스토리·참조 이미지·영상 설정
+                        전달 · 소리 켜기
                       </small>
                       <small>
-                        저장된 대사를 재사용하며, 대사가 없으면 한글 장면 요약을
-                        대사로 사용합니다. 새 영상 생성은 별도 승인이
-                        필요합니다.
+                        영상 모델이 전체 스토리를 해석해 장면·연기·소리를
+                        구성합니다. 자막·장면 설명은 읽지 않도록 요청하며,
+                        새 영상 생성은 별도 승인이 필요합니다.
                       </small>
                     </div>
                   )}
@@ -1472,7 +1472,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                                 /[가-힣]/.test(item.narration),
                             )
                             ? "소리 켜짐 · 한국어 대사를 영상 모델에 전달합니다. 실제 발음·음색은 결과 검수가 필요합니다."
-                            : "소리 켜짐 · 모델 자체 소리 생성을 요청합니다. 생성 결과 검수가 필요합니다."
+                            : "소리 켜짐 · 영상 모델이 스토리에 맞는 한국어 상황극·소리를 구성하도록 요청합니다. 생성 결과 검수가 필요합니다."
                           : adjustments.sound
                       }
                     />

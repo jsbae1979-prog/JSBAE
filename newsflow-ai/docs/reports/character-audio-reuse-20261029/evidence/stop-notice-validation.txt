@@ -1,0 +1,47 @@
+NewsFlow AI Stop self-close focused validation
+Captured from the completed tool invocation; tests were not rerun for this file.
+Development checkout:
+<DEVELOPMENT_CHECKOUT>
+
+PYTHON COMMAND
+<PYTHON_3_14_7> -m pytest tools/bat_distribution/tests/test_browser_stop_notice.py tools/bat_distribution/tests/test_windows_live.py -q --disable-warnings
+OUTPUT
+..............................                                           [100%]
+30 passed, 1 warning in 0.41s
+Interpretation: 12 newly added stop-notice cases and 18 existing impacted Control/runtime cases.
+
+NODE COMMAND
+node --experimental-strip-types --test tools/bat_distribution/tests/own_document_stop.test.mjs
+CONDENSED OUTPUT (per-case timings omitted)
+✔ explicit authenticated Stop requests only this tab once
+✔ browser refusal gives visible direct-close fallback
+✔ successful close needs no fallback
+✔ throwing browser close still gives fallback without force close
+✔ network failure never closes a tab
+✔ unauthorized never closes a tab
+✔ redirected response never closes a tab
+✔ different response URL never closes a tab
+✔ invalid body never closes a tab
+✔ unsupported schema never closes a tab
+✔ invalid JSON never closes a tab
+✔ ordinary read response cannot close; later explicit accepted response can
+✔ cancelled page cannot close on a late response
+ℹ tests 13
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+Interpretation: 13 new Fake browser tests; no actual browser was opened or closed.
+
+TYPESCRIPT COMMAND
+frontend\node_modules\.bin\tsc.CMD --noEmit -p frontend/tsconfig.json
+RESULT
+No diagnostics; combined tool invocation exit_code 0.
+
+TOTAL
+New focused cases: 25 PASS (12 Python + 13 Node).
+Rechecked impacted existing cases: 18 PASS.
+TypeScript: PASS.
+Actual operating deployment/restart/browser-close validation: NOT EXECUTED by this agent.
+Browser self-close remains best effort; Chromium can refuse window.close.

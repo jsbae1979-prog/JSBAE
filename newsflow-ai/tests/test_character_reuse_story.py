@@ -47,9 +47,12 @@ def test_copy_reuses_saved_korean_story_and_png_without_claude_or_original_chang
     assert copied['studio_selection']['sound']=='on' and copied['scenes']==[]
     assert copied['script']['title']==original['script']['title']
     for old,new in zip(original['script']['scenes'],copied['script']['scenes']):
-        assert new['narration']==old['caption']
+        assert new['narration']==old.get('narration','')==''
         assert {k:v for k,v in new.items() if k!='narration'}=={k:v for k,v in old.items() if k!='narration'}
     assert copied['reused_story']['source_job_id']==source
+    assert copied['reused_story']['dialogue_source']=='story_inferred_audio'
+    assert all('Scene context (unspoken):' in row['prompt'] for row in copied['prompts'])
+    assert all('Infer natural Korean in-scene sound and character dialogue as the story needs' in row['prompt'] for row in copied['prompts'])
     assert copied['reused_story']['source_plan_hash']==original['plan_hash']
     assert studio.writer.calls==0 and provider.calls==0 and provider.uploads==0
     assert sum((day_exposure(row,'2026-10-29') for row in s.listing()),Decimal(0))==Decimal('1.260')
@@ -105,6 +108,61 @@ def test_explicit_korean_dialogue_changes_only_the_new_copy(studio):
         s.reuse_story(source,{**settings,'duration':30,'clip_seconds':6},'2.50','20',request_id=uuid4().hex,consent=True)
     assert len(s.listing())==2 and studio.writer.calls==0
 
+
+
+@pytest.mark.parametrize('provenance',[None,'saved_dialogue_or_caption','user_edited'])
+def test_default_reuse_clears_stored_narration_and_preserves_whole_story(studio,provenance):
+    from newsflow.character.kling import snapshot
+    s=studio.service
+    source,settings,provider=source_job(studio)
+    job=s.read(source)
+    job['studio_selection']=snapshot(settings)
+    job['script']['scenes'][0]['narration']='잠깐, 같이 가요.'
+    job['script']['scenes'][1]['narration']=job['script']['scenes'][1]['caption']
+    if provenance:
+        job['reused_story']={'dialogue_source':provenance}
+    job['plan_hash']=s.plan_hash(job)
+    s.save(job)
+    original=files(s,source)
+    identifier,_=s.reuse_story(source,settings,'2.50','20',request_id=uuid4().hex,consent=True)
+    copied=s.read(identifier)
+    spoken=[scene['narration'] for scene in copied['script']['scenes']]
+    assert spoken==['']*5
+    assert [scene['action'] for scene in copied['script']['scenes']]==[scene['action'] for scene in job['script']['scenes']]
+    s.prepare(identifier,consent=True,script_reviewed=True)
+    payload=s.read(identifier)['scenes'][0]['payload']
+    assert payload['duration']==15 and payload['sound']=='on'
+    assert all(scene['action'] in payload['prompt'] for scene in job['script']['scenes'])
+    assert 'choose the pacing, camera and acting' in payload['prompt']
+    assert '0-3 seconds:' not in payload['prompt'] and 'No spoken dialogue in this beat.' not in payload['prompt']
+    assert files(s,source)==original and studio.writer.calls==0 and provider.calls==0
+
+
+def test_optional_explicit_dialogue_remains_compatible_with_single_video_payload(studio):
+    s=studio.service
+    source,settings,_=source_job(studio)
+    original=files(s,source)
+    spoken=['동료: 잠깐, 같이 가요.','','정말요?','','(주인공) 그럼 출발해요.']
+    identifier,_=s.reuse_story(source,settings,'2.50','20',request_id=uuid4().hex,dialogues=spoken,consent=True)
+    copied=s.read(identifier)
+    assert [scene['narration'] for scene in copied['script']['scenes']]==spoken
+    s.prepare(identifier,consent=True,script_reviewed=True)
+    quoted=s.read(identifier)
+    assert len(quoted['scenes'])==1 and quoted['scenes'][0]['payload']['sound']=='on'
+    prompt=quoted['scenes'][0]['payload']['prompt']
+    assert 'Speaker/acting direction (unspoken): 동료.' in prompt
+    assert 'Speaker/acting direction (unspoken): 주인공.' in prompt
+    assert 'In-character Korean dialogue: "잠깐, 같이 가요."' in prompt
+    assert 'In-character Korean dialogue: "정말요?"' in prompt
+    assert 'In-character Korean dialogue: "그럼 출발해요."' in prompt
+    assert '"동료:' not in prompt and '"(주인공)' not in prompt
+    assert 'Scene context (unspoken):' in prompt
+    assert 'No voiceover or narrator.' in prompt
+    assert 'speaker labels and parenthesized acting cues are unspoken direction.' in prompt
+    assert 'Story labels and context are unspoken direction.' in prompt
+    assert prompt.count('Infer natural Korean in-scene sound and character dialogue as the story needs')==2
+    assert files(s,source)==original and studio.writer.calls==0
+    assert all(client.calls==0 for client in studio.clients.values())
 
 def test_submission_diagnostics_preserve_unknown_payload_without_secret_fields_or_retry(studio):
     s=studio.service

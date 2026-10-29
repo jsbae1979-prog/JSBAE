@@ -47,7 +47,10 @@ def test_five_story_beats_become_exactly_one_15_second_estimate_and_submit(studi
     assert payload['duration']==15 and payload['sound']=='off' and payload['multi_shots'] is False
     assert quoted['scenes'][0]['story_positions']==[1,2,3,4,5]
     assert all(f'distinct story beat {n}' in payload['prompt'] for n in range(1,6))
-    assert all(f'{start}-{start+3} seconds:' in payload['prompt'] for start in range(0,15,3))
+    assert all(f'Story beat {n}:' in payload['prompt'] for n in range(1,6))
+    assert 'choose the pacing, camera and acting' in payload['prompt']
+    assert '0-3 seconds:' not in payload['prompt']
+    assert original['script']['plan']['situation'] in payload['prompt']
     assert len(payload['prompt'])<=4500
     assert quoted['prompts']==original['prompts'] and quoted['script']==original['script']
     assert quoted['plan_hash']==original['plan_hash'] and quoted['quote_total_usd']=='0.10'

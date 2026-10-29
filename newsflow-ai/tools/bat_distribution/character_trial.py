@@ -496,7 +496,7 @@ class Trial:
                 or marker.get('source_job_id') != p['reuse_source_job_id']
                 or marker.get('source_story_sha256') != p['reuse_story_sha256']
                 or marker.get('source_reference_sha256') != p['reference_sha256']
-                or marker.get('dialogue_source') not in {'saved_dialogue_or_caption', 'user_edited'}
+                or marker.get('dialogue_source') not in {'saved_dialogue_or_caption', 'story_inferred_audio', 'user_edited'}
                 or not isinstance(source.get('plan_hash'), str)
                 or not re.fullmatch(r'[a-f0-9]{64}', source['plan_hash'])
                 or marker.get('source_plan_hash') != source['plan_hash']
@@ -525,7 +525,10 @@ class Trial:
                 elif marker['dialogue_source'] == 'saved_dialogue_or_caption':
                     if narration != (old.get('narration', '').strip() or old['caption']):
                         _fail()
-                elif not narration.strip() or not re.search(r'[가-힣]', narration):
+                elif marker['dialogue_source'] == 'story_inferred_audio':
+                    if narration != '':
+                        _fail()
+                elif narration.strip() and not re.search(r'[가-힣]', narration):
                     _fail()
         except (KeyError, TypeError, ValueError):
             _fail()

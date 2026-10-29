@@ -424,3 +424,32 @@ def test_future_character_failure_saves_safe_http_details_and_keeps_unknown_stop
     with pytest.raises(CharacterError):
         service.write(identifier, consent=True)
     assert len(requests) == 1
+
+
+def test_studio_prompt_interprets_story_without_authored_dialogue():
+    from newsflow.character.studio_story import INSTRUCTION
+    screenplay=StudioStoryboard.model_validate(story(15,'off'))
+    rows=prompts(screenplay,{**DEFAULTS,'sound':'on'})
+    assert 'Do not author dialogue lines' in INSTRUCTION
+    assert 'narration must ALWAYS be an empty string' in INSTRUCTION
+    for scene,row in zip(screenplay.scenes,rows):
+        text=row['prompt']
+        assert scene.action in text and scene.caption in text
+        assert 'Scene context (unspoken):' in text
+        assert 'Act out the situation through visible actions, reactions and expressions.' in text
+        assert 'Infer natural Korean in-scene sound and character dialogue as the story needs' in text
+        assert 'No voiceover or narrator.' in text
+        assert 'Never read scene descriptions, captions, titles or timing markers aloud.' in text
+        assert 'In-character Korean dialogue:' not in text
+        assert 'No spoken dialogue in this beat.' not in text
+    silent=prompts(screenplay,{**DEFAULTS,'sound':'off'})
+    assert all('Silent video. No dialogue, speech, music or sound.' in row['prompt'] for row in silent)
+
+
+def test_new_topic_story_keeps_narration_empty_even_if_writer_returns_dialogue(studio):
+    identifier=create(studio,duration=15,clip_seconds=3,sound='on')
+    studio.service.write(identifier,consent=True)
+    job=studio.service.read(identifier)
+    assert [scene['narration'] for scene in job['script']['scenes']]==['']*5
+    assert all('In-character Korean dialogue:' not in row['prompt'] for row in job['prompts'])
+    assert studio.writer.calls==1 and all(client.calls==0 for client in studio.clients.values())

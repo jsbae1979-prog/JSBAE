@@ -66,12 +66,14 @@ def generation_rows(job):
     prefix=f'{appearance} {style} ' if isinstance(appearance,str) and isinstance(style,str) else ''
     shared=bool(prefix) and all(row['prompt'].startswith(prefix) for row in rows)
     lines=[prefix.strip()] if shared else []
-    lines.append(f"Create one continuous {job['duration']}-second video. Follow every story beat in order; keep the reference character consistent.")
-    elapsed=0
-    for row in rows:
+    lines.append(f"Interpret the complete story as one continuous {job['duration']}-second situational film. Preserve the story order and reference character; choose the pacing, camera and acting within the total duration. Story labels and context are unspoken direction.")
+    story=job.get('script') or {}
+    context={key:story[key] for key in ('plan','title','hook_caption','end_caption') if key in story}
+    if context:
+        lines.append('Complete story context (unspoken; never read aloud): '+json.dumps(context,ensure_ascii=False))
+    for index,row in enumerate(rows,1):
         text=row['prompt'][len(prefix):] if shared else row['prompt']
-        lines.append(f"{elapsed}-{elapsed+row['seconds']} seconds: {text}")
-        elapsed+=row['seconds']
+        lines.append(f"Story beat {index}: {text}")
     prompt='\n'.join(lines)
     if len(prompt)>4500:
         raise CharacterError('media')
@@ -278,17 +280,17 @@ class CharacterService:
                 raise CharacterError('blocked')
             revised=story.model_dump()
             for index,scene in enumerate(revised['scenes']):
-                text=(dialogues[index] if provided else scene.get('narration','').strip() or scene['caption'])
+                text=dialogues[index] if provided else ''
                 if chosen['sound']=='on':
-                    if (not isinstance(text,str) or not 1<=len(text.strip())<=160
-                            or not re.search(r'[가-힣]',text)):
+                    if (not isinstance(text,str) or len(text.strip())>160
+                            or (text.strip() and not re.search(r'[가-힣]',text))):
                         raise CharacterError('blocked')
                     scene['narration']=text.strip()
                 else:scene['narration']=''
             revised=StudioStoryboard.model_validate(revised)
             provenance={'source_job_id':source_id,'source_story_sha256':fingerprint(source['script']),
                         'source_plan_hash':source['plan_hash'],'source_reference_sha256':reference_hash,
-                        'dialogue_source':'user_edited' if provided else 'saved_dialogue_or_caption'}
+                        'dialogue_source':'user_edited' if provided else 'story_inferred_audio'}
             body_hash=fingerprint(['reuse_story_v1',provenance,revised.model_dump(),frozen,str(per),str(daily)])
             # Durable local request identity also covers a failed/uncertain file copy.
             # Such receipts are preserved, never silently retried or deleted.
@@ -385,6 +387,8 @@ class CharacterService:
                                    scene_count=job['duration']//settings['clip_seconds'])
                     story=self.writer.write_studio(payload,options,reference_bytes(self.folder(identifier)/'reference.png'))
                     story=StudioStoryboard.model_validate(story)
+                    # New topic-only stories never prescribe dialogue; preserve legacy stored stories on read.
+                    for scene in story.scenes:scene.narration=''
                     if (sum(s.seconds for s in story.scenes)!=job['duration'] or len(story.scenes)!=payload['scene_count']
                             or any(s.seconds!=settings['clip_seconds'] for s in story.scenes)): raise CharacterError()
                 else:
