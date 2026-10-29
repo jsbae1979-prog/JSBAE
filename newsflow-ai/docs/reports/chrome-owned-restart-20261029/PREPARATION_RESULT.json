@@ -1,0 +1,18 @@
+{
+  "oldOperatingPid": 23240,
+  "normalStopCalls": 1,
+  "stopExitCode": 0,
+  "oldAppExitCode": 0,
+  "backupFiles": 36,
+  "restorationVerified": true,
+  "tables": 47,
+  "articles": 169,
+  "credentialMediaFiles": 26,
+  "securityFlagsUnchanged": true,
+  "defaultBrowserTemporarilyDeferred": true,
+  "startPermittedAfterEpoch": 1793250392.8363082,
+  "settingsBeforeSha256": {
+    "launch": "8aac22b0a56d37354280168595b674282182425de60db432bb4ce56c9b52b1fd",
+    "layout": "f90b5a0207cb4af92b2b4c37c570d160c53b7bca5dd5231b3b550a218facf011"
+  }
+}
