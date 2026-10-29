@@ -1,0 +1,14 @@
+{
+  "normalStopCount": 1,
+  "stopExitCode": 0,
+  "oldPid": 31492,
+  "backupFiles": 36,
+  "backupDbVerified": true,
+  "controllerBeforeSha256": "eeb245b15c817d000823e15848ea669e8d4f567038c7d3ff0d5c07fb8e28281a",
+  "controllerAfterSha256": "6fa06664b22c6394f3b063c764356de237e2a79fde2521a6f380d65b11454bc3",
+  "layoutBeforeSha256": "f90b5a0207cb4af92b2b4c37c570d160c53b7bca5dd5231b3b550a218facf011",
+  "layoutAfterSha256": "619868c2f6d82df1501473ada5d72f071389ef4d6275d4aacb567a9db9ac112f",
+  "launchUnchanged": true,
+  "aclUnchanged": true,
+  "onlyApprovedChromeDeltaApplied": true
+}

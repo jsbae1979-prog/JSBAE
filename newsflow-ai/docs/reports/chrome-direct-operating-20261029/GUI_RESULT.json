@@ -1,0 +1,19 @@
+{
+  "newPid": 35844,
+  "port": 18768,
+  "stillActive": true,
+  "portAccepting": true,
+  "chromeAuthentication": "PASS: explicitly confirmed by user",
+  "newsShortsGui": "PASS: user manual observation",
+  "imageStudioGui": "PASS: user manual observation",
+  "characterShortsGui": "PASS: user manual observation",
+  "browserAutomationUsed": false,
+  "normalStopCount": 1,
+  "normalStartCount": 1,
+  "paidApiCalls": 0,
+  "snsCalls": 0,
+  "securityPoliciesWeakened": false,
+  "bootstrapOrCookiesReadOrPrinted": false,
+  "priorChromeLaunchTests": "13 PASS reused; not rerun",
+  "finalVerdict": "ACCEPTED for approved Chrome launch/restart/three-studio visibility scope"
+}

@@ -1,0 +1,16 @@
+{
+  "newPid": 35844,
+  "port": 18768,
+  "tablesUnchanged": 47,
+  "credentialMediaFilesUnchanged": 26,
+  "originalAndABUnchanged": true,
+  "securityFlagsUnchanged": true,
+  "openBrowserRestored": true,
+  "normalStopCount": 1,
+  "normalStartCount": 1,
+  "browserAutomationUsed": false,
+  "chromeOpenRequested": true,
+  "chromeOpenAccepted": true,
+  "browser": "chrome",
+  "actualChromeAuthentication": "PASS: user explicitly confirmed normal authentication and three studios"
+}
