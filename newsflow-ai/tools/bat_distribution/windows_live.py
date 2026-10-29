@@ -7,6 +7,7 @@ matching private loopback session to shut down; no signal, kill, shell or retry.
 from __future__ import annotations
 
 import hmac
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -38,10 +39,14 @@ def load_config(root):
     layout = json.loads((root / 'app/layout.json').read_bytes())
     if layout.get('liveStartStopConnected') is not True or layout.get('validationOnly') is not True:
         raise Blocked('live-validation-not-provisioned')
-    source = ordinary_absolute(root / 'app/validation-launch.json')
+    # Test harness metadata lives outside the immutable distributable program.
+    source = ordinary_absolute(root.parent / 'validation-launch.json')
     if source.stat().st_size > 4096:
         raise Blocked('invalid-validation-configuration')
-    raw = json.loads(source.read_bytes())
+    content = source.read_bytes()
+    if hashlib.sha256(content).hexdigest() != layout.get('validationConfigSha256'):
+        raise Blocked('validation-configuration-integrity')
+    raw = json.loads(content)
     if (raw.get('schemaVersion') != 1 or raw.get('syntheticOnly') is not True
             or raw.get('profileName') != 'SyntheticProfile' or type(raw.get('openBrowser')) is not bool):
         raise Blocked('synthetic-validation-only')

@@ -1,0 +1,40 @@
+{
+  "startCycles": 3,
+  "stopCycles": 3,
+  "batStartExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "batStopExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "lastExit": {
+    "result": "STOPPED",
+    "exitCode": 0
+  },
+  "syntheticDbCounts": {
+    "news_articles": 3,
+    "intelligence_runs": 1,
+    "production_schedules": 0,
+    "publish_schedules": 0
+  },
+  "savedFeedDefaults": [
+    {
+      "model": "gpt-image-2.5-flare-2026-09-08",
+      "provider": "openai",
+      "quality": "low",
+      "size": "1024x1024"
+    }
+  ],
+  "sessionsRemoved": true,
+  "ephemeralHttpCookieRemoved": true,
+  "dpapiFiles": 0,
+  "operatingDataUsed": false,
+  "paidApiCalls": 0,
+  "oauthCalls": 0,
+  "snsCalls": 0,
+  "initialHarnessIssue": "Unregistered singular /studio/image returned 404; corrected test URLs to /studio/images and /studio/characters without product changes."
+}

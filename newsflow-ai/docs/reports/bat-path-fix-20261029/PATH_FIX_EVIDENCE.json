@@ -1,0 +1,22 @@
+{
+  "rejectedFiles": [
+    {
+      "originalPath": "app/validation-launch.json",
+      "bytes": 190,
+      "sha256": "b24e7446b8679b59b8b037f7524a3bdfd41b0824b6766adeb7be86c7560ce30c",
+      "wasInManifest": true,
+      "purpose": "synthetic launch metadata"
+    },
+    {
+      "originalPath": "README-VALIDATION.txt",
+      "bytes": 196,
+      "sha256": "463267914333f07f6275dcda32159f363ad4fc1d07f537bc2a63cbdcd9d27e04",
+      "wasInManifest": true,
+      "purpose": "private validation instructions"
+    }
+  ],
+  "distributionPolicyChanged": false,
+  "externalValidationConfigSHA256": "b24e7446b8679b59b8b037f7524a3bdfd41b0824b6766adeb7be86c7560ce30c",
+  "candidateInventoryFiles": 2878,
+  "correctedInventoryPreflight": "PASS"
+}

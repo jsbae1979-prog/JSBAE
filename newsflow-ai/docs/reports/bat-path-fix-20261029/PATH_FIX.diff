@@ -1,0 +1,74 @@
+diff --git a/newsflow-ai/tools/bat_distribution/contract_entry.py b/newsflow-ai/tools/bat_distribution/contract_entry.py
+index b6a4e86..af02763 100644
+--- a/newsflow-ai/tools/bat_distribution/contract_entry.py
++++ b/newsflow-ai/tools/bat_distribution/contract_entry.py
+@@ -24 +24 @@ def main(argv=None) -> int:
+-    if not (args.program_root / 'app/validation-launch.json').is_file():
++    if not (args.program_root.parent / 'validation-launch.json').is_file():
+diff --git a/newsflow-ai/tools/bat_distribution/tests/test_windows_live.py b/newsflow-ai/tools/bat_distribution/tests/test_windows_live.py
+index ff637be..a6048c4 100644
+--- a/newsflow-ai/tools/bat_distribution/tests/test_windows_live.py
++++ b/newsflow-ai/tools/bat_distribution/tests/test_windows_live.py
+@@ -1,0 +2 @@ import json
++import hashlib
+@@ -20,3 +21,2 @@ def config(tmp_path, port=18767):
+-    (root / 'app/layout.json').write_text(json.dumps({
+-        'liveStartStopConnected': True, 'validationOnly': True}))
+-    (root / 'app/validation-launch.json').write_text(json.dumps({
++    external = root.parent / 'validation-launch.json'
++    external.write_text(json.dumps({
+@@ -24,0 +25,3 @@ def config(tmp_path, port=18767):
++    (root / 'app/layout.json').write_text(json.dumps({
++        'liveStartStopConnected': True, 'validationOnly': True,
++        'validationConfigSha256': hashlib.sha256(external.read_bytes()).hexdigest()}))
+@@ -36 +39 @@ def test_profile_cannot_adopt_operating_data(tmp_path):
+-    p = root / 'app/validation-launch.json'
++    p = root.parent / 'validation-launch.json'
+@@ -39,0 +43,4 @@ def test_profile_cannot_adopt_operating_data(tmp_path):
++    layout = root / 'app/layout.json'
++    metadata = json.loads(layout.read_text())
++    metadata['validationConfigSha256'] = hashlib.sha256(p.read_bytes()).hexdigest()
++    layout.write_text(json.dumps(metadata))
+@@ -107,0 +115,26 @@ def test_synthetic_policy_retains_defaults_save_and_reads():
++
++
++def test_external_validation_metadata_is_bound_and_not_a_payload(tmp_path):
++    from bat_distribution.zip_update import payload_name
++    root = config(tmp_path)
++    actual = live.load_config(root)
++    assert actual.profile == root.parent / 'SyntheticProfile'
++    assert not (root / 'app/validation-launch.json').exists()
++    for name in ('app/validation-launch.json', 'README-VALIDATION.txt'):
++        with pytest.raises(Blocked, match='nonprogram-or-unverified-sample-payload'):
++            payload_name(name)  # Distribution allowlist is deliberately unchanged.
++
++
++def test_changed_external_validation_metadata_is_refused(tmp_path):
++    root = config(tmp_path)
++    external = root.parent / 'validation-launch.json'
++    external.write_bytes(external.read_bytes() + b' ')
++    with pytest.raises(Blocked, match='validation-configuration-integrity'):
++        live.load_config(root)
++
++
++def test_distributable_without_external_harness_remains_inert(tmp_path):
++    root = config(tmp_path)
++    external = root.parent / 'validation-launch.json'
++    external.rename(root / 'app/validation-launch.json')
++    assert contract_entry.main(['start', str(root)]) == 2
+diff --git a/newsflow-ai/tools/bat_distribution/windows_live.py b/newsflow-ai/tools/bat_distribution/windows_live.py
+index b108472..730bf80 100644
+--- a/newsflow-ai/tools/bat_distribution/windows_live.py
++++ b/newsflow-ai/tools/bat_distribution/windows_live.py
+@@ -9,0 +10 @@ import hmac
++import hashlib
+@@ -41 +42,2 @@ def load_config(root):
+-    source = ordinary_absolute(root / 'app/validation-launch.json')
++    # Test harness metadata lives outside the immutable distributable program.
++    source = ordinary_absolute(root.parent / 'validation-launch.json')
+@@ -44 +46,4 @@ def load_config(root):
+-    raw = json.loads(source.read_bytes())
++    content = source.read_bytes()
++    if hashlib.sha256(content).hexdigest() != layout.get('validationConfigSha256'):
++        raise Blocked('validation-configuration-integrity')
++    raw = json.loads(content)

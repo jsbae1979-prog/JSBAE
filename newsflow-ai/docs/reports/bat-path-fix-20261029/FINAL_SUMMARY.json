@@ -1,0 +1,41 @@
+{
+  "baselineSha": "e531204ef515bbf5587d224e4ef45c0e43eec0ed",
+  "branch": "codex/newsflow-bat-distribution-prep",
+  "focusedUnitPass": 6,
+  "httpPass": 17,
+  "guiPass": 8,
+  "finalFail": 0,
+  "finalError": 0,
+  "reusedEarlierUnitPass": 15,
+  "batStartExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "batStopExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "testPort": 18767,
+  "listenersAfter": 0,
+  "candidatePythonProcessesAfter": 0,
+  "operatingProcessIdsUnchanged": [
+    3684,
+    12700,
+    15012,
+    26288
+  ],
+  "v3ServiceState": "Running",
+  "v3ExecutionDenialObserved": false,
+  "distributionPathPolicyChanged": false,
+  "productSourceChanged": false,
+  "guardChanged": false,
+  "operatingDataReadOrWritten": false,
+  "realPaidApiCalls": 0,
+  "oauthCalls": 0,
+  "snsCalls": 0,
+  "scopeVerdict": "ACCEPTED",
+  "scope": "isolated synthetic new BAT candidate startup/shutdown only",
+  "externalDistributionApproved": false
+}

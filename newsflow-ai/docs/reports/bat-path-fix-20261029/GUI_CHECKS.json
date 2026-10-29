@@ -1,0 +1,40 @@
+{
+  "browser": "Codex in-app Chromium on local Windows 11",
+  "pass": 8,
+  "fail": 0,
+  "checks": [
+    {
+      "name": "React dashboard rendered after normal local claim",
+      "result": "PASS"
+    },
+    {
+      "name": "News shorts synthetic TOP 1/2/3 rendered",
+      "result": "PASS"
+    },
+    {
+      "name": "Independent image studio rendered",
+      "result": "PASS"
+    },
+    {
+      "name": "News image tab + saved Fake analysis selection",
+      "result": "PASS"
+    },
+    {
+      "name": "mode=news directly selects TOP 3 tab",
+      "result": "PASS"
+    },
+    {
+      "name": "Restart preserves 1024x1024 + low defaults in GUI",
+      "result": "PASS"
+    },
+    {
+      "name": "Character studio rendered with empty reference/storyboard",
+      "result": "PASS"
+    },
+    {
+      "name": "Unquoted paid character generation remains disabled",
+      "result": "PASS"
+    }
+  ],
+  "realGeneration": false
+}

@@ -1,4 +1,5 @@
 import json
+import hashlib
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -17,11 +18,13 @@ def test_old_unprovisioned_dispatcher_stays_inert(tmp_path):
 def config(tmp_path, port=18767):
     root = tmp_path / 'Program'
     (root / 'app').mkdir(parents=True)
-    (root / 'app/layout.json').write_text(json.dumps({
-        'liveStartStopConnected': True, 'validationOnly': True}))
-    (root / 'app/validation-launch.json').write_text(json.dumps({
+    external = root.parent / 'validation-launch.json'
+    external.write_text(json.dumps({
         'schemaVersion': 1, 'syntheticOnly': True, 'profileName': 'SyntheticProfile',
         'installationId': 'b' * 32, 'port': port, 'openBrowser': False}))
+    (root / 'app/layout.json').write_text(json.dumps({
+        'liveStartStopConnected': True, 'validationOnly': True,
+        'validationConfigSha256': hashlib.sha256(external.read_bytes()).hexdigest()}))
     return root
 
 
@@ -33,10 +36,14 @@ def test_validation_cannot_use_operating_or_dynamic_port(tmp_path, port):
 
 def test_profile_cannot_adopt_operating_data(tmp_path):
     root = config(tmp_path)
-    p = root / 'app/validation-launch.json'
+    p = root.parent / 'validation-launch.json'
     data = json.loads(p.read_text())
     data['profileName'] = 'NewsFlowAI'
     p.write_text(json.dumps(data))
+    layout = root / 'app/layout.json'
+    metadata = json.loads(layout.read_text())
+    metadata['validationConfigSha256'] = hashlib.sha256(p.read_bytes()).hexdigest()
+    layout.write_text(json.dumps(metadata))
     with pytest.raises(Blocked, match='synthetic-validation'):
         live.load_config(root)
 
@@ -105,3 +112,29 @@ def test_synthetic_policy_retains_defaults_save_and_reads():
     client = TestClient(live.SyntheticRequests(inner))
     assert client.post('/api/feed-batches/defaults').status_code == 200
     assert client.get('/api/feed-batches').status_code == 200
+
+
+def test_external_validation_metadata_is_bound_and_not_a_payload(tmp_path):
+    from bat_distribution.zip_update import payload_name
+    root = config(tmp_path)
+    actual = live.load_config(root)
+    assert actual.profile == root.parent / 'SyntheticProfile'
+    assert not (root / 'app/validation-launch.json').exists()
+    for name in ('app/validation-launch.json', 'README-VALIDATION.txt'):
+        with pytest.raises(Blocked, match='nonprogram-or-unverified-sample-payload'):
+            payload_name(name)  # Distribution allowlist is deliberately unchanged.
+
+
+def test_changed_external_validation_metadata_is_refused(tmp_path):
+    root = config(tmp_path)
+    external = root.parent / 'validation-launch.json'
+    external.write_bytes(external.read_bytes() + b' ')
+    with pytest.raises(Blocked, match='validation-configuration-integrity'):
+        live.load_config(root)
+
+
+def test_distributable_without_external_harness_remains_inert(tmp_path):
+    root = config(tmp_path)
+    external = root.parent / 'validation-launch.json'
+    external.rename(root / 'app/validation-launch.json')
+    assert contract_entry.main(['start', str(root)]) == 2

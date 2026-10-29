@@ -1,0 +1,148 @@
+{
+  "checks": [
+    {
+      "name": "unauthenticated GUI refused",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "name": "normal one-time local claim",
+      "result": "PASS",
+      "detail": 204
+    },
+    {
+      "name": "/studio/dashboard",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "/studio/assets/index-DsTSicNr.js",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 546667
+      }
+    },
+    {
+      "name": "/studio/assets/index-DH-ao1BP.css",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 143580
+      }
+    },
+    {
+      "name": "/studio/shorts",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "/studio/images",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "/studio/images?mode=news",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "/studio/characters",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "/api/feed-batches",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 126
+      }
+    },
+    {
+      "name": "/api/studio/modules/images",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 5965
+      }
+    },
+    {
+      "name": "TOP 3 synthetic source/rank connection",
+      "result": "PASS",
+      "detail": {
+        "ranks": [
+          1,
+          2,
+          3
+        ],
+        "analysisId": 1
+      }
+    },
+    {
+      "name": "/api/studio/modules/shorts",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 4712
+      }
+    },
+    {
+      "name": "/api/studio/modules/characters",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 3274
+      }
+    },
+    {
+      "name": "CSRF protected synthetic defaults save",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "defaults read after save",
+      "result": "PASS",
+      "detail": {
+        "model": "gpt-image-2.5-flare-2026-09-08",
+        "provider": "openai",
+        "quality": "low",
+        "size": "1024x1024"
+      }
+    },
+    {
+      "name": "paid generation remains disabled",
+      "result": "PASS",
+      "detail": 403
+    }
+  ],
+  "defaultsBefore": {
+    "provider": "openai",
+    "model": "gpt-image-2.5-flare-2026-09-08",
+    "size": "1024x1280",
+    "quality": "medium"
+  },
+  "savedDefaults": {
+    "model": "gpt-image-2.5-flare-2026-09-08",
+    "provider": "openai",
+    "quality": "low",
+    "size": "1024x1024"
+  },
+  "pass": 17,
+  "fail": 0
+}
