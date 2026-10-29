@@ -1,4 +1,4 @@
-"""Approved synthetic-only portable BAT Start/Stop; no operating profile adoption.
+"""Explicit-profile portable BAT Start/Stop; no operating profile adoption.
 
 The old candidates remain inert. A newly assembled validation layout must opt in
 explicitly. Stop retains a query/synchronize-only process handle and asks the
@@ -58,7 +58,8 @@ def load_config(root):
     if not re.fullmatch('[0-9a-f]{32}', raw.get('installationId', '')):
         raise Blocked('invalid-installation-identity')
     profile = ordinary_absolute(root.parent / 'SyntheticProfile')
-    return ValidationConfig(root, profile, fixed_port(raw['port']), raw['installationId'], raw['openBrowser'])
+    kind = 'synthetic-local-work' if layout.get('validationProfile') == 'synthetic-local-work' else 'synthetic'
+    return ValidationConfig(root, profile, fixed_port(raw['port']), raw['installationId'], raw['openBrowser'], kind)
 
 
 def bootstrap(config):
@@ -282,7 +283,11 @@ def start(config, plan):
                 from .restored_install import disable_credential_decryption
                 credential_boundary = disable_credential_decryption()
             from newsflow.main import create_app
-            app = create_app(Settings(data_dir=config.profile, host='127.0.0.1', port=config.port), automatic_start=True)
+            adapter = None
+            if config.profile_kind == 'synthetic-local-work':
+                from .local_work import offline_adapter
+                adapter = offline_adapter()
+            app = create_app(Settings(data_dir=config.profile, host='127.0.0.1', port=config.port), adapter=adapter, automatic_start=True)
             # Instance-local test policy, not a product scheduler/Guard change.
             app.state.scheduler.start = lambda: None
             app.state.publishing_calendar.start = lambda: None
@@ -299,6 +304,9 @@ def start(config, plan):
             if config.profile_kind == 'restored-private-validation':
                 from .restored_install import RestoredRequests
                 request_boundary = RestoredRequests(LocalAccess(app, session))
+            elif config.profile_kind == 'synthetic-local-work':
+                from .local_work import LocalWorkRequests
+                request_boundary = LocalWorkRequests(LocalAccess(app, session))
             else:
                 request_boundary = SyntheticRequests(LocalAccess(app, session))
             protected = Control(request_boundary, identity, session.origin,
@@ -315,7 +323,8 @@ def start(config, plan):
                     print(f'READY: http://127.0.0.1:{config.port}/studio/dashboard (local authentication required)', flush=True)
                     if config.open_browser:
                         import webbrowser
-                        webbrowser.open(session.launch_url(), new=1)
+                        opened = bool(webbrowser.open(session.launch_url(), new=1))
+                        _atomic(config.profile / 'browser-open-result.json', {'requested': True, 'accepted': opened})
             thread = threading.Thread(target=ready, daemon=True)
             thread.start()
             phase = 'serve'
