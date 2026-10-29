@@ -1,0 +1,51 @@
+{
+  "keyMetadata": {
+    "claude": {
+      "encryptedFilePresent": true,
+      "decrypted": false,
+      "authenticationVerifiedThisRun": false,
+      "accountModelAccessVerified": false
+    },
+    "elevenlabs": {
+      "encryptedFilePresent": true,
+      "decrypted": false,
+      "authenticationVerifiedThisRun": false,
+      "accountModelAccessVerified": false
+    },
+    "openai": {
+      "encryptedFilePresent": false,
+      "decrypted": false,
+      "authenticationVerifiedThisRun": false,
+      "accountModelAccessVerified": false
+    },
+    "higgsfield": {
+      "encryptedFilePresent": true,
+      "decrypted": false,
+      "authenticationVerifiedThisRun": false,
+      "accountModelAccessVerified": false
+    }
+  },
+  "selectedModels": {
+    "claude": "claude-sonnet-4-6",
+    "elevenlabs": "eleven_multilingual_v2",
+    "openaiDefault": "gpt-image-2.5-flare-2026-09-08",
+    "openaiAlternative": "gpt-image-2.5-sunburst-2026-09-08",
+    "characterVideo": "bytedance/seedance-2.0/reference-to-video"
+  },
+  "historicalClaudeAuthRecordPresent": true,
+  "elevenlabsVoiceSelected": true,
+  "executionBoundary": {
+    "profileKind": "restored-local-operation",
+    "readOnly": false,
+    "decryptCredentials": false,
+    "automaticJobsEnabled": false,
+    "externalExecutionEnabled": false,
+    "port": 18768
+  },
+  "automaticSchedules": {
+    "production": 0,
+    "publishing": 0
+  },
+  "paidCalls": 0,
+  "credentialDecryption": 0
+}

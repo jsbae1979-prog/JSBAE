@@ -1,0 +1,16 @@
+{
+  "verdict": "CONDITIONAL",
+  "paidApiEntryStatus": "BLOCKED pending normal Chrome authentication, credential/execution approval, provider access and OpenAI key registration",
+  "newReadOnlyPass": 7,
+  "newFail": 0,
+  "newError": 0,
+  "currentChromeFlow": "BLOCKED",
+  "liveProviderPermissions": "NOT VERIFIED",
+  "automaticStoredTop1Contract": "PARTIAL",
+  "characterSceneCount": "3-5; exactly3 not guaranteed",
+  "productCodeChanged": false,
+  "paidCalls": 0,
+  "oauthAndSnsCalls": 0,
+  "credentialsDecrypted": 0,
+  "sourceHead": "ec9c609e923f36369c000dbe1e7bd3616eeaf039"
+}

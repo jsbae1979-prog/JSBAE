@@ -1,0 +1,57 @@
+{
+  "newReadOnlyPass": 7,
+  "newFail": 0,
+  "newError": 0,
+  "checks": [
+    {
+      "name": "operating PID retained",
+      "result": "PASS"
+    },
+    {
+      "name": "operating loopback retained",
+      "result": "PASS"
+    },
+    {
+      "name": "SQLite integrity",
+      "result": "PASS"
+    },
+    {
+      "name": "all47 tables and169 articles unchanged",
+      "result": "PASS"
+    },
+    {
+      "name": "automatic schedule tables remain empty",
+      "result": "PASS"
+    },
+    {
+      "name": "opaque credentials media and settings files unchanged",
+      "result": "PASS"
+    },
+    {
+      "name": "operating program layout unchanged",
+      "result": "PASS"
+    }
+  ],
+  "operatingPid": 23240,
+  "port": 18768,
+  "tables": 47,
+  "articles": 169,
+  "profileFilesUnchanged": 36,
+  "savedTop3Analyses": [
+    {
+      "id": 42,
+      "provider": "claude_api",
+      "model": "claude-sonnet-4-6",
+      "ranks": [
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "newProviderAuthenticationCalls": 0,
+  "newPaidCalls": 0,
+  "newKeyDecryption": 0,
+  "operatingRestart": false,
+  "productCodeChanged": false
+}

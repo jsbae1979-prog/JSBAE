@@ -1,0 +1,12 @@
+{
+  "browser": "Chrome",
+  "route": "http://127.0.0.1:18768/studio/dashboard",
+  "controlAvailable": true,
+  "authenticated": false,
+  "message": "Local Windows session authentication required.",
+  "rootRouteRefusedByExistingBoundary": true,
+  "restartPerformed": false,
+  "sessionTokenOrCookieTransferred": false,
+  "generationButtonsClicked": false,
+  "guiFlowStatus": "BLOCKED"
+}
