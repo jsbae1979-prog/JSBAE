@@ -1,0 +1,62 @@
+{
+  "currency": "USD, tax/account-discount excluded",
+  "claudeNews": {
+    "calls": 1,
+    "assumedInputTokens": 2000,
+    "maxOutputTokens": 2200,
+    "estimate": "0.039"
+  },
+  "claudeCharacter": {
+    "calls": 1,
+    "assumedInputTokens": 2000,
+    "maxOutputTokens": 3000,
+    "estimate": "0.051"
+  },
+  "elevenLabs": {
+    "calls": 1,
+    "characters": 100,
+    "unitPer1000Characters": "0.08",
+    "estimate": "0.008",
+    "voiceModifiersAndAccountEntitlements": "NOT VERIFIED"
+  },
+  "openAI": {
+    "calls": 1,
+    "model": "gpt-image-2.5-flare-2026-09-08",
+    "proposedOptions": "1024x1024 low n=1; current saved medium/4:5 not changed",
+    "textInputRatePerMillion": "5",
+    "imageOutputRatePerMillion": "30",
+    "exampleOnly": {
+      "assumedTextTokens": 200,
+      "assumedImageOutputTokens": 1000,
+      "calculatedAmount": "0.031"
+    },
+    "actualPerImageQuote": "UNKNOWN: GPT Image2 calculator does not predict2.5 tokens",
+    "proposedReviewBudgetNotHardCap": "0.20"
+  },
+  "higgsfield": {
+    "model": "bytedance/seedance-2.0/reference-to-video",
+    "options": "720p 9:16 image-only reference generate_audio=false",
+    "outputPixels": [
+      720,
+      1280
+    ],
+    "billingFps": 24,
+    "ratePer1000VideoTokens": "0.014",
+    "standalone4SecondExample": {
+      "tokens": 86400,
+      "estimate": "1.2096",
+      "currentGuiCanSubmitOneScene": "NO: submits approved scene bundle; no new standalone path developed"
+    },
+    "currentGui30SecondEpisode": {
+      "sceneCount": "3-5",
+      "generationCalls": "3-5",
+      "tokens": 648000,
+      "estimate": "9.072"
+    },
+    "officialQuoteRequiredBeforeExecution": true
+  },
+  "generationCountForCurrentGui": "7-9 across all workflows; upload/quote/status reads separate",
+  "allCostsArePlanningEstimatesNotBillsOrEnforcedCaps": true,
+  "failedOrUnknownRequests": "stop and reconcile; no auto replay",
+  "paidAuthorizationObtained": false
+}
