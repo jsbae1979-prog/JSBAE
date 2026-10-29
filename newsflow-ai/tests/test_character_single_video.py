@@ -19,7 +19,7 @@ from newsflow.video.tts import local_process_env
 def seeded(studio,*,duration=15,model=K3):
     s=studio.service
     identifier=create(studio,duration=duration,clip_seconds=duration//5,video_model=model,
-                      sound='off',output_quality='720p')
+                      native_resolution='std' if model==O3 else 'model_default',sound='off',output_quality='720p')
     job=s.read(identifier)
     screenplay=StudioStoryboard.model_validate(story(duration,'off'))
     for n,scene in enumerate(screenplay.scenes,1):

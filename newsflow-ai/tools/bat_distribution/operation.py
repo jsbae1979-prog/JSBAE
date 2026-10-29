@@ -65,7 +65,8 @@ class OperatingRequests(LocalWorkRequests):
             method, path = scope['method'], scope['path']
             local_settings = method == 'POST' and (self.CHARACTER_SETTINGS.fullmatch(path)
                                                   or self.CHARACTER_VISIBILITY.fullmatch(path)
-                                                  or self.CHARACTER_REUSE.fullmatch(path))
+                                                  or self.CHARACTER_REUSE.fullmatch(path)
+                                                  or path == '/api/studio/characters/library')
             copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path))
             if local_settings or copied_media:
                 # self.app remains LocalAccess(original_app, session); inner

@@ -242,7 +242,7 @@ def create_app(
                 return HTMLResponse("보안 토큰이 필요합니다.", status_code=403)
             encoding = request.headers.get("content-type", "").split(";", 1)[0]
             character_upload = encoding == 'multipart/form-data' and (
-                request.url.path in {'/character', '/image-studio/drafts'}
+                request.url.path in {'/character', '/image-studio/drafts', '/api/studio/characters/library'}
                 or re.fullmatch(r'/api/studio/characters/[a-f0-9]{32}/reuse-story',request.url.path) is not None)
             if encoding != "application/x-www-form-urlencoded" and not character_upload:
                 return HTMLResponse("지원하지 않는 요청 형식입니다.", status_code=415)

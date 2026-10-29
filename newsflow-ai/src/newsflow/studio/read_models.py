@@ -570,6 +570,9 @@ def module_view(request: Request, module: Module):
     result["catalog"]["referenceAssets"] = (
         state.image_studio.assets() if hasattr(state, "image_studio") else []
     )
+    result["catalog"]["myCharacters"] = (
+        state.image_studio.characters() if hasattr(state, "image_studio") else []
+    )
     result["catalog"]["assets"] = state.video.assets_list() if hasattr(state.video, "assets_list") else []
     result["catalog"]["voices"] = [{"id": "offline-silence", "label": "무음 검토영상"}]
     with state.sessions() as session:

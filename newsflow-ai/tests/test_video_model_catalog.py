@@ -115,5 +115,32 @@ def test_character_lock_is_also_enforced_on_server(key,value):
 def test_public_price_is_estimate_only_and_unverified_audio_price_is_not_invented():
     s=GenerationSettings(K3,'9:16','model_default',11,'3d_animation',False)
     e=estimate(s,55);assert e['minimum']=='4.620' and e['maximum']=='6.930' and not e['official_quote']
-    o=estimate(replace(s,model_id=O3,audio=True),55)
+    o=estimate(replace(s,model_id=O3,resolution='std',audio=True),55)
     assert o['maximum'] is None and not o['audio_price_verified']
+
+
+@pytest.mark.parametrize('quality',['std','pro','4k'])
+def test_official_o3_quality_modes_are_explicit_api_modes(quality):
+    m=CATALOG.model(O3)
+    assert m['resolutions']==['std','pro','4k'] and m['default_resolution']=='std'
+    s=GenerationSettings(O3,'9:16',quality,11,'3d_animation',False)
+    request=build_request(s,'walk',reference_url='https://example.com/ref.png')
+    assert request['path']==O3 and request['body']['mode']==quality
+    assert not {'resolution','quality'} & request['body'].keys()
+    if quality!='std':assert estimate(s,55)['maximum'] is None
+
+
+def test_standard_k3_quality_is_fixed_and_never_promoted():
+    m=CATALOG.model(K3)
+    assert m['resolutions']==['model_default'] and m['param_map']['resolution'] is None
+    s=GenerationSettings(K3,'9:16','model_default',11,'3d_animation',False)
+    assert not {'mode','resolution','quality'} & build_request(s,'walk')['body'].keys()
+    for value in ['std','pro','720p','1080p','4k']:
+        assert validate(replace(s,resolution=value))
+
+
+@pytest.mark.parametrize('previous',['model_default','720p','1080p'])
+def test_switching_to_o3_uses_standard_without_automatic_upgrade(previous):
+    s=GenerationSettings(O3,'9:16',previous,11,'3d_animation',False)
+    adjusted,notes=reconcile(s)
+    assert adjusted.resolution=='std' and 'resolution' in notes

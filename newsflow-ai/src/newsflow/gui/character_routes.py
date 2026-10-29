@@ -8,6 +8,7 @@ from newsflow.character.compose import digest
 from newsflow.character.schema import CharacterError, load_character
 from newsflow.character.service import SAFE_ERRORS
 from newsflow.creation.catalog import API_MODELS, SelectionError, read_defaults, save_defaults
+from newsflow.publishing.service import PublishingError
 
 from .routes import go, page
 
@@ -29,6 +30,22 @@ router=APIRouter()
 def video_models():
     from newsflow.character.kling import catalog
     return catalog()
+
+
+@router.post('/api/studio/characters/library')
+def save_character_reference(request: Request, reference: Annotated[UploadFile, File()],
+                             save_to_library: bool=Form(False), name: str=Form('',max_length=255)):
+    if not save_to_library:
+        raise HTTPException(422, '내 캐릭터 저장을 선택하세요.')
+    if reference.content_type not in {'image/png', 'image/jpeg'}:
+        raise HTTPException(422, 'PNG/JPG, 최대 10MB 이미지를 선택하세요.')
+    try:
+        raw = reference.file.read(10*1024*1024+1)
+        return request.app.state.image_studio.save_character(raw, name or reference.filename)
+    except (PublishingError, ValueError):
+        raise HTTPException(422, '이미지 형식·크기 또는 저장한 캐릭터 정보를 확인하세요.') from None
+    except OSError:
+        raise HTTPException(409, '캐릭터를 저장하지 못했습니다. 저장 공간과 파일 접근 권한을 확인하세요.') from None
 
 
 @router.post('/api/studio/characters/auto-story')
@@ -67,7 +84,8 @@ def reuse_story(request: Request,job_id: str,settings: str=Form(...,max_length=1
                 episode_limit: str=Form(...),day_limit: str=Form(...),request_id: str=Form(...),
                 dialogues: str=Form('[]',max_length=8000),consent: bool=Form(False),
                 reference: Annotated[UploadFile | None, File()]=None,
-                reference_job: str=Form('',max_length=32)):
+                reference_job: str=Form('',max_length=32),
+                reference_asset: str=Form('',max_length=80)):
     import json
     try:
         parsed=json.loads(settings)
@@ -76,7 +94,12 @@ def reuse_story(request: Request,job_id: str,settings: str=Form(...,max_length=1
         invalid=field_errors(parsed)
         if invalid:return JSONResponse({'error':'모델 지원 설정을 확인하세요.','fields':invalid},status_code=422)
         service=request.app.state.character
+        sources=int(bool(reference and reference.filename))+int(bool(reference_job))+int(bool(reference_asset))
+        if sources>1:
+            raise ValueError('Select one reference')
         raw=reference.file.read(10*1024*1024+1) if reference and reference.filename else None
+        if reference_asset:
+            raw=request.app.state.image_studio.asset(reference_asset).read_bytes()
         identifier,created=service.reuse_story(job_id,parsed,episode_limit,day_limit,
                               request_id=request_id,dialogues=spoken,reference=raw,
                               reference_job=reference_job,consent=consent)
@@ -86,7 +109,7 @@ def reuse_story(request: Request,job_id: str,settings: str=Form(...,max_length=1
                 'dialogueSource':job['reused_story']['dialogue_source']}
     except (OSError,*SAFE_ERRORS):
         return JSONResponse({'error':'복사를 중단했습니다. 원본 작업과 작업 이력을 확인하세요. 자동 재요청하지 않습니다.'},status_code=409)
-    except (ValueError,TypeError):
+    except (ValueError,TypeError,PublishingError):
         return JSONResponse({'error':'저장 스토리·참조 이미지·영상 설정을 확인하세요.'},status_code=422)
 
 

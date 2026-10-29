@@ -72,7 +72,7 @@ def create(studio,**kw):
 @pytest.mark.parametrize('sound',['on','off'])
 @pytest.mark.parametrize('ratio',['9:16'])
 def test_payload_uses_only_model_supported_fields(model,sound,ratio):
-    settings={**DEFAULTS,'video_model':model,'sound':sound,'aspect_ratio':ratio}
+    settings={**DEFAULTS,'video_model':model,'native_resolution':'std' if model==O3 else 'model_default','sound':sound,'aspect_ratio':ratio}
     client=KlingClient(lambda:'synthetic',settings)
     p=client.payload('A character walks.',11,'https://example.com/reference.png')
     assert p['sound']==sound and p['duration']==11 and p['multi_shots'] is False
@@ -83,7 +83,7 @@ def test_payload_uses_only_model_supported_fields(model,sound,ratio):
         assert p['mode']=='std' and p['aspect_ratio']==ratio and len(p['image_urls'])==1
 
 @pytest.mark.parametrize('key,value',[('video_model','bytedance/seedance-2.0/reference-to-video'),
-    ('video_model','kling-pro'),('style','injected'),('aspect_ratio','4:3'),('output_quality','4k'),
+    ('video_model','kling-pro'),('style','injected'),('aspect_ratio','4:3'),('output_quality','8k'),
     ('sound','voice-id'),('duration',True),('duration',61),('script_model','not-supported')])
 def test_unsupported_configuration_is_rejected(key,value):
     with pytest.raises(CharacterError):validate({**DEFAULTS,key:value})
@@ -92,10 +92,35 @@ def test_snapshot_mutation_is_not_silently_accepted():
     frozen=snapshot(DEFAULTS);frozen['sound']='on'
     with pytest.raises(CharacterError):check(frozen)
 
+
+def test_legacy_o3_standard_alias_preserves_snapshot_and_builds_same_payload():
+    frozen=snapshot({**DEFAULTS,'video_model':O3,'native_resolution':'model_default'})
+    before=json.dumps(frozen,sort_keys=True)
+    saved=check(frozen)
+    payload=KlingClient(lambda:'synthetic',saved).payload('walk',11,'https://example.com/ref.png')
+    assert payload['mode']=='std' and saved['native_resolution']=='model_default'
+    assert json.dumps(frozen,sort_keys=True)==before
+
+
+@pytest.mark.parametrize('quality',['std','pro','4k'])
+def test_o3_quality_is_validated_and_forwarded_without_model_switch(quality):
+    value={**DEFAULTS,'video_model':O3,'native_resolution':quality}
+    client=KlingClient(lambda:'synthetic',value)
+    assert client.model==O3 and client.payload('walk',11,'https://example.com/ref.png')['mode']==quality
+
+
+@pytest.mark.parametrize('model,quality',[(K3,'model_default'),(O3,'4k')])
+def test_local_4k_size_is_independent_of_native_generation_quality(model,quality):
+    value={**DEFAULTS,'video_model':model,'native_resolution':quality,'output_quality':'4k'}
+    assert dimensions(value)==(2160,3840)
+    payload=KlingClient(lambda:'synthetic',value).payload('walk',11,'https://example.com/ref.png')
+    assert 'output_quality' not in payload and 'resolution' not in payload
+    assert payload.get('mode')==('4k' if model==O3 else None)
+
 @pytest.mark.parametrize('model',[K3,O3])
 def test_reference_original_is_preserved_and_ratio_is_prepared(tmp_path,model):
     original=normalize_reference(png('JPEG'));path=tmp_path/'reference.png';path.write_bytes(original)
-    settings={**DEFAULTS,'video_model':model,'aspect_ratio':'9:16'}
+    settings={**DEFAULTS,'video_model':model,'native_resolution':'std' if model==O3 else 'model_default','aspect_ratio':'9:16'}
     derived=generation_reference(tmp_path,settings)
     assert path.read_bytes()==original
     with Image.open(derived) as image:
@@ -129,7 +154,7 @@ def test_unknown_story_stays_unknown_without_replay(studio):
 
 def test_video_settings_reach_quote_then_freeze_with_approval_and_unknown_protection(studio):
     s=studio.service;i=create(studio);s.write(i,consent=True)
-    chosen={**DEFAULTS,'video_model':O3,'sound':'on','style':DEFAULTS['style'],'aspect_ratio':'9:16'}
+    chosen={**DEFAULTS,'video_model':O3,'native_resolution':'std','sound':'on','style':DEFAULTS['style'],'aspect_ratio':'9:16'}
     s.update_studio_settings(i,chosen,'10','20')
     assert 'soft 3D animated film style' in s.read(i)['prompts'][0]['prompt']
     with pytest.raises(CharacterError):s.prepare(i,consent=True)

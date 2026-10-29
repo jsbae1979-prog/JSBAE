@@ -483,6 +483,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings),
     [tab, setTab] = useState("upload");
   const [file, setFile] = useState<File | null>(null);
+  const [saveToLibrary, setSaveToLibrary] = useState(false);
+  const [libraryBusy, setLibraryBusy] = useState(false);
+  const [libraryMessage, setLibraryMessage] = useState("");
+  const librarySending = useRef(false);
+
   const [scenePreview, setScenePreview] = useState<{
     url: string;
     title: string;
@@ -544,17 +549,12 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     const model = caps?.modelsDetailed?.find((m: Item) => m.id === id);
     if (!model) return;
     const adjusted = adjustModel(settings, model, caps.character);
-    setSettings(
-      trialEnabled && !job
-        ? { ...adjusted.value, duration: 15, clip_seconds: 3 }
-        : adjusted.value,
-    );
+    setSettings(adjusted.value);
     setAdjustments(adjusted.notes);
   }
   function changeDuration(v: string) {
     const total = Number(v);
     if (
-      (trialEnabled && total !== 15) ||
       total < 15 ||
       total > 60 ||
       total % 5 !== 0 ||
@@ -583,10 +583,13 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     referenceJob && /^[a-f0-9]{32}$/.test(referenceJob)
       ? `/api/studio/characters/${referenceJob}/reference`
       : null;
-  const reference = file || clonedReference || selectedReference;
+  const savedReference = /^studio-[a-f0-9]{64}\.png$/.test(asset)
+    ? `/image-studio/assets/${asset}`
+    : null;
+  const reference = file || savedReference || clonedReference || selectedReference;
   const pendingReferenceCopy =
-    !!story && !!job?.studio_selection && !!(file || referenceJob);
-  const isBusy = busy || visibilityBusy || trialBusy,
+    !!story && !!job?.studio_selection && !!(file || referenceJob || asset);
+  const isBusy = busy || visibilityBusy || trialBusy || libraryBusy,
     frozen =
       !!job &&
       !["needs_script", "script_review", "script_failed"].includes(job.state) &&
@@ -603,7 +606,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     );
   const settingsFrozen = frozen && !pendingReferenceCopy;
   const legacy = !!job && !job.studio_selection;
-  const lockedDuration = !!job?.studio_selection;
+  const lockedScriptModel = !!job?.studio_selection;
+  const legacyStoryTiming = !!story && scenes.length !== 5;
   useEffect(() => {
     if (job?.studio_selection) {
       const s = job.studio_selection;
@@ -659,6 +663,39 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     } else reset();
     setFile(f);
     setAsset("");
+    setLibraryMessage("");
+    if (saveToLibrary) void saveReference(f);
+  }
+  async function saveReference(selectedFile: File) {
+    if (librarySending.current) return;
+    librarySending.current = true;
+    setLibraryBusy(true);
+    setLibraryMessage("");
+    try {
+      const body = new FormData();
+      body.set("csrf_token", c.view?.csrfToken ?? "");
+      body.set("save_to_library", "true");
+      body.set("reference", selectedFile);
+      const response = await fetch("/api/studio/characters/library", {
+        method: "POST",
+        credentials: "same-origin",
+        body,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !/^studio-[a-f0-9]{64}\.png$/.test(data.id ?? ""))
+        throw Error(typeof data.detail === "string" ? data.detail : "캐릭터를 저장하지 못했습니다. 이미지와 저장 공간을 확인하세요.");
+      setLibraryMessage(data.created ? "내 캐릭터에 저장했습니다." : "이미 저장된 캐릭터입니다. 기존 이름과 이미지를 유지했습니다.");
+      try {
+        await c.load();
+      } catch {
+        setLibraryMessage("캐릭터는 저장됐습니다. 내 캐릭터 목록을 보려면 화면을 새로고침하세요.");
+      }
+    } catch (error) {
+      setLibraryMessage(error instanceof Error ? error.message : "저장 결과를 확인하지 못했습니다. 내 캐릭터 목록을 확인하세요.");
+    } finally {
+      librarySending.current = false;
+      setLibraryBusy(false);
+    }
   }
   async function post(url: string, body: FormData) {
     body.set("csrf_token", c.view?.csrfToken ?? "");
@@ -811,7 +848,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       isBusy ||
       !job?.id ||
       !story ||
-      !(file || referenceJob || selectedReference) ||
+      !(file || referenceJob || asset || selectedReference) ||
       !job.studio_selection ||
       !currentModel?.audio.native ||
       storyReuseRequests[job.id]
@@ -833,6 +870,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       body.set("request_id", requestId);
       if (file && body instanceof FormData) body.set("reference", file);
       else if (referenceJob) body.set("reference_job", referenceJob);
+      else if (asset) body.set("reference_asset", asset);
       const response = await fetch(
         `/api/studio/characters/${sourceId}/reuse-story`,
         {
@@ -960,7 +998,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       </ActionButton>
     );
   }
-  const refAssets = c.view?.catalog.referenceAssets ?? [];
+  const myCharacters: Item[] = c.view?.catalog.myCharacters ?? [];
   let elapsed = 0;
   return (
     <>
@@ -1080,6 +1118,23 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   hidden
                   onChange={(e) => selectFile(e.target.files?.[0])}
                 />
+                <label className="check">
+                  <input
+                    type="checkbox"
+                    checked={saveToLibrary}
+                    disabled={isBusy}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setSaveToLibrary(checked);
+                      if (checked && file) void saveReference(file);
+                    }}
+                  />
+                  내 캐릭터에 저장
+                </label>
+                <small>선택하면 업로드한 이미지를 파일 이름으로 저장합니다.</small>
+                {libraryBusy && <small role="status">캐릭터 저장 중…</small>}
+                {libraryMessage && <small role="status">{libraryMessage}</small>}
+
                 <h3>최근 사용 캐릭터</h3>
                 <div className="kling-character-recent">
                   {jobs
@@ -1167,22 +1222,25 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 이 캐릭터로 새 작업
               </button>
             )}
+            {tab === "mine" && myCharacters.length === 0 && (
+              <Empty>참조 이미지를 업로드하고 내 캐릭터에 저장을 선택하세요.</Empty>
+            )}
             {tab === "mine" && (
               <Select
-                label="저장한 참조 소재"
+                label="내 캐릭터"
                 disabled={isBusy}
                 value={asset}
                 onChange={(v) => {
-                  reset();
+                  if (story && job?.studio_selection) {
+                    setReferenceJob("");
+                    setFailure("");
+                    pending.current = null;
+                  } else reset();
                   setAsset(v);
                   setFile(null);
                 }}
                 options={Object.fromEntries(
-                  refAssets.map((x: Item | string) =>
-                    typeof x === "string"
-                      ? [x, x]
-                      : [x.id ?? x.key, x.label ?? x.title],
-                  ),
+                  myCharacters.map((x) => [x.id, x.label]),
                 )}
               />
             )}
@@ -1342,14 +1400,14 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </summary>
               <Select
                 label="Claude 모델"
-                disabled={isBusy || lockedDuration}
+                disabled={isBusy || lockedScriptModel}
                 value={settings.script_model}
                 onChange={(v) => setting("script_model", v)}
                 options={c.view?.catalog.apiModels?.claude_api ?? []}
               />
               <p>
                 전체 {settings.duration}초 ·{" "}
-                {Math.min(5, Math.floor(60 / settings.clip_seconds))}장면. 영상
+                {story ? scenes.length : 5}장면. 영상
                 길이는 영상 설정에서 선택하며, 장면은 자동으로 구성합니다.
               </p>
               <label>
@@ -1424,33 +1482,29 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       icon={<Clock3 size={18} />}
                       value={String(settings.duration)}
                       onChange={changeDuration}
-                      disabled={isBusy || frozen || lockedDuration}
+                      disabled={isBusy || settingsFrozen || legacyStoryTiming}
                       values={Object.fromEntries(
                         Array.from({ length: 10 }, (_, i) => 15 + i * 5).map(
                           (total) => [String(total), `${total}초`],
                         ),
                       )}
                       supported={
-                        trialEnabled
-                          ? ["15"]
-                          : (currentModel?.duration_values ?? [])
-                              .map((seconds: number) => seconds * 5)
-                              .filter(
-                                (total: number) => total >= 15 && total <= 60,
-                              )
-                              .map(String)
+                        (currentModel?.duration_values ?? [])
+                          .map((seconds: number) => seconds * 5)
+                          .filter(
+                            (total: number) => total >= 15 && total <= 60,
+                          )
+                          .map(String)
                       }
-                      unsupportedHint={
-                        trialEnabled
-                          ? "이번 테스트는 15초 단일 생성입니다."
-                          : undefined
-                      }
+                      unsupportedHint="이 모델은 전체 길이에 필요한 장면 길이를 지원하지 않아요."
                       hint={
-                        trialEnabled
-                          ? "이번 테스트는 15초 단일 생성 · Higgsfield 요청 1회입니다."
-                          : adjustments.clip_seconds
-                            ? "선택 모델에서 지원하는 영상 길이를 적용합니다."
-                            : "스토리 생성 후 영상 길이가 고정됩니다."
+                        legacyStoryTiming
+                          ? "기존 3~4장면 스토리 길이는 유지됩니다. 새 스토리를 만들면 5장면 길이를 선택할 수 있어요."
+                          : settingsFrozen
+                            ? "진행된 작업의 길이는 보관됩니다. 새 참조를 선택해 스토리를 복사한 뒤 길이를 바꾸세요."
+                            : story
+                              ? `5장면 × ${settings.clip_seconds}초 · 저장 또는 새 영상 복사 시 적용 · Claude 추가 호출 없음`
+                              : `5장면 × ${settings.clip_seconds}초 · 총 ${settings.duration}초`
                       }
                     />
                     <CapabilitySelect
@@ -1474,21 +1528,30 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       hint={adjustments.aspect_ratio}
                     />
                     <CapabilitySelect
-                      label="화질"
+                      label="모델 생성 화질"
                       icon={<Monitor size={18} />}
-                      value={settings.native_resolution}
+                      value={currentModel?.param_map?.resolution === "mode" && settings.native_resolution === "model_default" ? "std" : settings.native_resolution}
                       onChange={(v) => setting("native_resolution", v)}
                       values={{
-                        model_default: "모델 기본 (Standard)",
+                        model_default: "Standard 고정 화질",
                         ...Object.fromEntries(
                           (caps?.resolutionChoices ?? []).map((x: string) => [
                             x,
-                            x,
+                            ({ std: "Standard", pro: "Pro", "4k": "4K" } as Record<string, string>)[x] ?? x,
                           ]),
                         ),
                       }}
                       supported={currentModel?.resolutions ?? []}
-                      hint={adjustments.native_resolution}
+                      hint={[adjustments.native_resolution, currentModel?.quality_note].filter(Boolean).join(" ")}
+                    />
+                    <CapabilitySelect
+                      label="최종 저장 크기"
+                      icon={<Monitor size={18} />}
+                      value={settings.output_quality}
+                      onChange={(v) => setting("output_quality", v)}
+                      values={caps?.outputQualities ?? {}}
+                      supported={Object.keys(caps?.outputQualities ?? {})}
+                      hint={`최종 파일: ${settings.output_quality === "4k" ? "4K (2160p)" : settings.output_quality}. 모델 생성 화질과 별도인 로컬 저장 크기이며, 원본 크기에 따라 축소·확대될 수 있습니다.`}
                     />
                     <CapabilitySelect
                       label="음성"
@@ -1518,20 +1581,13 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       id="kling-video-advanced"
                       className="kling-video-advanced-body"
                     >
-                      <Select
-                        label="최종 저장 크기 · 로컬 FFmpeg"
-                        disabled={isBusy || settingsFrozen}
-                        value={settings.output_quality}
-                        onChange={(v) => setting("output_quality", v)}
-                        options={caps?.outputQualities ?? {}}
-                      />
                       <p>
                         캐릭터 스타일·9:16은 캐릭터 설정으로 고정됩니다.
                         스타일은 프롬프트에 반영되며 결과는 모델마다 다를 수
                         있습니다.
                       </p>
                       <p>
-                        화질은 모델의 네이티브 지원값만 전송합니다. 로컬 1080p
+                        화질은 모델의 네이티브 지원값만 전송합니다. 로컬 1080p·4K
                         저장에는 확대가 포함될 수 있으며, 네이티브 1080p 생성과
                         다릅니다.
                       </p>

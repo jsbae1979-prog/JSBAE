@@ -60,6 +60,19 @@ def quote_settings_editable(job):
                for scene in job.get('scenes',[]))
 
 
+def retime_studio_story(story, settings):
+    """Apply timing to a local copy of five saved beats, without rewriting content."""
+    from .studio_story import StudioStoryboard
+    revised=StudioStoryboard.model_validate(story).model_dump()
+    if len(revised['scenes'])!=5:
+        if sum(scene['seconds'] for scene in revised['scenes'])!=settings['duration']:
+            raise CharacterError('retime')
+        return StudioStoryboard.model_validate(revised)
+    for scene in revised['scenes']:
+        scene['seconds']=settings['clip_seconds']
+    return StudioStoryboard.model_validate(revised)
+
+
 def generation_rows(job):
     """New prepares use each saved story beat as one actual provider clip."""
     rows=job['prompts']
@@ -285,9 +298,7 @@ class CharacterService:
                 raise CharacterError('busy')
             if not source.get('script') or not source.get('studio_selection'):
                 raise CharacterError('blocked')
-            old=check(source['studio_selection'])
-            if (chosen['duration']!=source['duration'] or chosen['clip_seconds']!=old['clip_seconds']
-                    or chosen['script_model']!=source['claude_model']):
+            if chosen['script_model']!=source['claude_model']:
                 raise CharacterError('blocked')
             source_reference=self.folder(source_id)/'reference.png'
             raw=reference_bytes(source_reference)
@@ -302,7 +313,7 @@ class CharacterService:
                     raise CharacterError('reference')
                 raw=normalize_reference(selected_raw)
             reference_hash=hashlib.sha256(raw).hexdigest()
-            story=StudioStoryboard.model_validate(source['script'])
+            story=retime_studio_story(source['script'],chosen)
             provided=dialogues not in (None,[])
             if provided and (not isinstance(dialogues,list) or len(dialogues)!=len(story.scenes)
                              or chosen['sound']!='on'):
@@ -320,6 +331,9 @@ class CharacterService:
             provenance={'source_job_id':source_id,'source_story_sha256':fingerprint(source['script']),
                         'source_plan_hash':source['plan_hash'],'source_reference_sha256':source_reference_hash,
                         'dialogue_source':'user_edited' if provided else 'story_inferred_audio'}
+            if [s['seconds'] for s in source['script']['scenes']]!=[s.seconds for s in revised.scenes]:
+                provenance['retimed']={'source_duration':source['duration'],'duration':chosen['duration'],
+                                      'clip_seconds':chosen['clip_seconds']}
             if reference is not None or reference_job:
                 provenance['target_reference_sha256']=reference_hash
             body_hash=fingerprint(['reuse_story_v1',provenance,revised.model_dump(),frozen,str(per),str(daily),
@@ -366,19 +380,20 @@ class CharacterService:
 
     def update_studio_settings(self, identifier, settings, episode_limit, day_limit):
         from .kling import snapshot, check
-        from .studio_story import StudioStoryboard, prompts as studio_prompts
+        from .studio_story import prompts as studio_prompts
         frozen=snapshot(settings)
+        chosen=check(frozen)
         per,daily=amount(episode_limit),amount(day_limit)
         with self.lock():
             job=self.read(identifier)
             if not quote_settings_editable(job): raise CharacterError('blocked')
-            if (settings['duration']!=job['duration'] or settings['clip_seconds']!=check(job['studio_selection'])['clip_seconds']
-                    or settings['script_model']!=job['claude_model']):
+            if chosen['script_model']!=job['claude_model']:
                 raise CharacterError('blocked')
             if per>daily: raise CharacterError('budget')
+            revised=retime_studio_story(job['script'],chosen)
             if job['state'] in {'quoted','prepare_failed'}:
                 archived={key:deepcopy(job[key]) for key in (
-                    'state','studio_selection','model','episode_limit','day_limit','plan_hash','prompts','scenes',
+                    'state','studio_selection','model','duration','script','episode_limit','day_limit','plan_hash','prompts','scenes',
                     'quote_total_usd','quoted_at','quote_key_id','quote_hash','message','prepare_failure','failure','error')
                     if key in job}
                 archived['archived_at']=now().isoformat()
@@ -386,9 +401,10 @@ class CharacterService:
                 for key in ('quote_total_usd','quoted_at','quote_key_id','quote_hash','message','prepare_failure','failure','error'):
                     job.pop(key,None)
                 job.update(state='script_review',scenes=[])
-            job.update(studio_selection=frozen,model=settings['video_model'],
+            job.update(studio_selection=frozen,model=chosen['video_model'],duration=chosen['duration'],
+                       script=revised.model_dump(),
                        episode_limit=str(per),day_limit=str(daily))
-            job['prompts']=studio_prompts(StudioStoryboard.model_validate(job['script']),settings,job['character'])
+            job['prompts']=studio_prompts(revised,chosen,job['character'])
             job['plan_hash']=self.plan_hash(job)
             self.save(job)
 

@@ -22,7 +22,7 @@
         "voice_select": false
       },
       "checked_on": "2026-10-29",
-      "quality_note": "Standard 기본 화질 · 별도 네이티브 해상도 파라미터 없음",
+      "quality_note": "Standard 고정 화질 · 이 모델 API에는 화질·해상도 선택 항목이 없습니다. 최종 저장 크기는 별도 설정입니다.",
       "pricing_ref": "https://open.higgsfield.ai/pricing",
       "id": "kling-video/v3.0/std/image-to-video",
       "label": "Kling 3.0 Standard",
@@ -70,9 +70,11 @@
       "enabled": true,
       "reference_image": true,
       "resolutions": [
-        "model_default"
+        "std",
+        "pro",
+        "4k"
       ],
-      "default_resolution": "model_default",
+      "default_resolution": "std",
       "duration": {
         "min": 3,
         "max": 15,
@@ -84,10 +86,10 @@
         "voice_select": false
       },
       "checked_on": "2026-10-29",
-      "quality_note": "Standard 기본 화질 · 별도 네이티브 해상도 파라미터 없음",
+      "quality_note": "API 화질 모드: Standard / Pro / 4K. 선택한 모드를 전송하며 최종 저장 크기는 별도 설정입니다.",
       "pricing_ref": "https://open.higgsfield.ai/pricing",
       "id": "kling-video/o3/image-reference",
-      "label": "Kling O3 Standard",
+      "label": "Kling O3",
       "api_path": "kling-video/o3/image-reference",
       "recommended": false,
       "aspect_ratios": [
@@ -99,13 +101,12 @@
       "aspect_ratio_mode": "native",
       "param_map": {
         "aspect_ratio": "aspect_ratio",
-        "resolution": null,
+        "resolution": "mode",
         "duration": "duration",
         "audio": "sound",
         "reference": "image_urls"
       },
       "fixed_params": {
-        "mode": "std",
         "shot_type": "customize",
         "multi_shots": false
       },

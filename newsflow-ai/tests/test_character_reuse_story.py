@@ -105,7 +105,7 @@ def test_explicit_korean_dialogue_changes_only_the_new_copy(studio):
     with pytest.raises(CharacterError):
         s.reuse_story(source,settings,'2.50','20',request_id=uuid4().hex,consent=False)
     with pytest.raises(CharacterError):
-        s.reuse_story(source,{**settings,'duration':30,'clip_seconds':6},'2.50','20',request_id=uuid4().hex,consent=True)
+        s.reuse_story(source,{**settings,'duration':30,'clip_seconds':5},'2.50','20',request_id=uuid4().hex,consent=True)
     assert len(s.listing())==2 and studio.writer.calls==0
 
 
@@ -511,3 +511,32 @@ def test_normal_operating_quote_projection_hides_trial_caps_without_changing_tri
     normal=module_view(request,'characters')
     assert 'liveTrial' not in normal['catalog']['characterStudio']
     assert s._approved_character_trial is trial and trial.policy['total_limit_usd']=='4.50'
+
+
+
+def test_saved_my_character_is_selected_for_local_story_copy_without_changing_source(studio):
+    from newsflow.creation.image_studio import ImageStudio
+    from newsflow.gui.character_routes import reuse_story
+    from newsflow.character.kling import normalize_reference
+    service = studio.service
+    source, settings, provider = source_job(studio)
+    before = files(service, source)
+    library = ImageStudio(service.sessions, service.root.parent, None)
+    saved = library.save_character(replacement_png(), 'selected character.png')
+    request = SimpleNamespace(app=SimpleNamespace(state=SimpleNamespace(character=service,image_studio=library)))
+    arguments = dict(request=request,job_id=source,settings=json.dumps(settings),episode_limit='2.50',
+                     day_limit='20',request_id=uuid4().hex,dialogues='[]',consent=True,
+                     reference=None,reference_job='',reference_asset=saved['id'])
+    copied_response = reuse_story(**arguments)
+    copied = service.read(copied_response['id'])
+    expected = hashlib.sha256(normalize_reference(library.asset(saved['id']).read_bytes())).hexdigest()
+    assert copied['reference_sha256'] == expected != service.read(source)['reference_sha256']
+    assert copied['reused_story']['target_reference_sha256'] == expected
+    assert files(service, source) == before
+    assert len(library.characters()) == 1
+    invalid = reuse_story(**{**arguments,'request_id':uuid4().hex,'reference_asset':'../../private.png'})
+    assert invalid.status_code == 422
+    ambiguous = reuse_story(**{**arguments,'request_id':uuid4().hex,'reference_job':source})
+    assert ambiguous.status_code == 422
+    assert len(service.listing()) == 2 and files(service,source) == before
+    assert studio.writer.calls == 0 and provider.calls == 0 and provider.uploads == 0

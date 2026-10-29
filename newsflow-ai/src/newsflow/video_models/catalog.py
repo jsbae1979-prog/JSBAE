@@ -43,7 +43,7 @@ def validate_catalog(document):
         ids.add(m['id'])
         if (not _strings(m['aspect_ratios'],{'9:16','16:9','1:1','4:3','3:4','21:9'})
                 or m['default_aspect_ratio'] not in m['aspect_ratios']
-                or not _strings(m['resolutions'],{'model_default','480p','720p','1080p','4k'})
+                or not _strings(m['resolutions'],{'model_default','std','pro','480p','720p','1080p','4k'})
                 or m['default_resolution'] not in m['resolutions']
                 or m['aspect_ratio_mode'] not in {'native','reference-padding'}):raise CatalogError('모델 선택지를 확인하세요.')
         duration_values(m)
@@ -53,7 +53,7 @@ def validate_catalog(document):
         pm=m['param_map']
         if not isinstance(pm,dict) or set(pm)!={'aspect_ratio','resolution','duration','audio','reference'}:
             raise CatalogError('param_map 항목을 확인하세요.')
-        allowed={None,'aspect_ratio','resolution','duration','sound','generate_audio','image_url','image_urls'}
+        allowed={None,'aspect_ratio','resolution','mode','duration','sound','generate_audio','image_url','image_urls'}
         if any(x not in allowed for x in pm.values()) or pm['duration']!='duration' or pm['reference'] not in {'image_url','image_urls'}:
             raise CatalogError('지원하지 않는 파라미터 매핑입니다.')
         if (m['audio']['native'] and pm['audio'] not in {'sound','generate_audio'}) or (not m['audio']['native'] and pm['audio'] is not None):
@@ -64,6 +64,9 @@ def validate_catalog(document):
                 or m['fixed_params'].get('mode','std')!='std'
                 or m['fixed_params'].get('shot_type','customize')!='customize'
                 or m['fixed_params'].get('multi_shots',False) is not False):raise CatalogError('고정 Standard 파라미터를 확인하세요.')
+        if ((pm['resolution']=='mode' and (not set(m['resolutions'])<={'std','pro','4k'} or 'mode' in m['fixed_params']))
+                or (pm['resolution']!='mode' and set(m['resolutions']) & {'std','pro'})):
+            raise CatalogError('모델 화질 모드 매핑을 확인하세요.')
         for key in ('docs_ref','pricing_ref'):
             if not isinstance(m[key],str) or not m[key].startswith('https://open.higgsfield.ai/'):
                 raise CatalogError('공식 문서 출처를 확인하세요.')
@@ -142,7 +145,7 @@ def character_config():
             or doc['schema_version']!=1 or doc['style_id'] not in styles() or doc['aspect_ratio']!='9:16'
             or type(doc['clip_seconds']) is not int or not 3<=doc['clip_seconds']<=12
             or doc['max_total_seconds']!=60 or type(doc['audio_default']) is not bool
-            or doc['output_quality'] not in {'720p','1080p'}):raise CatalogError('캐릭터 고정 설정을 확인하세요.')
+            or doc['output_quality'] not in {'720p','1080p','4k'}):raise CatalogError('캐릭터 고정 설정을 확인하세요.')
     return doc
 
 @dataclass(frozen=True)
@@ -190,9 +193,10 @@ def reconcile(settings,catalog=CATALOG):
     if settings.aspect_ratio not in m['aspect_ratios']:
         values['aspect_ratio']='9:16' if '9:16' in m['aspect_ratios'] else m['default_aspect_ratio'];notes['aspect_ratio']='지원 비율로 변경했어요.'
     if settings.resolution not in m['resolutions']:
-        rank={'model_default':0,'480p':480,'720p':720,'1080p':1080,'4k':2160}
+        rank={'model_default':0,'std':0,'pro':1,'480p':480,'720p':720,'1080p':1080,'4k':2160}
         available=sorted(m['resolutions'],key=lambda x:rank[x]);under=[x for x in available if rank[x]<=rank.get(settings.resolution,0)]
-        values['resolution']=under[-1] if under else available[0];notes['resolution']=f"이 모델은 {settings.resolution}를 지원하지 않아 {values['resolution']}로 변경했어요."
+        values['resolution']=m['default_resolution'] if m['param_map']['resolution']=='mode' else under[-1] if under else available[0]
+        notes['resolution']=f"이 모델은 {settings.resolution}를 지원하지 않아 {values['resolution']}로 변경했어요."
     durations=duration_values(m)
     if type(settings.duration) is not int or settings.duration not in durations:
         values['duration']=min(durations,key=lambda x:(abs(x-settings.duration),x)) if type(settings.duration) is int else m['duration']['default'];notes['duration']='지원되는 가장 가까운 길이로 변경했어요.'
@@ -206,6 +210,9 @@ def reconcile(settings,catalog=CATALOG):
 def estimate(settings,total_seconds,catalog=CATALOG):
     if validate(settings,catalog):raise CatalogError('견적 전 모델 설정을 확인하세요.')
     m=catalog.model(settings.model_id);p=m['pricing'];rate=p['per_second']['on' if settings.audio else 'off']
+    unverified_mode=m['param_map']['resolution']=='mode' and settings.resolution!='std'
+    if unverified_mode:rate=None
     return {'currency':'USD','minimum':str(Decimal(rate[0])*total_seconds) if rate else None,
             'maximum':str(Decimal(rate[1])*total_seconds) if rate else None,'seconds':total_seconds,
-            'basis':p['basis'],'note':p['note'],'official_quote':False,'audio_price_verified':p['audio_price_verified']}
+            'basis':p['basis'],'note':'선택한 화질 모드의 단가는 공식 견적 전 미확정입니다.' if unverified_mode else p['note'],
+            'official_quote':False,'audio_price_verified':p['audio_price_verified']}

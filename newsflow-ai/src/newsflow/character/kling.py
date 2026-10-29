@@ -1,6 +1,6 @@
 """Model-specific Higgsfield contracts, public schemas checked 2026-10-29.
 
-Standard is an explicit model/mode, never silently promoted to Pro/4K.
+Standard is the default; only an explicit O3 quality selection requests Pro/4K.
 Style is our prompt preset; output size is local FFmpeg output, not native quality.
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ from newsflow.video_models.catalog import (CATALOG,GenerationSettings,build_requ
 MODELS={m['id']:m['label'] for m in CATALOG.refresh()['models'] if m['enabled']}
 STYLES={k:s['label'] for k,s in styles().items()}
 RATIOS={'9:16':'9:16 (쇼츠)','16:9':'16:9 (가로)','1:1':'1:1 (정사각형)'}
-OUTPUTS={'720p':'720p 출력','1080p':'1080p 출력 · 로컬 확대 가능'}
+OUTPUTS={'720p':'720p 출력','1080p':'1080p 출력 · 로컬 확대 가능','4k':'4K (2160p) 출력 · 로컬 확대 가능'}
 CHARACTER=character_config()
 RECOMMENDED=next((m for m in CATALOG.refresh()['models'] if m['enabled'] and m['recommended']),
                  next(m for m in CATALOG.refresh()['models'] if m['enabled']))
@@ -31,7 +31,10 @@ DEFAULTS={'video_model':RECOMMENDED['id'],'style':CHARACTER['style_id'],'aspect_
           'duration':CHARACTER['clip_seconds']*5,'script_model':'claude-sonnet-4-6'}
 
 def as_generation(value,seconds=None):
-    return GenerationSettings(value['video_model'],value['aspect_ratio'],value['native_resolution'],
+    # Historical O3 snapshots used model_default for the same explicit std mode.
+    # Resolve the alias at execution only; never rewrite frozen settings or quotes.
+    quality='std' if value['video_model']==O3 and value['native_resolution']=='model_default' else value['native_resolution']
+    return GenerationSettings(value['video_model'],value['aspect_ratio'],quality,
                               value['clip_seconds'] if seconds is None else seconds,value['style'],value['sound']=='on')
 
 def validate(value):
@@ -39,10 +42,10 @@ def validate(value):
     v=dict(value)
     try:
         issues=validate_generation(as_generation(v))
-        count=min(5,60//v['clip_seconds']) if type(v['clip_seconds']) is int and v['clip_seconds']>0 else 0
         if (issues or v['style']!=CHARACTER['style_id'] or v['aspect_ratio']!=CHARACTER['aspect_ratio']
                 or v['output_quality'] not in OUTPUTS or v['sound'] not in {'on','off'}
-                or type(v['duration']) is not int or not 3<=count<=5 or v['duration']!=count*v['clip_seconds']
+                or type(v['duration']) is not int or not 15<=v['duration']<=60 or v['duration']%5
+                or v['duration']!=5*v['clip_seconds']
                 or v['script_model'] not in API_MODELS['claude_api']):raise ValueError
     except (ValueError,KeyError,TypeError,ZeroDivisionError):raise CharacterError() from None
     return v
@@ -84,7 +87,7 @@ def check(value):
 
 def dimensions(value):
     v=validate(value)
-    short=720 if v['output_quality']=='720p' else 1080
+    short={'720p':720,'1080p':1080,'4k':2160}[v['output_quality']]
     return {'9:16':(short,short*16//9), '16:9':(short*16//9,short), '1:1':(short,short)}[v['aspect_ratio']]
 
 def catalog():
@@ -94,7 +97,7 @@ def catalog():
             'styles':STYLES,'stylePresets':list(styles().values()),'ratios':RATIOS,'character':CHARACTER,
             'outputQualities':OUTPUTS,'sounds':{'off':'끄기 (무음)','on':'켜기'},
             'capabilities':{m['id']:{'ratio':m['aspect_ratio_mode'],'quality':m['quality_note']} for m in models},
-            'revision':fingerprint(data),'resolutionChoices':['480p','720p','1080p','4k'],
+            'revision':fingerprint(data),'resolutionChoices':['std','pro','480p','720p','1080p','4k'],
             'durationChoices':sorted(set(n for m in models for n in duration_values(m))),
             'cacheWarning':CATALOG.warning,'accountVerified':False,'nativeVoiceSelection':False}
 

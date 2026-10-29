@@ -1,5 +1,8 @@
 """Local image drafts and existing one-shot image adapter; no startup generation."""
 import hashlib
+import json
+import os
+import tempfile
 import re
 import warnings
 from io import BytesIO
@@ -48,8 +51,9 @@ class ImageStudio:
             if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
                 raise PublishingError('이미지 무결성을 확인하세요.')
         else:
-            with path.open('xb') as handle:
-                handle.write(content)
+            self._atomic_create(path, content)
+            if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+                raise PublishingError('이미지 무결성을 확인하세요.')
         return name
 
     def asset(self, name):
@@ -73,6 +77,82 @@ class ImageStudio:
                 self.asset(path.name)
                 result.append(path.name)
             except (ValueError, OSError, PublishingError):
+                continue
+        return result
+
+    def _atomic_create(self, path, content):
+        """Publish a complete file without replacing any existing user content."""
+        self.images.safe(path, path.parent)
+        with tempfile.NamedTemporaryFile(dir=path.parent, prefix='.character-', delete=False) as handle:
+            temporary = self.images.safe(type(path)(handle.name), path.parent)
+            try:
+                handle.write(content)
+                handle.flush()
+                os.fsync(handle.fileno())
+            except BaseException:
+                handle.close()
+                temporary.unlink(missing_ok=True)
+                raise
+        try:
+            try:
+                if os.name == 'nt':
+                    # Windows rename is atomic and refuses an existing destination.
+                    os.rename(temporary, path)
+                else:
+                    os.link(temporary, path)
+                return True
+            except FileExistsError:
+                return False
+        finally:
+            temporary.unlink(missing_ok=True)
+
+    @staticmethod
+    def _character_label(name):
+        # Only a display name is retained; uploaded paths never enter the catalog.
+        label = re.split(r'[\\/]', str(name or ''))[-1]
+        label = ''.join(c for c in label if ord(c) >= 32 and ord(c) != 127)
+        label = re.sub(r'[<>:"|?*]', '', label).strip(' .')[:80].strip()
+        return label or '내 캐릭터'
+
+    def _character_record(self, path):
+        folder = self.images.root / 'my-characters'
+        self.images.safe(path, folder)
+        if path.stat().st_size > 4096:
+            raise PublishingError('저장한 캐릭터 정보를 확인하세요.')
+        row = json.loads(path.read_text(encoding='utf-8'))
+        if (not isinstance(row, dict) or row.get('version') != 1
+                or not isinstance(row.get('asset'), str) or not isinstance(row.get('label'), str)
+                or self._character_label(row['label']) != row['label']
+                or row['asset'] != 'studio-' + path.stem + '.png'):
+            raise PublishingError('저장한 캐릭터 정보를 확인하세요.')
+        self.asset(row['asset'])
+        return {'id': row['asset'], 'label': row['label'],
+                'url': '/image-studio/assets/' + row['asset']}
+
+    def save_character(self, raw, name=''):
+        """Explicit local-library save only: no project, provider, or generation."""
+        asset = self.asset_bytes(raw)
+        folder = self.images.root / 'my-characters'
+        self.images.safe(folder, folder).mkdir(parents=True, exist_ok=True)
+        path = self.images.safe(folder / (asset[7:-4] + '.json'), folder)
+        content = json.dumps({'version': 1, 'asset': asset, 'label': self._character_label(name)},
+                             ensure_ascii=False).encode('utf-8')
+        created = self._atomic_create(path, content)
+        # Duplicate saves retain the original name and bytes, including after restart.
+        return {**self._character_record(path), 'created': created}
+
+    def characters(self):
+        folder = self.images.root / 'my-characters'
+        if not folder.exists():
+            return []
+        self.images.safe(folder, folder)
+        result = []
+        for path in sorted(folder.glob('*.json'))[:1000]:
+            if not re.fullmatch(r'[a-f0-9]{64}\.json', path.name):
+                continue
+            try:
+                result.append(self._character_record(path))
+            except (OSError, ValueError, TypeError, PublishingError):
                 continue
         return result
 
