@@ -40,6 +40,9 @@ def load_config(root):
     layout = json.loads((root / 'app/layout.json').read_bytes())
     if layout.get('liveStartStopConnected') is not True:
         raise Blocked('live-start-stop-not-provisioned')
+    if layout.get('portableFirstRun') is True:
+        from .portable import load_portable
+        return load_portable(root, layout)
     if layout.get('operatingProfile') == 'restored-local-operation':
         from .operation import load_operating
         return load_operating(root, layout)
@@ -103,6 +106,9 @@ def _read_session(profile):
 
 
 def _profile(config, create):
+    if config.profile_kind == 'portable-local-operation':
+        from .portable import prepare_profile
+        return prepare_profile(config, create)
     from newsflow.distribution.windows_profile import current_sid, private_directory
     import win32security
     if not config.profile.exists() and not create:
@@ -284,7 +290,7 @@ def start(config, plan):
             if marker.exists():
                 raise Blocked('owned-session-unresolved-no-retry')
             credential_boundary = None
-            if config.profile_kind in {'restored-private-validation', 'restored-local-operation'}:
+            if config.profile_kind in {'restored-private-validation', 'restored-local-operation', 'portable-local-operation'}:
                 from .restored_install import disable_credential_decryption
                 credential_boundary = disable_credential_decryption()
             from newsflow.main import create_app
@@ -310,7 +316,7 @@ def start(config, plan):
             if config.profile_kind == 'restored-private-validation':
                 from .restored_install import RestoredRequests
                 request_boundary = RestoredRequests(LocalAccess(app, session))
-            elif config.profile_kind == 'restored-local-operation':
+            elif config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .operation import OperatingRequests
                 request_boundary = OperatingRequests(LocalAccess(app, session))
             elif config.profile_kind == 'synthetic-local-work':

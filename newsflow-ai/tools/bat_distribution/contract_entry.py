@@ -22,7 +22,8 @@ def main(argv=None) -> int:
         print('BLOCKED: publisher trust and live ZIP installer are not provisioned.', file=sys.stderr)
         return 3
     from bat_distribution.restored_install import restored_paths
-    if not ((args.program_root.parent / 'validation-launch.json').is_file()
+    if not ((args.program_root / 'connection.json').is_file()
+            or (args.program_root.parent / 'validation-launch.json').is_file()
             or (restored_paths()[0] / 'launch.json').is_file()):
         print('BLOCKED: live Start/Stop adapter is not provisioned.', file=sys.stderr)
         return 2

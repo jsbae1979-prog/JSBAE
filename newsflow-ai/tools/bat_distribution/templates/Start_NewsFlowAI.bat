@@ -1,6 +1,6 @@
 @echo off
 setlocal DisableDelayedExpansion
-rem Private validation only; requires provisioned synthetic validation layout.
+rem Explicit per-user portable profile; no shared operating data or automatic port change.
 if not exist "%~dp0app\runtime\python.exe" (
   echo BLOCKED: bundled Python runtime is missing.
   exit /b 2
