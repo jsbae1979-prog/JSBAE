@@ -7,7 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from bat_distribution.lifecycle import Blocked
-from bat_distribution.windows_live import character_trial_policy
+from bat_distribution.windows_live import character_trial_policy, active_character_trial_policy
 
 
 def configured(tmp_path, *, expires=None):
@@ -47,3 +47,16 @@ def test_other_profile_never_adopts_trial(tmp_path):
     config,_=configured(tmp_path)
     config.profile_kind='restored-private-validation'
     assert character_trial_policy(config) is None
+
+
+def test_closed_reuse_policy_retires_only_operation_wrapper_without_changing_approval():
+    policy={'reuse_source_job_id':'a'*32,'allow_submit':False,'expires_at':'historical'}
+    original=dict(policy)
+    for kind in ('restored-local-operation','portable-local-operation'):
+        config=SimpleNamespace(profile_kind=kind)
+        assert active_character_trial_policy(config,policy) is None
+        assert policy==original
+        for active in ({**policy,'allow_submit':True},{'allow_submit':False},None):
+            assert active_character_trial_policy(config,active) is active
+    config=SimpleNamespace(profile_kind='restored-private-validation')
+    assert active_character_trial_policy(config,policy) is policy

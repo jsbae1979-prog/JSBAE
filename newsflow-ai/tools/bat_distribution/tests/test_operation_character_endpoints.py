@@ -19,6 +19,51 @@ from newsflow.distribution.local_access import LaunchSession, LocalAccess
 JOB = 'a' * 32
 
 
+def complete_request(coroutine):
+    # These fake ASGI calls await only inline fakes; no OS loop/socket is needed.
+    with pytest.raises(StopIteration) as completed:
+        coroutine.send(None)
+    return completed.value.value
+
+
+def test_local_render_delegates_to_existing_auth_boundary_without_bypass():
+    received=[]
+    async def authenticated(scope,receive,send):
+        received.append(scope)
+        authorized=dict(scope['headers']).get(b'x-synthetic-auth')==b'accepted'
+        await send({'type':'http.response.start','status':204 if authorized else 403,'headers':[]})
+        await send({'type':'http.response.body','body':b''})
+    boundary=OperatingRequests(authenticated)
+    async def request(headers):
+        sent=[]
+        async def receive():return {'type':'http.request','body':b'reviewed=true','more_body':False}
+        async def send(event):sent.append(event)
+        scope={'type':'http','method':'POST','path':'/character/'+JOB+'/render','headers':headers}
+        await boundary(scope,receive,send)
+        assert received[-1] is scope
+        return sent[0]['status']
+    assert complete_request(request([]))==403
+    assert complete_request(request([(b'x-synthetic-auth',b'accepted')]))==204
+    assert len(received)==2
+
+
+def test_render_exception_keeps_external_actions_and_inexact_paths_closed():
+    received=[]
+    async def inner(scope,receive,send):received.append(scope)
+    boundary=OperatingRequests(inner)
+    async def request(method,path):
+        sent=[]
+        async def receive():return {'type':'http.request','body':b'','more_body':False}
+        async def send(event):sent.append(event)
+        await boundary({'type':'http','method':method,'path':path,'headers':[]},receive,send)
+        assert sent[0]['status']==403
+    for method,path in [('POST','/character/'+JOB+'/'+action) for action in ('submit','check','prepare','write')]+[
+            ('GET','/character/'+JOB+'/render'),('POST','/character/'+JOB+'/render/'),
+            ('POST','/character/'+'A'*32+'/render'),('POST','/api/studio/characters/auto-story')]:
+        complete_request(request(method,path))
+    assert not received
+
+
 def recorder():
     received = []
 
@@ -40,6 +85,7 @@ def recorder():
 @pytest.mark.parametrize('method,path', [
     ('GET', '/api/studio/video-models'), ('HEAD', '/api/studio/video-models'),
     ('POST', '/api/studio/characters/' + JOB + '/settings'),
+    ('POST', '/character/' + JOB + '/render'),
     ('GET', '/api/samples/character-robot/copy-file'),
     ('HEAD', '/api/samples/character-robot/copy-file'),
     ('GET', '/character/' + JOB + '/clips/1'),
@@ -60,7 +106,9 @@ def test_only_exact_local_paths_reach_inner_app(method, path):
     ('POST', '/api/studio/video-models'), ('GET', '/api/studio/characters/' + JOB + '/settings'),
     ('POST', '/api/studio/characters/auto-story'),
     ('POST', '/character/' + JOB + '/write'), ('POST', '/character/' + JOB + '/prepare'),
-    ('POST', '/character/' + JOB + '/submit'), ('POST', '/character/' + JOB + '/render'),
+    ('POST', '/character/' + JOB + '/submit'), ('POST', '/character/' + JOB + '/check'),
+    ('GET', '/character/' + JOB + '/render'), ('POST', '/character/' + JOB + '/render/'),
+    ('POST', '/character/' + 'A' * 32 + '/render'),
     ('POST', '/api/samples/character-robot/copy-file'),
     ('POST', '/api/samples/character-robot/copy'), ('POST', '/api/samples/character-robot/visibility'),
     ('GET', '/api/samples'), ('GET', '/api/samples/character-robot/file'),
@@ -105,6 +153,11 @@ def test_new_endpoints_keep_real_localaccess_origin_and_original_csrf_middleware
         requests.append('settings')
         return {'synthetic': True}
 
+    @app.post('/character/{job}/render')
+    async def render(job: str):
+        requests.append('render')
+        return {'synthetic': True}
+
     # Load precisely the existing two middleware functions, not the app factory.
     source = Path(__file__).resolve().parents[3] / 'src/newsflow/main.py'
     tree = ast.parse(source.read_text(encoding='utf8'))
@@ -133,5 +186,12 @@ def test_new_endpoints_keep_real_localaccess_origin_and_original_csrf_middleware
     assert requests == ['models']
     assert client.post(target, data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 200
     assert requests == ['models', 'settings']
-    assert client.post('/api/studio/characters/auto-story', data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 403
+    target = '/character/' + JOB + '/render'
+    assert client.post(target, data={'csrf_token': 'bad'}, headers={'Origin': session.origin}).status_code == 403
+    assert client.post(target, data={'csrf_token': csrf}, headers={'Origin': 'https://outside.invalid'}).status_code == 403
     assert requests == ['models', 'settings']
+    assert client.post(target, data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 200
+    assert requests == ['models', 'settings', 'render']
+    assert client.post('/character/' + JOB + '/submit', data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 403
+    assert client.post('/api/studio/characters/auto-story', data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 403
+    assert requests == ['models', 'settings', 'render']

@@ -369,6 +369,15 @@ def character_trial_unknowns(config):
     return value
 
 
+def active_character_trial_policy(config, policy):
+    """Closed reuse approvals remain archival data, not a local-operation gate."""
+    if (config.profile_kind in {'restored-local-operation', 'portable-local-operation'}
+            and isinstance(policy, dict) and 'reuse_source_job_id' in policy
+            and policy.get('allow_submit') is False):
+        return None
+    return policy
+
+
 def start(config, plan):
     from filelock import FileLock
     from newsflow.config import Settings
@@ -383,7 +392,7 @@ def start(config, plan):
         with FileLock(str(config.profile / 'desktop.lock')).acquire(timeout=0):
             if marker.exists():
                 raise Blocked('owned-session-unresolved-no-retry')
-            trial_policy = character_trial_policy(config)
+            trial_policy = active_character_trial_policy(config, character_trial_policy(config))
             trial_unknowns = character_trial_unknowns(config) if trial_policy is not None else None
             character_native_factory = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
