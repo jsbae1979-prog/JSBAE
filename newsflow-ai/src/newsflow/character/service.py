@@ -88,6 +88,7 @@ class CharacterService:
         self.video_override, self.video_keys = video, video_keys
         self.budget = budget or APIBudgetService(sessions)
         self.composer = composer or compose
+        self.daily_limit_approval = None  # Optional server-owned scoped approval, never a form field.
 
     def video_for(self, job):
         if self.video_override is not None or not (job.get('selection') or job.get('studio_selection')):
@@ -241,6 +242,90 @@ class CharacterService:
                  'made_for_kids':None,'studio_selection':frozen,
                  'studio_request_id':request_id,'studio_body_hash':body_hash}
             self.save(job)
+            return identifier,True
+
+    def reuse_story(self, source_id, settings, episode_limit, day_limit, *, request_id, dialogues=None, consent=False):
+        """Local explicit copy only. Never resubmit or mutate the source job."""
+        self.consent(consent)
+        from .kling import snapshot,check
+        from .studio_story import StudioStoryboard,prompts as studio_prompts
+        if not isinstance(request_id,str) or not re.fullmatch(r'[a-f0-9]{32}',request_id):
+            raise CharacterError('blocked')
+        frozen=snapshot(settings)
+        chosen=check(frozen)
+        per,daily=amount(episode_limit),amount(day_limit)
+        if per>daily:raise CharacterError('budget')
+        with self.lock():
+            source=self.read(source_id)
+            if source['state'] in {'writing','preparing','generating','retry_quoting','composing'}:
+                raise CharacterError('busy')
+            if not source.get('script') or not source.get('studio_selection'):
+                raise CharacterError('blocked')
+            old=check(source['studio_selection'])
+            if (chosen['duration']!=source['duration'] or chosen['clip_seconds']!=old['clip_seconds']
+                    or chosen['script_model']!=source['claude_model']):
+                raise CharacterError('blocked')
+            reference=self.folder(source_id)/'reference.png'
+            raw=reference_bytes(reference)
+            reference_hash=hashlib.sha256(raw).hexdigest()
+            if reference_hash!=source.get('reference_sha256'):raise CharacterError('reference')
+            story=StudioStoryboard.model_validate(source['script'])
+            provided=dialogues not in (None,[])
+            if provided and (not isinstance(dialogues,list) or len(dialogues)!=len(story.scenes)
+                             or chosen['sound']!='on'):
+                raise CharacterError('blocked')
+            revised=story.model_dump()
+            for index,scene in enumerate(revised['scenes']):
+                text=(dialogues[index] if provided else scene.get('narration','').strip() or scene['caption'])
+                if chosen['sound']=='on':
+                    if (not isinstance(text,str) or not 1<=len(text.strip())<=160
+                            or not re.search(r'[가-힣]',text)):
+                        raise CharacterError('blocked')
+                    scene['narration']=text.strip()
+                else:scene['narration']=''
+            revised=StudioStoryboard.model_validate(revised)
+            provenance={'source_job_id':source_id,'source_story_sha256':fingerprint(source['script']),
+                        'source_plan_hash':source['plan_hash'],'source_reference_sha256':reference_hash,
+                        'dialogue_source':'user_edited' if provided else 'saved_dialogue_or_caption'}
+            body_hash=fingerprint(['reuse_story_v1',provenance,revised.model_dump(),frozen,str(per),str(daily)])
+            # Durable local request identity also covers a failed/uncertain file copy.
+            # Such receipts are preserved, never silently retried or deleted.
+            for receipt in self.root.glob('*/reuse-request.json'):
+                if receipt.parent!=self.folder(receipt.parent.name):raise CharacterError('blocked')
+                if receipt.is_symlink() or receipt.stat().st_size>4096:raise CharacterError('blocked')
+                prior=json.loads(receipt.read_text(encoding='utf8'))
+                if prior.get('request_id')!=request_id:continue
+                if prior.get('body_hash')!=body_hash or prior.get('state')!='complete':
+                    raise CharacterError('blocked')
+                self.read(prior['id'])
+                return prior['id'],False
+            for existing in self.listing():
+                if existing.get('studio_request_id')==request_id:raise CharacterError('blocked')
+            identifier=uuid4().hex
+            folder=self.folder(identifier)
+            folder.mkdir()
+            receipt=folder/'reuse-request.json'
+            pending={'id':identifier,'request_id':request_id,'body_hash':body_hash,'state':'copying_or_unknown'}
+            with receipt.open('x',encoding='utf8') as stream:
+                json.dump(pending,stream);stream.flush();os.fsync(stream.fileno())
+            with (folder/'reference.png').open('xb') as stream:
+                stream.write(raw);stream.flush();os.fsync(stream.fileno())
+            job={'id':identifier,'created_at':now().isoformat(),'state':'script_review','topic':source['topic'],
+                 'model':chosen['video_model'],'claude_model':source['claude_model'],
+                 'character':dict(source['character']),'script':revised.model_dump(),
+                 'reference_sha256':reference_hash,'episode_limit':str(per),'day_limit':str(daily),
+                 'events':[{'stage':'reuse_story','at':now().isoformat(),'source_job_id':source_id}],
+                 'scenes':[],'reported_billed_usd':None,'duration':chosen['duration'],
+                 'made_for_kids':source.get('made_for_kids'),'studio_selection':frozen,
+                 'studio_request_id':request_id,'studio_body_hash':body_hash,'reused_story':provenance}
+            job['prompts']=studio_prompts(revised,chosen,job['character'])
+            job['plan_hash']=self.plan_hash(job)
+            self.save(job)
+            pending['state']='complete'
+            temporary=receipt.with_suffix('.new')
+            with temporary.open('x',encoding='utf8') as stream:
+                json.dump(pending,stream);stream.flush();os.fsync(stream.fileno())
+            os.replace(temporary,receipt)
             return identifier,True
 
     def update_studio_settings(self, identifier, settings, episode_limit, day_limit):
@@ -406,11 +491,24 @@ class CharacterService:
             day=(now()+timedelta(hours=9)).date().isoformat()
             used=sum((day_exposure(j,day) for j in self.listing()),start=Decimal(0))
             total=amount(job['quote_total_usd'])
-            if used+total>amount(job['day_limit']) or total>amount(job['episode_limit']):
+            daily=amount(job['day_limit'])
+            approval=self.daily_limit_approval(job,day) if callable(self.daily_limit_approval) else None
+            if approval is not None:
+                if (not isinstance(approval,dict) or set(approval)!={'scope','trial_id','job_id','policy_sha256',
+                        'base_policy_sha256','limit_usd','day'}
+                        or approval['scope']!='character_trial_daily_total' or approval['job_id']!=identifier
+                        or approval['day']!=day or approval['limit_usd']!='4.50'
+                        or not re.fullmatch(r'[a-f0-9]{32}',approval['trial_id'])
+                        or any(not re.fullmatch(r'[a-f0-9]{64}',approval[k])
+                               for k in ('policy_sha256','base_policy_sha256'))):
+                    raise CharacterError('budget')
+                daily=amount(approval['limit_usd'])
+            if used+total>daily or total>amount(job['episode_limit']):
                 raise CharacterError('budget')
             # Unknown submissions continue consuming this approved quote exposure; no automatic release.
             job['approved_day']=day
             job['quote_approvals']=[{'day':day,'usd':str(total),'scope':'initial'}]
+            if approval is not None:job['quote_approvals'][0]['daily_limit_approval']=dict(approval)
             job['state']='generating'
             self.save(job)
             for scene in job['scenes']:
@@ -421,9 +519,23 @@ class CharacterService:
                     scene['handle']=self.video_for(job).submit_scene(scene['payload'],scene['idempotency_key'])
                     scene['state']='submitted'
                     self.save(job)
-                except Exception:  # noqa: BLE001 - persist a stopped state without secret supplier diagnostics
+                except Exception as exc:  # noqa: BLE001 - fixed non-sensitive diagnostics only
                     scene['state']='unknown'
                     job['state']='submission_unknown'
+                    details=getattr(exc,'safe_diagnostics',{})
+                    if isinstance(details,dict):
+                        from .higgsfield_client import SAFE_ERROR_CODES
+                        from newsflow.video.ai.contracts import ERROR_MESSAGES
+                        safe={}
+                        status=details.get('http_status')
+                        code=details.get('error_code')
+                        if type(status) is int and 100<=status<=599:safe['http_status']=status
+                        if isinstance(code,str) and code in SAFE_ERROR_CODES|set(ERROR_MESSAGES):safe['error_code']=code
+                        if safe:
+                            scene['submit_diagnostics']=safe
+                            job['submit_diagnostics']=dict(safe)
+                            job['message']='영상 요청을 중단했습니다. 자동 재전송하지 않습니다.'
+                            if 'http_status' in safe:job['message']+=f" HTTP {safe['http_status']}."
                     self.save(job)
                     raise CharacterError('blocked') from None
 

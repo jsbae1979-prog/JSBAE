@@ -403,7 +403,8 @@ def start(config, plan):
             if trial_policy is not None:
                 from .character_trial import install
                 character_trial = install(app, config.profile, trial_policy, character_native_factory,
-                                          unknown_review=trial_unknowns)
+                                          unknown_review=trial_unknowns,
+                                          policy_loader=lambda: character_trial_policy(config))
             key_registration = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .higgsfield_key_registration import install as install_key_registration

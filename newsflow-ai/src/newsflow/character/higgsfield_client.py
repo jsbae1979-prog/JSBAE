@@ -10,7 +10,7 @@ from urllib.parse import urlsplit
 
 from PIL import Image
 
-from newsflow.video.ai.contracts import ClipStatus, ProviderAmbiguousSubmit, ProviderResponseError
+from newsflow.video.ai.contracts import ERROR_MESSAGES, ClipStatus, ProviderAmbiguousSubmit, ProviderResponseError
 from newsflow.video.ai.download import safe_url
 from newsflow.video.ai.higgsfield import REQUEST_ID, HiggsfieldProvider, _NotSent, video_url
 
@@ -18,6 +18,36 @@ from .schema import CharacterError
 
 MODEL = 'bytedance/seedance-2.0/reference-to-video'
 MODEL_DOC = 'https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video'
+SAFE_ERROR_CODES = frozenset({
+    'authentication_error', 'authorization_error', 'invalid_api_key', 'unauthorized', 'forbidden',
+    'permission_denied', 'insufficient_credits', 'insufficient_balance', 'model_not_found',
+    'invalid_request', 'invalid_request_error', 'validation_error', 'rate_limit_exceeded',
+    'rate_limit_error', 'too_many_requests', 'request_timeout', 'internal_server_error',
+    'server_error', 'service_unavailable',
+})
+
+
+def _response_diagnostics(status, data, error_code, protected=()):
+    """Retain only bounded machine facts from this request's response, never provider prose."""
+    result = {'error_code': error_code if error_code in ERROR_MESSAGES else ProviderResponseError.code}
+    if type(status) is int and 100 <= status <= 599:
+        result['http_status'] = status
+    secrets = tuple(part for value in protected if isinstance(value, str)
+                    for part in (value, *value.split(':')) if part)
+
+    def unprotected(value):
+        return isinstance(value, str) and not any(secret in value for secret in secrets)
+
+    error = data.get('error')
+    for code in (data.get('error_code'), data.get('code'), error.get('code') if isinstance(error, dict) else None):
+        if isinstance(code, str) and code in SAFE_ERROR_CODES and unprotected(code):
+            result['error_code'] = code
+            break
+    for field in ('request_id', 'correlation_id'):
+        value = data.get(field)
+        if unprotected(value) and REQUEST_ID.fullmatch(value):
+            result[field] = value
+    return result
 
 
 def amount(value):
@@ -58,13 +88,30 @@ class HiggsfieldVideoClient(HiggsfieldProvider):
         # No SDK installation, new key store, or browser credential handling.
         super().__init__(credential or (lambda: os.environ.get('HF_KEY', '')), **kwargs)
 
-    def _safe_call(self, method, path, payload=None, extra=None):
+    def _safe_call(self, method, path, payload=None, extra=None, *, _diagnostics=None):
         status, data = self._call(method, path, payload, extra)
-        if not 200 <= status < 300:
-            raise self._error(status, submit=path == '/'+getattr(self, 'model', MODEL))
-        key = self.credential().strip()
+        submit = path == '/'+getattr(self, 'model', MODEL)
+        try:
+            key = self.credential().strip()
+        except Exception:  # A second key-store read cannot replace an already received HTTP failure.
+            key = ''
+        error = self._error(status, submit=submit) if not 200 <= status < 300 else None
+        diagnostics = _response_diagnostics(
+            status, data, error.code if error else ProviderAmbiguousSubmit.code if submit else ProviderResponseError.code,
+            (key, (extra or {}).get('Idempotency-Key')),
+        )
+        if _diagnostics is not None:
+            _diagnostics.update(diagnostics)
+        if error:
+            error.safe_diagnostics = diagnostics
+            raise error
         if key and key in json.dumps(data):
-            raise ProviderResponseError()
+            error = ProviderResponseError()
+            diagnostics['error_code'] = error.code
+            if _diagnostics is not None:
+                _diagnostics.update(diagnostics)
+            error.safe_diagnostics = diagnostics
+            raise error
         return data
 
     def upload_reference(self, path: Path) -> str:
@@ -103,8 +150,10 @@ class HiggsfieldVideoClient(HiggsfieldProvider):
     def submit_scene(self, payload, idem_key):
         if not re.fullmatch(r'[a-f0-9-]{8,64}', idem_key):
             raise CharacterError()
+        diagnostics = {}
         try:
-            data = self._safe_call('POST', '/'+getattr(self, 'model', MODEL), payload, {'Idempotency-Key': idem_key})
+            data = self._safe_call('POST', '/'+getattr(self, 'model', MODEL), payload,
+                                   {'Idempotency-Key': idem_key}, _diagnostics=diagnostics)
             rid = data.get('request_id')
             status_url = request_url(data.get('status_url'), rid)
             if data.get('status') not in {'queued', 'in_progress', 'completed', 'failed', 'nsfw', 'canceled'}:
@@ -112,8 +161,13 @@ class HiggsfieldVideoClient(HiggsfieldProvider):
             return {'request_id': rid, 'status_url': status_url}
         except _NotSent:
             raise
+        except ProviderAmbiguousSubmit as exc:
+            exc.safe_diagnostics = diagnostics or {'error_code': ProviderAmbiguousSubmit.code}
+            raise
         except (ConnectionError, ProviderResponseError, TypeError):
-            raise ProviderAmbiguousSubmit() from None
+            error = ProviderAmbiguousSubmit()
+            error.safe_diagnostics = diagnostics or {'error_code': error.code}
+            raise error from None
 
     def check(self, handle):
         url = request_url(handle.get('status_url'), handle.get('request_id'))

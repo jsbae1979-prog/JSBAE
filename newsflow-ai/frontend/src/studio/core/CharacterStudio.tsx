@@ -484,6 +484,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [file, setFile] = useState<File | null>(null);
   const [asset, setAsset] = useState("");
   const [referenceJob, setReferenceJob] = useState("");
+  const [storyReuseRequests, setStoryReuseRequests] = useState<
+    Record<string, string>
+  >({});
   const [busy, setBusy] = useState(false),
     [history, setHistory] = useState(false),
     [help, setHelp] = useState(false),
@@ -774,6 +777,88 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       );
     } finally {
       await c.load();
+      setBusy(false);
+      sending.current = false;
+    }
+  }
+  async function reuseStoryForVideo() {
+    if (
+      sending.current ||
+      isBusy ||
+      !job?.id ||
+      !story ||
+      !selectedReference ||
+      !job.studio_selection ||
+      !currentModel?.audio.native ||
+      storyReuseRequests[job.id]
+    )
+      return;
+    const sourceId = String(job.id);
+    const requestId = crypto.randomUUID().replaceAll("-", "");
+    sending.current = true;
+    setStoryReuseRequests((value) => ({ ...value, [sourceId]: requestId }));
+    setBusy(true);
+    setFailure("");
+    try {
+      const body = new FormData();
+      body.set("csrf_token", c.view?.csrfToken ?? "");
+      body.set("consent", "true");
+      body.set("settings", JSON.stringify({ ...settings, sound: "on" }));
+      body.set("episode_limit", per);
+      body.set("day_limit", daily);
+      body.set("request_id", requestId);
+      const response = await fetch(
+        `/api/studio/characters/${sourceId}/reuse-story`,
+        {
+          method: "POST",
+          credentials: "same-origin",
+          body,
+        },
+      );
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok)
+        throw Error(
+          typeof data.error === "string"
+            ? data.error
+            : typeof data.detail === "string"
+              ? data.detail
+              : typeof data.message === "string"
+                ? data.message
+                : "새 영상 작업을 준비하지 못했습니다. 기존 작업은 유지됩니다. 자동 재요청하지 않습니다.",
+        );
+      if (
+        !/^[a-f0-9]{32}$/.test(data.id ?? "") ||
+        data.id === sourceId ||
+        data.reusedStory !== true ||
+        data.additionalClaudeCalls !== 0
+      ) {
+        throw Error(
+          "새 작업 준비 결과를 확인하지 못했습니다. 작업 이력을 확인하세요. 자동 재요청하지 않습니다.",
+        );
+      }
+      await c.load();
+      setId(data.id);
+      setFile(null);
+      setAsset("");
+      setReferenceJob("");
+      setTopic("");
+      setScene(-1);
+      pending.current = null;
+      c.setNotice(
+        "기존 스토리와 참조를 새 영상 작업으로 복사했습니다. Claude 추가 호출 없이 한국어 대사·소리 켜기를 요청합니다. 영상 생성은 별도 견적·승인 후 실행됩니다.",
+      );
+    } catch (error) {
+      setFailure(
+        error instanceof Error
+          ? error.message
+          : "새 영상 작업 준비 결과가 불명확합니다. 자동 재요청하지 않습니다.",
+      );
+      try {
+        await c.load();
+      } catch {
+        /* Never retry a local copy when its result is uncertain. */
+      }
+    } finally {
       setBusy(false);
       sending.current = false;
     }
@@ -1151,6 +1236,33 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   <State value={job?.state} />
                 </header>
                 <small>생성된 한글 장면 요약입니다.</small>
+                {trialEnabled &&
+                  job?.studio_selection &&
+                  selectedReference &&
+                  currentModel?.audio.native && (
+                    <div>
+                      <button
+                        type="button"
+                        disabled={
+                          isBusy ||
+                          !c.view?.commandsAvailable ||
+                          !!storyReuseRequests[job.id]
+                        }
+                        onClick={() => void reuseStoryForVideo()}
+                      >
+                        <Mic size={15} /> 이 스토리로 새 영상
+                      </button>
+                      <small>
+                        Claude 추가 호출 없음 · 원본·기존 한도 보존 · 소리
+                        켜기·한국어 대사 요청
+                      </small>
+                      <small>
+                        저장된 대사를 재사용하며, 대사가 없으면 한글 장면 요약을
+                        대사로 사용합니다. 새 영상 생성은 별도 승인이
+                        필요합니다.
+                      </small>
+                    </div>
+                  )}
                 {scenes.map((s, i) => (
                   <p key={i}>
                     <strong>
@@ -1352,7 +1464,17 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       supported={
                         currentModel?.audio.native ? ["off", "on"] : ["off"]
                       }
-                      hint={adjustments.sound}
+                      hint={
+                        settings.sound === "on"
+                          ? scenes.some(
+                              (item) =>
+                                typeof item.narration === "string" &&
+                                /[가-힣]/.test(item.narration),
+                            )
+                            ? "소리 켜짐 · 한국어 대사를 영상 모델에 전달합니다. 실제 발음·음색은 결과 검수가 필요합니다."
+                            : "소리 켜짐 · 모델 자체 소리 생성을 요청합니다. 생성 결과 검수가 필요합니다."
+                          : adjustments.sound
+                      }
                     />
                   </fieldset>
                   {videoAdvanced && (

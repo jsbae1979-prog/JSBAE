@@ -204,6 +204,8 @@ def character_rows(state):
                 "quote_hash",
                 "retry_hash",
                 "reported_billed_usd",
+                "reused_story",
+                "submit_diagnostics",
                 "episode_limit",
                 "day_limit",
                 "message",
@@ -513,7 +515,9 @@ def module_view(request: Request, module: Module):
         live_trial = getattr(state.character, "_approved_character_trial", None)
         if live_trial is not None:
             result["catalog"]["characterStudio"]["liveTrial"] = {
-                "enabled": True, "duration": 15, "totalLimitUsd": "3",
+                "enabled": True, "duration": 15, "totalLimitUsd": live_trial.policy["total_limit_usd"],
+                "sound": live_trial.policy["sound"],
+                "reuseStory": bool(live_trial.policy.get("reuse_source_job_id")),
                 "expiresAt": live_trial.policy["expires_at"],
             }
         from newsflow.character.kling import DEFAULTS, as_generation, validate as validate_character

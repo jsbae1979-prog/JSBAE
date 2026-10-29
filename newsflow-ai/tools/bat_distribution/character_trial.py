@@ -38,6 +38,7 @@ _ARCHIVE = '/api/studio/characters/trial-archive'
 _FIELDS = {'schemaVersion', 'id', 'expires_at', 'topic', 'reference_sha256',
            'script_model', 'video_model', 'duration', 'clip_seconds', 'scene_count',
            'sound', 'script_limit_usd', 'video_limit_usd', 'total_limit_usd'}
+_REUSE_FIELDS = _FIELDS | {'reuse_source_job_id', 'reuse_story_sha256', 'prior_trial_ids'}
 
 
 def _now():
@@ -123,9 +124,10 @@ def _reservation(sessions, identifier):
 
 
 def _policy(value):
-    if not isinstance(value, dict) or set(value) != _FIELDS:
+    if not isinstance(value, dict) or set(value) not in (_FIELDS, _REUSE_FIELDS, _REUSE_FIELDS | {'allow_submit'}):
         _fail()
     p = dict(value)
+    reuse = 'reuse_source_job_id' in p
     try:
         expiry = datetime.fromisoformat(p['expires_at'])
         if (type(p['schemaVersion']) is not int or p['schemaVersion'] != 1 or not _ID.fullmatch(p['id'])
@@ -134,10 +136,20 @@ def _policy(value):
                 or not re.fullmatch(r'[a-f0-9]{64}', p['reference_sha256'])
                 or p['script_model'] != CLAUDE or p['video_model'] != K3
                 or any(type(p[k]) is not int for k in ('duration', 'clip_seconds', 'scene_count'))
-                or (p['duration'], p['clip_seconds'], p['scene_count'], p['sound']) != (15, 3, 5, 'off')
-                or _money(p['script_limit_usd']) != Decimal('.25')
-                or _money(p['video_limit_usd']) not in {Decimal('2.50'), Decimal('2.75')}
-                or _money(p['total_limit_usd']) != Decimal('3')):
+                or (p['duration'], p['clip_seconds'], p['scene_count']) != (15, 3, 5)
+                or p['sound'] not in ({'on', 'off'} if reuse else {'off'})
+                or _money(p['script_limit_usd']) != (Decimal(0) if reuse else Decimal('.25'))
+                or _money(p['video_limit_usd']) not in ({Decimal('2.50')} if reuse else {Decimal('2.50'), Decimal('2.75')})
+                or _money(p['total_limit_usd']) not in ({Decimal('3'), Decimal('4.50')} if reuse else {Decimal('3')})):
+            _fail()
+        # Supporting a later explicit 4.50 policy does not install or approve one.
+        if reuse and (not isinstance(p['reuse_source_job_id'], str) or not _ID.fullmatch(p['reuse_source_job_id'])
+                or not isinstance(p['reuse_story_sha256'], str) or not re.fullmatch(r'[a-f0-9]{64}', p['reuse_story_sha256'])
+                or not isinstance(p['prior_trial_ids'], list) or len(p['prior_trial_ids']) > 1000
+                or any(not isinstance(item, str) or not _ID.fullmatch(item) or item == p['id']
+                       for item in p['prior_trial_ids'])
+                or len(set(p['prior_trial_ids'])) != len(p['prior_trial_ids'])
+                or ('allow_submit' in p and type(p['allow_submit']) is not bool)):
             _fail()
     except (KeyError, TypeError, ValueError):
         _fail()
@@ -255,7 +267,7 @@ class _Client:
 
     def _payload(self, payload):
         if (not isinstance(payload, dict) or payload.get('duration') != 15
-                or payload.get('sound') != 'off' or payload.get('multi_shots') is not False
+                or payload.get('sound') != self.trial.policy['sound'] or payload.get('multi_shots') is not False
                 or set(payload) != {'prompt', 'duration', 'sound', 'multi_shots', 'image_url'}):
             _fail()
 
@@ -317,14 +329,20 @@ class _Journal:
 
 
 class Trial:
-    def __init__(self, service, profile, policy, unknown_review=None):
+    def __init__(self, service, profile, policy, unknown_review=None, *, policy_loader=None):
         self.service, self.policy = service, _policy(policy)
+        self.reuse = 'reuse_source_job_id' in self.policy
+        if policy_loader is not None and not callable(policy_loader):
+            _fail()
+        self.policy_loader = policy_loader
         self.unknown_review = _unknown_review(unknown_review)
         self.unknown_review_hash = _hash(self.unknown_review)
         self.profile = _unlinked(Path(profile))
         if not self.profile.is_absolute() or not self.profile.is_dir():
             _fail()
         self.policy_hash = _hash(self.policy)
+        if self.reuse:
+            self.prior_exposure()
         self.directory = _private(_private(self.profile/'character-trials')/self.policy['id'])
         self.path = self.directory/'journal.json'
         if not self.path.exists():
@@ -333,7 +351,7 @@ class Trial:
                     _fail()
                 self.save({'schemaVersion': 1, 'policy_sha256': self.policy_hash,
                            'job_id': None, 'calls': {}, 'native_calls': {}, 'outcomes': {},
-                           'script': {'state': 'unspent', 'reserved_usd': '0'},
+                           'script': self.reused_script() if self.reuse else {'state': 'unspent', 'reserved_usd': '0'},
                            'video': {'state': 'unspent', 'reserved_usd': '0'}})
         with self.journal() as row:
             if self.unknown_review:
@@ -357,11 +375,172 @@ class Trial:
             os.fsync(stream.fileno())
         os.replace(temporary, path)
 
+    def reused_script(self):
+        return {'state': 'reused', 'reserved_usd': '0',
+                'source_job_id': self.policy['reuse_source_job_id'],
+                'source_story_sha256': self.policy['reuse_story_sha256']}
+
+    def _submit_scope(self):
+        """Read a fresh explicit approval without replacing the original scope or its hash."""
+        if not self.reuse or self.policy.get('allow_submit') is True:
+            return self.policy, None
+        if not callable(self.policy_loader) or _hash(self.policy) != self.policy_hash:
+            _fail()
+        try:
+            upgraded = _policy(self.policy_loader())
+        except Exception:
+            raise CharacterError('blocked') from None
+        mutable = {'allow_submit', 'total_limit_usd'}
+        if (_money(self.policy['total_limit_usd']) != Decimal('3')
+                or upgraded.get('allow_submit') is not True
+                or _money(upgraded['total_limit_usd']) not in {Decimal('3'), Decimal('4.50')}
+                or {k: v for k, v in self.policy.items() if k not in mutable}
+                != {k: v for k, v in upgraded.items() if k not in mutable}):
+            _fail()
+        return upgraded, {
+            'from_sha256': self.policy_hash, 'to_sha256': _hash(upgraded),
+            'changes': {'allow_submit': {'from': False, 'to': True},
+                        'total_limit_usd': {'from': self.policy['total_limit_usd'], 'to': upgraded['total_limit_usd']}},
+        }
+
+    def approved_daily_limit(self,job,day):
+        """A fresh submit overlay may approve daily exposure without editing a quoted plan."""
+        context=_CONTEXT.get()
+        if (not self.reuse or context is None or context.trial is not self
+                or context.action!='submit' or context.job_id!=job.get('id')):
+            return None
+        self._valid(context.job_id)
+        with self.journal(readonly=True) as row:
+            proof=row.get('submit_approval')
+            if (row['job_id']!=context.job_id or row['calls'].get('submit')!=1
+                    or row['outcomes'].get('submit')!='started_or_unknown'
+                    or row['native_calls'].get('submit_scene',0)!=0 or row['video']['state']!='reserved'
+                    or _money(row['video']['reserved_usd'])!=_money(job['quote_total_usd'])
+                    or not isinstance(proof,dict)):
+                return None
+            changes=proof.get('changes',{})
+            switch=changes.get('allow_submit',{})
+            total=changes.get('total_limit_usd',{})
+            if (proof.get('from_sha256')!=self.policy_hash
+                    or not isinstance(proof.get('to_sha256'),str)
+                    or not re.fullmatch(r'[a-f0-9]{64}',proof['to_sha256'])
+                    or switch!={'from':False,'to':True}
+                    or _money(total.get('from'))!=Decimal('3')
+                    or _money(total.get('to'))!=Decimal('4.50')):
+                return None
+            return {'scope':'character_trial_daily_total','trial_id':self.policy['id'],
+                    'job_id':context.job_id,'policy_sha256':proof['to_sha256'],
+                    'base_policy_sha256':self.policy_hash,'limit_usd':'4.50','day':day}
+
+    def prior_exposure(self):
+        """Read prior journals without acquiring their locks or rewriting any record."""
+        if not self.reuse:
+            return Decimal(0)
+        parent = _unlinked(self.profile/'character-trials')
+        listed, found, total = set(self.policy['prior_trial_ids']), set(), Decimal(0)
+        if not parent.exists():
+            if listed:
+                _fail()
+            return total
+        if not parent.is_dir():
+            _fail()
+        for entry in parent.iterdir():
+            entry = _unlinked(entry)
+            if not entry.is_dir():
+                continue
+            if not _ID.fullmatch(entry.name):
+                _fail()
+            if entry.name == self.policy['id']:
+                continue
+            path = _unlinked(entry/'journal.json')
+            if not path.is_file() or not 1 <= path.stat().st_size <= 32768:
+                _fail()
+            try:
+                row = json.loads(path.read_bytes())
+                if (not isinstance(row, dict) or type(row.get('schemaVersion')) is not int
+                        or row['schemaVersion'] != 1 or not isinstance(row.get('policy_sha256'), str)
+                        or not re.fullmatch(r'[a-f0-9]{64}', row['policy_sha256'])):
+                    _fail()
+                cost = Decimal(0)
+                for section in ('script', 'video'):
+                    item = row[section]
+                    if (not isinstance(item, dict) or not isinstance(item.get('state'), str)
+                            or item['state'] not in ({'unspent', 'reserved', 'reported', 'unknown_or_over_limit', 'reused'}
+                                                     if section == 'script' else {'unspent', 'reserved'})
+                            or not isinstance(item.get('reserved_usd'), str)
+                            or not 1 <= len(item['reserved_usd']) <= 32):
+                        _fail()
+                    cost += _money(item['reserved_usd'])
+            except (KeyError, TypeError, ValueError):
+                _fail()
+            if cost and entry.name not in listed:
+                _fail()
+            if entry.name in listed:
+                total += cost
+                found.add(entry.name)
+        if found != listed:
+            _fail()
+        return total
+
+    def _valid_reuse(self, identifier, job):
+        from newsflow.character.higgsfield_client import reference_bytes
+        from newsflow.character.studio_story import StudioStoryboard
+        p = self.policy
+        if identifier == p['reuse_source_job_id']:
+            _fail()
+        source = self.service.read(p['reuse_source_job_id'])
+        marker = job.get('reused_story')
+        selection = source.get('studio_selection', {})
+        if (not isinstance(selection, dict) or not isinstance(marker, dict) or set(marker) != {'source_job_id', 'source_story_sha256',
+                'source_plan_hash', 'source_reference_sha256', 'dialogue_source'}
+                or marker.get('source_job_id') != p['reuse_source_job_id']
+                or marker.get('source_story_sha256') != p['reuse_story_sha256']
+                or marker.get('source_reference_sha256') != p['reference_sha256']
+                or marker.get('dialogue_source') not in {'saved_dialogue_or_caption', 'user_edited'}
+                or not isinstance(source.get('plan_hash'), str)
+                or not re.fullmatch(r'[a-f0-9]{64}', source['plan_hash'])
+                or marker.get('source_plan_hash') != source['plan_hash']
+                or source.get('topic') != p['topic'] or source.get('reference_sha256') != p['reference_sha256']
+                or source.get('model') != p['video_model'] or source.get('claude_model') != p['script_model']
+                or source.get('duration') != 15 or selection.get('sound') not in {'on', 'off'}
+                or any(selection.get(k) != p[k] for k in ('video_model', 'script_model', 'duration', 'clip_seconds'))
+                or not isinstance(source.get('script'), dict) or not isinstance(job.get('script'), dict)
+                or _hash(source['script']) != p['reuse_story_sha256']):
+            _fail()
+        original, copied = source['script'], job['script']
+        try:
+            StudioStoryboard.model_validate(original)
+            StudioStoryboard.model_validate(copied)
+            if (len(original['scenes']) != 5 or any(scene['seconds'] != 3 for scene in original['scenes'])
+                    or {**original, 'scenes': [{k: v for k, v in scene.items() if k != 'narration'}
+                                               for scene in original['scenes']]}
+                    != {**copied, 'scenes': [{k: v for k, v in scene.items() if k != 'narration'}
+                                            for scene in copied['scenes']]}):
+                _fail()
+            for old, new in zip(original['scenes'], copied['scenes'], strict=True):
+                narration = new.get('narration', '')
+                if p['sound'] == 'off':
+                    if narration != '':
+                        _fail()
+                elif marker['dialogue_source'] == 'saved_dialogue_or_caption':
+                    if narration != (old.get('narration', '').strip() or old['caption']):
+                        _fail()
+                elif not narration.strip() or not re.search(r'[가-힣]', narration):
+                    _fail()
+        except (KeyError, TypeError, ValueError):
+            _fail()
+        for current in (identifier, p['reuse_source_job_id']):
+            reference = _unlinked(self.service.folder(current)/'reference.png')
+            if hashlib.sha256(reference_bytes(reference)).hexdigest() != p['reference_sha256']:
+                _fail()
+
     def _valid(self, identifier):
         if _now() >= datetime.fromisoformat(self.policy['expires_at']) or not _ID.fullmatch(identifier or ''):
             _fail()
         job = self.service.read(identifier)
         p, s = self.policy, job.get('studio_selection', {})
+        if self.reuse and (not isinstance(s, dict) or not isinstance(job.get('script'), dict)):
+            _fail()
         if (job.get('topic') != p['topic'] or job.get('reference_sha256') != p['reference_sha256']
                 or job.get('model') != p['video_model'] or job.get('claude_model') != p['script_model']
                 or job.get('duration') != 15
@@ -375,9 +554,13 @@ class Trial:
             scenes = job['script'].get('scenes', [])
             if len(scenes) != 5 or any(s.get('seconds') != 3 for s in scenes):
                 _fail()
+        if self.reuse:
+            self._valid_reuse(identifier, job)
         return job
 
     def active(self, provider, identifier=None):
+        if self.reuse and provider == 'claude':
+            _fail()
         context = _CONTEXT.get()
         if (context is not None and context.trial is self and provider == 'claude'
                 and context.action == 'authenticate' and context.job_id is None and identifier is None):
@@ -400,6 +583,8 @@ class Trial:
 
     def authenticate(self, *, consent):
         """One explicit model-metadata GET through the existing scoped key store."""
+        if self.reuse:
+            _fail()
         context = _CONTEXT.get()
         if (consent is not True or context is None or context.trial is not self
                 or context.action != 'authenticate' or context.job_id is not None
@@ -430,6 +615,12 @@ class Trial:
         if (context is None or context.trial is not self or context.action != 'status'
                 or context.job_id is not None):
             _fail()
+        if self.reuse:
+            expired = _now() >= datetime.fromisoformat(self.policy['expires_at'])
+            return {'ready': not expired, 'reasons': ['이번 제작 승인 시간이 만료되었습니다.'] if expired else [],
+                    'model': CLAUDE, 'keyConfigured': False, 'authenticationVerified': False,
+                    'authAttempted': False, 'archiveReady': False, 'unknownCount': 0, 'archivedCount': 0,
+                    'storyReused': True}
         model, verified = _authentication(self.service.sessions)
         with self.journal(readonly=True) as row:
             attempted = row['calls'].get('authenticate', 0) != 0
@@ -454,6 +645,8 @@ class Trial:
 
     def archive(self, *, consent):
         """Archive exactly the reviewed records; never delete or authorize replay."""
+        if self.reuse:
+            _fail()
         context = _CONTEXT.get()
         if (consent is not True or context is None or context.trial is not self
                 or context.action != 'archive' or context.job_id is not None
@@ -486,31 +679,47 @@ class Trial:
         context = _CONTEXT.get()
         if context is None or context.trial is not self or context.action != action or context.job_id != identifier:
             _fail()
+        if self.reuse and action == 'auto-story':
+            _fail()
         job = self._valid(identifier)
         required = {'auto-story': 'needs_script', 'prepare': 'script_review', 'submit': 'quoted',
                     'check': 'generating', 'render': 'clips_review'}
         if job['state'] != required[action]:
             _fail()
         with self.journal() as row:
-            if row['job_id'] is None and action == 'auto-story':
+            if row['job_id'] is None and action == ('prepare' if self.reuse else 'auto-story'):
                 row['job_id'] = identifier
             if row['job_id'] != identifier:
                 _fail()
             maximum = 60 if action == 'check' else 1
             if row['calls'].get(action, 0) >= maximum:
                 _fail()
-            if action != 'auto-story' and row['outcomes'].get('auto-story') != 'success':
-                _fail()
-            if action in {'prepare', 'submit'} and row['script']['state'] != 'reported':
-                _fail()
+            if self.reuse:
+                if row['script'] != self.reused_script():
+                    _fail()
+                if action != 'prepare' and row['outcomes'].get('prepare') != 'success':
+                    _fail()
+            else:
+                if action != 'auto-story' and row['outcomes'].get('auto-story') != 'success':
+                    _fail()
+                if action in {'prepare', 'submit'} and row['script']['state'] != 'reported':
+                    _fail()
             if action == 'submit':
+                if self.reuse and (row['video']['state'] != 'unspent'
+                        or row['native_calls'].get('submit_scene', 0)
+                        or 'submit' in row['outcomes'] or 'submit_approval' in row):
+                    _fail()
+                submit_policy, approval = self._submit_scope()
                 scenes = job.get('scenes', [])
                 total = sum((_money(scene['quote_usd']) for scene in scenes), Decimal(0))
+                prior = self.prior_exposure() if self.reuse else Decimal('.25')
                 if (len(scenes) != 1 or any(scene.get('state') != 'not_submitted' for scene in scenes)
                         or total != _money(job['quote_total_usd']) or total > _money(self.policy['video_limit_usd'])
-                        or total+Decimal('.25') > Decimal('3') or row['video']['state'] != 'unspent'
+                        or total+prior > _money(submit_policy['total_limit_usd']) or row['video']['state'] != 'unspent'
                         or row['outcomes'].get('prepare') != 'success'):
                     _fail()
+                if approval is not None:
+                    row['submit_approval'] = approval
                 row['video'].update(state='reserved', reserved_usd=str(total))
             row['calls'][action] = row['calls'].get(action, 0)+1
             row['outcomes'][action] = 'started_or_unknown'
@@ -548,6 +757,8 @@ class _Requests:
             return await self.normal(scope, receive, send)
         try:
             if not status and _now() >= datetime.fromisoformat(self.trial.policy['expires_at']):
+                _fail()
+            if self.trial.reuse and (authentication or archive or path == '/api/studio/characters/auto-story'):
                 _fail()
             if authentication or archive or status:
                 identifier, action = None, 'authenticate' if authentication else 'archive' if archive else 'status'
@@ -633,7 +844,7 @@ def _register_routes(app, trial):
     app.add_api_route(_ARCHIVE, archive, methods=['POST'], include_in_schema=False)
 
 
-def install(app, profile, policy, nativefactory, unknown_review=None):
+def install(app, profile, policy, nativefactory, unknown_review=None, *, policy_loader=None):
     """Configure one scope. nativefactory is the captured original DPAPI class.
 
     Global NoNativeCipher replacements remain unchanged. The returned native
@@ -642,7 +853,7 @@ def install(app, profile, policy, nativefactory, unknown_review=None):
     service = app.state.character
     if getattr(service, '_approved_character_trial', None) is not None:
         _fail()
-    trial = Trial(service, profile, policy, unknown_review)
+    trial = Trial(service, profile, policy, unknown_review, policy_loader=policy_loader)
     native = nativefactory()  # Does not decrypt any value or change the global factory.
     claude_cipher = _ReadOnlyCipher(trial, native, 'claude', AnthropicKeyStore.ENTROPY)
     video_cipher = _ReadOnlyCipher(trial, native, 'video', VideoAIKeyStore.ENTROPY)
@@ -653,6 +864,7 @@ def install(app, profile, policy, nativefactory, unknown_review=None):
     service.keys, service.video_keys = keys, video_keys
     service.writer = CharacterWriter(keys.key)
     service.budget = _Budget(trial, service.budget)
+    service.daily_limit_approval = trial.approved_daily_limit
     original_video = service.video_for
     def video_for(job):
         trial.active('video', job['id'])

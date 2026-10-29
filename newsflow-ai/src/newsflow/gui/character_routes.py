@@ -62,6 +62,30 @@ def studio_settings(request: Request,job_id:str,settings:str=Form(...),
         raise HTTPException(409,'견적 전 스토리 검토 단계에서만 영상 설정을 저장할 수 있습니다.') from None
 
 
+@router.post('/api/studio/characters/{job_id}/reuse-story')
+def reuse_story(request: Request,job_id: str,settings: str=Form(...,max_length=16000),
+                episode_limit: str=Form(...),day_limit: str=Form(...),request_id: str=Form(...),
+                dialogues: str=Form('[]',max_length=8000),consent: bool=Form(False)):
+    import json
+    try:
+        parsed=json.loads(settings)
+        spoken=json.loads(dialogues)
+        from newsflow.character.kling import field_errors
+        invalid=field_errors(parsed)
+        if invalid:return JSONResponse({'error':'모델 지원 설정을 확인하세요.','fields':invalid},status_code=422)
+        service=request.app.state.character
+        identifier,created=service.reuse_story(job_id,parsed,episode_limit,day_limit,
+                              request_id=request_id,dialogues=spoken,consent=consent)
+        job=service.read(identifier)
+        return {'id':identifier,'created':created,'state':job['state'],'source_id':job_id,
+                'reusedStory':True,'additionalClaudeCalls':0,
+                'dialogueSource':job['reused_story']['dialogue_source']}
+    except (OSError,*SAFE_ERRORS):
+        return JSONResponse({'error':'복사를 중단했습니다. 원본 작업과 작업 이력을 확인하세요. 자동 재요청하지 않습니다.'},status_code=409)
+    except (ValueError,TypeError):
+        return JSONResponse({'error':'저장 스토리·설정·한국어 대사를 확인하세요.'},status_code=422)
+
+
 @router.post('/api/studio/characters/{job_id}/visibility')
 def character_visibility(request: Request, job_id: str, scope: str=Form(...), hidden: bool=Form(...)):
     from newsflow.character.visibility import set_visibility
