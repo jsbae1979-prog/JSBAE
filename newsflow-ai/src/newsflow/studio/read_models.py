@@ -533,6 +533,9 @@ def module_view(request: Request, module: Module):
     if module == "characters":
         from newsflow.character.kling import catalog as character_catalog
         result["catalog"]["characterStudio"] = character_catalog()
+        result["catalog"]["characterStudio"]["manualExecutionEnabled"] = bool(
+            getattr(state.character, "_manual_character_execution_enabled",
+                    not getattr(state.character, "_operating_quote_only", False)))
         live_trial = getattr(state.character, "_approved_character_trial", None)
         if live_trial is not None and not getattr(state.character, "_operating_quote_only", False):
             result["catalog"]["characterStudio"]["liveTrial"] = {

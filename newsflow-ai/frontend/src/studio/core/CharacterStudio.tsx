@@ -503,8 +503,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     [history, setHistory] = useState(false),
     [help, setHelp] = useState(false),
     [videoAdvanced, setVideoAdvanced] = useState(false);
-  const [per, setPer] = useState("10"),
-    [failure, setFailure] = useState("");
+  const [perOverrides, setPerOverrides] = useState<Record<string, string>>({});
+  const [failure, setFailure] = useState("");
   const pending = useRef<string | null>(null),
     upload = useRef<HTMLInputElement>(null),
     sending = useRef(false);
@@ -520,6 +520,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       id === "new"
         ? undefined
         : (jobs.find((x) => String(x.id) === id) ?? jobs[0]);
+  const perKey = job?.id ? String(job.id) : "new";
+  const per = perOverrides[perKey] ?? (job ? String(job.episode_limit ?? "") : "10");
+  function setPer(value: string) {
+    setPerOverrides((current) => ({ ...current, [perKey]: value }));
+  }
   const caps = c.view?.catalog.characterStudio,
     ready = caps?.version === 2,
     choices = Object.fromEntries(
@@ -531,6 +536,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     (m: Item) => m.id === settings.video_model,
   );
   const trialEnabled = caps?.liveTrial?.enabled === true;
+  const executionEnabled = trialEnabled || caps?.manualExecutionEnabled !== false;
   const [adjustments, setAdjustments] = useState<Record<string, string>>({});
   const estimate = publicEstimate(currentModel, settings);
   useEffect(() => {
@@ -635,7 +641,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           Object.keys(defaultSettings).map((k) => [k, s[k]]),
         ) as Settings,
       );
-      setPer(job.episode_limit);
     }
     setScene(-1);
   }, [job?.id]);
@@ -646,6 +651,13 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     }));
   }
   function reset() {
+    if (job) {
+      setPerOverrides((current) => {
+        const next = { ...current };
+        delete next.new;
+        return next;
+      });
+    }
     setId("new");
     setReferenceJob("");
     setTopic("");
@@ -662,7 +674,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     setReferenceJob(source);
     setTab("upload");
     c.setNotice(
-      "기존 캐릭터 참조를 새 작업에 연결했습니다. 주제와 영상 길이를 선택하세요. 원본 작업은 변경하지 않습니다.",
+      "캐릭터를 선택했습니다. 새 스토리 주제를 입력하세요.",
     );
   }
   function selectFile(f: File | undefined) {
@@ -702,7 +714,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !/^studio-[a-f0-9]{64}\.png$/.test(data.id ?? ""))
         throw Error(typeof data.detail === "string" ? data.detail : "캐릭터를 저장하지 못했습니다. 이미지와 저장 공간을 확인하세요.");
-      setLibraryMessage(data.created ? "내 캐릭터에 저장했습니다." : "이미 저장된 캐릭터입니다. 기존 이름과 이미지를 유지했습니다.");
+      setLibraryMessage(data.created ? "내 캐릭터에 저장했습니다." : "이미 저장된 캐릭터입니다.");
       try {
         await c.load();
       } catch {
@@ -953,7 +965,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       setScene(-1);
       pending.current = null;
       c.setNotice(
-        "기존 스토리와 선택한 캐릭터 참조를 새 영상 작업으로 복사했습니다. 스토리·참조 이미지·영상 설정을 바탕으로 상황극과 자연스러운 한국어 소리를 요청합니다. 영상 생성은 별도 견적·승인 후 실행됩니다.",
+        "선택한 캐릭터로 새 영상 작업을 준비했습니다. 견적을 확인하세요.",
       );
     } catch (error) {
       setFailure(
@@ -972,7 +984,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     }
   }
   async function saveSettings() {
-    if (!job?.studio_selection || pendingReferenceCopy) return;
+    if (!job?.studio_selection || pendingReferenceCopy) return false;
     const form = new FormData();
     form.set("settings", JSON.stringify(settings));
     form.set("episode_limit", per);
@@ -989,7 +1001,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       throw Error(
         "영상 설정을 저장하지 못했습니다. 견적은 요청하지 않았습니다.",
       );
+    const data = await r.json().catch(() => ({}));
     await c.load();
+    return data.quoteRetained === true;
   }
   async function recoverStory() {
     if (!job || sending.current) return;
@@ -1001,7 +1015,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       });
       if (!response.ok) throw Error("저장된 스토리 응답을 복구하지 못했습니다. 추가 AI 요청은 하지 않았습니다.");
       await c.load();
-      c.setNotice("저장된 Claude 응답을 복구했습니다. 추가 AI 호출·비용 없이 스토리를 검토하고 영상 견적을 확인할 수 있습니다.");
+      c.setNotice("저장된 스토리를 복구했습니다. 내용을 검토한 뒤 견적을 확인하세요.");
     } catch (error) {
       setFailure(error instanceof Error ? error.message : "복구 결과를 확인하세요. 자동 재요청하지 않습니다.");
     } finally { setBusy(false); sending.current = false; }
@@ -1012,7 +1026,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     setBusy(true);
     setFailure("");
     try {
-      await saveSettings();
+      if (await saveSettings()) {
+        c.setNotice("설정을 저장했습니다. 현재 견적을 사용할 수 있습니다.");
+        return;
+      }
       c.open("character_act_prepare", {
         job_id: job?.id,
         state: "script_review",
@@ -1025,6 +1042,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     }
   }
   function action(kind: string, label: string, allowed: string[]) {
+    const connectionUnavailable = !executionEnabled && ["submit", "check", "retry-quote", "retry-scene"].includes(kind);
+    const actionLabel = connectionUnavailable
+      ? kind === "check" ? "상태 조회 연결 준비 중" : kind === "retry-quote" ? "추가 견적 연결 준비 중" : "영상 생성 연결 준비 중"
+      : label;
     return (
       <ActionButton
         c={c}
@@ -1042,12 +1063,13 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           !job ||
           !allowed.includes(job.state) ||
           pendingReferenceCopy ||
+          connectionUnavailable ||
           (kind === "submit" && (budgetExceeded || quoteSettingsChanged))
         }
         primary
       >
         <Clapperboard size={24} />
-        {label}
+        {actionLabel}
       </ActionButton>
     );
   }
@@ -1184,7 +1206,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   />
                   내 캐릭터에 저장
                 </label>
-                <small>선택하면 업로드한 이미지를 파일 이름으로 저장합니다.</small>
+                <small>저장한 이미지는 다시 사용할 수 있습니다.</small>
                 {libraryBusy && <small role="status">캐릭터 저장 중…</small>}
                 {libraryMessage && <small role="status">{libraryMessage}</small>}
 
@@ -1370,9 +1392,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             )}
 
             <p className="kling-character-consent">
-              주제 텍스트로 Claude가 스토리를 만들고 저장합니다. 참조 PNG는
-              스토리와 함께 Higgsfield 영상 제작에만 사용합니다. 저장된 API
-              승인·사용 한도가 적용되며 영상 생성 비용은 별도 승인합니다.
+              주제만 Claude에 전달합니다. 스토리 생성은 유료이며 영상 제작은
+              견적 확인 후 별도로 승인합니다.
             </p>
             {!ready && (
               <p role="status">
@@ -1416,17 +1437,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       >
                         <Mic size={15} /> 이 스토리로 새 영상
                       </button>
-                      <small>
-                        Claude 추가 호출 없음 · 스토리·참조 이미지·영상 설정
-                        전달 · 선택한 소리 설정 유지
-                      </small>
-                      <small>
-                        영상 모델이 전체 스토리를 해석해 장면·연기·소리를
-                        구성합니다. 자막·장면 설명은 읽지 않도록 요청하며, 새
-                        영상 생성은 별도 승인이 필요합니다.
-                        {pendingReferenceCopy &&
-                          " 새 참조와 설정은 ‘이 스토리로 새 영상’으로 복사한 뒤 견적을 확인하세요."}
-                      </small>
+                      <small>새 영상은 견적 확인 후 승인합니다.</small>
                     </div>
                   )}
                 {scenes.map((s, i) => (
@@ -1477,11 +1488,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 onChange={(v) => setting("script_model", v)}
                 options={c.view?.catalog.apiModels?.claude_api ?? []}
               />
-              <p>
-                전체 {settings.duration}초 ·{" "}
-                {story ? scenes.length : 5}장면. 영상
-                길이는 영상 설정에서 선택하며, 장면은 자동으로 구성합니다.
-              </p>
               <label>
                 편당 최대 승인 한도 (USD)
                 <input
@@ -1562,12 +1568,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       unsupportedHint="이 모델은 전체 길이에 필요한 장면 길이를 지원하지 않아요."
                       hint={
                         legacyStoryTiming
-                          ? "기존 3~4장면 스토리 길이는 유지됩니다. 새 스토리를 만들면 5장면 길이를 선택할 수 있어요."
+                          ? "이 스토리의 길이는 변경할 수 없습니다."
                           : settingsFrozen
-                            ? "진행된 작업의 길이는 보관됩니다. 새 참조를 선택해 스토리를 복사한 뒤 길이를 바꾸세요."
-                            : story
-                              ? `5장면 × ${settings.clip_seconds}초 · 저장 또는 새 영상 복사 시 적용 · Claude 추가 호출 없음`
-                              : `5장면 × ${settings.clip_seconds}초 · 총 ${settings.duration}초`
+                            ? "새 영상으로 복사하면 길이를 변경할 수 있습니다."
+                            : undefined
                       }
                     />
                     <CapabilitySelect
@@ -1605,7 +1609,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         ),
                       }}
                       supported={currentModel?.resolutions ?? []}
-                      hint={[adjustments.native_resolution, currentModel?.quality_note].filter(Boolean).join(" ")}
+                      hint={adjustments.native_resolution}
                     />
                     <CapabilitySelect
                       label="최종 저장 크기"
@@ -1614,7 +1618,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       onChange={(v) => setting("output_quality", v)}
                       values={caps?.outputQualities ?? {}}
                       supported={Object.keys(caps?.outputQualities ?? {})}
-                      hint={`최종 파일: ${settings.output_quality === "4k" ? "4K (2160p)" : settings.output_quality}. 모델 생성 화질과 별도인 로컬 저장 크기이며, 원본 크기에 따라 축소·확대될 수 있습니다.`}
                     />
                     <CapabilitySelect
                       label="음성"
@@ -1626,17 +1629,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       supported={
                         currentModel?.audio.native ? ["off", "on"] : ["off"]
                       }
-                      hint={
-                        settings.sound === "on"
-                          ? scenes.some(
-                              (item) =>
-                                typeof item.narration === "string" &&
-                                /[가-힣]/.test(item.narration),
-                            )
-                            ? "소리 켜짐 · 한국어 대사를 영상 모델에 전달합니다. 실제 발음·음색은 결과 검수가 필요합니다."
-                            : "소리 켜짐 · 영상 모델이 스토리에 맞는 한국어 상황극·소리를 구성하도록 요청합니다. 생성 결과 검수가 필요합니다."
-                          : adjustments.sound
-                      }
+                      hint={adjustments.sound}
                     />
                   </fieldset>
                   {videoAdvanced && (
@@ -1645,24 +1638,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       className="kling-video-advanced-body"
                     >
                       <p>
-                        캐릭터 스타일·9:16은 캐릭터 설정으로 고정됩니다.
-                        스타일은 프롬프트에 반영되며 결과는 모델마다 다를 수
-                        있습니다.
-                      </p>
-                      <p>
-                        화질은 모델의 네이티브 지원값만 전송합니다. 로컬 1080p·4K
-                        저장에는 확대가 포함될 수 있으며, 네이티브 1080p 생성과
-                        다릅니다.
-                      </p>
-                      <p>
-                        {currentModel?.aspect_ratio_mode === "reference-padding"
-                          ? "비율: 별도 참조 복사본 여백 조정 → 최종 합성. 미지원 aspect_ratio는 보내지 않습니다."
-                          : "비율: 모델의 aspect_ratio와 최종 합성에 반영합니다."}
-                      </p>
-                      <p>
-                        소리 생성은 대사·효과음·배경음을 함께 생성할 수
-                        있습니다. 목소리 종류 선택은 지원하지 않으며 한국어
-                        발음·입 모양·음색 일관성은 별도 검수가 필요합니다.
+                        캐릭터 스타일과 화면 비율은 고정됩니다.
                       </p>
                       {job?.state === "scene_review" &&
                         action("retry-quote", "실패 장면 새 견적", [
@@ -1710,7 +1686,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       >
                         <Clapperboard size={24} />
                         {job?.state === "prepare_failed"
-                          ? "설정 저장·견적 다시 받기"
+                          ? "설정 저장·견적 확인"
                           : "영상 견적 확인"}
                       </button>
                     ) : job?.state === "quoted" ? (
@@ -1745,7 +1721,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                           }
                           onClick={() => void quote()}
                         >
-                          설정 저장·견적 다시 받기
+                          설정 저장·견적 확인
                         </button>
                       )}
                   </div>

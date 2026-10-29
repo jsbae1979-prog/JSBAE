@@ -393,6 +393,30 @@ class CharacterService:
             if chosen['script_model']!=job['claude_model']:
                 raise CharacterError('blocked')
             revised=retime_studio_story(job['script'],chosen)
+            prepared_prompts=studio_prompts(revised,chosen,job['character'])
+            same_generation=(frozen==job['studio_selection'] and revised.model_dump()==job['script']
+                             and prepared_prompts==job['prompts'] and daily==amount(job['day_limit']))
+            if job['state']=='quoted' and same_generation:
+                # A ceiling edit changes approval identity, not supplier input or the quote's lifetime.
+                try:
+                    age=now()-datetime.fromisoformat(job['quoted_at'])
+                    valid=(bool(job['scenes']) and timedelta(0)<=age
+                           and sum(amount(scene['quote_usd']) for scene in job['scenes'])==amount(job['quote_total_usd'])
+                           and fingerprint([job['plan_hash'],job['scenes'],job['quoted_at'],job['quote_key_id']])==job['quote_hash'])
+                except (KeyError,TypeError,ValueError):
+                    raise CharacterError('budget') from None
+                if not valid:raise CharacterError('budget')
+                if age<=timedelta(minutes=15):
+                    if per!=amount(job['episode_limit']):
+                        previous={'episode_limit':job['episode_limit'],'plan_hash':job['plan_hash'],
+                                  'quote_hash':job['quote_hash'],'changed_at':now().isoformat()}
+                        job['episode_limit']=str(per)
+                        job['plan_hash']=self.plan_hash(job)
+                        job['quote_hash']=fingerprint([job['plan_hash'],job['scenes'],job['quoted_at'],job['quote_key_id']])
+                        previous.update(new_episode_limit=job['episode_limit'],new_quote_hash=job['quote_hash'])
+                        job.setdefault('quote_limit_changes',[]).append(previous)
+                        self.save(job)
+                    return
             if job['state'] in {'quoted','prepare_failed'}:
                 archived={key:deepcopy(job[key]) for key in (
                     'state','studio_selection','model','duration','script','episode_limit','day_limit','plan_hash','prompts','scenes',
@@ -406,7 +430,7 @@ class CharacterService:
             job.update(studio_selection=frozen,model=chosen['video_model'],duration=chosen['duration'],
                        script=revised.model_dump(),
                        episode_limit=str(per),day_limit=str(daily))
-            job['prompts']=studio_prompts(revised,chosen,job['character'])
+            job['prompts']=prepared_prompts
             job['plan_hash']=self.plan_hash(job)
             self.save(job)
 

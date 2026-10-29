@@ -438,25 +438,18 @@ def test_reuse_rejects_conflicting_or_tampered_reference_job(studio):
 
 
 
-def test_explicit_quote_refresh_preserves_prior_quote_and_allows_unchanged_settings(studio):
+def test_valid_quote_settings_save_reuses_unchanged_quote_without_refresh(studio):
     s=studio.service
     identifier,provider,estimates=seeded(studio)
     s.prepare(identifier,consent=True,script_reviewed=True)
-    before=s.read(identifier)
+    before=s.read(identifier);snapshot=files(s,identifier);estimate_count=len(estimates)
     settings=check(before['studio_selection'])
     s.update_studio_settings(identifier,settings,'10','20')
-    reset=s.read(identifier)
-    assert reset['state']=='script_review' and reset['scenes']==[] and 'quote_hash' not in reset
-    assert reset['quote_history'][0]['quote_hash']==before['quote_hash']
-    assert reset['quote_history'][0]['scenes']==before['scenes']
-    assert reset['quote_history'][0]['quoted_at']==before['quoted_at']
-    assert reset['quote_history'][0]['studio_selection']==before['studio_selection']
-    assert len(estimates)==1 and provider.calls==0
-    s.prepare(identifier,consent=True,script_reviewed=True)
-    second=s.read(identifier)
-    assert second['state']=='quoted' and second['quote_hash']!=before['quote_hash'] and len(estimates)==2
-    s.update_studio_settings(identifier,settings,'10','20')
-    assert len(s.read(identifier)['quote_history'])==2 and len(estimates)==2 and provider.calls==0
+    assert s.read(identifier)==before and files(s,identifier)==snapshot
+    assert len(estimates)==estimate_count and provider.calls==0
+    s.update_studio_settings(identifier,settings,'10.00','20')
+    assert s.read(identifier)==before and files(s,identifier)==snapshot
+    assert len(estimates)==estimate_count and provider.calls==0
 
 
 def test_failed_quote_requires_manual_settings_refresh_and_keeps_failure_history(studio):

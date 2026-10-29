@@ -425,7 +425,9 @@ def start(config, plan):
             trial_policy = active_character_trial_policy(config, character_trial_policy(config))
             trial_unknowns = character_trial_unknowns(config) if trial_policy is not None else None
             story_policy = character_story_policy(config)
-            if story_policy is not None and trial_policy is not None:
+            from .character_manual_execution import enabled as manual_character_enabled
+            manual_enabled = manual_character_enabled(config)
+            if trial_policy is not None and (story_policy is not None or manual_enabled):
                 raise Blocked('character-overlapping-approvals')
             character_native_factory = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
@@ -468,6 +470,10 @@ def start(config, plan):
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .character_quote_only import install as install_character_quote_only
                 character_quote_only = install_character_quote_only(app, config.profile, character_native_factory)
+            character_manual = None
+            if manual_enabled:
+                from .character_manual_execution import install as install_character_manual
+                character_manual = install_character_manual(app, config.profile, character_native_factory)
             import uvicorn
             session = LaunchSession(config.port)
             nonce = secrets.token_hex(32)
@@ -493,6 +499,8 @@ def start(config, plan):
                     request_boundary = key_registration.wrap(request_boundary, authenticated_app)
                 if character_quote_only is not None:
                     request_boundary = character_quote_only.wrap(request_boundary, authenticated_app)
+                if character_manual is not None:
+                    request_boundary = character_manual.wrap(request_boundary, authenticated_app)
             elif config.profile_kind == 'synthetic-local-work':
                 from .local_work import LocalWorkRequests
                 request_boundary = LocalWorkRequests(LocalAccess(app, session))

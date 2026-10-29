@@ -1,0 +1,19 @@
+{
+  "manualSynthetic": {
+    "pass": 29,
+    "fail": 0
+  },
+  "quoteRetentionAndRoute": {
+    "pass": 11,
+    "fail": 0
+  },
+  "nodeUI": {
+    "pass": 19,
+    "fail": 0
+  },
+  "typeScript": "PASS",
+  "vite": "PASS",
+  "operatingApplied": false,
+  "providerVideoRequests": 0,
+  "manualConnectionDefault": false
+}

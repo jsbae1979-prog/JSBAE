@@ -83,7 +83,9 @@ def studio_settings(request: Request,job_id:str,settings:str=Form(...),
         invalid=field_errors(parsed)
         if invalid:return JSONResponse({'error':'모델 지원 설정을 확인하세요.','fields':invalid},status_code=422)
         request.app.state.character.update_studio_settings(job_id,parsed,episode_limit,day_limit)
-        return {'id':job_id,'saved':True}
+        state=request.app.state.character.read(job_id)['state']
+        if state not in {'quoted','script_review'}:raise CharacterError('blocked')
+        return {'id':job_id,'saved':True,'state':state,'quoteRetained':state=='quoted'}
     except (ValueError,OSError,*SAFE_ERRORS):
         raise HTTPException(409,'견적 전 스토리 검토 단계에서만 영상 설정을 저장할 수 있습니다.') from None
 
