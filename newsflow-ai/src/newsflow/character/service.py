@@ -75,7 +75,7 @@ def retime_studio_story(story, settings):
 
 
 def generation_rows(job):
-    """New quotes send only the current saved beat and concise shared direction."""
+    """New quotes share one film setup and continue the preceding saved action."""
     rows=job['prompts']
     if not job.get('studio_selection'):
         return rows
@@ -93,16 +93,24 @@ def generation_rows(job):
         raise CharacterError('media')
     from .studio_story import StudioStoryboard
     story=StudioStoryboard.model_validate(job['script'])
-    # The saved per-beat prompt already contains its complete action, reference
-    # character/style and selected sound/no-narrator direction. Do not repeat
-    # all five actions, contrast, ending or display captions in every request.
-    shared=f"Situation (unspoken): {story.plan.situation}\n"
+    # Shared setup anchors all clips. Prior action is context, not another action
+    # to squeeze into this clip. No saved story/payload/approval is rewritten.
+    shared=(f"ONE {job['duration']}-second film in 5 consecutive shots. "
+            'Same cast species/faces/clothes/voices, set, props, light and time. '
+            'No recasting, location reset or time jump.\n'
+            f"Shared situation (unspoken): {story.plan.situation}\n"
+            f"Opening setup (context only; do not replay): {story.scenes[0].action}\n")
     result=[]
     for row in rows:
         validate_video_prompt(row.get('prompt'))
-        focus=(f"Create only beat {row['position']}/5 as one {row['seconds']}-second shot. "
-               'Keep the reference character consistent; do not perform other beats.\n')
-        prompt=shared+focus+row['prompt']
+        index=row['position']-1
+        prior=(f"Already happened: {story.scenes[index-1].action} "
+               'Continue from its end; do not repeat it.\n'
+               if index else 'Establish this one setting and cast.\n')
+        focus=(f"Now shot {row['position']}/5, {row['seconds']} seconds only. "
+               + ('End ready for the next action; no reset.\n' if index<4
+                  else 'Finish this same incident; no new scene.\n'))
+        prompt=shared+prior+focus+row['prompt']
         validate_video_prompt(prompt)  # Before upload/estimate. Never slice input.
         result.append({**row,'prompt':prompt})
     return result  # Stored story/prompts, old payloads/quotes/approvals remain unchanged.

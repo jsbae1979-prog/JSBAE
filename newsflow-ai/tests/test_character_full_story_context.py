@@ -28,7 +28,7 @@ def job():
             'quote_hash':'unchanged-old-quote','quote_approvals':[{'usd':'3.360'}]}
 
 
-def test_each_clip_keeps_its_complete_beat_and_concise_direction_not_other_beats():
+def test_each_clip_continues_one_setup_and_prior_action_without_replaying_all_beats():
     source=job();before=deepcopy(source)
     rows=generation_rows(source)
     assert len(rows)==5 and [row['seconds'] for row in rows]==[6]*5
@@ -38,9 +38,14 @@ def test_each_clip_keeps_its_complete_beat_and_concise_direction_not_other_beats
         assert source['script']['plan']['contrast'] not in prompt
         assert source['script']['plan']['punchline'] not in prompt
         assert scene['action'] in prompt and scene['sfx'] in prompt
-        assert all(other['action'] not in prompt for other in source['script']['scenes'] if other is not scene)
+        context_positions={1,row['position'],max(1,row['position']-1)}
+        assert all(other['action'] not in prompt for i,other in enumerate(source['script']['scenes'],1) if i not in context_positions)
+        assert source['script']['scenes'][0]['action'] in prompt
+        if row['position']>1:
+            assert 'Already happened: '+source['script']['scenes'][row['position']-2]['action'] in prompt
         assert source['character']['appearance'] in prompt and source['character']['style_lock'] in prompt
-        assert f"Create only beat {row['position']}/5 as one 6-second shot." in prompt
+        assert f"Now shot {row['position']}/5, 6 seconds only." in prompt
+        assert "ONE 30-second film" in prompt and "No recasting, location reset or time jump" in prompt
         assert 'No voiceover or narrator.' in prompt and 'no text, no logos' in prompt
         assert 'Infer natural Korean in-scene sound' in prompt
         assert 'ordered_story' not in prompt and 'Full story context' not in prompt
@@ -57,7 +62,7 @@ def test_app_bound_is_conservative_and_never_truncates_or_changes_old_records():
     assert source==before
 
 
-def test_maximum_story_fields_fit_without_repeating_whole_story_or_slicing():
+def test_maximum_fields_stop_intact_instead_of_silently_dropping_continuity():
     source=job()
     source['script']['plan']={key:'상'*300 for key in source['script']['plan']}
     for i,scene in enumerate(source['script']['scenes'],1):
@@ -66,9 +71,10 @@ def test_maximum_story_fields_fit_without_repeating_whole_story_or_slicing():
         scene['caption']='장'*40
     settings={key:source['studio_selection'][key] for key in DEFAULTS}
     source['prompts']=prompts(StudioStoryboard.model_validate(source['script']),settings,source['character'])
-    rows=generation_rows(source)
-    assert all(len(row['prompt'])<=VIDEO_PROMPT_LIMIT for row in rows)
-    assert all(scene['action'] in row['prompt'] and scene['sfx'] in row['prompt'] for scene,row in zip(source['script']['scenes'],rows))
+    before=deepcopy(source)
+    with pytest.raises(CharacterError) as error:
+        generation_rows(source)
+    assert error.value.code=='prompt_length' and source==before
 
 
 def test_new_quote_reuses_story_locally_with_five_compact_requests(studio):
@@ -116,3 +122,21 @@ def test_stored_oversized_payload_is_not_rewritten_or_replayed(studio,action):
         else:s.retry_scene(identifier,consent=True,quote_hash=job['retry_hash'])
     assert error.value.code=='prompt_length'
     assert s.read(identifier)==before and estimates==old_estimates and provider.calls==0
+
+
+def test_new_story_contract_requires_continuous_cast_place_and_action():
+    from newsflow.character.studio_story import INSTRUCTION
+    assert 'ONE short film' in INSTRUCTION and 'one location and continuous time' in INSTRUCTION
+    assert 'Do not replace people with animals or recast roles' in INSTRUCTION
+    assert 'preceding action outcome' in INSTRUCTION
+    assert 'No reference image is supplied' in INSTRUCTION
+    assert 'Do not author dialogue lines' in INSTRUCTION
+
+
+def test_scene_timing_is_film_position_not_five_new_introductions():
+    source=job();rows=generation_rows(source)
+    assert 'Establish this one setting and cast.' in rows[0]['prompt']
+    assert all('do not repeat it.' in row['prompt'] for row in rows[1:])
+    assert all('End ready for the next action' in row['prompt'] for row in rows[:-1])
+    assert 'Finish this same incident' in rows[-1]['prompt']
+    assert all('Opening setup (context only; do not replay)' in row['prompt'] for row in rows)

@@ -131,7 +131,7 @@
     }
   ],
   "audioQualityHumanReview": "PENDING",
-  "visualContinuity": "Supporting character appearance changes between clips; review needed",
+  "visualContinuity": "USER REJECTED: different supporting character appearance, scenery and situation between clips",
   "compositionPerformed": false,
   "tables": 47,
   "articles": 169,
@@ -140,7 +140,23 @@
   "originalBackupABUnchanged": true,
   "oldFailedRequestsUnchanged": true,
   "actualBilling": "NOT VERIFIED",
-  "currentScopeVerdict": "CONDITIONAL: generation and playback successful; quality review pending",
+  "currentScopeVerdict": "CONDITIONAL: generation and playback successful; user rejected continuity",
   "newProductCodeChanges": 0,
-  "operatingRestarts": 0
+  "operatingRestarts": 0,
+  "developmentContinuityUpdate": {
+    "visualConsistencyGuaranteed": false,
+    "providerCalls": 0,
+    "testsError": 0,
+    "appliedToOperating": false,
+    "promptLengths": [
+      1607,
+      1829,
+      1822,
+      1873,
+      1940
+    ],
+    "testsPass": 40,
+    "testsFail": 0,
+    "firstFrameChainingImplemented": false
+  }
 }
