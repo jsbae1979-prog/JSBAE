@@ -378,6 +378,36 @@ def active_character_trial_policy(config, policy):
     return policy
 
 
+
+def character_story_policy(config):
+    """Optional separate story-only approval; never revive a prior paid trial."""
+    if config.profile_kind != 'restored-local-operation':
+        return None
+    layout = json.loads((config.program / 'app/layout.json').read_bytes())
+    expected = layout.get('characterStoryOnlyPolicySha256')
+    if expected is None:
+        return None
+    import re
+    if not isinstance(expected, str) or not re.fullmatch('[a-f0-9]{64}', expected):
+        raise Blocked('character-story-approval-integrity')
+    source = ordinary_absolute(config.profile / 'character-story-only-policy.private.json')
+    content = source.read_bytes()
+    if len(content) > 65536 or hashlib.sha256(content).hexdigest() != expected:
+        raise Blocked('character-story-approval-integrity')
+    policy = json.loads(content)
+    from datetime import UTC, datetime
+    try:
+        expiry = datetime.fromisoformat(policy['expires_at'])
+        if expiry.tzinfo is None:
+            raise ValueError
+        if datetime.now(UTC) >= expiry:
+            return None
+        from .character_story_only import validate_policy
+        return validate_policy(policy)
+    except (KeyError, TypeError, ValueError):
+        raise Blocked('character-story-approval-scope') from None
+
+
 def start(config, plan):
     from filelock import FileLock
     from newsflow.config import Settings
@@ -394,6 +424,9 @@ def start(config, plan):
                 raise Blocked('owned-session-unresolved-no-retry')
             trial_policy = active_character_trial_policy(config, character_trial_policy(config))
             trial_unknowns = character_trial_unknowns(config) if trial_policy is not None else None
+            story_policy = character_story_policy(config)
+            if story_policy is not None and trial_policy is not None:
+                raise Blocked('character-overlapping-approvals')
             character_native_factory = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 # Capture before the global deny factory. Normal key saving gets
@@ -422,6 +455,11 @@ def start(config, plan):
                 character_trial = install(app, config.profile, trial_policy, character_native_factory,
                                           unknown_review=trial_unknowns,
                                           policy_loader=lambda: character_trial_policy(config))
+            character_story_only = None
+            if story_policy is not None:
+                from .character_story_only import install as install_character_story_only
+                character_story_only = install_character_story_only(
+                    app, config.profile, story_policy, character_native_factory)
             key_registration = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .higgsfield_key_registration import install as install_key_registration
@@ -449,6 +487,8 @@ def start(config, plan):
                 request_boundary = OperatingRequests(authenticated_app)
                 if character_trial is not None:
                     request_boundary = character_trial.wrap(request_boundary, authenticated_app)
+                if character_story_only is not None:
+                    request_boundary = character_story_only.wrap(request_boundary, authenticated_app)
                 if key_registration is not None:
                     request_boundary = key_registration.wrap(request_boundary, authenticated_app)
                 if character_quote_only is not None:
