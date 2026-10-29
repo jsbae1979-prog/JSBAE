@@ -39,7 +39,6 @@ import {
 import { CommandDialog, submitOriginal } from "./CommandDialog";
 import "./workbench.css";
 import { Thumbnail } from "./Thumbnail";
-import SampleGallery from "./SampleGallery";
 import TopThreeFeeds from "./TopThreeFeeds";
 import {
   WorkflowSteps,
@@ -79,7 +78,7 @@ function Empty({ text = "아직 저장된 항목이 없습니다." }: { text?: s
     <div className="work-empty">
       <FolderOpen size={34} />
       <strong>{text}</strong>
-      <span>샘플을 실제 작업으로 표시하지 않습니다.</span>
+      <span>저장된 제작 자료만 표시합니다.</span>
     </div>
   );
 }
@@ -175,7 +174,6 @@ function LegacyWorkbench({
   const [selected, setSelected] = useState<Item | null>(null);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("전체");
-  const [libraryScope, setLibraryScope] = useState("all");
   const [tab, setTab] = useState(
     location.pathname.includes("/feed") ||
       new URLSearchParams(location.search).get("mode") === "news"
@@ -2063,8 +2061,7 @@ function LegacyWorkbench({
             )}
             {module === "library" && (
               <>
-                <SampleGallery initialExpanded={!(view.projects ?? []).length} csrf={view.csrfToken} library onScope={setLibraryScope} />
-                {libraryScope !== "samples" && <div className="approved-library-grid">
+                <div className="approved-library-grid">
                   <div className="work-toolbar">
                     <label className="work-search">
                       <Search size={18} />
@@ -2158,7 +2155,6 @@ function LegacyWorkbench({
                     </div>
                   )}
                 </div>
-                }
                 <Collection
                   title="휴지 보관"
                   items={list("removed")}
@@ -2751,10 +2747,17 @@ function LegacyWorkbench({
   );
 }
 
-export default function Workbench(props: {module: string; onNavigate: (page: string) => void}) {
- return ["shorts", "characters", "images", "news"].includes(props.module)
-  ? <CoreStudios key={props.module} {...props}/>
-  : ["automation", "library", "publishing", "analytics", "settings"].includes(props.module)
-    ? <Management key={props.module} {...props}/>
-    : <LegacyWorkbench {...props}/>;
+export default function Workbench(props: {
+  module: string;
+  onNavigate: (page: string) => void;
+}) {
+  return ["shorts", "characters", "images", "news"].includes(props.module) ? (
+    <CoreStudios key={props.module} {...props} />
+  ) : ["automation", "library", "publishing", "analytics", "settings"].includes(
+      props.module,
+    ) ? (
+    <Management key={props.module} {...props} />
+  ) : (
+    <LegacyWorkbench {...props} />
+  );
 }

@@ -4,6 +4,11 @@ import json
 from io import BytesIO
 
 import pytest
+
+# Historical 12-item starter bundle tests, retired by the user's 2026-10-29 instruction.
+# Existing reports remain evidence of the earlier version. Current ownership/retirement
+# behavior is covered by tests/test_sample_retirement.py (20 focused PASS).
+pytest.skip("RETIRED: bundled sample UX/assets removed; replacement: tests/test_sample_retirement.py", allow_module_level=True)
 from PIL import Image
 from sqlalchemy import func, select
 

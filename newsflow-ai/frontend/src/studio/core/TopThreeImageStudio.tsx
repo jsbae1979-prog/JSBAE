@@ -1,4 +1,3 @@
-import SampleGallery from "../SampleGallery";
 import { useState, type ReactNode } from "react";
 import { Sparkles, Save, Pause, Download } from "lucide-react";
 import TopThreeFeeds from "../TopThreeFeeds";
@@ -368,11 +367,6 @@ export default function TopThreeImageStudio({
         catalog={c.view.catalog}
         csrf={c.view.csrfToken}
         render={(f) => <FeedLayout c={c} f={f} tabs={tabs} />}
-      />
-      <SampleGallery
-        initialExpanded={c.list("selections").length === 0}
-        types={["news-top3"]}
-        csrf={c.view.csrfToken}
       />
     </>
   ) : null;

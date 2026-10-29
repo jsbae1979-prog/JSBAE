@@ -1,13 +1,5 @@
-import { useEffect, useState } from "react";
-import {
-  Search,
-  Grid2X2,
-  List,
-  Trash2,
-  ArrowRight,
-  Copy,
-  EyeOff,
-} from "lucide-react";
+import { useState } from "react";
+import { Search, Grid2X2, List, Trash2, ArrowRight } from "lucide-react";
 import { type Item, safeMedia } from "../contracts";
 import {
   Panel,
@@ -21,62 +13,28 @@ import {
   withinPeriod,
   type Controller,
 } from "./shared";
+
 export default function Library({ c }: { c: Controller }) {
-  const [samples, setSamples] = useState<Item[]>([]),
-    [scope, setScope] = useState("all"),
-    [kind, setKind] = useState("all"),
+  const [kind, setKind] = useState("all"),
     [query, setQuery] = useState(""),
     [days, setDays] = useState("all"),
     [chosen, setChosen] = useState(""),
     [sort, setSort] = useState("new"),
-    [list, setList] = useState(false),
-    [hidden, setHidden] = useState(false),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
-  async function load() {
-    try {
-      const r = await fetch("/api/samples", {
-        credentials: "same-origin",
-        cache: "no-store",
-      });
-      if (!r.ok) throw Error();
-      const d = await r.json();
-      if (d.schemaVersion !== 1 || !Array.isArray(d.assets)) throw Error();
-      setSamples(d.assets);
-    } catch {
-      setError("샘플 자료 조회 실패 · 내 콘텐츠는 보존됩니다.");
-    }
-  }
-  useEffect(() => {
-    void load();
-  }, []);
-  const own = (c.workspace?.projects ?? c.view?.projects ?? []).map(
-    (x: Item) => ({ ...x, key: "own-" + x.id, sample: false }),
+    [list, setList] = useState(false);
+  const references = c.view?.collections.ownedReferences ?? [];
+  const own = (c.view?.projects ?? c.workspace?.projects ?? []).map(
+    (x: Item) => ({ ...x, key: "own-" + x.id }),
   );
-  const sample: Item[] = samples.map((x) => ({
-    ...x,
-    key: "sample-" + x.id,
-    sample: true,
-    kind:
-      x.mime === "video/mp4"
-        ? x.type === "news-short"
-          ? "news"
-          : "character"
-        : "image",
-    technicalStatus: "sample",
-  }));
-  const combined = [
-    ...(scope === "samples" ? [] : own),
-    ...sample.filter(
-      (x) => (scope !== "mine" || x.copied) && (hidden || !x.hidden),
-    ),
+  const combined: Item[] = [
+    ...own,
+    ...references.map((x: Item) => ({ ...x, key: "reference-" + x.id })),
   ];
   const rows = combined
     .filter(
       (x) =>
         (kind === "all" || x.kind === kind) &&
         String(x.title).toLowerCase().includes(query.toLowerCase()) &&
-        (days === "all" || (!x.sample && withinPeriod(x.updatedAt, days))),
+        (days === "all" || withinPeriod(x.updatedAt, days)),
     )
     .sort((a, b) =>
       sort === "title"
@@ -84,37 +42,6 @@ export default function Library({ c }: { c: Controller }) {
         : String(b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""),
     );
   const selected = rows.find((x) => x.key === chosen) ?? rows[0];
-  async function sampleAction(action: "copy" | "hide", use = false) {
-    if (!selected?.sample || busy) return;
-    setBusy(true);
-    try {
-      const r = await fetch(
-        "/api/samples/" +
-          selected.id +
-          "/" +
-          (action === "copy" ? "copy" : "visibility"),
-        {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            csrf_token: c.view?.csrfToken ?? "",
-            ...(action === "copy"
-              ? { use: String(use) }
-              : { hidden: String(!selected.hidden) }),
-          }),
-        },
-      );
-      if (!r.ok) throw Error("샘플 작업 실패 · 자동 재요청하지 않습니다.");
-      const result = await r.json();
-      c.setNotice(result.message ?? "사용자별 샘플 표시 상태를 저장했습니다.");
-      await load();
-    } catch (e) {
-      c.setNotice(String(e));
-    } finally {
-      setBusy(false);
-    }
-  }
   const destination =
     selected?.kind === "news"
       ? "shorts"
@@ -132,6 +59,9 @@ export default function Library({ c }: { c: Controller }) {
                 ["news", "뉴스 쇼츠"],
                 ["character", "캐릭터 쇼츠"],
                 ["image", "이미지"],
+                ...(references.some((x: Item) => x.kind === "reference")
+                  ? [["reference", "참조 영상"]]
+                  : []),
               ].map(([v, t]) => (
                 <button
                   key={v}
@@ -174,9 +104,6 @@ export default function Library({ c }: { c: Controller }) {
                 </button>
               ))}
             </div>
-            <p className="mg-muted">
-              샘플에는 생성 날짜를 임의 부여하지 않습니다.
-            </p>
           </Panel>
         </aside>
         <Panel
@@ -185,21 +112,7 @@ export default function Library({ c }: { c: Controller }) {
           tools={<span className="mg-badge">{rows.length}개</span>}
         >
           <div className="mg-toolbar">
-            <div className="mg-tabs" aria-label="라이브러리 콘텐츠 구분">
-              {[
-                ["all", "전체"],
-                ["mine", "내 콘텐츠"],
-                ["samples", "샘플 콘텐츠"],
-              ].map(([v, t]) => (
-                <button
-                  key={v}
-                  aria-selected={scope === v}
-                  onClick={() => setScope(v)}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
+            <span className="mg-badge">내 콘텐츠</span>
             <select
               aria-label="콘텐츠 정렬"
               value={sort}
@@ -223,7 +136,6 @@ export default function Library({ c }: { c: Controller }) {
               <List size={16} />
             </button>
           </div>
-          {error && <p role="alert">{error}</p>}
           <div className={"mg-library-cards " + (list ? "list" : "")}>
             {rows.map((x) => (
               <button
@@ -236,8 +148,8 @@ export default function Library({ c }: { c: Controller }) {
                 <Thumb item={x} />
                 <div>
                   <span className="mg-badge">
-                    {x.sample
-                      ? "샘플"
+                    {x.referenceOnly
+                      ? "참조 파일"
                       : x.kind === "image"
                         ? "이미지"
                         : x.kind === "news"
@@ -245,11 +157,7 @@ export default function Library({ c }: { c: Controller }) {
                           : "캐릭터 쇼츠"}
                   </span>
                   <strong>{x.title}</strong>
-                  <small>
-                    {x.sample
-                      ? "오프라인 예제 · 실제 생성 이력 아님"
-                      : date(x.updatedAt)}
-                  </small>
+                  <small>{date(x.updatedAt)}</small>
                   <Badge value={x.technicalStatus} />
                 </div>
               </button>
@@ -267,57 +175,17 @@ export default function Library({ c }: { c: Controller }) {
               <h3>{selected.title}</h3>
               <dl>
                 <dt>구분</dt>
-                <dd>{selected.sample ? "기본 샘플" : selected.sourceLabel}</dd>
+                <dd>{selected.sourceLabel}</dd>
                 <dt>상태</dt>
                 <dd>
                   <Badge value={selected.technicalStatus} />
                 </dd>
-                {selected.sample && (
-                  <>
-                    <dt>규격</dt>
-                    <dd>
-                      {selected.width}×{selected.height}
-                      {selected.durationSeconds
-                        ? ` · ${selected.durationSeconds}초`
-                        : ""}
-                    </dd>
-                  </>
-                )}
               </dl>
-              {selected.sample ? (
-                <>
-                  <p className="mg-muted">
-                    샘플입니다. MP4는 무음 12초 미리보기이며 편집 가능한 원본
-                    프로젝트가 아닙니다.
-                  </p>
-                  {selected.promptExample && (
-                    <details>
-                      <summary>프롬프트 예제</summary>
-                      <p>{selected.promptExample}</p>
-                    </details>
-                  )}
-                  <button
-                    className="mg-primary"
-                    disabled={busy}
-                    onClick={() => void sampleAction("copy")}
-                  >
-                    <Copy size={16} />내 작업으로 복사
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() => void sampleAction("copy", true)}
-                  >
-                    참조 소재로 활용
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() => void sampleAction("hide")}
-                  >
-                    <EyeOff size={16} />
-                    {selected.hidden ? "샘플 다시 표시" : "샘플 숨기기"}
-                  </button>
-                  {selected.copied && <DownloadLink url={selected.copyUrl} />}
-                </>
+              {selected.referenceOnly ? (
+                <p className="mg-muted">
+                  사용자가 보관한 참조 파일입니다. 편집 가능한 원본 제작
+                  프로젝트나 생성 완료 이력으로 취급하지 않습니다.
+                </p>
               ) : (
                 <>
                   <a
@@ -388,9 +256,6 @@ export default function Library({ c }: { c: Controller }) {
           ) : (
             <Empty>콘텐츠를 선택하세요.</Empty>
           )}
-          <button aria-pressed={hidden} onClick={() => setHidden(!hidden)}>
-            숨긴 샘플 관리
-          </button>
         </Panel>
       </div>
       <details className="mg-advanced">

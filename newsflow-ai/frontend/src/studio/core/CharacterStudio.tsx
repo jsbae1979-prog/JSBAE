@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   BookOpen,
   Bot,
@@ -11,9 +11,12 @@ import {
   Settings2,
   Sparkles,
   WandSparkles,
+  Ratio,
+  Monitor,
+  Mic,
+  Coins,
+  ChevronDown,
 } from "lucide-react";
-import SampleGallery, { type SampleUse } from "../SampleGallery";
-import CharacterReferenceSamples from "./CharacterReferenceSamples";
 import { Thumbnail } from "../Thumbnail";
 import { safeMedia, type Item } from "../contracts";
 import {
@@ -39,6 +42,8 @@ function CapabilitySelect({
   supported,
   disabled = false,
   hint,
+  icon,
+  ariaLabel,
 }: {
   label: string;
   value: string;
@@ -47,31 +52,40 @@ function CapabilitySelect({
   supported: string[];
   disabled?: boolean;
   hint?: string;
+  icon?: ReactNode;
+  ariaLabel?: string;
 }) {
   return (
     <label className="kling-capability-field">
-      <span>{label}</span>
-      <select
-        aria-label={label}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {Object.entries(values).map(([id, title]) => (
-          <option
-            key={id}
-            value={id}
-            disabled={!supported.includes(id)}
-            title={
-              !supported.includes(id)
-                ? "이 모델에서는 지원하지 않아요"
-                : undefined
-            }
-          >
-            {title}
-          </option>
-        ))}
-      </select>
+      <span className="kling-setting-label">
+        {icon}
+        <span>{label}</span>
+      </span>
+      <span className="kling-control-wrap">
+        <select
+          aria-label={ariaLabel ?? label}
+          title={values[value] ?? value}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value)}
+        >
+          {Object.entries(values).map(([id, title]) => (
+            <option
+              key={id}
+              value={id}
+              disabled={!supported.includes(id)}
+              title={
+                !supported.includes(id)
+                  ? "이 모델에서는 지원하지 않아요"
+                  : undefined
+              }
+            >
+              {title}
+            </option>
+          ))}
+        </select>
+        <ChevronDown aria-hidden="true" size={13} />
+      </span>
       {hint && <small className="kling-field-note">{hint}</small>}
     </label>
   );
@@ -128,12 +142,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings),
     [tab, setTab] = useState("upload");
   const [file, setFile] = useState<File | null>(null);
-  const [asset, setAsset] = useState(""),
-    [sampleRef, setSampleRef] = useState<string | null>(null);
+  const [asset, setAsset] = useState("");
   const [busy, setBusy] = useState(false),
-    [sampleBusy, setSampleBusy] = useState(false),
     [history, setHistory] = useState(false),
-    [help, setHelp] = useState(false);
+    [help, setHelp] = useState(false),
+    [videoAdvanced, setVideoAdvanced] = useState(false);
   const [per, setPer] = useState("10"),
     [daily, setDaily] = useState("20"),
     [failure, setFailure] = useState("");
@@ -150,10 +163,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     choices = Object.fromEntries(
       (caps?.modelsDetailed ?? [])
         .filter((m: Item) => m.enabled)
-        .map((m: Item) => [
-          m.id,
-          `${m.label} · 기본 화질${m.recommended ? " (추천)" : ""}`,
-        ]),
+        .map((m: Item) => [m.id, m.label]),
     );
   const currentModel: Item | undefined = caps?.modelsDetailed?.find(
     (m: Item) => m.id === settings.video_model,
@@ -191,8 +201,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     job?.referenceUrl === `/api/studio/characters/${job?.id}/reference`
       ? job.referenceUrl
       : null;
-  const reference = file || sampleRef || selectedReference;
-  const isBusy = busy || sampleBusy,
+  const reference = file || selectedReference;
+  const isBusy = busy,
     frozen =
       !!job &&
       !["needs_script", "script_review", "script_failed"].includes(job.state);
@@ -236,17 +246,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     reset();
     setFile(f);
     setAsset("");
-    setSampleRef(null);
-  }
-  async function useSample({ asset: sample, copy }: SampleUse) {
-    reset();
-    setAsset(copy.referenceAsset ?? "");
-    setFile(null);
-    setSampleRef(`/api/samples/${sample.referenceId || sample.id}/file`);
-    c.setNotice(
-      "샘플 참조를 새 작업에 연결했습니다. 스토리 주제를 입력하세요. 기존 작업은 보존됩니다.",
-    );
-    await c.load();
   }
   async function post(url: string, body: FormData) {
     body.set("csrf_token", c.view?.csrfToken ?? "");
@@ -311,7 +310,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           "이 요청은 이미 저장되어 있습니다. 작업 이력의 상태를 확인하세요. 자동 재생성하지 않습니다.",
         );
       setFile(null);
-      setSampleRef(null);
+
       setAsset("");
       setTopic("");
       c.setNotice(
@@ -386,6 +385,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         }
         primary
       >
+        <Clapperboard size={24} />
         {label}
       </ActionButton>
     );
@@ -474,6 +474,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     src={String(reference)}
                     alt="선택한 캐릭터 참조 이미지"
                   />
+                ) : asset ? (
+                  <Empty>내 캐릭터 참조 소재를 선택했습니다.</Empty>
                 ) : (
                   <Empty>캐릭터 참조 이미지를 선택하세요.</Empty>
                 )}
@@ -514,7 +516,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         onClick={() => {
                           setId(x.id);
                           setFile(null);
-                          setSampleRef(null);
+
                           setAsset("");
                           pending.current = null;
                         }}
@@ -535,7 +537,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   reset();
                   setAsset(v);
                   setFile(null);
-                  setSampleRef(null);
                 }}
                 options={Object.fromEntries(
                   refAssets.map((x: Item | string) =>
@@ -546,12 +547,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 )}
               />
             )}
-            <CharacterReferenceSamples
-              csrf={c.view?.csrfToken ?? ""}
-              busy={isBusy}
-              onBusy={setSampleBusy}
-              onUse={useSample}
-            />
           </section>
           <section className="kling-character-card kling-character-story">
             <header>
@@ -597,7 +592,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 !ready ||
                 !c.view?.commandsAvailable ||
                 !topic.trim() ||
-                !reference ||
+                (!reference && !asset) ||
                 !!failure
               }
             >
@@ -707,95 +702,206 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 ) && <span>생성·검토된 영상 없음</span>}
               </div>
               <div className="kling-character-video-settings">
-                <header>
-                  <h3>
-                    영상 설정 <Info size={13} />
-                  </h3>
-                </header>
-                <fieldset disabled={isBusy || frozen || !ready}>
-                  <Select
-                    label="영상 모델"
-                    value={settings.video_model}
-                    onChange={changeModel}
-                    options={choices}
-                  />
-                  <CapabilitySelect
-                    label="영상 스타일"
-                    value={settings.style}
-                    onChange={() => {}}
-                    disabled
-                    values={caps?.styles ?? {}}
-                    supported={[caps?.character?.style_id ?? ""]}
-                    hint={
-                      adjustments.style ??
-                      "캐릭터 스타일 고정 · 프롬프트 반영 (모델별 차이 있음)"
-                    }
-                  />
-                  <CapabilitySelect
-                    label="화면 비율"
-                    value={settings.aspect_ratio}
-                    onChange={() => {}}
-                    disabled
-                    values={caps?.ratios ?? {}}
-                    supported={["9:16"]}
-                    hint={adjustments.aspect_ratio}
-                  />
-                  <CapabilitySelect
-                    label="화질"
-                    value={settings.native_resolution}
-                    onChange={(v) => setting("native_resolution", v)}
-                    values={{
-                      model_default: "모델 기본 (Standard)",
-                      ...Object.fromEntries(
-                        (caps?.resolutionChoices ?? []).map((x: string) => [
-                          x,
-                          x,
-                        ]),
-                      ),
-                    }}
-                    supported={currentModel?.resolutions ?? []}
-                    hint={adjustments.native_resolution}
-                  />
-                  <CapabilitySelect
-                    label="장면 길이 (초)"
-                    value={String(settings.clip_seconds)}
-                    onChange={changeLength}
-                    disabled={lockedDuration}
-                    values={Object.fromEntries(
-                      (caps?.durationChoices ?? []).map((x: number) => [
-                        String(x),
-                        `${x}초`,
-                      ]),
-                    )}
-                    supported={(currentModel?.duration_values ?? []).map(
-                      String,
-                    )}
-                    hint={
-                      adjustments.clip_seconds ??
-                      `전체 ${settings.duration}초 · 스토리 생성 후 고정`
-                    }
-                  />
-                  <label className="kling-sound-row">
-                    <span>소리 생성</span>
+                <section
+                  className="kling-video-settings-card"
+                  aria-label="영상 설정"
+                >
+                  <header>
+                    <h3>
+                      영상 설정 <Info size={13} />
+                    </h3>
                     <button
                       type="button"
-                      role="switch"
-                      aria-label="소리 생성"
-                      aria-checked={settings.sound === "on"}
-                      disabled={!currentModel?.audio.native}
-                      onClick={() =>
-                        setting("sound", settings.sound === "on" ? "off" : "on")
+                      className="kling-video-advanced-trigger"
+                      aria-expanded={videoAdvanced}
+                      aria-controls="kling-video-advanced"
+                      onClick={() => setVideoAdvanced((x) => !x)}
+                    >
+                      고급 설정 <ChevronDown size={13} />
+                    </button>
+                  </header>
+                  <fieldset
+                    className="kling-five-settings"
+                    disabled={isBusy || frozen || !ready}
+                  >
+                    <CapabilitySelect
+                      label="영상 모델"
+                      icon={<Bot size={18} />}
+                      value={settings.video_model}
+                      onChange={changeModel}
+                      values={choices}
+                      supported={Object.keys(choices)}
+                      hint={adjustments.video_model}
+                    />
+                    <CapabilitySelect
+                      label="영상 스타일"
+                      icon={<Sparkles size={18} />}
+                      value={settings.style}
+                      onChange={() => {}}
+                      disabled
+                      values={caps?.styles ?? {}}
+                      supported={[caps?.character?.style_id ?? ""]}
+                      hint={adjustments.style}
+                    />
+                    <CapabilitySelect
+                      label="화면 비율"
+                      icon={<Ratio size={18} />}
+                      value={settings.aspect_ratio}
+                      onChange={() => {}}
+                      disabled
+                      values={caps?.ratios ?? {}}
+                      supported={["9:16"]}
+                      hint={adjustments.aspect_ratio}
+                    />
+                    <CapabilitySelect
+                      label="화질"
+                      icon={<Monitor size={18} />}
+                      value={settings.native_resolution}
+                      onChange={(v) => setting("native_resolution", v)}
+                      values={{
+                        model_default: "모델 기본 (Standard)",
+                        ...Object.fromEntries(
+                          (caps?.resolutionChoices ?? []).map((x: string) => [
+                            x,
+                            x,
+                          ]),
+                        ),
+                      }}
+                      supported={currentModel?.resolutions ?? []}
+                      hint={adjustments.native_resolution}
+                    />
+                    <CapabilitySelect
+                      label="음성"
+                      ariaLabel="소리 생성"
+                      icon={<Mic size={18} />}
+                      value={settings.sound}
+                      onChange={(v) => setting("sound", v)}
+                      values={{ off: "끄기 (무음)", on: "켜기 (모델 소리)" }}
+                      supported={
+                        currentModel?.audio.native ? ["off", "on"] : ["off"]
+                      }
+                      hint={adjustments.sound}
+                    />
+                  </fieldset>
+                  {videoAdvanced && (
+                    <div
+                      id="kling-video-advanced"
+                      className="kling-video-advanced-body"
+                    >
+                      <CapabilitySelect
+                        label="장면 길이 (초)"
+                        value={String(settings.clip_seconds)}
+                        onChange={changeLength}
+                        disabled={isBusy || frozen || lockedDuration}
+                        values={Object.fromEntries(
+                          (caps?.durationChoices ?? []).map((x: number) => [
+                            String(x),
+                            `${x}초`,
+                          ]),
+                        )}
+                        supported={(currentModel?.duration_values ?? []).map(
+                          String,
+                        )}
+                        hint={
+                          adjustments.clip_seconds ??
+                          `전체 ${settings.duration}초 · 스토리 생성 후 고정`
+                        }
+                      />
+                      <Select
+                        label="최종 저장 크기 · 로컬 FFmpeg"
+                        disabled={isBusy || frozen}
+                        value={settings.output_quality}
+                        onChange={(v) => setting("output_quality", v)}
+                        options={caps?.outputQualities ?? {}}
+                      />
+                      <p>
+                        캐릭터 스타일·9:16은 캐릭터 설정으로 고정됩니다.
+                        스타일은 프롬프트에 반영되며 결과는 모델마다 다를 수
+                        있습니다.
+                      </p>
+                      <p>
+                        화질은 모델의 네이티브 지원값만 전송합니다. 로컬 1080p
+                        저장에는 확대가 포함될 수 있으며, 네이티브 1080p 생성과
+                        다릅니다.
+                      </p>
+                      <p>
+                        {currentModel?.aspect_ratio_mode === "reference-padding"
+                          ? "비율: 별도 참조 복사본 여백 조정 → 최종 합성. 미지원 aspect_ratio는 보내지 않습니다."
+                          : "비율: 모델의 aspect_ratio와 최종 합성에 반영합니다."}
+                      </p>
+                      <p>
+                        소리 생성은 대사·효과음·배경음을 함께 생성할 수
+                        있습니다. 목소리 종류 선택은 지원하지 않으며 한국어
+                        발음·입 모양·음색 일관성은 별도 검수가 필요합니다.
+                      </p>
+                      {job?.state === "scene_review" &&
+                        action("retry-quote", "실패 장면 새 견적", [
+                          "scene_review",
+                        ])}
+                      {job?.state === "retry_quoted" &&
+                        action("retry-scene", "실패 장면 추가 견적 승인", [
+                          "retry_quoted",
+                        ])}
+                    </div>
+                  )}
+                </section>
+                <section
+                  className="kling-video-production-card"
+                  aria-label="영상 비용 및 제작"
+                >
+                  <div className="kling-character-cost">
+                    <strong>
+                      <Coins size={22} /> 예상 비용 <Info size={13} />
+                    </strong>
+                    <b
+                      title={
+                        job?.quote
+                          ? "공식 견적 · 실제 청구액 아님"
+                          : currentModel?.pricing.note
                       }
                     >
-                      <i />
-                      {settings.sound === "on" ? "켜기" : "끄기 (무음)"}
-                    </button>
-                    <small className="kling-field-note">
-                      {adjustments.sound ??
-                        "대사·효과음·배경음 함께 생성 · 음색 선택 없음"}
-                    </small>
-                  </label>
-                </fieldset>
+                      {job?.quote ? `$${job.quote}` : estimate.label}
+                    </b>
+                  </div>
+                  <div className="kling-character-generate">
+                    {job?.state === "script_review" ? (
+                      <button
+                        className="primary"
+                        title="스토리 검토·공식 견적을 확인한 후 비용을 별도로 승인합니다."
+                        disabled={isBusy || legacy || !ready || budgetExceeded}
+                        onClick={() => void quote()}
+                      >
+                        <Clapperboard size={24} />
+                        영상 생성하기
+                      </button>
+                    ) : job?.state === "quoted" ? (
+                      action("submit", "영상 생성하기", ["quoted"])
+                    ) : job?.state === "generating" ? (
+                      action("check", "장면 상태 확인", ["generating"])
+                    ) : job?.state === "clips_review" ? (
+                      action("render", "검토 후 영상 합성", ["clips_review"])
+                    ) : job?.state === "completed" &&
+                      safeMedia(job.mediaUrl) ? (
+                      <a
+                        href={`${job.mediaUrl}?download=true`}
+                        className="primary"
+                      >
+                        완성 영상 저장
+                      </a>
+                    ) : (
+                      <button disabled>
+                        <Clapperboard size={24} />
+                        영상 생성하기
+                      </button>
+                    )}
+                  </div>
+                  <small className="kling-cost-note">
+                    {settings.duration}초 기준 ·{" "}
+                    {job?.quote
+                      ? "공식 견적, 실제 청구와 다름"
+                      : "추정치, 공식 견적 확인 필요"}
+                  </small>
+                </section>
                 {(
                   job?.reviewWarnings ?? [
                     caps?.stylePresets?.find(
@@ -816,9 +922,13 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 {Object.entries(adjustments)
                   .filter(
                     ([k]) =>
-                      !["native_resolution", "clip_seconds", "sound"].includes(
-                        k,
-                      ),
+                      ![
+                        "video_model",
+                        "style",
+                        "aspect_ratio",
+                        "native_resolution",
+                        "sound",
+                      ].includes(k),
                   )
                   .map(([k, v]) => (
                     <p className="kling-field-note" role="status" key={k}>
@@ -830,93 +940,12 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     {caps.cacheWarning}
                   </p>
                 )}
-                <div className="kling-character-cost">
-                  <strong>
-                    예상 비용 <Info size={13} />
-                  </strong>
-                  <b>
-                    {job?.quote ? `공식 견적 $${job.quote}` : estimate.label}
-                  </b>
-                </div>
-                <small className="kling-cost-note">
-                  {settings.duration}초 기준 ·{" "}
-                  {job?.quote
-                    ? "실제 청구액 아님"
-                    : (currentModel?.pricing.note ??
-                      "단가 미확인 · 공식 견적이 필요합니다.")}
-                </small>
                 {budgetExceeded && (
                   <p className="kling-character-error" role="alert">
                     예상 비용 상한이 편당 예산 ${per}를 넘습니다. 한도와 설정을
                     확인하세요.
                   </p>
                 )}
-                <div className="kling-character-generate">
-                  {job?.state === "script_review" ? (
-                    <button
-                      className="primary"
-                      disabled={isBusy || legacy || !ready || budgetExceeded}
-                      onClick={() => void quote()}
-                    >
-                      <Clapperboard size={21} />
-                      영상 생성하기 · 견적 확인
-                    </button>
-                  ) : job?.state === "quoted" ? (
-                    action("submit", "영상 생성하기 · 비용 승인", ["quoted"])
-                  ) : job?.state === "generating" ? (
-                    action("check", "요청한 장면 상태 확인", ["generating"])
-                  ) : job?.state === "clips_review" ? (
-                    action("render", "영상 완성 · 검토 후 합성", [
-                      "clips_review",
-                    ])
-                  ) : job?.state === "completed" && safeMedia(job.mediaUrl) ? (
-                    <a
-                      href={`${job.mediaUrl}?download=true`}
-                      className="primary"
-                    >
-                      완성 영상 저장
-                    </a>
-                  ) : (
-                    <button disabled>
-                      <Clapperboard size={21} />
-                      영상 생성하기
-                    </button>
-                  )}
-                </div>
-                <details className="kling-character-advanced">
-                  <summary>고급 설정·지원 범위</summary>
-                  <p>
-                    화질은 모델이 지원하는 네이티브 값만 전송합니다. 지원하지
-                    않는 720p·1080p·4K는 비활성입니다.
-                  </p>
-                  <Select
-                    label="최종 저장 크기 · 로컬 FFmpeg"
-                    disabled={isBusy || frozen}
-                    value={settings.output_quality}
-                    onChange={(v) => setting("output_quality", v)}
-                    options={caps?.outputQualities ?? {}}
-                  />
-                  <p>
-                    1080p 저장에는 로컬 확대가 포함될 수 있습니다. 모델의
-                    네이티브 1080p 생성과 다릅니다.
-                  </p>
-                  <p>
-                    {currentModel?.aspect_ratio_mode === "reference-padding"
-                      ? "비율: 별도 참조 복사본 여백 조정 → 최종 합성. 미지원 aspect_ratio 파라미터는 보내지 않습니다."
-                      : "비율: 모델의 aspect_ratio와 최종 합성에 반영합니다."}
-                  </p>
-                  <p>
-                    소리 생성 켜기는 모델의 오디오를 보존합니다. 한국어 발음·입
-                    모양·음색 일관성은 모델마다 다르며 별도 검수가 필요합니다.
-                  </p>
-                  {job?.state === "scene_review" &&
-                    action("retry-quote", "실패 장면 새 견적", [
-                      "scene_review",
-                    ])}
-                  {action("retry-scene", "실패 장면 추가 견적 승인", [
-                    "retry_quoted",
-                  ])}
-                </details>
                 {legacy && (
                   <p className="kling-character-consent">
                     기존 모델 작업은 보존됩니다. 참조를 선택해 새 Kling 작업을
@@ -1008,7 +1037,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   onClick={() => {
                     setId(x.id);
                     setFile(null);
-                    setSampleRef(null);
+
                     setAsset("");
                     pending.current = null;
                     setFailure("");
@@ -1024,13 +1053,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           </section>
         )}
       </div>
-      <SampleGallery
-        onBusyChange={setSampleBusy}
-        initialExpanded={false}
-        types={["character", "kling-character-short"]}
-        csrf={c.view?.csrfToken ?? ""}
-        onUse={useSample}
-      />
     </>
   );
 }

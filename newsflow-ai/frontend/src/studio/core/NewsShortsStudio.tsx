@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import SampleGallery from "../SampleGallery";
 import {
   FileText,
   Sparkles,
@@ -578,11 +577,6 @@ export default function NewsShortsStudio({
           ))}
         </details>
       </div>
-      <SampleGallery
-        initialExpanded={c.list("drafts").length === 0}
-        types={["news-short"]}
-        csrf={c.view?.csrfToken ?? ""}
-      />
     </>
   );
 }

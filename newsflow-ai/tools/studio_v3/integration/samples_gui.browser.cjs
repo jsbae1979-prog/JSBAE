@@ -1,4 +1,12 @@
 "use strict";
+// The bundled starter UX was removed by the user's 2026-10-29 instruction.
+// Preserve the former script as history without creating a browser, IPC path or process.
+module.exports={retired:true,replacement:"tests/test_sample_retirement.py",historicalEvidence:"docs/reports/sample-content-20261028"};
+if(require.main===module){
+  console.log("RETIRED: sample gallery GUI removed; replacement tests/test_sample_retirement.py (20 focused PASS); no browser/app started.");
+}
+function retiredSampleGuiHistoricalEvidence(){
+"use strict";
 const fs=require("fs"),path=require("path"),assert=require("assert"),crypto=require("crypto");
 const {chromium}=require(path.join(process.env.NF_GUI_RUNTIME,"node_modules","playwright"));
 const root=process.env.NF_GUI_ROOT,out=path.join(root,"screenshots"),origin="http://127.0.0.1:18765";
@@ -128,3 +136,5 @@ finally{
  if(browser)await browser.close();await serial;fs.writeFileSync(path.join(root,"STOP"),"stop");result.browserClosed=true;result.pass=result.checks.filter(x=>x.status==="PASS").length;result.fail=result.checks.filter(x=>x.status==="FAIL").length+result.failures.filter(x=>!result.checks.some(c=>c.name===x.name)).length;result.skip=0;fs.writeFileSync(path.join(root,"gui-results.json"),JSON.stringify(result,null,2));console.log("SAMPLE_GUI_RESULT="+JSON.stringify(result));}
 if(result.failures.length)process.exitCode=1;
 })();
+
+}

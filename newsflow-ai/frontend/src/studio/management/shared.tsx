@@ -188,7 +188,7 @@ export function Media({
   image?: boolean;
   label?: string;
 }) {
-  const src = sampleMedia(url) || safeMedia(url);
+  const src = copiedReferenceMedia(url) || safeMedia(url);
   return (
     <div
       className={"mg-media " + (image ? "image" : "portrait")}
@@ -215,18 +215,19 @@ export function Media({
     </div>
   );
 }
-export function sampleMedia(v: unknown) {
+export function copiedReferenceMedia(v: unknown) {
   return typeof v === "string" &&
-    /^\/api\/samples\/[a-z0-9-]+\/(?:file|poster|copy-file)$/.test(v)
+    /^\/api\/samples\/[a-z0-9-]+\/copy-file$/.test(v)
     ? v
     : null;
 }
 export function Thumb({ item }: { item: Item }) {
-  let src = item.sample
-    ? sampleMedia(item.posterUrl || item.mediaUrl)
-    : safeMedia(item.thumbnailUrl);
+  let src =
+    item.referenceOnly && item.kind === "image"
+      ? copiedReferenceMedia(item.mediaUrl)
+      : safeMedia(item.thumbnailUrl);
   if (src?.startsWith("/studio/assets/design-art-")) src = null;
-  if (!src && !item.sample && item.kind === "news") {
+  if (!src && item.kind === "news") {
     const media = safeMedia(item.mediaUrl);
     if (media && /^\/video\/jobs\/\d+\/file$/.test(media))
       src = media.replace(/\/file$/, "/thumbnail");
@@ -326,7 +327,7 @@ export function Refresh({ c }: { c: Controller }) {
   );
 }
 export function DownloadLink({ url }: { url: unknown }) {
-  const src = sampleMedia(url) || safeMedia(url);
+  const src = copiedReferenceMedia(url) || safeMedia(url);
   return src ? (
     <a className="mg-button" href={src + "?download=true"} download>
       <Download size={16} />

@@ -497,6 +497,10 @@ def module_view(request: Request, module: Module):
         work = workspace(request)
         result["projects"] = work["projects"]
         result["services"] = work["services"]
+        if module == "library":
+            from newsflow.samples.catalog import Samples
+            result["collections"]["ownedReferences"] = Samples(
+                state.sessions,state.config.data_dir,state.image_studio).owned_references()
     result["catalog"] = {
         "apiModels": API_MODELS,
         "imageModels": list(IMAGE_MODELS),
