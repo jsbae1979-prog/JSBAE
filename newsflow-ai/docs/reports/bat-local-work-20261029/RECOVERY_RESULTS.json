@@ -1,0 +1,12 @@
+{
+  "snapshotFiles": 7,
+  "injectedSyntheticSettingAndMediaFailure": true,
+  "allSnapshotFileHashesRestored": true,
+  "sqliteIntegrity": "ok",
+  "savedDraftRevision": 2,
+  "originalTimeoutRestored": true,
+  "paidRequests": 0,
+  "restoreTarget": "synthetic profile only",
+  "real169ProfileRestoredOrModified": false,
+  "driverCorrection": "Initial driver retained its own sqlite connection; explicit closing used, no forced unlock or production change."
+}

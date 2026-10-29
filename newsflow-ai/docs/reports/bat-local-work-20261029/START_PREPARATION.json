@@ -1,0 +1,16 @@
+{
+  "candidateOnly": true,
+  "appliedToActualInstallation": false,
+  "proposedOpenBrowser": true,
+  "actualReadOnly": true,
+  "decryptCredentials": false,
+  "changedFields": [
+    "launch.openBrowser",
+    "layout.validationConfigSha256"
+  ],
+  "actualInstalledImplementationSha": "04d04aa55239b9755e9beb1e389bcaf5da1eee22",
+  "requiresExplicitActualProfileConfigApproval": true,
+  "autoReviewRejection": "Actual169 profile launch configuration modification was rejected before execution; proposal prepared outside actual profile instead.",
+  "actualOpenBrowser": false,
+  "actualConfigurationUnchanged": true
+}

@@ -1,0 +1,25 @@
+{
+  "initialCandidateSetupError": "Missing existing restored_install dependency; one module copied, no policy widening. Initial BAT exit2, subsequent three cycles exit0.",
+  "recoveryDriverCorrection": "Driver retained its own sqlite handle; driver ended normally, restore retried explicitly after handle release. No forced deletion or process termination.",
+  "autoReviewRejections": [
+    {
+      "action": "Combined dependency copy and relative BAT execution in source working directory",
+      "executed": false,
+      "resolution": "Split copy and explicit absolute synthetic BAT path; completed safely."
+    },
+    {
+      "action": "Actual restored-profile launch configuration update",
+      "executed": false,
+      "resolution": "No actual-profile changes; separate candidate configuration prepared. Explicit approval still required for application."
+    },
+    {
+      "action": "Narrow actual start metadata application after readonly comparison proof",
+      "executed": false,
+      "resolution": "Review again required separate actual installation/profile config approval. No further application attempted."
+    }
+  ],
+  "actual169DataWritesEnabled": false,
+  "actualOperatingProgramChanged": false,
+  "literalExplorerDoubleClickTested": false,
+  "defaultBrowserTab": "Opened synthetic NewsFlow tab in existing Edge window; other tabs/browser process not closed."
+}

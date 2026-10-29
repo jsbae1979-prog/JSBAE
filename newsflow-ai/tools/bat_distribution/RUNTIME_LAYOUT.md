@@ -1,3 +1,7 @@
+> 2026-10-29 로컬 쓰기 준비: synthetic-local-work에서 저장/복구/브라우저 동선 검증
+> 신규44 PASS. 실제169 프로필과 C 설치본은 읽기 전용 상태 그대로이며 설정 후보만 보존했다.
+> 최신 보고는 `docs/reports/bat-local-work-20261029/LOCAL_WORK_REPORT.md` 참조.
+
 > 2026-10-29 신규 설치/데이터 이전: C:/NewsFlowAI와 사용자 전용 NewsFlowAI-BAT/v1에
 > 동일 사용자 백업 복사본을 분리했다. 새 restored-private-validation 모드는 읽기만 허용하고
 > 암호문 복호화·자동화·외부 실행을 금지한다. 신규 집중56 PASS, 전체 판정 CONDITIONAL.

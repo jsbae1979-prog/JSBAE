@@ -1,0 +1,39 @@
+{
+  "baselineSha": "f435eace85f8da80c0eb633ecdd0d7857b2647c2",
+  "implementationSha": "c65eef44beadd2910aa7e95fd30def0447667c52",
+  "verdict": "CONDITIONAL",
+  "localSyntheticSavesVerified": true,
+  "unitPass": 12,
+  "saveWorkflowPass": 27,
+  "guiPass": 5,
+  "finalFocusedPass": 44,
+  "unresolvedTestFail": 0,
+  "unresolvedTestError": 0,
+  "syntheticFailureRecovery": "PASS",
+  "newStartExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "newStopExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "defaultBrowserAutoOpenAndNormalBootstrap": "PASS in synthetic profile",
+  "literalExplorerDoubleClick": "NOT VERIFIED",
+  "syntheticPort18769ListenersAfter": 0,
+  "syntheticAppProcessesAfter": 0,
+  "existingOperatingProcessesPreserved": 4,
+  "v3Running": true,
+  "v3ExecutionDenialObserved": false,
+  "real169ProfileReadOnly": true,
+  "realDbAnd6CiphertextsUnchanged": true,
+  "actual169ProfileRun": false,
+  "actualCInstallationOrConfigChanged": false,
+  "actualProfileStartConfigProposalPrepared": true,
+  "actualProfileStartConfigChangeApprovalRequired": true,
+  "paidApiCalls": 0,
+  "snsCalls": 0,
+  "originalBackupsTouched": false
+}

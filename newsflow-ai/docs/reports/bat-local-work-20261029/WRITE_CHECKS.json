@@ -1,0 +1,189 @@
+{
+  "checks": [
+    {
+      "name": "normal local authentication",
+      "result": "PASS",
+      "detail": 204
+    },
+    {
+      "name": "React image data and CSRF initialization",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "POST /settings/sources",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "POST /collection",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "news persisted through Fake RSS and existing collection engine",
+      "result": "PASS",
+      "detail": {
+        "articles": 1,
+        "collectionStatus": "success"
+      }
+    },
+    {
+      "name": "POST /ai/analyze",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "POST /ai/generate",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "POST /ai/drafts/1",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "script revision increments and content retained",
+      "result": "PASS",
+      "detail": null
+    },
+    {
+      "name": "POST /ai/drafts/1",
+      "result": "PASS",
+      "detail": {
+        "status": 409,
+        "error": null
+      }
+    },
+    {
+      "name": "revision conflict preserves saved content",
+      "result": "PASS",
+      "detail": null
+    },
+    {
+      "name": "POST /image-studio/defaults",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "POST /image-studio/drafts",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "image project and normalized media asset saved",
+      "result": "PASS",
+      "detail": {
+        "draftId": 4,
+        "assetExists": true
+      }
+    },
+    {
+      "name": "POST /character-defaults",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "POST /character",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "character reference and selected model saved without paid generation",
+      "result": "PASS",
+      "detail": {
+        "state": "needs_script",
+        "selectedModel": "claude-haiku-4-5-20251001"
+      }
+    },
+    {
+      "name": "POST /settings/collection",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "user setting update persisted",
+      "result": "PASS",
+      "detail": null
+    },
+    {
+      "name": "POST /settings/collection",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "user setting restored",
+      "result": "PASS",
+      "detail": null
+    },
+    {
+      "name": "POST /ai/preferences",
+      "result": "PASS",
+      "detail": {
+        "status": 303,
+        "error": null
+      }
+    },
+    {
+      "name": "missing CSRF remains refused",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "name": "foreign Origin remains refused",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "name": "live provider still refused despite consent field",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "name": "paid image generation remains refused",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "name": "no paid request records or OAuth state introduced",
+      "result": "PASS",
+      "detail": null
+    }
+  ],
+  "pass": 27,
+  "fail": 0
+}

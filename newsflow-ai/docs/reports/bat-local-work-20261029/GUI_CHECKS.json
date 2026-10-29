@@ -1,0 +1,27 @@
+{
+  "checks": [
+    {
+      "name": "Saved image model, ratio, quality restored in React",
+      "result": "PASS"
+    },
+    {
+      "name": "Saved local image draft is not mislabeled as generated result",
+      "result": "PASS"
+    },
+    {
+      "name": "React modal saves a local image draft through existing CSRF API",
+      "result": "PASS"
+    },
+    {
+      "name": "Character project and selected Claude model persist after recovery/restart",
+      "result": "PASS"
+    },
+    {
+      "name": "Saved offline script reopens through existing advanced-work link",
+      "result": "PASS",
+      "note": "Offline non-TOP3 draft is selected explicitly, not attached to unrelated TOP3 automatically."
+    }
+  ],
+  "pass": 5,
+  "fail": 0
+}

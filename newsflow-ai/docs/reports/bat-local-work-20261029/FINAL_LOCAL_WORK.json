@@ -1,0 +1,24 @@
+{
+  "newStartExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "newStopExitCodes": [
+    0,
+    0,
+    0
+  ],
+  "savedDraftRevision": 2,
+  "savedImageDrafts": 2,
+  "characterState": "needs_script",
+  "paidRequests": 0,
+  "productionSchedules": 0,
+  "publishSchedules": 0,
+  "realProfileDbAnd6CiphertextsUnchanged": true,
+  "realProfileReadOnly": true,
+  "actual169ProfileRunThisTask": false,
+  "operatingPort8765Used": false,
+  "browserAutoOpenAccepted": true,
+  "mainAndPR35Changed": false
+}

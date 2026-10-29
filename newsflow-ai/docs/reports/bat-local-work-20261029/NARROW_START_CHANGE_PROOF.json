@@ -1,0 +1,16 @@
+{
+  "actualProposedChanges": [
+    "launch.openBrowser false to true",
+    "app/layout validationConfigSha256 only"
+  ],
+  "profileWriteActivation": false,
+  "currentAndProposedReadOnly": true,
+  "currentAndProposedDecryptCredentials": false,
+  "dataRootModified": false,
+  "launchMetadataOutsideV1Data": true,
+  "programCodeOrExistingOperatingAppChanged": false,
+  "paidApiOrSNSChanges": false,
+  "appExecutionRequiredForApply": false,
+  "scopeBasisPresentedForReview": "4. BAT 실행 동선: 브라우저에서 NewsFlow AI를 열 수 있도록 검증",
+  "reviewOutcome": "REJECTED; actual destination not modified"
+}
