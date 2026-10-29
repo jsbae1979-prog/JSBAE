@@ -192,7 +192,7 @@ function CharacterTrialConnection({
       value ? { ...value, authAttempted: true, ready: false } : value,
     );
     try {
-      const body = new FormData();
+      const body = new URLSearchParams();
       body.set("csrf_token", csrfToken);
       body.set("consent", "true");
       const response = await fetch(
@@ -248,7 +248,7 @@ function CharacterTrialConnection({
     setMessage("");
     setStatus((value) => (value ? { ...value, archiveReady: false } : value));
     try {
-      const body = new FormData();
+      const body = new URLSearchParams();
       body.set("csrf_token", csrfToken);
       body.set("consent", "true");
       const response = await fetch("/api/studio/characters/trial-archive", {
@@ -657,7 +657,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     setVisibilityBusy(true);
     setFailure("");
     try {
-      const body = new FormData();
+      const body = new URLSearchParams();
       body.set("csrf_token", c.view?.csrfToken ?? "");
       body.set("scope", target.scope);
       body.set("hidden", String(target.hidden));
@@ -1120,9 +1120,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               <span>→</span>
             </button>
             <p className="kling-character-consent">
-              클릭하면 주제·참조 이미지를 Claude에 보내 스토리 1회를
-              생성·저장합니다. 저장된 API 승인·사용 한도가 적용되며 영상 생성
-              비용은 별도 승인합니다.
+              주제 텍스트로 Claude 스토리 1회를 생성·저장합니다. 참조 PNG는
+              스토리와 함께 Higgsfield 영상 제작에만 사용합니다. 저장된 API
+              승인·사용 한도가 적용되며 영상 생성 비용은 별도 승인합니다.
             </p>
             {!ready && (
               <p role="status">
