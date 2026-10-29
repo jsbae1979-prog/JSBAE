@@ -1,0 +1,26 @@
+{
+  "codeSHA": "467518fa02e9d07cb017c1712614e4ec2e070e53",
+  "operatingFilesApplied": 6,
+  "normalStopExitCode": 0,
+  "startAttemptedOnce": true,
+  "tables": 47,
+  "articles": 169,
+  "protectedKeyMediaFilesUnchanged": 26,
+  "existingCreativeFilesUnchanged": 38,
+  "originalAndABUnchanged": true,
+  "priorPaidJournalsUnchanged": true,
+  "changedTables": [
+    "api_request_reservations"
+  ],
+  "newAPIReservationRows": 1,
+  "storyRequests": 1,
+  "storyState": "script_failed",
+  "reservationStatus": "failed",
+  "usageCostEstimateUSD": "0.015762",
+  "conservativeStoryReservationUSD": "0.25",
+  "officialVideoQuoteReceived": false,
+  "videoGenerationRequests": 0,
+  "automaticRetryRequests": 0,
+  "rawResponseRetained": false,
+  "exactResponseValidationFailure": "NOT DETERMINED"
+}
