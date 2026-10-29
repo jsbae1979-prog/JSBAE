@@ -42,6 +42,8 @@ def recorder():
     ('POST', '/api/studio/characters/' + JOB + '/settings'),
     ('GET', '/api/samples/character-robot/copy-file'),
     ('HEAD', '/api/samples/character-robot/copy-file'),
+    ('GET', '/character/' + JOB + '/clips/1'),
+    ('HEAD', '/character/' + JOB + '/clips/1'),
 ])
 def test_only_exact_local_paths_reach_inner_app(method, path):
     app, received = recorder()
@@ -70,6 +72,9 @@ def test_only_exact_local_paths_reach_inner_app(method, path):
     ('POST', '/api/studio/characters/' + JOB + '/settings/other'),
     ('POST', '/api/feed-batches/1/step'), ('GET', '/oauth/callback'),
     ('POST', '/publish/1'),
+    ('POST', '/character/' + JOB + '/clips/1'),
+    ('GET', '/character/' + JOB + '/clips/0'),
+    ('GET', '/character/' + JOB + '/clips/6'),
 ])
 def test_wrong_methods_paths_and_external_actions_remain_denied(method, path):
     app, received = recorder()

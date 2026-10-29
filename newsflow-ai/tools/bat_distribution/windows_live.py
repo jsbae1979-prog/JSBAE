@@ -314,6 +314,55 @@ def open_chrome_session(url):
     return False
 
 
+def character_trial_policy(config):
+    """Optional, hash-pinned single-character approval; never a global live flag."""
+    if config.profile_kind != 'restored-local-operation':
+        return None
+    layout = json.loads((config.program / 'app/layout.json').read_bytes())
+    expected = layout.get('characterTrialPolicySha256')
+    if expected is None:
+        return None
+    import re
+    if not isinstance(expected, str) or not re.fullmatch('[a-f0-9]{64}', expected):
+        raise Blocked('character-approval-integrity')
+    source = ordinary_absolute(config.profile / 'character-api-policy.private.json')
+    content = source.read_bytes()
+    if len(content) > 8192 or hashlib.sha256(content).hexdigest() != expected:
+        raise Blocked('character-approval-integrity')
+    policy = json.loads(content)
+    from datetime import UTC, datetime
+    try:
+        expires = datetime.fromisoformat(policy['expires_at'])
+        if expires.tzinfo is None:
+            raise ValueError
+    except (KeyError, TypeError, ValueError):
+        raise Blocked('character-approval-expiry') from None
+    # Expired approval disables only the trial; normal local editing still works.
+    return policy if datetime.now(UTC) < expires else None
+
+
+def character_trial_unknowns(config):
+    """An exact reviewed snapshot for recoverable archival, never auto-archived."""
+    if config.profile_kind != 'restored-local-operation':
+        return None
+    layout = json.loads((config.program / 'app/layout.json').read_bytes())
+    expected = layout.get('characterTrialUnknownReviewSha256')
+    if expected is None:
+        return None
+    source = ordinary_absolute(config.profile / 'character-api-unknowns.private.json')
+    content = source.read_bytes()
+    if len(content) > 4096 or hashlib.sha256(content).hexdigest() != expected:
+        raise Blocked('character-unknown-review-integrity')
+    value = json.loads(content)
+    import re
+    if (not isinstance(value, dict) or len(value) != 7 or any(
+            not isinstance(k, str) or not re.fullmatch('[a-f0-9]{32}', k)
+            or not isinstance(v, str) or not re.fullmatch('[a-f0-9]{64}', v)
+            for k, v in value.items())):
+        raise Blocked('character-unknown-review-scope')
+    return value
+
+
 def start(config, plan):
     from filelock import FileLock
     from newsflow.config import Settings
@@ -328,6 +377,12 @@ def start(config, plan):
         with FileLock(str(config.profile / 'desktop.lock')).acquire(timeout=0):
             if marker.exists():
                 raise Blocked('owned-session-unresolved-no-retry')
+            trial_policy = character_trial_policy(config)
+            trial_unknowns = character_trial_unknowns(config) if trial_policy is not None else None
+            character_native_factory = None
+            if trial_policy is not None:
+                from newsflow.oauth.vault import _DPAPI
+                character_native_factory = _DPAPI
             credential_boundary = None
             if config.profile_kind in {'restored-private-validation', 'restored-local-operation', 'portable-local-operation'}:
                 from .restored_install import disable_credential_decryption
@@ -342,6 +397,11 @@ def start(config, plan):
             # Existing reservations/history stay intact; no product scheduler change.
             app.state.scheduler.start = lambda: None
             app.state.publishing_calendar.start = lambda: None
+            character_trial = None
+            if trial_policy is not None:
+                from .character_trial import install
+                character_trial = install(app, config.profile, trial_policy, character_native_factory,
+                                          unknown_review=trial_unknowns)
             import uvicorn
             session = LaunchSession(config.port)
             nonce = secrets.token_hex(32)
@@ -357,7 +417,10 @@ def start(config, plan):
                 request_boundary = RestoredRequests(LocalAccess(app, session))
             elif config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .operation import OperatingRequests
-                request_boundary = OperatingRequests(LocalAccess(app, session))
+                authenticated_app = LocalAccess(app, session)
+                request_boundary = OperatingRequests(authenticated_app)
+                if character_trial is not None:
+                    request_boundary = character_trial.wrap(request_boundary, authenticated_app)
             elif config.profile_kind == 'synthetic-local-work':
                 from .local_work import LocalWorkRequests
                 request_boundary = LocalWorkRequests(LocalAccess(app, session))

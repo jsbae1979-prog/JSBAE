@@ -62,6 +62,17 @@ def studio_settings(request: Request,job_id:str,settings:str=Form(...),
         raise HTTPException(409,'견적 전 스토리 검토 단계에서만 영상 설정을 저장할 수 있습니다.') from None
 
 
+@router.post('/api/studio/characters/{job_id}/visibility')
+def character_visibility(request: Request, job_id: str, scope: str=Form(...), hidden: bool=Form(...)):
+    from newsflow.character.visibility import set_visibility
+    try:
+        return set_visibility(request.app.state.character,job_id,scope,hidden)
+    except (OSError,*SAFE_ERRORS):
+        raise HTTPException(409,'처리 중인 작업이나 원본 상태를 확인하세요. 원본 파일은 변경하지 않았습니다.') from None
+    except (ValueError,TypeError):
+        raise HTTPException(422,'작업과 목록 구분·숨김 값을 확인하세요.') from None
+
+
 @router.get('/character',response_class=HTMLResponse)
 def studio(request: Request, job_id: str = '', reference_asset: str = ''):
     service=request.app.state.character

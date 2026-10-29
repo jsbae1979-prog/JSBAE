@@ -182,6 +182,8 @@ def image_rows(state, session):
 
 
 def character_rows(state):
+    from newsflow.character.visibility import read_visibility
+    visibility = read_visibility(state.character.sessions)
     result = []
     for source in state.character.listing()[:100]:
         job = state.character.read(source["id"])
@@ -208,6 +210,7 @@ def character_rows(state):
             )
             if k in job
         }
+        item.update(visibility.get(job['id'], {'trashed': False, 'recentHidden': False}))
         # Reference and clips use existing validated file routes; do not expose local paths.
         item["scenes"] = [
             {
@@ -507,6 +510,12 @@ def module_view(request: Request, module: Module):
     if module == "characters":
         from newsflow.character.kling import catalog as character_catalog
         result["catalog"]["characterStudio"] = character_catalog()
+        live_trial = getattr(state.character, "_approved_character_trial", None)
+        if live_trial is not None:
+            result["catalog"]["characterStudio"]["liveTrial"] = {
+                "enabled": True, "duration": 15, "totalLimitUsd": "3",
+                "expiresAt": live_trial.policy["expires_at"],
+            }
         from newsflow.character.kling import DEFAULTS, as_generation, validate as validate_character
         from newsflow.video_models.catalog import reconcile
         for completed in state.character.listing():

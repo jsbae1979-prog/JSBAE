@@ -6,14 +6,13 @@ from .schema import CHARACTER_SCRIPT_INSTRUCTION, Storyboard
 
 
 class CharacterWriter(AnthropicProvider):
-    def write_studio(self, payload, options, reference):
-        import base64
+    def write_studio(self, payload, options, reference=None):
+        """Generate from text only; the compatibility reference argument is never read."""
         from .studio_story import INSTRUCTION, StudioStoryboard
+        self.last_usage = None
+        story_input={key:payload[key] for key in ('topic','duration','clip_seconds','scene_count','sound') if key in payload}
         body={'model':options.model,'max_tokens':options.max_tokens,'temperature':options.temperature,
-              'system':INSTRUCTION, 'messages':[{'role':'user','content':[
-                  {'type':'image','source':{'type':'base64','media_type':'image/png',
-                     'data':base64.b64encode(reference).decode('ascii')}},
-                  {'type':'text','text':user_message(payload)}]}],
+              'system':INSTRUCTION, 'messages':[{'role':'user','content':user_message(story_input)}],
               'output_config':{'format':{'type':'json_schema','schema':_output_schema(StudioStoryboard)}}}
         document=self._post(body,options)
         try:

@@ -9,25 +9,34 @@ from newsflow.video.engine import FFmpegAdapter, RenderPlan, write_ass
 def compose_studio(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None):
     settings=validate(settings)
     total=sum(s.seconds for s in story.scenes)
-    if total!=settings['duration'] or len(clips)!=len(story.scenes): raise CharacterError('media')
+    if total!=settings['duration']: raise CharacterError('media')
+    if len(clips)==1:
+        from .kling import as_generation
+        from newsflow.video_models.catalog import validate as validate_generation
+        if validate_generation(as_generation(settings,total)):raise CharacterError('media')
+        clip_durations=[total]
+    elif len(clips)==len(story.scenes):
+        clip_durations=[scene.seconds for scene in story.scenes]
+    else:
+        raise CharacterError('media')
     binary=str(FFmpegAdapter.executable('ffmpeg',ffmpeg))
     work=folder/'compose'
     work.mkdir(exist_ok=False)
     width,height=dimensions(settings)
     normalized=[]
-    for i,(clip,scene) in enumerate(zip(clips,story.scenes)):
+    for i,(clip,seconds) in enumerate(zip(clips,clip_durations)):
         info=probe_clip(clip,ffprobe)
-        if info['duration']<scene.seconds-2 or (settings['sound']=='on' and not info['has_audio']):
+        if info['duration']<seconds-2 or (settings['sound']=='on' and not info['has_audio']):
             raise CharacterError('media')  # Never replace a requested voice with fabricated silence.
         target=work/f'scene-{i}.mp4'
         args=[binary,'-nostdin','-n','-v','error','-protocol_whitelist','file',
               '-format_whitelist',FORMAT_WHITELIST,'-i',str(clip.resolve()),'-vf',
               f'scale={width}:{height}:force_original_aspect_ratio=decrease,pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,'
               'setsar=1,fps=30,format=yuv420p,'
-              f'tpad=stop_mode=clone:stop_duration={max(0,scene.seconds-info["duration"]):.3f}',
-              '-t',str(scene.seconds),'-c:v','libx264','-preset','ultrafast','-crf','22','-threads','2']
+              f'tpad=stop_mode=clone:stop_duration={max(0,seconds-info["duration"]):.3f}',
+              '-t',str(seconds),'-c:v','libx264','-preset','ultrafast','-crf','22','-threads','2']
         if settings['sound']=='on':
-            args+=['-af',f'apad,atrim=duration={scene.seconds},asetpts=PTS-STARTPTS',
+            args+=['-af',f'apad,atrim=duration={seconds},asetpts=PTS-STARTPTS',
                    '-c:a','aac','-ar','48000','-ac','2']
         else:
             args+=['-an']

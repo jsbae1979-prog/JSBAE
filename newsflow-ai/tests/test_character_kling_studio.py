@@ -144,16 +144,18 @@ def test_video_settings_reach_quote_then_freeze_with_approval_and_unknown_protec
     with pytest.raises(CharacterError):s.submit(i,consent=True,quote_hash=job['quote_hash'])
     assert provider.calls==1
 
-def test_reference_vision_and_generic_schema_are_sent_once_without_legacy_mascot(monkeypatch):
+def test_topic_and_generic_schema_are_sent_once_without_reference_or_legacy_mascot(monkeypatch):
     writer=CharacterWriter(lambda:'synthetic')
     seen=[]
     def reply(body,options):
         seen.append(body)
         return {'stop_reason':'end_turn','content':[{'type':'text','text':json.dumps(story())}]}
     monkeypatch.setattr(writer,'_post',reply)
-    result=writer.write_studio({'duration':55,'topic':'여행','sound':'off'},Options(model='claude-sonnet-4-6'),png())
+    payload={'duration':15,'topic':'여행','sound':'off','clip_seconds':3,'scene_count':5}
+    result=writer.write_studio(payload,Options(model='claude-sonnet-4-6'),png())
     assert len(result.scenes)==5 and len(seen)==1
-    assert seen[0]['messages'][0]['content'][0]['source']['media_type']=='image/png'
+    assert json.loads(seen[0]['messages'][0]['content'])==payload
+    assert not {'base64','media_type','image','source'} & set(seen[0]['messages'][0])
     assert 'fixed original mascot' not in seen[0]['system']
     assert 'output_config' in seen[0]
 
@@ -265,3 +267,77 @@ def test_catalog_deactivation_preserves_existing_job_read_but_blocks_execution(s
     monkeypatch.setattr(CATALOG,'_data',changed)
     assert s.read(i)['script']['title']=='새로운 여행'
     with pytest.raises(CharacterError):KlingClient(lambda:'synthetic',check(s.read(i)['studio_selection']))
+
+
+def test_studio_text_transport_never_reads_or_serializes_large_reference(monkeypatch):
+    from newsflow.intelligence.api_providers import MAX_REQUEST_BYTES
+
+    class UnreadReference:
+        declared_size = 4_902_024
+
+        def __len__(self):
+            raise AssertionError('Claude must not inspect the reference')
+
+        def __bytes__(self):
+            raise AssertionError('Claude must not convert the reference')
+
+        def __repr__(self):
+            raise AssertionError('Claude must not serialize the reference')
+
+        def read(self, *args):
+            raise AssertionError('Claude must not read the reference')
+
+    writer = CharacterWriter(lambda: 'synthetic-only')
+    requests = []
+
+    def capture(request, timeout, limit):
+        requests.append(request.data)
+        return json.dumps({'stop_reason': 'end_turn', 'content': [
+            {'type': 'text', 'text': json.dumps(story())}]}).encode('utf-8')
+
+    monkeypatch.setattr(writer, '_open', capture)
+    payload = {'duration': 15, 'topic': '친구와 숲을 여행하는 이야기', 'sound': 'off',
+               'clip_seconds': 3, 'scene_count': 5}
+    writer.write_studio(payload, Options(model='claude-sonnet-4-6', max_tokens=3000), UnreadReference())
+    assert len(requests) == 1 and len(requests[0]) <= MAX_REQUEST_BYTES == 64000
+    assert json.loads(json.loads(requests[0])['messages'][0]['content']) == payload
+    assert all(field not in requests[0] for field in
+               (b'"image"', b'"source"', b'"base64"', b'"media_type"'))
+
+
+def test_studio_text_story_leaves_stored_png_unchanged(tmp_path, monkeypatch):
+    import hashlib
+    reference = png()
+    path = tmp_path / 'reference.png'
+    path.write_bytes(reference)
+    original_hash = hashlib.sha256(reference).hexdigest()
+    writer = CharacterWriter(lambda: 'synthetic-only')
+    bodies = []
+
+    def capture(body, options):
+        bodies.append(body)
+        return {'stop_reason': 'end_turn', 'content': [{'type': 'text', 'text': json.dumps(story())}]}
+
+    monkeypatch.setattr(writer, '_post', capture)
+    writer.write_studio({'duration': 55, 'topic': '여행', 'sound': 'off'},
+                        Options(model='claude-sonnet-4-6'), reference)
+    assert isinstance(bodies[0]['messages'][0]['content'], str)
+    assert hashlib.sha256(reference).hexdigest() == original_hash
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == original_hash
+
+
+def test_studio_text_transport_timeout_does_not_retry_or_reuse_usage(monkeypatch):
+    from newsflow.intelligence.provider import ProviderTimeoutError
+    writer = CharacterWriter(lambda: 'synthetic-only')
+    writer.last_usage = {'prompt_tokens': 100, 'completion_tokens': 500}
+    requests = []
+
+    def timeout(request, timeout, limit):
+        requests.append(request.data)
+        raise TimeoutError
+
+    monkeypatch.setattr(writer, '_open', timeout)
+    options = Options(model='claude-sonnet-4-6')
+    with pytest.raises(ProviderTimeoutError):
+        writer.write_studio({'duration': 55, 'topic': '여행', 'sound': 'off'}, options)
+    assert len(requests) == 1 and writer.last_retried is False and writer.last_usage is None

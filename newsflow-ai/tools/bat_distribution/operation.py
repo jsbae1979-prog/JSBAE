@@ -55,13 +55,16 @@ class OperatingRequests(LocalWorkRequests):
     # Provider story/quote/submit routes remain outside the operation boundary.
     READS = (LocalWorkRequests.READS - {'/api/samples'}) | {'/api/studio/video-models'}
     CHARACTER_SETTINGS = re.compile(r'/api/studio/characters/[a-f0-9]{32}/settings\Z')
+    CHARACTER_VISIBILITY = re.compile(r'/api/studio/characters/[a-f0-9]{32}/visibility\Z')
     COPIED_MEDIA = re.compile(r'/api/samples/[a-z0-9-]{1,48}/copy-file\Z')
+    CHARACTER_CLIP = re.compile(r'/character/[a-f0-9]{32}/clips/[1-5]\Z')
 
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'http':
             method, path = scope['method'], scope['path']
-            local_settings = method == 'POST' and self.CHARACTER_SETTINGS.fullmatch(path)
-            copied_media = method in {'GET', 'HEAD'} and self.COPIED_MEDIA.fullmatch(path)
+            local_settings = method == 'POST' and (self.CHARACTER_SETTINGS.fullmatch(path)
+                                                  or self.CHARACTER_VISIBILITY.fullmatch(path))
+            copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path))
             if local_settings or copied_media:
                 # self.app remains LocalAccess(original_app, session); inner
                 # signed CSRF, Origin, ownership and file checks are unchanged.

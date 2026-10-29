@@ -41,6 +41,44 @@ def day_exposure(job, day):
     return amount(job['quote_total_usd']) if job.get('approved_day')==day else Decimal(0)
 
 
+def generation_rows(job):
+    """Keep the story plan intact; use one provider clip when its full length fits."""
+    rows=job['prompts']
+    if not job.get('studio_selection'):
+        return rows
+    from .kling import check
+    from newsflow.video_models.catalog import CATALOG,duration_values
+    settings=check(job['studio_selection'])
+    model=CATALOG.model(settings['video_model'])
+    if model is None:
+        raise CharacterError('provider')
+    supported=duration_values(model)
+    if job['duration']>max(supported):
+        return rows  # Preserve the accepted multi-clip behavior for longer jobs.
+    if job['duration'] not in supported or not rows or sum(row['seconds'] for row in rows)!=job['duration']:
+        raise CharacterError('media')
+    if any(not isinstance(row['prompt'],str) or not row['prompt'] for row in rows):
+        raise CharacterError('media')
+    # studio_story.prompts prepends this exact appearance/style to each beat.
+    # Factor only that known common prefix; never truncate or rewrite actions.
+    character=job.get('character',{})
+    appearance,style=character.get('appearance'),character.get('style_lock')
+    prefix=f'{appearance} {style} ' if isinstance(appearance,str) and isinstance(style,str) else ''
+    shared=bool(prefix) and all(row['prompt'].startswith(prefix) for row in rows)
+    lines=[prefix.strip()] if shared else []
+    lines.append(f"Create one continuous {job['duration']}-second video. Follow every story beat in order; keep the reference character consistent.")
+    elapsed=0
+    for row in rows:
+        text=row['prompt'][len(prefix):] if shared else row['prompt']
+        lines.append(f"{elapsed}-{elapsed+row['seconds']} seconds: {text}")
+        elapsed+=row['seconds']
+    prompt='\n'.join(lines)
+    if len(prompt)>4500:
+        raise CharacterError('media')
+    return [{'position':1,'seconds':job['duration'],'prompt':prompt,
+             'story_positions':[row['position'] for row in rows]}]
+
+
 class CharacterService:
     def __init__(self, data_dir, sessions, keys, *, writer=None, video=None, budget=None, composer=None, video_keys=None):
         self.root = Path(data_dir)/'character'
@@ -296,6 +334,7 @@ class CharacterService:
             job=self.read(identifier)
             if job['state']!='script_review':
                 raise CharacterError('blocked')
+            planned=generation_rows(job)
             if job.get('studio_selection'):
                 from .kling import check, as_generation
                 from newsflow.video_models.catalog import estimate
@@ -328,11 +367,12 @@ class CharacterService:
                         json.dump(cache,f)
                     os.replace(tmp,cachefile)
                 scenes=[]
-                for row in job['prompts']:
+                for row in planned:
                     payload=self.video_for(job).payload(row['prompt'],row['seconds'],public)
                     quote=str(amount(self.video_for(job).estimate(payload)))
                     scenes.append({'position':row['position'],'payload':payload,'quote_usd':quote,
                                    'state':'not_submitted','idempotency_key':uuid4().hex,'attempt':1})
+                    if row.get('story_positions'):scenes[-1]['story_positions']=list(row['story_positions'])
                 total=sum(amount(s['quote_usd']) for s in scenes)
                 if total>amount(job['episode_limit']):
                     raise CharacterError('budget')
