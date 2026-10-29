@@ -45,11 +45,75 @@
   "nodeAffectedPriorCases": 5,
   "typeScript": "PASS",
   "viteBuild": "PASS",
-  "operatingApplied": false,
-  "operatingRestarted": false,
-  "liveDiagnosticGETsThisRevision": 0,
+  "operatingApplied": true,
+  "operatingRestarted": true,
+  "liveDiagnosticGETsThisRevision": 5,
   "newGenerationRequests": 0,
-  "providerFailureCause": "NOT VERIFIED: console lacks detail; explicit status diagnostic is prepared but not operating-applied",
-  "rootCauseFixed": false,
-  "result": "CONDITIONAL"
+  "providerFailureCause": "prompt too long",
+  "result": "CONDITIONAL: diagnosis complete; compact request fix verified locally, operating activation and paid acceptance pending",
+  "operatingCodeSHA": "b8ec27980fd070437d07dcf2ebe5800ad2d4da44",
+  "operatingFilesApplied": 9,
+  "normalStopExitCode": 0,
+  "singleStartAttempted": true,
+  "chromeAuthenticated": true,
+  "providerError": "The prompt is too long. Shorten it to the limit supported by this model.",
+  "rootCauseFixedInDevelopment": true,
+  "rootCauseFixOperatingApplied": false,
+  "newPromptFocusedTests": {
+    "pass": 40,
+    "fail": 0,
+    "error": 0
+  },
+  "promptComparison": {
+    "rows": [
+      {
+        "position": 1,
+        "oldChars": 3414,
+        "newChars": 1159,
+        "seconds": 6
+      },
+      {
+        "position": 2,
+        "oldChars": 3368,
+        "newChars": 1113,
+        "seconds": 6
+      },
+      {
+        "position": 3,
+        "oldChars": 3401,
+        "newChars": 1146,
+        "seconds": 6
+      },
+      {
+        "position": 4,
+        "oldChars": 3425,
+        "newChars": 1170,
+        "seconds": 6
+      },
+      {
+        "position": 5,
+        "oldChars": 3471,
+        "newChars": 1216,
+        "seconds": 6
+      }
+    ],
+    "jobHashBeforeEqualsAfter": true,
+    "jobInMemoryUnchanged": true,
+    "providerCalls": 0,
+    "note": "Pure planning on an existing private evidence copy; no operating file changes or provider acceptance test.",
+    "characterCountUnit": "Unicode code points (Python len); prior browser/PowerShell UTF-16 counts include extra surrogate units for emoji."
+  },
+  "preservation": {
+    "articles": 169,
+    "tables": 47,
+    "changedTables": 0,
+    "protectedFilesAndACL": 26,
+    "originalBackupABUnchanged": true,
+    "newAPIReservationRows": 0,
+    "priorPaidJournalsUnchanged": true,
+    "allRequestsHandlesAttemptsTimesQuotesStoryUnchanged": true,
+    "creativeFilesChecked": 48,
+    "changedCreativeFiles": 1,
+    "newCreativeFiles": 0
+  }
 }

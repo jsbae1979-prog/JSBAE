@@ -16,6 +16,15 @@ from newsflow.video.ai.download import safe_url
 
 K3 = 'kling-video/v3.0/std/image-to-video'
 O3 = 'kling-video/o3/image-reference'
+# Conservative app guard after provider rejection, NOT a published Higgsfield limit.
+VIDEO_PROMPT_LIMIT = 2000
+
+def validate_video_prompt(prompt):
+    if not isinstance(prompt,str) or not prompt.strip():
+        raise CharacterError()
+    if len(prompt)>VIDEO_PROMPT_LIMIT:
+        raise CharacterError('prompt_length')
+
 from newsflow.video_models.catalog import (CATALOG,GenerationSettings,build_request,character_config,
     styles,duration_values,validate as validate_generation,estimate as estimate_generation)
 MODELS={m['id']:m['label'] for m in CATALOG.refresh()['models'] if m['enabled']}
@@ -138,7 +147,7 @@ class KlingClient(HiggsfieldVideoClient):
         self.model=self.settings['video_model']
 
     def payload(self, prompt, seconds, reference):
-        if not isinstance(prompt,str) or len(prompt)>4500:raise CharacterError()
+        validate_video_prompt(prompt)
         g=as_generation(self.settings,seconds)
         # The service froze the character/style prompt in jobs.json before quoting.
         request=build_request(GenerationSettings(g.model_id,g.aspect_ratio,g.resolution,g.duration,None,g.audio),

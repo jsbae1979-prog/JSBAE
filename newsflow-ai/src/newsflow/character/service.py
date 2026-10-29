@@ -75,11 +75,11 @@ def retime_studio_story(story, settings):
 
 
 def generation_rows(job):
-    """New prepares use each saved story beat as one actual provider clip."""
+    """New quotes send only the current saved beat and concise shared direction."""
     rows=job['prompts']
     if not job.get('studio_selection'):
         return rows
-    from .kling import check
+    from .kling import check,validate_video_prompt
     from newsflow.video_models.catalog import CATALOG,duration_values
     settings=check(job['studio_selection'])
     model=CATALOG.model(settings['video_model'])
@@ -89,28 +89,23 @@ def generation_rows(job):
     if (len(rows)!=5 or sum(row['seconds'] for row in rows)!=job['duration']
             or any(row.get('position')!=position for position,row in enumerate(rows,1))
             or any(type(row['seconds']) is not int or row['seconds'] not in supported
-                   or row['seconds']*5!=job['duration'] for row in rows)
-            or any(not isinstance(row.get('prompt'),str) or not row['prompt'].strip()
-                   or len(row['prompt'])>4500 for row in rows)):
+                   or row['seconds']*5!=job['duration'] for row in rows)):
         raise CharacterError('media')
     from .studio_story import StudioStoryboard
-    story=StudioStoryboard.model_validate(job['script']).model_dump()
-    context={'title':story['title'],'plan':story['plan'],'ordered_story':[
-        {'beat':position,'seconds':scene['seconds'],'role':scene['role'],
-         'action':scene['action'],'caption':scene['caption']}
-        for position,scene in enumerate(story['scenes'],1)]}
-    shared=('Full story context (UNSPOKEN direction for continuity; not a script to read aloud): '
-            +json.dumps(context,ensure_ascii=False,sort_keys=True,separators=(',',':'))+'\n'
-            'No voiceover or narrator. Never read descriptions, captions, titles or timing markers aloud.\n')
+    story=StudioStoryboard.model_validate(job['script'])
+    # The saved per-beat prompt already contains its complete action, reference
+    # character/style and selected sound/no-narrator direction. Do not repeat
+    # all five actions, contrast, ending or display captions in every request.
+    shared=f"Situation (unspoken): {story.plan.situation}\n"
     result=[]
     for row in rows:
-        focus=(f"Generate only this beat {row['position']} of 5, duration {row['seconds']} seconds. "
-               'Do not perform the other beats in this clip. Keep the reference character and story continuity consistent.\n')
+        validate_video_prompt(row.get('prompt'))
+        focus=(f"Create only beat {row['position']}/5 as one {row['seconds']}-second shot. "
+               'Keep the reference character consistent; do not perform other beats.\n')
         prompt=shared+focus+row['prompt']
-        if len(prompt)>4500:
-            raise CharacterError('media')  # Never truncate the full story or silently omit a beat.
+        validate_video_prompt(prompt)  # Before upload/estimate. Never slice input.
         result.append({**row,'prompt':prompt})
-    return result  # Derived request prompts only: stored story/prompts/plan and earlier payloads stay unchanged.
+    return result  # Stored story/prompts, old payloads/quotes/approvals remain unchanged.
 
 
 class CharacterService:
@@ -629,6 +624,10 @@ class CharacterService:
             job=self.read(identifier)
             if job['state']!='quoted' or quote_hash!=job['quote_hash']:
                 raise CharacterError('blocked')
+            if job.get('studio_selection'):
+                from .kling import validate_video_prompt
+                for scene in job['scenes']:
+                    validate_video_prompt(scene['payload'].get('prompt'))
             if (now()-datetime.fromisoformat(job['quoted_at'])>timedelta(minutes=15)
                     or hashlib.sha256(self.video_for(job).credential().encode()).hexdigest()!=job['quote_key_id']
                     or fingerprint([job['plan_hash'],job['scenes'],job['quoted_at'],job['quote_key_id']])!=quote_hash):
@@ -830,6 +829,9 @@ class CharacterService:
             pending=next((s for s in job['scenes'] if s['state']=='failed' and s['attempt']<3),None)
             if job['state']!='scene_review' or pending is None:
                 raise CharacterError('blocked')
+            if job.get('studio_selection'):
+                from .kling import validate_video_prompt
+                validate_video_prompt(pending['payload'].get('prompt'))
             job['state']='retry_quoting'
             self.save(job)
             try:
@@ -854,6 +856,9 @@ class CharacterService:
                 raise CharacterError('blocked')
             retry=job['retry']
             scene=next(s for s in job['scenes'] if s['position']==retry['position'])
+            if job.get('studio_selection'):
+                from .kling import validate_video_prompt
+                validate_video_prompt(scene['payload'].get('prompt'))
             if (fingerprint(retry)!=quote_hash or fingerprint(scene)!=retry['original']
                     or scene['state']!='failed' or scene['attempt']>=3
                     or now()-datetime.fromisoformat(retry['at'])>timedelta(minutes=15)
