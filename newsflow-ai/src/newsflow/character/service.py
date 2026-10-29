@@ -80,7 +80,7 @@ def generation_rows(job):
 
 
 class CharacterService:
-    def __init__(self, data_dir, sessions, keys, *, writer=None, video=None, budget=None, composer=None, video_keys=None):
+    def __init__(self, data_dir, sessions, keys, *, writer=None, video=None, budget=None, composer=None, video_keys=None, ffmpeg=None, ffprobe=None):
         self.root = Path(data_dir)/'character'
         self.sessions, self.keys = sessions, keys
         self.writer = writer or CharacterWriter(keys.key)
@@ -88,6 +88,8 @@ class CharacterService:
         self.video_override, self.video_keys = video, video_keys
         self.budget = budget or APIBudgetService(sessions)
         self.composer = composer or compose
+        self.ffmpeg = Path(ffmpeg) if ffmpeg is not None else None
+        self.ffprobe = Path(ffprobe) if ffprobe is not None else None
         self.daily_limit_approval = None  # Optional server-owned scoped approval, never a form field.
 
     def video_for(self, job):
@@ -553,6 +555,7 @@ class CharacterService:
                     continue
                 if scene['state']!='submitted':
                     raise CharacterError('blocked')
+                stage='status'
                 try:
                     status=self.video_for(job).check(scene['handle'])
                     if status.state in {'failed','nsfw','canceled'}:
@@ -565,8 +568,10 @@ class CharacterService:
                         path=folder/f'scene-{scene["position"]}.mp4'
                         scene['state']='downloading'
                         self.save(job)
+                        stage='download'
                         self.video_for(job).fetch(status,path,Event())
-                        info=probe_clip(path)
+                        stage='local_validation'
+                        info=probe_clip(path,self.ffprobe) if self.ffprobe is not None else probe_clip(path)
                         if info['duration']<scene['payload']['duration']-2:
                             raise CharacterError('media')
                         scene.update(state='downloaded',file=path.name,sha256=digest(path),media=info)
@@ -576,11 +581,68 @@ class CharacterService:
                     raise
                 except Exception:  # noqa: BLE001 - persist a stopped state without secret supplier diagnostics
                     job['state']='status_or_download_failed'
+                    job['last_failure']={'stage':stage,'code':'local_media_validation_failed' if stage=='local_validation' else 'provider_response_failed'}
                     self.save(job)
-                    raise CharacterError('provider') from None
+                    raise CharacterError('media' if stage=='local_validation' else 'provider') from None
             if all(s['state']=='downloaded' for s in job['scenes']):
                 job['state']='clips_review'
                 self.save(job)
+
+    def recover_local_download(self, identifier, *, consent=False, expected_sha256='', expected_bytes=0):
+        """Explicitly adopt an already downloaded clip; never contact a provider or retry a request."""
+        self.consent(consent)
+        if (not isinstance(expected_sha256,str) or not re.fullmatch(r'[a-f0-9]{64}',expected_sha256)
+                or type(expected_bytes) is not int or expected_bytes<=0):
+            raise CharacterError('media')
+        with self.lock():
+            job=self.read(identifier)
+            scenes=job.get('scenes',[])
+            if (job.get('state')!='status_or_download_failed' or len(scenes)!=1
+                    or scenes[0].get('state')!='downloading' or scenes[0].get('position')!=1
+                    or not isinstance(job.get('studio_selection'),dict)):
+                raise CharacterError('blocked')
+            scene=scenes[0]
+            from .kling import check
+            from .higgsfield_client import request_url
+            settings=check(job['studio_selection'])
+            handle=scene.get('handle')
+            if (not isinstance(handle,dict) or set(handle)!={'request_id','status_url'}
+                    or scene.get('payload',{}).get('duration')!=job['duration']
+                    or scene['payload'].get('sound')!=settings['sound']):
+                raise CharacterError('blocked')
+            request_url(handle['status_url'],handle['request_id'])  # Pure validation; never a status request.
+            path=self.folder(identifier)/'scene-1.mp4'
+            import stat
+            try:
+                before=path.lstat()
+                if (not stat.S_ISREG(before.st_mode) or path.is_symlink() or path.is_junction()
+                        or getattr(before,'st_file_attributes',0)&0x400
+                        or before.st_size!=expected_bytes or digest(path)!=expected_sha256):
+                    raise CharacterError('media')
+                probe=getattr(self,'ffprobe',None)
+                info=probe_clip(path,probe) if probe is not None else probe_clip(path)
+                after=path.lstat()
+                if (before.st_size!=after.st_size or before.st_mtime_ns!=after.st_mtime_ns
+                        or before.st_ino!=after.st_ino or digest(path)!=expected_sha256
+                        or abs(info['duration']-job['duration'])>2
+                        or bool(info['has_audio'])!=(settings['sound']=='on')):
+                    raise CharacterError('media')
+            except (OSError,ValueError,KeyError,TypeError):
+                raise CharacterError('media') from None
+            recovered=now().isoformat()
+            history=job.setdefault('local_recoveries',[])
+            if not isinstance(history,list) or len(history)>=20:
+                raise CharacterError('blocked')
+            history.append({'at':recovered,'action':'recover_local_download',
+                            'from_job_state':job['state'],'from_scene_state':scene['state'],
+                            'file':'scene-1.mp4','sha256':expected_sha256,'bytes':expected_bytes,
+                            'provider_calls':0})
+            scene.update(state='downloaded',file='scene-1.mp4',sha256=expected_sha256,
+                         media=info,finished_at=recovered)
+            job['state']='clips_review'
+            self.save(job)
+            return {'state':'clips_review','file':'scene-1.mp4','sha256':expected_sha256,
+                    'media':info,'providerCalls':0}
 
     def prepare_retry(self, identifier, *, consent=False):
         self.consent(consent)
@@ -662,15 +724,16 @@ class CharacterService:
                 raise CharacterError('media')
             job['state']='composing'
             self.save(job)
+            tools={name:value for name,value in (('ffmpeg',self.ffmpeg),('ffprobe',self.ffprobe)) if value is not None}
             try:
                 if job.get('studio_selection'):
                     from .compose_studio import compose_studio
                     from .studio_story import StudioStoryboard
                     from .kling import check
                     output=compose_studio(folder,StudioStoryboard.model_validate(job['script']),clips,
-                                          settings=check(job['studio_selection']))
+                                          settings=check(job['studio_selection']),**tools)
                 else:
-                    output=self.composer(folder,Storyboard.model_validate(job['script']),clips,sfx_root=self.root/'sfx')
+                    output=self.composer(folder,Storyboard.model_validate(job['script']),clips,sfx_root=self.root/'sfx',**tools)
             except Exception:  # noqa: BLE001 - persist a stopped state without secret supplier diagnostics
                 job['state']='compose_failed'
                 self.save(job)

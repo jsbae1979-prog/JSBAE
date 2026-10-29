@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import "./style.css";
 import Workbench from "./studio/Workbench";
+import StopNotice from "./studio/StopNotice";
 import { Thumbnail } from "./studio/Thumbnail";
 
 type Kind = "news" | "character" | "image";
@@ -1069,4 +1070,9 @@ function App() {
     </div>
   );
 }
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <>
+    <StopNotice />
+    <App />
+  </>,
+);

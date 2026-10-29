@@ -97,7 +97,7 @@ def _recover_intelligence_runs(sessions: sessionmaker[Session], data_dir: Path) 
 
 def create_app(
     settings: Settings | None = None, adapter: RSSAdapter | None = None, video_provider: VideoProvider | None = None,
-    *, automatic_start: bool = False,
+    *, automatic_start: bool = False, character_ffmpeg: Path | None = None, character_ffprobe: Path | None = None,
 ) -> FastAPI:
     settings = settings or Settings.from_env()
     engine = make_engine(settings.data_dir / "newsflow.db")
@@ -194,7 +194,8 @@ def create_app(
     app.state.config, app.state.sessions, app.state.coordinator = settings, sessions, coordinator
     from .character.service import CharacterService
 
-    app.state.character = CharacterService(settings.data_dir, sessions, api_keys['claude_api'], video_keys=video_ai.keys)
+    app.state.character = CharacterService(settings.data_dir, sessions, api_keys['claude_api'], video_keys=video_ai.keys,
+                                           ffmpeg=character_ffmpeg, ffprobe=character_ffprobe)
     app.state.news_thumbnails = ThumbnailService(coordinator.service.collector.adapter)
     app.state.engine = engine
     app.state.video = video

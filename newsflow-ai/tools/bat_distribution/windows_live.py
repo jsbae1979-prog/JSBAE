@@ -200,8 +200,9 @@ class SyntheticRequests:
 
 class Control:
     """Private session control in front of the unchanged LocalAccess wrapper."""
-    def __init__(self, app, identity, origin, stop):
+    def __init__(self, app, identity, origin, stop, stop_notice=None):
         self.app, self.identity, self.origin, self.stop = app, identity, origin, stop
+        self.stop_notice = stop_notice
         self.requested = False
 
     async def __call__(self, scope, receive, send):
@@ -231,6 +232,11 @@ class Control:
             (b'content-type', b'application/json'), (b'cache-control', b'no-store')]})
         await send({'type': 'http.response.body', 'body': body})
         if accepted:
+            if self.stop_notice is not None:
+                try:
+                    await self.stop_notice()
+                except Exception:
+                    pass  # Browser notification cannot block the authenticated Stop.
             self.stop()
 
 
@@ -394,7 +400,9 @@ def start(config, plan):
             if config.profile_kind == 'synthetic-local-work':
                 from .local_work import offline_adapter
                 adapter = offline_adapter()
-            app = create_app(Settings(data_dir=config.profile, host='127.0.0.1', port=config.port), adapter=adapter, automatic_start=True)
+            app = create_app(Settings(data_dir=config.profile, host='127.0.0.1', port=config.port), adapter=adapter, automatic_start=True,
+                             character_ffmpeg=config.program/'tools/ffmpeg.exe',
+                             character_ffprobe=config.program/'tools/ffprobe.exe')
             # No automatic scheduling in validation or newly adopted local operation.
             # Existing reservations/history stay intact; no product scheduler change.
             app.state.scheduler.start = lambda: None
@@ -435,8 +443,11 @@ def start(config, plan):
                 request_boundary = LocalWorkRequests(LocalAccess(app, session))
             else:
                 request_boundary = SyntheticRequests(LocalAccess(app, session))
-            protected = Control(request_boundary, identity, session.origin,
-                                lambda: setattr(server, 'should_exit', True))
+            from .browser_stop_notice import BrowserStopNotice
+            browser_stop_notice = BrowserStopNotice(request_boundary, session)
+            protected = Control(browser_stop_notice, identity, session.origin,
+                                lambda: setattr(server, 'should_exit', True),
+                                stop_notice=browser_stop_notice.stop_accepted)
             server.config.app = protected
             _atomic(marker, {'pid': identity.pid, 'creation_id': identity.creation_id,
                 'owner_sid': identity.owner_sid, 'executable': str(identity.executable),
