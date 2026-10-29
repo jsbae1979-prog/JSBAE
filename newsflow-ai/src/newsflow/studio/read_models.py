@@ -321,10 +321,6 @@ def module_view(request: Request, module: Module):
                                 "article_ids",
                                 "references",
                                 "selection",
-                "studio_selection",
-                "duration",
-                "model",
-                "claude_model",
                                 "origin",
                             )
                         }
