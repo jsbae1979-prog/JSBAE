@@ -341,3 +341,86 @@ def test_studio_text_transport_timeout_does_not_retry_or_reuse_usage(monkeypatch
     with pytest.raises(ProviderTimeoutError):
         writer.write_studio({'duration': 55, 'topic': '여행', 'sound': 'off'}, options)
     assert len(requests) == 1 and writer.last_retried is False and writer.last_usage is None
+
+
+def test_studio_wire_schema_moves_only_unsupported_minitems_and_keeps_local_validation(monkeypatch):
+    from newsflow.intelligence.api_providers import _output_schema
+    from newsflow.character.claude import _studio_wire_schema
+    from pydantic import ValidationError
+    writer = CharacterWriter(lambda: 'synthetic-only')
+    bodies = []
+
+    def reply(body, options):
+        bodies.append(body)
+        return {'stop_reason': 'end_turn', 'content': [{'type': 'text', 'text': json.dumps(story())}]}
+
+    monkeypatch.setattr(writer, '_post', reply)
+    writer.write_studio({'topic': '여행', 'duration': 55, 'clip_seconds': 11,
+                         'scene_count': 5, 'sound': 'off'}, Options(model='claude-sonnet-4-6'))
+    wire = bodies[0]['output_config']['format']['schema']
+    assert 'minItems' not in wire['properties']['scenes']
+    assert '"minItems": 3' in wire['properties']['scenes']['description']
+    assert _output_schema(StudioStoryboard)['properties']['scenes']['minItems'] == 3
+    assert StudioStoryboard.model_json_schema()['properties']['scenes']['minItems'] == 3
+    nested = {'anyOf': [{'minItems': 0}, {'minItems': 1}, {'items': {'minItems': 4}}]}
+    transformed = _studio_wire_schema(nested)
+    assert transformed['anyOf'][:2] == nested['anyOf'][:2]
+    assert 'minItems' not in transformed['anyOf'][2]['items']
+    assert nested['anyOf'][2]['items']['minItems'] == 4
+    invalid = story()
+    invalid['scenes'] = invalid['scenes'][:2]
+    with pytest.raises(ValidationError):
+        StudioStoryboard.model_validate(invalid)
+    assert len(bodies) == 1
+
+
+def test_studio_http_rejection_retains_only_existing_safe_diagnostics_once(monkeypatch):
+    import urllib.error
+    from newsflow.intelligence.provider import ProviderHTTPResponseError
+    records = []
+    recorder = SimpleNamespace(save=lambda **details: records.append(details) or 'a' * 32)
+    writer = CharacterWriter(lambda: 'synthetic-only', error_recorder=recorder)
+    requests = []
+
+    def rejected(request, timeout, limit):
+        requests.append(request)
+        raw = json.dumps({'error': {'type': 'invalid_request_error', 'message':
+                         'Invalid JSON schema in output_config.schema; synthetic-only private-prose'}}).encode()
+        raise urllib.error.HTTPError(request.full_url, 400, 'synthetic', {}, io.BytesIO(raw))
+
+    monkeypatch.setattr(writer, '_open', rejected)
+    with pytest.raises(ProviderHTTPResponseError):
+        writer.write_studio({'topic': '여행', 'duration': 15, 'clip_seconds': 3,
+                             'scene_count': 5, 'sound': 'off'}, Options(model='claude-sonnet-4-6'))
+    assert writer.last_failure == {'http_status': 400, 'error_type': 'invalid_request_error',
+        'request_issue': 'schema_invalid', 'request_fields': ['output_config', 'schema'], 'diagnostic_ref': 'a' * 32}
+    assert 'synthetic-only' not in json.dumps(writer.last_failure)
+    assert 'private-prose' not in json.dumps(writer.last_failure)
+    assert len(requests) == len(records) == 1 and writer.last_usage is None and writer.last_retried is False
+
+
+def test_future_character_failure_saves_safe_http_details_and_keeps_unknown_stopped(studio, monkeypatch):
+    from newsflow.intelligence.provider import ProviderHTTPResponseError
+    service = studio.service
+    writer = CharacterWriter(lambda: 'synthetic-only')
+    requests = []
+
+    def rejected(body, options):
+        requests.append(body)
+        error = ProviderHTTPResponseError(400, 'invalid_request_error', 'schema_invalid', ['schema'])
+        error.details['raw_body'] = 'synthetic-private-response'
+        raise error
+
+    monkeypatch.setattr(writer, '_post', rejected)
+    service.writer = writer
+    identifier = create(studio)
+    with pytest.raises(CharacterError):
+        service.write(identifier, consent=True)
+    job = service.read(identifier)
+    assert job['script_failure'] == {'http_status': 400, 'error_type': 'invalid_request_error',
+                                    'request_issue': 'schema_invalid', 'request_fields': ['schema']}
+    assert job['state'] == 'script_failed' and job['response_received'] is False
+    assert 'synthetic-private-response' not in json.dumps(job)
+    with pytest.raises(CharacterError):
+        service.write(identifier, consent=True)
+    assert len(requests) == 1

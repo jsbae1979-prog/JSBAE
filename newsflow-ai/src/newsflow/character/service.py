@@ -283,6 +283,7 @@ class CharacterService:
             reservation=self.budget.reserve(provider='claude_api',request_id=request_id,
                 kind='script',model=options.model,max_output_tokens=options.max_tokens,key_store=self.keys)
             job['state']='writing'
+            job.pop('script_failure', None)
             job['script_attempts']=attempt
             job['events'].append({'stage':'claude','at':now().isoformat(),'request_id':request_id})
             self.save(job)
@@ -303,8 +304,11 @@ class CharacterService:
                     story=self.writer.write(payload,options)
                     if not isinstance(story,Storyboard):
                         story=Storyboard.model_validate(story)
-            except Exception:  # noqa: BLE001 - persist a stopped state without secret supplier diagnostics
+            except Exception as error:  # noqa: BLE001 - only finite safe diagnostics may be retained
                 job['state']='script_failed'
+                from newsflow.intelligence.provider import ProviderHTTPResponseError
+                if isinstance(error, ProviderHTTPResponseError):
+                    job['script_failure'] = error.diagnostics()
                 usage=self.writer.last_usage
                 response_known=(isinstance(usage,dict) and all(
                     type(usage.get(k)) is int for k in ['prompt_tokens','completion_tokens']))
