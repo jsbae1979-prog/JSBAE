@@ -1,0 +1,21 @@
+{
+  "verdict": "BLOCKED",
+  "scope": "Normal Chrome authentication and account-permission readiness",
+  "startingHead": "9ba6ef02a5e0d73fb4d733463a1a290e3e1e0931",
+  "restartlessChromeEnrollmentExists": false,
+  "restartRequiredForFreshBootstrap": true,
+  "restartPerformed": false,
+  "browserCookieOrBootstrapTransferredOrReused": false,
+  "productionCodeOrConfigChanged": false,
+  "newRuntimePass": 0,
+  "newRuntimeFail": 0,
+  "newRuntimeError": 0,
+  "previousReadOnlyPassReused": 7,
+  "chromeGUI": "NOT VERIFIED this turn; previous authentication block reused",
+  "providerPermissionRequests": 0,
+  "paidGenerationRequests": 0,
+  "credentialDecryption": 0,
+  "keyRegistration": "Procedure prepared; currently blocked by operation request/DPAPI boundary",
+  "apiStatusBasis": "Previous accepted key registration observations reused; not reauthenticated",
+  "oauthSNSOrUnsignedUpdate": false
+}
