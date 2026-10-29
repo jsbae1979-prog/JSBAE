@@ -1,0 +1,14 @@
+{
+  "authenticatedHttpChecksReachedBeforeHarnessAssertion": 18,
+  "settingsSaveAndRestore": true,
+  "CSRFAndOriginEnforced": true,
+  "newContentRecords": 0,
+  "changedTables": [
+    "audit_logs"
+  ],
+  "expectedAuditEntriesAdded": 2,
+  "allOther46TablesUnchanged": true,
+  "startExitCode": 0,
+  "stopExitCode": 0,
+  "harnessIssue": "Media selector included image posts; a video-only assertion rejected a legitimate image path. No application failure. Existing media evidence reused."
+}

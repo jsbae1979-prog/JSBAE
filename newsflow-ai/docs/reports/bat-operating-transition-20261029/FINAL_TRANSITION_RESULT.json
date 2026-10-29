@@ -1,0 +1,47 @@
+{
+  "verdict": "ACCEPTED: local operation transition; external execution remains locked",
+  "mode": "restored-local-operation",
+  "readOnly": false,
+  "program": "C:/NewsFlowAI",
+  "port": 18768,
+  "primaryAppPid": 23240,
+  "oldFourProcessesStopped": true,
+  "oldPort8765Closed": true,
+  "newPort18768Ready": true,
+  "schema": "0018",
+  "tableCount": 47,
+  "unchangedTables": 46,
+  "changedTables": [
+    "audit_logs"
+  ],
+  "expectedAuditEntriesAdded": 2,
+  "counts": {
+    "news_articles": 169,
+    "intelligence_runs": 48,
+    "content_drafts": 6,
+    "video_projects": 7,
+    "image_posts": 3
+  },
+  "protectedOriginalAndABFilesUnchanged": 103,
+  "originalAndABDatabaseSHA256": "238d0aea41bc1377a29b9a1eb4b30f43e9d38ad39bba22e8a2fe31d7e6726287",
+  "credentialAndMediaFilesUnchanged": 26,
+  "restoredSettingPreservedAfterRestart": true,
+  "automaticSchedules": 0,
+  "publishSchedules": 0,
+  "paidApiOAuthSnsCalls": 0,
+  "newContentRecords": 0,
+  "updatesDisabled": true,
+  "browserAutoOpen": true,
+  "normalStopStartCycleExitCodes": [
+    0,
+    0
+  ],
+  "oldCtrlCConsoleExitCode": 1,
+  "oldCtrlCNotes": "Existing Uvicorn KeyboardInterrupt traceback followed by launcher user-stop message and CMD batch confirmation; all four owned Python processes exited, no force kill or old code change.",
+  "startupFolderNewsFlowEntries": 0,
+  "newLogonAutoStartAdded": false,
+  "fullEdgeDOMRetest": "NOT VERIFIED; authenticated title/bootstrap evidence plus reused GUI results",
+  "OSDPI": "NOT VERIFIED / previous state unchanged",
+  "publisherCertificateAndAnchor": "NOT AVAILABLE",
+  "externalDistribution": "NOT APPROVED"
+}

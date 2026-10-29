@@ -1,0 +1,29 @@
+{
+  "mode": "restored-local-operation",
+  "readOnly": false,
+  "externalExecution": false,
+  "automaticJobs": false,
+  "decryptCredentials": false,
+  "updatesEnabled": false,
+  "browserTemporarilyDeferredForAuthenticatedSettingsCheck": true,
+  "changedControllers": [
+    {
+      "path": "app/controller/bat_distribution/windows_live.py",
+      "previouslyExisted": true,
+      "sha256": "eeb245b15c817d000823e15848ea669e8d4f567038c7d3ff0d5c07fb8e28281a"
+    },
+    {
+      "path": "app/controller/bat_distribution/local_work.py",
+      "previouslyExisted": false,
+      "sha256": "66ce57e095cf35af100eae3204c72faff8cb6b22e22c1ce3fca4ec9db13159b5"
+    },
+    {
+      "path": "app/controller/bat_distribution/operation.py",
+      "previouslyExisted": false,
+      "sha256": "484127573e9d94730a238d94c06f9fff4fb53402c848c960277b8f5065d3410e"
+    }
+  ],
+  "launchSha256": "1b1954e52d8fed8841429cd4681ba4c35926f1370f0b79809b141e06a676dd2d",
+  "layoutSha256": "da5ae327bd6dcd6bc0d636908d25a634f6f8685c1e364493dd375ea0ae84a1c8",
+  "existingFileAclPreserved": true
+}

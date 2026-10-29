@@ -1,0 +1,23 @@
+{
+  "primaryProgram": "C:\\NewsFlowAI",
+  "port": 18768,
+  "shortcuts": [
+    {
+      "location": "Desktop",
+      "name": "NewsFlow AI.lnk",
+      "target": "C:\\NewsFlowAI\\Start_NewsFlowAI.bat"
+    },
+    {
+      "location": "Start Menu/NewsFlow AI",
+      "name": "NewsFlow AI.lnk",
+      "target": "C:\\NewsFlowAI\\Start_NewsFlowAI.bat"
+    },
+    {
+      "location": "Start Menu/NewsFlow AI",
+      "name": "Stop NewsFlow AI.lnk",
+      "target": "C:\\NewsFlowAI\\Stop_NewsFlowAI.bat"
+    }
+  ],
+  "automaticLogonStartupAdded": false,
+  "oldProgramDeleted": false
+}

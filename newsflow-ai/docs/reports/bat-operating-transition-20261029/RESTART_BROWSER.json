@@ -1,0 +1,11 @@
+{
+  "restartReady": true,
+  "openBrowser": {
+    "requested": true,
+    "accepted": true
+  },
+  "normalBootstrapConsumedBeforeExpiry": true,
+  "bootstrapAgeSeconds": 29.1,
+  "anonymousRefused": true,
+  "tokensLogged": false
+}

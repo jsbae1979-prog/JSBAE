@@ -1,0 +1,15 @@
+{
+  "backupVerified": true,
+  "restorationVerified": true,
+  "snapshotFileCount": 35,
+  "tables": 47,
+  "counts": {
+    "news_articles": 169,
+    "intelligence_runs": 48,
+    "content_drafts": 6,
+    "video_projects": 7,
+    "image_posts": 3
+  },
+  "credentialAndMediaCount": 26,
+  "sourceDatabaseChanged": false
+}
