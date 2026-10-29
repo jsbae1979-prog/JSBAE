@@ -1147,18 +1147,39 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             {story ? (
               <div className="kling-character-story-result">
                 <header>
-                  <h3>{story.title}</h3>
+                  <h3>한글 스토리 · {story.title}</h3>
                   <State value={job?.state} />
                 </header>
+                <small>생성된 한글 장면 요약입니다.</small>
                 {scenes.map((s, i) => (
                   <p key={i}>
                     <strong>
                       {i + 1}. {s.caption}
                     </strong>
-                    <span>{s.action}</span>
                     {s.narration && <small>대사 · {s.narration}</small>}
                   </p>
                 ))}
+                <details>
+                  <summary>영상 모델 전달용 프롬프트</summary>
+                  <small>영상 모델에 전달하는 원본 지시문입니다.</small>
+                  {scenes.map((s, i) => {
+                    const start = scenes
+                      .slice(0, i)
+                      .reduce(
+                        (total, item) => total + Number(item.seconds ?? 0),
+                        0,
+                      );
+                    return (
+                      <p key={i}>
+                        <strong>
+                          {i + 1}. {stamp(start)} -{" "}
+                          {stamp(start + Number(s.seconds ?? 0))}
+                        </strong>
+                        <span lang="en">{s.action}</span>
+                      </p>
+                    );
+                  })}
+                </details>
               </div>
             ) : (
               <div className="kling-character-story-empty">
