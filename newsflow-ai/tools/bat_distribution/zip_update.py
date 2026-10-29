@@ -41,7 +41,7 @@ def payload_name(value: str) -> str:
         raise Blocked('noncanonical-zip-path')
     parts = value.split('/')
     lowered = [part.casefold() for part in parts]
-    allowed = value in {'Start_NewsFlowAI.bat', 'Stop_NewsFlowAI.bat', 'Update_NewsFlowAI.bat', 'README.txt', 'app/layout.json'}
+    allowed = value in {'Start_NewsFlowAI.bat', 'Stop_NewsFlowAI.bat', 'Update_NewsFlowAI.bat', 'README.txt', 'app/layout.json', 'connection.json'}
     allowed |= value.startswith(('app/runtime/', 'app/product/', 'app/frontend/', 'app/controller/',
                                  'app/site-packages/', 'tools/', 'licenses/'))
     sample_code = value.startswith('app/product/newsflow/samples/') and Path(value).suffix == '.py'

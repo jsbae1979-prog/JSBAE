@@ -6,7 +6,7 @@ from .lifecycle import Blocked, ordinary_absolute
 from .bundle_assembly import digest, program_records, create_zip
 from .zip_update import FileRecord, _zip_members
 
-CONTROLLERS = ('windows_live.py','contract_entry.py','local_work.py','operation.py','portable.py')
+CONTROLLERS = ('windows_live.py','contract_entry.py','local_work.py','operation.py','portable.py','zip_update.py')
 
 
 def release(root, version, source_sha):
