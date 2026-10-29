@@ -33,6 +33,7 @@
   ],
   "typescript": "PASS",
   "vite": "PASS",
-  "operatingApplied": false,
-  "newProviderCalls": 0
+  "operatingApplied": true,
+  "newProviderCalls": 0,
+  "operatingCodeSHA": "1b394414e6f333bb7c74471d0fe54410da969eea"
 }

@@ -6,7 +6,7 @@
   "method": "Actual component functions and disabled condition in Node with local stub transports",
   "actualBrowserGeneration": "NOT RUN",
   "providerCalls": 0,
-  "operatingApplied": false,
+  "operatingApplied": true,
   "cases": [
     "New topic gets a new request ID",
     "New reference gets a new request ID",
@@ -16,5 +16,6 @@
     "Refresh failure releases busy state",
     "POST helper retains HTTP status",
     "Request identity matches reference payload precedence"
-  ]
+  ],
+  "operatingCodeSHA": "1b394414e6f333bb7c74471d0fe54410da969eea"
 }
