@@ -38,7 +38,12 @@ class ValidationConfig:
 def load_config(root):
     root = ordinary_absolute(root)
     layout = json.loads((root / 'app/layout.json').read_bytes())
-    if layout.get('liveStartStopConnected') is not True or layout.get('validationOnly') is not True:
+    if layout.get('liveStartStopConnected') is not True:
+        raise Blocked('live-start-stop-not-provisioned')
+    if layout.get('operatingProfile') == 'restored-local-operation':
+        from .operation import load_operating
+        return load_operating(root, layout)
+    if layout.get('validationOnly') is not True:
         raise Blocked('live-validation-not-provisioned')
     if layout.get('validationProfile') == 'restored-private-validation':
         from .restored_install import load_restored
@@ -103,7 +108,7 @@ def _profile(config, create):
     if not config.profile.exists() and not create:
         raise Blocked('no-owned-session')
     fresh = not config.profile.exists()
-    if config.profile_kind == 'restored-private-validation':
+    if config.profile_kind in {'restored-private-validation', 'restored-local-operation'}:
         if fresh:
             raise Blocked('restored-profile-must-be-migrated-first')
         private_directory(config.profile)
@@ -279,7 +284,7 @@ def start(config, plan):
             if marker.exists():
                 raise Blocked('owned-session-unresolved-no-retry')
             credential_boundary = None
-            if config.profile_kind == 'restored-private-validation':
+            if config.profile_kind in {'restored-private-validation', 'restored-local-operation'}:
                 from .restored_install import disable_credential_decryption
                 credential_boundary = disable_credential_decryption()
             from newsflow.main import create_app
@@ -288,7 +293,8 @@ def start(config, plan):
                 from .local_work import offline_adapter
                 adapter = offline_adapter()
             app = create_app(Settings(data_dir=config.profile, host='127.0.0.1', port=config.port), adapter=adapter, automatic_start=True)
-            # Instance-local test policy, not a product scheduler/Guard change.
+            # No automatic scheduling in validation or newly adopted local operation.
+            # Existing reservations/history stay intact; no product scheduler change.
             app.state.scheduler.start = lambda: None
             app.state.publishing_calendar.start = lambda: None
             import uvicorn
@@ -304,6 +310,9 @@ def start(config, plan):
             if config.profile_kind == 'restored-private-validation':
                 from .restored_install import RestoredRequests
                 request_boundary = RestoredRequests(LocalAccess(app, session))
+            elif config.profile_kind == 'restored-local-operation':
+                from .operation import OperatingRequests
+                request_boundary = OperatingRequests(LocalAccess(app, session))
             elif config.profile_kind == 'synthetic-local-work':
                 from .local_work import LocalWorkRequests
                 request_boundary = LocalWorkRequests(LocalAccess(app, session))
