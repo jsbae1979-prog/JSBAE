@@ -25,7 +25,7 @@ from .claude import CharacterWriter
 from .kling import catalog as studio_catalog  # Load the local capability cache once, without network calls.
 from .compose import compose, digest
 from .higgsfield_client import MODEL, HiggsfieldVideoClient, amount, reference_bytes
-from .schema import Character, CharacterError, Storyboard, clean_text, load_character, prompts
+from .schema import Character, CharacterError, Storyboard, clean_topic, load_character, prompts
 
 
 def now():
@@ -224,7 +224,7 @@ class CharacterService:
     def create(self, topic, episode_limit, day_limit, *, reference: bytes = b'', selection=None):
         from newsflow.creation.catalog import snapshot
         frozen = snapshot('character', selection) if selection is not None else None
-        topic = clean_text(topic,150)
+        topic = clean_topic(topic,150)
         per, daily = amount(episode_limit),amount(day_limit)
         if per>daily or len(reference)>10*1024*1024:
             raise CharacterError('budget')
@@ -252,7 +252,7 @@ class CharacterService:
     def create_studio(self, topic, episode_limit, day_limit, *, reference, settings, request_id):
         from .kling import normalize_reference, snapshot, check
         from newsflow.video_models.catalog import character_config, styles
-        topic=clean_text(topic,150)
+        topic=clean_topic(topic,150)
         if not re.fullmatch(r'[a-f0-9]{32}',request_id or ''): raise CharacterError()
         frozen=snapshot(settings)
         per,daily=amount(episode_limit),amount(day_limit)

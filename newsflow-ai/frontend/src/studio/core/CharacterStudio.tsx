@@ -597,7 +597,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           ? ["asset", asset]
           : ["job", job?.id || ""];
     return JSON.stringify([
-      topic.trim(), settings, Number(per), Number(daily), selected,
+      topic.replace(/[\r\n\t]+/g, " ").trim(), settings, Number(per), Number(daily), selected,
     ]);
   }
   const blockedStoryRequest = !!storyRequests[storyRequestKey()];

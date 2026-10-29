@@ -150,6 +150,19 @@ test("story settings belong to request identity and equivalent budget formatting
   assert.notEqual(h.posts[0].body.request_id, h.posts[1].body.request_id);
 });
 
+test("equivalent textarea separators cannot unlock a replay after a story result is uncertain", async () => {
+  const h = harness({ unknownStory: true });
+  h.context.topic = "토끼가 정원을 가꾼다\r\n채소를 보고 기뻐한다";
+  const originalKey = h.key();
+  await h.run();
+  h.context.topic = "토끼가 정원을 가꾼다 채소를 보고 기뻐한다";
+  assert.equal(h.key(), originalKey); assert.equal(h.disabled(), true);
+  await h.run();
+  assert.equal(h.posts.length, 1); assert.equal(h.storyCalls.length, 1);
+  h.context.topic = "토끼가 정원을 가꾼다\t채소를 보고 기뻐한다";
+  assert.equal(h.key(), originalKey); assert.equal(h.disabled(), true);
+});
+
 test("old job reference is pinned across new job selection and a failed list refresh releases busy state", async () => {
   const h = harness({ unknownStory: true, failLoad: true, useAsset: false });
   const originalKey = h.key();

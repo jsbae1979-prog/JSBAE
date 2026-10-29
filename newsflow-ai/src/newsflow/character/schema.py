@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from pathlib import Path
 from typing import Literal
 
@@ -88,6 +89,14 @@ def clean_text(text, maximum):
             or any(ord(c) < 32 for c in text) or re.search(r'(?:sk-ant-|sk-proj-|Bearer\s|HF_KEY\s*=)', text)):
         raise CharacterError()
     return text.strip()
+
+
+def clean_topic(text, maximum=150):
+    """Treat normal textarea line breaks/tabs as topic word separators only."""
+    if (not isinstance(text, str) or not 1 <= len(text.strip()) <= maximum
+            or any(unicodedata.category(c) == 'Cc' and c not in '\r\n\t' for c in text)):
+        raise CharacterError()
+    return clean_text(re.sub(r'[\r\n\t]+', ' ', text), maximum)
 
 
 def load_character(path: Path | None = None) -> Character:
