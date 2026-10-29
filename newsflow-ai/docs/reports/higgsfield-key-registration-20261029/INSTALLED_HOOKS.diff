@@ -1,0 +1,32 @@
+--- installed/windows_live.py
++++ prepared/windows_live.py
+@@ -371,7 +371,8 @@
+             trial_policy = character_trial_policy(config)
+             trial_unknowns = character_trial_unknowns(config) if trial_policy is not None else None
+             character_native_factory = None
+-            if trial_policy is not None:
++            if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
++                # Normal key registration may protect only its own credential.
+                 from newsflow.oauth.vault import _DPAPI
+                 character_native_factory = _DPAPI
+             credential_boundary = None
+@@ -393,6 +394,10 @@
+                 from .character_trial import install
+                 character_trial = install(app, config.profile, trial_policy, character_native_factory,
+                                           unknown_review=trial_unknowns)
++            key_registration = None
++            if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
++                from .higgsfield_key_registration import install as install_key_registration
++                key_registration = install_key_registration(app, config.profile, character_native_factory)
+             import uvicorn
+             session = LaunchSession(config.port)
+             nonce = secrets.token_hex(32)
+@@ -412,6 +417,8 @@
+                 request_boundary = OperatingRequests(authenticated_app)
+                 if character_trial is not None:
+                     request_boundary = character_trial.wrap(request_boundary, authenticated_app)
++                if key_registration is not None:
++                    request_boundary = key_registration.wrap(request_boundary, authenticated_app)
+             elif config.profile_kind == 'synthetic-local-work':
+                 from .local_work import LocalWorkRequests
+                 request_boundary = LocalWorkRequests(LocalAccess(app, session))

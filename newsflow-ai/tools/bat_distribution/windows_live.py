@@ -380,7 +380,9 @@ def start(config, plan):
             trial_policy = character_trial_policy(config)
             trial_unknowns = character_trial_unknowns(config) if trial_policy is not None else None
             character_native_factory = None
-            if trial_policy is not None:
+            if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
+                # Capture before the global deny factory. Normal key saving gets
+                # protect-only authority; the trial retains its separate scope.
                 from newsflow.oauth.vault import _DPAPI
                 character_native_factory = _DPAPI
             credential_boundary = None
@@ -402,6 +404,10 @@ def start(config, plan):
                 from .character_trial import install
                 character_trial = install(app, config.profile, trial_policy, character_native_factory,
                                           unknown_review=trial_unknowns)
+            key_registration = None
+            if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
+                from .higgsfield_key_registration import install as install_key_registration
+                key_registration = install_key_registration(app, config.profile, character_native_factory)
             import uvicorn
             session = LaunchSession(config.port)
             nonce = secrets.token_hex(32)
@@ -421,6 +427,8 @@ def start(config, plan):
                 request_boundary = OperatingRequests(authenticated_app)
                 if character_trial is not None:
                     request_boundary = character_trial.wrap(request_boundary, authenticated_app)
+                if key_registration is not None:
+                    request_boundary = key_registration.wrap(request_boundary, authenticated_app)
             elif config.profile_kind == 'synthetic-local-work':
                 from .local_work import LocalWorkRequests
                 request_boundary = LocalWorkRequests(LocalAccess(app, session))

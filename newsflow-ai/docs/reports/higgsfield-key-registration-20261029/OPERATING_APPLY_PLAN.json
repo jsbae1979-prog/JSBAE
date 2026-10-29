@@ -1,0 +1,23 @@
+{
+  "operatingApplied": false,
+  "stopStartPerformed": false,
+  "providerCalls": 0,
+  "launchSHA256": "8aac22b0a56d37354280168595b674282182425de60db432bb4ce56c9b52b1fd",
+  "layoutSHA256": "71004f41644e3d606a9a95e9f22d307f2f0ee678413b6eef73db36f6b6ae7a5e",
+  "files": [
+    {
+      "path": "app/controller/bat_distribution/windows_live.py",
+      "oldSHA256": "4f49013c40438ab189a97fc7603290d8671609fd400877326ab8ebc9f78940de",
+      "newSHA256": "bc53fb67b75145480054c641c32e3a3977f4a6e8aecacdc37f76f298188ee1da"
+    },
+    {
+      "path": "app/controller/bat_distribution/higgsfield_key_registration.py",
+      "oldSHA256": null,
+      "newSHA256": "9b61661729edea391be8a3d564c7363b73a13b5296a39c7c24b74d7212c273d6"
+    }
+  ],
+  "newModuleMatchesDevelopment": true,
+  "onlyInstalledHooksPatched": 3,
+  "keptInstalledChromeAndPortableAdaptations": true,
+  "credentialsReadOrChanged": false
+}
