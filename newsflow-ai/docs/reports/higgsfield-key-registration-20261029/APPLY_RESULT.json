@@ -1,0 +1,30 @@
+{
+  "normalStopExitCode": 0,
+  "normalStartInvokedOnce": true,
+  "oldPID": 39644,
+  "newPID": 10192,
+  "sourceSHA": "a9db85128ba587a2e8ca240fc060e7ccd569fc73",
+  "operatingControllerFilesChanged": 2,
+  "launchSecurityConfigurationUnchanged": true,
+  "schemaTables": 47,
+  "coreCounts": {
+    "content_drafts": 6,
+    "image_posts": 3,
+    "intelligence_runs": 49,
+    "news_articles": 169,
+    "publish_drafts": 1,
+    "video_projects": 7
+  },
+  "tableChangesAfterRestart": [],
+  "otherProtectedCredentialMediaFiles": 25,
+  "otherProtectedCredentialMediaUnchanged": true,
+  "userSavedCiphertextChanged": true,
+  "previousCiphertextBackedUp": true,
+  "privateKeyBackupCount": 1,
+  "keyPlaintextReadOrPrinted": false,
+  "providerCallsInRegistration": 0,
+  "videoUnknownStateAndExposurePreserved": true,
+  "additionalPaidGenerationCalls": 0,
+  "apiAuthorityVerified": false,
+  "newAudioVideoSubmitted": false
+}
