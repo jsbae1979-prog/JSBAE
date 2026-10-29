@@ -1,0 +1,41 @@
+{
+  "newStartExitCodes": [
+    0,
+    0
+  ],
+  "newStopExitCodes": [
+    0,
+    0
+  ],
+  "schema": [
+    "0018"
+  ],
+  "sqliteIntegrity": "ok",
+  "logicalTablesUnchanged": 47,
+  "changedDataTables": [],
+  "counts": {
+    "news_articles": 169,
+    "intelligence_runs": 48,
+    "content_drafts": 6,
+    "video_projects": 7,
+    "image_posts": 3,
+    "app_settings": 77,
+    "api_request_reservations": 29,
+    "oauth_connections": 1,
+    "production_schedules": 0,
+    "publish_schedules": 0
+  },
+  "mediaHashMatches": 20,
+  "opaqueCredentialHashMatches": 6,
+  "nativeCipherRequests": 0,
+  "protectedSourceAndBackupFilesChecked": 103,
+  "protectedMismatches": 0,
+  "sourceFilesAddedOrRemoved": false,
+  "restoredSessionsRemoved": true,
+  "paidApiCalls": 0,
+  "oauthCalls": 0,
+  "snsCalls": 0,
+  "runningSeparateZeroDbAccessed": false,
+  "originalDatabaseUsedByApp": false,
+  "originalAndBackupReads": "read-only hashes/metadata; consistent backup sourced from verified backup B"
+}

@@ -1,0 +1,227 @@
+{
+  "pass": 32,
+  "fail": 0,
+  "checks": [
+    {
+      "name": "unauthenticated private GUI refused",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "name": "normal local claim",
+      "result": "PASS",
+      "detail": 204
+    },
+    {
+      "name": "/studio/dashboard",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "React static /studio/assets/index-DsTSicNr.js",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 546667
+      }
+    },
+    {
+      "name": "React static /studio/assets/index-DH-ao1BP.css",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 143580
+      }
+    },
+    {
+      "name": "/studio/shorts",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "/studio/images",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "/studio/images?mode=news",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "/studio/characters",
+      "result": "PASS",
+      "detail": {
+        "status": 200,
+        "bytes": 418
+      }
+    },
+    {
+      "name": "module news",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "module shorts",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "module images",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "module characters",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "module automation",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "module library",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "visible stored articles retained",
+      "result": "PASS",
+      "detail": {
+        "visible": 81,
+        "databaseTotal": 169,
+        "hiddenByExistingPolicy": 88
+      }
+    },
+    {
+      "name": "stored analysis projection retained",
+      "result": "PASS",
+      "detail": {
+        "analysis": 29,
+        "allIntelligenceRuns": 48
+      }
+    },
+    {
+      "name": "stored drafts retained",
+      "result": "PASS",
+      "detail": 6
+    },
+    {
+      "name": "stored image posts retained",
+      "result": "PASS",
+      "detail": 3
+    },
+    {
+      "name": "TOP3 stored context response",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "TOP3 3 stored source ranks",
+      "result": "PASS",
+      "detail": {
+        "ranks": [
+          1,
+          2,
+          3
+        ],
+        "hasSelection": true
+      }
+    },
+    {
+      "name": "TOP3 history read",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "existing library workspace",
+      "result": "PASS",
+      "detail": 200
+    },
+    {
+      "name": "existing media links exposed",
+      "result": "PASS",
+      "detail": {
+        "linkedMedia": 5
+      }
+    },
+    {
+      "name": "existing media /image-posts/1/file",
+      "result": "PASS",
+      "detail": {
+        "status": 206,
+        "bytes": 64,
+        "contentType": "image/jpeg"
+      }
+    },
+    {
+      "name": "existing media /image-posts/2/file",
+      "result": "PASS",
+      "detail": {
+        "status": 206,
+        "bytes": 64,
+        "contentType": "image/jpeg"
+      }
+    },
+    {
+      "name": "existing media /image-posts/3/file",
+      "result": "PASS",
+      "detail": {
+        "status": 206,
+        "bytes": 64,
+        "contentType": "image/jpeg"
+      }
+    },
+    {
+      "name": "existing media /video/jobs/1/file",
+      "result": "PASS",
+      "detail": {
+        "status": 206,
+        "bytes": 64,
+        "contentType": "video/mp4"
+      }
+    },
+    {
+      "name": "existing media /video/jobs/7/file",
+      "result": "PASS",
+      "detail": {
+        "status": 206,
+        "bytes": 64,
+        "contentType": "video/mp4"
+      }
+    },
+    {
+      "name": "paid execution refused",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "name": "OAuth entry refused",
+      "result": "PASS",
+      "detail": 403
+    },
+    {
+      "name": "copied user settings cannot be changed during verification",
+      "result": "PASS",
+      "detail": 403
+    }
+  ],
+  "mediaLinks": 5,
+  "sourceDbNotUsedByApp": true,
+  "newDataProfileUsed": true,
+  "userContentLogged": false
+}

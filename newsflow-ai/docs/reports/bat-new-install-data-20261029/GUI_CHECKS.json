@@ -1,0 +1,49 @@
+{
+  "browser": "Codex in-app Chromium on local Windows 11",
+  "checks": [
+    {
+      "name": "Authenticated React home with existing projects",
+      "result": "PASS"
+    },
+    {
+      "name": "Stored news and AI analysis studio rendered",
+      "result": "PASS",
+      "note": "Check label corrected to actual existing heading AI 뉴스 분석."
+    },
+    {
+      "name": "Selecting existing TOP2 shows stored analysis #42 without generation",
+      "result": "PASS"
+    },
+    {
+      "name": "News shorts uses existing TOP3 and script controls",
+      "result": "PASS"
+    },
+    {
+      "name": "mode=news selects news image tab",
+      "result": "PASS"
+    },
+    {
+      "name": "Existing TOP3 analysis loads three ranked image sources",
+      "result": "PASS"
+    },
+    {
+      "name": "Character studio with existing profile renders",
+      "result": "PASS"
+    },
+    {
+      "name": "Existing saved script revision loaded after restart",
+      "result": "PASS"
+    },
+    {
+      "name": "Existing library rendered after restart",
+      "result": "PASS"
+    },
+    {
+      "name": "Existing library image previews decoded from copied media",
+      "result": "PASS"
+    }
+  ],
+  "pass": 10,
+  "fail": 0,
+  "privateScreenshotsNotForGit": true
+}

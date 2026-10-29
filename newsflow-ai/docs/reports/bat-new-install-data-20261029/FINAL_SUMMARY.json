@@ -1,0 +1,37 @@
+{
+  "verdict": "CONDITIONAL",
+  "completedScope": "new side-by-side private BAT installation, same-user copied data and read-only React validation",
+  "programRoot": "C:/NewsFlowAI",
+  "dataRoot": "<CURRENT_USER_HOME>/AppData/Local/NewsFlowAI-BAT/v1",
+  "implementationSha": "04d04aa55239b9755e9beb1e389bcaf5da1eee22",
+  "unitPass": 14,
+  "httpPass": 32,
+  "guiPass": 10,
+  "finalPass": 56,
+  "finalFail": 0,
+  "finalError": 0,
+  "newStartExitCodes": [
+    0,
+    0
+  ],
+  "newStopExitCodes": [
+    0,
+    0
+  ],
+  "sqliteSchema": "0018",
+  "all47DataTablesUnchanged": true,
+  "media20HashesMatched": true,
+  "opaqueCredentialFilesMatched": 6,
+  "nativeCipherRequests": 0,
+  "originalAndBothBackups103FilesUnchanged": true,
+  "newInstallProcessCountAfter": 0,
+  "testPort18768ListenersAfter": 0,
+  "operatingProcesses4Retained": true,
+  "paidApiCalls": 0,
+  "oauthCalls": 0,
+  "snsCalls": 0,
+  "readOnlyModeStillEnabled": true,
+  "oldOperatingInstallationReplaced": false,
+  "originalUserDataMerged": false,
+  "publicDistributionApproved": false
+}

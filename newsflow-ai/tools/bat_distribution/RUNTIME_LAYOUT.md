@@ -1,3 +1,8 @@
+> 2026-10-29 신규 설치/데이터 이전: C:/NewsFlowAI와 사용자 전용 NewsFlowAI-BAT/v1에
+> 동일 사용자 백업 복사본을 분리했다. 새 restored-private-validation 모드는 읽기만 허용하고
+> 암호문 복호화·자동화·외부 실행을 금지한다. 신규 집중56 PASS, 전체 판정 CONDITIONAL.
+> 최신 보고는 `docs/reports/bat-new-install-data-20261029/BAT_NEW_INSTALL_DATA_REPORT.md` 참조.
+
 > 2026-10-29 최신: 검증 설정/안내를 프로그램 밖으로 분리하고 설정 해시를 결속했다.
 > 배포 경로 허용 목록은 변경하지 않았다. 격리 합성 후보의 BAT Start/Stop3주기와 재실행,
 > React·TOP3·설정 보존 검증이 통과했다(신규 집중31 PASS). 기존 ZIP은 그대로 비활성이다.

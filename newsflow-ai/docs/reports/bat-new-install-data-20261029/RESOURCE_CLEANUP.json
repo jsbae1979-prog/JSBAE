@@ -1,0 +1,15 @@
+{
+  "testPort": 18768,
+  "candidateProcessesAfter": 0,
+  "listenersAfterFollowUp": 0,
+  "initialImmediatePostStopSnapshotListenerCount": 1,
+  "note": "A subsequent read after process exit confirmed no listener; no force kill or extra app start.",
+  "existingOperatingPidsPresent": [
+    3684,
+    12700,
+    15012,
+    26288
+  ],
+  "V3Service": "Running",
+  "V3ExecutionDenialObserved": false
+}

@@ -1,0 +1,20 @@
+{
+  "implementationSha": "04d04aa55239b9755e9beb1e389bcaf5da1eee22",
+  "programFiles": 2879,
+  "inventorySha256": "9a26cd00a7d708feed8edd72e395b991b2f22befef479a4092191dc86fb7de28",
+  "controllerMatches": [
+    {
+      "controller": "windows_live.py",
+      "matchesCommittedSourceIgnoringGitLineEndingNormalization": true
+    },
+    {
+      "controller": "restored_install.py",
+      "matchesCommittedSourceIgnoringGitLineEndingNormalization": true
+    },
+    {
+      "controller": "contract_entry.py",
+      "matchesCommittedSourceIgnoringGitLineEndingNormalization": true
+    }
+  ],
+  "runtimeAndReactChangedAfterValidation": false
+}
