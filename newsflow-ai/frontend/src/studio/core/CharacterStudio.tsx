@@ -800,7 +800,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     setBusy(true);
     setFailure("");
     try {
-      const body = new FormData();
+      const body = new URLSearchParams();
       body.set("csrf_token", c.view?.csrfToken ?? "");
       body.set("consent", "true");
       body.set("settings", JSON.stringify({ ...settings, sound: "on" }));
