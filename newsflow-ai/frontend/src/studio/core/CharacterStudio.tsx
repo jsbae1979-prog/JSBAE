@@ -498,6 +498,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [storyReuseRequests, setStoryReuseRequests] = useState<
     Record<string, string>
   >({});
+  const [storyRequests, setStoryRequests] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false),
     [history, setHistory] = useState(false),
     [help, setHelp] = useState(false),
@@ -587,6 +588,19 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     ? `/image-studio/assets/${asset}`
     : null;
   const reference = file || savedReference || clonedReference || selectedReference;
+  function storyRequestKey() {
+    const selected = referenceJob
+      ? ["job", referenceJob]
+      : file
+        ? ["upload", file.name, file.size, file.lastModified]
+        : asset
+          ? ["asset", asset]
+          : ["job", job?.id || ""];
+    return JSON.stringify([
+      topic.trim(), settings, Number(per), Number(daily), selected,
+    ]);
+  }
+  const blockedStoryRequest = !!storyRequests[storyRequestKey()];
   const pendingReferenceCopy =
     !!story && !!job?.studio_selection && !!(file || referenceJob || asset);
   const isBusy = busy || visibilityBusy || trialBusy || libraryBusy,
@@ -708,11 +722,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     if (data.id) setId(data.id);
     if (data.fields) setAdjustments(data.fields);
     if (!r.ok)
-      throw Error(
+      throw Object.assign(new Error(
         data.error ??
           data.detail ??
           "요청이 중단되었습니다. 작업 이력을 확인하세요. 자동 재전송하지 않습니다.",
-      );
+      ), { status: r.status });
     return data;
   }
   async function changeVisibility(target: VisibilityTarget) {
@@ -779,17 +793,22 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     }
   }
   async function autoStory() {
-    if (sending.current || !ready) return;
+    const inputKey = storyRequestKey();
+    if (sending.current || !ready || storyRequests[inputKey]) return;
     sending.current = true;
     setBusy(true);
     setFailure("");
-    // One durable request identity per click/uncertain outcome. Reload/history never retries it.
-    pending.current ??= crypto.randomUUID().replaceAll("-", "");
+    // New inputs get a new identity; an uncertain identical input cannot be replayed.
+    const requestId = crypto.randomUUID().replaceAll("-", "");
+    pending.current = requestId;
+    setStoryRequests((value) => ({ ...value, [inputKey]: requestId }));
+    if (!file && !asset && !referenceJob && job?.id) setReferenceJob(job.id);
+    let storyRequested = false;
     try {
       const form = new FormData();
       form.set("topic", topic.trim());
       form.set("studio_settings", JSON.stringify(settings));
-      form.set("request_id", pending.current);
+      form.set("request_id", requestId);
       form.set("consent", "true");
       form.set("episode_limit", per);
       form.set("day_limit", daily);
@@ -806,6 +825,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           consent: "true",
           csrf_token: c.view?.csrfToken ?? "",
         });
+        storyRequested = true;
         const response = await fetch("/api/studio/characters/auto-story", {
           method: "POST",
           credentials: "same-origin",
@@ -827,19 +847,36 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       setReferenceJob("");
       setAsset("");
       setTopic("");
+      setStoryRequests((value) => {
+        const next = { ...value };
+        delete next[inputKey];
+        return next;
+      });
       c.setNotice(
         "스토리가 생성·저장되었습니다. 장면을 검토한 뒤 영상 견적을 확인하세요.",
       );
     } catch (e) {
+      if (!storyRequested && e instanceof Error && "status" in e && e.status === 422) {
+        setStoryRequests((value) => {
+          const next = { ...value };
+          delete next[inputKey];
+          return next;
+        });
+      }
       setFailure(
         e instanceof Error
           ? e.message
           : "스토리 요청 중단 · 자동 재전송하지 않습니다.",
       );
     } finally {
-      await c.load();
-      setBusy(false);
-      sending.current = false;
+      try {
+        await c.load();
+      } catch {
+        setFailure("작업 목록을 불러오지 못했습니다. 새로고침해 저장된 결과를 확인하세요.");
+      } finally {
+        setBusy(false);
+        sending.current = false;
+      }
     }
   }
   async function reuseStoryForVideo() {
@@ -1257,6 +1294,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   setTopic(
                     "호기심 많은 캐릭터가 새로운 세상을 여행하는 이야기",
                   );
+                  setFailure("");
                   pending.current = null;
                 }}
               >
@@ -1275,7 +1313,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   disabled={isBusy}
                   onChange={(e) => {
                     setTopic(e.target.value);
-                    if (!failure) pending.current = null;
+                    if (e.target.value.trim() !== topic.trim()) setFailure("");
                   }}
                 />
                 <small>{topic.length}/100</small>
@@ -1290,7 +1328,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 !c.view?.commandsAvailable ||
                 !topic.trim() ||
                 (!reference && !asset) ||
-                !!failure
+                blockedStoryRequest
               }
             >
               <WandSparkles size={22} />
@@ -1307,9 +1345,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 새 제작실 API 연결 확인 전 · 생성할 수 없습니다.
               </p>
             )}
-            {failure && (
+            {(failure || blockedStoryRequest) && (
               <div className="kling-character-error" role="alert">
-                {failure}
+                {failure || "같은 요청의 결과를 확인하세요. 주제나 참조·설정을 바꾸면 새 스토리를 만들 수 있습니다."}
                 <button
                   disabled={isBusy}
                   onClick={() => {
@@ -1318,7 +1356,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     reset();
                   }}
                 >
-                  작업 이력 확인 후 새 작업
+                  새 스토리 입력
                 </button>
               </div>
             )}

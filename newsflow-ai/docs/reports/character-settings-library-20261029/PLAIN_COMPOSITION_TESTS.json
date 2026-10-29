@@ -1,0 +1,38 @@
+{
+  "groups": [
+    {
+      "group": "studio-composition",
+      "passed": 7,
+      "failed": 0,
+      "errors": 0,
+      "tests": [
+        "test_reviewed_clips_join_without_text_or_added_voice[1-on]",
+        "test_reviewed_clips_join_without_text_or_added_voice[1-off]",
+        "test_reviewed_clips_join_without_text_or_added_voice[5-on]",
+        "test_reviewed_clips_join_without_text_or_added_voice[5-off]",
+        "test_selected_ratio_output_and_audio_survive_real_local_composition[on-9:16]",
+        "test_selected_ratio_output_and_audio_survive_real_local_composition[off-9:16]",
+        "test_voice_request_is_not_silently_replaced_with_silence"
+      ]
+    },
+    {
+      "group": "legacy-composition",
+      "passed": 7,
+      "failed": 0,
+      "errors": 0,
+      "tests": [
+        "test_legacy_compose_adds_no_text_or_audio_and_preserves_source_audio[audio0]",
+        "test_legacy_compose_adds_no_text_or_audio_and_preserves_source_audio[audio1]",
+        "test_legacy_compose_adds_no_text_or_audio_and_preserves_source_audio[audio2]",
+        "test_legacy_compose_rejects_output_that_drops_original_audio",
+        "test_legacy_compose_still_blocks_too_short_clips_before_encoding",
+        "test_real_legacy_mixed_audio_stays_in_its_original_scene",
+        "test_unused_noncommercial_sfx_is_never_added_to_plain_composition"
+      ]
+    }
+  ],
+  "typescript": "PASS",
+  "vite": "PASS",
+  "operatingApplied": false,
+  "newProviderCalls": 0
+}

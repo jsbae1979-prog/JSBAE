@@ -25,6 +25,8 @@ def test_selected_ratio_output_and_audio_survive_real_local_composition(tmp_path
     assert (info['width'],info['height'])==dimensions(settings)
     assert info['has_audio']==(sound=='on') and abs(info['duration']-30)<.1
     assert result['human_quality']=='NOT VERIFIED'
+    assert result['captions_added'] is False and result['voice_added'] is False
+    assert result['ai_label_burned_in'] is False and not list(folder.rglob('*.ass'))
 
 def test_voice_request_is_not_silently_replaced_with_silence(tmp_path,monkeypatch):
     import newsflow.character.compose_studio as module

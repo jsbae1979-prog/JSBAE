@@ -810,7 +810,8 @@ class CharacterService:
                                                                     'finished_at']},
                                            'request_id':old.get('handle',{}).get('request_id')}
                                           for old in s.get('history',[])]} for s in job['scenes']],
-                    'checklist':['캐릭터 일관성','자막·장면 순서·길이','AI 생성 표시','시청 연령·아동용 여부 확인',
+                    'checklist':['캐릭터 일관성','장면 순서·길이','자막·추가 음성 없음','모델 원본 소리 확인',
+                                 'AI 생성 사실·게시 플랫폼 표시 설정','시청 연령·아동용 여부 확인',
                                  '음악은 플랫폼에서 직접 선택','최근 웃음 구조 반복 여부'],
                     'human_review':'NOT VERIFIED','automatic_upload':False}
             if job.get('character',{}).get('style_warn'):

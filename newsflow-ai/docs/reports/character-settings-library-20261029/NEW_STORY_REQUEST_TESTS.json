@@ -1,0 +1,20 @@
+{
+  "passed": 8,
+  "failed": 0,
+  "typescript": "PASS",
+  "vite": "PASS",
+  "method": "Actual component functions and disabled condition in Node with local stub transports",
+  "actualBrowserGeneration": "NOT RUN",
+  "providerCalls": 0,
+  "operatingApplied": false,
+  "cases": [
+    "New topic gets a new request ID",
+    "New reference gets a new request ID",
+    "New settings get a new request ID",
+    "Uncertain identical input stays blocked",
+    "Confirmed local 422 does not block corrected input",
+    "Refresh failure releases busy state",
+    "POST helper retains HTTP status",
+    "Request identity matches reference payload precedence"
+  ]
+}

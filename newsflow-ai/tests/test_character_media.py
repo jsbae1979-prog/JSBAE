@@ -62,14 +62,12 @@ def test_three_synthetic_episodes_are_1080x1920_30s_without_speech(setup,synthet
     (output.parent/'synthetic-test-topic.txt').write_text(topic,encoding='utf8')
 
 
-def test_no_silent_substitution_of_short_clip_or_noncommercial_sfx(tmp_path,synthetic_clip):
-    from newsflow.character.schema import CharacterError
-
+def test_unused_noncommercial_sfx_is_never_added_to_plain_composition(tmp_path,synthetic_clip):
     script=Storyboard.model_validate(story())
     folder=tmp_path/'output';folder.mkdir()
     sfx=tmp_path/'sfx';sfx.mkdir()
     (sfx/'sfx_map.json').write_text(json.dumps({'한숨':{'file':'sigh.wav','license':'unverified',
                                                        'commercial_use_confirmed':False}}),encoding='utf8')
-    with pytest.raises(CharacterError):
-        compose(folder,script,[synthetic_clip]*3,sfx_root=sfx)
-    assert not (folder/'final.mp4').exists()
+    result=compose(folder,script,[synthetic_clip]*3,sfx_root=sfx)
+    assert result['effects']==[] and not result['media']['has_audio']
+    assert (folder/'final.mp4').is_file() and not list((folder/'compose').glob('*.ass'))
