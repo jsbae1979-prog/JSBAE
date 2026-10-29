@@ -1,0 +1,65 @@
+{
+  "tables": 47,
+  "coreCounts": {
+    "image_posts": 3,
+    "intelligence_runs": 49,
+    "news_articles": 169,
+    "video_projects": 7
+  },
+  "changedTablesSinceTrialStart": {
+    "api_request_reservations": {
+      "before": 29,
+      "after": 31
+    },
+    "app_settings": {
+      "before": 78,
+      "after": 80
+    },
+    "audit_logs": {
+      "before": 54,
+      "after": 62
+    }
+  },
+  "protectedCredentialMediaFiles": 26,
+  "protectedCredentialMediaHashesAndACLUnchanged": true,
+  "originalAndABDatabaseHashesUnchanged": true,
+  "launchUnchanged": true,
+  "launchFlags": {
+    "port": 18768,
+    "automaticJobsEnabled": false,
+    "externalExecutionEnabled": false,
+    "decryptCredentials": false,
+    "openBrowser": true
+  },
+  "trialCalls": {
+    "archive": 1,
+    "auto-story": 1,
+    "prepare": 1,
+    "submit": 1
+  },
+  "trialNativeEntries": {
+    "estimate": 1,
+    "submit_scene": 1,
+    "upload": 1
+  },
+  "trialOutcomes": {
+    "archive": "success",
+    "auto-story": "success",
+    "prepare": "success",
+    "submit": "failed_or_unknown"
+  },
+  "scriptReportedUSD": "0.012114",
+  "scriptReservedUSD": "0.25",
+  "videoReservedUSD": "1.260",
+  "jobState": "submission_unknown",
+  "sceneState": [
+    "unknown"
+  ],
+  "providerHandleStored": false,
+  "ledgerStatusCounts": {
+    "archived_unknown": 8,
+    "failed": 12,
+    "success": 11
+  },
+  "paidRetryPerformed": false
+}
