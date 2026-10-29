@@ -1,4 +1,4 @@
-"""Explicit reversible archival of seven finished unknown API ledger entries.
+"""Explicit reversible archival of a bounded batch of finished unknown API ledger entries.
 
 Archival is not cancellation, a refund, a successful response or permission to
 replay an old request. Only status changes; request identity, usage, money and
@@ -33,12 +33,13 @@ def fingerprint(row):
     return _unknown_fingerprint(row)
 
 
-def _validate(mapping,consent):
-    if (consent is not True or not isinstance(mapping,Mapping) or len(mapping)!=COUNT
+def _validate(mapping,consent,expected_count):
+    if (consent is not True or type(expected_count) is not int or not 1<=expected_count<=COUNT
+            or not isinstance(mapping,Mapping) or len(mapping)!=expected_count
             or any(not isinstance(key,str) or not _ID.fullmatch(key)
                    or not isinstance(value,str) or not _HASH.fullmatch(value)
                    for key,value in mapping.items())):
-        raise ArchiveError('명시적으로 승인한 결과 불명 기록 7개와 원본 지문이 필요합니다.')
+        raise ArchiveError('명시적으로 승인한 건수(1~7개)와 결과 불명 원본 지문이 필요합니다.')
     return dict(mapping)
 
 
@@ -46,7 +47,7 @@ def _rows(session,mapping,status):
     rows=list(session.scalars(select(APIRequestReservation)
               .where(APIRequestReservation.id.in_(sorted(mapping)))
               .order_by(APIRequestReservation.id)))
-    if len(rows)!=COUNT:
+    if len(rows)!=len(mapping):
         raise ArchiveError('승인한 원본 기록을 모두 찾을 수 없습니다.')
     for row in rows:
         if (row.status!=status or row.finished_at is None or fingerprint(row)!=mapping[row.id]):
@@ -61,8 +62,8 @@ def _audit(session,event,payload):
     session.add(AuditLog(level='info',event=event,message=message))
 
 
-def archive_unknown(sessions,mapping,*,consent):
-    expected=_validate(mapping,consent)
+def archive_unknown(sessions,mapping,*,consent,expected_count=COUNT):
+    expected=_validate(mapping,consent,expected_count)
     batch=uuid4().hex
     archived={}
     with sessions.begin() as session:
@@ -77,12 +78,12 @@ def archive_unknown(sessions,mapping,*,consent):
                 'reservation_id':row.id,'before':expected[row.id],'after':archived[row.id],
                 'old_status':'unknown','new_status':ARCHIVED})
     return {'batch_id':batch,'status':ARCHIVED,'ids':sorted(archived),
-            'fingerprints':archived,'count':COUNT,'deleted':0,'replay_authorized':False}
+            'fingerprints':archived,'count':len(expected),'deleted':0,'replay_authorized':False}
 
 
-def restore_unknown(sessions,mapping,*,consent,batch_id):
+def restore_unknown(sessions,mapping,*,consent,batch_id,expected_count=COUNT):
     """Separate explicit recovery only; never called by app startup or archival."""
-    expected=_validate(mapping,consent)
+    expected=_validate(mapping,consent,expected_count)
     if not isinstance(batch_id,str) or not _ID.fullmatch(batch_id):
         raise ArchiveError('복원할 보관 묶음을 확인하세요.')
     restored={}
@@ -113,4 +114,4 @@ def restore_unknown(sessions,mapping,*,consent,batch_id):
                 'reservation_id':row.id,'before':expected[row.id],'after':restored[row.id],
                 'old_status':ARCHIVED,'new_status':'unknown'})
     return {'batch_id':batch_id,'status':'unknown','ids':sorted(restored),
-            'fingerprints':restored,'count':COUNT,'deleted':0,'replay_authorized':False}
+            'fingerprints':restored,'count':len(expected),'deleted':0,'replay_authorized':False}

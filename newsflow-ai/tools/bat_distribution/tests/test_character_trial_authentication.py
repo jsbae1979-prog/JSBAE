@@ -24,8 +24,10 @@ from test_character_trial import sample, read, KEY
 
 @pytest.fixture
 def authentication(sample, monkeypatch, request):
-    if getattr(request, 'param', None) == 'archive':
+    if getattr(request, 'param', None) in {'archive', 'archive-one'}:
         review = request.getfixturevalue('batch')
+        if request.param == 'archive-one':
+            review = dict(list(review.items())[:1])
         sample.service.sessions = request.getfixturevalue('sessions')
         sample.trial = m.Trial(sample.service, sample.root, sample.policy, unknown_review=review)
     app = FastAPI()

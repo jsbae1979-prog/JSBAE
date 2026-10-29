@@ -89,7 +89,7 @@ def _authentication(sessions):
 def _unknown_review(value):
     if value is None:
         return {}
-    if (not isinstance(value, dict) or len(value) != 7
+    if (not isinstance(value, dict) or not 1 <= len(value) <= 7
             or any(not isinstance(key, str) or not _ID.fullmatch(key)
                    or not isinstance(item, str) or not re.fullmatch(r'[a-f0-9]{64}', item)
                    for key, item in value.items())):
@@ -108,7 +108,7 @@ def _archive_state(sessions, review):
                     .where(APIRequestReservation.id.in_(sorted(review)))))
         unknown = sum(row.status == 'unknown' for row in rows)
         archived = sum(row.status == 'archived_unknown' for row in rows)
-        matching = (len(rows) == 7 and unknown == 7 and all(
+        matching = (len(rows) == len(review) and unknown == len(review) and all(
             row.finished_at is not None and fingerprint(row) == review[row.id] for row in rows))
     return matching, unknown, archived
 
@@ -135,8 +135,9 @@ def _policy(value):
                 or p['script_model'] != CLAUDE or p['video_model'] != K3
                 or any(type(p[k]) is not int for k in ('duration', 'clip_seconds', 'scene_count'))
                 or (p['duration'], p['clip_seconds'], p['scene_count'], p['sound']) != (15, 3, 5, 'off')
-                or (_money(p['script_limit_usd']), _money(p['video_limit_usd']),
-                    _money(p['total_limit_usd'])) != (Decimal('.25'), Decimal('2.75'), Decimal('3'))):
+                or _money(p['script_limit_usd']) != Decimal('.25')
+                or _money(p['video_limit_usd']) not in {Decimal('2.50'), Decimal('2.75')}
+                or _money(p['total_limit_usd']) != Decimal('3')):
             _fail()
     except (KeyError, TypeError, ValueError):
         _fail()
@@ -365,7 +366,7 @@ class Trial:
                 or job.get('model') != p['video_model'] or job.get('claude_model') != p['script_model']
                 or job.get('duration') != 15
                 or any(s.get(k) != p[k] for k in ('video_model', 'script_model', 'duration', 'clip_seconds', 'sound'))
-                or _money(job.get('episode_limit')) > Decimal('2.75')):
+                or _money(job.get('episode_limit')) > _money(p['video_limit_usd'])):
             _fail()
         reference = _unlinked(self.service.folder(identifier)/'reference.png')
         if hashlib.sha256(reference.read_bytes()).hexdigest() != p['reference_sha256']:
@@ -452,12 +453,13 @@ class Trial:
                 'unknownCount': unknown, 'archivedCount': archived}
 
     def archive(self, *, consent):
-        """Archive exactly the reviewed seven records; never delete or authorize replay."""
+        """Archive exactly the reviewed records; never delete or authorize replay."""
         context = _CONTEXT.get()
         if (consent is not True or context is None or context.trial is not self
                 or context.action != 'archive' or context.job_id is not None
                 or _now() >= datetime.fromisoformat(self.policy['expires_at'])
-                or len(self.unknown_review) != 7 or _hash(self.unknown_review) != self.unknown_review_hash):
+                or not 1 <= len(self.unknown_review) <= 7
+                or _hash(self.unknown_review) != self.unknown_review_hash):
             _fail()
         with self.journal() as row:
             if (row['calls'].get('archive', 0) != 0
@@ -467,8 +469,9 @@ class Trial:
             row['outcomes']['archive'] = 'started_or_unknown'
         try:
             from newsflow.intelligence.request_archival import archive_unknown
-            result = archive_unknown(self.service.sessions, self.unknown_review, consent=True)
-            if (result.get('count') != 7 or result.get('status') != 'archived_unknown'
+            count = len(self.unknown_review)
+            result = archive_unknown(self.service.sessions, self.unknown_review, consent=True, expected_count=count)
+            if (result.get('count') != count or result.get('status') != 'archived_unknown'
                     or result.get('replay_authorized') is not False or result.get('deleted') != 0):
                 _fail()
         except BaseException:
@@ -477,7 +480,7 @@ class Trial:
             raise
         with self.journal() as row:
             row['outcomes']['archive'] = 'success'
-        return {'count': 7, 'status': 'archived_unknown', 'replay_authorized': False}
+        return {'count': count, 'status': 'archived_unknown', 'replay_authorized': False}
 
     def invoke(self, action, identifier, method, *args, **kwargs):
         context = _CONTEXT.get()
@@ -504,7 +507,7 @@ class Trial:
                 scenes = job.get('scenes', [])
                 total = sum((_money(scene['quote_usd']) for scene in scenes), Decimal(0))
                 if (len(scenes) != 1 or any(scene.get('state') != 'not_submitted' for scene in scenes)
-                        or total != _money(job['quote_total_usd']) or total > Decimal('2.75')
+                        or total != _money(job['quote_total_usd']) or total > _money(self.policy['video_limit_usd'])
                         or total+Decimal('.25') > Decimal('3') or row['video']['state'] != 'unspent'
                         or row['outcomes'].get('prepare') != 'success'):
                     _fail()

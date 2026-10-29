@@ -115,3 +115,38 @@ def test_recovery_needs_matching_archive_evidence_and_restores_only_original_sta
         assert len(list(db.scalars(select(AuditLog).where(AuditLog.event==RESTORE_EVENT))))==7
     with pytest.raises(ArchiveError):
         restore_unknown(sessions,archived['fingerprints'],consent=True,batch_id=archived['batch_id'])
+
+
+
+def test_single_finished_unknown_archive_restore_keeps_original_cost_and_identity(sessions,batch):
+    identifier=next(iter(batch))
+    chosen={identifier:batch[identifier]}
+    original=contents(sessions)
+    archived=archive_unknown(sessions,chosen,consent=True,expected_count=1)
+    assert archived['count']==1 and archived['ids']==[identifier] and archived['deleted']==0
+    after=contents(sessions)
+    assert after[identifier]=={**original[identifier],'status':ARCHIVED}
+    assert {key:value for key,value in after.items() if key!=identifier}=={
+        key:value for key,value in original.items() if key!=identifier}
+    for column in ('request_id','reserved_usd','estimated_usd','bounds','prices','usage','finished_at'):
+        assert after[identifier][column]==original[identifier][column]
+    with pytest.raises(APISettingsError,match='이미 기록된 요청'):
+        APIBudgetService(sessions).reserve(provider='claude_api',request_id=original[identifier]['request_id'],
+            kind='script',model='claude-sonnet-4-6',max_output_tokens=3000,key_store=None)
+    result=restore_unknown(sessions,archived['fingerprints'],consent=True,
+                           batch_id=archived['batch_id'],expected_count=1)
+    assert result['count']==1 and result['fingerprints']==chosen
+    assert contents(sessions)==original
+    with sessions() as db:
+        assert len(list(db.scalars(select(AuditLog).where(AuditLog.event==ARCHIVE_EVENT))))==1
+        assert len(list(db.scalars(select(AuditLog).where(AuditLog.event==RESTORE_EVENT))))==1
+
+
+def test_single_scope_count_mismatch_and_invalid_counts_are_atomic(sessions,batch):
+    original=contents(sessions)
+    chosen={next(iter(batch)):next(iter(batch.values()))}
+    for expected_count,mapping in ((0,chosen),(8,chosen),(True,chosen),(1,batch),(7,chosen)):
+        with pytest.raises(ArchiveError):
+            archive_unknown(sessions,mapping,consent=True,expected_count=expected_count)
+        assert contents(sessions)==original
+    with sessions() as db:assert list(db.scalars(select(AuditLog)))==[]

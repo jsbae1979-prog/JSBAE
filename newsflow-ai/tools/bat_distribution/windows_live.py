@@ -355,7 +355,7 @@ def character_trial_unknowns(config):
         raise Blocked('character-unknown-review-integrity')
     value = json.loads(content)
     import re
-    if (not isinstance(value, dict) or len(value) != 7 or any(
+    if (not isinstance(value, dict) or not 1 <= len(value) <= 7 or any(
             not isinstance(k, str) or not re.fullmatch('[a-f0-9]{32}', k)
             or not isinstance(v, str) or not re.fullmatch('[a-f0-9]{64}', v)
             for k, v in value.items())):
