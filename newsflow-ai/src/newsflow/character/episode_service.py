@@ -155,6 +155,10 @@ class EpisodeFlow:
                 job['script_failure'] = {'failure_stage': 'preflight' if not_dispatched else 'schema',
                     'message': '설정·한도를 확인한 뒤 다시 요청하세요. 자동 실행하지 않습니다.' if not_dispatched else
                                '대본 형식·길이를 확인하세요. 자동 재생성하지 않습니다.'}
+                if not_dispatched:
+                    from .story_response import bounded_preflight_reason
+                    job['script_failure'].update(dispatched=False,
+                        preflight_reason=bounded_preflight_reason(preflight.get('reason')))
                 s.save(job)
                 raise CharacterError('provider') from None
             self.record_text_cost(job, authoring, attempt)

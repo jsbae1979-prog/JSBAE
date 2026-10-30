@@ -181,6 +181,12 @@ def provider_for_model(model):
     return matches[0]
 
 
+def budget_failure_reason(error):
+    """Recognize this reviewed local refusal, never retain raw exception text."""
+    return ('authentication_required' if isinstance(error, APISettingsError)
+            and str(error) == '실제 API 연결 미확인 · 별도 승인 후 검증 필요' else 'settings')
+
+
 def wire_schema(schema, provider):
     document = _output_schema(schema)
     def convert(value):
@@ -342,9 +348,10 @@ class AuthoringAI:
         try:
             reservation = self.budget.reserve(provider=provider,request_id=request_id,kind=kind,
                 model=options.model,max_output_tokens=options.max_tokens,key_store=store)
-        except (APISettingsError, ValueError):
+        except (APISettingsError, ValueError) as error:
             self.last_reserved_usd = '0'
-            self.last_failure = {'stage':'budget','response_received':False,'dispatched':False}
+            self.last_failure = {'stage':'budget','response_received':False,'dispatched':False,
+                                 'reason':budget_failure_reason(error)}
             raise CharacterError('budget') from None
         self.last_reservation = reservation
         self.last_reserved_usd = str(reservation.reserved_usd) if hasattr(reservation,'reserved_usd') else None
@@ -358,7 +365,8 @@ class AuthoringAI:
                 # unlike cancelling a dispatched request whose outcome is unknown.
                 self.last_usage = {'prompt_tokens':0,'completion_tokens':0,'search_calls':0}
                 self.last_reserved_usd = '0'
-                self.last_failure = {'stage':'budget','response_received':False,'dispatched':False}
+                self.last_failure = {'stage':'budget','response_received':False,'dispatched':False,
+                                     'reason':'episode_limit'}
                 self.budget.finish(reservation.id,status='failed',usage=self.last_usage)
                 raise CharacterError('budget')
         adapter.last_usage = None

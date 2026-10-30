@@ -53,6 +53,9 @@ def save_character_reference(request: Request, reference: Annotated[UploadFile, 
 @router.post('/api/studio/characters/auto-story')
 def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False)):
     service=request.app.state.character
+    attempted_write=False
+    prior_sequence=None
+    prior_failure=None
     try:
         service.consent(consent)
         job=service.read(job_id)
@@ -62,6 +65,9 @@ def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False
             service.authoring = authoring(request)
         if job['state']=='needs_script' or (job.get('automation_version') == 1 and job['state'] == 'script_failed'
                 and job.get('response_received') is True and 0 < job.get('script_attempts',0) < 3):
+            prior_sequence=job.get('script_request_sequence')
+            prior_failure=job.get('script_failure')
+            attempted_write=True
             service.write(job_id,consent=True)
         elif job['state']!='script_review':
             raise CharacterError('blocked')
@@ -73,6 +79,17 @@ def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False
             store.update_status(completed['character_id'], row['id'], 'scripted')
         return {'id':job_id,'state':completed['state']}
     except (ValueError,OSError,*SAFE_ERRORS):
+        if attempted_write:
+            try:
+                from newsflow.character.story_response import public_failure
+                failed=service.read(job_id)
+                fresh=(failed.get('script_request_sequence')!=prior_sequence
+                       or failed.get('script_failure')!=prior_failure)
+                diagnosed=public_failure(failed.get('script_failure')) if fresh else None
+                if diagnosed:
+                    return JSONResponse({'id':job_id,'error':diagnosed['message'],'failure':diagnosed},status_code=409)
+            except (ValueError,OSError,*SAFE_ERRORS):
+                pass
         return JSONResponse({'id':job_id,'error':'스토리 요청을 중단했습니다. 작업 이력을 확인하세요. 자동 재요청하지 않습니다.'},status_code=409)
 
 

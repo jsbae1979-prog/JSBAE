@@ -13,8 +13,23 @@ MESSAGES={
     'timing':'스토리 장면 수나 길이가 선택한 영상 설정과 맞지 않습니다.',
 }
 
+PREFLIGHT_MESSAGES={
+    'authentication_required':'설정에서 선택한 AI의 연결 상태를 다시 확인하세요.',
+    'episode_limit':'이번 영상의 남은 사용 한도를 확인하세요.',
+    'settings':'스토리 요청 전 설정 확인에서 중단됐습니다.',
+}
+
+
+def bounded_preflight_reason(value):
+    return value if isinstance(value,str) and value in PREFLIGHT_MESSAGES else 'settings'
+
 def public_failure(value):
     if not isinstance(value,dict):return None
+    if value.get('failure_stage')=='preflight':
+        if value.get('dispatched') is not False:return None
+        reason=bounded_preflight_reason(value.get('preflight_reason'))
+        return {'stage':'preflight','reason':reason,'dispatched':False,
+                'message':PREFLIGHT_MESSAGES[reason]+' 유료 요청은 전송되지 않았습니다.'}
     if value.get('failure_stage') not in MESSAGES:
         return {'stage':'request','message':'스토리 API 요청이 완료되지 않았습니다.'} if 'http_status' in value else None
     errors=value.get('validation_errors',())
