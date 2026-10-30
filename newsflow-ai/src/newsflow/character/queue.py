@@ -39,10 +39,10 @@ class EpisodeQueue:
         if not isinstance(identifier,str) or not re.fullmatch(r'[a-f0-9]{32}',identifier):raise CharacterError()
         return safe_path(self.root/(identifier+'.json'),self.root)
 
-    def _lock(self,identifier):
+    def _lock(self,identifier,*,timeout=5):
         self._path(identifier)
         safe_path(self.root,self.root).mkdir(parents=True,exist_ok=True)
-        return FileLock(str(safe_path(self.root/(identifier+'.lock'),self.root)),timeout=5)
+        return FileLock(str(safe_path(self.root/(identifier+'.lock'),self.root)),timeout=timeout)
 
     def _save(self,row):atomic_json(self._path(row['id']),row,self.root)
 
@@ -59,7 +59,22 @@ class EpisodeQueue:
     def list(self):
         safe_path(self.root,self.root)
         if not self.root.exists():return []
-        return [self.get(path.stem) for path in sorted(self.root.glob('*.json')) if re.fullmatch(r'[a-f0-9]{32}',path.stem)]
+        rows=[self.get(path.stem) for path in sorted(self.root.glob('*.json')) if re.fullmatch(r'[a-f0-9]{32}',path.stem)]
+        return [row for row in rows if not row.get('archived_at')]
+
+    def delete(self,identifier,*,consent=False):
+        """Remove the queue from the list without deleting any execution evidence."""
+        if consent is not True:raise CharacterError('consent')
+        try:
+            # A running request holds this same lock; do not wait and hide its result.
+            with self._lock(identifier,timeout=0):
+                queue=self.get(identifier)
+                if not queue.get('archived_at'):
+                    if queue['state'] in {'scripts_running','videos_running'}:raise CharacterError('busy')
+                    queue['archived_at']=datetime.now(UTC).isoformat()
+                    self._save(queue)
+                return {'deleted':True,'historicalJobsPreserved':True}
+        except Timeout:raise CharacterError('busy') from None
 
     def create(self,character_id,topic_ids,settings,episode_limit,request_id):
         if (not isinstance(topic_ids,list) or not 1<=len(topic_ids)<=50
@@ -70,6 +85,7 @@ class EpisodeQueue:
             with self._lock(request_id):
                 if self._path(request_id).exists():
                     queue=self.get(request_id)
+                    if queue.get('archived_at'):raise CharacterError('blocked')
                     if queue['request_hash']!=identity:raise CharacterError('blocked')
                 else:
                     profile=self.registry.snapshot(character_id)
@@ -96,6 +112,7 @@ class EpisodeQueue:
         try:
             with self._lock(identifier):
                 queue=self.get(identifier)
+                if queue.get('archived_at'):raise CharacterError('blocked')
                 if queue['state'] not in {'drafts','scripts_running','scripts_ready'}:raise CharacterError('blocked')
                 queue['state']='scripts_running';self._save(queue)
                 for row in queue['rows']:
@@ -128,6 +145,7 @@ class EpisodeQueue:
         try:
             with self._lock(identifier):
                 queue=self.get(identifier)
+                if queue.get('archived_at'):raise CharacterError('blocked')
                 if queue['state'] not in {'scripts_ready','drafts'} or queue.get('video_approval'):raise CharacterError('blocked')
                 job_ids={row['job_id'] for row in queue['rows']}
                 if (any(not isinstance(a,dict) or set(a)!={'job_id','quote_hash'} or a['job_id'] not in job_ids for a in approvals)
@@ -151,6 +169,7 @@ class EpisodeQueue:
         try:
             with self._lock(identifier):
                 queue=self.get(identifier)
+                if queue.get('archived_at'):raise CharacterError('blocked')
                 if queue['state'] not in {'videos_approved','videos_running','clips_ready'}:raise CharacterError('blocked')
                 if queue['state']=='clips_ready':return queue
                 for entry in queue['video_approval']['rows']:

@@ -625,8 +625,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     referenceJob && /^[a-f0-9]{32}$/.test(referenceJob)
       ? `/api/studio/characters/${referenceJob}/reference`
       : null;
-  const savedReference = /^studio-[a-f0-9]{64}\.png$/.test(asset)
-    ? `/image-studio/assets/${asset}`
+  // A new story keeps its selected profile after leaving a saved job.
+  // Existing jobs still use their immutable reference, not the current profile.
+  const referenceAssetId = asset || (!job ? activeProfile?.asset ?? "" : "");
+  const savedReference = /^studio-[a-f0-9]{64}\.png$/.test(referenceAssetId)
+    ? `/image-studio/assets/${referenceAssetId}`
     : null;
   const reference = file || savedReference || clonedReference || selectedReference;
   function storyRequestKey() {

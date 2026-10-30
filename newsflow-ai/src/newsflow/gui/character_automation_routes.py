@@ -195,6 +195,19 @@ def queue_scripts(request: Request, identifier: str, consent: bool = Form(False)
         raise public_problem() from None
 
 
+@router.post('/api/studio/characters/queues/{identifier}/delete')
+def queue_delete(request: Request, identifier: str, consent: bool = Form(False)):
+    if not consent:
+        raise HTTPException(422, '대기열 삭제를 확인하세요. 작업과 영상은 보존됩니다.')
+    try:
+        return episode_queue(request).delete(identifier, consent=True)
+    except CharacterError as error:
+        detail = '실행 중인 대기열은 삭제할 수 없습니다.' if error.code == 'busy' else '대기열을 삭제하지 못했습니다.'
+        raise HTTPException(409, detail) from None
+    except (ValueError, OSError, PublishingError):
+        raise HTTPException(409, '대기열을 삭제하지 못했습니다.') from None
+
+
 @router.post('/api/studio/characters/queues/{identifier}/approve-videos')
 def queue_approve(request: Request, identifier: str, approvals: str = Form(..., max_length=16000),
                   max_total_usd: str = Form(...), consent: bool = Form(False)):

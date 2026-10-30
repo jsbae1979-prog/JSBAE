@@ -64,7 +64,7 @@ class OperatingRequests(LocalWorkRequests):
     NEWS_PREVIEW = re.compile(r'/news/[1-9][0-9]*/thumbnail\Z')
 
     CHARACTER_LOCAL_READ = re.compile(r'/api/studio/characters/(?:profiles(?:/char_[a-f0-9]{32}/topics)?|queues(?:/[a-f0-9]{32})?)\Z')
-    CHARACTER_LOCAL_WRITE = re.compile(r'/api/studio/characters/(?:profiles/save|profiles/char_[a-f0-9]{32}/(?:delete|topics/(?:manual|import|[a-f0-9]{32}/status))|queues/create|[a-f0-9]{32}/script)\Z')
+    CHARACTER_LOCAL_WRITE = re.compile(r'/api/studio/characters/(?:profiles/save|profiles/char_[a-f0-9]{32}/(?:delete|topics/(?:manual|import|[a-f0-9]{32}/status))|queues/(?:create|[a-f0-9]{32}/delete)|[a-f0-9]{32}/script)\Z')
 
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'http':

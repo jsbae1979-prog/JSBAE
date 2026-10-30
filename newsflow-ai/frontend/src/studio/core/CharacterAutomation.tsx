@@ -178,6 +178,7 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
   const [queue, setQueue] = useState<Item | null>(null), [queues, setQueues] = useState<Item[]>([]);
   const [scriptConsent, setScriptConsent] = useState(false), [videoConsent, setVideoConsent] = useState(false);
   const [queueCap, setQueueCap] = useState("");
+  const [deleteQueue, setDeleteQueue] = useState<Item | null>(null), [deleteError, setDeleteError] = useState("");
   const sending = useRef(false);
   const topicStates: Record<string,string> = {new:"미사용",scripted:"대본 작성",produced:"영상 완료",skipped:"보류"};
   const queueStates: Record<string,string> = {drafts:"대본 생성 대기",scripts_running:"대본 생성 중",
@@ -186,6 +187,7 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
   useEffect(() => {
     setRows([]); setError(""); setSelectedTopics([]); setQueue(null); setQueues([]);
     setConsent(false); setScriptConsent(false); setVideoConsent(false); setQueueCap("");
+    setDeleteQueue(null); setDeleteError("");
     let active = true;
     fetch("/api/studio/characters/queues", { credentials: "same-origin" }).then(async r=>r.ok?r.json():{queues:[]})
       .then(data=>{if(active)setQueues(data.queues??[]);}).catch(()=>{});
@@ -198,6 +200,21 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
     setQueue(value);
     setQueues(previous=>previous.some(item=>item.id===value.id)
       ? previous.map(item=>item.id===value.id?value:item) : [...previous,value]);
+  }
+  async function removeQueue() {
+    const target = deleteQueue;
+    if (!target || sending.current || disabled || ["scripts_running","videos_running"].includes(target.state)) return;
+    sending.current = true; setBusy(true); onBusy(true); setDeleteError("");
+    try {
+      const result = await characterCommand(`/api/studio/characters/queues/${target.id}/delete`, csrf, { consent: "true" });
+      if (result.deleted !== true || result.historicalJobsPreserved !== true)
+        throw Error("삭제 결과를 확인하지 못했습니다. 목록을 다시 확인하세요.");
+      setQueues(previous=>previous.filter(item=>item.id!==target.id));
+      setQueue(current=>current?.id===target.id?null:current);
+      setScriptConsent(false); setVideoConsent(false); setQueueCap(""); setDeleteQueue(null);
+    } catch(e) {
+      setDeleteError(`대기열 삭제: ${e instanceof Error?e.message:"저장 상태를 확인하세요. 자동 재요청하지 않습니다."}`);
+    } finally { sending.current = false; setBusy(false); onBusy(false); }
   }
   async function act(kind: "generate" | "manual" | "import", value?: Item, status?: string) {
     if (!profile || sending.current || disabled) return;
@@ -282,9 +299,14 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
           <button disabled={!scriptConsent||!available||!selectedTopics.length} onClick={()=>void batch("scripts")}>선택한 주제 대본 생성</button>
         </details>
         <details className="character-queue"><summary>제작 대기열</summary>
-          <label>저장된 대기열<select value={queue?.id??""} onChange={e=>{if(e.target.value)void batch("read",e.target.value);}}>
-            <option value="">대기열 선택</option>{queues.filter(q=>q.character_id===profile?.id).map((q,index)=><option key={q.id} value={q.id}>대기열 {index+1} · {q.rows?.length??0}편</option>)}
-          </select></label>
+          <div className="character-queue-select">
+            <label>저장된 대기열<select value={queue?.id??""} onChange={e=>{if(e.target.value)void batch("read",e.target.value);}}>
+              <option value="">대기열 선택</option>{queues.filter(q=>q.character_id===profile?.id).map((q,index)=><option key={q.id} value={q.id}>대기열 {index+1} · {q.rows?.length??0}편</option>)}
+            </select></label>
+            <button type="button" disabled={!queue||["scripts_running","videos_running"].includes(queue.state)}
+              onClick={()=>{if(queue){setDeleteQueue({...queue});setDeleteError("");}}}>대기열 삭제</button>
+          </div>
+          {queue&&["scripts_running","videos_running"].includes(queue.state)&&<small>제작 중인 대기열은 작업이 끝난 뒤 삭제할 수 있습니다.</small>}
           {queue && <div className="character-queue-current"><p role="status">대기열 상태: {queueStates[queue.state]??"상태 확인 필요"}</p>
             <div className="character-queue-items">{(queue.rows??[]).map((row:Item,index:number)=><button key={row.job_id??row.topic_id??index} disabled={!row.job_id} onClick={()=>onJob(row.job_id)}>
               {queue.state==="clips_ready"?"장면 검토":"작업 보기"} · {jobs.find(j=>j.id===row.job_id)?.topic??row.topic??rows.find(r=>r.id===row.topic_id)?.topic??`${index+1}번째 주제`}
@@ -307,6 +329,13 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
     </fieldset>
     {!profile && <small>등록된 캐릭터를 먼저 선택하세요.</small>}
     {busy && <p role="status">주제 처리 중…</p>}{error && <p role="alert">{error}</p>}
+    {deleteQueue&&<CharacterModal title="제작 대기열 삭제" busy={busy} onClose={()=>setDeleteQueue(null)} footer={<>
+      <button type="button" disabled={busy} onClick={()=>setDeleteQueue(null)}>취소</button>
+      <button type="button" disabled={busy||disabled} onClick={()=>void removeQueue()}>대기열 삭제 확인</button></>}>
+      <p>선택한 대기열만 목록에서 삭제합니다. 연결된 작업·영상과 저장한 주제는 그대로 남습니다.</p>
+      <p>{deleteQueue.rows?.length??0}편 · {queueStates[deleteQueue.state]??"상태 확인 필요"}</p>
+      {deleteError&&<p role="alert" className="character-modal-feedback">{deleteError}</p>}
+    </CharacterModal>}
   </details>;
 }
 
