@@ -134,3 +134,44 @@ def test_generated_topics_reject_unknown_fields_and_empty_candidate_names():
     with pytest.raises(ValueError):TopicResponse.model_validate({'topics':[{'topic':'a','category':'b','joke_type':'c','key':'secret'}]})
     value=candidate();value['candidates'][0]['name_ko']=''
     with pytest.raises(ValueError):AnalysisResult.model_validate(value)
+
+
+@pytest.mark.parametrize('reserved,maximum',[('2.00','1.99'),(None,'5.00'),('NaN','5.00')])
+def test_episode_reservation_ceiling_blocks_before_external_call(reserved,maximum):
+    service,adapter,budget=build('claude_api',candidate())
+    original=budget.reserve
+    def reserve(**kwargs):
+        result=original(**kwargs)
+        if reserved is not None:result.reserved_usd=reserved
+        return result
+    budget.reserve=reserve
+    with pytest.raises(CharacterError):service.generate(CHARACTER_ANALYSIS_INSTRUCTION,{},AnalysisResult,
+        Options(model='claude-sonnet-4-6'),provider='claude_api',request_id='one',consent=True,max_reserved_usd=maximum)
+    assert not adapter.bodies and service.response_received is False and service.last_reserved_usd=='0'
+    assert budget.finished==[('1',{'status':'failed','usage':{'prompt_tokens':0,'completion_tokens':0,'search_calls':0}})]
+
+
+def test_preflight_error_resets_previous_request_evidence():
+    service,adapter,budget=build('claude_api',candidate())
+    service.analyze(png(),provider='claude_api',model='claude-sonnet-4-6',request_id='one',consent=True)
+    assert service.response_received
+    with pytest.raises(CharacterError):service.generate('instruction',{},AnalysisResult,
+        Options(model='claude-sonnet-4-6'),provider='claude_api',request_id='two',consent=False)
+    assert service.response_received is False and service.last_reservation is None and service.last_candidate is None
+    assert service.last_reserved_usd == '0'
+    assert service.last_failure == {'stage':'preflight','response_received':False,'dispatched':False}
+
+
+@pytest.mark.parametrize('failure',['missing_key','model_mismatch','oversized_payload'])
+def test_local_preflight_failures_are_proven_not_dispatched(failure):
+    service,adapter,budget=build('claude_api',candidate())
+    model='claude-sonnet-4-6';payload={}
+    if failure=='missing_key':service.keys={}
+    if failure=='model_mismatch':model='gpt-4.1-mini'
+    if failure=='oversized_payload':payload={'topic':'x'*70000}
+    with pytest.raises(CharacterError):
+        service.generate('instruction',payload,AnalysisResult,Options(model=model),
+            provider='claude_api',request_id='preflight',consent=True)
+    assert not adapter.bodies and not budget.reservations
+    assert service.last_reserved_usd=='0' and not service.response_received
+    assert service.last_failure=={'stage':'preflight','response_received':False,'dispatched':False}

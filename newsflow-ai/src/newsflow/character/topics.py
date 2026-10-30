@@ -118,7 +118,8 @@ class TopicStore:
         except Timeout: raise CharacterError('busy') from None
 
     def update_status(self, character_id, identifier, status, expected_revision=None):
-        if status not in TOPIC_STATES: raise CharacterError()
+        if status not in TOPIC_STATES or (expected_revision is not None and type(expected_revision) is not int):
+            raise CharacterError()
         try:
             with self._lock(character_id):
                 rows = self.list(character_id)

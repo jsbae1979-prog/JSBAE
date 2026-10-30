@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+from decimal import Decimal, InvalidOperation
 from io import BytesIO
 import json
 
@@ -13,6 +14,7 @@ from newsflow.intelligence.api_providers import (
     _claude_json_object, _output_schema,
 )
 from newsflow.intelligence.provider import Options, ProviderResponseError, user_message
+from newsflow.intelligence.api_settings import APISettingsError
 from .registry import ComedyFormula, safe_text
 from .schema import Strict, CharacterError
 from .topics import Topic, validate_generated
@@ -181,9 +183,20 @@ class AuthoringAI:
         self.last_reserved_usd = None
 
     def generate(self, instruction, payload, schema, options, *, provider, request_id, consent=False,
-                 image_bytes=None, kind='script'):
+                 image_bytes=None, kind='script', max_reserved_usd=None):
+        self.last_usage = self.last_candidate = self.last_failure = None
+        self.response_received = False
+        self.last_reservation = None
+        self.last_reserved_usd = '0'
+        self.last_failure = {'stage':'preflight','response_received':False,'dispatched':False}
         if consent is not True: raise CharacterError('consent')
         if kind not in {'analysis','script'}: raise CharacterError()
+        maximum = None
+        if max_reserved_usd is not None:
+            try:
+                maximum = Decimal(str(max_reserved_usd))
+                if not maximum.is_finite() or maximum < 0: raise ValueError
+            except (InvalidOperation, ValueError, TypeError): raise CharacterError('budget') from None
         store = self.keys.get(provider)
         adapter = self.providers.get(provider)
         if store is None or adapter is None or not store.status().get('configured'): raise CharacterError('provider')
@@ -192,10 +205,28 @@ class AuthoringAI:
         self.response_received = False
         self.last_reservation = None
         self.last_reserved_usd = None
-        reservation = self.budget.reserve(provider=provider,request_id=request_id,kind=kind,
-            model=options.model,max_output_tokens=options.max_tokens,key_store=store)
+        try:
+            reservation = self.budget.reserve(provider=provider,request_id=request_id,kind=kind,
+                model=options.model,max_output_tokens=options.max_tokens,key_store=store)
+        except (APISettingsError, ValueError):
+            self.last_reserved_usd = '0'
+            self.last_failure = {'stage':'budget','response_received':False,'dispatched':False}
+            raise CharacterError('budget') from None
         self.last_reservation = reservation
         self.last_reserved_usd = str(reservation.reserved_usd) if hasattr(reservation,'reserved_usd') else None
+        if maximum is not None:
+            try:
+                reserved = Decimal(self.last_reserved_usd)
+                permitted = reserved.is_finite() and 0 <= reserved <= maximum
+            except (InvalidOperation, TypeError, ValueError): permitted = False
+            if not permitted:
+                # Nothing left the process. A zero-use failed reservation is truthful,
+                # unlike cancelling a dispatched request whose outcome is unknown.
+                self.last_usage = {'prompt_tokens':0,'completion_tokens':0,'search_calls':0}
+                self.last_reserved_usd = '0'
+                self.last_failure = {'stage':'budget','response_received':False,'dispatched':False}
+                self.budget.finish(reservation.id,status='failed',usage=self.last_usage)
+                raise CharacterError('budget')
         adapter.last_usage = None
         try:
             document = adapter._post(body, options)
