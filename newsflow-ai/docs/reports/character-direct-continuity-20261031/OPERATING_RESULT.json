@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-31",
+  "sourceSha": "51dec551e9f761623f3e0c9d98e0fc7de0ff4988",
+  "operating": {
+    "head": "51dec551e9f761623f3e0c9d98e0fc7de0ff4988",
+    "port": 18768,
+    "pid": 35792,
+    "normalStopExit": 0,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "tablesUnchanged": 47,
+    "articles": 169,
+    "profileFilesPreserved": 166,
+    "originalAndABPreserved": true,
+    "chromeOpenAccepted": true,
+    "securityFlagsPreserved": true,
+    "paidCallsDuringDeployment": 0,
+    "snsCalls": 0
+  },
+  "filesApplied": 14,
+  "profileBackupFiles": 167,
+  "backupVerified": true,
+  "chrome": {
+    "directModeVisible": true,
+    "duration": "30",
+    "model": "kling-video/o3/image-reference",
+    "topicPreserved": true,
+    "storyGenerateButtons": 0,
+    "textModelPickers": 0,
+    "quoteButtonEnabled": true,
+    "quoteClicked": false,
+    "paidGenerationClicked": false
+  },
+  "screenshots": "Actual private Chrome screenshot retained locally; not uploaded",
+  "verdict": "ACCEPTED: authorized operating application and UI verification; real paid video quality NOT VERIFIED"
+}
