@@ -91,10 +91,11 @@
     "operatingRestarts": 0,
     "operatingDeletionTests": 0,
     "schemaMigrationAdded": false,
-    "fakeAndSyntheticOnly": true
+    "fakeAndSyntheticOnly": true,
+    "phase": "DEVELOPMENT_AND_SYNTHETIC_VERIFICATION_BEFORE_APPROVED_DEPLOYMENT"
   },
   "application": {
-    "status": "AWAITING_APPROVED_NORMAL_RESTART",
+    "status": "APPLIED_AFTER_USER_APPROVAL",
     "stagedFiles": [
       {
         "path": "app/product/newsflow/gui/studio_v3.py",
@@ -121,6 +122,30 @@
         "bytes": 418
       }
     ],
-    "operatingChanged": false
+    "operatingChanged": true,
+    "backupFiles": 128,
+    "result": {
+      "head": "7eed8ba96189207dd8aa6556cb55345cf0fa48fd",
+      "port": 18768,
+      "pid": 30204,
+      "normalStopExit": 0,
+      "stopAttempts": 1,
+      "startAttempts": 1,
+      "tablesUnchanged": 47,
+      "articles": 169,
+      "profileFilesPreserved": 127,
+      "originalAndABPreserved": true,
+      "chromeOpenAccepted": true,
+      "securityFlagsPreserved": true,
+      "paidCallsDuringDeployment": 0,
+      "snsCalls": 0
+    },
+    "readiness": {
+      "pid": 30204,
+      "unauthenticatedHttpStatus": 403,
+      "authenticationRequired": true
+    },
+    "productionChrome": "USER_DISPLAY_CONFIRMATION_PENDING",
+    "actualOperatingDeletionTested": false
   }
 }
