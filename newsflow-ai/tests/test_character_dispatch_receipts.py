@@ -96,6 +96,8 @@ def test_transport_boundary_failure_remains_unknown_and_is_not_retried(tmp_path,
     assert len(calls) == 1 and job['state'] == 'script_failed'
     assert job['response_received'] is False and job['script_attempts'] == 1
     assert job['script_failure'].get('dispatched') is not False
+    assert job['script_failure']['failure_stage'] == 'request'
+    assert job['script_failure']['request_reason'] == ('timeout' if failure == 'timeout' else 'request_rejected' if failure == 'http400' else 'connection')
     assert budget.finished[0][1]['status'] == 'unknown'
     assert job['text_reservations'][0]['usd'] == '0.252'
     with pytest.raises(CharacterError):

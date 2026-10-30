@@ -27,8 +27,25 @@ PREFLIGHT_MESSAGES={
 def bounded_preflight_reason(value):
     return value if isinstance(value,str) and value in PREFLIGHT_MESSAGES else 'settings'
 
-def public_failure(value):
+REQUEST_MESSAGES={
+    'timeout':'스토리 응답 대기 시간이 초과됐습니다. 처리·과금 여부를 확인하세요. 자동 재요청하지 않습니다.',
+    'connection':'스토리 응답 연결이 중단됐습니다. 처리·과금 여부를 확인하세요. 자동 재요청하지 않습니다.',
+    'authentication':'스토리 API 인증이 거절됐습니다. 연결 설정을 확인하세요.',
+    'request_rejected':'스토리 API가 요청을 거절했습니다. 자동 재요청하지 않습니다.',
+    'response_unavailable':'스토리 응답을 확인하지 못했습니다. 처리·과금 여부를 확인하세요. 자동 재요청하지 않습니다.',
+}
+
+
+def bounded_request_reason(value):
+    return value if isinstance(value,str) and value in REQUEST_MESSAGES else 'response_unavailable'
+
+
+def public_failure(value, response_received=None):
     if not isinstance(value,dict):return None
+    if value.get('failure_stage') == 'request' or (
+            value.get('failure_stage') == 'schema' and response_received is False):
+        reason=bounded_request_reason(value.get('request_reason'))
+        return {'stage':'request','reason':reason,'message':REQUEST_MESSAGES[reason]}
     if value.get('failure_stage')=='preflight':
         if value.get('dispatched') is not False:return None
         reason=bounded_preflight_reason(value.get('preflight_reason'))

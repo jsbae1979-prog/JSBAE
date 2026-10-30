@@ -230,6 +230,9 @@ class _APITransport:
         deadline = time.monotonic() + timeout
         self._cancelled()
         with urllib.request.build_opener(NoRedirect()).open(request, timeout=timeout) as response:
+            if self.provider == 'claude_api' and json.loads(request.data).get('stream') is True:
+                from .anthropic_stream import read_message
+                return read_message(response, limit=limit, deadline=deadline, cancelled=self._cancelled)
             chunks, length = [], 0
             while length <= limit:
                 self._cancelled()

@@ -252,7 +252,7 @@ def test_concurrent_authoring_keeps_each_callers_receipt_and_provider_usage(firs
     assert adapter.maximum_active == 1
     assert a[:4] == (not first_timeout, None if first_timeout else {'prompt_tokens':10,'completion_tokens':30}, '1.23', '1')
     assert b == (True, {'prompt_tokens':200,'completion_tokens':222}, '2.34', '2', None)
-    assert a[4] == ({'stage':'response','response_received':False} if first_timeout else None)
+    assert a[4] == ({'stage':'response','response_received':False,'reason':'timeout'} if first_timeout else None)
     assert [row[1]['status'] for row in budget.finished] == ['unknown' if first_timeout else 'success','success']
     assert budget.finished[0][1]['usage'] == a[1]
     assert budget.finished[1][1]['usage'] == b[1]

@@ -165,6 +165,17 @@ class EpisodeFlow:
                     from .story_response import bounded_preflight_reason
                     job['script_failure'].update(dispatched=False,
                         preflight_reason=bounded_preflight_reason(preflight.get('reason')))
+                elif not job['response_received']:
+                    from .story_response import bounded_request_reason
+                    job['script_failure'] = {'failure_stage':'request',
+                        'request_reason':bounded_request_reason((preflight or {}).get('reason'))}
+                    details = (preflight or {}).get('http')
+                    if isinstance(details, dict):
+                        from newsflow.intelligence.provider import _safe_http_diagnostics
+                        job['script_failure'].update(_safe_http_diagnostics(**{key:details.get(key) for key in
+                            ('http_status','error_type','request_issue','request_fields','diagnostic_ref')}))
+                elif isinstance(preflight, dict) and preflight.get('reason') in {'envelope','json'}:
+                    job['script_failure']['failure_stage'] = preflight['reason']
                 s.save(job)
                 raise CharacterError('provider') from None
             self.record_text_cost(job, authoring, attempt)

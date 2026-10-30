@@ -1,0 +1,41 @@
+{
+  "baseCommit": "38c859f23488336263ae768f69c30dbd72ed930f",
+  "observed": {
+    "oneApprovedLiveRequest": "unknown",
+    "responseReceived": false,
+    "usageKnown": false,
+    "privateCompleteResponseFilePresent": false,
+    "reservedCeilingUsd": "0.252000",
+    "actualBilling": "NOT VERIFIED",
+    "userScreenshot": "Aggregate API and Console token use; not correlated to an individual request"
+  },
+  "confirmedCodeDefect": "Episode failure handler labelled provider reception failures as schema failures.",
+  "unknownCause": "Historical request did not retain the transport exception category. Exact provider/network cause cannot be reconstructed; initial schema compilation delay is a possibility, not a proven cause.",
+  "changes": [
+    "Character episode only uses Messages SSE with unchanged model, schema, 4000-token cap and 300-second deadline.",
+    "Text-only bounded event accumulation returns on message_stop with final token usage; interrupted/error/malformed/over-limit streams never count as success.",
+    "Finite timeout/connection/authentication/rejection/reception diagnostics distinguish request failures from local schema validation.",
+    "Historical no-response schema labels corrected only in read projection; historical jobs/unknown reservations stay unchanged."
+  ],
+  "validation": {
+    "newFakeTests": 25,
+    "affectedExistingTests": 74,
+    "distinctPassed": 99,
+    "finalFailures": 0,
+    "finalErrors": 0,
+    "initialFailure": "Existing concurrency receipt assertion expected the old receipt without the new finite timeout reason; expectation updated, concurrency assertions preserved.",
+    "realProviderCallsDuringFix": 0,
+    "operatingChanges": false,
+    "fullRegressionRepeated": false
+  },
+  "references": [
+    "https://platform.claude.com/docs/en/build-with-claude/streaming",
+    "https://platform.claude.com/docs/en/build-with-claude/structured-outputs"
+  ],
+  "remaining": [
+    "Operating application requires separately approved normal Stop/Start.",
+    "Live streaming compatibility has not been verified with a paid call.",
+    "No stored full response exists to recover the previous result."
+  ],
+  "verdict": "CONDITIONAL — Fake verified; operating application and live verification pending"
+}

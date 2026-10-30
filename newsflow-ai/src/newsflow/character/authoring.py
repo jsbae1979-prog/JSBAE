@@ -244,6 +244,9 @@ def request_body(instruction, payload, schema, options, provider, image_bytes=No
         body = {'model':options.model,'max_tokens':options.max_tokens,'temperature':options.temperature,
                 'system':instruction,'messages':[{'role':'user','content':content}],
                 'output_config':{'format':{'type':'json_schema','schema':shape}}}
+        from .episode_story import EpisodeScript
+        if schema is EpisodeScript:
+            body['stream'] = True
     else:
         content = [{'type':'input_text','text':data}]
         if encoded is not None: content.append({'type':'input_image','image_url':'data:image/jpeg;base64,'+encoded})
@@ -403,7 +406,19 @@ class AuthoringAI:
             self.last_usage = getattr(adapter,'last_usage',None)
             known = isinstance(self.last_usage,dict) and all(type(self.last_usage.get(k)) is int
                        for k in ('prompt_tokens','completion_tokens'))
-            self.last_failure = {'stage':'response','response_received':known}
+            from newsflow.intelligence.provider import (
+                ProviderTimeoutError, ProviderUnavailableError, ProviderAuthError, ProviderHTTPResponseError)
+            if phase == 'provider':
+                reason = ('timeout' if isinstance(error, (ProviderTimeoutError, TimeoutError)) else
+                          'connection' if isinstance(error, ProviderUnavailableError) else
+                          'authentication' if isinstance(error, ProviderAuthError) else
+                          'request_rejected' if isinstance(error, ProviderHTTPResponseError) else 'response_unavailable')
+            else:
+                reason = error.phase if isinstance(error, AuthoringResponseError) else 'schema'
+            self.last_failure = {'stage':'response','response_received':self.response_received,
+                                 'reason':reason}
+            if isinstance(error, ProviderHTTPResponseError):
+                self.last_failure['http'] = error.diagnostics()
             from .episode_story import validation_feedback
             feedback = validation_feedback(error)
             if feedback:

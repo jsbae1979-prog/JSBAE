@@ -262,7 +262,7 @@ def character_rows(state):
             if k in job
         }
         from newsflow.character.story_response import public_failure
-        item['scriptFailure']=public_failure(job.get('script_failure'))
+        item['scriptFailure']=public_failure(job.get('script_failure'),job.get('response_received'))
         item['scriptRetryAllowed']=(job.get('state')=='script_failed' and job.get('response_received') is True
                                     and 0<job.get('script_attempts',0)<3)
         item['scriptResponseSaved']=bool(job.get('script_responses'))
