@@ -249,15 +249,13 @@ export default function Settings({
                             </small>
                           </td>
                           <td>
-                            <Badge
-                              value={
-                                meta?.verified
-                                  ? "success"
-                                  : meta?.configured
-                                    ? "review_required"
-                                    : "blocked"
-                              }
-                            />
+                            {meta?.verified ? (
+                              <span className="mg-badge good">인증 확인</span>
+                            ) : (
+                              <Badge
+                                value={meta?.configured ? "review_required" : "blocked"}
+                              />
+                            )}
                             <small>
                               {meta?.verified
                                 ? "인증·모델 확인"

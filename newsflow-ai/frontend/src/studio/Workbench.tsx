@@ -2555,15 +2555,13 @@ function LegacyWorkbench({
                       {(view.services ?? []).map((x) => (
                         <div className="connection-row" key={x.id}>
                           <strong>{x.label}</strong>
-                          <Badge
-                            value={
-                              x.verified
-                                ? "success"
-                                : x.configured
-                                  ? "review_required"
-                                  : "blocked"
-                            }
-                          />
+                          {x.verified ? (
+                            <span className="state-badge good">인증 확인</span>
+                          ) : (
+                            <Badge
+                              value={x.configured ? "review_required" : "blocked"}
+                            />
+                          )}
                           <span>
                             {x.verified
                               ? "인증·모델 확인"

@@ -98,6 +98,8 @@ def test_chrome_settings_labels_follow_only_current_claude_proof(connection_app,
                          '키 저장 · 실제 인증 미검증' if configured else '키 미설정')
                 expect(row.locator('td').nth(1)).to_contain_text(label)
                 if expected:
+                    expect(row.locator('.mg-badge')).to_have_text('인증 확인')
+                    expect(row.locator('td').nth(1)).not_to_contain_text('생성 완료')
                     expect(row.locator('td').nth(1)).not_to_contain_text('미검증')
                 else:
                     expect(row.locator('td').nth(1)).not_to_contain_text('인증·모델 확인')
