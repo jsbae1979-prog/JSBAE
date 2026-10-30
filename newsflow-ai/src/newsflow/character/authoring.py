@@ -23,7 +23,8 @@ from .topics import Topic, validate_generated
 
 CHARACTER_ANALYSIS_INSTRUCTION = (
     'You analyze an uploaded original mascot character image for a dialogue-free comedy YouTube Shorts series. '
-    'Return JSON only: species (<=40 chars), appearance (English, <=400 chars: body shape, colors, face, eyes, '
+    'Return JSON only: species (a short species label, <=40 chars; no adjectives, appearance details or explanations), '
+    'appearance (English, <=400 chars: body shape, colors, face, eyes, '
     'clothing, accessories; describe only what is visible, no personality, no background), '
     'style_suggestion (English, <=150 chars, the art style of the image), '
     'candidates (exactly 3 objects: name_ko (<=10 chars Korean), personality (<=80 chars Korean, shown through '
@@ -69,15 +70,55 @@ class AnalysisResult(Strict):
     @classmethod
     def text_safety(cls, value): return safe_text(value)
 
-    @model_validator(mode='after')
-    def complete(self):
+    def _complete(self, *, require_species):
         if self.rejected:
             if not self.reason: raise ValueError('Rejection reason required')
             if self.candidates: raise ValueError('Rejected image cannot supply candidates')
-        elif (not self.species or not self.appearance or not self.style_suggestion or len(self.candidates) != 3
+        elif ((require_species and not self.species) or not self.appearance or not self.style_suggestion or len(self.candidates) != 3
               or len({c.name_ko for c in self.candidates}) != 3):
             raise ValueError('Three distinct character candidates required')
         return self
+
+    @model_validator(mode='after')
+    def complete(self):
+        return self._complete(require_species=True)
+
+
+class _SpeciesReviewDraft(AnalysisResult):
+    """Local review only, never the provider schema or a persisted profile."""
+    @model_validator(mode='after')
+    def complete(self):
+        if self.rejected or self.species:
+            raise ValueError('Only the optional species field may await review')
+        return self._complete(require_species=False)
+
+
+def species_review_draft(candidate):
+    """Keep a paid valid core when only an optional label exceeds its save limit.
+
+    The original label is bounded and shown for explicit review, never truncated
+    or silently admitted into a profile. All other response constraints remain.
+    """
+    if not isinstance(candidate, dict): return None
+    try:
+        safe_text(candidate)  # Check the entire original before isolating anything.
+        original = candidate.get('species')
+        if (not isinstance(original, str) or not 40 < len(original) <= 400
+                or candidate.get('rejected', False) is not False):
+            return None
+        try:
+            AnalysisResult.model_validate(candidate)
+        except ValidationError as error:
+            errors = error.errors(include_input=False, include_context=False, include_url=False)
+            if len(errors) != 1 or errors[0]['loc'] != ('species',) or errors[0]['type'] != 'string_too_long':
+                return None
+        else:
+            return None
+        draft = _SpeciesReviewDraft.model_validate({**candidate, 'species': ''}).model_dump()
+    except (ValueError, TypeError):
+        return None
+    return {**draft, 'needs_review': [{'field': 'species', 'reason': 'string_too_long',
+            'characters': len(original), 'maximum': 40, 'original': original}]}
 
 
 class TopicResponse(Strict):
@@ -348,9 +389,19 @@ class AuthoringAI:
         return result
 
     def analyze(self, image_bytes, *, provider, model, request_id, consent=False):
-        result = self.generate(CHARACTER_ANALYSIS_INSTRUCTION, {}, AnalysisResult,
-            Options(model=model,max_tokens=3000,timeout=120),provider=provider,request_id=request_id,
-            consent=consent,image_bytes=image_bytes,kind='analysis')
+        try:
+            result = self.generate(CHARACTER_ANALYSIS_INSTRUCTION, {}, AnalysisResult,
+                Options(model=model,max_tokens=3000,timeout=120),provider=provider,request_id=request_id,
+                consent=consent,image_bytes=image_bytes,kind='analysis')
+        except CharacterError:
+            failure = self.last_failure
+            if (isinstance(failure, dict) and failure.get('analysis_stage') == 'schema'
+                    and failure.get('response_received') is True):
+                draft = species_review_draft(self.last_candidate)
+                if draft is not None:
+                    self.last_failure = {**failure, 'review_available': True}
+                    return draft
+            raise
         if result.rejected: raise CharacterError('reference')
         return result.model_dump()
 

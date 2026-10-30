@@ -48,12 +48,13 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
   const [draft, setDraft] = useState(blankProfile), [asset, setAsset] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [consent, setConsent] = useState(false), [candidates, setCandidates] = useState<Item[]>([]);
+  const [speciesReview, setSpeciesReview] = useState<{original:string;characters:number}|null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const sending = useRef(false), form=useRef<HTMLFormElement>(null), formId=useId();
   const imageOnly=images.filter(image=>!profiles.some(p=>p.asset===image.id));
   const choice=selected?`profile:${selected.id}`:selectedAsset?`image:${selectedAsset}`:"";
   function begin(row: Item | null) {
-    setRecord(row); setEditing(true); setError(""); setCandidates([]); setConsent(false);
+    setRecord(row); setEditing(true); setError(""); setCandidates([]); setConsent(false); setSpeciesReview(null);
     const base = blankProfile();
     setDraft(row ? Object.fromEntries(Object.keys(base).map(k => [k, row[k] ?? base[k as keyof typeof base]])) as typeof base : base);
     setAsset(row?.asset ?? "");
@@ -75,6 +76,9 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
         if (!consent || !available) throw Error("이미지 분석 전송과 유료 요청 승인을 확인하세요.");
         const result = await characterCommand("/api/studio/characters/profiles/analyze", csrf,
           { asset: reference, model, request_id: crypto.randomUUID().replaceAll("-", ""), consent: "true" });
+        const review = result.needs_review?.find((item:Item)=>item.field==='species'&&item.reason==='string_too_long');
+        setSpeciesReview(review&&typeof review.original==='string'&&review.original.length<=400
+          ?{original:review.original,characters:review.characters}:null);
         setDraft(v => ({ ...v, species: result.species, appearance: result.appearance, style_lock: result.style_suggestion }));
         setCandidates(result.candidates ?? []); setConsent(false);
       } else {
@@ -122,6 +126,11 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
       <button type="submit" form={formId} disabled={disabled||busy} className="primary">{busy?'처리 중…':'캐릭터 저장'}</button></>}>
       <form id={formId} ref={form} className="character-profile-form" onSubmit={e=>{e.preventDefault();void act('save');}}>
         <p>선택한 이미지에 이름과 특징을 저장합니다. 사용 권한이 있는 캐릭터만 등록하세요.</p>
+        {speciesReview&&<section aria-label="종류 초안 검토">
+          <p role="status">초안을 받았습니다. 종류는 짧게 수정하거나 비워두세요.</p>
+          <details><summary>종류 원문 · {speciesReview.characters}자</summary><p>{speciesReview.original}</p></details>
+          <label>종류<input disabled={disabled||busy} value={draft.species} maxLength={40} placeholder="선택 · 40자 이내" onChange={e=>setDraft(v=>({...v,species:e.target.value}))}/></label>
+        </section>}
         <fieldset disabled={disabled||busy} className="character-profile-fields">
           <label className="character-profile-wide">캐릭터 이름<input data-autofocus required value={draft.name_ko} maxLength={60} onChange={e=>setDraft(v=>({...v,name_ko:e.target.value}))}/></label>
           <label>외형 · 영어<textarea required value={draft.appearance} maxLength={400} rows={3} onChange={e=>setDraft(v=>({...v,appearance:e.target.value}))}/></label>
@@ -130,7 +139,7 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
         </fieldset>
         <details className="character-profile-optional"><summary>추가 정보 · 선택</summary>
           <fieldset disabled={disabled||busy} className="character-profile-fields">
-            <label>종류<input value={draft.species} maxLength={40} placeholder="예: rabbit" onChange={e=>setDraft(v=>({...v,species:e.target.value}))}/></label>
+            {!speciesReview&&<label>종류<input value={draft.species} maxLength={40} placeholder="예: rabbit" onChange={e=>setDraft(v=>({...v,species:e.target.value}))}/></label>}
             <label>이야기의 세계<input value={draft.comedy_formula.world} maxLength={60} onChange={e=>setDraft(v=>({...v,comedy_formula:{...v.comedy_formula,world:e.target.value}}))}/></label>
             <label className="character-profile-wide">고정 스타일 · 영어<input value={draft.style_lock} maxLength={600} placeholder="비워두면 기본 스타일 사용" onChange={e=>setDraft(v=>({...v,style_lock:e.target.value}))}/></label>
           </fieldset>
