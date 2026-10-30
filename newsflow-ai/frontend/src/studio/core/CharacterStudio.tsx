@@ -1,3 +1,4 @@
+import {SavedStoryReview} from './SavedStoryReview';
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   BookOpen,
@@ -497,6 +498,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [referencePreview, setReferencePreview] = useState(false);
   const [activeProfile, setActiveProfile] = useState<Item | null>(null);
   const [scriptDirty, setScriptDirty] = useState(false);
+  const [savedStoryOpen,setSavedStoryOpen]=useState(false);
   const [automationBusy, setAutomationBusy] = useState(false);
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [libraryBusy, setLibraryBusy] = useState(false);
@@ -1208,6 +1210,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   let elapsed = 0;
   return (
     <>
+      {savedStoryOpen && job?.id && <SavedStoryReview key={job.id} jobId={job.id} csrf={c.view?.csrfToken ?? ""}
+        onClose={()=>setSavedStoryOpen(false)} onRecovered={async()=>{await c.load();c.setNotice("편집한 스토리를 복구했습니다. 추가 AI 호출은 없습니다.");}} />}
       {storyReview && <CharacterModal title="이전 요청 결과 미확인" busy={busy}
         onClose={() => { setStoryReview(null); setStoryReviewConsent(false); }}
         footer={<>
@@ -1549,8 +1553,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </div>
             )}
             {job?.state === "script_failed" && job?.scriptResponseSaved && (
-              <button type="button" disabled={isBusy} onClick={recoverStory}>
-                저장된 스토리 복구 · 추가 비용 없음
+              <button type="button" disabled={isBusy} onClick={job?.automation_version === 1 ? ()=>setSavedStoryOpen(true) : recoverStory}>
+                보관된 스토리 검토·복구 · 추가 비용 없음
               </button>
             )}
             {job?.scriptRetryAllowed === true && (

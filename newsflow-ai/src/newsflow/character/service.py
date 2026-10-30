@@ -571,9 +571,13 @@ class CharacterService:
             (self.folder(identifier)/'script.json').write_text(story.model_dump_json(indent=2),encoding='utf8')
             (self.folder(identifier)/'prompts.json').write_text(json.dumps(job['prompts'],ensure_ascii=False,indent=2),encoding='utf8')
 
-    def recover_story_response(self, identifier, *, consent=False):
+    def recover_story_response(self, identifier, *, consent=False, script=None, expected_hash=''):
         """Validate a complete saved response locally; never call or refund a provider."""
         self.consent(consent)
+        if self.read(identifier).get('automation_version')==1:
+            from .episode_recovery import recover
+            return recover(self,identifier,consent=consent,script=script,expected_hash=expected_hash)
+        if script is not None or expected_hash:raise CharacterError('blocked')
         from .studio_story import StudioStoryboard, timing_errors, prompts as studio_prompts
         from .kling import check
         with self.lock():

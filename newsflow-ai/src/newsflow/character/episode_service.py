@@ -145,6 +145,8 @@ class EpisodeFlow:
                     consent=True, kind='script', max_reserved_usd=str(remaining), **review_options)
                 story = self.validate(job, candidate)
             except Exception as error:
+                from .episode_recovery import save_candidate
+                save_candidate(s,job,authoring,attempt)
                 self.record_text_cost(job, authoring, attempt)
                 preflight = getattr(authoring, 'last_failure', None)
                 not_dispatched = isinstance(preflight, dict) and preflight.get('dispatched') is False
@@ -180,6 +182,8 @@ class EpisodeFlow:
                     job['script_failure']['failure_stage'] = preflight['reason']
                 s.save(job)
                 raise CharacterError('provider') from None
+            from .episode_recovery import save_candidate
+            save_candidate(s,job,authoring,attempt)
             self.record_text_cost(job, authoring, attempt)
             job.update(state='script_review', script=dump(story), response_received=True)
             job.pop('script_validation_feedback', None)

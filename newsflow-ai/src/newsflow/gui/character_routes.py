@@ -1,4 +1,5 @@
 """Explicit, CSRF-protected stages inside Video Studio. No startup work or publication."""
+import json
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
@@ -101,10 +102,21 @@ def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False
         return JSONResponse({'id':job_id,'error':'스토리 요청을 중단했습니다. 작업 이력을 확인하세요. 자동 재요청하지 않습니다.'},status_code=409)
 
 
-@router.post('/api/studio/characters/{job_id}/recover-story')
-def recover_story(request: Request,job_id:str,consent:bool=Form(False)):
+@router.get('/api/studio/characters/{job_id}/story-response')
+def saved_story(request: Request,job_id:str):
     try:
-        request.app.state.character.recover_story_response(job_id,consent=consent)
+        from newsflow.character.episode_recovery import preview
+        return preview(request.app.state.character,job_id)
+    except (ValueError,OSError,*SAFE_ERRORS):
+        raise HTTPException(409,'보관된 응답을 확인하지 못했습니다.') from None
+
+
+@router.post('/api/studio/characters/{job_id}/recover-story')
+def recover_story(request: Request,job_id:str,consent:bool=Form(False),
+                  script:str=Form('',max_length=48000),expected_hash:str=Form('',max_length=64)):
+    try:
+        request.app.state.character.recover_story_response(job_id,consent=consent,
+            script=json.loads(script) if script else None,expected_hash=expected_hash)
         return {'id':job_id,'state':'script_review','additionalProviderCalls':0}
     except (ValueError,OSError,*SAFE_ERRORS):
         raise HTTPException(409,'보관 응답을 복구하지 못했습니다. 기존 실패 기록은 보존됩니다.') from None

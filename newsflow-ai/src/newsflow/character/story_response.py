@@ -60,7 +60,7 @@ def public_failure(value, response_received=None):
     stage=safe['failure_stage']
     return {'stage':stage,'message':MESSAGES[stage],**safe}
 
-def persist_candidate(folder,attempt,candidate,usage=None):
+def persist_candidate(folder,attempt,candidate,usage=None,*,provider='claude_api',context_hash=None):
     if not isinstance(candidate,dict):return None
     if type(attempt) is not int or not 1<=attempt<=1000:raise ValueError('attempt')
     folder=Path(folder)
@@ -68,7 +68,9 @@ def persist_candidate(folder,attempt,candidate,usage=None):
         raise ValueError('folder')
     safe_usage={k:v for k,v in (usage or {}).items()
                 if k in {'prompt_tokens','completion_tokens','search_calls'} and type(v) is int and 0<=v<=10_000_000}
-    record={'schemaVersion':1,'provider':'claude_api','attempt':attempt,'candidate':candidate,'usage':safe_usage}
+    if provider not in {'claude_api','openai'}:raise ValueError('provider')
+    record={'schemaVersion':1,'provider':provider,'attempt':attempt,'candidate':candidate,'usage':safe_usage}
+    if context_hash is not None: record['context_hash']=context_hash
     raw=json.dumps(record,ensure_ascii=False,separators=(',',':'),allow_nan=False).encode('utf8')
     if len(raw)>512*1024:raise ValueError('candidate-size')
     target=folder/f'story-response-attempt-{attempt}.private.json'
