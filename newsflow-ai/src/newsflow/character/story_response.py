@@ -17,6 +17,10 @@ PREFLIGHT_MESSAGES={
     'authentication_required':'설정에서 선택한 AI의 연결 상태를 다시 확인하세요.',
     'episode_limit':'이번 영상의 남은 사용 한도를 확인하세요.',
     'settings':'스토리 요청 전 설정 확인에서 중단됐습니다.',
+    'unresolved_requests':'이전 AI 요청의 처리·과금이 미확정입니다. 기록을 보존하고 새 스토리 사용 승인을 확인하세요.',
+    'credential_unavailable':'보호된 API 키를 읽지 못했습니다. 연결 설정을 확인하세요.',
+    'request_invalid':'스토리 요청 형식 또는 입력 크기를 확인하세요.',
+    'request_cancelled':'전송 전에 스토리 요청이 취소됐습니다.',
 }
 
 

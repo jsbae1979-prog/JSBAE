@@ -103,7 +103,7 @@ class EpisodeFlow:
             raise CharacterError('provider')
         return validate_episode(value, job['duration'], model, chosen['sound'] == 'on')
 
-    def write(self, identifier, *, consent=False):
+    def write(self, identifier, *, consent=False, review_token='', review_consent=False):
         s = self.owner
         s.consent(consent)
         with s.lock():
@@ -116,6 +116,12 @@ class EpisodeFlow:
             authoring = getattr(s, 'authoring', None)
             if authoring is None:
                 raise CharacterError('provider')
+            review_options = {}
+            if review_token or review_consent:
+                from .story_review import StoryReviewRequest
+                review = StoryReviewRequest(s, identifier, review_token, review_consent)
+                review.context()  # Only a new episode with no previous dispatched story.
+                review_options['story_review'] = review
             chosen = check(job['studio_selection'])
             payload = script_input(job['character'], job['topic'], job['duration'],
                                    CATALOG.model(chosen['video_model']), chosen['sound'] == 'on',
@@ -136,7 +142,7 @@ class EpisodeFlow:
                 candidate = authoring.generate(SCRIPT_INSTRUCTION, payload, EpisodeScript,
                     Options(model=chosen['script_model'], max_tokens=4000, timeout=300),
                     provider=job['script_provider'], request_id=f'episode:{identifier}:script:{sequence}',
-                    consent=True, kind='script', max_reserved_usd=str(remaining))
+                    consent=True, kind='script', max_reserved_usd=str(remaining), **review_options)
                 story = self.validate(job, candidate)
             except Exception as error:
                 self.record_text_cost(job, authoring, attempt)

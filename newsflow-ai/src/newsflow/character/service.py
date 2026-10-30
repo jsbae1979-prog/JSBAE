@@ -491,10 +491,13 @@ class CharacterService:
         except (OSError,ValueError,TypeError):
             job['script_evidence_error']='write_unavailable'
 
-    def write(self, identifier, *, consent=False):
+    def write(self, identifier, *, consent=False, review_token='', review_consent=False):
         if self.read(identifier).get('automation_version')==1:
             from .episode_service import EpisodeFlow
-            return EpisodeFlow(self).write(identifier,consent=consent)
+            return EpisodeFlow(self).write(identifier,consent=consent,
+                                          review_token=review_token,review_consent=review_consent)
+        if review_token or review_consent:
+            raise CharacterError('blocked')
         self.consent(consent)
         with self.lock():
             job=self.read(identifier)

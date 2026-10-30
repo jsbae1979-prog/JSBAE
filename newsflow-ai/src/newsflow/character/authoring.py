@@ -183,8 +183,12 @@ def provider_for_model(model):
 
 def budget_failure_reason(error):
     """Recognize this reviewed local refusal, never retain raw exception text."""
-    return ('authentication_required' if isinstance(error, APISettingsError)
-            and str(error) == '실제 API 연결 미확인 · 별도 승인 후 검증 필요' else 'settings')
+    if isinstance(error, APISettingsError):
+        if str(error) == '실제 API 연결 미확인 · 별도 승인 후 검증 필요':
+            return 'authentication_required'
+        if str(error) == '진행 중이거나 결과 불명인 API 요청이 있어 새 호출을 차단합니다.':
+            return 'unresolved_requests'
+    return 'settings'
 
 
 def wire_schema(schema, provider):
@@ -323,7 +327,7 @@ class AuthoringAI:
 
     @_serialized_transport
     def generate(self, instruction, payload, schema, options, *, provider, request_id, consent=False,
-                 image_bytes=None, kind='script', max_reserved_usd=None):
+                 image_bytes=None, kind='script', max_reserved_usd=None, story_review=None):
         self.last_usage = self.last_candidate = self.last_failure = None
         self.response_received = False
         self.last_reservation = None
@@ -346,8 +350,15 @@ class AuthoringAI:
         self.last_reservation = None
         self.last_reserved_usd = None
         try:
-            reservation = self.budget.reserve(provider=provider,request_id=request_id,kind=kind,
-                model=options.model,max_output_tokens=options.max_tokens,key_store=store)
+            if story_review is not None:
+                if kind != 'script':
+                    raise APISettingsError('새 스토리 1회 승인만 적용할 수 있습니다.')
+                reservation = self.budget.reserve_episode_story(provider=provider, request_id=request_id,
+                    model=options.model, max_output_tokens=options.max_tokens, key_store=store,
+                    story_review=story_review)
+            else:
+                reservation = self.budget.reserve(provider=provider,request_id=request_id,kind=kind,
+                    model=options.model,max_output_tokens=options.max_tokens,key_store=store)
         except (APISettingsError, ValueError) as error:
             self.last_reserved_usd = '0'
             self.last_failure = {'stage':'budget','response_received':False,'dispatched':False,
@@ -380,6 +391,15 @@ class AuthoringAI:
             phase = 'schema'
             result = schema.model_validate(candidate)
         except Exception as error:
+            from newsflow.intelligence.api_providers import APIRequestNotDispatched
+            if isinstance(error, APIRequestNotDispatched):
+                self.last_usage = {'prompt_tokens': 0, 'completion_tokens': 0, 'search_calls': 0}
+                self.last_reserved_usd = '0'
+                self.response_received = False
+                self.last_failure = {'stage': 'preflight', 'response_received': False,
+                                     'dispatched': False, 'reason': error.reason}
+                self.budget.finish(reservation.id, status='failed', usage=self.last_usage)
+                raise CharacterError('provider') from None
             self.last_usage = getattr(adapter,'last_usage',None)
             known = isinstance(self.last_usage,dict) and all(type(self.last_usage.get(k)) is int
                        for k in ('prompt_tokens','completion_tokens'))

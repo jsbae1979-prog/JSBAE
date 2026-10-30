@@ -1212,3 +1212,13 @@
 .core-studio[data-module="characters"] .character-topic-empty { color: #9eb6cf; font-size: 12px; }
 
 .core-studio[data-module="characters"] .character-topic-tools > [role="alert"] { margin: 10px 0 0; color: #ffb8b8; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+
+/* A scoped new story confirmation never changes the previous request record. */
+.core-studio[data-module="characters"] .character-story-request-review { display: grid; gap: 14px; }
+.core-studio[data-module="characters"] .character-story-request-review p { margin: 0; }
+.core-studio[data-module="characters"] .character-story-review-reserve { color: #a5b7d2; font-size: 12px; }
+.core-studio[data-module="characters"] .character-story-request-review dl { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 10px 14px; margin: 0; }
+.core-studio[data-module="characters"] .character-story-request-review dt { color: #9fb3d3; }
+.core-studio[data-module="characters"] .character-story-request-review dd { margin: 0; overflow-wrap: anywhere; }
+.core-studio[data-module="characters"] .character-story-review-consent { display: flex; flex-direction: row; align-items: flex-start; gap: 8px; line-height: 1.5; }
+.core-studio[data-module="characters"] .character-story-review-consent input[type="checkbox"] { width: 16px; height: 16px; min-width: 16px; margin: 3px 0 0; }

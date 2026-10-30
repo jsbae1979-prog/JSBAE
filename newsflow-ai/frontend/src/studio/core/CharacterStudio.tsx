@@ -128,6 +128,11 @@ function LocalReference({ file }: { file: File }) {
     <canvas ref={canvas} role="img" aria-label="선택한 캐릭터 로컬 미리보기" />
   );
 }
+type StoryRequestDraft = { jobId: string; inputKey: string; requestId: string };
+type StoryRequestReview = StoryRequestDraft & {
+  token: string; count: number; heldUsd: string; duration: number; model: string; limit: string;
+};
+
 type TrialStatus = {
   ready: boolean;
   reasons: string[];
@@ -511,6 +516,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     Record<string, string>
   >({});
   const [storyRequests, setStoryRequests] = useState<Record<string, string>>({});
+  const preparedStory = useRef<StoryRequestDraft | null>(null);
+  const [storyReview, setStoryReview] = useState<StoryRequestReview | null>(null);
+  const [storyReviewConsent, setStoryReviewConsent] = useState(false);
   const [busy, setBusy] = useState(false),
     [history, setHistory] = useState(false),
     [help, setHelp] = useState(false),
@@ -555,7 +563,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     ? { ...settings, duration: job.story.scenes.reduce((total: number, row: Item) => total + Number(row.seconds), 0) }
     : settings);
   useEffect(() => {
-    if (ready && !job?.studio_selection) {
+    if (ready && !job?.studio_selection && !busy && !sending.current) {
       setSettings(
         trialEnabled && !job
           ? { ...caps.defaults, duration: 15, clip_seconds: 3 }
@@ -643,10 +651,18 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           ? ["asset", asset]
           : ["job", job?.id || ""];
     return JSON.stringify([
-      topic.replace(/[\r\n\t]+/g, " ").trim(), settings, Number(per), selected,
+      topic.replace(/[\r\n\t]+/g, " ").trim(), Object.keys(defaultSettings).sort().map(key => [key, settings[key as keyof Settings]]), Number(per), selected,
     ]);
   }
-  const blockedStoryRequest = !!storyRequests[storyRequestKey()];
+  const currentStoryInput = storyRequestKey();
+  const blockedStoryRequest = !!storyRequests[currentStoryInput];
+  useEffect(() => {
+    if (!busy && storyReview && storyReview.inputKey !== currentStoryInput) {
+      setStoryReview(null);
+      setStoryReviewConsent(false);
+      setFailure("선택이 변경됐습니다. 현재 설정으로 스토리 요청을 다시 확인하세요.");
+    }
+  }, [currentStoryInput, storyReview, busy]);
   const pendingReferenceCopy =
     !!story && !!job?.studio_selection && !!(file || referenceJob || asset);
   const isBusy = busy || visibilityBusy || trialBusy || libraryBusy || automationBusy,
@@ -712,6 +728,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     setScene(-1);
     setFailure("");
     pending.current = null;
+    preparedStory.current = null;
+    setStoryReview(null);
+    setStoryReviewConsent(false);
   }
   function startFromCharacter() {
     if (isBusy || !job?.id || !selectedReference) return;
@@ -864,86 +883,103 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       visibilitySending.current = false;
     }
   }
+  function selectStoryDraft(identifier: string) {
+    setId(identifier);
+    const url = new URL(window.location.href);
+    url.searchParams.set("job_id", identifier);
+    window.history.replaceState(window.history.state, "", url);
+  }
+  function unlockUnsentStory(inputKey: string) {
+    setStoryRequests((value) => {
+      const next = { ...value };
+      delete next[inputKey];
+      return next;
+    });
+  }
+  async function sendStory(draft: StoryRequestDraft, reviewToken = "") {
+    // This is the only paid dispatch. Never replay it after an uncertain response.
+    preparedStory.current = null;
+    setStoryRequests((value) => ({ ...value, [draft.inputKey]: draft.requestId }));
+    const encoded = new URLSearchParams({
+      job_id: draft.jobId,
+      consent: "true",
+      csrf_token: c.view?.csrfToken ?? "",
+      ...(reviewToken ? { review_token: reviewToken, review_consent: "true" } : {}),
+    });
+    const response = await fetch("/api/studio/characters/auto-story", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: encoded,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw Error(data.error ??
+      "스토리 요청 결과를 확인하지 못했습니다. 작업 이력을 확인하세요. 자동 재전송하지 않습니다.");
+    if (data.state !== "script_review") throw Error(
+      "이 요청은 이미 저장되어 있습니다. 작업 이력의 상태를 확인하세요. 자동 재생성하지 않습니다.");
+    setFile(null); setReferenceJob(""); setAsset("");
+    unlockUnsentStory(draft.inputKey);
+    c.setNotice("스토리가 생성·저장되었습니다. 장면을 검토한 뒤 영상 견적을 확인하세요.");
+  }
+  async function refreshStoryResult() {
+    try { await c.load(); }
+    catch { setFailure("작업 목록을 불러오지 못했습니다. 새로고침해 저장된 결과를 확인하세요."); }
+    finally { setBusy(false); sending.current = false; }
+  }
+  async function confirmStoryReview() {
+    const review = storyReview;
+    if (!review || !storyReviewConsent || sending.current || review.inputKey !== storyRequestKey()) return;
+    sending.current = true; setBusy(true); setFailure("");
+    setStoryReview(null); setStoryReviewConsent(false);
+    try { await sendStory(review, review.token); }
+    catch (error) { setFailure(error instanceof Error ? error.message : "스토리 요청 결과를 확인하지 못했습니다. 자동 재전송하지 않습니다."); }
+    finally { await refreshStoryResult(); }
+  }
   async function autoStory() {
     const inputKey = storyRequestKey();
     if (sending.current || !ready || storyRequests[inputKey] || !activeProfile || !scriptAvailable ||
         (job?.automation_version === 1 && job.script && topic.trim() === String(job.topic).trim())) return;
-    sending.current = true;
-    setBusy(true);
-    setFailure("");
-    // New inputs get a new identity; an uncertain identical input cannot be replayed.
-    const requestId = crypto.randomUUID().replaceAll("-", "");
+    sending.current = true; setBusy(true); setFailure("");
+    setStoryReview(null); setStoryReviewConsent(false);
+    let draft = preparedStory.current?.inputKey === inputKey ? preparedStory.current : null;
+    const requestId = draft?.requestId ?? crypto.randomUUID().replaceAll("-", "");
     pending.current = requestId;
     setStoryRequests((value) => ({ ...value, [inputKey]: requestId }));
-    let storyRequested = false;
+    let createdKnown = !!draft;
+    let dispatched = false;
     try {
-      const form = new FormData();
-      form.set("topic", topic.trim());
-      form.set("studio_settings", JSON.stringify(settings));
-      form.set("request_id", requestId);
-      form.set("consent", "true");
-      form.set("episode_limit", per);
-      form.set("character_id", activeProfile.id);
-      form.set("character_revision", String(activeProfile.revision));
-      const draft = await post("/character", form);
-      let data = draft;
-      if (draft.created) {
-        const encoded = new URLSearchParams({
-          job_id: draft.id,
-          consent: "true",
-          csrf_token: c.view?.csrfToken ?? "",
-        });
-        storyRequested = true;
-        const response = await fetch("/api/studio/characters/auto-story", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: encoded,
-        });
-        data = await response.json().catch(() => ({}));
-        if (!response.ok)
-          throw Error(
-            data.error ??
-              "스토리 요청 결과를 확인하지 못했습니다. 작업 이력을 확인하세요. 자동 재전송하지 않습니다.",
-          );
+      if (!draft) {
+        const form = new FormData();
+        form.set("topic", topic.trim()); form.set("studio_settings", JSON.stringify(settings));
+        form.set("request_id", requestId); form.set("consent", "true");
+        form.set("episode_limit", per); form.set("character_id", activeProfile.id);
+        form.set("character_revision", String(activeProfile.revision));
+        const data = await post("/character", form);
+        if (!data.created) throw Error("저장된 요청의 상태를 확인하세요. 자동 재생성하지 않습니다.");
+        draft = { jobId: data.id, inputKey, requestId };
+        preparedStory.current = draft;
+        createdKnown = true;
+        setPerOverrides((value) => ({ ...value, [data.id]: per }));
       }
-      if (!["script_review"].includes(data.state))
-        throw Error(
-          "이 요청은 이미 저장되어 있습니다. 작업 이력의 상태를 확인하세요. 자동 재생성하지 않습니다.",
-        );
-      setFile(null);
-      setReferenceJob("");
-      setAsset("");
-      setStoryRequests((value) => {
-        const next = { ...value };
-        delete next[inputKey];
-        return next;
-      });
-      c.setNotice(
-        "스토리가 생성·저장되었습니다. 장면을 검토한 뒤 영상 견적을 확인하세요.",
-      );
-    } catch (e) {
-      if (!storyRequested && e instanceof Error && "status" in e && e.status === 422) {
-        setStoryRequests((value) => {
-          const next = { ...value };
-          delete next[inputKey];
-          return next;
-        });
+      selectStoryDraft(draft.jobId);
+      const response = await fetch(`/api/studio/characters/${draft.jobId}/story-review`, { credentials: "same-origin" });
+      const review = await response.json().catch(() => ({}));
+      if (!response.ok || review.ready !== true) throw Error(
+        typeof review.message === "string" ? review.message : "스토리 요청 조건을 확인하지 못했습니다. 유료 요청은 보내지 않았습니다.");
+      if (review.review?.token) {
+        if (typeof review.review.token !== "string" || !/^[a-f0-9]{64}$/.test(review.review.token) ||
+            !Number.isInteger(review.review.count) || review.review.count < 1) throw Error("이전 요청 확인 정보를 읽지 못했습니다. 유료 요청은 보내지 않았습니다.");
+        setStoryReview({ ...draft, token: review.review.token, count: review.review.count,
+          heldUsd: String(review.review.held_usd), duration: settings.duration,
+          model: settings.script_model, limit: per });
+        return;
       }
-      setFailure(
-        e instanceof Error
-          ? e.message
-          : "스토리 요청 중단 · 자동 재전송하지 않습니다.",
-      );
+      dispatched = true;
+      await sendStory(draft);
+    } catch (error) {
+      if (!createdKnown && error instanceof Error && "status" in error && error.status === 422) unlockUnsentStory(inputKey);
+      setFailure(error instanceof Error ? error.message : "스토리 요청 중단 · 자동 재전송하지 않습니다.");
     } finally {
-      try {
-        await c.load();
-      } catch {
-        setFailure("작업 목록을 불러오지 못했습니다. 새로고침해 저장된 결과를 확인하세요.");
-      } finally {
-        setBusy(false);
-        sending.current = false;
-      }
+      if (createdKnown && !dispatched) unlockUnsentStory(inputKey);
+      await refreshStoryResult();
     }
   }
   async function reuseStoryForVideo() {
@@ -1172,6 +1208,23 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   let elapsed = 0;
   return (
     <>
+      {storyReview && <CharacterModal title="이전 요청 결과 미확인" busy={busy}
+        onClose={() => { setStoryReview(null); setStoryReviewConsent(false); }}
+        footer={<>
+          <button type="button" disabled={busy} onClick={() => { setStoryReview(null); setStoryReviewConsent(false); }}>취소</button>
+          <button type="button" className="primary" disabled={busy || !storyReviewConsent}
+            onClick={() => void confirmStoryReview()}>이번 새 스토리 요청</button>
+        </>}>
+        <div className="character-story-request-review">
+          <p>이전 {storyReview.count}건의 처리·과금이 아직 확인되지 않았습니다. 기존 기록은 보존합니다.</p>
+          <p className="character-story-review-reserve">기존 미확인 예약액 US${storyReview.heldUsd} · 실제 청구액 아님</p>
+          <dl><dt>이번 스토리</dt><dd>{topic}</dd><dt>모델 · 길이</dt><dd>{storyReview.model} · {storyReview.duration}초</dd>
+            <dt>편당 상한</dt><dd>US${storyReview.limit}</dd></dl>
+          <label className="character-story-review-consent"><input type="checkbox" checked={storyReviewConsent}
+            onChange={event => setStoryReviewConsent(event.target.checked)} />
+            이전 요청은 재전송하지 않고, 이번 새 스토리의 유료 요청에 동의합니다.</label>
+        </div>
+      </CharacterModal>}
       {referencePreview && <CharacterModal title="참조 이미지 미리보기" onClose={()=>setReferencePreview(false)}
         footer={<button type="button" onClick={()=>setReferencePreview(false)}>닫기</button>}>
         <div className="character-reference-large">{file?<LocalReference file={file}/>:reference?<img src={String(reference)} alt="선택한 캐릭터 참조 이미지 원본"/>:null}</div>

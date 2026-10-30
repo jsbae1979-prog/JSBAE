@@ -50,8 +50,16 @@ def save_character_reference(request: Request, reference: Annotated[UploadFile, 
         raise HTTPException(409, '캐릭터를 저장하지 못했습니다. 저장 공간과 파일 접근 권한을 확인하세요.') from None
 
 
+@router.get('/api/studio/characters/{job_id}/story-review')
+def story_review(request: Request, job_id: str):
+    from newsflow.character.story_review import preview
+    from .character_automation_routes import authoring
+    return preview(request.app.state.character, authoring(request), job_id)
+
+
 @router.post('/api/studio/characters/auto-story')
-def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False)):
+def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False),
+               review_token: str=Form('', max_length=64), review_consent: bool=Form(False)):
     service=request.app.state.character
     attempted_write=False
     prior_sequence=None
@@ -68,7 +76,7 @@ def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False
             prior_sequence=job.get('script_request_sequence')
             prior_failure=job.get('script_failure')
             attempted_write=True
-            service.write(job_id,consent=True)
+            service.write(job_id,consent=True,review_token=review_token,review_consent=review_consent)
         elif job['state']!='script_review':
             raise CharacterError('blocked')
         completed = service.read(job_id)

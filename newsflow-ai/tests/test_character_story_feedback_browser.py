@@ -35,6 +35,9 @@ def setup(app):
 def open_story(browser, origin, saved):
     context = browser.new_context(viewport={'width': 1366, 'height': 768})
     context.route('**/*', lambda route: route.continue_() if route.request.url.startswith(origin + '/') else route.abort())
+    # This suite isolates rendering after a story submission; review gates have their own tests.
+    context.route('**/api/studio/characters/*/story-review', lambda route: route.fulfill(
+        json={'ready': True, 'review': {'token': '', 'count': 0, 'held_usd': '0'}}))
     page = context.new_page(); posts = []
     page.on('request', lambda r: posts.append(r.url) if r.method == 'POST' else None)
     page.goto(origin + '/studio/characters')

@@ -95,7 +95,7 @@ class _Authoring(AuthoringAI):
         super().__init__(keys, budget, providers)
 
     def generate(self, instruction, payload, schema, options, *, provider, request_id,
-                 consent=False, image_bytes=None, kind='script', max_reserved_usd=None):
+                 consent=False, image_bytes=None, kind='script', max_reserved_usd=None, story_review=None):
         # A local capability failure must not be recorded as an unknown paid call.
         self.last_usage = self.last_candidate = self.last_reservation = None
         self.last_reserved_usd = '0'
@@ -128,7 +128,7 @@ class _Authoring(AuthoringAI):
         try:
             return super().generate(instruction, payload, schema, options, provider=provider,
                 request_id=request_id, consent=consent, image_bytes=image_bytes, kind=kind,
-                max_reserved_usd=max_reserved_usd)
+                max_reserved_usd=max_reserved_usd, story_review=story_review)
         finally:
             _KEY_USE.reset(token)
 
