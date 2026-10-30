@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 from test_api_settings import sessions, store
-from test_character_kling_studio import studio
+from test_character_kling_studio import studio, png
 from test_character_reuse_story import source_job
 from test_character_single_video import seeded
 from test_character_visibility import files
@@ -20,7 +20,7 @@ def test_total_duration_contract_is_five_supported_native_clips(total):
     assert validate({**DEFAULTS,'duration':total,'clip_seconds':total//5})['duration']==total
 
 
-@pytest.mark.parametrize('total,seconds',[(14,3),(16,3),(30,5),(60,15),(65,13),(True,3)])
+@pytest.mark.parametrize('total,seconds',[(14,3),(16,3),(65,13),(True,3)])
 def test_total_duration_rejects_other_clip_counts_and_invalid_totals(total,seconds):
     with pytest.raises(CharacterError):validate({**DEFAULTS,'duration':total,'clip_seconds':seconds})
 
@@ -136,3 +136,22 @@ def test_legacy_three_scene_story_remains_readable_and_cannot_gain_fabricated_be
     copied=service.read(copied_id)
     assert len(copied['script']['scenes'])==3 and [row['seconds'] for row in copied['script']['scenes']]==[5]*3
     assert studio.writer.calls==provider.calls==provider.uploads==0
+
+
+@pytest.mark.parametrize('total,seconds',[(30,5),(60,15)])
+def test_mismatched_legacy_five_clip_timing_cannot_create_or_modify_jobs(studio,total,seconds):
+    service=studio.service
+    chosen={**DEFAULTS,'duration':total,'clip_seconds':seconds}
+    # The shared catalog accepts durations independently for new variable plans.
+    assert validate(chosen)==chosen
+    with pytest.raises(CharacterError):
+        service.create_studio('합성 주제','10',reference=png(),settings=chosen,request_id=uuid4().hex)
+    assert service.listing()==[] and not list(service.root.glob('*/jobs.json'))
+    identifier,provider,_=seeded(studio)
+    original=service.read(identifier);before=files(service,identifier)
+    with pytest.raises(CharacterError):
+        service.update_studio_settings(identifier,chosen,'10')
+    with pytest.raises(CharacterError):
+        service.reuse_story(identifier,chosen,'10',request_id=uuid4().hex,consent=True)
+    assert service.read(identifier)==original and files(service,identifier)==before
+    assert len(service.listing())==1 and studio.writer.calls==provider.calls==0

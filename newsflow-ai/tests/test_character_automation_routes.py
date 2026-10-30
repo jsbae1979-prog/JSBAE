@@ -199,3 +199,20 @@ def test_regenerated_clip_route_selects_only_hash_bound_owned_attempt(gui):
     record['file']='scene-1-t2.mp4';assert gui.client.get(uri).status_code==404
     record['file']=path.name;record['sha256']='0'*64
     assert gui.client.get(uri).status_code==404
+
+
+def test_manual_topic_normalizes_textarea_without_unsafe_or_oversize_text(gui):
+    row=gui.post('/api/studio/characters/profiles/save',profile=json.dumps(profile()),asset=gui.asset).json()
+    uri=f"/api/studio/characters/profiles/{row['id']}/topics/manual"
+    result=gui.post(uri,topic='정원의 아침\n작은 실수')
+    assert result.status_code==200 and result.json()['topic']=='정원의 아침 작은 실수'
+    assert gui.post(uri,topic='가'*61).status_code==422
+    assert gui.post(uri,topic='잘못\x00된 주제').status_code==409
+
+
+def test_unknown_authoring_model_fails_before_provider_call(gui):
+    class Fake:
+        def analyze(self,*args,**kwargs):raise AssertionError('Uncatalogued model reached provider')
+    gui.app.state.character_authoring=Fake()
+    assert gui.post('/api/studio/characters/profiles/analyze',asset=gui.asset,model='injected-model',
+        request_id='a'*32,consent='true').status_code==409

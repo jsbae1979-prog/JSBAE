@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json
 from fastapi import APIRouter, Form, HTTPException, Request
-from newsflow.character.schema import CharacterError
+from newsflow.character.schema import CharacterError, clean_topic
 from newsflow.intelligence.provider import ProviderError
 from newsflow.publishing.service import PublishingError
 
@@ -113,7 +113,7 @@ def topic_manual(request: Request, identifier: str, topic: str = Form(..., max_l
                  category: str = Form('', max_length=10)):
     try:
         registry(request).get(identifier)
-        return topics(request).add(identifier, topic, category=category)
+        return topics(request).add(identifier, clean_topic(topic,60), category=category)
     except (ValueError, OSError, CharacterError, PublishingError):
         raise public_problem() from None
 

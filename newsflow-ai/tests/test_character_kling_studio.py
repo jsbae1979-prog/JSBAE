@@ -162,7 +162,7 @@ def test_video_settings_reach_quote_then_freeze_with_approval_and_unknown_protec
     job=s.read(i)
     assert job['quote_total_usd']=='0.50' and all(x['payload']['mode']=='std' and x['payload']['sound']=='on' for x in job['scenes'])
     # A local duration edit invalidates the old quote; it never submits or calls Claude.
-    s.update_studio_settings(i,{**chosen,'duration':30},'10','20')
+    s.update_studio_settings(i,{**chosen,'duration':30,'clip_seconds':6},'10','20')
     assert s.read(i)['state']=='script_review' and studio.writer.calls==1
     with pytest.raises(CharacterError):s.submit(i,consent=True,quote_hash=job['quote_hash'])
     s.prepare(i,consent=True,script_reviewed=True);job=s.read(i)

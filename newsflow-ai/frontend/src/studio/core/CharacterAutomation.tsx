@@ -16,10 +16,10 @@ const fields = [ ["name_ko", "캐릭터 이름", 60], ["species", "종류", 40],
   ["style_lock", "고정 스타일 · 영어", 600] ] as const;
 
 export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, model, available,
-  csrf, disabled, onRefresh }: {
+  csrf, disabled, onRefresh, onBusy }: {
   profiles: Item[]; selected: Item | null; onSelect: (p: Item | null) => void;
   ensureAsset: () => Promise<string>; model: string; available: boolean; csrf: string;
-  disabled: boolean; onRefresh: () => Promise<unknown>;
+  disabled: boolean; onRefresh: () => Promise<unknown>; onBusy: (value:boolean) => void;
 }) {
   const [editing, setEditing] = useState(false), [record, setRecord] = useState<Item | null>(null);
   const [draft, setDraft] = useState(blankProfile), [asset, setAsset] = useState("");
@@ -35,7 +35,7 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
   }
   async function act(kind: "save" | "analyze" | "delete") {
     if (sending.current || disabled) return;
-    sending.current = true; setBusy(true); setError("");
+    sending.current = true; setBusy(true); onBusy(true); setError("");
     try {
       if (kind === "delete" && selected) {
         await characterCommand(`/api/studio/characters/profiles/${selected.id}/delete`, csrf,
@@ -57,7 +57,7 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
         onSelect(row); setEditing(false); await onRefresh();
       }
     } catch (e) { setError(e instanceof Error ? e.message : "캐릭터 정보를 확인하세요."); }
-    finally { sending.current = false; setBusy(false); }
+    finally { sending.current = false; setBusy(false); onBusy(false); }
   }
   return <section className="character-profile-editor" aria-label="캐릭터 프로필">
     <label>등록된 캐릭터<select aria-label="등록된 캐릭터" disabled={disabled || busy} value={selected?.id ?? ""}
@@ -112,10 +112,10 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
   </section>;
 }
 
-export function CharacterTopics({ profile, model, available, topic, onTopic, csrf, disabled, settings, episodeLimit, jobs, onRefresh, onJob }: {
+export function CharacterTopics({ profile, model, available, topic, onTopic, csrf, disabled, settings, episodeLimit, jobs, onRefresh, onJob, onBusy }: {
   profile: Item | null; model: string; available: boolean; topic: string; onTopic: (value: string) => void;
   csrf: string; disabled: boolean; settings: Item; episodeLimit: string; jobs: Item[];
-  onRefresh: () => Promise<unknown>; onJob: (id: string) => void;
+  onRefresh: () => Promise<unknown>; onJob: (id: string) => void; onBusy: (value:boolean) => void;
 }) {
   const [rows, setRows] = useState<Item[]>([]), [count, setCount] = useState(10);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
@@ -136,7 +136,7 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
   }, [profile?.id]);
   async function act(kind: "generate" | "manual" | "import", value?: Item, status?: string) {
     if (!profile || sending.current || disabled) return;
-    sending.current = true; setBusy(true); setError("");
+    sending.current = true; setBusy(true); onBusy(true); setError("");
     try {
       if (kind === "generate" && (!consent || !available)) throw Error("주제 생성의 유료 요청 승인을 확인하세요.");
       const data = await characterCommand(`/api/studio/characters/profiles/${profile.id}/topics/${value ? `${value.id}/status` : kind}`, csrf,
@@ -145,14 +145,14 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
           kind === "manual" ? { topic } : { content: csv });
       setRows(data.topics ?? [...rows.filter(r => r.id !== data.id), data]); setConsent(false);
     } catch (e) { setError(e instanceof Error ? e.message : "주제 작업을 확인하세요."); }
-    finally { sending.current = false; setBusy(false); }
+    finally { sending.current = false; setBusy(false); onBusy(false); }
   }
   const queueJobs: Item[] = (queue?.rows ?? []).map((row: Item) => jobs.find(j => j.id === row.job_id)).filter(Boolean);
   const quoted = queueJobs.length > 0 && queueJobs.length === queue?.rows?.length && queueJobs.every(j => j.state === "quoted" && j.quote_hash);
   const queueQuote = queueJobs.reduce((sum,j) => sum + Number(j.quote ?? 0), 0);
   async function batch(kind: "scripts" | "approve" | "advance" | "read", identifier?: string) {
     if (!profile || sending.current || disabled) return;
-    sending.current = true; setBusy(true); setError("");
+    sending.current = true; setBusy(true); onBusy(true); setError("");
     try {
       if (kind === "scripts") {
         if (!scriptConsent || !available || selectedTopics.length === 0) throw Error("선택한 대본 요청의 유료 사용을 승인하세요.");
@@ -177,7 +177,7 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
       }
       await onRefresh();
     } catch(e) {setError(e instanceof Error?e.message:"대기열을 중단했습니다. 자동 재시도하지 않습니다.");}
-    finally {sending.current=false;setBusy(false);}
+    finally {sending.current=false;setBusy(false);onBusy(false);}
   }
   return <details className="character-topic-tools"><summary>주제 자동 생성·기록</summary>
     <fieldset disabled={disabled || busy || !profile}>
@@ -190,10 +190,11 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
           onChange={e=>setSelectedTopics(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id))} />
         <button onClick={()=>onTopic(row.topic)}>{row.topic}</button></label>
         <select aria-label={`${row.topic} 상태`} value={row.status} onChange={e=>void act("manual",row,e.target.value)}>
-          <option value="new">미사용</option><option value="scripted">대본 작성</option><option value="produced">제작 완료</option><option value="skipped">보류</option>
+          <option value="new">미사용</option><option value="scripted">대본 작성</option><option value="produced">게시 완료</option><option value="skipped">보류</option>
         </select>
       </div>)}</div>
       <details className="character-batch"><summary>선택 주제 일괄 제작 ({selectedTopics.length}개)</summary>
+        <p>선택한 회차 한도 합계: US${(Number(episodeLimit||0)*selectedTopics.length).toFixed(2)} · 대본·영상 포함 상한이며 실제 청구액은 아닙니다.</p>
         <p>대본부터 순서대로 생성합니다. 각 대본을 검토하고 공식 견적을 받은 후 영상 제작을 별도로 승인합니다.</p>
         <label className="check"><input type="checkbox" checked={scriptConsent} onChange={e=>setScriptConsent(e.target.checked)} />
           선택한 {selectedTopics.length}편의 대본 유료 생성에 동의합니다. 요청별 AI 한도와 편당 영상 한도 ${episodeLimit}를 유지합니다.</label>
@@ -243,7 +244,7 @@ export function CharacterScriptEditor({ job, csrf, disabled, onRefresh, onDirty 
     <dl>{([["situation","상황"],["escalation","일의 전개"],["reaction","캐릭터 반응"],["punchline","결말"]] as const).map(([key,label])=><div key={key}><dt>{label}</dt><dd>{script.plan?.[key]}</dd></div>)}</dl>
     <p>{job.playback_seconds != null ? `편집 후 ${Number(job.playback_seconds).toFixed(2)}초 · ` : ""}최종 {job.duration}초</p>
     <label className="check"><input type="checkbox" checked={advanced} onChange={e=>setAdvanced(e.target.checked)} />고급 편집 · 행동·카메라</label>
-    <fieldset disabled={disabled||busy||job.state!=="script_review"}>
+    <fieldset disabled={disabled||busy||!["script_review","quoted"].includes(job.state)}>
       <label>첫 자막<input value={script.hook_caption??""} maxLength={20} onChange={e=>setScript(v=>({...v,hook_caption:e.target.value}))}/></label>
       {script.scenes.map((s:Item,i:number)=><section key={i}>
         <strong>장면 {s.no} · {s.seconds}초 · {s.continuity==="continue"?`${s.from}번에서 이어짐`:"새 컷"}</strong>
@@ -274,18 +275,18 @@ export function CharacterScriptEditor({ job, csrf, disabled, onRefresh, onDirty 
 }
 
 
-export function CharacterRegeneration({job,csrf,disabled,onRefresh}:{job:Item;csrf:string;disabled:boolean;onRefresh:()=>Promise<unknown>}) {
+export function CharacterRegeneration({job,csrf,disabled,onRefresh,onBusy}:{job:Item;csrf:string;disabled:boolean;onRefresh:()=>Promise<unknown>;onBusy:(value:boolean)=>void}) {
   const [position,setPosition]=useState(1),[quoteConsent,setQuoteConsent]=useState(false),[paidConsent,setPaidConsent]=useState(false);
   const [busy,setBusy]=useState(false),[error,setError]=useState("");const sending=useRef(false);
   useEffect(()=>{setPaidConsent(false);setQuoteConsent(false);setError("");},[job.id,job.regeneration_hash]);
   async function run(kind:"quote"|"submit"|"cancel") {
     if(sending.current||disabled||(kind!=="cancel"&&!(kind==="quote"?quoteConsent:paidConsent)))return;
-    sending.current=true;setBusy(true);setError("");
+    sending.current=true;setBusy(true);onBusy(true);setError("");
     try {await characterCommand(`/api/studio/characters/${job.id}/regeneration/${kind}`,csrf,
       kind==="quote"?{position:String(position),consent:"true"}:{quote_hash:job.regeneration_hash,consent:"true"});
       setPaidConsent(false);setQuoteConsent(false);await onRefresh();}
     catch(e){setError(e instanceof Error?e.message:"재생성 상태를 확인하세요. 자동 재요청하지 않습니다.");}
-    finally {sending.current=false;setBusy(false);}
+    finally {sending.current=false;setBusy(false);onBusy(false);}
   }
   if(job.automation_version!==1||!["clips_review","completed","regeneration_quoted"].includes(job.state))return null;
   return <details className="character-regeneration"><summary>선택 장면 다시 만들기</summary>

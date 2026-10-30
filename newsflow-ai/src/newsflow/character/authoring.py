@@ -235,11 +235,15 @@ class AuthoringAI:
             candidate = response_object(document, provider)
             self.last_candidate = candidate
             result = schema.model_validate(candidate)
-        except Exception:
+        except Exception as error:
             self.last_usage = getattr(adapter,'last_usage',None)
             known = isinstance(self.last_usage,dict) and all(type(self.last_usage.get(k)) is int
                        for k in ('prompt_tokens','completion_tokens'))
             self.last_failure = {'stage':'response','response_received':known}
+            from .episode_story import validation_feedback
+            feedback = validation_feedback(error)
+            if feedback:
+                self.last_failure['validation_feedback'] = feedback
             self.budget.finish(reservation.id,status='failed' if known else 'unknown',usage=self.last_usage)
             raise CharacterError('provider') from None
         self.budget.finish(reservation.id,status='success',usage=self.last_usage)

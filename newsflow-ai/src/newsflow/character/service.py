@@ -69,6 +69,10 @@ def retime_studio_story(story, settings):
         if sum(scene['seconds'] for scene in revised['scenes'])!=settings['duration']:
             raise CharacterError('retime')
         return StudioStoryboard.model_validate(revised)
+    # Only the saved five-beat format uses this relationship. V3 episodes
+    # validate their variable scene plan in EpisodeFlow instead.
+    if settings['clip_seconds'] * 5 != settings['duration']:
+        raise CharacterError('media')
     for scene in revised['scenes']:
         scene['seconds']=settings['clip_seconds']
     return StudioStoryboard.model_validate(revised)
@@ -288,6 +292,9 @@ class CharacterService:
         topic=clean_topic(topic,150)
         if not re.fullmatch(r'[a-f0-9]{32}',request_id or ''): raise CharacterError()
         frozen=snapshot(settings)
+        chosen=check(frozen)
+        if chosen['clip_seconds'] * 5 != chosen['duration']:
+            raise CharacterError('media')
         per=amount(episode_limit)
         daily=amount(day_limit if day_limit not in (None,'') else episode_limit)
         raw=normalize_reference(reference)

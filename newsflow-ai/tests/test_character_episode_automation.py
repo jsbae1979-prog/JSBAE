@@ -137,3 +137,27 @@ def test_duration_change_requires_new_script_and_preserves_snapshot(tmp_path):
     with pytest.raises(CharacterError):
         s.update_studio_settings(i,{**check(before['studio_selection']),'duration':35},'5')
     assert s.read(i)==before
+
+
+def test_selected_model_is_frozen_after_script(tmp_path):
+    s,v,i,registry,p=setup_episode(tmp_path)
+    s.write(i,consent=True);before=deepcopy(s.read(i))
+    from newsflow.character.kling import check,K3
+    changed={**check(before['studio_selection']),'video_model':K3,'native_resolution':'model_default'}
+    with pytest.raises(CharacterError):s.update_studio_settings(i,changed,'5')
+    assert s.read(i)==before and not v.sent
+
+
+def test_sound_off_is_local_edit_without_more_authoring_or_paid_execution(tmp_path):
+    s,v,i,registry,p=setup_episode(tmp_path)
+    s.write(i,consent=True)
+    s.prepare(i,consent=True,script_reviewed=True)
+    before=s.read(i)
+    from newsflow.character.kling import check
+    s.update_studio_settings(i,{**check(before['studio_selection']),'sound':'off'},'5')
+    after=s.read(i)
+    assert after['state']=='script_review' and 'quote_hash' not in after
+    assert all(not scene['sound'] for scene in after['script']['scenes'])
+    assert all('Sound effects only:' not in row['prompt'] for row in after['prompts'])
+    assert len(s.authoring.calls)==1 and not v.sent
+    assert json.loads((s.folder(i)/'script.json').read_text(encoding='utf8'))==after['script']

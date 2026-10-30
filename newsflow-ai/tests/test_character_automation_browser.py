@@ -44,6 +44,9 @@ def test_registered_profiles_openai_script_editor_and_responsive_layout(app,brow
         assert state.character_authoring.calls[0]['character']['species']=='penguin'
         job=state.character.listing()[0]
         assert job['duration']==35 and job['script_provider']=='openai' and len(job['script']['scenes'])==3
+        expect(page.get_by_label('영상 모델',exact=True)).to_be_disabled()
+        expect(page.get_by_label('영상 길이',exact=True)).to_be_disabled()
+        expect(page.get_by_text('0:22 - 0:35',exact=True)).to_be_visible()
         page.get_by_text('장면 연출·자막·효과음 검토',exact=True).click()
         page.get_by_label('첫 자막',exact=True).fill('느긋한 아침')
         expect(page.get_by_role('button',name='영상 견적 확인',exact=True)).to_be_disabled()
@@ -62,4 +65,42 @@ def test_registered_profiles_openai_script_editor_and_responsive_layout(app,brow
             folder.mkdir(parents=True,exist_ok=True)
             page.screenshot(path=str(folder/f'character-automation-{width}x{height}.png'),full_page=True)
         assert not errors
+        context.close()
+
+
+def test_pending_topic_response_cannot_switch_character_or_start_another_request(app,browser,tmp_path):
+    from threading import Event
+    release=Event();called=Event();seen=[]
+    class Key:
+        def status(self):return {'configured':True}
+        def key(self):raise AssertionError('No real keys')
+    class DelayedFake(FakeAuthoring):
+        def topics(self,character,count,existing,**kwargs):
+            seen.append(character['id']);called.set()
+            assert release.wait(10),'Synthetic response was not released'
+            return [{'topic':'정원의 작은 실수','category':'정원','joke_type':'반전'}]
+    state=app.state;state.api_keys={'claude_api':Key(),'openai':Key()};state.character_authoring=DelayedFake()
+    registry=CharacterRegistry(state.config.data_dir,state.image_studio)
+    first=registry.save(profile('합성 토끼','rabbit'),state.image_studio.asset_bytes(image()))
+    second=registry.save(profile('합성 펭귄','penguin'),state.image_studio.asset_bytes(image('green')))
+    with local_server(app) as origin:
+        context=browser.new_context()
+        context.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
+        page=context.new_page();page.goto(origin+'/studio/characters')
+        picker=page.get_by_label('등록된 캐릭터',exact=True);picker.select_option(first['id'])
+        page.get_by_text('주제 자동 생성·기록',exact=True).click()
+        page.get_by_label('주제 개수',exact=True).fill('1')
+        page.get_by_label('주제 생성 유료 요청에 동의합니다.',exact=True).check()
+        try:
+            page.get_by_role('button',name='주제 자동 생성',exact=True).click()
+            assert called.wait(5)
+            expect(picker).to_be_disabled()
+            expect(page.get_by_label('대본 AI',exact=True)).to_be_disabled()
+            expect(page.get_by_role('button',name='새 캐릭터 등록',exact=True)).to_be_disabled()
+        finally:release.set()
+        expect(page.get_by_role('button',name='정원의 작은 실수',exact=True)).to_be_visible()
+        expect(picker).to_be_enabled()
+        picker.select_option(second['id'])
+        expect(page.get_by_role('button',name='정원의 작은 실수',exact=True)).to_have_count(0)
+        assert seen==[first['id']]
         context.close()

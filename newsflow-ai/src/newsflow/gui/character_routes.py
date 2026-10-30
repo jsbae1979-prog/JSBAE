@@ -5,7 +5,7 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 from newsflow.character.compose import digest
-from newsflow.character.schema import CharacterError, load_character
+from newsflow.character.schema import CharacterError, load_character, clean_topic
 from newsflow.character.service import SAFE_ERRORS
 from newsflow.creation.catalog import API_MODELS, SelectionError, read_defaults, save_defaults
 from newsflow.publishing.service import PublishingError
@@ -171,6 +171,7 @@ def create(request: Request, reference: Annotated[UploadFile | None, File()] = N
         import json
         try:
             service=request.app.state.character
+            topic = clean_topic(topic, 60)
             from newsflow.character.kling import field_errors
             parsed=json.loads(studio_settings)
             invalid=field_errors(parsed)

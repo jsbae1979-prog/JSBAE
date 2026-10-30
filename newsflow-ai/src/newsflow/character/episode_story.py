@@ -84,6 +84,57 @@ class EpisodeScript(Strict):
         return self
 
 
+
+_FEEDBACK_FIELDS = frozenset({'script', 'unknown_field', 'index'} | {
+    field.alias or name
+    for schema in (EpisodeScript, EpisodePlan, EpisodeScene, ComedySfx, UploadInfo)
+    for name, field in schema.model_fields.items()})
+_FEEDBACK_TYPES = frozenset({'missing', 'string_too_short', 'string_too_long', 'string_pattern_mismatch',
+    'int_parsing', 'int_type', 'int_from_float', 'greater_than_equal', 'less_than_equal', 'literal_error',
+    'too_short', 'too_long', 'extra_forbidden', 'schema_relation', 'list_type', 'model_type', 'dict_type',
+    'bool_parsing', 'bool_type', 'none_required', 'invalid_value', 'scene_count', 'duration', 'sound',
+    'edited_duration', 'sfx'})
+
+
+def bounded_validation_feedback(value):
+    """Only reviewed field names, bounded indices and finite error types cross the boundary."""
+    if not isinstance(value, list):
+        return []
+    result = []
+    for item in value[:8]:
+        if not isinstance(item, dict) or not isinstance(item.get('field'), (list, tuple)):
+            continue
+        field = []
+        for part in item['field'][:8]:
+            if type(part) is int:
+                field.append(part if 0 <= part < 60 else 'index')
+            else:
+                field.append(part if isinstance(part, str) and part in _FEEDBACK_FIELDS else 'unknown_field')
+        kind = item.get('type')
+        kind = kind if isinstance(kind, str) and kind in _FEEDBACK_TYPES else 'invalid_value'
+        row = {'field': field or ['script'], 'type': kind}
+        if row not in result:
+            result.append(row)
+    return result
+
+
+class EpisodeValidationError(CharacterError):
+    def __init__(self, kind, field=('scenes',)):
+        self.validation_feedback = bounded_validation_feedback([{'field': list(field), 'type': kind}])
+        super().__init__('media')
+
+
+def validation_feedback(error):
+    """Never copy Pydantic input, context, message, URL or unexpected field names."""
+    from pydantic import ValidationError
+    if isinstance(error, EpisodeValidationError):
+        return bounded_validation_feedback(error.validation_feedback)
+    if isinstance(error, ValidationError):
+        return bounded_validation_feedback([
+            {'field': row['loc'], 'type': 'schema_relation' if row['type'] == 'value_error' else row['type']}
+            for row in error.errors(include_input=False, include_context=False, include_url=False)[:8]])
+    return []
+
 def base_scene_count(target_seconds):
     if type(target_seconds) is not int or target_seconds not in range(15, 61, 5):
         raise CharacterError('media')
@@ -110,14 +161,17 @@ def validate_episode(story, target_seconds, model, native_sound=True):
     allowed = duration_values(model)
     sfx = load_sfx_map()
     if not lo <= len(story.scenes) <= hi:
-        raise CharacterError('media')
-    if any(s.seconds not in allowed or any(c.key not in sfx for c in s.sfx) for s in story.scenes):
-        raise CharacterError('media')
-    if not native_sound and any(s.sound for s in story.scenes):
-        raise CharacterError('media')
+        raise EpisodeValidationError('scene_count')
+    for index, scene in enumerate(story.scenes):
+        if scene.seconds not in allowed:
+            raise EpisodeValidationError('duration', ('scenes', index, 'seconds'))
+        if any(c.key not in sfx for c in scene.sfx):
+            raise EpisodeValidationError('sfx', ('scenes', index, 'sfx'))
+        if not native_sound and scene.sound:
+            raise EpisodeValidationError('sound', ('scenes', index, 'sound'))
     total = total_playback_seconds(story, load_edit_presets())
     if not target_seconds - 2 <= total <= target_seconds:
-        raise CharacterError('media')
+        raise EpisodeValidationError('edited_duration')
     return story
 
 

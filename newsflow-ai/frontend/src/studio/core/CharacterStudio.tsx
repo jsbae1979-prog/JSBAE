@@ -486,6 +486,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [file, setFile] = useState<File | null>(null);
   const [activeProfile, setActiveProfile] = useState<Item | null>(null);
   const [scriptDirty, setScriptDirty] = useState(false);
+  const [automationBusy, setAutomationBusy] = useState(false);
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [libraryMessage, setLibraryMessage] = useState("");
@@ -636,7 +637,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const blockedStoryRequest = !!storyRequests[storyRequestKey()];
   const pendingReferenceCopy =
     !!story && !!job?.studio_selection && !!(file || referenceJob || asset);
-  const isBusy = busy || visibilityBusy || trialBusy || libraryBusy,
+  const isBusy = busy || visibilityBusy || trialBusy || libraryBusy || automationBusy,
     frozen =
       !!job &&
       !["needs_script", "script_review", "script_failed"].includes(job.state) &&
@@ -1365,7 +1366,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 )}
               />
             )}
-            <CharacterProfiles key={file ? `${file.name}:${file.size}:${file.lastModified}` : asset} profiles={profiles} selected={activeProfile} onSelect={selectProfile}
+            <CharacterProfiles onBusy={setAutomationBusy} key={file ? `${file.name}:${file.size}:${file.lastModified}` : asset} profiles={profiles} selected={activeProfile} onSelect={selectProfile}
               ensureAsset={ensureProfileAsset} model={settings.script_model} available={scriptAvailable}
               csrf={c.view?.csrfToken ?? ""} disabled={isBusy} onRefresh={c.load} />
           </section>
@@ -1396,7 +1397,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 {apiProviders.map(p => <option key={p.id} value={p.id} disabled={!p.configured}>{p.label}{p.configured ? "" : " · 키 등록 필요"}</option>)}
               </select>
             </label>
-            <CharacterTopics profile={activeProfile} model={settings.script_model} available={scriptAvailable}
+            <CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
               topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy}
               settings={settings} episodeLimit={per} jobs={jobs} onRefresh={c.load}
               onJob={(identifier) => { setId(identifier); setFile(null); setAsset(""); setReferenceJob(""); }} />
@@ -1606,6 +1607,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       icon={<Bot size={18} />}
                       value={settings.video_model}
                       onChange={changeModel}
+                      disabled={job?.automation_version === 1 && !!story}
                       values={choices}
                       supported={Object.keys(choices)}
                       hint={adjustments.video_model}
@@ -1615,7 +1617,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       icon={<Clock3 size={18} />}
                       value={String(settings.duration)}
                       onChange={changeDuration}
-                      disabled={isBusy || settingsFrozen || legacyStoryTiming}
+                      disabled={isBusy || settingsFrozen || legacyStoryTiming || (job?.automation_version === 1 && !!story)}
                       values={Object.fromEntries(
                         (caps?.totalDurationChoices ?? Array.from({ length: 10 }, (_, i) => 15 + i * 5)).map(
                           (total: number) => [String(total), `${total}초`],
@@ -1626,7 +1628,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       }
                       unsupportedHint="이 모델은 전체 길이에 필요한 장면 길이를 지원하지 않아요."
                       hint={
-                        legacyStoryTiming
+                        job?.automation_version === 1 && story
+                          ? "모델·길이는 새 스토리를 만들기 전에 선택하세요."
+                          : legacyStoryTiming
                           ? "이 스토리의 길이는 변경할 수 없습니다."
                           : settingsFrozen
                             ? "새 영상으로 복사하면 길이를 변경할 수 있습니다."
@@ -1895,7 +1899,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               최종 영상
             </button>
           </header>
-          {job && <CharacterRegeneration job={job} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} onRefresh={c.load} />}
+          {job && <CharacterRegeneration onBusy={setAutomationBusy} job={job} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} onRefresh={c.load} />}
           {!scenes.length && <Empty>대본을 생성하면 선택한 길이에 맞는 장면 계획이 표시됩니다.</Empty>}
           <div className="kling-character-scene-grid">
             {(scenes.length

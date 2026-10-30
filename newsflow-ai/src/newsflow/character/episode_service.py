@@ -121,8 +121,10 @@ class EpisodeFlow:
                                    CATALOG.model(chosen['video_model']), chosen['sound'] == 'on',
                                    [j['topic'] for j in s.listing() if j.get('character_id') == job['character_id']
                                     and j['id'] != identifier][:5])
+            from .episode_story import bounded_validation_feedback, validation_feedback
             if attempt > 1:
-                payload['validation_feedback'] = 'Previous response failed local schema or duration validation. Follow the supplied schema and timing.'
+                payload['validation_feedback'] = bounded_validation_feedback(job.get('script_validation_feedback', [])) or [
+                    {'field': ['script'], 'type': 'invalid_value'}]
             remaining = amount(job['episode_limit']) - self.text_exposure(job)
             if remaining <= 0:
                 raise CharacterError('budget')
@@ -136,7 +138,7 @@ class EpisodeFlow:
                     provider=job['script_provider'], request_id=f'episode:{identifier}:script:{sequence}',
                     consent=True, kind='script', max_reserved_usd=str(remaining))
                 story = self.validate(job, candidate)
-            except Exception:
+            except Exception as error:
                 self.record_text_cost(job, authoring, attempt)
                 preflight = getattr(authoring, 'last_failure', None)
                 not_dispatched = isinstance(preflight, dict) and preflight.get('dispatched') is False
@@ -145,6 +147,11 @@ class EpisodeFlow:
                 if not_dispatched:
                     # Keep a unique request sequence but do not count a local refusal as a paid attempt.
                     job['script_attempts'] = attempt - 1
+                feedback = validation_feedback(error) or bounded_validation_feedback(
+                    preflight.get('validation_feedback', []) if isinstance(preflight, dict) else [])
+                if not not_dispatched and job['response_received'] and feedback:
+                    job['script_validation_feedback'] = feedback
+                    job.setdefault('script_validation_history', []).append({'attempt': attempt, 'feedback': feedback})
                 job['script_failure'] = {'failure_stage': 'preflight' if not_dispatched else 'schema',
                     'message': '설정·한도를 확인한 뒤 다시 요청하세요. 자동 실행하지 않습니다.' if not_dispatched else
                                '대본 형식·길이를 확인하세요. 자동 재생성하지 않습니다.'}
@@ -152,6 +159,8 @@ class EpisodeFlow:
                 raise CharacterError('provider') from None
             self.record_text_cost(job, authoring, attempt)
             job.update(state='script_review', script=dump(story), response_received=True)
+            job.pop('script_validation_feedback', None)
+            job.pop('script_failure', None)
             try:
                 job['prompts'] = prompts(story, chosen, job['character'])
                 job.pop('prompt_validation_error', None)
@@ -432,15 +441,21 @@ class EpisodeFlow:
             if job['state'] not in {'script_review', 'quoted'} or job.get('quote_approvals'):
                 raise CharacterError('blocked')
             old = check(job['studio_selection'])
-            if settings['duration'] != old['duration'] or settings['script_model'] != old['script_model']:
+            if any(settings[key] != old[key] for key in ('duration','script_model','video_model')):
                 raise CharacterError('retime')  # A different target requires a newly generated script.
             candidate = {**job, 'studio_selection': frozen}
-            story = self.validate(candidate, job['script'])
+            script = deepcopy(job['script'])
+            if settings['sound'] == 'off':
+                for scene in script['scenes']:
+                    scene['sound'] = ''  # Explicit off ignores generation-stage ambience, never calls the author again.
+            story = self.validate(candidate, script)
             job.setdefault('quote_history', []).append({k: deepcopy(job[k]) for k in
                 ('scenes', 'quote_hash', 'quote_total_usd', 'quoted_at') if k in job})
             job.update(studio_selection=frozen, model=settings['video_model'], episode_limit=str(amount(episode_limit)),
+                       script=dump(story), script_hash=fp(dump(story)),
                        prompts=prompts(story, settings, job['character']), state='script_review', scenes=[])
             for key in ('script_approval', 'quote_hash', 'quote_total_usd', 'quoted_at', 'quote_key_id'):
                 job.pop(key, None)
             job['plan_hash'] = s.plan_hash(job)
             s.save(job)
+            (s.folder(identifier) / 'script.json').write_text(json.dumps(job['script'], ensure_ascii=False, indent=2), encoding='utf8')
