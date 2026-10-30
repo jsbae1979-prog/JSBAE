@@ -27,3 +27,14 @@ UI 테스트는 제한된 Windows 실행 환경에서 TestClient의 내부 socke
 ## 운영 상태와 다음 작업
 
 운영 코드·설정·데이터·키·미디어·백업은 변경하지 않았다. 정상 Stop·Start를 아직 수행하지 않았다. 실행 중인 Python에 반영하려면 새 사용자 승인이 필요하다. 승인 후 기존 보존 절차로 정확한 Python 4개와 React 빌드 변경 파일만 적용하고, Chrome에서 기존 인증 경로로 모델 정보 조회 1회만 확인한다. 생성·SNS는 실행하지 않으며 실패 시 자동 재요청하지 않는다.
+
+## 운영 반영 후보
+
+구현 SHA: `f91afae3c979cef9636c9aa5e0a7fc1357e49826`. 기존 운영 전용 연결을 보존하는 정확한 문맥 수정으로 Python 4개와 React 자산 2개를 별도 폴더에 준비했다. 운영 원본은 변경하지 않았다.
+
+- `app/product/newsflow/gui/api_settings_routes.py` — SHA-256 `6c617630231d6a39299851343f6159a9a017865e73c05d94743fb344cd319e13`
+- `app/product/newsflow/gui/studio_v3.py` — SHA-256 `b5e5155d1998feefaf83d0159e8810113143ccc93b5d5d1ebc158de4eaf486df`
+- `app/controller/bat_distribution/claude_connection_check.py` — SHA-256 `2dd40b0bd34127c2aa44f543d702312a20e3b26a739642b5ff7ea0318061161f`
+- `app/controller/bat_distribution/windows_live.py` — SHA-256 `276e0b270abcea2c0e4459299be225313f9da28262a5049feae3e46a6ce0ebb5`
+- `app/frontend/dist/assets/index-WABMv2Ne.js` — SHA-256 `96e8610c6d643bc5c04f4a2f25878823912e3d2f6c33253e05599869bb7dd7d7`
+- `app/frontend/dist/index.html` — SHA-256 `7e0b87e1c7e93f0c379ce31d49a3ba6770756c0d1faa9d9601e1d1260e50db55`

@@ -208,5 +208,47 @@
     "keysExposed": false,
     "globalPolicyRelaxed": false
   },
-  "liveVerification": "PENDING_EXPLICIT_RESTART_APPROVAL"
+  "liveVerification": "PENDING_EXPLICIT_RESTART_APPROVAL",
+  "sourceSha": "f91afae3c979cef9636c9aa5e0a7fc1357e49826",
+  "application": {
+    "status": "STAGED_NOT_APPLIED",
+    "files": [
+      {
+        "path": "app/product/newsflow/gui/api_settings_routes.py",
+        "before": "280726d6f7e3751fee1076c83f49b30ccce7141a95627c9316f257e7d2c73175",
+        "sha256": "6c617630231d6a39299851343f6159a9a017865e73c05d94743fb344cd319e13",
+        "bytes": 6710
+      },
+      {
+        "path": "app/product/newsflow/gui/studio_v3.py",
+        "before": "1eedd54abda7490656e4b372c9a55095e4647cdb9b8275b0a7f60b79ef35f802",
+        "sha256": "b5e5155d1998feefaf83d0159e8810113143ccc93b5d5d1ebc158de4eaf486df",
+        "bytes": 13477
+      },
+      {
+        "path": "app/controller/bat_distribution/claude_connection_check.py",
+        "before": null,
+        "sha256": "2dd40b0bd34127c2aa44f543d702312a20e3b26a739642b5ff7ea0318061161f",
+        "bytes": 4855
+      },
+      {
+        "path": "app/controller/bat_distribution/windows_live.py",
+        "before": "3e66af6c786b7652f7e85956ed7af7dfc07444902da3b11959d3ad8c08bdbba2",
+        "sha256": "276e0b270abcea2c0e4459299be225313f9da28262a5049feae3e46a6ce0ebb5",
+        "bytes": 28559
+      },
+      {
+        "path": "app/frontend/dist/assets/index-WABMv2Ne.js",
+        "before": null,
+        "sha256": "96e8610c6d643bc5c04f4a2f25878823912e3d2f6c33253e05599869bb7dd7d7",
+        "bytes": 608275
+      },
+      {
+        "path": "app/frontend/dist/index.html",
+        "before": "c25fb8eb9c0babe032878bc3e41092e75d184be7b4dcca6b3157555a2aae751f",
+        "sha256": "7e0b87e1c7e93f0c379ce31d49a3ba6770756c0d1faa9d9601e1d1260e50db55",
+        "bytes": 418
+      }
+    ]
+  }
 }
