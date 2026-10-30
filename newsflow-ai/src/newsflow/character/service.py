@@ -76,6 +76,13 @@ def retime_studio_story(story, settings):
 
 def generation_rows(job):
     """New quotes share one film setup and continue the preceding saved action."""
+    if job.get('automation_version')==1:
+        from .episode_story import validate_episode, prompts as episode_prompts
+        from .kling import check
+        from newsflow.video_models.catalog import CATALOG
+        chosen=check(job['studio_selection'])
+        story=validate_episode(job['script'],job['duration'],CATALOG.model(job['model']),chosen['sound']=='on')
+        return episode_prompts(story,chosen,job['character'])
     rows=job['prompts']
     if not job.get('studio_selection'):
         return rows
@@ -129,6 +136,26 @@ class CharacterService:
         self.ffprobe = Path(ffprobe) if ffprobe is not None else None
         self.daily_limit_approval = None  # Compatibility hook for older trial installers; no daily execution gate.
 
+    def create_episode(self, topic, episode_limit, *, reference, settings, request_id, profile):
+        from .episode_service import EpisodeFlow
+        return EpisodeFlow(self).create(topic,episode_limit,reference=reference,settings=settings,request_id=request_id,profile=profile)
+
+    def edit_episode(self, identifier, script, expected_hash):
+        from .episode_service import EpisodeFlow
+        return EpisodeFlow(self).edit(identifier,script,expected_hash)
+
+    def prepare_regeneration(self, identifier, position, *, consent=False):
+        from .episode_regeneration import RegenerationFlow
+        return RegenerationFlow(self).prepare(identifier, position, consent=consent)
+
+    def regenerate_scenes(self, identifier, *, consent=False, quote_hash=''):
+        from .episode_regeneration import RegenerationFlow
+        return RegenerationFlow(self).submit(identifier, consent=consent, quote_hash=quote_hash)
+
+    def cancel_regeneration(self, identifier, *, quote_hash=''):
+        from .episode_regeneration import RegenerationFlow
+        return RegenerationFlow(self).cancel(identifier, quote_hash=quote_hash)
+
     def video_for(self, job):
         if self.video_override is not None or not (job.get('selection') or job.get('studio_selection')):
             return self.video
@@ -175,9 +202,10 @@ class CharacterService:
                     raise ValueError
             if result.get('script'):
                 from .studio_story import StudioStoryboard
-                schema=StudioStoryboard if result.get('studio_selection') else Storyboard
+                from .episode_story import EpisodeScript
+                schema=EpisodeScript if result.get('automation_version')==1 else StudioStoryboard if result.get('studio_selection') else Storyboard
                 script=schema.model_validate(result['script'])
-                if sum(s.seconds for s in script.scenes)!=result['duration']: raise ValueError
+                if result.get('automation_version')!=1 and sum(s.seconds for s in script.scenes)!=result['duration']: raise ValueError
                 assert result['plan_hash'] == self.plan_hash(result)
             return result
         except (OSError,KeyError,AssertionError,ValueError,TypeError):
@@ -384,6 +412,9 @@ class CharacterService:
             return identifier,True
 
     def update_studio_settings(self, identifier, settings, episode_limit, day_limit=None):
+        if self.read(identifier).get('automation_version')==1:
+            from .episode_service import EpisodeFlow
+            return EpisodeFlow(self).update_settings(identifier,settings,episode_limit)
         from .kling import snapshot, check
         from .studio_story import prompts as studio_prompts
         frozen=snapshot(settings)
@@ -454,6 +485,9 @@ class CharacterService:
             job['script_evidence_error']='write_unavailable'
 
     def write(self, identifier, *, consent=False):
+        if self.read(identifier).get('automation_version')==1:
+            from .episode_service import EpisodeFlow
+            return EpisodeFlow(self).write(identifier,consent=consent)
         self.consent(consent)
         with self.lock():
             job=self.read(identifier)
@@ -574,6 +608,9 @@ class CharacterService:
             self.save(job)
 
     def prepare(self, identifier, *, consent=False, script_reviewed=False):
+        if self.read(identifier).get('automation_version')==1:
+            from .episode_service import EpisodeFlow
+            return EpisodeFlow(self).prepare(identifier,consent=consent,script_reviewed=script_reviewed)
         self.consent(consent)
         self.consent(script_reviewed)
         with self.lock():
@@ -627,6 +664,9 @@ class CharacterService:
                 raise CharacterError(exc.code if isinstance(exc,CharacterError) else 'provider') from None
 
     def submit(self, identifier, *, consent=False, quote_hash=''):
+        if self.read(identifier).get('automation_version')==1:
+            from .episode_service import EpisodeFlow
+            return EpisodeFlow(self).submit(identifier,consent=consent,quote_hash=quote_hash)
         self.consent(consent)
         with self.lock():
             job=self.read(identifier)
@@ -679,6 +719,9 @@ class CharacterService:
                     raise CharacterError('blocked') from None
 
     def check(self, identifier, *, consent=False):
+        if self.read(identifier).get('automation_version')==1:
+            from .episode_service import EpisodeFlow
+            return EpisodeFlow(self).check(identifier,consent=consent)
         self.consent(consent)
         with self.lock():
             job=self.read(identifier)
@@ -745,7 +788,7 @@ class CharacterService:
         with self.lock():
             job=self.read(identifier)
             scenes=job.get('scenes',[])
-            if (job['state']!='scene_review' or not 1<=len(scenes)<=5
+            if (job['state']!='scene_review' or not 1<=len(scenes)<=60
                     or any(s.get('state') not in TERMINAL|{'submitted','downloaded'} for s in scenes)):
                 raise CharacterError('blocked')
             targets=[s for s in scenes if s['state'] in TERMINAL]
@@ -757,7 +800,7 @@ class CharacterService:
             for scene in targets:
                 position=scene.get('position')
                 handle=scene.get('handle')
-                if (type(position) is not int or not 1<=position<=5 or position in positions
+                if (type(position) is not int or not 1<=position<=60 or position in positions
                         or not isinstance(handle,dict) or set(handle)!={'request_id','status_url'}):
                     raise CharacterError('blocked')
                 try:
@@ -874,11 +917,14 @@ class CharacterService:
                 raise CharacterError('blocked')
             day=(now()+timedelta(hours=9)).date().isoformat()
             extra=amount(retry['quote_usd'])
-            if extra>amount(job['episode_limit']):
+            exposure=sum((amount(r['usd']) for r in job.get('quote_approvals',[])),Decimal(0))
+            exposure+=sum((amount(r['usd']) for r in job.get('text_reservations',[])),Decimal(0))
+            if extra+exposure>amount(job['episode_limit']):
                 raise CharacterError('budget')
             history=scene.get('history',[])
             history.append({k:v for k,v in scene.items() if k!='history'})
-            scene.update(history=history,attempt=scene['attempt']+1,idempotency_key=uuid4().hex,
+            next_key=(f"{identifier}-s{scene['position']}-t{scene['attempt']+1}" if job.get('automation_version')==1 else uuid4().hex)
+            scene.update(history=history,attempt=scene['attempt']+1,idempotency_key=next_key,
                          state='submitting',quote_usd=retry['quote_usd'],submitted_at=now().isoformat())
             scene.pop('handle',None)
             scene.pop('finished_at',None)
@@ -920,7 +966,8 @@ class CharacterService:
                     from .compose_studio import compose_studio
                     from .studio_story import StudioStoryboard
                     from .kling import check
-                    output=compose_studio(folder,StudioStoryboard.model_validate(job['script']),clips,
+                    from .episode_story import parse_script
+                    output=compose_studio(folder,parse_script(job['script']),clips,
                                           settings=check(job['studio_selection']),**tools)
                 else:
                     output=self.composer(folder,Storyboard.model_validate(job['script']),clips,sfx_root=self.root/'sfx',**tools)
@@ -942,6 +989,9 @@ class CharacterService:
                                  'AI 생성 사실·게시 플랫폼 표시 설정','시청 연령·아동용 여부 확인',
                                  '음악은 플랫폼에서 직접 선택','최근 웃음 구조 반복 여부'],
                     'human_review':'NOT VERIFIED','automatic_upload':False}
+            if job.get('automation_version')==1:
+                review['upload']=job['script']['upload']
+                review['checklist']=['주인공 외모·연속성','대사·웅얼거림·음악 없음','속도·반응 대비','자막 오탈자·위치','효과음·연결 음량','선택 길이·마지막 반전','업로드 정보·AI 표시·시청 연령']
             if job.get('character',{}).get('style_warn'):
                 review['checklist'].append(job['character']['style_warn'])
             (folder/'review.json').write_text(json.dumps(review,ensure_ascii=False,indent=2),encoding='utf8')
