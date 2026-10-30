@@ -6,6 +6,7 @@ export type View = {
   dataOrigin: string;
   csrfToken: string;
   commandsAvailable: boolean;
+  libraryRemovalAvailable?: boolean;
   collections: Record<string, Item[]>;
   catalog: Item;
   projects?: Item[];

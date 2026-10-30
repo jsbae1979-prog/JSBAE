@@ -24,6 +24,31 @@ from .task_views import task_rows
 router = APIRouter()
 
 
+def _library_visibility(request, items, confirm, *, hidden):
+    from newsflow.studio.library_visibility import LibraryVisibility, LibraryVisibilityError
+    if not confirm:
+        raise HTTPException(422, "선택한 콘텐츠를 확인해 주세요.")
+    try:
+        return LibraryVisibility(request.app.state.sessions, request.app.state.character).change(items, hidden=hidden)
+    except LibraryVisibilityError as error:
+        status, message = {
+            'invalid': (422, '선택한 콘텐츠를 확인해 주세요.'),
+            'missing': (404, '콘텐츠를 찾지 못했습니다.'),
+            'busy': (409, '진행 중인 콘텐츠는 완료 후 삭제해 주세요.'),
+        }[str(error)]
+        raise HTTPException(status, message) from None
+
+
+@router.post('/api/studio/library/remove')
+def library_remove(request: Request, items: str = Form(max_length=10000), confirm: bool = Form(False)):
+    return _library_visibility(request, items, confirm, hidden=True)
+
+
+@router.post('/api/studio/library/restore')
+def library_restore(request: Request, items: str = Form(max_length=10000), confirm: bool = Form(False)):
+    return _library_visibility(request, items, confirm, hidden=False)
+
+
 def file_digest(path):
     with path.open("rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
@@ -32,7 +57,8 @@ def file_digest(path):
 @router.get("/workspace/trash")
 def trash(request: Request):
     with request.app.state.sessions() as session:
-        rows = list(session.scalars(select(WorkspaceRemoval).order_by(WorkspaceRemoval.created_at.desc())))
+        rows = list(session.scalars(select(WorkspaceRemoval).where(
+            ~WorkspaceRemoval.key.startswith('library:')).order_by(WorkspaceRemoval.created_at.desc())))
         return page(request, "workspace_trash.html", active="videos", removed=rows)
 
 

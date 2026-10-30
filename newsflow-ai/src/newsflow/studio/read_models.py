@@ -134,6 +134,8 @@ def rows(session, model_name, columns):
         query = query.outerjoin(m.NewsListState, m.NewsListState.article_id == model.id).where(
             m.NewsListState.hidden.is_not(True)
         )
+    if model_name == "WorkspaceRemoval":
+        query = query.where(~model.key.startswith("library:"))
     order = getattr(model, "id", getattr(model, "key", None))
     if order is not None:
         query = query.order_by(order.desc())
@@ -553,8 +555,16 @@ def module_view(request: Request, module: Module):
         result["services"] = work["services"]
         if module == "library":
             from newsflow.samples.catalog import Samples
+            from newsflow.studio.library_visibility import LibraryVisibility
             result["collections"]["ownedReferences"] = Samples(
                 state.sessions,state.config.data_dir,state.image_studio).owned_references()
+            removed = LibraryVisibility(state.sessions, state.character).listing()
+            hidden = {item["id"] for item in removed}
+            result["projects"] = [item for item in result["projects"] if item["id"] not in hidden]
+            result["collections"]["ownedReferences"] = [
+                item for item in result["collections"]["ownedReferences"] if item["id"] not in hidden]
+            result["collections"]["libraryRemoved"] = removed
+            result["libraryRemovalAvailable"] = True
     result["catalog"] = {
         "apiModels": API_MODELS,
         "imageModels": list(IMAGE_MODELS),

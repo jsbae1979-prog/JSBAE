@@ -75,6 +75,7 @@ class OperatingRequests(LocalWorkRequests):
                                                   or self.CHARACTER_RENDER.fullmatch(path)
                                                   or self.CHARACTER_RECOVER.fullmatch(path)
                                                   or path == '/api/studio/characters/library'
+                                                  or path in {'/api/studio/library/remove', '/api/studio/library/restore'}
                                                   or self.CHARACTER_LOCAL_WRITE.fullmatch(path))
             copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path)
                                                        or self.CHARACTER_LOCAL_READ.fullmatch(path))
