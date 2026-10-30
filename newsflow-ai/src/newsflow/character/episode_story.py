@@ -249,6 +249,9 @@ def prompts(story, settings, character):
 
 
 def parse_script(value):
+    if isinstance(value,dict) and value.get('schema_version')==4:
+        from .direct_video import DirectVideoPlan
+        return DirectVideoPlan.model_validate(value)
     if isinstance(value, dict) and value.get('schema_version') == 3:
         return EpisodeScript.model_validate(value)
     from .studio_story import StudioStoryboard

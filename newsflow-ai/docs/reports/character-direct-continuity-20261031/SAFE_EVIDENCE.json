@@ -1,0 +1,189 @@
+{
+  "verdict": "CONDITIONAL: development verified; operating application pending restart approval",
+  "flow": [
+    "character/image + user topic",
+    "first 15 seconds: setup/development, leave action unfinished",
+    "verify downloaded first clip SHA-256",
+    "decode actual final frame from bounded last second",
+    "second 15 seconds: original identity + final frame + topic + previous direction + elapsed time + ending role",
+    "review clips and locally compose one 30-second MP4"
+  ],
+  "contextLimit": "Prior instructions and visible last-frame state; no claimed semantic analysis of the previous video",
+  "paidCalls": 0,
+  "storyAiCalls": 0,
+  "tests": {
+    "passed": 28,
+    "failed": 0,
+    "errors": 0,
+    "newContinuityCases": 8,
+    "relatedRecheckedCases": 20,
+    "typeScript": "PASS",
+    "reactBuild": "PASS",
+    "earlier94FocusedCases": "reused separately; not added to current 28",
+    "initialRuns": [
+      "Missing local FFmpeg test path corrected without product change",
+      "Removed stale UI state reference found by TypeScript; final check passes"
+    ]
+  },
+  "cases": [
+    {
+      "module": "tests.test_character_direct_continuity",
+      "case": "test_30_seconds_has_setup_and_continuing_ending_without_a_writer[kling-video/o3/image-reference]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_continuity",
+      "case": "test_30_seconds_has_setup_and_continuing_ending_without_a_writer[kling-video/v3.0/std/image-to-video]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_continuity",
+      "case": "test_second_segment_receives_true_final_frame_and_frozen_context",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_continuity",
+      "case": "test_changed_context_never_submits_the_continuation[context]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_continuity",
+      "case": "test_changed_context_never_submits_the_continuation[parent_prompt]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_continuity",
+      "case": "test_failed_or_unknown_parent_does_not_start_or_retry_next_segment[failed]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_continuity",
+      "case": "test_failed_or_unknown_parent_does_not_start_or_retry_next_segment[unknown]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_continuity",
+      "case": "test_continuation_price_increase_stops_before_second_submit",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_native_duration_segments_cover_one_video_and_continue[15-kling-video/o3/image-reference]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_native_duration_segments_cover_one_video_and_continue[15-kling-video/v3.0/std/image-to-video]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_native_duration_segments_cover_one_video_and_continue[30-kling-video/o3/image-reference]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_native_duration_segments_cover_one_video_and_continue[30-kling-video/v3.0/std/image-to-video]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_native_duration_segments_cover_one_video_and_continue[60-kling-video/o3/image-reference]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_native_duration_segments_cover_one_video_and_continue[60-kling-video/v3.0/std/image-to-video]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_direct_plan_does_not_accept_changed_subject_or_unapproved_timing",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_image_topic_to_fake_video_and_final_mp4_has_zero_story_calls[15]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_image_topic_to_fake_video_and_final_mp4_has_zero_story_calls[30]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_direct_and_story_modes_cannot_share_an_idempotency_key",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_long_direct_video_requires_explicit_continuation_choice",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_video",
+      "case": "test_unknown_direct_submit_is_not_replayed",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_direct_browser",
+      "case": "test_image_topic_direct_mode_requires_no_text_key_and_never_calls_writer",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_episode_automation",
+      "case": "test_fake_pipeline_to_real_mp4[15-\\ubcc4-rabbit-claude-sonnet-4-6]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_episode_automation",
+      "case": "test_fake_pipeline_to_real_mp4[35-\\ub2ec-penguin-gpt-4.1-mini]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_episode_automation",
+      "case": "test_fake_pipeline_to_real_mp4[60-\\ubcc4-rabbit-claude-sonnet-4-6]",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_episode_automation",
+      "case": "test_approval_edit_revision_and_unknown_never_replayed",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_episode_automation",
+      "case": "test_duration_change_requires_new_script_and_preserves_snapshot",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_episode_automation",
+      "case": "test_selected_model_is_frozen_after_script",
+      "result": "PASS"
+    },
+    {
+      "module": "tests.test_character_episode_automation",
+      "case": "test_sound_off_is_local_edit_without_more_authoring_or_paid_execution",
+      "result": "PASS"
+    }
+  ],
+  "sourceSha256": {
+    "src/newsflow/character/direct_video.py": "a2842f0460b644a71a9454656b2f340bba3c3e321f371c2045608dd52aee522d",
+    "src/newsflow/character/episode_service.py": "6a7bda8314143db7e768332a3cef56084c5a84971059a83bd878ad3d557456d9",
+    "frontend/src/studio/core/CharacterStudio.tsx": "21848a570172edf96f086182da88ef15577edb692fa5a243aeb782b55bbf232c",
+    "tests/test_character_direct_continuity.py": "b9ad27fca21ee8172cd015c436f93ad53926b6aad54fe9530336a67a7af6a1be",
+    "tests/test_character_direct_browser.py": "60915717f96b1111aae18f8701a038339d6a207696872f892a71856b82e26149"
+  },
+  "protection": {
+    "operatingFilesChanged": false,
+    "restartPerformed": false,
+    "dbKeysMediaBackupsChanged": false,
+    "mainOrPr35Changed": false,
+    "paidOrSnsCalls": 0,
+    "automaticPaidRetry": false
+  },
+  "notVerified": [
+    "Real provider continuity/artistic quality",
+    "New mode in operating Chrome before approved restart"
+  ]
+}

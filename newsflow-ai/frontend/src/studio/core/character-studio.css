@@ -1279,3 +1279,12 @@
 }
 .core-studio[data-module="characters"] .kling-generation-progress small {font-size:11px;color:#a3bdd9;}
 .core-studio[data-module="characters"] .kling-generation-progress p {font-size:11px;line-height:1.5;}
+
+.core-studio[data-module="characters"] .character-direct-mode{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.core-studio[data-module="characters"] .character-direct-mode button{flex:1;min-width:120px;padding:9px 8px;border:1px solid #304c72;border-radius:7px;background:#10223b;color:#bbc9dd;font-size:12px}
+.core-studio[data-module="characters"] .character-direct-mode button[aria-pressed="true"]{background:linear-gradient(110deg,#6b2dee,#2553e4);border-color:#a07aff;color:#fff;font-weight:700}
+
+.core-studio[data-module="characters"] .character-direct-extension{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:12px}
+.core-studio[data-module="characters"] .character-direct-extension input{width:16px;height:16px;flex:0 0 16px;margin:0}
+
+.core-studio[data-module="characters"] .character-direct-mode button{white-space:nowrap;font-size:11px}

@@ -50,9 +50,12 @@ class EpisodeFlow:
     def __init__(self, owner):
         self.owner = owner
 
-    def create(self, topic, episode_limit, *, reference, settings, request_id, profile):
-        # The registry supplies a validated, user-confirmed snapshot; never a mascot fallback.
-        if not isinstance(profile, dict) or not profile.get('id'):
+    def create(self, topic, episode_limit, *, reference, settings, request_id, profile=None, reference_asset='', direct_video=False, direct_extension=False):
+        reference_only = profile is None
+        if reference_only:
+            from .reference_character import reference_snapshot
+            profile = reference_snapshot(reference, reference_asset)
+        elif not isinstance(profile, dict) or not profile.get('id') or reference_asset:
             raise CharacterError('reference')
         topic = clean_topic(topic, 150)
         if not re.fullmatch(r'[a-f0-9]{32}', request_id or ''):
@@ -68,13 +71,18 @@ class EpisodeFlow:
         raw = normalize_reference(reference)
         reference_hash = hashlib.sha256(raw).hexdigest()
         from .registry import CharacterProfile, PROFILE_ID, ASSET_ID
-        if (not PROFILE_ID.fullmatch(profile['id']) or not ASSET_ID.fullmatch(profile.get('asset', ''))
+        if ((not reference_only and not PROFILE_ID.fullmatch(profile['id'])) or not ASSET_ID.fullmatch(profile.get('asset', ''))
                 or profile['asset'][7:-4] != hashlib.sha256(reference).hexdigest()):
             raise CharacterError('reference')
         validated = CharacterProfile.model_validate({k: profile[k] for k in CharacterProfile.model_fields if k in profile})
         profile = {**validated.model_dump(), **{k: deepcopy(profile[k]) for k in
                    ('id', 'revision', 'asset', 'reference_image') if k in profile}}
-        identity = fp([topic, reference_hash, frozen, str(per), profile])
+        identity = fp([topic, reference_hash, frozen, str(per), profile]+(['direct_topic_v1',bool(direct_extension)] if direct_video else []))
+        plan = planned_direct = None
+        if direct_video:
+            from .direct_video import make_plan, prompts as direct_prompts
+            plan=make_plan(topic,chosen['duration'],model,allow_continuation=direct_extension)
+            planned_direct=direct_prompts(plan,chosen,profile)
         s = self.owner
         with s.lock():
             for existing in s.listing():
@@ -94,6 +102,11 @@ class EpisodeFlow:
                    'duration': chosen['duration'], 'events': [], 'scenes': [], 'reported_billed_usd': None,
                    'made_for_kids': False, 'studio_selection': frozen,
                    'studio_request_id': request_id, 'studio_body_hash': identity}
+            if reference_only:job['character_reference_mode']='image_topic'
+            if direct_video:
+                job.update(direct_video=True,direct_extension=direct_extension,state='script_review',script=dump(plan),
+                    prompts=planned_direct,text_provider_calls=0)
+                job['script_hash']=fp(job['script']);job['plan_hash']=s.plan_hash(job)
             s.save(job)
             return identifier, True
 
@@ -102,6 +115,9 @@ class EpisodeFlow:
         model = CATALOG.model(chosen['video_model'])
         if not model:
             raise CharacterError('provider')
+        if job.get('direct_video'):
+            from .direct_video import validate_plan
+            return validate_plan(value,job['duration'],model,job['topic'],allow_continuation=job.get('direct_extension',False))
         return validate_episode(value, job['duration'], model, chosen['sound'] == 'on')
 
     def write(self, identifier, *, consent=False, review_token='', review_consent=False):
@@ -219,7 +235,7 @@ class EpisodeFlow:
         s = self.owner
         with s.lock():
             job = s.read(identifier)
-            if job['state'] not in {'script_review', 'quoted'} or job.get('quote_approvals') or expected_hash != fp(job['script']):
+            if job.get('direct_video') or job['state'] not in {'script_review', 'quoted'} or job.get('quote_approvals') or expected_hash != fp(job['script']):
                 raise CharacterError('blocked')
             story = self.validate(job, script)
             if job.get('scenes'):
@@ -244,7 +260,10 @@ class EpisodeFlow:
                 raise CharacterError('blocked')
             story = self.validate(job, job['script'])
             chosen = check(job['studio_selection'])
-            planned = prompts(story, chosen, job['character'])
+            if job.get('direct_video'):
+                from .direct_video import prompts as direct_prompts
+                planned=direct_prompts(story,chosen,job['character'])
+            else:planned = prompts(story, chosen, job['character'])
             folder = s.folder(identifier)
             if digest(folder / 'reference.png') != job['reference_sha256']:
                 raise CharacterError('reference')
@@ -355,9 +374,13 @@ class EpisodeFlow:
                 raise CharacterError('media')
         else:
             binary = str(FFmpegAdapter.executable('ffmpeg', s.ffmpeg))
+            # Direct continuation uses the actual final decoded frame. Decode only
+            # the final second, reverse that bounded tail and take its first frame.
+            tail = ['-sseof', '-1'] if job.get('direct_video') else ['-sseof', '-0.1']
+            filters = ['-vf', 'reverse'] if job.get('direct_video') else []
             run([binary, '-nostdin', '-n', '-v', 'error', '-protocol_whitelist', 'file',
-                 '-format_whitelist', FORMAT_WHITELIST, '-sseof', '-0.1', '-i', str(clip.resolve()),
-                 '-frames:v', '1', '-update', '1', str(output.resolve())], folder)
+                 '-format_whitelist', FORMAT_WHITELIST, *tail, '-i', str(clip.resolve()),
+                 *filters, '-frames:v', '1', '-update', '1', str(output.resolve())], folder)
             reference_bytes(output)
             parent['last_frame_sha256'] = digest(output)
             s.save(job)
@@ -437,7 +460,11 @@ class EpisodeFlow:
                         continue
                     if fp(row['payload']) != row['approved_template_hash']:
                         raise CharacterError('blocked')
-                    # The only dynamic field is the approved dependency's verified last frame.
+                    context_hash = None
+                    if job.get('direct_video'):
+                        from .direct_video import verify_continuation
+                        context_hash = verify_continuation(job, row, parent)
+                    # Context/prompt was quoted up front. Only the verified frame changes.
                     frame = self.last_frame(job, parent)
                     row['state'] = 'preparing_dependency'
                     s.save(job)
@@ -454,6 +481,8 @@ class EpisodeFlow:
                             'position': parent['position'], 'attempt': parent['attempt'],
                             'clip_sha256': parent['sha256'], 'frame_sha256': digest(frame)},
                             execution_quote_usd=str(quote))
+                        if context_hash is not None:
+                            row['dependency']['context_sha256'] = context_hash
                         s.save(job)
                     except Exception:
                         if row['state'] == 'preparing_dependency':

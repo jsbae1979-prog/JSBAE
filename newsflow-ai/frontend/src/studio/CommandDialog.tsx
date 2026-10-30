@@ -783,7 +783,7 @@ export function CommandDialog({
                 <section aria-label="실제 합성 대상 영상 검토">
                   <p>
                     저장된 실제 영상 {localRender.clips.length}개를 내 PC의
-                    FFmpeg로 연결·저장합니다. {localRender.job?.automation_version===1
+                    FFmpeg로 연결·저장합니다. {localRender.job?.automation_version===1&&!localRender.job?.directVideo
                       ? "검토한 자막·코믹 효과음을 더하고 장면의 환경음을 연결합니다. 새 음성·나레이션은 추가하지 않습니다."
                       : "자막이나 새 음성·나레이션은 추가하지 않고, 장면에 포함된 원래 소리만 유지합니다."}
                     새 AI 생성이나 외부 전송은 실행하지 않습니다.

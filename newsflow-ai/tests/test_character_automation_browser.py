@@ -28,6 +28,8 @@ def test_registered_profiles_openai_script_editor_and_responsive_layout(app,brow
     with local_server(app) as origin:
         context=browser.new_context(viewport={'width':1920,'height':1080})
         context.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
+        context.route('**/api/studio/characters/*/story-review',lambda route:route.fulfill(
+            json={'ready':True,'review':{'token':'','count':0,'held_usd':'0'}}))
         page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
         page.goto(origin+'/studio/characters')
         page.get_by_role('button',name='내 캐릭터',exact=True).click()
@@ -93,7 +95,7 @@ def test_pending_topic_response_cannot_switch_character_or_start_another_request
         picker=page.get_by_label('저장된 캐릭터',exact=True);picker.select_option('profile:'+first['id'])
         page.get_by_text('주제 자동 생성·기록',exact=True).click()
         page.get_by_label('주제 개수',exact=True).fill('1')
-        page.get_by_label('주제 생성 유료 요청에 동의합니다.',exact=True).check()
+        expect(page.get_by_label('주제 생성 유료 요청에 동의합니다.',exact=True)).to_have_count(0)
         try:
             page.get_by_role('button',name='주제 자동 생성',exact=True).click()
             assert called.wait(5)
@@ -223,7 +225,7 @@ def test_analysis_failure_is_visible_in_modal_footer_and_preserves_draft(app,bro
         dialog.get_by_role('textbox',name='캐릭터 이름',exact=True).fill('보존할 합성 캐릭터')
         dialog.get_by_role('textbox',name='성격',exact=True).fill('천천히 주변을 살펴보는 성격')
         dialog.get_by_text('AI로 특징 초안 만들기 · 선택 사항',exact=True).click()
-        dialog.get_by_label('선택한 AI에 참조 이미지를 전송하는 유료 분석에 동의합니다.',exact=True).check()
+        expect(dialog.get_by_label('선택한 AI에 참조 이미지를 전송하는 유료 분석에 동의합니다.',exact=True)).to_have_count(0)
         dialog.get_by_role('button',name='이미지로 특징 초안 만들기',exact=True).click()
         alert=dialog.get_by_role('alert')
         expect(alert).to_have_text('특징 초안을 만들지 못했습니다.'+(' 외형 설명: 글자 수 초과' if failure_kind=='schema' else ''))
@@ -267,8 +269,7 @@ def test_compact_reference_and_topic_controls_preserve_explicit_actions(app,brow
         assert page.get_by_label('스토리 주제',exact=True).bounding_box()['y']<tools.bounding_box()['y']
         page.get_by_text('주제 자동 생성·기록',exact=True).click()
         consent=page.get_by_label('주제 생성 유료 요청에 동의합니다.',exact=True)
-        box=consent.bounding_box();assert box and box['width']<=20 and box['height']<=20
-        assert consent.locator('..').evaluate('(e)=>getComputedStyle(e).flexDirection')=='row'
+        expect(consent).to_have_count(0)
         assert page.get_by_label('주제 개수',exact=True).bounding_box()['width']<=90
         expect(tools.locator('.character-batch')).to_have_count(0)
         expect(tools.locator('.character-topic-import')).to_have_count(0)

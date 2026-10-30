@@ -240,6 +240,8 @@ def character_rows(state):
                 "state",
                 "created_at",
                 "automation_version",
+                "direct_video",
+                "direct_extension",
                 "character_id",
                 "script_hash",
                 "script",
@@ -282,18 +284,25 @@ def character_rows(state):
         item["reviewWarnings"] = [job["character"]["style_warn"]] if job.get("character",{}).get("style_warn") else []
         item["story"] = job.get("script")
         if job.get("automation_version") == 1:
-            item["characterProfile"] = job.get("character", {})
+            item["characterProfile"] = None if job.get("character_reference_mode")=="image_topic" else job.get("character", {})
+            item["referenceMode"] = job.get("character_reference_mode", "registered")
         if job.get("regeneration"):
             item["regeneration"] = {k: job["regeneration"][k] for k in
                 ("position", "affected", "quote_total_usd", "exposure_usd", "total_after_usd", "at") if k in job["regeneration"]}
-        if job.get('automation_version') == 1 and job.get('script'):
+        item['directVideo']=job.get('direct_video') is True
+        if job.get('direct_video'):
+            from newsflow.character.direct_video import DirectVideoPlan,timeline
+            item['editTimeline']=timeline(DirectVideoPlan.model_validate(job['script']))
+            item['playback_seconds']=job['duration'];item['sfx_keys']=[]
+        if job.get('automation_version') == 1 and job.get('script') and not job.get('direct_video'):
             from newsflow.character.episode_story import EpisodeScript
             from newsflow.character.editing import total_playback_seconds, load_edit_presets, load_sfx_map, edit_timeline
             parsed = EpisodeScript.model_validate(job['script'])
             item['playback_seconds'] = total_playback_seconds(parsed, load_edit_presets())
             item['editTimeline'] = edit_timeline(parsed, job['duration'])
             item['sfx_keys'] = list(load_sfx_map())
-            item['characterProfile'] = job.get('character', {})
+            item['characterProfile'] = None if job.get('character_reference_mode')=='image_topic' else job.get('character', {})
+            item['referenceMode'] = job.get('character_reference_mode', 'registered')
         item["quote"] = job.get("quote_total_usd")
         item["referenceUrl"] = (
             f"/api/studio/characters/{job['id']}/reference" if job.get("reference_sha256") else None

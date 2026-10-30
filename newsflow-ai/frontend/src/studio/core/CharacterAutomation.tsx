@@ -47,7 +47,7 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
   const [editing, setEditing] = useState(false), [record, setRecord] = useState<Item | null>(null);
   const [draft, setDraft] = useState(blankProfile), [asset, setAsset] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  const [consent, setConsent] = useState(false), [candidates, setCandidates] = useState<Item[]>([]);
+  const [candidates, setCandidates] = useState<Item[]>([]);
   const [speciesReview, setSpeciesReview] = useState<{original:string;characters:number}|null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const sending = useRef(false), form=useRef<HTMLFormElement>(null), formId=useId();
@@ -57,7 +57,7 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
     // A viewed job keeps its historical snapshot. Editing targets the current
     // registered profile, including its matching reference and revision.
     const current = row ? profiles.find(profile=>profile.id===row.id) ?? row : null;
-    setRecord(current); setEditing(true); setError(""); setCandidates([]); setConsent(false); setSpeciesReview(null);
+    setRecord(current); setEditing(true); setError(""); setCandidates([]); setSpeciesReview(null);
     const base = blankProfile();
     setDraft(current ? Object.fromEntries(Object.keys(base).map(k => [k, current[k] ?? base[k as keyof typeof base]])) as typeof base : base);
     setAsset(current?.asset ?? "");
@@ -76,14 +76,14 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
       if (!reference) throw Error("참조 이미지를 업로드하거나 저장한 이미지를 선택하세요.");
       setAsset(reference);
       if (kind === "analyze") {
-        if (!consent || !available) throw Error("이미지 분석 전송과 유료 요청 승인을 확인하세요.");
+        if (!available) throw Error("선택한 AI의 저장된 연결 설정을 확인하세요.");
         const result = await characterCommand("/api/studio/characters/profiles/analyze", csrf,
           { asset: reference, model, request_id: crypto.randomUUID().replaceAll("-", ""), consent: "true" });
         const review = result.needs_review?.find((item:Item)=>item.field==='species'&&item.reason==='string_too_long');
         setSpeciesReview(review&&typeof review.original==='string'&&review.original.length<=400
           ?{original:review.original,characters:review.characters}:null);
         setDraft(v => ({ ...v, species: result.species, appearance: result.appearance, style_lock: result.style_suggestion }));
-        setCandidates(result.candidates ?? []); setConsent(false);
+        setCandidates(result.candidates ?? []);
       } else {
         const row = await characterCommand("/api/studio/characters/profiles/save", csrf,
           { asset: reference, profile: JSON.stringify(draft), identifier: record?.id ?? "", revision: String(record?.revision ?? 0) });
@@ -164,9 +164,8 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
         </details>
         <details className="character-profile-ai"><summary>AI로 특징 초안 만들기 · 선택 사항</summary>
           <fieldset disabled={disabled||busy}>
-            <label className="check"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>선택한 AI에 참조 이미지를 전송하는 유료 분석에 동의합니다.</label>
-            <button type="button" disabled={!consent||!available} onClick={()=>void act('analyze')}>이미지로 특징 초안 만들기</button>
-            <small>요청별 사용 한도를 적용합니다. 직접 입력하여 무료로 등록할 수도 있습니다.</small>
+            <button type="button" disabled={!available} onClick={()=>void act('analyze')}>이미지로 특징 초안 만들기</button>
+            <small>선택한 AI로 이미지를 분석합니다. 저장한 요청당 한도를 적용합니다.</small>
             {candidates.length>0&&<div className="character-profile-actions">{candidates.map((p,i)=><button type="button" key={i} onClick={()=>setDraft(v=>({...v,name_ko:p.name_ko,personality:p.personality,comedy_formula:p.comedy_formula}))}>{p.name_ko} 선택</button>)}</div>}
           </fieldset>
         </details>
@@ -190,11 +189,10 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
 }) {
   const [rows, setRows] = useState<Item[]>([]), [count, setCount] = useState(10);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  const [consent, setConsent] = useState(false);
   const sending = useRef(false);
   const topicStates: Record<string,string> = {new:"미사용",script_requested:"스토리 요청",scripted:"대본 작성",produced:"영상 완료",skipped:"보류"};
   useEffect(() => {
-    setRows([]); setError(""); setConsent(false); let active = true;
+    setRows([]); setError(""); let active = true;
     if (profile) fetch(`/api/studio/characters/profiles/${profile.id}/topics`, { credentials: "same-origin" })
       .then(async response => {if (!response.ok) throw Error("저장한 주제를 불러오지 못했습니다.");return response.json();})
       .then(data => {if (active) setRows(data.topics ?? []);})
@@ -205,13 +203,12 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
     if (!profile || sending.current || disabled) return;
     sending.current = true; setBusy(true); onBusy(true); setError("");
     try {
-      if (kind === "generate" && (!consent || !available || !Number.isInteger(count) || count < 1 || count > 50))
-        throw Error("주제 개수와 유료 요청 동의를 확인하세요.");
+      if (kind === "generate" && (!available || !Number.isInteger(count) || count < 1 || count > 50))
+        throw Error("주제 개수와 저장된 AI 설정을 확인하세요.");
       const data = await characterCommand(`/api/studio/characters/profiles/${profile.id}/topics/${kind}`, csrf,
         kind === "generate" ? {count: String(count), model, consent: "true", request_id: crypto.randomUUID().replaceAll("-", "")}
           : {topic});
       setRows(previous => data.topics ?? [...previous.filter(row => row.id !== data.id), data]);
-      setConsent(false);
     } catch (error) {
       setError(`${kind === "generate" ? "주제 생성" : "주제 저장"}: ${error instanceof Error ? error.message : "저장 상태를 확인하세요."}`);
     } finally {sending.current = false; setBusy(false); onBusy(false);}
@@ -220,9 +217,9 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
     <fieldset disabled={disabled || busy || !profile}>
       <div className="character-topic-create">
         <label>주제 개수<input type="number" min={1} max={50} value={count} onChange={e=>setCount(Number(e.target.value))} /></label>
-        <button disabled={!consent || !available || !Number.isInteger(count) || count<1 || count>50} onClick={()=>void act("generate")}>주제 자동 생성</button>
+        <button disabled={!available || !Number.isInteger(count) || count<1 || count>50} onClick={()=>void act("generate")}>주제 자동 생성</button>
       </div>
-      <label className="check"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} />주제 생성 유료 요청에 동의합니다.</label>
+
       <div className="character-topic-record-head"><span>저장한 주제 {rows.length}개</span>
         <button className="character-topic-save" disabled={!topic.trim()} onClick={()=>void act("manual")}>입력한 주제 저장</button></div>
       <div className="character-topic-list">{rows.map(row=><div key={row.id}>

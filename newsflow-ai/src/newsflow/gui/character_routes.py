@@ -68,7 +68,7 @@ def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False
     try:
         service.consent(consent)
         job=service.read(job_id)
-        if not job.get('studio_selection'): raise CharacterError('blocked')
+        if not job.get('studio_selection') or job.get('direct_video'): raise CharacterError('blocked')
         if job.get('automation_version') == 1:
             from .character_automation_routes import authoring
             service.authoring = authoring(request)
@@ -81,7 +81,8 @@ def auto_story(request: Request, job_id: str=Form(...), consent: bool=Form(False
         elif job['state']!='script_review':
             raise CharacterError('blocked')
         completed = service.read(job_id)
-        if completed.get('automation_version') == 1 and completed['state'] == 'script_review':
+        if (completed.get('automation_version') == 1 and completed['state'] == 'script_review'
+                and completed.get('character_reference_mode') != 'image_topic'):
             from .character_automation_routes import topics
             store = topics(request)
             row = store.add(completed['character_id'], completed['topic'])
@@ -201,9 +202,8 @@ def studio(request: Request, job_id: str = '', reference_asset: str = ''):
 def create(request: Request, reference: Annotated[UploadFile | None, File()] = None, topic: str=Form(...),
            episode_limit: str=Form(...),day_limit: str=Form(''), script_model: str=Form(''),
            video_model: str=Form(''), reference_asset: str=Form(''), reference_job: str=Form(''),
-           studio_settings: str=Form(''), request_id: str=Form(''), character_id: str=Form(''), character_revision: int=Form(0)):
-    if not character_id:
-        return JSONResponse({'error':'캐릭터 제작실에서 등록된 캐릭터를 선택해 새 작업을 시작하세요.'}, status_code=422)
+           studio_settings: str=Form(''), request_id: str=Form(''), character_id: str=Form(''), character_revision: int=Form(0), creation_mode: str=Form('story'), direct_extension: bool=Form(False)):
+    if creation_mode not in {'story','direct'}:return JSONResponse({'error':'제작 방식을 확인하세요.'},status_code=422)
     if studio_settings:
         import json
         try:
@@ -223,12 +223,29 @@ def create(request: Request, reference: Annotated[UploadFile | None, File()] = N
                 raw = request.app.state.image_studio.asset(profile['asset']).read_bytes()
                 topics(request).add(character_id, topic)
                 identifier, created = service.create_episode(topic, episode_limit, reference=raw,
-                    settings=parsed, request_id=request_id, profile=profile)
+                    settings=parsed, request_id=request_id, profile=profile,direct_video=creation_mode=='direct',direct_extension=direct_extension)
                 return JSONResponse({'id': identifier, 'created': created, 'state': service.read(identifier)['state']})
-            raise CharacterError('reference')
-        except (ValueError,OSError,*SAFE_ERRORS):
+            if sum((bool(reference and reference.filename),bool(reference_asset),bool(reference_job))) != 1:
+                raise CharacterError('reference')
+            images=request.app.state.image_studio
+            if reference:
+                if reference.content_type not in {'image/png','image/jpeg'}:raise CharacterError('reference')
+                raw=reference.file.read(10*1024*1024+1)
+                if not raw or len(raw)>10*1024*1024:raise CharacterError('reference')
+                reference_asset=images.asset_bytes(raw)
+            elif reference_job:
+                old=service.read(reference_job);source=service.folder(reference_job)/'reference.png'
+                if source.is_symlink() or source.is_junction() or digest(source)!=old['reference_sha256']:
+                    raise CharacterError('reference')
+                reference_asset=images.asset_bytes(source.read_bytes())
+            raw=images.asset(reference_asset).read_bytes()
+            identifier,created=service.create_episode(topic,episode_limit,reference=raw,settings=parsed,
+                request_id=request_id,reference_asset=reference_asset,direct_video=creation_mode=='direct',direct_extension=direct_extension)
+            return JSONResponse({'id':identifier,'created':created,'state':service.read(identifier)['state'],
+                                 'referenceMode':'image_topic'})
+        except (ValueError,OSError,PublishingError,*SAFE_ERRORS):
             return JSONResponse({'error':'참조 이미지와 새 작업 설정을 확인하세요.'},status_code=422)
-    return JSONResponse({'error':'캐릭터 제작실에서 등록된 캐릭터를 선택해 새 작업을 시작하세요.'}, status_code=422)
+    return JSONResponse({'error':'참조 이미지와 스토리 주제를 선택하세요.'}, status_code=422)
 
 
 @router.post('/character/{job_id}/{action}')

@@ -80,6 +80,13 @@ def retime_studio_story(story, settings):
 
 def generation_rows(job):
     """New quotes share one film setup and continue the preceding saved action."""
+    if job.get('direct_video'):
+        from .direct_video import validate_plan, prompts as direct_prompts
+        from .kling import check
+        from newsflow.video_models.catalog import CATALOG
+        chosen=check(job['studio_selection'])
+        plan=validate_plan(job['script'],job['duration'],CATALOG.model(job['model']),job['topic'],allow_continuation=job.get('direct_extension',False))
+        return direct_prompts(plan,chosen,job['character'])
     if job.get('automation_version')==1:
         from .episode_story import validate_episode, prompts as episode_prompts
         from .kling import check
@@ -140,9 +147,10 @@ class CharacterService:
         self.ffprobe = Path(ffprobe) if ffprobe is not None else None
         self.daily_limit_approval = None  # Compatibility hook for older trial installers; no daily execution gate.
 
-    def create_episode(self, topic, episode_limit, *, reference, settings, request_id, profile):
+    def create_episode(self, topic, episode_limit, *, reference, settings, request_id, profile=None, reference_asset='', direct_video=False, direct_extension=False):
         from .episode_service import EpisodeFlow
-        return EpisodeFlow(self).create(topic,episode_limit,reference=reference,settings=settings,request_id=request_id,profile=profile)
+        return EpisodeFlow(self).create(topic,episode_limit,reference=reference,settings=settings,
+            request_id=request_id,profile=profile,reference_asset=reference_asset,direct_video=direct_video,direct_extension=direct_extension)
 
     def edit_episode(self, identifier, script, expected_hash):
         from .episode_service import EpisodeFlow
@@ -207,7 +215,10 @@ class CharacterService:
             if result.get('script'):
                 from .studio_story import StudioStoryboard
                 from .episode_story import EpisodeScript
-                schema=EpisodeScript if result.get('automation_version')==1 else StudioStoryboard if result.get('studio_selection') else Storyboard
+                from .direct_video import DirectVideoPlan
+                schema=(DirectVideoPlan
+                        if result.get('direct_video') else EpisodeScript if result.get('automation_version')==1
+                        else StudioStoryboard if result.get('studio_selection') else Storyboard)
                 script=schema.model_validate(result['script'])
                 if result.get('automation_version')!=1 and sum(s.seconds for s in script.scenes)!=result['duration']: raise ValueError
                 assert result['plan_hash'] == self.plan_hash(result)

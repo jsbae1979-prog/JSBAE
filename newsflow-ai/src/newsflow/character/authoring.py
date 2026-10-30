@@ -171,7 +171,10 @@ def analysis_failure_message(error, failure):
     if isinstance(error, CharacterError):
         if error.code == 'consent': return '이미지 분석 전송 동의 필요'
         if error.code == 'reference': return '분석할 캐릭터 이미지 확인 필요'
-        if error.code == 'budget': return 'API 사용 승인·1회 한도 확인 필요'
+        if error.code == 'budget':
+            if isinstance(failure, dict) and failure.get('reason') == 'unresolved_requests':
+                return '같은 작업의 결과가 미확정이거나 처리 중입니다. 기존 요청 상태를 확인하세요.'
+            return '저장된 AI 설정과 요청당 사용 한도를 확인하세요.'
     return '이미지 분석을 완료하지 못했습니다'
 
 
@@ -359,6 +362,13 @@ class AuthoringAI:
                 reservation = self.budget.reserve_episode_story(provider=provider, request_id=request_id,
                     model=options.model, max_output_tokens=options.max_tokens, key_store=store,
                     story_review=story_review)
+            elif callable(getattr(self.budget, 'reserve_character', None)):
+                from .request_scope import operation_for
+                operation = operation_for(kind=kind, instruction=instruction, payload=payload,
+                    model=options.model, request_id=request_id, image_bytes=image_bytes)
+                reservation = self.budget.reserve_character(operation=operation,
+                    provider=provider,request_id=request_id,kind=kind,
+                    model=options.model,max_output_tokens=options.max_tokens,key_store=store)
             else:
                 reservation = self.budget.reserve(provider=provider,request_id=request_id,kind=kind,
                     model=options.model,max_output_tokens=options.max_tokens,key_store=store)

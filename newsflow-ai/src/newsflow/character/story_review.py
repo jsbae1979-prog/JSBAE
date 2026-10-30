@@ -144,6 +144,15 @@ def preview(service, authoring, job_id):
             if upper > min(settings.request_limit_usd, Decimal(context['episode_limit'])):
                 raise ReviewBlocked('limit')
             state = document(session, settings, rows, context)
+            # Do not repeat an already recorded exact-journal review for a
+            # different new episode. Fresh or changed unknowns still require
+            # the existing explicit review and are not silently acknowledged.
+            from .request_scope import operation_for, unrelated_unknown_ids, previously_reviewed_ids
+            operation = operation_for(kind='script',instruction='',payload={},model=context['model'],
+                                      request_id=context['request_id'])
+            reusable = unrelated_unknown_ids(rows, operation, previously_reviewed_ids(session,settings,rows))
+            if state['ids'] and state['ids'] <= reusable:
+                state = {**state,'token':'','count':0,'held_usd':'0'}
         return {'ready': True, 'review': {name: state[name] for name in empty},
                 'message': UNRESOLVED if state['token'] else ''}
     except ReviewBlocked as error:
