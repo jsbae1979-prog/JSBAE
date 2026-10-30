@@ -31,7 +31,7 @@ import {
   type Controller,
 } from "./shared";
 import "./character-studio.css";
-import { CharacterProfiles, CharacterTopics, CharacterScriptEditor, CharacterRegeneration } from "./CharacterAutomation";
+import { CharacterModal, CharacterProfiles, CharacterTopics, CharacterScriptEditor, CharacterRegeneration } from "./CharacterAutomation";
 
 import {
   adjustModel,
@@ -484,6 +484,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings),
     [tab, setTab] = useState("upload");
   const [file, setFile] = useState<File | null>(null);
+  const [referencePreview, setReferencePreview] = useState(false);
   const [activeProfile, setActiveProfile] = useState<Item | null>(null);
   const [scriptDirty, setScriptDirty] = useState(false);
   const [automationBusy, setAutomationBusy] = useState(false);
@@ -750,15 +751,15 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       if (!response.ok || !/^studio-[a-f0-9]{64}\.png$/.test(data.id ?? ""))
         throw Error(typeof data.detail === "string" ? data.detail : "캐릭터를 저장하지 못했습니다. 이미지와 저장 공간을 확인하세요.");
       setAsset(data.id);
-      setLibraryMessage(data.created ? "내 캐릭터에 저장했습니다." : "이미 저장된 캐릭터입니다.");
+      setLibraryMessage(data.created ? "참조 이미지를 보관했습니다. 특징을 등록하면 내 캐릭터로 사용할 수 있습니다." : "이미 보관된 참조 이미지입니다.");
       try {
         await c.load();
       } catch {
-        setLibraryMessage("캐릭터는 저장됐습니다. 내 캐릭터 목록을 보려면 화면을 새로고침하세요.");
+        setLibraryMessage("참조 이미지는 보관됐습니다. 목록을 보려면 화면을 새로고침하세요.");
       }
       return data.id as string;
     } catch (error) {
-      setLibraryMessage(error instanceof Error ? error.message : "저장 결과를 확인하지 못했습니다. 내 캐릭터 목록을 확인하세요.");
+      setLibraryMessage(error instanceof Error ? error.message : "저장 결과를 확인하지 못했습니다. 저장한 참조 이미지 목록을 확인하세요.");
     } finally {
       librarySending.current = false;
       setLibraryBusy(false);
@@ -1114,7 +1115,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const scriptAvailable = scriptProvider?.configured === true;
   async function ensureProfileAsset() {
     if (file) return await saveReference(file) ?? "";
-    return asset || activeProfile?.asset || "";
+    if (asset || activeProfile?.asset) return asset || activeProfile?.asset;
+    const existing = clonedReference || selectedReference;
+    if (existing) {
+      const response=await fetch(existing,{credentials:"same-origin"});
+      if(!response.ok)throw Error("기존 참조 이미지를 불러오지 못했습니다.");
+      const blob=await response.blob();
+      if(blob.size>10*1024*1024)throw Error("참조 이미지 크기를 확인하세요.");
+      return await saveReference(new File([blob],"기존 참조 이미지.png",{type:"image/png"}))??"";
+    }
+    return "";
   }
   function selectProfile(profile: Item | null) {
     reset(); setActiveProfile(profile); setFile(null); setAsset(profile?.asset ?? "");
@@ -1123,6 +1133,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   let elapsed = 0;
   return (
     <>
+      {referencePreview && <CharacterModal title="참조 이미지 미리보기" onClose={()=>setReferencePreview(false)}
+        footer={<button type="button" onClick={()=>setReferencePreview(false)}>닫기</button>}>
+        <div className="character-reference-large">{file?<LocalReference file={file}/>:reference?<img src={String(reference)} alt="선택한 캐릭터 참조 이미지 원본"/>:null}</div>
+      </CharacterModal>}
       <div className="kling-character-approved" aria-busy={isBusy}>
         <div className="kling-character-tools">
           <button onClick={() => setHelp((x) => !x)}>
@@ -1191,19 +1205,27 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             <div className="kling-character-tabs">
               <button
                 aria-pressed={tab === "upload"}
+                disabled={isBusy}
                 onClick={() => setTab("upload")}
               >
                 참조 이미지 업로드
               </button>
               <button
                 aria-pressed={tab === "mine"}
+                disabled={isBusy}
                 onClick={() => setTab("mine")}
               >
                 내 캐릭터
               </button>
             </div>
-            <div className="kling-character-reference-content">
-              <div className="kling-character-reference-image">
+            <CharacterProfiles onBusy={setAutomationBusy} profiles={profiles} selected={activeProfile} onSelect={selectProfile}
+              ensureAsset={ensureProfileAsset} model={settings.script_model} available={scriptAvailable}
+              csrf={c.view?.csrfToken ?? ""} disabled={isBusy} onRefresh={c.load}
+              mode={tab} images={myCharacters} selectedAsset={asset} hasReference={!!reference}
+              onSelectImage={(value)=>{reset();setFile(null);setAsset(value);setActiveProfile(null);}} />
+            <div className="kling-character-reference-content" data-source={tab}>
+              <button type="button" className="kling-character-reference-image" aria-label="참조 이미지 크게 보기"
+                disabled={!reference || isBusy} onClick={()=>setReferencePreview(true)}>
                 {file ? (
                   <LocalReference file={file} />
                 ) : reference ? (
@@ -1216,8 +1238,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 ) : (
                   <Empty>캐릭터 참조 이미지를 선택하세요.</Empty>
                 )}
-              </div>
+              </button>
               <div className="kling-character-reference-options">
+                {tab === "upload" && <>
                 <button
                   className="kling-character-upload"
                   disabled={isBusy}
@@ -1250,13 +1273,15 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       if (checked && file) void saveReference(file);
                     }}
                   />
-                  내 캐릭터에 저장
+                  참조 이미지 보관
                 </label>
-                <small>저장한 이미지는 다시 사용할 수 있습니다.</small>
+                <small>이미지만 보관합니다. 이름과 특징은 캐릭터 등록에서 저장하세요.</small>
                 {libraryBusy && <small role="status">캐릭터 저장 중…</small>}
                 {libraryMessage && <small role="status">{libraryMessage}</small>}
 
-                <h3>최근 사용 캐릭터</h3>
+                </>}
+                {tab === "mine" && <details className="character-recent-references">
+                <summary>최근 작업의 참조 이미지</summary>
                 <div className="kling-character-recent">
                   {jobs
                     .filter((x) => x.referenceUrl && !x.recentHidden)
@@ -1332,9 +1357,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     <small>숨긴 캐릭터가 없습니다.</small>
                   )}
                 </details>
+                </details>}
               </div>
             </div>
-            {selectedReference && job?.id && (
+            {selectedReference && job?.id && job?.automation_version !== 1 && (
               <button
                 type="button"
                 disabled={isBusy}
@@ -1343,32 +1369,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 이 캐릭터로 새 작업
               </button>
             )}
-            {tab === "mine" && myCharacters.length === 0 && !activeProfile && (
-              <Empty>참조 이미지를 업로드하고 내 캐릭터에 저장을 선택하세요.</Empty>
-            )}
-            {tab === "mine" && myCharacters.length > 0 && (
-              <Select
-                label="내 캐릭터"
-                disabled={isBusy}
-                value={asset}
-                onChange={(v) => {
-                  if (story && job?.studio_selection) {
-                    setReferenceJob("");
-                    setFailure("");
-                    pending.current = null;
-                  } else reset();
-                  setAsset(v);
-                  setFile(null);
-                  setActiveProfile(null);
-                }}
-                options={Object.fromEntries(
-                  myCharacters.map((x) => [x.id, x.label]),
-                )}
-              />
-            )}
-            <CharacterProfiles onBusy={setAutomationBusy} key={file ? `${file.name}:${file.size}:${file.lastModified}` : asset} profiles={profiles} selected={activeProfile} onSelect={selectProfile}
-              ensureAsset={ensureProfileAsset} model={settings.script_model} available={scriptAvailable}
-              csrf={c.view?.csrfToken ?? ""} disabled={isBusy} onRefresh={c.load} />
+
           </section>
           <section className="kling-character-card kling-character-story">
             <header>

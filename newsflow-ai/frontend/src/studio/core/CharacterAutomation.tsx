@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { Item } from "../contracts";
 
 export async function characterCommand(path: string, csrf: string, values: Record<string, string>) {
@@ -11,22 +11,47 @@ export async function characterCommand(path: string, csrf: string, values: Recor
 const blankProfile = () => ({ name_ko: "", species: "", appearance: "", personality: "",
   comedy_formula: { world: "", setup: "", reaction: "" },
   style_lock: "", supporting_cast: [] as Item[], audience: "general", made_for_kids: false });
-const fields = [ ["name_ko", "캐릭터 이름", 60], ["species", "종류", 40],
-  ["appearance", "외형 · 영어", 400], ["personality", "성격", 800],
-  ["style_lock", "고정 스타일 · 영어", 600] ] as const;
+export function CharacterModal({title, busy=false, onClose, children, footer}: {
+  title: string; busy?: boolean; onClose:()=>void; children:ReactNode; footer?:ReactNode;
+}) {
+  const dialog=useRef<HTMLDialogElement>(null), titleId=useId();
+  useEffect(()=>{
+    const previous=document.activeElement instanceof HTMLElement?document.activeElement:null;
+    const node=dialog.current;
+    node?.showModal();
+    node?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
+    return ()=>{
+      if(node?.open)node.close();
+      requestAnimationFrame(()=>{
+        if(previous?.isConnected)previous.focus();
+        else document.querySelector<HTMLElement>('[data-character-profile-focus]')?.focus();
+      });
+    };
+  },[]);
+  return <dialog ref={dialog} className="character-modal" aria-labelledby={titleId} aria-modal="true"
+    onCancel={e=>{e.preventDefault();if(!busy)onClose();}}>
+    <header className="character-modal-head"><h2 id={titleId}>{title}</h2>
+      <button type="button" aria-label={`${title} 닫기`} disabled={busy} onClick={onClose}>×</button></header>
+    <div className="character-modal-body">{children}</div>
+    {footer&&<footer className="character-modal-footer">{footer}</footer>}
+  </dialog>;
+}
 
 export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, model, available,
-  csrf, disabled, onRefresh, onBusy }: {
+  csrf, disabled, onRefresh, onBusy, mode, images, selectedAsset, onSelectImage, hasReference }: {
   profiles: Item[]; selected: Item | null; onSelect: (p: Item | null) => void;
   ensureAsset: () => Promise<string>; model: string; available: boolean; csrf: string;
   disabled: boolean; onRefresh: () => Promise<unknown>; onBusy: (value:boolean) => void;
+  mode:string; images:Item[]; selectedAsset:string; onSelectImage:(asset:string)=>void; hasReference:boolean;
 }) {
   const [editing, setEditing] = useState(false), [record, setRecord] = useState<Item | null>(null);
   const [draft, setDraft] = useState(blankProfile), [asset, setAsset] = useState("");
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [consent, setConsent] = useState(false), [candidates, setCandidates] = useState<Item[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const sending = useRef(false);
+  const sending = useRef(false), form=useRef<HTMLFormElement>(null), formId=useId();
+  const imageOnly=images.filter(image=>!profiles.some(p=>p.asset===image.id));
+  const choice=selected?`profile:${selected.id}`:selectedAsset?`image:${selectedAsset}`:"";
   function begin(row: Item | null) {
     setRecord(row); setEditing(true); setError(""); setCandidates([]); setConsent(false);
     const base = blankProfile();
@@ -35,6 +60,7 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
   }
   async function act(kind: "save" | "analyze" | "delete") {
     if (sending.current || disabled) return;
+    if(kind==='save'&&!form.current?.reportValidity())return;
     sending.current = true; setBusy(true); onBusy(true); setError("");
     try {
       if (kind === "delete" && selected) {
@@ -54,64 +80,74 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
       } else {
         const row = await characterCommand("/api/studio/characters/profiles/save", csrf,
           { asset: reference, profile: JSON.stringify(draft), identifier: record?.id ?? "", revision: String(record?.revision ?? 0) });
-        onSelect(row); setEditing(false); await onRefresh();
+        setEditing(false); onSelect(row); await onRefresh();
       }
     } catch (e) { setError(e instanceof Error ? e.message : "캐릭터 정보를 확인하세요."); }
     finally { sending.current = false; setBusy(false); onBusy(false); }
   }
-  return <section className="character-profile-editor" aria-label="캐릭터 프로필">
-    <label>등록된 캐릭터<select aria-label="등록된 캐릭터" disabled={disabled || busy} value={selected?.id ?? ""}
-      onChange={e => { onSelect(profiles.find(p => p.id === e.target.value) ?? null); setEditing(false); }}>
+  return <section className="character-profile-editor" aria-label="캐릭터 선택과 특징">
+    {mode==='mine'&&<label>저장된 캐릭터<select aria-label="저장된 캐릭터" data-character-profile-focus disabled={disabled || busy} value={choice}
+      onChange={e => {
+        const value=e.target.value;
+        if(value.startsWith('profile:'))onSelect(profiles.find(p=>p.id===value.slice(8))??null);
+        else if(value.startsWith('image:'))onSelectImage(value.slice(6));
+        else onSelect(null);
+        setError('');
+      }}>
       <option value="">캐릭터를 선택하세요</option>
-      {selected && !profiles.some(p=>p.id===selected.id) && <option value={selected.id}>{selected.name_ko} · 작업에 보존된 특징</option>}
-      {profiles.map(p => <option key={p.id} value={p.id}>{p.name_ko}</option>)}
-    </select></label>
-    <div className="character-profile-actions">
-      <button disabled={disabled || busy} onClick={() => begin(null)}>새 캐릭터 등록</button>
-      <button disabled={disabled || busy || !selected} onClick={() => begin(selected)}>특징 수정</button>
-      <button disabled={disabled || busy || !selected} onClick={() => setConfirmDelete(true)}>등록 삭제</button>
-    </div>
-    {selected && !editing && <p>{selected.personality}<br /><small>{selected.comedy_formula?.setup} → {selected.comedy_formula?.reaction}</small></p>}
-    {confirmDelete && <div role="alert" className="character-profile-confirm">
-      <p>등록만 삭제합니다. 이전 작업·이미지·영상·비용 기록은 보존됩니다.</p>
-      <button disabled={busy} onClick={() => setConfirmDelete(false)}>취소</button>
-      <button disabled={busy} onClick={() => void act("delete")}>등록 삭제 확인</button>
-    </div>}
-    {editing && <fieldset disabled={disabled || busy}>
-      <legend>{record ? "캐릭터 특징 수정" : "새 캐릭터 특징"}</legend>
-      {record && <button onClick={() => { void ensureAsset().then(value => { if(value)setAsset(value); }).catch(() => setError("참조 이미지를 확인하세요.")); }}>현재 선택 이미지로 교체</button>}
-      <p>실존 인물이나 유명 캐릭터 대신 사용 권한이 있는 캐릭터 이미지를 등록하세요.</p>
-      <label className="check"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} />
-        선택한 AI에 참조 이미지를 전송하는 유료 분석에 동의합니다.</label>
-      <button disabled={!consent || !available} onClick={() => void act("analyze")}>이미지로 특징 초안 만들기</button>
-      <small>설정에 저장된 요청별 사용 한도를 적용합니다. 직접 입력하여 무료로 등록할 수도 있습니다.</small>
-      {candidates.length > 0 && <div className="character-profile-actions">{candidates.map((p, i) =>
-        <button key={i} onClick={() => setDraft(v => ({ ...v, name_ko: p.name_ko, personality: p.personality, comedy_formula: p.comedy_formula }))}>{p.name_ko} 선택</button>)}</div>}
-      {fields.map(([key, label, max]) => <label key={key}>{label}
-        <textarea value={draft[key]} maxLength={max} rows={key === "name_ko" || key === "species" ? 1 : 2}
-          onChange={e => setDraft(v => ({ ...v, [key]: e.target.value }))} />
-      </label>)}
-      {([ ["world", "이야기의 세계"], ["setup", "반복되는 상황"], ["reaction", "캐릭터만의 반응"] ] as const).map(([key,label]) =>
-        <label key={key}>{label}<input value={draft.comedy_formula[key]} maxLength={60}
-          onChange={e => setDraft(v => ({ ...v, comedy_formula: { ...v.comedy_formula, [key]: e.target.value } }))} /></label>)}
-      <details><summary>조연·대상 시청자</summary>
-        <label>대상 시청자<input value={draft.audience} maxLength={80} onChange={e => setDraft(v => ({ ...v, audience: e.target.value }))} /></label>
-        <small>등록 캐릭터 여러 명의 동시 출연은 지원하지 않습니다. 조연은 설명만 저장합니다.</small>
-        {draft.supporting_cast.map((cast, index) => <div key={index} className="character-profile-cast">
-          <label>조연 식별명 · 영문<input value={cast.id} maxLength={40} onChange={e => setDraft(v => ({...v, supporting_cast: v.supporting_cast.map((c,i)=>i===index?{...c,id:e.target.value}:c)}))} /></label>
-          <label>외형 설명 · 영어<textarea value={cast.appearance} maxLength={600} onChange={e=>setDraft(v=>({...v,supporting_cast:v.supporting_cast.map((c,i)=>i===index?{...c,appearance:e.target.value}:c)}))} /></label>
-          <button onClick={()=>setDraft(v=>({...v,supporting_cast:v.supporting_cast.filter((_,i)=>i!==index)}))}>조연 제거</button>
-        </div>)}
-        <button disabled={draft.supporting_cast.length >= 3} onClick={()=>setDraft(v=>({...v,supporting_cast:[...v.supporting_cast,{id:"",appearance:""}]}))}>조연 설명 추가</button>
-      </details>
-      <div className="character-profile-actions"><button onClick={() => setEditing(false)}>취소</button>
-        <button className="primary" onClick={() => void act("save")}>캐릭터 저장</button></div>
-    </fieldset>}
-    {error && <p role="alert">{error}</p>}
-    {busy && <p role="status">처리 중…</p>}
+      {selected && !profiles.some(p=>p.id===selected.id) && <option value={`profile:${selected.id}`}>{selected.name_ko} · 작업에 보존된 특징</option>}
+      {profiles.length>0&&<optgroup label="캐릭터 · 특징 등록 완료">{profiles.map(p=><option key={p.id} value={`profile:${p.id}`}>{p.name_ko}</option>)}</optgroup>}
+      {imageOnly.length>0&&<optgroup label="저장한 참조 이미지 · 특징 미등록">{imageOnly.map(image=><option key={image.id} value={`image:${image.id}`}>{image.label} · 특징 미등록</option>)}</optgroup>}
+    </select></label>}
+    {selected ? <>
+      <div className="character-profile-summary"><strong>{selected.name_ko}</strong><span>특징 등록 완료</span><p>{selected.personality}</p></div>
+      <div className="character-profile-actions"><button type="button" disabled={disabled||busy} onClick={()=>begin(selected)}>특징 수정</button>
+        <button type="button" disabled={disabled||busy} onClick={()=>setConfirmDelete(true)}>등록 삭제</button></div>
+    </>:<>
+      <p className="character-profile-hint">{hasReference?'이미지를 선택했습니다. 이름과 특징을 등록하면 주제·스토리에 사용할 수 있습니다.':mode==='mine'?'저장된 캐릭터를 선택하거나 참조 이미지를 업로드하세요.':'참조 이미지를 업로드한 뒤 캐릭터 이름과 특징을 등록하세요.'}</p>
+      <button type="button" data-character-profile-focus disabled={disabled||busy||!hasReference} onClick={()=>begin(null)}>{mode==='mine'?'이 이미지로 캐릭터 등록':'새 캐릭터 등록'}</button>
+    </>}
+    {confirmDelete&&<CharacterModal title="캐릭터 등록 삭제" busy={busy} onClose={()=>setConfirmDelete(false)} footer={<>
+      <button type="button" disabled={busy} onClick={()=>setConfirmDelete(false)}>취소</button>
+      <button type="button" disabled={busy} onClick={()=>void act('delete')}>등록 삭제 확인</button></>}>
+      <p>등록만 삭제합니다. 이전 작업·이미지·영상·비용 기록은 보존됩니다.</p>{error&&<p role="alert">{error}</p>}
+    </CharacterModal>}
+    {editing&&<CharacterModal title={record?'캐릭터 특징 수정':'새 캐릭터 등록'} busy={busy} onClose={()=>setEditing(false)} footer={<>
+      <button type="button" disabled={busy} onClick={()=>setEditing(false)}>취소</button>
+      <button type="submit" form={formId} disabled={disabled||busy} className="primary">{busy?'처리 중…':'캐릭터 저장'}</button></>}>
+      <form id={formId} ref={form} className="character-profile-form" onSubmit={e=>{e.preventDefault();void act('save');}}>
+        <p>선택한 이미지에 이름과 특징을 저장합니다. 사용 권한이 있는 캐릭터만 등록하세요.</p>
+        <fieldset disabled={disabled||busy} className="character-profile-fields">
+          <label>캐릭터 이름<input data-autofocus required value={draft.name_ko} maxLength={60} onChange={e=>setDraft(v=>({...v,name_ko:e.target.value}))}/></label>
+          <label>종류<input required value={draft.species} maxLength={40} placeholder="예: rabbit" onChange={e=>setDraft(v=>({...v,species:e.target.value}))}/></label>
+          <label>외형 · 영어<textarea required value={draft.appearance} maxLength={400} rows={3} onChange={e=>setDraft(v=>({...v,appearance:e.target.value}))}/></label>
+          <label>성격<textarea required value={draft.personality} maxLength={800} rows={3} onChange={e=>setDraft(v=>({...v,personality:e.target.value}))}/></label>
+          <label className="character-profile-wide">고정 스타일 · 영어<input required value={draft.style_lock} maxLength={600} onChange={e=>setDraft(v=>({...v,style_lock:e.target.value}))}/></label>
+          {([['world','이야기의 세계'],['setup','반복되는 상황'],['reaction','캐릭터만의 반응']] as const).map(([key,label])=><label key={key}>{label}<input required value={draft.comedy_formula[key]} maxLength={60} onChange={e=>setDraft(v=>({...v,comedy_formula:{...v.comedy_formula,[key]:e.target.value}}))}/></label>)}
+        </fieldset>
+        <details className="character-profile-ai"><summary>AI로 특징 초안 만들기 · 선택 사항</summary>
+          <fieldset disabled={disabled||busy}>
+            <label className="check"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>선택한 AI에 참조 이미지를 전송하는 유료 분석에 동의합니다.</label>
+            <button type="button" disabled={!consent||!available} onClick={()=>void act('analyze')}>이미지로 특징 초안 만들기</button>
+            <small>요청별 사용 한도를 적용합니다. 직접 입력하여 무료로 등록할 수도 있습니다.</small>
+            {candidates.length>0&&<div className="character-profile-actions">{candidates.map((p,i)=><button type="button" key={i} onClick={()=>setDraft(v=>({...v,name_ko:p.name_ko,personality:p.personality,comedy_formula:p.comedy_formula}))}>{p.name_ko} 선택</button>)}</div>}
+          </fieldset>
+        </details>
+        <details className="character-profile-extra"><summary>조연·대상 시청자</summary><fieldset disabled={disabled||busy}>
+          <label>대상 시청자<input value={draft.audience} maxLength={80} onChange={e=>setDraft(v=>({...v,audience:e.target.value}))}/></label>
+          <small>조연은 설명만 저장합니다. 등록 캐릭터 여러 명의 동시 출연은 지원하지 않습니다.</small>
+          {draft.supporting_cast.map((cast,index)=><div key={index} className="character-profile-cast">
+            <label>조연 식별명 · 영문<input value={cast.id} maxLength={40} onChange={e=>setDraft(v=>({...v,supporting_cast:v.supporting_cast.map((c,i)=>i===index?{...c,id:e.target.value}:c)}))}/></label>
+            <label>외형 설명 · 영어<textarea rows={2} value={cast.appearance} maxLength={600} onChange={e=>setDraft(v=>({...v,supporting_cast:v.supporting_cast.map((c,i)=>i===index?{...c,appearance:e.target.value}:c)}))}/></label>
+            <button type="button" onClick={()=>setDraft(v=>({...v,supporting_cast:v.supporting_cast.filter((_,i)=>i!==index)}))}>조연 제거</button></div>)}
+          <button type="button" disabled={draft.supporting_cast.length>=3} onClick={()=>setDraft(v=>({...v,supporting_cast:[...v.supporting_cast,{id:'',appearance:''}]}))}>조연 설명 추가</button>
+        </fieldset></details>
+        {error&&<p role="alert" className="character-profile-error">{error}</p>}{busy&&<p role="status">처리 중…</p>}
+      </form>
+    </CharacterModal>}
+    {!editing&&!confirmDelete&&error&&<p role="alert">{error}</p>}
   </section>;
 }
-
 export function CharacterTopics({ profile, model, available, topic, onTopic, csrf, disabled, settings, episodeLimit, jobs, onRefresh, onJob, onBusy }: {
   profile: Item | null; model: string; available: boolean; topic: string; onTopic: (value: string) => void;
   csrf: string; disabled: boolean; settings: Item; episodeLimit: string; jobs: Item[];
