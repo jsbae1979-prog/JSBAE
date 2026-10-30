@@ -28,7 +28,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: character-automation-${{ github.workflow }}-${{ github.ref }}
+  group: character-automation-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 jobs:
   fake-episode-and-react:
@@ -75,11 +75,13 @@ jobs:
         run: |
           python -c "import sys; assert sys.version_info[:2] in ((3,12),(3,14)); print(sys.version)"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          python -m venv .venv
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -m pip install --no-deps -e .
+          .venv/Scripts/python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          python -m pip check
+          .venv/Scripts/python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          .venv/Scripts/python -m pip check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           "PYTHONPATH=$PWD/src;$PWD/tests;$PWD/tools" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Existing FFmpeg tools and Windows Chrome
@@ -126,7 +128,7 @@ jobs:
           )
           # These tests inject Fake providers. The shared synthetic app fixture
           # blocks external DNS/connect and both operating ports (8765/18768).
-          python -m pytest -q -rs --tb=short -p no:cacheprovider --basetemp="$env:RUNNER_TEMP/newsflow-character-automation-${{ matrix.python }}" --junitxml=validation-output/character-automation/results.xml @testFiles
+          .venv/Scripts/python -m pytest -q -rs --tb=short -p no:cacheprovider --basetemp="$env:RUNNER_TEMP/newsflow-character-automation-${{ matrix.python }}" --junitxml=validation-output/character-automation/results.xml @testFiles
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         if: always()
