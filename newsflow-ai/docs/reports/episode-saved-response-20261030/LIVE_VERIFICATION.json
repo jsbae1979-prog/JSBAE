@@ -1,0 +1,84 @@
+{
+  "runtimeSourceSha": "27bcf094d041d6f0cc26a3b448c62b10a1b935c2",
+  "operatingPort": 18768,
+  "operatingPid": 13524,
+  "normalStopStartCycles": 1,
+  "storyPaidRequests": 1,
+  "storyAttempts": 1,
+  "completeResponseSaved": true,
+  "originalResponseHashPreserved": true,
+  "freeRecoveryProviderCalls": 0,
+  "freeRecoverySucceeded": true,
+  "sceneCount": 4,
+  "rawSeconds": [
+    9,
+    13,
+    8,
+    8
+  ],
+  "finalSeconds": 30,
+  "episodeLimitUsd": "10",
+  "officialVideoQuoteUsd": "4.256",
+  "storyUsage": {
+    "prompt_tokens": 3513,
+    "completion_tokens": 1069
+  },
+  "storyCostReservations": [
+    {
+      "attempt": 1,
+      "usd": "0.252000",
+      "basis": "reserved_ceiling_not_actual_bill"
+    }
+  ],
+  "videoSubmissions": 0,
+  "allScenesNotSubmitted": true,
+  "originalAndABPreserved": true,
+  "existingNonDatabaseProfileFilesPreserved": true,
+  "tableCount": 47,
+  "articleCount": 169,
+  "changedDatabaseTables": [
+    "api_request_reservations",
+    "audit_logs"
+  ],
+  "unchangedLaunchAndPolicy": true,
+  "snsCalls": 0,
+  "quoteIsNotActualInvoice": true,
+  "verdict": "ACCEPTED for approved story recovery and quote only",
+  "initialFailure": "Claude returned complete JSON; upload.hashtags lacked the required # prefix. Local validation remained unchanged.",
+  "localEdits": [
+    "Prefixed existing hashtags with #.",
+    "Adjusted raw clip lengths from 7/10/4/8 to 9/13/8/8 seconds; preserved story actions, camera choices and edit effects.",
+    "Raw 38 seconds -> final 30 seconds under existing speed/freeze presets."
+  ],
+  "reusedDevelopmentChecks": {
+    "newTestExecutionDuringLiveVerification": 0,
+    "errors": 0,
+    "reactBuild": "PASS",
+    "distinctPassed": 62,
+    "failures": 0,
+    "newTests": 20,
+    "typescript": "PASS"
+  },
+  "limitations": [
+    "Video generation was not authorized and was not submitted.",
+    "Official video quote is not an invoice and may expire; future generation must use a valid quote and explicit approval.",
+    "Story reservation ceiling US$0.252 is not an actual invoice.",
+    "Older responses without saved source files cannot be recovered retrospectively.",
+    "Live private story, reference image, screenshot, databases and credentials are excluded from GitHub."
+  ],
+  "liveFocusedChecks": {
+    "scope": [
+      "Owned normal Stop/Start and Chrome authentication",
+      "One paid story attempt",
+      "Complete response saved with original hash intact",
+      "Free local edited recovery",
+      "Final 30-second timing from four variable scenes",
+      "Official O3 Standard/environment-sound quote US$4.256",
+      "Zero video submissions",
+      "169 articles, 47 tables, credentials/media/original/A/B preservation"
+    ],
+    "failed": 0,
+    "errors": 0,
+    "passed": 8
+  }
+}
