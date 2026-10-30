@@ -125,6 +125,35 @@ def write_captions(target, story, timeline, presets):
     return len(events)
 
 
+def audio_join_filters(timeline, crossfade):
+    """Overlap audible tails while keeping every incoming clip at its video cut.
+
+    Reflect the outgoing track's final bounded audio window beyond the cut.
+    Reversing that window starts with its last sample, avoiding a jump back to
+    the beginning of a repeated buffer. The extension is faded against the
+    next clip's first window, so acrossfade removes only added tail time.
+    Original samples and every next clip's start retain their video timing.
+    """
+    filters = []
+    for index, row in enumerate(timeline):
+        audio = f'[{index}:a]atrim=duration={row["seconds"]:.6f},asetpts=PTS-STARTPTS'
+        if crossfade and index < len(timeline) - 1:
+            if row['seconds'] < crossfade:
+                raise CharacterError('media')
+            filters.append(audio + f',asplit=2[body{index}][tail_source{index}]')
+            filters.append(f'[tail_source{index}]atrim=start={row["seconds"]-crossfade:.6f}:'
+                           f'end={row["seconds"]:.6f},areverse,asetpts=PTS-STARTPTS[tail{index}]')
+            filters.append(f'[body{index}][tail{index}]concat=n=2:v=0:a=1[a{index}]')
+        else:
+            filters.append(audio + f'[a{index}]')
+    previous = 'a0'
+    for index in range(1, len(timeline)):
+        operation = f'acrossfade=d={crossfade}:c1=tri:c2=tri' if crossfade else 'concat=n=2:v=0:a=1'
+        filters.append(f'[{previous}][a{index}]{operation}[join{index}]')
+        previous = f'join{index}'
+    return filters, previous
+
+
 def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None):
     """Edit reviewed v3 clips without any external calls or additional speech."""
     presets, effects = load_edit_presets(), load_sfx_map()
@@ -200,20 +229,8 @@ def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None
     filters.append(''.join(f'[v{i}]' for i in range(len(timeline))) +
                    f'concat=n={len(timeline)}:v=1:a=0[vjoined]')
     filters.append('[vjoined]subtitles=captions.ass:fontsdir=fonts[vout]')
-    crossfade = presets['scene_audio_crossfade']
-    for index, row in enumerate(timeline):
-        audio = f'[{index}:a]atrim=duration={row["seconds"]:.6f},asetpts=PTS-STARTPTS'
-        # A code-owned silent tail offsets acrossfade's overlap. Every next clip
-        # begins at its video cut; audio is not progressively shifted earlier.
-        if crossfade and index < len(timeline) - 1:
-            audio += (f',afade=t=out:st={max(0, row["seconds"]-crossfade):.6f}:d={crossfade},'
-                      f'apad=pad_dur={crossfade},atrim=duration={row["seconds"]+crossfade:.6f}')
-        filters.append(audio + f'[a{index}]')
-    previous = 'a0'
-    for index in range(1, len(timeline)):
-        operation = f'acrossfade=d={crossfade}:c1=tri:c2=tri' if crossfade else 'concat=n=2:v=0:a=1'
-        filters.append(f'[{previous}][a{index}]{operation}[join{index}]')
-        previous = f'join{index}'
+    audio_filters, previous = audio_join_filters(timeline, presets['scene_audio_crossfade'])
+    filters.extend(audio_filters)
     audio_labels = [f'[{previous}]']
     # Split reused sound inputs explicitly so one key can appear in multiple scenes.
     for key, details in generated.items():
@@ -248,6 +265,7 @@ def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None
                 'sfx_sha256': {key: value['sha256'] for key, value in generated.items()},
                 'sfx_provenance': 'original mathematical oscillators / CC0-1.0',
                 'source_audio_classification': 'human review required',
+                'audio_crossfade': 'reflected outgoing tail / incoming original start / video cuts unchanged',
                 'actual_media': info}
     (work / 'edit-evidence.json').write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding='utf-8')
     return {'file': 'final.mp4', 'sha256': digest(output), 'media': info,

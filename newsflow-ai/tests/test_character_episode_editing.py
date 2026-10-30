@@ -168,3 +168,40 @@ def test_real_ffmpeg_variable_episode_is_exact_portrait_mp4(tmp_path, synthetic_
     streams = json.loads(probe.stdout)['streams']
     lengths = [float(stream['duration']) for stream in streams if stream['codec_type'] in {'audio', 'video'}]
     assert max(lengths) - min(lengths) <= .1
+
+
+def test_real_audio_crossfade_contains_both_sources_without_time_shift(tmp_path):
+    from array import array
+    import math
+    import sys
+
+    binary = str(FFmpegAdapter.executable('ffmpeg', None))
+    timeline = [{'seconds': 1.0}, {'seconds': 1.0}]
+    filters, output = editing.audio_join_filters(timeline, .15)
+    target = tmp_path / 'crossfade.wav'
+    subprocess.run([binary, '-nostdin', '-n', '-v', 'error',
+                    '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000:duration=1',
+                    '-f', 'lavfi', '-i', 'sine=frequency=880:sample_rate=48000:duration=1',
+                    '-filter_complex', ';'.join(filters), '-map', f'[{output}]',
+                    '-c:a', 'pcm_s16le', '-ac', '1', str(target)],
+                   check=True, capture_output=True, timeout=30, env=local_process_env())
+    with wave.open(str(target), 'rb') as sound:
+        assert sound.getframerate() == 48000 and sound.getnchannels() == 1
+        assert sound.getnframes() == 2 * 48000  # overlap never shortens the episode
+        samples = array('h', sound.readframes(sound.getnframes()))
+    if sys.byteorder != 'little':
+        samples.byteswap()
+
+    def amplitude(frequency, start):
+        window = samples[round(start * 48000):round((start + .05) * 48000)]
+        sine = sum(value * math.sin(2 * math.pi * frequency * i / 48000)
+                   for i, value in enumerate(window))
+        cosine = sum(value * math.cos(2 * math.pi * frequency * i / 48000)
+                     for i, value in enumerate(window))
+        return 2 * math.hypot(sine, cosine) / len(window) / 32768
+
+    # Before the cut only the outgoing track is present. At the next video's
+    # start both real tones overlap; a silent padding/fade-in substitute fails.
+    assert amplitude(440, .90) > .10 and amplitude(880, .90) < .003
+    assert amplitude(440, 1.05) > .025 and amplitude(880, 1.05) > .025
+    assert amplitude(880, 1.20) > .10 and amplitude(440, 1.20) < .003

@@ -411,7 +411,7 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
     estimate = service.estimate(plan_id)
     assert estimate == {
         "scenes": [{"position": 2, "seconds": 5, "model": MODEL, "cost": "0.5", "usable": True}], "total": "0.5", "currency": "USD",
-        "plan_spent": "0", "job_limit": "5", "monthly_limit": "20", "month_spent": "0", "remaining": "20",
+        "plan_spent": "0", "job_limit": "5", "limit_scope": "per_execution", "month_spent": "0", "remaining": None,
         "problems": [], "notices": [], "can_submit": True, "other_currency_spend": False, "compose_closed": False, "accounting": "legacy_estimate",
     }
     assert estimate["scenes"][0]["usable"] is True
@@ -425,7 +425,7 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
             reserved.estimated_cost, reserved.currency, reserved.request_id) == (
         "reserved", 1, "fake", MODEL, 5, "0.5", "USD", None)
     after = service.estimate(plan_id)
-    assert after["plan_spent"] == "0.5" and after["month_spent"] == "0.5" and after["remaining"] == "19.5"
+    assert after["plan_spent"] == "0.5" and after["month_spent"] == "0.5" and after["remaining"] is None
 
     service.tick()  # submit
     scene = scenes(studio, plan_id)[2]
