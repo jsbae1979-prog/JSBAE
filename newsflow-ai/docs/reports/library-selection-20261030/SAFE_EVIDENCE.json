@@ -19,8 +19,8 @@
     "captures/library-multiple-selection-1920x1080.png"
   ],
   "application": {
-    "status": "STAGED_WAITING_FOR_RESTART_APPROVAL",
-    "operatingChanged": false,
+    "status": "APPLIED_AFTER_USER_APPROVAL",
+    "operatingChanged": true,
     "stagedFiles": [
       {
         "path": "app/product/newsflow/gui/cleanup_routes.py",
@@ -58,12 +58,36 @@
         "bytes": 418
       }
     ],
-    "stopAttempts": 0,
-    "startAttempts": 0
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "result": {
+      "head": "531958cd2e3a0c0f32eaec500b985f56f36c7120",
+      "port": 18768,
+      "pid": 9196,
+      "normalStopExit": 0,
+      "stopAttempts": 1,
+      "startAttempts": 1,
+      "tablesUnchanged": 47,
+      "articles": 169,
+      "profileFilesPreserved": 125,
+      "originalAndABPreserved": true,
+      "chromeOpenAccepted": true,
+      "securityFlagsPreserved": true,
+      "paidCallsDuringDeployment": 0,
+      "snsCalls": 0
+    }
   },
   "providerCalls": 0,
   "operatingContentDeletion": 0,
   "schemaMigrationAdded": false,
   "externalCalls": 0,
-  "productionChrome": "NOT VERIFIED"
+  "productionChrome": "NOT VERIFIED",
+  "preservationAudit": {
+    "backupJobRecords": 27,
+    "activeJobsAtBackup": 0,
+    "activeScenesAtBackup": 0,
+    "currentPid": 9196,
+    "unauthenticatedHttpStatus": 403,
+    "authenticatedUserChrome": "AWAITING_USER_CONFIRMATION"
+  }
 }
