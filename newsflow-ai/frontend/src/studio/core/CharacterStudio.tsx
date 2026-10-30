@@ -31,6 +31,7 @@ import {
   type Controller,
 } from "./shared";
 import "./character-studio.css";
+import { CharacterProfiles, CharacterTopics, CharacterScriptEditor, CharacterRegeneration } from "./CharacterAutomation";
 
 import {
   adjustModel,
@@ -469,12 +470,12 @@ const defaultSettings: Settings = {
   aspect_ratio: "9:16",
   native_resolution: "model_default",
   output_quality: "1080p",
-  sound: "off",
+  sound: "on",
   clip_seconds: 11,
   duration: 55,
 };
 const stamp = (n: number) =>
-  `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+  `${Math.floor(Math.round(n) / 60)}:${String(Math.round(n) % 60).padStart(2, "0")}`;
 
 export default function CharacterStudio({ c }: { c: Controller }) {
   const [id, setId] = useState(""),
@@ -483,6 +484,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings),
     [tab, setTab] = useState("upload");
   const [file, setFile] = useState<File | null>(null);
+  const [activeProfile, setActiveProfile] = useState<Item | null>(null);
+  const [scriptDirty, setScriptDirty] = useState(false);
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [libraryMessage, setLibraryMessage] = useState("");
@@ -538,7 +541,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const trialEnabled = caps?.liveTrial?.enabled === true;
   const executionEnabled = trialEnabled || caps?.manualExecutionEnabled !== false;
   const [adjustments, setAdjustments] = useState<Record<string, string>>({});
-  const estimate = publicEstimate(currentModel, settings);
+  const estimate = publicEstimate(currentModel, job?.automation_version === 1 && job.story?.scenes
+    ? { ...settings, duration: job.story.scenes.reduce((total: number, row: Item) => total + Number(row.seconds), 0) }
+    : settings);
   useEffect(() => {
     if (ready && !job?.studio_selection) {
       setSettings(
@@ -558,14 +563,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   }
   function changeDuration(v: string) {
     const total = Number(v);
-    if (
-      total < 15 ||
-      total > 60 ||
-      total % 5 !== 0 ||
-      !currentModel?.duration_values?.includes(total / 5)
-    )
-      return;
-    setSettings((x) => ({ ...x, clip_seconds: total / 5, duration: total }));
+    if (total < 15 || total > 60 || total % 5 !== 0) return;
+    setSettings((x) => ({ ...x, duration: total }));
   }
   const story = job?.story,
     scenes: Item[] = story?.scenes ?? [],
@@ -621,7 +620,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     : null;
   const reference = file || savedReference || clonedReference || selectedReference;
   function storyRequestKey() {
-    const selected = referenceJob
+    const selected = activeProfile
+      ? ["profile", activeProfile.id, activeProfile.revision, activeProfile.reference_image?.sha256]
+      : referenceJob
       ? ["job", referenceJob]
       : file
         ? ["upload", file.name, file.size, file.lastModified]
@@ -661,8 +662,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const settingsFrozen = frozen && !pendingReferenceCopy;
   const legacy = !!job && !job.studio_selection;
   const lockedScriptModel = !!job?.studio_selection;
-  const legacyStoryTiming = !!story && scenes.length !== 5;
+  const legacyStoryTiming = !!story && job?.automation_version !== 1 && scenes.length !== 5;
   useEffect(() => {
+    if (job?.topic) setTopic(job.topic);
     if (job?.studio_selection) {
       const s = job.studio_selection;
       setSettings(
@@ -671,6 +673,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         ) as Settings,
       );
     }
+    if (job?.automation_version === 1 && job.characterProfile) setActiveProfile(job.characterProfile);
+    else if (job) setActiveProfile(null);
     setScene(-1);
   }, [job?.id]);
   function setting(k: keyof Settings, v: string) {
@@ -722,6 +726,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     } else reset();
     setFile(f);
     setAsset("");
+    setActiveProfile(null);
     setLibraryMessage("");
     if (saveToLibrary) void saveReference(f);
   }
@@ -743,12 +748,14 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !/^studio-[a-f0-9]{64}\.png$/.test(data.id ?? ""))
         throw Error(typeof data.detail === "string" ? data.detail : "캐릭터를 저장하지 못했습니다. 이미지와 저장 공간을 확인하세요.");
+      setAsset(data.id);
       setLibraryMessage(data.created ? "내 캐릭터에 저장했습니다." : "이미 저장된 캐릭터입니다.");
       try {
         await c.load();
       } catch {
         setLibraryMessage("캐릭터는 저장됐습니다. 내 캐릭터 목록을 보려면 화면을 새로고침하세요.");
       }
+      return data.id as string;
     } catch (error) {
       setLibraryMessage(error instanceof Error ? error.message : "저장 결과를 확인하지 못했습니다. 내 캐릭터 목록을 확인하세요.");
     } finally {
@@ -839,7 +846,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   }
   async function autoStory() {
     const inputKey = storyRequestKey();
-    if (sending.current || !ready || storyRequests[inputKey]) return;
+    if (sending.current || !ready || storyRequests[inputKey] || !activeProfile || !scriptAvailable ||
+        (job?.automation_version === 1 && job.script && topic.trim() === String(job.topic).trim())) return;
     sending.current = true;
     setBusy(true);
     setFailure("");
@@ -847,7 +855,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     const requestId = crypto.randomUUID().replaceAll("-", "");
     pending.current = requestId;
     setStoryRequests((value) => ({ ...value, [inputKey]: requestId }));
-    if (!file && !asset && !referenceJob && job?.id) setReferenceJob(job.id);
     let storyRequested = false;
     try {
       const form = new FormData();
@@ -856,11 +863,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       form.set("request_id", requestId);
       form.set("consent", "true");
       form.set("episode_limit", per);
-      if (referenceJob) form.set("reference_job", referenceJob);
-      else if (file) form.set("reference", file);
-      else if (asset) form.set("reference_asset", asset);
-      else if (job?.id) form.set("reference_job", job.id);
-      else throw Error("참조 캐릭터 이미지를 먼저 선택하세요.");
+      form.set("character_id", activeProfile.id);
+      form.set("character_revision", String(activeProfile.revision));
       const draft = await post("/character", form);
       let data = draft;
       if (draft.created) {
@@ -890,7 +894,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       setFile(null);
       setReferenceJob("");
       setAsset("");
-      setTopic("");
       setStoryRequests((value) => {
         const next = { ...value };
         delete next[inputKey];
@@ -931,6 +934,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       !story ||
       !(file || referenceJob || asset || selectedReference) ||
       !job.studio_selection ||
+      job.automation_version === 1 ||
       !currentModel?.audio.native ||
       storyReuseRequests[job.id]
     )
@@ -1050,7 +1054,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     } finally { setBusy(false); sending.current = false; }
   }
   async function quote() {
-    if (sending.current || pendingReferenceCopy) return;
+    if (sending.current || pendingReferenceCopy || scriptDirty) return;
     sending.current = true;
     setBusy(true);
     setFailure("");
@@ -1103,6 +1107,18 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     );
   }
   const myCharacters: Item[] = c.view?.catalog.myCharacters ?? [];
+  const profiles: Item[] = c.view?.catalog.characterProfiles ?? [];
+  const apiProviders: Item[] = c.view?.catalog.characterAIProviders ?? [];
+  const scriptProvider = apiProviders.find((p) => p.models?.includes(settings.script_model));
+  const scriptAvailable = scriptProvider?.configured === true;
+  async function ensureProfileAsset() {
+    if (file) return await saveReference(file) ?? "";
+    return asset || activeProfile?.asset || "";
+  }
+  function selectProfile(profile: Item | null) {
+    reset(); setActiveProfile(profile); setFile(null); setAsset(profile?.asset ?? "");
+    setTab("mine");
+  }
   let elapsed = 0;
   return (
     <>
@@ -1133,7 +1149,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           >
             참조 이미지 선택 → 주제 입력 → 스토리 자동 생성하기 → 장면 검토 →
             영상 설정·공식 견적 → 비용 승인 → 장면 확인 → 합성·저장. 스토리는
-            Claude 1회 요청이며, 영상 생성은 별도의 견적 승인이 필요합니다.
+            선택한 AI가 캐릭터 특징과 주제로 만들며, 영상 생성은 별도의 견적 승인이 필요합니다.
           </div>
         )}
         <div className="kling-character-steps" aria-label="캐릭터 제작 흐름">
@@ -1326,10 +1342,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 이 캐릭터로 새 작업
               </button>
             )}
-            {tab === "mine" && myCharacters.length === 0 && (
+            {tab === "mine" && myCharacters.length === 0 && !activeProfile && (
               <Empty>참조 이미지를 업로드하고 내 캐릭터에 저장을 선택하세요.</Empty>
             )}
-            {tab === "mine" && (
+            {tab === "mine" && myCharacters.length > 0 && (
               <Select
                 label="내 캐릭터"
                 disabled={isBusy}
@@ -1342,12 +1358,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   } else reset();
                   setAsset(v);
                   setFile(null);
+                  setActiveProfile(null);
                 }}
                 options={Object.fromEntries(
                   myCharacters.map((x) => [x.id, x.label]),
                 )}
               />
             )}
+            <CharacterProfiles key={file ? `${file.name}:${file.size}:${file.lastModified}` : asset} profiles={profiles} selected={activeProfile} onSelect={selectProfile}
+              ensureAsset={ensureProfileAsset} model={settings.script_model} available={scriptAvailable}
+              csrf={c.view?.csrfToken ?? ""} disabled={isBusy} onRefresh={c.load} />
           </section>
           <section className="kling-character-card kling-character-story">
             <header>
@@ -1369,13 +1389,24 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 예시 주제 보기
               </button>
             </header>
+            <label>대본 AI
+              <select aria-label="대본 AI" disabled={isBusy || lockedScriptModel} value={scriptProvider?.id ?? ""}
+                onChange={(e) => {const provider = apiProviders.find(p => p.id === e.target.value); if(provider?.models?.[0]) setting("script_model",provider.models[0]);}}>
+                <option value="" disabled>API를 선택하세요</option>
+                {apiProviders.map(p => <option key={p.id} value={p.id} disabled={!p.configured}>{p.label}{p.configured ? "" : " · 키 등록 필요"}</option>)}
+              </select>
+            </label>
+            <CharacterTopics profile={activeProfile} model={settings.script_model} available={scriptAvailable}
+              topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy}
+              settings={settings} episodeLimit={per} jobs={jobs} onRefresh={c.load}
+              onJob={(identifier) => { setId(identifier); setFile(null); setAsset(""); setReferenceJob(""); }} />
             <label>
               스토리 주제
               <div className="kling-character-topic">
                 <textarea
                   aria-label="스토리 주제"
                   value={topic}
-                  maxLength={100}
+                  maxLength={60}
                   placeholder="캐릭터가 어떤 이야기를 펼칠까요?"
                   disabled={isBusy}
                   onChange={(e) => {
@@ -1383,7 +1414,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     if (e.target.value.trim() !== topic.trim()) setFailure("");
                   }}
                 />
-                <small>{topic.length}/100</small>
+                <small>{topic.length}/60</small>
               </div>
             </label>
             <button
@@ -1394,7 +1425,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 !ready ||
                 !c.view?.commandsAvailable ||
                 !topic.trim() ||
-                (!reference && !asset) ||
+                (job?.automation_version === 1 && job.script && topic.trim() === String(job.topic).trim()) ||
+                !activeProfile || !scriptAvailable ||
                 blockedStoryRequest
               }
             >
@@ -1421,8 +1453,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             )}
 
             <p className="kling-character-consent">
-              주제만 Claude에 전달합니다. 스토리 생성은 유료이며 영상 제작은
-              견적 확인 후 별도로 승인합니다.
+              선택한 AI에 주제와 캐릭터 특징을 전달합니다. 스토리 생성은 유료이며 영상 제작은
+              대본·견적 확인 후 별도로 승인합니다. 참조 이미지는 대본 요청에 포함하지 않습니다.
             </p>
             {!ready && (
               <p role="status">
@@ -1445,13 +1477,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </div>
             )}
             {story ? (
-              <div className="kling-character-story-result">
+              <div className={`kling-character-story-result${job?.automation_version === 1 ? " kling-character-story-result--episode" : ""}`}>
                 <header>
                   <h3>한글 스토리 · {story.title}</h3>
                   <State value={job?.state} />
                 </header>
-                <small>생성된 한글 장면 요약입니다.</small>
-                {job?.studio_selection &&
+                <small>장면을 검토한 뒤 영상 제작을 승인하세요.</small>
+                {job?.message && <p role="status">{job.message}</p>}
+                {job?.automation_version === 1 && <CharacterScriptEditor job={job} onDirty={setScriptDirty} csrf={c.view?.csrfToken ?? ""}
+                  disabled={isBusy} onRefresh={c.load} />}
+                {job?.studio_selection && job.automation_version !== 1 &&
                   selectedReference &&
                   currentModel?.audio.native && (
                     <div>
@@ -1511,11 +1546,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 스토리 세부 설정
               </summary>
               <Select
-                label="Claude 모델"
+                label="대본 모델"
                 disabled={isBusy || lockedScriptModel}
                 value={settings.script_model}
                 onChange={(v) => setting("script_model", v)}
-                options={c.view?.catalog.apiModels?.claude_api ?? []}
+                options={scriptProvider?.models ?? []}
               />
               <label>
                 편당 최대 승인 한도 (USD)
@@ -1582,17 +1617,12 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       onChange={changeDuration}
                       disabled={isBusy || settingsFrozen || legacyStoryTiming}
                       values={Object.fromEntries(
-                        Array.from({ length: 10 }, (_, i) => 15 + i * 5).map(
-                          (total) => [String(total), `${total}초`],
+                        (caps?.totalDurationChoices ?? Array.from({ length: 10 }, (_, i) => 15 + i * 5)).map(
+                          (total: number) => [String(total), `${total}초`],
                         ),
                       )}
                       supported={
-                        (currentModel?.duration_values ?? [])
-                          .map((seconds: number) => seconds * 5)
-                          .filter(
-                            (total: number) => total >= 15 && total <= 60,
-                          )
-                          .map(String)
+                        (caps?.totalDurationChoices ?? Array.from({ length: 10 }, (_, i) => 15 + i * 5)).map(String)
                       }
                       unsupportedHint="이 모델은 전체 길이에 필요한 장면 길이를 지원하지 않아요."
                       hint={
@@ -1609,8 +1639,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       value={settings.style}
                       onChange={() => {}}
                       disabled
-                      values={caps?.styles ?? {}}
-                      supported={[caps?.character?.style_id ?? ""]}
+                      values={activeProfile ? { [settings.style]: "캐릭터 고정" } : caps?.styles ?? {}}
+                      supported={[settings.style]}
                       hint={adjustments.style}
                     />
                     <CapabilitySelect
@@ -1645,16 +1675,17 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       icon={<Monitor size={18} />}
                       value={settings.output_quality}
                       onChange={(v) => setting("output_quality", v)}
-                      values={caps?.outputQualities ?? {}}
-                      supported={Object.keys(caps?.outputQualities ?? {})}
+                      values={{ "1080p": "1080p (1080×1920)" }}
+                      supported={["1080p"]}
+                      disabled
                     />
                     <CapabilitySelect
-                      label="음성"
+                      label="소리 생성"
                       ariaLabel="소리 생성"
                       icon={<Mic size={18} />}
                       value={settings.sound}
                       onChange={(v) => setting("sound", v)}
-                      values={{ off: "끄기 (무음)", on: "켜기 (모델 소리)" }}
+                      values={{ off: "끄기", on: "켜기 (환경음만)" }}
                       supported={
                         currentModel?.audio.native ? ["off", "on"] : ["off"]
                       }
@@ -1708,6 +1739,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         disabled={
                           isBusy ||
                           pendingReferenceCopy ||
+                          scriptDirty ||
                           legacy ||
                           !ready
                         }
@@ -1745,6 +1777,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                           disabled={
                             isBusy ||
                             pendingReferenceCopy ||
+                            scriptDirty ||
                             legacy ||
                             !ready
                           }
@@ -1772,6 +1805,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       ))}
                     </section>
                   )}
+                  {scriptDirty && <p role="status">편집한 대본을 저장한 뒤 견적을 확인하세요.</p>}
                   {quoteSettingsChanged && (
                     <p role="status" className="kling-field-note">
                       설정이 바뀌었습니다. 견적을 다시 확인하세요.
@@ -1850,7 +1884,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               <small>
                 {singleVideo
                   ? `(${scenes.length}개 계획 · 15초 단일 영상)`
-                  : `(${scenes.length}개 장면 · ${scenes.reduce((n, s) => n + s.seconds, 0)}초)`}
+                  : `(${scenes.length}개 장면 · 최종 ${job?.duration ?? settings.duration}초)`}
               </small>
             </h2>
             <button
@@ -1861,13 +1895,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               최종 영상
             </button>
           </header>
+          {job && <CharacterRegeneration job={job} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} onRefresh={c.load} />}
+          {!scenes.length && <Empty>대본을 생성하면 선택한 길이에 맞는 장면 계획이 표시됩니다.</Empty>}
           <div className="kling-character-scene-grid">
             {(scenes.length
               ? scenes
-              : Array.from({ length: 5 }, () => null)
+              : []
             ).map((s, i) => {
-              const start = elapsed;
-              elapsed += s?.seconds ?? 0;
+              const edited = job?.editTimeline?.[i];
+              const start = edited?.start ?? elapsed;
+              elapsed = edited ? edited.start + edited.seconds : elapsed + (s?.seconds ?? 0);
               const clip = clips.find((x) => x.position === i + 1);
               const media = clip?.mediaUrl;
               const planOnly = singleVideo && !clip;

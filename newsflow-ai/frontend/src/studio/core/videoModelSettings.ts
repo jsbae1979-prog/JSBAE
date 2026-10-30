@@ -44,7 +44,7 @@ export function adjustModel(
     notes.native_resolution = `이 모델은 ${before}를 지원하지 않아 ${value.native_resolution === "model_default" ? "모델 기본 화질" : value.native_resolution}로 변경했어요.`;
   }
   const clipDurations = model.duration_values.filter(
-    (seconds: number) => Number.isInteger(seconds) && seconds >= 3 && seconds <= 12,
+    (seconds: number) => Number.isInteger(seconds) && seconds >= 1 && seconds <= 60,
   );
   if (!clipDurations.includes(value.clip_seconds)) {
     value.clip_seconds = [...clipDurations].sort(
@@ -62,7 +62,8 @@ export function adjustModel(
     value.style = character.style_id;
     value.aspect_ratio = character.aspect_ratio;
   }
-  value.duration = value.clip_seconds * 5;
+  // Total runtime is independent of the model clip length; the script plans each scene.
+  value.duration = current.duration;
   return { value, notes };
 }
 export function publicEstimate(

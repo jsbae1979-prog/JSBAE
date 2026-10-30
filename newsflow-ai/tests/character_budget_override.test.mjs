@@ -12,7 +12,7 @@ const resetFunction = source.slice(source.indexOf("  function reset()"), source.
 
 function contextFor(job, perOverrides = {}) {
   const sent = [];
-  const context = { job, perOverrides, FormData, URLSearchParams, pendingReferenceCopy: false,
+  const context = { job, perOverrides, FormData, URLSearchParams, pendingReferenceCopy: false, scriptDirty: false,
     settings: { duration: 30, clip_seconds: 6 }, pending: { current: null },
     c: { view: { csrfToken: "synthetic-csrf" }, load: async () => {} },
     setPerOverrides: (update) => { context.perOverrides = update(context.perOverrides); },
@@ -80,7 +80,7 @@ test("requested implementation descriptions are absent while setting labels and 
     assert.equal(source.includes(text), false, text);
   }
   for (const text of ['label="영상 길이"', 'label="모델 생성 화질"', 'label="최종 저장 크기"',
-    'label="음성"', "스토리 생성은 유료이며 영상 제작은", 'kind === "submit" && (budgetExceeded || quoteSettingsChanged)']) {
+    'label="소리 생성"', "스토리 생성은 유료이며 영상 제작은", 'kind === "submit" && (budgetExceeded || quoteSettingsChanged)']) {
     assert.equal(source.includes(text), true, text);
   }
 });
@@ -92,7 +92,7 @@ test("quote-only connections show disabled generation and status actions with cl
   const check = (kind, executionEnabled) => vm.runInNewContext(
     `(() => { ${setup}\nreturn { disabled: (${disabled}), label: actionLabel }; })()`, {
       kind, label: "원래 실행 이름", executionEnabled, isBusy: false, job: { state: "quoted" },
-      allowed: ["quoted"], pendingReferenceCopy: false, budgetExceeded: false, quoteSettingsChanged: false,
+      allowed: ["quoted"], pendingReferenceCopy: false, scriptDirty: false, budgetExceeded: false, quoteSettingsChanged: false,
     },
   );
   assert.equal(check("submit", false).disabled, true);
@@ -118,7 +118,7 @@ test("a retained quote is reused after loading settings while expired quotes ope
   for (const retained of [true, false]) {
     const events = [];
     const context = { FormData, URLSearchParams, job: { id: "a", studio_selection: {} },
-      pendingReferenceCopy: false, per: "5.00", settings: {}, sending: { current: false },
+      pendingReferenceCopy: false, scriptDirty: false, per: "5.00", settings: {}, sending: { current: false },
       setBusy: () => {}, setFailure: () => {},
       c: { view: { csrfToken: "synthetic-csrf" }, load: async () => { events.push("loaded"); },
         setNotice: (value) => { events.push(value); }, open: (id) => { events.push(id); } },
@@ -131,4 +131,13 @@ test("a retained quote is reused after loading settings while expired quotes ope
       : ["loaded", "character_act_prepare"]);
     assert.equal(context.sending.current, false);
   }
+});
+
+
+test("unsaved edited script cannot save settings or open a quote approval", async () => {
+ const quoteFunction=source.slice(source.indexOf("  async function quote()"),source.indexOf("  function action("));
+ const context={sending:{current:false},pendingReferenceCopy:false,scriptDirty:true};
+ vm.createContext(context);vm.runInContext(quoteFunction,context);
+ await vm.runInContext("quote()",context);
+ assert.equal(context.sending.current,false);
 });

@@ -24,6 +24,7 @@ function harness({ failCreate = 0, failStatus, unknownStory = false, failLoad = 
     asset: useAsset ? `studio-${"b".repeat(64)}.png` : "",
     referenceJob: "", reference: "/local-reference.png", job: original,
     pending: { current: "0".repeat(32) }, sending: { current: false },
+    activeProfile: { id: "char_"+"1".repeat(32), revision: 1, reference_image: { sha256: "f".repeat(64) } }, scriptAvailable: true,
     ready: true, isBusy: false, failure: "참조 이미지와 새 작업 설정을 확인하세요.", storyRequests: {},
     crypto: { randomUUID: () => String(++sequence).padStart(32, "0") },
     setBusy: (value) => { context.isBusy = value; },
@@ -66,7 +67,8 @@ test("old history and an unrelated error do not disable a new saved-reference to
   assert.equal(h.posts.length, 1);
   assert.equal(h.posts[0].url, "/character");
   assert.equal(h.posts[0].body.topic, "토끼의 새로운 여행");
-  assert.equal(h.posts[0].body.reference_asset, `studio-${"b".repeat(64)}.png`);
+  assert.equal(h.posts[0].body.character_id, "char_"+"1".repeat(32));
+  assert.equal(h.posts[0].body.reference_asset, undefined);
   assert.equal(h.posts[0].body.day_limit, undefined);
   assert.notEqual(h.posts[0].body.request_id, "0".repeat(32));
   assert.deepEqual(JSON.parse(h.posts[0].body.studio_settings), h.context.settings);
@@ -86,13 +88,16 @@ test("the real local create helper preserves the confirmed HTTP validation statu
   assert.equal(body.get("csrf_token"), "synthetic-csrf");
 });
 
-test("request identity uses the same reference priority as the actual form", async () => {
+test("profile identity and revision, not an unrelated upload, bind the actual request", async () => {
   const h = harness({ unknownStory: true });
+  const first = h.key();
   h.context.referenceJob = "e".repeat(32);
-  assert.deepEqual(JSON.parse(h.key()).at(-1), ["job", "e".repeat(32)]);
+  assert.equal(h.key(), first);
   await h.run();
-  assert.equal(h.posts[0].body.reference_job, "e".repeat(32));
-  assert.equal(h.posts[0].body.reference_asset, undefined);
+  assert.equal(h.posts[0].body.character_id, h.context.activeProfile.id);
+  assert.equal(h.posts[0].body.reference_job, undefined);
+  h.context.activeProfile = { ...h.context.activeProfile, revision: 2 };
+  assert.notEqual(h.key(), first);
 });
 
 test("changed input after a failed create gets a fresh request ID; identical failed input stays blocked", async () => {
@@ -131,7 +136,7 @@ test("an uncertain story call cannot repeat while a genuinely new reference can 
   assert.equal(h.disabled(), true);
   await h.run();
   assert.equal(h.posts.length, 1); assert.equal(h.storyCalls.length, 1);
-  h.context.asset = `studio-${"c".repeat(64)}.png`;
+  h.context.activeProfile = { ...h.context.activeProfile, id: "char_"+"2".repeat(32) };
   assert.equal(h.disabled(), false);
   await h.run();
   assert.equal(h.posts.length, 2); assert.equal(h.storyCalls.length, 2);
@@ -168,7 +173,7 @@ test("old job reference is pinned across new job selection and a failed list ref
   const h = harness({ unknownStory: true, failLoad: true, useAsset: false });
   const originalKey = h.key();
   await h.run();
-  assert.equal(h.context.referenceJob, "a".repeat(32));
+  assert.equal(h.posts[0].body.character_id, h.context.activeProfile.id);
   assert.equal(h.key(), originalKey);
   assert.equal(h.disabled(), true);
   assert.equal(h.context.sending.current, false); assert.equal(h.context.isBusy, false);
@@ -193,7 +198,15 @@ test("over-cap estimates do not disable explicit quote or requote actions", () =
   for (const section of [first, refresh]) {
     const expression = section.match(/disabled=\{([\s\S]*?)\n\s+\}/)[1];
     assert.equal(vm.runInNewContext(`(${expression})`, {
-      isBusy: false, pendingReferenceCopy: false, legacy: false, ready: true, budgetExceeded: true,
+      isBusy: false, pendingReferenceCopy: false, scriptDirty: false, legacy: false, ready: true, budgetExceeded: true,
     }), false);
+  }
+});
+
+test("missing profile or API key blocks new story without a request", async () => {
+  for (const field of ["activeProfile", "scriptAvailable"]) {
+    const h=harness();h.context[field]=field==="activeProfile"?null:false;
+    assert.equal(h.disabled(),true);
+    await h.run();assert.equal(h.posts.length,0);
   }
 });

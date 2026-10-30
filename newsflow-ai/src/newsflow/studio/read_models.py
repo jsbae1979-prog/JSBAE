@@ -195,6 +195,9 @@ def character_rows(state):
                 "topic",
                 "state",
                 "created_at",
+                "automation_version",
+                "character_id",
+                "script_hash",
                 "script",
                 "selection",
                 "studio_selection",
@@ -204,6 +207,7 @@ def character_rows(state):
                 "quote_total_usd",
                 "quote_hash",
                 "retry_hash",
+                "regeneration_hash",
                 "reported_billed_usd",
                 "reused_story",
                 "submit_diagnostics",
@@ -219,6 +223,8 @@ def character_rows(state):
                                     and 0<job.get('script_attempts',0)<3)
         item['scriptResponseSaved']=bool(job.get('script_responses'))
         item['quoteSettingsEditable']=quote_settings_editable(job)
+        if job.get('prompt_validation_error'):
+            item['message'] = '대본 저장됨 · 영상 지시문 길이를 줄여주세요'
         item.update(visibility.get(job['id'], {'trashed': False, 'recentHidden': False}))
         # Reference and clips use existing validated file routes; do not expose local paths.
         item["scenes"] = [
@@ -231,6 +237,19 @@ def character_rows(state):
         ]
         item["reviewWarnings"] = [job["character"]["style_warn"]] if job.get("character",{}).get("style_warn") else []
         item["story"] = job.get("script")
+        if job.get("automation_version") == 1:
+            item["characterProfile"] = job.get("character", {})
+        if job.get("regeneration"):
+            item["regeneration"] = {k: job["regeneration"][k] for k in
+                ("position", "affected", "quote_total_usd", "exposure_usd", "total_after_usd", "at") if k in job["regeneration"]}
+        if job.get('automation_version') == 1 and job.get('script'):
+            from newsflow.character.episode_story import EpisodeScript
+            from newsflow.character.editing import total_playback_seconds, load_edit_presets, load_sfx_map, edit_timeline
+            parsed = EpisodeScript.model_validate(job['script'])
+            item['playback_seconds'] = total_playback_seconds(parsed, load_edit_presets())
+            item['editTimeline'] = edit_timeline(parsed, job['duration'])
+            item['sfx_keys'] = list(load_sfx_map())
+            item['characterProfile'] = job.get('character', {})
         item["quote"] = job.get("quote_total_usd")
         item["referenceUrl"] = (
             f"/api/studio/characters/{job['id']}/reference" if job.get("reference_sha256") else None
@@ -257,7 +276,11 @@ def character_rows(state):
             details = public_diagnostic(original.get('status_diagnostics'), private_inputs(job))
             if details is not None:
                 scene['status_diagnostics'] = details
-            clip = state.character.folder(job["id"]) / f"scene-{scene['position']}.mp4"
+            import re
+            filename = original.get("file", f"scene-{scene['position']}.mp4")
+            if not isinstance(filename,str) or not re.fullmatch(rf"scene-{scene['position']}(?:-t[0-9]+)?\.mp4",filename):
+                filename = "blocked-missing-clip.mp4"
+            clip = state.character.folder(job["id"]) / filename
             scene["mediaUrl"] = (
                 f"/character/{job['id']}/clips/{scene['position']}"
                 if scene.get("state") == "downloaded"
@@ -559,7 +582,8 @@ def module_view(request: Request, module: Module):
                         native_resolution=adjusted.resolution,clip_seconds=adjusted.duration,
                         sound='on' if adjusted.audio else 'off',style=DEFAULTS['style'])
                     saved['aspect_ratio']=DEFAULTS['aspect_ratio']
-                    saved['duration']=saved['clip_seconds']*min(5,60//saved['clip_seconds'])
+                    if completed.get('automation_version') != 1:
+                        saved['duration']=saved['clip_seconds']*min(5,60//saved['clip_seconds'])
                     result["catalog"]["characterStudio"]["defaults"] = validate_character(saved)
                     result["catalog"]["characterStudio"]["restoredNotes"] = notes
                 except (ValueError,KeyError,TypeError):
@@ -585,6 +609,15 @@ def module_view(request: Request, module: Module):
     result["catalog"]["myCharacters"] = (
         state.image_studio.characters() if hasattr(state, "image_studio") else []
     )
+    if module == "characters":
+        from newsflow.character.registry import CharacterRegistry
+        result['catalog']['characterProfiles'] = CharacterRegistry(state.config.data_dir, state.image_studio).list()
+        result['catalog']['characterAIProviders'] = []
+        for provider, label in (('claude_api', 'Claude API'), ('openai', 'OpenAI API')):
+            store = getattr(state, 'api_keys', {}).get(provider)
+            configured = bool(store is not None and store.status().get('configured'))
+            result['catalog']['characterAIProviders'].append({'id': provider, 'label': label,
+                'models': list(API_MODELS.get(provider, ())), 'configured': configured})
     result["catalog"]["assets"] = state.video.assets_list() if hasattr(state.video, "assets_list") else []
     result["catalog"]["voices"] = [{"id": "offline-silence", "label": "무음 검토영상"}]
     with state.sessions() as session:
