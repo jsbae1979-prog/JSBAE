@@ -28,7 +28,7 @@ class EpisodeScene(Strict):
     seconds: int = Field(ge=1, le=120)
     continuity: Literal['cut', 'continue']
     from_scene: int | None = Field(default=None, alias='from', ge=1, le=60)
-    action: str = Field(min_length=1, max_length=300, pattern=r'^[^가-힣]*[A-Za-z][^가-힣]*$')
+    action: str = Field(min_length=1, max_length=300, pattern=r'^[^가-힣]*[A-Za-z][^가-힣]*$', description='English only. No Korean characters.')
     camera: str = Field(min_length=1, max_length=120, pattern=r'^[^가-힣]*[A-Za-z][^가-힣]*$')
     sound: str = Field(default='', max_length=100)
     speed: Literal['normal', 'fast'] = 'normal'

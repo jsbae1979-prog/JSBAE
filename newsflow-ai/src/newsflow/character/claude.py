@@ -65,17 +65,17 @@ def _studio_wire_schema(value):
 
 
 def studio_output_schema(payload):
-    """Use supported enum/pattern constraints; keep array bounds local.
+    """Keep enums on the wire and enforce English action patterns locally.
 
     https://platform.claude.com/docs/en/build-with-claude/structured-outputs
     """
-    from .studio_story import ENGLISH_ACTION_PATTERN, StudioStoryboard
+    from .studio_story import StudioStoryboard
     schema=_studio_wire_schema(_output_schema(StudioStoryboard))
     scene=schema['$defs']['StudioScene']['properties']
     seconds=payload.get('clip_seconds')
     if type(seconds) is int and 3<=seconds<=15:
         scene['seconds']['enum']=[seconds]
-    scene['action']['pattern']=ENGLISH_ACTION_PATTERN
+    scene['action']['description'] = (scene['action'].get('description', '') + ' English only. No Korean characters.').strip()
     scene['role']['description']='First scene setup; middle scenes build or contrast; final scene punchline.'
     scene['narration']['enum']=['']
     count=payload.get('scene_count')
@@ -102,7 +102,7 @@ class CharacterWriter(AnthropicProvider):
             document=self._post(body,options)
         except ProviderHTTPResponseError as error:
             # The existing transport already sanitizes these finite diagnostics.
-            # Never retain supplier prose, headers, keys or the request/response.
+            # Only bounded, redacted error prose is retained; no headers, keys or request/response envelope.
             self.last_failure = error.diagnostics()
             raise
         except ProviderResponseError:

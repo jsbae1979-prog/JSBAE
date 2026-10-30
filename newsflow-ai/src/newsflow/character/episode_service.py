@@ -171,7 +171,9 @@ class EpisodeFlow:
                         'request_reason':bounded_request_reason((preflight or {}).get('reason'))}
                     details = (preflight or {}).get('http')
                     if isinstance(details, dict):
-                        from newsflow.intelligence.provider import _safe_http_diagnostics
+                        from newsflow.intelligence.provider import _safe_http_diagnostics, bounded_error_message
+                        summary = bounded_error_message(details.get('error_message'))
+                        if summary is not None: job['script_failure']['error_message'] = summary
                         job['script_failure'].update(_safe_http_diagnostics(**{key:details.get(key) for key in
                             ('http_status','error_type','request_issue','request_fields','diagnostic_ref')}))
                 elif isinstance(preflight, dict) and preflight.get('reason') in {'envelope','json'}:

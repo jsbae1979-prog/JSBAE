@@ -192,7 +192,7 @@ def budget_failure_reason(error):
 
 
 def wire_schema(schema, provider):
-    document = _output_schema(schema)
+    document = _output_schema(schema, claude=provider == 'claude_api')
     def convert(value):
         if isinstance(value, list): return [convert(item) for item in value]
         if not isinstance(value, dict): return value

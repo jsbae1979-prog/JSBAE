@@ -112,7 +112,7 @@ def _claude_json_object(text: str) -> dict:
     return _safe_json(text, reject_duplicates=True)
 
 
-def _output_schema(model) -> dict:
+def _output_schema(model, *, claude=True) -> dict:
     """Send supported wire constraints; retain the original strict local schema.
 
     Claude's raw JSON schema API does not support string/numeric bounds or
@@ -120,14 +120,17 @@ def _output_schema(model) -> dict:
     https://platform.claude.com/docs/en/build-with-claude/structured-outputs
     """
     unsupported = {"minimum", "maximum", "minLength", "maxLength", "maxItems"}
+    if claude:
+        unsupported.add("pattern")
 
     def wire(value):
         if isinstance(value, list):
             return [wire(item) for item in value]
         if not isinstance(value, dict):
             return value
-        limits = {name: value[name] for name in unsupported if name in value}
-        result = {name: wire(item) for name, item in value.items() if name not in unsupported}
+        omitted = unsupported | ({"minItems"} if claude and type(value.get("minItems")) is int and value["minItems"] > 1 else set())
+        limits = {name: value[name] for name in omitted if name in value}
+        result = {name: wire(item) for name, item in value.items() if name not in omitted}
         if result.get('type') == 'object':
             result['additionalProperties'] = False
         if limits:
@@ -301,7 +304,7 @@ class _APITransport:
         except urllib.error.HTTPError as exc:
             if self.provider == "claude_api" and type(OpenAIProvider._classify(exc)) is ProviderResponseError:
                 raise ProviderHTTPResponseError.from_http_error(
-                    exc, recorder=self.error_recorder, secret=key) from None
+                    exc, recorder=self.error_recorder, secret=key, request_body=body) from None
             raise OpenAIProvider._classify(exc) from None
         except TimeoutError:
             raise ProviderTimeoutError("API 요청 결과가 불명확합니다. 자동 재요청하지 않습니다.") from None

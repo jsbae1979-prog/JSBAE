@@ -392,7 +392,7 @@ def test_studio_wire_schema_moves_only_unsupported_minitems_and_keeps_local_vali
     wire = bodies[0]['output_config']['format']['schema']
     assert 'minItems' not in wire['properties']['scenes']
     assert '"minItems": 3' in wire['properties']['scenes']['description']
-    assert _output_schema(StudioStoryboard)['properties']['scenes']['minItems'] == 3
+    assert 'minItems' not in _output_schema(StudioStoryboard)['properties']['scenes']
     assert StudioStoryboard.model_json_schema()['properties']['scenes']['minItems'] == 3
     nested = {'anyOf': [{'minItems': 0}, {'minItems': 1}, {'items': {'minItems': 4}}]}
     transformed = _studio_wire_schema(nested)
@@ -425,9 +425,12 @@ def test_studio_http_rejection_retains_only_existing_safe_diagnostics_once(monke
         writer.write_studio({'topic': '여행', 'duration': 15, 'clip_seconds': 3,
                              'scene_count': 5, 'sound': 'off'}, Options(model='claude-sonnet-4-6'))
     assert writer.last_failure == {'http_status': 400, 'error_type': 'invalid_request_error',
-        'request_issue': 'schema_invalid', 'request_fields': ['output_config', 'schema'], 'diagnostic_ref': 'a' * 32}
+        'request_issue': 'schema_invalid', 'request_fields': ['output_config', 'schema'], 'diagnostic_ref': 'a' * 32,
+        'error_message': 'Invalid JSON schema in output_config.schema; [REDACTED] private-prose'}
     assert 'synthetic-only' not in json.dumps(writer.last_failure)
-    assert 'private-prose' not in json.dumps(writer.last_failure)
+    from newsflow.character.story_response import public_failure
+    assert 'private-prose' not in json.dumps(public_failure(writer.last_failure))
+    assert len(writer.last_failure['error_message']) <= 300
     assert len(requests) == len(records) == 1 and writer.last_usage is None and writer.last_retried is False
 
 
