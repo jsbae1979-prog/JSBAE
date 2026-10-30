@@ -2,6 +2,7 @@
 
 import json
 from copy import deepcopy
+from decimal import Decimal
 
 import pytest
 from sqlalchemy import select
@@ -104,7 +105,8 @@ def test_one_complete_json_object_is_accepted_with_unchanged_source_and_schema_c
     assert run.id == identifier and run.status == row.status == "success"
     assert run.result == state["payload"] and len(state["calls"]) == 1
     assert row.usage == {"prompt_tokens": 1098, "completion_tokens": 721, "search_calls": 0}
-    assert row.reserved_usd == "0" and not state["adapter"].last_retried
+    assert Decimal(row.reserved_usd) == Decimal('0.267000' if version == 'v1' else '0.273000')
+    assert not state["adapter"].last_retried
     body = state["calls"][0]
     schema = body["output_config"]["format"]["schema"]
     assert body["output_config"]["format"]["type"] == "json_schema"

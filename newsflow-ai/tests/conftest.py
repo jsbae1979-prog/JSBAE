@@ -29,10 +29,20 @@ def synthetic_app_isolation(monkeypatch, tmp_path, request):
         folder.mkdir(parents=True)
         monkeypatch.setenv(name, str(folder))
     test_options = {'NEWSFLOW_DATA_DIR', 'NEWSFLOW_SCRIPT_PROMPT_VERSION',
-                    'NEWSFLOW_FFMPEG', 'NEWSFLOW_FFPROBE', 'NEWSFLOW_FONT_PATH'}
+                    'NEWSFLOW_FFMPEG', 'NEWSFLOW_FFPROBE', 'NEWSFLOW_FONT_PATH',
+                    'NEWSFLOW_BASELINE_GUI_SOURCE'}
     for name in tuple(os.environ):
         if name.startswith(('NEWSFLOW_', 'OPENAI_', 'ANTHROPIC_', 'ELEVENLABS_', 'HIGGSFIELD_', 'SERPAPI_')) or name in {'HF_KEY','HF_SECRET'}:
             if name not in test_options: monkeypatch.delenv(name, raising=False)
+    # Legacy browser evidence writers previously depended on a separate harness.
+    # Plain pytest writes screenshots only inside this test's temporary root.
+    for name in ('NEWSFLOW_USABILITY_EVIDENCE', 'NEWSFLOW_MODERN_SCRIPT_EVIDENCE',
+                 'NEWSFLOW_SMALL_UX_EVIDENCE', 'NEWSFLOW_CONTROL_EVIDENCE',
+                 'NEWSFLOW_STUDIO_POLISH_EVIDENCE', 'NEWSFLOW_VIDEO_MODERN_EVIDENCE',
+                 'NEWSFLOW_VALIDATION_OUTPUT'):
+        folder = root / 'evidence' / name.lower()
+        folder.mkdir(parents=True)
+        monkeypatch.setenv(name, str(folder))
     connect, connect_ex, resolve = socket.socket.connect, socket.socket.connect_ex, socket.getaddrinfo
 
     def local(address):

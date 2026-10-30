@@ -53,7 +53,7 @@ def test_automatic_price_registration_consent_failure_and_narrow_layout(app, pri
         expect(row.locator('[data-model-price-evidence]')).to_contain_text('5초 $0.280')
         expect(row.locator('[data-model-price-evidence]')).to_contain_text('10초 $0.560')
         expect(page.locator('#video-ai-job-limit')).to_have_value('5')
-        expect(page.locator('#video-ai-monthly-limit')).to_have_value('20')
+        expect(page.locator('#video-ai-monthly-limit')).to_have_count(0)  # Per-call approval only; no global cumulative limit.
         before=snapshot(app)
         # Existing prices stay manual by default: merely opening the screen cannot requery.
         expect(row.locator('[name=pricing_mode]')).to_have_value('manual')

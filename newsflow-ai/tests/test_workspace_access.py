@@ -63,10 +63,11 @@ def test_character_simplification_keeps_upload_budget_and_csrf_requirements(clie
     html = client.get('/character').text
     assert '주제·원본 저장' in html and 'data-character-reference' in html
     form = re.search(r'<form\b[^>]*class="[^"]*\bcharacter-form\b[^"]*".*?</form>', html, re.DOTALL).group(0)
-    for name in ('topic', 'reference', 'episode_limit', 'day_limit', 'csrf_token'):
+    for name in ('topic', 'reference', 'episode_limit', 'csrf_token'):
         assert f'name="{name}"' in form
     assert 'enctype="multipart/form-data"' in form
-    assert len(re.findall(r'\brequired\b', form)) == 3
+    assert len(re.findall(r'\brequired\b', form)) == 2
+    assert 'name="day_limit"' not in form
     assert 'name="reference_asset"' in form
     assert 'data-character-preview hidden' in html
     assert client.post('/character', data={'topic': 'test'}).status_code in (403, 422)
@@ -74,5 +75,6 @@ def test_character_simplification_keeps_upload_budget_and_csrf_requirements(clie
     token = re.search(r'name="csrf_token" value="([^"]+)"', html).group(1)
     response = client.post('/character', data={'csrf_token': token, 'topic': '참조 없는 합성 입력',
         'episode_limit': '5', 'day_limit': '20'})
-    assert '입력과 PNG 원본·제작 한도를 확인하세요.' in response.text
+    assert response.status_code == 422
+    assert '등록된 캐릭터를 선택' in response.json()['error']
     assert not app.state.character.root.exists()  # Neither upload nor saved reference: no job is created.
