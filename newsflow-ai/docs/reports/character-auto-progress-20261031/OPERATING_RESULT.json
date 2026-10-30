@@ -1,0 +1,38 @@
+{
+  "applied": true,
+  "head": "37484330ff1a1f126bdca6b199a9b179d50abca0",
+  "files": [
+    {
+      "path": "app/frontend/dist/assets/index-B6SOAlx-.css",
+      "before": null,
+      "sha256": "e29c204a3efa1d0804cbf5918b4a9b1016e31664ebfd903d6b2e09d7e43fbd52",
+      "bytes": 177832
+    },
+    {
+      "path": "app/frontend/dist/assets/index-BGrmJfnv.js",
+      "before": null,
+      "sha256": "49411cb11ee80c82de6ce94181cfc2d1f1cf702ba4c29bf8a6da8871dfdd5708",
+      "bytes": 618516
+    },
+    {
+      "path": "app/frontend/dist/index.html",
+      "before": "e87632a358dcf229d40476af6febcef406f31e3cbac1425268809c934b118c19",
+      "sha256": "52cfa5d0618c6545367707b235e13346a989b7d6928b126334f6500f40772453",
+      "bytes": 418
+    }
+  ],
+  "restartCount": 0,
+  "startCount": 0,
+  "stopCount": 0,
+  "paidCalls": 0,
+  "sessionMarkerUnchanged": true,
+  "launchUnchanged": true,
+  "protectedFilesUnchanged": 8,
+  "articles": 169,
+  "oldAssetsPreserved": true,
+  "liveUiVerification": "NOT VERIFIED: same owned Python PID remains but no loopback listener; user requested state check only",
+  "tables": 47,
+  "existingDownloadedClipsUnchanged": 4,
+  "finalComposeSubmitted": false,
+  "finalVerdict": "CONDITIONAL: implementation and static application complete; live GUI/compose pending"
+}
