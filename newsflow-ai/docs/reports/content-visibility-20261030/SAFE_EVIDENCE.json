@@ -145,7 +145,39 @@
       "unauthenticatedHttpStatus": 403,
       "authenticationRequired": true
     },
-    "productionChrome": "USER_DISPLAY_CONFIRMATION_PENDING",
-    "actualOperatingDeletionTested": false
+    "productionChrome": "ASSISTANT_READ_ONLY_GUI_VERIFIED",
+    "actualOperatingDeletionTested": false,
+    "readOnlyGuiVerification": {
+      "method": "CONNECTED_CHROME_EXTENSION_EXISTING_USER_TAB",
+      "observer": "ASSISTANT",
+      "userPersonalConfirmation": "NOT_RECORDED",
+      "newTestRuns": 0,
+      "libraryActive": 2,
+      "libraryScriptReady": 1,
+      "libraryCompleted": 1,
+      "libraryTrash": 26,
+      "creationActive": 2,
+      "publishingCandidates": 1,
+      "publishingDraftExcluded": true,
+      "publishedPerformanceContent": 0,
+      "publishedEmptyStateShown": true,
+      "costUsageAndRequestRecordsVisible": true,
+      "existingCharacterJobOpens": true,
+      "referenceAndTopicMatch": true,
+      "storyConnectionMessageCount": 1,
+      "storyConnectionMessageBelowGenerateButton": true,
+      "duplicateBottomStoryMessage": false,
+      "additionalRestarts": 0,
+      "deleteActions": 0,
+      "restoreActions": 0,
+      "externalProviderCalls": 0,
+      "paidGenerationCalls": 0,
+      "snsCalls": 0,
+      "sensitiveContentSavedOrUploaded": false,
+      "providerPermissionsVerified": false,
+      "paidProductionVerified": false
+    },
+    "scopeVerdict": "ACCEPTED_DISPLAY_FIX_ONLY",
+    "remainingSeparateWork": ["CLAUDE_CONNECTION_VERIFICATION", "PAID_PRODUCTION_AND_PROVIDER_PERMISSIONS"]
   }
 }
