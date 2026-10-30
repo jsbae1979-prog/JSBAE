@@ -49,3 +49,12 @@
 현재 작업에서는 운영 앱 재시작, 운영 DB/키/미디어/백업 변경, 실제 콘텐츠 삭제, 실제 AI·SNS 호출을 하지 않았다. 변경은 개발본과 합성 테스트에만 적용했다. 운영 반영은 이번 Python 조회 코드의 적용을 위한 정상 Stop·Start 1회 승인 후 진행한다. 인증·CSRF·Origin·DPAPI·ACL·승인 정책과 결과 불명 보호는 유지한다. `main`·PR #35 병합 및 외부 배포는 수행하지 않는다.
 
 판정: **CONDITIONAL — 개발·집중 검증 완료, 운영 반영 승인 및 사용자 Chrome 확인 대기.**
+
+## 운영 적용 후보
+
+구현 SHA: `7eed8ba96189207dd8aa6556cb55345cf0fa48fd`. 별도 준비 폴더의 적용 후보는 다음 4개 파일이며, 운영본은 아직 변경하지 않았다. 기존 운영 전용 인증·실행 연결 코드를 보존하는 정확한 문맥 수정으로 준비했다.
+
+- `app/product/newsflow/gui/studio_v3.py` — SHA-256 `1eedd54abda7490656e4b372c9a55095e4647cdb9b8275b0a7f60b79ef35f802`
+- `app/product/newsflow/studio/read_models.py` — SHA-256 `1a4804dd0ee24954847ef95473cf31fe093a523afdef752ed86c1ccdd2d75518`
+- `app/frontend/dist/assets/index-CFqGb_2-.js` — SHA-256 `86d12b5292a49f46497d65427fba5adefe273910140b8e52d1cfa8f44adf00e4`
+- `app/frontend/dist/index.html` — SHA-256 `c25fb8eb9c0babe032878bc3e41092e75d184be7b4dcca6b3157555a2aae751f`

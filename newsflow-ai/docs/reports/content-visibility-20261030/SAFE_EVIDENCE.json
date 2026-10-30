@@ -1,6 +1,6 @@
 {
   "branch": "codex/newsflow-character-shorts-automation-20261030",
-  "sourceSha": "RECORDED_AFTER_COMMIT",
+  "sourceSha": "7eed8ba96189207dd8aa6556cb55345cf0fa48fd",
   "tests": {
     "distinctPass": 11,
     "newPass": 9,
@@ -94,6 +94,33 @@
     "fakeAndSyntheticOnly": true
   },
   "application": {
-    "status": "AWAITING_APPROVED_NORMAL_RESTART"
+    "status": "AWAITING_APPROVED_NORMAL_RESTART",
+    "stagedFiles": [
+      {
+        "path": "app/product/newsflow/gui/studio_v3.py",
+        "before": "e289022bb04417ac193a40e746c55d666d0d32fd0eb72a46bdb2564249ff62eb",
+        "sha256": "1eedd54abda7490656e4b372c9a55095e4647cdb9b8275b0a7f60b79ef35f802",
+        "bytes": 13189
+      },
+      {
+        "path": "app/product/newsflow/studio/read_models.py",
+        "before": "ae3289cafb30ff72429a0029e6d86d4943c4d85da882bc1e52d2a68aa06601af",
+        "sha256": "1a4804dd0ee24954847ef95473cf31fe093a523afdef752ed86c1ccdd2d75518",
+        "bytes": 41566
+      },
+      {
+        "path": "app/frontend/dist/assets/index-CFqGb_2-.js",
+        "before": null,
+        "sha256": "86d12b5292a49f46497d65427fba5adefe273910140b8e52d1cfa8f44adf00e4",
+        "bytes": 608182
+      },
+      {
+        "path": "app/frontend/dist/index.html",
+        "before": "d70a49ed2d4e22e1ecf091f141196e8c4b80f533c65008cbeea26f71f8238c3f",
+        "sha256": "c25fb8eb9c0babe032878bc3e41092e75d184be7b4dcca6b3157555a2aae751f",
+        "bytes": 418
+      }
+    ],
+    "operatingChanged": false
   }
 }
