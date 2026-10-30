@@ -478,7 +478,12 @@ const stamp = (n: number) =>
   `${Math.floor(Math.round(n) / 60)}:${String(Math.round(n) % 60).padStart(2, "0")}`;
 
 export default function CharacterStudio({ c }: { c: Controller }) {
-  const [id, setId] = useState(""),
+  const [id, setId] = useState(() => {
+      const query = new URLSearchParams(window.location.search);
+      if (!query.has("job_id")) return "";
+      const requested = query.get("job_id") ?? "";
+      return /^[a-f0-9]{32}$/.test(requested) ? requested : "unavailable";
+    }),
     [topic, setTopic] = useState(""),
     [scene, setScene] = useState(-1);
   const [settings, setSettings] = useState<Settings>(defaultSettings),
@@ -526,7 +531,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     job =
       id === "new"
         ? undefined
-        : (jobs.find((x) => String(x.id) === id) ?? jobs[0]);
+        : id ? jobs.find((x) => String(x.id) === id) : jobs[0];
+  const selectionUnavailable = !c.loading && !!c.view && id !== "" && id !== "new" && !job;
   const perKey = job?.id ? String(job.id) : "new";
   const per = perOverrides[perKey] ?? (job ? String(job.episode_limit ?? "") : "10");
   function setPer(value: string) {
@@ -1176,6 +1182,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             작업 이력
           </button>
         </div>
+        {selectionUnavailable && (
+          <p className="kling-character-error" role="alert">
+            선택한 작업을 찾을 수 없습니다. 작업 이력에서 다른 작업을 선택하세요.
+          </p>
+        )}
         {caps?.liveTrial?.enabled === true && (
           <CharacterTrialConnection
             csrfToken={c.view?.csrfToken ?? ""}
@@ -1451,6 +1462,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 !ready ||
                 !c.view?.commandsAvailable ||
                 !topic.trim() ||
+                selectionUnavailable ||
                 (job?.automation_version === 1 && job.script && topic.trim() === String(job.topic).trim()) ||
                 !activeProfile || !scriptAvailable ||
                 blockedStoryRequest
