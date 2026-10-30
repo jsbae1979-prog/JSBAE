@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "fast": {"weak": 1.25, "medium": 1.5, "strong": 2.0},
+  "freeze": {"weak": 0.5, "medium": 1.0, "strong": 1.5},
+  "sfx_volume_db": -6,
+  "scene_audio_crossfade": 0.15,
+  "fast_strong_audio": "duck",
+  "fast_strong_duck_db": -6,
+  "loudness_lufs": -14,
+  "caption": {
+    "font": "character/assets/NotoSansKR.ttf",
+    "family": "Noto Sans KR",
+    "size": 72,
+    "outline": 6,
+    "top_margin_ratio": 0.12
+  }
+}
