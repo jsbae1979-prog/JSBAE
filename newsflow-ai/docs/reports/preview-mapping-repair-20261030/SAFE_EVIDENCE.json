@@ -1,0 +1,85 @@
+{
+  "sourceSha": "7b4685964088241859c60f17f66508a5b3f24e14",
+  "operatingApplied": false,
+  "operation": "Awaiting approval; latest read-only port check found no listener",
+  "articles": 169,
+  "storedPreviewRecords": 77,
+  "articlesWithoutPreviewRecords": 92,
+  "newTests": {
+    "speciesBackend": 17,
+    "speciesBrowser": 2,
+    "libraryBrowser": 4,
+    "newsBackend": 15,
+    "newsBrowser": 1,
+    "total": 39
+  },
+  "newFailures": 0,
+  "newErrors": 0,
+  "recheckedDiagnosticTests": 8,
+  "verifiedJunitSummaries": {
+    "libraryBrowser": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "newsBackend": {
+      "tests": 15,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "newsBrowser": {
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "typeScript": "PASS",
+  "combinedReactBuild": "PASS",
+  "diffCheck": "PASS",
+  "stagedFiles": [
+    {
+      "path": "app/product/newsflow/character/authoring.py",
+      "sha256": "dd28bd7c33e8cd2f1ae70a253e049ee33d4c751b84eb5cdd9f3548bfae32ac65",
+      "bytes": 22349
+    },
+    {
+      "path": "app/product/newsflow/studio/read_models.py",
+      "sha256": "3da11d7ebe7160f82786c16d95a04ab8088e709f26f5637356036a022d2f7435",
+      "bytes": 36967
+    },
+    {
+      "path": "app/controller/bat_distribution/operation.py",
+      "sha256": "f25ee6976ea3a2fbec7b153b3d190b86a4efcce84b3502cc6e65674f10951361",
+      "bytes": 5417
+    },
+    {
+      "path": "app/frontend/dist/assets/index-7ZIsqjQ1.js",
+      "sha256": "4f25b1db4cdb314a682cdd124b570616d8f567d15c8a8d941465ade183c64485",
+      "bytes": 605690
+    },
+    {
+      "path": "app/frontend/dist/assets/index-cJ56DmdS.css",
+      "sha256": "22f3dfac1c8d2bcee2422ca4dba2cbec3bbfdeba37d8a10654a6e3ff5b47fdbb",
+      "bytes": 173417
+    },
+    {
+      "path": "app/frontend/dist/index.html",
+      "sha256": "230e2b956ce31657148716d528413eae173e59d3985ed5b7cb54a18646daedfb",
+      "bytes": 418
+    }
+  ],
+  "paidCallsMadeByThisWork": 0,
+  "automaticRetries": 0,
+  "operatingMutations": 0,
+  "observedPriorAnalysis": {
+    "failedRecords": 4,
+    "estimatedUsageUSD": "0.053022",
+    "reservationCeilingsUSD": "1.140000",
+    "vendorInvoiceVerified": false
+  },
+  "actualUserChromeAfterFix": "NOT VERIFIED",
+  "judgment": "CONDITIONAL"
+}
