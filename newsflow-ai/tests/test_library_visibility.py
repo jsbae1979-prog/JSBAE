@@ -66,7 +66,7 @@ def mixed(app):
     return ids, {path: path.read_bytes() for path in files if path.is_file()}
 
 
-def test_all_types_hide_restore_only_library_and_preserve_every_original(app, client):
+def test_all_types_hide_active_workspace_restore_and_preserve_every_original(app, client):
     ids, files = mixed(app)
     workspace = client.get('/api/studio/workspace').json()['projects']
     before = client.get('/api/studio/modules/library').json()
@@ -84,7 +84,8 @@ def test_all_types_hide_restore_only_library_and_preserve_every_original(app, cl
     assert after['collections']['removed'] == before['collections']['removed']
     assert all('library:' not in row['key'] for row in after['collections']['removed'])
     assert 'library:' not in client.get('/workspace/trash').text
-    assert client.get('/api/studio/workspace').json()['projects'] == workspace
+    assert client.get('/api/studio/workspace').json()['projects'] == []
+    assert client.get('/api/studio/modules/publishing').json()['projects'] == []
     assert client.get('/api/studio/modules/shorts').json()['projects'] == workspace
     assert 'libraryRemovalAvailable' not in client.get('/api/studio/modules/shorts').json()
     assert files == {path: path.read_bytes() for path in files}
@@ -97,6 +98,7 @@ def test_all_types_hide_restore_only_library_and_preserve_every_original(app, cl
     assert restored['projects'] == before['projects']
     assert restored['collections']['ownedReferences'] == before['collections']['ownedReferences']
     assert restored['collections']['libraryRemoved'] == []
+    assert client.get('/api/studio/workspace').json()['projects'] == workspace
     assert markers(app) == {'activity:historic': {'title':'기존 보관 활동','state':'hidden'}}
     assert files == {path: path.read_bytes() for path in files}
 

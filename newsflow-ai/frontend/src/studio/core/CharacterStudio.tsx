@@ -1477,11 +1477,23 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               {busy ? "스토리 처리 중…" : "스토리 자동 생성하기"}
               <span>→</span>
             </button>
-            {job?.scriptFailure && (
-              <p className="kling-character-error" role="status">
-                {job.scriptFailure.message}
-                {job.scriptResponseSaved && " 응답은 로컬에 보존되어 있습니다."}
-              </p>
+            {(failure || job?.scriptFailure?.message || blockedStoryRequest) && (
+              <div className="kling-character-error" role="alert">
+                {failure || job?.scriptFailure?.message || "같은 요청의 결과를 확인하세요. 주제나 참조·설정을 바꾸면 새 스토리를 만들 수 있습니다."}
+                {job?.scriptFailure && job.scriptResponseSaved && " 응답은 로컬에 보존되어 있습니다."}
+                {(failure || blockedStoryRequest) && (
+                  <button
+                    disabled={isBusy}
+                    onClick={() => {
+                      setFailure("");
+                      pending.current = null;
+                      reset(true);
+                    }}
+                  >
+                    새 스토리 입력
+                  </button>
+                )}
+              </div>
             )}
             {job?.state === "script_failed" && job?.scriptResponseSaved && (
               <button type="button" disabled={isBusy} onClick={recoverStory}>
@@ -1502,21 +1514,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               <p role="status">
                 새 제작실 API 연결 확인 전 · 생성할 수 없습니다.
               </p>
-            )}
-            {(failure || blockedStoryRequest) && (
-              <div className="kling-character-error" role="alert">
-                {failure || "같은 요청의 결과를 확인하세요. 주제나 참조·설정을 바꾸면 새 스토리를 만들 수 있습니다."}
-                <button
-                  disabled={isBusy}
-                  onClick={() => {
-                    setFailure("");
-                    pending.current = null;
-                    reset(true);
-                  }}
-                >
-                  새 스토리 입력
-                </button>
-              </div>
             )}
             {story ? (
               <div className={`kling-character-story-result${job?.automation_version === 1 ? " kling-character-story-result--episode" : ""}`}>

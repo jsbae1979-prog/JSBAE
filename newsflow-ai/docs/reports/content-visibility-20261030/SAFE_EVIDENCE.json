@@ -1,0 +1,99 @@
+{
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "sourceSha": "RECORDED_AFTER_COMMIT",
+  "tests": {
+    "distinctPass": 11,
+    "newPass": 9,
+    "affectedExistingPass": 2,
+    "finalFail": 0,
+    "finalError": 0,
+    "finalSkip": 0,
+    "initialTestSelectorFailures": 1,
+    "testSelectorCorrectionOnly": true,
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "diffCheck": "PASS"
+  },
+  "runs": [
+    {
+      "source": "library-visibility-projections.xml",
+      "results": [
+        {
+          "test": "tests.test_library_visibility_projections::test_publishing_candidates_only_complete_media_but_history_is_preserved",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_visibility_projections::test_performance_only_confirmed_publication_costs_and_hidden_history_retained",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_visibility_projections::test_approval_simulated_unknown_or_incomplete_receipt_never_claims_publication",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_visibility_projections::test_instagram_image_published_receipt_is_independent_of_library_visibility",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_visibility::test_all_types_hide_active_workspace_restore_and_preserve_every_original",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "source": "library-receipt-account.xml",
+      "results": [
+        {
+          "test": "tests.test_library_visibility_projections::test_published_receipt_account_survives_draft_edit_but_invalid_accounts_are_rejected",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "source": "feedback-projection-browser.xml",
+      "results": [
+        {
+          "test": "tests.test_character_story_feedback_browser::test_persisted_preflight_message_appears_once_after_request_and_refresh",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_character_story_feedback_browser::test_generic_request_error_remains_visible_once_and_new_story_keeps_reference",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_projection_browser::test_library_remove_restore_updates_creation_and_completed_publish_candidates_in_same_spa",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_projection_browser::test_analytics_uses_confirmed_publication_only_and_keeps_all_cost_records",
+          "status": "FAIL"
+        },
+        {
+          "test": "tests.test_character_selected_reference_browser::test_saved_job_to_new_story_keeps_profile_image_and_never_mixes_characters[failed_story]",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "source": "analytics-projection-recheck.xml",
+      "results": [
+        {
+          "test": "tests.test_library_projection_browser::test_analytics_uses_confirmed_publication_only_and_keeps_all_cost_records",
+          "status": "PASS"
+        }
+      ]
+    }
+  ],
+  "scope": {
+    "externalProviderCalls": 0,
+    "snsCalls": 0,
+    "operatingMutations": 0,
+    "operatingRestarts": 0,
+    "operatingDeletionTests": 0,
+    "schemaMigrationAdded": false,
+    "fakeAndSyntheticOnly": true
+  },
+  "application": {
+    "status": "AWAITING_APPROVED_NORMAL_RESTART"
+  }
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Search, Send, CalendarDays } from "lucide-react";
-import type { Item } from "../contracts";
+import { safeMedia, type Item } from "../contracts";
 import {
   Panel,
   Empty,
@@ -22,17 +22,25 @@ export default function Publishing({ c }: { c: Controller }) {
     [targets, setTargets] = useState<string[]>([]),
     [time, setTime] = useState(""),
     [cohortId, setCohortId] = useState("");
-  const drafts = c.list("drafts"),
-    projects = c.workspace?.projects ?? [],
-    selected =
-      id === "new"
-        ? undefined
-        : (drafts.find((x) => String(x.id) === id) ?? drafts[0]);
+  // The module supplies publishable candidates; historical drafts/results stay
+  // in their own collections and never reintroduce hidden or unfinished media.
+  const projects = (c.view?.module === "publishing" ? c.view.projects ?? [] : []).filter((x) =>
+    !!safeMedia(x.mediaUrl) && (x.kind === "character" ? x.technicalStatus === "completed" : x.technicalStatus === "success"));
+  const drafts = c.list("drafts").filter((draft) =>
+    projects.some((project: Item) => project.id === "news:" + draft.render_job_id));
   const [projectId, setProjectId] = useState("");
-  const project =
-    projects.find(
-      (x: Item) => x.id === (projectId || "news:" + selected?.render_job_id),
-    ) ?? projects[0];
+  const selectionMissing =
+    (!!projectId && !projects.some((x: Item) => x.id === projectId)) ||
+    (!!id && id !== "new" && !drafts.some((x) => String(x.id) === id));
+  const selected = selectionMissing || id === "new"
+    ? undefined : (drafts.find((x) => String(x.id) === id) ?? drafts[0]);
+  const project = selectionMissing ? undefined : (
+    projects.find((x: Item) => x.id === (projectId || "news:" + selected?.render_job_id)) ?? projects[0]);
+  useEffect(() => {
+    if (!selectionMissing) return;
+    setId("new"); setProjectId(""); setForm({});
+    setTargets([]); setTime(""); setCohortId("");
+  }, [selectionMissing]);
   useEffect(() => {
     const next = selected
       ? {
@@ -167,7 +175,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 </button>
               ))}
           </div>
-          {!projects.length && <Empty>저장된 콘텐츠가 없습니다.</Empty>}
+          {!projects.length && <Empty>게시할 수 있는 완성 콘텐츠가 없습니다.</Empty>}
           <h3>로컬 게시 초안</h3>
           <div className="mg-draft-list">
             {drafts.map((x) => (

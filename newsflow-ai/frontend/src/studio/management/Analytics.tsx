@@ -32,12 +32,11 @@ export default function Analytics({ c }: { c: Controller }) {
     [period, setPeriod] = useState("all"),
     [id, setId] = useState("");
   const accounts = c.publishing?.collections?.accounts ?? [],
-    projects = c.workspace?.projects ?? [],
+    projects = c.view?.publishedProjects ?? [],
     selected = projects.find((x: Item) => x.id === id) ?? projects[0];
   const inPeriod = (x: Item) =>
     withinPeriod(x.period_end ?? x.created_at ?? x.fetched_at, period);
-  const metrics = c
-    .list("metrics")
+  const metrics = (c.view?.publishedProjects ? c.list("metrics") : [])
     .filter(
       (x) =>
         (platform === "all" || x.platform === platform) &&
@@ -220,7 +219,7 @@ export default function Analytics({ c }: { c: Controller }) {
                     </button>
                   ))}
               </div>
-              {!projects.length && <Empty>콘텐츠 기록 없음</Empty>}
+              {!projects.length && <Empty>아직 게시 완료된 콘텐츠가 없습니다.</Empty>}
               <div className="mg-table-scroll">
                 <table>
                   <thead>

@@ -252,6 +252,7 @@ function App() {
   } | null>(null);
   const modal = useRef<HTMLDialogElement>(null);
   const search = useRef<HTMLInputElement>(null);
+  const previousPage = useRef(page);
   async function load() {
     setLoading(true);
     setError("");
@@ -287,6 +288,16 @@ function App() {
       window.removeEventListener("keydown", key);
     };
   }, []);
+  useEffect(() => {
+    const changed = previousPage.current !== page;
+    previousPage.current = page;
+    if (changed && page === "create") {
+      // Library removal/restoration may have changed the active workspace while
+      // this top-level shell stayed mounted during studio navigation.
+      setData(null);
+      void load();
+    }
+  }, [page]);
   useEffect(() => {
     if (dialog && !modal.current?.open) modal.current?.showModal();
     if (!dialog && modal.current?.open) modal.current?.close();

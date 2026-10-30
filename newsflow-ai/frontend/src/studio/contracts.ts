@@ -10,6 +10,7 @@ export type View = {
   collections: Record<string, Item[]>;
   catalog: Item;
   projects?: Item[];
+  publishedProjects?: Item[];
   services?: Item[];
   settings?: Record<string, string>;
   policy?: Item;

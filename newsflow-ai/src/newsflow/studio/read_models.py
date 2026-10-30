@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from hashlib import sha256
+import re
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Request
@@ -140,6 +141,47 @@ def rows(session, model_name, columns):
     if order is not None:
         query = query.order_by(order.desc())
     return [{k: value(getattr(row, k)) for k in columns.split()} for row in session.scalars(query.limit(100))]
+
+
+def published_content(session):
+    """Stored successful publication plus its remote receipt; never query providers."""
+    projects, jobs = {}, {}
+    for job, draft in session.execute(select(m.PublishJob, m.PublishDraft).join(
+            m.PublishDraft, m.PublishDraft.id == m.PublishJob.draft_id).where(
+            m.PublishJob.status.in_({'uploaded', 'ig_published', 'ig_published_no_link'}))):
+        youtube = job.platform == 'youtube' and job.status == 'uploaded'
+        instagram = job.platform == 'instagram' and job.status in {'ig_published', 'ig_published_no_link'}
+        if not youtube and not instagram:
+            continue
+        kind = 'youtube_upload_result' if youtube else 'instagram_state'
+        receipt = next((row.payload for row in session.scalars(select(m.PublishEvidence).where(
+            m.PublishEvidence.draft_id == draft.id, m.PublishEvidence.kind == kind)
+            .order_by(m.PublishEvidence.id.desc()))
+            if isinstance(row.payload, dict) and row.payload.get('job_id') == job.id), {})
+        remote = receipt.get('video_id' if youtube else 'media_id')
+        account_id = receipt.get('account_id')
+        account = session.get(m.PlatformAccount, account_id) if type(account_id) is int and 0 < account_id <= 9223372036854775807 else None
+        if (receipt.get('synthetic') is True or receipt.get('status') != job.status
+                or account is None or account.platform != job.platform
+                or not isinstance(remote, str)
+                or not re.fullmatch(r'[A-Za-z0-9_-]{11}' if youtube else r'[1-9][0-9]{0,39}', remote)):
+            continue
+        publication = {'platform': job.platform, 'accountId': account_id,
+                       'jobId': job.id, 'status': job.status}
+        projects.setdefault(f'news:{draft.render_job_id}', []).append(publication)
+        jobs[job.id] = {**publication, 'remoteId': remote}
+    for delivery in session.scalars(select(m.ImagePostDelivery).where(
+            m.ImagePostDelivery.status.in_({'published', 'published_no_link'}))):
+        detail = delivery.detail if isinstance(delivery.detail, dict) else {}
+        remote = detail.get('media_id')
+        account = session.get(m.PlatformAccount, delivery.account_id)
+        if (detail.get('synthetic') is True or not account or account.platform != 'instagram'
+                or not isinstance(remote, str) or not re.fullmatch(r'[1-9][0-9]{0,39}', remote)):
+            continue
+        projects.setdefault(f'post:{delivery.post_id}', []).append({
+            'platform': 'instagram', 'accountId': delivery.account_id,
+            'deliveryId': delivery.id, 'status': delivery.status})
+    return projects, jobs
 
 
 def image_rows(state, session):
@@ -327,7 +369,7 @@ def module_view(request: Request, module: Module):
         IMAGE_SIZES,
         read_defaults,
     )
-    from newsflow.gui.studio_v3 import workspace
+    from newsflow.gui.studio_v3 import workspace_view
 
     state = request.app.state
     result = {
@@ -340,9 +382,20 @@ def module_view(request: Request, module: Module):
         "commandsAvailable": True,
         "collections": {},
     }
+    publication_sources = {}
     with state.sessions() as session:
         for key, name, columns in SPECS[module]:
             result["collections"][key] = rows(session, name, columns)
+        if module == 'analytics':
+            publication_sources, confirmed_jobs = published_content(session)
+            metrics = []
+            for item in result['collections']['metrics']:
+                row = session.get(m.SocialMetric, item['id'])
+                receipt = confirmed_jobs.get(row.job_id)
+                if (receipt and not row.synthetic and row.remote_id == receipt['remoteId']
+                        and row.platform == receipt['platform'] and row.account_id == receipt['accountId']):
+                    metrics.append(item)
+            result['collections']['metrics'] = metrics
         if module == "automation":
             # Explicit non-secret saved options, so editing never resets them.
             for item in result["collections"]["schedules"]:
@@ -550,9 +603,12 @@ def module_view(request: Request, module: Module):
     if module == "characters":
         result["collections"]["jobs"] = character_rows(state)
     if module in {"library", "shorts", "publishing", "settings"}:
-        work = workspace(request)
+        work = workspace_view(request, include_library_hidden=module in {'shorts', 'settings'})
         result["projects"] = work["projects"]
         result["services"] = work["services"]
+        if module == 'publishing':
+            result['projects'] = [item for item in result['projects']
+                if item.get('mediaUrl') and item['technicalStatus'] in {'success', 'completed'}]
         if module == "library":
             from newsflow.samples.catalog import Samples
             from newsflow.studio.library_visibility import LibraryVisibility
@@ -565,6 +621,10 @@ def module_view(request: Request, module: Module):
                 item for item in result["collections"]["ownedReferences"] if item["id"] not in hidden]
             result["collections"]["libraryRemoved"] = removed
             result["libraryRemovalAvailable"] = True
+    if module == 'analytics':
+        work = workspace_view(request, include_library_hidden=True, project_ids=set(publication_sources))
+        result['publishedProjects'] = [{**item, 'publications': publication_sources[item['id']]}
+                                      for item in work['projects']]
     result["catalog"] = {
         "apiModels": API_MODELS,
         "imageModels": list(IMAGE_MODELS),
