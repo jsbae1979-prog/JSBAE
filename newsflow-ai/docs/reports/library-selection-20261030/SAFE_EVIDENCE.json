@@ -1,0 +1,69 @@
+{
+  "sourceSha": "531958cd2e3a0c0f32eaec500b985f56f36c7120",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "tests": {
+    "newApiPass": 36,
+    "newBrowserPass": 4,
+    "existingNavigationPass": 1,
+    "distinctPass": 41,
+    "finalFail": 0,
+    "finalError": 0,
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "initialFixtureErrors": 4,
+    "intermediateTitleSelectorFailures": 4,
+    "testFixesOnly": true
+  },
+  "captures": [
+    "captures/library-multiple-selection-1366x768.png",
+    "captures/library-multiple-selection-1920x1080.png"
+  ],
+  "application": {
+    "status": "STAGED_WAITING_FOR_RESTART_APPROVAL",
+    "operatingChanged": false,
+    "stagedFiles": [
+      {
+        "path": "app/product/newsflow/gui/cleanup_routes.py",
+        "sha256": "f9b7aceed1533c64c93038cc4a881f1fe7deb32215804f9069df35147df2bfdc",
+        "bytes": 9224
+      },
+      {
+        "path": "app/product/newsflow/studio/library_visibility.py",
+        "sha256": "4899c817e37b27e99ddb7dd2da2ca77a29edff1b0a115586ff398a53c326ca1e",
+        "bytes": 6378
+      },
+      {
+        "path": "app/product/newsflow/studio/read_models.py",
+        "sha256": "ae3289cafb30ff72429a0029e6d86d4943c4d85da882bc1e52d2a68aa06601af",
+        "bytes": 37659
+      },
+      {
+        "path": "app/controller/bat_distribution/operation.py",
+        "sha256": "02679701a98730bb49f18b1a9ac9c529829552171e1b5ebc8907fa40bff2c9b1",
+        "bytes": 5564
+      },
+      {
+        "path": "app/frontend/dist/assets/index-Cp0q8wWs.js",
+        "sha256": "d7baee295832cbb0324beeaeddd49a1fe1c6cd4b92b71d976f4f65877fd529de",
+        "bytes": 607676
+      },
+      {
+        "path": "app/frontend/dist/assets/index-Dt-ySDul.css",
+        "sha256": "d8984f83f2ed61f2e5e8c36e61139ac7f247234f37cd3ff9b64e531f10618e23",
+        "bytes": 175130
+      },
+      {
+        "path": "app/frontend/dist/index.html",
+        "sha256": "d70a49ed2d4e22e1ecf091f141196e8c4b80f533c65008cbeea26f71f8238c3f",
+        "bytes": 418
+      }
+    ],
+    "stopAttempts": 0,
+    "startAttempts": 0
+  },
+  "providerCalls": 0,
+  "operatingContentDeletion": 0,
+  "schemaMigrationAdded": false,
+  "externalCalls": 0,
+  "productionChrome": "NOT VERIFIED"
+}
