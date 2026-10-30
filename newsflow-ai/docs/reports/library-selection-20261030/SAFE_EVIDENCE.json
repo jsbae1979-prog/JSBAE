@@ -81,13 +81,22 @@
   "operatingContentDeletion": 0,
   "schemaMigrationAdded": false,
   "externalCalls": 0,
-  "productionChrome": "NOT VERIFIED",
+  "productionChrome": "DISPLAY_CONFIRMED_BY_USER",
   "preservationAudit": {
     "backupJobRecords": 27,
     "activeJobsAtBackup": 0,
     "activeScenesAtBackup": 0,
     "currentPid": 9196,
     "unauthenticatedHttpStatus": 403,
-    "authenticatedUserChrome": "AWAITING_USER_CONFIRMATION"
+    "authenticatedUserChrome": "DISPLAY_CONFIRMED_BY_USER"
+  },
+  "userConfirmation": {
+    "date": "2026-10-30",
+    "timezone": "Asia/Seoul",
+    "statement": "다중 선택·삭제·휴지통 모두 정상 표시",
+    "scope": "Authenticated Chrome selection and controls display",
+    "actualOperatingDeletionTested": false,
+    "additionalRestarts": 0,
+    "additionalPaidCalls": 0
   }
 }
