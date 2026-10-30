@@ -1,15 +1,12 @@
-"""Simple topic picking and explicitly expanded batch controls; Fake AI only."""
+"""One selected topic feeds the main story action; no batch controls or live AI."""
 import os
 from pathlib import Path
-from uuid import uuid4
 
 import pytest
 from playwright.sync_api import expect
 from test_model_picker_browser import browser
 from test_cloud_workspace_flow import local_server
 from test_character_episode_schema import image, profile, script
-from newsflow.character.kling import DEFAULTS, O3
-from newsflow.character.queue import EpisodeQueue
 from newsflow.character.registry import CharacterRegistry
 from newsflow.character.topics import TopicStore
 
@@ -134,94 +131,30 @@ def test_topic_generation_still_requires_explicit_paid_consent(app, browser, top
         context.close()
 
 
-def test_advanced_topics_preserve_batch_status_import_and_quote_approval(app, browser, topic_data, tmp_path):
-    data = topic_data; service = app.state.character
-    queue_service = EpisodeQueue(app.state.config.data_dir, service, data['registry'], data['store'])
-    queue = queue_service.create(data['profile']['id'], [row['id'] for row in data['rows'][:2]],
-        {**DEFAULTS, 'video_model': O3, 'native_resolution': 'std', 'duration': 15,
-         'sound': 'on', 'script_model': 'claude-sonnet-4-6'}, '5', uuid4().hex)
-    for row in queue['rows']:
-        job = service.read(row['job_id']); job.update(state='quoted', script=script(15), prompts=[],
-            quote_total_usd='0.40', quote_hash='f' * 64)
-        job['plan_hash'] = service.plan_hash(job); service.save(job)
-    queue['state'] = 'scripts_ready'; queue_service._save(queue)
-    blocked = queue_service.create(data['profile']['id'], [data['rows'][2]['id']],
-        queue['settings'], '5', uuid4().hex)
-    blocked['state'] = 'blocked'; queue_service._save(blocked)
+def test_one_selected_topic_uses_main_story_action_without_queue_requests(app, browser, topic_data):
+    data = topic_data
     with local_server(app) as origin:
-        context = context_for(browser, origin); page = context.new_page(); posts = []
-        page.on('request', lambda r: posts.append(r.url) if r.method == 'POST' else None)
+        context = context_for(browser, origin); page = context.new_page(); requests = []
+        page.on('request', lambda r: requests.append(r))
         panel = open_topics(page, origin, data)
+        for selector in ('.character-topic-advanced', '.character-topic-manage', '.character-batch', '.character-queue', '.character-topic-import'):
+            expect(panel.locator(selector)).to_have_count(0)
+        expect(panel.get_by_role('checkbox')).to_have_count(1)
+        expect(panel.get_by_role('combobox')).to_have_count(0)
+        target = data['rows'][1]['topic']
+        panel.get_by_role('button', name=target, exact=True).click()
+        expect(page.get_by_label('스토리 주제', exact=True)).to_have_value(target)
+        expect(panel.get_by_role('button', name=target, exact=True)).to_have_attribute('aria-pressed', 'true')
+        assert not any(r.method == 'POST' for r in requests)
         page.get_by_label('영상 길이', exact=True).select_option('15')
-        panel.get_by_text('고급 · 일괄 제작·기록 관리', exact=True).click()
-        first = data['rows'][0]
-        select = panel.get_by_label(first['topic'] + ' 대기열 선택', exact=True)
-        expect(select).to_be_visible(); select.check()
-        status = panel.get_by_label(first['topic'] + ' 상태', exact=True)
-        expect(status).to_be_visible(); status.select_option('skipped')
-        expect(status).to_have_value('skipped')
-        assert data['store'].list(data['profile']['id'])[0]['status'] == 'skipped'
-        panel.locator('.character-batch > summary').click()
-        scripts = panel.get_by_role('button', name='선택한 주제 대본 생성', exact=True)
-        expect(scripts).to_be_disabled()
-        panel.get_by_label('선택한 1편의 유료 대본 생성에 동의합니다.', exact=True).check()
-        expect(scripts).to_be_enabled()
-        panel.get_by_label('선택한 1편의 유료 대본 생성에 동의합니다.', exact=True).uncheck()
-        panel.locator('.character-queue > summary').click()
-        panel.get_by_role('combobox', name='저장된 대기열', exact=True).select_option(queue['id'])
-        approval = panel.get_by_role('button', name='견적 승인 후 순차 영상 생성', exact=True)
-        expect(approval).to_be_disabled()
-        expect(panel.get_by_text('공식 견적 합계: US$0.80', exact=True)).to_be_visible()
-        panel.get_by_label('이번 대기열 영상 승인 한도 (USD)', exact=True).fill('0.79')
-        panel.get_by_label('각 대본·견적을 검토했고 합계 비용에 동의합니다.', exact=True).check()
-        expect(approval).to_be_disabled()
-        panel.get_by_label('이번 대기열 영상 승인 한도 (USD)', exact=True).fill('0.80')
-        expect(approval).to_be_enabled()
-        panel.get_by_label('각 대본·견적을 검토했고 합계 비용에 동의합니다.', exact=True).uncheck()
-        expect(approval).to_be_disabled()
-        for raw in [queue['id'], 'scripts_ready', *[row['job_id'] for row in queue['rows']]]:
-            assert raw not in panel.inner_text()
-        out = CAPTURE_DIR or tmp_path / 'captures'; out.mkdir(parents=True, exist_ok=True)
-        for width, height in [(1920, 1080), (1366, 768)]:
-            page.set_viewport_size({'width': width, 'height': height})
-            assert panel.evaluate('(e)=>e.scrollWidth<=e.clientWidth+1')
-            assert page.evaluate('document.documentElement.scrollWidth<=window.innerWidth')
-            page.screenshot(path=str(out / f'character-advanced-topics-{width}x{height}.png'), full_page=True)
-        panel.get_by_label('각 대본·견적을 검토했고 합계 비용에 동의합니다.', exact=True).check()
-        panel.get_by_label('선택한 1편의 유료 대본 생성에 동의합니다.', exact=True).check()
-        panel.get_by_role('combobox', name='저장된 대기열', exact=True).select_option(blocked['id'])
-        expect(panel.get_by_role('button', name='승인한 영상 이어서 제작', exact=True)).to_have_count(0)
-        expect(panel.get_by_role('button', name='견적 승인 후 순차 영상 생성', exact=True)).to_have_count(0)
-        assert 'blocked' not in panel.inner_text() and blocked['id'] not in panel.inner_text()
-        expect(panel.get_by_label('선택한 1편의 유료 대본 생성에 동의합니다.', exact=True)).not_to_be_checked()
-        panel.get_by_role('combobox', name='저장된 대기열', exact=True).select_option(queue['id'])
-        expect(panel.get_by_label('각 대본·견적을 검토했고 합계 비용에 동의합니다.', exact=True)).not_to_be_checked()
-        expect(panel.get_by_role('button', name='견적 승인 후 순차 영상 생성', exact=True)).to_be_disabled()
-        blocked['state'] = 'unknown'; queue_service._save(blocked)
-        panel.get_by_role('combobox', name='저장된 대기열', exact=True).select_option(blocked['id'])
-        expect(panel.get_by_role('button', name='승인한 영상 이어서 제작', exact=True)).to_have_count(0)
-        expect(panel.get_by_role('button', name='견적 승인 후 순차 영상 생성', exact=True)).to_have_count(0)
-        assert 'unknown' not in panel.inner_text()
-        panel.get_by_role('combobox', name='저장된 대기열', exact=True).select_option(queue['id'])
-        panel.get_by_text('CSV 주제 가져오기', exact=True).click()
-        panel.get_by_label('번호, 카테고리, 주제', exact=True).fill('번호,카테고리,주제\n1,일상,합성 캐릭터가 작은 우체통을 발견한 오후')
-        panel.get_by_role('button', name='CSV 가져오기', exact=True).click()
-        expect(panel.get_by_role('button', name='합성 캐릭터가 작은 우체통을 발견한 오후', exact=True)).to_be_visible()
-        assert len(posts) == 2 and posts[0].endswith('/status') and posts[1].endswith('/topics/import')
-        assert not data['fake'].calls
-        assert queue_service.get(queue['id'])['state'] == 'scripts_ready'
-        assert all(service.read(row['job_id'])['state'] == 'quoted' for row in queue['rows'])
-        panel.get_by_label('이번 대기열 영상 승인 한도 (USD)', exact=True).fill('0.80')
-        panel.get_by_label('각 대본·견적을 검토했고 합계 비용에 동의합니다.', exact=True).check()
-        panel.get_by_label('선택한 1편의 유료 대본 생성에 동의합니다.', exact=True).check()
-        scripts.click()
-        expect(panel.get_by_label('선택한 1편의 유료 대본 생성에 동의합니다.', exact=True)).not_to_be_checked()
-        saved_queues = queue_service.list()
-        assert len(saved_queues) == 3 and len(data['fake'].script_calls) == 1
-        created = next(row for row in saved_queues if row['id'] not in {queue['id'], blocked['id']})
-        picker = panel.get_by_role('combobox', name='저장된 대기열', exact=True)
-        expect(picker).to_have_value(created['id'])
-        expect(picker.locator(f"option[value='{created['id']}']")).to_have_count(1)
-        assert len(posts) == 4 and posts[2].endswith('/queues/create') and posts[3].endswith('/scripts')
-        assert not any(url.endswith('/approve-videos') or url.endswith('/advance') for url in posts)
+        page.get_by_role('button', name='스토리 자동 생성하기', exact=False).click()
+        expect(page.get_by_role('heading', name='한글 스토리 · 합성 느긋한 토끼의 정원', exact=True)).to_be_visible(timeout=20000)
+        jobs = app.state.character.listing()
+        assert len(jobs) == 1 and jobs[0]['topic'] == target and jobs[0]['state'] == 'script_review'
+        assert len(data['fake'].script_calls) == 1 and not data['fake'].calls
+        expect(page.get_by_role('button', name='영상 견적 확인', exact=True)).to_be_enabled()
+        posts = [r for r in requests if r.method == 'POST']
+        assert len(posts) == 2 and posts[0].url.endswith('/character') and posts[1].url.endswith('/characters/auto-story')
+        assert not any('/queues' in r.url or r.url.endswith('/topics/import') or r.url.endswith('/status') for r in requests)
+        assert not any('/approve-videos' in r.url or '/advance' in r.url or '/submit' in r.url for r in requests)
         context.close()

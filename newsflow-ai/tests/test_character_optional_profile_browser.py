@@ -95,7 +95,7 @@ def test_generic_profile_failure_is_action_specific_and_keeps_inputs(app,browser
             dialog=page.get_by_role('dialog',name='캐릭터 특징 수정',exact=True)
             dialog.get_by_role('textbox',name='성격',exact=True).fill('저장 실패 후에도 남을 입력')
             dialog.get_by_role('button',name='캐릭터 저장',exact=True).click()
-            expect(dialog.get_by_role('alert')).to_have_text('캐릭터 정보를 저장하지 못했습니다. 필수 항목을 확인하세요.')
+            expect(dialog.get_by_role('alert')).to_have_text('캐릭터 정보를 저장하지 못했습니다. 입력한 내용은 유지됩니다. 저장 상태를 확인하세요.')
             expect(dialog.get_by_role('textbox',name='성격',exact=True)).to_have_value('저장 실패 후에도 남을 입력')
         else:
             page.get_by_role('button',name='등록 삭제',exact=True).click()

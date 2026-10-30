@@ -270,8 +270,9 @@ def test_compact_reference_and_topic_controls_preserve_explicit_actions(app,brow
         box=consent.bounding_box();assert box and box['width']<=20 and box['height']<=20
         assert consent.locator('..').evaluate('(e)=>getComputedStyle(e).flexDirection')=='row'
         assert page.get_by_label('주제 개수',exact=True).bounding_box()['width']<=90
-        assert tools.locator('.character-batch').evaluate('(e)=>e.open') is False
-        assert tools.locator('.character-topic-import').evaluate('(e)=>e.open') is False
+        expect(tools.locator('.character-batch')).to_have_count(0)
+        expect(tools.locator('.character-topic-import')).to_have_count(0)
+        expect(tools.locator('.character-topic-advanced')).to_have_count(0)
         expect(page.get_by_role('button',name='입력한 주제 저장',exact=True)).to_be_enabled()
         expect(page.get_by_role('button',name='주제 자동 생성',exact=True)).to_be_disabled()
         for width,height in ((1920,1080),(1366,768)):

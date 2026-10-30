@@ -54,10 +54,13 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
   const imageOnly=images.filter(image=>!profiles.some(p=>p.asset===image.id));
   const choice=selected?`profile:${selected.id}`:selectedAsset?`image:${selectedAsset}`:"";
   function begin(row: Item | null) {
-    setRecord(row); setEditing(true); setError(""); setCandidates([]); setConsent(false); setSpeciesReview(null);
+    // A viewed job keeps its historical snapshot. Editing targets the current
+    // registered profile, including its matching reference and revision.
+    const current = row ? profiles.find(profile=>profile.id===row.id) ?? row : null;
+    setRecord(current); setEditing(true); setError(""); setCandidates([]); setConsent(false); setSpeciesReview(null);
     const base = blankProfile();
-    setDraft(row ? Object.fromEntries(Object.keys(base).map(k => [k, row[k] ?? base[k as keyof typeof base]])) as typeof base : base);
-    setAsset(row?.asset ?? "");
+    setDraft(current ? Object.fromEntries(Object.keys(base).map(k => [k, current[k] ?? base[k as keyof typeof base]])) as typeof base : base);
+    setAsset(current?.asset ?? "");
   }
   async function act(kind: "save" | "analyze" | "delete") {
     if (sending.current || disabled) return;
@@ -89,8 +92,23 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
     } catch (e) {
       const message=e instanceof Error ? e.message : "캐릭터 정보를 확인하세요.";
       const generic=message.startsWith('입력·저장 상태')||message.startsWith('저장 상태를 확인')||message.startsWith('이미지 분석을 완료하지 못했습니다');
+      if(kind==='save'&&generic&&record) {
+        // Diagnose a concurrent edit with one authenticated read. Never replace
+        // the user's draft, adopt a new revision, or replay the failed save.
+        try {
+          const response=await fetch("/api/studio/characters/profiles",{credentials:"same-origin",cache:"no-store"});
+          if(response.ok) {
+            const data=await response.json();
+            const current=Array.isArray(data.profiles)?data.profiles.find((profile:Item)=>profile.id===record.id):null;
+            if(current&&Number.isInteger(current.revision)&&current.revision!==record.revision) {
+              setError("다른 곳에서 캐릭터 정보가 변경되었습니다. 입력한 내용은 유지했습니다. 최신 정보를 확인한 뒤 다시 수정하세요.");
+              return;
+            }
+          }
+        } catch { /* A failed diagnostic read never retries or overwrites data. */ }
+      }
       setError(kind==='analyze'?`특징 초안을 만들지 못했습니다.${generic?'':` ${message}`}`:
-        generic?(kind==='save'?'캐릭터 정보를 저장하지 못했습니다. 필수 항목을 확인하세요.':'캐릭터 등록을 삭제하지 못했습니다.'):message);
+        generic?(kind==='save'?'캐릭터 정보를 저장하지 못했습니다. 입력한 내용은 유지됩니다. 저장 상태를 확인하세요.':'캐릭터 등록을 삭제하지 못했습니다.'):message);
     }
     finally { sending.current = false; setBusy(false); onBusy(false); }
   }
@@ -166,109 +184,37 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
     </CharacterModal>}
   </section>;
 }
-export function CharacterTopics({ profile, model, available, topic, onTopic, csrf, disabled, settings, episodeLimit, jobs, onRefresh, onJob, onBusy }: {
+export function CharacterTopics({ profile, model, available, topic, onTopic, csrf, disabled, onBusy }: {
   profile: Item | null; model: string; available: boolean; topic: string; onTopic: (value: string) => void;
-  csrf: string; disabled: boolean; settings: Item; episodeLimit: string; jobs: Item[];
-  onRefresh: () => Promise<unknown>; onJob: (id: string) => void; onBusy: (value:boolean) => void;
+  csrf: string; disabled: boolean; onBusy: (value:boolean) => void;
 }) {
   const [rows, setRows] = useState<Item[]>([]), [count, setCount] = useState(10);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
-  const [consent, setConsent] = useState(false), [csv, setCsv] = useState("");
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [queue, setQueue] = useState<Item | null>(null), [queues, setQueues] = useState<Item[]>([]);
-  const [scriptConsent, setScriptConsent] = useState(false), [videoConsent, setVideoConsent] = useState(false);
-  const [queueCap, setQueueCap] = useState("");
-  const [deleteQueue, setDeleteQueue] = useState<Item | null>(null), [deleteError, setDeleteError] = useState("");
+  const [consent, setConsent] = useState(false);
   const sending = useRef(false);
   const topicStates: Record<string,string> = {new:"미사용",scripted:"대본 작성",produced:"영상 완료",skipped:"보류"};
-  const queueStates: Record<string,string> = {drafts:"대본 생성 대기",scripts_running:"대본 생성 중",
-    scripts_ready:"대본 검토 대기",videos_approved:"영상 제작 승인 완료",videos_running:"영상 제작 중",
-    clips_ready:"장면 검토 대기",blocked:"확인 필요 · 제작 중단"};
   useEffect(() => {
-    setRows([]); setError(""); setSelectedTopics([]); setQueue(null); setQueues([]);
-    setConsent(false); setScriptConsent(false); setVideoConsent(false); setQueueCap("");
-    setDeleteQueue(null); setDeleteError("");
-    let active = true;
-    fetch("/api/studio/characters/queues", { credentials: "same-origin" }).then(async r=>r.ok?r.json():{queues:[]})
-      .then(data=>{if(active)setQueues(data.queues??[]);}).catch(()=>{});
+    setRows([]); setError(""); setConsent(false); let active = true;
     if (profile) fetch(`/api/studio/characters/profiles/${profile.id}/topics`, { credentials: "same-origin" })
-      .then(async r => { if (!r.ok) throw Error("주제 목록을 읽지 못했습니다."); return r.json(); })
-      .then(data => { if (active) setRows(data.topics ?? []); }).catch(e => { if (active) setError(e.message); });
-    return () => { active = false; };
+      .then(async response => {if (!response.ok) throw Error("저장한 주제를 불러오지 못했습니다.");return response.json();})
+      .then(data => {if (active) setRows(data.topics ?? []);})
+      .catch(error => {if (active) setError(error.message);});
+    return () => {active = false;};
   }, [profile?.id]);
-  function acceptQueue(value: Item) {
-    setQueue(value);
-    setQueues(previous=>previous.some(item=>item.id===value.id)
-      ? previous.map(item=>item.id===value.id?value:item) : [...previous,value]);
-  }
-  async function removeQueue() {
-    const target = deleteQueue;
-    if (!target || sending.current || disabled || ["scripts_running","videos_running"].includes(target.state)) return;
-    sending.current = true; setBusy(true); onBusy(true); setDeleteError("");
-    try {
-      const result = await characterCommand(`/api/studio/characters/queues/${target.id}/delete`, csrf, { consent: "true" });
-      if (result.deleted !== true || result.historicalJobsPreserved !== true)
-        throw Error("삭제 결과를 확인하지 못했습니다. 목록을 다시 확인하세요.");
-      setQueues(previous=>previous.filter(item=>item.id!==target.id));
-      setQueue(current=>current?.id===target.id?null:current);
-      setScriptConsent(false); setVideoConsent(false); setQueueCap(""); setDeleteQueue(null);
-    } catch(e) {
-      setDeleteError(`대기열 삭제: ${e instanceof Error?e.message:"저장 상태를 확인하세요. 자동 재요청하지 않습니다."}`);
-    } finally { sending.current = false; setBusy(false); onBusy(false); }
-  }
-  async function act(kind: "generate" | "manual" | "import", value?: Item, status?: string) {
+  async function act(kind: "generate" | "manual") {
     if (!profile || sending.current || disabled) return;
     sending.current = true; setBusy(true); onBusy(true); setError("");
     try {
-      if (kind === "generate" && (!consent || !available)) throw Error("주제 생성의 유료 요청 승인을 확인하세요.");
-      const data = await characterCommand(`/api/studio/characters/profiles/${profile.id}/topics/${value ? `${value.id}/status` : kind}`, csrf,
-        value ? { status: status ?? "skipped" } : kind === "generate" ?
-          { count: String(count), model, consent: "true", request_id: crypto.randomUUID().replaceAll("-", "") } :
-          kind === "manual" ? { topic } : { content: csv });
-      setRows(data.topics ?? [...rows.filter(r => r.id !== data.id), data]); setConsent(false);
-    } catch (e) {
-      const action=value?"주제 상태 변경":kind==="generate"?"주제 생성":kind==="import"?"CSV 가져오기":"주제 저장";
-      setError(`${action}: ${e instanceof Error ? e.message : "입력과 저장 상태를 확인하세요."}`);
-    } finally { sending.current = false; setBusy(false); onBusy(false); }
-  }
-  const queueJobs: Item[] = (queue?.rows ?? []).map((row: Item) => jobs.find(j => j.id === row.job_id)).filter(Boolean);
-  const quoted = queueJobs.length > 0 && queueJobs.length === queue?.rows?.length && queueJobs.every(j => j.state === "quoted" && j.quote_hash);
-  const queueQuote = queueJobs.reduce((sum,j) => sum + Number(j.quote ?? 0), 0);
-  const reviewQueue = !!queue && ["drafts","scripts_ready"].includes(queue.state) && !queue.video_approval;
-  const continueQueue = !!queue && ["videos_approved","videos_running"].includes(queue.state) && !!queue.video_approval;
-  async function batch(kind: "scripts" | "approve" | "advance" | "read", identifier?: string) {
-    if (!profile || sending.current || disabled) return;
-    sending.current = true; setBusy(true); onBusy(true); setError("");
-    if(kind==="read") { setVideoConsent(false); setScriptConsent(false); setQueueCap(""); }
-    try {
-      if (kind === "scripts") {
-        setVideoConsent(false); setQueueCap("");
-        if (!scriptConsent || !available || selectedTopics.length === 0) throw Error("선택한 대본 요청의 유료 사용을 승인하세요.");
-        const created = await characterCommand("/api/studio/characters/queues/create", csrf,
-          { character_id: profile.id, topic_ids: JSON.stringify(selectedTopics), settings: JSON.stringify(settings),
-            episode_limit: episodeLimit, request_id: crypto.randomUUID().replaceAll("-", "") });
-        acceptQueue(created);
-        const result = await characterCommand(`/api/studio/characters/queues/${created.id}/scripts`, csrf, { consent: "true" });
-        acceptQueue(result); setScriptConsent(false);
-      } else if (kind === "approve" && queue) {
-        if (!quoted || !videoConsent || !(Number(queueCap) >= queueQuote)) throw Error("각 대본의 검토·공식 견적과 전체 승인 금액을 확인하세요.");
-        const approved = await characterCommand(`/api/studio/characters/queues/${queue.id}/approve-videos`, csrf,
-          { approvals: JSON.stringify(queueJobs.map(j=>({job_id:j.id,quote_hash:j.quote_hash}))), max_total_usd: queueCap, consent: "true" });
-        acceptQueue(approved); setVideoConsent(false);
-        const result = await characterCommand(`/api/studio/characters/queues/${queue.id}/advance`, csrf, { consent: "true" });
-        acceptQueue(result);
-      } else if (kind === "advance" && queue) {
-        acceptQueue(await characterCommand(`/api/studio/characters/queues/${queue.id}/advance`, csrf, { consent: "true" }));
-      } else if (kind === "read" && identifier) {
-        const response = await fetch(`/api/studio/characters/queues/${identifier}`, { credentials: "same-origin" });
-        if (!response.ok) throw Error("대기열을 읽지 못했습니다."); acceptQueue(await response.json());
-      }
-      await onRefresh();
-    } catch(e) {
-      setScriptConsent(false); setVideoConsent(false);
-      const action={scripts:"일괄 대본 생성",approve:"영상 제작 승인",advance:"영상 제작 계속",read:"대기열 조회"}[kind];
-      setError(`${action}: ${e instanceof Error?e.message:"요청 결과를 확인하세요. 자동 재시도하지 않습니다."}`);
-    } finally {sending.current=false;setBusy(false);onBusy(false);}
+      if (kind === "generate" && (!consent || !available || !Number.isInteger(count) || count < 1 || count > 50))
+        throw Error("주제 개수와 유료 요청 동의를 확인하세요.");
+      const data = await characterCommand(`/api/studio/characters/profiles/${profile.id}/topics/${kind}`, csrf,
+        kind === "generate" ? {count: String(count), model, consent: "true", request_id: crypto.randomUUID().replaceAll("-", "")}
+          : {topic});
+      setRows(previous => data.topics ?? [...previous.filter(row => row.id !== data.id), data]);
+      setConsent(false);
+    } catch (error) {
+      setError(`${kind === "generate" ? "주제 생성" : "주제 저장"}: ${error instanceof Error ? error.message : "저장 상태를 확인하세요."}`);
+    } finally {sending.current = false; setBusy(false); onBusy(false);}
   }
   return <details className="character-topic-tools"><summary>주제 자동 생성·기록</summary>
     <fieldset disabled={disabled || busy || !profile}>
@@ -284,58 +230,9 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
         <span className="character-topic-status">{topicStates[row.status]??"상태 확인"}</span>
       </div>)}</div>
       {!rows.length&&<small className="character-topic-empty">생성하거나 저장한 주제를 여기에서 선택하세요.</small>}
-      <details className="character-topic-advanced"><summary>고급 · 일괄 제작·기록 관리</summary>
-        <div className="character-topic-manage">{rows.map(row=><div key={row.id}>
-          <label className="check"><input type="checkbox" aria-label={`${row.topic} 대기열 선택`} checked={selectedTopics.includes(row.id)}
-            onChange={e=>{setSelectedTopics(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id));setScriptConsent(false);}} />{row.topic}</label>
-          <select aria-label={`${row.topic} 상태`} value={row.status} onChange={e=>void act("manual",row,e.target.value)}>
-            <option value="new">미사용</option><option value="scripted">대본 작성</option><option value="produced">영상 완료</option><option value="skipped">보류</option>
-          </select>
-        </div>)}</div>
-        <details className="character-batch"><summary>선택 주제 일괄 제작 ({selectedTopics.length}개)</summary>
-          <p>편당 한도 US${episodeLimit} · 선택한 {selectedTopics.length}편 상한 US${(Number(episodeLimit||0)*selectedTopics.length).toFixed(2)}</p>
-          <label className="check"><input type="checkbox" checked={scriptConsent} onChange={e=>setScriptConsent(e.target.checked)} />
-            선택한 {selectedTopics.length}편의 유료 대본 생성에 동의합니다.</label>
-          <button disabled={!scriptConsent||!available||!selectedTopics.length} onClick={()=>void batch("scripts")}>선택한 주제 대본 생성</button>
-        </details>
-        <details className="character-queue"><summary>제작 대기열</summary>
-          <div className="character-queue-select">
-            <label>저장된 대기열<select value={queue?.id??""} onChange={e=>{if(e.target.value)void batch("read",e.target.value);}}>
-              <option value="">대기열 선택</option>{queues.filter(q=>q.character_id===profile?.id).map((q,index)=><option key={q.id} value={q.id}>대기열 {index+1} · {q.rows?.length??0}편</option>)}
-            </select></label>
-            <button type="button" disabled={!queue||["scripts_running","videos_running"].includes(queue.state)}
-              onClick={()=>{if(queue){setDeleteQueue({...queue});setDeleteError("");}}}>대기열 삭제</button>
-          </div>
-          {queue&&["scripts_running","videos_running"].includes(queue.state)&&<small>제작 중인 대기열은 작업이 끝난 뒤 삭제할 수 있습니다.</small>}
-          {queue && <div className="character-queue-current"><p role="status">대기열 상태: {queueStates[queue.state]??"상태 확인 필요"}</p>
-            <div className="character-queue-items">{(queue.rows??[]).map((row:Item,index:number)=><button key={row.job_id??row.topic_id??index} disabled={!row.job_id} onClick={()=>onJob(row.job_id)}>
-              {queue.state==="clips_ready"?"장면 검토":"작업 보기"} · {jobs.find(j=>j.id===row.job_id)?.topic??row.topic??rows.find(r=>r.id===row.topic_id)?.topic??`${index+1}번째 주제`}
-            </button>)}</div>
-            {queue.state==="blocked"&&<p className="character-queue-notice">실패하거나 결과가 불명확한 작업이 있습니다. 각 작업을 확인하세요. 자동 재시도하지 않습니다.</p>}
-            {reviewQueue&&<div className="character-queue-review">
-              <p>{quoted?`공식 견적 합계: US$${queueQuote.toFixed(2)}`:"각 대본을 검토한 뒤 공식 견적을 받아주세요."}</p>
-              {quoted&&<><label>이번 대기열 영상 승인 한도 (USD)<input inputMode="decimal" value={queueCap} onChange={e=>setQueueCap(e.target.value)}/></label>
-                <label className="check"><input type="checkbox" checked={videoConsent} onChange={e=>setVideoConsent(e.target.checked)} />각 대본·견적을 검토했고 합계 비용에 동의합니다.</label>
-                <button disabled={!videoConsent||!(Number(queueCap)>=queueQuote)} onClick={()=>void batch("approve")}>견적 승인 후 순차 영상 생성</button></>}
-            </div>}
-            {continueQueue&&<><button onClick={()=>void batch("advance")}>승인한 영상 이어서 제작</button>
-              <small>승인한 다음 영상의 유료 생성이 포함될 수 있습니다. 실패·결과 불명 시 중단합니다.</small></>}
-            {queue.state==="clips_ready"&&<small>각 장면을 검토한 뒤 작업 화면에서 최종 합성을 진행하세요.</small>}
-          </div>}
-        </details>
-        <details className="character-topic-import"><summary>CSV 주제 가져오기</summary><label>번호, 카테고리, 주제<textarea value={csv} maxLength={48000} onChange={e=>setCsv(e.target.value)} /></label>
-          <button disabled={!csv.trim()} onClick={()=>void act("import")}>CSV 가져오기</button></details>
-      </details>
     </fieldset>
     {!profile && <small>등록된 캐릭터를 먼저 선택하세요.</small>}
     {busy && <p role="status">주제 처리 중…</p>}{error && <p role="alert">{error}</p>}
-    {deleteQueue&&<CharacterModal title="제작 대기열 삭제" busy={busy} onClose={()=>setDeleteQueue(null)} footer={<>
-      <button type="button" disabled={busy} onClick={()=>setDeleteQueue(null)}>취소</button>
-      <button type="button" disabled={busy||disabled} onClick={()=>void removeQueue()}>대기열 삭제 확인</button></>}>
-      <p>선택한 대기열만 목록에서 삭제합니다. 연결된 작업·영상과 저장한 주제는 그대로 남습니다.</p>
-      <p>{deleteQueue.rows?.length??0}편 · {queueStates[deleteQueue.state]??"상태 확인 필요"}</p>
-      {deleteError&&<p role="alert" className="character-modal-feedback">{deleteError}</p>}
-    </CharacterModal>}
   </details>;
 }
 

@@ -696,7 +696,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       [k]: ["duration", "clip_seconds"].includes(k) ? Number(v) : v,
     }));
   }
-  function reset() {
+  function reset(useCurrentProfile = false) {
+    if (useCurrentProfile) setActiveProfile(current => current
+      ? profiles.find(profile => profile.id === current.id) ?? current : null);
     if (job) {
       setPerOverrides((current) => {
         const next = { ...current };
@@ -1495,9 +1497,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
 
             <p className="kling-character-consent">스토리 생성은 유료입니다. 영상 제작은 별도 승인합니다.</p>
             <CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
-              topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy}
-              settings={settings} episodeLimit={per} jobs={jobs} onRefresh={c.load}
-              onJob={(identifier) => { setId(identifier); setFile(null); setAsset(""); setReferenceJob(""); }} />
+              topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} />
             {!ready && (
               <p role="status">
                 새 제작실 API 연결 확인 전 · 생성할 수 없습니다.
@@ -1511,7 +1511,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   onClick={() => {
                     setFailure("");
                     pending.current = null;
-                    reset();
+                    reset(true);
                   }}
                 >
                   새 스토리 입력
@@ -2037,7 +2037,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 type="button"
                 disabled={isBusy}
                 onClick={() => {
-                  reset();
+                  reset(true);
                   setFile(null);
                   setAsset("");
                   setHistory(false);
