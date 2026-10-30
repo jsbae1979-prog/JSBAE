@@ -1,0 +1,116 @@
+{
+  "sourceCommit": "8c4d5158567461a6ad9d213177ffe9bef3f05546",
+  "scope": "CharacterTopics UI and scoped CSS only",
+  "newTests": {
+    "pass": 3,
+    "fail": 0,
+    "error": 0
+  },
+  "reusedImpactTestsExecuted": {
+    "pass": 2,
+    "fail": 0,
+    "error": 0
+  },
+  "finalDistinctCases": {
+    "test_simple_topic_selection_manual_save_and_compact_layout": true,
+    "test_topic_generation_still_requires_explicit_paid_consent": true,
+    "test_advanced_topics_preserve_batch_status_import_and_quote_approval": true,
+    "test_pending_topic_response_cannot_switch_character_or_start_another_request": true,
+    "test_compact_reference_and_topic_controls_preserve_explicit_actions": true
+  },
+  "testFixtureCorrections": [
+    "Replaced nested-label select locator with role-based combobox locator.",
+    "Fake writer now follows actual payload without character ID; test explicitly selects 15 seconds matching its synthetic script."
+  ],
+  "typescript": "PASS",
+  "reactBuild": "PASS",
+  "browser": "isolated Playwright Chromium, synthetic profiles and Fake providers",
+  "viewportSizes": [
+    "1920x1080",
+    "1366x768"
+  ],
+  "assertions": [
+    "Selecting a topic makes no POST request; manual save remains explicit.",
+    "Topic generation and batch scripts require explicit consent.",
+    "Profile and queue changes clear stale consent.",
+    "Status editing and CSV import remain available under advanced controls.",
+    "Quote approval preserves amount and consent checks.",
+    "Blocked and unknown queues expose no paid continue action.",
+    "New queue appears immediately in saved queue selector.",
+    "No approve-videos or advance POST was performed by the tests."
+  ],
+  "operatingApplication": {
+    "frontendOnly": true,
+    "restartCount": 0,
+    "recordedPidUnchanged": 28460,
+    "recordedPythonProcessPresent": true,
+    "unauthenticatedRootHttpStatus": 403,
+    "chromeUserConfirmation": "PENDING",
+    "tablesUnchanged": 47,
+    "articles": 169,
+    "originalAndABPreserved": true,
+    "launchAndAclUnchanged": true,
+    "files": [
+      {
+        "path": "app/frontend/dist/assets/index-BIbinl4J.css",
+        "sha256": "710f5bb5f6362f7a5e462b4c3c5fd4c48e41d41c538520aea3a07484d00d01d3",
+        "bytes": 175901
+      },
+      {
+        "path": "app/frontend/dist/assets/index-RdtVcRo7.js",
+        "sha256": "48eb83e0685cea7f6f70d3492edb035f806796392de751340fdc461a027e1f5b",
+        "bytes": 608209
+      },
+      {
+        "path": "app/frontend/dist/index.html",
+        "sha256": "45c990f81342f0d59e1ddbd065449146d2b3e26484e7dff98511fa371d86e770",
+        "bytes": 418
+      }
+    ],
+    "rollback": "Previous index/layout backed up locally; prior hashed assets retained."
+  },
+  "paidProviderCalls": 0,
+  "snsCalls": 0,
+  "unchanged": [
+    "character registration and analysis prompt/schema",
+    "Python APIs",
+    "stored topics and queues",
+    "user keys and media",
+    "original DB and backups A/B",
+    "PR #35",
+    "main"
+  ],
+  "captures": [
+    {
+      "path": "captures/character-advanced-topics-1366x768.png",
+      "sha256": "c05fdc51549cbed77255bece52f74952ede0a37f872e979c6bcdbcb080e6e7fa"
+    },
+    {
+      "path": "captures/character-advanced-topics-1920x1080.png",
+      "sha256": "ca40056d0486bc1021f010806520f84a0556f970f8071f78a5088cb103ef8fc0"
+    },
+    {
+      "path": "captures/character-reference-compact-1366x768.png",
+      "sha256": "2cd18f469dc92f859081e830c35f29e020c8ee3878c0541f3ef5dace51a3f834"
+    },
+    {
+      "path": "captures/character-simple-topics-1366x768.png",
+      "sha256": "7a950819cb3e8e6bb2162af5dbeb882b949404453758da7e8e137cc8bb64efa2"
+    },
+    {
+      "path": "captures/character-simple-topics-1920x1080.png",
+      "sha256": "bca0a66b8f4631abad0f37a94884b826b4bd09d1630b349bf3e72638d5b91633"
+    },
+    {
+      "path": "captures/character-topic-compact-1366x768.png",
+      "sha256": "43d9abe64495f1532d327526e73b5861803f328fb2cb6c1ae7db0ba08c0ea59d"
+    },
+    {
+      "path": "captures/character-topic-compact-1920x1080.png",
+      "sha256": "b1ff0db0bedab4f65c192a930e3799db41ce92c1ed48f52397876e6774c8dc9d"
+    }
+  ],
+  "limitations": [
+    "Operating Chrome visual confirmation pending user refresh; no live paid generation tested."
+  ]
+}

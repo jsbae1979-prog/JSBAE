@@ -13,3 +13,7 @@ Focused verification uses isolated synthetic profiles and Fake providers: compac
 Operating application uses the existing frontend-only procedure: back up the old index/layout, install immutable hashed JS/CSS first, then atomically switch the index, and keep old assets for rollback. No process is stopped or started. User data, launch policy, authentication, cost approvals, original DB and backups A/B remain protected. Operating Chrome refresh confirmation is recorded separately from synthetic browser tests.
 
 No paid AI, OAuth, SNS, unsigned update, external distribution or PR merge is performed. Existing PR #36 remains unmerged; PR #35 and main are untouched.
+
+Final focused results: 3 new tests PASS and 2 existing impact tests PASS, with 0 remaining FAIL/ERROR. TypeScript and React build passed. Initial failures were test-selector/Fake-fixture mismatches, corrected without additional product changes.
+
+Static operating assets applied from commit `8c4d5158567461a6ad9d213177ffe9bef3f05546` without restart. All 47 table fingerprints and 169 article count remained unchanged; original DB and backups A/B matched, and launch/ACL settings were unchanged. The recorded Python process remains present; unauthenticated root returned HTTP 403. Chrome confirmation awaits the user refreshing the authenticated screen. No browser automation or authentication workaround was attempted.
