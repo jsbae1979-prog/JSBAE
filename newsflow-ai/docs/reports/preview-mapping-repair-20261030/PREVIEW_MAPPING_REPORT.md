@@ -1,6 +1,6 @@
 # News preview, selected content and character analysis repair — 2026-10-30
 
-**CONDITIONAL: implementation and focused verification passed; operating application is pending approval.** No new paid generation was submitted. Existing failed requests were not replayed or removed.
+**ACCEPTED for these repairs and their approved operating application.** The user confirmed in the newly opened Chrome that news images and selected-library-content navigation both work normally. Character analysis review handling passed Fake tests; no new paid analysis or video generation was submitted. Existing failed requests were not replayed or removed. Paid end-to-end film acceptance remains incomplete.
 
 ## Source and scope
 
@@ -8,7 +8,8 @@
 - Development baseline: `3be8f0eadc87b7152b0a5968f452c70c1d1ea8d5`.
 - Species review: `46cbd9f`; selected content: `2843344`; news previews / combined build source: `7b4685964088241859c60f17f66508a5b3f24e14`.
 - Existing PR #36 remains unmerged. PR #35 and main were not changed.
-- Existing operating source remains `2dcb062058edb12c485e3c65d4e3ad64568af265` until explicit application.
+- Previous operating source: `2dcb062058edb12c485e3c65d4e3ad64568af265`; applied source: `7b4685964088241859c60f17f66508a5b3f24e14`.
+- Operating installation `C:\NewsFlowAI`, port 18768, final owned Python PID 28460.
 
 ## News Studio images
 
@@ -18,7 +19,7 @@ The operating BAT request boundary inherited the validation route restriction an
 
 `OperatingRequests` now delegates only exact GET `/news/[1-9][0-9]*/thumbnail` to the existing inner application. Restored validation mode, HEAD/POST and other paths remain unchanged. LocalAccess, Origin/CSRF, source-DB lookup and the existing HTTPS/DNS-pinning/robots/redirect/raster limits remain in force. A cache miss can perform public source-image and robots GETs, without API keys or paid AI calls. No arbitrary URL parameter, article scraping, paid-provider, OAuth, SNS or collection capability was added.
 
-The news read model returns a thumbnail URL only when a source record exists. News Studio distinguishes loaded images, **출처 이미지 없음**, and **이미지를 불러오지 못했습니다**, with a neutral source/news icon. No fabricated image substitutes for missing source material. A saved URL does not guarantee that its remote source is still accessible; all 77 live-source images remain unverified until operating Chrome inspection after application.
+The news read model returns a thumbnail URL only when a source record exists. News Studio distinguishes loaded images, **출처 이미지 없음**, and **이미지를 불러오지 못했습니다**, with a neutral source/news icon. No fabricated image substitutes for missing source material. A saved URL does not guarantee that its remote source is still accessible. The user confirmed recent news images in operating Chrome after application; this does not certify every one of the 77 remote source URLs.
 
 Changed: `src/newsflow/studio/read_models.py`, `tools/bat_distribution/operation.py`, `frontend/src/studio/core/NewsStudio.tsx`, scoped news rules in `core-studios.css`.
 
@@ -53,7 +54,7 @@ All new development/browser checks used synthetic data and Fake providers; brows
 | News Chrome rendering at 1920×1080 and 1366×768 | 1 | 0 | 0 |
 | **New tests total** | **39** | **0** | **0** |
 
-Eight existing analysis diagnostic tests were also rechecked: 8 PASS. TypeScript, final combined React build, independent diff review and `git diff --check` passed. Existing font/bundle and Starlette deprecation warnings were not newly introduced. An initial browser-test selector mistake was corrected; the final two review tests passed. These are development checks, not confirmation in the user's operating Chrome.
+Eight existing analysis diagnostic tests were also rechecked: 8 PASS. TypeScript, final combined React build, independent diff review and `git diff --check` passed. Existing font/bundle and Starlette deprecation warnings were not newly introduced. An initial browser-test selector mistake was corrected; the final two review tests passed. These development results are separate from the user's later operating Chrome confirmation.
 
 Prior full Python 3.12 regression, BAT/start-stop, DB, media, packaging and security evidence were reused. No full regression, Guard audit, V3 diagnosis, package regeneration or paid-provider test was repeated. No new Python 3.14 full-suite or OS DPI claim is made.
 
@@ -61,8 +62,10 @@ Synthetic screenshots are preserved in `character-library-navigation-20261030/ca
 
 ## Operation and paid-test status
 
-Six exact application files are staged with source/destination hashes; existing operating overlays are preserved using unique diff context. No operating file has yet been modified by this work. At the latest read-only check, port 18768 had no listener; no automatic start or stop was attempted.
+After the user's explicit approval, six exact application files were applied with source/destination hashes; existing operating overlays were preserved using unique diff context. A preliminary port query showed no listener, but the follow-up process check found the recorded owned Python PID 17700 still alive. The existing Stop BAT therefore performed one normal Stop, exit 0; no force termination or extra attempt was used. A verified 106-file profile snapshot and program rollback copies were created before applying files. One Start opened Chrome through the existing normal authentication flow; final owned PID is 28460.
 
 The observed four failed Claude analysis requests have aggregate estimated usage US$0.053022 and conservative reservation ceilings US$1.140000. These are not verified invoices. No new profiles or changed episode jobs were found since the existing baseline. This work made no paid request or retry.
 
-Existing DB, keys, media, originals and A/B backups were not changed by the development work. For application, the existing approved backup/diff/normal-stop-start procedure is prepared; a fresh user authorization is required because the prior restart allowance was already consumed. No automatic retry will follow a failed start or an unknown outcome.
+Post-start comparison confirmed 47 DB tables / 169 articles unchanged, 105 compared profile files preserved, source original and backups A/B unchanged, ACLs and launch/security flags preserved. Expected session/browser-launch records changed as part of the normal restart. No key or token was printed or committed. No migration, paid generation, SNS, update, deployment to another user or PR merge occurred.
+
+The user answered **두 항목 모두 정상** when asked to check (1) recent News Studio article images and (2) selecting a library card then opening its matching topic/character in the studio. Browser automation remained unused; no session token/cookie was copied or displayed. New paid image-analysis behavior is intentionally not re-tested against a supplier, and prior failed response bodies remain unrecoverable. No further restart or automatic retry was performed.

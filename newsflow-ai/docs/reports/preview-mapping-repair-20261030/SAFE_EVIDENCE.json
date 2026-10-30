@@ -1,7 +1,22 @@
 {
   "sourceSha": "7b4685964088241859c60f17f66508a5b3f24e14",
-  "operatingApplied": false,
-  "operation": "Awaiting approval; latest read-only port check found no listener",
+  "operatingApplied": true,
+  "operation": {
+    "head": "7b4685964088241859c60f17f66508a5b3f24e14",
+    "port": 18768,
+    "pid": 28460,
+    "normalStopExit": 0,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "tablesUnchanged": 47,
+    "articles": 169,
+    "profileFilesPreserved": 105,
+    "originalAndABPreserved": true,
+    "chromeOpenAccepted": true,
+    "securityFlagsPreserved": true,
+    "paidCallsDuringDeployment": 0,
+    "snsCalls": 0
+  },
   "articles": 169,
   "storedPreviewRecords": 77,
   "articlesWithoutPreviewRecords": 92,
@@ -73,13 +88,17 @@
   ],
   "paidCallsMadeByThisWork": 0,
   "automaticRetries": 0,
-  "operatingMutations": 0,
+  "approvedOperatingFilesApplied": 6,
   "observedPriorAnalysis": {
     "failedRecords": 4,
     "estimatedUsageUSD": "0.053022",
     "reservationCeilingsUSD": "1.140000",
     "vendorInvoiceVerified": false
   },
-  "actualUserChromeAfterFix": "NOT VERIFIED",
-  "judgment": "CONDITIONAL"
+  "actualUserChromeAfterFix": {
+    "newsImages": "USER CONFIRMED NORMAL",
+    "selectedContentMapping": "USER CONFIRMED NORMAL"
+  },
+  "newPaidAnalysisAfterFix": "NOT RUN",
+  "judgment": "ACCEPTED for scoped repairs; paid end-to-end film incomplete"
 }
