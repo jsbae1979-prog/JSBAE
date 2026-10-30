@@ -70,6 +70,8 @@ export const status: Record<string, string> = {
   prepare_failed: "견적 확인 필요",
   generating: "장면 생성 중",
   submission_unknown: "결과 불명 · 재요청 금지",
+  submission_not_sent: "전송 전 중단",
+  not_sent: "미전송",
   scene_review: "장면 확인 필요",
   retry_quoted: "추가 견적 승인 대기",
   clips_review: "장면 검토",

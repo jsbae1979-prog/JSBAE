@@ -265,3 +265,19 @@ def test_changed_account_key_cannot_start_a_continuation_from_previous_quote(epi
     assert len([r for r in x.state.calls if r[0] == 'upload']) == 1
     assert len([r for r in x.state.calls if r[0] == 'estimate']) == 2
     assert x.service.read(x.identifier)['scenes'][1]['state'] == 'dependency_failed'
+
+
+def test_manual_wrapper_uses_real_submit_key_validation_with_fake_http(episode, monkeypatch):
+    from newsflow.character.higgsfield_client import HiggsfieldVideoClient
+    x=episode;x.act('prepare');calls=[]
+    client_class=m.KlingClient
+    monkeypatch.setattr(client_class,'submit_scene',HiggsfieldVideoClient.submit_scene)
+    def reply(client,method,path,payload=None,extra=None):
+        assert client.credential()==x.state.key
+        calls.append((method,path,extra['Idempotency-Key']))
+        return 200,{'request_id':'synthetic-request-1','status':'queued',
+                    'status_url':'https://api.higgsfield.ai/requests/synthetic-request-1/status'}
+    monkeypatch.setattr(client_class,'_call',reply)
+    x.act('submit')
+    assert len(calls)==1 and calls[0][2]==x.identifier+'-s1-t1'
+    assert x.service.read(x.identifier)['scenes'][0]['state']=='submitted'

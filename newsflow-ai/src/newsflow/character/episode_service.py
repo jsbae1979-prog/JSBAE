@@ -15,7 +15,8 @@ import re
 from .schema import CharacterError, clean_topic
 from .compose import digest, run
 from .episode_story import EpisodeScript, SCRIPT_INSTRUCTION, script_input, prompts, validate_episode
-from .higgsfield_client import amount, reference_bytes
+from .higgsfield_client import amount, reference_bytes, SceneNotSent
+from newsflow.video.ai.higgsfield import _NotSent
 from .kling import check, snapshot, normalize_reference, generation_reference
 from newsflow.intelligence.provider import Options
 from newsflow.video.ai.clips import probe_clip, FORMAT_WHITELIST
@@ -323,14 +324,20 @@ class EpisodeFlow:
                 row = futures[future]
                 try:
                     row.update(handle=future.result(), state='submitted')
+                except _NotSent as error:
+                    row['state'] = 'not_sent'
+                    row['submit_diagnostics'] = {'stage': 'pre_submit', 'dispatched': False,
+                        'error_code': error.reason if isinstance(error, SceneNotSent) else 'transport_not_sent'}
+                    failure = True
                 except Exception:
                     row['state'] = 'unknown'
                     failure = True
                 s.save(job)
         if failure:
-            job['state'] = 'submission_unknown'
+            unknown = any(row['state'] == 'unknown' for row in job['scenes'])
+            job['state'] = 'submission_unknown' if unknown else 'submission_not_sent'
             s.save(job)
-            raise CharacterError('blocked')
+            raise CharacterError('blocked' if unknown else 'not_sent')
 
     def last_frame(self, job, parent):
         s = self.owner

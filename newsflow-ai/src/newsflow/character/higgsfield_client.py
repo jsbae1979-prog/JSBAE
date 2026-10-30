@@ -16,6 +16,20 @@ from newsflow.video.ai.higgsfield import REQUEST_ID, HiggsfieldProvider, _NotSen
 
 from .schema import CharacterError
 
+class SceneNotSent(_NotSent):
+    """A bounded local submit validation failure, before credentials or HTTP."""
+    reason = 'invalid_request_key'
+
+
+def validate_scene_key(value):
+    # Preserve legacy hex keys and accept only the episode service's exact format.
+    if not isinstance(value, str) or not (
+            re.fullmatch(r'[a-f0-9-]{8,64}', value)
+            or re.fullmatch(r'[a-f0-9]{32}-s[1-9][0-9]{0,2}-t[1-9][0-9]{0,2}', value)):
+        raise SceneNotSent()
+    return value
+
+
 MODEL = 'bytedance/seedance-2.0/reference-to-video'
 MODEL_DOC = 'https://docs.higgsfield.ai/docs/models/seedance-2/reference-to-video'
 SAFE_ERROR_CODES = frozenset({
@@ -148,8 +162,7 @@ class HiggsfieldVideoClient(HiggsfieldProvider):
         return str(amount(result.get('usd')))
 
     def submit_scene(self, payload, idem_key):
-        if not re.fullmatch(r'[a-f0-9-]{8,64}', idem_key):
-            raise CharacterError()
+        validate_scene_key(idem_key)
         diagnostics = {}
         try:
             data = self._safe_call('POST', '/'+getattr(self, 'model', MODEL), payload,

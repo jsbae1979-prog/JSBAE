@@ -592,7 +592,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const pendingSceneChecks = clips.some((clip) => clip.state === "submitted");
   const canCheckScenes = job?.state === "generating" || (job?.state === "scene_review" && pendingSceneChecks);
   const sceneProgressSummary = [
-    ["failed", "실패"], ["submitted", "상태 확인 대기"], ["downloaded", "저장"], ["unknown", "결과 불명"],
+    ["failed", "실패"], ["not_sent", "미전송"], ["submitted", "상태 확인 대기"], ["downloaded", "저장"], ["unknown", "결과 불명"],
   ].map(([state, label]) => {
     const count = clips.filter((clip) => clip.state === state).length;
     return count ? `${label} ${count}` : "";
@@ -1809,6 +1809,15 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         ])}
                     </div>
                   )}
+                  {job?.state === "quoted" && job.quoteSettingsEditable === true && (
+                    <div className="kling-settings-footer">
+                      <button type="button" className="kling-quote-refresh"
+                        disabled={isBusy || pendingReferenceCopy || scriptDirty || legacy || !ready}
+                        onClick={() => void quote()}>
+                        {quoteSettingsChanged ? "설정 적용·견적 갱신" : "견적 다시 확인"}
+                      </button>
+                    </div>
+                  )}
                 </section>
                 <section
                   className="kling-video-production-card"
@@ -1869,24 +1878,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         영상 생성하기
                       </button>
                     )}
-                    {job?.state === "quoted" &&
-                      job.quoteSettingsEditable === true && (
-                        <button
-                          type="button"
-                          disabled={
-                            isBusy ||
-                            pendingReferenceCopy ||
-                            scriptDirty ||
-                            legacy ||
-                            !ready
-                          }
-                          onClick={() => void quote()}
-                        >
-                          설정 저장·견적 확인
-                        </button>
-                      )}
+
                   </div>
-                  {sceneProgressSummary && ["generating", "scene_review", "submission_unknown", "clips_review"].includes(job?.state ?? "") && (
+                  {sceneProgressSummary && ["generating", "scene_review", "submission_unknown", "submission_not_sent", "clips_review"].includes(job?.state ?? "") && (
                     <p className="kling-field-note" role="status">{sceneProgressSummary}</p>
                   )}
                   {canDiagnoseScenes && (
@@ -1967,7 +1961,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     만드세요.
                   </p>
                 )}
-                {/unknown|failed/.test(job?.state ?? "") && (
+                {/unknown|failed|not_sent/.test(job?.state ?? "") && (
                   <p role="status" className="kling-character-error">
                     작업 중단 · 결과를 확인하세요. 자동 재요청하지 않습니다.
                   </p>
