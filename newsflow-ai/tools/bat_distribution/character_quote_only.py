@@ -9,7 +9,7 @@ import re
 from uuid import uuid4
 
 from filelock import FileLock
-from newsflow.character.service import CharacterService,generation_rows,fingerprint
+from newsflow.character.service import CharacterService,generation_rows,fingerprint,digest
 from newsflow.character.kling import KlingClient,check
 from newsflow.character.schema import CharacterError
 from newsflow.intelligence.credentials import CredentialError
@@ -18,6 +18,7 @@ from newsflow.video.ai.keys import VideoAIKeyStore
 PATH=re.compile(r'/character/([a-f0-9]{32})/prepare\Z')
 _REQUEST=ContextVar('newsflow_quote_request',default=None)
 _ACTIVE=ContextVar('newsflow_quote_active',default=None)
+_PAYLOADS=ContextVar('newsflow_quote_payloads',default=None)
 _ENTROPY=hashlib.sha256(VideoAIKeyStore.ENTROPY).digest()
 
 
@@ -58,12 +59,41 @@ class _Store(VideoAIKeyStore):
 class _Client:
     def __init__(self,scope,original):self.scope,self.original=scope,original
     def credential(self):self.scope.active();return self.original.credential()
-    def payload(self,*args,**kwargs):self.scope.active();return self.original.payload(*args,**kwargs)
+    def payload(self,prompt,seconds,reference):
+        identifier=self.scope.active(); context=_PAYLOADS.get()
+        if not isinstance(context,dict) or context.get('job_id')!=identifier:_deny()
+        index=len(context['payloads'])
+        if index>=len(context['planned']) or reference!=context.get('reference'):_deny()
+        planned=context['planned'][index]
+        if prompt!=planned['prompt'] or seconds!=planned['seconds']:_deny()
+        result=self.original.payload(prompt,seconds,reference)
+        expected=result
+        if planned.get('continuity')=='continue':
+            from newsflow.video_models.catalog import CATALOG
+            job=self.scope.local.read(identifier)
+            field=CATALOG.model(job['model']).get('continuation_param')
+            if not field:_deny()
+            expected={**result,field:reference}
+        context['payloads'].append(fingerprint(expected))
+        return result
     def upload_reference(self,path):
         folder=self.scope.local.folder(self.scope.active())
         if _unlinked(path) not in {folder/'reference.png',folder/'generation-reference.png'}:_deny()
-        self.scope.claim('upload');return self.original.upload_reference(path)
+        job=self.scope.local.read(self.scope.active())
+        if digest(_unlinked(folder/'reference.png'))!=job['reference_sha256']:_deny()
+        context=_PAYLOADS.get()
+        if not isinstance(context,dict) or context.get('job_id')!=job['id']:_deny()
+        self.scope.claim('upload')
+        from newsflow.video.ai.download import safe_url
+        public=safe_url(self.original.upload_reference(path))
+        context['reference']=public
+        return public
     def estimate(self,payload):
+        identifier=self.scope.active(); context=_PAYLOADS.get()
+        if not isinstance(context,dict) or context.get('job_id')!=identifier:_deny()
+        index=context['estimated']
+        if index>=len(context['payloads']) or fingerprint(payload)!=context['payloads'][index]:_deny()
+        context['estimated']+=1
         self.scope.claim('estimate');return self.original.estimate(payload)
     def submit_scene(self,*args,**kwargs):_deny()
     def check(self,*args,**kwargs):_deny()
@@ -140,6 +170,7 @@ class QuoteOnly:
             if (job.get('state')!='script_review' or not job.get('script') or job.get('scenes')
                     or not job.get('studio_selection')):_deny()
             settings=check(job['studio_selection'])
+            if job['plan_hash']!=self.local.plan_hash(job):_deny()
             rows=generation_rows(job)
             if not rows:_deny()
             attempt=uuid4().hex
@@ -152,6 +183,7 @@ class QuoteOnly:
             with path.open('x',encoding='utf8') as stream:
                 json.dump(row,stream,sort_keys=True);stream.flush();os.fsync(stream.fileno())
         token=_ACTIVE.set((self,identifier,attempt))
+        payload_token=_PAYLOADS.set({'job_id':identifier,'planned':rows,'payloads':[],'estimated':0})
         try:
             CharacterService.prepare(self.local,identifier,consent=True,script_reviewed=True)
             job=self.local.read(identifier)
@@ -161,7 +193,9 @@ class QuoteOnly:
             with FileLock(str(self.local.folder(identifier)/'quote-only.lock'),timeout=0):
                 failed=self._read(identifier,attempt);failed['state']='failed_or_unknown';self._write(identifier,failed,attempt)
             raise
-        finally:_ACTIVE.reset(token)
+        finally:
+            _PAYLOADS.reset(payload_token)
+            _ACTIVE.reset(token)
         with FileLock(str(self.local.folder(identifier)/'quote-only.lock'),timeout=0):
             final=self._read(identifier,attempt);final['state']='quoted';self._write(identifier,final,attempt)
 
