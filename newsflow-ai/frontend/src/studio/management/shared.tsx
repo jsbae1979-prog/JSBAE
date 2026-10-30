@@ -17,7 +17,7 @@ import {
   Rss,
   SlidersHorizontal,
 } from "lucide-react";
-import { actions, status, safeMedia, type Item } from "../contracts";
+import { actions, status, safeMedia, characterReferenceThumbnail, type Item } from "../contracts";
 import { Thumbnail } from "../Thumbnail";
 import { useStudio } from "../core/shared";
 export type Controller = ReturnType<typeof useManagement>;
@@ -232,16 +232,19 @@ export function Thumb({ item }: { item: Item }) {
     if (media && /^\/video\/jobs\/\d+\/file$/.test(media))
       src = media.replace(/\/file$/, "/thumbnail");
   }
+  const reference = !src ? characterReferenceThumbnail(item) : null;
+  if (reference) src=reference;
   return (
     <div className="mg-thumb">
       {src ? (
-        <Thumbnail src={src} alt={item.title || "콘텐츠 썸네일"} />
+        <Thumbnail src={src} alt={`${item.title || "콘텐츠"}${reference ? " · 참조 이미지" : " 썸네일"}`} />
       ) : (
         <span>
           <ImageIcon size={24} />
           미리보기 없음
         </span>
       )}
+      {reference && <small className="mg-thumb-reference">참조 이미지</small>}
     </div>
   );
 }

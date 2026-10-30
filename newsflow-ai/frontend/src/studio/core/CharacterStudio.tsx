@@ -492,6 +492,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [libraryMessage, setLibraryMessage] = useState("");
   const librarySending = useRef(false);
+  const savedUploads = useRef(new WeakMap<File, string>());
+  const [confirmedLibraryAssets, setConfirmedLibraryAssets] = useState<Record<string, boolean>>({});
 
   const [scenePreview, setScenePreview] = useState<{
     url: string;
@@ -729,10 +731,12 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     setFile(f);
     setAsset("");
     setActiveProfile(null);
+    setSaveToLibrary(false);
     setLibraryMessage("");
-    if (saveToLibrary) void saveReference(f);
   }
   async function saveReference(selectedFile: File) {
+    const saved = savedUploads.current.get(selectedFile);
+    if (saved) return saved;
     if (librarySending.current) return;
     librarySending.current = true;
     setLibraryBusy(true);
@@ -750,6 +754,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !/^studio-[a-f0-9]{64}\.png$/.test(data.id ?? ""))
         throw Error(typeof data.detail === "string" ? data.detail : "캐릭터를 저장하지 못했습니다. 이미지와 저장 공간을 확인하세요.");
+      savedUploads.current.set(selectedFile, data.id);
+      setConfirmedLibraryAssets(current => ({ ...current, [data.id]: true }));
       setAsset(data.id);
       setLibraryMessage(data.created ? "참조 이미지를 보관했습니다." : "이미 보관된 참조 이미지입니다.");
       try {
@@ -759,6 +765,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       }
       return data.id as string;
     } catch (error) {
+      setSaveToLibrary(false);
       setLibraryMessage(error instanceof Error ? error.message : "저장 결과를 확인하지 못했습니다. 저장한 참조 이미지 목록을 확인하세요.");
     } finally {
       librarySending.current = false;
@@ -1110,6 +1117,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   }
   const myCharacters: Item[] = c.view?.catalog.myCharacters ?? [];
   const profiles: Item[] = c.view?.catalog.characterProfiles ?? [];
+  const referenceAsset = file ? savedUploads.current.get(file) : asset || activeProfile?.asset;
+  const referenceStored = !!referenceAsset && (myCharacters.some(row => row.id === referenceAsset)
+    || confirmedLibraryAssets[referenceAsset] === true);
+  const referenceStorageStatus = !reference ? "" : referenceStored ? "보관됨"
+    : referenceAsset ? "아직 보관 안 됨" : "보관 여부 확인 전";
   const apiProviders: Item[] = c.view?.catalog.characterAIProviders ?? [];
   const scriptProvider = apiProviders.find((p) => p.models?.includes(settings.script_model));
   const scriptAvailable = scriptProvider?.configured === true;
@@ -1129,6 +1141,22 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   function selectProfile(profile: Item | null) {
     reset(); setActiveProfile(profile); setFile(null); setAsset(profile?.asset ?? "");
     setTab("mine");
+  }
+  async function storeCurrentReference() {
+    if (isBusy || referenceStored || !reference) return;
+    if (file) { await saveReference(file); return; }
+    setLibraryBusy(true);
+    setLibraryMessage("");
+    try {
+      const response = await fetch(String(reference), { credentials: "same-origin" });
+      if (!response.ok) throw Error("참조 이미지를 불러오지 못했습니다.");
+      const blob = await response.blob();
+      if (blob.size > 10 * 1024 * 1024) throw Error("참조 이미지 크기를 확인하세요.");
+      await saveReference(new File([blob], "참조 이미지.png", { type: "image/png" }));
+    } catch (error) {
+      setSaveToLibrary(false);
+      setLibraryMessage(error instanceof Error ? error.message : "보관 상태를 확인하지 못했습니다.");
+    } finally { setLibraryBusy(false); }
   }
   let elapsed = 0;
   return (
@@ -1265,16 +1293,17 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 <label className="check character-reference-store">
                   <input
                     type="checkbox"
-                    checked={saveToLibrary}
-                    disabled={isBusy}
+                    checked={referenceStored || (!!reference && saveToLibrary)}
+                    disabled={isBusy || referenceStored || !reference}
                     onChange={(e) => {
                       const checked = e.target.checked;
                       setSaveToLibrary(checked);
-                      if (checked && file) void saveReference(file);
+                      if (checked) void storeCurrentReference();
                     }}
                   />
                   참조 이미지 보관
                 </label>
+                {referenceStorageStatus && <small role="status" aria-label="참조 이미지 보관 상태">{referenceStorageStatus}</small>}
                 {libraryBusy && <small role="status">캐릭터 저장 중…</small>}
                 {libraryMessage && <small role="status">{libraryMessage}</small>}
 

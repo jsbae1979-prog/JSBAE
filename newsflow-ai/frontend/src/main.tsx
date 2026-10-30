@@ -41,6 +41,7 @@ import "./style.css";
 import Workbench from "./studio/Workbench";
 import StopNotice from "./studio/StopNotice";
 import { Thumbnail } from "./studio/Thumbnail";
+import { characterReferenceThumbnail } from "./studio/contracts";
 
 type Kind = "news" | "character" | "image";
 type Project = {
@@ -419,12 +420,13 @@ function App() {
             >
               <div className="project-visual">
                 <Thumbnail
-                  src={p.thumbnailUrl ? localHref(p.thumbnailUrl) : null}
+                  src={p.thumbnailUrl ? localHref(p.thumbnailUrl) : characterReferenceThumbnail(p)}
                   alt={`${p.title} · ${p.sourceLabel}`}
                   kind={p.kind}
                 />
                 <span className="type-tag">
                   {TYPES.find((t) => t.id === p.kind)?.title}
+                  {!p.thumbnailUrl && characterReferenceThumbnail(p) && " · 참조 이미지"}
                 </span>
                 {synthetic && <span className="sample-tag">합성 자료</span>}
               </div>

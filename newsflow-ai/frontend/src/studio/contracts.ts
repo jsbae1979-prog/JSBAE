@@ -240,11 +240,17 @@ export function label(key: string) {
 }
 export function safeMedia(url: unknown) {
   return typeof url === "string" &&
-    /^\/(?:video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/(?:\d+|backgrounds\/\d+)\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
+    /^\/(?:api\/studio\/characters\/[a-f0-9]{32}\/reference|video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/(?:\d+|backgrounds\/\d+)\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
       url,
     )
     ? url
     : null;
+}
+/** A card-only fallback; the authenticated endpoint validates the owned image/hash. */
+export function characterReferenceThumbnail(item: Item) {
+  const match=item.kind === "character" && typeof item.id === "string"
+    ? /^character:([a-f0-9]{32})$/.exec(item.id) : null;
+  return match ? safeMedia(`/api/studio/characters/${match[1]}/reference`) : null;
 }
 export function itemTitle(item: Item) {
   return String(
