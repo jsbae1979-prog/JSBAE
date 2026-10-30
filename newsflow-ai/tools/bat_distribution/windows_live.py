@@ -474,6 +474,10 @@ def start(config, plan):
             if manual_enabled:
                 from .character_manual_execution import install as install_character_manual
                 character_manual = install_character_manual(app, config.profile, character_native_factory)
+            character_authoring = None
+            if manual_enabled and trial_policy is None:
+                from .character_authoring import install as install_character_authoring
+                character_authoring = install_character_authoring(app, config.profile, character_native_factory)
             import uvicorn
             session = LaunchSession(config.port)
             nonce = secrets.token_hex(32)
@@ -501,6 +505,8 @@ def start(config, plan):
                     request_boundary = character_quote_only.wrap(request_boundary, authenticated_app)
                 if character_manual is not None:
                     request_boundary = character_manual.wrap(request_boundary, authenticated_app)
+                if character_authoring is not None:
+                    request_boundary = character_authoring.wrap(request_boundary, authenticated_app)
             elif config.profile_kind == 'synthetic-local-work':
                 from .local_work import LocalWorkRequests
                 request_boundary = LocalWorkRequests(LocalAccess(app, session))
