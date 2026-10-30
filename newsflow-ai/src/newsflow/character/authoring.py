@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import base64
 from decimal import Decimal, InvalidOperation
+from functools import wraps
 from io import BytesIO
 import json
+from threading import RLock, local
 
 from PIL import Image, ImageOps
 from pydantic import Field, model_validator
@@ -171,8 +173,44 @@ def response_object(document, provider):
         raise ProviderResponseError('AI 응답 형식을 확인하지 못했습니다. 자동 재요청하지 않습니다.') from None
 
 
+class _CallerReceipt:
+    """A caller reads its own outcome after generate returns or raises."""
+    def __init__(self, default=None):
+        self.default = default
+
+    def __set_name__(self, owner, name):
+        self.name = name
+
+    def __get__(self, instance, owner=None):
+        if instance is None:
+            return self
+        return getattr(instance._receipts, self.name, self.default)
+
+    def __set__(self, instance, value):
+        setattr(instance._receipts, self.name, value)
+
+
+def _serialized_transport(method):
+    @wraps(method)
+    def call(self, *args, **kwargs):
+        # Existing provider adapters expose mutable last_usage. Serialize their
+        # transport/accounting work; keep the returned caller receipt independent.
+        with self._transport_lock:
+            return method(self, *args, **kwargs)
+    return call
+
+
 class AuthoringAI:
+    last_usage = _CallerReceipt()
+    last_candidate = _CallerReceipt()
+    last_failure = _CallerReceipt()
+    response_received = _CallerReceipt(False)
+    last_reservation = _CallerReceipt()
+    last_reserved_usd = _CallerReceipt()
+
     def __init__(self, keys, budget, providers=None):
+        self._receipts = local()
+        self._transport_lock = RLock()
         self.keys, self.budget = keys, budget
         self.providers = providers if providers is not None else {
             provider: (AnthropicProvider if provider == 'claude_api' else OpenAISearchProvider)(store.key)
@@ -182,6 +220,7 @@ class AuthoringAI:
         self.last_reservation = None
         self.last_reserved_usd = None
 
+    @_serialized_transport
     def generate(self, instruction, payload, schema, options, *, provider, request_id, consent=False,
                  image_bytes=None, kind='script', max_reserved_usd=None):
         self.last_usage = self.last_candidate = self.last_failure = None

@@ -175,3 +175,85 @@ def test_local_preflight_failures_are_proven_not_dispatched(failure):
     assert not adapter.bodies and not budget.reservations
     assert service.last_reserved_usd=='0' and not service.response_received
     assert service.last_failure=={'stage':'preflight','response_received':False,'dispatched':False}
+
+
+@pytest.mark.parametrize('first_timeout', [False, True])
+def test_concurrent_authoring_keeps_each_callers_receipt_and_provider_usage(first_timeout):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event, Lock
+    entered, release, first_returned, second_started, second_finished = [Event() for _ in range(5)]
+    guard = Lock()
+
+    class ReservedBudget(Budget):
+        def reserve(self, **kwargs):
+            receipt = super().reserve(**kwargs)
+            receipt.reserved_usd = '1.23' if kwargs['request_id']=='first' else '2.34'
+            return receipt
+
+    class SharedAdapter(Adapter):
+        def __init__(self):
+            super().__init__('claude_api', candidate())
+            self.active = self.maximum_active = 0
+
+        def _post(self, body, options):
+            with guard:
+                self.active += 1
+                self.maximum_active = max(self.maximum_active, self.active)
+            try:
+                name = body['system']
+                if name == 'first':
+                    entered.set()
+                    assert release.wait(5)
+                    if first_timeout:
+                        raise TimeoutError('synthetic unknown outcome')
+                else:
+                    assert first_returned.wait(5)
+                result = super()._post(body, options)
+                self.last_usage = {'prompt_tokens':10 if name=='first' else 200,
+                                   'completion_tokens':30 if name=='first' else 222}
+                return result
+            finally:
+                with guard:
+                    self.active -= 1
+
+    adapter, budget = SharedAdapter(), ReservedBudget()
+    service = AuthoringAI({'claude_api':Store()}, budget, {'claude_api':adapter})
+
+    def receipt():
+        return (service.response_received, deepcopy(service.last_usage), service.last_reserved_usd,
+                service.last_reservation.id, deepcopy(service.last_failure))
+
+    def run_first():
+        try:
+            service.generate('first', {}, AnalysisResult, Options(model='claude-sonnet-4-6'),
+                provider='claude_api',request_id='first',consent=True)
+        except CharacterError:
+            assert first_timeout
+        finally:
+            first_returned.set()
+        assert second_finished.wait(5)
+        return receipt()  # Deliberately read AFTER the other request completed.
+
+    def run_second():
+        second_started.set()
+        service.generate('second', {}, AnalysisResult, Options(model='claude-sonnet-4-6'),
+            provider='claude_api',request_id='second',consent=True)
+        value = receipt()
+        second_finished.set()
+        return value
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(run_first)
+        assert entered.wait(5)
+        second = pool.submit(run_second)
+        assert second_started.wait(5)
+        release.set()
+        a, b = first.result(5), second.result(5)
+    assert adapter.maximum_active == 1
+    assert a[:4] == (not first_timeout, None if first_timeout else {'prompt_tokens':10,'completion_tokens':30}, '1.23', '1')
+    assert b == (True, {'prompt_tokens':200,'completion_tokens':222}, '2.34', '2', None)
+    assert a[4] == ({'stage':'response','response_received':False} if first_timeout else None)
+    assert [row[1]['status'] for row in budget.finished] == ['unknown' if first_timeout else 'success','success']
+    assert budget.finished[0][1]['usage'] == a[1]
+    assert budget.finished[1][1]['usage'] == b[1]
+    assert service.last_reservation is None and service.response_received is False
