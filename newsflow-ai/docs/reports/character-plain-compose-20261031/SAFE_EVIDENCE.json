@@ -20,14 +20,15 @@
     "modified": false,
     "actualComposeSubmitted": false,
     "existingFourClipsPreserved": true,
-    "pending": "One separately approved normal restart to apply the Python changes, then compose current four clips in Chrome.",
+    "pending": "None. Never applied. User requested captions and comic SFX; existing operating Python retained.",
     "restarted": false
   },
-  "verdict": "CONDITIONAL: focused development verified; operating application pending",
+  "verdict": "SUPERSEDED_BY_USER_DIRECTION",
   "scope": [
     "Version-3 studio delegates with add_captions=false and add_sfx=false.",
     "Shared editor retains explicit optional editing support; studio path does not create ASS/fonts/SFX or apply subtitle/effect filters.",
     "Existing speed, hold, original-audio time alignment, crossfade and loudness handling remain unchanged.",
     "Review checklist matches no-added-text/audio behavior."
-  ]
+  ],
+  "supersededBy": "../character-auto-progress-20261031/SAFE_EVIDENCE.json"
 }

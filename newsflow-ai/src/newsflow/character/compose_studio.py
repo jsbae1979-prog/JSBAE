@@ -8,8 +8,7 @@ from newsflow.video.engine import FFmpegAdapter
 def compose_studio(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None):
     if getattr(story, 'schema_version', None) == 3:
         from .editing import compose_episode
-        return compose_episode(folder, story, clips, settings=settings, ffmpeg=ffmpeg, ffprobe=ffprobe,
-                               add_captions=False, add_sfx=False)
+        return compose_episode(folder, story, clips, settings=settings, ffmpeg=ffmpeg, ffprobe=ffprobe)
     settings=validate(settings)
     total=sum(s.seconds for s in story.scenes)
     if total!=settings['duration']: raise CharacterError('media')

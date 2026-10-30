@@ -767,7 +767,7 @@ export function CommandDialog({
                     {diagnosingCharacterScenes
                       ? "실패한 기존 요청의 처리 결과와 오류 설명만 확인합니다. 영상 생성·재시도·새 견적은 요청하지 않습니다."
                       : checkingCharacterScenes
-                      ? "이미 요청한 장면의 상태를 확인하고 완료된 영상을 저장합니다. 새 영상 생성이나 재생성은 하지 않습니다."
+                      ? "접수된 장면을 확인·저장합니다. 이어지는 장면은 승인된 견적 범위에서 앞 장면의 마지막 프레임으로 연결합니다. 실패 장면은 재시도하지 않습니다."
                       : "대상과 선택 모델을 확인하세요. 외부 전송·유료 사용·공개 게시 동의는 각각 별도로 적용되며, 실패·결과 불명 시 자동 재요청하지 않습니다."}
                   </p>
                 </div>
@@ -783,9 +783,10 @@ export function CommandDialog({
                 <section aria-label="실제 합성 대상 영상 검토">
                   <p>
                     저장된 실제 영상 {localRender.clips.length}개를 내 PC의
-                    FFmpeg로 연결·저장합니다. 자막이나 새 음성·나레이션은
-                    추가하지 않고, 장면에 포함된 원래 소리만 유지합니다. 새 AI
-                    생성이나 외부 전송은 실행하지 않습니다.
+                    FFmpeg로 연결·저장합니다. {localRender.job?.automation_version===1
+                      ? "검토한 자막·코믹 효과음을 더하고 장면의 환경음을 연결합니다. 새 음성·나레이션은 추가하지 않습니다."
+                      : "자막이나 새 음성·나레이션은 추가하지 않고, 장면에 포함된 원래 소리만 유지합니다."}
+                    새 AI 생성이나 외부 전송은 실행하지 않습니다.
                   </p>
                   {localRender.job && (
                     <p className="bound-field">
@@ -929,7 +930,7 @@ export function CommandDialog({
               <ShieldCheck size={18} />
             )}{" "}
             {busy
-              ? "응답 확인 중 · 재요청 금지"
+              ? localRender ? "FFmpeg로 최종 영상 합성 중…" : "응답 확인 중 · 재요청 금지"
               : localRender
                 ? localRenderTitle
                 : action.label}

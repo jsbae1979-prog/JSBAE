@@ -1005,7 +1005,7 @@ class CharacterService:
                     'human_review':'NOT VERIFIED','automatic_upload':False}
             if job.get('automation_version')==1:
                 review['upload']=job['script']['upload']
-                review['checklist']=['주인공 외모·연속성','대사·웅얼거림·음악 없음','속도·반응 대비','추가 자막·음성 없음','모델 원본 소리·연결 음량','선택 길이·마지막 반전','업로드 정보·AI 표시·시청 연령']
+                review['checklist']=['주인공 외모·연속성','대사·웅얼거림·음악 없음','속도·반응 대비','자막 오탈자·위치','효과음·연결 음량','선택 길이·마지막 반전','업로드 정보·AI 표시·시청 연령']
             if job.get('character',{}).get('style_warn'):
                 review['checklist'].append(job['character']['style_warn'])
             (folder/'review.json').write_text(json.dumps(review,ensure_ascii=False,indent=2),encoding='utf8')

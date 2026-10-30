@@ -1,3 +1,4 @@
+import {useSceneProgress} from "./useSceneProgress";
 import {SavedStoryReview} from './SavedStoryReview';
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
@@ -19,6 +20,7 @@ import {
   ChevronDown,
   Trash2,
   RotateCcw,
+  LoaderCircle,
   X,
 } from "lucide-react";
 import { Thumbnail } from "../Thumbnail";
@@ -667,7 +669,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   }, [currentStoryInput, storyReview, busy]);
   const pendingReferenceCopy =
     !!story && !!job?.studio_selection && !!(file || referenceJob || asset);
-  const isBusy = busy || visibilityBusy || trialBusy || libraryBusy || automationBusy,
+  const follow=useSceneProgress({job,view:c.view,
+    enabled:ready&&caps?.manualExecutionEnabled===true,
+    blocked:busy||visibilityBusy||trialBusy||libraryBusy||automationBusy||!!c.command,
+    readError:c.error,load:c.load});
+  const isBusy = busy || visibilityBusy || trialBusy || libraryBusy || automationBusy || follow.checking,
     frozen =
       !!job &&
       !["needs_script", "script_review", "script_failed"].includes(job.state) &&
@@ -1861,6 +1867,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       </button>
                     ) : job?.state === "quoted" ? (
                       action("submit", "영상 생성하기", ["quoted"])
+                    ) : canCheckScenes && follow.active ? (
+                      <div className="kling-generation-live" role="status">
+                        <LoaderCircle className="spin" size={20}/>
+                        {follow.checking?"완료 영상 확인·저장 중":"장면 생성 중 · 자동 확인"}
+                      </div>
                     ) : canCheckScenes ? (
                       action("check", job?.state === "scene_review" ? "남은 장면 상태 확인" : "장면 상태 확인", ["generating", "scene_review"])
                     ) : job?.state === "clips_review" ? (
@@ -1881,6 +1892,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     )}
 
                   </div>
+                  {!!follow.total && ["generating","scene_review","submission_unknown","submission_not_sent","status_or_download_failed","clips_review","composing","compose_failed","completed"].includes(job?.state??"") && (
+                    <section className="kling-generation-progress" aria-label="영상 제작 진행" aria-live="polite">
+                      <div><strong>{job?.state==="composing"?"최종 영상 합성 중":job?.state==="completed"?"최종 영상 저장 완료":follow.failed||follow.error?"확인 필요":follow.done===follow.total?"장면 검토 준비 완료":"장면 제작 진행 중"}</strong>
+                        <span>완료 {follow.done}/{follow.total}</span></div>
+                      <progress aria-label={job?.state==="composing"?"최종 영상 합성 진행":"장면 저장 진행률"}
+                        max={follow.total} value={job?.state==="composing"?undefined:follow.done}/>
+                      <small>{job?.state==="composing"?"내 PC에서 FFmpeg로 합성하고 있습니다.":`${follow.percent}% · 저장 완료 장면 기준`}</small>
+                      {follow.error&&<><p role="alert">{follow.error}</p><button type="button" disabled={isBusy} onClick={follow.resume}>진행 확인 재개</button></>}
+                    </section>
+                  )}
                   {sceneProgressSummary && ["generating", "scene_review", "submission_unknown", "submission_not_sent", "clips_review"].includes(job?.state ?? "") && (
                     <p className="kling-field-note" role="status">{sceneProgressSummary}</p>
                   )}

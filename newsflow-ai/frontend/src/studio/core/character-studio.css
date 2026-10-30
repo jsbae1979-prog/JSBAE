@@ -1262,3 +1262,20 @@
 .core-studio[data-module="characters"] .character-story-request-review dd { margin: 0; overflow-wrap: anywhere; }
 .core-studio[data-module="characters"] .character-story-review-consent { display: flex; flex-direction: row; align-items: flex-start; gap: 8px; line-height: 1.5; }
 .core-studio[data-module="characters"] .character-story-review-consent input[type="checkbox"] { width: 16px; height: 16px; min-width: 16px; margin: 3px 0 0; }
+
+.core-studio[data-module="characters"] .kling-generation-live {
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  min-height:48px;color:#a8dcff;font-weight:600;font-size:13px;
+}
+.core-studio[data-module="characters"] .kling-generation-progress {
+  margin-top:12px;padding:10px;border:1px solid #255574;border-radius:8px;background:#071d30;
+}
+.core-studio[data-module="characters"] .kling-generation-progress > div {
+  display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;
+}
+.core-studio[data-module="characters"] .kling-generation-progress span {color:#22d9eb;white-space:nowrap;}
+.core-studio[data-module="characters"] .kling-generation-progress progress {
+  width:100%;height:7px;margin:9px 0 5px;accent-color:#28c9f3;
+}
+.core-studio[data-module="characters"] .kling-generation-progress small {font-size:11px;color:#a3bdd9;}
+.core-studio[data-module="characters"] .kling-generation-progress p {font-size:11px;line-height:1.5;}
