@@ -122,7 +122,7 @@ def test_only_exact_local_paths_reach_inner_app(method, path):
     ('POST', '/publish/1'),
     ('POST', '/character/' + JOB + '/clips/1'),
     ('GET', '/character/' + JOB + '/clips/0'),
-    ('GET', '/character/' + JOB + '/clips/6'),
+    ('GET', '/character/' + JOB + '/clips/61'),
 ])
 def test_wrong_methods_paths_and_external_actions_remain_denied(method, path):
     app, received = recorder()
@@ -195,3 +195,32 @@ def test_new_endpoints_keep_real_localaccess_origin_and_original_csrf_middleware
     assert client.post('/character/' + JOB + '/submit', data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 403
     assert client.post('/api/studio/characters/auto-story', data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 403
     assert requests == ['models', 'settings', 'render']
+
+
+@pytest.mark.parametrize('method,path',[
+ ('GET','/api/studio/characters/profiles'),
+ ('GET','/api/studio/characters/profiles/char_'+JOB+'/topics'),
+ ('GET','/api/studio/characters/queues'),
+ ('GET','/api/studio/characters/queues/'+JOB),
+ ('POST','/api/studio/characters/profiles/save'),
+ ('POST','/api/studio/characters/profiles/char_'+JOB+'/topics/manual'),
+ ('POST','/api/studio/characters/'+JOB+'/script'),
+ ('GET','/character/'+JOB+'/clips/60'),
+])
+def test_episode_local_routes_retain_inner_security(method,path):
+    app,received=recorder()
+    assert TestClient(OperatingRequests(app)).request(method,path).status_code==204
+    assert received
+
+@pytest.mark.parametrize('path',[
+ '/api/studio/characters/profiles/analyze',
+ '/api/studio/characters/profiles/char_'+JOB+'/topics/generate',
+ '/api/studio/characters/queues/'+JOB+'/scripts',
+ '/api/studio/characters/queues/'+JOB+'/advance',
+ '/api/studio/characters/queues/'+JOB+'/approve-videos',
+ '/api/studio/characters/profiles/char_'+JOB+'/delete/extra',
+])
+def test_local_route_delta_does_not_grant_external_execution(path):
+    app,received=recorder()
+    assert TestClient(OperatingRequests(app)).post(path).status_code==403
+    assert not received

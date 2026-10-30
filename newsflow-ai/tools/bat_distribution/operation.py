@@ -60,7 +60,10 @@ class OperatingRequests(LocalWorkRequests):
     CHARACTER_RENDER = re.compile(r'/character/[a-f0-9]{32}/render\Z')
     CHARACTER_RECOVER = re.compile(r'/api/studio/characters/[a-f0-9]{32}/recover-story\Z')
     COPIED_MEDIA = re.compile(r'/api/samples/[a-z0-9-]{1,48}/copy-file\Z')
-    CHARACTER_CLIP = re.compile(r'/character/[a-f0-9]{32}/clips/[1-5]\Z')
+    CHARACTER_CLIP = re.compile(r'/character/[a-f0-9]{32}/clips/(?:[1-9]|[1-5][0-9]|60)\Z')
+
+    CHARACTER_LOCAL_READ = re.compile(r'/api/studio/characters/(?:profiles(?:/char_[a-f0-9]{32}/topics)?|queues(?:/[a-f0-9]{32})?)\Z')
+    CHARACTER_LOCAL_WRITE = re.compile(r'/api/studio/characters/(?:profiles/save|profiles/char_[a-f0-9]{32}/(?:delete|topics/(?:manual|import|[a-f0-9]{32}/status))|queues/create|[a-f0-9]{32}/script)\Z')
 
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'http':
@@ -70,8 +73,10 @@ class OperatingRequests(LocalWorkRequests):
                                                   or self.CHARACTER_REUSE.fullmatch(path)
                                                   or self.CHARACTER_RENDER.fullmatch(path)
                                                   or self.CHARACTER_RECOVER.fullmatch(path)
-                                                  or path == '/api/studio/characters/library')
-            copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path))
+                                                  or path == '/api/studio/characters/library'
+                                                  or self.CHARACTER_LOCAL_WRITE.fullmatch(path))
+            copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path)
+                                                       or self.CHARACTER_LOCAL_READ.fullmatch(path))
             if local_settings or copied_media:
                 # self.app remains LocalAccess(original_app, session); inner
                 # signed CSRF, Origin, ownership and file checks are unchanged.
