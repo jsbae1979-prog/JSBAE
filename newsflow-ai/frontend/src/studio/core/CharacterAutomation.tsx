@@ -179,8 +179,14 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
   const [scriptConsent, setScriptConsent] = useState(false), [videoConsent, setVideoConsent] = useState(false);
   const [queueCap, setQueueCap] = useState("");
   const sending = useRef(false);
+  const topicStates: Record<string,string> = {new:"미사용",scripted:"대본 작성",produced:"영상 완료",skipped:"보류"};
+  const queueStates: Record<string,string> = {drafts:"대본 생성 대기",scripts_running:"대본 생성 중",
+    scripts_ready:"대본 검토 대기",videos_approved:"영상 제작 승인 완료",videos_running:"영상 제작 중",
+    clips_ready:"장면 검토 대기",blocked:"확인 필요 · 제작 중단"};
   useEffect(() => {
-    setRows([]); setError(""); setSelectedTopics([]); setQueue(null); let active = true;
+    setRows([]); setError(""); setSelectedTopics([]); setQueue(null); setQueues([]);
+    setConsent(false); setScriptConsent(false); setVideoConsent(false); setQueueCap("");
+    let active = true;
     fetch("/api/studio/characters/queues", { credentials: "same-origin" }).then(async r=>r.ok?r.json():{queues:[]})
       .then(data=>{if(active)setQueues(data.queues??[]);}).catch(()=>{});
     if (profile) fetch(`/api/studio/characters/profiles/${profile.id}/topics`, { credentials: "same-origin" })
@@ -188,6 +194,11 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
       .then(data => { if (active) setRows(data.topics ?? []); }).catch(e => { if (active) setError(e.message); });
     return () => { active = false; };
   }, [profile?.id]);
+  function acceptQueue(value: Item) {
+    setQueue(value);
+    setQueues(previous=>previous.some(item=>item.id===value.id)
+      ? previous.map(item=>item.id===value.id?value:item) : [...previous,value]);
+  }
   async function act(kind: "generate" | "manual" | "import", value?: Item, status?: string) {
     if (!profile || sending.current || disabled) return;
     sending.current = true; setBusy(true); onBusy(true); setError("");
@@ -198,77 +209,101 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
           { count: String(count), model, consent: "true", request_id: crypto.randomUUID().replaceAll("-", "") } :
           kind === "manual" ? { topic } : { content: csv });
       setRows(data.topics ?? [...rows.filter(r => r.id !== data.id), data]); setConsent(false);
-    } catch (e) { setError(e instanceof Error ? e.message : "주제 작업을 확인하세요."); }
-    finally { sending.current = false; setBusy(false); onBusy(false); }
+    } catch (e) {
+      const action=value?"주제 상태 변경":kind==="generate"?"주제 생성":kind==="import"?"CSV 가져오기":"주제 저장";
+      setError(`${action}: ${e instanceof Error ? e.message : "입력과 저장 상태를 확인하세요."}`);
+    } finally { sending.current = false; setBusy(false); onBusy(false); }
   }
   const queueJobs: Item[] = (queue?.rows ?? []).map((row: Item) => jobs.find(j => j.id === row.job_id)).filter(Boolean);
   const quoted = queueJobs.length > 0 && queueJobs.length === queue?.rows?.length && queueJobs.every(j => j.state === "quoted" && j.quote_hash);
   const queueQuote = queueJobs.reduce((sum,j) => sum + Number(j.quote ?? 0), 0);
+  const reviewQueue = !!queue && ["drafts","scripts_ready"].includes(queue.state) && !queue.video_approval;
+  const continueQueue = !!queue && ["videos_approved","videos_running"].includes(queue.state) && !!queue.video_approval;
   async function batch(kind: "scripts" | "approve" | "advance" | "read", identifier?: string) {
     if (!profile || sending.current || disabled) return;
     sending.current = true; setBusy(true); onBusy(true); setError("");
+    if(kind==="read") { setVideoConsent(false); setScriptConsent(false); setQueueCap(""); }
     try {
       if (kind === "scripts") {
+        setVideoConsent(false); setQueueCap("");
         if (!scriptConsent || !available || selectedTopics.length === 0) throw Error("선택한 대본 요청의 유료 사용을 승인하세요.");
         const created = await characterCommand("/api/studio/characters/queues/create", csrf,
           { character_id: profile.id, topic_ids: JSON.stringify(selectedTopics), settings: JSON.stringify(settings),
             episode_limit: episodeLimit, request_id: crypto.randomUUID().replaceAll("-", "") });
-        setQueue(created);
+        acceptQueue(created);
         const result = await characterCommand(`/api/studio/characters/queues/${created.id}/scripts`, csrf, { consent: "true" });
-        setQueue(result); setScriptConsent(false);
+        acceptQueue(result); setScriptConsent(false);
       } else if (kind === "approve" && queue) {
         if (!quoted || !videoConsent || !(Number(queueCap) >= queueQuote)) throw Error("각 대본의 검토·공식 견적과 전체 승인 금액을 확인하세요.");
         const approved = await characterCommand(`/api/studio/characters/queues/${queue.id}/approve-videos`, csrf,
           { approvals: JSON.stringify(queueJobs.map(j=>({job_id:j.id,quote_hash:j.quote_hash}))), max_total_usd: queueCap, consent: "true" });
-        setQueue(approved); setVideoConsent(false);
+        acceptQueue(approved); setVideoConsent(false);
         const result = await characterCommand(`/api/studio/characters/queues/${queue.id}/advance`, csrf, { consent: "true" });
-        setQueue(result);
+        acceptQueue(result);
       } else if (kind === "advance" && queue) {
-        setQueue(await characterCommand(`/api/studio/characters/queues/${queue.id}/advance`, csrf, { consent: "true" }));
+        acceptQueue(await characterCommand(`/api/studio/characters/queues/${queue.id}/advance`, csrf, { consent: "true" }));
       } else if (kind === "read" && identifier) {
         const response = await fetch(`/api/studio/characters/queues/${identifier}`, { credentials: "same-origin" });
-        if (!response.ok) throw Error("대기열을 읽지 못했습니다."); setQueue(await response.json());
+        if (!response.ok) throw Error("대기열을 읽지 못했습니다."); acceptQueue(await response.json());
       }
       await onRefresh();
-    } catch(e) {setError(e instanceof Error?e.message:"대기열을 중단했습니다. 자동 재시도하지 않습니다.");}
-    finally {sending.current=false;setBusy(false);onBusy(false);}
+    } catch(e) {
+      setScriptConsent(false); setVideoConsent(false);
+      const action={scripts:"일괄 대본 생성",approve:"영상 제작 승인",advance:"영상 제작 계속",read:"대기열 조회"}[kind];
+      setError(`${action}: ${e instanceof Error?e.message:"요청 결과를 확인하세요. 자동 재시도하지 않습니다."}`);
+    } finally {sending.current=false;setBusy(false);onBusy(false);}
   }
   return <details className="character-topic-tools"><summary>주제 자동 생성·기록</summary>
     <fieldset disabled={disabled || busy || !profile}>
       <div className="character-topic-create">
         <label>주제 개수<input type="number" min={1} max={50} value={count} onChange={e=>setCount(Number(e.target.value))} /></label>
-        <button disabled={!consent || !available} onClick={()=>void act("generate")}>주제 자동 생성</button>
+        <button disabled={!consent || !available || !Number.isInteger(count) || count<1 || count>50} onClick={()=>void act("generate")}>주제 자동 생성</button>
       </div>
       <label className="check"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} />주제 생성 유료 요청에 동의합니다.</label>
-      <button className="character-topic-save" disabled={!topic.trim()} onClick={()=>void act("manual")}>입력한 주제 저장</button>
+      <div className="character-topic-record-head"><span>저장한 주제 {rows.length}개</span>
+        <button className="character-topic-save" disabled={!topic.trim()} onClick={()=>void act("manual")}>입력한 주제 저장</button></div>
       <div className="character-topic-list">{rows.map(row=><div key={row.id}>
-        <label className="check"><input type="checkbox" aria-label={`${row.topic} 대기열 선택`} checked={selectedTopics.includes(row.id)}
-          onChange={e=>setSelectedTopics(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id))} />
-        <button onClick={()=>onTopic(row.topic)}>{row.topic}</button></label>
-        <select aria-label={`${row.topic} 상태`} value={row.status} onChange={e=>void act("manual",row,e.target.value)}>
-          <option value="new">미사용</option><option value="scripted">대본 작성</option><option value="produced">게시 완료</option><option value="skipped">보류</option>
-        </select>
+        <button aria-label={row.topic} aria-pressed={topic.trim()===row.topic.trim()} onClick={()=>onTopic(row.topic)}>{row.topic}</button>
+        <span className="character-topic-status">{topicStates[row.status]??"상태 확인"}</span>
       </div>)}</div>
-      <details className="character-batch"><summary>선택 주제 일괄 제작 ({selectedTopics.length}개)</summary>
-        <p>편당 한도 US${episodeLimit} · 선택한 {selectedTopics.length}편 상한 US${(Number(episodeLimit||0)*selectedTopics.length).toFixed(2)}</p>
-        <label className="check"><input type="checkbox" checked={scriptConsent} onChange={e=>setScriptConsent(e.target.checked)} />
-          선택한 {selectedTopics.length}편의 유료 대본 생성에 동의합니다.</label>
-        <button disabled={!scriptConsent||!available||!selectedTopics.length} onClick={()=>void batch("scripts")}>선택한 주제 대본 생성</button>
-        <label>저장된 대기열<select value={queue?.id??""} onChange={e=>{if(e.target.value)void batch("read",e.target.value);}}>
-          <option value="">대기열 선택</option>{queues.filter(q=>q.character_id===profile?.id).map(q=><option key={q.id} value={q.id}>{q.created_at??q.id} · {q.rows?.length??0}편</option>)}
-        </select></label>
-        {queue && <div><p role="status">대기열 상태: {queue.state}</p>
-          {(queue.rows??[]).map((row:Item)=><button key={row.job_id} onClick={()=>onJob(row.job_id)}>대본 검토 · {jobs.find(j=>j.id===row.job_id)?.topic??row.topic_id}</button>)}
-          <p>공식 견적 합계: {quoted?`US$${queueQuote.toFixed(2)}`:"모든 대본을 검토하고 견적을 받아야 합니다."}</p>
-          <label>이번 대기열 영상 승인 한도 (USD)<input inputMode="decimal" value={queueCap} onChange={e=>setQueueCap(e.target.value)}/></label>
-          <label className="check"><input type="checkbox" checked={videoConsent} onChange={e=>setVideoConsent(e.target.checked)} />각 대본·견적을 검토했고 합계 비용에 동의합니다.</label>
-          <button disabled={!quoted||!videoConsent||!(Number(queueCap)>=queueQuote)} onClick={()=>void batch("approve")}>견적 승인 후 순차 영상 생성</button>
-          <button onClick={()=>void batch("advance")}>승인된 대기열 진행 확인</button>
-          <small>실패·결과 불명에서 중단합니다. 완료 장면을 다시 요청하지 않으며 최종 합성은 별도 검토 후 실행합니다.</small>
-        </div>}
+      {!rows.length&&<small className="character-topic-empty">생성하거나 저장한 주제를 여기에서 선택하세요.</small>}
+      <details className="character-topic-advanced"><summary>고급 · 일괄 제작·기록 관리</summary>
+        <div className="character-topic-manage">{rows.map(row=><div key={row.id}>
+          <label className="check"><input type="checkbox" aria-label={`${row.topic} 대기열 선택`} checked={selectedTopics.includes(row.id)}
+            onChange={e=>{setSelectedTopics(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id));setScriptConsent(false);}} />{row.topic}</label>
+          <select aria-label={`${row.topic} 상태`} value={row.status} onChange={e=>void act("manual",row,e.target.value)}>
+            <option value="new">미사용</option><option value="scripted">대본 작성</option><option value="produced">영상 완료</option><option value="skipped">보류</option>
+          </select>
+        </div>)}</div>
+        <details className="character-batch"><summary>선택 주제 일괄 제작 ({selectedTopics.length}개)</summary>
+          <p>편당 한도 US${episodeLimit} · 선택한 {selectedTopics.length}편 상한 US${(Number(episodeLimit||0)*selectedTopics.length).toFixed(2)}</p>
+          <label className="check"><input type="checkbox" checked={scriptConsent} onChange={e=>setScriptConsent(e.target.checked)} />
+            선택한 {selectedTopics.length}편의 유료 대본 생성에 동의합니다.</label>
+          <button disabled={!scriptConsent||!available||!selectedTopics.length} onClick={()=>void batch("scripts")}>선택한 주제 대본 생성</button>
+        </details>
+        <details className="character-queue"><summary>제작 대기열</summary>
+          <label>저장된 대기열<select value={queue?.id??""} onChange={e=>{if(e.target.value)void batch("read",e.target.value);}}>
+            <option value="">대기열 선택</option>{queues.filter(q=>q.character_id===profile?.id).map((q,index)=><option key={q.id} value={q.id}>대기열 {index+1} · {q.rows?.length??0}편</option>)}
+          </select></label>
+          {queue && <div className="character-queue-current"><p role="status">대기열 상태: {queueStates[queue.state]??"상태 확인 필요"}</p>
+            <div className="character-queue-items">{(queue.rows??[]).map((row:Item,index:number)=><button key={row.job_id??row.topic_id??index} disabled={!row.job_id} onClick={()=>onJob(row.job_id)}>
+              {queue.state==="clips_ready"?"장면 검토":"작업 보기"} · {jobs.find(j=>j.id===row.job_id)?.topic??row.topic??rows.find(r=>r.id===row.topic_id)?.topic??`${index+1}번째 주제`}
+            </button>)}</div>
+            {queue.state==="blocked"&&<p className="character-queue-notice">실패하거나 결과가 불명확한 작업이 있습니다. 각 작업을 확인하세요. 자동 재시도하지 않습니다.</p>}
+            {reviewQueue&&<div className="character-queue-review">
+              <p>{quoted?`공식 견적 합계: US$${queueQuote.toFixed(2)}`:"각 대본을 검토한 뒤 공식 견적을 받아주세요."}</p>
+              {quoted&&<><label>이번 대기열 영상 승인 한도 (USD)<input inputMode="decimal" value={queueCap} onChange={e=>setQueueCap(e.target.value)}/></label>
+                <label className="check"><input type="checkbox" checked={videoConsent} onChange={e=>setVideoConsent(e.target.checked)} />각 대본·견적을 검토했고 합계 비용에 동의합니다.</label>
+                <button disabled={!videoConsent||!(Number(queueCap)>=queueQuote)} onClick={()=>void batch("approve")}>견적 승인 후 순차 영상 생성</button></>}
+            </div>}
+            {continueQueue&&<><button onClick={()=>void batch("advance")}>승인한 영상 이어서 제작</button>
+              <small>승인한 다음 영상의 유료 생성이 포함될 수 있습니다. 실패·결과 불명 시 중단합니다.</small></>}
+            {queue.state==="clips_ready"&&<small>각 장면을 검토한 뒤 작업 화면에서 최종 합성을 진행하세요.</small>}
+          </div>}
+        </details>
+        <details className="character-topic-import"><summary>CSV 주제 가져오기</summary><label>번호, 카테고리, 주제<textarea value={csv} maxLength={48000} onChange={e=>setCsv(e.target.value)} /></label>
+          <button disabled={!csv.trim()} onClick={()=>void act("import")}>CSV 가져오기</button></details>
       </details>
-      <details className="character-topic-import"><summary>CSV 주제 가져오기</summary><label>번호, 카테고리, 주제<textarea value={csv} maxLength={48000} onChange={e=>setCsv(e.target.value)} /></label>
-        <button disabled={!csv.trim()} onClick={()=>void act("import")}>CSV 가져오기</button></details>
     </fieldset>
     {!profile && <small>등록된 캐릭터를 먼저 선택하세요.</small>}
     {busy && <p role="status">주제 처리 중…</p>}{error && <p role="alert">{error}</p>}
