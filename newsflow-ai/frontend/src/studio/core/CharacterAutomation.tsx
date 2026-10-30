@@ -85,7 +85,8 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
     } catch (e) {
       const message=e instanceof Error ? e.message : "캐릭터 정보를 확인하세요.";
       const generic=message.startsWith('입력·저장 상태')||message.startsWith('저장 상태를 확인')||message.startsWith('이미지 분석을 완료하지 못했습니다');
-      setError(kind==='analyze'?`특징 초안을 만들지 못했습니다.${generic?'':` ${message}`}`:message);
+      setError(kind==='analyze'?`특징 초안을 만들지 못했습니다.${generic?'':` ${message}`}`:
+        generic?(kind==='save'?'캐릭터 정보를 저장하지 못했습니다. 필수 항목을 확인하세요.':'캐릭터 등록을 삭제하지 못했습니다.'):message);
     }
     finally { sending.current = false; setBusy(false); onBusy(false); }
   }
@@ -122,13 +123,18 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
       <form id={formId} ref={form} className="character-profile-form" onSubmit={e=>{e.preventDefault();void act('save');}}>
         <p>선택한 이미지에 이름과 특징을 저장합니다. 사용 권한이 있는 캐릭터만 등록하세요.</p>
         <fieldset disabled={disabled||busy} className="character-profile-fields">
-          <label>캐릭터 이름<input data-autofocus required value={draft.name_ko} maxLength={60} onChange={e=>setDraft(v=>({...v,name_ko:e.target.value}))}/></label>
-          <label>종류<input required value={draft.species} maxLength={40} placeholder="예: rabbit" onChange={e=>setDraft(v=>({...v,species:e.target.value}))}/></label>
+          <label className="character-profile-wide">캐릭터 이름<input data-autofocus required value={draft.name_ko} maxLength={60} onChange={e=>setDraft(v=>({...v,name_ko:e.target.value}))}/></label>
           <label>외형 · 영어<textarea required value={draft.appearance} maxLength={400} rows={3} onChange={e=>setDraft(v=>({...v,appearance:e.target.value}))}/></label>
           <label>성격<textarea required value={draft.personality} maxLength={800} rows={3} onChange={e=>setDraft(v=>({...v,personality:e.target.value}))}/></label>
-          <label className="character-profile-wide">고정 스타일 · 영어<input required value={draft.style_lock} maxLength={600} onChange={e=>setDraft(v=>({...v,style_lock:e.target.value}))}/></label>
-          {([['world','이야기의 세계'],['setup','반복되는 상황'],['reaction','캐릭터만의 반응']] as const).map(([key,label])=><label key={key}>{label}<input required value={draft.comedy_formula[key]} maxLength={60} onChange={e=>setDraft(v=>({...v,comedy_formula:{...v.comedy_formula,[key]:e.target.value}}))}/></label>)}
+          {([['setup','반복되는 상황'],['reaction','캐릭터만의 반응']] as const).map(([key,label])=><label key={key}>{label}<input required value={draft.comedy_formula[key]} maxLength={60} onChange={e=>setDraft(v=>({...v,comedy_formula:{...v.comedy_formula,[key]:e.target.value}}))}/></label>)}
         </fieldset>
+        <details className="character-profile-optional"><summary>추가 정보 · 선택</summary>
+          <fieldset disabled={disabled||busy} className="character-profile-fields">
+            <label>종류<input value={draft.species} maxLength={40} placeholder="예: rabbit" onChange={e=>setDraft(v=>({...v,species:e.target.value}))}/></label>
+            <label>이야기의 세계<input value={draft.comedy_formula.world} maxLength={60} onChange={e=>setDraft(v=>({...v,comedy_formula:{...v.comedy_formula,world:e.target.value}}))}/></label>
+            <label className="character-profile-wide">고정 스타일 · 영어<input value={draft.style_lock} maxLength={600} placeholder="비워두면 기본 스타일 사용" onChange={e=>setDraft(v=>({...v,style_lock:e.target.value}))}/></label>
+          </fieldset>
+        </details>
         <details className="character-profile-ai"><summary>AI로 특징 초안 만들기 · 선택 사항</summary>
           <fieldset disabled={disabled||busy}>
             <label className="check"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>선택한 AI에 참조 이미지를 전송하는 유료 분석에 동의합니다.</label>

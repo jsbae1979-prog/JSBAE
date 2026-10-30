@@ -38,6 +38,28 @@ class ComedyFormula(Strict):
     reaction: str = Field(min_length=1, max_length=60)
 
 
+class ProfileComedyFormula(ComedyFormula):
+    # An omitted setting is not a claimed character fact. Authoring derives it
+    # from the user's setup, while image-analysis response validation stays strict.
+    world: str = Field(default='', max_length=60)
+
+    @field_validator('world', mode='before')
+    @classmethod
+    def blank_world(cls, value):
+        return '' if isinstance(value, str) and not value.strip() else value
+
+    @field_validator('setup', 'reaction')
+    @classmethod
+    def required_description(cls, value):
+        if not value.strip(): raise ValueError('Required character description')
+        return value
+
+
+def channel_style_default():
+    from newsflow.video_models.catalog import character_config
+    return character_config()['style_lock']
+
+
 class SupportingCast(Strict):
     id: str = Field(pattern=r'^[a-z_]{1,40}$')
     appearance: str = Field(min_length=1, max_length=600)
@@ -45,11 +67,11 @@ class SupportingCast(Strict):
 
 class CharacterProfile(Strict):
     name_ko: str = Field(min_length=1, max_length=60)
-    species: str = Field(min_length=1, max_length=40)
+    species: str = Field(default='', max_length=40)
     appearance: str = Field(min_length=1, max_length=400)
     personality: str = Field(min_length=1, max_length=800)
-    comedy_formula: ComedyFormula
-    style_lock: str = Field(min_length=1, max_length=600)
+    comedy_formula: ProfileComedyFormula
+    style_lock: str = Field(default_factory=channel_style_default, min_length=1, max_length=600, validate_default=True)
     supporting_cast: list[SupportingCast] = Field(default_factory=list, max_length=3)
     audience: str = Field(default='general', min_length=1, max_length=80)
     made_for_kids: Literal[False] = False
@@ -58,6 +80,19 @@ class CharacterProfile(Strict):
     @classmethod
     def text_safety(cls, value):
         return safe_text(value)
+
+    @field_validator('species', 'style_lock', 'audience', mode='before')
+    @classmethod
+    def optional_defaults(cls, value, info):
+        if isinstance(value, str) and not value.strip():
+            return channel_style_default() if info.field_name == 'style_lock' else 'general' if info.field_name == 'audience' else ''
+        return value
+
+    @field_validator('name_ko', 'appearance', 'personality')
+    @classmethod
+    def required_description(cls, value):
+        if not value.strip(): raise ValueError('Required character description')
+        return value
 
     @field_validator('appearance', 'style_lock')
     @classmethod

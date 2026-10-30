@@ -55,7 +55,7 @@ def test_revision_conflicts_do_not_overwrite_or_delete(registry):
     assert service.get(first['id'])==first
 
 
-@pytest.mark.parametrize('field',['name_ko','species','appearance','personality','comedy_formula','style_lock'])
+@pytest.mark.parametrize('field',['name_ko','appearance','personality','comedy_formula'])
 def test_profile_required_fields(registry,field):
     service,asset=registry; value=profile();value.pop(field)
     with pytest.raises(CharacterError): service.save(value,asset)

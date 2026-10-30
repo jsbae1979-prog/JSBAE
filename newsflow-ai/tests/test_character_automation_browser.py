@@ -133,17 +133,19 @@ def test_character_registration_modal_keyboard_responsive_and_explicit_save(app,
         assert not registry.list() and not calls
         trigger.click();dialog=page.get_by_role('dialog',name='새 캐릭터 등록',exact=True)
         values=profile('새 합성 토끼','rabbit')
+        dialog.get_by_text('추가 정보 · 선택',exact=True).click()
         for label,key in [('캐릭터 이름','name_ko'),('종류','species'),('외형 · 영어','appearance'),('성격','personality'),('고정 스타일 · 영어','style_lock')]:
             dialog.get_by_label(label,exact=True).fill(values[key])
         for label,key in [('이야기의 세계','world'),('반복되는 상황','setup'),('캐릭터만의 반응','reaction')]:
             dialog.get_by_label(label,exact=True).fill(values['comedy_formula'][key])
+        dialog.get_by_text('추가 정보 · 선택',exact=True).click()
         for width,height in ((1920,1080),(1366,768),(390,844)):
             page.set_viewport_size({'width':width,'height':height})
             assert dialog.evaluate('(e)=>e.scrollWidth<=e.clientWidth+1')
             bounds=dialog.bounding_box();assert bounds and bounds['x']>=0 and bounds['x']+bounds['width']<=width+1
             expect(dialog.get_by_role('button',name='캐릭터 저장',exact=True)).to_be_visible()
             expect(dialog.get_by_role('button',name='취소',exact=True)).to_be_visible()
-            positions=dialog.locator('.character-profile-fields > label').evaluate_all('(es)=>es.slice(0,2).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
+            positions=dialog.locator('.character-profile-form > .character-profile-fields > label').evaluate_all('(es)=>es.slice(1,3).map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y}))')
             if width==390:assert positions[0]['y']<positions[1]['y'] and positions[0]['x']==positions[1]['x']
             else:assert positions[0]['y']==positions[1]['y'] and positions[0]['x']<positions[1]['x']
             out=CAPTURE_DIR or tmp_path/'captures';out.mkdir(parents=True,exist_ok=True)

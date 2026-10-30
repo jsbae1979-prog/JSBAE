@@ -9,7 +9,7 @@ import json
 from threading import RLock, local
 
 from PIL import Image, ImageOps
-from pydantic import Field, model_validator
+from pydantic import Field, ValidationError, model_validator
 
 from newsflow.intelligence.api_providers import (
     API_MODELS, MAX_REQUEST_BYTES, AnthropicProvider, OpenAISearchProvider,
@@ -37,7 +37,8 @@ TOPIC_INSTRUCTION = (
     'You create episode topics for a fast-paced, dialogue-free comedy YouTube Shorts series starring the character '
     'in input.character. Return JSON only: topics (exactly input.count objects with topic (<=60 chars Korean, one line: '
     'the situation and character reaction), category (<=10 chars Korean), joke_type (<=20 chars, a short label)). '
-    'Every topic must fit comedy_formula: happen in or near its world, start from a setup like it, and end with '
+    'If comedy_formula.world is empty, derive a fitting setting from comedy_formula.setup; do not treat an inferred setting as a supplied character fact. '
+    'Every topic must fit comedy_formula: use its world when provided, start from a setup like it, and end with '
     'the character typical reaction. Each topic must be showable without dialogue through actions, expressions, '
     'sound effects and short captions. Spread topics across at least min(5,input.count) categories and avoid repeating '
     'a joke_type more than twice. Do not repeat or closely resemble input.existing_topics. '
@@ -81,6 +82,56 @@ class AnalysisResult(Strict):
 
 class TopicResponse(Strict):
     topics: list[Topic] = Field(min_length=1, max_length=50)
+
+
+def analysis_feedback(error):
+    """Finite schema names/types only; never expose validation input or messages."""
+    if not isinstance(error, ValidationError):
+        return []
+    fields = {'rejected', 'reason', 'species', 'appearance', 'style_suggestion',
+              'candidates', 'name_ko', 'personality', 'comedy_formula', 'world', 'setup', 'reaction'}
+    types = {'missing', 'string_too_short', 'string_too_long', 'string_type', 'too_short',
+             'too_long', 'extra_forbidden', 'list_type', 'model_type', 'dict_type', 'bool_type'}
+    result = []
+    for item in error.errors(include_input=False, include_context=False, include_url=False)[:4]:
+        path = [part if isinstance(part, str) and part in fields else
+                part if type(part) is int and 0 <= part < 3 else 'field' for part in item['loc'][:4]]
+        result.append({'field': path or ['candidates'],
+                       'type': item['type'] if item['type'] in types else 'schema_relation'})
+    return result
+
+
+class AuthoringResponseError(ProviderResponseError):
+    def __init__(self, phase):
+        self.phase = phase if phase in {'envelope', 'json'} else 'envelope'
+        super().__init__('AI 응답 형식을 확인하지 못했습니다. 자동 재요청하지 않습니다.')
+
+
+def analysis_failure_message(error, failure):
+    """Short, public GUI detail built exclusively from reviewed constants."""
+    if isinstance(failure, dict) and failure.get('analysis_stage') == 'schema':
+        labels = {'species':'종류', 'appearance':'외형 설명', 'style_suggestion':'영상 스타일',
+                  'candidates':'캐릭터 후보', 'name_ko':'이름', 'personality':'성격',
+                  'comedy_formula':'코미디 특징', 'world':'배경', 'setup':'상황', 'reaction':'반응',
+                  'rejected':'분석 결과', 'reason':'검토 사유'}
+        reasons = {'string_too_long':'글자 수 초과', 'too_long':'항목 수 초과',
+                   'string_too_short':'필수 내용 누락', 'too_short':'항목 수 부족', 'missing':'필수 항목 누락'}
+        feedback = failure.get('analysis_feedback', [])
+        if isinstance(feedback, list) and feedback and isinstance(feedback[0], dict):
+            row = feedback[0]
+            path = row.get('field', [])
+            names = [labels[part] for part in path if isinstance(part, str) and part in labels] if isinstance(path, list) else []
+            label = names[-1] if names else '분석 결과'
+            kind = row.get('type')
+            return label + ': ' + (reasons.get(kind, '응답 구성 확인 필요') if isinstance(kind, str) else '응답 구성 확인 필요')
+        return '이미지 분석 결과의 구성 확인 필요'
+    if isinstance(failure, dict) and failure.get('analysis_stage') in ('envelope', 'json'):
+        return '이미지 분석 응답 형식 확인 필요'
+    if isinstance(error, CharacterError):
+        if error.code == 'consent': return '이미지 분석 전송 동의 필요'
+        if error.code == 'reference': return '분석할 캐릭터 이미지 확인 필요'
+        if error.code == 'budget': return 'API 사용 승인·1회 한도 확인 필요'
+    return '이미지 분석을 완료하지 못했습니다'
 
 
 def provider_for_model(model):
@@ -155,6 +206,7 @@ def request_body(instruction, payload, schema, options, provider, image_bytes=No
 
 
 def response_object(document, provider):
+    phase = 'envelope'
     try:
         if provider == 'claude_api':
             if document.get('stop_reason') != 'end_turn': raise ValueError
@@ -168,9 +220,11 @@ def response_object(document, provider):
             blocks = messages[0]['content']
             if len(blocks) != 1 or blocks[0]['type'] != 'output_text': raise ValueError
             text = blocks[0]['text']
+        if not isinstance(text, str): raise ValueError
+        phase = 'json'
         return _claude_json_object(text)
-    except (ValueError, TypeError, KeyError, IndexError):
-        raise ProviderResponseError('AI 응답 형식을 확인하지 못했습니다. 자동 재요청하지 않습니다.') from None
+    except (ValueError, TypeError, KeyError, IndexError, ProviderResponseError):
+        raise AuthoringResponseError(phase) from None
 
 
 class _CallerReceipt:
@@ -267,12 +321,14 @@ class AuthoringAI:
                 self.budget.finish(reservation.id,status='failed',usage=self.last_usage)
                 raise CharacterError('budget')
         adapter.last_usage = None
+        phase = 'provider'
         try:
             document = adapter._post(body, options)
             self.response_received = isinstance(document,dict)
             self.last_usage = adapter.last_usage
             candidate = response_object(document, provider)
             self.last_candidate = candidate
+            phase = 'schema'
             result = schema.model_validate(candidate)
         except Exception as error:
             self.last_usage = getattr(adapter,'last_usage',None)
@@ -283,6 +339,9 @@ class AuthoringAI:
             feedback = validation_feedback(error)
             if feedback:
                 self.last_failure['validation_feedback'] = feedback
+            if schema is AnalysisResult and instruction == CHARACTER_ANALYSIS_INSTRUCTION:
+                self.last_failure['analysis_stage'] = error.phase if isinstance(error, AuthoringResponseError) else phase
+                self.last_failure['analysis_feedback'] = analysis_feedback(error)
             self.budget.finish(reservation.id,status='failed' if known else 'unknown',usage=self.last_usage)
             raise CharacterError('provider') from None
         self.budget.finish(reservation.id,status='success',usage=self.last_usage)

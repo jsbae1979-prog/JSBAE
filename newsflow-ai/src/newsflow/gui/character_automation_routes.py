@@ -75,12 +75,16 @@ def profile_delete(request: Request, identifier: str, revision: int = Form(...),
 def profile_analyze(request: Request, asset: str = Form(..., max_length=80),
                     model: str = Form(..., max_length=180), request_id: str = Form(..., max_length=64),
                     consent: bool = Form(False)):
+    service = None
     try:
         content = request.app.state.image_studio.asset(asset).read_bytes()
-        return authoring(request).analyze(content, provider=selected_provider(model), model=model,
-                                         request_id=request_id, consent=consent)
-    except (ValueError, OSError, CharacterError, ProviderError, PublishingError):
-        raise public_problem() from None
+        provider = selected_provider(model)
+        service = authoring(request)
+        return service.analyze(content, provider=provider, model=model,
+                               request_id=request_id, consent=consent)
+    except (ValueError, OSError, CharacterError, ProviderError, PublishingError) as error:
+        from newsflow.character.authoring import analysis_failure_message
+        raise HTTPException(409, analysis_failure_message(error, getattr(service, 'last_failure', None))) from None
 
 
 @router.get('/api/studio/characters/profiles/{identifier}/topics')
