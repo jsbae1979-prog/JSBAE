@@ -35,10 +35,14 @@ def acknowledge_analysis(request: Request, provider: str, reservation_id: str = 
 def check_connection(request: Request, provider: str, consent: bool = Form(False)):
     store = _store(request, provider)
     if provider == "claude_api":
-        result = check_claude_connection(
-            request.app.state.sessions, store, consent=consent,
-            transport=getattr(request.app.state, "claude_connection_transport", None),
-        )
+        scoped_check = getattr(request.app.state, "claude_metadata_check", None)
+        if scoped_check is not None:
+            result = scoped_check(consent=consent)
+        else:
+            result = check_claude_connection(
+                request.app.state.sessions, store, consent=consent,
+                transport=getattr(request.app.state, "claude_connection_transport", None),
+            )
     else:
         result = check_api_connection(
             request.app.state.sessions, store, provider=provider, consent=consent,

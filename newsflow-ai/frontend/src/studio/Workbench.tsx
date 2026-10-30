@@ -2565,9 +2565,11 @@ function LegacyWorkbench({
                             }
                           />
                           <span>
-                            {x.configured
-                              ? "키 저장 · 인증 미검증"
-                              : "키 미설정"}
+                            {x.verified
+                              ? "인증·모델 확인"
+                              : x.configured
+                                ? "키 저장 · 인증 미검증"
+                                : "키 미설정"}
                           </span>
                         </div>
                       ))}

@@ -1,0 +1,212 @@
+{
+  "phase": "DEVELOPMENT_READY_OPERATING_RESTART_NOT_AUTHORIZED",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "baseline": "898618bfd9fd8f64a22e19407aa2f2e57ad5fc40",
+  "operatingSourceSha": "7eed8ba96189207dd8aa6556cb55345cf0fa48fd",
+  "tests": {
+    "pass": 38,
+    "newPass": 38,
+    "affectedExistingPass": 0,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "fakeOnly": true,
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "diffCheck": "PASS"
+  },
+  "initialTestSetup": {
+    "errors": 31,
+    "cause": "new test location did not load shared synthetic app fixture",
+    "resolution": "moved test to existing product tests fixture scope"
+  },
+  "initialTestExpectation": {
+    "failures": 1,
+    "cause": "existing service creates two empty proof fields on first check",
+    "resolution": "test permits unchanged empty search/inference proof fields"
+  },
+  "uiTestEnvironment": {
+    "interruptedBeforeAssertion": 2,
+    "cause": "restricted Windows TestClient asyncio socketpair initialization wait",
+    "resolution": "approved elevated synthetic test execution; no policy changes"
+  },
+  "cases": [
+    {
+      "test": "tests.test_claude_operating_connection_check::test_authenticated_metadata_get_refreshes_only_proof_and_preserves_secrets_and_budget",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_existing_local_auth_origin_csrf_consent_and_loopback_are_required",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[GET-/api-settings/claude_api/check]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[DELETE-/api-settings/claude_api/check]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/openai/check]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/claude_api/check-search]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/claude_api/key]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/claude_api/check/extra]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api/studio/characters/auto-story]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/claude_api]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/v1/messages]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs0]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs1]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs2]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs3]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs4]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs5]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs6]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs7]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs8]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_and_key_scope_end_after_callback_and_never_repeat_same_dispatch",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[401-auth_error]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[403-permission]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[404-model_unavailable]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[429-rate_limit]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[302-unavailable]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[504-timeout]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_timeout_no_retry_and_redirect_policy_stays_denied",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_missing_stored_key_does_not_use_environment_or_change_verification_ttl",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_model_change_invalidates_proof_without_generation",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_install_does_not_accept_another_profile_or_replace_existing_checker",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[not_checked-None-claude-sonnet-4-6-True-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[valid-1-claude-sonnet-4-6-True-True]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[expired-25-claude-sonnet-4-6-True-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[model_changed-1-claude-opus-4-6-True-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[key_missing-1-claude-sonnet-4-6-False-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[future_stamp--1-claude-sonnet-4-6-True-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_chrome_settings_labels_follow_only_current_claude_proof",
+      "status": "PASS"
+    }
+  ],
+  "chrome": {
+    "authenticatedUserTabObserved": true,
+    "provider": "claude_api",
+    "model": "claude-sonnet-4-6",
+    "status": "STORED_KEY_AUTHENTICATION_NOT_VERIFIED",
+    "checkSubmitted": false,
+    "keyValueRead": false
+  },
+  "diagnosis": {
+    "missingOperatingRoute": "/api-settings/claude_api/check",
+    "reactVerificationHardcodedFalse": true,
+    "generalCredentialDecryptionRemainsDenied": true,
+    "keyInvalidityOrExpiry": "NOT_ESTABLISHED"
+  },
+  "protection": {
+    "operatingFilesChanged": false,
+    "operatingDataChanged": false,
+    "operatingRestartCount": 0,
+    "providerRequests": 0,
+    "paidGenerationRequests": 0,
+    "snsRequests": 0,
+    "keysExposed": false,
+    "globalPolicyRelaxed": false
+  },
+  "liveVerification": "PENDING_EXPLICIT_RESTART_APPROVAL"
+}

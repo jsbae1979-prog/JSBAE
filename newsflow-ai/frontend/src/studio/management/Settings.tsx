@@ -251,13 +251,19 @@ export default function Settings({
                           <td>
                             <Badge
                               value={
-                                meta?.configured ? "review_required" : "blocked"
+                                meta?.verified
+                                  ? "success"
+                                  : meta?.configured
+                                    ? "review_required"
+                                    : "blocked"
                               }
                             />
                             <small>
-                              {meta?.configured
-                                ? "키 저장 · 실제 인증 미검증"
-                                : "키 미설정"}
+                              {meta?.verified
+                                ? "인증·모델 확인"
+                                : meta?.configured
+                                  ? "키 저장 · 실제 인증 미검증"
+                                  : "키 미설정"}
                             </small>
                           </td>
                           <td>

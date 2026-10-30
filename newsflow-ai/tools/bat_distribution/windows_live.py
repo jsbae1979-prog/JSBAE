@@ -463,9 +463,12 @@ def start(config, plan):
                 character_story_only = install_character_story_only(
                     app, config.profile, story_policy, character_native_factory)
             key_registration = None
+            claude_connection_check = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .higgsfield_key_registration import install as install_key_registration
                 key_registration = install_key_registration(app, config.profile, character_native_factory)
+                from .claude_connection_check import install as install_claude_connection_check
+                claude_connection_check = install_claude_connection_check(app, config.profile, character_native_factory)
             character_quote_only = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .character_quote_only import install as install_character_quote_only
@@ -507,6 +510,8 @@ def start(config, plan):
                     request_boundary = character_manual.wrap(request_boundary, authenticated_app)
                 if character_authoring is not None:
                     request_boundary = character_authoring.wrap(request_boundary, authenticated_app)
+                if claude_connection_check is not None:
+                    request_boundary = claude_connection_check.wrap(request_boundary, authenticated_app)
             elif config.profile_kind == 'synthetic-local-work':
                 from .local_work import LocalWorkRequests
                 request_boundary = LocalWorkRequests(LocalAccess(app, session))
