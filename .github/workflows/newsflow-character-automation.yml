@@ -1,0 +1,139 @@
+name: NewsFlow character automation Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/newsflow-character-shorts-automation-20261030]
+    paths:
+      - newsflow-ai/src/newsflow/character/**
+      - newsflow-ai/src/newsflow/gui/character*routes.py
+      - newsflow-ai/src/newsflow/studio/read_models.py
+      - newsflow-ai/src/newsflow/config/**
+      - newsflow-ai/frontend/**
+      - newsflow-ai/tests/test_character*.py
+      - newsflow-ai/tests/character*.test.mjs
+      - newsflow-ai/tests/conftest.py
+      - .github/workflows/newsflow-character-automation.yml
+  pull_request:
+    branches: [codex/newsflow-bat-distribution-prep]
+    paths:
+      - newsflow-ai/src/newsflow/character/**
+      - newsflow-ai/src/newsflow/gui/character*routes.py
+      - newsflow-ai/src/newsflow/studio/read_models.py
+      - newsflow-ai/src/newsflow/config/**
+      - newsflow-ai/frontend/**
+      - newsflow-ai/tests/test_character*.py
+      - newsflow-ai/tests/character*.test.mjs
+      - newsflow-ai/tests/conftest.py
+      - .github/workflows/newsflow-character-automation.yml
+permissions:
+  contents: read
+concurrency:
+  group: character-automation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  fake-episode-and-react:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: newsflow-ai
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      NEWSFLOW_AI_LIVE_TEST: '0'
+      NEWSFLOW_LIVE_TEST: '0'
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+      ANTHROPIC_AUTH_TOKEN: ''
+      CLAUDE_CODE_OAUTH_TOKEN: ''
+      ELEVENLABS_API_KEY: ''
+      HIGGSFIELD_API_KEY: ''
+      HF_KEY: ''
+      HF_SECRET: ''
+      HF_API_KEY: ''
+      HF_API_SECRET: ''
+      NEWSFLOW_AI_API_KEY: ''
+      NEWSFLOW_ANTHROPIC_API_KEY: ''
+      NEWSFLOW_ELEVENLABS_KEY: ''
+      NEWSFLOW_VIDEO_AI_KEY: ''
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.22.1'
+      - name: Locked Python and browser-test dependencies
+        run: |
+          python -c "import sys; assert sys.version_info[:2] in ((3,12),(3,14)); print(sys.version)"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install -r requirements-dev.lock -r tools/requirements-ci.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip install --no-deps -e .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "PYTHONPATH=$PWD/src;$PWD/tests;$PWD/tools" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Existing FFmpeg tools and Windows Chrome
+        run: |
+          if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
+            choco install ffmpeg --version=7.1.1 -y --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:PATH += ';C:\ProgramData\chocolatey\bin;C:\tools\ffmpeg\bin'
+          }
+          @((Split-Path (Get-Command ffmpeg -ErrorAction Stop).Source), (Split-Path (Get-Command ffprobe -ErrorAction Stop).Source)) | Select-Object -Unique | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $chrome = Join-Path $env:ProgramFiles 'Google/Chrome/Application/chrome.exe'
+          if (-not (Test-Path -LiteralPath $chrome)) { throw 'Windows Chrome is required for the focused browser tests' }
+      - name: Build actual React assets and check frontend contracts
+        run: |
+          npm install --global pnpm@11.25.0 --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend install --frozen-lockfile --ignore-scripts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend exec tsc --noEmit
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm --dir frontend exec vite build --configLoader runner
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node --test tests/*.test.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Fake providers, local FFmpeg and isolated React routes
+        run: |
+          New-Item -ItemType Directory -Path validation-output/character-automation -Force | Out-Null
+          $env:NEWSFLOW_CHARACTER_CAPTURE_DIR = Join-Path $PWD 'validation-output/character-automation/captures'
+          $testFiles = @(
+            'tests/test_character_registry_v3.py',
+            'tests/test_character_topics_v3.py',
+            'tests/test_character_authoring_v3.py',
+            'tests/test_character_episode_schema.py',
+            'tests/test_character_validation_feedback.py',
+            'tests/test_character_episode_catalog.py',
+            'tests/test_character_episode_automation.py',
+            'tests/test_character_episode_recovery.py',
+            'tests/test_character_episode_queue.py',
+            'tests/test_character_episode_editing.py',
+            'tests/test_character_episode_regeneration.py',
+            'tests/test_character_episode_end_to_end.py',
+            'tests/test_character_automation_routes.py',
+            'tests/test_character_automation_browser.py'
+          )
+          # These tests inject Fake providers. The shared synthetic app fixture
+          # blocks external DNS/connect and both operating ports (8765/18768).
+          python -m pytest -q -rs --tb=short -p no:cacheprovider --basetemp="$env:RUNNER_TEMP/newsflow-character-automation-${{ matrix.python }}" --junitxml=validation-output/character-automation/results.xml @testFiles
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: character-automation-windows-python-${{ matrix.python }}
+          path: |
+            newsflow-ai/validation-output/character-automation/results.xml
+            newsflow-ai/validation-output/character-automation/captures/*.png
+          if-no-files-found: warn
+          retention-days: 7

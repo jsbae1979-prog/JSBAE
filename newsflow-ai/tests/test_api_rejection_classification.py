@@ -151,7 +151,7 @@ def test_rejection_does_not_grant_approval_or_erase_monthly_usage(sessions, stor
     with sessions.begin() as session:
         session.get(APIRequestReservation, row.id).estimated_usd = "2"
     before = journal(sessions)
-    with pytest.raises(APISettingsError, match="월별"):
-        reserve(budget, store, request_id="over:limit")
-    assert journal(sessions) == before
+    new = reserve(budget, store, request_id="new:approved")
+    assert new.reserved_usd > 0
+    assert [record for record in journal(sessions) if record['id'] != new.id] == before
     assert "sk-" not in json.dumps(before, default=str)

@@ -166,7 +166,7 @@ def prepared(client, app, fake, request, monkeypatch):
     Curator(app.state.coordinator).refresh(True)
     options = Options(MODELS[mode], max_tokens=3000)
     save_api_settings(app.state.sessions, mode, model=options.model, approved=True,
-                      search_enabled=False, search_approved=False, monthly_limit_usd="100",
+                      search_enabled=False, search_approved=False, request_limit_usd="10", monthly_limit_usd="100",
                       input_price_per_1m="3", output_price_per_1m="15", search_price_per_1k="10",
                       billing_confirmed=True)
     if mode == "openai":

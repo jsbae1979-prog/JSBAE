@@ -1,4 +1,4 @@
-"""AI settings, approval gate, monthly budget, key store and the AI connection GUI."""
+"""AI settings, per-call budget, retained monthly usage and secure connection GUI."""
 
 from __future__ import annotations
 
@@ -69,14 +69,15 @@ def test_settings_require_limit_for_approval_and_keep_first_approval_date(app):
     with pytest.raises(SettingsError):
         write_settings(sessions, "openai", "bad model name!", True, 1000, 20)
     first = write_settings(sessions, "openai", "gpt-4o-mini", True, 50_000, 25)
-    assert first.approved and first.approved_at and first.monthly_token_limit == 50_000 and first.timeout == 25
+    assert first.approved and first.approved_at and first.request_token_limit == 50_000 and first.timeout == 25
+    assert first.monthly_token_limit == 0
     again = write_settings(sessions, "openai", "gpt-4o-mini", True, 60_000, 25)
     assert again.approved_at == first.approved_at
     revoked = write_settings(sessions, "openai", "gpt-4o-mini", False, 60_000, 25)
     assert not revoked.approved and revoked.approved_at is None
 
 
-def test_budget_counts_current_month_only_and_blocks_before_call(app, store, monkeypatch):
+def test_budget_keeps_monthly_usage_but_enforces_only_per_call_limit(app, store, monkeypatch):
     sessions = app.state.sessions
     settings = write_settings(sessions, "openai", "gpt-4o-mini", True, 3000, 20)
     record_usage(sessions, run_id=None, provider="openai", model="m", kind="script", status="success",
@@ -88,8 +89,9 @@ def test_budget_counts_current_month_only_and_blocks_before_call(app, store, mon
         session.add(old)
     assert usage_this_month(sessions)["tokens"] == 1500
     check_budget(sessions, settings, Options(max_tokens=1500))
+    check_budget(sessions, settings, Options(max_tokens=1600))
     with pytest.raises(SettingsError):
-        check_budget(sessions, settings, Options(max_tokens=1600))
+        check_budget(sessions, settings, Options(max_tokens=3001))
     monkeypatch.delenv("NEWSFLOW_AI_API_KEY", raising=False)
     status = external_ready(sessions, store)
     assert not status["ready"] and "API 키가 없습니다." in status["reasons"]
@@ -97,7 +99,9 @@ def test_budget_counts_current_month_only_and_blocks_before_call(app, store, mon
     assert external_ready(sessions, store)["ready"] is True
     record_usage(sessions, run_id=None, provider="openai", model="m", kind="script", status="success",
                  usage={"total_tokens": 2000}, elapsed_ms=10)
-    assert "이번 달 토큰 한도를 모두 사용했습니다." in external_ready(sessions, store)["reasons"]
+    assert usage_this_month(sessions)["tokens"] == 3500
+    assert external_ready(sessions, store)["ready"] is True
+    check_budget(sessions, settings, Options(max_tokens=3000))
 
 
 def test_service_records_usage_and_maps_auth_failure(app, store):
@@ -132,9 +136,9 @@ def test_gui_saves_settings_and_key_without_echo(client, app, monkeypatch):
     assert "뉴스·대본 AI" in page.text and 'type="password"' in page.text
     token = csrf(client)
     assert client.post("/ai-settings", data={"csrf_token": token, "provider": "openai", "model": "gpt-4o-mini",
-                                             "approved": "true", "monthly_token_limit": "0", "timeout": "20"}).status_code == 422
+                                             "approved": "true", "request_token_limit": "0", "timeout": "20"}).status_code == 422
     saved = client.post("/ai-settings", data={"csrf_token": token, "provider": "openai", "model": "gpt-4o-mini",
-                                              "approved": "true", "monthly_token_limit": "100000", "timeout": "30"})
+                                              "approved": "true", "request_token_limit": "100000", "timeout": "30"})
     assert saved.status_code == 200 and "기존 AI 설정을 저장했습니다" in saved.text
     stored = client.post("/ai-settings/key", data={"csrf_token": token, "api_key": KEY})
     assert stored.status_code == 200 and KEY not in stored.text and "API Key를 저장했습니다" in stored.text
@@ -155,7 +159,7 @@ def test_gui_connection_check_uses_zero_token_lookup_and_stores_safe_result(clie
     app.state.ai_keys.save(KEY)
     token = csrf(client)
     client.post("/ai-settings", data={"csrf_token": token, "provider": "openai", "model": "gpt-4o-mini",
-                                      "approved": "true", "monthly_token_limit": "1000", "timeout": "20"})
+                                      "approved": "true", "request_token_limit": "1000", "timeout": "20"})
 
     class Checker:
         def check_connection(self, options):
