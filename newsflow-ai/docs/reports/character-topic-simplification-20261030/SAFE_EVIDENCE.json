@@ -45,7 +45,7 @@
     "recordedPidUnchanged": 28460,
     "recordedPythonProcessPresent": true,
     "unauthenticatedRootHttpStatus": 403,
-    "chromeUserConfirmation": "PENDING",
+    "chromeUserConfirmation": "USER CONFIRMED: 간단해진 화면 정상 표시",
     "tablesUnchanged": 47,
     "articles": 169,
     "originalAndABPreserved": true,
@@ -111,6 +111,6 @@
     }
   ],
   "limitations": [
-    "Operating Chrome visual confirmation pending user refresh; no live paid generation tested."
+    "No live paid generation tested."
   ]
 }
