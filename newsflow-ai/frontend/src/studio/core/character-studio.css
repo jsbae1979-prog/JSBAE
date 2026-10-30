@@ -1152,6 +1152,28 @@
 .core-studio[data-module="characters"] .character-regeneration { margin: 12px 0; padding: 12px; border: 1px solid #254c76; border-radius: 9px; }
 .core-studio[data-module="characters"] .character-regeneration fieldset { display: grid; gap: 10px; padding: 10px 0; border: 0; min-width: 0; }
 .core-studio[data-module="characters"] .character-regeneration .check { display: flex; align-items: flex-start; gap: 8px; }
+.core-studio[data-module="characters"] .character-script-editor > dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.core-studio[data-module="characters"] .character-script-editor > dl > div {
+  display: block;
+  min-width: 0;
+  width: auto;
+  grid-column: auto;
+}
+.core-studio[data-module="characters"] .character-script-editor > dl dt,
+.core-studio[data-module="characters"] .character-script-editor > dl dd {
+  width: auto;
+  max-width: 100%;
+  white-space: normal;
+  writing-mode: horizontal-tb;
+  word-break: keep-all;
+  line-height: 1.6;
+}
 .core-studio[data-module="characters"] .character-script-editor dt { font-weight: 700; color: #82dcf4; }
 .core-studio[data-module="characters"] .character-script-editor dd { margin: 3px 0 10px; overflow-wrap: anywhere; }
 /* Character registration is a modal; the approved three-panel workspace stays compact. */

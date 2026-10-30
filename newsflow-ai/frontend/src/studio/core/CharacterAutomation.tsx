@@ -184,15 +184,15 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
     </CharacterModal>}
   </section>;
 }
-export function CharacterTopics({ profile, model, available, topic, onTopic, csrf, disabled, onBusy }: {
+export function CharacterTopics({ profile, model, available, topic, onTopic, csrf, disabled, onBusy, refreshKey }: {
   profile: Item | null; model: string; available: boolean; topic: string; onTopic: (value: string) => void;
-  csrf: string; disabled: boolean; onBusy: (value:boolean) => void;
+  csrf: string; disabled: boolean; onBusy: (value:boolean) => void; refreshKey?: string;
 }) {
   const [rows, setRows] = useState<Item[]>([]), [count, setCount] = useState(10);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const [consent, setConsent] = useState(false);
   const sending = useRef(false);
-  const topicStates: Record<string,string> = {new:"미사용",scripted:"대본 작성",produced:"영상 완료",skipped:"보류"};
+  const topicStates: Record<string,string> = {new:"미사용",script_requested:"스토리 요청",scripted:"대본 작성",produced:"영상 완료",skipped:"보류"};
   useEffect(() => {
     setRows([]); setError(""); setConsent(false); let active = true;
     if (profile) fetch(`/api/studio/characters/profiles/${profile.id}/topics`, { credentials: "same-origin" })
@@ -200,7 +200,7 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
       .then(data => {if (active) setRows(data.topics ?? []);})
       .catch(error => {if (active) setError(error.message);});
     return () => {active = false;};
-  }, [profile?.id]);
+  }, [profile?.id, refreshKey]);
   async function act(kind: "generate" | "manual") {
     if (!profile || sending.current || disabled) return;
     sending.current = true; setBusy(true); onBusy(true); setError("");

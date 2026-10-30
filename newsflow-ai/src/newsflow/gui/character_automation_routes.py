@@ -91,7 +91,8 @@ def profile_analyze(request: Request, asset: str = Form(..., max_length=80),
 def topics_list(request: Request, identifier: str):
     try:
         registry(request).get(identifier)
-        return {'topics': topics(request).list(identifier)}
+        service=getattr(request.app.state,'character',None)
+        return {'topics': topics(request).with_usage(identifier,service.listing() if service is not None else ())}
     except (ValueError, OSError, CharacterError, PublishingError):
         raise public_problem() from None
 
@@ -127,7 +128,8 @@ def topics_import(request: Request, identifier: str, content: str = Form(..., ma
     try:
         registry(request).get(identifier)
         topics(request).import_csv(identifier, content)
-        return {'topics': topics(request).list(identifier)}
+        service=getattr(request.app.state,'character',None)
+        return {'topics': topics(request).with_usage(identifier,service.listing() if service is not None else ())}
     except (ValueError, OSError, CharacterError, PublishingError):
         raise public_problem() from None
 
@@ -138,7 +140,8 @@ def topic_status(request: Request, identifier: str, topic_id: str,
     try:
         registry(request).get(identifier)
         topics(request).update_status(identifier, topic_id, status)
-        return {'topics': topics(request).list(identifier)}
+        service=getattr(request.app.state,'character',None)
+        return {'topics': topics(request).with_usage(identifier,service.listing() if service is not None else ())}
     except (ValueError, OSError, CharacterError, PublishingError):
         raise public_problem() from None
 

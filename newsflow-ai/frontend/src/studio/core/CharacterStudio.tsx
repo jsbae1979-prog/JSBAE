@@ -1566,7 +1566,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
 
             <p className="kling-character-consent">스토리 생성은 유료입니다. 영상 제작은 별도 승인합니다.</p>
             <CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
-              topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} />
+              topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} refreshKey={`${job?.id ?? ""}:${job?.state ?? ""}:${job?.script_hash ?? ""}`}
+                />
             {!ready && (
               <p role="status">
                 새 제작실 API 연결 확인 전 · 생성할 수 없습니다.
@@ -1724,7 +1725,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       unsupportedHint="이 모델은 전체 길이에 필요한 장면 길이를 지원하지 않아요."
                       hint={
                         job?.automation_version === 1 && story
-                          ? "모델·길이는 새 스토리를 만들기 전에 선택하세요."
+                          ? undefined
                           : legacyStoryTiming
                           ? "이 스토리의 길이는 변경할 수 없습니다."
                           : settingsFrozen

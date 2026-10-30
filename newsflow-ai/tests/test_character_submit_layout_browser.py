@@ -28,8 +28,11 @@ def test_quote_refresh_is_separate_and_notsent_has_clear_status(app,browser,monk
         expect(page.locator('.kling-settings-footer').get_by_role('button',name='견적 다시 확인',exact=True)).to_have_count(1)
         expect(production.get_by_role('button')).to_have_count(1)
         expect(production.get_by_role('button',name='영상 생성하기',exact=True)).to_be_visible()
+        page.get_by_text('장면 연출·자막·효과음 검토',exact=True).click()
         for width,height in ((1366,768),(1920,1080)):
             page.set_viewport_size({'width':width,'height':height})
+            widths=page.locator('.character-script-editor > dl > div').evaluate_all('(rows)=>rows.map(e=>e.getBoundingClientRect().width)')
+            assert len(widths)==4 and all(w>180 for w in widths)
             refresh.scroll_into_view_if_needed()
             box=refresh.bounding_box();assert box and box['height']<=40 and box['width']<220
             path=Path(r'C:/Codex/NewsFlowAI/character_automation_operating')/f'submit-layout-{width}x{height}.png'

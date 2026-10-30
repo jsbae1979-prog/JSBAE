@@ -84,6 +84,27 @@ class TopicStore:
             return rows
         except (OSError, ValueError, TypeError, KeyError): raise CharacterError() from None
 
+    def with_usage(self, character_id, jobs=()):
+        """Read projection only; historical single-episode use must not look unused."""
+        from newsflow.character.service import fingerprint
+        rank={'new':0,'script_requested':1,'scripted':2,'produced':3}
+        used={}
+        for job in jobs:
+            if job.get('character_id')!=character_id or not isinstance(job.get('topic'),str):continue
+            status='new'
+            if job.get('script_attempts',0)>0:status='script_requested'
+            script=job.get('script')
+            if isinstance(script,dict) and script and job.get('script_hash')==fingerprint(script):
+                status='produced' if job.get('state')=='completed' and job.get('output',{}).get('sha256') else 'scripted'
+            key=topic_key(job['topic'])
+            if rank[status]>rank.get(used.get(key,'new'),0):used[key]=status
+        rows=[]
+        for original in self.list(character_id):
+            row=dict(original);observed=used.get(topic_key(row['topic']),'new')
+            if rank.get(observed,0)>rank.get(row['status'],0):row['status']=observed
+            rows.append(row)
+        return rows
+
     def _save(self, character_id, rows):
         if len(rows) > 5000: raise CharacterError()
         atomic_json(self._path(character_id), {'version':1,'character_id':character_id,'topics':rows}, self.root)

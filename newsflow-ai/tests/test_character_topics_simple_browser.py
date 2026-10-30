@@ -67,6 +67,7 @@ def open_topics(page, origin, data):
 def context_for(browser, origin):
     context = browser.new_context(viewport={'width': 1366, 'height': 768})
     context.route('**/*', lambda route: route.continue_() if route.request.url.startswith(origin + '/') else route.abort())
+    context.route('**/api/studio/characters/*/story-review', lambda route: route.fulfill(json={'ready':True,'review':{'token':'','count':0,'held_usd':'0'}}))
     return context
 
 
@@ -141,7 +142,7 @@ def test_one_selected_topic_uses_main_story_action_without_queue_requests(app, b
             expect(panel.locator(selector)).to_have_count(0)
         expect(panel.get_by_role('checkbox')).to_have_count(1)
         expect(panel.get_by_role('combobox')).to_have_count(0)
-        target = data['rows'][1]['topic']
+        target = data['rows'][0]['topic']
         panel.get_by_role('button', name=target, exact=True).click()
         expect(page.get_by_label('스토리 주제', exact=True)).to_have_value(target)
         expect(panel.get_by_role('button', name=target, exact=True)).to_have_attribute('aria-pressed', 'true')
@@ -152,6 +153,8 @@ def test_one_selected_topic_uses_main_story_action_without_queue_requests(app, b
         jobs = app.state.character.listing()
         assert len(jobs) == 1 and jobs[0]['topic'] == target and jobs[0]['state'] == 'script_review'
         assert len(data['fake'].script_calls) == 1 and not data['fake'].calls
+        selected_row=panel.locator('.character-topic-list > div').filter(has_text=target)
+        expect(selected_row.get_by_text('대본 작성',exact=True)).to_be_visible()
         expect(page.get_by_role('button', name='영상 견적 확인', exact=True)).to_be_enabled()
         posts = [r for r in requests if r.method == 'POST']
         assert len(posts) == 2 and posts[0].url.endswith('/character') and posts[1].url.endswith('/characters/auto-story')
