@@ -119,6 +119,7 @@ def test_version_three_dispatches_without_mutating_legacy_composer(tmp_path, mon
     monkeypatch.setattr(editing, 'compose_episode', compose)
     assert compose_studio(tmp_path, episode(15), [], settings={'duration': 15}) == expected
     assert len(called) == 1
+    assert called[0][1]['add_captions'] is False and called[0][1]['add_sfx'] is False
 
 
 @pytest.fixture(scope='module')
@@ -151,15 +152,21 @@ def test_real_ffmpeg_variable_episode_is_exact_portrait_mp4(tmp_path, synthetic_
     info = probe_clip(tmp_path/'final.mp4')
     assert (info['width'], info['height'], info['video_codec']) == (1080, 1920, 'h264')
     assert abs(info['duration'] - target) <= .1 and info['has_audio']
-    assert result['captions_added'] and result['sfx_added']
+    assert result['captions_added'] is False and result['sfx_added'] is False
+    assert result['audio_source']=='model_output'
+    assert not (tmp_path/'compose/captions.ass').exists()
+    assert not (tmp_path/'compose/fonts').exists()
+    assert not list((tmp_path/'compose').glob('sfx-*.wav'))
     assert result['voice_added'] is False and result['music_added'] is False
     assert result['human_quality'] == 'NOT VERIFIED'
     assert [editing.digest(path) for path in synthetic_sources] == before
     evidence = json.loads((tmp_path/'compose/edit-evidence.json').read_text(encoding='utf8'))
-    assert evidence['target_seconds'] == target and evidence['sfx_sha256']
+    assert evidence['target_seconds'] == target and not evidence['sfx_sha256']
+    assert not evidence['sfx_events']
     filters = (tmp_path/'compose/edit-filter.txt').read_text(encoding='utf8')
     assert 'acrossfade=d=0.15' in filters and 'xfade=' not in filters
-    assert 'loudnorm=I=-14' in filters and 'subtitles=captions.ass:fontsdir=fonts' in filters
+    assert 'loudnorm=I=-14' in filters and '[vjoined]null[vout]' in filters
+    assert 'subtitles=' not in filters and '[effect' not in filters and 'adelay=' not in filters
     assert 'zoompan' not in filters and 'drawtext' not in filters
     binary = str(FFmpegAdapter.executable('ffprobe', None))
     probe = subprocess.run([binary, '-v', 'error', '-show_streams', '-of', 'json',
@@ -205,3 +212,10 @@ def test_real_audio_crossfade_contains_both_sources_without_time_shift(tmp_path)
     assert amplitude(440, .90) > .10 and amplitude(880, .90) < .003
     assert amplitude(440, 1.05) > .025 and amplitude(880, 1.05) > .025
     assert amplitude(880, 1.20) > .10 and amplitude(440, 1.20) < .003
+
+
+@pytest.mark.parametrize('flag', ['add_captions', 'add_sfx'])
+def test_plain_mode_flags_are_booleans_before_any_media_io(tmp_path, monkeypatch, flag):
+    monkeypatch.setattr(editing,'load_edit_presets',lambda:pytest.fail('read before flag validation'))
+    with pytest.raises(CharacterError):
+        editing.compose_episode(tmp_path,episode(15),[],settings={},**{flag:'false'})

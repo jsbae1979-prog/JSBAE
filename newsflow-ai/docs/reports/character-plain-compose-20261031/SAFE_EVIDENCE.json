@@ -1,0 +1,33 @@
+{
+  "validation": {
+    "sourceMediaPreserved": true,
+    "initialTestCorrection": "Original-audio crossfade uses asplit; assertion was narrowed to the synthesized effect labels.",
+    "realLocalFfmpegTargetsSeconds": [
+      15,
+      35,
+      60
+    ],
+    "passed": 20,
+    "failed": 0,
+    "errors": 0,
+    "externalProviderCalls": 0,
+    "output": "1080x1920 H.264 with aligned audio"
+  },
+  "issue": "Studio review promises no added captions, speech or effects; version-3 delegation still enabled captions and synthesized SFX.",
+  "base": "1c149f5e5d9346a1e6cac4d9a7a82e6eca4c2ad3",
+  "operating": {
+    "paidProviderCalls": 0,
+    "modified": false,
+    "actualComposeSubmitted": false,
+    "existingFourClipsPreserved": true,
+    "pending": "One separately approved normal restart to apply the Python changes, then compose current four clips in Chrome.",
+    "restarted": false
+  },
+  "verdict": "CONDITIONAL: focused development verified; operating application pending",
+  "scope": [
+    "Version-3 studio delegates with add_captions=false and add_sfx=false.",
+    "Shared editor retains explicit optional editing support; studio path does not create ASS/fonts/SFX or apply subtitle/effect filters.",
+    "Existing speed, hold, original-audio time alignment, crossfade and loudness handling remain unchanged.",
+    "Review checklist matches no-added-text/audio behavior."
+  ]
+}

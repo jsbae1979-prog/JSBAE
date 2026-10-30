@@ -154,8 +154,11 @@ def audio_join_filters(timeline, crossfade):
     return filters, previous
 
 
-def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None):
-    """Edit reviewed v3 clips without any external calls or additional speech."""
+def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None,
+                    add_captions=True, add_sfx=True):
+    """Edit reviewed v3 clips; studio's plain mode adds neither text nor sound."""
+    if type(add_captions) is not bool or type(add_sfx) is not bool:
+        raise CharacterError('media')
     presets, effects = load_edit_presets(), load_sfx_map()
     scenes, target = _get(story, 'scenes'), settings.get('duration')
     timeline = edit_timeline(story, target, presets)
@@ -178,14 +181,17 @@ def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None
             key, at = _get(request, 'key'), _get(request, 'at')
             if key not in effects or at not in {'start', 'end'}:
                 raise CharacterError('media')
-            sfx_events.append({'key': key, 'seconds': row['start'] +
-                               (row['content_seconds'] if at == 'end' else 0)})
-    font = CONFIG.parent / presets['caption']['font']
-    if not font.is_file() or font.is_symlink() or font.is_junction():
-        raise CharacterError('media')
-    (work / 'fonts').mkdir()
-    shutil.copyfile(font, work / 'fonts' / 'NotoSansKR.ttf')
-    caption_count = write_captions(work / 'captions.ass', story, timeline, presets)
+            if add_sfx:
+                sfx_events.append({'key': key, 'seconds': row['start'] +
+                                   (row['content_seconds'] if at == 'end' else 0)})
+    caption_count = 0
+    if add_captions:
+        font = CONFIG.parent / presets['caption']['font']
+        if not font.is_file() or font.is_symlink() or font.is_junction():
+            raise CharacterError('media')
+        (work / 'fonts').mkdir()
+        shutil.copyfile(font, work / 'fonts' / 'NotoSansKR.ttf')
+        caption_count = write_captions(work / 'captions.ass', story, timeline, presets)
     normalized = []
     for index, (clip, scene, row) in enumerate(zip(clips, scenes, timeline)):
         clip = Path(clip)
@@ -228,7 +234,7 @@ def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None
         filters.append(f'[{index}:v]trim=duration={row["seconds"]:.6f},setpts=PTS-STARTPTS[v{index}]')
     filters.append(''.join(f'[v{i}]' for i in range(len(timeline))) +
                    f'concat=n={len(timeline)}:v=1:a=0[vjoined]')
-    filters.append('[vjoined]subtitles=captions.ass:fontsdir=fonts[vout]')
+    filters.append('[vjoined]subtitles=captions.ass:fontsdir=fonts[vout]' if add_captions else '[vjoined]null[vout]')
     audio_filters, previous = audio_join_filters(timeline, presets['scene_audio_crossfade'])
     filters.extend(audio_filters)
     audio_labels = [f'[{previous}]']
@@ -271,5 +277,5 @@ def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None
     return {'file': 'final.mp4', 'sha256': digest(output), 'media': info,
             'captions_added': bool(caption_count), 'sfx_added': bool(sfx_events),
             'voice_added': False, 'music_added': False, 'ai_label_burned_in': False,
-            'audio_source': 'model_and_local_effects' if settings['sound'] == 'on' else 'local_effects_only',
+            'audio_source': ('model_and_local_effects' if add_sfx else 'model_output') if settings['sound'] == 'on' else ('local_effects_only' if add_sfx else 'none'),
             'output_quality': '1080p', 'timeline': timeline, 'human_quality': 'NOT VERIFIED'}
