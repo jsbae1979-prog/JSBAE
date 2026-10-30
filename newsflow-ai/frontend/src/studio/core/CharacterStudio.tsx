@@ -751,7 +751,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       if (!response.ok || !/^studio-[a-f0-9]{64}\.png$/.test(data.id ?? ""))
         throw Error(typeof data.detail === "string" ? data.detail : "캐릭터를 저장하지 못했습니다. 이미지와 저장 공간을 확인하세요.");
       setAsset(data.id);
-      setLibraryMessage(data.created ? "참조 이미지를 보관했습니다. 특징을 등록하면 내 캐릭터로 사용할 수 있습니다." : "이미 보관된 참조 이미지입니다.");
+      setLibraryMessage(data.created ? "참조 이미지를 보관했습니다." : "이미 보관된 참조 이미지입니다.");
       try {
         await c.load();
       } catch {
@@ -1262,7 +1262,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   hidden
                   onChange={(e) => selectFile(e.target.files?.[0])}
                 />
-                <label className="check">
+                <label className="check character-reference-store">
                   <input
                     type="checkbox"
                     checked={saveToLibrary}
@@ -1275,7 +1275,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   />
                   참조 이미지 보관
                 </label>
-                <small>이미지만 보관합니다. 이름과 특징은 캐릭터 등록에서 저장하세요.</small>
                 {libraryBusy && <small role="status">캐릭터 저장 중…</small>}
                 {libraryMessage && <small role="status">{libraryMessage}</small>}
 
@@ -1398,10 +1397,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 {apiProviders.map(p => <option key={p.id} value={p.id} disabled={!p.configured}>{p.label}{p.configured ? "" : " · 키 등록 필요"}</option>)}
               </select>
             </label>
-            <CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
-              topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy}
-              settings={settings} episodeLimit={per} jobs={jobs} onRefresh={c.load}
-              onJob={(identifier) => { setId(identifier); setFile(null); setAsset(""); setReferenceJob(""); }} />
             <label>
               스토리 주제
               <div className="kling-character-topic">
@@ -1454,10 +1449,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </div>
             )}
 
-            <p className="kling-character-consent">
-              선택한 AI에 주제와 캐릭터 특징을 전달합니다. 스토리 생성은 유료이며 영상 제작은
-              대본·견적 확인 후 별도로 승인합니다. 참조 이미지는 대본 요청에 포함하지 않습니다.
-            </p>
+            <p className="kling-character-consent">스토리 생성은 유료입니다. 영상 제작은 별도 승인합니다.</p>
+            <CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
+              topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy}
+              settings={settings} episodeLimit={per} jobs={jobs} onRefresh={c.load}
+              onJob={(identifier) => { setId(identifier); setFile(null); setAsset(""); setReferenceJob(""); }} />
             {!ready && (
               <p role="status">
                 새 제작실 API 연결 확인 전 · 생성할 수 없습니다.

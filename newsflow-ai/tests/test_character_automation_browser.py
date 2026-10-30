@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 from types import SimpleNamespace
+import pytest
 from playwright.sync_api import expect
 from test_model_picker_browser import browser
 from test_cloud_workspace_flow import local_server
@@ -191,4 +192,89 @@ def test_saved_image_is_not_profile_until_registered_and_profile_edit_is_local(a
         assert updated['revision']==saved['revision']+1 and updated['personality']=='조용하지만 호기심이 많은 성격'
         assert updated['asset']==saved['asset'] and state.image_studio.asset(image_row['id']).read_bytes()
         assert len(registry.list())==1 and not state.character.listing()
+        context.close()
+
+
+@pytest.mark.parametrize('failure_kind,detail', [
+    ('generic', '입력·저장 상태·API 승인 한도를 확인하세요. 결과가 불명확하면 자동 재요청하지 않습니다.'),
+    ('schema', '외형 설명: 글자 수 초과'),
+])
+def test_analysis_failure_is_visible_in_modal_footer_and_preserves_draft(app,browser,tmp_path,failure_kind,detail):
+    from urllib.parse import parse_qs
+    attempts=[]
+    class Key:
+        def status(self):return {'configured':True}
+        def key(self):raise AssertionError('No real keys')
+    app.state.api_keys={'claude_api':Key()}
+    def fail_analysis(route):
+        assert route.request.method=='POST'
+        attempts.append(parse_qs(route.request.post_data))
+        route.fulfill(status=409,json={'detail':detail})
+    with local_server(app) as origin:
+        context=browser.new_context(viewport={'width':1366,'height':768})
+        context.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
+        context.route('**/api/studio/characters/profiles/analyze',fail_analysis)
+        page=context.new_page();page.goto(origin+'/studio/characters')
+        page.get_by_label('캐릭터 참조 이미지 업로드',exact=True).set_input_files({'name':'synthetic.png','mimeType':'image/png','buffer':image()})
+        page.get_by_role('button',name='새 캐릭터 등록',exact=True).click()
+        dialog=page.get_by_role('dialog',name='새 캐릭터 등록',exact=True)
+        dialog.get_by_role('textbox',name='캐릭터 이름',exact=True).fill('보존할 합성 캐릭터')
+        dialog.get_by_role('textbox',name='성격',exact=True).fill('천천히 주변을 살펴보는 성격')
+        dialog.get_by_text('AI로 특징 초안 만들기 · 선택 사항',exact=True).click()
+        dialog.get_by_label('선택한 AI에 참조 이미지를 전송하는 유료 분석에 동의합니다.',exact=True).check()
+        dialog.get_by_role('button',name='이미지로 특징 초안 만들기',exact=True).click()
+        alert=dialog.get_by_role('alert')
+        expect(alert).to_have_text('특징 초안을 만들지 못했습니다.'+(' 외형 설명: 글자 수 초과' if failure_kind=='schema' else ''))
+        dialog.locator('.character-modal-body').evaluate('(e)=>e.scrollTop=0')
+        expect(alert).to_be_in_viewport()
+        expect(dialog.locator('.character-modal-footer').get_by_role('alert')).to_have_count(1)
+        expect(dialog.get_by_role('button',name='취소',exact=True)).to_be_enabled()
+        expect(dialog.get_by_role('textbox',name='캐릭터 이름',exact=True)).to_have_value('보존할 합성 캐릭터')
+        expect(dialog.get_by_role('textbox',name='성격',exact=True)).to_have_value('천천히 주변을 살펴보는 성격')
+        assert len(attempts)==1 and attempts[0]['consent']==['true']
+        assert not CharacterRegistry(app.state.config.data_dir,app.state.image_studio).list()
+        out=CAPTURE_DIR or tmp_path/'captures';out.mkdir(parents=True,exist_ok=True)
+        page.screenshot(path=str(out/f'character-analysis-failure-{failure_kind}-1366x768.png'))
+        context.close()
+
+
+def test_compact_reference_and_topic_controls_preserve_explicit_actions(app,browser,tmp_path):
+    registry=CharacterRegistry(app.state.config.data_dir,app.state.image_studio)
+    saved=registry.save(profile('합성 토끼','rabbit'),app.state.image_studio.asset_bytes(image()))
+    with local_server(app) as origin:
+        context=browser.new_context(viewport={'width':1366,'height':768})
+        context.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
+        page=context.new_page();posts=[];page.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
+        page.goto(origin+'/studio/characters')
+        page.get_by_label('캐릭터 참조 이미지 업로드',exact=True).set_input_files({'name':'synthetic.png','mimeType':'image/png','buffer':image()})
+        expect(page.get_by_role('button',name='새 캐릭터 등록',exact=True)).to_be_enabled()
+        expect(page.get_by_text('이미지를 선택했습니다. 이름과 특징을 등록하면 주제·스토리에 사용할 수 있습니다.',exact=True)).to_have_count(0)
+        expect(page.get_by_text('이미지만 보관합니다. 이름과 특징은 캐릭터 등록에서 저장하세요.',exact=True)).to_have_count(0)
+        checkbox=page.get_by_label('참조 이미지 보관',exact=True)
+        box=checkbox.bounding_box();assert box and box['width']<=20 and box['height']<=20
+        assert checkbox.locator('..').evaluate('(e)=>getComputedStyle(e).flexDirection')=='row'
+        panel=page.locator('.character-profile-editor')
+        assert panel.evaluate('(e)=>getComputedStyle(e).borderTopWidth')=='0px'
+        out=CAPTURE_DIR or tmp_path/'captures';out.mkdir(parents=True,exist_ok=True)
+        page.screenshot(path=str(out/'character-reference-compact-1366x768.png'))
+        page.get_by_role('button',name='내 캐릭터',exact=True).click()
+        page.get_by_label('저장된 캐릭터',exact=True).select_option('profile:'+saved['id'])
+        page.get_by_label('스토리 주제',exact=True).fill('정원의 느긋한 아침')
+        tools=page.locator('.character-topic-tools')
+        assert tools.evaluate('(e)=>e.open') is False
+        assert page.get_by_label('스토리 주제',exact=True).bounding_box()['y']<tools.bounding_box()['y']
+        page.get_by_text('주제 자동 생성·기록',exact=True).click()
+        consent=page.get_by_label('주제 생성 유료 요청에 동의합니다.',exact=True)
+        box=consent.bounding_box();assert box and box['width']<=20 and box['height']<=20
+        assert consent.locator('..').evaluate('(e)=>getComputedStyle(e).flexDirection')=='row'
+        assert page.get_by_label('주제 개수',exact=True).bounding_box()['width']<=90
+        assert tools.locator('.character-batch').evaluate('(e)=>e.open') is False
+        assert tools.locator('.character-topic-import').evaluate('(e)=>e.open') is False
+        expect(page.get_by_role('button',name='입력한 주제 저장',exact=True)).to_be_enabled()
+        expect(page.get_by_role('button',name='주제 자동 생성',exact=True)).to_be_disabled()
+        for width,height in ((1920,1080),(1366,768)):
+            page.set_viewport_size({'width':width,'height':height})
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            page.screenshot(path=str(out/f'character-topic-compact-{width}x{height}.png'),full_page=True)
+        assert not posts and len(registry.list())==1
         context.close()

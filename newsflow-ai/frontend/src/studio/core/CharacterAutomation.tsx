@@ -82,7 +82,11 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
           { asset: reference, profile: JSON.stringify(draft), identifier: record?.id ?? "", revision: String(record?.revision ?? 0) });
         setEditing(false); onSelect(row); await onRefresh();
       }
-    } catch (e) { setError(e instanceof Error ? e.message : "캐릭터 정보를 확인하세요."); }
+    } catch (e) {
+      const message=e instanceof Error ? e.message : "캐릭터 정보를 확인하세요.";
+      const generic=message.startsWith('입력·저장 상태')||message.startsWith('저장 상태를 확인')||message.startsWith('이미지 분석을 완료하지 못했습니다');
+      setError(kind==='analyze'?`특징 초안을 만들지 못했습니다.${generic?'':` ${message}`}`:message);
+    }
     finally { sending.current = false; setBusy(false); onBusy(false); }
   }
   return <section className="character-profile-editor" aria-label="캐릭터 선택과 특징">
@@ -104,7 +108,6 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
       <div className="character-profile-actions"><button type="button" disabled={disabled||busy} onClick={()=>begin(selected)}>특징 수정</button>
         <button type="button" disabled={disabled||busy} onClick={()=>setConfirmDelete(true)}>등록 삭제</button></div>
     </>:<>
-      <p className="character-profile-hint">{hasReference?'이미지를 선택했습니다. 이름과 특징을 등록하면 주제·스토리에 사용할 수 있습니다.':mode==='mine'?'저장된 캐릭터를 선택하거나 참조 이미지를 업로드하세요.':'참조 이미지를 업로드한 뒤 캐릭터 이름과 특징을 등록하세요.'}</p>
       <button type="button" data-character-profile-focus disabled={disabled||busy||!hasReference} onClick={()=>begin(null)}>{mode==='mine'?'이 이미지로 캐릭터 등록':'새 캐릭터 등록'}</button>
     </>}
     {confirmDelete&&<CharacterModal title="캐릭터 등록 삭제" busy={busy} onClose={()=>setConfirmDelete(false)} footer={<>
@@ -113,6 +116,7 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
       <p>등록만 삭제합니다. 이전 작업·이미지·영상·비용 기록은 보존됩니다.</p>{error&&<p role="alert">{error}</p>}
     </CharacterModal>}
     {editing&&<CharacterModal title={record?'캐릭터 특징 수정':'새 캐릭터 등록'} busy={busy} onClose={()=>setEditing(false)} footer={<>
+      {error&&<p role="alert" className="character-modal-feedback">{error}</p>}
       <button type="button" disabled={busy} onClick={()=>setEditing(false)}>취소</button>
       <button type="submit" form={formId} disabled={disabled||busy} className="primary">{busy?'처리 중…':'캐릭터 저장'}</button></>}>
       <form id={formId} ref={form} className="character-profile-form" onSubmit={e=>{e.preventDefault();void act('save');}}>
@@ -142,10 +146,9 @@ export function CharacterProfiles({ profiles, selected, onSelect, ensureAsset, m
             <button type="button" onClick={()=>setDraft(v=>({...v,supporting_cast:v.supporting_cast.filter((_,i)=>i!==index)}))}>조연 제거</button></div>)}
           <button type="button" disabled={draft.supporting_cast.length>=3} onClick={()=>setDraft(v=>({...v,supporting_cast:[...v.supporting_cast,{id:'',appearance:''}]}))}>조연 설명 추가</button>
         </fieldset></details>
-        {error&&<p role="alert" className="character-profile-error">{error}</p>}{busy&&<p role="status">처리 중…</p>}
+        {busy&&<p role="status">처리 중…</p>}
       </form>
     </CharacterModal>}
-    {!editing&&!confirmDelete&&error&&<p role="alert">{error}</p>}
   </section>;
 }
 export function CharacterTopics({ profile, model, available, topic, onTopic, csrf, disabled, settings, episodeLimit, jobs, onRefresh, onJob, onBusy }: {
@@ -217,10 +220,12 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
   }
   return <details className="character-topic-tools"><summary>주제 자동 생성·기록</summary>
     <fieldset disabled={disabled || busy || !profile}>
-      <label>주제 개수<input type="number" min={1} max={50} value={count} onChange={e=>setCount(Number(e.target.value))} /></label>
+      <div className="character-topic-create">
+        <label>주제 개수<input type="number" min={1} max={50} value={count} onChange={e=>setCount(Number(e.target.value))} /></label>
+        <button disabled={!consent || !available} onClick={()=>void act("generate")}>주제 자동 생성</button>
+      </div>
       <label className="check"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} />주제 생성 유료 요청에 동의합니다.</label>
-      <button disabled={!consent || !available} onClick={()=>void act("generate")}>주제 자동 생성</button>
-      <button disabled={!topic.trim()} onClick={()=>void act("manual")}>입력한 주제 저장</button>
+      <button className="character-topic-save" disabled={!topic.trim()} onClick={()=>void act("manual")}>입력한 주제 저장</button>
       <div className="character-topic-list">{rows.map(row=><div key={row.id}>
         <label className="check"><input type="checkbox" aria-label={`${row.topic} 대기열 선택`} checked={selectedTopics.includes(row.id)}
           onChange={e=>setSelectedTopics(v=>e.target.checked?[...v,row.id]:v.filter(id=>id!==row.id))} />
@@ -230,10 +235,9 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
         </select>
       </div>)}</div>
       <details className="character-batch"><summary>선택 주제 일괄 제작 ({selectedTopics.length}개)</summary>
-        <p>선택한 회차 한도 합계: US${(Number(episodeLimit||0)*selectedTopics.length).toFixed(2)} · 대본·영상 포함 상한이며 실제 청구액은 아닙니다.</p>
-        <p>대본부터 순서대로 생성합니다. 각 대본을 검토하고 공식 견적을 받은 후 영상 제작을 별도로 승인합니다.</p>
+        <p>편당 한도 US${episodeLimit} · 선택한 {selectedTopics.length}편 상한 US${(Number(episodeLimit||0)*selectedTopics.length).toFixed(2)}</p>
         <label className="check"><input type="checkbox" checked={scriptConsent} onChange={e=>setScriptConsent(e.target.checked)} />
-          선택한 {selectedTopics.length}편의 대본 유료 생성에 동의합니다. 요청별 AI 한도와 편당 영상 한도 ${episodeLimit}를 유지합니다.</label>
+          선택한 {selectedTopics.length}편의 유료 대본 생성에 동의합니다.</label>
         <button disabled={!scriptConsent||!available||!selectedTopics.length} onClick={()=>void batch("scripts")}>선택한 주제 대본 생성</button>
         <label>저장된 대기열<select value={queue?.id??""} onChange={e=>{if(e.target.value)void batch("read",e.target.value);}}>
           <option value="">대기열 선택</option>{queues.filter(q=>q.character_id===profile?.id).map(q=><option key={q.id} value={q.id}>{q.created_at??q.id} · {q.rows?.length??0}편</option>)}
@@ -248,7 +252,7 @@ export function CharacterTopics({ profile, model, available, topic, onTopic, csr
           <small>실패·결과 불명에서 중단합니다. 완료 장면을 다시 요청하지 않으며 최종 합성은 별도 검토 후 실행합니다.</small>
         </div>}
       </details>
-      <details><summary>CSV 주제 가져오기</summary><label>번호, 카테고리, 주제<textarea value={csv} maxLength={48000} onChange={e=>setCsv(e.target.value)} /></label>
+      <details className="character-topic-import"><summary>CSV 주제 가져오기</summary><label>번호, 카테고리, 주제<textarea value={csv} maxLength={48000} onChange={e=>setCsv(e.target.value)} /></label>
         <button disabled={!csv.trim()} onClick={()=>void act("import")}>CSV 가져오기</button></details>
     </fieldset>
     {!profile && <small>등록된 캐릭터를 먼저 선택하세요.</small>}
