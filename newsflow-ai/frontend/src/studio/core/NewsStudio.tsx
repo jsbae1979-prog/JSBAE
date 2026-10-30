@@ -1,14 +1,33 @@
 import { useState } from "react";
-import { Search, Sparkles, ArrowRight, ExternalLink } from "lucide-react";
+import { Search, Sparkles, ArrowRight, ExternalLink, Newspaper } from "lucide-react";
 import type { Item } from "../contracts";
 import {
   Panel,
-  NewsImage,
   Empty,
   ActionButton,
   Select,
   type Controller,
 } from "./shared";
+function ArticleImage({ item }: { item: Item }) {
+  const src = typeof item.thumbnailUrl === "string" &&
+    /^\/news\/[1-9]\d*\/thumbnail$/.test(item.thumbnailUrl)
+    ? item.thumbnailUrl : null;
+  return <ArticleImagePreview key={`${item.id}:${src ?? "missing"}`}
+    src={src} publisher={String(item.publisher || "뉴스 출처")} />;
+}
+function ArticleImagePreview({ src, publisher }: { src: string | null; publisher: string }) {
+  const [loaded, setLoaded] = useState(false), [failed, setFailed] = useState(false);
+  return <div className="core-news-article-image">
+    {src && !failed && <img src={src} alt={`${publisher} 제공 기사 이미지`}
+      loading="lazy" decoding="async" className={loaded ? "loaded" : ""}
+      onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />}
+    {(!src || failed || !loaded) && <div className="core-news-source-fallback" role="status">
+      <Newspaper size={30} aria-hidden="true" />
+      <span>{publisher}</span>
+      <small>{!src ? "출처 이미지 없음" : failed ? "이미지를 불러오지 못했습니다" : "기사 이미지 불러오는 중"}</small>
+    </div>}
+  </div>;
+}
 function publicLink(url: unknown) {
   try {
     const u = new URL(String(url));
@@ -83,7 +102,7 @@ export default function NewsStudio({
                 onClick={() => choose(x)}
               >
                 <div className="core-news-list-picture">
-                  <NewsImage item={x} />
+                  <ArticleImage item={x} />
                   {(c.context?.top3 ?? []).some((r: Item) =>
                     r.articleIds.includes(x.id),
                   ) && (
@@ -134,7 +153,7 @@ export default function NewsStudio({
             {selected ? (
               <>
                 <div className="core-article-head">
-                  <NewsImage item={selected} />
+                  <ArticleImage item={selected} />
                   <div>
                     <h3>{selected.title}</h3>
                     <small>
@@ -269,7 +288,7 @@ export default function NewsStudio({
             .filter(Boolean)
             .map((x) => (
               <button key={x!.id} onClick={() => choose(x!)}>
-                <NewsImage item={x!} />
+                <ArticleImage item={x!} />
                 <strong>{x!.title}</strong>
               </button>
             ))}

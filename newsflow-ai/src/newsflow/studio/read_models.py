@@ -532,9 +532,14 @@ def module_view(request: Request, module: Module):
                     draft["imageLinks"] = []
                     draft["imageError"] = "장면 이미지 연결을 확인하세요."
         if module == "news":
-            # Thumbnail URLs are read from records; no network lookup on page load.
+            # Only source-supplied metadata earns an image request. Reading the
+            # model never fetches an image or substitutes generated artwork.
+            article_ids = [article["id"] for article in result["collections"]["articles"]]
+            with_previews = set(session.scalars(select(m.ArticleThumbnail.article_id).where(
+                m.ArticleThumbnail.article_id.in_(article_ids))))
             for article in result["collections"]["articles"]:
-                article["thumbnailUrl"] = f"/news/{article['id']}/thumbnail"
+                article["thumbnailUrl"] = (f"/news/{article['id']}/thumbnail"
+                                           if article["id"] in with_previews else None)
         if module in {"settings", "onboarding"}:
             result["settings"] = {
                 row.key: row.value

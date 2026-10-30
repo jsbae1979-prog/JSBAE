@@ -61,6 +61,7 @@ class OperatingRequests(LocalWorkRequests):
     CHARACTER_RECOVER = re.compile(r'/api/studio/characters/[a-f0-9]{32}/recover-story\Z')
     COPIED_MEDIA = re.compile(r'/api/samples/[a-z0-9-]{1,48}/copy-file\Z')
     CHARACTER_CLIP = re.compile(r'/character/[a-f0-9]{32}/clips/(?:[1-9]|[1-5][0-9]|60)\Z')
+    NEWS_PREVIEW = re.compile(r'/news/[1-9][0-9]*/thumbnail\Z')
 
     CHARACTER_LOCAL_READ = re.compile(r'/api/studio/characters/(?:profiles(?:/char_[a-f0-9]{32}/topics)?|queues(?:/[a-f0-9]{32})?)\Z')
     CHARACTER_LOCAL_WRITE = re.compile(r'/api/studio/characters/(?:profiles/save|profiles/char_[a-f0-9]{32}/(?:delete|topics/(?:manual|import|[a-f0-9]{32}/status))|queues/create|[a-f0-9]{32}/script)\Z')
@@ -77,7 +78,11 @@ class OperatingRequests(LocalWorkRequests):
                                                   or self.CHARACTER_LOCAL_WRITE.fullmatch(path))
             copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path)
                                                        or self.CHARACTER_LOCAL_READ.fullmatch(path))
-            if local_settings or copied_media:
+            # Existing authenticated endpoint resolves only a stored source URL.
+            # Its public-image TLS/DNS/robots/raster rules remain authoritative;
+            # no arbitrary URL, collection, paid provider, or validation grant.
+            source_preview = method == 'GET' and self.NEWS_PREVIEW.fullmatch(path)
+            if local_settings or copied_media or source_preview:
                 # self.app remains LocalAccess(original_app, session); inner
                 # signed CSRF, Origin, ownership and file checks are unchanged.
                 return await self.app(scope, receive, send)
