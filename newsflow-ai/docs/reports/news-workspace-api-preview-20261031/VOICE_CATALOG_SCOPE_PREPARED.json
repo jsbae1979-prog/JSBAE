@@ -1,0 +1,27 @@
+{
+  "sourceSha": "0691cc934eb5014aa6d0fe7780a72b1de93131ea",
+  "operatingBaseSha": "7ca89eb226833dfd5b1aa6cd856f4b3271993d3a",
+  "files": [
+    {
+      "path": "app/product/newsflow/gui/video_routes.py",
+      "before": "19c5277133144e24ae7789efb7ee47197a55e161d215929ac8bd6b6a6b8ed074",
+      "sha256": "5169ac4a9bf28968302421a6d26b4a1364a6fbe3fddb8650cdd56a96bfa8b6a0",
+      "bytes": 19465
+    },
+    {
+      "path": "app/controller/bat_distribution/voice_catalog_access.py",
+      "before": null,
+      "sha256": "d5abe04b497d3377f0a085a437461fba5d69defd61bfa6e61ce56df45632a69f",
+      "bytes": 2755
+    },
+    {
+      "path": "app/controller/bat_distribution/windows_live.py",
+      "before": "a866cbcb581b41ef3f928771493a457b493057c23f58f87fae73e4c099a66f04",
+      "sha256": "0d07c7b2ca661b3a0ef8143e1b117e79ba49051608153f5ff7244d06f6746f84",
+      "bytes": 30493
+    }
+  ],
+  "applied": false,
+  "additionalNormalStopStartApprovalRequired": true,
+  "userDataUnchanged": true
+}
