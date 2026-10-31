@@ -87,7 +87,7 @@ def check_relative_references(source,rows):
     needles=(str(source).casefold(),source.as_posix().casefold())
     for row in rows:
         f=source/row['path']
-        if f.suffix=='.json' and not set(f.relative_to(source).parts)&{'logs','diagnostics','backups','credential-backups','update-backups'}:
+        if f.suffix=='.json' and not set(f.relative_to(source).parts)&{'logs','diagnostics','backups','credential-backups','update-backups','archives'}:
             def strings(v):
                 if isinstance(v,str):yield v
                 elif isinstance(v,dict):

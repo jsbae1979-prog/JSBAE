@@ -170,7 +170,8 @@ def validate_episode(story, target_seconds, model, native_sound=True):
         if not native_sound and scene.sound:
             raise EpisodeValidationError('sound', ('scenes', index, 'sound'))
     total = total_playback_seconds(story, load_edit_presets())
-    if not target_seconds - 2 <= total <= target_seconds:
+    from .episode_policy import valid_playback_seconds
+    if not valid_playback_seconds(total,target_seconds):
         raise EpisodeValidationError('edited_duration')
     return story
 

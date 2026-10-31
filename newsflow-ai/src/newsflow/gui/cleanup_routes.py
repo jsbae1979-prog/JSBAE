@@ -32,6 +32,7 @@ def _library_visibility(request, items, confirm, *, hidden):
         return LibraryVisibility(request.app.state.sessions, request.app.state.character).change(items, hidden=hidden)
     except LibraryVisibilityError as error:
         status, message = {
+            'permanent': (409,'완전 삭제를 시작한 항목은 복원할 수 없습니다.'),
             'invalid': (422, '선택한 콘텐츠를 확인해 주세요.'),
             'missing': (404, '콘텐츠를 찾지 못했습니다.'),
             'busy': (409, '진행 중인 콘텐츠는 완료 후 삭제해 주세요.'),
@@ -59,6 +60,7 @@ def trash(request: Request):
     with request.app.state.sessions() as session:
         rows = list(session.scalars(select(WorkspaceRemoval).where(
             ~WorkspaceRemoval.key.startswith('library:')).order_by(WorkspaceRemoval.created_at.desc())))
+        rows=[r for r in rows if r.detail.get('state')!='purged']
         return page(request, "workspace_trash.html", active="videos", removed=rows)
 
 
@@ -147,6 +149,8 @@ def restore(request: Request, item: str = Form(max_length=80), confirm: bool = F
             row = session.get(WorkspaceRemoval, item)
             if row is None:
                 raise HTTPException(404, "보관된 항목이 없습니다.")
+            if row.detail.get('state') in {'purging','purge_failed','purged'}:
+                raise HTTPException(409,'완전 삭제를 시작한 항목은 복원할 수 없습니다.')
             if item.startswith("video:"):
                 detail = row.detail
                 name = detail.get("output_name", "")
@@ -167,3 +171,20 @@ def restore(request: Request, item: str = Form(max_length=80), confirm: bool = F
     except Timeout:
         raise HTTPException(409, "다른 정리 작업이 진행 중입니다.") from None
     return go("/workspace/trash")
+
+
+@router.post('/api/studio/library/purge')
+def library_purge(request:Request,items:str=Form(max_length=12000),confirm:bool=Form(False)):
+    from newsflow.studio.library_purge import LibraryPurge,PurgeError
+    try:return LibraryPurge(request.app.state).purge(items,confirmed=confirm)
+    except PurgeError as error:
+        messages={'confirmation':'완전 삭제할 항목을 확인해 주세요.','invalid':'선택한 항목을 확인해 주세요.',
+          'missing':'콘텐츠를 찾지 못했습니다.','not_trashed':'휴지통에 있는 항목만 완전 삭제할 수 있습니다.',
+          'busy':'진행 중인 작업이 있습니다. 완료 후 확인해 주세요.','unknown':'결과 불명인 요청은 상태를 먼저 확인해 주세요.',
+          'linked':'게시 이력이나 게시 초안에 연결된 파일은 완전 삭제할 수 없습니다.',
+          'shared':'다른 작업과 공유하는 파일은 삭제할 수 없습니다.','path':'파일 경로를 확인하지 못했습니다. 삭제하지 않았습니다.',
+          'integrity':'파일 무결성을 확인하지 못했습니다. 자동 삭제하지 않습니다.',
+          'failed':'파일 삭제를 완료하지 못했습니다. 목록을 확인한 뒤 직접 다시 요청해 주세요. 자동 재요청하지 않습니다.'}
+        raise HTTPException(422 if str(error) in {'confirmation','invalid'} else 409,messages.get(str(error),'삭제 상태를 확인해 주세요.')) from None
+    except (OSError,ValueError):
+        raise HTTPException(409,'파일 경로·무결성·사용 상태를 확인해 주세요. 자동으로 다시 삭제하지 않습니다.') from None

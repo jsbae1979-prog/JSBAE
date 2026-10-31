@@ -1478,3 +1478,15 @@
 }
 
 .management-ui .mg-thumb-reference { position: absolute; left: 6px; bottom: 6px; padding: 3px 6px; border-radius: 4px; background: #061626df; color: #c8e0f4; font-size: 10px; line-height: 1.4; }
+
+/* Provider actions align within their own table cell and wrap as whole buttons. */
+.management-ui .mg-provider-actions {display:flex;align-items:center;flex-wrap:wrap;gap:8px;}
+.management-ui .mg-provider-actions > button {display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;margin:0;padding:8px 12px;white-space:nowrap;line-height:1.25;}
+.management-ui .mg-provider-actions > small {flex-basis:100%;}
+.management-ui .mg-trash-toolbar {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:14px 0;}
+.management-ui .mg-trash-row {display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #1b3f61;}
+.management-ui .mg-trash-row > input {width:16px;height:16px;min-height:0;margin:0;padding:0;accent-color:#8b40ff;}
+.management-ui .mg-trash-row strong {display:block;overflow-wrap:anywhere;}
+.management-ui .mg-trash-row small {display:block;color:var(--mg-muted);font-size:11px;}
+.management-ui .mg-danger {background:#8f2342;border:1px solid #dc5c82;color:#fff;}
+@media(max-width:720px){.management-ui .mg-trash-row{grid-template-columns:18px minmax(0,1fr);}.management-ui .mg-trash-row > button{grid-column:2;justify-self:start;}}

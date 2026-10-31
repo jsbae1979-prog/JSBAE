@@ -190,7 +190,7 @@ def test_exact_routes_retain_local_auth_origin_csrf_and_confirmation(app):
 @pytest.mark.parametrize('method,path,status', [
     ('POST','/api/studio/library/remove',204), ('POST','/api/studio/library/restore',204),
     ('GET','/api/studio/library/remove',403), ('DELETE','/api/studio/library/remove',403),
-    ('POST','/api/studio/library/remove/extra',403), ('POST','/api/studio/library/purge',403),
+    ('POST','/api/studio/library/remove/extra',403), ('POST','/api/studio/library/purge',204),
     ('POST','/workspace/videos/1/remove',403), ('POST','/api/studio/library/restore-all',403)])
 def test_only_exact_two_local_posts_enter_operating_boundary(method,path,status):
     reached=[]

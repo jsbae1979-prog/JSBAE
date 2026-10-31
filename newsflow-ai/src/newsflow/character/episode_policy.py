@@ -80,6 +80,13 @@ def playback_seconds(scene, presets=None):
     return seconds / factor + (presets['freeze'][freeze] if freeze != 'none' else 0)
 
 
+# Small boundary tolerance, independent of provider duration/scene/schema rules.
+# It never stretches clips or changes an AI-authored scene duration.
+MIN_PLAYBACK_BOUNDARY_TOLERANCE = .1
+
+def valid_playback_seconds(total,target):
+    return target-2-MIN_PLAYBACK_BOUNDARY_TOLERANCE-1e-8 <= total <= target+1e-8
+
 def total_playback_seconds(story, presets=None):
     presets = presets or load_edit_presets()
     return sum(playback_seconds(scene, presets) for scene in _get(story, 'scenes', []))

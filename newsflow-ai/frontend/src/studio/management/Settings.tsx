@@ -284,7 +284,7 @@ export default function Settings({
                             </small>
                             {meta?.checkedAt&&<small>확인: {new Date(meta.checkedAt).toLocaleString("ko-KR")}</small>}
                           </td>
-                          <td>
+                          <td><div className="mg-provider-actions">
                             <button type="button" disabled={!!probeBusy || !meta?.configured}
                               title="저장된 키를 공식 공급사로 전송해 조회합니다. 콘텐츠는 생성하지 않습니다."
                               onClick={()=>void testProvider(p.id,modelTab)}>
@@ -323,7 +323,7 @@ export default function Settings({
                             >
                               1회 사용 한도
                             </Action>
-                          </td>
+                          </div></td>
                         </tr>
                       );
                     })}

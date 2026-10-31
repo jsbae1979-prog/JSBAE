@@ -26,7 +26,7 @@ def test_saved_story_review_cancel_is_readonly_and_edited_recovery_is_free(app,b
         page=context.new_page();posts=[]
         page.on('request',lambda req:posts.append(req.url) if req.method=='POST' else None)
         page.goto(origin+'/studio/characters?job_id='+identifier)
-        trigger=page.get_by_role('button',name='보관된 스토리 검토·복구 · 추가 비용 없음',exact=True)
+        trigger=page.get_by_role('button',name='직접 검토·편집',exact=True)
         expect(trigger).to_be_visible();trigger.click()
         dialog=page.get_by_role('dialog',name='보관된 스토리 검토',exact=True)
         expect(dialog).to_be_visible()

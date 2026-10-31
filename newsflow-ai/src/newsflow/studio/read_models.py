@@ -137,6 +137,7 @@ def rows(session, model_name, columns):
         )
     if model_name == "WorkspaceRemoval":
         query = query.where(~model.key.startswith("library:"))
+        query = query.where(model.detail["state"].as_string().is_(None) | (model.detail["state"].as_string()!="purged"))
     order = getattr(model, "id", getattr(model, "key", None))
     if order is not None:
         query = query.order_by(order.desc())
@@ -372,6 +373,10 @@ def character_rows(state):
                 and sha256(path.read_bytes()).hexdigest() == job.get("output", {}).get("sha256")
             ):
                 item["mediaUrl"] = f"/character/{job['id']}/file"
+        if job.get('automation_version')==1 and job.get('script',{}):
+            from newsflow.character.episode_policy import total_playback_seconds
+            try:item['plannedDurationSeconds']=round(total_playback_seconds(job['script']),2)
+            except (ValueError,TypeError,KeyError):pass
         result.append(item)
     return result
 
@@ -637,6 +642,7 @@ def module_view(request: Request, module: Module):
                 item for item in result["collections"]["ownedReferences"] if item["id"] not in hidden]
             result["collections"]["libraryRemoved"] = removed
             result["libraryRemovalAvailable"] = True
+            result["libraryPurgeAvailable"] = True
     if module == 'analytics':
         work = workspace_view(request, include_library_hidden=True, project_ids=set(publication_sources))
         result['publishedProjects'] = [{**item, 'publications': publication_sources[item['id']]}

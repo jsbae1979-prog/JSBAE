@@ -7,6 +7,7 @@ export type View = {
   csrfToken: string;
   commandsAvailable: boolean;
   libraryRemovalAvailable?: boolean;
+  libraryPurgeAvailable?: boolean;
   collections: Record<string, Item[]>;
   catalog: Item;
   projects?: Item[];

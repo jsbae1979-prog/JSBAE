@@ -28,23 +28,26 @@ from .episode_policy import (
 
 
 def edit_timeline(story, target_seconds, presets=None):
-    """Quantize scene boundaries to 30 fps and pad only the final hold to target."""
+    """Quantize at 30 fps; preserve natural timing for newly accepted boundary cases."""
     presets = presets or load_edit_presets()
     scenes = _get(story, 'scenes', [])
     if type(target_seconds) is not int or target_seconds not in range(15, 61, 5) or not scenes:
         raise CharacterError('media')
     total = total_playback_seconds(story, presets)
-    if not target_seconds - 2 <= total <= target_seconds + 1e-8:
+    from .episode_policy import valid_playback_seconds
+    if not valid_playback_seconds(total,target_seconds):
         raise CharacterError('media')
     if _get(scenes[-1], 'freeze_end') not in {'medium', 'strong'}:
         raise CharacterError('media')
+    # A near-boundary script is usable as-is, not an instruction to invent a longer hold.
+    output_frames=round(total*30) if total < target_seconds-2 else target_seconds*30
     result, cursor = [], 0
     for index, scene in enumerate(scenes):
         speed = presets['fast'][_get(scene, 'fast_intensity')] if _get(scene, 'speed') == 'fast' else 1
         content = _get(scene, 'seconds') / speed
         frames = round(playback_seconds(scene, presets) * 30)
         if index == len(scenes) - 1:
-            frames = target_seconds * 30 - cursor
+            frames = output_frames - cursor
         duration = frames / 30
         if duration < content - 1 / 30:
             raise CharacterError('media')
@@ -158,7 +161,9 @@ def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None
     """Edit reviewed v3 clips without any external calls or additional speech."""
     presets, effects = load_edit_presets(), load_sfx_map()
     scenes, target = _get(story, 'scenes'), settings.get('duration')
+    requested_target=target
     timeline = edit_timeline(story, target, presets)
+    target=round(sum(row['seconds'] for row in timeline),6)
     if (len(clips) != len(scenes) or settings.get('aspect_ratio') != '9:16'
             or settings.get('sound') not in {'on', 'off'}):
         raise CharacterError('media')
@@ -260,7 +265,7 @@ def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None
          '-i', str(candidate.resolve()), '-f', 'null', '-'], work)
     output = folder / 'final.mp4'
     candidate.rename(output)
-    evidence = {'schema_version': 1, 'target_seconds': target, 'timeline': timeline,
+    evidence = {'schema_version': 1, 'target_seconds': requested_target, 'output_seconds': target, 'timeline': timeline,
                 'presets': presets, 'sfx_events': sfx_events,
                 'sfx_sha256': {key: value['sha256'] for key, value in generated.items()},
                 'sfx_provenance': 'original mathematical oscillators / CC0-1.0',

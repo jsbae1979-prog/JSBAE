@@ -1687,3 +1687,6 @@
     font-size: 14px;
   }
 }
+
+.core-studio[data-module="characters"] .kling-story-recovery-actions {display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+.core-studio[data-module="characters"] .kling-story-recovery-actions button {min-height:36px;margin:0;white-space:normal;}

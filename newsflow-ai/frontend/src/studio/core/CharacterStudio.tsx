@@ -1582,16 +1582,12 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </div>
             )}
             {job?.state === "script_failed" && job?.scriptResponseSaved && (
-              <button type="button" disabled={isBusy} onClick={job?.automation_version === 1 ? ()=>setSavedStoryOpen(true) : recoverStory}>
-                보관된 스토리 검토·복구 · 추가 비용 없음
-              </button>
-            )}
-            {job?.scriptRetryAllowed === true && (
-              <div className="kling-character-retry">
-                {action("write", "이 작업의 스토리 다시 생성하기", ["script_failed"])}
-                <small>저장된 이 작업의 주제·캐릭터·설정으로 새 스토리를 요청합니다. 비용 승인은 유지됩니다.</small>
+              <div className="kling-story-recovery-actions">
+                <button type="button" disabled={isBusy} onClick={recoverStory}>보관된 스토리 자동 복구</button>
+                {job.automation_version===1&&<button type="button" disabled={isBusy} onClick={()=>setSavedStoryOpen(true)}>직접 검토·편집</button>}
               </div>
             )}
+
 
             {<p className="kling-character-consent">스토리 생성은 유료입니다. 영상 제작은 별도 승인합니다.</p>}
             <CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
@@ -2024,7 +2020,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               <small>
                 {singleVideo
                   ? `(${scenes.length}개 계획 · 15초 단일 영상)`
-                  : `(${scenes.length}개 장면 · 최종 ${job?.duration ?? settings.duration}초)`}
+                  : `(${scenes.length}개 장면 · 목표 ${job?.duration ?? settings.duration}초${typeof job?.plannedDurationSeconds==='number'&&Math.abs(job.plannedDurationSeconds-(job?.duration??settings.duration))>.04?` · 예상 ${job.plannedDurationSeconds}초`:''})`}
               </small>
             </h2>
             <button

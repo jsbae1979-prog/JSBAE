@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import LibraryTrash from "./LibraryTrash";
 import { Search, Grid2X2, List, Trash2, ArrowRight } from "lucide-react";
 import { type Item, safeMedia } from "../contracts";
 import {
@@ -376,27 +377,11 @@ export default function Library({ c }: { c: Controller }) {
           )}
         </Panel>
       </div>
-      <details className="mg-advanced mg-library-trash">
-        <summary>라이브러리 휴지통 · {libraryTrash.length}개</summary>
-        <p className="mg-muted">원본 파일과 제작 작업·이력은 보존됩니다.</p>
-        {libraryTrash.map((x) => <div className="mg-record" key={canonicalId(x)}>
-          <strong>{x.title}</strong><small>{date(x.updatedAt)}</small>
-          <button aria-label={`${x.title} 복원`} disabled={!removalAvailable || busy || !removable(x)} onClick={() => void mutateLibrary("restore", [x])}>복원</button>
-        </div>)}
-        {!libraryTrash.length && <Empty>휴지통이 비어 있습니다.</Empty>}
-      </details>
-      <details className="mg-advanced">
-        <summary>휴지 보관 · {c.list("removed").length}개</summary>
-        {c.list("removed").map((x) => (
-          <div className="mg-record" key={x.key}>
-            <strong>{x.key}</strong>
-            <small>{date(x.created_at)}</small>
-            <Action c={c} id="cleanup_restore" context={{ item: x.key }}>
-              복원 검토
-            </Action>
-          </div>
-        ))}
-      </details>
+      <LibraryTrash c={c} items={libraryTrash} title="라이브러리 휴지통" restore={x=><button
+        aria-label={`${x.title} 복원`} disabled={!removalAvailable||busy||!removable(x)}
+        onClick={()=>void mutateLibrary("restore",[x])}>복원</button>}/>
+      <LibraryTrash c={c} items={c.list("removed")} title="휴지 보관" legacy restore={x=><Action
+        c={c} id="cleanup_restore" context={{item:x.key}}>복원 검토</Action>}/>
       <dialog className="mg-library-delete-dialog" ref={deleteDialog} aria-labelledby="library-delete-title"
         onCancel={(event) => { event.preventDefault(); closeDelete(); }} onClose={() => { if (!requestInFlight.current) setPendingDelete(null); }}>
         <h2 id="library-delete-title">라이브러리에서 삭제</h2>

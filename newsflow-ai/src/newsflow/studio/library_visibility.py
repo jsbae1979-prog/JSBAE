@@ -96,6 +96,8 @@ class LibraryVisibility:
                 # Validate the entire request before changing even the first marker.
                 for identifier in identifiers:
                     row = session.get(WorkspaceRemoval, PREFIX + identifier)
+                    if row is not None and row.detail.get('state') in {'purging','purge_failed','purged'}:
+                        raise LibraryVisibilityError('permanent')
                     if hidden and row is None:
                         session.add(WorkspaceRemoval(key=PREFIX + identifier, detail=details[identifier]))
                     elif not hidden and row is not None:
@@ -115,7 +117,8 @@ class LibraryVisibility:
                 if not IDENTIFIER.fullmatch(identifier):
                     continue
                 detail = row.detail if isinstance(row.detail, dict) else {}
+                if detail.get('state')=='purged':continue
                 result.append({'id': identifier, 'title': str(detail.get('title', '보관한 콘텐츠')),
                                'kind': identifier.split(':', 1)[0], 'updatedAt': row.created_at.isoformat(),
-                               'technicalStatus': 'hidden'})
+                               'technicalStatus': detail.get('state') if detail.get('state') in {'purging','purge_failed'} else 'hidden'})
             return result
