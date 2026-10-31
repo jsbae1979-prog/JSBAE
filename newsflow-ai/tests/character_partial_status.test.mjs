@@ -43,6 +43,7 @@ test("downloaded and unknown scenes remain distinct from confirmed failures", ()
 async function submitDialog({ check = true, reject = true, ack = true } = {}) {
   const calls = { requests: 0, reloads: 0, closes: 0, error: "", busy: false };
   const context = { Error, busy: false, risky: true, ack, localRender: null,
+    compactCharacter: false, quoteReady: true, registeredRSS: false, quoteSubmit: false,
     checkingCharacterScenes: check, diagnosingCharacterScenes: false, effective: {}, values: {}, view: {}, files: {}, context: {},
     submitOriginal: async () => { calls.requests++; if (reject) throw Error("이전 요청 결과를 확인하세요. 자동 재전송하지 않습니다."); },
     onSaved: () => { calls.reloads++; }, onClose: () => { calls.closes++; },
