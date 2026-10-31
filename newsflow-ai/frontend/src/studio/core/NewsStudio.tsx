@@ -1,4 +1,5 @@
 import { useState } from "react";
+import {NewsCollectionControls} from "./NewsCollectionControls";
 import { Search, Sparkles, ArrowRight, ExternalLink, Newspaper } from "lucide-react";
 import type { Item } from "../contracts";
 import {
@@ -130,17 +131,7 @@ export default function NewsStudio({
               <Empty>검색 조건에 맞는 보관 기사가 없습니다.</Empty>
             )}
           </div>
-          <div className="core-actions">
-            <ActionButton c={c} id="routes_collect">
-              등록 RSS 수집 · 확인
-            </ActionButton>
-            <ActionButton c={c} id="serpapi_settings" disabled={!c.view?.catalog.serpapi?.registrationAvailable}>
-              SerpApi 키·수집 설정
-            </ActionButton>
-            <ActionButton c={c} id="curation_refresh">
-              인기 뉴스 RSS 수집 · 확인
-            </ActionButton>
-          </div>
+          <NewsCollectionControls c={c}/>
         </Panel>
         <div className="core-news-center">
           <Panel

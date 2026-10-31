@@ -555,6 +555,7 @@ export function CommandDialog({
     }
     setBusy(true);
     setError("");
+    if (registeredRSS && typeof context.__collectionProgress === "function") context.__collectionProgress("requesting");
     try {
       const result = await submitOriginal(
         effective,
@@ -563,10 +564,12 @@ export function CommandDialog({
         files,
         localRender ? {} : (context.__extra ?? {}),
       );
+      if (registeredRSS && typeof context.__collectionProgress === "function") context.__collectionProgress("accepted");
       onSaved();
       if (result) setResponseSummary(result);
       else onClose();
     } catch (e) {
+      if (registeredRSS && typeof context.__collectionProgress === "function") context.__collectionProgress("unknown");
       setAck(false);
       const detail = e instanceof Error ? e.message : "저장 결과를 확인하세요.";
       if (checkingCharacterScenes) {
@@ -983,7 +986,7 @@ export function CommandDialog({
               <ShieldCheck size={18} />
             )}{" "}
             {busy
-              ? localRender ? "FFmpeg로 최종 영상 합성 중…" : "응답 확인 중 · 재요청 금지"
+              ? localRender ? "FFmpeg로 최종 영상 합성 중…" : registeredRSS ? "수집 요청 중…" : "응답 확인 중 · 재요청 금지"
               : localRender
                 ? localRenderTitle
                 : action.label}
