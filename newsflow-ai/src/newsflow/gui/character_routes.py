@@ -203,7 +203,7 @@ def create(request: Request, reference: Annotated[UploadFile | None, File()] = N
            episode_limit: str=Form(...),day_limit: str=Form(''), script_model: str=Form(''),
            video_model: str=Form(''), reference_asset: str=Form(''), reference_job: str=Form(''),
            studio_settings: str=Form(''), request_id: str=Form(''), character_id: str=Form(''), character_revision: int=Form(0), creation_mode: str=Form('story'), direct_extension: bool=Form(False)):
-    if creation_mode not in {'story','direct'}:return JSONResponse({'error':'제작 방식을 확인하세요.'},status_code=422)
+    if creation_mode != 'story':return JSONResponse({'error':'이미지·주제 직접 제작은 종료했습니다. 스토리 제작을 사용하세요.'},status_code=410)
     if studio_settings:
         import json
         try:

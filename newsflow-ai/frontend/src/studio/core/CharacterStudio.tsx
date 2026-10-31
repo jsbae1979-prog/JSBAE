@@ -24,8 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { Thumbnail } from "../Thumbnail";
-import { actions, safeMedia, type Item } from "../contracts";
-import {submitOriginal} from "../CommandDialog";
+import { safeMedia, type Item } from "../contracts";
 import {
   Empty,
   Media,
@@ -500,8 +499,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [file, setFile] = useState<File | null>(null);
   const [referencePreview, setReferencePreview] = useState(false);
   const [activeProfile, setActiveProfile] = useState<Item | null>(null);
-  const [creationMode,setCreationMode]=useState<"story"|"direct">("story");
-  const directDraft=useRef<{key:string;requestId:string;jobId?:string}|null>(null);
   const [scriptDirty, setScriptDirty] = useState(false);
   const [savedStoryOpen,setSavedStoryOpen]=useState(false);
   const [automationBusy, setAutomationBusy] = useState(false);
@@ -715,7 +712,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     }
     if (job?.automation_version === 1 && job.characterProfile) setActiveProfile(job.characterProfile);
     else if (job) setActiveProfile(null);
-    if(job){setCreationMode(job.directVideo?"direct":"story");}
     setScene(-1);
   }, [job?.id]);
   function setting(k: keyof Settings, v: string) {
@@ -944,39 +940,6 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     try { await sendStory(review, review.token); }
     catch (error) { setFailure(error instanceof Error ? error.message : "스토리 요청 결과를 확인하지 못했습니다. 자동 재전송하지 않습니다."); }
     finally { await refreshStoryResult(); }
-  }
-  function switchCreationMode(mode:"story"|"direct") {
-    if(mode===creationMode)return;
-    const keptTopic=topic,keptReference=job?.id;
-    if(job){reset(true);setTopic(keptTopic);if(!activeProfile&&!file&&!asset&&keptReference)setReferenceJob(String(keptReference));}
-    setCreationMode(mode);setFailure("");
-    if(mode==="direct"){setSettings(value=>({...value,duration:15}));}
-  }
-  async function directQuote() {
-    if(sending.current || isBusy || !ready || !reference || !topic.trim() || !c.view)return;
-    sending.current=true;setBusy(true);setFailure("");
-    const key="direct:"+String(Number(settings.duration)>15)+":"+storyRequestKey();
-    const draft=directDraft.current?.key===key?directDraft.current:{key,requestId:crypto.randomUUID().replaceAll("-","")};
-    directDraft.current=draft;
-    try {
-      if(!draft.jobId){
-        const form=new FormData();form.set("creation_mode","direct");form.set("direct_extension",String(Number(settings.duration)>15));form.set("topic",topic.trim());
-        form.set("studio_settings",JSON.stringify(settings));form.set("episode_limit",per);form.set("request_id",draft.requestId);
-        if(activeProfile){form.set("character_id",activeProfile.id);form.set("character_revision",String(activeProfile.revision));}
-        else if(file)form.set("reference",file);
-        else if(asset)form.set("reference_asset",asset);
-        else form.set("reference_job",referenceJob||String(job?.id||""));
-        const created=await post("/character",form);draft.jobId=created.id;directDraft.current=draft;
-        setPerOverrides(value=>({...value,[created.id]:per}));
-      }
-      selectStoryDraft(draft.jobId!);
-      const prepare=actions.find(row=>row.id==="character_act_prepare");
-      if(!prepare)throw Error("영상 견적 경로를 확인하세요.");
-      await submitOriginal(prepare,{job_id:draft.jobId,consent:true,reviewed:true},c.view,{});
-      setFile(null);setAsset("");setReferenceJob("");
-      c.setNotice("주제를 영상 모델에 직접 전달하는 견적입니다. 스토리 AI는 호출하지 않았습니다.");
-    } catch(error){setFailure(error instanceof Error?error.message:"견적 확인을 중단했습니다. 자동으로 다시 요청하지 않습니다.");}
-    finally {await c.load();setBusy(false);sending.current=false;}
   }
   async function autoStory() {
     const inputKey = storyRequestKey();
@@ -1324,8 +1287,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             [Bot, "캐릭터 선택", "참조 이미지로 캐릭터를 설정합니다."],
             [
               BookOpen,
-              creationMode==="direct"?"주제 입력":"스토리 생성",
-              creationMode==="direct"?"이미지와 함께 사용할 영상 주제를 입력합니다.":"주제를 입력하면 AI가 스토리를 만듭니다.",
+              "스토리 생성",
+              "주제를 입력하면 AI가 스토리를 만듭니다.",
             ],
             [
               Clapperboard,
@@ -1526,7 +1489,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           <section className="kling-character-card kling-character-story">
             <header>
               <h2>
-                <em>2.</em> {creationMode==="direct"?"주제 입력":"스토리 생성"} <Info size={14} />
+                <em>2.</em> {"스토리 생성"} <Info size={14} />
               </h2>
               <button
                 className="kling-character-example"
@@ -1543,22 +1506,18 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 예시 주제 보기
               </button>
             </header>
-            <div className="character-direct-mode" role="group" aria-label="캐릭터 영상 제작 방식">
-              <button type="button" aria-pressed={creationMode==="story"} disabled={isBusy} onClick={()=>switchCreationMode("story")}>스토리로 제작</button>
-              <button type="button" aria-pressed={creationMode==="direct"} disabled={isBusy} onClick={()=>switchCreationMode("direct")}>이미지·주제 제작</button>
-            </div>
-            {creationMode==="story"&&<label>대본 AI
+            <label>대본 AI
               <select aria-label="대본 AI" disabled={isBusy || lockedScriptModel} value={scriptProvider?.id ?? ""}
                 onChange={(e) => {const provider = apiProviders.find(p => p.id === e.target.value); if(provider?.models?.[0]) setting("script_model",provider.models[0]);}}>
                 <option value="" disabled>API를 선택하세요</option>
                 {apiProviders.map(p => <option key={p.id} value={p.id} disabled={!p.configured}>{p.label}{p.configured ? "" : " · 키 등록 필요"}</option>)}
               </select>
-            </label>}
+            </label>
             <label>
-              {creationMode==="direct"?"영상 주제":"스토리 주제"}
+              {"스토리 주제"}
               <div className="kling-character-topic">
                 <textarea
-                  aria-label={creationMode==="direct"?"영상 주제":"스토리 주제"}
+                  aria-label={"스토리 주제"}
                   value={topic}
                   maxLength={60}
                   placeholder="캐릭터가 어떤 이야기를 펼칠까요?"
@@ -1571,7 +1530,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 <small>{topic.length}/60</small>
               </div>
             </label>
-            {creationMode==="story"&&<button
+            {<button
               className="kling-character-story-generate"
               onClick={() => void autoStory()}
               disabled={
@@ -1619,16 +1578,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </div>
             )}
 
-            {creationMode==="story"&&<p className="kling-character-consent">스토리 생성은 유료입니다. 영상 제작은 별도 승인합니다.</p>}
-            {creationMode==="story"&&<CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
+            {<p className="kling-character-consent">스토리 생성은 유료입니다. 영상 제작은 별도 승인합니다.</p>}
+            <CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
               topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} refreshKey={`${job?.id ?? ""}:${job?.state ?? ""}:${job?.script_hash ?? ""}`}
-                />}
+                />
             {!ready && (
               <p role="status">
                 새 제작실 API 연결 확인 전 · 생성할 수 없습니다.
               </p>
             )}
-            {story && creationMode==="story" ? (
+            {story ? (
               <div className={`kling-character-story-result${job?.automation_version === 1 ? " kling-character-story-result--episode" : ""}`}>
                 <header>
                   <h3>한글 스토리 · {story.title}</h3>
@@ -1689,21 +1648,21 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             ) : (
               <div className="kling-character-story-empty">
                 <BookOpen />
-                <span>{creationMode==="direct"?"이미지와 주제로 영상 견적을 확인하세요.":"생성한 스토리가 여기에 표시됩니다."}</span>
+                <span>{"생성한 스토리가 여기에 표시됩니다."}</span>
               </div>
             )}
             <details className="kling-character-advanced">
               <summary>
                 <Settings2 size={14} />
-                {creationMode==="direct"?"제작 세부 설정":"스토리 세부 설정"}
+                {"스토리 세부 설정"}
               </summary>
-              {creationMode==="story"&&<Select
+              <Select
                 label="대본 모델"
                 disabled={isBusy || lockedScriptModel}
                 value={settings.script_model}
                 onChange={(v) => setting("script_model", v)}
                 options={scriptProvider?.models ?? []}
-              />}
+              />
               <label>
                 편당 최대 승인 한도 (USD)
                 <input
@@ -1894,10 +1853,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     </b>
                   </div>
                   <div className="kling-character-generate">
-                    {creationMode==="direct"&&(!job?.directVideo||topic.trim()!==String(job.topic).trim()||!!file||job.state==="script_review")?(
-                      <button type="button" className="primary" disabled={isBusy||!ready||!reference||!topic.trim()||!c.view?.commandsAvailable}
-                        onClick={()=>void directQuote()}><Clapperboard size={24}/>{busy?"영상 견적 확인 중…":"영상 견적 확인"}</button>
-                    ):job?.state === "script_review" ||
+                    {job?.state === "script_review" ||
                     (job?.state === "prepare_failed" &&
                       job.quoteSettingsEditable === true) ? (
                       <button
@@ -2044,13 +2000,13 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             </div>
           </section>
         </div>
-        {(creationMode!=="direct"||clips.some(row=>row.state==="downloaded"))&&<section className="kling-character-card kling-character-storyboard">
+        {<section className="kling-character-card kling-character-storyboard">
           <header>
             <h2>
-              {creationMode==="direct"?"생성된 영상":singleVideo ? "스토리 계획" : "생성된 장면"}{" "}
+              {singleVideo ? "스토리 계획" : "생성된 장면"}{" "}
               <small>
                 {singleVideo
-                  ? creationMode==="direct"?`(15초 단일 영상)`:`(${scenes.length}개 계획 · 15초 단일 영상)`
+                  ? `(${scenes.length}개 계획 · 15초 단일 영상)`
                   : `(${scenes.length}개 장면 · 최종 ${job?.duration ?? settings.duration}초)`}
               </small>
             </h2>
@@ -2111,7 +2067,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   {s &&
                     (planOnly ? (
                       <small>
-                        {creationMode==="direct"?"완성 영상 확인":"스토리 계획 · 전체 영상에서 확인"}
+                        {"스토리 계획 · 전체 영상에서 확인"}
                         <br />
                         별도 장면 파일 없음
                       </small>

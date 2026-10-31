@@ -291,6 +291,7 @@ def character_rows(state):
                 ("position", "affected", "quote_total_usd", "exposure_usd", "total_after_usd", "at") if k in job["regeneration"]}
         item['directVideo']=job.get('direct_video') is True
         if job.get('direct_video'):
+            item['story']=None  # Historical technical plans are not authored stories.
             from newsflow.character.direct_video import DirectVideoPlan,timeline
             item['editTimeline']=timeline(DirectVideoPlan.model_validate(job['script']))
             item['playback_seconds']=job['duration'];item['sfx_keys']=[]
