@@ -7,7 +7,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from .lifecycle import Blocked, ordinary_absolute, fixed_port
+from .lifecycle import Blocked, ordinary_absolute, fixed_port, separated
 from .restored_install import restored_paths
 from .local_work import LocalWorkRequests
 
@@ -38,6 +38,8 @@ def load_operating(root, layout):
         raise Blocked('local-operation-boundaries-required')
     if ordinary_absolute(Path(raw['programRoot'])) != root:
         raise Blocked('operating-program-identity')
+    if 'dataDirectory' in raw:
+        _, profile = separated(root, ordinary_absolute(Path(raw['dataDirectory'])))
     return ValidationConfig(root, profile, fixed_port(raw['port']), raw['installationId'],
                             raw['openBrowser'], 'restored-local-operation')
 
@@ -76,7 +78,7 @@ class OperatingRequests(LocalWorkRequests):
                                                   or self.CHARACTER_REUSE.fullmatch(path)
                                                   or self.CHARACTER_RENDER.fullmatch(path)
                                                   or self.CHARACTER_RECOVER.fullmatch(path)
-                                                  or path == '/api/studio/characters/library'
+                                                  or path in {'/api/studio/characters/library','/api/studio/data-location'}
                                                   or path in {'/api/studio/library/remove', '/api/studio/library/restore'}
                                                   or self.CHARACTER_LOCAL_WRITE.fullmatch(path))
             copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path)

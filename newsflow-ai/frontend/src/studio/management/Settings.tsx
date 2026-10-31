@@ -37,6 +37,20 @@ export default function Settings({
     [modelTab, setModelTab] = useState("text"),
     [startup, setStartup] = useState<any>(null),
     [loading, setLoading] = useState(false);
+  const [dataDestination,setDataDestination]=useState("");
+  const [dataMoving,setDataMoving]=useState(false);
+  const [dataMoveMessage,setDataMoveMessage]=useState("");
+  async function requestDataMove(){
+    if(dataMoving)return;
+    setDataMoving(true);
+    try {
+      const response=await fetch('/api/studio/data-location',{method:'POST',credentials:'same-origin',
+        body:new URLSearchParams({destination:dataDestination,csrf_token:c.view?.csrfToken??''})});
+      const result=await response.json().catch(()=>({}));
+      setDataMoveMessage(response.ok?result.message:(result.detail??'이동을 예약하지 못했습니다. 현재 위치를 유지합니다.'));
+    } catch {setDataMoveMessage('결과를 확인하지 못했습니다. 자동으로 다시 요청하지 않습니다.');}
+    finally {setDataMoving(false);}
+  }
   const [probeBusy,setProbeBusy]=useState("");
   const [probeResult,setProbeResult]=useState<Record<string,any>>({});
   async function testProvider(provider:string,scope:string) {
@@ -413,10 +427,15 @@ export default function Settings({
               <dt>인증정보</dt>
               <dd>기존 DPAPI·사용자별 키 정책 유지</dd>
             </dl>
-            <p className="mg-muted">
-              이 화면에서 저장 폴더를 이동하거나 기존 데이터를 삭제하지
-              않습니다.
-            </p>
+            {c.view?.catalog.storage?.relocationAvailable && <div>
+              <label>새 데이터 폴더<input aria-label="새 사용자 데이터 저장 경로"
+                value={dataDestination} onChange={e=>setDataDestination(e.target.value)}
+                placeholder="D:\NewsFlowAI_Data" disabled={dataMoving}/></label>
+              <button disabled={dataMoving||!dataDestination.trim()} onClick={requestDataMove}>
+                {dataMoving?'확인 중…':'저장 위치 변경 예약'}</button>
+              <p className="mg-muted">정상 종료 후 다음 Start에서 이동합니다. 기존 폴더는 복구용으로 보존합니다.</p>
+              {dataMoveMessage&&<p role="status">{dataMoveMessage}</p>}
+            </div>}
           </Panel>
         )}
         {show("system") && (

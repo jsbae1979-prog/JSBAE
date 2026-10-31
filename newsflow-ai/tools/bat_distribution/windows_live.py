@@ -447,6 +447,8 @@ def start(config, plan):
             app = create_app(Settings(data_dir=config.profile, host='127.0.0.1', port=config.port), adapter=adapter, automatic_start=True,
                              character_ffmpeg=config.program/'tools/ffmpeg.exe',
                              character_ffprobe=config.program/'tools/ffprobe.exe')
+            from .data_location import install as install_data_location
+            install_data_location(app,config)
             # No automatic scheduling in validation or newly adopted local operation.
             # Existing reservations/history stay intact; no product scheduler change.
             app.state.scheduler.start = lambda: None
@@ -574,6 +576,11 @@ def dispatch(action, root):
     config = load_config(root)
     bootstrap(config)
     sid = _profile(config, create=action == 'start')
+    if action == 'start' and config.profile_kind == 'restored-local-operation':
+        from .data_location import apply_pending
+        if apply_pending(config,sid):
+            config=load_config(root)
+            sid=_profile(config,create=False)
     plan = start_plan(config.program, config.profile, config.port, sid, config.installation_id)
     if action == 'start':
         return start(config, plan)

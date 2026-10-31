@@ -770,7 +770,7 @@ def module_view(request: Request, module: Module):
         }
     if module == "settings":
         import platform
-        result["catalog"]["storage"] = {"dataDirectory": str(state.config.data_dir), "python": platform.python_version()}
+        result["catalog"]["storage"] = {"dataDirectory": str(state.config.data_dir), "python": platform.python_version(), "relocationAvailable": callable(getattr(state,"data_location_request",None))}
         from newsflow.operations import evidence
 
         result["operationsReview"] = evidence.read(state.sessions)

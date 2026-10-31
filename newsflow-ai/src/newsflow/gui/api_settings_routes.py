@@ -147,3 +147,12 @@ def provider_connection_test(request: Request, provider: str, scope: str=Form(''
         return connections(request.app.state).check(provider,scope,consent=consent)
     except (ValueError,KeyError):
         raise HTTPException(422,'공급사·모델 설정을 확인하세요.') from None
+
+
+@router.post('/api/studio/data-location')
+def request_data_location(request: Request, destination: str=Form('')):
+    action=getattr(request.app.state,'data_location_request',None)
+    if not callable(action):raise HTTPException(409,'이 실행 환경에서는 데이터 위치를 변경할 수 없습니다.')
+    try:return action(destination)
+    except (ValueError,OSError):
+        raise HTTPException(422,'사용자 소유의 비어 있는 로컬 폴더를 지정하세요. 현재 데이터·프로그램 경로와 겹칠 수 없습니다.') from None
