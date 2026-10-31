@@ -482,7 +482,7 @@ class EpisodeFlow:
                             'clip_sha256': parent['sha256'], 'frame_sha256': digest(frame)},
                             execution_quote_usd=str(quote))
                         if context_hash is not None:
-                            row['dependency']['context_sha256'] = context_hash
+                            row['continuation_context_sha256'] = context_hash
                         s.save(job)
                     except Exception:
                         if row['state'] == 'preparing_dependency':

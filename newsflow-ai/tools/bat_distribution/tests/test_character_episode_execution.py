@@ -21,10 +21,20 @@ from test_character_episode_schema import image
 
 
 @pytest.fixture
-def episode(tmp_path, monkeypatch):
+def episode(tmp_path, monkeypatch, request):
     monkeypatch.setattr(FFmpegAdapter, 'executable', staticmethod(lambda *a: Path('synthetic-tool.exe')))
-    service, _, identifier, _, _ = setup_episode(tmp_path)
-    service.write(identifier, consent=True)
+    service, _, identifier, registry, saved = setup_episode(tmp_path)
+    direct_model = getattr(request, 'param', None)
+    if direct_model:
+        from uuid import uuid4
+        selected = {**settings_for(service.read(identifier)['studio_selection']),
+                    'duration': 30, 'video_model': direct_model,
+                    'native_resolution': CATALOG.model(direct_model)['default_resolution']}
+        identifier, _ = service.create_episode('합성 캐릭터가 모자를 찾는 연속 사건', '5', reference=image(),
+            settings=selected, profile=saved, request_id=uuid4().hex,
+            direct_video=True, direct_extension=True)
+    else:
+        service.write(identifier, consent=True)
     profile = service.root.parent
     (profile / VideoAIKeyStore.FILE).write_bytes(b'owned synthetic cipher')
     state = SimpleNamespace(key='synthetic-only', calls=[], price='0.10', status='completed', failure=None,
@@ -83,7 +93,7 @@ def episode(tmp_path, monkeypatch):
     monkeypatch.setattr(m, 'KlingClient', FakeKling)
     monkeypatch.setattr(EpisodeFlow, 'last_frame', last_frame)
     monkeypatch.setattr('newsflow.character.episode_service.probe_clip',
-                        lambda *a: {'duration': 7, 'width': 144, 'height': 256, 'has_audio': True})
+                        lambda *a: {'duration': 15 if direct_model else 7, 'width': 144, 'height': 256, 'has_audio': True})
     app = SimpleNamespace(state=SimpleNamespace(character=service, config=SimpleNamespace(data_dir=profile)))
     quote = q.install(app, profile, Native)
     manual = m.install(app, profile, Native)
@@ -281,3 +291,26 @@ def test_manual_wrapper_uses_real_submit_key_validation_with_fake_http(episode, 
     x.act('submit')
     assert len(calls)==1 and calls[0][2]==x.identifier+'-s1-t1'
     assert x.service.read(x.identifier)['scenes'][0]['state']=='submitted'
+
+
+@pytest.mark.parametrize('episode', [O3, 'kling-video/v3.0/std/image-to-video'], indirect=True)
+def test_direct_continuation_uses_real_operating_adapter_without_writer(episode):
+    x = episode
+    assert not x.service.authoring.calls
+    x.act('prepare'); x.act('submit')
+    assert len(sent(x)) == 1
+    x.act('check')
+    rows = x.service.read(x.identifier)['scenes']
+    assert [r['state'] for r in rows] == ['downloaded', 'submitted']
+    assert len(sent(x)) == 2
+    assert set(rows[1]['dependency']) == {'position', 'attempt', 'clip_sha256', 'frame_sha256'}
+    assert len(rows[1]['continuation_context_sha256']) == 64
+    assert rows[1]['continuation_context']['previous_direction'] == rows[0]['continuation_context']['direction']
+    field = CATALOG.model(x.service.read(x.identifier)['model'])['continuation_param']
+    assert sent(x)[1][2][field].endswith('/scene-1-t1-last.png')
+    x.act('check')
+    assert x.service.read(x.identifier)['state'] == 'clips_review'
+    assert not x.service.authoring.calls
+    before = deepcopy(x.state.calls)
+    with pytest.raises(CharacterError): x.act('submit')
+    assert x.state.calls == before

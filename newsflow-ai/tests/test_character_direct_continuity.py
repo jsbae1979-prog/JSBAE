@@ -75,7 +75,7 @@ def test_second_segment_receives_true_final_frame_and_frozen_context(tmp_path):
     assert red > 200 and blue < 30  # Actual last frame, not a blue near-end frame.
     assert second['dependency']['frame_sha256'] == digest(frame)
     assert second['dependency']['clip_sha256'] == first['sha256']
-    assert len(second['dependency']['context_sha256']) == 64
+    assert len(second['continuation_context_sha256']) == 64
     assert second['payload']['image_urls'] == before['image_urls']  # Original identity reference retained.
     assert {k: x for k, x in second['payload'].items() if k != 'first_frame_url'} == {
         k: x for k, x in before.items() if k != 'first_frame_url'}
