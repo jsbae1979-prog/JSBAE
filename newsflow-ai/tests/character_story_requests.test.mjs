@@ -3,12 +3,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
+import {stripTypeScriptTypes} from "node:module";
 
 const source = readFileSync(new URL("../frontend/src/studio/core/CharacterStudio.tsx", import.meta.url), "utf8");
-const keyFunction = source.slice(source.indexOf("  function storyRequestKey()"), source.indexOf("  const blockedStoryRequest"));
+const keyFunction = source.slice(source.indexOf("  function storyRequestKey()"), source.indexOf("  const currentStoryInput"));
 const requestFunction = source.slice(source.indexOf("  async function autoStory()"), source.indexOf("  async function reuseStoryForVideo()"));
 const postFunction = source.slice(source.indexOf("  async function post("), source.indexOf("  async function changeVisibility("))
   .replace("(url: string, body: FormData)", "(url, body)");
+const supportingFunctions=source.slice(source.indexOf("  function selectStoryDraft("),source.indexOf("  async function confirmStoryReview()"));
 const button = source.slice(source.indexOf('className="kling-character-story-generate"'));
 const disabledExpression = button.match(/disabled=\{([\s\S]*?)\n\s+\}/)[1];
 
@@ -18,7 +20,10 @@ function harness({ failCreate = 0, failStatus, unknownStory = false, failLoad = 
   const posts = [], storyCalls = [];
   let sequence = 0;
   const context = {
-    FormData, URLSearchParams, Error,
+    FormData, URLSearchParams, Error, URL, selectionUnavailable:false,
+    window:{location:{href:"http://127.0.0.1:18771/studio/characters"},history:{state:null,replaceState:()=>{}}},
+    preparedStory:{current:null}, setStoryReview:()=>{},setStoryReviewConsent:()=>{},
+    setPerOverrides:()=>{}, setId:()=>{},
     topic: "토끼의 새로운 여행", settings: { video_model: "kling-video/o3/image-reference", native_resolution: "std", duration: 30, clip_seconds: 6 },
     per: "10", daily: "20", file: null,
     asset: useAsset ? `studio-${"b".repeat(64)}.png` : "",
@@ -43,13 +48,15 @@ function harness({ failCreate = 0, failStatus, unknownStory = false, failLoad = 
       return { id: context.job.id, created: true, state: "needs_script" };
     },
     fetch: async (url, options) => {
+      if (options?.method !== "POST") return {ok:true,json:async()=>({ready:true,review:{token:"",count:0,held_usd:"0"}})};
       storyCalls.push({ url, body: Object.fromEntries(options.body) });
       if (unknownStory) throw Error("synthetic unknown story result");
       return { ok: true, json: async () => ({ state: "script_review" }) };
     },
   };
   vm.createContext(context);
-  vm.runInContext(keyFunction + requestFunction, context);
+  context.defaultSettings={...context.settings};
+  vm.runInContext(stripTypeScriptTypes(keyFunction+supportingFunctions+requestFunction), context);
   const key = () => vm.runInContext("storyRequestKey()", context);
   const disabled = () => {
     context.blockedStoryRequest = !!context.storyRequests[key()];
@@ -193,19 +200,20 @@ test("fresh official quotes determine the execution cap while stale settings use
 });
 
 test("over-cap estimates do not disable explicit quote or requote actions", () => {
-  const first = source.slice(source.indexOf('title="스토리 검토·공식 견적을 확인한 후 비용을 별도로 승인합니다."'));
-  const refresh = source.slice(source.indexOf('job.quoteSettingsEditable === true && ('));
-  for (const section of [first, refresh]) {
-    const expression = section.match(/disabled=\{([\s\S]*?)\n\s+\}/)[1];
+  const section = source.slice(source.indexOf('title="스토리 검토·공식 견적을 확인한 후 비용을 별도로 승인합니다."'));
+  // Script review and editable failed preparation now share this same button.
+  for (const state of ["script_review","prepare_failed"]) {
+    const expression = section.match(/disabled=\{([\s\S]*?)\}\s+onClick/)[1];
     assert.equal(vm.runInNewContext(`(${expression})`, {
-      isBusy: false, pendingReferenceCopy: false, scriptDirty: false, legacy: false, ready: true, budgetExceeded: true,
+      isBusy: false, pendingReferenceCopy: false, scriptDirty: false, legacy: false, ready: true, budgetExceeded: true,job:{state,quoteSettingsEditable:true},
     }), false);
   }
 });
 
-test("missing profile or API key blocks new story without a request", async () => {
+test("missing reference or API key blocks new story without a request", async () => {
   for (const field of ["activeProfile", "scriptAvailable"]) {
     const h=harness();h.context[field]=field==="activeProfile"?null:false;
+    if(field==="activeProfile"){h.context.reference=null;h.context.asset="";h.context.referenceJob="";}
     assert.equal(h.disabled(),true);
     await h.run();assert.equal(h.posts.length,0);
   }

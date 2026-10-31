@@ -8,12 +8,13 @@ const source = readFileSync(new URL("../frontend/src/studio/core/CharacterStudio
 const selection = source.slice(source.indexOf("  const perKey ="), source.indexOf("  const caps ="))
   .replace("setPer(value: string)", "setPer(value)");
 const saveFunction = source.slice(source.indexOf("  async function saveSettings()"), source.indexOf("  async function quote()"));
-const resetFunction = source.slice(source.indexOf("  function reset()"), source.indexOf("  function startFromCharacter()"));
+const resetFunction = source.slice(source.indexOf("  function reset("), source.indexOf("  function startFromCharacter()"));
 
 function contextFor(job, perOverrides = {}) {
   const sent = [];
   const context = { job, perOverrides, FormData, URLSearchParams, pendingReferenceCopy: false, scriptDirty: false,
-    settings: { duration: 30, clip_seconds: 6 }, pending: { current: null },
+    settings: { duration: 30, clip_seconds: 6 }, pending: { current: null }, preparedStory: {current:null},
+    setStoryReview:()=>{}, setStoryReviewConsent:()=>{},
     c: { view: { csrfToken: "synthetic-csrf" }, load: async () => {} },
     setPerOverrides: (update) => { context.perOverrides = update(context.perOverrides); },
     setId: () => { context.job = undefined; }, setReferenceJob: () => {}, setTopic: () => {},
@@ -80,7 +81,7 @@ test("requested implementation descriptions are absent while setting labels and 
     assert.equal(source.includes(text), false, text);
   }
   for (const text of ['label="영상 길이"', 'label="모델 생성 화질"', 'label="최종 저장 크기"',
-    'label="소리 생성"', "스토리 생성은 유료이며 영상 제작은", 'kind === "submit" && (budgetExceeded || quoteSettingsChanged)']) {
+    'label="소리 생성"', "스토리 생성은 유료입니다. 영상 제작은 별도 승인합니다.", 'kind === "submit" && (budgetExceeded || quoteSettingsChanged)']) {
     assert.equal(source.includes(text), true, text);
   }
 });
