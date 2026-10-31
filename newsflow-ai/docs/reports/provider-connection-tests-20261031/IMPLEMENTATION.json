@@ -28,8 +28,25 @@
   },
   "TypeScript": "PASS",
   "ReactBuild": "PASS",
-  "fullSuite": "RUNNING; final results will be recorded separately",
-  "operatingDeployment": "NOT YET PERFORMED",
+  "fullSuite": {
+    "initialCollected": 6567,
+    "PASS": 6517,
+    "FAIL": 1,
+    "SKIP": 49,
+    "ERROR": 0,
+    "collectionCoverageMatched": true,
+    "oneFailure": "New job creation/list response race",
+    "correction": "55ea30c; related 19 PASS; original scenario also passed subsequent related UI run",
+    "freshWholeSuiteAfterCorrection": false
+  },
+  "operatingDeployment": {
+    "state": "APPLIED",
+    "providerAndRecoveryCode": "0c3694a6726947348bad3f75519135d754d71ab4",
+    "latestCode": "f2a3d8a68a82bfe1a2bb6f62f476e3f42a250d44",
+    "currentDataDirectory": "D:\\NewsFlowAI_Data",
+    "normalStopStartCycles": 2,
+    "authorization": "One original approved cycle; one separately approved follow-up cycle"
+  },
   "officialReferences": [
     "https://developers.openai.com/api/reference/resources/models/methods/retrieve",
     "https://platform.claude.com/docs/en/api/models/retrieve",
