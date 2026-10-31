@@ -108,14 +108,16 @@ def test_news_image_post_is_independent_from_image_generation_draft(tmp_path):
 def test_current_tts_and_video_limits_are_read_without_reset(tmp_path):
     request,engine,sessions=setup(tmp_path)
     request.state=NS(csrf="SYNTHETIC")
-    values={"studio_provider":"claude_api","studio_model_claude_api":"claude-sonnet-4-6","tts_el_enabled":"true","tts_el_voice_id":'"synthetic-voice"',"tts_el_model":'"eleven_multilingual_v2"',"tts_el_job_limit":"4321","tts_el_monthly_limit":"20000","tts_el_commercial":"true"}
+    values={"studio_provider":"claude_api","studio_model_claude_api":"claude-sonnet-4-6","tts_el_enabled":"true","tts_el_voice_id":'"synthetic-voice"',"tts_el_model":'"eleven_multilingual_v2"',"tts_el_job_limit":"4321","tts_el_commercial":"true"}
     with sessions.begin() as session:
         for key,value in values.items():session.add(AppSetting(key=key,value=value))
     result=module_view(request,"settings")
     config=result['formDefaults']['video_save_tts']
     assert result['formDefaults']['intelligence_analyze']=={'provider':'claude_api','model':'claude-sonnet-4-6'}
     assert config['enabled'] is True and config['commercial'] is True
-    assert config['voice_id']=='synthetic-voice' and config['job_limit']==4321 and config['monthly_limit']==20000
+    assert config['voice_id']=='synthetic-voice' and config['job_limit']==4321
+    # Monthly TTS limits were replaced by per-execution limits (1e3d5a9).
+    assert 'monthly_limit' not in config
     with sessions() as session:
         assert {key:session.get(AppSetting,key).value for key in values}==values
     engine.dispose()

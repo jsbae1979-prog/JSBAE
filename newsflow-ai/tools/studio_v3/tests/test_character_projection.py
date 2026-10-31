@@ -20,9 +20,25 @@ SOURCE = Path(
 def projection():
     tree = ast.parse(SOURCE.read_text(encoding="utf-8-sig"))
     function = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "character_rows")
-    namespace = {"sha256": sha256}
+    # The projection now reads library visibility from the character store's database.
+    from sqlalchemy import select
+
+    from newsflow.db import models
+
+    namespace = {"sha256": sha256, "select": select, "m": models}
     exec(compile(ast.Module(body=[function], type_ignores=[]), str(SOURCE), "exec"), namespace)  # noqa: S102 - audited pure function only; no module imports
     return namespace["character_rows"]
+
+
+def synthetic_sessions():
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+
+    from newsflow.db.models import Base
+
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(engine)
+    return sessionmaker(engine, expire_on_commit=False)
 
 
 class CharacterProjectionTests(unittest.TestCase):
@@ -68,7 +84,8 @@ class CharacterProjectionTests(unittest.TestCase):
 
     def read(self):
         character = SimpleNamespace(
-            listing=lambda: [{"id": self.identifier}], read=lambda _: self.job, folder=lambda _: self.folder
+            listing=lambda: [{"id": self.identifier}], read=lambda _: self.job, folder=lambda _: self.folder,
+            sessions=synthetic_sessions(), composition_retry_available=lambda _: False,
         )
         return projection()(SimpleNamespace(character=character))[0]
 
@@ -162,7 +179,7 @@ class CharacterProjectionTests(unittest.TestCase):
         self.assertIsNone(self.read()["mediaUrl"])
 
     def test_empty_listing_returns_no_invented_job(self):
-        state = SimpleNamespace(character=SimpleNamespace(listing=list))
+        state = SimpleNamespace(character=SimpleNamespace(listing=list, sessions=synthetic_sessions()))
         self.assertEqual(projection()(state), [])
 
 
