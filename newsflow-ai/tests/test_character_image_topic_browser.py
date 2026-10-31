@@ -24,6 +24,9 @@ def test_uploaded_image_and_topic_enable_single_story_without_profile_registrati
         ctx.route('**/api/studio/characters/auto-story',refuse)
         trigger.click()
         expect(page.get_by_role('alert')).to_contain_text('Synthetic stop after explicit button')
+        expect(page.get_by_label('스토리 주제',exact=True)).to_have_value('주어진 이미지의 캐릭터가 우산을 찾아요')
+        expect(page.get_by_role('img',name='선택한 캐릭터 로컬 미리보기',exact=True)).to_be_visible()
+        expect(page.get_by_text('선택한 작업을 찾을 수 없습니다. 작업 이력에서 다른 작업을 선택하세요.',exact=True)).to_have_count(0)
         jobs=app.state.character.listing();assert len(jobs)==1 and jobs[0]['character_reference_mode']=='image_topic'
         assert len(sent)==1 and not any('/analyze' in p or '/profiles/save' in p or '/library' in p for p in posts)
         expect(page.get_by_role('dialog')).to_have_count(0)

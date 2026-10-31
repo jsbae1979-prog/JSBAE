@@ -538,13 +538,15 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     useState<VisibilityTarget | null>(null);
   const [showTrash, setShowTrash] = useState(false);
   const visibilitySending = useRef(false);
+  const createdSelection = useRef<{id:string;view:unknown}|null>(null);
   const allJobs = c.list("jobs"),
     jobs = allJobs.filter((x) => !x.trashed),
     job =
       id === "new"
         ? undefined
         : id ? jobs.find((x) => String(x.id) === id) : jobs[0];
-  const selectionUnavailable = !c.loading && !!c.view && id !== "" && id !== "new" && !job;
+  const selectionUnavailable = !c.loading && !!c.view && id !== "" && id !== "new" && !job &&
+    !(createdSelection.current?.id === id && createdSelection.current.view === c.view);
   const perKey = job?.id ? String(job.id) : "new";
   const per = perOverrides[perKey] ?? (job ? String(job.episode_limit ?? "") : "10");
   function setPer(value: string) {
@@ -738,6 +740,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         return next;
       });
     }
+    createdSelection.current=null;
     setId("new");
     setReferenceJob("");
     setTopic("");
@@ -826,7 +829,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       body,
     });
     const data = await r.json().catch(() => ({}));
-    if (data.id) setId(data.id);
+    if (data.id) {
+      // A creation receipt is authoritative until a subsequent list response arrives.
+      createdSelection.current={id:String(data.id),view:c.view};
+      setId(data.id);
+    }
     if (data.fields) setAdjustments(data.fields);
     if (!r.ok)
       throw Object.assign(new Error(
