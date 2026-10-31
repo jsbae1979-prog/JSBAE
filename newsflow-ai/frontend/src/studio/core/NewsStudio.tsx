@@ -121,6 +121,7 @@ export default function NewsStudio({
                   <small>
                     {x.category} · {x.publisher}
                   </small>
+                  {x.used === true && <span className="core-tag">영상 사용됨</span>}
                   <p>{x.summary}</p>
                 </div>
               </button>

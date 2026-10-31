@@ -1,10 +1,12 @@
-"""Replace visible collections, retain video sources and all historical evidence."""
-from sqlalchemy import select
+"""Replace visible collections: delete unused old articles, hide and keep the ones work refers to."""
+from sqlalchemy import delete, select
 
 from newsflow.db.models import (
+    AutopilotArticleClaim,
     AutopilotArtifact,
     AutopilotJob,
     ContentDraft,
+    ImagePost,
     NewsArticle,
     NewsListState,
     VideoProject,
@@ -38,18 +40,43 @@ def remember_video_sources(session) -> None:
         state.used = True
 
 
+def referenced_article_ids(session) -> set[int]:
+    """Articles that saved work still points at; these are hidden, never deleted."""
+    identifiers = used_article_ids(session)
+    identifiers.update(session.scalars(select(ImagePost.article_id)))
+    identifiers.update(session.scalars(select(AutopilotJob.article_id).where(AutopilotJob.article_id.is_not(None))))
+    identifiers.update(session.scalars(select(AutopilotArticleClaim.article_id)))
+    for sources in session.scalars(select(ContentDraft.sources)):
+        for article in (sources or {}).get("articles", []):
+            identifier = article.get("id", article.get("article_id"))
+            if type(identifier) is int:
+                identifiers.add(identifier)
+    return identifiers
+
+
 def replace_collection(session, identifiers: list[int]) -> None:
     # Empty/failed collections must not erase the last useful list.
     if not identifiers:
         return
     remember_video_sources(session)
     keep = set(identifiers)
+    referenced = referenced_article_ids(session)
+    removable = []
     for identifier in session.scalars(select(NewsArticle.id)):
+        if identifier not in keep and identifier not in referenced:
+            removable.append(identifier)
+            continue
         state = session.get(NewsListState, identifier)
         if state is None:
             state = NewsListState(article_id=identifier, hidden=False, used=False)
             session.add(state)
         state.hidden = identifier not in keep
+    if removable:
+        # Thumbnails, mentions and scores cascade with the article row.
+        session.flush()
+        session.execute(delete(NewsListState).where(NewsListState.article_id.in_(removable)))
+        session.execute(delete(NewsArticle).where(NewsArticle.id.in_(removable)))
+        session.expire_all()
 
 
 def visible_news():
