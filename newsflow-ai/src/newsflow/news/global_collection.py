@@ -8,6 +8,7 @@ from newsflow.db.models import CollectionRun, IntelligenceRun, NewsSource, utcno
 from .serpapi import SOURCE_URL, SerpApiError
 from .serpapi_settings import claim
 from .service import safe_feed_message
+from .collection_workspace import begin_collection
 from .trends import MAX_AGE, parse_trends
 
 GLOBAL_POLICY = "global_trends_v1"
@@ -87,6 +88,7 @@ def collect_global(curator, config: dict, adapter, token: str) -> int:
         session.flush()
         identifier = run.id
         claim(session, token, identifier)
+        begin_collection(session)
     requests, ids, origins = [], [], {}
     added = duplicates = succeeded = 0
     snapshot, collection_id, error = None, None, None

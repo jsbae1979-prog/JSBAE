@@ -24,6 +24,7 @@ from .serpapi_settings import claim
 from .serpapi_settings import settings as serpapi_settings
 from .service import CollectionBusy, safe_feed_message
 from .trends import GOOGLE_NEWS_URL, MAX_AGE, TRENDS_URL, parse_trends
+from .collection_workspace import begin_collection
 
 
 class Curator:
@@ -96,6 +97,7 @@ class Curator:
                         source = NewsSource(name="Google News · 한국", url=GOOGLE_NEWS_URL, enabled=False)
                         session.add(source)
                         session.flush()
+                    begin_collection(session)
                     stored = self.news.store_articles(session, source.id, articles, rss_metadata=True)
                     from .lifecycle import replace_collection
 
@@ -156,6 +158,7 @@ class Curator:
                     session.flush()
                     run_id = run.id
                     claim(session, token, run_id)
+                    begin_collection(session)
                 try:
                     articles, metadata = adapter.search()
                     with self.sessions.begin() as session:

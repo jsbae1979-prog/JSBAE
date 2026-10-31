@@ -104,7 +104,7 @@ def test_empty_collection_does_not_clear_existing(app):
         assert set(session.scalars(select(NewsArticle.id).where(visible_news()))) == set(ids)
 
 
-def test_rss_success_replaces_list_but_failure_keeps_it(app):
+def test_rss_success_replaces_list_but_failure_hides_previous_round_and_keeps_originals(app):
     from newsflow.db.models import CollectionRun
 
     ids = articles(app)
@@ -130,7 +130,8 @@ def test_rss_success_replaces_list_but_failure_keeps_it(app):
     service.collector = Failed()
     service.collect(run_id)
     with app.state.sessions() as session:
-        assert list(session.scalars(select(NewsArticle.id).where(visible_news()))) == result["article_ids"]
+        assert list(session.scalars(select(NewsArticle.id).where(visible_news()))) == []
+        assert all(session.get(NewsArticle, identifier) is not None for identifier in result["article_ids"])
 
 
 def test_video_delete_and_restore_preserve_bytes_and_sources(client, app):
