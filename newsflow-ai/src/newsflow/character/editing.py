@@ -37,8 +37,7 @@ def edit_timeline(story, target_seconds, presets=None):
     from .episode_policy import valid_playback_seconds
     if not valid_playback_seconds(total,target_seconds):
         raise CharacterError('media')
-    if _get(scenes[-1], 'freeze_end') not in {'medium', 'strong'}:
-        raise CharacterError('media')
+    # The final hold rule depends on the job's story format and is checked with the script.
     # A near-boundary script is usable as-is, not an instruction to invent a longer hold.
     output_frames=round(total*30) if total < target_seconds-2 else target_seconds*30
     result, cursor = [], 0

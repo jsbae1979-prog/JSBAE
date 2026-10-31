@@ -14,7 +14,8 @@ import re
 
 from .schema import CharacterError, clean_topic
 from .compose import digest, run
-from .episode_story import EpisodeScript, SCRIPT_INSTRUCTION, script_input, prompts, validate_episode
+from .episode_story import EpisodeScript, script_instruction, script_input, prompts, validate_episode
+from .episode_policy import job_story_format, load_story_format
 from .higgsfield_client import amount, reference_bytes, SceneNotSent
 from newsflow.video.ai.higgsfield import _NotSent
 from .kling import check, snapshot, normalize_reference, generation_reference
@@ -102,6 +103,9 @@ class EpisodeFlow:
                    'duration': chosen['duration'], 'events': [], 'scenes': [], 'reported_billed_usd': None,
                    'made_for_kids': False, 'studio_selection': frozen,
                    'studio_request_id': request_id, 'studio_body_hash': identity}
+            if not direct_video:
+                # Frozen per job, so a later setting change keeps this job's script valid.
+                job['story_format'] = load_story_format()
             if reference_only:job['character_reference_mode']='image_topic'
             if direct_video:
                 job.update(direct_video=True,direct_extension=direct_extension,state='script_review',script=dump(plan),
@@ -118,7 +122,7 @@ class EpisodeFlow:
         if job.get('direct_video'):
             from .direct_video import validate_plan
             return validate_plan(value,job['duration'],model,job['topic'],allow_continuation=job.get('direct_extension',False))
-        return validate_episode(value, job['duration'], model, chosen['sound'] == 'on')
+        return validate_episode(value, job['duration'], model, chosen['sound'] == 'on', job_story_format(job))
 
     def write(self, identifier, *, consent=False, review_token='', review_consent=False):
         s = self.owner
@@ -143,7 +147,7 @@ class EpisodeFlow:
             payload = script_input(job['character'], job['topic'], job['duration'],
                                    CATALOG.model(chosen['video_model']), chosen['sound'] == 'on',
                                    [j['topic'] for j in s.listing() if j.get('character_id') == job['character_id']
-                                    and j['id'] != identifier][:5])
+                                    and j['id'] != identifier][:5], job_story_format(job))
             from .episode_story import bounded_validation_feedback, validation_feedback
             if attempt > 1:
                 payload['validation_feedback'] = bounded_validation_feedback(job.get('script_validation_feedback', [])) or [
@@ -156,7 +160,7 @@ class EpisodeFlow:
                        response_received=False)
             s.save(job)  # An interrupted request cannot be automatically replayed.
             try:
-                candidate = authoring.generate(SCRIPT_INSTRUCTION, payload, EpisodeScript,
+                candidate = authoring.generate(script_instruction(job_story_format(job)), payload, EpisodeScript,
                     Options(model=chosen['script_model'], max_tokens=4000, timeout=300),
                     provider=job['script_provider'], request_id=f'episode:{identifier}:script:{sequence}',
                     consent=True, kind='script', max_reserved_usd=str(remaining), **review_options)
@@ -208,7 +212,7 @@ class EpisodeFlow:
             job.pop('script_validation_feedback', None)
             job.pop('script_failure', None)
             try:
-                job['prompts'] = prompts(story, chosen, job['character'])
+                job['prompts'] = prompts(story, chosen, job['character'], job_story_format(job))
                 job.pop('prompt_validation_error', None)
             except CharacterError:
                 # Preserve the paid, valid script and reservation for a local edit.
@@ -242,7 +246,8 @@ class EpisodeFlow:
             story = self.validate(job, script)
             if job.get('scenes'):
                 job.setdefault('quote_history', []).append({'scenes': deepcopy(job['scenes']), 'at': now().isoformat()})
-            job.update(script=dump(story), prompts=prompts(story, check(job['studio_selection']), job['character']),
+            job.update(script=dump(story),
+                       prompts=prompts(story, check(job['studio_selection']), job['character'], job_story_format(job)),
                        scenes=[], state='script_review')
             job.pop('prompt_validation_error', None)
             for key in ('script_approval', 'quote_hash', 'quote_total_usd', 'quoted_at', 'quote_key_id'):
@@ -265,7 +270,7 @@ class EpisodeFlow:
             if job.get('direct_video'):
                 from .direct_video import prompts as direct_prompts
                 planned=direct_prompts(story,chosen,job['character'])
-            else:planned = prompts(story, chosen, job['character'])
+            else:planned = prompts(story, chosen, job['character'], job_story_format(job))
             folder = s.folder(identifier)
             if digest(folder / 'reference.png') != job['reference_sha256']:
                 raise CharacterError('reference')
@@ -524,7 +529,8 @@ class EpisodeFlow:
                 ('scenes', 'quote_hash', 'quote_total_usd', 'quoted_at') if k in job})
             job.update(studio_selection=frozen, model=settings['video_model'], episode_limit=str(amount(episode_limit)),
                        script=dump(story), script_hash=fp(dump(story)),
-                       prompts=prompts(story, settings, job['character']), state='script_review', scenes=[])
+                       prompts=prompts(story, settings, job['character'], job_story_format(job)),
+                       state='script_review', scenes=[])
             for key in ('script_approval', 'quote_hash', 'quote_total_usd', 'quoted_at', 'quote_key_id'):
                 job.pop(key, None)
             job['plan_hash'] = s.plan_hash(job)

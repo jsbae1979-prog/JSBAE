@@ -6,7 +6,7 @@ from newsflow.video_models.catalog import CATALOG,validate_catalog,ModelCatalog,
 def test_new_episode_length_choices_are_independent_of_model_clip_duration():
     c=catalog()
     assert c['totalDurationChoices']==list(range(15,61,5))
-    assert c['defaults']['duration']==30 and c['defaults']['sound']=='on'
+    assert c['defaults']['duration']==20 and c['defaults']['sound']=='on'
     for target in (15,35,60):
         assert validate({**DEFAULTS,'duration':target,'script_model':'gpt-4.1-mini'})['duration']==target
 

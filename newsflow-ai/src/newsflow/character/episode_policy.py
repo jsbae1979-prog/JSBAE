@@ -46,6 +46,29 @@ def load_edit_presets(path=None):
     return value
 
 
+STORY_FORMAT_KEYS = ('hook_first', 'loop_ending', 'short_scenes')
+# Jobs created before the format setting existed keep their original rules.
+LEGACY_STORY_FORMAT = {'schema_version': 1, **{key: False for key in STORY_FORMAT_KEYS}}
+
+
+def check_story_format(value):
+    if (not isinstance(value, dict) or set(value) != {'schema_version', *STORY_FORMAT_KEYS}
+            or value['schema_version'] != 1 or any(type(value[key]) is not bool for key in STORY_FORMAT_KEYS)):
+        raise CharacterError('media')
+    return dict(value)
+
+
+def load_story_format(path=None):
+    """Shorts story rules for new episodes; each job keeps the copy taken at creation."""
+    return check_story_format(load_document(Path(path or CONFIG / 'character_story.yaml')))
+
+
+def job_story_format(job):
+    """None for jobs created before story formats; they keep every original rule."""
+    value = job.get('story_format') if isinstance(job, dict) else None
+    return None if value is None else check_story_format(value)
+
+
 def load_sfx_map(path=None):
     """Return only original, bounded oscillator recipes, never arbitrary paths."""
     value = load_document(Path(path or CONFIG / 'sfx_map.yaml'))
