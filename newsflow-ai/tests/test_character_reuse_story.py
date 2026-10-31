@@ -52,7 +52,7 @@ def test_copy_reuses_saved_korean_story_and_png_without_claude_or_original_chang
     assert copied['reused_story']['source_job_id']==source
     assert copied['reused_story']['dialogue_source']=='story_inferred_audio'
     assert all('Scene context (unspoken):' in row['prompt'] for row in copied['prompts'])
-    assert all('Infer natural Korean in-scene sound and character dialogue as the story needs' in row['prompt'] for row in copied['prompts'])
+    assert all('Ambient sound effects only:' in row['prompt'] and 'No dialogue, no voices, no music.' in row['prompt'] for row in copied['prompts'])
     assert copied['reused_story']['source_plan_hash']==original['plan_hash']
     assert studio.writer.calls==0 and provider.calls==0 and provider.uploads==0
     assert sum((day_exposure(row,'2026-10-29') for row in s.listing()),Decimal(0))==Decimal('1.260')
@@ -142,7 +142,7 @@ def test_default_reuse_clears_stored_narration_and_preserves_whole_story(studio,
     assert files(s,source)==original and studio.writer.calls==0 and provider.calls==0
 
 
-def test_legacy_explicit_dialogue_remains_in_its_corresponding_scene_payload(studio):
+def test_legacy_explicit_dialogue_is_preserved_in_copy_but_not_spoken_by_new_scene_payload(studio):
     s=studio.service
     source,settings,_=source_job(studio)
     original=files(s,source)
@@ -154,17 +154,12 @@ def test_legacy_explicit_dialogue_remains_in_its_corresponding_scene_payload(stu
     quoted=s.read(identifier)
     assert len(quoted['scenes'])==5 and all(row['payload']['sound']=='on' for row in quoted['scenes'])
     prompt='\n'.join(row['payload']['prompt'] for row in quoted['scenes'])
-    assert 'Speaker/acting direction (unspoken): 동료.' in prompt
-    assert 'Speaker/acting direction (unspoken): 주인공.' in prompt
-    assert 'In-character Korean dialogue: "잠깐, 같이 가요."' in prompt
-    assert 'In-character Korean dialogue: "정말요?"' in prompt
-    assert 'In-character Korean dialogue: "그럼 출발해요."' in prompt
-    assert '"동료:' not in prompt and '"(주인공)' not in prompt
+    assert 'In-character Korean dialogue:' not in prompt and 'Speaker/acting direction' not in prompt
+    assert not any(line in prompt for line in ('잠깐, 같이 가요.', '정말요?', '그럼 출발해요.'))
     assert 'Scene context (unspoken):' in prompt
-    assert 'No voiceover or narrator.' in prompt
-    assert 'speaker labels and parenthesized acting cues are unspoken direction.' in prompt
-    assert 'Never read scene descriptions, captions, titles or timing markers aloud.' in prompt
-    assert prompt.count('Infer natural Korean in-scene sound and character dialogue as the story needs')==2
+    assert 'No dialogue, no voices, no music.' in prompt
+    assert all('Ambient sound effects only:' in row['payload']['prompt']
+               and 'No dialogue, no voices, no music.' in row['payload']['prompt'] for row in quoted['scenes'])
     assert files(s,source)==original and studio.writer.calls==0
     assert all(client.calls==0 for client in studio.clients.values())
 

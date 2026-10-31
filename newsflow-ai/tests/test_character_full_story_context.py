@@ -46,8 +46,9 @@ def test_each_clip_continues_one_setup_and_prior_action_without_replaying_all_be
         assert source['character']['appearance'] in prompt and source['character']['style_lock'] in prompt
         assert f"Now shot {row['position']}/5, 6 seconds only." in prompt
         assert "ONE 30-second film" in prompt and "No recasting, location reset or time jump" in prompt
-        assert 'No voiceover or narrator.' in prompt and 'no text, no logos' in prompt
-        assert 'Infer natural Korean in-scene sound' in prompt
+        assert 'No dialogue, no voices, no music.' in prompt and 'no text, no logos' in prompt
+        assert 'Ambient sound effects only:' in prompt and 'No dialogue, no voices, no music.' in prompt
+        assert 'Infer natural Korean in-scene sound' not in prompt
         assert 'ordered_story' not in prompt and 'Full story context' not in prompt
         assert prompt.endswith(source['prompts'][row['position']-1]['prompt'])
         assert len(prompt)<=VIDEO_PROMPT_LIMIT

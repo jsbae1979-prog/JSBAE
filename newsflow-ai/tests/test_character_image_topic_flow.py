@@ -33,7 +33,7 @@ def test_image_topic_creates_draft_without_registration_or_analysis_and_keeps_ex
     quoted=c.service.read(identifier)
     assert quoted['state']=='quoted' and len(quoted['scenes'])==len(quoted['script']['scenes'])
     assert c.video.uploads and not c.video.sent
-    assert all('no dialogue, no voices, no music' in row['prompt'] for row in quoted['scenes'])
+    assert all('no dialogue, no voices, no music' in row['prompt'].lower() for row in quoted['scenes'])
 
 def test_registered_profile_path_is_preserved_and_references_cannot_be_mixed(connected):
     c=connected;before=deepcopy(c.service.read(c.identifier))

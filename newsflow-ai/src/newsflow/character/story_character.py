@@ -18,7 +18,7 @@ def story_character(profile):
         # Named supporting roles only; visual traits stay in the video stage.
         result['supporting_cast']=[{key:deepcopy(row[key]) for key in ('id','name','role','personality') if key in row}
                                   if isinstance(row,dict) else deepcopy(row) for row in cast]
-    return deepcopy(result)
+    return deepcopy(result) if any(result.values()) else {}
 
 
 ROLE_DIRECTIONS={

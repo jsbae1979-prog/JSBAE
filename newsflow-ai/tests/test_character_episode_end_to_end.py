@@ -117,7 +117,7 @@ def test_registered_characters_and_generated_topics_reach_final_mp4(tmp_path, ta
     for payload, _ in video.sent:
         assert selected_profile['appearance'] in payload['prompt']
         assert other['appearance'] not in payload['prompt']
-        assert 'no dialogue, no voices, no music' in payload['prompt']
+        assert 'no dialogue, no voices, no music' in payload['prompt'].lower()
         assert 'lip sync' not in payload['prompt'] and 'Korean' not in payload['prompt']
     output = service.render(identifier, reviewed=True)
     final = service.read(identifier)
