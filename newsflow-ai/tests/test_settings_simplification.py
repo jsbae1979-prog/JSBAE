@@ -166,7 +166,8 @@ def test_key_entry_is_direct_and_cost_approvals_are_not_prechecked_or_hidden_in_
         control = next(node for node in dom.find("input", name=name) if cost_form in node.ancestors)
         assert "checked" not in control.attrs
         assert not any(parent.tag == "details" for parent in control.ancestors)
-    assert dom.find("input", name="monthly_limit_usd")
+    assert dom.find("input", name="request_limit_usd")
+    assert not dom.find("input", name="monthly_limit_usd")
     assert not dom.find("input", name="billing_confirmed")
     assert not dom.find("input", name="account_remaining_usd")
 

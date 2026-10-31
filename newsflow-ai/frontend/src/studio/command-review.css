@@ -1,0 +1,22 @@
+/* Only the compact quote/RSS/key-registration dialogs. */
+.command-dialog.command-dialog--compact label.check-field {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 9px;
+  line-height: 1.6;
+}
+.command-dialog.command-dialog--compact label.check-field input[type="checkbox"] {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin: 3px 0 0;
+  padding: 0;
+}
+.command-dialog.command-dialog--compact .check-field.approval {
+  background: rgba(82, 74, 185, .14);
+  border-color: #384b78;
+}
+.command-dialog.command-dialog--compact .form-field { grid-column: 1 / -1; }
+.command-dialog.command-dialog--compact .property-list dd { overflow-wrap: anywhere; }

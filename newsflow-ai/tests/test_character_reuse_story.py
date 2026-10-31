@@ -52,7 +52,7 @@ def test_copy_reuses_saved_korean_story_and_png_without_claude_or_original_chang
     assert copied['reused_story']['source_job_id']==source
     assert copied['reused_story']['dialogue_source']=='story_inferred_audio'
     assert all('Scene context (unspoken):' in row['prompt'] for row in copied['prompts'])
-    assert all('Infer natural Korean in-scene sound and character dialogue as the story needs' in row['prompt'] for row in copied['prompts'])
+    assert all('Ambient sound effects only:' in row['prompt'] and 'No dialogue, no voices, no music.' in row['prompt'] for row in copied['prompts'])
     assert copied['reused_story']['source_plan_hash']==original['plan_hash']
     assert studio.writer.calls==0 and provider.calls==0 and provider.uploads==0
     assert sum((day_exposure(row,'2026-10-29') for row in s.listing()),Decimal(0))==Decimal('1.260')
@@ -130,15 +130,19 @@ def test_default_reuse_clears_stored_narration_and_preserves_whole_story(studio,
     assert spoken==['']*5
     assert [scene['action'] for scene in copied['script']['scenes']]==[scene['action'] for scene in job['script']['scenes']]
     s.prepare(identifier,consent=True,script_reviewed=True)
-    payload=s.read(identifier)['scenes'][0]['payload']
-    assert payload['duration']==15 and payload['sound']=='on'
-    assert all(scene['action'] in payload['prompt'] for scene in job['script']['scenes'])
-    assert 'choose the pacing, camera and acting' in payload['prompt']
-    assert '0-3 seconds:' not in payload['prompt'] and 'No spoken dialogue in this beat.' not in payload['prompt']
+    scenes=s.read(identifier)['scenes']
+    assert len(scenes)==5 and sum(row['payload']['duration'] for row in scenes)==15
+    for index,(row,scene) in enumerate(zip(scenes,job['script']['scenes']),1):
+        payload=row['payload']
+        assert payload['duration']==3 and payload['sound']=='on'
+        assert scene['action'] in payload['prompt']
+        assert 'ONE 15-second film in 5 consecutive shots.' in payload['prompt']
+        assert f'Now shot {index}/5, 3 seconds only.' in payload['prompt']
+        assert 'No spoken dialogue in this beat.' not in payload['prompt']
     assert files(s,source)==original and studio.writer.calls==0 and provider.calls==0
 
 
-def test_optional_explicit_dialogue_remains_compatible_with_single_video_payload(studio):
+def test_legacy_explicit_dialogue_is_preserved_in_copy_but_not_spoken_by_new_scene_payload(studio):
     s=studio.service
     source,settings,_=source_job(studio)
     original=files(s,source)
@@ -148,19 +152,14 @@ def test_optional_explicit_dialogue_remains_compatible_with_single_video_payload
     assert [scene['narration'] for scene in copied['script']['scenes']]==spoken
     s.prepare(identifier,consent=True,script_reviewed=True)
     quoted=s.read(identifier)
-    assert len(quoted['scenes'])==1 and quoted['scenes'][0]['payload']['sound']=='on'
-    prompt=quoted['scenes'][0]['payload']['prompt']
-    assert 'Speaker/acting direction (unspoken): 동료.' in prompt
-    assert 'Speaker/acting direction (unspoken): 주인공.' in prompt
-    assert 'In-character Korean dialogue: "잠깐, 같이 가요."' in prompt
-    assert 'In-character Korean dialogue: "정말요?"' in prompt
-    assert 'In-character Korean dialogue: "그럼 출발해요."' in prompt
-    assert '"동료:' not in prompt and '"(주인공)' not in prompt
+    assert len(quoted['scenes'])==5 and all(row['payload']['sound']=='on' for row in quoted['scenes'])
+    prompt='\n'.join(row['payload']['prompt'] for row in quoted['scenes'])
+    assert 'In-character Korean dialogue:' not in prompt and 'Speaker/acting direction' not in prompt
+    assert not any(line in prompt for line in ('잠깐, 같이 가요.', '정말요?', '그럼 출발해요.'))
     assert 'Scene context (unspoken):' in prompt
-    assert 'No voiceover or narrator.' in prompt
-    assert 'speaker labels and parenthesized acting cues are unspoken direction.' in prompt
-    assert 'Story labels and context are unspoken direction.' in prompt
-    assert prompt.count('Infer natural Korean in-scene sound and character dialogue as the story needs')==2
+    assert 'No dialogue, no voices, no music.' in prompt
+    assert all('Ambient sound effects only:' in row['payload']['prompt']
+               and 'No dialogue, no voices, no music.' in row['payload']['prompt'] for row in quoted['scenes'])
     assert files(s,source)==original and studio.writer.calls==0
     assert all(client.calls==0 for client in studio.clients.values())
 
@@ -292,8 +291,8 @@ def test_runtime_source_hook_uses_only_existing_fixed_hash_pinned_policy_loader(
 
 
 
-@pytest.mark.parametrize(('quote','approved_total','raised_daily'),[('1.890','4.50',True),('1.000','3',False)])
-def test_real_daily_limit_values_need_scoped_overlay_and_keep_original_quote(studio,monkeypatch,quote,approved_total,raised_daily):
+@pytest.mark.parametrize('approved_total',['4.50','3'])
+def test_historical_single_video_trial_rejects_new_five_clip_scope_without_expanding_approval(studio,monkeypatch,approved_total):
     from datetime import UTC,datetime,timedelta
     from newsflow.character.service import now
     from bat_distribution import character_trial as trial_module
@@ -307,7 +306,8 @@ def test_real_daily_limit_values_need_scoped_overlay_and_keep_original_quote(stu
     identifier,_=s.reuse_story(source,settings,'2.50','2.50',request_id=uuid4().hex,consent=True)
     job=s.read(identifier)
     provider=s.video_for(job)
-    provider.estimate=lambda payload:quote
+    estimates=[]
+    provider.estimate=lambda payload:(estimates.append(payload) or '0.10')
     profile=s.root.parent
     parent=profile/'character-trials';parent.mkdir()
     prior_ids=['6'*32,'7'*32]
@@ -330,37 +330,35 @@ def test_real_daily_limit_values_need_scoped_overlay_and_keep_original_quote(stu
     upgraded={**policy,'total_limit_usd':approved_total,'allow_submit':True}
     def private(path):path.mkdir(exist_ok=True);return path
     monkeypatch.setattr(trial_module,'_private',private)
-    original_submit=s.submit
     class NoNative:
         def unprotect(self,*args):raise AssertionError('No real key in this synthetic test')
     trial=trial_module.install(SimpleNamespace(state=SimpleNamespace(character=s)),profile,policy,NoNative,
                                policy_loader=lambda:upgraded)
     prepare=trial_module._CONTEXT.set(SimpleNamespace(trial=trial,action='prepare',job_id=identifier))
-    try:s.prepare(identifier,consent=True,script_reviewed=True)
+    # This historical approval is for one 15-second supplier request, not the
+    # current five 3-second clips. Keep the old scope frozen, even after a fresh
+    # spending overlay; do not broaden the trial just to satisfy a legacy test.
+    try:
+        with pytest.raises(CharacterError) as denied:
+            s.prepare(identifier,consent=True,script_reviewed=True)
+        assert denied.value.code=='blocked'
     finally:trial_module._CONTEXT.reset(prepare)
-    quoted=s.read(identifier)
-    assert quoted['quote_total_usd']==quote and quoted['day_limit']=='2.50'
-    quote_hash,plan_hash=quoted['quote_hash'],quoted['plan_hash']
+    result=s.read(identifier)
+    assert result['state']=='prepare_failed' and result['scenes']==[]
+    assert result['day_limit']=='2.50' and result['plan_hash']==job['plan_hash']
+    assert result.get('quote_hash') is None and result.get('quote_approvals',[])==[]
+    assert provider.calls==0 and estimates==[] and provider.uploads==1
+    with trial.journal(readonly=True) as journal:
+        assert journal['calls']=={'prepare':1}
+        assert journal['outcomes']=={'prepare':'failed_or_unknown'}
+        assert journal['native_calls']=={'upload':1}
+        assert journal['video']['state']=='unspent'
+        assert 'submit_approval' not in journal
     context=trial_module._CONTEXT.set(SimpleNamespace(trial=trial,action='submit',job_id=identifier))
     try:
-        # Exact reported defect: 1.260 + 1.890 = 3.150 > saved day_limit 2.50.
-        if raised_daily:
-            with pytest.raises(CharacterError):original_submit(identifier,consent=True,quote_hash=quote_hash)
-            assert provider.calls==0 and s.read(identifier)['state']=='quoted'
-        # The explicit fresh 4.50 overlay is journaled by the trial before this
-        # unchanged quote reaches the optional server-owned daily approval hook.
-        s.submit(identifier,consent=True,quote_hash=quote_hash)
-        with pytest.raises(CharacterError):s.submit(identifier,consent=True,quote_hash=quote_hash)
+        with pytest.raises(CharacterError):s.submit(identifier,consent=True,quote_hash='')
     finally:trial_module._CONTEXT.reset(context)
-    result=s.read(identifier)
-    assert provider.calls==1 and result['state']=='generating'
-    assert result['day_limit']=='2.50' and result['quote_hash']==quote_hash and result['plan_hash']==plan_hash
-    if raised_daily:
-        receipt=result['quote_approvals'][0]['daily_limit_approval']
-        assert receipt['limit_usd']=='4.50' and receipt['policy_sha256']==trial_module._hash(upgraded)
-        assert receipt['base_policy_sha256']==trial.policy_hash and receipt['trial_id']==policy['id']
-    else:
-        assert 'daily_limit_approval' not in result['quote_approvals'][0]
+    assert provider.calls==0 and s.read(identifier)==result
     assert trial.prior_exposure()==Decimal('1.760')
     assert files(s,source)==old_files
     assert all(path.read_bytes()==data and path.stat().st_mtime_ns==mtime for path,(data,mtime) in old_journals.items())
@@ -489,14 +487,16 @@ def test_settings_refresh_refuses_paid_reserved_submitted_and_unknown_records(st
     job=deepcopy(base);job['scenes'][0].update(state='submitted',handle={'request_id':'synthetic'})
     s.save(job);before=files(s,identifier)
     with pytest.raises(CharacterError):s.update_studio_settings(identifier,check(job['studio_selection']),'10','20')
-    assert files(s,identifier)==before and provider.calls==0 and len(estimates)==1
+    assert files(s,identifier)==before and provider.calls==0 and len(estimates)==5
 
 
 def test_normal_operating_quote_projection_hides_trial_caps_without_changing_trial(studio):
     from newsflow.studio.read_models import module_view
     trial=SimpleNamespace(policy={'total_limit_usd':'4.50','sound':'on','expires_at':'2026-10-29T23:59:59+00:00'})
     s=studio.service;s._approved_character_trial=trial
-    state=SimpleNamespace(character=s,sessions=s.sessions,video=SimpleNamespace())
+    from newsflow.creation.image_studio import ImageStudio
+    state=SimpleNamespace(character=s,sessions=s.sessions,video=SimpleNamespace(),
+        config=SimpleNamespace(data_dir=s.root.parent),image_studio=ImageStudio(s.sessions,s.root.parent,None))
     request=SimpleNamespace(app=SimpleNamespace(state=state),state=SimpleNamespace())
     before=module_view(request,'characters')
     assert before['catalog']['characterStudio']['liveTrial']['enabled']

@@ -1,0 +1,183 @@
+{
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "sourceSha": "7eed8ba96189207dd8aa6556cb55345cf0fa48fd",
+  "tests": {
+    "distinctPass": 11,
+    "newPass": 9,
+    "affectedExistingPass": 2,
+    "finalFail": 0,
+    "finalError": 0,
+    "finalSkip": 0,
+    "initialTestSelectorFailures": 1,
+    "testSelectorCorrectionOnly": true,
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "diffCheck": "PASS"
+  },
+  "runs": [
+    {
+      "source": "library-visibility-projections.xml",
+      "results": [
+        {
+          "test": "tests.test_library_visibility_projections::test_publishing_candidates_only_complete_media_but_history_is_preserved",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_visibility_projections::test_performance_only_confirmed_publication_costs_and_hidden_history_retained",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_visibility_projections::test_approval_simulated_unknown_or_incomplete_receipt_never_claims_publication",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_visibility_projections::test_instagram_image_published_receipt_is_independent_of_library_visibility",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_visibility::test_all_types_hide_active_workspace_restore_and_preserve_every_original",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "source": "library-receipt-account.xml",
+      "results": [
+        {
+          "test": "tests.test_library_visibility_projections::test_published_receipt_account_survives_draft_edit_but_invalid_accounts_are_rejected",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "source": "feedback-projection-browser.xml",
+      "results": [
+        {
+          "test": "tests.test_character_story_feedback_browser::test_persisted_preflight_message_appears_once_after_request_and_refresh",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_character_story_feedback_browser::test_generic_request_error_remains_visible_once_and_new_story_keeps_reference",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_projection_browser::test_library_remove_restore_updates_creation_and_completed_publish_candidates_in_same_spa",
+          "status": "PASS"
+        },
+        {
+          "test": "tests.test_library_projection_browser::test_analytics_uses_confirmed_publication_only_and_keeps_all_cost_records",
+          "status": "FAIL"
+        },
+        {
+          "test": "tests.test_character_selected_reference_browser::test_saved_job_to_new_story_keeps_profile_image_and_never_mixes_characters[failed_story]",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "source": "analytics-projection-recheck.xml",
+      "results": [
+        {
+          "test": "tests.test_library_projection_browser::test_analytics_uses_confirmed_publication_only_and_keeps_all_cost_records",
+          "status": "PASS"
+        }
+      ]
+    }
+  ],
+  "scope": {
+    "externalProviderCalls": 0,
+    "snsCalls": 0,
+    "operatingMutations": 0,
+    "operatingRestarts": 0,
+    "operatingDeletionTests": 0,
+    "schemaMigrationAdded": false,
+    "fakeAndSyntheticOnly": true,
+    "phase": "DEVELOPMENT_AND_SYNTHETIC_VERIFICATION_BEFORE_APPROVED_DEPLOYMENT"
+  },
+  "application": {
+    "status": "APPLIED_AFTER_USER_APPROVAL",
+    "stagedFiles": [
+      {
+        "path": "app/product/newsflow/gui/studio_v3.py",
+        "before": "e289022bb04417ac193a40e746c55d666d0d32fd0eb72a46bdb2564249ff62eb",
+        "sha256": "1eedd54abda7490656e4b372c9a55095e4647cdb9b8275b0a7f60b79ef35f802",
+        "bytes": 13189
+      },
+      {
+        "path": "app/product/newsflow/studio/read_models.py",
+        "before": "ae3289cafb30ff72429a0029e6d86d4943c4d85da882bc1e52d2a68aa06601af",
+        "sha256": "1a4804dd0ee24954847ef95473cf31fe093a523afdef752ed86c1ccdd2d75518",
+        "bytes": 41566
+      },
+      {
+        "path": "app/frontend/dist/assets/index-CFqGb_2-.js",
+        "before": null,
+        "sha256": "86d12b5292a49f46497d65427fba5adefe273910140b8e52d1cfa8f44adf00e4",
+        "bytes": 608182
+      },
+      {
+        "path": "app/frontend/dist/index.html",
+        "before": "d70a49ed2d4e22e1ecf091f141196e8c4b80f533c65008cbeea26f71f8238c3f",
+        "sha256": "c25fb8eb9c0babe032878bc3e41092e75d184be7b4dcca6b3157555a2aae751f",
+        "bytes": 418
+      }
+    ],
+    "operatingChanged": true,
+    "backupFiles": 128,
+    "result": {
+      "head": "7eed8ba96189207dd8aa6556cb55345cf0fa48fd",
+      "port": 18768,
+      "pid": 30204,
+      "normalStopExit": 0,
+      "stopAttempts": 1,
+      "startAttempts": 1,
+      "tablesUnchanged": 47,
+      "articles": 169,
+      "profileFilesPreserved": 127,
+      "originalAndABPreserved": true,
+      "chromeOpenAccepted": true,
+      "securityFlagsPreserved": true,
+      "paidCallsDuringDeployment": 0,
+      "snsCalls": 0
+    },
+    "readiness": {
+      "pid": 30204,
+      "unauthenticatedHttpStatus": 403,
+      "authenticationRequired": true
+    },
+    "productionChrome": "ASSISTANT_READ_ONLY_GUI_VERIFIED",
+    "actualOperatingDeletionTested": false,
+    "readOnlyGuiVerification": {
+      "method": "CONNECTED_CHROME_EXTENSION_EXISTING_USER_TAB",
+      "observer": "ASSISTANT",
+      "userPersonalConfirmation": "NOT_RECORDED",
+      "newTestRuns": 0,
+      "libraryActive": 2,
+      "libraryScriptReady": 1,
+      "libraryCompleted": 1,
+      "libraryTrash": 26,
+      "creationActive": 2,
+      "publishingCandidates": 1,
+      "publishingDraftExcluded": true,
+      "publishedPerformanceContent": 0,
+      "publishedEmptyStateShown": true,
+      "costUsageAndRequestRecordsVisible": true,
+      "existingCharacterJobOpens": true,
+      "referenceAndTopicMatch": true,
+      "storyConnectionMessageCount": 1,
+      "storyConnectionMessageBelowGenerateButton": true,
+      "duplicateBottomStoryMessage": false,
+      "additionalRestarts": 0,
+      "deleteActions": 0,
+      "restoreActions": 0,
+      "externalProviderCalls": 0,
+      "paidGenerationCalls": 0,
+      "snsCalls": 0,
+      "sensitiveContentSavedOrUploaded": false,
+      "providerPermissionsVerified": false,
+      "paidProductionVerified": false
+    },
+    "scopeVerdict": "ACCEPTED_DISPLAY_FIX_ONLY",
+    "remainingSeparateWork": ["CLAUDE_CONNECTION_VERIFICATION", "PAID_PRODUCTION_AND_PROVIDER_PERMISSIONS"]
+  }
+}

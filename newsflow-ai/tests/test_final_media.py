@@ -61,7 +61,7 @@ def test_four_combinations_local_mp4(full,monkeypatch,ai,voice,duration,tmp_path
     else:
         full.app.state.video.tts=LocalFakeVoice(seconds)
     if ai:
-        full.service.confirm_generation(plan,rev(full,plan),'',True)
+        full.service.confirm_generation(plan,rev(full,plan),full.service.estimate(plan)['total'],True)
         for _ in range(10):
             full.service.tick()
             if all(s.status=='ready' for s in rows(full,plan)): break

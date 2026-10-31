@@ -127,8 +127,9 @@ def test_decorative_icons_preserve_button_name_and_required_consent(page, app):
     button = page.get_by_role('button', name='주제·원본 저장', exact=True)
     expect(button).to_be_visible()
     expect(button.locator('svg')).to_have_attribute('aria-hidden', 'true')
-    assert page.locator('.character-form input[required]').count() == 3
-    assert set(page.locator('.character-form input[required]').evaluate_all('(nodes)=>nodes.map(n=>n.name)')) == {'topic','episode_limit','day_limit'}
+    assert page.locator('.character-form input[required]').count() == 2
+    assert set(page.locator('.character-form input[required]').evaluate_all('(nodes)=>nodes.map(n=>n.name)')) == {'topic','episode_limit'}
+    expect(page.locator('.character-form [name=day_limit]')).to_have_count(0)
     expect(page.locator('.character-form [name=reference_asset]')).to_have_count(1)
     assert page.locator('.character-form [name=reference]').get_attribute('accept') == 'image/png'
     assert page.locator('.character-form [name=csrf_token]').input_value()

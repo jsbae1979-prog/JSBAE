@@ -1,0 +1,327 @@
+{
+  "base": "5a2c17d5565dc84d250e92dc8f32295a84e7f122",
+  "tested_source": "c7a8d824a742e636d40ce062327edbda42be2e38",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "commits": [
+    {
+      "sha": "ea433102001a697d967c91775d760faea7e639c4",
+      "title": "docs(character): import automation spec and record implementation differences",
+      "files": [
+        "newsflow-ai/docs/character_shorts/CHARACTER_SHORTS_CHANGE_SPEC.md",
+        "newsflow-ai/docs/character_shorts/IMPLEMENTATION_REVIEW.md"
+      ]
+    },
+    {
+      "sha": "b58ae27fa496f5f3900cafd1e34fcca74303e6fd",
+      "title": "feat(character): persist editable multi-character profiles with revision protection",
+      "files": [
+        "newsflow-ai/src/newsflow/character/registry.py",
+        "newsflow-ai/tests/test_character_registry_v3.py"
+      ]
+    },
+    {
+      "sha": "113af6135de92b3dafd4ec4571ab0438ad48f5e0",
+      "title": "feat(character): add budgeted topic and image authoring with Claude or OpenAI",
+      "files": [
+        "newsflow-ai/src/newsflow/character/authoring.py",
+        "newsflow-ai/src/newsflow/character/topics.py",
+        "newsflow-ai/tests/test_character_authoring_v3.py",
+        "newsflow-ai/tests/test_character_topics_v3.py"
+      ]
+    },
+    {
+      "sha": "2ec30ac85d9269a6b058deb3e1b3d6da89772b2b",
+      "title": "feat(character): validate versioned silent-comedy scripts and editing intensity",
+      "files": [
+        "newsflow-ai/src/newsflow/character/episode_policy.py",
+        "newsflow-ai/src/newsflow/character/episode_story.py",
+        "newsflow-ai/src/newsflow/config/edit_presets.yaml",
+        "newsflow-ai/src/newsflow/config/sfx_map.yaml",
+        "newsflow-ai/tests/test_character_episode_schema.py"
+      ]
+    },
+    {
+      "sha": "0df8822e2a46df33e2cff5d39bab1a7f6cb07f29",
+      "title": "feat(character): decouple episode length and map catalog model capabilities",
+      "files": [
+        "newsflow-ai/src/newsflow/character/kling.py",
+        "newsflow-ai/src/newsflow/config/character_studio.yaml",
+        "newsflow-ai/src/newsflow/config/video_models.yaml",
+        "newsflow-ai/src/newsflow/video_models/catalog.py",
+        "newsflow-ai/tests/test_character_episode_catalog.py"
+      ]
+    },
+    {
+      "sha": "2539fa410c0cf33a789dfa2c2bb3bb281c99e165",
+      "title": "feat(character): orchestrate dependent clips with owned frames and explicit regeneration",
+      "files": [
+        "newsflow-ai/src/newsflow/character/episode_regeneration.py",
+        "newsflow-ai/src/newsflow/character/episode_service.py",
+        "newsflow-ai/src/newsflow/character/service.py",
+        "newsflow-ai/tests/test_character_episode_automation.py",
+        "newsflow-ai/tests/test_character_episode_recovery.py",
+        "newsflow-ai/tests/test_character_episode_regeneration.py"
+      ]
+    },
+    {
+      "sha": "96b9d2eb7670848eaabf10c8c256f9787b02af6c",
+      "title": "feat(character): connect profile topic and provider selection to the React studio",
+      "files": [
+        "newsflow-ai/frontend/src/studio/core/CharacterAutomation.tsx",
+        "newsflow-ai/frontend/src/studio/core/CharacterStudio.tsx",
+        "newsflow-ai/frontend/src/studio/core/character-studio.css",
+        "newsflow-ai/frontend/src/studio/core/videoModelSettings.ts",
+        "newsflow-ai/src/newsflow/gui/character_automation_routes.py",
+        "newsflow-ai/src/newsflow/gui/character_routes.py",
+        "newsflow-ai/src/newsflow/studio/read_models.py",
+        "newsflow-ai/tests/character_budget_override.test.mjs",
+        "newsflow-ai/tests/character_story_requests.test.mjs",
+        "newsflow-ai/tests/test_character_automation_browser.py",
+        "newsflow-ai/tests/test_character_automation_routes.py",
+        "newsflow-ai/tests/test_character_kling_studio.py"
+      ]
+    },
+    {
+      "sha": "92156216160f47933b91689213b302c5b7566466",
+      "title": "feat(character): compose timed comedy edits and original local sound effects",
+      "files": [
+        "newsflow-ai/pyproject.toml",
+        "newsflow-ai/src/newsflow/character/assets/SFX_PROVENANCE.md",
+        "newsflow-ai/src/newsflow/character/compose_studio.py",
+        "newsflow-ai/src/newsflow/character/editing.py",
+        "newsflow-ai/tests/test_character_episode_editing.py",
+        "newsflow-ai/tests/test_character_episode_end_to_end.py"
+      ]
+    },
+    {
+      "sha": "068526e7c0a2d3f5037e71a3c048e2e3a6e6e84e",
+      "title": "feat(character): gate episode queues and preserve per-request cost exposure",
+      "files": [
+        "newsflow-ai/src/newsflow/character/authoring.py",
+        "newsflow-ai/src/newsflow/character/queue.py",
+        "newsflow-ai/src/newsflow/character/topics.py",
+        "newsflow-ai/tests/test_character_authoring_v3.py",
+        "newsflow-ai/tests/test_character_episode_queue.py"
+      ]
+    },
+    {
+      "sha": "b28296603048aa6902d194c8fb236d8d384eb5f3",
+      "title": "refactor(character): retire fixed clip routing while preserving legacy boundaries",
+      "files": [
+        "newsflow-ai/tools/bat_distribution/operation.py",
+        "newsflow-ai/tools/bat_distribution/tests/test_operation_character_endpoints.py"
+      ]
+    },
+    {
+      "sha": "22c38f7bbcb3d8d640201de611b57623d542a9b5",
+      "title": "fix(character): preserve profile timing and validation context across user edits",
+      "files": [
+        "newsflow-ai/frontend/src/studio/core/CharacterAutomation.tsx",
+        "newsflow-ai/frontend/src/studio/core/CharacterStudio.tsx",
+        "newsflow-ai/src/newsflow/character/authoring.py",
+        "newsflow-ai/src/newsflow/character/episode_service.py",
+        "newsflow-ai/src/newsflow/character/episode_story.py",
+        "newsflow-ai/src/newsflow/character/service.py",
+        "newsflow-ai/src/newsflow/gui/character_automation_routes.py",
+        "newsflow-ai/src/newsflow/gui/character_routes.py",
+        "newsflow-ai/tests/test_character_automation_browser.py",
+        "newsflow-ai/tests/test_character_automation_routes.py",
+        "newsflow-ai/tests/test_character_duration_controls.py",
+        "newsflow-ai/tests/test_character_episode_automation.py",
+        "newsflow-ai/tests/test_character_kling_studio.py",
+        "newsflow-ai/tests/test_character_topic_input.py",
+        "newsflow-ai/tests/test_character_validation_feedback.py"
+      ]
+    },
+    {
+      "sha": "b19354336ba8480c6f8d4cb1932aaf3ff063f332",
+      "title": "test: align offline regression fixtures with accepted per-execution policies",
+      "files": [
+        ".github/workflows/newsflow-character-automation.yml",
+        "newsflow-ai/tests/conftest.py",
+        "newsflow-ai/tests/test_ai_estimate.py",
+        "newsflow-ai/tests/test_ai_settings.py",
+        "newsflow-ai/tests/test_ai_video_gui.py",
+        "newsflow-ai/tests/test_ai_video_settings.py",
+        "newsflow-ai/tests/test_api_first_check_gui.py",
+        "newsflow-ai/tests/test_api_news_gui.py",
+        "newsflow-ai/tests/test_api_rejection_classification.py",
+        "newsflow-ai/tests/test_api_script_once.py",
+        "newsflow-ai/tests/test_api_search_check.py",
+        "newsflow-ai/tests/test_api_search_runtime_diagnostics.py",
+        "newsflow-ai/tests/test_api_settings.py",
+        "newsflow-ai/tests/test_api_unknown_acknowledgement.py",
+        "newsflow-ai/tests/test_character_per_execution_limits.py",
+        "newsflow-ai/tests/test_character_reuse_story.py",
+        "newsflow-ai/tests/test_character_shorts.py",
+        "newsflow-ai/tests/test_character_single_video.py",
+        "newsflow-ai/tests/test_first_search_budget.py",
+        "newsflow-ai/tests/test_google_news_trends.py"
+      ]
+    },
+    {
+      "sha": "d15d7aae652d553cd047e50ade318c5ddf320395",
+      "title": "ci: isolate locked Python dependencies from hosted runner tools",
+      "files": [
+        ".github/workflows/newsflow-character-automation.yml"
+      ]
+    },
+    {
+      "sha": "40cb7fbadeb35632d04cddae6eae55f896b44ab2",
+      "title": "fix(character): keep concurrent authoring receipts and reservations isolated",
+      "files": [
+        "newsflow-ai/src/newsflow/character/authoring.py",
+        "newsflow-ai/tests/test_character_authoring_v3.py"
+      ]
+    },
+    {
+      "sha": "bd3c9cf36eb5a238b8054ec756da4bd6b433e208",
+      "title": "test: preserve legacy workflows under current explicit approval contracts",
+      "files": [
+        "newsflow-ai/tests/conftest.py",
+        "newsflow-ai/tests/test_ai_video_service.py",
+        "newsflow-ai/tests/test_all_scene_production.py",
+        "newsflow-ai/tests/test_claude_analysis_response.py",
+        "newsflow-ai/tests/test_claude_feed_cards.py",
+        "newsflow-ai/tests/test_claude_search_diagnostics.py",
+        "newsflow-ai/tests/test_comparison_approval.py",
+        "newsflow-ai/tests/test_creation_models.py",
+        "newsflow-ai/tests/test_final_media.py",
+        "newsflow-ai/tests/test_final_production.py",
+        "newsflow-ai/tests/test_global_news_policy.py",
+        "newsflow-ai/tests/test_higgsfield_model_pricing.py",
+        "newsflow-ai/tests/test_higgsfield_model_pricing_browser.py",
+        "newsflow-ai/tests/test_production_options_browser.py",
+        "newsflow-ai/tests/test_settings_api_panel.py",
+        "newsflow-ai/tests/test_settings_simplification.py",
+        "newsflow-ai/tests/test_voice_engines.py",
+        "newsflow-ai/tests/test_workspace_access.py",
+        "newsflow-ai/tests/test_workspace_access_browser.py"
+      ]
+    },
+    {
+      "sha": "c7a8d824a742e636d40ce062327edbda42be2e38",
+      "title": "fix(character): crossfade audible scene tails without shifting video cuts",
+      "files": [
+        "newsflow-ai/src/newsflow/character/editing.py",
+        "newsflow-ai/tests/test_ai_video_service.py",
+        "newsflow-ai/tests/test_character_episode_editing.py"
+      ]
+    }
+  ],
+  "changed_files": [
+    ".github/workflows/newsflow-character-automation.yml",
+    "newsflow-ai/docs/character_shorts/CHARACTER_SHORTS_CHANGE_SPEC.md",
+    "newsflow-ai/docs/character_shorts/IMPLEMENTATION_REVIEW.md",
+    "newsflow-ai/frontend/src/studio/core/CharacterAutomation.tsx",
+    "newsflow-ai/frontend/src/studio/core/CharacterStudio.tsx",
+    "newsflow-ai/frontend/src/studio/core/character-studio.css",
+    "newsflow-ai/frontend/src/studio/core/videoModelSettings.ts",
+    "newsflow-ai/pyproject.toml",
+    "newsflow-ai/src/newsflow/character/assets/SFX_PROVENANCE.md",
+    "newsflow-ai/src/newsflow/character/authoring.py",
+    "newsflow-ai/src/newsflow/character/compose_studio.py",
+    "newsflow-ai/src/newsflow/character/editing.py",
+    "newsflow-ai/src/newsflow/character/episode_policy.py",
+    "newsflow-ai/src/newsflow/character/episode_regeneration.py",
+    "newsflow-ai/src/newsflow/character/episode_service.py",
+    "newsflow-ai/src/newsflow/character/episode_story.py",
+    "newsflow-ai/src/newsflow/character/kling.py",
+    "newsflow-ai/src/newsflow/character/queue.py",
+    "newsflow-ai/src/newsflow/character/registry.py",
+    "newsflow-ai/src/newsflow/character/service.py",
+    "newsflow-ai/src/newsflow/character/topics.py",
+    "newsflow-ai/src/newsflow/config/character_studio.yaml",
+    "newsflow-ai/src/newsflow/config/edit_presets.yaml",
+    "newsflow-ai/src/newsflow/config/sfx_map.yaml",
+    "newsflow-ai/src/newsflow/config/video_models.yaml",
+    "newsflow-ai/src/newsflow/gui/character_automation_routes.py",
+    "newsflow-ai/src/newsflow/gui/character_routes.py",
+    "newsflow-ai/src/newsflow/studio/read_models.py",
+    "newsflow-ai/src/newsflow/video_models/catalog.py",
+    "newsflow-ai/tests/character_budget_override.test.mjs",
+    "newsflow-ai/tests/character_story_requests.test.mjs",
+    "newsflow-ai/tests/conftest.py",
+    "newsflow-ai/tests/test_ai_estimate.py",
+    "newsflow-ai/tests/test_ai_settings.py",
+    "newsflow-ai/tests/test_ai_video_gui.py",
+    "newsflow-ai/tests/test_ai_video_service.py",
+    "newsflow-ai/tests/test_ai_video_settings.py",
+    "newsflow-ai/tests/test_all_scene_production.py",
+    "newsflow-ai/tests/test_api_first_check_gui.py",
+    "newsflow-ai/tests/test_api_news_gui.py",
+    "newsflow-ai/tests/test_api_rejection_classification.py",
+    "newsflow-ai/tests/test_api_script_once.py",
+    "newsflow-ai/tests/test_api_search_check.py",
+    "newsflow-ai/tests/test_api_search_runtime_diagnostics.py",
+    "newsflow-ai/tests/test_api_settings.py",
+    "newsflow-ai/tests/test_api_unknown_acknowledgement.py",
+    "newsflow-ai/tests/test_character_authoring_v3.py",
+    "newsflow-ai/tests/test_character_automation_browser.py",
+    "newsflow-ai/tests/test_character_automation_routes.py",
+    "newsflow-ai/tests/test_character_duration_controls.py",
+    "newsflow-ai/tests/test_character_episode_automation.py",
+    "newsflow-ai/tests/test_character_episode_catalog.py",
+    "newsflow-ai/tests/test_character_episode_editing.py",
+    "newsflow-ai/tests/test_character_episode_end_to_end.py",
+    "newsflow-ai/tests/test_character_episode_queue.py",
+    "newsflow-ai/tests/test_character_episode_recovery.py",
+    "newsflow-ai/tests/test_character_episode_regeneration.py",
+    "newsflow-ai/tests/test_character_episode_schema.py",
+    "newsflow-ai/tests/test_character_kling_studio.py",
+    "newsflow-ai/tests/test_character_per_execution_limits.py",
+    "newsflow-ai/tests/test_character_registry_v3.py",
+    "newsflow-ai/tests/test_character_reuse_story.py",
+    "newsflow-ai/tests/test_character_shorts.py",
+    "newsflow-ai/tests/test_character_single_video.py",
+    "newsflow-ai/tests/test_character_topic_input.py",
+    "newsflow-ai/tests/test_character_topics_v3.py",
+    "newsflow-ai/tests/test_character_validation_feedback.py",
+    "newsflow-ai/tests/test_claude_analysis_response.py",
+    "newsflow-ai/tests/test_claude_feed_cards.py",
+    "newsflow-ai/tests/test_claude_search_diagnostics.py",
+    "newsflow-ai/tests/test_comparison_approval.py",
+    "newsflow-ai/tests/test_creation_models.py",
+    "newsflow-ai/tests/test_final_media.py",
+    "newsflow-ai/tests/test_final_production.py",
+    "newsflow-ai/tests/test_first_search_budget.py",
+    "newsflow-ai/tests/test_global_news_policy.py",
+    "newsflow-ai/tests/test_google_news_trends.py",
+    "newsflow-ai/tests/test_higgsfield_model_pricing.py",
+    "newsflow-ai/tests/test_higgsfield_model_pricing_browser.py",
+    "newsflow-ai/tests/test_production_options_browser.py",
+    "newsflow-ai/tests/test_settings_api_panel.py",
+    "newsflow-ai/tests/test_settings_simplification.py",
+    "newsflow-ai/tests/test_voice_engines.py",
+    "newsflow-ai/tests/test_workspace_access.py",
+    "newsflow-ai/tests/test_workspace_access_browser.py",
+    "newsflow-ai/tools/bat_distribution/operation.py",
+    "newsflow-ai/tools/bat_distribution/tests/test_operation_character_endpoints.py"
+  ],
+  "protected_prefix_changes": {
+    "newsflow-ai/src/newsflow/db/": [],
+    "newsflow-ai/assets/samples/": [],
+    "newsflow-ai/frontend/src/studio/management/": [],
+    "newsflow-ai/src/newsflow/gui/studio_v3.py": []
+  },
+  "existing_untracked_validation_preserved": true,
+  "operating_app_deployed_or_restarted": false,
+  "real_ai_oauth_sns_called": false,
+  "main_or_pr35_mutated": false,
+  "captures": [
+    {
+      "file": "captures/character-automation-1366x768.png",
+      "bytes": 740341,
+      "sha256": "366280abc10e180ea221da5d7d27d0491869cb29b3dba82e4a8fa3eae5eda5d0",
+      "kind": "isolated synthetic React browser, full-page capture at filename viewport",
+      "ui_source": "22c38f7 (frontend unchanged through tested source)"
+    },
+    {
+      "file": "captures/character-automation-1920x1080.png",
+      "bytes": 979274,
+      "sha256": "a08af56cf43b1697eed2683b5c2cdb81e6e0b13a27568622a7ed4c6c2724ffad",
+      "kind": "isolated synthetic React browser, full-page capture at filename viewport",
+      "ui_source": "22c38f7 (frontend unchanged through tested source)"
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import {useSceneProgress} from "./useSceneProgress";
+import {SavedStoryReview} from './SavedStoryReview';
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   BookOpen,
@@ -18,6 +20,7 @@ import {
   ChevronDown,
   Trash2,
   RotateCcw,
+  LoaderCircle,
   X,
 } from "lucide-react";
 import { Thumbnail } from "../Thumbnail";
@@ -31,6 +34,7 @@ import {
   type Controller,
 } from "./shared";
 import "./character-studio.css";
+import { CharacterModal, CharacterProfiles, CharacterTopics, CharacterScriptEditor, CharacterRegeneration } from "./CharacterAutomation";
 
 import {
   adjustModel,
@@ -127,6 +131,11 @@ function LocalReference({ file }: { file: File }) {
     <canvas ref={canvas} role="img" aria-label="선택한 캐릭터 로컬 미리보기" />
   );
 }
+type StoryRequestDraft = { jobId: string; inputKey: string; requestId: string };
+type StoryRequestReview = StoryRequestDraft & {
+  token: string; count: number; heldUsd: string; duration: number; model: string; limit: string;
+};
+
 type TrialStatus = {
   ready: boolean;
   reasons: string[];
@@ -469,24 +478,36 @@ const defaultSettings: Settings = {
   aspect_ratio: "9:16",
   native_resolution: "model_default",
   output_quality: "1080p",
-  sound: "off",
+  sound: "on",
   clip_seconds: 11,
   duration: 55,
 };
 const stamp = (n: number) =>
-  `${Math.floor(n / 60)}:${String(n % 60).padStart(2, "0")}`;
+  `${Math.floor(Math.round(n) / 60)}:${String(Math.round(n) % 60).padStart(2, "0")}`;
 
 export default function CharacterStudio({ c }: { c: Controller }) {
-  const [id, setId] = useState(""),
+  const [id, setId] = useState(() => {
+      const query = new URLSearchParams(window.location.search);
+      if (!query.has("job_id")) return "";
+      const requested = query.get("job_id") ?? "";
+      return /^[a-f0-9]{32}$/.test(requested) ? requested : "unavailable";
+    }),
     [topic, setTopic] = useState(""),
     [scene, setScene] = useState(-1);
   const [settings, setSettings] = useState<Settings>(defaultSettings),
     [tab, setTab] = useState("upload");
   const [file, setFile] = useState<File | null>(null);
+  const [referencePreview, setReferencePreview] = useState(false);
+  const [activeProfile, setActiveProfile] = useState<Item | null>(null);
+  const [scriptDirty, setScriptDirty] = useState(false);
+  const [savedStoryOpen,setSavedStoryOpen]=useState(false);
+  const [automationBusy, setAutomationBusy] = useState(false);
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [libraryMessage, setLibraryMessage] = useState("");
   const librarySending = useRef(false);
+  const savedUploads = useRef(new WeakMap<File, string>());
+  const [confirmedLibraryAssets, setConfirmedLibraryAssets] = useState<Record<string, boolean>>({});
 
   const [scenePreview, setScenePreview] = useState<{
     url: string;
@@ -499,6 +520,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     Record<string, string>
   >({});
   const [storyRequests, setStoryRequests] = useState<Record<string, string>>({});
+  const preparedStory = useRef<StoryRequestDraft | null>(null);
+  const [storyReview, setStoryReview] = useState<StoryRequestReview | null>(null);
+  const [storyReviewConsent, setStoryReviewConsent] = useState(false);
   const [busy, setBusy] = useState(false),
     [history, setHistory] = useState(false),
     [help, setHelp] = useState(false),
@@ -514,12 +538,15 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     useState<VisibilityTarget | null>(null);
   const [showTrash, setShowTrash] = useState(false);
   const visibilitySending = useRef(false);
+  const createdSelection = useRef<{id:string;view:unknown}|null>(null);
   const allJobs = c.list("jobs"),
     jobs = allJobs.filter((x) => !x.trashed),
     job =
       id === "new"
         ? undefined
-        : (jobs.find((x) => String(x.id) === id) ?? jobs[0]);
+        : id ? jobs.find((x) => String(x.id) === id) : jobs[0];
+  const selectionUnavailable = !c.loading && !!c.view && id !== "" && id !== "new" && !job &&
+    !(createdSelection.current?.id === id && createdSelection.current.view === c.view);
   const perKey = job?.id ? String(job.id) : "new";
   const per = perOverrides[perKey] ?? (job ? String(job.episode_limit ?? "") : "10");
   function setPer(value: string) {
@@ -538,9 +565,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const trialEnabled = caps?.liveTrial?.enabled === true;
   const executionEnabled = trialEnabled || caps?.manualExecutionEnabled !== false;
   const [adjustments, setAdjustments] = useState<Record<string, string>>({});
-  const estimate = publicEstimate(currentModel, settings);
+  const estimate = publicEstimate(currentModel, job?.automation_version === 1 && job.story?.scenes
+    ? { ...settings, duration: job.story.scenes.reduce((total: number, row: Item) => total + Number(row.seconds), 0) }
+    : settings);
   useEffect(() => {
-    if (ready && !job?.studio_selection) {
+    if (ready && !job?.studio_selection && !busy && !sending.current) {
       setSettings(
         trialEnabled && !job
           ? { ...caps.defaults, duration: 15, clip_seconds: 3 }
@@ -558,22 +587,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   }
   function changeDuration(v: string) {
     const total = Number(v);
-    if (
-      total < 15 ||
-      total > 60 ||
-      total % 5 !== 0 ||
-      !currentModel?.duration_values?.includes(total / 5)
-    )
-      return;
-    setSettings((x) => ({ ...x, clip_seconds: total / 5, duration: total }));
+    if (total < 15 || total > 60 || total % 5 !== 0) return;
+    setSettings((x) => ({ ...x, duration: total }));
   }
   const story = job?.story,
-    scenes: Item[] = story?.scenes ?? [],
+    scenes: Item[] = story?.scenes ?? (job?.directVideo ? job.scenes ?? [] : []),
     clips: Item[] = job?.scenes ?? [];
   const pendingSceneChecks = clips.some((clip) => clip.state === "submitted");
   const canCheckScenes = job?.state === "generating" || (job?.state === "scene_review" && pendingSceneChecks);
   const sceneProgressSummary = [
-    ["failed", "실패"], ["submitted", "상태 확인 대기"], ["downloaded", "저장"], ["unknown", "결과 불명"],
+    ["failed", "실패"], ["not_sent", "미전송"], ["submitted", "상태 확인 대기"], ["downloaded", "저장"], ["unknown", "결과 불명"],
   ].map(([state, label]) => {
     const count = clips.filter((clip) => clip.state === state).length;
     return count ? `${label} ${count}` : "";
@@ -616,12 +639,17 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     referenceJob && /^[a-f0-9]{32}$/.test(referenceJob)
       ? `/api/studio/characters/${referenceJob}/reference`
       : null;
-  const savedReference = /^studio-[a-f0-9]{64}\.png$/.test(asset)
-    ? `/image-studio/assets/${asset}`
+  // A new story keeps its selected profile after leaving a saved job.
+  // Existing jobs still use their immutable reference, not the current profile.
+  const referenceAssetId = asset || (!job ? activeProfile?.asset ?? "" : "");
+  const savedReference = /^studio-[a-f0-9]{64}\.png$/.test(referenceAssetId)
+    ? `/image-studio/assets/${referenceAssetId}`
     : null;
   const reference = file || savedReference || clonedReference || selectedReference;
   function storyRequestKey() {
-    const selected = referenceJob
+    const selected = activeProfile
+      ? ["profile", activeProfile.id, activeProfile.revision, activeProfile.reference_image?.sha256]
+      : referenceJob
       ? ["job", referenceJob]
       : file
         ? ["upload", file.name, file.size, file.lastModified]
@@ -629,17 +657,37 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           ? ["asset", asset]
           : ["job", job?.id || ""];
     return JSON.stringify([
-      topic.replace(/[\r\n\t]+/g, " ").trim(), settings, Number(per), selected,
+      topic.replace(/[\r\n\t]+/g, " ").trim(), Object.keys(defaultSettings).sort().map(key => [key, settings[key as keyof Settings]]), Number(per), selected,
     ]);
   }
-  const blockedStoryRequest = !!storyRequests[storyRequestKey()];
+  const currentStoryInput = storyRequestKey();
+  const blockedStoryRequest = !!storyRequests[currentStoryInput];
+  useEffect(() => {
+    if (!busy && storyReview && storyReview.inputKey !== currentStoryInput) {
+      setStoryReview(null);
+      setStoryReviewConsent(false);
+      setFailure("선택이 변경됐습니다. 현재 설정으로 스토리 요청을 다시 확인하세요.");
+    }
+  }, [currentStoryInput, storyReview, busy]);
   const pendingReferenceCopy =
     !!story && !!job?.studio_selection && !!(file || referenceJob || asset);
-  const isBusy = busy || visibilityBusy || trialBusy || libraryBusy,
+  const follow=useSceneProgress({job,view:c.view,
+    enabled:ready&&caps?.manualExecutionEnabled===true,
+    blocked:busy||visibilityBusy||trialBusy||libraryBusy||automationBusy||!!c.command,
+    readError:c.error,load:c.load});
+  const isBusy = busy || visibilityBusy || trialBusy || libraryBusy || automationBusy || follow.checking,
     frozen =
       !!job &&
       !["needs_script", "script_review", "script_failed"].includes(job.state) &&
       job.quoteSettingsEditable !== true;
+  useEffect(() => {
+    // A deleted/missing selection must not leave another job's draft on screen.
+    // Keep the panels mounted while a newly created job is still being loaded.
+    if (selectionUnavailable && !isBusy) {
+      setTopic(""); setReferenceJob(""); setAsset("");
+      setFile(null); setActiveProfile(null);
+    }
+  }, [selectionUnavailable, isBusy, id]);
   const quoteSettingsChanged =
     job?.state === "quoted" &&
     quotedSettingsDirty(
@@ -661,8 +709,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const settingsFrozen = frozen && !pendingReferenceCopy;
   const legacy = !!job && !job.studio_selection;
   const lockedScriptModel = !!job?.studio_selection;
-  const legacyStoryTiming = !!story && scenes.length !== 5;
+  const legacyStoryTiming = !!story && job?.automation_version !== 1 && scenes.length !== 5;
   useEffect(() => {
+    if (job?.topic) setTopic(job.topic);
     if (job?.studio_selection) {
       const s = job.studio_selection;
       setSettings(
@@ -671,6 +720,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         ) as Settings,
       );
     }
+    if (job?.automation_version === 1 && job.characterProfile) setActiveProfile(job.characterProfile);
+    else if (job) setActiveProfile(null);
     setScene(-1);
   }, [job?.id]);
   function setting(k: keyof Settings, v: string) {
@@ -679,7 +730,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       [k]: ["duration", "clip_seconds"].includes(k) ? Number(v) : v,
     }));
   }
-  function reset() {
+  function reset(useCurrentProfile = false) {
+    if (useCurrentProfile) setActiveProfile(current => current
+      ? profiles.find(profile => profile.id === current.id) ?? current : null);
     if (job) {
       setPerOverrides((current) => {
         const next = { ...current };
@@ -687,12 +740,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
         return next;
       });
     }
+    createdSelection.current=null;
     setId("new");
     setReferenceJob("");
     setTopic("");
     setScene(-1);
     setFailure("");
     pending.current = null;
+    preparedStory.current = null;
+    setStoryReview(null);
+    setStoryReviewConsent(false);
   }
   function startFromCharacter() {
     if (isBusy || !job?.id || !selectedReference) return;
@@ -722,10 +779,13 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     } else reset();
     setFile(f);
     setAsset("");
+    setActiveProfile(null);
+    setSaveToLibrary(false);
     setLibraryMessage("");
-    if (saveToLibrary) void saveReference(f);
   }
   async function saveReference(selectedFile: File) {
+    const saved = savedUploads.current.get(selectedFile);
+    if (saved) return saved;
     if (librarySending.current) return;
     librarySending.current = true;
     setLibraryBusy(true);
@@ -743,14 +803,19 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !/^studio-[a-f0-9]{64}\.png$/.test(data.id ?? ""))
         throw Error(typeof data.detail === "string" ? data.detail : "캐릭터를 저장하지 못했습니다. 이미지와 저장 공간을 확인하세요.");
-      setLibraryMessage(data.created ? "내 캐릭터에 저장했습니다." : "이미 저장된 캐릭터입니다.");
+      savedUploads.current.set(selectedFile, data.id);
+      setConfirmedLibraryAssets(current => ({ ...current, [data.id]: true }));
+      setAsset(data.id);
+      setLibraryMessage(data.created ? "참조 이미지를 보관했습니다." : "이미 보관된 참조 이미지입니다.");
       try {
         await c.load();
       } catch {
-        setLibraryMessage("캐릭터는 저장됐습니다. 내 캐릭터 목록을 보려면 화면을 새로고침하세요.");
+        setLibraryMessage("참조 이미지는 보관됐습니다. 목록을 보려면 화면을 새로고침하세요.");
       }
+      return data.id as string;
     } catch (error) {
-      setLibraryMessage(error instanceof Error ? error.message : "저장 결과를 확인하지 못했습니다. 내 캐릭터 목록을 확인하세요.");
+      setSaveToLibrary(false);
+      setLibraryMessage(error instanceof Error ? error.message : "저장 결과를 확인하지 못했습니다. 저장한 참조 이미지 목록을 확인하세요.");
     } finally {
       librarySending.current = false;
       setLibraryBusy(false);
@@ -764,7 +829,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       body,
     });
     const data = await r.json().catch(() => ({}));
-    if (data.id) setId(data.id);
+    if (data.id) {
+      // A creation receipt is authoritative until a subsequent list response arrives.
+      createdSelection.current={id:String(data.id),view:c.view};
+      setId(data.id);
+    }
     if (data.fields) setAdjustments(data.fields);
     if (!r.ok)
       throw Object.assign(new Error(
@@ -837,90 +906,111 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       visibilitySending.current = false;
     }
   }
+  function selectStoryDraft(identifier: string) {
+    setId(identifier);
+    const url = new URL(window.location.href);
+    url.searchParams.set("job_id", identifier);
+    window.history.replaceState(window.history.state, "", url);
+  }
+  function unlockUnsentStory(inputKey: string) {
+    setStoryRequests((value) => {
+      const next = { ...value };
+      delete next[inputKey];
+      return next;
+    });
+  }
+  async function sendStory(draft: StoryRequestDraft, reviewToken = "") {
+    // This is the only paid dispatch. Never replay it after an uncertain response.
+    preparedStory.current = null;
+    setStoryRequests((value) => ({ ...value, [draft.inputKey]: draft.requestId }));
+    const encoded = new URLSearchParams({
+      job_id: draft.jobId,
+      consent: "true",
+      csrf_token: c.view?.csrfToken ?? "",
+      ...(reviewToken ? { review_token: reviewToken, review_consent: "true" } : {}),
+    });
+    const response = await fetch("/api/studio/characters/auto-story", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: encoded,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw Error(data.error ??
+      "스토리 요청 결과를 확인하지 못했습니다. 작업 이력을 확인하세요. 자동 재전송하지 않습니다.");
+    if (data.state !== "script_review") throw Error(
+      "이 요청은 이미 저장되어 있습니다. 작업 이력의 상태를 확인하세요. 자동 재생성하지 않습니다.");
+    setFile(null); setReferenceJob(""); setAsset("");
+    unlockUnsentStory(draft.inputKey);
+    c.setNotice("스토리가 생성·저장되었습니다. 장면을 검토한 뒤 영상 견적을 확인하세요.");
+  }
+  async function refreshStoryResult() {
+    try { await c.load(); }
+    catch { setFailure("작업 목록을 불러오지 못했습니다. 새로고침해 저장된 결과를 확인하세요."); }
+    finally { setBusy(false); sending.current = false; }
+  }
+  async function confirmStoryReview() {
+    const review = storyReview;
+    if (!review || !storyReviewConsent || sending.current || review.inputKey !== storyRequestKey()) return;
+    sending.current = true; setBusy(true); setFailure("");
+    setStoryReview(null); setStoryReviewConsent(false);
+    try { await sendStory(review, review.token); }
+    catch (error) { setFailure(error instanceof Error ? error.message : "스토리 요청 결과를 확인하지 못했습니다. 자동 재전송하지 않습니다."); }
+    finally { await refreshStoryResult(); }
+  }
   async function autoStory() {
     const inputKey = storyRequestKey();
-    if (sending.current || !ready || storyRequests[inputKey]) return;
-    sending.current = true;
-    setBusy(true);
-    setFailure("");
-    // New inputs get a new identity; an uncertain identical input cannot be replayed.
-    const requestId = crypto.randomUUID().replaceAll("-", "");
+    if (sending.current || !ready || storyRequests[inputKey] || !(activeProfile || reference) || !scriptAvailable ||
+        (job?.automation_version === 1 && job.script && topic.trim() === String(job.topic).trim())) return;
+    sending.current = true; setBusy(true); setFailure("");
+    setStoryReview(null); setStoryReviewConsent(false);
+    let draft = preparedStory.current?.inputKey === inputKey ? preparedStory.current : null;
+    const requestId = draft?.requestId ?? crypto.randomUUID().replaceAll("-", "");
     pending.current = requestId;
     setStoryRequests((value) => ({ ...value, [inputKey]: requestId }));
-    if (!file && !asset && !referenceJob && job?.id) setReferenceJob(job.id);
-    let storyRequested = false;
+    let createdKnown = !!draft;
+    let dispatched = false;
     try {
-      const form = new FormData();
-      form.set("topic", topic.trim());
-      form.set("studio_settings", JSON.stringify(settings));
-      form.set("request_id", requestId);
-      form.set("consent", "true");
-      form.set("episode_limit", per);
-      if (referenceJob) form.set("reference_job", referenceJob);
-      else if (file) form.set("reference", file);
-      else if (asset) form.set("reference_asset", asset);
-      else if (job?.id) form.set("reference_job", job.id);
-      else throw Error("참조 캐릭터 이미지를 먼저 선택하세요.");
-      const draft = await post("/character", form);
-      let data = draft;
-      if (draft.created) {
-        const encoded = new URLSearchParams({
-          job_id: draft.id,
-          consent: "true",
-          csrf_token: c.view?.csrfToken ?? "",
-        });
-        storyRequested = true;
-        const response = await fetch("/api/studio/characters/auto-story", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: encoded,
-        });
-        data = await response.json().catch(() => ({}));
-        if (!response.ok)
-          throw Error(
-            data.error ??
-              "스토리 요청 결과를 확인하지 못했습니다. 작업 이력을 확인하세요. 자동 재전송하지 않습니다.",
-          );
+      if (!draft) {
+        const form = new FormData();
+        form.set("topic", topic.trim()); form.set("studio_settings", JSON.stringify(settings));
+        form.set("request_id", requestId); form.set("consent", "true");
+        form.set("episode_limit", per);
+        if(activeProfile){
+          form.set("character_id",activeProfile.id);form.set("character_revision",String(activeProfile.revision));
+        } else if(file){
+          form.set("reference",file);
+        } else if(asset){
+          form.set("reference_asset",asset);
+        } else if(referenceJob || job?.id){
+          form.set("reference_job",referenceJob || String(job?.id));
+        } else {throw Error("참조 이미지를 선택하세요.");}
+        const data = await post("/character", form);
+        if (!data.created) throw Error("저장된 요청의 상태를 확인하세요. 자동 재생성하지 않습니다.");
+        draft = { jobId: data.id, inputKey, requestId };
+        preparedStory.current = draft;
+        createdKnown = true;
+        setPerOverrides((value) => ({ ...value, [data.id]: per }));
       }
-      if (!["script_review"].includes(data.state))
-        throw Error(
-          "이 요청은 이미 저장되어 있습니다. 작업 이력의 상태를 확인하세요. 자동 재생성하지 않습니다.",
-        );
-      setFile(null);
-      setReferenceJob("");
-      setAsset("");
-      setTopic("");
-      setStoryRequests((value) => {
-        const next = { ...value };
-        delete next[inputKey];
-        return next;
-      });
-      c.setNotice(
-        "스토리가 생성·저장되었습니다. 장면을 검토한 뒤 영상 견적을 확인하세요.",
-      );
-    } catch (e) {
-      if (!storyRequested && e instanceof Error && "status" in e && e.status === 422) {
-        setStoryRequests((value) => {
-          const next = { ...value };
-          delete next[inputKey];
-          return next;
-        });
+      selectStoryDraft(draft.jobId);
+      const response = await fetch(`/api/studio/characters/${draft.jobId}/story-review`, { credentials: "same-origin" });
+      const review = await response.json().catch(() => ({}));
+      if (!response.ok || review.ready !== true) throw Error(
+        typeof review.message === "string" ? review.message : "스토리 요청 조건을 확인하지 못했습니다. 유료 요청은 보내지 않았습니다.");
+      if (review.review?.token) {
+        if (typeof review.review.token !== "string" || !/^[a-f0-9]{64}$/.test(review.review.token) ||
+            !Number.isInteger(review.review.count) || review.review.count < 1) throw Error("이전 요청 확인 정보를 읽지 못했습니다. 유료 요청은 보내지 않았습니다.");
+        setStoryReview({ ...draft, token: review.review.token, count: review.review.count,
+          heldUsd: String(review.review.held_usd), duration: settings.duration,
+          model: settings.script_model, limit: per });
+        return;
       }
-      setFailure(
-        e instanceof Error
-          ? e.message
-          : "스토리 요청 중단 · 자동 재전송하지 않습니다.",
-      );
+      dispatched = true;
+      await sendStory(draft);
+    } catch (error) {
+      if (!createdKnown && error instanceof Error && "status" in error && error.status === 422) unlockUnsentStory(inputKey);
+      setFailure(error instanceof Error ? error.message : "스토리 요청 중단 · 자동 재전송하지 않습니다.");
     } finally {
-      try {
-        await c.load();
-      } catch {
-        setFailure("작업 목록을 불러오지 못했습니다. 새로고침해 저장된 결과를 확인하세요.");
-      } finally {
-        setBusy(false);
-        sending.current = false;
-      }
+      if (createdKnown && !dispatched) unlockUnsentStory(inputKey);
+      await refreshStoryResult();
     }
   }
   async function reuseStoryForVideo() {
@@ -931,6 +1021,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       !story ||
       !(file || referenceJob || asset || selectedReference) ||
       !job.studio_selection ||
+      job.automation_version === 1 ||
       !currentModel?.audio.native ||
       storyReuseRequests[job.id]
     )
@@ -1050,7 +1141,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     } finally { setBusy(false); sending.current = false; }
   }
   async function quote() {
-    if (sending.current || pendingReferenceCopy) return;
+    if (sending.current || pendingReferenceCopy || scriptDirty) return;
     sending.current = true;
     setBusy(true);
     setFailure("");
@@ -1086,6 +1177,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             kind === "retry-scene" ? job?.retry_hash : job?.quote_hash,
           retry_hash: job?.retry_hash,
           retryQuote: job?.retryQuote,
+          __refreshQuote: kind === 'submit' ? quote : undefined,
         }}
         disabled={
           isBusy ||
@@ -1103,9 +1195,74 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     );
   }
   const myCharacters: Item[] = c.view?.catalog.myCharacters ?? [];
+  const profiles: Item[] = c.view?.catalog.characterProfiles ?? [];
+  const referenceAsset = file ? savedUploads.current.get(file) : asset || activeProfile?.asset;
+  const referenceStored = !!referenceAsset && (myCharacters.some(row => row.id === referenceAsset)
+    || confirmedLibraryAssets[referenceAsset] === true);
+  const referenceStorageStatus = !reference ? "" : referenceStored ? "보관됨"
+    : referenceAsset ? "아직 보관 안 됨" : "보관 여부 확인 전";
+  const apiProviders: Item[] = c.view?.catalog.characterAIProviders ?? [];
+  const scriptProvider = apiProviders.find((p) => p.models?.includes(settings.script_model));
+  const scriptAvailable = scriptProvider?.configured === true;
+  async function ensureProfileAsset() {
+    if (file) return await saveReference(file) ?? "";
+    if (asset || activeProfile?.asset) return asset || activeProfile?.asset;
+    const existing = clonedReference || selectedReference;
+    if (existing) {
+      const response=await fetch(existing,{credentials:"same-origin"});
+      if(!response.ok)throw Error("기존 참조 이미지를 불러오지 못했습니다.");
+      const blob=await response.blob();
+      if(blob.size>10*1024*1024)throw Error("참조 이미지 크기를 확인하세요.");
+      return await saveReference(new File([blob],"기존 참조 이미지.png",{type:"image/png"}))??"";
+    }
+    return "";
+  }
+  function selectProfile(profile: Item | null) {
+    reset(); setActiveProfile(profile); setFile(null); setAsset(profile?.asset ?? "");
+    setTab("mine");
+  }
+  async function storeCurrentReference() {
+    if (isBusy || referenceStored || !reference) return;
+    if (file) { await saveReference(file); return; }
+    setLibraryBusy(true);
+    setLibraryMessage("");
+    try {
+      const response = await fetch(String(reference), { credentials: "same-origin" });
+      if (!response.ok) throw Error("참조 이미지를 불러오지 못했습니다.");
+      const blob = await response.blob();
+      if (blob.size > 10 * 1024 * 1024) throw Error("참조 이미지 크기를 확인하세요.");
+      await saveReference(new File([blob], "참조 이미지.png", { type: "image/png" }));
+    } catch (error) {
+      setSaveToLibrary(false);
+      setLibraryMessage(error instanceof Error ? error.message : "보관 상태를 확인하지 못했습니다.");
+    } finally { setLibraryBusy(false); }
+  }
   let elapsed = 0;
   return (
     <>
+      {savedStoryOpen && job?.id && <SavedStoryReview key={job.id} jobId={job.id} csrf={c.view?.csrfToken ?? ""}
+        onClose={()=>setSavedStoryOpen(false)} onRecovered={async()=>{await c.load();c.setNotice("편집한 스토리를 복구했습니다. 추가 AI 호출은 없습니다.");}} />}
+      {storyReview && <CharacterModal title="이전 요청 결과 미확인" busy={busy}
+        onClose={() => { setStoryReview(null); setStoryReviewConsent(false); }}
+        footer={<>
+          <button type="button" disabled={busy} onClick={() => { setStoryReview(null); setStoryReviewConsent(false); }}>취소</button>
+          <button type="button" className="primary" disabled={busy || !storyReviewConsent}
+            onClick={() => void confirmStoryReview()}>이번 새 스토리 요청</button>
+        </>}>
+        <div className="character-story-request-review">
+          <p>이전 {storyReview.count}건의 처리·과금이 아직 확인되지 않았습니다. 기존 기록은 보존합니다.</p>
+          <p className="character-story-review-reserve">기존 미확인 예약액 US${storyReview.heldUsd} · 실제 청구액 아님</p>
+          <dl><dt>이번 스토리</dt><dd>{topic}</dd><dt>모델 · 길이</dt><dd>{storyReview.model} · {storyReview.duration}초</dd>
+            <dt>편당 상한</dt><dd>US${storyReview.limit}</dd></dl>
+          <label className="character-story-review-consent"><input type="checkbox" checked={storyReviewConsent}
+            onChange={event => setStoryReviewConsent(event.target.checked)} />
+            이전 요청은 재전송하지 않고, 이번 새 스토리의 유료 요청에 동의합니다.</label>
+        </div>
+      </CharacterModal>}
+      {referencePreview && <CharacterModal title="참조 이미지 미리보기" onClose={()=>setReferencePreview(false)}
+        footer={<button type="button" onClick={()=>setReferencePreview(false)}>닫기</button>}>
+        <div className="character-reference-large">{file?<LocalReference file={file}/>:reference?<img src={String(reference)} alt="선택한 캐릭터 참조 이미지 원본"/>:null}</div>
+      </CharacterModal>}
       <div className="kling-character-approved" aria-busy={isBusy}>
         <div className="kling-character-tools">
           <button onClick={() => setHelp((x) => !x)}>
@@ -1117,6 +1274,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             작업 이력
           </button>
         </div>
+        {selectionUnavailable && (
+          <p className="kling-character-error" role="alert">
+            선택한 작업을 찾을 수 없습니다. 작업 이력에서 다른 작업을 선택하세요.
+          </p>
+        )}
         {caps?.liveTrial?.enabled === true && (
           <CharacterTrialConnection
             csrfToken={c.view?.csrfToken ?? ""}
@@ -1133,7 +1295,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
           >
             참조 이미지 선택 → 주제 입력 → 스토리 자동 생성하기 → 장면 검토 →
             영상 설정·공식 견적 → 비용 승인 → 장면 확인 → 합성·저장. 스토리는
-            Claude 1회 요청이며, 영상 생성은 별도의 견적 승인이 필요합니다.
+            선택한 AI가 캐릭터 특징과 주제로 만들며, 영상 생성은 별도의 견적 승인이 필요합니다.
           </div>
         )}
         <div className="kling-character-steps" aria-label="캐릭터 제작 흐름">
@@ -1174,19 +1336,27 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             <div className="kling-character-tabs">
               <button
                 aria-pressed={tab === "upload"}
+                disabled={isBusy}
                 onClick={() => setTab("upload")}
               >
                 참조 이미지 업로드
               </button>
               <button
                 aria-pressed={tab === "mine"}
+                disabled={isBusy}
                 onClick={() => setTab("mine")}
               >
                 내 캐릭터
               </button>
             </div>
-            <div className="kling-character-reference-content">
-              <div className="kling-character-reference-image">
+            <CharacterProfiles onBusy={setAutomationBusy} profiles={profiles} selected={activeProfile} onSelect={selectProfile}
+              ensureAsset={ensureProfileAsset} model={settings.script_model} available={scriptAvailable}
+              csrf={c.view?.csrfToken ?? ""} disabled={isBusy} onRefresh={c.load}
+              mode={tab} images={myCharacters} selectedAsset={asset} hasReference={!!reference}
+              onSelectImage={(value)=>{reset();setFile(null);setAsset(value);setActiveProfile(null);}} />
+            <div className="kling-character-reference-content" data-source={tab}>
+              <button type="button" className="kling-character-reference-image" aria-label="참조 이미지 크게 보기"
+                disabled={!reference || isBusy} onClick={()=>setReferencePreview(true)}>
                 {file ? (
                   <LocalReference file={file} />
                 ) : reference ? (
@@ -1199,8 +1369,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 ) : (
                   <Empty>캐릭터 참조 이미지를 선택하세요.</Empty>
                 )}
-              </div>
+              </button>
               <div className="kling-character-reference-options">
+                {tab === "upload" && <>
                 <button
                   className="kling-character-upload"
                   disabled={isBusy}
@@ -1222,24 +1393,26 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   hidden
                   onChange={(e) => selectFile(e.target.files?.[0])}
                 />
-                <label className="check">
+                <label className="check character-reference-store">
                   <input
                     type="checkbox"
-                    checked={saveToLibrary}
-                    disabled={isBusy}
+                    checked={referenceStored || (!!reference && saveToLibrary)}
+                    disabled={isBusy || referenceStored || !reference}
                     onChange={(e) => {
                       const checked = e.target.checked;
                       setSaveToLibrary(checked);
-                      if (checked && file) void saveReference(file);
+                      if (checked) void storeCurrentReference();
                     }}
                   />
-                  내 캐릭터에 저장
+                  참조 이미지 보관
                 </label>
-                <small>저장한 이미지는 다시 사용할 수 있습니다.</small>
+                {referenceStorageStatus && <small role="status" aria-label="참조 이미지 보관 상태">{referenceStorageStatus}</small>}
                 {libraryBusy && <small role="status">캐릭터 저장 중…</small>}
                 {libraryMessage && <small role="status">{libraryMessage}</small>}
 
-                <h3>최근 사용 캐릭터</h3>
+                </>}
+                {tab === "mine" && <details className="character-recent-references">
+                <summary>최근 작업의 참조 이미지</summary>
                 <div className="kling-character-recent">
                   {jobs
                     .filter((x) => x.referenceUrl && !x.recentHidden)
@@ -1315,9 +1488,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     <small>숨긴 캐릭터가 없습니다.</small>
                   )}
                 </details>
+                </details>}
               </div>
             </div>
-            {selectedReference && job?.id && (
+            {selectedReference && job?.id && job?.automation_version !== 1 && (
               <button
                 type="button"
                 disabled={isBusy}
@@ -1326,33 +1500,12 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 이 캐릭터로 새 작업
               </button>
             )}
-            {tab === "mine" && myCharacters.length === 0 && (
-              <Empty>참조 이미지를 업로드하고 내 캐릭터에 저장을 선택하세요.</Empty>
-            )}
-            {tab === "mine" && (
-              <Select
-                label="내 캐릭터"
-                disabled={isBusy}
-                value={asset}
-                onChange={(v) => {
-                  if (story && job?.studio_selection) {
-                    setReferenceJob("");
-                    setFailure("");
-                    pending.current = null;
-                  } else reset();
-                  setAsset(v);
-                  setFile(null);
-                }}
-                options={Object.fromEntries(
-                  myCharacters.map((x) => [x.id, x.label]),
-                )}
-              />
-            )}
+
           </section>
           <section className="kling-character-card kling-character-story">
             <header>
               <h2>
-                <em>2.</em> 스토리 생성 <Info size={14} />
+                <em>2.</em> {"스토리 생성"} <Info size={14} />
               </h2>
               <button
                 className="kling-character-example"
@@ -1369,13 +1522,20 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 예시 주제 보기
               </button>
             </header>
+            <label>대본 AI
+              <select aria-label="대본 AI" disabled={isBusy || lockedScriptModel} value={scriptProvider?.id ?? ""}
+                onChange={(e) => {const provider = apiProviders.find(p => p.id === e.target.value); if(provider?.models?.[0]) setting("script_model",provider.models[0]);}}>
+                <option value="" disabled>API를 선택하세요</option>
+                {apiProviders.map(p => <option key={p.id} value={p.id} disabled={!p.configured}>{p.label}{p.configured ? "" : " · 키 등록 필요"}</option>)}
+              </select>
+            </label>
             <label>
-              스토리 주제
+              {"스토리 주제"}
               <div className="kling-character-topic">
                 <textarea
-                  aria-label="스토리 주제"
+                  aria-label={"스토리 주제"}
                   value={topic}
-                  maxLength={100}
+                  maxLength={60}
                   placeholder="캐릭터가 어떤 이야기를 펼칠까요?"
                   disabled={isBusy}
                   onChange={(e) => {
@@ -1383,10 +1543,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     if (e.target.value.trim() !== topic.trim()) setFailure("");
                   }}
                 />
-                <small>{topic.length}/100</small>
+                <small>{topic.length}/60</small>
               </div>
             </label>
-            <button
+            {<button
               className="kling-character-story-generate"
               onClick={() => void autoStory()}
               disabled={
@@ -1394,64 +1554,62 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 !ready ||
                 !c.view?.commandsAvailable ||
                 !topic.trim() ||
-                (!reference && !asset) ||
+                selectionUnavailable ||
+                (job?.automation_version === 1 && job.script && topic.trim() === String(job.topic).trim()) ||
+                !(activeProfile || reference) || !scriptAvailable ||
                 blockedStoryRequest
               }
             >
               <WandSparkles size={22} />
               {busy ? "스토리 처리 중…" : "스토리 자동 생성하기"}
               <span>→</span>
-            </button>
-            {job?.scriptFailure && (
-              <p className="kling-character-error" role="status">
-                {job.scriptFailure.message}
-                {job.scriptResponseSaved && " 응답은 로컬에 보존되어 있습니다."}
-              </p>
+            </button>}
+            {(failure || job?.scriptFailure?.message || blockedStoryRequest) && (
+              <div className="kling-character-error" role="alert">
+                {failure || job?.scriptFailure?.message || "같은 요청의 결과를 확인하세요. 주제나 참조·설정을 바꾸면 새 스토리를 만들 수 있습니다."}
+                {job?.scriptFailure && job.scriptResponseSaved && " 응답은 로컬에 보존되어 있습니다."}
+                {(failure || blockedStoryRequest) && (
+                  <button
+                    disabled={isBusy}
+                    onClick={() => {
+                      setFailure("");
+                      pending.current = null;
+                      reset(true);
+                    }}
+                  >
+                    새 스토리 입력
+                  </button>
+                )}
+              </div>
             )}
             {job?.state === "script_failed" && job?.scriptResponseSaved && (
-              <button type="button" disabled={isBusy} onClick={recoverStory}>
-                저장된 스토리 복구 · 추가 비용 없음
-              </button>
-            )}
-            {job?.scriptRetryAllowed === true && (
-              <div className="kling-character-retry">
-                {action("write", "이 작업의 스토리 다시 생성하기", ["script_failed"])}
-                <small>저장된 이 작업의 주제·캐릭터·설정으로 새 스토리를 요청합니다. 비용 승인은 유지됩니다.</small>
+              <div className="kling-story-recovery-actions">
+                <button type="button" disabled={isBusy} onClick={recoverStory}>보관된 스토리 자동 복구</button>
+                {job.automation_version===1&&<button type="button" disabled={isBusy} onClick={()=>setSavedStoryOpen(true)}>직접 검토·편집</button>}
               </div>
             )}
 
-            <p className="kling-character-consent">
-              주제만 Claude에 전달합니다. 스토리 생성은 유료이며 영상 제작은
-              견적 확인 후 별도로 승인합니다.
-            </p>
+
+            {<p className="kling-character-consent">스토리 생성은 유료입니다. 영상 제작은 별도 승인합니다.</p>}
+            <CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
+              topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} refreshKey={`${job?.id ?? ""}:${job?.state ?? ""}:${job?.script_hash ?? ""}`}
+                />
             {!ready && (
               <p role="status">
                 새 제작실 API 연결 확인 전 · 생성할 수 없습니다.
               </p>
             )}
-            {(failure || blockedStoryRequest) && (
-              <div className="kling-character-error" role="alert">
-                {failure || "같은 요청의 결과를 확인하세요. 주제나 참조·설정을 바꾸면 새 스토리를 만들 수 있습니다."}
-                <button
-                  disabled={isBusy}
-                  onClick={() => {
-                    setFailure("");
-                    pending.current = null;
-                    reset();
-                  }}
-                >
-                  새 스토리 입력
-                </button>
-              </div>
-            )}
             {story ? (
-              <div className="kling-character-story-result">
+              <div className={`kling-character-story-result${job?.automation_version === 1 ? " kling-character-story-result--episode" : ""}`}>
                 <header>
                   <h3>한글 스토리 · {story.title}</h3>
                   <State value={job?.state} />
                 </header>
-                <small>생성된 한글 장면 요약입니다.</small>
-                {job?.studio_selection &&
+                <small>장면을 검토한 뒤 영상 제작을 승인하세요.</small>
+                {job?.message && <p role="status">{job.message}</p>}
+                {job?.automation_version === 1 && <CharacterScriptEditor job={job} onDirty={setScriptDirty} csrf={c.view?.csrfToken ?? ""}
+                  disabled={isBusy} onRefresh={c.load} />}
+                {job?.studio_selection && job.automation_version !== 1 &&
                   selectedReference &&
                   currentModel?.audio.native && (
                     <div>
@@ -1502,20 +1660,20 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             ) : (
               <div className="kling-character-story-empty">
                 <BookOpen />
-                <span>생성한 스토리가 여기에 표시됩니다.</span>
+                <span>{"생성한 스토리가 여기에 표시됩니다."}</span>
               </div>
             )}
             <details className="kling-character-advanced">
               <summary>
                 <Settings2 size={14} />
-                스토리 세부 설정
+                {"스토리 세부 설정"}
               </summary>
               <Select
-                label="Claude 모델"
+                label="대본 모델"
                 disabled={isBusy || lockedScriptModel}
                 value={settings.script_model}
                 onChange={(v) => setting("script_model", v)}
-                options={c.view?.catalog.apiModels?.claude_api ?? []}
+                options={scriptProvider?.models ?? []}
               />
               <label>
                 편당 최대 승인 한도 (USD)
@@ -1571,6 +1729,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       icon={<Bot size={18} />}
                       value={settings.video_model}
                       onChange={changeModel}
+                      disabled={job?.automation_version === 1 && !!story}
                       values={choices}
                       supported={Object.keys(choices)}
                       hint={adjustments.video_model}
@@ -1580,23 +1739,20 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       icon={<Clock3 size={18} />}
                       value={String(settings.duration)}
                       onChange={changeDuration}
-                      disabled={isBusy || settingsFrozen || legacyStoryTiming}
+                      disabled={isBusy || settingsFrozen || legacyStoryTiming || (job?.automation_version === 1 && !!story)}
                       values={Object.fromEntries(
-                        Array.from({ length: 10 }, (_, i) => 15 + i * 5).map(
-                          (total) => [String(total), `${total}초`],
+                        (caps?.totalDurationChoices ?? Array.from({ length: 10 }, (_, i) => 15 + i * 5)).map(
+                          (total: number) => [String(total), `${total}초`],
                         ),
                       )}
                       supported={
-                        (currentModel?.duration_values ?? [])
-                          .map((seconds: number) => seconds * 5)
-                          .filter(
-                            (total: number) => total >= 15 && total <= 60,
-                          )
-                          .map(String)
+                        (caps?.totalDurationChoices ?? Array.from({ length: 10 }, (_, i) => 15 + i * 5)).map(String)
                       }
                       unsupportedHint="이 모델은 전체 길이에 필요한 장면 길이를 지원하지 않아요."
                       hint={
-                        legacyStoryTiming
+                        job?.automation_version === 1 && story
+                          ? undefined
+                          : legacyStoryTiming
                           ? "이 스토리의 길이는 변경할 수 없습니다."
                           : settingsFrozen
                             ? "새 영상으로 복사하면 길이를 변경할 수 있습니다."
@@ -1609,8 +1765,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       value={settings.style}
                       onChange={() => {}}
                       disabled
-                      values={caps?.styles ?? {}}
-                      supported={[caps?.character?.style_id ?? ""]}
+                      values={activeProfile ? { [settings.style]: "캐릭터 고정" } : caps?.styles ?? {}}
+                      supported={[settings.style]}
                       hint={adjustments.style}
                     />
                     <CapabilitySelect
@@ -1645,16 +1801,17 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       icon={<Monitor size={18} />}
                       value={settings.output_quality}
                       onChange={(v) => setting("output_quality", v)}
-                      values={caps?.outputQualities ?? {}}
-                      supported={Object.keys(caps?.outputQualities ?? {})}
+                      values={{ "1080p": "1080p (1080×1920)" }}
+                      supported={["1080p"]}
+                      disabled
                     />
                     <CapabilitySelect
-                      label="음성"
+                      label="소리 생성"
                       ariaLabel="소리 생성"
                       icon={<Mic size={18} />}
                       value={settings.sound}
                       onChange={(v) => setting("sound", v)}
-                      values={{ off: "끄기 (무음)", on: "켜기 (모델 소리)" }}
+                      values={{ off: "끄기", on: "켜기 (환경음만)" }}
                       supported={
                         currentModel?.audio.native ? ["off", "on"] : ["off"]
                       }
@@ -1677,6 +1834,15 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         action("retry-scene", "실패 장면 추가 견적 승인", [
                           "retry_quoted",
                         ])}
+                    </div>
+                  )}
+                  {job?.state === "quoted" && job.quoteSettingsEditable === true && (
+                    <div className="kling-settings-footer">
+                      <button type="button" className="kling-quote-refresh"
+                        disabled={isBusy || pendingReferenceCopy || scriptDirty || legacy || !ready}
+                        onClick={() => void quote()}>
+                        {quoteSettingsChanged ? "설정 적용·견적 갱신" : "견적 다시 확인"}
+                      </button>
                     </div>
                   )}
                 </section>
@@ -1708,6 +1874,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         disabled={
                           isBusy ||
                           pendingReferenceCopy ||
+                          scriptDirty ||
                           legacy ||
                           !ready
                         }
@@ -1720,10 +1887,17 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       </button>
                     ) : job?.state === "quoted" ? (
                       action("submit", "영상 생성하기", ["quoted"])
+                    ) : canCheckScenes && follow.active ? (
+                      <div className="kling-generation-live" role="status">
+                        <LoaderCircle className="spin" size={20}/>
+                        {follow.checking?"완료 영상 확인·저장 중":"장면 생성 중 · 자동 확인"}
+                      </div>
                     ) : canCheckScenes ? (
                       action("check", job?.state === "scene_review" ? "남은 장면 상태 확인" : "장면 상태 확인", ["generating", "scene_review"])
                     ) : job?.state === "clips_review" ? (
                       action("render", "검토 후 영상 합성", ["clips_review"])
+                    ) : ["compose_failed", "composing"].includes(job?.state ?? "") && job?.composeRecoveryAvailable === true ? (
+                      action("render", "합성 다시 시도", ["compose_failed", "composing"])
                     ) : job?.state === "completed" &&
                       safeMedia(job.mediaUrl) ? (
                       <a
@@ -1738,23 +1912,19 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                         영상 생성하기
                       </button>
                     )}
-                    {job?.state === "quoted" &&
-                      job.quoteSettingsEditable === true && (
-                        <button
-                          type="button"
-                          disabled={
-                            isBusy ||
-                            pendingReferenceCopy ||
-                            legacy ||
-                            !ready
-                          }
-                          onClick={() => void quote()}
-                        >
-                          설정 저장·견적 확인
-                        </button>
-                      )}
+
                   </div>
-                  {sceneProgressSummary && ["generating", "scene_review", "submission_unknown", "clips_review"].includes(job?.state ?? "") && (
+                  {!!follow.total && ["generating","scene_review","submission_unknown","submission_not_sent","status_or_download_failed","clips_review","composing","compose_failed","completed"].includes(job?.state??"") && (
+                    <section className="kling-generation-progress" aria-label="영상 제작 진행" aria-live="polite">
+                      <div><strong>{job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 중":job?.composeRecoveryAvailable?"합성 중단 · 다시 합성 가능":job?.state==="completed"?"최종 영상 저장 완료":follow.failed||follow.error?"확인 필요":follow.done===follow.total?"장면 검토 준비 완료":"장면 제작 진행 중"}</strong>
+                        <span>완료 {follow.done}/{follow.total}</span></div>
+                      <progress aria-label={job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 진행":"장면 저장 진행률"}
+                        max={follow.total} value={job?.state==="composing"&&!job?.composeRecoveryAvailable?undefined:follow.done}/>
+                      <small>{job?.state==="composing"&&!job?.composeRecoveryAvailable?"내 PC에서 FFmpeg로 합성하고 있습니다.":`${follow.percent}% · 저장 완료 장면 기준`}</small>
+                      {follow.error&&<><p role="alert">{follow.error}</p><button type="button" disabled={isBusy} onClick={follow.resume}>진행 확인 재개</button></>}
+                    </section>
+                  )}
+                  {sceneProgressSummary && ["generating", "scene_review", "submission_unknown", "submission_not_sent", "clips_review"].includes(job?.state ?? "") && (
                     <p className="kling-field-note" role="status">{sceneProgressSummary}</p>
                   )}
                   {canDiagnoseScenes && (
@@ -1772,6 +1942,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       ))}
                     </section>
                   )}
+                  {scriptDirty && <p role="status">편집한 대본을 저장한 뒤 견적을 확인하세요.</p>}
                   {quoteSettingsChanged && (
                     <p role="status" className="kling-field-note">
                       설정이 바뀌었습니다. 견적을 다시 확인하세요.
@@ -1834,7 +2005,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     만드세요.
                   </p>
                 )}
-                {/unknown|failed/.test(job?.state ?? "") && (
+                {/unknown|failed|not_sent/.test(job?.state ?? "") && (
                   <p role="status" className="kling-character-error">
                     작업 중단 · 결과를 확인하세요. 자동 재요청하지 않습니다.
                   </p>
@@ -1843,14 +2014,14 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             </div>
           </section>
         </div>
-        <section className="kling-character-card kling-character-storyboard">
+        {<section className="kling-character-card kling-character-storyboard">
           <header>
             <h2>
               {singleVideo ? "스토리 계획" : "생성된 장면"}{" "}
               <small>
                 {singleVideo
                   ? `(${scenes.length}개 계획 · 15초 단일 영상)`
-                  : `(${scenes.length}개 장면 · ${scenes.reduce((n, s) => n + s.seconds, 0)}초)`}
+                  : `(${scenes.length}개 장면 · 목표 ${job?.duration ?? settings.duration}초${typeof job?.plannedDurationSeconds==='number'&&Math.abs(job.plannedDurationSeconds-(job?.duration??settings.duration))>.04?` · 예상 ${job.plannedDurationSeconds}초`:''})`}
               </small>
             </h2>
             <button
@@ -1861,13 +2032,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               최종 영상
             </button>
           </header>
+          {job && <CharacterRegeneration onBusy={setAutomationBusy} job={job} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} onRefresh={c.load} />}
+          {!scenes.length && <Empty>대본을 생성하면 선택한 길이에 맞는 장면 계획이 표시됩니다.</Empty>}
           <div className="kling-character-scene-grid">
             {(scenes.length
               ? scenes
-              : Array.from({ length: 5 }, () => null)
+              : []
             ).map((s, i) => {
-              const start = elapsed;
-              elapsed += s?.seconds ?? 0;
+              const edited = job?.editTimeline?.[i];
+              const start = edited?.start ?? elapsed;
+              elapsed = edited ? edited.start + edited.seconds : elapsed + (s?.seconds ?? 0);
               const clip = clips.find((x) => x.position === i + 1);
               const media = clip?.mediaUrl;
               const planOnly = singleVideo && !clip;
@@ -1907,7 +2081,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   {s &&
                     (planOnly ? (
                       <small>
-                        스토리 계획 · 전체 영상에서 확인
+                        {"스토리 계획 · 전체 영상에서 확인"}
                         <br />
                         별도 장면 파일 없음
                       </small>
@@ -1921,7 +2095,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               );
             })}
           </div>
-        </section>
+        </section>}
         {scenePreview && safeMedia(scenePreview.url) && (
           <CharacterDialog
             title={`${scenePreview.title} · ${scenePreview.seconds}초`}
@@ -1955,7 +2129,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 type="button"
                 disabled={isBusy}
                 onClick={() => {
-                  reset();
+                  reset(true);
                   setFile(null);
                   setAsset("");
                   setHistory(false);

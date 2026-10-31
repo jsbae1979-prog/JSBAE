@@ -122,7 +122,8 @@ def prepare_plan(p, identifier):
 
 def generate(p, plan_id):
     quote = p["service"].estimate(plan_id)
-    assert quote["accounting"] == "reported_usage" and quote["total"] == ""
+    assert quote["accounting"] == "quoted_execution" and float(quote["total"]) > 0
+    assert quote["can_submit"], quote["problems"]
     assert quote["remaining"] is None
     with pytest.raises(AIVideoError):
         p["service"].confirm_generation(plan_id, revision(p, plan_id), quote["total"], False)

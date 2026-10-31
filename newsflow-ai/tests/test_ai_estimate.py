@@ -130,7 +130,7 @@ def test_write_prices_round_trip_and_estimate_in_readiness(app, monkeypatch):
     monkeypatch.delenv("NEWSFLOW_AI_API_KEY", raising=False)
     status = external_ready(sessions, store)
     assert status["estimate"]["total_max"] > 0 and status["prices"]["configured"] is True
-    assert status["remaining_tokens"] == 0
+    assert status["remaining_tokens"] is None  # Cumulative budgets are intentionally retired.
     write_prices(sessions, "", "", "KRW")
     assert read_prices(sessions)["input_per_1m"] is None and job_estimate(sessions, 45)["cost"] is None
     with app.state.sessions() as session:
@@ -143,7 +143,7 @@ def test_check_budget_reserves_prompt_estimate_with_numbers(app):
     check_budget(sessions, settings, Options(max_tokens=1500), prompt_estimate=1500)
     with pytest.raises(SettingsError) as failure:
         check_budget(sessions, settings, Options(max_tokens=1500), prompt_estimate=1501)
-    assert "사용 0" in str(failure.value) and "한도 3000" in str(failure.value)
+    assert "이번 호출 예상 3001" in str(failure.value) and "1회 한도 3000" in str(failure.value)
 
 
 def _collect_fixture(app):

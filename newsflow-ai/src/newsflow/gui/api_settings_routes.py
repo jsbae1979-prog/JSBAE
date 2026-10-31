@@ -35,10 +35,14 @@ def acknowledge_analysis(request: Request, provider: str, reservation_id: str = 
 def check_connection(request: Request, provider: str, consent: bool = Form(False)):
     store = _store(request, provider)
     if provider == "claude_api":
-        result = check_claude_connection(
-            request.app.state.sessions, store, consent=consent,
-            transport=getattr(request.app.state, "claude_connection_transport", None),
-        )
+        scoped_check = getattr(request.app.state, "claude_metadata_check", None)
+        if scoped_check is not None:
+            result = scoped_check(consent=consent)
+        else:
+            result = check_claude_connection(
+                request.app.state.sessions, store, consent=consent,
+                transport=getattr(request.app.state, "claude_connection_transport", None),
+            )
     else:
         result = check_api_connection(
             request.app.state.sessions, store, provider=provider, consent=consent,
@@ -134,3 +138,21 @@ def clear_key(request: Request, provider: str):
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
     return go("/simple-settings?saved=key_removed#selected-ai")
+
+
+@router.post('/api/studio/providers/{provider}/check')
+def provider_connection_test(request: Request, provider: str, scope: str=Form(''), consent: bool=Form(False)):
+    from newsflow.intelligence.provider_connections import connections
+    try:
+        return connections(request.app.state).check(provider,scope,consent=consent)
+    except (ValueError,KeyError):
+        raise HTTPException(422,'공급사·모델 설정을 확인하세요.') from None
+
+
+@router.post('/api/studio/data-location')
+def request_data_location(request: Request, destination: str=Form('')):
+    action=getattr(request.app.state,'data_location_request',None)
+    if not callable(action):raise HTTPException(409,'이 실행 환경에서는 데이터 위치를 변경할 수 없습니다.')
+    try:return action(destination)
+    except (ValueError,OSError):
+        raise HTTPException(422,'사용자 소유의 비어 있는 로컬 폴더를 지정하세요. 현재 데이터·프로그램 경로와 겹칠 수 없습니다.') from None

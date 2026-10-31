@@ -1,0 +1,85 @@
+{
+  "head": "7ca89eb226833dfd5b1aa6cd856f4b3271993d3a",
+  "port": 18768,
+  "pid": 36360,
+  "normalStopExit": 0,
+  "stopAttempts": 1,
+  "startAttempts": 1,
+  "tablesUnchanged": 47,
+  "articles": 179,
+  "profileFilesPreserved": 362,
+  "originalAndABPreserved": true,
+  "chromeOpenAccepted": true,
+  "securityFlagsPreserved": true,
+  "paidCallsDuringDeployment": 0,
+  "snsCalls": 0,
+  "verdict": "CONDITIONAL",
+  "clientDate": "2026-11-01",
+  "originalArticlesPreserved": 169,
+  "opaqueCredentialsAndMediaUnchanged": true,
+  "chrome": {
+    "normalAuthentication": true,
+    "localFfmpegInformation": true,
+    "higgsfieldModelInformation": true,
+    "analysisScopeAndProviderModel": true,
+    "voiceSamplePlayback": {
+      "supplierSample": true,
+      "languageLabel": "Korean sample",
+      "seconds": 13.60975,
+      "readyState": 4,
+      "mediaError": null
+    },
+    "voiceSelectionPersistedByAgent": false,
+    "voiceListReload": "FAILED_LOCALLY_BEFORE_SUPPLIER_REQUEST",
+    "repeatedListRequest": false
+  },
+  "liveGui": {
+    "pass": 8,
+    "fail": 1,
+    "error": 0
+  },
+  "paidGenerationCalls": 0,
+  "newsCollectionCalls": 0,
+  "issue": {
+    "failureCode": "key_store",
+    "providerHttpStatus": null,
+    "keyValidityNotDeterminedByThisFailure": true,
+    "cause": "Normal operating startup disables global credential decryption. The newly connected voice catalog route used a default unscoped ElevenLabs key store instead of a request-scoped metadata store.",
+    "callChain": [
+      "windows_live.start / disable_credential_decryption",
+      "gui.video_routes._voice_catalog",
+      "ElevenLabsVoices.load / _http",
+      "AIKeyStore.key / _native_cipher"
+    ],
+    "fix": "Add a same-profile authenticated catalog loader using the existing scoped _Store, active only for explicit POST /video/tts/voices/load and one fixed metadata GET. Global credential decryption, paid synthesis and key write permissions remain blocked.",
+    "codeHead": "0691cc934eb5014aa6d0fe7780a72b1de93131ea",
+    "operatingApplied": false,
+    "preparedFiles": 3,
+    "additionalRestartApprovalRequired": true
+  },
+  "noExtraOperatingRestart": true,
+  "productionScreenshots": "Local only; not uploaded to GitHub",
+  "focusedTests": {
+    "newCases": 12,
+    "executedPass": 102,
+    "fail": 0,
+    "error": 0,
+    "runs": [
+      {
+        "evidence": "voice-catalog-operating-scope-final.xml",
+        "pass": 70,
+        "fail": 0,
+        "error": 0,
+        "sha256": "6daf15d0a59d4b634d59815e3a2b781e6299d6e07d63e8b496851091e718a4ef"
+      },
+      {
+        "evidence": "voice-catalog-launcher-related-final.xml",
+        "pass": 32,
+        "fail": 0,
+        "error": 0,
+        "sha256": "b0b9ecfa7984df019cfd9d53df86491a55c90e4308fe7ae7ec5e449a28370f2f"
+      }
+    ],
+    "previous33NewCasesAnd227FocusedEvidence": "reused, not relabeled as new"
+  }
+}

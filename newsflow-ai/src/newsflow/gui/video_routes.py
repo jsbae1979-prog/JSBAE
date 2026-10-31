@@ -5,7 +5,7 @@ from __future__ import annotations
 import sys
 
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, JSONResponse, Response
 from sqlalchemy import select
 
 from newsflow.db.models import (
@@ -37,6 +37,9 @@ def tts_settings(request: Request, sample: str = "", saved_voice: bool = False):
 
 
 def _voice_catalog(request):
+    scoped = getattr(request.app.state, "eleven_voice_catalog", None)
+    if scoped is not None:
+        return scoped
     from newsflow.video.elevenlabs_tts import ElevenLabsKeys
     from newsflow.video.elevenlabs_voices import ElevenLabsVoices
 
@@ -67,26 +70,35 @@ def _tts_page(request, *, sample="", message="", error=False):
 
 
 @router.post("/video/tts/voices/load")
-def load_elevenlabs_voices(request: Request, consent: bool = Form(False), more: bool = Form(False)):
+def load_elevenlabs_voices(request: Request, consent: bool = Form(False), more: bool = Form(False), scope: str = Form("saved", max_length=10)):
+    if scope not in {"saved", "all"}:
+        raise HTTPException(422, "음성 목록 범위를 확인하세요.")
     if not consent:
         return _tts_page(request, error=True, message="등록된 키로 음성 목록을 조회하는 데 동의하세요.")
     catalog = _voice_catalog(request)
     try:
-        catalog.load(more=more)
+        if scope == "all":
+            catalog.load(more=more, all_voices=True)
+        else:
+            catalog.load(more=more)
     except TTSError as exc:
         catalog.record_failure(exc)
         return _tts_page(request, error=True, message=str(exc))
+    if request.headers.get("accept") == "application/json":
+        return JSONResponse({"loaded": True})
     return go("/video/tts#elevenlabs-voices")
 
 
 @router.post("/video/tts/voices/select")
-def select_elevenlabs_voice(request: Request, voice_id: str = Form("", max_length=100)):
+def select_elevenlabs_voice(request: Request, voice_id: str = Form("", max_length=100), use_for_news: bool = Form(False)):
     from newsflow.video.elevenlabs_voices import select_voice
 
     try:
-        select_voice(request.app.state.sessions, voice_id, _voice_catalog(request))
+        select_voice(request.app.state.sessions, voice_id, _voice_catalog(request), use_for_news=use_for_news)
     except TTSError as exc:
         return _tts_page(request, error=True, message=str(exc))
+    if request.headers.get("accept") == "application/json":
+        return JSONResponse({"voiceId": voice_id})
     return go("/video/tts?saved_voice=true#elevenlabs-voices")
 
 
@@ -99,6 +111,8 @@ def preview_elevenlabs_voice(request: Request, voice_id: str = Form("", max_leng
         _voice_catalog(request).prepare_sample(voice_id)
     except TTSError as exc:
         return _tts_page(request, error=True, message=str(exc))
+    if request.headers.get('accept') == 'application/json':
+        return JSONResponse({'mediaUrl':f'/video/tts/voices/{voice_id}/sample'})
     return go(f"/video/tts?sample={voice_id}#elevenlabs-voices")
 
 

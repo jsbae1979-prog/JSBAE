@@ -588,6 +588,15 @@ class APIBudgetService:
                              max_input_tokens=max_input_tokens, max_output_tokens=max_output_tokens,
                              key_store=key_store, max_search_calls=max_search_calls)
 
+    def reserve_character(self, *, operation, **kwargs):
+        """Explicit manual button action; reuse saved approval/cap, no extra UI grant."""
+        return self._reserve(**kwargs, character_operation=operation)
+
+    def reserve_episode_story(self, *, provider, request_id, model, max_output_tokens, key_store, story_review):
+        return self._reserve(provider=provider, request_id=request_id, kind="script", model=model,
+                             max_output_tokens=max_output_tokens, key_store=key_store,
+                             episode_review=story_review)
+
     def reserve_first_search(self, *, provider: str, model: str, authentication_at: str,
                              key_store, consent: bool, max_cost_usd: str | None = None) -> Reservation:
         """One explicitly approved bootstrap request per authentication.
@@ -610,7 +619,8 @@ class APIBudgetService:
 
     def _reserve(self, *, provider: str, request_id: str, kind: str, model: str, max_input_tokens: int | None = None,
                  max_output_tokens: int, key_store, max_search_calls: int = 0,
-                 first_search_authentication: str | None = None, card_review_token: str = "") -> Reservation:
+                 first_search_authentication: str | None = None, card_review_token: str = "", episode_review=None,
+                 character_operation=None) -> Reservation:
         _provider(provider)
         if kind not in ("search", "analysis", "script") or not re.fullmatch(r"[A-Za-z0-9:._-]{1,128}", request_id):
             raise APISettingsError("API 요청 식별자와 작업 유형을 확인하세요.")
@@ -620,6 +630,9 @@ class APIBudgetService:
                 raise APISettingsError("API 요청의 토큰·검색 상한이 불명확하여 차단합니다.")
         if (kind == "search") != (max_search_calls == 1):
             raise APISettingsError("검색 요청은 검색 도구 최대 1회를 명시해야 합니다.")
+        if character_operation is not None:
+            from newsflow.character.request_scope import validate_operation
+            character_operation = validate_operation(character_operation, kind, request_id)
         now = utcnow()
         with self.sessions.begin() as session:
             session.connection().exec_driver_sql("BEGIN IMMEDIATE")
@@ -651,7 +664,13 @@ class APIBudgetService:
             bounds = {"accounting": "per_execution", "prompt_tokens": input_bound,
                       "completion_tokens": max_output_tokens, "search_calls": max_search_calls,
                       "request_limit_usd": str(settings.request_limit_usd)}
+            character_ids = set()
+            if character_operation is not None:
+                from newsflow.character.request_scope import unrelated_unknown_ids, previously_reviewed_ids
+                bounds["character_operation"] = character_operation
             rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
+            if character_operation is not None:
+                character_ids = unrelated_unknown_ids(rows, character_operation, previously_reviewed_ids(session, settings, rows))
             reviews = _unknown_analysis_reviews(session, settings, rows)
             acknowledged = {row["id"] for row in reviews if row["acknowledged"]}
             script_approval = _script_approval(session, settings, request_id, kind, rows, acknowledged)
@@ -669,13 +688,19 @@ class APIBudgetService:
                 if not review["token"] or card_review_token != review["token"]:
                     raise APISettingsError("뉴스·모델·결과 불명 기록이 변경되었습니다. 화면을 새로 확인하세요.")
                 card_ids = review["ids"]
+            episode_ids = set()
+            if episode_review is not None:
+                from newsflow.character.story_review import consume
+
+                episode_ids = consume(session, settings, rows, episode_review,
+                    request_id=request_id, kind=kind, model=model, max_output_tokens=max_output_tokens)
             from .comparison_approval import CONSUMED, authorize_step
 
             comparison = authorize_step(session, settings, request_id, kind, rows, max_output_tokens)
             reasons = _limit_reasons(settings, rows, now, capability=kind, acknowledged=acknowledged,
                                      script_exception=script_approval is not None,
                                      rejected=_confirmed_rejections(session, rows) | card_ids,
-                                     scoped_unknowns=set(comparison["unknown_ids"]) if comparison else None)
+                                     scoped_unknowns=character_ids | episode_ids | (set(comparison["unknown_ids"]) if comparison else set()))
             if reasons:
                 raise APISettingsError(" / ".join(reasons))
             row = APIRequestReservation(id=uuid.uuid4().hex, request_id=request_id, provider=provider, kind=kind,

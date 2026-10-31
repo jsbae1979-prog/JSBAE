@@ -42,15 +42,14 @@ def test_wire_uses_supported_dynamic_seconds_and_english_action_without_unsuppor
     schema=studio_output_schema(PAYLOAD)
     scene=schema['$defs']['StudioScene']['properties']
     assert scene['seconds']['enum']==[6] and scene['narration']['enum']==['']
-    assert re.fullmatch(scene['action']['pattern'],'A rabbit waters a garden.')
-    assert not re.fullmatch(scene['action']['pattern'],'토끼 waters a garden.')
-    assert not re.fullmatch(scene['action']['pattern'],'12345')
+    assert 'pattern' not in scene['action']
+    assert 'English only. No Korean characters.' in scene['action']['description']
     assert 'Exactly 5 scenes, each 6 seconds' in schema['properties']['scenes']['description']
     assert 'first setup, last punchline' in schema['properties']['scenes']['description']
     assert 'First scene setup' in scene['role']['description']
     def inspect(value):
         if isinstance(value,dict):
-            assert not set(value)&{'minimum','maximum','minLength','maxLength','maxItems','prefixItems'}
+            assert not set(value)&{'minimum','maximum','minLength','maxLength','maxItems','prefixItems','pattern'}
             assert 'minItems' not in value or value['minItems'] in (0,1)
             for child in value.values():inspect(child)
         elif isinstance(value,list):

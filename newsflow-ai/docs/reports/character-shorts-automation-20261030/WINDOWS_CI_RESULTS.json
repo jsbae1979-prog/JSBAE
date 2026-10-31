@@ -1,0 +1,15 @@
+{
+  "source": "c7a8d824a742e636d40ce062327edbda42be2e38",
+  "run_id": 41010344831,
+  "url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/41010344831",
+  "conclusion": "success",
+  "os": "GitHub hosted Windows Server 2025",
+  "providers": "Fake only; no user credentials",
+  "matrix": [
+    {"python": "3.12", "job_id": 123914941753, "python_pass": 148, "python_fail": 0, "python_error": 0, "node_pass": 31, "typescript": "PASS", "react_build": "PASS", "python_seconds": 85.63},
+    {"python": "3.14", "job_id": 123914942056, "python_pass": 148, "python_fail": 0, "python_error": 0, "node_pass": 31, "typescript": "PASS", "react_build": "PASS", "python_seconds": 95.89}
+  ],
+  "includes": ["profile/topic/authoring", "schema/catalog", "continuity/recovery/queue/regeneration", "actual local FFmpeg 15/35/60 seconds", "two distinct synthetic characters", "real PCM crossfade", "isolated React Chrome routes", "bounded validation feedback", "concurrent request receipts"],
+  "not_verified": ["real supplier account permissions/billing", "real model visual consistency/no speech", "human subjective review", "interactive operating Windows 11 session", "OS DPI"],
+  "counts_note": "Matrix entries are separate executions of the same focused suite; do not add them to the local full suite as unique coverage."
+}

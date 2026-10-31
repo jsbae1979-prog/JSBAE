@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import "./command-review.css";
 import { X, ShieldCheck, LoaderCircle, AlertTriangle } from "lucide-react";
 import {
   type Action,
@@ -94,7 +95,8 @@ export function localCharacterRenderReview(
     clips,
     ready:
       !!job &&
-      ["clips_review", "completed"].includes(job.state) &&
+      (["clips_review", "completed"].includes(job.state) ||
+        (["compose_failed", "composing"].includes(job.state) && job.composeRecoveryAvailable === true)) &&
       clips.length > 0 &&
       clips.every((clip) => clip.state === "downloaded" && !!clip.mediaUrl),
   };
@@ -519,7 +521,28 @@ export function CommandDialog({
       ? action.fields.filter((f) => ["job_id", "reviewed"].includes(f.name))
       : [...action.fields, ...dynamic],
   };
-  const risky = !localRender && action.risk !== "local";
+  const quoteSubmit = action.id === "character_act_submit";
+  const quotePrepare = action.id === "character_act_prepare";
+  const registeredRSS = action.id === "routes_collect";
+  const compactCharacter = quoteSubmit || quotePrepare;
+  const collectionAnalysis = action.id === "curation_analyze";
+  const compactConsent = compactCharacter || collectionAnalysis;
+  const compactReview = compactConsent || registeredRSS;
+  const analysis = view.catalog.newsAnalysis;
+  const analysisReady = !collectionAnalysis || (analysis?.collectionReady === true &&
+    Number.isSafeInteger(values.collection_context_id) && values.collection_context_id === analysis.collectionContextId);
+  const [clock, setClock] = useState(Date.now);
+  useEffect(() => {
+    if (!quoteSubmit) return;
+    const timer = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [quoteSubmit]);
+  const quoteJob = (view.collections.jobs ?? []).find(item => item.id === values.job_id);
+  const expires = Date.parse(String(quoteJob?.quoteExpiresAt ?? ""));
+  const expired = quoteSubmit && (quoteJob?.quoteStatus === "expired" || (Number.isFinite(expires) && clock > expires));
+  const quoteReady = !quoteSubmit || (!!quoteJob && quoteJob.state === "quoted" &&
+    quoteJob.quoteStatus === "ready" && quoteJob.quote_hash === values.quote_hash && !expired);
+  const risky = !localRender && !compactReview && action.risk !== "local";
   const set = (key: string, v: unknown) => {
     setValues((old) => {
       const next = { ...old, [key]: v };
@@ -530,25 +553,28 @@ export function CommandDialog({
   };
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (busy || (risky && !ack)) return;
+    if (busy || (risky && !ack) || (compactConsent && !ack) || !quoteReady || !analysisReady) return;
     if (localRender && (!localRender.ready || values.reviewed !== true)) {
       setError("실제 합성 대상 영상을 확인한 뒤 장면 검토를 체크하세요.");
       return;
     }
     setBusy(true);
     setError("");
+    if (registeredRSS && typeof context.__collectionProgress === "function") context.__collectionProgress("requesting");
     try {
       const result = await submitOriginal(
         effective,
-        values,
+        compactConsent ? { ...values, consent: ack, reviewed: ack } : values,
         view,
         files,
         localRender ? {} : (context.__extra ?? {}),
       );
+      if (registeredRSS && typeof context.__collectionProgress === "function") context.__collectionProgress("accepted");
       onSaved();
       if (result) setResponseSummary(result);
       else onClose();
     } catch (e) {
+      if (registeredRSS && typeof context.__collectionProgress === "function") context.__collectionProgress("unknown");
       setAck(false);
       const detail = e instanceof Error ? e.message : "저장 결과를 확인하세요.";
       if (checkingCharacterScenes) {
@@ -557,7 +583,10 @@ export function CommandDialog({
       } else if (diagnosingCharacterScenes) {
         onSaved();
         setError(`실패 상세 조회를 완료하지 못했습니다. 저장된 조회 결과를 확인하세요. ${detail}`);
-      } else setError(detail);
+      } else {
+        if (quoteSubmit) onSaved();
+        setError(detail);
+      }
     } finally {
       setBusy(false);
     }
@@ -568,6 +597,10 @@ export function CommandDialog({
         ? "기존 실패 상세 조회에 동의합니다"
         : checkingCharacterScenes && f.name === "consent"
         ? "기존 장면 상태 조회·완료 영상 저장에 동의합니다"
+        : action.id === "serpapi_settings" && f.name === "api_key"
+        ? "SerpApi API 키 · 변경할 때만 입력"
+        : action.id === "serpapi_settings" && f.name === "approved"
+        ? "SerpApi 뉴스 수집 사용"
         : f.name === "job_limit"
         ? action.id === "video_save_tts"
           ? "1회 음성 입력 글자 수 한도"
@@ -580,6 +613,8 @@ export function CommandDialog({
       label(f.name);
     const opts = choices(f, view, values, action);
     const v = values[f.name] ?? f.default;
+    if (action.id === "intelligence_analyze" && f.name === "article_ids" && context.articleTitle)
+      return <p className="bound-field" key={f.name}>분석 대상 <strong>{context.articleTitle}</strong></p>;
     if (["approval_token", "quote_hash"].includes(f.name) && context[f.name])
       return (
         <p className="bound-field" key={f.name}>
@@ -702,6 +737,7 @@ export function CommandDialog({
   const basic = effective.fields.filter(
     (f) =>
       f.required ||
+      (action.id === "serpapi_settings" && f.name === "api_key") ||
       f.path ||
       f.type === "boolean" ||
       [
@@ -728,7 +764,7 @@ export function CommandDialog({
   return (
     <dialog
       ref={dialog}
-      className="command-dialog"
+      className={"command-dialog" + (compactReview || action.id === "serpapi_settings" ? " command-dialog--compact" : "")} aria-label={localRender ? localRenderTitle : action.label}
       onCancel={(e) => {
         if (busy) e.preventDefault();
         else onClose();
@@ -760,6 +796,39 @@ export function CommandDialog({
             </p>
           ) : (
             <>
+              {action.id === "serpapi_settings" && <p>키를 비우면 기존 키를 유지합니다. 저장은 연결 테스트나 뉴스 조회를 실행하지 않습니다.</p>}
+              {compactReview && (
+                <section className="compact-command-review" aria-label="이번 작업 확인">
+                  {registeredRSS ? <p>이전 목록을 비우고 등록·활성화된 공개 RSS를 새로 수집합니다. 저장된 제작 이력은 유지됩니다.</p>
+                    : quotePrepare ? <p>선택한 참조 이미지와 검토한 스토리로 최신 영상 견적을 확인합니다. 영상은 생성하지 않습니다.</p>
+                    : collectionAnalysis ? <>
+                        <p>이번 수집 회차 전체 {analysis?.candidateCount??0}개 기사에서 TOP 3를 분석합니다.</p>
+                        <dl className="property-list">
+                          <div><dt>분석 API</dt><dd>{view.catalog.analysisProviders?.[analysis?.provider]??"미설정"}</dd></div>
+                          <div><dt>모델</dt><dd>{analysis?.model??"미설정"}</dd></div>
+                        </dl>
+                        {!analysisReady&&<p role="status">새 수집 자료와 분석 API 설정을 확인하세요.</p>}
+                      </> : <>
+                        <p>{quoteJob?.topic}</p>
+                        <dl className="property-list">
+                          <div><dt>영상 모델</dt><dd>{view.catalog.characterStudio?.models?.[quoteJob?.model] ?? quoteJob?.model}</dd></div>
+                          <div><dt>영상</dt><dd>{quoteJob?.scenes?.length ?? 0}장면 · {quoteJob?.plannedDurationSeconds ?? quoteJob?.duration}초</dd></div>
+                          <div><dt>공식 영상 견적</dt><dd>US${quoteJob?.quote_total_usd ?? "미확정"}</dd></div>
+                          <div><dt>편당 상한</dt><dd>US${quoteJob?.episode_limit ?? "미설정"}</dd></div>
+                        </dl>
+                      </>}
+                  {quoteSubmit && !quoteReady ? <div role="status">
+                    <p>{expired ? "견적 유효시간이 지났습니다. 최신 견적을 확인하세요." : "최신 작업 상태와 견적을 확인하세요."}</p>
+                    {quoteJob?.quoteSettingsEditable === true && typeof context.__refreshQuote === "function" &&
+                      <button type="button" disabled={busy} onClick={() => { onClose(); void context.__refreshQuote(); }}>최신 견적 확인</button>}
+                  </div> : compactConsent && analysisReady && <label className="check-field approval">
+                    <input type="checkbox" checked={ack} onChange={event => setAck(event.target.checked)}
+                      aria-label={collectionAnalysis ? "현재 수집 회차의 유료 분석 승인" : quotePrepare ? "참조 이미지 전송·스토리 검토 확인" : "표시된 견적과 검토한 내용으로 영상 생성 승인"}/>
+                    {collectionAnalysis ? "표시된 수집 기사와 모델의 유료 분석에 동의합니다." : quotePrepare ? "참조 이미지 전송과 검토한 스토리의 견적 조회에 동의합니다."
+                      : `검토한 이미지·스토리와 위 견적으로 영상 생성을 승인합니다. 실패하면 자동 재요청하지 않습니다.`}
+                  </label>}
+                </section>
+              )}
               {risky && (
                 <div className="scope-note">
                   <ShieldCheck size={20} />
@@ -767,7 +836,7 @@ export function CommandDialog({
                     {diagnosingCharacterScenes
                       ? "실패한 기존 요청의 처리 결과와 오류 설명만 확인합니다. 영상 생성·재시도·새 견적은 요청하지 않습니다."
                       : checkingCharacterScenes
-                      ? "이미 요청한 장면의 상태를 확인하고 완료된 영상을 저장합니다. 새 영상 생성이나 재생성은 하지 않습니다."
+                      ? "접수된 장면을 확인·저장합니다. 이어지는 장면은 승인된 견적 범위에서 앞 장면의 마지막 프레임으로 연결합니다. 실패 장면은 재시도하지 않습니다."
                       : "대상과 선택 모델을 확인하세요. 외부 전송·유료 사용·공개 게시 동의는 각각 별도로 적용되며, 실패·결과 불명 시 자동 재요청하지 않습니다."}
                   </p>
                 </div>
@@ -783,9 +852,10 @@ export function CommandDialog({
                 <section aria-label="실제 합성 대상 영상 검토">
                   <p>
                     저장된 실제 영상 {localRender.clips.length}개를 내 PC의
-                    FFmpeg로 연결·저장합니다. 자막이나 새 음성·나레이션은
-                    추가하지 않고, 장면에 포함된 원래 소리만 유지합니다. 새 AI
-                    생성이나 외부 전송은 실행하지 않습니다.
+                    FFmpeg로 연결·저장합니다. {localRender.job?.automation_version===1&&!localRender.job?.directVideo
+                      ? "검토한 자막·코믹 효과음을 더하고 장면의 환경음을 연결합니다. 새 음성·나레이션은 추가하지 않습니다."
+                      : "자막이나 새 음성·나레이션은 추가하지 않고, 장면에 포함된 원래 소리만 유지합니다."}
+                    새 AI 생성이나 외부 전송은 실행하지 않습니다.
                   </p>
                   {localRender.job && (
                     <p className="bound-field">
@@ -852,15 +922,15 @@ export function CommandDialog({
                   </label>
                 </section>
               ) : (
-                <div className="form-grid">{basic.map(field)}</div>
+                !compactReview && <div className="form-grid">{basic.map(field)}</div>
               )}
-              {!localRender && advanced.length > 0 && (
+              {!localRender && !compactReview && advanced.length > 0 && (
                 <details className="advanced">
                   <summary>세부 설정 · 검토 항목 ({advanced.length})</summary>
                   <div className="form-grid">{advanced.map(field)}</div>
                 </details>
               )}
-              {!localRender && (
+              {!localRender && !compactReview && action.id !== "serpapi_settings" && (
                 <p className="muted">
                   {view.policy?.price ??
                     "실제 계정 사용 가능 여부와 비용은 아직 확인되지 않았습니다."}
@@ -919,6 +989,7 @@ export function CommandDialog({
               action.unsupported ||
               !view.commandsAvailable ||
               (risky && !ack) ||
+              (compactConsent && !ack) || !quoteReady || !analysisReady ||
               (!!localRender &&
                 (!localRender.ready || values.reviewed !== true))
             }
@@ -929,7 +1000,7 @@ export function CommandDialog({
               <ShieldCheck size={18} />
             )}{" "}
             {busy
-              ? "응답 확인 중 · 재요청 금지"
+              ? localRender ? "FFmpeg로 최종 영상 합성 중…" : registeredRSS ? "수집 요청 중…" : "응답 확인 중 · 재요청 금지"
               : localRender
                 ? localRenderTitle
                 : action.label}

@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-31",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "operatingCodeHead": "f2a3d8a68a82bfe1a2bb6f62f476e3f42a250d44",
+  "operating": {
+    "programRoot": "C:\\NewsFlowAI",
+    "dataDirectory": "D:\\NewsFlowAI_Data",
+    "loopbackPort": 18768,
+    "bundledPython": "3.14.7",
+    "normalStopExitCodes": [
+      0,
+      0
+    ],
+    "explicitlyApprovedStopStartCycles": 2,
+    "currentChrome": "User-visible official quote page; no token/cookie copied or exposed"
+  },
+  "dataRelocation": {
+    "state": "PASS",
+    "articles": 169,
+    "databaseTables": 47,
+    "originalNonsettingRowsPreservedTables": 46,
+    "keyMediaIntegrity": "Preexisting opaque keys and media SHA-256 preserved",
+    "backupIntegrity": "Logical SQLite backup equality; original and A/B SHA-256 unchanged; raw old folder archives retained",
+    "previousSourcePaths": [
+      "%LOCALAPPDATA%\\NewsFlowAI",
+      "%LOCALAPPDATA%\\NewsFlowAI-BAT\\v1"
+    ],
+    "removedAfterVerifiedArchive": {
+      "files": 185,
+      "bytes": 340049792
+    },
+    "archiveRoot": "D:\\NewsFlowAI_Data\\archives",
+    "controlFilesRetained": "%LOCALAPPDATA%\\NewsFlowAI-BAT launch configuration and private recovery backups",
+    "productBehavior": "Only explicit local fixed-drive request; same-user private ACL; stopped consistent copy; integrity-checked config switch; no merge; failures retain source and block auto replay",
+    "oldFolderDeletion": "Operator performed only the two specifically authorized obsolete folder removals. Product migration never deletes old data automatically."
+  },
+  "providerTests": {
+    "claude": {
+      "authentication": "PASS",
+      "selectedModelMetadata": "PASS",
+      "metadataRequests": 1
+    },
+    "openai": {
+      "authentication": "NOT VERIFIED",
+      "reason": "No registered key; test button disabled; no request"
+    },
+    "elevenlabs": {
+      "authentication": "PASS",
+      "modelListVisibility": "PASS",
+      "metadataRequests": 2,
+      "voiceAndCommercialEntitlement": "NOT VERIFIED"
+    },
+    "higgsfield": {
+      "authentication": "PASS",
+      "ownedTerminalRequestRead": "PASS",
+      "metadataRequests": 1,
+      "newGenerationModelEntitlement": "NOT VERIFIED"
+    },
+    "paidGenerations": 0,
+    "accountResponseBodiesPersisted": false,
+    "securityPoliciesPreserved": true
+  },
+  "library": {
+    "visibilitySynchronization": "PASS: 16 history rows became 1 matching Library, before later user-created work",
+    "originalRawJobsRetained": true,
+    "permanentDeletion": "Implemented explicit selection and confirmation; media unlink is journaled and scoped to owned trashed content; active/unknown/shared/publishing-linked media protected",
+    "auditCostApprovalPublicationAndBackupsRetained": true,
+    "chromeLibraryTrashCount": 33,
+    "chromeLegacyTrashCount": 6,
+    "chromeMultipleSelectionAndReset": "PASS in both sections; selected 2, then cleared",
+    "actualContentPurgeRequests": 0,
+    "buttonHeightsPx": 36,
+    "buttonGapPx": 8
+  },
+  "compositionRecovery": {
+    "implementation": "APPLIED; preserve paid clips; per-attempt workspace; locked manual recovery from compose_failed or interrupted composing",
+    "reusedFocusedEvidence": {
+      "PASS": 198,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "actualOperatingFailedCompositionRetry": "NOT VERIFIED: no compose_failed/composing item existed; no failure was induced in user data",
+    "existingFinalMedia": "PASS: existing 30-second media loaded at readyState 4 without error after relocation"
+  },
+  "currentStory": {
+    "state": "quoted",
+    "targetSeconds": 30,
+    "actualPlannedSeconds": 27.9,
+    "sourceSceneSeconds": [
+      7,
+      8,
+      8,
+      5
+    ],
+    "originalStoryAttemptsRetained": 3,
+    "additionalClaudeCalls": 0,
+    "originalResponseHashesAndTextCostRecordsPreserved": true,
+    "repair": "Small lower-bound timing tolerance of 0.1s; no text rewrite, scene seconds change, extra slow-down or forced hold to reach 30s",
+    "futureLargeTimingErrors": "Remain blocked for local review; no automatic paid retry",
+    "localFfmpegProof": "PASS: synthetic boundary story output is 27.9s rather than padded to 30s",
+    "model": "Kling 3.0 Standard",
+    "sound": "environment only",
+    "quoteUsd": "3.528",
+    "quoteIsActualBill": false,
+    "quoteReferenceUploads": 1,
+    "quotePriceLookups": 4,
+    "videoSubmissions": 0,
+    "oldPaidRetryButton": "Removed from basic screen; saved response automatic recovery and manual editing remain"
+  },
+  "focusedValidation": {
+    "note": "Runs overlap; do not sum as independent new tests. No new full regression was run after the initial full run.",
+    "provider": {
+      "PASS": 119,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "creationSelectionRaceRelated": {
+      "PASS": 19,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "dataLocationContracts": {
+      "PASS": 49,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "dataLocationUiRelated": {
+      "PASS": 9,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "libraryPurgeAndVisibility": {
+      "PASS": 58,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "nativeRefusalAndRecovery": {
+      "PASS": 3,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "naturalTimingAndExistingProtection": {
+      "PASS": 55,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "latestUi": {
+      "PASS": 10,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "integratedRemoteReadModels": {
+      "PASS": 39,
+      "FAIL": 0,
+      "ERROR": 0
+    },
+    "TypeScript": "PASS",
+    "ReactBuild": "PASS"
+  },
+  "boundaries": {
+    "assistantPaidGenerations": 0,
+    "snsCalls": 0,
+    "unsignedUpdates": 0,
+    "externalDistribution": false,
+    "mainChanged": false,
+    "pr35Changed": false,
+    "existingUserLocalChangesRetained": true,
+    "productionSecretsDatabasesMediaOrCapturesCommitted": false
+  },
+  "result": "CONDITIONAL",
+  "remaining": [
+    "OpenAI key registration and metadata check require the user to register a key through the existing secure UI",
+    "Current video generation requires a separate approval of its official quote and expected natural duration",
+    "Real failed operating composition retry not exercised because no such item existed"
+  ],
+  "evidence": "Sensitive runtime evidence and Chrome captures retained locally. This report contains only finite non-sensitive aggregates."
+}

@@ -37,7 +37,7 @@ def articles(app):
         return ids
 
 
-def test_replace_collection_archives_used_sources_preserves_rows_and_reactivates(app, client):
+def test_replace_collection_deletes_unused_hides_used_sources_and_reactivates(app, client):
     old, used, new = articles(app)
     fixture = video_fixture(app, "Archive fixture")
     with app.state.sessions.begin() as session:
@@ -47,16 +47,53 @@ def test_replace_collection_archives_used_sources_preserves_rows_and_reactivates
     with app.state.sessions() as session:
         assert set(session.scalars(select(NewsArticle.id).where(visible_news()))) == {new}
         assert used_article_ids(session) == {used}
-        assert len(list(session.scalars(select(NewsArticle)))) == 3
+        # The unused old article is deleted; the video source row is kept but hidden.
+        assert set(session.scalars(select(NewsArticle.id))) == {used, new}
+        assert session.get(NewsArticle, old) is None and session.get(NewsListState, old) is None
         assert session.get(NewsArticle, used).summary == "Stored summary"
+        assert session.get(NewsListState, used).hidden and session.get(NewsListState, used).used
     assert "Synthetic topic 2" in client.get("/news").text
     assert "Synthetic topic 1" not in client.get("/news").text
     assert "Synthetic topic 1" in client.get("/news?view=used").text
     with app.state.sessions.begin() as session:
-        replace_collection(session, [old])
-        assert session.get(NewsListState, used).used
-    assert "Synthetic topic 0" in client.get("/").text
+        replace_collection(session, [used])
+        assert session.get(NewsListState, used).used and not session.get(NewsListState, used).hidden
+        assert session.get(NewsArticle, new) is None
+    assert "Synthetic topic 1" in client.get("/").text
     assert "Synthetic topic 2" not in client.get("/dashboard/news").text
+
+
+def test_replace_collection_keeps_articles_referenced_by_drafts_images_and_autopilot(app):
+    from newsflow.db.models import ArticleThumbnail, AutopilotJob, ImagePost
+
+    draft_ref, image_ref, autopilot_ref = articles(app)
+    with app.state.sessions.begin() as session:
+        source_id = session.get(NewsArticle, draft_ref).source_id
+        removed, current = (NewsArticle(source_id=source_id, title=f"Synthetic extra {i}", summary="Stored summary",
+                                        url=f"https://example.com/cleanup/x{i}",
+                                        canonical_url=f"https://example.com/cleanup/x{i}", publisher="Fixture")
+                            for i in range(2))
+        session.add_all([removed, current])
+        session.flush()
+        removed, current = removed.id, current.id
+        session.add(ArticleThumbnail(article_id=removed, url="https://images.example.org/x.png",
+                                     source_article_url="https://example.com/cleanup/x0", publisher="Fixture"))
+        run = IntelligenceRun(kind="script", status="success", provider="offline", options={}, evidence={},
+                              result={}, message="")
+        session.add(run)
+        session.flush()
+        session.add(ContentDraft(run_id=run.id, duration=30, content={},
+                                 sources={"articles": [{"article_id": draft_ref}]}))
+        session.add(ImagePost(article_id=image_ref, title="t", caption="c", sources={}, filename="synthetic.jpg",
+                              sha256="0" * 64, ai_disclosure="none"))
+        session.add(AutopilotJob(id="d" * 32, mode="guided", source="sample", duration=30, platform="youtube",
+                                 status="failed", current_stage="script", article_id=autopilot_ref))
+    with app.state.sessions.begin() as session:
+        replace_collection(session, [current])
+    with app.state.sessions() as session:
+        assert set(session.scalars(select(NewsArticle.id))) == {draft_ref, image_ref, autopilot_ref, current}
+        assert set(session.scalars(select(NewsArticle.id).where(visible_news()))) == {current}
+        assert session.get(ArticleThumbnail, removed) is None
 
 
 def test_empty_collection_does_not_clear_existing(app):
@@ -67,7 +104,7 @@ def test_empty_collection_does_not_clear_existing(app):
         assert set(session.scalars(select(NewsArticle.id).where(visible_news()))) == set(ids)
 
 
-def test_rss_success_replaces_list_but_failure_keeps_it(app):
+def test_rss_success_replaces_list_but_failure_hides_previous_round_and_keeps_originals(app):
     from newsflow.db.models import CollectionRun
 
     ids = articles(app)
@@ -85,14 +122,16 @@ def test_rss_success_replaces_list_but_failure_keeps_it(app):
     result = service.collect(run_id)
     with app.state.sessions() as session:
         assert list(session.scalars(select(NewsArticle.id).where(visible_news()))) == result["article_ids"]
-        assert all(session.get(NewsArticle, i) for i in ids)
+        # Unreferenced articles from the earlier collection are deleted on a successful replace.
+        assert not any(session.get(NewsArticle, i) for i in ids)
     class Failed:
         def collect(self, *_args):
             raise RuntimeError("Do not log raw transport text")
     service.collector = Failed()
     service.collect(run_id)
     with app.state.sessions() as session:
-        assert list(session.scalars(select(NewsArticle.id).where(visible_news()))) == result["article_ids"]
+        assert list(session.scalars(select(NewsArticle.id).where(visible_news()))) == []
+        assert all(session.get(NewsArticle, identifier) is not None for identifier in result["article_ids"])
 
 
 def test_video_delete_and_restore_preserve_bytes_and_sources(client, app):

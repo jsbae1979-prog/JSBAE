@@ -60,6 +60,25 @@ class APICancelled(ProviderError):
     code = "ai_cancelled"
 
 
+class APIRequestNotDispatched(ProviderError):
+    """Only a failure proven to precede the transport boundary; never a timeout."""
+    def __init__(self, reason='request_invalid'):
+        self.reason = reason if reason in {'request_invalid', 'credential_unavailable', 'request_cancelled'} else 'request_invalid'
+        super().__init__('API 요청을 전송하기 전에 중단했습니다.')
+
+
+class APIInputNotDispatched(APIRequestNotDispatched, ProviderResponseError):
+    code = ProviderResponseError.code
+
+
+class APIKeyNotDispatched(APIRequestNotDispatched, ProviderKeyMissing):
+    code = ProviderKeyMissing.code
+
+
+class APICancelledBeforeDispatch(APIRequestNotDispatched, APICancelled):
+    code = APICancelled.code
+
+
 def _safe_json(text: str, *, reject_duplicates: bool = False) -> dict:
     def unique(pairs):
         result = {}
@@ -93,7 +112,7 @@ def _claude_json_object(text: str) -> dict:
     return _safe_json(text, reject_duplicates=True)
 
 
-def _output_schema(model) -> dict:
+def _output_schema(model, *, claude=True) -> dict:
     """Send supported wire constraints; retain the original strict local schema.
 
     Claude's raw JSON schema API does not support string/numeric bounds or
@@ -101,14 +120,17 @@ def _output_schema(model) -> dict:
     https://platform.claude.com/docs/en/build-with-claude/structured-outputs
     """
     unsupported = {"minimum", "maximum", "minLength", "maxLength", "maxItems"}
+    if claude:
+        unsupported.add("pattern")
 
     def wire(value):
         if isinstance(value, list):
             return [wire(item) for item in value]
         if not isinstance(value, dict):
             return value
-        limits = {name: value[name] for name in unsupported if name in value}
-        result = {name: wire(item) for name, item in value.items() if name not in unsupported}
+        omitted = unsupported | ({"minItems"} if claude and type(value.get("minItems")) is int and value["minItems"] > 1 else set())
+        limits = {name: value[name] for name in omitted if name in value}
+        result = {name: wire(item) for name, item in value.items() if name not in omitted}
         if result.get('type') == 'object':
             result['additionalProperties'] = False
         if limits:
@@ -211,6 +233,9 @@ class _APITransport:
         deadline = time.monotonic() + timeout
         self._cancelled()
         with urllib.request.build_opener(NoRedirect()).open(request, timeout=timeout) as response:
+            if self.provider == 'claude_api' and json.loads(request.data).get('stream') is True:
+                from .anthropic_stream import read_message
+                return read_message(response, limit=limit, deadline=deadline, cancelled=self._cancelled)
             chunks, length = [], 0
             while length <= limit:
                 self._cancelled()
@@ -236,30 +261,37 @@ class _APITransport:
     def _post_once(self, body: dict, options: Options) -> dict:
         self.last_usage = None
         self.last_search_evidence = None
-        self._cancelled()
+        if self.cancel_event.is_set():
+            raise APICancelledBeforeDispatch('request_cancelled')
         if options.model not in API_MODELS[self.provider]:
-            raise ProviderResponseError("이 API 모델은 NewsFlow 검색·비용 계약 검증 대상이 아닙니다.")
+            raise APIInputNotDispatched('request_invalid')
         try:
             key = self.key_provider()
         except Exception:  # noqa: BLE001 - DPAPI/provider diagnostics may contain secrets
-            raise ProviderKeyMissing("선택한 API의 비밀키를 읽지 못했습니다.") from None
+            raise APIKeyNotDispatched('credential_unavailable') from None
         if not isinstance(key, str) or not key.strip():
-            raise ProviderKeyMissing("선택한 API의 키가 등록되지 않았습니다.")
+            raise APIKeyNotDispatched('credential_unavailable') from None
         key = key.strip()
         if any(ord(char) < 33 or ord(char) > 126 for char in key):
-            raise ProviderKeyMissing("API 키 형식을 확인해 주세요.")
-        raw = json.dumps(body, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        properties = body.get("output_config", {}).get("format", {}).get("schema", {}).get("properties", {})
+            raise APIKeyNotDispatched('credential_unavailable') from None
+        try:
+            raw = json.dumps(body, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            properties = body.get("output_config", {}).get("format", {}).get("schema", {}).get("properties", {})
+        except (TypeError, ValueError, AttributeError):
+            raise APIInputNotDispatched('request_invalid') from None
         request_limit = (MAX_CURATION_REQUEST_BYTES if self.provider == "claude_api"
                          and "article_groups" in properties else MAX_REQUEST_BYTES)
         if len(raw) > request_limit:
-            raise ProviderResponseError("API 입력 크기가 제한을 초과했습니다.")
+            raise APIInputNotDispatched('request_invalid')
         headers = {"Content-Type": "application/json", "Accept-Encoding": "identity"}
         if self.provider == "openai":
             headers["Authorization"] = "Bearer " + key
         else:
             headers.update({"x-api-key": key, "anthropic-version": "2023-06-01"})
-        request = urllib.request.Request(self.endpoint, data=raw, headers=headers, method="POST")
+        try:
+            request = urllib.request.Request(self.endpoint, data=raw, headers=headers, method="POST")
+        except (TypeError, ValueError):
+            raise APIInputNotDispatched('request_invalid') from None
         started = time.monotonic()
         try:
             response = self._open(request, options.timeout, MAX_RESPONSE_BYTES)
@@ -272,7 +304,7 @@ class _APITransport:
         except urllib.error.HTTPError as exc:
             if self.provider == "claude_api" and type(OpenAIProvider._classify(exc)) is ProviderResponseError:
                 raise ProviderHTTPResponseError.from_http_error(
-                    exc, recorder=self.error_recorder, secret=key) from None
+                    exc, recorder=self.error_recorder, secret=key, request_body=body) from None
             raise OpenAIProvider._classify(exc) from None
         except TimeoutError:
             raise ProviderTimeoutError("API 요청 결과가 불명확합니다. 자동 재요청하지 않습니다.") from None
@@ -280,6 +312,10 @@ class _APITransport:
             if isinstance(exc.reason, TimeoutError):
                 raise ProviderTimeoutError("API 요청 결과가 불명확합니다. 자동 재요청하지 않습니다.") from None
             raise ProviderUnavailableError("API 연결에 실패했습니다. 자동 재요청하지 않습니다.") from None
+        except APIRequestNotDispatched:
+            # Once _open has been entered, even a matching exception cannot prove
+            # non-transmission. Never release a potentially billed reservation.
+            raise ProviderUnavailableError("API 요청 결과를 확인하지 못했습니다. 자동 재요청하지 않습니다.") from None
         except ProviderError:
             raise
         except Exception:  # noqa: BLE001 - no supplier content/credentials in errors

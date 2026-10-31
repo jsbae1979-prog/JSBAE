@@ -6,9 +6,12 @@ export type View = {
   dataOrigin: string;
   csrfToken: string;
   commandsAvailable: boolean;
+  libraryRemovalAvailable?: boolean;
+  libraryPurgeAvailable?: boolean;
   collections: Record<string, Item[]>;
   catalog: Item;
   projects?: Item[];
+  publishedProjects?: Item[];
   services?: Item[];
   settings?: Record<string, string>;
   policy?: Item;
@@ -68,6 +71,8 @@ export const status: Record<string, string> = {
   prepare_failed: "견적 확인 필요",
   generating: "장면 생성 중",
   submission_unknown: "결과 불명 · 재요청 금지",
+  submission_not_sent: "전송 전 중단",
+  not_sent: "미전송",
   scene_review: "장면 확인 필요",
   retry_quoted: "추가 견적 승인 대기",
   clips_review: "장면 검토",
@@ -240,11 +245,17 @@ export function label(key: string) {
 }
 export function safeMedia(url: unknown) {
   return typeof url === "string" &&
-    /^\/(?:video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/(?:\d+|backgrounds\/\d+)\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
+    /^\/(?:api\/studio\/characters\/[a-f0-9]{32}\/reference|video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/(?:\d+|backgrounds\/\d+)\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
       url,
     )
     ? url
     : null;
+}
+/** A card-only fallback; the authenticated endpoint validates the owned image/hash. */
+export function characterReferenceThumbnail(item: Item) {
+  const match=item.kind === "character" && typeof item.id === "string"
+    ? /^character:([a-f0-9]{32})$/.exec(item.id) : null;
+  return match ? safeMedia(`/api/studio/characters/${match[1]}/reference`) : null;
 }
 export function itemTitle(item: Item) {
   return String(

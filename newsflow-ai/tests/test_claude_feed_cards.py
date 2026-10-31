@@ -1,5 +1,6 @@
 """Claude card JSON + local raster, using synthetic credentials/data and Fake only."""
 import json
+from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
@@ -81,7 +82,7 @@ def test_no_openai_required_single_call_and_settings_unchanged(app, prepared):
         record = session.scalar(select(APIRequestReservation))
         assert record.request_id == f"feed-card:{identifier}"
         assert record.kind == "script" and record.usage["search_calls"] == 0
-        assert record.reserved_usd == "0" and record.status == "success"
+        assert Decimal(record.reserved_usd) == Decimal('0.222000') and record.status == "success"
     assert not app.state.api_keys["openai"].status()["configured"]
 
 

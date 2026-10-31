@@ -63,7 +63,8 @@
         },
         "audio_price_verified": false,
         "note": "공개 정가 범위 추정치 · 소리별 단가 매핑 미확인. 실제 견적·청구와 다름."
-      }
+      },
+      "continuation_param": "image_url"
     },
     {
       "provider": "higgsfield",
@@ -127,7 +128,8 @@
         },
         "audio_price_verified": false,
         "note": "소리 끔 공개 정가 참고치. 소리 켬은 공식 견적 전 미확정. 실제 청구와 다름."
-      }
+      },
+      "continuation_param": "first_frame_url"
     }
   ]
 }

@@ -1,0 +1,31 @@
+{
+  "head": "fa87bcafa88d556f7bb9df3f6726798ae20fcd5f",
+  "frontendOnly": true,
+  "files": [
+    "app/frontend/dist/assets/index-BbyZPotA.css",
+    "app/frontend/dist/assets/index-Byz2gGDK.js",
+    "app/frontend/dist/index.html"
+  ],
+  "pidPreserved": 31076,
+  "restartCount": 0,
+  "tablesUnchanged": 47,
+  "articles": 169,
+  "originalAndABPreserved": true,
+  "launchAndAclUnchanged": true,
+  "paidCalls": 0,
+  "snsCalls": 0,
+  "backendDiagnosticFixApplied": false,
+  "focusedTests": {
+    "distinctPass": 10,
+    "finalFail": 0,
+    "finalError": 0,
+    "firstRunPass": 9,
+    "firstRunFailure": 1,
+    "firstFailure": "Browser selector expected exact button name without decorative icon; fixed test selector only",
+    "targetedRecheckPass": 1,
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "paidApi": "NOT RUN",
+    "chromeUserConfirmation": "PENDING"
+  }
+}

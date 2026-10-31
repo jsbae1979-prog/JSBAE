@@ -41,6 +41,7 @@ import "./style.css";
 import Workbench from "./studio/Workbench";
 import StopNotice from "./studio/StopNotice";
 import { Thumbnail } from "./studio/Thumbnail";
+import { characterReferenceThumbnail } from "./studio/contracts";
 
 type Kind = "news" | "character" | "image";
 type Project = {
@@ -251,6 +252,7 @@ function App() {
   } | null>(null);
   const modal = useRef<HTMLDialogElement>(null);
   const search = useRef<HTMLInputElement>(null);
+  const previousPage = useRef(page);
   async function load() {
     setLoading(true);
     setError("");
@@ -286,6 +288,16 @@ function App() {
       window.removeEventListener("keydown", key);
     };
   }, []);
+  useEffect(() => {
+    const changed = previousPage.current !== page;
+    previousPage.current = page;
+    if (changed && page === "create") {
+      // Library removal/restoration may have changed the active workspace while
+      // this top-level shell stayed mounted during studio navigation.
+      setData(null);
+      void load();
+    }
+  }, [page]);
   useEffect(() => {
     if (dialog && !modal.current?.open) modal.current?.showModal();
     if (!dialog && modal.current?.open) modal.current?.close();
@@ -419,12 +431,13 @@ function App() {
             >
               <div className="project-visual">
                 <Thumbnail
-                  src={p.thumbnailUrl ? localHref(p.thumbnailUrl) : null}
+                  src={p.thumbnailUrl ? localHref(p.thumbnailUrl) : characterReferenceThumbnail(p)}
                   alt={`${p.title} · ${p.sourceLabel}`}
                   kind={p.kind}
                 />
                 <span className="type-tag">
                   {TYPES.find((t) => t.id === p.kind)?.title}
+                  {!p.thumbnailUrl && characterReferenceThumbnail(p) && " · 참조 이미지"}
                 </span>
                 {synthetic && <span className="sample-tag">합성 자료</span>}
               </div>

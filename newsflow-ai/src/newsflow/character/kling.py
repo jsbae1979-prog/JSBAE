@@ -54,8 +54,7 @@ def validate(value):
         if (issues or v['style']!=CHARACTER['style_id'] or v['aspect_ratio']!=CHARACTER['aspect_ratio']
                 or v['output_quality'] not in OUTPUTS or v['sound'] not in {'on','off'}
                 or type(v['duration']) is not int or not 15<=v['duration']<=60 or v['duration']%5
-                or v['duration']!=5*v['clip_seconds']
-                or v['script_model'] not in API_MODELS['claude_api']):raise ValueError
+                or v['script_model'] not in tuple(API_MODELS['claude_api'])+tuple(API_MODELS['openai'])):raise ValueError
     except (ValueError,KeyError,TypeError,ZeroDivisionError):raise CharacterError() from None
     return v
 
@@ -101,8 +100,10 @@ def dimensions(value):
 
 def catalog():
     data=CATALOG.refresh()
-    models=[{**m,'duration_values':duration_values(m)} for m in data['models'] if m['enabled']]
-    return {'version':2,'models':{m['id']:m['label'] for m in models},'modelsDetailed':models,'defaults':DEFAULTS,
+    models=[{**m,'duration_values':duration_values(m)} for m in data['models']
+            if m['enabled'] and m['reference_image'] and '9:16' in m['aspect_ratios']]
+    return {'version':2,'models':{m['id']:m['label'] for m in models},'modelsDetailed':models,'defaults':{**DEFAULTS,'duration':CHARACTER['target_duration']['default']},
+            'totalDurationChoices':list(range(CHARACTER['target_duration']['min'],CHARACTER['target_duration']['max']+1,CHARACTER['target_duration']['step'])),
             'styles':STYLES,'stylePresets':list(styles().values()),'ratios':RATIOS,'character':CHARACTER,
             'outputQualities':OUTPUTS,'sounds':{'off':'끄기 (무음)','on':'켜기'},
             'capabilities':{m['id']:{'ratio':m['aspect_ratio_mode'],'quality':m['quality_note']} for m in models},

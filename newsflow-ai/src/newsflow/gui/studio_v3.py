@@ -48,6 +48,11 @@ def _project(identifier, title, kind, status, at, href, *, thumb=None, media=Non
 
 @router.get("/api/studio/workspace")
 def workspace(request: Request):
+    return workspace_view(request)
+
+
+def workspace_view(request: Request, *, include_library_hidden=False, project_ids=None):
+    """Active workspace by default; retained sources only for internal history projections."""
     import os
 
     state = request.app.state
@@ -198,6 +203,10 @@ def workspace(request: Request):
                 media=url,
             )
         )
+    if not include_library_hidden:
+        projects = [item for item in projects if "library:" + item["id"] not in removed]
+    if project_ids is not None:
+        projects = [item for item in projects if item["id"] in project_ids]
     projects.sort(key=lambda x: x["updatedAt"], reverse=True)
     synthetic = getattr(state, "studio_synthetic", False)
     if synthetic:
@@ -249,12 +258,16 @@ def workspace(request: Request):
             configured = (p.is_file() and not p.is_symlink()) or bool(
                 os.environ.get("NEWSFLOW_ELEVENLABS_KEY", "")
             )
+        from newsflow.intelligence.provider_connections import SCOPES, connections
+        checks = {scope: connections(state).status(identifier,scope) for scope in SCOPES[identifier]}
+        verified = any(check['verified'] for check in checks.values())
         services.append(
             {
                 "id": identifier,
                 "label": label,
                 "configured": configured,
-                "verified": False,
+                "verified": verified,
+                "checks": checks,
                 "href": "/settings",
             }
         )

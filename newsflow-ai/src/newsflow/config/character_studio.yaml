@@ -4,8 +4,14 @@
   "aspect_ratio": "9:16",
   "appearance": "Preserve the character identity and appearance in the supplied reference image.",
   "style_lock": "soft 3D animated film style, warm pastel lighting, consistent character design, no text, no logos",
-  "audio_default": false,
+  "audio_default": true,
   "clip_seconds": 11,
   "max_total_seconds": 60,
-  "output_quality": "1080p"
+  "output_quality": "1080p",
+  "target_duration": {
+    "min": 15,
+    "max": 60,
+    "step": 5,
+    "default": 30
+  }
 }

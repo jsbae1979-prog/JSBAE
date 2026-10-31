@@ -608,6 +608,48 @@
   width: 100%;
   margin: 5px 0;
 }
+/* Selection and reversible removal are limited to the library. */
+.management-ui .mg-library-selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+.management-ui .mg-library-selection strong { margin-right: auto; }
+.management-ui .mg-library-selection button { font-size: 12px; padding: 5px 9px; }
+.management-ui .mg-library-card-wrap { position: relative; min-width: 0; }
+.management-ui .mg-library-card-wrap .mg-content-card { width: 100%; height: 100%; }
+.management-ui .mg-library-card-wrap .mg-library-check {
+  position: absolute;
+  top: 13px;
+  left: 13px;
+  z-index: 2;
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  padding: 0;
+  accent-color: #9758ff;
+  cursor: pointer;
+}
+.management-ui .mg-library-check:focus-visible { outline: 3px solid #39d6ff; outline-offset: 3px; }
+.management-ui .mg-library-check:disabled { cursor: not-allowed; }
+.management-ui .mg-library-file-cleanup { margin: 8px 0; }
+.management-ui .mg-library-delete-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  padding: 24px;
+  color: #edf6ff;
+  background: #061b2e;
+  border: 1px solid #4e76a6;
+  border-radius: 12px;
+  box-shadow: 0 12px 60px #0009;
+}
+.management-ui .mg-library-delete-dialog::backdrop { background: #0009; }
+.management-ui .mg-library-delete-dialog h2 { font-size: 20px; }
+.management-ui .mg-library-delete-dialog ul { max-height: 180px; overflow: auto; padding-left: 22px; overflow-wrap: anywhere; }
+.management-ui .mg-library-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 .management-ui .mg-publish-steps {
   list-style: none;
   display: grid;
@@ -1434,3 +1476,17 @@
     margin: 7px 0;
   }
 }
+
+.management-ui .mg-thumb-reference { position: absolute; left: 6px; bottom: 6px; padding: 3px 6px; border-radius: 4px; background: #061626df; color: #c8e0f4; font-size: 10px; line-height: 1.4; }
+
+/* Provider actions align within their own table cell and wrap as whole buttons. */
+.management-ui .mg-provider-actions {display:flex;align-items:center;flex-wrap:wrap;gap:8px;}
+.management-ui .mg-provider-actions > button {display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;margin:0;padding:8px 12px;white-space:nowrap;line-height:1.25;}
+.management-ui .mg-provider-actions > small {flex-basis:100%;}
+.management-ui .mg-trash-toolbar {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:14px 0;}
+.management-ui .mg-trash-row {display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #1b3f61;}
+.management-ui .mg-trash-row > input {width:16px;height:16px;min-height:0;margin:0;padding:0;accent-color:#8b40ff;}
+.management-ui .mg-trash-row strong {display:block;overflow-wrap:anywhere;}
+.management-ui .mg-trash-row small {display:block;color:var(--mg-muted);font-size:11px;}
+.management-ui .mg-danger {background:#8f2342;border:1px solid #dc5c82;color:#fff;}
+@media(max-width:720px){.management-ui .mg-trash-row{grid-template-columns:18px minmax(0,1fr);}.management-ui .mg-trash-row > button{grid-column:2;justify-self:start;}}

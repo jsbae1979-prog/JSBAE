@@ -1,0 +1,340 @@
+{
+  "phase": "APPLIED_AND_AUTHENTICATED_CHROME_METADATA_VERIFIED",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "baseline": "898618bfd9fd8f64a22e19407aa2f2e57ad5fc40",
+  "operatingSourceSha": "7eed8ba96189207dd8aa6556cb55345cf0fa48fd",
+  "tests": {
+    "pass": 38,
+    "newPass": 38,
+    "affectedExistingPass": 0,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "fakeOnly": true,
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "diffCheck": "PASS",
+    "badgeChromeRecheckPass": 1,
+    "distinctPass": 38,
+    "badgeTypescript": "PASS",
+    "badgeReactBuild": "PASS"
+  },
+  "initialTestSetup": {
+    "errors": 31,
+    "cause": "new test location did not load shared synthetic app fixture",
+    "resolution": "moved test to existing product tests fixture scope"
+  },
+  "initialTestExpectation": {
+    "failures": 1,
+    "cause": "existing service creates two empty proof fields on first check",
+    "resolution": "test permits unchanged empty search/inference proof fields"
+  },
+  "uiTestEnvironment": {
+    "interruptedBeforeAssertion": 2,
+    "cause": "restricted Windows TestClient asyncio socketpair initialization wait",
+    "resolution": "approved elevated synthetic test execution; no policy changes"
+  },
+  "cases": [
+    {
+      "test": "tests.test_claude_operating_connection_check::test_authenticated_metadata_get_refreshes_only_proof_and_preserves_secrets_and_budget",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_existing_local_auth_origin_csrf_consent_and_loopback_are_required",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[GET-/api-settings/claude_api/check]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[DELETE-/api-settings/claude_api/check]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/openai/check]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/claude_api/check-search]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/claude_api/key]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/claude_api/check/extra]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api/studio/characters/auto-story]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/api-settings/claude_api]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_scope_does_not_expand_other_endpoints[POST-/v1/messages]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs0]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs1]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs2]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs3]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs4]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs5]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs6]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs7]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_rejects_paid_posts_arbitrary_urls_or_payloads_before_dispatch[kwargs8]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_transport_and_key_scope_end_after_callback_and_never_repeat_same_dispatch",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[401-auth_error]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[403-permission]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[404-model_unavailable]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[429-rate_limit]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[302-unavailable]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_provider_errors_are_sanitized_and_never_retried[504-timeout]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_timeout_no_retry_and_redirect_policy_stays_denied",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_missing_stored_key_does_not_use_environment_or_change_verification_ttl",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_model_change_invalidates_proof_without_generation",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_operating_connection_check::test_install_does_not_accept_another_profile_or_replace_existing_checker",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[not_checked-None-claude-sonnet-4-6-True-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[valid-1-claude-sonnet-4-6-True-True]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[expired-25-claude-sonnet-4-6-True-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[model_changed-1-claude-opus-4-6-True-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[key_missing-1-claude-sonnet-4-6-False-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_claude_connection_projection_preserves_gates_and_settings[future_stamp--1-claude-sonnet-4-6-True-False]",
+      "status": "PASS"
+    },
+    {
+      "test": "tests.test_claude_connection_ui::test_chrome_settings_labels_follow_only_current_claude_proof",
+      "status": "PASS"
+    }
+  ],
+  "chrome": {
+    "authenticatedUserTabObserved": true,
+    "provider": "claude_api",
+    "model": "claude-sonnet-4-6",
+    "status": "AUTHENTICATION_AND_MODEL_CONFIRMED",
+    "checkSubmitted": true,
+    "keyValueRead": false,
+    "requests": 1,
+    "finalBadge": "인증 확인",
+    "finalText": "인증·모델 확인"
+  },
+  "diagnosis": {
+    "missingOperatingRoute": "/api-settings/claude_api/check",
+    "reactVerificationHardcodedFalse": true,
+    "generalCredentialDecryptionRemainsDenied": true,
+    "keyInvalidityOrExpiry": "STORED_KEY_AUTHENTICATED_SUCCESSFULLY",
+    "previousAuthenticationRecordExpired": true
+  },
+  "liveVerification": "PASS_AUTHENTICATION_AND_MODEL_GET_ONLY_NOT_GENERATION_OR_BILLING",
+  "sourceSha": "464493cab1db21e108c044430cfbd301b8849d7b",
+  "application": {
+    "status": "APPLIED_AFTER_EXPLICIT_APPROVAL",
+    "files": [
+      {
+        "path": "app/product/newsflow/gui/api_settings_routes.py",
+        "before": "280726d6f7e3751fee1076c83f49b30ccce7141a95627c9316f257e7d2c73175",
+        "sha256": "6c617630231d6a39299851343f6159a9a017865e73c05d94743fb344cd319e13",
+        "bytes": 6710
+      },
+      {
+        "path": "app/product/newsflow/gui/studio_v3.py",
+        "before": "1eedd54abda7490656e4b372c9a55095e4647cdb9b8275b0a7f60b79ef35f802",
+        "sha256": "b5e5155d1998feefaf83d0159e8810113143ccc93b5d5d1ebc158de4eaf486df",
+        "bytes": 13477
+      },
+      {
+        "path": "app/controller/bat_distribution/claude_connection_check.py",
+        "before": null,
+        "sha256": "2dd40b0bd34127c2aa44f543d702312a20e3b26a739642b5ff7ea0318061161f",
+        "bytes": 4855
+      },
+      {
+        "path": "app/controller/bat_distribution/windows_live.py",
+        "before": "3e66af6c786b7652f7e85956ed7af7dfc07444902da3b11959d3ad8c08bdbba2",
+        "sha256": "276e0b270abcea2c0e4459299be225313f9da28262a5049feae3e46a6ce0ebb5",
+        "bytes": 28559
+      },
+      {
+        "path": "app/frontend/dist/assets/index-WABMv2Ne.js",
+        "before": null,
+        "sha256": "96e8610c6d643bc5c04f4a2f25878823912e3d2f6c33253e05599869bb7dd7d7",
+        "bytes": 608275
+      },
+      {
+        "path": "app/frontend/dist/index.html",
+        "before": "c25fb8eb9c0babe032878bc3e41092e75d184be7b4dcca6b3157555a2aae751f",
+        "sha256": "7e0b87e1c7e93f0c379ce31d49a3ba6770756c0d1faa9d9601e1d1260e50db55",
+        "bytes": 418
+      }
+    ],
+    "normalDeployment": {
+      "head": "f91afae3c979cef9636c9aa5e0a7fc1357e49826",
+      "port": 18768,
+      "pid": 32312,
+      "normalStopExit": 0,
+      "stopAttempts": 1,
+      "startAttempts": 1,
+      "tablesUnchanged": 47,
+      "articles": 169,
+      "profileFilesPreserved": 127,
+      "originalAndABPreserved": true,
+      "chromeOpenAccepted": true,
+      "securityFlagsPreserved": true,
+      "paidCallsDuringDeployment": 0,
+      "snsCalls": 0
+    },
+    "staticBadgeCorrection": {
+      "head": "464493cab1db21e108c044430cfbd301b8849d7b",
+      "frontendOnly": true,
+      "files": [
+        "app/frontend/dist/assets/index-BdcoJefS.js",
+        "app/frontend/dist/index.html"
+      ],
+      "pidPreserved": 32312,
+      "restartCount": 0,
+      "tablesUnchanged": 47,
+      "articles": 169,
+      "originalAndABPreserved": true,
+      "launchAndAclUnchanged": true,
+      "paidCalls": 0,
+      "snsCalls": 0,
+      "backendDiagnosticFixApplied": false
+    },
+    "staticBadgeFiles": [
+      {
+        "path": "app/frontend/dist/assets/index-BdcoJefS.js",
+        "before": null,
+        "sha256": "6cda187d2afe94c1b43ce66997ea6d985a14fd143a1b9a2906e867909e73c4d5",
+        "bytes": 608400
+      },
+      {
+        "path": "app/frontend/dist/index.html",
+        "before": "7e0b87e1c7e93f0c379ce31d49a3ba6770756c0d1faa9d9601e1d1260e50db55",
+        "sha256": "54ba09816557dbefc14f0193b52a906de71c2ca9f1216d341b4391340ed8f4dc",
+        "bytes": 418
+      }
+    ]
+  },
+  "finalVerdict": "ACCEPTED_FOR_CLAUDE_CONNECTION_CHECK_ONLY",
+  "developmentProtection": {
+    "operatingFilesChanged": false,
+    "operatingDataChanged": false,
+    "operatingRestartCount": 0,
+    "providerRequests": 0,
+    "paidGenerationRequests": 0,
+    "snsRequests": 0,
+    "keysExposed": false,
+    "globalPolicyRelaxed": false
+  },
+  "protection": {
+    "normalStopStartCycles": 1,
+    "additionalRestarts": 0,
+    "paidGenerations": 0,
+    "snsRequests": 0,
+    "keyReplacement": false,
+    "keysExposed": false,
+    "globalPolicyRelaxed": false,
+    "verificationMetadataOnlyChanged": true,
+    "preservation": {
+      "result": "CLAUDE_AUTHENTICATION_AND_MODEL_CONFIRMED",
+      "model": "claude-sonnet-4-6",
+      "guiMetadataRequests": 1,
+      "paidGenerationRequests": 0,
+      "snsRequests": 0,
+      "automaticRetryCount": 0,
+      "tableCount": 47,
+      "articles": 169,
+      "unchangedNonSettingTables": 46,
+      "changedSettings": [
+        "api_claude_api_authentication_verified_at",
+        "api_claude_api_connection_check_started_at",
+        "api_claude_api_connection_checked_at"
+      ],
+      "otherSettingsUnchanged": true,
+      "nonDatabaseProfileFilesPreserved": 125,
+      "originalAndABPreserved": true,
+      "keyValuesExposed": false
+    }
+  }
+}

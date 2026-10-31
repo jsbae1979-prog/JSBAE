@@ -84,6 +84,10 @@ def test_elevenlabs_consent_cancel_and_reported_usage_policy(tmp_path):
         provider.synthesize_timed("시험.", tmp_path / "no.wav", "elevenlabs", 30, cancel=cancel)
     assert transport.calls == []
     provider.config["job_limit"] = 1
+    with pytest.raises(TTSError, match="1회 실행 한도"):
+        provider.synthesize_timed("시험.", tmp_path / "blocked.wav", "elevenlabs", 30)
+    assert transport.calls == []
+    provider.config["job_limit"] = len("시험.")
     provider.synthesize_timed("시험.", tmp_path / "yes.wav", "elevenlabs", 30)
     assert transport.calls == ["GET", "POST"]
 

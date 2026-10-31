@@ -52,12 +52,12 @@ def render_panel(provider="openai", *, settings=None, token_limit=0, **changes):
     }
     html = templates.env.get_template("api_connection.html").render(
         key=provider, api_connections={provider: api}, csrf_field=lambda: "CSRF-FIELD",
-        legacy_api_settings=SimpleNamespace(monthly_token_limit=token_limit, timeout=30),
+        legacy_api_settings=SimpleNamespace(request_token_limit=token_limit, timeout=30),
     )
     html += templates.env.get_template("api_budget.html").render(
         key=provider, api=api, api_label="OpenAI API" if provider == "openai" else "Claude API",
         csrf_field=lambda: "CSRF-FIELD",
-        legacy_api_settings=SimpleNamespace(monthly_token_limit=token_limit, timeout=30))
+        legacy_api_settings=SimpleNamespace(request_token_limit=token_limit, timeout=30))
     return html, Panel(html)
 
 
@@ -80,12 +80,12 @@ def test_key_registration_is_direct_and_costs_use_one_accessible_dialog(provider
 @pytest.mark.parametrize("provider", ["openai", "claude_api"])
 def test_mandatory_approvals_and_budget_are_visible_in_dialog_and_not_prechecked(provider):
     html, panel = render_panel(provider)
-    for name in ("approved", "search_enabled", "search_approved", "monthly_limit_usd"):
+    for name in ("approved", "search_enabled", "search_approved", "request_limit_usd"):
         field, parents = panel.field(name)
         assert parents == ("dialog", "form") and "checked" not in field
-    assert not any(field.get("name") == "request_limit_usd" for field, _ in panel.inputs)
+    assert not any(field.get("name") == "monthly_limit_usd" for field, _ in panel.inputs)
     assert not any(field.get("name") in {"billing_confirmed", "account_remaining_usd"} for field, _ in panel.inputs)
-    assert "최종 비용 상한을 보장하지 않습니다" in html
+    assert "보수적 예상 비용이 1회 한도 안에 있을 때만 승인" in html
     assert "details" in panel.field("input_price_per_1m")[1]
     assert "details" in panel.field("search_price_per_1k")[1]
 
@@ -103,7 +103,7 @@ def test_existing_approvals_remain_independent_without_manual_balance_fields():
 @pytest.mark.parametrize("token_limit", [0, 150000])
 def test_required_openai_token_limit_stays_visible_until_configured(token_limit):
     _, panel = render_panel(token_limit=token_limit)
-    field, parents = panel.field("monthly_token_limit")
+    field, parents = panel.field("request_token_limit")
     assert field["value"] == str(token_limit) and "required" in field
     assert ("details" in parents) is (token_limit > 0)
     assert "details" in panel.field("timeout")[1]

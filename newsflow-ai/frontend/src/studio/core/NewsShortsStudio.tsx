@@ -1,3 +1,5 @@
+import {ElevenVoicePicker} from "./ElevenVoicePicker";
+import {VoicePreview} from "./VoicePreview";
 import { useEffect, useRef, useState } from "react";
 import {
   FileText,
@@ -26,6 +28,7 @@ export default function NewsShortsStudio({
   c: Controller;
   onNavigate: (page: string) => void;
 }) {
+  const voiceInitialized=useRef(false);
   const [archiveId, setArchiveId] = useState<number | null>(
     () => Number(new URLSearchParams(location.search).get("draft_id")) || null,
   );
@@ -35,7 +38,15 @@ export default function NewsShortsStudio({
     [duration, setDuration] = useState("30"),
     [voice, setVoice] = useState("offline-silence"),
     [subtitle, setSubtitle] = useState("48:1420"),
-    [visual, setVisual] = useState("news");
+    [visual, setVisual] = useState("news"),
+    [voiceReady,setVoiceReady] = useState(false);
+  useEffect(()=>{
+    if(!voiceInitialized.current&&c.view){
+      const saved=c.view.formDefaults?.video_render?.voice;
+      if(typeof saved==="string")setVoice(saved);
+      voiceInitialized.current=true;
+    }
+  },[c.view]);
   const [editor, setEditor] = useState<Item | null>(null),
     [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
@@ -333,6 +344,7 @@ export default function NewsShortsStudio({
                   onChange={setVoice}
                   options={voices}
                 />
+                {voice==="elevenlabs"?<ElevenVoicePicker c={c} onReady={setVoiceReady}/>:<VoicePreview c={c} voice={voice}/>}
                 <Select
                   label="영상 방식"
                   value={visual}
@@ -343,6 +355,13 @@ export default function NewsShortsStudio({
                     ai: "AI 장면 · 별도 견적",
                   }}
                 />
+                <div className="news-video-api-info" role="region" aria-label="영상 API 정보">
+                  {visual==="ai"?<>
+                    <strong>Higgsfield · AI 영상 API</strong>
+                    <small>{(c.view?.collections.models??[]).filter(m=>m.provider==="higgsfield"&&m.confirmed_at).map(m=>m.label).join(" · ")||"영상 모델 등록·설정 필요"}</small>
+                    <small>장면 계획에서 모델을 선택하고 공식 견적을 확인합니다.</small>
+                  </>:<><strong>FFmpeg · 내 PC에서 합성</strong><small>{visual==="news"?"뉴스 이미지 자동 연결":"기본 카드 영상"} · 외부 영상 API 없음</small></>}
+                </div>
                 <fieldset className="core-choice-field">
                   <legend>영상 길이</legend>
                   <div>
@@ -414,7 +433,7 @@ export default function NewsShortsStudio({
             c={c}
             id="video_render"
             primary
-            disabled={!draft || dirty || visual === "ai"}
+            disabled={!draft || dirty || visual === "ai" || (voice==="elevenlabs"&&!voiceReady)}
             context={{
               draft_id: draft?.id,
               duration: Number(duration),

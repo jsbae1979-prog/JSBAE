@@ -199,7 +199,7 @@ def test_global_wire_uses_exact_region_language_query_and_no_search_addons(monke
 def test_all_global_candidates_korean_audience_six_scores_and_script_review(client, app, global_setup, monkeypatch):
     assert request(client).status_code == 200
     save_api_settings(app.state.sessions, "claude_api", model="claude-sonnet-4-6", approved=True,
-                      search_enabled=False, search_approved=False, monthly_limit_usd="100",
+                      search_enabled=False, search_approved=False, monthly_limit_usd="100", request_limit_usd="10",
                       input_price_per_1m="3", output_price_per_1m="15", search_price_per_1k="10", billing_confirmed=True)
     write_studio_settings(app.state.sessions, "claude_api", "claude-sonnet-4-6")
     ai = GlobalAI("claude_api")

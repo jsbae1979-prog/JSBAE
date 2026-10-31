@@ -94,7 +94,7 @@ MSG_MONEY_FORMAT = "금액은 0 이상의 숫자(소수점 4자리까지)로 입
 MSG_MAX_ACTIVE = "동시 생성 수는 1~4 사이여야 합니다."
 MSG_TIMEOUT = "장면별 제한시간은 5~120분 사이여야 합니다."
 MSG_POLL = "상태 확인 간격은 5~60초 사이여야 합니다."
-MSG_APPROVAL_LIMITS = "유료 생성을 승인하려면 0보다 큰 작업별 한도와 월 한도를 함께 설정하세요."
+MSG_APPROVAL_LIMITS = "유료 영상 승인에는 0보다 큰 1회 실행 한도가 필요합니다."
 MSG_JOB_OVER_MONTH = "작업별 한도는 월 한도보다 클 수 없습니다."
 MSG_CURRENCY_LOCKED = "이번 달 사용 기록이 있어 통화를 바꿀 수 없습니다. 다음 달에 바꾸세요."
 MSG_PATH = "모델 경로는 공식 문서의 소문자 경로 형식(예: vendor/model/text-to-video)으로 입력하세요."
@@ -106,7 +106,7 @@ MSG_MODEL_LIMIT = "모델은 최대 10개까지 등록할 수 있습니다."
 MSG_NOT_FOUND = "모델을 찾지 못했습니다."
 MSG_DURATIONS = "허용 길이는 쉼표로 구분한 초 단위 정수로 입력하세요. 예: 5,10"
 MSG_DURATION_RANGE = "허용 길이는 1~30초 사이여야 합니다."
-MSG_NO_LIMITS = "작업별 한도와 월 한도가 설정되지 않아 AI 영상을 생성하지 않습니다."
+MSG_NO_LIMITS = "1회 실행 한도가 설정되지 않아 AI 영상을 생성하지 않습니다."
 MSG_PROMPT_EMPTY = "AI 생성 장면의 프롬프트를 입력하세요."
 MSG_PROMPT_LONG = "프롬프트는 600자 이내로 입력하세요."
 MSG_PROMPT_CONTROL = "프롬프트에 제어 문자를 넣을 수 없습니다."
@@ -118,7 +118,7 @@ MSG_VIDEO_KEY_FORMAT = "open.higgsfield.ai에서 복사한 API 키를 공백·�
 MSG_AI_KEY_FORMAT = "API 키 형식을 확인하세요. 공백 없이 20자 이상이어야 합니다."
 REASON_OFF = "AI 영상 공급사가 '사용 안 함'입니다. 기본 FFmpeg 제작만 사용합니다."
 REASON_APPROVAL = "AI 영상 유료 생성 승인이 저장되지 않았습니다."
-REASON_LIMITS = "작업별 한도와 월 한도가 없습니다."
+REASON_LIMITS = "1회 실행 한도가 없습니다."
 REASON_EXHAUSTED = "이번 달 AI 영상 한도를 모두 사용했습니다."
 REASON_KEY = "AI 영상 API 키가 없습니다."
 REASON_MODEL = "공식 문서 확인과 초당 단가를 입력한 모델이 없습니다."
@@ -269,11 +269,11 @@ def test_read_settings_falls_back_to_safe_defaults_for_tampered_rows(sessions):
         ({"host": "api.higgsfield.ai.evil.example"}, MSG_HOST),
         ({"currency": "EUR"}, MSG_CURRENCY),
         ({"currency": "usd"}, MSG_CURRENCY),
-        ({"monthly_limit": "-1"}, MSG_MONEY_FORMAT),
-        ({"monthly_limit": "abc"}, MSG_MONEY_FORMAT),
+        ({"job_limit": "-1"}, MSG_MONEY_FORMAT),
+        ({"job_limit": "abc"}, MSG_MONEY_FORMAT),
         ({"job_limit": "1.23456"}, MSG_MONEY_FORMAT),
         ({"job_limit": "1e3"}, MSG_MONEY_FORMAT),
-        ({"monthly_limit": "10000001"}, "금액은 10000000 이하로 입력하세요."),
+        ({"job_limit": "10000001"}, "금액은 10000000 이하로 입력하세요."),
         ({"max_active": 0}, MSG_MAX_ACTIVE),
         ({"max_active": 5}, MSG_MAX_ACTIVE),
         ({"max_active": True}, MSG_MAX_ACTIVE),
@@ -282,25 +282,12 @@ def test_read_settings_falls_back_to_safe_defaults_for_tampered_rows(sessions):
         ({"timeout_minutes": 121}, MSG_TIMEOUT),
         ({"poll_seconds": 4}, MSG_POLL),
         ({"poll_seconds": 61}, MSG_POLL),
-        ({"monthly_limit": "0"}, MSG_APPROVAL_LIMITS),
+        ({"job_limit": "0"}, MSG_APPROVAL_LIMITS),
         ({"job_limit": ""}, MSG_APPROVAL_LIMITS),
         ({"monthly_limit": "", "job_limit": ""}, MSG_APPROVAL_LIMITS),
-        ({"monthly_limit": "10", "job_limit": "20"}, MSG_JOB_OVER_MONTH),
-        ({"approved": False, "monthly_limit": "10", "job_limit": "10.0001"}, MSG_JOB_OVER_MONTH),
     ],
 )
 def test_write_settings_rejects_invalid_values_and_stores_nothing(sessions, overrides, expected):
-    # Historical parameter IDs retained. Blank speculative caps are valid settings,
-    # while saving them does not plan/submit a paid video request.
-    if expected == MSG_APPROVAL_LIMITS:
-        saved = save_settings(sessions, **overrides)
-        assert read_settings(sessions) == saved and saved.approved
-        assert saved.monthly_limit == Decimal(overrides.get("monthly_limit", "100") or "0")
-        assert saved.job_limit == Decimal(overrides.get("job_limit", "10") or "0")
-        with sessions() as session:
-            assert session.scalar(select(AIVideoPlan)) is None
-            assert session.scalar(select(VideoAIUsage)) is None
-        return
     with pytest.raises(VideoSettingsError) as excinfo:
         save_settings(sessions, **overrides)
     assert message(excinfo) == expected
@@ -325,23 +312,26 @@ def test_write_settings_normalizes_limits_and_round_trips(sessions):
         sessions, host=HOSTS[0], monthly_limit=" 1,000.5 ", job_limit="12.50", currency="KRW", max_active=3,
     )
     assert saved.provider == "higgsfield" and saved.host == "api.higgsfield.ai"
-    assert saved.monthly_limit == Decimal("1000.5") and saved.job_limit == Decimal("12.5")
+    assert saved.monthly_limit == Decimal(0) and saved.job_limit == Decimal("12.5")
     assert saved.currency == "KRW" and saved.max_active == 3 and saved.approved
     with sessions() as session:
         stored = {row.key: row.value for row in session.scalars(select(AppSetting))}
-    assert stored["video_ai_monthly_limit"] == "1000.5"
+    assert "video_ai_monthly_limit" not in stored
     assert stored["video_ai_job_limit"] == "12.5"
     assert stored["video_ai_provider"] == "higgsfield"
     assert read_settings(sessions) == saved
 
 
-def test_job_limit_equal_to_monthly_limit_is_allowed(sessions):
-    saved = save_settings(sessions, monthly_limit="10", job_limit="10")
-    assert saved.job_limit == saved.monthly_limit == Decimal(10)
+@pytest.mark.parametrize('legacy', ['0', '10', 'NaN', '10000001'])
+def test_legacy_monthly_limit_is_ignored_and_never_newly_persisted(sessions, legacy):
+    saved = save_settings(sessions, monthly_limit=legacy, job_limit="20")
+    assert saved.job_limit == Decimal(20) and saved.monthly_limit == Decimal(0)
+    with sessions() as session:
+        assert session.get(AppSetting, 'video_ai_monthly_limit') is None
 
 
 def test_off_provider_never_stores_an_approval(sessions):
-    saved = save_settings(sessions, provider="off", approved=True, monthly_limit="", job_limit="")
+    saved = save_settings(sessions, provider="off", approved=False, monthly_limit="", job_limit="")
     assert saved.provider == "off" and not saved.approved and saved.approved_at is None
     saved = save_settings(sessions, provider="off", approved=True)
     assert not saved.approved
@@ -355,7 +345,7 @@ def test_approval_timestamp_kept_on_resave_and_cleared_when_unchecked_or_off(ses
 
     again = save_settings(sessions, monthly_limit="200", job_limit="20", host=HOSTS[0], poll_seconds=30)
     assert again.approved_at == first.approved_at
-    assert again.monthly_limit == Decimal(200) and again.poll_seconds == 30
+    assert again.monthly_limit == Decimal(0) and again.job_limit == Decimal(20) and again.poll_seconds == 30
 
     unchecked = save_settings(sessions, approved=False)
     assert not unchecked.approved and unchecked.approved_at is None
@@ -379,7 +369,7 @@ def test_currency_change_blocked_by_counted_usage_this_month(sessions):
     assert message(excinfo) == MSG_CURRENCY_LOCKED
     assert read_settings(sessions).currency == "USD"
     # Re-saving with the same currency still works.
-    assert save_settings(sessions, currency="USD", monthly_limit="50").monthly_limit == Decimal(50)
+    assert save_settings(sessions, currency="USD", monthly_limit="50").monthly_limit == Decimal(0)
 
 
 @pytest.mark.parametrize("status", sorted(COUNTED))
@@ -691,8 +681,12 @@ def limits(job: str = "10", monthly: str = "20", currency: str = "KRW") -> Video
 
 
 @pytest.mark.parametrize(("job", "monthly"), [("0", "20"), ("10", "0"), ("0", "0")])
-def test_check_budget_requires_both_limits(sessions, job, monthly):
+def test_check_budget_requires_only_positive_job_limit(sessions, job, monthly):
     plan = make_plan(sessions)
+    if Decimal(job) > 0:
+        with sessions() as session:
+            check_budget(session, limits(job, monthly), plan, Decimal('0.01'))
+        return
     with sessions() as session, pytest.raises(VideoSettingsError) as excinfo:
         check_budget(session, limits(job, monthly), plan, Decimal("0.01"))
     assert message(excinfo) == MSG_NO_LIMITS
@@ -703,13 +697,10 @@ def test_check_budget_job_limit_message_with_numbers(sessions):
     add_usage(sessions, plan, "8.5", currency="KRW")
     add_usage(sessions, plan, "100", status="not_sent", currency="KRW")
     with sessions() as session:
-        check_budget(session, limits(), plan, Decimal("1.5"))  # exactly at the job limit is allowed
+        check_budget(session, limits(), plan, Decimal("10"))  # Prior spend stays history, current call equals cap.
         with pytest.raises(VideoSettingsError) as excinfo:
-            check_budget(session, limits(), plan, Decimal(2))
-    assert message(excinfo) == (
-        "작업별 한도를 넘습니다: 이 작업 사용 8.5 + 이번 요청 예상 2 > 한도 10 KRW. "
-        "장면 수를 줄이거나 한도를 확인하세요."
-    )
+            check_budget(session, limits(), plan, Decimal('10.0001'))
+    assert '10.0001' in message(excinfo) and '10 KRW' in message(excinfo) and '1회' in message(excinfo)
 
 
 def test_check_budget_refuses_a_plan_whose_spend_is_in_another_currency(sessions):
@@ -728,25 +719,23 @@ def test_check_budget_refuses_a_plan_whose_spend_is_in_another_currency(sessions
         check_budget(session, limits(), other, Decimal(1))  # never-sent rows are not counted spend
 
 
-def test_check_budget_monthly_message_with_numbers(sessions):
+def test_check_budget_preserves_monthly_history_without_blocking_new_call(sessions):
     plan, other = make_plan(sessions), make_plan(sessions)
     add_usage(sessions, other, "15")
     add_usage(sessions, other, "500", created_at=last_month())
     add_usage(sessions, other, "500", status="not_sent")
     with sessions() as session:
-        check_budget(session, limits(), plan, Decimal(5))  # 15 + 5 == 20 is allowed
-        with pytest.raises(VideoSettingsError) as excinfo:
-            check_budget(session, limits(), plan, Decimal(6))
-    assert message(excinfo) == "이번 달 AI 영상 한도를 넘습니다: 사용 15 + 이번 요청 예상 6 > 한도 20 KRW."
+        check_budget(session, limits(), plan, Decimal(5))
+        check_budget(session, limits(), plan, Decimal(6))
+        assert plan_spent(session, other) == Decimal(515)
 
 
-def test_check_budget_reports_job_limit_before_monthly_limit(sessions):
+def test_check_budget_reports_current_call_limit_independent_of_past_spend(sessions):
     plan = make_plan(sessions)
     add_usage(sessions, plan, "19.9999")
     with sessions() as session, pytest.raises(VideoSettingsError) as excinfo:
-        check_budget(session, limits("20", "20", "USD"), plan, Decimal("0.0002"))
-    assert message(excinfo).startswith("작업별 한도를 넘습니다: 이 작업 사용 19.9999 + 이번 요청 예상 0.0002")
-    assert message(excinfo).endswith("> 한도 20 USD. 장면 수를 줄이거나 한도를 확인하세요.")
+        check_budget(session, limits("20", "20", "USD"), plan, Decimal("20.0001"))
+    assert '20.0001' in message(excinfo) and '20 USD' in message(excinfo) and '1회' in message(excinfo)
 
 
 def test_readiness_lists_every_missing_condition_by_default(sessions, tmp_path):
@@ -754,7 +743,7 @@ def test_readiness_lists_every_missing_condition_by_default(sessions, tmp_path):
     assert not result["ready"]
     assert result["reasons"] == [REASON_OFF, REASON_APPROVAL, REASON_LIMITS, REASON_KEY, REASON_MODEL]
     assert result["provider"] == "off" and result["key"] == {"configured": False}
-    assert result["remaining"] == Decimal(0) and result["models"] == []
+    assert result["remaining"] is None and result["models"] == []
     store = VideoAIKeyStore(tmp_path / "keys", FakeCipher())
     assert readiness(sessions, store)["reasons"] == result["reasons"]
 
@@ -769,7 +758,7 @@ def test_readiness_ready_when_every_condition_holds(sessions, tmp_path):
     result = readiness(sessions, store)
     assert result["ready"] and result["reasons"] == []
     assert result["provider"] == "higgsfield" and result["key"]["configured"]
-    assert result["remaining"] == Decimal("17.5") and result["usage"]["spent"] == Decimal("12.5")
+    assert result["remaining"] is None and result["usage"]["spent"] == Decimal("12.5")
     assert [m.path for m in result["models"]] == [PATH]
 
 
@@ -792,10 +781,11 @@ def test_readiness_each_condition_individually(sessions, tmp_path, monkeypatch):
     save_settings(sessions, monthly_limit="20", job_limit="10")
     add_usage(sessions, make_plan(sessions), "20")
     exhausted = readiness(sessions, store)
-    assert exhausted["reasons"] == [REASON_EXHAUSTED] and exhausted["remaining"] == Decimal(0)
+    assert exhausted["ready"] and exhausted["reasons"] == [] and exhausted["remaining"] is None
+    assert exhausted['usage']['spent'] == Decimal(20)
 
     monkeypatch.delenv(VIDEO_ENV_NAME)
-    assert readiness(sessions, store)["reasons"] == [REASON_EXHAUSTED, REASON_KEY]
+    assert readiness(sessions, store)["reasons"] == [REASON_KEY]
 
 
 def test_provider_override_skips_provider_and_key_checks_only(sessions):

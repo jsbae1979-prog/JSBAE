@@ -130,7 +130,7 @@ def test_auto_registration_fills_price_and_preserves_all_other_records_limits_an
     assert KEY not in json.dumps(evidence,default=str)
     assert [call[3]['duration'] for call in sender.calls] == [5,10]
     assert read_settings(app.state.sessions) == settings
-    assert settings.job_limit == 5 and settings.monthly_limit == 20 and settings.approved
+    assert settings.job_limit == 5 and settings.monthly_limit == 0 and settings.approved
     assert keys.path.read_bytes() == key_bytes
     after = snapshot(app)
     assert {k:v for k,v in before.items() if k not in ('app_settings','video_ai_models')} == {

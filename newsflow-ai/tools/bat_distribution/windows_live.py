@@ -447,6 +447,8 @@ def start(config, plan):
             app = create_app(Settings(data_dir=config.profile, host='127.0.0.1', port=config.port), adapter=adapter, automatic_start=True,
                              character_ffmpeg=config.program/'tools/ffmpeg.exe',
                              character_ffprobe=config.program/'tools/ffprobe.exe')
+            from .data_location import install as install_data_location
+            install_data_location(app,config)
             # No automatic scheduling in validation or newly adopted local operation.
             # Existing reservations/history stay intact; no product scheduler change.
             app.state.scheduler.start = lambda: None
@@ -463,9 +465,22 @@ def start(config, plan):
                 character_story_only = install_character_story_only(
                     app, config.profile, story_policy, character_native_factory)
             key_registration = None
+            claude_connection_check = None
+            provider_connection_check = None
+            voice_catalog_access = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .higgsfield_key_registration import install as install_key_registration
                 key_registration = install_key_registration(app, config.profile, character_native_factory)
+                from .claude_connection_check import install as install_claude_connection_check
+                claude_connection_check = install_claude_connection_check(app, config.profile, character_native_factory)
+                from .provider_connection_check import install as install_provider_connection_check
+                provider_connection_check = install_provider_connection_check(app, config.profile, character_native_factory)
+                from .voice_catalog_access import install as install_voice_catalog_access
+                voice_catalog_access = install_voice_catalog_access(app, config.profile, character_native_factory)
+            serpapi_registration = None
+            if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
+                from .serpapi_key_registration import install as install_serpapi_registration
+                serpapi_registration = install_serpapi_registration(app, config.profile, character_native_factory)
             character_quote_only = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .character_quote_only import install as install_character_quote_only
@@ -474,6 +489,10 @@ def start(config, plan):
             if manual_enabled:
                 from .character_manual_execution import install as install_character_manual
                 character_manual = install_character_manual(app, config.profile, character_native_factory)
+            character_authoring = None
+            if manual_enabled and trial_policy is None:
+                from .character_authoring import install as install_character_authoring
+                character_authoring = install_character_authoring(app, config.profile, character_native_factory)
             import uvicorn
             session = LaunchSession(config.port)
             nonce = secrets.token_hex(32)
@@ -491,6 +510,11 @@ def start(config, plan):
                 from .operation import OperatingRequests
                 authenticated_app = LocalAccess(app, session)
                 request_boundary = OperatingRequests(authenticated_app)
+                from .registered_rss import install as install_registered_rss
+                registered_rss = install_registered_rss(app)
+                request_boundary = registered_rss.wrap(request_boundary, authenticated_app)
+                if serpapi_registration is not None:
+                    request_boundary = serpapi_registration.wrap(request_boundary, authenticated_app)
                 if character_trial is not None:
                     request_boundary = character_trial.wrap(request_boundary, authenticated_app)
                 if character_story_only is not None:
@@ -501,6 +525,14 @@ def start(config, plan):
                     request_boundary = character_quote_only.wrap(request_boundary, authenticated_app)
                 if character_manual is not None:
                     request_boundary = character_manual.wrap(request_boundary, authenticated_app)
+                if character_authoring is not None:
+                    request_boundary = character_authoring.wrap(request_boundary, authenticated_app)
+                if claude_connection_check is not None:
+                    request_boundary = claude_connection_check.wrap(request_boundary, authenticated_app)
+                if provider_connection_check is not None:
+                    request_boundary = provider_connection_check.wrap(request_boundary, authenticated_app)
+                if voice_catalog_access is not None:
+                    request_boundary = voice_catalog_access.wrap(request_boundary, authenticated_app)
             elif config.profile_kind == 'synthetic-local-work':
                 from .local_work import LocalWorkRequests
                 request_boundary = LocalWorkRequests(LocalAccess(app, session))
@@ -558,6 +590,11 @@ def dispatch(action, root):
     config = load_config(root)
     bootstrap(config)
     sid = _profile(config, create=action == 'start')
+    if action == 'start' and config.profile_kind == 'restored-local-operation':
+        from .data_location import apply_pending
+        if apply_pending(config,sid):
+            config=load_config(root)
+            sid=_profile(config,create=False)
     plan = start_plan(config.program, config.profile, config.port, sid, config.installation_id)
     if action == 'start':
         return start(config, plan)

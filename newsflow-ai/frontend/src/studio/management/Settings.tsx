@@ -37,6 +37,38 @@ export default function Settings({
     [modelTab, setModelTab] = useState("text"),
     [startup, setStartup] = useState<any>(null),
     [loading, setLoading] = useState(false);
+  const [dataDestination,setDataDestination]=useState("");
+  const [dataMoving,setDataMoving]=useState(false);
+  const [dataMoveMessage,setDataMoveMessage]=useState("");
+  async function requestDataMove(){
+    if(dataMoving)return;
+    setDataMoving(true);
+    try {
+      const response=await fetch('/api/studio/data-location',{method:'POST',credentials:'same-origin',
+        body:new URLSearchParams({destination:dataDestination,csrf_token:c.view?.csrfToken??''})});
+      const result=await response.json().catch(()=>({}));
+      setDataMoveMessage(response.ok?result.message:(result.detail??'이동을 예약하지 못했습니다. 현재 위치를 유지합니다.'));
+    } catch {setDataMoveMessage('결과를 확인하지 못했습니다. 자동으로 다시 요청하지 않습니다.');}
+    finally {setDataMoving(false);}
+  }
+  const [probeBusy,setProbeBusy]=useState("");
+  const [probeResult,setProbeResult]=useState<Record<string,any>>({});
+  async function testProvider(provider:string,scope:string) {
+    if(probeBusy)return;
+    const key=provider+":"+scope;
+    setProbeBusy(key);
+    try {
+      const response=await fetch(`/api/studio/providers/${provider}/check`,{
+        method:"POST",credentials:"same-origin",
+        body:new URLSearchParams({scope,consent:"true",csrf_token:c.view?.csrfToken??""})
+      });
+      const result=await response.json().catch(()=>({}));
+      setProbeResult(previous=>({...previous,[key]:response.ok?result:{code:"unavailable",verified:false,message:"연결 테스트를 완료하지 못했습니다. 다시 누르기 전에 상태를 확인하세요."}}));
+      await c.load();
+    } catch {
+      setProbeResult(previous=>({...previous,[key]:{code:"network",verified:false,message:"결과를 받지 못했습니다. 자동 재요청하지 않습니다."}}));
+    } finally {setProbeBusy("");}
+  }
   let setup: any = {};
   try {
     setup = JSON.parse(c.view?.settings?.easy_setup ?? "{}");
@@ -230,37 +262,35 @@ export default function Settings({
                   {providers
                     .filter((p) => p.types.includes(modelTab))
                     .map((p) => {
-                      const meta = c.view?.services?.find((s) => s.id === p.id);
+                      const service = c.view?.services?.find((s) => s.id === p.id);
+                      const meta=service?.checks?.[modelTab]??service;
+                      const result=probeResult[p.id+":"+modelTab];
                       return (
                         <tr key={p.id}>
                           <td>
                             {p.name}
                             <small>
-                              {p.id === "openai"
-                                ? modelTab === "image"
-                                  ? (c.view?.catalog.imageDefaults?.model ??
-                                    "모델 설정에서 확인")
-                                  : (c.view?.catalog.studioModels?.openai_api ??
-                                    "작업별 모델 설정")
-                                : p.id === "claude"
-                                  ? (c.view?.catalog.characterDefaults
-                                      ?.script_model ?? "모델 설정에서 확인")
-                                  : "등록 모델·가격 확인 필요"}
+                              {meta?.model || "모델 설정에서 확인"}
                             </small>
                           </td>
                           <td>
-                            <Badge
-                              value={
-                                meta?.configured ? "review_required" : "blocked"
-                              }
-                            />
+                            {meta?.verified ? (
+                              <span className="mg-badge good">인증 확인</span>
+                            ) : (
+                              <span className="mg-badge">{meta?.configured ? "연결 미확인" : "키 미설정"}</span>
+                            )}
                             <small>
-                              {meta?.configured
-                                ? "키 저장 · 실제 인증 미검증"
-                                : "키 미설정"}
+                              {meta?.message ?? (meta?.configured ? "키 저장 · 연결 미확인" : "키 미설정")}
                             </small>
+                            {meta?.checkedAt&&<small>확인: {new Date(meta.checkedAt).toLocaleString("ko-KR")}</small>}
                           </td>
-                          <td>
+                          <td><div className="mg-provider-actions">
+                            <button type="button" disabled={!!probeBusy || !meta?.configured}
+                              title="저장된 키를 공식 공급사로 전송해 조회합니다. 콘텐츠는 생성하지 않습니다."
+                              onClick={()=>void testProvider(p.id,modelTab)}>
+                              <RefreshCw size={14}/>{probeBusy===p.id+":"+modelTab?"확인 중…":"API 키 테스트"}
+                            </button>
+                            {result&&!result.checkedAt&&<small role="status">{result.message}</small>}
                             <Action
                               c={c}
                               id={p.action}
@@ -293,7 +323,7 @@ export default function Settings({
                             >
                               1회 사용 한도
                             </Action>
-                          </td>
+                          </div></td>
                         </tr>
                       );
                     })}
@@ -351,6 +381,12 @@ export default function Settings({
             className="mg-settings-sources"
             tools={<Rss size={20} />}
           >
+            <section aria-label="SerpApi 뉴스 수집 설정" className="mg-setting-row">
+              <strong>SerpApi · Google News</strong>
+              <span className="mg-badge">{c.view?.catalog.serpapi?.keyConfigured ? "키 저장 · 연결 미검증" : "키 미등록"}</span>
+              <small>{c.view?.catalog.serpapi?.approved ? "수집 사용 설정" : "수집 사용 중지"} · 저장만으로 조회하지 않습니다.</small>
+              <Action c={c} id="serpapi_settings" disabled={!c.view?.catalog.serpapi?.registrationAvailable}>SerpApi 키·수집 설정</Action>
+            </section>
             <div className="mg-source-list">
               {c.list("sources").map((x) => (
                 <article key={x.id}>
@@ -397,10 +433,15 @@ export default function Settings({
               <dt>인증정보</dt>
               <dd>기존 DPAPI·사용자별 키 정책 유지</dd>
             </dl>
-            <p className="mg-muted">
-              이 화면에서 저장 폴더를 이동하거나 기존 데이터를 삭제하지
-              않습니다.
-            </p>
+            {c.view?.catalog.storage?.relocationAvailable && <div>
+              <label>새 데이터 폴더<input aria-label="새 사용자 데이터 저장 경로"
+                value={dataDestination} onChange={e=>setDataDestination(e.target.value)}
+                placeholder="D:\NewsFlowAI_Data" disabled={dataMoving}/></label>
+              <button disabled={dataMoving||!dataDestination.trim()} onClick={requestDataMove}>
+                {dataMoving?'확인 중…':'저장 위치 변경 예약'}</button>
+              <p className="mg-muted">정상 종료 후 다음 Start에서 이동합니다. 기존 폴더는 복구용으로 보존합니다.</p>
+              {dataMoveMessage&&<p role="status">{dataMoveMessage}</p>}
+            </div>}
           </Panel>
         )}
         {show("system") && (

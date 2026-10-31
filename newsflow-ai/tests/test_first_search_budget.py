@@ -72,7 +72,7 @@ def settings_values(sessions):
 
 
 @pytest.mark.parametrize("provider", ["openai", "claude_api"])
-def test_first_search_exempts_only_search_proof_and_tracks_request_without_guessed_amount(sessions, provider):
+def test_first_search_exempts_only_search_proof_and_reserves_per_execution_bound(sessions, provider):
     stamp = configured(sessions, provider)
     before = settings_values(sessions)
     normal = api_readiness(sessions, provider, StatusOnlyStore())
@@ -83,10 +83,13 @@ def test_first_search_exempts_only_search_proof_and_tracks_request_without_guess
     assert quote["authentication_at"] == stamp and quote["model"] == DEFAULT_MODELS[provider]
     assert settings_values(sessions) == before  # GET quote is read-only.
     result = reserve(sessions, stamp, provider)
-    assert result.request_id == quote["request_id"] and result.reserved_usd == 0
+    assert result.request_id == quote["request_id"] and result.reserved_usd > 0
     with sessions() as session:
         row = session.get(APIRequestReservation, result.id)
-        assert row.bounds == {"accounting": "reported_usage", "search_calls": 1}
+        assert row.bounds['accounting']=='per_execution' and row.bounds['search_calls']==1
+        assert row.bounds['completion_tokens']==FIRST_SEARCH_OUTPUT_TOKENS
+        assert Decimal(row.bounds['request_limit_usd'])==10
+        assert 0 < Decimal(row.reserved_usd) <= 10
         assert not row.test_only and row.status == "reserved"
     assert settings_values(sessions) == before
     assert not api_readiness(sessions, provider, StatusOnlyStore())["ready"]
@@ -129,8 +132,8 @@ def test_all_existing_gates_apply_to_quote_and_reservation(sessions, changes, re
         result = reserve(sessions, stamp)
         with sessions() as session:
             row = session.get(APIRequestReservation, result.id)
-            assert row.status == "reserved" and row.reserved_usd == "0"
-            assert row.bounds["accounting"] == "reported_usage"
+            assert row.status == "reserved" and Decimal(row.reserved_usd) > 0
+            assert row.bounds["accounting"] == "per_execution"
         return
     assert not quote["ready"] and any(reason in text for text in quote["reasons"])
     with pytest.raises(APISettingsError, match=reason):
@@ -173,7 +176,7 @@ def test_submitted_authentication_and_model_must_match_under_lock(sessions):
         reserve(sessions, stamp, key_store=None)
 
 
-def test_current_prices_are_recorded_for_reported_usage_without_speculative_consent_cap(sessions):
+def test_current_prices_are_recorded_with_saved_per_execution_cap(sessions):
     stamp = configured(sessions)
     quote = first_search_readiness(sessions, "claude_api", StatusOnlyStore())
     assert quote["reserved_usd"] is None
@@ -182,15 +185,15 @@ def test_current_prices_are_recorded_for_reported_usage_without_speculative_cons
     result = reserve(sessions, stamp, max_cost_usd="0.001")
     with sessions() as session:
         row = session.get(APIRequestReservation, result.id)
-        assert row.prices["input"] == "4" and Decimal(row.reserved_usd) == 0
+        assert row.prices["input"] == "4" and 0 < Decimal(row.reserved_usd) <= 10
 
 
 @pytest.mark.parametrize("cap", ["", "0", "NaN", "Infinity", "-1"])
-def test_legacy_displayed_cap_is_ignored_and_no_money_is_prereserved(sessions, cap):
+def test_legacy_client_cap_is_ignored_but_saved_per_execution_cap_is_reserved(sessions, cap):
     stamp = configured(sessions)
     result = reserve(sessions, stamp, max_cost_usd=cap)
     with sessions() as session:
-        assert Decimal(session.get(APIRequestReservation, result.id).reserved_usd) == 0
+        assert 0 < Decimal(session.get(APIRequestReservation, result.id).reserved_usd) <= 10
 
 
 @pytest.mark.parametrize("status", ["success", "failed", "unknown", "cancelled"])
@@ -205,7 +208,7 @@ def test_repeat_and_restart_never_reuse_same_authentication_attempt(sessions, st
     assert not quote["ready"] and quote["reservation_id"] == reservation.id
     assert quote["attempt_status"] == ("unknown" if status == "cancelled" else status)
     with sessions() as session:
-        assert Decimal(session.get(APIRequestReservation, reservation.id).reserved_usd) == 0
+        assert Decimal(session.get(APIRequestReservation, reservation.id).reserved_usd) == reservation.reserved_usd > 0
 
 
 @pytest.mark.parametrize("status", ["reserved", "unknown"])
@@ -223,7 +226,7 @@ def test_other_pending_or_unknown_request_blocks_first_search(sessions, status):
 
 @pytest.mark.parametrize("limit,reason", [("monthly_limit_usd", "월별"),
                                          ("account_remaining_usd", "잔여 예산")])
-def test_reported_usage_consumes_month_and_account_limits(sessions, limit, reason):
+def test_reported_usage_is_preserved_without_retired_monthly_or_account_gates(sessions, limit, reason):
     stamp = configured(sessions, **{limit: "0.01"})
     result = reserve(sessions, stamp)
     APIBudgetService(sessions).finish(result.id, status="failed",
@@ -231,19 +234,15 @@ def test_reported_usage_consumes_month_and_account_limits(sessions, limit, reaso
     new_stamp = utcnow().isoformat()
     with sessions.begin() as session:
         _set(session, "api_claude_api_authentication_verified_at", new_stamp)
-    if limit == "account_remaining_usd":
-        before = settings_values(sessions)
-        assert first_search_readiness(sessions, "claude_api", StatusOnlyStore())["ready"]
-        assert settings_values(sessions) == before
-        next_request = reserve(sessions, new_stamp)
-        with sessions() as session:
-            prior = session.get(APIRequestReservation, result.id)
-            assert prior.status == "failed" and prior.usage == {"prompt_tokens": 100, "completion_tokens": 50, "search_calls": 1}
-            assert session.get(APIRequestReservation, next_request.id).status == "reserved"
-        return
-    assert not first_search_readiness(sessions, "claude_api", StatusOnlyStore())["ready"]
-    with pytest.raises(APISettingsError, match=reason):
-        reserve(sessions, new_stamp)
+    before = settings_values(sessions)
+    assert first_search_readiness(sessions, "claude_api", StatusOnlyStore())["ready"]
+    assert settings_values(sessions) == before
+    next_request = reserve(sessions, new_stamp)
+    with sessions() as session:
+        prior = session.get(APIRequestReservation, result.id)
+        assert prior.status == "failed" and prior.usage == {"prompt_tokens": 100, "completion_tokens": 50, "search_calls": 1}
+        assert session.get(APIRequestReservation, next_request.id).status == "reserved"
+        assert next_request.reserved_usd > 0
 
 
 def test_concurrent_first_search_is_reserved_once(sessions):
@@ -272,5 +271,6 @@ def test_invalidating_one_provider_clears_summary_without_touching_other_provide
     invalidate_api_verification(sessions, "claude_api")
     after = settings_values(sessions)
     assert after["api_claude_api_search_check_summary"] == ""
-    assert after["api_claude_api_monthly_limit_usd"] == before["api_claude_api_monthly_limit_usd"]
+    assert after["api_claude_api_request_limit_usd"] == before["api_claude_api_request_limit_usd"]
+    assert "api_claude_api_monthly_limit_usd" not in after
     assert all(after[key] == value for key, value in before.items() if key.startswith("api_openai_"))
