@@ -85,6 +85,11 @@ def test_registry_preserves_every_original_post_route_and_no_write_proxy():
                 if isinstance(decorator,ast.Call) and isinstance(decorator.func,ast.Attribute) and decorator.func.attr=='post' and decorator.args and isinstance(decorator.args[0],ast.Constant):
                     found.append((file.name,decorator.args[0].value))
     for file,path in found:
+        # Since 2026-10-29 the studio has JSON write routes under /api/studio/, guarded by
+        # signed CSRF, Origin and the operating request allowlist rather than this legacy
+        # form registry. Only original form routes must stay registered here.
+        if path.startswith('/api/studio/'):
+            continue
         assert any(action['source']=='gui/'+file and (action['path']==path or '{action}' in path and action['path'].startswith(path.split('{action}')[0])) for action in registry),(file,path)
     assert all('/api/studio/' not in action['path'] for action in registry)
     studio=(root/'src/newsflow/studio/read_models.py').read_text(encoding='utf-8')
