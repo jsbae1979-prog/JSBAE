@@ -1,36 +1,165 @@
 {
-  "scope": "Restore story-only creation; profile-linked writing and roles; ambient-only sound",
+  "verdict": "CONDITIONAL",
+  "implementationComplete": true,
+  "operatingApplied": true,
+  "runtimeSourceSha": "55caa0db30dc841d8373108746bb4d2fd4328a0d",
+  "developmentCodeSha": "f60537dab3cde23f3e4027bc8af2b86c1e973e4a",
+  "environment": {
+    "os": "Windows 11 10.0.26300",
+    "pythonTests": "3.12.10",
+    "operatingPython": "3.14.7",
+    "node": "24.19.0",
+    "python314FullSuite": "NOT VERIFIED"
+  },
   "focus": {
     "passed": 98,
     "failed": 0,
     "errors": 0,
     "typeScript": "PASS",
-    "reactBuild": "PASS"
+    "reactBuild": "PASS",
+    "nodeTests": {
+      "passed": 31,
+      "failed": 0
+    }
   },
-  "fullPytest": {
+  "initialSingleCommand": {
     "command": "python -m pytest -q -rs",
-    "status": "RUNNING",
-    "resultNotYetClaimed": true
+    "counts": {
+      "tests": 6521,
+      "failures": 38,
+      "errors": 0,
+      "skipped": 49,
+      "passed": 6434
+    }
   },
-  "differences": [
-    "New episodes use EpisodeFlow / EpisodeScript, not CharacterWriter.write_studio",
-    "Current episode input already had personality/comedy_formula; explicit canonical aliases and plan/ending instructions were added",
-    "Legacy write_studio dropped character fields; now projects selected text-only profile",
-    "Legacy sound-on prompt requested Korean dialogue/lip sync; now ambient-only for all new prompts",
-    "V3 scenes have no role field; setup/middle contrast/final punchline are inferred from ordering without migration"
-  ],
+  "finalFullShardedExecution": {
+    "tests": 6521,
+    "passed": 6471,
+    "skipped": 49,
+    "failed": 1,
+    "coverageMatched": true,
+    "shards": 4,
+    "dynamicParameterMapping": "one import-time synthetic UUID, same file/function/parameter slot",
+    "command": "python -m pytest -q -rs <disjoint file lists>",
+    "python": "3.12"
+  },
+  "standaloneFailedFfmpegRecheck": {
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 1
+  },
+  "historicalVideoUiRecheck": {
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 2
+  },
+  "latestPerCaseOutcomes": {
+    "tests": 6521,
+    "passed": 6472,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 49
+  },
+  "singleFullInvocationAllPass": false,
+  "remainingCondition": "One existing FFmpeg pipeline failed under concurrent execution and passed alone; concurrency-only root cause is not confirmed. No all-pass single invocation is claimed.",
+  "skipReasons": {
+    "Windows has a real DPAPI cipher": 1,
+    "ffmpeg/ffprobe not installed": 40,
+    "opt-in live RSS: set NEWSFLOW_LIVE_TEST=1": 1,
+    "Korean font not configured (NEWSFLOW_FONT_PATH)": 5,
+    "symlinks are not available for this user": 1,
+    "opt-in paid AI live test: set NEWSFLOW_AI_LIVE_TEST=1, NEWSFLOW_AI_API_KEY and NEWSFLOW_AI_LIVE_MAX_TOKENS": 1
+  },
+  "gui": {
+    "hasDirectModeButton": false,
+    "hasStoryButton": true,
+    "horizontalOverflow": false,
+    "referenceVisible": true,
+    "title": "캐릭터 쇼츠 제작"
+  },
+  "operating": {
+    "head": "55caa0db30dc841d8373108746bb4d2fd4328a0d",
+    "port": 18768,
+    "pid": 27464,
+    "normalStopExit": 0,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "tablesUnchanged": 47,
+    "articles": 169,
+    "profileFilesPreserved": 173,
+    "originalAndABPreserved": true,
+    "chromeOpenAccepted": true,
+    "securityFlagsPreserved": true,
+    "paidCallsDuringDeployment": 0,
+    "snsCalls": 0
+  },
   "protection": {
-    "paidCalls": 0,
-    "operatingRestartNotYetPerformed": true,
-    "savedDirectVideosAndJobsPreserved": true,
-    "oldNarrationRemainsReadable": true,
-    "newDirectHttpCreationRejected": true,
-    "mainPr35Unchanged": true
+    "paidCallsThisTask": 0,
+    "snsCalls": 0,
+    "plaintextApiKeysReadOrExported": false,
+    "profilesAndStoredDirectClipsPreserved": true,
+    "unknownStatesReplayed": false,
+    "mainAndPr35Unchanged": true
   },
-  "cancelledWork": {
-    "referenceTopicFeatureNotApplied": true,
-    "cancelledTestsArchivedLocallyNotDeleted": true,
-    "broadRestoreAndReverseDiffRejectedNotExecuted": true,
-    "saferExactFunctionAndLineChangesUsed": true
-  }
+  "deploymentFiles": [
+    {
+      "path": "app/product/newsflow/character/claude.py",
+      "sha256": "583d0f5fe91237c03eb3d01288079a8935f366120f46f77889f2dab4a23a5220",
+      "bytes": 8618
+    },
+    {
+      "path": "app/product/newsflow/character/episode_service.py",
+      "sha256": "e7f29692322d0fa0f235e43368476727a5db63488bd306335fadfaba008740e2",
+      "bytes": 30616
+    },
+    {
+      "path": "app/product/newsflow/character/episode_story.py",
+      "sha256": "a58a81b76ed374dcd2012cca61d8de7ad85942e5da50751583946ad5729ccfa2",
+      "bytes": 13928
+    },
+    {
+      "path": "app/product/newsflow/character/service.py",
+      "sha256": "11129387aa1de032e890b0c3e678daeab97601b4c7c0d06caf199e593d31cef7",
+      "bytes": 60843
+    },
+    {
+      "path": "app/product/newsflow/character/story_character.py",
+      "sha256": "cf7e0f6a948a876913de6e75d2160b28616da4b046bbfa7ad5bcc9eda8dabc12",
+      "bytes": 1452
+    },
+    {
+      "path": "app/product/newsflow/character/studio_story.py",
+      "sha256": "7e2f20ed731d3615567e2415d96f3cd6a9d2583351c7c1b29963bd7d564fdbdb",
+      "bytes": 5810
+    },
+    {
+      "path": "app/product/newsflow/gui/character_routes.py",
+      "sha256": "4327e422ccc0997d1fe040ea2ee9d44d8a6f6638ab09db410426802a2227b68e",
+      "bytes": 18895
+    },
+    {
+      "path": "app/product/newsflow/studio/read_models.py",
+      "sha256": "7640f33ddf376f9432a9957b9fa659b88e698296cb9be82804cffe11e6eba62e",
+      "bytes": 42421
+    },
+    {
+      "path": "app/frontend/dist/index.html",
+      "sha256": "f57fa0eaf3f6c2b95dcd6874ab832d1556a7bad8a4306eab5d00a7dcaedb411a",
+      "bytes": 418
+    },
+    {
+      "path": "app/product/newsflow/intelligence/provider.py",
+      "sha256": "7adb80eb7e5e2130ec0ea125dae08bc77a799296f0b689ca91829f0d8f94f0d1",
+      "bytes": 42326
+    },
+    {
+      "path": "app/frontend/dist/assets/index-6jwZPmcl.js",
+      "sha256": "17af5843d7dc238c46a98e23e587e5a6a1414db3ca11edcb8816a99fac46de9f",
+      "bytes": 618267
+    }
+  ]
 }
