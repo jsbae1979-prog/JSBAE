@@ -8,8 +8,7 @@ type Phase = "" | "requesting" | "accepted" | "unknown";
 const states = new Set(["idle", "running", "success", "partial", "failed", "interrupted", "empty"]);
 const count = (v:unknown) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 ? v : 0;
 
-export function NewsCollectionControls({c}:{c:Controller}) {
-  const [method,setMethod]=useState("rss");
+export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;method:string;onMethodChange:(v:string)=>void}) {
   const [collection,setCollection]=useState<Collection|null>(null);
   const [phase,setPhase]=useState<Phase>("");
   const [error,setError]=useState("");
@@ -44,6 +43,7 @@ export function NewsCollectionControls({c}:{c:Controller}) {
     if(next==="requesting")baseline.current=last.current?.run_id??null;
     setPhase(next);
     if(next==="accepted"||next==="unknown")setRefresh(n=>n+1);
+    if(next==="accepted")void c.load();
   }
   const pending=phase!==""||collection?.status==="running";
   const busy=pending&&!error&&phase!=="unknown";
@@ -54,7 +54,7 @@ export function NewsCollectionControls({c}:{c:Controller}) {
   return <section className="news-collection-controls" aria-label="뉴스 수집">
     <div className="news-collection-controls-head">
       <label><span>뉴스 수집</span><select aria-label="뉴스 수집 방식" value={method} disabled={pending}
-        onChange={e=>setMethod(e.target.value)}>
+        onChange={e=>onMethodChange(e.target.value)}>
         <option value="rss">등록 RSS</option><option value="serpapi">SerpApi</option>
       </select></label>
       {method==="rss" ? <ActionButton c={c} id="routes_collect" disabled={pending}
@@ -63,6 +63,8 @@ export function NewsCollectionControls({c}:{c:Controller}) {
             SerpApi 키·수집 설정
           </ActionButton>}
     </div>
+    <small className="news-collection-provider-info">{method==="rss"?"등록 공개 RSS · API 키 불필요":
+      c.view?.catalog.serpapi?.keyConfigured?"SerpApi · 키 저장 · 연결 미검증":"SerpApi · API 키 미등록"}</small>
     {message&&<div className="news-collection-progress" role="status" aria-live="polite">
       <div>{busy&&<LoaderCircle className="spin" size={16}/>}<strong>{message}</strong>
         {!busy&&<button type="button" aria-label="수집 상태 새로고침" onClick={()=>setRefresh(n=>n+1)}><RefreshCw size={14}/></button>}</div>

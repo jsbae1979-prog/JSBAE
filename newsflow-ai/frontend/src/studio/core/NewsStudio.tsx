@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {NewsCollectionControls} from "./NewsCollectionControls";
+import {NewsAnalysisControls} from "./NewsAnalysisControls";
 import { Search, Sparkles, ArrowRight, ExternalLink, Newspaper } from "lucide-react";
 import type { Item } from "../contracts";
 import {
@@ -51,8 +52,11 @@ export default function NewsStudio({
   const [query, setQuery] = useState(""),
     [category, setCategory] = useState(""),
     [id, setId] = useState<number | null>(null),
-    [recent, setRecent] = useState<number[]>([]);
+    [recent, setRecent] = useState<number[]>([]),
+    [collectionMethod,setCollectionMethod]=useState("rss");
   const all = c.list("articles"),
+    currentTop3 = (c.context?.top3 ?? []).filter((item: Item) =>
+      item.articleIds.some((articleId: number) => all.some(article => article.id === articleId))),
     rows = all.filter(
       (x) =>
         (!category || x.category === category) &&
@@ -61,7 +65,7 @@ export default function NewsStudio({
           .includes(query.toLowerCase()),
     ),
     selected = all.find((x) => x.id === id) ?? rows[0],
-    ranked = (c.context?.top3 ?? []).find((x: Item) =>
+    ranked = currentTop3.find((x: Item) =>
       x.articleIds.includes(selected?.id),
     ),
     url = publicLink(selected?.url);
@@ -104,13 +108,13 @@ export default function NewsStudio({
               >
                 <div className="core-news-list-picture">
                   <ArticleImage item={x} />
-                  {(c.context?.top3 ?? []).some((r: Item) =>
+                  {currentTop3.some((r: Item) =>
                     r.articleIds.includes(x.id),
                   ) && (
                     <b>
                       TOP{" "}
                       {
-                        (c.context?.top3 ?? []).find((r: Item) =>
+                        currentTop3.find((r: Item) =>
                           r.articleIds.includes(x.id),
                         )?.rank
                       }
@@ -131,7 +135,7 @@ export default function NewsStudio({
               <Empty>검색 조건에 맞는 보관 기사가 없습니다.</Empty>
             )}
           </div>
-          <NewsCollectionControls c={c}/>
+          <NewsCollectionControls c={c} method={collectionMethod} onMethodChange={setCollectionMethod}/>
         </Panel>
         <div className="core-news-center">
           <Panel
@@ -168,6 +172,7 @@ export default function NewsStudio({
               ranked && <span className="core-tag">TOP {ranked.rank}</span>
             }
           >
+            <NewsAnalysisControls c={c} selected={selected} collectionMethod={collectionMethod}/>
             {ranked ? (
               <>
                 <h3>핵심 요약</h3>
@@ -192,29 +197,7 @@ export default function NewsStudio({
                 임의로 만들지 않습니다.
               </Empty>
             )}
-            <div className="core-actions">
-              <ActionButton
-                c={c}
-                id="intelligence_analyze"
-                context={{ article_ids: selected ? [selected.id] : [] }}
-                disabled={!selected}
-              >
-                <Sparkles size={15} />
-                선택 기사 분석 · 승인
-              </ActionButton>
-              <ActionButton
-                c={c}
-                id="curation_analyze"
-                context={{ collection_context_id: c.context?.collection?.id }}
-                disabled={!c.context?.collection}
-              >
-                수집 회차 TOP 3 분석 · 승인
-              </ActionButton>
-            </div>
-            <p className="core-muted">
-              기존 분석을 제작실에서 재사용합니다. 새 분석은 명시적 승인 후에만
-              실행합니다.
-            </p>
+
           </Panel>
         </div>
         <div className="core-news-right">
@@ -248,7 +231,7 @@ export default function NewsStudio({
             {c.context?.blockedReason && (
               <p className="core-warning">{c.context.blockedReason}</p>
             )}
-            {(c.context?.top3 ?? []).map((x: Item) => (
+            {currentTop3.map((x: Item) => (
               <button
                 className="core-ranked-row"
                 key={x.rank}

@@ -51,7 +51,9 @@ class OperatingRequests(LocalWorkRequests):
     credential writes, OAuth, scheduler activation and SNS remain unavailable
     until separately authorized. Offline script edits retain revision checks.
     """
-    POSTS = LocalWorkRequests.POSTS - {'/collection'} | {'/ai-settings/prices'}
+    # Exact free previews only: installed Korean SAPI fixed sentence or a cached/public ElevenLabs sample.
+    # Explicit account metadata GET and local voice selection only; no arbitrary text, paid synthesis or broader provider authority.
+    POSTS = LocalWorkRequests.POSTS - {'/collection'} | {'/ai-settings/prices', '/voices/preview', '/video/tts/voices/preview', '/video/tts/voices/load', '/video/tts/voices/select'}
 
     # Only cached capability data and local settings writes are enabled here.
     # Provider story/quote/submit routes remain outside the operation boundary.

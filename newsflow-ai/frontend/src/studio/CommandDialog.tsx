@@ -525,7 +525,12 @@ export function CommandDialog({
   const quotePrepare = action.id === "character_act_prepare";
   const registeredRSS = action.id === "routes_collect";
   const compactCharacter = quoteSubmit || quotePrepare;
-  const compactReview = compactCharacter || registeredRSS;
+  const collectionAnalysis = action.id === "curation_analyze";
+  const compactConsent = compactCharacter || collectionAnalysis;
+  const compactReview = compactConsent || registeredRSS;
+  const analysis = view.catalog.newsAnalysis;
+  const analysisReady = !collectionAnalysis || (analysis?.collectionReady === true &&
+    Number.isSafeInteger(values.collection_context_id) && values.collection_context_id === analysis.collectionContextId);
   const [clock, setClock] = useState(Date.now);
   useEffect(() => {
     if (!quoteSubmit) return;
@@ -548,7 +553,7 @@ export function CommandDialog({
   };
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (busy || (risky && !ack) || (compactCharacter && !ack) || !quoteReady) return;
+    if (busy || (risky && !ack) || (compactConsent && !ack) || !quoteReady || !analysisReady) return;
     if (localRender && (!localRender.ready || values.reviewed !== true)) {
       setError("실제 합성 대상 영상을 확인한 뒤 장면 검토를 체크하세요.");
       return;
@@ -559,7 +564,7 @@ export function CommandDialog({
     try {
       const result = await submitOriginal(
         effective,
-        compactCharacter ? { ...values, consent: ack, reviewed: ack } : values,
+        compactConsent ? { ...values, consent: ack, reviewed: ack } : values,
         view,
         files,
         localRender ? {} : (context.__extra ?? {}),
@@ -608,6 +613,8 @@ export function CommandDialog({
       label(f.name);
     const opts = choices(f, view, values, action);
     const v = values[f.name] ?? f.default;
+    if (action.id === "intelligence_analyze" && f.name === "article_ids" && context.articleTitle)
+      return <p className="bound-field" key={f.name}>분석 대상 <strong>{context.articleTitle}</strong></p>;
     if (["approval_token", "quote_hash"].includes(f.name) && context[f.name])
       return (
         <p className="bound-field" key={f.name}>
@@ -792,9 +799,16 @@ export function CommandDialog({
               {action.id === "serpapi_settings" && <p>키를 비우면 기존 키를 유지합니다. 저장은 연결 테스트나 뉴스 조회를 실행하지 않습니다.</p>}
               {compactReview && (
                 <section className="compact-command-review" aria-label="이번 작업 확인">
-                  {registeredRSS ? <p>등록·활성화된 공개 RSS를 수집합니다. 유료 AI 호출이나 SNS 게시는 하지 않습니다.</p>
+                  {registeredRSS ? <p>이전 목록을 비우고 등록·활성화된 공개 RSS를 새로 수집합니다. 저장된 제작 이력은 유지됩니다.</p>
                     : quotePrepare ? <p>선택한 참조 이미지와 검토한 스토리로 최신 영상 견적을 확인합니다. 영상은 생성하지 않습니다.</p>
-                    : <>
+                    : collectionAnalysis ? <>
+                        <p>이번 수집 회차 전체 {analysis?.candidateCount??0}개 기사에서 TOP 3를 분석합니다.</p>
+                        <dl className="property-list">
+                          <div><dt>분석 API</dt><dd>{view.catalog.analysisProviders?.[analysis?.provider]??"미설정"}</dd></div>
+                          <div><dt>모델</dt><dd>{analysis?.model??"미설정"}</dd></div>
+                        </dl>
+                        {!analysisReady&&<p role="status">새 수집 자료와 분석 API 설정을 확인하세요.</p>}
+                      </> : <>
                         <p>{quoteJob?.topic}</p>
                         <dl className="property-list">
                           <div><dt>영상 모델</dt><dd>{view.catalog.characterStudio?.models?.[quoteJob?.model] ?? quoteJob?.model}</dd></div>
@@ -807,10 +821,10 @@ export function CommandDialog({
                     <p>{expired ? "견적 유효시간이 지났습니다. 최신 견적을 확인하세요." : "최신 작업 상태와 견적을 확인하세요."}</p>
                     {quoteJob?.quoteSettingsEditable === true && typeof context.__refreshQuote === "function" &&
                       <button type="button" disabled={busy} onClick={() => { onClose(); void context.__refreshQuote(); }}>최신 견적 확인</button>}
-                  </div> : compactCharacter && <label className="check-field approval">
+                  </div> : compactConsent && analysisReady && <label className="check-field approval">
                     <input type="checkbox" checked={ack} onChange={event => setAck(event.target.checked)}
-                      aria-label={quotePrepare ? "참조 이미지 전송·스토리 검토 확인" : "표시된 견적과 검토한 내용으로 영상 생성 승인"}/>
-                    {quotePrepare ? "참조 이미지 전송과 검토한 스토리의 견적 조회에 동의합니다."
+                      aria-label={collectionAnalysis ? "현재 수집 회차의 유료 분석 승인" : quotePrepare ? "참조 이미지 전송·스토리 검토 확인" : "표시된 견적과 검토한 내용으로 영상 생성 승인"}/>
+                    {collectionAnalysis ? "표시된 수집 기사와 모델의 유료 분석에 동의합니다." : quotePrepare ? "참조 이미지 전송과 검토한 스토리의 견적 조회에 동의합니다."
                       : `검토한 이미지·스토리와 위 견적으로 영상 생성을 승인합니다. 실패하면 자동 재요청하지 않습니다.`}
                   </label>}
                 </section>
@@ -975,7 +989,7 @@ export function CommandDialog({
               action.unsupported ||
               !view.commandsAvailable ||
               (risky && !ack) ||
-              (compactCharacter && !ack) || !quoteReady ||
+              (compactConsent && !ack) || !quoteReady || !analysisReady ||
               (!!localRender &&
                 (!localRender.ready || values.reviewed !== true))
             }

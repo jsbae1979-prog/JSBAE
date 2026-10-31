@@ -9,7 +9,7 @@ import sys
 from uuid import uuid4
 
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, JSONResponse
 
 from newsflow.easy_setup import (
     LISTENING_ITEMS,
@@ -137,6 +137,8 @@ def preview(
     (directory / name).with_suffix('.json').write_text(json.dumps({"provider": "windows", "voice": voice,
         "rate": int(rate), "pause_ms": int(pause_ms),
         "sha256": hashlib.sha256((directory / name).read_bytes()).hexdigest()}, ensure_ascii=False), encoding='utf-8')
+    if request.headers.get('accept') == 'application/json':
+        return JSONResponse({'mediaUrl':f'/voices/preview/{name}'})
     return go(f"/voices?preview={name}")
 
 

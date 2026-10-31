@@ -741,8 +741,12 @@ def module_view(request: Request, module: Module):
         catalog = ElevenLabsVoices(state.config.data_dir, ElevenLabsKeys(state.config.data_dir))
         result["catalog"]["elevenVoices"] = []
         result["collections"]["audioSamples"] = []
-        for voice in catalog.cached()["voices"]:
-            result["catalog"]["elevenVoices"].append({"id": voice["voice_id"], "label": voice["name"]})
+        cached_voices = catalog.cached()
+        result["catalog"]["elevenVoiceCatalog"] = {"hasMore": cached_voices["has_more"],
+            "scope": cached_voices.get("voice_type", "saved"), "fetchedAt": cached_voices["fetched_at"],
+            "keyConfigured": catalog.keys.status()["configured"]}
+        for voice in cached_voices["voices"]:
+            result["catalog"]["elevenVoices"].append({"id": voice["voice_id"], "label": voice["name"], "hasSample": bool(voice.get('preview_url')), "sampleLabel": voice.get("sample_label", "공식 샘플")})
             try:
                 sample = catalog.sample_path(voice["voice_id"])
                 if sample.is_file() and not sample.is_symlink():
@@ -799,6 +803,15 @@ def module_view(request: Request, module: Module):
 
     studio = read_studio_settings(state.sessions)
     result["catalog"]["studioModels"] = studio["models"]
+    if module == "news":
+        from newsflow.news.curator import Curator
+        coordinator = getattr(state,'coordinator',None)
+        context = Curator(coordinator).context() if getattr(coordinator,'service',None) is not None else {'ready':False,'run_id':None,'articles':[]}
+        store = getattr(state, 'api_keys', {}).get(studio['provider'])
+        result['catalog']['newsAnalysis'] = {'provider': studio['provider'], 'model': studio['model'],
+            'keyConfigured': bool(store and store.status().get('configured')),
+            'collectionReady': bool(context['ready'] and studio['provider'] in {'claude_api','openai'}),
+            'collectionContextId': context['run_id'], 'candidateCount': len(context['articles'])}
     for action in ("intelligence_analyze", "intelligence_generate", "intelligence_studio_preferences"):
         result["formDefaults"][action] = {"provider": studio["provider"], "model": studio["model"]}
 
@@ -831,6 +844,14 @@ def module_view(request: Request, module: Module):
         key: tts[key] for key in ("enabled", "voice_id", "model", "job_limit", "commercial")
     }
     video = video_settings(state.sessions)
+    if module == 'shorts':
+        selected_voice = next((v for v in result['catalog'].get('elevenVoices',[]) if v['id']==tts['voice_id']),None)
+        result['catalog']['newsVideo'] = {'provider': video.provider, 'approved': video.approved,
+            'ttsVoiceId': tts['voice_id'], 'ttsModel': tts['model'],
+            'ttsVoiceLabel': selected_voice['label'] if selected_voice else '저장한 목소리',
+            'ttsSampleAvailable': bool(selected_voice and selected_voice['hasSample'])}
+        if not any(v["id"] == "elevenlabs" for v in result["catalog"]["voices"]):
+            result["catalog"]["voices"].append({"id":"elevenlabs","label":"ElevenLabs · API 목소리"})
     result["formDefaults"]["video_ai_save_settings"] = {
         key: value(getattr(video, key))
         if key != "job_limit"
