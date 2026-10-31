@@ -76,5 +76,5 @@ def test_character_simplification_keeps_upload_budget_and_csrf_requirements(clie
     response = client.post('/character', data={'csrf_token': token, 'topic': '참조 없는 합성 입력',
         'episode_limit': '5', 'day_limit': '20'})
     assert response.status_code == 422
-    assert '등록된 캐릭터를 선택' in response.json()['error']
+    assert '참조 이미지와 스토리 주제' in response.json()['error']
     assert not app.state.character.root.exists()  # Neither upload nor saved reference: no job is created.

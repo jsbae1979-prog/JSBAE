@@ -106,6 +106,8 @@ def bounded_error_message(value, *, secret='', request_body=None):
         for name in ('messages', 'system', 'input', 'instructions'):
             remove_inputs(request_body.get(name))
     text = re.sub(r'(?i)\b(?:sk-ant-|sk-)[A-Za-z0-9_-]+', '[REDACTED]', text)
+    # Opaque provider-side identifiers can contain echoed private data too.
+    text = re.sub(r'\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b', '[REDACTED]', text)
     # Drop header lines and echoed request payloads rather than try to parse secrets.
     text = re.sub(r'(?im)(?:authorization|x-api-key|api[_ -]?key|cookie|set-cookie)\s*[:=][^\r\n]*', '[AUTH REDACTED]', text)
     text = re.sub(r'(?is)["\']?(?:messages|system|input|instructions|request_body|body|prompt|headers)["\']?\s*[:=].*', '[REQUEST REDACTED]', text)

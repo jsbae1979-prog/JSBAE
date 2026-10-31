@@ -50,7 +50,7 @@ def test_two_line_topic_creates_local_o3_thirty_second_draft_with_selected_setti
         reference=None,
         topic=topic,episode_limit='5.00',day_limit='10.00',script_model='',video_model='',
         reference_asset='',reference_job='',studio_settings=json.dumps(settings),request_id=uuid4().hex,
-        character_id=registered['id'],character_revision=registered['revision'])
+        character_id=registered['id'],character_revision=registered['revision'],creation_mode='story',direct_extension=False)
     assert response.status_code==200
     result=json.loads(response.body);job=service.read(result['id'])
     assert result['created'] and job['state']=='needs_script' and job['script'] is None
@@ -79,6 +79,6 @@ def test_route_rejects_other_controls_keys_and_oversize_before_creating_any_draf
         reference=None,topic=topic,episode_limit='5',day_limit='10',
         script_model='',video_model='',reference_asset='',reference_job='',
         studio_settings=json.dumps(settings),request_id=uuid4().hex,
-        character_id=registered['id'],character_revision=registered['revision'])
+        character_id=registered['id'],character_revision=registered['revision'],creation_mode='story',direct_extension=False)
     assert response.status_code==422 and studio.service.listing()==[]
     assert studio.writer.calls==0 and studio.clients=={}

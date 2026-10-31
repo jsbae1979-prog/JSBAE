@@ -33,11 +33,14 @@ def test_saved_job_to_new_story_keeps_profile_image_and_never_mixes_characters(a
                       'sound': 'on', 'script_model': 'claude-sonnet-4-6'}, request_id=uuid4().hex, profile=saved)
         cases.append((saved, job_id))
     app.state.api_keys = {'claude_api': NoSecret()}
+    from test_api_settings import configured
+    configured(app.state.sessions)
     before = {row['id']: deepcopy(row) for row in app.state.character.listing()}
     with local_server(OperatingRequests(app)) as origin:
         context = browser.new_context(viewport={'width': 1366, 'height': 768})
         context.route('**/*', lambda route: route.continue_() if route.request.url.startswith(origin + '/') else route.abort())
-        context.route('**/api/studio/characters/auto-story', lambda route: route.fulfill(status=409, json={'detail': '합성 스토리 요청 실패'}))
+        context.route('**/api/studio/characters/*/story-review', lambda route: route.fulfill(json={'ready':True,'review':{'token':'','count':0,'held_usd':'0'}}))
+        context.route('**/api/studio/characters/auto-story', lambda route: route.fulfill(status=409, json={'error': '합성 스토리 요청 실패'}))
         page = context.new_page(); posts = []; errors = []
         page.on('request', lambda r: posts.append(r.url) if r.method == 'POST' else None)
         page.on('pageerror', lambda error: errors.append(str(error)))
@@ -52,7 +55,7 @@ def test_saved_job_to_new_story_keeps_profile_image_and_never_mixes_characters(a
                 page.get_by_role('dialog', name='작업 이력', exact=True).get_by_role('button', name='새 작업', exact=True).click()
             else:
                 page.get_by_role('button', name='스토리 자동 생성하기', exact=False).click()
-                expect(page.get_by_role('alert')).to_contain_text('스토리 요청 결과를 확인하지 못했습니다.')
+                expect(page.get_by_role('alert')).to_contain_text('합성 스토리 요청 실패')
                 page.get_by_role('button', name='새 스토리 입력', exact=True).click()
             expect(page.get_by_label('스토리 주제', exact=True)).to_have_value('')
             expect(picture).to_have_attribute('src', '/image-studio/assets/' + saved['asset'])

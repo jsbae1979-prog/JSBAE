@@ -46,6 +46,7 @@ def test_selected_upload_becomes_stored_only_after_success_without_duplicate_sav
         page.get_by_role('button', name='새 캐릭터 등록', exact=True).click()
         dialog = page.get_by_role('dialog', name='새 캐릭터 등록', exact=True)
         values = profile('저장 확인 토끼')
+        dialog.get_by_text('추가 정보 · 선택', exact=True).click()
         for label, key in [('캐릭터 이름','name_ko'), ('종류','species'), ('외형 · 영어','appearance'),
                            ('성격','personality'), ('고정 스타일 · 영어','style_lock')]:
             dialog.get_by_label(label, exact=True).fill(values[key])

@@ -34,6 +34,8 @@ class FakeTopics:
 
 @pytest.fixture
 def topic_data(app):
+    from test_api_settings import configured
+    configured(app.state.sessions)
     registry = CharacterRegistry(app.state.config.data_dir, app.state.image_studio)
     saved = registry.save(profile('합성 느긋한 토끼', 'rabbit'), app.state.image_studio.asset_bytes(image()))
     other = registry.save(profile('합성 고양이', 'cat'), app.state.image_studio.asset_bytes(image('green')))
@@ -102,30 +104,28 @@ def test_simple_topic_selection_manual_save_and_compact_layout(app, browser, top
             assert page.evaluate('document.documentElement.scrollWidth<=window.innerWidth')
             expect(panel.get_by_role('button', name='입력한 주제 저장', exact=True)).to_be_visible()
             page.screenshot(path=str(out / f'character-simple-topics-{width}x{height}.png'), full_page=True)
-        panel.get_by_label('주제 생성 유료 요청에 동의합니다.', exact=True).check()
         page.get_by_label('저장된 캐릭터', exact=True).select_option('profile:' + data['other']['id'])
         expect(panel.get_by_role('button', name='다른 캐릭터에게만 속한 주제', exact=True)).to_be_visible()
-        expect(panel.get_by_label('주제 생성 유료 요청에 동의합니다.', exact=True)).not_to_be_checked()
+        expect(panel.get_by_role('checkbox')).to_have_count(0)
         expect(panel.get_by_role('button', name=manual, exact=True)).to_have_count(0)
         assert len(posts) == 1 and not errors
         context.close()
 
 
-def test_topic_generation_still_requires_explicit_paid_consent(app, browser, topic_data):
+def test_topic_generation_uses_saved_approval_and_one_explicit_click_without_repeated_checkbox(app, browser, topic_data):
     data = topic_data
     with local_server(app) as origin:
         context = context_for(browser, origin); page = context.new_page(); posts = []
         page.on('request', lambda r: posts.append(r.url) if r.method == 'POST' else None)
         panel = open_topics(page, origin, data)
         button = panel.get_by_role('button', name='주제 자동 생성', exact=True)
-        expect(button).to_be_disabled()
+        expect(button).to_be_enabled()
         panel.get_by_label('주제 개수', exact=True).fill('1')
         assert not posts and not data['fake'].calls
-        panel.get_by_label('주제 생성 유료 요청에 동의합니다.', exact=True).check()
         expect(button).to_be_enabled(); button.click()
         expect(panel.get_by_role('button', name='합성 캐릭터가 우산을 거꾸로 펼친 아침', exact=True)).to_be_visible()
-        expect(button).to_be_disabled()
-        expect(panel.get_by_label('주제 생성 유료 요청에 동의합니다.', exact=True)).not_to_be_checked()
+        expect(button).to_be_enabled()
+        expect(panel.get_by_role('checkbox')).to_have_count(0)
         assert len(posts) == 1 and posts[0].endswith('/topics/generate')
         assert len(data['fake'].calls) == 1 and data['fake'].calls[0]['character_id'] == data['profile']['id']
         assert not app.state.character.listing()
@@ -140,7 +140,7 @@ def test_one_selected_topic_uses_main_story_action_without_queue_requests(app, b
         panel = open_topics(page, origin, data)
         for selector in ('.character-topic-advanced', '.character-topic-manage', '.character-batch', '.character-queue', '.character-topic-import'):
             expect(panel.locator(selector)).to_have_count(0)
-        expect(panel.get_by_role('checkbox')).to_have_count(1)
+        expect(panel.get_by_role('checkbox')).to_have_count(0)
         expect(panel.get_by_role('combobox')).to_have_count(0)
         target = data['rows'][0]['topic']
         panel.get_by_role('button', name=target, exact=True).click()

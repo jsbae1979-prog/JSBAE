@@ -30,10 +30,10 @@ def test_partial_analysis_requires_manual_candidate_and_save(app, browser, short
         page.get_by_role('button', name='새 캐릭터 등록', exact=True).click()
         dialog = page.get_by_role('dialog', name='새 캐릭터 등록', exact=True)
         dialog.get_by_text('AI로 특징 초안 만들기 · 선택 사항', exact=True).click()
-        dialog.get_by_label('선택한 AI에 참조 이미지를 전송하는 유료 분석에 동의합니다.', exact=True).check()
         dialog.get_by_role('button', name='이미지로 특징 초안 만들기', exact=True).click()
         notice = dialog.get_by_text('초안을 받았습니다. 종류는 짧게 수정하거나 비워두세요.', exact=True)
         expect(notice).to_be_visible()
+        dialog.get_by_text('추가 정보 · 선택', exact=True).click()
         review = dialog.get_by_role('region', name='종류 초안 검토', exact=True)
         assert not review.locator('details').evaluate('(e)=>e.open')
         expect(review.get_by_text(LONG_SPECIES, exact=True)).not_to_be_visible()
@@ -49,7 +49,7 @@ def test_partial_analysis_requires_manual_candidate_and_save(app, browser, short
         assert not registry.list()
         assert not any(url.endswith('/profiles/save') for url in posts)
         assert len(adapter.bodies)==1 and len(budget.finished)==1
-        expect(dialog.get_by_role('button', name='이미지로 특징 초안 만들기', exact=True)).to_be_disabled()
+        expect(dialog.get_by_role('button', name='이미지로 특징 초안 만들기', exact=True)).to_be_enabled()
 
         review.get_by_text(f'종류 원문 · {len(LONG_SPECIES)}자', exact=True).click()
         expect(review.get_by_text(LONG_SPECIES, exact=True)).to_be_visible()
