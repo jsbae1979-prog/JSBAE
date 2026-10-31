@@ -613,9 +613,12 @@ def module_view(request: Request, module: Module):
             article_ids = [article["id"] for article in result["collections"]["articles"]]
             with_previews = set(session.scalars(select(m.ArticleThumbnail.article_id).where(
                 m.ArticleThumbnail.article_id.in_(article_ids))))
+            used = set(session.scalars(select(m.NewsListState.article_id).where(
+                m.NewsListState.article_id.in_(article_ids), m.NewsListState.used.is_(True))))
             for article in result["collections"]["articles"]:
                 article["thumbnailUrl"] = (f"/news/{article['id']}/thumbnail"
                                            if article["id"] in with_previews else None)
+                article["used"] = article["id"] in used
         if module in {"settings", "onboarding"}:
             result["settings"] = {
                 row.key: row.value
