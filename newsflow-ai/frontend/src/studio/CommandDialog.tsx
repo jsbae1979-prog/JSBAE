@@ -94,7 +94,8 @@ export function localCharacterRenderReview(
     clips,
     ready:
       !!job &&
-      ["clips_review", "completed"].includes(job.state) &&
+      (["clips_review", "completed"].includes(job.state) ||
+        (["compose_failed", "composing"].includes(job.state) && job.composeRecoveryAvailable === true)) &&
       clips.length > 0 &&
       clips.every((clip) => clip.state === "downloaded" && !!clip.mediaUrl),
   };

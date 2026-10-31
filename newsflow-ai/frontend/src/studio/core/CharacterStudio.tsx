@@ -678,6 +678,14 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       !!job &&
       !["needs_script", "script_review", "script_failed"].includes(job.state) &&
       job.quoteSettingsEditable !== true;
+  useEffect(() => {
+    // A deleted/missing selection must not leave another job's draft on screen.
+    // Keep the panels mounted while a newly created job is still being loaded.
+    if (selectionUnavailable && !isBusy) {
+      setTopic(""); setReferenceJob(""); setAsset("");
+      setFile(null); setActiveProfile(null);
+    }
+  }, [selectionUnavailable, isBusy, id]);
   const quoteSettingsChanged =
     job?.state === "quoted" &&
     quotedSettingsDirty(
@@ -1884,6 +1892,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       action("check", job?.state === "scene_review" ? "남은 장면 상태 확인" : "장면 상태 확인", ["generating", "scene_review"])
                     ) : job?.state === "clips_review" ? (
                       action("render", "검토 후 영상 합성", ["clips_review"])
+                    ) : ["compose_failed", "composing"].includes(job?.state ?? "") && job?.composeRecoveryAvailable === true ? (
+                      action("render", "합성 다시 시도", ["compose_failed", "composing"])
                     ) : job?.state === "completed" &&
                       safeMedia(job.mediaUrl) ? (
                       <a
@@ -1902,11 +1912,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   </div>
                   {!!follow.total && ["generating","scene_review","submission_unknown","submission_not_sent","status_or_download_failed","clips_review","composing","compose_failed","completed"].includes(job?.state??"") && (
                     <section className="kling-generation-progress" aria-label="영상 제작 진행" aria-live="polite">
-                      <div><strong>{job?.state==="composing"?"최종 영상 합성 중":job?.state==="completed"?"최종 영상 저장 완료":follow.failed||follow.error?"확인 필요":follow.done===follow.total?"장면 검토 준비 완료":"장면 제작 진행 중"}</strong>
+                      <div><strong>{job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 중":job?.composeRecoveryAvailable?"합성 중단 · 다시 합성 가능":job?.state==="completed"?"최종 영상 저장 완료":follow.failed||follow.error?"확인 필요":follow.done===follow.total?"장면 검토 준비 완료":"장면 제작 진행 중"}</strong>
                         <span>완료 {follow.done}/{follow.total}</span></div>
-                      <progress aria-label={job?.state==="composing"?"최종 영상 합성 진행":"장면 저장 진행률"}
-                        max={follow.total} value={job?.state==="composing"?undefined:follow.done}/>
-                      <small>{job?.state==="composing"?"내 PC에서 FFmpeg로 합성하고 있습니다.":`${follow.percent}% · 저장 완료 장면 기준`}</small>
+                      <progress aria-label={job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 진행":"장면 저장 진행률"}
+                        max={follow.total} value={job?.state==="composing"&&!job?.composeRecoveryAvailable?undefined:follow.done}/>
+                      <small>{job?.state==="composing"&&!job?.composeRecoveryAvailable?"내 PC에서 FFmpeg로 합성하고 있습니다.":`${follow.percent}% · 저장 완료 장면 기준`}</small>
                       {follow.error&&<><p role="alert">{follow.error}</p><button type="button" disabled={isBusy} onClick={follow.resume}>진행 확인 재개</button></>}
                     </section>
                   )}

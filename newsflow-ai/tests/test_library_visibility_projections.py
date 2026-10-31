@@ -153,3 +153,20 @@ def test_published_receipt_account_survives_draft_edit_but_invalid_accounts_are_
     with app.state.sessions.begin() as session:
         session.get(PublishEvidence,evidence_id).payload=original
     assert client.get('/api/studio/modules/analytics').json()['publishedProjects']==baseline['publishedProjects']
+
+
+def test_library_character_removal_hides_studio_and_restore_returns_original(app,client):
+    identifier=character(app)
+    job_id=identifier.split(':')[1]
+    service=app.state.character
+    before=service.read(job_id)
+    files={p:p.read_bytes() for p in service.folder(job_id).glob('*') if p.is_file()}
+    def jobs(): return client.get('/api/studio/modules/characters').json()['collections']['jobs']
+    assert job_id in {row['id'] for row in jobs()}
+    assert post(client,'remove',[identifier]).status_code==200
+    assert job_id not in {row['id'] for row in jobs()}
+    assert service.read(job_id)==before and all(p.read_bytes()==data for p,data in files.items())
+    assert job_id in {row['id'] for row in service.listing()}
+    assert post(client,'restore',[identifier]).status_code==200
+    assert job_id in {row['id'] for row in jobs()}
+    assert service.read(job_id)==before

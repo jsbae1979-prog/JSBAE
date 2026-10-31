@@ -968,6 +968,19 @@ class CharacterService:
                 self.save(job)
                 raise CharacterError('blocked') from None
 
+    def composition_retry_available(self, identifier):
+        """A manual local retry is possible only when no compositor owns the lock."""
+        from .composition_recovery import downloaded_clips
+        try:
+            with self.lock():
+                job = self.read(identifier)
+                if job['state'] not in {'compose_failed', 'composing'}:
+                    return False
+                downloaded_clips(self.folder(identifier), job)
+                return True
+        except (CharacterError, Timeout, OSError, ValueError, KeyError, TypeError):
+            return False
+
     def render(self, identifier, *, reviewed=False):
         self.consent(reviewed)
         with self.lock():
@@ -977,12 +990,18 @@ class CharacterService:
                 if digest(path)!=job['output']['sha256']:
                     raise CharacterError('media')
                 return path
-            if job['state']!='clips_review':
+            if job['state'] not in {'clips_review','compose_failed','composing'}:
                 raise CharacterError('blocked')
             folder=self.folder(identifier)
-            clips=[folder/s['file'] for s in job['scenes']]
-            if any(digest(p)!=s['sha256'] for p,s in zip(clips,job['scenes'])):
-                raise CharacterError('media')
+            from .composition_recovery import downloaded_clips, new_attempt, publish_attempt
+            clips = downloaded_clips(folder, job)
+            attempt = new_attempt(folder)
+            attempts = job.setdefault('composition_attempts', [])
+            for old in attempts:
+                if old.get('state') == 'composing':
+                    old.update(state='interrupted', finished_at=now().isoformat())
+            receipt = {'id': attempt.name, 'state': 'composing', 'started_at': now().isoformat()}
+            attempts.append(receipt)
             job['state']='composing'
             self.save(job)
             tools={name:value for name,value in (('ffmpeg',self.ffmpeg),('ffprobe',self.ffprobe)) if value is not None}
@@ -992,34 +1011,37 @@ class CharacterService:
                     from .studio_story import StudioStoryboard
                     from .kling import check
                     from .episode_story import parse_script
-                    output=compose_studio(folder,parse_script(job['script']),clips,
+                    output=compose_studio(attempt,parse_script(job['script']),clips,
                                           settings=check(job['studio_selection']),**tools)
                 else:
-                    output=self.composer(folder,Storyboard.model_validate(job['script']),clips,sfx_root=self.root/'sfx',**tools)
-            except Exception:  # noqa: BLE001 - persist a stopped state without secret supplier diagnostics
+                    output=self.composer(attempt,Storyboard.model_validate(job['script']),clips,sfx_root=self.root/'sfx',**tools)
+                review={'title':job['script']['title'],'output':output,'model':job['model'],'made_for_kids':job.get('made_for_kids'),
+                        'quote_total_usd':job['quote_total_usd'],'reported_billed_usd':None,
+                        'scenes':[{**{k:s[k] for k in ['position','file','sha256','state','attempt','quote_usd']},
+                                   'history':[{**{k:old.get(k) for k in ['attempt','state','quote_usd','submitted_at',
+                                                                        'finished_at']},
+                                               'request_id':old.get('handle',{}).get('request_id')}
+                                              for old in s.get('history',[])]} for s in job['scenes']],
+                        'checklist':['캐릭터 일관성','장면 순서·길이','자막·추가 음성 없음','모델 원본 소리 확인',
+                                     'AI 생성 사실·게시 플랫폼 표시 설정','시청 연령·아동용 여부 확인',
+                                     '음악은 플랫폼에서 직접 선택','최근 웃음 구조 반복 여부'],
+                        'human_review':'NOT VERIFIED','automatic_upload':False}
+                if job.get('automation_version')==1:
+                    review['upload']=job['script']['upload']
+                    review['checklist']=['주인공 외모·연속성','대사·웅얼거림·음악 없음','속도·반응 대비','자막 오탈자·위치','효과음·연결 음량','선택 길이·마지막 반전','업로드 정보·AI 표시·시청 연령']
+                if job.get('character',{}).get('style_warn'):
+                    review['checklist'].append(job['character']['style_warn'])
+                (attempt/'review.json').write_text(json.dumps(review,ensure_ascii=False,indent=2),encoding='utf8')
+                publish_attempt(folder, attempt, output)
+                job['output']=output
+                receipt.update(state='completed', finished_at=now().isoformat())
+                job['state']='completed'
+                self.save(job)
+            except Exception:  # noqa: BLE001 - retain local evidence, never replay a supplier request
+                receipt.update(state='failed', finished_at=now().isoformat())
                 job['state']='compose_failed'
                 self.save(job)
                 raise CharacterError('media') from None
-            job['output']=output
-            job['state']='completed'
-            self.save(job)
-            review={'title':job['script']['title'],'output':output,'model':job['model'],'made_for_kids':job.get('made_for_kids'),
-                    'quote_total_usd':job['quote_total_usd'],'reported_billed_usd':None,
-                    'scenes':[{**{k:s[k] for k in ['position','file','sha256','state','attempt','quote_usd']},
-                               'history':[{**{k:old.get(k) for k in ['attempt','state','quote_usd','submitted_at',
-                                                                    'finished_at']},
-                                           'request_id':old.get('handle',{}).get('request_id')}
-                                          for old in s.get('history',[])]} for s in job['scenes']],
-                    'checklist':['캐릭터 일관성','장면 순서·길이','자막·추가 음성 없음','모델 원본 소리 확인',
-                                 'AI 생성 사실·게시 플랫폼 표시 설정','시청 연령·아동용 여부 확인',
-                                 '음악은 플랫폼에서 직접 선택','최근 웃음 구조 반복 여부'],
-                    'human_review':'NOT VERIFIED','automatic_upload':False}
-            if job.get('automation_version')==1:
-                review['upload']=job['script']['upload']
-                review['checklist']=['주인공 외모·연속성','대사·웅얼거림·음악 없음','속도·반응 대비','자막 오탈자·위치','효과음·연결 음량','선택 길이·마지막 반전','업로드 정보·AI 표시·시청 연령']
-            if job.get('character',{}).get('style_warn'):
-                review['checklist'].append(job['character']['style_warn'])
-            (folder/'review.json').write_text(json.dumps(review,ensure_ascii=False,indent=2),encoding='utf8')
             return folder/'final.mp4'
 
 

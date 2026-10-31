@@ -99,3 +99,30 @@ def test_missing_or_invalid_requested_job_never_selects_another_job(app, browser
         expect(page.get_by_text(saved_episodes[0]['topic'], exact=True)).to_be_visible()
         assert not posts
         context.close()
+
+
+def test_deleted_library_selection_clears_stale_draft_and_restores(app,browser,saved_episodes):
+    from newsflow.studio.library_visibility import LibraryVisibility
+    case=saved_episodes[0]
+    before=app.state.character.read(case['id'])
+    visibility=LibraryVisibility(app.state.sessions,app.state.character)
+    with local_server(app) as origin:
+        context=browser.new_context(viewport={'width':1366,'height':768})
+        context.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
+        page=context.new_page();posts=[]
+        page.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
+        page.goto(origin+f"/studio/characters?job_id={case['id']}")
+        check_selected(page,case)
+        # Simulate deletion from another local library view, then refresh this view.
+        visibility.change(['character:'+case['id']],hidden=True)
+        page.reload()
+        expect(page.get_by_role('alert')).to_contain_text('선택한 작업을 찾을 수 없습니다.')
+        expect(page.locator('.kling-character-topic textarea')).to_have_value('')
+        expect(page.get_by_role('img',name='선택한 캐릭터 참조 이미지',exact=True)).to_have_count(0)
+        expect(page.locator('.kling-character-story-result')).to_have_count(0)
+        expect(page.get_by_role('button',name='스토리 자동 생성하기',exact=False)).to_be_disabled()
+        visibility.change(['character:'+case['id']],hidden=False)
+        page.reload();check_selected(page,case)
+        assert not posts
+        context.close()
+    assert app.state.character.read(case['id'])==before

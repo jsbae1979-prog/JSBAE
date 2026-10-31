@@ -229,8 +229,12 @@ def character_rows(state):
     from newsflow.character.visibility import read_visibility
     from newsflow.character.service import quote_settings_editable
     visibility = read_visibility(state.character.sessions)
+    with state.character.sessions() as session:
+        library_hidden = {key.removeprefix('library:character:') for key in session.scalars(
+            select(m.WorkspaceRemoval.key).where(m.WorkspaceRemoval.key.startswith('library:character:')))}
     result = []
-    for source in state.character.listing()[:100]:
+    sources = [row for row in state.character.listing() if row['id'] not in library_hidden]
+    for source in sources[:100]:
         job = state.character.read(source["id"])
         item = {
             k: job[k]
@@ -269,6 +273,8 @@ def character_rows(state):
                                     and 0<job.get('script_attempts',0)<3)
         item['scriptResponseSaved']=bool(job.get('script_responses'))
         item['quoteSettingsEditable']=quote_settings_editable(job)
+        item['composeRecoveryAvailable']=(job.get('state') in {'compose_failed','composing'}
+                                          and state.character.composition_retry_available(job['id']))
         if job.get('prompt_validation_error'):
             item['message'] = '대본 저장됨 · 영상 지시문 길이를 줄여주세요'
         item.update(visibility.get(job['id'], {'trashed': False, 'recentHidden': False}))
