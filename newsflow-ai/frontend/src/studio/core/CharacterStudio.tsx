@@ -589,7 +589,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     setSettings((x) => ({ ...x, duration: total }));
   }
   const story = job?.story,
-    scenes: Item[] = story?.scenes ?? [],
+    scenes: Item[] = story?.scenes ?? (job?.directVideo ? job.scenes ?? [] : []),
     clips: Item[] = job?.scenes ?? [];
   const pendingSceneChecks = clips.some((clip) => clip.state === "submitted");
   const canCheckScenes = job?.state === "generating" || (job?.state === "scene_review" && pendingSceneChecks);
