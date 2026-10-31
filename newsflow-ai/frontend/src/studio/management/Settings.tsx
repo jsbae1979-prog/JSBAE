@@ -37,6 +37,24 @@ export default function Settings({
     [modelTab, setModelTab] = useState("text"),
     [startup, setStartup] = useState<any>(null),
     [loading, setLoading] = useState(false);
+  const [probeBusy,setProbeBusy]=useState("");
+  const [probeResult,setProbeResult]=useState<Record<string,any>>({});
+  async function testProvider(provider:string,scope:string) {
+    if(probeBusy)return;
+    const key=provider+":"+scope;
+    setProbeBusy(key);
+    try {
+      const response=await fetch(`/api/studio/providers/${provider}/check`,{
+        method:"POST",credentials:"same-origin",
+        body:new URLSearchParams({scope,consent:"true",csrf_token:c.view?.csrfToken??""})
+      });
+      const result=await response.json().catch(()=>({}));
+      setProbeResult(previous=>({...previous,[key]:response.ok?result:{code:"unavailable",verified:false,message:"연결 테스트를 완료하지 못했습니다. 다시 누르기 전에 상태를 확인하세요."}}));
+      await c.load();
+    } catch {
+      setProbeResult(previous=>({...previous,[key]:{code:"network",verified:false,message:"결과를 받지 못했습니다. 자동 재요청하지 않습니다."}}));
+    } finally {setProbeBusy("");}
+  }
   let setup: any = {};
   try {
     setup = JSON.parse(c.view?.settings?.easy_setup ?? "{}");
@@ -230,41 +248,35 @@ export default function Settings({
                   {providers
                     .filter((p) => p.types.includes(modelTab))
                     .map((p) => {
-                      const meta = c.view?.services?.find((s) => s.id === p.id);
+                      const service = c.view?.services?.find((s) => s.id === p.id);
+                      const meta=service?.checks?.[modelTab]??service;
+                      const result=probeResult[p.id+":"+modelTab];
                       return (
                         <tr key={p.id}>
                           <td>
                             {p.name}
                             <small>
-                              {p.id === "openai"
-                                ? modelTab === "image"
-                                  ? (c.view?.catalog.imageDefaults?.model ??
-                                    "모델 설정에서 확인")
-                                  : (c.view?.catalog.studioModels?.openai_api ??
-                                    "작업별 모델 설정")
-                                : p.id === "claude"
-                                  ? (c.view?.catalog.characterDefaults
-                                      ?.script_model ?? "모델 설정에서 확인")
-                                  : "등록 모델·가격 확인 필요"}
+                              {meta?.model || "모델 설정에서 확인"}
                             </small>
                           </td>
                           <td>
                             {meta?.verified ? (
                               <span className="mg-badge good">인증 확인</span>
                             ) : (
-                              <Badge
-                                value={meta?.configured ? "review_required" : "blocked"}
-                              />
+                              <span className="mg-badge">{meta?.configured ? "연결 미확인" : "키 미설정"}</span>
                             )}
                             <small>
-                              {meta?.verified
-                                ? "인증·모델 확인"
-                                : meta?.configured
-                                  ? "키 저장 · 실제 인증 미검증"
-                                  : "키 미설정"}
+                              {meta?.message ?? (meta?.configured ? "키 저장 · 연결 미확인" : "키 미설정")}
                             </small>
+                            {meta?.checkedAt&&<small>확인: {new Date(meta.checkedAt).toLocaleString("ko-KR")}</small>}
                           </td>
                           <td>
+                            <button type="button" disabled={!!probeBusy || !meta?.configured}
+                              title="저장된 키를 공식 공급사로 전송해 조회합니다. 콘텐츠는 생성하지 않습니다."
+                              onClick={()=>void testProvider(p.id,modelTab)}>
+                              <RefreshCw size={14}/>{probeBusy===p.id+":"+modelTab?"확인 중…":"API 키 테스트"}
+                            </button>
+                            {result&&!result.checkedAt&&<small role="status">{result.message}</small>}
                             <Action
                               c={c}
                               id={p.action}

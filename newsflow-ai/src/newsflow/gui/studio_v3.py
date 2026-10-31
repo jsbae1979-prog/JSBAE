@@ -258,18 +258,16 @@ def workspace_view(request: Request, *, include_library_hidden=False, project_id
             configured = (p.is_file() and not p.is_symlink()) or bool(
                 os.environ.get("NEWSFLOW_ELEVENLABS_KEY", "")
             )
-        verified = False
-        if identifier == "claude" and configured:
-            from newsflow.intelligence.api_settings import api_readiness
-
-            verified = bool(api_readiness(state.sessions, "claude_api", store, "analysis")[
-                "authentication_verified"])
+        from newsflow.intelligence.provider_connections import SCOPES, connections
+        checks = {scope: connections(state).status(identifier,scope) for scope in SCOPES[identifier]}
+        verified = any(check['verified'] for check in checks.values())
         services.append(
             {
                 "id": identifier,
                 "label": label,
                 "configured": configured,
                 "verified": verified,
+                "checks": checks,
                 "href": "/settings",
             }
         )

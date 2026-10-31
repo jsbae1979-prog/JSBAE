@@ -94,15 +94,15 @@ def test_chrome_settings_labels_follow_only_current_claude_proof(connection_app,
                 row = page.locator('.mg-settings-models tbody tr').filter(
                     has=page.get_by_role('button', name='Claude 키 설정', exact=True))
                 expect(row).to_have_count(1)
-                label = ('인증·모델 확인' if expected else
-                         '키 저장 · 실제 인증 미검증' if configured else '키 미설정')
+                label = ('키 인증·모델 조회 확인' if expected else
+                         '연결 미확인' if configured else '키 미설정')
                 expect(row.locator('td').nth(1)).to_contain_text(label)
                 if expected:
                     expect(row.locator('.mg-badge')).to_have_text('인증 확인')
                     expect(row.locator('td').nth(1)).not_to_contain_text('생성 완료')
                     expect(row.locator('td').nth(1)).not_to_contain_text('미검증')
                 else:
-                    expect(row.locator('td').nth(1)).not_to_contain_text('인증·모델 확인')
+                    expect(row.locator('td').nth(1)).not_to_contain_text('키 인증·모델 조회 확인')
                 assert values(app) == before
             assert not posts and not external and not errors
         finally:

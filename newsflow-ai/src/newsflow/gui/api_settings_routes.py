@@ -138,3 +138,12 @@ def clear_key(request: Request, provider: str):
     except CredentialError as exc:
         raise HTTPException(422, str(exc)) from None
     return go("/simple-settings?saved=key_removed#selected-ai")
+
+
+@router.post('/api/studio/providers/{provider}/check')
+def provider_connection_test(request: Request, provider: str, scope: str=Form(''), consent: bool=Form(False)):
+    from newsflow.intelligence.provider_connections import connections
+    try:
+        return connections(request.app.state).check(provider,scope,consent=consent)
+    except (ValueError,KeyError):
+        raise HTTPException(422,'공급사·모델 설정을 확인하세요.') from None

@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-31",
+  "scope": "Explicit authenticated provider metadata tests. No inference, media upload, cancellation or paid retry.",
+  "providers": {
+    "claude": "One official model metadata GET; reuse existing verification service",
+    "openai": "One official selected text/image model metadata GET",
+    "elevenlabs": "Authenticated user GET plus model-list GET; model listing does not prove voice/commercial entitlement",
+    "higgsfield": "One official status GET for an owned previously terminal request; no invented request or generation fallback"
+  },
+  "safety": [
+    "Exact per-provider request context and stored current-profile DPAPI file only",
+    "Existing LocalAccess/Origin/CSRF retained",
+    "No redirects or automatic retries",
+    "Ciphertext/model-bound verification expires after 24 hours",
+    "Supplier account bodies, request handles and headers never persisted in probe results",
+    "No generation/budget/approval setting changed by connection checks"
+  ],
+  "focused": {
+    "PASS": 119,
+    "FAIL": 0,
+    "ERROR": 0
+  },
+  "uiRelatedRun": {
+    "PASS": 28,
+    "FAIL": 0,
+    "note": "Includes overlapping unit tests; not added to focused count"
+  },
+  "TypeScript": "PASS",
+  "ReactBuild": "PASS",
+  "fullSuite": "RUNNING; final results will be recorded separately",
+  "operatingDeployment": "NOT YET PERFORMED",
+  "officialReferences": [
+    "https://developers.openai.com/api/reference/resources/models/methods/retrieve",
+    "https://platform.claude.com/docs/en/api/models/retrieve",
+    "https://elevenlabs.io/docs/api-reference/user/get",
+    "https://elevenlabs.io/docs/api-reference/models/list",
+    "https://docs.higgsfield.ai/docs/api-reference/requests/get-request-status"
+  ]
+}
