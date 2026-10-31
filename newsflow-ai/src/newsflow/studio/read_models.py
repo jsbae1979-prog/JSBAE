@@ -274,6 +274,9 @@ def character_rows(state):
                                     and 0<job.get('script_attempts',0)<3)
         item['scriptResponseSaved']=bool(job.get('script_responses'))
         item['quoteSettingsEditable']=quote_settings_editable(job)
+        from newsflow.character.quote_review import quote_review
+        from newsflow.db.models import utcnow
+        item.update(quote_review(job, utcnow()))
         item['composeRecoveryAvailable']=(job.get('state') in {'compose_failed','composing'}
                                           and state.character.composition_retry_available(job['id']))
         if job.get('prompt_validation_error'):
@@ -801,6 +804,14 @@ def module_view(request: Request, module: Module):
         key: getattr(ai, key) for key in ("provider", "model", "approved", "request_token_limit", "timeout")
     }
     from newsflow.intelligence.api_settings import read_api_settings
+    from newsflow.news.serpapi import SerpApiKeys
+    from newsflow.news.serpapi_settings import context as serpapi_context
+    # Status only: never load/decrypt a key or contact SerpApi while rendering.
+    serpapi = serpapi_context(state.sessions, getattr(state, "serpapi_keys", None) or SerpApiKeys(state.config.data_dir))
+    result["catalog"]["serpapi"] = {"keyConfigured": serpapi["key"]["configured"],
+        "approved": bool(serpapi["approved_at"]),
+        "registrationAvailable": getattr(state, "serpapi_registration_available", False)}
+    result["formDefaults"]["serpapi_settings"] = {"api_key": "", "approved": bool(serpapi["approved_at"])}
     result["catalog"]["apiSettingsDefaults"] = {}
     for provider in ("openai", "claude_api"):
         current = read_api_settings(state.sessions, provider)

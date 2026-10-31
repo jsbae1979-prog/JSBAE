@@ -311,12 +311,18 @@ class EpisodeFlow:
         s.consent(consent)
         with s.lock():
             job = s.read(identifier)
-            if (job['state'] != 'quoted' or quote_hash != job.get('quote_hash') or
-                fp([job['plan_hash'], job['scenes'], job['quoted_at'], job['quote_key_id']]) != quote_hash or
-                not timedelta(0) <= now() - datetime.fromisoformat(job['quoted_at']) <= timedelta(minutes=15) or
+            if job['state'] != 'quoted':
+                raise CharacterError('blocked')
+            from .quote_review import quote_review
+            review = quote_review(job, now())
+            if quote_hash != job.get('quote_hash') or review['quoteStatus'] == 'changed':
+                raise CharacterError('quote_changed')
+            if review['quoteStatus'] == 'expired':
+                raise CharacterError('quote_expired')
+            if (review['quoteStatus'] != 'ready' or
                 hashlib.sha256(s.video_for(job).credential().encode()).hexdigest() != job['quote_key_id'] or
                 job.get('script_approval', {}).get('sha256') != fp(job['script'])):
-                raise CharacterError('blocked')
+                raise CharacterError('quote_changed')
             self.validate(job, job['script'])
             if amount(job['quote_total_usd']) + self.text_exposure(job) > amount(job['episode_limit']):
                 raise CharacterError('budget')

@@ -14,7 +14,7 @@ function contextFor(job, perOverrides = {}) {
   const sent = [];
   const context = { job, perOverrides, FormData, URLSearchParams, pendingReferenceCopy: false, scriptDirty: false,
     settings: { duration: 30, clip_seconds: 6 }, pending: { current: null }, preparedStory: {current:null},
-    setStoryReview:()=>{}, setStoryReviewConsent:()=>{},
+    createdSelection: {current:null}, setStoryReview:()=>{}, setStoryReviewConsent:()=>{},
     c: { view: { csrfToken: "synthetic-csrf" }, load: async () => {} },
     setPerOverrides: (update) => { context.perOverrides = update(context.perOverrides); },
     setId: () => { context.job = undefined; }, setReferenceJob: () => {}, setTopic: () => {},

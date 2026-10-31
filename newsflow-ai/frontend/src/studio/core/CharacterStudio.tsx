@@ -1177,6 +1177,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             kind === "retry-scene" ? job?.retry_hash : job?.quote_hash,
           retry_hash: job?.retry_hash,
           retryQuote: job?.retryQuote,
+          __refreshQuote: kind === 'submit' ? quote : undefined,
         }}
         disabled={
           isBusy ||

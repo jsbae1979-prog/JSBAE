@@ -381,6 +381,12 @@ export default function Settings({
             className="mg-settings-sources"
             tools={<Rss size={20} />}
           >
+            <section aria-label="SerpApi 뉴스 수집 설정" className="mg-setting-row">
+              <strong>SerpApi · Google News</strong>
+              <span className="mg-badge">{c.view?.catalog.serpapi?.keyConfigured ? "키 저장 · 연결 미검증" : "키 미등록"}</span>
+              <small>{c.view?.catalog.serpapi?.approved ? "수집 사용 설정" : "수집 사용 중지"} · 저장만으로 조회하지 않습니다.</small>
+              <Action c={c} id="serpapi_settings" disabled={!c.view?.catalog.serpapi?.registrationAvailable}>SerpApi 키·수집 설정</Action>
+            </section>
             <div className="mg-source-list">
               {c.list("sources").map((x) => (
                 <article key={x.id}>

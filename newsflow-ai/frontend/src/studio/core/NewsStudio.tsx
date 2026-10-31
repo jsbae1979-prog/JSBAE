@@ -133,8 +133,11 @@ export default function NewsStudio({
             <ActionButton c={c} id="routes_collect">
               등록 RSS 수집 · 확인
             </ActionButton>
+            <ActionButton c={c} id="serpapi_settings" disabled={!c.view?.catalog.serpapi?.registrationAvailable}>
+              SerpApi 키·수집 설정
+            </ActionButton>
             <ActionButton c={c} id="curation_refresh">
-              인기 뉴스 수집 · 확인
+              인기 뉴스 RSS 수집 · 확인
             </ActionButton>
           </div>
         </Panel>

@@ -474,6 +474,10 @@ def start(config, plan):
                 claude_connection_check = install_claude_connection_check(app, config.profile, character_native_factory)
                 from .provider_connection_check import install as install_provider_connection_check
                 provider_connection_check = install_provider_connection_check(app, config.profile, character_native_factory)
+            serpapi_registration = None
+            if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
+                from .serpapi_key_registration import install as install_serpapi_registration
+                serpapi_registration = install_serpapi_registration(app, config.profile, character_native_factory)
             character_quote_only = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .character_quote_only import install as install_character_quote_only
@@ -503,6 +507,11 @@ def start(config, plan):
                 from .operation import OperatingRequests
                 authenticated_app = LocalAccess(app, session)
                 request_boundary = OperatingRequests(authenticated_app)
+                from .registered_rss import install as install_registered_rss
+                registered_rss = install_registered_rss(app)
+                request_boundary = registered_rss.wrap(request_boundary, authenticated_app)
+                if serpapi_registration is not None:
+                    request_boundary = serpapi_registration.wrap(request_boundary, authenticated_app)
                 if character_trial is not None:
                     request_boundary = character_trial.wrap(request_boundary, authenticated_app)
                 if character_story_only is not None:
