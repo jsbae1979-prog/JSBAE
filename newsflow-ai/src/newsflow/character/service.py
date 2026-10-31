@@ -114,7 +114,7 @@ def generation_rows(job):
     # Shared setup anchors all clips. Prior action is context, not another action
     # to squeeze into this clip. No saved story/payload/approval is rewritten.
     shared=(f"ONE {job['duration']}-second film in 5 consecutive shots. "
-            'Same cast species/faces/clothes/voices, set, props, light and time. '
+            'Same cast species/faces/clothes, set, props, light and time. '
             'No recasting, location reset or time jump.\n'
             f"Shared situation (unspoken): {story.plan.situation}\n"
             f"Opening setup (context only; do not replay): {story.scenes[0].action}\n")

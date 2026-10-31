@@ -194,10 +194,12 @@ def test_route_reuses_durable_id_without_auto_replay_and_requires_explicit_conse
     from fastapi.testclient import TestClient
     from newsflow.gui.character_routes import router
     app=FastAPI();app.state.character=studio.service;app.include_router(router)
+    from newsflow.creation.image_studio import ImageStudio
+    app.state.image_studio=ImageStudio(studio.service.sessions,studio.service.root.parent,None)
     client=TestClient(app)
     data={'topic':'참조 캐릭터 여행','studio_settings':json.dumps(DEFAULTS),'request_id':uuid4().hex,'episode_limit':'10','day_limit':'20'}
     local=client.post('/character',data=data,files={'reference':('ref.png',png(),'image/png')})
-    assert local.status_code==422 and studio.writer.calls==0
+    assert local.status_code==200 and studio.writer.calls==0
     job=create(studio)  # Historical studio job remains readable/reviewable.
     bad=client.post('/api/studio/characters/auto-story',data={'job_id':job,'consent':'false'})
     assert bad.status_code==409 and studio.writer.calls==0
@@ -228,6 +230,8 @@ def test_actual_existing_security_middleware_still_guards_both_calls(studio):
     nodes=[n for n in ast.walk(tree) if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and n.name in {'valid','security'}]
     assert len(nodes)==2
     app=FastAPI();app.state.character=studio.service;app.include_router(router)
+    from newsflow.creation.image_studio import ImageStudio
+    app.state.image_studio=ImageStudio(studio.service.sessions,studio.service.root.parent,None)
     scope=dict(app=app,secret=b'synthetic-csrf-only',hashlib=hashlib,hmac=hmac,re=re,secrets=secrets,
                Request=Request,HTMLResponse=HTMLResponse,StarletteHTTPException=StarletteHTTPException)
     # Execute exactly the two production functions, retaining the original form limits/origin/cookie checks.
@@ -239,7 +243,7 @@ def test_actual_existing_security_middleware_still_guards_both_calls(studio):
     assert client.post('/character',data={**fields,'csrf_token':'bad'},files={'reference':('ref.png',png(),'image/png')}).status_code==403
     assert client.post('/character',data=fields,files={'reference':('ref.png',png(),'image/png')},headers={'Origin':'https://outside.invalid'}).status_code==403
     local=client.post('/character',data=fields,files={'reference':('ref.png',png(),'image/png')})
-    assert local.status_code==422 and studio.writer.calls==0
+    assert local.status_code==200 and studio.writer.calls==0
     identifier=create(studio)  # New HTTP jobs require a registered profile.
     paid={'job_id':identifier,'consent':'true','csrf_token':csrf}
     assert client.post('/api/studio/characters/auto-story',data={**paid,'csrf_token':'bad'}).status_code==403
@@ -272,6 +276,8 @@ def test_unsupported_native_quality_reports_field_without_creating_a_job(studio)
     from fastapi.testclient import TestClient
     from newsflow.gui.character_routes import router
     app=FastAPI();app.state.character=studio.service;app.include_router(router)
+    from newsflow.creation.image_studio import ImageStudio
+    app.state.image_studio=ImageStudio(studio.service.sessions,studio.service.root.parent,None)
     client=TestClient(app)
     data={'topic':'여행','studio_settings':json.dumps({**DEFAULTS,'native_resolution':'1080p'}),
           'request_id':uuid4().hex,'episode_limit':'10','day_limit':'20','character_id':'char_'+'a'*32}
@@ -472,13 +478,12 @@ def test_studio_prompt_interprets_story_without_authored_dialogue():
         assert scene.action in text and scene.caption in text
         assert 'Scene context (unspoken):' in text
         assert 'Act out the situation through visible actions, reactions and expressions.' in text
-        assert 'Infer natural Korean in-scene sound and character dialogue as the story needs' in text
-        assert 'No voiceover or narrator.' in text
-        assert 'Never read scene descriptions, captions, titles or timing markers aloud.' in text
+        assert 'Ambient sound effects only:' in text
+        assert 'No dialogue, no voices, no music.' in text
         assert 'In-character Korean dialogue:' not in text
         assert 'No spoken dialogue in this beat.' not in text
     silent=prompts(screenplay,{**DEFAULTS,'sound':'off'})
-    assert all('Silent video. No dialogue, speech, music or sound.' in row['prompt'] for row in silent)
+    assert all('Silent video. No dialogue, no voices, no music.' in row['prompt'] for row in silent)
 
 
 def test_new_topic_story_keeps_narration_empty_even_if_writer_returns_dialogue(studio):

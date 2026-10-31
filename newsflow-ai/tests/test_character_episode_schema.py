@@ -71,9 +71,9 @@ def test_prompts_no_dialogue_and_character_isolation():
     for character in (a,b):
         prompt=scene_prompt(character,story.scenes[0],True)
         assert character['appearance'] in prompt and character['style_lock'] in prompt
-        assert 'no dialogue, no voices, no music' in prompt
+        assert 'no dialogue, no voices, no music' in prompt.lower()
         assert 'lip sync' not in prompt and 'Korean' not in prompt
-        assert 'Camera:' in prompt and 'Sound effects only:' in prompt
+        assert 'Camera:' in prompt and 'Ambient sound effects only:' in prompt
     assert 'rabbit' not in scene_prompt(b,story.scenes[0],False)
     assert 'Sound effects only' not in scene_prompt(b,story.scenes[0],False)
     payload=script_input(a,'합성 주제',15,CATALOG.model(O3),True)

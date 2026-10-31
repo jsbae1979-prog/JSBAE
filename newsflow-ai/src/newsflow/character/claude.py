@@ -94,6 +94,9 @@ class CharacterWriter(AnthropicProvider):
         self.last_failure = None
         self.last_candidate = None
         story_input={key:payload[key] for key in ('topic','duration','clip_seconds','scene_count','sound') if key in payload}
+        from .story_character import story_character
+        character=story_character(payload.get('character'))
+        if character:story_input['character']=character
         body={'model':options.model,'max_tokens':options.max_tokens,'temperature':options.temperature,
               'system':INSTRUCTION, 'messages':[{'role':'user','content':user_message(story_input)}],
               'output_config':{'format':{'type':'json_schema',
@@ -123,6 +126,9 @@ class CharacterWriter(AnthropicProvider):
             story=StudioStoryboard.model_validate(candidate)
         except ValidationError as error:
             self._studio_fail('schema',stop,error.errors(include_url=False,include_context=False,include_input=False))
+        narration_errors=[{'loc':['scenes',i,'narration'],'type':'literal_error'}
+                          for i,scene in enumerate(story.scenes) if scene.narration != '']
+        if narration_errors:self._studio_fail('schema',stop,narration_errors)
         from .studio_story import timing_errors
         errors=timing_errors(story,story_input)
         if errors:self._studio_fail('timing',stop,errors)

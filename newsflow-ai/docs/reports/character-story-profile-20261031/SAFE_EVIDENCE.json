@@ -1,0 +1,36 @@
+{
+  "scope": "Restore story-only creation; profile-linked writing and roles; ambient-only sound",
+  "focus": {
+    "passed": 98,
+    "failed": 0,
+    "errors": 0,
+    "typeScript": "PASS",
+    "reactBuild": "PASS"
+  },
+  "fullPytest": {
+    "command": "python -m pytest -q -rs",
+    "status": "RUNNING",
+    "resultNotYetClaimed": true
+  },
+  "differences": [
+    "New episodes use EpisodeFlow / EpisodeScript, not CharacterWriter.write_studio",
+    "Current episode input already had personality/comedy_formula; explicit canonical aliases and plan/ending instructions were added",
+    "Legacy write_studio dropped character fields; now projects selected text-only profile",
+    "Legacy sound-on prompt requested Korean dialogue/lip sync; now ambient-only for all new prompts",
+    "V3 scenes have no role field; setup/middle contrast/final punchline are inferred from ordering without migration"
+  ],
+  "protection": {
+    "paidCalls": 0,
+    "operatingRestartNotYetPerformed": true,
+    "savedDirectVideosAndJobsPreserved": true,
+    "oldNarrationRemainsReadable": true,
+    "newDirectHttpCreationRejected": true,
+    "mainPr35Unchanged": true
+  },
+  "cancelledWork": {
+    "referenceTopicFeatureNotApplied": true,
+    "cancelledTestsArchivedLocallyNotDeleted": true,
+    "broadRestoreAndReverseDiffRejectedNotExecuted": true,
+    "saferExactFunctionAndLineChangesUsed": true
+  }
+}
