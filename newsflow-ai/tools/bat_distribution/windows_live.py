@@ -467,6 +467,7 @@ def start(config, plan):
             key_registration = None
             claude_connection_check = None
             provider_connection_check = None
+            voice_catalog_access = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .higgsfield_key_registration import install as install_key_registration
                 key_registration = install_key_registration(app, config.profile, character_native_factory)
@@ -474,6 +475,8 @@ def start(config, plan):
                 claude_connection_check = install_claude_connection_check(app, config.profile, character_native_factory)
                 from .provider_connection_check import install as install_provider_connection_check
                 provider_connection_check = install_provider_connection_check(app, config.profile, character_native_factory)
+                from .voice_catalog_access import install as install_voice_catalog_access
+                voice_catalog_access = install_voice_catalog_access(app, config.profile, character_native_factory)
             serpapi_registration = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .serpapi_key_registration import install as install_serpapi_registration
@@ -528,6 +531,8 @@ def start(config, plan):
                     request_boundary = claude_connection_check.wrap(request_boundary, authenticated_app)
                 if provider_connection_check is not None:
                     request_boundary = provider_connection_check.wrap(request_boundary, authenticated_app)
+                if voice_catalog_access is not None:
+                    request_boundary = voice_catalog_access.wrap(request_boundary, authenticated_app)
             elif config.profile_kind == 'synthetic-local-work':
                 from .local_work import LocalWorkRequests
                 request_boundary = LocalWorkRequests(LocalAccess(app, session))

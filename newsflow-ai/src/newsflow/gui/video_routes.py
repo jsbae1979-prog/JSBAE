@@ -37,6 +37,9 @@ def tts_settings(request: Request, sample: str = "", saved_voice: bool = False):
 
 
 def _voice_catalog(request):
+    scoped = getattr(request.app.state, "eleven_voice_catalog", None)
+    if scoped is not None:
+        return scoped
     from newsflow.video.elevenlabs_tts import ElevenLabsKeys
     from newsflow.video.elevenlabs_voices import ElevenLabsVoices
 
