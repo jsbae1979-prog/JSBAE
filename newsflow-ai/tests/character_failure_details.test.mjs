@@ -81,6 +81,7 @@ test("the diagnosis action preserves the connection gate and never uses a genera
 async function diagnoseDialog({ reject = false, ack = true } = {}) {
   const calls = { requests: 0, reloads: 0, closes: 0, error: "", busy: false };
   const context = { Error, busy: false, risky: true, ack, localRender: null,
+    compactCharacter: false, quoteReady: true, registeredRSS: false, quoteSubmit: false,
     checkingCharacterScenes: false, diagnosingCharacterScenes: true,
     effective: { id: "character_act_diagnose", path: "/character/{job_id}/diagnose" },
     values: { job_id: "a".repeat(32), consent: true }, view: {}, files: {}, context: {},

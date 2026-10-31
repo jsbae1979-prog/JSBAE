@@ -68,7 +68,8 @@ class RegenerationFlow:
                 owned_clip(folder, row)
             story = self.flow.validate(job, job['script'])
             chosen = check(job['studio_selection'])
-            planned = {row['position']: row for row in prompts(story, chosen, job['character'])}
+            from .episode_policy import job_story_format
+            planned = {row['position']: row for row in prompts(story, chosen, job['character'], job_story_format(job))}
             video = s.video_for(job)
             public = video.upload_reference(generation_reference(folder, chosen))
             items = []
