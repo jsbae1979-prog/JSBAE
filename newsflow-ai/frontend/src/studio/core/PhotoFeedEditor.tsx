@@ -547,7 +547,7 @@ export default function PhotoFeedEditor({
             </details>
             {version > 0 && !dirty && (
               <details>
-                <summary>이 버전 게시용 검토본 저장</summary>
+                <summary>게시 준비</summary>
                 <label>
                   <input
                     type="checkbox"
@@ -589,7 +589,7 @@ export default function PhotoFeedEditor({
                     })
                   }
                 >
-                  선택 버전 검토본 저장
+                  게시 스튜디오에 저장
                 </button>
               </details>
             )}

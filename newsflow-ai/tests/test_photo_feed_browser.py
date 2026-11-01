@@ -49,7 +49,19 @@ def test_photo_feed_editor_local_browser(app,feeds,browser,tmp_path):
         expect(p.get_by_role('status').filter(has_text='미리보기 반영됨')).to_be_visible()
         p.get_by_role('button',name='새 버전으로 저장',exact=True).click();expect(p.get_by_role('status').filter(has_text='새 버전 저장 완료')).to_be_visible()
         p.reload();expect(p.get_by_label('핵심 설명',exact=True)).to_have_value('2026년 관측 결과 공개 예정\n추가 검토 진행 중')
-        p.get_by_role('button',name='선택 이미지 크게 보기',exact=True).click();expect(p.get_by_role('dialog')).to_be_visible();p.get_by_role('button',name='닫기',exact=True).click()
+        for width,height in [(1920,1080),(1366,768),(390,844),(844,390)]:
+            p.set_viewport_size({'width':width,'height':height})
+            p.get_by_role('button',name='선택 이미지 크게 보기',exact=True).click()
+            dialog=p.get_by_role('dialog');expect(dialog).to_be_visible()
+            box=dialog.bounding_box();assert box['x']>=0 and box['y']>=0
+            assert box['x']+box['width']<=width and box['y']+box['height']<=height
+            assert dialog.evaluate('(d)=>d.scrollWidth<=d.clientWidth && d.scrollHeight<=d.clientHeight')
+            img=dialog.locator('img');expect(img).to_be_visible()
+            assert img.evaluate('(i)=>getComputedStyle(i).objectFit==="contain" && i.complete && i.naturalWidth===1080')
+            close=dialog.get_by_role('button',name='닫기',exact=True).bounding_box()
+            assert close['y']>=0 and close['y']+close['height']<=height
+            p.screenshot(path=str(evidence/f'popup-{width}.png'))
+            dialog.get_by_role('button',name='닫기',exact=True).click()
         for width,height in [(1920,1080),(1366,768)]:
             p.set_viewport_size({'width':width,'height':height});assert p.evaluate('document.documentElement.scrollWidth<=innerWidth')
             p.screenshot(path=str(evidence/f'editor-{width}.png'),full_page=True)
