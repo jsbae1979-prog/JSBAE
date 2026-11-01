@@ -62,7 +62,7 @@ def connected(gui, sessions, monkeypatch):
         elif instruction == TOPIC_INSTRUCTION:
             answer = {'topics': [{'topic': '정리하다 낮잠을 자는 토끼', 'category': '정원', 'joke_type': '반전'}]}
         else:
-            answer = script()
+            answer = getattr(state, 'story_answer', None) or script()
         text = json.dumps(answer, ensure_ascii=False)
         if provider == 'claude_api':
             return {'stop_reason': 'end_turn', 'content': [{'type': 'text', 'text': text}]}
@@ -203,3 +203,19 @@ def test_legacy_episode_uses_original_scope_without_new_authority(connected):
     c.service.save(job)
     assert c.post(m.AUTO_STORY, job_id=c.identifier, consent='true').status_code == 403
     assert not c.state.calls and not c.state.decryptions
+
+
+@pytest.mark.story_format
+def test_operating_new_format_uses_snapshot_and_preserves_request_boundary(connected):
+    from test_character_story_format import script as new_script, FORMAT
+    from newsflow.character.episode_story import script_instruction
+    c = connected
+    c.state.story_answer = new_script([5, 5, 5])
+    assert c.service.read(c.identifier)['story_format'] == FORMAT
+    response = c.post(m.AUTO_STORY, job_id=c.identifier, consent='true')
+    assert response.status_code == 200, response.text
+    assert c.service.read(c.identifier)['state'] == 'script_review'
+    assert len(c.state.calls) == 1
+    assert c.state.calls[0][1]['system'] == script_instruction(FORMAT)
+    assert c.post(m.AUTO_STORY, job_id=c.identifier, consent='true').status_code == 200
+    assert len(c.state.calls) == 1 and not c.video.sent

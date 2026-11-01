@@ -112,9 +112,10 @@ class _Authoring(AuthoringAI):
             valid = (instruction == TOPIC_INSTRUCTION and schema is TopicResponse
                      and kind == 'script' and image_bytes is None)
         else:
-            from newsflow.character.episode_story import SCRIPT_INSTRUCTION, EpisodeScript
+            from newsflow.character.episode_story import script_instruction, EpisodeScript
+            from newsflow.character.episode_policy import job_story_format
             job = self.owner.service.read(context['job_id'])
-            valid = (instruction == SCRIPT_INSTRUCTION and schema is EpisodeScript and kind == 'script'
+            valid = (instruction == script_instruction(job_story_format(job)) and schema is EpisodeScript and kind == 'script'
                      and image_bytes is None and max_reserved_usd is not None
                      and job.get('automation_version') == 1 and job.get('state') == 'writing'
                      and request_id == f"episode:{context['job_id']}:script:{job.get('script_request_sequence')}"
