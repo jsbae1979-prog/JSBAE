@@ -1,0 +1,121 @@
+{
+  "date": "2026-11-01",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "baseSha": "3cd8b5881a972f9f180db529aa4aa5e02388a47e",
+  "implementationSha": "9f024a1f00e4300e30ead041ca129f9e95ff07e7",
+  "decision": "CONDITIONAL",
+  "operatingApplied": false,
+  "changes": {
+    "publishing": [
+      "이미지에는 Instagram 피드, 뉴스·캐릭터 영상에는 YouTube Shorts/Instagram Reels/TikTok/Facebook Reels 검토 대상을 표시",
+      "콘텐츠 변경 시 플랫폼 선택 초기화; 알 수 없는 유형에는 대상 없음",
+      "게시 문구 저장·형식 검사·Claude/OpenAI 수정안 검토 후 적용; 원본 파일/대본/출처는 변경하지 않음",
+      "AI 검토는 텍스트만 전송; 기존 요청별 예산·인증 유지; 영상 자체 분석 또는 권리 승인으로 표시하지 않음",
+      "문구 수정 후 이전 게시 승인 상태 재사용 금지; 저장 중 새 입력 보존"
+    ],
+    "news": [
+      "수집 시작과 RSS/SerpApi 선택; API 키 설정은 설정 화면으로 이동",
+      "선택 기사/저장 분석 순위 자동 연결; 내부 ID 입력 제거",
+      "알려진 영상 모델·지원 화질 선택; path/표시 이름 직접 입력 제거; 견적·권한 성공을 가정하지 않음"
+    ],
+    "images": [
+      "저장된 TOP 3 분석과 실제 새 뉴스 수집 구분",
+      "TOP 3 전체 또는 선택 뉴스 1건 작업 저장·원문 연결",
+      "운영 요청 경계의 로컬 작업 저장 누락과 비 JSON 오류 처리 수정"
+    ],
+    "character": [
+      "작업 이력 휴지통 다중 선택·완전 삭제 확인; 기존 shared-media 및 ledger 보호 재사용",
+      "보관된 스토리도 다시 생성 확인 후 새 작업 요청 가능; 기존 응답과 실패 이력 보존",
+      "처리 중 중복 경고 숨김; 새 스토리 프롬프트의 편집 후 길이 조건 명확화"
+    ]
+  },
+  "validation": {
+    "focusedPython": {
+      "pass": 99,
+      "fail": 0,
+      "error": 0
+    },
+    "nodeStoryRequests": {
+      "pass": 14,
+      "reusedFromEarlierInTask": true
+    },
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "viewport": [
+      {
+        "width": 1366,
+        "height": 768
+      },
+      {
+        "width": 1920,
+        "height": 1080
+      }
+    ],
+    "captures": "Synthetic data only; placeholder media is intentional and does not indicate real operating media failure. Browser viewport is not OS DPI validation.",
+    "warnings": [
+      "Existing runtime font path warning",
+      "Existing bundle size and lucide module directive warnings",
+      "Starlette/httpx deprecation warning"
+    ]
+  },
+  "limitations": [
+    "운영 반영 및 사용자 Chrome 확인은 재시작 승인 후 진행",
+    "뉴스 TOP 3 이미지 실제 유료 생성은 기존 서비스가 비용/실행 연결을 제공하지 않아 여전히 차단; 로컬 저장·문구 검토만 수정",
+    "캐릭터·이미지의 새 문구 편집은 가능하지만 기존 게시 실행 경로는 뉴스 RenderJob 중심; SNS 전송 확장 미구현",
+    "이미지 Instagram/영상 4종은 현재 제품의 검토 지원 범위이며 SNS 전체 서비스 기능 목록이나 실제 계정 권한을 의미하지 않음",
+    "실제 AI 문구 검토·공식 모델 계정 권한·SNS 게시 NOT VERIFIED; 유료 요청 미수행"
+  ],
+  "protection": {
+    "operatingRestart": false,
+    "operatingCodeChanged": false,
+    "operatingDataChangedByTask": false,
+    "actualPurge": false,
+    "paidCalls": 0,
+    "liveCollection": 0,
+    "oauthOrSNS": 0,
+    "mainChanged": false,
+    "pr35Changed": false,
+    "newsLifecycleChanged": false,
+    "unrelatedWorkingChangesPreserved": true
+  },
+  "changedFiles": [
+    "newsflow-ai/frontend/src/studio/CommandDialog.tsx",
+    "newsflow-ai/frontend/src/studio/TopThreeFeeds.tsx",
+    "newsflow-ai/frontend/src/studio/core/CharacterStudio.tsx",
+    "newsflow-ai/frontend/src/studio/core/NewsCollectionControls.tsx",
+    "newsflow-ai/frontend/src/studio/core/NewsShortsStudio.tsx",
+    "newsflow-ai/frontend/src/studio/core/TopThreeImageStudio.tsx",
+    "newsflow-ai/frontend/src/studio/core/character-studio.css",
+    "newsflow-ai/frontend/src/studio/core/core-studios.css",
+    "newsflow-ai/frontend/src/studio/management/PostingCopyReview.tsx",
+    "newsflow-ai/frontend/src/studio/management/Publishing.tsx",
+    "newsflow-ai/frontend/src/studio/management/Settings.tsx",
+    "newsflow-ai/frontend/src/studio/management/management.css",
+    "newsflow-ai/src/newsflow/character/episode_story.py",
+    "newsflow-ai/src/newsflow/character/visibility.py",
+    "newsflow-ai/src/newsflow/creation/top_three_feeds.py",
+    "newsflow-ai/src/newsflow/gui/creation_routes.py",
+    "newsflow-ai/src/newsflow/gui/publishing_metadata_routes.py",
+    "newsflow-ai/src/newsflow/main.py",
+    "newsflow-ai/src/newsflow/publishing/posting_copy.py",
+    "newsflow-ai/src/newsflow/studio/library_purge.py",
+    "newsflow-ai/src/newsflow/studio/read_models.py",
+    "newsflow-ai/src/newsflow/video/ai/higgsfield.py",
+    "newsflow-ai/src/newsflow/video/ai/model_contracts.py",
+    "newsflow-ai/tests/character_story_requests.test.mjs",
+    "newsflow-ai/tests/test_character_history_purge.py",
+    "newsflow-ai/tests/test_compact_creation_browser.py",
+    "newsflow-ai/tests/test_news_collection_controls_browser.py",
+    "newsflow-ai/tests/test_news_model_presets.py",
+    "newsflow-ai/tests/test_posting_copy.py",
+    "newsflow-ai/tests/test_posting_copy_access.py",
+    "newsflow-ai/tests/test_posting_copy_browser.py",
+    "newsflow-ai/tests/test_serpapi_collection_boundary.py",
+    "newsflow-ai/tests/test_top_three_selection.py",
+    "newsflow-ai/tests/test_top_three_selection_browser.py",
+    "newsflow-ai/tools/bat_distribution/operation.py",
+    "newsflow-ai/tools/bat_distribution/posting_copy_access.py",
+    "newsflow-ai/tools/bat_distribution/serpapi_collection.py",
+    "newsflow-ai/tools/bat_distribution/windows_live.py"
+  ]
+}

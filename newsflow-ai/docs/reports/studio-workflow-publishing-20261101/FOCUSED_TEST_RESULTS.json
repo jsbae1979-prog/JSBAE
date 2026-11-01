@@ -1,0 +1,505 @@
+{
+  "python": "3.12",
+  "platform": "Windows",
+  "uniqueFinalTests": [
+    {
+      "test": "tests.test_news_model_presets.test_presets_fit_existing_registration_contract[Kling 3.0 Turbo]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_model_presets.test_presets_fit_existing_registration_contract[Wan 2.7]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_model_presets.test_presets_fit_existing_registration_contract[Wan 3.0]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_model_presets.test_presets_fit_existing_registration_contract[PixVerse V6]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_model_presets.test_quote_and_generation_use_identical_payload_with_fake_transport[Kling 3.0 Turbo]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_model_presets.test_quote_and_generation_use_identical_payload_with_fake_transport[Wan 2.7]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_model_presets.test_quote_and_generation_use_identical_payload_with_fake_transport[Wan 3.0]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_model_presets.test_quote_and_generation_use_identical_payload_with_fake_transport[PixVerse V6]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_model_presets.test_gui_register_without_price_or_provider_call_then_select",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_history_purge.test_legacy_trash_purge_preserves_journal_and_blocks_restore",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_history_purge.test_legacy_mixed_selection_failure_changes_nothing",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_history_purge.test_recent_hidden_only_is_not_trash",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_history_purge.test_history_trash_selection_cancel_then_synthetic_purge",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_collection_controls_browser.test_one_box_selects_rss_or_serpapi_without_sending_requests",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_collection_controls_browser.test_collection_request_has_running_and_final_counts_without_resubmission[success]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_collection_controls_browser.test_collection_request_has_running_and_final_counts_without_resubmission[partial]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_collection_controls_browser.test_collection_request_has_running_and_final_counts_without_resubmission[failed]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_collection_controls_browser.test_unknown_post_only_reads_status_and_never_replays",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_collection_controls_browser.test_serpapi_start_has_bounded_usage_confirmation_no_key_form",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_variable_scene_boundaries_and_edited_duration[15-expected0]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_variable_scene_boundaries_and_edited_duration[20-expected1]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_variable_scene_boundaries_and_edited_duration[35-expected2]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_variable_scene_boundaries_and_edited_duration[50-expected3]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_variable_scene_boundaries_and_edited_duration[60-expected4]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_short_model_extends_scene_count",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[future]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[first]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[number]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[hold]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[key]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[dialogue]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[lip]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[music]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[too_long]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[duration]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_bad_episode_rejected[fast]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_character_episode_schema.test_prompts_no_dialogue_and_character_isolation",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_character_limits_derive_from_unchanged_local_schema_without_image_input",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_failed_complete_candidate_is_saved_before_validation_and_can_be_edited_locally",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_tampered_or_stale_saved_response_cannot_be_recovered[file]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_tampered_or_stale_saved_response_cannot_be_recovered[topic]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_tampered_or_stale_saved_response_cannot_be_recovered[profile]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_tampered_or_stale_saved_response_cannot_be_recovered[reference]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_tampered_or_stale_saved_response_cannot_be_recovered[provider]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_tampered_or_stale_saved_response_cannot_be_recovered[attempt]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_tampered_or_stale_saved_response_cannot_be_recovered[model]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_tampered_or_stale_saved_response_cannot_be_recovered[cap]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_tampered_or_stale_saved_response_cannot_be_recovered[not_received]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_local_recovery_requires_consent_hash_and_full_original_validation[consent]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_local_recovery_requires_consent_hash_and_full_original_validation[hash]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_local_recovery_requires_consent_hash_and_full_original_validation[still_long]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_local_recovery_requires_consent_hash_and_full_original_validation[korean]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_local_recovery_requires_consent_hash_and_full_original_validation[duration]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_no_complete_response_or_storage_failure_never_invents_a_saved_candidate",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_successful_response_is_retained_and_readonly_preview_requires_failed_owned_job",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_episode_saved_candidate.test_recovery_http_contract_preserves_csrf_origin_and_never_calls_provider",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_windows_preview_json_uses_only_fixed_installed_voice",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_official_sample_json_never_calls_paid_tts",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_operating_free_preview_keeps_authentication_and_csrf[valid]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_operating_free_preview_keeps_authentication_and_csrf[csrf]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_operating_free_preview_keeps_authentication_and_csrf[origin]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_operating_free_preview_keeps_authentication_and_csrf[session]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_one_analysis_range_selector_and_api_information",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_whole_collection_id_bound_automatically_without_numeric_input[claude_api]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_whole_collection_id_bound_automatically_without_numeric_input[openai]",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_news_analysis_voice_features.test_shorts_api_info_and_cached_voice_sample_without_generation",
+      "status": "PASS",
+      "evidence": "news-collection-story-trash-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_explicit_review_apply_and_idempotence",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_consent_different_content_and_unknown_not_replayed",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_source_and_revision_protect_edits",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_bad_copy_rejected[value0]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_bad_copy_rejected[value1]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_bad_copy_rejected[value2]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_bad_copy_rejected[value3]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_real_selected_source_removed_or_missing_stays_unavailable",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_http_csrf_and_wrong_review_target",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection.test_exact_scope_and_idempotent_local_save[None]",
+      "status": "PASS",
+      "evidence": "posting-copy-image-focus.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection.test_exact_scope_and_idempotent_local_save[1]",
+      "status": "PASS",
+      "evidence": "posting-copy-image-focus.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection.test_exact_scope_and_idempotent_local_save[2]",
+      "status": "PASS",
+      "evidence": "posting-copy-image-focus.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection.test_exact_scope_and_idempotent_local_save[3]",
+      "status": "PASS",
+      "evidence": "posting-copy-image-focus.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection.test_invalid_rank_does_not_create_draft[0]",
+      "status": "PASS",
+      "evidence": "posting-copy-image-focus.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection.test_invalid_rank_does_not_create_draft[4]",
+      "status": "PASS",
+      "evidence": "posting-copy-image-focus.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection.test_invalid_rank_does_not_create_draft[True]",
+      "status": "PASS",
+      "evidence": "posting-copy-image-focus.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection.test_invalid_rank_does_not_create_draft[2]",
+      "status": "PASS",
+      "evidence": "posting-copy-image-focus.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection.test_route_forwards_selected_rank_and_preserves_csrf",
+      "status": "PASS",
+      "evidence": "posting-copy-image-focus.xml"
+    },
+    {
+      "test": "tests.test_posting_copy_access.test_scoped_keys_and_single_fake_call[claude_api]",
+      "status": "PASS",
+      "evidence": "posting-copy-browser-boundary.xml"
+    },
+    {
+      "test": "tests.test_posting_copy_access.test_scoped_keys_and_single_fake_call[openai]",
+      "status": "PASS",
+      "evidence": "posting-copy-browser-boundary.xml"
+    },
+    {
+      "test": "tests.test_posting_copy_browser.test_copy_review_apply_and_image_platform_filter",
+      "status": "PASS",
+      "evidence": "publishing-platform-browser-final.xml"
+    },
+    {
+      "test": "tests.test_top_three_selection_browser.test_selected_news_rank_and_plain_error_in_browser",
+      "status": "PASS",
+      "evidence": "publishing-platform-browser-final.xml"
+    },
+    {
+      "test": "tests.test_library_projection_browser.test_library_remove_restore_updates_creation_and_completed_publish_candidates_in_same_spa",
+      "status": "PASS",
+      "evidence": "posting-copy-image-browser-fixed.xml"
+    },
+    {
+      "test": "tests.test_library_projection_browser.test_analytics_uses_confirmed_publication_only_and_keeps_all_cost_records",
+      "status": "PASS",
+      "evidence": "posting-copy-image-browser-fixed.xml"
+    },
+    {
+      "test": "tests.test_posting_copy.test_format_validation_never_saves_or_calls_ai",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_compact_creation_browser.test_news_script_selected_context_single_approval",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_compact_creation_browser.test_saved_story_requires_confirmation_then_exactly_one_fresh_request",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_serpapi_collection_boundary.test_scope_auth_consent_and_buffers[valid]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_serpapi_collection_boundary.test_scope_auth_consent_and_buffers[csrf]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_serpapi_collection_boundary.test_scope_auth_consent_and_buffers[origin]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_serpapi_collection_boundary.test_scope_auth_consent_and_buffers[session]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_serpapi_collection_boundary.test_scope_auth_consent_and_buffers[consent]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    },
+    {
+      "test": "tests.test_serpapi_collection_boundary.test_scope_auth_consent_and_buffers[count]",
+      "status": "PASS",
+      "evidence": "publishing-platform-final-focus.xml"
+    }
+  ],
+  "pass": 99,
+  "fail": 0,
+  "error": 0,
+  "method": "Existing successful focused cases reused; only changed cases rerun. Earlier failures corrected; final result per case only. Fake providers/synthetic profiles; no live API."
+}
