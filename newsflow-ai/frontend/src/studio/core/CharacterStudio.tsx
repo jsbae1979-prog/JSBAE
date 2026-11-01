@@ -573,7 +573,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       setSettings(
         trialEnabled && !job
           ? { ...caps.defaults, duration: 15, clip_seconds: 3 }
-          : caps.defaults,
+          : !job
+            ? { ...caps.defaults, duration: caps.character?.target_duration?.default ?? caps.defaults.duration }
+            : caps.defaults,
       );
       setAdjustments(caps.restoredNotes ?? {});
     }
