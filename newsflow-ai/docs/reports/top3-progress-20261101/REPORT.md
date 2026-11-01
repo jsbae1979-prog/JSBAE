@@ -9,3 +9,11 @@ Changed files: TopThreeFeeds.tsx, core/TopThreeImageStudio.tsx, core/FeedGenerat
 Validation: eight synthetic progress-state tests PASS; TypeScript PASS; production React build PASS. Initial test harness failed because TypeScript7 lacks the older transpileModule API; harness uses the project's existing native type-strip pattern and final tests passed. No paid calls were made for the UI fix. No Python, database, credential, provider, reservation, or retry logic changed. Full regression was not repeated per user scope.
 
 Progress means completed images (0/3, 1/3, 2/3, 3/3), not invented provider-internal percentage or time remaining. Generated files remain local and are not committed.
+
+## Operating deployment and visible Chrome verification
+
+Deployed the three built static assets at code commit 3ad4e62414c2881aab007dc51d2079e95699dc22 without restarting the server. Preserved all 47 database tables, the launch configuration and session record; PID unchanged and previous static assets retained for recovery.
+
+The user's Chrome showed work #53 / analysis #42, all three successful result images and the accessible progress panel reading 3/3 complete / 100%. Selected TOP 1, 2 and 3 to inspect their result details. TOP 3's English headline is shortened in its rendered image and needs editorial review before publication; no paid regeneration or publishing was performed. User acceptance of the image content is still pending.
+
+Local-only screenshot: C:/Codex/NewsFlowAI/character_automation_operating/top3-progress-static-20261101/results.jpg. Deployment evidence is retained in the same local directory. No operating data, credentials or generated media are uploaded to GitHub.
