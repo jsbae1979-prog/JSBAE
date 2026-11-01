@@ -1,0 +1,119 @@
+{
+  "appliedSourceSha": "e688a39eabf93b9978515861088ec0e503438a6b",
+  "checks": {
+    "normal_stop_exit_zero": "PASS",
+    "single_start_ready_loopback": "PASS",
+    "chrome_open_accepted": "PASS",
+    "installed_12_file_hashes": "PASS",
+    "all_47_db_tables_preserved": "PASS",
+    "profile_387_files_preserved": "PASS",
+    "original_and_backups_AB_preserved": "PASS",
+    "launch_acl_security_flags_preserved": "PASS",
+    "unauthenticated_requests_denied": "PASS"
+  },
+  "newPass": 9,
+  "newFail": 0,
+  "finalError": 0,
+  "operating": {
+    "head": "e688a39eabf93b9978515861088ec0e503438a6b",
+    "port": 18768,
+    "pid": 3520,
+    "normalStopExit": 0,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "tablesUnchanged": 47,
+    "articles": 86,
+    "profileFilesPreserved": 387,
+    "originalAndABPreserved": true,
+    "chromeOpenAccepted": true,
+    "securityFlagsPreserved": true,
+    "paidCallsDuringDeployment": 0,
+    "snsCalls": 0
+  },
+  "http": {
+    "authenticated": false,
+    "responses": [
+      {
+        "path": "/studio/images?mode=top3",
+        "status": 403
+      },
+      {
+        "path": "/studio/assets/index-Dls9rpGt.js",
+        "status": 403
+      },
+      {
+        "path": "/studio/assets/index-C_ZHmUja.css",
+        "status": 403
+      }
+    ],
+    "authBoundaryPreserved": true,
+    "installedFileHashMatches": 12,
+    "photoFeedBundlePresent": true,
+    "browserVisualCheck": "USER_PENDING",
+    "paidCalls": 0
+  },
+  "files": [
+    {
+      "path": "app/product/newsflow/creation/feed_budget.py",
+      "sha256": "db6360c59612fa3f8c9ebd4466d0e77a2bcae206f970793583ec890c8cc11426",
+      "bytes": 5835
+    },
+    {
+      "path": "app/product/newsflow/creation/feed_costs.py",
+      "sha256": "198822a69c74c20f15c24d3365ddcfda27454f35b0d588c4930be94f64fdb216",
+      "bytes": 7821
+    },
+    {
+      "path": "app/product/newsflow/creation/feed_designs.py",
+      "sha256": "6a563d7e04556f5c117fd325be8c9747aa2545bdb2d64a41eb339b398e968300",
+      "bytes": 11415
+    },
+    {
+      "path": "app/product/newsflow/creation/top_three_feeds.py",
+      "sha256": "be795126f247b4186d7c66d0b04717dbddec02f761fda88e9cece717fca9895b",
+      "bytes": 37101
+    },
+    {
+      "path": "app/product/newsflow/gui/creation_routes.py",
+      "sha256": "a73f760b915b54ac22bd807fce4b3d616d27678050b8d31ef6898861de7266ee",
+      "bytes": 15363
+    },
+    {
+      "path": "app/product/newsflow/publishing/image_posts.py",
+      "sha256": "448c974a6788cb36bd515823dcb09bd92b3184b83b0fdd52918abc78e2c57cd7",
+      "bytes": 23734
+    },
+    {
+      "path": "app/product/newsflow/publishing/photo_feed.py",
+      "sha256": "63b4ea3e87c05a02ce99adeba6a1f0ab623b0f7f0047f452a6cccccf36dcce0f",
+      "bytes": 6453
+    },
+    {
+      "path": "app/product/newsflow/studio/actions.json",
+      "sha256": "89c0062c8ee4e2295be6b6a03244d80dda0185825a6c03a40ef1b5d4c58b6eb6",
+      "bytes": 137986
+    },
+    {
+      "path": "app/controller/bat_distribution/operation.py",
+      "sha256": "0a16b80c29d1f1d9dad6ee21579535726a6e590e467e443c13c5d62cdca4b9bf",
+      "bytes": 9692
+    },
+    {
+      "path": "app/frontend/dist/index.html",
+      "sha256": "31d6a8d60978fa0b57e54717fbb7c60426dc5485cf2bbd2644941719bb69d92b",
+      "bytes": 418
+    },
+    {
+      "path": "app/frontend/dist/assets/index-Dls9rpGt.js",
+      "sha256": "21619c4caa6f42dd618bbcbbe4a0f1ef6fddf798895a9dce79de594cfe7c3433",
+      "bytes": 681064
+    },
+    {
+      "path": "app/frontend/dist/assets/index-C_ZHmUja.css",
+      "sha256": "cf5e3377c25a9d6e42b9d5331fe50d13493b4e590cdd7c5d144381a1a14ba3a1",
+      "bytes": 191350
+    }
+  ],
+  "visualReview": "NOT VERIFIED - user Chrome confirmation pending",
+  "initialVerification": "First verification ran before session marker creation; same start subsequently reached READY. No repeated start."
+}
