@@ -7,6 +7,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from urllib.parse import parse_qs
 from .lifecycle import Blocked, ordinary_absolute, fixed_port, separated
 from .restored_install import restored_paths
 from .local_work import LocalWorkRequests
@@ -53,7 +54,7 @@ class OperatingRequests(LocalWorkRequests):
     """
     # Exact free previews only: installed Korean SAPI fixed sentence or a cached/public ElevenLabs sample.
     # Explicit account metadata GET and local voice selection only; no arbitrary text, paid synthesis or broader provider authority.
-    POSTS = LocalWorkRequests.POSTS - {'/collection'} | {'/ai-settings/prices', '/voices/preview', '/video/tts/voices/preview', '/video/tts/voices/load', '/video/tts/voices/select'}
+    POSTS = LocalWorkRequests.POSTS - {'/collection'} | {'/ai-settings/prices', '/voices/preview', '/video/tts/voices/preview', '/video/tts/voices/load', '/video/tts/voices/select', '/video/ai/plans'}
 
     # Only cached capability data and local settings writes are enabled here.
     # Provider story/quote/submit routes remain outside the operation boundary.
@@ -75,6 +76,38 @@ class OperatingRequests(LocalWorkRequests):
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'http':
             method, path = scope['method'], scope['path']
+            if method == 'POST' and path == '/video-ai-settings/models':
+                # Local model registration only. Official pricing can make an
+                # external request and retains its separate execution boundary.
+                headers = {k.lower(): v for k, v in scope.get('headers', [])}
+                body = b''
+                valid = headers.get(b'content-type', b'').split(b';')[0] == b'application/x-www-form-urlencoded'
+                while valid:
+                    message = await receive()
+                    if message['type'] != 'http.request':
+                        valid = False
+                        break
+                    body += message.get('body', b'')
+                    if len(body) > 65536:
+                        valid = False
+                        break
+                    if not message.get('more_body'):
+                        break
+                try:
+                    valid = valid and parse_qs(body.decode('utf8'), keep_blank_values=True).get('pricing_mode', ['manual']) == ['manual']
+                except UnicodeError:
+                    valid = False
+                if not valid:
+                    await send({'type': 'http.response.start', 'status': 403, 'headers': []})
+                    return await send({'type': 'http.response.body', 'body': b'Local model settings only.'})
+                delivered = False
+                async def replay():
+                    nonlocal delivered
+                    if delivered:
+                        return await receive()
+                    delivered = True
+                    return {'type': 'http.request', 'body': body, 'more_body': False}
+                return await self.app(scope, replay, send)
             local_settings = method == 'POST' and (self.CHARACTER_SETTINGS.fullmatch(path)
                                                   or self.CHARACTER_VISIBILITY.fullmatch(path)
                                                   or self.CHARACTER_REUSE.fullmatch(path)

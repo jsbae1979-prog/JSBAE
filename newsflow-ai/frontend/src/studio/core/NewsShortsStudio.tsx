@@ -29,6 +29,10 @@ export default function NewsShortsStudio({
   onNavigate: (page: string) => void;
 }) {
   const voiceInitialized=useRef(false);
+  const [videoModel, setVideoModel] = useState<string | null>(null);
+  const videoModels: Item[] = c.view?.catalog.newsVideoModels ?? [];
+  const selectedModel = videoModel ?? c.view?.catalog.newsVideoDefault ?? "";
+  const modelReady = videoModels.some(m => m.path === selectedModel);
   const [archiveId, setArchiveId] = useState<number | null>(
     () => Number(new URLSearchParams(location.search).get("draft_id")) || null,
   );
@@ -358,8 +362,12 @@ export default function NewsShortsStudio({
                 <div className="news-video-api-info" role="region" aria-label="영상 API 정보">
                   {visual==="ai"?<>
                     <strong>Higgsfield · AI 영상 API</strong>
-                    <small>{(c.view?.collections.models??[]).filter(m=>m.provider==="higgsfield"&&m.confirmed_at).map(m=>m.label).join(" · ")||"영상 모델 등록·설정 필요"}</small>
-                    <small>장면 계획에서 모델을 선택하고 공식 견적을 확인합니다.</small>
+                    <Select label="AI 영상 모델" value={modelReady ? selectedModel : ""}
+                      onChange={setVideoModel} options={Object.fromEntries(videoModels.map(m =>
+                        [m.path, `${m.label} · ${m.resolution}`]))}/>
+                    <ActionButton c={c} id="video_ai_save_model_route">영상 모델 등록</ActionButton>
+                    <a href="/studio/settings">모델·API 설정 관리</a>
+                    {!modelReady && <small>등록된 모델을 선택하세요.</small>}
                   </>:<><strong>FFmpeg · 내 PC에서 합성</strong><small>{visual==="news"?"뉴스 이미지 자동 연결":"기본 카드 영상"} · 외부 영상 API 없음</small></>}
                 </div>
                 <fieldset className="core-choice-field">
@@ -410,8 +418,10 @@ export default function NewsShortsStudio({
                     context={{
                       draft_id: draft?.id,
                       duration: Number(duration),
+                      mode: "full",
+                      model_path: selectedModel,
                     }}
-                    disabled={!draft || dirty}
+                    disabled={!draft || dirty || !modelReady}
                   >
                     AI 장면 계획 · 견적
                   </ActionButton>

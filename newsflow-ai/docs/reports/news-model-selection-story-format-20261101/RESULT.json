@@ -1,0 +1,45 @@
+{
+  "status": "DEVELOPMENT_ACCEPTED_OPERATING_PENDING",
+  "baseSha": "0faa96de2ccdb940a83e1400278dd68025b12c7c",
+  "changes": [
+    "News shorts: registered contract-compatible video model selector; explicit full-plan model propagation; model registration entry",
+    "Read model: eligible local models and saved default; no remote discovery or credential access",
+    "Operating boundary: authenticated local plan save and manual model registration; official pricing, generation, SNS remain closed",
+    "PR40 integration: compare authoring instruction against job story_format snapshot; legacy jobs retain legacy instructions; new default 20 seconds"
+  ],
+  "verification": {
+    "deduplicated": {
+      "PASS": 118,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 0
+    },
+    "newTests": 10,
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "syntheticChromeViewports": [
+      "1366x768",
+      "1920x1080"
+    ],
+    "storyFormat": "Fake authenticated operating adapter new-format script succeeds; existing story reused without another request; old format tests pass",
+    "localFFmpeg": "PR40 Fake 20-second pipeline produces MP4 without added final hold",
+    "initialTestFailures": "Two browser assertions targeted non-existent HTML name attributes; one fixture attempted duplicate model registration. Tests corrected to accessible labels/new registration. Final deduplicated results all pass."
+  },
+  "limits": [
+    "Actual operating overlay and Chrome validation pending normal Stop/Start approval",
+    "Only registered contract-compatible models are selectable. Additional models require explicit registration; no account access or price verification claimed.",
+    "Official external pricing and paid generation are not enabled by local model selection",
+    "Python 3.12 focused checks only; no full suite or additional Python 3.14 execution this turn",
+    "Existing runtime font/lucide/chunk-size build warnings unchanged"
+  ],
+  "protection": {
+    "operatingWrites": false,
+    "restarts": 0,
+    "paidCalls": 0,
+    "providerCalls": 0,
+    "userDataChanges": false,
+    "mainChanged": false,
+    "pr35Changed": false,
+    "lifecycleChanged": false
+  }
+}

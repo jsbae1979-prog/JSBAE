@@ -845,6 +845,14 @@ def module_view(request: Request, module: Module):
     }
     video = video_settings(state.sessions)
     if module == 'shorts':
+        from newsflow.video.ai.production import model_ready
+        from newsflow.video.ai.settings import list_models
+        from newsflow.creation.catalog import news_video_default
+        result['catalog']['newsVideoModels'] = [
+            {'path': model.path, 'label': model.label, 'resolution': model.resolution,
+             'durations': list(model.durations)}
+            for model in list_models(state.sessions) if model_ready(model)]
+        result['catalog']['newsVideoDefault'] = news_video_default(state.sessions)
         selected_voice = next((v for v in result['catalog'].get('elevenVoices',[]) if v['id']==tts['voice_id']),None)
         result['catalog']['newsVideo'] = {'provider': video.provider, 'approved': video.approved,
             'ttsVoiceId': tts['voice_id'], 'ttsModel': tts['model'],

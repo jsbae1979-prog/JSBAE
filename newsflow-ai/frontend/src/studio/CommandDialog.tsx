@@ -211,6 +211,8 @@ function choices(
     return c.characterDefaults?.video_model
       ? [[c.characterDefaults.video_model, c.characterDefaults.video_model]]
       : [];
+  if (f.name === "model_path" && action.id === "video_ai_create_plan")
+    return (c.newsVideoModels ?? []).map((x: Item) => [x.path, `${x.label} · ${x.resolution}`]);
   if (f.name === "model_path")
     return (view.collections.models ?? c.videoModels ?? [])
       .filter((x: Item) => x.confirmed_at)
@@ -738,6 +740,7 @@ export function CommandDialog({
     (f) =>
       f.required ||
       (action.id === "serpapi_settings" && f.name === "api_key") ||
+      (action.id === "video_ai_create_plan" && f.name === "model_path") ||
       f.path ||
       f.type === "boolean" ||
       [
