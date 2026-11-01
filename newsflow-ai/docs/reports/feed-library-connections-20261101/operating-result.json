@@ -1,0 +1,16 @@
+{
+  "head": "2b69a0e174b514348ca02b6e3d74b658787b1c8b",
+  "port": 18768,
+  "pid": 41968,
+  "normalStopExit": 0,
+  "stopAttempts": 1,
+  "startAttempts": 1,
+  "tablesUnchanged": 47,
+  "articles": 86,
+  "profileFilesPreserved": 416,
+  "originalAndABPreserved": true,
+  "chromeOpenAccepted": true,
+  "securityFlagsPreserved": true,
+  "paidCallsDuringDeployment": 0,
+  "snsCalls": 0
+}
