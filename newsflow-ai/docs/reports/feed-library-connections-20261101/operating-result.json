@@ -12,5 +12,7 @@
   "chromeOpenAccepted": true,
   "securityFlagsPreserved": true,
   "paidCallsDuringDeployment": 0,
-  "snsCalls": 0
+  "snsCalls": 0,
+  "loopbackTcpConfirmed": true,
+  "unauthenticatedHttpStatus": 403
 }

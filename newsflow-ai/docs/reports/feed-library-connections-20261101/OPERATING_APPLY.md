@@ -13,3 +13,5 @@
 2. Library → Images: completed TOP 3 images (or their existing review copies) have thumbnails; open the intended work/rank.
 3. Photo feed → Advanced → Background image: selecting a different image refreshes the main preview/credit without Save. Same-background versions are grouped; complete older layouts remain in Saved edit version.
 4. Recent generated images: per-image selection/Delete and Select delete appear. Deletion asks confirmation and moves visibility to Library Trash; originals remain recoverable. No need to confirm a real deletion to check the controls.
+
+- Final listener confirmation: direct loopback TCP succeeded and an unauthenticated HTTP GET returned the expected 403. PID 41968 is alive. One CIM port inventory query returned no match; no second restart was needed.
