@@ -36,7 +36,8 @@ def _finish(curator, collection_id, rows, totals, hours, *, run_id=None, failed=
     with curator.sessions.begin() as session:
         recent, info = select_recent(session, ids, utcnow(), hours)
         counts = [{"category": r["category"], "collected": len(set(r["article_ids"])),
-                   "kept": len(set(r["article_ids"]) & set(recent)), "status": r["status"]} for r in rows]
+                   "kept": len(set(r["article_ids"]) & set(recent)), "status": r["status"],
+                   **({"skipped_items": r["skipped_items"]} if r.get("skipped_items") else {})} for r in rows]
         result = {**totals, "article_ids": recent, "recent_filter": info, "category_counts": counts}
         collection = session.get(CollectionRun, collection_id)
         for key in ("added", "duplicates", "succeeded", "failed"):
@@ -112,28 +113,30 @@ def collect_serpapi(curator, config, adapter, token, categories, hours):
             run.result = {**run.result, "local_request_attempts": index + 1,
                           "requests": [*run.result["requests"], {"category": row["category"], "status": "submitted"}]}
         try:
+            stage = "response"
             articles, metadata = adapter.search(query=category_query(row["category"]))
+            stage = "storage"
             stored = _store(curator, SOURCE_URL, row["category"], articles)
-            row.update(article_ids=stored["article_ids"], status="success")
+            row.update(article_ids=stored["article_ids"], status="success", skipped_items=metadata.get("skipped_items", 0))
             for key in ("added", "duplicates"):
                 totals[key] += stored[key]
             totals["succeeded"] += 1
             with curator.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 requests = list(run.result["requests"])
-                requests[-1] = {"category": row["category"], "status": "success", "article_ids": stored["article_ids"]}
+                requests[-1] = {"category": row["category"], "status": "success", "article_ids": stored["article_ids"], "metadata": metadata}
                 run.result = {**run.result, "requests": requests}
         except Exception as exc:
             code = exc.code if isinstance(exc, SerpApiError) else "bad_response"
-            error = SerpApiError(code)
+            error = exc if isinstance(exc, SerpApiError) else SerpApiError(code, reason="storage" if stage == "storage" else "unknown")
             outcome = "unknown" if code in {"timeout_unknown", "network_unknown"} else "failed"
             row["status"] = outcome; totals["failed"] += 1
             with curator.sessions.begin() as session:
                 run = session.get(IntelligenceRun, run_id)
                 run.status, run.finished_at, run.message = outcome, utcnow(), str(error)
                 requests = list(run.result["requests"])
-                requests[-1] = {"category": row["category"], "status": outcome, "error_code": code}
-                run.result = {**run.result, "requests": requests, "error_code": code}
+                requests[-1] = {"category": row["category"], "status": outcome, "error_code": code, "diagnostic": error.diagnostics()}
+                run.result = {**run.result, "requests": requests, "error_code": code, "diagnostic": error.diagnostics()}
             _finish(curator, collection_id, rows, totals, hours, run_id=run_id, failed=True)
             raise error from None
     with curator.sessions.begin() as session:

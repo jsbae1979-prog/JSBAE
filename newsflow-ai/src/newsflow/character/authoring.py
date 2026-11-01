@@ -187,7 +187,8 @@ def provider_for_model(model):
 def budget_failure_reason(error):
     """Recognize this reviewed local refusal, never retain raw exception text."""
     if isinstance(error, APISettingsError):
-        if str(error) == '실제 API 연결 미확인 · 별도 승인 후 검증 필요':
+        from newsflow.intelligence.api_settings import AUTH_EXPIRED
+        if str(error) in {'실제 API 연결 미확인 · 별도 승인 후 검증 필요', AUTH_EXPIRED}:
             return 'authentication_required'
         if str(error) == '진행 중이거나 결과 불명인 API 요청이 있어 새 호출을 차단합니다.':
             return 'unresolved_requests'

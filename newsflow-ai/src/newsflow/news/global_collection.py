@@ -133,10 +133,10 @@ def collect_global(curator, config: dict, adapter, token: str, hours: int = 24) 
                 collection = session.get(CollectionRun, collection_id)
                 collection.added, collection.duplicates, collection.succeeded = added, duplicates, succeeded
     except Exception as exc:  # noqa: BLE001 - stop the batch, retain partial data, never replay or switch provider
-        error = SerpApiError(exc.code if isinstance(exc, SerpApiError) else "bad_response")
+        error = exc if isinstance(exc, SerpApiError) else SerpApiError("bad_response")
         if requests and requests[-1]["status"] == "running":
             requests[-1].update(status="unknown" if error.code in {"timeout_unknown", "network_unknown"} else "failed",
-                                error_code=error.code)
+                                error_code=error.code, diagnostic=error.diagnostics())
     with sessions.begin() as session:
         if collection_id is not None:
             collection = session.get(CollectionRun, collection_id)
@@ -167,7 +167,7 @@ def collect_global(curator, config: dict, adapter, token: str, hours: int = 24) 
                       "collection_policy": GLOBAL_POLICY, "candidate_mix": mix, "added": added, "duplicates": duplicates,
                       "searched_at": utcnow().isoformat(), "local_request_attempts": len(requests),
                       "provider_billed_credits": None, "ai_calls": 0, "facts_verified": False,
-                      **({"error_code": error.code} if error else {})}
+                      **({"error_code": error.code, "diagnostic": error.diagnostics()} if error else {})}
         trend = IntelligenceRun(kind="trends", provider="google_trends", status="failed" if error else "success",
                                 options={"collection_run_id": collection_id},
                                 evidence={"news_origin": "serpapi", "news_search_run_id": identifier,

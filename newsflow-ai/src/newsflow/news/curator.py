@@ -208,12 +208,12 @@ class Curator:
                                       "ai_calls": 0, "facts_verified": False}
                 except Exception as exc:  # noqa: BLE001 - never keep supplier text or key-bearing request URLs
                     code = exc.code if isinstance(exc, SerpApiError) else "bad_response"
-                    error = SerpApiError(code)
+                    error = exc if isinstance(exc, SerpApiError) else SerpApiError(code)
                     with self.sessions.begin() as session:
                         run = session.get(IntelligenceRun, run_id)
                         run.status = "unknown" if code in {"timeout_unknown", "network_unknown"} else "failed"
                         run.finished_at, run.message = utcnow(), str(error)
-                        run.result = {"error_code": error.code, "local_request_attempts": 1, "provider_billed_credits": None}
+                        run.result = {"error_code": error.code, "diagnostic": error.diagnostics(), "local_request_attempts": 1, "provider_billed_credits": None}
                     raise error from None
                 current = self.context()
                 snapshot = current["snapshot"] if current["fresh"] else None

@@ -19,7 +19,7 @@ def test_category_selection_counts_and_consent_browser(app,client,browser,setup_
         page.goto(origin+'/studio/news')
         expect(page.get_by_role('combobox',name='기사 분야').locator('option').filter(has_text='연예')).to_have_count(1)
         box=page.get_by_role('region',name='뉴스 수집',exact=True)
-        box.get_by_role('combobox',name='뉴스 수집 방식').select_option('popular')
+        box.get_by_role('combobox',name='RSS 출처').select_option('popular')
         expect(box.get_by_role('checkbox')).to_have_count(0)
         expect(box.get_by_role('combobox',name='수집 범위')).to_have_count(0)
         assert not posts

@@ -378,3 +378,19 @@ def test_no_balance_required_but_actual_authentication_still_expires(sessions, s
     with sessions.begin() as session:
         _set(session, "api_claude_api_authentication_verified_at", (utcnow() - timedelta(hours=25)).isoformat())
     assert not budget.readiness("claude_api", store, "analysis")["ready"]
+
+
+def test_expired_connection_has_clear_guidance_without_weakening_ttl(sessions,store):
+    from datetime import timedelta
+    from newsflow.intelligence.api_settings import AUTH_EXPIRED,_reasons,VERIFICATION_TTL,read_api_settings
+    from newsflow.character.authoring import budget_failure_reason
+    from dataclasses import replace
+    configured(sessions)
+    now=utcnow()
+    old=read_api_settings(sessions,'claude_api')
+    current=replace(old,verified_model=old.model,authentication_verified_at=(now-timedelta(hours=25)).isoformat())
+    assert AUTH_EXPIRED in _reasons(current,{'configured':True},'analysis',now)
+    assert budget_failure_reason(APISettingsError(AUTH_EXPIRED))=='authentication_required'
+    assert VERIFICATION_TTL==timedelta(hours=24)
+    current=replace(current,authentication_verified_at=(now-timedelta(hours=23)).isoformat())
+    assert AUTH_EXPIRED not in _reasons(current,{'configured':True},'analysis',now)

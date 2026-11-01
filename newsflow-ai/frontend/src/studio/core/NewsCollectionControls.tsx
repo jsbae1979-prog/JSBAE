@@ -9,6 +9,7 @@ const states = new Set(["idle", "running", "success", "partial", "failed", "inte
 const count = (v:unknown) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 ? v : 0;
 
 export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;method:string;onMethodChange:(v:string)=>void}) {
+  const [rssSource,setRssSource]=useState(method === "popular" ? "popular" : "rss");
   const [collection,setCollection]=useState<Collection|null>(null);
   const [phase,setPhase]=useState<Phase>("");
   const [error,setError]=useState("");
@@ -53,9 +54,9 @@ export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;m
     : method==="serpapi" ? c.view?.catalog.serpapi?.last?.message??"" : labels[collection?.status??""]??"");
   return <section className="news-collection-controls" aria-label="뉴스 수집">
     <div className="news-collection-controls-head">
-      <label><span>뉴스 수집</span><select aria-label="뉴스 수집 방식" value={method} disabled={pending}
-        onChange={e=>onMethodChange(e.target.value)}>
-        <option value="rss">등록 RSS</option><option value="popular">인기 뉴스 RSS · 분야 선택</option><option value="serpapi">SerpApi</option>
+      <label><span>뉴스 수집</span><select aria-label="뉴스 수집 방식" value={method === "serpapi" ? "serpapi" : "rss"} disabled={pending}
+        onChange={e=>onMethodChange(e.target.value === "rss" ? rssSource : "serpapi")}>
+        <option value="rss">RSS 수집</option><option value="serpapi">SerpApi 수집</option>
       </select></label>
       {method==="rss" ? <ActionButton c={c} id="routes_collect" disabled={pending}
         context={{__collectionProgress:requestState}}>수집 시작</ActionButton>
@@ -66,6 +67,12 @@ export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;m
             수집 시작
           </ActionButton>}
     </div>
+    {method!=="serpapi"&&<label className="news-collection-scope"><span>RSS 출처</span>
+      <select aria-label="RSS 출처" value={method} disabled={pending}
+        onChange={e=>{setRssSource(e.target.value);onMethodChange(e.target.value);}}>
+        <option value="rss">등록한 출처</option><option value="popular">분야별 뉴스</option>
+      </select>
+    </label>}
     <small className="news-collection-provider-info">{method==="rss"?"등록 공개 RSS · API 키 불필요":method==="popular"?"Google News 공개 RSS · 분야·기간 선택":
       c.view?.catalog.serpapi?.keyConfigured?"SerpApi · 키 등록됨":"SerpApi · API 키 미등록"}</small>
     {method==="serpapi"&&<a className="news-collection-settings" href="/studio/settings?tab=sources">설정·관리에서 수집 설정</a>}
@@ -75,7 +82,7 @@ export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;m
         ? `수집 ${row.collected}건 · 기간 내 ${row.kept}건`
         : row.status === "pending" ? "요청하지 않음 · 앞선 분야 수집 중단"
         : row.status === "unknown" ? "응답 확인 필요 · 기사 수 미확인"
-        : `수집 실패 · ${row.collected > 0 ? `저장 ${row.collected}건` : "기사 수 미확인"}`}</li>)}
+        : `수집 실패 · ${row.collected > 0 ? `저장 ${row.collected}건` : "기사 수 미확인"}`}{row.skipped_items > 0 && ` · 형식 확인 불가 ${row.skipped_items}건 제외`}</li>)}
     </ul>}
     {message&&<div className="news-collection-progress" role="status" aria-live="polite">
       <div>{busy&&<LoaderCircle className="spin" size={16}/>}<strong>{message}</strong>

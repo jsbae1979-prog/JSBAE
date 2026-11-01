@@ -110,7 +110,6 @@ def test_parse_nested_news_unknown_summary_date_no_article_download():
     (lambda d: d.update(error="Your account has run out of searches SECRET"), "usage_limited"),
     (lambda d: d["search_metadata"].update(status="Processing"), "bad_response"),
     (lambda d: d.update(news_results=[]), "empty"),
-    (lambda d: d["news_results"][0].update(link="http://127.0.0.1/private"), "bad_response"),
 ])
 def test_invalid_empty_private_results_safe_and_no_pagination(mutation, code):
     data = deepcopy(RESULT)

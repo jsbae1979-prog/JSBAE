@@ -30,6 +30,7 @@ from .settings import SettingsError, _set, _value, month_start
 PROVIDERS = {"openai": "OpenAI API", "claude_api": "Claude API"}
 DEFAULT_MODELS = {"openai": "gpt-4.1-mini", "claude_api": "claude-sonnet-4-6"}
 VERIFICATION_TTL = timedelta(hours=24)
+AUTH_EXPIRED = "API 연결 확인 기간(24시간)이 지났습니다. 설정·관리에서 API 키 테스트를 다시 실행하세요. 유료 생성은 전송하지 않았습니다."
 FIRST_SEARCH_OUTPUT_TOKENS = 9000
 # Supported search models retained for compatibility; these context sizes are NOT
 # used to estimate or reserve a new request's dollar cost.
@@ -254,7 +255,9 @@ def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *
         reasons.append("공식 요금표에서 확인한 단가 입력 필요")
     if not fake:
         if settings.verified_model != settings.model or not _recent(settings.authentication_verified_at, now):
-            reasons.append("실제 API 연결 미확인 · 별도 승인 후 검증 필요")
+            checked = _time(settings.authentication_verified_at)
+            expired = settings.verified_model == settings.model and checked is not None and now - checked > VERIFICATION_TTL
+            reasons.append(AUTH_EXPIRED if expired else "실제 API 연결 미확인 · 별도 승인 후 검증 필요")
         if capability == "search" and not first_search and (
             settings.verified_model != settings.model or not settings.search_verified_at
         ):
