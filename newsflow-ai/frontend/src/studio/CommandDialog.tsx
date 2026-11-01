@@ -124,6 +124,8 @@ function choices(
     return Object.entries(c.listening?.verdicts ?? {});
   if (action.id === "operations_review" && c.operationsItems?.[f.name])
     return ["NOT VERIFIED", "PASS", "FAIL"].map((x) => [x, x]);
+  if (action.id === "curation_refresh" && f.name === "hours")
+    return [6, 12, 24, 48].map((x) => [String(x), `최근 ${x}시간`]);
   if (action.id === "operations_startup" && f.name === "command")
     return [
       ["register", "자동 시작 등록"],
