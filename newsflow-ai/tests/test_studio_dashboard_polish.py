@@ -65,7 +65,7 @@ def test_studio_dashboard_polish_keeps_real_state_forms_and_reviews(visual,brows
             expect(page.locator('#dash-workflow-title')).to_have_text('AI 제작 워크플로')
             expect(page.get_by_role('link',name='쇼츠 영상',exact=True)).to_have_count(1)
             expect(page.get_by_role('link',name='이미지 게시물',exact=True)).to_have_count(1)
-            expect(page.locator('[data-dash-news-category]')).to_have_count(9)
+            expect(page.locator('[data-dash-news-category]')).to_have_count(10)
             assert page.locator('.dash-center').evaluate("e=>[...e.children].map(n=>n.className)")==[
                 'dash-panel dash-workflow','studio-disclosure dashboard-history','dash-panel dash-recent']
             expect(page.locator('.dashboard-history')).not_to_have_attribute('open','')

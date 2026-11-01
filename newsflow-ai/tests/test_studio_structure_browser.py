@@ -61,5 +61,5 @@ def test_archive_categories_do_not_navigate_to_collection(page):
     expect(page.locator('[data-dash-news-category="경제"]')).to_have_attribute('aria-current', 'true')
     expect(page.locator('[data-dash-news-status]')).to_contain_text('새 수집·AI 호출 없음')
     expect(page).to_have_url('http://127.0.0.1/')
-    assert page.locator('[data-dash-news-category]').count() == 9
+    assert page.locator('[data-dash-news-category]').count() == 10
     expect(page.locator('#quick-production')).to_have_count(0)

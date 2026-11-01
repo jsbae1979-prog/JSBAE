@@ -100,7 +100,9 @@ def test_news_filters_curation_consents_and_read_only_state(visual, browser, mon
             page.set_viewport_size({'width':width,'height':1000})
             assert page.goto(origin+'/news').status == 200
             expect(page.locator('.news-modern')).to_have_count(1)
-            expect(page.locator('[data-news-category]')).to_have_count(9)
+            expect(page.locator('[data-news-category]')).to_have_count(10)
+            expect(page.locator('[data-news-category="문화"]')).to_have_text('문화')
+            expect(page.locator('[data-news-category="연예"]')).to_have_text('연예')
             expect(page.locator('[data-news-category=""]')).to_have_attribute('aria-pressed','true')
             expect(page.locator('.suite-news-article')).to_have_count(8)
             for action in ['serpapi','analyze','generate','import']:
