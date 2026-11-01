@@ -1396,6 +1396,15 @@
         "required": false,
         "default": false,
         "path": false
+      },
+      {
+        "name": "hours",
+        "type": "number",
+        "required": false,
+        "default": 24,
+        "path": false,
+        "ge": 6,
+        "le": 48
       }
     ],
     "source": "gui/curation_routes.py",
