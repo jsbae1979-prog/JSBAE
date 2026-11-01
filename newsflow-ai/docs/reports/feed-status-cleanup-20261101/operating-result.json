@@ -1,0 +1,28 @@
+{
+  "files": [
+    {
+      "path": "app/frontend/dist/assets/index-C9j6ZyzJ.js",
+      "bytes": 698923,
+      "sha256": "de34b29584794ea72219c61a299aa67b63963619e0b95dbae4db8157b8e9084a"
+    },
+    {
+      "path": "app/frontend/dist/assets/index-DyIp_NtV.css",
+      "bytes": 195080,
+      "sha256": "4988d503795b3a2258f58438193d2ddadf9d57fc33e10bdbf2e75bc34950e0cd"
+    },
+    {
+      "path": "app/frontend/dist/index.html",
+      "bytes": 418,
+      "sha256": "a9ea41cbef36c869b21dacb88488ad812410a54d6af8ffd47efaa238caf62f78"
+    }
+  ],
+  "restart": false,
+  "dataTouched": false,
+  "securityUnchanged": true,
+  "paidCalls": 0,
+  "base": "2b69a0e174b514348ca02b6e3d74b658787b1c8b",
+  "sourceHead": "aa746525b2b1e865467e3c7c479f92d0c6e69f19",
+  "loopbackListening": true,
+  "unauthenticatedHttpStatus": 403,
+  "installedFileHashes": "PASS"
+}
