@@ -1396,6 +1396,15 @@
         "required": false,
         "default": false,
         "path": false
+      },
+      {
+        "name": "hours",
+        "type": "number",
+        "required": false,
+        "default": 24,
+        "path": false,
+        "ge": 6,
+        "le": 48
       }
     ],
     "source": "gui/curation_routes.py",
@@ -5650,6 +5659,54 @@
         "type": "text",
         "required": false,
         "default": "medium",
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_feed_batch_cost_review",
+    "module": "images",
+    "label": "TOP 3 비용 검토 승인",
+    "path": "/api/feed-batches/{identifier}/cost-review",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "limit",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
         "path": false
       }
     ],

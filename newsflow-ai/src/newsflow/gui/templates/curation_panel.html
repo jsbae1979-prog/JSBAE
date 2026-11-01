@@ -18,7 +18,7 @@
     </form>
     <div role="status">
       {% if curation.observed_at %}<p>{{ ui_icon('clock',16) }} {{ curation.observed_at|kst }}</p>{% endif %}
-      {% if curation.collection %}<p>신규 {{ curation.collection.added }} · 중복 {{ curation.collection.duplicates }} · 실패 {{ curation.collection.failed }}</p>{% else %}<p>아직 수집한 자료가 없습니다.</p>{% endif %}
+      {% if curation.collection %}<p>신규 {{ curation.collection.added }} · 중복 {{ curation.collection.duplicates }} · 실패 {{ curation.collection.failed }}</p>{% set hot = curation.collection.hot_filter %}{% if hot %}<p id="hot-filter-summary">최근 {{ hot.hours }}시간 · 수집 {{ hot.collected }}건 중 기간 내 {{ hot.recent }}건 · 화제 신호 {{ hot.signalled }}건 · 남김 {{ hot.kept }}건{% if hot.unknown_published_at %} · 발행 시각 없음 {{ hot.unknown_published_at }}건{% endif %}{% if hot.signal_shortfall %} <strong>화제성 신호 부족</strong>(점수순으로 채움){% endif %}</p>{% endif %}{% else %}<p>아직 수집한 자료가 없습니다.</p>{% endif %}
       {% if curation.candidate_mix %}<p>글로벌 {{ curation.candidate_mix.global_edition_unique }} · 한국 {{ curation.candidate_mix.korea_edition_unique }} · 공통 {{ curation.candidate_mix.both_editions }}</p>{% endif %}
       {% if curation.error %}<p class="error">{{ curation.error }}</p>{% endif %}
     </div>

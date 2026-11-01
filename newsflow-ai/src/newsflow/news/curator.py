@@ -25,6 +25,7 @@ from .serpapi_settings import settings as serpapi_settings
 from .service import CollectionBusy, safe_feed_message
 from .trends import GOOGLE_NEWS_URL, MAX_AGE, TRENDS_URL, parse_trends
 from .collection_workspace import begin_collection
+from .hot_filter import DEFAULT_HOT_HOURS, HOT_HOURS, select_hot
 
 
 class Curator:
@@ -33,16 +34,18 @@ class Curator:
         self.news = coordinator.service
         self.sessions = self.news.sessions
 
-    def refresh(self, permission: bool = False) -> int:
+    def refresh(self, permission: bool = False, hours: int = DEFAULT_HOT_HOURS) -> int:
         if not permission:
             raise ValueError("Google News·Trends의 공개 RSS 이용 조건과 출처 표시에 동의해 주세요.")
+        if hours not in HOT_HOURS:
+            raise ValueError("수집 기간은 6·12·24·48시간 중에서 선택해 주세요.")
         try:
             with FileLock(str(self.coordinator.lock_path)).acquire(timeout=0):
-                return self._refresh()
+                return self._refresh(hours)
         except Timeout:
             raise CollectionBusy from None
 
-    def _refresh(self) -> int:
+    def _refresh(self, hours: int = DEFAULT_HOT_HOURS) -> int:
         with self.sessions.begin() as session:
             source = session.scalar(select(NewsSource).where(NewsSource.url == GOOGLE_NEWS_URL))
             if source is None:
@@ -73,6 +76,14 @@ class Curator:
                                                                         AuditLog.event == "source_error")
                                         .order_by(AuditLog.id.desc()).limit(1))
             trend.status = "success" if snapshot and collected["succeeded"] else "failed"
+            if trend.status == "success" and not collected["failed"] and collected["article_ids"]:
+                # Keep only recent articles with a Trends or multi-publisher signal.
+                hot, info = select_hot(session, collected["article_ids"], snapshot, utcnow(), hours)
+                if hot:
+                    from .lifecycle import replace_collection
+
+                    replace_collection(session, hot)
+                    collected = {**collected, "article_ids": hot, "hot_filter": info}
             trend.result = {"snapshot": snapshot, "collection": collected, "trends_error": error,
                             "news_error": news_error, "ai_calls": 0, "facts_verified": False}
             trend.message = ("Google News·Trends 자료 준비 완료 · AI 평가 전" if trend.status == "success"
