@@ -64,7 +64,7 @@ def exercise(browser, service, news, origin, tmp_path):
     page.reload()
     assert len(service.codex_adapter.calls) == 1
     form = page.locator("[data-image-form]")
-    for name in ("reviewed", "sources_confirmed", "rights"):
+    for name in ("reviewed", "sources_confirmed", "rights", "image_safety_checked"):
         form.locator(f'[name="{name}"]').check()
     form.get_by_role("button", name="검토한 전체 이미지 저장").click()
     expect(page.get_by_text("이미지 준비 완료 · 1080×1350 JPEG", exact=True)).to_be_visible()

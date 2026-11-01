@@ -133,8 +133,8 @@ def test_preparation_validation(preparation,patch):
 
 def test_image_only_instagram(preparation):
     svc,source=preparation;source['kind']='image';source['id']='image:1'
-    with pytest.raises(PublishingError):svc.save(source['id'],digest(source),0,COPY,preparation=PREP)
-    row=svc.save(source['id'],digest(source),0,COPY,preparation={**PREP,'platforms':['instagram']})
+    with pytest.raises(PublishingError):svc.save(source['id'],digest(source),0,COPY,preparation={**PREP,'image_safety_checked':True})
+    row=svc.save(source['id'],digest(source),0,COPY,preparation={**PREP,'platforms':['instagram'],'image_safety_checked':True})
     assert row['preparation']['platforms']==['instagram']
 
 def test_preparation_route_csrf_and_local_boundary(preparation,client):

@@ -8,6 +8,7 @@
   <form action="/image-posts" method="get"><label for="image-article">사용할 뉴스</label><select id="image-article" name="article_id" required><option value="">뉴스 선택</option>{% for item in articles %}<option value="{{ item.id }}" {{ 'selected' if article and item.id == article.id }}>{{ item.title }}</option>{% endfor %}</select><button type="submit">이 뉴스 사용</button></form>
 </section>
 {% if article %}
+{% if image_safety.sensitive %}<p role="note">민감 주제: 인물·국기·사건 장면 없이 상징 이미지로 만듭니다</p>{% endif %}
 <section class="card"><h2>이미지와 문구</h2>
 <p>{{ article.publisher }} · {{ article.published_at|kst }} · <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">원문 확인 ↗</a></p>
 {% if not article.summary %}<p role="status">저장된 요약이 없습니다. 원문을 확인해 본문을 작성하거나 기존 대본을 선택하세요.</p>{% endif %}
@@ -147,6 +148,8 @@
 <label for="image-ai">이미지 표시</label><select name="ai_disclosure" id="image-ai" required {{ 'disabled' if generated or card_plan }}><option value="">선택하세요</option><option value="not_required">직접 제작한 카드·허가받은 사진</option><option value="disclose" {{ 'selected' if generated or card_plan }}>{{ 'AI 구성 뉴스 카드 · 실제 현장 사진 아님' if card_plan else 'AI 생성 이미지 · 실제 현장 사진 아님' }}</option></select>
 <div class="image-checks">
 <label><input type="checkbox" name="reviewed" value="true" required> {{ '이미지 속 한글·수치·날짜·출처·AI 표시와 아래 문구가 일치함을 직접 확인했습니다.' if full_generated|default(false) or (card_plan and card_plan.options.get('purpose') == 'svg_card') else '제목·본문의 사실과 날짜를 확인했습니다.' }}</label>
+{% if generated or full_generated %}<label><input type="checkbox" name="image_safety_checked" value="true" required> AI 이미지 안전 확인: 실존 인물의 사실적 얼굴, 국기·종교·정치 상징으로 특정 집단을 범인처럼 보이게 하는 요소, 실제 사건 재현이 없습니다.</label>{% endif %}
+<p>인스타그램 게시 시 'AI 정보' 라벨을 켜세요.</p>
 <label><input type="checkbox" name="sources_confirmed" value="true" required> 뉴스 출처를 확인했습니다. 출처는 본문에 함께 저장됩니다.</label>
 <label><input type="checkbox" name="rights" value="true" required> 사진·문구를 사용할 권한이 있습니다.</label></div>
 <p data-image-error role="alert"></p><button class="primary" type="submit">{{ '검토한 전체 이미지 저장' if full_generated|default(false) else '이미지 만들고 미리보기' }}</button><p class="hint">PC에만 저장합니다. 공개 게시 승인은 별도입니다.</p>

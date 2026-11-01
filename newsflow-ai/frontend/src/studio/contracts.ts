@@ -195,6 +195,7 @@ export const labels: Record<string, string> = {
   content_reviewed: "콘텐츠 내용을 검토했습니다",
   copyright_confirmed: "저작권·초상권을 확인했습니다",
   sources_confirmed: "출처를 확인했습니다",
+  image_safety_checked: "AI 이미지 안전 확인: 사실적인 실존 인물·집단 낙인·사건 재현이 없습니다",
   ai_disclosure: "AI 생성 표시",
   privacy: "공개 범위",
   approval_token: "게시 검토 식별값",

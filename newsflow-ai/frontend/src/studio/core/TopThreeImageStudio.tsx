@@ -212,6 +212,7 @@ function FeedLayout({
                   {b.simulation ? "합성 검증 결과 · 실제 게시 차단" : b.price} ·
                   저장된 모델·옵션 고정
                 </p>
+                {b.items.some((x:Item)=>x.image_safety?.sensitive)&&<p role="note" className="core-muted">민감 주제: 인물·국기·사건 장면 없이 상징 이미지로 만듭니다</p>}
                 <FeedCostReview batch={b} busy={f.busy} onRefresh={()=>f.local(f.refreshCosts)} onSave={data=>f.local(async()=>f.show(await f.post(`/api/feed-batches/${b.id}/cost-review`,{revision:b.revision,...data})))}/>
                 {b.canRecover && <button disabled={blocked} onClick={()=>f.local(async()=>{
                   f.show(await f.post(`/api/feed-batches/${b.id}/change`,{action:"recover",revision:b.revision}));

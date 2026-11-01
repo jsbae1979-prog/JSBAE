@@ -186,13 +186,13 @@ def feed_batch_file(request: Request, identifier: int, rank: int, download: bool
 
 @router.post('/api/feed-batches/{identifier}/items/{rank}/review')
 def feed_batch_review(request: Request, identifier: int, rank: int, reviewed: bool = Form(False),
-                      rights: bool = Form(False), sources_confirmed: bool = Form(False),
+                      rights: bool = Form(False), sources_confirmed: bool = Form(False), image_safety_checked: bool = Form(False),
                       ai_disclosure: str = Form("unreviewed")):
     service = request.app.state.top_three_feeds
     try:
         # Local reviewed post only; no upload, account query or publish in this endpoint.
         post_id = service.review(identifier, rank, request.app.state.image_posts,
-            reviewed=reviewed, rights=rights, sources_confirmed=sources_confirmed, ai_disclosure=ai_disclosure)
+            reviewed=reviewed, rights=rights, sources_confirmed=sources_confirmed, ai_disclosure=ai_disclosure, image_safety_checked=image_safety_checked)
         return {"postId": post_id, "href": f"/image-posts?post_id={post_id}", "published": False,
                 "message": "로컬 검토본 저장 · 계정 선택·이미지 전달·공개 게시 승인은 별도입니다."}
     except (PublishingError, SelectionError, StopIteration) as exc:

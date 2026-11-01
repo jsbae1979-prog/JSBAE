@@ -28,6 +28,7 @@ from .image_artwork import artwork, card_artwork
 from .image_selection import references, selection
 from .instagram import GRAPH, InstagramUploadAdapter, InstagramUploadError, _identifier
 from .service import PublishingError, hash_file
+from .sensitive_topics import classify
 
 STATES = {
     "preparing": "전송 중 · 반복 요청 금지", "processing": "Instagram 처리 확인 필요",
@@ -80,7 +81,9 @@ class ImagePostService:
 
     def create(self, article_id, *, title, body, hashtags="", photo=None, reviewed=False,
                rights=False, sources_confirmed=False, ai_disclosure="unreviewed", draft_id=None,
-               analysis_id=None, rank=None, generated_id=None, card_id=None, feed_batch_id=None):
+               analysis_id=None, rank=None, generated_id=None, card_id=None, feed_batch_id=None, image_safety_checked=False):
+        if (generated_id is not None or feed_batch_id is not None) and image_safety_checked is not True:
+            raise PublishingError("AI 이미지 안전 확인을 체크해 주세요.")
         if not (reviewed and rights and sources_confirmed):
             raise PublishingError("내용·출처·이미지 이용 권한을 확인해 주세요.")
         plan = None
@@ -165,6 +168,8 @@ class ImagePostService:
                         seen.add(reference["url"])
         if generated_id is not None:
             sources["generated_image_run_id"] = generated_id
+            sources["image_safety_checked"] = image_safety_checked is True
+            sources["image_safety"] = classify(title, body)
         if full_image is not None:
             if full_image.options.get("claude_card_run_id") is not None:
                 sources["claude_card_run_id"] = full_image.options["claude_card_run_id"]

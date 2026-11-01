@@ -31,7 +31,7 @@ class FeedBudget(FeedCosts):
         for item in row.result['items']:
             if item['status']!='pending':continue
             source=next(s for s in row.evidence['sources'] if s['rank']==item['rank'])
-            prompt=prompt_for(source,item['content'],row.id,item['attempt'],local_title=row.options.get('title_layout')==TITLE_LAYOUT)
+            prompt=prompt_for(source,item['content'],row.id,item['attempt'],local_title=row.options.get('title_layout')==TITLE_LAYOUT,safety_version=item.get('safety_version'))
             result=rates.estimate(row.options['selection'],prompt,now=self.clock())
             bounds.append({'rank':item['rank'],'attempt':item['attempt'],
                            'maximumUsd':result['reserveUsd'],'estimate':result,

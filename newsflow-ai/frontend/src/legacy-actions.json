@@ -1620,6 +1620,13 @@
         "default": "unreviewed",
         "path": false,
         "max_length": 30
+      },
+      {
+        "name": "image_safety_checked",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
       }
     ],
     "source": "gui/image_post_routes.py",
@@ -5881,6 +5888,13 @@
         "type": "text",
         "required": false,
         "default": "unreviewed",
+        "path": false
+      },
+      {
+        "name": "image_safety_checked",
+        "type": "boolean",
+        "required": false,
+        "default": false,
         "path": false
       }
     ],
