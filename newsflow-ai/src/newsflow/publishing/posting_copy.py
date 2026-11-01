@@ -61,6 +61,26 @@ def digest(value):
 
 def source_for(state,identifier):
     from newsflow.gui.studio_v3 import workspace_view
+    if re.fullmatch(r'feed:[1-9][0-9]*:[1-3]', identifier):
+        from newsflow.studio.feed_library import images
+        from newsflow.creation.feed_designs import FeedDesigns
+        feeds = state.top_three_feeds
+        project = next((p for p in images(feeds) if p['id'] == identifier), None)
+        if not project: raise PublishingError('삭제되지 않은 완성 이미지를 선택하세요.')
+        _, batch, rank = identifier.split(':'); batch, rank = int(batch), int(rank)
+        designs = FeedDesigns(feeds); row, evidence, item = designs.source(batch, rank)
+        if project['designVersion']:
+            version = designs.version(batch, rank, project['designVersion']); d = version['design']
+            output_hash = version['sha256']
+            content = {'title': d['title'], 'description': d['caption'], 'hashtags': d['hashtags']}
+        else:
+            feeds.path(batch, rank); output_hash = item['sha256']
+            content = {'title': item['content']['title'], 'description': item['content']['body'], 'hashtags': item['content']['hashtags']}
+        content.update(output_sha256=output_hash, sources={'full_image': True, 'image_safety_checked': False,
+            'feed_batch_id': batch, 'selection': {'rank': rank}, 'articles': [{'title': evidence['title'], 'body': evidence['body']}],
+            'references': evidence['references'], 'ai_disclosure': 'disclose'})
+        reject_secrets(content)
+        return {'id': identifier, 'kind': 'image', 'title': content['title'], 'content': content}
     if not re.fullmatch(r'(?:news:[1-9][0-9]*|character:[a-f0-9]{32}|(?:image|post):[1-9][0-9]*)',identifier):
         raise PublishingError('완성 콘텐츠를 선택하세요.')
     workspace=workspace_view(SimpleNamespace(app=SimpleNamespace(state=state)),project_ids={identifier})
@@ -112,6 +132,9 @@ class PostingCopy:
     def view(self,identifier):
         source=self.source(identifier)
         with self.sessions() as s:local=self._load(s,identifier)
+        if identifier.startswith('feed:') and local['copy'] is None:
+            c=source['content']
+            local={**local,'copy':{'title':' '.join(c['title'].split()),'description':c['description'],'hashtags':c['hashtags'].split()}}
         providers=[]
         for name in ('claude_api','openai'):
             setting=read_api_settings(self.sessions,name)

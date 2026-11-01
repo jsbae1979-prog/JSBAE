@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Item } from "../contracts";
 import { Panel, Empty } from "./shared";
 import "./photo-feed.css";
-import { FeedCopyTools, FeedPerformance } from "./FeedGrowthTools";
 // Only pixels affect the local preview; caption/hashtags remain separate.
 function visualKey(form: Item, background: string) {
   const keys = [
@@ -47,8 +46,7 @@ export default function PhotoFeedEditor({
   const [preview, setPreview] = useState(""),
     [message, setMessage] = useState(""),
     [dirty, setDirty] = useState(false),
-    [version, setVersion] = useState(0),
-    [reviewed, setReviewed] = useState(false);
+    [version, setVersion] = useState(0);
   const [uploadKind, setUploadKind] = useState("stock"),
     [credit, setCredit] = useState("");
   const [previewState, setPreviewState] = useState(""),
@@ -102,7 +100,7 @@ export default function PhotoFeedEditor({
   }
   function change(patch: Item) {
     setVersion(0);
-    setReviewed(false);
+
     setForm((f) => ({ ...f, ...patch }));
     setDirty(true);
     setMessage("");
@@ -195,7 +193,7 @@ export default function PhotoFeedEditor({
         if (action === "render") {
           renderedKey.current = visualKey(d.draft, d.background);
           setPreviewError("");
-          setReviewed(false);
+
           const v = d.versions.at(-1);
           setVersion(v.version);
           setPreview(base + "/design-file/" + v.version);
@@ -235,7 +233,7 @@ export default function PhotoFeedEditor({
         setForm({ ...form, credit: d.draft.credit });
         setVersion(0);
         setDirty(true);
-        setReviewed(false);
+
         setMessage("배경 이미지 변경 완료");
       } catch (e) {
         setMessage((e as Error).message);
@@ -353,7 +351,7 @@ export default function PhotoFeedEditor({
                   setForm(v.design);
                   setBackground(`version:${v.version}`);
                   setDirty(false);
-                  setReviewed(false);
+
                   setMessage(
                     `버전 ${v.version}을 불러왔습니다.`,
                   );
@@ -388,7 +386,7 @@ export default function PhotoFeedEditor({
             {text("핵심 설명", "description", 2)}
             {!form.description && (
               <small>
-                확인 필요 · 저장된 요약에서 핵심 사실 1~2줄을 직접 입력하세요.
+                확인 필요 · 기사 요약에서 핵심 사실 1~2줄을 직접 입력하세요.
               </small>
             )}
             <details>
@@ -438,18 +436,18 @@ export default function PhotoFeedEditor({
               >
                 새 버전으로 저장
               </button>
+              {version > 0 && !dirty && version === state.versions.at(-1)?.version && !item?.libraryHidden && (
+                <a className="button" href={"/studio/publishing?project_id=" + encodeURIComponent(state.posts?.[String(version)] ? `post:${state.posts[String(version)]}` : `feed:${batch.id}:${rank}`)}>게시 스튜디오로 이동</a>
+              )}
             </div>
             <details className="photo-feed-advanced">
-              <summary>고급 편집</summary>
-              <FeedCopyTools
-                state={state}
-                form={form}
-                base={base}
-                csrf={csrf}
-                background={background}
-                local={local}
-                onChange={change}
-              />
+              <summary>추가 편집</summary>
+              <details>
+                <summary>제목 추천</summary>
+                {(state.copyOptions?.titleCandidates ?? []).map((candidate: Item) => (
+                  <button key={candidate.text} type="button" onClick={() => edit("title", candidate.text)}>{candidate.text}</button>
+                ))}
+              </details>
               <label>
                 배경 이미지
                 <select
@@ -477,9 +475,9 @@ export default function PhotoFeedEditor({
                 </select>
               </label>
               <details>
-                <summary>다른 이미지 선택</summary>
+                <summary>내 이미지 올리기</summary>
                 <label>
-                  이미지 구분
+                  이미지 종류
                   <select
                     value={uploadKind}
                     onChange={(e) => setUploadKind(e.target.value)}
@@ -490,17 +488,17 @@ export default function PhotoFeedEditor({
                   </select>
                 </label>
                 <label>
-                  새 이미지 크레딧
+                  업로드 이미지 출처
                   <input
-                    aria-label="새 이미지 크레딧"
+                    aria-label="업로드 이미지 출처"
                     value={credit}
                     onChange={(e) => setCredit(e.target.value)}
                   />
                 </label>
                 <label>
-                  로컬 이미지 업로드
+                  이미지 파일 선택
                   <input
-                    aria-label="로컬 이미지 업로드"
+                    aria-label="이미지 파일 선택"
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
                     disabled={!credit.trim()}
@@ -513,19 +511,17 @@ export default function PhotoFeedEditor({
                 </small>
               </details>
               <details>
-                <summary>출처·크레딧</summary>
-                {text("브랜드", "brand")}
-                {text("날짜", "date")}
+                <summary>출처 정보</summary>
                 {text("기사 출처", "source", 2)}
-                {text("이미지 크레딧", "credit", 2)}
+                {text("이미지 출처", "credit", 2)}
               </details>
               <details>
-                <summary>캡션 · 원문 참고</summary>
-                {text("캡션 본문", "caption", 5)}
+                <summary>게시글 내용</summary>
+                {text("게시글 본문", "caption", 5)}
                 {text("해시태그", "hashtags", 2)}
                 <strong>기사 원제</strong>
                 <p>{state.sourceTitle}</p>
-                <strong>저장된 요약</strong>
+                <strong>기사 요약</strong>
                 <p>{state.originalSummary}</p>
                 <small>
                   숫자·날짜·주체와 검토/예정 등 진행 상태를 유지하세요. 제작자
@@ -533,64 +529,9 @@ export default function PhotoFeedEditor({
                 </small>
               </details>
               <button disabled={!background} onClick={() => run("draft")}>
-                편집 초안 저장
+                입력 내용 저장
               </button>
-              <FeedPerformance
-                base={base}
-                csrf={csrf}
-                versions={state.versions}
-                busy={busy}
-                local={local}
-              />
             </details>
-            {version > 0 && !dirty && (
-              <details>
-                <summary>게시 준비</summary>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={reviewed}
-                    onChange={(e) => setReviewed(e.target.checked)}
-                  />
-                  내용·권리·출처·AI 이미지 안전 확인
-                </label>
-                <button
-                  disabled={!reviewed || batch.simulation}
-                  onClick={() =>
-                    local(async () => {
-                      try {
-                        await response(
-                          await fetch(base + "/design-review", {
-                            method: "POST",
-                            credentials: "same-origin",
-                            body: new URLSearchParams({
-                              csrf_token: csrf,
-                              version: String(version),
-                              reviewed: "true",
-                              image_safety_checked: "true",
-                            }),
-                          }),
-                        );
-                        setMessage("게시용 검토본 저장 완료 · 실제 게시 없음");
-                        accept(
-                          await (
-                            await response(
-                              await fetch(base + "/design", {
-                                credentials: "same-origin",
-                              }),
-                            )
-                          ).json(),
-                        );
-                      } catch (e) {
-                        setMessage((e as Error).message);
-                      }
-                    })
-                  }
-                >
-                  게시 스튜디오에 저장
-                </button>
-              </details>
-            )}
             {dirty && <small>저장하지 않은 편집이 있습니다.</small>}
             {message && <p role="status">{message}</p>}
             {state.warnings.map((m: string) => (

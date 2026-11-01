@@ -70,14 +70,14 @@ def render(raw,value,kind):
     canvas=Image.alpha_composite(canvas,overlay);d=ImageDraw.Draw(canvas)
     path=font_path();bold=path.with_name('malgunbd.ttf') if path.name.lower()=='malgun.ttf' else path
     titlefont=ImageFont.truetype(str(bold if bold.exists() else path),round(v['title_size']))
-    descfont=ImageFont.truetype(str(path),34);small=ImageFont.truetype(str(path),26)
+    descfont=ImageFont.truetype(str(path),34)
     title=lines(d,v['title'],titlefont,968,3,'제목');desc=lines(d,v['description'],descfont,968,2,'핵심 설명') if v['description'] else []
-    metadata=' · '.join(x for x in [v['brand'],v['date'],v['source'],v['credit']] if x)
-    meta=lines(d,metadata,small,968,3,'출처·크레딧')
-    bottom=1350-48-(len(meta)+1)*34
+    # Provenance stays in the editable draft, immutable version and publishing caption.
+    # Only the selected headline and description are drawn on the photo.
+    bottom=1350-48
     y=round(v['text_y']*1350)
     if y+len(title)*(titlefont.size+14)+20+len(desc)*46>bottom-24:
-        raise PublishingError('텍스트와 출처 영역이 겹칩니다. 텍스트 위치를 위로 옮기거나 문구·줄바꿈을 조정하세요.')
+        raise PublishingError('텍스트가 이미지 아래 여백과 겹칩니다. 텍스트 위치를 위로 옮기거나 문구·줄바꿈을 조정하세요.')
     for line in title:
         x=56
         for part in re.split('('+re.escape(v['emphasis'])+')',line) if v['emphasis'] else [line]:
@@ -86,9 +86,5 @@ def render(raw,value,kind):
         y+=titlefont.size+14
     y+=20
     for line in desc:d.text((56,y),line,font=descfont,fill='white',anchor='lt');y+=46
-    # Guaranteed high contrast for provenance, independent of the photograph or gradient settings.
-    d.rectangle((0,bottom-14,1080,1350),fill='#08111d')
-    for line in meta:d.text((56,bottom),line,font=small,fill='#e0e8f5',anchor='lt');bottom+=34
-    d.text((56,bottom),LABELS[kind],font=small,fill='#b6eaff',anchor='lt')
     out=BytesIO();canvas.convert('RGB').save(out,'JPEG',quality=95)
     return out.getvalue()

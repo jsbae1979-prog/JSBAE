@@ -45,7 +45,7 @@ def test_local_edits_preserve_batch_budget_other_ranks_and_exact_preview(feeds):
     assert len(saved2['versions'])==2 and service.path(v['filename'],v['sha256']).read_bytes()==original
     assert saved2['versions'][0]['background']['filename']!=saved2['versions'][1]['background']['filename']
 
-@pytest.mark.parametrize('patch,match',[(dict(title='혼합 ABC 2026년 20km 계획 '*20),'글자 수'),(dict(title='한글영문 ABC 123 '*9),'줄'),(dict(source='긴출처 '*39),'출처'),(dict(text_y=.78),'겹칩니다'),(dict(crop=[0,0,0,1]),'자르기'),(dict(accent=12),'강조색')])
+@pytest.mark.parametrize('patch,match',[(dict(title='혼합 ABC 2026년 20km 계획 '*20),'글자 수'),(dict(title='한글영문 ABC 123 '*9),'줄'),(dict(source='긴출처 '*51),'출처'),(dict(text_y=.78),'겹칩니다'),(dict(crop=[0,0,0,1]),'자르기'),(dict(accent=12),'강조색')])
 def test_overflow_requires_explicit_edit_not_shrink_or_truncate(feeds,patch,match):
     s,b,state,d=prepared(feeds)
     with pytest.raises(PublishingError,match=match):s.preview(b,1,state['revision'],state['background'],{**d,**patch})
@@ -212,3 +212,22 @@ def test_feed_upload_exact_multipart_route_keeps_origin_csrf_size_and_raster_che
         c.get('/studio/images');data['csrf_token']=c.cookies.get('newsflow_csrf')
         for wrong in (f'/api/feed-batches/{b}/items/4/design-upload',f'/api/feed-batches/{b}/items/1/design', '/api/other-upload'):
             assert c.post(wrong,data=data,files=files).status_code==415
+
+
+def test_photo_pixels_omit_provenance_but_saved_metadata_survives(feeds):
+    service,b,state,design=prepared(feeds)
+    design={**design,'image_height':1.,'gradient_strength':.3}
+    raw=service.preview(b,1,state['revision'],state['background'],design)
+    # Long but valid provenance no longer consumes image space or changes pixels.
+    changed={**design,'source':'긴 출처 '*39,'credit':'다른 제작자','brand':'다른 브랜드','date':'2026.12.01'}
+    assert service.preview(b,1,state['revision'],state['background'],changed)==raw
+    assert render(photo(),design,'ai')==render(photo(),design,'stock')
+    with Image.open(BytesIO(raw)) as image:
+        assert image.size==(1080,1350)
+        # The footer is photograph/gradient, not the former solid provenance band.
+        assert image.getpixel((500,1330))!=(8,17,29)
+    saved=service.save(b,1,state['revision'],state['background'],design,export=True)
+    assert saved['draft']==design
+    assert saved['versions'][-1]['design']==design
+    assert saved['versions'][-1]['background']['credit']==design['credit']
+    assert service.path(saved['versions'][-1]['filename'],saved['versions'][-1]['sha256']).read_bytes()==raw

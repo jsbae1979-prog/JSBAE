@@ -69,6 +69,19 @@ def test_photo_feed_editor_local_browser(app,feeds,browser,tmp_path):
         p.get_by_role('button',name='TOP 1 결과 선택',exact=True).click();expect(p.get_by_label('피드 제목',exact=True)).to_have_value(d['title'])
         assert p.locator('.photo-feed-thumbs img').first.get_attribute('src').endswith('/design-file/2')
         assert p.locator('.photo-feed-canvas img').evaluate('(img)=>img.complete && img.naturalWidth===1080')
+        expect(p.get_by_text('게시 준비',exact=True)).to_have_count(0)
+        expect(p.get_by_text('기존 결과 도구',exact=True)).to_have_count(0)
+        p.get_by_text('추가 편집',exact=True).click()
+        for removed in ['브랜드','날짜','게시 후 성과 비교 · 직접 입력','캡션 본문']:
+            expect(p.get_by_text(removed,exact=True)).to_have_count(0)
+        expect(p.get_by_text('출처 정보',exact=True)).to_be_visible()
+        expect(p.get_by_text('게시글 내용',exact=True)).to_be_visible()
+        p.get_by_role('link',name='게시 스튜디오로 이동',exact=True).click()
+        expect(p.get_by_label('게시 제목',exact=True)).to_have_value(' '.join(d['title'].split()))
+        expect(p.get_by_label('게시 설명',exact=True)).to_have_value(d['caption'])
+        expect(p.locator('.mg-publish-image-grid img').first).to_have_attribute('src',f'/api/feed-batches/{b}/items/1/design-file/2')
+        expect(p.get_by_label('콘텐츠·권리·출처 검토 완료',exact=True)).not_to_be_checked()
+        expect(p.get_by_label('AI 이미지 안전 확인',exact=True)).not_to_be_checked()
         assert not errors
         writes=[url for method,url in requests if method=='POST']
         assert writes and all(url.endswith('/design') for url in writes),writes

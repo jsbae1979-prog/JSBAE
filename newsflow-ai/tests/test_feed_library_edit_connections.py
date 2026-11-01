@@ -32,7 +32,7 @@ def test_library_individual_images_readonly_latest_saved_and_no_publishing(app,c
     assert feeds.get(b).result==before and s.state(b,2)['revision']==saved['revision']
     result=client.get('/api/studio/modules/library').json()
     assert len([p for p in result['projects'] if p['id'].startswith('feed:')])==3
-    assert not any(p['id'].startswith('feed:') for p in client.get('/api/studio/modules/publishing').json()['projects'])
+    assert len([p for p in client.get('/api/studio/modules/publishing').json()['projects'] if p['id'].startswith('feed:')])==3
     assert all(client.get(r['mediaUrl']).status_code==200 for r in rows)
 
 def test_hide_restore_gallery_library_atomic_preserves_files(app,client,feeds):
@@ -101,3 +101,28 @@ def test_review_copy_dedup_and_bidirectional_visibility(app,client,feeds):
     assert feeds.view(b)['items'][0]['libraryHidden']
     assert post(client,'restore',[f'post:{pid}']).status_code==200
     assert not feeds.view(b)['items'][0]['libraryHidden']
+
+
+def test_saved_feed_moves_to_publishing_without_preapproving_or_copying(app,client,feeds):
+    from newsflow.publishing.posting_copy import PostingCopy, source_for
+    from newsflow.publishing.service import PublishingError
+    s,b,state,d=completed(feeds)
+    saved=s.save(b,1,state['revision'],state['background'],d,export=True)
+    before=deepcopy(s.state(b,1))
+    identifier=f'feed:{b}:1'
+    copy=PostingCopy(app.state)
+    view=copy.view(identifier)
+    assert view['copy']=={'title':' '.join(d['title'].split()),'description':d['caption'],'hashtags':d['hashtags'].split()}
+    assert view['published'] is False and view['imageSafetyRequired'] is True
+    assert 'preparation' not in view
+    assert source_for(app.state,identifier)['content']['output_sha256']==saved['versions'][-1]['sha256']
+    with pytest.raises(PublishingError):
+        copy.save(identifier,view['sourceHash'],0,view['copy'],preparation={'platforms':['instagram'],'content_reviewed':False,'rights_reviewed':False,'sources_reviewed':False,'image_safety_checked':False})
+    reviewed=copy.save(identifier,view['sourceHash'],0,view['copy'],preparation={'platforms':['instagram'],'content_reviewed':True,'rights_reviewed':True,'sources_reviewed':True,'image_safety_checked':True})
+    assert reviewed['approval'] is False and reviewed['preparation']['transmission_approved'] is False
+    assert reviewed['preparation']['published'] is False
+    assert s.state(b,1)==before
+    with feeds.sessions() as db:assert list(db.scalars(select(ImagePost)))==[]
+    assert post(client,'remove',[identifier]).status_code==200
+    with pytest.raises(PublishingError):copy.view(identifier)
+    assert all(p['id']!=identifier for p in client.get('/api/studio/modules/publishing').json()['projects'])

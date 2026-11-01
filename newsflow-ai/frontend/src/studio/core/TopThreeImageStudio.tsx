@@ -273,10 +273,10 @@ function FeedLayout({
                 </button>
               )}
               {b.items
-                .filter((x: Item) => x.rank === active)
+                .filter((x: Item) => x.rank === active && !x.designVersion && b.feedStyle !== "photo_feed_v1")
                 .map((x: Item) => (
                   <details key={x.rank}>
-                    <summary>기존 결과 도구</summary>
+                    <summary>원본 이미지</summary>
                     <button
                       disabled={
                         blocked || (x.status !== "pending" && !x.canEditTitle)
@@ -290,24 +290,13 @@ function FeedLayout({
                         <button
                           onClick={() => openImage({ batch: b, item: x })}
                         >
-                          기존 이미지 크게 보기
+                          원본 보기
                         </button>
                         <a href={x.mediaUrl + "?download=true"} download>
-                          기존 이미지 저장
+                          원본 저장
                         </a>
                       </>
                     )}
-                    <button
-                      disabled={
-                        blocked ||
-                        b.simulation ||
-                        x.status !== "success" ||
-                        b.feedStyle === "photo_feed_v1"
-                      }
-                      onClick={() => f.review(x)}
-                    >
-                      기존 결과 게시용 검토본 저장
-                    </button>
                   </details>
                 ))}
             </Panel>

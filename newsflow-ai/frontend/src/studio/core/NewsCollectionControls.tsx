@@ -9,10 +9,6 @@ const states = new Set(["idle", "running", "success", "partial", "failed", "inte
 const count = (v:unknown) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0 ? v : 0;
 
 export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;method:string;onMethodChange:(v:string)=>void}) {
-  const [categories,setCategories]=useState<string[]>([]);
-  const [policy,setPolicy]=useState("global_trends_v1");
-  const fields: string[] = c.view?.catalog.newsCategories ?? [];
-  const categoryContext = {categories, ...(method === "serpapi" ? {collection_policy:policy, maximum_requests:policy === "korea_v1" ? Math.max(1,categories.length) : 5} : {})};
   const [collection,setCollection]=useState<Collection|null>(null);
   const [phase,setPhase]=useState<Phase>("");
   const [error,setError]=useState("");
@@ -64,20 +60,12 @@ export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;m
       {method==="rss" ? <ActionButton c={c} id="routes_collect" disabled={pending}
         context={{__collectionProgress:requestState}}>수집 시작</ActionButton>
         : method==="popular" ? <ActionButton c={c} id="curation_refresh" disabled={pending}
-          context={{...categoryContext,__collectionProgress:requestState}}>수집 시작</ActionButton>
+          context={{__collectionProgress:requestState}}>수집 시작</ActionButton>
         : <ActionButton c={c} id="serpapi_collect" disabled={pending || !c.view?.catalog.serpapi?.canRequest}
-            context={{...categoryContext,categories:policy === "korea_v1" ? categories : [],__collectionProgress:requestState}}>
+            context={{__collectionProgress:requestState}}>
             수집 시작
           </ActionButton>}
     </div>
-    {method === "serpapi" && <label className="news-collection-scope">수집 범위<select aria-label="수집 범위" disabled={pending} value={policy} onChange={e=>setPolicy(e.target.value)}>
-      <option value="global_trends_v1">글로벌 인기 뉴스</option><option value="korea_v1">한국 뉴스 · 분야 선택</option>
-    </select></label>}
-    {method === "popular" || method === "serpapi" && policy === "korea_v1" ? <fieldset className="news-collection-categories" disabled={pending}>
-      <legend>수집할 기사 분야 · 여러 개 선택</legend>
-      <label><input type="checkbox" checked={!categories.length} onChange={()=>setCategories([])}/>전체 분야</label>
-      {fields.map(value=><label key={value}><input type="checkbox" checked={categories.includes(value)} onChange={e=>setCategories(old=>e.target.checked?[...old,value]:old.filter(x=>x!==value))}/>{value} 분야</label>)}
-    </fieldset> : method === "rss" ? <div className="news-collection-scope"><span>등록 RSS는 등록된 출처에서 수집합니다.</span><button type="button" disabled={pending} onClick={()=>onMethodChange("popular")}>분야를 선택해 수집</button></div> : null}
     <small className="news-collection-provider-info">{method==="rss"?"등록 공개 RSS · API 키 불필요":method==="popular"?"Google News 공개 RSS · 분야·기간 선택":
       c.view?.catalog.serpapi?.keyConfigured?"SerpApi · 키 등록됨":"SerpApi · API 키 미등록"}</small>
     {method==="serpapi"&&<a className="news-collection-settings" href="/studio/settings?tab=sources">설정·관리에서 수집 설정</a>}

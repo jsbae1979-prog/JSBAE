@@ -17,7 +17,8 @@ import {
   type Controller,
 } from "./shared";
 export default function Publishing({ c }: { c: Controller }) {
-  const [id, setId] = useState(""),
+  const requestedProject = new URLSearchParams(window.location.search).get("project_id") ?? "";
+  const [id, setId] = useState(requestedProject ? "new" : ""),
     [query, setQuery] = useState(""),
     [type, setType] = useState("all"),
     [form, setForm] = useState<Item>({}),
@@ -33,7 +34,7 @@ export default function Publishing({ c }: { c: Controller }) {
     (type === "all" || x.kind === type) && String(x.title).includes(query));
   const drafts = c.list("drafts").filter((draft) =>
     visibleProjects.some((project: Item) => project.id === "news:" + draft.render_job_id));
-  const [projectId, setProjectId] = useState("");
+  const [projectId, setProjectId] = useState(requestedProject);
   const selectionMissing =
     (!!projectId && !visibleProjects.some((x: Item) => x.id === projectId)) ||
     (!!id && id !== "new" && !drafts.some((x) => String(x.id) === id));
@@ -42,10 +43,10 @@ export default function Publishing({ c }: { c: Controller }) {
   const project = selectionMissing ? undefined : (
     visibleProjects.find((x: Item) => x.id === (projectId || "news:" + selected?.render_job_id)) ?? visibleProjects[0]);
   useEffect(() => {
-    if (!selectionMissing) return;
+    if (!selectionMissing || c.view?.module !== "publishing") return;
     setId("new"); setProjectId(""); setForm({});
     setTargets([]); setTime(""); setCohortId("");
-  }, [selectionMissing]);
+  }, [selectionMissing, c.view?.module]);
   useEffect(() => {
     const next = selected
       ? {
