@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Sparkles, Save, Pause, Download } from "lucide-react";
 import TopThreeFeeds from "../TopThreeFeeds";
+import FeedCostReview from "../FeedCostReview";
 import { Thumbnail } from "../Thumbnail";
 import type { Item } from "../contracts";
 import {
@@ -197,7 +198,7 @@ function FeedLayout({
                   {b.simulation ? "합성 검증 결과 · 실제 게시 차단" : b.price} ·
                   저장된 모델·옵션 고정
                 </p>
-                {b.generationBlock && <p role="status" className="core-warning">{b.generationBlock}</p>}
+                <FeedCostReview batch={b} busy={f.busy} onSave={data=>f.local(async()=>f.show(await f.post(`/api/feed-batches/${b.id}/cost-review`,{revision:b.revision,...data})))}/>
                 <div className={`core-feed-results${b.items.length === 1 ? " core-feed-single" : ""}`}>
                   {b.items.map((x: Item) => (
                     <article

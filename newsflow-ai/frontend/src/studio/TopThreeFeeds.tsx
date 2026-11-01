@@ -189,7 +189,7 @@ export default function TopThreeFeeds({
         );
         b = await post(`/api/feed-batches/${b.id}/step`, { consent, reviewed });
         show(b);
-        if (b.items.some((x: Item) => x.status === "unknown")) break;
+        if (b.items.some((x: Item) => ["unknown","failed"].includes(x.status))) break;
       }
       if (stop.current) {
         b = await post(`/api/feed-batches/${b.id}/change`, {

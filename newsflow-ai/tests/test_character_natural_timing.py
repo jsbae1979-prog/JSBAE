@@ -31,7 +31,7 @@ def test_near_boundary_is_accepted_without_changing_any_story_field():
     assert [s['source_seconds'] for s in timeline]==[7,8,7,6]
     assert [s['speed'] for s in timeline]==[1,1.25,1,1]
 
-@pytest.mark.parametrize('total,valid',[(27.9,True),(27.899,False),(28,True),(30,True),(30.001,False),(23.1,False),(27.1,False)])
+@pytest.mark.parametrize('total,valid',[(27.9,True),(27.899,False),(28,True),(30,True),(30.001,True),(31,True),(32,True),(32.001,False),(23.1,False),(27.1,False)])
 def test_boundary_remains_bounded_and_no_broad_relaxation(total,valid,monkeypatch):
     monkeypatch.setattr(episode_policy,'total_playback_seconds',lambda *a,**k:total)
     if valid:validate_episode(marginal_story(),30,CATALOG.model(O3))
@@ -68,3 +68,37 @@ def test_real_local_ffmpeg_keeps_27_9_seconds_instead_of_padding_to_30(tmp_path,
     assert result['timeline'][-1]['freeze_seconds']==pytest.approx(1.5)
     evidence=json.loads((tmp_path/'compose/edit-evidence.json').read_text(encoding='utf8'))
     assert evidence['target_seconds']==30 and evidence['output_seconds']==pytest.approx(27.9)
+
+
+def longer_story():
+    value=script(50)
+    for scene,seconds in zip(value['scenes'],[4,4,4,8]):scene['seconds']=seconds
+    value['scenes'][1].update(speed='fast',fast_intensity='medium')
+    value['scenes'][-1]['freeze_end']='strong'
+    return value
+
+@pytest.mark.story_format
+def test_saved_20_17_story_recovers_without_ai_or_rewriting(tmp_path,monkeypatch):
+    service,video,i,_,_=setup_episode(tmp_path,target=20)
+    value=longer_story();authoring,adapter,budget=bounded_authoring(value);service.authoring=authoring
+    before=deepcopy(value)
+    assert total_playback_seconds(value)==pytest.approx(20+1/6)
+    monkeypatch.setattr(episode_policy,'PLAYBACK_VARIANCE_SECONDS',0)
+    with pytest.raises(CharacterError):service.write(i,consent=True)
+    failed=service.read(i);responses=deepcopy(failed['script_responses']);cost=deepcopy(failed['text_reservations'])
+    monkeypatch.setattr(episode_policy,'PLAYBACK_VARIANCE_SECONDS',2)
+    authoring.generate=lambda *a,**k:pytest.fail('No provider call during recovery')
+    service.recover_story_response(i,consent=True)
+    result=service.read(i)
+    assert result['script']==before and result['state']=='script_review'
+    assert result['script_responses']==responses and result['text_reservations']==cost
+    assert len(adapter.bodies)==1 and not video.sent
+    timeline=editing.edit_timeline(result['script'],20)
+    assert sum(row['seconds'] for row in timeline)==pytest.approx(20+1/6)
+    assert timeline[-1]['freeze_seconds']==pytest.approx(1.5)
+
+def test_real_ffmpeg_preserves_20_17_without_trimming(tmp_path,synthetic_sources):
+    result=editing.compose_episode(tmp_path,EpisodeScript.model_validate(longer_story()),[synthetic_sources[1]]*4,
+        settings={'duration':20,'aspect_ratio':'9:16','sound':'on'})
+    assert result['media']['duration']==pytest.approx(20+1/6,abs=.1)
+    assert result['timeline'][-1]['freeze_seconds']==pytest.approx(1.5)

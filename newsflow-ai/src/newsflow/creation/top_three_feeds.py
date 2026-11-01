@@ -22,6 +22,7 @@ from newsflow.publishing.service import PublishingError
 from newsflow.video.news_images import NewsImages
 
 from .catalog import DEFAULTS, check_snapshot, snapshot, validate
+from .feed_costs import FeedCosts
 
 KIND = "feed_top3_batch"
 DISCLOSURE = "AI 생성 이미지 · 실제 현장 사진 아님"
@@ -85,8 +86,9 @@ class LocalFeedPreviewAdapter:
 
 
 class TopThreeFeeds:
-    def __init__(self, sessions, data_dir, generation, *, simulation=False):
+    def __init__(self, sessions, data_dir, generation, *, simulation=False, cached_quote=None, account_scope=None):
         self.sessions, self.generation = sessions, generation
+        self.costs = FeedCosts(cached_quote, account_scope)
         self.simulation = simulation is True and type(generation.adapter) is LocalFeedPreviewAdapter
         self.root = Path(data_dir) / "outputs" / "top3-feeds"
         self.safe_paths = NewsImages(data_dir)
@@ -219,8 +221,25 @@ class TopThreeFeeds:
         if row.options["simulation"] != self.simulation:
             raise PublishingError("Fake 작업과 실제 생성 경로는 서로 전환할 수 없습니다.")
         if not self.simulation:
-            # No quote adapter exists for these image models. Client-entered prices are not trusted evidence.
-            raise PublishingError("공식 견적·계정 권한·예상 비용이 미확정이므로 유료 자동 제작을 차단했습니다.")
+            self.costs.quote(row)
+            if not self.costs.view(row)['approved']:
+                raise PublishingError("이번 이미지 제작 비용을 먼저 승인하세요.")
+
+    def cost_review(self, identifier, revision, *, limit=None, quote_hash='', consent=False):
+        """Local cached quote/approval only. Never submit, decrypt a key or fetch a quote."""
+        try:
+            with self.lock:
+                row=self.get(identifier)
+                if type(revision) is not int or row.result['revision']!=revision:
+                    raise PublishingError('다른 화면에서 작업이 변경됐습니다. 새로고침 후 확인하세요.')
+                if row.options['simulation'] or any(i['status'] in {'running','unknown'} for i in row.result['items']):
+                    raise PublishingError('작업 상태를 확인하세요. 비용 승인을 변경하지 않았습니다.')
+                costs=(self.costs.refresh(row) if limit is None else
+                    self.costs.approve(row,quote_hash,limit,consent))
+                result=deepcopy(row.result);result['revision']+=1
+                self._save(identifier,result,options={**row.options,'costs':costs})
+        except Timeout:
+            raise PublishingError('진행 중인 요청이 끝난 뒤 확인하세요.') from None
 
     def _accept(self, row, item, output_id):
         generated = self.generation.get(output_id)
@@ -258,8 +277,13 @@ class TopThreeFeeds:
                     raise PublishingError("결과 불명 항목이 있습니다. 나머지 자동 실행도 중단합니다.")
                 item = next((i for i in result["items"] if i["status"] == "pending"), None)
                 if item is None: return
+                if any(i['status']=='failed' for i in result['items']):
+                    raise PublishingError('실패한 이미지가 있습니다. 자동 진행을 중단했습니다.')
+                options=deepcopy(row.options)
+                if not self.simulation:
+                    options['costs']=self.costs.reserve(row,item)
                 item["status"] = "running"; result["revision"] += 1
-                self._save(identifier, result)  # Durable claim before any generation.
+                self._save(identifier, result, options=options)  # Atomic reservation and claim before generation.
                 source = next(source for source in row.evidence["sources"] if source["rank"] == item["rank"])
                 context = {"batch_id": identifier, "rank": item["rank"], "attempt": item["attempt"],
                            "plan": {**item["content"], "source_article_ids": source["article_ids"]},
@@ -304,7 +328,9 @@ class TopThreeFeeds:
                                 raise PublishingError("문구의 비밀정보·제어문자를 제거하세요.")
                         item["content"] = {"title": title.strip(), "body": body.strip(), "hashtags": hashtags.strip()}
                     else:
-                        self._authorize(row, consent, reviewed)
+                        # This only prepares a new attempt; its changed binding needs a fresh cost approval.
+                        if consent is not True or reviewed is not True or row.options['simulation']!=self.simulation:
+                            raise PublishingError('기존 결과와 재생성 범위를 검토하세요.')
                         if item["status"] == "pending": raise PublishingError("이미 생성 대기 중인 항목입니다.")
                         item["history"].append({k: deepcopy(v) for k, v in item.items() if k != "history"})
                         item.update(status="pending", generation_id=None, attempt=item["attempt"]+1)
@@ -379,7 +405,8 @@ class TopThreeFeeds:
                 "revision": row.result["revision"], "paused": row.result["paused"],
                 "simulation": row.options["simulation"], "plannedImages": len(items),
                 "maxGenerations": row.options["max_generations"],
-                "price": "Fake 검증 · 실제 과금 없음" if row.options["simulation"] else "공식 견적 미확정 · 유료 실행 차단",
-                "canGenerate": self.simulation and row.options["simulation"],
-                "generationBlock": None if self.simulation else "OpenAI 이미지 실행의 비용 승인 연결이 필요합니다. 작업 저장·문구 편집은 가능합니다.",
+                "price": "Fake 검증 · 실제 과금 없음" if row.options["simulation"] else self.costs.view(row)["message"],
+                "costReview": self.costs.view(row),
+                "canGenerate": bool((self.simulation and row.options["simulation"]) or (not row.options["simulation"] and self.costs.view(row)["approved"])),
+                "generationBlock": None if self.simulation or self.costs.view(row)["approved"] else self.costs.view(row)["message"],
                 "publishApproval": "내용·출처·권리·AI 표시 검토 후 계정 선택과 최종 게시 승인 별도"}

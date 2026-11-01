@@ -68,12 +68,13 @@ def test_exact_frame_timeline_and_final_hold(target):
         assert current['start'] == pytest.approx(previous['start'] + previous['seconds'])
 
 
-def test_only_final_hold_is_extended_and_oversize_script_is_rejected():
+def test_natural_timing_is_preserved_and_outside_tolerance_rejected():
     story = episode(15)
     story.scenes[-1].seconds = 8
     timeline = editing.edit_timeline(story, 15)
-    assert timeline[-1]['freeze_seconds'] == 2
-    story.scenes[-1].seconds = 11
+    assert timeline[-1]['freeze_seconds'] == 1
+    assert sum(row['seconds'] for row in timeline) == 14
+    story.scenes[-1].seconds = 12
     with pytest.raises(CharacterError):
         editing.edit_timeline(story, 15)
 

@@ -39,7 +39,7 @@ def edit_timeline(story, target_seconds, presets=None):
         raise CharacterError('media')
     # The final hold rule depends on the job's story format and is checked with the script.
     # A near-boundary script is usable as-is, not an instruction to invent a longer hold.
-    output_frames=round(total*30) if total < target_seconds-2 else target_seconds*30
+    output_frames=round(total*30)  # Preserve authored timing; never pad or trim to the requested target.
     result, cursor = [], 0
     for index, scene in enumerate(scenes):
         speed = presets['fast'][_get(scene, 'fast_intensity')] if _get(scene, 'speed') == 'fast' else 1

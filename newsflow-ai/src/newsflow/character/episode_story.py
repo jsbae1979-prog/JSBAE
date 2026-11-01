@@ -223,7 +223,7 @@ SCRIPT_INSTRUCTION = (
     'For normal speed, factor=1; for fast speed, factor=input.edit_presets.fast[fast_intensity]. '
     'For freeze_end none, hold=0; otherwise hold=input.edit_presets.freeze[freeze_end]. '
     'Sum seconds / factor + hold for every scene AFTER choosing all effects, not just raw clip seconds. '
-    'Total playback must be within input.target_seconds-2 and input.target_seconds. '
+    'Aim for input.target_seconds; natural playback within input.target_seconds-2 and input.target_seconds+2 is accepted. Do not add filler or extend a freeze just to hit the target. '
     'Before returning, recalculate the sum; revise the plan in the SAME response if outside those bounds. '
     'No dialogue, no voices, no music or lip movement for speech anywhere. Do not put these directions in positive fields. '
     'Korean hook_caption and end_caption <=20 characters; captions label situations, never speech. '

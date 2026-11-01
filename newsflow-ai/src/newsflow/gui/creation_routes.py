@@ -130,6 +130,18 @@ def feed_batch_create(request: Request, analysis_id: int = Form(ge=1), model: st
         raise HTTPException(422, str(exc)) from None
 
 
+@router.post('/api/feed-batches/{identifier}/cost-review')
+def feed_cost_review(request: Request, identifier: int, revision: int = Form(ge=1),
+                     limit: str | None = Form(None,max_length=20), quote_hash: str = Form('',max_length=64),
+                     consent: bool = Form(False)):
+    try:
+        service=request.app.state.top_three_feeds
+        service.cost_review(identifier,revision,limit=limit,quote_hash=quote_hash,consent=consent)
+        return service.view(identifier)
+    except (PublishingError,SelectionError) as exc:
+        raise HTTPException(409 if '다른 화면' in str(exc) else 422,str(exc)) from None
+
+
 @router.post('/api/feed-batches/{identifier}/step')
 def feed_batch_step(request: Request, identifier: int, consent: bool = Form(False), reviewed: bool = Form(False)):
     try:

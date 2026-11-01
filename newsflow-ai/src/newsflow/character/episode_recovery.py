@@ -83,7 +83,7 @@ def timing_review(job,candidate):
     """Read-only numeric guidance. Never modifies timing, content, or model settings."""
     from .kling import check
     from .episode_story import scene_range
-    from .episode_policy import job_story_format,load_edit_presets,playback_seconds,valid_playback_seconds
+    from .episode_policy import job_story_format,load_edit_presets,playback_seconds,valid_playback_seconds,playback_bounds
     from newsflow.video_models.catalog import CATALOG,duration_values
     settings=check(job['studio_selection']);model=CATALOG.model(settings['video_model'])
     presets=load_edit_presets();target=job['duration']
@@ -95,7 +95,7 @@ def timing_review(job,candidate):
             except (CharacterError,TypeError,KeyError):durations.append(None)
     known=bool(durations) and all(value is not None for value in durations)
     total=sum(durations) if known else None
-    return {'targetSeconds':target,'minimumSeconds':target-2.1,'maximumSeconds':target,
+    return {'targetSeconds':target,'minimumSeconds':playback_bounds(target)[0],'maximumSeconds':playback_bounds(target)[1],
         'playbackSeconds':round(total,4) if known else None,
         'withinTimingRange':valid_playback_seconds(total,target) if known else False,
         'sceneRange':list(scene_range(target,model,job_story_format(job))),

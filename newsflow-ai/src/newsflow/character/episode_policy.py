@@ -107,8 +107,16 @@ def playback_seconds(scene, presets=None):
 # It never stretches clips or changes an AI-authored scene duration.
 MIN_PLAYBACK_BOUNDARY_TOLERANCE = .1
 
+PLAYBACK_VARIANCE_SECONDS = 2
+
+def playback_bounds(target):
+    # Preserve the previously accepted 0.1 s lower-bound rounding allowance.
+    return (target-PLAYBACK_VARIANCE_SECONDS-MIN_PLAYBACK_BOUNDARY_TOLERANCE,
+            target+PLAYBACK_VARIANCE_SECONDS)
+
 def valid_playback_seconds(total,target):
-    return target-2-MIN_PLAYBACK_BOUNDARY_TOLERANCE-1e-8 <= total <= target+1e-8
+    low,high=playback_bounds(target)
+    return math.isfinite(total) and low-1e-8 <= total <= high+1e-8
 
 def total_playback_seconds(story, presets=None):
     presets = presets or load_edit_presets()
