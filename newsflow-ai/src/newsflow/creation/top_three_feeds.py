@@ -481,6 +481,9 @@ class TopThreeFeeds:
     def view(self, identifier):
         row = self.get(identifier)
         items = deepcopy(row.result["items"])
+        from newsflow.creation.feed_visibility import hidden_items
+        with self.sessions() as session:hidden=hidden_items(session)
+        for item in items:item['libraryHidden']=f"feed:{identifier}:{item['rank']}" in hidden
         for item in items:
             source = next(source for source in row.evidence["sources"] if source["rank"] == item["rank"])
             item["source"] = source
@@ -509,6 +512,7 @@ class TopThreeFeeds:
                     v = designs.version(identifier, item['rank'], versions[-1]['version'])
                     item['designMediaUrl'] = f"/api/feed-batches/{identifier}/items/{item['rank']}/design-file/{v['version']}"
                     item['designVersion'] = v['version']
+                    item['designTitle'] = v['design']['title']
                 except (PublishingError, OSError, ValueError):
                     pass
         cost = self.costs.view(row)

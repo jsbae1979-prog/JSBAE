@@ -5,8 +5,9 @@ import "./feed-image-gallery.css";
 export type FeedEntry = { batch: Item; item: Item };
 export function completedFeedImages(batches: Item[]): FeedEntry[] {
   return batches.flatMap(batch => (batch.items ?? [])
-    .filter((item: Item) => item.status === "success" && item.mediaUrl === `/api/feed-batches/${batch.id}/items/${item.rank}/file`)
-    .map((item: Item) => ({ batch, item })));
+    .filter((item: Item) => !item.libraryHidden && (item.designMediaUrl || item.status === "success" && item.mediaUrl === `/api/feed-batches/${batch.id}/items/${item.rank}/file`))
+    .map((item: Item) => ({ batch, item: {...item, mediaUrl:item.designMediaUrl || item.mediaUrl,
+      content:{...item.content,title:item.designTitle || item.content?.title}} })));
 }
 export default function FeedImagePreview({ entries, index, onSelect, onClose }: {
   entries: FeedEntry[]; index: number; onSelect:(entry:FeedEntry)=>void; onClose:()=>void;

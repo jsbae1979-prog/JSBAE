@@ -642,6 +642,9 @@ def module_view(request: Request, module: Module):
             result['projects'] = [item for item in result['projects']
                 if item.get('mediaUrl') and item['technicalStatus'] in {'success', 'completed'}]
         if module == "library":
+            from newsflow.studio.feed_library import images as feed_images
+            if getattr(state, "top_three_feeds", None) is not None:
+                result["projects"].extend(feed_images(state.top_three_feeds))
             from newsflow.samples.catalog import Samples
             from newsflow.studio.library_visibility import LibraryVisibility
             result["collections"]["ownedReferences"] = Samples(

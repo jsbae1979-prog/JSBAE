@@ -73,7 +73,15 @@ class FeedDesigns:
     def view(self,batch,rank):
         state=self.state(batch,rank);_,source,item=self.source(batch,rank)
         from .feed_growth import copy_options
-        candidates=[{k:v for k,v in c.items() if k!='path'} for c in self.candidates(batch,rank,state)]
+        candidates=[];groups={}
+        for c in self.candidates(batch,rank,state):
+            key=(c['sha256'],c['kind'],c['credit'])
+            if key not in groups:groups[key]={**c,'aliases':[c['id']]}
+            else:
+                aliases=groups[key]['aliases']+[c['id']]
+                if c['id']==state['background']:groups[key]={**c,'aliases':aliases}
+                else:groups[key]['aliases']=aliases
+        candidates=[{k:v for k,v in c.items() if k!='path'} for c in groups.values()]
         return {**state,'batch':batch,'rank':rank,'articleId':source['article_id'],'sourceTitle':source['title'],
             'originalSummary':source['body'],'candidates':candidates,
             'copyOptions':copy_options(source,item,state['draft']),

@@ -123,7 +123,7 @@ export default function PhotoFeedEditor({
       setPreviewState("");
       return () => controller.abort();
     }
-    setPreviewState("미리보기 반영 중…");
+    setPreviewState("이미지·편집 반영 중…");
     // Debounce rapid edits, abort superseded requests and discard late responses.
     // This endpoint runs the same local renderer as Save, without saving a version.
     const timer = window.setTimeout(async () => {
@@ -293,7 +293,11 @@ export default function PhotoFeedEditor({
         className="photo-feed-stage"
       >
         {resultPicker}
-        <div className="photo-feed-canvas">
+        <div className="photo-feed-preview-status" aria-live="polite">
+          {previewState && <small role="status">{previewState}</small>}
+          {previewError && <p role="alert">{previewError} 마지막 정상 미리보기를 표시합니다.</p>}
+        </div>
+        <div className="photo-feed-canvas" aria-busy={previewState === "이미지·편집 반영 중…"}>
           {shown ? (
             <button
               onClick={() => modal.current?.showModal()}
@@ -424,18 +428,10 @@ export default function PhotoFeedEditor({
                 ))}
               </div>
             </details>
-            <div className="photo-feed-preview-status" aria-live="polite">
-              {previewState && <small role="status">{previewState}</small>}
-              {previewError && (
-                <p role="alert">
-                  {previewError} 마지막 정상 미리보기를 표시합니다.
-                </p>
-              )}
-            </div>
             <div className="photo-feed-actions">
               <button
                 className="primary"
-                disabled={!background || !!previewError}
+                disabled={!background || !!previewError || previewState === "이미지·편집 반영 중…"}
                 onClick={() => run("render")}
               >
                 새 버전으로 저장
@@ -456,7 +452,7 @@ export default function PhotoFeedEditor({
                 배경 이미지
                 <select
                   aria-label="배경 이미지"
-                  value={background}
+                  value={state.candidates.find((c:Item)=>c.id===background || c.aliases?.includes(background))?.id ?? background}
                   onChange={(e) => {
                     setBackground(e.target.value);
                     const c = state.candidates.find(

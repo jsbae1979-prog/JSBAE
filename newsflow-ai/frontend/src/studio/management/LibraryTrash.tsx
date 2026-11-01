@@ -33,15 +33,15 @@ export default function LibraryTrash({c,items,title,legacy=false,restore}:{
     <summary>{title} · {rows.length}개</summary>
     <div className="mg-trash-toolbar" aria-label={title+' 선택'}>
       <strong>선택 {selected.filter(x=>rows.some(r=>id(r)===x)).length}개</strong>
-      <button disabled={busy||!rows.length} onClick={()=>setSelected(rows.map(id))}>전체 선택</button>
+      <button disabled={busy||!rows.length} onClick={()=>setSelected(rows.filter(x=>x.purgeable!==false).map(id))}>전체 선택</button>
       <button disabled={busy||!selected.length} onClick={()=>setSelected([])}>선택 해제</button>
       <button disabled={busy||!available||!selected.length} title={!available?'서버 반영 후 사용할 수 있습니다.':undefined}
         onClick={()=>{setMessage('');setPending(rows.filter(x=>selected.includes(id(x))));}}>선택 완전 삭제</button>
     </div>
     {rows.map(x=><div className="mg-trash-row" key={id(x)}>
-      <input type="checkbox" aria-label={`${x.title??x.key} 완전 삭제 선택`} checked={selected.includes(id(x))} disabled={busy}
+      <input type="checkbox" aria-label={`${x.title??x.key} 완전 삭제 선택`} checked={selected.includes(id(x))} disabled={busy||x.purgeable===false}
         onChange={e=>setSelected(old=>e.target.checked?[...old,id(x)]:old.filter(k=>k!==id(x)))}/>
-      <div><strong>{x.title??x.key}</strong><small>{x.updatedAt??x.created_at}</small></div>
+      <div><strong>{x.title??x.key}</strong><small>{x.updatedAt??x.created_at}</small>{x.purgeable===false&&<small>편집 원본 보존 · 복원 가능</small>}</div>
       {x.technicalStatus==='purge_failed'||x.technicalStatus==='purging'?<span>삭제 확인 필요</span>:restore(x)}
     </div>)}
     {!rows.length&&<p className="mg-muted">휴지통이 비어 있습니다.</p>}

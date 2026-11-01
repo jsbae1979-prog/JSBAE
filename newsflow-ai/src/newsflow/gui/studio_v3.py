@@ -137,7 +137,10 @@ def workspace_view(request: Request, *, include_library_hidden=False, project_id
                     media=url,
                 )
             )
+        from newsflow.creation.feed_visibility import hidden_items, feed_identity
+        hidden_feeds = hidden_items(session) if not include_library_hidden else set()
         for post in session.scalars(select(ImagePost).order_by(ImagePost.id.desc()).limit(100)):
+            if feed_identity(post) in hidden_feeds:continue
             media = None
             status = "success"
             try:

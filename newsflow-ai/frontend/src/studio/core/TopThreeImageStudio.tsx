@@ -3,6 +3,7 @@ import TopThreeFeeds from "../TopThreeFeeds";
 import FeedCostReview from "../FeedCostReview";
 import FeedGenerationProgress from "./FeedGenerationProgress";
 import PhotoFeedEditor from "./PhotoFeedEditor";
+import FeedImageHistory from "./FeedImageHistory";
 import FeedImagePreview, {
   completedFeedImages,
   type FeedEntry,
@@ -44,7 +45,9 @@ function FeedLayout({
     : -1;
   useEffect(() => {
     if (b) {
-      setActive(pendingRank.current ?? b.items[0]?.rank ?? 1);
+      const params = new URLSearchParams(window.location.search);
+      const requested = params.get("batch_id") === String(b.id) ? Number(params.get("rank")) : 0;
+      setActive(pendingRank.current ?? (b.items.some((x: Item)=>x.rank===requested) ? requested : b.items[0]?.rank ?? 1));
       pendingRank.current = null;
       setScope(b.plannedImages === 1 ? "selected" : "all");
       setStyle(b.feedStyle ?? "legacy");
@@ -365,22 +368,8 @@ function FeedLayout({
         </div>
       )}
       <Panel title="최근 생성 이미지">
-        <div className="feed-image-history">
-          {entries.map(({ batch, item }) => (
-            <button
-              className="feed-image-history-card"
-              key={`${batch.id}:${item.rank}`}
-              disabled={f.busy}
-              onClick={() => openImage({ batch, item })}
-            >
-              <Thumbnail src={item.mediaUrl} alt={item.content?.title} />
-              <strong>{item.content?.title}</strong>
-              <small>
-                작업 #{batch.id} · TOP {item.rank}
-              </small>
-            </button>
-          ))}
-        </div>
+        <FeedImageHistory entries={entries} busy={f.busy} csrf={c.view?.csrfToken ?? ""}
+          onOpen={openImage} onRemoved={async()=>{setPreview(null);await f.load();await c.load();}}/>
       </Panel>
       {previewIndex >= 0 && (
         <FeedImagePreview

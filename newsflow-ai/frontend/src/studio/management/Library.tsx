@@ -35,7 +35,7 @@ export default function Library({ c }: { c: Controller }) {
     cancelDelete = useRef<HTMLButtonElement>(null);
   const removalAvailable = c.view?.libraryRemovalAvailable === true && c.view.commandsAvailable && !!c.view.csrfToken;
   const canonicalId = (x: Item) => String(x.id ?? "");
-  const removable = (x: Item) => /^(?:(?:news|image|post):[1-9][0-9]*|character:[a-f0-9]{32}|reference:[a-z0-9-]{1,48})$/.test(canonicalId(x));
+  const removable = (x: Item) => /^(?:feed:[1-9][0-9]*:[1-3]|(?:news|image|post):[1-9][0-9]*|character:[a-f0-9]{32}|reference:[a-z0-9-]{1,48})$/.test(canonicalId(x));
   const locallyHidden = new Set(localRemoved.map(canonicalId));
   const references = c.view?.collections.ownedReferences ?? [];
   const own = (c.view?.projects ?? c.workspace?.projects ?? []).map(
@@ -304,7 +304,9 @@ export default function Library({ c }: { c: Controller }) {
                   <a
                     className="mg-button mg-primary"
                     href={
-                      String(selected.id).startsWith("post:")
+                      /^feed:[1-9][0-9]*:[1-3]$/.test(String(selected.id))
+                        ? `/studio/images?mode=top3&batch_id=${String(selected.id).split(":")[1]}&rank=${String(selected.id).split(":")[2]}`
+                        : String(selected.id).startsWith("post:")
                         ? "/image-posts?post_id=" +
                           String(selected.id).split(":")[1]
                         : "/studio/" +
@@ -334,7 +336,7 @@ export default function Library({ c }: { c: Controller }) {
                       </Action>
                     )}
                   {selected.kind !== "news" &&
-                    !String(selected.id).startsWith("post:") && (
+                    !String(selected.id).startsWith("post:") && !String(selected.id).startsWith("feed:") && (
                       <a
                         className="mg-button"
                         href={

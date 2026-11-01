@@ -82,7 +82,8 @@ export default function TopThreeFeeds({
     const version = ++loadVersion.current;
     setReady(false);
     try {
-      const r = await fetch("/api/feed-batches", {
+      const linkedBatch = new URLSearchParams(window.location.search).get("batch_id");
+      const r = await fetch("/api/feed-batches" + (linkedBatch && /^[1-9][0-9]*$/.test(linkedBatch) ? "?batch_id="+linkedBatch : ""), {
         credentials: "same-origin",
         cache: "no-store",
       });
@@ -91,10 +92,10 @@ export default function TopThreeFeeds({
       if (!mounted.current || version !== loadVersion.current) return;
       setBatches(d.batches);
       setOptions(d.defaults ?? catalog.imageDefaults ?? {});
-      setBatch(
-        (b) =>
-          d.batches.find((x: Item) => x.id === b?.id) ?? d.batches[0] ?? null,
-      );
+      const requested = new URLSearchParams(window.location.search).get("batch_id");
+      setBatch((b) => d.batches.find((x: Item) => x.id === b?.id) ??
+        (requested && /^[1-9][0-9]*$/.test(requested)
+          ? d.batches.find((x: Item) => String(x.id) === requested) ?? null : d.batches[0] ?? null));
     } finally {
       if (mounted.current && version === loadVersion.current) setReady(true);
     }

@@ -104,9 +104,14 @@ def reuse(request: Request, identifier: int, reviewed: bool = Form(False), targe
 
 
 @router.get('/api/feed-batches')
-def feed_batches(request: Request):
+def feed_batches(request: Request, batch_id: int | None = None):
     service = request.app.state.top_three_feeds
-    return {"batches": [service.view(row.id) for row in service.recent()], "defaults": service.defaults()}
+    rows=service.recent()
+    if batch_id is not None and not any(row.id==batch_id for row in rows):
+        if not 1<=batch_id<=9223372036854775807:raise HTTPException(422,'작업 번호를 확인하세요.')
+        try:rows.insert(0,service.get(batch_id))
+        except PublishingError:raise HTTPException(404,'선택한 작업을 확인하세요.') from None
+    return {"batches": [service.view(row.id) for row in rows], "defaults": service.defaults()}
 
 
 @router.post('/api/feed-batches/defaults')

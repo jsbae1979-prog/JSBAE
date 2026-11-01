@@ -10,7 +10,7 @@ from newsflow.character.schema import CharacterError
 from newsflow.db.models import AppSetting, ImagePost, IntelligenceRun, RenderJob, VideoProject, WorkspaceRemoval
 
 PREFIX = 'library:'
-IDENTIFIER = re.compile(r'(?:news:[1-9][0-9]{0,18}|image:[1-9][0-9]{0,18}|post:[1-9][0-9]{0,18}|character:[a-f0-9]{32}|reference:[a-z0-9-]{1,48})\Z')
+IDENTIFIER = re.compile(r'(?:feed:[1-9][0-9]{0,18}:[1-3]|news:[1-9][0-9]{0,18}|image:[1-9][0-9]{0,18}|post:[1-9][0-9]{0,18}|character:[a-f0-9]{32}|reference:[a-z0-9-]{1,48})\Z')
 ACTIVE = frozenset({'running', 'queued', 'submitting', 'submitted', 'waiting', 'in_progress', 'downloading',
                     'writing', 'preparing', 'generating', 'retry_quoting', 'composing'})
 
@@ -26,8 +26,8 @@ def parse_items(raw):
         raise LibraryVisibilityError('invalid') from None
     if (not isinstance(values, list) or not 1 <= len(values) <= 100
             or any(not isinstance(value, str) or not IDENTIFIER.fullmatch(value) for value in values)
-            or any(value.split(':', 1)[0] in {'news', 'image', 'post'}
-                   and int(value.split(':', 1)[1]) > 9223372036854775807 for value in values)
+            or any(value.split(':', 1)[0] in {'news', 'image', 'post', 'feed'}
+                   and int(value.split(':')[1]) > 9223372036854775807 for value in values)
             or len(set(values)) != len(values)):
         raise LibraryVisibilityError('invalid')
     return values
@@ -49,6 +49,12 @@ class LibraryVisibility:
                     scene.get('state') in ACTIVE for scene in job.get('scenes', []))):
                 raise LibraryVisibilityError('busy')
             title, status = job.get('topic', '캐릭터 쇼츠'), job['state']
+        elif kind == 'feed':
+            batch, rank = map(int,value.split(':'))
+            row=session.get(IntelligenceRun,batch)
+            item=next((i for i in row.result.get('items',[]) if i.get('rank')==rank),None) if row and row.kind=='feed_top3_batch' else None
+            if item is None:raise LibraryVisibilityError('missing')
+            title,status=item.get('content',{}).get('title','뉴스 이미지'),item.get('status','')
         elif kind == 'reference':
             row = session.get(AppSetting, 'sample_content:v1:copy:' + value)
             try:
@@ -83,7 +89,7 @@ class LibraryVisibility:
         if removing and status in ACTIVE:
             raise LibraryVisibilityError('busy')
         return {'id': identifier, 'title': str(title), 'kind': kind, 'state': 'hidden',
-                'originalStatus': status}
+                'originalStatus': status, 'purgeable': kind != 'feed'}
 
     def change(self, items, *, hidden):
         identifiers = parse_items(items)
@@ -119,6 +125,6 @@ class LibraryVisibility:
                 detail = row.detail if isinstance(row.detail, dict) else {}
                 if detail.get('state')=='purged':continue
                 result.append({'id': identifier, 'title': str(detail.get('title', '보관한 콘텐츠')),
-                               'kind': identifier.split(':', 1)[0], 'updatedAt': row.created_at.isoformat(),
+                               **({'purgeable': False} if identifier.startswith('feed:') else {}), 'kind': identifier.split(':', 1)[0], 'updatedAt': row.created_at.isoformat(),
                                'technicalStatus': detail.get('state') if detail.get('state') in {'purging','purge_failed'} else 'hidden'})
             return result

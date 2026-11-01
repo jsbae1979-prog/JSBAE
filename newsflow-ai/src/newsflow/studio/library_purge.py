@@ -75,6 +75,8 @@ class LibraryPurge:
         return [self._file(self.state.video.outputs/row.output_name)]
 
     def _plan(self,session,item,row):
+        # Feed backgrounds/versions may be shared by edits and review copies.
+        if item.startswith('feed:'):raise PurgeError('linked')
         detail=row.detail if isinstance(row.detail,dict) else {}
         if not item.startswith('archive:'):
             try:self.visibility._item(session,item,removing=True)
@@ -126,6 +128,7 @@ class LibraryPurge:
         return files
 
     def _owned(self,session,item,path):
+        if item.startswith('feed:'):return False
         if item.startswith('archive:activity:'):return False
         if item.startswith('archive:video:'):item='news:'+item.split(':')[-1]
         kind,value=item.split(':',1)
