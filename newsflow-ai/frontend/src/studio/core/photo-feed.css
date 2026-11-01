@@ -136,3 +136,22 @@
   min-height: 16px;
   flex: 0 0 16px;
 }
+
+/* Local editorial tools remain scoped to the photo feed editor. */
+.photo-feed-editor .feed-title-options { display: grid; gap: 8px; margin: 12px 0; }
+.photo-feed-editor .feed-title-options button { display: grid; gap: 5px; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+.photo-feed-editor .feed-title-options small { color: #83cfe9; }
+.photo-feed-editor .feed-growth-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.photo-feed-editor .feed-growth-confirm { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+.photo-feed-editor .feed-growth-confirm input { width: 16px; height: 16px; flex: 0 0 16px; }
+.photo-feed-editor .feed-performance-table { overflow-x: auto; margin: 14px 0; }
+.photo-feed-editor .feed-performance-table table { border-collapse: collapse; min-width: 540px; font-size: 12px; }
+.photo-feed-editor .feed-performance-table th,.photo-feed-editor .feed-performance-table td { padding: 8px; border-bottom: 1px solid #28435f; text-align: left; }
+.photo-feed-editor .feed-performance-table small { display: block; font-weight: normal; }
+@media(max-width:600px) { .photo-feed-editor .feed-growth-fields { grid-template-columns: 1fr; } }
+
+.core-studio .photo-feed-editor fieldset,
+.core-studio .photo-feed-editor details[open] { grid-template-columns: minmax(0,1fr); }
+.core-studio .photo-feed-editor fieldset > *,
+.core-studio .photo-feed-editor details > *,
+.photo-feed-editor .feed-growth-fields > * { min-width: 0; max-width: 100%; }

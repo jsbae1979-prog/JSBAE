@@ -214,6 +214,10 @@ def feed_design_save(request: Request, identifier: int, rank: int, revision: int
     from newsflow.creation.feed_designs import FeedDesigns
     try:
         service=FeedDesigns(request.app.state.top_three_feeds); value=json.loads(design)
+        if action=='caption':
+            from newsflow.creation.feed_growth import compose_caption
+            service.checked(identifier,rank,revision)
+            return {'caption':compose_caption(value), 'paid':False}
         if action=='preview':
             from hashlib import sha256
             raw=service.preview(identifier,rank,revision,background,value);digest=sha256(raw).hexdigest()
@@ -267,3 +271,25 @@ def feed_design_preview_file(request: Request, identifier: int, rank: int, diges
         if sha256(path.read_bytes()).hexdigest()!=digest:raise ValueError()
         return FileResponse(path,media_type='image/jpeg',headers={'Cache-Control':'no-store'})
     except (PublishingError,ValueError,OSError):raise HTTPException(404,'미리보기 이미지를 확인하세요.') from None
+
+
+@router.get('/api/feed-batches/{identifier}/items/{rank}/design-performance')
+def feed_performance_view(request: Request, identifier: int, rank: int):
+    from newsflow.creation.feed_designs import FeedDesigns
+    from newsflow.creation.feed_growth import FeedPerformance
+    try:
+        return FeedPerformance(FeedDesigns(request.app.state.top_three_feeds)).view(identifier,rank)
+    except (PublishingError, ValueError, OSError):
+        raise HTTPException(422, '선택 뉴스의 성과 기록을 확인하세요.') from None
+
+
+@router.post('/api/feed-batches/{identifier}/items/{rank}/design-performance')
+def feed_performance_save(request: Request, identifier: int, rank: int,
+                          revision: int = Form(ge=0), metrics: str = Form(...,max_length=3000)):
+    import json
+    from newsflow.creation.feed_designs import FeedDesigns
+    from newsflow.creation.feed_growth import FeedPerformance
+    try:
+        return FeedPerformance(FeedDesigns(request.app.state.top_three_feeds)).save(identifier,rank,revision,json.loads(metrics))
+    except (PublishingError, ValueError, OSError) as exc:
+        raise HTTPException(422,str(exc) if isinstance(exc,PublishingError) else '성과 입력 형식을 확인하세요.') from None

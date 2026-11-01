@@ -71,10 +71,12 @@ class FeedDesigns:
         if not result:raise PublishingError('배경 이미지를 선택하세요. 연결된 로컬 보관본 또는 업로드만 사용할 수 있습니다.')
         return result
     def view(self,batch,rank):
-        state=self.state(batch,rank);_,source,_=self.source(batch,rank)
+        state=self.state(batch,rank);_,source,item=self.source(batch,rank)
+        from .feed_growth import copy_options
         candidates=[{k:v for k,v in c.items() if k!='path'} for c in self.candidates(batch,rank,state)]
         return {**state,'batch':batch,'rank':rank,'articleId':source['article_id'],'sourceTitle':source['title'],
             'originalSummary':source['body'],'candidates':candidates,
+            'copyOptions':copy_options(source,item,state['draft']),
             'needsCopy':not bool(state['draft']['description']),
             'warnings':self.copy_warnings(state['draft'],source)}
     @staticmethod

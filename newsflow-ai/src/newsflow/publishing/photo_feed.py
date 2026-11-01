@@ -10,12 +10,14 @@ from .service import PublishingError
 STYLE = 'photo_feed_v1'
 DEFAULT = dict(style=STYLE, title='', description='', caption='', hashtags='', brand='NewsFlow AI', date='',
                credit='', source='', emphasis='', accent='#76e4ff', title_size=64, text_y=.64,
-               gradient_height=.58, gradient_strength=.85, image_height=1., crop=[0.,0.,1.,1.])
+               gradient_height=.58, gradient_strength=.85, image_height=1., crop=[0.,0.,1.,1.], caption_sections={})
 LABELS = {'ai':'AI 생성 이미지 · 실제 현장 사진 아님', 'photo':'실제 사진', 'stock':'자료사진 · 설명용'}
 
 def validate(value):
     if not isinstance(value,dict) or set(value)-set(DEFAULT): raise PublishingError('편집 항목을 확인하세요.')
     v={**deepcopy(DEFAULT),**deepcopy(value)}
+    from newsflow.creation.feed_growth import caption_parts
+    caption_parts(v['caption_sections'])
     limits={'title':140,'description':140,'caption':1800,'hashtags':200,'brand':30,'date':30,'credit':160,'source':200,'emphasis':40}
     for k,n in limits.items():
         if not isinstance(v[k],str) or len(v[k])>n or any(ord(c)<32 and c!='\n' for c in v[k]):

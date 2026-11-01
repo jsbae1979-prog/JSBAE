@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Item } from "../contracts";
 import { Panel, Empty } from "./shared";
 import "./photo-feed.css";
+import { FeedCopyTools, FeedPerformance } from "./FeedGrowthTools";
 export default function PhotoFeedEditor({
   batch,
   rank,
@@ -65,9 +66,10 @@ export default function PhotoFeedEditor({
       abort.abort();
     };
   }, [base]);
-  function edit(k: string, v: any) {
+  function edit(k: string, v: any) { change({ [k]: v }); }
+  function change(patch: Item) {
     setReviewed(false);
-    setForm((f) => ({ ...f, [k]: v }));
+    setForm((f) => ({ ...f, ...patch }));
     setDirty(true);
     setMessage("수정 중 · 미리보기 적용 후 새 버전으로 저장하세요.");
   }
@@ -286,6 +288,7 @@ export default function PhotoFeedEditor({
               이 뉴스만 편집합니다. 원제·요약·다른 결과·자동 제작 기본값은
               유지됩니다.
             </p>
+            <FeedCopyTools state={state} form={form} base={base} csrf={csrf} background={background} local={local} onChange={change} />
             {text("피드 제목", "title", 3)}
             {text("핵심 설명", "description", 2)}
             {!form.description && (
@@ -477,6 +480,7 @@ export default function PhotoFeedEditor({
                 </button>
               </details>
             )}
+            <FeedPerformance base={base} csrf={csrf} versions={state.versions} busy={busy} local={local} />
             {dirty && <small>저장하지 않은 편집이 있습니다.</small>}
             {message && <p role="status">{message}</p>}
             {state.warnings.map((m: string) => (

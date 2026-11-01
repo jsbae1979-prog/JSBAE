@@ -6061,5 +6061,45 @@
     ],
     "source": "gui/creation_routes.py",
     "unsupported": false
+  },
+  {
+    "id": "feed_photo_performance",
+    "module": "images",
+    "label": "게시 후 성과 직접 기록",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/design-performance",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "metrics",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 3000
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
   }
 ]
