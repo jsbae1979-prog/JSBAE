@@ -41,7 +41,7 @@ import "./style.css";
 import Workbench from "./studio/Workbench";
 import StopNotice from "./studio/StopNotice";
 import { Thumbnail } from "./studio/Thumbnail";
-import { characterReferenceThumbnail } from "./studio/contracts";
+import { characterReferenceThumbnail, status as studioStatus } from "./studio/contracts";
 
 type Kind = "news" | "character" | "image";
 type Project = {
@@ -162,6 +162,7 @@ const NAV = [
   },
 ];
 const labels: Record<string, string> = {
+  ...studioStatus,
   success: "파일 생성 완료",
   completed: "파일 생성 완료",
   ready: "파일 생성 완료",

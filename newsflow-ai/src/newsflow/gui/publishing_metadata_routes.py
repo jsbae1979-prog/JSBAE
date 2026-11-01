@@ -62,3 +62,11 @@ def validate(request:Request,project_id:str=Form(max_length=65),source_hash:str=
         Copy.model_validate(json.loads(copy_payload))
         return {'valid':True,'published':False,'approval':False}
     return safe(perform)
+
+
+@router.post('/api/studio/publishing/copy/prepare')
+def prepare(request:Request,project_id:str=Form(max_length=65),source_hash:str=Form(min_length=64,max_length=64),
+            revision:int=Form(ge=0),copy_payload:str=Form(alias="copy",max_length=12000),
+            preparation:str=Form(max_length=1000)):
+    return safe(lambda:service(request).save(project_id,source_hash,revision,json.loads(copy_payload),
+                                            preparation=json.loads(preparation)))

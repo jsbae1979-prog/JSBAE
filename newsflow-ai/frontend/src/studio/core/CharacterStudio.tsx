@@ -1626,8 +1626,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </div>
             )}
             {job?.state === "script_failed" && job?.scriptResponseSaved && (
-              <div className="kling-story-recovery-actions">
-                <button type="button" disabled={isBusy} onClick={recoverStory}>보관된 스토리 자동 복구</button>
+              <div className="kling-story-recovery-actions"><p>기존 응답을 사용합니다. 길이를 임의로 늘리거나 AI에 다시 요청하지 않습니다.</p>
+                <button type="button" disabled={isBusy} onClick={recoverStory}>저장된 응답으로 다시 검증 · 무료</button>
                 {job.automation_version===1&&<button type="button" disabled={isBusy} onClick={()=>setSavedStoryOpen(true)}>직접 검토·편집</button>}
               </div>
             )}

@@ -53,7 +53,7 @@ def preview(service, identifier):
         job=service.read(identifier)
         record,row=read_candidate(service,job)
         return {'candidate':deepcopy(record['candidate']),'expected_hash':row['sha256'],
-                'additionalProviderCalls':0}
+                'timing':timing_review(job,record['candidate']), 'additionalProviderCalls':0}
 
 
 def recover(service, identifier, *, consent=False, script=None, expected_hash=''):
@@ -77,3 +77,27 @@ def recover(service, identifier, *, consent=False, script=None, expected_hash=''
         job.pop('script_failure',None);job.pop('script_validation_feedback',None)
         (service.folder(identifier)/'script.json').write_text(json.dumps(job['script'],ensure_ascii=False,indent=2),encoding='utf8')
         service.save(job)
+
+
+def timing_review(job,candidate):
+    """Read-only numeric guidance. Never modifies timing, content, or model settings."""
+    from .kling import check
+    from .episode_story import scene_range
+    from .episode_policy import job_story_format,load_edit_presets,playback_seconds,valid_playback_seconds
+    from newsflow.video_models.catalog import CATALOG,duration_values
+    settings=check(job['studio_selection']);model=CATALOG.model(settings['video_model'])
+    presets=load_edit_presets();target=job['duration']
+    scenes=candidate.get('scenes',[])
+    durations=[]
+    if isinstance(scenes,list):
+        for scene in scenes[:60]:
+            try: durations.append(round(playback_seconds(scene,presets),4))
+            except (CharacterError,TypeError,KeyError):durations.append(None)
+    known=bool(durations) and all(value is not None for value in durations)
+    total=sum(durations) if known else None
+    return {'targetSeconds':target,'minimumSeconds':target-2.1,'maximumSeconds':target,
+        'playbackSeconds':round(total,4) if known else None,
+        'withinTimingRange':valid_playback_seconds(total,target) if known else False,
+        'sceneRange':list(scene_range(target,model,job_story_format(job))),
+        'allowedClipSeconds':list(duration_values(model)),
+        'fast':presets['fast'],'freeze':presets['freeze'],'sceneSeconds':durations}

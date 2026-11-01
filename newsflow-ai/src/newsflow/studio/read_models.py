@@ -124,7 +124,7 @@ def value(v):
     return v
 
 
-def rows(session, model_name, columns):
+def rows(session, model_name, columns, *, limit=100):
     model = getattr(m, model_name)
     query = select(model)
     if model_name == "IntelligenceRun":
@@ -138,10 +138,12 @@ def rows(session, model_name, columns):
     if model_name == "WorkspaceRemoval":
         query = query.where(~model.key.startswith("library:"))
         query = query.where(model.detail["state"].as_string().is_(None) | (model.detail["state"].as_string()!="purged"))
-    order = getattr(model, "id", getattr(model, "key", None))
+    order = getattr(model, "created_at", getattr(model, "id", getattr(model, "key", None)))
     if order is not None:
         query = query.order_by(order.desc())
-    return [{k: value(getattr(row, k)) for k in columns.split()} for row in session.scalars(query.limit(100))]
+        if hasattr(model, "id"): query = query.order_by(model.id.desc())
+    if limit is not None: query = query.limit(limit)
+    return [{k: value(getattr(row, k)) for k in columns.split()} for row in session.scalars(query)]
 
 
 def published_content(session):
@@ -409,8 +411,10 @@ def module_view(request: Request, module: Module):
     publication_sources = {}
     with state.sessions() as session:
         for key, name, columns in SPECS[module]:
-            result["collections"][key] = rows(session, name, columns)
+            result["collections"][key] = rows(session, name, columns, limit=None if module == "analytics" else 100)
         if module == 'analytics':
+            from .usage_projection import combined_usage
+            result['collections']['usage'] = combined_usage(session, result['collections']['usage'])
             publication_sources, confirmed_jobs = published_content(session)
             metrics = []
             for item in result['collections']['metrics']:

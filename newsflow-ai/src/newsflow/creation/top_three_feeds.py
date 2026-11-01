@@ -135,6 +135,9 @@ class TopThreeFeeds:
             with self.lock, self.sessions.begin() as s:
                 prior = s.get(AppSetting, claim)
                 if prior:
+                    existing = s.get(IntelligenceRun, int(prior.value))
+                    if existing.options.get("selection") != frozen:
+                        raise PublishingError("이 뉴스의 제작 작업은 다른 모델·설정으로 저장되어 있습니다. 기존 작업을 선택해 확인하세요.")
                     return int(prior.value)
                 group = selection(s, analysis_id)
                 if len(group["items"]) != 3 or {x["rank"] for x in group["items"]} != {1,2,3} or group["run"].evidence["curation_contract"].get("top_k") != 3:
@@ -378,4 +381,5 @@ class TopThreeFeeds:
                 "maxGenerations": row.options["max_generations"],
                 "price": "Fake 검증 · 실제 과금 없음" if row.options["simulation"] else "공식 견적 미확정 · 유료 실행 차단",
                 "canGenerate": self.simulation and row.options["simulation"],
+                "generationBlock": None if self.simulation else "OpenAI 이미지 실행의 비용 승인 연결이 필요합니다. 작업 저장·문구 편집은 가능합니다.",
                 "publishApproval": "내용·출처·권리·AI 표시 검토 후 계정 선택과 최종 게시 승인 별도"}

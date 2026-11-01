@@ -201,7 +201,7 @@ export default function Publishing({ c }: { c: Controller }) {
               </button>
             ))}
           </div>
-          <Action
+          {project?.kind === "news" && <Action
             c={c}
             id="unified_publishing_local_draft"
             context={context}
@@ -209,7 +209,7 @@ export default function Publishing({ c }: { c: Controller }) {
             primary
           >
             새 로컬 초안 저장
-          </Action>
+          </Action>}
         </Panel>
         <Panel title="콘텐츠 미리보기 및 편집" className="mg-publish-editor">
           <div className="mg-publish-edit-grid">
@@ -240,7 +240,7 @@ export default function Publishing({ c }: { c: Controller }) {
                   onChange={(e) => update("hashtags", e.target.value)}
                 />
               </label>
-              {project && <PostingCopyReview key={project.id} project={project} form={form} setForm={setForm} csrf={c.view?.csrfToken??""}/> }
+              {project && <PostingCopyReview key={project.id} project={project} form={form} setForm={setForm} csrf={c.view?.csrfToken??""} targets={targets}/> }
               <p className="mg-muted">
                 저장한 게시 문구는 콘텐츠별로 유지됩니다. 실제 게시는 검토·승인 후 진행합니다.
               </p>
@@ -319,7 +319,7 @@ export default function Publishing({ c }: { c: Controller }) {
               primary
             >
               선택 플랫폼 게시 검토
-            </Action> : project && <p className="mg-muted">이 콘텐츠의 게시 전송 연동은 준비 중입니다. 게시 문구를 먼저 저장할 수 있습니다.</p>}
+            </Action> : project && <p className="mg-muted">게시 문구와 플랫폼별 검토를 왼쪽 편집 영역에서 저장하세요. 외부 전송은 계정 연결·전송 기능·최종 승인이 필요합니다.</p>}
           </Panel>
           <Panel title="게시 일정 · 승인">
             <label>

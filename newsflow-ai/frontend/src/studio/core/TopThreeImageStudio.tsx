@@ -197,6 +197,7 @@ function FeedLayout({
                   {b.simulation ? "합성 검증 결과 · 실제 게시 차단" : b.price} ·
                   저장된 모델·옵션 고정
                 </p>
+                {b.generationBlock && <p role="status" className="core-warning">{b.generationBlock}</p>}
                 <div className={`core-feed-results${b.items.length === 1 ? " core-feed-single" : ""}`}>
                   {b.items.map((x: Item) => (
                     <article

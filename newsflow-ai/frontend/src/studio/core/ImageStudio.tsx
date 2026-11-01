@@ -51,7 +51,7 @@ export default function ImageStudio({
       prompt: style ? `${prompt}\n시각 스타일: ${style}` : prompt,
       ...options,
     },
-    blocked = !!selected?.reference || selected?.outputId != null;
+    blocked = selected?.outputId != null;
   function choose(x: Item) {
     setId(x.id);
   }
@@ -65,7 +65,7 @@ export default function ImageStudio({
               프롬프트
               <textarea
                 aria-label="이미지 프롬프트"
-                maxLength={8000}
+                maxLength={4000}
                 placeholder="만들고 싶은 이미지를 설명해 주세요."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -138,8 +138,7 @@ export default function ImageStudio({
               </ActionButton>
             </div>
             <p className="core-muted">
-              참조 PNG는 초안 창에서 첨부·보관할 수 있습니다. 참조 기반 유료
-              이미지 편집 생성은 미구현입니다.
+              참조 이미지를 첨부하면 이미지 편집 방식으로 요청합니다. 생성 전 키·실행 승인·비용 조건을 확인합니다.
             </p>
           </Panel>
         </div>
@@ -164,7 +163,7 @@ export default function ImageStudio({
                   primary
                 >
                   <Sparkles size={16} />
-                  견적 · 생성 승인
+                  생성 조건 확인
                 </ActionButton>
                 <ActionButton
                   c={c}
@@ -200,11 +199,9 @@ export default function ImageStudio({
             </div>
           )}
           <p className="core-warning">
-            {selected?.reference
-              ? "참조 기반 유료 편집 생성은 미구현 · 로컬 보관만 지원"
-              : selected?.outputId != null
+            {selected?.outputId != null
                 ? "기존 생성 결과·실패·결과 불명 기록은 보존됩니다. 자동 재요청하지 않습니다."
-                : "공식 견적을 확인한 후 승인합니다. 미확정 비용은 0원으로 표시하지 않습니다."}
+                : "이미지 요금은 모델·크기·품질·사용량에 따라 달라집니다. 비용 확인 전에는 생성하지 않습니다."}
           </p>
         </Panel>
         <Panel title="생성 이력" className="core-image-history">

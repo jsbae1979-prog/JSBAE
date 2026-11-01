@@ -1,0 +1,50 @@
+NewsFlow program review improvements — 2026-11-01
+Baseline d88eb2ca2d14017a9dda4fa549d197b21b2a0a04
+
+Implemented and Fake-tested:
+- Merge known API request usage with legacy AIUsage using proven request/run links; no ledger rewriting or invented usage.
+- Sort request records by created_at; analytics no longer truncates to 100 before applying periods. All-history response remains a scalability limitation; server aggregation/pagination is follow-up work.
+- OpenAI Images edits multipart adapter for sanitized local reference PNG; validation before transmission, durable duplicate claim, existing outcome protection retained.
+- Local publishing preparation for completed character/image content with platform/content/rights/source review, revision/source CAS, invalidation on copy/media changes. This is NOT SNS transmission approval.
+- TOP 3 saved model/settings conflicts rejected instead of silently using old options; explicit readiness reason.
+- Stored story timing editor shows target, allowed range, per-scene playback and model durations. No automatic stretching, regeneration, or user story modification.
+- Home internal failure states mapped to user-readable labels.
+
+Focused validation: 104 PASS / 0 FAIL / 0 ERROR, Python 3.12, Fake external providers and installed local FFmpeg.
+TypeScript and React build passed. Existing deprecation/chunk warnings retained; bundled runtime font is present in operating assets.
+Initial fixture/FFmpeg-path failures were corrected before the final 104-test run; no product security relaxation.
+Existing broad regression results reused; no paid API, account authentication, collection, SNS, deletion, migration or security-product changes.
+
+Not complete / NOT VERIFIED:
+- TOP 3 real image cost approval/authority adapter remains missing; production generation stays blocked. An arbitrary price is not an official quote.
+- Actual character/independent-image SNS transmission adapter remains missing; completed local preparation is not publication.
+- OpenAI key was unconfigured at review time. Reference edit wire contract is Fake-tested, not a live account test; operating paid execution boundary is unchanged.
+- Existing failed stored story has not been edited/recovered automatically. Human review of altered timing is needed; raw response remains preserved.
+- No claim of all requested issues being resolved. Overall CONDITIONAL until the above paths are implemented and explicitly approved live checks pass.
+
+Official reference edit contract:
+https://developers.openai.com/api/reference/resources/images/methods/edit
+https://developers.openai.com/api/docs/guides/image-generation
+
+Changed files:
+frontend/src/main.tsx
+frontend/src/studio/core/CharacterStudio.tsx
+frontend/src/studio/core/ImageStudio.tsx
+frontend/src/studio/core/SavedStoryReview.tsx
+frontend/src/studio/core/TopThreeImageStudio.tsx
+frontend/src/studio/management/PostingCopyReview.tsx
+frontend/src/studio/management/Publishing.tsx
+src/newsflow/character/episode_recovery.py
+src/newsflow/creation/image_studio.py
+src/newsflow/creation/top_three_feeds.py
+src/newsflow/gui/publishing_metadata_routes.py
+src/newsflow/publishing/image_generation.py
+src/newsflow/publishing/posting_copy.py
+src/newsflow/publishing/image_reference.py
+src/newsflow/publishing/preparation.py
+src/newsflow/studio/read_models.py
+src/newsflow/studio/usage_projection.py
+tests/test_image_module_read_model.py
+tests/test_top_three_selection.py
+tests/test_program_review_fixes.py
+tools/bat_distribution/operation.py

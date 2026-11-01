@@ -50,3 +50,11 @@ def test_route_forwards_selected_rank_and_preserves_csrf(app,feeds):
         assert c.post(f'/api/feed-batches/{identifier}/change',data={**body,'action':'edit','revision':'1','title':'Title','body':'Summary'}).status_code==200
         assert c.post(f'/api/feed-batches/{identifier}/change',data={**body,'action':'regenerate','revision':'2','consent':'true','reviewed':'true'}).status_code==403
         assert c.post(f'/api/feed-batches/{identifier}/step',data=body).status_code==403
+
+
+def test_changed_model_not_silently_replaced_with_old_batch(feeds):
+    identifier=feeds.create(42,DEFAULTS['image'])
+    with pytest.raises(PublishingError,match='다른 모델'):
+        feeds.create(42,{**DEFAULTS['image'],'quality':'high'})
+    assert feeds.view(identifier)['selection']['quality']==DEFAULTS['image']['quality']
+    assert len(feeds.recent())==1

@@ -123,7 +123,7 @@ class OpenAIImageAdapter:
     def __init__(self, opener=None):
         self.opener = opener
 
-    def generate(self, prompt, key, *, selection=None):
+    def generate(self, prompt, key, *, selection=None, reference=None):
         payload = {"model": MODEL, "prompt": prompt, "n": 1, "size": "1024x1280",
                    "quality": "medium", "output_format": "jpeg", "output_compression": 85,
                    "background": "opaque", "moderation": "auto"}
@@ -131,10 +131,16 @@ class OpenAIImageAdapter:
             from newsflow.creation.catalog import validate
             selected = validate("image", selection)
             payload.update(model=selected["model"], size=selected["size"], quality=selected["quality"])
-        request = urllib.request.Request(
-            "https://api.openai.com/v1/images/generations",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"}, method="POST")
+        endpoint = "https://api.openai.com/v1/images/generations"
+        body = json.dumps(payload).encode("utf-8")
+        content_type = "application/json"
+        if reference is not None:
+            # Only sanitized local PNG bytes: no paths, URLs, metadata or redirects.
+            from .image_reference import multipart_edit
+            body, content_type = multipart_edit(payload, reference)
+            endpoint = "https://api.openai.com/v1/images/edits"
+        request = urllib.request.Request(endpoint, data=body,
+            headers={"Authorization": f"Bearer {key}", "Content-Type": content_type}, method="POST")
         try:
             opener = self.opener or urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
             with opener.open(request, timeout=180) as response:
@@ -304,7 +310,7 @@ class ImageGenerationService:
                               draft_id=draft_id, provider="codex")
 
     def _generate(self, article_id, analysis_id, rank, style, context, prompt, *, card_id=None,
-                  draft_id=None, provider="openai", execution=None):
+                  draft_id=None, provider="openai", execution=None, reference=None):
         # Inspect only the existing OpenAI credential; never store it in the run.
         key = None
         if provider == "openai":
@@ -323,8 +329,15 @@ class ImageGenerationService:
             if provider != "openai":
                 raise PublishingError("이미지 모델 제공자를 확인하세요.")
         model = selected["model"] if selected else MODEL if provider == "openai" else "codex-default"
+        if reference is not None:
+            from .image_reference import checked_reference
+            checked_reference(reference)
+            if provider != "openai" or not selected:
+                raise PublishingError("참조 이미지 생성 모델을 선택하세요.")
         adapter = self.adapter if provider == "openai" else self.codex_adapter
         digest = hashlib.sha256((model + prompt + (json.dumps([execution, draft_id], sort_keys=True) if execution else "")).encode()).hexdigest()
+        if reference is not None:
+            digest = hashlib.sha256((digest + hashlib.sha256(reference).hexdigest()).encode()).hexdigest()
         # AppSetting's existing 50-character primary key is an atomic durable claim.
         claim = "feed-image:" + digest[:39]
         try:
@@ -347,8 +360,9 @@ class ImageGenerationService:
                 started = time.monotonic()
                 usage = None
                 try:
-                    raw, usage = (adapter.generate(prompt, key, selection=selected) if selected
-                                  else adapter.generate(prompt, key))
+                    arguments = {"selection": selected} if selected else {}
+                    if reference is not None: arguments["reference"] = reference
+                    raw, usage = adapter.generate(prompt, key, **arguments)
                     usage = safe_usage(usage)
                     raw = clean_image(raw, size=tuple(map(int, selected["size"].split("x"))) if selected else (1024, 1280)) if provider == "openai" else clean_codex_image(raw)
                     self.outputs.mkdir(parents=True, exist_ok=True)

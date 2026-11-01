@@ -74,9 +74,11 @@ def source_for(state,identifier):
             content={'topic':job.get('topic',''),'story':job.get('script',{}),'output_sha256':job.get('output',{}).get('sha256')}
         elif kind=='image':
             row=s.get(IntelligenceRun,int(key))
-            content={'prompt':row.result.get('prompt',''),'title':project['title']}
+            output=state.image_studio.output(int(key))
+            content={'prompt':row.result.get('prompt',''),'title':project['title'],
+                     'output_sha256':output.result.get('sha256') if output else None}
         else:
-            row=s.get(ImagePost,int(key));content={'title':row.title,'description':row.caption,'sources':row.sources}
+            row=s.get(ImagePost,int(key));content={'title':row.title,'description':row.caption,'sources':row.sources,'output_sha256':row.sha256}
     # Only selected authored text. Never serialize jobs, keys, paths, logs or media.
     reject_secrets(content)
     if len(json.dumps(content,ensure_ascii=False).encode())>24000:
@@ -114,16 +116,21 @@ class PostingCopy:
             readiness=APIBudgetService(self.sessions).posting_copy_readiness(name,store)
             providers.append({'id':name,'model':setting.model,'limitUsd':str(setting.request_limit_usd),
                               'ready':readiness.get('ready',False)})
-        return {**local,'projectId':identifier,'sourceHash':digest(source),'platforms':platforms_for(source),
+        return {**local,'preparationCurrent':local.get('sourceHash')==digest(source),
+                'projectId':identifier,'sourceHash':digest(source),'platforms':platforms_for(source),
                 'providers':providers,'published':False}
 
-    def save(self,identifier,source_hash,revision,value):
+    def save(self,identifier,source_hash,revision,value,*,preparation=None):
         copy=Copy.model_validate(value).model_dump()
+        if preparation is not None:
+            from .preparation import validate_preparation
+            preparation=validate_preparation(self.source(identifier),preparation)
         with self.lock,self.sessions.begin() as s:
             if digest(self.source(identifier))!=source_hash:raise PublishingError('콘텐츠가 변경됐습니다. 다시 선택하세요.')
             current=self._load(s,identifier)
             if current['revision']!=revision:raise PublishingError('다른 화면에서 게시 문구가 바뀌었습니다. 다시 불러오세요.')
             record={'revision':revision+1,'copy':copy,'sourceHash':source_hash,'approval':False}
+            if preparation is not None: record['preparation']=preparation
             row=s.get(AppSetting,PREFIX+identifier)
             if row:row.value=json.dumps(record,ensure_ascii=False)
             else:s.add(AppSetting(key=PREFIX+identifier,value=json.dumps(record,ensure_ascii=False)))

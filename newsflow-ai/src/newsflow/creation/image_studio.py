@@ -189,11 +189,11 @@ class ImageStudio:
         if consent is not True or reviewed is not True:
             raise PublishingError('지시문을 검토하고 외부 전송·유료 이미지 1회 생성에 동의하세요.')
         row = self.get(identifier)
-        if row.options.get('reference'):
-            raise PublishingError('참조 이미지는 로컬 저장·재사용만 지원합니다. 참조 기반 생성 Adapter는 미구현입니다.')
+        reference = self.asset(row.options['reference']).read_bytes() if row.options.get('reference') else None
         selection = row.options['selection']
         return self.generation._generate(None, None, None, 'studio',
-            {'image_studio_draft': identifier}, row.result['prompt'], draft_id=identifier, execution=selection)
+            {'image_studio_draft': identifier}, row.result['prompt'], draft_id=identifier, execution=selection,
+            **({'reference': reference} if reference is not None else {}))
 
     def output(self, identifier):
         self.get(identifier)
