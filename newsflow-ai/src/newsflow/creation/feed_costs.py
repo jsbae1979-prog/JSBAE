@@ -25,7 +25,8 @@ def money(value):
 
 def binding(row):
     return fingerprint({'id':row.id,'source':row.options['source_hash'],'selection':row.options['selection'],
-        'items':[{k:i[k] for k in ('rank','attempt','content')} for i in row.result['items']]})
+        'items':[{k:i[k] for k in ('rank','attempt','content')} for i in row.result['items']],
+        **({'title_layout':row.options['title_layout']} if row.options.get('title_layout') else {})})
 
 def exposure(state):
     return sum((max(money(r['reservedUsd']),Decimal(r.get('observedUsd','0'))) for r in state.get('reservations',[])),Decimal(0))

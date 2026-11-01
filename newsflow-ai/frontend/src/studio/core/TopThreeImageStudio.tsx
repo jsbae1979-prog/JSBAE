@@ -216,7 +216,7 @@ function FeedLayout({
                         aria-label={`TOP ${x.rank} 결과 선택`}
                         onClick={() => setActive(x.rank)}
                       >
-                        <FeedImage batch={b} item={x} />
+                        <FeedImage key={`${x.sha256}`} batch={b} item={x} />
                         <strong>
                           TOP {x.rank} · {x.content?.title}
                         </strong>
@@ -232,10 +232,10 @@ function FeedLayout({
                             </a>
                           )}
                         <button
-                          disabled={blocked || x.status !== "pending"}
+                          disabled={blocked || (x.status !== "pending" && !x.canEditTitle)}
                           onClick={() => f.edit(x)}
                         >
-                          문구 수정
+                          {x.canEditTitle ? "제목 수정 · 무료" : "문구 수정"}
                         </button>
                         {["success", "failed"].includes(x.status) && (
                           <button
@@ -303,10 +303,10 @@ function FeedLayout({
               <p>{item.content?.body}</p>
               <p className="core-hashtags">{item.content?.hashtags}</p>
               <button
-                disabled={blocked || item.status !== "pending"}
+                disabled={blocked || (item.status !== "pending" && !item.canEditTitle)}
                 onClick={() => f.edit(item)}
               >
-                선택 뉴스 문구 수정
+                {item.canEditTitle ? "제목 수정 · 무료" : "선택 뉴스 문구 수정"}
               </button>
               <dl>
                 <dt>출력</dt>

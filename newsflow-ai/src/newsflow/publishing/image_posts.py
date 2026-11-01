@@ -80,11 +80,24 @@ class ImagePostService:
 
     def create(self, article_id, *, title, body, hashtags="", photo=None, reviewed=False,
                rights=False, sources_confirmed=False, ai_disclosure="unreviewed", draft_id=None,
-               analysis_id=None, rank=None, generated_id=None, card_id=None):
+               analysis_id=None, rank=None, generated_id=None, card_id=None, feed_batch_id=None):
         if not (reviewed and rights and sources_confirmed):
             raise PublishingError("내용·출처·이미지 이용 권한을 확인해 주세요.")
         plan = None
         full_image = None
+        feed_copy = None
+        if feed_batch_id is not None:
+            from newsflow.creation.top_three_feeds import TopThreeFeeds
+            from newsflow.db.models import IntelligenceRun
+            with self.sessions() as session:
+                batch = session.get(IntelligenceRun, feed_batch_id)
+                item = next((i for i in batch.result["items"] if i["rank"] == rank), None) if batch and batch.kind == "feed_top3_batch" else None
+                source = next((i for i in batch.evidence["sources"] if i["rank"] == rank), None) if item else None
+                if (not item or not source or item["status"] != "success" or item["generation_id"] != generated_id
+                    or source["article_id"] != article_id or batch.evidence["analysis_id"] != analysis_id
+                    or source["draft_id"] != draft_id or (title.strip(), body.strip()) != (item["content"]["title"], item["content"]["body"])):
+                    raise PublishingError("피드 교정본의 뉴스·문구 연결을 확인하세요.")
+                feed_copy = TopThreeFeeds(self.sessions, self.outputs.parent.parent, self.generation).path(feed_batch_id, rank).read_bytes()
         if card_id is not None:
             if generated_id is not None or photo is not None or self.cards is None:
                 raise PublishingError("Claude 카드·AI 배경·내 사진 중 하나만 선택하세요.")
@@ -107,7 +120,7 @@ class ImagePostService:
                     raise PublishingError("이미지와 대본 연결이 다릅니다.")
                 full_image = generated
                 copy = generated.evidence["source"]["plan"]
-                if (title.strip(), body.strip()) != (copy["title"], copy["body"]):
+                if feed_copy is None and (title.strip(), body.strip()) != (copy["title"], copy["body"]):
                     raise PublishingError("완성 이미지의 문구는 자동 변경되지 않습니다. 생성 당시 문구를 유지하세요.")
             ai_disclosure = "disclose"  # The client cannot remove generated-image disclosure.
         title, body, hashtags = title.strip(), body.strip(), hashtags.strip()
@@ -181,6 +194,10 @@ class ImagePostService:
                 ImageOps.pad(image.convert("RGB"), (1080, 1350), method=Image.Resampling.LANCZOS,
                              color=(11, 22, 40)).save(output, format="JPEG", quality=90)
                 raw = output.getvalue()
+        if feed_copy is not None:
+            raw = feed_copy
+            sources["feed_batch_id"] = feed_batch_id
+            sources["feed_revision"] = batch.result["revision"]
         self.outputs.mkdir(parents=True, exist_ok=True)
         name = f"image-{uuid4().hex}.jpg"
         with (self.outputs / name).open("xb") as stream:

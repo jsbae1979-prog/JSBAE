@@ -264,12 +264,12 @@ export default function TopThreeFeeds({
       )}
       {editing && (
         <FeedDialog name="피드 문구 수정" onClose={() => setEditing(null)}>
-          <h2>TOP {editing.rank} 문구 수정</h2>
+          <h2>TOP {editing.rank} {editing.titleOnly ? "제목 수정 · 무료" : "문구 수정"}</h2>
           <label>
             제목
             <input
               aria-label="TOP 3 수정 제목"
-              maxLength={60}
+              maxLength={100}
               value={editing.title}
               onChange={(e) =>
                 setEditing({ ...editing, title: e.target.value })
@@ -280,6 +280,7 @@ export default function TopThreeFeeds({
             짧은 요약
             <textarea
               aria-label="TOP 3 수정 요약"
+              disabled={editing.titleOnly}
               maxLength={180}
               value={editing.body}
               onChange={(e) => setEditing({ ...editing, body: e.target.value })}
@@ -289,6 +290,7 @@ export default function TopThreeFeeds({
             해시태그
             <input
               aria-label="TOP 3 수정 해시태그"
+              disabled={editing.titleOnly}
               maxLength={200}
               value={editing.hashtags}
               onChange={(e) =>
@@ -305,7 +307,7 @@ export default function TopThreeFeeds({
                   show(
                     await post(`/api/feed-batches/${batch!.id}/change`, {
                       revision: batch!.revision,
-                      action: "edit",
+                      action: editing.titleOnly ? "retitle" : "edit",
                       ...editing,
                     }),
                   );
@@ -415,8 +417,8 @@ export default function TopThreeFeeds({
             setApproval(true);
           },
           edit: (item: Item) => {
-            if (!ready || busy || item.status !== "pending") return;
-            setEditing({ ...item.content, rank: item.rank });
+            if (!ready || busy || (item.status !== "pending" && !item.canEditTitle)) return;
+            setEditing({ ...item.content, rank: item.rank, titleOnly: item.status === "success" });
           },
           review: (item: Item) => {
             if (busy || batch?.simulation || item.status !== "success") return;

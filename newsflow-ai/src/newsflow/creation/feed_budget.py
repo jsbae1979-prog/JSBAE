@@ -23,6 +23,7 @@ class FeedBudget(FeedCosts):
             self.quote(row);return deepcopy(row.options['costs'])
         except PublishingError:pass
         from .top_three_feeds import prompt_for
+        from newsflow.publishing.feed_titles import TITLE_LAYOUT
         scope=self.account_scope();status=self.readiness(row.options['selection'])
         if not scope or not status['modelVerified']:
             raise PublishingError('설정에서 선택한 OpenAI 이미지 모델의 연결 테스트를 먼저 확인하세요.')
@@ -30,7 +31,7 @@ class FeedBudget(FeedCosts):
         for item in row.result['items']:
             if item['status']!='pending':continue
             source=next(s for s in row.evidence['sources'] if s['rank']==item['rank'])
-            prompt=prompt_for(source,item['content'],row.id,item['attempt'])
+            prompt=prompt_for(source,item['content'],row.id,item['attempt'],local_title=row.options.get('title_layout')==TITLE_LAYOUT)
             result=rates.estimate(row.options['selection'],prompt,now=self.clock())
             bounds.append({'rank':item['rank'],'attempt':item['attempt'],
                            'maximumUsd':result['reserveUsd'],'estimate':result,

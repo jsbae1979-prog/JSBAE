@@ -10,8 +10,8 @@ from bat_distribution.operation import OperatingRequests
 
 @pytest.fixture
 def feeds(app,monkeypatch):
-    items=[{'rank':n,'article_id':n,'article_ids':[n], 'title':f'Synthetic news {n}',
-        'body':f'Synthetic summary {n}', 'references':[{'url':f'https://example.com/news/{n}','publisher':'Fixture'}],
+    items=[{'rank':n,'article_id':n,'article_ids':[n], 'title':f'합성 뉴스 {n}',
+        'body':f'합성 요약 {n}', 'references':[{'url':f'https://example.com/news/{n}','publisher':'Fixture'}],
         'selection':{'draft_id':None},'origin':'saved'} for n in (1,2,3)]
     monkeypatch.setattr('newsflow.creation.top_three_feeds.selection',lambda s,i:{'run':SimpleNamespace(id=i,evidence={'curation_contract':{'top_k':3}}),'items':deepcopy(items)})
     service=TopThreeFeeds(app.state.sessions,app.state.config.data_dir,SimpleNamespace(adapter=None))

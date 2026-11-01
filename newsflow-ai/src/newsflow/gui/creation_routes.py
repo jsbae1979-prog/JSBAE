@@ -163,7 +163,7 @@ def feed_batch_step(request: Request, identifier: int, consent: bool = Form(Fals
 @router.post('/api/feed-batches/{identifier}/change')
 def feed_batch_change(request: Request, identifier: int, revision: int = Form(ge=1),
                       action: str = Form(...), rank: int | None = Form(None, ge=1, le=3),
-                      title: str = Form("", max_length=60), body: str = Form("", max_length=180),
+                      title: str = Form("", max_length=100), body: str = Form("", max_length=180),
                       hashtags: str = Form("", max_length=200), consent: bool = Form(False),
                       reviewed: bool = Form(False)):
     try:
@@ -179,7 +179,7 @@ def feed_batch_change(request: Request, identifier: int, revision: int = Form(ge
 def feed_batch_file(request: Request, identifier: int, rank: int, download: bool = False):
     try:
         path = request.app.state.top_three_feeds.path(identifier, rank)
-        return FileResponse(path, media_type="image/jpeg", filename=path.name if download else None)
+        return FileResponse(path, media_type="image/jpeg", filename=path.name if download else None, headers={"Cache-Control": "no-store"})
     except (PublishingError, SelectionError, ValueError, OSError):
         raise HTTPException(404, "완료한 피드 이미지를 확인하세요.") from None
 
