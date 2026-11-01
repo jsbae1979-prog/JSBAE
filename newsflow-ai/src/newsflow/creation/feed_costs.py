@@ -1,7 +1,7 @@
 """Server-owned cached cost bounds; no network, key loading or client-priced grants.
 
-The production Images API has no integrated bounded quote source yet. A missing
-source fails closed. Constructor-injected cached bounds are exercised with Fakes.
+FeedBudget supplies the explicit production app-estimate policy. This base
+retains legacy bounded-quote behavior; a missing resolver fails closed.
 Reservations survive failures and fresh quotes; they are exposure, not invoices.
 """
 from copy import deepcopy
@@ -28,7 +28,7 @@ def binding(row):
         'items':[{k:i[k] for k in ('rank','attempt','content')} for i in row.result['items']]})
 
 def exposure(state):
-    return sum((money(r['reservedUsd']) for r in state.get('reservations',[])),Decimal(0))
+    return sum((max(money(r['reservedUsd']),Decimal(r.get('observedUsd','0'))) for r in state.get('reservations',[])),Decimal(0))
 
 def unreserved(row,state,quote):
     used={r['requestKey'] for r in state.get('reservations',[])}

@@ -272,7 +272,7 @@ function FeedLayout({
                 <p className="core-warning">
                   {b.canGenerate
                     ? b.price
-                    : "실제 이미지 생성은 비용·실행 연결 준비 중입니다. 작업 저장과 문구 검토는 가능합니다."}
+                    : b.generationBlock ?? "이미지 생성 비용을 확인하고 승인하세요."}
                 </p>
               </>
             ) : (

@@ -92,5 +92,5 @@ def test_production_readiness_is_wired_and_never_claims_a_quote(app,monkeypatch,
     monkeypatch.setattr(readiness.connections,'status',lambda *args:{'configured':configured,'verified':verified,'modelVerified':verified,'model':DEFAULTS['image']['model'] if match else 'other-model'})
     r=readiness(DEFAULTS['image'])
     assert r['modelVerified']==(configured and verified and match)
-    assert not r['costBoundVerified'] and not r['generationEnabled']
+    assert not r['costBoundVerified'] and r['generationEnabled']==(configured and verified and match)
     assert not r['rateReference']['guaranteedMaximum']

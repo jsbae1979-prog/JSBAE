@@ -207,6 +207,9 @@ class TopThreeFeeds:
                     IntelligenceRun.evidence["source"]["attempt"].as_integer() == item["attempt"])))
             if len(found) == 1 and found[0].status in {"success", "failed"}:
                 try:
+                    if hasattr(self.costs,'settle'):
+                        settled=self.costs.settle(self.get(row.id),item,found[0])
+                        self._save(row.id,result,options={**self.get(row.id).options,'costs':settled})
                     self._accept(row, item, found[0].id)
                 except (PublishingError, OSError, ValueError):
                     item.clear(); item.update(previous)
@@ -300,6 +303,10 @@ class TopThreeFeeds:
                     output_id = self.generation._generate(source["article_id"], row.evidence["analysis_id"],
                         item["rank"], "full_card", context, prompt,
                         draft_id=source["draft_id"], execution=row.options["selection"])
+                    if hasattr(self.costs,'settle'):
+                        fresh=self.get(identifier)
+                        settled=self.costs.settle(fresh,item,self.generation.get(output_id))
+                        self._save(identifier,result,options={**fresh.options,'costs':settled})
                     self._accept(row, item, output_id)
                 except Exception:  # noqa: BLE001 -- any uncertain generation/save outcome stays unknown; never auto-replay.
                     item.update(status="unknown", message="생성 또는 저장 결과 불명 · 재전송 금지")
