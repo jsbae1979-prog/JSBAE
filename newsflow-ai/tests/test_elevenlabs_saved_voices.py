@@ -51,7 +51,7 @@ def test_unfiltered_legacy_cache_is_preserved_and_cannot_mix_page_tokens(catalog
     assert catalog.cached()["voices"] == legacy["voices"] and path.read_bytes() == before
     calls = []
     catalog.transport = lambda token: calls.append(token) or voices_tests.payload("내 음성", "savedOnly")
-    with pytest.raises(TTSError, match="기존 전체 목록"):
+    with pytest.raises(TTSError, match="목록 범위가 달라"):
         catalog.load(more=True)
     assert calls == [] and path.read_bytes() == before
     result = catalog.load()

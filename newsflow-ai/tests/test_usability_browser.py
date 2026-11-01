@@ -113,6 +113,9 @@ def test_local_workflow_and_all_screen_design(visual, browser):
         page.get_by_role('link', name='이 대본으로 영상 구성', exact=False).click()
         expect(page.locator('.composition-preview')).to_be_visible()
         expect(page.locator('.composition-preview')).to_contain_text('음성·타이밍 미검증')
+        # Navigation may expose the DOM before its stylesheets finish loading.
+        page.wait_for_load_state('load')
+        expect(page.locator('.composition-preview')).to_have_css('aspect-ratio','9 / 16')
         frame = page.locator('.composition-preview').bounding_box()
         monitor = page.locator('.workstation-monitor').bounding_box()
         assert abs(frame['height'] / frame['width'] - 16/9) < .02
