@@ -35,3 +35,10 @@ Existing broad regression evidence reused; no full regression, packaging rebuild
 Public documentation/calculator reviewed 2026-11-01. No real credential/model lookup repeated. The direct Images API has no per-request USD charge cap; actual cost can exceed an estimate, even with the reserve. Model metadata visibility does not guarantee actual generation permission. Real generation and invoice verification remain untested and require separate user approval.
 
 Implementation/Fake validation: ACCEPTED. Real paid generation/billing: NOT VERIFIED. Overall readiness for live use: CONDITIONAL.
+
+
+## Operating application result
+
+Code b8a3979 applied as 11 exact program/React files, preserving the installation's existing launch overlays and policy flags. Existing profile backup was verified before applying. Normal Stop exit 0 and Start each executed once; owned process and port 18768 responded. Normal launcher reported Chrome auto-open accepted. No bootstrap/cookie was printed or copied. Unauthenticated HTTP remained 403 as required.
+
+All 47 operating DB tables and current 86 articles were unchanged. 373 non-session profile files were preserved (374-file backup); original 169-article source and backups A/B matched their existing hashes. Credentials, media, launch flags and ACLs were preserved. No paid AI or SNS call occurred. Operating Chrome visual inspection was NOT VERIFIED in this turn; the isolated headless Chrome UI checks above passed. No main/PR #35 merge or external distribution.

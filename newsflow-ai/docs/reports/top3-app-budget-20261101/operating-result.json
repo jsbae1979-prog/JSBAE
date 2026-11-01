@@ -1,0 +1,19 @@
+{
+  "head": "b8a3979a91650ada47acdc4d01e6bdef01c61905",
+  "port": 18768,
+  "normalStopExit": 0,
+  "stopAttempts": 1,
+  "startAttempts": 1,
+  "tablesUnchanged": 47,
+  "articles": 86,
+  "profileFilesPreserved": 373,
+  "originalAndABPreserved": true,
+  "chromeOpenAccepted": true,
+  "securityFlagsPreserved": true,
+  "paidCallsDuringDeployment": 0,
+  "snsCalls": 0,
+  "processAlive": true,
+  "loopbackResponding": true,
+  "unauthenticatedStatus": 403,
+  "operatingChromeVisualVerified": false
+}
