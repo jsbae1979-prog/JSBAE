@@ -5666,6 +5666,54 @@
     "unsupported": false
   },
   {
+    "id": "creation_feed_batch_cost_review",
+    "module": "images",
+    "label": "TOP 3 비용 검토 승인",
+    "path": "/api/feed-batches/{identifier}/cost-review",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "limit",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
     "id": "creation_feed_batch_step",
     "module": "images",
     "label": "TOP 3 검토 후 생성",
