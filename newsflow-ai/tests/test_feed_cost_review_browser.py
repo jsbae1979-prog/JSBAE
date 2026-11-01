@@ -15,6 +15,7 @@ def test_cost_status_and_expired_additional_quote(app,ready,browser,monkeypatch,
         c.route('**/*',lambda r:r.continue_() if r.request.url.startswith(origin+'/') else r.abort())
         p=c.new_page();posts=[];p.on('request',lambda r:posts.append(r) if r.method=='POST' else None)
         p.goto(origin+'/studio/images?mode=news')
+        p.get_by_text('새 배경 생성 · 견적·비용 승인',exact=True).click()
         box=p.locator('.core-feed-cost');box.locator('summary').click()
         expect(box).to_contain_text('비용 승인 저장됨')
         before=s.get(i);revision=before.result['revision']
@@ -24,8 +25,8 @@ def test_cost_status_and_expired_additional_quote(app,ready,browser,monkeypatch,
         s.costs.clock=lambda:201
         box.get_by_role('button',name='비용 상태 새로고침',exact=True).click()
         expect(box.get_by_role('button',name='새 견적 준비',exact=True)).to_be_visible()
-        expect(p.get_by_role('button',name='추가 견적',exact=True)).to_be_enabled()
-        p.get_by_role('button',name='추가 견적',exact=True).click()
+        expect(p.get_by_role('button',name='TOP 1 새 배경 추가 견적',exact=True)).to_be_enabled()
+        p.get_by_role('button',name='TOP 1 새 배경 추가 견적',exact=True).click()
         dialog=p.get_by_role('dialog',name='TOP 3 생성 범위 승인',exact=True)
         expect(dialog).to_contain_text('무료이며 API를 호출하지 않습니다')
         expect(dialog.get_by_role('checkbox')).to_have_count(1)

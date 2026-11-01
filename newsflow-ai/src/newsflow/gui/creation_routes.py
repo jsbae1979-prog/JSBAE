@@ -121,10 +121,10 @@ def feed_batch_defaults(request: Request, model: str = Form(...), size: str = Fo
 @router.post('/api/feed-batches')
 def feed_batch_create(request: Request, analysis_id: int = Form(ge=1), model: str = Form(...),
                       size: str = Form("1024x1280"), quality: str = Form("medium"),
-                      rank: int | None = Form(None, ge=1, le=3)):
+                      rank: int | None = Form(None, ge=1, le=3), feed_style: str = Form("legacy")):
     try:
         service = request.app.state.top_three_feeds
-        identifier = service.create(analysis_id, {'provider': "openai", 'model': model, 'size': size, 'quality': quality}, rank=rank)
+        identifier = service.create(analysis_id, {'provider': "openai", 'model': model, 'size': size, 'quality': quality}, rank=rank, feed_style=feed_style)
         return service.view(identifier)
     except (PublishingError, SelectionError) as exc:
         raise HTTPException(422, str(exc)) from None
@@ -197,3 +197,73 @@ def feed_batch_review(request: Request, identifier: int, rank: int, reviewed: bo
                 "message": "로컬 검토본 저장 · 계정 선택·이미지 전달·공개 게시 승인은 별도입니다."}
     except (PublishingError, SelectionError, StopIteration) as exc:
         raise HTTPException(422, str(exc) or "완료한 피드 이미지를 선택하세요.") from None
+
+
+# Local-only photo feed editing. Existing application Origin/CSRF middleware applies.
+@router.get('/api/feed-batches/{identifier}/items/{rank}/design')
+def feed_design_view(request: Request, identifier: int, rank: int):
+    from newsflow.creation.feed_designs import FeedDesigns
+    try: return FeedDesigns(request.app.state.top_three_feeds).view(identifier, rank)
+    except (PublishingError, ValueError, OSError): raise HTTPException(422, '편집 이미지 연결을 확인하세요.') from None
+
+
+@router.post('/api/feed-batches/{identifier}/items/{rank}/design')
+def feed_design_save(request: Request, identifier: int, rank: int, revision: int = Form(ge=0),
+                     action: str = Form(...), background: str = Form(...), design: str = Form(..., max_length=8000)):
+    import json
+    from newsflow.creation.feed_designs import FeedDesigns
+    try:
+        service=FeedDesigns(request.app.state.top_three_feeds); value=json.loads(design)
+        if action=='preview':
+            from hashlib import sha256
+            raw=service.preview(identifier,rank,revision,background,value);digest=sha256(raw).hexdigest()
+            folder=service.feeds.safe_paths.safe(service.root/'previews',service.root);folder.mkdir(parents=True,exist_ok=True)
+            path=folder/f'{identifier}-{rank}-{digest}.jpg'
+            if not path.exists():
+                with path.open('xb') as stream:stream.write(raw)
+            return {'previewUrl':f'/api/feed-batches/{identifier}/items/{rank}/design-preview/{digest}'}
+        if action not in {'draft','render'}:raise PublishingError('편집 동작을 확인하세요.')
+        return service.save(identifier,rank,revision,background,value,export=action=='render')
+    except (PublishingError,ValueError,OSError) as exc:
+        raise HTTPException(409 if '다른 화면' in str(exc) else 422,str(exc) if isinstance(exc,PublishingError) else '편집 입력·이미지를 확인하세요.') from None
+
+
+@router.post('/api/feed-batches/{identifier}/items/{rank}/design-upload')
+def feed_design_upload(request: Request, identifier: int, rank: int, revision: int = Form(ge=0),
+                       kind: str = Form(...), credit: str = Form(...,max_length=160), image: UploadFile = File(...)):
+    from newsflow.creation.feed_designs import FeedDesigns
+    try:return FeedDesigns(request.app.state.top_three_feeds).upload(identifier,rank,revision,image.file.read(20*1024*1024+1),kind,credit)
+    except (PublishingError,ValueError,OSError) as exc:
+        raise HTTPException(422,str(exc) if isinstance(exc,PublishingError) else '업로드 이미지를 확인하세요.') from None
+
+
+@router.get('/api/feed-batches/{identifier}/items/{rank}/design-file/{version}')
+def feed_design_file(request: Request, identifier: int, rank: int, version: int, download: bool=False):
+    from newsflow.creation.feed_designs import FeedDesigns
+    try:
+        service=FeedDesigns(request.app.state.top_three_feeds);v=service.version(identifier,rank,version)
+        return FileResponse(service.path(v['filename'],v['sha256']),media_type='image/jpeg',filename=f'news-{rank}-v{version}.jpg' if download else None,headers={'Cache-Control':'no-store'})
+    except (PublishingError,ValueError,OSError):raise HTTPException(404,'저장된 편집 이미지를 확인하세요.') from None
+
+
+@router.post('/api/feed-batches/{identifier}/items/{rank}/design-review')
+def feed_design_review(request: Request, identifier: int, rank: int, version: int = Form(ge=1), reviewed: bool = Form(False), image_safety_checked: bool = Form(False)):
+    from newsflow.creation.feed_designs import FeedDesigns
+    try:
+        post=FeedDesigns(request.app.state.top_three_feeds).review(identifier,rank,version,request.app.state.image_posts,reviewed=reviewed,image_safety_checked=image_safety_checked)
+        return {'postId':post,'published':False}
+    except (PublishingError,ValueError,OSError) as exc:raise HTTPException(422,str(exc) if isinstance(exc,PublishingError) else '저장된 버전을 확인하세요.') from None
+
+
+@router.get('/api/feed-batches/{identifier}/items/{rank}/design-preview/{digest}')
+def feed_design_preview_file(request: Request, identifier: int, rank: int, digest: str):
+    import re
+    from hashlib import sha256
+    from newsflow.creation.feed_designs import FeedDesigns
+    try:
+        if not re.fullmatch(r'[a-f0-9]{64}',digest):raise ValueError()
+        service=FeedDesigns(request.app.state.top_three_feeds);service.source(identifier,rank)
+        path=service.feeds.safe_paths.safe(service.root/'previews'/f'{identifier}-{rank}-{digest}.jpg',service.root)
+        if sha256(path.read_bytes()).hexdigest()!=digest:raise ValueError()
+        return FileResponse(path,media_type='image/jpeg',headers={'Cache-Control':'no-store'})
+    except (PublishingError,ValueError,OSError):raise HTTPException(404,'미리보기 이미지를 확인하세요.') from None

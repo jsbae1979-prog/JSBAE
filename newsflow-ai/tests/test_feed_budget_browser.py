@@ -15,6 +15,7 @@ def test_app_budget_review_in_react(app,budget_setup,browser):
         c.route('**/*',lambda r:r.continue_() if r.request.url.startswith(origin+'/') else r.abort())
         p=c.new_page();errors=[];p.on('pageerror',lambda e:errors.append(str(e)))
         p.goto(origin+'/studio/images?mode=news')
+        p.get_by_text('새 배경 생성 · 견적·비용 승인',exact=True).click()
         box=p.locator('.core-feed-cost');box.locator('summary').click()
         expect(box).to_contain_text('최종 청구 상한을 보장하지 않습니다')
         expect(box).to_contain_text('여유분 2배 포함')

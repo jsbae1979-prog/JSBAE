@@ -1,0 +1,138 @@
+.core-studio .photo-feed-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(360px, 1.4fr) minmax(
+      290px,
+      1fr
+    );
+  gap: 16px;
+  align-items: start;
+}
+.core-studio .photo-feed-grid > *,
+.photo-feed-editor fieldset {
+  min-width: 0;
+}
+.core-studio .photo-feed-canvas {
+  aspect-ratio: 4/5;
+  max-height: 80vh;
+  margin: auto;
+  background: #071321;
+  display: flex;
+  justify-content: center;
+}
+.core-studio .photo-feed-canvas button {
+  padding: 0;
+  border: 0;
+  background: none;
+  height: 100%;
+  width: 100%;
+  cursor: zoom-in;
+}
+.core-studio .photo-feed-canvas img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.core-studio .photo-feed-editor fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.core-studio .photo-feed-editor label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+.core-studio
+  .photo-feed-editor
+  input:not([type="range"]):not([type="color"]):not([type="checkbox"]),
+.core-studio .photo-feed-editor textarea,
+.core-studio .photo-feed-editor select {
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+.core-studio .photo-feed-editor input[type="range"] {
+  width: 100%;
+  min-height: 22px;
+}
+.core-studio .photo-feed-editor details {
+  border-top: 1px solid #25465f;
+  padding: 10px 0;
+}
+.core-studio .photo-feed-editor details[open] {
+  display: grid;
+  gap: 10px;
+}
+.core-studio .photo-feed-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.core-studio .photo-feed-crop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.core-studio .photo-feed-thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 12px 0;
+}
+.core-studio .photo-feed-thumbs button {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  min-width: 0;
+}
+.core-studio .photo-feed-thumbs img {
+  height: 48px;
+  width: 100%;
+  object-fit: contain;
+}
+.core-studio .photo-feed-thumbs [aria-pressed="true"] {
+  border: 2px solid #9d4dff;
+}
+.core-studio .photo-feed-modal {
+  max-width: 92vw;
+  max-height: 94vh;
+  background: #091626;
+  border: 1px solid #456185;
+  color: white;
+}
+.core-studio .photo-feed-modal img {
+  display: block;
+  max-width: 86vw;
+  max-height: 84vh;
+  object-fit: contain;
+}
+@media (max-width: 1150px) {
+  .core-studio .photo-feed-grid {
+    grid-template-columns: minmax(220px, 0.8fr) minmax(320px, 1.2fr);
+  }
+  .core-studio .photo-feed-editor {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 700px) {
+  .core-studio .photo-feed-grid {
+    grid-template-columns: 1fr;
+  }
+  .core-studio .photo-feed-editor {
+    grid-column: auto;
+  }
+}
+
+.core-studio .photo-feed-editor label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.core-studio .photo-feed-editor input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  flex: 0 0 16px;
+}
