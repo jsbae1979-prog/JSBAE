@@ -1,0 +1,27 @@
+NewsFlow operating verification — 2026-11-01
+Overall: CONDITIONAL; software improvements applied, remaining live-generation/transmission implementation explicitly listed in IMPLEMENTATION.txt.
+Product commit: 37dc410ce87ec500367f845d30b1b2a789c2157c
+Branch: codex/newsflow-character-shorts-automation-20261030
+
+Focused tests: 104 PASS / 0 FAIL / 0 ERROR. TypeScript PASS. React build PASS.
+Existing full regression/paid generation evidence reused, not counted as new PASS.
+
+Operating application: C:\NewsFlowAI; data D:\NewsFlowAI_Data; loopback port 18768.
+One normal Stop (exit 0) and one Start. PID 26676 at verification.
+14 exact files applied; launch/security flags unchanged. Existing runtime/FFmpeg not replaced.
+Pre-apply backup: 372 files. Post-start comparison: 371 non-session files preserved.
+All 47 SQLite tables unchanged, article count 179 (original 169 plus previously collected news).
+Original database and backups A/B unchanged. Credentials/media not printed or uploaded.
+
+Visible user Chrome checks (read only):
+- New normal local authentication succeeded; dashboard and selected project opened.
+- Home shows a readable script-review status instead of script_failed.
+- All-history token records now include the latest stored requests; Today filter narrows correctly. Token/estimate/actual billing remain distinct.
+- Completed character video shows local platform preparation controls; no save/publication performed on actual data.
+- Stored response editor shows target 20 seconds vs edited 20.17 seconds, scene lengths/speed/freeze settings. No auto-stretch, edit, recovery, or extra AI call was performed.
+- Independent reference-image edit conditions and TOP 3 saved-news screen rendered.
+Local captures retained in the private working directory, not published with personal project text.
+
+No paid API, SNS, news collection, deletion, migration, V3 changes, main merge or external distribution.
+Current failed story still needs reviewed timing correction. TOP 3 cost/authority integration and actual non-news SNS dispatch remain missing implementations, not claimed as fixed.
+OpenAI credentials remain unconfigured. No actual reference-image vendor validation has been performed.

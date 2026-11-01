@@ -33,7 +33,7 @@ export default function PostingCopyReview({project,form,setForm,csrf,targets=[]}
       if(!alive.current)return;
       if(action==='validate'){setMessage('제목·설명·해시태그 형식을 확인했습니다. 게시 승인과는 별도입니다.');}
       else if(action==='review'){setSuggestion({...result,formFingerprint:before});setMessage('수정안을 확인한 뒤 적용해 주세요.');}
-      else{setState(old=>({...old,...result}));
+      else{setState(old=>({...old,...result,preparationCurrent:result.sourceHash===old?.sourceHash}));
         if(currentFingerprint.current===before){setForm(old=>({...old,...result.copy,hashtags:result.copy.hashtags.join(' ')}));setMessage(action==='prepare'?'플랫폼별 게시 준비를 저장했습니다. 실제 게시는 실행하지 않았습니다.':'게시 문구를 저장했습니다.');}
         else setMessage('요청한 문구를 저장했습니다. 이후 입력한 변경 내용은 아직 저장하지 않았습니다.');
         setSuggestion(null);}
