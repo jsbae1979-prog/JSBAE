@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Sparkles, Save, Pause, Download } from "lucide-react";
 import TopThreeFeeds from "../TopThreeFeeds";
 import FeedCostReview from "../FeedCostReview";
 import FeedGenerationProgress from "./FeedGenerationProgress";
+import FeedImagePreview, { completedFeedImages, type FeedEntry } from "./FeedImagePreview";
 import { Thumbnail } from "../Thumbnail";
 import type { Item } from "../contracts";
 import {
@@ -35,6 +36,17 @@ function FeedLayout({
   tabs: ReactNode;
 }) {
   const [scope,setScope]=useState("all");
+  const pendingRank=useRef<number|null>(null);
+  const [preview,setPreview]=useState<{batchId:number;rank:number}|null>(null);
+  const entries=completedFeedImages(f.batches.map((x:Item)=>x.id===f.batch?.id?f.batch:x));
+  const previewIndex=preview?entries.findIndex(x=>x.batch.id===preview.batchId&&x.item.rank===preview.rank):-1;
+  function openImage({batch,item}:FeedEntry){
+    if(f.busy)return;
+    if(f.batch?.id!==batch.id){pendingRank.current=item.rank;f.select(batch);}
+    setActive(item.rank);
+    if(item.status==="success"&&item.mediaUrl===`/api/feed-batches/${batch.id}/items/${item.rank}/file`)
+      setPreview({batchId:batch.id,rank:item.rank});
+  }
   const [active, setActive] = useState(1),
     b = f.batch,
     blocked = f.busy || !f.ready,
@@ -47,7 +59,7 @@ function FeedLayout({
         rank: x.rank,
       })) ??
       [];
-  useEffect(()=>{if(b){setActive(b.items[0]?.rank??1);setScope(b.plannedImages===1?"selected":"all");}},[b?.id]);
+  useEffect(()=>{if(b){setActive(pendingRank.current??b.items[0]?.rank??1);pendingRank.current=null;setScope(b.plannedImages===1?"selected":"all");}},[b?.id]);
   const item = b?.items.find((x: Item) => x.rank === active),
     hasUnknown = b?.items.some((x: Item) =>
       ["unknown", "running"].includes(x.status),
@@ -214,7 +226,7 @@ function FeedLayout({
                       <button
                         className="core-result-select"
                         aria-label={`TOP ${x.rank} 결과 선택`}
-                        onClick={() => setActive(x.rank)}
+                        onClick={() => openImage({batch:b,item:x})}
                       >
                         <FeedImage key={`${x.sha256}`} batch={b} item={x} />
                         <strong>
@@ -342,29 +354,21 @@ function FeedLayout({
           {f.message}
         </div>
       )}
-      <Panel title="최근 생성 이미지 · 작업 기록" className="core-recent-panel">
-        <div className="core-recent">
-          {f.batches.map((x: Item) => (
-            <button
-              key={x.id}
-              disabled={f.busy}
-              onClick={() => f.select(x)}
-              aria-pressed={b?.id === x.id}
-            >
-              <strong>작업 #{x.id}</strong>
-              <div className="core-feed-mini">
-                {x.items.map((i: Item) => (
-                  <FeedImage key={i.rank} batch={x} item={i} />
-                ))}
-              </div>
-              <small>
-                {x.items.filter((i: Item) => i.status === "success").length}/{x.plannedImages ?? x.items.length}
-                성공 · 기존 결과 보존
-              </small>
-            </button>
-          ))}
+      <Panel title="최근 생성 이미지" className="core-recent-panel">
+        <div className="feed-image-history">
+          {entries.map(({batch,item})=><button key={`${batch.id}:${item.rank}`} className="feed-image-history-card"
+            disabled={f.busy} onClick={()=>openImage({batch,item})}
+            aria-label={`${item.content?.title || "생성 이미지"} 크게 보기`}
+            aria-pressed={b?.id===batch.id&&active===item.rank}>
+            <FeedImage key={item.sha256} batch={batch} item={item}/>
+            <strong>{item.content?.title || "생성 이미지"}</strong>
+            <small>작업 #{batch.id} · 생성 완료</small>
+          </button>)}
         </div>
+        {!entries.length&&<Empty>완료된 이미지가 여기에 표시됩니다.</Empty>}
       </Panel>
+      {previewIndex>=0&&<FeedImagePreview entries={entries} index={previewIndex} onSelect={openImage} onClose={()=>setPreview(null)}/>}
+
     </div>
   );
 }

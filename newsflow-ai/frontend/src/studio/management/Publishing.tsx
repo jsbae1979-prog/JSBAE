@@ -27,16 +27,18 @@ export default function Publishing({ c }: { c: Controller }) {
   // in their own collections and never reintroduce hidden or unfinished media.
   const projects = (c.view?.module === "publishing" ? c.view.projects ?? [] : []).filter((x) =>
     !!safeMedia(x.mediaUrl) && (x.kind === "character" ? x.technicalStatus === "completed" : x.technicalStatus === "success"));
+  const visibleProjects = projects.filter((x: Item) =>
+    (type === "all" || x.kind === type) && String(x.title).includes(query));
   const drafts = c.list("drafts").filter((draft) =>
-    projects.some((project: Item) => project.id === "news:" + draft.render_job_id));
+    visibleProjects.some((project: Item) => project.id === "news:" + draft.render_job_id));
   const [projectId, setProjectId] = useState("");
   const selectionMissing =
-    (!!projectId && !projects.some((x: Item) => x.id === projectId)) ||
+    (!!projectId && !visibleProjects.some((x: Item) => x.id === projectId)) ||
     (!!id && id !== "new" && !drafts.some((x) => String(x.id) === id));
   const selected = selectionMissing || id === "new"
     ? undefined : (drafts.find((x) => String(x.id) === id) ?? drafts[0]);
   const project = selectionMissing ? undefined : (
-    projects.find((x: Item) => x.id === (projectId || "news:" + selected?.render_job_id)) ?? projects[0]);
+    visibleProjects.find((x: Item) => x.id === (projectId || "news:" + selected?.render_job_id)) ?? visibleProjects[0]);
   useEffect(() => {
     if (!selectionMissing) return;
     setId("new"); setProjectId(""); setForm({});
@@ -162,13 +164,7 @@ export default function Publishing({ c }: { c: Controller }) {
             ))}
           </div>
           <div className="mg-publish-list">
-            {projects
-              .filter(
-                (x: Item) =>
-                  (type === "all" || x.kind === type) &&
-                  String(x.title).includes(query),
-              )
-              .map((x: Item) => (
+            {visibleProjects.map((x: Item) => (
                 <button
                   key={x.id}
                   aria-pressed={project?.id === x.id}
@@ -183,7 +179,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 </button>
               ))}
           </div>
-          {!projects.length && <Empty>게시할 수 있는 완성 콘텐츠가 없습니다.</Empty>}
+          {!visibleProjects.length && <Empty>현재 조건에 맞는 게시용 콘텐츠가 없습니다.</Empty>}
           <h3>로컬 게시 초안</h3>
           <div className="mg-draft-list">
             {drafts.map((x) => (
@@ -212,7 +208,7 @@ export default function Publishing({ c }: { c: Controller }) {
           </Action>}
         </Panel>
         <Panel title="콘텐츠 미리보기 및 편집" className="mg-publish-editor">
-          <div className="mg-publish-edit-grid">
+          {project ? <div className="mg-publish-edit-grid">
             <Media url={project?.mediaUrl} image={project?.kind === "image"} />
             <div>
               <label>
@@ -259,7 +255,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 ))}
               </div>
             </div>
-          </div>
+          </div> : <Empty>왼쪽에서 게시할 콘텐츠를 선택하세요.</Empty>}
         </Panel>
         <aside className="mg-publish-right">
           <Panel title="게시 플랫폼 설정">
