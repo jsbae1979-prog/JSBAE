@@ -75,7 +75,7 @@ def _query(snapshot):
     return " OR ".join(terms) + " when:1d"
 
 
-def collect_global(curator, config: dict, adapter, token: str) -> int:
+def collect_global(curator, config: dict, adapter, token: str, hours: int = 24) -> int:
     """Caller holds the collection lock and has checked the key, approval and durable token."""
     sessions = curator.sessions
     with sessions.begin() as session:
@@ -142,9 +142,14 @@ def collect_global(curator, config: dict, adapter, token: str) -> int:
             collection = session.get(CollectionRun, collection_id)
             collection.status, collection.finished_at = "failed" if error else "success", utcnow()
             collection.failed = int(error is not None)
+        recent_info = None
         if not error:
+            from .recent_filter import select_recent
             from .lifecycle import replace_collection
 
+            # Keep only recently published articles; TOP 3 scoring judges newsworthiness.
+            ids, recent_info = select_recent(session, ids, utcnow(), hours)
+            origins = {k: v for k, v in origins.items() if int(k) in set(ids)}
             replace_collection(session, ids)
         overseas = {i for i, rows in origins.items() if any(r["role"] != "korea" for r in rows)}
         korea = {i for i, rows in origins.items() if any(r["role"] == "korea" for r in rows)}
@@ -168,7 +173,8 @@ def collect_global(curator, config: dict, adapter, token: str) -> int:
                                 evidence={"news_origin": "serpapi", "news_search_run_id": identifier,
                                           "collection_policy": GLOBAL_POLICY},
                                 result={"snapshot": snapshot, "collection": {"article_ids": ids, "added": added,
-                                        "duplicates": duplicates, "succeeded": succeeded, "failed": int(error is not None)},
+                                        "duplicates": duplicates, "succeeded": succeeded, "failed": int(error is not None),
+                                        **({"recent_filter": recent_info} if recent_info else {})},
                                         "candidate_mix": mix, "ai_calls": 0, "news_error": str(error) if error else None},
                                 message=row.message, finished_at=utcnow())
         session.add(trend)

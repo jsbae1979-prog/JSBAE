@@ -3586,6 +3586,15 @@
         "required": false,
         "default": 1,
         "path": false
+      },
+      {
+        "name": "hours",
+        "type": "number",
+        "required": false,
+        "default": 24,
+        "path": false,
+        "ge": 6,
+        "le": 48
       }
     ],
     "source": "gui/serpapi_routes.py",

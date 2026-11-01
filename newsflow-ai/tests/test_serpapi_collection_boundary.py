@@ -26,9 +26,9 @@ def boundary(app, monkeypatch):
     entropy=bytearray(__import__('hashlib').sha256(SerpApiKeys.ENTROPY).digest())
     (root/SerpApiKeys.FILE).write_bytes(native.protect(secret.encode(),entropy))
     calls=[]
-    def collect(self,keys,token,*,consent,adapter,policy):
+    def collect(self,keys,token,*,consent,adapter,policy,hours):
         if not consent: raise ValueError('consent required')
-        assert keys.key()==secret;calls.append((token,policy));return 1
+        assert keys.key()==secret and hours==24;calls.append((token,policy));return 1
     monkeypatch.setattr('newsflow.news.curator.Curator.serpapi',collect)
     launch=LaunchSession(18779);auth=LocalAccess(app,launch)
     client=TestClient(owner.wrap(registration.wrap(OperatingRequests(auth),auth),auth),

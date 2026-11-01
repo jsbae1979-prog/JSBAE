@@ -107,7 +107,7 @@ def test_refresh_dedup_durable_signals_source_states_and_no_inference(client, ap
     ctx = curator.context()
     assert ctx["ready"] and len(ctx["articles"]) == 3
     assert ctx["collection"]["added"] == 3
-    assert ctx["collection"]["hot_filter"]["hours"] == 24 and "hot-filter-summary" in client.get("/news").text
+    assert ctx["collection"]["recent_filter"]["hours"] == 24 and "recent-filter-summary" in client.get("/news").text
     with app.state.sessions() as session:
         assert not session.scalar(select(NewsSource).where(NewsSource.url == GOOGLE_NEWS_URL)).enabled
         assert all(run.kind == "trends" for run in session.scalars(select(IntelligenceRun)))
