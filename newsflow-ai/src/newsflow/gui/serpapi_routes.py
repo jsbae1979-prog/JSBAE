@@ -36,16 +36,23 @@ def settings(request: Request, api_key: str = Form(""), approved: bool = Form(Fa
 @router.post("/news/curation/serpapi")
 def collect(request: Request, request_token: str = Form(max_length=32), consent: bool = Form(False),
             collection_policy: str = Form("korea_v1", max_length=30), maximum_requests: int = Form(1),
-            hours: int = Form(24)):
+            hours: int = Form(24), categories: list[str] = Form([])):
     from newsflow.news.global_collection import GLOBAL_POLICY, plan_context
 
-    expected = plan_context()["maximum_requests"] if collection_policy == GLOBAL_POLICY else 1
+    from newsflow.news.ranking import selected_categories
+    try:
+        categories = selected_categories(categories)
+        if collection_policy == GLOBAL_POLICY and categories:
+            raise ValueError("글로벌 수집에는 분야 선택을 적용하지 않습니다.")
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from None
+    expected = plan_context()["maximum_requests"] if collection_policy == GLOBAL_POLICY else max(1, len(categories))
     if maximum_requests != expected:
         raise HTTPException(422, "예상 조회 횟수가 변경됐습니다. 수집 범위와 동의를 다시 확인해 주세요.")
     try:
         Curator(request.app.state.coordinator).serpapi(keys(request), request_token, consent=consent,
                                                      adapter=getattr(request.app.state, "serpapi_adapter", None),
-                                                     policy=collection_policy, hours=hours)
+                                                     policy=collection_policy, hours=hours, categories=categories)
     except (ValueError, SerpApiError) as exc:
         raise HTTPException(422, str(exc)) from None
     except CollectionBusy:

@@ -26,7 +26,7 @@ def boundary(app, monkeypatch):
     entropy=bytearray(__import__('hashlib').sha256(SerpApiKeys.ENTROPY).digest())
     (root/SerpApiKeys.FILE).write_bytes(native.protect(secret.encode(),entropy))
     calls=[]
-    def collect(self,keys,token,*,consent,adapter,policy,hours):
+    def collect(self,keys,token,*,consent,adapter,policy,hours,categories):
         if not consent: raise ValueError('consent required')
         assert keys.key()==secret and hours==24;calls.append((token,policy));return 1
     monkeypatch.setattr('newsflow.news.curator.Curator.serpapi',collect)
@@ -51,4 +51,25 @@ def test_scope_auth_consent_and_buffers(boundary,mode):
     assert len(r.calls)==r.native.reads==(1 if mode=='valid' else 0)
     assert all(not any(b) for b in r.native.buffers)
     with pytest.raises(CredentialError):r.app.state.serpapi_keys.key()
-    assert r.client.post('/news/curation/refresh',data=body,headers=headers).status_code in {401,403}
+    # No public RSS permission was supplied, so authenticated calls fail validation.
+    assert r.client.post('/news/curation/refresh',data=body,headers=headers).status_code == (403 if mode in {'csrf','origin','session'} else 422)
+
+@pytest.mark.parametrize('mode',['valid','csrf','origin','permission','category'])
+def test_public_rss_exact_scope(boundary,monkeypatch,mode):
+    r=boundary; calls=[]
+    def refresh(self,permission,hours,categories):
+        from newsflow.news.ranking import selected_categories
+        selected_categories(categories)
+        if not permission: raise ValueError('permission required')
+        calls.append((hours,categories)); return 1
+    monkeypatch.setattr('newsflow.news.curator.Curator.refresh',refresh)
+    body={'csrf_token':r.client.cookies.get('newsflow_csrf'),'permission':'true','hours':'24','categories':['연예']}
+    headers={'Origin':r.origin}
+    if mode=='csrf':body['csrf_token']='bad'
+    if mode=='origin':headers['Origin']='https://outside.invalid'
+    if mode=='permission':body['permission']='false'
+    if mode=='category':body['categories']=['bad']
+    response=r.client.post('/news/curation/refresh',data=body,headers=headers)
+    assert response.status_code == (303 if mode=='valid' else 403 if mode in {'csrf','origin'} else 422)
+    assert len(calls)==(1 if mode=='valid' else 0) and r.native.reads==0
+    assert r.client.post('/news/curation/import',data=body,headers=headers).status_code==403

@@ -81,12 +81,15 @@ class NewsService:
 
     @staticmethod
     def store_articles(session: Session, source_id: int, articles: list[CollectedArticle],
-                       *, rss_metadata: bool = False) -> dict:
+                       *, rss_metadata: bool = False, category: str | None = None) -> dict:
         """Shared RSS/search dedup boundary. Inputs must already pass their source policy.
 
         Search imports and their durable request result use one transaction. Existing
         articles, dates and summaries are never overwritten by an AI response.
         """
+        if category is not None:
+            from .ranking import selected_categories
+            selected_categories([category])
         existing = list(session.scalars(select(NewsArticle)))
         identifiers, added, duplicates = [], 0, 0
         for item in articles:
@@ -100,7 +103,7 @@ class NewsService:
                 article = NewsArticle(
                     title=item.title, url=item.url, canonical_url=canonical, source_id=source_id,
                     publisher=item.publisher, summary=item.summary, published_at=item.published_at,
-                    category=classify(item.title + " " + item.summary),
+                    category=category or classify(item.title + " " + item.summary),
                 )
                 session.add(article)
                 session.flush()

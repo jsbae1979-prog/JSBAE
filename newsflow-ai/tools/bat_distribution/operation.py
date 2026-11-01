@@ -54,7 +54,8 @@ class OperatingRequests(LocalWorkRequests):
     """
     # Exact free previews only: installed Korean SAPI fixed sentence or a cached/public ElevenLabs sample.
     # Explicit account metadata GET and local voice selection only; no arbitrary text, paid synthesis or broader provider authority.
-    POSTS = LocalWorkRequests.POSTS - {'/collection'} | {'/ai-settings/prices', '/voices/preview', '/video/tts/voices/preview', '/video/tts/voices/load', '/video/tts/voices/select', '/video/ai/plans', '/api/feed-batches'}
+    # Explicit public RSS collection; its route still requires permission, auth and CSRF.
+    POSTS = LocalWorkRequests.POSTS - {'/collection'} | {'/news/curation/refresh', '/ai-settings/prices', '/voices/preview', '/video/tts/voices/preview', '/video/tts/voices/load', '/video/tts/voices/select', '/video/ai/plans', '/api/feed-batches'}
 
     # Only cached capability data and local settings writes are enabled here.
     # Provider story/quote/submit routes remain outside the operation boundary.

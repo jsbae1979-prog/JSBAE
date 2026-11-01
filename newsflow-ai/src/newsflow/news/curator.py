@@ -34,17 +34,22 @@ class Curator:
         self.news = coordinator.service
         self.sessions = self.news.sessions
 
-    def refresh(self, permission: bool = False, hours: int = DEFAULT_HOT_HOURS) -> int:
+    def refresh(self, permission: bool = False, hours: int = DEFAULT_HOT_HOURS, categories=None) -> int:
         if not permission:
             raise ValueError("Google News·Trends의 공개 RSS 이용 조건과 출처 표시에 동의해 주세요.")
+        from .ranking import selected_categories
+        categories = selected_categories(categories)
         check_hours(hours)
         try:
             with FileLock(str(self.coordinator.lock_path)).acquire(timeout=0):
-                return self._refresh(hours)
+                return self._refresh(hours, categories)
         except Timeout:
             raise CollectionBusy from None
 
-    def _refresh(self, hours: int = DEFAULT_HOT_HOURS) -> int:
+    def _refresh(self, hours: int = DEFAULT_HOT_HOURS, categories=None) -> int:
+        if categories:
+            from .category_collection import collect_rss
+            return collect_rss(self, categories, hours)
         with self.sessions.begin() as session:
             source = session.scalar(select(NewsSource).where(NewsSource.url == GOOGLE_NEWS_URL))
             if source is None:
@@ -132,7 +137,7 @@ class Curator:
             raise CollectionBusy from None
 
     def serpapi(self, keys, token: str, *, consent: bool = False, adapter=None, policy: str = "korea_v1",
-                hours: int = DEFAULT_HOT_HOURS) -> int:
+                hours: int = DEFAULT_HOT_HOURS, categories=None) -> int:
         """One durable authorized attempt, then Trends only. No fallback/replay after any outcome."""
         if not re.fullmatch(r"[a-f0-9]{32}", token):
             raise ValueError("요청 식별자를 확인해 주세요.")
@@ -142,6 +147,10 @@ class Curator:
 
         if policy not in {"korea_v1", GLOBAL_POLICY}:
             raise ValueError("수집 정책을 확인해 주세요.")
+        from .ranking import selected_categories
+        categories = selected_categories(categories)
+        if policy == GLOBAL_POLICY and categories:
+            raise ValueError("글로벌 수집에는 분야 선택을 적용하지 않습니다.")
         check_hours(hours)
         try:
             with FileLock(str(self.coordinator.lock_path)).acquire(timeout=0):
@@ -149,7 +158,9 @@ class Curator:
                     previous = session.get(AppSetting, "serpapi_request:" + token)
                     if previous:
                         run = session.get(IntelligenceRun, json.loads(previous.value)["run_id"])
-                        if run.options.get("collection_policy", "korea_v1") != policy:
+                        if (run.options.get("collection_policy", "korea_v1") != policy
+                                or run.options.get("categories", []) != categories
+                                or (categories and run.options.get("hours") != hours)):
                             raise ValueError("기존 요청의 수집 범위와 다릅니다. 요청 기록은 보존합니다.")
                         if run.result.get("trends_run_id"):
                             return run.result["trends_run_id"]
@@ -160,6 +171,9 @@ class Curator:
                 adapter = adapter or SerpApiAdapter(keys)
                 if policy == GLOBAL_POLICY:
                     return collect_global(self, config, adapter, token, hours)
+                if categories:
+                    from .category_collection import collect_serpapi
+                    return collect_serpapi(self, config, adapter, token, categories, hours)
                 with self.sessions.begin() as session:
                     run = IntelligenceRun(kind="news_search", provider="serpapi", status="running",
                                           options={"generation": config["generation"],

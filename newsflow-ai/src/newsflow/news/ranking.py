@@ -10,10 +10,41 @@ CATEGORY_WORDS = {
     "경제": ("금리", "증시", "주식", "경제", "물가", "수출"),
     "사회": ("사고", "재난", "지진", "교육", "법원", "의료"),
     "IT·과학": ("인공지능", "AI", "반도체", "우주", "과학", "기술"),
-    "문화": ("영화", "음악", "공연", "문화"),
+    "문화": ("영화", "음악", "공연", "문화", "전시", "미술", "책", "출판", "뮤지컬", "문화재", "축제"),
+    "연예": ("연예", "K팝", "케이팝", "아이돌", "걸그룹", "보이그룹", "컴백", "드라마", "배우", "가수", "예능", "웹툰", "넷플릭스", "OTT", "앨범", "콘서트", "팬미팅", "시상식"),
     "스포츠": ("축구", "야구", "올림픽", "스포츠"),
     "국제": ("미국", "중국", "유럽", "전쟁", "유엔"),
 }
+
+
+CATEGORIES = tuple(CATEGORY_WORDS)
+CATEGORY_TOPICS = {"경제": ("BUSINESS",), "IT·과학": ("TECHNOLOGY", "SCIENCE"),
+                   "연예": ("ENTERTAINMENT",), "스포츠": ("SPORTS",), "국제": ("WORLD",), "사회": ("NATION",)}
+
+
+def selected_categories(values=None):
+    if values is None:
+        return []
+    if not isinstance(values, (list, tuple)) or len(values) > len(CATEGORIES):
+        raise ValueError("수집 분야를 확인하세요.")
+    if any(not isinstance(v, str) or v not in CATEGORIES for v in values):
+        raise ValueError("허용된 수집 분야를 선택하세요.")
+    return [v for v in CATEGORIES if v in values]
+
+
+def category_query(category):
+    selected_categories([category])
+    return "(" + " OR ".join(CATEGORY_WORDS[category]) + ") when:1d"
+
+
+def category_feeds(category):
+    from urllib.parse import urlencode
+    selected_categories([category])
+    params = {"hl": "ko", "gl": "KR", "ceid": "KR:ko"}
+    if category in CATEGORY_TOPICS:
+        return ["https://news.google.com/rss/headlines/section/topic/" + topic + "?" + urlencode(params)
+                for topic in CATEGORY_TOPICS[category]]
+    return ["https://news.google.com/rss/search?" + urlencode({"q": category_query(category), **params})]
 
 
 def classify(text: str) -> str:

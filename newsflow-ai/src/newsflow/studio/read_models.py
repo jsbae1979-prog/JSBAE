@@ -809,9 +809,12 @@ def module_view(request: Request, module: Module):
     studio = read_studio_settings(state.sessions)
     result["catalog"]["studioModels"] = studio["models"]
     if module == "news":
+        from newsflow.news.ranking import CATEGORIES
+        result["catalog"]["newsCategories"] = list(CATEGORIES)
         from newsflow.news.curator import Curator
         coordinator = getattr(state,'coordinator',None)
         context = Curator(coordinator).context() if getattr(coordinator,'service',None) is not None else {'ready':False,'run_id':None,'articles':[]}
+        result["catalog"]["categoryCollection"] = context.get("collection", {}).get("category_counts", [])
         store = getattr(state, 'api_keys', {}).get(studio['provider'])
         result['catalog']['newsAnalysis'] = {'provider': studio['provider'], 'model': studio['model'],
             'keyConfigured': bool(store and store.status().get('configured')),

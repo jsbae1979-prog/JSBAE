@@ -55,19 +55,24 @@ export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;m
     <div className="news-collection-controls-head">
       <label><span>뉴스 수집</span><select aria-label="뉴스 수집 방식" value={method} disabled={pending}
         onChange={e=>onMethodChange(e.target.value)}>
-        <option value="rss">등록 RSS</option><option value="serpapi">SerpApi</option>
+        <option value="rss">등록 RSS</option><option value="popular">인기 뉴스 RSS · 분야 선택</option><option value="serpapi">SerpApi</option>
       </select></label>
       {method==="rss" ? <ActionButton c={c} id="routes_collect" disabled={pending}
         context={{__collectionProgress:requestState}}>수집 시작</ActionButton>
+        : method==="popular" ? <ActionButton c={c} id="curation_refresh" disabled={pending}
+          context={{__collectionProgress:requestState}}>수집 시작</ActionButton>
         : <ActionButton c={c} id="serpapi_collect" disabled={pending || !c.view?.catalog.serpapi?.canRequest}
             context={{__collectionProgress:requestState}}>
             수집 시작
           </ActionButton>}
     </div>
-    <small className="news-collection-provider-info">{method==="rss"?"등록 공개 RSS · API 키 불필요":
+    <small className="news-collection-provider-info">{method==="rss"?"등록 공개 RSS · API 키 불필요":method==="popular"?"Google News 공개 RSS · 분야·기간 선택":
       c.view?.catalog.serpapi?.keyConfigured?"SerpApi · 키 등록됨":"SerpApi · API 키 미등록"}</small>
     {method==="serpapi"&&<a className="news-collection-settings" href="/studio/settings?tab=sources">설정·관리에서 수집 설정</a>}
     {method==="serpapi"&&!c.view?.catalog.serpapi?.canRequest&&<small>설정·관리에서 키 등록과 사용 승인을 확인하세요.</small>}
+    {(c.view?.catalog.categoryCollection ?? []).length > 0 && <ul className="news-category-counts" aria-label="최근 분야별 수집 결과">
+      {c.view?.catalog.categoryCollection.map((row: any) => <li key={row.category}>{row.category} · 수집 {row.collected}건 · 남김 {row.kept}건{row.status === "success" ? "" : row.status === "pending" ? " · 미요청" : " · 확인 필요"}</li>)}
+    </ul>}
     {message&&<div className="news-collection-progress" role="status" aria-live="polite">
       <div>{busy&&<LoaderCircle className="spin" size={16}/>}<strong>{message}</strong>
         {!busy&&<button type="button" aria-label="수집 상태 새로고침" onClick={()=>setRefresh(n=>n+1)}><RefreshCw size={14}/></button>}</div>

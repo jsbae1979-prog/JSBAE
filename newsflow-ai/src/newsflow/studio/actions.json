@@ -1405,6 +1405,13 @@
         "path": false,
         "ge": 6,
         "le": 48
+      },
+      {
+        "name": "categories",
+        "type": "array",
+        "required": false,
+        "default": [],
+        "path": false
       }
     ],
     "source": "gui/curation_routes.py",
@@ -3595,6 +3602,13 @@
         "path": false,
         "ge": 6,
         "le": 48
+      },
+      {
+        "name": "categories",
+        "type": "array",
+        "required": false,
+        "default": [],
+        "path": false
       }
     ],
     "source": "gui/serpapi_routes.py",

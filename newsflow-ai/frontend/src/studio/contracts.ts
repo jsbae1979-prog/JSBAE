@@ -219,6 +219,8 @@ export const labels: Record<string, string> = {
   label: "표시 이름",
   rights_basis: "사용 권한 근거",
   permission: "이 소재를 사용할 권한이 있습니다",
+  categories: "수집 분야",
+  collection_policy: "수집 범위",
   hours: "수집 기간 · 이 시간 안에 발행된 기사만",
   step: "설정 단계",
   action: "변경 동작",

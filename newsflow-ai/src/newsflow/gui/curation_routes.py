@@ -42,9 +42,10 @@ def context(request: Request) -> dict:
 
 
 @router.post("/news/curation/refresh")
-def refresh(request: Request, permission: bool = Form(False), hours: int = Form(24)):
+def refresh(request: Request, permission: bool = Form(False), hours: int = Form(24),
+            categories: list[str] = Form([])):
     try:
-        Curator(request.app.state.coordinator).refresh(permission, hours)
+        Curator(request.app.state.coordinator).refresh(permission, hours, categories)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from None
     except CollectionBusy:

@@ -116,6 +116,10 @@ function choices(
     if (preset) return preset.resolutions.map((r: string) => [r, r]);
   }
 
+  if (f.name === "categories" && ["curation_refresh", "serpapi_collect"].includes(action.id))
+    return (c.newsCategories ?? []).map((name: string) => [name, name]);
+  if (action.id === "serpapi_collect" && f.name === "collection_policy")
+    return [["korea_v1", "한국 · 분야 선택 가능"], ["global_trends_v1", "글로벌 · 기존 수집 방식"]];
   if (f.name === "voice_id")
     return (c.elevenVoices ?? []).map((x: Item) => [x.id, x.label]);
   if (action.id === "voice_listening" && c.listening?.items?.[f.name])
@@ -539,12 +543,13 @@ export function CommandDialog({
   const compactCharacter = quoteSubmit || quotePrepare;
   const collectionAnalysis = action.id === "curation_analyze";
   const serpapiCollect = action.id === "serpapi_collect";
-  const collecting = registeredRSS || serpapiCollect;
+  const categoryRSS = action.id === "curation_refresh";
+  const collecting = registeredRSS || serpapiCollect || categoryRSS;
   const newsScript = action.id === "curation_generate";
   const selectedNews = context.__newsSelection?.article;
   const newsSelection = context.__newsSelection?.selection;
   const newsScriptReady = !newsScript || (!!selectedNews && !newsSelection?.stale && Number(values.analysis_id) === Number(newsSelection?.id) && Number(values.rank) === Number(selectedNews.rank));
-  const compactConsent = compactCharacter || collectionAnalysis || serpapiCollect || newsScript;
+  const compactConsent = compactCharacter || collectionAnalysis || serpapiCollect || categoryRSS || newsScript;
   const modelRegistration = action.id === "video_ai_save_model_route";
   const registrationPreset = (view.catalog.newsVideoPresets ?? []).find((x: Item)=>x.path===values.path);
   const registrationReady = !modelRegistration || (!!registrationPreset && registrationPreset.resolutions.includes(values.resolution) && !(view.catalog.newsVideoRegisteredPaths ?? []).includes(values.path));
@@ -573,10 +578,16 @@ export function CommandDialog({
         if (preset) Object.assign(next, {label:preset.label, durations:preset.durations.join(","),
           resolution:preset.resolution, price_per_second:"", confirmed:false, model_id:"", pricing_mode:"manual", estimate_consent:false});
       }
-      if (key === "provider")
-        next.model = view.catalog.studioModels?.[String(v)] ?? "";
+      if (serpapiCollect && ["collection_policy", "categories"].includes(key)) {
+        if (next.collection_policy === "global_trends_v1") next.categories = [];
+        next.maximum_requests = next.collection_policy === "global_trends_v1"
+          ? view.catalog.serpapi?.collectionPlan?.maximum_requests ?? 5
+          : Math.max(1, (next.categories ?? []).length);
+      }
+      if (key === "provider") next.model = view.catalog.studioModels?.[String(v)] ?? "";
       return next;
     });
+    if (["categories", "collection_policy", "hours"].includes(key)) setAck(false);
   };
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -593,7 +604,7 @@ export function CommandDialog({
         effective,
         modelRegistration ? {...values,label:registrationPreset.label,durations:registrationPreset.durations.join(","),
           confirmed:true,price_per_second:"",pricing_mode:"manual",estimate_consent:false,model_id:""}
-        : compactConsent ? { ...values, consent: ack, reviewed: ack } : values,
+        : compactConsent ? { ...values, consent: ack, reviewed: ack, ...(categoryRSS ? {permission: ack} : {}) } : values,
         view,
         files,
         localRender ? {} : (context.__extra ?? {}),
@@ -622,7 +633,17 @@ export function CommandDialog({
   }
   const field = (f: Field) => {
     if (modelRegistration && !["path","resolution"].includes(f.name)) return null;
-    if (serpapiCollect && ["request_token","collection_policy","maximum_requests","consent"].includes(f.name)) return null;
+    if (serpapiCollect && ["request_token","maximum_requests","consent"].includes(f.name)) return null;
+    if (categoryRSS && f.name === "permission") return null;
+    if (f.name === "categories") {
+      if (serpapiCollect && values.collection_policy !== "korea_v1") return null;
+      const selected: string[] = Array.isArray(values.categories) ? values.categories : [];
+      return <fieldset key={f.name} className="collection-category-picker"><legend>수집 분야 · 여러 개 선택</legend>
+        <label><input type="checkbox" aria-label="전체 분야" checked={!selected.length} onChange={() => set("categories", [])} />전체</label>
+        {choices(f, view, values, action).map(([name]) => <label key={name}><input type="checkbox" aria-label={`${name} 분야`}
+          checked={selected.includes(name)} onChange={e => set("categories", e.target.checked ? [...selected, name] : selected.filter(x => x !== name))} />{name}</label>)}
+      </fieldset>;
+    }
     const fieldLabel =
       (action.id === "video_ai_save_model_route" && f.name === "confirmed"
         ? "선택한 모델의 공식 입력 규격을 확인했습니다"
@@ -845,7 +866,8 @@ export function CommandDialog({
                         <dl className="property-list"><div><dt>대본 AI</dt><dd>{view.formDefaults?.intelligence_generate?.provider} · {view.formDefaults?.intelligence_generate?.model}</dd></div></dl>
                         {field(effective.fields.find(f=>f.name==="duration")!)}
                         {!newsScriptReady&&<p role="status">뉴스를 다시 선택해 주세요.</p>}</>
-                    : serpapiCollect ? <><p>SerpApi Google News + Trends 수집</p><p>{view.catalog.serpapi?.collectionPlan?.edition_labels}</p><p>SerpApi 검색 최대 {values.maximum_requests}회 · 계정 사용량이 차감될 수 있습니다. AI 분석·대본은 실행하지 않습니다.</p></>
+                    : categoryRSS ? <><div className="form-grid">{effective.fields.filter(f=>["hours","categories"].includes(f.name)).map(field)}</div><p>인기 뉴스 RSS · {(values.categories ?? []).join(" · ") || "전체"}</p><p>공개 뉴스·Trends 수집만 실행합니다. AI 분석은 실행하지 않습니다.</p></>
+                    : serpapiCollect ? <><div className="form-grid">{effective.fields.filter(f=>["collection_policy","hours","categories"].includes(f.name)).map(field)}</div><p>SerpApi Google News + Trends 수집</p><p>{values.collection_policy === "korea_v1" ? `한국 · ${(values.categories ?? []).join(" · ") || "전체"}` : view.catalog.serpapi?.collectionPlan?.edition_labels}</p><p>SerpApi 검색 최대 {values.maximum_requests}회 · 계정 사용량이 차감될 수 있습니다. AI 분석·대본은 실행하지 않습니다.</p></>
                     : quotePrepare ? <p>선택한 참조 이미지와 검토한 스토리로 최신 영상 견적을 확인합니다. 영상은 생성하지 않습니다.</p>
                     : collectionAnalysis ? <>
                         <p>이번 수집 회차 전체 {analysis?.candidateCount??0}개 기사에서 TOP 3를 분석합니다.</p>
@@ -869,8 +891,8 @@ export function CommandDialog({
                       <button type="button" disabled={busy} onClick={() => { onClose(); void context.__refreshQuote(); }}>최신 견적 확인</button>}
                   </div> : compactConsent && analysisReady && <label className="check-field approval">
                     <input type="checkbox" checked={ack} onChange={event => setAck(event.target.checked)}
-                      aria-label={newsScript ? "선택 기사 유료 대본 생성 승인" : serpapiCollect ? "SerpApi 수집 사용량 승인" : collectionAnalysis ? "현재 수집 회차의 유료 분석 승인" : quotePrepare ? "참조 이미지 전송·스토리 검토 확인" : "표시된 견적과 검토한 내용으로 영상 생성 승인"}/>
-                    {newsScript ? "선택한 기사로 유료 대본 생성을 진행합니다." : serpapiCollect ? "표시된 검색 횟수와 외부 수집에 동의합니다." : collectionAnalysis ? "표시된 수집 기사와 모델의 유료 분석에 동의합니다." : quotePrepare ? "참조 이미지 전송과 검토한 스토리의 견적 조회에 동의합니다."
+                      aria-label={categoryRSS ? "공개 분야 RSS 수집 승인" : newsScript ? "선택 기사 유료 대본 생성 승인" : serpapiCollect ? "SerpApi 수집 사용량 승인" : collectionAnalysis ? "현재 수집 회차의 유료 분석 승인" : quotePrepare ? "참조 이미지 전송·스토리 검토 확인" : "표시된 견적과 검토한 내용으로 영상 생성 승인"}/>
+                    {categoryRSS ? "선택한 분야의 공개 RSS 수집과 출처 표시에 동의합니다." : newsScript ? "선택한 기사로 유료 대본 생성을 진행합니다." : serpapiCollect ? "표시된 검색 횟수와 외부 수집에 동의합니다." : collectionAnalysis ? "표시된 수집 기사와 모델의 유료 분석에 동의합니다." : quotePrepare ? "참조 이미지 전송과 검토한 스토리의 견적 조회에 동의합니다."
                       : `검토한 이미지·스토리와 위 견적으로 영상 생성을 승인합니다. 실패하면 자동 재요청하지 않습니다.`}
                   </label>}
                 </section>

@@ -93,7 +93,7 @@ export default function NewsStudio({
             options={{
               "": "전체",
               ...Object.fromEntries(
-                [...new Set(all.map((x) => x.category).filter(Boolean))].map(
+                [...new Set([...(c.view?.catalog.newsCategories ?? []), ...all.map((x) => x.category).filter(Boolean)])].map(
                   (x) => [x, x],
                 ),
               ),
