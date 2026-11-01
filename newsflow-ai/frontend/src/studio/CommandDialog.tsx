@@ -108,6 +108,14 @@ function choices(
   action: Action,
 ): [string, string][] {
   const c = view.catalog;
+  if (action.id === "video_ai_save_model_route" && f.name === "path")
+    return (c.newsVideoPresets ?? []).filter((x: Item) => !(c.newsVideoRegisteredPaths ?? []).includes(x.path))
+      .map((x: Item) => [x.path, x.label]);
+  if (action.id === "video_ai_save_model_route" && f.name === "resolution") {
+    const preset = (c.newsVideoPresets ?? []).find((x: Item) => x.path === values.path);
+    if (preset) return preset.resolutions.map((r: string) => [r, r]);
+  }
+
   if (f.name === "voice_id")
     return (c.elevenVoices ?? []).map((x: Item) => [x.id, x.label]);
   if (action.id === "voice_listening" && c.listening?.items?.[f.name])
@@ -528,9 +536,19 @@ export function CommandDialog({
   const registeredRSS = action.id === "routes_collect";
   const compactCharacter = quoteSubmit || quotePrepare;
   const collectionAnalysis = action.id === "curation_analyze";
-  const compactConsent = compactCharacter || collectionAnalysis;
-  const compactReview = compactConsent || registeredRSS;
+  const serpapiCollect = action.id === "serpapi_collect";
+  const collecting = registeredRSS || serpapiCollect;
+  const newsScript = action.id === "curation_generate";
+  const selectedNews = context.__newsSelection?.article;
+  const newsSelection = context.__newsSelection?.selection;
+  const newsScriptReady = !newsScript || (!!selectedNews && !newsSelection?.stale && Number(values.analysis_id) === Number(newsSelection?.id) && Number(values.rank) === Number(selectedNews.rank));
+  const compactConsent = compactCharacter || collectionAnalysis || serpapiCollect || newsScript;
+  const modelRegistration = action.id === "video_ai_save_model_route";
+  const registrationPreset = (view.catalog.newsVideoPresets ?? []).find((x: Item)=>x.path===values.path);
+  const registrationReady = !modelRegistration || (!!registrationPreset && registrationPreset.resolutions.includes(values.resolution) && !(view.catalog.newsVideoRegisteredPaths ?? []).includes(values.path));
+  const compactReview = compactConsent || registeredRSS || modelRegistration;
   const analysis = view.catalog.newsAnalysis;
+  const collectionReady = !serpapiCollect || view.catalog.serpapi?.canRequest === true;
   const analysisReady = !collectionAnalysis || (analysis?.collectionReady === true &&
     Number.isSafeInteger(values.collection_context_id) && values.collection_context_id === analysis.collectionContextId);
   const [clock, setClock] = useState(Date.now);
@@ -548,6 +566,11 @@ export function CommandDialog({
   const set = (key: string, v: unknown) => {
     setValues((old) => {
       const next = { ...old, [key]: v };
+      if (action.id === "video_ai_save_model_route" && key === "path") {
+        const preset = (view.catalog.newsVideoPresets ?? []).find((x: Item) => x.path === v);
+        if (preset) Object.assign(next, {label:preset.label, durations:preset.durations.join(","),
+          resolution:preset.resolution, price_per_second:"", confirmed:false, model_id:"", pricing_mode:"manual", estimate_consent:false});
+      }
       if (key === "provider")
         next.model = view.catalog.studioModels?.[String(v)] ?? "";
       return next;
@@ -555,28 +578,30 @@ export function CommandDialog({
   };
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (busy || (risky && !ack) || (compactConsent && !ack) || !quoteReady || !analysisReady) return;
+    if (busy || (risky && !ack) || (compactConsent && !ack) || !quoteReady || !analysisReady || !collectionReady || !newsScriptReady || !registrationReady) return;
     if (localRender && (!localRender.ready || values.reviewed !== true)) {
       setError("실제 합성 대상 영상을 확인한 뒤 장면 검토를 체크하세요.");
       return;
     }
     setBusy(true);
     setError("");
-    if (registeredRSS && typeof context.__collectionProgress === "function") context.__collectionProgress("requesting");
+    if (collecting && typeof context.__collectionProgress === "function") context.__collectionProgress("requesting");
     try {
       const result = await submitOriginal(
         effective,
-        compactConsent ? { ...values, consent: ack, reviewed: ack } : values,
+        modelRegistration ? {...values,label:registrationPreset.label,durations:registrationPreset.durations.join(","),
+          confirmed:true,price_per_second:"",pricing_mode:"manual",estimate_consent:false,model_id:""}
+        : compactConsent ? { ...values, consent: ack, reviewed: ack } : values,
         view,
         files,
         localRender ? {} : (context.__extra ?? {}),
       );
-      if (registeredRSS && typeof context.__collectionProgress === "function") context.__collectionProgress("accepted");
+      if (collecting && typeof context.__collectionProgress === "function") context.__collectionProgress("accepted");
       onSaved();
       if (result) setResponseSummary(result);
       else onClose();
     } catch (e) {
-      if (registeredRSS && typeof context.__collectionProgress === "function") context.__collectionProgress("unknown");
+      if (collecting && typeof context.__collectionProgress === "function") context.__collectionProgress("unknown");
       setAck(false);
       const detail = e instanceof Error ? e.message : "저장 결과를 확인하세요.";
       if (checkingCharacterScenes) {
@@ -594,8 +619,16 @@ export function CommandDialog({
     }
   }
   const field = (f: Field) => {
+    if (modelRegistration && !["path","resolution"].includes(f.name)) return null;
+    if (serpapiCollect && ["request_token","collection_policy","maximum_requests","consent"].includes(f.name)) return null;
     const fieldLabel =
-      (diagnosingCharacterScenes && f.name === "consent"
+      (action.id === "video_ai_save_model_route" && f.name === "confirmed"
+        ? "선택한 모델의 공식 입력 규격을 확인했습니다"
+        : action.id === "video_ai_save_model_route" && f.name === "path"
+        ? "추가할 영상 모델"
+        : action.id === "video_ai_save_model_route" && f.name === "price_per_second"
+        ? "확인된 초당 단가 · 모르면 비워 두세요"
+        : diagnosingCharacterScenes && f.name === "consent"
         ? "기존 실패 상세 조회에 동의합니다"
         : checkingCharacterScenes && f.name === "consent"
         ? "기존 장면 상태 조회·완료 영상 저장에 동의합니다"
@@ -741,6 +774,7 @@ export function CommandDialog({
       f.required ||
       (action.id === "serpapi_settings" && f.name === "api_key") ||
       (action.id === "video_ai_create_plan" && f.name === "model_path") ||
+      (action.id === "video_ai_save_model_route" && ["resolution","durations"].includes(f.name)) ||
       f.path ||
       f.type === "boolean" ||
       [
@@ -767,14 +801,14 @@ export function CommandDialog({
   return (
     <dialog
       ref={dialog}
-      className={"command-dialog" + (compactReview || action.id === "serpapi_settings" ? " command-dialog--compact" : "")} aria-label={localRender ? localRenderTitle : action.label}
+      className={"command-dialog" + (compactReview || action.id === "serpapi_settings" ? " command-dialog--compact" : "")} aria-label={modelRegistration ? "영상 모델 추가" : localRender ? localRenderTitle : action.label}
       onCancel={(e) => {
         if (busy) e.preventDefault();
         else onClose();
       }}
     >
       <div className="dialog-head">
-        <h2>{localRender ? localRenderTitle : action.label}</h2>
+        <h2>{modelRegistration ? "영상 모델 추가" : localRender ? localRenderTitle : action.label}</h2>
         <button
           className="icon-button"
           aria-label="닫기"
@@ -799,10 +833,17 @@ export function CommandDialog({
             </p>
           ) : (
             <>
+              {action.id === "video_ai_save_model_route" && <p>모델 설정만 저장합니다. 영상 생성 비용은 제작 전 견적에서 확인합니다.</p>}
               {action.id === "serpapi_settings" && <p>키를 비우면 기존 키를 유지합니다. 저장은 연결 테스트나 뉴스 조회를 실행하지 않습니다.</p>}
               {compactReview && (
                 <section className="compact-command-review" aria-label="이번 작업 확인">
-                  {registeredRSS ? <p>이전 목록을 비우고 등록·활성화된 공개 RSS를 새로 수집합니다. 저장된 제작 이력은 유지됩니다.</p>
+                  {modelRegistration ? <><div className="form-grid">{effective.fields.filter(f=>["path","resolution"].includes(f.name)).map(field)}</div>
+                    {!registrationReady&&<p>추가할 모델과 지원 화질을 선택하세요.</p>}</> : registeredRSS ? <p>이전 목록을 비우고 등록·활성화된 공개 RSS를 새로 수집합니다. 저장된 제작 이력은 유지됩니다.</p>
+                    : newsScript ? <><p>{selectedNews?.title ?? "선택 기사를 확인하세요."}</p>
+                        <dl className="property-list"><div><dt>대본 AI</dt><dd>{view.formDefaults?.intelligence_generate?.provider} · {view.formDefaults?.intelligence_generate?.model}</dd></div></dl>
+                        {field(effective.fields.find(f=>f.name==="duration")!)}
+                        {!newsScriptReady&&<p role="status">뉴스를 다시 선택해 주세요.</p>}</>
+                    : serpapiCollect ? <><p>SerpApi Google News + Trends 수집</p><p>{view.catalog.serpapi?.collectionPlan?.edition_labels}</p><p>SerpApi 검색 최대 {values.maximum_requests}회 · 계정 사용량이 차감될 수 있습니다. AI 분석·대본은 실행하지 않습니다.</p></>
                     : quotePrepare ? <p>선택한 참조 이미지와 검토한 스토리로 최신 영상 견적을 확인합니다. 영상은 생성하지 않습니다.</p>
                     : collectionAnalysis ? <>
                         <p>이번 수집 회차 전체 {analysis?.candidateCount??0}개 기사에서 TOP 3를 분석합니다.</p>
@@ -826,8 +867,8 @@ export function CommandDialog({
                       <button type="button" disabled={busy} onClick={() => { onClose(); void context.__refreshQuote(); }}>최신 견적 확인</button>}
                   </div> : compactConsent && analysisReady && <label className="check-field approval">
                     <input type="checkbox" checked={ack} onChange={event => setAck(event.target.checked)}
-                      aria-label={collectionAnalysis ? "현재 수집 회차의 유료 분석 승인" : quotePrepare ? "참조 이미지 전송·스토리 검토 확인" : "표시된 견적과 검토한 내용으로 영상 생성 승인"}/>
-                    {collectionAnalysis ? "표시된 수집 기사와 모델의 유료 분석에 동의합니다." : quotePrepare ? "참조 이미지 전송과 검토한 스토리의 견적 조회에 동의합니다."
+                      aria-label={newsScript ? "선택 기사 유료 대본 생성 승인" : serpapiCollect ? "SerpApi 수집 사용량 승인" : collectionAnalysis ? "현재 수집 회차의 유료 분석 승인" : quotePrepare ? "참조 이미지 전송·스토리 검토 확인" : "표시된 견적과 검토한 내용으로 영상 생성 승인"}/>
+                    {newsScript ? "선택한 기사로 유료 대본 생성을 진행합니다." : serpapiCollect ? "표시된 검색 횟수와 외부 수집에 동의합니다." : collectionAnalysis ? "표시된 수집 기사와 모델의 유료 분석에 동의합니다." : quotePrepare ? "참조 이미지 전송과 검토한 스토리의 견적 조회에 동의합니다."
                       : `검토한 이미지·스토리와 위 견적으로 영상 생성을 승인합니다. 실패하면 자동 재요청하지 않습니다.`}
                   </label>}
                 </section>
@@ -990,7 +1031,7 @@ export function CommandDialog({
               (view.dataOrigin === "development-fixtures" &&
                 action.fields.some((f) => secrets.test(f.name))) ||
               action.unsupported ||
-              !view.commandsAvailable ||
+              !view.commandsAvailable || !collectionReady || !newsScriptReady || !registrationReady ||
               (risky && !ack) ||
               (compactConsent && !ack) || !quoteReady || !analysisReady ||
               (!!localRender &&
@@ -1003,10 +1044,10 @@ export function CommandDialog({
               <ShieldCheck size={18} />
             )}{" "}
             {busy
-              ? localRender ? "FFmpeg로 최종 영상 합성 중…" : registeredRSS ? "수집 요청 중…" : "응답 확인 중 · 재요청 금지"
+              ? localRender ? "FFmpeg로 최종 영상 합성 중…" : collecting ? "수집 요청 중…" : "응답 확인 중 · 재요청 금지"
               : localRender
                 ? localRenderTitle
-                : action.label}
+                : modelRegistration ? "모델 추가" : action.label}
           </button>
         </footer>
       </form>

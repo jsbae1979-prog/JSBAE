@@ -1079,6 +1079,15 @@
   display: block;
   margin: 7px 0;
 }
+.core-studio[data-module="characters"] .character-trash-select {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.core-studio[data-module="characters"] .character-trash-select input[type="checkbox"] {
+  width: 16px; height: 16px; min-height: 16px; margin: 0; flex: 0 0 16px;
+}
+.core-studio[data-module="characters"] .kling-character-history-row > .character-trash-select {
+  flex: 1 1 180px; overflow-wrap: anywhere;
+}
 .core-studio[data-module="characters"] .kling-character-history-tools,
 .core-studio[data-module="characters"] .kling-character-history-row {
   display: flex;

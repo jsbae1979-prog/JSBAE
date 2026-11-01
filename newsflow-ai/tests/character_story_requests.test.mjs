@@ -7,7 +7,7 @@ import {stripTypeScriptTypes} from "node:module";
 
 const source = readFileSync(new URL("../frontend/src/studio/core/CharacterStudio.tsx", import.meta.url), "utf8");
 const keyFunction = source.slice(source.indexOf("  function storyRequestKey()"), source.indexOf("  const currentStoryInput"));
-const requestFunction = source.slice(source.indexOf("  async function autoStory()"), source.indexOf("  async function reuseStoryForVideo()"));
+const requestFunction = source.slice(source.indexOf("  async function autoStory("), source.indexOf("  async function reuseStoryForVideo()"));
 const postFunction = source.slice(source.indexOf("  async function post("), source.indexOf("  async function changeVisibility("))
   .replace("(url: string, body: FormData)", "(url, body)");
 const supportingFunctions=source.slice(source.indexOf("  function selectStoryDraft("),source.indexOf("  async function confirmStoryReview()"));
@@ -30,7 +30,7 @@ function harness({ failCreate = 0, failStatus, unknownStory = false, failLoad = 
     referenceJob: "", reference: "/local-reference.png", job: original,
     pending: { current: "0".repeat(32) }, sending: { current: false },
     activeProfile: { id: "char_"+"1".repeat(32), revision: 1, reference_image: { sha256: "f".repeat(64) } }, scriptAvailable: true,
-    ready: true, isBusy: false, failure: "참조 이미지와 새 작업 설정을 확인하세요.", storyRequests: {},
+    knownStory: false, ready: true, isBusy: false, failure: "참조 이미지와 새 작업 설정을 확인하세요.", storyRequests: {},
     crypto: { randomUUID: () => String(++sequence).padStart(32, "0") },
     setBusy: (value) => { context.isBusy = value; },
     setFailure: (value) => { context.failure = value; },
@@ -217,4 +217,18 @@ test("missing reference or API key blocks new story without a request", async ()
     assert.equal(h.disabled(),true);
     await h.run();assert.equal(h.posts.length,0);
   }
+});
+
+
+test("explicit stored-story confirmation makes one fresh request without overwriting the old job", async () => {
+  const h=harness(); h.context.knownStory=true;
+  h.context.storyRequests[h.key()]="old-request";
+  assert.equal(h.disabled(),false);
+  await vm.runInContext("autoStory(true)",h.context);
+  assert.equal(h.posts.length,1); assert.equal(h.storyCalls.length,1); h.assertOriginal();
+});
+test("confirmation cannot override an uncertain unreceived story", async () => {
+  const h=harness({unknownStory:true}); await h.run();
+  await vm.runInContext("autoStory(true)",h.context);
+  assert.equal(h.posts.length,1); assert.equal(h.storyCalls.length,1); h.assertOriginal();
 });

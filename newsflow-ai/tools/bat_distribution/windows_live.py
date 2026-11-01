@@ -478,9 +478,12 @@ def start(config, plan):
                 from .voice_catalog_access import install as install_voice_catalog_access
                 voice_catalog_access = install_voice_catalog_access(app, config.profile, character_native_factory)
             serpapi_registration = None
+            serpapi_collection = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .serpapi_key_registration import install as install_serpapi_registration
                 serpapi_registration = install_serpapi_registration(app, config.profile, character_native_factory)
+                from .serpapi_collection import install as install_serpapi_collection
+                serpapi_collection = install_serpapi_collection(app, config.profile, character_native_factory)
             character_quote_only = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .character_quote_only import install as install_character_quote_only
@@ -489,10 +492,13 @@ def start(config, plan):
             if manual_enabled:
                 from .character_manual_execution import install as install_character_manual
                 character_manual = install_character_manual(app, config.profile, character_native_factory)
+            posting_copy_access = None
             character_authoring = None
             if manual_enabled and trial_policy is None:
                 from .character_authoring import install as install_character_authoring
                 character_authoring = install_character_authoring(app, config.profile, character_native_factory)
+                from .posting_copy_access import install as install_posting_copy_access
+                posting_copy_access = install_posting_copy_access(app, config.profile, character_native_factory)
             import uvicorn
             session = LaunchSession(config.port)
             nonce = secrets.token_hex(32)
@@ -515,6 +521,8 @@ def start(config, plan):
                 request_boundary = registered_rss.wrap(request_boundary, authenticated_app)
                 if serpapi_registration is not None:
                     request_boundary = serpapi_registration.wrap(request_boundary, authenticated_app)
+                if serpapi_collection is not None:
+                    request_boundary = serpapi_collection.wrap(request_boundary, authenticated_app)
                 if character_trial is not None:
                     request_boundary = character_trial.wrap(request_boundary, authenticated_app)
                 if character_story_only is not None:
@@ -527,6 +535,8 @@ def start(config, plan):
                     request_boundary = character_manual.wrap(request_boundary, authenticated_app)
                 if character_authoring is not None:
                     request_boundary = character_authoring.wrap(request_boundary, authenticated_app)
+                if posting_copy_access is not None:
+                    request_boundary = posting_copy_access.wrap(request_boundary, authenticated_app)
                 if claude_connection_check is not None:
                     request_boundary = claude_connection_check.wrap(request_boundary, authenticated_app)
                 if provider_connection_check is not None:

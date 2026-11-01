@@ -501,6 +501,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [activeProfile, setActiveProfile] = useState<Item | null>(null);
   const [scriptDirty, setScriptDirty] = useState(false);
   const [savedStoryOpen,setSavedStoryOpen]=useState(false);
+  const [regenerateConfirm,setRegenerateConfirm]=useState<string|null>(null);
   const [automationBusy, setAutomationBusy] = useState(false);
   const [saveToLibrary, setSaveToLibrary] = useState(false);
   const [libraryBusy, setLibraryBusy] = useState(false);
@@ -537,6 +538,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   const [visibilityTarget, setVisibilityTarget] =
     useState<VisibilityTarget | null>(null);
   const [showTrash, setShowTrash] = useState(false);
+  const [trashSelected, setTrashSelected] = useState<string[]>([]);
+  const [purgeTarget, setPurgeTarget] = useState<Item[] | null>(null);
+
   const visibilitySending = useRef(false);
   const createdSelection = useRef<{id:string;view:unknown}|null>(null);
   const allJobs = c.list("jobs"),
@@ -664,6 +668,12 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   }
   const currentStoryInput = storyRequestKey();
   const blockedStoryRequest = !!storyRequests[currentStoryInput];
+  const knownStory = !!job && (job.scriptResponseSaved === true || !!job.script) && job.state !== "writing";
+  function requestStory() {
+    if (isBusy) return;
+    if (knownStory) setRegenerateConfirm(storyRequestKey());
+    else void autoStory();
+  }
   useEffect(() => {
     if (!busy && storyReview && storyReview.inputKey !== currentStoryInput) {
       setStoryReview(null);
@@ -845,6 +855,27 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       ), { status: r.status });
     return data;
   }
+  async function purgeHistory() {
+    if (!purgeTarget?.length || visibilitySending.current || isBusy) return;
+    visibilitySending.current = true;
+    setVisibilityBusy(true); setFailure("");
+    try {
+      const response = await fetch("/api/studio/library/purge", {
+        method: "POST", credentials: "same-origin",
+        body: new URLSearchParams({ csrf_token: c.view?.csrfToken ?? "",
+          items: JSON.stringify(purgeTarget.map(x => "character:" + x.id)), confirm: "true" }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw Error(data.detail ?? "완전 삭제 상태를 확인하세요. 자동 재요청하지 않습니다.");
+      setTrashSelected([]); setPurgeTarget(null);
+      c.setNotice("선택한 작업의 전용 파일을 완전 삭제했습니다. 생성·비용 기록은 보존됩니다.");
+      await c.load();
+    } catch (error) {
+      setPurgeTarget(null);
+      setFailure(error instanceof Error ? error.message : "삭제 결과를 확인하지 못했습니다. 자동 재요청하지 않습니다.");
+      try { await c.load(); } catch { /* Never retry deletion. */ }
+    } finally { visibilitySending.current = false; setVisibilityBusy(false); }
+  }
   async function changeVisibility(target: VisibilityTarget) {
     if (visibilitySending.current || busy) return;
     visibilitySending.current = true;
@@ -958,10 +989,11 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     catch (error) { setFailure(error instanceof Error ? error.message : "스토리 요청 결과를 확인하지 못했습니다. 자동 재전송하지 않습니다."); }
     finally { await refreshStoryResult(); }
   }
-  async function autoStory() {
+  async function autoStory(confirmedNew = false) {
     const inputKey = storyRequestKey();
-    if (sending.current || !ready || storyRequests[inputKey] || !(activeProfile || reference) || !scriptAvailable ||
-        (job?.automation_version === 1 && job.script && topic.trim() === String(job.topic).trim())) return;
+    if (sending.current || !ready || (storyRequests[inputKey] && !confirmedNew) || !(activeProfile || reference) || !scriptAvailable ||
+        (confirmedNew && !knownStory) || (!confirmedNew && job?.automation_version === 1 && job.script && topic.trim() === String(job.topic).trim())) return;
+    if (confirmedNew) { preparedStory.current = null; unlockUnsentStory(inputKey); }
     sending.current = true; setBusy(true); setFailure("");
     setStoryReview(null); setStoryReviewConsent(false);
     let draft = preparedStory.current?.inputKey === inputKey ? preparedStory.current : null;
@@ -1242,6 +1274,14 @@ export default function CharacterStudio({ c }: { c: Controller }) {
   let elapsed = 0;
   return (
     <>
+      {regenerateConfirm && <CharacterModal title="스토리를 다시 생성할까요?" busy={busy}
+        onClose={()=>setRegenerateConfirm(null)} footer={<>
+          <button type="button" onClick={()=>setRegenerateConfirm(null)}>취소</button>
+          <button type="button" className="primary" disabled={busy || regenerateConfirm!==currentStoryInput || !knownStory}
+            onClick={()=>{setRegenerateConfirm(null);void autoStory(true);}}>새 스토리 생성</button></>}>
+        <p>{topic}</p><p>{settings.duration}초 · {settings.script_model} · 이번 작업 상한 US${per}</p>
+        <p>보관된 응답과 기존 작업은 유지합니다. 새 스토리 생성에는 추가 비용이 발생하며 실패하면 자동 재요청하지 않습니다.</p>
+      </CharacterModal>}
       {savedStoryOpen && job?.id && <SavedStoryReview key={job.id} jobId={job.id} csrf={c.view?.csrfToken ?? ""}
         onClose={()=>setSavedStoryOpen(false)} onRecovered={async()=>{await c.load();c.setNotice("편집한 스토리를 복구했습니다. 추가 AI 호출은 없습니다.");}} />}
       {storyReview && <CharacterModal title="이전 요청 결과 미확인" busy={busy}
@@ -1468,7 +1508,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     .filter((x) => x.referenceUrl && x.recentHidden)
                     .map((x) => (
                       <div className="kling-character-history-row" key={x.id}>
-                        <span>{x.topic}</span>
+                        <label className="character-trash-select"><input type="checkbox" disabled={isBusy}
+                      aria-label={`${x.topic} 완전 삭제 선택`} checked={trashSelected.includes(x.id)}
+                      onChange={e=>setTrashSelected(old=>e.target.checked ? [...old,x.id] : old.filter(v=>v!==x.id))}/><span>{x.topic}</span></label>
                         <button
                           type="button"
                           disabled={isBusy}
@@ -1550,23 +1592,22 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             </label>
             {<button
               className="kling-character-story-generate"
-              onClick={() => void autoStory()}
+              onClick={requestStory}
               disabled={
                 isBusy ||
                 !ready ||
                 !c.view?.commandsAvailable ||
                 !topic.trim() ||
                 selectionUnavailable ||
-                (job?.automation_version === 1 && job.script && topic.trim() === String(job.topic).trim()) ||
                 !(activeProfile || reference) || !scriptAvailable ||
-                blockedStoryRequest
+                (blockedStoryRequest && !knownStory)
               }
             >
               <WandSparkles size={22} />
               {busy ? "스토리 처리 중…" : "스토리 자동 생성하기"}
               <span>→</span>
             </button>}
-            {(failure || job?.scriptFailure?.message || blockedStoryRequest) && (
+            {!busy && (failure || job?.scriptFailure?.message || (blockedStoryRequest && !knownStory)) && (
               <div className="kling-character-error" role="alert">
                 {failure || job?.scriptFailure?.message || "같은 요청의 결과를 확인하세요. 주제나 참조·설정을 바꾸면 새 스토리를 만들 수 있습니다."}
                 {job?.scriptFailure && job.scriptResponseSaved && " 응답은 로컬에 보존되어 있습니다."}
@@ -2143,7 +2184,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                 type="button"
                 disabled={isBusy}
                 aria-pressed={showTrash}
-                onClick={() => setShowTrash((value) => !value)}
+                onClick={() => { setShowTrash((value) => !value); setTrashSelected([]); }}
               >
                 {showTrash ? "작업 이력 보기" : "휴지통 보기"}
               </button>
@@ -2154,15 +2195,25 @@ export default function CharacterStudio({ c }: { c: Controller }) {
               </p>
             )}
             <p className="muted">
-              삭제한 작업은 휴지통에서 복원할 수 있습니다. 원본 이미지·영상과
-              생성·비용 기록은 삭제하지 않습니다.
+              {showTrash ? "완전 삭제하면 작업 전용 이미지·영상은 복원할 수 없습니다. 내 캐릭터·생성·비용 기록은 보존됩니다."
+                : "삭제한 작업은 휴지통에서 복원할 수 있습니다."}
             </p>
+            {showTrash && allJobs.some(x => x.trashed) && <div className="kling-character-history-tools">
+              <label className="character-trash-select"><input type="checkbox" aria-label="휴지통 전체 선택" disabled={isBusy}
+                checked={allJobs.filter(x=>x.trashed).every(x=>trashSelected.includes(x.id))}
+                onChange={e=>setTrashSelected(e.target.checked ? allJobs.filter(x=>x.trashed).map(x=>x.id) : [])}/> 전체 선택</label>
+              <span>{allJobs.filter(x=>x.trashed && trashSelected.includes(x.id)).length}개 선택</span>
+              <button type="button" disabled={isBusy || !allJobs.some(x=>x.trashed && trashSelected.includes(x.id))}
+                onClick={()=>setPurgeTarget(allJobs.filter(x=>x.trashed && trashSelected.includes(x.id)))}>선택 완전 삭제</button>
+            </div>}
             {allJobs
               .filter((x) => Boolean(x.trashed) === showTrash)
               .map((x) => (
                 <div className="kling-character-history-row" key={x.id}>
                   {showTrash ? (
-                    <span>{x.topic}</span>
+                    <label className="character-trash-select"><input type="checkbox" disabled={isBusy}
+                      aria-label={`${x.topic} 완전 삭제 선택`} checked={trashSelected.includes(x.id)}
+                      onChange={e=>setTrashSelected(old=>e.target.checked ? [...old,x.id] : old.filter(v=>v!==x.id))}/><span>{x.topic}</span></label>
                   ) : (
                     <button
                       type="button"
@@ -2231,6 +2282,16 @@ export default function CharacterStudio({ c }: { c: Controller }) {
             )}
           </CharacterDialog>
         )}
+        {purgeTarget && <CharacterDialog title="선택 작업 완전 삭제" busy={visibilityBusy}
+          onClose={()=>setPurgeTarget(null)} confirmation>
+          <p>선택한 작업 {purgeTarget.length}개</p>
+          <ul>{purgeTarget.map(x=><li key={x.id}>{x.topic}</li>)}</ul>
+          <p>작업 전용 이미지·영상 파일을 완전 삭제하며 앱에서 복원할 수 없습니다. 내 캐릭터와 생성·비용 기록은 보존됩니다.</p>
+          <div className="kling-character-history-tools">
+            <button type="button" disabled={visibilityBusy} onClick={()=>setPurgeTarget(null)}>취소</button>
+            <button type="button" disabled={visibilityBusy} onClick={()=>void purgeHistory()}>{visibilityBusy ? "삭제 중…" : "완전 삭제"}</button>
+          </div>
+        </CharacterDialog>}
         {visibilityTarget && (
           <CharacterDialog
             title={

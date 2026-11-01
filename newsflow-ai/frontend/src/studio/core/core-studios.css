@@ -710,6 +710,9 @@
   gap: 10px;
   margin: 12px 0;
 }
+.core-studio .core-feed-results.core-feed-single {
+  grid-template-columns: minmax(0, 320px);
+}
 .core-studio .core-feed-results article {
   border: 1px solid #214870;
   border-radius: 8px;

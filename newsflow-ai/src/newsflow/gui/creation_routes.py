@@ -120,10 +120,11 @@ def feed_batch_defaults(request: Request, model: str = Form(...), size: str = Fo
 
 @router.post('/api/feed-batches')
 def feed_batch_create(request: Request, analysis_id: int = Form(ge=1), model: str = Form(...),
-                      size: str = Form("1024x1280"), quality: str = Form("medium")):
+                      size: str = Form("1024x1280"), quality: str = Form("medium"),
+                      rank: int | None = Form(None, ge=1, le=3)):
     try:
         service = request.app.state.top_three_feeds
-        identifier = service.create(analysis_id, {'provider': "openai", 'model': model, 'size': size, 'quality': quality})
+        identifier = service.create(analysis_id, {'provider': "openai", 'model': model, 'size': size, 'quality': quality}, rank=rank)
         return service.view(identifier)
     except (PublishingError, SelectionError) as exc:
         raise HTTPException(422, str(exc)) from None

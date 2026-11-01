@@ -319,6 +319,8 @@ def create_app(
     app.include_router(youtube_router)
     app.include_router(tiktok_router)
     app.include_router(instagram_router)
+    from .gui.publishing_metadata_routes import router as publishing_metadata_router
+    app.include_router(publishing_metadata_router)
     app.include_router(unified_publishing_router)
     app.include_router(social_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")

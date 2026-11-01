@@ -123,22 +123,25 @@ class TopThreeFeeds:
             return list(s.scalars(select(IntelligenceRun).where(IntelligenceRun.kind == KIND)
                                   .order_by(IntelligenceRun.id.desc()).limit(30)))
 
-    def create(self, analysis_id, selected):
+    def create(self, analysis_id, selected, *, rank=None):
+        if rank is not None and (type(rank) is not int or rank not in {1,2,3}):
+            raise PublishingError("제작할 뉴스 순위를 확인하세요.")
         frozen = snapshot("image", selected)
         # The provider supports these sizes; final feed is fit/padded, never cropped/stretched.
         if frozen["size"] not in {"1024x1280", "1024x1024", "1024x1536"}:
             raise PublishingError("피드는 4:5·1:1·2:3 생성 크기를 선택하세요. 최종 출력은 1080×1350입니다.")
-        claim = "top3-feed:" + str(analysis_id)
+        claim = "top3-feed:" + str(analysis_id) + (f":rank:{rank}" if rank is not None else "")
         try:
             with self.lock, self.sessions.begin() as s:
                 prior = s.get(AppSetting, claim)
                 if prior:
                     return int(prior.value)
                 group = selection(s, analysis_id)
-                if len(group["items"]) != 3 or group["run"].evidence["curation_contract"].get("top_k") != 3:
+                if len(group["items"]) != 3 or {x["rank"] for x in group["items"]} != {1,2,3} or group["run"].evidence["curation_contract"].get("top_k") != 3:
                     raise PublishingError("완료된 TOP 3 분석이 필요합니다.")
                 sources, items, urls, titles, event_claims = [], [], set(), set(), set()
                 for item in group["items"]:
+                    if rank is not None and item["rank"] != rank: continue
                     refs = [{"url": r["url"], "publisher": r.get("publisher") or "원문"}
                             for r in item["references"]]
                     canonical = set()
@@ -167,9 +170,9 @@ class TopThreeFeeds:
                 evidence = {"analysis_id": group["run"].id, "sources": sources}
                 row = IntelligenceRun(kind=KIND, status="saved", provider="openai",
                     options={"selection": frozen, "source_hash": digest(evidence),
-                             "simulation": self.simulation, "max_generations": 3}, evidence=evidence,
+                             "simulation": self.simulation, "max_generations": len(items)}, evidence=evidence,
                     result={"revision": 1, "paused": False, "items": items},
-                    message="TOP 3 고정 · 이미지 3개 · 게시 승인 별도")
+                    message=f"뉴스 고정 · 이미지 {len(items)}개 · 게시 승인 별도")
                 s.add(row); s.flush(); identifier = row.id
                 s.add(AppSetting(key=claim, value=str(identifier)))
                 for key in event_claims: s.add(AppSetting(key=key, value=str(identifier)))
@@ -179,7 +182,7 @@ class TopThreeFeeds:
 
     def _save(self, identifier, result, *, options=None):
         statuses = [i["status"] for i in result["items"]]
-        state = "success" if statuses == ["success"] * 3 else "running" if "running" in statuses else "partial" if any(x != "pending" for x in statuses) else "saved"
+        state = "success" if statuses == ["success"] * len(statuses) else "running" if "running" in statuses else "partial" if any(x != "pending" for x in statuses) else "saved"
         with self.sessions.begin() as s:
             row = s.get(IntelligenceRun, identifier)
             row.result, row.status = deepcopy(result), state
@@ -223,7 +226,7 @@ class TopThreeFeeds:
             item["message"] = "결과 불명 · 재요청 금지" if generated.status in {"unknown", "running"} else "실패 · 명시적 재생성 전 보존"
             if generated.status == "running": item["status"] = "unknown"
             return
-        path = self.generation.path(output_id, article_id=row.evidence["sources"][item["rank"]-1]["article_id"],
+        path = self.generation.path(output_id, article_id=next(source for source in row.evidence["sources"] if source["rank"] == item["rank"])["article_id"],
                                     analysis_id=row.evidence["analysis_id"], rank=item["rank"])
         self.safe_paths.safe(path, self.generation.outputs)
         self.safe_paths.safe(self.root, self.root).mkdir(parents=True, exist_ok=True)
@@ -254,7 +257,7 @@ class TopThreeFeeds:
                 if item is None: return
                 item["status"] = "running"; result["revision"] += 1
                 self._save(identifier, result)  # Durable claim before any generation.
-                source = row.evidence["sources"][item["rank"]-1]
+                source = next(source for source in row.evidence["sources"] if source["rank"] == item["rank"])
                 context = {"batch_id": identifier, "rank": item["rank"], "attempt": item["attempt"],
                            "plan": {**item["content"], "source_article_ids": source["article_ids"]},
                            "source": source}
@@ -321,7 +324,7 @@ class TopThreeFeeds:
                 self.path(identifier, rank)
                 result = deepcopy(row.result)
                 item = next(i for i in result["items"] if i["rank"] == rank)
-                source = row.evidence["sources"][rank-1]
+                source = next(source for source in row.evidence["sources"] if source["rank"] == rank)
                 # Recover a local save gap by its immutable generation relationship, never resubmit/publish.
                 with self.sessions() as s:
                     previous = s.scalar(select(ImagePost).where(ImagePost.article_id == source["article_id"],
@@ -355,7 +358,7 @@ class TopThreeFeeds:
         row = self.get(identifier)
         items = deepcopy(row.result["items"])
         for item in items:
-            source = row.evidence["sources"][item["rank"]-1]
+            source = next(source for source in row.evidence["sources"] if source["rank"] == item["rank"])
             item["source"] = source
             item["prompt"] = prompt_for(source, item["content"], row.id, item["attempt"])
             item["caption"] = (item["content"]["title"] + "\n\n" + item["content"]["body"] + "\n\n" +
@@ -371,7 +374,7 @@ class TopThreeFeeds:
         return {"id": row.id, "analysisId": row.evidence["analysis_id"], "status": row.status,
                 "selection": row.options["selection"], "items": items,
                 "revision": row.result["revision"], "paused": row.result["paused"],
-                "simulation": row.options["simulation"], "plannedImages": 3,
+                "simulation": row.options["simulation"], "plannedImages": len(items),
                 "maxGenerations": row.options["max_generations"],
                 "price": "Fake 검증 · 실제 과금 없음" if row.options["simulation"] else "공식 견적 미확정 · 유료 실행 차단",
                 "canGenerate": self.simulation and row.options["simulation"],

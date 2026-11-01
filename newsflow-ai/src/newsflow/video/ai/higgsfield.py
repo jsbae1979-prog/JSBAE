@@ -163,13 +163,8 @@ class HiggsfieldProvider:
             return ProviderUnavailable(status_code=status)
         return ProviderResponseError(status_code=status)
 
-    def submit(self, request: ClipRequest) -> Submission:
-        try:
-            path = "/" + validate_path(request.model_path)
-        except VideoSettingsError:
-            raise ProviderInputError(sent=False) from None
-        if check_model_contract(request.model_path, (request.seconds,), request.resolution)[0] == "FAIL":
-            raise ProviderInputError(sent=False)
+    @staticmethod
+    def _generation_payload(request: ClipRequest) -> dict:
         payload = {
             "prompt": request.prompt, "duration": int(request.seconds),
             "aspect_ratio": request.aspect_ratio, "resolution": request.resolution,
@@ -177,6 +172,16 @@ class HiggsfieldProvider:
         if request.model_path in {"pixverse/v6/text-to-video", "alibaba/wan-3.0/text-to-video",
                                   "alibaba/wan-3.0-prime/text-to-video"}:
             payload["generate_audio"] = False  # Narration uses the independently selected TTS engine.
+        return payload
+
+    def submit(self, request: ClipRequest) -> Submission:
+        try:
+            path = "/" + validate_path(request.model_path)
+        except VideoSettingsError:
+            raise ProviderInputError(sent=False) from None
+        if check_model_contract(request.model_path, (request.seconds,), request.resolution)[0] == "FAIL":
+            raise ProviderInputError(sent=False)
+        payload = self._generation_payload(request)
         key = request.idempotency_key
         extra = {"Idempotency-Key": key} if key and IDEMPOTENCY_KEY.fullmatch(key) else None
         try:
@@ -201,10 +206,7 @@ class HiggsfieldProvider:
         path = validate_path(request.model_path)
         if check_model_contract(path, (request.seconds,), request.resolution)[0] != "PASS":
             raise ProviderInputError(sent=False)
-        payload = {
-            "prompt": request.prompt, "duration": request.seconds,
-            "aspect_ratio": request.aspect_ratio, "resolution": request.resolution,
-        }
+        payload = self._generation_payload(request)
         try:
             status, data = self._call("POST", "/estimate/" + path, payload)
         except (_NotSent, ConnectionError):

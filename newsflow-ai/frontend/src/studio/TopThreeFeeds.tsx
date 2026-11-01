@@ -106,6 +106,11 @@ export default function TopThreeFeeds({
       ++loadVersion.current;
     };
   }, []);
+  useEffect(()=>{
+    if(batch){setAnalysis(String(batch.analysisId));setOptions(batch.selection);}
+    else if(!analysis && selections.length)setAnalysis(String(selections[0].id));
+  },[batch?.id,selections]);
+  function chooseAnalysis(value:string){setAnalysis(value);setBatch(null);setMessage("");setApproval(false);}
   async function post(path: string, data: Item) {
     const form = new URLSearchParams({
       csrf_token: csrf,
@@ -121,7 +126,8 @@ export default function TopThreeFeeds({
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: form,
     });
-    const d = await r.json();
+    const d = await r.json().catch(()=>null);
+    if (!d) throw Error(r.status===403 ? "현재 실행 모드에서 이 작업이 허용되지 않습니다. 설정과 앱 연결을 확인하세요." : "서버 응답을 확인하지 못했습니다. 자동으로 다시 요청하지 않습니다.");
     if (!r.ok)
       throw Error(
         typeof d.detail === "string"
@@ -370,7 +376,7 @@ export default function TopThreeFeeds({
           batches,
           batch,
           analysis,
-          setAnalysis,
+          setAnalysis:chooseAnalysis,
           options,
           setOptions,
           busy,

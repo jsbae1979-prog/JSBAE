@@ -26,3 +26,21 @@ def check_model_contract(path: str, durations: tuple[int, ...], resolution: str)
     if not durations or any(type(d) is not int or d not in seconds for d in durations) or resolution not in resolutions:
         return "FAIL", "등록한 길이 또는 해상도가 확인한 공식 스키마와 다릅니다. 모델 설정을 확인하세요."
     return "PASS", "2026-10-16 공식 스키마와 공통 요청 필드·길이·해상도·9:16이 일치합니다. 실제 계정 동작은 미검증입니다."
+
+
+# Public API reference rechecked 2026-11-01. No account/pricing claims or DB seeding.
+NEWS_PRESETS = (
+    ("kling-video/v3.0-turbo/text-to-video", "Kling 3.0 Turbo", (3,5,6,8,10,12,15), "720p"),
+    ("wan/v2.7/text-to-video", "Wan 2.7", (3,5,6,8,10,12,15), "720p"),
+    ("alibaba/wan-3.0/text-to-video", "Wan 3.0", (3,5,6,10,15,20,25,30), "720p"),
+    ("pixverse/v6/text-to-video", "PixVerse V6", (3,5,6,8,10,12,15), "720p"),
+)
+
+
+def news_model_presets():
+    return [dict(path=path, label=label, durations=list(durations), resolution=resolution,
+                 resolutions=[r for r in CONTRACTS[path][1] if r in {"480p","720p","1080p"}],
+                 minSeconds=min(CONTRACTS[path][0]), maxSeconds=max(CONTRACTS[path][0]),
+                 aspectRatio="9:16", checkedOn="2026-11-01",
+                 docsUrl="https://open.higgsfield.ai/models/"+path+"/api-reference")
+            for path,label,durations,resolution in NEWS_PRESETS]

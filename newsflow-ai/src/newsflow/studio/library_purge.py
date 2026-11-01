@@ -170,6 +170,16 @@ class LibraryPurge:
                     session.connection().exec_driver_sql('BEGIN IMMEDIATE')
                     for item,key in keys.items():
                         row=session.get(WorkspaceRemoval,key)
+                        if row is None and item.startswith('character:'):
+                            # Legacy character-history trash predates the library marker.
+                            # Validate that exact saved preference inside this transaction.
+                            from newsflow.character.visibility import PREFIX as CHAR_PREFIX, _decode
+                            saved=session.get(AppSetting,CHAR_PREFIX+item.split(':',1)[1])
+                            try:trashed=saved is not None and _decode(saved.value)['history'] is True
+                            except (ValueError,TypeError):trashed=False
+                            if trashed:
+                                row=WorkspaceRemoval(key=key,detail=self.visibility._item(session,item,removing=True))
+                                session.add(row)
                         if row is None:raise PurgeError('not_trashed')
                         plans[item]=[f for f in self._plan(session,item,row) if f is not None]
                     # All items validate before any tombstone or file is changed.

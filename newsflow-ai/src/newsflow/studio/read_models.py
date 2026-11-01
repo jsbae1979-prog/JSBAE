@@ -570,6 +570,7 @@ def module_view(request: Request, module: Module):
                         "id": row.id,
                         "title": "게시 검토 #" + str(row.id),
                         "approval_token": cohort["approval_token"],
+                        "metadata": row.payload.get("metadata", {}),
                         "can_execute": cohort["can_execute"],
                         "reviewed": cohort["reviewed"],
                         "locked": cohort["locked"],
@@ -825,8 +826,12 @@ def module_view(request: Request, module: Module):
     # Status only: never load/decrypt a key or contact SerpApi while rendering.
     serpapi = serpapi_context(state.sessions, getattr(state, "serpapi_keys", None) or SerpApiKeys(state.config.data_dir))
     result["catalog"]["serpapi"] = {"keyConfigured": serpapi["key"]["configured"],
-        "approved": bool(serpapi["approved_at"]),
+        "approved": bool(serpapi["approved_at"]), "canRequest": serpapi["can_request"],
+        "collectionPlan": serpapi["collection_plan"], "last": serpapi["last"],
         "registrationAvailable": getattr(state, "serpapi_registration_available", False)}
+    result["formDefaults"]["serpapi_collect"] = {"request_token": serpapi["request_token"],
+        "collection_policy": serpapi["collection_plan"]["policy"],
+        "maximum_requests": serpapi["collection_plan"]["maximum_requests"], "consent": False}
     result["formDefaults"]["serpapi_settings"] = {"api_key": "", "approved": bool(serpapi["approved_at"])}
     result["catalog"]["apiSettingsDefaults"] = {}
     for provider in ("openai", "claude_api"):
@@ -846,11 +851,14 @@ def module_view(request: Request, module: Module):
     video = video_settings(state.sessions)
     if module == 'shorts':
         from newsflow.video.ai.production import model_ready
+        from newsflow.video.ai.model_contracts import news_model_presets
         from newsflow.video.ai.settings import list_models
         from newsflow.creation.catalog import news_video_default
+        result['catalog']['newsVideoPresets'] = news_model_presets()
+        result['catalog']['newsVideoRegisteredPaths'] = [m.path for m in list_models(state.sessions)]
         result['catalog']['newsVideoModels'] = [
             {'path': model.path, 'label': model.label, 'resolution': model.resolution,
-             'durations': list(model.durations)}
+             'durations': list(model.durations), 'priceKnown': model.price_per_second is not None}
             for model in list_models(state.sessions) if model_ready(model)]
         result['catalog']['newsVideoDefault'] = news_video_default(state.sessions)
         selected_voice = next((v for v in result['catalog'].get('elevenVoices',[]) if v['id']==tts['voice_id']),None)

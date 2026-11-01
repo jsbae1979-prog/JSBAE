@@ -1,3 +1,4 @@
+import PostingCopyReview from './PostingCopyReview';
 import { useEffect, useState } from "react";
 import { Search, Send, CalendarDays } from "lucide-react";
 import { safeMedia, type Item } from "../contracts";
@@ -65,6 +66,10 @@ export default function Publishing({ c }: { c: Controller }) {
     );
     if (selected) setProjectId("news:" + selected.render_job_id);
   }, [selected?.id, selected?.revision]);
+  const availablePlatforms = project ? platforms
+    .filter(p => project.kind === "image" ? p.id === "instagram" : ["news", "character"].includes(project.kind))
+    .map(p => ({ ...p, label: p.id === "instagram" ? (project.kind === "image" ? "Instagram 피드" : "Instagram Reels") : p.label })) : [];
+  useEffect(()=>{setTargets([]);},[project?.id]);
   const cohorts = c
     .list("cohorts")
     .filter(
@@ -78,7 +83,10 @@ export default function Publishing({ c }: { c: Controller }) {
         ),
     );
   const cohort = cohorts.find((x) => String(x.id) === cohortId) ?? cohorts[0];
+  const reviewedCopy=cohort?.metadata;
+  const copyMatches=!!reviewedCopy && reviewedCopy.title===(form.title??project?.title??"") && reviewedCopy.description===(form.description??"") && (Array.isArray(reviewedCopy.hashtags)?reviewedCopy.hashtags.join(" "):reviewedCopy.hashtags)===(form.hashtags??"");
   function selectProject(x: Item) {
+    if(project?.id===x.id)return;
     const matching = drafts.find((d) => "news:" + d.render_job_id === x.id);
     setId(matching ? String(matching.id) : "new");
     setProjectId(x.id);
@@ -232,27 +240,9 @@ export default function Publishing({ c }: { c: Controller }) {
                   onChange={(e) => update("hashtags", e.target.value)}
                 />
               </label>
-              <div className="mg-actions">
-                <Action
-                  c={c}
-                  id="publishing_edit"
-                  context={context}
-                  disabled={!selected}
-                >
-                  초안 수정 · 저장
-                </Action>
-                <Action
-                  c={c}
-                  id="publishing_validate"
-                  context={{ draft_id: selected?.id }}
-                  disabled={!selected}
-                >
-                  형식 검증
-                </Action>
-              </div>
+              {project && <PostingCopyReview key={project.id} project={project} form={form} setForm={setForm} csrf={c.view?.csrfToken??""}/> }
               <p className="mg-muted">
-                저장과 검토·최종 게시 승인은 별도입니다. 수정한 내용은 기존 저장
-                창에서 확인합니다.
+                저장한 게시 문구는 콘텐츠별로 유지됩니다. 실제 게시는 검토·승인 후 진행합니다.
               </p>
               <div className="mg-review-checks">
                 {[
@@ -262,7 +252,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 ].map(([k, t]) => (
                   <p key={k}>
                     <Badge
-                      value={selected?.[k] ? "approved" : "review_required"}
+                      value={selected?.[k] && copyMatches ? "approved" : "review_required"}
                     />
                     {t}
                   </p>
@@ -273,8 +263,10 @@ export default function Publishing({ c }: { c: Controller }) {
         </Panel>
         <aside className="mg-publish-right">
           <Panel title="게시 플랫폼 설정">
+            {!project && <p>완성 콘텐츠를 먼저 선택하세요.</p>}
+            {project?.kind==="image"&&<p className="mg-muted">이미지 콘텐츠 · Instagram 피드</p>}
             <div className="mg-publish-platforms">
-              {platforms.map((p) => (
+              {availablePlatforms.map((p) => (
                 <article key={p.id}>
                   <header>
                     <PlatformIcon id={p.id} />
@@ -319,7 +311,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 </article>
               ))}
             </div>
-            <Action
+            {project?.kind === "news" ? <Action
               c={c}
               id="unified_publishing_review"
               context={context}
@@ -327,7 +319,7 @@ export default function Publishing({ c }: { c: Controller }) {
               primary
             >
               선택 플랫폼 게시 검토
-            </Action>
+            </Action> : project && <p className="mg-muted">이 콘텐츠의 게시 전송 연동은 준비 중입니다. 게시 문구를 먼저 저장할 수 있습니다.</p>}
           </Panel>
           <Panel title="게시 일정 · 승인">
             <label>
@@ -363,7 +355,7 @@ export default function Publishing({ c }: { c: Controller }) {
                   ? (time.length === 16 ? time + ":00" : time) + "+09:00"
                   : "",
               }}
-              disabled={!cohort || !time}
+              disabled={!cohort || !time || !copyMatches}
             >
               <CalendarDays size={16} />
               예약 저장 · 검토
@@ -375,7 +367,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 cohort_id: cohort?.id,
                 approval_token: cohort?.approval_token,
               }}
-              disabled={!cohort?.can_execute}
+              disabled={!cohort?.can_execute || !copyMatches}
               primary
             >
               <Send size={16} />

@@ -1490,3 +1490,5 @@
 .management-ui .mg-trash-row small {display:block;color:var(--mg-muted);font-size:11px;}
 .management-ui .mg-danger {background:#8f2342;border:1px solid #dc5c82;color:#fff;}
 @media(max-width:720px){.management-ui .mg-trash-row{grid-template-columns:18px minmax(0,1fr);}.management-ui .mg-trash-row > button{grid-column:2;justify-self:start;}}
+
+.mg-copy-review{margin:12px 0;padding:12px;border:1px solid #304765;border-radius:8px}.mg-copy-suggestion{margin-top:12px;padding:12px;background:#10263b;border-radius:8px}.mg-copy-description{white-space:pre-wrap}.mg-copy-dialog{width:min(560px,92vw);max-height:85vh;overflow:auto;color:#e4edff;background:#101d32;border:1px solid #526486;border-radius:12px;padding:24px}.mg-copy-dialog::backdrop{background:#0009}.mg-copy-dialog label{display:grid;gap:8px}.mg-copy-dialog select{max-width:100%}.mg-copy-review .mg-actions{display:flex;gap:8px;flex-wrap:wrap}

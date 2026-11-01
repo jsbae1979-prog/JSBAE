@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Sparkles, Save, Pause, Download } from "lucide-react";
 import TopThreeFeeds from "../TopThreeFeeds";
 import { Thumbnail } from "../Thumbnail";
@@ -32,6 +32,7 @@ function FeedLayout({
   f: any;
   tabs: ReactNode;
 }) {
+  const [scope,setScope]=useState("all");
   const [active, setActive] = useState(1),
     b = f.batch,
     blocked = f.busy || !f.ready,
@@ -44,6 +45,7 @@ function FeedLayout({
         rank: x.rank,
       })) ??
       [];
+  useEffect(()=>{if(b){setActive(b.items[0]?.rank??1);setScope(b.plannedImages===1?"selected":"all");}},[b?.id]);
   const item = b?.items.find((x: Item) => x.rank === active),
     hasUnknown = b?.items.some((x: Item) =>
       ["unknown", "running"].includes(x.status),
@@ -53,7 +55,8 @@ function FeedLayout({
       <div className="core-top3-grid">
         <div className="core-top3-left">
           {tabs}
-          <Panel title="실시간 인기 뉴스 TOP 3" className="core-top3-news">
+          <Panel title="저장된 뉴스 TOP 3" className="core-top3-news">
+            <a href="/studio/news">새 뉴스 수집·분석</a>
             <Select
               label="완료된 TOP 3 분석"
               value={f.analysis}
@@ -103,7 +106,10 @@ function FeedLayout({
           </Panel>
         </div>
         <div className="core-top3-center">
-          <Panel title="공통 이미지 생성 설정">
+          <Panel title="뉴스 이미지 제작 설정">
+            <Select label="제작 범위" value={scope} onChange={setScope} disabled={blocked}
+              options={{all:"TOP 3 전체 · 이미지 3개",selected:"선택 뉴스 · 이미지 1개"}}/>
+            <p>{scope==="all"?"TOP 1·2·3을 각각 제작합니다.":`선택한 TOP ${active} 뉴스만 제작합니다.`}</p>
             <div className="core-two-fields">
               <Select
                 label="TOP 3 이미지 모델"
@@ -132,7 +138,7 @@ function FeedLayout({
               />
               <div className="core-output-spec">
                 <strong>최종 1080×1350</strong>
-                <small>개별 이미지 3개 · 4:5</small>
+                <small>이미지 {scope==="all"?3:1}개 · 4:5</small>
               </div>
             </div>
             <div className="core-actions">
@@ -146,17 +152,18 @@ function FeedLayout({
                     f.show(
                       await f.post("/api/feed-batches", {
                         analysis_id: f.analysis,
+                        ...(scope==="selected"?{rank:active}:{}),
                         ...f.options,
                       }),
                     );
                     f.setMessage(
-                      "TOP 3 작업을 고정해 저장했습니다. 아직 생성하지 않았습니다.",
+                      "뉴스와 제작 범위를 저장했습니다. 이미지 생성은 아직 실행하지 않았습니다.",
                     );
                   })
                 }
               >
                 <Save size={16} />
-                TOP 3 제작 작업 저장
+                {scope==="all"?"TOP 3 전체 제작 준비":"선택 뉴스 제작 준비"}
               </button>
               <button
                 disabled={blocked}
@@ -174,7 +181,7 @@ function FeedLayout({
             </div>
           </Panel>
           <Panel
-            title="TOP 3 이미지 결과"
+            title="뉴스 이미지 결과"
             tools={
               b && (
                 <span className="core-tag">
@@ -190,7 +197,7 @@ function FeedLayout({
                   {b.simulation ? "합성 검증 결과 · 실제 게시 차단" : b.price} ·
                   저장된 모델·옵션 고정
                 </p>
-                <div className="core-feed-results">
+                <div className={`core-feed-results${b.items.length === 1 ? " core-feed-single" : ""}`}>
                   {b.items.map((x: Item) => (
                     <article
                       key={x.rank}
@@ -247,7 +254,7 @@ function FeedLayout({
                     onClick={() => f.approve()}
                   >
                     <Sparkles size={16} />
-                    TOP 3 생성 · 비용 승인
+                    {b.plannedImages===1?"선택 뉴스 생성 · 비용 승인":"TOP 3 전체 생성 · 비용 승인"}
                   </button>
                   {f.busy && (
                     <button onClick={f.pause}>
@@ -259,15 +266,15 @@ function FeedLayout({
                 <p className="core-warning">
                   {b.canGenerate
                     ? b.price
-                    : "공식 견적·실행 권한 미확정 · 유료 생성 차단"}
+                    : "실제 이미지 생성은 비용·실행 연결 준비 중입니다. 작업 저장과 문구 검토는 가능합니다."}
                 </p>
               </>
             ) : (
               <div
-                className="core-feed-results"
+                className={`core-feed-results${scope === "selected" ? " core-feed-single" : ""}`}
                 aria-label="아직 제작하지 않은 TOP 3 결과"
               >
-                {[1, 2, 3].map((rank) => (
+                {(scope==="all"?[1,2,3]:[active]).map((rank) => (
                   <article key={rank}>
                     <div className="core-result-select">
                       <Empty>TOP {rank} · 제작 작업을 먼저 저장하세요.</Empty>
@@ -343,7 +350,7 @@ function FeedLayout({
                 ))}
               </div>
               <small>
-                {x.items.filter((i: Item) => i.status === "success").length}/3
+                {x.items.filter((i: Item) => i.status === "success").length}/{x.plannedImages ?? x.items.length}
                 성공 · 기존 결과 보존
               </small>
             </button>

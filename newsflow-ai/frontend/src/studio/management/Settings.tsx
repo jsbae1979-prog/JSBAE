@@ -33,7 +33,7 @@ export default function Settings({
   c: Controller;
   onNavigate: (p: string) => void;
 }) {
-  const [tab, setTab] = useState("overview"),
+  const [tab, setTab] = useState(() => {const requested=new URLSearchParams(window.location.search).get("tab");return tabs.some(([id])=>id===requested)?requested!:"overview";}),
     [modelTab, setModelTab] = useState("text"),
     [startup, setStartup] = useState<any>(null),
     [loading, setLoading] = useState(false);

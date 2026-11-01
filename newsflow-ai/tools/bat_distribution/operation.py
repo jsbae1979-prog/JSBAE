@@ -54,11 +54,14 @@ class OperatingRequests(LocalWorkRequests):
     """
     # Exact free previews only: installed Korean SAPI fixed sentence or a cached/public ElevenLabs sample.
     # Explicit account metadata GET and local voice selection only; no arbitrary text, paid synthesis or broader provider authority.
-    POSTS = LocalWorkRequests.POSTS - {'/collection'} | {'/ai-settings/prices', '/voices/preview', '/video/tts/voices/preview', '/video/tts/voices/load', '/video/tts/voices/select', '/video/ai/plans'}
+    POSTS = LocalWorkRequests.POSTS - {'/collection'} | {'/ai-settings/prices', '/voices/preview', '/video/tts/voices/preview', '/video/tts/voices/load', '/video/tts/voices/select', '/video/ai/plans', '/api/feed-batches'}
 
     # Only cached capability data and local settings writes are enabled here.
     # Provider story/quote/submit routes remain outside the operation boundary.
-    READS = (LocalWorkRequests.READS - {'/api/samples'}) | {'/api/studio/video-models'}
+    READS = (LocalWorkRequests.READS - {'/api/samples'}) | {'/api/studio/video-models','/api/studio/publishing/copy'}
+    FEED_CHANGE = re.compile(r'/api/feed-batches/[0-9]+/change\Z')
+    FEED_REVIEW = re.compile(r'/api/feed-batches/[0-9]+/items/[1-3]/review\Z')
+    FEED_MEDIA = re.compile(r'/api/feed-batches/[0-9]+/items/[1-3]/file\Z')
     CHARACTER_SETTINGS = re.compile(r'/api/studio/characters/[a-f0-9]{32}/settings\Z')
     CHARACTER_VISIBILITY = re.compile(r'/api/studio/characters/[a-f0-9]{32}/visibility\Z')
     CHARACTER_REUSE = re.compile(r'/api/studio/characters/[a-f0-9]{32}/reuse-story\Z')
@@ -76,7 +79,7 @@ class OperatingRequests(LocalWorkRequests):
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'http':
             method, path = scope['method'], scope['path']
-            if method == 'POST' and path == '/video-ai-settings/models':
+            if method == 'POST' and (path == '/video-ai-settings/models' or self.FEED_CHANGE.fullmatch(path)):
                 # Local model registration only. Official pricing can make an
                 # external request and retains its separate execution boundary.
                 headers = {k.lower(): v for k, v in scope.get('headers', [])}
@@ -94,12 +97,13 @@ class OperatingRequests(LocalWorkRequests):
                     if not message.get('more_body'):
                         break
                 try:
-                    valid = valid and parse_qs(body.decode('utf8'), keep_blank_values=True).get('pricing_mode', ['manual']) == ['manual']
+                    fields = parse_qs(body.decode('utf8'), keep_blank_values=True)
+                    valid = valid and (fields.get('pricing_mode', ['manual']) == ['manual'] if path == '/video-ai-settings/models' else fields.get('action') in ([a] for a in ('edit','pause','resume','recover')))
                 except UnicodeError:
                     valid = False
                 if not valid:
                     await send({'type': 'http.response.start', 'status': 403, 'headers': []})
-                    return await send({'type': 'http.response.body', 'body': b'Local model settings only.'})
+                    return await send({'type': 'http.response.body', 'body': b'Local settings only.'})
                 delivered = False
                 async def replay():
                     nonlocal delivered
@@ -114,8 +118,9 @@ class OperatingRequests(LocalWorkRequests):
                                                   or self.CHARACTER_RENDER.fullmatch(path)
                                                   or self.CHARACTER_RECOVER.fullmatch(path)
                                                   or path in {'/api/studio/characters/library','/api/studio/data-location'}
-                                                  or path in {'/api/studio/library/remove', '/api/studio/library/restore', '/api/studio/library/purge'}
-                                                  or self.CHARACTER_LOCAL_WRITE.fullmatch(path))
+                                                  or path in {'/api/studio/library/remove', '/api/studio/library/restore', '/api/studio/library/purge','/api/studio/publishing/copy/save','/api/studio/publishing/copy/apply','/api/studio/publishing/copy/validate'}
+                                                  or self.CHARACTER_LOCAL_WRITE.fullmatch(path)
+                                                  or self.FEED_REVIEW.fullmatch(path))
             copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path)
                                                        or self.CHARACTER_LOCAL_READ.fullmatch(path))
             # Existing authenticated endpoint resolves only a stored source URL.
@@ -123,7 +128,8 @@ class OperatingRequests(LocalWorkRequests):
             # no arbitrary URL, collection, paid provider, or validation grant.
             source_preview = method == 'GET' and self.NEWS_PREVIEW.fullmatch(path)
             story_review = method == 'GET' and (self.CHARACTER_STORY_REVIEW.fullmatch(path) or self.CHARACTER_STORY_RESPONSE.fullmatch(path))
-            if local_settings or copied_media or source_preview or story_review:
+            feed_media = method in {'GET','HEAD'} and self.FEED_MEDIA.fullmatch(path)
+            if local_settings or copied_media or source_preview or story_review or feed_media:
                 # self.app remains LocalAccess(original_app, session); inner
                 # signed CSRF, Origin, ownership and file checks are unchanged.
                 return await self.app(scope, receive, send)

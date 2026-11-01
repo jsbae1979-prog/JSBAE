@@ -33,6 +33,9 @@ export default function NewsShortsStudio({
   const videoModels: Item[] = c.view?.catalog.newsVideoModels ?? [];
   const selectedModel = videoModel ?? c.view?.catalog.newsVideoDefault ?? "";
   const modelReady = videoModels.some(m => m.path === selectedModel);
+  const selectedModelInfo = videoModels.find(m => m.path === selectedModel);
+  const selectedPreset = (c.view?.catalog.newsVideoPresets ?? []).find((m: Item) => m.path === selectedModel);
+
   const [archiveId, setArchiveId] = useState<number | null>(
     () => Number(new URLSearchParams(location.search).get("draft_id")) || null,
   );
@@ -241,6 +244,7 @@ export default function NewsShortsStudio({
                 id="curation_generate"
                 context={{
                   analysis_id: c.context?.selection?.id,
+                  __newsSelection: {article:chosen, selection:c.context?.selection},
                   rank,
                   duration: Number(duration),
                 }}
@@ -364,8 +368,11 @@ export default function NewsShortsStudio({
                     <strong>Higgsfield · AI 영상 API</strong>
                     <Select label="AI 영상 모델" value={modelReady ? selectedModel : ""}
                       onChange={setVideoModel} options={Object.fromEntries(videoModels.map(m =>
-                        [m.path, `${m.label} · ${m.resolution}`]))}/>
+                        [m.path, m.label.includes(m.resolution) ? m.label : `${m.label} · ${m.resolution}`]))}/>
+                    {selectedPreset && <small>장면 {selectedPreset.minSeconds}–{selectedPreset.maxSeconds}초 · 9:16 · 음성은 위에서 별도 선택</small>}
+                    {selectedModelInfo?.priceKnown === false && <small>비용 미확정 · 생성 전 견적 필요</small>}
                     <ActionButton c={c} id="video_ai_save_model_route">영상 모델 등록</ActionButton>
+                    {selectedPreset && <a href={selectedPreset.docsUrl} target="_blank" rel="noreferrer">공식 모델 정보</a>}
                     <a href="/studio/settings">모델·API 설정 관리</a>
                     {!modelReady && <small>등록된 모델을 선택하세요.</small>}
                   </>:<><strong>FFmpeg · 내 PC에서 합성</strong><small>{visual==="news"?"뉴스 이미지 자동 연결":"기본 카드 영상"} · 외부 영상 API 없음</small></>}

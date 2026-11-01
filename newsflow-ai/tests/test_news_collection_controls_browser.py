@@ -3,6 +3,7 @@ import pytest
 from playwright.sync_api import expect
 from test_model_picker_browser import browser
 from test_cloud_workspace_flow import local_server
+from test_serpapi_news import setup_serpapi
 
 def browser_context(browser,origin):
     context=browser.new_context(viewport={'width':1366,'height':768})
@@ -17,13 +18,13 @@ def test_one_box_selects_rss_or_serpapi_without_sending_requests(app,browser):
         p.goto(origin+'/studio/news');box=p.get_by_role('region',name='뉴스 수집',exact=True)
         picker=box.get_by_role('combobox',name='뉴스 수집 방식',exact=True)
         expect(picker).to_have_value('rss')
-        expect(box.get_by_role('button',name='등록 RSS 수집 · 확인',exact=True)).to_be_visible()
+        expect(box.get_by_role('button',name='수집 시작',exact=True)).to_be_visible()
         expect(box.get_by_role('button',name='SerpApi 키·수집 설정',exact=True)).to_have_count(0)
         picker.select_option('serpapi')
-        expect(box.get_by_role('button',name='등록 RSS 수집 · 확인',exact=True)).to_have_count(0)
-        box.get_by_role('button',name='SerpApi 키·수집 설정',exact=True).click()
-        d=p.get_by_role('dialog',name='수집 연결 설정 저장',exact=True);expect(d).to_be_visible()
-        d.get_by_role('button',name='취소',exact=True).click();picker.select_option('rss')
+        expect(box.get_by_role('button',name='수집 시작',exact=True)).to_be_disabled()
+        expect(box.get_by_role('link',name='설정·관리에서 수집 설정')).to_have_attribute('href','/studio/settings?tab=sources')
+        expect(box.get_by_role('button',name='SerpApi 키·수집 설정',exact=True)).to_have_count(0)
+        picker.select_option('rss')
         for w,h in [(1366,768),(1920,1080)]:
             p.set_viewport_size({'width':w,'height':h});expect(picker).to_be_visible()
             assert p.evaluate('document.documentElement.scrollWidth<=innerWidth')
@@ -44,12 +45,12 @@ def test_collection_request_has_running_and_final_counts_without_resubmission(ap
             route.fulfill(status=303,headers={'Location':'/dashboard'},body='')
         p.route('**/api/collection',status);p.route(origin+'/collection',submit)
         p.goto(origin+'/studio/news');box=p.get_by_role('region',name='뉴스 수집',exact=True)
-        box.get_by_role('button',name='등록 RSS 수집 · 확인',exact=True).click()
+        box.get_by_role('button',name='수집 시작',exact=True).click()
         p.get_by_role('dialog',name='등록 RSS 수집',exact=True).get_by_role('button',name='등록 RSS 수집',exact=True).click()
         expect(box).to_contain_text('뉴스 수집 중…')
         expect(box.get_by_role('progressbar')).to_have_attribute('aria-label','뉴스 수집 진행 중')
         assert box.get_by_role('progressbar').get_attribute('value') is None
-        expect(box.get_by_role('button',name='등록 RSS 수집 · 확인',exact=True)).to_be_disabled()
+        expect(box.get_by_role('button',name='수집 시작',exact=True)).to_be_disabled()
         state['finished']=True
         expected={'success':'최근 수집 완료','partial':'일부 출처 수집 완료','failed':'수집 실패'}[end]
         expect(box).to_contain_text(expected)
@@ -65,11 +66,39 @@ def test_unknown_post_only_reads_status_and_never_replays(app,browser):
             body=json.dumps({'status':'idle','run_id':None,'added':0,'succeeded':0,'failed':0}))))
         p.route(origin+'/collection',lambda r:(posts.append(True),r.abort('failed')))
         p.goto(origin+'/studio/news');box=p.get_by_role('region',name='뉴스 수집',exact=True)
-        box.get_by_role('button',name='등록 RSS 수집 · 확인',exact=True).click()
+        box.get_by_role('button',name='수집 시작',exact=True).click()
         d=p.get_by_role('dialog',name='등록 RSS 수집',exact=True)
         d.get_by_role('button',name='등록 RSS 수집',exact=True).click()
         expect(d.get_by_role('alert')).to_be_visible();d.get_by_role('button',name='취소',exact=True).click()
         expect(box).to_contain_text('수집 요청 결과 확인 필요')
         box.get_by_role('button',name='수집 상태 새로고침',exact=True).click()
         assert len(posts)==1 and len(reads)>=1
+        c.close()
+
+
+def test_serpapi_start_has_bounded_usage_confirmation_no_key_form(app,client,browser,setup_serpapi):
+    from test_serpapi_news import register
+    from urllib.parse import parse_qs
+    register(client)
+    with local_server(app) as origin:
+        c=browser_context(browser,origin);p=c.new_page();posts=[]
+        def submit(route):
+            posts.append(parse_qs(route.request.post_data))
+            route.fulfill(status=303,headers={'Location':'/news'},body='')
+        p.route(origin+'/news/curation/serpapi',submit)
+        p.goto(origin+'/studio/news');box=p.get_by_role('region',name='뉴스 수집',exact=True)
+        box.get_by_role('combobox',name='뉴스 수집 방식',exact=True).select_option('serpapi')
+        box.get_by_role('button',name='수집 시작',exact=True).click()
+        d=p.get_by_role('dialog',name='Google News + Trends 수집',exact=True)
+        expect(d).to_contain_text('SerpApi 검색 최대 5회')
+        expect(d.get_by_role('textbox')).to_have_count(0)
+        expect(d.get_by_role('checkbox')).to_have_count(1)
+        expect(d.get_by_role('button',name='Google News + Trends 수집',exact=True)).to_be_disabled()
+        d.get_by_role('checkbox',name='SerpApi 수집 사용량 승인').check()
+        d.get_by_role('button',name='Google News + Trends 수집',exact=True).click()
+        expect(d).to_have_count(0)
+        assert len(posts)==1 and posts[0]['collection_policy']==['global_trends_v1']
+        assert posts[0]['maximum_requests']==['5'] and posts[0]['consent']==['true']
+        assert len(posts[0]['request_token'][0])==32 and 'api_key' not in posts[0]
+        assert setup_serpapi[1].calls==0
         c.close()
