@@ -100,6 +100,7 @@ def test_trends_first_multi_edition_all_candidates_and_no_automatic_ai(client, a
     assert fake.calls == [f"https://trends.google.com/trending/rss?geo={r}" for r in TERMS]
     ctx = Curator(app.state.coordinator).context()
     assert ctx["ready"] and len(ctx["articles"]) == 5
+    assert ctx["collection"]["recent_filter"]["hours"] == 24 and ctx["collection"]["recent_filter"]["kept"] == 5
     assert ctx["candidate_mix"]["global_edition_unique"] == 4
     assert ctx["candidate_mix"]["korea_edition_unique"] == 1
     assert ctx["candidate_mix"]["global_edition_percent"] == 80

@@ -18,7 +18,7 @@
     </form>
     <div role="status">
       {% if curation.observed_at %}<p>{{ ui_icon('clock',16) }} {{ curation.observed_at|kst }}</p>{% endif %}
-      {% if curation.collection %}<p>신규 {{ curation.collection.added }} · 중복 {{ curation.collection.duplicates }} · 실패 {{ curation.collection.failed }}</p>{% set hot = curation.collection.hot_filter %}{% if hot %}<p id="hot-filter-summary">최근 {{ hot.hours }}시간 · 수집 {{ hot.collected }}건 중 기간 내 {{ hot.recent }}건 · 화제 신호 {{ hot.signalled }}건 · 남김 {{ hot.kept }}건{% if hot.unknown_published_at %} · 발행 시각 없음 {{ hot.unknown_published_at }}건{% endif %}{% if hot.signal_shortfall %} <strong>화제성 신호 부족</strong>(점수순으로 채움){% endif %}</p>{% endif %}{% else %}<p>아직 수집한 자료가 없습니다.</p>{% endif %}
+      {% if curation.collection %}<p>신규 {{ curation.collection.added }} · 중복 {{ curation.collection.duplicates }} · 실패 {{ curation.collection.failed }}</p>{% set recent = curation.collection.recent_filter %}{% if recent %}<p id="recent-filter-summary">최근 {{ recent.hours }}시간 · 수집 {{ recent.collected }}건 중 기간 내 {{ recent.recent }}건 남김{% if recent.excluded_old %} · 오래된 기사 {{ recent.excluded_old }}건 제외{% endif %}{% if recent.unknown_published_at %} · 발행 시각 없음 {{ recent.unknown_published_at }}건 포함{% endif %}{% if recent.recent_shortfall and recent.filled_old %} <strong>기간 내 기사 부족</strong>(가장 최근 기사 {{ recent.filled_old }}건으로 채움){% endif %}</p>{% endif %}{% else %}<p>아직 수집한 자료가 없습니다.</p>{% endif %}
       {% if curation.candidate_mix %}<p>글로벌 {{ curation.candidate_mix.global_edition_unique }} · 한국 {{ curation.candidate_mix.korea_edition_unique }} · 공통 {{ curation.candidate_mix.both_editions }}</p>{% endif %}
       {% if curation.error %}<p class="error">{{ curation.error }}</p>{% endif %}
     </div>

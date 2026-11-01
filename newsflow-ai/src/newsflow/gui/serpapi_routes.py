@@ -35,7 +35,8 @@ def settings(request: Request, api_key: str = Form(""), approved: bool = Form(Fa
 
 @router.post("/news/curation/serpapi")
 def collect(request: Request, request_token: str = Form(max_length=32), consent: bool = Form(False),
-            collection_policy: str = Form("korea_v1", max_length=30), maximum_requests: int = Form(1)):
+            collection_policy: str = Form("korea_v1", max_length=30), maximum_requests: int = Form(1),
+            hours: int = Form(24)):
     from newsflow.news.global_collection import GLOBAL_POLICY, plan_context
 
     expected = plan_context()["maximum_requests"] if collection_policy == GLOBAL_POLICY else 1
@@ -44,7 +45,7 @@ def collect(request: Request, request_token: str = Form(max_length=32), consent:
     try:
         Curator(request.app.state.coordinator).serpapi(keys(request), request_token, consent=consent,
                                                      adapter=getattr(request.app.state, "serpapi_adapter", None),
-                                                     policy=collection_policy)
+                                                     policy=collection_policy, hours=hours)
     except (ValueError, SerpApiError) as exc:
         raise HTTPException(422, str(exc)) from None
     except CollectionBusy:

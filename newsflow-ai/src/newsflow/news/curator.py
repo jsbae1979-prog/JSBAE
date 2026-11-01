@@ -25,7 +25,7 @@ from .serpapi_settings import settings as serpapi_settings
 from .service import CollectionBusy, safe_feed_message
 from .trends import GOOGLE_NEWS_URL, MAX_AGE, TRENDS_URL, parse_trends
 from .collection_workspace import begin_collection
-from .hot_filter import DEFAULT_HOT_HOURS, HOT_HOURS, select_hot
+from .recent_filter import DEFAULT_HOT_HOURS, check_hours, select_recent
 
 
 class Curator:
@@ -37,8 +37,7 @@ class Curator:
     def refresh(self, permission: bool = False, hours: int = DEFAULT_HOT_HOURS) -> int:
         if not permission:
             raise ValueError("Google News·Trends의 공개 RSS 이용 조건과 출처 표시에 동의해 주세요.")
-        if hours not in HOT_HOURS:
-            raise ValueError("수집 기간은 6·12·24·48시간 중에서 선택해 주세요.")
+        check_hours(hours)
         try:
             with FileLock(str(self.coordinator.lock_path)).acquire(timeout=0):
                 return self._refresh(hours)
@@ -77,13 +76,13 @@ class Curator:
                                         .order_by(AuditLog.id.desc()).limit(1))
             trend.status = "success" if snapshot and collected["succeeded"] else "failed"
             if trend.status == "success" and not collected["failed"] and collected["article_ids"]:
-                # Keep only recent articles with a Trends or multi-publisher signal.
-                hot, info = select_hot(session, collected["article_ids"], snapshot, utcnow(), hours)
-                if hot:
+                # Keep only recently published articles; TOP 3 scoring judges newsworthiness.
+                recent, info = select_recent(session, collected["article_ids"], utcnow(), hours)
+                if recent:
                     from .lifecycle import replace_collection
 
-                    replace_collection(session, hot)
-                    collected = {**collected, "article_ids": hot, "hot_filter": info}
+                    replace_collection(session, recent)
+                    collected = {**collected, "article_ids": recent, "recent_filter": info}
             trend.result = {"snapshot": snapshot, "collection": collected, "trends_error": error,
                             "news_error": news_error, "ai_calls": 0, "facts_verified": False}
             trend.message = ("Google News·Trends 자료 준비 완료 · AI 평가 전" if trend.status == "success"
@@ -132,7 +131,8 @@ class Curator:
         except Timeout:
             raise CollectionBusy from None
 
-    def serpapi(self, keys, token: str, *, consent: bool = False, adapter=None, policy: str = "korea_v1") -> int:
+    def serpapi(self, keys, token: str, *, consent: bool = False, adapter=None, policy: str = "korea_v1",
+                hours: int = DEFAULT_HOT_HOURS) -> int:
         """One durable authorized attempt, then Trends only. No fallback/replay after any outcome."""
         if not re.fullmatch(r"[a-f0-9]{32}", token):
             raise ValueError("요청 식별자를 확인해 주세요.")
@@ -142,6 +142,7 @@ class Curator:
 
         if policy not in {"korea_v1", GLOBAL_POLICY}:
             raise ValueError("수집 정책을 확인해 주세요.")
+        check_hours(hours)
         try:
             with FileLock(str(self.coordinator.lock_path)).acquire(timeout=0):
                 with self.sessions() as session:
@@ -158,7 +159,7 @@ class Curator:
                     raise ValueError("설정에서 SerpApi 키 등록과 사용 승인을 확인해 주세요.")
                 adapter = adapter or SerpApiAdapter(keys)
                 if policy == GLOBAL_POLICY:
-                    return collect_global(self, config, adapter, token)
+                    return collect_global(self, config, adapter, token, hours)
                 with self.sessions.begin() as session:
                     run = IntelligenceRun(kind="news_search", provider="serpapi", status="running",
                                           options={"generation": config["generation"],
@@ -180,6 +181,8 @@ class Curator:
                             session.flush()
                         stored = self.news.store_articles(session, source.id, articles)
                         self.news.rescore(session)
+                        recent, info = select_recent(session, stored["article_ids"], utcnow(), hours)
+                        stored = {**stored, "article_ids": recent, "recent_filter": info}
                         collection = CollectionRun(status="success", added=stored["added"], duplicates=stored["duplicates"],
                                                    succeeded=1, failed=0, finished_at=utcnow())
                         session.add(collection)
