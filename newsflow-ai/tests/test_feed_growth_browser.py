@@ -26,7 +26,8 @@ def test_free_copy_and_manual_performance_browser(app,feeds,browser,tmp_path):
             route.fulfill(json=data)
         ctx.route('**/api/studio/modules/images',module)
         ctx.route('**/news/*/thumbnail',lambda route:route.fulfill(content_type='image/png',body=photo()))
-        page=ctx.new_page();errors=[];writes=[]
+        page=ctx.new_page();errors=[];writes=[];performance_reads=[]
+        page.on('request',lambda r:performance_reads.append(r.url) if r.method=="GET" and r.url.endswith("/design-performance") else None)
         page.on('pageerror',lambda e:errors.append(str(e)))
         page.on('request',lambda r:writes.append(r.url) if r.method=='POST' else None)
         page.goto(origin+'/studio/images?mode=top3')
@@ -49,7 +50,14 @@ def test_free_copy_and_manual_performance_browser(app,feeds,browser,tmp_path):
         page.get_by_text('고급 편집',exact=True).click()
         page.get_by_text('제목 후보 · 캡션 구성',exact=True).click()
         expect(page.get_by_label('캡션 첫 문장',exact=True)).to_have_value('합성 관측 계획 공개')
+        assert not performance_reads
         page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True).click()
+        expect(page.get_by_label('성과 이미지 버전',exact=True)).to_be_enabled()
+        assert len(performance_reads)==1
+        page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True).click()
+        page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True).click()
+        page.wait_for_timeout(100)
+        assert len(performance_reads)==1
         expect(page.get_by_role('button',name='성과 기록 저장',exact=True)).to_be_disabled()
         page.get_by_label('성과 이미지 버전',exact=True).select_option('2')
         page.get_by_label('Instagram 게시물 주소',exact=True).fill('https://www.instagram.com/p/FixtureOnly123/')

@@ -20,7 +20,8 @@ export default function FeedImageHistory({entries,busy,csrf,onOpen,onRemoved}:{e
       if(!r.ok||!Array.isArray(data.removed)||data.removed.length!==ids.length||new Set(data.removed).size!==ids.length||!data.removed.every((x:string)=>ids.includes(x)))throw Error();
       setHidden(old=>[...new Set([...old,...ids])]);setSelected(old=>old.filter(x=>!ids.includes(x)));setPending(null);
       setMessage(`${ids.length}개를 휴지통으로 옮겼습니다. 라이브러리에서 복원할 수 있습니다.`);
-      await onRemoved();
+      try { await onRemoved(); }
+      catch { setMessage(`${ids.length}개를 휴지통으로 옮겼습니다. 목록 새로고침만 실패했습니다. 새로고침해 확인하세요.`); }
     }catch {setMessage('삭제 결과를 확인하지 못했습니다. 목록을 새로고침해 확인하세요.');}
     finally {flight.current=false;setSending(false);}
   }

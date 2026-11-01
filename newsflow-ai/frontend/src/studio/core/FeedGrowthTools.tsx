@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Item } from "../contracts";
 
 type Local = (fn: () => Promise<void>) => void;
@@ -48,16 +48,22 @@ export function FeedPerformance({ base, csrf, versions, busy, local }: { base: s
   const [state, setState] = useState<Item | null>(null), [message, setMessage] = useState("");
   const [form, setForm] = useState<Item>({ version: "0", url: "", publishedAt: "", observedAt: localNow(), reach: "", saves: "", shares: "", follows: "" });
   const [confirmed, setConfirmed] = useState(false);
+  const [open, setOpen] = useState(false);
+  const loadedBase = useRef("");
   useEffect(() => {
+    if (!open || loadedBase.current === base) return;
+    setState(null); setMessage("");
     const abort = new AbortController();
     fetch(base + "/design-performance", { credentials: "same-origin", cache: "no-store", signal: abort.signal })
-      .then(json).then(setState).catch(e => { if (e.name !== "AbortError") setMessage(e.message); });
+      .then(json).then(value => {
+        if (!abort.signal.aborted) { loadedBase.current = base; setState(value); }
+      }).catch(e => { if (!abort.signal.aborted) setMessage(e.message); });
     return () => abort.abort();
-  }, [base]);
+  }, [base, open]);
   const update = (key: string, value: string) => setForm(old => ({ ...old, [key]: value }));
   const number = (value: unknown) => value == null ? "미확인" : Number(value).toLocaleString("ko-KR");
   const rate = (value: unknown) => value == null ? "—" : `${value}%`;
-  return <details className="feed-performance">
+  return <details className="feed-performance" onToggle={e => setOpen(e.currentTarget.open)}>
     <summary>게시 후 성과 비교 · 직접 입력</summary>
     <p className="core-muted">Instagram에서 확인한 수치입니다. 자동 조회·게시되지 않습니다.</p>
     <fieldset disabled={busy || !state}>
@@ -83,7 +89,7 @@ export function FeedPerformance({ base, csrf, versions, busy, local }: { base: s
     {message && <p role="status">{message}</p>}
     {state?.records.length ? <div className="feed-performance-table"><table><caption>버전별 성과 · 사용자 입력</caption><thead><tr><th>스타일 / 버전</th><th>게시 후</th><th>도달</th><th>저장 / 비율</th><th>공유 / 비율</th><th>팔로우 / 비율</th></tr></thead><tbody>
       {state.records.map((r: Item) => <tr key={r.id}><th>{r.style === "legacy" ? "기존 카드" : "사진 중심"}{r.version ? ` v${r.version}` : ""}<small>{new Date(r.observedAt).toLocaleString("ko-KR")}</small></th><td>{r.elapsedHours}시간</td><td>{number(r.reach)}</td><td>{number(r.saves)} / {rate(r.rates.saves)}</td><td>{number(r.shares)} / {rate(r.rates.shares)}</td><td>{number(r.follows)} / {rate(r.rates.follows)}</td></tr>)}
-    </tbody></table></div> : <p className="core-muted">저장된 게시 성과가 없습니다.</p>}
+    </tbody></table></div> : <p className="core-muted">{state ? "저장된 게시 성과가 없습니다." : message ? "성과 기록을 불러오지 못했습니다." : "성과 기록 불러오는 중…"}</p>}
     <small>비율 = 각 반응 ÷ 도달 계정. 측정 기간과 독자층이 비슷한 게시물을 비교하세요. 결과만으로 디자인 효과를 단정할 수 없습니다.</small>
   </details>;
 }

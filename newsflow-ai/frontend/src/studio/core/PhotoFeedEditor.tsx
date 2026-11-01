@@ -101,6 +101,7 @@ export default function PhotoFeedEditor({
     change({ [k]: v });
   }
   function change(patch: Item) {
+    setVersion(0);
     setReviewed(false);
     setForm((f) => ({ ...f, ...patch }));
     setDirty(true);
@@ -232,6 +233,7 @@ export default function PhotoFeedEditor({
         // Replacing an image must not discard unsaved title/layout edits.
         accept(d);
         setForm({ ...form, credit: d.draft.credit });
+        setVersion(0);
         setDirty(true);
         setReviewed(false);
         setMessage("배경 이미지 변경 완료");
@@ -350,10 +352,10 @@ export default function PhotoFeedEditor({
                   );
                   setForm(v.design);
                   setBackground(`version:${v.version}`);
-                  setDirty(true);
+                  setDirty(false);
                   setReviewed(false);
                   setMessage(
-                    "선택 버전의 편집값을 불러왔습니다. 수정 후 새 버전으로 저장하세요.",
+                    `버전 ${v.version}을 불러왔습니다.`,
                   );
                 }
               }}
@@ -431,7 +433,7 @@ export default function PhotoFeedEditor({
             <div className="photo-feed-actions">
               <button
                 className="primary"
-                disabled={!background || !!previewError || previewState === "이미지·편집 반영 중…"}
+                disabled={!background || (!dirty && version > 0) || !!previewError || previewState === "이미지·편집 반영 중…"}
                 onClick={() => run("render")}
               >
                 새 버전으로 저장

@@ -86,3 +86,23 @@ def test_gallery_delete_and_library_restore_no_media_loss(app,feeds,browser,tmp_
         assert all(feeds.path(b,n).is_file() for n in (1,2,3))
         p.screenshot(path=str(tmp_path/'recent-image-delete.png'),full_page=True)
         ctx.close()
+
+
+def test_gallery_acknowledged_delete_refresh_failure_is_not_unknown(app,feeds,browser):
+    service,b,state,design=completed(feeds)
+    original=deepcopy(feeds.get(b).result)
+    with local_server(OperatingRequests(app)) as origin:
+        ctx=context(browser,origin);p=ctx.new_page();posts=[]
+        p.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
+        p.goto(origin+'/studio/images?mode=top3')
+        expect(p.locator('.feed-image-history-card')).to_have_count(3)
+        # Mutation succeeds, only the subsequent listing fails.
+        ctx.route('**/api/feed-batches',lambda r:r.fulfill(status=503,json={'detail':'fixture refresh failure'}))
+        p.get_by_role('button',name=f'작업 {b} TOP 1 삭제',exact=True).click()
+        p.get_by_role('dialog',name='최근 생성 이미지 삭제').get_by_role('button',name='휴지통으로 이동',exact=True).click()
+        expect(p.get_by_role('status').filter(has_text='목록 새로고침만 실패했습니다')).to_be_visible()
+        expect(p.locator('.feed-image-history-card')).to_have_count(2)
+        expect(p.get_by_role('dialog',name='최근 생성 이미지 삭제')).not_to_be_visible()
+        assert sum(x.endswith('/remove') for x in posts)==1
+        assert feeds.get(b).result==original and all(feeds.path(b,n).is_file() for n in (1,2,3))
+        ctx.close()
