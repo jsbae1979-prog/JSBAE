@@ -12,6 +12,19 @@ from newsflow.news.rss_adapter import FakeRSSAdapter
 pytest_plugins = ("oauth_protocol_fixtures",)
 
 
+@pytest.fixture(autouse=True)
+def legacy_character_story_format(request, monkeypatch):
+    """Existing character fixtures encode the pre-format story rules.
+
+    New jobs normally freeze config/character_story.yaml; tests that check the
+    shorts format opt in with the ``story_format`` marker.
+    """
+    if request.node.get_closest_marker('story_format'):
+        return
+    from newsflow.character import episode_service
+    monkeypatch.setattr(episode_service, 'load_story_format', lambda: None)
+
+
 @pytest.fixture
 def synthetic_app_isolation(monkeypatch, tmp_path, request):
     """Plain pytest's synthetic app boundary; historical Guard plugins retain theirs.

@@ -24,7 +24,7 @@ newsflow = ["config/*.yaml", "config/*.txt", "gui/templates/*.html", "gui/templa
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["network: opt-in live RSS request"]
+markers = ["network: opt-in live RSS request", "story_format: use the configured character shorts story format"]
 
 [tool.ruff]
 target-version = "py312"

@@ -79,8 +79,6 @@ class EpisodeScript(Strict):
             raise ValueError('scene numbers must be consecutive')
         if self.scenes[0].continuity != 'cut':
             raise ValueError('first scene starts from the registered reference')
-        if self.scenes[-1].freeze_end not in {'medium', 'strong'}:
-            raise ValueError('punchline requires a final hold')
         return self
 
 
@@ -147,17 +145,32 @@ def base_scene_count(target_seconds):
     return 4, 6
 
 
-def scene_range(target_seconds, model):
+SHORT_SCENE_SECONDS = (3, 6)
+
+
+def scene_range(target_seconds, model, story_format=None):
+    from .episode_policy import LEGACY_STORY_FORMAT
+    story_format = story_format or LEGACY_STORY_FORMAT
     lo, hi = base_scene_count(target_seconds)
-    need = math.ceil(target_seconds / max(duration_values(model)))
+    allowed = duration_values(model)
+    need = math.ceil(target_seconds / max(allowed))
+    if story_format['short_scenes']:
+        # Quick cuts: aim for 3-6 second beats, bounded by the model's shortest clip.
+        shortest, longest = SHORT_SCENE_SECONDS
+        lo = max(lo, math.ceil(target_seconds / longest))
+        hi = max(lo + 1, min(math.ceil(target_seconds / 4) + 1,
+                              target_seconds // max(shortest, min(allowed))))
     lo = max(lo, need)
     return lo, max(hi, lo + 1)
 
 
-def validate_episode(story, target_seconds, model, native_sound=True):
-    from .episode_policy import load_edit_presets, load_sfx_map, total_playback_seconds
+def validate_episode(story, target_seconds, model, native_sound=True, story_format=None):
+    from .episode_policy import LEGACY_STORY_FORMAT, load_edit_presets, load_sfx_map, total_playback_seconds
+    story_format = story_format or LEGACY_STORY_FORMAT
     story = EpisodeScript.model_validate(story)
-    lo, hi = scene_range(target_seconds, model)
+    if not story_format['loop_ending'] and story.scenes[-1].freeze_end not in {'medium', 'strong'}:
+        raise EpisodeValidationError('schema_relation', ('scenes', len(story.scenes) - 1, 'freeze_end'))
+    lo, hi = scene_range(target_seconds, model, story_format)
     allowed = duration_values(model)
     sfx = load_sfx_map()
     if not lo <= len(story.scenes) <= hi:
@@ -216,14 +229,49 @@ SCRIPT_INSTRUCTION = (
 )
 
 
-def script_input(profile, topic, target_seconds, model, native_sound, recent_topics=()):
+_FINAL_HOLD = 'The last scene is the punchline and must freeze_end medium or strong. '
+_HOOK_FIRST = (
+    'Hook first: scene 1 opens in the middle of the most surprising or absurd visible moment, with strong motion '
+    'in its first second; no calm establishing shot. Explain the situation through the following scenes. '
+    'hook_caption is a short Korean line that makes viewers curious about what happens next, not a title. ')
+_SHORT_SCENES = (
+    'Quick cuts: each scene is one quick beat; choose scene seconds between 3 and 6 when input.scene_seconds allows. ')
+_LOOP_ENDING = (
+    'Loop ending: the last scene is the punchline and ends on the punchline action, not a long hold; '
+    'use freeze_end none or weak for it. Its final pose, place and framing lead naturally back into scene 1, '
+    'so a replay looks continuous. Make total playback as close to input.target_seconds as possible. '
+    'Leave end_caption empty. ')
+
+
+def script_instruction(story_format=None):
+    """Legacy jobs keep the original text; new jobs add the stored shorts format rules."""
+    from .episode_policy import LEGACY_STORY_FORMAT
+    story_format = LEGACY_STORY_FORMAT if story_format is None else story_format
+    text = SCRIPT_INSTRUCTION
+    if story_format['loop_ending']:
+        text = text.replace(_FINAL_HOLD, _LOOP_ENDING)
+    extra = (_HOOK_FIRST if story_format['hook_first'] else '') + (_SHORT_SCENES if story_format['short_scenes'] else '')
+    if story_format is not LEGACY_STORY_FORMAT:
+        extra += ('Supporting cast: when input.character.supporting_cast members appear, write their exact id '
+                  '(for example team_lead) in that scene action. ')
+    return text + (' ' + extra.strip() if extra else '')
+
+
+def script_input(profile, topic, target_seconds, model, native_sound, recent_topics=(), story_format=None):
     from .episode_policy import load_edit_presets, load_sfx_map
-    lo, hi = scene_range(target_seconds, model)
+    lo, hi = scene_range(target_seconds, model, story_format)
     # Appearance and the image are deliberately excluded from the text-writing stage.
     character = {key: profile[key] for key in ('name_ko', 'species', 'personality', 'comedy_formula',
                  'supporting_cast', 'audience') if key in profile}
     from .story_character import story_character
     character.update(story_character(profile))
+    if story_format is not None:
+        # The text stage needs to know who each supporting id is; the protagonist look stays excluded.
+        cast = [{'id': row['id'], 'description': row['appearance'][:160]}
+                for row in profile.get('supporting_cast', []) if isinstance(row, dict) and row.get('id')
+                and isinstance(row.get('appearance'), str)]
+        if cast:
+            character['supporting_cast'] = cast
     return {'character': character, 'topic': topic, 'target_seconds': target_seconds,
             'character_limits':character_limits(),
             'min_scenes': lo, 'max_scenes': hi, 'scene_seconds': duration_values(model),
@@ -232,10 +280,20 @@ def script_input(profile, topic, target_seconds, model, native_sound, recent_top
             'recent_topics': list(recent_topics)[-5:]}
 
 
-def scene_prompt(character, scene, native_sound, role=''):
+def _mentions(action, cast_id, loose):
+    action = action.casefold()
+    if cast_id.casefold() in action:
+        return True
+    # "team lead" or "team-lead" for team_lead; only for jobs that store a story format.
+    words = re.split(r'_+', cast_id.casefold())
+    return loose and bool(re.search(r'\b' + r'[ _-]+'.join(map(re.escape, words)) + r'\b', action))
+
+
+def scene_prompt(character, scene, native_sound, role='', story_format=None):
+    loose = story_format is not None
     supporting = []
     for cast in character.get('supporting_cast', []):
-        if isinstance(cast, dict) and cast.get('id') and cast['id'].casefold() in scene.action.casefold():
+        if isinstance(cast, dict) and cast.get('id') and _mentions(scene.action, cast['id'], loose):
             supporting.append(cast['appearance'])
     from .story_character import ROLE_DIRECTIONS
     parts = [character['style_lock'], character['appearance'], *supporting, ROLE_DIRECTIONS.get(role,''), scene.action,
@@ -250,11 +308,20 @@ def scene_prompt(character, scene, native_sound, role=''):
     return text
 
 
-def prompts(story, settings, character):
+def scene_role(index, count, story_format=None):
+    if index == 0:
+        return 'hook' if story_format and story_format['hook_first'] else 'setup'
+    if index == count - 1:
+        return 'loop_punchline' if story_format and story_format['loop_ending'] else 'punchline'
+    return 'contrast'
+
+
+def prompts(story, settings, character, story_format=None):
+    count = len(story.scenes)
     return [{'position': s.no, 'seconds': s.seconds,
              'continuity': s.continuity, 'from': s.from_scene,
              'prompt': scene_prompt(character, s, settings['sound'] == 'on',
-                 'setup' if index==0 else 'punchline' if index==len(story.scenes)-1 else 'contrast')}
+                 scene_role(index, count, story_format), story_format)}
             for index,s in enumerate(story.scenes)]
 
 

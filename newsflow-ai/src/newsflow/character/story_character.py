@@ -26,4 +26,6 @@ ROLE_DIRECTIONS={
     'build':'Show the contrast between the character and the surroundings; develop the situation.',
     'contrast':'Show the contrast between the character and the surroundings.',
     'punchline':"Comedic payoff: hold the character's reaction for a beat, exaggerated expression.",
+    'hook':'Open in the middle of the most surprising visible moment, with strong motion in the first second; no calm establishing shot.',
+    'loop_punchline':'Comedic payoff: exaggerated reaction that ends close to the opening pose and framing, so the video can loop.',
 }

@@ -92,8 +92,10 @@ def generation_rows(job):
         from .kling import check
         from newsflow.video_models.catalog import CATALOG
         chosen=check(job['studio_selection'])
-        story=validate_episode(job['script'],job['duration'],CATALOG.model(job['model']),chosen['sound']=='on')
-        return episode_prompts(story,chosen,job['character'])
+        from .episode_policy import job_story_format
+        story_format=job_story_format(job)
+        story=validate_episode(job['script'],job['duration'],CATALOG.model(job['model']),chosen['sound']=='on',story_format)
+        return episode_prompts(story,chosen,job['character'],story_format)
     rows=job['prompts']
     if not job.get('studio_selection'):
         return rows
