@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Sparkles, Save, Pause, Download } from "lucide-react";
 import TopThreeFeeds from "../TopThreeFeeds";
 import FeedCostReview from "../FeedCostReview";
+import FeedGenerationProgress from "./FeedGenerationProgress";
 import { Thumbnail } from "../Thumbnail";
 import type { Item } from "../contracts";
 import {
@@ -194,6 +195,7 @@ function FeedLayout({
           >
             {b ? (
               <>
+                <FeedGenerationProgress batch={b} busy={f.busy} runningRank={f.runningRank} stopping={f.stopRequested} message={f.message}/>
                 <p className="core-muted">
                   {b.simulation ? "합성 검증 결과 · 실제 게시 차단" : b.price} ·
                   저장된 모델·옵션 고정
@@ -219,7 +221,7 @@ function FeedLayout({
                           TOP {x.rank} · {x.content?.title}
                         </strong>
                       </button>
-                      <State value={x.status} />
+                      <State value={f.busy && f.runningRank === x.rank && x.status === "pending" ? "running" : x.status} />
                       <div className="core-actions">
                         {x.status === "success" &&
                           x.mediaUrl ===
@@ -262,10 +264,10 @@ function FeedLayout({
                     <Sparkles size={16} />
                     {b.plannedImages===1?"선택 뉴스 생성 · 비용 승인":"TOP 3 전체 생성 · 비용 승인"}
                   </button>
-                  {f.busy && (
-                    <button onClick={f.pause}>
+                  {f.busy && f.runningRank != null && (
+                    <button onClick={f.pause} disabled={f.stopRequested}>
                       <Pause size={14} />
-                      현재 요청 후 중단
+                      {f.stopRequested ? "중단 요청됨" : "현재 요청 후 중단"}
                     </button>
                   )}
                 </div>

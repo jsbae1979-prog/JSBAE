@@ -73,6 +73,7 @@ export default function TopThreeFeeds({
     [sources, setSources] = useState(false);
   const [ready, setReady] = useState(false);
   const [runningRank, setRunningRank] = useState<number | null>(null);
+  const [stopRequested, setStopRequested] = useState(false);
   const loadVersion = useRef(0);
   const stop = useRef(false),
     mounted = useRef(true);
@@ -167,6 +168,7 @@ export default function TopThreeFeeds({
     setApproval(false);
     await local(async () => {
       stop.current = false;
+      setStopRequested(false);
       let b = batch;
       if (regenerate) {
         b = await post(`/api/feed-batches/${b.id}/change`, {
@@ -389,6 +391,7 @@ export default function TopThreeFeeds({
           message,
           ready,
           runningRank,
+          stopRequested,
           chosen,
           local,
           post,
@@ -424,6 +427,7 @@ export default function TopThreeFeeds({
           },
           pause: () => {
             stop.current = true;
+            setStopRequested(true);
           },
           select: (b: Item) => {
             if (!busy) show(b);
