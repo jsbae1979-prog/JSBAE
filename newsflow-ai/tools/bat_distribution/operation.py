@@ -99,7 +99,7 @@ class OperatingRequests(LocalWorkRequests):
                         break
                 try:
                     fields = parse_qs(body.decode('utf8'), keep_blank_values=True)
-                    valid = valid and (fields.get('pricing_mode', ['manual']) == ['manual'] if path == '/video-ai-settings/models' else fields.get('action') in ([a] for a in ('edit','pause','resume','recover')))
+                    valid = valid and (fields.get('pricing_mode', ['manual']) == ['manual'] if path == '/video-ai-settings/models' else fields.get('action') in ([a] for a in ('edit','pause','resume','recover','regenerate')))
                 except UnicodeError:
                     valid = False
                 if not valid:
@@ -130,7 +130,7 @@ class OperatingRequests(LocalWorkRequests):
             # no arbitrary URL, collection, paid provider, or validation grant.
             source_preview = method == 'GET' and self.NEWS_PREVIEW.fullmatch(path)
             story_review = method == 'GET' and (self.CHARACTER_STORY_REVIEW.fullmatch(path) or self.CHARACTER_STORY_RESPONSE.fullmatch(path))
-            feed_media = method in {'GET','HEAD'} and self.FEED_MEDIA.fullmatch(path)
+            feed_media = method in {'GET','HEAD'} and (self.FEED_MEDIA.fullmatch(path) or self.FEED_COST.fullmatch(path))
             if local_settings or copied_media or source_preview or story_review or feed_media:
                 # self.app remains LocalAccess(original_app, session); inner
                 # signed CSRF, Origin, ownership and file checks are unchanged.

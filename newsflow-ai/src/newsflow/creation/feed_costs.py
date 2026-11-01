@@ -35,13 +35,20 @@ def unreserved(row,state,quote):
     return [b for b in quote['bounds'] if f"{row.id}:{b['rank']}:{b['attempt']}" not in used]
 
 class FeedCosts:
-    def __init__(self,cached_quote=None,account_scope=None,clock=None):
+    def __init__(self,cached_quote=None,account_scope=None,clock=None,readiness=None):
         # A cached quote resolver is a trusted server dependency, never form data.
         self.cached_quote,self.account_scope=cached_quote,account_scope
+        self.readiness=readiness
         self.clock=clock or (lambda:datetime.now(timezone.utc).timestamp())
 
     def refresh(self,row):
         prior=row.options.get('costs',{})
+        # Repeating a preparation check must not revoke an unchanged valid approval.
+        try:
+            self.quote(row)
+            return deepcopy(prior)
+        except PublishingError:
+            pass
         state={'reservations':deepcopy(prior.get('reservations',[]))}
         if self.cached_quote is None or self.account_scope is None:
             return state
@@ -103,10 +110,12 @@ class FeedCosts:
         try:quote=self.quote(row)
         except PublishingError:pass
         approval=state.get('approval',{})
+        readiness=self.readiness(row.options['selection']) if self.readiness else None
         return {'currency':'USD','quoteHash':quote['hash'] if quote else None,
+            'readiness':readiness,
             'remainingMaximumUsd':str(sum((money(b['maximumUsd']) for b in unreserved(row,state,quote)),Decimal(0))) if quote else None,
             'reservedUsd':str(exposure(state)),'approvedLimitUsd':approval.get('limitUsd'),
             'approved':bool(quote and approval.get('quoteHash')==quote['hash']),
             'ready':bool(quote),'billingVerified':False,
             'message':'선택 범위의 비용 상한 확인됨 · 실제 청구액 별도' if quote else
-                '장당 비용 미확정 · OpenAI 계정 권한과 비용 상한을 확인해야 생성할 수 있습니다.'}
+                (readiness['message'] if readiness else '장당 비용 미확정 · OpenAI 계정 권한과 비용 상한을 확인해야 생성할 수 있습니다.')}

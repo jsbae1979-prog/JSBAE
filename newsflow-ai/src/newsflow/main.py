@@ -219,7 +219,9 @@ def create_app(
     from .creation.image_studio import ImageStudio
     app.state.image_studio = ImageStudio(sessions, settings.data_dir, image_generation)
     from .creation.top_three_feeds import TopThreeFeeds
-    app.state.top_three_feeds = TopThreeFeeds(sessions, settings.data_dir, image_generation)
+    from .creation.feed_readiness import FeedReadiness
+    app.state.top_three_feeds = TopThreeFeeds(sessions, settings.data_dir, image_generation,
+                                             readiness=FeedReadiness(app.state))
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 
     def valid(token: str) -> bool:

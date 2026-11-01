@@ -111,7 +111,8 @@ def analyze(request: Request, collection_context_id: int = Form(ge=1), consent: 
     ai = ctx["ai"]
     try:
         result = _once(request, ["analysis", ctx["run_id"], sorted(article_ids), ai["provider"], ai["model"], WORKSPACE_TOP_K],
-                       lambda remember: {"run_id": service(request).analyze(
+                       lambda remember: {"run_id": (request.app.state.news_analysis_access.service(request)
+                           if hasattr(request.app.state, 'news_analysis_access') else service(request)).analyze(
                            article_ids, ai["provider"], True,
                            Options(ai["model"], timeout=CURATION_TIMEOUT_SECONDS,
                                    max_tokens=curation_output_tokens(ai["provider"], ai["model"])),

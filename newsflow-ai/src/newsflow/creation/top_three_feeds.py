@@ -86,9 +86,9 @@ class LocalFeedPreviewAdapter:
 
 
 class TopThreeFeeds:
-    def __init__(self, sessions, data_dir, generation, *, simulation=False, cached_quote=None, account_scope=None):
+    def __init__(self, sessions, data_dir, generation, *, simulation=False, cached_quote=None, account_scope=None, readiness=None):
         self.sessions, self.generation = sessions, generation
-        self.costs = FeedCosts(cached_quote, account_scope)
+        self.costs = FeedCosts(cached_quote, account_scope, readiness=readiness)
         self.simulation = simulation is True and type(generation.adapter) is LocalFeedPreviewAdapter
         self.root = Path(data_dir) / "outputs" / "top3-feeds"
         self.safe_paths = NewsImages(data_dir)
@@ -194,23 +194,30 @@ class TopThreeFeeds:
             if options is not None: row.options = deepcopy(options)
 
     def _recover(self, row):
+        """Reconcile terminal local evidence only. Never query or resubmit a provider."""
         result = deepcopy(row.result); changed = False
         for item in result["items"]:
-            if item["status"] != "running": continue
-            changed = True
+            if item["status"] not in {"running", "unknown"}: continue
+            previous = deepcopy(item)
             with self.sessions() as s:
                 found = list(s.scalars(select(IntelligenceRun).where(
                     IntelligenceRun.kind == "feed_image",
                     IntelligenceRun.evidence["source"]["batch_id"].as_integer() == row.id,
                     IntelligenceRun.evidence["source"]["rank"].as_integer() == item["rank"],
                     IntelligenceRun.evidence["source"]["attempt"].as_integer() == item["attempt"])))
-            if len(found) == 1 and found[0].status in {"success", "failed", "unknown"}:
+            if len(found) == 1 and found[0].status in {"success", "failed"}:
                 try:
                     self._accept(row, item, found[0].id)
                 except (PublishingError, OSError, ValueError):
-                    item.update(status="unknown", message="기존 결과 파일을 확인하지 못했습니다. 재전송 금지")
-            else:
+                    item.clear(); item.update(previous)
+                    if item["status"] == "running":
+                        item.update(status="unknown", message="기존 결과 파일을 확인하지 못했습니다. 재전송 금지")
+            elif item["status"] == "running":
                 item.update(status="unknown", message="중단된 요청 · 결과 불명 · 자동 재요청 금지")
+            if item != previous:
+                history = item.setdefault("recovery_history", [])
+                history.append({k: deepcopy(v) for k,v in previous.items() if k not in {"history", "recovery_history"}})
+                changed = True
         if changed:
             result["revision"] += 1; self._save(row.id, result)
         return result
@@ -331,6 +338,8 @@ class TopThreeFeeds:
                         # This only prepares a new attempt; its changed binding needs a fresh cost approval.
                         if consent is not True or reviewed is not True or row.options['simulation']!=self.simulation:
                             raise PublishingError('기존 결과와 재생성 범위를 검토하세요.')
+                        if any(i['status'] in {'running','unknown'} for i in result['items']):
+                            raise PublishingError('먼저 기존 요청 결과를 확인하세요. 새 요청은 준비하지 않았습니다.')
                         if item["status"] == "pending": raise PublishingError("이미 생성 대기 중인 항목입니다.")
                         item["history"].append({k: deepcopy(v) for k, v in item.items() if k != "history"})
                         item.update(status="pending", generation_id=None, attempt=item["attempt"]+1)
@@ -400,13 +409,17 @@ class TopThreeFeeds:
                     item["mediaUrl"] = f"/api/feed-batches/{identifier}/items/{item['rank']}/file"
                 except (PublishingError, OSError, ValueError):
                     item["status"] = "missing"
+        cost = self.costs.view(row)
+        can_prepare = not any(i['status'] in {'running', 'unknown'} for i in items)
         return {"id": row.id, "analysisId": row.evidence["analysis_id"], "status": row.status,
+                "canPrepareRegeneration": can_prepare,
+                "canRecover": any(i['status'] in {'running', 'unknown'} for i in items),
                 "selection": row.options["selection"], "items": items,
                 "revision": row.result["revision"], "paused": row.result["paused"],
                 "simulation": row.options["simulation"], "plannedImages": len(items),
                 "maxGenerations": row.options["max_generations"],
-                "price": "Fake 검증 · 실제 과금 없음" if row.options["simulation"] else self.costs.view(row)["message"],
-                "costReview": self.costs.view(row),
-                "canGenerate": bool((self.simulation and row.options["simulation"]) or (not row.options["simulation"] and self.costs.view(row)["approved"])),
-                "generationBlock": None if self.simulation or self.costs.view(row)["approved"] else self.costs.view(row)["message"],
+                "price": "Fake 검증 · 실제 과금 없음" if row.options["simulation"] else cost["message"],
+                "costReview": cost,
+                "canGenerate": bool((self.simulation and row.options["simulation"]) or (not row.options["simulation"] and cost["approved"])),
+                "generationBlock": None if self.simulation or cost["approved"] else cost["message"],
                 "publishApproval": "내용·출처·권리·AI 표시 검토 후 계정 선택과 최종 게시 승인 별도"}

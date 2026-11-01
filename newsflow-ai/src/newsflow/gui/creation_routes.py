@@ -130,6 +130,14 @@ def feed_batch_create(request: Request, analysis_id: int = Form(ge=1), model: st
         raise HTTPException(422, str(exc)) from None
 
 
+@router.get('/api/feed-batches/{identifier}/cost-review')
+def feed_cost_status(request: Request, identifier: int):
+    try:
+        return request.app.state.top_three_feeds.view(identifier)
+    except (PublishingError, SelectionError) as exc:
+        raise HTTPException(422, str(exc)) from None
+
+
 @router.post('/api/feed-batches/{identifier}/cost-review')
 def feed_cost_review(request: Request, identifier: int, revision: int = Form(ge=1),
                      limit: str | None = Form(None,max_length=20), quote_hash: str = Form('',max_length=64),

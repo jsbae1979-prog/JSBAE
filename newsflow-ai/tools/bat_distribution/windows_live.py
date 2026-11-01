@@ -493,12 +493,15 @@ def start(config, plan):
                 from .character_manual_execution import install as install_character_manual
                 character_manual = install_character_manual(app, config.profile, character_native_factory)
             posting_copy_access = None
+            news_analysis_access = None
             character_authoring = None
             if manual_enabled and trial_policy is None:
                 from .character_authoring import install as install_character_authoring
                 character_authoring = install_character_authoring(app, config.profile, character_native_factory)
                 from .posting_copy_access import install as install_posting_copy_access
                 posting_copy_access = install_posting_copy_access(app, config.profile, character_native_factory)
+                from .news_analysis_access import install as install_news_analysis_access
+                news_analysis_access = install_news_analysis_access(app, config.profile, character_native_factory)
             import uvicorn
             session = LaunchSession(config.port)
             nonce = secrets.token_hex(32)
@@ -537,6 +540,8 @@ def start(config, plan):
                     request_boundary = character_authoring.wrap(request_boundary, authenticated_app)
                 if posting_copy_access is not None:
                     request_boundary = posting_copy_access.wrap(request_boundary, authenticated_app)
+                if news_analysis_access is not None:
+                    request_boundary = news_analysis_access.wrap(request_boundary, authenticated_app)
                 if claude_connection_check is not None:
                     request_boundary = claude_connection_check.wrap(request_boundary, authenticated_app)
                 if provider_connection_check is not None:

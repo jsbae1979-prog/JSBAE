@@ -198,7 +198,11 @@ function FeedLayout({
                   {b.simulation ? "합성 검증 결과 · 실제 게시 차단" : b.price} ·
                   저장된 모델·옵션 고정
                 </p>
-                <FeedCostReview batch={b} busy={f.busy} onSave={data=>f.local(async()=>f.show(await f.post(`/api/feed-batches/${b.id}/cost-review`,{revision:b.revision,...data})))}/>
+                <FeedCostReview batch={b} busy={f.busy} onRefresh={()=>f.local(f.refreshCosts)} onSave={data=>f.local(async()=>f.show(await f.post(`/api/feed-batches/${b.id}/cost-review`,{revision:b.revision,...data})))}/>
+                {b.canRecover && <button disabled={blocked} onClick={()=>f.local(async()=>{
+                  f.show(await f.post(`/api/feed-batches/${b.id}/change`,{action:"recover",revision:b.revision}));
+                  f.setMessage("저장된 결과 확인 완료 · 추가 API 요청 없음. 미확인 항목은 그대로 보존됩니다.");
+                })}>저장된 결과 복구 · 무료</button>}
                 <div className={`core-feed-results${b.items.length === 1 ? " core-feed-single" : ""}`}>
                   {b.items.map((x: Item) => (
                     <article
@@ -233,7 +237,7 @@ function FeedLayout({
                         </button>
                         {["success", "failed"].includes(x.status) && (
                           <button
-                            disabled={blocked || hasUnknown || !b.canGenerate}
+                            disabled={blocked || !b.canPrepareRegeneration}
                             onClick={() => f.approve(x)}
                           >
                             추가 견적

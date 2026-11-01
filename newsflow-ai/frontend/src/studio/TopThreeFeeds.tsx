@@ -136,6 +136,12 @@ export default function TopThreeFeeds({
       );
     return d;
   }
+  async function refreshCosts() {
+    if (!batch) return;
+    const response = await fetch(`/api/feed-batches/${batch.id}/cost-review`, {credentials:"same-origin",cache:"no-store"});
+    if (!response.ok) throw Error("비용 상태를 확인하지 못했습니다. 기존 승인은 유지됩니다.");
+    show(await response.json());
+  }
   function show(b: Item) {
     if (!mounted.current) return;
     setBatch(b);
@@ -167,7 +173,7 @@ export default function TopThreeFeeds({
           revision: b.revision,
           action: "regenerate",
           rank: regenerate.rank,
-          consent,
+          consent: reviewed,
           reviewed,
         });
         show(b);
@@ -222,7 +228,7 @@ export default function TopThreeFeeds({
           </p>
           <p>
             {regenerate
-              ? "기존 결과를 보존하고 1회 추가 생성을 준비합니다."
+              ? "기존 결과를 보존하고 새 견적을 준비합니다. 이 단계는 무료이며 API를 호출하지 않습니다."
               : "대기 항목만 각 1회 생성합니다. 결과 불명 요청은 재시도하지 않습니다."}
           </p>
           <label>
@@ -233,7 +239,7 @@ export default function TopThreeFeeds({
             />
             뉴스·문구·출처·모델을 검토했습니다.
           </label>
-          <label>
+          {!regenerate && <label>
             <input
               type="checkbox"
               checked={consent}
@@ -242,10 +248,10 @@ export default function TopThreeFeeds({
             {batch?.simulation
               ? "표시된 Fake 생성 범위에 동의합니다."
               : "표시된 외부 전송·유료 생성 범위에 동의합니다."}
-          </label>
+          </label>}
           <div className="work-actions">
             <button
-              disabled={!consent || !reviewed || !batch?.canGenerate}
+              disabled={!reviewed || (regenerate ? !batch?.canPrepareRegeneration : (!consent || !batch?.canGenerate))}
               onClick={() => run(regenerate ?? undefined)}
             >
               {regenerate ? "1회 재생성 준비" : "자동 제작 시작"}
@@ -388,12 +394,13 @@ export default function TopThreeFeeds({
           post,
           show,
           load,
+          refreshCosts,
           setMessage,
           approve: (item?: Item) => {
             if (
               !ready ||
               busy ||
-              !batch?.canGenerate ||
+              !batch || !(item ? batch.canPrepareRegeneration : batch.canGenerate) ||
               batch.items.some((x: Item) =>
                 ["unknown", "running"].includes(x.status),
               )

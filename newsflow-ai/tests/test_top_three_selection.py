@@ -48,7 +48,7 @@ def test_route_forwards_selected_rank_and_preserves_csrf(app,feeds):
         result=response.json();identifier=result['id']
         assert [i['rank'] for i in result['items']]==[3]
         assert c.post(f'/api/feed-batches/{identifier}/change',data={**body,'action':'edit','revision':'1','title':'Title','body':'Summary'}).status_code==200
-        assert c.post(f'/api/feed-batches/{identifier}/change',data={**body,'action':'regenerate','revision':'2','consent':'true','reviewed':'true'}).status_code==403
+        assert c.post(f'/api/feed-batches/{identifier}/change',data={**body,'action':'regenerate','rank':'3','revision':'2','consent':'true','reviewed':'true'}).status_code==422  # reaches local validation; pending cannot regenerate
         assert c.post(f'/api/feed-batches/{identifier}/step',data=body).status_code==403
 
 
