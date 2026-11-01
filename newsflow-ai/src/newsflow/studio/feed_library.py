@@ -7,7 +7,7 @@ from newsflow.publishing.service import PublishingError
 
 from newsflow.creation.feed_visibility import hidden_items
 
-def images(feeds):
+def images(feeds, *, publishable_only=False):
     designs=FeedDesigns(feeds)
     with feeds.sessions() as s:
         rows=list(s.scalars(select(IntelligenceRun).where(IntelligenceRun.kind==KIND).order_by(IntelligenceRun.id.desc()).limit(100)))
@@ -17,6 +17,8 @@ def images(feeds):
                      for p in s.scalars(select(ImagePost)) if isinstance(p.sources,dict)}
     result=[]
     for row in rows:
+        if publishable_only and row.options.get("simulation"):
+            continue
         for item in row.result.get('items',[]):
             rank=item.get('rank');identifier=f'feed:{row.id}:{rank}'
             if rank not in (1,2,3) or identifier in hidden:continue

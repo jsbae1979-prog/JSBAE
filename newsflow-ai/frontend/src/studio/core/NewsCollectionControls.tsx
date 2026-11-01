@@ -71,7 +71,11 @@ export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;m
     {method==="serpapi"&&<a className="news-collection-settings" href="/studio/settings?tab=sources">설정·관리에서 수집 설정</a>}
     {method==="serpapi"&&!c.view?.catalog.serpapi?.canRequest&&<small>설정·관리에서 키 등록과 사용 승인을 확인하세요.</small>}
     {(c.view?.catalog.categoryCollection ?? []).length > 0 && <ul className="news-category-counts" aria-label="최근 분야별 수집 결과">
-      {c.view?.catalog.categoryCollection.map((row: any) => <li key={row.category}>{row.category} · 수집 {row.collected}건 · 남김 {row.kept}건{row.status === "success" ? "" : row.status === "pending" ? " · 미요청" : " · 확인 필요"}</li>)}
+      {c.view?.catalog.categoryCollection.map((row: any) => <li key={row.category}>{row.category} · {row.status === "success"
+        ? `수집 ${row.collected}건 · 기간 내 ${row.kept}건`
+        : row.status === "pending" ? "요청하지 않음 · 앞선 분야 수집 중단"
+        : row.status === "unknown" ? "응답 확인 필요 · 기사 수 미확인"
+        : `수집 실패 · ${row.collected > 0 ? `저장 ${row.collected}건` : "기사 수 미확인"}`}</li>)}
     </ul>}
     {message&&<div className="news-collection-progress" role="status" aria-live="polite">
       <div>{busy&&<LoaderCircle className="spin" size={16}/>}<strong>{message}</strong>

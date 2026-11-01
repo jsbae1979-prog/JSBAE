@@ -56,3 +56,29 @@ def test_category_selection_counts_and_consent_browser(app,client,browser,setup_
         assert posts[1][1]['maximum_requests']==['2'] and posts[1][1]['categories']==['경제','연예']
         assert len(posts)==2 and setup_serpapi[1].calls==0 and not errors
         context.close()
+
+
+def test_failure_and_unrequested_are_not_presented_as_zero_articles(app,browser):
+    import json
+    with local_server(app) as origin:
+        context=browser_context(browser,origin);page=context.new_page();posts=[]
+        def module(route):
+            data=route.fetch().json()
+            data['catalog']['categoryCollection']=[
+                {'category':'IT·과학','collected':98,'kept':98,'status':'success'},
+                {'category':'문화','collected':0,'kept':0,'status':'failed'},
+                {'category':'연예','collected':0,'kept':0,'status':'pending'},
+                {'category':'스포츠','collected':0,'kept':0,'status':'unknown'},
+                {'category':'경제','collected':0,'kept':0,'status':'success'}]
+            route.fulfill(status=200,content_type='application/json',body=json.dumps(data))
+        page.route(origin+'/api/studio/modules/news',module)
+        page.on('request',lambda r:posts.append(r) if r.method=='POST' else None)
+        page.goto(origin+'/studio/news')
+        results=page.get_by_role('list',name='최근 분야별 수집 결과')
+        expect(results).to_contain_text('IT·과학 · 수집 98건 · 기간 내 98건')
+        expect(results).to_contain_text('문화 · 수집 실패 · 기사 수 미확인')
+        expect(results).to_contain_text('연예 · 요청하지 않음 · 앞선 분야 수집 중단')
+        expect(results).to_contain_text('스포츠 · 응답 확인 필요 · 기사 수 미확인')
+        expect(results).to_contain_text('경제 · 수집 0건 · 기간 내 0건')
+        assert not posts
+        context.close()

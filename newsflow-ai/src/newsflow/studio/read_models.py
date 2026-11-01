@@ -644,7 +644,7 @@ def module_view(request: Request, module: Module):
         if module in {"library", "publishing"}:
             from newsflow.studio.feed_library import images as feed_images
             if getattr(state, "top_three_feeds", None) is not None:
-                result["projects"].extend(feed_images(state.top_three_feeds))
+                result["projects"].extend(feed_images(state.top_three_feeds, publishable_only=module == "publishing"))
         if module == "library":
             from newsflow.samples.catalog import Samples
             from newsflow.studio.library_visibility import LibraryVisibility

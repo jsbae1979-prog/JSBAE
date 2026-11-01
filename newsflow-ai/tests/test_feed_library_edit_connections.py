@@ -126,3 +126,15 @@ def test_saved_feed_moves_to_publishing_without_preapproving_or_copying(app,clie
     assert post(client,'remove',[identifier]).status_code==200
     with pytest.raises(PublishingError):copy.view(identifier)
     assert all(p['id']!=identifier for p in client.get('/api/studio/modules/publishing').json()['projects'])
+
+
+def test_simulation_images_stay_in_library_but_cannot_prepare_publishing(app,client,feeds):
+    from newsflow.publishing.posting_copy import PostingCopy
+    from newsflow.publishing.service import PublishingError
+    _,batch,_,_=completed(feeds)
+    with feeds.sessions.begin() as db:
+        row=db.get(IntelligenceRun,batch);row.options={**row.options,'simulation':True}
+    assert len(images(feeds))==3
+    assert images(feeds,publishable_only=True)==[]
+    assert all(not p['id'].startswith(f'feed:{batch}:') for p in client.get('/api/studio/modules/publishing').json()['projects'])
+    with pytest.raises(PublishingError):PostingCopy(app.state).view(f'feed:{batch}:1')

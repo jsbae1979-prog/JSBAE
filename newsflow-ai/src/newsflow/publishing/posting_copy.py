@@ -65,7 +65,7 @@ def source_for(state,identifier):
         from newsflow.studio.feed_library import images
         from newsflow.creation.feed_designs import FeedDesigns
         feeds = state.top_three_feeds
-        project = next((p for p in images(feeds) if p['id'] == identifier), None)
+        project = next((p for p in images(feeds, publishable_only=True) if p['id'] == identifier), None)
         if not project: raise PublishingError('삭제되지 않은 완성 이미지를 선택하세요.')
         _, batch, rank = identifier.split(':'); batch, rank = int(batch), int(rank)
         designs = FeedDesigns(feeds); row, evidence, item = designs.source(batch, rank)
