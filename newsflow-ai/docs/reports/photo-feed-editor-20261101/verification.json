@@ -1,0 +1,130 @@
+{
+  "implementation": "e498a3f063d92092c8e72820a544ed727daff9e0",
+  "focused": {
+    "passed": 100,
+    "failed": 0,
+    "errors": 0
+  },
+  "studio_v3": {
+    "passed": 58,
+    "failed": 0,
+    "errors": 0
+  },
+  "typescript": "PASS",
+  "react_build": "PASS",
+  "full_initial_snapshot": {
+    "passed": 6886,
+    "failed": 19,
+    "errors": 0,
+    "skipped": 49,
+    "duration_seconds": 3502.51,
+    "note": "Started before final local editor response and selector refinements; not a final all-green regression."
+  },
+  "failures": [
+    {
+      "test": "tests.test_card_response_diagnostics::test_changed_instruction_preserves_v1_claim_and_reuses_success[unknown]",
+      "category": "unchanged feature: existing assertion/selector mismatch",
+      "error": "AssertionError: assert 'claude-full-image-v3' == 'claude-full-image-v2'"
+    },
+    {
+      "test": "tests.test_character_automation_browser::test_registered_profiles_openai_script_editor_and_responsive_layout",
+      "category": "unchanged feature: existing assertion/selector mismatch",
+      "error": "AssertionError: Locator expected to be disabled"
+    },
+    {
+      "test": "tests.test_creation_models::test_reference_local_only_and_reusable",
+      "category": "unchanged feature: existing assertion/selector mismatch",
+      "error": "Failed: DID NOT RAISE <class 'newsflow.publishing.service.PublishingError'>"
+    },
+    {
+      "test": "tests.test_dashboard_cohesion::test_archive_filters_visual_system_and_auxiliary_routes",
+      "category": "test harness: baseline fixture environment missing",
+      "error": "KeyError: 'NEWSFLOW_BASELINE_GUI_SOURCE'"
+    },
+    {
+      "test": "tests.test_elevenlabs_saved_voices::test_unfiltered_legacy_cache_is_preserved_and_cannot_mix_page_tokens",
+      "category": "unchanged feature: existing assertion/selector mismatch",
+      "error": "AssertionError: Regex pattern did not match."
+    },
+    {
+      "test": "tests.test_feed_budget_browser::test_app_budget_review_in_react",
+      "category": "changed-scope; final commit targeted rerun",
+      "error": "playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "test": "tests.test_feed_cost_review_browser::test_cost_status_and_expired_additional_quote",
+      "category": "changed-scope; final commit targeted rerun",
+      "error": "playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "test": "tests.test_photo_feed_browser::test_photo_feed_editor_local_browser",
+      "category": "changed-scope; final commit targeted rerun",
+      "error": "AssertionError: Locator expected to be visible"
+    },
+    {
+      "test": "tests.test_quote_rss_settings_browser::test_registered_rss_has_no_paid_or_repeated_scope_checkbox",
+      "category": "unchanged feature: existing assertion/selector mismatch",
+      "error": "playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded."
+    },
+    {
+      "test": "tests.test_social_calendar_analytics::test_recommendations_require_comparable_complete_windows_and_one_account",
+      "category": "test environment: tzdata missing",
+      "error": "zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key America/Los_Angeles'"
+    },
+    {
+      "test": "tests.test_top_three_selection_browser::test_selected_news_rank_and_plain_error_in_browser",
+      "category": "changed-scope; final commit targeted rerun",
+      "error": "AssertionError: Locator expected to have count '1'"
+    },
+    {
+      "test": "tests.test_usability_browser::test_local_workflow_and_all_screen_design",
+      "category": "test harness: baseline fixture environment missing",
+      "error": "KeyError: 'NEWSFLOW_BASELINE_GUI_SOURCE'"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-03-08T09:59:00+00:00-1-59--8-0]",
+      "category": "test environment: tzdata missing",
+      "error": "zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key America/Los_Angeles'"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-03-08T10:00:00+00:00-3-0--7-0]",
+      "category": "test environment: tzdata missing",
+      "error": "zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key America/Los_Angeles'"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-11-01T08:30:00+00:00-1-30--7-0]",
+      "category": "test environment: tzdata missing",
+      "error": "zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key America/Los_Angeles'"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-11-01T09:30:00+00:00-1-30--8-1]",
+      "category": "test environment: tzdata missing",
+      "error": "zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key America/Los_Angeles'"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_seoul_agrees_with_existing_kst_and_calendar_stores_utc[2026-03-08T10:00:00+00:00]",
+      "category": "test environment: tzdata missing",
+      "error": "zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key Asia/Seoul'"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_seoul_agrees_with_existing_kst_and_calendar_stores_utc[2026-11-01T09:30:00+00:00]",
+      "category": "test environment: tzdata missing",
+      "error": "zoneinfo._common.ZoneInfoNotFoundError: 'No time zone found with key Asia/Seoul'"
+    },
+    {
+      "test": "tests.test_windows_transition_plan::test_restore_point_update_failure_and_restart",
+      "category": "test harness: baseline fixture environment missing",
+      "error": "KeyError: 'STEP13_ROOT'"
+    }
+  ],
+  "paid_api_calls": 0,
+  "operating_app_changes": false,
+  "operating_data_access": false,
+  "evidence": "synthetic local articles/images and Fake providers only",
+  "post_full_final_commit_rerun": {
+    "overlaps_focused": true,
+    "passed": 22,
+    "failed": 0,
+    "errors": 0
+  }
+}
