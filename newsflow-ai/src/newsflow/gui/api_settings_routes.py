@@ -121,6 +121,8 @@ def save_configuration(
 def save_key(request: Request, provider: str, api_key: str = Form("")):
     # Validate in the store: FastAPI field errors otherwise echo submitted secrets.
     store = _store(request, provider)
+    if provider == "openai":
+        store = getattr(request.app.state, "openai_key_registration_store", store)
     try:
         store.save(api_key)
         invalidate_api_verification(request.app.state.sessions, provider)

@@ -79,7 +79,7 @@ export default function Settings({
       id: "openai",
       name: "OpenAI",
       action: "api_settings_save_key",
-      provider: "openai_api",
+      provider: "openai",
       types: ["text", "image"],
     },
     {

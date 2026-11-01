@@ -772,7 +772,7 @@ export function CommandDialog({
   const basic = effective.fields.filter(
     (f) =>
       f.required ||
-      (action.id === "serpapi_settings" && f.name === "api_key") ||
+      (["serpapi_settings", "api_settings_save_key"].includes(action.id) && f.name === "api_key") ||
       (action.id === "video_ai_create_plan" && f.name === "model_path") ||
       (action.id === "video_ai_save_model_route" && ["resolution","durations"].includes(f.name)) ||
       f.path ||

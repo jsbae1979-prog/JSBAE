@@ -465,12 +465,15 @@ def start(config, plan):
                 character_story_only = install_character_story_only(
                     app, config.profile, story_policy, character_native_factory)
             key_registration = None
+            openai_key_registration = None
             claude_connection_check = None
             provider_connection_check = None
             voice_catalog_access = None
             if config.profile_kind in {'restored-local-operation', 'portable-local-operation'}:
                 from .higgsfield_key_registration import install as install_key_registration
                 key_registration = install_key_registration(app, config.profile, character_native_factory)
+                from .openai_key_registration import install as install_openai_key_registration
+                openai_key_registration = install_openai_key_registration(app, config.profile, character_native_factory)
                 from .claude_connection_check import install as install_claude_connection_check
                 claude_connection_check = install_claude_connection_check(app, config.profile, character_native_factory)
                 from .provider_connection_check import install as install_provider_connection_check
@@ -535,6 +538,8 @@ def start(config, plan):
                     request_boundary = character_story_only.wrap(request_boundary, authenticated_app)
                 if key_registration is not None:
                     request_boundary = key_registration.wrap(request_boundary, authenticated_app)
+                if openai_key_registration is not None:
+                    request_boundary = openai_key_registration.wrap(request_boundary, authenticated_app)
                 if character_quote_only is not None:
                     request_boundary = character_quote_only.wrap(request_boundary, authenticated_app)
                 if character_manual is not None:
