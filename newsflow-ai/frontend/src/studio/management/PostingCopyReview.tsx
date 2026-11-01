@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { Item } from '../contracts';
 
-type Props={project:Item; form:Item; setForm:(fn:(old:Item)=>Item)=>void; csrf:string; targets?:string[]};
-export default function PostingCopyReview({project,form,setForm,csrf,targets=[]}:Props){
+type Props={project:Item; form:Item; setForm:(fn:(old:Item)=>Item)=>void; csrf:string; targets?:string[]; preparationTarget:HTMLDivElement|null};
+export default function PostingCopyReview({project,form,setForm,csrf,targets=[],preparationTarget}:Props){
   const [state,setState]=useState<Item|null>(null),[provider,setProvider]=useState('claude_api');
   const [message,setMessage]=useState(''),[busy,setBusy]=useState(false),[confirm,setConfirm]=useState(false);
   const [suggestion,setSuggestion]=useState<Item|null>(null);
@@ -45,17 +46,16 @@ export default function PostingCopyReview({project,form,setForm,csrf,targets=[]}
   const selected=state?.providers.find((x:Item)=>x.id===provider);
   return <section className="mg-copy-review" aria-label="게시 문구 검토">
     <div className="mg-actions">
-      <button disabled={busy||!state} onClick={()=>void run('save')}>게시 문구 저장</button>
-      <button disabled={busy||!state} onClick={()=>void run('validate')}>문구 형식 검사</button>
-      <button disabled={busy||!state} onClick={()=>{setMessage('');setConfirm(true)}}>AI 제목·설명·해시태그 검토</button>
+      <button disabled={busy||!state} onClick={()=>void run('save')}>저장</button>
+      <button disabled={busy||!state} onClick={()=>{setMessage('');setConfirm(true)}}>AI 문구 다듬기</button>
     </div>
-    {project.kind!=="news"&&<div className="mg-copy-preparation">
+    {project.kind!=="news"&&preparationTarget&&createPortal(<div className="mg-copy-preparation" role="region" aria-label="게시 전 권리·출처 확인">
       <label className="mg-inline"><input type="checkbox" checked={reviewed} disabled={busy}
         onChange={e=>setReviewed(e.target.checked)}/>콘텐츠·권리·출처 검토 완료</label>
       <button disabled={busy||!state||!reviewed||!targets.length} onClick={()=>void run('prepare')}>선택 플랫폼 게시 준비 저장</button>
-      {!targets.length&&<p className="mg-muted">오른쪽에서 게시 플랫폼을 선택하세요.</p>}
+      {!targets.length&&<p className="mg-muted">게시할 플랫폼을 선택하세요.</p>}
       {state?.preparation&&<p role="status">{state.preparationCurrent&&savedFields===fingerprint&&preparedTargets===[...targets].sort().join(',')?'저장된 준비':'내용 변경 · 재검토 필요'} · {state.preparation.platforms.join(', ')} · 미게시</p>}
-    </div>}
+    </div>,preparationTarget)}
     {busy&&<p role="status">{suggestion?'게시 문구 처리 중…':'요청 처리 중…'}</p>}
     {message&&<p role="status">{message}</p>}
     {suggestion&&<div className="mg-copy-suggestion"><strong>AI 수정안</strong>

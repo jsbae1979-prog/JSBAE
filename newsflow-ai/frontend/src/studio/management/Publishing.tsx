@@ -24,6 +24,7 @@ export default function Publishing({ c }: { c: Controller }) {
     [targets, setTargets] = useState<string[]>([]),
     [time, setTime] = useState(""),
     [cohortId, setCohortId] = useState("");
+  const [preparationTarget, setPreparationTarget] = useState<HTMLDivElement|null>(null);
   // The module supplies publishable candidates; historical drafts/results stay
   // in their own collections and never reintroduce hidden or unfinished media.
   const projects = (c.view?.module === "publishing" ? c.view.projects ?? [] : []).filter((x) =>
@@ -239,29 +240,13 @@ export default function Publishing({ c }: { c: Controller }) {
                   onChange={(e) => update("hashtags", e.target.value)}
                 />
               </label>
-              {project && <PostingCopyReview key={project.id} project={project} form={form} setForm={setForm} csrf={c.view?.csrfToken??""} targets={targets}/> }
-              <p className="mg-muted">
-                저장한 게시 문구는 콘텐츠별로 유지됩니다. 실제 게시는 검토·승인 후 진행합니다.
-              </p>
-              <div className="mg-review-checks">
-                {[
-                  ["content_reviewed", "콘텐츠 검토"],
-                  ["copyright_confirmed", "저작권·사용권"],
-                  ["sources_confirmed", "원문 출처"],
-                ].map(([k, t]) => (
-                  <p key={k}>
-                    <Badge
-                      value={selected?.[k] && copyMatches ? "approved" : "review_required"}
-                    />
-                    {t}
-                  </p>
-                ))}
-              </div>
+              {project && <PostingCopyReview key={project.id} project={project} form={form} setForm={setForm} csrf={c.view?.csrfToken??""} targets={targets} preparationTarget={preparationTarget}/> }
+
             </div>
           </div> : <Empty>왼쪽에서 게시할 콘텐츠를 선택하세요.</Empty>}
         </Panel>
         <aside className="mg-publish-right">
-          <Panel title="게시 플랫폼 설정">
+          <Panel title="게시 플랫폼 · 권리 확인">
             {!project && <p>완성 콘텐츠를 먼저 선택하세요.</p>}
             {project?.kind==="image"&&<p className="mg-muted">이미지 콘텐츠 · Instagram 피드</p>}
             <div className="mg-publish-platforms">
@@ -310,6 +295,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 </article>
               ))}
             </div>
+            <div ref={setPreparationTarget}/>
             {project?.kind === "news" ? <Action
               c={c}
               id="unified_publishing_review"
@@ -318,7 +304,21 @@ export default function Publishing({ c }: { c: Controller }) {
               primary
             >
               선택 플랫폼 게시 검토
-            </Action> : project && <p className="mg-muted">게시 문구와 플랫폼별 검토를 왼쪽 편집 영역에서 저장하세요. 외부 전송은 계정 연결·전송 기능·최종 승인이 필요합니다.</p>}
+            </Action> : null}
+            {project?.kind === "news" && (<div className="mg-review-checks">
+                {[
+                  ["content_reviewed", "콘텐츠 검토"],
+                  ["copyright_confirmed", "저작권·사용권"],
+                  ["sources_confirmed", "원문 출처"],
+                ].map(([k, t]) => (
+                  <p key={k}>
+                    <Badge
+                      value={selected?.[k] && copyMatches ? "approved" : "review_required"}
+                    />
+                    {t}
+                  </p>
+                ))}
+              </div>)}
           </Panel>
           <Panel title="게시 일정 · 승인">
             <label>
