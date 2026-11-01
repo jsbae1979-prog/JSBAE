@@ -1,4 +1,5 @@
 import PostingCopyReview from './PostingCopyReview';
+import PublishingImage from './PublishingImage';
 import { useEffect, useState } from "react";
 import { Search, Send, CalendarDays } from "lucide-react";
 import { safeMedia, type Item } from "../contracts";
@@ -208,8 +209,10 @@ export default function Publishing({ c }: { c: Controller }) {
           </Action>}
         </Panel>
         <Panel title="콘텐츠 미리보기 및 편집" className="mg-publish-editor">
-          {project ? <div className="mg-publish-edit-grid">
-            <Media url={project?.mediaUrl} image={project?.kind === "image"} />
+          {project ? <div className={"mg-publish-edit-grid" + (project.kind === "image" ? " mg-publish-image-grid" : "")}>
+            {project.kind === "image"
+              ? <PublishingImage key={project.id} url={project.mediaUrl} title={String(form.title ?? project.title ?? "이미지")} />
+              : <Media url={project.mediaUrl} />}
             <div>
               <label>
                 제목
