@@ -17,7 +17,8 @@ from test_api_settings import configured
 from test_posting_copy import VALUE
 
 @pytest.mark.parametrize('provider',['claude_api','openai'])
-def test_scoped_keys_and_single_fake_call(app,monkeypatch,provider):
+@pytest.mark.parametrize('historical_unknown',[False,True])
+def test_scoped_keys_and_single_fake_call(app,monkeypatch,provider,historical_unknown):
     root=private_directory(app.state.config.data_dir/'posting-private')
     app.state.config=SimpleNamespace(**{**vars(app.state.config),'data_dir':root})
     class Native(FakeCipher):
@@ -29,6 +30,9 @@ def test_scoped_keys_and_single_fake_call(app,monkeypatch,provider):
     configured(app.state.sessions,provider)
     secret='synthetic-posting-review-key-123456789'
     (root/kind.FILE).write_bytes(native.protect(secret.encode(),hashlib.sha256(kind.ENTROPY).digest()))
+    if historical_unknown and provider=='claude_api':
+        from test_posting_copy_scope import history
+        history(app.state.sessions)
     calls=[]
     def fake_post(self,body,options):
         assert self.key_provider()==secret

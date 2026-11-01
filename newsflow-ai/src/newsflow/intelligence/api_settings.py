@@ -262,7 +262,7 @@ def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *
     return reasons
 
 
-def _readiness(sessions, provider, key_store, capability="search", *, fake=False) -> dict:
+def _readiness(sessions, provider, key_store, capability="search", *, fake=False, posting_copy=False) -> dict:
     from dataclasses import asdict
 
     from .api_connection import read_connection_check
@@ -273,12 +273,16 @@ def _readiness(sessions, provider, key_store, capability="search", *, fake=False
         rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
         reviews = _unknown_analysis_reviews(session, settings, rows)
         rejected = _confirmed_rejections(session, rows)
+        posting_ids = set()
+        if posting_copy:
+            from newsflow.publishing.request_scope import reviewed_character_unknowns
+            posting_ids = reviewed_character_unknowns(session, settings, rows)
     key = key_store.status() if key_store is not None else {"configured": False}
     usage = _usage(rows, now)
     reasons = _reasons(settings, key, capability, now, fake=fake)
     acknowledged = {row["id"] for row in reviews if row["acknowledged"]}
     reasons.extend(_limit_reasons(settings, rows, now, capability=capability, acknowledged=acknowledged,
-                                 rejected=rejected))
+                                 rejected=rejected, scoped_unknowns=posting_ids))
     auth = settings.verified_model == settings.model and _recent(settings.authentication_verified_at, now)
     return {"ready": not reasons, "state": "ready" if not reasons else "blocked", "reasons": reasons,
             "provider": provider, "model": settings.model, "capability": capability, "key": key,
@@ -561,6 +565,14 @@ class APIBudgetService:
         result["test_only"] = self.test_only
         return result
 
+    def posting_copy_readiness(self, provider, key_store):
+        """Only completed, previously reviewed character history is unrelated here."""
+        return _readiness(self.sessions, provider, key_store, "script",
+                          fake=self.test_only, posting_copy=True)
+
+    def reserve_posting_copy(self, **kwargs):
+        return self._reserve(**kwargs, posting_copy=True)
+
     def feed_card_review(self, key_store, context):
         """Preview only. GET never saves acknowledgement or grants an execution."""
         with self.sessions() as session:
@@ -620,7 +632,7 @@ class APIBudgetService:
     def _reserve(self, *, provider: str, request_id: str, kind: str, model: str, max_input_tokens: int | None = None,
                  max_output_tokens: int, key_store, max_search_calls: int = 0,
                  first_search_authentication: str | None = None, card_review_token: str = "", episode_review=None,
-                 character_operation=None) -> Reservation:
+                 character_operation=None, posting_copy=False) -> Reservation:
         _provider(provider)
         if kind not in ("search", "analysis", "script") or not re.fullmatch(r"[A-Za-z0-9:._-]{1,128}", request_id):
             raise APISettingsError("API 요청 식별자와 작업 유형을 확인하세요.")
@@ -671,6 +683,12 @@ class APIBudgetService:
             rows = list(session.scalars(select(APIRequestReservation).where(APIRequestReservation.provider == provider)))
             if character_operation is not None:
                 character_ids = unrelated_unknown_ids(rows, character_operation, previously_reviewed_ids(session, settings, rows))
+            posting_ids = set()
+            if posting_copy:
+                from newsflow.publishing.request_scope import validate_posting_request, reviewed_character_unknowns
+                validate_posting_request(session, settings, request_id, kind, max_search_calls)
+                posting_ids = reviewed_character_unknowns(session, settings, rows)
+                bounds["posting_copy_review"] = True
             reviews = _unknown_analysis_reviews(session, settings, rows)
             acknowledged = {row["id"] for row in reviews if row["acknowledged"]}
             script_approval = _script_approval(session, settings, request_id, kind, rows, acknowledged)
@@ -700,13 +718,17 @@ class APIBudgetService:
             reasons = _limit_reasons(settings, rows, now, capability=kind, acknowledged=acknowledged,
                                      script_exception=script_approval is not None,
                                      rejected=_confirmed_rejections(session, rows) | card_ids,
-                                     scoped_unknowns=character_ids | episode_ids | (set(comparison["unknown_ids"]) if comparison else set()))
+                                     scoped_unknowns=character_ids | episode_ids | posting_ids | (set(comparison["unknown_ids"]) if comparison else set()))
             if reasons:
                 raise APISettingsError(" / ".join(reasons))
             row = APIRequestReservation(id=uuid.uuid4().hex, request_id=request_id, provider=provider, kind=kind,
                                         model=model, status="reserved", reserved_usd=str(upper), bounds=bounds,
                                         prices=prices, usage={}, test_only=self.test_only, created_at=now)
             session.add(row)
+            if posting_ids:
+                session.add(AuditLog(level="info", event="api_posting_copy_scope", message=json.dumps({
+                    "scope": "new_posting_copy_only", "request_id": request_id,
+                    "retained_unknown_ids": sorted(posting_ids)}, separators=(",", ":"))))
             if comparison:
                 session.add(AuditLog(level='info', event=CONSUMED, message=json.dumps(
                     comparison, separators=(',', ':'))))

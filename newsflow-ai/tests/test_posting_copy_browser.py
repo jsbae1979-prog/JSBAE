@@ -23,7 +23,7 @@ def test_copy_review_apply_and_image_platform_filter(app,browser,monkeypatch,tmp
             self.calls.append((payload,kwargs))
             return Suggestion(**{**VALUE,'title':'검토한 게시 제목','notes':['합성 API 검토']})
     ai=AI();app.state.posting_copy=PostingCopy(app.state,ai=ai)
-    monkeypatch.setattr('newsflow.publishing.posting_copy.APIBudgetService.readiness',lambda *a,**k:{'ready':True})
+    monkeypatch.setattr('newsflow.publishing.posting_copy.APIBudgetService.posting_copy_readiness',lambda *a,**k:{'ready':True})
     with local_server(app) as origin:
         ctx=browser.new_context(viewport={'width':1366,'height':768})
         ctx.route('**/*',lambda r:r.continue_() if r.request.url.startswith(origin+'/') else r.abort())

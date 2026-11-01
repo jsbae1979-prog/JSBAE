@@ -88,9 +88,9 @@ def platforms_for(source):
     return ['instagram'] if source['kind']=='image' else ['youtube','instagram','tiktok','facebook']
 
 class _Budget:
-    """Reuse generic per-request budget without character-specific exceptions."""
+    """Use posting-only scope; preserve old records and per-request checks."""
     def __init__(self,budget):self.budget=budget
-    def reserve(self,**kwargs):return self.budget.reserve(**kwargs)
+    def reserve(self,**kwargs):return self.budget.reserve_posting_copy(**kwargs)
     def finish(self,*args,**kwargs):return self.budget.finish(*args,**kwargs)
 
 class PostingCopy:
@@ -111,7 +111,7 @@ class PostingCopy:
         for name in ('claude_api','openai'):
             setting=read_api_settings(self.sessions,name)
             store=self.state.api_keys.get(name)
-            readiness=APIBudgetService(self.sessions).readiness(name,store,capability='script')
+            readiness=APIBudgetService(self.sessions).posting_copy_readiness(name,store)
             providers.append({'id':name,'model':setting.model,'limitUsd':str(setting.request_limit_usd),
                               'ready':readiness.get('ready',False)})
         return {**local,'projectId':identifier,'sourceHash':digest(source),'platforms':platforms_for(source),
