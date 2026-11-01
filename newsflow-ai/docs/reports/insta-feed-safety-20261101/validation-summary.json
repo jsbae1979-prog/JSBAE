@@ -1,0 +1,182 @@
+{
+  "before": {
+    "PASS": 747,
+    "FAIL": 13,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "after_first_run": {
+    "PASS": 766,
+    "FAIL": 14,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "final_focused": {
+    "PASS": 119,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "environment_recheck": {
+    "PASS": 12,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "final_preparation": {
+    "PASS": 1,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 0
+  },
+  "studio_v3": {
+    "PASS": 58,
+    "FAIL": 0,
+    "ERROR": 0
+  },
+  "frontend_build": "PASS",
+  "unresolved": [],
+  "distinct_scoped_cases_passed": 782,
+  "paid_api_calls": 0,
+  "sns_calls": 0,
+  "operating_deployment": false,
+  "baseline_failures": [
+    {
+      "id": "tests.test_blue_studio_browser::test_portrait_library_edit_playback_and_publish_keep_original_boundaries",
+      "result": "FAIL",
+      "reason": "KeyError: 'NEWSFLOW_FFMPEG'"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_30_seconds_has_setup_and_continuing_ending_without_a_writer[kling-video/o3/image-reference]",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_30_seconds_has_setup_and_continuing_ending_without_a_writer[kling-video/v3.0/std/image-to-video]",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_direct_video::test_image_topic_to_fake_video_and_final_mp4_has_zero_story_calls[15]",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_direct_video::test_image_topic_to_fake_video_and_final_mp4_has_zero_story_calls[30]",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_validation_feedback::test_schema_failure_is_stored_safely_and_sent_only_on_next_explicit_request",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_validation_feedback::test_duration_failure_reaches_next_explicit_retry_without_raw_response",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_validation_feedback::test_ambiguous_response_has_no_schema_feedback_and_cannot_be_retried",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_cloud_workspace_flow::test_api_to_render_review_and_existing_publish_services[openai]",
+      "result": "FAIL",
+      "reason": "AssertionError: {'acquisition_policy': 'ai_web', 'ai_mode': 'openai', 'ai_model': 'gpt-4.1-mini', 'ai_phase': None, ...}\nassert ('failed', 'render') == ('waiting_review', 'validate')\n  \n  At index 0 diff: 'failed' != 'waiting_review'\n  Use -v to get more diff"
+    },
+    {
+      "id": "tests.test_cloud_workspace_flow::test_api_to_render_review_and_existing_publish_services[claude_api]",
+      "result": "FAIL",
+      "reason": "AssertionError: {'acquisition_policy': 'ai_web', 'ai_mode': 'claude_api', 'ai_model': 'claude-sonnet-4-6', 'ai_phase': None, ...}\nassert ('failed', 'render') == ('waiting_review', 'validate')\n  \n  At index 0 diff: 'failed' != 'waiting_review'\n  Use -v to get more diff"
+    },
+    {
+      "id": "tests.test_news_image_linking::test_real_mp4_every_auto_scene_has_expected_pixels",
+      "result": "FAIL",
+      "reason": "AssertionError: FFmpeg/ffprobe 설치·버전 실패. 해당 단계의 설정과 승인 조건을 확인하세요. 자동 재시도하지 않습니다.\nassert 'failed' == 'success'\n  \n  - success\n  + failed"
+    },
+    {
+      "id": "tests.test_posting_copy_browser::test_copy_review_apply_and_image_platform_filter",
+      "result": "FAIL",
+      "reason": "AssertionError: Locator expected to have count '0'\nActual value: 1 \nCall log:\n  - Expect \"to_have_count\" get_by_role(\"button\", name=\"문구 형식 검사\", exact=True) with timeout 5000ms\n  - waiting for get_by_role(\"button\", name=\"문구 형식 검사\", exact=True)\n    13 × locator resolved to 1 element\n       - unexpected value \"1\""
+    },
+    {
+      "id": "tests.test_step13j_user_flow::test_synthetic_rss_to_manual_image_video_and_unapproved_local_publish_draft",
+      "result": "FAIL",
+      "reason": "AssertionError: FFmpeg/ffprobe 설치·버전 실패. 해당 단계의 설정과 승인 조건을 확인하세요. 자동 재시도하지 않습니다.\nassert 'failed' == 'success'\n  \n  - success\n  + failed"
+    }
+  ],
+  "first_run_failures": [
+    {
+      "id": "tests.test_blue_studio_browser::test_portrait_library_edit_playback_and_publish_keep_original_boundaries",
+      "result": "FAIL",
+      "reason": "KeyError: 'NEWSFLOW_FFMPEG'"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_30_seconds_has_setup_and_continuing_ending_without_a_writer[kling-video/o3/image-reference]",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_30_seconds_has_setup_and_continuing_ending_without_a_writer[kling-video/v3.0/std/image-to-video]",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_direct_video::test_image_topic_to_fake_video_and_final_mp4_has_zero_story_calls[15]",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_direct_video::test_image_topic_to_fake_video_and_final_mp4_has_zero_story_calls[30]",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_validation_feedback::test_schema_failure_is_stored_safely_and_sent_only_on_next_explicit_request",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_validation_feedback::test_duration_failure_reaches_next_explicit_retry_without_raw_response",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_character_validation_feedback::test_ambiguous_response_has_no_schema_feedback_and_cannot_be_retried",
+      "result": "FAIL",
+      "reason": "newsflow.video.engine.RenderError: ffmpeg 실행 파일을 찾지 못했습니다. 설치 후 PATH 또는 실행 파일 설정을 확인하세요."
+    },
+    {
+      "id": "tests.test_cloud_workspace_flow::test_api_to_render_review_and_existing_publish_services[openai]",
+      "result": "FAIL",
+      "reason": "AssertionError: {'acquisition_policy': 'ai_web', 'ai_mode': 'openai', 'ai_model': 'gpt-4.1-mini', 'ai_phase': None, ...}\nassert ('failed', 'render') == ('waiting_review', 'validate')\n  \n  At index 0 diff: 'failed' != 'waiting_review'\n  Use -v to get more diff"
+    },
+    {
+      "id": "tests.test_cloud_workspace_flow::test_api_to_render_review_and_existing_publish_services[claude_api]",
+      "result": "FAIL",
+      "reason": "AssertionError: {'acquisition_policy': 'ai_web', 'ai_mode': 'claude_api', 'ai_model': 'claude-sonnet-4-6', 'ai_phase': None, ...}\nassert ('failed', 'render') == ('waiting_review', 'validate')\n  \n  At index 0 diff: 'failed' != 'waiting_review'\n  Use -v to get more diff"
+    },
+    {
+      "id": "tests.test_codex_image_browser::test_codex_copy_review_to_whole_image_save_in_offline_chrome",
+      "result": "FAIL",
+      "reason": "AssertionError: Locator expected to be visible\nActual value: None\nError: element(s) not found \nCall log:\n  - Expect \"to_be_visible\" get_by_text(\"이미지 준비 완료 · 1080×1350 JPEG\", exact=True) with timeout 5000ms\n  - waiting for get_by_text(\"이미지 준비 완료 · 1080×1350 JPEG\", exact=True)\n\nAria snapshot:\n- link \"본문으로 이동\":\n  - /url: \"#main-content\"\n- banner:\n  - link \"NewsFlow AI 작업실\":\n    - /url: /\n    - text: NewsFlowAI\n  - paragraph: 뉴스에서 쇼츠까지\n  - group:\n    - navigation \"주 메뉴\":\n      - paragraph: 뉴스 쇼츠 스튜디오\n      - link \"홈\":\n        - /url: /\n      - link \"쇼츠 만들기\":\n        - /url: /create\n      - link \"뉴스 선택\":\n        - /url: /news\n      - link \"작업 현황\":\n        - /url: /?show=tasks\n      - link \"내 영상\":"
+    },
+    {
+      "id": "tests.test_news_image_linking::test_real_mp4_every_auto_scene_has_expected_pixels",
+      "result": "FAIL",
+      "reason": "AssertionError: FFmpeg/ffprobe 설치·버전 실패. 해당 단계의 설정과 승인 조건을 확인하세요. 자동 재시도하지 않습니다.\nassert 'failed' == 'success'\n  \n  - success\n  + failed"
+    },
+    {
+      "id": "tests.test_program_review_fixes::test_image_only_instagram",
+      "result": "FAIL",
+      "reason": "newsflow.publishing.service.PublishingError: AI 이미지 안전 확인을 체크해 주세요."
+    },
+    {
+      "id": "tests.test_step13j_user_flow::test_synthetic_rss_to_manual_image_video_and_unapproved_local_publish_draft",
+      "result": "FAIL",
+      "reason": "AssertionError: FFmpeg/ffprobe 설치·버전 실패. 해당 단계의 설정과 승인 조건을 확인하세요. 자동 재시도하지 않습니다.\nassert 'failed' == 'success'\n  \n  - success\n  + failed"
+    }
+  ]
+}

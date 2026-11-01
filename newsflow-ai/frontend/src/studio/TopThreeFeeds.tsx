@@ -70,7 +70,8 @@ export default function TopThreeFeeds({
     [editing, setEditing] = useState<Item | null>(null);
   const [postReview, setPostReview] = useState<Item | null>(null),
     [rights, setRights] = useState(false),
-    [sources, setSources] = useState(false);
+    [sources, setSources] = useState(false),
+    [imageSafety, setImageSafety] = useState(false);
   const [ready, setReady] = useState(false);
   const [runningRank, setRunningRank] = useState<number | null>(null);
   const [stopRequested, setStopRequested] = useState(false);
@@ -233,6 +234,7 @@ export default function TopThreeFeeds({
               ? "기존 결과를 보존하고 새 견적을 준비합니다. 이 단계는 무료이며 API를 호출하지 않습니다."
               : "대기 항목만 각 1회 생성합니다. 결과 불명 요청은 재시도하지 않습니다."}
           </p>
+          {batch?.items.some((x:Item)=>x.image_safety?.sensitive)&&<p role="note">민감 주제: 인물·국기·사건 장면 없이 상징 이미지로 만듭니다</p>}
           <label>
             <input
               type="checkbox"
@@ -324,6 +326,8 @@ export default function TopThreeFeeds({
       {postReview && (
         <FeedDialog name="피드 게시용 검토" onClose={() => setPostReview(null)}>
           <h2>TOP {postReview.rank} 게시용 검토</h2>
+          {postReview.image_safety?.sensitive&&<p role="note">민감 주제: 인물·국기·사건 장면 없이 상징 이미지로 만듭니다</p>}
+          {postReview.mediaUrl&&<img src={postReview.mediaUrl} alt="안전 확인할 생성 이미지" style={{maxWidth:'100%',maxHeight:'45vh',objectFit:'contain'}}/>}
           <p>
             AI 생성물 표시를 포함한 로컬 검토본만 저장합니다. 계정 연결·이미지
             업로드·공개 게시를 실행하지 않습니다.
@@ -352,9 +356,13 @@ export default function TopThreeFeeds({
             />
             원문 출처 확인
           </label>
+          <label><input type="checkbox" checked={imageSafety} onChange={e=>setImageSafety(e.target.checked)}/>
+            AI 이미지 안전 확인: 실존 인물의 사실적 얼굴, 국기·종교·정치 상징으로 특정 집단을 범인처럼 보이게 하는 요소, 실제 사건 재현이 없습니다.
+          </label>
+          <p>인스타그램 게시 시 'AI 정보' 라벨을 켜세요.</p>
           <div className="work-actions">
             <button
-              disabled={busy || !reviewed || !rights || !sources}
+              disabled={busy || !reviewed || !rights || !sources || !imageSafety}
               onClick={() =>
                 local(async () => {
                   const r = await post(
@@ -363,6 +371,7 @@ export default function TopThreeFeeds({
                       reviewed,
                       rights,
                       sources_confirmed: sources,
+                      image_safety_checked: imageSafety,
                       ai_disclosure: "disclose",
                     },
                   );
@@ -424,7 +433,7 @@ export default function TopThreeFeeds({
             if (busy || batch?.simulation || item.status !== "success") return;
             setPostReview(item);
             setRights(false);
-            setSources(false);
+            setSources(false); setImageSafety(false);
             setReviewed(false);
           },
           pause: () => {
@@ -789,7 +798,7 @@ export default function TopThreeFeeds({
                         onClick={() => {
                           setPostReview(x);
                           setRights(false);
-                          setSources(false);
+                          setSources(false); setImageSafety(false);
                           setReviewed(false);
                         }}
                       >

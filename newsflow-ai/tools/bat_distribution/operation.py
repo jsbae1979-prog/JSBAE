@@ -63,6 +63,8 @@ class OperatingRequests(LocalWorkRequests):
     FEED_CHANGE = re.compile(r'/api/feed-batches/[0-9]+/change\Z')
     FEED_COST = re.compile(r'/api/feed-batches/[0-9]+/cost-review\Z')
     FEED_REVIEW = re.compile(r'/api/feed-batches/[0-9]+/items/[1-3]/review\Z')
+    FEED_DESIGN_WRITE = re.compile(r'/api/feed-batches/[0-9]+/items/[1-3]/design(?:-upload|-review|-performance)?\Z')
+    FEED_DESIGN_READ = re.compile(r'/api/feed-batches/[0-9]+/items/[1-3]/design(?:-performance|-file/[1-9][0-9]*|-preview/[a-f0-9]{64})?\Z')
     FEED_MEDIA = re.compile(r'/api/feed-batches/[0-9]+/items/[1-3]/file\Z')
     CHARACTER_SETTINGS = re.compile(r'/api/studio/characters/[a-f0-9]{32}/settings\Z')
     CHARACTER_VISIBILITY = re.compile(r'/api/studio/characters/[a-f0-9]{32}/visibility\Z')
@@ -123,9 +125,9 @@ class OperatingRequests(LocalWorkRequests):
                                                   or path in {'/api/studio/library/remove', '/api/studio/library/restore', '/api/studio/library/purge','/api/studio/publishing/copy/save','/api/studio/publishing/copy/apply','/api/studio/publishing/copy/validate','/api/studio/publishing/copy/prepare'}
                                                   or self.CHARACTER_LOCAL_WRITE.fullmatch(path)
                                                   or self.FEED_REVIEW.fullmatch(path)
-                                                  or self.FEED_COST.fullmatch(path))
+                                                  or self.FEED_COST.fullmatch(path) or self.FEED_DESIGN_WRITE.fullmatch(path))
             copied_media = method in {'GET', 'HEAD'} and (self.COPIED_MEDIA.fullmatch(path) or self.CHARACTER_CLIP.fullmatch(path)
-                                                       or self.CHARACTER_LOCAL_READ.fullmatch(path))
+                                                       or self.CHARACTER_LOCAL_READ.fullmatch(path) or self.FEED_DESIGN_READ.fullmatch(path))
             # Existing authenticated endpoint resolves only a stored source URL.
             # Its public-image TLS/DNS/robots/raster rules remain authoritative;
             # no arbitrary URL, collection, paid provider, or validation grant.

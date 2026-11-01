@@ -61,7 +61,8 @@ def card_artwork(title, body, publisher, plan):
         draw.text((66, 894 + index * 41), line, font=text, fill="#e1e8f0")
     for index, line in enumerate(wrap(draw, f"출처: {publisher}", small, 948, 2)):
         draw.text((66, 1204 + index * 34), line, font=small, fill=accent)
-    draw.text((66, 1290), "AI 구성 · 설명용 그래픽 / 실제 현장 사진 아님", font=small, fill="#d6e1f4")
+    draw.rectangle((0, 1280, 1079, 1349), fill="#101e34")
+    draw.text((66, 1290), "AI 구성 · 설명용 그래픽 / 실제 현장 사진 아님", font=ImageFont.truetype(face, 38), fill="white")
     output = BytesIO()
     canvas.save(output, format="JPEG", quality=90)
     return output.getvalue()
@@ -133,7 +134,8 @@ def artwork(title: str, publisher: str, photo: bytes | None = None, *, ai=False,
     for index, line in enumerate(wrap(draw, f"출처: {publisher}", small, 948, 2)):
         draw.text((66, 1200 + index * 38), line, font=small, fill="#d6e1f4")
     if ai:
-        draw.text((66, 1300), "AI 생성 이미지 · 실제 현장 사진 아님", font=small, fill="white")
+        draw.rectangle((0, 1280, 1079, 1349), fill="#101e34")
+        draw.text((66, 1290), "AI 생성 이미지 · 실제 현장 사진 아님", font=ImageFont.truetype(face, 42), fill="white")
     output = BytesIO()
     # Fresh raster does not carry EXIF, location, comments or original file metadata.
     canvas.save(output, format="JPEG", quality=90)

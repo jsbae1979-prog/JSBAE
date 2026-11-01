@@ -18,7 +18,7 @@ def test_english_headline_reuses_complete_korean_summary_without_translation():
     title = "한국어 전체 제목 " * 7
     assert choose_title(title.strip(), "요약입니다.") == title.strip()
     assert content_for({'title':'English headline','body':sentence,'rank':3}) == {
-        'title':sentence,'body':sentence,'hashtags':'#뉴스 #뉴스요약'}
+        'title':sentence,'body':sentence,'hashtags':'#뉴스요약 #정치 #호주'}
 
 @pytest.mark.parametrize('title',["English title", "잘린 제목…", "가"*101, "한글 title", "비밀\x00문자"])
 def test_invalid_headline_rejected_without_truncation(title):
@@ -107,13 +107,13 @@ def test_corrected_feed_publishing_copy_uses_exact_derivative(app,selected,monke
     feeds._accept(row,result['items'][0],gid);result['items'][0]['title_header_bottom']=260;feeds._save(i,result)
     feeds.change(i,1,'retitle',rank=1,title='교정한 한국어 제목')
     app.state.image_posts.generation=generation
-    post=feeds.review(i,1,app.state.image_posts,reviewed=True,rights=True,sources_confirmed=True,ai_disclosure='disclose')
+    post=feeds.review(i,1,app.state.image_posts,reviewed=True,rights=True,sources_confirmed=True,ai_disclosure='disclose',image_safety_checked=True)
     assert app.state.image_posts.path(post).read_bytes()==feeds.path(i,1).read_bytes()
     # Same local save is idempotent; a later title revision keeps this post intact.
-    assert feeds.review(i,1,app.state.image_posts,reviewed=True,rights=True,sources_confirmed=True,ai_disclosure='disclose')==post
+    assert feeds.review(i,1,app.state.image_posts,reviewed=True,rights=True,sources_confirmed=True,ai_disclosure='disclose',image_safety_checked=True)==post
     before=app.state.image_posts.path(post).read_bytes()
     feeds.change(i,feeds.get(i).result['revision'],'retitle',rank=1,title='추가 교정 한국어 제목')
-    second=feeds.review(i,1,app.state.image_posts,reviewed=True,rights=True,sources_confirmed=True,ai_disclosure='disclose')
+    second=feeds.review(i,1,app.state.image_posts,reviewed=True,rights=True,sources_confirmed=True,ai_disclosure='disclose',image_safety_checked=True)
     assert second!=post and app.state.image_posts.path(post).read_bytes()==before
 
 

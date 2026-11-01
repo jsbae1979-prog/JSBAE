@@ -40,8 +40,10 @@ class Fake:
     def __init__(self, error=None):
         self.calls=[]
         self.error=error
-    def generate(self, prompt, key, *, selection):
+        self.references=[]
+    def generate(self, prompt, key, *, selection, reference=None):
         self.calls.append((prompt, selection.copy()))
+        if reference is not None:self.references.append(reference)
         assert key == 'synthetic-only-image-key'
         if self.error:
             raise self.error
@@ -118,12 +120,19 @@ def test_failed_request_never_replayed(service,error,status):
     assert len(service.generation.adapter.calls)==1
 
 
-def test_reference_local_only_and_reusable(service):
+def test_reference_requires_review_then_reuses_exact_local_asset(service):
     identifier=service.create('참조 그림',DEFAULTS['image'],reference=png())
     row=service.get(identifier)
-    assert service.asset(row.options['reference']).is_file()
-    with pytest.raises(PublishingError,match='미구현'):service.execute(identifier,consent=True,reviewed=True)
+    path=service.asset(row.options['reference']);original=path.read_bytes()
+    with pytest.raises(PublishingError):service.execute(identifier,consent=False,reviewed=True)
+    with pytest.raises(PublishingError):service.execute(identifier,consent=True,reviewed=False)
     assert service.generation.adapter.calls==[]
+    generated=service.execute(identifier,consent=True,reviewed=True)
+    assert service.generation.get(generated).status=='success'
+    assert service.generation.adapter.references==[original]
+    assert service.execute(identifier,consent=True,reviewed=True)==generated
+    assert len(service.generation.adapter.calls)==1
+    assert path.read_bytes()==original
 
 
 @pytest.mark.parametrize('name',['../secret.png','C:/secret.png','https://example.com/image.png','studio-'+'0'*64+'.png'])

@@ -13,6 +13,7 @@ from newsflow.publishing.image_artwork import MAX_IMAGE_BYTES, card_artwork
 from newsflow.publishing.image_generation import MODEL, STYLES
 from newsflow.publishing.image_posts import STATES
 from newsflow.publishing.service import PublishingError
+from newsflow.publishing.sensitive_topics import classify
 
 from .routes import go, page
 
@@ -70,6 +71,7 @@ def workspace(request: Request, article_id: int | None = Query(None, ge=1),
                 seed = generated.evidence["source"]["plan"]
             return page(request, "image_posts.html", active="image-posts", article=article,
                         full_image_available=True, full_generated=full_generated,
+                        image_safety=classify(article.title, article.summary) if article else {"sensitive": False},
                         claude_cards_available=bool(cards), card_plan=card,
                         card_readiness=cards.readiness(article_id, analysis_id, rank, draft_id) if cards else {},
                         card_runs=cards.recent(article_id) if cards and article_id else [],
@@ -106,7 +108,7 @@ def create(request: Request, article_id: int = Form(ge=1), title: str = Form(max
            card_id: int | None = Form(None, ge=1),
            image_base64: str = Form("", max_length=6_000_000),
            reviewed: bool = Form(False), rights: bool = Form(False),
-           sources_confirmed: bool = Form(False), ai_disclosure: str = Form("unreviewed", max_length=30)):
+           sources_confirmed: bool = Form(False), image_safety_checked: bool = Form(False), ai_disclosure: str = Form("unreviewed", max_length=30)):
     try:
         photo = base64.b64decode(image_base64, validate=True) if image_base64 else None
         if photo and len(photo) > MAX_IMAGE_BYTES:
@@ -115,7 +117,7 @@ def create(request: Request, article_id: int = Form(ge=1), title: str = Form(max
             article_id, title=title, body=body, hashtags=hashtags, photo=photo,
             reviewed=reviewed, rights=rights, sources_confirmed=sources_confirmed,
             ai_disclosure=ai_disclosure, draft_id=draft_id, analysis_id=analysis_id, rank=rank,
-            generated_id=generated_id, card_id=card_id)
+            generated_id=generated_id, card_id=card_id, image_safety_checked=image_safety_checked)
     except (ValueError, binascii.Error):
         raise HTTPException(422, "사진 파일을 다시 선택하세요.") from None
     except PublishingError as error:

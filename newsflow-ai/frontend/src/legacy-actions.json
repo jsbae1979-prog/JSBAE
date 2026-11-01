@@ -1627,6 +1627,13 @@
         "default": "unreviewed",
         "path": false,
         "max_length": 30
+      },
+      {
+        "name": "image_safety_checked",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
       }
     ],
     "source": "gui/image_post_routes.py",
@@ -5683,6 +5690,13 @@
         "required": false,
         "default": "medium",
         "path": false
+      },
+      {
+        "name": "feed_style",
+        "type": "text",
+        "required": false,
+        "default": "legacy",
+        "path": false
       }
     ],
     "source": "gui/creation_routes.py",
@@ -5896,6 +5910,207 @@
         "required": false,
         "default": "unreviewed",
         "path": false
+      },
+      {
+        "name": "image_safety_checked",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "feed_photo_design",
+    "module": "images",
+    "label": "사진 중심 피드 무료 편집",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/design",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "background",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "design",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 8000
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "feed_photo_design_upload",
+    "module": "images",
+    "label": "사진 중심 피드 무료 편집",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/design-upload",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "kind",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "credit",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 160
+      },
+      {
+        "name": "image",
+        "type": "file",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "feed_photo_review",
+    "module": "images",
+    "label": "편집 버전 게시용 검토본 저장",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/design-review",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "path": true,
+        "required": true,
+        "default": null
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "path": true,
+        "required": true,
+        "default": null
+      },
+      {
+        "name": "version",
+        "type": "number",
+        "path": false,
+        "required": true,
+        "default": null
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "path": false,
+        "required": false,
+        "default": false
+      },
+      {
+        "name": "image_safety_checked",
+        "type": "boolean",
+        "path": false,
+        "required": false,
+        "default": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "feed_photo_performance",
+    "module": "images",
+    "label": "게시 후 성과 직접 기록",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/design-performance",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "metrics",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 3000
       }
     ],
     "source": "gui/creation_routes.py",

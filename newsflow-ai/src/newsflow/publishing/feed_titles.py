@@ -62,7 +62,7 @@ def title_lines(title, height=HEADER_BOTTOM):
             return font, lines, line_height
     raise PublishingError("제목 전체가 들어가도록 문구를 줄여 주세요. 잘린 이미지는 저장하지 않았습니다.")
 
-def render_title(raw, title, *, height=HEADER_BOTTOM, hashtag_band=None):
+def render_title(raw, title, *, height=HEADER_BOTTOM, hashtag_band=None, hashtags=""):
     font, lines, line_height = title_lines(title, height)
     with Image.open(BytesIO(raw)) as source:
         image = ImageOps.pad(source.convert("RGB"), (1080, 1350), method=Image.Resampling.LANCZOS, color=(11,22,40))
@@ -81,6 +81,6 @@ def render_title(raw, title, *, height=HEADER_BOTTOM, hashtag_band=None):
         top, bottom = hashtag_band
         draw.rectangle((0, top, 1079, bottom-1), fill="#f7f9fc")
         small = ImageFont.truetype(str(font_path()), 30)
-        draw.text((52, top+(bottom-top-36)//2), "#뉴스 #뉴스요약", font=small, fill="#456bb0", anchor="lt")
+        draw.text((52, top+(bottom-top-36)//2), hashtags, font=small, fill="#456bb0", anchor="lt")
     out = BytesIO(); image.save(out, "JPEG", quality=95)
     return out.getvalue()

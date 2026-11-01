@@ -43,7 +43,15 @@ def test_registered_profiles_openai_script_editor_and_responsive_layout(app,brow
         page.get_by_role('button',name='스토리 자동 생성하기').click()
         expect(page.get_by_role('heading',name='한글 스토리 · 합성 펭귄의 정원',exact=True)).to_be_visible(timeout=20000)
         expect(page.get_by_label('스토리 주제',exact=True)).to_have_value('정원의 아침')
-        expect(page.get_by_role('button',name='스토리 자동 생성하기')).to_be_disabled()
+        # Existing stories may be regenerated only after a separate explicit confirmation.
+        regenerate=page.get_by_role('button',name='스토리 자동 생성하기')
+        expect(regenerate).to_be_enabled();regenerate.click()
+        dialog=page.get_by_role('dialog',name='스토리를 다시 생성할까요?',exact=True)
+        expect(dialog).to_be_visible()
+        expect(dialog.get_by_role('button',name='새 스토리 생성',exact=True)).to_be_enabled()
+        assert len(state.character_authoring.calls)==1
+        dialog.get_by_role('button',name='취소',exact=True).click()
+        expect(dialog).to_have_count(0)
         assert len(state.character_authoring.calls)==1
         assert state.character_authoring.calls[0]['character']['species']=='penguin'
         job=state.character.listing()[0]

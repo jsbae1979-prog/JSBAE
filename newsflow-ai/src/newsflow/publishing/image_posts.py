@@ -28,6 +28,7 @@ from .image_artwork import artwork, card_artwork
 from .image_selection import references, selection
 from .instagram import GRAPH, InstagramUploadAdapter, InstagramUploadError, _identifier
 from .service import PublishingError, hash_file
+from .sensitive_topics import classify
 
 STATES = {
     "preparing": "전송 중 · 반복 요청 금지", "processing": "Instagram 처리 확인 필요",
@@ -80,12 +81,15 @@ class ImagePostService:
 
     def create(self, article_id, *, title, body, hashtags="", photo=None, reviewed=False,
                rights=False, sources_confirmed=False, ai_disclosure="unreviewed", draft_id=None,
-               analysis_id=None, rank=None, generated_id=None, card_id=None, feed_batch_id=None):
+               analysis_id=None, rank=None, generated_id=None, card_id=None, feed_batch_id=None, image_safety_checked=False, feed_design_version=None):
+        if (generated_id is not None or feed_batch_id is not None) and image_safety_checked is not True:
+            raise PublishingError("AI 이미지 안전 확인을 체크해 주세요.")
         if not (reviewed and rights and sources_confirmed):
             raise PublishingError("내용·출처·이미지 이용 권한을 확인해 주세요.")
         plan = None
         full_image = None
         feed_copy = None
+        design_version = None
         if feed_batch_id is not None:
             from newsflow.creation.top_three_feeds import TopThreeFeeds
             from newsflow.db.models import IntelligenceRun
@@ -93,11 +97,21 @@ class ImagePostService:
                 batch = session.get(IntelligenceRun, feed_batch_id)
                 item = next((i for i in batch.result["items"] if i["rank"] == rank), None) if batch and batch.kind == "feed_top3_batch" else None
                 source = next((i for i in batch.evidence["sources"] if i["rank"] == rank), None) if item else None
+                if feed_design_version is not None:
+                    if not item or not source:raise PublishingError("선택 뉴스 연결을 확인하세요.")
+                    from newsflow.creation.feed_designs import FeedDesigns
+                    designs=FeedDesigns(TopThreeFeeds(self.sessions,self.outputs.parent.parent,self.generation))
+                    design_version=designs.version(feed_batch_id,rank,feed_design_version)
+                    if batch.options.get('simulation'):raise PublishingError('합성 검증 이미지는 게시용으로 저장할 수 없습니다.')
+                    item={**item,'status':'success','generation_id':None,'content':{'title':design_version['design']['title'],'body':design_version['design']['caption']}}
+                    generated_id=None
+                    photo=designs.path(design_version['filename'],design_version['sha256']).read_bytes()
+                    ai_disclosure='disclose' if design_version['background']['kind']=='ai' else 'not_required'
                 if (not item or not source or item["status"] != "success" or item["generation_id"] != generated_id
                     or source["article_id"] != article_id or batch.evidence["analysis_id"] != analysis_id
                     or source["draft_id"] != draft_id or (title.strip(), body.strip()) != (item["content"]["title"], item["content"]["body"])):
                     raise PublishingError("피드 교정본의 뉴스·문구 연결을 확인하세요.")
-                feed_copy = TopThreeFeeds(self.sessions, self.outputs.parent.parent, self.generation).path(feed_batch_id, rank).read_bytes()
+                feed_copy = photo if design_version else TopThreeFeeds(self.sessions, self.outputs.parent.parent, self.generation).path(feed_batch_id, rank).read_bytes()
         if card_id is not None:
             if generated_id is not None or photo is not None or self.cards is None:
                 raise PublishingError("Claude 카드·AI 배경·내 사진 중 하나만 선택하세요.")
@@ -124,10 +138,10 @@ class ImagePostService:
                     raise PublishingError("완성 이미지의 문구는 자동 변경되지 않습니다. 생성 당시 문구를 유지하세요.")
             ai_disclosure = "disclose"  # The client cannot remove generated-image disclosure.
         title, body, hashtags = title.strip(), body.strip(), hashtags.strip()
-        if (not 1 <= len(title) <= 100 or not 1 <= len(body) <= 1800 or len(hashtags) > 200
+        if (not 1 <= len(title) <= (140 if design_version else 100) or not 1 <= len(body) <= 1800 or len(hashtags) > 200
                 or ai_disclosure not in {"disclose", "not_required"}
                 or any(ord(c) < 32 and c not in "\n\r\t" for c in title + body + hashtags)):
-            raise PublishingError("제목 100자·본문 1800자·해시태그 200자 이내로 입력하고 AI 표시를 선택하세요.")
+            raise PublishingError("제목·본문·해시태그 길이와 AI 표시를 확인하세요.")
         with self.sessions() as session:
             article = session.get(NewsArticle, article_id)
             if not article:
@@ -165,6 +179,8 @@ class ImagePostService:
                         seen.add(reference["url"])
         if generated_id is not None:
             sources["generated_image_run_id"] = generated_id
+            sources["image_safety_checked"] = image_safety_checked is True
+            sources["image_safety"] = classify(title, body)
         if full_image is not None:
             if full_image.options.get("claude_card_run_id") is not None:
                 sources["claude_card_run_id"] = full_image.options["claude_card_run_id"]
@@ -186,7 +202,7 @@ class ImagePostService:
         if len(caption) > 2200:
             raise PublishingError("출처·표시를 포함한 본문이 2200자를 넘습니다. 본문을 줄여 주세요.")
         raw = (card_artwork(title, body, publisher, plan) if plan else
-               artwork(title, publisher, photo, ai=ai_disclosure == "disclose", body=body)) if full_image is None else None
+               artwork(title, publisher, photo, ai=ai_disclosure == "disclose", body=body)) if full_image is None and feed_copy is None else None
         if full_image is not None:
             # Preserve the API's entire composition; resize only, no local card/template overlay.
             with Image.open(BytesIO(photo)) as image:
@@ -198,6 +214,12 @@ class ImagePostService:
             raw = feed_copy
             sources["feed_batch_id"] = feed_batch_id
             sources["feed_revision"] = batch.result["revision"]
+            if design_version:
+                sources['feed_design_version']=feed_design_version
+                sources['feed_design']=deepcopy(design_version['design'])
+                sources['image_credit']=design_version['background']['credit']
+                sources['image_kind']=design_version['background']['kind']
+                sources['image_safety_checked']=image_safety_checked is True
         self.outputs.mkdir(parents=True, exist_ok=True)
         name = f"image-{uuid4().hex}.jpg"
         with (self.outputs / name).open("xb") as stream:

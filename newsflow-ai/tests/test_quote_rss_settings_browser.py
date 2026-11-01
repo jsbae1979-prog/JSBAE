@@ -74,7 +74,9 @@ def test_fresh_quote_uses_one_bound_cost_approval_at_both_sizes(quoted_app,brows
 def test_registered_rss_has_no_paid_or_repeated_scope_checkbox(app,browser):
     with local_server(app) as origin:
         c=context(browser,origin);p=c.new_page();p.goto(origin+'/studio/news')
-        p.get_by_role('button',name='등록 RSS 수집 · 확인',exact=True).click()
+        collection=p.get_by_role('region',name='뉴스 수집',exact=True)
+        collection.get_by_label('뉴스 수집 방식',exact=True).select_option('rss')
+        collection.get_by_role('button',name='수집 시작',exact=True).click()
         d=p.get_by_role('dialog',name='등록 RSS 수집',exact=True)
         expect(d.get_by_role('checkbox')).to_have_count(0)
         expect(d).to_contain_text('등록·활성화된 공개 RSS')
