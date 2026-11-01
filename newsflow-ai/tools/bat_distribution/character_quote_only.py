@@ -63,7 +63,27 @@ class _Client:
         identifier=self.scope.active(); context=_PAYLOADS.get()
         if not isinstance(context,dict) or context.get('job_id')!=identifier:_deny()
         index=len(context['payloads'])
-        if index>=len(context['planned']) or reference!=context.get('reference'):_deny()
+        if index>=len(context['planned']):_deny()
+        if 'reference' not in context:
+            # prepare() can reuse an earlier upload without calling upload_reference.
+            # Bind that URL to this job's exact image and current credential first.
+            from newsflow.video_models.catalog import CATALOG
+            from newsflow.video.ai.download import safe_url
+            job=self.scope.local.read(identifier)
+            folder=self.scope.local.folder(identifier)
+            if digest(_unlinked(folder/'reference.png'))!=job['reference_sha256']:_deny()
+            model=CATALOG.model(check(job['studio_selection'])['video_model'])
+            if not model:_deny()
+            image=_unlinked(folder/('reference.png' if model['aspect_ratio_mode']=='native' else 'generation-reference.png'))
+            cachefile=_unlinked(self.scope.local.root/'references.json')
+            if not cachefile.is_file() or not 0<cachefile.stat().st_size<=1000000:_deny()
+            cache=json.loads(cachefile.read_text(encoding='utf8'))
+            if not isinstance(cache,dict):_deny()
+            key_id=hashlib.sha256(self.original.credential().encode()).hexdigest()
+            cached=cache.get(fingerprint([digest(image),key_id]))
+            if not isinstance(cached,str) or reference!=cached:_deny()
+            context['reference']=safe_url(cached)
+        if reference!=context['reference']:_deny()
         planned=context['planned'][index]
         if prompt!=planned['prompt'] or seconds!=planned['seconds']:_deny()
         result=self.original.payload(prompt,seconds,reference)

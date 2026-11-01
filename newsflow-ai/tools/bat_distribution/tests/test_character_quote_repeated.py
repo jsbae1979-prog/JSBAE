@@ -58,6 +58,8 @@ def test_two_explicit_quotes_after_user_reset_keep_first_receipt(quoted):
     assert quoted.post()==200
     assert len(receipts(quoted))==2 and first.read_bytes()==before
     assert quoted.state.calls.count('estimate')==10
+    assert quoted.state.calls.count('upload')==1
+    assert latest_receipt(quoted)['calls']=={'estimate':5}
     assert latest_receipt(quoted)['state']=='quoted'
     assert_old_state_unchanged(quoted)
 
@@ -74,4 +76,19 @@ def test_unknown_quote_is_preserved_then_explicit_user_reset_can_quote_again(quo
     assert len(receipts(quoted))==2 and failed.read_bytes()==before
     assert latest_receipt(quoted)['state']=='quoted'
     assert quoted.state.calls.count('estimate')==6
+    assert_old_state_unchanged(quoted)
+
+
+def test_cached_quote_rejects_a_different_payload_reference(quoted,monkeypatch):
+    from bat_distribution import character_quote_only as adapter
+    assert quoted.post()==200
+    reset(quoted)
+    before=list(quoted.state.calls)
+    payload=adapter._Client.payload
+    def changed(self,prompt,seconds,reference):
+        return payload(self,prompt,seconds,'https://example.com/foreign-reference.png')
+    monkeypatch.setattr(adapter._Client,'payload',changed)
+    assert quoted.post()==409
+    assert quoted.state.calls==before
+    assert latest_receipt(quoted)['state']=='failed_or_unknown'
     assert_old_state_unchanged(quoted)
