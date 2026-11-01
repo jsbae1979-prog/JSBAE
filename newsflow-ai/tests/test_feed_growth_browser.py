@@ -31,6 +31,7 @@ def test_free_copy_and_manual_performance_browser(app,feeds,browser,tmp_path):
         page.on('request',lambda r:writes.append(r.url) if r.method=='POST' else None)
         page.goto(origin+'/studio/images?mode=top3')
         expect(page.get_by_label('피드 제목',exact=True)).to_have_value(d['title'])
+        page.get_by_text('고급 편집',exact=True).click()
         page.get_by_text('제목 후보 · 캡션 구성',exact=True).click()
         group=page.get_by_role('group',name='제목 후보 비교')
         expect(group.get_by_role('button')).to_have_count(3)
@@ -45,6 +46,7 @@ def test_free_copy_and_manual_performance_browser(app,feeds,browser,tmp_path):
         page.get_by_role('button',name='새 버전으로 저장',exact=True).click()
         expect(page.get_by_role('status').filter(has_text='새 버전 저장 완료')).to_be_visible()
         page.reload();expect(page.get_by_label('피드 제목',exact=True)).to_have_value('합성 뉴스 1')
+        page.get_by_text('고급 편집',exact=True).click()
         page.get_by_text('제목 후보 · 캡션 구성',exact=True).click()
         expect(page.get_by_label('캡션 첫 문장',exact=True)).to_have_value('합성 관측 계획 공개')
         page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True).click()
@@ -67,6 +69,7 @@ def test_free_copy_and_manual_performance_browser(app,feeds,browser,tmp_path):
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), page.evaluate("Array.from(document.querySelectorAll('body *')).filter(e=>e.getBoundingClientRect().right>innerWidth+2).slice(-8).map(e=>({tag:e.tagName,cls:e.className,width:e.getBoundingClientRect().width}))")
         page.get_by_role('button',name='TOP 2 결과 선택',exact=True).click()
         expect(page.get_by_label('피드 제목',exact=True)).to_have_value('합성 뉴스 2')
+        page.get_by_text('고급 편집',exact=True).click()
         page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True).click()
         expect(page.get_by_text('저장된 게시 성과가 없습니다.',exact=True)).to_be_visible()
         assert not errors

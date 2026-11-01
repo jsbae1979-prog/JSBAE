@@ -187,3 +187,28 @@ def test_saved_background_survives_removal_of_temporary_upload(feeds):
     revised=s.save(b,1,saved['revision'],saved['background'],{**saved['draft'],'emphasis':'공개'},export=True)
     assert revised['background']=='version:2'
     assert s.path(saved['versions'][0]['filename'],saved['versions'][0]['sha256']).read_bytes()==original
+
+
+def test_feed_upload_exact_multipart_route_keeps_origin_csrf_size_and_raster_checks(app,feeds):
+    s,b,state,d=prepared(feeds)
+    with TestClient(OperatingRequests(app),base_url='http://127.0.0.1:18779') as c:
+        c.get('/studio/images');token=c.cookies.get('newsflow_csrf')
+        url=f'/api/feed-batches/{b}/items/1/design-upload'
+        data={'revision':state['revision'],'kind':'stock','credit':'합성 업로드'}
+        files={'image':('test.png',photo(),'image/png')}
+        assert c.post(url,data=data,files=files).status_code==403
+        data['csrf_token']=token
+        assert c.post(url,data=data,files=files,headers={'Origin':'https://other.invalid'}).status_code==403
+        assert s.state(b,1)==state or s.state(b,1)['revision']==state['revision']
+        assert c.post(url,data=data,files={'image':('bad.png',b'not an image','image/png')}).status_code==422
+        oversized={'image':('large.png',b'x'*(20*1024*1024+65536),'image/png')}
+        assert c.post(url,data=data,files=oversized).status_code==413
+        result=c.post(url,data=data,files=files)
+        assert result.status_code==200,result.text
+        assert result.json()['draft']['credit']=='합성 업로드'
+        assert s.state(b,1)['revision']==state['revision']+1
+        assert s.state(b,2)['revision']==0
+    with TestClient(app) as c:
+        c.get('/studio/images');data['csrf_token']=c.cookies.get('newsflow_csrf')
+        for wrong in (f'/api/feed-batches/{b}/items/4/design-upload',f'/api/feed-batches/{b}/items/1/design', '/api/other-upload'):
+            assert c.post(wrong,data=data,files=files).status_code==415

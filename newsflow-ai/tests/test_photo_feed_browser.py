@@ -45,10 +45,10 @@ def test_photo_feed_editor_local_browser(app,feeds,browser,tmp_path):
         p=ctx.new_page();errors=[];requests=[];p.on('pageerror',lambda e:errors.append(str(e)));p.on('request',lambda r:requests.append((r.method,r.url)))
         p.goto(origin+'/studio/images?mode=top3');expect(p.get_by_label('피드 제목',exact=True)).to_have_value(d['title'])
         expect(p.locator('.photo-feed-canvas img')).to_be_visible()
-        p.get_by_label('핵심 설명',exact=True).fill('2026년 관측 결과 공개 예정\n추가 검토는 진행 중')
-        p.get_by_role('button',name='미리보기 적용 · 무료',exact=True).click();expect(p.get_by_role('status').filter(has_text='현재 편집 미리보기')).to_be_visible()
+        p.get_by_label('핵심 설명',exact=True).fill('2026년 관측 결과 공개 예정\n추가 검토 진행 중')
+        expect(p.get_by_role('status').filter(has_text='미리보기 반영됨')).to_be_visible()
         p.get_by_role('button',name='새 버전으로 저장',exact=True).click();expect(p.get_by_role('status').filter(has_text='새 버전 저장 완료')).to_be_visible()
-        p.reload();expect(p.get_by_label('핵심 설명',exact=True)).to_have_value('2026년 관측 결과 공개 예정\n추가 검토는 진행 중')
+        p.reload();expect(p.get_by_label('핵심 설명',exact=True)).to_have_value('2026년 관측 결과 공개 예정\n추가 검토 진행 중')
         p.get_by_role('button',name='선택 이미지 크게 보기',exact=True).click();expect(p.get_by_role('dialog')).to_be_visible();p.get_by_role('button',name='닫기',exact=True).click()
         for width,height in [(1920,1080),(1366,768)]:
             p.set_viewport_size({'width':width,'height':height});assert p.evaluate('document.documentElement.scrollWidth<=innerWidth')

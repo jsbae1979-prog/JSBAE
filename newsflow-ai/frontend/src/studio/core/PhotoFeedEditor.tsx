@@ -3,6 +3,27 @@ import type { Item } from "../contracts";
 import { Panel, Empty } from "./shared";
 import "./photo-feed.css";
 import { FeedCopyTools, FeedPerformance } from "./FeedGrowthTools";
+// Only pixels affect the local preview; caption/hashtags remain separate.
+function visualKey(form: Item, background: string) {
+  const keys = [
+    "style",
+    "title",
+    "description",
+    "brand",
+    "date",
+    "source",
+    "credit",
+    "emphasis",
+    "accent",
+    "title_size",
+    "text_y",
+    "image_height",
+    "gradient_height",
+    "gradient_strength",
+    "crop",
+  ];
+  return JSON.stringify([background, keys.map((k) => form[k])]);
+}
 export default function PhotoFeedEditor({
   batch,
   rank,
@@ -30,6 +51,11 @@ export default function PhotoFeedEditor({
     [reviewed, setReviewed] = useState(false);
   const [uploadKind, setUploadKind] = useState("stock"),
     [credit, setCredit] = useState("");
+  const [previewState, setPreviewState] = useState(""),
+    [previewError, setPreviewError] = useState("");
+  const renderedKey = useRef("");
+  const previewRequest = useRef<AbortController | null>(null);
+  const previewSequence = useRef(0);
   const modal = useRef<HTMLDialogElement>(null),
     alive = useRef(true);
   const base = `/api/feed-batches/${batch.id}/items/${rank}`;
@@ -53,7 +79,12 @@ export default function PhotoFeedEditor({
         if (!r.ok) throw Error(d.detail || "편집 상태 확인 필요");
         accept(d);
         const v = d.versions.at(-1);
-        if (v) {
+        if (
+          v &&
+          visualKey(v.design, `version:${v.version}`) ===
+            visualKey(d.draft, d.background)
+        ) {
+          renderedKey.current = visualKey(d.draft, d.background);
           setVersion(v.version);
           setPreview(base + "/design-file/" + v.version);
         }
@@ -66,12 +97,14 @@ export default function PhotoFeedEditor({
       abort.abort();
     };
   }, [base]);
-  function edit(k: string, v: any) { change({ [k]: v }); }
+  function edit(k: string, v: any) {
+    change({ [k]: v });
+  }
   function change(patch: Item) {
     setReviewed(false);
     setForm((f) => ({ ...f, ...patch }));
     setDirty(true);
-    setMessage("수정 중 · 미리보기 적용 후 새 버전으로 저장하세요.");
+    setMessage("");
   }
   async function response(r: Response) {
     if (!r.ok) {
@@ -80,7 +113,66 @@ export default function PhotoFeedEditor({
     }
     return r;
   }
+  const visual = visualKey(form, background);
+  useEffect(() => {
+    const sequence = ++previewSequence.current;
+    const controller = new AbortController();
+    previewRequest.current = controller;
+    setPreviewError("");
+    if (!state || !background || busy || visual === renderedKey.current) {
+      setPreviewState("");
+      return () => controller.abort();
+    }
+    setPreviewState("미리보기 반영 중…");
+    // Debounce rapid edits, abort superseded requests and discard late responses.
+    // This endpoint runs the same local renderer as Save, without saving a version.
+    const timer = window.setTimeout(async () => {
+      try {
+        const r = await response(
+          await fetch(base + "/design", {
+            method: "POST",
+            credentials: "same-origin",
+            signal: controller.signal,
+            body: new URLSearchParams({
+              csrf_token: csrf,
+              revision: String(state.revision),
+              action: "preview",
+              background,
+              design: JSON.stringify(form),
+            }),
+          }),
+        );
+        const d = await r.json();
+        if (
+          controller.signal.aborted ||
+          sequence !== previewSequence.current ||
+          !alive.current
+        )
+          return;
+        renderedKey.current = visual;
+        setPreview(d.previewUrl);
+        setVersion(0);
+        setPreviewState("미리보기 반영됨 · 저장 전");
+      } catch (e) {
+        if (
+          controller.signal.aborted ||
+          sequence !== previewSequence.current ||
+          !alive.current
+        )
+          return;
+        setPreviewState("");
+        setPreviewError((e as Error).message);
+      }
+    }, 250);
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [visual, state?.revision, base, csrf, busy]);
+
   function run(action: string) {
+    previewRequest.current?.abort();
+    ++previewSequence.current;
     local(async () => {
       setMessage("");
       try {
@@ -97,26 +189,22 @@ export default function PhotoFeedEditor({
             }),
           }),
         );
-        if (action === "preview") {
-          setPreview((await r.json()).previewUrl);
-          setVersion(0);
-          setMessage("현재 편집 미리보기 · 추가 API 호출 없음");
-        } else {
-          const d = await r.json();
-          accept(d);
-          if (action === "render") {
-            setReviewed(false);
-            const v = d.versions.at(-1);
-            setVersion(v.version);
-            setPreview(base + "/design-file/" + v.version);
-            await onSaved();
-          }
-          setMessage(
-            action === "render"
-              ? "새 버전 저장 완료 · 기존 결과 보존"
-              : "편집 초안을 저장했습니다.",
-          );
+        const d = await r.json();
+        accept(d);
+        if (action === "render") {
+          renderedKey.current = visualKey(d.draft, d.background);
+          setPreviewError("");
+          setReviewed(false);
+          const v = d.versions.at(-1);
+          setVersion(v.version);
+          setPreview(base + "/design-file/" + v.version);
+          await onSaved();
         }
+        setMessage(
+          action === "render"
+            ? "새 버전 저장 완료 · 기존 결과 보존"
+            : "편집 초안을 저장했습니다.",
+        );
       } catch (e) {
         setMessage((e as Error).message);
       }
@@ -132,19 +220,21 @@ export default function PhotoFeedEditor({
         data.set("kind", uploadKind);
         data.set("credit", credit);
         data.set("image", file);
-        accept(
-          await (
-            await response(
-              await fetch(base + "/design-upload", {
-                method: "POST",
-                credentials: "same-origin",
-                body: data,
-              }),
-            )
-          ).json(),
-        );
+        const d = await (
+          await response(
+            await fetch(base + "/design-upload", {
+              method: "POST",
+              credentials: "same-origin",
+              body: data,
+            }),
+          )
+        ).json();
+        // Replacing an image must not discard unsaved title/layout edits.
+        accept(d);
+        setForm({ ...form, credit: d.draft.credit });
+        setDirty(true);
         setReviewed(false);
-        setMessage("이미지와 크레딧을 변경했습니다. 미리보기를 적용하세요.");
+        setMessage("배경 이미지 변경 완료");
       } catch (e) {
         setMessage((e as Error).message);
       }
@@ -220,7 +310,7 @@ export default function PhotoFeedEditor({
               />
             </button>
           ) : (
-            <Empty>이미지를 선택하고 무료 미리보기를 적용하세요.</Empty>
+            <Empty>배경 이미지를 선택하세요.</Empty>
           )}
         </div>
         <p>
@@ -250,6 +340,10 @@ export default function PhotoFeedEditor({
                 setPreview(base + "/design-file/" + n);
                 const v = state?.versions.find((v: Item) => v.version === n);
                 if (v) {
+                  renderedKey.current = visualKey(
+                    v.design,
+                    `version:${v.version}`,
+                  );
                   setForm(v.design);
                   setBackground(`version:${v.version}`);
                   setDirty(true);
@@ -284,11 +378,6 @@ export default function PhotoFeedEditor({
           <Empty>{message || "편집 상태 불러오는 중…"}</Empty>
         ) : (
           <fieldset disabled={busy}>
-            <p className="core-muted">
-              이 뉴스만 편집합니다. 원제·요약·다른 결과·자동 제작 기본값은
-              유지됩니다.
-            </p>
-            <FeedCopyTools state={state} form={form} base={base} csrf={csrf} background={background} local={local} onChange={change} />
             {text("피드 제목", "title", 3)}
             {text("핵심 설명", "description", 2)}
             {!form.description && (
@@ -296,68 +385,6 @@ export default function PhotoFeedEditor({
                 확인 필요 · 저장된 요약에서 핵심 사실 1~2줄을 직접 입력하세요.
               </small>
             )}
-            <label>
-              배경 이미지
-              <select
-                aria-label="배경 이미지"
-                value={background}
-                onChange={(e) => {
-                  setBackground(e.target.value);
-                  const c = state.candidates.find(
-                    (c: Item) => c.id === e.target.value,
-                  );
-                  edit("credit", c?.credit ?? "");
-                }}
-              >
-                <option value="">이미지 선택</option>
-                {state.candidates.map((c: Item) => (
-                  <option key={c.id} value={c.id}>
-                    {c.label} ·{" "}
-                    {c.kind === "ai"
-                      ? "AI 생성"
-                      : c.kind === "photo"
-                        ? "실제 사진"
-                        : "자료사진"}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <details>
-              <summary>다른 이미지 선택</summary>
-              <label>
-                이미지 구분
-                <select
-                  value={uploadKind}
-                  onChange={(e) => setUploadKind(e.target.value)}
-                >
-                  <option value="stock">자료사진</option>
-                  <option value="photo">실제 사진</option>
-                  <option value="ai">AI 생성</option>
-                </select>
-              </label>
-              <label>
-                새 이미지 크레딧
-                <input
-                  aria-label="새 이미지 크레딧"
-                  value={credit}
-                  onChange={(e) => setCredit(e.target.value)}
-                />
-              </label>
-              <label>
-                로컬 이미지 업로드
-                <input
-                  aria-label="로컬 이미지 업로드"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  disabled={!credit.trim()}
-                  onChange={(e) => upload(e.target.files?.[0])}
-                />
-              </label>
-              <small>
-                사용권을 확인한 이미지만 선택하세요. 외부 이미지는 자동으로
-                가져오지 않습니다.
-              </small>
-            </details>
             <details>
               <summary>배치·색상·자르기</summary>
               {text("강조 단어", "emphasis")}
@@ -397,41 +424,127 @@ export default function PhotoFeedEditor({
                 ))}
               </div>
             </details>
-            <details>
-              <summary>출처·크레딧</summary>
-              {text("브랜드", "brand")}
-              {text("날짜", "date")}
-              {text("기사 출처", "source", 2)}
-              {text("이미지 크레딧", "credit", 2)}
-            </details>
-            <details>
-              <summary>캡션 · 원문 참고</summary>
-              {text("캡션 본문", "caption", 5)}
-              {text("해시태그", "hashtags", 2)}
-              <strong>기사 원제</strong>
-              <p>{state.sourceTitle}</p>
-              <strong>저장된 요약</strong>
-              <p>{state.originalSummary}</p>
-              <small>
-                숫자·날짜·주체와 검토/예정 등 진행 상태를 유지하세요. 제작자
-                메모는 캡션에 넣지 마세요.
-              </small>
-            </details>
+            <div className="photo-feed-preview-status" aria-live="polite">
+              {previewState && <small role="status">{previewState}</small>}
+              {previewError && (
+                <p role="alert">
+                  {previewError} 마지막 정상 미리보기를 표시합니다.
+                </p>
+              )}
+            </div>
             <div className="photo-feed-actions">
-              <button disabled={!background} onClick={() => run("preview")}>
-                미리보기 적용 · 무료
-              </button>
-              <button disabled={!background} onClick={() => run("draft")}>
-                편집 초안 저장
-              </button>
               <button
                 className="primary"
-                disabled={!background}
+                disabled={!background || !!previewError}
                 onClick={() => run("render")}
               >
                 새 버전으로 저장
               </button>
             </div>
+            <details className="photo-feed-advanced">
+              <summary>고급 편집</summary>
+              <FeedCopyTools
+                state={state}
+                form={form}
+                base={base}
+                csrf={csrf}
+                background={background}
+                local={local}
+                onChange={change}
+              />
+              <label>
+                배경 이미지
+                <select
+                  aria-label="배경 이미지"
+                  value={background}
+                  onChange={(e) => {
+                    setBackground(e.target.value);
+                    const c = state.candidates.find(
+                      (c: Item) => c.id === e.target.value,
+                    );
+                    edit("credit", c?.credit ?? "");
+                  }}
+                >
+                  <option value="">이미지 선택</option>
+                  {state.candidates.map((c: Item) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label} ·{" "}
+                      {c.kind === "ai"
+                        ? "AI 생성"
+                        : c.kind === "photo"
+                          ? "실제 사진"
+                          : "자료사진"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <details>
+                <summary>다른 이미지 선택</summary>
+                <label>
+                  이미지 구분
+                  <select
+                    value={uploadKind}
+                    onChange={(e) => setUploadKind(e.target.value)}
+                  >
+                    <option value="stock">자료사진</option>
+                    <option value="photo">실제 사진</option>
+                    <option value="ai">AI 생성</option>
+                  </select>
+                </label>
+                <label>
+                  새 이미지 크레딧
+                  <input
+                    aria-label="새 이미지 크레딧"
+                    value={credit}
+                    onChange={(e) => setCredit(e.target.value)}
+                  />
+                </label>
+                <label>
+                  로컬 이미지 업로드
+                  <input
+                    aria-label="로컬 이미지 업로드"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={!credit.trim()}
+                    onChange={(e) => upload(e.target.files?.[0])}
+                  />
+                </label>
+                <small>
+                  사용권을 확인한 이미지만 선택하세요. 외부 이미지는 자동으로
+                  가져오지 않습니다.
+                </small>
+              </details>
+              <details>
+                <summary>출처·크레딧</summary>
+                {text("브랜드", "brand")}
+                {text("날짜", "date")}
+                {text("기사 출처", "source", 2)}
+                {text("이미지 크레딧", "credit", 2)}
+              </details>
+              <details>
+                <summary>캡션 · 원문 참고</summary>
+                {text("캡션 본문", "caption", 5)}
+                {text("해시태그", "hashtags", 2)}
+                <strong>기사 원제</strong>
+                <p>{state.sourceTitle}</p>
+                <strong>저장된 요약</strong>
+                <p>{state.originalSummary}</p>
+                <small>
+                  숫자·날짜·주체와 검토/예정 등 진행 상태를 유지하세요. 제작자
+                  메모는 캡션에 넣지 마세요.
+                </small>
+              </details>
+              <button disabled={!background} onClick={() => run("draft")}>
+                편집 초안 저장
+              </button>
+              <FeedPerformance
+                base={base}
+                csrf={csrf}
+                versions={state.versions}
+                busy={busy}
+                local={local}
+              />
+            </details>
             {version > 0 && !dirty && (
               <details>
                 <summary>이 버전 게시용 검토본 저장</summary>
@@ -480,7 +593,6 @@ export default function PhotoFeedEditor({
                 </button>
               </details>
             )}
-            <FeedPerformance base={base} csrf={csrf} versions={state.versions} busy={busy} local={local} />
             {dirty && <small>저장하지 않은 편집이 있습니다.</small>}
             {message && <p role="status">{message}</p>}
             {state.warnings.map((m: string) => (
