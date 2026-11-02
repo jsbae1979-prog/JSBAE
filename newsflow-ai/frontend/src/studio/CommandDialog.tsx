@@ -1,3 +1,4 @@
+import AnalysisConnectionCheck from "./AnalysisConnectionCheck";
 import { useEffect, useRef, useState } from "react";
 import "./command-review.css";
 import { X, ShieldCheck, LoaderCircle, AlertTriangle } from "lucide-react";
@@ -1036,6 +1037,11 @@ export function CommandDialog({
               </p>
             </div>
           )}
+          {(collectionAnalysis || action.id === "intelligence_analyze") &&
+            <AnalysisConnectionCheck provider={collectionAnalysis ? analysis?.provider : values.provider}
+              csrfToken={view.csrfToken ?? ""} busy={busy}
+              onBegin={() => { setBusy(true); setAck(false); setError(""); }}
+              onEnd={() => setBusy(false)} onRefresh={onSaved} />}
           {error && (
             <p role="alert" className="command-error">
               <AlertTriangle size={18} />
