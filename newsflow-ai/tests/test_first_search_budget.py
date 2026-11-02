@@ -3,6 +3,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from decimal import Decimal
+import re
 
 import pytest
 from sqlalchemy import select
@@ -10,6 +11,7 @@ from sqlalchemy import select
 from newsflow.db.models import APIRequestReservation, AppSetting, utcnow
 from newsflow.db.session import make_engine, migrate, session_factory
 from newsflow.intelligence.api_settings import (
+    AUTH_EXPIRED,
     DEFAULT_MODELS,
     FIRST_SEARCH_OUTPUT_TOKENS,
     APIBudgetService,
@@ -136,12 +138,12 @@ def test_all_existing_gates_apply_to_quote_and_reservation(sessions, changes, re
             assert row.bounds["accounting"] == "per_execution"
         return
     assert not quote["ready"] and any(reason in text for text in quote["reasons"])
-    with pytest.raises(APISettingsError, match=reason):
+    with pytest.raises(APISettingsError, match=re.escape(reason)):
         reserve(sessions, stamp)
 
 
 @pytest.mark.parametrize("field,value,reason", [
-    ("authentication_verified_at", "stale", "API 연결 미확인"),
+    ("authentication_verified_at", "stale", AUTH_EXPIRED),
     ("verified_model", "other", "API 연결 미확인"),
     ("billing_confirmed_at", "stale", "24시간"),
     ("connection_check_id", "active-check", "연결 확인 중"),
@@ -162,7 +164,7 @@ def test_stale_proof_and_active_auth_check_block(sessions, field, value, reason)
             assert session.get(APIRequestReservation, result.id).status == "reserved"
         return
     assert not quote["ready"] and any(reason in text for text in quote["reasons"])
-    with pytest.raises(APISettingsError, match=reason):
+    with pytest.raises(APISettingsError, match=re.escape(reason)):
         reserve(sessions, stamp)
 
 

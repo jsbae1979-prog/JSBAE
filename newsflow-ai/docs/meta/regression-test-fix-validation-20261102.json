@@ -1,0 +1,68 @@
+{
+  "date": "2026-11-02",
+  "base_sha": "a6237eb831e0164bacf226934b8d54f55cd9bdb0",
+  "scope": "Four test files only; no product/UI/runtime changes. Historical full regression preserved without rerun.",
+  "changes": {
+    "tests/test_feed_connections_browser.py": "Use current additional-editing, source-information and image-source labels; keep background pixel, preview-only, title, rank and original-data assertions.",
+    "tests/test_feed_cost_review_browser.py": "Await matching POST response and completed body with status 200 before checking attempt; keep one request, no extra generation and disabled unapproved-generation assertions. No sleeps.",
+    "tests/test_first_search_budget.py": "Expect AUTH_EXPIRED for expired proof; escape literal exception message; keep readiness refusal and reservation rejection.",
+    "tests/test_feed_growth_browser.py": "Use approved simplified title and direct caption controls. Verify caption/hashtag persistence, prior versions and other ranks; explicitly assert removed manual-performance UI and requests stay absent. Manual metrics storage/security assertions retained in test_feed_growth.py."
+  },
+  "environment": {
+    "python": "existing Windows Python 3.14",
+    "data": "temporary synthetic profile",
+    "network": "Fake providers, local isolated HTTP only",
+    "ffmpeg": "existing binaries configured for test process only"
+  },
+  "command": "python -m pytest -q -rs --tb=short -p no:cacheprovider --basetemp=<temporary-profile> --junitxml=<evidence> tests/test_feed_connections_browser.py tests/test_feed_cost_review_browser.py tests/test_feed_growth_browser.py tests/test_first_search_budget.py tests/test_feed_growth.py",
+  "result": {
+    "pass": 68,
+    "fail": 0,
+    "error": 0,
+    "skip": 0,
+    "duration_seconds": 32.33,
+    "warnings": 1,
+    "warning": "Existing Starlette/httpx deprecation",
+    "per_module": {
+      "tests.test_feed_connections_browser": 3,
+      "tests.test_feed_cost_review_browser": 1,
+      "tests.test_feed_growth_browser": 1,
+      "tests.test_first_search_budget": 35,
+      "tests.test_feed_growth": 28
+    }
+  },
+  "reused_not_reexecuted": [
+    "Historical whole regression 6975 PASS / 113 FAIL / 24 ERROR / 50 SKIP",
+    "Previous fixed compactConsent frontend tests and focused Windows CI",
+    "Historical targeted 93 PASS / 2 FAIL and previous classification probe 3 PASS / 2 FAIL"
+  ],
+  "boundaries": {
+    "product_code_changed": false,
+    "operating_restart": false,
+    "operating_data_modified": false,
+    "real_api_calls": 0,
+    "real_uploads_or_publications": 0,
+    "whole_regression_rerun": false,
+    "frontend_build_rerun": false,
+    "existing_dirty_files_preserved": true
+  },
+  "limitations": [
+    "68 PASS is a focused local result, not whole-suite success or real API/operating validation.",
+    "No new CI result claimed.",
+    "Historical regression classification is retained as dated evidence; these four cases have now been corrected only in test contracts."
+  ],
+  "evidence": [
+    {
+      "file": "regression-test-fix.xml",
+      "sha256": "1eed1e73129d616ec0ec68b4b0c907fadb84ee97f93f6fa2ecfbd613499c7ed1"
+    },
+    {
+      "file": "regression-test-fix.log",
+      "sha256": "b7e33cab9ef3e6b83fbfa9aa18377fd1126ed46f31994e374eabf5552c9e7dd7"
+    },
+    {
+      "file": "regression-test-fix-command.json",
+      "sha256": "8462b43500e4d2343aade0184455e0bc25b5058c8c5c5ff38feb5975ca5aa301"
+    }
+  ]
+}

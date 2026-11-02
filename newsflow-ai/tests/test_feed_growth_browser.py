@@ -6,7 +6,7 @@ from test_cloud_workspace_flow import local_server
 from test_photo_feed_editor import feeds, prepared, photo
 
 
-def test_free_copy_and_manual_performance_browser(app,feeds,browser,tmp_path):
+def test_free_title_caption_edit_preserves_versions_without_performance_requests(app,feeds,browser,tmp_path):
     designs,b,state,d=prepared(feeds)
     raw=photo();feeds.root.mkdir(exist_ok=True,parents=True)
     result=deepcopy(feeds.get(b).result)
@@ -32,57 +32,44 @@ def test_free_copy_and_manual_performance_browser(app,feeds,browser,tmp_path):
         page.on('request',lambda r:writes.append(r.url) if r.method=='POST' else None)
         page.goto(origin+'/studio/images?mode=top3')
         expect(page.get_by_label('피드 제목',exact=True)).to_have_value(d['title'])
-        page.get_by_text('고급 편집',exact=True).click()
-        page.get_by_text('제목 후보 · 캡션 구성',exact=True).click()
-        group=page.get_by_role('group',name='제목 후보 비교')
-        expect(group.get_by_role('button')).to_have_count(3)
-        group.get_by_role('button').filter(has_text='저장된 제목').click()
+        # db1b278 simplified the editor: title suggestions and direct caption editing.
+        # Manual performance storage/auth contracts remain covered in test_feed_growth.py.
+        page.get_by_text('추가 편집',exact=True).click()
+        suggestions=page.locator('details').filter(has=page.locator('summary').filter(has_text='제목 추천')).last
+        page.get_by_text('제목 추천',exact=True).click()
+        expect(suggestions.get_by_role('button')).to_have_count(3)
+        suggestions.get_by_role('button',name='합성 뉴스 1',exact=True).click()
         expect(page.get_by_label('피드 제목',exact=True)).to_have_value('합성 뉴스 1')
-        page.get_by_role('button',name='저장된 내용으로 구성 불러오기',exact=True).click()
-        page.get_by_label('캡션 첫 문장',exact=True).fill('합성 관측 계획 공개')
-        page.get_by_label('핵심 사실',exact=True).fill('추가 검토 중이며 확정되지 않았습니다.')
-        page.get_by_label('독자에게 중요한 점 · 선택',exact=True).fill('관측 결과는 추후 확인할 수 있습니다.')
-        page.get_by_role('button',name='캡션에 적용 · 무료',exact=True).click()
-        expect(page.get_by_role('status').filter(has_text='캡션에 적용했습니다')).to_be_visible()
+        page.get_by_text('게시글 내용',exact=True).click()
+        caption='합성 관측 계획 공개\n추가 검토 중이며 확정되지 않았습니다.\n관측 결과는 추후 확인할 수 있습니다.'
+        page.get_by_label('게시글 본문',exact=True).fill(caption)
+        page.get_by_label('해시태그',exact=True).fill('#합성 #관측')
         page.get_by_role('button',name='새 버전으로 저장',exact=True).click()
         expect(page.get_by_role('status').filter(has_text='새 버전 저장 완료')).to_be_visible()
         page.reload();expect(page.get_by_label('피드 제목',exact=True)).to_have_value('합성 뉴스 1')
-        page.get_by_text('고급 편집',exact=True).click()
-        page.get_by_text('제목 후보 · 캡션 구성',exact=True).click()
-        expect(page.get_by_label('캡션 첫 문장',exact=True)).to_have_value('합성 관측 계획 공개')
+        page.get_by_text('추가 편집',exact=True).click()
+        page.get_by_text('게시글 내용',exact=True).click()
+        expect(page.get_by_label('게시글 본문',exact=True)).to_have_value(caption)
+        expect(page.get_by_label('해시태그',exact=True)).to_have_value('#합성 #관측')
+        expect(page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True)).to_have_count(0)
+        expect(page.get_by_role('button',name='성과 기록 저장',exact=True)).to_have_count(0)
         assert not performance_reads
-        page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True).click()
-        expect(page.get_by_label('성과 이미지 버전',exact=True)).to_be_enabled()
-        assert len(performance_reads)==1
-        page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True).click()
-        page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True).click()
-        page.wait_for_timeout(100)
-        assert len(performance_reads)==1
-        expect(page.get_by_role('button',name='성과 기록 저장',exact=True)).to_be_disabled()
-        page.get_by_label('성과 이미지 버전',exact=True).select_option('2')
-        page.get_by_label('Instagram 게시물 주소',exact=True).fill('https://www.instagram.com/p/FixtureOnly123/')
-        page.get_by_label('게시 시각',exact=True).fill('2026-01-01T09:00')
-        page.get_by_label('측정 시각',exact=True).fill('2026-01-02T09:00')
-        page.get_by_label('도달 계정',exact=True).fill('1000')
-        page.get_by_label('저장',exact=True).fill('25')
-        page.get_by_label('공유',exact=True).fill('10')
-        page.get_by_label('실제 게시한 이미지의 성과를 입력했습니다',exact=True).check()
-        page.get_by_role('button',name='성과 기록 저장',exact=True).click()
-        expect(page.get_by_role('status').filter(has_text='성과 기록을 저장했습니다')).to_be_visible()
-        table=page.get_by_role('table',name='버전별 성과 · 사용자 입력')
-        expect(table).to_contain_text('2.5%');expect(table).to_contain_text('24시간');expect(table).to_contain_text('미확인 / —')
         for width,height in [(1920,1080),(1366,768)]:
             page.set_viewport_size({'width':width,'height':height})
             page.screenshot(path=str(tmp_path/f'feed-growth-{width}.png'),full_page=True)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), page.evaluate("Array.from(document.querySelectorAll('body *')).filter(e=>e.getBoundingClientRect().right>innerWidth+2).slice(-8).map(e=>({tag:e.tagName,cls:e.className,width:e.getBoundingClientRect().width}))")
         page.get_by_role('button',name='TOP 2 결과 선택',exact=True).click()
         expect(page.get_by_label('피드 제목',exact=True)).to_have_value('합성 뉴스 2')
-        page.get_by_text('고급 편집',exact=True).click()
-        page.get_by_text('게시 후 성과 비교 · 직접 입력',exact=True).click()
-        expect(page.get_by_text('저장된 게시 성과가 없습니다.',exact=True)).to_be_visible()
+        page.get_by_text('추가 편집',exact=True).click()
+        page.get_by_text('게시글 내용',exact=True).click()
+        expect(page.get_by_label('게시글 본문',exact=True)).not_to_have_value(caption)
+        expect(page.get_by_label('해시태그',exact=True)).not_to_have_value('#합성 #관측')
+        assert not performance_reads
         assert not errors
-        assert writes and all(url.endswith(('/design','/design-performance')) for url in writes)
+        assert writes and all(url.endswith('/design') for url in writes)
         ctx.close()
     assert feeds.get(b).result==before
     assert designs.state(b,1)['versions'][0]['design']['caption']==d['caption']
     assert len(designs.state(b,1)['versions'])==2 and designs.state(b,2)['versions']==[]
+    assert designs.state(b,1)['versions'][1]['design']['caption']==caption
+    assert designs.state(b,1)['versions'][1]['design']['hashtags']=='#합성 #관측'

@@ -31,7 +31,13 @@ def test_cost_status_and_expired_additional_quote(app,ready,browser,monkeypatch,
         expect(dialog).to_contain_text('무료이며 API를 호출하지 않습니다')
         expect(dialog.get_by_role('checkbox')).to_have_count(1)
         dialog.get_by_role('checkbox').check()
-        dialog.get_by_role('button',name='1회 재생성 준비',exact=True).click()
+        # Closing the dialog starts the asynchronous request; it is not completion.
+        with p.expect_response(lambda response:
+                response.url == origin + f'/api/feed-batches/{i}/change'
+                and response.request.method == 'POST') as completed:
+            dialog.get_by_role('button',name='1회 재생성 준비',exact=True).click()
+        assert completed.value.status == 200
+        assert completed.value.finished() is None
         expect(dialog).not_to_be_visible()
         assert len(posts)==1 and len(calls)==1
         assert s.get(i).result['items'][0]['attempt']==2

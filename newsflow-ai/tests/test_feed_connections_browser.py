@@ -30,7 +30,7 @@ def test_distinct_background_changes_immediately_without_save_and_keeps_rank(app
         p.on('request',lambda r:posts.append(r) if r.method=='POST' else None)
         p.goto(origin+f'/studio/images?mode=top3&batch_id={b}&rank=1')
         expect(p.locator('.photo-feed-canvas img')).to_be_visible()
-        p.get_by_text('고급 편집',exact=True).click()
+        p.get_by_text('추가 편집',exact=True).click()
         selector=p.get_by_label('배경 이미지',exact=True)
         expect(selector).to_be_visible()
         # The candidate for the old background may be the original upload (aliases preserved).
@@ -44,8 +44,8 @@ def test_distinct_background_changes_immediately_without_save_and_keeps_rank(app
         two=p.locator('.photo-feed-canvas img').get_attribute('src')
         assert one!=two and p.request.get(origin+one).body()!=p.request.get(origin+two).body()
         expect(p.get_by_label('피드 제목',exact=True)).to_have_value('편집한 제목 보존')
-        p.get_by_text('출처·크레딧',exact=True).click()
-        expect(p.get_by_label('이미지 크레딧',exact=True)).to_have_value('새 사진 크레딧')
+        p.get_by_text('출처 정보',exact=True).click()
+        expect(p.get_by_label('이미지 출처',exact=True)).to_have_value('새 사진 크레딧')
         assert s.state(b,1)==before and feeds.get(b).result==batch_before
         p.get_by_label('저장된 편집 버전',exact=True).select_option('1')
         assert selector.input_value()==candidate['id']
