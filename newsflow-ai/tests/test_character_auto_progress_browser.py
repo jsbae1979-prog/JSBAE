@@ -138,3 +138,30 @@ def test_slow_check_explains_wait_without_aborting_or_replaying(app,browser,monk
         page.clock.fast_forward(60000);assert len(pending)==1
         assert s.read(i)['state']=='generating'
         ctx.close()
+
+
+def test_failed_scene_keeps_polling_other_receipt_then_stops_and_shows_dependency(app,browser,monkeypatch):
+    from copy import deepcopy
+    s,i=prepared(app,monkeypatch);job=s.read(i)
+    third=deepcopy(job['scenes'][0]);third.update(position=3)
+    job['scenes'].append(third);s.save(job)
+    checks=[]
+    with local_server(app) as origin:
+        ctx,page=context(browser,origin)
+        def check(route):
+            checks.append(1);job=s.read(i);job['state']='scene_review'
+            job['scenes'][0]['state']='failed'
+            if len(checks)>1:job['scenes'][2]['state']='failed'
+            s.save(job);route.fulfill(status=303,headers={'Location':'/character?job_id='+i})
+        page.route('**/character/'+i+'/check',check)
+        page.goto(origin+'/studio/characters?job_id='+i)
+        expect(page.get_by_text('장면 생성 중 · 자동 확인',exact=True)).to_be_visible()
+        page.clock.fast_forward(11000)
+        expect(page.get_by_role('region',name='영상 제작 진행')).to_contain_text('남은 장면 확인 중')
+        expect(page.get_by_text('앞 장면 실패로 중단',exact=True)).to_be_visible()
+        expect(page.get_by_role('button',name='실패 상세 확인',exact=True)).to_be_visible()
+        page.clock.fast_forward(11000)
+        expect(page.get_by_role('region',name='영상 제작 진행')).to_contain_text('확인 필요')
+        page.clock.fast_forward(60000)
+        assert len(checks)==2 and len(s.video.sent)==1
+        ctx.close()

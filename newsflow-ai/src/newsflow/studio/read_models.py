@@ -338,7 +338,8 @@ def character_rows(state):
             original = next((x for x in job.get("scenes", []) if x["position"] == scene["position"]), {})
             if "cost" not in scene and "quote_usd" in original:
                 scene["cost"] = original["quote_usd"]
-            from newsflow.character.status_diagnostics import public_diagnostic, private_inputs
+            from newsflow.character.status_diagnostics import public_diagnostic, private_inputs, dependency_stop_reason
+            scene['dependencyStopReason'] = dependency_stop_reason(job, original)
             details = public_diagnostic(original.get('status_diagnostics'), private_inputs(job))
             if details is not None:
                 scene['status_diagnostics'] = details

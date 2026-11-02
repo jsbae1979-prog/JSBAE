@@ -132,3 +132,10 @@ for (const [label, gates] of [
     assert.equal(calls.busy, false); // no setBusy callback on a blocked submission
   });
 }
+
+
+test("episode failure details remain available with an unsent continuation", () => {
+  const clips=[{position:1,state:"failed"},{position:2,state:"waiting_dependency"}];
+  assert.equal(inspect(clips,{state:"scene_review",studio_selection:{},automation_version:1}).canDiagnoseScenes,true);
+  assert.equal(inspect(clips).canDiagnoseScenes,false);
+});

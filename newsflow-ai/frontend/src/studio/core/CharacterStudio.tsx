@@ -627,7 +627,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
     };
   });
   const canDiagnoseScenes = job?.state === "scene_review" && !!job?.studio_selection && failureDetails.length > 0
-    && clips.every((clip) => ["failed", "nsfw", "canceled", "submitted", "downloaded"].includes(clip.state));
+    && clips.every((clip) => ["failed", "nsfw", "canceled", "submitted", "downloaded"].includes(clip.state)
+      || (job.automation_version === 1 && clip.state === "waiting_dependency"));
   const selectedClip = clips.find((x) => x.position === scene + 1);
   const singleVideo =
     clips.length === 1 &&
@@ -1959,7 +1960,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   </div>
                   {!!follow.total && ["generating","scene_review","submission_unknown","submission_not_sent","status_or_download_failed","clips_review","composing","compose_failed","completed"].includes(job?.state??"") && (
                     <section className="kling-generation-progress" aria-label="영상 제작 진행" aria-live="polite">
-                      <div><strong>{job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 중":job?.composeRecoveryAvailable?"합성 중단 · 다시 합성 가능":job?.state==="completed"?"최종 영상 저장 완료":follow.failed||follow.error?"확인 필요":follow.done===follow.total?"장면 검토 준비 완료":"장면 제작 진행 중"}</strong>
+                      <div><strong>{job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 중":job?.composeRecoveryAvailable?"합성 중단 · 다시 합성 가능":job?.state==="completed"?"최종 영상 저장 완료":follow.error?"확인 필요":follow.failed?(follow.active?"실패 장면 있음 · 남은 장면 확인 중":"확인 필요"):follow.done===follow.total?"장면 검토 준비 완료":"장면 제작 진행 중"}</strong>
                         <span>완료 {follow.done}/{follow.total}</span></div>
                       <progress aria-label={job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 진행":"장면 저장 진행률"}
                         max={follow.total} value={job?.state==="composing"&&!job?.composeRecoveryAvailable?undefined:follow.done}/>
@@ -2133,7 +2134,9 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                     ) : (
                       <>
                         {singleVideo && <small>15초 전체 영상</small>}
-                        <State value={clip?.state ?? "pending"} />
+                        {clip?.dependencyStopReason ? (
+                          <small role="status">{clip.dependencyStopReason === "parent_failed" ? "앞 장면 실패로 중단" : "작업 실패로 연결 보류"}</small>
+                        ) : <State value={clip?.state ?? "pending"} />}
                       </>
                     ))}
                 </button>

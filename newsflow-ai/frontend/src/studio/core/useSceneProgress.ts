@@ -9,7 +9,8 @@ export function sceneProgress(job:Item|undefined) {
   const done=rows.filter(row=>row.state==="downloaded").length;
   const failed=rows.some(row=>stopped.has(row.state));
   return {total:rows.length,done,percent:rows.length?Math.floor(done*100/rows.length):0,
-    failed,eligible:job?.automation_version===1&&job?.state==="generating"&&!failed&&rows.length>0};
+    failed,eligible:job?.automation_version===1&&["generating","scene_review"].includes(job?.state??"")
+      &&rows.some(row=>["submitted","downloading"].includes(row.state))};
 }
 
 export function useSceneProgress({job,view,enabled,blocked,readError,load}:{

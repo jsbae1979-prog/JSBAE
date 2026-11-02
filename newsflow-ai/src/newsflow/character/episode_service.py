@@ -417,6 +417,8 @@ class EpisodeFlow:
                     continue
                 try:
                     result = video.check(row['handle'])
+                    from .status_diagnostics import diagnostic, private_inputs
+                    row['status_diagnostics'] = diagnostic(result, result.state, now().isoformat(), private_inputs(job))
                     if result.state in {'failed', 'nsfw', 'canceled'}:
                         row.update(state=result.state, finished_at=now().isoformat())
                         s.save(job)
@@ -464,7 +466,11 @@ class EpisodeFlow:
                     s.save(job)
                     raise CharacterError('provider') from None
             uncertain = any(r['state'] in {'unknown', 'submitting'} for r in job['scenes'])
-            if not uncertain:
+            # Keep observing accepted receipts after a failure, but do not spend
+            # on new continuations or replay any failed/unsent scene.
+            stopped = any(r['state'] in {'failed', 'nsfw', 'canceled', 'not_sent',
+                'dependency_failed', 'dependency_quote_changed'} for r in job['scenes'])
+            if not uncertain and not stopped:
                 for row in job['scenes']:
                     if row['state'] != 'waiting_dependency':
                         continue

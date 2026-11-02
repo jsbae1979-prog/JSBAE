@@ -815,8 +815,17 @@ class CharacterService:
         with self.lock():
             job=self.read(identifier)
             scenes=job.get('scenes',[])
+            # A never-submitted continuation must not hide an accepted failure.
+            companions = TERMINAL|{'submitted','downloaded'}
+            if job.get('automation_version') == 1:
+                companions = companions|{'waiting_dependency'}
+                if any(s.get('state') == 'waiting_dependency' and
+                       (s.get('handle') or s.get('continuity') != 'continue' or
+                        type(s.get('from')) is not int or not 1 <= s['from'] < s.get('position', 0))
+                       for s in scenes):
+                    raise CharacterError('blocked')
             if (job['state']!='scene_review' or not 1<=len(scenes)<=60
-                    or any(s.get('state') not in TERMINAL|{'submitted','downloaded'} for s in scenes)):
+                    or any(s.get('state') not in companions for s in scenes)):
                 raise CharacterError('blocked')
             targets=[s for s in scenes if s['state'] in TERMINAL]
             if not targets:
