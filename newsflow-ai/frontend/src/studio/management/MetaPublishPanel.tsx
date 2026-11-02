@@ -16,7 +16,7 @@ function StorageForm({
     [expires, setExpires] = useState("");
   return (
     <details>
-      <summary>외부 저장소 연결</summary>
+      <summary>고급 · 기존 파일별 주소 사용</summary>
       <div className="mg-form">
         <p>
           사용 중인 저장소에서 발급한 파일별 임시 주소를 입력하세요. 전송 승인
@@ -213,13 +213,15 @@ export default function MetaPublishPanel({
       >
         대상별 게시 준비 저장
       </button>
-      {!data?.mediaReady && (
-        <p>
-          게시 준비 후 외부 저장소의 임시 주소를 등록하세요. 별도 서버·도메인
-          구매 없이 사용할 수 있으며 저장소 요금은 해당 서비스 기준입니다.
+      <p>
+        전송 승인 후 파일을 자동 업로드합니다. 직접 전송 가능한 콘텐츠에는 외부
+        저장소가 필요 없습니다.
+      </p>
+      {busy && (
+        <p role="status" aria-live="polite">
+          전송·처리 중… 완료될 때까지 다시 누르지 마세요.
         </p>
       )}
-      {busy && <p role="status">처리 중… 창을 닫지 마세요.</p>}
       {rows.map((row: any) => (
         <article key={row.id} className="mg-panel">
           <strong>
@@ -243,11 +245,21 @@ export default function MetaPublishPanel({
           {row.state === "draft" && (
             <>
               <p>
-                {data?.storageReady?.[row.id]
-                  ? "미디어 전달 준비됨 · 실제 업로드 전"
-                  : "외부 저장소 주소 필요"}
+                {data?.transferModes?.[row.id] === "direct"
+                  ? "프로그램에서 Meta로 직접 업로드"
+                  : data?.storageReady?.[row.id]
+                    ? "전송 승인 시 자동 업로드"
+                    : "Instagram 이미지 자동 업로드 저장소를 처음 한 번 연결하세요."}
               </p>
-              <StorageForm id={row.id} busy={busy} save={act} />
+              {data?.transferModes?.[row.id] !== "direct" &&
+                !data?.storageReady?.[row.id] && (
+                  <>
+                    <a href="/studio/settings?tab=accounts">
+                      자동 업로드 연결 설정
+                    </a>
+                    <StorageForm id={row.id} busy={busy} save={act} />
+                  </>
+                )}
             </>
           )}
           {row.state === "draft" && (
@@ -269,9 +281,10 @@ export default function MetaPublishPanel({
               전송 승인{row.platform === "facebook" ? " · 게시" : ""}
             </button>
           )}
-          {["processing", "ready", "published_unverified"].includes(
+          {(["processing", "ready", "published_unverified"].includes(
             row.state,
-          ) && (
+          ) ||
+            row.canCheck) && (
             <button
               disabled={busy || data?.executionReady === false}
               onClick={() => act(`publications/${row.id}/check`, {})}

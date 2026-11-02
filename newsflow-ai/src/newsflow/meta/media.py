@@ -101,6 +101,9 @@ class MetaDelivery:
         from .storage import StorageLinks
 
         self.links = StorageLinks(connections)
+        from .automatic_storage import AutomaticStorage
+
+        self.automatic = AutomaticStorage(connections, self.links)
         self.key = "meta.media." + connections.owner
         self.identifier = fingerprint(["media", connections.owner])[:32]
 
@@ -143,14 +146,17 @@ class MetaDelivery:
         if cfg:
             return bool(
                 cfg["state"] in {"prepared", "uploaded"}
-                and datetime.fromisoformat(cfg["expires"]) > utcnow() + timedelta(minutes=15)
+                and (
+                    datetime.fromisoformat(cfg["expires"]) > utcnow() + timedelta(minutes=15)
+                    or self.automatic.renewable(cfg)
+                )
             )
         return self.ready()
 
     def ready(self):
         # No decryption or remote request during a screen read.
         cfg = self.config()
-        return bool(cfg.get("origin") and cfg.get("reference"))
+        return self.automatic.ready() or bool(cfg.get("origin") and cfg.get("reference"))
 
     @staticmethod
     def _upload(origin, raw, kind, secret):
@@ -178,6 +184,8 @@ class MetaDelivery:
             conn.close()
 
     def upload(self, path, expected_sha, kind):
+        if self.automatic.ready():
+            self.automatic.provision(expected_sha, kind)
         if self.links.config(expected_sha):
             return self.links.upload(path, expected_sha, kind)
         cfg = self.config()

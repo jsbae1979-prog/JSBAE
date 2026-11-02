@@ -31,6 +31,9 @@ const names: Record<string, string> = {
   identity: "서비스 설정 변경 · 다시 연결",
   draft: "게시 준비",
   sending: "전송 중",
+  uploading: "파일 업로드 중",
+  upload_unknown: "업로드 결과 확인 필요 · 재전송 없음",
+  upload_failed: "업로드 실패 · 결과 조회 가능",
   processing: "미디어 처리 중",
   ready: "최종 게시 대기",
   publishing: "게시 중",
@@ -42,6 +45,77 @@ const names: Record<string, string> = {
 export const metaState = (value: string) => names[value] ?? value;
 const date = (value: string | null) =>
   value ? new Date(value).toLocaleString() : "만료일 미지정 · 철회 시 무효";
+
+function AutomaticStorageForm({
+  busy,
+  ready,
+  save,
+}: {
+  busy: boolean;
+  ready: boolean;
+  save: (path: string, values: Record<string, string>) => Promise<void>;
+}) {
+  const [values, setValues] = useState({
+    endpoint: "",
+    region: "auto",
+    bucket: "",
+    access_key: "",
+    secret_key: "",
+  });
+  return (
+    <details>
+      <summary>
+        Instagram 이미지 자동 업로드 · {ready ? "연결 설정됨" : "최초 연결"}
+      </summary>
+      <p>
+        본인 S3 호환 저장소를 한 번 연결하면 게시 전송 시 파일을 자동
+        업로드합니다. 서버나 도메인을 직접 운영할 필요는 없습니다.
+      </p>
+      <div className="mg-form">
+        {(
+          [
+            ["endpoint", "저장소 API 주소(HTTPS)"],
+            ["region", "지역"],
+            ["bucket", "저장 공간 이름(버킷)"],
+            ["access_key", "접근 키"],
+            ["secret_key", "비밀 키"],
+          ] as const
+        ).map(([key, label]) => (
+          <label key={key}>
+            {label}
+            <input
+              type={key.endsWith("key") ? "password" : "text"}
+              autoComplete="off"
+              value={values[key]}
+              disabled={busy}
+              onChange={(e) => setValues({ ...values, [key]: e.target.value })}
+            />
+          </label>
+        ))}
+        <p>
+          이 사용자 전용 저장소의 파일 읽기·쓰기 키를 사용하세요. 비공개 파일용
+          임시 주소는 프로그램이 만들며 24시간 유효합니다. 저장소에 newsflow/
+          경로의 자동 만료 규칙(예: 7일)을 설정하세요. 저장·전송 요금은 저장소
+          기준입니다.
+        </p>
+        <button
+          disabled={busy || Object.values(values).some((v) => !v.trim())}
+          onClick={() => {
+            const input = { ...values };
+            setValues({ ...values, access_key: "", secret_key: "" });
+            void save("automatic-storage", input);
+          }}
+        >
+          자동 업로드 연결 저장
+        </button>
+        <p>
+          연결 저장만으로 파일을 전송하지 않습니다. 실제 업로드 확인은 게시 전송
+          승인 후 진행됩니다.
+        </p>
+      </div>
+    </details>
+  );
+}
 
 export default function MetaAccounts({ csrf }: { csrf: string }) {
   const [data, setData] = useState<any>(null),
@@ -160,6 +234,15 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
           </button>
         )}
       </div>
+      <AutomaticStorageForm
+        busy={busy}
+        ready={!!data?.automaticStorageReady}
+        save={act}
+      />
+      <p>
+        Facebook 이미지·영상과 Instagram 릴스는 직접 전송합니다. Instagram
+        이미지에는 자동 업로드 저장소를 사용합니다.
+      </p>
       {config && (
         <details>
           <summary>앱 설정 · 기존 서버 연결(선택)</summary>

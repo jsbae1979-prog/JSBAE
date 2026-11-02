@@ -31,8 +31,16 @@ def services(request):
             delivery = MetaDelivery(accounts)
 
             class Graph:
+                supports_direct = staticmethod(MetaGraph.supports_direct)
+
                 def call(self, *args):
                     return MetaGraph(accounts.config()["graphVersion"]).call(*args)
+
+                def upload_file(self, *args):
+                    return MetaGraph(accounts.config()["graphVersion"]).upload_file(*args)
+
+                def upload_reel(self, *args):
+                    return MetaGraph(accounts.config()["graphVersion"]).upload_reel(*args)
 
             publisher = MetaPublishing(accounts, Graph(), lambda key: resolve_content(state, key), delivery)
             publisher.recover()  # Mark interrupted POSTs unknown; never resume them.
@@ -59,6 +67,10 @@ def status(request: Request):
             "executionReady": getattr(request.app.state, "meta_execution_enabled", True),
             "publications": publisher.list(),
             "storageReady": publisher.storage_states(),
+            "transferModes": publisher.transfer_modes(),
+            "automaticStorageReady": bool(
+                getattr(publisher.delivery, "automatic", None) and publisher.delivery.automatic.ready()
+            ),
         }
 
     return safely(run)
@@ -90,6 +102,25 @@ def configure(
 @router.post("/api/meta/media-config")
 def media_config(request: Request, origin: str = Form(max_length=300), credential: str = Form()):
     return safely(lambda: services(request)[1].delivery.configure(origin, credential) or {"saved": True})
+
+
+@router.post("/api/meta/automatic-storage")
+def automatic_storage(
+    request: Request,
+    endpoint: str = Form(max_length=300),
+    region: str = Form(max_length=40),
+    bucket: str = Form(max_length=63),
+    access_key: str = Form(),
+    secret_key: str = Form(),
+):
+    return safely(
+        lambda: (
+            services(request)[1].delivery.automatic.configure(
+                endpoint, region, bucket, access_key, secret_key
+            )
+            or {"saved": True}
+        )
+    )
 
 
 @router.post("/api/meta/import-token")

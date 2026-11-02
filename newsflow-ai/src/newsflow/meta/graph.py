@@ -27,7 +27,7 @@ class MetaGraph:
         request = Request(url, headers=headers, data=body if method == "POST" else None, method=method)
         try:
             response = build_opener(NoRedirect(), HTTPSHandler(context=ssl.create_default_context())).open(
-                request, timeout=30
+                request, timeout=120
             )
         except HTTPError as error:
             response = error
@@ -60,16 +60,33 @@ class MetaGraph:
             raise MetaError("invalid")
         if method == "GET" and body:
             url += "?" + body.decode("ascii")
+        return self.request(
+            method,
+            url,
+            {
+                "Authorization": "Bearer " + token.get_secret_value(),
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body,
+        )
+
+    @staticmethod
+    def supports_direct(platform, kind):
+        return platform == "facebook" or (platform == "instagram" and kind == "video")
+
+    def upload_file(self, target, token, raw, kind, caption):
+        from .direct_upload import facebook_file
+
+        return facebook_file(self, target, token, raw, kind, caption)
+
+    def upload_reel(self, container, token, raw):
+        from .direct_upload import instagram_file
+
+        return instagram_file(self, container, token, raw)
+
+    def request(self, method, url, headers, body):
         try:
-            status, raw = self.transport(
-                method,
-                url,
-                {
-                    "Authorization": "Bearer " + token.get_secret_value(),
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body,
-            )
+            status, raw = self.transport(method, url, headers, body)
             if len(raw) > 262144:
                 raise MetaError("unknown")
             data = json.loads(raw)

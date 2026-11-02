@@ -37,6 +37,11 @@ class MetaPublishing:
             "caption": r.caption,
             "remoteId": r.remote_id,
             "errorCode": r.error_code,
+            "canCheck": bool(
+                r.container_id
+                and r.platform == "instagram"
+                and r.state in {"upload_unknown", "upload_failed"}
+            ),
             "createdAt": r.created_at.isoformat(),
             "publishedAt": r.published_at.isoformat() if r.published_at else None,
         }
@@ -128,12 +133,22 @@ class MetaPublishing:
                 raise MetaError("media")
             self.delivery.links.configure(row.media_sha256, put_url, get_url, expires)
 
+    def direct(self, platform, kind):
+        return bool(hasattr(self.graph, "supports_direct") and self.graph.supports_direct(platform, kind))
+
+    def transfer_modes(self):
+        with self.sessions() as db:
+            return {
+                r.id: "direct" if self.direct(r.platform, r.media_kind) else "storage"
+                for r in db.scalars(select(MetaPublication).where(MetaPublication.owner == self.owner))
+            }
+
     def storage_states(self):
         if not hasattr(self.delivery, "available"):
             return {r["id"]: self.delivery.ready() for r in self.list()}
         with self.sessions() as db:
             return {
-                r.id: self.delivery.available(r.media_sha256)
+                r.id: self.direct(r.platform, r.media_kind) or self.delivery.available(r.media_sha256)
                 for r in db.scalars(select(MetaPublication).where(MetaPublication.owner == self.owner)).all()
             }
 
@@ -163,7 +178,10 @@ class MetaPublishing:
     def _error(self, identifier, row, error):
         code = error.code if isinstance(error, MetaError) else "unknown"
         self.accounts.invalidate(row["connection_id"], code)
-        return self._set(identifier, "unknown" if code == "unknown" else "failed", error_code=code)
+        with self.sessions() as db:
+            upload_only = self.owned(db, identifier).state == "uploading"
+        state = "unknown" if code == "unknown" else "failed"
+        return self._set(identifier, "upload_" + state if upload_only else state, error_code=code)
 
     def _token(self, row):
         token, target, _revision = self.accounts.credential(
@@ -185,7 +203,8 @@ class MetaPublishing:
                 media = self.resolve(current.content_id)
                 if media["sha256"] != current.media_sha256 or media["kind"] != current.media_kind:
                     raise MetaError("media")
-            if not (
+            direct = self.direct(current.platform, current.media_kind)
+            if not direct and not (
                 self.delivery.available(media["sha256"])
                 if hasattr(self.delivery, "available")
                 else self.delivery.ready()
@@ -194,6 +213,27 @@ class MetaPublishing:
             row = self._claim(identifier, {"draft"}, "sending")
             try:
                 token = self._token(row)
+                if direct:
+                    from .direct_upload import read_media
+
+                    raw = read_media(media["path"], row["media_sha256"], row["media_kind"])
+                    if row["platform"] == "facebook":
+                        data = self.graph.upload_file(
+                            row["target_id"], token, raw, row["media_kind"], row["caption"]
+                        )
+                        return self._set(
+                            identifier, "published_unverified", remote_id=self._id(data, prefer="post_id")
+                        )
+                    data = self.graph.call(
+                        "POST",
+                        row["target_id"] + "/media",
+                        token,
+                        {"caption": row["caption"], "media_type": "REELS", "upload_type": "resumable"},
+                    )
+                    container = self._id(data)
+                    self._set(identifier, "uploading", container_id=container)
+                    self.graph.upload_reel(container, token, raw)
+                    return self._set(identifier, "processing")
                 url = self.delivery.upload(media["path"], row["media_sha256"], row["media_kind"])
                 if row["platform"] == "instagram":
                     payload = {"caption": row["caption"]}
@@ -232,7 +272,11 @@ class MetaPublishing:
             row = {c.name: getattr(entity, c.name) for c in entity.__table__.columns}
         if row["state"] == "published":
             return self.list_one(identifier)
-        if row["state"] not in {"processing", "published_unverified", "ready"}:
+        if row["state"] not in {"processing", "published_unverified", "ready"} and not (
+            row["state"] in {"upload_unknown", "upload_failed"}
+            and row["container_id"]
+            and row["platform"] == "instagram"
+        ):
             raise MetaError("unknown")
         try:
             token = self._token(row)
@@ -298,11 +342,12 @@ class MetaPublishing:
         with self.sessions.begin() as db:
             rows = db.scalars(
                 select(MetaPublication).where(
-                    MetaPublication.owner == self.owner, MetaPublication.state.in_(("sending", "publishing"))
+                    MetaPublication.owner == self.owner,
+                    MetaPublication.state.in_(("sending", "uploading", "publishing")),
                 )
             ).all()
             for r in rows:
-                r.state = "unknown"
+                r.state = "upload_unknown" if r.state == "uploading" else "unknown"
                 r.error_code = "unknown"
                 r.updated_at = utcnow()
             return len(rows)

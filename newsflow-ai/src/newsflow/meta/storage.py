@@ -80,7 +80,17 @@ class StorageLinks:
             and datetime.fromisoformat(cfg["expires"]) > utcnow() + timedelta(minutes=15)
         )
 
-    def configure(self, digest, put_url, get_url, expires):
+    def configure(
+        self,
+        digest,
+        put_url,
+        get_url,
+        expires,
+        *,
+        automatic_identity=None,
+        object_key=None,
+        reuse_uploaded=False,
+    ):
         storage_url(put_url)
         storage_url(get_url)
         try:
@@ -97,6 +107,13 @@ class StorageLinks:
         # A failed/unknown upload is never reset by entering the same or another URL.
         if old and old["state"] not in {"prepared", "uploaded"}:
             raise MetaError("unknown")
+        if reuse_uploaded and (
+            not old
+            or old["state"] != "uploaded"
+            or old.get("automaticIdentity") != automatic_identity
+            or old.get("objectKey") != object_key
+        ):
+            raise MetaError("invalid")
         ref = self.accounts.vault.put(
             identifier,
             identity,
@@ -118,7 +135,12 @@ class StorageLinks:
                         "reference": ref,
                         "identity": identity,
                         "expires": expiry.isoformat(),
-                        "state": "prepared",
+                        "state": "uploaded" if reuse_uploaded else "prepared",
+                        **(
+                            {"automaticIdentity": automatic_identity, "objectKey": object_key}
+                            if automatic_identity
+                            else {}
+                        ),
                     }
                 )
                 row = db.get(AppSetting, key)

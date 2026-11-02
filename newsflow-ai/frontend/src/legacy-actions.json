@@ -6446,5 +6446,49 @@
         "path": false
       }
     ]
+  },
+  {
+    "id": "meta_automatic_storage",
+    "module": "publishing",
+    "label": "자동 업로드 저장소 연결",
+    "path": "/api/meta/automatic-storage",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "endpoint",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "region",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "bucket",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "access_key",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "secret_key",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ]
   }
 ]
