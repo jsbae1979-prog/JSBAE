@@ -10,7 +10,7 @@ export function NewsAnalysisControls({c,selected,collectionMethod}:{c:Controller
   const all=scope==="collection";
   return <section className="news-analysis-controls" aria-label="뉴스 분석 설정">
     <dl>
-      <div><dt>선택 수집 방식</dt><dd>{collectionMethod==="serpapi"?"SerpApi":"등록 RSS"}</dd></div>
+      <div><dt>선택 수집 방식</dt><dd>{collectionMethod==="serpapi"?"SerpApi":collectionMethod==="popular"?"분야별 뉴스 RSS":"등록 RSS"}</dd></div>
       <div><dt>분석 API</dt><dd>{providerLabel}</dd></div>
       <div><dt>모델</dt><dd>{config?.model??"설정 미확인"}</dd></div>
     </dl>

@@ -1,0 +1,82 @@
+{
+  "recordedAt": "2026-11-02T04:02:58.072948+00:00",
+  "baseSha": "45b14de7dab94e6eb737d2c0e8a8c492231bbe8f",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "scope": "News collection/analysis and TOP 3 image budget/edit follow-up; synthetic fixtures only",
+  "finding": "The analysis panel labeled the popular/category RSS source as registered RSS.",
+  "change": "Distinguish registered RSS, category RSS and SerpApi in the analysis source label. Preserve collection route, approval, budget and retry behavior.",
+  "changedCode": [
+    "frontend/src/studio/core/NewsAnalysisControls.tsx",
+    "tests/test_news_collection_controls_browser.py"
+  ],
+  "environment": {
+    "os": "Windows",
+    "python": "3.14.7",
+    "browser": "isolated headless Chrome, loopback-only routing"
+  },
+  "checks": {
+    "news": {
+      "pass": 9,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "command": "python -B -m pytest -q -rs --tb=short -p no:cacheprovider tests/test_news_collection_controls_browser.py tests/test_news_analysis_voice_features.py::test_one_analysis_range_selector_and_api_information tests/test_news_analysis_voice_features.py::test_whole_collection_id_bound_automatically_without_numeric_input",
+      "cases": [
+        "test_one_box_selects_rss_or_serpapi_without_sending_requests",
+        "test_collection_request_has_running_and_final_counts_without_resubmission[success]",
+        "test_collection_request_has_running_and_final_counts_without_resubmission[partial]",
+        "test_collection_request_has_running_and_final_counts_without_resubmission[failed]",
+        "test_unknown_post_only_reads_status_and_never_replays",
+        "test_serpapi_start_has_bounded_usage_confirmation_no_key_form",
+        "test_one_analysis_range_selector_and_api_information",
+        "test_whole_collection_id_bound_automatically_without_numeric_input[claude_api]",
+        "test_whole_collection_id_bound_automatically_without_numeric_input[openai]"
+      ],
+      "exitCode": 0
+    },
+    "images": {
+      "pass": 3,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "command": "python -B -m pytest -q -rs --tb=short -p no:cacheprovider tests/test_feed_budget_browser.py tests/test_feed_cost_review_browser.py tests/test_live_feed_browser.py",
+      "cases": [
+        "test_app_budget_review_in_react",
+        "test_cost_status_and_expired_additional_quote",
+        "test_live_preview_latest_edit_no_autosave_and_exact_saved_pixels"
+      ],
+      "exitCode": 0
+    }
+  },
+  "typescript": {
+    "command": "node node_modules/typescript/bin/tsc --noEmit",
+    "exitCode": 0
+  },
+  "reactBuild": {
+    "command": "node node_modules/vite/bin/vite.js build --configLoader runner",
+    "exitCode": 0
+  },
+  "evidence": [
+    "Source switching updates the analysis label and sends no POST request.",
+    "Collection running/final/unknown displays use mocked responses; unknown requests are not replayed.",
+    "Unprepared collection analysis remains disabled; collection ID is bound automatically; consent is required.",
+    "Image cost review retains app-budget disclosure; status reads do not mutate revisions or generate images.",
+    "Live image edits use local rendering; stale preview responses cannot replace newer edits.",
+    "Saved image bytes match preview, original version survives, rank 2/3 remain unchanged."
+  ],
+  "reusedEvidence": {
+    "frontendFixSha": "45b14de7dab94e6eb737d2c0e8a8c492231bbe8f",
+    "ciRun": 41377472022,
+    "windowsJobs": "Python 3.12.10 and 3.14.9: frontend 47 PASS; Fake/FFmpeg/routes 151 PASS each. Prior results, not new tests."
+  },
+  "warnings": [
+    "Existing Starlette TestClient deprecation warning; React dependency use-client build warnings. No dependency changes."
+  ],
+  "limits": [
+    "No real RSS/SerpApi collection or AI request; live provider errors and credentials not retested.",
+    "No user Chrome interaction or operating deployment/restart.",
+    "No operating database, credentials, media, settings or backups opened or changed.",
+    "Existing unrelated local modifications preserved."
+  ],
+  "result": "PASS within development scope; real provider/operating verification not performed"
+}
