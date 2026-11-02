@@ -30,3 +30,13 @@ Official reference URLs attempted:
 ## Operating application
 
 See the follow-up operating result after the approved normal Stop/Start. Preserve current profile, encrypted credentials, media, original source DB and A/B backups. Do not reset unknown paid requests or invoke pending generation.
+
+## Operating result
+
+Applied source `3e61eec0dceca91958e9f250e3cad9dc51e455e0` to four files (the two read-model hunks plus React index/JS/CSS). Installation-only Python overlays and previous assets were preserved. Normal Stop exit 0, one Start, Chrome opened; port 18768, PID 39916 at verification.
+
+Before/after: 49 tables and 394 stored articles unchanged, 429 files backed up, 428 protected profile files checked unchanged apart from normal session/lock artifacts; encrypted keys/media and original/A/B backups preserved. Launch/security flags unchanged. No provider check, paid generation, collection, upload or publication was invoked.
+
+User Chrome showed 372 visible articles (50 initially rendered), collection unique total 372 and cross-category overlap 1. The stored total 394 includes records outside the current visible list; records were not deleted. The new API recheck button was visible, analysis consent unchecked and paid action disabled. The recheck button was not executed on the real provider. Browser left on the news screen. Screenshots and private backup manifests remain local and are not uploaded to GitHub.
+
+Final: implemented/application changes ACCEPTED; real-provider verification and Instagram storage-free image transmission remain NOT VERIFIED. Existing paid scene retry and real SNS publication remain user approval/testing items.
