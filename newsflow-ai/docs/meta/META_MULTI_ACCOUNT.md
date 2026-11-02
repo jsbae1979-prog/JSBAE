@@ -37,10 +37,10 @@
 
 참고: [Meta 공식 SDK의 Page 파일 업로드](https://github.com/facebook/facebook-python-business-sdk/blob/main/facebook_business/adobjects/page.py), [Instagram 미디어 생성의 upload_type](https://github.com/facebook/facebook-python-business-sdk/blob/main/facebook_business/adobjects/iguser.py), [AWS SigV4 서명 규칙과 검증 예제](https://docs.aws.amazon.com/AmazonS3/latest/developerguide/sigv4-query-string-auth.html). Instagram 직접 업로드는 운영 앱의 Facebook Login for Business 권한과 API v26.0에서 별도 실검증해야 한다.
 
-**현재 운영본에는 적용하지 않았다. 실제 토큰·외부 저장소·Meta 게시 검증도 하지 않았다.** 아래 인증 서버/미디어 서버 장은 기존 선택 경로에 관한 문서다.
+**운영 반영 기록:** `d9cded31022de7422ac46b2e2c695af432827cc9`의 연결·자동 업로드 화면과 실행 경로는 운영본에 적용됐다. [운영 반영 보고서](META_OPERATING_APPLY_20261102.md)를 기준으로 한다. 실제 토큰·외부 저장소·Meta 게시 수락은 별도 검증 항목이다. 아래 인증 서버/미디어 서버 장은 기존 선택 경로에 관한 문서다.
 
 
-이 구현은 Facebook Login for Business로 관리 페이지를 조회하고, 페이지에 연결된 Instagram 전문 계정까지 연결별로 저장한다. 새 기능은 개발본에서 모의 공급사로 검증했다. 실제 토큰 등록, 사용자 로그인, 미디어 업로드, SNS 게시, 운영 설치 반영은 수행하지 않았다.
+이 구현은 Facebook Login for Business로 관리 페이지를 조회하고, 페이지에 연결된 Instagram 전문 계정까지 연결별로 저장한다. 새 기능은 개발본에서 모의 공급사로 검증하고 운영 화면에 반영했다. 실제 토큰 등록·계정 조회·미디어 업로드·SNS 게시의 성공 여부는 모의 검사 및 운영 반영과 구분해 기록한다.
 
 ## 구현 범위
 
@@ -115,7 +115,7 @@ Meta 앱의 유효한 OAuth 리디렉션 URI에는 정확히 `https://<인증 �
 
 이 값은 사용자 동의나 계정 권한을 대신하지 않는다. 모든 실제 게시에는 대상과 콘텐츠 확인, 연결 소유권, 로컬 인증·CSRF·Origin 및 해당 작업의 전송 승인이 추가 적용된다. 다른 공급사 경로나 자동화 스케줄러의 제한을 해제하지 않는다. 배포 무결성 목록과 관련 파일 해시도 기존 운영 반영 절차에 따라 갱신해야 한다.
 
-**이번 작업에서는 운영 설치의 이 값, 프로그램 파일, DB, 실행 프로세스를 변경하지 않았다.** 본인 Meta 연결과 필요한 저장소가 준비되고 사용자가 실제 검증을 승인한 후 별도 운영 적용이 필요하다.
+**2026-11-02 운영 반영에서 `metaPublishingConnected`와 해당 프로그램 파일이 적용됐다.** 이후 테스트·회귀 분류 작업에서는 운영 설치를 변경하거나 재시작하지 않았다. 본인 계정·콘텐츠에 대한 실제 외부 조회·전송·게시는 각각 승인된 범위에서만 수행한다.
 
 ## 게시 절차와 실패 처리
 
