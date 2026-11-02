@@ -21,7 +21,7 @@ from newsflow.character.schema import CharacterError
 from .character_quote_only import _Store, _ReadOnlyCipher, _unlinked
 from .lifecycle import Blocked
 
-PATH = re.compile(r'/character/([a-f0-9]{32})/(submit|check|diagnose|retry-quote)\Z')
+PATH = re.compile(r'/character/([a-f0-9]{32})/(submit|check|diagnose|retry-quote|retry-scene)\Z')
 _REQUEST = ContextVar('newsflow_manual_character_request', default=None)
 _ACTIVE = ContextVar('newsflow_manual_character_active', default=None)
 
@@ -52,7 +52,7 @@ class _Client:
     def submit_scene(self, payload, idempotency_key):
         context = self.scope.context()
         action = context['request'][2]
-        if action not in {'submit', 'check'}:
+        if action not in {'submit', 'check', 'retry-scene'}:
             _deny()
         job = self.scope.local.read(context['job_id'])
         matches = [scene for scene in job.get('scenes', [])
@@ -62,7 +62,30 @@ class _Client:
         if len(matches) != 1:
             _deny()
         scene = matches[0]
-        if action == 'check':
+        if action == 'retry-scene':
+            self.scope.approved_episode(job)
+            previous = context['retry_source']
+            retry = context['retry_quote']
+            expected_history = [*previous.get('history', []),
+                                {k: v for k, v in previous.items() if k != 'history'}]
+            if (job['state'] != 'generating' or scene['position'] != previous['position']
+                    or scene['attempt'] != previous['attempt'] + 1
+                    or scene['payload'] != previous['payload']
+                    or scene.get('history') != expected_history
+                    or scene.get('handle') is not None
+                    or idempotency_key != f'{job["id"]}-s{scene["position"]}-t{scene["attempt"]}'
+                    or scene.get('quote_usd') != retry['quote_usd']
+                    or job.get('retry_hash') != context['retry_hash']
+                    or job.get('retry') != retry
+                    or job['quote_approvals'][:-1] != context['prior_approvals']
+                    or job['quote_approvals'][-1].get('scope') != 'scene_retry'
+                    or job['quote_approvals'][-1].get('position') != scene['position']
+                    or job['quote_approvals'][-1].get('attempt') != scene['attempt']
+                    or amount(job['quote_approvals'][-1]['usd']) != amount(retry['quote_usd'])
+                    or any(fingerprint(row) != context['other_scenes'].get(row['position'])
+                           for row in job['scenes'] if row['position'] != scene['position'])):
+                _deny()
+        elif action == 'check':
             self.scope.approved_episode(job)
             receipt = context['continuations'].get(scene['position'])
             if (job['state'] not in {'generating', 'scene_review', 'status_or_download_failed'}
@@ -263,7 +286,7 @@ class ManualExecution:
         return _Client(self, KlingClient(self.keys.key, settings))
 
     def execute(self, action, identifier, *, consent=False, quote_hash=''):
-        if action not in {'submit', 'check', 'diagnose', 'retry-quote'} or _REQUEST.get() != (self, identifier, action):
+        if action not in {'submit', 'check', 'diagnose', 'retry-quote', 'retry-scene'} or _REQUEST.get() != (self, identifier, action):
             _deny()
         self.local.consent(consent)
         # Product methods own the lock, quote approval, per-execution cap,
@@ -278,11 +301,12 @@ class ManualExecution:
                              'initial_states': {row['position']: row['state'] for row in job.get('scenes', [])},
                              'continuations': {}, 'claims_lock': Lock()})
         try:
-            if action == 'retry-quote':
-                # Quote only for a confirmed, owned failure; never opens retry-scene.
+            if action in {'retry-quote', 'retry-scene'}:
+                # Exact owned failure only; submission still needs a fresh quoted approval.
                 pending = next((row for row in job.get('scenes', [])
                                 if row.get('state') == 'failed' and row.get('attempt', 3) < 3), None)
-                if (job.get('state') != 'scene_review' or pending is None
+                expected_state = 'retry_quoted' if action == 'retry-scene' else 'scene_review'
+                if (job.get('state') != expected_state or pending is None
                         or any(row.get('state') not in {'failed', 'nsfw', 'canceled', 'downloaded', 'waiting_dependency'}
                                for row in job.get('scenes', []))):
                     _deny()
@@ -296,7 +320,22 @@ class ManualExecution:
                     _deny()
                 if job.get('automation_version') == 1:
                     self.approved_episode(job)
-                context = self.context('retry-quote')
+                context = self.context(action)
+                if action == 'retry-scene':
+                    # Modern episode retries preserve the original plan and all other scenes.
+                    # The service validates expiry/key/budget and journals intent before IO.
+                    retry = job.get('retry', {})
+                    if (job.get('automation_version') != 1 or not quote_hash
+                            or quote_hash != job.get('retry_hash')
+                            or fingerprint(retry) != quote_hash
+                            or retry.get('position') != pending['position']
+                            or retry.get('original') != fingerprint(pending)):
+                        _deny()
+                    context.update(retry_source=pending, retry_quote=retry, retry_hash=quote_hash,
+                                   prior_approvals=job['quote_approvals'],
+                                   other_scenes={row['position']: fingerprint(row) for row in job['scenes']
+                                                 if row['position'] != pending['position']})
+                    return CharacterService.retry_scene(self.local, identifier, consent=True, quote_hash=quote_hash)
                 context.update(retry_position=pending['position'], retry_target=fingerprint(pending))
                 return CharacterService.prepare_retry(self.local, identifier, consent=True)
             if action == 'submit':
@@ -334,7 +373,7 @@ def install(app, profile, nativefactory):
         _deny()
     manual = ManualExecution(service, Path(profile), nativefactory)
     for action, method in (('submit', 'submit'), ('check', 'check'), ('diagnose', 'diagnose'),
-                           ('retry-quote', 'prepare_retry')):
+                           ('retry-quote', 'prepare_retry'), ('retry-scene', 'retry_scene')):
         original = getattr(service, method)
         def wrapped(identifier, *args, _action=action, _original=original, **kwargs):
             if _REQUEST.get() == (manual, identifier, _action):

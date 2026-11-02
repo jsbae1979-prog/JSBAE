@@ -78,4 +78,5 @@ def test_estimate_context_cannot_submit_upload_check_download_or_estimate_twice(
             with pytest.raises(CharacterError):getattr(client,name)(*args)
     x.inside_quote=inside
     assert post(x)==200 and len(x.quotes)==1 and x.state.calls==[]
-    assert x.post('retry-scene',job_id=x.identifier)==202  # Paid retry remains at the normal blocked boundary.
+    assert x.post('retry-scene',job_id=x.identifier,quote_hash='')==409  # Missing quoted approval never sends.
+    assert x.state.calls==[]

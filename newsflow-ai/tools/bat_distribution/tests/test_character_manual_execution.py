@@ -94,11 +94,11 @@ def execution(studio, monkeypatch, request):
                 action = environ['path'].rsplit('/', 1)[-1]
                 job_id = environ['path'].split('/')[2]
                 kwargs = {'consent': values.get('consent') == ['true']}
-                if action == 'submit':
+                if action in {'submit', 'retry-scene'}:
                     kwargs['quote_hash'] = values.get('quote_hash', [''])[0]
                 if action == 'prepare':
                     kwargs['script_reviewed'] = True
-                getattr(service, {'retry-quote': 'prepare_retry'}.get(action, action))(job_id, **kwargs)
+                getattr(service, {'retry-quote': 'prepare_retry', 'retry-scene': 'retry_scene'}.get(action, action))(job_id, **kwargs)
                 status = 200
             except (CharacterError, CredentialError, OSError):
                 status = 409
@@ -215,7 +215,7 @@ def test_pending_status_can_be_checked_again_without_new_submissions(execution):
 
 
 @pytest.mark.parametrize('method,suffix', [('GET', 'submit'), ('POST', 'submit/'), ('POST', 'write'),
-                                         ('POST', 'retry-scene'), ('POST', 'fetch'), ('POST', 'render')])
+                                         ('POST', 'retry-scene/'), ('POST', 'fetch'), ('POST', 'render')])
 def test_only_exact_submit_and_check_routes_bypass_normal_paid_block(execution, method, suffix):
     path = f'/character/{execution.identifier}/{suffix}'
     assert execution.post(path=path, method=method) == 202
