@@ -21,7 +21,7 @@
 
 | 검사 | 명령 | 로컬 결과 |
 |---|---|---|
-| Meta 계정·직접 등록·게시·브라우저 | `python -m pytest -q -rs --tb=short tests/test_meta_accounts.py tests/test_meta_direct.py tests/test_meta_browser.py` | Python 3.14: 73 PASS / 0 FAIL / 0 SKIP |
+| Meta 계정·직접 등록·게시·브라우저 | `python -m pytest -q -rs --tb=short tests/test_meta_accounts.py tests/test_meta_direct.py tests/test_meta_browser.py` | Python 3.14: 최종 코드 76 PASS / 0 FAIL / 0 SKIP |
 | Python 3.12 호환 | `python -m pytest -q -rs --tb=short tests/test_meta_accounts.py tests/test_meta_direct.py` | 70 PASS / 0 FAIL / 0 SKIP |
 | 이후 저장소 동시 변경·중단 보완 포함 | `python -m pytest -q -rs --tb=short tests/test_meta_direct.py` | Python 3.14: 26 PASS / 0 FAIL / 0 SKIP (앞선 23개 + 신규 3개) |
 | 두 action 카탈로그·studio_v3 | `python -m pytest -q -rs --tb=short tools/studio_v3/tests` | 58 PASS / 0 FAIL / 0 SKIP |
@@ -33,7 +33,9 @@ Windows CI에는 위 Meta 3개 테스트 파일을 연결했다. 로컬 성공�
 
 직접 등록 이전 실패 재검증(기존 작업의 결과): 93 PASS / 2 FAIL. 남은 실패는 `test_feed_cost_review_browser::test_cost_status_and_expired_additional_quote`, `test_feed_growth_browser::test_free_copy_and_manual_performance_browser`이다. 이번 Meta 변경으로 고쳤다고 주장하지 않는다.
 
-전체 Python 검사는 `python -m pytest -q -rs --tb=short`로 별도 실행 중이며, 완료 수치는 후속 결과에 기록한다. 이전 전체 회귀가 통과했다고 주장하지 않는다. 전체 실행 이후의 저장소 보완은 별도 26개 집중 검사로 확인했다.
+전체 Python 검사는 `python -m pytest -q -rs --tb=short`로 실행했으나 28%에서 명시적으로 중단했다. 전체 완료 집계·JUnit 결과는 생성되지 않았으며 **전체 회귀는 미완료/NOT VERIFIED**다. 변경 범위 집중 검사가 완료된 뒤 장시간 전체 회귀를 계속하지 않았으며, 전체 통과를 주장하지 않는다. 해당 전체 검사 Python 프로세스가 더 이상 실행 중이지 않은 것을 확인했다. 최종 코드의 Meta 범위는 위 76개 검사로 확인했다.
+
+구현 커밋: `7114d8a3f25582d1c8d559fdc9c33ab8b1c068c5`. GitHub 개발 브랜치 push 완료. [Windows CI 41430853673](https://github.com/jsbae1979-prog/JSBAE/actions/runs/41430853673)는 마지막 조회에서 실행 중으로, CI 통과 여부는 미검증이다. 이 보고서의 후속 커밋은 검증 기록만 갱신한다.
 
 ## 남은 조건
 
