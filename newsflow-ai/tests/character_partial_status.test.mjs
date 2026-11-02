@@ -40,10 +40,16 @@ test("downloaded and unknown scenes remain distinct from confirmed failures", ()
   assert.equal(mixed.sceneProgressSummary, "실패 1 · 상태 확인 대기 2 · 저장 1 · 결과 불명 1");
 });
 
-async function submitDialog({ check = true, reject = true, ack = true } = {}) {
+async function submitDialog({ check = true, reject = true, ack = true, gates = {} } = {}) {
   const calls = { requests: 0, reloads: 0, closes: 0, error: "", busy: false };
   const context = { Error, busy: false, risky: true, ack, localRender: null,
-    compactCharacter: false, quoteReady: true, registeredRSS: false, quoteSubmit: false,
+    // These fixtures are check/diagnose actions, so specialized form readiness
+    // is not applicable (CommandDialog's !actionKind branches). Each guard is
+    // independently exercised below with an explicit blocked fixture.
+    compactCharacter: false, compactConsent: false, quoteReady: true,
+    analysisReady: true, collectionReady: true, newsScriptReady: true, registrationReady: true,
+    registeredRSS: false, quoteSubmit: false, collecting: false, modelRegistration: false,
+    categoryRSS: false, ...gates,
     checkingCharacterScenes: check, diagnosingCharacterScenes: false, effective: {}, values: {}, view: {}, files: {}, context: {},
     submitOriginal: async () => { calls.requests++; if (reject) throw Error("이전 요청 결과를 확인하세요. 자동 재전송하지 않습니다."); },
     onSaved: () => { calls.reloads++; }, onClose: () => { calls.closes++; },
@@ -76,3 +82,19 @@ test("manual status checks retain the explicit confirmation gate", async () => {
   const blocked = await submitDialog({ ack: false });
   assert.equal(blocked.requests, 0); assert.equal(blocked.reloads, 0);
 });
+
+for (const [label, gates] of [
+  ["request already busy", {busy: true}],
+  ["compact consent missing", {compactConsent: true, risky: false}],
+  ...["quoteReady", "analysisReady", "collectionReady", "newsScriptReady", "registrationReady"]
+    .map((field) => [field + " incomplete", {[field]: false}]),
+]) {
+  test("submitDialog blocks " + label + " without request, reload or close", async () => {
+    const calls = await submitDialog({gates, ack: label !== "compact consent missing"});
+    assert.equal(calls.requests, 0);
+    assert.equal(calls.reloads, 0);
+    assert.equal(calls.closes, 0);
+    assert.equal(calls.error, "");
+    assert.equal(calls.busy, false); // no setBusy callback on a blocked submission
+  });
+}
