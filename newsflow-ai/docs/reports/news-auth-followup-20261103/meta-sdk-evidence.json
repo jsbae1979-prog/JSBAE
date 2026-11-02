@@ -1,0 +1,12 @@
+{
+  "checked_date": "2026-11-03",
+  "repository": "facebook/facebook-python-business-sdk",
+  "revision": "788f363d15b1269ab5efb7cd00fb5e3b133cd99b",
+  "source_url": "https://raw.githubusercontent.com/facebook/facebook-python-business-sdk/788f363d15b1269ab5efb7cd00fb5e3b133cd99b/facebook_business/adobjects/iguser.py",
+  "decoded_utf8_sha256": "591390f8d11e39da80e65e843e9d660d20f9aa962eda0b107c6035ee100ee666",
+  "method": "IGUser.create_media",
+  "image_url_parameter": true,
+  "upload_type_parameter": true,
+  "source_file_parameter": false,
+  "conclusion": "SDK parameter inspection does not establish binary image upload support. No authenticated Meta request was made."
+}

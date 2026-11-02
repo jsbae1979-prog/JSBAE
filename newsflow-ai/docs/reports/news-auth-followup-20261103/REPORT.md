@@ -40,3 +40,15 @@ Before/after: 49 tables and 394 stored articles unchanged, 429 files backed up, 
 User Chrome showed 372 visible articles (50 initially rendered), collection unique total 372 and cross-category overlap 1. The stored total 394 includes records outside the current visible list; records were not deleted. The new API recheck button was visible, analysis consent unchecked and paid action disabled. The recheck button was not executed on the real provider. Browser left on the news screen. Screenshots and private backup manifests remain local and are not uploaded to GitHub.
 
 Final: implemented/application changes ACCEPTED; real-provider verification and Instagram storage-free image transmission remain NOT VERIFIED. Existing paid scene retry and real SNS publication remain user approval/testing items.
+
+## Follow-up: Instagram storage-free image transport evidence
+
+Reviewed application source at `8ba60c87bb0e090dcb24e8014e4fcd8430ad7b0a` on 2026-11-03. No product or operating files changed in this follow-up.
+
+- Meta's official Python Business SDK `IGUser.create_media` was retrieved at pinned file revision `788f363d15b1269ab5efb7cd00fb5e3b133cd99b`. It declares `image_url` and `upload_type`, but no `source` file parameter. See `meta-sdk-evidence.json` for the source URL and decoded UTF-8 content hash.
+- This confirms the SDK parameter shape only. It does not prove that resumable image bytes are supported or universally unsupported. The content-publishing documentation remained unavailable through the documentation reader (429/inaccessible); no authenticated endpoint was probed.
+- Current `graph.py::supports_direct`, `direct_upload.py::instagram_file` and `publishing.py::send` consistently separate Instagram video bytes from image URL delivery. Image media is not silently converted to video or sent to the Facebook photo endpoint. Existing Instagram automatic storage delivery is retained.
+- Existing focused Fake transport evidence (132 PASS including direct/automatic-upload tests in the preceding validation) is reused, not counted as new tests. No tests rerun for this documentation-only change; `git diff --check` is the new documentation check.
+- No real upload, post, provider check, storage registration, credential read, application restart or data mutation was performed. Existing unrelated local changes remain untouched.
+
+Decision: storage-free Instagram image transmission remains **NOT VERIFIED / BLOCKED for enablement**. There is no supported implementation change to enable from the evidence obtained. The existing configured-storage path remains implemented but real account acceptance/upload/publication is not validated by these Fake tests. A documented image-byte contract and a separately authorized controlled verification would be needed before enabling a new direct path. Do not repeat paid generation or change security settings to resolve this external capability question.
