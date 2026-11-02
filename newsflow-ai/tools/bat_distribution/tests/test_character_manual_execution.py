@@ -98,7 +98,7 @@ def execution(studio, monkeypatch, request):
                     kwargs['quote_hash'] = values.get('quote_hash', [''])[0]
                 if action == 'prepare':
                     kwargs['script_reviewed'] = True
-                getattr(service, action)(job_id, **kwargs)
+                getattr(service, {'retry-quote': 'prepare_retry'}.get(action, action))(job_id, **kwargs)
                 status = 200
             except (CharacterError, CredentialError, OSError):
                 status = 409

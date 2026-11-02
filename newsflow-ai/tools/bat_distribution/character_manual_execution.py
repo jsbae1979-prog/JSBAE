@@ -21,7 +21,7 @@ from newsflow.character.schema import CharacterError
 from .character_quote_only import _Store, _ReadOnlyCipher, _unlinked
 from .lifecycle import Blocked
 
-PATH = re.compile(r'/character/([a-f0-9]{32})/(submit|check|diagnose)\Z')
+PATH = re.compile(r'/character/([a-f0-9]{32})/(submit|check|diagnose|retry-quote)\Z')
 _REQUEST = ContextVar('newsflow_manual_character_request', default=None)
 _ACTIVE = ContextVar('newsflow_manual_character_active', default=None)
 
@@ -167,6 +167,18 @@ class _Client:
         return public
 
     def estimate(self, payload):
+        context = self.scope.context()
+        if context['request'][2] == 'retry-quote':
+            job = self.scope.local.read(context['job_id'])
+            target = context.get('retry_target')
+            matches = [scene for scene in job.get('scenes', [])
+                       if scene.get('position') == context.get('retry_position')]
+            if (job.get('state') != 'retry_quoting' or len(matches) != 1
+                    or fingerprint(matches[0]) != target or matches[0].get('payload') != payload
+                    or context.get('retry_estimated')):
+                _deny()
+            context['retry_estimated'] = True  # One quote only, claimed before external IO.
+            return str(amount(self.original.estimate(payload)))
         context = self.scope.context('check')
         job = self.scope.local.read(context['job_id'])
         self.scope.approved_episode(job)
@@ -251,7 +263,7 @@ class ManualExecution:
         return _Client(self, KlingClient(self.keys.key, settings))
 
     def execute(self, action, identifier, *, consent=False, quote_hash=''):
-        if action not in {'submit', 'check', 'diagnose'} or _REQUEST.get() != (self, identifier, action):
+        if action not in {'submit', 'check', 'diagnose', 'retry-quote'} or _REQUEST.get() != (self, identifier, action):
             _deny()
         self.local.consent(consent)
         # Product methods own the lock, quote approval, per-execution cap,
@@ -266,6 +278,27 @@ class ManualExecution:
                              'initial_states': {row['position']: row['state'] for row in job.get('scenes', [])},
                              'continuations': {}, 'claims_lock': Lock()})
         try:
+            if action == 'retry-quote':
+                # Quote only for a confirmed, owned failure; never opens retry-scene.
+                pending = next((row for row in job.get('scenes', [])
+                                if row.get('state') == 'failed' and row.get('attempt', 3) < 3), None)
+                if (job.get('state') != 'scene_review' or pending is None
+                        or any(row.get('state') not in {'failed', 'nsfw', 'canceled', 'downloaded', 'waiting_dependency'}
+                               for row in job.get('scenes', []))):
+                    _deny()
+                handle = pending.get('handle')
+                if not isinstance(handle, dict) or set(handle) != {'request_id', 'status_url'}:
+                    _deny()
+                from newsflow.character.higgsfield_client import request_url
+                request_url(handle['status_url'], handle['request_id'])
+                detail = pending.get('status_diagnostics', {})
+                if detail and (detail.get('observed_state') != 'failed' or detail.get('state_mismatch')):
+                    _deny()
+                if job.get('automation_version') == 1:
+                    self.approved_episode(job)
+                context = self.context('retry-quote')
+                context.update(retry_position=pending['position'], retry_target=fingerprint(pending))
+                return CharacterService.prepare_retry(self.local, identifier, consent=True)
             if action == 'submit':
                 return CharacterService.submit(self.local, identifier, consent=True, quote_hash=quote_hash)
             if action == 'diagnose':
@@ -300,15 +333,16 @@ def install(app, profile, nativefactory):
             or _unlinked(app.state.config.data_dir) != _unlinked(profile)):
         _deny()
     manual = ManualExecution(service, Path(profile), nativefactory)
-    for action in ('submit', 'check', 'diagnose'):
-        original = getattr(service, action)
+    for action, method in (('submit', 'submit'), ('check', 'check'), ('diagnose', 'diagnose'),
+                           ('retry-quote', 'prepare_retry')):
+        original = getattr(service, method)
         def wrapped(identifier, *args, _action=action, _original=original, **kwargs):
             if _REQUEST.get() == (manual, identifier, _action):
                 if args:
                     _deny()
                 return manual.execute(_action, identifier, **kwargs)
             return _original(identifier, *args, **kwargs)
-        setattr(service, action, wrapped)
+        setattr(service, method, wrapped)
     service._manual_character_execution = manual
     service._manual_character_execution_enabled = True
     return manual
