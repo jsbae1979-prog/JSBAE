@@ -181,6 +181,8 @@ def create_app(
             youtube.close()
             tiktok.close()
             instagram.close()
+            if hasattr(app.state, 'meta_connections'):
+                app.state.meta_connections.cancel()
             publishing_calendar.close()
             scheduler.close()
             video_ai.close()
@@ -327,6 +329,8 @@ def create_app(
     app.include_router(youtube_router)
     app.include_router(tiktok_router)
     app.include_router(instagram_router)
+    from .meta.routes import router as meta_router
+    app.include_router(meta_router)
     from .gui.publishing_metadata_routes import router as publishing_metadata_router
     app.include_router(publishing_metadata_router)
     app.include_router(unified_publishing_router)

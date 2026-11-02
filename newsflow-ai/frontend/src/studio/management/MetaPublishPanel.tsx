@@ -1,0 +1,203 @@
+import { useEffect, useRef, useState } from "react";
+import { Panel } from "./shared";
+import { metaRequest, metaState } from "./MetaAccounts";
+
+export default function MetaPublishPanel({
+  csrf,
+  contentId,
+  caption,
+}: {
+  csrf: string;
+  contentId: string;
+  caption: string;
+}) {
+  const [data, setData] = useState<any>(null),
+    [targets, setTargets] = useState<string[]>([]),
+    [reviewed, setReviewed] = useState(false);
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  const lock = useRef(false);
+  async function load() {
+    try {
+      setData(await metaRequest("status", csrf));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }
+  useEffect(() => {
+    void load();
+  }, []);
+  useEffect(() => {
+    setTargets([]);
+    setReviewed(false);
+  }, [contentId]);
+  useEffect(() => {
+    setReviewed(false);
+  }, [caption]);
+  async function act(path: string, values: Record<string, string>) {
+    if (lock.current) return;
+    lock.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      await metaRequest(path, csrf, values);
+      await load();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }
+  const rows = (data?.publications ?? []).filter(
+    (row: any) => row.contentId === contentId,
+  );
+  return (
+    <Panel title="Facebook · Instagram 다중 계정 게시">
+      <p>
+        현재 선택한 콘텐츠를 게시할 계정을 고르세요. 대상별로 전송·최종 게시
+        결과를 확인합니다.
+      </p>
+      {error && <p role="alert">{error}</p>}
+      {data?.executionReady === false && <p>Meta 실행 연결이 준비되기 전에는 게시 준비만 저장할 수 있습니다.</p>}
+      {!data?.accounts?.length && (
+        <a href="/studio/settings?tab=accounts">설정에서 Meta 계정 연결</a>
+      )}
+      {data?.accounts?.map((a: any) => (
+        <div key={a.id}>
+          <strong>{a.label}</strong>
+          {["facebook", "instagram"].map((platform) => {
+            const key = a.id + ":" + platform;
+            const enabled =
+              platform === "facebook" ? a.facebookReady : a.instagramReady;
+            return (
+              <label
+                key={key}
+                style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", width: "auto", gap: 8, margin: 8 }}
+              >
+                <input
+                  type="checkbox"
+                  style={{ width: 16, height: 16 }}
+                  checked={targets.includes(key)}
+                  disabled={busy || !enabled}
+                  onChange={(e) => {
+                    setTargets((old) =>
+                      e.target.checked
+                        ? [...old, key]
+                        : old.filter((v) => v !== key),
+                    );
+                    setReviewed(false);
+                  }}
+                />
+                {platform === "facebook"
+                  ? "Facebook 페이지"
+                  : `Instagram @${a.instagramName ?? "미연결"}`}
+              </label>
+            );
+          })}
+        </div>
+      ))}
+      <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <input
+          type="checkbox"
+          style={{ width: 16, height: 16 }}
+          checked={reviewed}
+          onChange={(e) => setReviewed(e.target.checked)}
+        />
+        선택 계정·콘텐츠·문구와 권리·출처·AI 표시를 확인했습니다.
+      </label>
+      <button
+        disabled={
+          busy || !contentId || !targets.length || !reviewed || !caption.trim()
+        }
+        onClick={() =>
+          act("publications/prepare", {
+            content_id: contentId,
+            caption,
+            targets: JSON.stringify(
+              targets.map((t) => {
+                const [connectionId, platform] = t.split(":");
+                return { connectionId, platform };
+              }),
+            ),
+            reviewed: "true",
+          })
+        }
+      >
+        대상별 게시 준비 저장
+      </button>
+      {!data?.mediaReady && (
+        <p>HTTPS 미디어 서버가 준비되기 전에는 실제 전송이 차단됩니다.</p>
+      )}
+      {busy && <p role="status">처리 중… 창을 닫지 마세요.</p>}
+      {rows.map((row: any) => (
+        <article key={row.id} className="mg-panel">
+          <strong>
+            {row.platform} ·{" "}
+            {data?.accounts.find((a: any) => a.id === row.connectionId)
+              ?.label ?? row.targetId}
+          </strong>
+          <p>
+            {metaState(row.state)}{" "}
+            {row.errorCode && `· ${metaState(row.errorCode)}`}
+          </p>
+          <details>
+            <summary>게시 문구 · 결과</summary>
+            <p style={{ whiteSpace: "pre-wrap" }}>{row.caption}</p>
+            <p>대상 ID: {row.targetId}</p>
+            {row.remoteId && <p>결과 ID: {row.remoteId}</p>}
+            {row.publishedAt && (
+              <time>{new Date(row.publishedAt).toLocaleString()}</time>
+            )}
+          </details>
+          {row.state === "draft" && (
+            <button
+              disabled={busy || !data?.mediaReady || data?.executionReady === false}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `${row.platform} 대상 ${row.targetId}에 이 문구와 콘텐츠를 전송할까요? Facebook은 즉시 게시됩니다.`,
+                  )
+                )
+                  void act(`publications/${row.id}/send`, { consent: "true" });
+              }}
+            >
+              전송 승인{row.platform === "facebook" ? " · 게시" : ""}
+            </button>
+          )}
+          {["processing", "ready", "published_unverified"].includes(
+            row.state,
+          ) && (
+            <button
+              disabled={busy || data?.executionReady === false}
+              onClick={() => act(`publications/${row.id}/check`, {})}
+            >
+              처리 · 게시 결과 확인
+            </button>
+          )}
+          {row.state === "ready" && (
+            <button
+              disabled={busy || data?.executionReady === false}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Instagram 대상 ${row.targetId}에 최종 게시할까요?`,
+                  )
+                )
+                  void act(`publications/${row.id}/publish`, {
+                    consent: "true",
+                  });
+              }}
+            >
+              Instagram 최종 게시 승인
+            </button>
+          )}
+        </article>
+      ))}
+      <p>
+        예약 게시와 자동 재시도는 하지 않습니다. PC가 꺼지면 상태 확인도
+        멈춥니다.
+      </p>
+    </Panel>
+  );
+}

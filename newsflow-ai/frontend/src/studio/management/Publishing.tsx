@@ -1,3 +1,4 @@
+import MetaPublishPanel from './MetaPublishPanel';
 import PostingCopyReview from './PostingCopyReview';
 import PublishingImage from './PublishingImage';
 import { useEffect, useState } from "react";
@@ -380,6 +381,7 @@ export default function Publishing({ c }: { c: Controller }) {
           </Panel>
         </aside>
       </div>
+      {project && <MetaPublishPanel csrf={c.view?.csrfToken??""} contentId={project.id} caption={[form.title??project.title,form.description,form.hashtags].filter(Boolean).join("\n\n")} />}
       <Panel title="게시 대기 목록 · 결과 기록">
         <div className="mg-table-scroll">
           <table>

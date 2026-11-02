@@ -1,3 +1,4 @@
+import MetaAccounts from './MetaAccounts';
 import { useState } from "react";
 import {
   Settings2,
@@ -175,6 +176,7 @@ export default function Settings({
       >
         {show("accounts") && (
           <Panel title="플랫폼 계정" className="mg-settings-accounts">
+            <MetaAccounts csrf={c.view?.csrfToken??""} />
             <Accounts c={c} compact />
             <p className="mg-muted">
               API 키 저장, 로컬 계정 등록, 실제 OAuth·권한 검증은 서로 다릅니다.

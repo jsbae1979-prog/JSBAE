@@ -100,7 +100,7 @@ def test_0014_upgrade_preserves_data_and_legacy_category(request):
     migrate(engine)
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0018"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0019"
         after = connection.exec_driver_sql("SELECT * FROM publish_drafts ORDER BY id").mappings().all()
     assert [{k: v for k, v in row.items() if k != "youtube_category_id"} for row in after] == [dict(r) for r in before]
     assert {row["youtube_category_id"] for row in after} == {"25"}

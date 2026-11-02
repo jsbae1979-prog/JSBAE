@@ -238,7 +238,7 @@ def test_migrate_existing_database_settings_and_key(tmp_path):
     assert (original / "newsflow.db").read_bytes() == original_db
 
 
-@pytest.mark.parametrize("revision", ["0016", "0017", "0018"])
+@pytest.mark.parametrize("revision", ["0016", "0017", "0018", "0019"])
 def test_copy_rejects_unsupported_revision_preserving_source(tmp_path, revision):
     import sqlite3
 

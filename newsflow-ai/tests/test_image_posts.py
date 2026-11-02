@@ -335,7 +335,7 @@ def test_migration_adds_only_image_tables_and_preserves_existing_data(tmp_path):
         before = {t: connection.exec_driver_sql(f'SELECT * FROM "{t}"').all() for t in tables}
     migrate(engine)
     with engine.connect() as connection:
-        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0018"
+        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0019"
         assert connection.exec_driver_sql("PRAGMA integrity_check").scalar() == "ok"
         assert all(connection.exec_driver_sql(f'SELECT * FROM "{t}"').all() == rows
                    for t, rows in before.items())

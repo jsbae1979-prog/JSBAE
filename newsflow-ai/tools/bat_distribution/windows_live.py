@@ -525,6 +525,11 @@ def start(config, plan):
                 from .operation import OperatingRequests
                 authenticated_app = LocalAccess(app, session)
                 request_boundary = OperatingRequests(authenticated_app)
+                from .meta_access import MetaRequests
+                meta_enabled = json.loads((config.program / 'app/layout.json').read_bytes()).get('metaPublishingConnected') is True
+                app.state.meta_native_factory = character_native_factory
+                app.state.meta_execution_enabled = meta_enabled
+                request_boundary = MetaRequests(request_boundary, authenticated_app, enabled=meta_enabled)
                 from .registered_rss import install as install_registered_rss
                 registered_rss = install_registered_rss(app)
                 request_boundary = registered_rss.wrap(request_boundary, authenticated_app)

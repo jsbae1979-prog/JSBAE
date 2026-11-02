@@ -1,0 +1,106 @@
+# Facebook·Instagram 다중 계정 연결 및 게시
+
+이 구현은 Facebook Login for Business로 관리 페이지를 조회하고, 페이지에 연결된 Instagram 전문 계정까지 연결별로 저장한다. 새 기능은 개발본에서 모의 공급사로 검증했다. 실제 토큰 등록, 사용자 로그인, 미디어 업로드, SNS 게시, 운영 설치 반영은 수행하지 않았다.
+
+## 구현 범위
+
+| 영역 | 구현 | 남은 실제 검증 |
+|---|---|---|
+| 계정 | 여러 페이지 및 연결된 Instagram 선택, 이름·권한·만료 상태 표시, 재연결·해제 | 서로 다른 실제 Meta 계정 2개 로그인 |
+| 사용자 분리 | 현재 Windows SID 기반 소유자 검사, 연결·게시·서비스 설정의 소유자 조건, CurrentUser DPAPI 및 기존 ACL 저장소 | 별도 Windows 사용자로 실제 DPAPI·ACL 교차 접근 확인 |
+| 게시 | Facebook 페이지 이미지/동영상, Instagram 이미지/Reels의 생성→처리 확인→최종 게시→결과 확인 | 승인된 실제 계정·콘텐츠로 API v26.0 수락/게시 확인 |
+| 미디어 | JPEG/MP4의 별도 HTTPS 전달, PNG는 원본 보존 JPEG 사본 생성, 만료 URL·계정별 업로드 키 | 공인 HTTPS 서비스와 Meta 다운로드 확인 |
+| 중복 방지 | 계정·콘텐츠·미디어 해시·문구별 게시 기록, 원자적 상태 전환, 중복 클릭 및 중단된 요청 재전송 차단 | 실제 결과 불명 요청의 공급사 측 대조 절차 |
+
+동일 Windows 계정을 여러 사람이 공유하는 경우에는 별도 사용자로 구분하지 않는다. 사용자별 Windows 계정과 사용자 전용 데이터 폴더를 사용해야 한다. 관리자의 시스템 접근을 막는 보안 경계로 주장하지 않는다.
+
+## 구성과 저장
+
+- `src/newsflow/meta/routes.py`: 기존 LocalAccess·Origin·CSRF 보호를 유지하는 로컬 API.
+- `service.py`, `models.py`: 소유자별 계정·권한·상태·만료일과 게시 결과 기록.
+- `vault.py`: 기존 Windows DPAPI/ACL 커널을 재사용한다. SQLite에는 토큰 원문 대신 암호문 참조만 저장한다.
+- `relay.py`: 별도로 운영할 인증 서버. 앱 시크릿, 코드 교환, 장기 사용자 토큰 전환, 페이지 토큰 조회를 담당한다. 로그인 state·클라이언트 verifier·일회용 교환·취소 계약을 기존 인증 중계에서 재사용한다.
+- `graph.py`, `publishing.py`: 고정 Meta 호스트와 허용 API 경로, 토큰 헤더, 대상별 상태 전이. 자동 POST 재시도와 임의 URL 이동을 하지 않는다.
+- `media.py`, `media_server.py`: 사용자 PC의 파일 확인과 별도 HTTPS 미디어 제공 서버.
+- `frontend/src/studio/management/MetaAccounts.tsx`, `MetaPublishPanel.tsx`: 계정 설정과 선택 콘텐츠의 대상별 게시 UI.
+- `0019_meta_accounts.py`: 기존 테이블/데이터를 바꾸지 않는 추가 마이그레이션. 운영 DB에는 실행하지 않았다.
+- 두 action 카탈로그에 새 POST 경로를 함께 등록했다.
+
+서비스 기본값은 사용자가 제공한 공개 앱 ID `1390637697472218`, 로그인 구성 ID `1370882678260953`, API 버전 `v26.0`이다. 설정 화면에서 변경할 수 있다. 비즈니스 ID, 초기 테스트 페이지·Instagram ID, 실제 사용자 이름이나 토큰은 대상 선택 로직에 고정하지 않았다.
+
+계정 정보는 현재 데이터 폴더 DB의 `meta_accounts`, 게시 기록은 `meta_publications`에 저장한다. 토큰은 데이터 폴더의 `meta-oauth`에 DPAPI로 저장한다. 서비스/미디어 서버 주소는 사용자별 설정이다. PNG 게시 사본은 `meta-publish-media`에 저장하며 원본과 기존 결과를 수정하지 않는다.
+
+기존 OAuth 연결 테이블·토큰을 자동 가져오거나 다른 계정과 공유하지 않는다. 연결 해제 시 해당 연결을 즉시 비활성화하고 로컬 암호문을 정리한다. 정리 실패 시 게시를 계속 차단하고 다시 정리할 수 있다. Meta 전체 앱 권한 철회는 Meta 계정 설정에서 별도로 진행한다.
+
+## 인증 서버 준비
+
+**앱 시크릿을 Windows 배포 ZIP, React, `launch.json` 또는 `layout.json`에 넣지 않는다.** 다음 설정은 인증 서버의 비밀정보 저장소·서비스 실행 환경에서만 제공한다.
+
+| 설정 | 내용 |
+|---|---|
+| `NEWSFLOW_META_RELAY_ORIGIN` | 공인 인증 서버 HTTPS origin |
+| `NEWSFLOW_META_APP_ID` | 운영 앱 ID |
+| `NEWSFLOW_META_CONFIG_ID` | Facebook Login for Business 구성 ID |
+| `NEWSFLOW_META_APP_SECRET` | 서버 비밀정보 저장소에서 주입 |
+| `NEWSFLOW_META_GRAPH_VERSION` | 기본 v26.0 |
+
+실행 팩토리는 `newsflow.meta.relay:from_environment`이다. 기존 Python 의존성으로 별도 Windows 서비스/프로세스에 배치할 수 있다. TLS 종단, 방화벽, 요청 크기/속도 제한, 운영 모니터링은 서버 운영자가 구성해야 한다. 로그인 코드·쿼리·Authorization 헤더가 접근 로그에 남지 않게 Uvicorn 및 프록시의 해당 로그를 끈다.
+
+Meta 앱의 유효한 OAuth 리디렉션 URI에는 정확히 `https://<인증 서버>/oauth/callback`을 등록한다. 앱 도메인, Facebook Login for Business 구성, 필요한 권한과 토큰 종류를 대시보드에서 확인한다. 데스크톱에는 해당 origin과 공개 앱/구성 ID만 입력한다. localhost 주소를 공용 콜백으로 사용하거나 사용자의 Meta 비밀번호를 수집하지 않는다.
+
+사용자는 Meta에서 본인 계정으로 로그인하고 접근 가능한 페이지를 선택한다. 여러 페이지는 연결 추가를 반복해 등록한다. Facebook 페이지만 연결할 수 있으며, Instagram 게시에는 해당 페이지와 연결된 비즈니스 또는 크리에이터 계정이 필요하다. 개인 Instagram 계정은 이 연결 방식의 게시 대상으로 처리하지 않는다.
+
+사용자 토큰, 페이지 토큰, 데이터 접근 만료일을 구분해 표시한다. 사용자 토큰은 페이지 목록 및 토큰 조회에, 페이지 토큰은 실제 게시 API에 사용한다. 페이지 토큰의 만료 0은 만료일 미지정으로 표시하며 영구 유효를 의미하지 않는다. 권한 철회/만료 오류가 오면 해당 연결만 재연결 상태로 바꾼다.
+
+현재 데이터 접근 만료 차단은 사용자/페이지 디버그 결과 중 유효한 가장 이른 시각을 보수적으로 적용한다. 이 값이 권한별로 적용되는 최신 정책 범위는 이번에 독립 확인하지 못했다. 실제 서비스 적용 전 Meta 공식 문서·앱 대시보드에서 확인해야 한다.
+
+## 미디어 서버 준비
+
+운영자가 사용자마다 별도의 무작위 업로드 키를 발급한다. 서버에는 키의 SHA-256과 내부 tenant ID만 등록하고, 사용자는 본인 키를 앱의 DPAPI 저장 경로로 등록한다. Meta 페이지 토큰을 업로드 키로 재사용하지 않는다.
+
+| 설정 | 내용 |
+|---|---|
+| `NEWSFLOW_META_MEDIA_ORIGIN` | 공인 미디어 HTTPS origin |
+| `NEWSFLOW_META_MEDIA_ROOT` | 서버 전용 미디어 저장 절대 경로 |
+| `NEWSFLOW_META_MEDIA_CREDENTIALS_FILE` | 업로드 키 SHA-256 → 32자리 내부 tenant ID JSON 파일의 절대 경로 |
+| `NEWSFLOW_META_MEDIA_TTL` | 기본 3600초, 허용 900~86400초 |
+
+실행 팩토리는 `newsflow.meta.media_server:from_environment`이다. 서버에만 설정하며 사용자 PC 프로그램 폴더에 복사하지 않는다. 파일 최대 크기는 100MiB이다. 계정별 키로 인증된 업로드만 받고 임의 로컬 경로나 파일 목록을 제공하지 않는다. Meta가 미디어를 받을 수 있도록 다운로드는 추측하기 어려운 만료 URL을 사용한다. URL을 알게 된 사람은 유효시간 동안 접근할 수 있으므로 URL도 로그·게시 본문에 노출하지 않는다.
+
+유효기간이 지나거나 업로드 키의 소유자가 철회되면 다운로드를 거절한다. 만료된 서버 파일의 실제 디스크 정리는 운영자의 보존/정리 정책으로 준비해야 한다. 원본 사용자 미디어를 이 정리 대상으로 삼지 않는다. 처리에 오래 걸리는 동영상은 URL 유효시간과 Meta의 실제 처리 시간을 함께 확인해야 한다.
+
+## BAT 실행기 연결
+
+`tools/bat_distribution/meta_access.py`는 Meta의 정확한 경로만 기존 인증 앱으로 전달한다. 로컬 계정 상태·설정·게시 준비는 로컬 동작이며, 연결·상태 API 조회·업로드·게시 동작은 설치 구성 `app/layout.json`의 `metaPublishingConnected: true`를 명시적으로 적용한 경우에만 열린다. 미설정은 차단 상태다.
+
+이 값은 사용자 동의나 계정 권한을 대신하지 않는다. 모든 실제 게시에는 대상과 콘텐츠 확인, 연결 소유권, 로컬 인증·CSRF·Origin 및 해당 작업의 전송 승인이 추가 적용된다. 다른 공급사 경로나 자동화 스케줄러의 제한을 해제하지 않는다. 배포 무결성 목록과 관련 파일 해시도 기존 운영 반영 절차에 따라 갱신해야 한다.
+
+**이번 작업에서는 운영 설치의 이 값, 프로그램 파일, DB, 실행 프로세스를 변경하지 않았다.** 인증/미디어 서버가 준비되고 사용자가 실제 검증을 승인한 후 별도 운영 적용이 필요하다.
+
+## 게시 절차와 실패 처리
+
+1. 설정에서 본인 계정으로 Meta 로그인 후 페이지를 선택한다. 연결별 권한·상태·세 만료일을 확인한다.
+2. 게시 스튜디오에서 완성된 콘텐츠를 선택하고 Facebook/Instagram 대상을 각각 선택한다.
+3. 문구·권리·출처·AI 표시를 확인하고 대상별 게시 준비를 저장한다. 이 단계는 외부 전송이 없다.
+4. 대상별 전송 승인 후 HTTPS 미디어 사본을 올린다. Facebook 전송은 게시까지 진행하므로 이를 버튼과 확인창에 표시한다.
+5. Instagram은 컨테이너 처리 상태를 확인한 다음 최종 게시를 별도 승인한다. 결과 ID 조회까지 성공해야 게시 완료로 표시한다.
+6. 실패 대상과 성공 대상은 독립 기록한다. 통신 단절/앱 종료 중 전송은 결과 불명으로 남기고 자동 재전송하지 않는다. 기록을 지우거나 새로 만들어 강제로 재시도하지 않는다.
+
+Facebook 객체 ID가 있다는 이유만으로 공개 게시 성공으로 판단하지 않는다. 게시 플래그·동영상 처리 상태 확인 전에는 결과 확인 필요로 유지한다. 재연결로 연결 revision이 달라지거나 미디어 내용이 바뀌면 이전 준비 건의 전송을 거절하고 새 내용 검토가 필요하다.
+
+이번 버전은 단일 이미지/JPEG(원본 PNG의 로컬 사본 포함)와 MP4 게시를 대상으로 한다. 캐러셀, 스토리, 게시물 수정/삭제, Meta 서버 예약 게시, 앱 종료 중 예약 실행은 구현하지 않았다. PC가 꺼지면 신규 전송·상태 확인은 진행되지 않는다. 실제 영상 코덱·길이·비율 수락 여부와 플랫폼별 게시 표현은 실계정 검증 항목이다.
+
+## Meta 심사와 외부 준비
+
+사용자 제공 현황상 앱은 미게시 상태이고 비즈니스 인증은 완료되지 않았다. 앱 역할이 없는 일반 사용자를 연결하기 전에 해당 앱 사용 사례의 앱 심사·고급 액세스, 비즈니스 인증, 개인정보 처리방침, 데이터 삭제 안내/콜백, 서비스 약관과 앱 공개 요건을 Meta 대시보드에서 확정해야 한다. 로컬 개발 통과를 일반 사용자 제공 승인으로 해석하지 않는다.
+
+공식 참고:
+
+- [Meta 공식 Instagram API Postman](https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api): Facebook Login의 페이지 연계 방식, 페이지 목록과 Instagram 미디어 게시 흐름 확인.
+- [Instagram API with Facebook Login](https://developers.facebook.com/docs/instagram-platform/instagram-api-with-facebook-login/)
+- [Facebook Login for Business](https://developers.facebook.com/docs/facebook-login/facebook-login-for-business/)
+- [장기 토큰](https://developers.facebook.com/docs/facebook-login/guides/access-tokens/get-long-lived/)
+
+2026-11-02 조사에서 developers.facebook.com 문서 직접 조회는 HTTP 429로 제한됐다. 위 정책/심사 세부 요건과 v26.0 실제 응답 호환성은 미검증이다. 공식 Meta Postman에서 확인한 프로토콜과 사용자가 제공한 준비 정보를 바탕으로 구현했으며, 토큰 유효성이나 초기 테스트 계정의 현재 연결 상태를 새로 조회했다고 주장하지 않는다.
+
+검증 결과 및 실행 명령은 [검증 보고서](META_VALIDATION_20261102.md)에 기록한다.
