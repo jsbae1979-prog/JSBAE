@@ -1,6 +1,7 @@
 """Independent headless browser, synthetic DB/media and Fake Meta only."""
 from hashlib import sha256
 from pathlib import Path
+from time import monotonic, sleep
 import pytest
 from playwright.sync_api import expect
 from test_model_picker_browser import browser
@@ -27,12 +28,35 @@ def context(browser,origin):
     ctx.route('**/*',lambda r:r.continue_() if r.request.url.startswith(origin+'/') else r.abort())
     return ctx
 
-def test_accounts_metadata_no_external_login_on_open(app,browser,connected,tmp_path):
+@pytest.mark.parametrize("status_delay", [0, 6], ids=["immediate", "delayed-status"])
+def test_accounts_metadata_no_external_login_on_open(app,browser,connected,tmp_path,monkeypatch,record_property,status_delay):
     accounts,publisher,ids=connected
+    original_status=accounts.status
+    reads=[]
+    def status():
+        reads.append(1)
+        if status_delay:
+            sleep(status_delay)  # Synthetic latency, not a wait for a passing assertion.
+        return original_status()
+    monkeypatch.setattr(accounts,'status',status)
     with local_server(app) as origin:
         ctx=context(browser,origin);page=ctx.new_page();calls=[]
         page.on('request',lambda r:calls.append(r.url) if r.method=='POST' else None)
-        page.goto(origin+'/studio/settings?tab=accounts')
+        started=monotonic()
+        # The page load event does not imply that the asynchronous account GET completed.
+        with page.expect_response(lambda response: response.url==origin+'/api/meta/status'
+                and response.request.method=='GET') as received:
+            page.goto(origin+'/studio/settings?tab=accounts')
+        response=received.value
+        record_property('meta_status_http',response.status)
+        record_property('meta_status_elapsed_ms',round((monotonic()-started)*1000))
+        assert response.status==200, f'Meta metadata GET returned HTTP {response.status}'
+        assert response.finished() is None
+        payload=response.json()
+        labels={account['label'] for account in payload.get('accounts',[])}
+        record_property('meta_account_count',len(labels))
+        assert labels=={'Synthetic 101','Synthetic 102'}, 'Synthetic account metadata mismatch'
+        assert 'synthetic-user-' not in response.text() and 'synthetic-page-' not in response.text()
         panel=page.locator('section').filter(has=page.get_by_role('heading',name='Facebook · Instagram 연결',exact=True)).last
         expect(panel.get_by_text('Synthetic 101',exact=True)).to_be_visible()
         expect(panel.get_by_text('Synthetic 102',exact=True)).to_be_visible()
@@ -40,7 +64,7 @@ def test_accounts_metadata_no_external_login_on_open(app,browser,connected,tmp_p
         expect(panel.get_by_label('본인 사용자 토큰')).to_have_attribute('type', 'password')
         panel.get_by_text('권한 · 만료일',exact=True).first.click()
         expect(panel.get_by_text('페이지 토큰: 만료일 미지정 · 철회 시 무효',exact=True).first).to_be_visible()
-        assert not calls and not publisher.graph.calls
+        assert reads==[1] and not calls and not publisher.graph.calls
         assert 'synthetic-user-' not in page.content() and 'synthetic-page-' not in page.content()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         panel.screenshot(path=str(tmp_path/'meta-accounts.png'))

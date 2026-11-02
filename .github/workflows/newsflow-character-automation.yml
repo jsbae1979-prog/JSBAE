@@ -108,7 +108,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Meta connections and publishing with Fake providers only
         run: |
-          .venv/Scripts/python -m pytest -q -rs --tb=short tests/test_meta_accounts.py tests/test_meta_direct.py tests/test_meta_automatic_upload.py tests/test_meta_browser.py tests/test_meta_automatic_browser.py
+          New-Item -ItemType Directory -Path validation-output/meta -Force | Out-Null
+          .venv/Scripts/python -m pytest -q -rs --tb=short -o junit_family=legacy --junitxml=validation-output/meta/results.xml tests/test_meta_accounts.py tests/test_meta_direct.py tests/test_meta_automatic_upload.py tests/test_meta_browser.py tests/test_meta_automatic_browser.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Fake providers, local FFmpeg and isolated React routes
         run: |
@@ -139,6 +140,7 @@ jobs:
         with:
           name: character-automation-windows-python-${{ matrix.python }}
           path: |
+            newsflow-ai/validation-output/meta/results.xml
             newsflow-ai/validation-output/character-automation/results.xml
             newsflow-ai/validation-output/character-automation/captures/*.png
           if-no-files-found: warn
