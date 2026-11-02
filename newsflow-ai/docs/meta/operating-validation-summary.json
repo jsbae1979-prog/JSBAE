@@ -1,0 +1,136 @@
+{
+  "sourceSha": "d9cded31022de7422ac46b2e2c695af432827cc9",
+  "port": 18768,
+  "stopAttempts": 1,
+  "startAttempts": 1,
+  "stopExitCode": 0,
+  "schema": "0019",
+  "existingBusinessTablesPreserved": 46,
+  "articles": 184,
+  "backupFileCount": 426,
+  "profileFilesPreserved": 424,
+  "paidCalls": 0,
+  "snsCalls": 0,
+  "realUploads": 0,
+  "metaConnections": 0,
+  "storageConfigured": false,
+  "chromeLaunchAccepted": true,
+  "userVisualConfirmation": "pending",
+  "programFiles": [
+    {
+      "path": "app/product/newsflow/db/migrations/versions/0019_meta_accounts.py",
+      "sha256": "4ccf019690f24a9fcd57c7327e340c1bc362765587b82722b236e5c4c9f78508",
+      "bytes": 3820
+    },
+    {
+      "path": "app/product/newsflow/main.py",
+      "sha256": "c1fbbcb5de8701a8a6574282e79710d56e16d5c1ea306bbdee575f11326fcb2d",
+      "bytes": 20443
+    },
+    {
+      "path": "app/product/newsflow/meta/__init__.py",
+      "sha256": "b2ac7a2b5fccc75f03ef9a96e9b24abeac50f1fb459facb026e2711612b10cbc",
+      "bytes": 55
+    },
+    {
+      "path": "app/product/newsflow/meta/automatic_storage.py",
+      "sha256": "5e388ac358997d98f0d64ba166c5f43d678822100f0ca288f898b42b47a2b58e",
+      "bytes": 6680
+    },
+    {
+      "path": "app/product/newsflow/meta/contracts.py",
+      "sha256": "cabe4bc00fa3b5fae292a9817fcb2f7dd0939fcff084a798883b8ced57c65bd0",
+      "bytes": 5000
+    },
+    {
+      "path": "app/product/newsflow/meta/direct.py",
+      "sha256": "e4f11ef981a9bea032c1299d6bb9e96e92a8d0723aecd689b3b413e78c7c5164",
+      "bytes": 2974
+    },
+    {
+      "path": "app/product/newsflow/meta/direct_upload.py",
+      "sha256": "28472006760e31b04e861b3fbb2b354d1fb75b4c325cbdcbf8143b58e1dd7358",
+      "bytes": 2547
+    },
+    {
+      "path": "app/product/newsflow/meta/graph.py",
+      "sha256": "4b90b27cdbf1ca5036397396bc45f865b3b95d8174c7b97b3d82004bab1bf41d",
+      "bytes": 4084
+    },
+    {
+      "path": "app/product/newsflow/meta/media.py",
+      "sha256": "a0520d9fbcc93e95f4c8bfd01bf0919ef9bb9954650203dfe75b733e0552b5c3",
+      "bytes": 9791
+    },
+    {
+      "path": "app/product/newsflow/meta/media_server.py",
+      "sha256": "b3e34974619a7052c7ee045707e97bca1a2112cabf62787c17b9d0ff1ad31e93",
+      "bytes": 4647
+    },
+    {
+      "path": "app/product/newsflow/meta/models.py",
+      "sha256": "5cac5d8dee88d3c3027e3bda20402a84b5874818efa3849adb0f4b26a031d35e",
+      "bytes": 2940
+    },
+    {
+      "path": "app/product/newsflow/meta/publishing.py",
+      "sha256": "0e0f74d7e5aa973595646620428dd41fdfd6a3949005e6abb29f406da39cb75d",
+      "bytes": 15950
+    },
+    {
+      "path": "app/product/newsflow/meta/relay.py",
+      "sha256": "9b1f9a5ad78a61c0f62eed681af111d17c20b60dc5dc07981e6b08a758f51298",
+      "bytes": 11963
+    },
+    {
+      "path": "app/product/newsflow/meta/routes.py",
+      "sha256": "bb73c5ac694390b42a1372e8e4da9630d1731a2e1865db3b29029c5782f6bad3",
+      "bytes": 7134
+    },
+    {
+      "path": "app/product/newsflow/meta/service.py",
+      "sha256": "b479ea092af8eb4a3d648b7f8f190253788301ca51b11775d9d7f8c12e12de34",
+      "bytes": 15993
+    },
+    {
+      "path": "app/product/newsflow/meta/storage.py",
+      "sha256": "a5dcc99dffcab760b47de19c16f7b8985e8128f3237a7cdeaad473b650518aa4",
+      "bytes": 7721
+    },
+    {
+      "path": "app/product/newsflow/meta/vault.py",
+      "sha256": "483b7a5b4398f72013bd645f1d497be1d2a5da2c4256dd868970ae999ccc8332",
+      "bytes": 1513
+    },
+    {
+      "path": "app/product/newsflow/oauth/relay_server.py",
+      "sha256": "32aec1d9a37f8a6ce3bf4bf65f5efce838f82b43375b43ff115405f813034c33",
+      "bytes": 24961
+    },
+    {
+      "path": "app/product/newsflow/studio/actions.json",
+      "sha256": "f9d6a0015df1dd7c2b323b7807950586b1f8c4757867aee2b0a4f09778002f26",
+      "bytes": 140900
+    },
+    {
+      "path": "app/controller/bat_distribution/meta_access.py",
+      "sha256": "20fc03ba1e9cb43b3392a483ef0651dadc76c37223345f0423d2edca4357ac69",
+      "bytes": 1861
+    },
+    {
+      "path": "app/controller/bat_distribution/windows_live.py",
+      "sha256": "b85e71757701d831bbe8ce61031fa7385613cdb1eefa32b0c891c4be902a258e",
+      "bytes": 32902
+    },
+    {
+      "path": "app/frontend/dist/assets/index-CC_nH8qu.js",
+      "sha256": "e9b6b6e0a74965a68eacb09b4e156ee6b5b832652418fc0026385d7365b1bca7",
+      "bytes": 710861
+    },
+    {
+      "path": "app/frontend/dist/index.html",
+      "sha256": "f6b9e8c9285c900bc73b3cae08601ff2f0d1112764e493c4b429c1044169bb05",
+      "bytes": 418
+    }
+  ]
+}
