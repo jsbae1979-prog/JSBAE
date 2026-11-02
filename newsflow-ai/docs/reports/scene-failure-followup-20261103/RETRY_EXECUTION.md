@@ -19,3 +19,8 @@ Changed files:
 - tools/bat_distribution/tests/test_character_retry_execution.py (20 focused cases)
 
 Real paid regeneration has not been executed. An explicit user approval with a currently valid quote remains necessary. Expired quotes are rejected; the previous quote is not an indefinite spending authorization. Legacy non-episode retries remain blocked in this operating adapter.
+
+Operating application: code 44c5f4683f367d6737dddb348e8918ba29ad7210 applied as one controller file. Normal Stop exit 0, Start each once. PID changed to 36336 on 127.0.0.1:18768. Chrome opened normally. 49 tables, 394 current-profile articles and 428 profile files preserved; original 169-article source and backups A/B unchanged. Launch/security flags and stored credentials unchanged. No paid API or SNS call during deployment. Local rollback snapshot: 429 files.
+Chrome verification: opened the existing job and its failed-scene quote approval dialog. It displays scene 1 / USD 0.448, with all consent boxes unchecked and submission disabled. No submit action was performed. The job file remains byte-identical to the pre-application backup after this UI check. Private screenshot: retry-execution-operating-20261103/chrome-ready.png (not committed).
+
+Verdict: implementation, Fake tests and operating application PASS. Real paid generation and supplier completion remain NOT VERIFIED; no video completion is claimed.
