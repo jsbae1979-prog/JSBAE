@@ -2,6 +2,77 @@ import { useEffect, useRef, useState } from "react";
 import { Panel } from "./shared";
 import { metaRequest, metaState } from "./MetaAccounts";
 
+function StorageForm({
+  id,
+  busy,
+  save,
+}: {
+  id: string;
+  busy: boolean;
+  save: (path: string, values: Record<string, string>) => Promise<void>;
+}) {
+  const [upload, setUpload] = useState(""),
+    [download, setDownload] = useState(""),
+    [expires, setExpires] = useState("");
+  return (
+    <details>
+      <summary>외부 저장소 연결</summary>
+      <div className="mg-form">
+        <p>
+          사용 중인 저장소에서 발급한 파일별 임시 주소를 입력하세요. 전송 승인
+          전에는 업로드하지 않습니다.
+        </p>
+        <label>
+          임시 업로드 주소(PUT)
+          <input
+            type="password"
+            autoComplete="off"
+            value={upload}
+            onChange={(e) => setUpload(e.target.value)}
+          />
+        </label>
+        <label>
+          미디어 다운로드 주소(GET)
+          <input
+            type="password"
+            autoComplete="off"
+            value={download}
+            onChange={(e) => setDownload(e.target.value)}
+          />
+        </label>
+        <label>
+          두 주소의 유효 기한(현재 PC 시간)
+          <input
+            type="datetime-local"
+            value={expires}
+            onChange={(e) => setExpires(e.target.value)}
+          />
+        </label>
+        <p>
+          JPEG 또는 MP4를 그대로 저장하는 HTTPS 저장소가 필요합니다. 유효 기한은
+          15분 이후부터 7일 이내이며 Meta 처리가 끝날 때까지 유지해야 합니다.
+        </p>
+        <button
+          disabled={busy || !upload || !download || !expires}
+          onClick={() => {
+            const date = new Date(expires);
+            if (!Number.isFinite(date.getTime())) return;
+            void save(`publications/${id}/storage`, {
+              put_url: upload,
+              get_url: download,
+              expires: date.toISOString(),
+            });
+            setUpload("");
+            setDownload("");
+          }}
+        >
+          저장소 주소 저장
+        </button>
+      </div>
+    </details>
+  );
+}
+
 export default function MetaPublishPanel({
   csrf,
   contentId,
@@ -59,7 +130,9 @@ export default function MetaPublishPanel({
         결과를 확인합니다.
       </p>
       {error && <p role="alert">{error}</p>}
-      {data?.executionReady === false && <p>Meta 실행 연결이 준비되기 전에는 게시 준비만 저장할 수 있습니다.</p>}
+      {data?.executionReady === false && (
+        <p>Meta 실행 연결이 준비되기 전에는 게시 준비만 저장할 수 있습니다.</p>
+      )}
       {!data?.accounts?.length && (
         <a href="/studio/settings?tab=accounts">설정에서 Meta 계정 연결</a>
       )}
@@ -73,7 +146,14 @@ export default function MetaPublishPanel({
             return (
               <label
                 key={key}
-                style={{ display: "inline-flex", flexDirection: "row", alignItems: "center", width: "auto", gap: 8, margin: 8 }}
+                style={{
+                  display: "inline-flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  width: "auto",
+                  gap: 8,
+                  margin: 8,
+                }}
               >
                 <input
                   type="checkbox"
@@ -97,7 +177,14 @@ export default function MetaPublishPanel({
           })}
         </div>
       ))}
-      <label style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <label
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
         <input
           type="checkbox"
           style={{ width: 16, height: 16 }}
@@ -127,7 +214,10 @@ export default function MetaPublishPanel({
         대상별 게시 준비 저장
       </button>
       {!data?.mediaReady && (
-        <p>HTTPS 미디어 서버가 준비되기 전에는 실제 전송이 차단됩니다.</p>
+        <p>
+          게시 준비 후 외부 저장소의 임시 주소를 등록하세요. 별도 서버·도메인
+          구매 없이 사용할 수 있으며 저장소 요금은 해당 서비스 기준입니다.
+        </p>
       )}
       {busy && <p role="status">처리 중… 창을 닫지 마세요.</p>}
       {rows.map((row: any) => (
@@ -151,8 +241,22 @@ export default function MetaPublishPanel({
             )}
           </details>
           {row.state === "draft" && (
+            <>
+              <p>
+                {data?.storageReady?.[row.id]
+                  ? "미디어 전달 준비됨 · 실제 업로드 전"
+                  : "외부 저장소 주소 필요"}
+              </p>
+              <StorageForm id={row.id} busy={busy} save={act} />
+            </>
+          )}
+          {row.state === "draft" && (
             <button
-              disabled={busy || !data?.mediaReady || data?.executionReady === false}
+              disabled={
+                busy ||
+                !(data?.storageReady?.[row.id] ?? data?.mediaReady) ||
+                data?.executionReady === false
+              }
               onClick={() => {
                 if (
                   window.confirm(

@@ -118,6 +118,25 @@ class MetaPublishing:
             db.commit()
         return result
 
+    def configure_storage(self, identifier, put_url, get_url, expires):
+        with self.accounts.lock, self.sessions() as db:
+            row = self.owned(db, identifier)
+            if row.state != "draft":
+                raise MetaError("pending")
+            media = self.resolve(row.content_id)
+            if media["sha256"] != row.media_sha256 or media["kind"] != row.media_kind:
+                raise MetaError("media")
+            self.delivery.links.configure(row.media_sha256, put_url, get_url, expires)
+
+    def storage_states(self):
+        if not hasattr(self.delivery, "available"):
+            return {r["id"]: self.delivery.ready() for r in self.list()}
+        with self.sessions() as db:
+            return {
+                r.id: self.delivery.available(r.media_sha256)
+                for r in db.scalars(select(MetaPublication).where(MetaPublication.owner == self.owner)).all()
+            }
+
     def _claim(self, identifier, allowed, next_state):
         with self.sessions() as db:
             db.connection().exec_driver_sql("BEGIN IMMEDIATE")
@@ -166,7 +185,11 @@ class MetaPublishing:
                 media = self.resolve(current.content_id)
                 if media["sha256"] != current.media_sha256 or media["kind"] != current.media_kind:
                     raise MetaError("media")
-            if not self.delivery.ready():
+            if not (
+                self.delivery.available(media["sha256"])
+                if hasattr(self.delivery, "available")
+                else self.delivery.ready()
+            ):
                 raise MetaError("configuration")
             row = self._claim(identifier, {"draft"}, "sending")
             try:

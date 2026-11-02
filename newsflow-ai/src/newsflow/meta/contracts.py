@@ -17,7 +17,7 @@ SCOPES = (
 )
 TASKS = {"CREATE_CONTENT", "MANAGE", "PROFILE_PLUS_CREATE_CONTENT", "PROFILE_PLUS_FULL_CONTROL"}
 MESSAGES = {
-    "configuration": "HTTPS 인증 중계·미디어 서버 설정이 필요합니다.",
+    "configuration": "계정 연결 또는 외부 미디어 저장소 설정을 확인하세요.",
     "not_found": "이 사용자의 연결 또는 게시 작업이 아닙니다.",
     "consent": "대상 계정·콘텐츠와 전송·게시 승인을 확인하세요.",
     "expired": "인증 또는 데이터 접근이 만료되었습니다. 다시 연결하세요.",

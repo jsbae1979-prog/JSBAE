@@ -106,6 +106,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node --test tests/*.test.mjs
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Meta connections and publishing with Fake providers only
+        run: |
+          .venv/Scripts/python -m pytest -q -rs --tb=short tests/test_meta_accounts.py tests/test_meta_direct.py tests/test_meta_browser.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Fake providers, local FFmpeg and isolated React routes
         run: |
           New-Item -ItemType Directory -Path validation-output/character-automation -Force | Out-Null

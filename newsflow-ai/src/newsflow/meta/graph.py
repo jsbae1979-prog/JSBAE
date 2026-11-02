@@ -37,7 +37,10 @@ class MetaGraph:
     def call(self, method, path, token, values=None):
         valid = (
             method == "GET"
-            and (path in {"me/permissions", "me/accounts"} or re.fullmatch(r"[1-9][0-9_]{0,80}", path))
+            and (
+                path in {"me/permissions", "me/accounts", "debug_token"}
+                or re.fullmatch(r"[1-9][0-9_]{0,80}", path)
+            )
         ) or (
             method == "POST"
             and re.fullmatch(r"[1-9][0-9]{0,39}/(?:media|media_publish|photos|videos|feed)", path)
@@ -45,7 +48,11 @@ class MetaGraph:
         if not valid or not isinstance(token, SecretStr):
             raise MetaError("invalid")
         values = values or {}
-        if set(values) & {"access_token", "client_secret"}:
+        if (
+            set(values) & {"access_token", "client_secret"}
+            or ("input_token" in values and path != "debug_token")
+            or (path == "debug_token" and set(values) != {"input_token"})
+        ):
             raise MetaError("invalid")
         body = urlencode(values).encode("utf8")
         url = f"https://graph.facebook.com/{self.version}/{path}"

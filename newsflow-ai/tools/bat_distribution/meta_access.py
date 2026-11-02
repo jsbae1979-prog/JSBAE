@@ -10,10 +10,10 @@ import re
 from starlette.responses import JSONResponse
 
 LOCAL = re.compile(
-    r"/api/meta/(?:config|media-config|accounts/[a-f0-9]{32}/(?:rename|disconnect)|publications/prepare)\Z"
+    r"/api/meta/(?:config|media-config|accounts/[a-f0-9]{32}/(?:rename|disconnect)|publications/prepare|publications/[a-f0-9]{32}/storage)\Z"
 )
 EXTERNAL = re.compile(
-    r"/api/meta/(?:connect|select-page|cancel|publications/[a-f0-9]{32}/(?:send|check|publish))\Z"
+    r"/api/meta/(?:import-token|connect|select-page|cancel|publications/[a-f0-9]{32}/(?:send|check|publish))\Z"
 )
 
 

@@ -5,8 +5,10 @@ import re
 from datetime import timedelta
 from pathlib import Path
 from threading import RLock, Thread
+from time import monotonic
 from uuid import uuid4
 
+from pydantic import SecretStr
 from sqlalchemy import select
 
 from newsflow.db.models import AppSetting, utcnow
@@ -39,6 +41,8 @@ class MetaConnections:
         self.pending = None
         self.error = None
         self.cleanup_pending = False
+        self.direct_pending = None
+        self.direct_factory = None
 
     def config(self):
         with self.sessions() as db:
@@ -117,6 +121,7 @@ class MetaConnections:
 
     def status(self):
         with self.lock:
+            self._expire_direct()
             state = self.authorization.snapshot() if self.pending and self.authorization else {}
             return {
                 "config": self.config(),
@@ -124,11 +129,47 @@ class MetaConnections:
                 "pending": bool(self.pending),
                 "error": self.error,
                 "cleanupPending": self.cleanup_pending,
-                "pages": state.get("pages", []),
+                "pages": self.direct_pending["choices"] if self.direct_pending else state.get("pages", []),
+                "connectionMode": "direct-token",
+                "directPending": bool(self.direct_pending),
                 "loginState": state.get("relay_state", "idle"),
                 "configured": bool(self.config()["relayOrigin"]),
                 "requirement": "Facebook 페이지에 연결된 Instagram 비즈니스·크리에이터 계정이 필요합니다. 개인 계정은 지원하지 않습니다.",
             }
+
+    def _expire_direct(self):
+        if self.direct_pending and monotonic() >= self.direct_pending["until"]:
+            self.direct_pending = None
+            self.pending = None
+            self.error = "expired"
+
+    def import_token(self, token, *, consent=False, reconnect=None):
+        if consent is not True:
+            raise MetaError("consent")
+        from .direct import discover
+
+        with self.lock:
+            self._expire_direct()
+            if self.pending:
+                raise MetaError("pending")
+            if reconnect:
+                with self.sessions() as db:
+                    self.owned(db, reconnect)
+            self.pending = uuid4().hex
+            self.authorization = None
+            self.error = None
+            try:
+                grants, choices = (self.direct_factory or discover)(SecretStr(token), self.config())
+                self.direct_pending = {
+                    "grants": grants,
+                    "choices": choices,
+                    "until": monotonic() + 300,
+                    "reconnect": reconnect,
+                }
+            except Exception as error:  # noqa: BLE001 - redact credentials and transport diagnostics
+                self.pending = None
+                self.direct_pending = None
+                raise MetaError(error.code if isinstance(error, MetaError) else "unknown") from None
 
     def begin(self, *, consent=False, reconnect=None):
         if consent is not True:
@@ -184,6 +225,15 @@ class MetaConnections:
 
     def select_page(self, page):
         with self.lock:
+            self._expire_direct()
+            if self.direct_pending:
+                grant = self.direct_pending["grants"].get(object_id(page))
+                if not grant:
+                    raise MetaError("not_found")
+                self.accept(grant, app_id=self.config()["appId"], reconnect=self.direct_pending["reconnect"])
+                self.direct_pending = None
+                self.pending = None
+                return
             if not self.pending or not self.authorization:
                 raise MetaError("pending")
             self.authorization.select_page(object_id(page))
@@ -193,9 +243,10 @@ class MetaConnections:
             if self.authorization:
                 self.authorization.cancel()
             self.pending = None
+            self.direct_pending = None
 
     def accept(self, grant, *, app_id, reconnect=None):
-        # Only called with a verified relay result, never from a route/request token body.
+        # Only verified relay/direct discovery grants; never trust request-supplied identities.
         if not isinstance(grant, Grant) or grant.app_id != app_id or app_id != self.config()["appId"]:
             raise MetaError("identity")
         if min(grant.user_expires_at, grant.data_expires_at) <= utcnow() + timedelta(seconds=30):

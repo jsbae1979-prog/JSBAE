@@ -58,6 +58,7 @@ def status(request: Request):
             "mediaReady": publisher.delivery.ready(),
             "executionReady": getattr(request.app.state, "meta_execution_enabled", True),
             "publications": publisher.list(),
+            "storageReady": publisher.storage_states(),
         }
 
     return safely(run)
@@ -89,6 +90,21 @@ def configure(
 @router.post("/api/meta/media-config")
 def media_config(request: Request, origin: str = Form(max_length=300), credential: str = Form()):
     return safely(lambda: services(request)[1].delivery.configure(origin, credential) or {"saved": True})
+
+
+@router.post("/api/meta/import-token")
+def import_token(
+    request: Request,
+    token: str = Form(),
+    consent: bool = Form(False),
+    reconnect: str = Form("", max_length=32),
+):
+    return safely(
+        lambda: (
+            services(request)[0].import_token(token, consent=consent, reconnect=reconnect or None)
+            or {"discovered": True}
+        )
+    )
 
 
 @router.post("/api/meta/connect")
@@ -134,6 +150,21 @@ def prepare(
 ):
     return safely(
         lambda: services(request)[1].prepare(content_id, json.loads(targets), caption, reviewed=reviewed)
+    )
+
+
+@router.post("/api/meta/publications/{identifier}/storage")
+def storage(
+    request: Request,
+    identifier: str,
+    put_url: str = Form(),
+    get_url: str = Form(),
+    expires: str = Form(max_length=40),
+):
+    return safely(
+        lambda: (
+            services(request)[1].configure_storage(identifier, put_url, get_url, expires) or {"saved": True}
+        )
     )
 
 

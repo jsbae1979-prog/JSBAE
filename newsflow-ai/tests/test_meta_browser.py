@@ -36,7 +36,8 @@ def test_accounts_metadata_no_external_login_on_open(app,browser,connected,tmp_p
         panel=page.locator('section').filter(has=page.get_by_role('heading',name='Facebook · Instagram 연결',exact=True)).last
         expect(panel.get_by_text('Synthetic 101',exact=True)).to_be_visible()
         expect(panel.get_by_text('Synthetic 102',exact=True)).to_be_visible()
-        expect(panel.get_by_role('button',name='Meta 로그인 · 계정 추가')).to_be_disabled()
+        expect(panel.get_by_role('button',name='토큰 확인 · 페이지 조회')).to_be_disabled()
+        expect(panel.get_by_label('본인 사용자 토큰')).to_have_attribute('type', 'password')
         panel.get_by_text('권한 · 만료일',exact=True).first.click()
         expect(panel.get_by_text('페이지 토큰: 만료일 미지정 · 철회 시 무효',exact=True).first).to_be_visible()
         assert not calls and not publisher.graph.calls
@@ -78,4 +79,24 @@ def test_selected_account_and_image_publish_use_fake_only(app,browser,connected,
         page.locator('.mg-publish-list').get_by_role('button').filter(has_text='합성 뉴스 영상').click()
         expect(panel.get_by_role('checkbox',name='Facebook 페이지',exact=True).first).not_to_be_checked()
         expect(button).to_be_disabled()
+        ctx.close()
+
+
+def test_direct_token_selection_no_relay_no_token_echo(app,browser,connected):
+    from test_meta_direct import DiscoveryGraph, factory
+    accounts,publisher,ids=connected
+    graph=DiscoveryGraph();accounts.direct_factory=factory(graph)
+    with local_server(app) as origin:
+        ctx=context(browser,origin);page=ctx.new_page()
+        page.goto(origin+'/studio/settings?tab=accounts')
+        panel=page.locator('section').filter(has=page.get_by_role('heading',name='Facebook · Instagram 연결',exact=True)).last
+        field=panel.get_by_label('본인 사용자 토큰')
+        field.fill('synthetic-browser-user')
+        panel.get_by_role('button',name='토큰 확인 · 페이지 조회',exact=True).click()
+        expect(field).to_have_value('')
+        panel.get_by_role('button',name='Synthetic 101 · Instagram 연결 포함 선택',exact=True).click()
+        expect(panel.get_by_text('계정 확인 완료 · 연결할 페이지를 선택하세요',exact=True)).to_have_count(0)
+        assert accounts.credential(ids[0],'instagram')[1]=='201'
+        assert 'synthetic-browser-user' not in page.content()
+        assert not publisher.graph.calls and all(c[0]=='GET' for c in graph.calls)
         ctx.close()

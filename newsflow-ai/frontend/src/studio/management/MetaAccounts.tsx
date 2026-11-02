@@ -50,6 +50,9 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
   const [busy, setBusy] = useState(false),
     [origin, setOrigin] = useState(""),
     [credential, setCredential] = useState("");
+  const [token, setToken] = useState("");
+  const [reconnect, setReconnect] = useState("");
+  const tokenRef = useRef<HTMLInputElement>(null);
   const lock = useRef(false);
   async function load() {
     try {
@@ -64,7 +67,7 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
     void load();
   }, []);
   useEffect(() => {
-    if (!data?.pending) return;
+    if (!data?.pending || data?.directPending) return;
     const timer = setInterval(() => void load(), 2000);
     return () => clearInterval(timer);
   }, [data?.pending]);
@@ -75,6 +78,7 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
     setError("");
     try {
       await metaRequest(path, csrf, values);
+      if (path === "select-page") setReconnect("");
       await load();
     } catch (e) {
       setError((e as Error).message);
@@ -86,24 +90,79 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
   return (
     <Panel title="Facebook · Instagram 연결">
       <p>
-        본인의 Meta 계정으로 로그인해 관리하는 페이지를 선택하세요. Instagram은
-        Facebook 페이지에 연결된 비즈니스·크리에이터 계정이어야 합니다.
+        본인이 발급받은 사용자 토큰으로 관리 페이지를 조회하고 선택하세요.
+        Instagram은 Facebook 페이지에 연결된 비즈니스·크리에이터 계정이어야
+        합니다.
       </p>
       <p>
         이 Windows 사용자에게만 저장됩니다. 다른 사용자와 토큰을 공유하지
         않습니다.
       </p>
       {error && <p role="alert">{error}</p>}
-      {data?.cleanupPending && <p role="status">사용하지 않는 암호화 자료의 정리가 필요합니다. 연결 상태와 게시 기록은 유지됩니다.</p>}
-      {data?.executionReady === false && <p role="status">Meta 실행 연결이 아직 적용되지 않았습니다. 서비스 설정을 준비한 후 운영 반영이 필요합니다.</p>}
+      {data?.cleanupPending && (
+        <p role="status">
+          사용하지 않는 암호화 자료의 정리가 필요합니다. 연결 상태와 게시 기록은
+          유지됩니다.
+        </p>
+      )}
+      {data?.executionReady === false && (
+        <p role="status">
+          Meta 실행 연결이 아직 적용되지 않았습니다. 서비스 설정을 준비한 후
+          운영 반영이 필요합니다.
+        </p>
+      )}
       {data?.error && (
         <p role="status">
           로그인 결과: {metaState(data.error)}. 자동 재요청하지 않습니다.
         </p>
       )}
+      <div className="mg-form">
+        <label>
+          본인 사용자 토큰
+          <input
+            ref={tokenRef}
+            type="password"
+            autoComplete="off"
+            value={token}
+            onChange={(e) => setToken(e.target.value)}
+          />
+        </label>
+        <p>
+          별도 인증 서버나 도메인 구매가 필요하지 않습니다. 앱 시크릿·페이지
+          토큰이 아닌 본인의 사용자 토큰을 입력하세요. 만료 시 새 토큰으로 다시
+          연결합니다.
+        </p>
+        {reconnect && (
+          <p role="status">기존 연결 갱신 중 · 같은 페이지를 선택하세요.</p>
+        )}
+        <button
+          disabled={
+            busy ||
+            !token.trim() ||
+            data?.pending ||
+            data?.executionReady === false
+          }
+          onClick={() => {
+            const value = token.trim();
+            setToken("");
+            void act("import-token", {
+              token: value,
+              consent: "true",
+              reconnect,
+            });
+          }}
+        >
+          {busy ? "계정 확인 중…" : "토큰 확인 · 페이지 조회"}
+        </button>
+        {reconnect && (
+          <button disabled={busy} onClick={() => setReconnect("")}>
+            새 연결로 변경
+          </button>
+        )}
+      </div>
       {config && (
         <details>
-          <summary>서비스 연결 설정</summary>
+          <summary>앱 설정 · 기존 서버 연결(선택)</summary>
           <div className="mg-form">
             {[
               ["appId", "Meta 앱 ID"],
@@ -135,10 +194,12 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
               서비스 설정 저장
             </button>
             <p>
-              앱 시크릿은 인증 서버에만 보관합니다. 이 PC에 입력하지 마세요.
+              직접 토큰 등록에는 인증 서버가 필요 없습니다. 기존 서버 로그인
+              기능을 사용하는 경우에만 서버 주소를 설정하세요. 앱 시크릿은 이
+              PC에 입력하지 마세요.
             </p>
             <label>
-              미디어 서버 HTTPS 주소
+              기존 미디어 서버 HTTPS 주소(선택)
               <input
                 value={origin}
                 onChange={(e) => setOrigin(e.target.value)}
@@ -169,17 +230,25 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
           </div>
         </details>
       )}
-      <button
-        disabled={busy || !data?.configured || data?.pending || data?.executionReady === false}
-        onClick={() => act("connect", { consent: "true" })}
-      >
-        Meta 로그인 · 계정 추가
-      </button>
+      <details>
+        <summary>기존 서버로 Meta 로그인</summary>
+        <button
+          disabled={
+            busy ||
+            !data?.configured ||
+            data?.pending ||
+            data?.executionReady === false
+          }
+          onClick={() => act("connect", { consent: "true" })}
+        >
+          Meta 로그인 · 계정 추가
+        </button>
+      </details>
       {data?.pending && (
         <>
-          <p role="status">Meta 로그인 · 페이지 선택 진행 중</p>
+          <p role="status">계정 확인 완료 · 연결할 페이지를 선택하세요</p>
           <button disabled={busy} onClick={() => act("cancel", {})}>
-            로그인 취소
+            연결 취소
           </button>
         </>
       )}
@@ -222,14 +291,19 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
           </button>
           <button
             disabled={busy || data?.pending}
-            onClick={() =>
-              act("connect", { consent: "true", reconnect: account.id })
-            }
+            onClick={() => (
+              setReconnect(account.id),
+              tokenRef.current?.focus()
+            )}
           >
             다시 연결
           </button>
           <button
-            disabled={busy || data?.pending || (account.state === "disconnected" && !account.cleanupRequired)}
+            disabled={
+              busy ||
+              data?.pending ||
+              (account.state === "disconnected" && !account.cleanupRequired)
+            }
             onClick={() => {
               if (
                 window.confirm(

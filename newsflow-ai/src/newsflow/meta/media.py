@@ -2,7 +2,7 @@
 
 import json
 import re
-from datetime import timedelta
+from datetime import datetime, timedelta
 from hashlib import sha256
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -98,6 +98,9 @@ class MetaDelivery:
     def __init__(self, connections, *, transport=None):
         self.accounts = connections
         self.transport = transport or self._upload
+        from .storage import StorageLinks
+
+        self.links = StorageLinks(connections)
         self.key = "meta.media." + connections.owner
         self.identifier = fingerprint(["media", connections.owner])[:32]
 
@@ -135,6 +138,15 @@ class MetaDelivery:
         if old:
             self.accounts.vault.delete(self.identifier, old["identity"], old["reference"])
 
+    def available(self, digest):
+        cfg = self.links.config(digest)
+        if cfg:
+            return bool(
+                cfg["state"] in {"prepared", "uploaded"}
+                and datetime.fromisoformat(cfg["expires"]) > utcnow() + timedelta(minutes=15)
+            )
+        return self.ready()
+
     def ready(self):
         # No decryption or remote request during a screen read.
         cfg = self.config()
@@ -166,6 +178,8 @@ class MetaDelivery:
             conn.close()
 
     def upload(self, path, expected_sha, kind):
+        if self.links.config(expected_sha):
+            return self.links.upload(path, expected_sha, kind)
         cfg = self.config()
         if not self.ready():
             raise MetaError("configuration")

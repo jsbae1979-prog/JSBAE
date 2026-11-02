@@ -6379,5 +6379,72 @@
         "path": false
       }
     ]
+  },
+  {
+    "id": "meta_import_token",
+    "module": "publishing",
+    "label": "Meta meta_import_token",
+    "path": "/api/meta/import-token",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "token",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reconnect",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ]
+  },
+  {
+    "id": "meta_storage",
+    "module": "publishing",
+    "label": "Meta meta_storage",
+    "path": "/api/meta/publications/{identifier}/storage",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "put_url",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "get_url",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "expires",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ]
   }
 ]
