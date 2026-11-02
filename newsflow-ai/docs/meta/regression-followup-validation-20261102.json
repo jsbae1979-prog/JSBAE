@@ -1,0 +1,97 @@
+{
+  "date": "2026-11-02",
+  "verified_code_sha": "9f20d03e803ec64ec55744e6388dcf9119572f19",
+  "scope": "Historical regression follow-up; no whole-suite rerun, product modification, real API, publishing or operating restart.",
+  "timezone_finding": {
+    "cause": "Existing Python 3.14.7 development venv has no importable tzdata. Product pyproject.toml and requirements-dev.lock already declare tzdata==2026.5 on Windows.",
+    "minimal_action": "Reuse installed tzdata 2026.5 zoneinfo read-only through subprocess-only PYTHONTZPATH. No package install, no OS setting mutation, no operating path change.",
+    "command": "python -m pytest -q -rs --tb=short -o junit_family=legacy -p no:cacheprovider --basetemp=<synthetic-profile> --junitxml=<evidence> tests/test_windows_timezone_contract.py tests/test_social_calendar_analytics.py::test_recommendations_require_comparable_complete_windows_and_one_account",
+    "result": {
+      "pass": 10,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "seconds": 0.68
+    },
+    "coverage": "Six previously failed IANA conversion/DST cases, one previously failed analytics timezone case, three retained explicit missing/corrupt-timezone rejection cases.",
+    "test_process_timezone_path": "C:\\NewsFlowAI\\app\\site-packages\\tzdata\\zoneinfo",
+    "warning": "Existing Starlette/httpx deprecation; no new warning."
+  },
+  "reused_ci": {
+    "run_url": "https://github.com/jsbae1979-prog/JSBAE/actions/runs/41448385402",
+    "synthetic_merge_short_sha": "57755ea",
+    "jobs": [
+      {
+        "python": "3.12.10",
+        "frontend_pass": 47,
+        "meta_pass": 108,
+        "fake_ffmpeg_routes_pass": 151,
+        "fail": 0,
+        "error": 0,
+        "skip": 0,
+        "build": "PASS"
+      },
+      {
+        "python": "3.14.10",
+        "frontend_pass": 47,
+        "meta_pass": 108,
+        "fake_ffmpeg_routes_pass": 151,
+        "fail": 0,
+        "error": 0,
+        "skip": 0,
+        "build": "PASS"
+      }
+    ],
+    "note": "Reused completed CI, not rerun this turn. PR synthetic merge is not a branch merge."
+  },
+  "historical_reconciliation": {
+    "original": {
+      "pass": 6975,
+      "fail": 113,
+      "error": 24,
+      "skip": 50
+    },
+    "classification_file": "regression-classification-20261102.json",
+    "ffmpeg_configuration": {
+      "count": 91,
+      "status": "Direct log diagnosis retained. No claim that all 91 were rerun at final SHA."
+    },
+    "timezone_data": {
+      "count": 7,
+      "status": "Now PASS using declared timezone data in test process only."
+    },
+    "baseline_gui_source": {
+      "count": 2,
+      "status": "Earlier targeted PASS retained; not rerun now."
+    },
+    "other_37": {
+      "historical_targeted_pass": 30,
+      "previous_current_ffmpeg_probe_pass": 3,
+      "test_contract_cases_fixed": 4,
+      "test_contract_commit": "552a9a2a05c8ce8f79fe0c1c66153ab7d2dcb21e",
+      "focused_result_reused": "68 PASS"
+    },
+    "note": "These categories are evidence reconciliation, not a synthetic whole-suite pass count. Historical failures remain preserved."
+  },
+  "evidence": [
+    {
+      "file": "timezone-followup.log",
+      "sha256": "8aed69560738251c4d8eca50ca552db9f5bd28892e3a2bd8df66392381b6685c"
+    },
+    {
+      "file": "timezone-followup.xml",
+      "sha256": "3371ec816c105958ec4263d15ff8fb941e8c134b036b329f65e522e3bfb6b596"
+    }
+  ],
+  "preserved": {
+    "existing_dirty_files": true,
+    "operating_app": true,
+    "user_data_keys_media_backups": true,
+    "old_logs": true
+  },
+  "remaining_not_verified": [
+    "Final-SHA whole regression (not requested to rerun).",
+    "Real Meta multi-account authentication/upload/publication and provider acceptance; require separately approved account/content test."
+  ],
+  "verdict": "Focused diagnosis and verification complete; not a public-distribution or real-Meta acceptance."
+}
