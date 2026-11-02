@@ -38,6 +38,8 @@ export default function Settings({
     [modelTab, setModelTab] = useState("text"),
     [startup, setStartup] = useState<any>(null),
     [loading, setLoading] = useState(false);
+  const [accountPlatform,setAccountPlatform]=useState("instagram");
+  const [metaAccountData,setMetaAccountData]=useState<any>(null);
   const [dataDestination,setDataDestination]=useState("");
   const [dataMoving,setDataMoving]=useState(false);
   const [dataMoveMessage,setDataMoveMessage]=useState("");
@@ -176,10 +178,23 @@ export default function Settings({
       >
         {show("accounts") && (
           <Panel title="플랫폼 계정" className="mg-settings-accounts">
-            <MetaAccounts csrf={c.view?.csrfToken??""} />
-            <Accounts c={c} compact />
+            <Accounts c={c} compact onConfigure={setAccountPlatform} metaAccounts={metaAccountData?.accounts} />
+            <div hidden={!["instagram","facebook"].includes(accountPlatform)}>
+              <MetaAccounts csrf={c.view?.csrfToken??""} platform={accountPlatform} onStatus={setMetaAccountData} />
+            </div>
+            {accountPlatform === "youtube" && (
+              <Panel title="YouTube 계정 설정">
+                <p>Google 로그인으로 게시할 YouTube 채널을 연결합니다. Meta 토큰은 사용하지 않습니다.</p>
+                <Action c={c} id="youtube_connect">Google 로그인 · YouTube 연결</Action>
+              </Panel>
+            )}
+            {accountPlatform === "tiktok" && (
+              <Panel title="TikTok 계정 설정">
+                <p>TikTok 직접 연결·게시 기능은 아직 지원하지 않습니다. 다른 플랫폼의 토큰을 등록하지 마세요.</p>
+              </Panel>
+            )}
             <p className="mg-muted">
-              API 키 저장, 로컬 계정 등록, 실제 OAuth·권한 검증은 서로 다릅니다.
+              게시할 플랫폼의 계정을 연결하세요. 연결만으로 콘텐츠가 게시되지는 않습니다.
               실제로 연결되지 않은 계정을 연결 완료로 표시하지 않습니다.
             </p>
           </Panel>

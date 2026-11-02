@@ -169,7 +169,10 @@ class MetaConnections:
             except Exception as error:  # noqa: BLE001 - redact credentials and transport diagnostics
                 self.pending = None
                 self.direct_pending = None
-                raise MetaError(error.code if isinstance(error, MetaError) else "unknown") from None
+                raise MetaError(
+                    error.code if isinstance(error, MetaError) else "unknown",
+                    diagnostics=error.diagnostics if isinstance(error, MetaError) else None,
+                ) from None
 
     def begin(self, *, consent=False, reconnect=None):
         if consent is not True:
@@ -215,7 +218,7 @@ class MetaConnections:
                             "professional_required": "permission",
                             "identity_mismatch": "identity",
                             "cancelled": "disconnected",
-                            "authentication_failed": "expired",
+                            "authentication_failed": "authentication",
                         }.get(getattr(e, "code", ""), "unknown")
                     )
         finally:
@@ -373,7 +376,7 @@ class MetaConnections:
             return token, row.page_id if platform == "facebook" else row.instagram_id, row.revision
 
     def invalidate(self, identifier, code):
-        if code not in {"expired", "permission"}:
+        if code not in {"expired", "permission", "authentication"}:
             return
         with self.sessions.begin() as db:
             self.owned(db, identifier).state = code

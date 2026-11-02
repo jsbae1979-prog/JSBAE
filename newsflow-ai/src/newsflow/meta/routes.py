@@ -52,7 +52,9 @@ def safely(operation):
     try:
         return operation()
     except MetaError as error:
-        raise HTTPException(422, {"code": error.code, "message": str(error)}) from None
+        raise HTTPException(422, {
+            "code": error.code, "message": str(error), "diagnostics": error.diagnostics,
+        }) from None
     except Exception:  # noqa: BLE001 - never expose provider, credential or native exception details
         raise HTTPException(422, {"code": "unknown", "message": str(MetaError())}) from None
 

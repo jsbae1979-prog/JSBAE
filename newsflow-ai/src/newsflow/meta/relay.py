@@ -87,17 +87,23 @@ class MetaBusinessSessions(RelaySessions):
                 raise MetaError("invalid")
             checkpoint()
             data = self.transport.inspect(token)["data"]
-            if (
-                data.get("is_valid") is not True
-                or data.get("type") != "USER"
-                or str(data.get("app_id")) != self.config.app_id
-            ):
-                raise MetaError("identity")
+            direct = getattr(self, "preserve_meta_errors", False)
+            if data.get("is_valid") is not True:
+                raise MetaError("authentication" if direct else "identity")
+            if data.get("type") != "USER":
+                raise MetaError("token_type" if direct else "identity")
+            if str(data.get("app_id")) != self.config.app_id:
+                raise MetaError("token_app" if direct else "identity")
             object_id(data.get("user_id"))
-            user_exp = timestamp(data.get("expires_at"))
-            data_exp = timestamp(data.get("data_access_expires_at"))
-            if min(user_exp, data_exp).timestamp() <= self.clock() + 30:
-                raise MetaError("expired")
+            try:
+                user_exp = timestamp(data.get("expires_at"))
+                data_exp = timestamp(data.get("data_access_expires_at"))
+            except MetaError:
+                raise MetaError("token_metadata" if direct else "invalid") from None
+            if user_exp.timestamp() <= self.clock() + 30:
+                raise MetaError("token_expired" if direct else "expired")
+            if data_exp.timestamp() <= self.clock() + 30:
+                raise MetaError("data_expired" if direct else "expired")
             checkpoint()
             permissions = self.transport.permissions(token).get("data")
             if not isinstance(permissions, list):
@@ -181,6 +187,8 @@ class MetaBusinessSessions(RelaySessions):
                 "_selected_grants": private,
             }, choices
         except MetaError as error:
+            if getattr(self, "preserve_meta_errors", False):
+                raise
             code = {
                 "permission": "permission_denied",
                 "expired": "expired",

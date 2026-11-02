@@ -21,11 +21,18 @@ class DirectTransport:
         # Reuse the verified-grant parser, without exchanging/refreshing a token.
         return {"access_token": self.token.get_secret_value()}
 
+    def _get(self, stage, path, values):
+        try:
+            return self.graph.call("GET", path, self.token, values)
+        except MetaError as error:
+            raise MetaError(error.code, diagnostics={**error.diagnostics, "stage": stage}) from None
+
     def inspect(self, token):
-        return self.graph.call("GET", "debug_token", self.token, {"input_token": token.get_secret_value()})
+        stage = "user_token" if token.get_secret_value() == self.token.get_secret_value() else "page_token"
+        return self._get(stage, "debug_token", {"input_token": token.get_secret_value()})
 
     def permissions(self, token):
-        return self.graph.call("GET", "me/permissions", token, {})
+        return self._get("permissions", "me/permissions", {})
 
     def pages(self, token):
         rows, seen, after = [], set(), None
@@ -33,7 +40,7 @@ class DirectTransport:
             values = {"fields": "id,name,access_token,tasks,instagram_business_account", "limit": "100"}
             if after:
                 values["after"] = after
-            result = self.graph.call("GET", "me/accounts", token, values)
+            result = self._get("pages", "me/accounts", values)
             if not isinstance(result.get("data"), list):
                 raise MetaError("invalid")
             rows.extend(result["data"])
@@ -47,7 +54,10 @@ class DirectTransport:
         raise MetaError("invalid")
 
     def profile(self, identifier, token):
-        return self.graph.call("GET", identifier, token, {"fields": "id,username"})
+        try:
+            return self.graph.call("GET", identifier, token, {"fields": "id,username"})
+        except MetaError as error:
+            raise MetaError(error.code, diagnostics={**error.diagnostics, "stage": "instagram"}) from None
 
 
 def discover(token, config, *, graph=None):
@@ -58,6 +68,7 @@ def discover(token, config, *, graph=None):
         raise MetaError("invalid")
     verifier = SimpleNamespace(
         config=SimpleNamespace(app_id=config["appId"]),
+        preserve_meta_errors=True,
         clock=time,
         transport=DirectTransport(token, config["graphVersion"], graph),
     )

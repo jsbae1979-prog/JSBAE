@@ -16,17 +16,25 @@ export async function metaRequest(
       : {}),
   });
   const data = await response.json();
-  if (!response.ok)
+  if (!response.ok) {
+    const stages: Record<string, string> = {
+      user_token: "사용자 토큰 확인", permissions: "권한 확인",
+      pages: "관리 페이지 조회", page_token: "페이지 토큰 확인",
+      instagram: "Instagram 계정 확인",
+    };
+    const stage = stages[data.detail?.diagnostics?.stage];
     throw new Error(
-      data.detail?.message ??
-        "연결 상태를 확인하세요. 자동 재요청하지 않습니다.",
+      (stage ? `${stage}: ` : "") + (data.detail?.message ??
+        "연결 상태를 확인하세요. 자동 재요청하지 않습니다."),
     );
+  }
   return data;
 }
 const names: Record<string, string> = {
   connected: "연결됨",
   disconnected: "연결 해제",
   expired: "만료 · 다시 연결",
+  authentication: "인증 거절 · 다시 연결",
   permission: "권한 확인 필요",
   identity: "서비스 설정 변경 · 다시 연결",
   draft: "게시 준비",
@@ -117,7 +125,9 @@ function AutomaticStorageForm({
   );
 }
 
-export default function MetaAccounts({ csrf }: { csrf: string }) {
+export default function MetaAccounts({ csrf, platform, onStatus }: {
+  csrf: string; platform?: string; onStatus?: (value: any) => void;
+}) {
   const [data, setData] = useState<any>(null),
     [config, setConfig] = useState<any>(null),
     [error, setError] = useState("");
@@ -132,6 +142,7 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
     try {
       const value = await metaRequest("status", csrf);
       setData(value);
+      onStatus?.(value);
       setConfig((old: any) => old ?? value.config);
     } catch (e) {
       setError((e as Error).message);
@@ -163,10 +174,10 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
   }
   return (
     <Panel title="Facebook · Instagram 연결">
+      {platform && <p role="status">설정 대상: {platform === "instagram" ? "Instagram 전문 계정" : "Facebook 페이지"}</p>}
       <p>
-        본인이 발급받은 사용자 토큰으로 관리 페이지를 조회하고 선택하세요.
-        Instagram은 Facebook 페이지에 연결된 비즈니스·크리에이터 계정이어야
-        합니다.
+        사용자 토큰을 입력한 뒤 연결할 페이지를 선택하세요.
+        계정·권한·만료일은 자동으로 확인합니다.
       </p>
       <p>
         이 Windows 사용자에게만 저장됩니다. 다른 사용자와 토큰을 공유하지
@@ -185,7 +196,7 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
           운영 반영이 필요합니다.
         </p>
       )}
-      {data?.error && (
+      {data?.error && !error && (
         <p role="status">
           로그인 결과: {metaState(data.error)}. 자동 재요청하지 않습니다.
         </p>
@@ -202,10 +213,16 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
           />
         </label>
         <p>
-          별도 인증 서버나 도메인 구매가 필요하지 않습니다. 앱 시크릿·페이지
-          토큰이 아닌 본인의 사용자 토큰을 입력하세요. 만료 시 새 토큰으로 다시
-          연결합니다.
+          앱 시크릿·페이지 토큰이 아닌 본인의 사용자 토큰만 입력하세요.
+          이름·계정 ID·만료일을 따로 입력할 필요는 없습니다.
         </p>
+        <details>
+          <summary>사용자 토큰 준비 방법</summary>
+          <p>Meta Graph API 탐색기에서 설정된 앱의 사용자 토큰을 준비하세요.
+            토큰은 이 입력란에만 넣고 채팅이나 화면 캡처에 포함하지 마세요.</p>
+          <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noreferrer">Meta 공식 도구 열기</a>
+          <p>Instagram은 Facebook 페이지에 연결된 비즈니스·크리에이터 계정이 필요합니다.</p>
+        </details>
         {reconnect && (
           <p role="status">기존 연결 갱신 중 · 같은 페이지를 선택하세요.</p>
         )}
@@ -234,11 +251,11 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
           </button>
         )}
       </div>
-      <AutomaticStorageForm
+      {platform !== "facebook" && <AutomaticStorageForm
         busy={busy}
         ready={!!data?.automaticStorageReady}
         save={act}
-      />
+      />}
       <p>
         Facebook 이미지·영상과 Instagram 릴스는 직접 전송합니다. Instagram
         이미지에는 자동 업로드 저장소를 사용합니다.
@@ -335,7 +352,10 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
           </button>
         </>
       )}
-      {data?.pages?.map((page: any) => (
+      {platform === "instagram" && data?.directPending && !data?.pages?.some((p: any) => p.instagram_id) && (
+        <p role="status">조회된 페이지에 연결된 Instagram 전문 계정이 없습니다. Facebook 페이지와 Instagram 연결을 확인하세요.</p>
+      )}
+      {data?.pages?.filter((page: any) => platform !== "instagram" || page.instagram_id).map((page: any) => (
         <button
           key={page.id}
           disabled={busy}
@@ -345,7 +365,7 @@ export default function MetaAccounts({ csrf }: { csrf: string }) {
           {page.instagram_id ? "Instagram 연결 포함" : "Facebook만"} 선택
         </button>
       ))}
-      {data?.accounts?.map((account: any) => (
+      {data?.accounts?.filter((account: any) => platform !== "instagram" || account.instagramId).map((account: any) => (
         <article key={account.id} className="mg-panel">
           <strong>{account.label}</strong> · {metaState(account.state)}
           <p>

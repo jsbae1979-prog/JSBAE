@@ -93,15 +93,18 @@ class MetaGraph:
             if not isinstance(data, dict):
                 raise MetaError("unknown")
             if not 200 <= status < 300 or "error" in data:
-                code = data.get("error", {}).get("code") if isinstance(data.get("error"), dict) else None
+                detail = data.get("error") if isinstance(data.get("error"), dict) else {}
+                code = detail.get("code")
                 raise MetaError(
-                    "expired"
+                    "authentication"
                     if code == 190 or status == 401
                     else "permission"
                     if code in {10, 200} or status == 403
                     else "unknown"
                     if status >= 500 or status in {408, 429}
-                    else "rejected"
+                    else "rejected",
+                    diagnostics={"http_status": status, "provider_code": code,
+                                 "provider_subcode": detail.get("error_subcode")},
                 )
             return data
         except MetaError:

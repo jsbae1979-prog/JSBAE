@@ -21,6 +21,12 @@ MESSAGES = {
     "not_found": "이 사용자의 연결 또는 게시 작업이 아닙니다.",
     "consent": "대상 계정·콘텐츠와 전송·게시 승인을 확인하세요.",
     "expired": "인증 또는 데이터 접근이 만료되었습니다. 다시 연결하세요.",
+    "authentication": "Meta가 인증을 거절했습니다. 만료로 확인된 것은 아닙니다. 입력한 사용자 토큰과 앱 권한을 확인하세요.",
+    "token_expired": "사용자 토큰의 유효기간이 지났습니다. 새 사용자 토큰을 입력하세요.",
+    "data_expired": "계정 데이터 접근 기간이 지났습니다. Meta에서 권한을 다시 승인한 사용자 토큰을 입력하세요.",
+    "token_type": "사용자 토큰이 아닙니다. 페이지 토큰·앱 시크릿 대신 본인 사용자 토큰을 입력하세요.",
+    "token_app": "다른 Meta 앱에서 발급한 토큰입니다. 설정된 NewsFlow AI 앱의 사용자 토큰을 입력하세요.",
+    "token_metadata": "Meta에서 토큰 유효기간을 확인하지 못했습니다. 만료일을 직접 입력할 필요는 없습니다.",
     "permission": "선택한 계정의 관리·게시 권한이 부족합니다.",
     "identity": "다른 계정으로 재연결할 수 없습니다. 새 연결로 추가하세요.",
     "invalid": "설정 또는 Meta 응답을 확인하지 못했습니다.",
@@ -33,8 +39,17 @@ MESSAGES = {
 
 
 class MetaError(Exception):
-    def __init__(self, code="unknown"):
+    def __init__(self, code="unknown", *, diagnostics=None):
         self.code = code if code in MESSAGES else "unknown"
+        self.diagnostics = {}
+        if isinstance(diagnostics, dict):
+            for key in ("http_status", "provider_code", "provider_subcode"):
+                value = diagnostics.get(key)
+                if type(value) is int and 0 <= value <= 2**31 - 1:
+                    self.diagnostics[key] = value
+            stage = diagnostics.get("stage")
+            if stage in {"user_token", "permissions", "pages", "page_token", "instagram"}:
+                self.diagnostics["stage"] = stage
         super().__init__(MESSAGES[self.code])
 
 

@@ -271,7 +271,7 @@ def test_auth_revocation_invalidates_only_one_connection(env):
 @pytest.mark.parametrize(
     "status,body,code",
     [
-        (401, {"error": {"code": 190, "message": "private-token"}}, "expired"),
+        (401, {"error": {"code": 190, "message": "private-token"}}, "authentication"),
         (403, {}, "permission"),
         (429, {}, "unknown"),
         (500, {}, "unknown"),
