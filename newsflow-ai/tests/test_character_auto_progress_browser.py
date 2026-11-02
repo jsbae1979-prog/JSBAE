@@ -100,3 +100,41 @@ def test_caption_sfx_review_matches_v3_and_does_not_compose_automatically(app,br
         expect(dialog).to_contain_text('새 음성·나레이션은 추가하지 않습니다.')
         assert not posts
         ctx.close()
+
+
+def test_missing_command_connection_shows_reason_without_forever_active_spinner(app,browser,monkeypatch):
+    s,i=prepared(app,monkeypatch)
+    with local_server(app) as origin:
+        ctx,page=context(browser,origin);posts=[]
+        def missing(route):
+            response=route.fetch();data=response.json();data['commandsAvailable']=False
+            route.fulfill(response=response,json=data)
+        page.route('**/api/studio/modules/characters',missing)
+        page.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
+        page.goto(origin+'/studio/characters?job_id='+i)
+        expect(page.get_by_text('장면 생성 중 · 자동 확인',exact=True)).to_be_visible()
+        page.clock.fast_forward(11000)
+        expect(page.get_by_role('alert').filter(has_text='자동 확인을 사용할 수 없습니다')).to_be_visible()
+        expect(page.get_by_text('장면 생성 중 · 자동 확인',exact=True)).not_to_be_visible()
+        page.clock.fast_forward(60000);assert not posts
+        ctx.close()
+
+
+def test_slow_check_explains_wait_without_aborting_or_replaying(app,browser,monkeypatch):
+    s,i=prepared(app,monkeypatch)
+    with local_server(app) as origin:
+        ctx,page=context(browser,origin);pending=[]
+        page.route('**/character/'+i+'/check',lambda route:pending.append(route))
+        page.goto(origin+'/studio/characters?job_id='+i)
+        expect(page.get_by_text('장면 생성 중 · 자동 확인',exact=True)).to_be_visible()
+        page.clock.fast_forward(11000)
+        expect(page.get_by_text('완료 영상 확인·저장 중',exact=True)).to_be_visible()
+        page.clock.fast_forward(46000)
+        expect(page.get_by_text('진행 확인 응답 대기 중',exact=True)).to_be_visible()
+        expect(page.get_by_text('서버 응답이 지연되고 있습니다.',exact=False)).to_be_visible()
+        page.clock.fast_forward(120000);assert len(pending)==1
+        pending[0].fulfill(status=409,json={'detail':'Synthetic stopped'})
+        expect(page.get_by_role('button',name='진행 확인 재개',exact=True)).to_be_visible()
+        page.clock.fast_forward(60000);assert len(pending)==1
+        assert s.read(i)['state']=='generating'
+        ctx.close()

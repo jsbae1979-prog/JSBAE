@@ -411,7 +411,7 @@ def module_view(request: Request, module: Module):
     publication_sources = {}
     with state.sessions() as session:
         for key, name, columns in SPECS[module]:
-            result["collections"][key] = rows(session, name, columns, limit=None if module == "analytics" else 100)
+            result["collections"][key] = rows(session, name, columns, limit=None if module == "analytics" or (module == "news" and key == "articles") else 100)
         if module == 'analytics':
             from .usage_projection import combined_usage
             result['collections']['usage'] = combined_usage(session, result['collections']['usage'])
@@ -819,6 +819,16 @@ def module_view(request: Request, module: Module):
         coordinator = getattr(state,'coordinator',None)
         context = Curator(coordinator).context() if getattr(coordinator,'service',None) is not None else {'ready':False,'run_id':None,'articles':[]}
         result["catalog"]["categoryCollection"] = context.get("collection", {}).get("category_counts", [])
+        collection = context.get("collection", {})
+        if collection.get("recent_filter"):
+            info = collection["recent_filter"]
+            unique = len(set(collection.get("article_ids", [])))
+            result["catalog"]["newsCollectionSummary"] = {
+                "kept": unique, "hours": info.get("hours"),
+                "overlap": max(0, sum(row["kept"] for row in collection.get("category_counts", [])) - unique),
+                "unknownTime": info.get("unknown_published_at", 0),
+                "olderIncluded": info.get("filled_old", 0),
+            }
         store = getattr(state, 'api_keys', {}).get(studio['provider'])
         result['catalog']['newsAnalysis'] = {'provider': studio['provider'], 'model': studio['model'],
             'keyConfigured': bool(store and store.status().get('configured')),

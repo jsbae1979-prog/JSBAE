@@ -50,6 +50,7 @@ export default function NewsStudio({
   onNavigate: (page: string) => void;
 }) {
   const [query, setQuery] = useState(""),
+    [shown, setShown] = useState(50),
     [category, setCategory] = useState(""),
     [id, setId] = useState<number | null>(null),
     [recent, setRecent] = useState<number[]>([]),
@@ -64,7 +65,7 @@ export default function NewsStudio({
           .toLowerCase()
           .includes(query.toLowerCase()),
     ),
-    selected = all.find((x) => x.id === id) ?? rows[0],
+    selected = rows.find((x) => x.id === id) ?? rows[0],
     ranked = currentTop3.find((x: Item) =>
       x.articleIds.includes(selected?.id),
     ),
@@ -82,14 +83,14 @@ export default function NewsStudio({
             <input
               aria-label="보관 뉴스 검색"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {setQuery(e.target.value);setShown(50);}}
               placeholder="제목 · 출처 · 요약 검색"
             />
           </label>
           <Select
             label="기사 분야"
             value={category}
-            onChange={setCategory}
+            onChange={(value) => {setCategory(value);setShown(50);}}
             options={{
               "": "전체",
               ...Object.fromEntries(
@@ -99,8 +100,11 @@ export default function NewsStudio({
               ),
             }}
           />
+          <p className="core-muted" role="status" aria-label="기사 목록 건수">
+            불러온 기사 {all.length}건 · 검색 결과 {rows.length}건 · 현재 표시 {Math.min(shown, rows.length)}건
+          </p>
           <div className="core-news-list">
-            {rows.map((x) => (
+            {rows.slice(0,shown).map((x) => (
               <button
                 key={x.id}
                 aria-pressed={selected?.id === x.id}
@@ -131,6 +135,9 @@ export default function NewsStudio({
                 </div>
               </button>
             ))}
+            {shown < rows.length && <button type="button" onClick={()=>setShown(n=>n+50)}>
+              기사 더 보기 ({Math.min(50,rows.length-shown)}건)
+            </button>}
             {!rows.length && (
               <Empty>검색 조건에 맞는 보관 기사가 없습니다.</Empty>
             )}

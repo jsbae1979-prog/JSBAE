@@ -1932,8 +1932,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       action("submit", "영상 생성하기", ["quoted"])
                     ) : canCheckScenes && follow.active ? (
                       <div className="kling-generation-live" role="status">
-                        <LoaderCircle className="spin" size={20}/>
-                        {follow.checking?"완료 영상 확인·저장 중":"장면 생성 중 · 자동 확인"}
+                        <LoaderCircle className={follow.paused?"":"spin"} size={20}/>
+                        {follow.paused?"다른 작업이 끝나면 확인 재개":follow.slow?"진행 확인 응답 대기 중":follow.checking?"완료 영상 확인·저장 중":"장면 생성 중 · 자동 확인"}
                       </div>
                     ) : canCheckScenes ? (
                       action("check", job?.state === "scene_review" ? "남은 장면 상태 확인" : "장면 상태 확인", ["generating", "scene_review"])
@@ -1964,6 +1964,8 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       <progress aria-label={job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 진행":"장면 저장 진행률"}
                         max={follow.total} value={job?.state==="composing"&&!job?.composeRecoveryAvailable?undefined:follow.done}/>
                       <small>{job?.state==="composing"&&!job?.composeRecoveryAvailable?"내 PC에서 FFmpeg로 합성하고 있습니다.":`${follow.percent}% · 저장 완료 장면 기준`}</small>
+                      {follow.active&&<small>{follow.lastChecked?`마지막 상태 확인 ${follow.lastChecked}`:"아직 완료 여부를 확인하지 않았습니다."} · 이 화면에서 10초마다 확인</small>}
+                      {follow.slow&&<p role="status">서버 응답이 지연되고 있습니다. 현재 요청을 기다리는 중이며 새 생성 요청은 보내지 않습니다.</p>}
                       {follow.error&&<><p role="alert">{follow.error}</p><button type="button" disabled={isBusy} onClick={follow.resume}>진행 확인 재개</button></>}
                     </section>
                   )}

@@ -79,11 +79,17 @@ export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;m
     {method==="serpapi"&&!c.view?.catalog.serpapi?.canRequest&&<small>설정·관리에서 키 등록과 사용 승인을 확인하세요.</small>}
     {(c.view?.catalog.categoryCollection ?? []).length > 0 && <ul className="news-category-counts" aria-label="최근 분야별 수집 결과">
       {c.view?.catalog.categoryCollection.map((row: any) => <li key={row.category}>{row.category} · {row.status === "success"
-        ? `수집 ${row.collected}건 · 기간 내 ${row.kept}건`
+        ? `수집 ${row.collected}건 · 목록 대상 ${row.kept}건`
         : row.status === "pending" ? "요청하지 않음 · 앞선 분야 수집 중단"
         : row.status === "unknown" ? "응답 확인 필요 · 기사 수 미확인"
         : `수집 실패 · ${row.collected > 0 ? `저장 ${row.collected}건` : "기사 수 미확인"}`}{row.skipped_items > 0 && ` · 형식 확인 불가 ${row.skipped_items}건 제외`}</li>)}
     </ul>}
+    {c.view?.catalog.newsCollectionSummary && <div className="news-collection-summary">
+      <p>이번 수집 목록 대상 {c.view.catalog.newsCollectionSummary.kept}건 · 분야 간 중복 {c.view.catalog.newsCollectionSummary.overlap}건</p>
+      <small>분야별 숫자는 수집 출처 기준이며, 기사 목록은 중복을 합친 뒤 저장된 기사 분야로 나눕니다.</small>
+      {c.view.catalog.newsCollectionSummary.unknownTime > 0 && <small>발행 시각 미확인 {c.view.catalog.newsCollectionSummary.unknownTime}건 포함</small>}
+      {c.view.catalog.newsCollectionSummary.olderIncluded > 0 && <small>기간 내 기사 부족으로 이전 기사 {c.view.catalog.newsCollectionSummary.olderIncluded}건 포함</small>}
+    </div>}
     {message&&<div className="news-collection-progress" role="status" aria-live="polite">
       <div>{busy&&<LoaderCircle className="spin" size={16}/>}<strong>{message}</strong>
         {!busy&&<button type="button" aria-label="수집 상태 새로고침" onClick={()=>setRefresh(n=>n+1)}><RefreshCw size={14}/></button>}</div>

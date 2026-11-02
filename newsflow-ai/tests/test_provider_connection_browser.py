@@ -36,3 +36,33 @@ def test_all_provider_tabs_test_and_persist_without_generation(probe,browser):
         assert len(probe.calls)==6 and not errors
         assert app.state.character.listing()==before
         context.close()
+
+
+def test_home_refreshes_saved_auth_after_settings_without_another_provider_call(probe,browser):
+    app=probe.app
+    stores={provider:SimpleNamespace(path=store.path,status=lambda:{'configured':True},key=lambda:KEY)
+            for provider,store in probe.checker.stores.items()}
+    app.state.provider_connections=ProviderConnections(app.state,stores,probe.checker.network)
+    with local_server(app) as origin:
+        ctx=browser.new_context()
+        ctx.route('**/*',lambda route:route.continue_() if route.request.url.startswith(origin+'/') else route.abort())
+        page=ctx.new_page();posts=[]
+        page.on('request',lambda req:posts.append(req.url) if req.method=='POST' else None)
+        page.goto(origin+'/studio/dashboard')
+        home=page.locator('.services')
+        expect(home.get_by_role('button',name='Claude 키 저장 · 연결 미확인',exact=True)).to_be_visible()
+        page.get_by_role('button',name='설정 · 관리',exact=True).click()
+        page.get_by_role('tab',name='AI 모델 · API 키',exact=True).click()
+        row=page.locator('.mg-settings-models tbody tr').filter(has=page.get_by_role('button',name='Claude 키 설정',exact=True))
+        row.get_by_role('button',name='API 키 테스트',exact=True).click()
+        expect(row.locator('.mg-badge')).to_have_text('인증 확인')
+        page.get_by_role('button',name='홈',exact=True).click()
+        expect(home.get_by_role('button',name='Claude 연결 확인됨',exact=True)).to_be_visible()
+        assert len(posts)==1 and len(probe.calls)==1
+        # Key invalidation is still reflected; refreshing never invents success.
+        (app.state.config.data_dir/probe.kinds['claude'].FILE).write_bytes(b'changed synthetic cipher')
+        page.get_by_role('button',name='설정 · 관리',exact=True).click()
+        page.get_by_role('button',name='홈',exact=True).click()
+        expect(home.get_by_role('button',name='Claude 연결 재확인 필요',exact=True)).to_be_visible()
+        assert len(posts)==1 and len(probe.calls)==1
+        ctx.close()

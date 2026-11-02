@@ -81,6 +81,7 @@ type Workspace = {
     label: string;
     configured: boolean;
     verified: boolean;
+    checks?: Record<string, {code: string; verified: boolean; message: string}>;
     href: string;
   }[];
   upcoming: { title: string; at: string; href: string }[];
@@ -292,7 +293,7 @@ function App() {
   useEffect(() => {
     const changed = previousPage.current !== page;
     previousPage.current = page;
-    if (changed && page === "create") {
+    if (changed && ["create", "dashboard"].includes(page)) {
       // Library removal/restoration may have changed the active workspace while
       // this top-level shell stayed mounted during studio navigation.
       setData(null);
@@ -946,9 +947,11 @@ function App() {
                         >
                           <i />
                           {s.verified
-                            ? "확인됨"
+                            ? "연결 확인됨"
                             : s.configured
-                              ? "키 저장 · 미검증"
+                              ? Object.values(s.checks ?? {}).some(check => check.code === "stale")
+                                ? "연결 재확인 필요"
+                                : "키 저장 · 연결 미확인"
                               : "미설정"}
                         </span>
                       </button>
