@@ -58,5 +58,30 @@
     "YouTube opens existing Google authorization flow; no real OAuth test",
     "TikTok direct connection/publishing remains unsupported",
     "Real account metadata is never included in this evidence"
-  ]
+  ],
+  "operating": {
+    "head": "a46a8ca7e2c682aaf8e49296226941d9b496525c",
+    "port": 18768,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "oldTablesPreserved": 49,
+    "schema": "0019",
+    "articles": 184,
+    "profileFilesPreserved": 424,
+    "metaAccounts": 0,
+    "metaPublications": 0,
+    "chromeLaunchAccepted": true,
+    "paidCalls": 0,
+    "snsCalls": 0,
+    "changedProgramFiles": 8,
+    "backupFiles": 426,
+    "chromeChecks": {
+      "facebookPagePanel": true,
+      "instagramProfessionalPanel": true,
+      "youtubeGoogleConnectButton": true,
+      "tiktokUnsupportedNotice": true,
+      "tokenLookupNotSubmitted": true
+    },
+    "accountConnectionResult": "NOT VERIFIED; no additional live lookup"
+  }
 }
