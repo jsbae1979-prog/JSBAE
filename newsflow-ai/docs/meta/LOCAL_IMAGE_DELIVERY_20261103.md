@@ -44,3 +44,9 @@ New tests cover settings without exposure, unavailable tooling, protected ports,
 Cloudflare describes Quick Tunnels as account/domain-free temporary URLs for testing/development, with changing hostnames and no uptime guarantee. Therefore this implementation must not be presented as an unattended production publishing service. Official reference: https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/
 
 Implementation command flags were also compared with the official source: https://github.com/cloudflare/cloudflared/blob/master/cmd/cloudflared/tunnel/cmd.go . No authenticated Meta request, paid generation, news collection, user-file upload or SNS publication occurred.
+
+## UI simplification follow-up
+
+The local delivery settings are now a compact card: title, trial badge, current status and one enable/disable button. Port configuration and transport limitations are collapsed under “연결 설정 · 안내”. Port saving is separate from enabling delivery; it does not expose files. The actual local transport, approval checks and unknown-result behavior are unchanged. An enabled mode can be disabled even if its optional tool is no longer available.
+
+Validation: 4 isolated browser tests PASS, 0 FAIL / ERROR / SKIP; desktop and narrow viewport screenshots checked. Tests verify missing-tool disabled state, collapsed details, explicit port persistence without enabling, and no bridge/Meta call on settings actions. TypeScript and React build PASS. Prior backend/route evidence is reused rather than counted again. Operating installation, user data and external connections were not changed.
