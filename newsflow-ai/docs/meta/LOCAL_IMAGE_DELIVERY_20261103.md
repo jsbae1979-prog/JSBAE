@@ -1,5 +1,7 @@
 # Local Instagram image delivery — 2026-11-03
 
+> Operating follow-up: official helper provisioning, one normal Stop/Start and Chrome settings verification are now complete; mode remains off and real transmission is unverified. See [operating evidence](LOCAL_IMAGE_DELIVERY_OPERATING_20261103.md). Earlier sections below describe the development-only checkpoint.
+
 Branch: `codex/newsflow-character-shorts-automation-20261030`.
 Base: `63fbbd96bc088aa71bce3bb2ebe91e76d319fea7`.
 
