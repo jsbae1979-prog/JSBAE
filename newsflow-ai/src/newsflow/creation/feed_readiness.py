@@ -21,6 +21,8 @@ class FeedReadiness:
 
     def standing_limit(self):
         from newsflow.intelligence.api_settings import read_api_settings
+        dedicated=read_image_budget(self.connections.sessions)
+        if dedicated is not None:return dedicated['limit'] if dedicated['approved'] else None
         saved=read_api_settings(self.connections.sessions,'openai')
         return str(saved.request_limit_usd) if saved.approved and saved.request_limit_usd>0 else None
 
@@ -48,3 +50,39 @@ class FeedReadiness:
                 'rateReference': ({'textInputPerMillionUsd':'5.00', 'imageOutputPerMillionUsd':'30.00',
                                    'source':PRICING_SOURCE, 'guide':GUIDE_SOURCE, 'checkedOn':CHECKED_ON,
                                    'guaranteedMaximum':False} if model in IMAGE_MODELS else None)}
+
+
+def read_image_budget(sessions):
+    """Image-only standing approval, independent of text/search provider policy."""
+    import json
+    from newsflow.db.models import AppSetting
+    with sessions() as session:
+        row=session.get(AppSetting,'feed_image_budget')
+        if row is None:return None
+        try:
+            value=json.loads(row.value)
+            limit=_image_limit(value['limit'])
+            return {'limit':limit,'approved':value.get('approved') is True}
+        except (ValueError,TypeError,KeyError):
+            return {'limit':'0','approved':False}
+
+
+def _image_limit(value):
+    from decimal import Decimal,InvalidOperation
+    try:
+        number=Decimal(str(value))
+        if not number.is_finite() or not 0<number<=10000:raise ValueError()
+        return format(number.normalize(),'f')
+    except (InvalidOperation,ValueError,TypeError):
+        raise ValueError('이미지 작업 한도는 0보다 큰 USD 금액으로 입력하세요.') from None
+
+
+def save_image_budget(sessions,limit,approved):
+    import json
+    from newsflow.db.models import AppSetting
+    value={'limit':_image_limit(limit),'approved':approved is True,'updatedAt':datetime.now(timezone.utc).isoformat()}
+    with sessions.begin() as session:
+        row=session.get(AppSetting,'feed_image_budget')
+        if row is None:session.add(AppSetting(key='feed_image_budget',value=json.dumps(value)))
+        else:row.value=json.dumps(value)
+    return {'saved':True,'requestLimitUsd':value['limit'],'approved':value['approved'],'paidCalls':0}

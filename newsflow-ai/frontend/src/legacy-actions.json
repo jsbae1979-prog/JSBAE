@@ -342,6 +342,32 @@
     "unsupported": false
   },
   {
+    "id": "feed_image_budget_save",
+    "module": "settings",
+    "label": "이미지 작업 예산 저장",
+    "path": "/api/feed-image-budget",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "request_limit_usd",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "approved",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
     "id": "api_settings_save_key",
     "module": "settings",
     "label": "API 키 저장",

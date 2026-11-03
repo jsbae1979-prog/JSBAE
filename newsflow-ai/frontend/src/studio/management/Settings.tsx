@@ -321,14 +321,18 @@ export default function Settings({
                             <Action
                               c={c}
                               id={
-                                p.id === "elevenlabs"
+                                p.id === "openai" && modelTab === "image"
+                                  ? "feed_image_budget_save"
+                                  : p.id === "elevenlabs"
                                   ? "video_save_tts"
                                   : p.id === "higgsfield"
                                     ? "video_ai_save_settings"
                                     : "api_settings_save_configuration"
                               }
                               context={
-                                p.id === "openai" || p.id === "claude"
+                                p.id === "openai" && modelTab === "image"
+                                  ? {}
+                                  : p.id === "openai" || p.id === "claude"
                                   ? {
                                       ...c.view?.catalog.apiSettingsDefaults?.[
                                         p.id === "openai" ? "openai" : "claude_api"

@@ -298,3 +298,10 @@ def feed_performance_save(request: Request, identifier: int, rank: int,
         return FeedPerformance(FeedDesigns(request.app.state.top_three_feeds)).save(identifier,rank,revision,json.loads(metrics))
     except (PublishingError, ValueError, OSError) as exc:
         raise HTTPException(422,str(exc) if isinstance(exc,PublishingError) else '성과 입력 형식을 확인하세요.') from None
+
+
+@router.post('/api/feed-image-budget')
+def feed_image_budget_save(request: Request, request_limit_usd: str = Form(...,max_length=20), approved: bool = Form(False)):
+    from newsflow.creation.feed_readiness import save_image_budget
+    try:return save_image_budget(request.app.state.sessions,request_limit_usd,approved)
+    except ValueError as exc:raise HTTPException(422,str(exc)) from None
