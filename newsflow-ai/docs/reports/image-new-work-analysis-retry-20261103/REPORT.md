@@ -20,3 +20,10 @@ Initial validation found the existing VM extractors needed the changed submit si
 
 ## Limitations
 No paid request was made. AI rendering of Korean text still requires user review. Retry does not repair a provider's malformed response or guarantee the next response. Old operating failure records and costs are preserved. Operating verification is recorded separately after deployment.
+
+## Operating application
+- Applied code SHA `7e19359e345dfcf98a99073fe7d699f7d78f6b79`; 6 exact program/assets files changed. Portable-controller overlays were not replaced.
+- Normal Stop/Start: 1 cycle; loopback 18768 listening; Chrome launch accepted. Actual user-visible operating Chrome was not automated; synthetic headless browser verification above is separate.
+- Consistent SQLite rollback backup created; all table fingerprints unchanged. Profile files (keys/media included), original DB and backups preserved; only normal runtime/session markers changed.
+- Paid API requests / SNS requests / content deletions: 0. No existing draft/result/claim modified by verification.
+- Unrelated uncommitted files remained uncommitted and were excluded from the staged frontend build.
