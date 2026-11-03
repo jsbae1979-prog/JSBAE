@@ -24,3 +24,8 @@ Python 3.14.7, temporary profiles, Fake DPAPI/image adapters and local test brow
 
 ## Operating application
 See operating-result.json after exact-file update and one normal Stop/Start. No database content, credentials, media or backups are intentionally changed. Final hashes/table fingerprints are checked separately. Real Claude analysis success is not certified by these Fake tests.
+
+
+Applied source: `12da40c5919ac9a7028732c855a1bdd694f9d900`. Normal Stop/Start completed once; server listening on loopback 18768, Chrome launch accepted. All DB-table fingerprints and pre-existing protected profile files match; original and backup hashes match. No generation reservation remained active. Analysis #93 remains the original failed record and draft #49 still has zero generation records; neither was resent.
+
+The operating source contains the documented pre-existing Windows launcher overlay plus the five targeted installation lines. Repository HEAD alone is therefore not a claim that every operating file equals the entire repository tree. Only the eight manifest-listed files were applied.
