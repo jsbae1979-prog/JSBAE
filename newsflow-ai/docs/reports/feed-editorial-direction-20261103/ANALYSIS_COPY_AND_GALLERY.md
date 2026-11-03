@@ -26,3 +26,6 @@ Commands used existing interpreter with `python -m pytest -q -rs --tb=short`, ex
 - Tests prove data propagation and instructions, not actual AI typography, originality, legal clearance or artistic quality. Real output requires a later explicitly authorized generation and review.
 - Old analyses without `feed_copy` continue the old path; no automatic reanalysis or regeneration. Existing image job reservations/prompts remain frozen.
 - No migrations, new POST endpoints, settings or cost/consent gate changes. No operating user content deleted. Deployment evidence appended after normal Stop/Start.
+
+## Operating application
+Applied code commit 563e7586da5521c9622260da50ef53de7f39f20f, 10 changed program/bundle files, after private rollback backup and active-work check. Normal Stop/Start once succeeded, loopback port 18768, Chrome launch accepted. All database table fingerprints, protected profile file hashes, original and backup hashes unchanged. No paid calls, SNS, real content deletion, reanalysis or regeneration. User-visible operating screen appearance awaits user confirmation; isolated browser checks above passed.
