@@ -19,3 +19,6 @@ Base: 1203344a064fe6281344b8a7fbfed8bf53af90a8. Branch: codex/newsflow-character
 - 0 active Claude reservations; 3 finished unknown character requests matched exact prior user-review fingerprints; 0 other unknown requests. No acknowledgement or status was created or changed.
 - Library's missing coffee-errand short already has a permanent-deletion tombstone and no current final.mp4. The other completed short remains. No restoration/deletion is performed in this task.
 - Actual paid analysis and visual quality of new generated videos remain unverified.
+
+## Operating application
+Code SHA: 3d8d94f82d1bd892c5dfa2754beae6786b595aff. Five exact program/assets files applied, with private rollback copies and consistent SQLite backup. Normal Stop/Start once; no active generation/reservation at cutover. Loopback 18768 returned; Chrome launch accepted. All database table row hashes, non-session profile files, original DB and backup A/B hashes preserved. Library deletion tombstones predate this operation and were not changed. Browser rendering tested on synthetic profiles; final user's Chrome appearance awaits their confirmation. No paid API, collection, upload, SNS, or deletion performed.

@@ -1,0 +1,15 @@
+{
+  "files": 5,
+  "sourceSha": "3d8d94f82d1bd892c5dfa2754beae6786b595aff",
+  "wasRunning": true,
+  "normalStopPerformed": true,
+  "localStoryRecovered": false,
+  "paidCalls": 0,
+  "pid": 8580,
+  "port": 18768,
+  "databaseTablesPreserved": true,
+  "originalAndBackupsPreserved": true,
+  "otherProfileFilesPreserved": true,
+  "chromeLaunchAccepted": true,
+  "snsCalls": 0
+}
