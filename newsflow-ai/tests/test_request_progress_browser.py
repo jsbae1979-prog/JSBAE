@@ -46,14 +46,16 @@ def test_analysis_visible_progress_no_replay(app,browser,tmp_path,ending):
         expect(panel).to_contain_text(expected)
         if ending in {'success','failed'}:
             expect(d.locator('footer').get_by_role('button',name='닫기',exact=True)).to_be_enabled()
-            expect(d.get_by_role('button',name=expected,exact=True)).to_be_disabled()
+            if ending=='failed':expect(d.locator('footer button.primary')).to_have_count(0)
+            else:expect(d.get_by_role('button',name=expected,exact=True)).to_be_disabled()
         p.screenshot(path=str(tmp_path/('request-'+ending+'.png')))
         assert len(pending)==1
         if ending=='success':pending[0].fulfill(status=303,headers={'Location':'/news'},body='');expect(d).not_to_be_visible()
         else:
             pending[0].fulfill(status=422,json={'detail':'저장된 실패 기록을 확인하세요.'})
             expect(d.get_by_role('alert')).to_contain_text('저장된 실패 기록')
-            expect(d.get_by_role('button',name='기사 분석',exact=True)).to_be_disabled()
+            if ending=='failed':expect(d.locator('footer button.primary')).to_have_count(0)
+            else:expect(d.get_by_role('button',name='기사 분석',exact=True)).to_be_disabled()
         assert len(pending)==1 and not errors
         p.unroute_all(behavior="wait")
         c.close()

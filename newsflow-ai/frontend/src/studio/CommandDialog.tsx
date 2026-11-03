@@ -450,6 +450,7 @@ export function CommandDialog({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [checkingConnection, setCheckingConnection] = useState(false);
+  const [retrySourceRunId, setRetrySourceRunId] = useState<number | undefined>();
   const [terminalStatus, setTerminalStatus] = useState<"success" | "failed" | null>(null);
   useEffect(() => { if (busy) setTerminalStatus(null); }, [busy]);
   const [ack, setAck] = useState(false);
@@ -546,6 +547,8 @@ export function CommandDialog({
   const quotePrepare = action.id === "character_act_prepare";
   const registeredRSS = action.id === "routes_collect";
   const compactCharacter = quoteSubmit || quotePrepare;
+  const compactImage = action.id === "creation_generate";
+  const imageDraft = view.collections.drafts?.find(x => x.id === Number(values.identifier));
   const collectionAnalysis = action.id === "curation_analyze";
   const serpapiCollect = action.id === "serpapi_collect";
   const categoryRSS = action.id === "curation_refresh";
@@ -554,7 +557,7 @@ export function CommandDialog({
   const selectedNews = context.__newsSelection?.article;
   const newsSelection = context.__newsSelection?.selection;
   const newsScriptReady = !newsScript || (!!selectedNews && !newsSelection?.stale && Number(values.analysis_id) === Number(newsSelection?.id) && Number(values.rank) === Number(selectedNews.rank));
-  const compactConsent = compactCharacter || collectionAnalysis || serpapiCollect || categoryRSS || newsScript;
+  const compactConsent = compactImage || compactCharacter || collectionAnalysis || serpapiCollect || categoryRSS || newsScript;
   const modelRegistration = action.id === "video_ai_save_model_route";
   const registrationPreset = (view.catalog.newsVideoPresets ?? []).find((x: Item)=>x.path===values.path);
   const registrationReady = !modelRegistration || (!!registrationPreset && registrationPreset.resolutions.includes(values.resolution) && !(view.catalog.newsVideoRegisteredPaths ?? []).includes(values.path));
@@ -594,13 +597,15 @@ export function CommandDialog({
     });
     if (["categories", "collection_policy", "hours"].includes(key)) setAck(false);
   };
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent, retryFailedRunId?: number) {
     e.preventDefault();
-    if (busy || (risky && !ack) || (compactConsent && !ack) || !quoteReady || !analysisReady || !collectionReady || !newsScriptReady || !registrationReady) return;
+    const retrying = retryFailedRunId !== undefined && collectionAnalysis && Number.isSafeInteger(retryFailedRunId) && retryFailedRunId > 0;
+    if (busy || (risky && !ack) || (compactConsent && !ack && !retrying) || !quoteReady || !analysisReady || !collectionReady || !newsScriptReady || !registrationReady) return;
     if (localRender && (!localRender.ready || values.reviewed !== true)) {
       setError("실제 합성 대상 영상을 확인한 뒤 장면 검토를 체크하세요.");
       return;
     }
+    if (retrying) setRetrySourceRunId(retryFailedRunId);
     setBusy(true);
     setError("");
     if (collecting && typeof context.__collectionProgress === "function") context.__collectionProgress("requesting");
@@ -609,10 +614,10 @@ export function CommandDialog({
         effective,
         modelRegistration ? {...values,label:registrationPreset.label,durations:registrationPreset.durations.join(","),
           confirmed:true,price_per_second:"",pricing_mode:"manual",estimate_consent:false,model_id:""}
-        : compactConsent ? { ...values, consent: ack, reviewed: ack, ...(categoryRSS ? {permission: ack} : {}) } : values,
+        : compactConsent ? { ...values, consent: ack || retrying, reviewed: ack || retrying, ...(categoryRSS ? {permission: ack} : {}) } : values,
         view,
         files,
-        localRender ? {} : (context.__extra ?? {}),
+        localRender ? {} : { ...(context.__extra ?? {}), ...(retrying ? {retry_failed_run_id: retryFailedRunId} : {}) },
       );
       if (collecting && typeof context.__collectionProgress === "function") context.__collectionProgress("accepted");
       onSaved();
@@ -637,6 +642,7 @@ export function CommandDialog({
     }
   }
   const field = (f: Field) => {
+    if (f.name === "retry_failed_run_id") return null;
     if (modelRegistration && !["path","resolution"].includes(f.name)) return null;
     if (serpapiCollect && ["request_token","maximum_requests","consent"].includes(f.name)) return null;
     if (categoryRSS && f.name === "permission") return null;
@@ -865,7 +871,7 @@ export function CommandDialog({
               {action.id === "serpapi_settings" && <p>키를 비우면 기존 키를 유지합니다. 저장은 연결 테스트나 뉴스 조회를 실행하지 않습니다.</p>}
               {compactReview && (
                 <section className="compact-command-review" aria-label="이번 작업 확인">
-                  {modelRegistration ? <><div className="form-grid">{effective.fields.filter(f=>["path","resolution"].includes(f.name)).map(field)}</div>
+                  {compactImage ? <><p>{imageDraft?.title ?? `이미지 초안 #${values.identifier}`}</p><p className="muted">{imageDraft?.selection?.model} · {imageDraft?.selection?.size} · {imageDraft?.selection?.quality}</p></> : modelRegistration ? <><div className="form-grid">{effective.fields.filter(f=>["path","resolution"].includes(f.name)).map(field)}</div>
                     {!registrationReady&&<p>추가할 모델과 지원 화질을 선택하세요.</p>}</> : registeredRSS ? <p>이전 목록을 비우고 등록·활성화된 공개 RSS를 새로 수집합니다. 저장된 제작 이력은 유지됩니다.</p>
                     : newsScript ? <><p>{selectedNews?.title ?? "선택 기사를 확인하세요."}</p>
                         <dl className="property-list"><div><dt>대본 AI</dt><dd>{view.formDefaults?.intelligence_generate?.provider} · {view.formDefaults?.intelligence_generate?.model}</dd></div></dl>
@@ -896,8 +902,8 @@ export function CommandDialog({
                       <button type="button" disabled={busy} onClick={() => { onClose(); void context.__refreshQuote(); }}>최신 견적 확인</button>}
                   </div> : compactConsent && analysisReady && <label className="check-field approval">
                     <input type="checkbox" checked={ack} onChange={event => setAck(event.target.checked)}
-                      aria-label={categoryRSS ? "공개 분야 RSS 수집 승인" : newsScript ? "선택 기사 유료 대본 생성 승인" : serpapiCollect ? "SerpApi 수집 사용량 승인" : collectionAnalysis ? "현재 수집 회차의 유료 분석 승인" : quotePrepare ? "참조 이미지 전송·스토리 검토 확인" : "표시된 견적과 검토한 내용으로 영상 생성 승인"}/>
-                    {categoryRSS ? "선택한 분야의 공개 RSS 수집과 출처 표시에 동의합니다." : newsScript ? "선택한 기사로 유료 대본 생성을 진행합니다." : serpapiCollect ? "표시된 검색 횟수와 외부 수집에 동의합니다." : collectionAnalysis ? "표시된 수집 기사와 모델의 유료 분석에 동의합니다." : quotePrepare ? "참조 이미지 전송과 검토한 스토리의 견적 조회에 동의합니다."
+                      aria-label={compactImage ? "이미지 생성 승인" : categoryRSS ? "공개 분야 RSS 수집 승인" : newsScript ? "선택 기사 유료 대본 생성 승인" : serpapiCollect ? "SerpApi 수집 사용량 승인" : collectionAnalysis ? "현재 수집 회차의 유료 분석 승인" : quotePrepare ? "참조 이미지 전송·스토리 검토 확인" : "표시된 견적과 검토한 내용으로 영상 생성 승인"}/>
+                    {compactImage ? "내용·출처를 확인했으며, 설정된 작업 예산 내 이미지 생성에 동의합니다." : categoryRSS ? "선택한 분야의 공개 RSS 수집과 출처 표시에 동의합니다." : newsScript ? "선택한 기사로 유료 대본 생성을 진행합니다." : serpapiCollect ? "표시된 검색 횟수와 외부 수집에 동의합니다." : collectionAnalysis ? "표시된 수집 기사와 모델의 유료 분석에 동의합니다." : quotePrepare ? "참조 이미지 전송과 검토한 스토리의 견적 조회에 동의합니다."
                       : `검토한 이미지·스토리와 위 견적으로 영상 생성을 승인합니다. 실패하면 자동 재요청하지 않습니다.`}
                   </label>}
                 </section>
@@ -1046,7 +1052,8 @@ export function CommandDialog({
               csrfToken={view.csrfToken ?? ""} busy={busy}
               onBegin={() => { setCheckingConnection(true); setBusy(true); setAck(false); setError(""); }}
               onEnd={() => { setCheckingConnection(false); setBusy(false); }} onRefresh={onSaved} />}
-          {(busy || collectionAnalysis) && <RequestProgress active={busy} onTerminal={setTerminalStatus} collectionId={collectionAnalysis && !checkingConnection ? Number(values.collection_context_id) : undefined}
+          {(busy || collectionAnalysis) && <RequestProgress active={busy} onTerminal={setTerminalStatus} retrySourceRunId={retrySourceRunId}
+            onRetry={(id, event) => { void submit(event, id); }} collectionId={collectionAnalysis && !checkingConnection ? Number(values.collection_context_id) : undefined}
             label={checkingConnection ? "API 연결 확인" : localRender ? "영상 합성" : collecting ? "뉴스 수집" : action.label} />}
           {error && (
             <p role="alert" className="command-error">
@@ -1059,7 +1066,7 @@ export function CommandDialog({
           <button type="button" onClick={onClose} disabled={busy && !terminalStatus}>
             {terminalStatus ? "닫기" : "취소"}
           </button>
-          <button
+          {terminalStatus !== "failed" && <button
             className="primary"
             disabled={
               busy ||
@@ -1080,11 +1087,11 @@ export function CommandDialog({
               <ShieldCheck size={18} />
             )}{" "}
             {busy
-              ? terminalStatus === "failed" ? "분석 실패" : terminalStatus === "success" ? "분석 완료" : localRender ? "FFmpeg로 최종 영상 합성 중…" : collecting ? "수집 요청 중…" : "처리 중…"
+              ? terminalStatus === "success" ? "분석 완료" : localRender ? "FFmpeg로 최종 영상 합성 중…" : collecting ? "수집 요청 중…" : "처리 중…"
               : localRender
                 ? localRenderTitle
                 : modelRegistration ? "모델 추가" : action.label}
-          </button>
+          </button>}
         </footer>
       </form>
     </dialog>

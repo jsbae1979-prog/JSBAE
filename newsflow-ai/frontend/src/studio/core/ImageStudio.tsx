@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Sparkles,
   Save,
@@ -20,6 +20,7 @@ import {
   ActionButton,
   type Controller,
 } from "./shared";
+import ImageResultPreview from "./ImageResultPreview";
 export default function ImageStudio({
   c,
   tabs,
@@ -27,18 +28,33 @@ export default function ImageStudio({
   c: Controller;
   tabs: ReactNode;
 }) {
+  const [newMode, setNewMode] = useState(false);
+  const [imageText, setImageText] = useState("");
+  const [preview, setPreview] = useState<Item | null>(null);
+  const knownIds = useRef<Set<number>>(new Set());
+  const promptInput = useRef<HTMLTextAreaElement>(null);
   const [prompt, setPrompt] = useState(""),
     [style, setStyle] = useState(""),
     [options, setOptions] = useState<Item>({}),
     [id, setId] = useState<number | null>(null);
   const drafts = c.list("drafts"),
-    selected = drafts.find((x) => x.id === id) ?? drafts[0],
+    selected = newMode ? undefined : drafts.find((x) => x.id === id) ?? drafts[0],
     success = drafts.filter(
       (x) => x.status === "success" && safeMedia(x.mediaUrl),
     );
   useEffect(() => {
     setOptions(c.view?.catalog.imageDefaults ?? {});
   }, [c.view?.catalog.imageDefaults]);
+  useEffect(() => {
+    if (!newMode) return;
+    const fresh = drafts.find(x => !knownIds.current.has(x.id));
+    if (fresh) { setId(fresh.id); setNewMode(false); }
+  }, [drafts, newMode]);
+  function startNew() {
+    knownIds.current = new Set(drafts.map(x => x.id));
+    setNewMode(true); setId(null); setPrompt(""); setImageText(""); setPreview(null);
+    promptInput.current?.focus();
+  }
   const styles = [
       "3D 애니메이션",
       "애니메이션",
@@ -48,28 +64,33 @@ export default function ImageStudio({
       "스케치",
     ],
     context = {
-      prompt: style ? `${prompt}\n시각 스타일: ${style}` : prompt,
+      prompt: [prompt, style && `시각 스타일: ${style}`, imageText.trim() && `이미지에 넣을 문구(원문 유지): ${imageText.trim()}`].filter(Boolean).join("\n"),
       ...options,
     },
     blocked = selected?.outputId != null;
   function choose(x: Item) {
-    setId(x.id);
+    setNewMode(false); setId(x.id);
   }
   return (
     <>
       <div className="core-image-grid">
         <div className="core-image-input">
           {tabs}
-          <Panel title="이미지 주제 입력">
+          <Panel title="이미지 주제 입력" tools={<button type="button" onClick={startNew}>새로 만들기</button>}>
             <label>
               프롬프트
               <textarea
+                ref={promptInput}
                 aria-label="이미지 프롬프트"
-                maxLength={4000}
+                maxLength={3500}
                 placeholder="만들고 싶은 이미지를 설명해 주세요."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
               />
+            </label>
+            <label>이미지에 넣을 짧은 문구 · 선택
+              <input aria-label="이미지에 넣을 짧은 문구" maxLength={120} value={imageText}
+                placeholder="예: 오늘도 나답게" onChange={e => setImageText(e.target.value)}/>
             </label>
             <div className="core-tags">
               {["여행", "일상", "판타지", "도시", "자연"].map((x) => (
@@ -147,11 +168,11 @@ export default function ImageStudio({
           className="core-image-result"
           tools={selected && <State value={selected.status} />}
         >
-          <Media
-            url={selected?.status === "success" ? selected.mediaUrl : null}
-            kind="image"
-            label="실제 생성 결과"
-          />
+          {selected?.status === "success" && safeMedia(selected.mediaUrl) ?
+            <button type="button" className="image-result-enlarge" aria-label="생성 이미지 크게 보기" onClick={() => setPreview(selected)}>
+              <Media url={selected.mediaUrl} kind="image" label="실제 생성 결과"/>
+              <span>크게 보기</span>
+            </button> : <Empty>{newMode ? "새 프롬프트를 입력하고 초안을 저장하세요." : "생성된 이미지가 없습니다."}</Empty>}
           <div className="core-actions">
             {selected && (
               <>
@@ -225,10 +246,11 @@ export default function ImageStudio({
           </div>
         </Panel>
       </div>
+      {preview && <ImageResultPreview item={preview} onClose={() => setPreview(null)}/>}
       <Panel title="최근 생성 이미지" className="core-recent-panel">
         <div className="core-recent">
           {success.map((x) => (
-            <button key={x.id} onClick={() => choose(x)}>
+            <button key={x.id} onClick={() => { choose(x); setPreview(x); }}>
               <Media url={x.mediaUrl} kind="image" />
               <strong>{x.title}</strong>
             </button>

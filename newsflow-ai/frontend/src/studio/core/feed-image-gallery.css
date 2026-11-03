@@ -27,3 +27,6 @@ dialog.feed-image-preview::backdrop{background:rgba(0,7,18,.82)}
 .core-studio .feed-history-select input[type=checkbox]{width:18px;height:18px;min-height:0;margin:0;accent-color:#9f55ff;cursor:pointer}
 .core-studio .feed-history-select:focus-within{outline:2px solid #60dbff;outline-offset:2px}
 .core-studio .feed-history-entry.is-selected>.feed-image-history-card{border-color:#b878ff;box-shadow:0 0 0 2px #9f55ff}
+
+.core-studio .image-result-enlarge{display:block;width:100%;padding:0;position:relative;background:transparent;border:0;cursor:zoom-in}
+.core-studio .image-result-enlarge>span{position:absolute;right:10px;bottom:10px;padding:5px 9px;background:#102039dd;color:white;border-radius:5px}

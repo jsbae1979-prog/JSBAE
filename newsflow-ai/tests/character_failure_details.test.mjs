@@ -12,7 +12,7 @@ const actionDefinition = source.slice(source.indexOf("  function action("), sour
 const actionSetup = actionDefinition.slice(actionDefinition.indexOf("    const connectionUnavailable"), actionDefinition.indexOf("    return ("));
 const actionDisabled = actionDefinition.match(/disabled=\{([\s\S]*?)\n\s+\}/)[1];
 const submitLogic = dialog.slice(dialog.indexOf("  async function submit(e:"), dialog.indexOf("  const field ="))
-  .replace("submit(e: React.FormEvent)", "submit(e)");
+  .replace("submit(e: React.FormEvent, retryFailedRunId?: number)", "submit(e, retryFailedRunId)");
 
 test("diagnosis has its own consent-only external action and matches the backend registry", () => {
   const backend = JSON.parse(readFileSync(new URL("../src/newsflow/studio/actions.json", import.meta.url), "utf8"));

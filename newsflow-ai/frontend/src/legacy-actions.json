@@ -1490,6 +1490,14 @@
         "required": false,
         "default": false,
         "path": false
+      },
+      {
+        "name": "retry_failed_run_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
       }
     ],
     "source": "gui/curation_routes.py",

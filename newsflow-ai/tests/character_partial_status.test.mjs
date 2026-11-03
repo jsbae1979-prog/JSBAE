@@ -9,7 +9,7 @@ const dialog = readFileSync(new URL("../frontend/src/studio/CommandDialog.tsx", 
 const progressLogic = studio.slice(studio.indexOf("  const pendingSceneChecks ="), studio.indexOf("  const failureDetails ="));
 const checkAction = studio.match(/action\("check", job\?\.state[^\n]+/)[0].trim();
 const submitLogic = dialog.slice(dialog.indexOf("  async function submit(e:"), dialog.indexOf("  const field ="))
-  .replace("submit(e: React.FormEvent)", "submit(e)");
+  .replace("submit(e: React.FormEvent, retryFailedRunId?: number)", "submit(e, retryFailedRunId)");
 
 function progress(states) {
   const clips = states.map((state, index) => ({ position: index + 1, state }));

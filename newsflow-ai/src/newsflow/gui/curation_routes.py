@@ -66,7 +66,7 @@ def import_rss(request: Request, rss_xml: str = Form(max_length=20000), permissi
     return go("/news#curation")
 
 
-def _once(request: Request, identity: list, callback, *, retry_preflight=False) -> dict:
+def _once(request: Request, identity: list, callback, *, retry_preflight=False, retry_failed_run_id=None) -> dict:
     """Durable claim before calling. Repeated submits/restarts reuse the record, never the request."""
     sessions = request.app.state.sessions
     digest = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:36]
@@ -83,11 +83,20 @@ def _once(request: Request, identity: list, callback, *, retry_preflight=False) 
                     not_sent = record.get('status') == 'failed' and (
                         not record.get('run_id') or (run is not None and run.status == 'failed'
                             and run.result.get('dispatch_state') == 'not_sent'))
-                    if not (retry_preflight and identity[0] == 'analysis' and not_sent):
+                    from .analysis_progress import retryable_run
+                    confirmed_retry = (retry_failed_run_id is not None and identity[0] == 'analysis'
+                        and record.get('status') == 'failed' and record.get('run_id') == retry_failed_run_id
+                        and retryable_run(run))
+                    if retry_failed_run_id is not None and not confirmed_retry:
+                        raise HTTPException(409, "요청 상태가 바뀌었습니다. 현재 작업을 확인한 뒤 다시 선택하세요.")
+                    if not confirmed_retry and not (retry_preflight and identity[0] == 'analysis' and not_sent):
                         raise HTTPException(409, "이전 요청이 진행 중이거나 전송 결과를 확인해야 합니다. 중복 과금 방지를 위해 다시 전송하지 않았습니다.")
                     history = [*record.get('history', []), {k:v for k,v in record.items() if k != 'history'}]
-                    existing.value = json.dumps({'status':'running', 'history':history})
+                    existing.value = json.dumps({'status':'running', 'history':history,
+                        **({'retry_of_run_id':retry_failed_run_id} if confirmed_retry else {})})
                 else:
+                    if retry_failed_run_id is not None:
+                        raise HTTPException(409, "다시 분석할 실패 기록이 현재 수집 회차와 일치하지 않습니다.")
                     session.add(AppSetting(key=key, value=json.dumps({"status": "running"})))
 
             def remember(run_id):
@@ -120,7 +129,8 @@ def analysis_status(request: Request, collection_context_id: int):
 
 
 @router.post("/news/curation/analyze")
-def analyze(request: Request, collection_context_id: int = Form(ge=1), consent: bool = Form(False)):
+def analyze(request: Request, collection_context_id: int = Form(ge=1), consent: bool = Form(False),
+            retry_failed_run_id: int | None = Form(None, ge=1)):
     ctx = context(request)
     if not consent or not ctx["api_selected"]:
         raise HTTPException(422, "선택한 API의 뉴스 자료 전송·사용량 발생 동의가 필요합니다.")
@@ -142,7 +152,7 @@ def analyze(request: Request, collection_context_id: int = Form(ge=1), consent: 
                                    max_tokens=curation_output_tokens(ai["provider"], ai["model"])),
                            on_run=remember, curate=True,
                            trend_snapshot={**ctx["snapshot"], "collection_context_id": ctx["run_id"]},
-                           curation_top_k=WORKSPACE_TOP_K), 'candidate_selection': selection}, retry_preflight=True)
+                           curation_top_k=WORKSPACE_TOP_K), 'candidate_selection': selection}, retry_preflight=True, retry_failed_run_id=retry_failed_run_id)
     except (IntelligenceError, ValueError) as exc:
         raise HTTPException(422, str(exc)) from None
     return go(f"/news?curation_id={result['run_id']}#curation-results")
