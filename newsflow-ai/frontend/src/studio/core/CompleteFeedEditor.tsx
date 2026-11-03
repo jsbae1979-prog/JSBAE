@@ -2,8 +2,10 @@ import {useEffect,useState} from 'react';
 import type {Item} from '../contracts';
 import {FeedDialog} from '../TopThreeFeeds';
 import {Panel} from './shared';
+import PhotoFeedEditor from './PhotoFeedEditor';
 
-export default function CompleteFeedEditor({batch,rank,f,onSelect}:{batch:Item;rank:number;f:any;onSelect:(n:number)=>void}){
+export default function CompleteFeedEditor({batch,rank,f,onSelect,csrf}:{batch:Item;rank:number;f:any;onSelect:(n:number)=>void;csrf:string}){
+ const [photoEdit,setPhotoEdit]=useState(false);
  const item=batch.items.find((x:Item)=>x.rank===rank);
  const [title,setTitle]=useState(''),[description,setDescription]=useState(''),[accent,setAccent]=useState('#ffb45c'),[large,setLarge]=useState(false),[version,setVersion]=useState('');
  useEffect(()=>{setVersion('');const p=item?.creative_plan;setTitle(p?.headline??item?.content?.title??'');setDescription(p?.key_fact??'');setAccent(p?.accent??'#ffb45c');},[batch.id,rank,item?.attempt]);
@@ -13,6 +15,11 @@ export default function CompleteFeedEditor({batch,rank,f,onSelect}:{batch:Item;r
  const image=version ? `/api/feed-batches/${batch.id}/items/${rank}/file?attempt=${version}` : item.mediaUrl;
  const download=image ? image+(image.includes('?')?'&':'?')+'download=true' : '';
 
+ if(photoEdit)return <PhotoFeedEditor key={`${batch.id}:${rank}`} batch={batch} rank={rank} csrf={csrf} busy={f.busy} local={f.local} onSaved={f.load} resultPicker={<>
+  <button onClick={()=>setPhotoEdit(false)}>AI 완성 이미지로 돌아가기</button>
+  <p>사용 권한을 확인한 사진을 선택하세요. 얼굴을 AI로 재생성하지 않고 글자·배치만 편집합니다.</p>
+  <div className="photo-feed-thumbs">{batch.items.map((x:Item)=><button key={x.rank} aria-pressed={rank===x.rank} disabled={f.busy} onClick={()=>onSelect(x.rank)}>TOP {x.rank}</button>)}</div>
+ </>}/>;
  return <><Panel title={`TOP ${rank} · 완성 피드`}>
   <div className="photo-feed-thumbs">{batch.items.map((x:Item)=><button key={x.rank} aria-pressed={rank===x.rank} disabled={f.busy} onClick={()=>onSelect(x.rank)}>TOP {x.rank}{x.mediaUrl&&<img src={x.mediaUrl} alt="" style={{height:80,objectFit:'contain'}}/>}</button>)}</div>
   {history.length>0&&<label>저장된 버전<select value={version} onChange={e=>setVersion(e.target.value)}><option value="">최신 버전</option>{history.map((x:Item)=><option key={x.attempt} value={String(x.attempt)}>이전 버전 {x.attempt}</option>)}</select></label>}
@@ -20,7 +27,9 @@ export default function CompleteFeedEditor({batch,rank,f,onSelect}:{batch:Item;r
   {image&&<a href={download} download>이미지 저장</a>}
   {large&&image&&<FeedDialog name="완성 피드 확대" onClose={()=>setLarge(false)}><button onClick={()=>setLarge(false)}>닫기</button><img src={image} alt={title} style={{maxHeight:'85vh',maxWidth:'90vw',objectFit:'contain'}}/></FeedDialog>}
  </Panel><Panel title={`TOP ${rank} · 디자인 수정`}>
-  <label>제목<textarea value={title} maxLength={100} disabled={f.busy} onChange={e=>setTitle(e.target.value)}/></label>
+  <button disabled={f.busy} onClick={()=>setPhotoEdit(true)}>사진 선택·직접 편집 · 무료</button>
+  {item.creative_plan?.copy_mode==='rewrite_from_facts'&&<p>아래 문구는 참고 원문입니다. AI가 이미지에 작성한 문구와 다를 수 있습니다.</p>}
+  <label>수정할 제목<textarea value={title} maxLength={100} disabled={f.busy} onChange={e=>setTitle(e.target.value)}/></label>
   <label>핵심 설명<textarea value={description} maxLength={180} disabled={f.busy} onChange={e=>setDescription(e.target.value)}/></label>
   <label>강조색<input type="color" value={accent} disabled={f.busy} onChange={e=>setAccent(e.target.value)}/></label>
   <p>완성 이미지의 글자·색상을 AI로 수정합니다. 새 버전으로 저장됩니다.</p>

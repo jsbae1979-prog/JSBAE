@@ -59,10 +59,10 @@ def prompt_for(source, content, batch_id, attempt, *, local_title=False, safety_
     data = {"batch_id": batch_id, "rank": source["rank"], "attempt": attempt,
             "plan": content, "references": source["references"]}
     if feed_style == "ai_design_v1":
-        from .complete_feed import INSTRUCTION
+        from .complete_feed import request_prompt
         if not creative_plan or creative_plan.get('version') != feed_style:
             raise PublishingError('완성형 이미지 구성 정보를 확인하세요.')
-        return protect(INSTRUCTION + json.dumps({**data, 'creative_plan':creative_plan}, ensure_ascii=False, sort_keys=True), {'source':source,'plan':content})
+        return protect(request_prompt(data,creative_plan), {'source':source,'plan':content})
     if feed_style == "photo_feed_v1" and creative_plan is not None:
         from .feed_art_direction import DIRECTION, checked
         return protect(DIRECTION + json.dumps({**data, "creative_plan": checked(creative_plan)},

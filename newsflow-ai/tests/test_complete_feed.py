@@ -32,8 +32,8 @@ def test_complete_style_generated_with_copy_and_no_local_overlay(budget_setup,mo
         assert r.json()['items'][n]['status']=='success'
     assert len(b.calls)==3
     for item,call in zip(b.service.get(b.id).result['items'],b.calls):
-        assert 'exact Korean title' in call['prompt'] and 'NO text' not in call['prompt']
-        assert item['creative_plan']['headline'] in call['prompt']
+        assert 'ORIGINAL concise Korean headline' in call['prompt']
+        assert item['creative_plan']['news_reference']['title'] in call['prompt']
         assert 'auto_design' not in item and 'title_header_bottom' not in item
 
 @pytest.mark.parametrize('bad',['not_approved','zero','small','no_consent','no_review','revoked'])

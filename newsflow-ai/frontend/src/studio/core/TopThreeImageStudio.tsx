@@ -279,7 +279,7 @@ function FeedLayout({
             </Panel>
           )}
         </div>
-        {b?.feedStyle==='ai_design_v1' ? <CompleteFeedEditor batch={b} rank={active} f={f} onSelect={setActive}/> : b?.items.some((x: Item) => x.rank === active) ? (
+        {b?.feedStyle==='ai_design_v1' ? <CompleteFeedEditor batch={b} rank={active} f={f} onSelect={setActive} csrf={c.view?.csrfToken??""}/> : b?.items.some((x: Item) => x.rank === active) ? (
           <PhotoFeedEditor
             key={`${b.id}:${active}:${b.items.find((x:Item)=>x.rank===active)?.generation_id??"none"}`}
             batch={b}
