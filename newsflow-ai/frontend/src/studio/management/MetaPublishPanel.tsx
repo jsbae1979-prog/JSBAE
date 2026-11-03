@@ -247,9 +247,11 @@ export default function MetaPublishPanel({
               <p>
                 {data?.transferModes?.[row.id] === "direct"
                   ? "프로그램에서 Meta로 직접 업로드"
+                  : data?.transferModes?.[row.id] === "local"
+                    ? "이 PC에서 임시 주소로 전달 · 처리 완료까지 앱을 켜 두세요."
                   : data?.storageReady?.[row.id]
                     ? "전송 승인 시 자동 업로드"
-                    : "Instagram 이미지 자동 업로드 저장소를 처음 한 번 연결하세요."}
+                    : "Instagram 이미지 전달 방식을 설정에서 준비하세요."}
               </p>
               {data?.transferModes?.[row.id] !== "direct" &&
                 !data?.storageReady?.[row.id] && (

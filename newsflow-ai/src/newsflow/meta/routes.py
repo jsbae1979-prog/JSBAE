@@ -28,7 +28,7 @@ def services(request):
                 native_factory=getattr(state, "meta_native_factory", None),
             )
             accounts = MetaConnections(state.sessions, state.config.data_dir, owner=owner, vault=vault)
-            delivery = MetaDelivery(accounts)
+            delivery = MetaDelivery(accounts, local_bridge_factory=getattr(state, "meta_local_bridge_factory", None))
 
             class Graph:
                 supports_direct = staticmethod(MetaGraph.supports_direct)
@@ -66,6 +66,7 @@ def status(request: Request):
         return {
             **accounts.status(),
             "mediaReady": publisher.delivery.ready(),
+            "localImageDelivery": publisher.delivery.local.status() if hasattr(publisher.delivery, "local") else None,
             "executionReady": getattr(request.app.state, "meta_execution_enabled", True),
             "publications": publisher.list(),
             "storageReady": publisher.storage_states(),
@@ -123,6 +124,11 @@ def automatic_storage(
             or {"saved": True}
         )
     )
+
+
+@router.post("/api/meta/local-images")
+def local_images(request: Request, enabled: bool = Form(False), port: int = Form(18769)):
+    return safely(lambda: services(request)[1].delivery.local.configure(enabled, port) or {"saved": True})
 
 
 @router.post("/api/meta/import-token")

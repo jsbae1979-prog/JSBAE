@@ -139,7 +139,9 @@ class MetaPublishing:
     def transfer_modes(self):
         with self.sessions() as db:
             return {
-                r.id: "direct" if self.direct(r.platform, r.media_kind) else "storage"
+                r.id: "direct" if self.direct(r.platform, r.media_kind) else (
+                    "local" if getattr(self.delivery, "local", None) and self.delivery.local.enabled() else "storage"
+                )
                 for r in db.scalars(select(MetaPublication).where(MetaPublication.owner == self.owner))
             }
 

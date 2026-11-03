@@ -95,7 +95,7 @@ def resolve_content(state, identifier):
 
 
 class MetaDelivery:
-    def __init__(self, connections, *, transport=None):
+    def __init__(self, connections, *, transport=None, local_bridge_factory=None):
         self.accounts = connections
         self.transport = transport or self._upload
         from .storage import StorageLinks
@@ -104,6 +104,9 @@ class MetaDelivery:
         from .automatic_storage import AutomaticStorage
 
         self.automatic = AutomaticStorage(connections, self.links)
+        from .local_delivery import LocalImageDelivery
+
+        self.local = LocalImageDelivery(connections, local_bridge_factory)
         self.key = "meta.media." + connections.owner
         self.identifier = fingerprint(["media", connections.owner])[:32]
 
@@ -142,6 +145,8 @@ class MetaDelivery:
             self.accounts.vault.delete(self.identifier, old["identity"], old["reference"])
 
     def available(self, digest):
+        if self.local.enabled():
+            return self.local.ready()
         cfg = self.links.config(digest)
         if cfg:
             return bool(
@@ -155,6 +160,8 @@ class MetaDelivery:
 
     def ready(self):
         # No decryption or remote request during a screen read.
+        if self.local.enabled():
+            return self.local.ready()
         cfg = self.config()
         return self.automatic.ready() or bool(cfg.get("origin") and cfg.get("reference"))
 
@@ -184,6 +191,8 @@ class MetaDelivery:
             conn.close()
 
     def upload(self, path, expected_sha, kind):
+        if self.local.enabled():
+            return self.local.upload(path, expected_sha, kind)
         if self.automatic.ready():
             self.automatic.provision(expected_sha, kind)
         if self.links.config(expected_sha):

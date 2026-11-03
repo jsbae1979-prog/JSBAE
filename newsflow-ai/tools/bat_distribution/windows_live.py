@@ -529,6 +529,10 @@ def start(config, plan):
                 meta_enabled = json.loads((config.program / 'app/layout.json').read_bytes()).get('metaPublishingConnected') is True
                 app.state.meta_native_factory = character_native_factory
                 app.state.meta_execution_enabled = meta_enabled
+                from newsflow.meta.local_image_tunnel import QuickTunnel
+                local_bridge_sha = json.loads((config.program / 'app/layout.json').read_bytes()).get('localImageTunnelSha256')
+                app.state.meta_local_bridge_factory = lambda: QuickTunnel(
+                    config.program / 'tools/cloudflared.exe', local_bridge_sha)
                 request_boundary = MetaRequests(request_boundary, authenticated_app, enabled=meta_enabled)
                 from .registered_rss import install as install_registered_rss
                 registered_rss = install_registered_rss(app)
@@ -596,6 +600,10 @@ def start(config, plan):
             finally:
                 server.should_exit = True
                 thread.join(timeout=2)
+                meta_publisher = getattr(app.state, 'meta_publishing', None)
+                local_delivery = getattr(getattr(meta_publisher, 'delivery', None), 'local', None)
+                if local_delivery:
+                    local_delivery.close()
             if not clean:
                 raise Blocked('shutdown-result-not-confirmed')
             _atomic(config.profile / 'last-exit.json', {'result': 'STOPPED', 'exitCode': 0,

@@ -251,6 +251,33 @@ export default function MetaAccounts({ csrf, platform, onStatus }: {
           </button>
         )}
       </div>
+      {platform !== "facebook" && data?.localImageDelivery && (
+        <details>
+          <summary>이 PC에서 이미지 전달 · 시험 연결</summary>
+          <p>저장소 계정 없이 승인한 이미지만 임시 HTTPS 주소로 전달합니다.
+            Cloudflare 중계 서비스를 거치며, Meta의 이미지 처리가 끝날 때까지 PC와 앱을 켜 두세요.</p>
+          <p>개발·시험용 연결로 주소와 가동 시간이 보장되지 않습니다. 실제 Instagram 전송은 아직 미검증입니다.</p>
+          <p role="status">{data.localImageDelivery.available
+            ? (data.localImageDelivery.enabled ? "선택됨 · 전송 승인 시 연결" : "사용 가능 · 현재 꺼짐")
+            : "전달 도구 준비 필요 · 아직 사용할 수 없습니다."}
+            {data.localImageDelivery.active && " · 이미지 제공 중"}</p>
+          <label>이미지 전달 포트
+            <input type="number" min={1024} max={65535} step={1}
+              value={data.localImageDelivery.port} disabled={busy || data.localImageDelivery.active}
+              onChange={(event) => setData((old: any) => ({ ...old,
+                localImageDelivery: { ...old.localImageDelivery, port: Number(event.target.value) },
+              }))} />
+          </label>
+          <p>다른 프로그램이 사용 중이면 중단하며 자동으로 포트를 바꾸지 않습니다.</p>
+          <button disabled={busy || !data.localImageDelivery.available || data.localImageDelivery.active}
+            onClick={() => void act("local-images", {
+              enabled: String(!data.localImageDelivery.enabled), port: String(data.localImageDelivery.port),
+            })}>
+            {data.localImageDelivery.enabled ? "이 PC 전달 끄기" : "이 PC 전달 사용"}
+          </button>
+          <p>설정을 저장해도 파일을 공개하지 않습니다. 게시 화면의 전송 승인은 별도로 유지됩니다.</p>
+        </details>
+      )}
       {platform !== "facebook" && <AutomaticStorageForm
         busy={busy}
         ready={!!data?.automaticStorageReady}
@@ -258,7 +285,7 @@ export default function MetaAccounts({ csrf, platform, onStatus }: {
       />}
       <p>
         Facebook 이미지·영상과 Instagram 릴스는 직접 전송합니다. Instagram
-        이미지에는 자동 업로드 저장소를 사용합니다.
+        이미지는 자동 업로드 저장소 또는 준비된 이 PC 시험 연결로 전달합니다.
       </p>
       {config && (
         <details>

@@ -6490,5 +6490,28 @@
         "path": false
       }
     ]
+  },
+  {
+    "id": "meta_local_images",
+    "module": "publishing",
+    "label": "이 PC 이미지 전달 설정",
+    "path": "/api/meta/local-images",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "checkbox",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "required": true,
+        "default": 18769,
+        "path": false
+      }
+    ]
   }
 ]
