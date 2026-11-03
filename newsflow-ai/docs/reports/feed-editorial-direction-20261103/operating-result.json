@@ -1,0 +1,16 @@
+{
+  "files": 13,
+  "sourceSha": "816e95a4916530c37bec712f9f672a05f44b33a4",
+  "wasRunning": true,
+  "normalStopPerformed": true,
+  "localStoryRecovered": false,
+  "paidCalls": 0,
+  "pid": 43504,
+  "port": 18768,
+  "databaseTablesPreserved": true,
+  "originalAndBackupsPreserved": true,
+  "otherProfileFilesPreserved": true,
+  "chromeLaunchAccepted": true,
+  "snsCalls": 0,
+  "chromeVisualConfirmation": "Deferred by user; no browser automation repeated"
+}
