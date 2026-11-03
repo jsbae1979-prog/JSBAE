@@ -46,9 +46,36 @@ EDITORIAL_INSTRUCTION = (
     'new people or events. Return only one image, no commentary. '
 )
 
+
+# Revision 2 remains immutable for saved prompts, reservations and comparison images.
+# This is a generation instruction, not OCR validation or a copyright clearance.
+HEADLINE_INSTRUCTION = (
+    'COPY WORKFLOW for rewrite_from_facts, before drawing: '
+    '1. Extract supported facts from news_reference: who, what, status, when, numbers and attribution. '
+    '2. Internally draft three DIFFERENT concise Korean feed headlines from those facts. '
+    '3. Compare each candidate against the source title AND summary. Reject a verbatim title, '
+    'a copied opening clause, a shortened extract, or the same sentence with synonyms, punctuation '
+    'or line breaks changed. Keep necessary proper names, technical terms and exact factual numbers; '
+    'do not distort facts just to reduce word overlap. Change the sentence structure and editorial angle. '
+    'Do not reuse distinctive metaphors, sensational expressions or quotations from the source. '
+    '4. Choose one original, factual candidate and write a separate core explanation adding one '
+    'supported detail rather than repeating the headline. Retain attribution for study findings and opinions. '
+    'A possibility remains a possibility; a pending election must not become an election result. '
+    'Use a question only if the supplied facts let the explanation answer it; do not force questions. '
+    '5. Render ONLY that selected headline and explanation, not the candidates or review notes. '
+    'If facts are insufficient, use a neutral description and 확인 필요 instead of inventing an angle. '
+    'Source title and summary are REFERENCE ONLY, never ready-to-render copy. '
+    'Synthetic writing example (never transfer its names, numbers or events to this news): '
+    'source: 가상시, 전기버스 12대 도입 검토…친환경 교통에 청신호. '
+    'reject: 가상시 전기버스 12대 도입 검토 (copied opening); '
+    'reject: 가상시 전기버스 12대 운행 시작 (changed status); '
+    'alternative: 전기버스 12대, 도입될까? / 가상시가 도입 여부를 검토 중이다. '
+    'Finish the originality and fact checks inside this single image request; do not request another API call. '
+)
+
 def request_prompt(data, creative_plan):
     import json
-    if creative_plan.get('editorial_revision') != 2:
+    if creative_plan.get('editorial_revision') not in (2, 3):
         return INSTRUCTION + json.dumps({**data, 'creative_plan':creative_plan}, ensure_ascii=False, sort_keys=True)
     # Keep full summaries/hashtags out of render-copy fields. Sources remain frozen per job.
     payload={k:v for k,v in data.items() if k != 'plan'}
@@ -56,12 +83,15 @@ def request_prompt(data, creative_plan):
                    copy_mode=creative_plan['copy_mode'], accent=creative_plan['accent'])
     if creative_plan['copy_mode']=='exact_user_copy':
         payload['requested_copy']={'title':creative_plan['headline'],'description':creative_plan['key_fact']}
-    return EDITORIAL_INSTRUCTION + json.dumps(payload, ensure_ascii=False, sort_keys=True)
+    instruction = EDITORIAL_INSTRUCTION
+    if creative_plan.get('editorial_revision') == 3 and creative_plan['copy_mode'] == 'rewrite_from_facts':
+        instruction += HEADLINE_INSTRUCTION
+    return instruction + json.dumps(payload, ensure_ascii=False, sort_keys=True)
 
 def plan(source,content,accent='#ffb45c'):
     from .feed_art_direction import make_plan
     p=make_plan(source,content)
-    p.update(version=STYLE,accent=accent,editorial_revision=2,copy_mode='rewrite_from_facts',
+    p.update(version=STYLE,accent=accent,editorial_revision=3,copy_mode='rewrite_from_facts',
              news_reference={'title':source['title'],'summary':source['body'],
                              'references':deepcopy(source['references'])})
     return p

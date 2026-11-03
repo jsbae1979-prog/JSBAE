@@ -24,7 +24,7 @@ def content(s):
 
 def test_new_copy_uses_frozen_full_facts_not_extracted_render_copy():
     s=source(); original=deepcopy(s); c=content(s); p=plan(s,c)
-    assert p['editorial_revision']==2 and p['copy_mode']=='rewrite_from_facts'
+    assert p['editorial_revision']==3 and p['copy_mode']=='rewrite_from_facts'
     data={'plan':c,'rank':1,'references':s['references']}
     prompt=request_prompt(data,p)
     payload=json.loads(prompt[prompt.index('{'):])
