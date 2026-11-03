@@ -62,6 +62,7 @@ CALLBACK_REJECTION_MESSAGES = {
     "duplicate_field": "Google 인증 응답에 중복된 항목이 있습니다.",
     "empty_field": "Google 인증 응답에 빈 항목이 있습니다.",
     "field_format": "Google 인증 응답 항목의 길이 또는 문자 형식이 올바르지 않습니다.",
+    "issuer": "Google 인증 응답의 발급기관이 일치하지 않습니다.",
     "result_fields": "Google 인증 응답의 성공·오류 항목 구성이 올바르지 않습니다.",
     "provider_denied": "Google 권한 승인이 취소되었습니다.",
     "provider_error": "Google이 인증 오류를 반환했습니다.",
@@ -467,7 +468,7 @@ class LoopbackCallbackListener:
                 return
             try:
                 values: dict[str, str] = {}
-                allowed = {"state", "code", "error", "error_description", "scope", "authuser", "prompt"}
+                allowed = {"state", "code", "error", "error_description", "scope", "authuser", "prompt", "iss"}
                 if not 1 <= len(pairs) <= _MAX_FIELDS:
                     raise CallbackError("callback_invalid")
                 for key, value in pairs:
@@ -481,6 +482,9 @@ class LoopbackCallbackListener:
                             or any(ord(character) < 32 or ord(character) == 127 for character in value)):
                         raise CallbackError("callback_invalid", reason="field_format")
                     values[key] = value
+                # RFC 9207: compare the authorization response issuer exactly.
+                if "iss" in values and values["iss"] != "https://accounts.google.com":
+                    raise CallbackError("callback_invalid", reason="issuer")
                 state = values.get("state", "")
                 if not re.fullmatch(r"[A-Za-z0-9_-]{43,128}", state) or not hmac.compare_digest(
                     hashlib.sha256(state.encode("ascii")).digest(), self._state_digest,
