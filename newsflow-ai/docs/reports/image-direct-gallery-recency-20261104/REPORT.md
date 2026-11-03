@@ -21,3 +21,8 @@
 
 ## Limits
 No real image quality or external provider reliability claim is made by fake tests. Old analysis response cannot be reconstructed. Operating application validation is recorded separately after exact-file deployment. No schema migration, credential change, original-media deletion, or library UI redesign.
+
+## Operating application
+Deployed code: `bcdd42ff1ebdde10bf42c20d544de9c49a38dc83`. Exactly 8 program/static files updated after a normal Stop; one Start succeeded on loopback port 18768. No active generation/analysis or reserved request was present before stopping. Private rollback contains the DB snapshot and changed program files; secrets/DB/media were not committed.
+
+All DB table snapshots, original backups and other profile-file hashes were preserved (only normal session/browser/exit records may change). Chrome launch was accepted; actual user-visible confirmation is pending. No real provider call, collection, deletion, publishing, or automatic retry occurred.
