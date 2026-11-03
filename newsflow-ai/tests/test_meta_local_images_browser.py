@@ -44,7 +44,7 @@ def test_local_image_settings_truthful_and_no_network(app, browser, connected, t
         else:
             expect(button).to_be_disabled()
             expect(
-                page.get_by_text("전달 도구를 먼저 준비해 주세요.", exact=True)
+                page.get_by_text("이미지 전송 연결 준비 필요", exact=True)
             ).to_be_visible()
         assert not bridge.started and publisher.graph.calls == []
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")

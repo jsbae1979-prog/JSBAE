@@ -32,7 +32,7 @@ export default function LocalImageSettings({ data, busy, save }: {
       </header>
       <p>별도 저장소 계정 없이 이미지를 전달합니다.</p>
       <div className="meta-local-delivery__action">
-        <span>{!data.available ? "전달 도구를 먼저 준비해 주세요."
+        <span>{!data.available ? "이미지 전송 연결 준비 필요"
           : data.active ? "완료될 때까지 앱을 켜 두세요."
           : "게시 화면에서 전송을 승인하면 연결됩니다."}</span>
         <button disabled={locked || (!data.available && !data.enabled)}
@@ -53,7 +53,7 @@ export default function LocalImageSettings({ data, busy, save }: {
         </div>
         {!valid && <p role="alert">1024~65535 중 8765·18768을 제외한 포트를 입력하세요.</p>}
         <ul>
-          <li>Cloudflare 임시 연결을 사용합니다. 실제 Instagram 전송은 아직 미확인입니다.</li>
+          <li>Cloudflare의 cloudflared 프로그램으로 임시 연결합니다. 실제 Instagram 전송은 아직 미확인입니다.</li>
           <li>설정만으로 파일을 공개하지 않습니다. 전송 완료까지 PC와 앱을 켜 두세요.</li>
           <li>시험용 연결로 중단될 수 있습니다. 포트 충돌 시 자동 변경하지 않습니다.</li>
         </ul>
