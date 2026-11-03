@@ -33,3 +33,10 @@ One existing Starlette/httpx deprecation warning remains. No full unrelated regr
 - New AI output quality, factual fidelity and literal text require a later approved live generation and human review. Prompt tests do not guarantee future image pixels or legal clearance.
 - A real photograph needs a suitable license/permission; being in a news article is not evidence of reuse rights. This implementation does not obtain or certify such permission.
 - Existing AI-generated TOP 3 images are preserved; they are not converted into genuine photographs.
+
+## Operating application
+
+Applied product commit ed9527fc55aaf02e3299518c10a937ef1e77a964: two Python modules and the rebuilt frontend entry/JavaScript (four files). Normal Stop/Start performed once after confirming no active generation. Chrome launch was accepted; server listens on 127.0.0.1:18768. The user's authenticated screen was not clicked by automation.
+
+Pre-change consistent SQLite backup was verified. Before/after per-table content hashes match. Existing profile media/credential files, original database and backups A/B remain unchanged; only expected session/browser runtime records changed. Launch security/settings hash remains unchanged. No paid API or SNS calls occurred. Private backup/evidence stays local and is not committed.
+
