@@ -1,0 +1,270 @@
+{
+  "tested_head": "dc843b3a6351849f47339cb1f2353243a660eb8c",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "scope": "Windows local development tests; no live providers or operating deployment",
+  "environment": {
+    "python": "3.14.7 AMD64",
+    "pytest": "8.4.2",
+    "node": "24.19.0",
+    "os": "Windows 11 10.0.26300"
+  },
+  "results": {
+    "full-python": {
+      "counts": {
+        "PASS": 7221,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 14
+      },
+      "xml_sha256": "2f6da8b134f9fd9e5b7199b278ab60ee44678ea399eab6c4a5363d6679d7d69c",
+      "prior_failures": {
+        "total": 137,
+        "now_pass": 135,
+        "still_failed": 0,
+        "not_found": 2
+      },
+      "failures": [],
+      "skip_reasons": {
+        "tests.test_ai_video_compose::test_overlay_draws_opaque_label_band_and_leaves_the_clip_visible": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:305: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_overlay_and_card_enforce_the_same_subtitle_safe_area[five-plus-lines]": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:322: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_overlay_and_card_enforce_the_same_subtitle_safe_area[five-plus-lines-with-spaces]": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:322: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_overlay_and_card_enforce_the_same_subtitle_safe_area[four-lines-below-safe-bottom]": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:322: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_card_is_deterministic_has_no_ai_label_and_ignores_clip_fields": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:338: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_fake_provider_clip_and_card_render_a_playable_labelled_mp4[planned-seconds]": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:359: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_fake_provider_clip_and_card_render_a_playable_labelled_mp4[audio-fit]": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:359: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_clip_and_card_scene_files_share_one_h264_header_even_for_tagged_clips": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:404: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_landscape_clip_shorter_than_scene_is_cropped_looped_and_its_audio_dropped": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:427: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_corrupted_clip_fails_probe_and_render": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:489: Korean font not configured (NEWSFLOW_FONT_PATH)",
+        "tests.test_ai_video_compose::test_clip_store_rejects_symlinks": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_compose.py:691: symlinks are not available for this user",
+        "tests.test_ai_video_settings::test_video_key_store_fails_closed_without_dpapi": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_ai_video_settings.py:1166: Windows has a real DPAPI cipher",
+        "tests.test_live_ai::test_single_approved_openai_script_generation": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_live_ai.py:25: opt-in paid AI live test: set NEWSFLOW_AI_LIVE_TEST=1, NEWSFLOW_AI_API_KEY and NEWSFLOW_AI_LIVE_MAX_TOKENS",
+        "tests.test_live_rss::test_google_news_live": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai\\tests\\test_live_rss.py:11: opt-in live RSS: set NEWSFLOW_LIVE_TEST=1"
+      },
+      "renamed_successors": [
+        {
+          "id": "tests.test_feed_growth_browser::test_free_title_caption_edit_preserves_versions_without_performance_requests",
+          "outcome": "PASS"
+        },
+        {
+          "id": "tests.test_first_search_budget::test_stale_proof_and_active_auth_check_block[authentication_verified_at-stale-API \\uc5f0\\uacb0 \\ud655\\uc778 \\uae30\\uac04(24\\uc2dc\\uac04)\\uc774 \\uc9c0\\ub0ac\\uc2b5\\ub2c8\\ub2e4. \\uc124\\uc815\\xb7\\uad00\\ub9ac\\uc5d0\\uc11c API \\ud0a4 \\ud14c\\uc2a4\\ud2b8\\ub97c \\ub2e4\\uc2dc \\uc2e4\\ud589\\ud558\\uc138\\uc694. \\uc720\\ub8cc \\uc0dd\\uc131\\uc740 \\uc804\\uc1a1\\ud558\\uc9c0 \\uc54a\\uc558\\uc2b5\\ub2c8\\ub2e4.]",
+          "outcome": "PASS"
+        }
+      ]
+    },
+    "font-followup": {
+      "counts": {
+        "PASS": 10,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 0
+      },
+      "xml_sha256": "5a446acc152184afa10de035d65886e4d18f87e5743bb2ef14e457916073fd42"
+    },
+    "studio-v3": {
+      "counts": {
+        "PASS": 58,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 0
+      },
+      "xml_sha256": "74f69de569e48e1c8d01f87c8c39fe05756bb193979d7b323948a57e1c0f0349"
+    },
+    "top3-tools": {
+      "counts": {
+        "PASS": 25,
+        "FAIL": 0,
+        "ERROR": 0,
+        "SKIP": 0
+      },
+      "xml_sha256": "164e3b61afb77fb5550a7ac81c5cab24627cacb55d346d75a7c7f3d867a7d72c"
+    },
+    "combined_python": {
+      "PASS": 7231,
+      "FAIL": 0,
+      "ERROR": 0,
+      "SKIP": 4,
+      "method": "7,221 full-run passes plus the 10 previously skipped font cases; no duplicate passed cases added."
+    }
+  },
+  "frontend": {
+    "contracts": 48,
+    "extra": 18,
+    "fail": 0,
+    "skip": 0,
+    "typecheck_exit": 0,
+    "build_exit": 0
+  },
+  "http_smoke": {
+    "pass": 26,
+    "fail": 0,
+    "error": 0,
+    "results": [
+      {
+        "kind": "react-shell",
+        "module": "dashboard",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "create",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "news",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "news",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "shorts",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "shorts",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "characters",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "characters",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "images",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "images",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "automation",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "automation",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "library",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "library",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "publishing",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "publishing",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "analytics",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "analytics",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "settings",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "settings",
+        "status": 200
+      },
+      {
+        "kind": "react-shell",
+        "module": "onboarding",
+        "status": 200
+      },
+      {
+        "kind": "read-model",
+        "module": "onboarding",
+        "status": 200
+      },
+      {
+        "kind": "static-asset",
+        "path": "/studio/assets/index-DX8jpYwm.js",
+        "status": 200
+      },
+      {
+        "kind": "static-asset",
+        "path": "/studio/assets/index-BMwsyBUX.css",
+        "status": 200
+      },
+      {
+        "kind": "static-asset",
+        "path": "/studio/assets/NotoSansKR.ttf",
+        "status": 200
+      }
+    ],
+    "all_tables_unchanged": true,
+    "external_requests": 0,
+    "operating_access": false,
+    "browser_visual_review": false
+  },
+  "preservation": {
+    "programs": true,
+    "files": true,
+    "tables": true,
+    "layout": true,
+    "launch": true,
+    "workingChanges": true,
+    "originalsMatch": true
+  },
+  "working_changes_preserved": [
+    "frontend/src/studio/management/Analytics.tsx",
+    "src/newsflow/character/topics.py",
+    "src/newsflow/gui/character_automation_routes.py"
+  ],
+  "evidence": {
+    "font-followup.log": "39638cd1716b0d988994f7a8c1dcf8730564c115e5ae433bf1f28d92ff8c2e10",
+    "font-followup.xml": "5a446acc152184afa10de035d65886e4d18f87e5743bb2ef14e457916073fd42",
+    "frontend-contracts.log": "71046043ef752ac0e1eece988ca88f4811cb2537d2c0d25cb9c955144df00cda",
+    "frontend-extra.log": "d02c8f558cff92e9a93d1255b3b7994306602499822ba83f06e96a15fdf1c17e",
+    "full-python.log": "4c2f1b019a146ac9b60414ee247ededb21981494ba3c6548012dc5a60b54a927",
+    "full-python.xml": "2f6da8b134f9fd9e5b7199b278ab60ee44678ea399eab6c4a5363d6679d7d69c",
+    "react-build.log": "623135c7a74765f6a2b17475587527d18f2cda8ecf2c0a6a7d6f26d5c440e6c6",
+    "studio-v3.log": "ff70e863b34903b0fc1dae55b7b405884aaaecae9865d37dcb5dcede5e3b2846",
+    "studio-v3.xml": "74f69de569e48e1c8d01f87c8c39fe05756bb193979d7b323948a57e1c0f0349",
+    "top3-tools.log": "402286035bdee583ba67e3edf86427fac5bec8e7b11f89f1bab4d2b8b0f3b3d4",
+    "top3-tools.xml": "164e3b61afb77fb5550a7ac81c5cab24627cacb55d346d75a7c7f3d867a7d72c",
+    "typecheck.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "not_verified": [
+    "Python 3.12 full regression",
+    "actual paid AI generation and billing",
+    "actual OAuth/login/refresh",
+    "Meta/YouTube upload/publishing",
+    "user Chrome visual review",
+    "CI-only tools/studio_v3/integration/test_full_app_forms.py locally",
+    "new CI run"
+  ]
+}
