@@ -9,8 +9,24 @@ class FeedBudget(FeedCosts):
     def __init__(self,readiness,clock=None):
         super().__init__(account_scope=readiness.account_scope,readiness=readiness,clock=clock)
 
+    def standing_limit(self):
+        fn=getattr(self.readiness,'standing_limit',None)
+        return fn() if fn else None
+
+    def apply_settings(self,row):
+        limit=self.standing_limit()
+        if not limit:return None
+        prepared=deepcopy(row)
+        prepared.options={**row.options,'costs':self.refresh(row)}
+        state=self.approve(prepared,prepared.options['costs']['quote']['hash'],limit,True)
+        state['approval']['source']='settings'
+        return state
+
     def quote(self,row):
         q=super().quote(row)
+        approval=row.options.get('costs',{}).get('approval',{})
+        if approval.get('source')=='settings' and self.standing_limit()!=approval.get('limitUsd'):
+            raise PublishingError('설정의 사용 승인·한도가 변경됐습니다.')
         if q.get('basis')!='app_budget_estimate' or q.get('pricingVersion')!=rates.VERSION or not rates.current(self.clock()):
             raise PublishingError('새 이미지 예산을 계산하고 승인하세요.')
         selected=self.readiness(row.options['selection'])
@@ -31,8 +47,15 @@ class FeedBudget(FeedCosts):
         for item in row.result['items']:
             if item['status']!='pending':continue
             source=next(s for s in row.evidence['sources'] if s['rank']==item['rank'])
-            prompt=prompt_for(source,item['content'],row.id,item['attempt'],local_title=row.options.get('title_layout')==TITLE_LAYOUT,safety_version=item.get('safety_version'),feed_style=row.options.get('feed_style'))
+            prompt=prompt_for(source,item['content'],row.id,item['attempt'],local_title=row.options.get('title_layout')==TITLE_LAYOUT,safety_version=item.get('safety_version'),feed_style=row.options.get('feed_style'),creative_plan=item.get('creative_plan'))
             result=rates.estimate(row.options['selection'],prompt,now=self.clock())
+            if item.get('creative_plan',{}).get('reference'):
+                # One 1080x1350 reference: 16x16 patch allowance (68x85 tokens).
+                # App planning heuristic, NOT a documented vendor tokenizer or charge ceiling.
+                extra=Decimal(68*85)*Decimal('8')/Decimal(1000000)
+                result['estimatedUsd']=str(Decimal(result['estimatedUsd'])+extra)
+                result['reserveUsd']=str(Decimal(result['reserveUsd'])+extra*2)
+                result['inputBasis']='text_bytes_plus_reference_16px_patch_estimate'
             bounds.append({'rank':item['rank'],'attempt':item['attempt'],
                            'maximumUsd':result['reserveUsd'],'estimate':result,
                            'promptHash':fingerprint(prompt)})
@@ -75,6 +98,8 @@ class FeedBudget(FeedCosts):
             raise PublishingError('저장된 이미지 사용량의 작업 연결이 다릅니다.')
         usage=generated.result.get('usage')
         amount=rates.usage_cost(usage)
+        if amount is not None and item.get('creative_plan',{}).get('reference'):
+            amount=str((Decimal(8)*usage['input_tokens']+Decimal(30)*usage['output_tokens'])/Decimal(1000000))
         entry.update(generationId=generated.id,billingStatus='usage_unconfirmed',billingVerified=False)
         if amount is not None and generated.status=='success':
             entry.update(usage=deepcopy(usage),observedUsd=amount,billingStatus='usage_calculated',
@@ -90,6 +115,7 @@ class FeedBudget(FeedCosts):
                  estimatedUsd=str(sum((Decimal(b['estimate']['estimatedUsd']) for b in unreserved(row,state,q)),Decimal(0))) if q else None,
                  usageCalculatedUsd=str(sum((Decimal(r.get('observedUsd','0')) for r in state.get('reservations',[])),Decimal(0))),
                  usageUnknown=any(r.get('billingStatus') in {'unconfirmed','usage_unconfirmed'} for r in state.get('reservations',[])))
+        v['settingsLimitUsd']=self.standing_limit()
         v['approved']=v['approved'] and not reason
         if reason:v['message']=reason
         elif q:v['message']='앱 예산 계산 완료 · 예상 비용이며 OpenAI의 최종 청구 상한을 보장하지 않습니다.'

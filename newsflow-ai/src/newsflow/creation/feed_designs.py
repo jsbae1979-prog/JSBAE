@@ -26,6 +26,9 @@ class FeedDesigns:
         with self.sessions() as s:
             stored=s.get(AppSetting,self.key(batch,rank))
             if stored:return json.loads(stored.value)
+        if item.get('auto_design'):
+            return {'revision':0,'draft':deepcopy(item['auto_design']), 'background':'generated',
+                    'generation_id':item['generation_id'], 'assets':[], 'versions':[], 'posts':{}}
         # Exact saved text; never invent or truncate a short fact. Long copy remains editable.
         short=source['body'] if len(source['body'])<=60 else ''
         return {'revision':0,'draft':{**deepcopy(DEFAULT),'title':item['content']['title'],'description':short,
@@ -88,6 +91,7 @@ class FeedDesigns:
                    state.get('generation_id')!=item['generation_id'] and
                    (not selected or selected['sha256']!=generated['sha256']))
         return {**state,'newGeneratedBackground':generated['id'] if fresh else None,
+            'autoDesign':deepcopy(item.get('auto_design')), 'designReview':deepcopy(item.get('design_review')),
             'batch':batch,'rank':rank,'articleId':source['article_id'],'sourceTitle':source['title'],
             'originalSummary':source['body'],'candidates':candidates,
             'copyOptions':copy_options(source,item,state['draft']),

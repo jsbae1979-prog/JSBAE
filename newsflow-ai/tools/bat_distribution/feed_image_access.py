@@ -27,12 +27,14 @@ class _Generation(ImageGenerationService):
                           if r['requestKey']==f"{row.id}:{rank}:{item['attempt']}"),None) if item else None
         bound=next((b for b in q['bounds'] if item and b['rank']==rank and b['attempt']==item['attempt']),None)
         source=next((s for s in row.evidence['sources'] if s['rank']==rank),None)
-        if (not item or item['status']!='running' or not source or not reservation or not bound
+        from newsflow.creation.complete_feed import reference
+        expected_reference=reference(owner.app.state.top_three_feeds,item) if item else None
+        if (not item or item['status']!='running'  or not source or not reservation or not bound
                 or reservation.get('quoteHash')!=q['hash'] or reservation.get('billingStatus')!='unconfirmed'
                 or row.options['costs'].get('approval',{}).get('quoteHash')!=q['hash']
                 or style!='full_card' or article_id!=source['article_id'] or analysis_id!=row.evidence['analysis_id']
                 or context.get('batch_id')!=row.id or context.get('rank')!=rank or context.get('attempt')!=item['attempt']
-                or fingerprint(prompt)!=bound.get('promptHash') or kw.get('reference') is not None
+                or fingerprint(prompt)!=bound.get('promptHash') or kw.get('reference')!=expected_reference
                 or kw.get('provider','openai')!='openai' or kw.get('execution')!=row.options['selection']):
             raise CredentialError('이미지 예산·문구·작업 범위를 다시 확인하세요.')
         check_snapshot(kw['execution'],'image')

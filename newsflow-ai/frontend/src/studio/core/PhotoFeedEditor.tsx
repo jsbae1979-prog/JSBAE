@@ -6,6 +6,7 @@ import "./photo-feed.css";
 function visualKey(form: Item, background: string) {
   const keys = [
     "style",
+    "typography",
     "title",
     "description",
     "brand",
@@ -322,6 +323,8 @@ export default function PhotoFeedEditor({
             <Empty>배경 이미지를 선택하세요.</Empty>
           )}
         </div>
+        {state?.designReview && <small role="status">{state.designReview.layout === 'passed'
+          ? '자동 구성 완료 · 내용과 이미지를 확인하세요.' : '배경 생성 완료 · 문구를 조정하세요.'}</small>}
         <p>
           {version
             ? `사진 중심 피드 · 버전 ${version}`
@@ -396,6 +399,9 @@ export default function PhotoFeedEditor({
             )}
             <details>
               <summary>배치·색상·자르기</summary>
+              {state.autoDesign && currentImage && <button type="button" onClick={()=>{
+                setBackground(currentImage.id);change(state.autoDesign);
+              }}>자동 구성으로 되돌리기 · 무료</button>}
               {text("강조 단어", "emphasis")}
               <label>
                 강조색

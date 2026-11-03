@@ -216,6 +216,23 @@ export default function TopThreeFeeds({
       setMessage("제작 상태를 저장했습니다. 실제 게시되지 않았습니다.");
     });
   }
+  async function runSettings(edit?:Item) {
+    if(!batch||busy||!ready||!batch.costReview?.settingsLimitUsd)return;
+    await local(async()=>{
+      stop.current=false;setStopRequested(false);
+      let b=batch;
+      if(edit){b=await post(`/api/feed-batches/${b.id}/change`,{revision:b.revision,action:'design_edit',...edit});show(b);}
+      b=await post(`/api/feed-batches/${b.id}/cost-review`,{revision:b.revision});show(b);
+      if(!b.costReview?.approved)throw Error(b.costReview?.message??'설정의 사용 한도를 확인하세요.');
+      if(b.paused){b=await post(`/api/feed-batches/${b.id}/change`,{revision:b.revision,action:'resume'});show(b);}
+      while(!stop.current&&b.items.some((x:Item)=>x.status==='pending')){
+        setRunningRank(b.items.find((x:Item)=>x.status==='pending')?.rank??null);
+        b=await post(`/api/feed-batches/${b.id}/step`,{consent:true,reviewed:true});show(b);
+        if(b.items.some((x:Item)=>['unknown','failed'].includes(x.status))||!b.canGenerate)break;
+      }
+      setMessage('제작 상태를 저장했습니다.');
+    });
+  }
   const [regenerate, setRegenerate] = useState<Item | null>(null);
   const dialogs = (
     <>
@@ -415,6 +432,7 @@ export default function TopThreeFeeds({
           show,
           load,
           refreshCosts,
+          runSettings,
           setMessage,
           approve: (item?: Item) => {
             if (

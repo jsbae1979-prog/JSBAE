@@ -3,6 +3,7 @@ import TopThreeFeeds, { FeedDialog } from "../TopThreeFeeds";
 import FeedCostReview from "../FeedCostReview";
 import FeedGenerationProgress from "./FeedGenerationProgress";
 import PhotoFeedEditor from "./PhotoFeedEditor";
+import CompleteFeedEditor from "./CompleteFeedEditor";
 import FeedImageHistory from "./FeedImageHistory";
 import FeedImagePreview, {
   completedFeedImages,
@@ -22,7 +23,7 @@ function FeedLayout({
 }) {
   const [active, setActive] = useState(1),
     [scope, setScope] = useState("all"),
-    [style, setStyle] = useState("photo_feed_v1");
+    [style, setStyle] = useState("ai_design_v1");
   const [costOpen, setCostOpen] = useState(false);
   const pendingRank = useRef<number | null>(null);
   const [preview, setPreview] = useState<{
@@ -126,7 +127,8 @@ function FeedLayout({
               onChange={setStyle}
               disabled={blocked}
               options={{
-                photo_feed_v1: "사진 중심 피드 · 무료 한글 편집",
+                ai_design_v1: "AI 완성 피드 · 한글·디자인 함께 생성",
+                photo_feed_v1: "사진 중심 피드 · 무료 글자 편집",
                 legacy: "기존 뉴스 카드",
               }}
             />
@@ -186,7 +188,7 @@ function FeedLayout({
                     }),
                   );
                   f.setMessage(
-                    "뉴스와 스타일 저장 · 생성은 비용 승인 후 별도 실행",
+                    "뉴스와 스타일 저장 · 이미지 생성 버튼으로 진행하세요",
                   );
                 })
               }
@@ -203,7 +205,11 @@ function FeedLayout({
                 stopping={f.stopRequested}
                 message={f.message}
               />
-              <button className="primary" disabled={blocked} onClick={()=>setCostOpen(true)}>
+              {b.costReview?.settingsLimitUsd && <p>작업 한도 US${b.costReview.settingsLimitUsd} · 설정값 사용</p>}
+              <button className="primary" disabled={blocked} onClick={()=>{
+                if(b.costReview?.settingsLimitUsd){if(b.items.some((x:Item)=>x.status==='pending'))f.runSettings();else f.runSettings({action:'regenerate',rank:active,consent:true,reviewed:true});return;}
+                setCostOpen(true);
+              }}>
                 {b.items.some((x:Item)=>x.status==="pending") ? "이미지 생성" : `TOP ${active} 이미지 다시 만들기`}
               </button>
               {f.busy && f.runningRank != null && <button onClick={f.pause} disabled={f.stopRequested}>현재 요청 후 중단</button>}
@@ -273,7 +279,7 @@ function FeedLayout({
             </Panel>
           )}
         </div>
-        {b?.items.some((x: Item) => x.rank === active) ? (
+        {b?.feedStyle==='ai_design_v1' ? <CompleteFeedEditor batch={b} rank={active} f={f} onSelect={setActive}/> : b?.items.some((x: Item) => x.rank === active) ? (
           <PhotoFeedEditor
             key={`${b.id}:${active}:${b.items.find((x:Item)=>x.rank===active)?.generation_id??"none"}`}
             batch={b}

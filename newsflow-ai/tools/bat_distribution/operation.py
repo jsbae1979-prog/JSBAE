@@ -102,7 +102,7 @@ class OperatingRequests(LocalWorkRequests):
                         break
                 try:
                     fields = parse_qs(body.decode('utf8'), keep_blank_values=True)
-                    valid = valid and (fields.get('pricing_mode', ['manual']) == ['manual'] if path == '/video-ai-settings/models' else fields.get('action') in ([a] for a in ('edit','retitle','pause','resume','recover','regenerate')))
+                    valid = valid and (fields.get('pricing_mode', ['manual']) == ['manual'] if path == '/video-ai-settings/models' else fields.get('action') in ([a] for a in ('edit','design_edit','retitle','pause','resume','recover','regenerate')))
                 except UnicodeError:
                     valid = False
                 if not valid:

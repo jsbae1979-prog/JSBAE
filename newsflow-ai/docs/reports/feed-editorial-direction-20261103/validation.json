@@ -1,0 +1,19 @@
+{
+  "python": "3.14.7",
+  "runs": {
+    "full-python": 134,
+    "layout-followup": 13,
+    "studio-v3": 58,
+    "top3-tools": 25
+  },
+  "uniquePythonPass": 218,
+  "frontendContractPass": 53,
+  "reactBuild": "PASS",
+  "typecheck": "PASS",
+  "fail": 0,
+  "error": 0,
+  "skip": 0,
+  "newsflowPaidCalls": 0,
+  "codexBuiltinPreviewImages": 1,
+  "browserUI": "NOT VERIFIED - user confirmation pending"
+}

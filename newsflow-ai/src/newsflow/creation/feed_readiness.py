@@ -19,6 +19,11 @@ class FeedReadiness:
     def __init__(self, state):
         self.connections = ProviderConnections(state)
 
+    def standing_limit(self):
+        from newsflow.intelligence.api_settings import read_api_settings
+        saved=read_api_settings(self.connections.sessions,'openai')
+        return str(saved.request_limit_usd) if saved.approved and saved.request_limit_usd>0 else None
+
     def account_scope(self):
         status=self.connections.status('openai','image')
         rev=revision(self.connections.stores['openai'])

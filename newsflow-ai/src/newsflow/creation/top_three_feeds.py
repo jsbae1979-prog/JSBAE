@@ -55,9 +55,18 @@ def content_for(item):
     return {"title": title, "body": body, "hashtags": hashtags}
 
 
-def prompt_for(source, content, batch_id, attempt, *, local_title=False, safety_version=None, feed_style=None):
+def prompt_for(source, content, batch_id, attempt, *, local_title=False, safety_version=None, feed_style=None, creative_plan=None):
     data = {"batch_id": batch_id, "rank": source["rank"], "attempt": attempt,
             "plan": content, "references": source["references"]}
+    if feed_style == "ai_design_v1":
+        from .complete_feed import INSTRUCTION
+        if not creative_plan or creative_plan.get('version') != feed_style:
+            raise PublishingError('완성형 이미지 구성 정보를 확인하세요.')
+        return protect(INSTRUCTION + json.dumps({**data, 'creative_plan':creative_plan}, ensure_ascii=False, sort_keys=True), {'source':source,'plan':content})
+    if feed_style == "photo_feed_v1" and creative_plan is not None:
+        from .feed_art_direction import DIRECTION, checked
+        return protect(DIRECTION + json.dumps({**data, "creative_plan": checked(creative_plan)},
+            ensure_ascii=False, sort_keys=True), {"source":source,"plan":content})
     if feed_style == "photo_feed_v1":
         return protect("Create one full-bleed editorial representative illustration, portrait 4:5. "
             "Image only: NO text, headline, caption, hashtags, logos, numbers, borders or blank header. "
@@ -161,7 +170,7 @@ class TopThreeFeeds:
                                   .order_by(IntelligenceRun.id.desc()).limit(30)))
 
     def create(self, analysis_id, selected, *, rank=None, feed_style="legacy"):
-        if feed_style not in {"legacy","photo_feed_v1"}:raise PublishingError("피드 스타일을 확인하세요.")
+        if feed_style not in {"legacy","photo_feed_v1","ai_design_v1"}:raise PublishingError("피드 스타일을 확인하세요.")
         if rank is not None and (type(rank) is not int or rank not in {1,2,3}):
             raise PublishingError("제작할 뉴스 순위를 확인하세요.")
         frozen = snapshot("image", selected)
@@ -199,8 +208,13 @@ class TopThreeFeeds:
                     urls.update(canonical); titles.add(title_key)
                     keys = {"top3-event:" + digest(["headline", title_key])[:38]}
                     keys.update("top3-event:" + digest(["source", *u])[:38] for u in canonical)
-                    if any(s.get(AppSetting, key) for key in keys):
-                        raise PublishingError("이미 TOP 3 제작 작업에 포함된 사건입니다. 기존 결과에서 개별 재생성을 검토하세요.")
+                    for key in keys:
+                        claim_row=s.get(AppSetting,key)
+                        if not claim_row:continue
+                        owner=s.get(IntelligenceRun,int(claim_row.value))
+                        if not (feed_style=='ai_design_v1' and owner and owner.evidence.get('analysis_id')==analysis_id
+                                and not any(i['status'] in {'running','unknown'} for i in owner.result['items'])):
+                            raise PublishingError("이미 TOP 3 제작 작업에 포함된 사건입니다. 기존 결과에서 개별 재생성을 검토하세요.")
                     event_claims.update(keys)
                     src = {"rank": item["rank"], "article_id": item["article_id"],
                            "article_ids": item["article_ids"], "title": item["title"],
@@ -210,6 +224,13 @@ class TopThreeFeeds:
                     items.append({"rank": src["rank"], "content": content_for(item), "attempt": 1,
                                   "status": "pending", "generation_id": None, "history": [],
                                   "safety_version": 1, "image_safety": context_safety(src)})
+                if feed_style == "photo_feed_v1":
+                    from .feed_art_direction import make_plan
+                    for src, item in zip(sources, items):
+                        item['creative_plan'] = make_plan(src, item['content'])
+                if feed_style == 'ai_design_v1':
+                    from .complete_feed import plan
+                    for src, item in zip(sources, items):item['creative_plan']=plan(src,item['content'])
                 evidence = {"analysis_id": group["run"].id, "sources": sources}
                 row = IntelligenceRun(kind=KIND, status="saved", provider="openai",
                     options={"selection": frozen, "source_hash": digest(evidence),
@@ -219,7 +240,8 @@ class TopThreeFeeds:
                     message=f"뉴스 고정 · 이미지 {len(items)}개 · 게시 승인 별도")
                 s.add(row); s.flush(); identifier = row.id
                 s.add(AppSetting(key=claim, value=str(identifier)))
-                for key in event_claims: s.add(AppSetting(key=key, value=str(identifier)))
+                for key in event_claims:
+                    if not s.get(AppSetting,key):s.add(AppSetting(key=key,value=str(identifier)))
                 return identifier
         except (Timeout, IntegrityError):
             raise PublishingError("다른 화면에서 작업을 저장 중입니다. 저장된 TOP 3 작업을 확인하세요.") from None
@@ -283,7 +305,7 @@ class TopThreeFeeds:
                     raise PublishingError('다른 화면에서 작업이 변경됐습니다. 새로고침 후 확인하세요.')
                 if row.options['simulation'] or any(i['status'] in {'running','unknown'} for i in row.result['items']):
                     raise PublishingError('작업 상태를 확인하세요. 비용 승인을 변경하지 않았습니다.')
-                costs=(self.costs.refresh(row) if limit is None else
+                costs=((getattr(self.costs,"apply_settings",lambda r:None)(row) or self.costs.refresh(row)) if limit is None else
                     self.costs.approve(row,quote_hash,limit,consent))
                 result=deepcopy(row.result);result['revision']+=1
                 self._save(identifier,result,options={**row.options,'costs':costs})
@@ -311,6 +333,14 @@ class TopThreeFeeds:
         if generated.evidence.get("source", {}).get("plan", {}).get("title_layout") == TITLE_LAYOUT:
             raw = render_title(raw, item["content"]["title"])
             item["title_header_bottom"] = HEADER_BOTTOM
+        creative = generated.evidence.get("source", {}).get("plan", {}).get("creative_plan")
+        if creative is not None and row.options.get("feed_style") != "ai_design_v1":
+            if creative != item.get('creative_plan'):
+                raise PublishingError('승인한 구성과 생성 결과의 연결이 다릅니다.')
+            from .feed_art_direction import compose
+            source = next(s for s in row.evidence['sources'] if s['rank']==item['rank'])
+            raw, design, review = compose(path.read_bytes(), source, item['content'], creative)
+            item.update(auto_design=design, design_review=review)
         expected = sha256(raw).hexdigest()
         if target.exists():
             if sha256(target.read_bytes()).hexdigest() != expected:
@@ -323,6 +353,11 @@ class TopThreeFeeds:
         try:
             with self.lock:
                 row = self.get(identifier)
+                if consent is True and reviewed is True and not self.simulation:
+                    state=getattr(self.costs,'apply_settings',lambda r:None)(row)
+                    if state is not None:
+                        self._save(identifier,row.result,options={**row.options,'costs':state})
+                        row=self.get(identifier)
                 self._authorize(row, consent, reviewed)
                 result = self._recover(row)
                 if result["paused"]: raise PublishingError("중지된 작업입니다. 재개를 선택하세요.")
@@ -332,8 +367,10 @@ class TopThreeFeeds:
                 if item is None: return
                 if any(i['status']=='failed' for i in result['items']):
                     raise PublishingError('실패한 이미지가 있습니다. 자동 진행을 중단했습니다.')
-                if row.options.get("title_layout") == TITLE_LAYOUT and row.options.get("feed_style")!="photo_feed_v1":
+                if row.options.get("title_layout") == TITLE_LAYOUT and row.options.get("feed_style") not in {"photo_feed_v1","ai_design_v1"}:
                     title_lines(item["content"]["title"])  # preflight before any reservation or paid request
+                from .complete_feed import reference
+                ref=reference(self,item)  # verify before reserving/submitting
                 options=deepcopy(row.options)
                 if not self.simulation:
                     options['costs']=self.costs.reserve(row,item)
@@ -342,13 +379,14 @@ class TopThreeFeeds:
                 source = next(source for source in row.evidence["sources"] if source["rank"] == item["rank"])
                 context = {"batch_id": identifier, "rank": item["rank"], "attempt": item["attempt"],
                            "plan": {**item["content"], "source_article_ids": source["article_ids"],
-                                    "title_layout": None if row.options.get("feed_style")=="photo_feed_v1" else row.options.get("title_layout")},
+                                    "title_layout": None if row.options.get("feed_style") in {"photo_feed_v1","ai_design_v1"} else row.options.get("title_layout"),
+                                    **({'creative_plan':deepcopy(item['creative_plan'])} if item.get('creative_plan') else {})},
                            "source": source}
-                prompt = prompt_for(source, item["content"], identifier, item["attempt"], local_title=row.options.get("title_layout")==TITLE_LAYOUT, safety_version=item.get("safety_version"), feed_style=row.options.get("feed_style"))
+                prompt = prompt_for(source, item["content"], identifier, item["attempt"], local_title=row.options.get("title_layout")==TITLE_LAYOUT, safety_version=item.get("safety_version"), feed_style=row.options.get("feed_style"), creative_plan=item.get("creative_plan"))
                 try:
                     output_id = self.generation._generate(source["article_id"], row.evidence["analysis_id"],
                         item["rank"], "full_card", context, prompt,
-                        draft_id=source["draft_id"], execution=row.options["selection"])
+                        draft_id=source["draft_id"], execution=row.options["selection"], **({"reference":ref} if ref is not None else {}))
                     if hasattr(self.costs,'settle'):
                         fresh=self.get(identifier)
                         settled=self.costs.settle(fresh,item,self.generation.get(output_id))
@@ -360,7 +398,7 @@ class TopThreeFeeds:
         except Timeout:
             raise PublishingError("해당 TOP 3 작업이 진행 중입니다. 중복 요청하지 마세요.") from None
 
-    def change(self, identifier, revision, action, *, rank=None, title="", body="", hashtags="", consent=False, reviewed=False):
+    def change(self, identifier, revision, action, *, rank=None, title="", body="", hashtags="", accent="#ffb45c", consent=False, reviewed=False):
         try:
             with self.lock:
                 row = self.get(identifier)
@@ -374,6 +412,9 @@ class TopThreeFeeds:
                     raise PublishingError("다른 화면에서 작업이 변경됐습니다. 새로고침 후 확인하세요.")
                 if action in {"pause", "resume"}:
                     result["paused"] = action == "pause"
+                elif action == 'design_edit':
+                    from .complete_feed import prepare
+                    prepare(self,row,result,rank,title,body,accent)
                 elif action == "retitle":
                     self._retitle(row, result, rank, title)
                 elif action in {"edit", "regenerate"}:
@@ -401,6 +442,15 @@ class TopThreeFeeds:
                         for key in ("filename", "sha256", "message", "post_id", "title_header_bottom", "local_title_edit"): item.pop(key, None)
                         options = {**row.options, "max_generations": row.options["max_generations"]+1, "title_layout": TITLE_LAYOUT}
                         row.options = options
+                    if row.options.get('feed_style') == 'ai_design_v1':
+                        from .complete_feed import plan
+                        src=next(s for s in row.evidence['sources'] if s['rank']==item['rank'])
+                        item['creative_plan']=plan(src,item['content'])
+                    if row.options.get('feed_style') == 'photo_feed_v1':
+                        from .feed_art_direction import make_plan
+                        src=next(s for s in row.evidence['sources'] if s['rank']==item['rank'])
+                        item['creative_plan']=make_plan(src,item['content'])
+                        item.pop('auto_design',None);item.pop('design_review',None)
                 else: raise PublishingError("지원하지 않는 작업입니다.")
                 result["revision"] += 1; self._save(identifier, result, options=row.options)
         except Timeout:
@@ -467,9 +517,12 @@ class TopThreeFeeds:
         except Timeout:
             raise PublishingError("생성 요청이 끝난 후 검토본을 저장하세요.") from None
 
-    def path(self, identifier, rank):
+    def path(self, identifier, rank, *, attempt=None):
         row = self.get(identifier)
         item = next((i for i in row.result["items"] if i["rank"] == rank), None)
+        if attempt is not None:
+            if type(attempt) is not int or not 1<=attempt<=100000:raise PublishingError('이미지 버전을 확인하세요.')
+            item=next((x for x in [item,*(item or {}).get('history',[])] if x and x.get('attempt')==attempt and x.get('status')=='success'),None)
         if not item or item["status"] != "success": raise PublishingError("완료한 이미지가 없습니다.")
         if not re.fullmatch(r"feed-[0-9]+-[1-3]-[0-9]+(?:-title-[0-9]+)?\.jpg", item.get("filename", "")):
             raise PublishingError("결과 이미지 경로가 올바르지 않습니다.")
@@ -490,7 +543,7 @@ class TopThreeFeeds:
             item["image_safety"] = context_safety({"source": source, "plan": item["content"]})
             item["canEditTitle"] = item["status"] == "success" and isinstance(item.get("title_header_bottom"), int)
             item["titleReviewRequired"] = not valid_title(item["content"]["title"])
-            item["prompt"] = prompt_for(source, item["content"], row.id, item["attempt"], local_title=row.options.get("title_layout")==TITLE_LAYOUT, safety_version=item.get("safety_version"), feed_style=row.options.get("feed_style"))
+            item["prompt"] = prompt_for(source, item["content"], row.id, item["attempt"], local_title=row.options.get("title_layout")==TITLE_LAYOUT, safety_version=item.get("safety_version"), feed_style=row.options.get("feed_style"), creative_plan=item.get("creative_plan"))
             item["caption"] = (item["content"]["title"] + "\n\n" + item["content"]["body"] + "\n\n" +
                 "\n\n".join("출처: " + r["publisher"] + "\n" + r["url"] for r in source["references"]) +
                 "\n\n" + item["content"]["hashtags"] + "\n" + DISCLOSURE)

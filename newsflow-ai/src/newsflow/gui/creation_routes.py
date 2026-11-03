@@ -169,21 +169,21 @@ def feed_batch_step(request: Request, identifier: int, consent: bool = Form(Fals
 def feed_batch_change(request: Request, identifier: int, revision: int = Form(ge=1),
                       action: str = Form(...), rank: int | None = Form(None, ge=1, le=3),
                       title: str = Form("", max_length=100), body: str = Form("", max_length=180),
-                      hashtags: str = Form("", max_length=200), consent: bool = Form(False),
+                      hashtags: str = Form("", max_length=200), accent: str = Form("#ffb45c", max_length=7), consent: bool = Form(False),
                       reviewed: bool = Form(False)):
     try:
         service = request.app.state.top_three_feeds
         service.change(identifier, revision, action, rank=rank, title=title, body=body,
-                       hashtags=hashtags, consent=consent, reviewed=reviewed)
+                       hashtags=hashtags, accent=accent, consent=consent, reviewed=reviewed)
         return service.view(identifier)
     except (PublishingError, SelectionError) as exc:
         raise HTTPException(409 if "다른 화면" in str(exc) else 422, str(exc)) from None
 
 
 @router.get('/api/feed-batches/{identifier}/items/{rank}/file')
-def feed_batch_file(request: Request, identifier: int, rank: int, download: bool = False):
+def feed_batch_file(request: Request, identifier: int, rank: int, download: bool = False, attempt: int | None = None):
     try:
-        path = request.app.state.top_three_feeds.path(identifier, rank)
+        path = request.app.state.top_three_feeds.path(identifier, rank, attempt=attempt)
         return FileResponse(path, media_type="image/jpeg", filename=path.name if download else None, headers={"Cache-Control": "no-store"})
     except (PublishingError, SelectionError, ValueError, OSError):
         raise HTTPException(404, "완료한 피드 이미지를 확인하세요.") from None
