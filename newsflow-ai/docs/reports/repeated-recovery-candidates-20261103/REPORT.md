@@ -24,4 +24,12 @@ Commands use the existing Python environment and isolated temporary APPDATA/LOCA
 
 Provider errors after dispatch still require result/billing review; generic automatic paid retries are intentionally not enabled. Local candidate selection uses recency rather than paid scoring. No articles are deleted or restored. No new POST endpoints, migration, security relaxation, main merge, or UI redesign.
 
-Operating deployment evidence will be appended after exact-file application and normal startup. Private input, database, token, media and rollback copies are excluded from Git.
+## Operating result
+
+Code commit: a3c44c951032e94c3f1e88437d0d1d9b6002f799, pushed to codex/newsflow-character-shorts-automation-20261030.
+
+Applied 13 exact program/static files; no operating overlays were overwritten. At the final deployment check the server was running, so one normal Stop and one Start were performed. Normal Chrome launch was accepted; port 18768 is listening. Saved response recovered locally to script_review without paid replay, and the original response, reference image and cost history remain preserved.
+
+All DB table contents match the pre-deployment snapshot. Original/backup A/B hashes, launch settings, keys and other profile files remain unchanged; only the intended recovered job and normal session lifecycle files changed. A consistent SQLite backup, this job's rollback files, changed program-file backups and private hash inventories are retained locally. No bulk duplicate media backup was created.
+
+The user was asked to confirm the visible story and 651→210 candidate count in Chrome; visual confirmation remains pending. No analysis, collection, paid generation, SNS request or merge was executed. Private input, database, token, media and rollback copies are excluded from Git.
