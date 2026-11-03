@@ -141,7 +141,9 @@ def test_new_job_freezes_format_and_reaches_loop_mp4(tmp_path, monkeypatch):
     assert s.read(i)['story_format'] == FORMAT
     s.write(i, consent=True)
     instruction, payload = s.authoring.calls[0]
-    assert instruction == script_instruction(FORMAT) and (payload['min_scenes'], payload['max_scenes']) == (4, 6)
+    assert s.read(i)['continuity_policy'] == 'single_incident_v2'
+    assert instruction == script_instruction(FORMAT, s.read(i)['continuity_policy'])
+    assert (payload['min_scenes'], payload['max_scenes']) == (4, 6)
     # A later setting change does not invalidate the stored script or its prompts.
     from newsflow.character import episode_service
     monkeypatch.setattr(episode_service, 'load_story_format', lambda: {**FORMAT, 'loop_ending': False})

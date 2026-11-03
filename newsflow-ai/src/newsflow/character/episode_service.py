@@ -107,7 +107,7 @@ class EpisodeFlow:
                 # Frozen per job, so a later setting change keeps this job's script valid.
                 job['story_format'] = load_story_format()
                 if job['story_format'] and job['story_format']['short_scenes'] and model.get('continuation_param'):
-                    job['continuity_policy'] = 'single_incident_v1'
+                    job['continuity_policy'] = 'single_incident_v2'
             if reference_only:job['character_reference_mode']='image_topic'
             if direct_video:
                 job.update(direct_video=True,direct_extension=direct_extension,state='script_review',script=dump(plan),
@@ -151,7 +151,7 @@ class EpisodeFlow:
             payload = script_input(job['character'], job['topic'], job['duration'],
                                    CATALOG.model(chosen['video_model']), chosen['sound'] == 'on',
                                    [j['topic'] for j in s.listing() if j.get('character_id') == job['character_id']
-                                    and j['id'] != identifier][:5], job_story_format(job))
+                                    and j['id'] != identifier][:5], job_story_format(job), job.get('continuity_policy'))
             from .episode_story import bounded_validation_feedback, validation_feedback
             if attempt > 1:
                 payload['validation_feedback'] = bounded_validation_feedback(job.get('script_validation_feedback', [])) or [
@@ -164,7 +164,7 @@ class EpisodeFlow:
                        response_received=False)
             s.save(job)  # An interrupted request cannot be automatically replayed.
             try:
-                candidate = authoring.generate(script_instruction(job_story_format(job)), payload, EpisodeScript,
+                candidate = authoring.generate(script_instruction(job_story_format(job), job.get('continuity_policy')), payload, EpisodeScript,
                     Options(model=chosen['script_model'], max_tokens=4000, timeout=300),
                     provider=job['script_provider'], request_id=f'episode:{identifier}:script:{sequence}',
                     consent=True, kind='script', max_reserved_usd=str(remaining), **review_options)
@@ -391,10 +391,11 @@ class EpisodeFlow:
                 raise CharacterError('media')
         else:
             binary = str(FFmpegAdapter.executable('ffmpeg', s.ffmpeg))
-            # Direct continuation uses the actual final decoded frame. Decode only
+            # Direct and new story continuity use the actual final decoded frame. Decode only
             # the final second, reverse that bounded tail and take its first frame.
-            tail = ['-sseof', '-1'] if job.get('direct_video') else ['-sseof', '-0.1']
-            filters = ['-vf', 'reverse'] if job.get('direct_video') else []
+            exact_end = job.get('direct_video') or job.get('continuity_policy') == 'single_incident_v2'
+            tail = ['-sseof', '-1'] if exact_end else ['-sseof', '-0.1']
+            filters = ['-vf', 'reverse'] if exact_end else []
             run([binary, '-nostdin', '-n', '-v', 'error', '-protocol_whitelist', 'file',
                  '-format_whitelist', FORMAT_WHITELIST, *tail, '-i', str(clip.resolve()),
                  *filters, '-frames:v', '1', '-update', '1', str(output.resolve())], folder)

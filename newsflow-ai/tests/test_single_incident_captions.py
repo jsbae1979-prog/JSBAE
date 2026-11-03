@@ -21,7 +21,7 @@ def test_single_incident_forces_all_cut_dependencies_only_when_frozen():
 def test_new_job_dependency_payload_and_one_submit_per_scene(tmp_path):
     from test_character_episode_automation import setup_episode
     s,v,i,_,_=setup_episode(tmp_path,20);s.authoring=FormatAuthoring()
-    assert s.read(i)['continuity_policy']=='single_incident_v1'
+    assert s.read(i)['continuity_policy']=='single_incident_v2'
     s.write(i,consent=True);s.prepare(i,consent=True,script_reviewed=True)
     s.submit(i,consent=True,quote_hash=s.read(i)['quote_hash'])
     assert len(v.sent)==1

@@ -254,7 +254,7 @@ _LOOP_ENDING = (
     'Leave end_caption empty. ')
 
 
-def script_instruction(story_format=None):
+def script_instruction(story_format=None, continuity_policy=None):
     """Legacy jobs keep the original text; new jobs add the stored shorts format rules."""
     from .episode_policy import LEGACY_STORY_FORMAT
     story_format = LEGACY_STORY_FORMAT if story_format is None else story_format
@@ -262,13 +262,21 @@ def script_instruction(story_format=None):
     if story_format['loop_ending']:
         text = text.replace(_FINAL_HOLD, _LOOP_ENDING)
     extra = (_HOOK_FIRST if story_format['hook_first'] else '') + (_SHORT_SCENES if story_format['short_scenes'] else '')
-    if story_format is not LEGACY_STORY_FORMAT:
+    if story_format is not LEGACY_STORY_FORMAT and continuity_policy != 'single_incident_v2':
         extra += ('Supporting cast: when input.character.supporting_cast members appear, write their exact id '
                   '(for example team_lead) in that scene action. ')
+    if continuity_policy == 'single_incident_v2':
+        from .scene_continuity import STORY_DIRECTION
+        text = text.replace('Build setup and chaos with fast speed and energetic camera; let the signature reaction breathe. ',
+                            'Let visible actions and expressions build the contrast; keep movement readable. ')
+        # Avoid telling the writer to cut/reset or introduce a supporting cast.
+        extra = extra.replace(_SHORT_SCENES, _SHORT_SCENES.replace('Quick cuts:', 'Short continuous beats:').replace(
+            'Do not invent coworkers or extra characters absent from input.character.supporting_cast. ', ''))
+        extra += STORY_DIRECTION
     return text + (' ' + extra.strip() if extra else '')
 
 
-def script_input(profile, topic, target_seconds, model, native_sound, recent_topics=(), story_format=None):
+def script_input(profile, topic, target_seconds, model, native_sound, recent_topics=(), story_format=None, continuity_policy=None):
     from .episode_policy import load_edit_presets, load_sfx_map
     lo, hi = scene_range(target_seconds, model, story_format)
     # Appearance and the image are deliberately excluded from the text-writing stage.
@@ -283,6 +291,9 @@ def script_input(profile, topic, target_seconds, model, native_sound, recent_top
                 and isinstance(row.get('appearance'), str)]
         if cast:
             character['supporting_cast'] = cast
+    if continuity_policy == 'single_incident_v2':
+        # v1 product scope: one protagonist; keep the stored full profile intact.
+        character.pop('supporting_cast', None)
     return {'character': character, 'topic': topic, 'target_seconds': target_seconds,
             'character_limits':character_limits(),
             'min_scenes': lo, 'max_scenes': hi, 'scene_seconds': duration_values(model),
@@ -328,6 +339,9 @@ def scene_role(index, count, story_format=None):
 
 
 def prompts(story, settings, character, story_format=None, continuity_policy=None):
+    if continuity_policy == 'single_incident_v2':
+        from .scene_continuity import connected_prompts
+        return connected_prompts(story, settings, character, story_format)
     count = len(story.scenes)
     rows = [{'position': s.no, 'seconds': s.seconds,
              'continuity': s.continuity, 'from': s.from_scene,

@@ -1,0 +1,15 @@
+{
+  "python": "3.14.7",
+  "platform": "Windows 11",
+  "pass": 75,
+  "fail": 0,
+  "error": 0,
+  "skip": 0,
+  "new_test_cases": 10,
+  "real_ai_requests": 0,
+  "sns_requests": 0,
+  "source_clips_preserved": 5,
+  "inspected_frames": 15,
+  "actual_new_generated_quality": "NOT VERIFIED",
+  "frontend_unchanged": true
+}
