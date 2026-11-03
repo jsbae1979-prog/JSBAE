@@ -1,4 +1,4 @@
-"""Explicit collection TOP-3 analysis only; no search, scripts or background AI.
+"""Explicit news analysis and selected-news script requests; no search or background AI.
 
 The authenticated route checks current collection, provider and user consent,
 claims the request durably, and uses the normal per-request budget. Decryption
@@ -14,6 +14,7 @@ from .character_authoring import _Store, _unlinked
 
 PATH = '/news/curation/analyze'
 SELECTED_PATH = '/ai/analyze'
+SCRIPT_PATH = '/news/curation/generate'
 _ACTIVE = ContextVar('news_collection_analysis_request', default=None)
 
 class _Service(IntelligenceService):
@@ -24,9 +25,17 @@ class _Service(IntelligenceService):
     def analyze(self, article_ids, mode, consent, options=None, **kwargs):
         self.owner.active_key(mode)
         if (consent is not True or
+                _ACTIVE.get()[2] not in {PATH, SELECTED_PATH} or
                 bool(kwargs.get('curate')) != (_ACTIVE.get()[2] == PATH)):
             raise IntelligenceError('수집 회차 분석 범위를 확인하세요.', 'ai_consent', False)
         return super().analyze(article_ids, mode, consent, options, **kwargs)
+
+    def generate(self, analysis_id, duration, mode='offline', consent=False, options=None, **kwargs):
+        self.owner.active_key(mode)
+        if consent is not True or _ACTIVE.get()[2] != SCRIPT_PATH:
+            raise IntelligenceError('선택 뉴스 대본 생성 동의를 확인하세요.', 'ai_consent', False)
+        return super().generate(analysis_id, duration, mode, consent, options, **kwargs)
+
 
 class NewsAnalysisAccess:
     def __init__(self, app, profile, nativefactory, *, providers=None, budget=None):
@@ -41,7 +50,7 @@ class NewsAnalysisAccess:
         app.state.news_analysis_access = self
 
     def active_key(self, provider):
-        if (_ACTIVE.get() not in {(self, provider, PATH), (self, provider, SELECTED_PATH)} or provider not in self.keys):
+        if (_ACTIVE.get() not in {(self, provider, PATH), (self, provider, SELECTED_PATH), (self, provider, SCRIPT_PATH)} or provider not in self.keys):
             raise CredentialError('현재 승인된 뉴스 분석 요청이 아닙니다.')
 
     def service(self, request, provider=None):
@@ -53,7 +62,7 @@ class NewsAnalysisAccess:
     def wrap(self, normal, authenticated):
         owner = self
         async def call(scope, receive, send):
-            if scope.get('type')!='http' or scope.get('method')!='POST' or scope.get('path') not in {PATH, SELECTED_PATH}:
+            if scope.get('type')!='http' or scope.get('method')!='POST' or scope.get('path') not in {PATH, SELECTED_PATH, SCRIPT_PATH}:
                 return await normal(scope,receive,send)
             selected = read_studio_settings(owner.app.state.sessions)['provider']
             path = scope['path']

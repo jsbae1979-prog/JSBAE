@@ -248,6 +248,7 @@ export function label(key: string) {
   return labels[key] ?? key.replaceAll("_", " ");
 }
 export function safeMedia(url: unknown) {
+  if (typeof url === "string" && /^\/api\/feed-batches\/[1-9][0-9]*\/items\/[1-3]\/file\?attempt=[1-9][0-9]{0,5}(?:&v=[a-f0-9]{64})?$/.test(url)) return url;
   return typeof url === "string" &&
     /^\/(?:api\/feed-batches\/[1-9][0-9]*\/items\/[1-3]\/(?:file|design-file\/[1-9][0-9]*)|api\/studio\/characters\/[a-f0-9]{32}\/reference|video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/(?:\d+|backgrounds\/\d+)\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
       url,

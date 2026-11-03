@@ -235,3 +235,20 @@ def test_restore_rejects_tampered_mp4(client, app):
     response = client.post("/workspace/trash/restore", data={"csrf_token": token, "confirm": "true",
                            "item": f"video:{fixture['id']}"})
     assert response.status_code == 409 and path.is_file()
+
+
+def test_new_collection_preserves_feed_batch_sources_before_publishing(app):
+    unused, image_source, new = articles(app)
+    evidence={'sources':[{'rank':1,'article_id':image_source,'article_ids':[image_source]}]}
+    result={'items':[{'rank':1,'status':'success','filename':'synthetic-only.jpg'}]}
+    with app.state.sessions.begin() as db:
+        row=IntelligenceRun(kind='feed_top3_batch',status='saved',provider='openai',options={},evidence=evidence,result=result,message='')
+        db.add(row);db.flush();rid=row.id
+        replace_collection(db,[new])
+    with app.state.sessions() as db:
+        assert db.get(NewsArticle,unused) is None
+        assert db.get(NewsArticle,image_source) is not None
+        assert db.get(NewsListState,image_source).hidden
+        assert set(db.scalars(select(NewsArticle.id).where(visible_news())))=={new}
+        assert db.get(IntelligenceRun,rid).evidence==evidence
+        assert db.get(IntelligenceRun,rid).result==result

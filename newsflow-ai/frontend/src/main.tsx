@@ -339,7 +339,7 @@ function App() {
       ? "automation"
       : href.startsWith("/character")
         ? "characters"
-        : href.startsWith("/image")
+        : (href.startsWith("/image") || href.startsWith("/studio/images?"))
           ? "images"
           : href.startsWith("/ai") ||
               href.startsWith("/video") ||

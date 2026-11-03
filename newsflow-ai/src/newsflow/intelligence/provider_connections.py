@@ -127,8 +127,11 @@ class ProviderConnections:
             try: age = utcnow() - datetime.fromisoformat(row.get('checkedAt') or row['startedAt'])
             except (KeyError,TypeError,ValueError):
                 return {**public({'code':'invalid_response','scope':scope}), 'configured':configured}
-            if (row.get('revision') == revision(store) and row.get('model') == plan.model
-                    and timedelta(0) <= age < timedelta(days=1)):
+            # Successful verification is evidence, not a daily subscription. Keep it
+            # until settings change or a later explicit check reports a problem.
+            rev = revision(store)
+            if (configured and rev is not None and row.get('revision') == rev
+                    and row.get('model') == plan.model and timedelta(0) <= age):
                 result = public(row)
                 if result['code'] == 'checking' and age > timedelta(seconds=60):
                     result = public({'code':'stale','scope':scope,'model':plan.model})

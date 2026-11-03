@@ -66,6 +66,88 @@ function FeedLayout({
     setActive(item.rank);
     setPreview({ batchId: batch.id, rank: item.rank });
   }
+  const productionStatus = b && (
+            <Panel title={`작업 #${b.id} · 제작 상태`}>
+              <FeedGenerationProgress
+                batch={b}
+                busy={f.busy}
+                runningRank={f.runningRank}
+                stopping={f.stopRequested}
+                message={f.message}
+              />
+              {b.costReview?.settingsLimitUsd && <p>작업 한도 US${b.costReview.settingsLimitUsd} · 설정값 사용</p>}
+              <button className="primary" disabled={blocked} onClick={()=>{
+                if(b.costReview?.settingsLimitUsd){if(b.items.some((x:Item)=>x.status==='pending'))f.runSettings();else f.runSettings({action:'regenerate',rank:active,consent:true,reviewed:true});return;}
+                setCostOpen(true);
+              }}>
+                {b.items.some((x:Item)=>x.status==="pending") ? "이미지 생성" : `TOP ${active} 이미지 다시 만들기`}
+              </button>
+              {f.busy && f.runningRank != null && <button onClick={f.pause} disabled={f.stopRequested}>현재 요청 후 중단</button>}
+              {costOpen && <FeedDialog name="이미지 생성 비용 확인" onClose={()=>setCostOpen(false)}>
+                <h2>{b.items.some((x:Item)=>x.status==="pending") ? "이미지 생성" : `TOP ${active} 이미지 다시 만들기`}</h2>
+                <FeedCostReview expanded
+                  batch={b}
+                  busy={f.busy}
+                  onRefresh={() => f.local(f.refreshCosts)}
+                  onSave={(data) =>
+                    f.local(async () =>
+                      f.show(
+                        await f.post(`/api/feed-batches/${b.id}/cost-review`, {
+                          revision: b.revision,
+                          ...data,
+                        }),
+                      ),
+                    )
+                  }
+                />
+                {b.items.some((x:Item)=>x.status==="pending") && <button
+                  className="primary"
+                  disabled={
+                    blocked ||
+                    !b.canGenerate ||
+                    b.items.some((x: Item) =>
+                      ["unknown", "running"].includes(x.status),
+                    ) ||
+                    !b.items.some((x: Item) => x.status === "pending")
+                  }
+                  onClick={() => {setCostOpen(false);f.approve();}}
+                >
+                  {b.plannedImages === 1
+                    ? "선택 뉴스 생성 · 비용 승인"
+                    : "TOP 3 전체 생성 · 비용 승인"}
+                </button>}
+                {b.items
+                  .filter((x: Item) => x.rank === active && ["success", "failed"].includes(x.status))
+                  .map((x: Item) => (
+                    <button
+                      key={x.rank}
+                      disabled={blocked || !b.canPrepareRegeneration}
+                      onClick={() => {setCostOpen(false);f.approve(x);}}
+                    >
+                      선택 이미지 새 견적 준비
+                    </button>
+                  ))}
+                <button onClick={()=>setCostOpen(false)}>닫기</button>
+              </FeedDialog>}
+              {b.canRecover && (
+                <button
+                  disabled={blocked}
+                  onClick={() =>
+                    f.local(async () =>
+                      f.show(
+                        await f.post(`/api/feed-batches/${b.id}/change`, {
+                          action: "recover",
+                          revision: b.revision,
+                        }),
+                      ),
+                    )
+                  }
+                >
+                  저장된 결과 복구 · 무료
+                </button>
+              )}
+            </Panel>
+          );
   return (
     <div className="core-top3">
       <div className="photo-feed-grid">
@@ -196,91 +278,11 @@ function FeedLayout({
               {matching ? "저장된 작업 열기" : scope === "all" ? "TOP 3 전체 제작 준비" : "선택 뉴스 제작 준비"}
             </button>
           </Panel>
-          {b && (
-            <Panel title={`작업 #${b.id} · 제작 상태`}>
-              <FeedGenerationProgress
-                batch={b}
-                busy={f.busy}
-                runningRank={f.runningRank}
-                stopping={f.stopRequested}
-                message={f.message}
-              />
-              {b.costReview?.settingsLimitUsd && <p>작업 한도 US${b.costReview.settingsLimitUsd} · 설정값 사용</p>}
-              <button className="primary" disabled={blocked} onClick={()=>{
-                if(b.costReview?.settingsLimitUsd){if(b.items.some((x:Item)=>x.status==='pending'))f.runSettings();else f.runSettings({action:'regenerate',rank:active,consent:true,reviewed:true});return;}
-                setCostOpen(true);
-              }}>
-                {b.items.some((x:Item)=>x.status==="pending") ? "이미지 생성" : `TOP ${active} 이미지 다시 만들기`}
-              </button>
-              {f.busy && f.runningRank != null && <button onClick={f.pause} disabled={f.stopRequested}>현재 요청 후 중단</button>}
-              {costOpen && <FeedDialog name="이미지 생성 비용 확인" onClose={()=>setCostOpen(false)}>
-                <h2>{b.items.some((x:Item)=>x.status==="pending") ? "이미지 생성" : `TOP ${active} 이미지 다시 만들기`}</h2>
-                <FeedCostReview expanded
-                  batch={b}
-                  busy={f.busy}
-                  onRefresh={() => f.local(f.refreshCosts)}
-                  onSave={(data) =>
-                    f.local(async () =>
-                      f.show(
-                        await f.post(`/api/feed-batches/${b.id}/cost-review`, {
-                          revision: b.revision,
-                          ...data,
-                        }),
-                      ),
-                    )
-                  }
-                />
-                {b.items.some((x:Item)=>x.status==="pending") && <button
-                  className="primary"
-                  disabled={
-                    blocked ||
-                    !b.canGenerate ||
-                    b.items.some((x: Item) =>
-                      ["unknown", "running"].includes(x.status),
-                    ) ||
-                    !b.items.some((x: Item) => x.status === "pending")
-                  }
-                  onClick={() => {setCostOpen(false);f.approve();}}
-                >
-                  {b.plannedImages === 1
-                    ? "선택 뉴스 생성 · 비용 승인"
-                    : "TOP 3 전체 생성 · 비용 승인"}
-                </button>}
-                {b.items
-                  .filter((x: Item) => x.rank === active && ["success", "failed"].includes(x.status))
-                  .map((x: Item) => (
-                    <button
-                      key={x.rank}
-                      disabled={blocked || !b.canPrepareRegeneration}
-                      onClick={() => {setCostOpen(false);f.approve(x);}}
-                    >
-                      선택 이미지 새 견적 준비
-                    </button>
-                  ))}
-                <button onClick={()=>setCostOpen(false)}>닫기</button>
-              </FeedDialog>}
-              {b.canRecover && (
-                <button
-                  disabled={blocked}
-                  onClick={() =>
-                    f.local(async () =>
-                      f.show(
-                        await f.post(`/api/feed-batches/${b.id}/change`, {
-                          action: "recover",
-                          revision: b.revision,
-                        }),
-                      ),
-                    )
-                  }
-                >
-                  저장된 결과 복구 · 무료
-                </button>
-              )}
-            </Panel>
-          )}
+
         </div>
-        {b?.feedStyle==='ai_design_v1' ? <CompleteFeedEditor batch={b} rank={active} f={f} onSelect={setActive} csrf={c.view?.csrfToken??""}/> : b?.items.some((x: Item) => x.rank === active) ? (
+        {b?.feedStyle==='ai_design_v1' ? <CompleteFeedEditor statusPanel={productionStatus} batch={b} rank={active} f={f} onSelect={setActive} csrf={c.view?.csrfToken??""}/> : b?.items.some((x: Item) => x.rank === active) ? (
           <PhotoFeedEditor
+            statusPanel={productionStatus}
             key={`${b.id}:${active}:${b.items.find((x:Item)=>x.rank===active)?.generation_id??"none"}`}
             batch={b}
             rank={active}

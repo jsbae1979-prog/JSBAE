@@ -180,7 +180,8 @@ def generate(request: Request, analysis_id: int = Form(ge=1), rank: int = Form(g
         raise HTTPException(422, "평가 이후 AI 선택이 변경됐습니다. 같은 API·모델을 선택해 주세요.")
     try:
         result = _once(request, ["script", analysis_id, rank, duration, provider, model],
-                       lambda remember: {"draft_id": service(request).generate(
+                       lambda remember: {"draft_id": (request.app.state.news_analysis_access.service(request)
+                           if hasattr(request.app.state, 'news_analysis_access') else service(request)).generate(
                            analysis_id, duration, provider, True, Options(model, timeout=60, max_tokens=2200),
                            article_ids=ids, on_run=remember)})
     except (IntelligenceError, ValueError) as exc:

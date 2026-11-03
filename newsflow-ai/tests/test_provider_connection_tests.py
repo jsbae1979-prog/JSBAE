@@ -207,3 +207,43 @@ def test_untrusted_higgsfield_status_url_is_not_a_probe_target(probe):
     probe.app.state.character.save(job)
     assert probe.call('higgsfield','video').json()['code']=='unsupported'
     assert not probe.calls and not probe.native.calls
+
+
+@pytest.mark.parametrize('provider,scope',[('claude','text'),('openai','text'),('openai','image'),('elevenlabs','voice'),('higgsfield','video')])
+def test_old_verification_survives_without_plaintext_network_or_record_changes(probe,provider,scope):
+    from datetime import timedelta
+    from newsflow.db.models import utcnow
+    terminal(probe)
+    assert probe.call(provider,scope).json()['verified']
+    name='provider_probe:'+provider+':'+scope
+    stamp=(utcnow()-timedelta(days=90)).isoformat()
+    with probe.app.state.sessions.begin() as session:
+        row=session.get(AppSetting,name); doc=json.loads(row.value); doc['checkedAt']=stamp
+        row.value=json.dumps(doc); before=row.value
+    count=len(probe.calls); decrypts=probe.native.calls
+    for _ in range(2):
+        status=probe.checker.status(provider,scope)
+        assert status['verified'] and status['checkedAt']==stamp
+    assert len(probe.calls)==count and probe.native.calls==decrypts
+    with probe.app.state.sessions() as session:assert session.get(AppSetting,name).value==before
+
+
+@pytest.mark.parametrize('problem',['model','key','missing_key','checking','future','auth_error','permission'])
+def test_changed_or_failed_connection_is_not_a_cached_success(probe,problem):
+    from datetime import timedelta
+    from newsflow.db.models import utcnow
+    assert probe.call('elevenlabs','voice').json()['verified']
+    name='provider_probe:elevenlabs:voice'
+    with probe.app.state.sessions.begin() as session:
+        row=session.get(AppSetting,name); doc=json.loads(row.value)
+        if problem=='model':doc['model']='other-model'
+        if problem=='checking':doc.update(code='checking',authenticated=False,checkedAt=(utcnow()-timedelta(seconds=61)).isoformat())
+        if problem=='future':doc['checkedAt']=(utcnow()+timedelta(days=1)).isoformat()
+        if problem in ('auth_error','permission'):doc.update(code=problem,authenticated=False)
+        row.value=json.dumps(doc)
+    path=probe.app.state.config.data_dir/probe.kinds['elevenlabs'].FILE
+    if problem=='key':path.write_bytes(b'different synthetic ciphertext')
+    if problem=='missing_key':path.unlink()
+    count=len(probe.calls); decrypts=probe.native.calls
+    assert not probe.checker.status('elevenlabs','voice')['verified']
+    assert len(probe.calls)==count and probe.native.calls==decrypts

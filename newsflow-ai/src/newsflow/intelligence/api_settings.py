@@ -83,6 +83,12 @@ def _time(value: str | None) -> datetime | None:
         return None
 
 
+def _confirmed(value: str | None, now: datetime) -> bool:
+    """Saved authentication has no age expiry; key/model changes invalidate it."""
+    parsed = _time(value)
+    return parsed is not None and parsed <= now
+
+
 def _recent(value: str | None, now: datetime) -> bool:
     parsed = _time(value)
     return parsed is not None and timedelta(0) <= now - parsed <= VERIFICATION_TTL
@@ -254,10 +260,8 @@ def _reasons(settings: APISettings, key: dict, capability: str, now: datetime, *
     if any(price is None or price <= 0 for price in prices):
         reasons.append("공식 요금표에서 확인한 단가 입력 필요")
     if not fake:
-        if settings.verified_model != settings.model or not _recent(settings.authentication_verified_at, now):
-            checked = _time(settings.authentication_verified_at)
-            expired = settings.verified_model == settings.model and checked is not None and now - checked > VERIFICATION_TTL
-            reasons.append(AUTH_EXPIRED if expired else "실제 API 연결 미확인 · 별도 승인 후 검증 필요")
+        if settings.verified_model != settings.model or not _confirmed(settings.authentication_verified_at, now):
+            reasons.append("실제 API 연결 미확인 · 별도 승인 후 검증 필요")
         if capability == "search" and not first_search and (
             settings.verified_model != settings.model or not settings.search_verified_at
         ):
@@ -286,7 +290,7 @@ def _readiness(sessions, provider, key_store, capability="search", *, fake=False
     acknowledged = {row["id"] for row in reviews if row["acknowledged"]}
     reasons.extend(_limit_reasons(settings, rows, now, capability=capability, acknowledged=acknowledged,
                                  rejected=rejected, scoped_unknowns=posting_ids))
-    auth = settings.verified_model == settings.model and _recent(settings.authentication_verified_at, now)
+    auth = settings.verified_model == settings.model and _confirmed(settings.authentication_verified_at, now)
     return {"ready": not reasons, "state": "ready" if not reasons else "blocked", "reasons": reasons,
             "provider": provider, "model": settings.model, "capability": capability, "key": key,
             "configured": bool(key.get("configured")), "authentication_verified": auth,

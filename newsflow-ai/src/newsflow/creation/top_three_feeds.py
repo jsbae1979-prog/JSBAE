@@ -61,6 +61,16 @@ def content_for(item):
     return {"title": title, "body": body, "hashtags": hashtags}
 
 
+def source_identity(url):
+    """Keep article-identifying query values; ignore only known tracking fields."""
+    from urllib.parse import parse_qsl, urlencode
+    from newsflow.news.dedup import canonical_url
+    u = urlsplit(canonical_url(url))
+    base = (u.netloc.lower(), u.path.rstrip("/"))
+    query = urlencode(sorted(parse_qsl(u.query, keep_blank_values=True)))
+    return (*base, query) if query else base
+
+
 def prompt_for(source, content, batch_id, attempt, *, local_title=False, safety_version=None, feed_style=None, creative_plan=None):
     data = {"batch_id": batch_id, "rank": source["rank"], "attempt": attempt,
             "plan": content, "references": source["references"]}
@@ -197,6 +207,7 @@ class TopThreeFeeds:
                 if len(group["items"]) != 3 or {x["rank"] for x in group["items"]} != {1,2,3} or group["run"].evidence["curation_contract"].get("top_k") != 3:
                     raise PublishingError("완료된 TOP 3 분석이 필요합니다.")
                 sources, items, urls, titles, event_claims = [], [], set(), set(), set()
+                article_ids = set()
                 for item in group["items"]:
                     if rank is not None and item["rank"] != rank: continue
                     refs = [{"url": r["url"], "publisher": r.get("publisher") or "원문"}
@@ -206,18 +217,26 @@ class TopThreeFeeds:
                         u = urlsplit(ref["url"])
                         if u.scheme not in {"http", "https"} or not u.hostname or u.username or u.password:
                             raise PublishingError("공개 원문 출처 주소를 확인하세요.")
-                        canonical.add((u.hostname.lower(), u.path.rstrip("/")))
+                        canonical.add(source_identity(ref["url"]))
                     # Shared sources/article IDs or duplicate normalized headline are never auto-rendered twice.
                     title_key = re.sub(r"[\W_]+", "", item["title"]).casefold()
-                    if urls & canonical or title_key in titles:
+                    ids = set(item["article_ids"])
+                    if urls & canonical or title_key in titles or article_ids & ids:
                         raise PublishingError("동일 사건으로 보이는 후보가 중복됐습니다. TOP 3 선정을 검토하세요.")
-                    urls.update(canonical); titles.add(title_key)
+                    urls.update(canonical); titles.add(title_key); article_ids.update(ids)
                     keys = {"top3-event:" + digest(["headline", title_key])[:38]}
                     keys.update("top3-event:" + digest(["source", *u])[:38] for u in canonical)
-                    for key in keys:
+                    # Pre-query-fix claims used only host/path. Check their actual
+                    # stored sources before treating another article as the same.
+                    legacy_keys = {"top3-event:" + digest(["source", *u[:2]])[:38] for u in canonical if len(u) == 3}
+                    for key in keys | legacy_keys:
                         claim_row=s.get(AppSetting,key)
                         if not claim_row:continue
                         owner=s.get(IntelligenceRun,int(claim_row.value))
+                        if key in legacy_keys and key not in keys and owner:
+                            known = {source_identity(ref['url']) for src in owner.evidence.get('sources', []) for ref in src.get('references', []) if ref.get('url')}
+                            if known and not known & canonical:
+                                continue
                         if not (feed_style=='ai_design_v1' and owner and owner.evidence.get('analysis_id')==analysis_id
                                 and not any(i['status'] in {'running','unknown'} for i in owner.result['items'])):
                             raise PublishingError("이미 TOP 3 제작 작업에 포함된 사건입니다. 기존 결과에서 개별 재생성을 검토하세요.")

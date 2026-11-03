@@ -1,0 +1,46 @@
+{
+  "focused": {
+    "tests": 50,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 50
+  },
+  "lifecycle": {
+    "tests": 48,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 48
+  },
+  "connection": {
+    "tests": 133,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 133
+  },
+  "browser": {
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 8
+  },
+  "studio": {
+    "tests": 58,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "passed": 58
+  },
+  "frontendContracts": {
+    "passed": 58,
+    "failures": 0,
+    "skipped": 0
+  },
+  "typescriptAndVite": {
+    "passed": true
+  },
+  "paidRequests": 0
+}

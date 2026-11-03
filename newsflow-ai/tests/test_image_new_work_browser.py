@@ -82,3 +82,25 @@ def test_retry_confirmation_is_explicit_and_never_replays(app,browser,can_retry)
         body=posts[0].request.post_data
         assert 'retry_failed_run_id=93' in body and 'consent=true' in body
         p.unroute_all(behavior="wait");c.unroute_all(behavior='wait');c.close()
+
+
+def test_result_description_uses_requested_theme_without_internal_instructions(app,browser,tmp_path):
+    with local_server(app) as origin:
+        c=browser_context(browser,origin);p=c.new_page();posts=[]
+        p.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
+        prompt=('직장인들의 일상 (반복되고 지친 하루)\n시각 스타일: 3D 애니메이션\n'
+          '주제에 어울리는 짧은 한국어 문구 한 개를 직접 만들고 이미지와 함께 디자인하세요. 읽기 쉬운 한글 타이포그래피, 충분한 여백, 배경과 대비되는 강조색을 사용하고 주요 피사체를 가리지 마세요. 문구는 간결하게, 근거 없는 사실·수치·인용은 추가하지 마세요.')
+        def module(route):
+            data=route.fetch().json();data['collections']['drafts']=[{'id':7,'title':prompt,'prompt':prompt,'status':'success','outputId':8,'mediaUrl':'/image-studio/7/file','selection':{}}];route.fulfill(json=data)
+        p.route('**/api/studio/modules/images',module)
+        p.route(origin+'/image-studio/7/file',lambda r:r.fulfill(content_type='image/svg+xml',body='<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="blue"/></svg>'))
+        p.goto(origin+'/studio/images?mode=ai');display=p.locator('.core-saved-selection')
+        expect(display.locator('strong')).to_have_text('직장인들의 일상')
+        expect(display).to_contain_text('제작 의도 · 반복되고 지친 하루 · 3D 애니메이션')
+        expect(display).not_to_contain_text('근거 없는 사실')
+        display.get_by_text('입력한 내용',exact=True).click()
+        expect(display.locator('details p')).to_have_text('직장인들의 일상 (반복되고 지친 하루)')
+        expect(p.locator('.core-recent-panel .feed-image-history-card strong')).to_have_text('직장인들의 일상')
+        assert not posts
+        display.screenshot(path=str(tmp_path/'description.png'))
+        p.unroute_all(behavior='wait');c.unroute_all(behavior='wait');c.close()

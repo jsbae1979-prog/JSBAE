@@ -7,6 +7,7 @@ from newsflow.db.models import (
     AutopilotJob,
     ContentDraft,
     ImagePost,
+    IntelligenceRun,
     NewsArticle,
     NewsListState,
     VideoProject,
@@ -44,6 +45,13 @@ def referenced_article_ids(session) -> set[int]:
     """Articles that saved work still points at; these are hidden, never deleted."""
     identifiers = used_article_ids(session)
     identifiers.update(session.scalars(select(ImagePost.article_id)))
+    # Feed batches exist before a publishing ImagePost. Keep their frozen
+    # article links, including old versions and unfinished local drafts.
+    for evidence in session.scalars(select(IntelligenceRun.evidence).where(IntelligenceRun.kind == "feed_top3_batch")):
+        for source in (evidence or {}).get("sources", []):
+            values = [source.get("article_id"), *source.get("article_ids", [])]
+            identifiers.update(value for value in values if type(value) is int and value > 0)
+
     identifiers.update(session.scalars(select(AutopilotJob.article_id).where(AutopilotJob.article_id.is_not(None))))
     identifiers.update(session.scalars(select(AutopilotArticleClaim.article_id)))
     for sources in session.scalars(select(ContentDraft.sources)):

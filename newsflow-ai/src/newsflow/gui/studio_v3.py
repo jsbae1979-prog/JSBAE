@@ -48,10 +48,10 @@ def _project(identifier, title, kind, status, at, href, *, thumb=None, media=Non
 
 @router.get("/api/studio/workspace")
 def workspace(request: Request):
-    return workspace_view(request)
+    return workspace_view(request, include_feed_images=True)
 
 
-def workspace_view(request: Request, *, include_library_hidden=False, project_ids=None):
+def workspace_view(request: Request, *, include_library_hidden=False, project_ids=None, include_feed_images=False):
     """Active workspace by default; retained sources only for internal history projections."""
     import os
 
@@ -179,6 +179,13 @@ def workspace_view(request: Request, *, include_library_hidden=False, project_id
             )
         ]
         publish_count = session.scalar(select(func.count(PublishDraft.id))) or 0
+    if include_feed_images and getattr(state, 'top_three_feeds', None) is not None:
+        from newsflow.studio.feed_library import images as feed_images
+        for image in feed_images(state.top_three_feeds):
+            entry = _project(image['id'], image['title'], 'image', image['technicalStatus'],
+                image['updatedAt'], image['href'], thumb=image['thumbnailUrl'], media=image['mediaUrl'])
+            entry['sourceLabel'] = image['sourceLabel']
+            projects.append(entry)
     for job in state.character.listing():
         status = job["state"]
         url = None

@@ -364,7 +364,7 @@ def test_old_balance_values_are_history_only_and_normal_saves_preserve_them(sess
     assert saved.account_remaining_usd == old.account_remaining_usd and saved.billing_confirmed_at == stamp
 
 
-def test_no_balance_required_but_actual_authentication_still_expires(sessions, store):
+def test_no_balance_required_and_authentication_does_not_expire_by_age(sessions, store):
     configured(sessions)
     budget = APIBudgetService(sessions)
     assert "실제 API 연결 미확인 · 별도 승인 후 검증 필요" in budget.readiness(
@@ -377,20 +377,20 @@ def test_no_balance_required_but_actual_authentication_still_expires(sessions, s
     assert status["settings"].billing_confirmed_at is None
     with sessions.begin() as session:
         _set(session, "api_claude_api_authentication_verified_at", (utcnow() - timedelta(hours=25)).isoformat())
+    assert budget.readiness("claude_api", store, "analysis")["ready"]
+    invalidate_api_verification(sessions, "claude_api")
     assert not budget.readiness("claude_api", store, "analysis")["ready"]
 
 
-def test_expired_connection_has_clear_guidance_without_weakening_ttl(sessions,store):
-    from datetime import timedelta
-    from newsflow.intelligence.api_settings import AUTH_EXPIRED,_reasons,VERIFICATION_TTL,read_api_settings
-    from newsflow.character.authoring import budget_failure_reason
+def test_saved_authentication_requires_valid_date_and_current_model(sessions,store):
+    from newsflow.intelligence.api_settings import _reasons, read_api_settings
     from dataclasses import replace
     configured(sessions)
-    now=utcnow()
-    old=read_api_settings(sessions,'claude_api')
-    current=replace(old,verified_model=old.model,authentication_verified_at=(now-timedelta(hours=25)).isoformat())
-    assert AUTH_EXPIRED in _reasons(current,{'configured':True},'analysis',now)
-    assert budget_failure_reason(APISettingsError(AUTH_EXPIRED))=='authentication_required'
-    assert VERIFICATION_TTL==timedelta(hours=24)
-    current=replace(current,authentication_verified_at=(now-timedelta(hours=23)).isoformat())
-    assert AUTH_EXPIRED not in _reasons(current,{'configured':True},'analysis',now)
+    now=utcnow(); old=read_api_settings(sessions,'claude_api')
+    current=replace(old,verified_model=old.model,authentication_verified_at=(now-timedelta(days=90)).isoformat())
+    assert not _reasons(current,{'configured':True},'analysis',now)
+    for changed in (replace(current,verified_model='different'),
+                    replace(current,authentication_verified_at=None),
+                    replace(current,authentication_verified_at='invalid'),
+                    replace(current,authentication_verified_at=(now+timedelta(seconds=1)).isoformat())):
+        assert '실제 API 연결 미확인 · 별도 승인 후 검증 필요' in _reasons(changed,{'configured':True},'analysis',now)

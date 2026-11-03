@@ -32,6 +32,7 @@ export default function PhotoFeedEditor({
   local,
   onSaved,
   resultPicker,
+  statusPanel,
 }: {
   batch: Item;
   rank: number;
@@ -40,6 +41,7 @@ export default function PhotoFeedEditor({
   local: (fn: () => Promise<void>) => void;
   onSaved: () => Promise<void>;
   resultPicker: ReactNode;
+  statusPanel?: ReactNode;
 }) {
   const [state, setState] = useState<Item | null>(null),
     [form, setForm] = useState<Item>({}),
@@ -382,6 +384,7 @@ export default function PhotoFeedEditor({
           {shown && <img src={shown} alt="피드 확대" />}
         </dialog>
       </Panel>
+      <div className="photo-feed-editor-side">{statusPanel}
       <Panel
         title={`TOP ${rank} · 사진 중심 피드 편집`}
         className="photo-feed-editor"
@@ -556,6 +559,7 @@ export default function PhotoFeedEditor({
           </fieldset>
         )}
       </Panel>
+      </div>
     </>
   );
 }

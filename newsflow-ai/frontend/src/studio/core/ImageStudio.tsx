@@ -19,7 +19,7 @@ import {
   ActionButton,
   type Controller,
 } from "./shared";
-import { imagePrompt } from "./imagePrompt";
+import { imagePrompt, imageDescription } from "./imagePrompt";
 import FeedImageHistory from "./FeedImageHistory";
 import ImageResultPreview from "./ImageResultPreview";
 export default function ImageStudio({
@@ -42,7 +42,10 @@ export default function ImageStudio({
     [style, setStyle] = useState(""),
     [options, setOptions] = useState<Item>({}),
     [id, setId] = useState<number | null>(null);
-  const drafts = c.list("drafts"),
+  const drafts = c.list("drafts").map((x): Item => {
+    const display = imageDescription(String(x.prompt || x.title || ""));
+    return {...x, title:display.title, displayDescription:display.description, displayRequest:display.request};
+  }),
     selected = newMode ? undefined : drafts.find((x) => x.id === id) ?? drafts[0],
     success = drafts.filter(
       (x) => x.status === "success" && safeMedia(x.mediaUrl),
@@ -234,7 +237,8 @@ export default function ImageStudio({
           {selected && (
             <div className="core-saved-selection">
               <strong>{selected.title}</strong>
-              <p>{selected.prompt}</p>
+              <p><span>제작 의도 · </span>{selected.displayDescription}</p>
+              <details><summary>입력한 내용</summary><p>{selected.displayRequest}</p></details>
               <small>
                 {selected.selection?.model} · {selected.selection?.size} ·{" "}
                 {selected.selection?.quality}

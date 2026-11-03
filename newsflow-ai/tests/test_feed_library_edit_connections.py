@@ -138,3 +138,17 @@ def test_simulation_images_stay_in_library_but_cannot_prepare_publishing(app,cli
     assert images(feeds,publishable_only=True)==[]
     assert all(not p['id'].startswith(f'feed:{batch}:') for p in client.get('/api/studio/modules/publishing').json()['projects'])
     with pytest.raises(PublishingError):PostingCopy(app.state).view(f'feed:{batch}:1')
+
+
+def test_home_includes_generated_news_images_without_library_duplicates(app,client,feeds):
+    _,b,_,_=completed(feeds)
+    before=deepcopy(feeds.get(b).result)
+    home=client.get('/api/studio/workspace').json()
+    rows=[x for x in home['projects'] if x['id'].startswith('feed:')]
+    assert {x['id'] for x in rows}=={f'feed:{b}:{n}' for n in (1,2,3)}
+    assert all(x['kind']=='image' and x['thumbnailUrl'] and x['mediaUrl'] and f'batch_id={b}' in x['href'] for x in rows)
+    lib=client.get('/api/studio/modules/library').json()
+    assert len([x for x in lib['projects'] if x['id'].startswith('feed:')])==3
+    LibraryVisibility(app.state.sessions,app.state.character).change([f'feed:{b}:2'],hidden=True)
+    assert f'feed:{b}:2' not in {x['id'] for x in client.get('/api/studio/workspace').json()['projects']}
+    assert feeds.get(b).result==before

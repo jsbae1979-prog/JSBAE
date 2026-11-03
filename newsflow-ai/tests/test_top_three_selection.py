@@ -61,3 +61,41 @@ def test_changed_model_not_silently_replaced_with_old_batch(feeds):
         feeds.create(42,{**DEFAULTS['image'],'quality':'high'})
     assert feeds.view(identifier)['selection']['quality']==DEFAULTS['image']['quality']
     assert len(feeds.recent())==1
+
+
+def query_selection(monkeypatch, urls, *, shared_id=False):
+    rows=[{'rank':n,'article_id':n,'article_ids':[1 if shared_id and n==2 else n],
+        'title':f'서로 다른 사건 {url}','body':f'합성 요약 {n}',
+        'references':[{'url':url,'publisher':'Fixture'}],
+        'selection':{'draft_id':None},'origin':'saved'} for n,url in enumerate(urls,1)]
+    monkeypatch.setattr('newsflow.creation.top_three_feeds.selection',lambda s,i:{
+        'run':SimpleNamespace(id=i,evidence={'curation_contract':{'top_k':3}}),'items':deepcopy(rows)})
+
+def test_distinct_query_article_ids_are_not_duplicate_events(feeds,monkeypatch):
+    query_selection(monkeypatch,[f'https://example.com/news/article.html?no={n}' for n in (11,22,33)])
+    i=feeds.create(100,DEFAULTS['image'])
+    assert len(feeds.get(i).result['items'])==3
+
+@pytest.mark.parametrize('kind',['query_order','tracking','article_id'])
+def test_same_article_still_rejected_without_paid_call(feeds,monkeypatch,kind):
+    first='https://example.com/article?no=1&section=2'
+    second={'query_order':'https://example.com/article?section=2&no=1',
+        'tracking':first+'&utm_source=test#top','article_id':'https://other.example/article/2'}[kind]
+    query_selection(monkeypatch,[first,second,'https://example.com/article?no=3'],shared_id=kind=='article_id')
+    with pytest.raises(PublishingError,match='중복'):feeds.create(100,DEFAULTS['image'])
+    assert not feeds.recent()
+
+@pytest.mark.parametrize('same',[True,False])
+def test_legacy_path_claim_checks_actual_article_and_preserves_record(feeds,monkeypatch,same):
+    from newsflow.db.models import AppSetting
+    from newsflow.creation.top_three_feeds import digest
+    query_selection(monkeypatch,[f'https://example.com/article?no={n}' for n in (11,22,33)])
+    old=feeds.create(90,DEFAULTS['image'],rank=1)
+    key='top3-event:'+digest(['source','example.com','/article'])[:38]
+    with feeds.sessions.begin() as db:db.add(AppSetting(key=key,value=str(old)))
+    query_selection(monkeypatch,[f'https://example.com/article?no={n}' for n in ((11,44,55) if same else (44,55,66))])
+    if same:
+        with pytest.raises(PublishingError,match='이미 TOP 3'):feeds.create(100,DEFAULTS['image'])
+    else:
+        new=feeds.create(100,DEFAULTS['image']);assert new!=old
+    with feeds.sessions() as db:assert db.get(AppSetting,key).value==str(old)
