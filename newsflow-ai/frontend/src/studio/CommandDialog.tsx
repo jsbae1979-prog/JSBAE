@@ -1,3 +1,4 @@
+import RequestProgress from "./RequestProgress";
 import AnalysisConnectionCheck from "./AnalysisConnectionCheck";
 import { useEffect, useRef, useState } from "react";
 import "./command-review.css";
@@ -448,6 +449,9 @@ export function CommandDialog({
   const [files, setFiles] = useState<Record<string, File>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [checkingConnection, setCheckingConnection] = useState(false);
+  const [terminalStatus, setTerminalStatus] = useState<"success" | "failed" | null>(null);
+  useEffect(() => { if (busy) setTerminalStatus(null); }, [busy]);
   const [ack, setAck] = useState(false);
   const [responseSummary, setResponseSummary] = useState<Item | null>(null);
   const [clipDurations, setClipDurations] = useState<Record<string, number>>(
@@ -1040,8 +1044,10 @@ export function CommandDialog({
           {(collectionAnalysis || action.id === "intelligence_analyze") &&
             <AnalysisConnectionCheck provider={collectionAnalysis ? analysis?.provider : values.provider}
               csrfToken={view.csrfToken ?? ""} busy={busy}
-              onBegin={() => { setBusy(true); setAck(false); setError(""); }}
-              onEnd={() => setBusy(false)} onRefresh={onSaved} />}
+              onBegin={() => { setCheckingConnection(true); setBusy(true); setAck(false); setError(""); }}
+              onEnd={() => { setCheckingConnection(false); setBusy(false); }} onRefresh={onSaved} />}
+          {(busy || collectionAnalysis) && <RequestProgress active={busy} onTerminal={setTerminalStatus} collectionId={collectionAnalysis && !checkingConnection ? Number(values.collection_context_id) : undefined}
+            label={checkingConnection ? "API 연결 확인" : localRender ? "영상 합성" : collecting ? "뉴스 수집" : action.label} />}
           {error && (
             <p role="alert" className="command-error">
               <AlertTriangle size={18} />
@@ -1050,8 +1056,8 @@ export function CommandDialog({
           )}
         </div>
         <footer>
-          <button type="button" onClick={onClose} disabled={busy}>
-            취소
+          <button type="button" onClick={onClose} disabled={busy && !terminalStatus}>
+            {terminalStatus ? "닫기" : "취소"}
           </button>
           <button
             className="primary"
@@ -1068,13 +1074,13 @@ export function CommandDialog({
                 (!localRender.ready || values.reviewed !== true))
             }
           >
-            {busy ? (
+            {busy && !terminalStatus ? (
               <LoaderCircle className="spin" size={18} />
             ) : (
               <ShieldCheck size={18} />
             )}{" "}
             {busy
-              ? localRender ? "FFmpeg로 최종 영상 합성 중…" : collecting ? "수집 요청 중…" : "응답 확인 중 · 재요청 금지"
+              ? terminalStatus === "failed" ? "분석 실패" : terminalStatus === "success" ? "분석 완료" : localRender ? "FFmpeg로 최종 영상 합성 중…" : collecting ? "수집 요청 중…" : "처리 중…"
               : localRender
                 ? localRenderTitle
                 : modelRegistration ? "모델 추가" : action.label}

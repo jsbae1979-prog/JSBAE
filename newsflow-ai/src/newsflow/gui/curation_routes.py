@@ -112,6 +112,13 @@ def _once(request: Request, identity: list, callback, *, retry_preflight=False) 
         raise HTTPException(409, "다른 뉴스 평가·대본 요청이 진행 중입니다.") from None
 
 
+@router.get("/api/curation/analysis-status")
+def analysis_status(request: Request, collection_context_id: int):
+    from .analysis_progress import status
+    return JSONResponse(status(request.app.state.sessions, context(request), collection_context_id),
+                        headers={"Cache-Control": "no-store"})
+
+
 @router.post("/news/curation/analyze")
 def analyze(request: Request, collection_context_id: int = Form(ge=1), consent: bool = Form(False)):
     ctx = context(request)

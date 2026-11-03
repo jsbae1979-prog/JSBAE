@@ -59,7 +59,7 @@ class OperatingRequests(LocalWorkRequests):
 
     # Only cached capability data and local settings writes are enabled here.
     # Provider story/quote/submit routes remain outside the operation boundary.
-    READS = (LocalWorkRequests.READS - {'/api/samples'}) | {'/api/studio/video-models','/api/studio/publishing/copy'}
+    READS = (LocalWorkRequests.READS - {'/api/samples'}) | {'/api/studio/video-models','/api/studio/publishing/copy','/api/curation/analysis-status'}
     FEED_CHANGE = re.compile(r'/api/feed-batches/[0-9]+/change\Z')
     FEED_COST = re.compile(r'/api/feed-batches/[0-9]+/cost-review\Z')
     FEED_REVIEW = re.compile(r'/api/feed-batches/[0-9]+/items/[1-3]/review\Z')

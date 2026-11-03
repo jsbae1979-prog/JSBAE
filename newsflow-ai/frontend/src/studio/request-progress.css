@@ -1,0 +1,5 @@
+.request-progress{padding:16px;margin-top:16px;border:1px solid #246489;border-radius:10px;background:#0b2940;color:#d8efff}
+.request-progress-heading{display:flex;align-items:center;gap:10px}.request-progress-heading strong{flex:1}.request-progress-heading span{font-variant-numeric:tabular-nums;white-space:nowrap;color:#78ddff}
+.request-progress progress{display:block;width:100%;height:7px;margin:14px 0;accent-color:#46cfff}
+.request-progress p{margin:10px 0 5px;line-height:1.5}.request-progress small{color:#a9c0da}.request-progress.failed,.request-progress.delayed{border-color:#986d48;background:#352c27}.request-progress.success{border-color:#2b9b87;background:#133c38}
+@media(prefers-reduced-motion:reduce){.request-progress .spin{animation:none}}
