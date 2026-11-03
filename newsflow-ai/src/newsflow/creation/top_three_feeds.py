@@ -50,6 +50,12 @@ def excerpt(value, limit):
 
 
 def content_for(item):
+    copy = item.get('feed_copy')
+    if copy:
+        from newsflow.intelligence.feed_copy import FeedCopy
+        copy = FeedCopy.model_validate(copy).model_dump()
+        return {'title': copy['title'], 'body': copy['description'],
+                'hashtags': news_hashtags(copy['title'], copy['description'], item.get('category'))}
     title, body = choose_title(item["title"], item["body"]), excerpt(item["body"], 180)
     hashtags = news_hashtags(title, body, item.get("category"))
     return {"title": title, "body": body, "hashtags": hashtags}
@@ -220,6 +226,8 @@ class TopThreeFeeds:
                            "article_ids": item["article_ids"], "title": item["title"],
                            "body": item["body"], "references": refs,
                            "draft_id": item["selection"]["draft_id"], "origin": item["origin"]}
+                    if item.get('feed_copy'):
+                        src['feed_copy'] = deepcopy(item['feed_copy'])
                     sources.append(src)
                     items.append({"rank": src["rank"], "content": content_for(item), "attempt": 1,
                                   "status": "pending", "generation_id": None, "history": [],

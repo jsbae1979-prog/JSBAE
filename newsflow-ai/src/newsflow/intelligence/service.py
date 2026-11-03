@@ -569,7 +569,7 @@ class IntelligenceService:
                 raise IntelligenceError("화제성 평가는 선택한 API의 승인 경로로 실행하세요.", "ai_budget", False)
             from .curation import enrich
 
-            payload = enrich(payload, trend_snapshot, utcnow(), top_k=curation_top_k)
+            payload = enrich(payload, trend_snapshot, utcnow(), top_k=curation_top_k, feed_copy=True)
             if mode == "claude_api":
                 from .curation_wire import SCORE_DERIVATION
 

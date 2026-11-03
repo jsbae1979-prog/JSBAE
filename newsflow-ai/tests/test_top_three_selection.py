@@ -9,10 +9,13 @@ from newsflow.publishing.service import PublishingError
 from bat_distribution.operation import OperatingRequests
 
 @pytest.fixture
-def feeds(app,monkeypatch):
+def feeds(app,monkeypatch,request):
     items=[{'rank':n,'article_id':n,'article_ids':[n], 'title':f'합성 뉴스 {n}',
         'body':f'합성 요약 {n}', 'references':[{'url':f'https://example.com/news/{n}','publisher':'Fixture'}],
         'selection':{'draft_id':None},'origin':'saved'} for n in (1,2,3)]
+    if getattr(request,'param',None)=='analysis_feed_copy':
+        for item in items:
+            item['feed_copy']={'title':f"독립 제목 {item['rank']}\n계획 검토",'description':f"해당 핵심 설명 {item['rank']}"}
     monkeypatch.setattr('newsflow.creation.top_three_feeds.selection',lambda s,i:{'run':SimpleNamespace(id=i,evidence={'curation_contract':{'top_k':3}}),'items':deepcopy(items)})
     service=TopThreeFeeds(app.state.sessions,app.state.config.data_dir,SimpleNamespace(adapter=None))
     app.state.top_three_feeds=service

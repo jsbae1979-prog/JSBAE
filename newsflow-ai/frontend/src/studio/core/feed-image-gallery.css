@@ -17,8 +17,13 @@ dialog.feed-image-preview::backdrop{background:rgba(0,7,18,.82)}
 .feed-image-preview footer{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:12px;border-top:1px solid #2a405e}
 @media(max-width:550px){.core-studio .core-top3 .feed-image-history{grid-template-columns:repeat(2,minmax(0,1fr))}.feed-image-preview header{padding:10px}.feed-image-preview footer{gap:6px;padding:8px}.feed-image-preview footer button,.feed-image-preview footer a{padding:7px;font-size:12px}}
 
-.core-studio .feed-history-entry{display:flex;flex-direction:column;min-width:0;gap:6px}
+.core-studio .feed-history-entry{position:relative;display:flex;flex-direction:column;min-width:0;gap:6px}
 .core-studio .feed-history-entry>.feed-image-history-card{flex:1}
 .core-studio .feed-history-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:6px 0}
 .core-studio .feed-history-actions label{display:flex;flex-direction:row;align-items:center;gap:6px;margin:0}
 .core-studio .feed-history-actions input[type=checkbox]{width:15px;height:15px;margin:0;min-height:0;flex:none}
+
+.core-studio .feed-history-select{position:absolute;top:17px;left:17px;z-index:1;display:flex;align-items:center;justify-content:center;width:32px;height:32px;margin:0;padding:0;border:1px solid #7f99b9;border-radius:8px;background:rgba(7,18,33,.88);box-shadow:0 1px 5px #0006;cursor:pointer}
+.core-studio .feed-history-select input[type=checkbox]{width:18px;height:18px;min-height:0;margin:0;accent-color:#9f55ff;cursor:pointer}
+.core-studio .feed-history-select:focus-within{outline:2px solid #60dbff;outline-offset:2px}
+.core-studio .feed-history-entry.is-selected>.feed-image-history-card{border-color:#b878ff;box-shadow:0 0 0 2px #9f55ff}

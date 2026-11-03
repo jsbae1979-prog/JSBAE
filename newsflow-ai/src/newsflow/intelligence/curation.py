@@ -12,6 +12,7 @@ from newsflow.news.trends import trend_matches
 
 from .provider import AnalysisResponseError
 from .schema import Analysis, Comparison
+from .feed_copy import FeedCopy
 
 PROFILE = "google_news_trends_v1"
 GLOBAL_PROFILE = "global_news_trends_v2"
@@ -67,7 +68,7 @@ class CurationValidationError(AnalysisResponseError, ValueError):
     }
     SCHEMA_FIELDS = frozenset({"overview", "comparisons", "article_ids", "reason", "uncertainties",
                               "recommended_article_id", "selection_reason", "ranking", "rank", "score",
-                              "components", "summary", *COMPONENTS, *GLOBAL_COMPONENTS})
+                              "components", "summary", "feed_copy", "title", "description", *COMPONENTS, *GLOBAL_COMPONENTS})
     SCHEMA_TYPES = frozenset({"missing", "extra_forbidden", "int_type", "string_type", "list_type",
                              "dict_type", "model_type", "greater_than_equal", "less_than_equal",
                              "too_long", "too_short", "string_too_long", "string_too_short"})
@@ -82,7 +83,7 @@ class CurationValidationError(AnalysisResponseError, ValueError):
             k: v for k, v in (coverage_check.items() if isinstance(coverage_check, dict) else [])
             if isinstance(k, str) and k in fields and type(v) is int and 0 < v <= MAX_CURATION_ARTICLES
         }
-        self.number_field = number_field if isinstance(number_field, str) and number_field in {"reason", "summary"} else None
+        self.number_field = number_field if isinstance(number_field, str) and number_field in {"reason", "summary", "feed_title", "feed_description"} else None
         self.number_check = None
         if isinstance(number_check, dict):
             position, count, origin = (number_check.get(k) for k in ("position", "unmatched_count", "origin_hint"))
@@ -180,7 +181,25 @@ class TopThreeGlobalAnalysis(GlobalCuratedAnalysis):
     ranking: list[GlobalRankedNews] = Field(min_length=1, max_length=3)
 
 
+class FeedRankedNews(RankedNews):
+    feed_copy: FeedCopy
+
+
+class FeedGlobalRankedNews(GlobalRankedNews):
+    feed_copy: FeedCopy
+
+
+class FeedTopThreeAnalysis(TopThreeAnalysis):
+    ranking: list[FeedRankedNews] = Field(min_length=1, max_length=3)
+
+
+class FeedTopThreeGlobalAnalysis(TopThreeGlobalAnalysis):
+    ranking: list[FeedGlobalRankedNews] = Field(min_length=1, max_length=3)
+
+
 def ranking_model(contract: dict):
+    if contract.get('top_k') == 3 and contract.get('feed_copy_version') == 1:
+        return FeedTopThreeGlobalAnalysis if contract['profile'] == GLOBAL_PROFILE else FeedTopThreeAnalysis
     if contract.get("top_k", 10) == 3:
         return TopThreeGlobalAnalysis if contract["profile"] == GLOBAL_PROFILE else TopThreeAnalysis
     return GlobalCuratedAnalysis if contract["profile"] == GLOBAL_PROFILE else CuratedAnalysis
@@ -224,7 +243,7 @@ def recency(value: str | None, now: datetime) -> int | None:
     return 20 if age <= 6 else 16 if age <= 24 else 10 if age <= 48 else 4 if age <= 72 else 0
 
 
-def enrich(evidence: dict, snapshot: dict | None, now: datetime, *, top_k: int = 10) -> dict:
+def enrich(evidence: dict, snapshot: dict | None, now: datetime, *, top_k: int = 10, feed_copy: bool = False) -> dict:
     if type(top_k) is not int or top_k not in {3, 10}:
         raise ValueError("선정 건수를 확인해 주세요.")
     articles = []
@@ -306,6 +325,10 @@ def enrich(evidence: dict, snapshot: dict | None, now: datetime, *, top_k: int =
         "reason과 summary의 수치·날짜가 뒷받침되는지 확인한다. 전체 입력 중 다른 기사에서 보았다는 이유로 "
         "해당 묶음의 근거로 쓰지 않는다. 근거가 부족하면 수치만 삭제해 주장을 유지하지 말고 주장 전체를 생략한다."
     )
+    if top_k == 3 and feed_copy:
+        from .feed_copy import INSTRUCTION
+        contract['feed_copy_version'] = 1
+        contract['instructions'] += ' ' + INSTRUCTION
     return result
 
 
@@ -419,6 +442,12 @@ def validate_ranking(result: dict, evidence: dict) -> dict:
         if global_policy:
             reason_numbers |= {Decimal(len(articles[i].get("search_provenance", {}).get("edition_appearances", [])))
                                for i in item["article_ids"]}
+        for field, text in item.get('feed_copy', {}).items():
+            unmatched = _numeric_values(text) - allowed_numbers
+            if unmatched:
+                raise _number_error(unmatched, 'feed_' + field, index, item, articles)
+            if not text.strip():
+                raise CurationValidationError('curation_schema')
         unmatched = _numeric_values(item["summary"]) - allowed_numbers
         if unmatched:
             raise _number_error(unmatched, "summary", index, item, articles)

@@ -44,7 +44,7 @@ def test_real_adapter_fake_json_keeps_rules_and_persists_only_safe_diagnostics(
     svc, _fake, _mode, _options, _ids = prepared
     ctx = extend_collection(app, 81)
     ids = sorted(a.id for a in ctx["articles"])
-    evidence = enrich(svc.evidence_for(ids), SNAPSHOT, utcnow(), top_k=3)
+    evidence = enrich(svc.evidence_for(ids), SNAPSHOT, utcnow(), top_k=3, feed_copy=True)
     output = output_for(evidence)
     if kind == "schema_type":
         output["ranking"][0]["components"]["impact"] = RAW

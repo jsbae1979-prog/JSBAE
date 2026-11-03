@@ -69,7 +69,7 @@ def selection(session, analysis_id=None):
             ImagePost.sources["selection"]["rank"].as_integer() == row["rank"]
         ).order_by(ImagePost.id.desc())))
         items.append({"rank": row["rank"], "score": row.get("score"), "title": title,
-                      "body": body, "article_id": ids[0], "article_ids": ids, "references": refs,
+                      "body": body, "feed_copy": deepcopy(row.get("feed_copy")), "article_id": ids[0], "article_ids": ids, "references": refs,
                       "draft": draft, "saved": saved,
                       "origin": "기존 대본 재사용" if draft else "저장된 평가 요약 · 대본 미생성",
                       "selection": {"analysis_id": analysis.id, "rank": row["rank"],

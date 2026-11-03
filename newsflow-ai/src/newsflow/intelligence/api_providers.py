@@ -428,6 +428,10 @@ class AnthropicProvider(_APITransport):
                     ranking_schema = _legacy_wire(ranking_schema, script=False)
                 schema = output_schema(ranking_schema, payload["evidence"])
                 body["system"] += INSTRUCTION
+                if contract.get('feed_copy_version') == 1:
+                    body['system'] += (' For this version ranking ALSO requires feed_copy (title, description); '
+                                       'include it alongside group_id, components, reason and summary. '
+                                       'Follow the feed_copy instructions in curation_contract.')
                 body["messages"][0]["content"] = json.dumps(
                     {**payload, "evidence": wire_evidence(payload["evidence"])}, ensure_ascii=False, separators=(",", ":"))
             body["output_config"] = {"format": {"type": "json_schema", "schema": schema}}

@@ -30,13 +30,14 @@ export default function FeedImageHistory({entries,busy,csrf,onOpen,onRemoved}:{e
       <button disabled={busy||sending||!visible.length} onClick={()=>setSelected(visible.slice(0,100).map(id))}>전체 선택</button>
       <button disabled={sending||!selected.length} onClick={()=>setSelected([])}>선택 해제</button>
       <button disabled={busy||sending||!csrf||!selected.length} onClick={()=>setPending(visible.filter(x=>selected.includes(id(x))))}>선택 삭제</button></div>
-    <div className="feed-image-history">{visible.map(entry=><div className="feed-history-entry" key={id(entry)}>
+    <div className="feed-image-history">{visible.map(entry=><div className={`feed-history-entry${selected.includes(id(entry))?' is-selected':''}`} key={id(entry)}>
       <button className="feed-image-history-card" disabled={busy||sending} onClick={()=>onOpen(entry)}>
         <Thumbnail src={entry.item.mediaUrl} alt={entry.item.content?.title}/><strong>{entry.item.content?.title}</strong>
         <small>작업 #{entry.batch.id} · TOP {entry.item.rank}</small></button>
-      <div className="feed-history-actions"><label><input type="checkbox" aria-label={`작업 ${entry.batch.id} TOP ${entry.item.rank} 선택`} checked={selected.includes(id(entry))} disabled={busy||sending||!selected.includes(id(entry))&&selected.length>=100}
-        onChange={e=>setSelected(old=>e.target.checked?[...old,id(entry)]:old.filter(x=>x!==id(entry)))}/>선택</label>
-      <button aria-label={`작업 ${entry.batch.id} TOP ${entry.item.rank} 삭제`} disabled={busy||sending||!csrf} onClick={()=>setPending([entry])}>삭제</button></div></div>)}</div>
+      <label className="feed-history-select" title="이미지 선택">
+        <input type="checkbox" aria-label={`작업 ${entry.batch.id} TOP ${entry.item.rank} 선택`} checked={selected.includes(id(entry))} disabled={busy||sending||!selected.includes(id(entry))&&selected.length>=100}
+          onChange={e=>setSelected(old=>e.target.checked?[...old,id(entry)]:old.filter(x=>x!==id(entry)))}/>
+      </label></div>)}</div>
     {!visible.length&&<p>표시할 최근 이미지가 없습니다. 삭제한 이미지는 <a href="/studio/library">라이브러리 휴지통</a>에서 복원할 수 있습니다.</p>}
     {message&&<p role="status">{message}</p>}
     <dialog className="top3-dialog" ref={dialog} aria-label="최근 생성 이미지 삭제" onCancel={e=>{e.preventDefault();if(!flight.current)setPending(null);}}>

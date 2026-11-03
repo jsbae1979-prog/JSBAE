@@ -145,6 +145,9 @@ class CuratorResponse(FakeAPIProvider):
                           "score": sum(v or 0 for v in components.values()), "components": components,
                           "reason": "합성 자료의 대중 관심과 영향 범위를 비교한 편집 평가입니다.",
                           "summary": "제공 자료 안에서 연구 또는 문화 계획의 의미를 살펴봅니다."})
+        if evidence["curation_contract"].get("feed_copy_version") == 1:
+            for item in items:
+                item["feed_copy"] = {"title": "새 계획, 무엇을 확인할까?", "description": "제공된 자료의 적용 범위는 확인이 필요하다."}
         return {"overview": "합성 자료의 화제성 편집 평가 · 사실 검증 아님",
                 "comparisons": [{"article_ids": group, "reason": "같은 이슈 후보로 비교합니다.",
                                  "uncertainties": "발표 내용과 적용 범위는 원문 검토가 필요합니다."} for group in groups],

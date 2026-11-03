@@ -122,7 +122,7 @@ def test_eighty_one_article_fake_response_preserves_usage_and_single_call_contra
     svc, _fake, _mode, _options, _ids = prepared
     ctx = extend_collection(app, 81)
     ids = sorted(a.id for a in ctx["articles"])
-    evidence = enrich(svc.evidence_for(ids), SNAPSHOT, utcnow(), top_k=3)
+    evidence = enrich(svc.evidence_for(ids), SNAPSHOT, utcnow(), top_k=3, feed_copy=True)
     output = output_for(evidence)
     if invalid:
         output["ranking"][1][field] = "보도되지 않은 수량 999999개입니다."

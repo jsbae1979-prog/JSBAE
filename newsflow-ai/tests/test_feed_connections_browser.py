@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+import pytest
 from copy import deepcopy
 from io import BytesIO
 from PIL import Image
@@ -61,10 +64,21 @@ def test_gallery_delete_and_library_restore_no_media_loss(app,feeds,browser,tmp_
         p.on('pageerror',lambda e:errors.append(str(e)));p.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
         p.goto(origin+'/studio/images?mode=top3')
         expect(p.locator('.feed-image-history-card')).to_have_count(3)
-        p.get_by_role('button',name=f'작업 {b} TOP 2 삭제',exact=True).click()
+        # Selection overlays the image; no separate per-card selection/delete row.
+        entry=p.locator('.feed-history-entry').nth(1)
+        box=entry.locator('.feed-history-select').bounding_box()
+        image=entry.locator('img').bounding_box()
+        assert image['x']<=box['x'] and image['y']<=box['y']
+        assert box['x']+box['width']<=image['x']+image['width']
+        assert box['y']+box['height']<=image['y']+image['height']
+        expect(p.locator('.feed-history-entry .feed-history-actions')).to_have_count(0)
+        p.get_by_label(f'작업 {b} TOP 2 선택',exact=True).check()
+        expect(p.locator('dialog.feed-image-preview')).not_to_be_visible()
+        p.get_by_role('button',name='선택 삭제',exact=True).click()
         dialog=p.get_by_role('dialog',name='최근 생성 이미지 삭제')
         dialog.get_by_role('button',name='취소',exact=True).click()
         assert not any(x.endswith('/remove') for x in posts)
+        p.get_by_label(f'작업 {b} TOP 2 선택',exact=True).uncheck()
         p.get_by_label(f'작업 {b} TOP 1 선택',exact=True).check()
         p.get_by_label(f'작업 {b} TOP 3 선택',exact=True).check()
         p.get_by_role('button',name='선택 삭제',exact=True).click()
@@ -98,7 +112,8 @@ def test_gallery_acknowledged_delete_refresh_failure_is_not_unknown(app,feeds,br
         expect(p.locator('.feed-image-history-card')).to_have_count(3)
         # Mutation succeeds, only the subsequent listing fails.
         ctx.route('**/api/feed-batches',lambda r:r.fulfill(status=503,json={'detail':'fixture refresh failure'}))
-        p.get_by_role('button',name=f'작업 {b} TOP 1 삭제',exact=True).click()
+        p.get_by_label(f'작업 {b} TOP 1 선택',exact=True).check()
+        p.get_by_role('button',name='선택 삭제',exact=True).click()
         p.get_by_role('dialog',name='최근 생성 이미지 삭제').get_by_role('button',name='휴지통으로 이동',exact=True).click()
         expect(p.get_by_role('status').filter(has_text='목록 새로고침만 실패했습니다')).to_be_visible()
         expect(p.locator('.feed-image-history-card')).to_have_count(2)
@@ -106,3 +121,9 @@ def test_gallery_acknowledged_delete_refresh_failure_is_not_unknown(app,feeds,br
         assert sum(x.endswith('/remove') for x in posts)==1
         assert feeds.get(b).result==original and all(feeds.path(b,n).is_file() for n in (1,2,3))
         ctx.close()
+
+
+@pytest.fixture(autouse=True)
+def gallery_dist(monkeypatch):
+    root=Path(os.environ.get('EDITORIAL_TEST_DIST',Path(__file__).resolve().parents[1]/'frontend/dist'))
+    monkeypatch.setattr('newsflow.studio.resources.studio_dist_root',lambda:root)

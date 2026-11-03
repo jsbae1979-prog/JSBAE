@@ -112,7 +112,7 @@ def test_eighty_one_article_fake_wire_preserves_billing_and_blocks_factual_colli
     svc, _fake, _mode, _options, _ids = prepared
     ctx = extend_collection(app, 81)
     ids = sorted(a.id for a in ctx["articles"])
-    evidence = enrich(svc.evidence_for(ids), SNAPSHOT, utcnow(), top_k=3)
+    evidence = enrich(svc.evidence_for(ids), SNAPSHOT, utcnow(), top_k=3, feed_copy=True)
     output = output_for(evidence)
     for item in output["ranking"]:
         item["reason"] = f"AI 평가 점수 {item['score']}점 · 이번 평가 {item['rank']}위. 자료 범위의 AI 추정입니다."
@@ -147,7 +147,7 @@ def test_eighty_one_article_fake_wire_preserves_billing_and_blocks_factual_colli
         assert reservation.bounds["search_calls"] == 0
         assert session.scalar(select(ContentDraft)) is None
         if factual_collision:
-            assert run.result == {"analysis_failure": {
+            assert run.result == {"dispatch_state": "sent_or_unknown", "analysis_failure": {
                 "failure_reason": "curation_numbers", "number_field": "reason",
                 "number_check": {"position": 1, "unmatched_count": 1, "origin_hint": "evaluation_metadata_only"}}}
         else:

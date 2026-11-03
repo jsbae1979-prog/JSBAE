@@ -60,6 +60,9 @@ class GlobalAI(CuratorResponse):
                             "score": round(sum(v or 0 for v in values.values()) * 100 / 120),
                             "reason": "관측된 급상승과 수집 응답을 참고한 한국 시청자 관심도 AI 추정입니다.",
                             "summary": "제공 자료의 주제와 적용 범위를 확인합니다."})
+        if evidence["curation_contract"].get("feed_copy_version") == 1:
+            for item in ranking:
+                item["feed_copy"] = {"title": "새 계획, 무엇을 확인할까?", "description": "제공된 자료의 적용 범위는 확인이 필요하다."}
         ranking.sort(key=lambda item: item["score"], reverse=True)
         for index, item in enumerate(ranking, 1):
             item["rank"] = index
