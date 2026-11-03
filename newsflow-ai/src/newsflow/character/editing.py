@@ -99,6 +99,9 @@ def _caption(value):
 
 def write_captions(target, story, timeline, presets):
     caption = presets['caption']
+    if caption.get('preset') == 'social_v1':
+        from .social_captions import write
+        return write(target, story, timeline, presets)
     margin = round(1920 * caption['top_margin_ratio'])
     lines = ['[Script Info]', 'ScriptType: v4.00+', 'PlayResX: 1080', 'PlayResY: 1920',
              'WrapStyle: 0', 'ScaledBorderAndShadow: yes', '', '[V4+ Styles]',

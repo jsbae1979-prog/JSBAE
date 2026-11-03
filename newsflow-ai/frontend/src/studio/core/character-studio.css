@@ -1297,3 +1297,37 @@
 .core-studio[data-module="characters"] .character-direct-extension input{width:16px;height:16px;flex:0 0 16px;margin:0}
 
 .core-studio[data-module="characters"] .character-direct-mode button{white-space:nowrap;font-size:11px}
+
+/* Fill the allocated preview column; never stretch or crop the actual clip. */
+.core-studio[data-module="characters"] .kling-character-video-preview {
+  max-width: none;
+  max-height: none;
+}
+.core-studio[data-module="characters"] .kling-character-video-preview .core-media.video {
+  width: 100%;
+  max-width: none;
+  max-height: none;
+}
+
+/* Shared tracks keep each numbered step aligned with its working panel. */
+.core-studio[data-module="characters"] .kling-character-approved {
+  --character-tracks:minmax(260px,1.03fr) minmax(270px,.95fr) minmax(395px,1.21fr);
+  --character-gap:12px;
+}
+.core-studio[data-module="characters"] .kling-character-steps,
+.core-studio[data-module="characters"] .kling-character-columns {
+  grid-template-columns:var(--character-tracks);gap:var(--character-gap);
+}
+@media(max-width:1450px) {
+  .core-studio[data-module="characters"] .kling-character-approved {
+    --character-tracks:minmax(230px,1fr) minmax(235px,.95fr) minmax(365px,1.35fr);
+    --character-gap:10px;
+  }
+}
+@media(max-width:1100px) {
+  .core-studio[data-module="characters"] .kling-character-approved {--character-tracks:1fr 1fr;}
+  .core-studio[data-module="characters"] .kling-character-steps > div:last-child {grid-column:1/-1;}
+}
+@media(max-width:700px) {
+  .core-studio[data-module="characters"] .kling-character-approved {--character-tracks:1fr;}
+}

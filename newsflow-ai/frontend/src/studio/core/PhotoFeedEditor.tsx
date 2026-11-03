@@ -60,9 +60,11 @@ export default function PhotoFeedEditor({
   function accept(d: Item) {
     if (!alive.current) return;
     setState(d);
-    setForm(d.draft);
-    setBackground(d.background);
-    setDirty(false);
+    const fresh=d.candidates.find((c:Item)=>c.id===d.newGeneratedBackground);
+    setForm(fresh?{...d.draft,credit:fresh.credit}:d.draft);
+    setBackground(fresh?fresh.id:d.background);
+    setDirty(!!fresh);
+    if(fresh){setVersion(0);setMessage("새 배경을 반영했습니다. 이전 버전은 보존됩니다.");}
   }
   useEffect(() => {
     alive.current = true;
@@ -78,7 +80,7 @@ export default function PhotoFeedEditor({
         accept(d);
         const v = d.versions.at(-1);
         if (
-          v &&
+          v && !d.newGeneratedBackground &&
           visualKey(v.design, `version:${v.version}`) ===
             visualKey(d.draft, d.background)
         ) {
@@ -240,6 +242,9 @@ export default function PhotoFeedEditor({
       }
     });
   }
+  const currentImage=state?.candidates.find((c:Item)=>c.id==='generated'||c.aliases?.includes('generated'));
+  const selectedImage=state?.candidates.find((c:Item)=>c.id===background||c.aliases?.includes(background));
+  const hasNewBackground=!!currentImage && selectedImage?.sha256!==currentImage.sha256;
   const text = (label: string, key: string, rows = 1) => (
     <label>
       {label}
@@ -449,8 +454,11 @@ export default function PhotoFeedEditor({
                 ))}
               </details>
               <label>
-                배경 이미지
-                <select
+                  배경 이미지
+                  {hasNewBackground&&<button type="button" disabled={busy} onClick={()=>{
+                    setBackground(currentImage.id);edit('credit',currentImage.credit??'');
+                  }}>새로 생성한 배경 적용 · 무료</button>}
+                  <select
                   aria-label="배경 이미지"
                   value={state.candidates.find((c:Item)=>c.id===background || c.aliases?.includes(background))?.id ?? background}
                   onChange={(e) => {

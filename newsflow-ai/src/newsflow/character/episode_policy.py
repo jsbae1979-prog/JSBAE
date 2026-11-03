@@ -35,7 +35,8 @@ def load_edit_presets(path=None):
             or not _number(value['fast_strong_duck_db'], -40, 0)
             or not _number(value['loudness_lufs'], -24, -10)
             or not isinstance(caption, dict)
-            or set(caption) != {'font', 'family', 'size', 'outline', 'top_margin_ratio'}
+            or set(caption) - {'preset'} != {'font', 'family', 'size', 'outline', 'top_margin_ratio'}
+            or caption.get('preset', 'classic') not in {'classic', 'social_v1'}
             or caption['font'] != 'character/assets/NotoSansKR.ttf'
             or not isinstance(caption['family'], str)
             or not re.fullmatch(r'[A-Za-z0-9 _-]{1,60}', caption['family'])

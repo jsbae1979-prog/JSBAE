@@ -2,6 +2,7 @@
 from sqlalchemy import select
 from newsflow.db.models import CollectionRun, IntelligenceRun, NewsSource, utcnow
 from .collection_workspace import begin_collection
+from .category_selection import recommend
 from .ranking import category_feeds, category_query
 from .recent_filter import select_recent
 from .serpapi import SOURCE_URL, SerpApiError
@@ -35,10 +36,16 @@ def _finish(curator, collection_id, rows, totals, hours, *, run_id=None, failed=
     ids = list(dict.fromkeys(i for row in rows for i in row["article_ids"]))
     with curator.sessions.begin() as session:
         recent, info = select_recent(session, ids, utcnow(), hours)
-        counts = [{"category": r["category"], "collected": len(set(r["article_ids"])),
+        counts = [{"category": r["category"], "collected": r.get("selection", {}).get("candidates", len(set(r["article_ids"]))),
                    "kept": len(set(r["article_ids"]) & set(recent)), "status": r["status"],
+                   **({"selection": {k: v for k, v in r["selection"].items() if k != "ranking"}} if "selection" in r else {}),
                    **({"skipped_items": r["skipped_items"]} if r.get("skipped_items") else {})} for r in rows]
-        result = {**totals, "article_ids": recent, "recent_filter": info, "category_counts": counts}
+        selections = [r["selection"] for r in rows if "selection" in r]
+        if selections:
+            info.update(collected=sum(s["candidates"] for s in selections),
+                        excluded_old=sum(s["excluded_old"] for s in selections), filled_old=0,
+                        selection_policy="category_recommendation_v1")
+        result = {**totals, "selection_evidence": {r["category"]: r["selection"] for r in rows if "selection" in r}, "article_ids": recent, "recent_filter": info, "category_counts": counts}
         collection = session.get(CollectionRun, collection_id)
         for key in ("added", "duplicates", "succeeded", "failed"):
             setattr(collection, key, totals[key])
@@ -76,18 +83,30 @@ def collect_rss(curator, categories, hours):
     totals = dict(added=0, duplicates=0, succeeded=0, failed=0)
     for row in rows:
         row["status"] = "success"
+        candidates = []
+        origins = {}
         for url in category_feeds(row["category"]):
             try:
                 articles = curator.news.collector.collect(url, "Google News · " + row["category"], 10)
-                stored = _store(curator, url, row["category"], articles, rss=True)
-                row["article_ids"].extend(stored["article_ids"])
-                totals["added"] += stored["added"]
-                totals["duplicates"] += stored["duplicates"]
+                candidates.extend(articles)
+                origins.update({id(item): url for item in articles})
                 totals["succeeded"] += 1
             except Exception as exc:
                 row["status"] = "failed"
                 row["error"] = safe_feed_message(exc)
                 totals["failed"] += 1
+        chosen, row["selection"] = recommend(candidates, utcnow(), hours)
+        for url in dict.fromkeys(origins[id(item)] for item in chosen):
+            try:
+                stored = _store(curator, url, row["category"], [item for item in chosen if origins[id(item)] == url], rss=True)
+                row["article_ids"].extend(stored["article_ids"])
+                totals["added"] += stored["added"]
+                totals["duplicates"] += stored["duplicates"]
+            except Exception as exc:
+                row["status"] = "failed"
+                row["error"] = safe_feed_message(exc)
+                totals["failed"] += 1
+                totals["succeeded"] -= 1
     return _finish(curator, identifier, rows, totals, hours, failed=bool(totals["failed"]))
 
 
@@ -116,7 +135,8 @@ def collect_serpapi(curator, config, adapter, token, categories, hours):
             stage = "response"
             articles, metadata = adapter.search(query=category_query(row["category"]))
             stage = "storage"
-            stored = _store(curator, SOURCE_URL, row["category"], articles)
+            chosen, row["selection"] = recommend(articles, utcnow(), hours)
+            stored = _store(curator, SOURCE_URL, row["category"], chosen)
             row.update(article_ids=stored["article_ids"], status="success", skipped_items=metadata.get("skipped_items", 0))
             for key in ("added", "duplicates"):
                 totals[key] += stored[key]

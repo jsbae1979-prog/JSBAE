@@ -640,9 +640,9 @@ export function CommandDialog({
       if (serpapiCollect && values.collection_policy !== "korea_v1") return null;
       const selected: string[] = Array.isArray(values.categories) ? values.categories : [];
       return <fieldset key={f.name} className="collection-category-picker"><legend>수집 분야 · 여러 개 선택</legend>
-        <label><input type="checkbox" aria-label="전체 분야" checked={!selected.length} onChange={() => set("categories", [])} />전체</label>
+        <label><input type="checkbox" aria-label="전체 분야" checked={selected.length===choices(f, view, values, action).length} onChange={() => set("categories", choices(f, view, values, action).map(([name])=>name))} />전체</label>
         {choices(f, view, values, action).map(([name]) => <label key={name}><input type="checkbox" aria-label={`${name} 분야`}
-          checked={selected.includes(name)} onChange={e => set("categories", e.target.checked ? [...selected, name] : selected.filter(x => x !== name))} />{name}</label>)}
+          checked={selected.includes(name)} onChange={e => set("categories", e.target.checked ? [...selected, name] : selected.length>1 ? selected.filter(x => x !== name) : selected)} />{name}</label>)}
       </fieldset>;
     }
     const fieldLabel =
@@ -867,8 +867,8 @@ export function CommandDialog({
                         <dl className="property-list"><div><dt>대본 AI</dt><dd>{view.formDefaults?.intelligence_generate?.provider} · {view.formDefaults?.intelligence_generate?.model}</dd></div></dl>
                         {field(effective.fields.find(f=>f.name==="duration")!)}
                         {!newsScriptReady&&<p role="status">뉴스를 다시 선택해 주세요.</p>}</>
-                    : categoryRSS ? <><div className="form-grid">{effective.fields.filter(f=>["hours","categories"].includes(f.name)).map(field)}</div><p>인기 뉴스 RSS · {(values.categories ?? []).join(" · ") || "전체"}</p><p>공개 뉴스·Trends 수집만 실행합니다. AI 분석은 실행하지 않습니다.</p></>
-                    : serpapiCollect ? <><div className="form-grid">{effective.fields.filter(f=>["collection_policy","hours","categories"].includes(f.name)).map(field)}</div><p>SerpApi Google News + Trends 수집</p><p>{values.collection_policy === "korea_v1" ? `한국 · ${(values.categories ?? []).join(" · ") || "전체"}` : view.catalog.serpapi?.collectionPlan?.edition_labels}</p><p>SerpApi 검색 최대 {values.maximum_requests}회 · 계정 사용량이 차감될 수 있습니다. AI 분석·대본은 실행하지 않습니다.</p></>
+                    : categoryRSS ? <><div className="form-grid">{effective.fields.filter(f=>["hours","categories"].includes(f.name)).map(field)}</div><p>인기 뉴스 RSS · {(values.categories ?? []).join(" · ") || "전체"}</p><p>분야별 추천 최대 30건을 저장합니다. AI 분석은 실행하지 않습니다.</p></>
+                    : serpapiCollect ? <><div className="form-grid">{effective.fields.filter(f=>["collection_policy","hours","categories"].includes(f.name)).map(field)}</div><p>SerpApi · 분야별 추천 최대 30건</p><p>{values.collection_policy === "korea_v1" ? `한국 · ${(values.categories ?? []).join(" · ") || "전체"}` : view.catalog.serpapi?.collectionPlan?.edition_labels}</p><p>SerpApi 검색 최대 {values.maximum_requests}회 · 계정 사용량이 차감될 수 있습니다. AI 분석·대본은 실행하지 않습니다.</p></>
                     : quotePrepare ? <p>선택한 참조 이미지와 검토한 스토리로 최신 영상 견적을 확인합니다. 영상은 생성하지 않습니다.</p>
                     : collectionAnalysis ? <>
                         <p>수집 {analysis?.collectedCount??analysis?.candidateCount??0}건 중 분야별 최신 최대 30건, 총 {analysis?.candidateCount??0}건에서 TOP 3를 분석합니다.</p>

@@ -203,3 +203,14 @@
 .approved-studio.core-studio .core-news-list small { display:block; margin:3px 0; }
 .approved-studio.core-studio .core-news-list .project-placeholder { min-height:105px; }
 .approved-studio.core-studio .core-article-head > .project-placeholder { min-height:150px; }
+
+/* News preview uses its available column, retaining the full portrait frame. */
+.approved-studio.core-studio[data-module="shorts"] .core-settings-preview {
+  grid-template-columns:minmax(0,1fr) minmax(180px,1fr);
+}
+.approved-studio.core-studio[data-module="shorts"] .core-simple-video .core-media.video {
+  width:100%; max-width:none; max-height:none; aspect-ratio:9/16;
+}
+@media(max-width:600px) {
+  .approved-studio.core-studio[data-module="shorts"] .core-settings-preview {grid-template-columns:1fr;}
+}

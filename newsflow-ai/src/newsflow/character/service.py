@@ -95,7 +95,7 @@ def generation_rows(job):
         from .episode_policy import job_story_format
         story_format=job_story_format(job)
         story=validate_episode(job['script'],job['duration'],CATALOG.model(job['model']),chosen['sound']=='on',story_format)
-        return episode_prompts(story,chosen,job['character'],story_format)
+        return episode_prompts(story,chosen,job['character'],story_format,job.get('continuity_policy'))
     rows=job['prompts']
     if not job.get('studio_selection'):
         return rows
@@ -231,7 +231,7 @@ class CharacterService:
     @staticmethod
     def plan_hash(job):
         return fingerprint({k:job[k] for k in ['topic','model','claude_model','character','script','prompts',
-                                               'episode_limit','day_limit','reference_sha256'] + (['selection'] if 'selection' in job else []) + (['studio_selection'] if 'studio_selection' in job else [])})
+                                               'episode_limit','day_limit','reference_sha256'] + (['selection'] if 'selection' in job else []) + (['studio_selection'] if 'studio_selection' in job else []) + (['continuity_policy'] if 'continuity_policy' in job else [])})
 
     def save(self, job):
         path = self.folder(job['id'])/'jobs.json'

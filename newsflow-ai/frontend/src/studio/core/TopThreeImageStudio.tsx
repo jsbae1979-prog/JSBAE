@@ -31,6 +31,8 @@ function FeedLayout({
   const b = f.batch,
     blocked = f.busy || !f.ready,
     selection = c.list("selections").find((x) => String(x.id) === f.analysis);
+  const matching = f.batches.find((x:Item)=>String(x.analysisId)===f.analysis && x.feedStyle===style &&
+    (scope==='all' ? x.plannedImages===3 : x.plannedImages===1 && x.items[0]?.rank===active));
   const ranking =
     selection?.ranking ??
     b?.items.map((x: Item) => ({ ...x.source, ...x.content, rank: x.rank })) ??
@@ -68,6 +70,9 @@ function FeedLayout({
         <div className="core-top3-left">
           {tabs}
           <Panel title="뉴스 선택" className="core-top3-news">
+            {f.batches.length>0&&<details><summary>이전 작업 열기</summary><Select label="저장된 이미지 작업" value={b?String(b.id):""}
+              options={Object.fromEntries(f.batches.map((x:Item)=>[String(x.id),`작업 #${x.id} · ${x.items[0]?.content?.title??"뉴스 이미지"}`]))}
+              onChange={v=>{const x=f.batches.find((x:Item)=>String(x.id)===v);if(x)f.select(x);}} disabled={blocked}/></details>}
             <Select
               label="완료된 TOP 3 분석"
               value={f.analysis}
@@ -170,6 +175,7 @@ function FeedLayout({
               }
               onClick={() =>
                 f.local(async () => {
+                  if(matching){f.select(matching);f.setMessage("저장된 작업을 열었습니다. 새 배경이 필요하면 결과 아래의 새 배경 견적을 선택하세요.");return;}
                   f.show(
                     await f.post("/api/feed-batches", {
                       analysis_id: f.analysis,
@@ -184,7 +190,7 @@ function FeedLayout({
                 })
               }
             >
-              {scope === "all" ? "TOP 3 전체 제작 준비" : "선택 뉴스 제작 준비"}
+              {matching ? "저장된 작업 열기" : scope === "all" ? "TOP 3 전체 제작 준비" : "선택 뉴스 제작 준비"}
             </button>
           </Panel>
           {b && (
@@ -196,11 +202,9 @@ function FeedLayout({
                 stopping={f.stopRequested}
                 message={f.message}
               />
-              <details>
+              <details open>
                 <summary>새 배경 생성 · 견적·비용 승인</summary>
-                <p className="core-muted">
-                  배경이 있을 때 문구·배치 수정은 오른쪽 무료 편집을 이용하세요.
-                </p>
+
                 {b.items.some((x: Item) => x.image_safety?.sensitive) && (
                   <p>
                     민감 주제: 인물·국기·사건 장면 없이 상징 이미지로 만듭니다
@@ -253,7 +257,7 @@ function FeedLayout({
                     현재 요청 후 중단
                   </button>
                 )}
-                <p>{b.price}</p>
+
               </details>
               {b.canRecover && (
                 <button
@@ -304,7 +308,7 @@ function FeedLayout({
         </div>
         {b?.items.some((x: Item) => x.rank === active) ? (
           <PhotoFeedEditor
-            key={`${b.id}:${active}`}
+            key={`${b.id}:${active}:${b.items.find((x:Item)=>x.rank===active)?.generation_id??"none"}`}
             batch={b}
             rank={active}
             csrf={c.view?.csrfToken ?? ""}

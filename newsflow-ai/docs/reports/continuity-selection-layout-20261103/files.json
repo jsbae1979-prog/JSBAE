@@ -1,0 +1,126 @@
+[
+  {
+    "path": "newsflow-ai/frontend/src/studio/CommandDialog.tsx",
+    "sha256": "3efa605481270ee98ea68752960debc42617c3da1de1012e92e2503a0387b3fb"
+  },
+  {
+    "path": "newsflow-ai/frontend/src/studio/FeedCostReview.tsx",
+    "sha256": "0bd71392159bab33356c7b838804684bd4249f486c70325d3398a676fc5f2886"
+  },
+  {
+    "path": "newsflow-ai/frontend/src/studio/TopThreeFeeds.tsx",
+    "sha256": "0319a971057970b60d2d4db4b612c916b6fbd8048bf01b909ee9b1ace0a0ef0d"
+  },
+  {
+    "path": "newsflow-ai/frontend/src/studio/core/NewsCollectionControls.tsx",
+    "sha256": "58f7b0d9f69bd8c4b1d291dedf7cf4d5ee810c2a1bc667eed3041fd4848d7031"
+  },
+  {
+    "path": "newsflow-ai/frontend/src/studio/core/NewsShortsStudio.tsx",
+    "sha256": "e880b1802f43cc6656104ec5ee943c85c82e3ddd617d755e36238c468eb60dbb"
+  },
+  {
+    "path": "newsflow-ai/frontend/src/studio/core/PhotoFeedEditor.tsx",
+    "sha256": "de81173f3983d971f61c03269dd7e5ddbc652a5b4b24d70ab1b1f16bfce80751"
+  },
+  {
+    "path": "newsflow-ai/frontend/src/studio/core/TopThreeImageStudio.tsx",
+    "sha256": "29352043ead47128e055f0faceef81155121ce4164584ddeddfb9032e71da2a8"
+  },
+  {
+    "path": "newsflow-ai/frontend/src/studio/core/character-studio.css",
+    "sha256": "d842aaf3a5679b02126be2e27daab119ea19ada3dbdaef3727e35d5a55e95c12"
+  },
+  {
+    "path": "newsflow-ai/frontend/src/studio/core/precision.css",
+    "sha256": "4135b14cd5b60245d7db32c9245aa405d896a4df045ebcad7e82b69dc2e20fef"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/character/editing.py",
+    "sha256": "da02eee4e2a1f43d7e2400d316d5cb36e4f16c70282128ed15e6cece0d0f1da1"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/character/episode_policy.py",
+    "sha256": "6d75a5aa345a4aa8761b871cb90408e80f69155759a7511ace75269845781551"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/character/episode_recovery.py",
+    "sha256": "bbc1bb0a6b8e2aa2181eb440f315ed7913f9555ff2645a3b45e8ef2ece9be740"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/character/episode_service.py",
+    "sha256": "964259fcffd80d90213794e6b59bbeeb8104a57e1694f9abf01547a42d0b1197"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/character/episode_story.py",
+    "sha256": "314abda92891ec88a7c6518cddab55b95d3b251abe59e823523b6082d7cbb00e"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/character/service.py",
+    "sha256": "bfe0bb82719c8324dd7de8e0834a63b31651c42675f9f83738109611d8bc036e"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/config/edit_presets.yaml",
+    "sha256": "19fd7f980934f1378fba8e7c5ace3827168ce32d1a1a0ef73f621a791fe96874"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/creation/feed_designs.py",
+    "sha256": "ac3ae86b9d0e291687209b1b635f44ae93b7fc0746b98c9330a10c376631b58f"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/creation/top_three_feeds.py",
+    "sha256": "a5fa59faffedd5d49c06695c35a9c8a1ce99baed913270ef62314cdfbb504893"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/gui/templates/curation_panel.html",
+    "sha256": "05152e292be2a2b7ac743be059bc8eecaef5482c4048dd0c206baa366bec89d3"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/news/category_collection.py",
+    "sha256": "3176dbe0539cb8d5015c31712b2b3cb870e1eced50862868d7b10301d78ab009"
+  },
+  {
+    "path": "newsflow-ai/tests/test_category_collection.py",
+    "sha256": "a696ad18289dc2c8e2c4b57c3674d4a8162ec733e83fc8d3e2c6191dd5801acb"
+  },
+  {
+    "path": "newsflow-ai/tests/test_character_episode_editing.py",
+    "sha256": "b971f0bc9e26ddf2c0648207c900577ce547ee9a3d36e27a173986c473b8c3dd"
+  },
+  {
+    "path": "newsflow-ai/tests/test_feed_budget_browser.py",
+    "sha256": "ec83cc3a1341c65e8f42911f3a2cfe16bcf6085e2e6e0c64b760ff8d79edc88c"
+  },
+  {
+    "path": "newsflow-ai/tests/test_feed_cost_review_browser.py",
+    "sha256": "59f4bbb862b17ac38b3cba23cd5c92ff474c6e3ce59cdf6da334bfd463cb77ea"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/news/category_selection.py",
+    "sha256": "cda600adc7e6b442f165350071720c1cad5d4443462809d910d9ea454f7cae57"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/character/scene_continuity.py",
+    "sha256": "9a37436506f506fd97521941091e8ff9390cd6ee28b2576ddc534946a4983a2c"
+  },
+  {
+    "path": "newsflow-ai/src/newsflow/character/social_captions.py",
+    "sha256": "1ff4ac5aa7b490d458491a9b16f424f874b7c035d6b0df19ca264d665be58658"
+  },
+  {
+    "path": "newsflow-ai/tests/test_category_recommendation.py",
+    "sha256": "04d29a0998a11a2379adadaae079d71255fffa75b3dd79fd47b6cd9e70aa58dd"
+  },
+  {
+    "path": "newsflow-ai/tests/test_feed_new_background.py",
+    "sha256": "34537299713e960408db85feb3bdeb8d6a2ee393065e28c58917b356f3b0528b"
+  },
+  {
+    "path": "newsflow-ai/tests/test_review_selection_browser.py",
+    "sha256": "a231a98a32d6432fc8763f5a1cff0defc7c0d24b5a0c65e30d23c7892ace2c42"
+  },
+  {
+    "path": "newsflow-ai/tests/test_single_incident_captions.py",
+    "sha256": "3797ce309e133e063f97ff5d1e2b278c3fc36e70512f59eabfa6e843c08f1d1a"
+  }
+]

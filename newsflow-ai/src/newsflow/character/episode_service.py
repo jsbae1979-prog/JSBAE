@@ -106,6 +106,8 @@ class EpisodeFlow:
             if not direct_video:
                 # Frozen per job, so a later setting change keeps this job's script valid.
                 job['story_format'] = load_story_format()
+                if job['story_format'] and job['story_format']['short_scenes'] and model.get('continuation_param'):
+                    job['continuity_policy'] = 'single_incident_v1'
             if reference_only:job['character_reference_mode']='image_topic'
             if direct_video:
                 job.update(direct_video=True,direct_extension=direct_extension,state='script_review',script=dump(plan),
@@ -214,7 +216,7 @@ class EpisodeFlow:
             job.pop('script_validation_feedback', None)
             job.pop('script_failure', None)
             try:
-                job['prompts'] = prompts(story, chosen, job['character'], job_story_format(job))
+                job['prompts'] = prompts(story, chosen, job['character'], job_story_format(job), job.get('continuity_policy'))
                 job.pop('prompt_validation_error', None)
             except CharacterError:
                 # Preserve the paid, valid script and reservation for a local edit.
@@ -249,7 +251,7 @@ class EpisodeFlow:
             if job.get('scenes'):
                 job.setdefault('quote_history', []).append({'scenes': deepcopy(job['scenes']), 'at': now().isoformat()})
             job.update(script=dump(story),
-                       prompts=prompts(story, check(job['studio_selection']), job['character'], job_story_format(job)),
+                       prompts=prompts(story, check(job['studio_selection']), job['character'], job_story_format(job), job.get('continuity_policy')),
                        scenes=[], state='script_review')
             job.pop('prompt_validation_error', None)
             for key in ('script_approval', 'quote_hash', 'quote_total_usd', 'quoted_at', 'quote_key_id'):
@@ -272,7 +274,7 @@ class EpisodeFlow:
             if job.get('direct_video'):
                 from .direct_video import prompts as direct_prompts
                 planned=direct_prompts(story,chosen,job['character'])
-            else:planned = prompts(story, chosen, job['character'], job_story_format(job))
+            else:planned = prompts(story, chosen, job['character'], job_story_format(job), job.get('continuity_policy'))
             folder = s.folder(identifier)
             if digest(folder / 'reference.png') != job['reference_sha256']:
                 raise CharacterError('reference')
@@ -537,7 +539,7 @@ class EpisodeFlow:
                 ('scenes', 'quote_hash', 'quote_total_usd', 'quoted_at') if k in job})
             job.update(studio_selection=frozen, model=settings['video_model'], episode_limit=str(amount(episode_limit)),
                        script=dump(story), script_hash=fp(dump(story)),
-                       prompts=prompts(story, settings, job['character'], job_story_format(job)),
+                       prompts=prompts(story, settings, job['character'], job_story_format(job), job.get('continuity_policy')),
                        state='script_review', scenes=[])
             for key in ('script_approval', 'quote_hash', 'quote_total_usd', 'quoted_at', 'quote_key_id'):
                 job.pop(key, None)

@@ -68,7 +68,7 @@ def recover(service, identifier, *, consent=False, script=None, expected_hash=''
         # No truncation, AI repair or parser relaxation. Every local rule still runs.
         story=EpisodeFlow(service).validate(job, record['candidate'] if script is None else script)
         from .episode_policy import job_story_format
-        prepared=prompts(story,check(job['studio_selection']),job['character'],job_story_format(job))
+        prepared=prompts(story,check(job['studio_selection']),job['character'],job_story_format(job),job.get('continuity_policy'))
         previous=deepcopy(job['script_failure'])
         job.update(script=dump(story),prompts=prepared,state='script_review',response_received=True)
         job['script_hash']=fp(job['script']);job['plan_hash']=service.plan_hash(job)

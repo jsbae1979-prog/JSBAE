@@ -506,8 +506,9 @@ class TopThreeFeeds:
         designs = FeedDesigns(self)
         for item in items:
             item['designMediaUrl'] = None
-            versions = designs.state(identifier, item['rank'])['versions']
-            if versions:
+            design = designs.view(identifier, item['rank'])
+            versions = design['versions']
+            if versions and not design['newGeneratedBackground']:
                 try:
                     v = designs.version(identifier, item['rank'], versions[-1]['version'])
                     item['designMediaUrl'] = f"/api/feed-batches/{identifier}/items/{item['rank']}/design-file/{v['version']}"

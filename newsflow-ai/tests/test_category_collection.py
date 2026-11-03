@@ -73,7 +73,8 @@ def test_rss_selected_feeds_merge_age_cleanup_and_old_category_preserved(client,
     ctx=curator.context();summary=ctx['collection']
     assert summary['recent_filter']['excluded_old']==1 and summary['recent_filter']['unknown_published_at']==1
     assert len(summary['article_ids'])==len(set(summary['article_ids']))==6
-    assert summary['category_counts']==[{'category':'IT·과학','collected':6,'kept':5,'status':'success'},{'category':'연예','collected':2,'kept':2,'status':'success'}]
+    assert [(r['category'],r['collected'],r['kept'],r['status']) for r in summary['category_counts']]==[('IT·과학',7,5,'success'),('연예',2,2,'success')]
+    assert summary['category_counts'][0]['selection']['excluded_old']==1
     with app.state.sessions() as session:
         assert session.get(NewsArticle,old).category=='문화'
         assert session.get(NewsArticle,discarded) is None

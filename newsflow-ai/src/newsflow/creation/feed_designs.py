@@ -82,7 +82,13 @@ class FeedDesigns:
                 if c['id']==state['background']:groups[key]={**c,'aliases':aliases}
                 else:groups[key]['aliases']=aliases
         candidates=[{k:v for k,v in c.items() if k!='path'} for c in groups.values()]
-        return {**state,'batch':batch,'rank':rank,'articleId':source['article_id'],'sourceTitle':source['title'],
+        generated=next((c for c in candidates if 'generated' in c.get('aliases',[])),None)
+        selected=next((c for c in candidates if state['background'] in c.get('aliases',[])),None)
+        fresh=bool(generated and item.get('attempt',1)>1 and item.get('generation_id') and
+                   state.get('generation_id')!=item['generation_id'] and
+                   (not selected or selected['sha256']!=generated['sha256']))
+        return {**state,'newGeneratedBackground':generated['id'] if fresh else None,
+            'batch':batch,'rank':rank,'articleId':source['article_id'],'sourceTitle':source['title'],
             'originalSummary':source['body'],'candidates':candidates,
             'copyOptions':copy_options(source,item,state['draft']),
             'needsCopy':not bool(state['draft']['description']),
@@ -143,7 +149,8 @@ class FeedDesigns:
                     version={'version':len(state['versions'])+1,'design':v,'background':{**frozen,'kind':c['kind'],'credit':v['credit'],'sourceId':background,'provenance':deepcopy(c.get('provenance',{}))},**self.file(raw,'jpg')}
                     state['versions'].append(version)
                     background=f"version:{version['version']}"
-                state.update(draft=v,background=background,revision=state['revision']+1);self.write(batch,rank,state)
+                _,_,item=self.source(batch,rank)
+                state.update(draft=v,background=background,generation_id=item.get('generation_id'),revision=state['revision']+1);self.write(batch,rank,state)
         except Timeout:raise PublishingError('작업이 진행 중입니다. 잠시 후 확인하세요.') from None
         return self.view(batch,rank)
     def version(self,batch,rank,number):

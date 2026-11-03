@@ -61,9 +61,9 @@ export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;m
       {method==="rss" ? <ActionButton c={c} id="routes_collect" disabled={pending}
         context={{__collectionProgress:requestState}}>수집 시작</ActionButton>
         : method==="popular" ? <ActionButton c={c} id="curation_refresh" disabled={pending}
-          context={{__collectionProgress:requestState}}>수집 시작</ActionButton>
+          context={{categories:c.view?.catalog.newsCategories??[],__collectionProgress:requestState}}>수집 시작</ActionButton>
         : <ActionButton c={c} id="serpapi_collect" disabled={pending || !c.view?.catalog.serpapi?.canRequest}
-            context={{__collectionProgress:requestState}}>
+            context={{collection_policy:"korea_v1",categories:c.view?.catalog.newsCategories??[],maximum_requests:(c.view?.catalog.newsCategories??[]).length,__collectionProgress:requestState}}>
             수집 시작
           </ActionButton>}
     </div>
@@ -77,9 +77,10 @@ export function NewsCollectionControls({c,method,onMethodChange}:{c:Controller;m
       c.view?.catalog.serpapi?.keyConfigured?"SerpApi · 키 등록됨":"SerpApi · API 키 미등록"}</small>
     {method==="serpapi"&&<a className="news-collection-settings" href="/studio/settings?tab=sources">설정·관리에서 수집 설정</a>}
     {method==="serpapi"&&!c.view?.catalog.serpapi?.canRequest&&<small>설정·관리에서 키 등록과 사용 승인을 확인하세요.</small>}
+    {method!=="rss"&&<small>분야별 최대 30건 선별 · 최근성·복수 출처·중요도 기준이며 실제 조회수 순위는 아닙니다.</small>}
     {(c.view?.catalog.categoryCollection ?? []).length > 0 && <ul className="news-category-counts" aria-label="최근 분야별 수집 결과">
       {c.view?.catalog.categoryCollection.map((row: any) => <li key={row.category}>{row.category} · {row.status === "success"
-        ? `수집 ${row.collected}건 · 목록 대상 ${row.kept}건`
+        ? row.selection ? `후보 ${row.collected}건 · 추천 ${row.kept}건 / 최대 30건` : `수집 ${row.collected}건 · 목록 대상 ${row.kept}건`
         : row.status === "pending" ? "요청하지 않음 · 앞선 분야 수집 중단"
         : row.status === "unknown" ? "응답 확인 필요 · 기사 수 미확인"
         : `수집 실패 · ${row.collected > 0 ? `저장 ${row.collected}건` : "기사 수 미확인"}`}{row.skipped_items > 0 && ` · 형식 확인 불가 ${row.skipped_items}건 제외`}</li>)}

@@ -1,0 +1,23 @@
+{
+  "command": [
+    "C:\\Codex\\NewsFlowAI-IsolatedReview\\integration-20261024\\venv314\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "-rs",
+    "--tb=short",
+    "-o",
+    "junit_family=legacy",
+    "-o",
+    "faulthandler_timeout=120",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Codex\\NewsFlowAI\\continuity_review_20261103\\routes\\studio-v3-tmp",
+    "--junitxml=C:\\Codex\\NewsFlowAI\\continuity_review_20261103\\studio-v3.xml",
+    "--confcutdir",
+    "tools/studio_v3/tests",
+    "tools/studio_v3/tests"
+  ],
+  "exitCode": 0,
+  "seconds": 9.85
+}

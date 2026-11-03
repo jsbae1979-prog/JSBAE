@@ -239,7 +239,14 @@ _HOOK_FIRST = (
     'in its first second; no calm establishing shot. Explain the situation through the following scenes. '
     'hook_caption is a short Korean line that makes viewers curious about what happens next, not a title. ')
 _SHORT_SCENES = (
-    'Quick cuts: each scene is one quick beat; choose scene seconds between 3 and 6 when input.scene_seconds allows. ')
+    'Quick cuts: each scene is one quick beat; choose scene seconds between 3 and 6 when input.scene_seconds allows. '
+    'One continuous incident in one location and time. After scene 1 continue from the immediately previous scene. '
+    'Camera angle changes are not a reset of body position, held props, weather or room layout. '
+    'Show necessary movement on screen; never teleport the protagonist. '
+    'Do not invent coworkers or extra characters absent from input.character.supporting_cast. '
+    'Captions are short silent-comedy hooks, contrasts and payoff beats, not plot summaries or spoken dialogue. '
+    'Use a few concrete Korean words and avoid repeating the same hook in the next scene. ')
+
 _LOOP_ENDING = (
     'Loop ending: the last scene is the punchline and ends on the punchline action, not a long hold; '
     'use freeze_end none or weak for it. Its final pose, place and framing lead naturally back into scene 1, '
@@ -320,13 +327,18 @@ def scene_role(index, count, story_format=None):
     return 'contrast'
 
 
-def prompts(story, settings, character, story_format=None):
+def prompts(story, settings, character, story_format=None, continuity_policy=None):
     count = len(story.scenes)
-    return [{'position': s.no, 'seconds': s.seconds,
+    rows = [{'position': s.no, 'seconds': s.seconds,
              'continuity': s.continuity, 'from': s.from_scene,
              'prompt': scene_prompt(character, s, settings['sound'] == 'on',
                  scene_role(index, count, story_format), story_format)}
             for index,s in enumerate(story.scenes)]
+    if continuity_policy is not None:
+        if continuity_policy != 'single_incident_v1': raise CharacterError('blocked')
+        from .scene_continuity import connect
+        rows = connect(rows, story, character)
+    return rows
 
 
 def parse_script(value):

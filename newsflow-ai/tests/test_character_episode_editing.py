@@ -85,7 +85,7 @@ def test_caption_override_and_newline_are_data(tmp_path):
     path = tmp_path / '자막.ass'
     events = editing.write_captions(path, story, editing.edit_timeline(story, 15), editing.load_edit_presets())
     content = path.read_text(encoding='utf-8-sig')
-    assert '{\\pos' not in content and '｛＼pos(1,1)｝ 한글' in content
+    assert '{\\pos' not in content and '｛＼pos(1,1)｝ 한글' in content.replace(r'\N', ' ')
     assert content.count('Dialogue:') == events
     assert 'Noto Sans KR' in content and 'PlayResY: 1920' in content
 

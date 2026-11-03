@@ -167,7 +167,7 @@ export default function NewsShortsStudio({
     }
   }
   const scenes = Array.isArray(editor?.scenes) ? editor.scenes : [],
-    project = (c.view?.projects ?? []).find((x) => x.draftId === draft?.id);
+    project = draft?.id != null ? (c.view?.projects ?? []).find((x) => x.draftId != null && x.draftId === draft.id) : undefined;
   const voices: Record<string, string> = {
     "offline-silence": "무음 · 로컬 검증",
   };

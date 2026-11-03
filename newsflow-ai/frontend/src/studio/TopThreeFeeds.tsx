@@ -76,6 +76,7 @@ export default function TopThreeFeeds({
   const [runningRank, setRunningRank] = useState<number | null>(null);
   const [stopRequested, setStopRequested] = useState(false);
   const loadVersion = useRef(0);
+  const initialLoad = useRef(true);
   const stop = useRef(false),
     mounted = useRef(true);
   async function load() {
@@ -93,9 +94,13 @@ export default function TopThreeFeeds({
       setBatches(d.batches);
       setOptions(d.defaults ?? catalog.imageDefaults ?? {});
       const requested = new URLSearchParams(window.location.search).get("batch_id");
+      const latest=selections.filter(x=>x.status==='success'&&x.ranking?.length===3).sort((a,b)=>Number(b.id)-Number(a.id))[0];
+      const first=initialLoad.current;initialLoad.current=false;
+      if(first&&!requested&&latest)setAnalysis(String(latest.id));
       setBatch((b) => d.batches.find((x: Item) => x.id === b?.id) ??
         (requested && /^[1-9][0-9]*$/.test(requested)
-          ? d.batches.find((x: Item) => String(x.id) === requested) ?? null : d.batches[0] ?? null));
+          ? d.batches.find((x: Item) => String(x.id) === requested) ?? null
+          : latest ? d.batches.find((x:Item)=>x.analysisId===latest.id)??null : d.batches[0]??null));
     } finally {
       if (mounted.current && version === loadVersion.current) setReady(true);
     }

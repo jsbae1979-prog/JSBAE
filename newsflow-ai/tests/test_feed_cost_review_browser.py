@@ -14,13 +14,13 @@ def test_cost_status_and_expired_additional_quote(app,ready,browser,monkeypatch,
         c=browser.new_context(viewport={'width':1366,'height':768})
         c.route('**/*',lambda r:r.continue_() if r.request.url.startswith(origin+'/') else r.abort())
         p=c.new_page();posts=[];p.on('request',lambda r:posts.append(r) if r.method=='POST' else None)
-        p.goto(origin+'/studio/images?mode=news')
-        p.get_by_text('새 배경 생성 · 견적·비용 승인',exact=True).click()
-        box=p.locator('.core-feed-cost');box.locator('summary').click()
-        expect(box).to_contain_text('비용 승인 저장됨')
+        p.goto(origin+f'/studio/images?mode=news&batch_id={i}')
+        expect(p.get_by_text('새 배경 생성 · 견적·비용 승인',exact=True)).to_be_visible()
+        box=p.locator('.core-feed-cost');box.locator(':scope > summary').click()
+        expect(box).to_contain_text('예산 적용됨')
         before=s.get(i);revision=before.result['revision']
         box.get_by_role('button',name='비용 상태 새로고침',exact=True).click()
-        expect(box).to_contain_text('비용 승인 저장됨')
+        expect(box).to_contain_text('예산 적용됨')
         assert not posts and s.get(i).result['revision']==revision
         s.costs.clock=lambda:201
         box.get_by_role('button',name='비용 상태 새로고침',exact=True).click()
