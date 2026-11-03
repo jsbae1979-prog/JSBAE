@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Sparkles,
-  Save,
   Download,
   Box,
   Palette,
@@ -20,6 +19,8 @@ import {
   ActionButton,
   type Controller,
 } from "./shared";
+import { imagePrompt } from "./imagePrompt";
+import FeedImageHistory from "./FeedImageHistory";
 import ImageResultPreview from "./ImageResultPreview";
 export default function ImageStudio({
   c,
@@ -28,6 +29,10 @@ export default function ImageStudio({
   c: Controller;
   tabs: ReactNode;
 }) {
+  const [textMode, setTextMode] = useState("auto");
+  const [preparing, setPreparing] = useState(false);
+  const [prepareError, setPrepareError] = useState("");
+  const prepareLock = useRef(false);
   const [newMode, setNewMode] = useState(false);
   const [imageText, setImageText] = useState("");
   const [preview, setPreview] = useState<Item | null>(null);
@@ -52,7 +57,7 @@ export default function ImageStudio({
   }, [drafts, newMode]);
   function startNew() {
     knownIds.current = new Set(drafts.map(x => x.id));
-    setNewMode(true); setId(null); setPrompt(""); setImageText(""); setPreview(null);
+    setNewMode(true); setId(null); setPrompt(""); setImageText(""); setTextMode("auto"); setPreview(null); setPrepareError("");
     promptInput.current?.focus();
   }
   const styles = [
@@ -64,10 +69,26 @@ export default function ImageStudio({
       "스케치",
     ],
     context = {
-      prompt: [prompt, style && `시각 스타일: ${style}`, imageText.trim() && `이미지에 넣을 문구(원문 유지): ${imageText.trim()}`].filter(Boolean).join("\n"),
+      prompt: imagePrompt(prompt, style, textMode, imageText),
       ...options,
     },
     blocked = selected?.outputId != null;
+  async function prepareImage() {
+    if (prepareLock.current || !prompt.trim() || (textMode === "manual" && !imageText.trim()) || !c.view?.csrfToken || !c.view.commandsAvailable) return;
+    prepareLock.current = true; setPreparing(true); setPrepareError("");
+    try {
+      const body = new URLSearchParams({csrf_token:c.view.csrfToken,prompt:context.prompt,
+        provider:String(options.provider ?? "openai"),model:String(options.model ?? ""),size:String(options.size ?? ""),quality:String(options.quality ?? "")});
+      const response = await fetch("/image-studio/drafts", {method:"POST",credentials:"same-origin",headers:{Accept:"application/json"},body});
+      const data = await response.json();
+      if (!response.ok || !Number.isSafeInteger(data.draft_id) || data.draft_id < 1)
+        throw new Error(typeof data.detail === "string" ? data.detail : "초안 저장 상태를 확인하세요.");
+      setId(data.draft_id); setNewMode(false);
+      await c.load();
+      c.open("creation_generate", {identifier:data.draft_id});
+    } catch (error) { setPrepareError(error instanceof Error ? error.message : "초안을 준비하지 못했습니다."); }
+    finally { prepareLock.current = false; setPreparing(false); }
+  }
   function choose(x: Item) {
     setNewMode(false); setId(x.id);
   }
@@ -76,7 +97,7 @@ export default function ImageStudio({
       <div className="core-image-grid">
         <div className="core-image-input">
           {tabs}
-          <Panel title="이미지 주제 입력" tools={<button type="button" onClick={startNew}>새로 만들기</button>}>
+          <Panel title="이미지 주제 입력" tools={<button type="button" disabled={preparing} onClick={startNew}>새로 만들기</button>}>
             <label>
               프롬프트
               <textarea
@@ -88,10 +109,16 @@ export default function ImageStudio({
                 onChange={(e) => setPrompt(e.target.value)}
               />
             </label>
-            <label>이미지에 넣을 짧은 문구 · 선택
+            <label>이미지 문구
+              <select aria-label="이미지 문구 만들기" value={textMode} onChange={e => setTextMode(e.target.value)}>
+                <option value="auto">AI가 문구와 디자인 만들기</option>
+                <option value="manual">문구 직접 입력</option><option value="none">문구 없이</option>
+              </select>
+            </label>
+            {textMode === "manual" && <label>이미지에 넣을 짧은 문구
               <input aria-label="이미지에 넣을 짧은 문구" maxLength={120} value={imageText}
                 placeholder="예: 오늘도 나답게" onChange={e => setImageText(e.target.value)}/>
-            </label>
+            </label>}
             <div className="core-tags">
               {["여행", "일상", "판타지", "도시", "자연"].map((x) => (
                 <button
@@ -144,23 +171,18 @@ export default function ImageStudio({
               />
             </div>
             <div className="core-actions">
-              <ActionButton
-                c={c}
-                id="creation_draft"
-                context={context}
-                disabled={!prompt.trim()}
-                primary
-              >
-                <Save size={16} />
-                초안 저장 · 참조 첨부
-              </ActionButton>
+              <button type="button" className="primary" onClick={() => void prepareImage()}
+                disabled={preparing || !prompt.trim() || (textMode === "manual" && !imageText.trim())}>
+                <Sparkles size={16}/>{preparing ? "생성 준비 중…" : "이미지 만들기"}
+              </button>
               <ActionButton c={c} id="creation_defaults" context={options}>
                 다음 작업 기본값 저장
               </ActionButton>
             </div>
-            <p className="core-muted">
-              참조 이미지를 첨부하면 이미지 편집 방식으로 요청합니다. 생성 전 키·실행 승인·비용 조건을 확인합니다.
-            </p>
+            {prepareError && <p role="alert">{prepareError}</p>}
+            <details><summary>참조 이미지 사용 · 선택</summary>
+              <ActionButton c={c} id="creation_draft" context={context} disabled={!prompt.trim() || preparing}>참조 이미지 첨부</ActionButton>
+            </details>
           </Panel>
         </div>
         <Panel
@@ -172,7 +194,7 @@ export default function ImageStudio({
             <button type="button" className="image-result-enlarge" aria-label="생성 이미지 크게 보기" onClick={() => setPreview(selected)}>
               <Media url={selected.mediaUrl} kind="image" label="실제 생성 결과"/>
               <span>크게 보기</span>
-            </button> : <Empty>{newMode ? "새 프롬프트를 입력하고 초안을 저장하세요." : "생성된 이미지가 없습니다."}</Empty>}
+            </button> : <Empty>{newMode ? "만들고 싶은 이미지를 입력하고 이미지 만들기를 누르세요." : "생성된 이미지가 없습니다."}</Empty>}
           <div className="core-actions">
             {selected && (
               <>
@@ -248,17 +270,10 @@ export default function ImageStudio({
       </div>
       {preview && <ImageResultPreview item={preview} onClose={() => setPreview(null)}/>}
       <Panel title="최근 생성 이미지" className="core-recent-panel">
-        <div className="core-recent">
-          {success.map((x) => (
-            <button key={x.id} onClick={() => { choose(x); setPreview(x); }}>
-              <Media url={x.mediaUrl} kind="image" />
-              <strong>{x.title}</strong>
-            </button>
-          ))}
-          {!success.length && (
-            <Empty>검증된 생성 성공 파일만 표시합니다.</Empty>
-          )}
-        </div>
+        <FeedImageHistory kind="image" entries={success.map(x=>({batch:{id:x.id},item:{rank:1,mediaUrl:x.mediaUrl,content:{title:x.title}}}))}
+          busy={preparing} csrf={c.view?.csrfToken ?? ""}
+          onOpen={entry=>{const item=success.find(x=>x.id===entry.batch.id);if(item){choose(item);setPreview(item);}}}
+          onRemoved={async()=>{setPreview(null);setId(null);await c.load();}}/>
       </Panel>
     </>
   );

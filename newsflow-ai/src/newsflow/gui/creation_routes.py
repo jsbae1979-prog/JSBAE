@@ -2,7 +2,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from newsflow.creation.catalog import (
     IMAGE_MODELS,
@@ -45,9 +45,13 @@ def draft(request: Request, prompt: str = Form(...), model: str = Form(...),
     try:
         identifier = service.create(prompt, {'provider': provider, 'model': model, 'size': size, 'quality': quality},
                          reference=reference.file.read(10*1024*1024+1) if reference and reference.filename else b'')
+        if request.headers.get('accept') == 'application/json':
+            return JSONResponse({'draft_id': identifier}, headers={'Cache-Control':'no-store'})
         return go('/image-studio?draft_id=' + str(identifier))
     except (PublishingError, SelectionError, ValueError, OSError) as exc:
         message = str(exc) if isinstance(exc, (PublishingError, SelectionError)) else '입력 이미지를 확인하세요.'
+        if request.headers.get('accept') == 'application/json':
+            raise HTTPException(422, message) from None
         return page(request, 'image_studio.html', **context(request, error=message))
 
 

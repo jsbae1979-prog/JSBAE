@@ -3,10 +3,11 @@ from copy import deepcopy
 
 from pydantic import ValidationError
 
-from .curation import GLOBAL_PROFILE, CurationValidationError, component_total, ranking_model
+from .curation import GLOBAL_PROFILE, CurationValidationError, component_total, ranking_model, representative_article
 
 SCORE_DERIVATION = {
     "version": "claude_components_v1",
+    "recency": "representative_evidence_v1",
     "selection": "AI selects candidates; application does not add or replace them.",
     "total": "Existing policy: sum for five components; round(sum*100/120) for six components.",
     "rounding": "Nearest integer, ties to even; unassessed components remain null.",
@@ -33,6 +34,22 @@ INSTRUCTION = (
 )
 
 
+RECENCY_INSTRUCTION = (
+    " For the five-component profile, do NOT return components.recency. "
+    "The app supplies it from the stored curation_recency of the representative article: "
+    "longest supplied summary, then lowest article ID for ties. "
+    "Do not choose the latest article as the representative or recalculate its age. "
+    "An unknown stored value remains null. This overrides earlier instructions to return recency. "
+    "Other component points and candidate selection remain your task."
+)
+
+
+def derives_recency(evidence: dict) -> bool:
+    contract = evidence["curation_contract"]
+    return (contract["profile"] != GLOBAL_PROFILE and
+            contract.get("score_derivation", {}).get("recency") == "representative_evidence_v1")
+
+
 def output_schema(schema: dict, evidence: dict) -> dict:
     """Keep grammar size independent of article count; validate exact membership locally."""
     result = deepcopy(schema)
@@ -45,6 +62,9 @@ def output_schema(schema: dict, evidence: dict) -> dict:
         "The application enforces the range and complete coverage after generation.")}
     for definition in definitions.values():
         properties = definition.get("properties", {})
+        if derives_recency(evidence) and "recency" in properties:
+            properties.pop("recency")
+            definition["required"] = [name for name in definition["required"] if name != "recency"]
         if "article_ids" in properties:
             properties.pop("article_ids")
             properties["group_id"] = {"$ref": "#/$defs/G"}
@@ -114,6 +134,7 @@ def decode(output: dict, evidence: dict) -> dict:
     if not isinstance(ranking, list):
         raise CurationValidationError("curation_schema")
     ranked = []
+    articles = {a["id"]: a for a in evidence["articles"]}
     for item in ranking:
         if not isinstance(item, dict) or type(item.get("group_id")) is not int:
             raise CurationValidationError("curation_schema")
@@ -126,6 +147,12 @@ def decode(output: dict, evidence: dict) -> dict:
         # explicitly excludes derived fields from the response.
         if "score" in item or "rank" in item:
             raise CurationValidationError("curation_score_order")
+        item = deepcopy(item)
+        if derives_recency(evidence):
+            components = item.get("components")
+            if not isinstance(components, dict) or "recency" in components:
+                raise CurationValidationError("curation_schema")
+            components["recency"] = representative_article(articles, groups[label])["curation_recency"]
         ranked.append({**{k: v for k, v in item.items() if k != "group_id"},
                        "article_ids": sorted(groups[label]), "rank": len(ranked) + 1, "score": 0})
     # Unknown fields remain for the strict local model to reject.

@@ -25,6 +25,7 @@ def test_new_image_text_preview_and_single_consent(app,browser,tmp_path):
             posts.append((route.request.url,route.request.post_data))
             if route.request.url.endswith('/drafts'):
                 rows.insert(0,{'id':6,'title':'새 이미지','prompt':'새 프롬프트','status':'draft','outputId':None,'selection':rows[0]['selection']})
+                route.fulfill(json={'draft_id':6});return
             route.fulfill(status=303,headers={'Location':'/image-studio'},body='')
         p.route(origin+'/image-studio/drafts',post);p.route(origin+'/image-studio/6/generate',post)
         p.goto(origin+'/studio/images?mode=ai')
@@ -37,15 +38,14 @@ def test_new_image_text_preview_and_single_consent(app,browser,tmp_path):
         expect(p.get_by_label('이미지 프롬프트',exact=True)).to_be_focused()
         expect(p.get_by_role('button',name='생성 조건 확인',exact=True)).to_have_count(0)
         p.get_by_label('이미지 프롬프트',exact=True).fill('푸른 바다 위 작은 배')
+        expect(p.get_by_label('이미지 문구 만들기')).to_have_value('auto')
+        p.get_by_label('이미지 문구 만들기').select_option('manual')
         p.get_by_label('이미지에 넣을 짧은 문구',exact=True).fill('오늘도 나답게')
-        p.get_by_role('button',name='초안 저장 · 참조 첨부',exact=True).click()
-        draft=p.get_by_role('dialog',name='이미지 초안 저장',exact=True)
-        expect(draft.locator('[name=prompt]')).to_contain_text('오늘도 나답게') if False else None
-        assert '오늘도 나답게' in draft.locator('textarea').first.input_value()
-        draft.get_by_role('button',name='이미지 초안 저장',exact=True).click();expect(draft).not_to_be_visible()
-        expect(p.get_by_role('button',name='생성 조건 확인',exact=True)).to_be_enabled()
-        p.get_by_role('button',name='생성 조건 확인',exact=True).click()
+        p.get_by_role('button',name='이미지 만들기',exact=True).click()
         d=p.get_by_role('dialog',name='승인 후 이미지 1회 생성',exact=True)
+        from urllib.parse import parse_qs
+        assert '오늘도 나답게' in parse_qs(posts[0][1])['prompt'][0]
+        assert 'reference' not in parse_qs(posts[0][1])
         expect(d.get_by_role('checkbox')).to_have_count(1)
         button=d.get_by_role('button',name='승인 후 이미지 1회 생성',exact=True)
         expect(button).to_be_disabled();assert len(posts)==1
@@ -56,7 +56,7 @@ def test_new_image_text_preview_and_single_consent(app,browser,tmp_path):
         assert len(posts)==2 and posts[-1][0].endswith('/6/generate')
         assert 'consent=true' in posts[-1][1] and 'reviewed=true' in posts[-1][1]
         assert rows[-1]['id']==5 and rows[-1]['mediaUrl']==image and not errors
-        p.unroute_all(behavior="wait");c.close()
+        p.unroute_all(behavior="wait");c.unroute_all(behavior='wait');c.close()
 
 @pytest.mark.parametrize('can_retry',[True,False])
 def test_retry_confirmation_is_explicit_and_never_replays(app,browser,can_retry):
@@ -73,7 +73,7 @@ def test_retry_confirmation_is_explicit_and_never_replays(app,browser,can_retry)
         d=p.get_by_role('dialog',name='기사 분석',exact=True)
         expect(d.get_by_role('status',name='요청 진행 상태')).to_contain_text('분석 실패')
         retry=d.get_by_role('button',name='다시 분석하기',exact=True)
-        if not can_retry:expect(retry).to_have_count(0);assert not posts;c.close();return
+        if not can_retry:expect(retry).to_have_count(0);assert not posts;c.unroute_all(behavior='wait');c.close();return
         retry.click();expect(d.get_by_text('같은 기사로 다시 분석할까요?',exact=True)).to_be_visible()
         d.get_by_role('button',name='취소',exact=True).click();assert not posts
         retry.click();d.get_by_role('button',name='동의하고 다시 분석',exact=True).click()
@@ -81,4 +81,4 @@ def test_retry_confirmation_is_explicit_and_never_replays(app,browser,can_retry)
         assert len(posts)==1
         body=posts[0].request.post_data
         assert 'retry_failed_run_id=93' in body and 'consent=true' in body
-        p.unroute_all(behavior="wait");c.close()
+        p.unroute_all(behavior="wait");c.unroute_all(behavior='wait');c.close()

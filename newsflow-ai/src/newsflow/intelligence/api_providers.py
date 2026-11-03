@@ -420,7 +420,7 @@ class AnthropicProvider(_APITransport):
             schema = _script_output_schema(version, payload.get('evidence')) if script else _analysis_output_schema(version)
             if analysis and payload.get("evidence", {}).get("curation_contract"):
                 from .curation import ranking_model, wire_evidence
-                from .curation_wire import INSTRUCTION, output_schema
+                from .curation_wire import INSTRUCTION, RECENCY_INSTRUCTION, derives_recency, output_schema
 
                 contract = payload["evidence"]["curation_contract"]
                 ranking_schema = _output_schema(ranking_model(contract))
@@ -428,6 +428,8 @@ class AnthropicProvider(_APITransport):
                     ranking_schema = _legacy_wire(ranking_schema, script=False)
                 schema = output_schema(ranking_schema, payload["evidence"])
                 body["system"] += INSTRUCTION
+                if derives_recency(payload["evidence"]):
+                    body["system"] += RECENCY_INSTRUCTION
                 if contract.get('feed_copy_version') == 1:
                     body['system'] += (' For this version ranking ALSO requires feed_copy (title, description); '
                                        'include it alongside group_id, components, reason and summary. '

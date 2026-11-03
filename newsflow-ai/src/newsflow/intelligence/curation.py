@@ -407,6 +407,11 @@ def component_total(values: dict[str, int | None], *, global_policy: bool) -> in
     return round(raw_total * 100 / 120) if global_policy else raw_total
 
 
+def representative_article(articles: dict, identifiers: list[int]) -> dict:
+    """One stable representative rule for derivation and validation."""
+    return max((articles[i] for i in identifiers), key=lambda a: (len(a["summary"]), -a["id"]))
+
+
 def validate_ranking(result: dict, evidence: dict) -> dict:
     global_policy = evidence["curation_contract"]["profile"] == GLOBAL_PROFILE
     try:
@@ -431,8 +436,7 @@ def validate_ranking(result: dict, evidence: dict) -> dict:
             raise CurationValidationError("curation_group")
         used.update(group)
         # Richest supplied summary represents the issue; originals are never rewritten.
-        representative = max((articles[i] for i in item["article_ids"]),
-                             key=lambda a: (len(a["summary"]), -a["id"]))
+        representative = representative_article(articles, item["article_ids"])
         source_text = " ".join(articles[i]["title"] + " " + articles[i]["summary"] for i in item["article_ids"])
         allowed_numbers = _numeric_values(source_text)
         # Trend traffic is permitted in the rationale, never as an article fact in the summary.

@@ -188,6 +188,7 @@ def published_content(session):
 
 
 def image_rows(state, session):
+    from sqlalchemy import String
     outputs = {}
     for row in session.scalars(
         select(m.IntelligenceRun)
@@ -200,6 +201,9 @@ def image_rows(state, session):
     for row in session.scalars(
         select(m.IntelligenceRun)
         .where(m.IntelligenceRun.kind == "image_draft")
+        .where(~select(m.WorkspaceRemoval.key).where(
+            m.WorkspaceRemoval.key == 'library:image:' + m.IntelligenceRun.id.cast(String)
+        ).exists())
         .order_by(m.IntelligenceRun.id.desc())
         .limit(100)
     ):

@@ -2,15 +2,15 @@ import {useEffect,useRef,useState} from "react";
 import type {FeedEntry} from "./FeedImagePreview";
 import {Thumbnail} from "../Thumbnail";
 
-export default function FeedImageHistory({entries,busy,csrf,onOpen,onRemoved}:{entries:FeedEntry[];busy:boolean;csrf:string;onOpen:(entry:FeedEntry)=>void;onRemoved:()=>Promise<void>}) {
+export default function FeedImageHistory({entries,busy,csrf,onOpen,onRemoved,kind="feed"}:{kind?:"feed"|"image";entries:FeedEntry[];busy:boolean;csrf:string;onOpen:(entry:FeedEntry)=>void;onRemoved:()=>Promise<void>}) {
   const [selected,setSelected]=useState<string[]>([]),[pending,setPending]=useState<FeedEntry[]|null>(null);
   const [sending,setSending]=useState(false),[message,setMessage]=useState("");
   const flight=useRef(false),dialog=useRef<HTMLDialogElement>(null);
-  const id=({batch,item}:FeedEntry)=>`feed:${batch.id}:${item.rank}`;
+  const id=({batch,item}:FeedEntry)=>kind==="image"?`image:${batch.id}`:`feed:${batch.id}:${item.rank}`;
   const [hidden,setHidden]=useState<string[]>([]);
   const visible=entries.filter(x=>!hidden.includes(id(x)));
   useEffect(()=>{if(pending)dialog.current?.showModal();else dialog.current?.close();},[pending]);
-  useEffect(()=>{const ids=new Set(entries.map(id));setSelected(old=>old.filter(x=>ids.has(x)));setHidden(old=>old.filter(x=>ids.has(x)));},[entries]);
+  useEffect(()=>{const ids=new Set(entries.map(id));setSelected(old=>old.filter(x=>ids.has(x)));setHidden(old=>old.filter(x=>ids.has(x)));},[entries,kind]);
   async function remove(){
     if(flight.current||!pending?.length||!csrf)return;
     flight.current=true;setSending(true);setMessage("");const ids=pending.map(id);
@@ -33,9 +33,9 @@ export default function FeedImageHistory({entries,busy,csrf,onOpen,onRemoved}:{e
     <div className="feed-image-history">{visible.map(entry=><div className={`feed-history-entry${selected.includes(id(entry))?' is-selected':''}`} key={id(entry)}>
       <button className="feed-image-history-card" disabled={busy||sending} onClick={()=>onOpen(entry)}>
         <Thumbnail src={entry.item.mediaUrl} alt={entry.item.content?.title}/><strong>{entry.item.content?.title}</strong>
-        <small>작업 #{entry.batch.id} · TOP {entry.item.rank}</small></button>
+        <small>작업 #{entry.batch.id}{kind==="feed"?` · TOP ${entry.item.rank}`:""}</small></button>
       <label className="feed-history-select" title="이미지 선택">
-        <input type="checkbox" aria-label={`작업 ${entry.batch.id} TOP ${entry.item.rank} 선택`} checked={selected.includes(id(entry))} disabled={busy||sending||!selected.includes(id(entry))&&selected.length>=100}
+        <input type="checkbox" aria-label={`작업 ${entry.batch.id}${kind==="feed"?` TOP ${entry.item.rank}`:""} 선택`} checked={selected.includes(id(entry))} disabled={busy||sending||!selected.includes(id(entry))&&selected.length>=100}
           onChange={e=>setSelected(old=>e.target.checked?[...old,id(entry)]:old.filter(x=>x!==id(entry)))}/>
       </label></div>)}</div>
     {!visible.length&&<p>표시할 최근 이미지가 없습니다. 삭제한 이미지는 <a href="/studio/library">라이브러리 휴지통</a>에서 복원할 수 있습니다.</p>}
