@@ -1168,7 +1168,10 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       const response = await fetch(`/api/studio/characters/${job.id}/recover-story`, {
         method: "POST", credentials: "same-origin", body,
       });
-      if (!response.ok) throw Error("저장된 스토리 응답을 복구하지 못했습니다. 추가 AI 요청은 하지 않았습니다.");
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw Error(typeof result.error === "string" ? result.error : "저장된 응답과 작업 연결을 확인하세요. 추가 AI 요청은 하지 않았습니다.");
+      }
       await c.load();
       c.setNotice("저장된 스토리를 복구했습니다. 내용을 검토한 뒤 견적을 확인하세요.");
     } catch (error) {

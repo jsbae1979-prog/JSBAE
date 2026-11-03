@@ -38,6 +38,8 @@ def context(request: Request) -> dict:
     result["ai"] = read_studio_settings(request.app.state.sessions)
     result["api_selected"] = result["ai"]["provider"] in {"openai", "claude_api"}
     result["selection_limit"] = WORKSPACE_TOP_K
+    from newsflow.news.analysis_candidates import shortlist
+    result['analysis_candidates'], result['candidate_selection'] = shortlist(result['articles'])
     return result
 
 
@@ -64,7 +66,7 @@ def import_rss(request: Request, rss_xml: str = Form(max_length=20000), permissi
     return go("/news#curation")
 
 
-def _once(request: Request, identity: list, callback) -> dict:
+def _once(request: Request, identity: list, callback, *, retry_preflight=False) -> dict:
     """Durable claim before calling. Repeated submits/restarts reuse the record, never the request."""
     sessions = request.app.state.sessions
     digest = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:36]
@@ -77,12 +79,21 @@ def _once(request: Request, identity: list, callback) -> dict:
                     record = json.loads(existing.value)
                     if record.get("status") == "success":
                         return record
-                    raise HTTPException(409, "이미 요청한 작업입니다. 실행/실패 기록을 보존하며 자동 재요청하지 않습니다.")
-                session.add(AppSetting(key=key, value=json.dumps({"status": "running"})))
+                    run = session.get(IntelligenceRun, record['run_id']) if record.get('run_id') else None
+                    not_sent = record.get('status') == 'failed' and (
+                        not record.get('run_id') or (run is not None and run.status == 'failed'
+                            and run.result.get('dispatch_state') == 'not_sent'))
+                    if not (retry_preflight and identity[0] == 'analysis' and not_sent):
+                        raise HTTPException(409, "이전 요청이 진행 중이거나 전송 결과를 확인해야 합니다. 중복 과금 방지를 위해 다시 전송하지 않았습니다.")
+                    history = [*record.get('history', []), {k:v for k,v in record.items() if k != 'history'}]
+                    existing.value = json.dumps({'status':'running', 'history':history})
+                else:
+                    session.add(AppSetting(key=key, value=json.dumps({"status": "running"})))
 
             def remember(run_id):
                 with sessions.begin() as session:
-                    session.get(AppSetting, key).value = json.dumps({"status": "running", "run_id": run_id})
+                    row = session.get(AppSetting, key)
+                    row.value = json.dumps({**json.loads(row.value), "status": "running", "run_id": run_id})
 
             try:
                 record = {"status": "success", **callback(remember)}
@@ -93,7 +104,9 @@ def _once(request: Request, identity: list, callback) -> dict:
                     row.value = json.dumps({**record, "status": "failed"})
                 raise
             with sessions.begin() as session:
-                session.get(AppSetting, key).value = json.dumps(record)
+                row = session.get(AppSetting, key)
+                record = {**json.loads(row.value), **record}
+                row.value = json.dumps(record)
             return record
     except Timeout:
         raise HTTPException(409, "다른 뉴스 평가·대본 요청이 진행 중입니다.") from None
@@ -109,17 +122,20 @@ def analyze(request: Request, collection_context_id: int = Form(ge=1), consent: 
     article_ids = sorted(a.id for a in ctx["articles"])
     if not ctx["ready"] or not article_ids:
         raise HTTPException(422, "24시간 이내 뉴스·Trends 자료를 준비해 주세요.")
+    from newsflow.news.analysis_candidates import shortlist
+    candidates, selection = shortlist(ctx['articles'])
+    candidate_ids = sorted(a.id for a in candidates)
     ai = ctx["ai"]
     try:
         result = _once(request, ["analysis", ctx["run_id"], sorted(article_ids), ai["provider"], ai["model"], WORKSPACE_TOP_K],
                        lambda remember: {"run_id": (request.app.state.news_analysis_access.service(request)
                            if hasattr(request.app.state, 'news_analysis_access') else service(request)).analyze(
-                           article_ids, ai["provider"], True,
+                           candidate_ids, ai["provider"], True,
                            Options(ai["model"], timeout=CURATION_TIMEOUT_SECONDS,
                                    max_tokens=curation_output_tokens(ai["provider"], ai["model"])),
                            on_run=remember, curate=True,
                            trend_snapshot={**ctx["snapshot"], "collection_context_id": ctx["run_id"]},
-                           curation_top_k=WORKSPACE_TOP_K)})
+                           curation_top_k=WORKSPACE_TOP_K), 'candidate_selection': selection}, retry_preflight=True)
     except (IntelligenceError, ValueError) as exc:
         raise HTTPException(422, str(exc)) from None
     return go(f"/news?curation_id={result['run_id']}#curation-results")

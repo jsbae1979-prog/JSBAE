@@ -831,10 +831,12 @@ def module_view(request: Request, module: Module):
                 "olderIncluded": info.get("filled_old", 0),
             }
         store = getattr(state, 'api_keys', {}).get(studio['provider'])
-        result['catalog']['newsAnalysis'] = {'provider': studio['provider'], 'model': studio['model'],
+        from newsflow.news.analysis_candidates import shortlist
+        _, candidate_selection = shortlist(context['articles'])
+        result['catalog']['newsAnalysis'] = {**candidate_selection, 'provider': studio['provider'], 'model': studio['model'],
             'keyConfigured': bool(store and store.status().get('configured')),
             'collectionReady': bool(context['ready'] and studio['provider'] in {'claude_api','openai'}),
-            'collectionContextId': context['run_id'], 'candidateCount': len(context['articles'])}
+            'collectionContextId': context['run_id']}
     for action in ("intelligence_analyze", "intelligence_generate", "intelligence_studio_preferences"):
         result["formDefaults"][action] = {"provider": studio["provider"], "model": studio["model"]}
 

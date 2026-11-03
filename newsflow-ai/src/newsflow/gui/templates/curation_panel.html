@@ -45,17 +45,17 @@
   <form method="post" action="/news/curation/analyze" data-curation-form>
     <input type="hidden" name="csrf_token" value="{{ csrf }}">
     <input type="hidden" name="collection_context_id" value="{{ curation.run_id }}">
-    <h3>전체 뉴스 화제성 평가 <small>최근 수집 회차 전체 {{ curation.articles|length }}개 비교 · 상위 {{ curation.selection_limit|default(10) }}개 주제 선정</small></h3>
+    <h3>전체 뉴스 화제성 평가 <small>수집 {{ curation.articles|length }}개 · 분야별 최신 최대 30개, 후보 {{ curation.analysis_candidates|length }}개 비교 · 상위 {{ curation.selection_limit|default(10) }}개 주제 선정</small></h3>
 
-    <details><summary>전체 평가 대상 {{ curation.articles|length }}개 보기</summary>
+    <details><summary>분석 후보 {{ curation.analysis_candidates|length }}개 보기</summary>
     <div class="curation-candidates">
-    {% for article in curation.articles %}<div><span>{{ article.title }}<small>{{ article.publisher }} · {{ article.published_at|kst }}</small></span><a href="/news/{{ article.id }}">자료 보기</a></div>{% endfor %}
+    {% for article in curation.analysis_candidates %}<div><span>{{ article.title }}<small>{{ article.publisher }} · {{ article.published_at|kst }}</small></span><a href="/news/{{ article.id }}">자료 보기</a></div>{% endfor %}
     </div></details>
     <p>현재 AI: <strong>{{ curation.ai.provider }} · {{ curation.ai.model }}</strong> <a href="/simple-settings#connections">변경</a></p>
-    {% if curation.api_selected %}<label class="check"><input type="checkbox" name="consent" value="true" required> 최근 수집 회차 전체 {{ curation.articles|length }}개의 제목·요약·출처·Trends 자료를 해당 API에 전송해 화제성 분석 1회를 실행합니다. 본인 계정 사용량과 비용이 발생합니다.</label><button class="primary" type="submit">{{ ui_icon('sparkles',16) }} 전체 뉴스 화제성 평가 1회</button>
+    {% if curation.api_selected %}<label class="check"><input type="checkbox" name="consent" value="true" required> 분야별 최신 최대 30개씩, 후보 {{ curation.analysis_candidates|length }}개의 제목·요약·출처·Trends 자료를 해당 API에 전송해 화제성 분석 1회를 실행합니다. 본인 계정 사용량과 비용이 발생합니다.</label><button class="primary" type="submit">{{ ui_icon('sparkles',16) }} 전체 뉴스 화제성 평가 1회</button>
     {% else %}<p class="error">OpenAI API 또는 Claude API를 설정해 주세요. Offline 고정 대본으로 대체하지 않습니다.</p>{% endif %}
     {% if curation.snapshot.collection_policy|default('') == 'global_trends_v1' %}<small>검색 관심 증가 가능성·이번 응답 등장 빈도·SNS 확산 가능성·한국 시청자 관심도·영향력·흥미도 각 20점 → 합계 120점을 100점으로 환산 · 관측 근거와 AI 추정 구분 · 미확인은 미평가</small>{% else %}<small>최신성·대중성·영향력·확산 가능성·흥미도 각 20점 · 미확인 항목은 미평가</small>{% endif %}
-    <small>전송 한도 초과 시 일부 제외·자동 분할 호출 없이 중단 · 재검색·자동 재시도 없음</small>
+    <small>보관 기사는 유지 · 후보에서 TOP 3 선정 · 추가 수집·자동 유료 재요청 없음</small>
   </form>
   {% else %}<p role="status">전체 뉴스 평가 기능을 적용하려면 앱 재시작이 필요합니다. 실제 평가 요청은 실행하지 않습니다.</p>{% endif %}
   {% endif %}

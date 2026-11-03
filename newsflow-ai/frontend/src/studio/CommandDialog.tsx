@@ -871,7 +871,7 @@ export function CommandDialog({
                     : serpapiCollect ? <><div className="form-grid">{effective.fields.filter(f=>["collection_policy","hours","categories"].includes(f.name)).map(field)}</div><p>SerpApi Google News + Trends 수집</p><p>{values.collection_policy === "korea_v1" ? `한국 · ${(values.categories ?? []).join(" · ") || "전체"}` : view.catalog.serpapi?.collectionPlan?.edition_labels}</p><p>SerpApi 검색 최대 {values.maximum_requests}회 · 계정 사용량이 차감될 수 있습니다. AI 분석·대본은 실행하지 않습니다.</p></>
                     : quotePrepare ? <p>선택한 참조 이미지와 검토한 스토리로 최신 영상 견적을 확인합니다. 영상은 생성하지 않습니다.</p>
                     : collectionAnalysis ? <>
-                        <p>이번 수집 회차 전체 {analysis?.candidateCount??0}개 기사에서 TOP 3를 분석합니다.</p>
+                        <p>수집 {analysis?.collectedCount??analysis?.candidateCount??0}건 중 분야별 최신 최대 30건, 총 {analysis?.candidateCount??0}건에서 TOP 3를 분석합니다.</p>
                         <dl className="property-list">
                           <div><dt>분석 API</dt><dd>{view.catalog.analysisProviders?.[analysis?.provider]??"미설정"}</dd></div>
                           <div><dt>모델</dt><dd>{analysis?.model??"미설정"}</dd></div>

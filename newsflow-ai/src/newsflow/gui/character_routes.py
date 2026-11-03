@@ -119,8 +119,19 @@ def recover_story(request: Request,job_id:str,consent:bool=Form(False),
         request.app.state.character.recover_story_response(job_id,consent=consent,
             script=json.loads(script) if script else None,expected_hash=expected_hash)
         return {'id':job_id,'state':'script_review','additionalProviderCalls':0}
-    except (ValueError,OSError,*SAFE_ERRORS):
-        raise HTTPException(409,'보관 응답을 복구하지 못했습니다. 기존 실패 기록은 보존됩니다.') from None
+    except (ValueError,OSError,*SAFE_ERRORS) as error:
+        from newsflow.character.episode_story import validation_feedback
+        feedback = validation_feedback(error)
+        labels = {'action':'장면 행동', 'camera':'카메라 설명', 'seconds':'장면 길이', 'scenes':'장면 구성'}
+        issues = []
+        for row in feedback:
+            field = row['field']; number = next((x+1 for x in field if type(x) is int), None)
+            label = labels.get(field[-1], '스토리 항목')
+            reason = {'string_pattern_mismatch':'영문 작성 필요', 'string_too_long':'글자 수 초과',
+                'edited_duration':'전체 길이 확인 필요', 'duration':'지원 길이 확인 필요'}.get(row['type'], '형식 확인 필요')
+            issues.append(f'{number}번 {label}: {reason}' if number else f'{label}: {reason}')
+        detail = ' / '.join(issues[:4]) if issues else '보관 응답과 현재 작업의 연결을 확인하세요.'
+        return JSONResponse({'error': detail + ' 직접 검토·편집에서 수정할 수 있습니다. 추가 AI 요청은 하지 않았습니다.'},status_code=409)
 
 
 @router.post('/api/studio/characters/{job_id}/settings')

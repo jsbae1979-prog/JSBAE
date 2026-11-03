@@ -403,6 +403,10 @@ class AuthoringAI:
             candidate = response_object(document, provider)
             self.last_candidate = candidate
             phase = 'schema'
+            from .episode_story import EpisodeScript
+            if schema is EpisodeScript:
+                from .scene_identity import resolve_scene_identity
+                candidate = resolve_scene_identity(candidate, payload.get('character', {}))
             result = schema.model_validate(candidate)
         except Exception as error:
             from newsflow.intelligence.api_providers import APIRequestNotDispatched

@@ -122,6 +122,8 @@ class EpisodeFlow:
         if job.get('direct_video'):
             from .direct_video import validate_plan
             return validate_plan(value,job['duration'],model,job['topic'],allow_continuation=job.get('direct_extension',False))
+        from .scene_identity import resolve_scene_identity
+        value = resolve_scene_identity(value, job['character'])
         return validate_episode(value, job['duration'], model, chosen['sound'] == 'on', job_story_format(job))
 
     def write(self, identifier, *, consent=False, review_token='', review_consent=False):

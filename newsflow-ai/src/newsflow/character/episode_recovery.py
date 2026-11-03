@@ -73,7 +73,8 @@ def recover(service, identifier, *, consent=False, script=None, expected_hash=''
         job.update(script=dump(story),prompts=prepared,state='script_review',response_received=True)
         job['script_hash']=fp(job['script']);job['plan_hash']=service.plan_hash(job)
         job['script_recovery']={'at':now().isoformat(),'attempt':job['script_attempts'],
-            'sha256':row['sha256'],'previous_failure':previous,'provider_calls':0,'edited':script is not None}
+            'sha256':row['sha256'],'previous_failure':previous,'provider_calls':0,'edited':script is not None,
+            'identity_normalized': script is None and dump(story) != record['candidate']}
         job.pop('script_failure',None);job.pop('script_validation_feedback',None)
         (service.folder(identifier)/'script.json').write_text(json.dumps(job['script'],ensure_ascii=False,indent=2),encoding='utf8')
         service.save(job)
