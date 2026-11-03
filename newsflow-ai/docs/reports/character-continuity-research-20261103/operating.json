@@ -1,0 +1,15 @@
+{
+  "source_sha": "c174cf2757ae9e73af72e88933bf1383746d2f68",
+  "changed_program_files": 3,
+  "normal_stop_start_cycles": 1,
+  "port": 18768,
+  "database_logical_rows_unchanged": true,
+  "key_and_media_files_unchanged": true,
+  "original_and_AB_backups_unchanged": true,
+  "chrome_launch_accepted": true,
+  "chrome_ui_manually_verified": false,
+  "actual_generated_quality": "NOT VERIFIED",
+  "paid_calls": 0,
+  "sns_calls": 0,
+  "existing_jobs_rewritten": 0
+}
