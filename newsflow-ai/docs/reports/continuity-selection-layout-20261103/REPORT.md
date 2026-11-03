@@ -25,3 +25,10 @@ Base: `7e3bb05730c765afed5952b12d51add09067d612`; branch `codex/newsflow-charact
 
 ## Preservation and scope
 Development uses Fake providers and temporary data. No real collection, AI generation or SNS request is sent. No original DB, generated media, saved image version, credential or backup is committed. Existing unrelated local changes are excluded. Operating application result is recorded separately after normal Stop/Start.
+
+## Operating application
+- Applied source `0481821cc7efe309ebb8365d4e85adb7ca506a05` to 17 exact program/static-asset files, with no pre-existing operating overlays detected.
+- Normal Stop completed; Start performed once. Server listens on 127.0.0.1:18768; Chrome launch accepted. User-visible Chrome inspection is left to the user; development layout checks used isolated synthetic Chromium.
+- All SQLite tables were compared by row hashes and counts before/after; unchanged. A consistent private SQLite backup and prior program-file copies were retained locally. Credential/media/profile file hashes unchanged except expected local session/start-stop markers. Original DB and A/B backup hashes unchanged.
+- Existing job JSON, received clips, final videos, image versions, API keys and settings were not edited. No paid request, live collection, or SNS call performed. No deletion, external distribution or merge.
+- Existing jumps/captions in previously saved videos remain unchanged. Continuity policy affects new eligible jobs; revised caption rendering applies when a local composition is explicitly performed.
