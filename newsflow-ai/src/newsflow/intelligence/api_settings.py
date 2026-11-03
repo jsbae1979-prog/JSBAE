@@ -277,7 +277,7 @@ def _readiness(sessions, provider, key_store, capability="search", *, fake=False
         reviews = _unknown_analysis_reviews(session, settings, rows)
         rejected = _confirmed_rejections(session, rows)
         posting_ids = set()
-        if posting_copy:
+        if posting_copy or capability == "analysis":
             from newsflow.publishing.request_scope import reviewed_character_unknowns
             posting_ids = reviewed_character_unknowns(session, settings, rows)
     key = key_store.status() if key_store is not None else {"configured": False}
@@ -692,6 +692,12 @@ class APIBudgetService:
                 validate_posting_request(session, settings, request_id, kind, max_search_calls)
                 posting_ids = reviewed_character_unknowns(session, settings, rows)
                 bounds["posting_copy_review"] = True
+            analysis_ids = set()
+            from .analysis_scope import is_news_analysis
+            if is_news_analysis(session, settings, request_id, kind, max_search_calls):
+                from newsflow.publishing.request_scope import reviewed_character_unknowns
+                analysis_ids = reviewed_character_unknowns(session, settings, rows)
+                bounds["news_analysis"] = True
             reviews = _unknown_analysis_reviews(session, settings, rows)
             acknowledged = {row["id"] for row in reviews if row["acknowledged"]}
             script_approval = _script_approval(session, settings, request_id, kind, rows, acknowledged)
@@ -721,13 +727,17 @@ class APIBudgetService:
             reasons = _limit_reasons(settings, rows, now, capability=kind, acknowledged=acknowledged,
                                      script_exception=script_approval is not None,
                                      rejected=_confirmed_rejections(session, rows) | card_ids,
-                                     scoped_unknowns=character_ids | episode_ids | posting_ids | (set(comparison["unknown_ids"]) if comparison else set()))
+                                     scoped_unknowns=character_ids | episode_ids | posting_ids | analysis_ids | (set(comparison["unknown_ids"]) if comparison else set()))
             if reasons:
                 raise APISettingsError(" / ".join(reasons))
             row = APIRequestReservation(id=uuid.uuid4().hex, request_id=request_id, provider=provider, kind=kind,
                                         model=model, status="reserved", reserved_usd=str(upper), bounds=bounds,
                                         prices=prices, usage={}, test_only=self.test_only, created_at=now)
             session.add(row)
+            if analysis_ids:
+                session.add(AuditLog(level="info", event="api_news_analysis_scope", message=json.dumps({
+                    "scope": "new_news_analysis_only", "request_id": request_id,
+                    "retained_unknown_ids": sorted(analysis_ids)}, separators=(",", ":"))))
             if posting_ids:
                 session.add(AuditLog(level="info", event="api_posting_copy_scope", message=json.dumps({
                     "scope": "new_posting_copy_only", "request_id": request_id,

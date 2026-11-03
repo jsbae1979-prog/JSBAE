@@ -1,13 +1,13 @@
 import {useEffect,useState} from 'react';
 import type {Item} from './contracts';
 
-export default function FeedCostReview({batch,busy,onSave,onRefresh}:{batch:Item;busy:boolean;onSave:(data:Item)=>void;onRefresh:()=>void}) {
+export default function FeedCostReview({batch,busy,onSave,onRefresh,expanded=false}:{batch:Item;busy:boolean;expanded?:boolean;onSave:(data:Item)=>void;onRefresh:()=>void}) {
   const [limit,setLimit]=useState('');
   const cost=batch.costReview;
   useEffect(()=>setLimit(cost?.approvedLimitUsd??''),[batch.id,cost?.approvedLimitUsd]);
   if(batch.simulation||!cost)return null;
   const readiness=cost.readiness;
-  return <details className="core-feed-cost"><summary>이미지 생성 비용·승인</summary>
+  return <details className="core-feed-cost" open={expanded || undefined}><summary>이미지 생성 비용·승인</summary>
     {!cost.ready&&<p role="status">{cost.message}</p>}
     <details><summary>계산 근거·연결 상태</summary>
     {cost.ready&&<p>{cost.message}</p>}

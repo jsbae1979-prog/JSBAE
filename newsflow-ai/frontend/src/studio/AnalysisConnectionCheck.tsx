@@ -21,7 +21,7 @@ export default function AnalysisConnectionCheck({provider, csrfToken, busy, onBe
       });
       const result = await response.json().catch(() => ({}));
       setMessage(response.ok && result.verified === true
-        ? "연결을 확인했습니다. 분석하려면 유료 분석에 동의한 뒤 실행하세요."
+        ? "모델 연결을 확인했습니다. 실행 조건과 비용 동의는 별도로 확인합니다."
         : "연결을 확인하지 못했습니다. 설정·관리에서 키와 모델을 확인하세요.");
       onRefresh();
     } catch {

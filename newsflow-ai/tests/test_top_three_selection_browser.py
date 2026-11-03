@@ -25,13 +25,14 @@ def test_selected_news_rank_and_plain_error_in_browser(app,feeds,browser,tmp_pat
         expect(page.locator('.photo-feed-thumbs button')).to_have_count(1)
         expect(page.locator('.photo-feed-editor')).to_contain_text('TOP 3')
         assert parse_qs(requests[0].post_data)['rank']==['3']
-        page.get_by_text('새 배경 생성 · 견적·비용 승인',exact=True).click()
+        page.get_by_role('button',name='이미지 생성',exact=True).click()
         expect(page.get_by_role('button',name='선택 뉴스 생성 · 비용 승인',exact=True)).to_be_disabled()
         page.reload();expect(page.locator('.photo-feed-editor')).to_contain_text('TOP 3')
         for w,h in [(1366,768),(1920,1080)]:
             page.set_viewport_size({'width':w,'height':h})
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
             page.screenshot(path=str(tmp_path/f'news-image-selection-{w}.png'),full_page=True)
+        page.get_by_role('combobox',name='제작 스타일',exact=True).select_option('legacy')
         page.route(origin+'/api/feed-batches',lambda r:r.fulfill(status=403,body='Restored profile boundary denied') if r.request.method=='POST' else r.continue_())
         page.get_by_role('button',name='선택 뉴스 제작 준비',exact=True).click()
         expect(page.locator('.core-notice')).to_contain_text('현재 실행 모드')

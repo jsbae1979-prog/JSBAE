@@ -15,8 +15,10 @@ def test_cost_status_and_expired_additional_quote(app,ready,browser,monkeypatch,
         c.route('**/*',lambda r:r.continue_() if r.request.url.startswith(origin+'/') else r.abort())
         p=c.new_page();posts=[];p.on('request',lambda r:posts.append(r) if r.method=='POST' else None)
         p.goto(origin+f'/studio/images?mode=news&batch_id={i}')
-        expect(p.get_by_text('새 배경 생성 · 견적·비용 승인',exact=True)).to_be_visible()
-        box=p.locator('.core-feed-cost');box.locator(':scope > summary').click()
+        expect(p.locator('.core-feed-cost')).to_have_count(0)
+        p.get_by_role('button',name='이미지 생성',exact=True).click()
+        expect(p.get_by_role('dialog',name='이미지 생성 비용 확인')).to_be_visible()
+        box=p.locator('.core-feed-cost')
         expect(box).to_contain_text('예산 적용됨')
         before=s.get(i);revision=before.result['revision']
         box.get_by_role('button',name='비용 상태 새로고침',exact=True).click()
@@ -25,8 +27,8 @@ def test_cost_status_and_expired_additional_quote(app,ready,browser,monkeypatch,
         s.costs.clock=lambda:201
         box.get_by_role('button',name='비용 상태 새로고침',exact=True).click()
         expect(box.get_by_role('button',name='새 견적 준비',exact=True)).to_be_visible()
-        expect(p.get_by_role('button',name='TOP 1 새 배경 추가 견적',exact=True)).to_be_enabled()
-        p.get_by_role('button',name='TOP 1 새 배경 추가 견적',exact=True).click()
+        expect(p.get_by_role('button',name='선택 이미지 새 견적 준비',exact=True)).to_be_enabled()
+        p.get_by_role('button',name='선택 이미지 새 견적 준비',exact=True).click()
         dialog=p.get_by_role('dialog',name='TOP 3 생성 범위 승인',exact=True)
         expect(dialog).to_contain_text('무료이며 API를 호출하지 않습니다')
         expect(dialog.get_by_role('checkbox')).to_have_count(1)
@@ -41,8 +43,11 @@ def test_cost_status_and_expired_additional_quote(app,ready,browser,monkeypatch,
         expect(dialog).not_to_be_visible()
         assert len(posts)==1 and len(calls)==1
         assert s.get(i).result['items'][0]['attempt']==2
+        p.get_by_role('button',name='이미지 생성',exact=True).click()
         expect(p.get_by_role('button',name='TOP 3 전체 생성 · 비용 승인',exact=True)).to_be_disabled()
+        p.get_by_role('button',name='닫기',exact=True).click()
         for width,height in [(1366,768),(1920,1080)]:
             p.set_viewport_size({'width':width,'height':height})
             assert p.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            p.screenshot(path=str(tmp_path/f'simplified-image-{width}.png'),full_page=True)
         c.close()

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import TopThreeFeeds from "../TopThreeFeeds";
+import TopThreeFeeds, { FeedDialog } from "../TopThreeFeeds";
 import FeedCostReview from "../FeedCostReview";
 import FeedGenerationProgress from "./FeedGenerationProgress";
 import PhotoFeedEditor from "./PhotoFeedEditor";
@@ -23,6 +23,7 @@ function FeedLayout({
   const [active, setActive] = useState(1),
     [scope, setScope] = useState("all"),
     [style, setStyle] = useState("photo_feed_v1");
+  const [costOpen, setCostOpen] = useState(false);
   const pendingRank = useRef<number | null>(null);
   const [preview, setPreview] = useState<{
     batchId: number;
@@ -120,7 +121,7 @@ function FeedLayout({
               }}
             />
             <Select
-              label="새 제작 스타일"
+              label="제작 스타일"
               value={style}
               onChange={setStyle}
               disabled={blocked}
@@ -175,7 +176,7 @@ function FeedLayout({
               }
               onClick={() =>
                 f.local(async () => {
-                  if(matching){f.select(matching);f.setMessage("저장된 작업을 열었습니다. 새 배경이 필요하면 결과 아래의 새 배경 견적을 선택하세요.");return;}
+                  if(matching){f.select(matching);f.setMessage("저장된 작업을 열었습니다. 제작 상태의 이미지 생성 버튼에서 진행하세요.");return;}
                   f.show(
                     await f.post("/api/feed-batches", {
                       analysis_id: f.analysis,
@@ -202,15 +203,13 @@ function FeedLayout({
                 stopping={f.stopRequested}
                 message={f.message}
               />
-              <details open>
-                <summary>새 배경 생성 · 견적·비용 승인</summary>
-
-                {b.items.some((x: Item) => x.image_safety?.sensitive) && (
-                  <p>
-                    민감 주제: 인물·국기·사건 장면 없이 상징 이미지로 만듭니다
-                  </p>
-                )}
-                <FeedCostReview
+              <button className="primary" disabled={blocked} onClick={()=>setCostOpen(true)}>
+                {b.items.some((x:Item)=>x.status==="pending") ? "이미지 생성" : `TOP ${active} 이미지 다시 만들기`}
+              </button>
+              {f.busy && f.runningRank != null && <button onClick={f.pause} disabled={f.stopRequested}>현재 요청 후 중단</button>}
+              {costOpen && <FeedDialog name="이미지 생성 비용 확인" onClose={()=>setCostOpen(false)}>
+                <h2>{b.items.some((x:Item)=>x.status==="pending") ? "이미지 생성" : `TOP ${active} 이미지 다시 만들기`}</h2>
+                <FeedCostReview expanded
                   batch={b}
                   busy={f.busy}
                   onRefresh={() => f.local(f.refreshCosts)}
@@ -225,7 +224,7 @@ function FeedLayout({
                     )
                   }
                 />
-                <button
+                {b.items.some((x:Item)=>x.status==="pending") && <button
                   className="primary"
                   disabled={
                     blocked ||
@@ -235,30 +234,25 @@ function FeedLayout({
                     ) ||
                     !b.items.some((x: Item) => x.status === "pending")
                   }
-                  onClick={() => f.approve()}
+                  onClick={() => {setCostOpen(false);f.approve();}}
                 >
                   {b.plannedImages === 1
                     ? "선택 뉴스 생성 · 비용 승인"
                     : "TOP 3 전체 생성 · 비용 승인"}
-                </button>
+                </button>}
                 {b.items
-                  .filter((x: Item) => ["success", "failed"].includes(x.status))
+                  .filter((x: Item) => x.rank === active && ["success", "failed"].includes(x.status))
                   .map((x: Item) => (
                     <button
                       key={x.rank}
                       disabled={blocked || !b.canPrepareRegeneration}
-                      onClick={() => f.approve(x)}
+                      onClick={() => {setCostOpen(false);f.approve(x);}}
                     >
-                      TOP {x.rank} 새 배경 추가 견적
+                      선택 이미지 새 견적 준비
                     </button>
                   ))}
-                {f.busy && f.runningRank != null && (
-                  <button onClick={f.pause} disabled={f.stopRequested}>
-                    현재 요청 후 중단
-                  </button>
-                )}
-
-              </details>
+                <button onClick={()=>setCostOpen(false)}>닫기</button>
+              </FeedDialog>}
               {b.canRecover && (
                 <button
                   disabled={blocked}
@@ -276,33 +270,6 @@ function FeedLayout({
                   저장된 결과 복구 · 무료
                 </button>
               )}
-              {b.items
-                .filter((x: Item) => x.rank === active && !x.designVersion && b.feedStyle !== "photo_feed_v1")
-                .map((x: Item) => (
-                  <details key={x.rank}>
-                    <summary>원본 이미지</summary>
-                    <button
-                      disabled={
-                        blocked || (x.status !== "pending" && !x.canEditTitle)
-                      }
-                      onClick={() => f.edit(x)}
-                    >
-                      {x.canEditTitle ? "제목 수정 · 무료" : "문구 수정"}
-                    </button>
-                    {x.mediaUrl && (
-                      <>
-                        <button
-                          onClick={() => openImage({ batch: b, item: x })}
-                        >
-                          원본 보기
-                        </button>
-                        <a href={x.mediaUrl + "?download=true"} download>
-                          원본 저장
-                        </a>
-                      </>
-                    )}
-                  </details>
-                ))}
             </Panel>
           )}
         </div>
@@ -316,6 +283,7 @@ function FeedLayout({
             local={f.local}
             onSaved={f.load}
             resultPicker={
+              <>
               <div className="photo-feed-thumbs">
                 {b.items.map((x: Item) => (
                   <button
@@ -344,6 +312,34 @@ function FeedLayout({
                   </button>
                 ))}
               </div>
+              {b.items
+                .filter((x: Item) => x.rank === active && !x.designVersion && b.feedStyle !== "photo_feed_v1")
+                .map((x: Item) => (
+                  <details key={x.rank}>
+                    <summary>원본 이미지</summary>
+                    <button
+                      disabled={
+                        blocked || (x.status !== "pending" && !x.canEditTitle)
+                      }
+                      onClick={() => f.edit(x)}
+                    >
+                      {x.canEditTitle ? "제목 수정 · 무료" : "문구 수정"}
+                    </button>
+                    {x.mediaUrl && (
+                      <>
+                        <button
+                          onClick={() => openImage({ batch: b, item: x })}
+                        >
+                          원본 보기
+                        </button>
+                        <a href={x.mediaUrl + "?download=true"} download>
+                          원본 저장
+                        </a>
+                      </>
+                    )}
+                  </details>
+                ))}
+              </>
             }
           />
         ) : (

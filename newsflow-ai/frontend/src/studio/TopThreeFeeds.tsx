@@ -19,7 +19,7 @@ const states: Record<string, string> = {
   unknown: "결과 불명 · 재요청 금지",
   missing: "파일 확인 필요",
 };
-function FeedDialog({
+export function FeedDialog({
   name,
   onClose,
   children,

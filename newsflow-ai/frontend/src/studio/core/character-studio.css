@@ -1331,3 +1331,24 @@
 @media(max-width:700px) {
   .core-studio[data-module="characters"] .kling-character-approved {--character-tracks:1fr;}
 }
+
+/* Give the preview the remaining width; keep settings readable in a narrower rail. */
+.core-studio[data-module="characters"] .kling-character-video-content {
+  grid-template-columns: minmax(0, 1fr) clamp(200px, 40%, 230px);
+  gap: 12px;
+}
+.core-studio[data-module="characters"] .kling-character-video-settings .kling-five-settings > label {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  min-height: 0;
+  padding: 3px 0;
+}
+.core-studio[data-module="characters"] .kling-character-video-settings .kling-control-wrap select {
+  height: 30px;
+  min-height: 30px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+@media(max-width:480px) {
+  .core-studio[data-module="characters"] .kling-character-video-content { grid-template-columns:minmax(0,1fr); }
+}
