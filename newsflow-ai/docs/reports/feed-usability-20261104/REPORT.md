@@ -44,3 +44,6 @@ Browser evidence uses generated solid-color fixtures, never private user images.
 ## Preservation and operating application
 
 No content restoration, real analysis, generation, SNS, key changes or migrations are included. Deployment status and hash/table preservation evidence are recorded separately after the authorized normal Stop/Start. Original/backup and user media hashes are kept locally in protected rollback evidence, not committed. CI was not represented as run by these local checks.
+
+
+Operating application completed: `ec84c9f46f1fc112394caa51b43007aea1b79523`. Exactly 10 changed program/build files, one normal Stop/Start. No active production work was present before stopping. Database tables, all non-session profile files (including keys/media), original and backup hashes were verified unchanged. A consistent pre-change SQLite backup and changed-program rollback copies are protected locally. Chrome launch was accepted; operating Chrome visuals await user confirmation (isolated browser checks passed). No live provider, news collection/deletion, SNS or migration was run. Main and PR #35 were not modified.
