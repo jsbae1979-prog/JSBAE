@@ -283,3 +283,24 @@ def test_publishing_error_does_not_expose_unexpected_provider_message(youtube_ui
                            "made_for_kids": "yes", "privacy": "public", "public_consent": "true", "consent": "true"})
     assert response.status_code == 422 and "SYNTHETIC-RESPONSE-SECRET" not in response.text
     assert youtube_ui[1].execute.call_count == 1
+
+
+@pytest.mark.parametrize("action", ["client", "connect", "cancel"])
+def test_react_connection_ack_does_not_redirect_to_legacy_settings(youtube_ui, client, action):
+    connection, uploads, account_id = youtube_ui
+    path = f"/youtube/connect/{account_id}/cancel" if action == "cancel" else f"/youtube/{action}"
+    values = {"csrf_token": csrf(client), "consent": "true", "account_id": account_id, "client_json": "synthetic"}
+    response = client.post(path, data=values, headers={"Accept": "application/json"}, follow_redirects=False)
+    assert response.status_code == 200
+    assert response.json() == {"accepted": True}
+    assert "location" not in response.headers
+    assert response.headers["cache-control"] == "no-store"
+    assert len(connection.calls) == 1
+    assert not uploads.calls
+
+
+def test_react_connection_ack_still_requires_consent(youtube_ui, client):
+    connection, uploads, account_id = youtube_ui
+    response = client.post("/youtube/connect", data={"csrf_token": csrf(client), "account_id": account_id}, headers={"Accept": "application/json"})
+    assert response.status_code == 422
+    assert not connection.calls and not uploads.calls

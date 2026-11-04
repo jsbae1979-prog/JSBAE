@@ -37,7 +37,7 @@ export default function YouTubeAccounts({ csrf, enabled }: { csrf: string; enabl
     if (lock.current || !enabled || !csrf) return;
     lock.current=true; setBusy(true); setError(""); setMessage("");
     try {
-      const r = await fetch(path, { method:"POST", credentials:"same-origin", body:new URLSearchParams({...values,csrf_token:csrf}) });
+      const r = await fetch(path, { method:"POST", credentials:"same-origin", headers:{Accept:"application/json"}, body:new URLSearchParams({...values,csrf_token:csrf}) });
       if(!r.ok) { setError("처리를 완료하지 못했습니다. 앱 설정과 연결 상태를 확인하세요. 자동으로 다시 요청하지 않습니다."); return; }
       setMessage(success); setConsent(false);
       try { await load(); } catch { setError("요청 후 상태를 확인하지 못했습니다. 다시 연결하기 전에 상태를 새로고침하세요."); }

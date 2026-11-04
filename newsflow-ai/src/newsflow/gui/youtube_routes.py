@@ -13,6 +13,14 @@ from .routes import go
 router = APIRouter()
 
 
+def _connection_result(request: Request, legacy_path: str):
+    # React needs an acknowledgement, not navigation to the legacy settings page.
+    if "application/json" in request.headers.get("accept", ""):
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"accepted": True}, headers={"Cache-Control": "no-store"})
+    return go(legacy_path)
+
+
 def connection_context(request: Request) -> dict:
     service = getattr(request.app.state, "youtube", None)
     return service.status() if service else {"client_configured": False, "storage_supported": False,
@@ -66,7 +74,7 @@ def save_client(request: Request, client_json: str = Form(max_length=16384)):
         request.app.state.youtube.save_client(client_json)
     except Exception:  # noqa: BLE001 - client JSON may contain a secret; never reflect exceptions.
         raise HTTPException(422, "Google 데스크톱 앱 OAuth JSON을 확인하세요. Windows 보호 저장소가 필요합니다.") from None
-    return go("/simple-settings?saved=youtube-client#youtube")
+    return _connection_result(request, "/simple-settings?saved=youtube-client#youtube")
 
 
 @router.post("/youtube/connect")
@@ -77,7 +85,7 @@ def connect(request: Request, consent: bool = Form(False), account_id: int | Non
         request.app.state.youtube.begin(consent=True, account_id=account_id)
     except Exception:  # noqa: BLE001 - no provider, client or callback data in HTTP errors.
         raise HTTPException(422, "YouTube 연결을 시작하지 못했습니다. 클라이언트 설정과 진행 중인 연결을 확인하세요.") from None
-    return go("/simple-settings?saved=youtube-login#youtube")
+    return _connection_result(request, "/simple-settings?saved=youtube-login#youtube")
 
 
 @router.post("/youtube/connect/{account_id}/cancel")
@@ -86,7 +94,7 @@ def cancel(request: Request, account_id: int):
         request.app.state.youtube.cancel(account_id)
     except Exception:  # noqa: BLE001
         raise HTTPException(422, "연결 취소 상태를 확인하세요.") from None
-    return go("/simple-settings#youtube")
+    return _connection_result(request, "/simple-settings#youtube")
 
 
 @router.post("/youtube/connect/{account_id}/link")
