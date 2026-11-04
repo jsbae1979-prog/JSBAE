@@ -50,3 +50,10 @@
 .precision-review-heading h3{margin:0}.precision-editor-advanced{margin:14px 0}.precision-editor-advanced>summary{cursor:pointer;color:#b9d0ea}
 
 .precision-field-error{color:#ffb0be;font-size:12px}.character-precision [aria-invalid=true],.precision-editor [aria-invalid=true]{border-color:#e989a3!important}
+
+.precision-activity{box-sizing:border-box;width:100%;padding:14px;border:1px solid #2685a0;border-radius:10px;background:#102b3c;color:#dff7ff}
+.precision-activity-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.precision-activity-heading strong{display:flex;align-items:center;gap:8px}.precision-activity time{white-space:nowrap;font-variant-numeric:tabular-nums;color:#64dcff}
+.precision-activity progress{display:block;width:100%;height:8px;margin:12px 0}.precision-activity p{margin:8px 0;font-size:13px;line-height:1.6}.precision-activity small{display:block;color:#b7cfdf}
+.precision-activity.is-failed{background:#342b25;border-color:#a17e43}.precision-spinner{width:14px;height:14px;border:2px solid #376377;border-top-color:#56d9ff;border-radius:50%;animation:precision-spin 1s linear infinite}
+@keyframes precision-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.precision-spinner{animation:none}}

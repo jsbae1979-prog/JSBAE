@@ -3,6 +3,7 @@ import {characterCommand,CharacterModal} from './CharacterAutomation';
 import type {Controller} from './shared';
 import type {Item} from '../contracts';
 import './character-precision.css';
+import PrecisionActivity from './PrecisionActivity';
 import {timingIssue,sceneErrors,basicSceneFields,advancedSceneFields,connectionSceneFields,editableScenario} from './precisionValidation';
 
 const base='/api/studio/character-precision';
@@ -25,6 +26,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const reviewArea=useRef<HTMLElement|null>(null),editorInitial=useRef('');
   const [editorError,setEditorError]=useState(''),[fieldErrors,setFieldErrors]=useState<Record<string,string>>({});
   const [pollError,setPollError]=useState('');
+  const [requestStarted,setRequestStarted]=useState(0);
   const selectionEpoch=useRef(0);
   const [loadingWork,setLoadingWork]=useState<string|null>(null),[editorNotice,setEditorNotice]=useState('');
   function openEditor(draft:Item,source=work){
@@ -94,7 +96,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
         setEditorError(issues._scenes??issues._total??'표시된 입력 항목을 확인하세요.');return;
       }
     }
-    sending.current=true;setBusy(kind);setError('');setPollError('');
+    sending.current=true;setRequestStarted(Date.now());setBusy(kind);setError('');setPollError('');
     let target=work;
     try {
       // Free draft persistence precedes one explicitly approved story call. No automatic replay.
@@ -122,6 +124,15 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const locked=loadingWork!==null||!!busy||!!work?.video_job_id||['writing','generating'].includes(work?.state);
   const completed=rows.filter(s=>s.versions.some((v:Item)=>v.state==='success')).length;
   useEffect(()=>{if(completed>0)reviewArea.current?.scrollIntoView({block:'start'});},[work?.id,completed>0]);
+  const lastStory=work?.story_attempts?.at(-1);
+  const storyActive=busy==='story'||work?.state==='writing';
+  const imageActive=busy==='generate'||work?.state==='generating';
+  const storyFailed=work?.state==='story_failed';
+  const imageStart=work?.events?.filter((e:Item)=>e.kind==='image_approval').at(-1)?.at;
+  const activityStart=(storyActive?lastStory?.at:imageActive?imageStart:null);
+  const activity=<PrecisionActivity active={storyActive||imageActive} phase={storyActive||storyFailed?'story':'images'}
+    started={activityStart?Date.parse(activityStart):requestStarted} completed={completed} total={work?.common.scene_count??common.scene_count}
+    failed={storyFailed} unknown={lastStory?.state==='unknown'} candidate={!!lastStory?.candidate} connectionIssue={pollError}/>;
   const quote=work?.quote;
   const missing=rows.filter(s=>!s.versions.length);
   const allConfirmed=!!rows.length&&rows.every(s=>s.confirmed);
@@ -228,10 +239,11 @@ export default function CharacterPrecision({c}:{c:Controller}) {
           <small>설정의 요청당 한도도 적용됩니다. 예산 변경으로 이미지를 생성하지 않습니다.</small></details>
       </section>
       </div></details><div className="precision-progress" role="status" aria-live="polite"><strong>{work.common.title} · {stateName[work.state]??work.state}</strong>
-      <span>{completed}/{rows.length||work.common.scene_count}장 완료 · {rows.filter(s=>s.confirmed).length}장 확정</span>
-      {(busy||['writing','generating'].includes(work.state))&&<span className="precision-running">처리 중 · 결과를 확인하고 있습니다</span>}
+      {activity}
+      {!storyActive&&!storyFailed&&<span>{completed}/{rows.length||work.common.scene_count}장 완료 · {rows.filter(s=>s.confirmed).length}장 확정</span>}
+      {storyFailed&&lastStory?.candidate&&<button disabled={locked} onClick={()=>openEditor({scenario:structuredClone(lastStory.candidate)})}>보관된 응답 검토·수정 · 무료</button>}
       {!busy&&(['writing','generating'].includes(work.state)||rows.some(s=>s.versions.some((v:Item)=>['requesting','unknown'].includes(v.state))))&&<button onClick={()=>void act('reconcile')}>저장된 결과 확인 · 무료</button>}
-      <>{pollError&&<span role="alert">{pollError}</span>}</><progress value={completed} max={rows.length||work.common.scene_count}/></div>
+      <>{!storyActive&&!imageActive&&!storyFailed&&<progress value={completed} max={rows.length||work.common.scene_count}/>}</></div>
       {rows.length>0&&<section ref={reviewArea} className="precision-review-area"><div className="precision-review-heading"><h3>장면 이미지 검토</h3>
         {allConfirmed&&!work.video_job_id&&<button className="primary" disabled={locked} onClick={()=>void act('handoff')}>영상 제작으로 이동</button>}
         {work.video_job_id&&<button disabled={!!busy} onClick={()=>void act('revise-connection',{request_id:crypto.randomUUID().replaceAll('-','')})}>연결 보완 초안 · 무료</button>}
@@ -270,11 +282,13 @@ export default function CharacterPrecision({c}:{c:Controller}) {
         </div>
       </section>}
     </>}
-    {approval==='story'&&<CharacterModal title="스토리 만들기" busy={!!busy} onClose={()=>setApproval(null)} footer={<button className="primary" disabled={!paidAvailable||!!busy||(!work&&!canCreate)} onClick={()=>void act('story',{consent:'true'})}>유료 스토리 생성 승인</button>}>
+    {approval==='story'&&<CharacterModal title="스토리 만들기" busy={!!busy} onClose={()=>setApproval(null)} footer={<button className="primary" disabled={!paidAvailable||!!busy||(!work&&!canCreate)} onClick={()=>void act('story',{consent:'true'})}>{storyActive?'스토리 생성 중…':'유료 스토리 생성 승인'}</button>}>
+      {(storyActive||storyFailed)&&activity}
       <p>{work?.common.topic??common.topic}</p><p>{work?.video_settings.script_model??video.script_model}</p>
       <p>스토리·영상 작업 한도 US${work?.video_limit??videoLimit}</p><p>캐릭터 특징과 주제를 AI에 전송합니다. 참조 이미지는 보내지 않습니다.</p>
     </CharacterModal>}
-    {approval==='images'&&quote&&<CharacterModal title="장면 이미지 만들기" busy={!!busy} onClose={()=>setApproval(null)} footer={<button className="primary" disabled={!paidAvailable||locked} onClick={()=>void act('generate',{quote_hash:quote.hash,consent:'true',reference_consent:'true'})}>참조 이미지 전송·생성 승인</button>}>
+    {approval==='images'&&quote&&<CharacterModal title="장면 이미지 만들기" busy={!!busy} onClose={()=>setApproval(null)} footer={<button className="primary" disabled={!paidAvailable||locked} onClick={()=>void act('generate',{quote_hash:quote.hash,consent:'true',reference_consent:'true'})}>{imageActive?'장면 이미지 생성 중…':'참조 이미지 전송·생성 승인'}</button>}>
+      {imageActive&&activity}
       <p>장면 {quote.numbers.join(', ')} · {work?.selection.model}</p>
       <p>예상 US${quote.estimated_usd} · 예산 예약 US${quote.reserve_usd}</p>
       <p>선택한 캐릭터 참조 이미지를 전송합니다. 실제 청구액과 다를 수 있으며 영상 비용은 별도입니다.</p>
