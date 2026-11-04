@@ -270,7 +270,10 @@ class EpisodeFlow:
         s.consent(script_reviewed)
         with s.lock():
             job = s.read(identifier)
-            if job['state'] != 'script_review':
+            from .service import quote_settings_editable
+            renewing = bool(job.get('precision') and job['state'] == 'quoted'
+                            and quote_settings_editable(job))
+            if job['state'] != 'script_review' and not renewing:
                 raise CharacterError('blocked')
             story = self.validate(job, job['script'])
             chosen = check(job['studio_selection'])
@@ -283,6 +286,16 @@ class EpisodeFlow:
             folder = s.folder(identifier)
             if digest(folder / 'reference.png') != job['reference_sha256']:
                 raise CharacterError('reference')
+            if renewing:
+                # Explicit quote renewal preserves the frozen plan and old evidence.
+                archived = {key: deepcopy(job[key]) for key in (
+                    'state', 'plan_hash', 'prompts', 'scenes', 'quote_total_usd',
+                    'quoted_at', 'quote_key_id', 'quote_hash', 'script_approval') if key in job}
+                archived['archived_at'] = now().isoformat()
+                job.setdefault('quote_history', []).append(archived)
+                for key in ('quote_total_usd', 'quoted_at', 'quote_key_id', 'quote_hash'):
+                    job.pop(key, None)
+                job['scenes'] = []
             job['state'] = 'preparing'
             s.save(job)
             try:

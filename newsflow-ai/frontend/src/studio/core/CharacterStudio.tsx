@@ -1184,19 +1184,19 @@ function FastCharacterStudio({ c }: { c: Controller }) {
       setFailure(error instanceof Error ? error.message : "복구 결과를 확인하세요. 자동 재요청하지 않습니다.");
     } finally { setBusy(false); sending.current = false; }
   }
-  async function quote() {
+  async function quote(forceRefresh = false) {
     if (sending.current || pendingReferenceCopy || scriptDirty) return;
     sending.current = true;
     setBusy(true);
     setFailure("");
     try {
-      if (await saveSettings()) {
+      if (await saveSettings() && !forceRefresh && job?.quoteStatus !== "expired") {
         c.setNotice("설정을 저장했습니다. 현재 견적을 사용할 수 있습니다.");
         return;
       }
       c.open("character_act_prepare", {
         job_id: job?.id,
-        state: "script_review",
+        state: job?.precisionWorkId ? job.state : "script_review",
       });
     } catch (e) {
       setFailure(e instanceof Error ? e.message : "영상 설정 저장 실패");
@@ -1221,7 +1221,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
             kind === "retry-scene" ? job?.retry_hash : job?.quote_hash,
           retry_hash: job?.retry_hash,
           retryQuote: job?.retryQuote,
-          __refreshQuote: kind === 'submit' ? quote : undefined,
+          __refreshQuote: kind === 'submit' ? () => quote(true) : undefined,
         }}
         disabled={
           isBusy ||

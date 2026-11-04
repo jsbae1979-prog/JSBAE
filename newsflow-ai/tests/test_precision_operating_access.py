@@ -234,6 +234,15 @@ def test_confirmed_precision_images_through_operating_quote_scope(connected,monk
    assert [x[1] for x in calls if x[0]=='upload']==[f'precision-scene-{n}.png' for n in range(1,6)]
    assert len([x for x in calls if x[0]=='estimate'])==5
    assert all('No dialogue, no voices, no music.' in s['prompt'] for s in job['scenes'])
+   from test_character_quote_expiry_review import expired
+   previous=expired(c.p.owner,identifier)
+   scope.prepare(identifier,consent=True,script_reviewed=True)
+   job=c.p.owner.read(identifier)
+   assert job['quote_hash']!=previous['quote_hash']
+   assert job['precision']==previous['precision']
+   assert job['quote_history'][-1]['quote_hash']==previous['quote_hash']
+   assert len([x for x in calls if x[0]=='estimate'])==10
+   assert not any(x[0]=='submit' for x in calls)
    from bat_distribution import character_manual_execution as execution
    class Submitted(Video):
     def submit_scene(self,payload,idempotency_key):

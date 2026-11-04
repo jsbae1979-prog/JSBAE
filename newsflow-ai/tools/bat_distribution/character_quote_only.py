@@ -196,7 +196,11 @@ class QuoteOnly:
         self.local.consent(consent);self.local.consent(script_reviewed)
         with self.local.lock():
             job=self.local.read(identifier)
-            if (job.get('state')!='script_review' or not job.get('script') or job.get('scenes')
+            from newsflow.character.service import quote_settings_editable
+            renewing=bool(job.get('precision') and job.get('state')=='quoted'
+                          and quote_settings_editable(job))
+            initial=job.get('state')=='script_review' and not job.get('scenes')
+            if (not (initial or renewing) or not job.get('script')
                     or not job.get('studio_selection')):_deny()
             settings=check(job['studio_selection'])
             if job['plan_hash']!=self.local.plan_hash(job):_deny()
