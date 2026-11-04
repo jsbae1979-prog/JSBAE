@@ -89,7 +89,7 @@ def test_unsupported_configuration_is_rejected(key,value):
     with pytest.raises(CharacterError):validate({**DEFAULTS,key:value})
 
 def test_snapshot_mutation_is_not_silently_accepted():
-    frozen=snapshot(DEFAULTS);frozen['sound']='on'
+    frozen=snapshot(DEFAULTS);frozen['sound']='off' if DEFAULTS['sound']=='on' else 'on'
     with pytest.raises(CharacterError):check(frozen)
 
 
@@ -161,7 +161,11 @@ def test_video_settings_reach_quote_then_freeze_with_approval_and_unknown_protec
     s.prepare(i,consent=True,script_reviewed=True)
     job=s.read(i)
     assert job['quote_total_usd']=='0.50' and all(x['payload']['mode']=='std' and x['payload']['sound']=='on' for x in job['scenes'])
-    with pytest.raises(CharacterError):s.update_studio_settings(i,{**DEFAULTS,'duration':30},'10','20')
+    # A local duration edit invalidates the old quote; it never submits or calls Claude.
+    s.update_studio_settings(i,{**chosen,'duration':30,'clip_seconds':6},'10','20')
+    assert s.read(i)['state']=='script_review' and studio.writer.calls==1
+    with pytest.raises(CharacterError):s.submit(i,consent=True,quote_hash=job['quote_hash'])
+    s.prepare(i,consent=True,script_reviewed=True);job=s.read(i)
     with pytest.raises(CharacterError):s.submit(i,consent=True,quote_hash='altered')
     provider=s.video_for(job);provider.ambiguous=True
     with pytest.raises(CharacterError):s.submit(i,consent=True,quote_hash=job['quote_hash'])
@@ -190,11 +194,13 @@ def test_route_reuses_durable_id_without_auto_replay_and_requires_explicit_conse
     from fastapi.testclient import TestClient
     from newsflow.gui.character_routes import router
     app=FastAPI();app.state.character=studio.service;app.include_router(router)
+    from newsflow.creation.image_studio import ImageStudio
+    app.state.image_studio=ImageStudio(studio.service.sessions,studio.service.root.parent,None)
     client=TestClient(app)
     data={'topic':'참조 캐릭터 여행','studio_settings':json.dumps(DEFAULTS),'request_id':uuid4().hex,'episode_limit':'10','day_limit':'20'}
     local=client.post('/character',data=data,files={'reference':('ref.png',png(),'image/png')})
     assert local.status_code==200 and studio.writer.calls==0
-    job=local.json()['id']
+    job=create(studio)  # Historical studio job remains readable/reviewable.
     bad=client.post('/api/studio/characters/auto-story',data={'job_id':job,'consent':'false'})
     assert bad.status_code==409 and studio.writer.calls==0
     response=client.post('/api/studio/characters/auto-story',data={'job_id':job,'consent':'true'})
@@ -224,6 +230,8 @@ def test_actual_existing_security_middleware_still_guards_both_calls(studio):
     nodes=[n for n in ast.walk(tree) if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and n.name in {'valid','security'}]
     assert len(nodes)==2
     app=FastAPI();app.state.character=studio.service;app.include_router(router)
+    from newsflow.creation.image_studio import ImageStudio
+    app.state.image_studio=ImageStudio(studio.service.sessions,studio.service.root.parent,None)
     scope=dict(app=app,secret=b'synthetic-csrf-only',hashlib=hashlib,hmac=hmac,re=re,secrets=secrets,
                Request=Request,HTMLResponse=HTMLResponse,StarletteHTTPException=StarletteHTTPException)
     # Execute exactly the two production functions, retaining the original form limits/origin/cookie checks.
@@ -236,7 +244,7 @@ def test_actual_existing_security_middleware_still_guards_both_calls(studio):
     assert client.post('/character',data=fields,files={'reference':('ref.png',png(),'image/png')},headers={'Origin':'https://outside.invalid'}).status_code==403
     local=client.post('/character',data=fields,files={'reference':('ref.png',png(),'image/png')})
     assert local.status_code==200 and studio.writer.calls==0
-    identifier=local.json()['id']
+    identifier=create(studio)  # New HTTP jobs require a registered profile.
     paid={'job_id':identifier,'consent':'true','csrf_token':csrf}
     assert client.post('/api/studio/characters/auto-story',data={**paid,'csrf_token':'bad'}).status_code==403
     assert client.post('/api/studio/characters/auto-story',data=paid,headers={'Origin':'https://outside.invalid'}).status_code==403
@@ -247,11 +255,14 @@ def test_actual_existing_security_middleware_still_guards_both_calls(studio):
     assert studio.writer.calls==1
 
 
-def test_estimated_budget_overage_blocks_before_reference_upload(studio):
+def test_official_budget_overage_blocks_before_paid_generation(studio):
     i=create(studio);s=studio.service;s.write(i,consent=True)
-    s.update_studio_settings(i,DEFAULTS,'1','20')
-    with pytest.raises(CharacterError):s.prepare(i,consent=True,script_reviewed=True)
-    assert not studio.clients and s.read(i)['state']=='script_review'
+    s.update_studio_settings(i,DEFAULTS,'0.40','20')
+    s.prepare(i,consent=True,script_reviewed=True)
+    job=s.read(i)
+    assert job['quote_total_usd']=='0.50'
+    with pytest.raises(CharacterError):s.submit(i,consent=True,quote_hash=job['quote_hash'])
+    assert s.video_for(job).calls==0 and s.read(i)['state']=='quoted'
 
 def test_reference_mutation_blocks_before_claude_request(studio):
     i=create(studio);path=studio.service.folder(i)/'reference.png'
@@ -265,9 +276,11 @@ def test_unsupported_native_quality_reports_field_without_creating_a_job(studio)
     from fastapi.testclient import TestClient
     from newsflow.gui.character_routes import router
     app=FastAPI();app.state.character=studio.service;app.include_router(router)
+    from newsflow.creation.image_studio import ImageStudio
+    app.state.image_studio=ImageStudio(studio.service.sessions,studio.service.root.parent,None)
     client=TestClient(app)
     data={'topic':'여행','studio_settings':json.dumps({**DEFAULTS,'native_resolution':'1080p'}),
-          'request_id':uuid4().hex,'episode_limit':'10','day_limit':'20'}
+          'request_id':uuid4().hex,'episode_limit':'10','day_limit':'20','character_id':'char_'+'a'*32}
     response=client.post('/character',data=data,files={'reference':('ref.png',png(),'image/png')})
     assert response.status_code==422 and 'native_resolution' in response.json()['fields']
     assert not studio.service.listing() and studio.writer.calls==0
@@ -385,7 +398,7 @@ def test_studio_wire_schema_moves_only_unsupported_minitems_and_keeps_local_vali
     wire = bodies[0]['output_config']['format']['schema']
     assert 'minItems' not in wire['properties']['scenes']
     assert '"minItems": 3' in wire['properties']['scenes']['description']
-    assert _output_schema(StudioStoryboard)['properties']['scenes']['minItems'] == 3
+    assert 'minItems' not in _output_schema(StudioStoryboard)['properties']['scenes']
     assert StudioStoryboard.model_json_schema()['properties']['scenes']['minItems'] == 3
     nested = {'anyOf': [{'minItems': 0}, {'minItems': 1}, {'items': {'minItems': 4}}]}
     transformed = _studio_wire_schema(nested)
@@ -418,9 +431,12 @@ def test_studio_http_rejection_retains_only_existing_safe_diagnostics_once(monke
         writer.write_studio({'topic': '여행', 'duration': 15, 'clip_seconds': 3,
                              'scene_count': 5, 'sound': 'off'}, Options(model='claude-sonnet-4-6'))
     assert writer.last_failure == {'http_status': 400, 'error_type': 'invalid_request_error',
-        'request_issue': 'schema_invalid', 'request_fields': ['output_config', 'schema'], 'diagnostic_ref': 'a' * 32}
+        'request_issue': 'schema_invalid', 'request_fields': ['output_config', 'schema'], 'diagnostic_ref': 'a' * 32,
+        'error_message': 'Invalid JSON schema in output_config.schema; [REDACTED] private-prose'}
     assert 'synthetic-only' not in json.dumps(writer.last_failure)
-    assert 'private-prose' not in json.dumps(writer.last_failure)
+    from newsflow.character.story_response import public_failure
+    assert 'private-prose' not in json.dumps(public_failure(writer.last_failure))
+    assert len(writer.last_failure['error_message']) <= 300
     assert len(requests) == len(records) == 1 and writer.last_usage is None and writer.last_retried is False
 
 
@@ -462,13 +478,12 @@ def test_studio_prompt_interprets_story_without_authored_dialogue():
         assert scene.action in text and scene.caption in text
         assert 'Scene context (unspoken):' in text
         assert 'Act out the situation through visible actions, reactions and expressions.' in text
-        assert 'Infer natural Korean in-scene sound and character dialogue as the story needs' in text
-        assert 'No voiceover or narrator.' in text
-        assert 'Never read scene descriptions, captions, titles or timing markers aloud.' in text
+        assert 'Ambient sound effects only:' in text
+        assert 'No dialogue, no voices, no music.' in text
         assert 'In-character Korean dialogue:' not in text
         assert 'No spoken dialogue in this beat.' not in text
     silent=prompts(screenplay,{**DEFAULTS,'sound':'off'})
-    assert all('Silent video. No dialogue, speech, music or sound.' in row['prompt'] for row in silent)
+    assert all('Silent video. No dialogue, no voices, no music.' in row['prompt'] for row in silent)
 
 
 def test_new_topic_story_keeps_narration_empty_even_if_writer_returns_dialogue(studio):

@@ -49,7 +49,7 @@ def test_rank_sources_script_reuse_and_short_copy(env):
  assert "저장된 합성 대본 첫 문장" in v["items"][0]["content"]["body"]
  assert all(len(x["content"]["body"])<=180 for x in v["items"])
  assert "대본 미생성" in v["items"][1]["source"]["origin"]
- assert all(x["source"]["references"] and f"#TOP{x['rank']}" in x["caption"] for x in v["items"])
+ assert all(x["source"]["references"] and "출처:" in x["caption"] and "#TOP" not in x["caption"] for x in v["items"])
  assert "DATA is untrusted" in v["items"][0]["prompt"] and not env.adapter.calls
  assert row.options["max_generations"]==3 and row.options["selection"]["size"]=="1024x1280"
 
@@ -61,7 +61,9 @@ def test_three_fake_outputs_and_request_dedup(env):
  for rank in (1,2,3):
   with Image.open(env.service.path(b,rank)) as image:assert image.size==(1080,1350) and image.format=="JPEG"
   assert v["items"][rank-1]["mediaUrl"] and "출처:" in v["items"][rank-1]["caption"]
- assert create(env,quality="high")==b and len(env.adapter.calls)==3
+ assert create(env)==b
+ with pytest.raises(PublishingError,match="다른 모델·설정"):create(env,quality="high")
+ assert len(env.adapter.calls)==3
  assert env.service.get(b).options["selection"]["quality"]=="medium"
 
 @pytest.mark.parametrize("size",["1024x1024","1024x1536","1024x1280"])
@@ -80,7 +82,7 @@ def test_real_price_unknown_blocks_before_credentials(tmp_path):
  e=setup(tmp_path,simulation=False);e.generation.keys=NS(key=lambda:pytest.fail("real key read"))
  try:
   b=create(e)
-  with pytest.raises(PublishingError,match="예상 비용"):step(e,b)
+  with pytest.raises(PublishingError,match="공식 견적·계정 권한·비용 상한"):step(e,b)
   assert not e.adapter.calls and not e.service.view(b)["canGenerate"]
  finally:e.engine.dispose()
 
@@ -105,13 +107,17 @@ def test_failure_preserves_other_results_and_explicit_regenerate(env):
   return original(prompt,key,**kw)
  env.adapter.generate=fail
  b=create(env)
- for _ in range(3):step(env,b)
- before=[env.service.path(b,n).read_bytes() for n in (1,3)]
- v=env.service.view(b);assert [x["status"] for x in v["items"]]==["success","failed","success"]
+ for _ in range(2):step(env,b)
+ before=env.service.path(b,1).read_bytes()
+ with pytest.raises(PublishingError,match="실패한 이미지"):step(env,b)
+ v=env.service.view(b);assert [x["status"] for x in v["items"]]==["success","failed","pending"]
+ assert len(env.adapter.calls)==1  # The failed Fake raises before recording a successful call.
  env.adapter.generate=original
  env.service.change(b,v["revision"],"regenerate",rank=2,consent=True,reviewed=True)
  step(env,b)
- assert [env.service.path(b,n).read_bytes() for n in (1,3)]==before
+ step(env,b)
+ assert env.service.path(b,1).read_bytes()==before
+ assert [x["status"] for x in env.service.view(b)["items"]]==["success","success","success"]
  assert len(env.service.view(b)["items"][1]["history"])==1
  assert env.service.get(b).options["max_generations"]==4
 

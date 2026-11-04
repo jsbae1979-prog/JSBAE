@@ -51,3 +51,10 @@ def test_local_saves_delegate_to_original_auth_and_services(path):
 def test_config_requires_explicit_layout_opt_in(tmp_path,monkeypatch):
     root,raw,write=configured(tmp_path,monkeypatch);layout=write();layout['validationOnly']=True
     with pytest.raises(Blocked):load_operating(root,layout)
+
+
+def test_youtube_status_delegates_only_local_metadata_read():
+    client = TestClient(OperatingRequests(inner))
+    assert client.get('/api/youtube/status').status_code == 204
+    for method, path in [('POST','/api/youtube/status'), ('GET','/api/youtube/status/other'), ('POST','/youtube/connect'), ('POST','/youtube/publish/1')]:
+        assert client.request(method,path).status_code == 403

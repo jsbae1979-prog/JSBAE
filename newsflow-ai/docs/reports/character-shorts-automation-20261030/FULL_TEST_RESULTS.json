@@ -1,0 +1,41 @@
+{
+  "command": "python -m pytest -q -rs",
+  "python": "3.12.10",
+  "windows_build": 26300,
+  "source": "c7a8d824a742e636d40ce062327edbda42be2e38",
+  "counts": {
+    "PASS": 6080,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIP": 4
+  },
+  "test_count": 6084,
+  "elapsed_seconds": 2277.339,
+  "failures": [],
+  "skips": [
+    {
+      "test": "tests.test_ai_video_compose::test_clip_store_rejects_symlinks",
+      "reason": "symlinks are not available for this user"
+    },
+    {
+      "test": "tests.test_ai_video_settings::test_video_key_store_fails_closed_without_dpapi",
+      "reason": "Windows has a real DPAPI cipher"
+    },
+    {
+      "test": "tests.test_live_ai::test_single_approved_openai_script_generation",
+      "reason": "opt-in paid AI live test: set NEWSFLOW_AI_LIVE_TEST=1, NEWSFLOW_AI_API_KEY and NEWSFLOW_AI_LIVE_MAX_TOKENS"
+    },
+    {
+      "test": "tests.test_live_rss::test_google_news_live",
+      "reason": "opt-in live RSS: set NEWSFLOW_LIVE_TEST=1"
+    }
+  ],
+  "junit_sha256": "626415af48849ca95668618f36a8f964b777b16fe2f6cc03549308479226db42",
+  "providers": "Fake only",
+  "real_api_calls": false,
+  "operating_application_used": false,
+  "historical_fixture_commit": "0a59bfb41eec6b243e4470f67cd53c1e7cd07e52",
+  "tzdata": "2026.5",
+  "isolated_ffmpeg": "9.0.2",
+  "note": "Raw logs and synthetic temporary data remain local; this summary contains counts and test names only."
+}

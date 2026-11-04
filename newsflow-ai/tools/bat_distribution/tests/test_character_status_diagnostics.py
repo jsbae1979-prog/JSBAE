@@ -193,3 +193,17 @@ def test_diagnostic_completed_observation_needs_no_media_url_or_fetch():
 def test_generic_provider_error_meaning_survives_prompt_redaction(message):
     private = 'Use the reference character image to create a generation. The duration follows the prompt.'
     assert safe_error(message, (private,)) == message
+
+
+def test_operating_diagnose_scope_accepts_never_sent_episode_dependency(failed):
+    from test_character_episode_automation import setup_episode
+    x=failed
+    service,video,identifier,_,_=setup_episode(x.profile,target=20)
+    service.write(identifier,consent=True)
+    service.prepare(identifier,consent=True,script_reviewed=True)
+    service.submit(identifier,consent=True,quote_hash=service.read(identifier)['quote_hash'])
+    job=service.read(identifier);job['state']='scene_review';job['scenes'][0]['state']='failed'
+    service.save(job);before=deepcopy(job);calls=deepcopy(x.state.calls)
+    assert x.post('diagnose',job_id=identifier)==200
+    assert len(x.state.observed)==1 and x.state.calls==calls and len(video.sent)==1
+    assert without_diagnostics(service.read(identifier))==before

@@ -8,6 +8,7 @@ from newsflow.db.models import CollectionRun, IntelligenceRun, NewsSource, utcno
 from .serpapi import SOURCE_URL, SerpApiError
 from .serpapi_settings import claim
 from .service import safe_feed_message
+from .collection_workspace import begin_collection
 from .trends import MAX_AGE, parse_trends
 
 GLOBAL_POLICY = "global_trends_v1"
@@ -74,7 +75,7 @@ def _query(snapshot):
     return " OR ".join(terms) + " when:1d"
 
 
-def collect_global(curator, config: dict, adapter, token: str) -> int:
+def collect_global(curator, config: dict, adapter, token: str, hours: int = 24) -> int:
     """Caller holds the collection lock and has checked the key, approval and durable token."""
     sessions = curator.sessions
     with sessions.begin() as session:
@@ -87,6 +88,7 @@ def collect_global(curator, config: dict, adapter, token: str) -> int:
         session.flush()
         identifier = run.id
         claim(session, token, identifier)
+        begin_collection(session)
     requests, ids, origins = [], [], {}
     added = duplicates = succeeded = 0
     snapshot, collection_id, error = None, None, None
@@ -131,18 +133,23 @@ def collect_global(curator, config: dict, adapter, token: str) -> int:
                 collection = session.get(CollectionRun, collection_id)
                 collection.added, collection.duplicates, collection.succeeded = added, duplicates, succeeded
     except Exception as exc:  # noqa: BLE001 - stop the batch, retain partial data, never replay or switch provider
-        error = SerpApiError(exc.code if isinstance(exc, SerpApiError) else "bad_response")
+        error = exc if isinstance(exc, SerpApiError) else SerpApiError("bad_response")
         if requests and requests[-1]["status"] == "running":
             requests[-1].update(status="unknown" if error.code in {"timeout_unknown", "network_unknown"} else "failed",
-                                error_code=error.code)
+                                error_code=error.code, diagnostic=error.diagnostics())
     with sessions.begin() as session:
         if collection_id is not None:
             collection = session.get(CollectionRun, collection_id)
             collection.status, collection.finished_at = "failed" if error else "success", utcnow()
             collection.failed = int(error is not None)
+        recent_info = None
         if not error:
+            from .recent_filter import select_recent
             from .lifecycle import replace_collection
 
+            # Keep only recently published articles; TOP 3 scoring judges newsworthiness.
+            ids, recent_info = select_recent(session, ids, utcnow(), hours)
+            origins = {k: v for k, v in origins.items() if int(k) in set(ids)}
             replace_collection(session, ids)
         overseas = {i for i, rows in origins.items() if any(r["role"] != "korea" for r in rows)}
         korea = {i for i, rows in origins.items() if any(r["role"] == "korea" for r in rows)}
@@ -160,13 +167,14 @@ def collect_global(curator, config: dict, adapter, token: str) -> int:
                       "collection_policy": GLOBAL_POLICY, "candidate_mix": mix, "added": added, "duplicates": duplicates,
                       "searched_at": utcnow().isoformat(), "local_request_attempts": len(requests),
                       "provider_billed_credits": None, "ai_calls": 0, "facts_verified": False,
-                      **({"error_code": error.code} if error else {})}
+                      **({"error_code": error.code, "diagnostic": error.diagnostics()} if error else {})}
         trend = IntelligenceRun(kind="trends", provider="google_trends", status="failed" if error else "success",
                                 options={"collection_run_id": collection_id},
                                 evidence={"news_origin": "serpapi", "news_search_run_id": identifier,
                                           "collection_policy": GLOBAL_POLICY},
                                 result={"snapshot": snapshot, "collection": {"article_ids": ids, "added": added,
-                                        "duplicates": duplicates, "succeeded": succeeded, "failed": int(error is not None)},
+                                        "duplicates": duplicates, "succeeded": succeeded, "failed": int(error is not None),
+                                        **({"recent_filter": recent_info} if recent_info else {})},
                                         "candidate_mix": mix, "ai_calls": 0, "news_error": str(error) if error else None},
                                 message=row.message, finished_at=utcnow())
         session.add(trend)

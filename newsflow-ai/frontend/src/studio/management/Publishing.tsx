@@ -1,6 +1,9 @@
+import MetaPublishPanel from './MetaPublishPanel';
+import PostingCopyReview from './PostingCopyReview';
+import PublishingImage from './PublishingImage';
 import { useEffect, useState } from "react";
 import { Search, Send, CalendarDays } from "lucide-react";
-import type { Item } from "../contracts";
+import { safeMedia, type Item } from "../contracts";
 import {
   Panel,
   Empty,
@@ -15,24 +18,36 @@ import {
   type Controller,
 } from "./shared";
 export default function Publishing({ c }: { c: Controller }) {
-  const [id, setId] = useState(""),
+  const requestedProject = new URLSearchParams(window.location.search).get("project_id") ?? "";
+  const [id, setId] = useState(requestedProject ? "new" : ""),
     [query, setQuery] = useState(""),
     [type, setType] = useState("all"),
     [form, setForm] = useState<Item>({}),
     [targets, setTargets] = useState<string[]>([]),
     [time, setTime] = useState(""),
     [cohortId, setCohortId] = useState("");
-  const drafts = c.list("drafts"),
-    projects = c.workspace?.projects ?? [],
-    selected =
-      id === "new"
-        ? undefined
-        : (drafts.find((x) => String(x.id) === id) ?? drafts[0]);
-  const [projectId, setProjectId] = useState("");
-  const project =
-    projects.find(
-      (x: Item) => x.id === (projectId || "news:" + selected?.render_job_id),
-    ) ?? projects[0];
+  const [preparationTarget, setPreparationTarget] = useState<HTMLDivElement|null>(null);
+  // The module supplies publishable candidates; historical drafts/results stay
+  // in their own collections and never reintroduce hidden or unfinished media.
+  const projects = (c.view?.module === "publishing" ? c.view.projects ?? [] : []).filter((x) =>
+    !!safeMedia(x.mediaUrl) && (x.kind === "character" ? x.technicalStatus === "completed" : x.technicalStatus === "success"));
+  const visibleProjects = projects.filter((x: Item) =>
+    (type === "all" || x.kind === type) && String(x.title).includes(query));
+  const drafts = c.list("drafts").filter((draft) =>
+    visibleProjects.some((project: Item) => project.id === "news:" + draft.render_job_id));
+  const [projectId, setProjectId] = useState(requestedProject);
+  const selectionMissing =
+    (!!projectId && !visibleProjects.some((x: Item) => x.id === projectId)) ||
+    (!!id && id !== "new" && !drafts.some((x) => String(x.id) === id));
+  const selected = selectionMissing || id === "new"
+    ? undefined : (drafts.find((x) => String(x.id) === id) ?? drafts[0]);
+  const project = selectionMissing ? undefined : (
+    visibleProjects.find((x: Item) => x.id === (projectId || "news:" + selected?.render_job_id)) ?? visibleProjects[0]);
+  useEffect(() => {
+    if (!selectionMissing || c.view?.module !== "publishing") return;
+    setId("new"); setProjectId(""); setForm({});
+    setTargets([]); setTime(""); setCohortId("");
+  }, [selectionMissing, c.view?.module]);
   useEffect(() => {
     const next = selected
       ? {
@@ -57,6 +72,10 @@ export default function Publishing({ c }: { c: Controller }) {
     );
     if (selected) setProjectId("news:" + selected.render_job_id);
   }, [selected?.id, selected?.revision]);
+  const availablePlatforms = project ? platforms
+    .filter(p => project.kind === "image" ? p.id === "instagram" : ["news", "character"].includes(project.kind))
+    .map(p => ({ ...p, label: p.id === "instagram" ? (project.kind === "image" ? "Instagram 피드" : "Instagram Reels") : p.label })) : [];
+  useEffect(()=>{setTargets([]);},[project?.id]);
   const cohorts = c
     .list("cohorts")
     .filter(
@@ -70,7 +89,10 @@ export default function Publishing({ c }: { c: Controller }) {
         ),
     );
   const cohort = cohorts.find((x) => String(x.id) === cohortId) ?? cohorts[0];
+  const reviewedCopy=cohort?.metadata;
+  const copyMatches=!!reviewedCopy && reviewedCopy.title===(form.title??project?.title??"") && reviewedCopy.description===(form.description??"") && (Array.isArray(reviewedCopy.hashtags)?reviewedCopy.hashtags.join(" "):reviewedCopy.hashtags)===(form.hashtags??"");
   function selectProject(x: Item) {
+    if(project?.id===x.id)return;
     const matching = drafts.find((d) => "news:" + d.render_job_id === x.id);
     setId(matching ? String(matching.id) : "new");
     setProjectId(x.id);
@@ -146,13 +168,7 @@ export default function Publishing({ c }: { c: Controller }) {
             ))}
           </div>
           <div className="mg-publish-list">
-            {projects
-              .filter(
-                (x: Item) =>
-                  (type === "all" || x.kind === type) &&
-                  String(x.title).includes(query),
-              )
-              .map((x: Item) => (
+            {visibleProjects.map((x: Item) => (
                 <button
                   key={x.id}
                   aria-pressed={project?.id === x.id}
@@ -167,7 +183,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 </button>
               ))}
           </div>
-          {!projects.length && <Empty>저장된 콘텐츠가 없습니다.</Empty>}
+          {!visibleProjects.length && <Empty>현재 조건에 맞는 게시용 콘텐츠가 없습니다.</Empty>}
           <h3>로컬 게시 초안</h3>
           <div className="mg-draft-list">
             {drafts.map((x) => (
@@ -185,7 +201,7 @@ export default function Publishing({ c }: { c: Controller }) {
               </button>
             ))}
           </div>
-          <Action
+          {project?.kind === "news" && <Action
             c={c}
             id="unified_publishing_local_draft"
             context={context}
@@ -193,11 +209,13 @@ export default function Publishing({ c }: { c: Controller }) {
             primary
           >
             새 로컬 초안 저장
-          </Action>
+          </Action>}
         </Panel>
         <Panel title="콘텐츠 미리보기 및 편집" className="mg-publish-editor">
-          <div className="mg-publish-edit-grid">
-            <Media url={project?.mediaUrl} image={project?.kind === "image"} />
+          {project ? <div className={"mg-publish-edit-grid" + (project.kind === "image" ? " mg-publish-image-grid" : "")}>
+            {project.kind === "image"
+              ? <PublishingImage key={project.id} url={project.mediaUrl} title={String(form.title ?? project.title ?? "이미지")} />
+              : <Media url={project.mediaUrl} />}
             <div>
               <label>
                 제목
@@ -224,49 +242,17 @@ export default function Publishing({ c }: { c: Controller }) {
                   onChange={(e) => update("hashtags", e.target.value)}
                 />
               </label>
-              <div className="mg-actions">
-                <Action
-                  c={c}
-                  id="publishing_edit"
-                  context={context}
-                  disabled={!selected}
-                >
-                  초안 수정 · 저장
-                </Action>
-                <Action
-                  c={c}
-                  id="publishing_validate"
-                  context={{ draft_id: selected?.id }}
-                  disabled={!selected}
-                >
-                  형식 검증
-                </Action>
-              </div>
-              <p className="mg-muted">
-                저장과 검토·최종 게시 승인은 별도입니다. 수정한 내용은 기존 저장
-                창에서 확인합니다.
-              </p>
-              <div className="mg-review-checks">
-                {[
-                  ["content_reviewed", "콘텐츠 검토"],
-                  ["copyright_confirmed", "저작권·사용권"],
-                  ["sources_confirmed", "원문 출처"],
-                ].map(([k, t]) => (
-                  <p key={k}>
-                    <Badge
-                      value={selected?.[k] ? "approved" : "review_required"}
-                    />
-                    {t}
-                  </p>
-                ))}
-              </div>
+              {project && <PostingCopyReview key={project.id} project={project} form={form} setForm={setForm} csrf={c.view?.csrfToken??""} targets={targets} preparationTarget={preparationTarget}/> }
+
             </div>
-          </div>
+          </div> : <Empty>왼쪽에서 게시할 콘텐츠를 선택하세요.</Empty>}
         </Panel>
         <aside className="mg-publish-right">
-          <Panel title="게시 플랫폼 설정">
+          <Panel title="게시 플랫폼 · 권리 확인">
+            {!project && <p>완성 콘텐츠를 먼저 선택하세요.</p>}
+            {project?.kind==="image"&&<p className="mg-muted">이미지 콘텐츠 · Instagram 피드</p>}
             <div className="mg-publish-platforms">
-              {platforms.map((p) => (
+              {availablePlatforms.map((p) => (
                 <article key={p.id}>
                   <header>
                     <PlatformIcon id={p.id} />
@@ -311,7 +297,8 @@ export default function Publishing({ c }: { c: Controller }) {
                 </article>
               ))}
             </div>
-            <Action
+            <div ref={setPreparationTarget}/>
+            {project?.kind === "news" ? <Action
               c={c}
               id="unified_publishing_review"
               context={context}
@@ -319,7 +306,21 @@ export default function Publishing({ c }: { c: Controller }) {
               primary
             >
               선택 플랫폼 게시 검토
-            </Action>
+            </Action> : null}
+            {project?.kind === "news" && (<div className="mg-review-checks">
+                {[
+                  ["content_reviewed", "콘텐츠 검토"],
+                  ["copyright_confirmed", "저작권·사용권"],
+                  ["sources_confirmed", "원문 출처"],
+                ].map(([k, t]) => (
+                  <p key={k}>
+                    <Badge
+                      value={selected?.[k] && copyMatches ? "approved" : "review_required"}
+                    />
+                    {t}
+                  </p>
+                ))}
+              </div>)}
           </Panel>
           <Panel title="게시 일정 · 승인">
             <label>
@@ -355,7 +356,7 @@ export default function Publishing({ c }: { c: Controller }) {
                   ? (time.length === 16 ? time + ":00" : time) + "+09:00"
                   : "",
               }}
-              disabled={!cohort || !time}
+              disabled={!cohort || !time || !copyMatches}
             >
               <CalendarDays size={16} />
               예약 저장 · 검토
@@ -367,7 +368,7 @@ export default function Publishing({ c }: { c: Controller }) {
                 cohort_id: cohort?.id,
                 approval_token: cohort?.approval_token,
               }}
-              disabled={!cohort?.can_execute}
+              disabled={!cohort?.can_execute || !copyMatches}
               primary
             >
               <Send size={16} />
@@ -380,6 +381,7 @@ export default function Publishing({ c }: { c: Controller }) {
           </Panel>
         </aside>
       </div>
+      {project && <MetaPublishPanel csrf={c.view?.csrfToken??""} contentId={project.id} caption={[form.title??project.title,form.description,form.hashtags].filter(Boolean).join("\n\n")} />}
       <Panel title="게시 대기 목록 · 결과 기록">
         <div className="mg-table-scroll">
           <table>

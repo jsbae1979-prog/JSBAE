@@ -284,7 +284,7 @@ def test_additive_upgrade_preserves_every_old_table_and_restore_revision(tmp_pat
     migrate(engine)
     engine.dispose()
     after = logical(stage/'newsflow.db')
-    assert after['alembic_version'] == [('0018',)]
+    assert after['alembic_version'] == [('0019',)]
     with closing(sqlite3.connect(stage/'newsflow.db')) as db:
         for table, schema in schemas.items():
             assert db.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone()[0] == schema

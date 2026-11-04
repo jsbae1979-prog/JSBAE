@@ -181,7 +181,9 @@ class ElevenLabsVoices:
             key = self.keys.key()
             if not key:
                 raise TTSError("ElevenLabs API Key 미등록")
-            query = {"page_size": 100, "voice_type": VOICE_TYPE}
+            query = {"page_size": 100}
+            if getattr(self, "_requested_scope", VOICE_TYPE) != "all":
+                query["voice_type"] = VOICE_TYPE
             if token:
                 query["next_page_token"] = token
             request = urllib.request.Request("https://api.elevenlabs.io/v2/voices?" + urlencode(query),
@@ -222,19 +224,21 @@ class ElevenLabsVoices:
         except OSError:
             pass  # Recording failure must not hide the original safe error or trigger another request.
 
-    def load(self, *, more=False):
+    def load(self, *, more=False, all_voices=False):
         """Exactly one page per explicit action; a failure keeps the last successful cache."""
         self.root.mkdir(parents=True, exist_ok=True)
         try:
             with FileLock(str(self.root / "voices.lock"), timeout=0):
                 tag, previous = self._tag(), self.cached()
+                scope = "all" if all_voices else VOICE_TYPE
                 if not tag:
                     raise TTSError("ElevenLabs API Key 미등록")
                 token = previous.get("next_page_token") if more and previous.get("has_more") else None
-                if more and previous.get("voice_type") != VOICE_TYPE:
-                    raise TTSError("기존 전체 목록의 다음 페이지는 불러오지 않습니다. 내 음성 목록을 새로 조회하세요.")
+                if more and previous.get("voice_type") != scope:
+                    raise TTSError("목록 범위가 달라 다음 페이지를 불러오지 않았습니다. 목록을 새로 조회하세요.")
                 if more and (not token or len(previous["voices"]) >= 1000):
                     raise TTSError("더 불러올 음성이 없습니다. 목록 새로 불러오기를 사용하세요.")
+                self._requested_scope = scope
                 result = self.transport(token)
                 if (not isinstance(result, dict) or not isinstance(result.get("voices"), list)
                         or len(result["voices"]) > 200 or type(result.get("has_more")) is not bool):
@@ -250,7 +254,7 @@ class ElevenLabsVoices:
                 if len(voices) > 1000 or self._tag() != tag:
                     raise TTSError("목록 한도 또는 키 변경 감지 · 목록을 저장하지 않았습니다.")
                 cached = {"key_tag": tag, "voices": list(voices.values()), "has_more": result["has_more"],
-                          "voice_type": VOICE_TYPE,
+                          "voice_type": scope,
                           "next_page_token": next_token if result["has_more"] else None,
                           "fetched_at": datetime.now(UTC).isoformat(timespec="seconds")}
                 atomic_write(self.root / "voices.json", json.dumps(cached, ensure_ascii=False).encode())
@@ -285,8 +289,8 @@ class ElevenLabsVoices:
             raise TTSError("샘플 연결·시간 초과·안전 검사 실패 · 자동 재시도 없음") from None
 
 
-def select_voice(sessions, voice_id, catalog):
-    """Explicit save changes only the existing voice ID, never another provider or approval."""
+def select_voice(sessions, voice_id, catalog, *, use_for_news=False):
+    """Explicit local selection; optional news voice preference never grants paid consent."""
     from newsflow.db.models import AppSetting
 
     if not catalog.voice(voice_id):
@@ -297,3 +301,9 @@ def select_voice(sessions, voice_id, catalog):
             session.add(AppSetting(key="tts_el_voice_id", value=json.dumps(voice_id)))
         else:
             row.value = json.dumps(voice_id)
+        if use_for_news:
+            preference = session.get(AppSetting, "video_default_voice")
+            if preference is None:
+                session.add(AppSetting(key="video_default_voice", value="elevenlabs"))
+            else:
+                preference.value = "elevenlabs"

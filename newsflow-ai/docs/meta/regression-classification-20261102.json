@@ -1,0 +1,1226 @@
+{
+  "date": "2026-11-02",
+  "head": "a6237eb831e0164bacf226934b8d54f55cd9bdb0",
+  "pre_meta_base": "7820915626be95818e8dfdb18ac71fca6568ec73",
+  "automatic_upload_feature_sha": "f4e2e15ae7689e3e48424491df43c390d8c795f7",
+  "scope": "Existing log comparison and five selected Fake-provider tests only; no full regression, product edits, operating access, paid API or publishing.",
+  "historical_full": {
+    "pass": 6975,
+    "fail": 113,
+    "error": 24,
+    "skip": 50,
+    "note": "Intermediate worktree before final automatic-upload refinements; not exact final SHA."
+  },
+  "direct_log_causes": {
+    "ffmpeg_configuration": 91,
+    "timezone_data": 7,
+    "baseline_gui_source": 2,
+    "originally_unresolved": 37
+  },
+  "remaining_37": {
+    "prior_targeted_pass_not_rerun": 30,
+    "current_ffmpeg_configured_pass": 3,
+    "stale_ui_contract": 2,
+    "authentication_message_contract": 1,
+    "async_completion_wait": 1
+  },
+  "new_probe": {
+    "pass": 3,
+    "fail": 2,
+    "error": 0,
+    "skip": 0,
+    "duration_seconds": 20.84,
+    "python": "existing Windows Python 3.14",
+    "notes": "No assertions removed or skipped. FFmpeg paths test-process-only. Two diagnostic repeats remained FAIL; do not add them as distinct tests."
+  },
+  "observer": {
+    "http_status": 200,
+    "attempt_after_response": 2,
+    "auth_ready": false,
+    "auth_reason": "API 연결 확인 기간(24시간)이 지났습니다. 설정·관리에서 API 키 테스트를 다시 실행하세요. 유료 생성은 전송하지 않았습니다.",
+    "note": "Observation after original failure; not a passing test."
+  },
+  "historical_targeted": {
+    "pass": 93,
+    "fail": 2,
+    "error": 0,
+    "skip": 0,
+    "timestamp": "2026-11-02T19:07:50.538004+09:00",
+    "warning": "Earlier working tree. Exact environment snapshot unavailable. Results reused, not presented as new."
+  },
+  "code_comparison": "git diff pre_meta_base..HEAD showed no differences for relevant video code, production_status, api_settings, PhotoFeedEditor, TopThreeFeeds and inspected failure tests.",
+  "next_minimal_test_changes": [
+    "Await matching /api/feed-batches/{id}/change response and completed UI before attempt assertion; retain no-extra-call checks.",
+    "Use explicit expired-auth reason and keep ready=false plus reservation rejection assertions.",
+    "Update feed connection selector to current additional-editing disclosure; preserve background and rank isolation assertions.",
+    "Reconcile removed manual-performance UI assertions with approved simplification; preserve caption persistence and zero paid call checks."
+  ],
+  "limitations": [
+    "No full-suite pass claimed.",
+    "No product defect attributable to Meta established by this review. Shared integration effects cannot be excluded by unchanged files alone.",
+    "Already-fixed three compactConsent VM frontend tests untouched.",
+    "No operating restart, account/token access, real uploads or paid calls.",
+    "Existing dirty files preserved."
+  ],
+  "evidence": [
+    {
+      "file": "pytest-full-314.log",
+      "sha256": "bb972dc76bae1a407dd9934936513b50efebb82282e295332e8c4623befbe817"
+    },
+    {
+      "file": "remaining-recheck.xml",
+      "sha256": "173b10f1d1efb669c47b36b6d0c17ef4afa3a58bdbf41acc6ec73a749965518b"
+    },
+    {
+      "file": "auto-full.xml",
+      "sha256": "06d13b4e03c688367a965a9475981397110db198d6a00cccb050300ef596b57f"
+    },
+    {
+      "file": "classification-probe.xml",
+      "sha256": "b5f91debe398929ebdeecda29ecde952cad977ef0b16be7213752286b65b9a80"
+    },
+    {
+      "file": "classification-observer.log",
+      "sha256": "133892988efc0d7ec118b47c5296ccede93feb60bca20f9922450c3613e38ef4"
+    },
+    {
+      "file": "classification-probe-command.json",
+      "sha256": "8996d8a852ecb0d536592c82decc13acdd6a13d2b12ba995b1a1b699709905af"
+    }
+  ],
+  "test_classification": [
+    {
+      "id": "tests.test_ai_video_service::test_a_batch_that_fills_the_month_exactly_is_still_sent",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_ai_video_service::test_a_status_failure_after_the_deadline_keeps_polling_then_closes_refetchably",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "PASS",
+      "finding": "Same test passes with FFmpeg/FFprobe configured in test process; Fake fetch requires local FFmpeg. Product unchanged."
+    },
+    {
+      "id": "tests.test_ai_video_service::test_existing_explicit_reservation_survives_month_boundary",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_browser::test_workspace_all_ai_voice_approval_to_original_task_preview[openai]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_browser::test_workspace_all_ai_voice_approval_to_original_task_preview[claude_api]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[openai-False-supertonic:F1-True]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[openai-False-supertonic:F1-False]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[openai-False-elevenlabs-True]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[openai-False-elevenlabs-False]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[openai-True-supertonic:F1-True]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[openai-True-supertonic:F1-False]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[openai-True-elevenlabs-True]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[openai-True-elevenlabs-False]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[claude_api-False-supertonic:F1-True]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[claude_api-False-supertonic:F1-False]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[claude_api-False-elevenlabs-True]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[claude_api-False-elevenlabs-False]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[claude_api-True-supertonic:F1-True]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[claude_api-True-supertonic:F1-False]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[claude_api-True-elevenlabs-True]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_production::test_eight_choice_matrix_real_ffmpeg[claude_api-True-elevenlabs-False]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_safety::test_deleted_or_unreviewed_generated_clip_prevents_synthesis[openai]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_safety::test_deleted_or_unreviewed_generated_clip_prevents_synthesis[claude_api]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_all_scene_safety::test_failed_voice_with_completed_ai_clips_is_not_recharged_on_compose_retry[openai]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "PASS",
+      "finding": "Same test passes with FFmpeg/FFprobe configured in test process; Fake fetch requires local FFmpeg. Product unchanged."
+    },
+    {
+      "id": "tests.test_all_scene_safety::test_failed_voice_with_completed_ai_clips_is_not_recharged_on_compose_retry[claude_api]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "PASS",
+      "finding": "Same test passes with FFmpeg/FFprobe configured in test process; Fake fetch requires local FFmpeg. Product unchanged."
+    },
+    {
+      "id": "tests.test_blue_studio_browser::test_portrait_library_edit_playback_and_publish_keep_original_boundaries",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_browser::test_character_studio_exposes_only_original_story_flow",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_30_seconds_has_setup_and_continuing_ending_without_a_writer[kling-video/o3/image-reference]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_30_seconds_has_setup_and_continuing_ending_without_a_writer[kling-video/v3.0/std/image-to-video]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_second_segment_receives_true_final_frame_and_frozen_context",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_changed_context_never_submits_the_continuation[context]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_changed_context_never_submits_the_continuation[parent_prompt]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_failed_or_unknown_parent_does_not_start_or_retry_next_segment[failed]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_failed_or_unknown_parent_does_not_start_or_retry_next_segment[unknown]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_continuity::test_continuation_price_increase_stops_before_second_submit",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_video::test_image_topic_to_fake_video_and_final_mp4_has_zero_story_calls[15]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_video::test_image_topic_to_fake_video_and_final_mp4_has_zero_story_calls[30]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_video::test_direct_and_story_modes_cannot_share_an_idempotency_key",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_direct_video::test_unknown_direct_submit_is_not_replayed",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_automation::test_fake_pipeline_to_real_mp4[15-\\ubcc4-rabbit-claude-sonnet-4-6]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_automation::test_fake_pipeline_to_real_mp4[35-\\ub2ec-penguin-gpt-4.1-mini]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_automation::test_fake_pipeline_to_real_mp4[60-\\ubcc4-rabbit-claude-sonnet-4-6]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_automation::test_approval_edit_revision_and_unknown_never_replayed",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_automation::test_duration_change_requires_new_script_and_preserves_snapshot",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_automation::test_selected_model_is_frozen_after_script",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_automation::test_sound_off_is_local_edit_without_more_authoring_or_paid_execution",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_editing::test_real_ffmpeg_variable_episode_is_exact_portrait_mp4[15]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_editing::test_real_ffmpeg_variable_episode_is_exact_portrait_mp4[35]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_editing::test_real_ffmpeg_variable_episode_is_exact_portrait_mp4[60]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_editing::test_real_audio_crossfade_contains_both_sources_without_time_shift",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_end_to_end::test_registered_characters_and_generated_topics_reach_final_mp4[15-0-claude_api-claude-sonnet-4-6]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_end_to_end::test_registered_characters_and_generated_topics_reach_final_mp4[35-1-openai-gpt-4.1-mini]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_end_to_end::test_registered_characters_and_generated_topics_reach_final_mp4[60-0-claude_api-claude-sonnet-4-6]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_known_failed_scene_requires_new_approval_and_counts_prior_exposure",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_explicit_failed_retry_keeps_first_receipt_and_dependency_waiting",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_timeout_submission_cannot_enter_failed_retry_path",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_transient_status_failure_can_recover_without_resubmission",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_failed_download_recovers_accepted_request_without_post_retry",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_dependency_quote_increase_never_spends_above_approved_amount",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_tampered_dependency_payload_is_not_uploaded_or_submitted",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_valid_script_and_cost_survive_local_prompt_failure",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_owned_partial_download_is_preserved_then_same_request_downloaded",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_foreign_file_cannot_be_adopted_as_failed_download",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_recovery::test_local_budget_refusal_restores_requestable_state_without_automatic_call",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_regeneration::test_quote_does_not_generate_or_change_old_clips_and_can_be_canceled",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_regeneration::test_only_approved_scene_and_continued_descendant_get_new_attempts",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_regeneration::test_continuation_selected_alone_uses_unchanged_parent_frame",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_regeneration::test_regeneration_exposure_cap_blocks_before_any_new_generation",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_regeneration::test_expired_regeneration_quote_does_not_submit",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_regeneration::test_foreign_clip_path_is_blocked_before_quote_upload",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_episode_regeneration::test_completed_final_and_composition_are_preserved_as_revision",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_kling_media::test_selected_ratio_output_and_audio_survive_real_local_composition[on-9:16]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_kling_media::test_selected_ratio_output_and_audio_survive_real_local_composition[off-9:16]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_kling_media::test_voice_request_is_not_silently_replaced_with_silence",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_library_preview_browser::test_character_cards_use_owned_reference_without_inventing_final_media",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_media::test_three_synthetic_episodes_are_1080x1920_30s_without_speech[\\uc6d4\\uc694\\uc77c \\uc544\\uce68 9\\uc2dc 1\\ubd84 \\uc9c0\\uac01]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_media::test_three_synthetic_episodes_are_1080x1920_30s_without_speech[\\uc18c\\ub780\\uc2a4\\ub7ec\\uc6b4 \\ud300 \\ud68c\\uc758]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_media::test_three_synthetic_episodes_are_1080x1920_30s_without_speech[\\uc11c\\ubc84 \\uc7a5\\uc560\\uc640 \\ub290\\uae0b\\ud55c \\ub300\\ub9ac]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_media::test_unused_noncommercial_sfx_is_never_added_to_plain_composition",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_media::test_failed_ffmpeg_attempt_can_finish_with_existing_paid_shaped_clips",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_media::test_long_root",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_natural_timing::test_fake_single_request_no_paid_retry_or_scene_seconds_change",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_natural_timing::test_saved_response_free_recovery_retains_evidence_and_cost",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_natural_timing::test_real_local_ffmpeg_keeps_27_9_seconds_instead_of_padding_to_30",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_natural_timing::test_saved_20_17_story_recovers_without_ai_or_rewriting",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_natural_timing::test_real_ffmpeg_preserves_20_17_without_trimming",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_plain_compose::test_real_legacy_mixed_audio_stays_in_its_original_scene",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_exact_lifetime_without_key_or_network[0-ready]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_exact_lifetime_without_key_or_network[900-ready]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_exact_lifetime_without_key_or_network[901-expired]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_exact_lifetime_without_key_or_network[-1-changed]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_invalid_quote_metadata_closed[not-a-date]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_invalid_quote_metadata_closed[2026-10-31T00:00:00]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_invalid_quote_metadata_closed[None]",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_expired_submit_specific_reason_no_key_decryption_or_submit",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_explicit_quote_refresh_keeps_history_and_needs_new_approval",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_quote_expiry_review::test_unknown_outcome_remains_blocked_and_cannot_refresh",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_story_format::test_new_job_freezes_format_and_reaches_loop_mp4",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_validation_feedback::test_schema_failure_is_stored_safely_and_sent_only_on_next_explicit_request",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_validation_feedback::test_duration_failure_reaches_next_explicit_retry_without_raw_response",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_character_validation_feedback::test_ambiguous_response_has_no_schema_feedback_and_cannot_be_retried",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_cloud_workspace_flow::test_api_to_render_review_and_existing_publish_services[openai]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_cloud_workspace_flow::test_api_to_render_review_and_existing_publish_services[claude_api]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_dashboard_cohesion::test_archive_filters_visual_system_and_auxiliary_routes",
+      "kind": "failure",
+      "category": "baseline_gui_source",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_feed_connections_browser::test_distinct_background_changes_immediately_without_save_and_keeps_rank",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Obsolete UI expectations: advanced editing label and removed manual performance controls; current UI uses additional editing. Existing user-approved simplification db1b278; no product change warranted."
+    },
+    {
+      "id": "tests.test_feed_cost_review_browser::test_cost_status_and_expired_additional_quote",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "FAIL",
+      "current_targeted_result": "FAIL",
+      "finding": "Premature assertion: dialog closes before POST finishes. Observed HTTP 200 and attempt 2 after response; original assertion remains FAIL. Future test should await matching response/completion rather than fixed sleep."
+    },
+    {
+      "id": "tests.test_feed_growth_browser::test_free_copy_and_manual_performance_browser",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "FAIL",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Obsolete UI expectations: advanced editing label and removed manual performance controls; current UI uses additional editing. Existing user-approved simplification db1b278; no product change warranted."
+    },
+    {
+      "id": "tests.test_final_media::test_four_combinations_local_mp4[False-local-30]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_final_media::test_four_combinations_local_mp4[False-elevenlabs-45]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_final_media::test_four_combinations_local_mp4[True-local-60]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_final_media::test_four_combinations_local_mp4[True-elevenlabs-30]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_first_search_budget::test_stale_proof_and_active_auth_check_block[authentication_verified_at-stale-API \\uc5f0\\uacb0 \\ubbf8\\ud655\\uc778]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "FAIL",
+      "finding": "Readiness correctly false. Actual reason explicitly says authentication expired after 24 hours; test expects old unverified text. No authentication weakening warranted."
+    },
+    {
+      "id": "tests.test_news_image_linking::test_real_mp4_every_auto_scene_has_expected_pixels",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_phase5d1_safety::test_restart_queries_existing_request_and_preserves_ready_clip",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_production_options_browser::test_skip_review_elevenlabs_fake_to_real_mp4_final_review[openai]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_production_options_browser::test_skip_review_elevenlabs_fake_to_real_mp4_final_review[claude_api]",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_program_review_fixes::test_timing_review_explains_without_changing_story",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_program_review_fixes::test_timing_review_invalid_numbers_are_not_repaired",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_quote_rss_settings_browser::test_expired_quote_offers_one_explicit_refresh_not_paid_submit",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_quote_rss_settings_browser::test_fresh_quote_uses_one_bound_cost_approval_at_both_sizes",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_quote_rss_settings_browser::test_open_quote_dialog_expires_without_submitting_or_replaying",
+      "kind": "error",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_social_calendar_analytics::test_recommendations_require_comparable_complete_windows_and_one_account",
+      "kind": "failure",
+      "category": "timezone_data",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_step13j_user_flow::test_synthetic_rss_to_manual_image_video_and_unapproved_local_publish_draft",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_studio_functional_controls::test_actual_ffmpeg_fade_mp4_and_decoded_frames",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_usability_browser::test_local_workflow_and_all_screen_design",
+      "kind": "failure",
+      "category": "baseline_gui_source",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_ux_workflow_settings::test_local_check_is_explicit_cached_and_not_generation",
+      "kind": "failure",
+      "category": "unresolved",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN",
+      "finding": "Same test ID passed in preserved earlier targeted run; source comparison shows related production/test code unchanged since pre-Meta base. Current test not rerun; historical environment capture is incomplete, so not final-SHA whole-suite success."
+    },
+    {
+      "id": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-03-08T09:59:00+00:00-1-59--8-0]",
+      "kind": "failure",
+      "category": "timezone_data",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-03-08T10:00:00+00:00-3-0--7-0]",
+      "kind": "failure",
+      "category": "timezone_data",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-11-01T08:30:00+00:00-1-30--7-0]",
+      "kind": "failure",
+      "category": "timezone_data",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-11-01T09:30:00+00:00-1-30--8-1]",
+      "kind": "failure",
+      "category": "timezone_data",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_timezone_contract::test_iana_seoul_agrees_with_existing_kst_and_calendar_stores_utc[2026-03-08T10:00:00+00:00]",
+      "kind": "failure",
+      "category": "timezone_data",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_timezone_contract::test_iana_seoul_agrees_with_existing_kst_and_calendar_stores_utc[2026-11-01T09:30:00+00:00]",
+      "kind": "failure",
+      "category": "timezone_data",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_transition_plan::test_restore_point_update_failure_and_restart",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_transition_plan::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0016]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_transition_plan::test_additive_upgrade_preserves_every_old_table_and_restore_revision[0017]",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": false,
+      "prior_targeted_result": "NOT_RUN",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_transition_plan::test_tamper_and_overwrite_refused",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    },
+    {
+      "id": "tests.test_windows_transition_plan::test_legacy_migrate_data_is_not_current_backup_tool",
+      "kind": "failure",
+      "category": "ffmpeg_configuration",
+      "prior_function_failure_observed": true,
+      "prior_targeted_result": "PASS",
+      "current_targeted_result": "NOT_RUN"
+    }
+  ]
+}

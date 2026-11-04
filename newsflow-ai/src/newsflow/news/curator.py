@@ -24,6 +24,8 @@ from .serpapi_settings import claim
 from .serpapi_settings import settings as serpapi_settings
 from .service import CollectionBusy, safe_feed_message
 from .trends import GOOGLE_NEWS_URL, MAX_AGE, TRENDS_URL, parse_trends
+from .collection_workspace import begin_collection
+from .recent_filter import DEFAULT_HOT_HOURS, check_hours, select_recent
 
 
 class Curator:
@@ -32,16 +34,22 @@ class Curator:
         self.news = coordinator.service
         self.sessions = self.news.sessions
 
-    def refresh(self, permission: bool = False) -> int:
+    def refresh(self, permission: bool = False, hours: int = DEFAULT_HOT_HOURS, categories=None) -> int:
         if not permission:
             raise ValueError("Google News·Trends의 공개 RSS 이용 조건과 출처 표시에 동의해 주세요.")
+        from .ranking import selected_categories
+        categories = selected_categories(categories)
+        check_hours(hours)
         try:
             with FileLock(str(self.coordinator.lock_path)).acquire(timeout=0):
-                return self._refresh()
+                return self._refresh(hours, categories)
         except Timeout:
             raise CollectionBusy from None
 
-    def _refresh(self) -> int:
+    def _refresh(self, hours: int = DEFAULT_HOT_HOURS, categories=None) -> int:
+        if categories:
+            from .category_collection import collect_rss
+            return collect_rss(self, categories, hours)
         with self.sessions.begin() as session:
             source = session.scalar(select(NewsSource).where(NewsSource.url == GOOGLE_NEWS_URL))
             if source is None:
@@ -72,6 +80,14 @@ class Curator:
                                                                         AuditLog.event == "source_error")
                                         .order_by(AuditLog.id.desc()).limit(1))
             trend.status = "success" if snapshot and collected["succeeded"] else "failed"
+            if trend.status == "success" and not collected["failed"] and collected["article_ids"]:
+                # Keep only recently published articles; TOP 3 scoring judges newsworthiness.
+                recent, info = select_recent(session, collected["article_ids"], utcnow(), hours)
+                if recent:
+                    from .lifecycle import replace_collection
+
+                    replace_collection(session, recent)
+                    collected = {**collected, "article_ids": recent, "recent_filter": info}
             trend.result = {"snapshot": snapshot, "collection": collected, "trends_error": error,
                             "news_error": news_error, "ai_calls": 0, "facts_verified": False}
             trend.message = ("Google News·Trends 자료 준비 완료 · AI 평가 전" if trend.status == "success"
@@ -96,6 +112,7 @@ class Curator:
                         source = NewsSource(name="Google News · 한국", url=GOOGLE_NEWS_URL, enabled=False)
                         session.add(source)
                         session.flush()
+                    begin_collection(session)
                     stored = self.news.store_articles(session, source.id, articles, rss_metadata=True)
                     from .lifecycle import replace_collection
 
@@ -119,7 +136,8 @@ class Curator:
         except Timeout:
             raise CollectionBusy from None
 
-    def serpapi(self, keys, token: str, *, consent: bool = False, adapter=None, policy: str = "korea_v1") -> int:
+    def serpapi(self, keys, token: str, *, consent: bool = False, adapter=None, policy: str = "korea_v1",
+                hours: int = DEFAULT_HOT_HOURS, categories=None) -> int:
         """One durable authorized attempt, then Trends only. No fallback/replay after any outcome."""
         if not re.fullmatch(r"[a-f0-9]{32}", token):
             raise ValueError("요청 식별자를 확인해 주세요.")
@@ -129,13 +147,20 @@ class Curator:
 
         if policy not in {"korea_v1", GLOBAL_POLICY}:
             raise ValueError("수집 정책을 확인해 주세요.")
+        from .ranking import selected_categories
+        categories = selected_categories(categories)
+        if policy == GLOBAL_POLICY and categories:
+            raise ValueError("글로벌 수집에는 분야 선택을 적용하지 않습니다.")
+        check_hours(hours)
         try:
             with FileLock(str(self.coordinator.lock_path)).acquire(timeout=0):
                 with self.sessions() as session:
                     previous = session.get(AppSetting, "serpapi_request:" + token)
                     if previous:
                         run = session.get(IntelligenceRun, json.loads(previous.value)["run_id"])
-                        if run.options.get("collection_policy", "korea_v1") != policy:
+                        if (run.options.get("collection_policy", "korea_v1") != policy
+                                or run.options.get("categories", []) != categories
+                                or (categories and run.options.get("hours") != hours)):
                             raise ValueError("기존 요청의 수집 범위와 다릅니다. 요청 기록은 보존합니다.")
                         if run.result.get("trends_run_id"):
                             return run.result["trends_run_id"]
@@ -145,7 +170,10 @@ class Curator:
                     raise ValueError("설정에서 SerpApi 키 등록과 사용 승인을 확인해 주세요.")
                 adapter = adapter or SerpApiAdapter(keys)
                 if policy == GLOBAL_POLICY:
-                    return collect_global(self, config, adapter, token)
+                    return collect_global(self, config, adapter, token, hours)
+                if categories:
+                    from .category_collection import collect_serpapi
+                    return collect_serpapi(self, config, adapter, token, categories, hours)
                 with self.sessions.begin() as session:
                     run = IntelligenceRun(kind="news_search", provider="serpapi", status="running",
                                           options={"generation": config["generation"],
@@ -156,6 +184,7 @@ class Curator:
                     session.flush()
                     run_id = run.id
                     claim(session, token, run_id)
+                    begin_collection(session)
                 try:
                     articles, metadata = adapter.search()
                     with self.sessions.begin() as session:
@@ -166,6 +195,8 @@ class Curator:
                             session.flush()
                         stored = self.news.store_articles(session, source.id, articles)
                         self.news.rescore(session)
+                        recent, info = select_recent(session, stored["article_ids"], utcnow(), hours)
+                        stored = {**stored, "article_ids": recent, "recent_filter": info}
                         collection = CollectionRun(status="success", added=stored["added"], duplicates=stored["duplicates"],
                                                    succeeded=1, failed=0, finished_at=utcnow())
                         session.add(collection)
@@ -177,12 +208,12 @@ class Curator:
                                       "ai_calls": 0, "facts_verified": False}
                 except Exception as exc:  # noqa: BLE001 - never keep supplier text or key-bearing request URLs
                     code = exc.code if isinstance(exc, SerpApiError) else "bad_response"
-                    error = SerpApiError(code)
+                    error = exc if isinstance(exc, SerpApiError) else SerpApiError(code)
                     with self.sessions.begin() as session:
                         run = session.get(IntelligenceRun, run_id)
                         run.status = "unknown" if code in {"timeout_unknown", "network_unknown"} else "failed"
                         run.finished_at, run.message = utcnow(), str(error)
-                        run.result = {"error_code": error.code, "local_request_attempts": 1, "provider_billed_credits": None}
+                        run.result = {"error_code": error.code, "diagnostic": error.diagnostics(), "local_request_attempts": 1, "provider_billed_credits": None}
                     raise error from None
                 current = self.context()
                 snapshot = current["snapshot"] if current["fresh"] else None

@@ -20,11 +20,11 @@ newsflow = "newsflow.main:run"
 where = ["src"]
 
 [tool.setuptools.package-data]
-newsflow = ["config/*.yaml", "config/*.txt", "gui/templates/*.html", "gui/templates/guides/*.html", "static/css/*.css", "static/js/*.js", "static/images/*.svg", "static/images/*.png", "static/images/studio-concepts/*.webp", "static/images/studio-concepts/*.json", "db/migrations/*.py", "db/migrations/versions/*.py", "video/*.ps1", "video/*.json", "character/assets/*.json", "character/assets/*.ttf", "character/assets/OFL.txt", "news/vendor/LICENSE-CPYTHON.txt"]
+newsflow = ["config/*.yaml", "config/*.txt", "gui/templates/*.html", "gui/templates/guides/*.html", "static/css/*.css", "static/js/*.js", "static/images/*.svg", "static/images/*.png", "static/images/studio-concepts/*.webp", "static/images/studio-concepts/*.json", "db/migrations/*.py", "db/migrations/versions/*.py", "video/*.ps1", "video/*.json", "character/assets/*.json", "character/assets/*.ttf", "character/assets/OFL.txt", "character/assets/SFX_PROVENANCE.md", "news/vendor/LICENSE-CPYTHON.txt"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["network: opt-in live RSS request"]
+markers = ["network: opt-in live RSS request", "story_format: use the configured character shorts story format"]
 
 [tool.ruff]
 target-version = "py312"

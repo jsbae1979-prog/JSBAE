@@ -1,0 +1,170 @@
+{
+  "date": "2026-11-01",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "appliedSourceSha": "d709f0f4e8d53ee720f19a6c6f1b3691f877e963",
+  "implementationSha": "9f024a1f00e4300e30ead041ca129f9e95ff07e7",
+  "operatingApplied": true,
+  "deploymentDecision": "ACCEPTED",
+  "overallFeatureDecision": "CONDITIONAL",
+  "normalStopStart": {
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "stopExitCode": 0,
+    "loopbackPort": 18768
+  },
+  "preservation": {
+    "tablesUnchanged": 47,
+    "articles": 179,
+    "profileFilesPreserved": 371,
+    "originalAndABPreserved": true,
+    "securityFlagsPreserved": true
+  },
+  "articleCountNote": "179 immediately before and after deployment; original 169-record database and backup A/B preserved. No new collection in this task.",
+  "chromeReadOnlyChecks": [
+    "Authenticated React dashboard in the user-visible Chrome tab after normal start.",
+    "Completed character video preview with editable title, description and hashtags.",
+    "AI posting-copy dialog shows provider/model/request limit; cancelled without submission.",
+    "Video platforms show Instagram Reels, YouTube Shorts, TikTok and Facebook Reels.",
+    "RSS and SerpApi selection both expose collection-start button; no collection requested.",
+    "Image scope switches between TOP 3 all and selected news; button/result panel follows scope.",
+    "Character studio loads existing reference/settings and 20-second value.",
+    "Stored failed story opens regenerate-confirmation dialog; cancelled without a paid request.",
+    "Character-history trash exposes select-all and selected permanent-delete button; no selection/purge performed."
+  ],
+  "validation": {
+    "reusedFocusedPythonPass": 99,
+    "reusedNodePass": 14,
+    "reusedTypeScript": "PASS",
+    "reusedReactBuild": "PASS",
+    "newChromeScreenChecksPass": 9,
+    "newRegressionTestsRun": 0
+  },
+  "remainingConditions": [
+    "Claude posting-copy review remains blocked by pre-existing in-flight/unknown API reservation records. Read-only readiness check only; no record cleared or bypass added.",
+    "OpenAI posting-copy review lacks registered key, approval, request budget/pricing and verified connection.",
+    "No completed image posting candidate in the current operating UI; image-only Instagram branch reuses synthetic browser evidence.",
+    "Actual AI copy generation, paid generation and SNS publishing not performed or validated.",
+    "News TOP 3 production image generation remains unsupported by the existing real generation boundary; this change repairs local preparation/selection/error handling.",
+    "New character/image posting-copy editor does not implement new SNS delivery adapters."
+  ],
+  "protectedActions": {
+    "paidCalls": 0,
+    "newsCollection": 0,
+    "snsCalls": 0,
+    "actualContentDeletion": false,
+    "mainChanged": false,
+    "pr35Changed": false
+  },
+  "overlayNote": "Existing installation-specific windows_live.py differences were retained; only exact new scoped-hook changes were applied. Hashes below describe actual installed files.",
+  "installedFiles": [
+    {
+      "path": "app/product/newsflow/character/episode_story.py",
+      "sha256": "fcc68ccd77eadbbb19bfa786e387a09459bcc1792e17298bd9c6ae9c82dc6459",
+      "bytes": 18283,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/character/visibility.py",
+      "sha256": "01bd2835d322fdc42ed1e0f18d26be20772172da0c28cf987518ac328ac0019f",
+      "bytes": 4098,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/creation/top_three_feeds.py",
+      "sha256": "6f0e2d327b93816727fd72ec295caed495ad2a08314efefe963b9fc7c1028373",
+      "bytes": 24800,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/gui/creation_routes.py",
+      "sha256": "dfa935bc50ad0a8024570a5e2c98974321fa63e3874846fd38ff6395ecf22de7",
+      "bytes": 9237,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/gui/publishing_metadata_routes.py",
+      "sha256": "679c347ac8b5b4fea6d65de3399de6b99522741e1c3e755d737e6ff3ec1f800e",
+      "bytes": 3517,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/main.py",
+      "sha256": "217062c1dccc9ca7675c857c34975be9ecb074d395605f1b3e298c78a0a88732",
+      "bytes": 20070,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/publishing/posting_copy.py",
+      "sha256": "d22848b2d81566cd517c0a9173013a3f8c36d564e906ce0e7422101ddbbecf53",
+      "bytes": 10510,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/studio/library_purge.py",
+      "sha256": "6d757049abcf4c7f9b2dc5c1e07b93ae9ae3ef85b4e9e0d2c311869b575b4a04",
+      "bytes": 13371,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/studio/read_models.py",
+      "sha256": "6184312de9649b05528bba510bc16b038c54b303b526b973c6580c9538c6a40f",
+      "bytes": 48581,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/video/ai/higgsfield.py",
+      "sha256": "b2e1ce67cf6ec82d46d77b9225e3b1b61dbfe2c344953c258078fbad4eed1915",
+      "bytes": 12805,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/product/newsflow/video/ai/model_contracts.py",
+      "sha256": "c0feca446bb57896b2df38c3c8a6010f2084987884804fdd0365b6895a7e89f7",
+      "bytes": 2908,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/controller/bat_distribution/operation.py",
+      "sha256": "2a9785841bd859526d35a15682e90de5389b1264f232afb35847f9493dc3b5a1",
+      "bytes": 9121,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/controller/bat_distribution/posting_copy_access.py",
+      "sha256": "4b7822673d4ef571f5728cea01889db51dac210a51fd8935246b802e8e9a1660",
+      "bytes": 2561,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/controller/bat_distribution/serpapi_collection.py",
+      "sha256": "2e578fb8dc896dd439baeac4c6f429a18f8f4483b4b880308b9041d6ef62a6d1",
+      "bytes": 2881,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/controller/bat_distribution/windows_live.py",
+      "sha256": "b87320cc15364ff6f47da3120d9b2f7eb066f955a5ba951946d31e45826364f3",
+      "bytes": 31272,
+      "operatingOverlay": true
+    },
+    {
+      "path": "app/frontend/dist/index.html",
+      "sha256": "8dd14e67baa858581fab34073e3da7167733fe84a232273c24ee9f2914209d32",
+      "bytes": 418,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/frontend/dist/assets/index-BigZo7iw.js",
+      "sha256": "80e4c57dc8575470fed98a04d5d4eb10554da7b8a3a7574f3d05b39801792735",
+      "bytes": 655911,
+      "operatingOverlay": false
+    },
+    {
+      "path": "app/frontend/dist/assets/index-3aZViUOD.css",
+      "sha256": "a7f5ee6d16f28d98eb211823148810315d82d5a17824985757f37fabaca7746d",
+      "bytes": 184312,
+      "operatingOverlay": false
+    }
+  ],
+  "privateEvidence": "Full profile backup, ACLs, session state and raw evidence retained locally only; excluded from Git."
+}

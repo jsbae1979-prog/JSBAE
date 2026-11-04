@@ -1,0 +1,35 @@
+{
+  "base": "1c838fb425db4e884a56d30f8bdb360ed4c8fb66",
+  "scope": "React static assets only; no Python runtime change relative to operating base",
+  "newTests": {
+    "browserFake": 6,
+    "nodeFocused": 10,
+    "failures": 0,
+    "errors": 0,
+    "typescript": "PASS",
+    "reactBuild": "PASS"
+  },
+  "automaticFollow": {
+    "intervalSeconds": 10,
+    "route": "existing authenticated character_act_check",
+    "continuation": "Only existing stored approval/quote/idempotency contract; no new approval or retry",
+    "stopsOn": [
+      "HTTP error",
+      "failed",
+      "unknown",
+      "not_sent",
+      "read failure"
+    ],
+    "progress": "Saved clips / total clips; no invented provider percent",
+    "finalCompose": "Manual review remains required"
+  },
+  "editing": {
+    "captions": true,
+    "comicSfx": true,
+    "originalEnvironmentalAudio": true,
+    "newNarration": false
+  },
+  "paidCallsDuringDevelopment": 0,
+  "liveAutomaticFollow": "NOT VERIFIED: no new paid generation requested",
+  "operatingRestartPerformed": false
+}

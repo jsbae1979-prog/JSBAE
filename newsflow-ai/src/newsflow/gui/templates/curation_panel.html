@@ -18,7 +18,8 @@
     </form>
     <div role="status">
       {% if curation.observed_at %}<p>{{ ui_icon('clock',16) }} {{ curation.observed_at|kst }}</p>{% endif %}
-      {% if curation.collection %}<p>신규 {{ curation.collection.added }} · 중복 {{ curation.collection.duplicates }} · 실패 {{ curation.collection.failed }}</p>{% else %}<p>아직 수집한 자료가 없습니다.</p>{% endif %}
+      {% if curation.collection %}<p>신규 {{ curation.collection.added }} · 중복 {{ curation.collection.duplicates }} · 실패 {{ curation.collection.failed }}</p>{% set recent = curation.collection.recent_filter %}{% if recent %}<p id="recent-filter-summary">최근 {{ recent.hours }}시간 · 수집 {{ recent.collected }}건 중 기간 내 {{ recent.recent }}건 남김{% if recent.excluded_old %} · 오래된 기사 {{ recent.excluded_old }}건 제외{% endif %}{% if recent.unknown_published_at %} · 발행 시각 없음 {{ recent.unknown_published_at }}건 포함{% endif %}{% if recent.recent_shortfall and recent.filled_old %} <strong>기간 내 기사 부족</strong>(가장 최근 기사 {{ recent.filled_old }}건으로 채움){% endif %}</p>{% endif %}{% else %}<p>아직 수집한 자료가 없습니다.</p>{% endif %}
+      {% if curation.collection.category_counts %}<ul id="category-collection-summary">{% for row in curation.collection.category_counts %}<li>{{ row.category }} · 후보 {{ row.collected }}건 · {% if row.selection %}추천 {{ row.kept }}건 / 최대 30건{% else %}남김 {{ row.kept }}건{% endif %} · {{ row.status }}</li>{% endfor %}</ul>{% endif %}
       {% if curation.candidate_mix %}<p>글로벌 {{ curation.candidate_mix.global_edition_unique }} · 한국 {{ curation.candidate_mix.korea_edition_unique }} · 공통 {{ curation.candidate_mix.both_editions }}</p>{% endif %}
       {% if curation.error %}<p class="error">{{ curation.error }}</p>{% endif %}
     </div>
@@ -27,7 +28,7 @@
     <p>Trends 급상승 키워드를 먼저 확인하고 지역별 Google News 판을 SerpApi로 조회합니다. 글로벌 80%·한국 20%는 조회 배분 목표이며 실제 기사 비율은 응답·중복에 따라 달라집니다. 전 세계 전수 수집이나 실제 인기 순위가 아닙니다.</p>
     <p>{{ curation.serpapi.collection_plan.edition_labels }}. Trends는 유효한 저장 자료가 있으면 재사용합니다. 수집 버튼은 AI 분석·대본을 실행하지 않습니다. 자동 재시도·다른 Provider 전환 없음.</p>
     <p>키 등록은 인증 성공을 뜻하지 않습니다. 초록색 뉴스는 수집 응답 저장, Trends는 최근 자료 보유만 뜻하며 사실 검증 완료가 아닙니다. {{ curation.message }}</p>
-    <p>이전 기사는 목록에서만 정리합니다. 영상 출처·대본·요청·실패 기록은 보존합니다. <a href="/news?view=used">영상에 사용한 뉴스 보기</a></p>
+    <p>새로 수집하면 이전 기사는 삭제합니다. 영상·대본·이미지·자동 제작에 쓴 기사는 지우지 않고 목록에서만 숨깁니다. <a href="/news?view=used">영상에 사용한 뉴스 보기</a></p>
     <p>Data source: <a href="https://trends.google.com/" target="_blank" rel="noopener noreferrer">Google Trends</a>. 검색 관심도는 실제 YouTube 조회수가 아닙니다. 트렌드 시각과 기사 발행시각은 다릅니다.</p>
   </details>
   <details><summary>보유 RSS 파일 가져오기</summary>
@@ -44,17 +45,17 @@
   <form method="post" action="/news/curation/analyze" data-curation-form>
     <input type="hidden" name="csrf_token" value="{{ csrf }}">
     <input type="hidden" name="collection_context_id" value="{{ curation.run_id }}">
-    <h3>전체 뉴스 화제성 평가 <small>최근 수집 회차 전체 {{ curation.articles|length }}개 비교 · 상위 {{ curation.selection_limit|default(10) }}개 주제 선정</small></h3>
+    <h3>전체 뉴스 화제성 평가 <small>수집 {{ curation.articles|length }}개 · 분야별 최신 최대 30개, 후보 {{ curation.analysis_candidates|length }}개 비교 · 상위 {{ curation.selection_limit|default(10) }}개 주제 선정</small></h3>
 
-    <details><summary>전체 평가 대상 {{ curation.articles|length }}개 보기</summary>
+    <details><summary>분석 후보 {{ curation.analysis_candidates|length }}개 보기</summary>
     <div class="curation-candidates">
-    {% for article in curation.articles %}<div><span>{{ article.title }}<small>{{ article.publisher }} · {{ article.published_at|kst }}</small></span><a href="/news/{{ article.id }}">자료 보기</a></div>{% endfor %}
+    {% for article in curation.analysis_candidates %}<div><span>{{ article.title }}<small>{{ article.publisher }} · {{ article.published_at|kst }}</small></span><a href="/news/{{ article.id }}">자료 보기</a></div>{% endfor %}
     </div></details>
     <p>현재 AI: <strong>{{ curation.ai.provider }} · {{ curation.ai.model }}</strong> <a href="/simple-settings#connections">변경</a></p>
-    {% if curation.api_selected %}<label class="check"><input type="checkbox" name="consent" value="true" required> 최근 수집 회차 전체 {{ curation.articles|length }}개의 제목·요약·출처·Trends 자료를 해당 API에 전송해 화제성 분석 1회를 실행합니다. 본인 계정 사용량과 비용이 발생합니다.</label><button class="primary" type="submit">{{ ui_icon('sparkles',16) }} 전체 뉴스 화제성 평가 1회</button>
+    {% if curation.api_selected %}<label class="check"><input type="checkbox" name="consent" value="true" required> 분야별 최신 최대 30개씩, 후보 {{ curation.analysis_candidates|length }}개의 제목·요약·출처·Trends 자료를 해당 API에 전송해 화제성 분석 1회를 실행합니다. 본인 계정 사용량과 비용이 발생합니다.</label><button class="primary" type="submit">{{ ui_icon('sparkles',16) }} 전체 뉴스 화제성 평가 1회</button>
     {% else %}<p class="error">OpenAI API 또는 Claude API를 설정해 주세요. Offline 고정 대본으로 대체하지 않습니다.</p>{% endif %}
     {% if curation.snapshot.collection_policy|default('') == 'global_trends_v1' %}<small>검색 관심 증가 가능성·이번 응답 등장 빈도·SNS 확산 가능성·한국 시청자 관심도·영향력·흥미도 각 20점 → 합계 120점을 100점으로 환산 · 관측 근거와 AI 추정 구분 · 미확인은 미평가</small>{% else %}<small>최신성·대중성·영향력·확산 가능성·흥미도 각 20점 · 미확인 항목은 미평가</small>{% endif %}
-    <small>전송 한도 초과 시 일부 제외·자동 분할 호출 없이 중단 · 재검색·자동 재시도 없음</small>
+    <small>보관 기사는 유지 · 후보에서 TOP 3 선정 · 추가 수집·자동 유료 재요청 없음</small>
   </form>
   {% else %}<p role="status">전체 뉴스 평가 기능을 적용하려면 앱 재시작이 필요합니다. 실제 평가 요청은 실행하지 않습니다.</p>{% endif %}
   {% endif %}

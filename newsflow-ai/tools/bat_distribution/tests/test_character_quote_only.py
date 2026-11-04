@@ -287,6 +287,6 @@ def test_quote_adapter_blocks_submit_status_and_fetch_even_inside_authorized_pre
 
     quoted.state.inside = inside
     assert quoted.post() == 200
-    assert quoted.state.calls == ['upload', 'estimate']
-    assert quoted.scope._read(quoted.identifier)['generation_requests'] == 0
+    assert quoted.state.calls == ['upload'] + ['estimate'] * len(m.generation_rows(quoted.original))
+    assert latest_receipt(quoted)['generation_requests'] == 0
     assert_old_state_unchanged(quoted)

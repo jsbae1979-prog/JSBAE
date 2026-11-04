@@ -1,0 +1,76 @@
+{
+  "meta-accounts-final.log": {
+    "sha256": "da4b1651e7d012f6c8f794d9f811a1dc99dfe858a22935197806d2392754aadf",
+    "summary": [
+      "47 passed, 1 warning in 6.75s"
+    ]
+  },
+  "meta-accounts-final-312.log": {
+    "sha256": "9b972c54e55f46990832cc7ba4734990763e8aef46d7c4cc6f6d4b1d5ea38a36",
+    "summary": [
+      "47 passed, 1 warning in 7.30s"
+    ]
+  },
+  "meta-browser-final.log": {
+    "sha256": "e943a94ad3439c0164b15a57c5583fdf2c220a996ab99aee86937926860547fe",
+    "summary": [
+      "2 passed, 1 warning in 5.68s"
+    ]
+  },
+  "final-focused-314.log": {
+    "sha256": "bb2db19d97103224d69a2f39110dc0ca2974555c3388c868c79728587bf80284",
+    "summary": [
+      "120 passed, 1 warning in 13.93s"
+    ]
+  },
+  "final-focused-312.log": {
+    "sha256": "1d137d2a66570ca1e9ad4752e49e53ea5ba33a22385dda866f5432b207a7e72f",
+    "summary": [
+      "172 passed, 1 warning in 11.33s"
+    ]
+  },
+  "final-studio-v3.log": {
+    "sha256": "2d0b5717e021056428442271d24ffdc7e1043226886724f75f6ce4adfc064810",
+    "summary": [
+      "58 passed in 3.62s"
+    ]
+  },
+  "frontend-contracts.log": {
+    "sha256": "badc9691ee1e56542b766aade207d367b058d16c549b81ce0d1069faa6de9f20",
+    "summary": [
+      "ℹ tests 47",
+      "ℹ pass 47",
+      "ℹ fail 0",
+      "ℹ skipped 0"
+    ]
+  },
+  "final-build.log": {
+    "sha256": "584abbaced6f0fc9090d89b65a4e816840aab521bdc17099a84f47456176484c",
+    "summary": [
+      "✓ built in 1.56s"
+    ]
+  },
+  "boundaries": {
+    "external_api_calls": 0,
+    "real_meta_logins": 0,
+    "real_tokens_registered": 0,
+    "real_uploads_or_publications": 0,
+    "operating_restarts": 0,
+    "operating_data_modified": false,
+    "real_second_account_test": "NOT VERIFIED",
+    "public_delivery_tls": "NOT VERIFIED"
+  },
+  "migration-focused.log": {
+    "sha256": "29298c7b242cec71e6fc86b518417227593483c13ccb132763df9132e022d97f",
+    "summary": [
+      "21 passed, 1 warning in 16.00s"
+    ]
+  },
+  "pytest-full-314.log": {
+    "sha256": "bb972dc76bae1a407dd9934936513b50efebb82282e295332e8c4623befbe817",
+    "summary": [
+      "129 failed, 6888 passed, 50 skipped, 11 warnings, 24 errors in 2296.86s (0:38:16)"
+    ]
+  },
+  "full_suite_note": "Intermediate full-suite run is not green. Final impacted migration subset: 21 passed. Final Meta tests: 47 passed per Python version; unrelated/full-suite failures not claimed resolved."
+}

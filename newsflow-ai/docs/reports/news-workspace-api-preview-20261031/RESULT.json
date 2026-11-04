@@ -1,0 +1,101 @@
+{
+  "verdict": "CONDITIONAL",
+  "codeHead": "3536a667adac1a0122bb19de2513ea20b60e9454",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "operatingApplied": false,
+  "operatingRestartApprovalRequired": true,
+  "previousApprovedStopStartAlreadyUsed": true,
+  "features": {
+    "freshCollectionWorkspace": "Previous round hidden at accepted start; only current received IDs shown, including partial results. Original articles and referenced work retained; existing successful cleanup policy unchanged.",
+    "analysis": "One range selector and action; selected article bound readonly; current eligible TOP3 context bound internally, never manually entered. Existing freshness/provider approval checks retained.",
+    "newsVideo": "Show local FFmpeg versus Higgsfield API/model configuration without inventing connectivity.",
+    "voicePreview": "Named ElevenLabs account/default voice list, manual pagination/search, individual official samples, explicit voice use and persistence; Windows fixed local sample also supported.",
+    "voiceListAuthority": "Explicit GET /v2/voices metadata only; all mode omits saved-only filter. No automatic page traversal, supplier retry or speech synthesis.",
+    "voiceSelectionAuthority": "Only local voice ID and explicitly chosen news voice preference change; no key, TTS enable flag, generation approval or budget is changed."
+  },
+  "tests": {
+    "newCases": 33,
+    "uniqueFocusedPass": 227,
+    "fail": 0,
+    "error": 0,
+    "runs": [
+      {
+        "evidence": "fresh-collection-workspace-focus.xml",
+        "pass": 57,
+        "fail": 0,
+        "error": 0,
+        "sha256": "922f1a90807a012654fa9e7554e3fcaf3f6d41cd9d6a2bada1a8e8d33df4378e"
+      },
+      {
+        "evidence": "fresh-workspace-reference-final.xml",
+        "pass": 7,
+        "fail": 0,
+        "error": 0,
+        "sha256": "051c898f6b8ece6f272b0e9b7801316c19f4d610b6ac563751506bc9e85230e1"
+      },
+      {
+        "evidence": "news-analysis-voice-final.xml",
+        "pass": 82,
+        "fail": 0,
+        "error": 0,
+        "sha256": "4d04143fd38e948b13f4a959f8b89b5d1576d2ca9a3c4f85e0622968762391f8"
+      },
+      {
+        "evidence": "news-ui-integration-final.xml",
+        "pass": 40,
+        "fail": 0,
+        "error": 0,
+        "sha256": "640068eaa4f62a0e04cbe047be0c73c28ff3a686a001e619042820fc8735a24c"
+      },
+      {
+        "evidence": "news-module-after-voice-final.xml",
+        "pass": 41,
+        "fail": 0,
+        "error": 0,
+        "sha256": "96c19cedfeabfc57e721476b2032f10de7db7f56cbbcfefc8152022040dd70ef"
+      },
+      {
+        "evidence": "news-api-voice-persistence-final.xml",
+        "pass": 65,
+        "fail": 0,
+        "error": 0,
+        "sha256": "93376fe3eac9035d83336c2f7b786c8e38598967ec92acd9c3cfa2a14c9c7114"
+      },
+      {
+        "evidence": "voice-picker-paid-boundary-final.xml",
+        "pass": 3,
+        "fail": 0,
+        "error": 0,
+        "sha256": "ec03e135a2caf100fd7dc83e996fed89d9ede65debcfff326d210ec212b8371e"
+      }
+    ],
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "viewports": [
+      "1366x768",
+      "1920x1080"
+    ],
+    "data": "Synthetic/Fake only",
+    "fullRegressionRepeated": false
+  },
+  "preservation": {
+    "original169AndBackupAB": true,
+    "operatingAppAdditionalRestart": false,
+    "productionKeyPlaintextRead": false,
+    "productionVoiceSelectionChanged": false,
+    "paidGenerationCalls": 0,
+    "liveVoiceListOrSampleCalls": 0,
+    "snsCalls": 0,
+    "newsLifecyclePyMatchesUpstream6cdb03c": true,
+    "mainAndPR35Unchanged": true
+  },
+  "notVerified": [
+    "New features in operating Chrome await explicit additional normal Stop/Start approval.",
+    "Actual account voice access, official sample playback and human listening quality not verified by Fake tests.",
+    "Voices without a supplier-provided safe public sample cannot be previewed without separate paid synthesis; UI says sample unavailable and never calls paid fallback.",
+    "Whole-collection TOP3 analysis retains existing fresh News/Trends context requirement. No live analysis performed.",
+    "No automatic production news recollection, deletion or SerpApi collection executed."
+  ],
+  "officialReference": "https://elevenlabs.io/docs/api-reference/voices/search",
+  "screenshots": "Synthetic fixtures only; no operating content or credentials uploaded."
+}

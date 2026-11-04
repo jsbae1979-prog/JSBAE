@@ -1,0 +1,18 @@
+{
+  "files": 8,
+  "sourceSha": "bcdd42ff1ebdde10bf42c20d544de9c49a38dc83",
+  "wasRunning": true,
+  "normalStopPerformed": true,
+  "paidCalls": 0,
+  "port": 18768,
+  "databaseTablesPreserved": true,
+  "originalAndBackupsPreserved": true,
+  "otherProfileFilesPreserved": true,
+  "chromeLaunchAccepted": true,
+  "snsCalls": 0,
+  "normalStartCount": 1,
+  "actualContentDeleted": false,
+  "libraryUIChanged": false,
+  "realImageQualityVerified": false,
+  "userChromeVisualConfirmation": "pending"
+}

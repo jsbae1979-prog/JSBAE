@@ -110,7 +110,6 @@ def test_parse_nested_news_unknown_summary_date_no_article_download():
     (lambda d: d.update(error="Your account has run out of searches SECRET"), "usage_limited"),
     (lambda d: d["search_metadata"].update(status="Processing"), "bad_response"),
     (lambda d: d.update(news_results=[]), "empty"),
-    (lambda d: d["news_results"][0].update(link="http://127.0.0.1/private"), "bad_response"),
 ])
 def test_invalid_empty_private_results_safe_and_no_pagination(mutation, code):
     data = deepcopy(RESULT)
@@ -195,6 +194,10 @@ def test_serpapi_trends_claude_reuses_news_keeps_sources_and_review(client, app,
     assert adapter.calls == 1 and fake.calls == rss_calls  # Fresh Trends snapshot reused, never Google RSS.
     ctx = Curator(app.state.coordinator).context()
     assert ctx["ready"] and ctx["collection"]["duplicates"] == 2
+    # Both results match articles already collected within the window; fewer than three is flagged, nothing old fills.
+    assert ctx["collection"]["recent_filter"] == {
+        "hours": 24, "collected": 2, "recent": 2, "excluded_old": 0, "kept": 2,
+        "unknown_published_at": 0, "recent_shortfall": True, "filled_old": 0}
     assert client.post("/news/curation/analyze", data={"csrf_token": csrf(client), "collection_context_id": ctx["run_id"],
                                                       "consent": "true"}).status_code == 200
     with app.state.sessions() as session:

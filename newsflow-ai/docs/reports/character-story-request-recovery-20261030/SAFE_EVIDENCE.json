@@ -1,0 +1,66 @@
+{
+  "scope": "Character story request recovery; development only, operating deployment pending",
+  "baseCommit": "28dd0c40c9a9c5f6a31cc94a233129281cccb393",
+  "operatingSourceBaseline": "464493cab1db21e108c044430cfbd301b8849d7b",
+  "rootCauses": [
+    "A retained unknown episode-script reservation blocks later requests for that provider; legacy exceptions only support other request kinds.",
+    "The specific unresolved-request reason was collapsed into a generic settings message.",
+    "Failures proven to occur before transport were classified as unknown when usage metadata was absent.",
+    "The GUI retained the previous job URL after a new draft failed."
+  ],
+  "changes": [
+    "Read-only current-episode review and unchecked, explicit new-story confirmation in React.",
+    "Review bound to new job, input/profile/reference, model, duration, episode limit, provider settings and exact unknown fingerprints; rechecked in reservation transaction.",
+    "Old reservations remain unchanged; current/active/unfinished requests and stale review data remain blocked.",
+    "No approval inheritance to video, search or unrelated requests; no automatic retry.",
+    "Proven pre-transport failures record zero usage and finite cause; failures after transport retain unknown state.",
+    "Current draft selection/URL and equivalent settings comparisons preserve the selected 30-second duration and US$5 limit."
+  ],
+  "validation": {
+    "python": "3.12",
+    "newTestsPassed": 49,
+    "affectedExistingTestsPassed": 61,
+    "distinctTotalPassed": 110,
+    "finalFailures": 0,
+    "finalErrors": 0,
+    "groups": {
+      "newReviewTests": 31,
+      "newDispatchTests": 13,
+      "newBrowserTests": 5,
+      "existingPreflightAndOperatingTests": 34,
+      "existingAPIProviderTests": 25,
+      "existingStoryFeedbackBrowserTests": 2
+    },
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "rechecksNotAddedToTotals": [
+      "two review message tests",
+      "one browser capture test"
+    ],
+    "initialIssuesResolved": [
+      "Test interpreter initially referenced an older editable checkout; explicit current src/tools/tests paths corrected collection.",
+      "New local key/cancel exception inheritance initially altered existing error families; corrected and 25 provider tests passed.",
+      "Review fixture used non-canonical settings; fixture normalized before 31 review tests passed.",
+      "Browser tests exposed equivalent-settings ordering and transient missing-draft reset; both fixed before five browser tests passed."
+    ],
+    "fullRegressionRepeated": false,
+    "realProviderCalls": 0,
+    "operatingRestartCount": 0
+  },
+  "protection": {
+    "operatingAppChanged": false,
+    "operatingDBOrKeysChanged": false,
+    "oldUnknownRecordsChanged": false,
+    "paidGeneration": false,
+    "snsCalls": false,
+    "backupsChanged": false,
+    "mainOrPR35Changed": false
+  },
+  "remaining": [
+    "Apply the staged Python and React changes with separately authorized normal Stop/Start.",
+    "Verify the current job review in the user-visible Chrome session after application.",
+    "No live story request or paid video generation was performed by these tests.",
+    "Past unknown request processing and supplier billing remain unverified; no status was guessed."
+  ],
+  "verdict": "CONDITIONAL — development fix verified; operating application pending"
+}

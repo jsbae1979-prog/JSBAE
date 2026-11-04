@@ -40,8 +40,10 @@ class Fake:
     def __init__(self, error=None):
         self.calls=[]
         self.error=error
-    def generate(self, prompt, key, *, selection):
+        self.references=[]
+    def generate(self, prompt, key, *, selection, reference=None):
         self.calls.append((prompt, selection.copy()))
+        if reference is not None:self.references.append(reference)
         assert key == 'synthetic-only-image-key'
         if self.error:
             raise self.error
@@ -118,12 +120,19 @@ def test_failed_request_never_replayed(service,error,status):
     assert len(service.generation.adapter.calls)==1
 
 
-def test_reference_local_only_and_reusable(service):
+def test_reference_requires_review_then_reuses_exact_local_asset(service):
     identifier=service.create('참조 그림',DEFAULTS['image'],reference=png())
     row=service.get(identifier)
-    assert service.asset(row.options['reference']).is_file()
-    with pytest.raises(PublishingError,match='미구현'):service.execute(identifier,consent=True,reviewed=True)
+    path=service.asset(row.options['reference']);original=path.read_bytes()
+    with pytest.raises(PublishingError):service.execute(identifier,consent=False,reviewed=True)
+    with pytest.raises(PublishingError):service.execute(identifier,consent=True,reviewed=False)
     assert service.generation.adapter.calls==[]
+    generated=service.execute(identifier,consent=True,reviewed=True)
+    assert service.generation.get(generated).status=='success'
+    assert service.generation.adapter.references==[original]
+    assert service.execute(identifier,consent=True,reviewed=True)==generated
+    assert len(service.generation.adapter.calls)==1
+    assert path.read_bytes()==original
 
 
 @pytest.mark.parametrize('name',['../secret.png','C:/secret.png','https://example.com/image.png','studio-'+'0'*64+'.png'])
@@ -183,14 +192,26 @@ def test_ui_local_save_no_provider_call_and_csrf(client,service):
     assert '1024x1024' in response.text
 
 
-def test_character_ui_choice_and_saved_reference(client,service):
+def test_character_ui_choice_and_saved_reference(client,service,app):
+    from uuid import uuid4
+    from test_character_automation_routes import profile
+    from newsflow.character.kling import DEFAULTS as STUDIO_DEFAULTS
+    from newsflow.character.registry import CharacterRegistry
     token=csrf(client)
     name=service.asset_bytes(png())
+    saved_reference=service.asset(name).read_bytes()
     response=client.get('/character?reference_asset='+name)
     assert response.status_code==200 and 'claude-opus-4-6' in response.text
-    response=client.post('/character',data={'csrf_token': token,'topic': 'GUI 캐릭터','episode_limit': '5','day_limit': '20',
-        'reference_asset': name,'script_model': 'claude-opus-4-6','video_model': DEFAULTS['character']['video_model']})
-    assert response.status_code==200 and 'claude-opus-4-6' in response.text
+    registered=CharacterRegistry(app.state.config.data_dir,service).save(profile(),name)
+    settings={**STUDIO_DEFAULTS,'script_model':'claude-opus-4-6'}
+    response=client.post('/character',data={'csrf_token': token,'topic': 'GUI 캐릭터','episode_limit': '5',
+        'character_id':registered['id'],'character_revision':registered['revision'],
+        'studio_settings':json.dumps(settings),'request_id':uuid4().hex})
+    assert response.status_code==200,response.text
+    job=app.state.character.read(response.json()['id'])
+    assert job['claude_model']=='claude-opus-4-6'
+    assert job['character']['id']==registered['id']
+    assert service.asset(name).read_bytes()==saved_reference
     assert service.generation.adapter.calls==[]
 
 

@@ -1,0 +1,33 @@
+{
+  "command": [
+    "C:\\Codex\\NewsFlowAI-IsolatedReview\\integration-20261024\\venv314\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "-rs",
+    "--tb=short",
+    "-o",
+    "junit_family=legacy",
+    "-o",
+    "faulthandler_timeout=120",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Codex\\NewsFlowAI\\continuity_review_20261103\\full\\full-python-tmp",
+    "--junitxml=C:\\Codex\\NewsFlowAI\\continuity_review_20261103\\full-python.xml",
+    "tests/test_category_recommendation.py",
+    "tests/test_category_collection.py",
+    "tests/test_single_incident_captions.py",
+    "tests/test_character_story_format.py",
+    "tests/test_character_episode_editing.py",
+    "tests/test_character_episode_automation.py",
+    "tests/test_feed_new_background.py",
+    "tests/test_review_selection_browser.py",
+    "tests/test_feed_budget_browser.py",
+    "tests/test_feed_cost_review_browser.py",
+    "tests/test_photo_feed_browser.py",
+    "tests/test_top_three_selection.py",
+    "tests/test_feed_library_edit_connections.py"
+  ],
+  "exitCode": 1,
+  "seconds": 192.46
+}

@@ -1,28 +1,17 @@
-import { useState, type ReactNode } from "react";
-import { Sparkles, Save, Pause, Download } from "lucide-react";
-import TopThreeFeeds from "../TopThreeFeeds";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import TopThreeFeeds, { FeedDialog } from "../TopThreeFeeds";
+import FeedCostReview from "../FeedCostReview";
+import FeedGenerationProgress from "./FeedGenerationProgress";
+import PhotoFeedEditor from "./PhotoFeedEditor";
+import CompleteFeedEditor from "./CompleteFeedEditor";
+import FeedImageHistory from "./FeedImageHistory";
+import FeedImagePreview, {
+  completedFeedImages,
+  type FeedEntry,
+} from "./FeedImagePreview";
 import { Thumbnail } from "../Thumbnail";
 import type { Item } from "../contracts";
-import {
-  Panel,
-  Empty,
-  Select,
-  State,
-  NewsImage,
-  type Controller,
-} from "./shared";
-function FeedImage({ batch, item }: { batch: Item; item: Item }) {
-  const expected = `/api/feed-batches/${batch.id}/items/${item.rank}/file`;
-  return item.status === "success" && item.mediaUrl === expected ? (
-    <Thumbnail src={item.mediaUrl} alt={`TOP ${item.rank} 생성 이미지`} />
-  ) : (
-    <Empty>
-      {item.status === "unknown"
-        ? "결과 불명 · 재요청 금지"
-        : "검증된 결과 파일 없음"}
-    </Empty>
-  );
-}
+import { Panel, Empty, Select, NewsImage, type Controller } from "./shared";
 function FeedLayout({
   c,
   f,
@@ -33,27 +22,141 @@ function FeedLayout({
   tabs: ReactNode;
 }) {
   const [active, setActive] = useState(1),
-    b = f.batch,
+    [scope, setScope] = useState("all"),
+    [style, setStyle] = useState("ai_design_v1");
+  const [costOpen, setCostOpen] = useState(false);
+  const pendingRank = useRef<number | null>(null);
+  const [preview, setPreview] = useState<{
+    batchId: number;
+    rank: number;
+  } | null>(null);
+  const b = f.batch,
     blocked = f.busy || !f.ready,
-    selection = c.list("selections").find((x) => String(x.id) === f.analysis),
-    ranking =
-      selection?.ranking ??
-      b?.items.map((x: Item) => ({
-        ...x.source,
-        ...x.content,
-        rank: x.rank,
-      })) ??
-      [];
-  const item = b?.items.find((x: Item) => x.rank === active),
-    hasUnknown = b?.items.some((x: Item) =>
-      ["unknown", "running"].includes(x.status),
-    );
+    selection = c.list("selections").find((x) => String(x.id) === f.analysis);
+  const matching = f.batches.find((x:Item)=>String(x.analysisId)===f.analysis && x.feedStyle===style &&
+    (scope==='all' ? x.plannedImages===3 : x.plannedImages===1 && x.items[0]?.rank===active));
+  const ranking =
+    selection?.ranking ??
+    b?.items.map((x: Item) => ({ ...x.source, ...x.content, rank: x.rank })) ??
+    [];
+  const entries = completedFeedImages(
+    f.batches.map((x: Item) => (x.id === b?.id ? b : x)),
+  );
+  const previewIndex = preview
+    ? entries.findIndex(
+        (x) => x.batch.id === preview.batchId && x.item.rank === preview.rank,
+      )
+    : -1;
+  useEffect(() => {
+    if (b) {
+      const params = new URLSearchParams(window.location.search);
+      const requested = params.get("batch_id") === String(b.id) ? Number(params.get("rank")) : 0;
+      setActive(pendingRank.current ?? (b.items.some((x: Item)=>x.rank===requested) ? requested : b.items[0]?.rank ?? 1));
+      pendingRank.current = null;
+      setScope(b.plannedImages === 1 ? "selected" : "all");
+      setStyle(b.feedStyle ?? "legacy");
+    }
+  }, [b?.id]);
+  function openImage({ batch, item }: FeedEntry) {
+    if (f.busy) return;
+    if (b?.id !== batch.id) {
+      pendingRank.current = item.rank;
+      f.select(batch);
+    }
+    setActive(item.rank);
+    setPreview({ batchId: batch.id, rank: item.rank });
+  }
+  const productionStatus = b && (
+            <Panel title={`작업 #${b.id} · 제작 상태`}>
+              <FeedGenerationProgress
+                batch={b}
+                busy={f.busy}
+                runningRank={f.runningRank}
+                stopping={f.stopRequested}
+                message={f.message}
+              />
+              {b.costReview?.settingsLimitUsd && <p>작업 한도 US${b.costReview.settingsLimitUsd} · 설정값 사용</p>}
+              <button className="primary" disabled={blocked} onClick={()=>{
+                if(b.costReview?.settingsLimitUsd){if(b.items.some((x:Item)=>x.status==='pending'))f.runSettings();else f.runSettings({action:'regenerate',rank:active,consent:true,reviewed:true});return;}
+                setCostOpen(true);
+              }}>
+                {b.items.some((x:Item)=>x.status==="pending") ? "이미지 생성" : `TOP ${active} 이미지 다시 만들기`}
+              </button>
+              {f.busy && f.runningRank != null && <button onClick={f.pause} disabled={f.stopRequested}>현재 요청 후 중단</button>}
+              {costOpen && <FeedDialog name="이미지 생성 비용 확인" onClose={()=>setCostOpen(false)}>
+                <h2>{b.items.some((x:Item)=>x.status==="pending") ? "이미지 생성" : `TOP ${active} 이미지 다시 만들기`}</h2>
+                <FeedCostReview expanded
+                  batch={b}
+                  busy={f.busy}
+                  onRefresh={() => f.local(f.refreshCosts)}
+                  onSave={(data) =>
+                    f.local(async () =>
+                      f.show(
+                        await f.post(`/api/feed-batches/${b.id}/cost-review`, {
+                          revision: b.revision,
+                          ...data,
+                        }),
+                      ),
+                    )
+                  }
+                />
+                {b.items.some((x:Item)=>x.status==="pending") && <button
+                  className="primary"
+                  disabled={
+                    blocked ||
+                    !b.canGenerate ||
+                    b.items.some((x: Item) =>
+                      ["unknown", "running"].includes(x.status),
+                    ) ||
+                    !b.items.some((x: Item) => x.status === "pending")
+                  }
+                  onClick={() => {setCostOpen(false);f.approve();}}
+                >
+                  {b.plannedImages === 1
+                    ? "선택 뉴스 생성 · 비용 승인"
+                    : "TOP 3 전체 생성 · 비용 승인"}
+                </button>}
+                {b.items
+                  .filter((x: Item) => x.rank === active && ["success", "failed"].includes(x.status))
+                  .map((x: Item) => (
+                    <button
+                      key={x.rank}
+                      disabled={blocked || !b.canPrepareRegeneration}
+                      onClick={() => {setCostOpen(false);f.approve(x);}}
+                    >
+                      선택 이미지 새 견적 준비
+                    </button>
+                  ))}
+                <button onClick={()=>setCostOpen(false)}>닫기</button>
+              </FeedDialog>}
+              {b.canRecover && (
+                <button
+                  disabled={blocked}
+                  onClick={() =>
+                    f.local(async () =>
+                      f.show(
+                        await f.post(`/api/feed-batches/${b.id}/change`, {
+                          action: "recover",
+                          revision: b.revision,
+                        }),
+                      ),
+                    )
+                  }
+                >
+                  저장된 결과 복구 · 무료
+                </button>
+              )}
+            </Panel>
+          );
   return (
     <div className="core-top3">
-      <div className="core-top3-grid">
+      <div className="photo-feed-grid">
         <div className="core-top3-left">
           {tabs}
-          <Panel title="실시간 인기 뉴스 TOP 3" className="core-top3-news">
+          <Panel title="뉴스 선택" className="core-top3-news">
+            {f.batches.length>0&&<details><summary>이전 작업 열기</summary><Select label="저장된 이미지 작업" value={b?String(b.id):""}
+              options={Object.fromEntries(f.batches.map((x:Item)=>[String(x.id),`작업 #${x.id} · ${x.items[0]?.content?.title??"뉴스 이미지"}`]))}
+              onChange={v=>{const x=f.batches.find((x:Item)=>String(x.id)===v);if(x)f.select(x);}} disabled={blocked}/></details>}
             <Select
               label="완료된 TOP 3 분석"
               value={f.analysis}
@@ -72,6 +175,7 @@ function FeedLayout({
               {ranking.map((x: Item) => (
                 <button
                   key={x.rank}
+                  disabled={blocked}
                   aria-pressed={active === x.rank}
                   onClick={() => setActive(x.rank)}
                 >
@@ -85,26 +189,33 @@ function FeedLayout({
                     />
                     <b>TOP {x.rank}</b>
                   </div>
-                  <div className="core-top3-article-copy">
-                    <strong>{x.title}</strong>
-                    <p>{x.body ?? x.summary ?? "저장 요약 확인 필요"}</p>
-                    <small>{x.origin ?? "저장된 분석"}</small>
-                  </div>
+                  <strong>{x.title}</strong>
                 </button>
               ))}
-              {!ranking.length && (
-                <Empty>완료된 분석 결과 3건을 선택하세요.</Empty>
-              )}
             </div>
-            <p className="core-muted">
-              1·2·3위의 뉴스·대본·출처를 재사용합니다. 추가 분석을 요청하지
-              않습니다.
-            </p>
-          </Panel>
-        </div>
-        <div className="core-top3-center">
-          <Panel title="공통 이미지 생성 설정">
-            <div className="core-two-fields">
+            <Select
+              label="제작 범위"
+              value={scope}
+              onChange={setScope}
+              disabled={blocked}
+              options={{
+                all: "TOP 3 전체 · 개별 이미지 3장",
+                selected: `선택 뉴스 TOP ${active} · 1장`,
+              }}
+            />
+            <Select
+              label="제작 스타일"
+              value={style}
+              onChange={setStyle}
+              disabled={blocked}
+              options={{
+                ai_design_v1: "AI 완성 피드 · 한글·디자인 함께 생성",
+                photo_feed_v1: "사진 중심 피드 · 무료 글자 편집",
+                legacy: "기존 뉴스 카드",
+              }}
+            />
+            <details>
+              <summary>모델·품질·생성 설정</summary>
               <Select
                 label="TOP 3 이미지 모델"
                 value={f.options.model}
@@ -118,8 +229,8 @@ function FeedLayout({
                 onChange={(v) => f.setOptions({ ...f.options, size: v })}
                 options={{
                   "1024x1280": "4:5 · 피드 권장",
-                  "1024x1024": "1:1 · 여백 변환",
-                  "1024x1536": "2:3 · 여백 변환",
+                  "1024x1024": "1:1",
+                  "1024x1536": "2:3",
                 }}
                 disabled={blocked}
               />
@@ -130,226 +241,141 @@ function FeedLayout({
                 options={c.view?.catalog.qualities ?? {}}
                 disabled={blocked}
               />
-              <div className="core-output-spec">
-                <strong>최종 1080×1350</strong>
-                <small>개별 이미지 3개 · 4:5</small>
-              </div>
-            </div>
-            <div className="core-actions">
-              <button
-                className="primary"
-                disabled={
-                  blocked || !selection || selection.ranking?.length !== 3
-                }
-                onClick={() =>
-                  f.local(async () => {
-                    f.show(
-                      await f.post("/api/feed-batches", {
-                        analysis_id: f.analysis,
-                        ...f.options,
-                      }),
-                    );
-                    f.setMessage(
-                      "TOP 3 작업을 고정해 저장했습니다. 아직 생성하지 않았습니다.",
-                    );
-                  })
-                }
-              >
-                <Save size={16} />
-                TOP 3 제작 작업 저장
-              </button>
               <button
                 disabled={blocked}
                 onClick={() =>
                   f.local(async () => {
                     await f.post("/api/feed-batches/defaults", f.options);
-                    f.setMessage(
-                      "자동 제작 기본값을 저장했습니다. 다른 모드·기존 작업은 변경되지 않습니다.",
-                    );
+                    f.setMessage("자동 제작 기본값 저장 · 기존 작업 불변");
                   })
                 }
               >
                 자동 제작 기본값 저장
               </button>
-            </div>
+            </details>
+            <button
+              className="primary"
+              disabled={
+                blocked || !selection || selection.ranking?.length !== 3
+              }
+              onClick={() =>
+                f.local(async () => {
+                  if(matching){f.select(matching);f.setMessage("저장된 작업을 열었습니다. 제작 상태의 이미지 생성 버튼에서 진행하세요.");return;}
+                  f.show(
+                    await f.post("/api/feed-batches", {
+                      analysis_id: f.analysis,
+                      ...(scope === "selected" ? { rank: active } : {}),
+                      ...f.options,
+                      feed_style: style,
+                    }),
+                  );
+                  f.setMessage(
+                    "뉴스와 스타일 저장 · 이미지 생성 버튼으로 진행하세요",
+                  );
+                })
+              }
+            >
+              {matching ? "저장된 작업 열기" : scope === "all" ? "TOP 3 전체 제작 준비" : "선택 뉴스 제작 준비"}
+            </button>
           </Panel>
-          <Panel
-            title="TOP 3 이미지 결과"
-            tools={
-              b && (
-                <span className="core-tag">
-                  작업 #{b.id} · 분석 #
-                  {b.analysisId ?? b.analysis_id ?? "고정됨"}
-                </span>
-              )
-            }
-          >
-            {b ? (
+
+        </div>
+        {b?.feedStyle==='ai_design_v1' ? <CompleteFeedEditor statusPanel={productionStatus} batch={b} rank={active} f={f} onSelect={setActive} csrf={c.view?.csrfToken??""}/> : b?.items.some((x: Item) => x.rank === active) ? (
+          <PhotoFeedEditor
+            statusPanel={productionStatus}
+            key={`${b.id}:${active}:${b.items.find((x:Item)=>x.rank===active)?.generation_id??"none"}`}
+            batch={b}
+            rank={active}
+            csrf={c.view?.csrfToken ?? ""}
+            busy={f.busy}
+            local={f.local}
+            onSaved={f.load}
+            resultPicker={
               <>
-                <p className="core-muted">
-                  {b.simulation ? "합성 검증 결과 · 실제 게시 차단" : b.price} ·
-                  저장된 모델·옵션 고정
-                </p>
-                <div className="core-feed-results">
-                  {b.items.map((x: Item) => (
-                    <article
-                      key={x.rank}
-                      className={active === x.rank ? "selected" : ""}
-                    >
-                      <button
-                        className="core-result-select"
-                        aria-label={`TOP ${x.rank} 결과 선택`}
-                        onClick={() => setActive(x.rank)}
-                      >
-                        <FeedImage batch={b} item={x} />
-                        <strong>
-                          TOP {x.rank} · {x.content?.title}
-                        </strong>
-                      </button>
-                      <State value={x.status} />
-                      <div className="core-actions">
-                        {x.status === "success" &&
-                          x.mediaUrl ===
-                            `/api/feed-batches/${b.id}/items/${x.rank}/file` && (
-                            <a href={`${x.mediaUrl}?download=true`} download>
-                              <Download size={14} />
-                              저장
-                            </a>
-                          )}
-                        <button
-                          disabled={blocked || x.status !== "pending"}
-                          onClick={() => f.edit(x)}
-                        >
-                          문구 수정
-                        </button>
-                        {["success", "failed"].includes(x.status) && (
-                          <button
-                            disabled={blocked || hasUnknown || !b.canGenerate}
-                            onClick={() => f.approve(x)}
-                          >
-                            추가 견적
-                          </button>
-                        )}
-                      </div>
-                      {x.message && <small>{x.message}</small>}
-                    </article>
-                  ))}
-                </div>
-                <div className="core-actions">
+              <div className="photo-feed-thumbs">
+                {b.items.map((x: Item) => (
                   <button
-                    className="primary"
-                    disabled={
-                      blocked ||
-                      !b.canGenerate ||
-                      hasUnknown ||
-                      !b.items.some((x: Item) => x.status === "pending")
-                    }
-                    onClick={() => f.approve()}
+                    key={x.rank}
+                    aria-label={`TOP ${x.rank} 결과 선택`}
+                    aria-pressed={active === x.rank}
+                    disabled={blocked}
+                    onClick={() => setActive(x.rank)}
                   >
-                    <Sparkles size={16} />
-                    TOP 3 생성 · 비용 승인
+                    {(x.designMediaUrl || x.mediaUrl) && (
+                      <Thumbnail
+                        src={x.designMediaUrl || x.mediaUrl}
+                        alt={`TOP ${x.rank}`}
+                      />
+                    )}
+                    <strong>TOP {x.rank}</strong>
+                    <small>
+                      {x.designVersion
+                        ? `편집 버전 ${x.designVersion}`
+                        : x.status === "success"
+                          ? "배경 준비됨"
+                          : x.status === "pending"
+                            ? "생성 대기"
+                            : x.message || x.status}
+                    </small>
                   </button>
-                  {f.busy && (
-                    <button onClick={f.pause}>
-                      <Pause size={14} />
-                      현재 요청 후 중단
-                    </button>
-                  )}
-                </div>
-                <p className="core-warning">
-                  {b.canGenerate
-                    ? b.price
-                    : "공식 견적·실행 권한 미확정 · 유료 생성 차단"}
-                </p>
-              </>
-            ) : (
-              <div
-                className="core-feed-results"
-                aria-label="아직 제작하지 않은 TOP 3 결과"
-              >
-                {[1, 2, 3].map((rank) => (
-                  <article key={rank}>
-                    <div className="core-result-select">
-                      <Empty>TOP {rank} · 제작 작업을 먼저 저장하세요.</Empty>
-                      <strong>TOP {rank} · 결과 없음</strong>
-                    </div>
-                    <State value="pending" />
-                  </article>
                 ))}
               </div>
-            )}
+              {b.items
+                .filter((x: Item) => x.rank === active && !x.designVersion && b.feedStyle !== "photo_feed_v1")
+                .map((x: Item) => (
+                  <details key={x.rank}>
+                    <summary>원본 이미지</summary>
+                    <button
+                      disabled={
+                        blocked || (x.status !== "pending" && !x.canEditTitle)
+                      }
+                      onClick={() => f.edit(x)}
+                    >
+                      {x.canEditTitle ? "제목 수정 · 무료" : "문구 수정"}
+                    </button>
+                    {x.mediaUrl && (
+                      <>
+                        <button
+                          onClick={() => openImage({ batch: b, item: x })}
+                        >
+                          원본 보기
+                        </button>
+                        <a href={x.mediaUrl + "?download=true"} download>
+                          원본 저장
+                        </a>
+                      </>
+                    )}
+                  </details>
+                ))}
+              </>
+            }
+          />
+        ) : (
+          <Panel title="사진 중심 피드">
+            <Empty>
+              왼쪽에서 뉴스와 제작 범위를 저장하세요. 저장만으로 생성 API가
+              실행되지 않습니다.
+            </Empty>
           </Panel>
-        </div>
-        <Panel title="문구 · 출력 설정" className="core-copy-output">
-          {item ? (
-            <>
-              <strong>TOP {item.rank}</strong>
-              <h3>{item.content?.title}</h3>
-              <p>{item.content?.body}</p>
-              <p className="core-hashtags">{item.content?.hashtags}</p>
-              <button
-                disabled={blocked || item.status !== "pending"}
-                onClick={() => f.edit(item)}
-              >
-                선택 뉴스 문구 수정
-              </button>
-              <dl>
-                <dt>출력</dt>
-                <dd>JPG · 1080×1350</dd>
-                <dt>출처</dt>
-                <dd>
-                  {(item.source?.references ?? item.references ?? [])
-                    .map((r: Item) => r.publisher)
-                    .join(" · ") || "원문 검토 필요"}
-                </dd>
-                <dt>게시</dt>
-                <dd>최종 승인 전 전송 차단</dd>
-              </dl>
-              <button
-                disabled={blocked || b.simulation || item.status !== "success"}
-                onClick={() => f.review(item)}
-              >
-                게시용 검토본 저장
-              </button>
-            </>
-          ) : (
-            <Empty>검토할 결과를 선택하세요.</Empty>
-          )}
-          <p className="core-muted">
-            사용권·출처·AI 표시를 검토합니다. 자동 제작은 Instagram에 게시하지
-            않습니다.
-          </p>
-          <a href="/studio/settings">OpenAI 키 · 연결 안내</a>
-        </Panel>
+        )}
       </div>
       {f.message && (
         <div role="status" className="core-notice">
           {f.message}
         </div>
       )}
-      <Panel title="최근 생성 이미지 · 작업 기록" className="core-recent-panel">
-        <div className="core-recent">
-          {f.batches.map((x: Item) => (
-            <button
-              key={x.id}
-              disabled={f.busy}
-              onClick={() => f.select(x)}
-              aria-pressed={b?.id === x.id}
-            >
-              <strong>작업 #{x.id}</strong>
-              <div className="core-feed-mini">
-                {x.items.map((i: Item) => (
-                  <FeedImage key={i.rank} batch={x} item={i} />
-                ))}
-              </div>
-              <small>
-                {x.items.filter((i: Item) => i.status === "success").length}/3
-                성공 · 기존 결과 보존
-              </small>
-            </button>
-          ))}
-        </div>
+      <Panel title="최근 생성 이미지">
+        <FeedImageHistory entries={entries} busy={f.busy} csrf={c.view?.csrfToken ?? ""}
+          onOpen={openImage} onRemoved={async()=>{setPreview(null);await f.load();await c.load();}}/>
       </Panel>
+      {previewIndex >= 0 && (
+        <FeedImagePreview
+          entries={entries}
+          index={previewIndex}
+          onSelect={openImage}
+          onClose={() => setPreview(null)}
+        />
+      )}
     </div>
   );
 }
@@ -361,13 +387,11 @@ export default function TopThreeImageStudio({
   tabs: ReactNode;
 }) {
   return c.view ? (
-    <>
-      <TopThreeFeeds
-        selections={c.list("selections")}
-        catalog={c.view.catalog}
-        csrf={c.view.csrfToken}
-        render={(f) => <FeedLayout c={c} f={f} tabs={tabs} />}
-      />
-    </>
+    <TopThreeFeeds
+      selections={c.list("selections")}
+      catalog={c.view.catalog}
+      csrf={c.view.csrfToken}
+      render={(f) => <FeedLayout c={c} f={f} tabs={tabs} />}
+    />
   ) : null;
 }

@@ -134,7 +134,7 @@ def test_generated_card_forces_disclosure_preserves_source_and_reviews(prepared,
     service, news = prepared
     first = service.generate(news, consent=True)
     options = {"title": "도서관 독서 모임", "body": "합성 뉴스 설명", "generated_id": first,
-               "reviewed": True, "rights": True, "sources_confirmed": True, "ai_disclosure": "not_required"}
+               "reviewed": True, "rights": True, "sources_confirmed": True, "ai_disclosure": "not_required", "image_safety_checked": True}
     with pytest.raises(PublishingError):
         app.state.image_posts.create(news, **(options | {"reviewed": False}))
     identifier = app.state.image_posts.create(news, **options)

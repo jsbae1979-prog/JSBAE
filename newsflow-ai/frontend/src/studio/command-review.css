@@ -1,0 +1,29 @@
+/* Only the compact quote/RSS/key-registration dialogs. */
+.command-dialog.command-dialog--compact label.check-field {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 9px;
+  line-height: 1.6;
+}
+.command-dialog.command-dialog--compact label.check-field input[type="checkbox"] {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin: 3px 0 0;
+  padding: 0;
+}
+.command-dialog.command-dialog--compact .check-field.approval {
+  background: rgba(82, 74, 185, .14);
+  border-color: #384b78;
+}
+.command-dialog.command-dialog--compact .form-field { grid-column: 1 / -1; }
+.command-dialog.command-dialog--compact .property-list dd { overflow-wrap: anywhere; }
+
+.collection-category-picker {display:flex!important;flex-wrap:wrap;gap:9px 14px;grid-column:1/-1;min-width:0;padding:12px;border:1px solid #345274;border-radius:8px;}
+.collection-category-picker label {display:inline-flex!important;align-items:center;gap:6px;margin:0!important;width:auto!important;}
+.collection-category-picker input[type=checkbox] {width:16px!important;height:16px!important;min-height:0!important;margin:0!important;}
+.news-category-counts {padding-left:18px;font-size:12px;line-height:1.7;}
+
+.analysis-connection-check{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}.analysis-connection-check p{flex-basis:100%;margin:0}.analysis-connection-check small{color:var(--muted,#a8b8cb)}

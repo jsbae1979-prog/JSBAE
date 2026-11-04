@@ -84,3 +84,22 @@ def public_diagnostic(value, protected=()):
     return {'observed_state': value['observed_state'],
             **facts(value.get('error_message'), protected),
             'state_mismatch': value['state_mismatch'], 'checked_at': value['checked_at']}
+
+
+def dependency_stop_reason(job, scene):
+    """Read-only projection; preserve retry history and never change scene state."""
+    if job.get('automation_version') != 1 or scene.get('state') != 'waiting_dependency':
+        return ''
+    rows = {row.get('position'): row for row in job.get('scenes', [])}
+    stopped = TERMINAL | {'dependency_failed', 'dependency_quote_changed', 'not_sent'}
+    seen = set()
+    parent = scene.get('from')
+    while type(parent) is int and parent in rows and parent not in seen:
+        seen.add(parent)
+        row = rows[parent]
+        if row.get('state') in stopped:
+            return 'parent_failed'
+        if row.get('state') != 'waiting_dependency':
+            break
+        parent = row.get('from')
+    return 'job_failed' if any(row.get('state') in stopped for row in rows.values()) else ''

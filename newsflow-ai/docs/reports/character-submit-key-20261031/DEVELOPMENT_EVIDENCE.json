@@ -1,0 +1,26 @@
+{
+  "focusedPassed": 45,
+  "changes": [
+    "Preserve legacy hex keys and accept exact job-sN-tN keys only.",
+    "A typed pre-submit rejection bypasses credentials/HTTP and persists not_sent. Generic exceptions remain unknown.",
+    "An explicit offline operator repair requires the byte-pinned old rejector, unchanged job fingerprint, original quote hash, no handle/HTTP evidence, and retained full submission history.",
+    "Quote refresh is a compact secondary action under video settings; production panel retains one primary action.",
+    "Topic usage is derived read-only from matching profile/topic job history and refreshes after story changes; existing stored history is preserved.",
+    "Removed the model/duration guidance sentence.",
+    "Story-plan details use one readable column inside the narrow panel instead of shrinking adjacent text to one character."
+  ],
+  "typescript": "PASS",
+  "externalProviderCallsInTests": 0,
+  "focusedErrors": 0,
+  "reactBuild": "PASS",
+  "paidRetryPerformed": false,
+  "focusedFailed": 0,
+  "initialTestIssues": [
+    "New unit fixtures needed synthetic FFmpeg paths; corrected without running FFmpeg.",
+    "Browser fixture requested unsupported synthetic 30-second story; reused supported 15-second fixture for layout-only validation."
+  ],
+  "operatingApplied": false,
+  "base": "66b1176155147d8b79317abe1c46f70cb71b1e8b",
+  "scope": "Exact scene idempotency-key validation, finite not-sent classification, quote refresh placement",
+  "newTests": 29
+}

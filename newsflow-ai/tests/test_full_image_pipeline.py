@@ -87,7 +87,7 @@ def test_two_separate_approvals_preserve_settings_and_entire_pixels(app, pipelin
     assert len(cards.adapter.calls) == len(images.adapter.calls) == 1
 
     args = {"title": PLAN["title"], "body": PLAN["body"], "generated_id": identifier,
-            "reviewed": True, "rights": True, "sources_confirmed": True, "ai_disclosure": "not_required"}
+            "reviewed": True, "rights": True, "sources_confirmed": True, "ai_disclosure": "not_required", "image_safety_checked": True}
     with pytest.raises(PublishingError):
         app.state.image_posts.create(news, **(args | {"reviewed": False}))
     with pytest.raises(PublishingError):
@@ -205,6 +205,6 @@ def test_tampered_generated_file_cannot_be_saved(app, pipeline):
     images.path(identifier).write_bytes(jpeg() + b"modified")
     with pytest.raises(PublishingError):
         app.state.image_posts.create(news, title=PLAN["title"], body=PLAN["body"], generated_id=identifier,
-                                    reviewed=True, rights=True, sources_confirmed=True)
+                                    reviewed=True, rights=True, sources_confirmed=True, image_safety_checked=True)
     with app.state.sessions() as session:
         assert session.get(IntelligenceRun, card).status == "success"

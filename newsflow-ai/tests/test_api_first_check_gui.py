@@ -89,10 +89,13 @@ def test_explicit_controls_get_is_read_only_and_search_is_disabled_before_auth(c
     assert "분석·대본·영상은 만들지 않습니다" in response.text
     assert "같은 인증 기록의 검증은 다시 전송하지 않습니다" in response.text
     assert not doc.find("input", name="max_cost_usd")
-    assert not doc.find("input", name="request_limit_usd")
+    budget_form = doc.find('form', action=f'/api-settings/{provider}')[0]
+    limit = next(node for node in doc.find('input', name='request_limit_usd') if budget_form in node.ancestors)
+    assert limit.attrs['value'] == '10' and 'required' in limit.attrs
+    assert not doc.find('input', name='monthly_limit_usd')
     assert "응답 후 확인되는 검색·토큰 비용" in response.text
     assert "이번 요청 비용은 사전에 확정되지 않습니다" in response.text
-    assert "비용 상한을 보장하지 않습니다" in response.text
+    assert "1회 실행 비용 한도 (USD)" in response.text
     assert calls == [] and settings(app) == before and encrypted == store.path.read_bytes()
     assert KEY not in response.text
 

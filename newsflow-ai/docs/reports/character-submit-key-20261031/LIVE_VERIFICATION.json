@@ -1,0 +1,125 @@
+{
+  "runtimeSourceSha": "1c838fb425db4e884a56d30f8bdb360ed4c8fb66",
+  "stopStartCycles": 1,
+  "normalStopExit": 0,
+  "port": 18768,
+  "pid": 33560,
+  "sceneKeyFixApplied": true,
+  "legacyUnsentReclassifiedPositions": [
+    1,
+    2,
+    3
+  ],
+  "legacyRecordsRetained": true,
+  "state": "clips_review",
+  "officialQuoteUsd": "4.256",
+  "videoApprovedCeilingUsd": "4.256",
+  "actualInvoiceVerified": false,
+  "newStoryCalls": 0,
+  "automaticVideoRetries": 0,
+  "scenes": [
+    {
+      "position": 1,
+      "seconds": 9,
+      "state": "downloaded",
+      "attempt": 1,
+      "requestAccepted": true,
+      "duration": 9.042,
+      "hasAudio": true,
+      "width": 720,
+      "height": 1280,
+      "sha256": "7ec568ec3d9ad73c4a55f3aecd970094a3432d49d9ee86891653cf6164f1574e"
+    },
+    {
+      "position": 2,
+      "seconds": 13,
+      "state": "downloaded",
+      "attempt": 1,
+      "requestAccepted": true,
+      "duration": 13.042,
+      "hasAudio": true,
+      "width": 720,
+      "height": 1280,
+      "sha256": "984173fbb28bde01f2155d37f5fb25f98c233483391e329ae34701721c19ed58"
+    },
+    {
+      "position": 3,
+      "seconds": 8,
+      "state": "downloaded",
+      "attempt": 1,
+      "requestAccepted": true,
+      "duration": 8.042,
+      "hasAudio": true,
+      "width": 720,
+      "height": 1280,
+      "sha256": "fbea7df1d7b05e535dbec2e0760c1dbba0397d515e269ac7ac09929e27a4b6d1"
+    },
+    {
+      "position": 4,
+      "seconds": 8,
+      "state": "downloaded",
+      "attempt": 1,
+      "requestAccepted": true,
+      "duration": 8.042,
+      "hasAudio": true,
+      "width": 720,
+      "height": 1280,
+      "sha256": "0aec3e781dbe8edba5e7023312f2b96bcb31e2a75bfa22ca12ca31dff5838402",
+      "verifiedParentLastFrame": true,
+      "executionQuoteUsd": "0.896"
+    }
+  ],
+  "articleCount": 169,
+  "tableCount": 47,
+  "priorNonDatabaseFilesPreserved": 136,
+  "originalAndABPreserved": true,
+  "launchAndSecurityFlagsUnchanged": true,
+  "changedDatabaseTables": [],
+  "ui": {
+    "quoteButtonSeparated": true,
+    "topicUsageDerivedFromHistory": true,
+    "durationNoteRemoved": true,
+    "storyPlanOneColumn": true
+  },
+  "tests": {
+    "focusedPassed": 45,
+    "failed": 0,
+    "errors": 0,
+    "typescript": "PASS",
+    "reactBuild": "PASS"
+  },
+  "snsCalls": 0,
+  "finalComposePerformed": false,
+  "browserReview": {
+    "humanReviewReceived": true,
+    "muted": false,
+    "individualScenesPlayed": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "playbackErrors": 0,
+    "allReachedEnded": true,
+    "userAssessment": "Connection and environmental sound acceptable"
+  },
+  "finalDurationPlan": {
+    "finalMp4NotYetComposed": true,
+    "rawSeconds": [
+      9,
+      13,
+      8,
+      8
+    ],
+    "rawTotalSeconds": 38,
+    "editedTargetSeconds": 30
+  },
+  "verdict": "ACCEPTED for minimum correction, one operating restart, bounded generation and individual clip review. Final compose remains pending.",
+  "boundaries": [
+    "No actual user media, story, databases or credentials uploaded.",
+    "No security relaxation, scheduling activation, SNS, main or PR #35 changes.",
+    "Original uncertain records from the rejected key were retained with byte-pinned pre-submit proof.",
+    "Each new accepted clip has attempt 1; continuation uses verified parent last-frame and US$0.896 quote.",
+    "Official quote is not an invoice; actual supplier billing was not inspected."
+  ]
+}

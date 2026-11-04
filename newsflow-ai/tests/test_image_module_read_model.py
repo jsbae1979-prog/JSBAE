@@ -11,12 +11,12 @@ from newsflow.publishing.image_selection import selection
 from newsflow.studio.read_models import module_view
 
 
-def test_image_module_reads_saved_top3_without_character_only_keys(sessions, monkeypatch):
+def test_image_module_reads_saved_top3_without_character_only_keys(sessions, monkeypatch, tmp_path):
     def stored_selection(analysis_id):
         with sessions() as session:
             return selection(session, analysis_id)
 
-    state = SimpleNamespace(sessions=sessions, studio_synthetic=True, video=SimpleNamespace(),
+    state = SimpleNamespace(sessions=sessions, studio_synthetic=True, config=SimpleNamespace(data_dir=tmp_path), video=SimpleNamespace(),
                             image_posts=SimpleNamespace(selection=stored_selection))
     app = SimpleNamespace(state=state)
     analysis_id, article_ids, _draft_id = selected.__wrapped__(app, monkeypatch)

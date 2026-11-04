@@ -1,0 +1,25 @@
+{
+  "python": {
+    "PASS": 188,
+    "FAIL": 0,
+    "SKIP": 0
+  },
+  "frontendContracts": {
+    "PASS": 53,
+    "FAIL": 0,
+    "SKIP": 0
+  },
+  "typecheck": "PASS",
+  "build": "PASS",
+  "paidCalls": 0,
+  "snsCalls": 0,
+  "analysis93": "failed: analysis_schema; response not archived; exact invalid field NOT VERIFIED",
+  "standaloneDraft49": "saved, no generation record; not resent",
+  "evidenceFiles": [
+    "request-progress-focused.xml",
+    "request-progress-status-auth.xml",
+    "request-progress-boundary.xml",
+    "request-progress-browser-accepted.xml",
+    "request-progress-studio.xml"
+  ]
+}

@@ -3,6 +3,7 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
+from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -135,7 +136,9 @@ def test_exact_five_steps_survive_service_reopen_and_preserve_every_legacy_value
         assert all('9.165' not in a.message and value['store'].key() not in a.message for a in audits)
         rows = list(session.scalars(select(APIRequestReservation)))
         assert sum(r.status == 'success' for r in rows) == 5
-        assert all(r.reserved_usd == '0' for r in rows if r.status == 'success')
+        assert sorted(Decimal(r.reserved_usd) for r in rows if r.status == 'success') == [
+            Decimal('0.219000'), Decimal('0.228000'), Decimal('0.228000'),
+            Decimal('0.267000'), Decimal('0.273000')]
     with pytest.raises(IntelligenceError):
         analyze(value, grant)
     assert len(value['calls']) == 5
@@ -181,8 +184,8 @@ def test_changed_context_never_dispatches(comparison, change):
     assert not value['calls']
 
 
-@pytest.mark.parametrize('problem', ['expired_auth', 'no_key', 'monthly_used', 'not_approved'])
-def test_scope_does_not_bypass_real_auth_key_consent_or_reported_usage_limit(comparison, problem, monkeypatch):
+@pytest.mark.parametrize('problem', ['expired_auth', 'no_key', 'request_limit', 'not_approved'])
+def test_scope_does_not_bypass_real_auth_key_consent_or_per_request_limit(comparison, problem, monkeypatch):
     value = comparison
     grant = approve(value)
     with value['sessions'].begin() as session:
@@ -190,15 +193,29 @@ def test_scope_does_not_bypass_real_auth_key_consent_or_reported_usage_limit(com
             _set(session, 'api_claude_api_authentication_verified_at', (utcnow()-timedelta(hours=25)).isoformat())
         elif problem == 'not_approved':
             _set(session, 'api_claude_api_approved_at', '')
-        elif problem == 'monthly_used':
-            session.add(APIRequestReservation(id=uuid4().hex, provider='claude_api', model=MODEL, kind='analysis',
-                request_id='reported:cost', status='success', reserved_usd='0', estimated_usd='30',
-                bounds={}, prices={}, usage={'prompt_tokens': 10}, finished_at=utcnow()))
+        elif problem == 'request_limit':
+            _set(session, 'api_claude_api_request_limit_usd', '0.01')
     if problem == 'no_key':
         monkeypatch.setattr(value['store'], 'status', lambda: {'configured': False})
     with pytest.raises(IntelligenceError):
         analyze(value, grant)
     assert not value['calls']
+
+
+def test_comparison_keeps_reported_usage_without_reintroducing_cumulative_cap(comparison):
+    value = comparison
+    grant = approve(value)
+    with value['sessions'].begin() as session:
+        row = APIRequestReservation(id=uuid4().hex, provider='claude_api', model=MODEL, kind='analysis',
+            request_id='reported:cost', status='success', reserved_usd='0.267000', estimated_usd='30',
+            bounds={}, prices={}, usage={'prompt_tokens': 10}, finished_at=utcnow())
+        session.add(row)
+        saved_id = row.id
+    assert analyze(value, grant) and len(value['calls']) == 1
+    with value['sessions']() as session:
+        old = session.get(APIRequestReservation, saved_id)
+        assert old.status == 'success' and old.estimated_usd == '30'
+        assert old.reserved_usd == '0.267000' and old.usage == {'prompt_tokens': 10}
 
 
 @pytest.mark.parametrize('failure', ['bad_json', 'max_tokens', 'missing_usage'])

@@ -218,8 +218,10 @@ def test_statuses_never_generate_additional_scenes(setup,state):
     setup.service.submit(i,consent=True,quote_hash=setup.service.read(i)['quote_hash'])
     setup.video.states=state
     if state in {'failed','nsfw','canceled'}:
-        with pytest.raises(CharacterError):setup.service.check(i,consent=True)
+        setup.service.check(i,consent=True)
         assert setup.service.read(i)['state']=='scene_review'
+        assert all(row['state']==state for row in setup.service.read(i)['scenes'])
+        setup.service.check(i,consent=True)  # Reading retained failures never resubmits.
     else:
         setup.service.check(i,consent=True)
         assert setup.service.read(i)['state']=='generating'
@@ -299,7 +301,7 @@ def test_status_url_cannot_redirect_credentials(url):
     assert len(calls)==1
 
 
-def test_fake_gui_stages_csrf_and_no_new_startup_dispatch(client,app,setup):
+def test_saved_legacy_gui_stages_keep_csrf_and_no_new_startup_dispatch(client,app,setup):
     from conftest import csrf
     app.state.character=setup.service
     token=csrf(client)
@@ -310,8 +312,8 @@ def test_fake_gui_stages_csrf_and_no_new_startup_dispatch(client,app,setup):
     files={'reference':('reference.png',png(),'image/png')}
     assert client.post('/character',data=data,files=files).status_code==403
     response=client.post('/character',data={**data,'csrf_token':token},files=files)
-    assert response.status_code==200
-    i=setup.service.listing()[0]['id']
+    assert response.status_code==422 and setup.service.listing()==[]
+    i=create(setup)  # A saved legacy draft remains usable; new HTTP work requires a profile.
     response=client.post('/character/'+i+'/write',data={'csrf_token':token,'consent':'true'})
     assert response.status_code==200 and '대본' in response.text
     assert setup.writer.calls==1 and setup.video.calls==0
@@ -345,9 +347,10 @@ def test_known_failed_scene_requires_new_quote_and_consent_and_stops_after_two(s
     i=prepared(setup)
     s=setup.service
     s.submit(i,consent=True,quote_hash=s.read(i)['quote_hash'])
-    setup.video.states='failed'
+    setup.video.check=lambda handle: ClipStatus('failed' if handle==s.read(i)['scenes'][0]['handle'] else 'queued')
     for attempt in [2,3]:
-        with pytest.raises(CharacterError):s.check(i,consent=True)
+        s.check(i,consent=True)
+        assert s.read(i)['scenes'][0]['state']=='failed'
         with pytest.raises(CharacterError):s.prepare_retry(i)
         s.prepare_retry(i,consent=True)
         job=s.read(i)
@@ -356,7 +359,7 @@ def test_known_failed_scene_requires_new_quote_and_consent_and_stops_after_two(s
         current=s.read(i)['scenes'][0]
         assert current['attempt']==attempt and len(current['history'])==attempt-1
         assert current['history'][-1]['handle']['request_id']!=current['handle']['request_id']
-    with pytest.raises(CharacterError):s.check(i,consent=True)
+    s.check(i,consent=True)
     with pytest.raises(CharacterError):s.prepare_retry(i,consent=True)
     assert setup.video.calls==5 and s.read(i)['quote_total_usd']=='2.50'
     assert len(s.read(i)['quote_approvals'])==3

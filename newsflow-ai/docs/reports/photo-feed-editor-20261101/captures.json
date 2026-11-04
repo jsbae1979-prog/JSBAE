@@ -1,0 +1,30 @@
+{
+  "source": "synthetic fixtures only; no operating data",
+  "captures": [
+    {
+      "file": "after.jpg",
+      "sha256": "498f455a0691f52195e5f194d50db75425564030e75d0a15eb2da4f734e3e602",
+      "bytes": 147610
+    },
+    {
+      "file": "before.jpg",
+      "sha256": "3d7261a25653d8fe11c5124de669b7d2b213c6220df498a4088017abeeaa37be",
+      "bytes": 99786
+    },
+    {
+      "file": "comparison.jpg",
+      "sha256": "2984083cbecdeb325525fd85e378d8f2117b9cda37949f169cd2bdcdc9e00d3f",
+      "bytes": 150263
+    },
+    {
+      "file": "editor-1366.png",
+      "sha256": "5214a6a8df14af82065b6ad7de728f6475558056c5ec5b81382e3dd8d6b6a09b",
+      "bytes": 778886
+    },
+    {
+      "file": "editor-1920.png",
+      "sha256": "563b7d43bcee13959fdf691caa66b79c87863eab6886815afa5eee3f401d7ba7",
+      "bytes": 1040617
+    }
+  ]
+}

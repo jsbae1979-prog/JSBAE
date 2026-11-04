@@ -1,0 +1,45 @@
+{
+  "port": 18768,
+  "pid": 31576,
+  "normalStopExit": 0,
+  "stopAttempts": 1,
+  "startAttempts": 1,
+  "tablesUnchanged": 47,
+  "articles": 179,
+  "profileFilesPreserved": 365,
+  "originalAndABPreserved": true,
+  "chromeOpenAccepted": true,
+  "securityFlagsPreserved": true,
+  "paidCallsDuringDeployment": 0,
+  "snsCalls": 0,
+  "backendSourceSha": "43fc2dd122ab21129007b2a952309419ae9a3634",
+  "frontendSourceSha": "dec56d924508d380b9a586adbba9480211812675",
+  "verdict": "CONDITIONAL",
+  "date": "2026-11-01",
+  "chromeChecks": {
+    "authenticated": "PASS",
+    "newsModelSelection": "PASS",
+    "newsModelPassedToReviewDialog": "PASS",
+    "reviewCancelledWithoutSubmission": true,
+    "availableRegisteredNewsModels": 1,
+    "newsModel": "kling-video/v3.0-turbo/text-to-video",
+    "existingCharacterJobSeconds": 30,
+    "newCharacterJobDefaultSeconds": 20,
+    "paidGeneration": false
+  },
+  "validation": {
+    "reusedFocusedTests": 118,
+    "newBrowserRegressionPass": 1,
+    "newBrowserRegressionFail": 0,
+    "typeScript": "PASS",
+    "reactBuild": "PASS",
+    "fullRegressionRepeated": false
+  },
+  "additionalFix": "New-job UI now uses catalog target_duration.default instead of the last completed job duration; legacy jobs and trial behavior preserved.",
+  "pending": [
+    "Other news AI video models need explicit supported model registration before selection; no vendor capability or paid generation test performed."
+  ],
+  "privacy": "Production screenshots and private rollback/profile evidence stay local; no database, keys, media or tokens committed.",
+  "mainAndPR35Unchanged": true,
+  "additionalRestarts": 0
+}

@@ -104,7 +104,7 @@ def test_archive_filters_visual_system_and_auxiliary_routes(visual, browser):
         page.goto(origin + '/')
         expect(page.locator('.dash-metric strong')).to_have_text(['8', '1', '1', '0'])
         expect(page.get_by_role('navigation', name='뉴스 분야', exact=True)).to_have_count(1)
-        categories = ['', '정치', '경제', '사회', 'IT·과학', '문화', '스포츠', '국제', '미분류']
+        categories = ['', '정치', '경제', '사회', 'IT·과학', '문화', '연예', '스포츠', '국제', '미분류']
         assert page.locator('.workflow-script .button.primary').evaluate('e=>getComputedStyle(e).backgroundImage') == 'none'
         assert page.locator('[data-dash-news-category]').evaluate_all('(els)=>els.map(e=>e.dataset.dashNewsCategory)') == categories
         art = page.locator('.studio-hero-art img')
@@ -124,8 +124,13 @@ def test_archive_filters_visual_system_and_auxiliary_routes(visual, browser):
         for category in categories[1:]:
             page.locator(f'[data-dash-news-category="{category}"]').click()
             expect(page.locator('[data-dash-news-status]')).to_contain_text(category + ' · 보관 뉴스')
-            expect(page.locator('[data-dash-news-list]')).to_contain_text(f'합성 {category} 보관 기사')
-            expect(page.locator('[data-dash-news-list] .dash-news-item')).to_have_count(1)
+            if category == '연예':
+                # Keep the eight archived fixture articles unchanged; the new
+                # category must show an empty result, not another category's data.
+                expect(page.locator('[data-dash-news-list] .dash-news-item')).to_have_count(0)
+            else:
+                expect(page.locator('[data-dash-news-list]')).to_contain_text(f'합성 {category} 보관 기사')
+                expect(page.locator('[data-dash-news-list] .dash-news-item')).to_have_count(1)
             expect(page.locator('[data-dash-news-category][aria-current=true]')).to_have_attribute('data-dash-news-category', category)
             assert page.url == origin + '/'
             expect(video_choice.locator('select')).to_have_value('higgsfield')

@@ -6,9 +6,12 @@ export type View = {
   dataOrigin: string;
   csrfToken: string;
   commandsAvailable: boolean;
+  libraryRemovalAvailable?: boolean;
+  libraryPurgeAvailable?: boolean;
   collections: Record<string, Item[]>;
   catalog: Item;
   projects?: Item[];
+  publishedProjects?: Item[];
   services?: Item[];
   settings?: Record<string, string>;
   policy?: Item;
@@ -68,6 +71,8 @@ export const status: Record<string, string> = {
   prepare_failed: "견적 확인 필요",
   generating: "장면 생성 중",
   submission_unknown: "결과 불명 · 재요청 금지",
+  submission_not_sent: "전송 전 중단",
+  not_sent: "미전송",
   scene_review: "장면 확인 필요",
   retry_quoted: "추가 견적 승인 대기",
   clips_review: "장면 검토",
@@ -190,6 +195,7 @@ export const labels: Record<string, string> = {
   content_reviewed: "콘텐츠 내용을 검토했습니다",
   copyright_confirmed: "저작권·초상권을 확인했습니다",
   sources_confirmed: "출처를 확인했습니다",
+  image_safety_checked: "AI 이미지 안전 확인: 사실적인 실존 인물·집단 낙인·사건 재현이 없습니다",
   ai_disclosure: "AI 생성 표시",
   privacy: "공개 범위",
   approval_token: "게시 검토 식별값",
@@ -214,6 +220,9 @@ export const labels: Record<string, string> = {
   label: "표시 이름",
   rights_basis: "사용 권한 근거",
   permission: "이 소재를 사용할 권한이 있습니다",
+  categories: "수집 분야",
+  collection_policy: "수집 범위",
+  hours: "수집 기간 · 이 시간 안에 발행된 기사만",
   step: "설정 단계",
   action: "변경 동작",
   return_to: "저장 후 돌아갈 화면",
@@ -239,12 +248,19 @@ export function label(key: string) {
   return labels[key] ?? key.replaceAll("_", " ");
 }
 export function safeMedia(url: unknown) {
+  if (typeof url === "string" && /^\/api\/feed-batches\/[1-9][0-9]*\/items\/[1-3]\/file\?attempt=[1-9][0-9]{0,5}(?:&v=[a-f0-9]{64})?$/.test(url)) return url;
   return typeof url === "string" &&
-    /^\/(?:video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/(?:\d+|backgrounds\/\d+)\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
+    /^\/(?:api\/feed-batches\/[1-9][0-9]*\/items\/[1-3]\/(?:file|design-file\/[1-9][0-9]*)|api\/studio\/characters\/[a-f0-9]{32}\/reference|video\/jobs\/\d+\/(?:file|thumbnail)|video\/ai\/scenes\/\d+\/clip|image-studio\/\d+\/file|image-posts\/(?:\d+|backgrounds\/\d+)\/file|character\/[a-zA-Z0-9_-]+\/(?:file|clips\/\d+)|studio\/assets\/[a-zA-Z0-9._-]+)$/.test(
       url,
     )
     ? url
     : null;
+}
+/** A card-only fallback; the authenticated endpoint validates the owned image/hash. */
+export function characterReferenceThumbnail(item: Item) {
+  const match=item.kind === "character" && typeof item.id === "string"
+    ? /^character:([a-f0-9]{32})$/.exec(item.id) : null;
+  return match ? safeMedia(`/api/studio/characters/${match[1]}/reference`) : null;
 }
 export function itemTitle(item: Item) {
   return String(

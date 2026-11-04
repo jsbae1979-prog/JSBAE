@@ -12,7 +12,7 @@ const actionDefinition = source.slice(source.indexOf("  function action("), sour
 const actionSetup = actionDefinition.slice(actionDefinition.indexOf("    const connectionUnavailable"), actionDefinition.indexOf("    return ("));
 const actionDisabled = actionDefinition.match(/disabled=\{([\s\S]*?)\n\s+\}/)[1];
 const submitLogic = dialog.slice(dialog.indexOf("  async function submit(e:"), dialog.indexOf("  const field ="))
-  .replace("submit(e: React.FormEvent)", "submit(e)");
+  .replace("submit(e: React.FormEvent, retryFailedRunId?: number)", "submit(e, retryFailedRunId)");
 
 test("diagnosis has its own consent-only external action and matches the backend registry", () => {
   const backend = JSON.parse(readFileSync(new URL("../src/newsflow/studio/actions.json", import.meta.url), "utf8"));
@@ -78,9 +78,16 @@ test("the diagnosis action preserves the connection gate and never uses a genera
   assert.equal(evaluate(false).label, "실패 상세 연결 준비 중");
 });
 
-async function diagnoseDialog({ reject = false, ack = true } = {}) {
+async function diagnoseDialog({ reject = false, ack = true, gates = {} } = {}) {
   const calls = { requests: 0, reloads: 0, closes: 0, error: "", busy: false };
   const context = { Error, busy: false, risky: true, ack, localRender: null,
+    // These fixtures are check/diagnose actions, so specialized form readiness
+    // is not applicable (CommandDialog's !actionKind branches). Each guard is
+    // independently exercised below with an explicit blocked fixture.
+    compactCharacter: false, compactConsent: false, quoteReady: true,
+    analysisReady: true, collectionReady: true, newsScriptReady: true, registrationReady: true,
+    registeredRSS: false, quoteSubmit: false, collecting: false, modelRegistration: false,
+    categoryRSS: false, ...gates,
     checkingCharacterScenes: false, diagnosingCharacterScenes: true,
     effective: { id: "character_act_diagnose", path: "/character/{job_id}/diagnose" },
     values: { job_id: "a".repeat(32), consent: true }, view: {}, files: {}, context: {},
@@ -108,4 +115,27 @@ test("one explicit diagnosis reloads stored details once, including after a part
   assert.equal(failure.busy, false);
   const unconfirmed = await diagnoseDialog({ ack: false });
   assert.equal(unconfirmed.requests, 0); assert.equal(unconfirmed.reloads, 0);
+});
+
+for (const [label, gates] of [
+  ["request already busy", {busy: true}],
+  ["compact consent missing", {compactConsent: true, risky: false}],
+  ...["quoteReady", "analysisReady", "collectionReady", "newsScriptReady", "registrationReady"]
+    .map((field) => [field + " incomplete", {[field]: false}]),
+]) {
+  test("diagnoseDialog blocks " + label + " without request, reload or close", async () => {
+    const calls = await diagnoseDialog({gates, ack: label !== "compact consent missing"});
+    assert.equal(calls.requests, 0);
+    assert.equal(calls.reloads, 0);
+    assert.equal(calls.closes, 0);
+    assert.equal(calls.error, "");
+    assert.equal(calls.busy, false); // no setBusy callback on a blocked submission
+  });
+}
+
+
+test("episode failure details remain available with an unsent continuation", () => {
+  const clips=[{position:1,state:"failed"},{position:2,state:"waiting_dependency"}];
+  assert.equal(inspect(clips,{state:"scene_review",studio_selection:{},automation_version:1}).canDiagnoseScenes,true);
+  assert.equal(inspect(clips).canDiagnoseScenes,false);
 });

@@ -102,15 +102,16 @@ def retry_quoted(studio,*,extra='0.10',state='failed',cap='2'):
     return identifier,provider
 
 
-def test_manual_retry_uses_own_execution_cap_and_keeps_prior_spend_for_reporting(studio):
-    service=studio.service;identifier,provider=retry_quoted(studio,extra='1.60')
+def test_manual_retry_includes_prior_spend_in_current_episode_cap(studio):
+    service=studio.service;identifier,provider=retry_quoted(studio,extra='1.60',cap='2.10')
     original=service.read(identifier)
     service.retry_scene(identifier,consent=True,quote_hash=original['retry_hash'])
     updated=service.read(identifier)
     assert updated['quote_total_usd']=='2.10' and updated['scenes'][0]['attempt']==2 and provider.calls==1
-    assert updated['quote_approvals'][-1]['usd']=='1.60' and updated['episode_limit']=='2'
+    assert updated['quote_approvals'][-1]['usd']=='1.60' and updated['episode_limit']=='2.10'
     assert updated['scenes'][0]['history'][0]['state']=='failed' and updated['day_limit']=='0.01'
-    other,other_provider=retry_quoted(studio,extra='2.01')
+    # 1.60 alone fits, but 0.50 already approved in this episode makes 2.10.
+    other,other_provider=retry_quoted(studio,extra='1.60',cap='2')
     before=files(service,other)
     with pytest.raises(CharacterError):
         service.retry_scene(other,consent=True,quote_hash=service.read(other)['retry_hash'])

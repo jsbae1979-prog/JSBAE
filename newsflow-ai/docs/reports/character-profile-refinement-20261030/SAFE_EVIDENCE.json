@@ -1,0 +1,87 @@
+{
+  "deployedSource": "2dcb062058edb12c485e3c65d4e3ad64568af265",
+  "operation": {
+    "head": "2dcb062058edb12c485e3c65d4e3ad64568af265",
+    "port": 18768,
+    "pid": 17700,
+    "normalStopExit": 0,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "tablesUnchanged": 47,
+    "articles": 169,
+    "profileFilesPreserved": 105,
+    "originalAndABPreserved": true,
+    "chromeOpenAccepted": true,
+    "securityFlagsPreserved": true,
+    "paidCallsDuringDeployment": 0,
+    "snsCalls": 0
+  },
+  "appliedFiles": [
+    {
+      "path": "app/product/newsflow/character/authoring.py",
+      "sha256": "fb77f9d1505a5ea15c6a644f6d79811ae7ed486c8058d59624e8bb83be31e181",
+      "bytes": 19959
+    },
+    {
+      "path": "app/product/newsflow/character/episode_story.py",
+      "sha256": "ecce76890c99e6ddb45874626cabadb108574d2609a47ed19f1c1c5b5fd32e07",
+      "bytes": 12013
+    },
+    {
+      "path": "app/product/newsflow/character/registry.py",
+      "sha256": "b0475a1c962a584821eb5966e4643792969482554672176b2c43baae1bfa7198",
+      "bytes": 8883
+    },
+    {
+      "path": "app/product/newsflow/gui/character_automation_routes.py",
+      "sha256": "d40d925467b0b981af98123d11fa67f2f2f8450e51ee9862a3b9f8aef0d10e9d",
+      "bytes": 11112
+    },
+    {
+      "path": "app/frontend/dist/assets/index-BgV9SiRa.js",
+      "sha256": "55aa060c2937ad321dc4b92e307009b0d0f14b7a13c13a0c3478863e33e8ea7a",
+      "bytes": 603684
+    },
+    {
+      "path": "app/frontend/dist/index.html",
+      "sha256": "33d4f36db9c5820575f66a737ec923bbe5b2b06d0b7d1e474e56d8104039be41",
+      "bytes": 418
+    }
+  ],
+  "referenceReadiness": {
+    "jobs": 12,
+    "verifiedExistingReference": 12
+  },
+  "userChromeConfirmation": {
+    "fiveRequiredFields": true,
+    "referenceStorageStatus": true,
+    "projectCardImages": true
+  },
+  "focusedRuns": {
+    "compactUiBrowser": 7,
+    "thumbnailNode": 3,
+    "thumbnailBrowser": 1,
+    "storageBrowser": 4,
+    "analysisDiagnostics": 8,
+    "profileContract": 66,
+    "profileBrowser": 5
+  },
+  "focusedFailures": 0,
+  "focusedErrors": 0,
+  "runsMayOverlap": true,
+  "typeScript": "PASS",
+  "reactBuild": "PASS",
+  "paidObservation": {
+    "analysisFailed": 3,
+    "estimatedUsageUSD": "0.040134",
+    "reservationCeilingsUSD": "0.855000",
+    "actualVendorInvoiceVerified": false,
+    "automaticRetryPerformed": false,
+    "newProfiles": 0,
+    "changedEpisodeJobs": 0
+  },
+  "judgment": {
+    "uiAndOperatingApplication": "ACCEPTED",
+    "paidEndToEndVideo": "NOT COMPLETED"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "command": [
+    "C:\\Users\\ching\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
+    "node_modules/typescript/bin/tsc",
+    "--noEmit"
+  ],
+  "exitCode": 0,
+  "seconds": 1.57
+}

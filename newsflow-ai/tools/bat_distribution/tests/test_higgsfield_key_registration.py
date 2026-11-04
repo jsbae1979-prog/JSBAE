@@ -143,7 +143,10 @@ def test_no_other_route_method_or_paid_permission_is_added(ui,method,path):
     ui.authenticate()
     response=ui.client.request(method,path,data={'api_key':KEY,'csrf_token':ui.client.cookies.get('newsflow_csrf')},
                                headers={'Origin':ui.session.origin})
-    assert response.status_code==403 and ui.native.protect_calls==0 and not ui.target.exists()
+    # Local model registration is an existing allowed route; malformed input
+    # reaches its field validator, without granting paid execution or key writes.
+    expected = 422 if path == '/video-ai-settings/models' else 403
+    assert response.status_code==expected and ui.native.protect_calls==0 and not ui.target.exists()
 
 
 def test_invalid_key_never_creates_file_backup_or_native_request(ui):

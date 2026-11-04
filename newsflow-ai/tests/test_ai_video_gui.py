@@ -105,7 +105,7 @@ def test_post_requires_csrf_and_refusals_carry_the_fixed_detail(studio):
     _app, client, _provider, draft_id = studio
     assert client.post("/video-ai-settings", data={"provider": "higgsfield"}).status_code == 403
     refused = post(client, "/video-ai-settings", {"provider": "higgsfield", "approved": "true", "monthly_limit": "", "job_limit": ""})
-    assert refused.status_code == 303
+    assert refused.status_code == 422  # Paid approval requires a valid per-job ceiling.
     with _app.state.sessions() as session:
         assert session.scalar(select(VideoAIUsage)) is None
     assert _provider.calls == []

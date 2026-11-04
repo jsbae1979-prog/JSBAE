@@ -1,0 +1,64 @@
+{
+  "head": "4706e62de67ce4a222e0085b6d51b9e576e3b932",
+  "port": 18768,
+  "normalStopExit": 0,
+  "stopAttempts": 1,
+  "startAttempts": 1,
+  "tablesUnchanged": 47,
+  "articles": 169,
+  "profileFilesPreserved": 133,
+  "originalAndABPreserved": true,
+  "chromeOpenAccepted": true,
+  "securityFlagsPreserved": true,
+  "paidCallsDuringDeployment": 0,
+  "snsCalls": 0,
+  "liveStoryCalls": 1,
+  "automaticRetries": 0,
+  "http400ResolvedForThisRequest": true,
+  "completeProviderResponseReceived": true,
+  "localStoryValidation": "FAIL",
+  "localFailures": [
+    {
+      "scene": 2,
+      "field": "action",
+      "maximumCharacters": 300
+    },
+    {
+      "scene": 2,
+      "field": "camera",
+      "maximumCharacters": 120
+    },
+    {
+      "scene": 3,
+      "field": "camera",
+      "maximumCharacters": 120
+    },
+    {
+      "scene": 4,
+      "field": "camera",
+      "maximumCharacters": 120
+    }
+  ],
+  "reservationStatus": "failed",
+  "reservedCeilingUsd": "0.252000",
+  "estimatedUsageUsd": "0.028203",
+  "reportedTokenUsage": {
+    "prompt_tokens": 3286,
+    "completion_tokens": 1223,
+    "search_calls": 0
+  },
+  "actualSupplierInvoice": "NOT VERIFIED",
+  "videoQuote": "BLOCKED by local validation",
+  "videoGenerationCalls": 0,
+  "durationSeconds": 30,
+  "episodeLimitUsd": "10",
+  "tables": 47,
+  "articlesPreserved": 169,
+  "originalAndABPreservedAfterRequest": true,
+  "completeResponseFileSaved": false,
+  "remaining": [
+    "Keep local bounds; improve length instructions/validation feedback before another approved request.",
+    "The v1 episode path does not persist a rejected full candidate; no free local recovery is available for this request."
+  ],
+  "verdict": "CONDITIONAL — HTTP schema rejection resolved in this live call; local length validation blocks quote"
+}

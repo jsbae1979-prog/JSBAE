@@ -116,7 +116,8 @@ def test_route_passes_longer_wait_once_and_preserves_unknown(client, app, prepar
     with app.state.sessions() as session:
         run = session.scalar(select(IntelligenceRun).where(IntelligenceRun.kind == "analysis"))
         reservation = session.scalar(select(APIRequestReservation))
-        assert run.options["timeout"] == 300 and len(run.evidence["articles"]) == 81
+        assert run.options["timeout"] == 300 and len(run.evidence["articles"]) == 31
+        assert len({a["id"] for a in run.evidence["articles"]}) == 31
         assert run.options["base_max_tokens"] == seen[0].max_tokens
         assert run.options["script_prompt_version"] == "v2"
         assert run.options["max_tokens"] == min(100_000 if _mode == "claude_api" else 9000, seen[0].max_tokens + 400)

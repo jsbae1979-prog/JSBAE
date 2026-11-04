@@ -1,0 +1,111 @@
+{
+  "date": "2026-11-01",
+  "platform": "Windows",
+  "python": "3.12.10",
+  "root_suite": {
+    "collected": 7032,
+    "coverageMatched": true,
+    "initial": {
+      "passed": 6977,
+      "failure": 6,
+      "skipped": 49
+    },
+    "final": {
+      "passed": 7028,
+      "skipped": 4
+    },
+    "resolved_initial_failures": [
+      "tests.test_dashboard_view::test_dashboard_category_links_stay_on_dashboard",
+      "tests.test_news_publish_modern::test_news_filters_curation_consents_and_read_only_state",
+      "tests.test_dashboard_cohesion::test_archive_filters_visual_system_and_auxiliary_routes",
+      "tests.test_studio_dashboard_polish::test_studio_dashboard_polish_keeps_real_state_forms_and_reviews",
+      "tests.test_dashboard_restore_browser::test_restored_dashboard_layout_and_readonly_navigation",
+      "tests.test_studio_structure_browser::test_archive_categories_do_not_navigate_to_collection"
+    ],
+    "remaining_skips": [
+      {
+        "case": "tests.test_live_ai::test_single_approved_openai_script_generation",
+        "status": "skipped",
+        "reason": "opt-in paid AI live test: set NEWSFLOW_AI_LIVE_TEST=1, NEWSFLOW_AI_API_KEY and NEWSFLOW_AI_LIVE_MAX_TOKENS"
+      },
+      {
+        "case": "tests.test_ai_video_settings::test_video_key_store_fails_closed_without_dpapi",
+        "status": "skipped",
+        "reason": "Windows has a real DPAPI cipher"
+      },
+      {
+        "case": "tests.test_ai_video_compose::test_clip_store_rejects_symlinks",
+        "status": "skipped",
+        "reason": "symlinks are not available for this user"
+      },
+      {
+        "case": "tests.test_live_rss::test_google_news_live",
+        "status": "skipped",
+        "reason": "opt-in live RSS: set NEWSFLOW_LIVE_TEST=1"
+      }
+    ]
+  },
+  "supplement_suites": {
+    "studio_v3": {
+      "passed": 58,
+      "failure": 0,
+      "error": 0
+    },
+    "feed_top3-recheck": {
+      "passed": 25,
+      "failure": 0,
+      "error": 0
+    },
+    "bat-final": {
+      "passed": 553,
+      "failure": 0,
+      "error": 0
+    }
+  },
+  "node_stop_notice": {
+    "passed": 13
+  },
+  "typescript": "PASS",
+  "react_build": "PASS",
+  "unique_passed": 7677,
+  "failed": 0,
+  "errors": 0,
+  "paid_calls": 0,
+  "live_rss_calls": 0,
+  "sns_calls": 0,
+  "operating": {
+    "head": "e671ff2a5529c26c5988febda8f2c12899d73f9e",
+    "port": 18768,
+    "pid": 40736,
+    "normalStopExit": 0,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "tablesUnchanged": 47,
+    "articles": 86,
+    "profileFilesPreserved": 416,
+    "originalAndABPreserved": true,
+    "chromeOpenAccepted": true,
+    "securityFlagsPreserved": true,
+    "paidCallsDuringDeployment": 0,
+    "snsCalls": 0
+  },
+  "evidence_sha256": {
+    "shard-0.xml": "e973ff4660d12c305901933b66180b32cc6bf6620a7c78a56fd1ea525c6aa9d6",
+    "shard-1.xml": "f45c15f421bcda6f04cd1daf50a1bae4fb335493d9c4f547539fd0c66d948bdf",
+    "shard-2.xml": "9e162142c38517e6938db20b03bd91ecac9b7c0f567c8fda3ff38a8fa656f088",
+    "shard-3.xml": "5b0f8908c13737e01060bb1be14623bd5ecfea222a2ac9b84333e9ffa3204ac5",
+    "news-browser-final.xml": "aa23041188f2f26cd30d96e5b485cce70a7daa7812e94e973945847ce9be4f0a",
+    "dashboard-category-final.xml": "66357d5912151d214b56246da0fc4786fda629e99ddedc011c4d2d983c60dd50",
+    "category-browser-final.xml": "a2fb3d3432b1f7fb7fd68fae91da53688efc88a9324504cc476d157331d7d1df",
+    "media-path-final.xml": "2b323a80bbe3485c350cd7c4d2842ed17c531ee8a6715c3e66b0b7d14dc996ca",
+    "compose-path-final.xml": "23c845765961545fe4a8a9f99533eae97336e05c054196b0fe39360948ee68af",
+    "studio_v3.xml": "7efb0599e380e8df845c05b84263f1f2fc6721f15fbdcf1a008a71c9868341e1",
+    "feed_top3-recheck.xml": "7b984b119157404eed8c20def02c386f7f5f9569b8a8408d7dc6609c4267168a",
+    "bat-final.xml": "7bd7a507570da32f769842599942919f1b2cafeebb049e7bf5ee4be844e9d1ce",
+    "typescript.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "react_build.log": "2cc9be632ee5da5dc12cee5f6b275d51e079503160139d28731a34c5c629b0d6",
+    "stop_notice.log": "34266fa5648ec116070c66bdd9fd4cc51dc788e0a248465460316c891af08dab",
+    "manifest.json": "f4db878af9850343fe4cd35574a99ee5ab61b2702a676e3882771606d516c65d",
+    "RESULT.json": "c91bca937673899875ed092dca62a140b3e1337048684cfc78c7de467cb7415a"
+  }
+}

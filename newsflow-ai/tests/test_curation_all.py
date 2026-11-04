@@ -1,4 +1,4 @@
-"""Whole latest collection, never a user-selected subset or automatic paid batches."""
+"""Server-owned category shortlist, no client-selected IDs or automatic paid batches."""
 from copy import deepcopy
 
 import pytest
@@ -36,16 +36,19 @@ def test_whole_collection_no_selection_no_sixty_article_cutoff(client, app, prep
     ctx = extend_collection(app, 65)
     assert len(ctx["articles"]) == 65
     html = client.get("/news").text
-    assert "전체 뉴스 화제성 평가" in html and "전체 65개 비교" in html
+    assert "전체 뉴스 화제성 평가" in html and "수집 65개 · 분야별 최신 최대 30개" in html
     assert 'name="article_ids"' not in html
     data = {"csrf_token": csrf(client), "consent": "true", "collection_context_id": ctx["run_id"],
             "article_ids": [ctx["articles"][0].id]}  # Cannot narrow the server-owned whole set.
     response = client.post("/news/curation/analyze", data=data)
     assert response.status_code == 200, response.text
-    assert len(adapter.payloads[0]["articles"]) == 65 and adapter.calls == ["analysis"]
+    from newsflow.news.analysis_candidates import shortlist
+    expected=len(shortlist(ctx['articles'])[0])
+    assert expected < 65
+    assert len(adapter.payloads[0]["articles"]) == expected and adapter.calls == ["analysis"]
     with app.state.sessions() as session:
         run = session.scalar(select(IntelligenceRun).where(IntelligenceRun.kind == "analysis"))
-        assert len(run.result["comparisons"]) == 65 and len(run.result["ranking"]) == 3
+        assert len(run.result["comparisons"]) == expected and len(run.result["ranking"]) == 3
         assert run.evidence["curation_contract"]["top_k"] == 3
         assert session.scalar(select(ContentDraft)) is None
     assert client.post("/news/curation/analyze", data=data).status_code == 200
@@ -62,13 +65,14 @@ def test_changed_collection_and_no_consent_make_no_calls(client, app, prepared):
     assert adapter.calls == []
 
 
-def test_collection_too_large_never_silently_truncated_or_split(client, app, prepared):
+def test_large_collection_uses_disclosed_shortlist_without_deleting_or_extra_calls(client, app, prepared):
     _, adapter, _, _, _ = prepared
     ctx = extend_collection(app, 401)
     response = client.post("/news/curation/analyze", data={"csrf_token": csrf(client), "consent": "true",
                                                           "collection_context_id": ctx["run_id"]})
-    assert response.status_code == 422 and "자동 추가 호출 없이 중단" in response.text
-    assert len(ctx["articles"]) == 401 and adapter.calls == []
+    assert response.status_code == 200, response.text
+    assert len(ctx["articles"]) == 401 and adapter.calls == ['analysis']
+    assert len(adapter.payloads[0]['articles']) <= 270
 
 
 def test_ranking_missing_unranked_article_rejected():

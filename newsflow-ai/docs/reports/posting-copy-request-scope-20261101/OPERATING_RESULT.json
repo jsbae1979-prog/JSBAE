@@ -1,0 +1,29 @@
+{
+  "head": "a41491c20a880a4107715866c56b77212d1354fb",
+  "port": 18768,
+  "pid": 31436,
+  "normalStopExit": 0,
+  "stopAttempts": 1,
+  "startAttempts": 1,
+  "tablesUnchanged": 47,
+  "articles": 179,
+  "profileFilesPreserved": 371,
+  "originalAndABPreserved": true,
+  "chromeOpenAccepted": true,
+  "securityFlagsPreserved": true,
+  "paidCallsDuringDeployment": 0,
+  "snsCalls": 0,
+  "decision": "ACCEPTED",
+  "chromeVerification": {
+    "authenticated": true,
+    "selectedProvider": "claude_api",
+    "selectedModel": "claude-sonnet-4-6",
+    "paidReviewButtonEnabled": true,
+    "blockingNoticeAbsent": true,
+    "paidReviewButtonClicked": false,
+    "dialogLeftOpen": true,
+    "unsavedPostingFieldsPreserved": true
+  },
+  "scope": "Approved three-file deployment and one normal Stop/Start; screen verification only.",
+  "reusedTests": "76 PASS; not rerun for deployment."
+}

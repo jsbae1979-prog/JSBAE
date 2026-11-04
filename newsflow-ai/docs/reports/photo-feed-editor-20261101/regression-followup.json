@@ -1,0 +1,111 @@
+{
+  "base": "fa3e2be05aa1cb4e573a31d0e0f591c8a4881a01",
+  "unique_prior_failures_rechecked": 15,
+  "passed": 15,
+  "failed": 0,
+  "errors": 0,
+  "full_suite_repeated": false,
+  "product_code_changed": false,
+  "operating_applied": false,
+  "paid_calls": 0,
+  "environment": {
+    "baseline_commit": "0a59bfb41eec6b243e4470f67cd53c1e7cd07e52",
+    "baseline_files": 5,
+    "baseline_sha256_verified": true,
+    "tzdata": "2026.5",
+    "iana": "2026e",
+    "fixture_source": "existing isolated development artifacts",
+    "operating_data_used": false
+  },
+  "results": [
+    {
+      "test": "tests.test_card_response_diagnostics::test_changed_instruction_preserves_v1_claim_and_reuses_success[unknown]",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_character_automation_browser::test_registered_profiles_openai_script_editor_and_responsive_layout",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_creation_models::test_reference_requires_review_then_reuses_exact_local_asset",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_dashboard_cohesion::test_archive_filters_visual_system_and_auxiliary_routes",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_elevenlabs_saved_voices::test_unfiltered_legacy_cache_is_preserved_and_cannot_mix_page_tokens",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_quote_rss_settings_browser::test_registered_rss_has_no_paid_or_repeated_scope_checkbox",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_social_calendar_analytics::test_recommendations_require_comparable_complete_windows_and_one_account",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_usability_browser::test_local_workflow_and_all_screen_design",
+      "outcome": "PASS",
+      "run": "remaining-two"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-03-08T09:59:00+00:00-1-59--8-0]",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-03-08T10:00:00+00:00-3-0--7-0]",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-11-01T08:30:00+00:00-1-30--7-0]",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_pacific_dst_transition_and_fold[2026-11-01T09:30:00+00:00-1-30--8-1]",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_seoul_agrees_with_existing_kst_and_calendar_stores_utc[2026-03-08T10:00:00+00:00]",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_windows_timezone_contract::test_iana_seoul_agrees_with_existing_kst_and_calendar_stores_utc[2026-11-01T09:30:00+00:00]",
+      "outcome": "PASS",
+      "run": "remaining"
+    },
+    {
+      "test": "tests.test_windows_transition_plan::test_restore_point_update_failure_and_restart",
+      "outcome": "PASS",
+      "run": "remaining-two"
+    }
+  ],
+  "runs": [
+    {
+      "name": "remaining",
+      "passed": 13,
+      "failed": 2,
+      "errors": 0
+    },
+    {
+      "name": "remaining-two",
+      "passed": 2,
+      "failed": 0,
+      "errors": 0
+    }
+  ]
+}

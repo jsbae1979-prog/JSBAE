@@ -569,7 +569,7 @@ class IntelligenceService:
                 raise IntelligenceError("화제성 평가는 선택한 API의 승인 경로로 실행하세요.", "ai_budget", False)
             from .curation import enrich
 
-            payload = enrich(payload, trend_snapshot, utcnow(), top_k=curation_top_k)
+            payload = enrich(payload, trend_snapshot, utcnow(), top_k=curation_top_k, feed_copy=True)
             if mode == "claude_api":
                 from .curation_wire import SCORE_DERIVATION
 
@@ -601,6 +601,7 @@ class IntelligenceService:
             run_id = run.id
         provider = self._provider(mode)
         reservation = None
+        dispatched = False
         try:
             if on_run:
                 on_run(run_id)
@@ -608,6 +609,7 @@ class IntelligenceService:
             reservation = self._reserve_api(mode, run_id, "analysis", options,
                                             {"instruction": instruction_text, "evidence": payload})
             try:
+                dispatched = True  # Once entered, a timeout is not proof of non-transmission.
                 output = provider.analyze(payload, base_options)
                 self._check_stored_secret(output)
                 if mode in {'openai', 'claude_api'}:
@@ -657,6 +659,7 @@ class IntelligenceService:
                         run.result = {**run.result, 'output_limit': {'stop_reason': 'max_tokens'}}
                 elif isinstance(exc, ProviderOutputLimitError):
                     run.result = {'output_limit': {'finish_reason': 'length'}}
+                run.result = {**run.result, 'dispatch_state': 'sent_or_unknown' if dispatched else 'not_sent'}
             self._usage(provider, run_id, mode, options, "analysis", "failed")
             self._finish_api(reservation, provider, "unknown" if code in {"ai_timeout", "ai_unavailable", "ai_cancelled"} else "failed")
             raise IntelligenceError(message, code, retryable) from None

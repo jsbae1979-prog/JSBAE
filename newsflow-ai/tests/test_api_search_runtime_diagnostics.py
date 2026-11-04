@@ -51,7 +51,7 @@ def state(tmp_path):
     store.save(KEY)
     save_api_settings(
         sessions, "claude_api", model=MODEL, approved=True, search_enabled=True, search_approved=True,
-        request_limit_usd="3.10", monthly_limit_usd="100", input_price_per_1m="3",
+        request_limit_usd="3.20", monthly_limit_usd="100", input_price_per_1m="3",
         output_price_per_1m="15", search_price_per_1k="10", billing_confirmed=True,
         account_remaining_usd="100",
     )
@@ -104,7 +104,7 @@ def snapshot(row):
     ("incomplete_response", "max_tokens"), ("incomplete_response", "pause_turn"),
     ("result_json", "end_turn"), ("source_binding", "end_turn"),
 ])
-def test_production_failure_persists_cause_and_reported_usage_without_guessed_token_bounds(
+def test_production_failure_persists_cause_and_marks_over_bound_usage_unknown(
     state, monkeypatch, reason, stop_reason,
 ):
     document = (response("claude_api") if reason == "incomplete_response" else broken_response(reason))
@@ -148,10 +148,11 @@ def test_production_failure_persists_cause_and_reported_usage_without_guessed_to
     assert len(ledger) == 2
     assert snapshot(next(row for row in ledger if row.id == previous.id)) == old_reservation
     current = next(row for row in ledger if row.id != previous.id)
-    assert current.status == "failed" and current.test_only is False
-    assert Decimal(current.reserved_usd) == 0
+    assert current.status == "unknown" and current.test_only is False
+    assert Decimal(current.reserved_usd) == Decimal('3.055000')
     assert Decimal(current.estimated_usd) == Decimal("0.090853")
-    assert current.bounds == {"accounting": "reported_usage", "search_calls": 1}
+    assert current.bounds == {'accounting': 'per_execution', 'search_calls': 1,
+                              'prompt_tokens': 1000000, 'completion_tokens': 3000, 'request_limit_usd': '3.20'}
     assert current.usage == {"prompt_tokens": 11651, "completion_tokens": 3060, "search_calls": 1}
     # The same failed request can never be replayed after reconstructing the ledger.
     with pytest.raises(APISettingsError, match="이미 기록된 요청"):
@@ -183,7 +184,7 @@ def test_first_search_parser_failure_with_complete_usage_is_not_unknown_only_for
     assert "sources" not in summary and "tool_ids" not in summary
     assert not read_api_settings(state["sessions"], "claude_api").search_verified_at
     reservation = rows(state["sessions"])[0]
-    assert reservation.status == "failed" and Decimal(reservation.reserved_usd) == 0
+    assert reservation.status == "failed" and Decimal(reservation.reserved_usd) == Decimal('3.145000')
     assert Decimal(reservation.estimated_usd) == Decimal("0.090853")
     assert send_search(state, transport).code == "blocked" and len(calls) == 1
     assert all(marker not in json.dumps(settings_values(state["sessions"])) for marker in (KEY, RAW_MARKER))
@@ -198,7 +199,7 @@ def test_missing_usage_keeps_parser_diagnostic_unknown_and_blocks_new_production
         search(service, ids.append)
     ledger = rows(state["sessions"])
     assert len(calls) == len(ledger) == 1 and ledger[0].status == "unknown"
-    assert ledger[0].estimated_usd is None and Decimal(ledger[0].reserved_usd) == 0
+    assert ledger[0].estimated_usd is None and Decimal(ledger[0].reserved_usd) == Decimal('3.055000')
     with state["sessions"]() as session:
         run = session.get(IntelligenceRun, ids[0])
         assert run.result == {"search_failure": {"failure_reason": "result_json", "stop_reason": "end_turn"}}

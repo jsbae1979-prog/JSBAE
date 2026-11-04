@@ -4,6 +4,7 @@ import json
 import subprocess
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+from decimal import Decimal
 
 import pytest
 from conftest import csrf
@@ -90,7 +91,7 @@ def test_ack_preserves_original_amount_failure_usage_and_settings_and_survives_r
     assert status["ready"] and status["usage"]["unknown"] == 1
     assert status["usage"]["held_usd"] == "9.165" and status["usage"]["vendor_billing"] == "NOT VERIFIED"
     assert status["acknowledged_unknown_analyses"] == 1
-    assert reserve(restarted, store, "new:analysis").reserved_usd == 0
+    assert reserve(restarted, store, "new:analysis").reserved_usd == Decimal('0.255000')
     with pytest.raises(APISettingsError, match="이미 기록된 요청"):
         reserve(restarted, store, "old:analysis")
 
@@ -149,7 +150,7 @@ def test_only_finished_unknown_analysis_can_be_acknowledged(sessions, store, sta
 
 @pytest.mark.parametrize("change,reason", [
     ({"api_claude_api_approved_at": ""}, "사용 승인"),
-    ({"api_claude_api_monthly_limit_usd": "0"}, "월별"),
+    ({"api_claude_api_request_limit_usd": "0"}, "1회"),
     ({"api_claude_api_output_price_per_1m": "0"}, "단가"),
 ])
 def test_ack_keeps_other_budget_gates(sessions, store, change, reason):

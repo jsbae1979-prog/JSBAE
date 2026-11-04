@@ -88,22 +88,55 @@ def _safe_http_diagnostics(http_status=None, error_type=None, request_issue=None
     return result
 
 
-class ProviderHTTPResponseError(ProviderResponseError):
-    """Retain only finite diagnostics from a rejected request, never its body."""
+def bounded_error_message(value, *, secret='', request_body=None):
+    """Only redacted error.message, never the HTTP envelope or request body."""
+    if not isinstance(value, str):
+        return None
+    text = value.replace(secret, '[REDACTED]') if secret else value
+    def remove_inputs(value):
+        nonlocal text
+        if isinstance(value, dict):
+            for item in value.values(): remove_inputs(item)
+        elif isinstance(value, (list, tuple)):
+            for item in value: remove_inputs(item)
+        elif isinstance(value, str) and value:
+            text = text.replace(value, '[REQUEST REDACTED]')
+            text = text.replace(json.dumps(value, ensure_ascii=True)[1:-1], '[REQUEST REDACTED]')
+    if isinstance(request_body, dict):
+        for name in ('messages', 'system', 'input', 'instructions'):
+            remove_inputs(request_body.get(name))
+    text = re.sub(r'(?i)\b(?:sk-ant-|sk-)[A-Za-z0-9_-]+', '[REDACTED]', text)
+    # Opaque provider-side identifiers can contain echoed private data too.
+    text = re.sub(r'\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b', '[REDACTED]', text)
+    # Drop header lines and echoed request payloads rather than try to parse secrets.
+    text = re.sub(r'(?im)(?:authorization|x-api-key|api[_ -]?key|cookie|set-cookie)\s*[:=][^\r\n]*', '[AUTH REDACTED]', text)
+    text = re.sub(r'(?is)["\']?(?:messages|system|input|instructions|request_body|body|prompt|headers)["\']?\s*[:=].*', '[REQUEST REDACTED]', text)
+    text = re.sub(r'(?i)\bBearer\s+[^\s,;]+', '[AUTH REDACTED]', text)
+    text = ''.join(ch if ch >= ' ' and ch != '\x7f' else ' ' for ch in text)
+    return text[:300]
 
-    def __init__(self, http_status, error_type=None, request_issue=None, request_fields=None, diagnostic_ref=None):
+
+class ProviderHTTPResponseError(ProviderResponseError):
+    """Finite fields plus at most 300 redacted error-message characters."""
+
+    def __init__(self, http_status, error_type=None, request_issue=None, request_fields=None, diagnostic_ref=None, error_message=None):
         self.details = _safe_http_diagnostics(http_status, error_type, request_issue, request_fields, diagnostic_ref)
+        self.error_message = bounded_error_message(error_message)
         super().__init__("Claude API가 요청을 거절했습니다. 자동 재요청하지 않습니다.")
 
     def diagnostics(self) -> dict:
-        return _safe_http_diagnostics(**{
+        result = _safe_http_diagnostics(**{
             name: self.details.get(name) for name in (
                 "http_status", "error_type", "request_issue", "request_fields", "diagnostic_ref")
         })
+        message = bounded_error_message(self.error_message)
+        if message is not None: result['error_message'] = message
+        return result
 
     @classmethod
-    def from_http_error(cls, error, *, recorder=None, secret=""):
+    def from_http_error(cls, error, *, recorder=None, secret="", request_body=None):
         error_type, issue, fields, reference = None, None, [], None
+        summary = None
         try:
             raw = error.read(8193)
             if len(raw) <= 8192:
@@ -111,10 +144,11 @@ class ProviderHTTPResponseError(ProviderResponseError):
                 error_type = detail.get("type")
                 message = detail.get("message")
                 if isinstance(message, str):
+                    summary = bounded_error_message(message, secret=secret, request_body=request_body)
                     if recorder is not None:
                         try:
                             reference = recorder.save(status=error.code, error_type=error_type,
-                                                      message=message, secret=secret)
+                                                      message=summary, secret=secret)
                         except Exception:  # noqa: BLE001 - encryption/storage failure must not leak detail or retry
                             reference = None
                     # These are field *mentions*, not proof of which parameter caused rejection.
@@ -135,7 +169,7 @@ class ProviderHTTPResponseError(ProviderResponseError):
             error_type, issue, fields = None, None, []
         finally:
             error.close()
-        return cls(error.code, error_type, issue, fields, reference)
+        return cls(error.code, error_type, issue, fields, reference, error_message=summary)
 
 
 class AnalysisResponseError(ProviderResponseError):
@@ -153,7 +187,7 @@ class AnalysisResponseError(ProviderResponseError):
     STOP_REASONS = frozenset({"end_turn", "max_tokens", "stop_sequence", "tool_use", "pause_turn", "refusal"})
 
     def __init__(self, failure_reason, *, stop_reason=None,
-                 http_status=None, error_type=None, request_issue=None, request_fields=None, diagnostic_ref=None):
+                 http_status=None, error_type=None, request_issue=None, request_fields=None, diagnostic_ref=None, error_message=None):
         self.failure_reason = (failure_reason if isinstance(failure_reason, str)
                                and failure_reason in self.MESSAGES else "response_envelope")
         self.stop_reason = None if stop_reason is None else (

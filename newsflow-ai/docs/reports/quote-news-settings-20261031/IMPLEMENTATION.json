@@ -1,0 +1,107 @@
+{
+  "verdict": "CONDITIONAL",
+  "implementationHead": "e4a43dd16922929ae63f26481f1089735e2cab50",
+  "branch": "codex/newsflow-character-shorts-automation-20261030",
+  "upstream": {
+    "pullRequestedByUser": true,
+    "includedTestPRs": [
+      37,
+      38
+    ],
+    "articleCleanupCommit": "6cdb03c",
+    "lifecycleEqualsUpstream": true,
+    "localEditsPreserved": true
+  },
+  "rootCauses": {
+    "videoWarning": "The quote expired after 15 minutes, but the submit guard reported the generic unknown-request message. All four live scene rows were still not_submitted; no handles or approvals existed.",
+    "rss403": "The normal restored operating request boundary excluded POST /collection, before the RSS handler. This is distinct from a supplier HTTP 403.",
+    "newsProviders": "Registered RSS, Google News/Trends RSS refresh, and SerpApi collection are separate existing paths. The React popular-news button used the RSS refresh path; SerpApi registration was not exposed."
+  },
+  "changes": [
+    "Differentiate expired/changed quote proofs before key access or paid submission; keep the existing 15-minute TTL.",
+    "One explicit image/story-and-current-price approval replaces three repeated checks for initial character generation.",
+    "Offer an explicit latest-quote action for a never-submitted expired quote; retain old quote history and require a new bound approval.",
+    "Expose only registered enabled public RSS on exact POST /collection, through unchanged local authentication, Origin and CSRF.",
+    "Exclude provider API rows and private/credential-bearing source URLs; retain the original DNS pinning, robots, limits, locks and lifecycle.",
+    "Add SerpApi key/collection settings to Settings > News collection and the News Studio. Password input remains blank; blank save keeps the old key.",
+    "SerpApi registration uses a protect-only same-profile DPAPI scope with verified ciphertext backup, atomic replacement and no key-reading or collection authority.",
+    "Label the existing popular-news RSS action accurately; registration does not invoke SerpApi or prove account access.",
+    "Merge upstream used-article tagging and article cleanup without editing lifecycle.py. Successful nonempty collection may delete unreferenced old articles; no live collection performed."
+  ],
+  "tests": {
+    "newlyExecutedDistinctPythonPass": 148,
+    "existingJavaScriptBudgetTestsPass": 9,
+    "totalDistinctPass": 157,
+    "finalFail": 0,
+    "finalError": 0,
+    "newPythonTests": 36,
+    "reusedPriorEvidenceCountedAsNew": false,
+    "typeScript": "PASS",
+    "reactBuild": "PASS",
+    "wholeRegressionRepeated": false,
+    "browser": "Synthetic Windows Chrome at 1366x768 and 1920x1080; Fake providers only.",
+    "resolvedTestSetupIssues": [
+      "Use a newly created current-user private ACL directory for the synthetic credential fixture.",
+      "Supply createdSelection in the existing VM reset fixture; retain all assertions.",
+      "Add the missing accessible dialog name; compare the quote with its actual Fake scene count."
+    ],
+    "buildNotes": [
+      "Existing runtime font resolution warning",
+      "Existing lucide use-client advisory",
+      "Existing chunk size advisory"
+    ]
+  },
+  "operating": {
+    "applied": false,
+    "installedSourceSha": "f2a3d8a68a82bfe1a2bb6f62f476e3f42a250d44",
+    "preparedRuntimeFiles": 10,
+    "preparedFrontendFiles": 3,
+    "articles": 169,
+    "tables": 47,
+    "originalAndBackupABSha256": "238d0aea41bc1377a29b9a1eb4b30f43e9d38ad39bba22e8a2fe31d7e6726287",
+    "originalAndBackupABMatch": true,
+    "keysReadOrChanged": false,
+    "mediaChanged": false,
+    "stopStartPerformed": false,
+    "listeningProcessObservedAt18768": false,
+    "paidGenerations": 0,
+    "liveSerpApiCalls": 0,
+    "liveRssCalls": 0,
+    "snsCalls": 0,
+    "authOriginCsrfDpapiAclMaintained": true,
+    "schedulerAndUnsignedUpdateBlocksMaintained": true
+  },
+  "notVerified": [
+    "Operating deployment and authenticated user-visible Chrome checks await restart/start permission.",
+    "Actual SerpApi credential registration and official account access are not tested.",
+    "No actual collection, paid video generation, OS DPI change or provider request was performed."
+  ],
+  "captures": [
+    {
+      "path": "captures/bound-quote-1366x768.png",
+      "sha256": "a80c0b41a8f10a9c1d0a8081ae598405cf863ff5bb248c38af40b10b491ffb03",
+      "syntheticOnly": true
+    },
+    {
+      "path": "captures/bound-quote-1920x1080.png",
+      "sha256": "f9a18fbb70061cedf8caca1a7c41e88766cd7a889a04be3d90687b0da3f17f8b",
+      "syntheticOnly": true
+    },
+    {
+      "path": "captures/expired-quote-1366x768.png",
+      "sha256": "17479ccd350b9ff6aa157c88b9e2081b40a7d4af5874af46fbda46a7b8d74f25",
+      "syntheticOnly": true
+    },
+    {
+      "path": "captures/registered-rss-1366x768.png",
+      "sha256": "3b522019366ac6b1e52ca5f26aef93e3cbc876937543e83a5924118c6128449c",
+      "syntheticOnly": true
+    },
+    {
+      "path": "captures/serpapi-registration-1366x768.png",
+      "sha256": "3d5f85fc390c971c46be83f9316183dee7e1a572bef70fe1aac2ade3eb24c4b1",
+      "syntheticOnly": true
+    }
+  ],
+  "mainAndPR35Changed": false
+}

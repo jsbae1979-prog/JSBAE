@@ -1,0 +1,48 @@
+{
+  "sourceSha": "23c22967f1f57f97b670f6083318b2f821b6f7e9",
+  "pythonUniquePassed": 242,
+  "nodePassed": 9,
+  "totalUniquePassed": 251,
+  "failed": 0,
+  "errors": 0,
+  "suites": [
+    {
+      "name": "serpapi-response-final",
+      "passed": 165
+    },
+    {
+      "name": "serpapi-studio-final",
+      "passed": 58
+    },
+    {
+      "name": "serpapi-global-final",
+      "passed": 14
+    },
+    {
+      "name": "collection-picker-final",
+      "passed": 13
+    }
+  ],
+  "typescript": "PASS",
+  "reactBuild": "PASS",
+  "operating": {
+    "head": "23c22967f1f57f97b670f6083318b2f821b6f7e9",
+    "port": 18768,
+    "pid": 41372,
+    "normalStopExit": 0,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "tablesUnchanged": 47,
+    "articles": 184,
+    "profileFilesPreserved": 425,
+    "originalAndABPreserved": true,
+    "chromeOpenAccepted": true,
+    "securityFlagsPreserved": true,
+    "paidCallsDuringDeployment": 0,
+    "snsCalls": 0
+  },
+  "anonymousHTTP": 403,
+  "liveCollectionRetried": false,
+  "paidCalls": 0,
+  "userChromeVisualCheck": "NOT VERIFIED"
+}

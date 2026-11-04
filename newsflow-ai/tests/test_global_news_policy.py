@@ -60,6 +60,9 @@ class GlobalAI(CuratorResponse):
                             "score": round(sum(v or 0 for v in values.values()) * 100 / 120),
                             "reason": "관측된 급상승과 수집 응답을 참고한 한국 시청자 관심도 AI 추정입니다.",
                             "summary": "제공 자료의 주제와 적용 범위를 확인합니다."})
+        if evidence["curation_contract"].get("feed_copy_version") == 1:
+            for item in ranking:
+                item["feed_copy"] = {"title": "새 계획, 무엇을 확인할까?", "description": "제공된 자료의 적용 범위는 확인이 필요하다."}
         ranking.sort(key=lambda item: item["score"], reverse=True)
         for index, item in enumerate(ranking, 1):
             item["rank"] = index
@@ -100,6 +103,7 @@ def test_trends_first_multi_edition_all_candidates_and_no_automatic_ai(client, a
     assert fake.calls == [f"https://trends.google.com/trending/rss?geo={r}" for r in TERMS]
     ctx = Curator(app.state.coordinator).context()
     assert ctx["ready"] and len(ctx["articles"]) == 5
+    assert ctx["collection"]["recent_filter"]["hours"] == 24 and ctx["collection"]["recent_filter"]["kept"] == 5
     assert ctx["candidate_mix"]["global_edition_unique"] == 4
     assert ctx["candidate_mix"]["korea_edition_unique"] == 1
     assert ctx["candidate_mix"]["global_edition_percent"] == 80
@@ -199,7 +203,7 @@ def test_global_wire_uses_exact_region_language_query_and_no_search_addons(monke
 def test_all_global_candidates_korean_audience_six_scores_and_script_review(client, app, global_setup, monkeypatch):
     assert request(client).status_code == 200
     save_api_settings(app.state.sessions, "claude_api", model="claude-sonnet-4-6", approved=True,
-                      search_enabled=False, search_approved=False, monthly_limit_usd="100",
+                      search_enabled=False, search_approved=False, monthly_limit_usd="100", request_limit_usd="10",
                       input_price_per_1m="3", output_price_per_1m="15", search_price_per_1k="10", billing_confirmed=True)
     write_studio_settings(app.state.sessions, "claude_api", "claude-sonnet-4-6")
     ai = GlobalAI("claude_api")

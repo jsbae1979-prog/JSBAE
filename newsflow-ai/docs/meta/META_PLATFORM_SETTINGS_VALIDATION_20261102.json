@@ -1,0 +1,87 @@
+{
+  "baseSha": "7190d0a",
+  "platform": "Windows 11",
+  "python": "3.14.7",
+  "scope": [
+    "Meta token-only entry and automatic validation",
+    "platform-specific settings for Instagram/Facebook/YouTube/TikTok",
+    "safe authentication diagnostics; no blanket expiry claim"
+  ],
+  "newTests": 17,
+  "results": {
+    "meta": {
+      "tests": "125",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "49.825"
+    },
+    "studio_v3": {
+      "tests": "58",
+      "failures": "0",
+      "errors": "0",
+      "skipped": "0",
+      "time": "5.673"
+    }
+  },
+  "frontendContracts": {
+    "pass": 47,
+    "fail": 0,
+    "skip": 0
+  },
+  "typescript": "PASS",
+  "reactBuild": "PASS",
+  "commands": [
+    "python -m pytest -q -rs tests/test_meta_accounts.py tests/test_meta_direct.py tests/test_meta_automatic_upload.py tests/test_meta_browser.py tests/test_meta_automatic_browser.py tests/test_meta_connection_guidance.py",
+    "python -m pytest -q -rs tools/studio_v3/tests",
+    "node --test tests/*.test.mjs",
+    "node node_modules/typescript/bin/tsc --noEmit",
+    "node node_modules/vite/bin/vite.js build --configLoader runner"
+  ],
+  "executionNotes": [
+    "pytest executed with verbose output and 30-second traceback timer; isolated temp profile; Fake providers only",
+    "Initial local run stopped after a hang; no PASS claimed for that run. The same isolated media test and complete focused run passed afterward.",
+    "Frontend warnings: existing font runtime resolution, large chunk, lucide use-client directive."
+  ],
+  "preserved": [
+    "CSRF/Origin/local authentication",
+    "owner-bound encrypted credentials",
+    "no implicit token retry or publishing",
+    "existing unknown publication outcomes",
+    "existing local uncommitted files"
+  ],
+  "realMetaRequests": 0,
+  "realUploads": 0,
+  "realPublications": 0,
+  "limitations": [
+    "Actual user-token rejection cause remains unverified; no new live lookup",
+    "YouTube opens existing Google authorization flow; no real OAuth test",
+    "TikTok direct connection/publishing remains unsupported",
+    "Real account metadata is never included in this evidence"
+  ],
+  "operating": {
+    "head": "a46a8ca7e2c682aaf8e49296226941d9b496525c",
+    "port": 18768,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "oldTablesPreserved": 49,
+    "schema": "0019",
+    "articles": 184,
+    "profileFilesPreserved": 424,
+    "metaAccounts": 0,
+    "metaPublications": 0,
+    "chromeLaunchAccepted": true,
+    "paidCalls": 0,
+    "snsCalls": 0,
+    "changedProgramFiles": 8,
+    "backupFiles": 426,
+    "chromeChecks": {
+      "facebookPagePanel": true,
+      "instagramProfessionalPanel": true,
+      "youtubeGoogleConnectButton": true,
+      "tiktokUnsupportedNotice": true,
+      "tokenLookupNotSubmitted": true
+    },
+    "accountConnectionResult": "NOT VERIFIED; no additional live lookup"
+  }
+}

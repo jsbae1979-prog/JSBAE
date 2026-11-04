@@ -1,0 +1,136 @@
+{
+  "sourceSha": "9f024a1f00e4300e30ead041ca129f9e95ff07e7",
+  "applied": false,
+  "requiresApproval": "normal Stop/Start once before Python deployment",
+  "files": [
+    {
+      "source": "newsflow-ai/src/newsflow/character/episode_story.py",
+      "target": "app/product/newsflow/character/episode_story.py",
+      "sha256": "fcc68ccd77eadbbb19bfa786e387a09459bcc1792e17298bd9c6ae9c82dc6459",
+      "previousSha256": "becf4bd62b8de3955f0433ad5df4d78ded29f50f4d85c6a2405f88073a1694e7",
+      "bytes": 18283
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/character/visibility.py",
+      "target": "app/product/newsflow/character/visibility.py",
+      "sha256": "01bd2835d322fdc42ed1e0f18d26be20772172da0c28cf987518ac328ac0019f",
+      "previousSha256": "117fd008a39228db30890683c7e6f14eaf186a9240ca38405fab6166ea7a1973",
+      "bytes": 4098
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/creation/top_three_feeds.py",
+      "target": "app/product/newsflow/creation/top_three_feeds.py",
+      "sha256": "6f0e2d327b93816727fd72ec295caed495ad2a08314efefe963b9fc7c1028373",
+      "previousSha256": "5a4ba705badbb27a289c994c571601da787385f6ddacfb334b68c7f4de8690c9",
+      "bytes": 24800
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/gui/creation_routes.py",
+      "target": "app/product/newsflow/gui/creation_routes.py",
+      "sha256": "dfa935bc50ad0a8024570a5e2c98974321fa63e3874846fd38ff6395ecf22de7",
+      "previousSha256": "8e9f1fa0ce5ef91fac903094400a397e55022e902611bf4f5a2e7a5e4cf8c117",
+      "bytes": 9237
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/gui/publishing_metadata_routes.py",
+      "target": "app/product/newsflow/gui/publishing_metadata_routes.py",
+      "sha256": "679c347ac8b5b4fea6d65de3399de6b99522741e1c3e755d737e6ff3ec1f800e",
+      "previousSha256": null,
+      "bytes": 3517
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/main.py",
+      "target": "app/product/newsflow/main.py",
+      "sha256": "217062c1dccc9ca7675c857c34975be9ecb074d395605f1b3e298c78a0a88732",
+      "previousSha256": "ba1b8b4542e172be218c3b3f13db13c17168e3dc615fe1875afb1d0bd39b712b",
+      "bytes": 20070
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/publishing/posting_copy.py",
+      "target": "app/product/newsflow/publishing/posting_copy.py",
+      "sha256": "d22848b2d81566cd517c0a9173013a3f8c36d564e906ce0e7422101ddbbecf53",
+      "previousSha256": null,
+      "bytes": 10510
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/studio/library_purge.py",
+      "target": "app/product/newsflow/studio/library_purge.py",
+      "sha256": "6d757049abcf4c7f9b2dc5c1e07b93ae9ae3ef85b4e9e0d2c311869b575b4a04",
+      "previousSha256": "e844e80a06cd780f3866d46ab0487c4bc7b08904eff9bcaa03799b92f8fa32b7",
+      "bytes": 13371
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/studio/read_models.py",
+      "target": "app/product/newsflow/studio/read_models.py",
+      "sha256": "6184312de9649b05528bba510bc16b038c54b303b526b973c6580c9538c6a40f",
+      "previousSha256": "5a56964bbc93a7d959d8f4d40e148dac9599d917a2ff7696ff39b82db8d5e7f7",
+      "bytes": 48581
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/video/ai/higgsfield.py",
+      "target": "app/product/newsflow/video/ai/higgsfield.py",
+      "sha256": "b2e1ce67cf6ec82d46d77b9225e3b1b61dbfe2c344953c258078fbad4eed1915",
+      "previousSha256": "0d8f68d71bbd5d72f6200ee2c7e973059afb2616f18f339b57119b4b407fe87e",
+      "bytes": 12805
+    },
+    {
+      "source": "newsflow-ai/src/newsflow/video/ai/model_contracts.py",
+      "target": "app/product/newsflow/video/ai/model_contracts.py",
+      "sha256": "c0feca446bb57896b2df38c3c8a6010f2084987884804fdd0365b6895a7e89f7",
+      "previousSha256": "2c2246a77e7e4ef44b8ad4fcfda3a1bfd3040390b14c91520baf0e18c66acd7e",
+      "bytes": 2908
+    },
+    {
+      "source": "newsflow-ai/tools/bat_distribution/operation.py",
+      "target": "app/controller/bat_distribution/operation.py",
+      "sha256": "2a9785841bd859526d35a15682e90de5389b1264f232afb35847f9493dc3b5a1",
+      "previousSha256": "63cd12ebef450505c72e5e33ab1ce4fbb5a31bfb4bd5c3220a0d7fde34a03d6c",
+      "bytes": 9121
+    },
+    {
+      "source": "newsflow-ai/tools/bat_distribution/posting_copy_access.py",
+      "target": "app/controller/bat_distribution/posting_copy_access.py",
+      "sha256": "4b7822673d4ef571f5728cea01889db51dac210a51fd8935246b802e8e9a1660",
+      "previousSha256": null,
+      "bytes": 2561
+    },
+    {
+      "source": "newsflow-ai/tools/bat_distribution/serpapi_collection.py",
+      "target": "app/controller/bat_distribution/serpapi_collection.py",
+      "sha256": "2e578fb8dc896dd439baeac4c6f429a18f8f4483b4b880308b9041d6ef62a6d1",
+      "previousSha256": null,
+      "bytes": 2881
+    },
+    {
+      "source": "newsflow-ai/tools/bat_distribution/windows_live.py",
+      "target": "app/controller/bat_distribution/windows_live.py",
+      "sha256": "e49878c41204a9e6c3d34a8fa2721c5a7fedffe12a1e9d05a3bf1e19aa5c0fae",
+      "previousSha256": "0d07c7b2ca661b3a0ef8143e1b117e79ba49051608153f5ff7244d06f6746f84",
+      "bytes": 32470
+    },
+    {
+      "source": "newsflow-ai/frontend/dist/index.html",
+      "target": "app/frontend/dist/index.html",
+      "sha256": "8dd14e67baa858581fab34073e3da7167733fe84a232273c24ee9f2914209d32",
+      "previousSha256": "a148b8d9e13a1e4037ff7d0c97f33eeaa095fb9263e83d0b7394d6a06b275833",
+      "bytes": 418
+    },
+    {
+      "source": "newsflow-ai/frontend/dist/assets/index-BigZo7iw.js",
+      "target": "app/frontend/dist/assets/index-BigZo7iw.js",
+      "sha256": "80e4c57dc8575470fed98a04d5d4eb10554da7b8a3a7574f3d05b39801792735",
+      "previousSha256": null,
+      "bytes": 655911
+    },
+    {
+      "source": "newsflow-ai/frontend/dist/assets/index-3aZViUOD.css",
+      "target": "app/frontend/dist/assets/index-3aZViUOD.css",
+      "sha256": "a7f5ee6d16f28d98eb211823148810315d82d5a17824985757f37fabaca7746d",
+      "previousSha256": null,
+      "bytes": 184312
+    }
+  ],
+  "deletions": [],
+  "operatingDataTouched": false,
+  "launchConfigChanges": false
+}

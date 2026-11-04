@@ -77,25 +77,26 @@ def test_openai_configuration_reuses_existing_token_gate_without_changing_select
     with app.state.sessions.begin() as session:
         session.add(AppSetting(key="autopilot_acquisition_policy", value="rss"))
     page = client.get("/simple-settings")
-    assert page.text.count('name="monthly_token_limit"') == 1
+    assert page.text.count('name="request_token_limit"') == 1
+    assert 'name="monthly_token_limit"' not in page.text
     assert page.text.count('name="timeout"') == 1
     response = client.post("/api-settings/openai", data=config(csrf(client), model="gpt-4.1-mini",
-                           monthly_token_limit="250000", timeout="35"), follow_redirects=False)
+                           request_token_limit="250000", timeout="35"), follow_redirects=False)
     assert response.status_code == 303
     saved = read_settings(app.state.sessions)
-    assert (saved.provider, saved.model, saved.approved, saved.monthly_token_limit, saved.timeout) == (
+    assert (saved.provider, saved.model, saved.approved, saved.request_token_limit, saved.timeout) == (
         "openai", "gpt-4.1-mini", True, 250000, 35)
     assert read_api_settings(app.state.sessions, "openai").search_approved
     assert read_studio_settings(app.state.sessions)["provider"] == "claude_code"
     assert values(app)["autopilot_acquisition_policy"] == "rss"
 
 
-@pytest.mark.parametrize("changes", [{"monthly_token_limit": "0"}, {"monthly_token_limit": "-1"},
-                                    {"monthly_token_limit": "50000001"}, {"timeout": "0"}, {"timeout": "61"}])
+@pytest.mark.parametrize("changes", [{"request_token_limit": "0"}, {"request_token_limit": "-1"},
+                                    {"request_token_limit": "50000001"}, {"timeout": "0"}, {"timeout": "61"}])
 def test_invalid_legacy_openai_gate_changes_no_api_settings(client, app, changes):
     token = csrf(client)
     before = values(app)
-    fields = config(token, model="gpt-4.1-mini", monthly_token_limit="100000", timeout="20")
+    fields = config(token, model="gpt-4.1-mini", request_token_limit="100000", timeout="20")
     response = client.post("/api-settings/openai", data={**fields, **changes}, follow_redirects=False)
     assert response.status_code == 422
     assert values(app) == before
@@ -109,12 +110,12 @@ def test_claude_api_configuration_does_not_change_existing_openai_gate(client, a
 
 
 @pytest.mark.parametrize("provider", ["openai", "claude_api"])
-def test_saving_without_removed_request_limit_preserves_saved_value_and_other_provider(client, app, provider):
+def test_saving_without_optional_request_limit_preserves_saved_value_and_other_provider(client, app, provider):
     token = csrf(client)
     model = "gpt-4.1-mini" if provider == "openai" else "claude-sonnet-4-6"
     other = "claude_api" if provider == "openai" else "openai"
     other_before = read_api_settings(app.state.sessions, other)
-    fields = config(token, model=model, monthly_token_limit="250000", timeout="35")
+    fields = config(token, model=model, request_token_limit="250000", timeout="35")
     path = f"/api-settings/{provider}"
     assert client.post(path, data=fields, follow_redirects=False).status_code == 303
     before = read_api_settings(app.state.sessions, provider)
@@ -124,7 +125,7 @@ def test_saving_without_removed_request_limit_preserves_saved_value_and_other_pr
     assert response.status_code == 303
     after = read_api_settings(app.state.sessions, provider)
     assert after.request_limit_usd == before.request_limit_usd == Decimal(5)
-    assert after.monthly_limit_usd == Decimal(25)
+    assert after.monthly_limit_usd == before.monthly_limit_usd == Decimal(0)
     assert after.approved_at == before.approved_at
     assert after.search_approved_at == before.search_approved_at
     assert after.model == before.model and after.search_enabled == before.search_enabled
@@ -194,8 +195,9 @@ def test_fake_ready_api_consent_names_three_stages_and_preserves_duration(client
     page = client.get(response.headers["location"])
     assert "웹 검색 최대 1회(검색 도구 최대 1회) + 기사 비교·분석 1회 + 대본 1회" in page.text
     assert "별도의 API 과금" in page.text
-    assert "응답의 보고 사용량으로 집계" in page.text
-    assert "최종 비용이나 월 예산 이내 완료를 보장하지 않습니다" in page.text
+    assert "응답의 보고 사용량을 별도로 집계" in page.text
+    assert "1회 비용 한도와 계정 확인 상태를 각 호출 전에 검사" in page.text
+    assert "공급사 실제 청구액은 계정 대시보드에서 확인" in page.text
     assert "요청별 예산" not in page.text
     assert "본인 Claude 또는 ChatGPT 구독" not in page.text
     assert app.state.autopilot.future is None

@@ -1,0 +1,76 @@
+{
+  "runtimeSourceSha": "37484330ff1a1f126bdca6b199a9b179d50abca0",
+  "normalStopCount": 1,
+  "startCount": 1,
+  "normalStopExit": 0,
+  "port": 18768,
+  "serverDiagnosis": {
+    "windowsPortEnumeration": "No row returned",
+    "actualTcpConnectCodeBeforeRestart": 0,
+    "chromeBeforeRestart": "Pending save resolved; UI responded normally",
+    "correction": "Earlier no-listener report was an unsupported inference from enumeration alone",
+    "historicalDelayRootCause": "NOT VERIFIED: no process exit or exception recorded",
+    "afterRestart": "READY and authenticated Chrome responsive; no code/security relaxation"
+  },
+  "articles": 169,
+  "tables": 47,
+  "databaseTablesUnchanged": true,
+  "protectedFilesPreserved": 67,
+  "originalAndBackupsABPreserved": true,
+  "launchAndSecurityFlagsUnchanged": true,
+  "output": {
+    "sha256": "fc694a5b0e726b524321e2e11d3cd59147786472b805cd60dd4d42ef53e9b0ef",
+    "media": {
+      "format": "mov",
+      "video_codec": "h264",
+      "width": 1080,
+      "height": 1920,
+      "duration": 30.0,
+      "bytes": 31333485,
+      "has_audio": true
+    },
+    "captions_added": true,
+    "caption_style": "shortform_bold_two_line_safe_area",
+    "sfx_added": true,
+    "voice_added": false,
+    "music_added": false
+  },
+  "editing": {
+    "largeTwoLineCaptions": true,
+    "whiteAndYellowEmphasis": true,
+    "blackOutline": true,
+    "audioPacketHashUnchanged": true,
+    "previousCompletedFilePreserved": true,
+    "scriptAndProviderReceiptsPreserved": true,
+    "paidCalls": 0,
+    "automaticPaidRetries": 0,
+    "publishedUsing": "Existing CharacterService lock/read/save; hash-pinned completed revision; rollback copies retained"
+  },
+  "chrome": {
+    "authenticated": true,
+    "savedProgress": "4/4, 100%",
+    "composeBusyStateObserved": true,
+    "shortformFinalPlayedToEnd": true,
+    "duration": 30,
+    "ended": true,
+    "muted": false,
+    "error": null
+  },
+  "newFocusedTests": {
+    "passed": 10,
+    "failed": 0,
+    "errors": 0,
+    "scope": "Caption layout, escaping, bounds, preservation, concurrent change refusal, rollback"
+  },
+  "realLocalFfmpeg": {
+    "completed": true,
+    "duration": 30,
+    "width": 1080,
+    "height": 1920,
+    "fullDecode": "PASS",
+    "audioPacketEquality": "PASS"
+  },
+  "userFinalAestheticApproval": "NOT VERIFIED",
+  "automaticFollowOnNewPaidJob": "NOT VERIFIED: no new paid job requested",
+  "verdict": "ACCEPTED for authorized normal restart, Chrome verification and final local composition; historical delay cause remains unproven"
+}

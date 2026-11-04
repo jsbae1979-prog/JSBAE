@@ -25,6 +25,7 @@ from newsflow.db.models import (
 )
 
 from .collector import CollectedArticle, Collector
+from .collection_workspace import begin_collection, reveal_current
 from .dedup import canonical_url, similar_title
 from .ranking import classify, rank
 from .rss_adapter import FeedError
@@ -80,12 +81,15 @@ class NewsService:
 
     @staticmethod
     def store_articles(session: Session, source_id: int, articles: list[CollectedArticle],
-                       *, rss_metadata: bool = False) -> dict:
+                       *, rss_metadata: bool = False, category: str | None = None) -> dict:
         """Shared RSS/search dedup boundary. Inputs must already pass their source policy.
 
         Search imports and their durable request result use one transaction. Existing
         articles, dates and summaries are never overwritten by an AI response.
         """
+        if category is not None:
+            from .ranking import selected_categories
+            selected_categories([category])
         existing = list(session.scalars(select(NewsArticle)))
         identifiers, added, duplicates = [], 0, 0
         for item in articles:
@@ -99,7 +103,7 @@ class NewsService:
                 article = NewsArticle(
                     title=item.title, url=item.url, canonical_url=canonical, source_id=source_id,
                     publisher=item.publisher, summary=item.summary, published_at=item.published_at,
-                    category=classify(item.title + " " + item.summary),
+                    category=category or classify(item.title + " " + item.summary),
                 )
                 session.add(article)
                 session.flush()
@@ -128,10 +132,12 @@ class NewsService:
                 session.add(ArticleThumbnail(article_id=article.id, url=image, source_article_url=item.url,
                                              publisher=item.publisher))
             identifiers.append(article.id)
+        reveal_current(session, identifiers)
         return {"article_ids": list(dict.fromkeys(identifiers)), "added": added, "duplicates": duplicates}
 
     def collect(self, run_id: int, source_ids: list[int] | None = None) -> dict:
-        with self.sessions() as session:
+        with self.sessions.begin() as session:
+            begin_collection(session)
             query = select(NewsSource).order_by(NewsSource.id)
             query = query.where(NewsSource.enabled if source_ids is None else NewsSource.id.in_(source_ids))
             sources = [(s.id, s.name, s.url) for s in session.scalars(query)]
@@ -283,6 +289,8 @@ class CollectionCoordinator:
                     run_id = run.id
                 if on_run:
                     on_run(run_id)
+                with self.service.sessions.begin() as session:
+                    begin_collection(session)
                 self.future = self.executor.submit(self._execute, run_id, lock, source_ids)
                 return run_id
             except Exception:

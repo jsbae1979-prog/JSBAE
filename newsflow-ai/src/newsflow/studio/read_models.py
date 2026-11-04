@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from hashlib import sha256
+import re
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Request
@@ -123,7 +124,7 @@ def value(v):
     return v
 
 
-def rows(session, model_name, columns):
+def rows(session, model_name, columns, *, limit=100):
     model = getattr(m, model_name)
     query = select(model)
     if model_name == "IntelligenceRun":
@@ -134,13 +135,60 @@ def rows(session, model_name, columns):
         query = query.outerjoin(m.NewsListState, m.NewsListState.article_id == model.id).where(
             m.NewsListState.hidden.is_not(True)
         )
-    order = getattr(model, "id", getattr(model, "key", None))
+    if model_name == "WorkspaceRemoval":
+        query = query.where(~model.key.startswith("library:"))
+        query = query.where(model.detail["state"].as_string().is_(None) | (model.detail["state"].as_string()!="purged"))
+    order = getattr(model, "created_at", getattr(model, "id", getattr(model, "key", None)))
     if order is not None:
         query = query.order_by(order.desc())
-    return [{k: value(getattr(row, k)) for k in columns.split()} for row in session.scalars(query.limit(100))]
+        if hasattr(model, "id"): query = query.order_by(model.id.desc())
+    if limit is not None: query = query.limit(limit)
+    return [{k: value(getattr(row, k)) for k in columns.split()} for row in session.scalars(query)]
+
+
+def published_content(session):
+    """Stored successful publication plus its remote receipt; never query providers."""
+    projects, jobs = {}, {}
+    for job, draft in session.execute(select(m.PublishJob, m.PublishDraft).join(
+            m.PublishDraft, m.PublishDraft.id == m.PublishJob.draft_id).where(
+            m.PublishJob.status.in_({'uploaded', 'ig_published', 'ig_published_no_link'}))):
+        youtube = job.platform == 'youtube' and job.status == 'uploaded'
+        instagram = job.platform == 'instagram' and job.status in {'ig_published', 'ig_published_no_link'}
+        if not youtube and not instagram:
+            continue
+        kind = 'youtube_upload_result' if youtube else 'instagram_state'
+        receipt = next((row.payload for row in session.scalars(select(m.PublishEvidence).where(
+            m.PublishEvidence.draft_id == draft.id, m.PublishEvidence.kind == kind)
+            .order_by(m.PublishEvidence.id.desc()))
+            if isinstance(row.payload, dict) and row.payload.get('job_id') == job.id), {})
+        remote = receipt.get('video_id' if youtube else 'media_id')
+        account_id = receipt.get('account_id')
+        account = session.get(m.PlatformAccount, account_id) if type(account_id) is int and 0 < account_id <= 9223372036854775807 else None
+        if (receipt.get('synthetic') is True or receipt.get('status') != job.status
+                or account is None or account.platform != job.platform
+                or not isinstance(remote, str)
+                or not re.fullmatch(r'[A-Za-z0-9_-]{11}' if youtube else r'[1-9][0-9]{0,39}', remote)):
+            continue
+        publication = {'platform': job.platform, 'accountId': account_id,
+                       'jobId': job.id, 'status': job.status}
+        projects.setdefault(f'news:{draft.render_job_id}', []).append(publication)
+        jobs[job.id] = {**publication, 'remoteId': remote}
+    for delivery in session.scalars(select(m.ImagePostDelivery).where(
+            m.ImagePostDelivery.status.in_({'published', 'published_no_link'}))):
+        detail = delivery.detail if isinstance(delivery.detail, dict) else {}
+        remote = detail.get('media_id')
+        account = session.get(m.PlatformAccount, delivery.account_id)
+        if (detail.get('synthetic') is True or not account or account.platform != 'instagram'
+                or not isinstance(remote, str) or not re.fullmatch(r'[1-9][0-9]{0,39}', remote)):
+            continue
+        projects.setdefault(f'post:{delivery.post_id}', []).append({
+            'platform': 'instagram', 'accountId': delivery.account_id,
+            'deliveryId': delivery.id, 'status': delivery.status})
+    return projects, jobs
 
 
 def image_rows(state, session):
+    from sqlalchemy import String
     outputs = {}
     for row in session.scalars(
         select(m.IntelligenceRun)
@@ -153,6 +201,9 @@ def image_rows(state, session):
     for row in session.scalars(
         select(m.IntelligenceRun)
         .where(m.IntelligenceRun.kind == "image_draft")
+        .where(~select(m.WorkspaceRemoval.key).where(
+            m.WorkspaceRemoval.key == 'library:image:' + m.IntelligenceRun.id.cast(String)
+        ).exists())
         .order_by(m.IntelligenceRun.id.desc())
         .limit(100)
     ):
@@ -185,8 +236,12 @@ def character_rows(state):
     from newsflow.character.visibility import read_visibility
     from newsflow.character.service import quote_settings_editable
     visibility = read_visibility(state.character.sessions)
+    with state.character.sessions() as session:
+        library_hidden = {key.removeprefix('library:character:') for key in session.scalars(
+            select(m.WorkspaceRemoval.key).where(m.WorkspaceRemoval.key.startswith('library:character:')))}
     result = []
-    for source in state.character.listing()[:100]:
+    sources = [row for row in state.character.listing() if row['id'] not in library_hidden]
+    for source in sources[:100]:
         job = state.character.read(source["id"])
         item = {
             k: job[k]
@@ -195,6 +250,11 @@ def character_rows(state):
                 "topic",
                 "state",
                 "created_at",
+                "automation_version",
+                "direct_video",
+                "direct_extension",
+                "character_id",
+                "script_hash",
                 "script",
                 "selection",
                 "studio_selection",
@@ -204,6 +264,7 @@ def character_rows(state):
                 "quote_total_usd",
                 "quote_hash",
                 "retry_hash",
+                "regeneration_hash",
                 "reported_billed_usd",
                 "reused_story",
                 "submit_diagnostics",
@@ -214,11 +275,18 @@ def character_rows(state):
             if k in job
         }
         from newsflow.character.story_response import public_failure
-        item['scriptFailure']=public_failure(job.get('script_failure'))
+        item['scriptFailure']=public_failure(job.get('script_failure'),job.get('response_received'))
         item['scriptRetryAllowed']=(job.get('state')=='script_failed' and job.get('response_received') is True
                                     and 0<job.get('script_attempts',0)<3)
         item['scriptResponseSaved']=bool(job.get('script_responses'))
         item['quoteSettingsEditable']=quote_settings_editable(job)
+        from newsflow.character.quote_review import quote_review
+        from newsflow.db.models import utcnow
+        item.update(quote_review(job, utcnow()))
+        item['composeRecoveryAvailable']=(job.get('state') in {'compose_failed','composing'}
+                                          and state.character.composition_retry_available(job['id']))
+        if job.get('prompt_validation_error'):
+            item['message'] = '대본 저장됨 · 영상 지시문 길이를 줄여주세요'
         item.update(visibility.get(job['id'], {'trashed': False, 'recentHidden': False}))
         # Reference and clips use existing validated file routes; do not expose local paths.
         item["scenes"] = [
@@ -231,6 +299,27 @@ def character_rows(state):
         ]
         item["reviewWarnings"] = [job["character"]["style_warn"]] if job.get("character",{}).get("style_warn") else []
         item["story"] = job.get("script")
+        if job.get("automation_version") == 1:
+            item["characterProfile"] = None if job.get("character_reference_mode")=="image_topic" else job.get("character", {})
+            item["referenceMode"] = job.get("character_reference_mode", "registered")
+        if job.get("regeneration"):
+            item["regeneration"] = {k: job["regeneration"][k] for k in
+                ("position", "affected", "quote_total_usd", "exposure_usd", "total_after_usd", "at") if k in job["regeneration"]}
+        item['directVideo']=job.get('direct_video') is True
+        if job.get('direct_video'):
+            item['story']=None  # Historical technical plans are not authored stories.
+            from newsflow.character.direct_video import DirectVideoPlan,timeline
+            item['editTimeline']=timeline(DirectVideoPlan.model_validate(job['script']))
+            item['playback_seconds']=job['duration'];item['sfx_keys']=[]
+        if job.get('automation_version') == 1 and job.get('script') and not job.get('direct_video'):
+            from newsflow.character.episode_story import EpisodeScript
+            from newsflow.character.editing import total_playback_seconds, load_edit_presets, load_sfx_map, edit_timeline
+            parsed = EpisodeScript.model_validate(job['script'])
+            item['playback_seconds'] = total_playback_seconds(parsed, load_edit_presets())
+            item['editTimeline'] = edit_timeline(parsed, job['duration'])
+            item['sfx_keys'] = list(load_sfx_map())
+            item['characterProfile'] = None if job.get('character_reference_mode')=='image_topic' else job.get('character', {})
+            item['referenceMode'] = job.get('character_reference_mode', 'registered')
         item["quote"] = job.get("quote_total_usd")
         item["referenceUrl"] = (
             f"/api/studio/characters/{job['id']}/reference" if job.get("reference_sha256") else None
@@ -253,11 +342,16 @@ def character_rows(state):
             original = next((x for x in job.get("scenes", []) if x["position"] == scene["position"]), {})
             if "cost" not in scene and "quote_usd" in original:
                 scene["cost"] = original["quote_usd"]
-            from newsflow.character.status_diagnostics import public_diagnostic, private_inputs
+            from newsflow.character.status_diagnostics import public_diagnostic, private_inputs, dependency_stop_reason
+            scene['dependencyStopReason'] = dependency_stop_reason(job, original)
             details = public_diagnostic(original.get('status_diagnostics'), private_inputs(job))
             if details is not None:
                 scene['status_diagnostics'] = details
-            clip = state.character.folder(job["id"]) / f"scene-{scene['position']}.mp4"
+            import re
+            filename = original.get("file", f"scene-{scene['position']}.mp4")
+            if not isinstance(filename,str) or not re.fullmatch(rf"scene-{scene['position']}(?:-t[0-9]+)?\.mp4",filename):
+                filename = "blocked-missing-clip.mp4"
+            clip = state.character.folder(job["id"]) / filename
             scene["mediaUrl"] = (
                 f"/character/{job['id']}/clips/{scene['position']}"
                 if scene.get("state") == "downloaded"
@@ -289,6 +383,10 @@ def character_rows(state):
                 and sha256(path.read_bytes()).hexdigest() == job.get("output", {}).get("sha256")
             ):
                 item["mediaUrl"] = f"/character/{job['id']}/file"
+        if job.get('automation_version')==1 and job.get('script',{}):
+            from newsflow.character.episode_policy import total_playback_seconds
+            try:item['plannedDurationSeconds']=round(total_playback_seconds(job['script']),2)
+            except (ValueError,TypeError,KeyError):pass
         result.append(item)
     return result
 
@@ -302,7 +400,7 @@ def module_view(request: Request, module: Module):
         IMAGE_SIZES,
         read_defaults,
     )
-    from newsflow.gui.studio_v3 import workspace
+    from newsflow.gui.studio_v3 import workspace_view
 
     state = request.app.state
     result = {
@@ -315,9 +413,22 @@ def module_view(request: Request, module: Module):
         "commandsAvailable": True,
         "collections": {},
     }
+    publication_sources = {}
     with state.sessions() as session:
         for key, name, columns in SPECS[module]:
-            result["collections"][key] = rows(session, name, columns)
+            result["collections"][key] = rows(session, name, columns, limit=None if module == "analytics" or (module == "news" and key == "articles") else 100)
+        if module == 'analytics':
+            from .usage_projection import combined_usage
+            result['collections']['usage'] = combined_usage(session, result['collections']['usage'])
+            publication_sources, confirmed_jobs = published_content(session)
+            metrics = []
+            for item in result['collections']['metrics']:
+                row = session.get(m.SocialMetric, item['id'])
+                receipt = confirmed_jobs.get(row.job_id)
+                if (receipt and not row.synthetic and row.remote_id == receipt['remoteId']
+                        and row.platform == receipt['platform'] and row.account_id == receipt['accountId']):
+                    metrics.append(item)
+            result['collections']['metrics'] = metrics
         if module == "automation":
             # Explicit non-secret saved options, so editing never resets them.
             for item in result["collections"]["schedules"]:
@@ -468,6 +579,7 @@ def module_view(request: Request, module: Module):
                         "id": row.id,
                         "title": "게시 검토 #" + str(row.id),
                         "approval_token": cohort["approval_token"],
+                        "metadata": row.payload.get("metadata", {}),
                         "can_execute": cohort["can_execute"],
                         "reviewed": cohort["reviewed"],
                         "locked": cohort["locked"],
@@ -509,9 +621,17 @@ def module_view(request: Request, module: Module):
                     draft["imageLinks"] = []
                     draft["imageError"] = "장면 이미지 연결을 확인하세요."
         if module == "news":
-            # Thumbnail URLs are read from records; no network lookup on page load.
+            # Only source-supplied metadata earns an image request. Reading the
+            # model never fetches an image or substitutes generated artwork.
+            article_ids = [article["id"] for article in result["collections"]["articles"]]
+            with_previews = set(session.scalars(select(m.ArticleThumbnail.article_id).where(
+                m.ArticleThumbnail.article_id.in_(article_ids))))
+            used = set(session.scalars(select(m.NewsListState.article_id).where(
+                m.NewsListState.article_id.in_(article_ids), m.NewsListState.used.is_(True))))
             for article in result["collections"]["articles"]:
-                article["thumbnailUrl"] = f"/news/{article['id']}/thumbnail"
+                article["thumbnailUrl"] = (f"/news/{article['id']}/thumbnail"
+                                           if article["id"] in with_previews else None)
+                article["used"] = article["id"] in used
         if module in {"settings", "onboarding"}:
             result["settings"] = {
                 row.key: row.value
@@ -520,13 +640,33 @@ def module_view(request: Request, module: Module):
     if module == "characters":
         result["collections"]["jobs"] = character_rows(state)
     if module in {"library", "shorts", "publishing", "settings"}:
-        work = workspace(request)
+        work = workspace_view(request, include_library_hidden=module in {'shorts', 'settings'})
         result["projects"] = work["projects"]
         result["services"] = work["services"]
+        if module == 'publishing':
+            result['projects'] = [item for item in result['projects']
+                if item.get('mediaUrl') and item['technicalStatus'] in {'success', 'completed'}]
+        if module in {"library", "publishing"}:
+            from newsflow.studio.feed_library import images as feed_images
+            if getattr(state, "top_three_feeds", None) is not None:
+                result["projects"].extend(feed_images(state.top_three_feeds, publishable_only=module == "publishing"))
         if module == "library":
             from newsflow.samples.catalog import Samples
+            from newsflow.studio.library_visibility import LibraryVisibility
             result["collections"]["ownedReferences"] = Samples(
                 state.sessions,state.config.data_dir,state.image_studio).owned_references()
+            removed = LibraryVisibility(state.sessions, state.character).listing()
+            hidden = {item["id"] for item in removed}
+            result["projects"] = [item for item in result["projects"] if item["id"] not in hidden]
+            result["collections"]["ownedReferences"] = [
+                item for item in result["collections"]["ownedReferences"] if item["id"] not in hidden]
+            result["collections"]["libraryRemoved"] = removed
+            result["libraryRemovalAvailable"] = True
+            result["libraryPurgeAvailable"] = True
+    if module == 'analytics':
+        work = workspace_view(request, include_library_hidden=True, project_ids=set(publication_sources))
+        result['publishedProjects'] = [{**item, 'publications': publication_sources[item['id']]}
+                                      for item in work['projects']]
     result["catalog"] = {
         "apiModels": API_MODELS,
         "imageModels": list(IMAGE_MODELS),
@@ -559,7 +699,8 @@ def module_view(request: Request, module: Module):
                         native_resolution=adjusted.resolution,clip_seconds=adjusted.duration,
                         sound='on' if adjusted.audio else 'off',style=DEFAULTS['style'])
                     saved['aspect_ratio']=DEFAULTS['aspect_ratio']
-                    saved['duration']=saved['clip_seconds']*min(5,60//saved['clip_seconds'])
+                    if completed.get('automation_version') != 1:
+                        saved['duration']=saved['clip_seconds']*min(5,60//saved['clip_seconds'])
                     result["catalog"]["characterStudio"]["defaults"] = validate_character(saved)
                     result["catalog"]["characterStudio"]["restoredNotes"] = notes
                 except (ValueError,KeyError,TypeError):
@@ -585,6 +726,15 @@ def module_view(request: Request, module: Module):
     result["catalog"]["myCharacters"] = (
         state.image_studio.characters() if hasattr(state, "image_studio") else []
     )
+    if module == "characters":
+        from newsflow.character.registry import CharacterRegistry
+        result['catalog']['characterProfiles'] = CharacterRegistry(state.config.data_dir, state.image_studio).list()
+        result['catalog']['characterAIProviders'] = []
+        for provider, label in (('claude_api', 'Claude API'), ('openai', 'OpenAI API')):
+            store = getattr(state, 'api_keys', {}).get(provider)
+            configured = bool(store is not None and store.status().get('configured'))
+            result['catalog']['characterAIProviders'].append({'id': provider, 'label': label,
+                'models': list(API_MODELS.get(provider, ())), 'configured': configured})
     result["catalog"]["assets"] = state.video.assets_list() if hasattr(state.video, "assets_list") else []
     result["catalog"]["voices"] = [{"id": "offline-silence", "label": "무음 검토영상"}]
     with state.sessions() as session:
@@ -605,8 +755,12 @@ def module_view(request: Request, module: Module):
         catalog = ElevenLabsVoices(state.config.data_dir, ElevenLabsKeys(state.config.data_dir))
         result["catalog"]["elevenVoices"] = []
         result["collections"]["audioSamples"] = []
-        for voice in catalog.cached()["voices"]:
-            result["catalog"]["elevenVoices"].append({"id": voice["voice_id"], "label": voice["name"]})
+        cached_voices = catalog.cached()
+        result["catalog"]["elevenVoiceCatalog"] = {"hasMore": cached_voices["has_more"],
+            "scope": cached_voices.get("voice_type", "saved"), "fetchedAt": cached_voices["fetched_at"],
+            "keyConfigured": catalog.keys.status()["configured"]}
+        for voice in cached_voices["voices"]:
+            result["catalog"]["elevenVoices"].append({"id": voice["voice_id"], "label": voice["name"], "hasSample": bool(voice.get('preview_url')), "sampleLabel": voice.get("sample_label", "공식 샘플")})
             try:
                 sample = catalog.sample_path(voice["voice_id"])
                 if sample.is_file() and not sample.is_symlink():
@@ -646,7 +800,7 @@ def module_view(request: Request, module: Module):
         }
     if module == "settings":
         import platform
-        result["catalog"]["storage"] = {"dataDirectory": str(state.config.data_dir), "python": platform.python_version()}
+        result["catalog"]["storage"] = {"dataDirectory": str(state.config.data_dir), "python": platform.python_version(), "relocationAvailable": callable(getattr(state,"data_location_request",None))}
         from newsflow.operations import evidence
 
         result["operationsReview"] = evidence.read(state.sessions)
@@ -663,6 +817,30 @@ def module_view(request: Request, module: Module):
 
     studio = read_studio_settings(state.sessions)
     result["catalog"]["studioModels"] = studio["models"]
+    if module == "news":
+        from newsflow.news.ranking import CATEGORIES
+        result["catalog"]["newsCategories"] = list(CATEGORIES)
+        from newsflow.news.curator import Curator
+        coordinator = getattr(state,'coordinator',None)
+        context = Curator(coordinator).context() if getattr(coordinator,'service',None) is not None else {'ready':False,'run_id':None,'articles':[]}
+        result["catalog"]["categoryCollection"] = context.get("collection", {}).get("category_counts", [])
+        collection = context.get("collection", {})
+        if collection.get("recent_filter"):
+            info = collection["recent_filter"]
+            unique = len(set(collection.get("article_ids", [])))
+            result["catalog"]["newsCollectionSummary"] = {
+                "kept": unique, "hours": info.get("hours"),
+                "overlap": max(0, sum(row["kept"] for row in collection.get("category_counts", [])) - unique),
+                "unknownTime": info.get("unknown_published_at", 0),
+                "olderIncluded": info.get("filled_old", 0),
+            }
+        store = getattr(state, 'api_keys', {}).get(studio['provider'])
+        from newsflow.news.analysis_candidates import shortlist
+        _, candidate_selection = shortlist(context['articles'])
+        result['catalog']['newsAnalysis'] = {**candidate_selection, 'provider': studio['provider'], 'model': studio['model'],
+            'keyConfigured': bool(store and store.status().get('configured')),
+            'collectionReady': bool(context['ready'] and studio['provider'] in {'claude_api','openai'}),
+            'collectionContextId': context['run_id']}
     for action in ("intelligence_analyze", "intelligence_generate", "intelligence_studio_preferences"):
         result["formDefaults"][action] = {"provider": studio["provider"], "model": studio["model"]}
 
@@ -671,6 +849,18 @@ def module_view(request: Request, module: Module):
         key: getattr(ai, key) for key in ("provider", "model", "approved", "request_token_limit", "timeout")
     }
     from newsflow.intelligence.api_settings import read_api_settings
+    from newsflow.news.serpapi import SerpApiKeys
+    from newsflow.news.serpapi_settings import context as serpapi_context
+    # Status only: never load/decrypt a key or contact SerpApi while rendering.
+    serpapi = serpapi_context(state.sessions, getattr(state, "serpapi_keys", None) or SerpApiKeys(state.config.data_dir))
+    result["catalog"]["serpapi"] = {"keyConfigured": serpapi["key"]["configured"],
+        "approved": bool(serpapi["approved_at"]), "canRequest": serpapi["can_request"],
+        "collectionPlan": serpapi["collection_plan"], "last": serpapi["last"],
+        "registrationAvailable": getattr(state, "serpapi_registration_available", False)}
+    result["formDefaults"]["serpapi_collect"] = {"request_token": serpapi["request_token"],
+        "collection_policy": serpapi["collection_plan"]["policy"],
+        "maximum_requests": serpapi["collection_plan"]["maximum_requests"], "consent": False}
+    result["formDefaults"]["serpapi_settings"] = {"api_key": "", "approved": bool(serpapi["approved_at"])}
     result["catalog"]["apiSettingsDefaults"] = {}
     for provider in ("openai", "claude_api"):
         current = read_api_settings(state.sessions, provider)
@@ -687,6 +877,25 @@ def module_view(request: Request, module: Module):
         key: tts[key] for key in ("enabled", "voice_id", "model", "job_limit", "commercial")
     }
     video = video_settings(state.sessions)
+    if module == 'shorts':
+        from newsflow.video.ai.production import model_ready
+        from newsflow.video.ai.model_contracts import news_model_presets
+        from newsflow.video.ai.settings import list_models
+        from newsflow.creation.catalog import news_video_default
+        result['catalog']['newsVideoPresets'] = news_model_presets()
+        result['catalog']['newsVideoRegisteredPaths'] = [m.path for m in list_models(state.sessions)]
+        result['catalog']['newsVideoModels'] = [
+            {'path': model.path, 'label': model.label, 'resolution': model.resolution,
+             'durations': list(model.durations), 'priceKnown': model.price_per_second is not None}
+            for model in list_models(state.sessions) if model_ready(model)]
+        result['catalog']['newsVideoDefault'] = news_video_default(state.sessions)
+        selected_voice = next((v for v in result['catalog'].get('elevenVoices',[]) if v['id']==tts['voice_id']),None)
+        result['catalog']['newsVideo'] = {'provider': video.provider, 'approved': video.approved,
+            'ttsVoiceId': tts['voice_id'], 'ttsModel': tts['model'],
+            'ttsVoiceLabel': selected_voice['label'] if selected_voice else '저장한 목소리',
+            'ttsSampleAvailable': bool(selected_voice and selected_voice['hasSample'])}
+        if not any(v["id"] == "elevenlabs" for v in result["catalog"]["voices"]):
+            result["catalog"]["voices"].append({"id":"elevenlabs","label":"ElevenLabs · API 목소리"})
     result["formDefaults"]["video_ai_save_settings"] = {
         key: value(getattr(video, key))
         if key != "job_limit"

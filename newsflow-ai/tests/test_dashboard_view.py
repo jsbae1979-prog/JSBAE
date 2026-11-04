@@ -87,14 +87,14 @@ def test_dashboard_category_links_stay_on_dashboard(client):
     html = client.get('/').text
     category_nav = re.search(r'<nav class="dash-categories".*?</nav>', html).group()
     links = re.findall(r'href="([^"]+)"', category_nav)
-    assert len(links) == 9
+    assert len(links) == 10
     categories = []
     for link in links:
         assert urlparse(link).path == '/'
         response = client.get(link)
         assert response.status_code == 200, link
         categories.extend(parse_qs(urlparse(link).query).get('news_category', []))
-    assert categories == ['정치', '경제', '사회', 'IT·과학', '문화', '스포츠', '국제', '미분류']
+    assert categories == ['정치', '경제', '사회', 'IT·과학', '문화', '연예', '스포츠', '국제', '미분류']
 
 
 def test_pc_creation_destinations_preserved_in_cloud_workflow(client):

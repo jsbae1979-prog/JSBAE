@@ -1,0 +1,53 @@
+{
+  "verdict": "ACCEPTED",
+  "runtimeAppliedHead": "bf36743ce2a62257e3760fea1b66f72a73a65a05",
+  "frontendAppliedHead": "402837af4af1c10e1482b0a347e7a5bec456daf4",
+  "port": 18768,
+  "pid": 14312,
+  "normalStopAttempts": 1,
+  "normalStopExit": 0,
+  "normalStartAttempts": 1,
+  "additionalRestartForPicker": 0,
+  "originalArticlesPreserved": 169,
+  "currentArticleCount": 179,
+  "tableCount": 47,
+  "nonNewsTablesUnchanged": 41,
+  "profileFilesPreservedExceptActiveNewsDatabase": 361,
+  "opaqueKeyFilesUnchanged": 14,
+  "imageAudioVideoFilesUnchanged": 150,
+  "originalAndBackupABPreserved": true,
+  "launchSecurityAndUserDataPathUnchanged": true,
+  "newFocusedBrowserTests": {
+    "pass": 5,
+    "fail": 0,
+    "error": 0
+  },
+  "reusedPreviousFocusedEvidence": 157,
+  "typeScript": "PASS",
+  "reactBuild": "PASS",
+  "chrome": {
+    "normalAuthentication": true,
+    "serpapiRegistrationDialog": true,
+    "keyInputEmptyAndPasswordType": true,
+    "singleNewsSourceBox": true,
+    "rssAndSerpapiSelection": true,
+    "rssConfirmationOnly": true,
+    "expiredQuoteSpecificMessage": true,
+    "expiredQuoteGenerationBlocked": true
+  },
+  "agentPaidCalls": 0,
+  "agentLiveRssRequests": 0,
+  "agentSerpapiRequests": 0,
+  "agentSnsCalls": 0,
+  "independentCollectionObserved": {
+    "status": "partial",
+    "newArticles": 10,
+    "succeededSources": 1,
+    "failedSources": 1
+  },
+  "remaining": [
+    "Actual SerpApi account verification/collection not executed.",
+    "Progress transitions tested using synthetic responses; current completed collection result verified in operating Chrome."
+  ],
+  "mainOrPR35Changed": false
+}

@@ -1,6 +1,7 @@
 """One 15-second supplier submission, then local composition; no real provider."""
 from copy import deepcopy
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 
@@ -93,10 +94,12 @@ def test_single_request_unknown_is_not_replayed(studio):
     assert provider.calls==1
 
 
-def test_single_15_second_local_mp4_keeps_all_seconds_and_five_caption_cues(tmp_path,monkeypatch):
+def test_legacy_single_15_second_local_mp4_preserves_plain_saved_job_contract(tmp_path,monkeypatch):
     import newsflow.character.compose_studio as module
-    ffmpeg=Path(r'C:\NewsFlowAI\tools\ffmpeg.exe')
-    ffprobe=Path(r'C:\NewsFlowAI\tools\ffprobe.exe')
+    if not os.environ.get('NEWSFLOW_FFMPEG') or not os.environ.get('NEWSFLOW_FFPROBE'):
+        pytest.skip('explicit isolated FFmpeg and FFprobe are required')
+    ffmpeg=Path(os.environ['NEWSFLOW_FFMPEG'])
+    ffprobe=Path(os.environ['NEWSFLOW_FFPROBE'])
     assert ffmpeg.is_file() and ffprobe.is_file()
     clip=tmp_path/'synthetic-source-15s.mp4'
     subprocess.run([str(ffmpeg),'-nostdin','-n','-v','error','-f','lavfi','-i',
@@ -122,11 +125,8 @@ def test_single_15_second_local_mp4_keeps_all_seconds_and_five_caption_cues(tmp_
     normalizations=[cmd for cmd in commands if str(cmd[-1]).endswith('scene-0.mp4')]
     assert len(normalizations)==1 and normalizations[0][normalizations[0].index('-t')+1]=='15'
     assert (folder/'compose/clips.txt').read_text(encoding='ascii').splitlines()==["file 'scene-0.mp4'"]
-    cues=[line for line in (folder/'compose/captions.ass').read_text(encoding='utf-8-sig').splitlines()
-          if line.startswith('Dialogue:')]
-    assert len(cues)==5
-    for n,line in enumerate(cues):
-        assert f'0:00:{n*3:02d}.00' in line and f'0:00:{(n+1)*3:02d}.00' in line
+    assert result['captions_added'] is False and result['voice_added'] is False
+    assert not list((folder/'compose').glob('*.ass'))
     assert hashlib.sha256(clip.read_bytes()).hexdigest()==source_hash
 
 

@@ -115,7 +115,7 @@ def test_studio_composer_receives_both_explicit_bundled_tools(studio,monkeypatch
     def compose(folder,story,clips,**kwargs):
         calls.append((folder,clips,kwargs))
         (folder/'final.mp4').write_bytes(b'synthetic composed output')
-        return {'file':'final.mp4','sha256':'a'*64,'media':media()}
+        return {'file':'final.mp4','sha256':hashlib.sha256((folder/'final.mp4').read_bytes()).hexdigest(),'media':media()}
     monkeypatch.setattr('newsflow.character.compose_studio.compose_studio',compose)
     assert service.render(identifier,reviewed=True)==path.parent/'final.mp4'
     assert calls[0][1]==[path]

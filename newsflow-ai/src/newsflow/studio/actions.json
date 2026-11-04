@@ -342,6 +342,32 @@
     "unsupported": false
   },
   {
+    "id": "feed_image_budget_save",
+    "module": "settings",
+    "label": "이미지 작업 예산 저장",
+    "path": "/api/feed-image-budget",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "request_limit_usd",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "approved",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
     "id": "api_settings_save_key",
     "module": "settings",
     "label": "API 키 저장",
@@ -1396,6 +1422,22 @@
         "required": false,
         "default": false,
         "path": false
+      },
+      {
+        "name": "hours",
+        "type": "number",
+        "required": false,
+        "default": 24,
+        "path": false,
+        "ge": 6,
+        "le": 48
+      },
+      {
+        "name": "categories",
+        "type": "array",
+        "required": false,
+        "default": [],
+        "path": false
       }
     ],
     "source": "gui/curation_routes.py",
@@ -1448,6 +1490,14 @@
         "required": false,
         "default": false,
         "path": false
+      },
+      {
+        "name": "retry_failed_run_id",
+        "type": "number",
+        "required": false,
+        "default": null,
+        "path": false,
+        "ge": 1
       }
     ],
     "source": "gui/curation_routes.py",
@@ -1611,6 +1661,13 @@
         "default": "unreviewed",
         "path": false,
         "max_length": 30
+      },
+      {
+        "name": "image_safety_checked",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
       }
     ],
     "source": "gui/image_post_routes.py",
@@ -3576,6 +3633,22 @@
         "type": "number",
         "required": false,
         "default": 1,
+        "path": false
+      },
+      {
+        "name": "hours",
+        "type": "number",
+        "required": false,
+        "default": 24,
+        "path": false,
+        "ge": 6,
+        "le": 48
+      },
+      {
+        "name": "categories",
+        "type": "array",
+        "required": false,
+        "default": [],
         "path": false
       }
     ],
@@ -5651,6 +5724,61 @@
         "required": false,
         "default": "medium",
         "path": false
+      },
+      {
+        "name": "feed_style",
+        "type": "text",
+        "required": false,
+        "default": "legacy",
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "creation_feed_batch_cost_review",
+    "module": "images",
+    "label": "TOP 3 비용 검토 승인",
+    "path": "/api/feed-batches/{identifier}/cost-review",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false,
+        "ge": 1
+      },
+      {
+        "name": "limit",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 20
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
       }
     ],
     "source": "gui/creation_routes.py",
@@ -5816,9 +5944,608 @@
         "required": false,
         "default": "unreviewed",
         "path": false
+      },
+      {
+        "name": "image_safety_checked",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
       }
     ],
     "source": "gui/creation_routes.py",
     "unsupported": false
+  },
+  {
+    "id": "feed_photo_design",
+    "module": "images",
+    "label": "사진 중심 피드 무료 편집",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/design",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "background",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "design",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 8000
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "feed_photo_design_upload",
+    "module": "images",
+    "label": "사진 중심 피드 무료 편집",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/design-upload",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "kind",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "credit",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 160
+      },
+      {
+        "name": "image",
+        "type": "file",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "feed_photo_review",
+    "module": "images",
+    "label": "편집 버전 게시용 검토본 저장",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/design-review",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "path": true,
+        "required": true,
+        "default": null
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "path": true,
+        "required": true,
+        "default": null
+      },
+      {
+        "name": "version",
+        "type": "number",
+        "path": false,
+        "required": true,
+        "default": null
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "path": false,
+        "required": false,
+        "default": false
+      },
+      {
+        "name": "image_safety_checked",
+        "type": "boolean",
+        "path": false,
+        "required": false,
+        "default": false
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "feed_photo_performance",
+    "module": "images",
+    "label": "게시 후 성과 직접 기록",
+    "path": "/api/feed-batches/{identifier}/items/{rank}/design-performance",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "rank",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "metrics",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 3000
+      }
+    ],
+    "source": "gui/creation_routes.py",
+    "unsupported": false
+  },
+  {
+    "id": "meta_configure",
+    "module": "settings",
+    "label": "Meta configure",
+    "path": "/api/meta/config",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "app_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 40
+      },
+      {
+        "name": "config_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 40
+      },
+      {
+        "name": "graph_version",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 10
+      },
+      {
+        "name": "relay_origin",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 300
+      }
+    ]
+  },
+  {
+    "id": "meta_media_config",
+    "module": "settings",
+    "label": "Meta media_config",
+    "path": "/api/meta/media-config",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "origin",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 300
+      },
+      {
+        "name": "credential",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 128
+      }
+    ]
+  },
+  {
+    "id": "meta_connect",
+    "module": "settings",
+    "label": "Meta connect",
+    "path": "/api/meta/connect",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reconnect",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false,
+        "max_length": 32
+      }
+    ]
+  },
+  {
+    "id": "meta_select_page",
+    "module": "settings",
+    "label": "Meta select_page",
+    "path": "/api/meta/select-page",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "page_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 40
+      }
+    ]
+  },
+  {
+    "id": "meta_cancel",
+    "module": "settings",
+    "label": "Meta cancel",
+    "path": "/api/meta/cancel",
+    "risk": "external",
+    "fields": []
+  },
+  {
+    "id": "meta_rename",
+    "module": "settings",
+    "label": "Meta rename",
+    "path": "/api/meta/accounts/{identifier}/rename",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "label",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 200
+      }
+    ]
+  },
+  {
+    "id": "meta_disconnect",
+    "module": "settings",
+    "label": "Meta disconnect",
+    "path": "/api/meta/accounts/{identifier}/disconnect",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ]
+  },
+  {
+    "id": "meta_prepare",
+    "module": "publishing",
+    "label": "Meta prepare",
+    "path": "/api/meta/publications/prepare",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "content_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 100
+      },
+      {
+        "name": "targets",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 4096
+      },
+      {
+        "name": "caption",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 2200
+      },
+      {
+        "name": "reviewed",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ]
+  },
+  {
+    "id": "meta_send",
+    "module": "publishing",
+    "label": "Meta send",
+    "path": "/api/meta/publications/{identifier}/send",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ]
+  },
+  {
+    "id": "meta_check",
+    "module": "publishing",
+    "label": "Meta check",
+    "path": "/api/meta/publications/{identifier}/check",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      }
+    ]
+  },
+  {
+    "id": "meta_publish",
+    "module": "publishing",
+    "label": "Meta publish",
+    "path": "/api/meta/publications/{identifier}/publish",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ]
+  },
+  {
+    "id": "meta_import_token",
+    "module": "publishing",
+    "label": "Meta meta_import_token",
+    "path": "/api/meta/import-token",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "token",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "reconnect",
+        "type": "text",
+        "required": false,
+        "default": "",
+        "path": false
+      }
+    ]
+  },
+  {
+    "id": "meta_storage",
+    "module": "publishing",
+    "label": "Meta meta_storage",
+    "path": "/api/meta/publications/{identifier}/storage",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "put_url",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "get_url",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "expires",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ]
+  },
+  {
+    "id": "meta_automatic_storage",
+    "module": "publishing",
+    "label": "자동 업로드 저장소 연결",
+    "path": "/api/meta/automatic-storage",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "endpoint",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "region",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "bucket",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "access_key",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "secret_key",
+        "type": "password",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ]
+  },
+  {
+    "id": "meta_local_images",
+    "module": "publishing",
+    "label": "이 PC 이미지 전달 설정",
+    "path": "/api/meta/local-images",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "enabled",
+        "type": "checkbox",
+        "required": false,
+        "default": false,
+        "path": false
+      },
+      {
+        "name": "port",
+        "type": "number",
+        "required": true,
+        "default": 18769,
+        "path": false
+      }
+    ]
   }
 ]

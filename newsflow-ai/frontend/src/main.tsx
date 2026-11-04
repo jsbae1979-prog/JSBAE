@@ -41,6 +41,7 @@ import "./style.css";
 import Workbench from "./studio/Workbench";
 import StopNotice from "./studio/StopNotice";
 import { Thumbnail } from "./studio/Thumbnail";
+import { characterReferenceThumbnail, status as studioStatus } from "./studio/contracts";
 
 type Kind = "news" | "character" | "image";
 type Project = {
@@ -80,6 +81,7 @@ type Workspace = {
     label: string;
     configured: boolean;
     verified: boolean;
+    checks?: Record<string, {code: string; verified: boolean; message: string}>;
     href: string;
   }[];
   upcoming: { title: string; at: string; href: string }[];
@@ -161,6 +163,7 @@ const NAV = [
   },
 ];
 const labels: Record<string, string> = {
+  ...studioStatus,
   success: "파일 생성 완료",
   completed: "파일 생성 완료",
   ready: "파일 생성 완료",
@@ -251,6 +254,7 @@ function App() {
   } | null>(null);
   const modal = useRef<HTMLDialogElement>(null);
   const search = useRef<HTMLInputElement>(null);
+  const previousPage = useRef(page);
   async function load() {
     setLoading(true);
     setError("");
@@ -286,6 +290,16 @@ function App() {
       window.removeEventListener("keydown", key);
     };
   }, []);
+  useEffect(() => {
+    const changed = previousPage.current !== page;
+    previousPage.current = page;
+    if (changed && ["create", "dashboard"].includes(page)) {
+      // Library removal/restoration may have changed the active workspace while
+      // this top-level shell stayed mounted during studio navigation.
+      setData(null);
+      void load();
+    }
+  }, [page]);
   useEffect(() => {
     if (dialog && !modal.current?.open) modal.current?.showModal();
     if (!dialog && modal.current?.open) modal.current?.close();
@@ -325,7 +339,7 @@ function App() {
       ? "automation"
       : href.startsWith("/character")
         ? "characters"
-        : href.startsWith("/image")
+        : (href.startsWith("/image") || href.startsWith("/studio/images?"))
           ? "images"
           : href.startsWith("/ai") ||
               href.startsWith("/video") ||
@@ -419,12 +433,13 @@ function App() {
             >
               <div className="project-visual">
                 <Thumbnail
-                  src={p.thumbnailUrl ? localHref(p.thumbnailUrl) : null}
+                  src={p.thumbnailUrl ? localHref(p.thumbnailUrl) : characterReferenceThumbnail(p)}
                   alt={`${p.title} · ${p.sourceLabel}`}
                   kind={p.kind}
                 />
                 <span className="type-tag">
                   {TYPES.find((t) => t.id === p.kind)?.title}
+                  {!p.thumbnailUrl && characterReferenceThumbnail(p) && " · 참조 이미지"}
                 </span>
                 {synthetic && <span className="sample-tag">합성 자료</span>}
               </div>
@@ -932,9 +947,11 @@ function App() {
                         >
                           <i />
                           {s.verified
-                            ? "확인됨"
+                            ? "연결 확인됨"
                             : s.configured
-                              ? "키 저장 · 미검증"
+                              ? Object.values(s.checks ?? {}).some(check => check.code === "stale")
+                                ? "연결 재확인 필요"
+                                : "키 저장 · 연결 미확인"
                               : "미설정"}
                         </span>
                       </button>

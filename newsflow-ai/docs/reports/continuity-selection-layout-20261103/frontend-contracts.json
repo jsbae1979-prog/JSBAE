@@ -1,0 +1,12 @@
+{
+  "command": [
+    "C:\\Users\\ching\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe",
+    "--test",
+    "tests/character_budget_override.test.mjs",
+    "tests/character_failure_details.test.mjs",
+    "tests/character_partial_status.test.mjs",
+    "tests/character_story_requests.test.mjs"
+  ],
+  "exitCode": 0,
+  "seconds": 0.46
+}

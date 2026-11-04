@@ -1,0 +1,20 @@
+{
+  "newResults": [
+    {
+      "suite": "browser",
+      "passed": 6,
+      "failed": 0,
+      "errors": 0
+    },
+    {
+      "suite": "studio",
+      "passed": 58,
+      "failed": 0,
+      "errors": 0
+    }
+  ],
+  "typescript": "PASS",
+  "reactBuild": "PASS",
+  "realPaidCalls": 0,
+  "operatingBrowserAutomation": false
+}

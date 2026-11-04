@@ -1,0 +1,126 @@
+{
+  "recency-focused": {
+    "tests": 167,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "command": [
+      "C:\\Codex\\NewsFlowAI-IsolatedReview\\integration-20261024\\venv314\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "-rs",
+      "--tb=short",
+      "-o",
+      "junit_family=legacy",
+      "-o",
+      "faulthandler_timeout=120",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\recency\\recency-focused-tmp",
+      "--junitxml=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\recency-focused.xml",
+      "tests/test_curation_recency_derivation.py",
+      "tests/test_curation_score_derivation.py",
+      "tests/test_curation_wire_coverage.py",
+      "tests/test_curation_validation_diagnostics.py",
+      "tests/test_curation_numbers.py",
+      "tests/test_curation_summary_grounding.py",
+      "tests/test_curation_timeout.py",
+      "tests/test_analysis_feed_copy.py",
+      "tests/test_curation_top_three.py",
+      "tests/test_analysis_retry_boundary.py",
+      "tests/test_google_news_trends.py"
+    ]
+  },
+  "image-direct-focused": {
+    "tests": 52,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "command": [
+      "C:\\Codex\\NewsFlowAI-IsolatedReview\\integration-20261024\\venv314\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "-rs",
+      "--tb=short",
+      "-o",
+      "junit_family=legacy",
+      "-o",
+      "faulthandler_timeout=120",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\focused\\image-direct-focused-tmp",
+      "--junitxml=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\image-direct-focused.xml",
+      "tests/test_image_draft_direct.py",
+      "tests/test_standalone_image_access.py",
+      "tests/test_library_visibility.py"
+    ]
+  },
+  "image-direct-browser": {
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "command": [
+      "C:\\Codex\\NewsFlowAI-IsolatedReview\\integration-20261024\\venv314\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "-rs",
+      "--tb=short",
+      "-o",
+      "junit_family=legacy",
+      "-o",
+      "faulthandler_timeout=120",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\browser\\image-direct-browser-tmp",
+      "--junitxml=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\image-direct-browser.xml",
+      "tests/test_image_new_work_browser.py",
+      "tests/test_image_history_browser.py"
+    ]
+  },
+  "image-direct-studio": {
+    "tests": 58,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "command": [
+      "C:\\Codex\\NewsFlowAI-IsolatedReview\\integration-20261024\\venv314\\Scripts\\python.exe",
+      "-m",
+      "pytest",
+      "-q",
+      "-rs",
+      "--tb=short",
+      "-o",
+      "junit_family=legacy",
+      "-o",
+      "faulthandler_timeout=120",
+      "-p",
+      "no:cacheprovider",
+      "--basetemp=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\studio\\image-direct-studio-tmp",
+      "--junitxml=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\image-direct-studio.xml",
+      "tools/studio_v3/tests"
+    ]
+  },
+  "frontend_contracts": {
+    "tests": 55,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "command": "node --test tests/*.test.mjs"
+  },
+  "build": {
+    "typecheck": 0,
+    "vite": 0,
+    "source": "HEAD frontend plus explicit task files; unrelated changes excluded"
+  },
+  "baseline": {
+    "sha": "9c3a6b748e9d713fe5b357133afda10ed3d7b0e7",
+    "test": "test_curation_timeout.py",
+    "passed": 8,
+    "failed": 4,
+    "cause": "Old route fixture expected 81 although existing category shortlist returns 31; verified with unchanged HEAD source. Updated exact count/unique IDs; separate 81-article transport cases preserved."
+  }
+}

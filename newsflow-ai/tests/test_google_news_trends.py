@@ -30,6 +30,15 @@ FEED = '''<rss version="2.0"><channel><title>Google News fixture</title>
 </channel></rss>'''.encode()
 
 
+def fresh_feed():
+    """Collection keeps only recently published articles, so refresh fixtures follow the clock."""
+    from email.utils import format_datetime
+
+    now = datetime.now(UTC)
+    return (FEED.replace(b"Tue, 20 Oct 2026 05:00:00 GMT", format_datetime(now - timedelta(hours=1), usegmt=True).encode())
+            .replace(b"Tue, 20 Oct 2026 05:30:00 GMT", format_datetime(now - timedelta(minutes=30), usegmt=True).encode()))
+
+
 @pytest.fixture(autouse=True)
 def no_external_calls(monkeypatch):
     monkeypatch.setattr("newsflow.video.tts.WindowsTTS.voice_details", lambda _: [])
@@ -86,7 +95,7 @@ def test_enrichment_ignores_category_old_score_and_preserves_unknown_date():
 
 
 def test_refresh_dedup_durable_signals_source_states_and_no_inference(client, app, fake):
-    fake.feeds.update({GOOGLE_NEWS_URL: FEED, TRENDS_URL: TREND})
+    fake.feeds.update({GOOGLE_NEWS_URL: fresh_feed(), TRENDS_URL: TREND})
     before = client.get("/news").text
     assert "Google News + Trends 수집" in before and fake.calls == []
     assert client.post("/news/curation/refresh", data={"csrf_token": csrf(client)}).status_code == 422
@@ -98,6 +107,7 @@ def test_refresh_dedup_durable_signals_source_states_and_no_inference(client, ap
     ctx = curator.context()
     assert ctx["ready"] and len(ctx["articles"]) == 3
     assert ctx["collection"]["added"] == 3
+    assert ctx["collection"]["recent_filter"]["hours"] == 24 and "recent-filter-summary" in client.get("/news").text
     with app.state.sessions() as session:
         assert not session.scalar(select(NewsSource).where(NewsSource.url == GOOGLE_NEWS_URL)).enabled
         assert all(run.kind == "trends" for run in session.scalars(select(IntelligenceRun)))
@@ -135,6 +145,9 @@ class CuratorResponse(FakeAPIProvider):
                           "score": sum(v or 0 for v in components.values()), "components": components,
                           "reason": "합성 자료의 대중 관심과 영향 범위를 비교한 편집 평가입니다.",
                           "summary": "제공 자료 안에서 연구 또는 문화 계획의 의미를 살펴봅니다."})
+        if evidence["curation_contract"].get("feed_copy_version") == 1:
+            for item in items:
+                item["feed_copy"] = {"title": "새 계획, 무엇을 확인할까?", "description": "제공된 자료의 적용 범위는 확인이 필요하다."}
         return {"overview": "합성 자료의 화제성 편집 평가 · 사실 검증 아님",
                 "comparisons": [{"article_ids": group, "reason": "같은 이슈 후보로 비교합니다.",
                                  "uncertainties": "발표 내용과 적용 범위는 원문 검토가 필요합니다."} for group in groups],
@@ -162,11 +175,11 @@ class CuratorResponse(FakeAPIProvider):
 @pytest.fixture(params=["claude_api", "openai"])
 def prepared(client, app, fake, request, monkeypatch):
     mode = request.param
-    fake.feeds.update({GOOGLE_NEWS_URL: FEED, TRENDS_URL: TREND})
+    fake.feeds.update({GOOGLE_NEWS_URL: fresh_feed(), TRENDS_URL: TREND})
     Curator(app.state.coordinator).refresh(True)
     options = Options(MODELS[mode], max_tokens=3000)
     save_api_settings(app.state.sessions, mode, model=options.model, approved=True,
-                      search_enabled=False, search_approved=False, monthly_limit_usd="100",
+                      search_enabled=False, search_approved=False, request_limit_usd="10", monthly_limit_usd="100",
                       input_price_per_1m="3", output_price_per_1m="15", search_price_per_1k="10",
                       billing_confirmed=True)
     if mode == "openai":

@@ -181,6 +181,8 @@ def create_app(
             youtube.close()
             tiktok.close()
             instagram.close()
+            if hasattr(app.state, 'meta_connections'):
+                app.state.meta_connections.cancel()
             publishing_calendar.close()
             scheduler.close()
             video_ai.close()
@@ -219,7 +221,11 @@ def create_app(
     from .creation.image_studio import ImageStudio
     app.state.image_studio = ImageStudio(sessions, settings.data_dir, image_generation)
     from .creation.top_three_feeds import TopThreeFeeds
-    app.state.top_three_feeds = TopThreeFeeds(sessions, settings.data_dir, image_generation)
+    from .creation.feed_readiness import FeedReadiness
+    app.state.top_three_feeds = TopThreeFeeds(sessions, settings.data_dir, image_generation,
+                                             readiness=FeedReadiness(app.state))
+    from .creation.feed_budget import FeedBudget
+    app.state.top_three_feeds.costs = FeedBudget(app.state.top_three_feeds.costs.readiness)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
 
     def valid(token: str) -> bool:
@@ -244,12 +250,16 @@ def create_app(
             character_upload = encoding == 'multipart/form-data' and (
                 request.url.path in {'/character', '/image-studio/drafts', '/api/studio/characters/library'}
                 or re.fullmatch(r'/api/studio/characters/[a-f0-9]{32}/reuse-story',request.url.path) is not None)
-            if encoding != "application/x-www-form-urlencoded" and not character_upload:
+            feed_upload = encoding == 'multipart/form-data' and re.fullmatch(
+                r'/api/feed-batches/[1-9][0-9]*/items/[1-3]/design-upload', request.url.path) is not None
+            local_upload = character_upload or feed_upload
+            upload_limit = (20 if feed_upload else 10) * 1024 * 1024
+            if encoding != "application/x-www-form-urlencoded" and not local_upload:
                 return HTMLResponse("지원하지 않는 요청 형식입니다.", status_code=415)
             # Cache before form parsing so downstream FastAPI receives the same body.
             # Only the local image form accepts bounded base64 raster data.
             # Origin, form encoding, signed CSRF and CSP checks remain unchanged.
-            limit = (10 * 1024 * 1024 + 65536 if character_upload else
+            limit = (upload_limit + 65536 if local_upload else
                      8 * 1024 * 1024 if request.url.path == "/image-posts/create" else 65536)
             chunks, length = [], 0
             async for chunk in request.stream():
@@ -259,9 +269,9 @@ def create_app(
                 chunks.append(chunk)
             body = b"".join(chunks)
             request._body = body
-            if character_upload:
+            if local_upload:
                 try:
-                    async with request.form(max_files=1, max_fields=10, max_part_size=10*1024*1024) as form:
+                    async with request.form(max_files=1, max_fields=10, max_part_size=upload_limit) as form:
                         token = form.get('csrf_token', '')
                 except (StarletteHTTPException, ValueError):
                     return HTMLResponse('PNG 파일 1개와 입력 항목을 확인하세요.', status_code=400)
@@ -319,6 +329,10 @@ def create_app(
     app.include_router(youtube_router)
     app.include_router(tiktok_router)
     app.include_router(instagram_router)
+    from .meta.routes import router as meta_router
+    app.include_router(meta_router)
+    from .gui.publishing_metadata_routes import router as publishing_metadata_router
+    app.include_router(publishing_metadata_router)
     app.include_router(unified_publishing_router)
     app.include_router(social_router)
     app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")

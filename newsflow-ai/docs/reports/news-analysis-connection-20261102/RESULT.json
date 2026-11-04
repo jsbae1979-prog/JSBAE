@@ -1,0 +1,37 @@
+{
+  "sourceSha": "e5268ff19c2aee2ac89bb01d5e28a9644f101c47",
+  "tests": [
+    {
+      "suite": "news-analysis-feed-final",
+      "passed": 39,
+      "failed": 0,
+      "errors": 0
+    },
+    {
+      "suite": "news-analysis-studio-final",
+      "passed": 58,
+      "failed": 0,
+      "errors": 0
+    }
+  ],
+  "typescript": true,
+  "reactBuild": true,
+  "operating": {
+    "head": "e5268ff19c2aee2ac89bb01d5e28a9644f101c47",
+    "port": 18768,
+    "pid": 31368,
+    "normalStopExit": 0,
+    "stopAttempts": 1,
+    "startAttempts": 1,
+    "tablesUnchanged": 47,
+    "articles": 184,
+    "profileFilesPreserved": 425,
+    "originalAndABPreserved": true,
+    "chromeOpenAccepted": true,
+    "securityFlagsPreserved": true,
+    "paidCallsDuringDeployment": 0,
+    "snsCalls": 0
+  },
+  "liveAnalysisRetested": false,
+  "liveSerpApiRetried": false
+}

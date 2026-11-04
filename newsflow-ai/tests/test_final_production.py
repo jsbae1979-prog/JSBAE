@@ -1,5 +1,6 @@
 """Full-scene plan/voice contract and media Fake verification, never live providers."""
 from copy import deepcopy
+from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
@@ -43,8 +44,8 @@ def full(app, monkeypatch):
     monkeypatch.setattr(service, 'wake', lambda: None)
     app.state.video_ai = service
     app.state.video.engine, app.state.video.tts = FakeRenderAdapter(), FakeTTS()
-    write_settings(app.state.sessions, provider='higgsfield', approved=True, monthly_limit='', job_limit='', host='api.higgsfield.ai', currency='USD', max_active=2, timeout_minutes=5, poll_seconds=10)
-    save_model(app.state.sessions, path=DEFAULT_MODEL, label='PixVerse V6', price_per_second='',
+    write_settings(app.state.sessions, provider='higgsfield', approved=True, monthly_limit='', job_limit='100', host='api.higgsfield.ai', currency='USD', max_active=2, timeout_minutes=5, poll_seconds=10)
+    save_model(app.state.sessions, path=DEFAULT_MODEL, label='Synthetic PixVerse V6', price_per_second='0.01',
                durations='5,10,15', resolution='720p', confirmed=True)
     draft_id = make_draft(app, add_article(app, 'full'))
     yield SimpleNamespace(app=app, service=service, provider=provider, draft_id=draft_id)
@@ -89,16 +90,20 @@ def test_full_plan_all_scenes_model_style_and_no_guessed_reservation(full, durat
     assert scenes[-1].end_ms == duration*1000
     estimate = full.service.estimate(plan)
     assert estimate['can_submit'], estimate['problems']
-    assert estimate['total'] == '' and estimate['remaining'] is None
+    expected = Decimal('0.30') if duration == 30 else Decimal('0.60')
+    assert Decimal(estimate['total']) == expected and estimate['remaining'] is None
+    assert all(Decimal(row['cost']) > 0 for row in estimate['scenes'])
     assert full.provider.calls == []
     with pytest.raises(AIVideoError):
         full.service.confirm_generation(plan, rev(full,plan), '', False)
-    assert full.service.confirm_generation(plan, rev(full,plan), '', True) == 6
+    assert full.service.confirm_generation(plan, rev(full,plan), estimate['total'], True) == 6
     with full.app.state.sessions() as s:
         usage=list(s.scalars(select(VideoAIUsage)))
-        assert len(usage)==6 and {u.estimated_cost for u in usage}=={'0'}
+        assert len(usage) == 6
+        assert sum(Decimal(u.estimated_cost) for u in usage) == expected
+        assert all(Decimal(u.estimated_cost) > 0 for u in usage)
     with pytest.raises(AIVideoError):
-        full.service.confirm_generation(plan, rev(full,plan), '', True)
+        full.service.confirm_generation(plan, rev(full,plan), full.service.estimate(plan)['total'], True)
     assert full.provider.calls == []
 
 
@@ -106,7 +111,7 @@ def test_full_plan_no_card_fallback_and_model_change_blocks_before_post(full):
     plan=new_plan(full)
     with pytest.raises(AIVideoError,match='카드'):
         full.service.update_scenes(plan, rev(full,plan), [{'position':0,'source':'card'}])
-    full.service.confirm_generation(plan, rev(full,plan), '', True)
+    full.service.confirm_generation(plan, rev(full,plan), full.service.estimate(plan)['total'], True)
     with full.app.state.sessions.begin() as s:
         row=s.scalar(select(VideoAIModel).where(VideoAIModel.path==DEFAULT_MODEL))
         row.resolution='1080p'
@@ -118,7 +123,7 @@ def test_full_plan_unknown_never_replays(full):
     plan=new_plan(full)
     full.service.update_scenes(plan, rev(full,plan), [{'position':0, 'source':'generated',
         'prompt': COMMON_STYLE+' [fake:ambiguous]', 'model_path':DEFAULT_MODEL}])
-    full.service.confirm_generation(plan, rev(full,plan), '', True)
+    full.service.confirm_generation(plan, rev(full,plan), full.service.estimate(plan)['total'], True)
     full.service.tick()
     unknown=next(s for s in rows(full,plan) if s.status=='unknown')
     unknown_key=unknown.submit_key
@@ -127,7 +132,7 @@ def test_full_plan_unknown_never_replays(full):
     assert len([c for c in full.provider.calls if c[0]=='submit' and c[2]==unknown_key])==1
     assert any(s.status=='unknown' for s in rows(full,plan))
     with pytest.raises(AIVideoError):
-        full.service.confirm_generation(plan, rev(full,plan), '', True)
+        full.service.confirm_generation(plan, rev(full,plan), full.service.estimate(plan)['total'], True)
 
 
 @pytest.mark.parametrize('voice',['offline-silence','elevenlabs'])
@@ -158,7 +163,7 @@ def test_voice_model_consent_frozen_and_clips_reused_for_composition(full, monke
     assert not full.provider.calls
 
 
-def test_full_ai_gui_defaults_and_empty_cost_confirmation(full):
+def test_full_ai_gui_defaults_and_quoted_cost_confirmation(full):
     from conftest import csrf
     from fastapi.testclient import TestClient
     with TestClient(full.app, base_url='http://127.0.0.1') as client:
@@ -166,7 +171,7 @@ def test_full_ai_gui_defaults_and_empty_cost_confirmation(full):
         text=client.get(f'/video/ai/plans/{plan}').text
         assert '전체 장면 유료 생성 승인' in text and '전체 AI 영상' in client.get('/video/ai').text
         response=client.post(f'/video/ai/plans/{plan}/confirm',data={
-            'csrf_token':csrf(client),'revision':rev(full,plan),'shown_total':'','confirmed':'true'},follow_redirects=False)
+            'csrf_token':csrf(client),'revision':rev(full,plan),'shown_total':full.service.estimate(plan)['total'],'confirmed':'true'},follow_redirects=False)
         assert response.status_code==303
 
 def test_current_status_and_preflight_do_not_require_guessed_money(full, monkeypatch):
@@ -181,11 +186,26 @@ def test_current_status_and_preflight_do_not_require_guessed_money(full, monkeyp
     report = inspect_setup(full.app.state.sessions, keys, reported=True)
     assert report['local_ready'], report['checks']
     assert report['actual_service'] == 'NOT VERIFIED' and report['new_reservations'] == 0
-    assert inspect_setup(full.app.state.sessions, keys)['local_ready'] is False  # preserved legacy contract
+    assert inspect_setup(full.app.state.sessions, keys)['local_ready'] is True  # explicit cap and synthetic price
     context = production_context(SimpleNamespace(app=full.app))
     state = context['provider_statuses']['higgsfield']
     assert state['status_code'] == 'configured'
     assert '예산' not in state['configuration'] and '미검증' in state['configuration']
     keys.status = lambda: {'configured': False}
     assert not inspect_setup(full.app.state.sessions, keys, reported=True)['local_ready']
+    assert full.provider.calls == []
+
+
+def test_full_plan_unknown_price_is_blocked_without_reservation(full):
+    plan = new_plan(full)
+    with full.app.state.sessions.begin() as session:
+        model = session.scalar(select(VideoAIModel).where(VideoAIModel.path == DEFAULT_MODEL))
+        model.price_per_second = ''
+    estimate = full.service.estimate(plan)
+    assert not estimate['can_submit'] and estimate['problems']
+    assert all(not row['usable'] for row in estimate['scenes'])
+    with pytest.raises(AIVideoError):
+        full.service.confirm_generation(plan, rev(full, plan), estimate['total'], True)
+    with full.app.state.sessions() as session:
+        assert list(session.scalars(select(VideoAIUsage))) == []
     assert full.provider.calls == []

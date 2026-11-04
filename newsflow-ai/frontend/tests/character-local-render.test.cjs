@@ -42,3 +42,14 @@ test('review remains manual and unrelated paid dialogs have no local-render over
     {reviewed:true,consent:true},{catalog:{}});
   assert.equal(initial.reviewed,false);assert.equal(initial.consent,false);
 });
+
+
+test('manual recovery review requires backend lock/clip validation and never overrides active composition',()=>{
+  for (const state of ['compose_failed','composing']) {
+    for (const available of [false,true]) {
+      const data=view([scene(1,15)]);
+      Object.assign(data.collections.jobs[0],{state,composeRecoveryAvailable:available});
+      assert.equal(review(action,{job_id:id},data).ready,available);
+    }
+  }
+});

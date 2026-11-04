@@ -29,7 +29,7 @@ def test_restored_dashboard_layout_and_readonly_navigation(page, app, tmp_path):
         for index in range(5):
             expect(page.locator('.workflow-steps li').nth(index)).to_contain_text(f'{index + 1}단계')
         expect(page.locator('.dash-preview video')).to_have_count(1)
-        expect(page.locator('.dash-categories a')).to_have_count(9)
+        expect(page.locator('.dash-categories a')).to_have_count(10)
         nav = page.locator('.dash-categories').bounding_box()
         for tab in page.locator('.dash-categories a').all():
             box = tab.bounding_box()

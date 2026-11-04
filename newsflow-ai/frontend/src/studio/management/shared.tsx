@@ -17,7 +17,7 @@ import {
   Rss,
   SlidersHorizontal,
 } from "lucide-react";
-import { actions, status, safeMedia, type Item } from "../contracts";
+import { actions, status, safeMedia, characterReferenceThumbnail, type Item } from "../contracts";
 import { Thumbnail } from "../Thumbnail";
 import { useStudio } from "../core/shared";
 export type Controller = ReturnType<typeof useManagement>;
@@ -232,29 +232,38 @@ export function Thumb({ item }: { item: Item }) {
     if (media && /^\/video\/jobs\/\d+\/file$/.test(media))
       src = media.replace(/\/file$/, "/thumbnail");
   }
+  const reference = !src ? characterReferenceThumbnail(item) : null;
+  if (reference) src=reference;
   return (
     <div className="mg-thumb">
       {src ? (
-        <Thumbnail src={src} alt={item.title || "콘텐츠 썸네일"} />
+        <Thumbnail src={src} alt={`${item.title || "콘텐츠"}${reference ? " · 참조 이미지" : " 썸네일"}`} />
       ) : (
         <span>
           <ImageIcon size={24} />
           미리보기 없음
         </span>
       )}
+      {reference && <small className="mg-thumb-reference">참조 이미지</small>}
     </div>
   );
 }
 export function Accounts({
   c,
   compact = false,
+  onConfigure,
+  metaAccounts,
 }: {
   c: Controller;
   compact?: boolean;
+  onConfigure?: (platform: string) => void;
+  metaAccounts?: Item[];
 }) {
   const accounts = c.publishing?.collections?.accounts;
   const cards = platforms.flatMap((p) => {
-    const rows = accounts?.filter((a: Item) => a.platform === p.id) ?? [];
+    const rows = onConfigure && ["facebook", "instagram"].includes(p.id)
+      ? (metaAccounts ?? []).filter((a: Item) => p.id === "facebook" || a.instagramId)
+      : accounts?.filter((a: Item) => a.platform === p.id) ?? [];
     return rows.length
       ? rows.map((a: Item) => ({ p, rows: [a], key: p.id + a.id }))
       : [{ p, rows: [], key: p.id }];
@@ -266,13 +275,15 @@ export function Accounts({
           <article key={key}>
             <h3>
               <PlatformIcon id={p.id} />
-              {p.label}
+              {onConfigure && p.id === "facebook" ? "Facebook 페이지" : p.label}
             </h3>
             {rows.length ? (
               rows.map((a: Item) => (
                 <p key={a.id}>
                   <strong>{a.label || `계정 #${a.id}`}</strong>
-                  <small>등록됨 · 실제 인증/권한 미검증</small>
+                  <small>{onConfigure && ["facebook", "instagram"].includes(p.id)
+                    ? (a.state === "connected" ? "연결됨 · 게시 전 권한 확인" : "재연결 또는 권한 확인 필요")
+                    : "등록됨 · 실제 인증/권한 미검증"}</small>
                 </p>
               ))
             ) : (
@@ -280,14 +291,16 @@ export function Accounts({
             )}
             <Badge
               value={
-                ["tiktok", "facebook"].includes(p.id)
-                  ? "blocked"
-                  : "review_required"
+                onConfigure && ["facebook", "instagram"].includes(p.id)
+                  ? rows.some((a: Item) => a.state === "connected") ? "active" : "연결 필요"
+                  : ["tiktok", "facebook"].includes(p.id) ? "blocked" : "review_required"
               }
             />
-            <Action c={c} id="publishing_account" context={{ platform: p.id }}>
-              계정 설정
-            </Action>
+            {onConfigure ? (
+              <button type="button" aria-label={`${p.id} 계정 설정`} onClick={() => onConfigure(p.id)}>{p.id === "youtube" ? "YouTube 채널 연결" : "계정 설정"}</button>
+            ) : (
+              <Action c={c} id="publishing_account" context={{ platform: p.id }}>계정 설정</Action>
+            )}
           </article>
         );
       })}

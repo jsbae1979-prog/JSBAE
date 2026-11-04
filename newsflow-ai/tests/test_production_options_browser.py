@@ -109,7 +109,7 @@ def test_skip_review_elevenlabs_fake_to_real_mp4_final_review(app, api_pipeline,
         job = coordinator.snapshot(identifier)
         assert (job["status"], job["current_stage"]) == ("waiting_review", "validate"), job
         assert job["production_options"]["script_review"] is False and job["review_pauses"] == ["validate"]
-        assert {k:v for k,v in job["production_options"]["elevenlabs"].items() if k != "credential_fingerprint"} == cfg
+        assert {k:v for k,v in job["production_options"]["elevenlabs"].items() if k != "credential_fingerprint"} == {**cfg, "monthly_limit": cfg["job_limit"]}  # Legacy field mirrors the per-call limit; no cumulative gate.
         assert api.calls == ["search", "analysis", "script"] and rss.calls == []
         assert len(sent) == 3 and [method for method, _ in calls] == ["GET", "POST"] * 3
         expect(page.locator('[data-autopilot-job]')).to_have_attribute("data-job-stage", "validate", timeout=15000)

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "source": "NewsFlow original mathematical oscillator recipes; no sampled recording, speech or music",
+  "license": "CC0-1.0",
+  "effects": {
+    "ding": {"wave": "sine", "start_hz": 1320, "end_hz": 1320, "seconds": 0.3, "decay": 8},
+    "whoosh": {"wave": "noise", "start_hz": 100, "end_hz": 800, "seconds": 0.35, "decay": 3},
+    "pop": {"wave": "sine", "start_hz": 680, "end_hz": 130, "seconds": 0.12, "decay": 9},
+    "boing": {"wave": "sine", "start_hz": 190, "end_hz": 740, "seconds": 0.4, "decay": 5},
+    "record_scratch": {"wave": "noise", "start_hz": 1800, "end_hz": 100, "seconds": 0.25, "decay": 4},
+    "cricket": {"wave": "pulse", "start_hz": 3200, "end_hz": 3200, "seconds": 0.45, "decay": 2},
+    "sparkle": {"wave": "sine", "start_hz": 1800, "end_hz": 3600, "seconds": 0.35, "decay": 7},
+    "drum_hit": {"wave": "sine", "start_hz": 145, "end_hz": 45, "seconds": 0.25, "decay": 9}
+  }
+}

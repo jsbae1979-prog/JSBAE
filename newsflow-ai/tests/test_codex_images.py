@@ -304,7 +304,7 @@ def test_reviews_settings_and_sources_preserved_whole_image_no_template(prepared
     monkeypatch.setattr("newsflow.publishing.image_posts.artwork", denied)
     monkeypatch.setattr("newsflow.publishing.image_posts.card_artwork", denied)
     post_id = app.state.image_posts.create(news, title=ARGS["title"], body=ARGS["body"],
-        generated_id=first, reviewed=True, rights=True, sources_confirmed=True, ai_disclosure="not_required")
+        generated_id=first, reviewed=True, rights=True, sources_confirmed=True, ai_disclosure="not_required", image_safety_checked=True)
     post = app.state.image_posts.get(post_id)
     assert post.sources["image_provider"] == "codex" and "claude_card_run_id" not in post.sources
     assert post.ai_disclosure == "disclose" and post.sources["articles"][0]["id"] == news

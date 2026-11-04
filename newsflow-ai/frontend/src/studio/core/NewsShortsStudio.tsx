@@ -1,3 +1,5 @@
+import {ElevenVoicePicker} from "./ElevenVoicePicker";
+import {VoicePreview} from "./VoicePreview";
 import { useEffect, useRef, useState } from "react";
 import {
   FileText,
@@ -26,6 +28,14 @@ export default function NewsShortsStudio({
   c: Controller;
   onNavigate: (page: string) => void;
 }) {
+  const voiceInitialized=useRef(false);
+  const [videoModel, setVideoModel] = useState<string | null>(null);
+  const videoModels: Item[] = c.view?.catalog.newsVideoModels ?? [];
+  const selectedModel = videoModel ?? c.view?.catalog.newsVideoDefault ?? "";
+  const modelReady = videoModels.some(m => m.path === selectedModel);
+  const selectedModelInfo = videoModels.find(m => m.path === selectedModel);
+  const selectedPreset = (c.view?.catalog.newsVideoPresets ?? []).find((m: Item) => m.path === selectedModel);
+
   const [archiveId, setArchiveId] = useState<number | null>(
     () => Number(new URLSearchParams(location.search).get("draft_id")) || null,
   );
@@ -35,7 +45,15 @@ export default function NewsShortsStudio({
     [duration, setDuration] = useState("30"),
     [voice, setVoice] = useState("offline-silence"),
     [subtitle, setSubtitle] = useState("48:1420"),
-    [visual, setVisual] = useState("news");
+    [visual, setVisual] = useState("news"),
+    [voiceReady,setVoiceReady] = useState(false);
+  useEffect(()=>{
+    if(!voiceInitialized.current&&c.view){
+      const saved=c.view.formDefaults?.video_render?.voice;
+      if(typeof saved==="string")setVoice(saved);
+      voiceInitialized.current=true;
+    }
+  },[c.view]);
   const [editor, setEditor] = useState<Item | null>(null),
     [dirty, setDirty] = useState(false),
     [busy, setBusy] = useState(false),
@@ -149,7 +167,7 @@ export default function NewsShortsStudio({
     }
   }
   const scenes = Array.isArray(editor?.scenes) ? editor.scenes : [],
-    project = (c.view?.projects ?? []).find((x) => x.draftId === draft?.id);
+    project = draft?.id != null ? (c.view?.projects ?? []).find((x) => x.draftId != null && x.draftId === draft.id) : undefined;
   const voices: Record<string, string> = {
     "offline-silence": "무음 · 로컬 검증",
   };
@@ -226,6 +244,7 @@ export default function NewsShortsStudio({
                 id="curation_generate"
                 context={{
                   analysis_id: c.context?.selection?.id,
+                  __newsSelection: {article:chosen, selection:c.context?.selection},
                   rank,
                   duration: Number(duration),
                 }}
@@ -333,6 +352,7 @@ export default function NewsShortsStudio({
                   onChange={setVoice}
                   options={voices}
                 />
+                {voice==="elevenlabs"?<ElevenVoicePicker c={c} onReady={setVoiceReady}/>:<VoicePreview c={c} voice={voice}/>}
                 <Select
                   label="영상 방식"
                   value={visual}
@@ -343,6 +363,20 @@ export default function NewsShortsStudio({
                     ai: "AI 장면 · 별도 견적",
                   }}
                 />
+                <div className="news-video-api-info" role="region" aria-label="영상 API 정보">
+                  {visual==="ai"?<>
+                    <strong>Higgsfield · AI 영상 API</strong>
+                    <Select label="AI 영상 모델" value={modelReady ? selectedModel : ""}
+                      onChange={setVideoModel} options={Object.fromEntries(videoModels.map(m =>
+                        [m.path, m.label.includes(m.resolution) ? m.label : `${m.label} · ${m.resolution}`]))}/>
+                    {selectedPreset && <small>장면 {selectedPreset.minSeconds}–{selectedPreset.maxSeconds}초 · 9:16 · 음성은 위에서 별도 선택</small>}
+                    {selectedModelInfo?.priceKnown === false && <small>비용 미확정 · 생성 전 견적 필요</small>}
+                    <ActionButton c={c} id="video_ai_save_model_route">영상 모델 등록</ActionButton>
+                    {selectedPreset && <a href={selectedPreset.docsUrl} target="_blank" rel="noreferrer">공식 모델 정보</a>}
+                    <a href="/studio/settings">모델·API 설정 관리</a>
+                    {!modelReady && <small>등록된 모델을 선택하세요.</small>}
+                  </>:<><strong>FFmpeg · 내 PC에서 합성</strong><small>{visual==="news"?"뉴스 이미지 자동 연결":"기본 카드 영상"} · 외부 영상 API 없음</small></>}
+                </div>
                 <fieldset className="core-choice-field">
                   <legend>영상 길이</legend>
                   <div>
@@ -391,8 +425,10 @@ export default function NewsShortsStudio({
                     context={{
                       draft_id: draft?.id,
                       duration: Number(duration),
+                      mode: "full",
+                      model_path: selectedModel,
                     }}
-                    disabled={!draft || dirty}
+                    disabled={!draft || dirty || !modelReady}
                   >
                     AI 장면 계획 · 견적
                   </ActionButton>
@@ -414,7 +450,7 @@ export default function NewsShortsStudio({
             c={c}
             id="video_render"
             primary
-            disabled={!draft || dirty || visual === "ai"}
+            disabled={!draft || dirty || visual === "ai" || (voice==="elevenlabs"&&!voiceReady)}
             context={{
               draft_id: draft?.id,
               duration: Number(duration),

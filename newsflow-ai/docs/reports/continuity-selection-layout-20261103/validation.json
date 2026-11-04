@@ -1,0 +1,36 @@
+{
+  "python": "3.14.7",
+  "os": "Windows 11",
+  "counts": {
+    "full-python": {
+      "pass": 92,
+      "fail": 0,
+      "error": 0,
+      "skip": 0
+    },
+    "studio-v3": {
+      "pass": 58,
+      "fail": 0,
+      "error": 0,
+      "skip": 0
+    },
+    "top3-tools": {
+      "pass": 25,
+      "fail": 0,
+      "error": 0,
+      "skip": 0
+    },
+    "frontend-contracts": {
+      "pass": 48,
+      "fail": 0,
+      "error": 0,
+      "skip": 0
+    }
+  },
+  "typecheck": "PASS",
+  "reactBuild": "PASS",
+  "paidCalls": 0,
+  "realCollection": 0,
+  "snsCalls": 0,
+  "base": "7e3bb05730c765afed5952b12d51add09067d612"
+}

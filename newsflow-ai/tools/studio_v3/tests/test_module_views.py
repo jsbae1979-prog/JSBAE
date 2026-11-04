@@ -85,6 +85,11 @@ def test_registry_preserves_every_original_post_route_and_no_write_proxy():
                 if isinstance(decorator,ast.Call) and isinstance(decorator.func,ast.Attribute) and decorator.func.attr=='post' and decorator.args and isinstance(decorator.args[0],ast.Constant):
                     found.append((file.name,decorator.args[0].value))
     for file,path in found:
+        # Since 2026-10-29 the studio has JSON write routes under /api/studio/, guarded by
+        # signed CSRF, Origin and the operating request allowlist rather than this legacy
+        # form registry. Only original form routes must stay registered here.
+        if path.startswith('/api/studio/'):
+            continue
         assert any(action['source']=='gui/'+file and (action['path']==path or '{action}' in path and action['path'].startswith(path.split('{action}')[0])) for action in registry),(file,path)
     assert all('/api/studio/' not in action['path'] for action in registry)
     studio=(root/'src/newsflow/studio/read_models.py').read_text(encoding='utf-8')
@@ -108,14 +113,16 @@ def test_news_image_post_is_independent_from_image_generation_draft(tmp_path):
 def test_current_tts_and_video_limits_are_read_without_reset(tmp_path):
     request,engine,sessions=setup(tmp_path)
     request.state=NS(csrf="SYNTHETIC")
-    values={"studio_provider":"claude_api","studio_model_claude_api":"claude-sonnet-4-6","tts_el_enabled":"true","tts_el_voice_id":'"synthetic-voice"',"tts_el_model":'"eleven_multilingual_v2"',"tts_el_job_limit":"4321","tts_el_monthly_limit":"20000","tts_el_commercial":"true"}
+    values={"studio_provider":"claude_api","studio_model_claude_api":"claude-sonnet-4-6","tts_el_enabled":"true","tts_el_voice_id":'"synthetic-voice"',"tts_el_model":'"eleven_multilingual_v2"',"tts_el_job_limit":"4321","tts_el_commercial":"true"}
     with sessions.begin() as session:
         for key,value in values.items():session.add(AppSetting(key=key,value=value))
     result=module_view(request,"settings")
     config=result['formDefaults']['video_save_tts']
     assert result['formDefaults']['intelligence_analyze']=={'provider':'claude_api','model':'claude-sonnet-4-6'}
     assert config['enabled'] is True and config['commercial'] is True
-    assert config['voice_id']=='synthetic-voice' and config['job_limit']==4321 and config['monthly_limit']==20000
+    assert config['voice_id']=='synthetic-voice' and config['job_limit']==4321
+    # Monthly TTS limits were replaced by per-execution limits (1e3d5a9).
+    assert 'monthly_limit' not in config
     with sessions() as session:
         assert {key:session.get(AppSetting,key).value for key in values}==values
     engine.dispose()

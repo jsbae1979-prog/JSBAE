@@ -1,0 +1,28 @@
+{
+  "name": "analysis-copy-number-recheck",
+  "command": [
+    "C:\\Codex\\NewsFlowAI-IsolatedReview\\integration-20261024\\venv314\\Scripts\\python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "-rs",
+    "--tb=short",
+    "-o",
+    "junit_family=legacy",
+    "-o",
+    "faulthandler_timeout=120",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\analysis-number-recheck-profile\\analysis-copy-number-recheck-tmp",
+    "--junitxml=C:\\Codex\\NewsFlowAI\\feed_director_20261103\\analysis-copy-number-recheck.xml",
+    "tests/test_curation_numbers.py"
+  ],
+  "cwd": "C:\\Codex\\NewsFlowAI-IsolatedReview\\studio-v3-20261026\\approved-ui-implementation-20261027\\newsflow-ai",
+  "start": 1793713072.7782052,
+  "python": "3.14.7 (tags/v3.14.7:823f032, Aug  5 2026, 10:51:32) [MSC v.1944 64 bit (AMD64)]",
+  "synthetic_profile": "C:\\Codex\\NewsFlowAI\\feed_director_20261103\\analysis-number-recheck-profile",
+  "ffmpeg": "C:\\NewsFlowAI\\tools\\ffmpeg.exe",
+  "timezone": "C:\\Codex\\NewsFlowAI\\character_automation_stage\\vendor\\tzdata\\zoneinfo",
+  "exitCode": 0,
+  "seconds": 5.33
+}

@@ -99,14 +99,14 @@ def test_windows_entrypoint_and_synthetic_profile_survive_normal_reopen(tmp_path
         with sqlite3.connect(profile / "newsflow.db") as connection:
             assert connection.execute("pragma integrity_check").fetchone() == ("ok",)
             assert connection.execute("pragma foreign_key_check").fetchall() == []
-            assert connection.execute("select version_num from alembic_version").fetchall() == [("0018",)]
+            assert connection.execute("select version_num from alembic_version").fetchall() == [("0019",)]
             rows = {table: connection.execute(f"select count(*) from {table}").fetchone()[0]
                     for table in ("news_articles", "content_drafts", "publish_jobs", "api_request_reservations")}
         if expected_rows is not None:
             assert rows == expected_rows
         expected_rows = rows
     (output / "entrypoint-result.json").write_text(json.dumps({
-        "status": "PASS", "launches": 2, "shutdown": "normal", "revision": "0018",
+        "status": "PASS", "launches": 2, "shutdown": "normal", "revision": "0019",
         "integrity": "ok", "foreign_key_errors": 0, "stored_counts_preserved": expected_rows,
         "external_requests": 0, "operating_profile_used": False,
     }), encoding="utf-8")

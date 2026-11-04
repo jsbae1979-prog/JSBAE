@@ -146,7 +146,7 @@ class AppSetting(Base):
 
 
 class NewsListState(Base):
-    """List visibility only; original articles and evidence are never erased."""
+    """List visibility; articles referenced by saved work are hidden here instead of deleted."""
     __tablename__ = "news_list_states"
     article_id: Mapped[int] = mapped_column(ForeignKey("news_articles.id"), primary_key=True)
     hidden: Mapped[bool] = mapped_column(Boolean, default=False)

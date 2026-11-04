@@ -45,7 +45,7 @@ def state(tmp_path):
     store.save(KEY)
     save_api_settings(
         sessions, "claude_api", model=MODELS["claude_api"], approved=True,
-        search_enabled=True, search_approved=True, request_limit_usd="3.10",
+        search_enabled=True, search_approved=True, request_limit_usd="3.20",
         monthly_limit_usd="100", input_price_per_1m="3", output_price_per_1m="15",
         search_price_per_1k="10", billing_confirmed=True, account_remaining_usd="100",
     )
@@ -110,7 +110,7 @@ def test_same_recorded_envelope_can_have_distinct_safe_failures(state, reason):
     assert not read_api_settings(state["sessions"], "claude_api").search_verified_at
     ledger = rows(state["sessions"])
     assert len(ledger) == 1 and ledger[0].status == "failed"
-    assert Decimal(ledger[0].reserved_usd) == 0
+    assert Decimal(ledger[0].reserved_usd) == Decimal('3.145000')
     assert ledger[0].usage == {"prompt_tokens": 100, "completion_tokens": 50, "search_calls": 1}
     assert Decimal(ledger[0].estimated_usd) > 0
     assert send_search(state, send).code == "blocked" and len(calls) == 1
@@ -132,7 +132,7 @@ def test_arbitrary_tool_error_details_are_never_persisted(state, error_code):
     assert summary["tool_error_code"] == "other"
     assert RAW_MARKER not in result.message
     assert RAW_MARKER not in json.dumps(settings_values(state["sessions"]))
-    assert Decimal(rows(state["sessions"])[0].reserved_usd) == 0
+    assert Decimal(rows(state["sessions"])[0].reserved_usd) == Decimal('3.145000')
 
 
 def test_success_keeps_existing_proof_contract_without_failure_diagnostics(state):
@@ -158,7 +158,7 @@ def test_later_failure_does_not_rewrite_existing_request_record(state):
     assert len(ledger) == 2
     preserved = next(row for row in ledger if row.id == previous.id)
     assert {column.name: getattr(preserved, column.name) for column in preserved.__table__.columns} == snapshot
-    assert all(Decimal(row.reserved_usd) == 0 for row in ledger)
+    assert all(Decimal(row.reserved_usd) == Decimal('3.145000') for row in ledger)
     assert read_search_check(state["sessions"], "claude_api")["failure_reason"] == "source_evidence"
 
 
@@ -220,7 +220,7 @@ def test_complete_json_presentation_keeps_sources_usage_and_no_replay(state, wra
     ledger = rows(state["sessions"])
     assert len(ledger) == 1 and ledger[0].status == "success"
     assert ledger[0].usage == {"prompt_tokens": 100, "completion_tokens": 50, "search_calls": 1}
-    assert Decimal(ledger[0].reserved_usd) == 0
+    assert Decimal(ledger[0].reserved_usd) == Decimal('3.145000')
     assert send_search(state, send).code == "blocked" and len(calls) == 1
     after = settings_values(state["sessions"])
     proof_updates = {"api_claude_api_search_verified_at", "api_claude_api_request_succeeded_at"}
@@ -261,7 +261,7 @@ def test_ambiguous_or_invalid_json_is_not_salvaged_and_keeps_reservation(state, 
     assert not read_api_settings(state["sessions"], "claude_api").search_verified_at
     ledger = rows(state["sessions"])
     assert len(ledger) == 1 and ledger[0].status == "failed"
-    assert Decimal(ledger[0].reserved_usd) == 0
+    assert Decimal(ledger[0].reserved_usd) == Decimal('3.145000')
     assert send_search(state, send).code == "blocked" and len(calls) == 1
     assert all(marker not in json.dumps(settings_values(state["sessions"])) for marker in (KEY, RAW_MARKER))
 
@@ -283,7 +283,7 @@ def test_fenced_json_still_requires_article_schema_and_observed_sources(state, c
     assert send_search(state, lambda *args: json.dumps(document).encode()).code == "ai_bad_response"
     assert read_search_check(state["sessions"], "claude_api")["failure_reason"] == reason
     assert rows(state["sessions"])[0].status == "failed"
-    assert Decimal(rows(state["sessions"])[0].reserved_usd) == 0
+    assert Decimal(rows(state["sessions"])[0].reserved_usd) == Decimal('3.145000')
 
 
 def test_new_valid_format_does_not_replay_or_rewrite_an_old_failure(state):
@@ -304,4 +304,4 @@ def test_new_valid_format_does_not_replay_or_rewrite_an_old_failure(state):
     ledger = rows(state["sessions"])
     preserved = next(row for row in ledger if row.id == previous.id)
     assert {column.name: getattr(preserved, column.name) for column in preserved.__table__.columns} == snapshot
-    assert len(ledger) == 2 and sum(Decimal(row.reserved_usd) for row in ledger) == 0
+    assert len(ledger) == 2 and sum(Decimal(row.reserved_usd) for row in ledger) == Decimal('6.290000')

@@ -34,12 +34,14 @@ def validate_catalog(document):
         'default_aspect_ratio','aspect_ratio_mode','param_map','fixed_params','audio_values','docs_ref','pricing'}
     ids=set()
     for m in document['models']:
-        if not isinstance(m,dict) or set(m)!=expected:raise CatalogError('모델의 누락·알 수 없는 항목을 확인하세요.')
+        if not isinstance(m,dict) or set(m)-{'continuation_param'}!=expected:raise CatalogError('모델의 누락·알 수 없는 항목을 확인하세요.')
         if (not isinstance(m['id'],str) or not re.fullmatch(r'[a-z0-9][a-z0-9/._-]{1,160}',m['id']) or '..' in m['id']
                 or m['id'] in ids or m['api_path']!=m['id'] or m['provider']!='higgsfield'
                 or any(type(m[k]) is not bool for k in ['enabled','recommended','reference_image'])
                 or not isinstance(m['label'],str) or not 1<=len(m['label'])<=100):
             raise CatalogError('모델 ID·경로·활성 상태를 확인하세요.')
+        if m.get('continuation_param') not in {None,'image_url','first_frame_url','start_image'}:
+            raise CatalogError('시작 프레임 파라미터를 확인하세요.')
         ids.add(m['id'])
         if (not _strings(m['aspect_ratios'],{'9:16','16:9','1:1','4:3','3:4','21:9'})
                 or m['default_aspect_ratio'] not in m['aspect_ratios']
@@ -53,8 +55,8 @@ def validate_catalog(document):
         pm=m['param_map']
         if not isinstance(pm,dict) or set(pm)!={'aspect_ratio','resolution','duration','audio','reference'}:
             raise CatalogError('param_map 항목을 확인하세요.')
-        allowed={None,'aspect_ratio','resolution','mode','duration','sound','generate_audio','image_url','image_urls'}
-        if any(x not in allowed for x in pm.values()) or pm['duration']!='duration' or pm['reference'] not in {'image_url','image_urls'}:
+        allowed={None,'aspect_ratio','resolution','mode','duration','sound','generate_audio','image_url','image_urls','start_image','first_frame_url'}
+        if any(x not in allowed for x in pm.values()) or pm['duration']!='duration' or pm['reference'] not in {'image_url','image_urls','start_image','first_frame_url'}:
             raise CatalogError('지원하지 않는 파라미터 매핑입니다.')
         if (m['audio']['native'] and pm['audio'] not in {'sound','generate_audio'}) or (not m['audio']['native'] and pm['audio'] is not None):
             raise CatalogError('소리 파라미터 매핑을 확인하세요.')
@@ -141,11 +143,18 @@ def styles():
 
 def character_config():
     doc=load_document(CONFIG/'character_studio.yaml')
-    if (set(doc)!={'schema_version','style_id','aspect_ratio','appearance','style_lock','audio_default','clip_seconds','max_total_seconds','output_quality'}
+    if (set(doc)-{'target_duration'}!={'schema_version','style_id','aspect_ratio','appearance','style_lock','audio_default','clip_seconds','max_total_seconds','output_quality'}
             or doc['schema_version']!=1 or doc['style_id'] not in styles() or doc['aspect_ratio']!='9:16'
             or type(doc['clip_seconds']) is not int or not 3<=doc['clip_seconds']<=12
             or doc['max_total_seconds']!=60 or type(doc['audio_default']) is not bool
             or doc['output_quality'] not in {'720p','1080p','4k'}):raise CatalogError('캐릭터 고정 설정을 확인하세요.')
+    target=doc.get('target_duration',{'min':15,'max':60,'step':5,'default':30})
+    if (not isinstance(target,dict) or set(target)!={'min','max','step','default'}
+            or any(type(v) is not int for v in target.values())
+            or target['min']!=15 or target['max']!=60 or target['step']!=5
+            or target['default'] not in range(15,61,5)):
+        raise CatalogError('회차 길이는 15~60초, 5초 단위여야 합니다.')
+    doc['target_duration']=target
     return doc
 
 @dataclass(frozen=True)

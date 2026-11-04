@@ -1,0 +1,86 @@
+{
+  "sourceSha": "3536a667adac1a0122bb19de2513ea20b60e9454",
+  "operatingBaseSha": "402837af4af1c10e1482b0a347e7a5bec456daf4",
+  "files": [
+    {
+      "path": "app/product/newsflow/gui/video_routes.py",
+      "before": "11e9ca55f8580c05ac84ad1fc5345faeddc34691c1fb5fc70fb6acdf107bc333",
+      "sha256": "19c5277133144e24ae7789efb7ee47197a55e161d215929ac8bd6b6a6b8ed074",
+      "bytes": 19346
+    },
+    {
+      "path": "app/product/newsflow/gui/voice_routes.py",
+      "before": "f5ba07aeb39fd2fe58aef8bfe200a4352dc6f3d9680dc2767c23fa8bff3c8216",
+      "sha256": "5b8fbd290b745ed40283d701cf44d608c76020348a17ea56509625cee4c57f88",
+      "bytes": 7262
+    },
+    {
+      "path": "app/product/newsflow/news/collection_workspace.py",
+      "before": null,
+      "sha256": "42c070045f0be56ff67ce7c7521b0c0cd10099b1ed56e71663d099214912a0d5",
+      "bytes": 1240
+    },
+    {
+      "path": "app/product/newsflow/news/curator.py",
+      "before": "d45de5e1cf30c0eb665628b27345f7f7ce07d2ae6bc34031270a91f0ee17471c",
+      "sha256": "d2f629b9ceb0543dbe7cec6b4c38f64cb05a3c91aaa2d0ca7f17caf24f55b77f",
+      "bytes": 15233
+    },
+    {
+      "path": "app/product/newsflow/news/global_collection.py",
+      "before": "7b6053b0b8162f6a8b6381ed7cf8c0b908b8e61691d8db6f30e9bf4b5a000c49",
+      "sha256": "2ce2ee4f41a40c4cffb1f883d71653b2e756758e74b2240cc9df0f36b76ac713",
+      "bytes": 10752
+    },
+    {
+      "path": "app/product/newsflow/news/service.py",
+      "before": "0a64232c29a462d387bd3af6bc6025fbb812d623bcfc4281f9f369391c034635",
+      "sha256": "dab34bdd556d6ff7a294b1df8d5d7c37043d1d0ba32cb022679e9629a9ebc7b9",
+      "bytes": 15645
+    },
+    {
+      "path": "app/product/newsflow/studio/read_models.py",
+      "before": "f0f97c1c0dfd539b157d50dde611ed9a131c74b3a645e9e763c173341fa175fb",
+      "sha256": "1f2da59c43a08619de0c8f3526777aa1d81e34cb737a5de1f423659a8ea94f7a",
+      "bytes": 46363
+    },
+    {
+      "path": "app/product/newsflow/video/elevenlabs_voices.py",
+      "before": "a52501ed612def8ec26ab43fb1949a5f9d0e6fdacfad701d149b2e47167b9ddb",
+      "sha256": "541c82e93e2c311e2d99497d4bf6a4e313be4642e6c6df54bac6a37dc8ee2c83",
+      "bytes": 16158
+    },
+    {
+      "path": "app/controller/bat_distribution/operation.py",
+      "before": "037852d61db1f87cacc9455b86ccb62e4cc133a51c67da27c663b5f808d56c0b",
+      "sha256": "35bf99857d894b16d3c08e6061856e1b7df6b8e193301c4e5d1cec927f2ef0ad",
+      "bytes": 6443
+    },
+    {
+      "path": "app/frontend/dist/assets/index-CY0DVrN9.css",
+      "before": null,
+      "sha256": "650ed72494b60f9a21cd1360d1c9a94135887c15d46e5d2ed0aa6159ca750b5c",
+      "bytes": 183284
+    },
+    {
+      "path": "app/frontend/dist/assets/index-P6T7GKqt.js",
+      "before": null,
+      "sha256": "215615d17d35a42fff135bbef26b1d18c39ce56841a7936b6a62348084ca9470",
+      "bytes": 640507
+    },
+    {
+      "path": "app/frontend/dist/index.html",
+      "before": "d70cd88e78c323fb3f854224a18247bb7afb9d602fb442b2eb6fb3c218250b73",
+      "sha256": "c6094acab118d751fa7255502a0e8fe07ea2e45f1e309557a33c3c48a26ebc61",
+      "bytes": 418
+    }
+  ],
+  "applied": false,
+  "approvalRequired": true,
+  "restart": "One additional normal Stop/Start required; earlier approved cycle already completed.",
+  "profileChanged": false,
+  "tables": 47,
+  "currentArticles": 179,
+  "originalArticlesPreserved": 169,
+  "paidCalls": 0
+}

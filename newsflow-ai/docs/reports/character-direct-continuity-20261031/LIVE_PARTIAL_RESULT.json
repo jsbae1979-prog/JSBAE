@@ -1,0 +1,56 @@
+{
+  "verdict": "BLOCKED: first segment saved; second local compatibility rejection; no 30-second final",
+  "operatingSourceSha": "51dec551e9f761623f3e0c9d98e0fc7de0ff4988",
+  "approvedQuoteUsd": "3.780",
+  "segmentQuoteUsd": "1.890",
+  "model": "kling-video/v3.0/std/image-to-video",
+  "targetSeconds": 30,
+  "sound": "environmental",
+  "storyAiCalls": 0,
+  "confirmedVideoSubmitReceipts": 1,
+  "firstSegment": {
+    "state": "downloaded",
+    "requestedSeconds": 15,
+    "media": {
+      "format": "mov",
+      "video_codec": "h264",
+      "width": 720,
+      "height": 1280,
+      "duration": 15.042,
+      "bytes": 9444587,
+      "has_audio": true
+    },
+    "sha256": "322262d28c93873c0d40793808f9b6bbcbe51b7c9a511bc1aea58913d6acf5e3",
+    "chromePlayback": "Observed playing with sound enabled and no browser media error"
+  },
+  "secondSegment": {
+    "state": "unknown",
+    "receiptPresent": false,
+    "localCause": "context_sha256 was appended inside dependency; unchanged operating adapter requires the exact four-field dependency receipt",
+    "submissionFinding": "Static deployed control flow and Fake reproduction identify rejection before original provider submit",
+    "billing": "Actual provider invoice NOT VERIFIED; estimate is not actual charge"
+  },
+  "developmentFix": {
+    "change": "Store continuation_context_sha256 on scene, outside the four-field dependency receipt",
+    "operatingAdapterChanged": false,
+    "securityRelaxation": false,
+    "focusedPassed": 24,
+    "failed": 0,
+    "errors": 0,
+    "redBeforeFix": 2,
+    "newAdapterRegressions": 2,
+    "operatingApplied": false
+  },
+  "preservation": {
+    "articles": 169,
+    "tables": 47,
+    "existingProtectedFilesUnchanged": 44,
+    "originalAndABUnchanged": true,
+    "firstSegmentPreserved": true,
+    "failedJournalModified": false
+  },
+  "paidRetryPerformed": false,
+  "additionalRestarts": 0,
+  "snsCalls": 0,
+  "screenshots": "Actual private Chrome and generated media retained locally; not uploaded"
+}

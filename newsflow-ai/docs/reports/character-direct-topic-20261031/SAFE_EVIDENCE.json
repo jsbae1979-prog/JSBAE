@@ -1,0 +1,63 @@
+{
+  "status": "DEVELOPMENT_VERIFIED; OPERATING_APPLICATION_PENDING_RESTART_APPROVAL",
+  "scope": {
+    "savedApproval": "Reuse existing API approval and request ceiling; no repeated analysis/topic checkboxes",
+    "unknowns": "Only already explicitly reviewed, unchanged prior fingerprints are reusable for separate new operations; same-operation, active, fresh or changed unknowns remain blocked",
+    "directVideo": "Image/character + topic directly to selected video model; zero Claude/OpenAI authoring or image analysis calls",
+    "storyMode": "Existing story-based route preserved; registration optional for image/topic story mode too",
+    "directDefault": "Default 15 seconds; selecting longer duration explicitly enables sequential continuation without a second checkbox",
+    "directContinuation": "Prior verified final frame, previous direction and elapsed time; no writer call, automatic retry or silent quote increase",
+    "nativeModelSelection": "Existing two-model catalog and parameter mapping retained"
+  },
+  "tests": {
+    "distinctFocusedPassed": 94,
+    "newCases": 30,
+    "relatedCases": 64,
+    "failed": 0,
+    "errors": 0,
+    "typeScript": "PASS",
+    "reactBuild": "PASS",
+    "realLocalFfmpegWithFakeVideoTargetsSeconds": [
+      15,
+      30
+    ],
+    "durationToleranceSeconds": 0.03333333333333333,
+    "containerAudioPaddingObservedSeconds": 0.021,
+    "browserResolutions": [
+      [
+        1366,
+        768
+      ],
+      [
+        1920,
+        1080
+      ]
+    ],
+    "externalPaidCalls": 0,
+    "followUp": "../character-direct-continuity-20261031/SAFE_EVIDENCE.json"
+  },
+  "reviewRejection": {
+    "action": "An earlier proposed test expectation would have accepted a fresh unreviewed unknown",
+    "performed": false,
+    "saferResolution": "Existing refusal tests unchanged. Reuse requires a prior exact-journal review; new unknowns still stop."
+  },
+  "operating": {
+    "newFeatureApplied": false,
+    "additionalRestarts": 0,
+    "paidCalls": 0,
+    "currentCompletedVideoPreserved": true,
+    "originalDbAndBackupsPreserved": true,
+    "keysNotReadOrChanged": true
+  },
+  "vendorDocs": {
+    "checkedDate": "2026-10-31",
+    "o3ImageReference": "https://open.higgsfield.ai/models/kling-video/o3/image-reference/api-reference",
+    "klingOverview": "https://higgsfield.ai/creator-hub/help-center/ai-models/how-do-i-use-kling",
+    "note": "Native 3–15 seconds. Last-frame continuation can help visual continuity but is not a narrative guarantee."
+  },
+  "notVerified": [
+    "Live paid direct generation",
+    "Actual new feature in operating Chrome before approved restart"
+  ],
+  "verdict": "CONDITIONAL: source and focused Fake verification complete; operating application awaits separate restart approval"
+}

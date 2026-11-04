@@ -1,0 +1,41 @@
+{
+  "baseCommit": "44f7fd0d113e114fa59724002edbd26af30a4ddf",
+  "changes": [
+    "Local character limits remain unchanged; a schema-derived per-field character budget and shorter action/camera target are sent to the authoring provider.",
+    "Completed JSON candidates are preserved even when local validation fails; existing size/path/hash controls are reused.",
+    "Private candidate records bind provider, attempt, request sequence, profile, topic, duration, selected settings, reference and episode budget.",
+    "Authenticated read-only preview and CSRF/Origin-protected free recovery validate every original local schema, timing, continuity and prompt rule.",
+    "Explicit review modal supports action/camera character counters and advanced full-object editing; cancel/read/recover do not call a provider.",
+    "Original candidate bytes and prior cost/attempt records are retained after successful edited recovery. No automatic truncation or retry."
+  ],
+  "validation": {
+    "distinctPassed": 62,
+    "newTests": 20,
+    "finalFailures": 0,
+    "finalErrors": 0,
+    "typescript": "PASS",
+    "reactBuild": "PASS",
+    "browser": "Synthetic local Chromium on Windows, 1366x768 and 1920x1080",
+    "realProviderCalls": 0,
+    "operatingRestarts": 0,
+    "fullRegressionRepeated": false,
+    "initialIssuesResolved": [
+      "Two test fixtures lacked reserved cost ceilings and stopped before the intended response path; corrected Fake budget receipts.",
+      "Browser fixture omitted read-model DB sessions; connected the existing synthetic session before the browser test passed."
+    ]
+  },
+  "protection": {
+    "operatingAppChanged": false,
+    "operatingDataKeysMediaBackupsChanged": false,
+    "paidGeneration": false,
+    "snsCalls": false,
+    "mainOrPR35Changed": false,
+    "newMigrations": false
+  },
+  "limitations": [
+    "Previously received responses without saved source files cannot be recovered retrospectively.",
+    "Improved prompting cannot guarantee the provider obeys length limits; rejected candidates remain available for explicit local editing.",
+    "Operating application and a new paid test require separate approval."
+  ],
+  "verdict": "CONDITIONAL — development and synthetic free recovery verified; operating application pending"
+}

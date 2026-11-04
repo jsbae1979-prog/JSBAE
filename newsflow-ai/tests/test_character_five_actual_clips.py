@@ -39,7 +39,7 @@ def test_old_accepted_single_fifteen_second_clip_renders_without_payload_reshape
     def compose(folder,story,clips,**settings):
         seen.append((len(story.scenes),list(clips)))
         (folder/'final.mp4').write_bytes(b'synthetic old clip composed')
-        return {'file':'final.mp4','sha256':'a'*64,'media':{'duration':15,'has_audio':False}}
+        return {'file':'final.mp4','sha256':hashlib.sha256((folder/'final.mp4').read_bytes()).hexdigest(),'media':{'duration':15,'has_audio':False}}
     monkeypatch.setattr('newsflow.character.compose_studio.compose_studio',compose)
     assert service.render(identifier,reviewed=True)==folder/'final.mp4'
     assert seen==[(5,[path])] and service.read(identifier)['scenes']==old_scene

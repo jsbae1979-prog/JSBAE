@@ -19,7 +19,7 @@ const states: Record<string, string> = {
   unknown: "결과 불명 · 재요청 금지",
   missing: "파일 확인 필요",
 };
-function FeedDialog({
+export function FeedDialog({
   name,
   onClose,
   children,
@@ -70,17 +70,21 @@ export default function TopThreeFeeds({
     [editing, setEditing] = useState<Item | null>(null);
   const [postReview, setPostReview] = useState<Item | null>(null),
     [rights, setRights] = useState(false),
-    [sources, setSources] = useState(false);
+    [sources, setSources] = useState(false),
+    [imageSafety, setImageSafety] = useState(false);
   const [ready, setReady] = useState(false);
   const [runningRank, setRunningRank] = useState<number | null>(null);
+  const [stopRequested, setStopRequested] = useState(false);
   const loadVersion = useRef(0);
+  const initialLoad = useRef(true);
   const stop = useRef(false),
     mounted = useRef(true);
   async function load() {
     const version = ++loadVersion.current;
     setReady(false);
     try {
-      const r = await fetch("/api/feed-batches", {
+      const linkedBatch = new URLSearchParams(window.location.search).get("batch_id");
+      const r = await fetch("/api/feed-batches" + (linkedBatch && /^[1-9][0-9]*$/.test(linkedBatch) ? "?batch_id="+linkedBatch : ""), {
         credentials: "same-origin",
         cache: "no-store",
       });
@@ -89,10 +93,14 @@ export default function TopThreeFeeds({
       if (!mounted.current || version !== loadVersion.current) return;
       setBatches(d.batches);
       setOptions(d.defaults ?? catalog.imageDefaults ?? {});
-      setBatch(
-        (b) =>
-          d.batches.find((x: Item) => x.id === b?.id) ?? d.batches[0] ?? null,
-      );
+      const requested = new URLSearchParams(window.location.search).get("batch_id");
+      const latest=selections.filter(x=>x.status==='success'&&x.ranking?.length===3).sort((a,b)=>Number(b.id)-Number(a.id))[0];
+      const first=initialLoad.current;initialLoad.current=false;
+      if(first&&!requested&&latest)setAnalysis(String(latest.id));
+      setBatch((b) => d.batches.find((x: Item) => x.id === b?.id) ??
+        (requested && /^[1-9][0-9]*$/.test(requested)
+          ? d.batches.find((x: Item) => String(x.id) === requested) ?? null
+          : latest ? d.batches.find((x:Item)=>x.analysisId===latest.id)??null : d.batches[0]??null));
     } finally {
       if (mounted.current && version === loadVersion.current) setReady(true);
     }
@@ -106,6 +114,11 @@ export default function TopThreeFeeds({
       ++loadVersion.current;
     };
   }, []);
+  useEffect(()=>{
+    if(batch){setAnalysis(String(batch.analysisId));setOptions(batch.selection);}
+    else if(!analysis && selections.length)setAnalysis(String(selections[0].id));
+  },[batch?.id,selections]);
+  function chooseAnalysis(value:string){setAnalysis(value);setBatch(null);setMessage("");setApproval(false);}
   async function post(path: string, data: Item) {
     const form = new URLSearchParams({
       csrf_token: csrf,
@@ -121,7 +134,8 @@ export default function TopThreeFeeds({
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: form,
     });
-    const d = await r.json();
+    const d = await r.json().catch(()=>null);
+    if (!d) throw Error(r.status===403 ? "현재 실행 모드에서 이 작업이 허용되지 않습니다. 설정과 앱 연결을 확인하세요." : "서버 응답을 확인하지 못했습니다. 자동으로 다시 요청하지 않습니다.");
     if (!r.ok)
       throw Error(
         typeof d.detail === "string"
@@ -129,6 +143,12 @@ export default function TopThreeFeeds({
           : "입력과 저장 상태를 확인하세요.",
       );
     return d;
+  }
+  async function refreshCosts() {
+    if (!batch) return;
+    const response = await fetch(`/api/feed-batches/${batch.id}/cost-review`, {credentials:"same-origin",cache:"no-store"});
+    if (!response.ok) throw Error("비용 상태를 확인하지 못했습니다. 기존 승인은 유지됩니다.");
+    show(await response.json());
   }
   function show(b: Item) {
     if (!mounted.current) return;
@@ -155,13 +175,14 @@ export default function TopThreeFeeds({
     setApproval(false);
     await local(async () => {
       stop.current = false;
+      setStopRequested(false);
       let b = batch;
       if (regenerate) {
         b = await post(`/api/feed-batches/${b.id}/change`, {
           revision: b.revision,
           action: "regenerate",
           rank: regenerate.rank,
-          consent,
+          consent: reviewed,
           reviewed,
         });
         show(b);
@@ -183,7 +204,7 @@ export default function TopThreeFeeds({
         );
         b = await post(`/api/feed-batches/${b.id}/step`, { consent, reviewed });
         show(b);
-        if (b.items.some((x: Item) => x.status === "unknown")) break;
+        if (!b.canGenerate || b.items.some((x: Item) => ["unknown","failed"].includes(x.status))) break;
       }
       if (stop.current) {
         b = await post(`/api/feed-batches/${b.id}/change`, {
@@ -193,6 +214,23 @@ export default function TopThreeFeeds({
         show(b);
       }
       setMessage("제작 상태를 저장했습니다. 실제 게시되지 않았습니다.");
+    });
+  }
+  async function runSettings(edit?:Item) {
+    if(!batch||busy||!ready||!batch.costReview?.settingsLimitUsd)return;
+    await local(async()=>{
+      stop.current=false;setStopRequested(false);
+      let b=batch;
+      if(edit){b=await post(`/api/feed-batches/${b.id}/change`,{revision:b.revision,action:'design_edit',...edit});show(b);}
+      b=await post(`/api/feed-batches/${b.id}/cost-review`,{revision:b.revision});show(b);
+      if(!b.costReview?.approved)throw Error(b.costReview?.message??'설정의 사용 한도를 확인하세요.');
+      if(b.paused){b=await post(`/api/feed-batches/${b.id}/change`,{revision:b.revision,action:'resume'});show(b);}
+      while(!stop.current&&b.items.some((x:Item)=>x.status==='pending')){
+        setRunningRank(b.items.find((x:Item)=>x.status==='pending')?.rank??null);
+        b=await post(`/api/feed-batches/${b.id}/step`,{consent:true,reviewed:true});show(b);
+        if(b.items.some((x:Item)=>['unknown','failed'].includes(x.status))||!b.canGenerate)break;
+      }
+      setMessage('제작 상태를 저장했습니다.');
     });
   }
   const [regenerate, setRegenerate] = useState<Item | null>(null);
@@ -216,9 +254,10 @@ export default function TopThreeFeeds({
           </p>
           <p>
             {regenerate
-              ? "기존 결과를 보존하고 1회 추가 생성을 준비합니다."
+              ? "기존 결과를 보존하고 새 견적을 준비합니다. 이 단계는 무료이며 API를 호출하지 않습니다."
               : "대기 항목만 각 1회 생성합니다. 결과 불명 요청은 재시도하지 않습니다."}
           </p>
+          {batch?.items.some((x:Item)=>x.image_safety?.sensitive)&&<p role="note">민감 주제: 인물·국기·사건 장면 없이 상징 이미지로 만듭니다</p>}
           <label>
             <input
               type="checkbox"
@@ -227,7 +266,7 @@ export default function TopThreeFeeds({
             />
             뉴스·문구·출처·모델을 검토했습니다.
           </label>
-          <label>
+          {!regenerate && <label>
             <input
               type="checkbox"
               checked={consent}
@@ -236,10 +275,10 @@ export default function TopThreeFeeds({
             {batch?.simulation
               ? "표시된 Fake 생성 범위에 동의합니다."
               : "표시된 외부 전송·유료 생성 범위에 동의합니다."}
-          </label>
+          </label>}
           <div className="work-actions">
             <button
-              disabled={!consent || !reviewed || !batch?.canGenerate}
+              disabled={!reviewed || (regenerate ? !batch?.canPrepareRegeneration : (!consent || !batch?.canGenerate))}
               onClick={() => run(regenerate ?? undefined)}
             >
               {regenerate ? "1회 재생성 준비" : "자동 제작 시작"}
@@ -250,12 +289,12 @@ export default function TopThreeFeeds({
       )}
       {editing && (
         <FeedDialog name="피드 문구 수정" onClose={() => setEditing(null)}>
-          <h2>TOP {editing.rank} 문구 수정</h2>
+          <h2>TOP {editing.rank} {editing.titleOnly ? "제목 수정 · 무료" : "문구 수정"}</h2>
           <label>
             제목
             <input
               aria-label="TOP 3 수정 제목"
-              maxLength={60}
+              maxLength={100}
               value={editing.title}
               onChange={(e) =>
                 setEditing({ ...editing, title: e.target.value })
@@ -266,6 +305,7 @@ export default function TopThreeFeeds({
             짧은 요약
             <textarea
               aria-label="TOP 3 수정 요약"
+              disabled={editing.titleOnly}
               maxLength={180}
               value={editing.body}
               onChange={(e) => setEditing({ ...editing, body: e.target.value })}
@@ -275,6 +315,7 @@ export default function TopThreeFeeds({
             해시태그
             <input
               aria-label="TOP 3 수정 해시태그"
+              disabled={editing.titleOnly}
               maxLength={200}
               value={editing.hashtags}
               onChange={(e) =>
@@ -291,7 +332,7 @@ export default function TopThreeFeeds({
                   show(
                     await post(`/api/feed-batches/${batch!.id}/change`, {
                       revision: batch!.revision,
-                      action: "edit",
+                      action: editing.titleOnly ? "retitle" : "edit",
                       ...editing,
                     }),
                   );
@@ -308,6 +349,8 @@ export default function TopThreeFeeds({
       {postReview && (
         <FeedDialog name="피드 게시용 검토" onClose={() => setPostReview(null)}>
           <h2>TOP {postReview.rank} 게시용 검토</h2>
+          {postReview.image_safety?.sensitive&&<p role="note">민감 주제: 인물·국기·사건 장면 없이 상징 이미지로 만듭니다</p>}
+          {postReview.mediaUrl&&<img src={postReview.mediaUrl} alt="안전 확인할 생성 이미지" style={{maxWidth:'100%',maxHeight:'45vh',objectFit:'contain'}}/>}
           <p>
             AI 생성물 표시를 포함한 로컬 검토본만 저장합니다. 계정 연결·이미지
             업로드·공개 게시를 실행하지 않습니다.
@@ -336,9 +379,13 @@ export default function TopThreeFeeds({
             />
             원문 출처 확인
           </label>
+          <label><input type="checkbox" checked={imageSafety} onChange={e=>setImageSafety(e.target.checked)}/>
+            AI 이미지 안전 확인: 실존 인물의 사실적 얼굴, 국기·종교·정치 상징으로 특정 집단을 범인처럼 보이게 하는 요소, 실제 사건 재현이 없습니다.
+          </label>
+          <p>인스타그램 게시 시 'AI 정보' 라벨을 켜세요.</p>
           <div className="work-actions">
             <button
-              disabled={busy || !reviewed || !rights || !sources}
+              disabled={busy || !reviewed || !rights || !sources || !imageSafety}
               onClick={() =>
                 local(async () => {
                   const r = await post(
@@ -347,6 +394,7 @@ export default function TopThreeFeeds({
                       reviewed,
                       rights,
                       sources_confirmed: sources,
+                      image_safety_checked: imageSafety,
                       ai_disclosure: "disclose",
                     },
                   );
@@ -370,24 +418,27 @@ export default function TopThreeFeeds({
           batches,
           batch,
           analysis,
-          setAnalysis,
+          setAnalysis:chooseAnalysis,
           options,
           setOptions,
           busy,
           message,
           ready,
           runningRank,
+          stopRequested,
           chosen,
           local,
           post,
           show,
           load,
+          refreshCosts,
+          runSettings,
           setMessage,
           approve: (item?: Item) => {
             if (
               !ready ||
               busy ||
-              !batch?.canGenerate ||
+              !batch || !(item ? batch.canPrepareRegeneration : batch.canGenerate) ||
               batch.items.some((x: Item) =>
                 ["unknown", "running"].includes(x.status),
               )
@@ -399,18 +450,19 @@ export default function TopThreeFeeds({
             setApproval(true);
           },
           edit: (item: Item) => {
-            if (!ready || busy || item.status !== "pending") return;
-            setEditing({ ...item.content, rank: item.rank });
+            if (!ready || busy || (item.status !== "pending" && !item.canEditTitle)) return;
+            setEditing({ ...item.content, rank: item.rank, titleOnly: item.status === "success" });
           },
           review: (item: Item) => {
             if (busy || batch?.simulation || item.status !== "success") return;
             setPostReview(item);
             setRights(false);
-            setSources(false);
+            setSources(false); setImageSafety(false);
             setReviewed(false);
           },
           pause: () => {
             stop.current = true;
+            setStopRequested(true);
           },
           select: (b: Item) => {
             if (!busy) show(b);
@@ -770,7 +822,7 @@ export default function TopThreeFeeds({
                         onClick={() => {
                           setPostReview(x);
                           setRights(false);
-                          setSources(false);
+                          setSources(false); setImageSafety(false);
                           setReviewed(false);
                         }}
                       >

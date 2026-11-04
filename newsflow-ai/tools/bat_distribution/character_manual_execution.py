@@ -5,17 +5,23 @@ global provider access, new cumulative budget or implicit retry is introduced.
 """
 from __future__ import annotations
 from contextvars import ContextVar
+from decimal import Decimal
+import hashlib
 import json
 from pathlib import Path
+from threading import Lock
 import re
 
-from newsflow.character.service import CharacterService, digest
-from newsflow.character.kling import KlingClient, K3, O3, check as settings_for
+from newsflow.character.service import CharacterService, digest, fingerprint
+from newsflow.character.kling import KlingClient, check as settings_for
+from newsflow.character.higgsfield_client import amount
+from newsflow.video.ai.download import safe_url
+from newsflow.video_models.catalog import CATALOG
 from newsflow.character.schema import CharacterError
 from .character_quote_only import _Store, _ReadOnlyCipher, _unlinked
 from .lifecycle import Blocked
 
-PATH = re.compile(r'/character/([a-f0-9]{32})/(submit|check|diagnose)\Z')
+PATH = re.compile(r'/character/([a-f0-9]{32})/(submit|check|diagnose|retry-quote|retry-scene)\Z')
 _REQUEST = ContextVar('newsflow_manual_character_request', default=None)
 _ACTIVE = ContextVar('newsflow_manual_character_active', default=None)
 
@@ -44,28 +50,84 @@ class _Client:
         return self.original.credential()
 
     def submit_scene(self, payload, idempotency_key):
-        context = self.scope.context('submit')
+        context = self.scope.context()
+        action = context['request'][2]
+        if action not in {'submit', 'check', 'retry-scene'}:
+            _deny()
         job = self.scope.local.read(context['job_id'])
         matches = [scene for scene in job.get('scenes', [])
                    if scene.get('state') == 'submitting'
                    and scene.get('idempotency_key') == idempotency_key
                    and scene.get('payload') == payload]
-        if job['state'] != 'generating' or len(matches) != 1 or idempotency_key in context['submitted']:
+        if len(matches) != 1:
             _deny()
-        # Product service has already persisted `submitting` before this call.
-        context['submitted'].add(idempotency_key)
+        scene = matches[0]
+        if action == 'retry-scene':
+            self.scope.approved_episode(job)
+            previous = context['retry_source']
+            retry = context['retry_quote']
+            expected_history = [*previous.get('history', []),
+                                {k: v for k, v in previous.items() if k != 'history'}]
+            if (job['state'] != 'generating' or scene['position'] != previous['position']
+                    or scene['attempt'] != previous['attempt'] + 1
+                    or scene['payload'] != previous['payload']
+                    or scene.get('history') != expected_history
+                    or scene.get('handle') is not None
+                    or idempotency_key != f'{job["id"]}-s{scene["position"]}-t{scene["attempt"]}'
+                    or scene.get('quote_usd') != retry['quote_usd']
+                    or job.get('retry_hash') != context['retry_hash']
+                    or job.get('retry') != retry
+                    or job['quote_approvals'][:-1] != context['prior_approvals']
+                    or job['quote_approvals'][-1].get('scope') != 'scene_retry'
+                    or job['quote_approvals'][-1].get('position') != scene['position']
+                    or job['quote_approvals'][-1].get('attempt') != scene['attempt']
+                    or amount(job['quote_approvals'][-1]['usd']) != amount(retry['quote_usd'])
+                    or any(fingerprint(row) != context['other_scenes'].get(row['position'])
+                           for row in job['scenes'] if row['position'] != scene['position'])):
+                _deny()
+        elif action == 'check':
+            self.scope.approved_episode(job)
+            receipt = context['continuations'].get(scene['position'])
+            if (job['state'] not in {'generating', 'scene_review', 'status_or_download_failed'}
+                    or context['initial_states'].get(scene['position']) != 'waiting_dependency'
+                    or any(value in {'unknown', 'submitting'} for value in context['initial_states'].values())
+                    or not receipt or receipt.get('quote') is None
+                    or payload != receipt['payload']
+                    or scene.get('dependency') != receipt['dependency']
+                    or scene.get('execution_quote_usd') != str(receipt['quote'])
+                    or amount(receipt['quote']) > amount(scene['quote_usd'])
+                    or idempotency_key != f'{job["id"]}-s{scene["position"]}-t{scene["attempt"]}'):
+                _deny()
+            self.scope.parent_frame(job, scene, receipt['frame'])
+        elif job['state'] != 'generating':
+            _deny()
+        elif job.get('automation_version') == 1:
+            self.scope.approved_episode(job)
+            if (scene.get('continuity') != 'cut'
+                    or context['initial_states'].get(scene['position']) != 'not_submitted'
+                    or idempotency_key != f'{job["id"]}-s{scene["position"]}-t{scene["attempt"]}'):
+                _deny()
+        # A shared request-local lock also protects concurrent cut dispatch.
+        with context['claims_lock']:
+            if idempotency_key in context['submitted']:
+                _deny()
+            context['submitted'].add(idempotency_key)
         return self.original.submit_scene(payload, idempotency_key)
 
     def check(self, handle):
         context = self.scope.context('check')
         job = self.scope.local.read(context['job_id'])
+        episode = job.get('automation_version') == 1
+        states = {'submitted', 'downloading'} if episode else {'submitted'}
+        job_states = {'generating', 'scene_review', 'submission_unknown', 'status_or_download_failed'} if episode else {'generating', 'scene_review'}
         matches = [scene for scene in job.get('scenes', [])
-                   if scene.get('state') == 'submitted' and scene.get('handle') == handle]
-        if job['state'] not in {'generating', 'scene_review'} or len(matches) != 1:
+                   if scene.get('state') in states and scene.get('handle') == handle]
+        if job['state'] not in job_states or len(matches) != 1:
             _deny()
         position = matches[0]['position']
         if position in context['statuses']:
             _deny()
+        context['statuses'][position] = None  # Claim before a possibly failing read.
         status = self.original.check(handle)
         context['statuses'][position] = status
         return status
@@ -89,21 +151,75 @@ class _Client:
         job = self.scope.local.read(context['job_id'])
         folder = self.scope.local.folder(context['job_id'])
         target = _unlinked(target)
+        episode = job.get('automation_version') == 1
+        def filename(scene):
+            suffix = f'-t{scene["attempt"]}' if episode and scene['attempt'] > 1 else ''
+            return f'scene-{scene["position"]}{suffix}.mp4'
         matches = [scene for scene in job.get('scenes', [])
                    if scene.get('state') == 'downloading'
-                   and target == folder/f'scene-{scene["position"]}.mp4'
+                   and target == folder / filename(scene)
                    and context['statuses'].get(scene['position']) is status]
-        if (job['state'] not in {'generating', 'scene_review'} or len(matches) != 1 or target in context['fetched']
-                or status.state != 'completed'):
+        job_states = {'generating', 'scene_review', 'submission_unknown', 'status_or_download_failed'} if episode else {'generating', 'scene_review'}
+        if (job['state'] not in job_states or len(matches) != 1 or target in context['fetched']
+                or target.exists() or status.state != 'completed'):
             _deny()
         context['fetched'].add(target)
         return self.original.fetch(status, target, cancel)
 
-    def upload_reference(self, *args, **kwargs):
-        _deny()
+    def upload_reference(self, path):
+        context = self.scope.context('check')
+        job = self.scope.local.read(context['job_id'])
+        self.scope.approved_episode(job)
+        matches = [scene for scene in job['scenes'] if scene['state'] == 'preparing_dependency'
+                   and context['initial_states'].get(scene['position']) == 'waiting_dependency']
+        if len(matches) != 1:
+            _deny()
+        scene = matches[0]
+        if (scene['position'] in context['continuations']
+                or fingerprint(scene['payload']) != scene['approved_template_hash']
+                or any(value in {'unknown', 'submitting'} for value in context['initial_states'].values())):
+            _deny()
+        dependency = self.scope.parent_frame(job, scene, path)
+        receipt = {'frame': _unlinked(path), 'dependency': dependency, 'quote': None}
+        context['continuations'][scene['position']] = receipt  # Never retry this upload within a check.
+        public = safe_url(self.original.upload_reference(path))
+        field = CATALOG.model(job['model']).get('continuation_param')
+        if not field:
+            _deny()
+        receipt['payload'] = {**scene['payload'], field: public}
+        return public
 
-    def estimate(self, *args, **kwargs):
-        _deny()
+    def estimate(self, payload):
+        context = self.scope.context()
+        if context['request'][2] == 'retry-quote':
+            job = self.scope.local.read(context['job_id'])
+            target = context.get('retry_target')
+            matches = [scene for scene in job.get('scenes', [])
+                       if scene.get('position') == context.get('retry_position')]
+            if (job.get('state') != 'retry_quoting' or len(matches) != 1
+                    or fingerprint(matches[0]) != target or matches[0].get('payload') != payload
+                    or context.get('retry_estimated')):
+                _deny()
+            context['retry_estimated'] = True  # One quote only, claimed before external IO.
+            return str(amount(self.original.estimate(payload)))
+        context = self.scope.context('check')
+        job = self.scope.local.read(context['job_id'])
+        self.scope.approved_episode(job)
+        matches = [scene for scene in job['scenes'] if scene['state'] == 'preparing_dependency'
+                   and context['continuations'].get(scene['position'], {}).get('payload') == payload]
+        if len(matches) != 1:
+            _deny()
+        scene = matches[0]
+        receipt = context['continuations'][scene['position']]
+        if receipt.get('estimate_attempted'):
+            _deny()
+        self.scope.parent_frame(job, scene, receipt['frame'])
+        receipt['estimate_attempted'] = True
+        price = amount(self.original.estimate(payload))
+        receipt['quote'] = str(price)
+        # Product EpisodeFlow compares the new price to the approved scene quote.
+        # A higher quote is returned, not clamped or silently approved.
+        return str(price)
 
 
 class ManualExecution:
@@ -130,30 +246,98 @@ class ManualExecution:
     def active(self):
         return self.context()['job_id']
 
+    def approved_episode(self, job):
+        from newsflow.character.episode_service import EpisodeFlow
+        if (job.get('automation_version') != 1 or job.get('id') != self.active()
+                or job.get('approved_plan_hash') != job.get('plan_hash')
+                or job.get('plan_hash') != self.local.plan_hash(job)
+                or job.get('script_approval', {}).get('sha256') != fingerprint(job.get('script'))
+                or not job.get('quote_approvals')
+                or hashlib.sha256(self.keys.key().encode()).hexdigest() != job.get('quote_key_id')):
+            _deny()
+        exposure = sum((amount(row['usd']) for row in job['quote_approvals']), Decimal(0))
+        exposure += EpisodeFlow.text_exposure(job)
+        if exposure > amount(job['episode_limit']):
+            _deny()
+
+    def parent_frame(self, job, scene, path):
+        """Only this approved continuation's owned, completed parent's frame."""
+        if (scene.get('continuity') != 'continue' or type(scene.get('from')) is not int
+                or not 1 <= scene['from'] < scene['position']):
+            _deny()
+        parent = job['scenes'][scene['from'] - 1]
+        folder = self.local.folder(job['id'])
+        expected = folder / 'frames' / f'scene-{parent["position"]}-t{parent["attempt"]}-last.png'
+        suffix = f'-t{parent["attempt"]}' if parent['attempt'] > 1 else ''
+        clip = folder / f'scene-{parent["position"]}{suffix}.mp4'
+        if (parent['position'] != scene['from'] or parent['state'] != 'downloaded'
+                or parent.get('file') != clip.name or _unlinked(path) != expected
+                or not _unlinked(clip).is_file() or digest(clip) != parent.get('sha256')
+                or not expected.is_file() or digest(expected) != parent.get('last_frame_sha256')):
+            _deny()
+        return {'position': parent['position'], 'attempt': parent['attempt'],
+                'clip_sha256': parent['sha256'], 'frame_sha256': parent['last_frame_sha256']}
+
     def video_for(self, job):
         identifier = self.active()
         if job.get('id') != identifier:
             _deny()
         settings = settings_for(job['studio_selection'])
-        if settings['video_model'] not in {K3, O3}:
-            _deny()
         return _Client(self, KlingClient(self.keys.key, settings))
 
     def execute(self, action, identifier, *, consent=False, quote_hash=''):
-        if action not in {'submit', 'check', 'diagnose'} or _REQUEST.get() != (self, identifier, action):
+        if action not in {'submit', 'check', 'diagnose', 'retry-quote', 'retry-scene'} or _REQUEST.get() != (self, identifier, action):
             _deny()
         self.local.consent(consent)
         # Product methods own the lock, quote approval, per-execution cap,
         # pre-submit state journal, status/download transitions and no replay.
         job = self.local.read(identifier)
         settings = settings_for(job['studio_selection'])
-        if (settings['video_model'] not in {K3, O3}
-                or job.get('plan_hash') != self.local.plan_hash(job)
+        if (job.get('plan_hash') != self.local.plan_hash(job)
                 or digest(_unlinked(self.local.folder(identifier)/'reference.png')) != job['reference_sha256']):
             _deny()
         token = _ACTIVE.set({'request': (self, identifier, action), 'job_id': identifier,
-                             'submitted': set(), 'statuses': {}, 'fetched': set()})
+                             'submitted': set(), 'statuses': {}, 'fetched': set(),
+                             'initial_states': {row['position']: row['state'] for row in job.get('scenes', [])},
+                             'continuations': {}, 'claims_lock': Lock()})
         try:
+            if action in {'retry-quote', 'retry-scene'}:
+                # Exact owned failure only; submission still needs a fresh quoted approval.
+                pending = next((row for row in job.get('scenes', [])
+                                if row.get('state') == 'failed' and row.get('attempt', 3) < 3), None)
+                expected_state = 'retry_quoted' if action == 'retry-scene' else 'scene_review'
+                if (job.get('state') != expected_state or pending is None
+                        or any(row.get('state') not in {'failed', 'nsfw', 'canceled', 'downloaded', 'waiting_dependency'}
+                               for row in job.get('scenes', []))):
+                    _deny()
+                handle = pending.get('handle')
+                if not isinstance(handle, dict) or set(handle) != {'request_id', 'status_url'}:
+                    _deny()
+                from newsflow.character.higgsfield_client import request_url
+                request_url(handle['status_url'], handle['request_id'])
+                detail = pending.get('status_diagnostics', {})
+                if detail and (detail.get('observed_state') != 'failed' or detail.get('state_mismatch')):
+                    _deny()
+                if job.get('automation_version') == 1:
+                    self.approved_episode(job)
+                context = self.context(action)
+                if action == 'retry-scene':
+                    # Modern episode retries preserve the original plan and all other scenes.
+                    # The service validates expiry/key/budget and journals intent before IO.
+                    retry = job.get('retry', {})
+                    if (job.get('automation_version') != 1 or not quote_hash
+                            or quote_hash != job.get('retry_hash')
+                            or fingerprint(retry) != quote_hash
+                            or retry.get('position') != pending['position']
+                            or retry.get('original') != fingerprint(pending)):
+                        _deny()
+                    context.update(retry_source=pending, retry_quote=retry, retry_hash=quote_hash,
+                                   prior_approvals=job['quote_approvals'],
+                                   other_scenes={row['position']: fingerprint(row) for row in job['scenes']
+                                                 if row['position'] != pending['position']})
+                    return CharacterService.retry_scene(self.local, identifier, consent=True, quote_hash=quote_hash)
+                context.update(retry_position=pending['position'], retry_target=fingerprint(pending))
+                return CharacterService.prepare_retry(self.local, identifier, consent=True)
             if action == 'submit':
                 return CharacterService.submit(self.local, identifier, consent=True, quote_hash=quote_hash)
             if action == 'diagnose':
@@ -188,15 +372,16 @@ def install(app, profile, nativefactory):
             or _unlinked(app.state.config.data_dir) != _unlinked(profile)):
         _deny()
     manual = ManualExecution(service, Path(profile), nativefactory)
-    for action in ('submit', 'check', 'diagnose'):
-        original = getattr(service, action)
+    for action, method in (('submit', 'submit'), ('check', 'check'), ('diagnose', 'diagnose'),
+                           ('retry-quote', 'prepare_retry'), ('retry-scene', 'retry_scene')):
+        original = getattr(service, method)
         def wrapped(identifier, *args, _action=action, _original=original, **kwargs):
             if _REQUEST.get() == (manual, identifier, _action):
                 if args:
                     _deny()
                 return manual.execute(_action, identifier, **kwargs)
             return _original(identifier, *args, **kwargs)
-        setattr(service, action, wrapped)
+        setattr(service, method, wrapped)
     service._manual_character_execution = manual
     service._manual_character_execution_enabled = True
     return manual

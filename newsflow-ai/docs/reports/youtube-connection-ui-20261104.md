@@ -1,0 +1,12 @@
+# YouTube channel connection UI — 2026-11-04
+
+- Replaced the generic connection command dialog in Settings with a platform-specific channel screen. Users do not enter email, password, token, label or account ID. Existing channel IDs are selected internally from local status.
+- Desktop OAuth JSON is selected as a file only when needed, validated locally and by the existing server, and sent through the existing CSRF-protected encrypted store. Stored client configuration remains collapsed. Nothing starts authentication on file save or screen load.
+- Explicit consent plus Google connection button, channel reconnect selector, pending status, reopen/cancel controls, and local-only status refresh. Existing credentials, callback verification, Origin/CSRF, publishing approval and no automatic POST retry are retained.
+- New GET /api/youtube/status returns an allowlist of nonsecret metadata with no-store; no tokens, authorization URL, client JSON or remote requests. No new POST routes; both existing action registries remain unchanged.
+- Fake/service/browser tests: 72 PASS; studio_v3 tests: 58 PASS. The 5 new screen/status cases were rerun after file-input and layout checks and pass (not counted twice). TypeScript and Vite build pass. Browser checks cover missing client, consent, unavailable storage, pending login, exact channel mapping, safe errors, invalid file rejection and client upload without secret display.
+- Earlier 4 browser failures were a fixture mount reading the old dist, fixed by patching the dist before app creation. One subsequent failure identified missing exact accessible name on channel selection; explicit aria-label added. No assertions removed or skipped.
+- No real Google login, token change, paid API, upload or SNS publishing performed. These remain separate live validation. Unrelated working changes excluded from build and commit.
+
+## Operating read boundary follow-up
+The live BAT wrapper initially refused the new local GET /api/youtube/status. Added only this exact metadata read to OperatingRequests. 16 boundary tests pass, including denial of status POST, sibling paths, OAuth connect and publication routes. The general external execution boundary is unchanged. UI and fake tests do not establish live Google login availability; actual Google connection remains unverified and the current BAT runtime still requires its dedicated OAuth execution integration. No Google login, token change or upload was performed.

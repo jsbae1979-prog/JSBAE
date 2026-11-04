@@ -1,0 +1,46 @@
+{
+  "implementationCommit": "7114d8a3f25582d1c8d559fdc9c33ab8b1c068c5",
+  "python314Meta": {
+    "passed": 76,
+    "failed": 0,
+    "skipped": 0
+  },
+  "python312MetaBeforeLastThreeCases": {
+    "passed": 70,
+    "failed": 0,
+    "skipped": 0
+  },
+  "storageAfterBoundaryChanges": {
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0
+  },
+  "frontend": {
+    "passed": 47,
+    "failed": 0,
+    "skipped": 0
+  },
+  "studioV3": {
+    "passed": 58,
+    "failed": 0,
+    "skipped": 0
+  },
+  "reactBuild": "PASS",
+  "fullRegression": "INTERRUPTED at 28%; no final counts; NOT VERIFIED",
+  "windowsCI": {
+    "id": 41430853673,
+    "statusAtLastCheck": "in_progress"
+  },
+  "realMetaRequests": 0,
+  "realStorageUploads": 0,
+  "actualPosts": 0,
+  "operatingDeployment": false,
+  "logsSha256": {
+    "direct-final-314.log": "508da407a623040bd9ac5cda32b9e603a693dc8f5489f7c78e6286713a3efd4f",
+    "direct-final-312.log": "c9c6711c6d10b9ca58f75b19c57fef6c6c7ac93d530919d2e987edff5bda386d",
+    "direct-storage-final.log": "4e5215c59281beeee9c6f0bedad09561c8590b20be8ec7205a590e2515588a1e",
+    "direct-frontend.log": "7855cb9d2105286b56341ca149fbfd9099446f52466f74d044e2f93df76f95d8",
+    "direct-build.log": "818c1d264869b140bd9cabba0be4066263e379bbfb18d57ca488c6466d370898",
+    "direct-full.log": "e127eb6d0ef3344e227cbc7b72a11ad38ccb67fe0c587fe8de4998bf2fd7a7b2"
+  }
+}

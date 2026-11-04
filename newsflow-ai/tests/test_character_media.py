@@ -71,3 +71,48 @@ def test_unused_noncommercial_sfx_is_never_added_to_plain_composition(tmp_path,s
     result=compose(folder,script,[synthetic_clip]*3,sfx_root=sfx)
     assert result['effects']==[] and not result['media']['has_audio']
     assert (folder/'final.mp4').is_file() and not list((folder/'compose').glob('*.ass'))
+
+
+def test_failed_ffmpeg_attempt_can_finish_with_existing_paid_shaped_clips(setup,synthetic_clip):
+    from newsflow.character.compose import digest
+    from newsflow.character.schema import CharacterError
+    service=setup.service;identifier=prepared(setup)
+    job=service.read(identifier);folder=service.folder(identifier)
+    for scene in job['scenes']:
+        target=folder/f"scene-{scene['position']}.mp4"
+        shutil.copy2(synthetic_clip,target)
+        scene.update(file=target.name,sha256=digest(target),state='downloaded')
+    job['state']='clips_review';service.save(job)
+    calls=(setup.video.calls,setup.writer.calls)
+    def fail(folder,*args,**kwargs):
+        (folder/'compose').mkdir()
+        raise OSError('Synthetic FFmpeg failure')
+    service.composer=fail
+    with pytest.raises(CharacterError):service.render(identifier,reviewed=True)
+    service.composer=compose
+    output=service.render(identifier,reviewed=True)
+    info=probe_clip(output)
+    assert (info['width'],info['height'],info['duration'])==(1080,1920,30.0)
+    assert (setup.video.calls,setup.writer.calls)==calls
+    assert all(digest(folder/s['file'])==s['sha256'] for s in job['scenes'])
+
+
+def test_long_root(setup,synthetic_clip,tmp_path):
+    # The previous workspace added 58 characters and made a 201-char job's
+    # FFmpeg cwd 259 chars (WinError 267 on Windows). Keep real Windows coverage.
+    from newsflow.character.compose import digest
+    service=setup.service
+    padding=201-len(str(tmp_path))-len('/character/')-32-1
+    assert padding>0
+    service.root=tmp_path/('p'*padding)/'character'
+    identifier=prepared(setup);folder=service.folder(identifier)
+    assert len(str(folder))==201
+    job=service.read(identifier)
+    for scene in job['scenes']:
+        target=folder/f"scene-{scene['position']}.mp4"
+        shutil.copy2(synthetic_clip,target)
+        scene.update(file=target.name,sha256=digest(target),state='downloaded')
+    job['state']='compose_failed';service.save(job)
+    output=service.render(identifier,reviewed=True)
+    assert probe_clip(output)['duration']==30
+    assert len(str(next((folder/'compose-runs').iterdir())/'compose'))<248

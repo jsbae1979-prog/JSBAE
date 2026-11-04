@@ -151,7 +151,7 @@ def test_service_dispatches_only_one_script_and_preserves_analysis(sessions, sto
     assert adapter.calls == ['script']
 
 
-@pytest.mark.parametrize('mutate', ['analysis', 'unknown', 'monthly'])
+@pytest.mark.parametrize('mutate', ['analysis', 'unknown', 'request_limit'])
 def test_changed_bound_records_or_budget_remain_blocked(sessions, store, mutate):
     from newsflow.db.models import APIRequestReservation
     from newsflow.intelligence.settings import _set
@@ -164,7 +164,7 @@ def test_changed_bound_records_or_budget_remain_blocked(sessions, store, mutate)
         elif mutate == 'unknown':
             session.scalar(select(APIRequestReservation)).reserved_usd = '123'
         else:
-            _set(session, 'api_claude_api_monthly_limit_usd', '0')
+            _set(session, 'api_claude_api_request_limit_usd', '0')
     with pytest.raises(APISettingsError):
         attempt(sessions, store, script(sessions, identifier))
 

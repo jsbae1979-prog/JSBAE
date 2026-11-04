@@ -10,7 +10,7 @@ import re
 
 from sqlalchemy import select
 
-from newsflow.db.models import AppSetting
+from newsflow.db.models import AppSetting, WorkspaceRemoval
 from .schema import CharacterError
 
 PREFIX = 'char-visibility:'  # 16+32 characters, within AppSetting's 50-character key.
@@ -57,6 +57,9 @@ def set_visibility(service, identifier, scope, hidden):
             # Serialize metadata changes from separate browser tabs. This does
             # not alter the job's own journal, reservations, approvals or state.
             session.connection().exec_driver_sql('BEGIN IMMEDIATE')
+            removal=session.get(WorkspaceRemoval,'library:character:'+identifier)
+            if removal is not None and removal.detail.get('state') in {'purging','purge_failed','purged'}:
+                raise CharacterError('busy')
             key=PREFIX+identifier
             row=session.get(AppSetting,key)
             value=_decode(row.value) if row is not None else dict(DEFAULTS)

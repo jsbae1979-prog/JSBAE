@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-31",
+  "decision": "CONDITIONAL",
+  "implementation": [
+    "Manual composition retry from compose_failed or interrupted composing under the existing exclusive lock",
+    "Per-attempt workspaces; downloaded clip hashes and supplier/billing journals unchanged",
+    "Old partial compose/final/review artifacts archived inside the same owned job, never deleted",
+    "Review and media validated before completed journal; completed composition remains idempotent",
+    "Library removal markers filter character studio rows; restoration returns the original job",
+    "Missing selections clear stale draft without unmounting active authoring panels"
+  ],
+  "validation": {
+    "python": "3.12.10",
+    "fullInitial": {
+      "collected": 6536,
+      "PASS": 6471,
+      "FAIL": 16,
+      "SKIP": 49,
+      "ERROR": 0,
+      "disjointShards": 4,
+      "caseCoverageMatched": true
+    },
+    "correctedFocused": {
+      "PASS": 198,
+      "FAIL": 0,
+      "ERROR": 0,
+      "allInitialFailuresCovered": true
+    },
+    "latestPerCaseCombined": {
+      "PASS": 6489,
+      "SKIP": 49
+    },
+    "latestPerCaseCount": 6538,
+    "singleFullInvocationAfterFinalCorrection": "NOT RUN; full initial run plus all failure files and every composition caller were rechecked",
+    "node": {
+      "PASS": 7,
+      "FAIL": 0
+    },
+    "typeScript": "PASS",
+    "reactBuild": "PASS",
+    "windowsPathProbe": {
+      "shortCwdChars": 220,
+      "shortResult": "PASS",
+      "longCwdChars": 259,
+      "longWinError": 267,
+      "fix": "Compact code-owned compose-runs attempt path; exclusive creation unchanged",
+      "regression": "Actual local FFmpeg composition from a synthetic job folder of exactly 201 characters PASS"
+    },
+    "fakeEpisodeDurationsSeconds": [
+      15,
+      35,
+      60
+    ],
+    "paidProviderCalls": 0,
+    "snsCalls": 0,
+    "operatingRestart": "NOT PERFORMED",
+    "operatingDeployment": "NOT PERFORMED"
+  },
+  "apiStatusReview": {
+    "scope": "Visible user Chrome settings and matching installed/development display source; no credential decryption or provider request",
+    "finding": "Only Claude authentication metadata is read by the service-status projection; other provider verification badges are fixed false",
+    "freshProviderAuthentication": "NOT VERIFIED",
+    "apiSettingsChanged": false
+  },
+  "protection": {
+    "operatingCodeKeysDataMediaBackupsModified": false,
+    "originalsAndBackupsUsedByTests": false,
+    "migrationsChanged": false,
+    "mainOrPR35Changed": false,
+    "existingUnrelatedLocalChangesPreserved": true
+  },
+  "remaining": [
+    "Approval for normal operating Stop/Start before applying Python changes",
+    "Operating GUI verification of new recovery/delete behavior",
+    "Provider authentication checks outside existing stored Claude verification remain unperformed"
+  ],
+  "sourceSha256": {
+    "src/newsflow/character/composition_recovery.py": "b4253b33c20d80e8a0a6bfbca470113c848828746c61dbc1513381105a9d0eb0",
+    "src/newsflow/character/service.py": "7d64ed69d85a4c7b38ad4560db551391e7c89b15b42bbf08c4c84e982afbf285",
+    "src/newsflow/studio/read_models.py": "fa2c957745e247310fca64fc665a352c3c437395df23295e87c5b4fb649e44bd",
+    "frontend/src/studio/CommandDialog.tsx": "4f0751f8b79f715e9c8b106dad76a5c28dcb48eca6dcb2291f78e69c168d75db",
+    "frontend/src/studio/core/CharacterStudio.tsx": "c24a2714940a7f31f202eac42f72386a3986cb01b1eaf10e67b0f651ac7db903"
+  }
+}

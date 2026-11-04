@@ -101,7 +101,7 @@ SERVICE_MESSAGES = {
     "완료된 결과를 다시 확인해 내려받습니다(추가 생성 요청 없음).",
     "AI 영상 공급사가 '사용 안 함'이라 상태 확인을 멈췄습니다. 공급사를 다시 켜면 이어서 확인합니다.",
     "확인 뒤에 유료 생성 승인이 다시 저장되어 이전 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
-    "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
+    "1회 실행 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요.",
     TIMEOUT_OPEN_MESSAGE,
     CLIP_LOST_MESSAGE,
     REFETCH_KEPT_MESSAGE,
@@ -117,7 +117,7 @@ READINESS_REASONS = (
     LEDGER_INVALID,
     "AI 영상 공급사가 '사용 안 함'입니다. 기본 FFmpeg 제작만 사용합니다.",
     "AI 영상 유료 생성 승인이 저장되지 않았습니다.",
-    "작업별 한도와 월 한도가 없습니다.",
+    "1회 실행 한도가 없습니다.",
     "이번 달 AI 영상 한도를 모두 사용했습니다.",
     "AI 영상 API 키가 없습니다.",
     "공식 문서 확인과 초당 단가를 입력한 모델이 없습니다.",
@@ -337,7 +337,7 @@ def test_default_off_no_injected_provider_estimate_lists_problems_and_confirm_is
     for reason in (
         "AI 영상 공급사가 '사용 안 함'입니다. 기본 FFmpeg 제작만 사용합니다.",
         "AI 영상 유료 생성 승인이 저장되지 않았습니다.",
-        "작업별 한도와 월 한도가 없습니다.",
+        "1회 실행 한도가 없습니다.",
         "AI 영상 API 키가 없습니다.",
         "공식 문서 확인과 초당 단가를 입력한 모델이 없습니다.",
         NOT_RETRYABLE,
@@ -366,7 +366,7 @@ def test_injected_fake_but_settings_off_refuses_and_never_calls_the_provider(stu
     estimate = studio.service.estimate(plan_id)
     assert estimate["can_submit"] is False and estimate["total"] == "0.5"
     assert "AI 영상 유료 생성 승인이 저장되지 않았습니다." in estimate["problems"]
-    assert "작업별 한도와 월 한도가 없습니다." in estimate["problems"]
+    assert "1회 실행 한도가 없습니다." in estimate["problems"]
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True)
     assert excinfo.value.status == 422 and "AI 영상 유료 생성 승인이 저장되지 않았습니다." in str(excinfo.value)
@@ -411,7 +411,7 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
     estimate = service.estimate(plan_id)
     assert estimate == {
         "scenes": [{"position": 2, "seconds": 5, "model": MODEL, "cost": "0.5", "usable": True}], "total": "0.5", "currency": "USD",
-        "plan_spent": "0", "job_limit": "5", "monthly_limit": "20", "month_spent": "0", "remaining": "20",
+        "plan_spent": "0", "job_limit": "5", "limit_scope": "per_execution", "month_spent": "0", "remaining": None,
         "problems": [], "notices": [], "can_submit": True, "other_currency_spend": False, "compose_closed": False, "accounting": "legacy_estimate",
     }
     assert estimate["scenes"][0]["usable"] is True
@@ -425,7 +425,7 @@ def test_full_flow_card_local_and_generated_scene_to_composition(studio):
             reserved.estimated_cost, reserved.currency, reserved.request_id) == (
         "reserved", 1, "fake", MODEL, 5, "0.5", "USD", None)
     after = service.estimate(plan_id)
-    assert after["plan_spent"] == "0.5" and after["month_spent"] == "0.5" and after["remaining"] == "19.5"
+    assert after["plan_spent"] == "0.5" and after["month_spent"] == "0.5" and after["remaining"] is None
 
     service.tick()  # submit
     scene = scenes(studio, plan_id)[2]
@@ -606,10 +606,10 @@ def test_duplicate_confirm_while_waiting_creates_no_second_usage_row(studio):
     assert len(calls(studio.provider, "submit")) == 1 and len(usage(studio)) == 1
 
 
-def test_per_job_limit_refusal_counts_earlier_attempts(studio):
+def test_per_execution_limit_preserves_earlier_attempts_without_cumulative_cap(studio):
     ready_studio(studio, job="1", monthly="20")
     plan_id = generated_plan(studio, {0: PROMPT + " [fake:fail]", 1: PROMPT + " [fake:fail]", 2: PROMPT})
-    over = "작업별 한도를 넘습니다: 이 작업 사용 0 + 이번 요청 예상 1.5 > 한도 1 USD. 장면 수를 줄이거나 한도를 확인하세요."
+    over = "1회 실행 한도를 넘습니다: 이번 요청 예상 1.5 > 한도 1 USD. 장면 수를 줄이거나 한도를 확인하세요."
     assert studio.service.estimate(plan_id)["problems"] == [over]  # the cost screen says so before any click
     with pytest.raises(AIVideoError) as excinfo:
         confirm_as_shown(studio, plan_id)
@@ -619,15 +619,14 @@ def test_per_job_limit_refusal_counts_earlier_attempts(studio):
     assert confirm(studio, plan_id) == 2
     studio.service.tick()
     assert [s.status for s in scenes(studio, plan_id)[:2]] == ["failed", "failed"]
-    # Retrying the failed scenes would pass the per-job limit: the earlier attempts still count.
-    with pytest.raises(AIVideoError) as excinfo:
-        confirm_as_shown(studio, plan_id)
-    assert refusal(excinfo) == (
-        "작업별 한도를 넘습니다: 이 작업 사용 1 + 이번 요청 예상 1 > 한도 1 USD. 장면 수를 줄이거나 한도를 확인하세요.", 422)
-    assert len(usage(studio)) == 2 and len(calls(studio.provider, "submit")) == 2
+    # A new explicit approval is bounded per execution; previous attempts stay in the ledger.
+    assert studio.service.estimate(plan_id)["plan_spent"] == "1"
+    assert confirm_as_shown(studio, plan_id) == 2
+    assert len(usage(studio)) == 4 and len(calls(studio.provider, "submit")) == 2
+    assert sorted(row.status for row in usage(studio)) == ["failed", "failed", "reserved", "reserved"]
 
 
-def test_monthly_limit_refusal_counts_other_plans(studio):
+def test_prior_month_usage_is_reported_but_not_a_new_execution_cap(studio):
     ready_studio(studio, job="5", monthly="5")
     other = studio.service.create_plan(studio.draft_id, 30)
     with studio.sessions.begin() as session:
@@ -642,13 +641,11 @@ def test_monthly_limit_refusal_counts_other_plans(studio):
         ))
     plan_id = generated_plan(studio)
     estimate = studio.service.estimate(plan_id)
-    over = "이번 달 AI 영상 한도를 넘습니다: 사용 4.8 + 이번 요청 예상 0.5 > 한도 5 USD."
-    assert estimate["month_spent"] == "4.8" and estimate["remaining"] == "0.2"
-    assert not estimate["can_submit"] and estimate["problems"] == [over]
-    with pytest.raises(AIVideoError) as excinfo:
-        confirm_as_shown(studio, plan_id)
-    assert refusal(excinfo) == (over, 422)
-    assert usage(studio, plan_id) == [] and studio.provider.calls == []
+    assert estimate["month_spent"] == "4.8" and estimate["remaining"] is None
+    assert estimate["can_submit"] and estimate["problems"] == []
+    assert confirm_as_shown(studio, plan_id) == 1
+    assert len(usage(studio, plan_id)) == 1 and studio.provider.calls == []
+    assert len(usage(studio, other)) == 2  # historical and not-sent evidence is preserved
 
 
 def test_max_active_bounds_concurrent_submissions(studio):
@@ -1473,10 +1470,10 @@ def test_estimate_and_confirm_use_the_current_confirmed_price_not_the_saved_one(
     add_model(studio, price="4", model_id=model.id)  # re-confirmed at 4/s: 20 for the same scene
     estimate = studio.service.estimate(plan_id)
     assert estimate["total"] == "20" and estimate["scenes"][0]["cost"] == "20"
-    assert not estimate["can_submit"] and "작업별 한도" in estimate["problems"][0]
+    assert not estimate["can_submit"] and "1회 실행 한도" in estimate["problems"][0]
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.confirm_generation(plan_id, revision(studio, plan_id), "20", True)
-    assert excinfo.value.status == 422 and "작업별 한도" in str(excinfo.value)
+    assert excinfo.value.status == 422 and "1회 실행 한도" in str(excinfo.value)
     configure(studio, job="50", monthly="100")
     with pytest.raises(AIVideoError) as excinfo:
         studio.service.confirm_generation(plan_id, revision(studio, plan_id), "0.5", True)
@@ -1545,7 +1542,7 @@ def test_a_batch_that_fills_the_month_exactly_is_still_sent(studio):
     studio.service.tick()
     assert scenes(studio, plan_id)[0].status in {"queued", "ready", "in_progress", "downloading"}
     assert len(calls(studio.provider, "submit")) == 1
-    assert "이번 달 AI 영상 한도를 모두 사용했습니다." in studio.service.readiness()["reasons"]  # no further confirmations
+    assert studio.service.readiness()["reasons"] == []  # monthly totals are observations only
 
 
 def test_a_status_failure_after_the_deadline_keeps_polling_then_closes_refetchably(studio, monkeypatch):
@@ -1642,7 +1639,7 @@ def test_a_per_job_limit_lowered_after_confirmation_stops_the_send(studio):
     configure(studio, job="0.1", monthly="20")
     studio.service.tick()
     scene = scenes(studio, plan_id)[0]
-    assert (scene.status, scene.message) == ("canceled", "작업별 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요.")
+    assert (scene.status, scene.message) == ("canceled", "1회 실행 한도가 확인 뒤에 낮아져 제출하지 않았습니다. 예상 비용을 다시 확인하세요.")
     assert studio.provider.calls == [] and [row.status for row in usage(studio)] == ["not_sent"]
 
 
@@ -1795,7 +1792,7 @@ def test_one_refetchable_scene_does_not_block_confirming_the_others(studio):
     assert estimate["notices"] and not estimate["problems"]
 
 
-def test_a_reservation_from_last_month_is_not_sent_this_month(studio):
+def test_existing_explicit_reservation_survives_month_boundary(studio):
     ready_studio(studio)
     plan_id = generated_plan(studio)
     confirm(studio, plan_id)
@@ -1804,8 +1801,10 @@ def test_a_reservation_from_last_month_is_not_sent_this_month(studio):
         row.created_at = row.created_at - timedelta(days=40)
     studio.service.tick()
     scene = scenes(studio, plan_id)[0]
-    assert (scene.status, scene.message) == ("canceled", "달이 바뀌어 지난달의 확인으로는 제출하지 않았습니다. 예상 비용을 다시 확인하세요.")
-    assert studio.provider.calls == []
+    assert scene.status in {"queued", "in_progress", "downloading", "ready"}
+    assert len(calls(studio.provider, "submit")) == 1
+    studio.service.tick()
+    assert len(calls(studio.provider, "submit")) == 1  # never repeat the accepted request
 
 
 # ---------------------------------------------------------------- paid results, script edits, currency

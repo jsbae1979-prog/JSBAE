@@ -139,7 +139,7 @@ def test_changed_instruction_preserves_v1_claim_and_reuses_success(pipeline, old
         assert identifier == old_id and not cards.adapter.calls
     else:
         assert identifier != old_id and len(cards.adapter.calls) == 1
-        assert cards.get(identifier).options["prompt_version"] == "claude-full-image-v2"
+        assert cards.get(identifier).options["prompt_version"] == "claude-full-image-v3"
     with cards.sessions() as session:
         preserved = session.get(IntelligenceRun, old_id)
         assert preserved.status == old_status and preserved.result == old_result

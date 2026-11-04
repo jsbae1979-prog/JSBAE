@@ -150,7 +150,7 @@ def test_library_exact_local_route_preserves_auth_origin_csrf_and_opt_in(tmp_pat
 def test_ui_default_off_and_only_explicit_local_save():
     source = (Path(__file__).resolve().parents[1]/'frontend/src/studio/core/CharacterStudio.tsx').read_text(encoding='utf-8')
     assert 'const [saveToLibrary, setSaveToLibrary] = useState(false)' in source
-    assert 'if (saveToLibrary) void saveReference(f)' in source
-    assert 'if (checked && file) void saveReference(file)' in source
+    assert 'if (checked) void storeCurrentReference()' in source
+    assert 'disabled={isBusy || referenceStored || !reference}' in source
     assert 'catalog.myCharacters' in source
-    assert '내 캐릭터에 저장' in source
+    assert '참조 이미지 보관' in source

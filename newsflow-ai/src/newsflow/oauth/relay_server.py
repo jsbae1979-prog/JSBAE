@@ -113,7 +113,7 @@ class MetaRelayTransport:
             raise RelayError("invalid_request")
         values = values or {}
         payload = urlencode(values).encode("ascii")
-        url = f"https://graph.facebook.com/{GRAPH_VERSION}/{path}"
+        url = f"https://graph.facebook.com/{getattr(self.config, 'graph_version', GRAPH_VERSION)}/{path}"
         headers = {"Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"}
         if token is not None:
             headers["Authorization"] = "Bearer " + token.get_secret_value()
@@ -213,7 +213,7 @@ class RelaySessions:
                            "response_type": "code", "override_default_response_type": "true",
                            "redirect_uri": self.config.callback_uri, "state": state})
         return {"session_id": identifier, "app_id": self.config.app_id, "expires_in": self.config.session_ttl,
-                "authorize_url": f"https://www.facebook.com/{GRAPH_VERSION}/dialog/oauth?{query}"}
+                "authorize_url": f"https://www.facebook.com/{getattr(self.config, 'graph_version', GRAPH_VERSION)}/dialog/oauth?{query}"}
 
     def _owned(self, identifier: str, verifier: str) -> _Session:
         self._cleanup()
@@ -394,10 +394,10 @@ async def _body(request: WebRequest, expected: str) -> str:
         raise RelayError("invalid_request") from None
 
 
-def create_relay_app(config: RelayConfig | None = None, *, transport=None, clock=None) -> FastAPI:
+def create_relay_app(config: RelayConfig | None = None, *, transport=None, clock=None, sessions_factory=RelaySessions) -> FastAPI:
     """Factory for a separate TLS listener. No external call occurs during startup."""
     config = config or RelayConfig.from_environment()
-    store = RelaySessions(config, transport if transport is not None else MetaRelayTransport(config), clock)
+    store = sessions_factory(config, transport if transport is not None else MetaRelayTransport(config), clock)
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     app.state.relay_sessions = store
 

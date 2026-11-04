@@ -274,7 +274,10 @@ def analyze(
 ) -> RedirectResponse:
     try:
         production = parse_context(flow)
-        identifier = service(request).analyze(
+        access = getattr(request.app.state, 'news_analysis_access', None)
+        selected_service = (access.service(request, provider=provider)
+                            if access is not None and provider in {'claude_api', 'openai'} else service(request))
+        identifier = selected_service.analyze(
             article_ids, provider, consent, Options(model, temperature, timeout, max_tokens),
             on_run=remember_context(request.app.state.sessions, production),
             news_usage=production.get("news_usage") if production and provider in {"openai", "claude_api"} else None,

@@ -1,0 +1,60 @@
+{
+  "head": "997e2489aeb1bb979a2ecf411b6914cb3694eab3",
+  "port": 18768,
+  "pid": 34916,
+  "normalStopExit": 0,
+  "stopAttempts": 1,
+  "startAttempts": 1,
+  "tablesUnchanged": 47,
+  "articles": 179,
+  "profileFilesPreserved": 363,
+  "originalAndABPreserved": true,
+  "chromeOpenAccepted": true,
+  "securityFlagsPreserved": true,
+  "paidCallsDuringDeployment": 0,
+  "snsCalls": 0,
+  "verdict": "ACCEPTED",
+  "scope": "Approved three-file operating fix, one normal Stop/Start and one official voice list lookup.",
+  "clientDate": "2026-11-01",
+  "originalArticlesPreserved": 169,
+  "originalAndBackupABPreserved": true,
+  "retainedProfileFiles": 362,
+  "opaqueDpapiFilesPreserved": 14,
+  "mediaFilesPreserved": 150,
+  "voiceCatalog": {
+    "status": "SUCCESS",
+    "scope": "all",
+    "voices": 26,
+    "supportedOfficialSamples": 19,
+    "sampleNotAvailableInThisApp": 7,
+    "hasMore": false,
+    "explicitLookups": 1,
+    "automaticRetries": 0
+  },
+  "keyPlaintextLogged": false,
+  "voicePreferenceChanged": false,
+  "paidSynthesisCalls": 0,
+  "newsCollectionCalls": 0,
+  "globalCredentialDecryptionEnabled": false,
+  "activeSchedulesEnabled": false,
+  "previousVoiceSampleResult": {
+    "officialKoreanSamplePlayed": true,
+    "duration": 13.60975,
+    "extraPaidSynthesis": false
+  },
+  "focusedTests": "Reused accepted 12 new / 102 focused PASS; not rerun or relabeled.",
+  "developerPull": {
+    "from": "997e2489aeb1bb979a2ecf411b6914cb3694eab3",
+    "to": "f7132dcc7aa659438fed19876d181525d91196c3",
+    "pr": 40,
+    "fastForward": true,
+    "localOriginalBytesPreserved": true,
+    "resetStashClean": false,
+    "operatingCodeChangedByPull": false
+  },
+  "limits": [
+    "Seven voices have no sample supported by the existing safe sample policy; no paid fallback generated.",
+    "Account voice listing does not establish paid speech model/voice synthesis entitlement or cost.",
+    "PR40 story format/default20 changes are in development only; not deployed by this approved three-file update."
+  ]
+}

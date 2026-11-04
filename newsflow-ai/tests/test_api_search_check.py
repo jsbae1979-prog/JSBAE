@@ -26,6 +26,7 @@ from newsflow.intelligence.settings import _set
 KEY = "sk-synthetic-first-search-test-0123456789"
 URL = "https://www.bbc.com/korean/articles/source-contract"
 MODELS = {"openai": "gpt-4.1-mini", "claude_api": "claude-sonnet-4-6"}
+UPPER = {'openai': Decimal('3.287728'), 'claude_api': Decimal('3.145000')}
 
 
 @pytest.fixture(autouse=True)
@@ -148,8 +149,10 @@ def test_first_search_validates_evidence_without_import_or_other_setting_changes
     assert summary["tool_ids"] and summary["reservation_id"]
     ledger = rows(sessions)
     assert len(ledger) == 1 and ledger[0].status == "success"
-    assert ledger[0].test_only is False and Decimal(ledger[0].reserved_usd) == 0
-    assert ledger[0].bounds == {"accounting": "reported_usage", "search_calls": 1}
+    assert ledger[0].test_only is False and Decimal(ledger[0].reserved_usd) == UPPER[provider]
+    assert ledger[0].bounds == {'accounting': 'per_execution', 'search_calls': 1,
+        'prompt_tokens': 1047576 if provider == 'openai' else 1000000,
+        'completion_tokens': FIRST_SEARCH_OUTPUT_TOKENS, 'request_limit_usd': '10'}
     assert Decimal(ledger[0].estimated_usd) > 0
     assert ledger[0].usage["search_calls"] == 1
     after = settings_values(sessions)
@@ -198,7 +201,7 @@ def test_unknown_outcome_survives_reauthentication_and_blocks_new_attempt(state)
     result = send_search(state, timeout)
     assert result.code == "unknown" and KEY not in repr(result)
     ledger = rows(state["sessions"])
-    assert ledger[0].status == "unknown" and Decimal(ledger[0].reserved_usd) == 0
+    assert ledger[0].status == "unknown" and Decimal(ledger[0].reserved_usd) == UPPER[state['provider']]
     authenticate(state)
     assert send_search(state, timeout).code == "blocked"
     assert len(calls) == 1 and len(rows(state["sessions"])) == 1
@@ -228,7 +231,7 @@ def test_bad_search_or_usage_never_creates_proof_or_releases_reservation(state, 
     assert not result.ok and len(calls) == 1
     assert not read_api_settings(state["sessions"], state["provider"]).search_verified_at
     ledger = rows(state["sessions"])
-    assert len(ledger) == 1 and Decimal(ledger[0].reserved_usd) == 0
+    assert len(ledger) == 1 and Decimal(ledger[0].reserved_usd) == UPPER[state['provider']]
     if problem in {"missing_usage", "malformed_usage"}:
         assert ledger[0].status == "unknown" and result.code == "unknown"
     assert send_search(state, send).code == "blocked" and len(calls) == 1
@@ -254,10 +257,10 @@ def test_late_search_cannot_verify_changed_model_key_or_authentication(state, ch
     assert send_search(state, send).code == "stale"
     assert not read_api_settings(sessions, provider).search_verified_at
     assert read_search_check(sessions, provider) == {}
-    assert len(rows(sessions)) == 1 and Decimal(rows(sessions)[0].reserved_usd) == 0
+    assert len(rows(sessions)) == 1 and Decimal(rows(sessions)[0].reserved_usd) == UPPER[provider]
 
 
-def test_reported_output_above_requested_tokens_does_not_invalidate_valid_result(state):
+def test_reported_output_above_requested_tokens_blocks_proof_and_preserves_unknown(state):
     document = response(state["provider"])
     document["usage"]["output_tokens"] = FIRST_SEARCH_OUTPUT_TOKENS + 1
     calls = []
@@ -266,10 +269,10 @@ def test_reported_output_above_requested_tokens_does_not_invalidate_valid_result
         calls.append(True)
         return json.dumps(document).encode()
 
-    assert send_search(state, send).ok and len(calls) == 1
+    assert send_search(state, send).code == 'unknown' and len(calls) == 1
     ledger = rows(state["sessions"])
-    assert len(ledger) == 1 and ledger[0].status == "success"
+    assert len(ledger) == 1 and ledger[0].status == "unknown"
     assert ledger[0].usage["completion_tokens"] == FIRST_SEARCH_OUTPUT_TOKENS + 1
-    assert Decimal(ledger[0].reserved_usd) == 0 and Decimal(ledger[0].estimated_usd) > 0
-    assert read_api_settings(state["sessions"], state["provider"]).search_verified_at
+    assert Decimal(ledger[0].reserved_usd) == UPPER[state['provider']] and Decimal(ledger[0].estimated_usd) > 0
+    assert not read_api_settings(state["sessions"], state["provider"]).search_verified_at
     assert send_search(state, send).code == "blocked" and len(calls) == 1

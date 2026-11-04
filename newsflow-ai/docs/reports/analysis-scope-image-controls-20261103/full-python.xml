@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="73" time="78.028" timestamp="2026-11-03T19:22:51.579814+09:00" hostname="JSBAE1979"><testcase classname="tests.test_news_analysis_scope" name="test_reviewed_history_does_not_block_new_news_or_change_old_records" file="tests\test_news_analysis_scope.py" line="18" time="0.354" /><testcase classname="tests.test_news_analysis_scope" name="test_unsafe_history_still_blocks[unreviewed]" file="tests\test_news_analysis_scope.py" line="29" time="0.257" /><testcase classname="tests.test_news_analysis_scope" name="test_unsafe_history_still_blocks[active]" file="tests\test_news_analysis_scope.py" line="29" time="0.233" /><testcase classname="tests.test_news_analysis_scope" name="test_unsafe_history_still_blocks[changed]" file="tests\test_news_analysis_scope.py" line="29" time="0.240" /><testcase classname="tests.test_news_analysis_scope" name="test_unsafe_history_still_blocks[unfinished]" file="tests\test_news_analysis_scope.py" line="29" time="0.278" /><testcase classname="tests.test_news_analysis_scope" name="test_unsafe_history_still_blocks[unclassified]" file="tests\test_news_analysis_scope.py" line="29" time="0.293" /><testcase classname="tests.test_news_analysis_scope" name="test_exception_requires_current_server_created_analysis[changes0]" file="tests\test_news_analysis_scope.py" line="40" time="0.222" /><testcase classname="tests.test_news_analysis_scope" name="test_exception_requires_current_server_created_analysis[changes1]" file="tests\test_news_analysis_scope.py" line="40" time="0.419" /><testcase classname="tests.test_news_analysis_scope" name="test_exception_requires_current_server_created_analysis[changes2]" file="tests\test_news_analysis_scope.py" line="40" time="0.215" /><testcase classname="tests.test_news_analysis_scope" name="test_exception_requires_current_server_created_analysis[changes3]" file="tests\test_news_analysis_scope.py" line="40" time="0.227" /><testcase classname="tests.test_news_analysis_scope" name="test_exception_requires_current_server_created_analysis[changes4]" file="tests\test_news_analysis_scope.py" line="40" time="0.220" /><testcase classname="tests.test_news_analysis_scope" name="test_active_and_same_analysis_unknown_block_even_after_ready" file="tests\test_news_analysis_scope.py" line="47" time="0.253" /><testcase classname="tests.test_news_analysis_scope" name="test_approval_and_execution_budget_still_required[changes0]" file="tests\test_news_analysis_scope.py" line="56" time="0.251" /><testcase classname="tests.test_news_analysis_scope" name="test_approval_and_execution_budget_still_required[changes1]" file="tests\test_news_analysis_scope.py" line="56" time="0.245" /><testcase classname="tests.test_news_analysis_scope" name="test_real_auth_not_bypassed" file="tests\test_news_analysis_scope.py" line="61" time="0.221" /><testcase classname="tests.test_posting_copy_scope" name="test_readiness_and_execution_agree_without_editing_old_journals" file="tests\test_posting_copy_scope.py" line="49" time="0.255" /><testcase classname="tests.test_posting_copy_scope" name="test_unrelated_does_not_mean_unconditionally_allowed[unreviewed]" file="tests\test_posting_copy_scope.py" line="70" time="0.255" /><testcase classname="tests.test_posting_copy_scope" name="test_unrelated_does_not_mean_unconditionally_allowed[changed]" file="tests\test_posting_copy_scope.py" line="70" time="0.240" /><testcase classname="tests.test_posting_copy_scope" name="test_unrelated_does_not_mean_unconditionally_allowed[active]" file="tests\test_posting_copy_scope.py" line="70" time="0.289" /><testcase classname="tests.test_posting_copy_scope" name="test_unrelated_does_not_mean_unconditionally_allowed[unfinished]" file="tests\test_posting_copy_scope.py" line="70" time="0.295" /><testcase classname="tests.test_posting_copy_scope" name="test_unrelated_does_not_mean_unconditionally_allowed[unclassified]" file="tests\test_posting_copy_scope.py" line="70" time="0.247" /><testcase classname="tests.test_posting_copy_scope" name="test_unrelated_does_not_mean_unconditionally_allowed[malformed]" file="tests\test_posting_copy_scope.py" line="70" time="0.234" /><testcase classname="tests.test_posting_copy_scope" name="test_posting_unknown_blocks_new_identifier_even_after_review" file="tests\test_posting_copy_scope.py" line="84" time="0.239" /><testcase classname="tests.test_posting_copy_scope" name="test_new_active_request_rechecked_after_ready_preview" file="tests\test_posting_copy_scope.py" line="93" time="0.328" /><testcase classname="tests.test_posting_copy_scope" name="test_scope_cannot_be_used_by_generic_requests[absent]" file="tests\test_posting_copy_scope.py" line="100" time="0.226" /><testcase classname="tests.test_posting_copy_scope" name="test_scope_cannot_be_used_by_generic_requests[wrong_kind]" file="tests\test_posting_copy_scope.py" line="100" time="0.462" /><testcase classname="tests.test_posting_copy_scope" name="test_scope_cannot_be_used_by_generic_requests[wrong_provider]" file="tests\test_posting_copy_scope.py" line="100" time="0.237" /><testcase classname="tests.test_posting_copy_scope" name="test_scope_cannot_be_used_by_generic_requests[finished]" file="tests\test_posting_copy_scope.py" line="100" time="0.271" /><testcase classname="tests.test_posting_copy_scope" name="test_scope_cannot_be_used_by_generic_requests[wrong_model]" file="tests\test_posting_copy_scope.py" line="100" time="0.271" /><testcase classname="tests.test_posting_copy_scope" name="test_scope_cannot_be_used_by_generic_requests[wrong_project]" file="tests\test_posting_copy_scope.py" line="100" time="0.200" /><testcase classname="tests.test_posting_copy_scope" name="test_saved_approval_and_cost_limit_remain_enforced[changes0]" file="tests\test_posting_copy_scope.py" line="116" time="0.220" /><testcase classname="tests.test_posting_copy_scope" name="test_saved_approval_and_cost_limit_remain_enforced[changes1]" file="tests\test_posting_copy_scope.py" line="116" time="0.229" /><testcase classname="tests.test_posting_copy_scope" name="test_saved_approval_and_cost_limit_remain_enforced[changes2]" file="tests\test_posting_copy_scope.py" line="116" time="0.221" /><testcase classname="tests.test_posting_copy_scope" name="test_real_auth_and_missing_key_remain_required" file="tests\test_posting_copy_scope.py" line="122" time="0.254" /><testcase classname="tests.test_api_settings" name="test_anthropic_key_has_distinct_dpapi_file_entropy_and_environment" file="tests\test_api_settings.py" line="58" time="0.021" /><testcase classname="tests.test_api_settings" name="test_save_preserves_selected_provider_rss_and_legacy_openai_token_policy" file="tests\test_api_settings.py" line="72" time="0.228" /><testcase classname="tests.test_api_settings" name="test_existing_inference_approval_never_grants_search" file="tests\test_api_settings.py" line="88" time="0.208" /><testcase classname="tests.test_api_settings" name="test_unsupported_legacy_model_stays_saved_with_explicit_supported_model_hint" file="tests\test_api_settings.py" line="95" time="0.228" /><testcase classname="tests.test_api_settings" name="test_configured_is_not_authenticated_or_successful_and_get_never_reads_key" file="tests\test_api_settings.py" line="107" time="0.226" /><testcase classname="tests.test_api_settings" name="test_missing_key_store_blocks_without_authentication_attempt" file="tests\test_api_settings.py" line="119" time="0.188" /><testcase classname="tests.test_api_settings" name="test_official_search_usage_field_is_recorded" file="tests\test_api_settings.py" line="126" time="0.210" /><testcase classname="tests.test_api_settings" name="test_invalid_money_fails_closed[NaN]" file="tests\test_api_settings.py" line="137" time="0.169" /><testcase classname="tests.test_api_settings" name="test_invalid_money_fails_closed[Infinity]" file="tests\test_api_settings.py" line="137" time="0.182" /><testcase classname="tests.test_api_settings" name="test_invalid_money_fails_closed[-1]" file="tests\test_api_settings.py" line="137" time="0.199" /><testcase classname="tests.test_api_settings" name="test_invalid_money_fails_closed[1000001]" file="tests\test_api_settings.py" line="137" time="0.185" /><testcase classname="tests.test_api_settings" name="test_invalid_money_fails_closed[0.000000001]" file="tests\test_api_settings.py" line="137" time="0.179" /><testcase classname="tests.test_api_settings" name="test_fake_uses_all_budget_gates_but_never_records_actual_authentication" file="tests\test_api_settings.py" line="143" time="0.232" /><testcase classname="tests.test_api_settings" name="test_duplicate_id_blocked_after_success_restart_and_failed_result" file="tests\test_api_settings.py" line="157" time="0.204" /><testcase classname="tests.test_api_settings" name="test_uncertain_outcome_retains_reservation_and_blocks_next_request[unknown]" file="tests\test_api_settings.py" line="170" time="0.226" /><testcase classname="tests.test_api_settings" name="test_uncertain_outcome_retains_reservation_and_blocks_next_request[cancelled]" file="tests\test_api_settings.py" line="170" time="0.219" /><testcase classname="tests.test_api_settings" name="test_reported_usage_exceeding_output_bound_is_unknown_and_retains_safe_cost" file="tests\test_api_settings.py" line="180" time="0.546" /><testcase classname="tests.test_api_settings" name="test_search_reserves_reviewed_context_upper_bound_and_price_floors" file="tests\test_api_settings.py" line="194" time="0.215" /><testcase classname="tests.test_api_settings" name="test_per_call_cap_applies_while_monthly_usage_and_old_balance_do_not_gate" file="tests\test_api_settings.py" line="206" time="0.271" /><testcase classname="tests.test_api_settings" name="test_missing_or_malformed_reported_usage_blocks_new_requests[None]" file="tests\test_api_settings.py" line="224" time="0.244" /><testcase classname="tests.test_api_settings" name="test_missing_or_malformed_reported_usage_blocks_new_requests[usage1]" file="tests\test_api_settings.py" line="224" time="0.249" /><testcase classname="tests.test_api_settings" name="test_missing_or_malformed_reported_usage_blocks_new_requests[usage2]" file="tests\test_api_settings.py" line="224" time="0.217" /><testcase classname="tests.test_api_settings" name="test_missing_or_malformed_reported_usage_blocks_new_requests[usage3]" file="tests\test_api_settings.py" line="224" time="0.271" /><testcase classname="tests.test_api_settings" name="test_missing_or_malformed_reported_usage_blocks_new_requests[usage4]" file="tests\test_api_settings.py" line="224" time="0.232" /><testcase classname="tests.test_api_settings" name="test_reported_search_count_above_one_still_blocks" file="tests\test_api_settings.py" line="240" time="0.240" /><testcase classname="tests.test_api_settings" name="test_old_large_reservation_is_preserved_without_counting_it_as_a_bill" file="tests\test_api_settings.py" line="253" time="0.235" /><testcase classname="tests.test_api_settings" name="test_optional_request_limit_omission_preserves_existing_setting" file="tests\test_api_settings.py" line="277" time="0.203" /><testcase classname="tests.test_api_settings" name="test_legacy_reserved_request_keeps_its_original_finish_semantics" file="tests\test_api_settings.py" line="291" time="0.228" /><testcase classname="tests.test_api_settings" name="test_stale_balance_is_not_a_gate_but_unknown_model_still_blocks" file="tests\test_api_settings.py" line="309" time="0.324" /><testcase classname="tests.test_api_settings" name="test_key_rotation_and_model_mismatch_invalidate_prior_proof" file="tests\test_api_settings.py" line="319" time="0.446" /><testcase classname="tests.test_api_settings" name="test_concurrent_reservations_are_atomic" file="tests\test_api_settings.py" line="334" time="0.313" /><testcase classname="tests.test_api_settings" name="test_old_balance_values_are_history_only_and_normal_saves_preserve_them" file="tests\test_api_settings.py" line="351" time="0.242" /><testcase classname="tests.test_api_settings" name="test_no_balance_required_but_actual_authentication_still_expires" file="tests\test_api_settings.py" line="366" time="0.217" /><testcase classname="tests.test_api_settings" name="test_expired_connection_has_clear_guidance_without_weakening_ttl" file="tests\test_api_settings.py" line="382" time="0.202" /><testcase classname="tests.test_feed_budget_browser" name="test_app_budget_review_in_react" file="tests\test_feed_budget_browser.py" line="9" time="5.734" /><testcase classname="tests.test_feed_cost_review_browser" name="test_cost_status_and_expired_additional_quote" file="tests\test_feed_cost_review_browser.py" line="8" time="9.402"><failure message="AssertionError: Locator expected to be enabled&#10;Actual value: None&#10;Error: element(s) not found &#10;Call log:&#10;  - Expect &quot;to_be_enabled&quot; get_by_role(&quot;button&quot;, name=&quot;TOP 1 새 배경 추가 견적&quot;, exact=True) with timeout 5000ms&#10;  - waiting for get_by_role(&quot;button&quot;, name=&quot;TOP 1 새 배경 추가 견적&quot;, exact=True)&#10;&#10;Aria snapshot:&#10;- link &quot;본문으로 이동&quot;:&#10;  - /url: &quot;#main&quot;&#10;- complementary:&#10;  - button &quot;NewsFlow AI Studio 홈&quot;: NewsFlow AI Studio&#10;  - navigation &quot;주 메뉴&quot;:&#10;    - button &quot;홈&quot;&#10;    - button &quot;콘텐츠 제작&quot;&#10;    - button &quot;뉴스 스튜디오&quot;&#10;    - button &quot;자동화 센터&quot;&#10;    - button &quot;라이브러리&quot;&#10;    - button &quot;게시 스튜디오&quot;&#10;    - button &quot;성과 · 비용&quot;&#10;    - button &quot;설정 · 관리&quot;&#10;  - strong: 내 PC 작업실&#10;  - text: 실행·공개 게시 별도 승인&#10;  - button &quot;메뉴 접기&quot;&#10;- main:&#10;  - text: 0개 프로젝트&#10;  - heading &quot;이미지 제작실&quot; [level=1]&#10;  - paragraph: 아이디어와 뉴스를 이미지로 만드세요&#10;  - text: 로컬 저장 자료&#10;  - button &quot;제작실 새로고침&quot;&#10;  - tablist &quot;이미지 제작실&quot;:&#10;    - tab &quot;AI 이미지 생성&quot;:&#10;      - strong: AI 이미지 생성&#10;      - text: 원하는 이미지를 직접 생성합니다&#10;    - tab &quot;뉴스 기반 이미지&quot; [selected]:&#10;      - strong: 뉴스 기반 이미지&#10;      - text: 저장된 TOP 3 분석을 재사용합니다&#10;  - heading &quot;뉴스 선택&quot; [level=2]&#10;  - group: 이전 작업 열기&#10;  - text: 완료된 TOP 3 분석&#10;  - combobox &quot;완료된 TOP 3 분석&quot;:&#10;    - option &quot;선택하세요&quot; [disabled] [selected]&#10;  - button &quot;TOP 1 합성 뉴스 1&quot; [pressed]:&#10;    - status: 미리보기 없음&#10;    - text: TOP 1&#10;    - strong: 합성 뉴스 1&#10;  - button &quot;TOP 2 합성 뉴스 2&quot;:&#10;    - status: 미리보기 없음&#10;    - text: TOP 2&#10;    - strong: 합성 뉴스 2&#10;  - button &quot;TOP 3 합성 뉴스 3&quot;:&#10;    - status: 미리보기 없음&#10;    - text: TOP 3&#10;    - strong: 합성 뉴스 3&#10;  - text: 제작 범위&#10;  - combobox &quot;제작 범위&quot;:&#10;    - option &quot;선택하세요&quot; [disabled]&#10;    - option &quot;TOP 3 전체 · 개별 이미지 3장&quot; [selected]&#10;    - option &quot;선택 뉴스 TOP 1 · 1장&quot;&#10;  - text: 제작 스타일&#10;  - combobox &quot;제작 스타일&quot;:&#10;    - option &quot;선택하세요&quot; [disabled]&#10;    - option &quot;사진 중심 피드 · 무료 한글 편집&quot;&#10;    - option &quot;기존 뉴스 카드&quot; [selected]&#10;  - group: 모델·품질·생성 설정&#10;  - button &quot;저장된 작업 열기&quot; [disabled]&#10;  - 'heading &quot;작업 #1 · 제작 상태&quot; [level=2]'&#10;  - region &quot;이미지 제작 진행 상황&quot;:&#10;    - status:&#10;      - strong: 생성 중단 · 실패 항목 확인 필요&#10;      - text: 0/3개 완료 · 0%&#10;    - progressbar &quot;이미지 제작 완료율&quot;&#10;    - text: 실패 1개 · 완료된 결과는 보존됐습니다.&#10;  - button &quot;이미지 생성&quot;&#10;  - dialog &quot;이미지 생성 비용 확인&quot;:&#10;    - heading &quot;이미지 생성&quot; [level=2]&#10;    - group:&#10;      - text: 이미지 생성 비용·승인&#10;      - status: 장당 비용 미확정 · OpenAI 계정 권한과 비용 상한을 확인해야 생성할 수 있습니다.&#10;      - group: 계산 근거·연결 상태&#10;      - button &quot;비용 상태 새로고침&quot;&#10;      - button &quot;새 견적 준비&quot;&#10;    - button &quot;TOP 3 전체 생성 · 비용 승인&quot; [disabled]&#10;    - button &quot;선택 이미지 새 견적 준비&quot;&#10;  - heading &quot;TOP 1 · 선택 결과 미리보기&quot; [level=2]&#10;  - button &quot;TOP 1 결과 선택&quot; [pressed]:&#10;    - strong: TOP 1&#10;    - text: failed&#10;  - button &quot;TOP 2 결과 선택&quot;:&#10;    - strong: TOP 2&#10;    - text: 생성 대기&#10;  - button &quot;TOP 3 결과 선택&quot;:&#10;    - strong: TOP 3&#10;    - text: 생성 대기&#10;  - group: 원본 이미지&#10;  - text: 배경 이미지를 선택하세요.&#10;  - paragraph: 기존 결과 · 원본 보존&#10;  - heading &quot;TOP 1 · 사진 중심 피드 편집&quot; [level=2]&#10;  - group:&#10;    - text: 피드 제목&#10;    - textbox &quot;피드 제목&quot;: 합성 뉴스 1&#10;    - text: 핵심 설명&#10;    - textbox &quot;핵심 설명&quot;: 합성 요약 1&#10;    - group: 배치·색상·자르기&#10;    - button &quot;새 버전으로 저장&quot; [disabled]&#10;    - group: 추가 편집&#10;  - heading &quot;최근 생성 이미지&quot; [level=2]&#10;  - text: 선택 0개&#10;  - button &quot;전체 선택&quot; [disabled]&#10;  - button &quot;선택 해제&quot; [disabled]&#10;  - button &quot;선택 삭제&quot; [disabled]&#10;  - paragraph:&#10;    - text: 표시할 최근 이미지가 없습니다. 삭제한 이미지는&#10;    - link &quot;라이브러리 휴지통&quot;:&#10;      - /url: /studio/library&#10;    - text: 에서 복원할 수 있습니다.&#10;  - paragraph: 생성·비용 승인과 최종 게시 승인은 별도입니다. 결과 불명 요청은 자동 재실행하지 않습니다.">tests\test_feed_cost_review_browser.py:30: in test_cost_status_and_expired_additional_quote
+    expect(p.get_by_role('button',name='TOP 1 새 배경 추가 견적',exact=True)).to_be_enabled()
+E   AssertionError: Locator expected to be enabled
+E   Actual value: None
+E   Error: element(s) not found 
+E   Call log:
+E     - Expect "to_be_enabled" get_by_role("button", name="TOP 1 새 배경 추가 견적", exact=True) with timeout 5000ms
+E     - waiting for get_by_role("button", name="TOP 1 새 배경 추가 견적", exact=True)
+E   
+E   Aria snapshot:
+E   - link "본문으로 이동":
+E     - /url: "#main"
+E   - complementary:
+E     - button "NewsFlow AI Studio 홈": NewsFlow AI Studio
+E     - navigation "주 메뉴":
+E       - button "홈"
+E       - button "콘텐츠 제작"
+E       - button "뉴스 스튜디오"
+E       - button "자동화 센터"
+E       - button "라이브러리"
+E       - button "게시 스튜디오"
+E       - button "성과 · 비용"
+E       - button "설정 · 관리"
+E     - strong: 내 PC 작업실
+E     - text: 실행·공개 게시 별도 승인
+E     - button "메뉴 접기"
+E   - main:
+E     - text: 0개 프로젝트
+E     - heading "이미지 제작실" [level=1]
+E     - paragraph: 아이디어와 뉴스를 이미지로 만드세요
+E     - text: 로컬 저장 자료
+E     - button "제작실 새로고침"
+E     - tablist "이미지 제작실":
+E       - tab "AI 이미지 생성":
+E         - strong: AI 이미지 생성
+E         - text: 원하는 이미지를 직접 생성합니다
+E       - tab "뉴스 기반 이미지" [selected]:
+E         - strong: 뉴스 기반 이미지
+E         - text: 저장된 TOP 3 분석을 재사용합니다
+E     - heading "뉴스 선택" [level=2]
+E     - group: 이전 작업 열기
+E     - text: 완료된 TOP 3 분석
+E     - combobox "완료된 TOP 3 분석":
+E       - option "선택하세요" [disabled] [selected]
+E     - button "TOP 1 합성 뉴스 1" [pressed]:
+E       - status: 미리보기 없음
+E       - text: TOP 1
+E       - strong: 합성 뉴스 1
+E     - button "TOP 2 합성 뉴스 2":
+E       - status: 미리보기 없음
+E       - text: TOP 2
+E       - strong: 합성 뉴스 2
+E     - button "TOP 3 합성 뉴스 3":
+E       - status: 미리보기 없음
+E       - text: TOP 3
+E       - strong: 합성 뉴스 3
+E     - text: 제작 범위
+E     - combobox "제작 범위":
+E       - option "선택하세요" [disabled]
+E       - option "TOP 3 전체 · 개별 이미지 3장" [selected]
+E       - option "선택 뉴스 TOP 1 · 1장"
+E     - text: 제작 스타일
+E     - combobox "제작 스타일":
+E       - option "선택하세요" [disabled]
+E       - option "사진 중심 피드 · 무료 한글 편집"
+E       - option "기존 뉴스 카드" [selected]
+E     - group: 모델·품질·생성 설정
+E     - button "저장된 작업 열기" [disabled]
+E     - 'heading "작업 #1 · 제작 상태" [level=2]'
+E     - region "이미지 제작 진행 상황":
+E       - status:
+E         - strong: 생성 중단 · 실패 항목 확인 필요
+E         - text: 0/3개 완료 · 0%
+E       - progressbar "이미지 제작 완료율"
+E       - text: 실패 1개 · 완료된 결과는 보존됐습니다.
+E     - button "이미지 생성"
+E     - dialog "이미지 생성 비용 확인":
+E       - heading "이미지 생성" [level=2]
+E       - group:
+E         - text: 이미지 생성 비용·승인
+E         - status: 장당 비용 미확정 · OpenAI 계정 권한과 비용 상한을 확인해야 생성할 수 있습니다.
+E         - group: 계산 근거·연결 상태
+E         - button "비용 상태 새로고침"
+E         - button "새 견적 준비"
+E       - button "TOP 3 전체 생성 · 비용 승인" [disabled]
+E       - button "선택 이미지 새 견적 준비"
+E     - heading "TOP 1 · 선택 결과 미리보기" [level=2]
+E     - button "TOP 1 결과 선택" [pressed]:
+E       - strong: TOP 1
+E       - text: failed
+E     - button "TOP 2 결과 선택":
+E       - strong: TOP 2
+E       - text: 생성 대기
+E     - button "TOP 3 결과 선택":
+E       - strong: TOP 3
+E       - text: 생성 대기
+E     - group: 원본 이미지
+E     - text: 배경 이미지를 선택하세요.
+E     - paragraph: 기존 결과 · 원본 보존
+E     - heading "TOP 1 · 사진 중심 피드 편집" [level=2]
+E     - group:
+E       - text: 피드 제목
+E       - textbox "피드 제목": 합성 뉴스 1
+E       - text: 핵심 설명
+E       - textbox "핵심 설명": 합성 요약 1
+E       - group: 배치·색상·자르기
+E       - button "새 버전으로 저장" [disabled]
+E       - group: 추가 편집
+E     - heading "최근 생성 이미지" [level=2]
+E     - text: 선택 0개
+E     - button "전체 선택" [disabled]
+E     - button "선택 해제" [disabled]
+E     - button "선택 삭제" [disabled]
+E     - paragraph:
+E       - text: 표시할 최근 이미지가 없습니다. 삭제한 이미지는
+E       - link "라이브러리 휴지통":
+E         - /url: /studio/library
+E       - text: 에서 복원할 수 있습니다.
+E     - paragraph: 생성·비용 승인과 최종 게시 승인은 별도입니다. 결과 불명 요청은 자동 재실행하지 않습니다.</failure></testcase><testcase classname="tests.test_top_three_selection_browser" name="test_selected_news_rank_and_plain_error_in_browser" file="tests\test_top_three_selection_browser.py" line="7" time="35.548"><failure message="playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.&#10;Call log:&#10;  - waiting for get_by_role(&quot;button&quot;, name=&quot;선택 뉴스 제작 준비&quot;, exact=True)">tests\test_top_three_selection_browser.py:36: in test_selected_news_rank_and_plain_error_in_browser
+    page.get_by_role('button',name='선택 뉴스 제작 준비',exact=True).click()
+..\..\..\integration-20261024\venv314\Lib\site-packages\playwright\sync_api\_generated.py:11021: in click
+    self._sync(
+..\..\..\integration-20261024\venv314\Lib\site-packages\playwright\_impl\_locator.py:174: in click
+    return await self._frame._click(self._selector, strict=True, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\integration-20261024\venv314\Lib\site-packages\playwright\_impl\_frame.py:598: in _click
+    await self._channel.send("click", self._timeout, locals_to_params(locals()))
+..\..\..\integration-20261024\venv314\Lib\site-packages\playwright\_impl\_connection.py:78: in send
+    return await self._connection.wrap_api_call(
+..\..\..\integration-20261024\venv314\Lib\site-packages\playwright\_impl\_connection.py:636: in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+E   playwright._impl._errors.TimeoutError: Locator.click: Timeout 30000ms exceeded.
+E   Call log:
+E     - waiting for get_by_role("button", name="선택 뉴스 제작 준비", exact=True)</failure></testcase><testcase classname="tests.test_review_selection_browser" name="test_news_preview_never_matches_two_absent_draft_ids_and_steps_align" file="tests\test_review_selection_browser.py" line="7" time="5.152" /><testcase classname="tests.test_review_selection_browser" name="test_existing_image_job_button_does_not_claim_new_creation" file="tests\test_review_selection_browser.py" line="37" time="2.489" /></testsuite></testsuites>
