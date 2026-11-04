@@ -1345,6 +1345,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
             선택한 AI가 캐릭터 특징과 주제로 만들며, 영상 생성은 별도의 견적 승인이 필요합니다.
           </div>
         )}
+        {job?.precisionWorkId&&<a className="precision-return" href={`/studio/characters?precision=${job.precisionWorkId}`}>← 확정한 장면 이미지 보기</a>}
         <div className="kling-character-steps" aria-label="캐릭터 제작 흐름">
           {[
             [Bot, "캐릭터 선택", "참조 이미지로 캐릭터를 설정합니다."],
@@ -2349,9 +2350,10 @@ function FastCharacterStudio({ c }: { c: Controller }) {
 
 export default function CharacterStudio({c}:{c:Controller}) {
   const [mode,setMode]=useState(()=>new URLSearchParams(location.search).has('precision')?'precision':'fast');
+  const [precisionVisited,setPrecisionVisited]=useState(mode==='precision');
   return <><nav className="precision-mode-switch" aria-label="제작 방식">
     <button aria-pressed={mode==='fast'} onClick={()=>setMode('fast')}>빠른 제작</button>
-    <button aria-pressed={mode==='precision'} onClick={()=>setMode('precision')}>정밀 제작 · 장면 이미지 먼저 만들기</button>
+    <button aria-pressed={mode==='precision'} onClick={()=>{setPrecisionVisited(true);setMode('precision');}}>정밀 제작 · 장면 이미지 먼저 만들기</button>
   </nav><div hidden={mode!=='fast'}><FastCharacterStudio c={c}/></div>
-  {mode==='precision'&&<CharacterPrecision c={c}/>}</>;
+  {precisionVisited&&<div hidden={mode!=='precision'}><CharacterPrecision c={c}/></div>}</>;
 }

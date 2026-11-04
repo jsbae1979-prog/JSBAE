@@ -16,3 +16,25 @@
 @media(prefers-reduced-motion:reduce){.precision-running{animation:none}}
 
 .character-precision label.precision-check{display:flex!important;flex-direction:row;justify-content:flex-start}.character-precision label.precision-check input[type=checkbox]{appearance:auto;align-self:center;width:16px!important;min-width:16px!important;height:16px!important;margin:0!important}.character-precision label.precision-check b{flex:1;text-align:left}
+
+/* Precision extends the familiar three steps; the fast studio keeps its own layout. */
+.precision-steps,.precision-setup{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.precision-steps>div{display:flex;align-items:center;gap:12px;padding:16px;border:1px solid #14749a;border-radius:10px;background:linear-gradient(110deg,#082946,#071b2c)}
+.precision-steps b{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#9143ff,#185fff);font-size:20px}
+.precision-setup>section{min-width:0;padding:16px}.precision-setup h3{color:#51e8ff;margin:0 0 18px}
+.precision-setup details{margin:16px 0}.precision-setup summary{cursor:pointer;color:#b9d0ea;font-size:13px}
+.precision-setup .precision-person{padding:10px;margin-bottom:10px}.precision-person .precision-check{flex-wrap:wrap}.precision-person small{font-size:11px}
+.precision-snapshot{display:flex;align-items:center;gap:12px}.precision-snapshot p{font-size:12px;color:#adc6dc}.precision-snapshot img{flex:0 0 64px}
+.precision-hint{font-size:12px;color:#abc1d6;line-height:1.6}.precision-setup p{overflow-wrap:anywhere}
+.precision-review-layout{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;margin-top:18px}
+.precision-scenes{display:flex;flex-direction:column;gap:8px;margin:0}.precision-scenes article{padding:6px}
+.precision-scene-choice{display:flex!important;align-items:center;gap:8px;width:100%;padding:6px!important;text-align:left;white-space:normal!important}
+.precision-scene-choice[aria-pressed=true]{border-color:#ae62ff!important;background:#302452!important;box-shadow:0 0 0 1px #ae62ff}
+.precision-scene-choice img,.precision-thumb-empty{width:44px;height:64px;object-fit:contain;flex:0 0 44px}
+.precision-thumb-empty{display:grid;place-items:center;background:#112d43}.precision-scene-choice small{display:block;color:#9fd3e6;font-size:11px;margin-top:6px}
+.precision-scenes .precision-check{font-size:11px;margin:6px 2px}.precision-selected{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;min-width:0}
+.precision-selected>div{min-width:0}.precision-selected .precision-image{background:#03111d!important}.precision-selected .precision-image img{max-height:560px}
+.precision-scene-detail p{overflow-wrap:anywhere}.precision-scene-detail details{margin:18px 0}.precision-empty{min-height:300px}
+.precision-return{display:inline-block;margin:0 0 12px;color:#b6dcff;text-decoration:underline}
+@media(max-width:1050px){.precision-steps{display:none}.precision-setup{grid-template-columns:1fr}.precision-selected{grid-template-columns:minmax(0,1fr)}.precision-review-layout{grid-template-columns:130px minmax(0,1fr)}}
+@media(max-width:600px){.precision-review-layout{grid-template-columns:1fr}.precision-scenes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.precision-pair{grid-template-columns:1fr}}
