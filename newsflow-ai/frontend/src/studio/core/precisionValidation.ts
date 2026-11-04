@@ -32,3 +32,31 @@ export function sceneErrors(scenario:Item,work:Item,allowed:number[]):Record<str
   if(rows.reduce((sum,s)=>sum+Number(s.seconds||0),0)!==work.common.duration)errors._total=`장면 길이 합계를 ${work.common.duration}초로 맞추세요.`;
   return errors;
 }
+
+
+// Keep the stored provider response intact; only prepare a separate editable draft.
+export function editableScenario(value:unknown,count:number):{scenario:Item;recovered:boolean}|null {
+  const source=value&&typeof value==='object'&&!Array.isArray(value)?value as Item:{};
+  const rows=Array.isArray(source.scenes)?source.scenes:[];
+  if(rows.length>count)return null; // Never silently discard extra provider scenes.
+  const textKeys=[...Object.keys(basicSceneFields),...Object.keys(advancedSceneFields)];
+  const knownKeys=new Set([...textKeys,'no','characters','seconds','sfx']);
+  const validEffects=(effects:unknown)=>Array.isArray(effects)&&effects.every(effect=>effect&&typeof effect==='object'&&!Array.isArray(effect)&&typeof effect.key==='string');
+  const scenes=Array.from({length:count},(_,i)=>{
+    const raw=rows[i],row=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+    const fields=Object.fromEntries(textKeys
+      .map(key=>[key,typeof row[key]==='string'?row[key]:'']));
+    return {...fields,no:i+1,
+      characters:Array.isArray(row.characters)&&row.characters.every((id:unknown)=>typeof id==='string')?[...row.characters]:[],
+      seconds:typeof row.seconds==='number'?row.seconds:'',
+      sfx:validEffects(row.sfx)?structuredClone(row.sfx):[]};
+  });
+  const scenario={scenes};
+  // Omitted optional fields are harmless; warnings describe only missing/invalid editor data.
+  const recovered=Object.keys(source).some(key=>key!=='scenes')||rows.length!==count||rows.some((row:Item,i:number)=>!row||typeof row!=='object'||Array.isArray(row)||
+    row.no!==i+1||!Array.isArray(row.characters)||row.characters.some((id:unknown)=>typeof id!=='string')||
+    typeof row.seconds!=='number'||[...Object.keys(basicSceneFields),'camera','motion','motion_camera'].some(key=>typeof row[key]!=='string')||
+    Object.keys(row).some(key=>!knownKeys.has(key))||textKeys.some(key=>row[key]!==undefined&&typeof row[key]!=='string')||
+    (row.sfx!==undefined&&!validEffects(row.sfx)));
+  return {scenario,recovered};
+}

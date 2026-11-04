@@ -3,7 +3,7 @@ import {characterCommand,CharacterModal} from './CharacterAutomation';
 import type {Controller} from './shared';
 import type {Item} from '../contracts';
 import './character-precision.css';
-import {timingIssue,sceneErrors,basicSceneFields,advancedSceneFields} from './precisionValidation';
+import {timingIssue,sceneErrors,basicSceneFields,advancedSceneFields,editableScenario} from './precisionValidation';
 
 const base='/api/studio/character-precision';
 const blank={title:'',topic:'',relationships:'',genre:'대사 없는 코미디',world:'',background:'',props:'',
@@ -23,7 +23,16 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const reviewArea=useRef<HTMLElement|null>(null),editorInitial=useRef('');
   const [editorError,setEditorError]=useState(''),[fieldErrors,setFieldErrors]=useState<Record<string,string>>({});
   const [pollError,setPollError]=useState('');
-  function openEditor(draft:Item){editorInitial.current=JSON.stringify(draft.scenario);setEditorError('');setFieldErrors({});setEditing(draft);}
+  const selectionEpoch=useRef(0);
+  const [loadingWork,setLoadingWork]=useState<string|null>(null),[editorNotice,setEditorNotice]=useState('');
+  function openEditor(draft:Item,source=work){
+    if(!source)return;
+    const prepared=editableScenario(draft.scenario,source.common.scene_count);
+    if(!prepared){setError('보관된 장면 수가 설정과 다릅니다. 원문은 보존돼 있으며 직접 작성으로 수정할 수 있습니다.');return;}
+    editorInitial.current=JSON.stringify(prepared.scenario);setEditorError('');setFieldErrors({});
+    setEditorNotice(prepared.recovered?'보관된 응답에 빠진 항목이 있습니다. 빈 항목을 채운 뒤 저장하세요. 원문은 그대로 보존합니다.':'');
+    setEditing({...draft,scenario:prepared.scenario});
+  }
   function closeEditor(){
     if(editing&&JSON.stringify(editing.scenario)!==editorInitial.current&&!window.confirm('저장하지 않은 수정 내용이 있습니다. 버리고 닫을까요?'))return;
     setEditing(null);setEditorError('');setFieldErrors({});
@@ -37,7 +46,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const styleEdited=useRef(false),worldEdited=useRef(false);
   const sending=useRef(false),createId=useRef(crypto.randomUUID().replaceAll('-',''));
   async function get(path:string) {const r=await fetch(path,{credentials:'same-origin'});if(!r.ok)throw Error('저장된 자료를 불러오지 못했습니다.');return r.json();}
-  useEffect(()=>{let live=true;get(base).then(async d=>{
+  useEffect(()=>{let live=true;const epoch=selectionEpoch.current;const initialId=new URLSearchParams(location.search).get('precision');get(base).then(async d=>{
     if(!live)return;setCatalog(d);setImage(d.recent_settings?.selection??d.image_defaults);
     setVideo(d.recent_settings?.video_settings??d.video.defaults);
     const standing=Number(d.standing_limit),previous=Number(d.recent_settings?.image_limit);
@@ -45,11 +54,10 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     setVideoLimit(d.recent_settings?.video_limit??'');
     setBudgetOpen(!(standing>0&&Number(d.recent_settings?.video_limit)>0));
     setCommon(v=>({...v,duration:d.video.character?.target_duration?.default??d.video.defaults.duration??20}));
-    const id=new URLSearchParams(location.search).get('precision');
-    if(id&&/^[a-f0-9]{32}$/.test(id)){const w=await get(`${base}/${id}`);if(live)setWork(w);}
-  }).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[]);
+    if(epoch===selectionEpoch.current&&initialId&&/^[a-f0-9]{32}$/.test(initialId))await loadWork(initialId);
+  }).catch(e=>{if(live)setError(e.message);});return()=>{live=false;selectionEpoch.current++;};},[]);
   useEffect(()=>{
-    if(!work?.id||!(busy||['writing','generating'].includes(work.state)))return;
+    if(loadingWork!==null||!work?.id||!(busy||['writing','generating'].includes(work.state)))return;
     const id=work.id;let live=true,inFlight=false;
     const poll=async()=>{
       if(inFlight)return;inFlight=true;
@@ -61,7 +69,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     };
     const timer=setInterval(()=>void poll(),2000);
     return()=>{live=false;clearInterval(timer);};
-  },[busy,work?.id,work?.state]);
+  },[busy,work?.id,work?.state,loadingWork]);
   function remember(w:Item){
     setWork(w);setCatalog(d=>d?{...d,works:[{id:w.id,title:w.common.title},...(d.works??[]).filter((item:Item)=>item.id!==w.id)]}:d);
     const url=new URL(location.href);url.searchParams.set('precision',w.id);url.searchParams.delete('job_id');history.replaceState(null,'',url);
@@ -72,9 +80,9 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     selection:image,video_settings:video,image_limit:imageLimit,video_limit:videoLimit})};}
   function manual(w:Item){openEditor({scenario:{scenes:Array.from({length:w.common.scene_count},(_,i)=>({no:i+1,
     characters:[Object.keys(w.cast)[0]],description:'',location:'',pose:'',emotion:'',camera:'',props:'',continuity:'',caption:'',
-    seconds:Math.floor(w.common.duration/w.common.scene_count)+(i<w.common.duration%w.common.scene_count?1:0),motion:'',motion_camera:'',sound:''}))}});}
+    seconds:Math.floor(w.common.duration/w.common.scene_count)+(i<w.common.duration%w.common.scene_count?1:0),motion:'',motion_camera:'',sound:''}))}},w);}
   async function act(kind:string,values:Record<string,string>={}) {
-    if(sending.current)return;
+    if(sending.current||loadingWork!==null)return;
     if(kind==='edit'&&editing&&work){
       const issues=sceneErrors(editing.scenario,work,sceneSeconds(work.video_settings.video_model));
       setFieldErrors(issues);setEditorError('');
@@ -107,7 +115,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     } finally{setBusy('');sending.current=false;}
   }
   const rows:Item[]=work?.scenes??[], profiles:Item[]=catalog?.profiles??[];
-  const locked=!!busy||!!work?.video_job_id||['writing','generating'].includes(work?.state);
+  const locked=loadingWork!==null||!!busy||!!work?.video_job_id||['writing','generating'].includes(work?.state);
   const completed=rows.filter(s=>s.versions.some((v:Item)=>v.state==='success')).length;
   useEffect(()=>{if(completed>0)reviewArea.current?.scrollIntoView({block:'start'});},[work?.id,completed>0]);
   const quote=work?.quote;
@@ -115,7 +123,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const allConfirmed=!!rows.length&&rows.every(s=>s.confirmed);
   function sceneSeconds(model:string):number[]{return catalog?.video.modelsDetailed.find((m:Item)=>m.id===model)?.duration_values??[];}
   const timingError=catalog?timingIssue(common.duration,common.scene_count,sceneSeconds(video.video_model)):'';
-  const canCreate=!timingError&&!busy&&cast.length>0&&cast.length<=4&&!!common.topic.trim()&&Number(imageLimit)>0&&Number(videoLimit)>0;
+  const canCreate=loadingWork===null&&!timingError&&!busy&&cast.length>0&&cast.length<=4&&!!common.topic.trim()&&Number(imageLimit)>0&&Number(videoLimit)>0;
   const selected=rows.find(s=>s.plan.no===scene)??rows[0];
   const current=selected?.versions.find((v:Item)=>v.version===(versions[selected.plan.no]??selected.selected));
   const staleImage=!!current&&current.matches_current_plan!==true;
@@ -127,21 +135,29 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   }
 
   function clearSelection(){setVersions({});setPicked([]);setScene(1);setApproval(null);setEditing(null);setLarge(null);setError('');setEditorError('');setFieldErrors({});setPollError('');}
-  function newWork(){clearSelection();setWork(null);createId.current=crypto.randomUUID().replaceAll('-','');
+  function newWork(){selectionEpoch.current++;setLoadingWork(null);clearSelection();setWork(null);createId.current=crypto.randomUUID().replaceAll('-','');
     const u=new URL(location.href);u.searchParams.set('precision','');u.searchParams.delete('job_id');history.replaceState(null,'',u);}
+  async function loadWork(id:string){
+    const epoch=++selectionEpoch.current;setLoadingWork(id);clearSelection();
+    try{
+      const next=await get(`${base}/${id}`);
+      if(epoch!==selectionEpoch.current)return;
+      setWork(next);
+      const url=new URL(location.href);url.searchParams.set('precision',next.id);url.searchParams.delete('job_id');history.replaceState(null,'',url);
+    }catch{if(epoch===selectionEpoch.current)setError('작품을 불러오지 못했습니다. 다시 선택해 주세요.');}
+    finally{if(epoch===selectionEpoch.current)setLoadingWork(null);}
+  }
   return <section className="character-precision" aria-label="정밀 제작">
     <header className="precision-steps" aria-label="정밀 제작 흐름">
       {['캐릭터 선택','스토리 생성','영상 제작'].map((title,i)=><div key={title}><b>{i+1}</b><strong>{title}</strong></div>)}
     </header>
     {error&&<p role="alert" className="precision-error">{error}</p>}
-    <div className="precision-toolbar"><label>저장한 작품 <select disabled={!!busy} value={work?.id??''} onChange={async e=>{
-      if(!e.target.value){newWork();return;}
-      try{const w=await get(`${base}/${e.target.value}`);clearSelection();setWork(w);
-        const u=new URL(location.href);u.searchParams.set('precision',w.id);u.searchParams.delete('job_id');history.replaceState(null,'',u);
-      }catch{setError('작품을 확인하세요.');}}}>
+    <div className="precision-toolbar"><label>저장한 작품 <select disabled={!!busy} value={loadingWork??work?.id??''} onChange={e=>{
+      if(!e.target.value){newWork();return;}void loadWork(e.target.value);}}>
       <option value="">새 작품</option>{(catalog?.works??[]).map((w:Item)=><option key={w.id} value={w.id}>{w.title}</option>)}
       {work&&!(catalog?.works??[]).some((w:Item)=>w.id===work.id)&&<option value={work.id}>{work.common.title}</option>}
     </select></label><button disabled={!!busy} onClick={newWork}>새 작품</button></div>
+    {loadingWork!==null&&<p role="status">선택한 작품을 불러오는 중입니다.</p>}
     {!work&&catalog&&<div className="precision-setup">
       <section><h3>1. 캐릭터 선택</h3><p>저장된 이미지와 특징을 그대로 사용합니다.</p>
         {profiles.map(p=><div className="precision-person" key={p.id}><label className="precision-check">
@@ -254,6 +270,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       <p>선택한 캐릭터 참조 이미지를 전송합니다. 실제 청구액과 다를 수 있으며 영상 비용은 별도입니다.</p>
     </CharacterModal>}
     {editing&&<CharacterModal title="장면 내용 수정" busy={!!busy} onClose={closeEditor} footer={<button className="primary" disabled={!!busy} onClick={()=>void act('edit',{scenario:JSON.stringify(editing.scenario)})}>장면 저장 · 무료</button>}>
+      {editorNotice&&<p role="status">{editorNotice}</p>}
       {editorError&&<p role="alert" className="precision-error">{editorError}</p>}
       <label>편집할 장면<select value={editing.number??editing.scenario.scenes[0]?.no} onChange={e=>setEditing({...editing,number:Number(e.target.value)})}>
         {editing.scenario.scenes.map((s:Item)=><option key={s.no} value={s.no}>장면 {s.no}</option>)}</select></label>

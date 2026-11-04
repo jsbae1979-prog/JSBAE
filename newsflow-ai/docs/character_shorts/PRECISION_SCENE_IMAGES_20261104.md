@@ -258,3 +258,37 @@ Final focused validation on Windows Python 3.14.7 with temporary profiles, synth
 Evidence: `C:\Codex\NewsFlowAI\precision_scene_20261104\boundary-fix-evidence`. The editor screenshot shows a deliberately simulated save conflict using synthetic data, not an operating failure.
 
 No new POST routes, schema migration, paid API, production data access, SNS, operating restart/deployment, push or merge. Fast mode and original assets/history preserved in focused checks. Actual vendor output quality and operating UI remain NOT VERIFIED. Development scope: ACCEPTED.
+
+## 2026-11-04 후속 재검토 2건 수정
+
+검토 기준 `cc0f9a8`에서 재현된 작품 조회 응답 경합과 보관 후보 편집 오류만 수정했습니다.
+
+- 작품 선택마다 조회 순번을 구분해 마지막 선택의 응답만 적용합니다. 새 작품 전환, 최초 URL 복원, 지연 실패 응답에도 같은 규칙을 적용합니다. 불러오는 동안 이전 작품의 변경 실행을 막고 진행 상태를 표시합니다.
+- 보관 후보 원문은 변경하지 않습니다. 편집용 사본에서 누락 필드를 빈 입력으로 준비하고 사용자가 작성하도록 안내합니다. 장면 길이나 내용을 AI로 보완하지 않습니다. 유효한 텍스트는 유지하고 입력·저장 검증을 그대로 거칩니다.
+- 편집 대상이 아닌 부가 정보는 원문에만 유지합니다. 설정보다 장면이 많은 응답은 임의로 자르지 않고 직접 작성 경로를 안내합니다.
+
+변경 파일:
+- `frontend/src/studio/core/CharacterPrecision.tsx`
+- `frontend/src/studio/core/precisionValidation.ts`
+- `tests/test_precision_recheck.py`
+- 이 보고서
+
+Windows Python 3.14.7, 격리 Chromium, 합성 데이터 및 Fake 공급사로 실행:
+
+```text
+python -m pytest -q -rs --tb=short tests/test_precision_recheck.py tests/test_character_precision_browser.py
+27 PASS / 0 FAIL / 0 ERROR / 0 SKIP
+신규 회귀 방지 8건 + 기존 화면 검사 19건
+
+tsc --noEmit: PASS
+vite build --configLoader runner: PASS
+git diff --check: PASS
+```
+
+검증: 작품 A→B 응답 역전, A→새 작품 후 이전 오류 도착, 최초 URL 조회 지연, 등장인물 누락·null 장면·장면 목록 누락, 사용자 수정 후 저장 및 원문 불변, 장면 초과 시 원문 보존. 기존 승인·상태 갱신·편집 취소·이미지 검토·영상 전달 브라우저 검사도 통과했습니다. 유료 요청을 자동 재전송하지 않습니다.
+
+직전 재검토의 2 FAIL은 모두 해결했습니다. 이전 서버 28 PASS 증거는 재사용하며 이번 수치에 합산하지 않습니다. 기존 Starlette/httpx 사용 중단 예고 경고 1건 외 신규 경고는 없습니다.
+
+로컬 증거: `C:\Codex\NewsFlowAI\precision_scene_20261104\precision-recheck-fixed.log`, `.xml`, `-command.json`, `-result.json` 및 `precision-typecheck.log`, `precision-build.log`.
+
+운영 설치·프로세스·DB·키·미디어·백업 불변. 유료 API·SNS·운영 적용·재시작·push·병합 미수행. 기존 별도 미커밋 작업은 보존했습니다. 판정: 개발 수정 ACCEPTED. 실제 공급사 품질·운영 적용은 이번 검증 범위가 아닙니다.
