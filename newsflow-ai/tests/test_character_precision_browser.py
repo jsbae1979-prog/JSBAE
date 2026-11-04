@@ -236,6 +236,15 @@ def test_precision_confirmed_images_move_to_video_without_generation(precision,b
         page.get_by_role('button',name='영상 제작으로 이동',exact=True).click()
         expect(page.get_by_label('영상 길이',exact=True)).to_have_value('26')
         assert '?job_id=' in page.url
+        expect(page.get_by_role('heading',name='2. 확정한 스토리')).to_be_visible()
+        expect(page.get_by_role('button',name='스토리 자동 생성하기')).to_have_count(0)
+        calls=[]
+        page.on('request',lambda r:calls.append(r.url) if r.method=='POST' else None)
+        before=f.owner.read(w['id'])
+        page.get_by_role('button',name='영상 견적 확인',exact=True).click()
+        expect(page.get_by_role('dialog',name='장면 공식 견적 조회')).to_be_visible()
+        assert not any(url.endswith('/settings') for url in calls)
+        assert f.owner.read(w['id'])==before
         assert not f.video.sent and not f.video.uploads and len(f.adapter.calls)==5
         context.close()
 

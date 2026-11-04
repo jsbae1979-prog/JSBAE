@@ -720,7 +720,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
     : estimate.upper;
   const budgetExceeded =
     budgetAmount !== null && Number(per) > 0 && budgetAmount > Number(per);
-  const settingsFrozen = frozen && !pendingReferenceCopy;
+  const settingsFrozen = !!job?.precisionWorkId || (frozen && !pendingReferenceCopy);
   const legacy = !!job && !job.studio_selection;
   const lockedScriptModel = !!job?.studio_selection;
   const legacyStoryTiming = !!story && job?.automation_version !== 1 && scenes.length !== 5;
@@ -1141,6 +1141,9 @@ function FastCharacterStudio({ c }: { c: Controller }) {
   }
   async function saveSettings() {
     if (!job?.studio_selection || pendingReferenceCopy) return false;
+    // Confirmed scene images already freeze the precision video settings.
+    // The backend deliberately rejects edits; quote the linked job unchanged.
+    if (job.precisionWorkId) return job.state === "quoted";
     const form = new FormData();
     form.set("settings", JSON.stringify(settings));
     form.set("episode_limit", per);
@@ -1555,9 +1558,9 @@ function FastCharacterStudio({ c }: { c: Controller }) {
           <section className="kling-character-card kling-character-story">
             <header>
               <h2>
-                <em>2.</em> {"스토리 생성"} <Info size={14} />
+                <em>2.</em> {job?.precisionWorkId ? "확정한 스토리" : "스토리 생성"} <Info size={14} />
               </h2>
-              <button
+              {!job?.precisionWorkId && <button
                 className="kling-character-example"
                 disabled={isBusy}
                 onClick={() => {
@@ -1570,8 +1573,9 @@ function FastCharacterStudio({ c }: { c: Controller }) {
               >
                 <Sparkles size={14} />
                 예시 주제 보기
-              </button>
+              </button>}
             </header>
+            {!job?.precisionWorkId && <>
             <label>대본 AI
               <select aria-label="대본 AI" disabled={isBusy || lockedScriptModel} value={scriptProvider?.id ?? ""}
                 onChange={(e) => {const provider = apiProviders.find(p => p.id === e.target.value); if(provider?.models?.[0]) setting("script_model",provider.models[0]);}}>
@@ -1643,6 +1647,8 @@ function FastCharacterStudio({ c }: { c: Controller }) {
             <CharacterTopics onBusy={setAutomationBusy} profile={activeProfile} model={settings.script_model} available={scriptAvailable}
               topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} refreshKey={`${job?.id ?? ""}:${job?.state ?? ""}:${job?.script_hash ?? ""}`}
                 />
+            </>}
+            {job?.precisionWorkId && <p role="status">확정한 장면 이미지 {scenes.length}장을 각 영상의 시작 이미지로 사용합니다.</p>}
             {!ready && (
               <p role="status">
                 새 제작실 API 연결 확인 전 · 생성할 수 없습니다.
@@ -1656,7 +1662,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
                 </header>
                 <small>장면을 검토한 뒤 영상 제작을 승인하세요.</small>
                 {job?.message && <p role="status">{job.message}</p>}
-                {job?.automation_version === 1 && <CharacterScriptEditor job={job} onDirty={setScriptDirty} csrf={c.view?.csrfToken ?? ""}
+                {job?.automation_version === 1 && !job.precisionWorkId && <CharacterScriptEditor job={job} onDirty={setScriptDirty} csrf={c.view?.csrfToken ?? ""}
                   disabled={isBusy} onRefresh={c.load} />}
                 {job?.studio_selection && job.automation_version !== 1 &&
                   selectedReference &&
@@ -1679,7 +1685,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
                 {scenes.map((s, i) => (
                   <p key={i}>
                     <strong>
-                      {i + 1}. {s.caption}
+                      {i + 1}. {s.caption || `장면 ${i + 1} · ${s.seconds}초`}
                     </strong>
                     {s.narration && <small>대사 · {s.narration}</small>}
                   </p>
@@ -2128,7 +2134,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
                       ? `${stamp(start)} - ${stamp(elapsed)}`
                       : "스토리 생성 대기"}
                   </small>
-                  <strong>{s?.caption ?? `장면 ${i + 1}`}</strong>
+                  <strong>{s?.caption || `장면 ${i + 1}`}</strong>
                   {s &&
                     (planOnly ? (
                       <small>
