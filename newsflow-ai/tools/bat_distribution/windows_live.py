@@ -528,6 +528,9 @@ def start(config, plan):
                 from .operation import OperatingRequests
                 authenticated_app = LocalAccess(app, session)
                 request_boundary = OperatingRequests(authenticated_app)
+                from .youtube_access import install as install_youtube_connection
+                youtube_connection = install_youtube_connection(app, config.profile, character_native_factory)
+                request_boundary = youtube_connection.wrap(request_boundary, authenticated_app)
                 from .meta_access import MetaRequests
                 meta_enabled = json.loads((config.program / 'app/layout.json').read_bytes()).get('metaPublishingConnected') is True
                 app.state.meta_native_factory = character_native_factory
