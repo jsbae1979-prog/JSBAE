@@ -80,9 +80,20 @@ class OperatingRequests(LocalWorkRequests):
     CHARACTER_LOCAL_READ = re.compile(r'/api/studio/characters/(?:profiles(?:/char_[a-f0-9]{32}/topics)?|queues(?:/[a-f0-9]{32})?)\Z')
     CHARACTER_LOCAL_WRITE = re.compile(r'/api/studio/characters/(?:profiles/save|profiles/char_[a-f0-9]{32}/(?:delete|topics/(?:manual|import|[a-f0-9]{32}/status))|queues/(?:create|[a-f0-9]{32}/delete)|[a-f0-9]{32}/script)\Z')
 
+    # Only local precision work is exposed. Paid adapters need their own scoped
+    # connection; passing this boundary never grants credential/provider access.
+    PRECISION_READ = re.compile(r'/api/studio/character-precision(?:/[a-f0-9]{32})?\Z')
+    PRECISION_LOCAL_WRITE = re.compile(r'/api/studio/character-precision/(?:create|[a-f0-9]{32}/(?:edit|quote|reconcile|confirm|handoff))\Z')
+
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'http':
             method, path = scope['method'], scope['path']
+            if ((method == 'GET' and self.PRECISION_READ.fullmatch(path))
+                    or (method == 'POST' and self.PRECISION_LOCAL_WRITE.fullmatch(path))):
+                # LocalAccess remains inside: session, Origin, CSRF and ownership
+                # are checked normally. No headers can enable paid availability.
+                local_scope = {**scope, 'newsflow.precision_paid_available': False}
+                return await self.app(local_scope, receive, send)
             if method == 'POST' and (path == '/video-ai-settings/models' or self.FEED_CHANGE.fullmatch(path)):
                 # Local model registration only. Official pricing can make an
                 # external request and retains its separate execution boundary.

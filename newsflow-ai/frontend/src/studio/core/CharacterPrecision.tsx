@@ -115,6 +115,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     } finally{setBusy('');sending.current=false;}
   }
   const rows:Item[]=work?.scenes??[], profiles:Item[]=catalog?.profiles??[];
+  const paidAvailable=catalog?.paid_available!==false;
   const locked=loadingWork!==null||!!busy||!!work?.video_job_id||['writing','generating'].includes(work?.state);
   const completed=rows.filter(s=>s.versions.some((v:Item)=>v.state==='success')).length;
   useEffect(()=>{if(completed>0)reviewArea.current?.scrollIntoView({block:'start'});},[work?.id,completed>0]);
@@ -152,6 +153,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       {['캐릭터 선택','스토리 생성','영상 제작'].map((title,i)=><div key={title}><b>{i+1}</b><strong>{title}</strong></div>)}
     </header>
     {error&&<p role="alert" className="precision-error">{error}</p>}
+    {catalog&&!paidAvailable&&<p role="status" className="precision-hint">정밀 제작의 AI 연결 준비 중 · 작품 편집과 검토는 사용할 수 있습니다.</p>}
     <div className="precision-toolbar"><label>저장한 작품 <select disabled={!!busy} value={loadingWork??work?.id??''} onChange={e=>{
       if(!e.target.value){newWork();return;}void loadWork(e.target.value);}}>
       <option value="">새 작품</option>{(catalog?.works??[]).map((w:Item)=><option key={w.id} value={w.id}>{w.title}</option>)}
@@ -169,7 +171,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       </section><section><h3>2. 스토리 생성</h3>
         <label>스토리 주제<input maxLength={150} value={common.topic} onChange={e=>setCommon({...common,topic:e.target.value})}/></label>
         <p className="precision-hint">{video.script_model}</p>
-        <button className="primary" disabled={!canCreate} onClick={()=>setApproval('story')}>스토리 만들기</button>
+        <button className="primary" disabled={!paidAvailable||!canCreate} onClick={()=>setApproval('story')}>스토리 만들기</button>
         <details><summary>직접 작성·상세 설정</summary><button disabled={!canCreate} onClick={()=>void act('manual')}>직접 작성</button>
         <label>스토리 AI 모델<select value={video.script_model??''} onChange={e=>setVideo({...video,script_model:e.target.value})}>
           {(catalog.script_models??[video.script_model]).map((m:string)=><option key={m}>{m}</option>)}</select></label>
@@ -204,7 +206,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       <section><h3>2. 스토리 생성</h3><p>{work.common.topic}</p>
         {work.scenario&&<button disabled={locked} onClick={()=>openEditor({scenario:structuredClone(work.scenario)})}>스토리 검토·수정</button>}
       {!work.scenario&&<div className="precision-story-controls">
-        <button className="primary" disabled={locked||work.story_attempts.length>0} onClick={()=>setApproval('story')}>스토리 만들기</button>
+        <button className="primary" disabled={!paidAvailable||locked||work.story_attempts.length>0} onClick={()=>setApproval('story')}>스토리 만들기</button>
         <details><summary>직접 작성·복구</summary><button disabled={locked} onClick={()=>manual(work)}>직접 작성</button>
         {work.state==='story_failed'&&<p>보관된 응답을 검토하세요. 추가 AI 요청 없이 수정할 수 있습니다.</p>}
         {work.story_attempts.at(-1)?.candidate&&<button onClick={()=>openEditor({scenario:structuredClone(work.story_attempts.at(-1).candidate)})}>보관된 스토리 편집</button>}</details>
@@ -260,11 +262,11 @@ export default function CharacterPrecision({c}:{c:Controller}) {
         </div>
       </section>}
     </>}
-    {approval==='story'&&<CharacterModal title="스토리 만들기" busy={!!busy} onClose={()=>setApproval(null)} footer={<button className="primary" disabled={!!busy||(!work&&!canCreate)} onClick={()=>void act('story',{consent:'true'})}>유료 스토리 생성 승인</button>}>
+    {approval==='story'&&<CharacterModal title="스토리 만들기" busy={!!busy} onClose={()=>setApproval(null)} footer={<button className="primary" disabled={!paidAvailable||!!busy||(!work&&!canCreate)} onClick={()=>void act('story',{consent:'true'})}>유료 스토리 생성 승인</button>}>
       <p>{work?.common.topic??common.topic}</p><p>{work?.video_settings.script_model??video.script_model}</p>
       <p>스토리·영상 작업 한도 US${work?.video_limit??videoLimit}</p><p>캐릭터 특징과 주제를 AI에 전송합니다. 참조 이미지는 보내지 않습니다.</p>
     </CharacterModal>}
-    {approval==='images'&&quote&&<CharacterModal title="장면 이미지 만들기" busy={!!busy} onClose={()=>setApproval(null)} footer={<button className="primary" disabled={locked} onClick={()=>void act('generate',{quote_hash:quote.hash,consent:'true',reference_consent:'true'})}>참조 이미지 전송·생성 승인</button>}>
+    {approval==='images'&&quote&&<CharacterModal title="장면 이미지 만들기" busy={!!busy} onClose={()=>setApproval(null)} footer={<button className="primary" disabled={!paidAvailable||locked} onClick={()=>void act('generate',{quote_hash:quote.hash,consent:'true',reference_consent:'true'})}>참조 이미지 전송·생성 승인</button>}>
       <p>장면 {quote.numbers.join(', ')} · {work?.selection.model}</p>
       <p>예상 US${quote.estimated_usd} · 예산 예약 US${quote.reserve_usd}</p>
       <p>선택한 캐릭터 참조 이미지를 전송합니다. 실제 청구액과 다를 수 있으며 영상 비용은 별도입니다.</p>

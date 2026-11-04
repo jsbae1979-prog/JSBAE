@@ -292,3 +292,10 @@ git diff --check: PASS
 로컬 증거: `C:\Codex\NewsFlowAI\precision_scene_20261104\precision-recheck-fixed.log`, `.xml`, `-command.json`, `-result.json` 및 `precision-typecheck.log`, `precision-build.log`.
 
 운영 설치·프로세스·DB·키·미디어·백업 불변. 유료 API·SNS·운영 적용·재시작·push·병합 미수행. 기존 별도 미커밋 작업은 보존했습니다. 판정: 개발 수정 ACCEPTED. 실제 공급사 품질·운영 적용은 이번 검증 범위가 아닙니다.
+
+
+## Operating screen integration (2026-11-04)
+
+The existing BAT boundary did not expose precision routes. Added only anchored local catalog/detail/create/edit/quote/reconcile/confirm/handoff routes through unchanged LocalAccess authentication, Origin and CSRF checks. Paid story/image routes remain denied: the installed scoped authoring adapter expects legacy episode jobs, and the installed image adapter does not accept multiple reference images. The UI now displays this actual readiness and disables paid execution. Fake service success must not be described as a completed production provider connection. Existing fast mode is unchanged.
+
+Additional focused Windows Python 3.14.7 verification: 17 PASS / 0 FAIL / 0 ERROR / 0 SKIP (exact route boundaries, authentication/CSRF/Origin, real Chromium local editing and disabled paid actions); TypeScript and Vite build passed. The first restricted test process stalled in Windows asyncio socketpair initialization and was terminated; its log is retained separately. No live provider calls. Previous 27 PASS reused, not recounted.

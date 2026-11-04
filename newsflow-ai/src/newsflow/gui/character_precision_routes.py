@@ -46,6 +46,7 @@ def catalog(request:Request):
         reusable={key:latest[key] for key in ('selection','video_settings','image_limit','video_limit')} if latest else None
         if reusable:reusable['video_settings']=video_choices(latest['video_settings'])
         return {'works':works,'recent_settings':reusable,'profiles':s.registry.list(),
+        'paid_available':request.scope.get('newsflow.precision_paid_available', True),
         'image_models':list(IMAGE_MODELS),'qualities':IMAGE_QUALITIES,
         'image_defaults':{**read_defaults(s.images.sessions,'image'),'size':'864x1536'},
         'sfx_keys':list(load_sfx_map()),
