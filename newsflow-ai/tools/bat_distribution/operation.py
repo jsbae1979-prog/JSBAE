@@ -84,7 +84,7 @@ class OperatingRequests(LocalWorkRequests):
     # Only local precision work is exposed. Paid adapters need their own scoped
     # connection; passing this boundary never grants credential/provider access.
     PRECISION_READ = re.compile(r'/api/studio/character-precision(?:/[a-f0-9]{32})?\Z')
-    PRECISION_LOCAL_WRITE = re.compile(r'/api/studio/character-precision/(?:create|[a-f0-9]{32}/(?:edit|quote|reconcile|confirm|handoff))\Z')
+    PRECISION_LOCAL_WRITE = re.compile(r'/api/studio/character-precision/(?:create|[a-f0-9]{32}/(?:edit|quote|reconcile|confirm|handoff|revise-connection))\Z')
 
     async def __call__(self, scope, receive, send):
         if scope['type'] == 'http':

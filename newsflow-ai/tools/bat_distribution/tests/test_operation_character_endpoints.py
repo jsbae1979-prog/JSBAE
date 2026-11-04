@@ -86,6 +86,7 @@ def recorder():
     ('GET', '/api/studio/video-models'), ('HEAD', '/api/studio/video-models'),
     ('POST', '/api/studio/characters/' + JOB + '/settings'),
     ('POST', '/character/' + JOB + '/render'),
+    ('POST', '/api/studio/character-precision/' + JOB + '/revise-connection'),
     ('GET', '/api/samples/character-robot/copy-file'),
     ('HEAD', '/api/samples/character-robot/copy-file'),
     ('GET', '/character/' + JOB + '/clips/1'),
@@ -130,6 +131,19 @@ def test_wrong_methods_paths_and_external_actions_remain_denied(method, path):
     assert not received
 
 
+@pytest.mark.parametrize('method,path', [
+    ('GET', '/api/studio/character-precision/' + JOB + '/revise-connection'),
+    ('POST', '/api/studio/character-precision/' + JOB + '/revise-connection/'),
+    ('POST', '/api/studio/character-precision/' + 'A' * 32 + '/revise-connection'),
+    ('POST', '/api/studio/character-precision/' + JOB + '/story'),
+    ('POST', '/api/studio/character-precision/' + JOB + '/generate'),
+])
+def test_connection_draft_exception_rejects_inexact_or_paid_paths(method, path):
+    app, received = recorder()
+    assert TestClient(OperatingRequests(app)).request(method, path).status_code == 403
+    assert not received
+
+
 def test_delta_does_not_change_original_readonly_validation_class():
     app, received = recorder()
     client = TestClient(RestoredRequests(app))
@@ -156,6 +170,11 @@ def test_new_endpoints_keep_real_localaccess_origin_and_original_csrf_middleware
     @app.post('/character/{job}/render')
     async def render(job: str):
         requests.append('render')
+        return {'synthetic': True}
+
+    @app.post('/api/studio/character-precision/{job}/revise-connection')
+    async def revise_connection(job: str):
+        requests.append('connection-draft')
         return {'synthetic': True}
 
     # Load precisely the existing two middleware functions, not the app factory.
@@ -195,6 +214,15 @@ def test_new_endpoints_keep_real_localaccess_origin_and_original_csrf_middleware
     assert client.post('/character/' + JOB + '/submit', data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 403
     assert client.post('/api/studio/characters/auto-story', data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 403
     assert requests == ['models', 'settings', 'render']
+    target = '/api/studio/character-precision/' + JOB + '/revise-connection'
+    assert client.post(target, data={'csrf_token': 'bad'}, headers={'Origin': session.origin}).status_code == 403
+    assert client.post(target, data={'csrf_token': csrf}, headers={'Origin': 'https://outside.invalid'}).status_code == 403
+    assert requests == ['models', 'settings', 'render']
+    assert client.post(target, data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 200
+    assert requests == ['models', 'settings', 'render', 'connection-draft']
+    client.cookies.clear()
+    assert client.post(target, data={'csrf_token': csrf}, headers={'Origin': session.origin}).status_code == 403
+    assert requests == ['models', 'settings', 'render', 'connection-draft']
 
 
 @pytest.mark.parametrize('method,path',[
