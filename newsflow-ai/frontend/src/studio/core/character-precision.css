@@ -38,3 +38,9 @@
 .precision-return{display:inline-block;margin:0 0 12px;color:#b6dcff;text-decoration:underline}
 @media(max-width:1050px){.precision-steps{display:none}.precision-setup{grid-template-columns:1fr}.precision-selected{grid-template-columns:minmax(0,1fr)}.precision-review-layout{grid-template-columns:130px minmax(0,1fr)}}
 @media(max-width:600px){.precision-review-layout{grid-template-columns:1fr}.precision-scenes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.precision-pair{grid-template-columns:1fr}}
+
+.precision-mode-switch>label{display:flex!important;flex-direction:row!important;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.precision-mode-switch input[type=checkbox]{width:16px!important;height:16px!important;min-width:16px!important;margin:0!important;appearance:auto}
+.precision-person img{width:90px;height:120px}.precision-snapshot img{flex-basis:90px}
+.precision-scene-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.precision-batch{font-size:12px;color:#b9d0ea}
+.precision-batch .precision-check{display:inline-flex!important;margin-right:16px}.precision-scene-detail details{font-size:12px}

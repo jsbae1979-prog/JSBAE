@@ -55,8 +55,9 @@ class PrecisionService:
     def listing(self):
         safe_path(self.root,self.root)
         if not self.root.exists(): return []
+        works=(self.read(p.stem) for p in self.root.glob('*.json'))
         return [{'id':w['id'],'title':w['common']['title'],'state':w['state']} for w in
-                (self.read(p.stem) for p in sorted(self.root.glob('*.json')))]
+                sorted(works,key=lambda w:(w.get('updated_at',''),w.get('created_at',''),w['id']),reverse=True)]
 
     def create(self, common, character_ids, outfits, selection, video_settings, image_limit, video_limit, request_id):
         from .kling import snapshot

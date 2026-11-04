@@ -160,3 +160,45 @@ EP01은 실제 원본 토토·루루나 ChatGPT의 기존 5장이라고 주장�
 화면 증거는 같은 임시 폴더의 `ui-refinement-evidence`에 보관했다. 캐릭터와 장면 이미지는 실제 사용자 자산이 아닌 색상 PNG다.
 
 운영 앱·DB·키·미디어·백업 접근/변경, 앱 재시작, 외부 API, GitHub push, 운영 반영은 수행하지 않았다. 개발 UI 집중 검증은 ACCEPTED, 실제 운영 화면 및 공급사 이미지·영상 품질은 미검증이다.
+
+
+## 후속 간소화 2 — 선택과 다음 행동 중심
+
+기준 `ddcef292c9e33c5fc5994f3d3491efdefab6bee5`. 운영 적용 없이 개발 브랜치에서 수행했다.
+
+- 두 개의 제작 방식 버튼을 “장면 이미지를 먼저 검토” 체크 옵션으로 교체했다. 미선택 시 기존 빠른 제작이며, 양쪽 화면의 미저장 상태는 유지된다.
+- 별도 작품명 입력과 작품 저장 버튼을 제거했다. 스토리 만들기에서 유료 요청 내용을 확인하면 무료 작품 저장 후 승인된 스토리 요청을 한 번 실행한다. 관리용 제목은 주제에서 최대 100자로 정하고 전체 주제는 별도 필드로 보존한다. 직접 작성도 첫 클릭에 무료 초안을 저장하고 편집 창으로 연결한다.
+- 캐릭터 카드에는 이미지·이름을 중심으로 보여 주고 특징·의상은 접었다. 기본 설정은 20초를 유지한다.
+- 새 작품은 최근 정밀 작품의 모델·화질·예산 선택값을 재사용한다. 이미지 예산은 현재 설정된 이미지 상한보다 커지지 않도록 제한한다. 승낙·견적·요청·비용 사용 내역은 승계하지 않는다. 기존 기록은 읽기만 한다.
+- 단계별 주요 행동은 스토리 만들기 / 장면 이미지 만들기 / 이 이미지 사용 / 영상 제작으로 이동 중 필요한 것만 강조한다. 생성 결과가 없는 단계에서 영상 이동 버튼은 노출하지 않는다.
+- 선택 장면 옆에는 “다시 만들기”, “이 이미지 사용”을 배치했다. 버전·프롬프트와 여러 장면 재생성은 접었다. 이미 확정한 버전은 “사용 중인 이미지”로 표시하며 중복 확정 버튼은 비활성화한다.
+- 이미지 예산 확인과 참조 이미지 외부 전송 승인은 한 팝업에서 한 번의 명시적 승인으로 처리한다. 팝업을 닫으면 생성하지 않는다. 생성 건수·모델·예상 비용·예약 금액과 실제 청구액의 차이는 그대로 표시한다.
+- 모든 장면을 확정하면 한 번의 클릭으로 기존 영상 작업을 준비하고 영상 제작 화면으로 이동한다. 이 이동 자체는 유료 영상 요청이 아니다.
+
+변경 파일: `CharacterPrecision.tsx`, `CharacterStudio.tsx`, `character-precision.css`, `character/precision.py`, `gui/character_precision_routes.py`, `tests/test_character_precision.py`, `tests/test_character_precision_browser.py`, 본 문서. 새 POST 경로와 DB migration은 추가하지 않았다.
+
+검증 환경: 기존 Windows Python 3.14.7, 별도 임시 DB·로컬 이미지·Fake 이미지/영상/스토리 공급사, Windows Chromium 1366/1920. 기존 운영 Chrome에는 연결하지 않았다.
+
+| 집중 검사 | PASS | FAIL | ERROR | SKIP |
+|---|---:|---:|---:|---:|
+| 정밀 제작 단위·통합 + 최근 설정 재사용 | 21 | 0 | 0 | 0 |
+| 브라우저 화면·작업 동선 | 8 | 0 | 0 | 0 |
+| 서로 다른 검사 합계 | 29 | 0 | 0 | 0 |
+
+실행 명령:
+
+```text
+python -m pytest -q -rs tests/test_character_precision.py
+python -m pytest -q -rs tests/test_character_precision.py::test_precision_catalog_reuses_only_latest_choices_not_approval
+python -m pytest -q -rs tests/test_character_precision_browser.py
+node node_modules/typescript/bin/tsc --noEmit
+node node_modules/vite/bin/vite.js build --configLoader runner
+```
+
+최초 브라우저 검사의 새 작품 3건은 이전 영상 snapshot 메타데이터를 신규 입력으로 전달해 실패했다. 기존 `kling.check`를 사용해 검증된 선택값만 추출하도록 수정했다. 단위 검사 21건 통과 후 이 변경에 직접 관련된 1건을 다시 실행해 통과했으며 중복 집계하지 않았다. 다음 브라우저 검사 1건은 캐릭터 목록이 로드되기 전에 테스트가 전체 선택을 시도한 문제여서 로딩 완료를 기다리도록 수정했다. 최종 브라우저 8건 전부 통과했다. TypeScript와 React/Vite 빌드, diff 공백 검사도 통과했다. 기존 Starlette/httpx 경고 1종은 유지된다.
+
+중점 확인: 확인 취소 시 생성 0회 / 연속 클릭 시 무료 저장·스토리 호출 각 1회 / 새로고침 및 실패·불명 후 자동 재호출 0회 / 장면·버전 전환 시 다른 결과 불변 / 기존 26초 작업 보존 / 확정 이미지에서 영상 화면 이동 시 새 영상 생성 0회 / 최근 모델·예산만 재사용하고 이전 승인 기록은 원본 그대로 보존.
+
+증거: `C:\Codex\NewsFlowAI\precision_scene_20261104\simplified-evidence`의 로그·JUnit·합성 화면 이미지. 이전 158 PASS 및 1차 UI 5 PASS는 과거 증거이며 이번 합계에 더하지 않았다. 전면 회귀, 실제 API, 운영 반영, 앱 재시작, SNS, 사용자 데이터 변경, GitHub push는 하지 않았다.
+
+판정: 개발·Fake 검증 ACCEPTED. 실제 운영 적용 및 공급사 출력 품질은 이번 범위에서 미검증.

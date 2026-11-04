@@ -27,14 +27,20 @@ def perform(call):
 def catalog(request:Request):
     from newsflow.character.editing import load_sfx_map
     from newsflow.creation.catalog import IMAGE_MODELS,IMAGE_QUALITIES,read_defaults
-    from newsflow.character.kling import catalog as video_catalog
+    from newsflow.character.kling import catalog as video_catalog, check as video_choices
     from newsflow.intelligence.api_providers import API_MODELS
     s=service(request)
-    return perform(lambda:{'works':s.listing(),'profiles':s.registry.list(),
+    def view():
+        works=s.listing()
+        latest=s.read(works[0]['id']) if works else None
+        reusable={key:latest[key] for key in ('selection','video_settings','image_limit','video_limit')} if latest else None
+        if reusable:reusable['video_settings']=video_choices(latest['video_settings'])
+        return {'works':works,'recent_settings':reusable,'profiles':s.registry.list(),
         'image_models':list(IMAGE_MODELS),'qualities':IMAGE_QUALITIES,
         'image_defaults':{**read_defaults(s.images.sessions,'image'),'size':'864x1536'},
         'sfx_keys':list(load_sfx_map()),
-        'script_models':list(API_MODELS['claude_api'])+list(API_MODELS['openai']), 'video':video_catalog(),'standing_limit':s.readiness.standing_limit()})
+        'script_models':list(API_MODELS['claude_api'])+list(API_MODELS['openai']), 'video':video_catalog(),'standing_limit':s.readiness.standing_limit()}
+    return perform(view)
 
 @router.get('/api/studio/character-precision/{identifier}')
 def detail(request:Request,identifier:str):

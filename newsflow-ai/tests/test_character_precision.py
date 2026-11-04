@@ -275,3 +275,26 @@ def test_existing_authoring_transport_with_two_cast_profiles(precision,provider,
     assert budget.finished[0][1]['status']=='success'
     with pytest.raises(ValueError):p.s.write_story(w['id'],result['revision'],True)
     assert len(adapter.bodies)==1
+
+
+def test_precision_catalog_reuses_only_latest_choices_not_approval(precision,monkeypatch):
+    from newsflow.gui.character_precision_routes import catalog
+    p=precision;old=p.s.read(p.w['id']);new=p.create()
+    # Explicit timestamps keep this test independent of the machine clock resolution.
+    old['updated_at']='2026-01-01T00:00:00Z';new['updated_at']='2026-02-01T00:00:00Z'
+    new['image_limit']='2.50';new['video_limit']='7'
+    new['quote']={'consent':True,'account_scope':'fixture-only'}
+    for w in (old,new):p.s.path(w['id']).write_text(json.dumps(w),encoding='utf8')
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:p.s)
+    view=catalog(None)
+    assert view['works'][0]['id']==new['id']
+    reusable=view['recent_settings']
+    assert set(reusable)=={'selection','video_settings','image_limit','video_limit'}
+    assert reusable['image_limit']=='2.50' and reusable['video_limit']=='7'
+    assert set(reusable['video_settings'])==set(DEFAULTS)
+    created=p.s.create({**p.w['common'],'duration':20},p.ids,{cid:'Same reference outfit' for cid in p.ids},
+        reusable['selection'],reusable['video_settings'],reusable['image_limit'],reusable['video_limit'],uuid4().hex)
+    assert created['common']['duration']==20 and created['video_settings']['version']==3
+    assert not created['story_attempts'] and not created.get('quote')
+    assert p.s.read(old['id'])==old and p.s.read(new['id'])==new
+    assert not p.adapter.calls and not p.writer.calls

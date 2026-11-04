@@ -24,11 +24,12 @@ def test_precision_cards_approval_confirm_and_version_selection(precision,browse
         panel=page.get_by_role('region',name='정밀 제작',exact=True)
         expect(panel.get_by_role('heading',name='장면 이미지 검토')).to_be_visible()
         expect(panel.locator('.precision-scenes article')).to_have_count(5)
-        panel.get_by_role('button',name='전체 미생성 장면 예산 확인').click()
-        button=panel.get_by_role('button',name='승인한 장면 이미지 생성')
-        expect(button).to_be_disabled();assert not f.adapter.calls
-        panel.get_by_role('checkbox',name='선택한 캐릭터 참조 이미지 전송과 표시된 이미지 생성 비용에 동의합니다.').check()
-        button.click()
+        panel.get_by_role('button',name='장면 이미지 만들기',exact=True).click()
+        popup=page.get_by_role('dialog',name='장면 이미지 만들기',exact=True)
+        expect(popup).to_be_visible();assert not f.adapter.calls
+        page.keyboard.press('Escape');assert not f.adapter.calls
+        panel.get_by_role('button',name='장면 이미지 만들기',exact=True).click()
+        page.get_by_role('button',name='참조 이미지 전송·생성 승인').click()
         expect(panel.get_by_role('status')).to_contain_text('5/5장 완료',timeout=20000)
         assert len(f.adapter.calls)==5
         first=panel.locator('.precision-scenes article').first
@@ -37,12 +38,15 @@ def test_precision_cards_approval_confirm_and_version_selection(precision,browse
         expect(popup.get_by_role('img')).to_be_visible()
         assert popup.bounding_box()['height']<=768
         page.keyboard.press('Escape');expect(popup).not_to_be_visible()
-        panel.get_by_role('button',name='이 이미지 검토·확정').click()
-        page.get_by_role('button',name='검토 완료 · 이미지 확정').click()
+        panel.get_by_role('button',name='이 이미지 사용').click()
+        page.get_by_role('button',name='확인 완료 · 이 이미지 사용').click()
         expect(first.get_by_text('이미지 확정',exact=True)).to_be_visible()
-        expect(panel.get_by_role('button',name='영상 제작 준비 · 무료')).to_be_disabled()
+        expect(panel.get_by_role('button',name='영상 제작으로 이동')).to_have_count(0)
+        expect(panel.get_by_role('button',name='사용 중인 이미지')).to_be_disabled()
         panel.get_by_role('button',name='장면 2 ·').click()
         expect(panel.locator('.precision-selected img')).to_have_attribute('alt','장면 2')
+        expect(panel.get_by_label('장면 2 이미지 버전')).not_to_be_visible()
+        panel.get_by_text('버전·프롬프트 더보기',exact=True).click()
         expect(panel.get_by_label('장면 2 이미지 버전')).to_be_visible()
         # Selection does not generate, confirm or alter another scene.
         saved=f.s.read(w['id']);assert saved['scenes'][0]['confirmed'] and not saved['scenes'][1]['confirmed']
@@ -55,11 +59,14 @@ def test_precision_cards_approval_confirm_and_version_selection(precision,browse
         page.reload()
         panel.get_by_role('button',name='장면 2 ·').click()
         expect(panel.locator('.precision-selected img')).to_have_attribute('src','/image-studio/assets/'+new_asset)
+        panel.get_by_text('버전·프롬프트 더보기',exact=True).click()
         panel.get_by_label('장면 2 이미지 버전').select_option('1')
         expect(panel.locator('.precision-selected img')).to_have_attribute('src','/image-studio/assets/'+old_asset)
         panel.get_by_label('장면 2 이미지 버전').select_option('2')
         expect(panel.locator('.precision-selected img')).to_have_attribute('src','/image-studio/assets/'+new_asset)
         assert f.s.read(w['id'])==newer and len(f.adapter.calls)==6 and not errors
+        panel.get_by_text('버전·프롬프트 더보기',exact=True).click()
+        panel.get_by_role('heading',name='장면 이미지 검토',exact=True).click()
         page.screenshot(path=str(tmp_path/'precision-five-scene-review.png'),full_page=True)
         context.close()
 
@@ -70,33 +77,34 @@ def test_precision_mode_keeps_fast_and_new_work_controls(precision,browser,monke
     with local_server(f.app) as origin:
         context=browser_context(browser,origin);page=context.new_page();page.set_viewport_size({'width':width,'height':900})
         page.goto(origin+'/studio/characters')
-        expect(page.get_by_role('button',name='빠른 제작',exact=True)).to_have_attribute('aria-pressed','true')
-        page.get_by_role('button',name='정밀 제작 · 장면 이미지 먼저 만들기',exact=True).click()
+        expect(page.get_by_role('checkbox',name='장면 이미지를 먼저 검토',exact=True)).not_to_be_checked()
+        page.get_by_role('checkbox',name='장면 이미지를 먼저 검토',exact=True).check()
         panel=page.get_by_role('region',name='정밀 제작',exact=True)
         expect(panel.get_by_label('스토리 주제',exact=True)).to_be_visible()
-        expect(panel.get_by_label('작품명',exact=True)).not_to_be_visible()
+        expect(panel.get_by_label('작품명',exact=True)).to_have_count(0)
         expect(panel.get_by_label('총 길이(초)')).to_have_value('20')
         expect(panel.locator('.precision-person')).to_have_count(2)
         page.wait_for_function("Array.from(document.querySelectorAll('.precision-person img')).every(i=>i.complete&&i.naturalWidth>0)")
-        expect(panel.get_by_role('button',name='작품 저장 · 무료')).to_be_disabled()
+        expect(panel.get_by_role('button',name='작품 저장 · 무료')).to_have_count(0)
+        expect(panel.get_by_role('button',name='스토리 만들기',exact=True)).to_be_disabled()
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         panel.get_by_label('스토리 주제',exact=True).fill('선택한 캐릭터의 새로운 하루')
         panel.locator('.precision-person').filter(has_text=f.chars[0]['name_ko']).locator('input[type=checkbox]').check()
-        panel.get_by_text('작품 세부 설정',exact=True).click()
+        panel.get_by_text('직접 작성·상세 설정',exact=True).click()
         expect(panel.get_by_label('그림 스타일',exact=True)).to_have_value(f.chars[0]['style_lock'])
         expect(panel.get_by_label('세계관',exact=True)).to_have_value(f.chars[0]['comedy_formula']['world'])
         panel.get_by_label('그림 스타일',exact=True).fill('User selected watercolor')
-        panel.get_by_text('작품 세부 설정',exact=True).click()
-        page.get_by_role('button',name='빠른 제작',exact=True).click()
+        panel.get_by_text('직접 작성·상세 설정',exact=True).click()
+        page.get_by_role('checkbox',name='장면 이미지를 먼저 검토',exact=True).uncheck()
         expect(panel).not_to_be_visible()
-        page.get_by_role('button',name='정밀 제작 · 장면 이미지 먼저 만들기',exact=True).click()
+        page.get_by_role('checkbox',name='장면 이미지를 먼저 검토',exact=True).check()
         expect(panel.get_by_label('스토리 주제',exact=True)).to_have_value('선택한 캐릭터의 새로운 하루')
         expect(panel.locator('.precision-person').filter(has_text=f.chars[0]['name_ko']).locator('input[type=checkbox]')).to_be_checked()
         panel.locator('.precision-person').filter(has_text=f.chars[0]['name_ko']).locator('input[type=checkbox]').uncheck()
         panel.locator('.precision-person').filter(has_text=f.chars[1]['name_ko']).locator('input[type=checkbox]').check()
-        panel.get_by_text('작품 세부 설정',exact=True).click()
+        panel.get_by_text('직접 작성·상세 설정',exact=True).click()
         expect(panel.get_by_label('그림 스타일',exact=True)).to_have_value('User selected watercolor')
-        panel.get_by_text('작품 세부 설정',exact=True).click()
+        panel.get_by_text('직접 작성·상세 설정',exact=True).click()
         assert not f.adapter.calls and not f.writer.calls
         page.screenshot(path=str(tmp_path/f'precision-setup-{width}.png'),full_page=True)
         context.close()
@@ -111,12 +119,12 @@ def test_precision_handoff_opens_existing_video_screen_at_26_seconds(precision,b
         context=browser_context(browser,origin);page=context.new_page();errors=[]
         page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(origin+'/studio/characters?job_id='+w['video_job_id'])
-        expect(page.get_by_role('button',name='빠른 제작',exact=True)).to_have_attribute('aria-pressed','true')
+        expect(page.get_by_role('checkbox',name='장면 이미지를 먼저 검토',exact=True)).not_to_be_checked()
         duration=page.get_by_label('영상 길이',exact=True)
         expect(duration).to_have_value('26');expect(duration).to_be_disabled()
         page.get_by_role('link',name='← 확정한 장면 이미지 보기').click()
         panel=page.get_by_role('region',name='정밀 제작',exact=True)
-        expect(panel.get_by_role('button',name='이 이미지 검토·확정')).to_be_disabled()
+        expect(panel.get_by_role('button',name='사용 중인 이미지')).to_be_disabled()
         expect(panel.get_by_role('link',name='영상 제작 열기',exact=True)).to_have_attribute('href','/studio/characters?job_id='+w['video_job_id'])
         assert f.s.read(w['id'])==w
         assert not errors and not f.video.sent and not f.video.uploads and len(f.adapter.calls)==5
@@ -135,9 +143,12 @@ def test_precision_create_reuses_profile_without_paid_call(precision,browser,mon
         panel.locator('.precision-budget-settings summary').click()
         panel.get_by_label('이미지 작업 예산(USD)',exact=True).fill('5')
         panel.get_by_label('스토리·영상 예산(USD)',exact=True).fill('5')
-        panel.get_by_role('button',name='작품 저장 · 무료').click()
-        expect(panel.get_by_role('button',name='스토리 자동 생성하기')).to_be_visible()
-        expect(panel.get_by_role('button',name='스토리 자동 생성하기')).to_be_disabled()
+        panel.get_by_text('직접 작성·상세 설정',exact=True).click()
+        panel.get_by_role('button',name='직접 작성',exact=True).click()
+        expect(page.get_by_role('dialog',name='장면 내용 수정')).to_be_visible()
+        page.keyboard.press('Escape')
+        expect(panel.get_by_role('button',name='스토리 만들기')).to_be_visible()
+        expect(panel.get_by_role('button',name='스토리 만들기')).to_be_enabled()
         identifier=page.url.split('precision=')[1].split('&')[0]
         w=f.s.read(identifier)
         assert w['common']['title']=='정원에서 찾은 작은 선물'
@@ -151,6 +162,78 @@ def test_precision_create_reuses_profile_without_paid_call(precision,browser,mon
         page.reload()
         expect(panel.get_by_label('스토리 주제',exact=True)).to_have_value('')
         panel.get_by_label('저장한 작품').select_option(identifier)
-        expect(panel.get_by_role('button',name='스토리 자동 생성하기')).to_be_disabled()
+        expect(panel.get_by_role('button',name='스토리 만들기')).to_be_enabled()
         assert f.s.read(identifier)==w
+        context.close()
+
+
+def test_precision_story_autosave_requires_confirmation_and_runs_once(precision,browser,monkeypatch):
+    from copy import deepcopy
+    f=precision;monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    f.app.state.image_studio=f.images
+    story=deepcopy(f.story)
+    for row in story['scenes']:row['seconds']=4
+    f.writer.scenario=story
+    with local_server(f.app) as origin:
+        context=browser_context(browser,origin);page=context.new_page();requests=[]
+        page.on('request',lambda r:requests.append(r.url) if r.method=='POST' else None)
+        page.goto(origin+'/studio/characters?precision=')
+        panel=page.get_by_role('region',name='정밀 제작',exact=True)
+        expect(panel.locator('.precision-person input[type=checkbox]')).to_have_count(2)
+        for box in panel.locator('.precision-person input[type=checkbox]').all():box.check()
+        topic='정원에서 작은 선물을 찾고 친구와 나누는 하루'
+        panel.get_by_label('스토리 주제',exact=True).fill(topic)
+        panel.get_by_role('button',name='스토리 만들기',exact=True).click()
+        popup=page.get_by_role('dialog',name='스토리 만들기',exact=True)
+        expect(popup).to_contain_text('US$5');assert not requests and not f.writer.calls
+        page.keyboard.press('Escape');assert len(f.s.listing())==1
+        panel.get_by_role('button',name='스토리 만들기',exact=True).click()
+        page.get_by_role('button',name='유료 스토리 생성 승인').dblclick()
+        expect(panel.get_by_role('button',name='장면 이미지 만들기',exact=True)).to_be_visible()
+        identifier=page.url.split('precision=')[1].split('&')[0];w=f.s.read(identifier)
+        assert w['common']['title']==topic and w['common']['duration']==20
+        assert len(f.writer.calls)==1 and len(f.s.listing())==2
+        assert sum(url.endswith('/create') for url in requests)==1
+        assert sum(url.endswith('/story') for url in requests)==1
+        assert not f.adapter.calls and not f.video.sent
+        page.reload();assert len(f.writer.calls)==1
+        context.close()
+
+
+def test_precision_story_failure_preserves_draft_without_replay(precision,browser,monkeypatch):
+    f=precision;monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    f.app.state.image_studio=f.images
+    def fail(*args,**kwargs):
+        f.writer.calls.append('attempt');raise TimeoutError('synthetic timeout')
+    f.writer.response_received=False;f.writer.generate=fail
+    with local_server(f.app) as origin:
+        context=browser_context(browser,origin);page=context.new_page()
+        page.goto(origin+'/studio/characters?precision=')
+        panel=page.get_by_role('region',name='정밀 제작',exact=True)
+        panel.locator('.precision-person input[type=checkbox]').first.check()
+        panel.get_by_label('스토리 주제',exact=True).fill('저장된 작품은 지우지 않기')
+        panel.get_by_role('button',name='스토리 만들기',exact=True).click()
+        page.get_by_role('button',name='유료 스토리 생성 승인').click()
+        expect(panel.get_by_role('status')).to_contain_text('스토리 확인 필요')
+        expect(panel.get_by_role('button',name='스토리 만들기',exact=True)).to_be_disabled()
+        identifier=page.url.split('precision=')[1].split('&')[0];w=f.s.read(identifier)
+        assert w['story_attempts'][0]['state']=='unknown'
+        page.reload()
+        expect(panel.get_by_role('button',name='스토리 만들기',exact=True)).to_be_disabled()
+        assert f.s.read(identifier)==w and len(f.writer.calls)==1 and not f.adapter.calls
+        context.close()
+
+
+def test_precision_confirmed_images_move_to_video_without_generation(precision,browser,monkeypatch):
+    from test_character_precision import confirmed
+    f=precision;w=confirmed(f)
+    f.app.state.character=f.owner;f.app.state.image_studio=f.images
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        context=browser_context(browser,origin);page=context.new_page()
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        page.get_by_role('button',name='영상 제작으로 이동',exact=True).click()
+        expect(page.get_by_label('영상 길이',exact=True)).to_have_value('26')
+        assert '?job_id=' in page.url
+        assert not f.video.sent and not f.video.uploads and len(f.adapter.calls)==5
         context.close()

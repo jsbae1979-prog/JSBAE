@@ -2351,9 +2351,9 @@ function FastCharacterStudio({ c }: { c: Controller }) {
 export default function CharacterStudio({c}:{c:Controller}) {
   const [mode,setMode]=useState(()=>new URLSearchParams(location.search).has('precision')?'precision':'fast');
   const [precisionVisited,setPrecisionVisited]=useState(mode==='precision');
-  return <><nav className="precision-mode-switch" aria-label="제작 방식">
-    <button aria-pressed={mode==='fast'} onClick={()=>setMode('fast')}>빠른 제작</button>
-    <button aria-pressed={mode==='precision'} onClick={()=>{setPrecisionVisited(true);setMode('precision');}}>정밀 제작 · 장면 이미지 먼저 만들기</button>
-  </nav><div hidden={mode!=='fast'}><FastCharacterStudio c={c}/></div>
+  return <><div className="precision-mode-switch"><label>
+    <input type="checkbox" checked={mode==='precision'} onChange={e=>{if(e.target.checked)setPrecisionVisited(true);setMode(e.target.checked?'precision':'fast');}}/>
+    장면 이미지를 먼저 검토
+  </label></div><div hidden={mode!=='fast'}><FastCharacterStudio c={c}/></div>
   {precisionVisited&&<div hidden={mode!=='precision'}><CharacterPrecision c={c}/></div>}</>;
 }
