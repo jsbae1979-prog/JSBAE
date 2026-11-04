@@ -318,7 +318,11 @@ def character_rows(state):
             item['playback_seconds'] = total_playback_seconds(parsed, load_edit_presets())
             item['editTimeline'] = edit_timeline(parsed, job['duration'], precise=bool(job.get('precision')))
             item['precisionWorkId'] = job.get('precision', {}).get('work_id')
-            item['precisionConnected'] = job.get('continuity_policy') == 'precision-continuity-v2'
+            item['precisionConnected'] = job.get('continuity_policy') in {'precision-continuity-v2','precision-causal-v3'}
+            from newsflow.character.precision_causal import pending_review
+            item['pendingClipReview'] = pending_review(job)
+            from newsflow.character.precision_causal import POLICY, reviewed
+            item['reviewedNextReady'] = job.get('continuity_policy')==POLICY and job.get('state')=='scene_review' and any(r['state'] in {'waiting_dependency','waiting_review'} and i>0 and reviewed(job['scenes'][i-1]) for i,r in enumerate(job.get('scenes',[])))
             item['sfx_keys'] = list(load_sfx_map())
             item['characterProfile'] = None if job.get('character_reference_mode')=='image_topic' else job.get('character', {})
             item['referenceMode'] = job.get('character_reference_mode', 'registered')

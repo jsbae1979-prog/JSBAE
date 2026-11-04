@@ -1,3 +1,5 @@
+import {submitOriginal} from "../CommandDialog";
+import {characterCommand} from "./CharacterAutomation";
 import CharacterPrecision from "./CharacterPrecision";
 import {useSceneProgress} from "./useSceneProgress";
 import {SavedStoryReview} from './SavedStoryReview';
@@ -25,7 +27,7 @@ import {
   X,
 } from "lucide-react";
 import { Thumbnail } from "../Thumbnail";
-import { safeMedia, type Item } from "../contracts";
+import { actions, safeMedia, type Item } from "../contracts";
 import {
   Empty,
   Media,
@@ -631,7 +633,8 @@ function FastCharacterStudio({ c }: { c: Controller }) {
   });
   const canDiagnoseScenes = job?.state === "scene_review" && !!job?.studio_selection && failureDetails.length > 0
     && clips.every((clip) => ["failed", "nsfw", "canceled", "submitted", "downloaded"].includes(clip.state)
-      || (job.automation_version === 1 && clip.state === "waiting_dependency"));
+      || (job.automation_version === 1 && clip.state === "waiting_dependency")
+      || (job.precisionConnected && clip.state === "waiting_review"));
   const selectedClip = clips.find((x) => x.position === scene + 1);
   const singleVideo =
     clips.length === 1 &&
@@ -1204,6 +1207,18 @@ function FastCharacterStudio({ c }: { c: Controller }) {
       setBusy(false);
       sending.current = false;
     }
+  }
+  async function reviewNextClip() {
+    if(isBusy || sending.current || !job?.pendingClipReview || !c.view || !executionEnabled)return;
+    sending.current=true;setBusy(true);setFailure('');
+    try {
+      await characterCommand(`/character/${job.id}/review-clip`,c.view.csrfToken??'',{
+        position:String(job.pendingClipReview.position),clip_sha256:job.pendingClipReview.clip_sha256,consent:'true'});
+      const command=actions.find(a=>a.id==='character_act_check');
+      if(!command)throw Error('장면 진행 연결을 확인하세요.');
+      await submitOriginal(command,{job_id:job.id,consent:true},c.view,{});
+    } catch(e) {setFailure(e instanceof Error?e.message:'현재 결과를 확인하세요. 자동 재요청하지 않습니다.');}
+    finally {sending.current=false;setBusy(false);await c.load();}
   }
   function action(kind: string, label: string, allowed: string[]) {
     const connectionUnavailable = !executionEnabled && ["submit", "check", "diagnose", "retry-quote", "retry-scene"].includes(kind);
@@ -1944,6 +1959,13 @@ function FastCharacterStudio({ c }: { c: Controller }) {
                       </button>
                     ) : job?.state === "quoted" ? (
                       action("submit", "영상 생성하기", ["quoted"])
+                    ) : job?.pendingClipReview ? (
+                      <div role="status"><p>장면 {job.pendingClipReview.position}을 재생해 캐릭터·소품·행동 연결을 확인하세요.</p>
+                      <button disabled={isBusy} onClick={()=>{const clip=clips.find(x=>x.position===job.pendingClipReview.position);if(safeMedia(clip?.mediaUrl))setScenePreview({url:clip!.mediaUrl,image:false,title:`장면 ${clip!.position}`,seconds:clip!.seconds});}}>장면 {job.pendingClipReview.position} 재생</button>
+                      <button className="primary" disabled={isBusy||!executionEnabled} onClick={()=>void reviewNextClip()}>
+                        장면 {job.pendingClipReview.position} 확인 · 다음 장면 만들기</button></div>
+                    ) : job?.reviewedNextReady ? (
+                      action("check", "검토한 장면에서 다음 장면 진행", ["scene_review"])
                     ) : canCheckScenes && follow.active ? (
                       <div className="kling-generation-live" role="status">
                         <LoaderCircle className={follow.paused?"":"spin"} size={20}/>
@@ -1973,7 +1995,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
                   </div>
                   {!!follow.total && ["generating","scene_review","submission_unknown","submission_not_sent","status_or_download_failed","clips_review","composing","compose_failed","completed"].includes(job?.state??"") && (
                     <section className="kling-generation-progress" aria-label="영상 제작 진행" aria-live="polite">
-                      <div><strong>{job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 중":job?.composeRecoveryAvailable?"합성 중단 · 다시 합성 가능":job?.state==="completed"?"최종 영상 저장 완료":follow.error?"확인 필요":follow.failed?(follow.active?"실패 장면 있음 · 남은 장면 확인 중":"확인 필요"):follow.done===follow.total?"장면 검토 준비 완료":"장면 제작 진행 중"}</strong>
+                      <div><strong>{job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 중":job?.composeRecoveryAvailable?"합성 중단 · 다시 합성 가능":job?.state==="completed"?"최종 영상 저장 완료":job?.pendingClipReview?"장면 검토 대기":follow.error?"확인 필요":follow.failed?(follow.active?"실패 장면 있음 · 남은 장면 확인 중":"확인 필요"):follow.done===follow.total?"장면 검토 준비 완료":"장면 제작 진행 중"}</strong>
                         <span>완료 {follow.done}/{follow.total}</span></div>
                       <progress aria-label={job?.state==="composing"&&!job?.composeRecoveryAvailable?"최종 영상 합성 진행":"장면 저장 진행률"}
                         max={follow.total} value={job?.state==="composing"&&!job?.composeRecoveryAvailable?undefined:follow.done}/>
@@ -2155,7 +2177,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
                         {showImage && <small>확정 이미지 · 클릭하여 크게 보기</small>}
                         {clip?.dependencyStopReason ? (
                           <small role="status">{clip.dependencyStopReason === "parent_failed" ? "앞 장면 실패로 중단" : "작업 실패로 연결 보류"}</small>
-                        ) : <State value={clip?.state === "not_submitted" || (!clip && showImage) ? "영상 생성 전" : clip?.state ?? "pending"} />}
+                        ) : <State value={clip?.state === "not_submitted" || (!clip && showImage) ? "영상 생성 전" : (clip?.state === "waiting_review" ? "앞 장면 검토 대기" : clip?.state === "waiting_dependency" ? "앞 장면 연결 대기" : clip?.state ?? "pending")} />}
                       </>
                     ))}
                 </button>

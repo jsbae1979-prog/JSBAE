@@ -311,10 +311,22 @@ export default function CharacterPrecision({c}:{c:Controller}) {
             onChange={e=>set('characters',e.target.checked?[...s.characters,person.id]:s.characters.filter((id:string)=>id!==person.id))}/>{person.name_ko}</label>;})}
           {issue('characters')&&<p className="precision-field-error">{issue('characters')}</p>}
           {Object.entries(basicSceneFields).map(([key,label])=>field(key,label))}
-          {work?.continuity_policy==='precision-continuity-v2'&&<>
+          {['precision-continuity-v2','precision-causal-v3'].includes(work?.continuity_policy)&&<>
             <label>장면 연결<select aria-label="장면 연결" value={s.connection??'cut'} onChange={e=>set('connection',e.target.value)}><option value="cut">새 장면 · 의도적인 전환</option><option value="continue" disabled={i===0}>앞 영상의 마지막 화면에서 이어가기</option></select>{issue('connection')&&<small>{issue('connection')}</small>}</label>
             {Object.entries(connectionSceneFields).filter(([key])=>key!=='transition_reason'||(i>0&&s.connection!=='continue')).map(([key,label])=>field(key,label))}
             {i>0&&s.connection==='continue'&&<button type="button" onClick={()=>set('start_state',editing.scenario.scenes[i-1].end_state??'')}>앞 장면 끝 상태 가져오기</button>}
+          </>}
+          {work?.continuity_policy==='precision-causal-v3'&&<>
+            {field('cause','이 행동을 하는 이유')}{field('result','행동 뒤 달라지는 것')}
+            {i>0&&<button type="button" onClick={()=>set('cause',editing.scenario.scenes[i-1].result??'')}>앞 장면 결과 가져오기</button>}
+            <details><summary>소품의 변화</summary>
+              {(s.prop_states??[]).map((prop:Item,n:number)=><fieldset key={n}><legend>소품 {n+1}</legend>
+                {Object.entries({id:'소품 이름',before:'시작 상태 · 수량·형태·위치',after:'끝 상태 · 수량·형태·위치',change:'바뀌는 행동'}).map(([key,label])=><label key={key}>{label}<input value={prop[key]??''} onChange={e=>set('prop_states',s.prop_states.map((p:Item,j:number)=>j===n?{...p,[key]:e.target.value}:p))}/></label>)}
+                <button type="button" onClick={()=>set('prop_states',s.prop_states.filter((_:Item,j:number)=>j!==n))}>소품 제외</button></fieldset>)}
+              <button type="button" disabled={(s.prop_states??[]).length>=8} onClick={()=>set('prop_states',[...(s.prop_states??[]),{id:'',before:'',after:'',change:''}])}>소품 추가</button>
+              {i>0&&<button type="button" onClick={()=>set('prop_states',(editing.scenario.scenes[i-1].prop_states??[]).map((p:Item)=>({id:p.id,before:p.after,after:p.after,change:''})))}>앞 장면 소품 상태 가져오기</button>}
+              {issue('prop_states')&&<p role="alert">{issue('prop_states')}</p>}
+            </details>
           </>}
           <label>길이(초)<input aria-invalid={!!issue('seconds')} aria-describedby={issue('seconds')?`scene-${s.no}-seconds-error`:undefined} type="number" min={3} max={15} value={s.seconds} onChange={e=>set('seconds',+e.target.value)}/>{issue('seconds')&&<small className="precision-field-error" id={`scene-${s.no}-seconds-error`}>{issue('seconds')}</small>}</label>
         </div><details className="precision-editor-advanced" open={Object.keys(advancedSceneFields).some(key=>!!issue(key))||undefined}><summary>구도·연결·자막·소리 자세히</summary><div className="precision-pair">

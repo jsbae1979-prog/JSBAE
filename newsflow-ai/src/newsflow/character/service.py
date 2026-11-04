@@ -832,8 +832,9 @@ class CharacterService:
                         type(s.get('from')) is not int or not 1 <= s['from'] < s.get('position', 0))
                        for s in scenes):
                     raise CharacterError('blocked')
+            from .precision_causal import waiting_cut
             if (job['state']!='scene_review' or not 1<=len(scenes)<=60
-                    or any(s.get('state') not in companions for s in scenes)):
+                    or any(s.get('state') not in companions and not waiting_cut(job,s) for s in scenes)):
                 raise CharacterError('blocked')
             targets=[s for s in scenes if s['state'] in TERMINAL]
             if not targets:

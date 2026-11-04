@@ -8,6 +8,7 @@ from .episode_story import ComedySfx
 
 PROMPT_VERSION = 'scene-still-v2'
 CONTINUITY_POLICY = 'precision-continuity-v2'
+CONNECTED_POLICIES = {CONTINUITY_POLICY, 'precision-causal-v3'}
 NO_TEXT = 'No subtitles, speech bubbles, letters, logos or watermark in the image.'
 
 class WorkSettings(Strict):
@@ -92,7 +93,12 @@ def validate_work_timing(work, video_model):
 def validate_scenario(work, cast, value, video_model, policy=None):
     from newsflow.video_models.catalog import duration_values
     safe_text(value)
-    result = PrecisionScenario.model_validate(value)
+    from .precision_causal import POLICY, CausalScenario, validate_causal
+    result = (CausalScenario if policy == POLICY else PrecisionScenario).model_validate(value)
+    if policy == POLICY:
+        validate_causal(result.model_dump()['scenes'])
+        if work.get('props','').strip() and any(not row.prop_states for row in result.scenes):
+            raise ValueError('작품 공통 소품의 시작·끝 상태를 모든 장면에 기록하세요.')
     if len(result.scenes) != work['scene_count'] or sum(x.seconds for x in result.scenes) != work['duration']:
         raise ValueError('장면 수와 전체 길이를 확인하세요. 길이를 임의로 늘리지 않습니다.')
     if [x.no for x in result.scenes] != list(range(1,len(result.scenes)+1)):
@@ -101,7 +107,7 @@ def validate_scenario(work, cast, value, video_model, policy=None):
     for scene in result.scenes:
         if not set(scene.characters) <= set(cast) or scene.seconds not in allowed:
             raise ValueError('등장 캐릭터와 영상 모델의 장면 길이를 확인하세요.')
-    if policy == CONTINUITY_POLICY:
+    if policy in CONNECTED_POLICIES:
         validate_connections(result.model_dump()['scenes'], video_model)
     return result.model_dump()
 
@@ -140,6 +146,8 @@ def image_prompt(work, cast, scene):
                   for c in scene['characters']]
     moment = {k:scene[k] for k in ('location','pose','emotion','camera','props','continuity')}
     moment.update({k:scene[k] for k in ('set_id','environment','start_state') if scene.get(k)})
+    if 'prop_states' in scene:
+        moment['prop_states'] = [{'id':p['id'],'state':p['before']} for p in scene['prop_states']]
     text = ('Depict the exact start_state before the action begins. One full-frame scene, never a contact sheet. Each attached reference corresponds in order to characters. '
             'Preserve each face, body, fur color, clothing and accessories. Preserve shared location and props. '
             + NO_TEXT + '\n' + json.dumps({'shared':shared,'characters':characters,'moment':moment},ensure_ascii=False))
@@ -149,10 +157,12 @@ def image_prompt(work, cast, scene):
 def motion_rows(work, cast, scenes, settings, policy=None):
     from .kling import validate_video_prompt
     rows=[]
-    connected = policy == CONTINUITY_POLICY
+    connected = policy in CONNECTED_POLICIES
     if connected:
         from newsflow.video_models.catalog import CATALOG
         validate_connections(scenes, CATALOG.model(settings['video_model']))
+    from .precision_causal import POLICY, validate_causal, context as causal_context
+    if policy == POLICY: validate_causal(scenes)
     for i, scene in enumerate(scenes):
         people='; '.join(cast[x]['name_ko']+': '+cast[x]['appearance'] for x in scene['characters'])
         connection = scene['connection'] if connected else 'cut'
@@ -166,6 +176,7 @@ def motion_rows(work, cast, scenes, settings, policy=None):
                 context += f"Previous action: {scenes[i-1]['motion']}. "
                 if connection == 'cut': context += f"Transition: {scene['transition_reason']}. "
             if i+1 < len(scenes) and scenes[i+1]['connection']=='continue': context += f"Next scene starts: {scenes[i+1]['start_state']}. "
+        if policy == POLICY: context += causal_context(scene)
         image_start = "Animate the supplied final frame; approved still references guide identity, not a pose reset." if connected and connection == "continue" else "Animate the approved starting image."
         prompt=(f"{work['style']}. {people}. {image_start} "
                 f"{context}{scene['motion']} Camera: {scene['motion_camera']}. Continuity: {scene['continuity']}. "

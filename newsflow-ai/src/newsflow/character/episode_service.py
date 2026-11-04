@@ -13,6 +13,7 @@ import json
 import re
 
 from .schema import CharacterError, clean_topic
+from .precision_causal import POLICY as CAUSAL_POLICY, reviewed as clip_reviewed
 from .compose import digest, run
 from .episode_story import EpisodeScript, script_instruction, script_input, prompts, validate_episode
 from .episode_policy import job_story_format, load_story_format
@@ -363,6 +364,8 @@ class EpisodeFlow:
             for scene in job['scenes']:
                 scene['approved_template_hash'] = fp(scene['payload'])
                 scene['state'] = 'waiting_dependency' if scene['continuity'] == 'continue' else 'ready'
+                if job.get('continuity_policy') == CAUSAL_POLICY and scene['position'] > 1 and scene['continuity'] == 'cut':
+                    scene['state'] = 'waiting_review'
             job['state'] = 'generating'
             s.save(job)
             self.dispatch(job)
@@ -416,7 +419,7 @@ class EpisodeFlow:
             binary = str(FFmpegAdapter.executable('ffmpeg', s.ffmpeg))
             # Direct and new story continuity use the actual final decoded frame. Decode only
             # the final second, reverse that bounded tail and take its first frame.
-            exact_end = job.get('direct_video') or job.get('continuity_policy') in {'single_incident_v2', 'precision-continuity-v2'}
+            exact_end = job.get('direct_video') or job.get('continuity_policy') in {'single_incident_v2', 'precision-continuity-v2', CAUSAL_POLICY}
             tail = ['-sseof', '-1'] if exact_end else ['-sseof', '-0.1']
             filters = ['-vf', 'reverse'] if exact_end else []
             run([binary, '-nostdin', '-n', '-v', 'error', '-protocol_whitelist', 'file',
@@ -500,6 +503,23 @@ class EpisodeFlow:
                 'dependency_failed', 'dependency_quote_changed'} for r in job['scenes'])
             if not uncertain and not stopped:
                 for row in job['scenes']:
+                    if job.get('continuity_policy') == CAUSAL_POLICY and row['state'] in {'waiting_dependency','waiting_review'}:
+                        if not clip_reviewed(job['scenes'][row['position']-2]):
+                            continue
+                    if row['state'] == 'waiting_review' and job.get('continuity_policy') == CAUSAL_POLICY:
+                        if fp(row['payload']) != row['approved_template_hash']:
+                            raise CharacterError('blocked')
+                        row['state']='preparing_cut';s.save(job)
+                        try:
+                            price=amount(video.estimate(row['payload']))
+                            if price > amount(row['quote_usd']):
+                                row['state']='dependency_quote_changed'
+                                raise CharacterError('budget')
+                            row.update(state='ready',execution_quote_usd=str(price));s.save(job)
+                        except Exception:
+                            if row['state']=='preparing_cut':row['state']='dependency_failed'
+                            job['state']='scene_review';s.save(job)
+                            raise CharacterError('provider') from None
                     if row['state'] != 'waiting_dependency':
                         continue
                     parent = job['scenes'][row['from'] - 1]
@@ -541,6 +561,8 @@ class EpisodeFlow:
             states = {r['state'] for r in job['scenes']}
             job['state'] = ('clips_review' if states == {'downloaded'} else 'submission_unknown' if uncertain else
                             'scene_review' if states & {'failed', 'nsfw', 'canceled', 'dependency_failed', 'dependency_quote_changed'} else 'generating')
+            if job.get('continuity_policy') == CAUSAL_POLICY and not states & {'submitted','downloading','unknown','submitting'} and states & {'waiting_dependency','waiting_review'}:
+                job['state']='scene_review'
             s.save(job)
 
     def update_settings(self, identifier, settings, episode_limit):

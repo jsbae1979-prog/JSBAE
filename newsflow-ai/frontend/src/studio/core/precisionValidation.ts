@@ -27,7 +27,7 @@ export function sceneErrors(scenario:Item,work:Item,allowed:number[]):Record<str
       if(required.has(key)&&!value.trim())errors[`${prefix}.${key}`]='내용을 입력하세요.';
       else if(Array.from(value).length>max)errors[`${prefix}.${key}`]=`${max}자 이내로 입력하세요.`;
     }
-    if(work.continuity_policy==='precision-continuity-v2'){
+    if(['precision-continuity-v2','precision-causal-v3'].includes(work.continuity_policy)){
       for(const key of ['set_id','environment','start_state','end_state'])if(!String(s[key]??'').trim())errors[`${prefix}.${key}`]='내용을 입력하세요.';
       for(const [key,max] of Object.entries({set_id:60,environment:120,start_state:160,end_state:160,transition_reason:160}))if(Array.from(String(s[key]??'')).length>max)errors[`${prefix}.${key}`]=`${max}자 이내로 입력하세요.`;
       if(!['cut','continue'].includes(s.connection??'cut'))errors[`${prefix}.connection`]='연결 방식을 선택하세요.';
@@ -41,6 +41,13 @@ export function sceneErrors(scenario:Item,work:Item,allowed:number[]):Record<str
           if(s.start_state!==prev.end_state)errors[`${prefix}.start_state`]='앞 장면의 끝 상태를 이어받으세요.';
         }else if(!String(s.transition_reason??'').trim())errors[`${prefix}.transition_reason`]='전환 이유를 입력하세요.';
       }
+    }
+    if(work.continuity_policy==='precision-causal-v3'){
+      for(const key of ['cause','result'])if(!String(s[key]??'').trim()||Array.from(String(s[key])).length>160)errors[`${prefix}.${key}`]='160자 이내로 입력하세요.';
+      if(i&&s.cause!==rows[i-1].result)errors[`${prefix}.cause`]='앞 장면 결과를 이어받으세요.';
+      const props:Array<Item>=s.prop_states??[],previous:Array<Item>=i?rows[i-1].prop_states??[]:[];
+      if(props.length>8||new Set(props.map(p=>p.id)).size!==props.length||props.some(p=>!p.id?.trim()||!p.before?.trim()||!p.after?.trim()||(p.before!==p.after&&!p.change?.trim()))
+        ||(i&&(props.length!==previous.length||props.some(p=>p.before!==previous.find(old=>old.id===p.id)?.after))))errors[`${prefix}.prop_states`]='소품 이름·시작·끝·바뀌는 행동을 확인하세요. 앞 장면 끝과 같아야 합니다.';
     }
     for(const key of ['motion','motion_camera'])if(s[key]&&!/^[^가-힣]*[A-Za-z][^가-힣]*$/.test(s[key]))errors[`${prefix}.${key}`]='영상 지시는 영어로 입력하세요.';
     if(!Number.isInteger(s.seconds)||s.seconds<3||s.seconds>15||!allowed.includes(s.seconds))errors[`${prefix}.seconds`]=`지원 길이: ${allowed.filter(n=>n>=3&&n<=15).join(', ')}초`;
@@ -56,13 +63,15 @@ export function editableScenario(value:unknown,count:number):{scenario:Item;reco
   const rows=Array.isArray(source.scenes)?source.scenes:[];
   if(rows.length>count)return null; // Never silently discard extra provider scenes.
   const textKeys=[...Object.keys(basicSceneFields),...Object.keys(advancedSceneFields),...Object.keys(connectionSceneFields)];
-  const knownKeys=new Set([...textKeys,'no','characters','seconds','sfx','connection']);
+  const knownKeys=new Set([...textKeys,'no','characters','seconds','sfx','connection','cause','result','prop_states']);
   const validEffects=(effects:unknown)=>Array.isArray(effects)&&effects.every(effect=>effect&&typeof effect==='object'&&!Array.isArray(effect)&&typeof effect.key==='string');
   const scenes=Array.from({length:count},(_,i)=>{
     const raw=rows[i],row=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
     const fields=Object.fromEntries(textKeys
       .map(key=>[key,typeof row[key]==='string'?row[key]:'']));
-    return {...fields,connection:row.connection==='continue'?'continue':'cut',no:i+1,
+    const causal=Object.fromEntries(['cause','result'].filter(key=>key in row).map(key=>[key,typeof row[key]==='string'?row[key]:'']));
+    if('prop_states' in row)causal.prop_states=Array.isArray(row.prop_states)?structuredClone(row.prop_states):[];
+    return {...fields,...causal,connection:row.connection==='continue'?'continue':'cut',no:i+1,
       characters:Array.isArray(row.characters)&&row.characters.every((id:unknown)=>typeof id==='string')?[...row.characters]:[],
       seconds:typeof row.seconds==='number'?row.seconds:'',
       sfx:validEffects(row.sfx)?structuredClone(row.sfx):[]};

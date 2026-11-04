@@ -47,8 +47,12 @@ class _Authoring(AuthoringAI):
         settings = check(w['video_settings'])
         expected = 'episode:' + w['id'] + ':script:1'
         attempts = w['story_attempts']
+        from newsflow.character.precision_causal import POLICY, CausalScenario, INSTRUCTION as CAUSAL_INSTRUCTION
+        causal=w.get('continuity_policy')==POLICY
+        expected_schema=CausalScenario if causal else PrecisionScenario
+        expected_instruction=INSTRUCTION+(CAUSAL_INSTRUCTION if causal else '')
         if (active['used'] or consent is not True or image_bytes is not None or story_review is not None
-                or schema is not PrecisionScenario or instruction != INSTRUCTION or kind != 'script'
+                or schema is not expected_schema or instruction != expected_instruction or kind != 'script'
                 or w['state'] != 'writing' or w['revision'] != active['revision'] or w['scenario']
                 or len(attempts) != 1 or attempts[0]['state'] != 'requesting'
                 or request_id != expected or attempts[0]['request_id'] != expected

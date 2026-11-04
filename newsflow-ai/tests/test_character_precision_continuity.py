@@ -11,7 +11,8 @@ from newsflow.character.schema import CharacterError
 
 def connected(p):
     p.w=p.create()
-    assert p.w['continuity_policy']==CONTINUITY_POLICY
+    p.w['continuity_policy']=CONTINUITY_POLICY
+    p.s.save(p.w)
     # Same single character throughout this synthetic sequence.
     for i,row in enumerate(p.story['scenes']):
         row.update(characters=[p.ids[0]],connection='cut' if i==0 else 'continue',

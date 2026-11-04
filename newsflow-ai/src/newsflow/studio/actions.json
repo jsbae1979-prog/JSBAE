@@ -971,6 +971,45 @@
     "unsupported": false
   },
   {
+    "id": "character_review_clip",
+    "module": "characters",
+    "label": "장면 연결 검토 저장",
+    "path": "/character/{job_id}/review-clip",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "job_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true
+      },
+      {
+        "name": "position",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "clip_sha256",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "consent",
+        "type": "boolean",
+        "required": false,
+        "default": false,
+        "path": false
+      }
+    ],
+    "source": "gui/character_routes.py",
+    "unsupported": false
+  },
+  {
     "id": "character_act_check",
     "module": "characters",
     "label": "장면 상태·클립 확인",

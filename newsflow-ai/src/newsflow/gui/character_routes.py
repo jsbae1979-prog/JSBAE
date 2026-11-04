@@ -261,6 +261,16 @@ def create(request: Request, reference: Annotated[UploadFile | None, File()] = N
     return JSONResponse({'error':'참조 이미지와 스토리 주제를 선택하세요.'}, status_code=422)
 
 
+@router.post('/character/{job_id}/review-clip')
+def review_clip(request: Request, job_id: str, position: int=Form(...), clip_sha256: str=Form(...), consent: bool=Form(False)):
+    from newsflow.character.precision_causal import review_clip as record
+    try:
+        record(request.app.state.character,job_id,position,clip_sha256,consent)
+        return {'reviewed':position}
+    except (ValueError,OSError,*SAFE_ERRORS):
+        raise HTTPException(409,'현재 장면을 다시 확인하세요. 영상은 재요청하지 않았습니다.') from None
+
+
 @router.post('/character/{job_id}/{action}')
 def act(request: Request,job_id: str,action: str,consent: bool=Form(False),reviewed: bool=Form(False),
         quote_hash: str=Form('')):

@@ -85,6 +85,19 @@ class _Client:
                     or any(fingerprint(row) != context['other_scenes'].get(row['position'])
                            for row in job['scenes'] if row['position'] != scene['position'])):
                 _deny()
+        elif action == 'check' and context.get('reviewed_cuts', {}).get(scene['position']):
+            self.scope.approved_episode(job)
+            from newsflow.character.precision_causal import POLICY, reviewed
+            receipt=context['reviewed_cuts'][scene['position']]
+            if (job.get('continuity_policy') != POLICY or scene['position'] < 2
+                    or context['initial_states'].get(scene['position']) != 'waiting_review'
+                    or not reviewed(job['scenes'][scene['position']-2])
+                    or receipt['payload'] != payload or scene['continuity'] != 'cut'
+                    or fingerprint(payload) != scene['approved_template_hash']
+                    or amount(receipt['quote']) > amount(scene['quote_usd'])
+                    or scene.get('execution_quote_usd') != receipt['quote']
+                    or idempotency_key != f'{job["id"]}-s{scene["position"]}-t{scene["attempt"]}'):
+                _deny()
         elif action == 'check':
             self.scope.approved_episode(job)
             receipt = context['continuations'].get(scene['position'])
@@ -205,6 +218,19 @@ class _Client:
         context = self.scope.context('check')
         job = self.scope.local.read(context['job_id'])
         self.scope.approved_episode(job)
+        cuts=[scene for scene in job['scenes'] if scene['state']=='preparing_cut' and scene['payload']==payload]
+        if cuts:
+            from newsflow.character.precision_causal import POLICY, reviewed
+            if len(cuts)!=1 or job.get('continuity_policy')!=POLICY: _deny()
+            scene=cuts[0];position=scene['position']
+            if (position < 2 or context['initial_states'].get(position)!='waiting_review'
+                    or not reviewed(job['scenes'][position-2]) or scene['continuity']!='cut'
+                    or fingerprint(payload)!=scene['approved_template_hash']
+                    or any(v in {'unknown','submitting'} for v in context['initial_states'].values())
+                    or position in context.setdefault('reviewed_cuts',{})):_deny()
+            receipt={'payload':payload,'quote':None};context['reviewed_cuts'][position]=receipt
+            price=str(amount(self.original.estimate(payload)));receipt['quote']=price
+            return price
         matches = [scene for scene in job['scenes'] if scene['state'] == 'preparing_dependency'
                    and context['continuations'].get(scene['position'], {}).get('payload') == payload]
         if len(matches) != 1:
@@ -266,6 +292,8 @@ class ManualExecution:
                 or not 1 <= scene['from'] < scene['position']):
             _deny()
         parent = job['scenes'][scene['from'] - 1]
+        from newsflow.character.precision_causal import POLICY, reviewed
+        if job.get('continuity_policy') == POLICY and not reviewed(parent): _deny()
         folder = self.local.folder(job['id'])
         expected = folder / 'frames' / f'scene-{parent["position"]}-t{parent["attempt"]}-last.png'
         suffix = f'-t{parent["attempt"]}' if parent['attempt'] > 1 else ''
@@ -306,8 +334,9 @@ class ManualExecution:
                 pending = next((row for row in job.get('scenes', [])
                                 if row.get('state') == 'failed' and row.get('attempt', 3) < 3), None)
                 expected_state = 'retry_quoted' if action == 'retry-scene' else 'scene_review'
+                from newsflow.character.precision_causal import waiting_cut
                 if (job.get('state') != expected_state or pending is None
-                        or any(row.get('state') not in {'failed', 'nsfw', 'canceled', 'downloaded', 'waiting_dependency'}
+                        or any(row.get('state') not in {'failed', 'nsfw', 'canceled', 'downloaded', 'waiting_dependency'} and not waiting_cut(job,row)
                                for row in job.get('scenes', []))):
                     _deny()
                 handle = pending.get('handle')

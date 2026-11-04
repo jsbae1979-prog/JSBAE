@@ -13,7 +13,8 @@ from PIL import Image
 
 from .registry import atomic_json, safe_path, safe_text
 from .precision_contract import (WorkSettings, PrecisionScenario, INSTRUCTION, PROMPT_VERSION,
-    validate_scenario, validate_work_timing, image_prompt, motion_rows, story_input, CONTINUITY_POLICY)
+    validate_scenario, validate_work_timing, image_prompt, motion_rows, story_input, CONTINUITY_POLICY, CONNECTED_POLICIES)
+from .precision_causal import POLICY, CausalScenario, INSTRUCTION as CAUSAL_INSTRUCTION
 from .schema import CharacterError
 from .service import fingerprint
 from newsflow.creation.catalog import validate as image_selection
@@ -90,7 +91,7 @@ class PrecisionService:
                     return old
             w={'id':uuid4().hex,'schema_version':1,'mode':'precision','state':'needs_story','revision':1,
                'request_id':request_id,'body_hash':identity,'created_at':stamp(),'scenario':None,'scenes':[],
-               'story_attempts':[],'events':[],'prompt_version':PROMPT_VERSION,'continuity_policy':CONTINUITY_POLICY,**payload}
+               'story_attempts':[],'events':[],'prompt_version':'scene-still-v3','continuity_policy':POLICY,**payload}
             self.save(w)
             return w
 
@@ -145,7 +146,8 @@ class PrecisionService:
             attempt={'request_id':'episode:'+identifier+':script:1','at':stamp(),'state':'requesting'}
             w['story_attempts'].append(attempt);w['state']='writing';self.save(w)
             try:
-                result=self.authoring.generate(INSTRUCTION,story_input(w['common'],w['cast'],model),PrecisionScenario,
+                causal = w.get('continuity_policy') == POLICY
+                result=self.authoring.generate(INSTRUCTION+(CAUSAL_INSTRUCTION if causal else ''),story_input(w['common'],w['cast'],model),CausalScenario if causal else PrecisionScenario,
                     Options(model=settings['script_model'],max_tokens=6000,timeout=300),
                     provider=script_provider(settings['script_model']),request_id=attempt['request_id'],consent=True,
                     kind='script',max_reserved_usd=w['video_limit'])
@@ -198,9 +200,9 @@ class PrecisionService:
     def quote(self,identifier,revision,numbers,regenerate=False):
         with self.lock():
             w=self.read(identifier);self.editable(w,revision)
-            if w.get('continuity_policy')==CONTINUITY_POLICY:
+            if w.get('continuity_policy') in CONNECTED_POLICIES:
                 from .kling import check
-                validate_scenario(w['common'],w['cast'],w['scenario'],CATALOG.model(check(w['video_settings'])['video_model']),CONTINUITY_POLICY)
+                validate_scenario(w['common'],w['cast'],w['scenario'],CATALOG.model(check(w['video_settings'])['video_model']),w.get('continuity_policy'))
             rows=self.selected_rows(w,numbers)
             if any(s['versions'] and not regenerate for s in rows): raise ValueError('선택 장면 재생성을 사용하세요.')
             if any(v['state'] in {'requesting','unknown'} for s in rows for v in s['versions']):
@@ -337,7 +339,7 @@ class PrecisionService:
             draft={k:deepcopy(source[k]) for k in ('common','cast','selection','video_settings','image_limit','video_limit')}
             draft.update(id=uuid4().hex,schema_version=1,mode='precision',state='connection_review',revision=1,
                 request_id=request_id,revision_request_id=request_id,source_work_id=identifier,source_revision=revision,
-                created_at=stamp(),prompt_version=PROMPT_VERSION,continuity_policy=CONTINUITY_POLICY,
+                created_at=stamp(),prompt_version='scene-still-v3',continuity_policy=POLICY,
                 scenario=deepcopy(source['scenario']),scenes=[],story_attempts=[],events=[])
             # Archive the old assets as references, never pretend they were generated for a changed plan.
             draft['reference_history']=deepcopy(source['scenes'])
