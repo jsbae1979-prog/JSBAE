@@ -3,6 +3,7 @@ import {characterCommand,CharacterModal} from './CharacterAutomation';
 import type {Controller} from './shared';
 import type {Item} from '../contracts';
 import './character-precision.css';
+import {timingIssue,sceneErrors,basicSceneFields,advancedSceneFields} from './precisionValidation';
 
 const base='/api/studio/character-precision';
 const blank={title:'',topic:'',relationships:'',genre:'대사 없는 코미디',world:'',background:'',props:'',
@@ -19,7 +20,19 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const [busy,setBusy]=useState(''),[error,setError]=useState(''),[approval,setApproval]=useState<'story'|'images'|null>(null);
   const [picked,setPicked]=useState<number[]>([]),[versions,setVersions]=useState<Record<number,number>>({});
   const [budgetOpen,setBudgetOpen]=useState(false),[editing,setEditing]=useState<Item|null>(null);
-  const reviewArea=useRef<HTMLElement|null>(null);
+  const reviewArea=useRef<HTMLElement|null>(null),editorInitial=useRef('');
+  const [editorError,setEditorError]=useState(''),[fieldErrors,setFieldErrors]=useState<Record<string,string>>({});
+  const [pollError,setPollError]=useState('');
+  function openEditor(draft:Item){editorInitial.current=JSON.stringify(draft.scenario);setEditorError('');setFieldErrors({});setEditing(draft);}
+  function closeEditor(){
+    if(editing&&JSON.stringify(editing.scenario)!==editorInitial.current&&!window.confirm('저장하지 않은 수정 내용이 있습니다. 버리고 닫을까요?'))return;
+    setEditing(null);setEditorError('');setFieldErrors({});
+  }
+  useEffect(()=>{
+    if(!editing||JSON.stringify(editing.scenario)===editorInitial.current)return;
+    const warn=(e:BeforeUnloadEvent)=>{e.preventDefault();e.returnValue='';};
+    window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn);
+  },[editing]);
   const [large,setLarge]=useState<string|null>(null),[scene,setScene]=useState(1);
   const styleEdited=useRef(false),worldEdited=useRef(false);
   const sending=useRef(false),createId=useRef(crypto.randomUUID().replaceAll('-',''));
@@ -35,9 +48,20 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     const id=new URLSearchParams(location.search).get('precision');
     if(id&&/^[a-f0-9]{32}$/.test(id)){const w=await get(`${base}/${id}`);if(live)setWork(w);}
   }).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[]);
-  useEffect(()=>{if(!busy||!work?.id)return;let live=true;
-    const timer=setInterval(()=>get(`${base}/${work.id}`).then(w=>{if(live)setWork(w);}).catch(()=>{}),2000);
-    return()=>{live=false;clearInterval(timer);};},[busy,work?.id]);
+  useEffect(()=>{
+    if(!work?.id||!(busy||['writing','generating'].includes(work.state)))return;
+    const id=work.id;let live=true,inFlight=false;
+    const poll=async()=>{
+      if(inFlight)return;inFlight=true;
+      try{const next=await get(`${base}/${id}`);
+        if(live){setPollError('');setWork(previous=>previous&&previous.id===id&&next.revision>=previous.revision&&
+          (next.updated_at??'')>=(previous.updated_at??'')?next:previous);}
+      }catch{if(live)setPollError('진행 상태를 확인하지 못했습니다. 연결되면 다시 확인합니다. 생성 요청은 반복하지 않습니다.');}
+      finally{inFlight=false;}
+    };
+    const timer=setInterval(()=>void poll(),2000);
+    return()=>{live=false;clearInterval(timer);};
+  },[busy,work?.id,work?.state]);
   function remember(w:Item){
     setWork(w);setCatalog(d=>d?{...d,works:[{id:w.id,title:w.common.title},...(d.works??[]).filter((item:Item)=>item.id!==w.id)]}:d);
     const url=new URL(location.href);url.searchParams.set('precision',w.id);url.searchParams.delete('job_id');history.replaceState(null,'',url);
@@ -46,11 +70,21 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     common:{...common,title:Array.from(common.topic.trim()).slice(0,100).join('')},character_ids:cast,
     outfits:Object.fromEntries(cast.map(id=>[id,outfits[id]??'참조 이미지의 의상·액세서리 유지'])),
     selection:image,video_settings:video,image_limit:imageLimit,video_limit:videoLimit})};}
-  function manual(w:Item){setEditing({scenario:{scenes:Array.from({length:w.common.scene_count},(_,i)=>({no:i+1,
+  function manual(w:Item){openEditor({scenario:{scenes:Array.from({length:w.common.scene_count},(_,i)=>({no:i+1,
     characters:[Object.keys(w.cast)[0]],description:'',location:'',pose:'',emotion:'',camera:'',props:'',continuity:'',caption:'',
     seconds:Math.floor(w.common.duration/w.common.scene_count)+(i<w.common.duration%w.common.scene_count?1:0),motion:'',motion_camera:'',sound:''}))}});}
   async function act(kind:string,values:Record<string,string>={}) {
-    if(sending.current)return;sending.current=true;setBusy(kind);setError('');
+    if(sending.current)return;
+    if(kind==='edit'&&editing&&work){
+      const issues=sceneErrors(editing.scenario,work,sceneSeconds(work.video_settings.video_model));
+      setFieldErrors(issues);setEditorError('');
+      if(Object.keys(issues).length){
+        const first=Object.keys(issues).find(key=>!key.startsWith('_'));
+        if(first)setEditing({...editing,number:Number(first.split('.')[0])});
+        setEditorError(issues._scenes??issues._total??'표시된 입력 항목을 확인하세요.');return;
+      }
+    }
+    sending.current=true;setBusy(kind);setError('');setPollError('');
     let target=work;
     try {
       // Free draft persistence precedes one explicitly approved story call. No automatic replay.
@@ -67,7 +101,8 @@ export default function CharacterPrecision({c}:{c:Controller}) {
         if(next)setScene(next.plan.no);
       }
       if(kind==='handoff'&&w.video_job_id)location.assign(`/studio/characters?job_id=${w.video_job_id}`);
-    } catch(e){setApproval(null);setError(e instanceof Error?e.message:'처리 결과를 확인하세요.');
+    } catch(e){setApproval(null);const message=e instanceof Error?e.message:'처리 결과를 확인하세요.';
+      if(kind==='edit')setEditorError(message);else setError(message);
       if(target?.id)try{remember(await get(`${base}/${target.id}`));}catch{/* keep the last visible journal */}
     } finally{setBusy('');sending.current=false;}
   }
@@ -78,9 +113,12 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const quote=work?.quote;
   const missing=rows.filter(s=>!s.versions.length);
   const allConfirmed=!!rows.length&&rows.every(s=>s.confirmed);
-  const canCreate=!busy&&cast.length>0&&cast.length<=4&&!!common.topic.trim()&&Number(imageLimit)>0&&Number(videoLimit)>0;
+  function sceneSeconds(model:string):number[]{return catalog?.video.modelsDetailed.find((m:Item)=>m.id===model)?.duration_values??[];}
+  const timingError=catalog?timingIssue(common.duration,common.scene_count,sceneSeconds(video.video_model)):'';
+  const canCreate=!timingError&&!busy&&cast.length>0&&cast.length<=4&&!!common.topic.trim()&&Number(imageLimit)>0&&Number(videoLimit)>0;
   const selected=rows.find(s=>s.plan.no===scene)??rows[0];
   const current=selected?.versions.find((v:Item)=>v.version===(versions[selected.plan.no]??selected.selected));
+  const staleImage=!!current&&current.matches_current_plan!==true;
   function selectCharacter(p:Item,checked:boolean){
     setCast(checked?[...cast,p.id]:cast.filter(id=>id!==p.id));
     if(checked&&!cast.length)setCommon(v=>({...v,
@@ -88,7 +126,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       world:worldEdited.current?v.world:p.comedy_formula?.world||''}));
   }
 
-  function clearSelection(){setVersions({});setPicked([]);setScene(1);setApproval(null);setEditing(null);setLarge(null);setError('');}
+  function clearSelection(){setVersions({});setPicked([]);setScene(1);setApproval(null);setEditing(null);setLarge(null);setError('');setEditorError('');setFieldErrors({});setPollError('');}
   function newWork(){clearSelection();setWork(null);createId.current=crypto.randomUUID().replaceAll('-','');
     const u=new URL(location.href);u.searchParams.set('precision','');u.searchParams.delete('job_id');history.replaceState(null,'',u);}
   return <section className="character-precision" aria-label="정밀 제작">
@@ -128,8 +166,8 @@ export default function CharacterPrecision({c}:{c:Controller}) {
 
       </section><section><h3>3. 영상 제작</h3>
         <div className="precision-pair"><label>총 길이(초)<input type="number" min={15} max={60} value={common.duration} onChange={e=>setCommon({...common,duration:+e.target.value})}/></label>
-          <label>장면 수<input type="number" min={2} max={12} value={common.scene_count} onChange={e=>setCommon({...common,scene_count:+e.target.value})}/></label></div>
-          <label>영상 모델<select value={video.video_model??''} onChange={e=>{
+          <label>장면 수<input aria-invalid={!!timingError} aria-describedby={timingError?"precision-timing-error":undefined} type="number" min={2} max={12} value={common.scene_count} onChange={e=>setCommon({...common,scene_count:+e.target.value})}/></label></div>
+          <>{timingError&&<p id="precision-timing-error" role="alert" className="precision-error">{timingError}</p>}</><label>영상 모델<select value={video.video_model??''} onChange={e=>{
             const m=catalog.video.modelsDetailed.find((m:Item)=>m.id===e.target.value);
             setVideo({...video,video_model:m.id,native_resolution:m.default_resolution,clip_seconds:m.duration_values[0]});}}>
             {Object.entries(catalog.video.models).map(([key,label])=><option key={key} value={key}>{String(label)}</option>)}</select></label>
@@ -148,12 +186,12 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       <section><h3>1. 캐릭터 선택</h3>{Object.values(work.cast).map((p:unknown)=>{const person=p as Item;return <div className="precision-person precision-snapshot" key={person.id}>
         <img src={`/image-studio/assets/${person.asset}`} alt={person.name_ko}/><div><strong>{person.name_ko}</strong><details><summary>캐릭터 특징</summary><p>{person.personality}</p></details></div></div>;})}</section>
       <section><h3>2. 스토리 생성</h3><p>{work.common.topic}</p>
-        {work.scenario&&<button disabled={locked} onClick={()=>setEditing({scenario:structuredClone(work.scenario)})}>스토리 검토·수정</button>}
+        {work.scenario&&<button disabled={locked} onClick={()=>openEditor({scenario:structuredClone(work.scenario)})}>스토리 검토·수정</button>}
       {!work.scenario&&<div className="precision-story-controls">
         <button className="primary" disabled={locked||work.story_attempts.length>0} onClick={()=>setApproval('story')}>스토리 만들기</button>
         <details><summary>직접 작성·복구</summary><button disabled={locked} onClick={()=>manual(work)}>직접 작성</button>
         {work.state==='story_failed'&&<p>보관된 응답을 검토하세요. 추가 AI 요청 없이 수정할 수 있습니다.</p>}
-        {work.story_attempts.at(-1)?.candidate&&<button onClick={()=>setEditing({scenario:work.story_attempts.at(-1).candidate})}>보관된 스토리 편집</button>}</details>
+        {work.story_attempts.at(-1)?.candidate&&<button onClick={()=>openEditor({scenario:structuredClone(work.story_attempts.at(-1).candidate)})}>보관된 스토리 편집</button>}</details>
       </div>}
       </section>
       <section><h3>3. 영상 제작</h3><p>{work.common.duration}초 · {work.common.scene_count}장면</p>
@@ -167,9 +205,9 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       </section>
       </div></details><div className="precision-progress" role="status" aria-live="polite"><strong>{work.common.title} · {stateName[work.state]??work.state}</strong>
       <span>{completed}/{rows.length||work.common.scene_count}장 완료 · {rows.filter(s=>s.confirmed).length}장 확정</span>
-      {busy&&<span className="precision-running">처리 중 · 결과를 확인하고 있습니다</span>}
+      {(busy||['writing','generating'].includes(work.state))&&<span className="precision-running">처리 중 · 결과를 확인하고 있습니다</span>}
       {!busy&&(['writing','generating'].includes(work.state)||rows.some(s=>s.versions.some((v:Item)=>['requesting','unknown'].includes(v.state))))&&<button onClick={()=>void act('reconcile')}>저장된 결과 확인 · 무료</button>}
-      <progress value={completed} max={rows.length||work.common.scene_count}/></div>
+      <>{pollError&&<span role="alert">{pollError}</span>}</><progress value={completed} max={rows.length||work.common.scene_count}/></div>
       {rows.length>0&&<section ref={reviewArea} className="precision-review-area"><div className="precision-review-heading"><h3>장면 이미지 검토</h3>
         {allConfirmed&&!work.video_job_id&&<button className="primary" disabled={locked} onClick={()=>void act('handoff')}>영상 제작으로 이동</button>}
         {work.video_job_id&&<a className="button primary" href={`/studio/characters?job_id=${work.video_job_id}`}>영상 제작 열기</a>}</div>
@@ -190,17 +228,17 @@ export default function CharacterPrecision({c}:{c:Controller}) {
             <div className="precision-scene-detail"><h4>장면 {selected.plan.no} · {selected.plan.seconds}초</h4><p>{selected.plan.description}</p>
               <p>{selected.plan.characters.map((id:string)=>work.cast[id].name_ko).join(' · ')}</p>
               <p className="precision-hint">캐릭터·의상·배경·장면 연결을 확인한 뒤 확정하세요.</p>
-              <div className="precision-scene-actions">
+              <>{staleImage&&<p className="precision-error" role="status">이전 장면의 이미지입니다. 현재 장면에 맞게 다시 만든 뒤 확정하세요.</p>}</><div className="precision-scene-actions">
                 <button disabled={locked||selected.versions.some((v:Item)=>['requesting','unknown'].includes(v.state))} onClick={()=>void act('quote',{numbers:JSON.stringify([selected.plan.no]),regenerate:'true'})}>다시 만들기</button>
-                <button className={!allConfirmed?'primary':''} disabled={locked||!current?.asset||selected.confirmed?.version===current.version}
+                <button className={!allConfirmed?'primary':''} disabled={locked||!current?.asset||staleImage||selected.confirmed?.version===current.version}
                   onClick={e=>{if(e.detail>1)return;void act('confirm',{number:String(selected.plan.no),version:String(current.version),reviewed:'true'});}}>
-                  {current&&selected.confirmed?.version===current.version?'사용 중인 이미지':rows.some(s=>s.plan.no!==selected.plan.no&&!s.confirmed)?'확정하고 다음 장면':'이미지 확정'}</button>
+                  {staleImage?'이전 장면 이미지':current&&selected.confirmed?.version===current.version?'사용 중인 이미지':rows.some(s=>s.plan.no!==selected.plan.no&&!s.confirmed)?'확정하고 다음 장면':'이미지 확정'}</button>
               </div>
               <details><summary>버전·프롬프트 더보기</summary>
               <label>이미지 버전<select aria-label={`장면 ${selected.plan.no} 이미지 버전`} value={versions[selected.plan.no]??selected.selected??''} onChange={e=>setVersions({...versions,[selected.plan.no]:+e.target.value})}>
-                <option value="">버전 선택</option>{selected.versions.map((v:Item)=><option key={v.version} value={v.version}>버전 {v.version} · {stateName[v.state]??v.state}</option>)}</select></label>
+                <option value="">버전 선택</option>{selected.versions.map((v:Item)=><option key={v.version} value={v.version}>버전 {v.version} · {stateName[v.state]??v.state}{v.matches_current_plan===false?' · 이전 장면':''}</option>)}</select></label>
               <p className="precision-prompt">{selected.prompt}</p>
-              <button disabled={locked} onClick={()=>setEditing({scenario:structuredClone(work.scenario),number:selected.plan.no})}>장면 내용 수정</button></details>
+              <button disabled={locked} onClick={()=>openEditor({scenario:structuredClone(work.scenario),number:selected.plan.no})}>장면 내용 수정</button></details>
             </div>
           </div>}
         </div>
@@ -215,21 +253,26 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       <p>예상 US${quote.estimated_usd} · 예산 예약 US${quote.reserve_usd}</p>
       <p>선택한 캐릭터 참조 이미지를 전송합니다. 실제 청구액과 다를 수 있으며 영상 비용은 별도입니다.</p>
     </CharacterModal>}
-    {editing&&<CharacterModal title="장면 내용 수정" busy={!!busy} onClose={()=>setEditing(null)} footer={<button className="primary" disabled={!!busy} onClick={()=>void act('edit',{scenario:JSON.stringify(editing.scenario)})}>장면 저장 · 무료</button>}>
+    {editing&&<CharacterModal title="장면 내용 수정" busy={!!busy} onClose={closeEditor} footer={<button className="primary" disabled={!!busy} onClick={()=>void act('edit',{scenario:JSON.stringify(editing.scenario)})}>장면 저장 · 무료</button>}>
+      {editorError&&<p role="alert" className="precision-error">{editorError}</p>}
       <label>편집할 장면<select value={editing.number??editing.scenario.scenes[0]?.no} onChange={e=>setEditing({...editing,number:Number(e.target.value)})}>
         {editing.scenario.scenes.map((s:Item)=><option key={s.no} value={s.no}>장면 {s.no}</option>)}</select></label>
       <div className="precision-editor">{(editing.scenario.scenes??[]).map((s:Item,i:number)=>{
         if(s.no!==(editing.number??editing.scenario.scenes[0]?.no))return null;
-        const set=(key:string,value:unknown)=>setEditing({...editing,scenario:{...editing.scenario,scenes:editing.scenario.scenes.map((r:Item,j:number)=>j===i?{...r,[key]:value}:r)}});
+        const set=(key:string,value:unknown)=>{setEditing({...editing,scenario:{...editing.scenario,scenes:editing.scenario.scenes.map((r:Item,j:number)=>j===i?{...r,[key]:value}:r)}});
+          setFieldErrors(previous=>Object.fromEntries(Object.entries(previous).filter(([name])=>name!==`${s.no}.${key}`)));};
+        const issue=(key:string)=>fieldErrors[`${s.no}.${key}`];
+        const field=(key:string,label:string)=><label key={key}>{label}<textarea aria-label={label} aria-invalid={!!issue(key)}
+          aria-describedby={issue(key)?`scene-${s.no}-${key}-error`:undefined} value={s[key]??''} onChange={e=>set(key,e.target.value)}/>
+          {issue(key)&&<small className="precision-field-error" id={`scene-${s.no}-${key}-error`}>{issue(key)}</small>}</label>;
         return <fieldset key={s.no}><legend>장면 {s.no}</legend><div className="precision-pair">
           {Object.values(work!.cast).map((p:unknown)=>{const person=p as Item;return <label className="precision-check" key={person.id}><input type="checkbox" checked={s.characters.includes(person.id)}
             onChange={e=>set('characters',e.target.checked?[...s.characters,person.id]:s.characters.filter((id:string)=>id!==person.id))}/>{person.name_ko}</label>;})}
-          {Object.entries({description:'장면 설명',location:'장소',pose:'행동·자세',emotion:'표정·감정'}).map(([key,label])=>
-            <label key={key}>{label}<textarea value={s[key]??''} onChange={e=>set(key,e.target.value)}/></label>)}
-          <label>길이(초)<input type="number" min={3} max={15} value={s.seconds} onChange={e=>set('seconds',+e.target.value)}/></label>
-        </div><details className="precision-editor-advanced"><summary>구도·연결·자막·소리 자세히</summary><div className="precision-pair">
-          {Object.entries({camera:'이미지 구도',props:'소품·위치',continuity:'이어질 요소',caption:'별도 자막',motion:'영상 동작 · 영어',motion_camera:'영상 카메라 · 영어',sound:'환경음'}).map(([key,label])=>
-            <label key={key}>{label}<textarea value={s[key]??''} onChange={e=>set(key,e.target.value)}/></label>)}
+          {issue('characters')&&<p className="precision-field-error">{issue('characters')}</p>}
+          {Object.entries(basicSceneFields).map(([key,label])=>field(key,label))}
+          <label>길이(초)<input aria-invalid={!!issue('seconds')} aria-describedby={issue('seconds')?`scene-${s.no}-seconds-error`:undefined} type="number" min={3} max={15} value={s.seconds} onChange={e=>set('seconds',+e.target.value)}/>{issue('seconds')&&<small className="precision-field-error" id={`scene-${s.no}-seconds-error`}>{issue('seconds')}</small>}</label>
+        </div><details className="precision-editor-advanced" open={Object.keys(advancedSceneFields).some(key=>!!issue(key))||undefined}><summary>구도·연결·자막·소리 자세히</summary><div className="precision-pair">
+          {Object.entries(advancedSceneFields).map(([key,label])=>field(key,label))}
           <label>로컬 효과음<select value={s.sfx?.[0]?.key??''} onChange={e=>set('sfx',e.target.value?[{at:'end',key:e.target.value}]:[])}><option value="">없음</option>{(catalog?.sfx_keys??[]).map((key:string)=><option key={key}>{key}</option>)}</select></label>
         </div></details></fieldset>;})}</div></CharacterModal>}
     {large&&<CharacterModal title="장면 이미지" onClose={()=>setLarge(null)}><img className="precision-large" src={large} alt="장면 확대"/></CharacterModal>}

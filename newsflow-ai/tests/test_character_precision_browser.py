@@ -364,3 +364,142 @@ def test_precision_double_click_does_not_confirm_next_scene(precision,browser,mo
         assert sum(bool(row['confirmed']) for row in f.s.read(w['id'])['scenes'])==1
         assert len(f.adapter.calls)==5 and not f.video.sent
         context.close()
+
+
+def test_precision_invalid_timing_blocks_before_approval_or_post(precision,browser,monkeypatch):
+    f=precision;monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    f.app.state.image_studio=f.images
+    with local_server(f.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page();posts=[]
+        page.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
+        page.goto(origin+'/studio/characters?precision=')
+        p=page.get_by_role('region',name='정밀 제작',exact=True)
+        expect(p.locator('.precision-person')).to_have_count(2)
+        p.locator('.precision-person input[type=checkbox]').first.check()
+        p.get_by_label('스토리 주제',exact=True).fill('요청 전 길이 확인')
+        p.get_by_label('총 길이(초)').fill('15');p.get_by_label('장면 수',exact=True).fill('12')
+        expect(p.get_by_role('alert')).to_contain_text('15초를 12장면으로 만들 수 없습니다')
+        expect(p.get_by_role('button',name='스토리 만들기',exact=True)).to_be_disabled()
+        p.get_by_label('장면 수',exact=True).fill('5')
+        expect(p.get_by_role('button',name='스토리 만들기',exact=True)).to_be_enabled()
+        assert not posts and not f.writer.calls and not f.adapter.calls
+        ctx.close()
+
+
+def test_precision_reload_resumes_readonly_progress_and_stops_when_done(precision,browser,monkeypatch):
+    from copy import deepcopy
+    from test_character_precision import generated
+    f=precision;w=generated(f);w['state']='generating';f.s.save(w)
+    f.app.state.image_studio=f.images
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page();gets=[];posts=[]
+        page.on('request',lambda r:posts.append(r.url) if r.method=='POST' else gets.append(r.url) if r.url.endswith('/character-precision/'+w['id']) else None)
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        p=page.get_by_role('region',name='정밀 제작',exact=True)
+        expect(p.get_by_role('status')).to_contain_text('이미지 생성 중')
+        finished=deepcopy(w);finished['state']='images';f.s.save(finished)
+        expect(p.get_by_role('button',name='확정하고 다음 장면')).to_be_enabled(timeout=8000)
+        assert len(gets)>=2 and not posts
+        count=len(gets);page.wait_for_timeout(2200)
+        assert len(gets)==count and len(f.adapter.calls)==5 and not f.video.sent
+        ctx.close()
+
+
+def test_precision_progress_get_failure_recovers_without_post(precision,browser,monkeypatch):
+    from test_character_precision import generated
+    f=precision;w=generated(f);w['state']='generating';f.s.save(w)
+    f.app.state.image_studio=f.images
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page();attempts=[];posts=[]
+        page.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
+        def response(route):
+            attempts.append(1)
+            if len(attempts)==2:route.fulfill(status=503,content_type='application/json',body='{}')
+            else:route.continue_()
+        page.route('**/character-precision/'+w['id'],response)
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        p=page.get_by_role('region',name='정밀 제작',exact=True)
+        expect(p.get_by_role('alert')).to_contain_text('진행 상태를 확인하지 못했습니다',timeout=8000)
+        w['state']='images';f.s.save(w)
+        expect(p.get_by_role('button',name='확정하고 다음 장면')).to_be_enabled(timeout=8000)
+        expect(p.get_by_role('alert')).to_have_count(0)
+        assert len(attempts)>=3 and not posts and len(f.adapter.calls)==5
+        ctx.close()
+
+
+def test_precision_unsaved_editor_close_requires_discard_confirmation(precision,browser,monkeypatch):
+    from test_character_precision import generated
+    f=precision;w=generated(f);f.app.state.image_studio=f.images
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page();choices=[]
+        def handle(dialog):
+            choices.append(dialog.message)
+            if len(choices)==1:dialog.dismiss()
+            else:dialog.accept()
+        page.on('dialog',handle)
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        p=page.get_by_role('region',name='정밀 제작',exact=True)
+        p.get_by_text('버전·프롬프트 더보기',exact=True).click()
+        p.get_by_role('button',name='장면 내용 수정').click()
+        modal=page.get_by_role('dialog',name='장면 내용 수정',exact=True)
+        page.keyboard.press('Escape');expect(modal).not_to_be_visible();assert not choices
+        p.get_by_role('button',name='장면 내용 수정').click()
+        modal.get_by_role('textbox',name='장면 설명',exact=True).fill('보존할 편집 내용')
+        page.keyboard.press('Escape')
+        expect(modal).to_be_visible()
+        expect(modal.get_by_role('textbox',name='장면 설명',exact=True)).to_have_value('보존할 편집 내용')
+        assert len(choices)==1
+        page.keyboard.press('Escape');expect(modal).not_to_be_visible()
+        assert len(choices)==2 and f.s.read(w['id'])==w and len(f.adapter.calls)==5
+        ctx.close()
+
+
+def test_precision_editor_errors_are_inline_and_preserve_input(precision,browser,monkeypatch,tmp_path):
+    from test_character_precision import generated
+    f=precision;w=generated(f);f.app.state.image_studio=f.images
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page();posts=[]
+        page.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        p=page.get_by_role('region',name='정밀 제작',exact=True)
+        p.get_by_text('버전·프롬프트 더보기',exact=True).click()
+        p.get_by_role('button',name='장면 내용 수정').click()
+        modal=page.get_by_role('dialog',name='장면 내용 수정',exact=True)
+        field=modal.get_by_role('textbox',name='장면 설명',exact=True);field.fill('')
+        modal.get_by_role('button',name='장면 저장 · 무료').click()
+        expect(modal.get_by_role('alert')).to_be_visible()
+        expect(field).to_have_attribute('aria-invalid','true')
+        expect(modal.get_by_text('내용을 입력하세요.',exact=True)).to_be_visible()
+        assert not posts
+        field.fill('수정한 장면 내용')
+        page.route('**/character-precision/*/edit',lambda route:route.fulfill(status=409,content_type='application/json',body='{"detail":"저장 충돌: 최신 상태를 확인하세요."}'))
+        modal.get_by_role('button',name='장면 저장 · 무료').click()
+        expect(modal.get_by_role('alert')).to_contain_text('저장 충돌')
+        expect(field).to_have_value('수정한 장면 내용')
+        assert len(posts)==1 and f.s.read(w['id'])==w and len(f.adapter.calls)==5
+        page.screenshot(path=str(tmp_path/'editor-inline-error.png'),full_page=True)
+        ctx.close()
+
+
+def test_precision_obsolete_image_is_labelled_and_cannot_confirm(precision,browser,monkeypatch):
+    from copy import deepcopy
+    from test_character_precision import generated
+    f=precision;w=generated(f);changed=deepcopy(w['scenario']);changed['scenes'][0]['pose']='문 옆에서 접시를 봄'
+    w=f.s.edit(w['id'],w['revision'],changed);f.app.state.image_studio=f.images
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page();posts=[]
+        page.on('request',lambda r:posts.append(r.url) if r.method=='POST' else None)
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        p=page.get_by_role('region',name='정밀 제작',exact=True)
+        p.get_by_text('버전·프롬프트 더보기',exact=True).click()
+        p.get_by_label('장면 1 이미지 버전').select_option('1')
+        expect(p.get_by_role('button',name='이전 장면 이미지',exact=True)).to_be_disabled()
+        expect(p.get_by_text('이전 장면의 이미지입니다. 현재 장면에 맞게 다시 만든 뒤 확정하세요.',exact=True)).to_be_visible()
+        expect(p.locator('.precision-selected img')).to_be_visible()
+        assert not posts and f.s.read(w['id'])==w and len(f.adapter.calls)==5
+        ctx.close()

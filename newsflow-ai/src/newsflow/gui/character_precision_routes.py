@@ -1,5 +1,7 @@
 """Local authenticated precision mode. Global LocalAccess/CSRF/Origin policies apply."""
 import json
+from copy import deepcopy
+from newsflow.character.service import fingerprint
 from fastapi import APIRouter, Form, HTTPException, Request
 from filelock import Timeout
 from newsflow.character.precision import PrecisionService
@@ -17,7 +19,15 @@ def service(request):
         state.image_studio,FeedReadiness(state),state.character,authoring(request))
 
 def perform(call):
-    try: return call()
+    try:
+        result=call()
+        if isinstance(result,dict) and 'common' in result and 'scenes' in result:
+            result=deepcopy(result) # Derived UI state must not modify persisted version history.
+            for scene in result['scenes']:
+                plan_hash=fingerprint(scene['plan'])
+                for version in scene['versions']:
+                    version['matches_current_plan']=version.get('plan_hash')==plan_hash
+        return result
     except Timeout: raise HTTPException(409,'이미 처리 중입니다. 현재 결과를 확인하세요.') from None
     except (ValueError,KeyError,TypeError,CharacterError,PublishingError,OSError):
         # Do not surface provider payloads, Pydantic input, local paths or secret values.

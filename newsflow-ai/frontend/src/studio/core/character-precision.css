@@ -48,3 +48,5 @@
 .precision-work-context>summary{cursor:pointer;color:#b9d0ea;padding:8px 0}.precision-work-context[open]>.precision-setup{margin-top:12px}
 .precision-review-area{scroll-margin-top:16px}.precision-review-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .precision-review-heading h3{margin:0}.precision-editor-advanced{margin:14px 0}.precision-editor-advanced>summary{cursor:pointer;color:#b9d0ea}
+
+.precision-field-error{color:#ffb0be;font-size:12px}.character-precision [aria-invalid=true],.precision-editor [aria-invalid=true]{border-color:#e989a3!important}

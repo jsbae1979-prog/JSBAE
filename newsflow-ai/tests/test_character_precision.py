@@ -298,3 +298,38 @@ def test_precision_catalog_reuses_only_latest_choices_not_approval(precision,mon
     assert not created['story_attempts'] and not created.get('quote')
     assert p.s.read(old['id'])==old and p.s.read(new['id'])==new
     assert not p.adapter.calls and not p.writer.calls
+
+
+@pytest.mark.parametrize('duration,count',[(15,12),(60,2)])
+def test_precision_impossible_partition_rejected_before_draft_or_authoring(precision,duration,count):
+    p=precision;before=p.s.read(p.w['id']);common={**before['common'],'duration':duration,'scene_count':count}
+    with pytest.raises(ValueError,match='영상 길이와 장면 수'):
+        p.s.create(common,p.ids,{cid:'Same original outfit' for cid in p.ids},before['selection'],
+                   check(before['video_settings']),'5','5',uuid4().hex)
+    assert len(p.s.listing())==1 and p.s.read(p.w['id'])==before
+    # A legacy journal with an impossible combination must also stop before reserving/calling AI.
+    legacy=deepcopy(before);legacy['common']=common;p.s.save(legacy)
+    with pytest.raises(ValueError,match='영상 길이와 장면 수'):p.s.write_story(legacy['id'],legacy['revision'],True)
+    assert p.s.read(legacy['id'])==legacy
+    assert not p.writer.calls and not p.adapter.calls and not p.video.sent
+
+@pytest.mark.parametrize('duration,count,allowed,valid',[(20,5,[4,6],True),(21,5,[4,6],False),(26,5,[3,4,5,6,7],True),(15,5,[5,10],False)])
+def test_precision_duration_uses_exact_catalog_partitions(precision,monkeypatch,duration,count,allowed,valid):
+    from newsflow.character.precision_contract import validate_work_timing
+    monkeypatch.setattr('newsflow.video_models.catalog.duration_values',lambda model:allowed)
+    common={**precision.w['common'],'duration':duration,'scene_count':count}
+    if valid:validate_work_timing(common,{})
+    else:
+        with pytest.raises(ValueError):validate_work_timing(common,{})
+
+def test_precision_ui_version_compatibility_is_derived_not_persisted(precision):
+    from newsflow.gui.character_precision_routes import perform
+    p=precision;w=generated(p);scenario=deepcopy(w['scenario']);scenario['scenes'][0]['pose']='새로운 위치에서 접시를 봄'
+    w=p.s.edit(w['id'],w['revision'],scenario);before=deepcopy(w)
+    view=perform(lambda:p.s.read(w['id']))
+    assert view['scenes'][0]['versions'][0]['matches_current_plan'] is False
+    assert all(row['versions'][0]['matches_current_plan'] for row in view['scenes'][1:])
+    assert p.s.read(w['id'])==before
+    assert all('matches_current_plan' not in v for row in before['scenes'] for v in row['versions'])
+    with pytest.raises(ValueError):p.s.confirm(w['id'],w['revision'],1,1,True)
+    assert p.s.read(w['id'])==before and len(p.adapter.calls)==5

@@ -62,6 +62,18 @@ describe temporal action separately in English motion and motion_camera. No dial
 Use Korean description and short caption. Optional local sfx keys must come from input.sfx_keys. Never put captions in the still scene. End with a visual payoff.
 Do not invent brands, copyrighted characters or real people. Return only the requested JSON object.'''
 
+def validate_work_timing(work, video_model):
+    """Reject impossible scene partitions before any paid authoring request."""
+    from newsflow.video_models.catalog import duration_values
+    value = WorkSettings.model_validate(work)
+    allowed = [n for n in duration_values(video_model) if 3 <= n <= 15]
+    reachable = {0}
+    for _ in range(value.scene_count):
+        reachable = {total + n for total in reachable for n in allowed if total + n <= value.duration}
+    if value.duration not in reachable:
+        raise ValueError('영상 길이와 장면 수가 선택 모델에서 가능한지 확인하세요.')
+
+
 def validate_scenario(work, cast, value, video_model):
     from newsflow.video_models.catalog import duration_values
     safe_text(value)

@@ -13,7 +13,7 @@ from PIL import Image
 
 from .registry import atomic_json, safe_path, safe_text
 from .precision_contract import (WorkSettings, PrecisionScenario, INSTRUCTION, PROMPT_VERSION,
-    validate_scenario, image_prompt, motion_rows, story_input)
+    validate_scenario, validate_work_timing, image_prompt, motion_rows, story_input)
 from .schema import CharacterError
 from .service import fingerprint
 from newsflow.creation.catalog import validate as image_selection
@@ -78,6 +78,7 @@ class PrecisionService:
         if len(cast)>reference_capacity(selection['model']): raise ValueError('모델이 이 참조 이미지 수를 지원하지 않습니다.')
         if selection['size']!='864x1536': raise ValueError('정밀 제작은 9:16 이미지를 선택하세요.')
         frozen=snapshot({**video_settings,'duration':common['duration']},precise=True)
+        validate_work_timing(common,CATALOG.model(video_settings['video_model']))
         payload={'common':common,'cast':cast,'selection':selection,'video_settings':frozen,
                  'image_limit':str(positive(image_limit)),'video_limit':str(positive(video_limit))}
         identity=fingerprint(payload)
@@ -130,6 +131,7 @@ class PrecisionService:
             if w['story_attempts'] or w['scenario']: raise ValueError('보관된 스토리를 편집하세요. 자동 재요청하지 않습니다.')
             if not self.authoring: raise ValueError('스토리 AI가 연결되지 않았습니다.')
             settings=check(w['video_settings']);model=CATALOG.model(settings['video_model'])
+            validate_work_timing(w['common'],model)
             attempt={'request_id':'episode:'+identifier+':script:1','at':stamp(),'state':'requesting'}
             w['story_attempts'].append(attempt);w['state']='writing';self.save(w)
             try:

@@ -227,3 +227,34 @@ Checks cover visible first-use budget controls and blocking at zero, five explic
 Evidence: `C:\Codex\NewsFlowAI\precision_scene_20261104\review-flow-evidence` (logs, command/result metadata, screenshots). Screenshots use synthetic colored assets, not real user characters or generated artwork.
 
 Operating app/data/keys/media/backups untouched. No paid API, SNS call, user Chrome automation, push, merge, or operating deployment performed. Actual vendor output quality remains unverified. Development UI scope: ACCEPTED.
+
+## 2026-11-04: five boundary-review findings resolved
+
+Base SHA: `a0a3599ae77342c258b63007867b812ecb3e3059`.
+
+- Validate the exact sum of model-supported scene durations before draft creation and before authoring an existing journal. UI uses the same duration catalogue to explain impossible combinations and disable submission. No automatic duration changes.
+- Resume authenticated local GET polling for writing/generating journals after reload. Only one read at a time, ignore stale/other-work results, report temporary read failure, and stop polling on completion. Polling never invokes a provider or resubmits generation.
+- Validate editable scene fields locally, show per-field errors and jump to the first affected scene. Server failures appear inside the editor; input is retained. Backend validation remains authoritative.
+- Closing a changed editor requires explicit discard confirmation. Unchanged editors close directly; browser navigation/reload uses the standard unsaved-change protection. No new sensitive local/session storage.
+- Derive `matches_current_plan` on HTTP responses without changing persisted version records. Old-plan versions remain viewable but labelled and cannot be confirmed; server plan-hash enforcement remains unchanged.
+
+Changed files:
+- `frontend/src/studio/core/CharacterPrecision.tsx`
+- `frontend/src/studio/core/precisionValidation.ts`
+- `frontend/src/studio/core/character-precision.css`
+- `src/newsflow/character/precision_contract.py`
+- `src/newsflow/character/precision.py`
+- `src/newsflow/gui/character_precision_routes.py`
+- `tests/test_character_precision.py`
+- `tests/test_character_precision_browser.py`
+- This report.
+
+Final focused validation on Windows Python 3.14.7 with temporary profiles, synthetic images and Fake providers:
+- `python -m pytest -q -rs tests/test_character_precision.py`: 28 PASS / 0 FAIL / 0 ERROR / 0 SKIP.
+- `python -m pytest -q -rs tests/test_character_precision_browser.py`: 19 PASS / 0 FAIL / 0 ERROR / 0 SKIP.
+- Total executed: 47 PASS, including 13 new cases (7 service/schema and 6 browser), with earlier relevant cases rechecked. Prior broader regression evidence is not included in this count.
+- `tsc --noEmit` and `vite build --configLoader runner`: PASS. Initial TypeScript nullability error was fixed before final validation. Existing Starlette/httpx deprecation warning remains.
+
+Evidence: `C:\Codex\NewsFlowAI\precision_scene_20261104\boundary-fix-evidence`. The editor screenshot shows a deliberately simulated save conflict using synthetic data, not an operating failure.
+
+No new POST routes, schema migration, paid API, production data access, SNS, operating restart/deployment, push or merge. Fast mode and original assets/history preserved in focused checks. Actual vendor output quality and operating UI remain NOT VERIFIED. Development scope: ACCEPTED.
