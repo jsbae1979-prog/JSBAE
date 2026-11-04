@@ -511,10 +511,12 @@ function FastCharacterStudio({ c }: { c: Controller }) {
   const savedUploads = useRef(new WeakMap<File, string>());
   const [confirmedLibraryAssets, setConfirmedLibraryAssets] = useState<Record<string, boolean>>({});
 
+  const safeSceneImage = (url: unknown): url is string => typeof url === "string" && /^\/image-studio\/assets\/studio-[a-f0-9]{64}\.png$/.test(url);
   const [scenePreview, setScenePreview] = useState<{
     url: string;
     title: string;
     seconds: number;
+    image?: boolean;
   } | null>(null);
   const [asset, setAsset] = useState("");
   const [referenceJob, setReferenceJob] = useState("");
@@ -2074,7 +2076,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
         {<section className="kling-character-card kling-character-storyboard">
           <header>
             <h2>
-              {singleVideo ? "스토리 계획" : "생성된 장면"}{" "}
+              {singleVideo ? "스토리 계획" : "장면 미리보기"}{" "}
               <small>
                 {singleVideo
                   ? `(${scenes.length}개 계획 · 15초 단일 영상)`
@@ -2101,18 +2103,21 @@ function FastCharacterStudio({ c }: { c: Controller }) {
               elapsed = edited ? edited.start + edited.seconds : elapsed + (s?.seconds ?? 0);
               const clip = clips.find((x) => x.position === i + 1);
               const media = clip?.mediaUrl;
+              const image = job?.precisionImages?.find((x: Item) => x.position === i + 1)?.imageUrl;
+              const showImage = !safeMedia(media) && safeSceneImage(image);
               const planOnly = singleVideo && !clip;
               return (
                 <button
                   key={i}
                   aria-pressed={scene === i}
-                  disabled={!s || planOnly || !safeMedia(media)}
+                  disabled={!s || planOnly || (!safeMedia(media) && !showImage)}
                   title={singleVideo ? s?.action : undefined}
                   onClick={() => {
-                    if (!planOnly && safeMedia(media)) {
+                    if (!planOnly && (safeMedia(media) || showImage)) {
                       setScene(i);
                       setScenePreview({
-                        url: media,
+                        url: showImage ? image : media,
+                        image: showImage,
                         title: singleVideo ? "15초 전체 영상" : `장면 ${i + 1}`,
                         seconds: singleVideo
                           ? Number(job?.duration ?? 15)
@@ -2125,6 +2130,8 @@ function FastCharacterStudio({ c }: { c: Controller }) {
                     <b>{i + 1}</b>
                     {safeMedia(media) ? (
                       <video src={media} preload="metadata" muted />
+                    ) : showImage ? (
+                      <img src={image} alt={`장면 ${i + 1} 확정 이미지`} style={{width:"100%",height:"100%",objectFit:"contain"}}/>
                     ) : (
                       <Clapperboard size={32} />
                     )}
@@ -2145,9 +2152,10 @@ function FastCharacterStudio({ c }: { c: Controller }) {
                     ) : (
                       <>
                         {singleVideo && <small>15초 전체 영상</small>}
+                        {showImage && <small>확정 이미지 · 클릭하여 크게 보기</small>}
                         {clip?.dependencyStopReason ? (
                           <small role="status">{clip.dependencyStopReason === "parent_failed" ? "앞 장면 실패로 중단" : "작업 실패로 연결 보류"}</small>
-                        ) : <State value={clip?.state ?? "pending"} />}
+                        ) : <State value={clip?.state === "not_submitted" || (!clip && showImage) ? "영상 생성 전" : clip?.state ?? "pending"} />}
                       </>
                     ))}
                 </button>
@@ -2155,13 +2163,13 @@ function FastCharacterStudio({ c }: { c: Controller }) {
             })}
           </div>
         </section>}
-        {scenePreview && safeMedia(scenePreview.url) && (
+        {scenePreview && (scenePreview.image ? safeSceneImage(scenePreview.url) : safeMedia(scenePreview.url)) && (
           <CharacterDialog
-            title={`${scenePreview.title} · ${scenePreview.seconds}초`}
+            title={`${scenePreview.title} · ${scenePreview.image ? "확정 이미지" : `${scenePreview.seconds}초`}`}
             busy={false}
             onClose={() => setScenePreview(null)}
           >
-            <video
+            {scenePreview.image ? <img src={scenePreview.url} alt={`${scenePreview.title} 확정 이미지`} style={{display:"block",width:"100%",maxHeight:"70vh",objectFit:"contain"}}/> : <video
               src={scenePreview.url}
               controls
               autoPlay
@@ -2174,7 +2182,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
                 maxHeight: "70vh",
                 objectFit: "contain",
               }}
-            />
+            />}
           </CharacterDialog>
         )}
         {history && (

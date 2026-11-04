@@ -322,6 +322,15 @@ def character_rows(state):
             item['sfx_keys'] = list(load_sfx_map())
             item['characterProfile'] = None if job.get('character_reference_mode')=='image_topic' else job.get('character', {})
             item['referenceMode'] = job.get('character_reference_mode', 'registered')
+        # Pinned handoff images, never the work's subsequently selected version.
+        import re
+        item["precisionImages"] = [
+            {"position": image["no"], "imageUrl": f"/image-studio/assets/{image['asset']}"}
+            for image in job.get("precision", {}).get("images", [])
+            if isinstance(image.get("no"), int) and image["no"] > 0
+            and isinstance(image.get("asset"), str)
+            and re.fullmatch(r"studio-[a-f0-9]{64}\.png", image["asset"])
+        ]
         item["quote"] = job.get("quote_total_usd")
         item["referenceUrl"] = (
             f"/api/studio/characters/{job['id']}/reference" if job.get("reference_sha256") else None
