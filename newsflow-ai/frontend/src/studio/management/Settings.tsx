@@ -1,3 +1,4 @@
+import YouTubeAccounts from "./YouTubeAccounts";
 import MetaAccounts from './MetaAccounts';
 import { useState } from "react";
 import {
@@ -183,10 +184,7 @@ export default function Settings({
               <MetaAccounts csrf={c.view?.csrfToken??""} platform={accountPlatform} onStatus={setMetaAccountData} />
             </div>
             {accountPlatform === "youtube" && (
-              <Panel title="YouTube 계정 설정">
-                <p>Google 로그인으로 게시할 YouTube 채널을 연결합니다. Meta 토큰은 사용하지 않습니다.</p>
-                <Action c={c} id="youtube_connect">Google 로그인 · YouTube 연결</Action>
-              </Panel>
+              <YouTubeAccounts csrf={c.view?.csrfToken ?? ""} enabled={!!c.view?.commandsAvailable} />
             )}
             {accountPlatform === "tiktok" && (
               <Panel title="TikTok 계정 설정">

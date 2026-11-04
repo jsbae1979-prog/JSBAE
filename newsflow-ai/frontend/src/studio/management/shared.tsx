@@ -297,7 +297,7 @@ export function Accounts({
               }
             />
             {onConfigure ? (
-              <button type="button" aria-label={`${p.id} 계정 설정`} onClick={() => onConfigure(p.id)}>계정 설정</button>
+              <button type="button" aria-label={`${p.id} 계정 설정`} onClick={() => onConfigure(p.id)}>{p.id === "youtube" ? "YouTube 채널 연결" : "계정 설정"}</button>
             ) : (
               <Action c={c} id="publishing_account" context={{ platform: p.id }}>계정 설정</Action>
             )}

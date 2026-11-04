@@ -46,6 +46,20 @@ def publishing_context(request: Request, render_job_id: int | None, *, platform:
                 "results": [item for item in results if item.get("render_job_id") == render_job_id]}
 
 
+@router.get("/api/youtube/status")
+def connection_status(request: Request):
+    """Local metadata only; no token, authorization URL or Google request."""
+    from fastapi.responses import JSONResponse
+    state = connection_context(request)
+    fields = ("id", "label", "channel_id", "status", "ready", "message", "refresh_needed")
+    return JSONResponse({
+        "client_configured": bool(state.get("client_configured")),
+        "storage_supported": bool(state.get("storage_supported")),
+        "pending": bool(state.get("pending")),
+        "accounts": [{key: row.get(key) for key in fields} for row in state.get("accounts", [])],
+    }, headers={"Cache-Control": "no-store"})
+
+
 @router.post("/youtube/client")
 def save_client(request: Request, client_json: str = Form(max_length=16384)):
     try:
