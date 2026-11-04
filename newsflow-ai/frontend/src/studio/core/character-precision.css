@@ -44,3 +44,7 @@
 .precision-person img{width:90px;height:120px}.precision-snapshot img{flex-basis:90px}
 .precision-scene-actions{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.precision-batch{font-size:12px;color:#b9d0ea}
 .precision-batch .precision-check{display:inline-flex!important;margin-right:16px}.precision-scene-detail details{font-size:12px}
+
+.precision-work-context>summary{cursor:pointer;color:#b9d0ea;padding:8px 0}.precision-work-context[open]>.precision-setup{margin-top:12px}
+.precision-review-area{scroll-margin-top:16px}.precision-review-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.precision-review-heading h3{margin:0}.precision-editor-advanced{margin:14px 0}.precision-editor-advanced>summary{cursor:pointer;color:#b9d0ea}

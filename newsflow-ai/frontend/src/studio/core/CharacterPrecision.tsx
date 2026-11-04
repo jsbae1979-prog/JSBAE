@@ -18,7 +18,8 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const [imageLimit,setImageLimit]=useState(''),[videoLimit,setVideoLimit]=useState('');
   const [busy,setBusy]=useState(''),[error,setError]=useState(''),[approval,setApproval]=useState<'story'|'images'|null>(null);
   const [picked,setPicked]=useState<number[]>([]),[versions,setVersions]=useState<Record<number,number>>({});
-  const [review,setReview]=useState<number|null>(null),[editing,setEditing]=useState<Item|null>(null);
+  const [budgetOpen,setBudgetOpen]=useState(false),[editing,setEditing]=useState<Item|null>(null);
+  const reviewArea=useRef<HTMLElement|null>(null);
   const [large,setLarge]=useState<string|null>(null),[scene,setScene]=useState(1);
   const styleEdited=useRef(false),worldEdited=useRef(false);
   const sending=useRef(false),createId=useRef(crypto.randomUUID().replaceAll('-',''));
@@ -29,6 +30,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     const standing=Number(d.standing_limit),previous=Number(d.recent_settings?.image_limit);
     setImageLimit(standing>0?String(previous>0?Math.min(standing,previous):standing):'');
     setVideoLimit(d.recent_settings?.video_limit??'');
+    setBudgetOpen(!(standing>0&&Number(d.recent_settings?.video_limit)>0));
     setCommon(v=>({...v,duration:d.video.character?.target_duration?.default??d.video.defaults.duration??20}));
     const id=new URLSearchParams(location.search).get('precision');
     if(id&&/^[a-f0-9]{32}$/.test(id)){const w=await get(`${base}/${id}`);if(live)setWork(w);}
@@ -58,7 +60,12 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       if(!target)throw Error('작품을 먼저 선택하세요.');
       if(kind==='manual'){manual(target);return;}
       const w=await characterCommand(`${base}/${target.id}/${kind}`,c.view?.csrfToken??'',{revision:String(target.revision),...values});
-      remember(w);setApproval(kind==='quote'?'images':null);setPicked([]);setVersions({});setEditing(null);setReview(null);
+      remember(w);setApproval(kind==='quote'?'images':null);setPicked([]);setVersions({});setEditing(null);
+      if(kind==='confirm'){
+        const pending=w.scenes.filter((row:Item)=>!row.confirmed);
+        const next=pending.find((row:Item)=>row.plan.no>Number(values.number))??pending[0];
+        if(next)setScene(next.plan.no);
+      }
       if(kind==='handoff'&&w.video_job_id)location.assign(`/studio/characters?job_id=${w.video_job_id}`);
     } catch(e){setApproval(null);setError(e instanceof Error?e.message:'처리 결과를 확인하세요.');
       if(target?.id)try{remember(await get(`${base}/${target.id}`));}catch{/* keep the last visible journal */}
@@ -67,6 +74,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const rows:Item[]=work?.scenes??[], profiles:Item[]=catalog?.profiles??[];
   const locked=!!busy||!!work?.video_job_id||['writing','generating'].includes(work?.state);
   const completed=rows.filter(s=>s.versions.some((v:Item)=>v.state==='success')).length;
+  useEffect(()=>{if(completed>0)reviewArea.current?.scrollIntoView({block:'start'});},[work?.id,completed>0]);
   const quote=work?.quote;
   const missing=rows.filter(s=>!s.versions.length);
   const allConfirmed=!!rows.length&&rows.every(s=>s.confirmed);
@@ -80,7 +88,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       world:worldEdited.current?v.world:p.comedy_formula?.world||''}));
   }
 
-  function clearSelection(){setVersions({});setPicked([]);setScene(1);setApproval(null);setEditing(null);setReview(null);setLarge(null);setError('');}
+  function clearSelection(){setVersions({});setPicked([]);setScene(1);setApproval(null);setEditing(null);setLarge(null);setError('');}
   function newWork(){clearSelection();setWork(null);createId.current=crypto.randomUUID().replaceAll('-','');
     const u=new URL(location.href);u.searchParams.set('precision','');u.searchParams.delete('job_id');history.replaceState(null,'',u);}
   return <section className="character-precision" aria-label="정밀 제작">
@@ -132,11 +140,11 @@ export default function CharacterPrecision({c}:{c:Controller}) {
           <p>이미지 비율 9:16</p>
           <label>영상 생성 화질<select value={video.native_resolution??''} onChange={e=>setVideo({...video,native_resolution:e.target.value})}>{(catalog.video.modelsDetailed.find((m:Item)=>m.id===video.video_model)?.resolutions??[]).map((key:string)=><option key={key}>{key}</option>)}</select></label>
           <label>환경음<select value={video.sound??'on'} onChange={e=>setVideo({...video,sound:e.target.value})}><option value="on">켜기</option><option value="off">끄기</option></select></label>
-        </details><details className="precision-budget-settings"><summary>작업 예산 (USD){(!imageLimit||!videoLimit)&&' · 설정 필요'}</summary><div className="precision-pair"><label>이미지 작업 예산(USD)<input type="number" min="0.01" step="0.01" value={imageLimit} onChange={e=>setImageLimit(e.target.value)}/></label>
+        </details><details className="precision-budget-settings" open={budgetOpen} onToggle={e=>setBudgetOpen(e.currentTarget.open)}><summary>작업 예산 (USD){(!imageLimit||!videoLimit)&&' · 설정 필요'}</summary><div className="precision-pair"><label>이미지 작업 예산(USD)<input type="number" min="0.01" step="0.01" value={imageLimit} onChange={e=>setImageLimit(e.target.value)}/></label>
           <label>스토리·영상 예산(USD)<input type="number" min="0.01" step="0.01" value={videoLimit} onChange={e=>setVideoLimit(e.target.value)}/></label></div></details>
         <p className="precision-hint">{catalog.recent_settings?'최근 작품의 모델·예산 사용':'모델·예산을 설정한 뒤 스토리를 만드세요.'}</p>
       </section></div>}
-    {work&&<><div className="precision-setup precision-saved">
+    {work&&<><details className="precision-work-context" key={`${work.id}:${completed>0}`} open={completed===0}><summary>캐릭터·스토리·설정 보기</summary><div className="precision-setup precision-saved">
       <section><h3>1. 캐릭터 선택</h3>{Object.values(work.cast).map((p:unknown)=>{const person=p as Item;return <div className="precision-person precision-snapshot" key={person.id}>
         <img src={`/image-studio/assets/${person.asset}`} alt={person.name_ko}/><div><strong>{person.name_ko}</strong><details><summary>캐릭터 특징</summary><p>{person.personality}</p></details></div></div>;})}</section>
       <section><h3>2. 스토리 생성</h3><p>{work.common.topic}</p>
@@ -150,19 +158,21 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       </section>
       <section><h3>3. 영상 제작</h3><p>{work.common.duration}초 · {work.common.scene_count}장면</p>
         <p>{catalog?.video.models[work.video_settings.video_model]??work.video_settings.video_model}</p>
-        {work.video_job_id?<><a className="button primary" href={`/studio/characters?job_id=${work.video_job_id}`}>영상 제작 열기</a><p className="precision-hint">확정한 이미지로 영상 제작을 이어갑니다.</p></>:
-          allConfirmed?<button className="primary" disabled={locked} onClick={()=>void act('handoff')}>영상 제작으로 이동</button>:
+        {work.video_job_id?<><p className="precision-hint">확정한 이미지로 영상 제작을 이어갑니다.</p></>:
+          allConfirmed?<p className="precision-hint">장면 검토 아래에서 영상 제작으로 이동하세요.</p>:
           missing.length?<button className="primary" disabled={locked} onClick={()=>void act('quote',{numbers:JSON.stringify(missing.map(s=>s.plan.no))})}>장면 이미지 만들기</button>:
           <p className="precision-hint">{rows.length?'아래에서 장면 이미지를 확인하세요.':'스토리를 먼저 만들어 주세요.'}</p>}
         <details><summary>저장된 모델·예산</summary><p>이미지 {work.selection.model} · {work.selection.quality}</p>
           <p>이미지 US${work.image_limit} / 스토리·영상 US${work.video_limit}</p></details>
       </section>
-      </div><div className="precision-progress" role="status" aria-live="polite"><strong>{work.common.title} · {stateName[work.state]??work.state}</strong>
+      </div></details><div className="precision-progress" role="status" aria-live="polite"><strong>{work.common.title} · {stateName[work.state]??work.state}</strong>
       <span>{completed}/{rows.length||work.common.scene_count}장 완료 · {rows.filter(s=>s.confirmed).length}장 확정</span>
       {busy&&<span className="precision-running">처리 중 · 결과를 확인하고 있습니다</span>}
       {!busy&&(['writing','generating'].includes(work.state)||rows.some(s=>s.versions.some((v:Item)=>['requesting','unknown'].includes(v.state))))&&<button onClick={()=>void act('reconcile')}>저장된 결과 확인 · 무료</button>}
       <progress value={completed} max={rows.length||work.common.scene_count}/></div>
-      {rows.length>0&&<section><h3>장면 이미지 검토</h3>
+      {rows.length>0&&<section ref={reviewArea} className="precision-review-area"><div className="precision-review-heading"><h3>장면 이미지 검토</h3>
+        {allConfirmed&&!work.video_job_id&&<button className="primary" disabled={locked} onClick={()=>void act('handoff')}>영상 제작으로 이동</button>}
+        {work.video_job_id&&<a className="button primary" href={`/studio/characters?job_id=${work.video_job_id}`}>영상 제작 열기</a>}</div>
         <details className="precision-batch"><summary>여러 장면 다시 만들기</summary>
           {rows.map(s=><label className="precision-check" key={s.plan.no}><input type="checkbox" disabled={locked} checked={picked.includes(s.plan.no)} onChange={e=>setPicked(e.target.checked?[...picked,s.plan.no]:picked.filter(x=>x!==s.plan.no))}/>장면 {s.plan.no}</label>)}
           <button disabled={locked||!picked.length} onClick={()=>void act('quote',{numbers:JSON.stringify(picked),regenerate:'true'})}>선택 장면 다시 만들기</button>
@@ -179,15 +189,18 @@ export default function CharacterPrecision({c}:{c:Controller}) {
             <div>{current?.asset?<button className="precision-image" onClick={()=>setLarge(`/image-studio/assets/${current.asset}`)}><img src={`/image-studio/assets/${current.asset}`} alt={`장면 ${selected.plan.no}`}/></button>:<div className="precision-empty">{stateName[selected.state]??selected.state}</div>}</div>
             <div className="precision-scene-detail"><h4>장면 {selected.plan.no} · {selected.plan.seconds}초</h4><p>{selected.plan.description}</p>
               <p>{selected.plan.characters.map((id:string)=>work.cast[id].name_ko).join(' · ')}</p>
+              <p className="precision-hint">캐릭터·의상·배경·장면 연결을 확인한 뒤 확정하세요.</p>
               <div className="precision-scene-actions">
                 <button disabled={locked||selected.versions.some((v:Item)=>['requesting','unknown'].includes(v.state))} onClick={()=>void act('quote',{numbers:JSON.stringify([selected.plan.no]),regenerate:'true'})}>다시 만들기</button>
-                <button className={!allConfirmed?'primary':''} disabled={locked||!current?.asset||selected.confirmed?.version===current.version} onClick={()=>setReview(selected.plan.no)}>{current&&selected.confirmed?.version===current.version?'사용 중인 이미지':'이 이미지 사용'}</button>
+                <button className={!allConfirmed?'primary':''} disabled={locked||!current?.asset||selected.confirmed?.version===current.version}
+                  onClick={e=>{if(e.detail>1)return;void act('confirm',{number:String(selected.plan.no),version:String(current.version),reviewed:'true'});}}>
+                  {current&&selected.confirmed?.version===current.version?'사용 중인 이미지':rows.some(s=>s.plan.no!==selected.plan.no&&!s.confirmed)?'확정하고 다음 장면':'이미지 확정'}</button>
               </div>
               <details><summary>버전·프롬프트 더보기</summary>
               <label>이미지 버전<select aria-label={`장면 ${selected.plan.no} 이미지 버전`} value={versions[selected.plan.no]??selected.selected??''} onChange={e=>setVersions({...versions,[selected.plan.no]:+e.target.value})}>
                 <option value="">버전 선택</option>{selected.versions.map((v:Item)=><option key={v.version} value={v.version}>버전 {v.version} · {stateName[v.state]??v.state}</option>)}</select></label>
               <p className="precision-prompt">{selected.prompt}</p>
-              <button disabled={locked} onClick={()=>setEditing({scenario:structuredClone(work.scenario)})}>장면 내용 수정</button></details>
+              <button disabled={locked} onClick={()=>setEditing({scenario:structuredClone(work.scenario),number:selected.plan.no})}>장면 내용 수정</button></details>
             </div>
           </div>}
         </div>
@@ -202,21 +215,23 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       <p>예상 US${quote.estimated_usd} · 예산 예약 US${quote.reserve_usd}</p>
       <p>선택한 캐릭터 참조 이미지를 전송합니다. 실제 청구액과 다를 수 있으며 영상 비용은 별도입니다.</p>
     </CharacterModal>}
-    {review!==null&&<CharacterModal title={`장면 ${review} 이미지 검토`} busy={!!busy} onClose={()=>setReview(null)} footer={<button className="primary" disabled={!!busy}
-      onClick={()=>{const s=rows.find(s=>s.plan.no===review)!;void act('confirm',{number:String(review),version:String(versions[review]??s.selected),reviewed:'true'});}}>확인 완료 · 이 이미지 사용</button>}>
-      <p>캐릭터 외형·얼굴과 색상·의상·소품·인원·배경·구도와 표정·장면 내용이 맞는지 확인하세요.</p>
-      <p>이 버전만 영상에 사용합니다. 이전 이미지는 보존합니다.</p></CharacterModal>}
     {editing&&<CharacterModal title="장면 내용 수정" busy={!!busy} onClose={()=>setEditing(null)} footer={<button className="primary" disabled={!!busy} onClick={()=>void act('edit',{scenario:JSON.stringify(editing.scenario)})}>장면 저장 · 무료</button>}>
+      <label>편집할 장면<select value={editing.number??editing.scenario.scenes[0]?.no} onChange={e=>setEditing({...editing,number:Number(e.target.value)})}>
+        {editing.scenario.scenes.map((s:Item)=><option key={s.no} value={s.no}>장면 {s.no}</option>)}</select></label>
       <div className="precision-editor">{(editing.scenario.scenes??[]).map((s:Item,i:number)=>{
-        const set=(key:string,value:unknown)=>setEditing({scenario:{...editing.scenario,scenes:editing.scenario.scenes.map((r:Item,j:number)=>j===i?{...r,[key]:value}:r)}});
+        if(s.no!==(editing.number??editing.scenario.scenes[0]?.no))return null;
+        const set=(key:string,value:unknown)=>setEditing({...editing,scenario:{...editing.scenario,scenes:editing.scenario.scenes.map((r:Item,j:number)=>j===i?{...r,[key]:value}:r)}});
         return <fieldset key={s.no}><legend>장면 {s.no}</legend><div className="precision-pair">
           {Object.values(work!.cast).map((p:unknown)=>{const person=p as Item;return <label className="precision-check" key={person.id}><input type="checkbox" checked={s.characters.includes(person.id)}
             onChange={e=>set('characters',e.target.checked?[...s.characters,person.id]:s.characters.filter((id:string)=>id!==person.id))}/>{person.name_ko}</label>;})}
-          {Object.entries({description:'장면 설명',location:'장소',pose:'행동·자세',emotion:'표정·감정',camera:'이미지 구도',props:'소품·위치',continuity:'이어질 요소',caption:'별도 자막',motion:'영상 동작 · 영어',motion_camera:'영상 카메라 · 영어',sound:'환경음'}).map(([key,label])=>
+          {Object.entries({description:'장면 설명',location:'장소',pose:'행동·자세',emotion:'표정·감정'}).map(([key,label])=>
+            <label key={key}>{label}<textarea value={s[key]??''} onChange={e=>set(key,e.target.value)}/></label>)}
+          <label>길이(초)<input type="number" min={3} max={15} value={s.seconds} onChange={e=>set('seconds',+e.target.value)}/></label>
+        </div><details className="precision-editor-advanced"><summary>구도·연결·자막·소리 자세히</summary><div className="precision-pair">
+          {Object.entries({camera:'이미지 구도',props:'소품·위치',continuity:'이어질 요소',caption:'별도 자막',motion:'영상 동작 · 영어',motion_camera:'영상 카메라 · 영어',sound:'환경음'}).map(([key,label])=>
             <label key={key}>{label}<textarea value={s[key]??''} onChange={e=>set(key,e.target.value)}/></label>)}
           <label>로컬 효과음<select value={s.sfx?.[0]?.key??''} onChange={e=>set('sfx',e.target.value?[{at:'end',key:e.target.value}]:[])}><option value="">없음</option>{(catalog?.sfx_keys??[]).map((key:string)=><option key={key}>{key}</option>)}</select></label>
-          <label>길이(초)<input type="number" min={3} max={15} value={s.seconds} onChange={e=>set('seconds',+e.target.value)}/></label>
-        </div></fieldset>;})}</div></CharacterModal>}
+        </div></details></fieldset>;})}</div></CharacterModal>}
     {large&&<CharacterModal title="장면 이미지" onClose={()=>setLarge(null)}><img className="precision-large" src={large} alt="장면 확대"/></CharacterModal>}
   </section>;
 }

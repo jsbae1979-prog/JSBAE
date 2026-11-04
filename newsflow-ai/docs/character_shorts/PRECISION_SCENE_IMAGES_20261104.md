@@ -202,3 +202,28 @@ node node_modules/vite/bin/vite.js build --configLoader runner
 증거: `C:\Codex\NewsFlowAI\precision_scene_20261104\simplified-evidence`의 로그·JUnit·합성 화면 이미지. 이전 158 PASS 및 1차 UI 5 PASS는 과거 증거이며 이번 합계에 더하지 않았다. 전면 회귀, 실제 API, 운영 반영, 앱 재시작, SNS, 사용자 데이터 변경, GitHub push는 하지 않았다.
 
 판정: 개발·Fake 검증 ACCEPTED. 실제 운영 적용 및 공급사 출력 품질은 이번 범위에서 미검증.
+
+## 2026-11-04: one-scene review workflow refinement
+
+Base: `4fd3f56ea0debbbb8e8f99e297fcca833113289e`. Development only; no operating deployment or restart.
+
+- Collapse completed character/story/settings context when scene images become available and scroll to review. Original settings remain accessible.
+- Confirm the visible image and advance to the next unconfirmed scene in one explicit click. Five-scene review takes five confirmation clicks instead of fourteen confirmation/navigation clicks. No popup, automatic confirmation, or automatic paid request is introduced.
+- Keep the current scene on confirmation failure. Ignore the second click of a double-click so it cannot confirm the next image accidentally.
+- Open only the selected scene in the editor; retain all scene data while switching the scene selector. Show essential fields first and place camera/continuity/caption/sound details in an expandable area.
+- Automatically expand budget inputs for first use when required budgets are missing. Positive-budget, story approval, reference-transfer consent and backend enforcement remain unchanged.
+
+Changed implementation: `frontend/src/studio/core/CharacterPrecision.tsx`, `frontend/src/studio/core/character-precision.css`.
+Tests: `tests/test_character_precision_browser.py` (eight existing cases adapted/reused plus five focused browser cases).
+
+Windows Python 3.14.7 / isolated Chromium / temporary profiles / Fake providers:
+`python -m pytest -q -rs tests/test_character_precision_browser.py` with the existing isolated environment and a temporary React build: **13 PASS / 0 FAIL / 0 ERROR / 0 SKIP**.
+`tsc --noEmit`: PASS. `vite build --configLoader runner`: PASS.
+An initial new editor test used exact label text including a textarea value and could not locate the control. The test now uses its actual accessible textbox role/name; no assertion was removed. Final browser run passed.
+Existing unrelated Starlette/httpx deprecation warning remains. Prior backend/FFmpeg evidence reused; no broad regression repeated because backend behavior and provider adapters were not changed.
+
+Checks cover visible first-use budget controls and blocking at zero, five explicit scene confirmations and free handoff, selected-scene editing with other scenes/history unchanged, failed confirmation without navigation/retry, double-click suppression, original mode preservation, image versions, and paid-approval boundaries using Fake providers.
+
+Evidence: `C:\Codex\NewsFlowAI\precision_scene_20261104\review-flow-evidence` (logs, command/result metadata, screenshots). Screenshots use synthetic colored assets, not real user characters or generated artwork.
+
+Operating app/data/keys/media/backups untouched. No paid API, SNS call, user Chrome automation, push, merge, or operating deployment performed. Actual vendor output quality remains unverified. Development UI scope: ACCEPTED.

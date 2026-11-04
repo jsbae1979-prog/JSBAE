@@ -38,10 +38,11 @@ def test_precision_cards_approval_confirm_and_version_selection(precision,browse
         expect(popup.get_by_role('img')).to_be_visible()
         assert popup.bounding_box()['height']<=768
         page.keyboard.press('Escape');expect(popup).not_to_be_visible()
-        panel.get_by_role('button',name='이 이미지 사용').click()
-        page.get_by_role('button',name='확인 완료 · 이 이미지 사용').click()
+        panel.get_by_role('button',name='확정하고 다음 장면').click()
         expect(first.get_by_text('이미지 확정',exact=True)).to_be_visible()
         expect(panel.get_by_role('button',name='영상 제작으로 이동')).to_have_count(0)
+        expect(panel.locator('.precision-selected img')).to_have_attribute('alt','장면 2')
+        panel.get_by_role('button',name='장면 1 ·').click()
         expect(panel.get_by_role('button',name='사용 중인 이미지')).to_be_disabled()
         panel.get_by_role('button',name='장면 2 ·').click()
         expect(panel.locator('.precision-selected img')).to_have_attribute('alt','장면 2')
@@ -236,4 +237,130 @@ def test_precision_confirmed_images_move_to_video_without_generation(precision,b
         expect(page.get_by_label('영상 길이',exact=True)).to_have_value('26')
         assert '?job_id=' in page.url
         assert not f.video.sent and not f.video.uploads and len(f.adapter.calls)==5
+        context.close()
+
+
+def test_precision_first_budget_is_visible_and_still_required(precision,browser,monkeypatch,tmp_path):
+    f=precision;monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    f.app.state.image_studio=f.images
+    with local_server(f.app) as origin:
+        context=browser_context(browser,origin);page=context.new_page()
+        def fresh(route):
+            response=route.fetch();data=response.json();data['recent_settings']=None
+            route.fulfill(response=response,json=data)
+        page.route('**/api/studio/character-precision',fresh)
+        page.goto(origin+'/studio/characters?precision=')
+        panel=page.get_by_role('region',name='정밀 제작',exact=True)
+        expect(panel.locator('.precision-person')).to_have_count(2)
+        panel.locator('.precision-person input[type=checkbox]').first.check()
+        panel.get_by_label('스토리 주제',exact=True).fill('처음 만드는 작품')
+        expect(panel.get_by_label('스토리·영상 예산(USD)',exact=True)).to_be_visible()
+        expect(panel.get_by_role('button',name='스토리 만들기',exact=True)).to_be_disabled()
+        panel.get_by_label('이미지 작업 예산(USD)',exact=True).fill('1')
+        panel.get_by_label('스토리·영상 예산(USD)',exact=True).fill('5')
+        expect(panel.get_by_role('button',name='스토리 만들기',exact=True)).to_be_enabled()
+        panel.get_by_label('스토리·영상 예산(USD)',exact=True).fill('0')
+        expect(panel.get_by_role('button',name='스토리 만들기',exact=True)).to_be_disabled()
+        assert not f.writer.calls and not f.adapter.calls and not f.video.sent
+        page.screenshot(path=str(tmp_path/'first-budget-visible.png'),full_page=True)
+        context.close()
+
+
+def test_precision_review_five_clicks_then_video(precision,browser,monkeypatch,tmp_path):
+    from test_character_precision import generated
+    f=precision;w=generated(f)
+    f.app.state.image_studio=f.images;f.app.state.character=f.owner
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        context=browser_context(browser,origin);page=context.new_page();page.set_viewport_size({'width':1366,'height':768})
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        panel=page.get_by_role('region',name='정밀 제작',exact=True)
+        expect(panel.get_by_text('캐릭터·스토리·설정 보기',exact=True)).to_be_visible()
+        expect(panel.locator('.precision-saved')).not_to_be_visible()
+        expect(panel.get_by_role('heading',name='장면 이미지 검토',exact=True)).to_be_in_viewport()
+        page.screenshot(path=str(tmp_path/'review-condensed.png'),full_page=True)
+        for n in range(1,6):
+            expect(panel.locator('.precision-selected img')).to_have_attribute('alt',f'장면 {n}')
+            panel.get_by_role('button',name='확정하고 다음 장면' if n<5 else '이미지 확정',exact=True).click()
+            expect(panel.get_by_role('status')).to_contain_text(f'{n}장 확정')
+            expect(page.get_by_role('dialog')).to_have_count(0)
+        saved=f.s.read(w['id']);assert all(row['confirmed'] for row in saved['scenes'])
+        assert len(f.adapter.calls)==5 and not f.video.sent
+        panel.get_by_role('button',name='영상 제작으로 이동',exact=True).click()
+        expect(page.get_by_label('영상 길이',exact=True)).to_have_value('26')
+        assert not f.video.sent and not f.video.uploads
+        context.close()
+
+
+def test_precision_edit_only_selected_scene_preserves_others(precision,browser,monkeypatch,tmp_path):
+    from copy import deepcopy
+    from test_character_precision import generated
+    f=precision;w=generated(f);before=deepcopy(w)
+    f.app.state.image_studio=f.images
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        context=browser_context(browser,origin);page=context.new_page()
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        panel=page.get_by_role('region',name='정밀 제작',exact=True)
+        panel.get_by_role('button',name='장면 3 ·').click()
+        panel.get_by_text('버전·프롬프트 더보기',exact=True).click()
+        panel.get_by_role('button',name='장면 내용 수정',exact=True).click()
+        modal=page.get_by_role('dialog',name='장면 내용 수정',exact=True)
+        expect(modal.get_by_label('편집할 장면')).to_have_value('3')
+        expect(modal.locator('fieldset')).to_have_count(1)
+        expect(modal.get_by_label('영상 동작 · 영어',exact=True)).not_to_be_visible()
+        modal.get_by_role('textbox',name='장면 설명',exact=True).fill('친구가 숨겨 둔 쿠키 단서를 발견한다')
+        modal.get_by_label('편집할 장면').select_option('2')
+        expect(modal.get_by_role('textbox',name='장면 설명',exact=True)).to_have_value(before['scenes'][1]['plan']['description'])
+        modal.get_by_label('편집할 장면').select_option('3')
+        expect(modal.get_by_role('textbox',name='장면 설명',exact=True)).to_have_value('친구가 숨겨 둔 쿠키 단서를 발견한다')
+        page.screenshot(path=str(tmp_path/'single-scene-editor.png'),full_page=True)
+        modal.get_by_role('button',name='장면 저장 · 무료').click()
+        expect(modal).not_to_be_visible()
+        after=f.s.read(w['id'])
+        assert after['scenes'][2]['plan']['description']=='친구가 숨겨 둔 쿠키 단서를 발견한다'
+        for i in (0,1,3,4):assert after['scenes'][i]==before['scenes'][i]
+        assert after['scenes'][2]['versions']==before['scenes'][2]['versions']
+        assert len(f.adapter.calls)==5 and not f.writer.calls and not f.video.sent
+        context.close()
+
+
+def test_precision_failed_confirmation_stays_on_scene_without_retry(precision,browser,monkeypatch):
+    from test_character_precision import generated
+    f=precision;w=generated(f);f.app.state.image_studio=f.images
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        context=browser_context(browser,origin);page=context.new_page();attempts=[]
+        def fail(route):
+            attempts.append(route.request.url)
+            route.fulfill(status=503,content_type='application/json',body='{"detail":"synthetic confirmation failure"}')
+        page.route('**/character-precision/*/confirm',fail)
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        panel=page.get_by_role('region',name='정밀 제작',exact=True)
+        panel.get_by_role('button',name='확정하고 다음 장면',exact=True).click()
+        expect(panel.get_by_role('alert')).to_be_visible()
+        expect(panel.get_by_role('button',name='확정하고 다음 장면',exact=True)).to_be_enabled()
+        expect(panel.locator('.precision-selected img')).to_have_attribute('alt','장면 1')
+        assert len(attempts)==1 and f.s.read(w['id'])==w
+        assert len(f.adapter.calls)==5 and not f.video.sent
+        context.close()
+
+
+
+
+def test_precision_double_click_does_not_confirm_next_scene(precision,browser,monkeypatch):
+    from test_character_precision import generated
+    f=precision;w=generated(f);f.app.state.image_studio=f.images
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
+    with local_server(f.app) as origin:
+        context=browser_context(browser,origin);page=context.new_page();requests=[]
+        page.on('request',lambda r:requests.append(r.url) if r.method=='POST' and r.url.endswith('/confirm') else None)
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        panel=page.get_by_role('region',name='정밀 제작',exact=True)
+        panel.get_by_role('button',name='확정하고 다음 장면',exact=True).dblclick()
+        expect(panel.locator('.precision-selected img')).to_have_attribute('alt','장면 2')
+        expect(panel.get_by_role('status')).to_contain_text('1장 확정')
+        assert len(requests)==1
+        assert sum(bool(row['confirmed']) for row in f.s.read(w['id'])['scenes'])==1
+        assert len(f.adapter.calls)==5 and not f.video.sent
         context.close()
