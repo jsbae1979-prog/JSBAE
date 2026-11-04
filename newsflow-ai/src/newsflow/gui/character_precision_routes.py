@@ -72,8 +72,9 @@ def story(request:Request,identifier:str,revision:int=Form(ge=1),consent:bool=Fo
     return perform(lambda:service(request).write_story(identifier,revision,consent))
 
 @router.post('/api/studio/character-precision/{identifier}/edit')
-def edit(request:Request,identifier:str,revision:int=Form(ge=1),scenario:str=Form(max_length=60000)):
-    return perform(lambda:service(request).edit(identifier,revision,json.loads(scenario)))
+def edit(request:Request,identifier:str,revision:int=Form(ge=1),scenario:str=Form(max_length=60000),
+         image_limit:str|None=Form(None,max_length=32)):
+    return perform(lambda:service(request).edit(identifier,revision,json.loads(scenario),image_limit))
 
 @router.post('/api/studio/character-precision/{identifier}/quote')
 def quote(request:Request,identifier:str,revision:int=Form(ge=1),numbers:str=Form(max_length=80),regenerate:bool=Form(False)):

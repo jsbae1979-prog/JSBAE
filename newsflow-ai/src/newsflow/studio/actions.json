@@ -6635,6 +6635,14 @@
         "default": null,
         "path": false,
         "max_length": 60000
+      },
+      {
+        "name": "image_limit",
+        "type": "text",
+        "required": false,
+        "default": null,
+        "path": false,
+        "max_length": 32
       }
     ],
     "source": "gui/character_precision_routes.py"

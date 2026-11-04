@@ -17,6 +17,8 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const [common,setCommon]=useState(blank),[cast,setCast]=useState<string[]>([]),[outfits,setOutfits]=useState<Record<string,string>>({});
   const [image,setImage]=useState<Item>({}),[video,setVideo]=useState<Item>({});
   const [imageLimit,setImageLimit]=useState(''),[videoLimit,setVideoLimit]=useState('');
+  const [savedImageLimit,setSavedImageLimit]=useState('');
+  useEffect(()=>{setSavedImageLimit(String(work?.image_limit??''));},[work?.id,work?.revision]);
   const [busy,setBusy]=useState(''),[error,setError]=useState(''),[approval,setApproval]=useState<'story'|'images'|null>(null);
   const [picked,setPicked]=useState<number[]>([]),[versions,setVersions]=useState<Record<number,number>>({});
   const [budgetOpen,setBudgetOpen]=useState(false),[editing,setEditing]=useState<Item|null>(null);
@@ -219,7 +221,10 @@ export default function CharacterPrecision({c}:{c:Controller}) {
           missing.length?<button className="primary" disabled={locked} onClick={()=>void act('quote',{numbers:JSON.stringify(missing.map(s=>s.plan.no))})}>장면 이미지 만들기</button>:
           <p className="precision-hint">{rows.length?'아래에서 장면 이미지를 확인하세요.':'스토리를 먼저 만들어 주세요.'}</p>}
         <details><summary>저장된 모델·예산</summary><p>이미지 {work.selection.model} · {work.selection.quality}</p>
-          <p>이미지 US${work.image_limit} / 스토리·영상 US${work.video_limit}</p></details>
+          <p>이미지 US${work.image_limit} / 스토리·영상 US${work.video_limit}</p>
+          {work.scenario&&!work.video_job_id&&<div className="precision-pair"><label>이번 작품 이미지 예산(USD)<input type="number" min="0.000001" step="0.000001" disabled={locked} value={savedImageLimit} onChange={e=>setSavedImageLimit(e.target.value)}/></label>
+            <button disabled={locked||!(Number(savedImageLimit)>0)||Number(savedImageLimit)===Number(work.image_limit)} onClick={()=>void act('edit',{scenario:JSON.stringify(work.scenario),image_limit:savedImageLimit})}>이미지 예산 저장</button></div>}
+          <small>설정의 요청당 한도도 적용됩니다. 예산 변경으로 이미지를 생성하지 않습니다.</small></details>
       </section>
       </div></details><div className="precision-progress" role="status" aria-live="polite"><strong>{work.common.title} · {stateName[work.state]??work.state}</strong>
       <span>{completed}/{rows.length||work.common.scene_count}장 완료 · {rows.filter(s=>s.confirmed).length}장 확정</span>

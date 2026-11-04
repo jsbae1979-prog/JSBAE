@@ -116,9 +116,19 @@ class PrecisionService:
         w.pop('quote',None)
         self.save(w)
 
-    def edit(self,identifier,revision,scenario):
+    def edit(self,identifier,revision,scenario,image_limit=None):
         with self.lock():
-            w=self.read(identifier);self.editable(w,revision);self.set_scenario(w,scenario)
+            w=self.read(identifier);self.editable(w,revision)
+            if image_limit is not None:
+                limit=positive(image_limit)
+                exposure=sum(max(Decimal(v['reserve_usd']),Decimal(v.get('observed_usd') or '0'))
+                    for s in w['scenes'] for v in s['versions'])
+                if limit<exposure: raise ValueError('기존 요청의 예약 비용보다 낮출 수 없습니다.')
+                if limit!=positive(w['image_limit']):
+                    w['events'].append({'at':stamp(),'kind':'image_budget_changed',
+                        'before':w['image_limit'],'after':str(limit)})
+                    w['image_limit']=str(limit)
+            self.set_scenario(w,scenario)
             return w
 
     def write_story(self,identifier,revision,consent=False):
