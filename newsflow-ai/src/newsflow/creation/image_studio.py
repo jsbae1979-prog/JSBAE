@@ -156,17 +156,22 @@ class ImageStudio:
                 continue
         return result
 
-    def create(self, prompt, selection, *, reference=b''):
+    def create(self, prompt, selection, *, reference=b'', references=None):
         prompt = prompt.strip()
-        if not 1 <= len(prompt) <= 4000 or any(ord(c) < 32 and c not in '\n\r\t' for c in prompt):
+        if not 1 <= len(prompt) <= (12000 if references is not None else 4000) or any(ord(c) < 32 and c not in '\n\r\t' for c in prompt):
             raise PublishingError('이미지 지시문은 1~4,000자로 입력하세요.')
         if re.search(r'\bsk-[A-Za-z0-9_-]{16,}', prompt):
             raise PublishingError('비밀정보를 지시문에 입력하지 마세요.')
         frozen = snapshot('image', selection)
+        if references is not None:
+            from newsflow.publishing.image_reference import checked_references
+            if reference: raise PublishingError('참조 입력을 중복 지정할 수 없습니다.')
+            checked_references(references, selection['model'])
+        reference_names = [self.asset_bytes(raw) for raw in references] if references is not None else []
         reference_name = self.asset_bytes(reference) if reference else None
         with self.sessions.begin() as session:
             row = IntelligenceRun(kind='image_draft', status='saved', provider='openai',
-                options={'selection': frozen, 'reference': reference_name}, evidence={},
+                options={'selection': frozen, 'reference': reference_name, **({'references':reference_names} if references is not None else {})}, evidence={},
                 result={'prompt': prompt}, message='로컬 초안 저장 · 생성 승인 전')
             session.add(row)
             session.flush()
@@ -190,6 +195,8 @@ class ImageStudio:
             raise PublishingError('지시문을 검토하고 외부 전송·유료 이미지 1회 생성에 동의하세요.')
         row = self.get(identifier)
         reference = self.asset(row.options['reference']).read_bytes() if row.options.get('reference') else None
+        if row.options.get('references'):
+            reference = [self.asset(name).read_bytes() for name in row.options['references']]
         selection = row.options['selection']
         return self.generation._generate(None, None, None, 'studio',
             {'image_studio_draft': identifier}, row.result['prompt'], draft_id=identifier, execution=selection,

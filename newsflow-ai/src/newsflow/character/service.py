@@ -176,7 +176,7 @@ class CharacterService:
         if job.get('studio_selection'):
             from .kling import KlingClient, check
             if self.video_keys is None: raise CharacterError('provider')
-            return KlingClient(self.video_keys.key, check(job['studio_selection']))
+            return KlingClient(self.video_keys.key, check(job['studio_selection']), precise=bool(job.get('precision')))
         from newsflow.creation.catalog import check_snapshot
         chosen = check_snapshot(job['selection'], 'character')
         if chosen['credential_source'] == 'legacy_env':
@@ -231,7 +231,7 @@ class CharacterService:
     @staticmethod
     def plan_hash(job):
         return fingerprint({k:job[k] for k in ['topic','model','claude_model','character','script','prompts',
-                                               'episode_limit','day_limit','reference_sha256'] + (['selection'] if 'selection' in job else []) + (['studio_selection'] if 'studio_selection' in job else []) + (['continuity_policy'] if 'continuity_policy' in job else [])})
+                                               'episode_limit','day_limit','reference_sha256'] + (['selection'] if 'selection' in job else []) + (['studio_selection'] if 'studio_selection' in job else []) + (['continuity_policy'] if 'continuity_policy' in job else []) + (['precision'] if 'precision' in job else [])})
 
     def save(self, job):
         path = self.folder(job['id'])/'jobs.json'
@@ -1023,7 +1023,7 @@ class CharacterService:
                     from .kling import check
                     from .episode_story import parse_script
                     output=compose_studio(attempt,parse_script(job['script']),clips,
-                                          settings=check(job['studio_selection']),**tools)
+                                          settings=check(job['studio_selection']),**({'precise':True} if job.get('precision') else {}),**tools)
                 else:
                     output=self.composer(attempt,Storyboard.model_validate(job['script']),clips,sfx_root=self.root/'sfx',**tools)
                 review={'title':job['script']['title'],'output':output,'model':job['model'],'made_for_kids':job.get('made_for_kids'),

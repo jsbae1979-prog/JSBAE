@@ -1,3 +1,4 @@
+import CharacterPrecision from "./CharacterPrecision";
 import {useSceneProgress} from "./useSceneProgress";
 import {SavedStoryReview} from './SavedStoryReview';
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -485,7 +486,7 @@ const defaultSettings: Settings = {
 const stamp = (n: number) =>
   `${Math.floor(Math.round(n) / 60)}:${String(Math.round(n) % 60).padStart(2, "0")}`;
 
-export default function CharacterStudio({ c }: { c: Controller }) {
+function FastCharacterStudio({ c }: { c: Controller }) {
   const [id, setId] = useState(() => {
       const query = new URLSearchParams(window.location.search);
       if (!query.has("job_id")) return "";
@@ -1769,7 +1770,7 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                   </header>
                   <fieldset
                     className="kling-five-settings"
-                    disabled={isBusy || settingsFrozen || !ready}
+                    disabled={isBusy || settingsFrozen || !ready || !!job?.precisionWorkId}
                   >
                     <CapabilitySelect
                       label="영상 모델"
@@ -1788,12 +1789,12 @@ export default function CharacterStudio({ c }: { c: Controller }) {
                       onChange={changeDuration}
                       disabled={isBusy || settingsFrozen || legacyStoryTiming || (job?.automation_version === 1 && !!story)}
                       values={Object.fromEntries(
-                        (caps?.totalDurationChoices ?? Array.from({ length: 10 }, (_, i) => 15 + i * 5)).map(
+                        (job?.precisionWorkId ? [settings.duration] : caps?.totalDurationChoices ?? Array.from({ length: 10 }, (_, i) => 15 + i * 5)).map(
                           (total: number) => [String(total), `${total}초`],
                         ),
                       )}
                       supported={
-                        (caps?.totalDurationChoices ?? Array.from({ length: 10 }, (_, i) => 15 + i * 5)).map(String)
+                        (job?.precisionWorkId ? [settings.duration] : caps?.totalDurationChoices ?? Array.from({ length: 10 }, (_, i) => 15 + i * 5)).map(String)
                       }
                       unsupportedHint="이 모델은 전체 길이에 필요한 장면 길이를 지원하지 않아요."
                       hint={
@@ -2344,4 +2345,13 @@ export default function CharacterStudio({ c }: { c: Controller }) {
       </div>
     </>
   );
+}
+
+export default function CharacterStudio({c}:{c:Controller}) {
+  const [mode,setMode]=useState(()=>new URLSearchParams(location.search).has('precision')?'precision':'fast');
+  return <><nav className="precision-mode-switch" aria-label="제작 방식">
+    <button aria-pressed={mode==='fast'} onClick={()=>setMode('fast')}>빠른 제작</button>
+    <button aria-pressed={mode==='precision'} onClick={()=>setMode('precision')}>정밀 제작 · 장면 이미지 먼저 만들기</button>
+  </nav><div hidden={mode!=='fast'}><FastCharacterStudio c={c}/></div>
+  {mode==='precision'&&<CharacterPrecision c={c}/>}</>;
 }

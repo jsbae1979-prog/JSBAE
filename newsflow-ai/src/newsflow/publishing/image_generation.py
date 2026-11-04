@@ -333,14 +333,16 @@ class ImageGenerationService:
                 raise PublishingError("이미지 모델 제공자를 확인하세요.")
         model = selected["model"] if selected else MODEL if provider == "openai" else "codex-default"
         if reference is not None:
-            from .image_reference import checked_reference
-            checked_reference(reference)
+            from .image_reference import checked_references
+            checked_references(reference, model)
             if provider != "openai" or not selected:
                 raise PublishingError("참조 이미지 생성 모델을 선택하세요.")
         adapter = self.adapter if provider == "openai" else self.codex_adapter
         digest = hashlib.sha256((model + prompt + (json.dumps([execution, draft_id], sort_keys=True) if execution else "")).encode()).hexdigest()
         if reference is not None:
-            digest = hashlib.sha256((digest + hashlib.sha256(reference).hexdigest()).encode()).hexdigest()
+            refs = list(reference) if isinstance(reference,(list,tuple)) else [reference]
+            for item in refs:
+                digest = hashlib.sha256((digest + hashlib.sha256(item).hexdigest()).encode()).hexdigest()
         # AppSetting's existing 50-character primary key is an atomic durable claim.
         claim = "feed-image:" + digest[:39]
         try:

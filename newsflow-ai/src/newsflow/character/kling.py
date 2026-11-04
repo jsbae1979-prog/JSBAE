@@ -46,14 +46,14 @@ def as_generation(value,seconds=None):
     return GenerationSettings(value['video_model'],value['aspect_ratio'],quality,
                               value['clip_seconds'] if seconds is None else seconds,value['style'],value['sound']=='on')
 
-def validate(value):
+def validate(value, *, exact_duration=False):
     if not isinstance(value,dict) or set(value)!=set(DEFAULTS):raise CharacterError()
     v=dict(value)
     try:
         issues=validate_generation(as_generation(v))
         if (issues or v['style']!=CHARACTER['style_id'] or v['aspect_ratio']!=CHARACTER['aspect_ratio']
                 or v['output_quality'] not in OUTPUTS or v['sound'] not in {'on','off'}
-                or type(v['duration']) is not int or not 15<=v['duration']<=60 or v['duration']%5
+                or type(v['duration']) is not int or not 15<=v['duration']<=60 or (v['duration']%5 and not exact_duration)
                 or v['script_model'] not in tuple(API_MODELS['claude_api'])+tuple(API_MODELS['openai'])):raise ValueError
     except (ValueError,KeyError,TypeError,ZeroDivisionError):raise CharacterError() from None
     return v
@@ -77,13 +77,13 @@ def field_errors(value):
 def fingerprint(value):
     return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
-def snapshot(value):
-    result={'version': 2, **validate(value), 'checked_on':'2026-10-29'}
+def snapshot(value, *, precise=False):
+    result={'version': 3 if precise else 2, **validate(value,exact_duration=precise), 'checked_on':'2026-10-29'}
     result['fingerprint']=fingerprint(result)
     return result
 
 def check(value):
-    if (not isinstance(value,dict) or value.get('version')!=2
+    if (not isinstance(value,dict) or value.get('version') not in (2,3)
             or value.get('fingerprint') != fingerprint({k:v for k,v in value.items() if k!='fingerprint'})
             or set(value) != set(DEFAULTS)|{'version','checked_on','fingerprint'}):
         raise CharacterError()
@@ -94,7 +94,7 @@ def check(value):
     return selected
 
 def dimensions(value):
-    v=validate(value)
+    v=validate(value,exact_duration=True)
     short={'720p':720,'1080p':1080,'4k':2160}[v['output_quality']]
     return {'9:16':(short,short*16//9), '16:9':(short*16//9,short), '1:1':(short,short)}[v['aspect_ratio']]
 
@@ -142,9 +142,9 @@ def generation_reference(folder:Path, settings):
     return target
 
 class KlingClient(HiggsfieldVideoClient):
-    def __init__(self, credential, settings, **kwargs):
+    def __init__(self, credential, settings, *, precise=False, **kwargs):
         super().__init__(credential, **kwargs)
-        self.settings=validate(settings)
+        self.settings=validate(settings,exact_duration=precise)
         self.model=self.settings['video_model']
 
     def payload(self, prompt, seconds, reference):

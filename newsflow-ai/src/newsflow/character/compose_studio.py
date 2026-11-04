@@ -5,10 +5,10 @@ from .schema import CharacterError
 from newsflow.video.ai.clips import probe_clip, FORMAT_WHITELIST
 from newsflow.video.engine import FFmpegAdapter
 
-def compose_studio(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None):
+def compose_studio(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None, precise=False):
     if getattr(story, 'schema_version', None) == 3:
         from .editing import compose_episode
-        return compose_episode(folder, story, clips, settings=settings, ffmpeg=ffmpeg, ffprobe=ffprobe)
+        return compose_episode(folder, story, clips, settings=settings, ffmpeg=ffmpeg, ffprobe=ffprobe, precise=precise)
     settings=validate(settings)
     total=sum(s.seconds for s in story.scenes)
     if total!=settings['duration']: raise CharacterError('media')

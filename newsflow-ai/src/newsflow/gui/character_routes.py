@@ -27,6 +27,8 @@ def choices(request, reference_asset=''):
 router=APIRouter()
 from .character_automation_routes import router as automation_router
 router.include_router(automation_router)
+from .character_precision_routes import router as precision_router
+router.include_router(precision_router)
 
 
 @router.get('/api/studio/video-models')

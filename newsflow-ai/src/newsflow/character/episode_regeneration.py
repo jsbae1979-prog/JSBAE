@@ -69,12 +69,15 @@ class RegenerationFlow:
             story = self.flow.validate(job, job['script'])
             chosen = check(job['studio_selection'])
             from .episode_policy import job_story_format
-            planned = {row['position']: row for row in prompts(story, chosen, job['character'], job_story_format(job))}
+            planned = {row['position']: row for row in (job['prompts'] if job.get('precision') else prompts(story, chosen, job['character'], job_story_format(job)))}
             video = s.video_for(job)
-            public = video.upload_reference(generation_reference(folder, chosen))
+            public = None if job.get('precision') else video.upload_reference(generation_reference(folder, chosen))
             items = []
             for number in affected:
                 old, plan = job['scenes'][number - 1], planned[number]
+                if job.get('precision'):
+                    from .precision_video import reference_path
+                    public = video.upload_reference(reference_path(s, job, number))
                 payload = video.payload(plan['prompt'], plan['seconds'], public)
                 waiting, dependency = False, None
                 if plan['continuity'] == 'continue':

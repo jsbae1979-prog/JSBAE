@@ -91,7 +91,9 @@ def test_registry_preserves_every_original_post_route_and_no_write_proxy():
         if path.startswith('/api/studio/'):
             continue
         assert any(action['source']=='gui/'+file and (action['path']==path or '{action}' in path and action['path'].startswith(path.split('{action}')[0])) for action in registry),(file,path)
-    assert all('/api/studio/' not in action['path'] for action in registry)
+    assert all('/api/studio/' not in action['path'] or (action['source']=='gui/character_precision_routes.py' and action['path'].startswith('/api/studio/character-precision/')) for action in registry)
+    precision_paths={path for file,path in found if file=='character_precision_routes.py'}
+    assert precision_paths=={a['path'] for a in registry if a.get('source')=='gui/character_precision_routes.py'}
     studio=(root/'src/newsflow/studio/read_models.py').read_text(encoding='utf-8')
     assert '@router.post' not in studio
     assert '/schedules' in {x['path'] for x in registry} and '/schedule' not in {x['path'] for x in registry}

@@ -6547,5 +6547,272 @@
         "path": false
       }
     ]
+  },
+  {
+    "id": "character_precision_create",
+    "module": "characters",
+    "label": "작품 저장",
+    "path": "/api/studio/character-precision/create",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "payload",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 20000
+      },
+      {
+        "name": "request_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 32
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
+  },
+  {
+    "id": "character_precision_story",
+    "module": "characters",
+    "label": "정밀 스토리 생성",
+    "path": "/api/studio/character-precision/{identifier}/story",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true,
+        "max_length": 32
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "consent",
+        "type": "checkbox",
+        "required": false,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
+  },
+  {
+    "id": "character_precision_edit",
+    "module": "characters",
+    "label": "정밀 장면 수정",
+    "path": "/api/studio/character-precision/{identifier}/edit",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true,
+        "max_length": 32
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "scenario",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 60000
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
+  },
+  {
+    "id": "character_precision_quote",
+    "module": "characters",
+    "label": "장면 이미지 예산 확인",
+    "path": "/api/studio/character-precision/{identifier}/quote",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true,
+        "max_length": 32
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "numbers",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 80
+      },
+      {
+        "name": "regenerate",
+        "type": "checkbox",
+        "required": false,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
+  },
+  {
+    "id": "character_precision_generate",
+    "module": "characters",
+    "label": "장면 이미지 생성",
+    "path": "/api/studio/character-precision/{identifier}/generate",
+    "risk": "external",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true,
+        "max_length": 32
+      },
+      {
+        "name": "quote_hash",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "max_length": 64
+      },
+      {
+        "name": "consent",
+        "type": "checkbox",
+        "required": false,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "reference_consent",
+        "type": "checkbox",
+        "required": false,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
+  },
+  {
+    "id": "character_precision_confirm",
+    "module": "characters",
+    "label": "장면 이미지 확정",
+    "path": "/api/studio/character-precision/{identifier}/confirm",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true,
+        "max_length": 32
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "number",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "version",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "checkbox",
+        "required": false,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
+  },
+  {
+    "id": "character_precision_handoff",
+    "module": "characters",
+    "label": "확정 이미지 영상 전달",
+    "path": "/api/studio/character-precision/{identifier}/handoff",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true,
+        "max_length": 32
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
+  },
+  {
+    "id": "character_precision_reconcile",
+    "module": "characters",
+    "label": "장면 저장 결과 확인",
+    "path": "/api/studio/character-precision/{identifier}/reconcile",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true,
+        "max_length": 32
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
   }
 ]

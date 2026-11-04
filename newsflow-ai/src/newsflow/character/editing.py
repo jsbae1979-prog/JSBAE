@@ -27,11 +27,11 @@ from .episode_policy import (
 )
 
 
-def edit_timeline(story, target_seconds, presets=None):
+def edit_timeline(story, target_seconds, presets=None, *, precise=False):
     """Quantize at 30 fps; preserve natural timing for newly accepted boundary cases."""
     presets = presets or load_edit_presets()
     scenes = _get(story, 'scenes', [])
-    if type(target_seconds) is not int or target_seconds not in range(15, 61, 5) or not scenes:
+    if type(target_seconds) is not int or target_seconds not in range(15, 61, 1 if precise else 5) or not scenes:
         raise CharacterError('media')
     total = total_playback_seconds(story, presets)
     from .episode_policy import valid_playback_seconds
@@ -159,12 +159,12 @@ def audio_join_filters(timeline, crossfade):
     return filters, previous
 
 
-def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None):
+def compose_episode(folder, story, clips, *, settings, ffmpeg=None, ffprobe=None, precise=False):
     """Edit reviewed v3 clips without any external calls or additional speech."""
     presets, effects = load_edit_presets(), load_sfx_map()
     scenes, target = _get(story, 'scenes'), settings.get('duration')
     requested_target=target
-    timeline = edit_timeline(story, target, presets)
+    timeline = edit_timeline(story, target, presets, precise=precise)
     target=round(sum(row['seconds'] for row in timeline),6)
     if (len(clips) != len(scenes) or settings.get('aspect_ratio') != '9:16'
             or settings.get('sound') not in {'on', 'off'}):

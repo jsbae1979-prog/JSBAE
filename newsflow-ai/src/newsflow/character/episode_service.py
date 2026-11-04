@@ -117,6 +117,9 @@ class EpisodeFlow:
             return identifier, True
 
     def validate(self, job, value):
+        if job.get('precision'):
+            from .precision_video import validate
+            return validate(job,value)
         chosen = check(job['studio_selection'])
         model = CATALOG.model(chosen['video_model'])
         if not model:
@@ -245,7 +248,7 @@ class EpisodeFlow:
         s = self.owner
         with s.lock():
             job = s.read(identifier)
-            if job.get('direct_video') or job['state'] not in {'script_review', 'quoted'} or job.get('quote_approvals') or expected_hash != fp(job['script']):
+            if job.get('precision') or job.get('direct_video') or job['state'] not in {'script_review', 'quoted'} or job.get('quote_approvals') or expected_hash != fp(job['script']):
                 raise CharacterError('blocked')
             story = self.validate(job, script)
             if job.get('scenes'):
@@ -271,7 +274,9 @@ class EpisodeFlow:
                 raise CharacterError('blocked')
             story = self.validate(job, job['script'])
             chosen = check(job['studio_selection'])
-            if job.get('direct_video'):
+            if job.get('precision'):
+                planned = job['prompts']
+            elif job.get('direct_video'):
                 from .direct_video import prompts as direct_prompts
                 planned=direct_prompts(story,chosen,job['character'])
             else:planned = prompts(story, chosen, job['character'], job_story_format(job), job.get('continuity_policy'))
@@ -282,10 +287,15 @@ class EpisodeFlow:
             s.save(job)
             try:
                 video = s.video_for(job)
-                path = generation_reference(folder, chosen)
-                public = video.upload_reference(path)
+                public = None
+                if not job.get('precision'):
+                    path = generation_reference(folder, chosen)
+                    public = video.upload_reference(path)
                 scenes = []
                 for row in planned:
+                    if job.get('precision'):
+                        from .precision_video import reference_path
+                        public = video.upload_reference(reference_path(s,job,row['position']))
                     payload = video.payload(row['prompt'], row['seconds'], public)
                     if row['continuity'] == 'continue':
                         payload = self.with_start(job, payload, public)
@@ -521,6 +531,7 @@ class EpisodeFlow:
             s.save(job)
 
     def update_settings(self, identifier, settings, episode_limit):
+        if self.owner.read(identifier).get('precision'): raise CharacterError('blocked')
         s = self.owner
         frozen = snapshot(settings)
         with s.lock():
