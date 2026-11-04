@@ -6799,6 +6799,40 @@
     "source": "gui/character_precision_routes.py"
   },
   {
+    "id": "character_precision_revise_connection",
+    "module": "characters",
+    "label": "장면 연결 보완 초안",
+    "path": "/api/studio/character-precision/{identifier}/revise-connection",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true,
+        "max_length": 32
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "request_id",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": false,
+        "min_length": 32,
+        "max_length": 32
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
+  },
+  {
     "id": "character_precision_reconcile",
     "module": "characters",
     "label": "장면 저장 결과 확인",

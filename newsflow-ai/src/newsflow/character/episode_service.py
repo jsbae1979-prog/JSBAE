@@ -403,7 +403,7 @@ class EpisodeFlow:
             binary = str(FFmpegAdapter.executable('ffmpeg', s.ffmpeg))
             # Direct and new story continuity use the actual final decoded frame. Decode only
             # the final second, reverse that bounded tail and take its first frame.
-            exact_end = job.get('direct_video') or job.get('continuity_policy') == 'single_incident_v2'
+            exact_end = job.get('direct_video') or job.get('continuity_policy') in {'single_incident_v2', 'precision-continuity-v2'}
             tail = ['-sseof', '-1'] if exact_end else ['-sseof', '-0.1']
             filters = ['-vf', 'reverse'] if exact_end else []
             run([binary, '-nostdin', '-n', '-v', 'error', '-protocol_whitelist', 'file',

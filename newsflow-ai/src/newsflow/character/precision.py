@@ -13,7 +13,7 @@ from PIL import Image
 
 from .registry import atomic_json, safe_path, safe_text
 from .precision_contract import (WorkSettings, PrecisionScenario, INSTRUCTION, PROMPT_VERSION,
-    validate_scenario, validate_work_timing, image_prompt, motion_rows, story_input)
+    validate_scenario, validate_work_timing, image_prompt, motion_rows, story_input, CONTINUITY_POLICY)
 from .schema import CharacterError
 from .service import fingerprint
 from newsflow.creation.catalog import validate as image_selection
@@ -90,7 +90,7 @@ class PrecisionService:
                     return old
             w={'id':uuid4().hex,'schema_version':1,'mode':'precision','state':'needs_story','revision':1,
                'request_id':request_id,'body_hash':identity,'created_at':stamp(),'scenario':None,'scenes':[],
-               'story_attempts':[],'events':[],'prompt_version':PROMPT_VERSION,**payload}
+               'story_attempts':[],'events':[],'prompt_version':PROMPT_VERSION,'continuity_policy':CONTINUITY_POLICY,**payload}
             self.save(w)
             return w
 
@@ -101,9 +101,9 @@ class PrecisionService:
     def set_scenario(self,w,value):
         from .kling import check
         model=CATALOG.model(check(w['video_settings'])['video_model'])
-        value=validate_scenario(w['common'],w['cast'],value,model)
+        value=validate_scenario(w['common'],w['cast'],value,model,w.get('continuity_policy'))
         # Freeze all prospective video prompts before any image can incur cost.
-        motion_rows(w['common'],w['cast'],value['scenes'],check(w['video_settings']))
+        motion_rows(w['common'],w['cast'],value['scenes'],check(w['video_settings']),w.get('continuity_policy'))
         previous={s['plan']['no']:s for s in w['scenes']}
         rows=[]
         for plan in value['scenes']:
@@ -198,6 +198,9 @@ class PrecisionService:
     def quote(self,identifier,revision,numbers,regenerate=False):
         with self.lock():
             w=self.read(identifier);self.editable(w,revision)
+            if w.get('continuity_policy')==CONTINUITY_POLICY:
+                from .kling import check
+                validate_scenario(w['common'],w['cast'],w['scenario'],CATALOG.model(check(w['video_settings'])['video_model']),CONTINUITY_POLICY)
             rows=self.selected_rows(w,numbers)
             if any(s['versions'] and not regenerate for s in rows): raise ValueError('선택 장면 재생성을 사용하세요.')
             if any(v['state'] in {'requesting','unknown'} for s in rows for v in s['versions']):
@@ -311,3 +314,38 @@ class PrecisionService:
             self.editable(w,revision)
             job=handoff(self,w)
             w.update(video_job_id=job,state='video_ready',revision=w['revision']+1);self.save(w);return w
+
+    def revise_connection(self,identifier,revision,request_id):
+        if not re.fullmatch('[a-f0-9]{32}',request_id or ''): raise ValueError('요청 식별자를 확인하세요.')
+        with self.lock():
+            source=self.read(identifier)
+            for item in self.listing():
+                old=self.read(item['id'])
+                if old.get('revision_request_id')==request_id:
+                    if old.get('source_work_id')!=identifier or old.get('source_revision')!=revision:
+                        raise ValueError('이미 사용한 요청입니다.')
+                    return old
+            if source['revision']!=revision or source['state'] in {'writing','generating'} or not source.get('scenario'):
+                raise ValueError('원본 작업 상태를 확인하세요.')
+            if any(v['state'] in {'requesting','unknown'} for row in source['scenes'] for v in row['versions']):
+                raise ValueError('결과가 불명확한 이미지 요청을 먼저 확인하세요.')
+            # Do not offer a route around an unresolved paid video request.
+            if source.get('video_job_id'):
+                video=self.characters.read(source['video_job_id'])
+                if video['state'] not in {'clips_review','completed'} or len(video['scenes'])!=len(source['scenes']) or any(row['state']!='downloaded' for row in video['scenes']):
+                    raise ValueError('영상 요청이 완료된 뒤 연결 보완 초안을 만드세요.')
+            draft={k:deepcopy(source[k]) for k in ('common','cast','selection','video_settings','image_limit','video_limit')}
+            draft.update(id=uuid4().hex,schema_version=1,mode='precision',state='connection_review',revision=1,
+                request_id=request_id,revision_request_id=request_id,source_work_id=identifier,source_revision=revision,
+                created_at=stamp(),prompt_version=PROMPT_VERSION,continuity_policy=CONTINUITY_POLICY,
+                scenario=deepcopy(source['scenario']),scenes=[],story_attempts=[],events=[])
+            # Archive the old assets as references, never pretend they were generated for a changed plan.
+            draft['reference_history']=deepcopy(source['scenes'])
+            for row in source['scenes']:
+                plan=deepcopy(row['plan'])
+                draft['scenes'].append({'plan':plan,'prompt':row['prompt'],'versions':[],
+                    'confirmed':None,'selected':None,'state':'pending'})
+            draft['body_hash']=fingerprint(draft['scenario'])
+            draft['events'].append({'kind':'connection_revision_created','at':stamp(),'source_work_id':identifier})
+            self.save(draft)
+            return draft

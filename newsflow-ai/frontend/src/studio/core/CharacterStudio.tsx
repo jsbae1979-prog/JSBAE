@@ -1648,7 +1648,7 @@ function FastCharacterStudio({ c }: { c: Controller }) {
               topic={topic} onTopic={setTopic} csrf={c.view?.csrfToken ?? ""} disabled={isBusy} refreshKey={`${job?.id ?? ""}:${job?.state ?? ""}:${job?.script_hash ?? ""}`}
                 />
             </>}
-            {job?.precisionWorkId && <p role="status">확정한 장면 이미지 {scenes.length}장을 각 영상의 시작 이미지로 사용합니다.</p>}
+            {job?.precisionWorkId && <p role="status">{job.precisionConnected ? '이어지는 장면은 이전 영상의 마지막 화면으로 연결합니다. 장면 이미지는 구도 검토에 사용합니다.' : `확정한 장면 이미지 ${scenes.length}장을 각각 사용한 기존 작업입니다.`}</p>}
             {!ready && (
               <p role="status">
                 새 제작실 API 연결 확인 전 · 생성할 수 없습니다.

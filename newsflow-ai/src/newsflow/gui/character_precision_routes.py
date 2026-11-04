@@ -97,3 +97,7 @@ def confirm(request:Request,identifier:str,revision:int=Form(ge=1),number:int=Fo
 @router.post('/api/studio/character-precision/{identifier}/handoff')
 def handoff(request:Request,identifier:str,revision:int=Form(ge=1)):
     return perform(lambda:service(request).handoff(identifier,revision))
+
+@router.post('/api/studio/character-precision/{identifier}/revise-connection')
+def revise_connection(request:Request,identifier:str,revision:int=Form(ge=1),request_id:str=Form(min_length=32,max_length=32)):
+    return perform(lambda:service(request).revise_connection(identifier,revision,request_id))

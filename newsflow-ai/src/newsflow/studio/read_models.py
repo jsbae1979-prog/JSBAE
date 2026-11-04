@@ -318,6 +318,7 @@ def character_rows(state):
             item['playback_seconds'] = total_playback_seconds(parsed, load_edit_presets())
             item['editTimeline'] = edit_timeline(parsed, job['duration'], precise=bool(job.get('precision')))
             item['precisionWorkId'] = job.get('precision', {}).get('work_id')
+            item['precisionConnected'] = job.get('continuity_policy') == 'precision-continuity-v2'
             item['sfx_keys'] = list(load_sfx_map())
             item['characterProfile'] = None if job.get('character_reference_mode')=='image_topic' else job.get('character', {})
             item['referenceMode'] = job.get('character_reference_mode', 'registered')

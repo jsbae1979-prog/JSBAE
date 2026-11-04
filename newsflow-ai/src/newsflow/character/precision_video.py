@@ -2,7 +2,7 @@
 from copy import deepcopy
 from decimal import Decimal
 from .episode_story import EpisodeScript
-from .precision_contract import motion_rows
+from .precision_contract import motion_rows, CONTINUITY_POLICY, validate_connections
 from .kling import check, normalize_reference
 from .service import fingerprint, now
 from .compose import digest
@@ -15,7 +15,14 @@ def validate(job,value):
     model=CATALOG.model(selected['video_model'])
     if not model or sum(s.seconds for s in story.scenes)!=job['duration']:
         raise CharacterError('media')
-    if any(s.seconds not in duration_values(model) or s.continuity!='cut' for s in story.scenes):
+    connected = job.get('continuity_policy') == CONTINUITY_POLICY
+    if connected:
+        plans = job['precision']['plans']
+        validate_connections(plans, model)
+        expected = motion_rows(job['precision']['common'],job['precision']['cast'],plans,selected,CONTINUITY_POLICY)
+        if len(story.scenes)!=len(plans) or job['prompts'] != expected or any((s.no,s.seconds,s.continuity,s.from_scene,s.action,s.camera)!=(p['no'],p['seconds'],p['connection'],p['no']-1 if p['connection']=='continue' else None,p['motion'],p['motion_camera']) for s,p in zip(story.scenes,plans)):
+            raise CharacterError('media')
+    if any(s.seconds not in duration_values(model) or (not connected and s.continuity!='cut') for s in story.scenes):
         raise CharacterError('media')
     if len(job['precision']['images'])!=len(story.scenes): raise CharacterError('media')
     return story
@@ -26,13 +33,14 @@ def handoff(service,w):
     if not scenes or any(s['state']!='confirmed' or not s['confirmed'] for s in scenes):
         raise ValueError('모든 장면 이미지를 먼저 확정하세요.')
     selected=check(w['video_settings'])
-    plan=motion_rows(w['common'],w['cast'],[s['plan'] for s in scenes],selected)
+    plan=motion_rows(w['common'],w['cast'],[s['plan'] for s in scenes],selected,w.get('continuity_policy'))
     script={'schema_version':3,'plan':{'situation':w['common']['topic'],
         'escalation':'장면별 상황 전개','reaction':'캐릭터의 시각적 반응','punchline':'마지막 장면의 반전'},
         'title':w['common']['title'][:60],'hook_caption':'','end_caption':'',
         'upload':{'title':w['common']['title'][:60],'description':w['common']['topic'],
                   'hashtags':['#캐릭터','#쇼츠','#애니메이션']},
-        'scenes':[{'no':s['plan']['no'],'seconds':s['plan']['seconds'],'continuity':'cut',
+        'scenes':[{'no':s['plan']['no'],'seconds':s['plan']['seconds'],'continuity':s['plan']['connection'] if w.get('continuity_policy')==CONTINUITY_POLICY else 'cut',
+                   'from':s['plan']['no']-1 if w.get('continuity_policy')==CONTINUITY_POLICY and s['plan']['connection']=='continue' else None,
                    'action':s['plan']['motion'],'camera':s['plan']['motion_camera'],
                    'sound':s['plan']['sound'],'caption':s['plan']['caption'],'sfx':s['plan'].get('sfx',[])} for s in scenes]}
     script=EpisodeScript.model_validate(script).model_dump(by_alias=True)
@@ -77,6 +85,9 @@ def handoff(service,w):
             'text_costs':[], 'script_hash':fingerprint(script)}
         # Keep text budget reservations visible to the existing video budget guard.
         job['text_reservations']=[{'attempt':i+1,'usd':a.get('reserved_usd','0'),'basis':'reserved_ceiling_not_actual_bill'} for i,a in enumerate(w['story_attempts'])]
+        if w.get('continuity_policy')==CONTINUITY_POLICY:
+            job['continuity_policy']=CONTINUITY_POLICY
+            job['precision']['plans']=[deepcopy(s['plan']) for s in scenes]
         job['plan_hash']=owner.plan_hash(job)
         validate(job,script);owner.save(job)
         return job['id']

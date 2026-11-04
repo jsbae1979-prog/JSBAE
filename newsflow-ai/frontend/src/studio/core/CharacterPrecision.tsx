@@ -3,13 +3,13 @@ import {characterCommand,CharacterModal} from './CharacterAutomation';
 import type {Controller} from './shared';
 import type {Item} from '../contracts';
 import './character-precision.css';
-import {timingIssue,sceneErrors,basicSceneFields,advancedSceneFields,editableScenario} from './precisionValidation';
+import {timingIssue,sceneErrors,basicSceneFields,advancedSceneFields,connectionSceneFields,editableScenario} from './precisionValidation';
 
 const base='/api/studio/character-precision';
 const blank={title:'',topic:'',relationships:'',genre:'대사 없는 코미디',world:'',background:'',props:'',
   style:'3D animation',ratio:'9:16',scene_count:5,duration:20,prohibitions:''};
 const stateName:Record<string,string>={needs_story:'스토리 작성',writing:'스토리 생성 중',story_failed:'스토리 확인 필요',
-  images:'장면 이미지 검토',generating:'이미지 생성 중',video_ready:'영상 제작 준비',pending:'생성 전',
+  connection_review:'장면 연결 검토',images:'장면 이미지 검토',generating:'이미지 생성 중',video_ready:'영상 제작 준비',pending:'생성 전',
   review:'검토 대기',confirmed:'이미지 확정',unknown:'결과 미확인 · 재전송 안 함',failed:'실패',success:'완료',requesting:'요청 중'};
 
 export default function CharacterPrecision({c}:{c:Controller}) {
@@ -81,7 +81,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     outfits:Object.fromEntries(cast.map(id=>[id,outfits[id]??'참조 이미지의 의상·액세서리 유지'])),
     selection:image,video_settings:video,image_limit:imageLimit,video_limit:videoLimit})};}
   function manual(w:Item){openEditor({scenario:{scenes:Array.from({length:w.common.scene_count},(_,i)=>({no:i+1,
-    characters:[Object.keys(w.cast)[0]],description:'',location:'',pose:'',emotion:'',camera:'',props:'',continuity:'',caption:'',
+    characters:[Object.keys(w.cast)[0]],description:'',location:'',pose:'',emotion:'',camera:'',props:'',continuity:'',connection:i?'continue':'cut',set_id:'',environment:'',start_state:'',end_state:'',transition_reason:'',caption:'',
     seconds:Math.floor(w.common.duration/w.common.scene_count)+(i<w.common.duration%w.common.scene_count?1:0),motion:'',motion_camera:'',sound:''}))}},w);}
   async function act(kind:string,values:Record<string,string>={}) {
     if(sending.current||loadingWork!==null)return;
@@ -105,6 +105,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       if(kind==='manual'){manual(target);return;}
       const w=await characterCommand(`${base}/${target.id}/${kind}`,c.view?.csrfToken??'',{revision:String(target.revision),...values});
       remember(w);setApproval(kind==='quote'?'images':null);setPicked([]);setVersions({});setEditing(null);
+      if(kind==='revise-connection')openEditor({scenario:structuredClone(w.scenario)},w);
       if(kind==='confirm'){
         const pending=w.scenes.filter((row:Item)=>!row.confirmed);
         const next=pending.find((row:Item)=>row.plan.no>Number(values.number))??pending[0];
@@ -233,6 +234,8 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       <>{pollError&&<span role="alert">{pollError}</span>}</><progress value={completed} max={rows.length||work.common.scene_count}/></div>
       {rows.length>0&&<section ref={reviewArea} className="precision-review-area"><div className="precision-review-heading"><h3>장면 이미지 검토</h3>
         {allConfirmed&&!work.video_job_id&&<button className="primary" disabled={locked} onClick={()=>void act('handoff')}>영상 제작으로 이동</button>}
+        {work.video_job_id&&<button disabled={!!busy} onClick={()=>void act('revise-connection',{request_id:crypto.randomUUID().replaceAll('-','')})}>연결 보완 초안 · 무료</button>}
+        {work.state==='connection_review'&&<button onClick={()=>openEditor({scenario:structuredClone(work.scenario)})}>장면 연결 검토</button>}
         {work.video_job_id&&<a className="button primary" href={`/studio/characters?job_id=${work.video_job_id}`}>영상 제작 열기</a>}</div>
         <details className="precision-batch"><summary>여러 장면 다시 만들기</summary>
           {rows.map(s=><label className="precision-check" key={s.plan.no}><input type="checkbox" disabled={locked} checked={picked.includes(s.plan.no)} onChange={e=>setPicked(e.target.checked?[...picked,s.plan.no]:picked.filter(x=>x!==s.plan.no))}/>장면 {s.plan.no}</label>)}
@@ -294,6 +297,11 @@ export default function CharacterPrecision({c}:{c:Controller}) {
             onChange={e=>set('characters',e.target.checked?[...s.characters,person.id]:s.characters.filter((id:string)=>id!==person.id))}/>{person.name_ko}</label>;})}
           {issue('characters')&&<p className="precision-field-error">{issue('characters')}</p>}
           {Object.entries(basicSceneFields).map(([key,label])=>field(key,label))}
+          {work?.continuity_policy==='precision-continuity-v2'&&<>
+            <label>장면 연결<select aria-label="장면 연결" value={s.connection??'cut'} onChange={e=>set('connection',e.target.value)}><option value="cut">새 장면 · 의도적인 전환</option><option value="continue" disabled={i===0}>앞 영상의 마지막 화면에서 이어가기</option></select>{issue('connection')&&<small>{issue('connection')}</small>}</label>
+            {Object.entries(connectionSceneFields).filter(([key])=>key!=='transition_reason'||(i>0&&s.connection!=='continue')).map(([key,label])=>field(key,label))}
+            {i>0&&s.connection==='continue'&&<button type="button" onClick={()=>set('start_state',editing.scenario.scenes[i-1].end_state??'')}>앞 장면 끝 상태 가져오기</button>}
+          </>}
           <label>길이(초)<input aria-invalid={!!issue('seconds')} aria-describedby={issue('seconds')?`scene-${s.no}-seconds-error`:undefined} type="number" min={3} max={15} value={s.seconds} onChange={e=>set('seconds',+e.target.value)}/>{issue('seconds')&&<small className="precision-field-error" id={`scene-${s.no}-seconds-error`}>{issue('seconds')}</small>}</label>
         </div><details className="precision-editor-advanced" open={Object.keys(advancedSceneFields).some(key=>!!issue(key))||undefined}><summary>구도·연결·자막·소리 자세히</summary><div className="precision-pair">
           {Object.entries(advancedSceneFields).map(([key,label])=>field(key,label))}

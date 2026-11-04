@@ -12,6 +12,7 @@ export function timingIssue(duration:number,count:number,allowed:number[]):strin
 
 export const basicSceneFields:Record<string,string>={description:'장면 설명',location:'장소',pose:'행동·자세',emotion:'표정·감정'};
 export const advancedSceneFields:Record<string,string>={camera:'이미지 구도',props:'소품·위치',continuity:'이어질 요소',caption:'별도 자막',motion:'영상 동작 · 영어',motion_camera:'영상 카메라 · 영어',sound:'환경음'};
+export const connectionSceneFields:Record<string,string>={set_id:'같은 장소 이름',environment:'날씨·조명·시간',start_state:'장면 시작 상태',end_state:'장면 끝 상태',transition_reason:'장소·시간 전환 이유'};
 export function sceneErrors(scenario:Item,work:Item,allowed:number[]):Record<string,string>{
   const errors:Record<string,string>={},rows:Item[]=scenario.scenes??[];
   if(rows.length!==work.common.scene_count)errors._scenes=`장면은 ${work.common.scene_count}개여야 합니다.`;
@@ -26,6 +27,21 @@ export function sceneErrors(scenario:Item,work:Item,allowed:number[]):Record<str
       if(required.has(key)&&!value.trim())errors[`${prefix}.${key}`]='내용을 입력하세요.';
       else if(Array.from(value).length>max)errors[`${prefix}.${key}`]=`${max}자 이내로 입력하세요.`;
     }
+    if(work.continuity_policy==='precision-continuity-v2'){
+      for(const key of ['set_id','environment','start_state','end_state'])if(!String(s[key]??'').trim())errors[`${prefix}.${key}`]='내용을 입력하세요.';
+      for(const [key,max] of Object.entries({set_id:60,environment:120,start_state:160,end_state:160,transition_reason:160}))if(Array.from(String(s[key]??'')).length>max)errors[`${prefix}.${key}`]=`${max}자 이내로 입력하세요.`;
+      if(!['cut','continue'].includes(s.connection??'cut'))errors[`${prefix}.connection`]='연결 방식을 선택하세요.';
+      if(i===0&&s.connection==='continue')errors[`${prefix}.connection`]='첫 장면은 새 장면으로 시작하세요.';
+      if(i>0){
+        const prev=rows[i-1];
+        if(!String(s.continuity??'').trim())errors[`${prefix}.continuity`]='앞 장면과 이어질 내용을 입력하세요.';
+        if(s.connection==='continue'){
+          for(const key of ['set_id','location','environment'])if(s[key]!==prev[key])errors[`${prefix}.${key}`]='앞 장면과 같은 장소·환경이어야 합니다.';
+          if(JSON.stringify([...(Array.isArray(s.characters)?s.characters:[])].sort())!==JSON.stringify([...(Array.isArray(prev.characters)?prev.characters:[])].sort()))errors[`${prefix}.characters`]='이어지는 장면의 등장인물을 유지하세요.';
+          if(s.start_state!==prev.end_state)errors[`${prefix}.start_state`]='앞 장면의 끝 상태를 이어받으세요.';
+        }else if(!String(s.transition_reason??'').trim())errors[`${prefix}.transition_reason`]='전환 이유를 입력하세요.';
+      }
+    }
     for(const key of ['motion','motion_camera'])if(s[key]&&!/^[^가-힣]*[A-Za-z][^가-힣]*$/.test(s[key]))errors[`${prefix}.${key}`]='영상 지시는 영어로 입력하세요.';
     if(!Number.isInteger(s.seconds)||s.seconds<3||s.seconds>15||!allowed.includes(s.seconds))errors[`${prefix}.seconds`]=`지원 길이: ${allowed.filter(n=>n>=3&&n<=15).join(', ')}초`;
   });
@@ -39,14 +55,14 @@ export function editableScenario(value:unknown,count:number):{scenario:Item;reco
   const source=value&&typeof value==='object'&&!Array.isArray(value)?value as Item:{};
   const rows=Array.isArray(source.scenes)?source.scenes:[];
   if(rows.length>count)return null; // Never silently discard extra provider scenes.
-  const textKeys=[...Object.keys(basicSceneFields),...Object.keys(advancedSceneFields)];
-  const knownKeys=new Set([...textKeys,'no','characters','seconds','sfx']);
+  const textKeys=[...Object.keys(basicSceneFields),...Object.keys(advancedSceneFields),...Object.keys(connectionSceneFields)];
+  const knownKeys=new Set([...textKeys,'no','characters','seconds','sfx','connection']);
   const validEffects=(effects:unknown)=>Array.isArray(effects)&&effects.every(effect=>effect&&typeof effect==='object'&&!Array.isArray(effect)&&typeof effect.key==='string');
   const scenes=Array.from({length:count},(_,i)=>{
     const raw=rows[i],row=raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
     const fields=Object.fromEntries(textKeys
       .map(key=>[key,typeof row[key]==='string'?row[key]:'']));
-    return {...fields,no:i+1,
+    return {...fields,connection:row.connection==='continue'?'continue':'cut',no:i+1,
       characters:Array.isArray(row.characters)&&row.characters.every((id:unknown)=>typeof id==='string')?[...row.characters]:[],
       seconds:typeof row.seconds==='number'?row.seconds:'',
       sfx:validEffects(row.sfx)?structuredClone(row.sfx):[]};
