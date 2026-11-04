@@ -286,7 +286,8 @@ def test_precision_catalog_reuses_only_latest_choices_not_approval(precision,mon
     new['quote']={'consent':True,'account_scope':'fixture-only'}
     for w in (old,new):p.s.path(w['id']).write_text(json.dumps(w),encoding='utf8')
     monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:p.s)
-    view=catalog(None)
+    from starlette.requests import Request
+    view=catalog(Request({'type':'http','method':'GET','path':'/api/studio/character-precision','headers':[]}))
     assert view['works'][0]['id']==new['id']
     reusable=view['recent_settings']
     assert set(reusable)=={'selection','video_settings','image_limit','video_limit'}

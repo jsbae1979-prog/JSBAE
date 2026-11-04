@@ -64,6 +64,8 @@ class _Client:
         if not isinstance(context,dict) or context.get('job_id')!=identifier:_deny()
         index=len(context['payloads'])
         if index>=len(context['planned']):_deny()
+        job=self.scope.local.read(identifier)
+        if job.get('precision') and context.get('reference_position')!=context['planned'][index]['position']:_deny()
         if 'reference' not in context:
             # prepare() can reuse an earlier upload without calling upload_reference.
             # Bind that URL to this job's exact image and current credential first.
@@ -98,11 +100,18 @@ class _Client:
         return result
     def upload_reference(self,path):
         folder=self.scope.local.folder(self.scope.active())
-        if _unlinked(path) not in {folder/'reference.png',folder/'generation-reference.png'}:_deny()
         job=self.scope.local.read(self.scope.active())
         if digest(_unlinked(folder/'reference.png'))!=job['reference_sha256']:_deny()
         context=_PAYLOADS.get()
         if not isinstance(context,dict) or context.get('job_id')!=job['id']:_deny()
+        if job.get('precision'):
+            from newsflow.character.precision_video import reference_path
+            index=len(context['payloads'])
+            if index>=len(context['planned']):_deny()
+            position=context['planned'][index]['position']
+            if context.get('reference_position')==position or _unlinked(path)!=_unlinked(reference_path(self.scope.local,job,position)):_deny()
+            context['reference_position']=position
+        elif _unlinked(path) not in {folder/'reference.png',folder/'generation-reference.png'}:_deny()
         self.scope.claim('upload')
         from newsflow.video.ai.download import safe_url
         public=safe_url(self.original.upload_reference(path))
@@ -166,7 +175,7 @@ class QuoteOnly:
         if action not in {'upload','estimate'}:_deny()
         with FileLock(str(self.local.folder(identifier)/'quote-only.lock'),timeout=0):
             row=self._read(identifier)
-            maximum=1 if action=='upload' else row['planned_estimates']
+            maximum=row.get('planned_uploads',1) if action=='upload' else row['planned_estimates']
             if type(maximum) is not int or maximum<1:_deny()
             if row['state']!='started_or_unknown' or row['calls'].get(action,0)>=maximum:_deny()
             row['calls'][action]=row['calls'].get(action,0)+1
@@ -180,7 +189,7 @@ class QuoteOnly:
                 or job.get('reference_sha256')!=row['reference_sha256']
                 or fingerprint(job.get('script'))!=row['story_sha256']):_deny()
         settings=check(job['studio_selection'])
-        return _Client(self,KlingClient(self.keys.key,settings))
+        return _Client(self,KlingClient(self.keys.key,settings,**({"precise":True} if job.get("precision") else {})))
 
     def prepare(self,identifier,*,consent=False,script_reviewed=False):
         if _REQUEST.get()!=(self,identifier):_deny()
@@ -199,7 +208,8 @@ class QuoteOnly:
             path=self.receipt(identifier,attempt)
             row={'schemaVersion':1,'job_id':identifier,'state':'started_or_unknown','calls':{},
                  'attempt_id':attempt,'plan_sha256':job['plan_hash'],'reference_sha256':job['reference_sha256'],
-                 'story_sha256':fingerprint(job['script']),'planned_estimates':len(rows),'generation_requests':0}
+                 'story_sha256':fingerprint(job['script']),'planned_estimates':len(rows),
+                 'planned_uploads':len(rows) if job.get('precision') else 1,'generation_requests':0}
             with path.open('x',encoding='utf8') as stream:
                 json.dump(row,stream,sort_keys=True);stream.flush();os.fsync(stream.fileno())
         token=_ACTIVE.set((self,identifier,attempt))

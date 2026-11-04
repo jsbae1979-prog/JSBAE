@@ -175,17 +175,21 @@ def test_unknown_response_preserves_reservation_and_is_never_replayed(connected)
         assert row.status == 'unknown' and row.reserved_usd != '0'
 
 
-@pytest.mark.parametrize('verified', [False, True])
-def test_real_budget_missing_or_expired_verification_is_not_bypassed(connected, verified):
+@pytest.mark.parametrize('verification', ['missing', 'future', 'old_valid'])
+def test_real_budget_verification_follows_saved_authentication_policy(connected, verification):
     c = connected
     c.connection.authoring.budget = APIBudgetService(c.sessions)
-    if verified:
+    if verification != 'missing':
         with c.sessions.begin() as session:
             _set(session, 'api_claude_api_verified_model', 'claude-sonnet-4-6')
-            _set(session, 'api_claude_api_authentication_verified_at', (utcnow()-timedelta(hours=25)).isoformat())
-    assert c.post(m.ANALYZE, asset=c.gui.asset, model='claude-sonnet-4-6', request_id='unverified',
-                  consent='true').status_code == 409
-    assert not c.state.calls and not c.state.decryptions
+            _set(session, 'api_claude_api_authentication_verified_at', (utcnow()+timedelta(hours=25 if verification == 'future' else -25)).isoformat())
+    response = c.post(m.ANALYZE, asset=c.gui.asset, model='claude-sonnet-4-6', request_id='unverified', consent='true')
+    if verification == 'old_valid':
+        assert response.status_code == 200 and len(c.state.calls) == 1
+        assert c.state.decryptions
+    else:
+        assert response.status_code == 409
+        assert not c.state.calls and not c.state.decryptions
 
 
 def test_direct_authoring_outside_authenticated_request_has_no_authority(connected):
@@ -216,6 +220,6 @@ def test_operating_new_format_uses_snapshot_and_preserves_request_boundary(conne
     assert response.status_code == 200, response.text
     assert c.service.read(c.identifier)['state'] == 'script_review'
     assert len(c.state.calls) == 1
-    assert c.state.calls[0][1]['system'] == script_instruction(FORMAT)
+    assert c.state.calls[0][1]['system'] == script_instruction(FORMAT, c.service.read(c.identifier).get('continuity_policy'))
     assert c.post(m.AUTO_STORY, job_id=c.identifier, consent='true').status_code == 200
     assert len(c.state.calls) == 1 and not c.video.sent

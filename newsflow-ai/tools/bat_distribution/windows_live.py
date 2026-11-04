@@ -499,6 +499,7 @@ def start(config, plan):
             news_analysis_access = None
             feed_image_access = None
             studio_image_access = None
+            precision_access = None
             character_authoring = None
             if manual_enabled and trial_policy is None:
                 from .character_authoring import install as install_character_authoring
@@ -511,6 +512,8 @@ def start(config, plan):
                 feed_image_access = install_feed_image_access(app, config.profile, character_native_factory)
                 from .studio_image_access import install as install_studio_image_access
                 studio_image_access = install_studio_image_access(app, config.profile, character_native_factory)
+                from .precision_access import install as install_precision_access
+                precision_access = install_precision_access(app, config.profile, character_native_factory)
             import uvicorn
             session = LaunchSession(config.port)
             nonce = secrets.token_hex(32)
@@ -569,6 +572,8 @@ def start(config, plan):
                     request_boundary = feed_image_access.wrap(request_boundary, authenticated_app)
                 if studio_image_access is not None:
                     request_boundary = studio_image_access.wrap(request_boundary, authenticated_app)
+                if precision_access is not None:
+                    request_boundary = precision_access.wrap(request_boundary, authenticated_app)
                 if claude_connection_check is not None:
                     request_boundary = claude_connection_check.wrap(request_boundary, authenticated_app)
                 if provider_connection_check is not None:

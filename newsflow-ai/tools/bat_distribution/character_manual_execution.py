@@ -283,7 +283,7 @@ class ManualExecution:
         if job.get('id') != identifier:
             _deny()
         settings = settings_for(job['studio_selection'])
-        return _Client(self, KlingClient(self.keys.key, settings))
+        return _Client(self, KlingClient(self.keys.key, settings, **({"precise": True} if job.get("precision") else {})))
 
     def execute(self, action, identifier, *, consent=False, quote_hash=''):
         if action not in {'submit', 'check', 'diagnose', 'retry-quote', 'retry-scene'} or _REQUEST.get() != (self, identifier, action):

@@ -15,8 +15,10 @@ router=APIRouter()
 def service(request):
     from .character_automation_routes import authoring
     state=request.app.state
-    return PrecisionService(state.config.data_dir,CharacterRegistry(state.config.data_dir,state.image_studio),
-        state.image_studio,FeedReadiness(state),state.character,authoring(request))
+    images=getattr(state,'precision_image_studio',state.image_studio)
+    writer=getattr(state,'precision_authoring',None)
+    return PrecisionService(state.config.data_dir,CharacterRegistry(state.config.data_dir,images),
+        images,FeedReadiness(state),state.character,writer if writer is not None else authoring(request))
 
 def perform(call):
     try:

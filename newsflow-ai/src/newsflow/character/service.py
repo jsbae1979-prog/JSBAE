@@ -80,6 +80,14 @@ def retime_studio_story(story, settings):
 
 def generation_rows(job):
     """New quotes share one film setup and continue the preceding saved action."""
+    if job.get('precision'):
+        from .precision_video import validate
+        validate(job, job['script'])
+        # The approved still-image plan already carries each character and scene.
+        # Never reconstruct it with the fast single-character storyboard rules.
+        rows = job['prompts']
+        if len(rows) != len(job['precision']['images']): raise CharacterError('media')
+        return rows
     if job.get('direct_video'):
         from .direct_video import validate_plan, prompts as direct_prompts
         from .kling import check

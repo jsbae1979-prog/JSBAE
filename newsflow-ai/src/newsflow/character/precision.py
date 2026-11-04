@@ -214,7 +214,7 @@ class PrecisionService:
                     or not self.readiness(w['selection'])['generationEnabled']): raise ValueError('예산을 다시 확인하세요.')
             rows=self.selected_rows(w,q['numbers'])
             limit=self.readiness.standing_limit()
-            exposure=sum(Decimal(v['reserve_usd']) for s in w['scenes'] for v in s['versions'])
+            exposure=sum(max(Decimal(v['reserve_usd']),Decimal(v.get('observed_usd') or '0')) for s in w['scenes'] for v in s['versions'])
             if not limit or exposure+Decimal(q['reserve_usd'])>min(positive(limit),positive(w['image_limit'])):
                 raise ValueError('설정 또는 작품의 이미지 작업 예산을 초과합니다.')
             if any(s['versions'] and not q['regenerate'] for s in rows) or any(v['state'] in {'unknown','requesting'} for s in rows for v in s['versions']):
@@ -238,6 +238,9 @@ class PrecisionService:
                     runid=self.images.execute(draft,consent=True,reviewed=True)
                     output=self.images.output(draft)
                     version.update(run_id=runid,state=output.status,usage=output.result.get('usage'))
+                    observed=image_pricing.usage_cost(output.result.get('usage'))
+                    if observed is not None:
+                        version.update(observed_usd=observed,over_reserve=Decimal(observed)>Decimal(version['reserve_usd']))
                     if output.status=='success':
                         asset=self.images.export(draft,reviewed=True)
                         version.update(asset=asset,sha256=hashlib.sha256(self.images.asset(asset).read_bytes()).hexdigest())
@@ -246,7 +249,7 @@ class PrecisionService:
                 except Exception:
                     version['state']='unknown';scene['state']='unknown'
                 self.save(w)
-                if version['state']!='success': break
+                if version['state']!='success' or version.get('over_reserve'): break
             w['state']='images';self.save(w)
             return w
 
@@ -264,6 +267,9 @@ class PrecisionService:
                         asset=self.images.export(v['draft_id'],reviewed=True)
                         v.update(state='success',run_id=output.id,usage=output.result.get('usage'),
                                  asset=asset,sha256=hashlib.sha256(self.images.asset(asset).read_bytes()).hexdigest())
+                        observed=image_pricing.usage_cost(output.result.get('usage'))
+                        if observed is not None:
+                            v.update(observed_usd=observed,over_reserve=Decimal(observed)>Decimal(v['reserve_usd']))
                         scene.update(state='review',selected=v['version'],confirmed=None)
                     else:
                         v['state']='failed' if output and output.status=='failed' else 'unknown'
