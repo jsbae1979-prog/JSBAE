@@ -2,12 +2,14 @@
 from contextvars import ContextVar
 from decimal import Decimal
 import re
+import hashlib
 import time
 from urllib.parse import parse_qs
 
 from newsflow.character.authoring import AuthoringAI, provider_for_model
 from newsflow.character.kling import check
 from newsflow.character.precision import PrecisionService, positive
+from newsflow.character import precision_visual as visual
 from newsflow.character.precision_contract import INSTRUCTION, PrecisionScenario, story_input, image_prompt
 from newsflow.character.registry import CharacterRegistry
 from newsflow.character.schema import CharacterError
@@ -95,18 +97,23 @@ class _Generation(ImageGenerationService):
                 or q['revision'] + 1 != w['revision'] or q['expires'] <= time.time()
                 or scene['plan']['no'] not in q['numbers']
                 or version['plan_hash'] != fingerprint(scene['plan'])
-                or prompt != scene['prompt'] or prompt != version['prompt']
-                or prompt != image_prompt(w['common'], w['cast'], scene['plan'])):
+                or scene['prompt'] != image_prompt(w['common'], w['cast'], scene['plan'])
+                or prompt != visual.request_prompt(w, scene) or prompt != version['prompt']
+                or version.get('visual_anchor') != visual.binding(w, scene)):
             deny()
         draft = owner.images.get(identifier)
         refs = service.refs(w, scene)
         expected_refs = [{'id': cid, 'asset': w['cast'][cid]['asset'], 'version': w['cast'][cid]['image_version']}
                          for cid in scene['plan']['characters']]
+        anchor = visual.binding(w, scene)
+        expected_assets = [r['asset'] for r in expected_refs]
+        if anchor:
+            expected_assets.append(anchor['asset'])
         if (style != 'studio' or any(x is not None for x in (article_id, analysis_id, rank))
                 or context != {'image_studio_draft': identifier} or kw.get('provider', 'openai') != 'openai'
                 or kw.get('card_id') is not None or kw.get('reference') != refs
                 or draft.result['prompt'] != prompt or draft.options.get('reference')
-                or draft.options.get('references') != [r['asset'] for r in expected_refs]
+                or draft.options.get('references') != expected_assets
                 or version['references'] != expected_refs or version['selection'] != w['selection']
                 or kw.get('execution') != draft.options['selection']
                 or check_snapshot(draft.options['selection'], 'image') != w['selection']):
@@ -114,7 +121,11 @@ class _Generation(ImageGenerationService):
         if owner.images.output(identifier):
             deny()  # Local reconciliation may recover it; never send it again.
         bound = next(b for b in q['bounds'] if b['no'] == scene['plan']['no'])
-        if version['reserve_usd'] != bound['reserveUsd'] or service.estimate(w, scene)['reserveUsd'] != bound['reserveUsd']:
+        if (version['reserve_usd'] != bound['reserveUsd']
+                or service.estimate(w, scene)['reserveUsd'] != bound['reserveUsd']
+                or bound.get('visual_anchor') != anchor
+                or bound.get('prompt_hash') != fingerprint(prompt)
+                or bound.get('reference_hashes') != [hashlib.sha256(raw).hexdigest() for raw in refs]):
             deny()
         # Keep the whole approved batch reserved, including not-yet-created drafts.
         old = sum(max(Decimal(v['reserve_usd']), Decimal(v.get('observed_usd') or '0')) for s in w['scenes'] for v in s['versions']
