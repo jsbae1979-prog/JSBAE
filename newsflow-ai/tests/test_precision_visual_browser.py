@@ -48,3 +48,28 @@ def test_changed_anchor_disables_video_handoff_and_stale_confirmation(precision,
         expect(panel.locator('.precision-progress')).to_contain_text('1장 확정')
         assert len(p.adapter.calls)==6 and not p.video.sent
         ctx.close()
+
+
+def test_legacy_image_review_can_create_set_reference_draft_without_paid_call(precision,browser,monkeypatch):
+    from copy import deepcopy
+    p=precision;w=prepare(p);w.pop('visual_reference_policy');p.s.save(w)
+    w=make(p,w,[1,2,3,4,5]);original=deepcopy(w)
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:p.s)
+    p.app.state.image_studio=p.images
+    with local_server(p.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page()
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        page.get_by_role('button',name='연결 보완 초안 · 무료',exact=True).click()
+        dialog=page.get_by_role('dialog',name='장면 내용 수정',exact=True)
+        expect(dialog).to_be_visible()
+        dialog.get_by_role('button',name='장면 저장 · 무료',exact=True).click()
+        expect(dialog).to_have_count(0)
+        expect(page.get_by_role('button',name='배경 기준 장면 먼저 만들기',exact=True)).to_be_visible()
+        assert p.s.read(w['id'])==original and len(p.adapter.calls)==5 and not p.video.sent
+        draft=p.s.read(page.url.split('precision=')[1])
+        assert draft['source_work_id']==w['id'] and draft['visual_reference_policy']=='approved-set-reference-v1'
+        assert all(not row['versions'] for row in draft['scenes'])
+        page.get_by_role('button',name='배경 기준 장면 먼저 만들기',exact=True).click()
+        expect(page.get_by_role('dialog',name='장면 이미지 만들기')).to_contain_text('장면 1 ·')
+        assert len(p.adapter.calls)==5 and not p.video.sent
+        ctx.close()

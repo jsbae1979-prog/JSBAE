@@ -253,7 +253,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
         </div>}
         <div className="precision-review-heading"><h3>장면 이미지 검토</h3>
         {allConfirmed&&!work.video_job_id&&<button className="primary" disabled={locked} onClick={()=>void act('handoff')}>영상 제작으로 이동</button>}
-        {work.video_job_id&&<button disabled={!!busy} onClick={()=>void act('revise-connection',{request_id:crypto.randomUUID().replaceAll('-','')})}>연결 보완 초안 · 무료</button>}
+        {(work.video_job_id||!work.visual_reference_policy)&&<button disabled={!!busy||['writing','generating'].includes(work.state)} onClick={()=>void act('revise-connection',{request_id:crypto.randomUUID().replaceAll('-','')})}>연결 보완 초안 · 무료</button>}
         {work.state==='connection_review'&&<button onClick={()=>openEditor({scenario:structuredClone(work.scenario)})}>장면 연결 검토</button>}
         {work.video_job_id&&<a className="button primary" href={`/studio/characters?job_id=${work.video_job_id}`}>영상 제작 열기</a>}</div>
         <details className="precision-batch"><summary>여러 장면 다시 만들기</summary>
