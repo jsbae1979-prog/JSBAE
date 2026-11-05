@@ -142,6 +142,24 @@ def story_input(work, cast, video_model):
         {k:deepcopy(c[k]) for k in ('id','name_ko','species','personality','comedy_formula')}
         for c in cast.values()], 'allowed_seconds':duration_values(video_model)}
 
+PROP_READABILITY = (
+    'Make story-relevant starting props readable on a phone screen through contrast and unobstructed framing. '
+    'Keep their specified identity, size, quantity and location; do not invent evidence or show a later reveal early. '
+    'Prioritize faces, hands and essential props over decorative background detail. '
+)
+
+
+def matches_saved_image_prompt(work, cast, scene, prompt):
+    """Accept only the exact current or pre-readability template for the same data.
+
+    Stored paid/approved work is immutable across template-only upgrades. Do not
+    rewrite its prompt or broaden validation to arbitrary user-supplied text.
+    Removing the known prefix once leaves character and scene JSON untouched.
+    """
+    current = image_prompt(work, cast, scene)
+    return prompt in (current, current.replace(PROP_READABILITY, '', 1))
+
+
 def image_prompt(work, cast, scene):
     # Subtitle/caption is intentionally excluded, even when it is filled in.
     import json
@@ -154,9 +172,7 @@ def image_prompt(work, cast, scene):
         moment['prop_states'] = [{'id':p['id'],'state':p['before']} for p in scene['prop_states']]
     text = ('Depict the exact start_state before the action begins. One full-frame scene, never a contact sheet. Each attached reference corresponds in order to characters. '
             'Preserve each face, body, fur color, clothing and accessories. Preserve shared location and props. '
-            'Make story-relevant starting props readable on a phone screen through contrast and unobstructed framing. '
-            'Keep their specified identity, size, quantity and location; do not invent evidence or show a later reveal early. '
-            'Prioritize faces, hands and essential props over decorative background detail. '
+            + PROP_READABILITY
             + NO_TEXT + '\n' + json.dumps({'shared':shared,'characters':characters,'moment':moment},ensure_ascii=False))
     if len(text)>12000: raise ValueError('공통 설정과 장면 설명을 줄여 주세요.')
     return text

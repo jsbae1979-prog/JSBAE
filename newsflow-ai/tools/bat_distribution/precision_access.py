@@ -10,7 +10,7 @@ from newsflow.character.authoring import AuthoringAI, provider_for_model
 from newsflow.character.kling import check
 from newsflow.character.precision import PrecisionService, positive
 from newsflow.character import precision_visual as visual
-from newsflow.character.precision_contract import INSTRUCTION, PrecisionScenario, story_input, image_prompt
+from newsflow.character.precision_contract import INSTRUCTION, PrecisionScenario, story_input, matches_saved_image_prompt
 from newsflow.character.registry import CharacterRegistry
 from newsflow.character.schema import CharacterError
 from newsflow.character.service import fingerprint
@@ -97,7 +97,7 @@ class _Generation(ImageGenerationService):
                 or q['revision'] + 1 != w['revision'] or q['expires'] <= time.time()
                 or scene['plan']['no'] not in q['numbers']
                 or version['plan_hash'] != fingerprint(scene['plan'])
-                or scene['prompt'] != image_prompt(w['common'], w['cast'], scene['plan'])
+                or not matches_saved_image_prompt(w['common'], w['cast'], scene['plan'], scene['prompt'])
                 or prompt != visual.request_prompt(w, scene) or prompt != version['prompt']
                 or version.get('visual_anchor') != visual.binding(w, scene)):
             deny()
