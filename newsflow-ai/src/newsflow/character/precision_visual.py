@@ -54,6 +54,18 @@ def request_prompt(work, scene):
         raise ValueError('공통 설정과 장면 설명을 줄여 주세요.')
     return prompt
 
+def reusable(work, scene, version):
+    if version.get('state') != 'success' or matches(work,scene,version):
+        return False
+    if any(v['state'] in {'requesting','unknown'} for v in scene['versions']):
+        return False
+    refs=[{'id':cid,'asset':work['cast'][cid]['asset'],'version':work['cast'][cid]['image_version']}
+          for cid in scene['plan']['characters']]
+    try:
+        return version.get('references') == refs and version.get('visual_anchor') == binding(work,scene)
+    except ValueError:
+        return False
+
 def annotate(work):
     """Derived response fields only; caller passes a detached copy."""
     for scene in work['scenes']:
@@ -66,6 +78,7 @@ def annotate(work):
             scene['image_ready'] = False
         for version in scene['versions']:
             version['matches_current_plan'] = matches(work, scene, version)
+            version['can_reuse'] = reusable(work,scene,version)
         receipt = scene.get('confirmed') or {}
         scene['confirmed_valid'] = any(v['version'] == receipt.get('version') and
             v.get('sha256') == receipt.get('sha256') and matches(work, scene, v) for v in scene['versions'])

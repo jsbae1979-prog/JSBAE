@@ -142,7 +142,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
   const timingError=catalog?timingIssue(common.duration,common.scene_count,sceneSeconds(video.video_model)):'';
   const canCreate=loadingWork===null&&!timingError&&!busy&&cast.length>0&&cast.length<=4&&!!common.topic.trim()&&Number(imageLimit)>0&&Number(videoLimit)>0;
   const selected=rows.find(s=>s.plan.no===scene)??rows[0];
-  const current=selected?.versions.find((v:Item)=>v.version===(versions[selected.plan.no]??selected.selected));
+  const current=selected?.versions.find((v:Item)=>v.version===(versions[selected.plan.no]??selected.selected??selected.versions.filter((v:Item)=>v.state==='success').at(-1)?.version));
   const staleImage=!!current&&current.matches_current_plan!==true;
   function selectCharacter(p:Item,checked:boolean){
     setCast(checked?[...cast,p.id]:cast.filter(id=>id!==p.id));
@@ -272,9 +272,12 @@ export default function CharacterPrecision({c}:{c:Controller}) {
             <div>{current?.asset?<button className="precision-image" onClick={()=>setLarge(`/image-studio/assets/${current.asset}`)}><img src={`/image-studio/assets/${current.asset}`} alt={`장면 ${selected.plan.no}`}/></button>:<div className="precision-empty">{stateName[selected.state]??selected.state}</div>}</div>
             <div className="precision-scene-detail"><h4>장면 {selected.plan.no} · {selected.plan.seconds}초</h4><p>{selected.plan.description}</p>
               <p>{selected.plan.characters.map((id:string)=>work.cast[id].name_ko).join(' · ')}</p>
-              <p className="precision-hint">캐릭터의 좌우 위치, 창문·가구, 소품 모양과 개수, 시작 동작을 확인하세요.</p>
+              <p className="precision-hint">캐릭터·장소·핵심 행동이 맞으면 사용할 수 있습니다. 작은 장식 차이만으로 다시 만들 필요는 없습니다.</p>
               {work.visual_reference_policy&&<p className="precision-hint">{selected.visual_anchor_scene?`배경 기준: 확정한 장면 ${selected.visual_anchor_scene}`:'이 장소의 배경 기준 이미지입니다.'}</p>}
-              <>{staleImage&&<p className="precision-error" role="status">{work.visual_reference_policy?'장면 내용 또는 배경 기준이 변경됐습니다. 기존 이미지는 보존됩니다. 다시 만든 뒤 확정하세요.':'이전 장면의 이미지입니다. 현재 장면에 맞게 다시 만든 뒤 확정하세요.'}</p>}</><div className="precision-scene-actions">
+              <>{staleImage&&<p className="precision-error" role="status">장면 내용이 변경됐습니다. 이미지가 수정 내용과 맞으면 그대로 사용할 수 있습니다. 캐릭터·배경 기준이 바뀌면 다시 만들어 주세요.</p>}</><div className="precision-scene-actions">
+                <button disabled={locked} onClick={()=>openEditor({scenario:structuredClone(work.scenario),number:selected.plan.no})}>장면 내용 수정 · 무료</button>
+                {staleImage&&current?.can_reuse&&<button disabled={locked||selected.image_ready===false}
+                  onClick={()=>{if(window.confirm('현재 이미지와 수정한 장면의 캐릭터·장소·핵심 행동이 맞나요? 이미지를 다시 생성하지 않고 연결합니다.'))void act('reuse-image',{number:String(selected.plan.no),version:String(current.version),reviewed:'true'});}}>이 이미지 그대로 사용 · 무료</button>}
                 <button disabled={locked||selected.image_ready===false||selected.versions.some((v:Item)=>['requesting','unknown'].includes(v.state))} onClick={()=>void act('quote',{numbers:JSON.stringify([selected.plan.no]),regenerate:'true'})}>다시 만들기</button>
                 <button className={!allConfirmed?'primary':''} disabled={locked||!current?.asset||staleImage||selected.confirmed?.version===current.version}
                   onClick={e=>{if(e.detail>1)return;void act('confirm',{number:String(selected.plan.no),version:String(current.version),reviewed:'true'});}}>
@@ -282,9 +285,9 @@ export default function CharacterPrecision({c}:{c:Controller}) {
               </div>
               <details><summary>버전·프롬프트 더보기</summary>
               <label>이미지 버전<select aria-label={`장면 ${selected.plan.no} 이미지 버전`} value={versions[selected.plan.no]??selected.selected??''} onChange={e=>setVersions({...versions,[selected.plan.no]:+e.target.value})}>
-                <option value="">버전 선택</option>{selected.versions.map((v:Item)=><option key={v.version} value={v.version}>버전 {v.version} · {stateName[v.state]??v.state}{v.matches_current_plan===false?' · 이전 장면':''}</option>)}</select></label>
+                <option value="">버전 선택</option>{selected.versions.map((v:Item)=><option key={v.version} value={v.version}>버전 {v.version} · {v.kind==='local_reuse'?'기존 이미지 재사용':stateName[v.state]??v.state}{v.matches_current_plan===false?' · 이전 장면':''}</option>)}</select></label>
               <p className="precision-prompt">{selected.prompt}</p>
-              <button disabled={locked} onClick={()=>openEditor({scenario:structuredClone(work.scenario),number:selected.plan.no})}>장면 내용 수정</button></details>
+              </details>
             </div>
           </div>}
         </div>
@@ -302,6 +305,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       <p>선택한 캐릭터와 확정된 배경 기준 이미지를 전송합니다. 실제 청구액과 다를 수 있으며 영상 비용은 별도입니다.</p>
     </CharacterModal>}
     {editing&&<CharacterModal title="장면 내용 수정" busy={!!busy} onClose={closeEditor} footer={<button className="primary" disabled={!!busy} onClick={()=>void act('edit',{scenario:JSON.stringify(editing.scenario)})}>장면 저장 · 무료</button>}>
+      <p className="precision-hint">이미지에 맞게 내용을 수정할 수 있습니다. 저장 후 기존 이미지를 다시 확인해 사용하면 생성 비용이 들지 않습니다.</p>
       {editorNotice&&<p role="status">{editorNotice}</p>}
       {editorError&&<p role="alert" className="precision-error">{editorError}</p>}
       <label>편집할 장면<select value={editing.number??editing.scenario.scenes[0]?.no} onChange={e=>setEditing({...editing,number:Number(e.target.value)})}>

@@ -73,3 +73,31 @@ def test_legacy_image_review_can_create_set_reference_draft_without_paid_call(pr
         expect(page.get_by_role('dialog',name='장면 이미지 만들기')).to_contain_text('장면 1 ·')
         assert len(p.adapter.calls)==5 and not p.video.sent
         ctx.close()
+
+
+def test_edit_then_reuse_image_without_regeneration(precision,browser,monkeypatch):
+    from copy import deepcopy
+    p=precision;w=make(p,prepare(p),[1]);original=deepcopy(w['scenes'][0]['versions'][0])
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:p.s)
+    p.app.state.image_studio=p.images
+    with local_server(p.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page();errors=[]
+        page.on('pageerror',lambda e:errors.append(str(e)))
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        page.get_by_role('button',name='장면 내용 수정 · 무료',exact=True).click()
+        dialog=page.get_by_role('dialog',name='장면 내용 수정',exact=True)
+        # Use the visible description label from the established editor.
+        dialog.get_by_label('장면 설명',exact=True).fill('기존 이미지에 맞춘 새로운 설명')
+        dialog.get_by_role('button',name='장면 저장 · 무료').click()
+        expect(dialog).to_have_count(0)
+        expect(page.locator('.precision-selected img')).to_have_attribute('src','/image-studio/assets/'+original['asset'])
+        page.once('dialog',lambda d:d.dismiss())
+        page.get_by_role('button',name='이 이미지 그대로 사용 · 무료').click()
+        assert len(p.s.read(w['id'])['scenes'][0]['versions'])==1
+        page.once('dialog',lambda d:d.accept())
+        page.get_by_role('button',name='이 이미지 그대로 사용 · 무료').click()
+        expect(page.get_by_role('button',name='사용 중인 이미지')).to_be_disabled()
+        saved=p.s.read(w['id']);assert saved['scenes'][0]['confirmed']['version']==2
+        assert saved['scenes'][0]['versions'][0]==original
+        assert len(p.adapter.calls)==1 and not p.video.sent and not errors
+        ctx.close()

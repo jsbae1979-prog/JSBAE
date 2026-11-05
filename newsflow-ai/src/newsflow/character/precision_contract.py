@@ -73,6 +73,10 @@ location and environment. Describe where bodies and props end up in end_state, a
 A deliberate cut needs transition_reason explaining the visible transition or narrative ellipsis;
 never use a cut to conceal missing travel or change weather without explanation.
 Prefer one location and one incident. Do not reset the action or pose at every boundary.
+Design the payoff around a clearly visible action or a large, recognizable prop at phone-screen size.
+Do not make the story depend solely on a tiny mark, a few crumbs, an exact particle count or hidden detail.
+When the user explicitly requires a small clue, stage a readable close-up or visible reveal action;
+do not silently remove or replace the requested clue. Keep incidental decoration out of the causal chain.
 Every seconds value must be in input.allowed_seconds. Describe a single still moment in pose/emotion/camera;
 describe temporal action separately in English motion and motion_camera. No dialogue, no voices, no music.
 Use Korean description and short caption. Optional local sfx keys must come from input.sfx_keys. Never put captions in the still scene. End with a visual payoff.
@@ -150,6 +154,9 @@ def image_prompt(work, cast, scene):
         moment['prop_states'] = [{'id':p['id'],'state':p['before']} for p in scene['prop_states']]
     text = ('Depict the exact start_state before the action begins. One full-frame scene, never a contact sheet. Each attached reference corresponds in order to characters. '
             'Preserve each face, body, fur color, clothing and accessories. Preserve shared location and props. '
+            'Make story-relevant starting props readable on a phone screen through contrast and unobstructed framing. '
+            'Keep their specified identity, size, quantity and location; do not invent evidence or show a later reveal early. '
+            'Prioritize faces, hands and essential props over decorative background detail. '
             + NO_TEXT + '\n' + json.dumps({'shared':shared,'characters':characters,'moment':moment},ensure_ascii=False))
     if len(text)>12000: raise ValueError('공통 설정과 장면 설명을 줄여 주세요.')
     return text

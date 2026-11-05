@@ -318,7 +318,7 @@ def test_precision_edit_only_selected_scene_preserves_others(precision,browser,m
         panel=page.get_by_role('region',name='정밀 제작',exact=True)
         panel.get_by_role('button',name='장면 3 ·').click()
         panel.get_by_text('버전·프롬프트 더보기',exact=True).click()
-        panel.get_by_role('button',name='장면 내용 수정',exact=True).click()
+        panel.get_by_role('button',name='장면 내용 수정 · 무료',exact=True).click()
         modal=page.get_by_role('dialog',name='장면 내용 수정',exact=True)
         expect(modal.get_by_label('편집할 장면')).to_have_value('3')
         expect(modal.locator('fieldset')).to_have_count(1)
@@ -513,7 +513,7 @@ def test_precision_obsolete_image_is_labelled_and_cannot_confirm(precision,brows
         p.get_by_text('버전·프롬프트 더보기',exact=True).click()
         p.get_by_label('장면 1 이미지 버전').select_option('1')
         expect(p.get_by_role('button',name='이전 장면 이미지',exact=True)).to_be_disabled()
-        expect(p.get_by_text('이전 장면의 이미지입니다. 현재 장면에 맞게 다시 만든 뒤 확정하세요.',exact=True)).to_be_visible()
+        expect(p.get_by_text('장면 내용이 변경됐습니다. 이미지가 수정 내용과 맞으면 그대로 사용할 수 있습니다. 캐릭터·배경 기준이 바뀌면 다시 만들어 주세요.',exact=True)).to_be_visible()
         expect(p.locator('.precision-selected img')).to_be_visible()
         assert not posts and f.s.read(w['id'])==w and len(f.adapter.calls)==5
         ctx.close()

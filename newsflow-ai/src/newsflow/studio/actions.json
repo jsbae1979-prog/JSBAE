@@ -6813,6 +6813,52 @@
     "source": "gui/character_precision_routes.py"
   },
   {
+    "id": "character_precision_reuse_image",
+    "module": "characters",
+    "label": "기존 이미지 그대로 사용 · 무료",
+    "path": "/api/studio/character-precision/{identifier}/reuse-image",
+    "risk": "local",
+    "fields": [
+      {
+        "name": "identifier",
+        "type": "text",
+        "required": true,
+        "default": null,
+        "path": true,
+        "max_length": 32
+      },
+      {
+        "name": "revision",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "number",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "version",
+        "type": "number",
+        "required": true,
+        "default": null,
+        "path": false
+      },
+      {
+        "name": "reviewed",
+        "type": "checkbox",
+        "required": false,
+        "default": null,
+        "path": false
+      }
+    ],
+    "source": "gui/character_precision_routes.py"
+  },
+  {
     "id": "character_precision_handoff",
     "module": "characters",
     "label": "확정 이미지 영상 전달",

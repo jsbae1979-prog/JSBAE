@@ -92,6 +92,11 @@ def confirm(request:Request,identifier:str,revision:int=Form(ge=1),number:int=Fo
             version:int=Form(ge=1),reviewed:bool=Form(False)):
     return perform(lambda:service(request).confirm(identifier,revision,number,version,reviewed))
 
+@router.post('/api/studio/character-precision/{identifier}/reuse-image')
+def reuse_image(request:Request,identifier:str,revision:int=Form(ge=1),number:int=Form(ge=1,le=12),
+                version:int=Form(ge=1),reviewed:bool=Form(False)):
+    return perform(lambda:service(request).reuse_image(identifier,revision,number,version,reviewed))
+
 @router.post('/api/studio/character-precision/{identifier}/handoff')
 def handoff(request:Request,identifier:str,revision:int=Form(ge=1)):
     return perform(lambda:service(request).handoff(identifier,revision))

@@ -337,6 +337,37 @@ class PrecisionService:
             scene.update(selected=version,confirmed={'version':version,'sha256':v['sha256'],'at':stamp()},state='confirmed')
             w['revision']+=1;w.pop('quote',None);self.save(w);return w
 
+    def reuse_image(self,identifier,revision,number,version,reviewed=False):
+        """Human-reviewed reuse after a local plan edit; no provider call or new charge."""
+        if reviewed is not True: raise ValueError('수정한 장면에 이 이미지가 맞는지 확인하세요.')
+        with self.lock():
+            w=self.read(identifier);self.editable(w,revision)
+            scene=self.selected_rows(w,[number])[0]
+            original=next((v for v in scene['versions'] if v['version']==version),None)
+            if (not original or original['state']!='success' or
+                    any(v['state'] in {'requesting','unknown'} for v in scene['versions'])):
+                raise ValueError('완료된 이미지와 요청 상태를 확인하세요.')
+            if visual.matches(w,scene,original): raise ValueError('이미 현재 장면에 연결된 이미지입니다.')
+            # Reuse cannot change identities or silently accept a replaced set reference.
+            if not visual.reusable(w,scene,original):
+                raise ValueError('캐릭터 또는 배경 기준이 바뀐 이미지는 그대로 연결할 수 없습니다.')
+            self.refs(w,scene)
+            raw=self.images.asset(original['asset']).read_bytes()
+            if hashlib.sha256(raw).hexdigest()!=original['sha256']: raise ValueError('이미지 무결성을 확인하세요.')
+            # Do not rewrite the original prompt, usage, billing or review receipt.
+            reuse={k:deepcopy(original[k]) for k in ('asset','sha256','references','selection','prompt','prompt_version')}
+            reuse.update(version=max(v['version'] for v in scene['versions'])+1,
+                state='success',at=stamp(),kind='local_reuse',source_version=version,
+                plan_hash=fingerprint(scene['plan']),visual_anchor=visual.binding(w,scene),
+                reserve_usd='0',observed_usd='0',billing_verified=False,
+                reviewed_plan=deepcopy(scene['plan']))
+            scene['versions'].append(reuse)
+            scene.update(selected=reuse['version'],state='confirmed',confirmed={
+                'version':reuse['version'],'sha256':reuse['sha256'],'at':stamp()})
+            w['events'].append({'kind':'image_reused_after_review','scene':number,
+                'source_version':version,'version':reuse['version'],'at':stamp()})
+            w['revision']+=1;w.pop('quote',None);self.save(w);return w
+
     def handoff(self,identifier,revision):
         from .precision_video import handoff
         with self.lock():
