@@ -1,0 +1,50 @@
+"""Real local Chromium UI with only Fake image requests and temporary data."""
+from playwright.sync_api import expect
+from test_character_precision import precision
+from test_character_precision_browser import dist, browser, local_server, browser_context
+from test_precision_visual import prepare, all_images, make
+
+def test_first_set_review_then_remaining_images(precision,browser,monkeypatch,tmp_path):
+    p=precision;w=prepare(p)
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:p.s)
+    p.app.state.image_studio=p.images
+    with local_server(p.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page();errors=[]
+        page.on('pageerror',lambda e:errors.append(str(e)))
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        panel=page.get_by_role('region',name='정밀 제작',exact=True)
+        panel.get_by_role('button',name='배경 기준 장면 먼저 만들기',exact=True).click()
+        dialog=page.get_by_role('dialog',name='장면 이미지 만들기',exact=True)
+        expect(dialog).to_contain_text('장면 1 ·')
+        assert not p.adapter.calls
+        dialog.get_by_role('button',name='참조 이미지 전송·생성 승인').click()
+        expect(panel.locator('.precision-progress')).to_contain_text('1/5장 완료',timeout=20000)
+        assert len(p.adapter.calls)==1
+        expect(panel.locator('.precision-next-action').get_by_text('첫 장면의 배경·소품을 확정하면 나머지 장면을 만들 수 있습니다.',exact=True)).to_be_visible()
+        panel.get_by_role('button',name='확정하고 다음 장면',exact=True).click()
+        expect(panel.get_by_role('button',name='나머지 장면 이미지 만들기',exact=True)).to_be_visible()
+        assert len(p.adapter.calls)==1
+        panel.get_by_role('button',name='나머지 장면 이미지 만들기',exact=True).click()
+        expect(dialog).to_contain_text('장면 2, 3, 4, 5 ·')
+        dialog.get_by_role('button',name='참조 이미지 전송·생성 승인').click()
+        expect(panel.locator('.precision-progress')).to_contain_text('5/5장 완료',timeout=20000)
+        expect(panel.get_by_role('button',name='영상 제작으로 이동')).to_have_count(0)
+        assert len(p.adapter.calls)==5 and not p.video.sent and not errors
+        page.screenshot(path=str(tmp_path/'set-reference-review.png'),full_page=True)
+        ctx.close()
+
+def test_changed_anchor_disables_video_handoff_and_stale_confirmation(precision,browser,monkeypatch):
+    p=precision;w=all_images(p);w=make(p,w,[1],True)
+    w=p.s.confirm(w['id'],w['revision'],1,2,True)
+    monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:p.s)
+    p.app.state.image_studio=p.images
+    with local_server(p.app) as origin:
+        ctx=browser_context(browser,origin);page=ctx.new_page()
+        page.goto(origin+'/studio/characters?precision='+w['id'])
+        panel=page.get_by_role('region',name='정밀 제작',exact=True)
+        panel.get_by_role('button',name='장면 2 ·').click()
+        expect(panel.get_by_role('button',name='이전 장면 이미지',exact=True)).to_be_disabled()
+        expect(panel.get_by_role('button',name='영상 제작으로 이동')).to_have_count(0)
+        expect(panel.locator('.precision-progress')).to_contain_text('1장 확정')
+        assert len(p.adapter.calls)==6 and not p.video.sent
+        ctx.close()

@@ -134,8 +134,10 @@ export default function CharacterPrecision({c}:{c:Controller}) {
     started={activityStart?Date.parse(activityStart):requestStarted} completed={completed} total={work?.common.scene_count??common.scene_count}
     failed={storyFailed} unknown={lastStory?.state==='unknown'} candidate={!!lastStory?.candidate} connectionIssue={pollError}/>;
   const quote=work?.quote;
-  const missing=rows.filter(s=>!s.versions.length);
-  const allConfirmed=!!rows.length&&rows.every(s=>s.confirmed);
+  const missing=rows.filter(s=>!s.versions.length&&s.image_ready!==false);
+  const validConfirmed=(s:Item)=>!!s.confirmed&&s.confirmed_valid!==false;
+  const needsAnchorReview=rows.some(s=>s.image_ready===false);
+  const allConfirmed=!!rows.length&&rows.every(validConfirmed);
   function sceneSeconds(model:string):number[]{return catalog?.video.modelsDetailed.find((m:Item)=>m.id===model)?.duration_values??[];}
   const timingError=catalog?timingIssue(common.duration,common.scene_count,sceneSeconds(video.video_model)):'';
   const canCreate=loadingWork===null&&!timingError&&!busy&&cast.length>0&&cast.length<=4&&!!common.topic.trim()&&Number(imageLimit)>0&&Number(videoLimit)>0;
@@ -230,8 +232,8 @@ export default function CharacterPrecision({c}:{c:Controller}) {
         <p>{catalog?.video.models[work.video_settings.video_model]??work.video_settings.video_model}</p>
         {work.video_job_id?<><p className="precision-hint">확정한 이미지로 영상 제작을 이어갑니다.</p></>:
           allConfirmed?<p className="precision-hint">장면 검토 아래에서 영상 제작으로 이동하세요.</p>:
-          missing.length?<button className="primary" disabled={locked} onClick={()=>void act('quote',{numbers:JSON.stringify(missing.map(s=>s.plan.no))})}>장면 이미지 만들기</button>:
-          <p className="precision-hint">{rows.length?'아래에서 장면 이미지를 확인하세요.':'스토리를 먼저 만들어 주세요.'}</p>}
+          missing.length?<button className="primary" disabled={locked} onClick={()=>void act('quote',{numbers:JSON.stringify(missing.map(s=>s.plan.no))})}>{needsAnchorReview?'배경 기준 장면 먼저 만들기':'장면 이미지 만들기'}</button>:
+          <p className="precision-hint">{needsAnchorReview?'첫 장면의 배경·소품을 확정하면 나머지 장면을 만들 수 있습니다.':rows.length?'아래에서 장면 이미지를 확인하세요.':'스토리를 먼저 만들어 주세요.'}</p>}
         <details><summary>저장된 모델·예산</summary><p>이미지 {work.selection.model} · {work.selection.quality}</p>
           <p>이미지 US${work.image_limit} / 스토리·영상 US${work.video_limit}</p>
           {work.scenario&&!work.video_job_id&&<div className="precision-pair"><label>이번 작품 이미지 예산(USD)<input type="number" min="0.000001" step="0.000001" disabled={locked} value={savedImageLimit} onChange={e=>setSavedImageLimit(e.target.value)}/></label>
@@ -240,18 +242,23 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       </section>
       </div></details><div className="precision-progress" role="status" aria-live="polite"><strong>{work.common.title} · {stateName[work.state]??work.state}</strong>
       {activity}
-      {!storyActive&&!storyFailed&&<span>{completed}/{rows.length||work.common.scene_count}장 완료 · {rows.filter(s=>s.confirmed).length}장 확정</span>}
+      {!storyActive&&!storyFailed&&<span>{completed}/{rows.length||work.common.scene_count}장 완료 · {rows.filter(validConfirmed).length}장 확정</span>}
       {storyFailed&&lastStory?.candidate&&<button disabled={locked} onClick={()=>openEditor({scenario:structuredClone(lastStory.candidate)})}>보관된 응답 검토·수정 · 무료</button>}
       {!busy&&(['writing','generating'].includes(work.state)||rows.some(s=>s.versions.some((v:Item)=>['requesting','unknown'].includes(v.state))))&&<button onClick={()=>void act('reconcile')}>저장된 결과 확인 · 무료</button>}
       <>{!storyActive&&!imageActive&&!storyFailed&&<progress value={completed} max={rows.length||work.common.scene_count}/>}</></div>
-      {rows.length>0&&<section ref={reviewArea} className="precision-review-area"><div className="precision-review-heading"><h3>장면 이미지 검토</h3>
+      {rows.length>0&&<section ref={reviewArea} className="precision-review-area">
+        {work.visual_reference_policy&&completed>0&&!work.video_job_id&&<div className="precision-next-action">
+          {needsAnchorReview&&<p>첫 장면의 배경·소품을 확정하면 나머지 장면을 만들 수 있습니다.</p>}
+          {missing.length>0&&<button className="primary" disabled={locked} onClick={()=>void act('quote',{numbers:JSON.stringify(missing.map(s=>s.plan.no))})}>나머지 장면 이미지 만들기</button>}
+        </div>}
+        <div className="precision-review-heading"><h3>장면 이미지 검토</h3>
         {allConfirmed&&!work.video_job_id&&<button className="primary" disabled={locked} onClick={()=>void act('handoff')}>영상 제작으로 이동</button>}
         {work.video_job_id&&<button disabled={!!busy} onClick={()=>void act('revise-connection',{request_id:crypto.randomUUID().replaceAll('-','')})}>연결 보완 초안 · 무료</button>}
         {work.state==='connection_review'&&<button onClick={()=>openEditor({scenario:structuredClone(work.scenario)})}>장면 연결 검토</button>}
         {work.video_job_id&&<a className="button primary" href={`/studio/characters?job_id=${work.video_job_id}`}>영상 제작 열기</a>}</div>
         <details className="precision-batch"><summary>여러 장면 다시 만들기</summary>
           {rows.map(s=><label className="precision-check" key={s.plan.no}><input type="checkbox" disabled={locked} checked={picked.includes(s.plan.no)} onChange={e=>setPicked(e.target.checked?[...picked,s.plan.no]:picked.filter(x=>x!==s.plan.no))}/>장면 {s.plan.no}</label>)}
-          <button disabled={locked||!picked.length} onClick={()=>void act('quote',{numbers:JSON.stringify(picked),regenerate:'true'})}>선택 장면 다시 만들기</button>
+          <button disabled={locked||!picked.length||rows.some(s=>picked.includes(s.plan.no)&&(s.image_ready===false||picked.includes(s.visual_anchor_scene)))} onClick={()=>void act('quote',{numbers:JSON.stringify(picked),regenerate:'true'})}>선택 장면 다시 만들기</button>
         </details>
         <div className="precision-review-layout">
           <div className="precision-scenes" role="group" aria-label="장면 선택">{rows.map(s=>{const n=s.plan.no,v=s.versions.find((v:Item)=>v.version===(versions[n]??s.selected));return <article key={n}>
@@ -265,9 +272,10 @@ export default function CharacterPrecision({c}:{c:Controller}) {
             <div>{current?.asset?<button className="precision-image" onClick={()=>setLarge(`/image-studio/assets/${current.asset}`)}><img src={`/image-studio/assets/${current.asset}`} alt={`장면 ${selected.plan.no}`}/></button>:<div className="precision-empty">{stateName[selected.state]??selected.state}</div>}</div>
             <div className="precision-scene-detail"><h4>장면 {selected.plan.no} · {selected.plan.seconds}초</h4><p>{selected.plan.description}</p>
               <p>{selected.plan.characters.map((id:string)=>work.cast[id].name_ko).join(' · ')}</p>
-              <p className="precision-hint">캐릭터·의상·배경·장면 연결을 확인한 뒤 확정하세요.</p>
-              <>{staleImage&&<p className="precision-error" role="status">이전 장면의 이미지입니다. 현재 장면에 맞게 다시 만든 뒤 확정하세요.</p>}</><div className="precision-scene-actions">
-                <button disabled={locked||selected.versions.some((v:Item)=>['requesting','unknown'].includes(v.state))} onClick={()=>void act('quote',{numbers:JSON.stringify([selected.plan.no]),regenerate:'true'})}>다시 만들기</button>
+              <p className="precision-hint">캐릭터의 좌우 위치, 창문·가구, 소품 모양과 개수, 시작 동작을 확인하세요.</p>
+              {work.visual_reference_policy&&<p className="precision-hint">{selected.visual_anchor_scene?`배경 기준: 확정한 장면 ${selected.visual_anchor_scene}`:'이 장소의 배경 기준 이미지입니다.'}</p>}
+              <>{staleImage&&<p className="precision-error" role="status">{work.visual_reference_policy?'장면 내용 또는 배경 기준이 변경됐습니다. 기존 이미지는 보존됩니다. 다시 만든 뒤 확정하세요.':'이전 장면의 이미지입니다. 현재 장면에 맞게 다시 만든 뒤 확정하세요.'}</p>}</><div className="precision-scene-actions">
+                <button disabled={locked||selected.image_ready===false||selected.versions.some((v:Item)=>['requesting','unknown'].includes(v.state))} onClick={()=>void act('quote',{numbers:JSON.stringify([selected.plan.no]),regenerate:'true'})}>다시 만들기</button>
                 <button className={!allConfirmed?'primary':''} disabled={locked||!current?.asset||staleImage||selected.confirmed?.version===current.version}
                   onClick={e=>{if(e.detail>1)return;void act('confirm',{number:String(selected.plan.no),version:String(current.version),reviewed:'true'});}}>
                   {staleImage?'이전 장면 이미지':current&&selected.confirmed?.version===current.version?'사용 중인 이미지':rows.some(s=>s.plan.no!==selected.plan.no&&!s.confirmed)?'확정하고 다음 장면':'이미지 확정'}</button>
@@ -291,7 +299,7 @@ export default function CharacterPrecision({c}:{c:Controller}) {
       {imageActive&&activity}
       <p>장면 {quote.numbers.join(', ')} · {work?.selection.model}</p>
       <p>예상 US${quote.estimated_usd} · 예산 예약 US${quote.reserve_usd}</p>
-      <p>선택한 캐릭터 참조 이미지를 전송합니다. 실제 청구액과 다를 수 있으며 영상 비용은 별도입니다.</p>
+      <p>선택한 캐릭터와 확정된 배경 기준 이미지를 전송합니다. 실제 청구액과 다를 수 있으며 영상 비용은 별도입니다.</p>
     </CharacterModal>}
     {editing&&<CharacterModal title="장면 내용 수정" busy={!!busy} onClose={closeEditor} footer={<button className="primary" disabled={!!busy} onClick={()=>void act('edit',{scenario:JSON.stringify(editing.scenario)})}>장면 저장 · 무료</button>}>
       {editorNotice&&<p role="status">{editorNotice}</p>}

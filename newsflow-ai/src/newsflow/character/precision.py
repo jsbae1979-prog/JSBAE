@@ -16,6 +16,7 @@ from .precision_contract import (WorkSettings, PrecisionScenario, INSTRUCTION, P
     validate_scenario, validate_work_timing, image_prompt, motion_rows, story_input, CONTINUITY_POLICY, CONNECTED_POLICIES)
 from .precision_causal import POLICY, CausalScenario, INSTRUCTION as CAUSAL_INSTRUCTION
 from .schema import CharacterError
+from . import precision_visual as visual
 from .service import fingerprint
 from newsflow.creation.catalog import validate as image_selection
 from newsflow.creation import image_pricing
@@ -91,7 +92,8 @@ class PrecisionService:
                     return old
             w={'id':uuid4().hex,'schema_version':1,'mode':'precision','state':'needs_story','revision':1,
                'request_id':request_id,'body_hash':identity,'created_at':stamp(),'scenario':None,'scenes':[],
-               'story_attempts':[],'events':[],'prompt_version':'scene-still-v3','continuity_policy':POLICY,**payload}
+               'story_attempts':[],'events':[],'prompt_version':'scene-still-v4','continuity_policy':POLICY,
+               'visual_reference_policy':visual.POLICY,**payload}
             self.save(w)
             return w
 
@@ -174,20 +176,34 @@ class PrecisionService:
             if hashlib.sha256(raw).hexdigest()!=c['reference_image']['sha256']:
                 raise ValueError('참조 이미지가 변경됐습니다.')
             result.append(raw)
-        return result
+        anchor=visual.binding(w,scene)
+        if anchor:
+            raw=self.images.asset(anchor['asset']).read_bytes()
+            if hashlib.sha256(raw).hexdigest()!=anchor['sha256']:
+                raise ValueError('배경 기준 이미지가 변경됐습니다.')
+            result.append(raw)
+        from newsflow.publishing.image_reference import checked_references
+        from newsflow.publishing.image_generation import ImageGenerationError
+        try:
+            return checked_references(result,w['selection']['model'])
+        except ImageGenerationError:
+            raise ValueError('모델의 참조 이미지 개수·파일 형식을 확인하세요.') from None
 
     def estimate(self,w,scene):
         from io import BytesIO
         from math import ceil
-        result=image_pricing.estimate(w['selection'],scene['prompt'],now=self.clock())
+        result=image_pricing.estimate(w['selection'],visual.request_prompt(w,scene),now=self.clock())
         # Same disclosed patch heuristic used by FeedBudget; never an invoice/cap.
         patches=0
-        for raw in self.refs(w,scene):
+        refs=self.refs(w,scene)
+        for raw in refs:
             with Image.open(BytesIO(raw)) as im: patches+=ceil(im.width/16)*ceil(im.height/16)
         extra=Decimal(patches)*Decimal('8')/Decimal(1000000)
         result.update(estimatedUsd=str(Decimal(result['estimatedUsd'])+extra),
             reserveUsd=str(Decimal(result['reserveUsd'])+extra*2),
-            inputBasis='text_bytes_plus_reference_16px_patch_estimate',referenceCount=len(scene['plan']['characters']))
+            inputBasis='text_bytes_plus_reference_16px_patch_estimate',referenceCount=len(refs),visual_anchor=visual.binding(w,scene),
+            prompt_hash=fingerprint(visual.request_prompt(w,scene)),
+            reference_hashes=[hashlib.sha256(raw).hexdigest() for raw in refs])
         return result
 
     def selected_rows(self,w,numbers):
@@ -210,6 +226,10 @@ class PrecisionService:
             scope=self.readiness.account_scope()
             if not scope or not self.readiness(w['selection'])['generationEnabled']:
                 raise ValueError('이미지 모델의 연결과 단가를 확인하세요.')
+            # An anchor and its dependants cannot share an approval: the new anchor needs human review.
+            selected=set(numbers)
+            if any((a:=visual.anchor_scene(w,s)) and a['plan']['no'] in selected for s in rows):
+                raise ValueError('배경 기준 장면을 먼저 생성·확정한 뒤 나머지 장면을 만드세요.')
             bounds=[{'no':s['plan']['no'],**self.estimate(w,s)} for s in rows]
             quote={'revision':revision,'numbers':numbers,'regenerate':regenerate,'bounds':bounds,
                 'account_scope':scope,'expires':min(self.clock()+3600,image_pricing.VALID_UNTIL),
@@ -234,13 +254,22 @@ class PrecisionService:
                 raise ValueError('설정 또는 작품의 이미지 작업 예산을 초과합니다.')
             if any(s['versions'] and not q['regenerate'] for s in rows) or any(v['state'] in {'unknown','requesting'} for s in rows for v in s['versions']):
                 raise ValueError('기존 요청을 확인하세요. 자동 재전송하지 않습니다.')
+            # Preflight every actual input before reserving/sending anything, including modified files.
+            for scene in rows:
+                bound=next(b for b in q['bounds'] if b['no']==scene['plan']['no'])
+                refs=self.refs(w,scene)
+                if (bound.get('visual_anchor')!=visual.binding(w,scene) or
+                        bound.get('prompt_hash')!=fingerprint(visual.request_prompt(w,scene)) or
+                        bound.get('reference_hashes')!=[hashlib.sha256(raw).hexdigest() for raw in refs]):
+                    raise ValueError('참조 이미지가 변경됐습니다. 예산을 다시 확인하세요.')
             w.update(state='generating',revision=w['revision']+1)
             w['events'].append({'at':stamp(),'kind':'image_approval','quote':deepcopy(q),'reference_consent':True})
             w.pop('quote',None);self.save(w)
             for scene in rows:
                 version={'version':len(scene['versions'])+1,'request_id':uuid4().hex,'at':stamp(),
-                    'state':'requesting','prompt':scene['prompt'],'plan_hash':fingerprint(scene['plan']),
-                    'prompt_version':PROMPT_VERSION,'selection':deepcopy(w['selection']),
+                    'state':'requesting','prompt':visual.request_prompt(w,scene),'plan_hash':fingerprint(scene['plan']),
+                    'visual_anchor':visual.binding(w,scene),
+                    'prompt_version':w.get('prompt_version',PROMPT_VERSION),'selection':deepcopy(w['selection']),
                     'references':[{'id':cid,'asset':w['cast'][cid]['asset'],'version':w['cast'][cid]['image_version']}
                                   for cid in scene['plan']['characters']],
                     'reserve_usd':next(b['reserveUsd'] for b in q['bounds'] if b['no']==scene['plan']['no']),
@@ -248,7 +277,7 @@ class PrecisionService:
                 scene['versions'].append(version);scene['state']='generating';self.save(w)
                 try:
                     refs=self.refs(w,scene)
-                    draft=self.images.create(scene['prompt'],w['selection'],references=refs)
+                    draft=self.images.create(version['prompt'],w['selection'],references=refs)
                     version['draft_id']=draft;self.save(w)  # persist before external execution
                     runid=self.images.execute(draft,consent=True,reviewed=True)
                     output=self.images.output(draft)
@@ -302,7 +331,7 @@ class PrecisionService:
             w=self.read(identifier);self.editable(w,revision)
             scene=self.selected_rows(w,[number])[0]
             v=next((v for v in scene['versions'] if v['version']==version),None)
-            if not v or v['state']!='success' or v['plan_hash']!=fingerprint(scene['plan']): raise ValueError('현재 장면의 완료 버전을 선택하세요.')
+            if not v or v['state']!='success' or not visual.matches(w,scene,v): raise ValueError('현재 장면의 완료 버전을 선택하세요.')
             raw=self.images.asset(v['asset']).read_bytes()
             if hashlib.sha256(raw).hexdigest()!=v['sha256']: raise ValueError('이미지 무결성을 확인하세요.')
             scene.update(selected=version,confirmed={'version':version,'sha256':v['sha256'],'at':stamp()},state='confirmed')
@@ -314,6 +343,12 @@ class PrecisionService:
             w=self.read(identifier)
             if w.get('video_job_id'): return w
             self.editable(w,revision)
+            for scene in w['scenes']:
+                receipt=scene.get('confirmed') or {}
+                version=next((v for v in scene['versions'] if v['version']==receipt.get('version')),None)
+                if not version or not visual.matches(w,scene,version):
+                    raise ValueError('변경된 배경 기준에 맞는 장면 이미지를 다시 검토하세요.')
+                self.refs(w,scene)
             job=handoff(self,w)
             w.update(video_job_id=job,state='video_ready',revision=w['revision']+1);self.save(w);return w
 
@@ -339,7 +374,8 @@ class PrecisionService:
             draft={k:deepcopy(source[k]) for k in ('common','cast','selection','video_settings','image_limit','video_limit')}
             draft.update(id=uuid4().hex,schema_version=1,mode='precision',state='connection_review',revision=1,
                 request_id=request_id,revision_request_id=request_id,source_work_id=identifier,source_revision=revision,
-                created_at=stamp(),prompt_version='scene-still-v3',continuity_policy=POLICY,
+                created_at=stamp(),prompt_version='scene-still-v4',continuity_policy=POLICY,
+                visual_reference_policy=visual.POLICY,
                 scenario=deepcopy(source['scenario']),scenes=[],story_attempts=[],events=[])
             # Archive the old assets as references, never pretend they were generated for a changed plan.
             draft['reference_history']=deepcopy(source['scenes'])

@@ -76,7 +76,7 @@ def precision(app,tmp_path,monkeypatch):
         {**IMAGE_DEFAULTS['image'],'size':'864x1536'},settings,'5','5',uuid4().hex)
     w=create()
     # This suite preserves the pre-v2 stored-work contract; v2 has its own tests.
-    w.pop('continuity_policy');service.save(w)
+    w.pop('continuity_policy');w.pop('visual_reference_policy');service.save(w)
     return NS(s=service,w=w,create=create,story=story,ids=ids,chars=chars,adapter=adapter,writer=writer,
               owner=owner,video=video,images=images,readiness=readiness,app=app)
 

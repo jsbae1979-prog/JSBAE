@@ -25,10 +25,8 @@ def perform(call):
         result=call()
         if isinstance(result,dict) and 'common' in result and 'scenes' in result:
             result=deepcopy(result) # Derived UI state must not modify persisted version history.
-            for scene in result['scenes']:
-                plan_hash=fingerprint(scene['plan'])
-                for version in scene['versions']:
-                    version['matches_current_plan']=version.get('plan_hash')==plan_hash
+            from newsflow.character.precision_visual import annotate
+            annotate(result)
         return result
     except Timeout: raise HTTPException(409,'이미 처리 중입니다. 현재 결과를 확인하세요.') from None
     except (ValueError,KeyError,TypeError,CharacterError,PublishingError,OSError):

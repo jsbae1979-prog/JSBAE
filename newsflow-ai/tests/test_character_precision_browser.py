@@ -30,7 +30,7 @@ def test_precision_cards_approval_confirm_and_version_selection(precision,browse
         page.keyboard.press('Escape');assert not f.adapter.calls
         panel.get_by_role('button',name='장면 이미지 만들기',exact=True).click()
         page.get_by_role('button',name='참조 이미지 전송·생성 승인').click()
-        expect(panel.get_by_role('status')).to_contain_text('5/5장 완료',timeout=20000)
+        expect(panel.locator('.precision-progress')).to_contain_text('5/5장 완료',timeout=20000)
         assert len(f.adapter.calls)==5
         first=panel.locator('.precision-scenes article').first
         panel.locator('.precision-selected .precision-image').click()
@@ -173,7 +173,12 @@ def test_precision_story_autosave_requires_confirmation_and_runs_once(precision,
     f=precision;monkeypatch.setattr('newsflow.gui.character_precision_routes.service',lambda request:f.s)
     f.app.state.image_studio=f.images
     story=deepcopy(f.story)
-    for row in story['scenes']:row['seconds']=4
+    # New work uses the causal contract; provide a valid Fake response for that contract.
+    for i,row in enumerate(story['scenes']):
+        row.update(seconds=4,characters=f.ids,connection='continue' if i else 'cut',
+            set_id='garden',environment='same daylight',start_state=f'hand position {i}',
+            end_state=f'hand position {i+1}',transition_reason='',cause=f'state {i}',result=f'state {i+1}',
+            prop_states=[{'id':'plate','before':f'position {i}','after':f'position {i+1}','change':'Moves plate visibly'}])
     f.writer.scenario=story
     with local_server(f.app) as origin:
         context=browser_context(browser,origin);page=context.new_page();requests=[]
@@ -190,7 +195,7 @@ def test_precision_story_autosave_requires_confirmation_and_runs_once(precision,
         page.keyboard.press('Escape');assert len(f.s.listing())==1
         panel.get_by_role('button',name='스토리 만들기',exact=True).click()
         page.get_by_role('button',name='유료 스토리 생성 승인').dblclick()
-        expect(panel.get_by_role('button',name='장면 이미지 만들기',exact=True)).to_be_visible()
+        expect(panel.get_by_role('button',name='배경 기준 장면 먼저 만들기',exact=True)).to_be_visible()
         identifier=page.url.split('precision=')[1].split('&')[0];w=f.s.read(identifier)
         assert w['common']['title']==topic and w['common']['duration']==20
         assert len(f.writer.calls)==1 and len(f.s.listing())==2
@@ -215,7 +220,7 @@ def test_precision_story_failure_preserves_draft_without_replay(precision,browse
         panel.get_by_label('스토리 주제',exact=True).fill('저장된 작품은 지우지 않기')
         panel.get_by_role('button',name='스토리 만들기',exact=True).click()
         page.get_by_role('button',name='유료 스토리 생성 승인').click()
-        expect(panel.get_by_role('status')).to_contain_text('스토리 확인 필요')
+        expect(panel.locator('.precision-progress')).to_contain_text('스토리 확인 필요')
         expect(panel.get_by_role('button',name='스토리 만들기',exact=True)).to_be_disabled()
         identifier=page.url.split('precision=')[1].split('&')[0];w=f.s.read(identifier)
         assert w['story_attempts'][0]['state']=='unknown'
@@ -291,7 +296,7 @@ def test_precision_review_five_clicks_then_video(precision,browser,monkeypatch,t
         for n in range(1,6):
             expect(panel.locator('.precision-selected img')).to_have_attribute('alt',f'장면 {n}')
             panel.get_by_role('button',name='확정하고 다음 장면' if n<5 else '이미지 확정',exact=True).click()
-            expect(panel.get_by_role('status')).to_contain_text(f'{n}장 확정')
+            expect(panel.locator('.precision-progress')).to_contain_text(f'{n}장 확정')
             expect(page.get_by_role('dialog')).to_have_count(0)
         saved=f.s.read(w['id']);assert all(row['confirmed'] for row in saved['scenes'])
         assert len(f.adapter.calls)==5 and not f.video.sent
@@ -368,7 +373,7 @@ def test_precision_double_click_does_not_confirm_next_scene(precision,browser,mo
         panel=page.get_by_role('region',name='정밀 제작',exact=True)
         panel.get_by_role('button',name='확정하고 다음 장면',exact=True).dblclick()
         expect(panel.locator('.precision-selected img')).to_have_attribute('alt','장면 2')
-        expect(panel.get_by_role('status')).to_contain_text('1장 확정')
+        expect(panel.locator('.precision-progress')).to_contain_text('1장 확정')
         assert len(requests)==1
         assert sum(bool(row['confirmed']) for row in f.s.read(w['id'])['scenes'])==1
         assert len(f.adapter.calls)==5 and not f.video.sent
@@ -406,7 +411,7 @@ def test_precision_reload_resumes_readonly_progress_and_stops_when_done(precisio
         page.on('request',lambda r:posts.append(r.url) if r.method=='POST' else gets.append(r.url) if r.url.endswith('/character-precision/'+w['id']) else None)
         page.goto(origin+'/studio/characters?precision='+w['id'])
         p=page.get_by_role('region',name='정밀 제작',exact=True)
-        expect(p.get_by_role('status')).to_contain_text('이미지 생성 중')
+        expect(p.locator('.precision-progress')).to_contain_text('이미지 생성 중')
         finished=deepcopy(w);finished['state']='images';f.s.save(finished)
         expect(p.get_by_role('button',name='확정하고 다음 장면')).to_be_enabled(timeout=8000)
         assert len(gets)>=2 and not posts

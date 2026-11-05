@@ -11,6 +11,8 @@ from newsflow.character.schema import CharacterError
 
 def connected(p):
     p.w=p.create()
+    # Preserve the stored v2 workflow; approved-set references have a separate suite.
+    p.w.pop('visual_reference_policy',None)
     p.w['continuity_policy']=CONTINUITY_POLICY
     p.s.save(p.w)
     # Same single character throughout this synthetic sequence.
